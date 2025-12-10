@@ -1881,6 +1881,8 @@ class GlitterEditor {
 		this.setTool('select');
 		this.updateStatus('Load an image to begin');
 		this.updateStatusBar();
+
+		window.dispatchEvent(new Event('imageRemoved'));
 	}
 
 	debouncedUpdatePreview() {
@@ -2219,6 +2221,8 @@ displayGlitterOptions() {
 			this.previewCtx.putImageData(this.originalImageData, 0, 0);
 			this.setTool('colorPicker');
 			this.updateStatus('Click on the preview to select a color');
+
+			window.dispatchEvent(new Event('imageLoaded'));
 
 
 		};
