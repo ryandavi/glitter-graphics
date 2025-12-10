@@ -53,127 +53,7 @@ const CONFIG = {
 	},
 
 
-	glitterGifs: [
-		// SPARKLE - Reds
-		{ url: 'images/glitter/sparkle/gliter_red.gif', name: 'Red', category: 'Sparkle', isPixelated: true, tags: ['red'] },
-		{ url: 'images/glitter/sparkle/glitter_crimson.gif', name: 'Crimson', category: 'Sparkle', isPixelated: true, tags: ['red', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_ruby.gif', name: 'Ruby', category: 'Sparkle', isPixelated: true, tags: ['red', 'jewel', 'dark'] },
-
-
-		// SPARKLE - Oranges
-		{ url: 'images/glitter/sparkle/glitter_coral.gif', name: 'Coral', category: 'Sparkle', isPixelated: true, tags: ['red', 'orange', 'pink', 'light', 'pastel'] },
-		{ url: 'images/glitter/sparkle/glitter_bright-orange.gif', name: 'Bright Orange', category: 'Sparkle', isPixelated: true, tags: ['orange', 'light'] },
-		{ url: 'images/glitter/sparkle/glitter_light-orange.gif', name: 'Light Orange', category: 'Sparkle', isPixelated: true, tags: ['orange', 'light', 'pastel'] },
-		{ url: 'images/glitter/sparkle/glitter_orange.gif', name: 'Orange', category: 'Sparkle', isPixelated: true, tags: ['orange'] },
-
-		{ url: 'images/glitter/sparkle/glitter_gold.gif', name: 'Gold', category: 'Sparkle', isPixelated: true, tags: ['yellow', 'metal', 'orange'] },
-		{ url: 'images/glitter/sparkle/glitter_bronze.gif', name: 'Bronze', category: 'Sparkle', isPixelated: true, tags: ['metal', 'earth-tone', 'orange'] },
-
-		// SPARKLE - Yellows
-		{ url: 'images/glitter/sparkle/glitter_yellow.gif', name: 'Yellow', category: 'Sparkle', isPixelated: true, tags: ['yellow'] },
-
-		// SPARKLE - Greens
-		{ url: 'images/glitter/sparkle/glitter_light-green.gif', name: 'Light Green', category: 'Sparkle', isPixelated: true, tags: ['green', 'light', 'pastel'] },
-		{ url: 'images/glitter/sparkle/glitter_lime-green.gif', name: 'Lime Green', category: 'Sparkle', isPixelated: true, tags: ['green', 'yellow', 'neon', 'light'] },
-		{ url: 'images/glitter/sparkle/glitter_green.gif', name: 'Green', category: 'Sparkle', isPixelated: true, tags: ['green'] },
-		{ url: 'images/glitter/sparkle/glitter_grass-green.gif', name: 'Grass Green', category: 'Sparkle', isPixelated: true, tags: ['green'] },
-		{ url: 'images/glitter/sparkle/glitter_dark-green.gif', name: 'Dark Green', category: 'Sparkle', isPixelated: true, tags: ['green', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_seafoam.gif', name: 'Seafoam', category: 'Sparkle', isPixelated: true, tags: ['green', 'blue', 'light', 'pastel'] },
-		{ url: 'images/glitter/sparkle/glitter_turquoise_2.gif', name: 'Turquoise 2', category: 'Sparkle', isPixelated: true, tags: ['blue', 'green', 'jewel'] },
-		{ url: 'images/glitter/sparkle/glitter_turquoise.gif', name: 'Turquoise', category: 'Sparkle', isPixelated: true, tags: ['blue', 'green', 'jewel'] },
-		{ url: 'images/glitter/sparkle/glitter_light-blue.gif', name: 'Light Blue', category: 'Sparkle', isPixelated: true, tags: ['blue', 'light', 'pastel'] },
-		{ url: 'images/glitter/sparkle/glitter_aquamarine.gif', name: 'Aquamarine', category: 'Sparkle', isPixelated: true, tags: ['blue', 'green', 'light', 'jewel'] },
-
-
-		// SPARKLE - Blues
-		{ url: 'images/glitter/sparkle/glitter_dusty-dark-blue.gif', name: 'Dusty Dark Blue', category: 'Sparkle', isPixelated: true, tags: ['blue', 'dark', 'dusty'] },
-		{ url: 'images/glitter/sparkle/glitter_sapphire.gif', name: 'Sapphire', category: 'Sparkle', isPixelated: true, tags: ['blue', 'jewel', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_navy.gif', name: 'Navy', category: 'Sparkle', isPixelated: true, tags: ['blue', 'dark'] },
-
-		// SPARKLE - Purples
-		{ url: 'images/glitter/sparkle/glitter_amethyst.gif', name: 'Amethyst', category: 'Sparkle', isPixelated: true, tags: ['purple', 'jewel'] },
-		{ url: 'images/glitter/sparkle/glitter_purple.gif', name: 'Purple', category: 'Sparkle', isPixelated: true, tags: ['purple'] },
-		{ url: 'images/glitter/sparkle/glitter_dark-purple.gif', name: 'Dark Purple', category: 'Sparkle', isPixelated: true, tags: ['purple', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_dark-purple-2.gif', name: 'Dark Purple 2', category: 'Sparkle', isPixelated: true, tags: ['purple', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_light-purple.gif', name: 'Light Purple', category: 'Sparkle', isPixelated: true, tags: ['purple', 'light', 'pastel'] },
-		{ url: 'images/glitter/sparkle/glitter_ugly-purple.gif', name: 'Ugly Purple', category: 'Sparkle', isPixelated: true, tags: ['purple', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_lavender.gif', name: 'Lavender', category: 'Sparkle', isPixelated: true, tags: ['purple', 'light', 'pastel'] },
-		{ url: 'images/glitter/sparkle/purpe_light-pink.gif', name: 'Idk Pink', category: 'Sparkle', isPixelated: true, tags: ['pink', 'light'] },
-
-		// SPARKLE - Pinks
-		{ url: 'images/glitter/sparkle/glitter_magenta.gif', name: 'Magenta', category: 'Sparkle', isPixelated: true, tags: ['pink', 'purple'] },
-		{ url: 'images/glitter/sparkle/glitter_hot-pink.gif', name: 'Hot Pink', category: 'Sparkle', isPixelated: true, tags: ['pink', 'neon'] },
-		{ url: 'images/glitter/sparkle/glitter_hot-pink-2.gif', name: 'Hot Pink 2', category: 'Sparkle', isPixelated: true, tags: ['pink', 'neon'] },
-		{ url: 'images/glitter/sparkle/glitter_pink-red.gif', name: 'Pink Red', category: 'Sparkle', isPixelated: true, tags: ['pink', 'red'] },
-		{ url: 'images/glitter/sparkle/glitter_pink-purple.gif', name: 'Pink Purple', category: 'Sparkle', isPixelated: true, tags: ['pink', 'purple'] },
-		{ url: 'images/glitter/sparkle/glitter_pink-magenta.gif', name: 'Pink Magenta', category: 'Sparkle', isPixelated: true, tags: ['pink', 'purple'] },
-		{ url: 'images/glitter/sparkle/glitter_pink-dark-purple.gif', name: 'Pink Dark Purple', category: 'Sparkle', isPixelated: true, tags: ['pink', 'purple', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_magenta-blue.gif', name: 'Magenta Blue', category: 'Sparkle', isPixelated: true, tags: ['pink', 'blue', 'purple', 'multicolor'] },
-
-		// SPARKLE - Earth Tones
-		{ url: 'images/glitter/sparkle/glitter_cream.gif', name: 'Cream', category: 'Sparkle', isPixelated: true, tags: ['earth-tone', 'light'] },
-		{ url: 'images/glitter/sparkle/glitter_tan.gif', name: 'Tan', category: 'Sparkle', isPixelated: true, tags: ['earth-tone', 'light'] },
-		{ url: 'images/glitter/sparkle/glitter_brown.gif', name: 'Brown', category: 'Sparkle', isPixelated: true, tags: ['earth-tone', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_dark-brown.gif', name: 'Dark Brown', category: 'Sparkle', isPixelated: true, tags: ['earth-tone', 'dark'] },
-
-
-		// SPARKLE - Neutrals / Metallic
-		{ url: 'images/glitter/sparkle/glitter_white.gif', name: 'White', category: 'Sparkle', isPixelated: true, tags: ['neutrals', 'light'] },
-		{ url: 'images/glitter/sparkle/glitter_silver-2.gif', name: 'Silver 2', category: 'Sparkle', isPixelated: true, tags: ['neutrals', 'metal', 'light'] },
-		{ url: 'images/glitter/sparkle/glitter_silver.gif', name: 'Silver', category: 'Sparkle', isPixelated: true, tags: ['neutrals', 'metal', 'light'] },
-		{ url: 'images/glitter/sparkle/glitter_dark-gray.gif', name: 'Dark Gray', category: 'Sparkle', isPixelated: true, tags: ['neutrals', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_black-2.gif', name: 'Black 2', category: 'Sparkle', isPixelated: true, tags: ['neutrals', 'dark'] },
-		{ url: 'images/glitter/sparkle/glitter_black.gif', name: 'Black', category: 'Sparkle', isPixelated: true, tags: ['neutrals', 'dark'] },
-
-		// SPARKLE - Multicolor / Patterns
-		{ url: 'images/glitter/sparkle/glitter_christmas.gif', name: 'Christmas', category: 'Sparkle', isPixelated: true, tags: ['red', 'green', 'multicolor', 'pattern'] },
-		{ url: 'images/glitter/sparkle/glitter_christmas-2.gif', name: 'Christmas 2', category: 'Sparkle', isPixelated: true, tags: ['red', 'green', 'multicolor', 'pattern'] },
-		{ url: 'images/glitter/sparkle/glitter_rainbow.gif', name: 'Rainbow', category: 'Sparkle', isPixelated: true, tags: ['multicolor'] },
-		{ url: 'images/glitter/sparkle/glitter_rainbow-2.gif', name: 'Rainbow 2', category: 'Sparkle', isPixelated: true, tags: ['multicolor'] },
-
-		// EMBER
-		{ url: 'images/glitter/ember/ember_red.gif', name: 'Red', category: 'Ember', isPixelated: true, tags: ['red', 'dark'] },
-		{ url: 'images/glitter/ember/ember_turquoise.gif', name: 'Turquoise', category: 'Ember', isPixelated: true, tags: ['blue', 'green'] },
-		{ url: 'images/glitter/ember/ember_purple.gif', name: 'Purple', category: 'Ember', isPixelated: true, tags: ['purple', 'dark'] },
-
-		// NOISE
-		{ url: 'images/glitter/noise/noise_red.gif', name: 'Red', category: 'Noise', isPixelated: true, tags: ['red'] },
-		{ url: 'images/glitter/noise/noise_orange.gif', name: 'Orange', category: 'Noise', isPixelated: true, tags: ['orange'] },
-		{ url: 'images/glitter/noise/noise_yellow.gif', name: 'Yellow', category: 'Noise', isPixelated: true, tags: ['yellow'] },
-		{ url: 'images/glitter/noise/noise_lime.gif', name: 'Lime', category: 'Noise', isPixelated: true, tags: ['green', 'yellow', 'neon', 'light'] },
-		{ url: 'images/glitter/noise/noise_magenta.gif', name: 'Magenta', category: 'Noise', isPixelated: true, tags: ['pink', 'purple', 'neon'] },
-		{ url: 'images/glitter/noise/noise_gray.gif', name: 'Gray', category: 'Noise', isPixelated: true, tags: ['neutrals'] },
-		{ url: 'images/glitter/noise/noise_white.gif', name: 'White', category: 'Noise', isPixelated: true, tags: ['neutrals', 'light'] },
-		{ url: 'images/glitter/noise/noise_black.gif', name: 'Black', category: 'Noise', isPixelated: true, tags: ['neutrals', 'dark'] },
-
-		// OTHER
-		{ url: 'images/glitter/etc/etc_black-2.gif', name: 'Black 2', category: 'Other', isPixelated: true, tags: ['neutrals', 'dark'] },
-		{ url: 'images/glitter/etc/etc_black-3.gif', name: 'Black 3', category: 'Other', isPixelated: true, tags: ['neutrals', 'dark'] },
-
-
-		{ url: 'images/glitter/etc/etc_black-2.gif', name: 'Black 2', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_black-3.gif', name: 'Black 3', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_blue-green.gif', name: 'Blue Green', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_bronze-2.gif', name: 'Bronze 2', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_bronze.gif', name: 'Bronze', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_champagne.gif', name: 'Champagne', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_dark-green.gif', name: 'Dark Green', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_dusty-pink.gif', name: 'Dusty Pink', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_gold-2.gif', name: 'Gold 2', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_gold-3.gif', name: 'Gold 3', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_gold.gif', name: 'Gold', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_green.gif', name: 'Green', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_hot-pink.gif', name: 'Hot Pink', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_lavender.gif', name: 'Lavender', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_periwinkle.gif', name: 'Periwinkle', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/etc_seafoam.gif', name: 'Seafoam', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/glitter_black.gif', name: 'Black', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/sparkle_blue.gif', name: 'Sparkle Blue', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/sparkle_green.gif', name: 'Sparkle Green', category: 'Other', isPixelated: true },
-		{ url: 'images/glitter/etc/sparkle_pink-hearts.gif', name: 'Sparkle Pink Hearts', category: 'Other', isPixelated: true }
-
-
-	],
+	glitterGifs: [],
 
 
 };
@@ -800,7 +680,6 @@ class GlitterEditor {
 		return this.layers.find(l => l.id === this.activeLayerId);
 	}
 
-
 	// ===== UX: EMPTY STATE MANAGEMENT =====
 
 	showLayerSettingsEmptyState() {
@@ -933,59 +812,59 @@ class GlitterEditor {
 		event.dataTransfer.setData('text/html', event.target.innerHTML);
 	}
 
-handleLayerDragOver(event, targetLayerId) {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+	handleLayerDragOver(event, targetLayerId) {
+		event.preventDefault();
+		event.dataTransfer.dropEffect = 'move';
 
-    if (!this.draggedLayerId) return;
+		if (!this.draggedLayerId) return;
 
-    // Call existing scroll handler
-    this.handleLayerDragScroll(event);
+		// Call existing scroll handler
+		this.handleLayerDragScroll(event);
 
-    const targetElement = event.currentTarget;
-    const rect = targetElement.getBoundingClientRect();
-    const layersList = document.getElementById('layersList');
-    const containerRect = layersList.getBoundingClientRect();
-    const insertionLine = document.querySelector('.layer-insertion-line');
+		const targetElement = event.currentTarget;
+		const rect = targetElement.getBoundingClientRect();
+		const layersList = document.getElementById('layersList');
+		const containerRect = layersList.getBoundingClientRect();
+		const insertionLine = document.querySelector('.layer-insertion-line');
 
-    const midpoint = rect.top + rect.height / 2;
-    const insertAbove = event.clientY < midpoint;
+		const midpoint = rect.top + rect.height / 2;
+		const insertAbove = event.clientY < midpoint;
 
-    const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-    const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
+		const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
+		const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
 
-    if (targetIndex === draggedIndex) {
-        insertionLine.classList.remove('visible');
-        return;
-    }
-    if (targetIndex === draggedIndex - 1 && insertAbove) {
-        insertionLine.classList.remove('visible');
-        return;
-    }
-    if (targetIndex === draggedIndex + 1 && !insertAbove) {
-        insertionLine.classList.remove('visible');
-        return;
-    }
+		if (targetIndex === draggedIndex) {
+			insertionLine.classList.remove('visible');
+			return;
+		}
+		if (targetIndex === draggedIndex - 1 && insertAbove) {
+			insertionLine.classList.remove('visible');
+			return;
+		}
+		if (targetIndex === draggedIndex + 1 && !insertAbove) {
+			insertionLine.classList.remove('visible');
+			return;
+		}
 
-    let lineY;
-    let LAYER_MARGIN_BOTTOM = 6;
-    let INSERTION_LINE_HEIGHT = 2;
-    let offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
-    
-    const scrollTop = layersList.scrollTop;
+		let lineY;
+		let LAYER_MARGIN_BOTTOM = 6;
+		let INSERTION_LINE_HEIGHT = 2;
+		let offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
+		
+		const scrollTop = layersList.scrollTop;
 
-    if (insertAbove) {
-        lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
-    } else {
-        lineY = rect.bottom - containerRect.top + scrollTop + offset;
-    }
+		if (insertAbove) {
+			lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
+		} else {
+			lineY = rect.bottom - containerRect.top + scrollTop + offset;
+		}
 
-    insertionLine.style.top = lineY + 'px';
-    insertionLine.classList.add('visible');
+		insertionLine.style.top = lineY + 'px';
+		insertionLine.classList.add('visible');
 
-    this.dropInsertAbove = insertAbove;
-    this.dropTargetId = targetLayerId;
-}
+		this.dropInsertAbove = insertAbove;
+		this.dropTargetId = targetLayerId;
+	}
 
 	handleLayerDragLeave(event) {
 		// Only hide if leaving the layers list entirely
@@ -1029,116 +908,112 @@ handleLayerDragOver(event, targetLayerId) {
 		}
 	}
 
+	// Replace handleLayerDrop with this optimized version:
+	handleLayerDrop(event, targetLayerId) {
+		event.preventDefault();
 
-// Replace handleLayerDrop with this optimized version:
-handleLayerDrop(event, targetLayerId) {
-	event.preventDefault();
+		const insertionLine = document.querySelector('.layer-insertion-line');
+		insertionLine.classList.remove('visible');
 
-	const insertionLine = document.querySelector('.layer-insertion-line');
-	insertionLine.classList.remove('visible');
+		if (!this.draggedLayerId) return;
 
-	if (!this.draggedLayerId) return;
+		// Use stored values from dragover
+		targetLayerId = this.dropTargetId;
+		const insertAbove = this.dropInsertAbove;
 
-	// Use stored values from dragover
-	targetLayerId = this.dropTargetId;
-	const insertAbove = this.dropInsertAbove;
+		if (!targetLayerId || this.draggedLayerId === targetLayerId) return;
 
-	if (!targetLayerId || this.draggedLayerId === targetLayerId) return;
+		const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
+		const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
 
-	const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-	const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
+		if (draggedIndex === -1 || targetIndex === -1) return;
 
-	if (draggedIndex === -1 || targetIndex === -1) return;
+		// Remove the dragged layer
+		const [draggedLayer] = this.layers.splice(draggedIndex, 1);
 
-	// Remove the dragged layer
-	const [draggedLayer] = this.layers.splice(draggedIndex, 1);
+		// Recalculate target index after removal
+		let newTargetIndex = this.layers.findIndex(l => l.id === targetLayerId);
 
-	// Recalculate target index after removal
-	let newTargetIndex = this.layers.findIndex(l => l.id === targetLayerId);
+		// IMPORTANT: Visual order is reversed!
+		// "Above" visually = higher index in array = AFTER target
+		// "Below" visually = lower index in array = AT target
+		let newIndex = insertAbove ? newTargetIndex + 1 : newTargetIndex;
 
-	// IMPORTANT: Visual order is reversed!
-	// "Above" visually = higher index in array = AFTER target
-	// "Below" visually = lower index in array = AT target
-	let newIndex = insertAbove ? newTargetIndex + 1 : newTargetIndex;
+		// Insert at new position
+		this.layers.splice(newIndex, 0, draggedLayer);
 
-	// Insert at new position
-	this.layers.splice(newIndex, 0, draggedLayer);
+		// OPTIMIZED: Just reorder DOM instead of recreating
+		this.reorderLayerElements();
+		this.reorderGlitterBackgrounds();
+		this.saveState();
+		// No updatePreview() needed - visual stacking order changed but render is same
+	}
 
-	// OPTIMIZED: Just reorder DOM instead of recreating
-	this.reorderLayerElements();
-	this.reorderGlitterBackgrounds();
-	this.saveState();
-	// No updatePreview() needed - visual stacking order changed but render is same
-}
+	// Fast reordering - just moves existing DOM elements
+	reorderLayerElements() {
+		const container = document.getElementById('layersList');
+		const insertionLine = container.querySelector('.layer-insertion-line');
+		
+		// Get all existing layer elements
+		const existingElements = new Map();
+		container.querySelectorAll('.layer-item').forEach(el => {
+			existingElements.set(el.dataset.layerId, el);
+		});
+		
+		// Reorder them to match layers array (reversed for display)
+		const fragment = document.createDocumentFragment();
+		
+		[...this.layers].reverse().forEach(layer => {
+			const element = existingElements.get(layer.id);
+			if (element) {
+				// Update active state
+				element.classList.toggle('active', layer.id === this.activeLayerId);
+				fragment.appendChild(element);
+			}
+		});
+		
+		// Clear and re-append in correct order
+		container.innerHTML = '';
+		container.appendChild(insertionLine);
+		container.appendChild(fragment);
+	}
 
+	// Fast reordering for glitter backgrounds
+	reorderGlitterBackgrounds() {
+		const container = this.glitterBackgroundsContainer;
+		
+		// Get existing background elements
+		const existingBgs = new Map();
+		container.querySelectorAll('.glitter-background').forEach(bg => {
+			existingBgs.set(bg.dataset.layerId, bg);
+		});
+		
+		// Reorder them to match layers array
+		const fragment = document.createDocumentFragment();
+		
+		this.layers.forEach(layer => {
+			const bg = existingBgs.get(layer.id);
+			if (bg) {
+				fragment.appendChild(bg);
+			}
+		});
+		
+		container.innerHTML = '';
+		container.appendChild(fragment);
+	}
 
-// Fast reordering - just moves existing DOM elements
-reorderLayerElements() {
-	const container = document.getElementById('layersList');
-	const insertionLine = container.querySelector('.layer-insertion-line');
-	
-	// Get all existing layer elements
-	const existingElements = new Map();
-	container.querySelectorAll('.layer-item').forEach(el => {
-		existingElements.set(el.dataset.layerId, el);
-	});
-	
-	// Reorder them to match layers array (reversed for display)
-	const fragment = document.createDocumentFragment();
-	
-	[...this.layers].reverse().forEach(layer => {
-		const element = existingElements.get(layer.id);
-		if (element) {
-			// Update active state
-			element.classList.toggle('active', layer.id === this.activeLayerId);
-			fragment.appendChild(element);
+	handleLayerDragEnd(event) {
+		event.target.classList.remove('dragging');
+		const insertionLine = document.querySelector('.layer-insertion-line');
+		insertionLine.classList.remove('visible');
+		
+		if (this.dragScrollInterval) {
+			clearInterval(this.dragScrollInterval);
+			this.dragScrollInterval = null;
 		}
-	});
-	
-	// Clear and re-append in correct order
-	container.innerHTML = '';
-	container.appendChild(insertionLine);
-	container.appendChild(fragment);
-}
-
-// Fast reordering for glitter backgrounds
-reorderGlitterBackgrounds() {
-	const container = this.glitterBackgroundsContainer;
-	
-	// Get existing background elements
-	const existingBgs = new Map();
-	container.querySelectorAll('.glitter-background').forEach(bg => {
-		existingBgs.set(bg.dataset.layerId, bg);
-	});
-	
-	// Reorder them to match layers array
-	const fragment = document.createDocumentFragment();
-	
-	this.layers.forEach(layer => {
-		const bg = existingBgs.get(layer.id);
-		if (bg) {
-			fragment.appendChild(bg);
-		}
-	});
-	
-	container.innerHTML = '';
-	container.appendChild(fragment);
-}
-
-
-handleLayerDragEnd(event) {
-    event.target.classList.remove('dragging');
-    const insertionLine = document.querySelector('.layer-insertion-line');
-    insertionLine.classList.remove('visible');
-    
-    if (this.dragScrollInterval) {
-        clearInterval(this.dragScrollInterval);
-        this.dragScrollInterval = null;
-    }
-    
-    this.draggedLayerId = null;
-}
-
+		
+		this.draggedLayerId = null;
+	}
 
 	renderLayersList() {
 		const container = document.getElementById('layersList');
@@ -1256,7 +1131,6 @@ handleLayerDragEnd(event) {
 	}
 
 	// ===== INITIALIZATION =====
-
 	initializeCollapsibleSections() {
 		const layerSettingsHeader = document.getElementById('layerSettingsHeader');
 		const layerSettingsContent = document.getElementById('layerSettingsContent');
@@ -2018,25 +1892,36 @@ handleLayerDragEnd(event) {
 	}
 
 	// ===== GLITTER LOADING =====
+async loadGlitterGifs() {
+	this.glitterGifs = [];
 
-	async loadGlitterGifs() {
-		this.glitterGifs = [];
+	const res = await fetch('data/swatches.json');
+	const json = await res.json();
 
-		CONFIG.glitterGifs.forEach((config) => {
-			this.glitterGifs.push({
-				url: config.url,
-				name: config.name || 'Unnamed',
-				frames: null,
-				category: config.category || 'Uncategorized',
-				isPixelated: config.isPixelated || false,
-				tags: config.tags || []
-			});
+	json.forEach(config => {
+		this.glitterGifs.push({
+			id: config.id,
+			url: config.url,
+			name: config.name || 'Unnamed',
+			generatedName: config.generatedName || null,
+			frames: null,
+			brightness: config.brightness || null,
+			sortOrder: config.sortOrder || 0,
+			hue: config.hue || null,
+			colorCodes: config.colorCodes || [],
+			frameCount: config.frameCount || 0,
+			frameRate: config.frameRate || 10,
+			isVariableFramerate: config.isVariableFramerate || false,
+			category: config.category || 'Uncategorized',
+			isPixelated: config.isPixelated || false,
+			tags: config.tags || []
 		});
+	});
 
-		if (this.glitterGifs.length > 0) {
-			this.displayGlitterOptions();
-		}
+	if (this.glitterGifs.length > 0) {
+		this.displayGlitterOptions();
 	}
+}
 
 	async parseGifFromUrl(url) {
 		const response = await fetch(url);
@@ -2095,6 +1980,10 @@ displayGlitterOptions() {
             option.dataset.name = glitter.name.toLowerCase();
             option.dataset.category = glitter.category.toLowerCase();
             option.dataset.tags = (glitter.tags || []).join(' ').toLowerCase();
+
+			option.dataset.hue = glitter.hue;
+			option.dataset.brightness = glitter.brightness;
+			option.dataset.sortOrder = glitter.sortOrder
 
             const img = document.createElement('img');
             img.src = glitter.url;

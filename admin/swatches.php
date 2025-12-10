@@ -77,7 +77,7 @@ try {
         LEFT JOIN tags t ON st.tag_id = t.id
         WHERE s.is_active = 1
         GROUP BY s.id, s.name, s.url, s.is_pixelated, c.name
-        ORDER BY c.sort_order, s.id
+        ORDER BY s.hue ASC, s.color_value DESC
     ";
 
     $stmt = $pdo->query($sql);
