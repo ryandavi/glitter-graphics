@@ -3306,56 +3306,108 @@ class MobileManager {
 	constructor(editor) {
 		this.editor = editor;
 		this.isMobile = window.innerWidth <= 800;
-		this.activePanel = 'image'; // Start on image
+		this.activeTab = 'image'; // image or preview
+		this.activeDrawer = null; // glitter or layers or null
 		this.resizeObserver = null;
 		
 		if (this.isMobile) {
 			this.init();
 		}
 		
-		// Always set up resize detection
 		this.setupResizeObserver();
+		this.setupImageEvents();
 	}
 	
 	init() {
 		console.log('Mobile: Initializing mobile manager');
 		this.createMobileControls();
 		this.setupEventListeners();
-		this.showPanel('image'); // Start on image
-		console.log('Mobile: Initialization complete, should be on image panel');
+		this.switchTab('image');
+		console.log('Mobile: Initialization complete, on image tab');
 	}
 	
-	createMobileControls() {
-		const mainContent = document.querySelector('.main-content');
-		console.log('Mobile: Creating controls, main-content exists:', !!mainContent);
-		console.log('Mobile: Screen width:', window.innerWidth);
-		
-		// Don't create if it already exists
-		if (document.querySelector('.mobile-nav')) {
-			console.log('Mobile: Nav already exists, skipping creation');
-			return;
-		}
-		
-		// Create mobile nav bar
-		const navBar = document.createElement('div');
-		navBar.className = 'mobile-nav';
-		navBar.innerHTML = `
-			<button class="mobile-nav-btn active" data-panel="image">🖼️ Image</button>
-			<button class="mobile-nav-btn" data-panel="layers">📋 Layers</button>
-			<button class="mobile-nav-btn" data-panel="glitter">✨ Glitter</button>
-			<button class="mobile-nav-btn" data-panel="preview">👁️ Preview</button>
-		`;
-		mainContent.appendChild(navBar);
-		console.log('Mobile: Nav bar created and appended');
+createMobileControls() {
+	const mainContent = document.querySelector('.main-content');
+	
+	if (document.querySelector('.mobile-top-nav')) {
+		console.log('Mobile: Controls already exist, skipping creation');
+		return;
 	}
+	
+	// Check if image exists to set initial disabled state
+	const hasImage = this.editor.originalImage !== null;
+	
+	// Create top nav (Image/Preview tabs)
+	const topNav = document.createElement('div');
+	topNav.className = 'mobile-top-nav';
+	topNav.innerHTML = `
+		<button class="mobile-tab-btn active" data-tab="image">Image</button>
+		<button class="mobile-tab-btn" data-tab="preview" ${!hasImage ? 'disabled' : ''}>Preview</button>
+	`;
+	
+	// Create bottom nav (Glitter/Layers drawer buttons)
+	const bottomNav = document.createElement('div');
+	bottomNav.className = 'mobile-bottom-nav';
+	bottomNav.innerHTML = `
+		<button class="mobile-drawer-btn" data-drawer="layers">Layers</button>
+		<button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
+	`;
+	
+	document.body.insertBefore(topNav, document.body.firstChild);
+	document.body.appendChild(bottomNav);
+	
+	console.log('Mobile: Navigation created');
+}
 	
 	setupEventListeners() {
-		document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
 			btn.addEventListener('click', () => {
-				this.showPanel(btn.dataset.panel);
+				this.switchTab(btn.dataset.tab);
+			});
+		});
+		
+		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
+			btn.addEventListener('click', () => {
+				this.toggleDrawer(btn.dataset.drawer);
 			});
 		});
 	}
+	
+setupImageEvents() {
+	window.addEventListener('imageLoaded', () => {
+		if (this.isMobile) {
+			// Enable preview tab
+			const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+			if (previewBtn) {
+				previewBtn.disabled = false;
+			}
+			
+			// Switch to preview and recalculate viewport
+			this.switchTab('preview');
+			
+			// Wait for tab switch to complete, then fix viewport
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					this.editor.resetViewport();
+					this.editor.updateZoomUI();
+				});
+			});
+		}
+	});
+	
+	window.addEventListener('imageRemoved', () => {
+		if (this.isMobile) {
+			// Disable preview tab
+			const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+			if (previewBtn) {
+				previewBtn.disabled = true;
+			}
+			
+			this.switchTab('image');
+			this.closeAllDrawers();
+		}
+	});
+}
 	
 	setupResizeObserver() {
 		let resizeTimer;
@@ -3368,14 +3420,11 @@ class MobileManager {
 				
 				console.log('Mobile: Resize detected, width:', newWidth, 'Mobile:', nowMobile);
 				
-				// Transition from desktop to mobile
 				if (!this.isMobile && nowMobile) {
 					console.log('Mobile: Switching to mobile mode');
 					this.isMobile = true;
 					this.init();
-				}
-				// Transition from mobile to desktop
-				else if (this.isMobile && !nowMobile) {
+				} else if (this.isMobile && !nowMobile) {
 					console.log('Mobile: Switching to desktop mode');
 					this.isMobile = false;
 					this.cleanup();
@@ -3383,45 +3432,73 @@ class MobileManager {
 			}, 250);
 		});
 		
-		// Observe the document body
 		this.resizeObserver.observe(document.body);
+	}
+	
+	switchTab(tab) {
+		console.log('Mobile: Switching to tab:', tab);
+		this.activeTab = tab;
+		
+		// Update tab button states
+		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+			btn.classList.toggle('active', btn.dataset.tab === tab);
+		});
+		
+		// Close any open drawers
+		this.closeAllDrawers();
+		
+		// Remove all tab classes
+		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab');
+		
+		// Add the active tab class
+		document.body.classList.add(`mobile-${tab}-tab`);
+		
+		console.log('Mobile: Tab switched to:', tab);
+	}
+	
+	toggleDrawer(drawer) {
+		console.log('Mobile: Toggling drawer:', drawer);
+		
+		// If clicking the currently open drawer, close it
+		if (this.activeDrawer === drawer) {
+			this.closeAllDrawers();
+		} else {
+			// Close any open drawer and open the new one
+			this.closeAllDrawers();
+			this.activeDrawer = drawer;
+			document.body.classList.add(`${drawer}Open`);
+			
+			// Update button states
+			document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
+				btn.classList.toggle('active', btn.dataset.drawer === drawer);
+			});
+		}
+	}
+	
+	closeAllDrawers() {
+		this.activeDrawer = null;
+		document.body.classList.remove('glitterOpen', 'layersOpen');
+		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
+			btn.classList.remove('active');
+		});
 	}
 	
 	cleanup() {
 		console.log('Mobile: Starting cleanup');
 		
-		// Remove mobile nav if it exists
-		const navBar = document.querySelector('.mobile-nav');
-		if (navBar) {
-			navBar.remove();
-			console.log('Mobile: Nav bar removed');
-		}
+		// Remove mobile navigation
+		const topNav = document.querySelector('.mobile-top-nav');
+		const bottomNav = document.querySelector('.mobile-bottom-nav');
 		
-		// Remove all panel body classes to restore desktop layout
-		document.body.classList.remove('previewOpen', 'glitterOpen', 'layersOpen', 'imageOpen');
+		if (topNav) topNav.remove();
+		if (bottomNav) bottomNav.remove();
 		
-		// Desktop shows all panels side-by-side, no special class needed
+		// Remove all mobile classes
+		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
+		
 		console.log('Mobile: Cleanup complete, restored to desktop layout');
 	}
-	
-	showPanel(panel) {
-		this.activePanel = panel;
-		
-		// Update button states
-		document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
-			btn.classList.toggle('active', btn.dataset.panel === panel);
-		});
-		
-		// Remove all panel classes first
-		document.body.classList.remove('previewOpen', 'glitterOpen', 'layersOpen', 'imageOpen');
-		
-		// Add the new panel class
-		document.body.classList.add(`${panel}Open`);
-		
-		console.log('Mobile: Switched to panel:', panel, 'Body classes:', document.body.className);
-	}
 }
-
 
 
 
