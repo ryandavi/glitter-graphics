@@ -1633,12 +1633,19 @@ input[type=range]::-moz-range-thumb {
   padding-bottom: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
+.settings-group > .settings-row + .settings-group-title {
+  margin-top: var(--spacing-xl);
+}
 
 .settings-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-md);
+}
+.settings-row.disabled {
+  opacity: 0.4;
+  pointer-events: none;
 }
 .settings-row:last-child {
   margin-bottom: 0;

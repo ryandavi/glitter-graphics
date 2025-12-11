@@ -28,9 +28,13 @@ const CONFIG = {
 
 	// Export settings (defaults)
 	defaultExportQuality: 10,
-	defaultExportDither: 'FloydSteinberg',
+	defaultExportDitherEnabled: true,
+	defaultExportDitherType: 'FloydSteinberg',
 	defaultExportFrameDelay: 110,
 	defaultExportMaxFrames: 60,
+	defaultExportBaseImage: true,
+	defaultExportTransparency: true,
+	defaultExportMatteColor: '#ffffff',
 
 	shortcuts: {
 		tools: [
@@ -66,12 +70,12 @@ class GlitterEditor {
 		this.previewWrapper = document.getElementById('previewWrapper');
 		this.glitterBackgroundsContainer = document.getElementById('glitterBackgroundsContainer');
 
-        // --- ADD THESE LINES TO FIX STACKING ---
-        // Ensure the canvas is the base layer and glitter sits on top
-        this.previewCanvas.style.zIndex = '1'; 
-        this.glitterBackgroundsContainer.style.zIndex = '10';
-        this.glitterBackgroundsContainer.style.pointerEvents = 'none'; // Allows clicking through to canvas
-        // ---------------------------------------
+		// --- ADD THESE LINES TO FIX STACKING ---
+		// Ensure the canvas is the base layer and glitter sits on top
+		this.previewCanvas.style.zIndex = '1';
+		this.glitterBackgroundsContainer.style.zIndex = '10';
+		this.glitterBackgroundsContainer.style.pointerEvents = 'none'; // Allows clicking through to canvas
+		// ---------------------------------------
 
 		this.originalCtx = this.originalCanvas.getContext('2d', { willReadFrequently: true });
 		this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
@@ -90,12 +94,17 @@ class GlitterEditor {
 
 
 		// Export settings
-		this.exportSettings = {
-			quality: CONFIG.defaultExportQuality,
-			dither: CONFIG.defaultExportDither,
-			frameDelay: CONFIG.defaultExportFrameDelay,
-			maxFrames: CONFIG.defaultExportMaxFrames
-		};
+this.exportSettings = {
+	quality: CONFIG.defaultExportQuality,
+	ditherEnabled: CONFIG.defaultExportDitherEnabled,
+	ditherType: CONFIG.defaultExportDitherType,
+	frameDelay: CONFIG.defaultExportFrameDelay,
+	maxFrames: CONFIG.defaultExportMaxFrames,
+	baseImage: CONFIG.defaultExportBaseImage,
+	transparency: CONFIG.defaultExportTransparency,
+	matteColor: CONFIG.defaultExportMatteColor
+};
+
 		this.exportStartTime = 0;
 		this.exportCancelled = false;
 
@@ -159,18 +168,55 @@ class GlitterEditor {
 		this.initializeExportSettings();
 	}
 
-	initializeExportSettings() {
-		// Set export settings UI to match CONFIG defaults
-		const qualitySelect = document.getElementById('exportQuality');
-		const ditherSelect = document.getElementById('exportDither');
-		const delaySelect = document.getElementById('exportFrameDelay');
-		const maxFramesSelect = document.getElementById('exportMaxFrames');
+initializeExportSettings() {
+	// Set export settings UI to match CONFIG defaults
+	const qualitySelect = document.getElementById('exportQuality');
+	const ditherEnabledCheckbox = document.getElementById('exportDitherEnabled');
+	const ditherTypeSelect = document.getElementById('exportDitherType');
+	const ditherTypeRow = document.getElementById('ditherTypeRow');
+	const baseImageCheckbox = document.getElementById('exportBaseImage');
+	const transparencyCheckbox = document.getElementById('exportTransparency');
+	const matteColor = document.getElementById('exportMatteColor');
+	const matteColorRow = document.getElementById('matteColorRow');
+	const delaySelect = document.getElementById('exportFrameDelay');
+	const maxFramesSelect = document.getElementById('exportMaxFrames');
 
-		if (qualitySelect) qualitySelect.value = CONFIG.defaultExportQuality;
-		if (ditherSelect) ditherSelect.value = CONFIG.defaultExportDither;
-		if (delaySelect) delaySelect.value = CONFIG.defaultExportFrameDelay;
-		if (maxFramesSelect) maxFramesSelect.value = CONFIG.defaultExportMaxFrames;
+	if (qualitySelect) qualitySelect.value = CONFIG.defaultExportQuality;
+	if (ditherEnabledCheckbox) ditherEnabledCheckbox.checked = CONFIG.defaultExportDitherEnabled;
+	if (ditherTypeSelect) ditherTypeSelect.value = CONFIG.defaultExportDitherType;
+	if (baseImageCheckbox) baseImageCheckbox.checked = CONFIG.defaultExportBaseImage;
+	if (transparencyCheckbox) transparencyCheckbox.checked = CONFIG.defaultExportTransparency;
+	if (matteColor) matteColor.value = CONFIG.defaultExportMatteColor;
+	if (delaySelect) delaySelect.value = CONFIG.defaultExportFrameDelay;
+	if (maxFramesSelect) maxFramesSelect.value = CONFIG.defaultExportMaxFrames;
+	
+	// Show/hide dither type dropdown based on enabled checkbox
+	const updateDitherTypeVisibility = () => {
+		if (ditherTypeRow) {
+			ditherTypeRow.classList.toggle('disabled', !ditherEnabledCheckbox.checked);
+		}
+	};
+	
+	if (ditherEnabledCheckbox) {
+		ditherEnabledCheckbox.addEventListener('change', updateDitherTypeVisibility);
+		updateDitherTypeVisibility();
 	}
+	
+	// Show/hide matte color based on transparency checkbox
+	const updateMatteColorVisibility = () => {
+		if (matteColorRow && transparencyCheckbox) {
+			// Show matte when transparency is disabled
+			matteColorRow.classList.toggle('disabled', transparencyCheckbox.checked);
+		}
+	};
+	
+	if (transparencyCheckbox) {
+		transparencyCheckbox.addEventListener('change', updateMatteColorVisibility);
+	}
+	
+	// Initial visibility states
+	updateMatteColorVisibility();
+}
 
 	// ===== RANDOMIZE GLITTER =====
 
@@ -741,40 +787,40 @@ class GlitterEditor {
 		this.updatePreview();
 	}
 
-goToGlitter(layerId) {
-	const layer = this.layers.find(l => l.id === layerId);
-	if (!layer) return;
-	
-	const glitterIndex = layer.selectedGlitterIndex;
-	
-	// On mobile, open the glitter drawer first
-	if (window.innerWidth <= 800 && this.mobileManager) {
-		this.mobileManager.toggleDrawer('glitter');
-	}
-	
-	// Scroll to the glitter option
-	this.scrollToGlitter(glitterIndex);
-}
+	goToGlitter(layerId) {
+		const layer = this.layers.find(l => l.id === layerId);
+		if (!layer) return;
 
-scrollToGlitter(glitterIndex) {
-	const glitterOption = document.querySelector(`.glitter-option[data-index="${glitterIndex}"]`);
-	if (!glitterOption) return;
-	
-	const glitterOptions = document.querySelector('.glitter-options');
-	if (!glitterOptions) return;
-	
-	// Scroll the glitter option into view
-	glitterOption.scrollIntoView({
-		behavior: 'smooth',
-		block: 'center'
-	});
-	
-	// Brief highlight effect
-	glitterOption.classList.add('highlight');
-	setTimeout(() => {
-		glitterOption.classList.remove('highlight');
-	}, 1000);
-}
+		const glitterIndex = layer.selectedGlitterIndex;
+
+		// On mobile, open the glitter drawer first
+		if (window.innerWidth <= 800 && this.mobileManager) {
+			this.mobileManager.toggleDrawer('glitter');
+		}
+
+		// Scroll to the glitter option
+		this.scrollToGlitter(glitterIndex);
+	}
+
+	scrollToGlitter(glitterIndex) {
+		const glitterOption = document.querySelector(`.glitter-option[data-index="${glitterIndex}"]`);
+		if (!glitterOption) return;
+
+		const glitterOptions = document.querySelector('.glitter-options');
+		if (!glitterOptions) return;
+
+		// Scroll the glitter option into view
+		glitterOption.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center'
+		});
+
+		// Brief highlight effect
+		glitterOption.classList.add('highlight');
+		setTimeout(() => {
+			glitterOption.classList.remove('highlight');
+		}, 1000);
+	}
 
 
 
@@ -923,9 +969,9 @@ scrollToGlitter(glitterIndex) {
 		}
 	}
 
-updateGlitterSelection() {
+	updateGlitterSelection() {
 		const layer = this.getActiveLayer();
-		
+
 		document.querySelectorAll('.glitter-option').forEach((opt) => {
 			// If layer exists, check index. If no layer (null), always false.
 			const isSelected = layer ? parseInt(opt.dataset.index) === layer.selectedGlitterIndex : false;
@@ -1518,14 +1564,14 @@ updateGlitterSelection() {
 			}
 		});
 
-// --- CANVAS INTERACTION ---
-this.previewWrapper.addEventListener('click', (e) => {
-	if (this.currentTool === 'colorPicker' || this.currentTool === 'select') {  // ADD 'select' here
-		this.handleCanvasClick(e);
-	} else if (this.currentTool === 'zoom') {
-		this.handleCanvasZoomClick(e);
-	}
-});
+		// --- CANVAS INTERACTION ---
+		this.previewWrapper.addEventListener('click', (e) => {
+			if (this.currentTool === 'colorPicker' || this.currentTool === 'select') {  // ADD 'select' here
+				this.handleCanvasClick(e);
+			} else if (this.currentTool === 'zoom') {
+				this.handleCanvasZoomClick(e);
+			}
+		});
 
 		// --- LAYER SETTINGS CONTROLS ---
 		['contiguous', 'invert'].forEach(id => {
@@ -1649,19 +1695,31 @@ this.previewWrapper.addEventListener('click', (e) => {
 		// --- EXPORT & GLOBAL ---
 		document.getElementById('exportGif').addEventListener('click', () => this.exportAnimatedGif());
 
-		// Export settings
-		document.getElementById('exportQuality').addEventListener('change', (e) => {
-			this.exportSettings.quality = parseInt(e.target.value);
-		});
-		document.getElementById('exportDither').addEventListener('change', (e) => {
-			this.exportSettings.dither = e.target.value === 'false' ? false : e.target.value;
-		});
-		document.getElementById('exportFrameDelay').addEventListener('change', (e) => {
-			this.exportSettings.frameDelay = parseInt(e.target.value);
-		});
-		document.getElementById('exportMaxFrames').addEventListener('change', (e) => {
-			this.exportSettings.maxFrames = parseInt(e.target.value);
-		});
+// Export settings
+document.getElementById('exportQuality').addEventListener('change', (e) => {
+	this.exportSettings.quality = parseInt(e.target.value);
+});
+document.getElementById('exportDitherEnabled').addEventListener('change', (e) => {
+	this.exportSettings.ditherEnabled = e.target.checked;
+});
+document.getElementById('exportDitherType').addEventListener('change', (e) => {
+	this.exportSettings.ditherType = e.target.value;
+});
+document.getElementById('exportBaseImage').addEventListener('change', (e) => {
+	this.exportSettings.baseImage = e.target.checked;
+});
+document.getElementById('exportTransparency').addEventListener('change', (e) => {
+	this.exportSettings.transparency = e.target.checked;
+});
+document.getElementById('exportMatteColor').addEventListener('change', (e) => {
+	this.exportSettings.matteColor = e.target.value;
+});
+document.getElementById('exportFrameDelay').addEventListener('change', (e) => {
+	this.exportSettings.frameDelay = parseInt(e.target.value);
+});
+document.getElementById('exportMaxFrames').addEventListener('change', (e) => {
+	this.exportSettings.maxFrames = parseInt(e.target.value);
+});
 
 		// Export progress cancel
 		document.getElementById('exportProgressCancel').addEventListener('click', () => {
@@ -1679,7 +1737,7 @@ this.previewWrapper.addEventListener('click', (e) => {
 		// --- TOUCH GESTURES ---
 		this.setupTouchGestures();  // ADD THIS at the end
 
-		
+
 	}
 
 	handleWindowResize() {
@@ -2412,149 +2470,149 @@ this.previewWrapper.addEventListener('click', (e) => {
 		});
 	}
 
-handleCanvasClick(event) {
-	if (!this.originalImageData) return;
-	
-	const rect = this.previewCanvas.getBoundingClientRect();
-	const clickX = event.clientX - rect.left;
-	const clickY = event.clientY - rect.top;
-	
-	const scaleX = this.previewCanvas.width / rect.width;
-	const scaleY = this.previewCanvas.height / rect.height;
-	
-	const x = Math.floor(clickX * scaleX);
-	const y = Math.floor(clickY * scaleY);
-	
-	if (x < 0 || x >= this.previewCanvas.width || y < 0 || y >= this.previewCanvas.height) {
-		return;
-	}
-	
-	// Select Tool: Pick layer at click location
-	if (this.currentTool === 'select') {
-		this.handleLayerPick(x, y);
-		return;
-	}
-	
-	// Color Picker Tool
-// Color Picker Tool
-if (this.currentTool === 'colorPicker') {
-	let layer = this.getActiveLayer();
-	
-	// If no active layer, find an empty one or create new
-	if (!layer) {
-		// Try to find a layer with no selections
-		const emptyLayer = this.layers.find(l => !l.selections || l.selections.length === 0);
-		
-		if (emptyLayer) {
-			// Reuse empty layer
-			this.setActiveLayer(emptyLayer.id);
-			layer = emptyLayer;
-			this.updateStatus('Selected empty layer');
-		} else {
-			// All layers have selections - create a new one
-			const newLayer = this.createLayer();
-			this.layers.push(newLayer);
-			this.setActiveLayer(newLayer.id);
+	handleCanvasClick(event) {
+		if (!this.originalImageData) return;
+
+		const rect = this.previewCanvas.getBoundingClientRect();
+		const clickX = event.clientX - rect.left;
+		const clickY = event.clientY - rect.top;
+
+		const scaleX = this.previewCanvas.width / rect.width;
+		const scaleY = this.previewCanvas.height / rect.height;
+
+		const x = Math.floor(clickX * scaleX);
+		const y = Math.floor(clickY * scaleY);
+
+		if (x < 0 || x >= this.previewCanvas.width || y < 0 || y >= this.previewCanvas.height) {
+			return;
+		}
+
+		// Select Tool: Pick layer at click location
+		if (this.currentTool === 'select') {
+			this.handleLayerPick(x, y);
+			return;
+		}
+
+		// Color Picker Tool
+		// Color Picker Tool
+		if (this.currentTool === 'colorPicker') {
+			let layer = this.getActiveLayer();
+
+			// If no active layer, find an empty one or create new
+			if (!layer) {
+				// Try to find a layer with no selections
+				const emptyLayer = this.layers.find(l => !l.selections || l.selections.length === 0);
+
+				if (emptyLayer) {
+					// Reuse empty layer
+					this.setActiveLayer(emptyLayer.id);
+					layer = emptyLayer;
+					this.updateStatus('Selected empty layer');
+				} else {
+					// All layers have selections - create a new one
+					const newLayer = this.createLayer();
+					this.layers.push(newLayer);
+					this.setActiveLayer(newLayer.id);
+					this.renderLayersList();
+					layer = newLayer;
+					this.updateStatus('Created new layer');
+				}
+			}
+
+			const pixelIndex = y * this.originalCanvas.width + x;
+			const alpha = this.originalAlphaChannel[pixelIndex];
+
+			if (alpha < CONFIG.alphaThreshold) {
+				this.updateStatus('Cannot select transparent pixels');
+				return;
+			}
+
+			const i = pixelIndex * 4;
+			const r = this.originalImageData.data[i];
+			const g = this.originalImageData.data[i + 1];
+			const b = this.originalImageData.data[i + 2];
+
+			const multiSelect = layer.settings.multiSelect;
+			if (!multiSelect) layer.selections = [];
+
+			layer.selections.push({ r, g, b, x, y });
 			this.renderLayersList();
-			layer = newLayer;
-			this.updateStatus('Created new layer');
+			this.saveState();
+			this.updatePreview();
+			this.updateActionButtons();
+			this.updateSelectedColorsDisplay();
+
+			this.updateStatus(`Selected RGB(${r}, ${g}, ${b}) at (${x}, ${y})`);
 		}
 	}
-	
-	const pixelIndex = y * this.originalCanvas.width + x;
-	const alpha = this.originalAlphaChannel[pixelIndex];
-		
-		if (alpha < CONFIG.alphaThreshold) {
-			this.updateStatus('Cannot select transparent pixels');
-			return;
+
+	handleLayerPick(x, y) {
+		// Check layers from top to bottom (end to start of array)
+		for (let i = this.layers.length - 1; i >= 0; i--) {
+			const layer = this.layers[i];
+
+			// Skip invisible layers
+			if (!layer.visible) continue;
+
+			// Skip layers without selections
+			if (!layer.selections || layer.selections.length === 0) continue;
+
+			// Check if this pixel is covered by this layer's selection
+			if (this.isPixelInLayerSelection(layer, x, y)) {
+				this.setActiveLayer(layer.id);
+				const glitterName = this.glitterGifs[layer.selectedGlitterIndex]?.name || 'Layer';
+				this.updateStatus(`Selected: ${glitterName}`);
+
+				// Brief visual feedback
+				const flash = document.createElement('div');
+				flash.className = 'layer-pick-flash';
+				flash.style.left = (x / this.previewCanvas.width * 100) + '%';
+				flash.style.top = (y / this.previewCanvas.height * 100) + '%';
+				this.previewWrapper.appendChild(flash);
+				setTimeout(() => flash.remove(), 300);
+
+				return;
+			}
 		}
-		
+
+		// Nothing clicked - deselect
+		this.setActiveLayer(null);
+		this.updateStatus('No layer at this location');
+	}
+
+	isPixelInLayerSelection(layer, x, y) {
+		const pixelIndex = y * this.originalCanvas.width + x;
 		const i = pixelIndex * 4;
-		const r = this.originalImageData.data[i];
-		const g = this.originalImageData.data[i + 1];
-		const b = this.originalImageData.data[i + 2];
-		
-		const multiSelect = layer.settings.multiSelect;
-		if (!multiSelect) layer.selections = [];
-		
-		layer.selections.push({ r, g, b, x, y });
-		this.renderLayersList();
-		this.saveState();
-		this.updatePreview();
-		this.updateActionButtons();
-		this.updateSelectedColorsDisplay();
-		
-		this.updateStatus(`Selected RGB(${r}, ${g}, ${b}) at (${x}, ${y})`);
-	}
-}
 
-handleLayerPick(x, y) {
-	// Check layers from top to bottom (end to start of array)
-	for (let i = this.layers.length - 1; i >= 0; i--) {
-		const layer = this.layers[i];
-		
-		// Skip invisible layers
-		if (!layer.visible) continue;
-		
-		// Skip layers without selections
-		if (!layer.selections || layer.selections.length === 0) continue;
-		
-		// Check if this pixel is covered by this layer's selection
-		if (this.isPixelInLayerSelection(layer, x, y)) {
-			this.setActiveLayer(layer.id);
-			const glitterName = this.glitterGifs[layer.selectedGlitterIndex]?.name || 'Layer';
-			this.updateStatus(`Selected: ${glitterName}`);
-			
-			// Brief visual feedback
-			const flash = document.createElement('div');
-			flash.className = 'layer-pick-flash';
-			flash.style.left = (x / this.previewCanvas.width * 100) + '%';
-			flash.style.top = (y / this.previewCanvas.height * 100) + '%';
-			this.previewWrapper.appendChild(flash);
-			setTimeout(() => flash.remove(), 300);
-			
-			return;
+		const pixelR = this.originalImageData.data[i];
+		const pixelG = this.originalImageData.data[i + 1];
+		const pixelB = this.originalImageData.data[i + 2];
+		const pixelAlpha = this.originalAlphaChannel[pixelIndex];
+
+		// Check if pixel is transparent
+		if (pixelAlpha < CONFIG.alphaThreshold) {
+			return false;
 		}
-	}
-	
-	// Nothing clicked - deselect
-	this.setActiveLayer(null);
-	this.updateStatus('No layer at this location');
-}
 
-isPixelInLayerSelection(layer, x, y) {
-	const pixelIndex = y * this.originalCanvas.width + x;
-	const i = pixelIndex * 4;
-	
-	const pixelR = this.originalImageData.data[i];
-	const pixelG = this.originalImageData.data[i + 1];
-	const pixelB = this.originalImageData.data[i + 2];
-	const pixelAlpha = this.originalAlphaChannel[pixelIndex];
-	
-	// Check if pixel is transparent
-	if (pixelAlpha < CONFIG.alphaThreshold) {
+		// Check if pixel matches any of this layer's color selections
+		const threshold = layer.settings.threshold;
+		const invert = layer.settings.invert;
+
+		for (const sel of layer.selections) {
+			const distance = Math.sqrt(
+				Math.pow(pixelR - sel.r, 2) +
+				Math.pow(pixelG - sel.g, 2) +
+				Math.pow(pixelB - sel.b, 2)
+			);
+
+			const matches = distance <= threshold;
+			if (invert ? !matches : matches) {
+				return true;
+			}
+		}
+
 		return false;
 	}
-	
-	// Check if pixel matches any of this layer's color selections
-	const threshold = layer.settings.threshold;
-	const invert = layer.settings.invert;
-	
-	for (const sel of layer.selections) {
-		const distance = Math.sqrt(
-			Math.pow(pixelR - sel.r, 2) +
-			Math.pow(pixelG - sel.g, 2) +
-			Math.pow(pixelB - sel.b, 2)
-		);
-		
-		const matches = distance <= threshold;
-		if (invert ? !matches : matches) {
-			return true;
-		}
-	}
-	
-	return false;
-}
 
 	updateSelectedColorsDisplay() {
 		const container = document.getElementById('selectedColorsDisplay');
@@ -2639,7 +2697,7 @@ isPixelInLayerSelection(layer, x, y) {
 		this.renderGlitterBackgrounds(layersToShow);
 		this.updatePreviewScale();
 	}
-	
+
 
 	/*
 
@@ -2678,7 +2736,7 @@ isPixelInLayerSelection(layer, x, y) {
 
 		*/
 
-renderPreviewCanvas(layersToShow) {
+	renderPreviewCanvas(layersToShow) {
 		// Just draw the original image. The glitter sits on top as a DOM element.
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 		this.previewCtx.putImageData(this.originalImageData, 0, 0);
@@ -2735,16 +2793,16 @@ renderPreviewCanvas(layersToShow) {
 			bg.dataset.layerId = layer.id;
 			bg.style.backgroundImage = `url(${glitter.url})`;
 
-bg.style.width = width + 'px';
+			bg.style.width = width + 'px';
 			bg.style.height = height + 'px';
 			bg.style.position = 'absolute';
 			bg.style.top = '0';
 			bg.style.left = '0';
-			
+
 			// --- CHANGED: Increase Z-Index to ensure it sits over the canvas ---
-			bg.style.zIndex = '100'; 
+			bg.style.zIndex = '100';
 			// -------------------------------------------------------------------
-			
+
 			bg.style.pointerEvents = 'none';
 
 			// --- ADDED: Apply Opacity here so transparent glitters fade correctly ---
@@ -2910,15 +2968,24 @@ bg.style.width = width + 'px';
 		this.showExportProgress();
 
 		// Read current settings from DOM
-		const qualityInput = document.getElementById('exportQuality');
-		const ditherInput = document.getElementById('exportDither');
-		const delayInput = document.getElementById('exportFrameDelay');
-		const maxFramesInput = document.getElementById('exportMaxFrames');
+// Read current settings from DOM
+const qualityInput = document.getElementById('exportQuality');
+const ditherEnabledInput = document.getElementById('exportDitherEnabled');
+const ditherTypeInput = document.getElementById('exportDitherType');
+const baseImageInput = document.getElementById('exportBaseImage');
+const transparencyInput = document.getElementById('exportTransparency');
+const matteColorInput = document.getElementById('exportMatteColor');
+const delayInput = document.getElementById('exportFrameDelay');
+const maxFramesInput = document.getElementById('exportMaxFrames');
 
-		this.exportSettings.quality = qualityInput ? parseInt(qualityInput.value) : CONFIG.defaultExportQuality;
-		this.exportSettings.dither = ditherInput ? (ditherInput.value === 'false' ? false : ditherInput.value) : CONFIG.defaultExportDither;
-		this.exportSettings.frameDelay = delayInput ? parseInt(delayInput.value) : CONFIG.defaultExportFrameDelay;
-		this.exportSettings.maxFrames = maxFramesInput ? parseInt(maxFramesInput.value) : CONFIG.defaultExportMaxFrames;
+this.exportSettings.quality = qualityInput ? parseInt(qualityInput.value) : CONFIG.defaultExportQuality;
+this.exportSettings.ditherEnabled = ditherEnabledInput ? ditherEnabledInput.checked : CONFIG.defaultExportDitherEnabled;
+this.exportSettings.ditherType = ditherTypeInput ? ditherTypeInput.value : CONFIG.defaultExportDitherType;
+this.exportSettings.frameDelay = delayInput ? parseInt(delayInput.value) : CONFIG.defaultExportFrameDelay;
+this.exportSettings.maxFrames = maxFramesInput ? parseInt(maxFramesInput.value) : CONFIG.defaultExportMaxFrames;
+this.exportSettings.baseImage = baseImageInput ? baseImageInput.checked : CONFIG.defaultExportBaseImage;
+this.exportSettings.transparency = transparencyInput ? transparencyInput.checked : CONFIG.defaultExportTransparency;
+this.exportSettings.matteColor = matteColorInput ? matteColorInput.value : CONFIG.defaultExportMatteColor;
 
 		console.log('Export settings:', this.exportSettings);
 
@@ -3036,18 +3103,21 @@ class GifExporter {
 		callbacks.onProgress(5, 'Processing frames...', 0, 0);
 		this._deoptimizeGlitterFrames(visibleLayers, glitterGifs);
 
-		// 3. CHECK FOR TRANSPARENCY
-		const hasTransparency = this._hasTransparency(canvasData);
-		console.log(`[GifExporter] Image has transparency: ${hasTransparency}`);
+// 3. CHECK FOR TRANSPARENCY
+const hasTransparency = this._hasTransparency(canvasData);
+console.log(`[GifExporter] Image has transparency: ${hasTransparency}`);
 
-		// Only find a safe key if we actually need transparency
-		const safeKey = hasTransparency
-			? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData)
-			: null;
+// Need a safe key if EITHER the image has transparency OR we're exporting glitter-only
+const needsSafeKey = hasTransparency || !exportSettings.baseImage;
 
-		if (safeKey) {
-			console.log(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
-		}
+// Only find a safe key if we actually need transparency
+const safeKey = needsSafeKey
+	? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData)
+	: null;
+
+if (safeKey) {
+	console.log(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
+}
 
 		// 4. Synchronization
 		const totalFrames = this._calculateTotalFrames(visibleLayers, glitterGifs, exportSettings.maxFrames);
@@ -3066,35 +3136,40 @@ class GifExporter {
 			maskCanvases.set(layer.id, maskCanvas);
 		});
 
-		// 6. Setup Encoder
-		// 6. Setup Encoder
-		const gifOptions = {
-			workers: this.config.workers,
-			quality: exportSettings.quality,
-			width: canvasData.width,
-			height: canvasData.height,
-			workerScript: this.config.workerScript,
-			dither: false
-		};
+// 6. Setup Encoder
+// Disable dithering when we need transparency (either from original image or from no base image)
+const needsTransparency = (hasTransparency && exportSettings.transparency) || (!exportSettings.baseImage && exportSettings.transparency);
 
-		// ONLY enable transparency if the original image has transparent pixels
-		if (hasTransparency && safeKey) {
-			gifOptions.transparent = safeKey.hex;
-			gifOptions.background = null;
-			console.log('[GifExporter] Transparency enabled with key:', safeKey.hex);
-		} else {
-			console.log('[GifExporter] No transparency - all pixels will be opaque');
-		}
+const gifOptions = {
+	workers: this.config.workers,
+	quality: exportSettings.quality,
+	width: canvasData.width,
+	height: canvasData.height,
+	workerScript: this.config.workerScript,
+	// CRITICAL: Disable dithering when using transparency to avoid artifacts
+	dither: needsTransparency 
+		? false 
+		: (exportSettings.ditherEnabled ? exportSettings.ditherType : false)
+};
 
-		const gif = new GIF(gifOptions);
+// Enable transparency if user wants it and we have a safe key
+if (needsTransparency && safeKey) {
+	gifOptions.transparent = safeKey.hex;
+	gifOptions.background = null;
+	console.log('[GifExporter] Transparency enabled with key:', safeKey.hex);
+} else {
+	console.log('[GifExporter] No transparency - all pixels will be opaque');
+}
+
+const gif = new GIF(gifOptions);
 
 		// 7. Render Loop
 		this.canvas.width = canvasData.width;
 		this.canvas.height = canvasData.height;
 
 		for (let f = 0; f < totalFrames; f++) {
-			// Pass the safeKey to the render function
-			const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey);
+			// Pass export settings to the render function
+const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey, exportSettings);
 			gif.addFrame(frameData, { delay: exportSettings.frameDelay, copy: true });
 
 			const progressPercent = 10 + Math.floor((f / totalFrames) * 65);
@@ -3212,92 +3287,165 @@ class GifExporter {
 		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
 	}
 
-	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey) {
-		const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
-		const ctx = this.ctx;
-		const hCtx = this.helperCtx;
+_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings) {
+	const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
+	const ctx = this.ctx;
+	const hCtx = this.helperCtx;
 
-		// A. Clear and Draw Background Image
-		ctx.clearRect(0, 0, width, height);
+	// A. Clear canvas
+	ctx.clearRect(0, 0, width, height);
+	
+	// B. Draw Background Image (if enabled)
+	if (exportSettings.baseImage) {
 		const bgImage = new ImageData(originalData, width, height);
 		ctx.putImageData(bgImage, 0, 0);
+	}
 
-		// B. Composite Layers
-		layers.forEach(layer => {
-			const maskCanvas = maskCanvases.get(layer.id);
-			if (!maskCanvas) return;
+	// C. Composite Glitter Layers
+	layers.forEach(layer => {
+		const maskCanvas = maskCanvases.get(layer.id);
+		if (!maskCanvas) return;
 
-			const glitter = library[layer.selectedGlitterIndex];
-			const frames = glitter.frames.frames;
-			const fIdx = frameIndex % frames.length;
-			const glitterFrame = frames[fIdx];
+		const glitter = library[layer.selectedGlitterIndex];
+		const frames = glitter.frames.frames;
+		const fIdx = frameIndex % frames.length;
+		const glitterFrame = frames[fIdx];
 
-			// 1. Pattern Fill
-			hCtx.clearRect(0, 0, width, height);
+		// 1. Pattern Fill
+		hCtx.clearRect(0, 0, width, height);
 
-			const patternSource = document.createElement('canvas');
-			patternSource.width = glitterFrame.width;
-			patternSource.height = glitterFrame.height;
-			patternSource.getContext('2d').putImageData(glitterFrame.data, 0, 0);
+		const patternSource = document.createElement('canvas');
+		patternSource.width = glitterFrame.width;
+		patternSource.height = glitterFrame.height;
+		patternSource.getContext('2d').putImageData(glitterFrame.data, 0, 0);
 
-			const pattern = hCtx.createPattern(patternSource, 'repeat');
-			const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-			const matrix = new DOMMatrix();
-			matrix.scaleSelf(scale, scale);
-			pattern.setTransform(matrix);
+		const pattern = hCtx.createPattern(patternSource, 'repeat');
+		const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+		const matrix = new DOMMatrix();
+		matrix.scaleSelf(scale, scale);
+		pattern.setTransform(matrix);
 
-			hCtx.globalAlpha = layer.settings.opacity / 100;
-			hCtx.fillStyle = pattern;
-			hCtx.fillRect(0, 0, width, height);
+		hCtx.globalAlpha = layer.settings.opacity / 100;
+		hCtx.fillStyle = pattern;
+		hCtx.fillRect(0, 0, width, height);
 
-			// 2. Apply Mask
-			hCtx.globalCompositeOperation = 'destination-in';
-			hCtx.globalAlpha = 1.0;
-			hCtx.drawImage(maskCanvas, 0, 0);
-			hCtx.globalCompositeOperation = 'source-over';
+		// 2. Apply Mask
+		hCtx.globalCompositeOperation = 'destination-in';
+		hCtx.globalAlpha = 1.0;
+		hCtx.drawImage(maskCanvas, 0, 0);
+		hCtx.globalCompositeOperation = 'source-over';
 
-			// 3. Draw to Main
-			ctx.drawImage(this.helperCanvas, 0, 0);
-		});
+		// 3. Draw to Main
+		ctx.drawImage(this.helperCanvas, 0, 0);
+	});
 
-		// C. APPLY TRANSPARENCY & PROTECT COLORS
-		const output = ctx.getImageData(0, 0, width, height);
-		const data = output.data;
-		const len = data.length;
+// D. APPLY TRANSPARENCY OR MATTE COLOR
+const output = ctx.getImageData(0, 0, width, height);
+const data = output.data;
+const len = data.length;
 
-		// Only process transparency if image has transparent pixels
-		if (safeKey) {
-			const { r: keyR, g: keyG, b: keyB } = safeKey;
+// Determine if we're applying transparency vs matte
+const shouldApplyTransparency = exportSettings.transparency && safeKey;
+const shouldApplyMatte = !exportSettings.transparency && safeKey;
 
-			for (let i = 0; i < len; i += 4) {
-				const pixelIndex = i / 4;
+if (shouldApplyTransparency) {
+	// TRANSPARENCY LOGIC
+	const { r: keyR, g: keyG, b: keyB } = safeKey;
 
-				// 1. IS THIS PIXEL TRANSPARENT IN THE ORIGINAL IMAGE?
-				if (originalAlpha[pixelIndex] < alphaThreshold) {
-					// FORCE TRANSPARENT: Fill with Safe Key Color
-					data[i] = keyR;
-					data[i + 1] = keyG;
-					data[i + 2] = keyB;
-					data[i + 3] = 255;
-				}
-				// 2. THIS IS A VISIBLE PIXEL (IMAGE OR GLITTER)
-				else {
-					// CONFLICT CHECK
-					if (data[i] === keyR && data[i + 1] === keyG && data[i + 2] === keyB) {
-						data[i + 1] = (keyG === 255) ? 254 : keyG + 1;
-					}
-					data[i + 3] = 255;
-				}
-			}
+	for (let i = 0; i < len; i += 4) {
+		const pixelIndex = i / 4;
+		const currentAlpha = data[i + 3];
+
+		// Determine if this pixel should be transparent
+		let shouldBeTransparent = false;
+		
+		if (!exportSettings.baseImage) {
+			// No base image: make all non-glitter pixels transparent
+			shouldBeTransparent = (currentAlpha === 0);
 		} else {
-			// No transparency needed - just ensure all pixels are opaque
-			for (let i = 3; i < len; i += 4) {
-				data[i] = 255; // Force alpha to 255
-			}
+			// With base image: only make originally transparent pixels transparent
+			shouldBeTransparent = (originalAlpha[pixelIndex] < alphaThreshold);
 		}
 
-		return output;
+		if (shouldBeTransparent) {
+			// FORCE TRANSPARENT: Fill with Safe Key Color
+			data[i] = keyR;
+			data[i + 1] = keyG;
+			data[i + 2] = keyB;
+			data[i + 3] = 255;
+		} else {
+			// CONFLICT CHECK for visible pixels
+			if (data[i] === keyR && data[i + 1] === keyG && data[i + 2] === keyB) {
+				data[i + 1] = (keyG === 255) ? 254 : keyG + 1;
+			}
+			data[i + 3] = 255;
+		}
 	}
+} else if (shouldApplyMatte) {
+	// APPLY MATTE COLOR TO TRANSPARENT AREAS
+	const matteColor = this._parseHexColor(exportSettings.matteColor);
+	
+	for (let i = 0; i < len; i += 4) {
+		const pixelIndex = i / 4;
+		const currentAlpha = data[i + 3];
+		
+		// Determine if this pixel needs matte
+		let needsMatte = false;
+		
+		if (!exportSettings.baseImage) {
+			// No base image: apply matte to all non-glitter pixels
+			needsMatte = (currentAlpha === 0);
+		} else {
+			// With base image: only apply matte to originally transparent pixels
+			needsMatte = (originalAlpha[pixelIndex] < alphaThreshold);
+		}
+		
+		if (needsMatte) {
+			if (currentAlpha === 0) {
+				// Fully transparent - fill with matte
+				data[i] = matteColor.r;
+				data[i + 1] = matteColor.g;
+				data[i + 2] = matteColor.b;
+				data[i + 3] = 255;
+			} else if (currentAlpha < 255) {
+				// Semi-transparent - composite over matte
+				const alpha = currentAlpha / 255;
+				data[i] = Math.round(data[i] * alpha + matteColor.r * (1 - alpha));
+				data[i + 1] = Math.round(data[i + 1] * alpha + matteColor.g * (1 - alpha));
+				data[i + 2] = Math.round(data[i + 2] * alpha + matteColor.b * (1 - alpha));
+				data[i + 3] = 255;
+			} else {
+				data[i + 3] = 255;
+			}
+		} else {
+			// Original image pixel was opaque, keep as-is
+			data[i + 3] = 255;
+		}
+	}
+} else {
+	// No transparency needed - just ensure all pixels are opaque
+	for (let i = 3; i < len; i += 4) {
+		data[i] = 255;
+	}
+}
+
+return output;
+}
+
+_parseHexColor(hex) {
+	// Remove # if present
+	hex = hex.replace('#', '');
+	
+	// Parse hex to RGB
+	const r = parseInt(hex.substring(0, 2), 16);
+	const g = parseInt(hex.substring(2, 4), 16);
+	const b = parseInt(hex.substring(4, 6), 16);
+	
+	return { r, g, b };
+}
+
+
+
 
 	_createMaskCanvas(rawMaskData, width, height) {
 		const c = document.createElement('canvas');
@@ -3587,66 +3735,66 @@ class MobileManager {
 		this.setupImageEvents();
 	}
 
-init() {
-	console.log('Mobile: Initializing mobile manager');
-	this.createMobileControls();
-	this.createMobileSwatch();  // ADD THIS
-	this.setupEventListeners();
-	this.switchTab('image');
-	console.log('Mobile: Initialization complete, on image tab');
-}
-
-createMobileSwatch() {
-	// Check if already exists
-	if (document.querySelector('.mobile-swatch')) {
-		return;
+	init() {
+		console.log('Mobile: Initializing mobile manager');
+		this.createMobileControls();
+		this.createMobileSwatch();  // ADD THIS
+		this.setupEventListeners();
+		this.switchTab('image');
+		console.log('Mobile: Initialization complete, on image tab');
 	}
-	
-	const previewContainer = document.getElementById('previewContainer');
-	
-	const swatch = document.createElement('div');
-	swatch.className = 'mobile-swatch';
-	swatch.innerHTML = `
+
+	createMobileSwatch() {
+		// Check if already exists
+		if (document.querySelector('.mobile-swatch')) {
+			return;
+		}
+
+		const previewContainer = document.getElementById('previewContainer');
+
+		const swatch = document.createElement('div');
+		swatch.className = 'mobile-swatch';
+		swatch.innerHTML = `
 		<div class="mobile-swatch-icon"></div>
 		<div class="mobile-swatch-label">Glitter</div>
 	`;
-	
-	swatch.addEventListener('click', () => {
-		this.toggleDrawer('glitter');
-	});
-	
-	previewContainer.appendChild(swatch);
-	
-	// Initial update
-	this.updateMobileSwatch();
-}
 
-updateMobileSwatch() {
-	const swatch = document.querySelector('.mobile-swatch');
-	if (!swatch) return;
-	
-	const icon = swatch.querySelector('.mobile-swatch-icon');
-	const layer = this.editor.getActiveLayer();
-	
-	if (layer) {
-		const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
-		if (glitter) {
-			icon.style.backgroundImage = `url(${glitter.url})`;
-			if (glitter.isPixelated) {
-				icon.classList.add('pixelated');
+		swatch.addEventListener('click', () => {
+			this.toggleDrawer('glitter');
+		});
+
+		previewContainer.appendChild(swatch);
+
+		// Initial update
+		this.updateMobileSwatch();
+	}
+
+	updateMobileSwatch() {
+		const swatch = document.querySelector('.mobile-swatch');
+		if (!swatch) return;
+
+		const icon = swatch.querySelector('.mobile-swatch-icon');
+		const layer = this.editor.getActiveLayer();
+
+		if (layer) {
+			const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
+			if (glitter) {
+				icon.style.backgroundImage = `url(${glitter.url})`;
+				if (glitter.isPixelated) {
+					icon.classList.add('pixelated');
+				} else {
+					icon.classList.remove('pixelated');
+				}
+				swatch.classList.add('visible');  // CHANGED: add visible class
 			} else {
-				icon.classList.remove('pixelated');
+				icon.style.backgroundImage = '';
+				swatch.classList.remove('visible');  // CHANGED: remove visible class
 			}
-			swatch.classList.add('visible');  // CHANGED: add visible class
 		} else {
 			icon.style.backgroundImage = '';
 			swatch.classList.remove('visible');  // CHANGED: remove visible class
 		}
-	} else {
-		icon.style.backgroundImage = '';
-		swatch.classList.remove('visible');  // CHANGED: remove visible class
 	}
-}
 
 
 	createMobileControls() {
@@ -3731,12 +3879,12 @@ updateMobileSwatch() {
 			}
 		});
 
-	// ADD THIS:
-	window.addEventListener('layerChanged', () => {
-		if (this.isMobile) {
-			this.updateMobileSwatch();
-		}
-	});
+		// ADD THIS:
+		window.addEventListener('layerChanged', () => {
+			if (this.isMobile) {
+				this.updateMobileSwatch();
+			}
+		});
 
 
 	}
@@ -3815,23 +3963,23 @@ updateMobileSwatch() {
 		});
 	}
 
-cleanup() {
-	console.log('Mobile: Starting cleanup');
-	
-	// Remove mobile navigation
-	const topNav = document.querySelector('.mobile-top-nav');
-	const bottomNav = document.querySelector('.mobile-bottom-nav');
-	const swatch = document.querySelector('.mobile-swatch');  // ADD THIS
-	
-	if (topNav) topNav.remove();
-	if (bottomNav) bottomNav.remove();
-	if (swatch) swatch.remove();  // ADD THIS
-	
-	// Remove all mobile classes
-	document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
-	
-	console.log('Mobile: Cleanup complete, restored to desktop layout');
-}
+	cleanup() {
+		console.log('Mobile: Starting cleanup');
+
+		// Remove mobile navigation
+		const topNav = document.querySelector('.mobile-top-nav');
+		const bottomNav = document.querySelector('.mobile-bottom-nav');
+		const swatch = document.querySelector('.mobile-swatch');  // ADD THIS
+
+		if (topNav) topNav.remove();
+		if (bottomNav) bottomNav.remove();
+		if (swatch) swatch.remove();  // ADD THIS
+
+		// Remove all mobile classes
+		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
+
+		console.log('Mobile: Cleanup complete, restored to desktop layout');
+	}
 }
 
 

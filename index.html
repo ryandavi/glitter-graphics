@@ -174,7 +174,6 @@
 							<button class="btn-icon" id="filterToggleBtn" title="Toggle filters">🎨</button>
 						</div>
 						<div class="filters-container" id="filtersContainer">
-
 							<div class="filters-container-inner">
 								<div class="filter-section">
 									<div class="filter-label">Filter</div>
@@ -190,24 +189,24 @@
 									<div class="color-filter-chips">
 										<div class="filter-chip color-filter-chip" data-color="red" data-filter="color"
 											title="Red"></div>
-										<div class="filter-chip color-filter-chip" data-color="orange" data-filter="color"
-											title="Orange"></div>
-										<div class="filter-chip color-filter-chip" data-color="yellow" data-filter="color"
-											title="Yellow"></div>
-										<div class="filter-chip color-filter-chip" data-color="green" data-filter="color"
-											title="Green"></div>
+										<div class="filter-chip color-filter-chip" data-color="orange"
+											data-filter="color" title="Orange"></div>
+										<div class="filter-chip color-filter-chip" data-color="yellow"
+											data-filter="color" title="Yellow"></div>
+										<div class="filter-chip color-filter-chip" data-color="green"
+											data-filter="color" title="Green"></div>
 										<div class="filter-chip color-filter-chip" data-color="blue" data-filter="color"
 											title="Blue"></div>
-										<div class="filter-chip color-filter-chip" data-color="purple" data-filter="color"
-											title="Purple"></div>
+										<div class="filter-chip color-filter-chip" data-color="purple"
+											data-filter="color" title="Purple"></div>
 										<div class="filter-chip color-filter-chip" data-color="pink" data-filter="color"
 											title="Pink"></div>
-										<div class="filter-chip color-filter-chip" data-color="neutrals" data-filter="color"
-											title="Neutrals"></div>
+										<div class="filter-chip color-filter-chip" data-color="neutrals"
+											data-filter="color" title="Neutrals"></div>
 										<div class="filter-chip color-filter-chip" data-color="earth-tone"
 											data-filter="color" title="Earth Tone"></div>
-										<div class="filter-chip color-filter-chip" data-color="metal" data-filter="color"
-											title="Metal"></div>
+										<div class="filter-chip color-filter-chip" data-color="metal"
+											data-filter="color" title="Metal"></div>
 									</div>
 								</div>
 								<div class="filter-section">
@@ -215,12 +214,12 @@
 									<div class="filter-chips">
 										<div class="filter-chip text-filter-chip" data-color="light" data-filter="color"
 											title="Light">Light</div>
-										<div class="filter-chip text-filter-chip" data-color="midtone" data-filter="color"
-											title="Midtone">Midtone</div>
+										<div class="filter-chip text-filter-chip" data-color="midtone"
+											data-filter="color" title="Midtone">Midtone</div>
 										<div class="filter-chip text-filter-chip" data-color="dark" data-filter="color"
 											title="dark">Dark</div>
-										<div class="filter-chip text-filter-chip" data-color="pastel" data-filter="color"
-											title="Pastel">Pastel</div>
+										<div class="filter-chip text-filter-chip" data-color="pastel"
+											data-filter="color" title="Pastel">Pastel</div>
 										<div class="filter-chip text-filter-chip" data-color="neon" data-filter="color"
 											title="Neon">Neon</div>
 										<div class="filter-chip text-filter-chip" data-color="jewel" data-filter="color"
@@ -230,15 +229,14 @@
 								<div class="filter-section">
 									<div class="filter-label">Vibe</div>
 									<div class="filter-chips">
-										<div class="filter-chip text-filter-chip" data-color="pattern" data-filter="color"
-											title="Pattern">Pattern</div>
+										<div class="filter-chip text-filter-chip" data-color="pattern"
+											data-filter="color" title="Pattern">Pattern</div>
 										<div class="filter-chip text-filter-chip" data-color="multicolor"
 											data-filter="color" title="Multicolor">Multicolor</div>
 									</div>
 								</div>
 							</div>
 							<button class="btn-text" id="clearFiltersBtn" disabled>Clear all filters</button>
-
 						</div>
 					</div>
 					<div class="glitter-options" id="glitterOptions"></div>
@@ -349,7 +347,45 @@
 			</div>
 			<div class="modal-body">
 				<div class="settings-group">
-					<div class="settings-group-title">Export Settings</div>
+
+					<!-- Composition Group -->
+					<div class="settings-group-title">Composition</div>
+					<div class="settings-row">
+						<div class="settings-row-label">
+							<div class="settings-row-label-main">Base Image</div>
+							<div class="settings-row-label-desc">Include the base image in the export. When disabled,
+								only glitter layers are exported.</div>
+						</div>
+						<div class="settings-row-control">
+							<label class="checkbox-group-simple">
+								<input type="checkbox" id="exportBaseImage">
+							</label>
+						</div>
+					</div>
+					<div class="settings-row" id="transparencySettingsRow">
+						<div class="settings-row-label">
+							<div class="settings-row-label-main">Transparency</div>
+							<div class="settings-row-label-desc">Preserve transparent areas from the original image.
+								When disabled, transparent areas use the matte color.</div>
+						</div>
+						<div class="settings-row-control">
+							<label class="checkbox-group-simple">
+								<input type="checkbox" id="exportTransparency">
+							</label>
+						</div>
+					</div>
+					<div class="settings-row" id="matteColorRow">
+						<div class="settings-row-label">
+							<div class="settings-row-label-main">Matte Color</div>
+							<div class="settings-row-label-desc">Background color for transparent areas when
+								transparency is disabled.</div>
+						</div>
+						<div class="settings-row-control">
+							<input type="color" id="exportMatteColor" value="#ffffff">
+						</div>
+					</div>
+					<!-- Encoding Group -->
+					<div class="settings-group-title">Encoding</div>
 					<div class="settings-row">
 						<div class="settings-row-label">
 							<div class="settings-row-label-main">Quality</div>
@@ -370,11 +406,23 @@
 					<div class="settings-row">
 						<div class="settings-row-label">
 							<div class="settings-row-label-main">Dithering</div>
-							<div class="settings-row-label-desc">Floyd-Steinberg dithering reduces color banding in
-								gradients. Disable for sharper edges.</div>
+							<div class="settings-row-label-desc">Reduces color banding in gradients. Disable for sharper
+								edges.</div>
 						</div>
 						<div class="settings-row-control">
-							<select id="exportDither">
+							<label class="checkbox-group-simple">
+								<input type="checkbox" id="exportDitherEnabled">
+							</label>
+						</div>
+					</div>
+					<div class="settings-row" id="ditherTypeRow">
+						<div class="settings-row-label">
+							<div class="settings-row-label-main">Dithering Algorithm</div>
+							<div class="settings-row-label-desc">Different algorithms produce different visual results.
+							</div>
+						</div>
+						<div class="settings-row-control">
+							<select id="exportDitherType">
 								<option value="FloydSteinberg">Floyd-Steinberg</option>
 								<option value="FloydSteinberg-serpentine">Floyd-Steinberg Serpentine</option>
 								<option value="FalseFloydSteinberg">False Floyd-Steinberg</option>
@@ -383,15 +431,16 @@
 								<option value="Stucki-serpentine">Stucki Serpentine</option>
 								<option value="Atkinson">Atkinson</option>
 								<option value="Atkinson-serpentine">Atkinson Serpentine</option>
-								<option value="false">Disabled</option>
 							</select>
 						</div>
 					</div>
+					<!-- Animation Group -->
+					<div class="settings-group-title">Animation</div>
 					<div class="settings-row">
 						<div class="settings-row-label">
 							<div class="settings-row-label-main">Frame Delay</div>
 							<div class="settings-row-label-desc">Time between frames in milliseconds. Lower = faster
-								animation (default: 100ms).</div>
+								animation (default: 110ms).</div>
 						</div>
 						<div class="settings-row-control">
 							<select id="exportFrameDelay">
@@ -408,16 +457,17 @@
 					<div class="settings-row">
 						<div class="settings-row-label">
 							<div class="settings-row-label-main">Max Frames</div>
-							<div class="settings-row-label-desc">Maximum frames to export. Lower values = smaller file
-								size but shorter loop.</div>
+							<div class="settings-row-label-desc">Maximum frames to export. Higher = longer animation but
+								larger file size.</div>
 						</div>
 						<div class="settings-row-control">
 							<select id="exportMaxFrames">
+								<option value="20">20 frames</option>
 								<option value="30">30 frames</option>
+								<option value="40">40 frames</option>
 								<option value="60">60 frames</option>
-								<option value="90">90 frames</option>
-								<option value="120">120 frames</option>
-								<option value="999">Unlimited</option>
+								<option value="80">80 frames</option>
+								<option value="100">100 frames</option>
 							</select>
 						</div>
 					</div>
@@ -525,45 +575,100 @@
 				</ul>
 				<p>And for the record, we pronounce <strong class="context"
 						title="Graphics Interchange Format">GIF</strong><sup>[21]</sup> with a hard 'G'.</p>
-<h3>References</h3>
-<ol>
-	<li>"<a class="external" href="http://geocities.yahoo.com/" target="_blank" rel="noopener noreferrer">GeoCities</a>". Yahoo!. <a class="external" href="https://web.archive.org/web/20040124092913/http://geocities.yahoo.com/" target="_blank" rel="noopener noreferrer">Archived</a> from the original on 24 January 2004.</li>
-	<li>"<a class="external" href="http://hometown.aol.com/" target="_blank" rel="noopener noreferrer">AOL Hometown</a>". AOL. <a class="external" href="https://web.archive.org/web/20040401124704/http://hometown.aol.com/" target="_blank" rel="noopener noreferrer">Archived</a> from the original on 1 April 2004.</li>
-	<li>"<a class="external" href="https://www.tripod.com/" target="_blank" rel="noopener noreferrer">Tripod</a>". Lycos.</li>
-	<li>"<a class="external" href="https://www.angelfire.com/" target="_blank" rel="noopener noreferrer">Angelfire</a>". Lycos.</li>
-	<li>"<a class="external" href="https://en.wikipedia.org/wiki/Scene_(subculture)" target="_blank" rel="noopener noreferrer">Scene (subculture)</a>". <em>Wikipedia</em>.</li>
-	<li>"<a class="external" href="https://aesthetics.fandom.com/wiki/McBling" target="_blank" rel="noopener noreferrer">McBling</a>". <em>Aesthetics Wiki</em>.</li>
-	<li>"<a class="external" href="http://blingee.com/" target="_blank" rel="noopener noreferrer">Blingee</a>". <a class="external" href="https://web.archive.org/web/20091021203517/http://blingee.com/" target="_blank" rel="noopener noreferrer">Archived</a> from the original on 21 October 2009.</li>
-	<li>"<a class="external" href="https://en.wikipedia.org/wiki/Web_2.0" target="_blank" rel="noopener noreferrer">Web 2.0</a>". <em>Wikipedia</em>.</li>
-	<li>"<a class="external" href="https://myspace.com/" target="_blank" rel="noopener noreferrer">MySpace</a>".</li>
-	<li>"<a class="external" href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer">Facebook</a>".</li>
-	<li>"<a class="external" href="https://tenor.com/" target="_blank" rel="noopener noreferrer">Tenor</a>".</li>
-	<li>"<a class="external" href="https://giphy.com/" target="_blank" rel="noopener noreferrer">GIPHY</a>".</li>
-	<li>"<a class="external" href="https://en.wikipedia.org/wiki/Adobe_ImageReady" target="_blank" rel="noopener noreferrer">Adobe ImageReady</a>". <em>Wikipedia</em>.</li>
-	<li>"<a class="external" href="https://en.wikipedia.org/wiki/PaintShop_Pro" target="_blank" rel="noopener noreferrer">PaintShop Pro</a>". <em>Wikipedia</em>.</li>
-	<li>"<a class="external" href="https://en.wikipedia.org/wiki/Animation_Shop" target="_blank" rel="noopener noreferrer">Animation Shop</a>". <em>Wikipedia</em>.</li>
-	<li>"<a class="external" href="https://www.picmix.com/" target="_blank" rel="noopener noreferrer">PicMix</a>".</li>
-	<li>"<a class="external" href="https://www.online-image-editor.com/" target="_blank" rel="noopener noreferrer">Online Image Editor</a>".</li>
-	<li>"<a class="external" href="https://en.wikipedia.org/wiki/Internet_art" target="_blank" rel="noopener noreferrer">Internet art</a>". <em>Wikipedia</em>.</li>
-	<li>"<a class="external" href="https://www.youtube.com/watch?v=sfbQ5mHWkOs" target="_blank" rel="noopener noreferrer">M.I.A. - XXXO (Official Video)</a>". <em>YouTube</em>.</li>
-	<li>"<a class="external" href="https://gifcities.org/" target="_blank" rel="noopener noreferrer">GifCities</a>". Internet Archive.</li>
-	<li>"<a class="external" href="https://en.wikipedia.org/wiki/GIF" target="_blank" rel="noopener noreferrer">GIF</a>". <em>Wikipedia</em>.</li>
-</ol>
-<h3>External links</h3>
-<ul>
-	<li>Kimble, Katrina "Mz.Kathy". "<a class="external" href="http://geocities.com/katrinakimble/page1.html" target="_blank" rel="noopener noreferrer">Dolls and other sigs</a>". <em>GeoCities</em>. <a class="external" href="https://web.archive.org/web/20091021203517/http://geocities.com/katrinakimble/page1.html" target="_blank" rel="noopener noreferrer">Archived</a> from the original on 21 October 2009.</li>
-	<li>__urbanizedDORK/d0rkyb0y. "<a class="external" href="http://geocities.com/urbanizedxdork/myspace/bg.htm" target="_blank" rel="noopener noreferrer">Backgrounds</a>". <em>GeoCities</em>. <a class="external" href="https://web.archive.org/web/20091022151103/http://geocities.com/urbanizedxdork/myspace/bg.htm" target="_blank" rel="noopener noreferrer">Archived</a> from the original on 22 October 2009.</li>
-	<li>harveysgraphics01. "<a class="external" href="http://geocities.com/harveysgraphics01/glitter.html" target="_blank" rel="noopener noreferrer">Glitter</a>". <em>GeoCities</em>. <a class="external" href="https://web.archive.org/web/20050430183144/http://geocities.com/harveysgraphics01/glitter.html" target="_blank" rel="noopener noreferrer">Archived</a> from the original on 30 April 2005.</li>
-	<li>elanger. "<a class="external" href="https://www.angelfire.com/nj4/elanger/glitters_galore.html" target="_blank" rel="noopener noreferrer">Glitters Galore</a>". <em>Angelfire</em>.</li>
-	<li>elanger. "<a class="external" href="https://www.angelfire.com/nj4/elanger//g1.html" target="_blank" rel="noopener noreferrer">Much More Glitter</a>". <em>Angelfire</em>.</li>
-	<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitterpicture.html" target="_blank" rel="noopener noreferrer">Adding glitter to a Picture</a>". <em>Angelfire</em>.</li>
-	<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitterpic.html" target="_blank" rel="noopener noreferrer">Adding a Glitter name to a Picture</a>". <em>Angelfire</em>.</li>
-	<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitters.html" target="_blank" rel="noopener noreferrer">Glitter</a>". <em>Angelfire</em>.</li>
-	<li>groovysmurf. "<a class="external" href="https://www.angelfire.com/on2/groovysmurf/glitterfillnames.html" target="_blank" rel="noopener noreferrer">HOW TO USE GLITTER FILLS</a>". <em>Angelfire</em>.</li>
-	<li>seira55. "<a class="external" href="https://seira55.tripod.com/glitterfiles2.htm" target="_blank" rel="noopener noreferrer">Glitter Files</a>". <em>Tripod</em>.</li>
-	<li>osodeoro. "<a class="external" href="https://osodeoro.tripod.com/Sparklies/Sparkelies.html" target="_blank" rel="noopener noreferrer">Sparkelies</a>". <em>Tripod</em>.</li>
-	<li>donnasblinkies. "<a class="external" href="https://donnasblinkies.tripod.com/" target="_blank" rel="noopener noreferrer">Doherty Designs</a>". <em>Tripod</em>.</li>
-</ul>
+				<h3>References</h3>
+				<ol>
+					<li>"<a class="external" href="http://geocities.yahoo.com/" target="_blank"
+							rel="noopener noreferrer">GeoCities</a>". Yahoo!. <a class="external"
+							href="https://web.archive.org/web/20040124092913/http://geocities.yahoo.com/"
+							target="_blank" rel="noopener noreferrer">Archived</a> from the original on 24 January 2004.
+					</li>
+					<li>"<a class="external" href="http://hometown.aol.com/" target="_blank"
+							rel="noopener noreferrer">AOL Hometown</a>". AOL. <a class="external"
+							href="https://web.archive.org/web/20040401124704/http://hometown.aol.com/" target="_blank"
+							rel="noopener noreferrer">Archived</a> from the original on 1 April 2004.</li>
+					<li>"<a class="external" href="https://www.tripod.com/" target="_blank"
+							rel="noopener noreferrer">Tripod</a>". Lycos.</li>
+					<li>"<a class="external" href="https://www.angelfire.com/" target="_blank"
+							rel="noopener noreferrer">Angelfire</a>". Lycos.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Scene_(subculture)" target="_blank"
+							rel="noopener noreferrer">Scene (subculture)</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://aesthetics.fandom.com/wiki/McBling" target="_blank"
+							rel="noopener noreferrer">McBling</a>". <em>Aesthetics Wiki</em>.</li>
+					<li>"<a class="external" href="http://blingee.com/" target="_blank"
+							rel="noopener noreferrer">Blingee</a>". <a class="external"
+							href="https://web.archive.org/web/20091021203517/http://blingee.com/" target="_blank"
+							rel="noopener noreferrer">Archived</a> from the original on 21 October 2009.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Web_2.0" target="_blank"
+							rel="noopener noreferrer">Web 2.0</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://myspace.com/" target="_blank"
+							rel="noopener noreferrer">MySpace</a>".</li>
+					<li>"<a class="external" href="https://www.facebook.com/" target="_blank"
+							rel="noopener noreferrer">Facebook</a>".</li>
+					<li>"<a class="external" href="https://tenor.com/" target="_blank"
+							rel="noopener noreferrer">Tenor</a>".</li>
+					<li>"<a class="external" href="https://giphy.com/" target="_blank"
+							rel="noopener noreferrer">GIPHY</a>".</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Adobe_ImageReady" target="_blank"
+							rel="noopener noreferrer">Adobe ImageReady</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/PaintShop_Pro" target="_blank"
+							rel="noopener noreferrer">PaintShop Pro</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Animation_Shop" target="_blank"
+							rel="noopener noreferrer">Animation Shop</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://www.picmix.com/" target="_blank"
+							rel="noopener noreferrer">PicMix</a>".</li>
+					<li>"<a class="external" href="https://www.online-image-editor.com/" target="_blank"
+							rel="noopener noreferrer">Online Image Editor</a>".</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Internet_art" target="_blank"
+							rel="noopener noreferrer">Internet art</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://www.youtube.com/watch?v=sfbQ5mHWkOs" target="_blank"
+							rel="noopener noreferrer">M.I.A. - XXXO (Official Video)</a>". <em>YouTube</em>.</li>
+					<li>"<a class="external" href="https://gifcities.org/" target="_blank"
+							rel="noopener noreferrer">GifCities</a>". Internet Archive.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/GIF" target="_blank"
+							rel="noopener noreferrer">GIF</a>". <em>Wikipedia</em>.</li>
+				</ol>
+				<h3>External links</h3>
+				<ul>
+					<li>Kimble, Katrina "Mz.Kathy". "<a class="external"
+							href="http://geocities.com/katrinakimble/page1.html" target="_blank"
+							rel="noopener noreferrer">Dolls and other sigs</a>". <em>GeoCities</em>. <a class="external"
+							href="https://web.archive.org/web/20091021203517/http://geocities.com/katrinakimble/page1.html"
+							target="_blank" rel="noopener noreferrer">Archived</a> from the original on 21 October 2009.
+					</li>
+					<li>__urbanizedDORK/d0rkyb0y. "<a class="external"
+							href="http://geocities.com/urbanizedxdork/myspace/bg.htm" target="_blank"
+							rel="noopener noreferrer">Backgrounds</a>". <em>GeoCities</em>. <a class="external"
+							href="https://web.archive.org/web/20091022151103/http://geocities.com/urbanizedxdork/myspace/bg.htm"
+							target="_blank" rel="noopener noreferrer">Archived</a> from the original on 22 October 2009.
+					</li>
+					<li>harveysgraphics01. "<a class="external"
+							href="http://geocities.com/harveysgraphics01/glitter.html" target="_blank"
+							rel="noopener noreferrer">Glitter</a>". <em>GeoCities</em>. <a class="external"
+							href="https://web.archive.org/web/20050430183144/http://geocities.com/harveysgraphics01/glitter.html"
+							target="_blank" rel="noopener noreferrer">Archived</a> from the original on 30 April 2005.
+					</li>
+					<li>elanger. "<a class="external" href="https://www.angelfire.com/nj4/elanger/glitters_galore.html"
+							target="_blank" rel="noopener noreferrer">Glitters Galore</a>". <em>Angelfire</em>.</li>
+					<li>elanger. "<a class="external" href="https://www.angelfire.com/nj4/elanger//g1.html"
+							target="_blank" rel="noopener noreferrer">Much More Glitter</a>". <em>Angelfire</em>.</li>
+					<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitterpicture.html"
+							target="_blank" rel="noopener noreferrer">Adding glitter to a Picture</a>".
+						<em>Angelfire</em>.</li>
+					<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitterpic.html"
+							target="_blank" rel="noopener noreferrer">Adding a Glitter name to a Picture</a>".
+						<em>Angelfire</em>.</li>
+					<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitters.html"
+							target="_blank" rel="noopener noreferrer">Glitter</a>". <em>Angelfire</em>.</li>
+					<li>groovysmurf. "<a class="external"
+							href="https://www.angelfire.com/on2/groovysmurf/glitterfillnames.html" target="_blank"
+							rel="noopener noreferrer">HOW TO USE GLITTER FILLS</a>". <em>Angelfire</em>.</li>
+					<li>seira55. "<a class="external" href="https://seira55.tripod.com/glitterfiles2.htm"
+							target="_blank" rel="noopener noreferrer">Glitter Files</a>". <em>Tripod</em>.</li>
+					<li>osodeoro. "<a class="external" href="https://osodeoro.tripod.com/Sparklies/Sparkelies.html"
+							target="_blank" rel="noopener noreferrer">Sparkelies</a>". <em>Tripod</em>.</li>
+					<li>donnasblinkies. "<a class="external" href="https://donnasblinkies.tripod.com/" target="_blank"
+							rel="noopener noreferrer">Doherty Designs</a>". <em>Tripod</em>.</li>
+				</ul>
 			</div>
 		</div>
 	</div>
