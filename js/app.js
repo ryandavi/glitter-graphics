@@ -66,6 +66,13 @@ class GlitterEditor {
 		this.previewWrapper = document.getElementById('previewWrapper');
 		this.glitterBackgroundsContainer = document.getElementById('glitterBackgroundsContainer');
 
+        // --- ADD THESE LINES TO FIX STACKING ---
+        // Ensure the canvas is the base layer and glitter sits on top
+        this.previewCanvas.style.zIndex = '1'; 
+        this.glitterBackgroundsContainer.style.zIndex = '10';
+        this.glitterBackgroundsContainer.style.pointerEvents = 'none'; // Allows clicking through to canvas
+        // ---------------------------------------
+
 		this.originalCtx = this.originalCanvas.getContext('2d', { willReadFrequently: true });
 		this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
 
@@ -80,7 +87,7 @@ class GlitterEditor {
 		// Auto-scroll for layer dragging
 		this.dragScrollInterval = null;
 		this.draggedLayerId = null;
-	
+
 
 		// Export settings
 		this.exportSettings = {
@@ -125,6 +132,15 @@ class GlitterEditor {
 		this.resizeTimeout = null;
 		this.lastViewportWidth = 0;
 		this.lastViewportHeight = 0;
+
+		// Touch gesture state
+		this.touch = {
+			active: false,
+			startDistance: 0,
+			startZoom: 1,
+			startPan: { x: 0, y: 0 },
+			lastCenter: { x: 0, y: 0 }
+		};
 
 
 		// Filter state
@@ -547,6 +563,79 @@ class GlitterEditor {
 		this.previewContainer.classList.remove('panning');
 	}
 
+	setupTouchGestures() {
+		const container = this.previewContainer;
+
+		const getTouchDistance = (touch1, touch2) => {
+			const dx = touch2.clientX - touch1.clientX;
+			const dy = touch2.clientY - touch1.clientY;
+			return Math.sqrt(dx * dx + dy * dy);
+		};
+
+		const getTouchCenter = (touch1, touch2) => {
+			return {
+				x: (touch1.clientX + touch2.clientX) / 2,
+				y: (touch1.clientY + touch2.clientY) / 2
+			};
+		};
+
+		container.addEventListener('touchstart', (e) => {
+			if (e.touches.length === 2) {
+				e.preventDefault();
+
+				this.touch.active = true;
+				this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
+				this.touch.startZoom = this.currentZoom;
+				this.touch.startPan = { x: this.panX, y: this.panY };
+				this.touch.lastCenter = getTouchCenter(e.touches[0], e.touches[1]);
+			}
+		}, { passive: false });
+
+		container.addEventListener('touchmove', (e) => {
+			if (this.touch.active && e.touches.length === 2) {
+				e.preventDefault();
+
+				// Calculate new distance and zoom
+				const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+				const scale = currentDistance / this.touch.startDistance;
+				const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
+
+				// Calculate center point movement for panning
+				const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
+				const deltaCenterX = currentCenter.x - this.touch.lastCenter.x;
+				const deltaCenterY = currentCenter.y - this.touch.lastCenter.y;
+
+				// Update zoom and pan
+				this.currentZoom = newZoom;
+				this.panX = this.touch.startPan.x + deltaCenterX;
+				this.panY = this.touch.startPan.y + deltaCenterY;
+
+				// Update zoom index for consistency
+				this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
+				if (this.currentZoomIndex === -1) {
+					this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
+				}
+
+				// Apply changes
+				this.applyZoomTransform();
+				this.updateZoomUI();
+				this.updateTransparencyGrid();
+				this.updateStatusBar();
+			}
+		}, { passive: false });
+
+		container.addEventListener('touchend', (e) => {
+			if (e.touches.length < 2) {
+				this.touch.active = false;
+			}
+		});
+
+		container.addEventListener('touchcancel', () => {
+			this.touch.active = false;
+		});
+	}
+
+
 	updateZoomUI() {
 		const percentage = Math.round(this.currentZoom * 100);
 		document.getElementById('zoomPercentage').textContent = `${percentage}%`;
@@ -652,6 +741,43 @@ class GlitterEditor {
 		this.updatePreview();
 	}
 
+goToGlitter(layerId) {
+	const layer = this.layers.find(l => l.id === layerId);
+	if (!layer) return;
+	
+	const glitterIndex = layer.selectedGlitterIndex;
+	
+	// On mobile, open the glitter drawer first
+	if (window.innerWidth <= 800 && this.mobileManager) {
+		this.mobileManager.toggleDrawer('glitter');
+	}
+	
+	// Scroll to the glitter option
+	this.scrollToGlitter(glitterIndex);
+}
+
+scrollToGlitter(glitterIndex) {
+	const glitterOption = document.querySelector(`.glitter-option[data-index="${glitterIndex}"]`);
+	if (!glitterOption) return;
+	
+	const glitterOptions = document.querySelector('.glitter-options');
+	if (!glitterOptions) return;
+	
+	// Scroll the glitter option into view
+	glitterOption.scrollIntoView({
+		behavior: 'smooth',
+		block: 'center'
+	});
+	
+	// Brief highlight effect
+	glitterOption.classList.add('highlight');
+	setTimeout(() => {
+		glitterOption.classList.remove('highlight');
+	}, 1000);
+}
+
+
+
 	setActiveLayer(layerId) {
 		this.activeLayerId = layerId;
 		this.renderLayersList();
@@ -674,6 +800,7 @@ class GlitterEditor {
 
 		this.updatePreview();
 		this.updateGlitterOptionsState();
+		window.dispatchEvent(new CustomEvent('layerChanged'));  // ADD THIS
 	}
 
 	getActiveLayer() {
@@ -796,12 +923,13 @@ class GlitterEditor {
 		}
 	}
 
-	updateGlitterSelection() {
+updateGlitterSelection() {
 		const layer = this.getActiveLayer();
-		if (!layer) return;
-
+		
 		document.querySelectorAll('.glitter-option').forEach((opt) => {
-			opt.classList.toggle('selected', parseInt(opt.dataset.index) === layer.selectedGlitterIndex);
+			// If layer exists, check index. If no layer (null), always false.
+			const isSelected = layer ? parseInt(opt.dataset.index) === layer.selectedGlitterIndex : false;
+			opt.classList.toggle('selected', isSelected);
 		});
 	}
 
@@ -850,7 +978,7 @@ class GlitterEditor {
 		let LAYER_MARGIN_BOTTOM = 6;
 		let INSERTION_LINE_HEIGHT = 2;
 		let offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
-		
+
 		const scrollTop = layersList.scrollTop;
 
 		if (insertAbove) {
@@ -953,16 +1081,16 @@ class GlitterEditor {
 	reorderLayerElements() {
 		const container = document.getElementById('layersList');
 		const insertionLine = container.querySelector('.layer-insertion-line');
-		
+
 		// Get all existing layer elements
 		const existingElements = new Map();
 		container.querySelectorAll('.layer-item').forEach(el => {
 			existingElements.set(el.dataset.layerId, el);
 		});
-		
+
 		// Reorder them to match layers array (reversed for display)
 		const fragment = document.createDocumentFragment();
-		
+
 		[...this.layers].reverse().forEach(layer => {
 			const element = existingElements.get(layer.id);
 			if (element) {
@@ -971,7 +1099,7 @@ class GlitterEditor {
 				fragment.appendChild(element);
 			}
 		});
-		
+
 		// Clear and re-append in correct order
 		container.innerHTML = '';
 		container.appendChild(insertionLine);
@@ -981,23 +1109,23 @@ class GlitterEditor {
 	// Fast reordering for glitter backgrounds
 	reorderGlitterBackgrounds() {
 		const container = this.glitterBackgroundsContainer;
-		
+
 		// Get existing background elements
 		const existingBgs = new Map();
 		container.querySelectorAll('.glitter-background').forEach(bg => {
 			existingBgs.set(bg.dataset.layerId, bg);
 		});
-		
+
 		// Reorder them to match layers array
 		const fragment = document.createDocumentFragment();
-		
+
 		this.layers.forEach(layer => {
 			const bg = existingBgs.get(layer.id);
 			if (bg) {
 				fragment.appendChild(bg);
 			}
 		});
-		
+
 		container.innerHTML = '';
 		container.appendChild(fragment);
 	}
@@ -1006,12 +1134,12 @@ class GlitterEditor {
 		event.target.classList.remove('dragging');
 		const insertionLine = document.querySelector('.layer-insertion-line');
 		insertionLine.classList.remove('visible');
-		
+
 		if (this.dragScrollInterval) {
 			clearInterval(this.dragScrollInterval);
 			this.dragScrollInterval = null;
 		}
-		
+
 		this.draggedLayerId = null;
 	}
 
@@ -1073,6 +1201,12 @@ class GlitterEditor {
 				}
 			}
 
+			// ADD THIS - Double-click swatch to go to glitter
+			swatch.addEventListener('dblclick', (e) => {
+				e.stopPropagation();
+				this.goToGlitter(layer.id);
+			});
+
 			const info = document.createElement('div');
 			info.className = 'layer-info';
 			const colorText = document.createElement('div');
@@ -1099,6 +1233,18 @@ class GlitterEditor {
 				this.toggleLayerVisibility(layer.id);
 			};
 
+
+			// ADD THIS - Arrow button to jump to glitter
+			const arrowBtn = document.createElement('button');
+			arrowBtn.className = 'layer-action-btn goto-glitter';
+			arrowBtn.textContent = '→';
+			arrowBtn.title = 'Go to glitter';
+			arrowBtn.onclick = (e) => {
+				e.stopPropagation();
+				this.goToGlitter(layer.id);
+			};
+
+
 			const delBtn = document.createElement('button');
 			delBtn.className = 'layer-action-btn delete';
 			delBtn.textContent = '✕';
@@ -1110,7 +1256,7 @@ class GlitterEditor {
 				}
 			};
 
-			actions.append(visBtn, delBtn);
+			actions.append(visBtn, arrowBtn, delBtn);  // CHANGED: added arrowBtn
 
 			layerEl.append(swatch, info, actions);
 			layerEl.onclick = () => this.setActiveLayer(layer.id);
@@ -1372,14 +1518,14 @@ class GlitterEditor {
 			}
 		});
 
-		// --- CANVAS INTERACTION ---
-		this.previewWrapper.addEventListener('click', (e) => {
-			if (this.currentTool === 'colorPicker') {
-				this.handleCanvasClick(e);
-			} else if (this.currentTool === 'zoom') {
-				this.handleCanvasZoomClick(e);
-			}
-		});
+// --- CANVAS INTERACTION ---
+this.previewWrapper.addEventListener('click', (e) => {
+	if (this.currentTool === 'colorPicker' || this.currentTool === 'select') {  // ADD 'select' here
+		this.handleCanvasClick(e);
+	} else if (this.currentTool === 'zoom') {
+		this.handleCanvasZoomClick(e);
+	}
+});
 
 		// --- LAYER SETTINGS CONTROLS ---
 		['contiguous', 'invert'].forEach(id => {
@@ -1529,6 +1675,11 @@ class GlitterEditor {
 
 		document.addEventListener('keydown', (e) => this.handleKeyboard(e));
 		document.addEventListener('keyup', (e) => this.handleKeyUp(e));
+
+		// --- TOUCH GESTURES ---
+		this.setupTouchGestures();  // ADD THIS at the end
+
+		
 	}
 
 	handleWindowResize() {
@@ -1894,36 +2045,36 @@ class GlitterEditor {
 	}
 
 	// ===== GLITTER LOADING =====
-async loadGlitterGifs() {
-	this.glitterGifs = [];
+	async loadGlitterGifs() {
+		this.glitterGifs = [];
 
-	const res = await fetch('data/swatches.json');
-	const json = await res.json();
+		const res = await fetch('data/swatches.json');
+		const json = await res.json();
 
-	json.forEach(config => {
-		this.glitterGifs.push({
-			id: config.id,
-			url: config.url,
-			name: config.name || 'Unnamed',
-			generatedName: config.generatedName || null,
-			frames: null,
-			brightness: config.brightness || null,
-			sortOrder: config.sortOrder || 0,
-			hue: config.hue || null,
-			colorCodes: config.colorCodes || [],
-			frameCount: config.frameCount || 0,
-			frameRate: config.frameRate || 10,
-			isVariableFramerate: config.isVariableFramerate || false,
-			category: config.category || 'Uncategorized',
-			isPixelated: config.isPixelated || false,
-			tags: config.tags || []
+		json.forEach(config => {
+			this.glitterGifs.push({
+				id: config.id,
+				url: config.url,
+				name: config.name || 'Unnamed',
+				generatedName: config.generatedName || null,
+				frames: null,
+				brightness: config.brightness || null,
+				sortOrder: config.sortOrder || 0,
+				hue: config.hue || null,
+				colorCodes: config.colorCodes || [],
+				frameCount: config.frameCount || 0,
+				frameRate: config.frameRate || 10,
+				isVariableFramerate: config.isVariableFramerate || false,
+				category: config.category || 'Uncategorized',
+				isPixelated: config.isPixelated || false,
+				tags: config.tags || []
+			});
 		});
-	});
 
-	if (this.glitterGifs.length > 0) {
-		this.displayGlitterOptions();
+		if (this.glitterGifs.length > 0) {
+			this.displayGlitterOptions();
+		}
 	}
-}
 
 	async parseGifFromUrl(url) {
 		const response = await fetch(url);
@@ -1949,61 +2100,61 @@ async loadGlitterGifs() {
 		};
 	}
 
-displayGlitterOptions() {
-    const container = document.getElementById('glitterOptions');
-    container.innerHTML = '';
+	displayGlitterOptions() {
+		const container = document.getElementById('glitterOptions');
+		container.innerHTML = '';
 
-    const categories = {};
-    this.glitterGifs.forEach((glitter, index) => {
-        if (!categories[glitter.category]) {
-            categories[glitter.category] = [];
-        }
-        categories[glitter.category].push({ glitter, index });
-    });
+		const categories = {};
+		this.glitterGifs.forEach((glitter, index) => {
+			if (!categories[glitter.category]) {
+				categories[glitter.category] = [];
+			}
+			categories[glitter.category].push({ glitter, index });
+		});
 
-    Object.entries(categories).forEach(([category, items]) => {
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'glitter-category';
-        categoryDiv.dataset.category = category;
+		Object.entries(categories).forEach(([category, items]) => {
+			const categoryDiv = document.createElement('div');
+			categoryDiv.className = 'glitter-category';
+			categoryDiv.dataset.category = category;
 
-        const title = document.createElement('div');
-        title.className = 'category-title';
-        title.textContent = category;
-        categoryDiv.appendChild(title);
+			const title = document.createElement('div');
+			title.className = 'category-title';
+			title.textContent = category;
+			categoryDiv.appendChild(title);
 
-        const grid = document.createElement('div');
-        grid.className = 'glitter-grid';
+			const grid = document.createElement('div');
+			grid.className = 'glitter-grid';
 
-        items.forEach(({ glitter, index }) => {
-            const option = document.createElement('div');
-            option.className = 'glitter-option' + (glitter.isPixelated ? ' pixelated' : '');
-            option.title = glitter.name;
-            option.dataset.index = index;
-            option.dataset.name = glitter.name.toLowerCase();
-            option.dataset.category = glitter.category.toLowerCase();
-            option.dataset.tags = (glitter.tags || []).join(' ').toLowerCase();
+			items.forEach(({ glitter, index }) => {
+				const option = document.createElement('div');
+				option.className = 'glitter-option' + (glitter.isPixelated ? ' pixelated' : '');
+				option.title = glitter.name;
+				option.dataset.index = index;
+				option.dataset.name = glitter.name.toLowerCase();
+				option.dataset.category = glitter.category.toLowerCase();
+				option.dataset.tags = (glitter.tags || []).join(' ').toLowerCase();
 
-			option.dataset.hue = glitter.hue;
-			option.dataset.brightness = glitter.brightness;
-			option.dataset.sortOrder = glitter.sortOrder
+				option.dataset.hue = glitter.hue;
+				option.dataset.brightness = glitter.brightness;
+				option.dataset.sortOrder = glitter.sortOrder
 
-            const img = document.createElement('img');
-            img.src = glitter.url;
-            img.alt = glitter.name;
+				const img = document.createElement('img');
+				img.src = glitter.url;
+				img.alt = glitter.name;
 
-            option.appendChild(img);
-            option.addEventListener('click', () => this.selectGlitter(index));
-            grid.appendChild(option);
-        });
+				option.appendChild(img);
+				option.addEventListener('click', () => this.selectGlitter(index));
+				grid.appendChild(option);
+			});
 
-        categoryDiv.appendChild(grid);
-        container.appendChild(categoryDiv);
-    });
-    
-    // ADD THESE TWO LINES HERE ↓
-    // Initialize disabled state for all glitter options
-    this.updateGlitterOptionsState();
-}
+			categoryDiv.appendChild(grid);
+			container.appendChild(categoryDiv);
+		});
+
+		// ADD THESE TWO LINES HERE ↓
+		// Initialize disabled state for all glitter options
+		this.updateGlitterOptionsState();
+	}
 
 	handleSearchInput(searchTerm) {
 		this.activeFilters.search = searchTerm.toLowerCase().trim();
@@ -2138,6 +2289,7 @@ displayGlitterOptions() {
 		}
 
 		this.updateStatus(`Selected ${glitter.name}`);
+		window.dispatchEvent(new CustomEvent('layerChanged'));  // ADD THIS
 	}
 
 	// ===== IMAGE LOADING =====
@@ -2260,53 +2412,149 @@ displayGlitterOptions() {
 		});
 	}
 
-	handleCanvasClick(event) {
-		if (!this.originalImageData || this.currentTool !== 'colorPicker') return;
-
-		// Color Picker Logic
-
-		const layer = this.getActiveLayer();
-		if (!layer) return;
-
-		const rect = this.previewCanvas.getBoundingClientRect();
-		const clickX = event.clientX - rect.left;
-		const clickY = event.clientY - rect.top;
-
-		const scaleX = this.previewCanvas.width / rect.width;
-		const scaleY = this.previewCanvas.height / rect.height;
-
-		const x = Math.floor(clickX * scaleX);
-		const y = Math.floor(clickY * scaleY);
-
-		if (x < 0 || x >= this.previewCanvas.width || y < 0 || y >= this.previewCanvas.height) {
-			return;
+handleCanvasClick(event) {
+	if (!this.originalImageData) return;
+	
+	const rect = this.previewCanvas.getBoundingClientRect();
+	const clickX = event.clientX - rect.left;
+	const clickY = event.clientY - rect.top;
+	
+	const scaleX = this.previewCanvas.width / rect.width;
+	const scaleY = this.previewCanvas.height / rect.height;
+	
+	const x = Math.floor(clickX * scaleX);
+	const y = Math.floor(clickY * scaleY);
+	
+	if (x < 0 || x >= this.previewCanvas.width || y < 0 || y >= this.previewCanvas.height) {
+		return;
+	}
+	
+	// Select Tool: Pick layer at click location
+	if (this.currentTool === 'select') {
+		this.handleLayerPick(x, y);
+		return;
+	}
+	
+	// Color Picker Tool
+// Color Picker Tool
+if (this.currentTool === 'colorPicker') {
+	let layer = this.getActiveLayer();
+	
+	// If no active layer, find an empty one or create new
+	if (!layer) {
+		// Try to find a layer with no selections
+		const emptyLayer = this.layers.find(l => !l.selections || l.selections.length === 0);
+		
+		if (emptyLayer) {
+			// Reuse empty layer
+			this.setActiveLayer(emptyLayer.id);
+			layer = emptyLayer;
+			this.updateStatus('Selected empty layer');
+		} else {
+			// All layers have selections - create a new one
+			const newLayer = this.createLayer();
+			this.layers.push(newLayer);
+			this.setActiveLayer(newLayer.id);
+			this.renderLayersList();
+			layer = newLayer;
+			this.updateStatus('Created new layer');
 		}
-
-		const pixelIndex = y * this.originalCanvas.width + x;
-		const alpha = this.originalAlphaChannel[pixelIndex];
-
+	}
+	
+	const pixelIndex = y * this.originalCanvas.width + x;
+	const alpha = this.originalAlphaChannel[pixelIndex];
+		
 		if (alpha < CONFIG.alphaThreshold) {
 			this.updateStatus('Cannot select transparent pixels');
 			return;
 		}
-
+		
 		const i = pixelIndex * 4;
 		const r = this.originalImageData.data[i];
 		const g = this.originalImageData.data[i + 1];
 		const b = this.originalImageData.data[i + 2];
-
+		
 		const multiSelect = layer.settings.multiSelect;
 		if (!multiSelect) layer.selections = [];
-
+		
 		layer.selections.push({ r, g, b, x, y });
 		this.renderLayersList();
 		this.saveState();
 		this.updatePreview();
 		this.updateActionButtons();
 		this.updateSelectedColorsDisplay();
-
+		
 		this.updateStatus(`Selected RGB(${r}, ${g}, ${b}) at (${x}, ${y})`);
 	}
+}
+
+handleLayerPick(x, y) {
+	// Check layers from top to bottom (end to start of array)
+	for (let i = this.layers.length - 1; i >= 0; i--) {
+		const layer = this.layers[i];
+		
+		// Skip invisible layers
+		if (!layer.visible) continue;
+		
+		// Skip layers without selections
+		if (!layer.selections || layer.selections.length === 0) continue;
+		
+		// Check if this pixel is covered by this layer's selection
+		if (this.isPixelInLayerSelection(layer, x, y)) {
+			this.setActiveLayer(layer.id);
+			const glitterName = this.glitterGifs[layer.selectedGlitterIndex]?.name || 'Layer';
+			this.updateStatus(`Selected: ${glitterName}`);
+			
+			// Brief visual feedback
+			const flash = document.createElement('div');
+			flash.className = 'layer-pick-flash';
+			flash.style.left = (x / this.previewCanvas.width * 100) + '%';
+			flash.style.top = (y / this.previewCanvas.height * 100) + '%';
+			this.previewWrapper.appendChild(flash);
+			setTimeout(() => flash.remove(), 300);
+			
+			return;
+		}
+	}
+	
+	// Nothing clicked - deselect
+	this.setActiveLayer(null);
+	this.updateStatus('No layer at this location');
+}
+
+isPixelInLayerSelection(layer, x, y) {
+	const pixelIndex = y * this.originalCanvas.width + x;
+	const i = pixelIndex * 4;
+	
+	const pixelR = this.originalImageData.data[i];
+	const pixelG = this.originalImageData.data[i + 1];
+	const pixelB = this.originalImageData.data[i + 2];
+	const pixelAlpha = this.originalAlphaChannel[pixelIndex];
+	
+	// Check if pixel is transparent
+	if (pixelAlpha < CONFIG.alphaThreshold) {
+		return false;
+	}
+	
+	// Check if pixel matches any of this layer's color selections
+	const threshold = layer.settings.threshold;
+	const invert = layer.settings.invert;
+	
+	for (const sel of layer.selections) {
+		const distance = Math.sqrt(
+			Math.pow(pixelR - sel.r, 2) +
+			Math.pow(pixelG - sel.g, 2) +
+			Math.pow(pixelB - sel.b, 2)
+		);
+		
+		const matches = distance <= threshold;
+		if (invert ? !matches : matches) {
+			return true;
+		}
+	}
+	
+	return false;
+}
 
 	updateSelectedColorsDisplay() {
 		const container = document.getElementById('selectedColorsDisplay');
@@ -2391,6 +2639,9 @@ displayGlitterOptions() {
 		this.renderGlitterBackgrounds(layersToShow);
 		this.updatePreviewScale();
 	}
+	
+
+	/*
 
 	renderPreviewCanvas(layersToShow) {
 		const previewData = new ImageData(
@@ -2424,6 +2675,16 @@ displayGlitterOptions() {
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 		this.previewCtx.putImageData(previewData, 0, 0);
 	}
+
+		*/
+
+renderPreviewCanvas(layersToShow) {
+		// Just draw the original image. The glitter sits on top as a DOM element.
+		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+		this.previewCtx.putImageData(this.originalImageData, 0, 0);
+	}
+
+
 
 	renderGlitterBackgrounds(layersToShow) {
 		this.glitterBackgroundsContainer.innerHTML = '';
@@ -2474,13 +2735,21 @@ displayGlitterOptions() {
 			bg.dataset.layerId = layer.id;
 			bg.style.backgroundImage = `url(${glitter.url})`;
 
-			bg.style.width = width + 'px';
+bg.style.width = width + 'px';
 			bg.style.height = height + 'px';
 			bg.style.position = 'absolute';
 			bg.style.top = '0';
 			bg.style.left = '0';
-			bg.style.zIndex = '1';
+			
+			// --- CHANGED: Increase Z-Index to ensure it sits over the canvas ---
+			bg.style.zIndex = '100'; 
+			// -------------------------------------------------------------------
+			
 			bg.style.pointerEvents = 'none';
+
+			// --- ADDED: Apply Opacity here so transparent glitters fade correctly ---
+			bg.style.opacity = layer.settings.opacity / 100;
+			// ------------------------------------------------------------------------
 
 			const maskDataURL = maskCanvas.toDataURL();
 			bg.style.maskImage = `url(${maskDataURL})`;
@@ -3222,83 +3491,83 @@ document.querySelectorAll('[data-tooltip]').forEach(el => {
 
 
 document.querySelectorAll('img[data-pixel-scale]').forEach(img => {
-  const s = Number(img.dataset.pixelScale);
-  img.style.width = img.naturalWidth * s + 'px';
-  img.style.height = img.naturalHeight * s + 'px';
-  img.style.imageRendering = 'pixelated';
+	const s = Number(img.dataset.pixelScale);
+	img.style.width = img.naturalWidth * s + 'px';
+	img.style.height = img.naturalHeight * s + 'px';
+	img.style.imageRendering = 'pixelated';
 });
 
 
 // Reference linking and highlighting functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const modalBody = document.querySelector('#aboutModal .modal-body');
-    
-    // Add IDs to sup elements and make them clickable
-    const sups = modalBody.querySelectorAll('sup');
-    sups.forEach((sup, index) => {
-        const refNum = sup.textContent.match(/\d+/)[0];
-        // Add both a unique ID and a class for the reference number
-        sup.id = `ref-link-${refNum}-${index}`;
-        sup.classList.add(`ref-${refNum}`);
-        sup.style.cursor = 'pointer';
-        
-        sup.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetRef = modalBody.querySelector(`#ref-${refNum}`);
-            if (targetRef) {
-                // Remove any existing highlights
-                modalBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
-                
-                // Scroll to reference
-                targetRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // Highlight the reference
-                targetRef.classList.add('highlight');
-                setTimeout(() => targetRef.classList.remove('highlight'), 2000);
-            }
-        });
-    });
-    
-    // Add IDs to reference list items and make them clickable
-    const refList = modalBody.querySelector('h3:has(+ ol) + ol');
-    if (refList) {
-        const refItems = refList.querySelectorAll('li');
-        refItems.forEach((item, index) => {
-            const refNum = index + 1;
-            item.id = `ref-${refNum}`;
-            item.style.cursor = 'pointer';
-            
-            item.addEventListener('click', function(e) {
-                // Don't trigger if clicking on a link
-                if (e.target.tagName === 'A') return;
-                
-                e.preventDefault();
-                
-                // Find ALL occurrences of this reference number
-                const targetSups = modalBody.querySelectorAll(`sup.ref-${refNum}`);
-                
-                if (targetSups.length > 0) {
-                    // Remove any existing highlights
-                    modalBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
-                    
-                    // Scroll to first mention
-                    targetSups[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Highlight ALL matching sup elements
-                    targetSups.forEach(sup => {
-                        sup.classList.add('highlight');
-                    });
-                    
-                    // Remove highlights after 2 seconds
-                    setTimeout(() => {
-                        targetSups.forEach(sup => {
-                            sup.classList.remove('highlight');
-                        });
-                    }, 2000);
-                }
-            });
-        });
-    }
+document.addEventListener('DOMContentLoaded', function () {
+	const modalBody = document.querySelector('#aboutModal .modal-body');
+
+	// Add IDs to sup elements and make them clickable
+	const sups = modalBody.querySelectorAll('sup');
+	sups.forEach((sup, index) => {
+		const refNum = sup.textContent.match(/\d+/)[0];
+		// Add both a unique ID and a class for the reference number
+		sup.id = `ref-link-${refNum}-${index}`;
+		sup.classList.add(`ref-${refNum}`);
+		sup.style.cursor = 'pointer';
+
+		sup.addEventListener('click', function (e) {
+			e.preventDefault();
+			const targetRef = modalBody.querySelector(`#ref-${refNum}`);
+			if (targetRef) {
+				// Remove any existing highlights
+				modalBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+
+				// Scroll to reference
+				targetRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+				// Highlight the reference
+				targetRef.classList.add('highlight');
+				setTimeout(() => targetRef.classList.remove('highlight'), 2000);
+			}
+		});
+	});
+
+	// Add IDs to reference list items and make them clickable
+	const refList = modalBody.querySelector('h3:has(+ ol) + ol');
+	if (refList) {
+		const refItems = refList.querySelectorAll('li');
+		refItems.forEach((item, index) => {
+			const refNum = index + 1;
+			item.id = `ref-${refNum}`;
+			item.style.cursor = 'pointer';
+
+			item.addEventListener('click', function (e) {
+				// Don't trigger if clicking on a link
+				if (e.target.tagName === 'A') return;
+
+				e.preventDefault();
+
+				// Find ALL occurrences of this reference number
+				const targetSups = modalBody.querySelectorAll(`sup.ref-${refNum}`);
+
+				if (targetSups.length > 0) {
+					// Remove any existing highlights
+					modalBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+
+					// Scroll to first mention
+					targetSups[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+					// Highlight ALL matching sup elements
+					targetSups.forEach(sup => {
+						sup.classList.add('highlight');
+					});
+
+					// Remove highlights after 2 seconds
+					setTimeout(() => {
+						targetSups.forEach(sup => {
+							sup.classList.remove('highlight');
+						});
+					}, 2000);
+				}
+			});
+		});
+	}
 });
 
 
@@ -3309,117 +3578,180 @@ class MobileManager {
 		this.activeTab = 'image'; // image or preview
 		this.activeDrawer = null; // glitter or layers or null
 		this.resizeObserver = null;
-		
+
 		if (this.isMobile) {
 			this.init();
 		}
-		
+
 		this.setupResizeObserver();
 		this.setupImageEvents();
 	}
-	
-	init() {
-		console.log('Mobile: Initializing mobile manager');
-		this.createMobileControls();
-		this.setupEventListeners();
-		this.switchTab('image');
-		console.log('Mobile: Initialization complete, on image tab');
-	}
-	
-createMobileControls() {
-	const mainContent = document.querySelector('.main-content');
-	
-	if (document.querySelector('.mobile-top-nav')) {
-		console.log('Mobile: Controls already exist, skipping creation');
+
+init() {
+	console.log('Mobile: Initializing mobile manager');
+	this.createMobileControls();
+	this.createMobileSwatch();  // ADD THIS
+	this.setupEventListeners();
+	this.switchTab('image');
+	console.log('Mobile: Initialization complete, on image tab');
+}
+
+createMobileSwatch() {
+	// Check if already exists
+	if (document.querySelector('.mobile-swatch')) {
 		return;
 	}
 	
-	// Check if image exists to set initial disabled state
-	const hasImage = this.editor.originalImage !== null;
+	const previewContainer = document.getElementById('previewContainer');
 	
-	// Create top nav (Image/Preview tabs)
-	const topNav = document.createElement('div');
-	topNav.className = 'mobile-top-nav';
-	topNav.innerHTML = `
+	const swatch = document.createElement('div');
+	swatch.className = 'mobile-swatch';
+	swatch.innerHTML = `
+		<div class="mobile-swatch-icon"></div>
+		<div class="mobile-swatch-label">Glitter</div>
+	`;
+	
+	swatch.addEventListener('click', () => {
+		this.toggleDrawer('glitter');
+	});
+	
+	previewContainer.appendChild(swatch);
+	
+	// Initial update
+	this.updateMobileSwatch();
+}
+
+updateMobileSwatch() {
+	const swatch = document.querySelector('.mobile-swatch');
+	if (!swatch) return;
+	
+	const icon = swatch.querySelector('.mobile-swatch-icon');
+	const layer = this.editor.getActiveLayer();
+	
+	if (layer) {
+		const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
+		if (glitter) {
+			icon.style.backgroundImage = `url(${glitter.url})`;
+			if (glitter.isPixelated) {
+				icon.classList.add('pixelated');
+			} else {
+				icon.classList.remove('pixelated');
+			}
+			swatch.classList.add('visible');  // CHANGED: add visible class
+		} else {
+			icon.style.backgroundImage = '';
+			swatch.classList.remove('visible');  // CHANGED: remove visible class
+		}
+	} else {
+		icon.style.backgroundImage = '';
+		swatch.classList.remove('visible');  // CHANGED: remove visible class
+	}
+}
+
+
+	createMobileControls() {
+		const mainContent = document.querySelector('.main-content');
+
+		if (document.querySelector('.mobile-top-nav')) {
+			console.log('Mobile: Controls already exist, skipping creation');
+			return;
+		}
+
+		// Check if image exists to set initial disabled state
+		const hasImage = this.editor.originalImage !== null;
+
+		// Create top nav (Image/Preview tabs)
+		const topNav = document.createElement('div');
+		topNav.className = 'mobile-top-nav';
+		topNav.innerHTML = `
 		<button class="mobile-tab-btn active" data-tab="image">Image</button>
 		<button class="mobile-tab-btn" data-tab="preview" ${!hasImage ? 'disabled' : ''}>Preview</button>
 	`;
-	
-	// Create bottom nav (Glitter/Layers drawer buttons)
-	const bottomNav = document.createElement('div');
-	bottomNav.className = 'mobile-bottom-nav';
-	bottomNav.innerHTML = `
+
+		// Create bottom nav (Glitter/Layers drawer buttons)
+		const bottomNav = document.createElement('div');
+		bottomNav.className = 'mobile-bottom-nav';
+		bottomNav.innerHTML = `
 		<button class="mobile-drawer-btn" data-drawer="layers">Layers</button>
 		<button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
 	`;
-	
-	document.body.insertBefore(topNav, document.body.firstChild);
-	document.body.appendChild(bottomNav);
-	
-	console.log('Mobile: Navigation created');
-}
-	
+
+		document.body.insertBefore(topNav, document.body.firstChild);
+		document.body.appendChild(bottomNav);
+
+		console.log('Mobile: Navigation created');
+	}
+
 	setupEventListeners() {
 		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
 			btn.addEventListener('click', () => {
 				this.switchTab(btn.dataset.tab);
 			});
 		});
-		
+
 		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
 			btn.addEventListener('click', () => {
 				this.toggleDrawer(btn.dataset.drawer);
 			});
 		});
 	}
-	
-setupImageEvents() {
-	window.addEventListener('imageLoaded', () => {
-		if (this.isMobile) {
-			// Enable preview tab
-			const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-			if (previewBtn) {
-				previewBtn.disabled = false;
-			}
-			
-			// Switch to preview and recalculate viewport
-			this.switchTab('preview');
-			
-			// Wait for tab switch to complete, then fix viewport
-			requestAnimationFrame(() => {
+
+	setupImageEvents() {
+		window.addEventListener('imageLoaded', () => {
+			if (this.isMobile) {
+				// Enable preview tab
+				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+				if (previewBtn) {
+					previewBtn.disabled = false;
+				}
+
+				// Switch to preview and recalculate viewport
+				this.switchTab('preview');
+
+				// Wait for tab switch to complete, then fix viewport
 				requestAnimationFrame(() => {
-					this.editor.resetViewport();
-					this.editor.updateZoomUI();
+					requestAnimationFrame(() => {
+						this.editor.resetViewport();
+						this.editor.updateZoomUI();
+					});
 				});
-			});
-		}
-	});
-	
-	window.addEventListener('imageRemoved', () => {
-		if (this.isMobile) {
-			// Disable preview tab
-			const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-			if (previewBtn) {
-				previewBtn.disabled = true;
 			}
-			
-			this.switchTab('image');
-			this.closeAllDrawers();
+		});
+
+		window.addEventListener('imageRemoved', () => {
+			if (this.isMobile) {
+				// Disable preview tab
+				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+				if (previewBtn) {
+					previewBtn.disabled = true;
+				}
+
+				this.switchTab('image');
+				this.closeAllDrawers();
+			}
+		});
+
+	// ADD THIS:
+	window.addEventListener('layerChanged', () => {
+		if (this.isMobile) {
+			this.updateMobileSwatch();
 		}
 	});
-}
-	
+
+
+	}
+
 	setupResizeObserver() {
 		let resizeTimer;
-		
+
 		this.resizeObserver = new ResizeObserver(entries => {
 			clearTimeout(resizeTimer);
 			resizeTimer = setTimeout(() => {
 				const newWidth = window.innerWidth;
 				const nowMobile = newWidth <= 800;
-				
+
 				console.log('Mobile: Resize detected, width:', newWidth, 'Mobile:', nowMobile);
-				
+
 				if (!this.isMobile && nowMobile) {
 					console.log('Mobile: Switching to mobile mode');
 					this.isMobile = true;
@@ -3431,34 +3763,34 @@ setupImageEvents() {
 				}
 			}, 250);
 		});
-		
+
 		this.resizeObserver.observe(document.body);
 	}
-	
+
 	switchTab(tab) {
 		console.log('Mobile: Switching to tab:', tab);
 		this.activeTab = tab;
-		
+
 		// Update tab button states
 		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
 			btn.classList.toggle('active', btn.dataset.tab === tab);
 		});
-		
+
 		// Close any open drawers
 		this.closeAllDrawers();
-		
+
 		// Remove all tab classes
 		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab');
-		
+
 		// Add the active tab class
 		document.body.classList.add(`mobile-${tab}-tab`);
-		
+
 		console.log('Mobile: Tab switched to:', tab);
 	}
-	
+
 	toggleDrawer(drawer) {
 		console.log('Mobile: Toggling drawer:', drawer);
-		
+
 		// If clicking the currently open drawer, close it
 		if (this.activeDrawer === drawer) {
 			this.closeAllDrawers();
@@ -3467,14 +3799,14 @@ setupImageEvents() {
 			this.closeAllDrawers();
 			this.activeDrawer = drawer;
 			document.body.classList.add(`${drawer}Open`);
-			
+
 			// Update button states
 			document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
 				btn.classList.toggle('active', btn.dataset.drawer === drawer);
 			});
 		}
 	}
-	
+
 	closeAllDrawers() {
 		this.activeDrawer = null;
 		document.body.classList.remove('glitterOpen', 'layersOpen');
@@ -3482,25 +3814,28 @@ setupImageEvents() {
 			btn.classList.remove('active');
 		});
 	}
+
+cleanup() {
+	console.log('Mobile: Starting cleanup');
 	
-	cleanup() {
-		console.log('Mobile: Starting cleanup');
-		
-		// Remove mobile navigation
-		const topNav = document.querySelector('.mobile-top-nav');
-		const bottomNav = document.querySelector('.mobile-bottom-nav');
-		
-		if (topNav) topNav.remove();
-		if (bottomNav) bottomNav.remove();
-		
-		// Remove all mobile classes
-		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
-		
-		console.log('Mobile: Cleanup complete, restored to desktop layout');
-	}
+	// Remove mobile navigation
+	const topNav = document.querySelector('.mobile-top-nav');
+	const bottomNav = document.querySelector('.mobile-bottom-nav');
+	const swatch = document.querySelector('.mobile-swatch');  // ADD THIS
+	
+	if (topNav) topNav.remove();
+	if (bottomNav) bottomNav.remove();
+	if (swatch) swatch.remove();  // ADD THIS
+	
+	// Remove all mobile classes
+	document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
+	
+	console.log('Mobile: Cleanup complete, restored to desktop layout');
+}
 }
 
 
 
 const editor = new GlitterEditor();
 const mobileManager = new MobileManager(editor);
+editor.mobileManager = mobileManager;  // ADD THIS LINE

@@ -43,7 +43,10 @@
   /* Sizes */
   --header-height: 60px;
   --toolbar-width: 60px;
-  --panel-width: 350px;
+  --layer-panel-width: 400px;
+  --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
+  --glitter-swatch-columns: 4;
+  --glitter-grid-mobile-columns: 5;
   --color-filter-chip-size: 32px;
   --mobile-menu-height: 60px;
   /* z indexes */
@@ -442,7 +445,7 @@ input[type=range]::-moz-range-thumb {
 
 /* ===== LEFT PANEL ===== */
 .left-panel {
-  width: var(--panel-width);
+  width: var(--layer-panel-width);
   background: var(--color-bg-primary);
   border-right: 1px solid var(--color-border);
   display: flex;
@@ -647,6 +650,11 @@ input[type=range]::-moz-range-thumb {
 .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.visibility.hidden {
   opacity: 0.3;
 }
+.layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.goto-glitter:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
 .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.delete:hover {
   background: var(--color-danger);
   border-color: var(--color-danger);
@@ -839,11 +847,12 @@ input[type=range]::-moz-range-thumb {
 
 /* ===== GLITTER COLUMN ===== */
 .glitter-column {
-  width: var(--panel-width);
+  width: var(--glitter-panel-width);
   background: var(--color-bg-primary);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
+  order: 1;
 }
 .glitter-column > .glitter-search {
   display: flex;
@@ -921,7 +930,7 @@ input[type=range]::-moz-range-thumb {
 }
 .glitter-column > .glitter-options > .glitter-category > .glitter-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
   gap: var(--spacing-sm);
 }
 .glitter-column > .glitter-options > .glitter-category > .glitter-grid > .glitter-option {
@@ -1854,7 +1863,7 @@ img[data-pixel-scale] {
     display: none;
   }
   .glitter-column > .glitter-options > .glitter-category > .glitter-grid {
-    grid-template-columns: repeat(4, 1fr);
+    --glitter-swatch-columns: var(--glitter-grid-mobile-columns);
   }
   /* ===== IMAGE TAB ===== */
   body.mobile-image-tab .main-content > .left-panel {
@@ -1914,6 +1923,76 @@ img[data-pixel-scale] {
     display: none;
   }
 }
+.mobile-swatch {
+  display: none;
+  position: absolute;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.mobile-swatch:hover {
+  border-color: var(--color-accent);
+  transform: scale(1.05);
+}
+.mobile-swatch > .mobile-swatch-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-xs);
+}
+.mobile-swatch > .mobile-swatch-icon.pixelated {
+  image-rendering: pixelated;
+}
+.mobile-swatch > .mobile-swatch-label {
+  font-size: var(--font-size-xs);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 800px) {
+  body.mobile-preview-tab .mobile-swatch.visible {
+    display: block;
+  }
+}
+.layer-pick-flash {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  margin-top: -20px;
+  border: 3px solid var(--color-accent);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: pickFlash 0.3s ease-out;
+  z-index: 1000;
+}
+
+@keyframes pickFlash {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+.preview-container {
+  touch-action: none;
+}
+
 #aboutModal {
   /* Highlight animation for references */
 }
@@ -1974,4 +2053,18 @@ body.winxp .app-header > .app-header-left > .app-header-logo > .logo {
 }
 body.winxp .app-header > .app-header-left > .app-header-logo > span.app-header-title {
   font-size: 14px;
+}
+
+.glitter-option.highlight {
+  outline-color: var(--color-accent);
+  animation: glitterPulse 0.5s ease-in-out 2;
+}
+
+@keyframes glitterPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }/*# sourceMappingURL=style.css.map */

@@ -47,7 +47,17 @@
 	/* Sizes */
 	--header-height: 60px;
 	--toolbar-width: 60px;
-	--panel-width: 350px;
+
+	
+	--layer-panel-width: 400px;
+
+	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
+	--glitter-swatch-columns: 4;
+	--glitter-grid-mobile-columns: 5;
+
+
+
+
 	--color-filter-chip-size: 32px;
 	--mobile-menu-height: 60px;
 
@@ -534,7 +544,8 @@ input[type="range"] {
 
 /* ===== LEFT PANEL ===== */
 .left-panel {
-	width: var(--panel-width);
+	// width: var(--panel-width);
+	width: var(--layer-panel-width);
 	background: var(--color-bg-primary);
 	border-right: 1px solid var(--color-border);
 	display: flex;
@@ -790,6 +801,13 @@ input[type="range"] {
 						opacity: 0.3;
 					}
 
+
+					&.goto-glitter:hover {
+						background: var(--color-bg-tertiary);
+						border-color: var(--color-accent);
+						color: var(--color-accent);
+					}
+
 					&.delete:hover {
 						background: var(--color-danger);
 						border-color: var(--color-danger);
@@ -1022,11 +1040,12 @@ input[type="range"] {
 
 /* ===== GLITTER COLUMN ===== */
 .glitter-column {
-	width: var(--panel-width);
+	width: var(--glitter-panel-width);
 	background: var(--color-bg-primary);
 	border-right: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
+	order: 1;
 
 
 	>.glitter-search {
@@ -1125,7 +1144,7 @@ input[type="range"] {
 
 			>.glitter-grid {
 				display: grid;
-				grid-template-columns: repeat(3, 1fr);
+				grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
 				gap: var(--spacing-sm);
 
 				>.glitter-option {
@@ -2330,7 +2349,9 @@ img[data-pixel-scale] {
 	}
 	
 	.glitter-column > .glitter-options > .glitter-category > .glitter-grid {
-		grid-template-columns: repeat(4, 1fr);
+		
+		--glitter-swatch-columns: var(--glitter-grid-mobile-columns);
+
 	}
 	
 	/* ===== IMAGE TAB ===== */
@@ -2405,6 +2426,124 @@ img[data-pixel-scale] {
 }
 
 
+
+
+
+
+
+
+
+
+
+// Mobile Swatch Display (only shown in mobile preview tab when layer is active)
+.mobile-swatch {
+	display: none;  // Hidden by default
+	position: absolute;
+	top: var(--spacing-md);
+	left: var(--spacing-md);
+	z-index: 1000;
+	background: rgba(0, 0, 0, 0.8);
+	border: 2px solid var(--color-border);
+	border-radius: var(--radius-md);
+	padding: var(--spacing-sm);
+	cursor: pointer;
+	transition: all var(--transition-fast);
+	
+	&:hover {
+		border-color: var(--color-accent);
+		transform: scale(1.05);
+	}
+	
+	> .mobile-swatch-icon {
+		width: 48px;
+		height: 48px;
+		border-radius: var(--radius-sm);
+		background-size: cover;
+		background-position: center;
+		border: 1px solid var(--color-border);
+		margin-bottom: var(--spacing-xs);
+		
+		&.pixelated {
+			image-rendering: pixelated;
+		}
+	}
+	
+	> .mobile-swatch-label {
+		font-size: var(--font-size-xs);
+		text-align: center;
+		color: var(--color-text-secondary);
+		font-weight: 600;
+		letter-spacing: 0.5px;
+		text-transform: uppercase;
+	}
+}
+
+@media (max-width: 800px) {
+	body.mobile-preview-tab .mobile-swatch.visible {  // CHANGED: added .visible
+		display: block;
+	}
+}
+
+
+
+// Layer pick visual feedback (shown for all users)
+.layer-pick-flash {
+	position: absolute;
+	width: 40px;
+	height: 40px;
+	margin-left: -20px;
+	margin-top: -20px;
+	border: 3px solid var(--color-accent);
+	border-radius: 50%;
+	pointer-events: none;
+	animation: pickFlash 0.3s ease-out;
+	z-index: 1000;
+}
+
+@keyframes pickFlash {
+	0% {
+		transform: scale(0.5);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(1.5);
+		opacity: 0;
+	}
+}
+
+// Allow touch gesture handling on preview container
+.preview-container {
+	touch-action: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #aboutModal {
 
 
@@ -2451,6 +2590,33 @@ img[data-pixel-scale] {
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 body.winxp {
 
 	.app-header {
@@ -2488,4 +2654,19 @@ body.winxp {
 	}
 
 
+}
+
+// Add highlight effect for glitter options
+.glitter-option.highlight {
+	outline-color: var(--color-accent);
+	animation: glitterPulse 0.5s ease-in-out 2;
+}
+
+@keyframes glitterPulse {
+	0%, 100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.05);
+	}
 }
