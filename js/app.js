@@ -1302,7 +1302,7 @@ initializeExportSettings() {
 				}
 			};
 
-			actions.append(visBtn, arrowBtn, delBtn);  // CHANGED: added arrowBtn
+			actions.append(arrowBtn, visBtn, delBtn);  // CHANGED: added arrowBtn
 
 			layerEl.append(swatch, info, actions);
 			layerEl.onclick = () => this.setActiveLayer(layer.id);
@@ -3588,54 +3588,187 @@ _parseHexColor(hex) {
 
 
 
-document.querySelectorAll('[data-tooltip]').forEach(el => {
-	el.addEventListener('mouseenter', () => {
+
+
+// ============================================
+// TOOLTIP MANAGER CLASS
+// ============================================
+class TooltipManager {
+	constructor(options = {}) {
+		this.config = {
+			gap: 5,
+			viewportPadding: 10,
+			dismissOnScroll: true,
+			oneAtATime: true,
+			...options
+		};
+
+		this.activeTooltip = null;
+		this.activeElement = null;
+		this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		this.scrollContainers = new Set();
+		
+		this.handleScroll = this.handleScroll.bind(this);
+		this.handleResize = this.handleResize.bind(this);
+		this.handleOutsideClick = this.handleOutsideClick.bind(this);
+		this.handleEscKey = this.handleEscKey.bind(this);
+		
+		this.init();
+	}
+
+	init() {
+		this.attachTooltipListeners();
+		this.attachGlobalListeners();
+	}
+
+	findScrollableParent(element) {
+		let parent = element.parentElement;
+		while (parent) {
+			const style = window.getComputedStyle(parent);
+			if (['auto', 'scroll'].includes(style.overflow) || 
+			    ['auto', 'scroll'].includes(style.overflowY)) {
+				return parent;
+			}
+			parent = parent.parentElement;
+		}
+		return window;
+	}
+
+	attachTooltipListeners() {
+		document.querySelectorAll('[data-tooltip]').forEach(el => {
+			if (this.isTouchDevice) {
+				el.addEventListener('click', (e) => this.handleMobileClick(e, el));
+			} else {
+				el.addEventListener('mouseenter', () => this.show(el));
+				el.addEventListener('mouseleave', () => this.hide(el));
+			}
+			
+			if (this.config.dismissOnScroll) {
+				const scrollParent = this.findScrollableParent(el);
+				if (!this.scrollContainers.has(scrollParent)) {
+					this.scrollContainers.add(scrollParent);
+					scrollParent.addEventListener('scroll', this.handleScroll, { passive: true });
+				}
+			}
+		});
+	}
+
+	attachGlobalListeners() {
+		if (this.config.dismissOnScroll) {
+			window.addEventListener('scroll', this.handleScroll, { passive: true });
+		}
+		if (this.isTouchDevice) {
+			document.addEventListener('click', this.handleOutsideClick);
+		}
+		document.addEventListener('keydown', this.handleEscKey);
+		window.addEventListener('resize', this.handleResize);
+	}
+
+	show(element) {
+		if (this.config.oneAtATime) {
+			this.dismissAll();
+		}
+
 		const tooltip = document.createElement('div');
 		tooltip.className = 'tooltip';
-		tooltip.textContent = el.dataset.tooltip;
+		tooltip.textContent = element.dataset.tooltip;
 		document.body.appendChild(tooltip);
 
-		// 1. Get dimensions
-		const rect = el.getBoundingClientRect(); // The element we are hovering
-		const tooltipRect = tooltip.getBoundingClientRect(); // The tooltip itself
-		const gap = 5; // Space between element and tooltip
+		this.position(tooltip, element);
 
-		// 2. Calculate initial Vertical Position (Above)
-		// We use window.scrollY because position:absolute is relative to the document, not viewport
-		let top = rect.top + window.scrollY - tooltipRect.height - gap;
+		element._tooltip = tooltip;
+		this.activeTooltip = tooltip;
+		this.activeElement = element;
+	}
 
-		// VERTICAL CHECK: If the tooltip goes off the top of the screen...
-		if (rect.top - tooltipRect.height - gap < 0) {
-			// ...flip it to the bottom of the element
-			top = rect.bottom + window.scrollY + gap;
+	position(tooltip, element) {
+		const rect = element.getBoundingClientRect();
+		tooltip.offsetHeight;
+		const tooltipRect = tooltip.getBoundingClientRect();
+		
+		// Vertical positioning
+		let top = rect.top - tooltipRect.height - this.config.gap;
+		if (top < 0) {
+			top = rect.bottom + this.config.gap;
 		}
 
-		// 3. Calculate initial Horizontal Position (Centered on element)
-		let left = rect.left + window.scrollX + (rect.width / 2) - (tooltipRect.width / 2);
+		// Horizontal positioning (centered)
+		let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+		
+		// Clamp to viewport
+		left = Math.max(
+			this.config.viewportPadding,
+			Math.min(left, window.innerWidth - tooltipRect.width - this.config.viewportPadding)
+		);
 
-		// HORIZONTAL CHECK: Prevent going off the Left edge
-		if (left < 0) {
-			left = 5; // Keep 5px padding from left edge
-		}
-		// HORIZONTAL CHECK: Prevent going off the Right edge
-		else if (left + tooltipRect.width > window.innerWidth) {
-			left = window.innerWidth - tooltipRect.width - 5; // Keep 5px padding from right
-		}
-
-		// 4. Apply calculated positions
 		tooltip.style.top = top + 'px';
 		tooltip.style.left = left + 'px';
+	}
 
-		el._tooltip = tooltip;
-	});
-
-	el.addEventListener('mouseleave', () => {
-		if (el._tooltip) {
-			el._tooltip.remove();
-			el._tooltip = null;
+	hide(element) {
+		if (element._tooltip) {
+			element._tooltip.remove();
+			element._tooltip = null;
+			if (this.activeElement === element) {
+				this.activeTooltip = null;
+				this.activeElement = null;
+			}
 		}
-	});
-});
+	}
+
+	dismissAll() {
+		document.querySelectorAll('.tooltip').forEach(t => t.remove());
+		document.querySelectorAll('[data-tooltip]').forEach(el => el._tooltip = null);
+		this.activeTooltip = null;
+		this.activeElement = null;
+	}
+
+	handleMobileClick(e, element) {
+		e.preventDefault();
+		e.stopPropagation();
+		element._tooltip ? this.hide(element) : this.show(element);
+	}
+
+	handleScroll() {
+		this.dismissAll();
+	}
+
+	handleResize() {
+		this.dismissAll();
+	}
+
+	handleOutsideClick(e) {
+		if (!e.target.closest('[data-tooltip], .tooltip')) {
+			this.dismissAll();
+		}
+	}
+
+	handleEscKey(e) {
+		if (e.key === 'Escape' && this.activeTooltip) {
+			this.dismissAll();
+		}
+	}
+
+	destroy() {
+		this.dismissAll();
+		this.scrollContainers.forEach(container => {
+			container.removeEventListener('scroll', this.handleScroll);
+		});
+		this.scrollContainers.clear();
+		window.removeEventListener('scroll', this.handleScroll);
+		window.removeEventListener('resize', this.handleResize);
+		document.removeEventListener('click', this.handleOutsideClick);
+		document.removeEventListener('keydown', this.handleEscKey);
+	}
+
+	refresh() {
+		this.attachTooltipListeners();
+	}
+}
+
+// Initialize
+const tooltips = new TooltipManager();
+
 
 
 document.querySelectorAll('img[data-pixel-scale]').forEach(img => {
@@ -3830,19 +3963,39 @@ class MobileManager {
 		console.log('Mobile: Navigation created');
 	}
 
-	setupEventListeners() {
-		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-			btn.addEventListener('click', () => {
-				this.switchTab(btn.dataset.tab);
-			});
+setupEventListeners() {
+	document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			this.switchTab(btn.dataset.tab);
 		});
+	});
 
-		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
-			btn.addEventListener('click', () => {
-				this.toggleDrawer(btn.dataset.drawer);
-			});
+	document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			this.toggleDrawer(btn.dataset.drawer);
 		});
-	}
+	});
+
+	// Close drawer when clicking on section headers (but not action buttons)
+	document.querySelectorAll('.section-header').forEach(header => {
+		header.addEventListener('click', (e) => {
+			// Only close if mobile and a drawer is open
+			if (this.isMobile && this.activeDrawer) {
+				// Don't close if clicking on the action button or its children
+				if (!e.target.closest('.section-header-action')) {
+					this.closeAllDrawers();
+				}
+			}
+		});
+	});
+
+	// Prevent action buttons from triggering header click
+	document.querySelectorAll('.section-header-action').forEach(btn => {
+		btn.addEventListener('click', (e) => {
+			e.stopPropagation();
+		});
+	});
+}
 
 	setupImageEvents() {
 		window.addEventListener('imageLoaded', () => {
