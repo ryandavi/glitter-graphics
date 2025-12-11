@@ -1314,13 +1314,17 @@ initializeExportSettings() {
 			layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
 			layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
 
-			container.appendChild(layerEl);
-		});
+		container.appendChild(layerEl);
+	});
 
-
-
-		document.getElementById('addLayerBtn').disabled = this.layers.length >= CONFIG.maxLayers;
+	document.getElementById('addLayerBtn').disabled = this.layers.length >= CONFIG.maxLayers;
+	
+	// Update mobile add button if it exists
+	const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
+	if (mobileAddBtn) {
+		mobileAddBtn.disabled = this.layers.length >= CONFIG.maxLayers;
 	}
+}
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
@@ -3056,536 +3060,535 @@ this.exportSettings.matteColor = matteColorInput ? matteColorInput.value : CONFI
 	}
 }
 class GifExporter {
-	constructor() {
-		const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    constructor() {
+        const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
-		this.config = {
-			workers: 4,
-			// Quality 1 = Best (samples every pixel). Critical for pixel art accuracy.
-			quality: 1,
-			workerScript: isLocal
-				? 'js/gif.worker.js'
-				: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
-			fileName: 'ryandavi-com_glitter.gif',
-			timing: { forceDelay: 100, maxFrames: 60 }
-		};
+        this.config = {
+            workers: 4,
+            // Quality 1 = Best (samples every pixel). Critical for pixel art/glitter accuracy.
+            quality: 1,
+            workerScript: isLocal
+                ? 'js/gif.worker.js'
+                : 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
+            fileName: 'ryandavi-com_glitter.gif',
+            timing: { forceDelay: 100, maxFrames: 60 }
+        };
 
-		// Reusable canvas elements
-		this.canvas = document.createElement('canvas');
-		this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+        // Reusable canvas elements
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
 
-		this.helperCanvas = document.createElement('canvas');
-		this.helperCtx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
-	}
+        this.helperCanvas = document.createElement('canvas');
+        this.helperCtx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
+    }
 
-	gcd(a, b) { return !b ? a : this.gcd(b, a % b); }
-	lcm(a, b) { return (a * b) / this.gcd(a, b); }
+    gcd(a, b) { return !b ? a : this.gcd(b, a % b); }
+    lcm(a, b) { return (a * b) / this.gcd(a, b); }
 
-	_hasTransparency(canvasData) {
-		const { originalAlpha, alphaThreshold } = canvasData;
-		for (let i = 0; i < originalAlpha.length; i++) {
-			if (originalAlpha[i] < alphaThreshold) {
-				return true; // Found at least one transparent pixel
-			}
-		}
-		return false; // No transparency in image
-	}
+    _hasTransparency(canvasData) {
+        const { originalAlpha, alphaThreshold } = canvasData;
+        for (let i = 0; i < originalAlpha.length; i++) {
+            if (originalAlpha[i] < alphaThreshold) {
+                return true; // Found at least one transparent pixel
+            }
+        }
+        return false; // No transparency in image
+    }
 
+    async process(params) {
+        const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks } = params;
 
-	async process(params) {
-		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks } = params;
+        // 1. Ensure Frames Loaded
+        callbacks.onProgress(0, 'Loading glitter frames...', 0, 0);
+        await this._loadMissingFrames(visibleLayers, glitterGifs, callbacks);
 
-		// 1. Ensure Frames Loaded
-		callbacks.onProgress(0, 'Loading glitter frames...', 0, 0);
-		await this._loadMissingFrames(visibleLayers, glitterGifs, callbacks);
+        // 2. De-Optimize Frames (Smart Flattening)
+        // This fixes the "glitter piling up" and "glitter disappearing" issues
+        callbacks.onProgress(5, 'Processing frames...', 0, 0);
+        this._deoptimizeGlitterFrames(visibleLayers, glitterGifs);
 
-		// 2. De-Optimize Frames (Flatten disposal methods)
-		callbacks.onProgress(5, 'Processing frames...', 0, 0);
-		this._deoptimizeGlitterFrames(visibleLayers, glitterGifs);
+        // 3. CHECK FOR TRANSPARENCY
+        const hasTransparency = this._hasTransparency(canvasData);
+        console.log(`[GifExporter] Image has transparency: ${hasTransparency}`);
 
-// 3. CHECK FOR TRANSPARENCY
-const hasTransparency = this._hasTransparency(canvasData);
-console.log(`[GifExporter] Image has transparency: ${hasTransparency}`);
+        // Need a safe key if EITHER the image has transparency OR we're exporting glitter-only
+        const needsSafeKey = hasTransparency || !exportSettings.baseImage;
 
-// Need a safe key if EITHER the image has transparency OR we're exporting glitter-only
-const needsSafeKey = hasTransparency || !exportSettings.baseImage;
+        // Only find a safe key if we actually need transparency
+        const safeKey = needsSafeKey
+            ? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData)
+            : null;
 
-// Only find a safe key if we actually need transparency
-const safeKey = needsSafeKey
-	? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData)
-	: null;
+        if (safeKey) {
+            console.log(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
+        }
 
-if (safeKey) {
-	console.log(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
+        // 4. Synchronization
+        const totalFrames = this._calculateTotalFrames(visibleLayers, glitterGifs, exportSettings.maxFrames);
+        callbacks.onStatus(`Rendering ${totalFrames} frames...`);
+
+        // 5. Prepare Masks
+        callbacks.onProgress(10, 'Preparing masks...', 0, totalFrames);
+        const maskCanvases = new Map();
+
+        this.helperCanvas.width = canvasData.width;
+        this.helperCanvas.height = canvasData.height;
+
+        visibleLayers.forEach(layer => {
+            const rawMask = callbacks.createMask(layer);
+            const maskCanvas = this._createMaskCanvas(rawMask, canvasData.width, canvasData.height);
+            maskCanvases.set(layer.id, maskCanvas);
+        });
+
+        // 6. Setup Encoder
+        const needsTransparency = (hasTransparency && exportSettings.transparency) || (!exportSettings.baseImage && exportSettings.transparency);
+
+        const gifOptions = {
+            workers: this.config.workers,
+            quality: exportSettings.quality,
+            width: canvasData.width,
+            height: canvasData.height,
+            workerScript: this.config.workerScript,
+            // Disable dithering if we are doing transparency to keep edges clean
+            dither: needsTransparency 
+                ? false 
+                : (exportSettings.ditherEnabled ? exportSettings.ditherType : false)
+        };
+
+        // Enable transparency if user wants it and we have a safe key
+        if (needsTransparency && safeKey) {
+            gifOptions.transparent = safeKey.hex;
+            gifOptions.background = 0; 
+            console.log('[GifExporter] Transparency enabled with key:', safeKey.hex);
+        }
+
+        const gif = new GIF(gifOptions);
+
+        // 7. Render Loop
+        this.canvas.width = canvasData.width;
+        this.canvas.height = canvasData.height;
+
+        for (let f = 0; f < totalFrames; f++) {
+            const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey, exportSettings);
+
+            gif.addFrame(frameData, { 
+                delay: exportSettings.frameDelay, 
+                copy: true
+                // CRITICAL FIX: Removed 'dispose: 2'.
+                // Since we render the FULL composite image every frame, we do NOT want
+                // the gif viewer to clear to transparent. This fixes the Frame 3 inversion.
+            });
+
+            const progressPercent = 10 + Math.floor((f / totalFrames) * 65);
+            callbacks.onProgress(progressPercent, `Rendering frame ${f + 1}/${totalFrames}...`, f + 1, totalFrames);
+        }
+
+        // 8. Output
+        callbacks.onProgress(75, 'Encoding GIF...', totalFrames, totalFrames);
+
+        gif.on('error', (error) => {
+            console.error('GIF encoding error:', error);
+            throw new Error('GIF encoding failed: ' + error.message);
+        });
+
+        gif.on('abort', () => {
+            throw new Error('Export cancelled');
+        });
+
+        gif.on('finished', (blob) => this._handleFileSave(blob, callbacks));
+
+        console.log('Starting GIF render:', {
+            frames: totalFrames,
+            workers: this.config.workers,
+            quality: exportSettings.quality,
+            key: safeKey
+        });
+
+        gif.render();
+    }
+
+    // --- HELPER METHODS ---
+
+    _renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings) {
+        const { width, height, originalData } = canvasData;
+        const ctx = this.ctx;
+        const hCtx = this.helperCtx;
+
+        // A. Clear canvas completely
+        this.canvas.width = width;
+        this.canvas.height = height;
+        ctx.clearRect(0, 0, width, height);
+        
+        // B. Draw Background Image (if enabled)
+        if (exportSettings.baseImage) {
+            const bgImage = new ImageData(originalData, width, height);
+            ctx.putImageData(bgImage, 0, 0);
+        }
+
+        // C. Composite Glitter Layers
+        layers.forEach(layer => {
+            const maskCanvas = maskCanvases.get(layer.id);
+            if (!maskCanvas) return;
+
+            const glitter = library[layer.selectedGlitterIndex];
+            const frames = glitter.frames.frames;
+            const fIdx = frameIndex % frames.length;
+            const glitterFrame = frames[fIdx];
+
+            // Save context state to prevent bleed between layers
+            hCtx.save();
+
+            // 1. Pattern Fill
+            hCtx.clearRect(0, 0, width, height);
+
+            const patternSource = document.createElement('canvas');
+            patternSource.width = glitterFrame.width;
+            patternSource.height = glitterFrame.height;
+            patternSource.getContext('2d').putImageData(glitterFrame.data, 0, 0);
+
+            const pattern = hCtx.createPattern(patternSource, 'repeat');
+            const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+            const matrix = new DOMMatrix();
+            matrix.scaleSelf(scale, scale);
+            pattern.setTransform(matrix);
+
+            hCtx.globalAlpha = layer.settings.opacity / 100;
+            hCtx.fillStyle = pattern;
+            hCtx.fillRect(0, 0, width, height);
+
+            // 2. Apply Mask
+            hCtx.globalCompositeOperation = 'destination-in';
+            hCtx.globalAlpha = 1.0;
+            hCtx.drawImage(maskCanvas, 0, 0);
+            
+            // Restore context for next layer
+            hCtx.restore();
+
+            // 3. Draw to Main
+            ctx.drawImage(this.helperCanvas, 0, 0);
+        });
+
+        // D. APPLY TRANSPARENCY LOGIC ON FINAL COMPOSITE
+        // We read the final pixel data (Base + All Glitters combined)
+        const output = ctx.getImageData(0, 0, width, height);
+        const data = output.data;
+        const len = data.length;
+
+        const shouldApplyTransparency = exportSettings.transparency && safeKey;
+        const shouldApplyMatte = !exportSettings.transparency && safeKey;
+
+        if (shouldApplyTransparency) {
+            const { r: keyR, g: keyG, b: keyB } = safeKey;
+
+            for (let i = 0; i < len; i += 4) {
+                // Check the ALPHA of the final composite pixel
+                const currentAlpha = data[i + 3];
+
+                // If pixel is effectively transparent...
+                if (currentAlpha < 10) { 
+                    // FILL WITH SAFE KEY and FORCE OPAQUE (Alpha 255).
+                    // This prevents the "Inversion" bug. We tell the encoder this is a 
+                    // bright green solid pixel, and the encoder maps bright green to transparent.
+                    data[i] = keyR;
+                    data[i + 1] = keyG;
+                    data[i + 2] = keyB;
+                    data[i + 3] = 255; 
+                } else {
+                    // CONFLICT CHECK: If a visible pixel happens to match our key color...
+                    if (data[i] === keyR && data[i + 1] === keyG && data[i + 2] === keyB) {
+                        // Shift the Green value slightly so it stays opaque
+                        data[i + 1] = (keyG === 255) ? 254 : keyG + 1;
+                    }
+                    // Ensure full opacity for visible pixels
+                    data[i + 3] = 255;
+                }
+            }
+        } else if (shouldApplyMatte) {
+            // APPLY MATTE COLOR
+            const matteColor = this._parseHexColor(exportSettings.matteColor);
+            
+            for (let i = 0; i < len; i += 4) {
+                const currentAlpha = data[i + 3];
+                
+                if (currentAlpha < 255) {
+                    if (currentAlpha === 0) {
+                        // Fully transparent -> Matte Color
+                        data[i] = matteColor.r;
+                        data[i + 1] = matteColor.g;
+                        data[i + 2] = matteColor.b;
+                        data[i + 3] = 255;
+                    } else {
+                        // Semi-transparent -> Blend with Matte
+                        const alpha = currentAlpha / 255;
+                        const invAlpha = 1 - alpha;
+                        data[i] = (data[i] * alpha) + (matteColor.r * invAlpha);
+                        data[i + 1] = (data[i + 1] * alpha) + (matteColor.g * invAlpha);
+                        data[i + 2] = (data[i + 2] * alpha) + (matteColor.b * invAlpha);
+                        data[i + 3] = 255;
+                    }
+                }
+            }
+        } else {
+            // No transparency needed - just ensure all pixels are opaque
+            for (let i = 3; i < len; i += 4) {
+                data[i] = 255;
+            }
+        }
+
+        return output;
+    }
+
+    _findSafeTransparencyKey(layers, library, canvasData) {
+        // Colors unlikely to appear in photos or glitter
+        const candidates = [
+            { name: 'DarkGray1', hex: 0x010101, r: 1, g: 1, b: 1 },
+            { name: 'OffGreen1', hex: 0x00FE00, r: 0, g: 254, b: 0 },
+            { name: 'Green', hex: 0x00FF00, r: 0, g: 255, b: 0 },
+            { name: 'Magenta', hex: 0xFF00FF, r: 255, g: 0, b: 255 },
+            { name: 'Blue', hex: 0x0000FF, r: 0, g: 0, b: 255 },
+            { name: 'Red', hex: 0xFF0000, r: 255, g: 0, b: 0 },
+            { name: 'Cyan', hex: 0x00FFFF, r: 0, g: 255, b: 255 }
+        ];
+
+        // Gather all glitter frame data to check against
+        const glitterFrames = [];
+        layers.forEach(layer => {
+            const glitter = library[layer.selectedGlitterIndex];
+            if (glitter?.frames?.frames) {
+                glitterFrames.push(...glitter.frames.frames);
+            }
+        });
+
+        for (const candidate of candidates) {
+            let isSafe = true;
+
+            // 1. Check Original Image (only opaque pixels)
+            const imgData = canvasData.originalData;
+            const imgLen = imgData.length;
+            const alphaThresh = canvasData.alphaThreshold;
+
+            for (let i = 0; i < imgLen; i += 4) {
+                // If the pixel is effectively transparent in source, we don't care if it matches
+                // because we are going to overwrite it anyway.
+                if (canvasData.originalAlpha[i/4] < alphaThresh) continue;
+
+                if (imgData[i] === candidate.r &&
+                    imgData[i + 1] === candidate.g &&
+                    imgData[i + 2] === candidate.b) {
+                    isSafe = false;
+                    break;
+                }
+            }
+
+            if (!isSafe) continue;
+
+            // 2. Check Glitter Frames (only opaque pixels)
+            for (const frame of glitterFrames) {
+                const data = frame.data;
+                const len = data.length;
+
+                for (let i = 0; i < len; i += 4) {
+                    if (data[i + 3] === 0) continue; // Ignore transparent glitter pixels
+
+                    if (data[i] === candidate.r &&
+                        data[i + 1] === candidate.g &&
+                        data[i + 2] === candidate.b) {
+                        isSafe = false;
+                        break;
+                    }
+                }
+                if (!isSafe) break;
+            }
+
+            if (isSafe) {
+                console.log(`[GifExporter] Found safe key: ${candidate.name}`);
+                return candidate;
+            }
+        }
+
+        console.warn('[GifExporter] Using fallback key.');
+        return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
+    }
+
+    _deoptimizeGlitterFrames(layers, library) {
+        layers.forEach(layer => {
+            const glitter = library[layer.selectedGlitterIndex];
+            if (glitter.isFlattened) return;
+
+            const rawFrames = glitter.frames.frames;
+            const width = glitter.frames.width;
+            const height = glitter.frames.height;
+
+            this.helperCanvas.width = width;
+            this.helperCanvas.height = height;
+            const ctx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
+
+            const tempC = document.createElement('canvas');
+            const tempCtx = tempC.getContext('2d');
+
+            const flattenedFrames = [];
+            let previousFrameData = ctx.getImageData(0, 0, width, height);
+
+            for (let i = 0; i < rawFrames.length; i++) {
+                const frame = rawFrames[i];
+                const dims = { x: frame.x || 0, y: frame.y || 0, w: frame.width || width, h: frame.height || height };
+
+                const patchData = new ImageData(frame.data, dims.w, dims.h);
+                tempC.width = dims.w;
+                tempC.height = dims.h;
+                tempCtx.putImageData(patchData, 0, 0);
+
+                // If disposal was 3 (Restore Previous), revert before drawing
+                if (frame.disposal === 3) ctx.putImageData(previousFrameData, 0, 0);
+
+                // Draw the current patch
+                ctx.drawImage(tempC, dims.x, dims.y);
+
+                // Save this state as "Previous" for the next frame if needed
+                const currentFullFrame = ctx.getImageData(0, 0, width, height);
+                flattenedFrames.push({
+                    data: currentFullFrame,
+                    width, height
+                });
+
+                // --- SMART DISPOSAL DETECTION ---
+                // We need to decide what to do with the canvas BEFORE the next loop iteration.
+                // If the user didn't specify disposal (undefined or 0), we guess based on content.
+                let disposal = frame.disposal;
+
+                if (disposal === undefined || disposal === 0) {
+                    // Check if the current patch had any transparency.
+                    // If it has transparency (twinkles), we usually want to Clear (2).
+                    // If it is solid (texture), we usually want to Keep (1).
+                    const isTransparent = this._checkFrameTransparency(frame.data);
+                    disposal = isTransparent ? 2 : 1;
+                }
+
+                if (disposal === 2) {
+                    // Restore to Background (Clear the area we just drew)
+                    ctx.clearRect(dims.x, dims.y, dims.w, dims.h);
+                } else if (disposal === 3) {
+                    // We will restore 'previousFrameData' at start of next loop
+                    // Just ensure previousFrameData is correct (it should be the state before this frame)
+                } else {
+                    // Disposal 1: Leave it on the canvas (update previousFrameData for disposal 3 usage)
+                    previousFrameData = currentFullFrame;
+                }
+            }
+
+            glitter.frames.frames = flattenedFrames;
+            glitter.isFlattened = true;
+        });
+    }
+
+    _checkFrameTransparency(data) {
+        // Scan the alpha channel of a frame to see if it has holes
+        // Step by 40 (every 10th pixel) for performance
+        for (let i = 3; i < data.length; i += 40) {
+            if (data[i] < 255) return true; // Found a transparent pixel
+        }
+        return false;
+    }
+
+    _parseHexColor(hex) {
+        hex = hex.replace('#', '');
+        return {
+            r: parseInt(hex.substring(0, 2), 16),
+            g: parseInt(hex.substring(2, 4), 16),
+            b: parseInt(hex.substring(4, 6), 16)
+        };
+    }
+
+    _createMaskCanvas(rawMaskData, width, height) {
+        const c = document.createElement('canvas');
+        c.width = width;
+        c.height = height;
+        const ctx = c.getContext('2d');
+
+        const imgData = ctx.createImageData(width, height);
+        const data = imgData.data;
+
+        for (let i = 0; i < rawMaskData.length; i++) {
+            const val = rawMaskData[i];
+            const pIdx = i * 4;
+            data[pIdx] = 0;
+            data[pIdx + 1] = 0;
+            data[pIdx + 2] = 0;
+            data[pIdx + 3] = val; // Mask value controls alpha
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        return c;
+    }
+
+    async _loadMissingFrames(layers, library, callbacks) {
+        for (const layer of layers) {
+            const glitter = library[layer.selectedGlitterIndex];
+            if (!glitter.frames) {
+                callbacks.onStatus(`Loading ${glitter.name}...`);
+                try {
+                    glitter.frames = await callbacks.parseGif(glitter.url);
+                } catch (e) {
+                    throw new Error(`Failed to load ${glitter.name}`);
+                }
+            }
+        }
+    }
+
+    _calculateTotalFrames(layers, library, maxFrames) {
+        const counts = layers.map(l => {
+            const glitter = library[l.selectedGlitterIndex];
+            if (!glitter || !glitter.frames || !glitter.frames.frames) {
+                return 1;
+            }
+            return glitter.frames.frames.length;
+        });
+
+        let total = counts[0] || 1;
+        if (counts.length > 1) {
+            total = counts.reduce((acc, val) => this.lcm(acc, val), total);
+        }
+
+        const result = Math.min(total, maxFrames);
+        console.log('Calculated total frames:', result);
+        return result;
+    }
+
+    async _handleFileSave(blob, callbacks) {
+        console.log('_handleFileSave called with blob size:', blob.size);
+        callbacks.onProgress(100, 'Export complete!', 0, 0);
+        callbacks.onStatus('Export complete!');
+        callbacks.onComplete();
+
+        const file = new File([blob], this.config.fileName, { type: 'image/gif' });
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'Glitter Image',
+                    text: 'Created with Glitter Image Editor'
+                });
+                return;
+            } catch (error) {
+                if (error.name !== 'AbortError') console.warn('Share failed', error);
+                else return;
+            }
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = this.config.fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+    }
 }
-
-		// 4. Synchronization
-		const totalFrames = this._calculateTotalFrames(visibleLayers, glitterGifs, exportSettings.maxFrames);
-		callbacks.onStatus(`Rendering ${totalFrames} frames...`);
-
-		// 5. Prepare Masks
-		callbacks.onProgress(10, 'Preparing masks...', 0, totalFrames);
-		const maskCanvases = new Map();
-
-		this.helperCanvas.width = canvasData.width;
-		this.helperCanvas.height = canvasData.height;
-
-		visibleLayers.forEach(layer => {
-			const rawMask = callbacks.createMask(layer);
-			const maskCanvas = this._createMaskCanvas(rawMask, canvasData.width, canvasData.height);
-			maskCanvases.set(layer.id, maskCanvas);
-		});
-
-// 6. Setup Encoder
-// Disable dithering when we need transparency (either from original image or from no base image)
-const needsTransparency = (hasTransparency && exportSettings.transparency) || (!exportSettings.baseImage && exportSettings.transparency);
-
-const gifOptions = {
-	workers: this.config.workers,
-	quality: exportSettings.quality,
-	width: canvasData.width,
-	height: canvasData.height,
-	workerScript: this.config.workerScript,
-	// CRITICAL: Disable dithering when using transparency to avoid artifacts
-	dither: needsTransparency 
-		? false 
-		: (exportSettings.ditherEnabled ? exportSettings.ditherType : false)
-};
-
-// Enable transparency if user wants it and we have a safe key
-if (needsTransparency && safeKey) {
-	gifOptions.transparent = safeKey.hex;
-	gifOptions.background = null;
-	console.log('[GifExporter] Transparency enabled with key:', safeKey.hex);
-} else {
-	console.log('[GifExporter] No transparency - all pixels will be opaque');
-}
-
-const gif = new GIF(gifOptions);
-
-		// 7. Render Loop
-		this.canvas.width = canvasData.width;
-		this.canvas.height = canvasData.height;
-
-		for (let f = 0; f < totalFrames; f++) {
-			// Pass export settings to the render function
-const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey, exportSettings);
-			gif.addFrame(frameData, { delay: exportSettings.frameDelay, copy: true });
-
-			const progressPercent = 10 + Math.floor((f / totalFrames) * 65);
-			callbacks.onProgress(progressPercent, `Rendering frame ${f + 1}/${totalFrames}...`, f + 1, totalFrames);
-		}
-
-		// 8. Output
-		callbacks.onProgress(75, 'Encoding GIF...', totalFrames, totalFrames);
-
-		gif.on('error', (error) => {
-			console.error('GIF encoding error:', error);
-			throw new Error('GIF encoding failed: ' + error.message);
-		});
-
-		gif.on('abort', () => {
-			throw new Error('Export cancelled');
-		});
-
-		gif.on('finished', (blob) => this._handleFileSave(blob, callbacks));
-
-		console.log('Starting GIF render:', {
-			frames: totalFrames,
-			workers: this.config.workers,
-			quality: exportSettings.quality,
-			key: safeKey
-		});
-
-		gif.render();
-	}
-
-	// --- HELPER METHODS ---
-
-	_findSafeTransparencyKey(layers, library, canvasData) {
-		// List of potential transparency keys - starting with obscure colors
-		// that are statistically unlikely to appear in photos or glitter
-		const candidates = [
-			// Near-black values (almost invisible if they do appear)
-			{ name: 'DarkGray1', hex: 0x010101, r: 1, g: 1, b: 1 },
-			{ name: 'DarkGray2', hex: 0x020202, r: 2, g: 2, b: 2 },
-			{ name: 'DarkGray3', hex: 0x030303, r: 3, g: 3, b: 3 },
-			// Obscure off-colors
-			{ name: 'OffGreen1', hex: 0x00FE00, r: 0, g: 254, b: 0 },
-			{ name: 'OffGreen2', hex: 0x01FF00, r: 1, g: 255, b: 0 },
-			// Standard chroma keys (kept as fallback)
-			{ name: 'Green', hex: 0x00FF00, r: 0, g: 255, b: 0 },
-			{ name: 'Magenta', hex: 0xFF00FF, r: 255, g: 0, b: 255 },
-			{ name: 'Blue', hex: 0x0000FF, r: 0, g: 0, b: 255 },
-			{ name: 'Red', hex: 0xFF0000, r: 255, g: 0, b: 0 },
-			{ name: 'Yellow', hex: 0xFFFF00, r: 255, g: 255, b: 0 },
-			{ name: 'Cyan', hex: 0x00FFFF, r: 0, g: 255, b: 255 }
-		];
-
-		// Gather all glitter frames
-		const glitterFrames = [];
-		layers.forEach(layer => {
-			const glitter = library[layer.selectedGlitterIndex];
-			if (glitter?.frames?.frames) {
-				glitterFrames.push(...glitter.frames.frames);
-			}
-		});
-
-		// Test each candidate
-		for (const candidate of candidates) {
-			let isSafe = true;
-
-			// 1. CHECK ORIGINAL IMAGE
-			const imgData = canvasData.originalData;
-			const imgLen = imgData.length;
-
-			for (let i = 0; i < imgLen; i += 4) {
-				// Only check opaque pixels
-				const pixelIndex = i / 4;
-				if (canvasData.originalAlpha[pixelIndex] < canvasData.alphaThreshold) continue;
-
-				// Does this pixel match our candidate?
-				if (imgData[i] === candidate.r &&
-					imgData[i + 1] === candidate.g &&
-					imgData[i + 2] === candidate.b) {
-					isSafe = false;
-					break;
-				}
-			}
-
-			if (!isSafe) continue; // Try next candidate
-
-			// 2. CHECK GLITTER FRAMES
-			for (const frame of glitterFrames) {
-				const data = frame.data;
-				const len = data.length;
-
-				for (let i = 0; i < len; i += 4) {
-					// Ignore transparent pixels in glitter
-					if (data[i + 3] === 0) continue;
-
-					// Does this pixel match our candidate?
-					if (data[i] === candidate.r &&
-						data[i + 1] === candidate.g &&
-						data[i + 2] === candidate.b) {
-						isSafe = false;
-						break;
-					}
-				}
-
-				if (!isSafe) break; // Try next candidate
-			}
-
-			if (isSafe) {
-				console.log(`[GifExporter] Found safe transparency key: ${candidate.name} RGB(${candidate.r}, ${candidate.g}, ${candidate.b})`);
-				return candidate;
-			}
-		}
-
-		// Ultimate fallback (extremely unlikely to be used)
-		console.warn('[GifExporter] All candidates failed. Using ultra-dark fallback.');
-		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
-	}
-
-_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings) {
-	const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
-	const ctx = this.ctx;
-	const hCtx = this.helperCtx;
-
-	// A. Clear canvas
-	ctx.clearRect(0, 0, width, height);
-	
-	// B. Draw Background Image (if enabled)
-	if (exportSettings.baseImage) {
-		const bgImage = new ImageData(originalData, width, height);
-		ctx.putImageData(bgImage, 0, 0);
-	}
-
-	// C. Composite Glitter Layers
-	layers.forEach(layer => {
-		const maskCanvas = maskCanvases.get(layer.id);
-		if (!maskCanvas) return;
-
-		const glitter = library[layer.selectedGlitterIndex];
-		const frames = glitter.frames.frames;
-		const fIdx = frameIndex % frames.length;
-		const glitterFrame = frames[fIdx];
-
-		// 1. Pattern Fill
-		hCtx.clearRect(0, 0, width, height);
-
-		const patternSource = document.createElement('canvas');
-		patternSource.width = glitterFrame.width;
-		patternSource.height = glitterFrame.height;
-		patternSource.getContext('2d').putImageData(glitterFrame.data, 0, 0);
-
-		const pattern = hCtx.createPattern(patternSource, 'repeat');
-		const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-		const matrix = new DOMMatrix();
-		matrix.scaleSelf(scale, scale);
-		pattern.setTransform(matrix);
-
-		hCtx.globalAlpha = layer.settings.opacity / 100;
-		hCtx.fillStyle = pattern;
-		hCtx.fillRect(0, 0, width, height);
-
-		// 2. Apply Mask
-		hCtx.globalCompositeOperation = 'destination-in';
-		hCtx.globalAlpha = 1.0;
-		hCtx.drawImage(maskCanvas, 0, 0);
-		hCtx.globalCompositeOperation = 'source-over';
-
-		// 3. Draw to Main
-		ctx.drawImage(this.helperCanvas, 0, 0);
-	});
-
-// D. APPLY TRANSPARENCY OR MATTE COLOR
-const output = ctx.getImageData(0, 0, width, height);
-const data = output.data;
-const len = data.length;
-
-// Determine if we're applying transparency vs matte
-const shouldApplyTransparency = exportSettings.transparency && safeKey;
-const shouldApplyMatte = !exportSettings.transparency && safeKey;
-
-if (shouldApplyTransparency) {
-	// TRANSPARENCY LOGIC
-	const { r: keyR, g: keyG, b: keyB } = safeKey;
-
-	for (let i = 0; i < len; i += 4) {
-		const pixelIndex = i / 4;
-		const currentAlpha = data[i + 3];
-
-		// Determine if this pixel should be transparent
-		let shouldBeTransparent = false;
-		
-		if (!exportSettings.baseImage) {
-			// No base image: make all non-glitter pixels transparent
-			shouldBeTransparent = (currentAlpha === 0);
-		} else {
-			// With base image: only make originally transparent pixels transparent
-			shouldBeTransparent = (originalAlpha[pixelIndex] < alphaThreshold);
-		}
-
-		if (shouldBeTransparent) {
-			// FORCE TRANSPARENT: Fill with Safe Key Color
-			data[i] = keyR;
-			data[i + 1] = keyG;
-			data[i + 2] = keyB;
-			data[i + 3] = 255;
-		} else {
-			// CONFLICT CHECK for visible pixels
-			if (data[i] === keyR && data[i + 1] === keyG && data[i + 2] === keyB) {
-				data[i + 1] = (keyG === 255) ? 254 : keyG + 1;
-			}
-			data[i + 3] = 255;
-		}
-	}
-} else if (shouldApplyMatte) {
-	// APPLY MATTE COLOR TO TRANSPARENT AREAS
-	const matteColor = this._parseHexColor(exportSettings.matteColor);
-	
-	for (let i = 0; i < len; i += 4) {
-		const pixelIndex = i / 4;
-		const currentAlpha = data[i + 3];
-		
-		// Determine if this pixel needs matte
-		let needsMatte = false;
-		
-		if (!exportSettings.baseImage) {
-			// No base image: apply matte to all non-glitter pixels
-			needsMatte = (currentAlpha === 0);
-		} else {
-			// With base image: only apply matte to originally transparent pixels
-			needsMatte = (originalAlpha[pixelIndex] < alphaThreshold);
-		}
-		
-		if (needsMatte) {
-			if (currentAlpha === 0) {
-				// Fully transparent - fill with matte
-				data[i] = matteColor.r;
-				data[i + 1] = matteColor.g;
-				data[i + 2] = matteColor.b;
-				data[i + 3] = 255;
-			} else if (currentAlpha < 255) {
-				// Semi-transparent - composite over matte
-				const alpha = currentAlpha / 255;
-				data[i] = Math.round(data[i] * alpha + matteColor.r * (1 - alpha));
-				data[i + 1] = Math.round(data[i + 1] * alpha + matteColor.g * (1 - alpha));
-				data[i + 2] = Math.round(data[i + 2] * alpha + matteColor.b * (1 - alpha));
-				data[i + 3] = 255;
-			} else {
-				data[i + 3] = 255;
-			}
-		} else {
-			// Original image pixel was opaque, keep as-is
-			data[i + 3] = 255;
-		}
-	}
-} else {
-	// No transparency needed - just ensure all pixels are opaque
-	for (let i = 3; i < len; i += 4) {
-		data[i] = 255;
-	}
-}
-
-return output;
-}
-
-_parseHexColor(hex) {
-	// Remove # if present
-	hex = hex.replace('#', '');
-	
-	// Parse hex to RGB
-	const r = parseInt(hex.substring(0, 2), 16);
-	const g = parseInt(hex.substring(2, 4), 16);
-	const b = parseInt(hex.substring(4, 6), 16);
-	
-	return { r, g, b };
-}
-
-
-
-
-	_createMaskCanvas(rawMaskData, width, height) {
-		const c = document.createElement('canvas');
-		c.width = width;
-		c.height = height;
-		const ctx = c.getContext('2d');
-
-		const imgData = ctx.createImageData(width, height);
-		const data = imgData.data;
-
-		for (let i = 0; i < rawMaskData.length; i++) {
-			const val = rawMaskData[i];
-			const pIdx = i * 4;
-			data[pIdx] = 0;
-			data[pIdx + 1] = 0;
-			data[pIdx + 2] = 0;
-			data[pIdx + 3] = val;
-		}
-
-		ctx.putImageData(imgData, 0, 0);
-		return c;
-	}
-
-	_deoptimizeGlitterFrames(layers, library) {
-		layers.forEach(layer => {
-			const glitter = library[layer.selectedGlitterIndex];
-			if (glitter.isFlattened) return;
-
-			const rawFrames = glitter.frames.frames;
-			const width = glitter.frames.width;
-			const height = glitter.frames.height;
-
-			this.helperCanvas.width = width;
-			this.helperCanvas.height = height;
-			const ctx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
-
-			const tempC = document.createElement('canvas');
-			const tempCtx = tempC.getContext('2d');
-
-			const flattenedFrames = [];
-			let previousFrameData = ctx.getImageData(0, 0, width, height);
-
-			for (let i = 0; i < rawFrames.length; i++) {
-				const frame = rawFrames[i];
-				const dims = { x: frame.x || 0, y: frame.y || 0, w: frame.width || width, h: frame.height || height };
-
-				const patchData = new ImageData(frame.data, dims.w, dims.h);
-				tempC.width = dims.w;
-				tempC.height = dims.h;
-				tempCtx.putImageData(patchData, 0, 0);
-
-				if (frame.disposal === 3) previousFrameData = ctx.getImageData(0, 0, width, height);
-
-				ctx.drawImage(tempC, dims.x, dims.y);
-
-				flattenedFrames.push({
-					data: ctx.getImageData(0, 0, width, height),
-					width, height
-				});
-
-				const disposal = frame.disposal !== undefined ? frame.disposal : 1;
-				if (disposal === 2) ctx.clearRect(dims.x, dims.y, dims.w, dims.h);
-				else if (disposal === 3) ctx.putImageData(previousFrameData, 0, 0);
-			}
-
-			glitter.frames.frames = flattenedFrames;
-			glitter.isFlattened = true;
-		});
-	}
-
-	async _loadMissingFrames(layers, library, callbacks) {
-		for (const layer of layers) {
-			const glitter = library[layer.selectedGlitterIndex];
-			if (!glitter.frames) {
-				callbacks.onStatus(`Loading ${glitter.name}...`);
-				try {
-					glitter.frames = await callbacks.parseGif(glitter.url);
-				} catch (e) {
-					throw new Error(`Failed to load ${glitter.name}`);
-				}
-			}
-		}
-	}
-
-	_calculateTotalFrames(layers, library, maxFrames) {
-		const counts = layers.map(l => {
-			const glitter = library[l.selectedGlitterIndex];
-			if (!glitter || !glitter.frames || !glitter.frames.frames) {
-				console.error('Missing frames for layer', l.id, 'glitter index', l.selectedGlitterIndex);
-				return 1;
-			}
-			return glitter.frames.frames.length;
-		});
-
-		let total = counts[0] || 1;
-		if (counts.length > 1) {
-			total = counts.reduce((acc, val) => this.lcm(acc, val), total);
-		}
-
-		const result = Math.min(total, maxFrames);
-		console.log('Calculated total frames:', result, 'from counts:', counts);
-		return result;
-	}
-
-	async _handleFileSave(blob, callbacks) {
-		console.log('_handleFileSave called with blob size:', blob.size);
-		callbacks.onProgress(100, 'Export complete!', 0, 0);
-		callbacks.onStatus('Export complete!');
-		callbacks.onComplete();
-
-		const file = new File([blob], this.config.fileName, { type: 'image/gif' });
-		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-		if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
-			try {
-				await navigator.share({
-					files: [file],
-					title: 'Glitter Image',
-					text: 'Created with Glitter Image Editor'
-				});
-				return;
-			} catch (error) {
-				if (error.name !== 'AbortError') console.warn('Share failed', error);
-				else return;
-			}
-		}
-
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = this.config.fileName;
-		document.body.appendChild(a);
-		a.click();
-		setTimeout(() => {
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
-		}, 100);
-	}
-}
-
 
 
 
@@ -3952,10 +3955,11 @@ class MobileManager {
 		// Create bottom nav (Glitter/Layers drawer buttons)
 		const bottomNav = document.createElement('div');
 		bottomNav.className = 'mobile-bottom-nav';
-		bottomNav.innerHTML = `
-		<button class="mobile-drawer-btn" data-drawer="layers">Layers</button>
-		<button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
-	`;
+bottomNav.innerHTML = `
+	<button class="mobile-drawer-btn" data-drawer="layers">Layers</button>
+	<button class="mobile-add-layer-btn" id="mobileAddLayerBtn">+</button>
+	<button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
+`;
 
 		document.body.insertBefore(topNav, document.body.firstChild);
 		document.body.appendChild(bottomNav);
@@ -3975,6 +3979,16 @@ setupEventListeners() {
 			this.toggleDrawer(btn.dataset.drawer);
 		});
 	});
+
+	// Add layer button
+	const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
+	if (mobileAddLayerBtn) {
+		mobileAddLayerBtn.addEventListener('click', () => {
+			this.editor.addLayer();
+			// Open layers drawer to show the new layer
+			// this.toggleDrawer('layers');
+		});
+	}
 
 	// Close drawer when clicking on section headers (but not action buttons)
 	document.querySelectorAll('.section-header').forEach(header => {
