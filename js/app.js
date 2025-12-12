@@ -3898,51 +3898,47 @@ _showExportPreviewModal(blobUrl, file, isIOS = false) {
 	
 	// Open GIF button handler (iOS only)
 // Open GIF button handler (iOS only)
+// Open GIF button handler (iOS only)
 openBtn.onclick = async () => {
-	// Convert blob to data URL so it works in new tab
+	// Convert blob to data URL
 	const reader = new FileReader();
 	reader.onload = function(e) {
 		const dataUrl = e.target.result;
 		
-		// Create an HTML wrapper for iOS to properly display animated GIF
-		const htmlContent = `
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<title>Glitter Image</title>
-				<style>
-					body {
-						margin: 0;
-						padding: 0;
-						background: #000;
-						display: flex;
-						align-items: center;
-						justify-content: center;
-						min-height: 100vh;
-					}
-					img {
-						max-width: 100%;
-						max-height: 100vh;
-						display: block;
-					}
-				</style>
-			</head>
-			<body>
-				<img src="${dataUrl}" alt="Glitter Image">
-			</body>
-			</html>
-		`;
-		
-		const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
-		const htmlUrl = URL.createObjectURL(htmlBlob);
-		window.open(htmlUrl, '_blank');
-		
-		// Clean up after a delay
-		setTimeout(() => {
-			URL.revokeObjectURL(htmlUrl);
-		}, 1000);
+		// Open data URL directly in new window
+		const newWindow = window.open('', '_blank');
+		if (newWindow) {
+			newWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<meta charset="UTF-8">
+					<meta name="viewport" content="width=device-width, initial-scale=1.0">
+					<title>Glitter Image</title>
+					<style>
+						body {
+							margin: 0;
+							padding: 0;
+							background: #000;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							min-height: 100vh;
+						}
+						img {
+							max-width: 100%;
+							max-height: 100vh;
+							display: block;
+						}
+					</style>
+				</head>
+				<body>
+					<img src="${dataUrl}" alt="Glitter Image">
+				</body>
+				</html>
+			`);
+			newWindow.document.close();
+		}
 	};
 	
 	// Read the file blob as data URL
