@@ -3897,7 +3897,13 @@ _showExportPreviewModal(blobUrl, file, isIOS = false) {
 	};
 	
 	// Open GIF button handler (iOS only)
-	openBtn.onclick = () => {
+// Open GIF button handler (iOS only)
+openBtn.onclick = async () => {
+	// Convert blob to data URL so it works in new tab
+	const reader = new FileReader();
+	reader.onload = function(e) {
+		const dataUrl = e.target.result;
+		
 		// Create an HTML wrapper for iOS to properly display animated GIF
 		const htmlContent = `
 			<!DOCTYPE html>
@@ -3924,7 +3930,7 @@ _showExportPreviewModal(blobUrl, file, isIOS = false) {
 				</style>
 			</head>
 			<body>
-				<img src="${blobUrl}" alt="Glitter Image">
+				<img src="${dataUrl}" alt="Glitter Image">
 			</body>
 			</html>
 		`;
@@ -3937,9 +3943,13 @@ _showExportPreviewModal(blobUrl, file, isIOS = false) {
 		setTimeout(() => {
 			URL.revokeObjectURL(htmlUrl);
 		}, 1000);
-		
-		closeModal();
 	};
+	
+	// Read the file blob as data URL
+	reader.readAsDataURL(file);
+	
+	closeModal();
+};
 	
 	// Close on background click
 	modal.onclick = (e) => {
