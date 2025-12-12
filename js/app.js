@@ -34,6 +34,8 @@ const CONFIG = {
 	defaultExportTransparency: true,
 	defaultExportMatteColor: '#ffffff',
 
+	forceIOSExportPreview: true,  // Set to true to test iOS export modal on desktop
+
 	shortcuts: {
 		tools: [
 			{ key: 'V', action: 'Select Tool' },
@@ -3784,40 +3786,101 @@ class GifExporter {
 		return result;
 	}
 
-	async _handleFileSave(blob, callbacks) {
-		console.log('_handleFileSave called with blob size:', blob.size);
-		callbacks.onProgress(100, 'Export complete!', 0, 0);
-		callbacks.onStatus('Export complete!');
-		callbacks.onComplete();
+async _handleFileSave(blob, callbacks) {
+	console.log('_handleFileSave called with blob size:', blob.size);
+	callbacks.onProgress(100, 'Export complete!', 0, 0);
+	callbacks.onStatus('Export complete!');
+	callbacks.onComplete();
 
-		const file = new File([blob], this.config.fileName, { type: 'image/gif' });
-		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+	const file = new File([blob], this.config.fileName, { type: 'image/gif' });
+	const url = URL.createObjectURL(blob);
+	
+	// Detect iOS specifically (iPhone/iPad) OR force for testing
+	const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || CONFIG.forceIOSExportPreview;
+	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-		if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+	// iOS: Show image in modal for long-press save
+	if (isIOS) {
+		this._showExportPreviewModal(url, file);
+		return;
+	}
+
+	// Android/Mobile: Try share API
+	if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+		try {
+			await navigator.share({
+				files: [file],
+				title: 'Glitter Image',
+				text: 'Created with Glitter Image Editor'
+			});
+			URL.revokeObjectURL(url);
+			return;
+		} catch (error) {
+			if (error.name !== 'AbortError') console.warn('Share failed', error);
+			else {
+				URL.revokeObjectURL(url);
+				return;
+			}
+		}
+	}
+
+	// Desktop/Fallback: Direct download
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = this.config.fileName;
+	document.body.appendChild(a);
+	a.click();
+	setTimeout(() => {
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}, 100);
+}
+
+_showExportPreviewModal(blobUrl, file) {
+	const modal = document.getElementById('exportPreviewModal');
+	const img = document.getElementById('exportPreviewImage');
+	const closeBtn = document.getElementById('closeExportPreviewModal');
+	const shareBtn = document.getElementById('exportPreviewShare');
+	
+	// Set the image
+	img.src = blobUrl;
+	
+	// Show modal
+	modal.classList.add('visible');
+	
+	// Close handler
+	const closeModal = () => {
+		modal.classList.remove('visible');
+		URL.revokeObjectURL(blobUrl);
+	};
+	
+	closeBtn.onclick = closeModal;
+	
+	// Share button handler
+	shareBtn.onclick = async () => {
+		if (navigator.canShare && navigator.canShare({ files: [file] })) {
 			try {
 				await navigator.share({
 					files: [file],
 					title: 'Glitter Image',
 					text: 'Created with Glitter Image Editor'
 				});
-				return;
+				closeModal();
 			} catch (error) {
-				if (error.name !== 'AbortError') console.warn('Share failed', error);
-				else return;
+				if (error.name !== 'AbortError') {
+					console.warn('Share failed', error);
+				}
 			}
 		}
-
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = this.config.fileName;
-		document.body.appendChild(a);
-		a.click();
-		setTimeout(() => {
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
-		}, 100);
-	}
+	};
+	
+	// Close on background click
+	modal.onclick = (e) => {
+		if (e.target === modal) {
+			closeModal();
+		}
+	};
+}
 }
 
 

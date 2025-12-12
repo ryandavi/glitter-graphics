@@ -229,6 +229,20 @@ html {
 	box-sizing: inherit;
 }
 
+/* MAKE WEB APP FEEL NATIVE */
+* {
+	-webkit-tap-highlight-color: transparent;
+	touch-action: manipulation;
+	user-select: none;
+}
+
+p,
+span,
+input,
+textarea {
+	user-select: text;
+}
+
 /* ===== LINKS ===== */
 
 a,
@@ -345,6 +359,7 @@ input[type="range"] {
 // Shared properties for all buttons
 .btn,
 .btn-icon,
+.btn-text-with-icon,
 .btn-text {
 	cursor: pointer;
 	// transition: all var(--transition-fast);
@@ -373,6 +388,44 @@ input[type="range"] {
 	&:hover {
 		background: var(--color-accent-hover);
 	}
+}
+
+.btn-text-with-icon {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	background: var(--color-bg-primary);
+	border: 1px solid var(--color-border);
+	aspect-ratio: unset;
+
+	&.icon-wrapper{
+		aspect-ratio: unset;
+		> svg.icon {
+			width: 28px;
+			height: 28px;
+			+ span.name {
+				display: block;
+			}
+		}
+
+	}
+
+
+
+
+
+	&:hover {
+		background: var(--color-bg-tertiary);
+		border-color: var(--color-border-hover);
+	}
+
+	&.active {
+		color: var(--color-text-primary);
+		background: var(--color-accent);
+		border-color: var(--color-accent-hover);
+	}
+
+
 }
 
 .btn-icon {
@@ -873,7 +926,7 @@ input[type="range"] {
 
 					width: 28px;
 					height: 28px;
-	
+
 					background: none;
 					// border: 1px solid var(--color-border);
 					border-radius: var(--radius-sm);
@@ -944,7 +997,7 @@ input[type="range"] {
 .section {
 
 	/* Section Headers */
-	> .section-header {
+	>.section-header {
 		position: relative;
 		border-bottom: 1px solid var(--color-border);
 		flex-shrink: 0;
@@ -955,8 +1008,8 @@ input[type="range"] {
 
 		>.section-header-title {
 
-			display:flex;
-			align-items:center;
+			display: flex;
+			align-items: center;
 			justify-content: center;
 			gap: var(--spacing-base);
 
@@ -1006,27 +1059,28 @@ input[type="range"] {
 			}
 		}
 	}
-	
-	>.section-content {
 
-	}
+	>.section-content {}
 
 	/* Collapsible Section */
 	&.collapsible-section {
 		border-top: 1px solid var(--color-border);
-		
+
 		background: var(--color-bg-primary);
 		flex-shrink: 0;
 
 		>.section-header {
 			cursor: pointer;
 			border-bottom: unset;
+
 			&:hover {
 				background: var(--color-bg-tertiary);
 			}
+
 			>h3.section-header-title {
 				+.section-header-action {
 					background-color: unset;
+
 					&:hover {
 						background-color: unset;
 					}
@@ -1630,7 +1684,7 @@ input[type="range"] {
 		>.export-action-btn {
 
 			@include windows7-button;
-			
+
 
 			/*
 			padding: var(--spacing-md) var(--spacing-lg);
@@ -1779,7 +1833,7 @@ input[type="range"] {
 			border-color: var(--color-border-hover);
 		}
 
-		
+
 	}
 }
 
@@ -2078,6 +2132,61 @@ input[type="range"] {
 
 
 
+// Export Preview Modal
+.export-preview-modal {
+	max-width: 90vw;
+	max-height: 90vh;
+
+	.modal-body {
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-lg);
+	}
+
+	.export-preview-image-container {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--spacing-lg);
+		background: var(--color-bg-tertiary);
+		border-radius: var(--radius-md);
+		min-height: 300px;
+
+		img {
+			max-width: 100%;
+			max-height: 60vh;
+			border-radius: var(--radius-sm);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		}
+	}
+
+	.export-preview-instructions {
+		text-align: center;
+
+		p {
+
+			color: var(--color-text-secondary);
+			margin: 0;
+
+			strong {
+				color: var(--color-text-primary);
+			}
+		}
+	}
+
+	.modal-footer {
+		padding: var(--spacing-lg);
+		border-top: 1px solid var(--color-border);
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+	}
+}
+
 
 
 
@@ -2160,6 +2269,7 @@ input[type="range"] {
 		}
 	}
 }
+
 .mobile-bottom-nav {
 	display: none;
 	position: fixed;
@@ -2730,15 +2840,16 @@ input[type="range"] {
 #icon-chevron-up
 
 #icon-export
+#icon-share
 
 #icon-question-circle
 */
 
 .icon-wrapper {
 	aspect-ratio: 1/1;
-    align-items: center;
-    justify-content: center;
-    display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	display: inline-flex;
 
 	>svg.icon {
 		width: 1em;

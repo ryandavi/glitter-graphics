@@ -3,7 +3,8 @@
 
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<title>Glitter Image Editor - Layers</title>
 	<link rel="stylesheet" href="css/style.css">
 </head>
@@ -541,6 +542,46 @@
 		<span id="errorText"></span>
 		<button class="error-close" id="errorClose">×</button>
 	</div>
+
+<!-- Export Preview Modal (iOS) -->
+<div class="modal-overlay" id="exportPreviewModal">
+	<div class="modal-content export-preview-modal">
+		<div class="modal-header">
+			<div class="modal-title">
+				<span class="modal-icon icon-wrapper">
+					<svg class="icon">
+						<use href="#icon-export"></use>
+					</svg>
+					<span class="name">Export</span>
+				</span>
+				<span class="modal-title-text">Save to Photos</span>
+			</div>
+			<button class="icon-wrapper modal-close" id="closeExportPreviewModal">
+				<svg class="icon">
+					<use href="#icon-x-mark"></use>
+				</svg>
+				<span class="name">Close</span>
+			</button>
+		</div>
+		<div class="modal-body export-preview-body">
+			<div class="export-preview-image-container">
+				<img id="exportPreviewImage" alt="Exported GIF">
+			</div>
+			<div class="export-preview-instructions">
+				<p>Hold down on the image and select <strong>"Add to Photos"</strong></p>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button class="btn btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewShare">
+				<svg class="icon">
+					<use href="#icon-share"></use>
+				</svg>
+				<span class="name">Share Instead</span>
+			</button>
+		</div>
+	</div>
+</div>
+
 	<!-- Settings Modal -->
 	<div class="modal-overlay" id="settingsModal">
 		<div class="modal-content">
@@ -1066,6 +1107,11 @@
 				<symbol id="icon-export" viewBox="0 0 640 640">
 					<path d="M352 96C352 78.3 337.7 64 320 64C302.3 64 288 78.3 288 96L288 306.7L246.6 265.3C234.1 252.8 213.8 252.8 201.3 265.3C188.8 277.8 188.8 298.1 201.3 310.6L297.3 406.6C309.8 419.1 330.1 419.1 342.6 406.6L438.6 310.6C451.1 298.1 451.1 277.8 438.6 265.3C426.1 252.8 405.8 252.8 393.3 265.3L352 306.7L352 96zM160 384C124.7 384 96 412.7 96 448L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 448C544 412.7 515.3 384 480 384L433.1 384L376.5 440.6C345.3 471.8 294.6 471.8 263.4 440.6L206.9 384L160 384zM464 440C477.3 440 488 450.7 488 464C488 477.3 477.3 488 464 488C450.7 488 440 477.3 440 464C440 450.7 450.7 440 464 440z"/>
 				</symbol>
+
+				<symbol id="icon-share" viewBox="0 0 640 640">
+					<path d="M416.5 88L416.5 160L352.5 160C273 160 208.5 224.5 208.5 304C208.5 397.4 291.3 438.8 309.1 446.6C311.3 447.6 313.7 448 316.2 448L318.7 448C328.5 448 336.5 440 336.5 430.2C336.5 421.9 330.6 414.7 323.7 409.9C314.8 403.7 304.5 391.7 304.5 369.4C304.5 324.4 341 287.9 386 287.9L416.5 287.9L416.5 359.9C416.5 369.6 422.3 378.4 431.3 382.1C440.3 385.8 450.6 383.8 457.5 376.9L593.5 240.9C602.9 231.5 602.9 216.3 593.5 207L457.5 71C450.6 64.1 440.3 62.1 431.3 65.8C422.3 69.5 416.5 78.3 416.5 88zM144.5 160C100.3 160 64.5 195.8 64.5 240L64.5 496C64.5 540.2 100.3 576 144.5 576L400.5 576C444.7 576 480.5 540.2 480.5 496L480.5 464C480.5 446.3 466.2 432 448.5 432C430.8 432 416.5 446.3 416.5 464L416.5 496C416.5 504.8 409.3 512 400.5 512L144.5 512C135.7 512 128.5 504.8 128.5 496L128.5 240C128.5 231.2 135.7 224 144.5 224L160.5 224C178.2 224 192.5 209.7 192.5 192C192.5 174.3 178.2 160 160.5 160L144.5 160z"/>
+				</symbol>
+
 
 		</defs>
 	</svg>
