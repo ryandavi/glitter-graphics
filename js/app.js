@@ -846,7 +846,7 @@ class GlitterEditor {
 
 		this.updatePreview();
 		this.updateGlitterOptionsState();
-		window.dispatchEvent(new CustomEvent('layerChanged'));  // ADD THIS
+		window.dispatchEvent(new CustomEvent('layerChanged'));
 	}
 
 	getActiveLayer() {
@@ -1247,7 +1247,7 @@ class GlitterEditor {
 				}
 			}
 
-			// ADD THIS - Double-click swatch to go to glitter
+			// Double-click swatch to go to glitter
 			swatch.addEventListener('dblclick', (e) => {
 				e.stopPropagation();
 				this.goToGlitter(layer.id);
@@ -1269,38 +1269,47 @@ class GlitterEditor {
 			const actions = document.createElement('div');
 			actions.className = 'layer-actions';
 
-			const visBtn = document.createElement('button');
-			visBtn.className = 'layer-action-btn visibility';
-			visBtn.textContent = layer.visible ? '👁️' : '👁️';
-			visBtn.title = layer.visible ? 'Hide layer' : 'Show layer';
-			if (!layer.visible) visBtn.classList.add('hidden');
-			visBtn.onclick = (e) => {
-				e.stopPropagation();
-				this.toggleLayerVisibility(layer.id);
-			};
 
 
-			// ADD THIS - Arrow button to jump to glitter
-			const arrowBtn = document.createElement('button');
-			arrowBtn.className = 'layer-action-btn goto-glitter';
-			arrowBtn.textContent = '→';
-			arrowBtn.title = 'Go to glitter';
-			arrowBtn.onclick = (e) => {
-				e.stopPropagation();
-				this.goToGlitter(layer.id);
-			};
 
-
-			const delBtn = document.createElement('button');
-			delBtn.className = 'layer-action-btn delete';
-			delBtn.textContent = '✕';
-			delBtn.title = 'Delete layer';
-			delBtn.onclick = (e) => {
-				e.stopPropagation();
-				if (confirm('Delete this layer?')) {
-					this.deleteLayer(layer.id);
+			const visBtn = this.createIconButton({
+				className: 'layer-action-btn visibility' + (!layer.visible ? ' hidden' : ''),
+				label: 'Layer Visibility',
+				title: layer.visible ? 'Hide layer' : 'Show layer',
+				iconType: 'eye',
+				onClick: (e) => {
+					e.stopPropagation();
+					this.toggleLayerVisibility(layer.id);
 				}
-			};
+			});
+
+			const arrowBtn = this.createIconButton({
+				className: 'layer-action-btn goto-glitter',
+				label: 'Go To',
+				title: 'Go to glitter',
+				iconType: 'chevron-right',
+				onClick: (e) => {
+					e.stopPropagation();
+					this.goToGlitter(layer.id);
+				}
+			});
+
+			const delBtn = this.createIconButton({
+				className: 'layer-action-btn delete',
+				label: 'Delete',
+				title: 'Delete layer',
+				iconType: 'x-mark',
+				onClick: (e) => {
+					e.stopPropagation();
+					if (confirm('Delete this layer?')) this.deleteLayer(layer.id);
+				}
+			});
+
+
+
+
+
+
 
 			actions.append(arrowBtn, visBtn, delBtn);  // CHANGED: added arrowBtn
 
@@ -1325,6 +1334,36 @@ class GlitterEditor {
 			mobileAddBtn.disabled = this.layers.length >= CONFIG.maxLayers;
 		}
 	}
+
+
+	createIconButton({ className = '', id = '', disabled = false, title = '', iconType = '', label = '', onClick }) {
+		const btn = document.createElement('button');
+		btn.className = "btn-icon icon-wrapper " + className;
+		if (id) btn.id = id;
+		if (disabled) btn.disabled = true;
+		if (title) btn.title = title;
+
+		if (iconType) {
+			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.classList.add('icon');
+			const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+			use.setAttribute('href', `#icon-${iconType}`);
+			svg.appendChild(use);
+			btn.appendChild(svg);
+		}
+
+		if (label) {
+			const span = document.createElement('span');
+			span.className = 'name';
+			span.textContent = label;
+			btn.appendChild(span);
+		}
+
+		if (onClick) btn.onclick = onClick;
+
+		return btn;
+	}
+
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
@@ -1739,7 +1778,7 @@ class GlitterEditor {
 		document.addEventListener('keyup', (e) => this.handleKeyUp(e));
 
 		// --- TOUCH GESTURES ---
-		this.setupTouchGestures();  // ADD THIS at the end
+		this.setupTouchGestures();
 
 
 	}
@@ -2242,7 +2281,7 @@ class GlitterEditor {
 		chip.classList.toggle('active');
 		console.log('chip classes after toggle:', chip.className);
 
-		console.log('About to check if filterType === color:', filterType === 'color');  // ADD THIS LINE
+		console.log('About to check if filterType === color:', filterType === 'color');
 
 		if (filterType === 'color') {
 			if (this.activeFilters.colors.has(value)) {
@@ -2372,7 +2411,7 @@ class GlitterEditor {
 		}
 
 		this.updateStatus(`Selected ${glitter.name}`);
-		window.dispatchEvent(new CustomEvent('layerChanged'));  // ADD THIS
+		window.dispatchEvent(new CustomEvent('layerChanged'));
 	}
 
 	// ===== IMAGE LOADING =====
@@ -3989,7 +4028,7 @@ class MobileManager {
 	init() {
 		console.log('Mobile: Initializing mobile manager');
 		this.createMobileControls();
-		this.createMobileSwatch();  // ADD THIS
+		this.createMobileSwatch();
 		this.setupEventListeners();
 		this.switchTab('image');
 		console.log('Mobile: Initialization complete, on image tab');
@@ -4161,7 +4200,6 @@ class MobileManager {
 			}
 		});
 
-		// ADD THIS:
 		window.addEventListener('layerChanged', () => {
 			if (this.isMobile) {
 				this.updateMobileSwatch();
@@ -4251,11 +4289,11 @@ class MobileManager {
 		// Remove mobile navigation
 		const topNav = document.querySelector('.mobile-top-nav');
 		const bottomNav = document.querySelector('.mobile-bottom-nav');
-		const swatch = document.querySelector('.mobile-swatch');  // ADD THIS
+		const swatch = document.querySelector('.mobile-swatch');
 
 		if (topNav) topNav.remove();
 		if (bottomNav) bottomNav.remove();
-		if (swatch) swatch.remove();  // ADD THIS
+		if (swatch) swatch.remove();
 
 		// Remove all mobile classes
 		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
@@ -4268,4 +4306,4 @@ class MobileManager {
 
 const editor = new GlitterEditor();
 const mobileManager = new MobileManager(editor);
-editor.mobileManager = mobileManager;  // ADD THIS LINE
+editor.mobileManager = mobileManager;

@@ -558,6 +558,10 @@ input[type="range"] {
 			>span.app-header-title {
 				font-size: 18px;
 				font-weight: 600;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+
 			}
 
 
@@ -807,6 +811,7 @@ input[type="range"] {
 			margin-bottom: var(--spacing-sm);
 			cursor: pointer;
 			transition: all var(--transition-fast);
+			overflow: hidden;
 
 			&:hover {
 				background: #252525;
@@ -842,6 +847,9 @@ input[type="range"] {
 
 			>.layer-info {
 				flex: 1;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
 
 				>.layer-color {
 					@include text-sm;
@@ -858,8 +866,7 @@ input[type="range"] {
 				flex-shrink: 0;
 
 				>.layer-action-btn {
-					width: 28px;
-					height: 28px;
+	
 					background: none;
 					border: 1px solid var(--color-border);
 					border-radius: var(--radius-sm);

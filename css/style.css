@@ -424,6 +424,9 @@ input[type=range]::-moz-range-thumb {
 .app-header > .app-header-left > .app-header-logo > span.app-header-title {
   font-size: 18px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .app-header > .app-header-left > .app-header-logo .logo {
   height: 36px;
@@ -632,6 +635,7 @@ input[type=range]::-moz-range-thumb {
   margin-bottom: var(--spacing-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
+  overflow: hidden;
 }
 .layers-section > .layers-list > .layer-item:hover {
   background: #252525;
@@ -660,6 +664,9 @@ input[type=range]::-moz-range-thumb {
 }
 .layers-section > .layers-list > .layer-item > .layer-info {
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .layers-section > .layers-list > .layer-item > .layer-info > .layer-color {
   font-size: var(--font-size-sm);
@@ -675,8 +682,6 @@ input[type=range]::-moz-range-thumb {
   flex-shrink: 0;
 }
 .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn {
-  width: 28px;
-  height: 28px;
   background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
