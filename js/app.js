@@ -34,7 +34,7 @@ const CONFIG = {
 	defaultExportTransparency: true,
 	defaultExportMatteColor: '#ffffff',
 
-	forceIOSExportPreview: true,  // Set to true to test iOS export modal on desktop
+	forceIOSExportPreview: false,  // Set to true to test iOS export modal on desktop
 
 	shortcuts: {
 		tools: [
@@ -2941,43 +2941,6 @@ this.previewContainer.addEventListener('mousedown', (e) => {
 	}
 
 
-	/*
-
-	renderPreviewCanvas(layersToShow) {
-		const previewData = new ImageData(
-			new Uint8ClampedArray(this.originalImageData.data),
-			this.previewCanvas.width,
-			this.previewCanvas.height
-		);
-
-		layersToShow.forEach(layer => {
-			const mask = this.createMaskForLayer(layer);
-			if (layer.settings.feather > 0) {
-				this.applyFeatherToMask(mask, layer.settings.feather);
-			}
-
-			const opacity = layer.settings.opacity / 100;
-
-			for (let i = 0; i < mask.length; i++) {
-				const maskValue = mask[i] / 255;
-				const originalAlpha = this.originalAlphaChannel[i];
-				const idx = i * 4;
-
-				if (originalAlpha < CONFIG.alphaThreshold) {
-					previewData.data[idx + 3] = 0;
-				} else if (maskValue > 0) {
-					const currentAlpha = previewData.data[idx + 3];
-					previewData.data[idx + 3] = Math.max(0, currentAlpha - Math.round(originalAlpha * maskValue * opacity));
-				}
-			}
-		});
-
-		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-		this.previewCtx.putImageData(previewData, 0, 0);
-	}
-
-		*/
-
 	renderPreviewCanvas(layersToShow) {
 		// Just draw the original image. The glitter sits on top as a DOM element.
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
@@ -3787,173 +3750,140 @@ class GifExporter {
 	}
 
 async _handleFileSave(blob, callbacks) {
-	console.log('_handleFileSave called with blob size:', blob.size);
-	callbacks.onProgress(100, 'Export complete!', 0, 0);
-	callbacks.onStatus('Export complete!');
-	callbacks.onComplete();
+		console.log('_handleFileSave called with blob size:', blob.size);
+		callbacks.onProgress(100, 'Export complete!', 0, 0);
+		callbacks.onStatus('Export complete!');
+		callbacks.onComplete();
 
-	const file = new File([blob], this.config.fileName, { type: 'image/gif' });
-	const url = URL.createObjectURL(blob);
-	
-	// Detect iOS specifically (iPhone/iPad) OR force for testing
-	const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || CONFIG.forceIOSExportPreview;
-	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+		// 1. Create File object (Required for navigator.share)
+		const file = new File([blob], this.config.fileName, { 
+			type: 'image/gif',
+			lastModified: Date.now() 
+		});
 
-	// iOS: Open in new tab for proper save functionality
-	if (isIOS) {
-		this._showExportPreviewModal(url, file, true); // true = iOS mode
-		return;
+		// 2. Create Blob URL
+		const url = URL.createObjectURL(blob);
+
+		// 3. Hand off to Modal
+		this._showExportPreviewModal(url, file);
 	}
 
-	// Android/Mobile: Try share API
-	if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
-		try {
-			await navigator.share({
-				files: [file],
-				title: 'Glitter Image',
-				text: 'Created with Glitter Image Editor'
-			});
-			URL.revokeObjectURL(url);
-			return;
-		} catch (error) {
-			if (error.name !== 'AbortError') console.warn('Share failed', error);
-			else {
-				URL.revokeObjectURL(url);
-				return;
+	_showExportPreviewModal(blobUrl, file) {
+		const modal = document.getElementById('exportPreviewModal');
+		const img = document.getElementById('exportPreviewImage');
+		const instructions = modal.querySelector('.export-preview-instructions');
+		const closeBtn = document.getElementById('closeExportPreviewModal');
+		
+		// Button Elements
+		const shareBtn = document.getElementById('exportPreviewShare');
+		const openBtn = document.getElementById('exportPreviewOpen');
+		const saveBtn = document.getElementById('exportPreviewSave'); // New Button
+
+		// 1. Environment Detection
+		// Force iOS logic if iPhone/iPad detected
+		const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+		const canShare = navigator.canShare && navigator.canShare({ files: [file] });
+
+		// 2. Helper to manage Button State (Text + Disabled)
+		const configureBtn = (btn, isEnabled, text = null) => {
+			if (!btn) return;
+			btn.disabled = !isEnabled;
+			// Optional: btn.style.display = isEnabled ? 'inline-flex' : 'none'; 
+			if (text) {
+				const span = btn.querySelector('.name');
+				if (span) span.textContent = text;
+			}
+		};
+
+		// 3. Set Image
+		img.src = blobUrl;
+
+		// 4. Configure UI Logic
+		if (isIOS) {
+			// --- iOS Logic ---
+			
+			// DISABLE "Open GIF" & "Save" (Direct download fails/breaks on iOS)
+			configureBtn(openBtn, false); 
+			configureBtn(saveBtn, false);
+
+			if (canShare) {
+				// ENABLE "Share" (mapped to Save Image)
+				configureBtn(shareBtn, true, "Save Image");
+				
+				instructions.innerHTML = `
+					<p><strong>Ready!</strong> Tap the <strong>"Save Image"</strong> button below <br>
+					to save the animation to your Photos.</p>`;
+			} else {
+				// Fallback (Rare old iOS)
+				configureBtn(shareBtn, false);
+				instructions.innerHTML = `<p>Long-press the image to save.</p>`;
+			}
+		} 
+		else {
+			// --- Desktop / Android Logic ---
+			
+			// ENABLE "Open GIF" & "Save" (Standard browser features)
+			configureBtn(openBtn, true);
+			configureBtn(saveBtn, true);
+
+			// Handle Share button (Some desktops like Safari/Edge support it)
+			if (canShare) {
+				configureBtn(shareBtn, true, "Share");
+				instructions.innerHTML = `<p>Save using the buttons below or right-click the image.</p>`;
+			} else {
+				configureBtn(shareBtn, false);
+				instructions.innerHTML = `<p>Use the <strong>Save</strong> button or right-click the image.</p>`;
 			}
 		}
-	}
 
-	// Desktop/Fallback: Direct download
-	const a = document.createElement('a');
-	a.href = url;
-	a.download = this.config.fileName;
-	document.body.appendChild(a);
-	a.click();
-	setTimeout(() => {
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
-	}, 100);
-}
+		// 5. Show Modal
+		modal.classList.add('visible');
 
-_showExportPreviewModal(blobUrl, file, isIOS = false) {
-	const modal = document.getElementById('exportPreviewModal');
-	const img = document.getElementById('exportPreviewImage');
-	const instructions = modal.querySelector('.export-preview-instructions');
-	const closeBtn = document.getElementById('closeExportPreviewModal');
-	const shareBtn = document.getElementById('exportPreviewShare');
-	const openBtn = document.getElementById('exportPreviewOpen');
-	
-	// Set the image
-	img.src = blobUrl;
-	
-	// Update instructions and button visibility based on platform
-	if (isIOS) {
-		img.style.pointerEvents = 'none';
-		img.style.userSelect = 'none';
-		img.style.webkitUserSelect = 'none';
-		img.style.webkitTouchCallout = 'none';
+		// 6. Handlers
+		const cleanup = () => {
+			modal.classList.remove('visible');
+			setTimeout(() => URL.revokeObjectURL(blobUrl), 500);
+		};
 
+		closeBtn.onclick = cleanup;
+		modal.onclick = (e) => { if (e.target === modal) cleanup(); };
 
-		instructions.innerHTML = `
-			<p><strong>Share:</strong> Quick share to other apps</p>
-			<p><strong>Open GIF:</strong> View in new tab, then long-press to save with animation</p>
-		`;
-
-	} else {
-		instructions.innerHTML = `
-			<p>Hold down on the image and select <strong>"Add to Photos"</strong></p>
-		`;
-
-	}
-	
-	// Show modal
-	modal.classList.add('visible');
-	
-	// Close handler
-	const closeModal = () => {
-		modal.classList.remove('visible');
-		URL.revokeObjectURL(blobUrl);
-	};
-	
-	closeBtn.onclick = closeModal;
-	
-	// Share button handler
-	shareBtn.onclick = async () => {
-		if (navigator.canShare && navigator.canShare({ files: [file] })) {
+		// Handler: Share (iOS "Save Image")
+		shareBtn.onclick = async () => {
+			if (shareBtn.disabled || !canShare) return;
 			try {
 				await navigator.share({
 					files: [file],
-					title: 'Glitter Image',
+					title: 'Glitter GIF',
 					text: 'Created with Glitter Image Editor'
 				});
-				closeModal();
 			} catch (error) {
-				if (error.name !== 'AbortError') {
-					console.warn('Share failed', error);
-				}
+				if (error.name !== 'AbortError') console.error('Share failed:', error);
 			}
-		}
-	};
-	
-	// Open GIF button handler (iOS only)
-// Open GIF button handler (iOS only)
-// Open GIF button handler (iOS only)
-openBtn.onclick = async () => {
-	// Convert blob to data URL
-	const reader = new FileReader();
-	reader.onload = function(e) {
-		const dataUrl = e.target.result;
-		
-		// Open data URL directly in new window
-		const newWindow = window.open('', '_blank');
-		if (newWindow) {
-			newWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<meta charset="UTF-8">
-					<meta name="viewport" content="width=device-width, initial-scale=1.0">
-					<title>Glitter Image</title>
-					<style>
-						body {
-							margin: 0;
-							padding: 0;
-							background: #000;
-							display: flex;
-							align-items: center;
-							justify-content: center;
-							min-height: 100vh;
-						}
-						img {
-							max-width: 100%;
-							max-height: 100vh;
-							display: block;
-						}
-					</style>
-				</head>
-				<body>
-					<img src="${dataUrl}" alt="Glitter Image">
-				</body>
-				</html>
-			`);
-			newWindow.document.close();
-		}
-	};
-	
-	// Read the file blob as data URL
-	reader.readAsDataURL(file);
-	
-	closeModal();
-};
-	
-	// Close on background click
-	modal.onclick = (e) => {
-		if (e.target === modal) {
-			closeModal();
-		}
-	};
-}
+		};
+
+		// Handler: Open in New Tab
+		openBtn.onclick = () => {
+			if (openBtn.disabled) return;
+			const win = window.open(blobUrl, '_blank');
+			if (!win) alert('Please allow popups to view the full image.');
+		};
+
+		// Handler: Save / Download (Desktop)
+		saveBtn.onclick = () => {
+			if (saveBtn.disabled) return;
+			const a = document.createElement('a');
+			a.href = blobUrl;
+			a.download = this.config.fileName;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+		};
+	}
+
+
+
+
 
 }
 

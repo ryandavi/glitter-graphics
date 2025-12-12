@@ -2135,7 +2135,6 @@ input[type="range"] {
 
 // Export Preview Modal
 #exportPreviewModal {
-.export-preview-modal {
 
 
 	.modal-body {
@@ -2199,9 +2198,13 @@ input[type="range"] {
 
 		gap: var(--spacing-md);
 
+		button:disabled {
+			display: none;
+		}
+
 	}
 }
-}
+
 
 
 

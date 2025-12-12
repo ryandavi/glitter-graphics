@@ -1739,13 +1739,13 @@ input[type=range]::-moz-range-thumb {
   margin-top: var(--spacing-base);
 }
 
-#exportPreviewModal .export-preview-modal .modal-body {
+#exportPreviewModal .modal-body {
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
 }
-#exportPreviewModal .export-preview-modal .export-preview-image-container {
+#exportPreviewModal .export-preview-image-container {
   flex: 1;
   display: flex;
   justify-content: center;
@@ -1754,7 +1754,7 @@ input[type=range]::-moz-range-thumb {
   border-radius: var(--radius-md);
   min-height: 300px;
 }
-#exportPreviewModal .export-preview-modal .export-preview-image-container img {
+#exportPreviewModal .export-preview-image-container img {
   max-width: 100%;
   max-height: 100%;
   -o-object-fit: contain;
@@ -1762,33 +1762,36 @@ input[type=range]::-moz-range-thumb {
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
-#exportPreviewModal .export-preview-modal .export-preview-instructions {
+#exportPreviewModal .export-preview-instructions {
   text-align: center;
   margin-bottom: var(--spacing-lg);
 }
-#exportPreviewModal .export-preview-modal .export-preview-instructions p {
+#exportPreviewModal .export-preview-instructions p {
   color: var(--color-text-secondary);
   margin: 0;
   margin-bottom: var(--spacing-sm);
 }
-#exportPreviewModal .export-preview-modal .export-preview-instructions p:last-child {
+#exportPreviewModal .export-preview-instructions p:last-child {
   margin-bottom: 0;
 }
-#exportPreviewModal .export-preview-modal .export-preview-instructions p.text-muted {
+#exportPreviewModal .export-preview-instructions p.text-muted {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   color: var(--color-text-tertiary);
 }
-#exportPreviewModal .export-preview-modal .export-preview-instructions p strong {
+#exportPreviewModal .export-preview-instructions p strong {
   color: var(--color-text-primary);
 }
-#exportPreviewModal .export-preview-modal .modal-footer {
+#exportPreviewModal .modal-footer {
   padding: var(--spacing-lg);
   border-top: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-md);
+}
+#exportPreviewModal .modal-footer button:disabled {
+  display: none;
 }
 
 @media (max-width: 1400px) {
