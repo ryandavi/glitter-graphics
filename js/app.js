@@ -3849,18 +3849,22 @@ _showExportPreviewModal(blobUrl, file, isIOS = false) {
 	
 	// Update instructions and button visibility based on platform
 	if (isIOS) {
+		img.style.pointerEvents = 'none';
+		img.style.userSelect = 'none';
+		img.style.webkitUserSelect = 'none';
+		img.style.webkitTouchCallout = 'none';
+
+
 		instructions.innerHTML = `
 			<p><strong>Share:</strong> Quick share to other apps</p>
 			<p><strong>Open GIF:</strong> View in new tab, then long-press to save with animation</p>
 		`;
-		shareBtn.style.display = 'flex';
-		openBtn.style.display = 'flex';
+
 	} else {
 		instructions.innerHTML = `
 			<p>Hold down on the image and select <strong>"Add to Photos"</strong></p>
 		`;
-		shareBtn.style.display = 'flex';
-		openBtn.style.display = 'none';
+
 	}
 	
 	// Show modal
@@ -3894,7 +3898,46 @@ _showExportPreviewModal(blobUrl, file, isIOS = false) {
 	
 	// Open GIF button handler (iOS only)
 	openBtn.onclick = () => {
-		window.open(blobUrl, '_blank');
+		// Create an HTML wrapper for iOS to properly display animated GIF
+		const htmlContent = `
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<title>Glitter Image</title>
+				<style>
+					body {
+						margin: 0;
+						padding: 0;
+						background: #000;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						min-height: 100vh;
+					}
+					img {
+						max-width: 100%;
+						max-height: 100vh;
+						display: block;
+					}
+				</style>
+			</head>
+			<body>
+				<img src="${blobUrl}" alt="Glitter Image">
+			</body>
+			</html>
+		`;
+		
+		const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+		const htmlUrl = URL.createObjectURL(htmlBlob);
+		window.open(htmlUrl, '_blank');
+		
+		// Clean up after a delay
+		setTimeout(() => {
+			URL.revokeObjectURL(htmlUrl);
+		}, 1000);
+		
 		closeModal();
 	};
 	
