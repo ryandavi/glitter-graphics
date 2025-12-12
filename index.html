@@ -19,74 +19,198 @@
 				</a>
 			</div>
 			<div class="app-header-right">
-				<button class="btn btn-text" id="aboutBtn">About</button>
+				<button class="btn-icon icon-wrapper" id="aboutBtn" title="About">
+					<svg class="icon">
+						<use href="#icon-question-circle"></use>
+					</svg>
+					<span class="name">About</span>
+				</button>
 			</div>
 		</div>
 		<div class="main-area">
+
 			<!-- Toolbar -->
 			<div class="toolbar">
 				<!-- Tools Group -->
 				<div class="toolbar-group" id="toolbarToolsGroup">
-					<button class="btn-icon active" id="selectTool" data-tooltip="Select (V)">➤</button>
-					<button class="btn-icon" id="colorPickerTool" data-tooltip="Color Picker (I)" disabled>🎨</button>
-					<button class="btn-icon" id="handTool" data-tooltip="Hand Tool (H)" disabled>✋</button>
-					<button class="btn-icon" id="zoomTool" data-tooltip="Zoom (Z)" disabled>🔍</button>
+					<button class="btn-icon icon-wrapper" id="selectTool" title="Select (V)">
+						<svg class="icon">
+							<use href="#icon-cursor"></use>
+						</svg>
+						<span class="name">Select</span>
+					</button>
+					<button class="btn-icon icon-wrapper" id="handTool" title="Hand Tool (H)" disabled>
+						<svg class="icon">
+							<use href="#icon-move"></use>
+						</svg>
+						<span class="name">Move</span>
+					</button>
+					<button class="btn-icon icon-wrapper" id="colorPickerTool" title="Color Picker (I)" disabled>
+						<svg class="icon">
+							<use href="#icon-magic-wand"></use>
+						</svg>
+						<span class="name">Color Selection</span>
+					</button>
+					<button class="btn-icon icon-wrapper" id="zoomTool" title="Zoom (Z)" disabled>
+						<svg class="icon">
+							<use href="#icon-magnifying-glass"></use>
+						</svg>
+						<span class="name">Zoom</span>
+					</button>
 				</div>
+
 				<!-- History Group -->
 				<div class="toolbar-group" id="toolbarHistoryGroup">
-					<button class="btn-icon" id="undoTool" data-tooltip="Undo (Ctrl+Z)" disabled>↶</button>
-					<button class="btn-icon" id="redoTool" data-tooltip="Redo (Ctrl+Shift+Z)" disabled>↷</button>
+					<button class="btn-icon icon-wrapper" id="undoTool" title="Undo (Ctrl+Z)" disabled>
+						<svg class="icon">
+							<use href="#icon-undo"></use>
+						</svg>
+						<span class="name">Undo</span>
+					</button>
+					<button class="btn-icon icon-wrapper" id="redoTool" title="Redo (Ctrl+Shift+Z)" disabled>
+						<svg class="icon">
+							<use href="#icon-redo"></use>
+						</svg>
+						<span class="name">Redo</span>
+					</button>
 				</div>
 				<div class="toolbar-spacer"></div>
-				<!-- Settings & Help Group -->
-				<div class="toolbar-group" id="toolbarSettingsGroup">
-					<button class="btn-icon" id="settingsBtn" data-tooltip="Settings">⚙️</button>
-					<button class="btn-icon" id="shortcutsBtn" data-tooltip="Keyboard Shortcuts">⌨️</button>
-				</div>
-				<!-- Reset Group -->
-				<div class="toolbar-group" id="toolbarResetGroup">
-					<button class="btn-icon" id="clearAllTool" data-tooltip="Reset (Clear Image & All Layers)"
-						disabled>✕</button>
-				</div>
+
+				<!-- Settings Group -->
+				<button class="btn-icon icon-wrapper" id="settingsBtn" title="Settings">
+					<svg class="icon">
+						<use href="#icon-gear"></use>
+					</svg>
+					<span class="name">Settings</span>
+				</button>
+
+				<!-- Help Group -->
+				<button class="btn-icon icon-wrapper" id="shortcutsBtn" title="Keyboard Shortcuts">
+					<svg class="icon">
+						<use href="#icon-keyboard"></use>
+					</svg>
+					<span class="name">Keyboard Shortcuts</span>
+				</button>
+
+				<!-- Clear Group -->
+				<button class="btn-icon icon-wrapper" id="clearAllTool" title="Reset (Clear Image & All Layers)"
+					disabled>
+					<svg class="icon">
+						<use href="#icon-x-mark"></use>
+					</svg>
+					<span class="name">Clear All</span>
+				</button>
 			</div>
+
 			<div class="main-content">
 				<!-- Left Panel -->
 				<div class="left-panel">
-					<div class="image-container">
+
+					<!-- Image Section -->
+					<div class="image-container section">
 						<div class="section-header section-header-with-action">
-							<h3 class="section-header-title"> Image </h3>
-							<button class="section-header-action btn-icon" id="imageClearBtn"
-								data-tooltip="Remove Image">✕</button>
+
+							<h3 class="section-header-title">
+								<!-- Layers Icon-->
+								<span class="section-header-title-icon icon-wrapper sm">
+									<svg class="icon">
+										<use href="#icon-image"></use>
+									</svg>
+									<span class="name">Image</span>
+								</span>
+								<span class="section-header-title-text">Image</span>
+							</h3>
+
+							<button class="section-header-action btn-icon icon-wrapper" id="imageClearBtn"
+								title="Remove Image">
+								<svg class="icon">
+									<use href="#icon-x-mark"></use>
+								</svg>
+								<span class="name">Remove Image</span>
+							</button>
 						</div>
-						<div class="image-dropzone-wrapper">
+						<div class="section-content image-dropzone-wrapper">
 							<div class="image-dropzone" id="imageDropzone">
 								<div class="dropzone-content visible" id="dropzoneContent">
-									<div class="dropzone-icon">📷</div>
+									<div class="dropzone-icon">
+										<!-- Image Icon-->
+										<span class="icon-wrapper xl">
+											<svg class="icon">
+												<use href="#icon-image"></use>
+											</svg>
+											<span class="name">Image</span>
+										</span>
+									</div>
 									<div class="dropzone-text">Drop image here or click to browse</div>
 									<div class="dropzone-subtext">Max 10MB, 1200x1200px</div>
 								</div>
 								<canvas id="originalCanvas"></canvas>
 								<div class="image-upload-overlay">
-									<div class="image-upload-overlay-icon">📷</div>
+									<div class="image-upload-overlay-icon">
+										<!-- Image Icon-->
+										<span class="icon-wrapper xl">
+											<svg class="icon">
+												<use href="#icon-image"></use>
+											</svg>
+											<span class="name">Image</span>
+										</span>
+									</div>
 									<div class="image-upload-overlay-text">Change Image</div>
 								</div>
 							</div>
 							<input type="file" id="imageUpload" accept="image/*">
 						</div>
 					</div>
-					<div class="layers-section">
-						<div class="section-header layers-header section-header-with-action">
-							<h3 class="section-header-title">Layers</h3>
-							<button class="btn-icon section-header-action" id="addLayerBtn" disabled
-								data-tooltip="Add new layer">+</button>
+
+					<!-- Layers -->
+					<div class="layers-section section">
+						<div class="section-header section-header-with-action">
+							<h3 class="section-header-title">
+
+								<!-- Layers Icon-->
+								<span class="section-header-title-icon icon-wrapper sm">
+									<svg class="icon">
+										<use href="#icon-layers"></use>
+									</svg>
+									<span class="name">Layers</span>
+								</span>
+								
+								<span class="section-header-title-text">Layers</span>
+							</h3>
+							<button class="section-header-action btn-icon icon-wrapper" id="addLayerBtn" disabled
+								title="Add new layer">
+								<svg class="icon">
+									<use href="#icon-plus"></use>
+								</svg>
+								<span class="name">New Layer</span>
+							</button>
 						</div>
-						<div class="layers-list" id="layersList"></div>
-						<div class="collapsible-section">
-							<div class="collapsible-header" id="layerSettingsHeader">
-								<div class="collapsible-header-title">Layer Settings</div>
-								<div class="collapsible-header-toggle collapsed" id="layerSettingsToggle">▼</div>
+						<div class="section-content layers-list" id="layersList"></div>
+						<!-- Layer Settings -->
+						<div class="section collapsible-section">
+							<div class="section-header section-header-with-action" id="layerSettingsHeader">
+
+								<h3 class="section-header-title">
+									<!-- Layers Icon-->
+									<span class="section-header-title-icon icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-sliders"></use>
+										</svg>
+										<span class="name">Slider</span>
+									</span>
+									<span class="section-header-title-text">Layer Settings</span>
+								</h3>
+
+								<div class="section-header-action btn-icon visible collapsed" id="layerSettingsToggle">
+									<!-- Chevron Icon-->
+									<span class="icon-wrapper">
+										<svg class="icon">
+											<use href="#icon-chevron-down"></use>
+										</svg>
+									</span>
+								</div>
 							</div>
-							<div class="collapsible-section-content" id="layerSettingsContent">
+							<div class="section-content" id="layerSettingsContent">
 								<div class="settings-empty-state visible" id="layerSettingsEmpty">
 									<div class="empty-state-icon">📋</div>
 									<div class="empty-state-text">No layer selected</div>
@@ -100,17 +224,17 @@
 													<label class="checkbox-group">
 														<input type="checkbox" id="contiguous">
 														<span
-															data-tooltip="Select only connected pixels of the same color">Contiguous</span>
+															title="Select only connected pixels of the same color">Contiguous</span>
 													</label>
 													<label class="checkbox-group">
 														<input type="checkbox" id="invert">
 														<span
-															data-tooltip="Invert the selection (select everything except the chosen color)">Invert</span>
+															title="Invert the selection (select everything except the chosen color)">Invert</span>
 													</label>
 													<label class="checkbox-group">
 														<input type="checkbox" id="multiSelect">
 														<span
-															data-tooltip="Select multiple colors on the same layer">Multi-Select</span>
+															title="Select multiple colors on the same layer">Multi-Select</span>
 													</label>
 												</div>
 											</div>
@@ -128,15 +252,14 @@
 												<span>Refine Selection</span>
 												<label class="checkbox-group">
 													<input type="checkbox" id="refineGlobal">
-													<span
-														data-tooltip="Apply refinement settings to every layer">Global</span>
+													<span title="Apply refinement settings to every layer">Global</span>
 												</label>
 											</div>
 											<div class="refine-group">
 												<div class="slider-group">
 													<div class="setting-header">
 														<span class="setting-label"
-															data-tooltip="Color similarity range (0-255)">Threshold</span>
+															title="Color similarity range (0-255)">Threshold</span>
 														<span class="setting-value" id="thresholdValue">50</span>
 													</div>
 													<input type="range" id="threshold" min="0" max="255" value="50">
@@ -145,7 +268,7 @@
 												<div class="slider-group">
 													<div class="setting-header">
 														<span class="setting-label"
-															data-tooltip="Soften selection edges">Feather</span>
+															title="Soften selection edges">Feather</span>
 														<span class="setting-value" id="featherValue">0</span>
 													</div>
 													<input type="range" id="feather" min="0" max="20" value="0">
@@ -159,19 +282,38 @@
 						</div>
 					</div>
 				</div>
+
 				<!-- Glitter Column -->
-				<div class="glitter-column">
+				<div class="glitter-column section">
 					<div class="section-header glitter-header section-header-with-action">
-						<h3 class="section-header-title">Glitter</h3>
+
+						<h3 class="section-header-title">
+							<!-- Layers Icon-->
+							<span class="section-header-title-icon icon-wrapper sm">
+								<svg class="icon">
+									<use href="#icon-glitter"></use>
+								</svg>
+								<span class="name">Glitter</span>
+							</span>
+							<span class="section-header-title-text">Glitter</span>
+						</h3>
+
 						<button class="section-header-action btn-icon" id="glitterClearBtn"
-							data-tooltip="Remove Glitter">✕</button>
+							title="Remove Glitter">✕</button>
 					</div>
+
+					<!-- Glitter Search -->
 					<div class="glitter-search">
 						<div class="search-toggle-row">
 							<div class="search-input-wrapper">
 								<input type="text" id="glitterSearch" placeholder="Search by name or tag...">
 							</div>
-							<button class="btn-icon" id="filterToggleBtn" data-tooltip="Toggle filters">🎨</button>
+							<button class="btn-icon icon-wrapper" id="filterToggleBtn" title="Toggle filters">
+								<svg class="icon">
+									<use href="#icon-filter"></use>
+								</svg>
+								<span class="name">Filter</span>
+							</button>
 						</div>
 						<div class="filters-container" id="filtersContainer">
 							<div class="filters-container-inner">
@@ -188,64 +330,86 @@
 									<div class="filter-label">Colors</div>
 									<div class="color-filter-chips">
 										<div class="filter-chip color-filter-chip" data-color="red" data-filter="color"
-											data-tooltip="Red"></div>
+											title="Red"></div>
 										<div class="filter-chip color-filter-chip" data-color="orange"
-											data-filter="color" data-tooltip="Orange"></div>
+											data-filter="color" title="Orange"></div>
 										<div class="filter-chip color-filter-chip" data-color="yellow"
-											data-filter="color" data-tooltip="Yellow"></div>
+											data-filter="color" title="Yellow"></div>
 										<div class="filter-chip color-filter-chip" data-color="green"
-											data-filter="color" data-tooltip="Green"></div>
+											data-filter="color" title="Green"></div>
 										<div class="filter-chip color-filter-chip" data-color="blue" data-filter="color"
-											data-tooltip="Blue"></div>
+											title="Blue"></div>
 										<div class="filter-chip color-filter-chip" data-color="purple"
-											data-filter="color" data-tooltip="Purple"></div>
+											data-filter="color" title="Purple"></div>
 										<div class="filter-chip color-filter-chip" data-color="pink" data-filter="color"
-											data-tooltip="Pink"></div>
+											title="Pink"></div>
 										<div class="filter-chip color-filter-chip" data-color="neutrals"
-											data-filter="color" data-tooltip="Neutrals"></div>
+											data-filter="color" title="Neutrals"></div>
 										<div class="filter-chip color-filter-chip" data-color="earth-tone"
-											data-filter="color" data-tooltip="Earth Tone"></div>
+											data-filter="color" title="Earth Tone"></div>
 										<div class="filter-chip color-filter-chip" data-color="metal"
-											data-filter="color" data-tooltip="Metal"></div>
+											data-filter="color" title="Metal"></div>
 									</div>
 								</div>
 								<div class="filter-section">
 									<div class="filter-label">Tone</div>
 									<div class="filter-chips">
 										<div class="filter-chip text-filter-chip" data-color="light" data-filter="color"
-											data-tooltip="Light">Light</div>
+											title="Light">Light</div>
 										<div class="filter-chip text-filter-chip" data-color="midtone"
-											data-filter="color" data-tooltip="Midtone">Midtone</div>
+											data-filter="color" title="Midtone">Midtone</div>
 										<div class="filter-chip text-filter-chip" data-color="dark" data-filter="color"
-											data-tooltip="dark">Dark</div>
+											title="dark">Dark</div>
 										<div class="filter-chip text-filter-chip" data-color="pastel"
-											data-filter="color" data-tooltip="Pastel">Pastel</div>
+											data-filter="color" title="Pastel">Pastel</div>
 										<div class="filter-chip text-filter-chip" data-color="neon" data-filter="color"
-											data-tooltip="Neon">Neon</div>
+											title="Neon">Neon</div>
 										<div class="filter-chip text-filter-chip" data-color="jewel" data-filter="color"
-											data-tooltip="Jewel Tone">Jewel Tone</div>
+											title="Jewel Tone">Jewel Tone</div>
 									</div>
 								</div>
 								<div class="filter-section">
 									<div class="filter-label">Vibe</div>
 									<div class="filter-chips">
 										<div class="filter-chip text-filter-chip" data-color="pattern"
-											data-filter="color" data-tooltip="Pattern">Pattern</div>
+											data-filter="color" title="Pattern">Pattern</div>
 										<div class="filter-chip text-filter-chip" data-color="multicolor"
-											data-filter="color" data-tooltip="Multicolor">Multicolor</div>
+											data-filter="color" title="Multicolor">Multicolor</div>
 									</div>
 								</div>
 							</div>
 							<button class="btn-text" id="clearFiltersBtn" disabled>Clear all filters</button>
 						</div>
 					</div>
+
+					<!-- Glitter Options -->
 					<div class="glitter-options" id="glitterOptions"></div>
-					<div class="collapsible-section">
-						<div class="collapsible-header" id="glitterSettingsHeader">
-							<div class="collapsible-header-title">Glitter Settings</div>
-							<div class="collapsible-header-toggle collapsed" id="glitterSettingsToggle">▼</div>
+
+					<!-- Glitter Settings -->
+					<div class="collapsible-section section">
+						<div class="section-header section-header-with-action" id="glitterSettingsHeader">
+	
+							<h3 class="section-header-title">
+								<!-- Layers Icon-->
+								<span class="section-header-title-icon icon-wrapper sm">
+									<svg class="icon">
+										<use href="#icon-sliders"></use>
+									</svg>
+									<span class="name">Sliders</span>
+								</span>
+								<span class="section-header-title-text">Glitter Settings</span>
+							</h3>
+
+							<div class="section-header-action btn-icon visible collapsed" id="glitterSettingsToggle">
+								<!-- Chevron Icon-->
+								<span class="icon-wrapper">
+									<svg class="icon">
+										<use href="#icon-chevron-down"></use>
+									</svg>
+								</span>
+							</div>
 						</div>
-						<div class="collapsible-section-content" id="glitterSettingsContent">
+						<div class="section-content" id="glitterSettingsContent">
 							<div class="settings-empty-state visible" id="glitterSettingsEmpty">
 								<div class="empty-state-icon">✨</div>
 								<div class="empty-state-text">No layer selected</div>
@@ -257,14 +421,14 @@
 											<span>Appearance</span>
 											<label class="checkbox-group">
 												<input type="checkbox" id="glitterGlobal">
-												<span data-tooltip="Apply settings to all glitter layers">Global</span>
+												<span title="Apply settings to all glitter layers">Global</span>
 											</label>
 										</div>
 										<div class="refine-group">
 											<div class="slider-group">
 												<div class="setting-header">
 													<span class="setting-label"
-														data-tooltip="Scale glitter pattern size">Scale</span>
+														title="Scale glitter pattern size">Scale</span>
 													<span class="setting-value" id="scaleValue">100%</span>
 												</div>
 												<input type="range" id="scale" min="25" max="200" value="100">
@@ -273,7 +437,7 @@
 											<div class="slider-group">
 												<div class="setting-header">
 													<span class="setting-label"
-														data-tooltip="Glitter effect intensity">Opacity</span>
+														title="Glitter effect intensity">Opacity</span>
 													<span class="setting-value" id="opacityValue">100%</span>
 												</div>
 												<input type="range" id="opacity" min="0" max="100" value="100">
@@ -286,19 +450,38 @@
 						</div>
 					</div>
 				</div>
+
 				<!-- Right Panel -->
 				<div class="right-panel">
 					<div class="preview-container" id="previewContainer">
 						<div class="preview-controls">
 							<div class="preview-controls-center">
-								<button class="preview-mode-toggle" id="previewModeToggle" disabled
-									data-tooltip="View only selected layer's glitter">👁️ Solo Mode</button>
-								<button class="transparency-toggle" id="transparencyToggle"
-									data-tooltip="Toggle Transparency">◫</button>
+								<button class="preview-mode-toggle btn-icon icon-wrapper" id="previewModeToggle"
+									title="View only selected layer's glitter" disabled>
+									<svg class="icon">
+										<use href="#icon-eye"></use>
+									</svg>
+									<span class="name">Solo Mode</span>
+								</button>
+								<button class="transparency-toggle btn-icon icon-wrapper" id="transparencyToggle"
+									title="Toggle Transparency">
+									<svg class="icon">
+										<use href="#icon-checkerboard"></use>
+									</svg>
+									<span class="name">Transparency</span>
+								</button>
 							</div>
 							<div class="preview-controls-right">
-								<button class="btn export-action-btn" id="exportGif" disabled
-									data-tooltip="Export glitter as GIF">Export GIF</button>
+
+								<!-- EXPORT ICON BUTTON -->
+								<button class="btn-icon export-action-btn icon-wrapper" id="exportGif" disabled title="Export glitter as GIF">
+									<svg class="icon">
+										<use href="#icon-export"></use>
+									</svg>
+									<span class="name">Export GIF</span>
+								</button>
+
+
 							</div>
 						</div>
 						<div class="preview-wrapper" id="previewWrapper">
@@ -307,11 +490,29 @@
 						</div>
 						<!-- Zoom Controls -->
 						<div class="zoom-controls" id="zoomControls">
-							<button class="zoom-btn" id="zoomOut" data-tooltip="Zoom Out (-)">−</button>
-							<div class="zoom-percentage" id="zoomPercentage" data-tooltip="Click to reset to 100%">100%</div>
-							<button class="zoom-btn" id="zoomIn" data-tooltip="Zoom In (+)">+</button>
-							<button class="zoom-fit-btn" id="fitScreen" data-tooltip="Fit Screen (Ctrl+0)">Fit</button>
-							<button class="zoom-fit-btn" id="fillScreen" data-tooltip="Fill Screen">Fill</button>
+
+							<!-- Zoom Out Button -->
+							<button class="icon-wrapper btn-icon" id="zoomOut" title="Zoom Out (-)">
+								<svg class="icon">
+									<use href="#icon-minus"></use>
+								</svg>
+								<span class="name">Zoom Out</span>
+							</button>
+
+							<!-- Zoom Percentage -->
+							<div class="zoom-percentage" id="zoomPercentage" title="Click to reset to 100%">100%</div>
+
+							<!-- Zoom In Button -->
+							<button class="icon-wrapper btn-icon" id="zoomIn" title="Zoom In (+)">
+								<svg class="icon">
+									<use href="#icon-plus"></use>
+								</svg>
+								<span class="name">Zoom Out</span>
+							</button>
+						
+
+							<button class="zoom-fit-btn btn" id="fitScreen" title="Fit Screen (Ctrl+0)">Fit</button>
+							<button class="zoom-fit-btn btn" id="fillScreen" title="Fill Screen">Fill</button>
 						</div>
 					</div>
 				</div>
@@ -342,135 +543,153 @@
 	<div class="modal-overlay" id="settingsModal">
 		<div class="modal-content">
 			<div class="modal-header">
-				<div class="modal-title">Settings</div>
-				<button class="modal-close" id="closeSettingsModal">×</button>
+
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon">
+							<use href="#icon-gear"></use>
+						</svg>
+						<span class="name">Settings</span>
+					</span>
+
+					<span class="modal-title-text">Settings</span>
+				</div>
+
+				<button class="icon-wrapper modal-close" id="closeSettingsModal">
+					<svg class="icon">
+						<use href="#icon-x-mark"></use>
+					</svg>
+					<span class="name">Image</span>
+				</button>
+
+
 			</div>
 			<div class="modal-body">
-<div class="settings-group">
-	<!-- Composition Group -->
-	<div class="settings-group-title">Composition</div>
-	<div class="settings-row">
-		<div class="settings-row-header">
-			<div class="settings-row-label-main">Base Image</div>
-			<div class="settings-row-control">
-				<label class="checkbox-group-simple">
-					<input type="checkbox" id="exportBaseImage">
-				</label>
-			</div>
-		</div>
-		<div class="settings-row-label-desc">Include the base image in the export. When disabled, only glitter layers are exported.</div>
-	</div>
-	
-	<div class="settings-row" id="transparencySettingsRow">
-		<div class="settings-row-header">
-			<div class="settings-row-label-main">Transparency</div>
-			<div class="settings-row-control">
-				<label class="checkbox-group-simple">
-					<input type="checkbox" id="exportTransparency">
-				</label>
-			</div>
-		</div>
-		<div class="settings-row-label-desc">Preserve transparent areas from the original image. When disabled, transparent areas use the matte color.</div>
-	</div>
-	
-	<div class="settings-row" id="matteColorRow">
-		<div class="settings-row-header">
-			<div class="settings-row-label-main">Matte Color</div>
-			<div class="settings-row-control">
-				<input type="color" id="exportMatteColor" value="#ffffff">
-			</div>
-		</div>
-		<div class="settings-row-label-desc">Background color for transparent areas when transparency is disabled.</div>
-	</div>
-	
-	<!-- Encoding Group -->
-	<div class="settings-group-title">Encoding</div>
-	<div class="settings-row">
-		<div class="settings-row-header">
-			<div class="settings-row-label-main">Dithering</div>
-			<div class="settings-row-control">
-				<label class="checkbox-group-simple">
-					<input type="checkbox" id="exportDitherEnabled">
-				</label>
-			</div>
-		</div>
-		<div class="settings-row-label-desc">Reduces color banding in gradients. Disable for sharper edges. Dithering does not apply to images with transparency.</div>
-	</div>
-	
-	<div class="settings-row" id="ditherTypeRow">
-		<div class="settings-row-header">
-			<div class="settings-row-label-main">Dithering Algorithm</div>
-			<div class="settings-row-control">
-				<select id="exportDitherType">
-					<option value="FloydSteinberg">Floyd-Steinberg</option>
-					<option value="FloydSteinberg-serpentine">Floyd-Steinberg Serpentine</option>
-					<option value="FalseFloydSteinberg">False Floyd-Steinberg</option>
-					<option value="FalseFloydSteinberg-serpentine">False Floyd-Steinberg Serpentine</option>
-					<option value="Stucki">Stucki</option>
-					<option value="Stucki-serpentine">Stucki Serpentine</option>
-					<option value="Atkinson">Atkinson</option>
-					<option value="Atkinson-serpentine">Atkinson Serpentine</option>
-				</select>
-			</div>
-		</div>
-		<div class="settings-row-label-desc">Different algorithms produce different visual results.</div>
-	</div>
-
-	<div class="settings-row">
-		<div class="settings-row-header">
-			<div class="settings-row-label-main">Quality</div>
-			<div class="settings-row-control">
-				<select id="exportQuality">
-					<option value="1">1 - Best Quality (Slowest)</option>
-					<option value="5">5 - High Quality</option>
-					<option value="10">10 - Good Quality</option>
-					<option value="15">15 - Medium Quality</option>
-					<option value="20">20 - Lower Quality (Faster)</option>
-					<option value="30">30 - Lowest Quality (Fastest)</option>
-				</select>
-			</div>
-		</div>
-		<div class="settings-row-label-desc">Lower values = better quality but slower encoding. Higher values = faster but may lose color accuracy.</div>
-	</div>
-
-	
-	<!-- Animation Group -->
-	<div class="settings-group-title">Animation</div>
-	<div class="settings-row">
-		<div class="settings-row-header">
-			<div class="settings-row-label-main">Frame Delay</div>
-			<div class="settings-row-control">
-				<select id="exportFrameDelay">
-					<option value="50">50ms - Very Fast</option>
-					<option value="75">75ms - Fast</option>
-					<option value="100">100ms - Normal</option>
-					<option value="110">110ms - Classic</option>
-					<option value="120">120ms</option>
-					<option value="150">150ms - Slow</option>
-					<option value="200">200ms - Very Slow</option>
-				</select>
-			</div>
-		</div>
-		<div class="settings-row-label-desc">Time between frames in milliseconds. Lower = faster animation (default: 110ms).</div>
-	</div>
-	
-	<div class="settings-row">
-		<div class="settings-row-header">
-			<div class="settings-row-label-main">Max Frames</div>
-			<div class="settings-row-control">
-				<select id="exportMaxFrames">
-					<option value="20">20 frames</option>
-					<option value="30">30 frames</option>
-					<option value="40">40 frames</option>
-					<option value="60">60 frames</option>
-					<option value="80">80 frames</option>
-					<option value="100">100 frames</option>
-				</select>
-			</div>
-		</div>
-		<div class="settings-row-label-desc">Maximum frames to export. Higher = longer animation but larger file size.</div>
-	</div>
-</div>
+				<div class="settings-group">
+					<!-- Composition Group -->
+					<div class="settings-group-title">Composition</div>
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Base Image</div>
+							<div class="settings-row-control">
+								<label class="checkbox-group-simple">
+									<input type="checkbox" id="exportBaseImage">
+								</label>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Include the base image in the export. When disabled, only
+							glitter layers are exported.</div>
+					</div>
+					<div class="settings-row" id="transparencySettingsRow">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Transparency</div>
+							<div class="settings-row-control">
+								<label class="checkbox-group-simple">
+									<input type="checkbox" id="exportTransparency">
+								</label>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Preserve transparent areas from the original image. When
+							disabled, transparent areas use the matte color.</div>
+					</div>
+					<div class="settings-row" id="matteColorRow">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Matte Color</div>
+							<div class="settings-row-control">
+								<input type="color" id="exportMatteColor" value="#ffffff">
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Background color for transparent areas when transparency is
+							disabled.</div>
+					</div>
+					<!-- Encoding Group -->
+					<div class="settings-group-title">Encoding</div>
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Dithering</div>
+							<div class="settings-row-control">
+								<label class="checkbox-group-simple">
+									<input type="checkbox" id="exportDitherEnabled">
+								</label>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Reduces color banding in gradients. Disable for sharper
+							edges. Dithering does not apply to images with transparency.</div>
+					</div>
+					<div class="settings-row" id="ditherTypeRow">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Dithering Algorithm</div>
+							<div class="settings-row-control">
+								<select id="exportDitherType">
+									<option value="FloydSteinberg">Floyd-Steinberg</option>
+									<option value="FloydSteinberg-serpentine">Floyd-Steinberg Serpentine</option>
+									<option value="FalseFloydSteinberg">False Floyd-Steinberg</option>
+									<option value="FalseFloydSteinberg-serpentine">False Floyd-Steinberg Serpentine
+									</option>
+									<option value="Stucki">Stucki</option>
+									<option value="Stucki-serpentine">Stucki Serpentine</option>
+									<option value="Atkinson">Atkinson</option>
+									<option value="Atkinson-serpentine">Atkinson Serpentine</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Different algorithms produce different visual results.
+						</div>
+					</div>
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Quality</div>
+							<div class="settings-row-control">
+								<select id="exportQuality">
+									<option value="1">1 - Best Quality (Slowest)</option>
+									<option value="5">5 - High Quality</option>
+									<option value="10">10 - Good Quality</option>
+									<option value="15">15 - Medium Quality</option>
+									<option value="20">20 - Lower Quality (Faster)</option>
+									<option value="30">30 - Lowest Quality (Fastest)</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Lower values = better quality but slower encoding. Higher
+							values = faster but may lose color accuracy.</div>
+					</div>
+					<!-- Animation Group -->
+					<div class="settings-group-title">Animation</div>
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Frame Delay</div>
+							<div class="settings-row-control">
+								<select id="exportFrameDelay">
+									<option value="50">50ms - Very Fast</option>
+									<option value="75">75ms - Fast</option>
+									<option value="100">100ms - Normal</option>
+									<option value="110">110ms - Classic</option>
+									<option value="120">120ms</option>
+									<option value="150">150ms - Slow</option>
+									<option value="200">200ms - Very Slow</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Time between frames in milliseconds. Lower = faster
+							animation (default: 110ms).</div>
+					</div>
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Max Frames</div>
+							<div class="settings-row-control">
+								<select id="exportMaxFrames">
+									<option value="20">20 frames</option>
+									<option value="30">30 frames</option>
+									<option value="40">40 frames</option>
+									<option value="60">60 frames</option>
+									<option value="80">80 frames</option>
+									<option value="100">100 frames</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Maximum frames to export. Higher = longer animation but larger file size.</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -478,8 +697,26 @@
 	<div class="modal-overlay" id="shortcutsModal">
 		<div class="modal-content">
 			<div class="modal-header">
-				<div class="modal-title">Keyboard Shortcuts</div>
-				<button class="modal-close" id="closeShortcutsModal">×</button>
+
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon">
+							<use href="#icon-keyboard"></use>
+						</svg>
+						<span class="name">Keyboard</span>
+					</span>
+
+					<span class="modal-title-text">Keyboard Shortcuts</span>
+				</div>
+
+
+				<button class="icon-wrapper modal-close" id="closeShortcutsModal">
+					<svg class="icon">
+						<use href="#icon-x-mark"></use>
+					</svg>
+					<span class="name">Image</span>
+				</button>
+
 			</div>
 			<div class="modal-body">
 				<div class="shortcut-list" id="shortcutList">
@@ -492,193 +729,344 @@
 	<div class="modal-overlay" id="aboutModal">
 		<div class="modal-content">
 			<div class="modal-header">
-				<div class="modal-title">About Glitter Graphics</div>
-				<button class="modal-close" id="closeAboutModal">×</button>
+
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon">
+							<use href="#icon-question-circle"></use>
+						</svg>
+						<span class="name">About</span>
+					</span>
+
+					<span class="modal-title-text">About Glitter Graphics</span>
+				</div>
+
+				<button class="icon-wrapper modal-close" id="closeAboutModal">
+					<svg class="icon">
+						<use href="#icon-x-mark"></use>
+					</svg>
+					<span class="name">Image</span>
+				</button>
 			</div>
-<div class="modal-body">
-	<img src="images/welcome.gif" data-pixel-scale="2" class="center" style="margin-bottom: 20px;"
-		alt="Welcome to Glitter Graphics">
-	<p><strong class="context"
-			data-tooltip="Also known as Sparkly GIFs or Blingees, named after the popular website that allowed for their creation">Glitter
-			Graphics</strong> are a form of maximalist digital art and a distinct visual style that was
-		popular online in the 2000s.</p>
-	<p>They emerged in online forum <strong class="context"
-			data-tooltip="A feature on forums that allowed users to attach a block of information to the end of each of their posts">signatures</strong>
-		and on early personal website-building platforms that led the first wave of user-generated content
-		online, such as <strong class="context"
-			data-tooltip="A web hosting service that allowed users to create and publish websites free of charge until 2009">GeoCities</strong><sup>[1]</sup>,
-		<strong class="context"
-			data-tooltip="A web hosting service offered by AOL until 2008 that offered 12 megabytes of server space for AOL subscribers to publish their own websites">AOL
-			Hometown</strong><sup>[2]</sup>, <strong class="context"
-			data-tooltip="Originally a free web hosting service, but is now a fully paid service">Tripod</strong><sup>[3]</sup>,
-		and <strong class="context"
-			data-tooltip="Originally a free web hosting service, but is now a fully paid service">Angelfire</strong><sup>[4]</sup>.
-		On these platforms, people shared their creations, compiled collections from other creators, and
-		provided tutorials and resources for making your own graphics.</p>
-	<p><em>Glitter Graphics</em> served as a popular technique for personalizing online profiles, spanning a
-		wide range of subcultures and themes—from Disney illustration to <strong class="context"
-			data-tooltip="A youth subculture that emerged during the early 2000s in the United States from the pre-existing emo subculture">Scene</strong><sup>[5]</sup>
-		to <strong class="context"
-			data-tooltip="Coined by the Consumer Aesthetics Research Institute, McBling is a fashion and lifestyle aesthetic that was prominent from roughly 2000 to 2008">McBling</strong><sup>[6]</sup>.
-		The base style is defined by its animated glitter effects, which all used the same base sparkle
-		animation and shifted color palettes and were commonly applied to illustrations or text. A more
-		maximalist approach was referred to as <strong class="context"
-			data-tooltip="Web-based tool for creating layered glitter graphics with decorative stamps">Blingees</strong><sup>[7]</sup>,
-		named for the web-based application that allowed users to append multiple layers of imagery as
-		decorative "stamps" that commonly had the glitter effect already applied.</p>
-	<p>Although most free web hosting services shuttered or transitioned to paid-only models by 2009—with
-		the rise of social media drawing people away from personal websites—the glitter graphics style
-		persisted into the <strong class="context"
-			data-tooltip="The second stage of development of the Internet, characterized by the change from static web pages to dynamic or user-generated content and the growth of social media">Web
-			2.0</strong><sup>[8]</sup> era. It was commonly found on social media platforms like
-		<strong class="context"
-			data-tooltip="A social networking service launched in 2003. It became the first platform to reach a global audience and had a major impact on technology, pop culture, and music. It remained the largest social network until Facebook surpassed it in 2009.">MySpace</strong><sup>[9]</sup>
-		and embraced by the elderly on <strong class="context"
-			data-tooltip="A social networking service launched in 2004. It is the largest social networking service in the world, with over 3 billion users.">Facebook</strong><sup>[10]</sup>.
-		Today, you'll find them resurfacing in nostalgic internet communities and lurking within GIF
-		keyboards integrated into apps like <strong class="context"
-			data-tooltip="A GIF keyboard and search platform">Tenor</strong><sup>[11]</sup> and <strong
-			class="context" data-tooltip="A GIF search engine and platform">GIPHY</strong><sup>[12]</sup>.</p>
-	<p>Early glitter graphics were created using digital art programs such as <strong class="context"
-			data-tooltip="Adobe's image editing program that allowed frame animation and GIF creation">Adobe
-			ImageReady</strong><sup>[13]</sup> and <strong class="context"
-			data-tooltip="A raster and vector graphics editor, later acquired by Corel">JASC Paint Shop
-			Pro</strong><sup>[14]</sup>'s companion program <strong class="context"
-			data-tooltip="Program used for creating simple animations and GIFs">Animation
-			Shop</strong><sup>[15]</sup>, which provided more affordable image editing options for
-		entry-level graphic designers.</p>
-	<p>Websites such as <strong class="context"
-			data-tooltip="Formerly a web-based tool for creating glitter graphics, now offline">Blingee</strong><sup>[7]</sup>,
-		<strong class="context"
-			data-tooltip="Web-based tool for creating glitter graphics">PicMix</strong><sup>[16]</sup>, and <strong
-			class="context" data-tooltip="Web-based tool for creating glitter graphics and animations">Online Image
-			Editor</strong><sup>[17]</sup> provided free, accessible tools for easily creating this style of
-		graphics.</p>
-	<p>The aesthetic influence of glitter graphics has extended into contemporary art and popular culture,
-		particularly within <strong class="context"
-			data-tooltip="Artwork and artistic practices that use the internet as a primary medium">Net
-			Art</strong><sup>[18]</sup> and digital culture movements that celebrate early web aesthetics.
-		The artwork for <strong class="context"
-			data-tooltip="British rapper, singer, and songwriter">M.I.A.</strong>'s 2010 single <strong
-			class="context" data-tooltip="Single from the album /\/\ /\ Y /\">XXXO</strong><sup>[19]</sup> directly
-		references the Blingee style, with its music video featuring glittering floral graphics and
-		decorative stamps characteristic of the maximalist aesthetic, embracing the vernacular visual
-		language of early social media culture.</p>
-	<h3>This Website</h3>
-	<p>All glitters are ethically sourced from <strong class="context"
-			data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive">GifCities</strong><sup>[20]</sup>
-		and Angelfire<sup>[4]</sup> sites. Original file names are mostly retained.</p>
-	<h4>Version History</h4>
-	<ul>
-		<li>December 12, 2025 — Beta Release</li>
-	</ul>
-	<p>And for the record, I pronounce <strong class="context"
-			data-tooltip="Graphics Interchange Format">GIF</strong><sup>[21]</sup> with a hard 'G'. The engineering lead on the team that created the format at <strong class="context" data-tooltip="American Internet company that provided the first major commercial online service">CompuServe</strong><sup>[22]</sup> in 1987, <strong class="context" data-tooltip="American computer scientist who led the team that created the GIF format">Steve Wilhite</strong><sup>[23]</sup>, insists it's pronounced the same as <span class="context" data-tooltip="the American peanut butter brand">Jif</span><sup>[24]</sup>, sparking one of the internet's most heated debates. Dictionaries list both pronunciations as acceptable<sup>[25]</sup>. But I solidified my pronunciation by age 6, so he should have spoke up sooner. May he rest in peace though.</p>
-	<h3>References</h3>
-	<ol>
-		<li>"<a class="external" href="http://geocities.yahoo.com/" target="_blank"
-				rel="noopener noreferrer">GeoCities</a>". Yahoo!. <a class="external"
-				href="https://web.archive.org/web/20040124092913/http://geocities.yahoo.com/"
-				target="_blank" rel="noopener noreferrer">Archived</a> from the original on 24 January 2004.
-		</li>
-		<li>"<a class="external" href="http://hometown.aol.com/" target="_blank"
-				rel="noopener noreferrer">AOL Hometown</a>". AOL. <a class="external"
-				href="https://web.archive.org/web/20040401124704/http://hometown.aol.com/" target="_blank"
-				rel="noopener noreferrer">Archived</a> from the original on 1 April 2004.</li>
-		<li>"<a class="external" href="https://www.tripod.com/" target="_blank"
-				rel="noopener noreferrer">Tripod</a>". Lycos.</li>
-		<li>"<a class="external" href="https://www.angelfire.com/" target="_blank"
-				rel="noopener noreferrer">Angelfire</a>". Lycos.</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/Scene_(subculture)" target="_blank"
-				rel="noopener noreferrer">Scene (subculture)</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://aesthetics.fandom.com/wiki/McBling" target="_blank"
-				rel="noopener noreferrer">McBling</a>". <em>Aesthetics Wiki</em>.</li>
-		<li>"<a class="external" href="http://blingee.com/" target="_blank"
-				rel="noopener noreferrer">Blingee</a>". <a class="external"
-				href="https://web.archive.org/web/20091021203517/http://blingee.com/" target="_blank"
-				rel="noopener noreferrer">Archived</a> from the original on 21 October 2009.</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/Web_2.0" target="_blank"
-				rel="noopener noreferrer">Web 2.0</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://myspace.com/" target="_blank"
-				rel="noopener noreferrer">MySpace</a>".</li>
-		<li>"<a class="external" href="https://www.facebook.com/" target="_blank"
-				rel="noopener noreferrer">Facebook</a>".</li>
-		<li>"<a class="external" href="https://tenor.com/" target="_blank"
-				rel="noopener noreferrer">Tenor</a>".</li>
-		<li>"<a class="external" href="https://giphy.com/" target="_blank"
-				rel="noopener noreferrer">GIPHY</a>".</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/Adobe_ImageReady" target="_blank"
-				rel="noopener noreferrer">Adobe ImageReady</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/PaintShop_Pro" target="_blank"
-				rel="noopener noreferrer">PaintShop Pro</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/Animation_Shop" target="_blank"
-				rel="noopener noreferrer">Animation Shop</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://www.picmix.com/" target="_blank"
-				rel="noopener noreferrer">PicMix</a>".</li>
-		<li>"<a class="external" href="https://www.online-image-editor.com/" target="_blank"
-				rel="noopener noreferrer">Online Image Editor</a>".</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/Internet_art" target="_blank"
-				rel="noopener noreferrer">Internet art</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://www.youtube.com/watch?v=sfbQ5mHWkOs" target="_blank"
-				rel="noopener noreferrer">M.I.A. - XXXO (Official Video)</a>". <em>YouTube</em>.</li>
-		<li>"<a class="external" href="https://gifcities.org/" target="_blank"
-				rel="noopener noreferrer">GifCities</a>". Internet Archive.</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/GIF" target="_blank"
-				rel="noopener noreferrer">GIF</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/CompuServe" target="_blank"
-				rel="noopener noreferrer">CompuServe</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/Steve_Wilhite" target="_blank"
-				rel="noopener noreferrer">Steve Wilhite</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://en.wikipedia.org/wiki/Jif_(peanut_butter)" target="_blank"
-				rel="noopener noreferrer">Jif (peanut butter)</a>". <em>Wikipedia</em>.</li>
-		<li>"<a class="external" href="https://www.merriam-webster.com/dictionary/GIF" target="_blank"
-				rel="noopener noreferrer">GIF</a>". <em>Merriam-Webster Dictionary</em>.</li>
-	</ol>
-	<h3>External links</h3>
-	<ul>
-		<li>Kimble, Katrina "Mz.Kathy". "<a class="external"
-				href="http://geocities.com/katrinakimble/page1.html" target="_blank"
-				rel="noopener noreferrer">Dolls and other sigs</a>". <em>GeoCities</em>. <a class="external"
-				href="https://web.archive.org/web/20091021203517/http://geocities.com/katrinakimble/page1.html"
-				target="_blank" rel="noopener noreferrer">Archived</a> from the original on 21 October 2009.
-		</li>
-		<li>__urbanizedDORK/d0rkyb0y. "<a class="external"
-				href="http://geocities.com/urbanizedxdork/myspace/bg.htm" target="_blank"
-				rel="noopener noreferrer">Backgrounds</a>". <em>GeoCities</em>. <a class="external"
-				href="https://web.archive.org/web/20091022151103/http://geocities.com/urbanizedxdork/myspace/bg.htm"
-				target="_blank" rel="noopener noreferrer">Archived</a> from the original on 22 October 2009.
-		</li>
-		<li>harveysgraphics01. "<a class="external"
-				href="http://geocities.com/harveysgraphics01/glitter.html" target="_blank"
-				rel="noopener noreferrer">Glitter</a>". <em>GeoCities</em>. <a class="external"
-				href="https://web.archive.org/web/20050430183144/http://geocities.com/harveysgraphics01/glitter.html"
-				target="_blank" rel="noopener noreferrer">Archived</a> from the original on 30 April 2005.
-		</li>
-		<li>elanger. "<a class="external" href="https://www.angelfire.com/nj4/elanger/glitters_galore.html"
-				target="_blank" rel="noopener noreferrer">Glitters Galore</a>". <em>Angelfire</em>.</li>
-		<li>elanger. "<a class="external" href="https://www.angelfire.com/nj4/elanger//g1.html"
-				target="_blank" rel="noopener noreferrer">Much More Glitter</a>". <em>Angelfire</em>.</li>
-		<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitterpicture.html"
-				target="_blank" rel="noopener noreferrer">Adding glitter to a Picture</a>".
-			<em>Angelfire</em>.</li>
-		<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitterpic.html"
-				target="_blank" rel="noopener noreferrer">Adding a Glitter name to a Picture</a>".
-			<em>Angelfire</em>.</li>
-		<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitters.html"
-				target="_blank" rel="noopener noreferrer">Glitter</a>". <em>Angelfire</em>.</li>
-		<li>groovysmurf. "<a class="external"
-				href="https://www.angelfire.com/on2/groovysmurf/glitterfillnames.html" target="_blank"
-				rel="noopener noreferrer">HOW TO USE GLITTER FILLS</a>". <em>Angelfire</em>.</li>
-		<li>seira55. "<a class="external" href="https://seira55.tripod.com/glitterfiles2.htm"
-				target="_blank" rel="noopener noreferrer">Glitter Files</a>". <em>Tripod</em>.</li>
-		<li>osodeoro. "<a class="external" href="https://osodeoro.tripod.com/Sparklies/Sparkelies.html"
-				target="_blank" rel="noopener noreferrer">Sparkelies</a>". <em>Tripod</em>.</li>
-		<li>donnasblinkies. "<a class="external" href="https://donnasblinkies.tripod.com/" target="_blank"
-				rel="noopener noreferrer">Doherty Designs</a>". <em>Tripod</em>.</li>
-	</ul>
-</div>
+			<div class="modal-body">
+				<img src="images/welcome.gif" data-pixel-scale="2" class="center" style="margin-bottom: 20px;"
+					alt="Welcome to Glitter Graphics">
+				<p><strong class="context"
+						data-tooltip="Also known as Sparkly GIFs or Blingees, named after the popular website that allowed for their creation">Glitter Graphics</strong> are a form of maximalist digital art and a distinct visual style that was
+					popular online in the 2000s.</p>
+				<p>They emerged in online forum <strong class="context"
+						data-tooltip="A feature on forums that allowed users to attach a block of information to the end of each of their posts">signatures</strong>
+					and on early personal website-building platforms that led the first wave of user-generated content
+					online, such as <strong class="context"
+						data-tooltip="A web hosting service that allowed users to create and publish websites free of charge until 2009">GeoCities</strong><sup>[1]</sup>,
+					<strong class="context"
+						data-tooltip="A web hosting service offered by AOL until 2008 that offered 12 megabytes of server space for AOL subscribers to publish their own websites">AOL
+						Hometown</strong><sup>[2]</sup>, <strong class="context"
+						data-tooltip="Originally a free web hosting service, but is now a fully paid service">Tripod</strong><sup>[3]</sup>,
+					and <strong class="context"
+						data-tooltip="Originally a free web hosting service, but is now a fully paid service">Angelfire</strong><sup>[4]</sup>.
+					On these platforms, people shared their creations, compiled collections from other creators, and
+					provided tutorials and resources for making your own graphics.
+				</p>
+				<p><em>Glitter Graphics</em> served as a popular technique for personalizing online profiles, spanning a
+					wide range of subcultures and themes—from Disney illustration to <strong class="context"
+						data-tooltip="A youth subculture that emerged during the early 2000s in the United States from the pre-existing emo subculture">Scene</strong><sup>[5]</sup>
+					to <strong class="context"
+						data-tooltip="Coined by the Consumer Aesthetics Research Institute, McBling is a fashion and lifestyle aesthetic that was prominent from roughly 2000 to 2008">McBling</strong><sup>[6]</sup>.
+					The base style is defined by its animated glitter effects, which all used the same base sparkle
+					animation and shifted color palettes and were commonly applied to illustrations or text. A more
+					maximalist approach was referred to as <strong class="context"
+						data-tooltip="Web-based tool for creating layered glitter graphics with decorative stamps">Blingees</strong><sup>[7]</sup>,
+					named for the web-based application that allowed users to append multiple layers of imagery as
+					decorative "stamps" that commonly had the glitter effect already applied.</p>
+				<p>Although most free web hosting services shuttered or transitioned to paid-only models by 2009—with
+					the rise of social media drawing people away from personal websites—the glitter graphics style
+					persisted into the <strong class="context"
+						data-tooltip="The second stage of development of the Internet, characterized by the change from static web pages to dynamic or user-generated content and the growth of social media">Web
+						2.0</strong><sup>[8]</sup> era. It was commonly found on social media platforms like <strong
+						class="context"
+						data-tooltip="A social networking service launched in 2003. It became the first platform to reach a global audience and had a major impact on technology, pop culture, and music. It remained the largest social network until Facebook surpassed it in 2009.">MySpace</strong><sup>[9]</sup>
+					and embraced by the elderly on <strong class="context"
+						data-tooltip="A social networking service launched in 2004. It is the largest social networking service in the world, with over 3 billion users.">Facebook</strong><sup>[10]</sup>.
+					Today, you'll find them resurfacing in nostalgic internet communities and lurking within GIF
+					keyboards integrated into apps like <strong class="context"
+						data-tooltip="A GIF keyboard and search platform">Tenor</strong><sup>[11]</sup> and <strong
+						class="context" data-tooltip="A GIF search engine and platform">GIPHY</strong><sup>[12]</sup>.
+				</p>
+				<p>Early glitter graphics were created using digital art programs such as <strong class="context"
+						data-tooltip="Adobe's image editing program that allowed frame animation and GIF creation">Adobe
+						ImageReady</strong><sup>[13]</sup> and <strong class="context"
+						data-tooltip="A raster and vector graphics editor, later acquired by Corel">JASC Paint Shop
+						Pro</strong><sup>[14]</sup>'s companion program <strong class="context"
+						data-tooltip="Program used for creating simple animations and GIFs">Animation
+						Shop</strong><sup>[15]</sup>, which provided more affordable image editing options for
+					entry-level graphic designers.</p>
+				<p>Websites such as <strong class="context"
+						data-tooltip="Formerly a web-based tool for creating glitter graphics, now offline">Blingee</strong><sup>[7]</sup>,
+					<strong class="context"
+						data-tooltip="Web-based tool for creating glitter graphics">PicMix</strong><sup>[16]</sup>, and
+					<strong class="context"
+						data-tooltip="Web-based tool for creating glitter graphics and animations">Online Image
+						Editor</strong><sup>[17]</sup> provided free, accessible tools for easily creating this style of
+					graphics.
+				</p>
+				<p>The aesthetic influence of glitter graphics has extended into contemporary art and popular culture,
+					particularly within <strong class="context"
+						data-tooltip="Artwork and artistic practices that use the internet as a primary medium">Net
+						Art</strong><sup>[18]</sup> and digital culture movements that celebrate early web aesthetics.
+					The artwork for <strong class="context"
+						data-tooltip="British rapper, singer, and songwriter">M.I.A.</strong>'s 2010 single <strong
+						class="context" data-tooltip="Single from the album /\/\ /\ Y /\">XXXO</strong><sup>[19]</sup>
+					directly references the Blingee style, with its music video featuring glittering floral graphics and
+					decorative stamps characteristic of the maximalist aesthetic, embracing the vernacular visual
+					language of early social media culture.</p>
+				<h3>This Website</h3>
+				<p>All glitters are ethically sourced from <strong class="context"
+						data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive">GifCities</strong><sup>[20]</sup>
+					and Angelfire<sup>[4]</sup> sites. Original file names are mostly retained.</p>
+				<h4>Version History</h4>
+				<ul>
+					<li>December 12, 2025 — Beta Release</li>
+				</ul>
+				<p>And for the record, I pronounce <strong class="context"
+						data-tooltip="Graphics Interchange Format">GIF</strong><sup>[21]</sup> with a hard 'G'. The
+					engineering lead on the team that created the format at <strong class="context"
+						data-tooltip="American Internet company that provided the first major commercial online service">CompuServe</strong><sup>[22]</sup>
+					in 1987, <strong class="context"
+						data-tooltip="American computer scientist who led the team that created the GIF format">Steve
+						Wilhite</strong><sup>[23]</sup>, insists it's pronounced the same as <span class="context"
+						data-tooltip="the American peanut butter brand">Jif</span><sup>[24]</sup>, sparking one of the
+					internet's most heated debates. Dictionaries list both pronunciations as acceptable<sup>[25]</sup>.
+					But I solidified my pronunciation by age 6, so he should have spoke up sooner. May he rest in peace
+					though.</p>
+				<h3>References</h3>
+				<ol>
+					<li>"<a class="external" href="http://geocities.yahoo.com/" target="_blank"
+							rel="noopener noreferrer">GeoCities</a>". Yahoo!. <a class="external"
+							href="https://web.archive.org/web/20040124092913/http://geocities.yahoo.com/"
+							target="_blank" rel="noopener noreferrer">Archived</a> from the original on 24 January 2004.
+					</li>
+					<li>"<a class="external" href="http://hometown.aol.com/" target="_blank"
+							rel="noopener noreferrer">AOL Hometown</a>". AOL. <a class="external"
+							href="https://web.archive.org/web/20040401124704/http://hometown.aol.com/" target="_blank"
+							rel="noopener noreferrer">Archived</a> from the original on 1 April 2004.</li>
+					<li>"<a class="external" href="https://www.tripod.com/" target="_blank"
+							rel="noopener noreferrer">Tripod</a>". Lycos.</li>
+					<li>"<a class="external" href="https://www.angelfire.com/" target="_blank"
+							rel="noopener noreferrer">Angelfire</a>". Lycos.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Scene_(subculture)" target="_blank"
+							rel="noopener noreferrer">Scene (subculture)</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://aesthetics.fandom.com/wiki/McBling" target="_blank"
+							rel="noopener noreferrer">McBling</a>". <em>Aesthetics Wiki</em>.</li>
+					<li>"<a class="external" href="http://blingee.com/" target="_blank"
+							rel="noopener noreferrer">Blingee</a>". <a class="external"
+							href="https://web.archive.org/web/20091021203517/http://blingee.com/" target="_blank"
+							rel="noopener noreferrer">Archived</a> from the original on 21 October 2009.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Web_2.0" target="_blank"
+							rel="noopener noreferrer">Web 2.0</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://myspace.com/" target="_blank"
+							rel="noopener noreferrer">MySpace</a>".</li>
+					<li>"<a class="external" href="https://www.facebook.com/" target="_blank"
+							rel="noopener noreferrer">Facebook</a>".</li>
+					<li>"<a class="external" href="https://tenor.com/" target="_blank"
+							rel="noopener noreferrer">Tenor</a>".</li>
+					<li>"<a class="external" href="https://giphy.com/" target="_blank"
+							rel="noopener noreferrer">GIPHY</a>".</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Adobe_ImageReady" target="_blank"
+							rel="noopener noreferrer">Adobe ImageReady</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/PaintShop_Pro" target="_blank"
+							rel="noopener noreferrer">PaintShop Pro</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Animation_Shop" target="_blank"
+							rel="noopener noreferrer">Animation Shop</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://www.picmix.com/" target="_blank"
+							rel="noopener noreferrer">PicMix</a>".</li>
+					<li>"<a class="external" href="https://www.online-image-editor.com/" target="_blank"
+							rel="noopener noreferrer">Online Image Editor</a>".</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Internet_art" target="_blank"
+							rel="noopener noreferrer">Internet art</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://www.youtube.com/watch?v=sfbQ5mHWkOs" target="_blank"
+							rel="noopener noreferrer">M.I.A. - XXXO (Official Video)</a>". <em>YouTube</em>.</li>
+					<li>"<a class="external" href="https://gifcities.org/" target="_blank"
+							rel="noopener noreferrer">GifCities</a>". Internet Archive.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/GIF" target="_blank"
+							rel="noopener noreferrer">GIF</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/CompuServe" target="_blank"
+							rel="noopener noreferrer">CompuServe</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Steve_Wilhite" target="_blank"
+							rel="noopener noreferrer">Steve Wilhite</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Jif_(peanut_butter)" target="_blank"
+							rel="noopener noreferrer">Jif (peanut butter)</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://www.merriam-webster.com/dictionary/GIF" target="_blank"
+							rel="noopener noreferrer">GIF</a>". <em>Merriam-Webster Dictionary</em>.</li>
+				</ol>
+				<h3>External links</h3>
+				<ul>
+					<li>Kimble, Katrina "Mz.Kathy". "<a class="external"
+							href="http://geocities.com/katrinakimble/page1.html" target="_blank"
+							rel="noopener noreferrer">Dolls and other sigs</a>". <em>GeoCities</em>. <a class="external"
+							href="https://web.archive.org/web/20091021203517/http://geocities.com/katrinakimble/page1.html"
+							target="_blank" rel="noopener noreferrer">Archived</a> from the original on 21 October 2009.
+					</li>
+					<li>__urbanizedDORK/d0rkyb0y. "<a class="external"
+							href="http://geocities.com/urbanizedxdork/myspace/bg.htm" target="_blank"
+							rel="noopener noreferrer">Backgrounds</a>". <em>GeoCities</em>. <a class="external"
+							href="https://web.archive.org/web/20091022151103/http://geocities.com/urbanizedxdork/myspace/bg.htm"
+							target="_blank" rel="noopener noreferrer">Archived</a> from the original on 22 October 2009.
+					</li>
+					<li>harveysgraphics01. "<a class="external"
+							href="http://geocities.com/harveysgraphics01/glitter.html" target="_blank"
+							rel="noopener noreferrer">Glitter</a>". <em>GeoCities</em>. <a class="external"
+							href="https://web.archive.org/web/20050430183144/http://geocities.com/harveysgraphics01/glitter.html"
+							target="_blank" rel="noopener noreferrer">Archived</a> from the original on 30 April 2005.
+					</li>
+					<li>elanger. "<a class="external" href="https://www.angelfire.com/nj4/elanger/glitters_galore.html"
+							target="_blank" rel="noopener noreferrer">Glitters Galore</a>". <em>Angelfire</em>.</li>
+					<li>elanger. "<a class="external" href="https://www.angelfire.com/nj4/elanger//g1.html"
+							target="_blank" rel="noopener noreferrer">Much More Glitter</a>". <em>Angelfire</em>.</li>
+					<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitterpicture.html"
+							target="_blank" rel="noopener noreferrer">Adding glitter to a Picture</a>".
+						<em>Angelfire</em>.
+					</li>
+					<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitterpic.html"
+							target="_blank" rel="noopener noreferrer">Adding a Glitter name to a Picture</a>".
+						<em>Angelfire</em>.
+					</li>
+					<li>juanita2. "<a class="external" href="https://www.angelfire.com/la3/juanita2/glitters.html"
+							target="_blank" rel="noopener noreferrer">Glitter</a>". <em>Angelfire</em>.</li>
+					<li>groovysmurf. "<a class="external"
+							href="https://www.angelfire.com/on2/groovysmurf/glitterfillnames.html" target="_blank"
+							rel="noopener noreferrer">HOW TO USE GLITTER FILLS</a>". <em>Angelfire</em>.</li>
+					<li>seira55. "<a class="external" href="https://seira55.tripod.com/glitterfiles2.htm"
+							target="_blank" rel="noopener noreferrer">Glitter Files</a>". <em>Tripod</em>.</li>
+					<li>osodeoro. "<a class="external" href="https://osodeoro.tripod.com/Sparklies/Sparkelies.html"
+							target="_blank" rel="noopener noreferrer">Sparkelies</a>". <em>Tripod</em>.</li>
+					<li>donnasblinkies. "<a class="external" href="https://donnasblinkies.tripod.com/" target="_blank"
+							rel="noopener noreferrer">Doherty Designs</a>". <em>Tripod</em>.</li>
+				</ul>
+			</div>
 		</div>
 	</div>
+	<!-- SVG Sprite Definition (Place at the bottom of your body tag) -->
+	<svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+		<defs>
+			<symbol id="icon-move" viewBox="0 0 640 640">
+				<path
+					d="M342.6 73.4C330.1 60.9 309.8 60.9 297.3 73.4L233.3 137.4C220.8 149.9 220.8 170.2 233.3 182.7C245.8 195.2 266.1 195.2 278.6 182.7L288 173.3L288 288L173.3 288L182.7 278.6C195.2 266.1 195.2 245.8 182.7 233.3C170.2 220.8 149.9 220.8 137.4 233.3L73.4 297.3C60.9 309.8 60.9 330.1 73.4 342.6L137.4 406.6C149.9 419.1 170.2 419.1 182.7 406.6C195.2 394.1 195.2 373.8 182.7 361.3L173.3 351.9L288 351.9L288 466.6L278.6 457.2C266.1 444.7 245.8 444.7 233.3 457.2C220.8 469.7 220.8 490 233.3 502.5L297.3 566.5C309.8 579 330.1 579 342.6 566.5L406.6 502.5C419.1 490 419.1 469.7 406.6 457.2C394.1 444.7 373.8 444.7 361.3 457.2L351.9 466.6L351.9 351.9L466.6 351.9L457.2 361.3C444.7 373.8 444.7 394.1 457.2 406.6C469.7 419.1 490 419.1 502.5 406.6L566.5 342.6C579 330.1 579 309.8 566.5 297.3L502.5 233.3C490 220.8 469.7 220.8 457.2 233.3C444.7 245.8 444.7 266.1 457.2 278.6L466.6 288L351.9 288L351.9 173.3L361.3 182.7C373.8 195.2 394.1 195.2 406.6 182.7C419.1 170.2 419.1 149.9 406.6 137.4L342.6 73.4z" />
+			</symbol>
+			<symbol id="icon-magic-wand" viewBox="0 0 640 640">
+				<path
+					d="M295.4 37L310.2 73.8L347 88.6C350 89.8 352 92.8 352 96C352 99.2 350 102.2 347 103.4L310.2 118.2L295.4 155C294.2 158 291.2 160 288 160C284.8 160 281.8 158 280.6 155L265.8 118.2L229 103.4C226 102.2 224 99.2 224 96C224 92.8 226 89.8 229 88.6L265.8 73.8L280.6 37C281.8 34 284.8 32 288 32C291.2 32 294.2 34 295.4 37zM142.7 105.7L164.2 155.8L214.3 177.3C220.2 179.8 224 185.6 224 192C224 198.4 220.2 204.2 214.3 206.7L164.2 228.2L142.7 278.3C140.2 284.2 134.4 288 128 288C121.6 288 115.8 284.2 113.3 278.3L91.8 228.2L41.7 206.7C35.8 204.2 32 198.4 32 192C32 185.6 35.8 179.8 41.7 177.3L91.8 155.8L113.3 105.7C115.8 99.8 121.6 96 128 96C134.4 96 140.2 99.8 142.7 105.7zM496 368C502.4 368 508.2 371.8 510.7 377.7L532.2 427.8L582.3 449.3C588.2 451.8 592 457.6 592 464C592 470.4 588.2 476.2 582.3 478.7L532.2 500.2L510.7 550.3C508.2 556.2 502.4 560 496 560C489.6 560 483.8 556.2 481.3 550.3L459.8 500.2L409.7 478.7C403.8 476.2 400 470.4 400 464C400 457.6 403.8 451.8 409.7 449.3L459.8 427.8L481.3 377.7C483.8 371.8 489.6 368 496 368zM492 64C503 64 513.6 68.4 521.5 76.2L563.8 118.5C571.6 126.4 576 137 576 148C576 159 571.6 169.6 563.8 177.5L475.6 265.7L374.3 164.4L462.5 76.2C470.4 68.4 481 64 492 64zM76.2 462.5L340.4 198.3L441.7 299.6L177.5 563.8C169.6 571.6 159 576 148 576C137 576 126.4 571.6 118.5 563.8L76.2 521.5C68.4 513.6 64 503 64 492C64 481 68.4 470.4 76.2 462.5z" />
+				<symbol id="icon-eye-dropper" viewBox="0 0 512 512">
+					<path
+						d="M50.75 333.25c-12 12-18.75 28.28-18.75 45.26V424L0 480l32 32 56-32h45.49c16.97 0 33.25-6.74 45.25-18.74l126.64-126.62-128-128L50.75 333.25zM483.88 28.12c-37.47-37.5-98.28-37.5-135.75 0l-77.09 77.09-13.1-13.1c-9.44-9.44-24.65-9.31-33.94 0l-40.97 40.97c-9.37 9.37-9.37 24.57 0 33.94l161.94 161.94c9.44 9.44 24.65 9.31 33.94 0L419.88 288c9.37-9.37 9.37-24.57 0-33.94l-13.1-13.1 77.09-77.09c37.51-37.48 37.51-98.26.01-135.75z" />
+				</symbol>
+				<symbol id="icon-cursor" viewBox="0 0 640 640">
+					<path
+						d="M173.3 66.5C181.4 62.4 191.2 63.3 198.4 68.8L518.4 308.7C526.7 314.9 530 325.7 526.8 335.5C523.6 345.3 514.4 351.9 504 351.9L351.7 351.9L440.6 529.6C448.5 545.4 442.1 564.6 426.3 572.5C410.5 580.4 391.3 574 383.4 558.2L294.5 380.5L203.2 502.3C197 510.6 186.2 513.9 176.4 510.7C166.6 507.5 160 498.3 160 488L160 88C160 78.9 165.1 70.6 173.3 66.5z" />
+				</symbol>
+				<symbol id="icon-pointer" viewBox="0 0 640 640">
+					<path
+						d="M224 104C224 81.9 241.9 64 264 64C286.1 64 304 81.9 304 104L304 252.2C312.5 244.6 323.7 240 336 240C356.6 240 374.2 253 381 271.2C389.8 261.9 402.2 256 416 256C441.3 256 462 275.5 463.9 300.3C472.4 292.6 483.7 288 496 288C522.5 288 544 309.5 544 336L544 448C544 518.7 486.7 576 416 576L330.7 576C325.7 576 320.8 575.7 316 575C260.7 569.4 209.8 541 176 496L104 400C90.7 382.3 94.3 357.3 112 344C129.7 330.7 154.7 334.3 168 352L224 426.7L224 104zM336 368C336 359.2 328.8 352 320 352C311.2 352 304 359.2 304 368L304 464C304 472.8 311.2 480 320 480C328.8 480 336 472.8 336 464L336 368zM384 352C375.2 352 368 359.2 368 368L368 464C368 472.8 375.2 480 384 480C392.8 480 400 472.8 400 464L400 368C400 359.2 392.8 352 384 352zM464 368C464 359.2 456.8 352 448 352C439.2 352 432 359.2 432 368L432 464C432 472.8 439.2 480 448 480C456.8 480 464 472.8 464 464L464 368z" />
+				</symbol>
+				<symbol id="icon-magnifying-glass" viewBox="0 0 640 640">
+					<path
+						d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z" />
+				</symbol>
+				<symbol id="icon-undo" viewBox="0 0 640 640">
+					<path
+						d="M88 256L232 256C241.7 256 250.5 250.2 254.2 241.2C257.9 232.2 255.9 221.9 249 215L202.3 168.3C277.6 109.7 386.6 115 455.8 184.2C530.8 259.2 530.8 380.7 455.8 455.7C380.8 530.7 259.3 530.7 184.3 455.7C174.1 445.5 165.3 434.4 157.9 422.7C148.4 407.8 128.6 403.4 113.7 412.9C98.8 422.4 94.4 442.2 103.9 457.1C113.7 472.7 125.4 487.5 139 501C239 601 401 601 501 501C601 401 601 239 501 139C406.8 44.7 257.3 39.3 156.7 122.8L105 71C98.1 64.2 87.8 62.1 78.8 65.8C69.8 69.5 64 78.3 64 88L64 232C64 245.3 74.7 256 88 256z" />
+				</symbol>
+				<symbol id="icon-redo" viewBox="0 0 640 640">
+					<path
+						d="M552 256L408 256C398.3 256 389.5 250.2 385.8 241.2C382.1 232.2 384.1 221.9 391 215L437.7 168.3C362.4 109.7 253.4 115 184.2 184.2C109.2 259.2 109.2 380.7 184.2 455.7C259.2 530.7 380.7 530.7 455.7 455.7C463.9 447.5 471.2 438.8 477.6 429.6C487.7 415.1 507.7 411.6 522.2 421.7C536.7 431.8 540.2 451.8 530.1 466.3C521.6 478.5 511.9 490.1 501 501C401 601 238.9 601 139 501C39.1 401 39 239 139 139C233.3 44.7 382.7 39.4 483.3 122.8L535 71C541.9 64.1 552.2 62.1 561.2 65.8C570.2 69.5 576 78.3 576 88L576 232C576 245.3 565.3 256 552 256z" />
+				</symbol>
+				<symbol id="icon-trash" viewBox="0 0 640 640">
+					<path
+						d="M232.7 69.9C237.1 56.8 249.3 48 263.1 48L377 48C390.8 48 403 56.8 407.4 69.9L416 96L512 96C529.7 96 544 110.3 544 128C544 145.7 529.7 160 512 160L128 160C110.3 160 96 145.7 96 128C96 110.3 110.3 96 128 96L224 96L232.7 69.9zM128 208L512 208L512 512C512 547.3 483.3 576 448 576L192 576C156.7 576 128 547.3 128 512L128 208zM216 272C202.7 272 192 282.7 192 296L192 488C192 501.3 202.7 512 216 512C229.3 512 240 501.3 240 488L240 296C240 282.7 229.3 272 216 272zM320 272C306.7 272 296 282.7 296 296L296 488C296 501.3 306.7 512 320 512C333.3 512 344 501.3 344 488L344 296C344 282.7 333.3 272 320 272zM424 272C410.7 272 400 282.7 400 296L400 488C400 501.3 410.7 512 424 512C437.3 512 448 501.3 448 488L448 296C448 282.7 437.3 272 424 272z" />
+				</symbol>
+				<symbol id="icon-gear" viewBox="0 0 640 640">
+					<path
+						d="M259.1 73.5C262.1 58.7 275.2 48 290.4 48L350.2 48C365.4 48 378.5 58.7 381.5 73.5L396 143.5C410.1 149.5 423.3 157.2 435.3 166.3L503.1 143.8C517.5 139 533.3 145 540.9 158.2L570.8 210C578.4 223.2 575.7 239.8 564.3 249.9L511 297.3C511.9 304.7 512.3 312.3 512.3 320C512.3 327.7 511.8 335.3 511 342.7L564.4 390.2C575.8 400.3 578.4 417 570.9 430.1L541 481.9C533.4 495 517.6 501.1 503.2 496.3L435.4 473.8C423.3 482.9 410.1 490.5 396.1 496.6L381.7 566.5C378.6 581.4 365.5 592 350.4 592L290.6 592C275.4 592 262.3 581.3 259.3 566.5L244.9 496.6C230.8 490.6 217.7 482.9 205.6 473.8L137.5 496.3C123.1 501.1 107.3 495.1 99.7 481.9L69.8 430.1C62.2 416.9 64.9 400.3 76.3 390.2L129.7 342.7C128.8 335.3 128.4 327.7 128.4 320C128.4 312.3 128.9 304.7 129.7 297.3L76.3 249.8C64.9 239.7 62.3 223 69.8 209.9L99.7 158.1C107.3 144.9 123.1 138.9 137.5 143.7L205.3 166.2C217.4 157.1 230.6 149.5 244.6 143.4L259.1 73.5zM320.3 400C364.5 399.8 400.2 363.9 400 319.7C399.8 275.5 363.9 239.8 319.7 240C275.5 240.2 239.8 276.1 240 320.3C240.2 364.5 276.1 400.2 320.3 400z" />
+				</symbol>
+				<symbol id="icon-keyboard" viewBox="0 0 640 640">
+					<path
+						d="M96 128C60.7 128 32 156.7 32 192L32 448C32 483.3 60.7 512 96 512L544 512C579.3 512 608 483.3 608 448L608 192C608 156.7 579.3 128 544 128L96 128zM112 192L144 192C152.8 192 160 199.2 160 208L160 240C160 248.8 152.8 256 144 256L112 256C103.2 256 96 248.8 96 240L96 208C96 199.2 103.2 192 112 192zM96 304C96 295.2 103.2 288 112 288L144 288C152.8 288 160 295.2 160 304L160 336C160 344.8 152.8 352 144 352L112 352C103.2 352 96 344.8 96 336L96 304zM208 192L240 192C248.8 192 256 199.2 256 208L256 240C256 248.8 248.8 256 240 256L208 256C199.2 256 192 248.8 192 240L192 208C192 199.2 199.2 192 208 192zM192 304C192 295.2 199.2 288 208 288L240 288C248.8 288 256 295.2 256 304L256 336C256 344.8 248.8 352 240 352L208 352C199.2 352 192 344.8 192 336L192 304zM208 384L432 384C440.8 384 448 391.2 448 400L448 432C448 440.8 440.8 448 432 448L208 448C199.2 448 192 440.8 192 432L192 400C192 391.2 199.2 384 208 384zM288 208C288 199.2 295.2 192 304 192L336 192C344.8 192 352 199.2 352 208L352 240C352 248.8 344.8 256 336 256L304 256C295.2 256 288 248.8 288 240L288 208zM304 288L336 288C344.8 288 352 295.2 352 304L352 336C352 344.8 344.8 352 336 352L304 352C295.2 352 288 344.8 288 336L288 304C288 295.2 295.2 288 304 288zM384 208C384 199.2 391.2 192 400 192L432 192C440.8 192 448 199.2 448 208L448 240C448 248.8 440.8 256 432 256L400 256C391.2 256 384 248.8 384 240L384 208zM400 288L432 288C440.8 288 448 295.2 448 304L448 336C448 344.8 440.8 352 432 352L400 352C391.2 352 384 344.8 384 336L384 304C384 295.2 391.2 288 400 288zM480 208C480 199.2 487.2 192 496 192L528 192C536.8 192 544 199.2 544 208L544 240C544 248.8 536.8 256 528 256L496 256C487.2 256 480 248.8 480 240L480 208zM496 288L528 288C536.8 288 544 295.2 544 304L544 336C544 344.8 536.8 352 528 352L496 352C487.2 352 480 344.8 480 336L480 304C480 295.2 487.2 288 496 288z" />
+				</symbol>
+				<symbol id="icon-filter" viewBox="0 0 640 640">
+					<path
+						d="M96 128C83.1 128 71.4 135.8 66.4 147.8C61.4 159.8 64.2 173.5 73.4 182.6L256 365.3L256 480C256 488.5 259.4 496.6 265.4 502.6L329.4 566.6C338.6 575.8 352.3 578.5 364.3 573.5C376.3 568.5 384 556.9 384 544L384 365.3L566.6 182.7C575.8 173.5 578.5 159.8 573.5 147.8C568.5 135.8 556.9 128 544 128L96 128z" />
+				</symbol>
+				<symbol id="icon-eye" viewBox="0 0 640 640">
+					<path
+						d="M320 96C239.2 96 174.5 132.8 127.4 176.6C80.6 220.1 49.3 272 34.4 307.7C31.1 315.6 31.1 324.4 34.4 332.3C49.3 368 80.6 420 127.4 463.4C174.5 507.1 239.2 544 320 544C400.8 544 465.5 507.2 512.6 463.4C559.4 419.9 590.7 368 605.6 332.3C608.9 324.4 608.9 315.6 605.6 307.7C590.7 272 559.4 220 512.6 176.6C465.5 132.9 400.8 96 320 96zM176 320C176 240.5 240.5 176 320 176C399.5 176 464 240.5 464 320C464 399.5 399.5 464 320 464C240.5 464 176 399.5 176 320zM320 256C320 291.3 291.3 320 256 320C244.5 320 233.7 317 224.3 311.6C223.3 322.5 224.2 333.7 227.2 344.8C240.9 396 293.6 426.4 344.8 412.7C396 399 426.4 346.3 412.7 295.1C400.5 249.4 357.2 220.3 311.6 224.3C316.9 233.6 320 244.4 320 256z" />
+				</symbol>
+				<symbol id="icon-eye-slash" viewBox="0 0 640 640">
+					<path
+						d="M73 39.1C63.6 29.7 48.4 29.7 39.1 39.1C29.8 48.5 29.7 63.7 39 73.1L567 601.1C576.4 610.5 591.6 610.5 600.9 601.1C610.2 591.7 610.3 576.5 600.9 567.2L504.5 470.8C507.2 468.4 509.9 466 512.5 463.6C559.3 420.1 590.6 368.2 605.5 332.5C608.8 324.6 608.8 315.8 605.5 307.9C590.6 272.2 559.3 220.2 512.5 176.8C465.4 133.1 400.7 96.2 319.9 96.2C263.1 96.2 214.3 114.4 173.9 140.4L73 39.1zM236.5 202.7C260 185.9 288.9 176 320 176C399.5 176 464 240.5 464 320C464 351.1 454.1 379.9 437.3 403.5L402.6 368.8C415.3 347.4 419.6 321.1 412.7 295.1C399 243.9 346.3 213.5 295.1 227.2C286.5 229.5 278.4 232.9 271.1 237.2L236.4 202.5zM357.3 459.1C345.4 462.3 332.9 464 320 464C240.5 464 176 399.5 176 320C176 307.1 177.7 294.6 180.9 282.7L101.4 203.2C68.8 240 46.4 279 34.5 307.7C31.2 315.6 31.2 324.4 34.5 332.3C49.4 368 80.7 420 127.5 463.4C174.6 507.1 239.3 544 320.1 544C357.4 544 391.3 536.1 421.6 523.4L357.4 459.2z" />
+				</symbol>
+				<symbol id="icon-x-mark" viewBox="0 0 640 640">
+					<path
+						d="M183.1 137.4C170.6 124.9 150.3 124.9 137.8 137.4C125.3 149.9 125.3 170.2 137.8 182.7L275.2 320L137.9 457.4C125.4 469.9 125.4 490.2 137.9 502.7C150.4 515.2 170.7 515.2 183.2 502.7L320.5 365.3L457.9 502.6C470.4 515.1 490.7 515.1 503.2 502.6C515.7 490.1 515.7 469.8 503.2 457.3L365.8 320L503.1 182.6C515.6 170.1 515.6 149.8 503.1 137.3C490.6 124.8 470.3 124.8 457.8 137.3L320.5 274.7L183.1 137.4z" />
+				</symbol>
+				<symbol id="icon-check" viewBox="0 0 640 640">
+					<path
+						d="M530.8 134.1C545.1 144.5 548.3 164.5 537.9 178.8L281.9 530.8C276.4 538.4 267.9 543.1 258.5 543.9C249.1 544.7 240 541.2 233.4 534.6L105.4 406.6C92.9 394.1 92.9 373.8 105.4 361.3C117.9 348.8 138.2 348.8 150.7 361.3L252.2 462.8L486.2 141.1C496.6 126.8 516.6 123.6 530.9 134z" />
+				</symbol>
+				<symbol id="icon-checkerboard" viewBox="0 0 640 640">
+					<path
+						d="M160 96C124.7 96 96 124.7 96 160L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 160C544 124.7 515.3 96 480 96L160 96zM224 160L224 224L288 224L288 160L352 160L352 224L416 224L416 160L480 160L480 224L416 224L416 288L480 288L480 352L416 352L416 416L480 416L480 480L416 480L416 416L352 416L352 480L288 480L288 416L224 416L224 480L160 480L160 416L224 416L224 352L160 352L160 288L224 288L224 224L160 224L160 160L224 160zM288 288L352 288L352 224L288 224L288 288zM288 352L288 288L224 288L224 352L288 352zM352 352L288 352L288 416L352 416L352 352zM352 352L416 352L416 288L352 288L352 352z" />
+				</symbol>
+				<symbol id="icon-image" viewBox="0 0 640 640">
+					<path
+						d="M160 144C151.2 144 144 151.2 144 160L144 480C144 488.8 151.2 496 160 496L480 496C488.8 496 496 488.8 496 480L496 160C496 151.2 488.8 144 480 144L160 144zM96 160C96 124.7 124.7 96 160 96L480 96C515.3 96 544 124.7 544 160L544 480C544 515.3 515.3 544 480 544L160 544C124.7 544 96 515.3 96 480L96 160zM224 192C241.7 192 256 206.3 256 224C256 241.7 241.7 256 224 256C206.3 256 192 241.7 192 224C192 206.3 206.3 192 224 192zM360 264C368.5 264 376.4 268.5 380.7 275.8L460.7 411.8C465.1 419.2 465.1 428.4 460.8 435.9C456.5 443.4 448.6 448 440 448L200 448C191.1 448 182.8 443 178.7 435.1C174.6 427.2 175.2 417.6 180.3 410.3L236.3 330.3C240.8 323.9 248.1 320.1 256 320.1C263.9 320.1 271.2 323.9 275.7 330.3L292.9 354.9L339.4 275.9C343.7 268.6 351.6 264.1 360.1 264.1z" />
+				</symbol>
+				<symbol id="icon-plus" viewBox="0 0 640 640">
+					<path
+						d="M352 128C352 110.3 337.7 96 320 96C302.3 96 288 110.3 288 128L288 288L128 288C110.3 288 96 302.3 96 320C96 337.7 110.3 352 128 352L288 352L288 512C288 529.7 302.3 544 320 544C337.7 544 352 529.7 352 512L352 352L512 352C529.7 352 544 337.7 544 320C544 302.3 529.7 288 512 288L352 288L352 128z" />
+				</symbol>
+				<symbol id="icon-chevron-down" viewBox="0 0 640 640">
+					<path
+						d="M297.4 470.6C309.9 483.1 330.2 483.1 342.7 470.6L534.7 278.6C547.2 266.1 547.2 245.8 534.7 233.3C522.2 220.8 501.9 220.8 489.4 233.3L320 402.7L150.6 233.4C138.1 220.9 117.8 220.9 105.3 233.4C92.8 245.9 92.8 266.2 105.3 278.7L297.3 470.7z" />
+				</symbol>
+				<symbol id="icon-chevron-left" viewBox="0 0 640 640">
+					<path
+						d="M169.4 297.4C156.9 309.9 156.9 330.2 169.4 342.7L361.4 534.7C373.9 547.2 394.2 547.2 406.7 534.7C419.2 522.2 419.2 501.9 406.7 489.4L237.3 320L406.6 150.6C419.1 138.1 419.1 117.8 406.6 105.3C394.1 92.8 373.8 92.8 361.3 105.3L169.3 297.3z" />
+				</symbol>
+				<symbol id="icon-chevron-right" viewBox="0 0 640 640">
+					<path
+						d="M471.1 297.4C483.6 309.9 483.6 330.2 471.1 342.7L279.1 534.7C266.6 547.2 246.3 547.2 233.8 534.7C221.3 522.2 221.3 501.9 233.8 489.4L403.2 320L233.9 150.6C221.4 138.1 221.4 117.8 233.9 105.3C246.4 92.8 266.7 92.8 279.2 105.3L471.2 297.3z" />
+				</symbol>
+				<symbol id="icon-chevron-up" viewBox="0 0 640 640">
+					<path
+						d="M297.4 169.4C309.9 156.9 330.2 156.9 342.7 169.4L534.7 361.4C547.2 373.9 547.2 394.2 534.7 406.7C522.2 419.2 501.9 419.2 489.4 406.7L320 237.3L150.6 406.6C138.1 419.1 117.8 419.1 105.3 406.6C92.8 394.1 92.8 373.8 105.3 361.3L297.3 169.3z" />
+				</symbol>
+				<symbol id="icon-question-circle" viewBox="0 0 640 640">
+					<path
+						d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM320 240C302.3 240 288 254.3 288 272C288 285.3 277.3 296 264 296C250.7 296 240 285.3 240 272C240 227.8 275.8 192 320 192C364.2 192 400 227.8 400 272C400 319.2 364 339.2 344 346.5L344 350.3C344 363.6 333.3 374.3 320 374.3C306.7 374.3 296 363.6 296 350.3L296 342.2C296 321.7 310.8 307 326.1 302C332.5 299.9 339.3 296.5 344.3 291.7C348.6 287.5 352 281.7 352 272.1C352 254.4 337.7 240.1 320 240.1zM288 432C288 414.3 302.3 400 320 400C337.7 400 352 414.3 352 432C352 449.7 337.7 464 320 464C302.3 464 288 449.7 288 432z" />
+				</symbol>
+
+				<symbol id="icon-minus" viewBox="0 0 640 640">
+					<path d="M96 320C96 302.3 110.3 288 128 288L512 288C529.7 288 544 302.3 544 320C544 337.7 529.7 352 512 352L128 352C110.3 352 96 337.7 96 320z"/>
+				</symbol>
+
+				<symbol id="icon-layers" viewBox="0 0 640 640">
+					<path d="M296.5 69.2C311.4 62.3 328.6 62.3 343.5 69.2L562.1 170.2C570.6 174.1 576 182.6 576 192C576 201.4 570.6 209.9 562.1 213.8L343.5 314.8C328.6 321.7 311.4 321.7 296.5 314.8L77.9 213.8C69.4 209.8 64 201.3 64 192C64 182.7 69.4 174.1 77.9 170.2L296.5 69.2zM112.1 282.4L276.4 358.3C304.1 371.1 336 371.1 363.7 358.3L528 282.4L562.1 298.2C570.6 302.1 576 310.6 576 320C576 329.4 570.6 337.9 562.1 341.8L343.5 442.8C328.6 449.7 311.4 449.7 296.5 442.8L77.9 341.8C69.4 337.8 64 329.3 64 320C64 310.7 69.4 302.1 77.9 298.2L112 282.4zM77.9 426.2L112 410.4L276.3 486.3C304 499.1 335.9 499.1 363.6 486.3L527.9 410.4L562 426.2C570.5 430.1 575.9 438.6 575.9 448C575.9 457.4 570.5 465.9 562 469.8L343.4 570.8C328.5 577.7 311.3 577.7 296.4 570.8L77.9 469.8C69.4 465.8 64 457.3 64 448C64 438.7 69.4 430.1 77.9 426.2z"/>
+				</symbol>
+
+				<symbol id="icon-sliders" viewBox="0 0 640 640">
+					<path d="M96 128C78.3 128 64 142.3 64 160C64 177.7 78.3 192 96 192L182.7 192C195 220.3 223.2 240 256 240C288.8 240 317 220.3 329.3 192L544 192C561.7 192 576 177.7 576 160C576 142.3 561.7 128 544 128L329.3 128C317 99.7 288.8 80 256 80C223.2 80 195 99.7 182.7 128L96 128zM96 288C78.3 288 64 302.3 64 320C64 337.7 78.3 352 96 352L342.7 352C355 380.3 383.2 400 416 400C448.8 400 477 380.3 489.3 352L544 352C561.7 352 576 337.7 576 320C576 302.3 561.7 288 544 288L489.3 288C477 259.7 448.8 240 416 240C383.2 240 355 259.7 342.7 288L96 288zM96 448C78.3 448 64 462.3 64 480C64 497.7 78.3 512 96 512L150.7 512C163 540.3 191.2 560 224 560C256.8 560 285 540.3 297.3 512L544 512C561.7 512 576 497.7 576 480C576 462.3 561.7 448 544 448L297.3 448C285 419.7 256.8 400 224 400C191.2 400 163 419.7 150.7 448L96 448z"/>
+				</symbol>
+
+				<symbol id="icon-glitter" viewBox="0 0 512 512">
+					<path d="M327.5 85.2c-4.5 1.7-7.5 6-7.5 10.8s3 9.1 7.5 10.8L384 128l21.2 56.5c1.7 4.5 6 7.5 10.8 7.5s9.1-3 10.8-7.5L448 128l56.5-21.2c4.5-1.7 7.5-6 7.5-10.8s-3-9.1-7.5-10.8L448 64 426.8 7.5C425.1 3 420.8 0 416 0s-9.1 3-10.8 7.5L384 64 327.5 85.2zM205.1 73.3c-2.6-5.7-8.3-9.3-14.5-9.3s-11.9 3.6-14.5 9.3L123.3 187.3 9.3 240C3.6 242.6 0 248.3 0 254.6s3.6 11.9 9.3 14.5l114.1 52.7L176 435.8c2.6 5.7 8.3 9.3 14.5 9.3s11.9-3.6 14.5-9.3l52.7-114.1 114.1-52.7c5.7-2.6 9.3-8.3 9.3-14.5s-3.6-11.9-9.3-14.5L257.8 187.4 205.1 73.3zM384 384l-56.5 21.2c-4.5 1.7-7.5 6-7.5 10.8s3 9.1 7.5 10.8L384 448l21.2 56.5c1.7 4.5 6 7.5 10.8 7.5s9.1-3 10.8-7.5L448 448l56.5-21.2c4.5-1.7 7.5-6 7.5-10.8s-3-9.1-7.5-10.8L448 384l-21.2-56.5c-1.7-4.5-6-7.5-10.8-7.5s-9.1 3-10.8 7.5L384 384z"/>
+				</symbol>
+
+				<symbol id="icon-export" viewBox="0 0 640 640">
+					<path d="M352 96C352 78.3 337.7 64 320 64C302.3 64 288 78.3 288 96L288 306.7L246.6 265.3C234.1 252.8 213.8 252.8 201.3 265.3C188.8 277.8 188.8 298.1 201.3 310.6L297.3 406.6C309.8 419.1 330.1 419.1 342.6 406.6L438.6 310.6C451.1 298.1 451.1 277.8 438.6 265.3C426.1 252.8 405.8 252.8 393.3 265.3L352 306.7L352 96zM160 384C124.7 384 96 412.7 96 448L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 448C544 412.7 515.3 384 480 384L433.1 384L376.5 440.6C345.3 471.8 294.6 471.8 263.4 440.6L206.9 384L160 384zM464 440C477.3 440 488 450.7 488 464C488 477.3 477.3 488 464 488C450.7 488 440 477.3 440 464C440 450.7 450.7 440 464 440z"/>
+				</symbol>
+
+		</defs>
+	</svg>
 	<script src="https://unpkg.com/omggif@1.0.10/omggif.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
 	<script src="js/app.js"></script>

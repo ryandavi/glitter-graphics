@@ -94,16 +94,16 @@ class GlitterEditor {
 
 
 		// Export settings
-this.exportSettings = {
-	quality: CONFIG.defaultExportQuality,
-	ditherEnabled: CONFIG.defaultExportDitherEnabled,
-	ditherType: CONFIG.defaultExportDitherType,
-	frameDelay: CONFIG.defaultExportFrameDelay,
-	maxFrames: CONFIG.defaultExportMaxFrames,
-	baseImage: CONFIG.defaultExportBaseImage,
-	transparency: CONFIG.defaultExportTransparency,
-	matteColor: CONFIG.defaultExportMatteColor
-};
+		this.exportSettings = {
+			quality: CONFIG.defaultExportQuality,
+			ditherEnabled: CONFIG.defaultExportDitherEnabled,
+			ditherType: CONFIG.defaultExportDitherType,
+			frameDelay: CONFIG.defaultExportFrameDelay,
+			maxFrames: CONFIG.defaultExportMaxFrames,
+			baseImage: CONFIG.defaultExportBaseImage,
+			transparency: CONFIG.defaultExportTransparency,
+			matteColor: CONFIG.defaultExportMatteColor
+		};
 
 		this.exportStartTime = 0;
 		this.exportCancelled = false;
@@ -168,55 +168,55 @@ this.exportSettings = {
 		this.initializeExportSettings();
 	}
 
-initializeExportSettings() {
-	// Set export settings UI to match CONFIG defaults
-	const qualitySelect = document.getElementById('exportQuality');
-	const ditherEnabledCheckbox = document.getElementById('exportDitherEnabled');
-	const ditherTypeSelect = document.getElementById('exportDitherType');
-	const ditherTypeRow = document.getElementById('ditherTypeRow');
-	const baseImageCheckbox = document.getElementById('exportBaseImage');
-	const transparencyCheckbox = document.getElementById('exportTransparency');
-	const matteColor = document.getElementById('exportMatteColor');
-	const matteColorRow = document.getElementById('matteColorRow');
-	const delaySelect = document.getElementById('exportFrameDelay');
-	const maxFramesSelect = document.getElementById('exportMaxFrames');
+	initializeExportSettings() {
+		// Set export settings UI to match CONFIG defaults
+		const qualitySelect = document.getElementById('exportQuality');
+		const ditherEnabledCheckbox = document.getElementById('exportDitherEnabled');
+		const ditherTypeSelect = document.getElementById('exportDitherType');
+		const ditherTypeRow = document.getElementById('ditherTypeRow');
+		const baseImageCheckbox = document.getElementById('exportBaseImage');
+		const transparencyCheckbox = document.getElementById('exportTransparency');
+		const matteColor = document.getElementById('exportMatteColor');
+		const matteColorRow = document.getElementById('matteColorRow');
+		const delaySelect = document.getElementById('exportFrameDelay');
+		const maxFramesSelect = document.getElementById('exportMaxFrames');
 
-	if (qualitySelect) qualitySelect.value = CONFIG.defaultExportQuality;
-	if (ditherEnabledCheckbox) ditherEnabledCheckbox.checked = CONFIG.defaultExportDitherEnabled;
-	if (ditherTypeSelect) ditherTypeSelect.value = CONFIG.defaultExportDitherType;
-	if (baseImageCheckbox) baseImageCheckbox.checked = CONFIG.defaultExportBaseImage;
-	if (transparencyCheckbox) transparencyCheckbox.checked = CONFIG.defaultExportTransparency;
-	if (matteColor) matteColor.value = CONFIG.defaultExportMatteColor;
-	if (delaySelect) delaySelect.value = CONFIG.defaultExportFrameDelay;
-	if (maxFramesSelect) maxFramesSelect.value = CONFIG.defaultExportMaxFrames;
-	
-	// Show/hide dither type dropdown based on enabled checkbox
-	const updateDitherTypeVisibility = () => {
-		if (ditherTypeRow) {
-			ditherTypeRow.classList.toggle('disabled', !ditherEnabledCheckbox.checked);
+		if (qualitySelect) qualitySelect.value = CONFIG.defaultExportQuality;
+		if (ditherEnabledCheckbox) ditherEnabledCheckbox.checked = CONFIG.defaultExportDitherEnabled;
+		if (ditherTypeSelect) ditherTypeSelect.value = CONFIG.defaultExportDitherType;
+		if (baseImageCheckbox) baseImageCheckbox.checked = CONFIG.defaultExportBaseImage;
+		if (transparencyCheckbox) transparencyCheckbox.checked = CONFIG.defaultExportTransparency;
+		if (matteColor) matteColor.value = CONFIG.defaultExportMatteColor;
+		if (delaySelect) delaySelect.value = CONFIG.defaultExportFrameDelay;
+		if (maxFramesSelect) maxFramesSelect.value = CONFIG.defaultExportMaxFrames;
+
+		// Show/hide dither type dropdown based on enabled checkbox
+		const updateDitherTypeVisibility = () => {
+			if (ditherTypeRow) {
+				ditherTypeRow.classList.toggle('disabled', !ditherEnabledCheckbox.checked);
+			}
+		};
+
+		if (ditherEnabledCheckbox) {
+			ditherEnabledCheckbox.addEventListener('change', updateDitherTypeVisibility);
+			updateDitherTypeVisibility();
 		}
-	};
-	
-	if (ditherEnabledCheckbox) {
-		ditherEnabledCheckbox.addEventListener('change', updateDitherTypeVisibility);
-		updateDitherTypeVisibility();
-	}
-	
-	// Show/hide matte color based on transparency checkbox
-	const updateMatteColorVisibility = () => {
-		if (matteColorRow && transparencyCheckbox) {
-			// Show matte when transparency is disabled
-			matteColorRow.classList.toggle('disabled', transparencyCheckbox.checked);
+
+		// Show/hide matte color based on transparency checkbox
+		const updateMatteColorVisibility = () => {
+			if (matteColorRow && transparencyCheckbox) {
+				// Show matte when transparency is disabled
+				matteColorRow.classList.toggle('disabled', transparencyCheckbox.checked);
+			}
+		};
+
+		if (transparencyCheckbox) {
+			transparencyCheckbox.addEventListener('change', updateMatteColorVisibility);
 		}
-	};
-	
-	if (transparencyCheckbox) {
-		transparencyCheckbox.addEventListener('change', updateMatteColorVisibility);
+
+		// Initial visibility states
+		updateMatteColorVisibility();
 	}
-	
-	// Initial visibility states
-	updateMatteColorVisibility();
-}
 
 	// ===== RANDOMIZE GLITTER =====
 
@@ -1314,17 +1314,17 @@ initializeExportSettings() {
 			layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
 			layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
 
-		container.appendChild(layerEl);
-	});
+			container.appendChild(layerEl);
+		});
 
-	document.getElementById('addLayerBtn').disabled = this.layers.length >= CONFIG.maxLayers;
-	
-	// Update mobile add button if it exists
-	const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
-	if (mobileAddBtn) {
-		mobileAddBtn.disabled = this.layers.length >= CONFIG.maxLayers;
+		document.getElementById('addLayerBtn').disabled = this.layers.length >= CONFIG.maxLayers;
+
+		// Update mobile add button if it exists
+		const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
+		if (mobileAddBtn) {
+			mobileAddBtn.disabled = this.layers.length >= CONFIG.maxLayers;
+		}
 	}
-}
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
@@ -1672,8 +1672,8 @@ initializeExportSettings() {
 		document.getElementById('previewModeToggle').addEventListener('click', () => {
 			this.showAllLayers = !this.showAllLayers;
 			const btn = document.getElementById('previewModeToggle');
-			btn.textContent = this.showAllLayers ? '👁️ Solo Mode' : '✓ Solo Mode';
-			btn.classList.toggle('solo-active', !this.showAllLayers);
+			// btn.textContent = this.showAllLayers ? '👁️ Solo Mode' : '✓ Solo Mode';
+			btn.classList.toggle('active', !this.showAllLayers);
 			btn.title = this.showAllLayers ? 'Show only active layer' : 'Show all layers';
 			this.updatePreview();
 		});
@@ -1699,31 +1699,31 @@ initializeExportSettings() {
 		// --- EXPORT & GLOBAL ---
 		document.getElementById('exportGif').addEventListener('click', () => this.exportAnimatedGif());
 
-// Export settings
-document.getElementById('exportQuality').addEventListener('change', (e) => {
-	this.exportSettings.quality = parseInt(e.target.value);
-});
-document.getElementById('exportDitherEnabled').addEventListener('change', (e) => {
-	this.exportSettings.ditherEnabled = e.target.checked;
-});
-document.getElementById('exportDitherType').addEventListener('change', (e) => {
-	this.exportSettings.ditherType = e.target.value;
-});
-document.getElementById('exportBaseImage').addEventListener('change', (e) => {
-	this.exportSettings.baseImage = e.target.checked;
-});
-document.getElementById('exportTransparency').addEventListener('change', (e) => {
-	this.exportSettings.transparency = e.target.checked;
-});
-document.getElementById('exportMatteColor').addEventListener('change', (e) => {
-	this.exportSettings.matteColor = e.target.value;
-});
-document.getElementById('exportFrameDelay').addEventListener('change', (e) => {
-	this.exportSettings.frameDelay = parseInt(e.target.value);
-});
-document.getElementById('exportMaxFrames').addEventListener('change', (e) => {
-	this.exportSettings.maxFrames = parseInt(e.target.value);
-});
+		// Export settings
+		document.getElementById('exportQuality').addEventListener('change', (e) => {
+			this.exportSettings.quality = parseInt(e.target.value);
+		});
+		document.getElementById('exportDitherEnabled').addEventListener('change', (e) => {
+			this.exportSettings.ditherEnabled = e.target.checked;
+		});
+		document.getElementById('exportDitherType').addEventListener('change', (e) => {
+			this.exportSettings.ditherType = e.target.value;
+		});
+		document.getElementById('exportBaseImage').addEventListener('change', (e) => {
+			this.exportSettings.baseImage = e.target.checked;
+		});
+		document.getElementById('exportTransparency').addEventListener('change', (e) => {
+			this.exportSettings.transparency = e.target.checked;
+		});
+		document.getElementById('exportMatteColor').addEventListener('change', (e) => {
+			this.exportSettings.matteColor = e.target.value;
+		});
+		document.getElementById('exportFrameDelay').addEventListener('change', (e) => {
+			this.exportSettings.frameDelay = parseInt(e.target.value);
+		});
+		document.getElementById('exportMaxFrames').addEventListener('change', (e) => {
+			this.exportSettings.maxFrames = parseInt(e.target.value);
+		});
 
 		// Export progress cancel
 		document.getElementById('exportProgressCancel').addEventListener('click', () => {
@@ -1855,11 +1855,20 @@ document.getElementById('exportMaxFrames').addEventListener('change', (e) => {
 			// Check if any modal is open
 			const shortcutsModal = document.getElementById('shortcutsModal');
 			const aboutModal = document.getElementById('aboutModal');
+			const settingsModal = document.getElementById('settingsModal');
+
+			if (settingsModal.classList.contains('visible')) {
+				settingsModal.classList.remove('visible');
+				return;
+			}
+
+		
 
 			if (shortcutsModal.classList.contains('visible')) {
 				shortcutsModal.classList.remove('visible');
 				return;
 			}
+
 			if (aboutModal.classList.contains('visible')) {
 				aboutModal.classList.remove('visible');
 				return;
@@ -2223,31 +2232,31 @@ document.getElementById('exportMaxFrames').addEventListener('change', (e) => {
 		this.applyFilters();
 	}
 
-toggleFilter(chip) {
-	console.log('toggleFilter called:', chip, chip.dataset);
-	const filterType = chip.dataset.filter;
-	const value = chip.dataset.value || chip.dataset.color;
-	
-	console.log('filterType:', filterType, 'value:', value);
-	
-	chip.classList.toggle('active');
-	console.log('chip classes after toggle:', chip.className);
+	toggleFilter(chip) {
+		console.log('toggleFilter called:', chip, chip.dataset);
+		const filterType = chip.dataset.filter;
+		const value = chip.dataset.value || chip.dataset.color;
 
-	console.log('About to check if filterType === color:', filterType === 'color');  // ADD THIS LINE
+		console.log('filterType:', filterType, 'value:', value);
 
-	if (filterType === 'color') {
-		if (this.activeFilters.colors.has(value)) {
-			this.activeFilters.colors.delete(value);
-		} else {
-			this.activeFilters.colors.add(value);
+		chip.classList.toggle('active');
+		console.log('chip classes after toggle:', chip.className);
+
+		console.log('About to check if filterType === color:', filterType === 'color');  // ADD THIS LINE
+
+		if (filterType === 'color') {
+			if (this.activeFilters.colors.has(value)) {
+				this.activeFilters.colors.delete(value);
+			} else {
+				this.activeFilters.colors.add(value);
+			}
 		}
-	}
-	
-	console.log('activeFilters.colors:', this.activeFilters.colors);
 
-	this.applyFilters();
-	this.updateClearFiltersButton();
-}
+		console.log('activeFilters.colors:', this.activeFilters.colors);
+
+		this.applyFilters();
+		this.updateClearFiltersButton();
+	}
 
 	clearAllFilters() {
 		this.activeFilters.colors.clear();
@@ -2262,6 +2271,8 @@ toggleFilter(chip) {
 
 		this.applyFilters();
 		this.updateClearFiltersButton();
+
+		this.toggleFilters();
 	}
 
 	updateClearFiltersButton() {
@@ -2273,6 +2284,8 @@ toggleFilter(chip) {
 			this.activeFilters.nameOnly;
 
 		document.getElementById('clearFiltersBtn').disabled = !hasActiveFilters;
+
+
 	}
 
 	applyFilters() {
@@ -2980,24 +2993,24 @@ toggleFilter(chip) {
 		this.showExportProgress();
 
 		// Read current settings from DOM
-// Read current settings from DOM
-const qualityInput = document.getElementById('exportQuality');
-const ditherEnabledInput = document.getElementById('exportDitherEnabled');
-const ditherTypeInput = document.getElementById('exportDitherType');
-const baseImageInput = document.getElementById('exportBaseImage');
-const transparencyInput = document.getElementById('exportTransparency');
-const matteColorInput = document.getElementById('exportMatteColor');
-const delayInput = document.getElementById('exportFrameDelay');
-const maxFramesInput = document.getElementById('exportMaxFrames');
+		// Read current settings from DOM
+		const qualityInput = document.getElementById('exportQuality');
+		const ditherEnabledInput = document.getElementById('exportDitherEnabled');
+		const ditherTypeInput = document.getElementById('exportDitherType');
+		const baseImageInput = document.getElementById('exportBaseImage');
+		const transparencyInput = document.getElementById('exportTransparency');
+		const matteColorInput = document.getElementById('exportMatteColor');
+		const delayInput = document.getElementById('exportFrameDelay');
+		const maxFramesInput = document.getElementById('exportMaxFrames');
 
-this.exportSettings.quality = qualityInput ? parseInt(qualityInput.value) : CONFIG.defaultExportQuality;
-this.exportSettings.ditherEnabled = ditherEnabledInput ? ditherEnabledInput.checked : CONFIG.defaultExportDitherEnabled;
-this.exportSettings.ditherType = ditherTypeInput ? ditherTypeInput.value : CONFIG.defaultExportDitherType;
-this.exportSettings.frameDelay = delayInput ? parseInt(delayInput.value) : CONFIG.defaultExportFrameDelay;
-this.exportSettings.maxFrames = maxFramesInput ? parseInt(maxFramesInput.value) : CONFIG.defaultExportMaxFrames;
-this.exportSettings.baseImage = baseImageInput ? baseImageInput.checked : CONFIG.defaultExportBaseImage;
-this.exportSettings.transparency = transparencyInput ? transparencyInput.checked : CONFIG.defaultExportTransparency;
-this.exportSettings.matteColor = matteColorInput ? matteColorInput.value : CONFIG.defaultExportMatteColor;
+		this.exportSettings.quality = qualityInput ? parseInt(qualityInput.value) : CONFIG.defaultExportQuality;
+		this.exportSettings.ditherEnabled = ditherEnabledInput ? ditherEnabledInput.checked : CONFIG.defaultExportDitherEnabled;
+		this.exportSettings.ditherType = ditherTypeInput ? ditherTypeInput.value : CONFIG.defaultExportDitherType;
+		this.exportSettings.frameDelay = delayInput ? parseInt(delayInput.value) : CONFIG.defaultExportFrameDelay;
+		this.exportSettings.maxFrames = maxFramesInput ? parseInt(maxFramesInput.value) : CONFIG.defaultExportMaxFrames;
+		this.exportSettings.baseImage = baseImageInput ? baseImageInput.checked : CONFIG.defaultExportBaseImage;
+		this.exportSettings.transparency = transparencyInput ? transparencyInput.checked : CONFIG.defaultExportTransparency;
+		this.exportSettings.matteColor = matteColorInput ? matteColorInput.value : CONFIG.defaultExportMatteColor;
 
 		console.log('Export settings:', this.exportSettings);
 
@@ -3068,530 +3081,530 @@ this.exportSettings.matteColor = matteColorInput ? matteColorInput.value : CONFI
 	}
 }
 class GifExporter {
-    constructor() {
-        const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-
-        this.config = {
-            workers: 4,
-            // Quality 1 = Best (samples every pixel). Critical for pixel art accuracy.
-            quality: 1,
-            workerScript: isLocal
-                ? 'js/gif.worker.js'
-                : 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
-            fileName: 'ryandavi-com_glitter.gif',
-            timing: { forceDelay: 100, maxFrames: 60 }
-        };
-
-        // Reusable canvas elements
-        this.canvas = document.createElement('canvas');
-        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-
-        this.helperCanvas = document.createElement('canvas');
-        this.helperCtx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
-    }
-
-    gcd(a, b) { return !b ? a : this.gcd(b, a % b); }
-    lcm(a, b) { return (a * b) / this.gcd(a, b); }
-
-    _hasTransparency(canvasData) {
-        const { originalAlpha, alphaThreshold } = canvasData;
-        for (let i = 0; i < originalAlpha.length; i++) {
-            if (originalAlpha[i] < alphaThreshold) {
-                return true; // Found at least one transparent pixel
-            }
-        }
-        return false; // No transparency in image
-    }
-
-    async process(params) {
-        const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks } = params;
-
-        // 1. Ensure Frames Loaded
-        callbacks.onProgress(0, 'Loading glitter frames...', 0, 0);
-        await this._loadMissingFrames(visibleLayers, glitterGifs, callbacks);
-
-        // 2. De-Optimize Frames (Flatten disposal methods)
-        callbacks.onProgress(5, 'Processing frames...', 0, 0);
-        this._deoptimizeGlitterFrames(visibleLayers, glitterGifs);
-
-        // 3. CHECK FOR TRANSPARENCY
-        const hasTransparency = this._hasTransparency(canvasData);
-        console.log(`[GifExporter] Image has transparency: ${hasTransparency}`);
-
-        // Need a safe key if EITHER the image has transparency OR we're exporting glitter-only
-        const needsSafeKey = hasTransparency || !exportSettings.baseImage;
-
-        // Only find a safe key if we actually need transparency
-        const safeKey = needsSafeKey
-            ? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData)
-            : null;
-
-        if (safeKey) {
-            console.log(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
-        }
-
-        // 4. Synchronization
-        const totalFrames = this._calculateTotalFrames(visibleLayers, glitterGifs, exportSettings.maxFrames);
-        callbacks.onStatus(`Rendering ${totalFrames} frames...`);
-
-        // 5. Prepare Masks
-        callbacks.onProgress(10, 'Preparing masks...', 0, totalFrames);
-        const maskCanvases = new Map();
-
-        this.helperCanvas.width = canvasData.width;
-        this.helperCanvas.height = canvasData.height;
-
-        visibleLayers.forEach(layer => {
-            const rawMask = callbacks.createMask(layer);
-            const maskCanvas = this._createMaskCanvas(rawMask, canvasData.width, canvasData.height);
-            maskCanvases.set(layer.id, maskCanvas);
-        });
-
-        // 6. Setup Encoder
-        // Disable dithering when we need transparency
-        const needsTransparency = hasTransparency && exportSettings.transparency;
-
-        const gifOptions = {
-            workers: this.config.workers,
-            quality: exportSettings.quality,
-            width: canvasData.width,
-            height: canvasData.height,
-            workerScript: this.config.workerScript,
-            dither: needsTransparency 
-                ? false 
-                : (exportSettings.ditherEnabled ? exportSettings.ditherType : false)
-        };
-
-        // Enable transparency if user wants it and we have a safe key
-if (needsTransparency && safeKey) {
-    gifOptions.transparent = safeKey.hex;
-    gifOptions.background = safeKey.hex;  // MUST BE safeKey.hex, not 0
-    console.log('[GifExporter] Transparency enabled with key:', safeKey.hex);
-}
-
-        const gif = new GIF(gifOptions);
-
-        // 7. Render Loop
-        this.canvas.width = canvasData.width;
-        this.canvas.height = canvasData.height;
-
-        for (let f = 0; f < totalFrames; f++) {
-            const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey, exportSettings);
-
-// Around line 105, REMOVE dispose: 2 again:
-gif.addFrame(frameData, { 
-    delay: exportSettings.frameDelay, 
-    copy: true
-    // NO dispose property - we're providing full frames
-});
-            const progressPercent = 10 + Math.floor((f / totalFrames) * 65);
-            callbacks.onProgress(progressPercent, `Rendering frame ${f + 1}/${totalFrames}...`, f + 1, totalFrames);
-        }
-
-        // 8. Output
-        callbacks.onProgress(75, 'Encoding GIF...', totalFrames, totalFrames);
-
-        gif.on('error', (error) => {
-            console.error('GIF encoding error:', error);
-            throw new Error('GIF encoding failed: ' + error.message);
-        });
-
-        gif.on('abort', () => {
-            throw new Error('Export cancelled');
-        });
-
-        gif.on('finished', (blob) => this._handleFileSave(blob, callbacks));
-
-        console.log('Starting GIF render:', {
-            frames: totalFrames,
-            workers: this.config.workers,
-            quality: exportSettings.quality,
-            key: safeKey
-        });
-
-        gif.render();
-    }
-
-    // --- HELPER METHODS ---
-
-    _findSafeTransparencyKey(layers, library, canvasData) {
-        const candidates = [
-            { name: 'DarkGray1', hex: 0x010101, r: 1, g: 1, b: 1 },
-            { name: 'DarkGray2', hex: 0x020202, r: 2, g: 2, b: 2 },
-            { name: 'DarkGray3', hex: 0x030303, r: 3, g: 3, b: 3 },
-            { name: 'OffGreen1', hex: 0x00FE00, r: 0, g: 254, b: 0 },
-            { name: 'OffGreen2', hex: 0x01FF00, r: 1, g: 255, b: 0 },
-            { name: 'Green', hex: 0x00FF00, r: 0, g: 255, b: 0 },
-            { name: 'Magenta', hex: 0xFF00FF, r: 255, g: 0, b: 255 },
-            { name: 'Blue', hex: 0x0000FF, r: 0, g: 0, b: 255 },
-            { name: 'Red', hex: 0xFF0000, r: 255, g: 0, b: 0 },
-            { name: 'Yellow', hex: 0xFFFF00, r: 255, g: 255, b: 0 },
-            { name: 'Cyan', hex: 0x00FFFF, r: 0, g: 255, b: 255 }
-        ];
-
-        const glitterFrames = [];
-        layers.forEach(layer => {
-            const glitter = library[layer.selectedGlitterIndex];
-            if (glitter?.frames?.frames) {
-                glitterFrames.push(...glitter.frames.frames);
-            }
-        });
-
-        for (const candidate of candidates) {
-            let isSafe = true;
-
-            const imgData = canvasData.originalData;
-            const imgLen = imgData.length;
-
-            for (let i = 0; i < imgLen; i += 4) {
-                const pixelIndex = i / 4;
-                if (canvasData.originalAlpha[pixelIndex] < canvasData.alphaThreshold) continue;
-
-                if (imgData[i] === candidate.r &&
-                    imgData[i + 1] === candidate.g &&
-                    imgData[i + 2] === candidate.b) {
-                    isSafe = false;
-                    break;
-                }
-            }
-
-            if (!isSafe) continue;
-
-            for (const frame of glitterFrames) {
-                const data = frame.data;
-                const len = data.length;
-
-                for (let i = 0; i < len; i += 4) {
-                    if (data[i + 3] === 0) continue;
-                    if (data[i] === candidate.r &&
-                        data[i + 1] === candidate.g &&
-                        data[i + 2] === candidate.b) {
-                        isSafe = false;
-                        break;
-                    }
-                }
-                if (!isSafe) break;
-            }
-
-            if (isSafe) {
-                console.log(`[GifExporter] Found safe transparency key: ${candidate.name} RGB(${candidate.r}, ${candidate.g}, ${candidate.b})`);
-                return candidate;
-            }
-        }
-
-        console.warn('[GifExporter] All candidates failed. Using ultra-dark fallback.');
-        return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
-    }
-
-    _renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings) {
-        const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
-        const ctx = this.ctx;
-        const hCtx = this.helperCtx;
-
-        // A. Clear canvas
-        this.canvas.width = width;
-        this.canvas.height = height;
-        ctx.clearRect(0, 0, width, height);
-        
-        // B. Draw Background Image
-        if (exportSettings.baseImage) {
-            const bgImage = new ImageData(originalData, width, height);
-            ctx.putImageData(bgImage, 0, 0);
-        }
-
-        // C. Composite Glitter Layers
-        layers.forEach(layer => {
-            const maskCanvas = maskCanvases.get(layer.id);
-            if (!maskCanvas) return;
-
-            const glitter = library[layer.selectedGlitterIndex];
-            const frames = glitter.frames.frames;
-            const fIdx = frameIndex % frames.length;
-            const glitterFrame = frames[fIdx];
-
-            // FIX: Save state so previous layers don't corrupt this one
-            hCtx.save();
-            
-            // 1. Pattern Fill
-            hCtx.clearRect(0, 0, width, height);
-
-            const patternSource = document.createElement('canvas');
-            patternSource.width = glitterFrame.width;
-            patternSource.height = glitterFrame.height;
-            patternSource.getContext('2d').putImageData(glitterFrame.data, 0, 0);
-
-            const pattern = hCtx.createPattern(patternSource, 'repeat');
-            const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-            const matrix = new DOMMatrix();
-            matrix.scaleSelf(scale, scale);
-            pattern.setTransform(matrix);
-
-            hCtx.globalAlpha = layer.settings.opacity / 100;
-            hCtx.fillStyle = pattern;
-            hCtx.fillRect(0, 0, width, height);
-
-            // 2. Apply Mask
-            hCtx.globalCompositeOperation = 'destination-in';
-            hCtx.globalAlpha = 1.0;
-            hCtx.drawImage(maskCanvas, 0, 0);
-            
-            // Restore state (resets composite op and alpha)
-            hCtx.restore();
-
-            // 3. Draw to Main
-            ctx.drawImage(this.helperCanvas, 0, 0);
-        });
-
-        // D. APPLY TRANSPARENCY OR MATTE COLOR
-        const output = ctx.getImageData(0, 0, width, height);
-        const data = output.data;
-        const len = data.length;
-
-        const shouldApplyTransparency = exportSettings.transparency && safeKey;
-        const shouldApplyMatte = !exportSettings.transparency && safeKey;
-
-        if (shouldApplyTransparency) {
-            // TRANSPARENCY LOGIC
-            const { r: keyR, g: keyG, b: keyB } = safeKey;
-
-            for (let i = 0; i < len; i += 4) {
-                const pixelIndex = i / 4;
-                const currentAlpha = data[i + 3];
-
-                let shouldBeTransparent = false;
-                
-                if (!exportSettings.baseImage) {
-                    shouldBeTransparent = (currentAlpha === 0);
-                } else {
-                    shouldBeTransparent = (originalAlpha[pixelIndex] < alphaThreshold);
-                }
-
-                if (shouldBeTransparent) {
-                    // FORCE TRANSPARENT: Fill with Safe Key Color
-                    data[i] = keyR;
-                    data[i + 1] = keyG;
-                    data[i + 2] = keyB;
-                    data[i + 3] = 255;
-                } else {
-                    // CONFLICT CHECK
-                    if (data[i] === keyR && data[i + 1] === keyG && data[i + 2] === keyB) {
-                        data[i + 1] = (keyG === 255) ? 254 : keyG + 1;
-                    }
-                    data[i + 3] = 255;
-                }
-            }
-        } else if (shouldApplyMatte) {
-            // APPLY MATTE COLOR
-            const matteColor = this._parseHexColor(exportSettings.matteColor);
-            
-            for (let i = 0; i < len; i += 4) {
-                const pixelIndex = i / 4;
-                const currentAlpha = data[i + 3];
-                
-                let needsMatte = false;
-                
-                if (!exportSettings.baseImage) {
-                    needsMatte = (currentAlpha === 0);
-                } else {
-                    needsMatte = (originalAlpha[pixelIndex] < alphaThreshold);
-                }
-                
-                if (needsMatte) {
-                    if (currentAlpha === 0) {
-                        data[i] = matteColor.r;
-                        data[i + 1] = matteColor.g;
-                        data[i + 2] = matteColor.b;
-                        data[i + 3] = 255;
-                    } else if (currentAlpha < 255) {
-                        const alpha = currentAlpha / 255;
-                        data[i] = Math.round(data[i] * alpha + matteColor.r * (1 - alpha));
-                        data[i + 1] = Math.round(data[i + 1] * alpha + matteColor.g * (1 - alpha));
-                        data[i + 2] = Math.round(data[i + 2] * alpha + matteColor.b * (1 - alpha));
-                        data[i + 3] = 255;
-                    } else {
-                        data[i + 3] = 255;
-                    }
-                } else {
-                    data[i + 3] = 255;
-                }
-            }
-        } else {
-            // No transparency needed
-            for (let i = 3; i < len; i += 4) {
-                data[i] = 255;
-            }
-        }
-
-        return output;
-    }
-
-    _parseHexColor(hex) {
-        hex = hex.replace('#', '');
-        const r = parseInt(hex.substring(0, 2), 16);
-        const g = parseInt(hex.substring(2, 4), 16);
-        const b = parseInt(hex.substring(4, 6), 16);
-        return { r, g, b };
-    }
-
-    _createMaskCanvas(rawMaskData, width, height) {
-        const c = document.createElement('canvas');
-        c.width = width;
-        c.height = height;
-        const ctx = c.getContext('2d');
-
-        const imgData = ctx.createImageData(width, height);
-        const data = imgData.data;
-
-        for (let i = 0; i < rawMaskData.length; i++) {
-            const val = rawMaskData[i];
-            const pIdx = i * 4;
-            data[pIdx] = 0;
-            data[pIdx + 1] = 0;
-            data[pIdx + 2] = 0;
-            data[pIdx + 3] = val;
-        }
-
-        ctx.putImageData(imgData, 0, 0);
-        return c;
-    }
-
-_deoptimizeGlitterFrames(layers, library) {
-    layers.forEach(layer => {
-        const glitter = library[layer.selectedGlitterIndex];
-        if (glitter.isFlattened) return;
-
-        const rawFrames = glitter.frames.frames;
-        const width = glitter.frames.width;
-        const height = glitter.frames.height;
-
-        this.helperCanvas.width = width;
-        this.helperCanvas.height = height;
-        const ctx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
-
-        const tempC = document.createElement('canvas');
-        const tempCtx = tempC.getContext('2d');
-
-        const flattenedFrames = [];
-        let previousFrameData = ctx.getImageData(0, 0, width, height);
-        
-        // We'll detect transparency from the FIRST FLATTENED FRAME
-        let glitterHasTransparency = false;
-
-        for (let i = 0; i < rawFrames.length; i++) {
-            const frame = rawFrames[i];
-            const dims = { x: frame.x || 0, y: frame.y || 0, w: frame.width || width, h: frame.height || height };
-
-            const patchData = new ImageData(frame.data, dims.w, dims.h);
-            tempC.width = dims.w;
-            tempC.height = dims.h;
-            tempCtx.putImageData(patchData, 0, 0);
-
-            if (frame.disposal === 3) previousFrameData = ctx.getImageData(0, 0, width, height);
-
-            ctx.drawImage(tempC, dims.x, dims.y);
-
-            const flattenedData = ctx.getImageData(0, 0, width, height);
-            
-            flattenedFrames.push({
-                data: flattenedData,
-                width, height
-            });
-
-            // Check FIRST FRAME ONLY for actual transparency
-            if (i === 0) {
-                const checkData = flattenedData.data;
-                for (let j = 3; j < checkData.length; j += 4) {
-                    if (checkData[j] < 255) {
-                        glitterHasTransparency = true;
-                        break;
-                    }
-                }
-                console.log(`[GifExporter] Glitter "${glitter.name}" has transparency: ${glitterHasTransparency}`);
-            }
-
-            // If glitter has transparency anywhere, ALL frames must clear (disposal=2)
-            // Otherwise use stacking (disposal=1) for opaque glitter
-            const disposal = glitterHasTransparency 
-                ? 2 
-                : (frame.disposal !== undefined ? frame.disposal : 1);
-            
-            if (disposal === 2) ctx.clearRect(dims.x, dims.y, dims.w, dims.h);
-            else if (disposal === 3) ctx.putImageData(previousFrameData, 0, 0);
-        }
-
-        glitter.frames.frames = flattenedFrames;
-        glitter.isFlattened = true;
-    });
-}
-
-    async _loadMissingFrames(layers, library, callbacks) {
-        for (const layer of layers) {
-            const glitter = library[layer.selectedGlitterIndex];
-            if (!glitter.frames) {
-                callbacks.onStatus(`Loading ${glitter.name}...`);
-                try {
-                    glitter.frames = await callbacks.parseGif(glitter.url);
-                } catch (e) {
-                    throw new Error(`Failed to load ${glitter.name}`);
-                }
-            }
-        }
-    }
-
-    _calculateTotalFrames(layers, library, maxFrames) {
-        const counts = layers.map(l => {
-            const glitter = library[l.selectedGlitterIndex];
-            if (!glitter || !glitter.frames || !glitter.frames.frames) {
-                console.error('Missing frames for layer', l.id, 'glitter index', l.selectedGlitterIndex);
-                return 1;
-            }
-            return glitter.frames.frames.length;
-        });
-
-        let total = counts[0] || 1;
-        if (counts.length > 1) {
-            total = counts.reduce((acc, val) => this.lcm(acc, val), total);
-        }
-
-        const result = Math.min(total, maxFrames);
-        console.log('Calculated total frames:', result, 'from counts:', counts);
-        return result;
-    }
-
-    async _handleFileSave(blob, callbacks) {
-        console.log('_handleFileSave called with blob size:', blob.size);
-        callbacks.onProgress(100, 'Export complete!', 0, 0);
-        callbacks.onStatus('Export complete!');
-        callbacks.onComplete();
-
-        const file = new File([blob], this.config.fileName, { type: 'image/gif' });
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: 'Glitter Image',
-                    text: 'Created with Glitter Image Editor'
-                });
-                return;
-            } catch (error) {
-                if (error.name !== 'AbortError') console.warn('Share failed', error);
-                else return;
-            }
-        }
-
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = this.config.fileName;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }, 100);
-    }
+	constructor() {
+		const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+		this.config = {
+			workers: 4,
+			// Quality 1 = Best (samples every pixel). Critical for pixel art accuracy.
+			quality: 1,
+			workerScript: isLocal
+				? 'js/gif.worker.js'
+				: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
+			fileName: 'ryandavi-com_glitter.gif',
+			timing: { forceDelay: 100, maxFrames: 60 }
+		};
+
+		// Reusable canvas elements
+		this.canvas = document.createElement('canvas');
+		this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+
+		this.helperCanvas = document.createElement('canvas');
+		this.helperCtx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
+	}
+
+	gcd(a, b) { return !b ? a : this.gcd(b, a % b); }
+	lcm(a, b) { return (a * b) / this.gcd(a, b); }
+
+	_hasTransparency(canvasData) {
+		const { originalAlpha, alphaThreshold } = canvasData;
+		for (let i = 0; i < originalAlpha.length; i++) {
+			if (originalAlpha[i] < alphaThreshold) {
+				return true; // Found at least one transparent pixel
+			}
+		}
+		return false; // No transparency in image
+	}
+
+	async process(params) {
+		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks } = params;
+
+		// 1. Ensure Frames Loaded
+		callbacks.onProgress(0, 'Loading glitter frames...', 0, 0);
+		await this._loadMissingFrames(visibleLayers, glitterGifs, callbacks);
+
+		// 2. De-Optimize Frames (Flatten disposal methods)
+		callbacks.onProgress(5, 'Processing frames...', 0, 0);
+		this._deoptimizeGlitterFrames(visibleLayers, glitterGifs);
+
+		// 3. CHECK FOR TRANSPARENCY
+		const hasTransparency = this._hasTransparency(canvasData);
+		console.log(`[GifExporter] Image has transparency: ${hasTransparency}`);
+
+		// Need a safe key if EITHER the image has transparency OR we're exporting glitter-only
+		const needsSafeKey = hasTransparency || !exportSettings.baseImage;
+
+		// Only find a safe key if we actually need transparency
+		const safeKey = needsSafeKey
+			? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData)
+			: null;
+
+		if (safeKey) {
+			console.log(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
+		}
+
+		// 4. Synchronization
+		const totalFrames = this._calculateTotalFrames(visibleLayers, glitterGifs, exportSettings.maxFrames);
+		callbacks.onStatus(`Rendering ${totalFrames} frames...`);
+
+		// 5. Prepare Masks
+		callbacks.onProgress(10, 'Preparing masks...', 0, totalFrames);
+		const maskCanvases = new Map();
+
+		this.helperCanvas.width = canvasData.width;
+		this.helperCanvas.height = canvasData.height;
+
+		visibleLayers.forEach(layer => {
+			const rawMask = callbacks.createMask(layer);
+			const maskCanvas = this._createMaskCanvas(rawMask, canvasData.width, canvasData.height);
+			maskCanvases.set(layer.id, maskCanvas);
+		});
+
+		// 6. Setup Encoder
+		// Disable dithering when we need transparency
+		const needsTransparency = hasTransparency && exportSettings.transparency;
+
+		const gifOptions = {
+			workers: this.config.workers,
+			quality: exportSettings.quality,
+			width: canvasData.width,
+			height: canvasData.height,
+			workerScript: this.config.workerScript,
+			dither: needsTransparency
+				? false
+				: (exportSettings.ditherEnabled ? exportSettings.ditherType : false)
+		};
+
+		// Enable transparency if user wants it and we have a safe key
+		if (needsTransparency && safeKey) {
+			gifOptions.transparent = safeKey.hex;
+			gifOptions.background = safeKey.hex;  // MUST BE safeKey.hex, not 0
+			console.log('[GifExporter] Transparency enabled with key:', safeKey.hex);
+		}
+
+		const gif = new GIF(gifOptions);
+
+		// 7. Render Loop
+		this.canvas.width = canvasData.width;
+		this.canvas.height = canvasData.height;
+
+		for (let f = 0; f < totalFrames; f++) {
+			const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey, exportSettings);
+
+			// Around line 105, REMOVE dispose: 2 again:
+			gif.addFrame(frameData, {
+				delay: exportSettings.frameDelay,
+				copy: true
+				// NO dispose property - we're providing full frames
+			});
+			const progressPercent = 10 + Math.floor((f / totalFrames) * 65);
+			callbacks.onProgress(progressPercent, `Rendering frame ${f + 1}/${totalFrames}...`, f + 1, totalFrames);
+		}
+
+		// 8. Output
+		callbacks.onProgress(75, 'Encoding GIF...', totalFrames, totalFrames);
+
+		gif.on('error', (error) => {
+			console.error('GIF encoding error:', error);
+			throw new Error('GIF encoding failed: ' + error.message);
+		});
+
+		gif.on('abort', () => {
+			throw new Error('Export cancelled');
+		});
+
+		gif.on('finished', (blob) => this._handleFileSave(blob, callbacks));
+
+		console.log('Starting GIF render:', {
+			frames: totalFrames,
+			workers: this.config.workers,
+			quality: exportSettings.quality,
+			key: safeKey
+		});
+
+		gif.render();
+	}
+
+	// --- HELPER METHODS ---
+
+	_findSafeTransparencyKey(layers, library, canvasData) {
+		const candidates = [
+			{ name: 'DarkGray1', hex: 0x010101, r: 1, g: 1, b: 1 },
+			{ name: 'DarkGray2', hex: 0x020202, r: 2, g: 2, b: 2 },
+			{ name: 'DarkGray3', hex: 0x030303, r: 3, g: 3, b: 3 },
+			{ name: 'OffGreen1', hex: 0x00FE00, r: 0, g: 254, b: 0 },
+			{ name: 'OffGreen2', hex: 0x01FF00, r: 1, g: 255, b: 0 },
+			{ name: 'Green', hex: 0x00FF00, r: 0, g: 255, b: 0 },
+			{ name: 'Magenta', hex: 0xFF00FF, r: 255, g: 0, b: 255 },
+			{ name: 'Blue', hex: 0x0000FF, r: 0, g: 0, b: 255 },
+			{ name: 'Red', hex: 0xFF0000, r: 255, g: 0, b: 0 },
+			{ name: 'Yellow', hex: 0xFFFF00, r: 255, g: 255, b: 0 },
+			{ name: 'Cyan', hex: 0x00FFFF, r: 0, g: 255, b: 255 }
+		];
+
+		const glitterFrames = [];
+		layers.forEach(layer => {
+			const glitter = library[layer.selectedGlitterIndex];
+			if (glitter?.frames?.frames) {
+				glitterFrames.push(...glitter.frames.frames);
+			}
+		});
+
+		for (const candidate of candidates) {
+			let isSafe = true;
+
+			const imgData = canvasData.originalData;
+			const imgLen = imgData.length;
+
+			for (let i = 0; i < imgLen; i += 4) {
+				const pixelIndex = i / 4;
+				if (canvasData.originalAlpha[pixelIndex] < canvasData.alphaThreshold) continue;
+
+				if (imgData[i] === candidate.r &&
+					imgData[i + 1] === candidate.g &&
+					imgData[i + 2] === candidate.b) {
+					isSafe = false;
+					break;
+				}
+			}
+
+			if (!isSafe) continue;
+
+			for (const frame of glitterFrames) {
+				const data = frame.data;
+				const len = data.length;
+
+				for (let i = 0; i < len; i += 4) {
+					if (data[i + 3] === 0) continue;
+					if (data[i] === candidate.r &&
+						data[i + 1] === candidate.g &&
+						data[i + 2] === candidate.b) {
+						isSafe = false;
+						break;
+					}
+				}
+				if (!isSafe) break;
+			}
+
+			if (isSafe) {
+				console.log(`[GifExporter] Found safe transparency key: ${candidate.name} RGB(${candidate.r}, ${candidate.g}, ${candidate.b})`);
+				return candidate;
+			}
+		}
+
+		console.warn('[GifExporter] All candidates failed. Using ultra-dark fallback.');
+		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
+	}
+
+	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings) {
+		const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
+		const ctx = this.ctx;
+		const hCtx = this.helperCtx;
+
+		// A. Clear canvas
+		this.canvas.width = width;
+		this.canvas.height = height;
+		ctx.clearRect(0, 0, width, height);
+
+		// B. Draw Background Image
+		if (exportSettings.baseImage) {
+			const bgImage = new ImageData(originalData, width, height);
+			ctx.putImageData(bgImage, 0, 0);
+		}
+
+		// C. Composite Glitter Layers
+		layers.forEach(layer => {
+			const maskCanvas = maskCanvases.get(layer.id);
+			if (!maskCanvas) return;
+
+			const glitter = library[layer.selectedGlitterIndex];
+			const frames = glitter.frames.frames;
+			const fIdx = frameIndex % frames.length;
+			const glitterFrame = frames[fIdx];
+
+			// FIX: Save state so previous layers don't corrupt this one
+			hCtx.save();
+
+			// 1. Pattern Fill
+			hCtx.clearRect(0, 0, width, height);
+
+			const patternSource = document.createElement('canvas');
+			patternSource.width = glitterFrame.width;
+			patternSource.height = glitterFrame.height;
+			patternSource.getContext('2d').putImageData(glitterFrame.data, 0, 0);
+
+			const pattern = hCtx.createPattern(patternSource, 'repeat');
+			const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+			const matrix = new DOMMatrix();
+			matrix.scaleSelf(scale, scale);
+			pattern.setTransform(matrix);
+
+			hCtx.globalAlpha = layer.settings.opacity / 100;
+			hCtx.fillStyle = pattern;
+			hCtx.fillRect(0, 0, width, height);
+
+			// 2. Apply Mask
+			hCtx.globalCompositeOperation = 'destination-in';
+			hCtx.globalAlpha = 1.0;
+			hCtx.drawImage(maskCanvas, 0, 0);
+
+			// Restore state (resets composite op and alpha)
+			hCtx.restore();
+
+			// 3. Draw to Main
+			ctx.drawImage(this.helperCanvas, 0, 0);
+		});
+
+		// D. APPLY TRANSPARENCY OR MATTE COLOR
+		const output = ctx.getImageData(0, 0, width, height);
+		const data = output.data;
+		const len = data.length;
+
+		const shouldApplyTransparency = exportSettings.transparency && safeKey;
+		const shouldApplyMatte = !exportSettings.transparency && safeKey;
+
+		if (shouldApplyTransparency) {
+			// TRANSPARENCY LOGIC
+			const { r: keyR, g: keyG, b: keyB } = safeKey;
+
+			for (let i = 0; i < len; i += 4) {
+				const pixelIndex = i / 4;
+				const currentAlpha = data[i + 3];
+
+				let shouldBeTransparent = false;
+
+				if (!exportSettings.baseImage) {
+					shouldBeTransparent = (currentAlpha === 0);
+				} else {
+					shouldBeTransparent = (originalAlpha[pixelIndex] < alphaThreshold);
+				}
+
+				if (shouldBeTransparent) {
+					// FORCE TRANSPARENT: Fill with Safe Key Color
+					data[i] = keyR;
+					data[i + 1] = keyG;
+					data[i + 2] = keyB;
+					data[i + 3] = 255;
+				} else {
+					// CONFLICT CHECK
+					if (data[i] === keyR && data[i + 1] === keyG && data[i + 2] === keyB) {
+						data[i + 1] = (keyG === 255) ? 254 : keyG + 1;
+					}
+					data[i + 3] = 255;
+				}
+			}
+		} else if (shouldApplyMatte) {
+			// APPLY MATTE COLOR
+			const matteColor = this._parseHexColor(exportSettings.matteColor);
+
+			for (let i = 0; i < len; i += 4) {
+				const pixelIndex = i / 4;
+				const currentAlpha = data[i + 3];
+
+				let needsMatte = false;
+
+				if (!exportSettings.baseImage) {
+					needsMatte = (currentAlpha === 0);
+				} else {
+					needsMatte = (originalAlpha[pixelIndex] < alphaThreshold);
+				}
+
+				if (needsMatte) {
+					if (currentAlpha === 0) {
+						data[i] = matteColor.r;
+						data[i + 1] = matteColor.g;
+						data[i + 2] = matteColor.b;
+						data[i + 3] = 255;
+					} else if (currentAlpha < 255) {
+						const alpha = currentAlpha / 255;
+						data[i] = Math.round(data[i] * alpha + matteColor.r * (1 - alpha));
+						data[i + 1] = Math.round(data[i + 1] * alpha + matteColor.g * (1 - alpha));
+						data[i + 2] = Math.round(data[i + 2] * alpha + matteColor.b * (1 - alpha));
+						data[i + 3] = 255;
+					} else {
+						data[i + 3] = 255;
+					}
+				} else {
+					data[i + 3] = 255;
+				}
+			}
+		} else {
+			// No transparency needed
+			for (let i = 3; i < len; i += 4) {
+				data[i] = 255;
+			}
+		}
+
+		return output;
+	}
+
+	_parseHexColor(hex) {
+		hex = hex.replace('#', '');
+		const r = parseInt(hex.substring(0, 2), 16);
+		const g = parseInt(hex.substring(2, 4), 16);
+		const b = parseInt(hex.substring(4, 6), 16);
+		return { r, g, b };
+	}
+
+	_createMaskCanvas(rawMaskData, width, height) {
+		const c = document.createElement('canvas');
+		c.width = width;
+		c.height = height;
+		const ctx = c.getContext('2d');
+
+		const imgData = ctx.createImageData(width, height);
+		const data = imgData.data;
+
+		for (let i = 0; i < rawMaskData.length; i++) {
+			const val = rawMaskData[i];
+			const pIdx = i * 4;
+			data[pIdx] = 0;
+			data[pIdx + 1] = 0;
+			data[pIdx + 2] = 0;
+			data[pIdx + 3] = val;
+		}
+
+		ctx.putImageData(imgData, 0, 0);
+		return c;
+	}
+
+	_deoptimizeGlitterFrames(layers, library) {
+		layers.forEach(layer => {
+			const glitter = library[layer.selectedGlitterIndex];
+			if (glitter.isFlattened) return;
+
+			const rawFrames = glitter.frames.frames;
+			const width = glitter.frames.width;
+			const height = glitter.frames.height;
+
+			this.helperCanvas.width = width;
+			this.helperCanvas.height = height;
+			const ctx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
+
+			const tempC = document.createElement('canvas');
+			const tempCtx = tempC.getContext('2d');
+
+			const flattenedFrames = [];
+			let previousFrameData = ctx.getImageData(0, 0, width, height);
+
+			// We'll detect transparency from the FIRST FLATTENED FRAME
+			let glitterHasTransparency = false;
+
+			for (let i = 0; i < rawFrames.length; i++) {
+				const frame = rawFrames[i];
+				const dims = { x: frame.x || 0, y: frame.y || 0, w: frame.width || width, h: frame.height || height };
+
+				const patchData = new ImageData(frame.data, dims.w, dims.h);
+				tempC.width = dims.w;
+				tempC.height = dims.h;
+				tempCtx.putImageData(patchData, 0, 0);
+
+				if (frame.disposal === 3) previousFrameData = ctx.getImageData(0, 0, width, height);
+
+				ctx.drawImage(tempC, dims.x, dims.y);
+
+				const flattenedData = ctx.getImageData(0, 0, width, height);
+
+				flattenedFrames.push({
+					data: flattenedData,
+					width, height
+				});
+
+				// Check FIRST FRAME ONLY for actual transparency
+				if (i === 0) {
+					const checkData = flattenedData.data;
+					for (let j = 3; j < checkData.length; j += 4) {
+						if (checkData[j] < 255) {
+							glitterHasTransparency = true;
+							break;
+						}
+					}
+					console.log(`[GifExporter] Glitter "${glitter.name}" has transparency: ${glitterHasTransparency}`);
+				}
+
+				// If glitter has transparency anywhere, ALL frames must clear (disposal=2)
+				// Otherwise use stacking (disposal=1) for opaque glitter
+				const disposal = glitterHasTransparency
+					? 2
+					: (frame.disposal !== undefined ? frame.disposal : 1);
+
+				if (disposal === 2) ctx.clearRect(dims.x, dims.y, dims.w, dims.h);
+				else if (disposal === 3) ctx.putImageData(previousFrameData, 0, 0);
+			}
+
+			glitter.frames.frames = flattenedFrames;
+			glitter.isFlattened = true;
+		});
+	}
+
+	async _loadMissingFrames(layers, library, callbacks) {
+		for (const layer of layers) {
+			const glitter = library[layer.selectedGlitterIndex];
+			if (!glitter.frames) {
+				callbacks.onStatus(`Loading ${glitter.name}...`);
+				try {
+					glitter.frames = await callbacks.parseGif(glitter.url);
+				} catch (e) {
+					throw new Error(`Failed to load ${glitter.name}`);
+				}
+			}
+		}
+	}
+
+	_calculateTotalFrames(layers, library, maxFrames) {
+		const counts = layers.map(l => {
+			const glitter = library[l.selectedGlitterIndex];
+			if (!glitter || !glitter.frames || !glitter.frames.frames) {
+				console.error('Missing frames for layer', l.id, 'glitter index', l.selectedGlitterIndex);
+				return 1;
+			}
+			return glitter.frames.frames.length;
+		});
+
+		let total = counts[0] || 1;
+		if (counts.length > 1) {
+			total = counts.reduce((acc, val) => this.lcm(acc, val), total);
+		}
+
+		const result = Math.min(total, maxFrames);
+		console.log('Calculated total frames:', result, 'from counts:', counts);
+		return result;
+	}
+
+	async _handleFileSave(blob, callbacks) {
+		console.log('_handleFileSave called with blob size:', blob.size);
+		callbacks.onProgress(100, 'Export complete!', 0, 0);
+		callbacks.onStatus('Export complete!');
+		callbacks.onComplete();
+
+		const file = new File([blob], this.config.fileName, { type: 'image/gif' });
+		const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+		if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
+			try {
+				await navigator.share({
+					files: [file],
+					title: 'Glitter Image',
+					text: 'Created with Glitter Image Editor'
+				});
+				return;
+			} catch (error) {
+				if (error.name !== 'AbortError') console.warn('Share failed', error);
+				else return;
+			}
+		}
+
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = this.config.fileName;
+		document.body.appendChild(a);
+		a.click();
+		setTimeout(() => {
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		}, 100);
+	}
 }
 
 
@@ -3603,10 +3616,12 @@ _deoptimizeGlitterFrames(layers, library) {
 class TooltipManager {
 	constructor(options = {}) {
 		this.config = {
-			gap: 5,
-			viewportPadding: 10,
-			dismissOnScroll: true,
-			oneAtATime: true,
+			gap: 8,                  // Distance from the element
+			viewportPadding: 10,     // Buffer from screen edges
+			dismissOnScroll: true,   // Hide on scroll
+			oneAtATime: true,        // Only one open at a time
+			placement: 'bottom',        // Primary Axis: top, bottom, left, right
+			alignment: 'center',     // Secondary Axis: center, left, right, top, bottom
 			...options
 		};
 
@@ -3614,12 +3629,11 @@ class TooltipManager {
 		this.activeElement = null;
 		this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 		this.scrollContainers = new Set();
-		
+
 		this.handleScroll = this.handleScroll.bind(this);
 		this.handleResize = this.handleResize.bind(this);
 		this.handleOutsideClick = this.handleOutsideClick.bind(this);
-		this.handleEscKey = this.handleEscKey.bind(this);
-		
+
 		this.init();
 	}
 
@@ -3632,8 +3646,8 @@ class TooltipManager {
 		let parent = element.parentElement;
 		while (parent) {
 			const style = window.getComputedStyle(parent);
-			if (['auto', 'scroll'].includes(style.overflow) || 
-			    ['auto', 'scroll'].includes(style.overflowY)) {
+			if (['auto', 'scroll'].includes(style.overflow) ||
+				['auto', 'scroll'].includes(style.overflowY)) {
 				return parent;
 			}
 			parent = parent.parentElement;
@@ -3649,12 +3663,14 @@ class TooltipManager {
 				el.addEventListener('mouseenter', () => this.show(el));
 				el.addEventListener('mouseleave', () => this.hide(el));
 			}
-			
+
 			if (this.config.dismissOnScroll) {
 				const scrollParent = this.findScrollableParent(el);
 				if (!this.scrollContainers.has(scrollParent)) {
 					this.scrollContainers.add(scrollParent);
-					scrollParent.addEventListener('scroll', this.handleScroll, { passive: true });
+					scrollParent.addEventListener('scroll', this.handleScroll, {
+						passive: true
+					});
 				}
 			}
 		});
@@ -3662,12 +3678,13 @@ class TooltipManager {
 
 	attachGlobalListeners() {
 		if (this.config.dismissOnScroll) {
-			window.addEventListener('scroll', this.handleScroll, { passive: true });
+			window.addEventListener('scroll', this.handleScroll, {
+				passive: true
+			});
 		}
 		if (this.isTouchDevice) {
 			document.addEventListener('click', this.handleOutsideClick);
 		}
-		document.addEventListener('keydown', this.handleEscKey);
 		window.addEventListener('resize', this.handleResize);
 	}
 
@@ -3679,6 +3696,11 @@ class TooltipManager {
 		const tooltip = document.createElement('div');
 		tooltip.className = 'tooltip';
 		tooltip.textContent = element.dataset.tooltip;
+
+		// Read overrides from data attributes, fallback to config
+		tooltip.dataset.placement = element.dataset.placement || this.config.placement;
+		tooltip.dataset.alignment = element.dataset.alignment || this.config.alignment;
+
 		document.body.appendChild(tooltip);
 
 		this.position(tooltip, element);
@@ -3688,29 +3710,128 @@ class TooltipManager {
 		this.activeElement = element;
 	}
 
+	// --- POSITIONING LOGIC ---
+
 	position(tooltip, element) {
 		const rect = element.getBoundingClientRect();
-		tooltip.offsetHeight;
 		const tooltipRect = tooltip.getBoundingClientRect();
-		
-		// Vertical positioning
-		let top = rect.top - tooltipRect.height - this.config.gap;
-		if (top < 0) {
-			top = rect.bottom + this.config.gap;
+
+		let preferredPlacement = tooltip.dataset.placement;
+		const preferredAlignment = tooltip.dataset.alignment;
+
+		// 1. Calculate preferred coordinates based on placement + alignment
+		let coords = this.getCoords(preferredPlacement, preferredAlignment, rect, tooltipRect);
+
+		// 2. Check collision with viewport edges (Main Axis flip)
+		if (this.isOutOfBounds(coords, tooltipRect)) {
+			const flippedPlacement = this.getOppositePlacement(preferredPlacement);
+			const flippedCoords = this.getCoords(flippedPlacement, preferredAlignment, rect, tooltipRect);
+
+			// If flipped fits better (or isn't strictly worse), use it
+			if (!this.isOutOfBounds(flippedCoords, tooltipRect)) {
+				coords = flippedCoords;
+				preferredPlacement = flippedPlacement;
+			}
 		}
 
-		// Horizontal positioning (centered)
-		let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-		
-		// Clamp to viewport
-		left = Math.max(
-			this.config.viewportPadding,
-			Math.min(left, window.innerWidth - tooltipRect.width - this.config.viewportPadding)
-		);
+		// 3. Clamp Secondary Axis 
+		// (Ensure it doesn't slide off screen left/right if placed top/bottom, etc.)
+		coords = this.clampToViewport(coords, tooltipRect);
 
-		tooltip.style.top = top + 'px';
-		tooltip.style.left = left + 'px';
+		// 4. Apply absolute position including current scroll offset
+		tooltip.style.left = (coords.left + window.scrollX) + 'px';
+		tooltip.style.top = (coords.top + window.scrollY) + 'px';
 	}
+
+	getCoords(placement, alignment, targetRect, tooltipRect) {
+		const gap = this.config.gap;
+		let top, left;
+
+		// Logic split by axis
+		switch (placement) {
+			case 'top':
+				top = targetRect.top - tooltipRect.height - gap;
+				left = this.getHorizontalAlignment(alignment, targetRect, tooltipRect);
+				break;
+			case 'bottom':
+				top = targetRect.bottom + gap;
+				left = this.getHorizontalAlignment(alignment, targetRect, tooltipRect);
+				break;
+			case 'left':
+				left = targetRect.left - tooltipRect.width - gap;
+				top = this.getVerticalAlignment(alignment, targetRect, tooltipRect);
+				break;
+			case 'right':
+				left = targetRect.right + gap;
+				top = this.getVerticalAlignment(alignment, targetRect, tooltipRect);
+				break;
+			default: // Fallback to top/center
+				top = targetRect.top - tooltipRect.height - gap;
+				left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+		}
+
+		return { top, left };
+	}
+
+	// Calculate X position based on alignment (left, center, right)
+	getHorizontalAlignment(align, target, tooltip) {
+		if (align === 'left' || align === 'start') {
+			return target.left;
+		}
+		if (align === 'right' || align === 'end') {
+			return target.right - tooltip.width;
+		}
+		// Default center
+		return target.left + (target.width / 2) - (tooltip.width / 2);
+	}
+
+	// Calculate Y position based on alignment (top, center, bottom)
+	getVerticalAlignment(align, target, tooltip) {
+		if (align === 'top' || align === 'start') {
+			return target.top;
+		}
+		if (align === 'bottom' || align === 'end') {
+			return target.bottom - tooltip.height;
+		}
+		// Default center
+		return target.top + (target.height / 2) - (tooltip.height / 2);
+	}
+
+	getOppositePlacement(placement) {
+		const opposites = {
+			'top': 'bottom',
+			'bottom': 'top',
+			'left': 'right',
+			'right': 'left'
+		};
+		return opposites[placement] || 'top';
+	}
+
+	isOutOfBounds(coords, tooltipRect) {
+		const padding = this.config.viewportPadding;
+		return (
+			coords.top < padding ||
+			coords.left < padding ||
+			coords.top + tooltipRect.height > window.innerHeight - padding ||
+			coords.left + tooltipRect.width > window.innerWidth - padding
+		);
+	}
+
+	clampToViewport(coords, tooltipRect) {
+		const padding = this.config.viewportPadding;
+
+		// Clamp Horizontal
+		const maxLeft = window.innerWidth - tooltipRect.width - padding;
+		coords.left = Math.max(padding, Math.min(coords.left, maxLeft));
+
+		// Clamp Vertical
+		const maxTop = window.innerHeight - tooltipRect.height - padding;
+		coords.top = Math.max(padding, Math.min(coords.top, maxTop));
+
+		return coords;
+	}
+
+	// --- END POSITIONING LOGIC ---
 
 	hide(element) {
 		if (element._tooltip) {
@@ -3736,13 +3857,8 @@ class TooltipManager {
 		element._tooltip ? this.hide(element) : this.show(element);
 	}
 
-	handleScroll() {
-		this.dismissAll();
-	}
-
-	handleResize() {
-		this.dismissAll();
-	}
+	handleScroll() { this.dismissAll(); }
+	handleResize() { this.dismissAll(); }
 
 	handleOutsideClick(e) {
 		if (!e.target.closest('[data-tooltip], .tooltip')) {
@@ -3750,11 +3866,7 @@ class TooltipManager {
 		}
 	}
 
-	handleEscKey(e) {
-		if (e.key === 'Escape' && this.activeTooltip) {
-			this.dismissAll();
-		}
-	}
+
 
 	destroy() {
 		this.dismissAll();
@@ -3765,7 +3877,6 @@ class TooltipManager {
 		window.removeEventListener('scroll', this.handleScroll);
 		window.removeEventListener('resize', this.handleResize);
 		document.removeEventListener('click', this.handleOutsideClick);
-		document.removeEventListener('keydown', this.handleEscKey);
 	}
 
 	refresh() {
@@ -3959,7 +4070,7 @@ class MobileManager {
 		// Create bottom nav (Glitter/Layers drawer buttons)
 		const bottomNav = document.createElement('div');
 		bottomNav.className = 'mobile-bottom-nav';
-bottomNav.innerHTML = `
+		bottomNav.innerHTML = `
 	<button class="mobile-drawer-btn" data-drawer="layers">Layers</button>
 	<button class="mobile-add-layer-btn" id="mobileAddLayerBtn">+</button>
 	<button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
@@ -3971,49 +4082,49 @@ bottomNav.innerHTML = `
 		console.log('Mobile: Navigation created');
 	}
 
-setupEventListeners() {
-	document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-		btn.addEventListener('click', () => {
-			this.switchTab(btn.dataset.tab);
+	setupEventListeners() {
+		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+			btn.addEventListener('click', () => {
+				this.switchTab(btn.dataset.tab);
+			});
 		});
-	});
 
-	document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
-		btn.addEventListener('click', () => {
-			this.toggleDrawer(btn.dataset.drawer);
+		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
+			btn.addEventListener('click', () => {
+				this.toggleDrawer(btn.dataset.drawer);
+			});
 		});
-	});
 
-	// Add layer button
-	const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
-	if (mobileAddLayerBtn) {
-		mobileAddLayerBtn.addEventListener('click', () => {
-			this.editor.addLayer();
-			// Open layers drawer to show the new layer
-			// this.toggleDrawer('layers');
+		// Add layer button
+		const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
+		if (mobileAddLayerBtn) {
+			mobileAddLayerBtn.addEventListener('click', () => {
+				this.editor.addLayer();
+				// Open layers drawer to show the new layer
+				// this.toggleDrawer('layers');
+			});
+		}
+
+		// Close drawer when clicking on section headers (but not action buttons)
+		document.querySelectorAll('.section-header').forEach(header => {
+			header.addEventListener('click', (e) => {
+				// Only close if mobile and a drawer is open
+				if (this.isMobile && this.activeDrawer) {
+					// Don't close if clicking on the action button or its children
+					if (!e.target.closest('.section-header-action')) {
+						this.closeAllDrawers();
+					}
+				}
+			});
+		});
+
+		// Prevent action buttons from triggering header click
+		document.querySelectorAll('.section-header-action').forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				e.stopPropagation();
+			});
 		});
 	}
-
-	// Close drawer when clicking on section headers (but not action buttons)
-	document.querySelectorAll('.section-header').forEach(header => {
-		header.addEventListener('click', (e) => {
-			// Only close if mobile and a drawer is open
-			if (this.isMobile && this.activeDrawer) {
-				// Don't close if clicking on the action button or its children
-				if (!e.target.closest('.section-header-action')) {
-					this.closeAllDrawers();
-				}
-			}
-		});
-	});
-
-	// Prevent action buttons from triggering header click
-	document.querySelectorAll('.section-header-action').forEach(btn => {
-		btn.addEventListener('click', (e) => {
-			e.stopPropagation();
-		});
-	});
-}
 
 	setupImageEvents() {
 		window.addEventListener('imageLoaded', () => {

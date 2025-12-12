@@ -12,7 +12,7 @@
         ],
         "frameCount": 3,
         "frameRate": 11,
-        "isVariableFramerate": false,
+        "isVariableFramerate": true,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
@@ -841,15 +841,15 @@
         ]
     },
     {
-        "id": 83,
-        "url": "images/glitter/sparkle/glitter_dark-vivid-purple.gif",
-        "name": "Dark Vivid Purple",
-        "generatedName": "Vivid Purple",
-        "brightness": "1",
+        "id": 96,
+        "url": "images/glitter/sparkle/glitter_navy.gif",
+        "name": "Navy",
+        "generatedName": "Muted Blue",
+        "brightness": "0",
         "sortOrder": 36,
-        "hue": 0.775,
+        "hue": 0.708,
         "colorCodes": [
-            "#6900FF"
+            "#0F0F1E"
         ],
         "frameCount": 3,
         "frameRate": 11,
@@ -857,10 +857,10 @@
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "Purple",
-            "Light",
+            "Blue",
+            "Dark",
             "Cool",
-            "Vivid"
+            "Muted"
         ]
     },
     {
@@ -910,15 +910,15 @@
         ]
     },
     {
-        "id": 110,
-        "url": "images/glitter/sparkle/glitter_ugly-purple.gif",
-        "name": "Ugly Purple",
-        "generatedName": "Muted Pink",
+        "id": 83,
+        "url": "images/glitter/sparkle/glitter_dark-vivid-purple.gif",
+        "name": "Dark Vivid Purple",
+        "generatedName": "Vivid Purple",
         "brightness": "1",
         "sortOrder": 39,
-        "hue": 0.144,
+        "hue": 0.775,
         "colorCodes": [
-            "#A55A96"
+            "#6900FF"
         ],
         "frameCount": 3,
         "frameRate": 11,
@@ -927,9 +927,9 @@
         "isPixelated": true,
         "tags": [
             "Purple",
-            "Pink",
-            "Muted",
-            "Contrast"
+            "Light",
+            "Cool",
+            "Vivid"
         ]
     },
     {
@@ -1033,12 +1033,35 @@
         ]
     },
     {
+        "id": 110,
+        "url": "images/glitter/sparkle/glitter_ugly-purple.gif",
+        "name": "Ugly Purple",
+        "generatedName": "Muted Pink",
+        "brightness": "1",
+        "sortOrder": 44,
+        "hue": 0.144,
+        "colorCodes": [
+            "#A55A96"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Pink",
+            "Muted",
+            "Contrast"
+        ]
+    },
+    {
         "id": 104,
         "url": "images/glitter/sparkle/glitter_purple.gif",
         "name": "Purple",
         "generatedName": "Muted Purple",
         "brightness": "1",
-        "sortOrder": 44,
+        "sortOrder": 45,
         "hue": 0.803,
         "colorCodes": [
             "#A569D2"
@@ -1060,7 +1083,7 @@
         "name": "Amethyst",
         "generatedName": "Vivid Purple",
         "brightness": "1",
-        "sortOrder": 45,
+        "sortOrder": 46,
         "hue": 0.819,
         "colorCodes": [
             "#7800B4"
@@ -1082,7 +1105,7 @@
         "name": "Dark Purple",
         "generatedName": "Jewel Tone Purple",
         "brightness": "0",
-        "sortOrder": 46,
+        "sortOrder": 47,
         "hue": 1.2,
         "colorCodes": [
             "#3C0078",
@@ -1108,7 +1131,7 @@
         "name": "Deep Purple",
         "generatedName": "Jewel Tone Purple",
         "brightness": "0",
-        "sortOrder": 47,
+        "sortOrder": 48,
         "hue": 1.2,
         "colorCodes": [
             "#3C0078",
@@ -1127,29 +1150,6 @@
             "Cool",
             "Vivid",
             "Contrast"
-        ]
-    },
-    {
-        "id": 96,
-        "url": "images/glitter/sparkle/glitter_navy.gif",
-        "name": "Navy",
-        "generatedName": "Muted Blue",
-        "brightness": "0",
-        "sortOrder": 48,
-        "hue": 0.708,
-        "colorCodes": [
-            "#0F0F1E"
-        ],
-        "frameCount": 3,
-        "frameRate": 11,
-        "isVariableFramerate": false,
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "Blue",
-            "Dark",
-            "Cool",
-            "Muted"
         ]
     },
     {

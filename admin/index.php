@@ -482,31 +482,49 @@ class GifAnalyzer
         return trim(implode(" ", $modifiers) . " " . $hueName);
     }
 
-    private function getHueName($hue, $sat)
+private function getHueName($hue, $sat)
     {
-        // Precise hue mapping with compound names for intermediate colors
-        // Ranges tuned for better color recognition
+        // Note: The hue passed here has been rotated by +15 degrees in calculateHue()
+        // Real Red (0) -> 15
 
-        if ($hue >= 350 || $hue < 10) return "Red";
-        if ($hue >= 10 && $hue < 20) return "Red-Orange";
-        if ($hue >= 20 && $hue < 35) return "Orange";
-        if ($hue >= 35 && $hue < 50) return "Yellow-Orange";
-        if ($hue >= 50 && $hue < 70) return "Yellow";
-        if ($hue >= 70 && $hue < 85) return "Yellow-Green";
-        if ($hue >= 85 && $hue < 100) return "Lime";
-        if ($hue >= 100 && $hue < 155) return "Green";
-        if ($hue >= 155 && $hue < 170) return "Green-Cyan";
-        if ($hue >= 170 && $hue < 185) return "Cyan";
-        if ($hue >= 185 && $hue < 200) return "Cyan-Blue";
-        if ($hue >= 200 && $hue < 215) return "Teal";
-        if ($hue >= 215 && $hue < 245) return "Blue";
-        if ($hue >= 245 && $hue < 265) return "Indigo";
-        if ($hue >= 265 && $hue < 280) return "Blue-Purple";
-        if ($hue >= 280 && $hue < 295) return "Purple";
-        if ($hue >= 295 && $hue < 310) return "Purple-Magenta";
-        if ($hue >= 310 && $hue < 325) return "Magenta";
-        if ($hue >= 325 && $hue < 335) return "Magenta-Pink";
-        if ($hue >= 335 && $hue < 350) return "Pink";
+        // REDS
+        // We catch Red earlier now (at 340 instead of 345) to fix the "Pink Red" issue.
+        // We also extend it to 25 so pure reds aren't called "Red-Orange".
+        if ($hue >= 340 || $hue < 25) return "Red";
+
+        // ORANGES
+        // Pushed start to 25 to give Red more room
+        if ($hue >= 25 && $hue < 40) return "Red-Orange";
+        if ($hue >= 40 && $hue < 55) return "Orange";
+        if ($hue >= 55 && $hue < 65) return "Yellow-Orange";
+        
+        // YELLOWS & GREENS
+        if ($hue >= 65 && $hue < 80) return "Yellow";
+        if ($hue >= 80 && $hue < 100) return "Yellow-Green";
+        if ($hue >= 100 && $hue < 115) return "Lime";
+        if ($hue >= 115 && $hue < 160) return "Green";
+        if ($hue >= 160 && $hue < 175) return "Green-Cyan";
+        
+        // CYANS & BLUES
+        if ($hue >= 175 && $hue < 195) return "Cyan";
+        if ($hue >= 195 && $hue < 210) return "Cyan-Blue";
+        if ($hue >= 210 && $hue < 225) return "Teal";
+        if ($hue >= 225 && $hue < 260) return "Blue";
+        
+        // PURPLES & MAGENTAS
+        if ($hue >= 260 && $hue < 275) return "Indigo";
+        if ($hue >= 275 && $hue < 290) return "Purple";
+        
+        // Magenta range
+        if ($hue >= 290 && $hue < 320) return "Magenta";
+        
+        // Transition zone (Hot Pink / Fuchsia)
+        if ($hue >= 320 && $hue < 330) return "Magenta-Pink"; 
+
+        // PINKS
+        // Very narrow range now (330-340).
+        // Anything 340+ is now caught by the Red check at the top.
+        if ($hue >= 330 && $hue < 340) return "Pink";
 
         return "Unknown";
     }
