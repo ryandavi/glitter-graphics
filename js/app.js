@@ -576,18 +576,22 @@ class GlitterEditor {
 		}
 	}
 
-	startPan(event) {
-		if ((this.currentTool !== 'hand' && !event.spaceKey) || !this.originalImage) return;
+// REPLACE your existing startPan method with this:
+startPan(x, y) {
+    if (!this.originalImage) return;
 
-		this.isPanning = true;
-		this.panStartX = event.clientX;
-		this.panStartY = event.clientY;
-		this.lastPanX = this.panX;
-		this.lastPanY = this.panY;
+    this.isPanning = true;
+    
+    // Store the starting coordinates
+    this.panStartX = x;
+    this.panStartY = y;
+    
+    // Store the current pan position to calculate offsets later
+    this.lastPanX = this.panX;
+    this.lastPanY = this.panY;
 
-		this.previewContainer.classList.add('panning');
-		event.preventDefault();
-	}
+    this.previewContainer.classList.add('panning');
+}
 
 	handlePan(event) {
 		if (!this.isPanning) return;
@@ -679,6 +683,37 @@ class GlitterEditor {
 		container.addEventListener('touchcancel', () => {
 			this.touch.active = false;
 		});
+
+this.previewContainer.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1 && this.currentTool === 'hand') {
+        const touch = e.touches[0];
+        // Now valid: startPan accepts numbers
+        this.startPan(touch.clientX, touch.clientY); 
+        e.preventDefault();
+    }
+}, { passive: false });
+
+		this.previewContainer.addEventListener('touchmove', (e) => {
+			if (e.touches.length === 1 && this.isPanning) {
+				const touch = e.touches[0];
+				const deltaX = touch.clientX - this.panStartX;
+				const deltaY = touch.clientY - this.panStartY;
+
+				this.panX = this.lastPanX + deltaX;
+				this.panY = this.lastPanY + deltaY;
+
+				this.applyZoomTransform();
+				e.preventDefault();
+			}
+		}, { passive: false });
+
+		this.previewContainer.addEventListener('touchend', (e) => {
+			if (this.isPanning && e.touches.length === 0) {
+				this.endPan();
+			}
+		});
+
+
 	}
 
 
@@ -1082,6 +1117,111 @@ class GlitterEditor {
 		}
 	}
 
+	handleLayerTouchStart(event, layerId) {
+		// Only start drag if touching the drag handle area (not buttons)
+		if (event.target.closest('.layer-actions')) {
+			return; // Don't drag if touching buttons
+		}
+
+		this.draggedLayerId = layerId;
+		event.currentTarget.classList.add('dragging');
+
+		const touch = event.touches[0];
+		this.touchDragStartY = touch.clientY;
+		this.touchDragLastY = touch.clientY;
+
+		event.preventDefault();
+	}
+
+handleLayerTouchMove(event) {
+    if (!this.draggedLayerId) return;
+
+    const touch = event.touches[0];
+    this.touchDragLastY = touch.clientY;
+
+    // Find which layer element we're over
+    const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+    
+    // FIX 1: Add check to ensure we aren't targeting the layer we are currently dragging
+    const targetLayer = elements.find(el => 
+        el.classList.contains('layer-item') && 
+        el.dataset.layerId !== this.draggedLayerId
+    );
+
+    if (targetLayer && targetLayer.dataset.layerId) {
+        const targetLayerId = targetLayer.dataset.layerId;
+
+        const rect = targetLayer.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+        const insertAbove = touch.clientY < midpoint;
+
+        // Show insertion line
+        const layersList = document.getElementById('layersList');
+        const containerRect = layersList.getBoundingClientRect();
+        const insertionLine = document.querySelector('.layer-insertion-line');
+
+        let lineY;
+        const LAYER_MARGIN_BOTTOM = 6;
+        const INSERTION_LINE_HEIGHT = 2;
+        const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
+        const scrollTop = layersList.scrollTop;
+
+        if (insertAbove) {
+            lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
+        } else {
+            lineY = rect.bottom - containerRect.top + scrollTop + offset;
+        }
+
+        insertionLine.style.top = lineY + 'px';
+        insertionLine.classList.add('visible');
+
+        this.dropTargetId = targetLayerId;
+        this.dropInsertAbove = insertAbove;
+    }
+
+    event.preventDefault();
+}
+
+handleLayerTouchEnd(event) {
+    if (!this.draggedLayerId) return;
+
+    // Find the dragged element and remove dragging class
+    const draggedElement = document.querySelector(`[data-layer-id="${this.draggedLayerId}"]`);
+    if (draggedElement) {
+        draggedElement.classList.remove('dragging');
+    }
+
+    const insertionLine = document.querySelector('.layer-insertion-line');
+    insertionLine.classList.remove('visible');
+
+    // Perform the actual reordering using stored values
+    if (this.dropTargetId && this.draggedLayerId !== this.dropTargetId) {
+        const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
+        
+        // Remove the dragged layer first
+        if (draggedIndex !== -1) {
+            const [draggedLayer] = this.layers.splice(draggedIndex, 1);
+            
+            // Recalculate target index after removal (items might have shifted)
+            let newTargetIndex = this.layers.findIndex(l => l.id === this.dropTargetId);
+            
+            // FIX 2: Fixed inverted logic. 
+            // "Insert Above" visually means a higher index in the array (rendered bottom-to-top)
+            let newIndex = this.dropInsertAbove ? newTargetIndex + 1 : newTargetIndex;
+
+            this.layers.splice(newIndex, 0, draggedLayer);
+            this.reorderLayerElements();
+            this.reorderGlitterBackgrounds();
+            this.saveState();
+        }
+    }
+
+    this.draggedLayerId = null;
+    this.dropTargetId = null;
+    this.dropInsertAbove = false;
+}
+
+
 	// Replace handleLayerDrop with this optimized version:
 	handleLayerDrop(event, targetLayerId) {
 		event.preventDefault();
@@ -1323,6 +1463,11 @@ class GlitterEditor {
 			layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
 			layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
 
+			layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
+			layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
+			layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
+
+
 			container.appendChild(layerEl);
 		});
 
@@ -1542,11 +1687,15 @@ class GlitterEditor {
 		}, { passive: false });
 
 		// --- PAN HANDLERS ---
-		this.previewContainer.addEventListener('mousedown', (e) => {
-			if (this.currentTool === 'hand') {
-				this.startPan(e);
-			}
-		});
+this.previewContainer.addEventListener('mousedown', (e) => {
+    // Check for Hand Tool OR Spacebar key
+    if (this.currentTool === 'hand' || e.code === 'Space') {
+        // Prevent default browser dragging
+        e.preventDefault(); 
+        // Pass specific X/Y coordinates to the new function
+        this.startPan(e.clientX, e.clientY);
+    }
+});
 
 
 
@@ -1561,6 +1710,9 @@ class GlitterEditor {
 		this.previewContainer.addEventListener('mouseleave', () => {
 			this.endPan();
 		});
+
+
+
 
 		// --- DISABLE RIGHT CLICK ON PREVIEW ---
 		this.previewContainer.addEventListener('contextmenu', (e) => {
@@ -1901,7 +2053,7 @@ class GlitterEditor {
 				return;
 			}
 
-		
+
 
 			if (shortcutsModal.classList.contains('visible')) {
 				shortcutsModal.classList.remove('visible');

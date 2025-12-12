@@ -681,6 +681,8 @@ input[type=range]::-moz-range-thumb {
   flex-shrink: 0;
 }
 .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn {
+  width: 24px;
+  height: 24px;
   background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
