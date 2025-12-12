@@ -4295,7 +4295,7 @@ class MobileManager {
 		console.log('Mobile: Navigation created');
 	}
 
-	setupEventListeners() {
+setupEventListeners() {
 		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
 			btn.addEventListener('click', () => {
 				this.switchTab(btn.dataset.tab);
@@ -4313,20 +4313,25 @@ class MobileManager {
 		if (mobileAddLayerBtn) {
 			mobileAddLayerBtn.addEventListener('click', () => {
 				this.editor.addLayer();
-				// Open layers drawer to show the new layer
-				// this.toggleDrawer('layers');
 			});
 		}
 
-		// Close drawer when clicking on section headers (but not action buttons)
+		// Close drawer when clicking on section headers (but not action buttons or collapsible sections)
 		document.querySelectorAll('.section-header').forEach(header => {
 			header.addEventListener('click', (e) => {
 				// Only close if mobile and a drawer is open
 				if (this.isMobile && this.activeDrawer) {
 					// Don't close if clicking on the action button or its children
-					if (!e.target.closest('.section-header-action')) {
-						this.closeAllDrawers();
+					if (e.target.closest('.section-header-action')) {
+						return;
 					}
+
+					// FIX: Don't close if this header belongs to a collapsible section (like Settings)
+					if (header.closest('.collapsible-section')) {
+						return; 
+					}
+
+					this.closeAllDrawers();
 				}
 			});
 		});
@@ -4338,7 +4343,6 @@ class MobileManager {
 			});
 		});
 	}
-
 	setupImageEvents() {
     window.addEventListener('imageLoaded', () => {
         if (this.isMobile) {
