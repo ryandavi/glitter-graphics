@@ -18,13 +18,11 @@ const CONFIG = {
 	refineGlobalDefault: false,
 	glitterGlobalDefault: false,
 	baseGridSize: 20,
-	zoomLevels: [0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 8, 10, 16],
-
+	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
 
 	// Auto-scroll settings for layer dragging
 	scrollZoneSize: 50,
 	scrollSpeed: 10,
-
 
 	// Export settings (defaults)
 	defaultExportQuality: 10,
@@ -3305,9 +3303,7 @@ class GifExporter {
 			workers: 4,
 			// Quality 1 = Best (samples every pixel). Critical for pixel art accuracy.
 			quality: 1,
-			workerScript: isLocal
-				? 'js/gif.worker.js'
-				: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
+			workerScript: 'js/gif.worker.js', //  isLocal ? 'js/gif.worker.js' : 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
 			fileName: 'ryandavi-com_glitter.gif',
 			timing: { forceDelay: 100, maxFrames: 60 }
 		};

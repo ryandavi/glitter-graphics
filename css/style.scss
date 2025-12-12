@@ -1007,11 +1007,13 @@ input[type="range"] {
 	/* Collapsible Section */
 	&.collapsible-section {
 		border-top: 1px solid var(--color-border);
+		
 		background: var(--color-bg-primary);
 		flex-shrink: 0;
 
 		>.section-header {
 			cursor: pointer;
+			border-bottom: unset;
 			&:hover {
 				background: var(--color-bg-tertiary);
 			}
@@ -1030,9 +1032,10 @@ input[type="range"] {
 		}
 
 		>.section-content {
-			padding: 0 var(--spacing-lg) var(--spacing-lg);
+
 			display: none;
 			padding: var(--spacing-md);
+			border-top: 1px solid var(--color-border);
 
 			&.visible {
 				display: block;
@@ -1183,7 +1186,7 @@ input[type="range"] {
 .glitter-column {
 	width: var(--glitter-panel-width);
 	background: var(--color-bg-primary);
-	border-right: 1px solid var(--color-border);
+	border-left: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
 	order: 1;
