@@ -48,6 +48,12 @@
   --glitter-swatch-columns: 4;
   --color-filter-chip-size: 32px;
   --mobile-menu-height: 60px;
+  /* MOBILE */
+  --mobile-top-nav-height: 50px;
+  --mobile-bottom-nav-height: 60px;
+  --mobile-drawer-height: 50dvh;
+  --mobile-breakpoint: 800px;
+  --mobile-header-height: 60px;
   /* z indexes */
   --modal-z-index: 20000;
   --mobile-menu-z-index: 2000;
@@ -1696,15 +1702,6 @@ input[type=range]::-moz-range-thumb {
     --glitter-swatch-columns: 2;
   }
 }
-/* ===== MOBILE CSS VARIABLES ===== */
-:root {
-  --mobile-top-nav-height: 50px;
-  --mobile-bottom-nav-height: 60px;
-  --mobile-drawer-height: 50dvh;
-  --mobile-breakpoint: 800px;
-  --mobile-header-height: 60px;
-}
-
 /* ===== MOBILE NAVIGATION ===== */
 .mobile-top-nav {
   display: none;
@@ -1811,7 +1808,7 @@ input[type=range]::-moz-range-thumb {
 /* ===== MOBILE LAYOUT ===== */
 @media (max-width: 800px) {
   :root {
-    --glitter-swatch-columns: 5;
+    --glitter-swatch-columns: 6;
   }
   .mobile-top-nav {
     display: flex;
