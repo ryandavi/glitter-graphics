@@ -286,6 +286,7 @@ input[type=range]::-moz-range-thumb {
 }
 .btn-text-with-icon.icon-wrapper {
   aspect-ratio: unset;
+  gap: var(--spacing-sm);
 }
 .btn-text-with-icon.icon-wrapper > svg.icon {
   width: 28px;
@@ -1751,7 +1752,6 @@ input[type=range]::-moz-range-thumb {
 .export-preview-modal .export-preview-image-container {
   flex: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
   padding: var(--spacing-lg);
   background: var(--color-bg-tertiary);
@@ -1760,7 +1760,9 @@ input[type=range]::-moz-range-thumb {
 }
 .export-preview-modal .export-preview-image-container img {
   max-width: 100%;
-  max-height: 60vh;
+  max-height: 100%;
+  -o-object-fit: contain;
+     object-fit: contain;
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
@@ -1770,6 +1772,15 @@ input[type=range]::-moz-range-thumb {
 .export-preview-modal .export-preview-instructions p {
   color: var(--color-text-secondary);
   margin: 0;
+  margin-bottom: var(--spacing-sm);
+}
+.export-preview-modal .export-preview-instructions p:last-child {
+  margin-bottom: 0;
+}
+.export-preview-modal .export-preview-instructions p.text-muted {
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
 }
 .export-preview-modal .export-preview-instructions p strong {
   color: var(--color-text-primary);
@@ -1780,6 +1791,7 @@ input[type=range]::-moz-range-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--spacing-md);
 }
 
 @media (max-width: 1400px) {

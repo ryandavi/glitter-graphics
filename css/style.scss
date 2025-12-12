@@ -400,6 +400,7 @@ input[type="range"] {
 
 	&.icon-wrapper{
 		aspect-ratio: unset;
+		gap: var(--spacing-sm);
 		> svg.icon {
 			width: 28px;
 			height: 28px;
@@ -2147,7 +2148,7 @@ input[type="range"] {
 	.export-preview-image-container {
 		flex: 1;
 		display: flex;
-		align-items: center;
+		// align-items: center;
 		justify-content: center;
 		padding: var(--spacing-lg);
 		background: var(--color-bg-tertiary);
@@ -2156,25 +2157,36 @@ input[type="range"] {
 
 		img {
 			max-width: 100%;
-			max-height: 60vh;
+			max-height: 100%;
+			    object-fit: contain;
 			border-radius: var(--radius-sm);
 			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 		}
 	}
 
-	.export-preview-instructions {
-		text-align: center;
+.export-preview-instructions {
 
-		p {
-
-			color: var(--color-text-secondary);
-			margin: 0;
-
-			strong {
-				color: var(--color-text-primary);
-			}
+	text-align: center;
+	
+	p {
+		color: var(--color-text-secondary);
+		margin: 0;
+		margin-bottom: var(--spacing-sm);
+		
+		&:last-child {
+			margin-bottom: 0;
+		}
+		
+		&.text-muted {
+			@include text-sm;
+			color: var(--color-text-tertiary);
+		}
+		
+		strong {
+			color: var(--color-text-primary);
 		}
 	}
+}
 
 	.modal-footer {
 		padding: var(--spacing-lg);
@@ -2183,6 +2195,8 @@ input[type="range"] {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+
+		gap: var(--spacing-md);
 
 	}
 }

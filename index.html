@@ -568,7 +568,8 @@
 				<img id="exportPreviewImage" alt="Exported GIF">
 			</div>
 			<div class="export-preview-instructions">
-				<p>Hold down on the image and select <strong>"Add to Photos"</strong></p>
+				<p><strong>To save with animation:</strong> Use the Share button below and select "Save to Files" or another app.</p>
+				<p class="text-muted">Note: Long-press save from this preview may save as a still image.</p>
 			</div>
 		</div>
 		<div class="modal-footer">
@@ -576,8 +577,16 @@
 				<svg class="icon">
 					<use href="#icon-share"></use>
 				</svg>
-				<span class="name">Share Instead</span>
+				<span class="name">Share</span>
 			</button>
+
+			<button class="btn btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewOpen">
+				<svg class="icon">
+					<use href="#icon-export"></use>
+				</svg>
+				<span class="name">Open GIF</span>
+			</button>
+
 		</div>
 	</div>
 </div>

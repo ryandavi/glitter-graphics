@@ -3799,9 +3799,9 @@ async _handleFileSave(blob, callbacks) {
 	const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || CONFIG.forceIOSExportPreview;
 	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-	// iOS: Show image in modal for long-press save
+	// iOS: Open in new tab for proper save functionality
 	if (isIOS) {
-		this._showExportPreviewModal(url, file);
+		this._showExportPreviewModal(url, file, true); // true = iOS mode
 		return;
 	}
 
@@ -3836,14 +3836,32 @@ async _handleFileSave(blob, callbacks) {
 	}, 100);
 }
 
-_showExportPreviewModal(blobUrl, file) {
+_showExportPreviewModal(blobUrl, file, isIOS = false) {
 	const modal = document.getElementById('exportPreviewModal');
 	const img = document.getElementById('exportPreviewImage');
+	const instructions = modal.querySelector('.export-preview-instructions');
 	const closeBtn = document.getElementById('closeExportPreviewModal');
 	const shareBtn = document.getElementById('exportPreviewShare');
+	const openBtn = document.getElementById('exportPreviewOpen');
 	
 	// Set the image
 	img.src = blobUrl;
+	
+	// Update instructions and button visibility based on platform
+	if (isIOS) {
+		instructions.innerHTML = `
+			<p><strong>Share:</strong> Quick share to other apps</p>
+			<p><strong>Open GIF:</strong> View in new tab, then long-press to save with animation</p>
+		`;
+		shareBtn.style.display = 'flex';
+		openBtn.style.display = 'flex';
+	} else {
+		instructions.innerHTML = `
+			<p>Hold down on the image and select <strong>"Add to Photos"</strong></p>
+		`;
+		shareBtn.style.display = 'flex';
+		openBtn.style.display = 'none';
+	}
 	
 	// Show modal
 	modal.classList.add('visible');
@@ -3874,6 +3892,12 @@ _showExportPreviewModal(blobUrl, file) {
 		}
 	};
 	
+	// Open GIF button handler (iOS only)
+	openBtn.onclick = () => {
+		window.open(blobUrl, '_blank');
+		closeModal();
+	};
+	
 	// Close on background click
 	modal.onclick = (e) => {
 		if (e.target === modal) {
@@ -3881,6 +3905,7 @@ _showExportPreviewModal(blobUrl, file) {
 		}
 	};
 }
+
 }
 
 
