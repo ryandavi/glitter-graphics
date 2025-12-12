@@ -1,1419 +1,2472 @@
 [
     {
-        "id": 2,
-        "url": "images/glitter/sparkle/glitter_crimson.gif",
-        "name": "Crimson",
+        "id": 111,
+        "url": "images/glitter/sparkle/purpe_light-pink.gif",
+        "name": "Light Pink",
+        "generatedName": "Muted Pink",
+        "brightness": "1",
+        "sortOrder": 0,
+        "hue": 0.185,
+        "colorCodes": [
+            "#FF78C3"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "dark",
-            "red",
-            "vivid",
-            "warm"
-        ]
-    },
-    {
-        "id": 1,
-        "url": "images/glitter/sparkle/gliter_red.gif",
-        "name": "Red",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "red",
-            "vivid",
-            "warm"
-        ]
-    },
-    {
-        "id": 27,
-        "url": "images/glitter/noise/noise_red.gif",
-        "name": "Red",
-        "category": "Noise",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "red",
-            "vivid",
-            "warm"
+            "Pink",
+            "Light",
+            "Muted"
         ]
     },
     {
         "id": 86,
         "url": "images/glitter/sparkle/glitter_dusty-pink.gif",
         "name": "Dusty Pink",
+        "generatedName": "Muted Red",
+        "brightness": "1",
+        "sortOrder": 1,
+        "hue": 0.042,
+        "colorCodes": [
+            "#F09696"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "light",
-            "muted",
-            "orange",
-            "pink",
-            "red",
-            "warm"
-        ]
-    },
-    {
-        "id": 103,
-        "url": "images/glitter/sparkle/glitter_pink-red.gif",
-        "name": "Pink Red",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "pink",
-            "red",
-            "vivid",
-            "warm"
-        ]
-    },
-    {
-        "id": 47,
-        "url": "images/glitter/ember/ember_burnt-orange.gif",
-        "name": "Burnt Orange",
-        "category": "Ember",
-        "isPixelated": true,
-        "tags": [
-            "dark",
-            "orange",
-            "red",
-            "warm"
-        ]
-    },
-    {
-        "id": 73,
-        "url": "images/glitter/sparkle/glitter_burn-sienna.gif",
-        "name": "Burn Sienna",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "beige",
-            "brown",
-            "muted",
-            "warm"
-        ]
-    },
-    {
-        "id": 108,
-        "url": "images/glitter/sparkle/glitter_tan.gif",
-        "name": "Tan",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "muted",
-            "orange",
-            "tan",
-            "warm"
-        ]
-    },
-    {
-        "id": 93,
-        "url": "images/glitter/sparkle/glitter_light-orange.gif",
-        "name": "Light Orange",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "orange",
-            "warm"
-        ]
-    },
-    {
-        "id": 5,
-        "url": "images/glitter/sparkle/glitter_orange.gif",
-        "name": "Orange",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "orange",
-            "vivid",
-            "warm"
-        ]
-    },
-    {
-        "id": 105,
-        "url": "images/glitter/sparkle/glitter_rainbow-2.gif",
-        "name": "Rainbow 2",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "green",
-            "multicolor",
-            "orange",
-            "purple",
-            "red",
-            "vivid",
-            "yellow"
-        ]
-    },
-    {
-        "id": 55,
-        "url": "images/glitter/etc/etc_dusty-pink.gif",
-        "name": "Dusty Pink",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "muted",
-            "pink"
-        ]
-    },
-    {
-        "id": 115,
-        "url": "images/glitter/sparkle_2/sparkle_pink-hearts.gif",
-        "name": "Pink Hearts",
-        "category": "Sparkle 2",
-        "isPixelated": true,
-        "tags": [
-            "pattern",
-            "pink",
-            "red"
-        ]
-    },
-    {
-        "id": 118,
-        "url": "images/glitter/transparent/transparent_pink-sparkle.gif",
-        "name": "Pink Sparkle",
-        "category": "transparent",
-        "isPixelated": true,
-        "tags": [
-            "pink"
-        ]
-    },
-    {
-        "id": 24,
-        "url": "images/glitter/ember/ember_red.gif",
-        "name": "Red",
-        "category": "Ember",
-        "isPixelated": true,
-        "tags": [
-            "dark",
-            "pink",
-            "red"
-        ]
-    },
-    {
-        "id": 71,
-        "url": "images/glitter/sparkle/glitter_brown.gif",
-        "name": "Brown",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "brown",
-            "muted",
-            "warm"
-        ]
-    },
-    {
-        "id": 16,
-        "url": "images/glitter/sparkle/glitter_magenta.gif",
-        "name": "Magenta",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "neon",
-            "pink",
-            "purple",
-            "vivid"
-        ]
-    },
-    {
-        "id": 51,
-        "url": "images/glitter/etc/etc_bronze-2.gif",
-        "name": "Bronze 2",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "beige",
-            "bronze",
-            "muted",
-            "warm"
-        ]
-    },
-    {
-        "id": 52,
-        "url": "images/glitter/etc/etc_bronze.gif",
-        "name": "Bronze",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "bronze",
-            "muted",
-            "warm"
-        ]
-    },
-    {
-        "id": 69,
-        "url": "images/glitter/sparkle/glitter_brown-2.gif",
-        "name": "Brown 2",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "brown",
-            "muted",
-            "warm"
-        ]
-    },
-    {
-        "id": 70,
-        "url": "images/glitter/sparkle/glitter_brown-4.gif",
-        "name": "Brown 4",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "brown",
-            "muted",
-            "warm"
-        ]
-    },
-    {
-        "id": 72,
-        "url": "images/glitter/sparkle/glitter_brown_3.gif",
-        "name": "Brown_3",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "brown",
-            "contrast",
-            "gold",
-            "muted",
-            "warm"
-        ]
-    },
-    {
-        "id": 107,
-        "url": "images/glitter/sparkle/glitter_rhodolite.gif",
-        "name": "Rhodolite",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "contrast",
-            "jewel",
-            "pink",
-            "vivid"
-        ]
-    },
-    {
-        "id": 101,
-        "url": "images/glitter/sparkle/glitter_pink-magenta.gif",
-        "name": "Pink Magenta",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "muted",
-            "pink"
-        ]
-    },
-    {
-        "id": 110,
-        "url": "images/glitter/sparkle/glitter_ugly-purple.gif",
-        "name": "Ugly Purple",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "contrast",
-            "muted",
-            "pink",
-            "purple"
-        ]
-    },
-    {
-        "id": 7,
-        "url": "images/glitter/sparkle/glitter_gold.gif",
-        "name": "Gold",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "gold",
-            "light",
-            "muted",
-            "warm",
-            "yellow"
-        ]
-    },
-    {
-        "id": 28,
-        "url": "images/glitter/noise/noise_orange.gif",
-        "name": "Orange",
-        "category": "Noise",
-        "isPixelated": true,
-        "tags": [
-            "bronze",
-            "jewel",
-            "orange",
-            "vivid",
-            "warm"
-        ]
-    },
-    {
-        "id": 98,
-        "url": "images/glitter/sparkle/glitter_orange-dark.gif",
-        "name": "Orange Dark",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "dark",
-            "orange",
-            "warm"
-        ]
-    },
-    {
-        "id": 31,
-        "url": "images/glitter/noise/noise_magenta.gif",
-        "name": "Magenta",
-        "category": "Noise",
-        "isPixelated": true,
-        "tags": [
-            "jewel",
-            "neon",
-            "pink",
-            "purple",
-            "vivid"
-        ]
-    },
-    {
-        "id": 56,
-        "url": "images/glitter/etc/etc_gold.gif",
-        "name": "Gold",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "orange",
-            "vivid",
-            "warm"
-        ]
-    },
-    {
-        "id": 23,
-        "url": "images/glitter/sparkle/glitter_bronze.gif",
-        "name": "Bronze",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "bronze",
-            "gold",
-            "vivid",
-            "warm",
-            "yellow"
-        ]
-    },
-    {
-        "id": 63,
-        "url": "images/glitter/sparkle/etc_gold-3.gif",
-        "name": "Gold 3",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "gold",
-            "vivid",
-            "warm",
-            "yellow"
-        ]
-    },
-    {
-        "id": 78,
-        "url": "images/glitter/sparkle/glitter_dark-gold.gif",
-        "name": "Dark Gold",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "gold",
-            "vivid",
-            "warm"
-        ]
-    },
-    {
-        "id": 17,
-        "url": "images/glitter/sparkle/glitter_hot-pink.gif",
-        "name": "Hot Pink",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "muted",
-            "neon",
-            "pink"
-        ]
-    },
-    {
-        "id": 58,
-        "url": "images/glitter/etc/etc_hot-pink.gif",
-        "name": "Hot Pink",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "pink"
-        ]
-    },
-    {
-        "id": 111,
-        "url": "images/glitter/sparkle/purpe_light-pink.gif",
-        "name": "Light Pink",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "muted",
-            "pink"
-        ]
-    },
-    {
-        "id": 6,
-        "url": "images/glitter/sparkle/glitter_yellow.gif",
-        "name": "Yellow",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "vivid",
-            "warm",
-            "yellow"
+            "Red",
+            "Orange",
+            "Pink",
+            "Light",
+            "Warm",
+            "Muted"
         ]
     },
     {
         "id": 89,
         "url": "images/glitter/sparkle/glitter_hot-pink-2.gif",
         "name": "Hot Pink 2",
+        "generatedName": "Vivid Pink",
+        "brightness": "1",
+        "sortOrder": 2,
+        "hue": 0.201,
+        "colorCodes": [
+            "#FF3C96"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "pink",
-            "vivid",
-            "warm"
+            "Pink",
+            "Warm",
+            "Vivid"
         ]
     },
     {
-        "id": 29,
-        "url": "images/glitter/noise/noise_yellow.gif",
-        "name": "Yellow",
-        "category": "Noise",
-        "isPixelated": true,
-        "tags": [
-            "jewel",
-            "vivid",
-            "warm",
-            "yellow"
-        ]
-    },
-    {
-        "id": 87,
-        "url": "images/glitter/sparkle/glitter_gold-2.gif",
-        "name": "Gold 2",
+        "id": 17,
+        "url": "images/glitter/sparkle/glitter_hot-pink.gif",
+        "name": "Muted Hot Pink",
+        "generatedName": "Multicolor",
+        "brightness": "1",
+        "sortOrder": 3,
+        "hue": 0.945,
+        "colorCodes": [
+            "#D26BA7",
+            "#FF007F"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "brown",
-            "contrast",
-            "gold",
-            "warm",
-            "yellow"
+            "Pink",
+            "Neon",
+            "Muted"
         ]
     },
     {
-        "id": 77,
-        "url": "images/glitter/sparkle/glitter_dark-brown.gif",
-        "name": "Dark Brown",
+        "id": 101,
+        "url": "images/glitter/sparkle/glitter_pink-magenta.gif",
+        "name": "Pink Magenta",
+        "generatedName": "Muted Pink",
+        "brightness": "1",
+        "sortOrder": 4,
+        "hue": 0.135,
+        "colorCodes": [
+            "#D269C3"
+        ],
+        "frameCount": 3,
+        "frameRate": 0,
+        "isVariableFramerate": true,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "brown",
-            "dark",
-            "muted",
-            "warm"
-        ]
-    },
-    {
-        "id": 4,
-        "url": "images/glitter/sparkle/glitter_coral.gif",
-        "name": "Coral",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "muted",
-            "orange",
-            "pastel",
-            "pink",
-            "red",
-            "warm"
+            "Pink",
+            "Light",
+            "Muted"
         ]
     },
     {
         "id": 102,
         "url": "images/glitter/sparkle/glitter_pink-purple.gif",
         "name": "Pink Purple",
+        "generatedName": "Muted Pink",
+        "brightness": "1",
+        "sortOrder": 5,
+        "hue": 0.215,
+        "colorCodes": [
+            "#E16996"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "muted",
-            "pink",
-            "purple",
-            "warm"
+            "Purple",
+            "Pink",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 16,
+        "url": "images/glitter/sparkle/glitter_magenta.gif",
+        "name": "Magenta",
+        "generatedName": "Neon Pink",
+        "brightness": "1",
+        "sortOrder": 6,
+        "hue": 0.125,
+        "colorCodes": [
+            "#B400A5"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Pink",
+            "Neon",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 107,
+        "url": "images/glitter/sparkle/glitter_rhodolite.gif",
+        "name": "Rhodolite",
+        "generatedName": "Jewel Tone Pink",
+        "brightness": "1",
+        "sortOrder": 7,
+        "hue": 0.13,
+        "colorCodes": [
+            "#870078"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Pink",
+            "Jewel",
+            "Vivid",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 103,
+        "url": "images/glitter/sparkle/glitter_pink-red.gif",
+        "name": "Pink Red",
+        "generatedName": "Vivid Red",
+        "brightness": "1",
+        "sortOrder": 8,
+        "hue": 0.042,
+        "colorCodes": [
+            "#FF0000"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Pink",
+            "Warm",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 1,
+        "url": "images/glitter/sparkle/gliter_red.gif",
+        "name": "Red",
+        "generatedName": "Vivid Red",
+        "brightness": "1",
+        "sortOrder": 9,
+        "hue": 0.042,
+        "colorCodes": [
+            "#FF0000"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Warm",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 2,
+        "url": "images/glitter/sparkle/glitter_crimson.gif",
+        "name": "Crimson",
+        "generatedName": "Vivid Red",
+        "brightness": "1",
+        "sortOrder": 10,
+        "hue": 0.028,
+        "colorCodes": [
+            "#C3000F"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Dark",
+            "Warm",
+            "Vivid"
         ]
     },
     {
         "id": 3,
         "url": "images/glitter/sparkle/glitter_ruby.gif",
         "name": "Ruby",
+        "generatedName": "Jewel Tone Pink",
+        "brightness": "0",
+        "sortOrder": 11,
+        "hue": 0.215,
+        "colorCodes": [
+            "#78002D"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "dark",
-            "jewel",
-            "pink",
-            "red",
-            "vivid",
-            "warm"
+            "Red",
+            "Pink",
+            "Dark",
+            "Jewel",
+            "Warm",
+            "Vivid"
         ]
     },
     {
         "id": 67,
         "url": "images/glitter/sparkle/glitter_bright-orange.gif",
         "name": "Bright Orange",
+        "generatedName": "Vivid Pink",
+        "brightness": "1",
+        "sortOrder": 12,
+        "hue": 0.23,
+        "colorCodes": [
+            "#FF2D69"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "orange",
-            "red",
-            "vivid",
-            "warm"
+            "Red",
+            "Orange",
+            "Warm",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 4,
+        "url": "images/glitter/sparkle/glitter_coral.gif",
+        "name": "Coral",
+        "generatedName": "Muted Pink",
+        "brightness": "1",
+        "sortOrder": 13,
+        "hue": 0.215,
+        "colorCodes": [
+            "#E16996"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Orange",
+            "Pink",
+            "Light",
+            "Pastel",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 93,
+        "url": "images/glitter/sparkle/glitter_light-orange.gif",
+        "name": "Light Orange",
+        "generatedName": "Vivid Orange",
+        "brightness": "1",
+        "sortOrder": 14,
+        "hue": 0.1,
+        "colorCodes": [
+            "#FF782D"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Orange",
+            "Light",
+            "Warm"
+        ]
+    },
+    {
+        "id": 5,
+        "url": "images/glitter/sparkle/glitter_orange.gif",
+        "name": "Orange",
+        "generatedName": "Vivid Orange",
+        "brightness": "1",
+        "sortOrder": 15,
+        "hue": 0.108,
+        "colorCodes": [
+            "#FF6900"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Orange",
+            "Warm",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 98,
+        "url": "images/glitter/sparkle/glitter_orange-dark.gif",
+        "name": "Orange Dark",
+        "generatedName": "Vivid Orange",
+        "brightness": "1",
+        "sortOrder": 16,
+        "hue": 0.158,
+        "colorCodes": [
+            "#D29600"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Orange",
+            "Dark",
+            "Warm"
+        ]
+    },
+    {
+        "id": 78,
+        "url": "images/glitter/sparkle/glitter_dark-gold.gif",
+        "name": "Dark Gold",
+        "generatedName": "Vivid Gold",
+        "brightness": "1",
+        "sortOrder": 17,
+        "hue": 0.167,
+        "colorCodes": [
+            "#B48700"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Gold",
+            "Warm",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 87,
+        "url": "images/glitter/sparkle/glitter_gold-2.gif",
+        "name": "Gold 2",
+        "generatedName": "Muted Yellow",
+        "brightness": "1",
+        "sortOrder": 18,
+        "hue": 0.208,
+        "colorCodes": [
+            "#FFFF69"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Yellow",
+            "Brown",
+            "Gold",
+            "Warm",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 7,
+        "url": "images/glitter/sparkle/glitter_gold.gif",
+        "name": "Gold",
+        "generatedName": "Muted Orange",
+        "brightness": "1",
+        "sortOrder": 19,
+        "hue": 0.158,
+        "colorCodes": [
+            "#FFD269"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Yellow",
+            "Gold",
+            "Light",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 6,
+        "url": "images/glitter/sparkle/glitter_yellow.gif",
+        "name": "Yellow",
+        "generatedName": "Vivid Gold",
+        "brightness": "1",
+        "sortOrder": 20,
+        "hue": 0.197,
+        "colorCodes": [
+            "#FFF000"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Yellow",
+            "Light",
+            "Warm",
+            "Vivid"
         ]
     },
     {
         "id": 95,
         "url": "images/glitter/sparkle/glitter_muted-green.gif",
         "name": "Muted Green",
+        "generatedName": "Neon Yellow",
+        "brightness": "1",
+        "sortOrder": 21,
+        "hue": 0.236,
+        "colorCodes": [
+            "#96B400"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "green",
-            "muted",
-            "neon",
-            "vivid",
-            "yellow"
+            "Yellow",
+            "Green",
+            "Neon",
+            "Vivid",
+            "Muted"
         ]
     },
     {
         "id": 92,
         "url": "images/glitter/sparkle/glitter_light-green.gif",
         "name": "Light Green",
+        "generatedName": "Muted Green",
+        "brightness": "1",
+        "sortOrder": 22,
+        "hue": 0.256,
+        "colorCodes": [
+            "#B4D269"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "green",
-            "light",
-            "muted"
-        ]
-    },
-    {
-        "id": 30,
-        "url": "images/glitter/noise/noise_lime.gif",
-        "name": "Lime",
-        "category": "Noise",
-        "isPixelated": true,
-        "tags": [
-            "green",
-            "jewel",
-            "neon",
-            "vivid",
-            "yellow"
+            "Green",
+            "Light",
+            "Muted"
         ]
     },
     {
         "id": 8,
         "url": "images/glitter/sparkle/glitter_lime-green.gif",
         "name": "Lime Green",
+        "generatedName": "Vivid Green",
+        "brightness": "1",
+        "sortOrder": 23,
+        "hue": 0.275,
+        "colorCodes": [
+            "#96FF00"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "green",
-            "light",
-            "neon",
-            "vivid",
-            "yellow"
+            "Yellow",
+            "Green",
+            "Light",
+            "Neon",
+            "Vivid"
         ]
     },
     {
         "id": 88,
         "url": "images/glitter/sparkle/glitter_grass-green.gif",
         "name": "Grass Green",
+        "generatedName": "Jewel Tone Green",
+        "brightness": "1",
+        "sortOrder": 24,
+        "hue": 0.275,
+        "colorCodes": [
+            "#5A9600"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "green",
-            "jewel",
-            "vivid"
+            "Green",
+            "Jewel",
+            "Vivid"
         ]
     },
     {
         "id": 9,
         "url": "images/glitter/sparkle/glitter_green.gif",
         "name": "Green",
+        "generatedName": "Jewel Tone Green",
+        "brightness": "1",
+        "sortOrder": 25,
+        "hue": 0.356,
+        "colorCodes": [
+            "#0F8700"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "green",
-            "jewel",
-            "vivid"
-        ]
-    },
-    {
-        "id": 54,
-        "url": "images/glitter/etc/etc_dark-green.gif",
-        "name": "Dark Green",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "contrast",
-            "green",
-            "muted"
-        ]
-    },
-    {
-        "id": 113,
-        "url": "images/glitter/sparkle_2/sparkle_green.gif",
-        "name": "Green",
-        "category": "Sparkle 2",
-        "isPixelated": true,
-        "tags": [
-            "green",
-            "vivid"
-        ]
-    },
-    {
-        "id": 25,
-        "url": "images/glitter/ember/ember_turquoise.gif",
-        "name": "Turquoise",
-        "category": "Ember",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "dark",
-            "green"
-        ]
-    },
-    {
-        "id": 57,
-        "url": "images/glitter/etc/etc_green.gif",
-        "name": "Green",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "cool",
-            "green",
-            "muted"
-        ]
-    },
-    {
-        "id": 13,
-        "url": "images/glitter/sparkle/glitter_turquoise_2.gif",
-        "name": "Turquoise 2",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "green",
-            "jewel",
-            "vivid"
-        ]
-    },
-    {
-        "id": 12,
-        "url": "images/glitter/sparkle/glitter_turquoise.gif",
-        "name": "Turquoise",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "green",
-            "jewel",
-            "vivid"
-        ]
-    },
-    {
-        "id": 11,
-        "url": "images/glitter/sparkle/glitter_aquamarine.gif",
-        "name": "Aquamarine",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "jewel",
-            "light",
-            "neon",
-            "vivid"
-        ]
-    },
-    {
-        "id": 106,
-        "url": "images/glitter/sparkle/glitter_rainbow.gif",
-        "name": "Rainbow",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "green",
-            "multicolor",
-            "purple",
-            "red",
-            "vivid",
-            "yellow"
-        ]
-    },
-    {
-        "id": 116,
-        "url": "images/glitter/transparent/transparent_bubbles.gif",
-        "name": "Bubbles",
-        "category": "transparent",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "light",
-            "pattern",
-            "vivid"
-        ]
-    },
-    {
-        "id": 50,
-        "url": "images/glitter/etc/etc_blue-green.gif",
-        "name": "Blue Green",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "jewel",
-            "vivid"
-        ]
-    },
-    {
-        "id": 91,
-        "url": "images/glitter/sparkle/glitter_light-blue.gif",
-        "name": "Light Blue",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "light",
-            "muted",
-            "pastel"
-        ]
-    },
-    {
-        "id": 66,
-        "url": "images/glitter/sparkle/glitter_blue-topaz.gif",
-        "name": "Blue Topaz",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "jewel",
-            "vivid"
-        ]
-    },
-    {
-        "id": 85,
-        "url": "images/glitter/sparkle/glitter_dusty-dark-blue.gif",
-        "name": "Dusty Dark Blue",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "light",
-            "muted"
-        ]
-    },
-    {
-        "id": 14,
-        "url": "images/glitter/sparkle/glitter_sapphire.gif",
-        "name": "Sapphire",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "dark",
-            "jewel",
-            "vivid"
-        ]
-    },
-    {
-        "id": 112,
-        "url": "images/glitter/sparkle_2/sparkle_blue.gif",
-        "name": "Blue",
-        "category": "Sparkle 2",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool"
-        ]
-    },
-    {
-        "id": 114,
-        "url": "images/glitter/sparkle_2/sparkle_periwinkle.gif",
-        "name": "Periwinkle",
-        "category": "Sparkle 2",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "light",
-            "muted",
-            "pastel"
-        ]
-    },
-    {
-        "id": 96,
-        "url": "images/glitter/sparkle/glitter_navy.gif",
-        "name": "Navy",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "dark",
-            "muted"
-        ]
-    },
-    {
-        "id": 81,
-        "url": "images/glitter/sparkle/glitter_dark-purple-2.gif",
-        "name": "Dark Purple 2",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "cool",
-            "jewel",
-            "purple",
-            "vivid"
-        ]
-    },
-    {
-        "id": 109,
-        "url": "images/glitter/sparkle/glitter_tanzanite.gif",
-        "name": "Tanzanite",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "cool",
-            "jewel",
-            "purple",
-            "vivid"
-        ]
-    },
-    {
-        "id": 26,
-        "url": "images/glitter/ember/ember_purple.gif",
-        "name": "Purple",
-        "category": "Ember",
-        "isPixelated": true,
-        "tags": [
-            "cool",
-            "dark",
-            "purple"
-        ]
-    },
-    {
-        "id": 83,
-        "url": "images/glitter/sparkle/glitter_dark-vivid-purple.gif",
-        "name": "Dark Vivid Purple",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "cool",
-            "light",
-            "purple",
-            "vivid"
-        ]
-    },
-    {
-        "id": 94,
-        "url": "images/glitter/sparkle/glitter_light-purple.gif",
-        "name": "Light Purple",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "muted",
-            "purple"
-        ]
-    },
-    {
-        "id": 104,
-        "url": "images/glitter/sparkle/glitter_purple.gif",
-        "name": "Purple",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "muted",
-            "purple"
-        ]
-    },
-    {
-        "id": 15,
-        "url": "images/glitter/sparkle/glitter_amethyst.gif",
-        "name": "Amethyst",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "jewel",
-            "purple",
-            "vivid"
-        ]
-    },
-    {
-        "id": 90,
-        "url": "images/glitter/sparkle/glitter_lavender.gif",
-        "name": "Lavender",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "light",
-            "muted",
-            "pastel",
-            "purple"
-        ]
-    },
-    {
-        "id": 20,
-        "url": "images/glitter/sparkle/glitter_white.gif",
-        "name": "White",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "grayscale",
-            "light",
-            "neutral",
-            "silver",
-            "white"
-        ]
-    },
-    {
-        "id": 22,
-        "url": "images/glitter/sparkle/glitter_silver-2.gif",
-        "name": "Silver 2",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "grayscale",
-            "light",
-            "neutral",
-            "silver",
-            "white"
-        ]
-    },
-    {
-        "id": 32,
-        "url": "images/glitter/noise/noise_white.gif",
-        "name": "White",
-        "category": "Noise",
-        "isPixelated": true,
-        "tags": [
-            "grayscale",
-            "light",
-            "neutral",
-            "silver",
-            "white"
-        ]
-    },
-    {
-        "id": 53,
-        "url": "images/glitter/etc/etc_champagne.gif",
-        "name": "Champagne",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "beige",
-            "light",
-            "pastel",
-            "warm"
-        ]
-    },
-    {
-        "id": 59,
-        "url": "images/glitter/etc/etc_lavender.gif",
-        "name": "Lavender",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "light",
-            "pastel"
-        ]
-    },
-    {
-        "id": 61,
-        "url": "images/glitter/etc/etc_seafoam.gif",
-        "name": "Seafoam",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "green",
-            "light",
-            "pastel"
-        ]
-    },
-    {
-        "id": 62,
-        "url": "images/glitter/etc/etc_snow.gif",
-        "name": "Snow",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "grayscale",
-            "light",
-            "neutral",
-            "silver"
-        ]
-    },
-    {
-        "id": 76,
-        "url": "images/glitter/sparkle/glitter_cream.gif",
-        "name": "Cream",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "cream",
-            "light",
-            "muted",
-            "orange",
-            "pastel",
-            "warm"
-        ]
-    },
-    {
-        "id": 97,
-        "url": "images/glitter/sparkle/glitter_opalite.gif",
-        "name": "Opalite",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "jewel",
-            "light",
-            "multicolor",
-            "pastel",
-            "pink"
-        ]
-    },
-    {
-        "id": 99,
-        "url": "images/glitter/sparkle/glitter_pastel-blue.gif",
-        "name": "Pastel Blue",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "light",
-            "pastel",
-            "silver"
-        ]
-    },
-    {
-        "id": 21,
-        "url": "images/glitter/sparkle/glitter_silver.gif",
-        "name": "Silver",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "grayscale",
-            "neutral",
-            "silver",
-            "white"
-        ]
-    },
-    {
-        "id": 33,
-        "url": "images/glitter/noise/noise_gray.gif",
-        "name": "Gray",
-        "category": "Noise",
-        "isPixelated": true,
-        "tags": [
-            "gray",
-            "grayscale",
-            "neutral"
-        ]
-    },
-    {
-        "id": 34,
-        "url": "images/glitter/noise/noise_black.gif",
-        "name": "Black",
-        "category": "Noise",
-        "isPixelated": true,
-        "tags": [
-            "black",
-            "dark",
-            "grayscale",
-            "neutral"
-        ]
-    },
-    {
-        "id": 46,
-        "url": "images/glitter/etc/glitter_black.gif",
-        "name": "Black",
-        "category": "Sparkle 2",
-        "isPixelated": true,
-        "tags": [
-            "black",
-            "dark",
-            "grayscale",
-            "neutral"
-        ]
-    },
-    {
-        "id": 48,
-        "url": "images/glitter/etc/etc_black-2.gif",
-        "name": "Black 2",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "black",
-            "dark",
-            "grayscale",
-            "neutral"
-        ]
-    },
-    {
-        "id": 49,
-        "url": "images/glitter/etc/etc_black-3.gif",
-        "name": "Black 3",
-        "category": "Etc",
-        "isPixelated": true,
-        "tags": [
-            "black",
-            "dark",
-            "grayscale",
-            "neutral"
-        ]
-    },
-    {
-        "id": 64,
-        "url": "images/glitter/sparkle/glitter_black-2.gif",
-        "name": "Black 2",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "black",
-            "dark",
-            "grayscale",
-            "neutral"
-        ]
-    },
-    {
-        "id": 65,
-        "url": "images/glitter/sparkle/glitter_black.gif",
-        "name": "Black",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "black",
-            "dark",
-            "grayscale",
-            "neutral"
-        ]
-    },
-    {
-        "id": 74,
-        "url": "images/glitter/sparkle/glitter_camo-pattern.gif",
-        "name": "Camo Pattern",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "beige",
-            "brown",
-            "contrast",
-            "multicolor",
-            "neutral",
-            "pattern"
-        ]
-    },
-    {
-        "id": 79,
-        "url": "images/glitter/sparkle/glitter_dark-gray.gif",
-        "name": "Dark Gray",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "dark",
-            "grayscale",
-            "neutral"
-        ]
-    },
-    {
-        "id": 117,
-        "url": "images/glitter/transparent/transparent_pastel-sparkle.gif",
-        "name": "Pastel Sparkle",
-        "category": "transparent",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "green",
-            "multicolor",
-            "pastel",
-            "pattern",
-            "pink",
-            "yellow"
-        ]
-    },
-    {
-        "id": 119,
-        "url": "images/glitter/transparent/transparent_rainbow-sparkle.gif",
-        "name": "Rainbow Sparkle",
-        "category": "transparent",
-        "isPixelated": true,
-        "tags": [
-            "green",
-            "multicolor",
-            "orange",
-            "pattern",
-            "pink",
-            "purple",
-            "red",
-            "yellow"
-        ]
-    },
-    {
-        "id": 10,
-        "url": "images/glitter/sparkle/glitter_seafoam.gif",
-        "name": "Seafoam",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "green",
-            "light",
-            "multicolor",
-            "muted",
-            "pastel"
-        ]
-    },
-    {
-        "id": 18,
-        "url": "images/glitter/sparkle/glitter_magenta-blue.gif",
-        "name": "Magenta Blue",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "contrast",
-            "cool",
-            "multicolor",
-            "neon",
-            "pink",
-            "purple",
-            "vivid"
-        ]
-    },
-    {
-        "id": 19,
-        "url": "images/glitter/sparkle/glitter_christmas.gif",
-        "name": "Christmas",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "contrast",
-            "green",
-            "light",
-            "multicolor",
-            "red",
-            "vivid"
-        ]
-    },
-    {
-        "id": 68,
-        "url": "images/glitter/sparkle/glitter_bright-seafoam.gif",
-        "name": "Bright Seafoam",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "blue",
-            "cool",
-            "green",
-            "light",
-            "multicolor",
-            "vivid"
-        ]
-    },
-    {
-        "id": 75,
-        "url": "images/glitter/sparkle/glitter_christmas-2.gif",
-        "name": "Christmas 2",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "contrast",
-            "green",
-            "multicolor",
-            "red",
-            "vivid",
-            "yellow"
-        ]
-    },
-    {
-        "id": 100,
-        "url": "images/glitter/sparkle/glitter_pink-dark-purple.gif",
-        "name": "Pink Dark Purple",
-        "category": "Sparkle",
-        "isPixelated": true,
-        "tags": [
-            "contrast",
-            "multicolor",
-            "pink",
-            "purple",
-            "vivid",
-            "warm"
+            "Green",
+            "Jewel",
+            "Vivid"
         ]
     },
     {
         "id": 80,
         "url": "images/glitter/sparkle/glitter_dark-green.gif",
         "name": "Dark Green",
+        "generatedName": "Blue and Yellow",
+        "brightness": "0",
+        "sortOrder": 26,
+        "hue": 1.2,
+        "colorCodes": [
+            "#003C4B",
+            "#4B5A00"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "cool",
-            "green",
-            "muted"
+            "Green",
+            "Cool",
+            "Muted"
+        ]
+    },
+    {
+        "id": 13,
+        "url": "images/glitter/sparkle/glitter_turquoise_2.gif",
+        "name": "Turquoise 2",
+        "generatedName": "Jewel Tone Blue",
+        "brightness": "1",
+        "sortOrder": 27,
+        "hue": 0.525,
+        "colorCodes": [
+            "#009687"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Green",
+            "Blue",
+            "Jewel",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 12,
+        "url": "images/glitter/sparkle/glitter_turquoise.gif",
+        "name": "Turquoise",
+        "generatedName": "Jewel Tone Blue",
+        "brightness": "1",
+        "sortOrder": 28,
+        "hue": 0.558,
+        "colorCodes": [
+            "#008796"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Green",
+            "Blue",
+            "Jewel",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 68,
+        "url": "images/glitter/sparkle/glitter_bright-seafoam.gif",
+        "name": "Bright Seafoam",
+        "generatedName": "Blue and Green",
+        "brightness": "1",
+        "sortOrder": 29,
+        "hue": 1.2,
+        "colorCodes": [
+            "#87D2F0",
+            "#00FF00"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Green",
+            "Blue",
+            "Light",
+            "Multicolor",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 10,
+        "url": "images/glitter/sparkle/glitter_seafoam.gif",
+        "name": "Seafoam",
+        "generatedName": "Blue and Green",
+        "brightness": "1",
+        "sortOrder": 30,
+        "hue": 1.2,
+        "colorCodes": [
+            "#87D2F0",
+            "#87C369"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Green",
+            "Blue",
+            "Light",
+            "Pastel",
+            "Multicolor",
+            "Cool",
+            "Muted"
+        ]
+    },
+    {
+        "id": 91,
+        "url": "images/glitter/sparkle/glitter_light-blue.gif",
+        "name": "Light Blue",
+        "generatedName": "Muted Blue",
+        "brightness": "1",
+        "sortOrder": 31,
+        "hue": 0.597,
+        "colorCodes": [
+            "#69C3F0"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Light",
+            "Pastel",
+            "Cool",
+            "Muted"
+        ]
+    },
+    {
+        "id": 11,
+        "url": "images/glitter/sparkle/glitter_aquamarine.gif",
+        "name": "Aquamarine",
+        "generatedName": "Neon Blue",
+        "brightness": "1",
+        "sortOrder": 32,
+        "hue": 0.569,
+        "colorCodes": [
+            "#00D2FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Light",
+            "Jewel",
+            "Neon",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 85,
+        "url": "images/glitter/sparkle/glitter_dusty-dark-blue.gif",
+        "name": "Dusty Dark Blue",
+        "generatedName": "Muted Blue",
+        "brightness": "1",
+        "sortOrder": 33,
+        "hue": 0.636,
+        "colorCodes": [
+            "#5A87C3"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Light",
+            "Cool",
+            "Muted"
+        ]
+    },
+    {
+        "id": 66,
+        "url": "images/glitter/sparkle/glitter_blue-topaz.gif",
+        "name": "Blue Topaz",
+        "generatedName": "Jewel Tone Blue",
+        "brightness": "1",
+        "sortOrder": 34,
+        "hue": 0.625,
+        "colorCodes": [
+            "#004B96"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Jewel",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 14,
+        "url": "images/glitter/sparkle/glitter_sapphire.gif",
+        "name": "Sapphire",
+        "generatedName": "Jewel Tone Blue",
+        "brightness": "1",
+        "sortOrder": 35,
+        "hue": 0.658,
+        "colorCodes": [
+            "#002D96"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Dark",
+            "Jewel",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 83,
+        "url": "images/glitter/sparkle/glitter_dark-vivid-purple.gif",
+        "name": "Dark Vivid Purple",
+        "generatedName": "Vivid Purple",
+        "brightness": "1",
+        "sortOrder": 36,
+        "hue": 0.775,
+        "colorCodes": [
+            "#6900FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Light",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 109,
+        "url": "images/glitter/sparkle/glitter_tanzanite.gif",
+        "name": "Tanzanite",
+        "generatedName": "Jewel Tone Purple",
+        "brightness": "1",
+        "sortOrder": 37,
+        "hue": 0.758,
+        "colorCodes": [
+            "#2D0096"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Jewel",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 81,
+        "url": "images/glitter/sparkle/glitter_dark-purple-2.gif",
+        "name": "Dark Purple 2",
+        "generatedName": "Jewel Tone Purple",
+        "brightness": "1",
+        "sortOrder": 38,
+        "hue": 0.758,
+        "colorCodes": [
+            "#2D0096"
+        ],
+        "frameCount": 3,
+        "frameRate": 0,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Jewel",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 110,
+        "url": "images/glitter/sparkle/glitter_ugly-purple.gif",
+        "name": "Ugly Purple",
+        "generatedName": "Muted Pink",
+        "brightness": "1",
+        "sortOrder": 39,
+        "hue": 0.144,
+        "colorCodes": [
+            "#A55A96"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Pink",
+            "Muted",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 90,
+        "url": "images/glitter/sparkle/glitter_lavender.gif",
+        "name": "Lavender",
+        "generatedName": "Muted Purple",
+        "brightness": "1",
+        "sortOrder": 40,
+        "hue": 0.825,
+        "colorCodes": [
+            "#E196FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": true,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Light",
+            "Pastel"
+        ]
+    },
+    {
+        "id": 94,
+        "url": "images/glitter/sparkle/glitter_light-purple.gif",
+        "name": "Light Purple",
+        "generatedName": "Muted Purple",
+        "brightness": "1",
+        "sortOrder": 41,
+        "hue": 0.803,
+        "colorCodes": [
+            "#D296FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Light",
+            "Muted"
+        ]
+    },
+    {
+        "id": 18,
+        "url": "images/glitter/sparkle/glitter_magenta-blue.gif",
+        "name": "Magenta Blue",
+        "generatedName": "Pink and Blue",
+        "brightness": "1",
+        "sortOrder": 42,
+        "hue": 1.2,
+        "colorCodes": [
+            "#FF00FF",
+            "#87D2F0",
+            "#0069A5"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Purple",
+            "Pink",
+            "Neon",
+            "Multicolor",
+            "Cool",
+            "Vivid",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 100,
+        "url": "images/glitter/sparkle/glitter_pink-dark-purple.gif",
+        "name": "Pink Dark Purple",
+        "generatedName": "Red and Purple",
+        "brightness": "1",
+        "sortOrder": 43,
+        "hue": 1.2,
+        "colorCodes": [
+            "#F09696",
+            "#6900C3",
+            "#A500FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 0,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Pink",
+            "Multicolor",
+            "Warm",
+            "Vivid",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 104,
+        "url": "images/glitter/sparkle/glitter_purple.gif",
+        "name": "Purple",
+        "generatedName": "Muted Purple",
+        "brightness": "1",
+        "sortOrder": 44,
+        "hue": 0.803,
+        "colorCodes": [
+            "#A569D2"
+        ],
+        "frameCount": 3,
+        "frameRate": 0,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Light",
+            "Muted"
+        ]
+    },
+    {
+        "id": 15,
+        "url": "images/glitter/sparkle/glitter_amethyst.gif",
+        "name": "Amethyst",
+        "generatedName": "Vivid Purple",
+        "brightness": "1",
+        "sortOrder": 45,
+        "hue": 0.819,
+        "colorCodes": [
+            "#7800B4"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Jewel",
+            "Vivid"
         ]
     },
     {
         "id": 82,
         "url": "images/glitter/sparkle/glitter_dark-purple.gif",
         "name": "Dark Purple",
+        "generatedName": "Jewel Tone Purple",
+        "brightness": "0",
+        "sortOrder": 46,
+        "hue": 1.2,
+        "colorCodes": [
+            "#3C0078",
+            "#000000",
+            "#8700FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 0,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "contrast",
-            "cool",
-            "jewel",
-            "purple",
-            "vivid"
+            "Purple",
+            "Jewel",
+            "Cool",
+            "Vivid",
+            "Contrast"
         ]
     },
     {
         "id": 84,
         "url": "images/glitter/sparkle/glitter_deep-purple.gif",
         "name": "Deep Purple",
+        "generatedName": "Jewel Tone Purple",
+        "brightness": "0",
+        "sortOrder": 47,
+        "hue": 1.2,
+        "colorCodes": [
+            "#3C0078",
+            "#000000",
+            "#8700FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
         "category": "Sparkle",
         "isPixelated": true,
         "tags": [
-            "contrast",
-            "cool",
-            "dark",
-            "jewel",
-            "purple",
-            "vivid"
+            "Purple",
+            "Dark",
+            "Jewel",
+            "Cool",
+            "Vivid",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 96,
+        "url": "images/glitter/sparkle/glitter_navy.gif",
+        "name": "Navy",
+        "generatedName": "Muted Blue",
+        "brightness": "0",
+        "sortOrder": 48,
+        "hue": 0.708,
+        "colorCodes": [
+            "#0F0F1E"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Dark",
+            "Cool",
+            "Muted"
+        ]
+    },
+    {
+        "id": 76,
+        "url": "images/glitter/sparkle/glitter_cream.gif",
+        "name": "Cream",
+        "generatedName": "Pastel Orange",
+        "brightness": "1",
+        "sortOrder": 49,
+        "hue": 1.1,
+        "colorCodes": [
+            "#F0D2B4"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Orange",
+            "Cream",
+            "Light",
+            "Pastel",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 74,
+        "url": "images/glitter/sparkle/glitter_camo-pattern.gif",
+        "name": "Camo Pattern",
+        "generatedName": "Gray",
+        "brightness": "0",
+        "sortOrder": 50,
+        "hue": 1.1,
+        "colorCodes": [
+            "#696969"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Brown",
+            "Beige",
+            "Pattern",
+            "Multicolor",
+            "Neutral",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 73,
+        "url": "images/glitter/sparkle/glitter_burn-sienna.gif",
+        "name": "Burn Sienna",
+        "generatedName": "Muted Orange",
+        "brightness": "1",
+        "sortOrder": 51,
+        "hue": 0.083,
+        "colorCodes": [
+            "#B48778"
+        ],
+        "frameCount": 2,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Brown",
+            "Beige",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 108,
+        "url": "images/glitter/sparkle/glitter_tan.gif",
+        "name": "Tan",
+        "generatedName": "Muted Orange",
+        "brightness": "1",
+        "sortOrder": 52,
+        "hue": 0.097,
+        "colorCodes": [
+            "#967869"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Orange",
+            "Tan",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 71,
+        "url": "images/glitter/sparkle/glitter_brown.gif",
+        "name": "Brown",
+        "generatedName": "Muted Orange",
+        "brightness": "0",
+        "sortOrder": 53,
+        "hue": 0.122,
+        "colorCodes": [
+            "#4B3C2D"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Brown",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 72,
+        "url": "images/glitter/sparkle/glitter_brown_3.gif",
+        "name": "Brown_3",
+        "generatedName": "Muted Orange",
+        "brightness": "0",
+        "sortOrder": 54,
+        "hue": 0.125,
+        "colorCodes": [
+            "#3C2D1E"
+        ],
+        "frameCount": 2,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Brown",
+            "Gold",
+            "Warm",
+            "Muted",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 70,
+        "url": "images/glitter/sparkle/glitter_brown-4.gif",
+        "name": "Brown 4",
+        "generatedName": "Muted Orange",
+        "brightness": "0",
+        "sortOrder": 55,
+        "hue": 0.125,
+        "colorCodes": [
+            "#3C2D1E"
+        ],
+        "frameCount": 2,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Brown",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 69,
+        "url": "images/glitter/sparkle/glitter_brown-2.gif",
+        "name": "Brown 2",
+        "generatedName": "Muted Orange",
+        "brightness": "0",
+        "sortOrder": 56,
+        "hue": 0.125,
+        "colorCodes": [
+            "#3C2D1E"
+        ],
+        "frameCount": 2,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Brown",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 77,
+        "url": "images/glitter/sparkle/glitter_dark-brown.gif",
+        "name": "Dark Brown",
+        "generatedName": "Muted Yellow",
+        "brightness": "0",
+        "sortOrder": 57,
+        "hue": 0.208,
+        "colorCodes": [
+            "#1E1E0F"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Brown",
+            "Dark",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 20,
+        "url": "images/glitter/sparkle/glitter_white.gif",
+        "name": "White",
+        "generatedName": "Light Gray",
+        "brightness": "1",
+        "sortOrder": 58,
+        "hue": 1.1,
+        "colorCodes": [
+            "#D2D2D2"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "White",
+            "Silver",
+            "Light",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 22,
+        "url": "images/glitter/sparkle/glitter_silver-2.gif",
+        "name": "Silver 2",
+        "generatedName": "Light Gray",
+        "brightness": "1",
+        "sortOrder": 59,
+        "hue": 1.1,
+        "colorCodes": [
+            "#D2D2D2"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "White",
+            "Silver",
+            "Light",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 21,
+        "url": "images/glitter/sparkle/glitter_silver.gif",
+        "name": "Silver",
+        "generatedName": "Gray",
+        "brightness": "0",
+        "sortOrder": 60,
+        "hue": 1.1,
+        "colorCodes": [
+            "#787878"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "White",
+            "Silver",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 79,
+        "url": "images/glitter/sparkle/glitter_dark-gray.gif",
+        "name": "Dark Gray",
+        "generatedName": "Black",
+        "brightness": "0",
+        "sortOrder": 61,
+        "hue": 1.1,
+        "colorCodes": [
+            "#2D2D2D"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Dark",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 64,
+        "url": "images/glitter/sparkle/glitter_black-2.gif",
+        "name": "Black 2",
+        "generatedName": "Black",
+        "brightness": "0",
+        "sortOrder": 62,
+        "hue": 1.1,
+        "colorCodes": [
+            "#0F0F0F"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Black",
+            "Dark",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 65,
+        "url": "images/glitter/sparkle/glitter_black.gif",
+        "name": "Black",
+        "generatedName": "Black",
+        "brightness": "0",
+        "sortOrder": 63,
+        "hue": 1.1,
+        "colorCodes": [
+            "#000000"
+        ],
+        "frameCount": 3,
+        "frameRate": 0,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Black",
+            "Dark",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 97,
+        "url": "images/glitter/sparkle/glitter_opalite.gif",
+        "name": "Opalite",
+        "generatedName": "Light Gray",
+        "brightness": "1",
+        "sortOrder": 64,
+        "hue": 1.1,
+        "colorCodes": [
+            "#CCCCCC",
+            "#CCFFFF",
+            "#FFCCFF"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Pink",
+            "Light",
+            "Jewel",
+            "Pastel",
+            "Multicolor"
+        ]
+    },
+    {
+        "id": 106,
+        "url": "images/glitter/sparkle/glitter_rainbow.gif",
+        "name": "Rainbow",
+        "generatedName": "Neon Blue",
+        "brightness": "1",
+        "sortOrder": 65,
+        "hue": 0.569,
+        "colorCodes": [
+            "#00D2FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Yellow",
+            "Green",
+            "Blue",
+            "Purple",
+            "Multicolor",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 105,
+        "url": "images/glitter/sparkle/glitter_rainbow-2.gif",
+        "name": "Rainbow 2",
+        "generatedName": "Vivid Orange",
+        "brightness": "1",
+        "sortOrder": 66,
+        "hue": 0.108,
+        "colorCodes": [
+            "#FF6900"
+        ],
+        "frameCount": 3,
+        "frameRate": 0,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Orange",
+            "Yellow",
+            "Green",
+            "Purple",
+            "Multicolor",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 19,
+        "url": "images/glitter/sparkle/glitter_christmas.gif",
+        "name": "Christmas",
+        "generatedName": "Green and Red",
+        "brightness": "1",
+        "sortOrder": 67,
+        "hue": 1.2,
+        "colorCodes": [
+            "#00D200",
+            "#F00000"
+        ],
+        "frameCount": 3,
+        "frameRate": 11,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Green",
+            "Light",
+            "Multicolor",
+            "Vivid",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 75,
+        "url": "images/glitter/sparkle/glitter_christmas-2.gif",
+        "name": "Christmas 2",
+        "generatedName": "Green and Red",
+        "brightness": "1",
+        "sortOrder": 68,
+        "hue": 1.2,
+        "colorCodes": [
+            "#00D200",
+            "#F00000",
+            "#D2002D"
+        ],
+        "frameCount": 3,
+        "frameRate": 0,
+        "isVariableFramerate": false,
+        "category": "Sparkle",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Yellow",
+            "Green",
+            "Multicolor",
+            "Vivid",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 47,
+        "url": "images/glitter/ember/ember_burnt-orange.gif",
+        "name": "Burnt Orange",
+        "generatedName": "Very Dark Vivid Red",
+        "brightness": "0",
+        "sortOrder": 69,
+        "hue": 0.042,
+        "colorCodes": [
+            "#330000",
+            "#782A06",
+            "#D57C11"
+        ],
+        "frameCount": 4,
+        "frameRate": 20,
+        "isVariableFramerate": false,
+        "category": "Ember",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Orange",
+            "Dark",
+            "Warm"
+        ]
+    },
+    {
+        "id": 24,
+        "url": "images/glitter/ember/ember_red.gif",
+        "name": "Red",
+        "generatedName": "Very Dark Vivid Purple-Magenta",
+        "brightness": "0",
+        "sortOrder": 70,
+        "hue": 0.875,
+        "colorCodes": [
+            "#330033",
+            "#780654",
+            "#D51169"
+        ],
+        "frameCount": 4,
+        "frameRate": 20,
+        "isVariableFramerate": false,
+        "category": "Ember",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Pink",
+            "Dark"
+        ]
+    },
+    {
+        "id": 25,
+        "url": "images/glitter/ember/ember_turquoise.gif",
+        "name": "Turquoise",
+        "generatedName": "Very Dark Vivid Green",
+        "brightness": "0",
+        "sortOrder": 71,
+        "hue": 0.457,
+        "colorCodes": [
+            "#003319",
+            "#067863",
+            "#11CCD5"
+        ],
+        "frameCount": 4,
+        "frameRate": 20,
+        "isVariableFramerate": false,
+        "category": "Ember",
+        "isPixelated": true,
+        "tags": [
+            "Green",
+            "Blue",
+            "Dark",
+            "Cool"
+        ]
+    },
+    {
+        "id": 26,
+        "url": "images/glitter/ember/ember_purple.gif",
+        "name": "Purple",
+        "generatedName": "Very Dark Vivid Indigo",
+        "brightness": "0",
+        "sortOrder": 72,
+        "hue": 0.734,
+        "colorCodes": [
+            "#080033",
+            "#3C0678",
+            "#9C11D5"
+        ],
+        "frameCount": 4,
+        "frameRate": 20,
+        "isVariableFramerate": false,
+        "category": "Ember",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Dark",
+            "Cool"
+        ]
+    },
+    {
+        "id": 27,
+        "url": "images/glitter/noise/noise_red.gif",
+        "name": "Red",
+        "generatedName": "Vivid Red",
+        "brightness": "1",
+        "sortOrder": 73,
+        "hue": 0.042,
+        "colorCodes": [
+            "#D20000"
+        ],
+        "frameCount": 4,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Noise",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Light",
+            "Warm",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 28,
+        "url": "images/glitter/noise/noise_orange.gif",
+        "name": "Orange",
+        "generatedName": "Jewel Tone Bronze",
+        "brightness": "1",
+        "sortOrder": 74,
+        "hue": 0.158,
+        "colorCodes": [
+            "#966900"
+        ],
+        "frameCount": 4,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Noise",
+        "isPixelated": true,
+        "tags": [
+            "Orange",
+            "Bronze",
+            "Jewel",
+            "Warm",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 31,
+        "url": "images/glitter/noise/noise_magenta.gif",
+        "name": "Magenta",
+        "generatedName": "Jewel Tone Pink",
+        "brightness": "1",
+        "sortOrder": 75,
+        "hue": 0.161,
+        "colorCodes": [
+            "#960069"
+        ],
+        "frameCount": 4,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Noise",
+        "isPixelated": true,
+        "tags": [
+            "Purple",
+            "Pink",
+            "Jewel",
+            "Neon",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 29,
+        "url": "images/glitter/noise/noise_yellow.gif",
+        "name": "Yellow",
+        "generatedName": "Jewel Tone Yellow",
+        "brightness": "1",
+        "sortOrder": 76,
+        "hue": 0.208,
+        "colorCodes": [
+            "#969600"
+        ],
+        "frameCount": 4,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Noise",
+        "isPixelated": true,
+        "tags": [
+            "Yellow",
+            "Jewel",
+            "Warm",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 30,
+        "url": "images/glitter/noise/noise_lime.gif",
+        "name": "Lime",
+        "generatedName": "Jewel Tone Green",
+        "brightness": "1",
+        "sortOrder": 77,
+        "hue": 0.258,
+        "colorCodes": [
+            "#699600"
+        ],
+        "frameCount": 4,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Noise",
+        "isPixelated": true,
+        "tags": [
+            "Yellow",
+            "Green",
+            "Jewel",
+            "Neon",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 99,
+        "url": "images/glitter/sparkle/glitter_pastel-blue.gif",
+        "name": "Pastel Blue",
+        "generatedName": "Pastel Silver",
+        "brightness": "1",
+        "sortOrder": 78,
+        "hue": 1.1,
+        "colorCodes": [
+            "#B4D2E1"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": true,
+        "category": "Noise",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Silver",
+            "Light",
+            "Pastel",
+            "Cool"
+        ]
+    },
+    {
+        "id": 32,
+        "url": "images/glitter/noise/noise_white.gif",
+        "name": "White",
+        "generatedName": "Light Gray",
+        "brightness": "1",
+        "sortOrder": 79,
+        "hue": 1.1,
+        "colorCodes": [
+            "#D2D2D2"
+        ],
+        "frameCount": 4,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Noise",
+        "isPixelated": true,
+        "tags": [
+            "White",
+            "Silver",
+            "Light",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 33,
+        "url": "images/glitter/noise/noise_gray.gif",
+        "name": "Gray",
+        "generatedName": "Gray",
+        "brightness": "0",
+        "sortOrder": 80,
+        "hue": 1.1,
+        "colorCodes": [
+            "#696969"
+        ],
+        "frameCount": 4,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Noise",
+        "isPixelated": true,
+        "tags": [
+            "Gray",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 34,
+        "url": "images/glitter/noise/noise_black.gif",
+        "name": "Black",
+        "generatedName": "Black",
+        "brightness": "0",
+        "sortOrder": 81,
+        "hue": 1.1,
+        "colorCodes": [
+            "#000000"
+        ],
+        "frameCount": 4,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Noise",
+        "isPixelated": true,
+        "tags": [
+            "Black",
+            "Dark",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 115,
+        "url": "images/glitter/sparkle_2/sparkle_pink-hearts.gif",
+        "name": "Pink Hearts",
+        "generatedName": "Vivid Pink",
+        "brightness": "1",
+        "sortOrder": 82,
+        "hue": 0.111,
+        "colorCodes": [
+            "#F02DF0"
+        ],
+        "frameCount": 3,
+        "frameRate": 8,
+        "isVariableFramerate": false,
+        "category": "Sparkle 2",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Pink",
+            "Pattern"
+        ]
+    },
+    {
+        "id": 113,
+        "url": "images/glitter/sparkle_2/sparkle_green.gif",
+        "name": "Green",
+        "generatedName": "Vivid Green",
+        "brightness": null,
+        "sortOrder": 83,
+        "hue": 0.375,
+        "colorCodes": [
+            "#006900"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Sparkle 2",
+        "isPixelated": true,
+        "tags": [
+            "Green",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 112,
+        "url": "images/glitter/sparkle_2/sparkle_blue.gif",
+        "name": "Blue",
+        "generatedName": "Vivid Blue",
+        "brightness": "1",
+        "sortOrder": 84,
+        "hue": 0.669,
+        "colorCodes": [
+            "#3C69FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Sparkle 2",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Cool"
+        ]
+    },
+    {
+        "id": 114,
+        "url": "images/glitter/sparkle_2/sparkle_periwinkle.gif",
+        "name": "Periwinkle",
+        "generatedName": "Muted Blue",
+        "brightness": "1",
+        "sortOrder": 85,
+        "hue": 0.686,
+        "colorCodes": [
+            "#8796FF"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Sparkle 2",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Light",
+            "Pastel",
+            "Cool",
+            "Muted"
+        ]
+    },
+    {
+        "id": 46,
+        "url": "images/glitter/etc/glitter_black.gif",
+        "name": "Black",
+        "generatedName": "Black",
+        "brightness": "0",
+        "sortOrder": 86,
+        "hue": 1.1,
+        "colorCodes": [
+            "#1E1E1E"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Sparkle 2",
+        "isPixelated": true,
+        "tags": [
+            "Black",
+            "Dark",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 55,
+        "url": "images/glitter/etc/etc_dusty-pink.gif",
+        "name": "Dusty Pink",
+        "generatedName": "Muted Pink",
+        "brightness": "1",
+        "sortOrder": 87,
+        "hue": 0.111,
+        "colorCodes": [
+            "#FF96FF"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Pink",
+            "Light",
+            "Muted"
+        ]
+    },
+    {
+        "id": 58,
+        "url": "images/glitter/etc/etc_hot-pink.gif",
+        "name": "Hot Pink",
+        "generatedName": "Muted Pink",
+        "brightness": "1",
+        "sortOrder": 88,
+        "hue": 0.183,
+        "colorCodes": [
+            "#FE3EAB"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": true,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Pink"
+        ]
+    },
+    {
+        "id": 54,
+        "url": "images/glitter/etc/etc_dark-green.gif",
+        "name": "Dark Green",
+        "generatedName": "Muted Green",
+        "brightness": "0",
+        "sortOrder": 89,
+        "hue": 0.375,
+        "colorCodes": [
+            "#2D4B2D"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Green",
+            "Muted",
+            "Contrast"
+        ]
+    },
+    {
+        "id": 56,
+        "url": "images/glitter/etc/etc_gold.gif",
+        "name": "Gold",
+        "generatedName": "Vivid Orange",
+        "brightness": "1",
+        "sortOrder": 90,
+        "hue": 0.164,
+        "colorCodes": [
+            "#FFD24B"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Orange",
+            "Light",
+            "Warm",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 61,
+        "url": "images/glitter/etc/etc_seafoam.gif",
+        "name": "Seafoam",
+        "generatedName": "Pastel Silver",
+        "brightness": "1",
+        "sortOrder": 91,
+        "hue": 1.1,
+        "colorCodes": [
+            "#C3E1B4"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Green",
+            "Light",
+            "Pastel"
+        ]
+    },
+    {
+        "id": 57,
+        "url": "images/glitter/etc/etc_green.gif",
+        "name": "Green",
+        "generatedName": "Muted Blue",
+        "brightness": "0",
+        "sortOrder": 92,
+        "hue": 0.486,
+        "colorCodes": [
+            "#1E4B3C"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Green",
+            "Cool",
+            "Muted"
+        ]
+    },
+    {
+        "id": 50,
+        "url": "images/glitter/etc/etc_blue-green.gif",
+        "name": "Blue Green",
+        "generatedName": "Jewel Tone Blue",
+        "brightness": "1",
+        "sortOrder": 93,
+        "hue": 0.578,
+        "colorCodes": [
+            "#006987"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Jewel",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 59,
+        "url": "images/glitter/etc/etc_lavender.gif",
+        "name": "Lavender",
+        "generatedName": "Pastel Silver",
+        "brightness": "1",
+        "sortOrder": 94,
+        "hue": 1.1,
+        "colorCodes": [
+            "#B4B4E1"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Light",
+            "Pastel",
+            "Cool"
+        ]
+    },
+    {
+        "id": 62,
+        "url": "images/glitter/etc/etc_snow.gif",
+        "name": "Snow",
+        "generatedName": "Light Gray",
+        "brightness": "1",
+        "sortOrder": 95,
+        "hue": 1.1,
+        "colorCodes": [
+            "#C3C3C3"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Silver",
+            "Light",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 53,
+        "url": "images/glitter/etc/etc_champagne.gif",
+        "name": "Champagne",
+        "generatedName": "Pastel Silver",
+        "brightness": "1",
+        "sortOrder": 96,
+        "hue": 1.1,
+        "colorCodes": [
+            "#E1D2B4"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Beige",
+            "Light",
+            "Pastel",
+            "Warm"
+        ]
+    },
+    {
+        "id": 52,
+        "url": "images/glitter/etc/etc_bronze.gif",
+        "name": "Bronze",
+        "generatedName": "Muted Orange",
+        "brightness": "1",
+        "sortOrder": 97,
+        "hue": 0.125,
+        "colorCodes": [
+            "#B49678"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Bronze",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 51,
+        "url": "images/glitter/etc/etc_bronze-2.gif",
+        "name": "Bronze 2",
+        "generatedName": "Muted Orange",
+        "brightness": "1",
+        "sortOrder": 98,
+        "hue": 0.125,
+        "colorCodes": [
+            "#B49678"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Beige",
+            "Bronze",
+            "Warm",
+            "Muted"
+        ]
+    },
+    {
+        "id": 49,
+        "url": "images/glitter/etc/etc_black-3.gif",
+        "name": "Black 3",
+        "generatedName": "Black",
+        "brightness": "0",
+        "sortOrder": 99,
+        "hue": 1.1,
+        "colorCodes": [
+            "#2D2D2D"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Black",
+            "Dark",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 48,
+        "url": "images/glitter/etc/etc_black-2.gif",
+        "name": "Black 2",
+        "generatedName": "Black",
+        "brightness": "0",
+        "sortOrder": 100,
+        "hue": 1.1,
+        "colorCodes": [
+            "#1E1E1E"
+        ],
+        "frameCount": 5,
+        "frameRate": 2,
+        "isVariableFramerate": false,
+        "category": "Etc",
+        "isPixelated": true,
+        "tags": [
+            "Black",
+            "Dark",
+            "Neutral",
+            "Grayscale"
+        ]
+    },
+    {
+        "id": 118,
+        "url": "images/glitter/transparent/transparent_pink-sparkle.gif",
+        "name": "Pink Sparkle",
+        "generatedName": "Vivid Pink",
+        "brightness": "1",
+        "sortOrder": 101,
+        "hue": 0.111,
+        "colorCodes": [
+            "#FF4BFF"
+        ],
+        "frameCount": 4,
+        "frameRate": 5,
+        "isVariableFramerate": false,
+        "category": "transparent",
+        "isPixelated": true,
+        "tags": [
+            "Pink"
+        ]
+    },
+    {
+        "id": 116,
+        "url": "images/glitter/transparent/transparent_bubbles.gif",
+        "name": "Bubbles",
+        "generatedName": "Neon Blue",
+        "brightness": "1",
+        "sortOrder": 102,
+        "hue": 0.569,
+        "colorCodes": [
+            "#00D2FF"
+        ],
+        "frameCount": 16,
+        "frameRate": 15,
+        "isVariableFramerate": false,
+        "category": "transparent",
+        "isPixelated": true,
+        "tags": [
+            "Blue",
+            "Light",
+            "Pattern",
+            "Cool",
+            "Vivid"
+        ]
+    },
+    {
+        "id": 117,
+        "url": "images/glitter/transparent/transparent_pastel-sparkle.gif",
+        "name": "Pastel Sparkle",
+        "generatedName": "Multicolor",
+        "brightness": "1",
+        "sortOrder": 103,
+        "hue": 0.928,
+        "colorCodes": [
+            "#F3B1DE",
+            "#05D3FF",
+            "#FEFEB6",
+            "#5BF9C1"
+        ],
+        "frameCount": 1,
+        "frameRate": 8,
+        "isVariableFramerate": false,
+        "category": "transparent",
+        "isPixelated": true,
+        "tags": [
+            "Yellow",
+            "Green",
+            "Blue",
+            "Pink",
+            "Pastel",
+            "Pattern",
+            "Multicolor"
+        ]
+    },
+    {
+        "id": 119,
+        "url": "images/glitter/transparent/transparent_rainbow-sparkle.gif",
+        "name": "Rainbow Sparkle",
+        "generatedName": "Multicolor",
+        "brightness": "1",
+        "sortOrder": 104,
+        "hue": 1.1,
+        "colorCodes": [
+            "#FFFFFF",
+            "#FF0000",
+            "#FF7373",
+            "#EDCCF7"
+        ],
+        "frameCount": 0,
+        "frameRate": 15,
+        "isVariableFramerate": false,
+        "category": "transparent",
+        "isPixelated": true,
+        "tags": [
+            "Red",
+            "Orange",
+            "Yellow",
+            "Green",
+            "Purple",
+            "Pink",
+            "Pattern",
+            "Multicolor"
         ]
     }
 ]
