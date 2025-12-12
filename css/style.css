@@ -46,7 +46,6 @@
   --layer-panel-width: 400px;
   --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
   --glitter-swatch-columns: 4;
-  --glitter-grid-mobile-columns: 5;
   --color-filter-chip-size: 32px;
   --mobile-menu-height: 60px;
   /* z indexes */
@@ -1797,6 +1796,9 @@ input[type=range]::-moz-range-thumb {
 
 /* ===== MOBILE LAYOUT ===== */
 @media (max-width: 800px) {
+  :root {
+    --glitter-swatch-columns: 5;
+  }
   .mobile-top-nav {
     display: flex;
   }
@@ -1846,9 +1848,6 @@ input[type=range]::-moz-range-thumb {
   }
   .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.goto-glitter {
     display: initial;
-  }
-  .glitter-column > .glitter-options > .glitter-category > .glitter-grid {
-    --glitter-swatch-columns: var(--glitter-grid-mobile-columns);
   }
   /* ===== IMAGE TAB ===== */
   body.mobile-image-tab .main-content > .left-panel {
@@ -1949,6 +1948,18 @@ input[type=range]::-moz-range-thumb {
   text-transform: uppercase;
 }
 
+@media (max-width: 1400px) {
+  :root {
+    --layer-panel-width: 300px;
+    --glitter-swatch-columns: 3;
+  }
+}
+@media (max-width: 1200px) {
+  :root {
+    --glitter-panel-width: 200px;
+    --glitter-swatch-columns: 2;
+  }
+}
 .layer-pick-flash {
   position: absolute;
   width: 40px;
