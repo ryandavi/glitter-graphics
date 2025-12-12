@@ -43,7 +43,7 @@
   /* Sizes */
   --header-height: 60px;
   --toolbar-width: 60px;
-  --layer-panel-width: 400px;
+  --layer-panel-width: 450px;
   --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
   --glitter-swatch-columns: 4;
   --color-filter-chip-size: 32px;
@@ -681,10 +681,9 @@ input[type=range]::-moz-range-thumb {
   flex-shrink: 0;
 }
 .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   background: none;
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -1830,7 +1829,7 @@ input[type=range]::-moz-range-thumb {
     border: 1px solid var(--color-border);
     display: none;
   }
-  .toolbar .toolbar-group #shortcutsBtn {
+  .toolbar #shortcutsBtn {
     display: none;
   }
   /* Main content adjustments */

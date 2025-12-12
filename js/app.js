@@ -545,6 +545,32 @@ class GlitterEditor {
 		this.updateStatusBar();
 	}
 
+resetZoomSmart() {
+    if (!this.previewCanvas.width) return;
+
+    const containerRect = this.previewContainer.getBoundingClientRect();
+    
+    // Safety check: If container is hidden (e.g., mobile upload tab), 
+    // width will be 0. We can't calculate fit yet.
+    if (containerRect.width === 0 || containerRect.height === 0) return;
+
+    const padding = 40; // Match the padding used in zoomToFit
+
+    // Calculate what the zoom WOULD be if we fitted it
+    const scaleX = (containerRect.width - padding) / this.previewCanvas.width;
+    const scaleY = (containerRect.height - padding) / this.previewCanvas.height;
+    const fitZoom = Math.min(scaleX, scaleY);
+
+    // If the image needs to shrink to fit (< 1), do it.
+    // Otherwise, default to 100% (1).
+    if (fitZoom < 1) {
+        this.zoomToFit();
+    } else {
+        this.resetViewport();
+    }
+}
+
+
 	resetViewport() {
 		if (!this.previewCanvas.width) return;
 
@@ -2605,8 +2631,8 @@ this.previewContainer.addEventListener('mousedown', (e) => {
 			}
 
 			// Reset viewport (zoom and pan)
-			this.resetViewport();
-			this.updateZoomUI();
+    this.resetZoomSmart(); 
+    this.updateZoomUI();
 
 			const dropzone = document.getElementById('imageDropzone');
 			dropzone.classList.add('has-image');
@@ -4318,39 +4344,58 @@ class MobileManager {
 	}
 
 	setupImageEvents() {
-		window.addEventListener('imageLoaded', () => {
-			if (this.isMobile) {
-				// Enable preview tab
-				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-				if (previewBtn) {
-					previewBtn.disabled = false;
-				}
+    window.addEventListener('imageLoaded', () => {
+        if (this.isMobile) {
+            // 1. HIDE THE CANVAS INSTANTLY
+            // We set opacity to 0 so the user doesn't see the "jump" 
+            // from 100% to "Fit"
+            this.editor.previewWrapper.style.opacity = '0';
+            this.editor.previewWrapper.style.transition = 'none'; // Disable transition for the reset
 
-				// Switch to preview and recalculate viewport
-				this.switchTab('preview');
+            // Enable preview tab
+            const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+            if (previewBtn) {
+                previewBtn.disabled = false;
+            }
 
-				// Wait for tab switch to complete, then fix viewport
-				requestAnimationFrame(() => {
-					requestAnimationFrame(() => {
-						this.editor.resetViewport();
-						this.editor.updateZoomUI();
-					});
-				});
-			}
-		});
+            // Switch to preview (Container becomes display:block, but opacity is 0)
+            this.switchTab('preview');
 
-		window.addEventListener('imageRemoved', () => {
-			if (this.isMobile) {
-				// Disable preview tab
-				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-				if (previewBtn) {
-					previewBtn.disabled = true;
-				}
+            // Wait for tab switch layout to apply
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // Update dimensions
+                    this.editor.performResizeUpdate();
+                    
+                    // Apply the sizing math
+                    this.editor.resetZoomSmart();
+                    this.editor.updateZoomUI();
 
-				this.switchTab('image');
-				this.closeAllDrawers();
-			}
-		});
+                    // 2. SHOW THE CANVAS
+                    // Now that the size is correct, fade it back in
+                    // Optional: Add a slight transition for a smooth feel
+                    this.editor.previewWrapper.style.transition = 'opacity 0.2s ease';
+                    this.editor.previewWrapper.style.opacity = '1';
+                    
+                    // Clean up transition property after animation allows panning to feel responsive again
+                    setTimeout(() => {
+                        this.editor.previewWrapper.style.transition = '';
+                    }, 250);
+                });
+            });
+        }
+    });
+
+    window.addEventListener('imageRemoved', () => {
+        if (this.isMobile) {
+            const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+            if (previewBtn) previewBtn.disabled = true;
+            this.switchTab('image');
+            this.closeAllDrawers();
+            // Reset opacity just in case
+            this.editor.previewWrapper.style.opacity = '1';
+        }
+    });
 
 		window.addEventListener('layerChanged', () => {
 			if (this.isMobile) {
@@ -4361,31 +4406,58 @@ class MobileManager {
 
 	}
 
-	setupResizeObserver() {
-		let resizeTimer;
+setupResizeObserver() {
+    let resizeTimer;
 
-		this.resizeObserver = new ResizeObserver(entries => {
-			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(() => {
-				const newWidth = window.innerWidth;
-				const nowMobile = newWidth <= 800;
+    this.resizeObserver = new ResizeObserver(entries => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            const newWidth = window.innerWidth;
+            const nowMobile = newWidth <= 800;
 
-				console.log('Mobile: Resize detected, width:', newWidth, 'Mobile:', nowMobile);
+            if (!this.isMobile && nowMobile) {
+                // Switching TO Mobile
+                console.log('Mobile: Switching to mobile mode');
+                this.isMobile = true;
+                this.init(); // This defaults to 'image' tab usually
 
-				if (!this.isMobile && nowMobile) {
-					console.log('Mobile: Switching to mobile mode');
-					this.isMobile = true;
-					this.init();
-				} else if (this.isMobile && !nowMobile) {
-					console.log('Mobile: Switching to desktop mode');
-					this.isMobile = false;
-					this.cleanup();
-				}
-			}, 250);
-		});
+                // FIX: Check if we have an image
+                if (this.editor.originalImage) {
+                    // 1. Force switch to preview tab so the container becomes visible (has width/height)
+                    this.switchTab('preview');
+                    
+                    // 2. Wait for the DOM to render the tab switch
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            // 3. Now reset dimensions - container is visible, so math will work
+                            this.editor.performResizeUpdate(); // Updates internal dimension tracking
+                            this.editor.resetViewport();       // Calculates center based on new dimensions
+                            this.editor.updateZoomUI();
+                            this.editor.updateTransparencyGrid();
+                        });
+                    });
+                }
 
-		this.resizeObserver.observe(document.body);
-	}
+            } else if (this.isMobile && !nowMobile) {
+                // Switching TO Desktop
+                console.log('Mobile: Switching to desktop mode');
+                this.isMobile = false;
+                this.cleanup();
+                
+                // Reset desktop view nicely
+                setTimeout(() => {
+                    if (this.editor.originalImage) {
+                        this.editor.performResizeUpdate();
+                        this.editor.resetViewport();
+                        this.editor.updateZoomUI();
+                    }
+                }, 50);
+            }
+        }, 250);
+    });
+
+    this.resizeObserver.observe(document.body);
+}
 
 	switchTab(tab) {
 		console.log('Mobile: Switching to tab:', tab);
