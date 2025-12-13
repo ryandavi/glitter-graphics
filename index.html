@@ -4,7 +4,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<title>Glitter Image Editor - Layers</title>
 	<link rel="stylesheet" href="css/style.css">
 </head>
@@ -78,7 +78,7 @@
 				<div class="toolbar-spacer"></div>
 
 				<!-- Keyboard -->
-				 <div class="toolbar-group" id="toolbarSettingsGroup">
+				<div class="toolbar-group" id="toolbarSettingsGroup">
 					<button class="btn-icon icon-wrapper" id="shortcutsBtn" title="Keyboard Shortcuts">
 						<svg class="icon">
 							<use href="#icon-keyboard"></use>
@@ -179,7 +179,7 @@
 									</svg>
 									<span class="name">Layers</span>
 								</span>
-								
+
 								<span class="section-header-title-text">Layers</span>
 								<span class="section-header-title-count" data-count="0"></span>
 							</h3>
@@ -394,7 +394,7 @@
 					<!-- Glitter Settings -->
 					<div class="collapsible-section section">
 						<div class="section-header section-header-with-action" id="glitterSettingsHeader">
-	
+
 							<h3 class="section-header-title">
 								<!-- Layers Icon-->
 								<span class="section-header-title-icon icon-wrapper sm">
@@ -515,7 +515,7 @@
 								</svg>
 								<span class="name">Zoom Out</span>
 							</button>
-						
+
 
 							<button class="zoom-fit-btn btn" id="fitScreen" title="Fit Screen (Ctrl+0)">Fit</button>
 							<button class="zoom-fit-btn btn" id="fillScreen" title="Fill Screen">Fill</button>
@@ -546,60 +546,60 @@
 		<button class="error-close" id="errorClose">×</button>
 	</div>
 
-<!-- Export Preview Modal (iOS) -->
-<div class="modal-overlay" id="exportPreviewModal">
-	<div class="modal-content export-preview-modal">
-		<div class="modal-header">
-			<div class="modal-title">
-				<span class="modal-icon icon-wrapper">
+	<!-- Export Preview Modal (iOS) -->
+	<div class="modal-overlay" id="exportPreviewModal">
+		<div class="modal-content export-preview-modal">
+			<div class="modal-header">
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon">
+							<use href="#icon-export"></use>
+						</svg>
+						<span class="name">Export</span>
+					</span>
+					<span class="modal-title-text">Save to Photos</span>
+				</div>
+				<button class="btn-icon icon-wrapper modal-close" id="closeExportPreviewModal">
+					<svg class="icon">
+						<use href="#icon-x-mark"></use>
+					</svg>
+					<span class="name">Close</span>
+				</button>
+			</div>
+			<div class="modal-body export-preview-body">
+				<div class="export-preview-image-container">
+					<img id="exportPreviewImage" alt="Exported GIF">
+				</div>
+				<div class="export-preview-instructions">
+					<p><strong>To save with animation:</strong> Use the Share button below and select "Save to Files" or another app.</p>
+					<p class="text-muted">Note: Long-press save from this preview may save as a still image.</p>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewShare">
+					<svg class="icon">
+						<use href="#icon-share"></use>
+					</svg>
+					<span class="name">Share</span>
+				</button>
+
+				<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewSave">
 					<svg class="icon">
 						<use href="#icon-export"></use>
 					</svg>
-					<span class="name">Export</span>
-				</span>
-				<span class="modal-title-text">Save to Photos</span>
-			</div>
-			<button class="btn-icon icon-wrapper modal-close" id="closeExportPreviewModal">
-				<svg class="icon">
-					<use href="#icon-x-mark"></use>
-				</svg>
-				<span class="name">Close</span>
-			</button>
-		</div>
-		<div class="modal-body export-preview-body">
-			<div class="export-preview-image-container">
-				<img id="exportPreviewImage" alt="Exported GIF">
-			</div>
-			<div class="export-preview-instructions">
-				<p><strong>To save with animation:</strong> Use the Share button below and select "Save to Files" or another app.</p>
-				<p class="text-muted">Note: Long-press save from this preview may save as a still image.</p>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewShare">
-				<svg class="icon">
-					<use href="#icon-share"></use>
-				</svg>
-				<span class="name">Share</span>
-			</button>
+					<span class="name">Save</span>
+				</button>
 
-			<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewSave">
-				<svg class="icon">
-					<use href="#icon-export"></use>
-				</svg>
-				<span class="name">Save</span>
-			</button>
+				<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewOpen">
+					<svg class="icon">
+						<use href="#icon-new-window"></use>
+					</svg>
+					<span class="name">Open GIF</span>
+				</button>
 
-			<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewOpen">
-				<svg class="icon">
-					<use href="#icon-new-window"></use>
-				</svg>
-				<span class="name">Open GIF</span>
-			</button>
-
+			</div>
 		</div>
 	</div>
-</div>
 
 	<!-- Settings Modal -->
 	<div class="modal-overlay" id="settingsModal">
@@ -855,52 +855,51 @@
 						data-tooltip="A GIF keyboard and search platform">Tenor</strong><sup>[11]</sup> and <strong
 						class="context" data-tooltip="A GIF search engine and platform">GIPHY</strong><sup>[12]</sup>.
 				</p>
+
+				<p>The <strong class="context" data-tooltip="Graphics Interchange Format">GIF</strong><sup>[13]</sup> format, introduced in 1987 by <strong class="context"
+						data-tooltip="American Internet company that provided the first major commercial online service">CompuServe</strong><sup>[14]</sup>, became the foundation for animated glitter graphics due to its support for multiple frames and widespread browser compatibility. The engineering lead on the team that created the format, <strong class="context"
+						data-tooltip="American computer scientist who led the team that created the GIF format">Steve
+						Wilhite</strong><sup>[15]</sup>, insists it's pronounced the same as <span class="context"
+						data-tooltip="the American peanut butter brand">Jif</span><sup>[16]</sup>, sparking one of the
+					internet's most heated debates. Dictionaries list both hard and soft 'G' pronunciations as acceptable<sup>[17]</sup>. I pronounce GIF with a hard 'G' and solidified my pronunciation by age 6, so he should have spoke up sooner. May he rest in peace though.</p>
+
 				<p>Early glitter graphics were created using digital art programs such as <strong class="context"
 						data-tooltip="Adobe's image editing program that allowed frame animation and GIF creation">Adobe
-						ImageReady</strong><sup>[13]</sup> and <strong class="context"
+						ImageReady</strong><sup>[18]</sup> and <strong class="context"
 						data-tooltip="A raster and vector graphics editor, later acquired by Corel">JASC Paint Shop
-						Pro</strong><sup>[14]</sup>'s companion program <strong class="context"
+						Pro</strong><sup>[19]</sup>'s companion program <strong class="context"
 						data-tooltip="Program used for creating simple animations and GIFs">Animation
-						Shop</strong><sup>[15]</sup>, which provided more affordable image editing options for
+						Shop</strong><sup>[20]</sup>, which provided more affordable image editing options for
 					entry-level graphic designers.</p>
 				<p>Websites such as <strong class="context"
-						data-tooltip="Formerly a web-based tool for creating glitter graphics, now offline">Blingee</strong><sup>[7]</sup>,
+						data-tooltip="Formerly a web-based tool for creating glitter graphics, now offline">Blingee</strong>,
 					<strong class="context"
-						data-tooltip="Web-based tool for creating glitter graphics">PicMix</strong><sup>[16]</sup>, and
+						data-tooltip="Web-based tool for creating glitter graphics">PicMix</strong><sup>[21]</sup>, and
 					<strong class="context"
 						data-tooltip="Web-based tool for creating glitter graphics and animations">Online Image
-						Editor</strong><sup>[17]</sup> provided free, accessible tools for easily creating this style of
+						Editor</strong><sup>[22]</sup> provided free, accessible tools for easily creating this style of
 					graphics.
 				</p>
 				<p>The aesthetic influence of glitter graphics has extended into contemporary art and popular culture,
 					particularly within <strong class="context"
 						data-tooltip="Artwork and artistic practices that use the internet as a primary medium">Net
-						Art</strong><sup>[18]</sup> and digital culture movements that celebrate early web aesthetics.
+						Art</strong><sup>[23]</sup> and digital culture movements that celebrate early web aesthetics.
 					The artwork for <strong class="context"
-						data-tooltip="British rapper, singer, and songwriter">M.I.A.</strong>'s 2010 single <strong
-						class="context" data-tooltip="Single from the album /\/\ /\ Y /\">XXXO</strong><sup>[19]</sup>
+						data-tooltip="British rapper, singer, and songwriter">M.I.A.</strong><sup>[24]</sup>'s 2010 single <strong
+						class="context" data-tooltip="Single from the album /\/\ /\ Y /\">XXXO</strong><sup>[25]</sup>
 					directly references the Blingee style, with its music video featuring glittering floral graphics and
 					decorative stamps characteristic of the maximalist aesthetic, embracing the vernacular visual
 					language of early social media culture.</p>
 				<h3>This Website</h3>
 				<p>All glitters are ethically sourced from <strong class="context"
-						data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive">GifCities</strong><sup>[20]</sup>
-					and Angelfire<sup>[4]</sup> sites. Original file names are mostly retained.</p>
+						data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive">GifCities</strong><sup>[26]</sup>,
+					Angelfire and Tripod websites. Original file names are mostly retained.</p>
+					<p>Beyond Geocities backup archives, and the few remaining active hosting sites, many resources were not preserved. Even in cases where archives exist, accompanying images were often not included, leaving only fragments of these sacred artifacts to be rediscovered and reconstructed here. The surviving hypertexts are presented below in the "External Links" section.</p>
 				<h4>Version History</h4>
 				<ul>
-					<li>December 12, 2025 — Beta Release</li>
+					<li>December 17, 2025 — Beta Release</li>
 				</ul>
-				<p>And for the record, I pronounce <strong class="context"
-						data-tooltip="Graphics Interchange Format">GIF</strong><sup>[21]</sup> with a hard 'G'. The
-					engineering lead on the team that created the format at <strong class="context"
-						data-tooltip="American Internet company that provided the first major commercial online service">CompuServe</strong><sup>[22]</sup>
-					in 1987, <strong class="context"
-						data-tooltip="American computer scientist who led the team that created the GIF format">Steve
-						Wilhite</strong><sup>[23]</sup>, insists it's pronounced the same as <span class="context"
-						data-tooltip="the American peanut butter brand">Jif</span><sup>[24]</sup>, sparking one of the
-					internet's most heated debates. Dictionaries list both pronunciations as acceptable<sup>[25]</sup>.
-					But I solidified my pronunciation by age 6, so he should have spoke up sooner. May he rest in peace
-					though.</p>
+
 				<h3>References</h3>
 				<ol>
 					<li>"<a class="external" href="http://geocities.yahoo.com/" target="_blank"
@@ -934,6 +933,16 @@
 							rel="noopener noreferrer">Tenor</a>".</li>
 					<li>"<a class="external" href="https://giphy.com/" target="_blank"
 							rel="noopener noreferrer">GIPHY</a>".</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/GIF" target="_blank"
+							rel="noopener noreferrer">GIF</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/CompuServe" target="_blank"
+							rel="noopener noreferrer">CompuServe</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Steve_Wilhite" target="_blank"
+							rel="noopener noreferrer">Steve Wilhite</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Jif_(peanut_butter)" target="_blank"
+							rel="noopener noreferrer">Jif (peanut butter)</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://www.merriam-webster.com/dictionary/GIF" target="_blank"
+							rel="noopener noreferrer">GIF</a>". <em>Merriam-Webster Dictionary</em>.</li>
 					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Adobe_ImageReady" target="_blank"
 							rel="noopener noreferrer">Adobe ImageReady</a>". <em>Wikipedia</em>.</li>
 					<li>"<a class="external" href="https://en.wikipedia.org/wiki/PaintShop_Pro" target="_blank"
@@ -946,20 +955,12 @@
 							rel="noopener noreferrer">Online Image Editor</a>".</li>
 					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Internet_art" target="_blank"
 							rel="noopener noreferrer">Internet art</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/M.I.A._(rapper)" target="_blank"
+							rel="noopener noreferrer">M.I.A.</a>". <em>Wikipedia</em>.</li>
 					<li>"<a class="external" href="https://www.youtube.com/watch?v=sfbQ5mHWkOs" target="_blank"
 							rel="noopener noreferrer">M.I.A. - XXXO (Official Video)</a>". <em>YouTube</em>.</li>
 					<li>"<a class="external" href="https://gifcities.org/" target="_blank"
 							rel="noopener noreferrer">GifCities</a>". Internet Archive.</li>
-					<li>"<a class="external" href="https://en.wikipedia.org/wiki/GIF" target="_blank"
-							rel="noopener noreferrer">GIF</a>". <em>Wikipedia</em>.</li>
-					<li>"<a class="external" href="https://en.wikipedia.org/wiki/CompuServe" target="_blank"
-							rel="noopener noreferrer">CompuServe</a>". <em>Wikipedia</em>.</li>
-					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Steve_Wilhite" target="_blank"
-							rel="noopener noreferrer">Steve Wilhite</a>". <em>Wikipedia</em>.</li>
-					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Jif_(peanut_butter)" target="_blank"
-							rel="noopener noreferrer">Jif (peanut butter)</a>". <em>Wikipedia</em>.</li>
-					<li>"<a class="external" href="https://www.merriam-webster.com/dictionary/GIF" target="_blank"
-							rel="noopener noreferrer">GIF</a>". <em>Merriam-Webster Dictionary</em>.</li>
 				</ol>
 				<h3>External links</h3>
 				<ul>
@@ -1004,6 +1005,15 @@
 							target="_blank" rel="noopener noreferrer">Sparkelies</a>". <em>Tripod</em>.</li>
 					<li>donnasblinkies. "<a class="external" href="https://donnasblinkies.tripod.com/" target="_blank"
 							rel="noopener noreferrer">Doherty Designs</a>". <em>Tripod</em>.</li>
+
+					<li>auburn_angel1. "<a class="external" href="http://auburn_angel1.tripod.com/aagraphics/id16.html" target="_blank"
+							rel="noopener noreferrer">Auburn Angel's Graphics</a>". <em>Tripod</em>.</li>
+
+					<li>jalena1989. "<a class="external" href="https://jalena1989.tripod.com/id19.html" target="_blank"
+							rel="noopener noreferrer">GLITTER ~*~ FILLS</a>". <em>Tripod</em>.</li>
+
+
+
 				</ul>
 			</div>
 		</div>
@@ -1108,31 +1118,31 @@
 				</symbol>
 
 				<symbol id="icon-minus" viewBox="0 0 640 640">
-					<path d="M96 320C96 302.3 110.3 288 128 288L512 288C529.7 288 544 302.3 544 320C544 337.7 529.7 352 512 352L128 352C110.3 352 96 337.7 96 320z"/>
+					<path d="M96 320C96 302.3 110.3 288 128 288L512 288C529.7 288 544 302.3 544 320C544 337.7 529.7 352 512 352L128 352C110.3 352 96 337.7 96 320z" />
 				</symbol>
 
 				<symbol id="icon-layers" viewBox="0 0 640 640">
-					<path d="M296.5 69.2C311.4 62.3 328.6 62.3 343.5 69.2L562.1 170.2C570.6 174.1 576 182.6 576 192C576 201.4 570.6 209.9 562.1 213.8L343.5 314.8C328.6 321.7 311.4 321.7 296.5 314.8L77.9 213.8C69.4 209.8 64 201.3 64 192C64 182.7 69.4 174.1 77.9 170.2L296.5 69.2zM112.1 282.4L276.4 358.3C304.1 371.1 336 371.1 363.7 358.3L528 282.4L562.1 298.2C570.6 302.1 576 310.6 576 320C576 329.4 570.6 337.9 562.1 341.8L343.5 442.8C328.6 449.7 311.4 449.7 296.5 442.8L77.9 341.8C69.4 337.8 64 329.3 64 320C64 310.7 69.4 302.1 77.9 298.2L112 282.4zM77.9 426.2L112 410.4L276.3 486.3C304 499.1 335.9 499.1 363.6 486.3L527.9 410.4L562 426.2C570.5 430.1 575.9 438.6 575.9 448C575.9 457.4 570.5 465.9 562 469.8L343.4 570.8C328.5 577.7 311.3 577.7 296.4 570.8L77.9 469.8C69.4 465.8 64 457.3 64 448C64 438.7 69.4 430.1 77.9 426.2z"/>
+					<path d="M296.5 69.2C311.4 62.3 328.6 62.3 343.5 69.2L562.1 170.2C570.6 174.1 576 182.6 576 192C576 201.4 570.6 209.9 562.1 213.8L343.5 314.8C328.6 321.7 311.4 321.7 296.5 314.8L77.9 213.8C69.4 209.8 64 201.3 64 192C64 182.7 69.4 174.1 77.9 170.2L296.5 69.2zM112.1 282.4L276.4 358.3C304.1 371.1 336 371.1 363.7 358.3L528 282.4L562.1 298.2C570.6 302.1 576 310.6 576 320C576 329.4 570.6 337.9 562.1 341.8L343.5 442.8C328.6 449.7 311.4 449.7 296.5 442.8L77.9 341.8C69.4 337.8 64 329.3 64 320C64 310.7 69.4 302.1 77.9 298.2L112 282.4zM77.9 426.2L112 410.4L276.3 486.3C304 499.1 335.9 499.1 363.6 486.3L527.9 410.4L562 426.2C570.5 430.1 575.9 438.6 575.9 448C575.9 457.4 570.5 465.9 562 469.8L343.4 570.8C328.5 577.7 311.3 577.7 296.4 570.8L77.9 469.8C69.4 465.8 64 457.3 64 448C64 438.7 69.4 430.1 77.9 426.2z" />
 				</symbol>
 
 				<symbol id="icon-sliders" viewBox="0 0 640 640">
-					<path d="M96 128C78.3 128 64 142.3 64 160C64 177.7 78.3 192 96 192L182.7 192C195 220.3 223.2 240 256 240C288.8 240 317 220.3 329.3 192L544 192C561.7 192 576 177.7 576 160C576 142.3 561.7 128 544 128L329.3 128C317 99.7 288.8 80 256 80C223.2 80 195 99.7 182.7 128L96 128zM96 288C78.3 288 64 302.3 64 320C64 337.7 78.3 352 96 352L342.7 352C355 380.3 383.2 400 416 400C448.8 400 477 380.3 489.3 352L544 352C561.7 352 576 337.7 576 320C576 302.3 561.7 288 544 288L489.3 288C477 259.7 448.8 240 416 240C383.2 240 355 259.7 342.7 288L96 288zM96 448C78.3 448 64 462.3 64 480C64 497.7 78.3 512 96 512L150.7 512C163 540.3 191.2 560 224 560C256.8 560 285 540.3 297.3 512L544 512C561.7 512 576 497.7 576 480C576 462.3 561.7 448 544 448L297.3 448C285 419.7 256.8 400 224 400C191.2 400 163 419.7 150.7 448L96 448z"/>
+					<path d="M96 128C78.3 128 64 142.3 64 160C64 177.7 78.3 192 96 192L182.7 192C195 220.3 223.2 240 256 240C288.8 240 317 220.3 329.3 192L544 192C561.7 192 576 177.7 576 160C576 142.3 561.7 128 544 128L329.3 128C317 99.7 288.8 80 256 80C223.2 80 195 99.7 182.7 128L96 128zM96 288C78.3 288 64 302.3 64 320C64 337.7 78.3 352 96 352L342.7 352C355 380.3 383.2 400 416 400C448.8 400 477 380.3 489.3 352L544 352C561.7 352 576 337.7 576 320C576 302.3 561.7 288 544 288L489.3 288C477 259.7 448.8 240 416 240C383.2 240 355 259.7 342.7 288L96 288zM96 448C78.3 448 64 462.3 64 480C64 497.7 78.3 512 96 512L150.7 512C163 540.3 191.2 560 224 560C256.8 560 285 540.3 297.3 512L544 512C561.7 512 576 497.7 576 480C576 462.3 561.7 448 544 448L297.3 448C285 419.7 256.8 400 224 400C191.2 400 163 419.7 150.7 448L96 448z" />
 				</symbol>
 
 				<symbol id="icon-glitter" viewBox="0 0 512 512">
-					<path d="M327.5 85.2c-4.5 1.7-7.5 6-7.5 10.8s3 9.1 7.5 10.8L384 128l21.2 56.5c1.7 4.5 6 7.5 10.8 7.5s9.1-3 10.8-7.5L448 128l56.5-21.2c4.5-1.7 7.5-6 7.5-10.8s-3-9.1-7.5-10.8L448 64 426.8 7.5C425.1 3 420.8 0 416 0s-9.1 3-10.8 7.5L384 64 327.5 85.2zM205.1 73.3c-2.6-5.7-8.3-9.3-14.5-9.3s-11.9 3.6-14.5 9.3L123.3 187.3 9.3 240C3.6 242.6 0 248.3 0 254.6s3.6 11.9 9.3 14.5l114.1 52.7L176 435.8c2.6 5.7 8.3 9.3 14.5 9.3s11.9-3.6 14.5-9.3l52.7-114.1 114.1-52.7c5.7-2.6 9.3-8.3 9.3-14.5s-3.6-11.9-9.3-14.5L257.8 187.4 205.1 73.3zM384 384l-56.5 21.2c-4.5 1.7-7.5 6-7.5 10.8s3 9.1 7.5 10.8L384 448l21.2 56.5c1.7 4.5 6 7.5 10.8 7.5s9.1-3 10.8-7.5L448 448l56.5-21.2c4.5-1.7 7.5-6 7.5-10.8s-3-9.1-7.5-10.8L448 384l-21.2-56.5c-1.7-4.5-6-7.5-10.8-7.5s-9.1 3-10.8 7.5L384 384z"/>
+					<path d="M327.5 85.2c-4.5 1.7-7.5 6-7.5 10.8s3 9.1 7.5 10.8L384 128l21.2 56.5c1.7 4.5 6 7.5 10.8 7.5s9.1-3 10.8-7.5L448 128l56.5-21.2c4.5-1.7 7.5-6 7.5-10.8s-3-9.1-7.5-10.8L448 64 426.8 7.5C425.1 3 420.8 0 416 0s-9.1 3-10.8 7.5L384 64 327.5 85.2zM205.1 73.3c-2.6-5.7-8.3-9.3-14.5-9.3s-11.9 3.6-14.5 9.3L123.3 187.3 9.3 240C3.6 242.6 0 248.3 0 254.6s3.6 11.9 9.3 14.5l114.1 52.7L176 435.8c2.6 5.7 8.3 9.3 14.5 9.3s11.9-3.6 14.5-9.3l52.7-114.1 114.1-52.7c5.7-2.6 9.3-8.3 9.3-14.5s-3.6-11.9-9.3-14.5L257.8 187.4 205.1 73.3zM384 384l-56.5 21.2c-4.5 1.7-7.5 6-7.5 10.8s3 9.1 7.5 10.8L384 448l21.2 56.5c1.7 4.5 6 7.5 10.8 7.5s9.1-3 10.8-7.5L448 448l56.5-21.2c4.5-1.7 7.5-6 7.5-10.8s-3-9.1-7.5-10.8L448 384l-21.2-56.5c-1.7-4.5-6-7.5-10.8-7.5s-9.1 3-10.8 7.5L384 384z" />
 				</symbol>
 
 				<symbol id="icon-export" viewBox="0 0 640 640">
-					<path d="M352 96C352 78.3 337.7 64 320 64C302.3 64 288 78.3 288 96L288 306.7L246.6 265.3C234.1 252.8 213.8 252.8 201.3 265.3C188.8 277.8 188.8 298.1 201.3 310.6L297.3 406.6C309.8 419.1 330.1 419.1 342.6 406.6L438.6 310.6C451.1 298.1 451.1 277.8 438.6 265.3C426.1 252.8 405.8 252.8 393.3 265.3L352 306.7L352 96zM160 384C124.7 384 96 412.7 96 448L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 448C544 412.7 515.3 384 480 384L433.1 384L376.5 440.6C345.3 471.8 294.6 471.8 263.4 440.6L206.9 384L160 384zM464 440C477.3 440 488 450.7 488 464C488 477.3 477.3 488 464 488C450.7 488 440 477.3 440 464C440 450.7 450.7 440 464 440z"/>
+					<path d="M352 96C352 78.3 337.7 64 320 64C302.3 64 288 78.3 288 96L288 306.7L246.6 265.3C234.1 252.8 213.8 252.8 201.3 265.3C188.8 277.8 188.8 298.1 201.3 310.6L297.3 406.6C309.8 419.1 330.1 419.1 342.6 406.6L438.6 310.6C451.1 298.1 451.1 277.8 438.6 265.3C426.1 252.8 405.8 252.8 393.3 265.3L352 306.7L352 96zM160 384C124.7 384 96 412.7 96 448L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 448C544 412.7 515.3 384 480 384L433.1 384L376.5 440.6C345.3 471.8 294.6 471.8 263.4 440.6L206.9 384L160 384zM464 440C477.3 440 488 450.7 488 464C488 477.3 477.3 488 464 488C450.7 488 440 477.3 440 464C440 450.7 450.7 440 464 440z" />
 				</symbol>
 
 				<symbol id="icon-share" viewBox="0 0 640 640">
-					<path d="M416.5 88L416.5 160L352.5 160C273 160 208.5 224.5 208.5 304C208.5 397.4 291.3 438.8 309.1 446.6C311.3 447.6 313.7 448 316.2 448L318.7 448C328.5 448 336.5 440 336.5 430.2C336.5 421.9 330.6 414.7 323.7 409.9C314.8 403.7 304.5 391.7 304.5 369.4C304.5 324.4 341 287.9 386 287.9L416.5 287.9L416.5 359.9C416.5 369.6 422.3 378.4 431.3 382.1C440.3 385.8 450.6 383.8 457.5 376.9L593.5 240.9C602.9 231.5 602.9 216.3 593.5 207L457.5 71C450.6 64.1 440.3 62.1 431.3 65.8C422.3 69.5 416.5 78.3 416.5 88zM144.5 160C100.3 160 64.5 195.8 64.5 240L64.5 496C64.5 540.2 100.3 576 144.5 576L400.5 576C444.7 576 480.5 540.2 480.5 496L480.5 464C480.5 446.3 466.2 432 448.5 432C430.8 432 416.5 446.3 416.5 464L416.5 496C416.5 504.8 409.3 512 400.5 512L144.5 512C135.7 512 128.5 504.8 128.5 496L128.5 240C128.5 231.2 135.7 224 144.5 224L160.5 224C178.2 224 192.5 209.7 192.5 192C192.5 174.3 178.2 160 160.5 160L144.5 160z"/>
+					<path d="M416.5 88L416.5 160L352.5 160C273 160 208.5 224.5 208.5 304C208.5 397.4 291.3 438.8 309.1 446.6C311.3 447.6 313.7 448 316.2 448L318.7 448C328.5 448 336.5 440 336.5 430.2C336.5 421.9 330.6 414.7 323.7 409.9C314.8 403.7 304.5 391.7 304.5 369.4C304.5 324.4 341 287.9 386 287.9L416.5 287.9L416.5 359.9C416.5 369.6 422.3 378.4 431.3 382.1C440.3 385.8 450.6 383.8 457.5 376.9L593.5 240.9C602.9 231.5 602.9 216.3 593.5 207L457.5 71C450.6 64.1 440.3 62.1 431.3 65.8C422.3 69.5 416.5 78.3 416.5 88zM144.5 160C100.3 160 64.5 195.8 64.5 240L64.5 496C64.5 540.2 100.3 576 144.5 576L400.5 576C444.7 576 480.5 540.2 480.5 496L480.5 464C480.5 446.3 466.2 432 448.5 432C430.8 432 416.5 446.3 416.5 464L416.5 496C416.5 504.8 409.3 512 400.5 512L144.5 512C135.7 512 128.5 504.8 128.5 496L128.5 240C128.5 231.2 135.7 224 144.5 224L160.5 224C178.2 224 192.5 209.7 192.5 192C192.5 174.3 178.2 160 160.5 160L144.5 160z" />
 				</symbol>
 
 				<symbol id="icon-new-window" viewBox="0 0 640 640">
-					<path d="M384 64C366.3 64 352 78.3 352 96C352 113.7 366.3 128 384 128L466.7 128L265.3 329.4C252.8 341.9 252.8 362.2 265.3 374.7C277.8 387.2 298.1 387.2 310.6 374.7L512 173.3L512 256C512 273.7 526.3 288 544 288C561.7 288 576 273.7 576 256L576 96C576 78.3 561.7 64 544 64L384 64zM144 160C99.8 160 64 195.8 64 240L64 496C64 540.2 99.8 576 144 576L400 576C444.2 576 480 540.2 480 496L480 416C480 398.3 465.7 384 448 384C430.3 384 416 398.3 416 416L416 496C416 504.8 408.8 512 400 512L144 512C135.2 512 128 504.8 128 496L128 240C128 231.2 135.2 224 144 224L224 224C241.7 224 256 209.7 256 192C256 174.3 241.7 160 224 160L144 160z"/>
+					<path d="M384 64C366.3 64 352 78.3 352 96C352 113.7 366.3 128 384 128L466.7 128L265.3 329.4C252.8 341.9 252.8 362.2 265.3 374.7C277.8 387.2 298.1 387.2 310.6 374.7L512 173.3L512 256C512 273.7 526.3 288 544 288C561.7 288 576 273.7 576 256L576 96C576 78.3 561.7 64 544 64L384 64zM144 160C99.8 160 64 195.8 64 240L64 496C64 540.2 99.8 576 144 576L400 576C444.2 576 480 540.2 480 496L480 416C480 398.3 465.7 384 448 384C430.3 384 416 398.3 416 416L416 496C416 504.8 408.8 512 400 512L144 512C135.2 512 128 504.8 128 496L128 240C128 231.2 135.2 224 144 224L224 224C241.7 224 256 209.7 256 192C256 174.3 241.7 160 224 160L144 160z" />
 				</symbol>
 
 
