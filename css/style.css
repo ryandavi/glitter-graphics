@@ -977,16 +977,20 @@ input[type=range]::-moz-range-thumb {
   border-color: var(--color-accent);
   background: #2a3a4a;
 }
+.layers-section > .layers-list > .layer-item.active > .layer-swatch {
+  outline-color: var(--color-text-tertiary);
+}
 .layers-section > .layers-list > .layer-item.dragging {
   opacity: 0.5;
 }
 .layers-section > .layers-list > .layer-item > .layer-swatch {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
   background-size: cover;
   flex-shrink: 0;
-  border: 1px solid var(--color-border);
+  outline: 2px solid var(--color-border);
+  outline-offset: 2px;
   transition: opacity var(--transition-fast);
 }
 .layers-section > .layers-list > .layer-item > .layer-swatch:hover {
@@ -2438,7 +2442,6 @@ input[type=range]::-moz-range-thumb {
   font-size: var(--font-size-md);
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-md);
   padding-bottom: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
@@ -2549,10 +2552,9 @@ input[type=range]::-moz-range-thumb {
   border-radius: 3px;
 }
 #settingsModal .settings-group > .settings-row > .settings-row-label-desc {
-  font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
+  font-size: var(--font-size-base);
   color: var(--color-text-tertiary);
-  line-height: 1.4;
+  max-width: 50%;
   padding-left: 0;
 }
 

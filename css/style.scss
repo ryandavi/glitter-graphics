@@ -993,6 +993,10 @@ input[type="range"] {
 			&.active {
 				border-color: var(--color-accent);
 				background: #2a3a4a;
+
+				>.layer-swatch {
+					outline-color: var(--color-text-tertiary);
+				}
 			}
 
 			&.dragging {
@@ -1000,12 +1004,13 @@ input[type="range"] {
 			}
 
 			>.layer-swatch {
-				width: 40px;
-				height: 40px;
+				width: 28px;
+				height: 28px;
 				border-radius: var(--radius-sm);
 				background-size: cover;
 				flex-shrink: 0;
-				border: 1px solid var(--color-border);
+				outline: 2px solid var(--color-border);
+				outline-offset: 2px;
 
 				transition: opacity var(--transition-fast);
 
@@ -2820,7 +2825,7 @@ input[type="range"] {
 				font-size: var(--font-size-md);
 				font-weight: 600;
 				color: var(--color-text-primary);
-				margin-bottom: var(--spacing-md);
+				// margin-bottom: var(--spacing-md);
 				padding-bottom: var(--spacing-sm);
 				border-bottom: 1px solid var(--color-border);
 			}
@@ -2956,9 +2961,9 @@ input[type="range"] {
 			}
 
 			>.settings-row-label-desc {
-				@include text-sm;
+				font-size: var(--font-size-base);
 				color: var(--color-text-tertiary);
-				line-height: 1.4;
+				max-width: 50%;
 				padding-left: 0;
 			}
 		}
