@@ -1,30 +1,45 @@
 const CONFIG = {
+	// app
+	maxLayers: 15,
+	historyLimit: 30,
+	defaultTool: "select",
+
+	// image
 	maxImageWidth: 1200,
 	maxImageHeight: 1200,
 	maxFileSizeMB: 10,
-	maxLayers: 15,
-	historyLimit: 30,
+
+	// selection
 	defaultThreshold: 50,
 	defaultFeather: 0,
 	defaultScale: 100,
 	defaultOpacity: 100,
-	defaultGlitterIndex: 0,
 	alphaThreshold: 254,
 	featherDebounceMs: 300,
-	layerSettingsOpenByDefault: false,
-	glitterSettingsOpenByDefault: false,
+
+	// glitter
+	defaultGlitterIndex: 0,
+	glitterGifs: [],
+
+	// layers
 	exportFrameRateSource: 'first-layer',
 	createDefaultLayerOnLoad: true,
-	refineGlobalDefault: false,
-	glitterGlobalDefault: false,
-	baseGridSize: 20,
-	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
-
-	// Auto-scroll settings for layer dragging
 	scrollZoneSize: 50,
 	scrollSpeed: 10,
 
-	// Export settings (defaults)
+	// settings
+	layerSettingsOpenByDefault: false,
+	glitterSettingsOpenByDefault: false,
+	refineGlobalDefault: false,
+	glitterGlobalDefault: false,
+
+	// transparency grid
+	baseGridSize: 20,
+
+	// zoom
+	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
+
+	// export settings (defaults)
 	defaultExportQuality: 10,
 	defaultExportDitherEnabled: true,
 	defaultExportDitherType: 'FloydSteinberg',
@@ -34,8 +49,10 @@ const CONFIG = {
 	defaultExportTransparency: true,
 	defaultExportMatteColor: '#ffffff',
 
+	// debug
 	forceIOSExportPreview: false,  // Set to true to test iOS export modal on desktop
 
+	// shortcuts
 	shortcuts: {
 		tools: [
 			{ key: 'V', action: 'Select Tool' },
@@ -55,10 +72,6 @@ const CONFIG = {
 			{ key: 'Ctrl + Shift + Z', action: 'Redo' },
 		]
 	},
-
-
-	glitterGifs: [],
-
 
 };
 
@@ -161,6 +174,8 @@ class GlitterEditor {
 			nameOnly: false
 		};
 
+		this.setTool(CONFIG.defaultTool);
+
 		this.setupEventListeners();
 		this.loadGlitterGifs();
 		this.initializeCollapsibleSections();
@@ -219,7 +234,6 @@ class GlitterEditor {
 	}
 
 	// ===== RANDOMIZE GLITTER =====
-
 	randomizeGlitter(category = null) {
 		if (this.layers.length === 0) {
 			console.log('No layers to randomize');
@@ -290,7 +304,7 @@ class GlitterEditor {
 		}
 	}
 
-	randomizeAdvanced(category = null) {
+	randomizeGlitterAdvanced(category = null) {
 		if (this.layers.length === 0) {
 			console.log('No layers to randomize');
 			return;
@@ -383,7 +397,6 @@ class GlitterEditor {
 		}
 	}
 
-
 	// ===== ZOOM & PAN FUNCTIONS =====
 
 	setZoom(newZoom, clickX = null, clickY = null) {
@@ -443,7 +456,6 @@ class GlitterEditor {
 		this.updateStatusBar();
 	}
 
-
 	applyZoomTransform() {
 		this.previewWrapper.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.currentZoom})`;
 	}
@@ -466,8 +478,6 @@ class GlitterEditor {
 			this.setZoom(nextZoom, clickX, clickY);
 		}
 	}
-
-
 
 	zoomToFit() {
 		if (!this.originalImage) return;
@@ -545,31 +555,30 @@ class GlitterEditor {
 		this.updateStatusBar();
 	}
 
-resetZoomSmart() {
-    if (!this.previewCanvas.width) return;
+	resetZoomSmart() {
+		if (!this.previewCanvas.width) return;
 
-    const containerRect = this.previewContainer.getBoundingClientRect();
-    
-    // Safety check: If container is hidden (e.g., mobile upload tab), 
-    // width will be 0. We can't calculate fit yet.
-    if (containerRect.width === 0 || containerRect.height === 0) return;
+		const containerRect = this.previewContainer.getBoundingClientRect();
+		
+		// Safety check: If container is hidden (e.g., mobile upload tab), 
+		// width will be 0. We can't calculate fit yet.
+		if (containerRect.width === 0 || containerRect.height === 0) return;
 
-    const padding = 40; // Match the padding used in zoomToFit
+		const padding = 40; // Match the padding used in zoomToFit
 
-    // Calculate what the zoom WOULD be if we fitted it
-    const scaleX = (containerRect.width - padding) / this.previewCanvas.width;
-    const scaleY = (containerRect.height - padding) / this.previewCanvas.height;
-    const fitZoom = Math.min(scaleX, scaleY);
+		// Calculate what the zoom WOULD be if we fitted it
+		const scaleX = (containerRect.width - padding) / this.previewCanvas.width;
+		const scaleY = (containerRect.height - padding) / this.previewCanvas.height;
+		const fitZoom = Math.min(scaleX, scaleY);
 
-    // If the image needs to shrink to fit (< 1), do it.
-    // Otherwise, default to 100% (1).
-    if (fitZoom < 1) {
-        this.zoomToFit();
-    } else {
-        this.resetViewport();
-    }
-}
-
+		// If the image needs to shrink to fit (< 1), do it.
+		// Otherwise, default to 100% (1).
+		if (fitZoom < 1) {
+			this.zoomToFit();
+		} else {
+			this.resetViewport();
+		}
+	}
 
 	resetViewport() {
 		if (!this.previewCanvas.width) return;
@@ -602,22 +611,21 @@ resetZoomSmart() {
 		}
 	}
 
-// REPLACE your existing startPan method with this:
-startPan(x, y) {
-    if (!this.originalImage) return;
+	startPan(x, y) {
+		if (!this.originalImage) return;
 
-    this.isPanning = true;
-    
-    // Store the starting coordinates
-    this.panStartX = x;
-    this.panStartY = y;
-    
-    // Store the current pan position to calculate offsets later
-    this.lastPanX = this.panX;
-    this.lastPanY = this.panY;
+		this.isPanning = true;
+		
+		// Store the starting coordinates
+		this.panStartX = x;
+		this.panStartY = y;
+		
+		// Store the current pan position to calculate offsets later
+		this.lastPanX = this.panX;
+		this.lastPanY = this.panY;
 
-    this.previewContainer.classList.add('panning');
-}
+		this.previewContainer.classList.add('panning');
+	}
 
 	handlePan(event) {
 		if (!this.isPanning) return;
@@ -742,7 +750,6 @@ this.previewContainer.addEventListener('touchstart', (e) => {
 
 	}
 
-
 	updateZoomUI() {
 		const percentage = Math.round(this.currentZoom * 100);
 		document.getElementById('zoomPercentage').textContent = `${percentage}%`;
@@ -854,6 +861,9 @@ this.previewContainer.addEventListener('touchstart', (e) => {
 
 		const glitterIndex = layer.selectedGlitterIndex;
 
+		// select this layer
+		this.setActiveLayer(layerId);
+
 		// On mobile, open the glitter drawer first
 		if (window.innerWidth <= 800 && this.mobileManager) {
 			this.mobileManager.toggleDrawer('glitter');
@@ -882,8 +892,6 @@ this.previewContainer.addEventListener('touchstart', (e) => {
 			glitterOption.classList.remove('highlight');
 		}, 1000);
 	}
-
-
 
 	setActiveLayer(layerId) {
 		this.activeLayerId = layerId;
@@ -968,7 +976,6 @@ this.previewContainer.addEventListener('touchstart', (e) => {
 			}
 		});
 	}
-
 
 	loadActiveLayerSettings() {
 		const layer = this.getActiveLayer();
@@ -1159,96 +1166,94 @@ this.previewContainer.addEventListener('touchstart', (e) => {
 		event.preventDefault();
 	}
 
-handleLayerTouchMove(event) {
-    if (!this.draggedLayerId) return;
+	handleLayerTouchMove(event) {
+		if (!this.draggedLayerId) return;
 
-    const touch = event.touches[0];
-    this.touchDragLastY = touch.clientY;
+		const touch = event.touches[0];
+		this.touchDragLastY = touch.clientY;
 
-    // Find which layer element we're over
-    const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
-    
-    // FIX 1: Add check to ensure we aren't targeting the layer we are currently dragging
-    const targetLayer = elements.find(el => 
-        el.classList.contains('layer-item') && 
-        el.dataset.layerId !== this.draggedLayerId
-    );
+		// Find which layer element we're over
+		const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+		
+		// FIX 1: Add check to ensure we aren't targeting the layer we are currently dragging
+		const targetLayer = elements.find(el => 
+			el.classList.contains('layer-item') && 
+			el.dataset.layerId !== this.draggedLayerId
+		);
 
-    if (targetLayer && targetLayer.dataset.layerId) {
-        const targetLayerId = targetLayer.dataset.layerId;
+		if (targetLayer && targetLayer.dataset.layerId) {
+			const targetLayerId = targetLayer.dataset.layerId;
 
-        const rect = targetLayer.getBoundingClientRect();
-        const midpoint = rect.top + rect.height / 2;
-        const insertAbove = touch.clientY < midpoint;
+			const rect = targetLayer.getBoundingClientRect();
+			const midpoint = rect.top + rect.height / 2;
+			const insertAbove = touch.clientY < midpoint;
 
-        // Show insertion line
-        const layersList = document.getElementById('layersList');
-        const containerRect = layersList.getBoundingClientRect();
-        const insertionLine = document.querySelector('.layer-insertion-line');
+			// Show insertion line
+			const layersList = document.getElementById('layersList');
+			const containerRect = layersList.getBoundingClientRect();
+			const insertionLine = document.querySelector('.layer-insertion-line');
 
-        let lineY;
-        const LAYER_MARGIN_BOTTOM = 6;
-        const INSERTION_LINE_HEIGHT = 2;
-        const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
-        const scrollTop = layersList.scrollTop;
+			let lineY;
+			const LAYER_MARGIN_BOTTOM = 6;
+			const INSERTION_LINE_HEIGHT = 2;
+			const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
+			const scrollTop = layersList.scrollTop;
 
-        if (insertAbove) {
-            lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
-        } else {
-            lineY = rect.bottom - containerRect.top + scrollTop + offset;
-        }
+			if (insertAbove) {
+				lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
+			} else {
+				lineY = rect.bottom - containerRect.top + scrollTop + offset;
+			}
 
-        insertionLine.style.top = lineY + 'px';
-        insertionLine.classList.add('visible');
+			insertionLine.style.top = lineY + 'px';
+			insertionLine.classList.add('visible');
 
-        this.dropTargetId = targetLayerId;
-        this.dropInsertAbove = insertAbove;
-    }
+			this.dropTargetId = targetLayerId;
+			this.dropInsertAbove = insertAbove;
+		}
 
-    event.preventDefault();
-}
+		event.preventDefault();
+	}
 
-handleLayerTouchEnd(event) {
-    if (!this.draggedLayerId) return;
+	handleLayerTouchEnd(event) {
+		if (!this.draggedLayerId) return;
 
-    // Find the dragged element and remove dragging class
-    const draggedElement = document.querySelector(`[data-layer-id="${this.draggedLayerId}"]`);
-    if (draggedElement) {
-        draggedElement.classList.remove('dragging');
-    }
+		// Find the dragged element and remove dragging class
+		const draggedElement = document.querySelector(`[data-layer-id="${this.draggedLayerId}"]`);
+		if (draggedElement) {
+			draggedElement.classList.remove('dragging');
+		}
 
-    const insertionLine = document.querySelector('.layer-insertion-line');
-    insertionLine.classList.remove('visible');
+		const insertionLine = document.querySelector('.layer-insertion-line');
+		insertionLine.classList.remove('visible');
 
-    // Perform the actual reordering using stored values
-    if (this.dropTargetId && this.draggedLayerId !== this.dropTargetId) {
-        const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-        
-        // Remove the dragged layer first
-        if (draggedIndex !== -1) {
-            const [draggedLayer] = this.layers.splice(draggedIndex, 1);
-            
-            // Recalculate target index after removal (items might have shifted)
-            let newTargetIndex = this.layers.findIndex(l => l.id === this.dropTargetId);
-            
-            // FIX 2: Fixed inverted logic. 
-            // "Insert Above" visually means a higher index in the array (rendered bottom-to-top)
-            let newIndex = this.dropInsertAbove ? newTargetIndex + 1 : newTargetIndex;
+		// Perform the actual reordering using stored values
+		if (this.dropTargetId && this.draggedLayerId !== this.dropTargetId) {
+			const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
+			
+			// Remove the dragged layer first
+			if (draggedIndex !== -1) {
+				const [draggedLayer] = this.layers.splice(draggedIndex, 1);
+				
+				// Recalculate target index after removal (items might have shifted)
+				let newTargetIndex = this.layers.findIndex(l => l.id === this.dropTargetId);
+				
+				// FIX 2: Fixed inverted logic. 
+				// "Insert Above" visually means a higher index in the array (rendered bottom-to-top)
+				let newIndex = this.dropInsertAbove ? newTargetIndex + 1 : newTargetIndex;
 
-            this.layers.splice(newIndex, 0, draggedLayer);
-            this.reorderLayerElements();
-            this.reorderGlitterBackgrounds();
-            this.saveState();
-        }
-    }
+				this.layers.splice(newIndex, 0, draggedLayer);
+				this.reorderLayerElements();
+				this.reorderGlitterBackgrounds();
+				this.saveState();
+			}
+		}
 
-    this.draggedLayerId = null;
-    this.dropTargetId = null;
-    this.dropInsertAbove = false;
-}
+		this.draggedLayerId = null;
+		this.dropTargetId = null;
+		this.dropInsertAbove = false;
+	}
 
-
-	// Replace handleLayerDrop with this optimized version:
 	handleLayerDrop(event, targetLayerId) {
 		event.preventDefault();
 
@@ -1497,6 +1502,18 @@ handleLayerTouchEnd(event) {
 			container.appendChild(layerEl);
 		});
 
+		// Update layer count
+		const layerCount = document.querySelector('.section-header-title-count');
+		if (layerCount) {
+			layerCount.setAttribute('data-count', this.layers.length);
+		}
+
+		// Update mobile layers count
+		const mobileLayersCount = document.querySelector('.mobile-layers-count');
+		if (mobileLayersCount) {
+			mobileLayersCount.setAttribute('data-count', this.layers.length);
+		}
+
 		document.getElementById('addLayerBtn').disabled = this.layers.length >= CONFIG.maxLayers;
 
 		// Update mobile add button if it exists
@@ -1505,7 +1522,6 @@ handleLayerTouchEnd(event) {
 			mobileAddBtn.disabled = this.layers.length >= CONFIG.maxLayers;
 		}
 	}
-
 
 	createIconButton({ className = '', id = '', disabled = false, title = '', iconType = '', label = '', onClick }) {
 		const btn = document.createElement('button');
@@ -1534,7 +1550,6 @@ handleLayerTouchEnd(event) {
 
 		return btn;
 	}
-
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
@@ -1993,8 +2008,6 @@ this.previewContainer.addEventListener('mousedown', (e) => {
 		this.lastViewportWidth = newWidth;
 		this.lastViewportHeight = newHeight;
 	}
-
-
 
 	toggleFilters() {
 		const container = document.getElementById('filtersContainer');
@@ -2940,14 +2953,11 @@ this.previewContainer.addEventListener('mousedown', (e) => {
 		this.updatePreviewScale();
 	}
 
-
 	renderPreviewCanvas(layersToShow) {
 		// Just draw the original image. The glitter sits on top as a DOM element.
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 		this.previewCtx.putImageData(this.originalImageData, 0, 0);
 	}
-
-
 
 	renderGlitterBackgrounds(layersToShow) {
 		this.glitterBackgroundsContainer.innerHTML = '';
@@ -3124,7 +3134,6 @@ this.previewContainer.addEventListener('mousedown', (e) => {
 		}
 	}
 
-
 	// ===== EXPORT PROGRESS =====
 	showExportProgress() {
 		const progress = document.getElementById('exportProgress');
@@ -3260,6 +3269,10 @@ this.previewContainer.addEventListener('mousedown', (e) => {
 		document.getElementById('statusText').textContent = message;
 	}
 }
+
+// ============================================
+// GIF EXPORT MANAGER CLASS
+// ============================================
 class GifExporter {
 	constructor() {
 		const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -3887,9 +3900,6 @@ async _handleFileSave(blob, callbacks) {
 
 }
 
-
-
-
 // ============================================
 // TOOLTIP MANAGER CLASS
 // ============================================
@@ -4164,18 +4174,13 @@ class TooltipManager {
 	}
 }
 
-// Initialize
-const tooltips = new TooltipManager();
-
-
-
+// Pixel Scaler
 document.querySelectorAll('img[data-pixel-scale]').forEach(img => {
 	const s = Number(img.dataset.pixelScale);
 	img.style.width = img.naturalWidth * s + 'px';
 	img.style.height = img.naturalHeight * s + 'px';
 	img.style.imageRendering = 'pixelated';
 });
-
 
 // Reference linking and highlighting functionality
 document.addEventListener('DOMContentLoaded', function () {
@@ -4249,7 +4254,9 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 });
 
-
+// ============================================
+// MOBILE MANAGER CLASS
+// ============================================
 class MobileManager {
 	constructor(editor) {
 		this.editor = editor;
@@ -4307,24 +4314,37 @@ class MobileManager {
 		const icon = swatch.querySelector('.mobile-swatch-icon');
 		const layer = this.editor.getActiveLayer();
 
-		if (layer) {
-			const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
-			if (glitter) {
-				icon.style.backgroundImage = `url(${glitter.url})`;
-				if (glitter.isPixelated) {
-					icon.classList.add('pixelated');
-				} else {
-					icon.classList.remove('pixelated');
-				}
-				swatch.classList.add('visible');  // CHANGED: add visible class
+const layersSwatch = document.querySelector('.mobile-layers-swatch');
+if (layersSwatch) {
+	if (layer) {
+		const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
+		if (glitter) {
+			layersSwatch.style.backgroundImage = `url(${glitter.url})`;
+			layersSwatch.classList.remove('empty');
+			if (glitter.isPixelated) {
+				layersSwatch.classList.add('pixelated');
 			} else {
-				icon.style.backgroundImage = '';
-				swatch.classList.remove('visible');  // CHANGED: remove visible class
+				layersSwatch.classList.remove('pixelated');
 			}
 		} else {
-			icon.style.backgroundImage = '';
-			swatch.classList.remove('visible');  // CHANGED: remove visible class
+			layersSwatch.style.backgroundImage = '';
+			layersSwatch.classList.add('empty');
+			layersSwatch.classList.remove('pixelated');
 		}
+	} else {
+		layersSwatch.style.backgroundImage = '';
+		layersSwatch.classList.add('empty');
+		layersSwatch.classList.remove('pixelated');
+	}
+}
+
+
+
+
+
+
+
+		
 	}
 
 
@@ -4351,8 +4371,21 @@ class MobileManager {
 		const bottomNav = document.createElement('div');
 		bottomNav.className = 'mobile-bottom-nav';
 		bottomNav.innerHTML = `
-	<button class="mobile-drawer-btn" data-drawer="layers">Layers</button>
-	<button class="mobile-add-layer-btn" id="mobileAddLayerBtn">+</button>
+	<button class="mobile-drawer-btn" data-drawer="layers">
+		<div class="mobile-layers-swatch empty"></div>
+		Layers
+		<span class="mobile-layers-count" data-count="0"></span>
+	</button>
+
+	<button class="btn-icon mobile-add-layer-btn icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
+		<svg class="icon">
+			<use href="#icon-plus"></use>
+		</svg>
+		<span class="name">Add Layer</span>
+	</button>
+
+	
+
 	<button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
 `;
 
@@ -4596,5 +4629,6 @@ setupResizeObserver() {
 
 
 const editor = new GlitterEditor();
+const tooltips = new TooltipManager();
 const mobileManager = new MobileManager(editor);
 editor.mobileManager = mobileManager;

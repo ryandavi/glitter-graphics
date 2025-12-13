@@ -78,31 +78,33 @@
 				<div class="toolbar-spacer"></div>
 
 				<!-- Keyboard -->
-				<button class="btn-icon icon-wrapper" id="shortcutsBtn" title="Keyboard Shortcuts">
-					<svg class="icon">
-						<use href="#icon-keyboard"></use>
-					</svg>
-					<span class="name">Keyboard Shortcuts</span>
-				</button>
+				 <div class="toolbar-group" id="toolbarSettingsGroup">
+					<button class="btn-icon icon-wrapper" id="shortcutsBtn" title="Keyboard Shortcuts">
+						<svg class="icon">
+							<use href="#icon-keyboard"></use>
+						</svg>
+						<span class="name">Keyboard Shortcuts</span>
+					</button>
 
-				<!-- Settings -->
-				<button class="btn-icon icon-wrapper" id="settingsBtn" title="Settings">
-					<svg class="icon">
-						<use href="#icon-gear"></use>
-					</svg>
-					<span class="name">Settings</span>
-				</button>
-
-
+					<!-- Settings -->
+					<button class="btn-icon icon-wrapper" id="settingsBtn" title="Settings">
+						<svg class="icon">
+							<use href="#icon-gear"></use>
+						</svg>
+						<span class="name">Settings</span>
+					</button>
+				</div>
 
 				<!-- Clear -->
-				<button class="btn-icon icon-wrapper" id="clearAllTool" title="Reset (Clear Image & All Layers)"
-					disabled>
-					<svg class="icon">
-						<use href="#icon-trash"></use>
-					</svg>
-					<span class="name">Clear All</span>
-				</button>
+				<div class="toolbar-group" id="toolbarClearGroup">
+					<button class="btn-icon icon-wrapper" id="clearAllTool" title="Reset (Clear Image & All Layers)"
+						disabled>
+						<svg class="icon">
+							<use href="#icon-trash"></use>
+						</svg>
+						<span class="name">Clear All</span>
+					</button>
+				</div>
 			</div>
 
 			<div class="main-content">
@@ -179,6 +181,7 @@
 								</span>
 								
 								<span class="section-header-title-text">Layers</span>
+								<span class="section-header-title-count" data-count="0"></span>
 							</h3>
 							<button class="section-header-action btn-icon icon-wrapper" id="addLayerBtn" disabled
 								title="Add new layer">
@@ -556,7 +559,7 @@
 				</span>
 				<span class="modal-title-text">Save to Photos</span>
 			</div>
-			<button class="icon-wrapper modal-close" id="closeExportPreviewModal">
+			<button class="btn-icon icon-wrapper modal-close" id="closeExportPreviewModal">
 				<svg class="icon">
 					<use href="#icon-x-mark"></use>
 				</svg>
@@ -573,21 +576,21 @@
 			</div>
 		</div>
 		<div class="modal-footer">
-			<button class="btn btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewShare">
+			<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewShare">
 				<svg class="icon">
 					<use href="#icon-share"></use>
 				</svg>
 				<span class="name">Share</span>
 			</button>
 
-			<button class="btn btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewSave">
+			<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewSave">
 				<svg class="icon">
 					<use href="#icon-export"></use>
 				</svg>
 				<span class="name">Save</span>
 			</button>
 
-			<button class="btn btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewOpen">
+			<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewOpen">
 				<svg class="icon">
 					<use href="#icon-new-window"></use>
 				</svg>
@@ -614,7 +617,7 @@
 					<span class="modal-title-text">Settings</span>
 				</div>
 
-				<button class="icon-wrapper modal-close" id="closeSettingsModal">
+				<button class="btn-icon icon-wrapper modal-close" id="closeSettingsModal">
 					<svg class="icon">
 						<use href="#icon-x-mark"></use>
 					</svg>
@@ -769,7 +772,7 @@
 				</div>
 
 
-				<button class="icon-wrapper modal-close" id="closeShortcutsModal">
+				<button class="btn-icon icon-wrapper modal-close" id="closeShortcutsModal">
 					<svg class="icon">
 						<use href="#icon-x-mark"></use>
 					</svg>
@@ -800,7 +803,7 @@
 					<span class="modal-title-text">About Glitter Graphics</span>
 				</div>
 
-				<button class="icon-wrapper modal-close" id="closeAboutModal">
+				<button class="btn-icon icon-wrapper modal-close" id="closeAboutModal">
 					<svg class="icon">
 						<use href="#icon-x-mark"></use>
 					</svg>
