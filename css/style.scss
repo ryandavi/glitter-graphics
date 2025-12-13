@@ -2151,23 +2151,28 @@ input[type="range"] {
 
 
 
+
 			>p+h2,
 			>ol+h2,
 			>ul+h2,
 
+
+
 			>p+h3,
 			>ol+h3,
 			>ul+h3 {
-				margin-top: var(--spacing-lg);
+				margin-top: var(--spacing-xl);
 
 			}
 
 
-			>h4+ul,
-			>h4+ol,
+			>h2 + p,
+			>h2 + ol,
+			>h2 + ul,
 
-			>h5+ul,
-			>h5+ol,
+			>h3+p,
+			>h3+ol,
+			>h3+ul,
 
 			>ol+p,
 			>ul+p,
@@ -2185,7 +2190,16 @@ input[type="range"] {
 
 			>ol+ul,
 			>ul+ol {
-				margin-top: var(--spacing-base);
+				margin-top: var(--spacing-sm);
+			}
+
+
+			>h4+ul,
+			>h4+ol,
+
+			>h5+ul,
+			>h5+ol {
+				margin-top: var(--spacing-xs);
 			}
 
 
@@ -2819,8 +2833,9 @@ input[type="range"] {
 		align-items: center;
 
 		>.shortcut-action {
+			font-size: var(--font-size-md);
 			color: var(--color-text-secondary);
-			@include text-sm;
+			font-weight: 500;
 		}
 
 		>.shortcut-keys {

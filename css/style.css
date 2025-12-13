@@ -1962,12 +1962,14 @@ input[type=range]::-moz-range-thumb {
 .modal-overlay > .modal-content > .modal-body > p + h3,
 .modal-overlay > .modal-content > .modal-body > ol + h3,
 .modal-overlay > .modal-content > .modal-body > ul + h3 {
-  margin-top: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
 }
-.modal-overlay > .modal-content > .modal-body > h4 + ul,
-.modal-overlay > .modal-content > .modal-body > h4 + ol,
-.modal-overlay > .modal-content > .modal-body > h5 + ul,
-.modal-overlay > .modal-content > .modal-body > h5 + ol,
+.modal-overlay > .modal-content > .modal-body > h2 + p,
+.modal-overlay > .modal-content > .modal-body > h2 + ol,
+.modal-overlay > .modal-content > .modal-body > h2 + ul,
+.modal-overlay > .modal-content > .modal-body > h3 + p,
+.modal-overlay > .modal-content > .modal-body > h3 + ol,
+.modal-overlay > .modal-content > .modal-body > h3 + ul,
 .modal-overlay > .modal-content > .modal-body > ol + p,
 .modal-overlay > .modal-content > .modal-body > ul + p,
 .modal-overlay > .modal-content > .modal-body > ol + ol,
@@ -1980,7 +1982,13 @@ input[type=range]::-moz-range-thumb {
 .modal-overlay > .modal-content > .modal-body > ul + h5,
 .modal-overlay > .modal-content > .modal-body > ol + ul,
 .modal-overlay > .modal-content > .modal-body > ul + ol {
-  margin-top: var(--spacing-base);
+  margin-top: var(--spacing-sm);
+}
+.modal-overlay > .modal-content > .modal-body > h4 + ul,
+.modal-overlay > .modal-content > .modal-body > h4 + ol,
+.modal-overlay > .modal-content > .modal-body > h5 + ul,
+.modal-overlay > .modal-content > .modal-body > h5 + ol {
+  margin-top: var(--spacing-xs);
 }
 
 #exportPreviewModal .modal-body {
@@ -2440,9 +2448,9 @@ input[type=range]::-moz-range-thumb {
   align-items: center;
 }
 #shortcutsModal .shortcut-item > .shortcut-action {
+  font-size: var(--font-size-md);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
+  font-weight: 500;
 }
 #shortcutsModal .shortcut-item > .shortcut-keys {
   display: flex;
