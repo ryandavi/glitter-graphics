@@ -279,6 +279,7 @@
 				var(--win7-btn-gradient-end) 100%);
 	}
 
+	&.mobile-drawer-btn,
 	&.btn {
 		&:before {
 			z-index: -1;
@@ -2413,38 +2414,31 @@ input[type="range"] {
 		.mobile-drawer-btn {
 			flex: 1;
 			padding: var(--spacing-md);
-			background: var(--color-bg-primary);
-			border: 1px solid var(--color-border);
-			border-radius: var(--radius-md);
-			color: var(--color-text-primary);
+
 			@include text-sm;
-			font-weight: 600;
-			cursor: pointer;
-			transition: all var(--transition-fast);
 
-
-			position: relative;
 
 			&[data-drawer="layers"] {
 				display: flex;
 				align-items: center;
-				gap: var(--spacing-sm);
+				gap: var(--spacing-md);
 
 				.mobile-layers-swatch {
-					width: 24px;
-					height: 24px;
+					width: 18px;
+					height: 18px;
 					border-radius: var(--radius-sm);
-					border: 1px solid var(--color-border);
+					outline: 2px solid var(--gray-100);
+					outline-offset: 2px;
 					background-size: cover;
 					background-position: center;
 					flex-shrink: 0;
 
 					&.empty {
 						background-image:
-							linear-gradient(45deg, #555 25%, transparent 25%),
-							linear-gradient(-45deg, #555 25%, transparent 25%),
-							linear-gradient(45deg, transparent 75%, #555 75%),
-							linear-gradient(-45deg, transparent 75%, #555 75%);
+							linear-gradient(45deg, white 25%, transparent 25%),
+							linear-gradient(-45deg, white 25%, transparent 25%),
+							linear-gradient(45deg, transparent 75%, white 75%),
+							linear-gradient(-45deg, transparent 75%, white 75%);
 						background-size: 8px 8px;
 						background-position: 0 0, 0 4px, 4px -4px, -4px 0;
 					}
@@ -2467,15 +2461,7 @@ input[type="range"] {
 
 
 
-			&:hover {
-				background: var(--color-bg-tertiary);
-			}
-
-			&.active {
-				background: var(--color-accent);
-				border-color: var(--color-accent-hover);
-				color: white;
-			}
+			@include windows7-button(true);
 
 
 		}
@@ -2486,11 +2472,7 @@ input[type="range"] {
 			flex-shrink: 0;
 			padding: var(--spacing-md);
 
-			font-size: 24px;
-			font-weight: 600;
-			line-height: 1;
-			cursor: pointer;
-			transition: all var(--transition-fast);
+			@include windows7-button();
 
 	
 
@@ -2611,7 +2593,7 @@ input[type="range"] {
 
 
 	.layers-section>.layers-list>.layer-item>.layer-actions>.layer-action-btn.goto-glitter {
-		display: initial;
+		display: flex;
 	}
 
 
@@ -2963,6 +2945,8 @@ input[type="range"] {
 			>.settings-row-label-desc {
 				font-size: var(--font-size-base);
 				color: var(--color-text-tertiary);
+				width: 50%;
+				min-width: 300px;
 				max-width: 50%;
 				padding-left: 0;
 			}

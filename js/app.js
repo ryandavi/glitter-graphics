@@ -4377,7 +4377,7 @@ if (layersSwatch) {
 		<span class="mobile-layers-count" data-count="0"></span>
 	</button>
 
-	<button class="btn-icon mobile-add-layer-btn icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
+	<button class="btn-icon mobile-add-layer-btn active icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
 		<svg class="icon">
 			<use href="#icon-plus"></use>
 		</svg>
