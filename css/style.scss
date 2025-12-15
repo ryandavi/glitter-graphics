@@ -1416,6 +1416,34 @@ input[type="range"] {
 
 
 
+.sticker-element {
+	position: absolute;
+	transform-origin: 0 0;
+	pointer-events: auto;
+	will-change: transform;
+	
+	img {
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+	
+	&.pixelated img {
+		image-rendering: pixelated;
+	}
+}
+
+.layer-swatch {
+	// ADD: Better sticker thumbnail rendering
+	&[style*="contain"] {
+		background-color: var(--color-bg-tertiary);
+	}
+}
+
+
+
+
+
 
 /* ===== GLITTER COLUMN ===== */
 .glitter-column {
@@ -1965,7 +1993,6 @@ input[type="range"] {
 	}
 }
 
-
 .pan-controls {
 	position: absolute;
 	bottom: var(--spacing-lg);
@@ -1987,9 +2014,6 @@ input[type="range"] {
 		height: 32px;
 	}
 }
-
-
-
 
 /* ===== EXPORT PROGRESS ===== */
 .export-progress {

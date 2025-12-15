@@ -1344,6 +1344,25 @@ input[type=range]::-moz-range-thumb {
   display: block;
 }
 
+.sticker-element {
+  position: absolute;
+  transform-origin: 0 0;
+  pointer-events: auto;
+  will-change: transform;
+}
+.sticker-element img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.sticker-element.pixelated img {
+  image-rendering: pixelated;
+}
+
+.layer-swatch[style*=contain] {
+  background-color: var(--color-bg-tertiary);
+}
+
 /* ===== GLITTER COLUMN ===== */
 .glitter-column {
   width: var(--glitter-panel-width);
