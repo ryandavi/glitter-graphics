@@ -648,49 +648,72 @@ class GlitterEditor {
 		this.previewContainer.classList.remove('panning');
 	}
 
-	setupTouchGestures() {
-		const container = this.previewContainer;
+setupTouchGestures() {
+	const container = this.previewContainer;
 
-		const getTouchDistance = (touch1, touch2) => {
-			const dx = touch2.clientX - touch1.clientX;
-			const dy = touch2.clientY - touch1.clientY;
-			return Math.sqrt(dx * dx + dy * dy);
+	const getTouchDistance = (touch1, touch2) => {
+		const dx = touch2.clientX - touch1.clientX;
+		const dy = touch2.clientY - touch1.clientY;
+		return Math.sqrt(dx * dx + dy * dy);
+	};
+
+	const getTouchCenter = (touch1, touch2) => {
+		return {
+			x: (touch1.clientX + touch2.clientX) / 2,
+			y: (touch1.clientY + touch2.clientY) / 2
 		};
+	};
 
-		const getTouchCenter = (touch1, touch2) => {
-			return {
-				x: (touch1.clientX + touch2.clientX) / 2,
-				y: (touch1.clientY + touch2.clientY) / 2
-			};
-		};
+	container.addEventListener('touchstart', (e) => {
+		if (e.touches.length === 2) {
+			e.preventDefault();
 
-		container.addEventListener('touchstart', (e) => {
-			if (e.touches.length === 2) {
-				e.preventDefault();
+			const center = getTouchCenter(e.touches[0], e.touches[1]);
 
-				const center = getTouchCenter(e.touches[0], e.touches[1]);
+			const rect = container.getBoundingClientRect();
+			const anchorX = center.x - rect.left;
+			const anchorY = center.y - rect.top;
 
-				const rect = container.getBoundingClientRect();
-				const anchorX = center.x - rect.left;
-				const anchorY = center.y - rect.top;
+			const canvasX = (anchorX - this.panX) / this.currentZoom;
+			const canvasY = (anchorY - this.panY) / this.currentZoom;
 
-				const canvasX = (anchorX - this.panX) / this.currentZoom;
-				const canvasY = (anchorY - this.panY) / this.currentZoom;
+			this.touch.active = true;
+			this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
+			this.touch.startZoom = this.currentZoom;
+			this.touch.anchorScreen = { x: anchorX, y: anchorY };
+			this.touch.anchorCanvas = { x: canvasX, y: canvasY };
+			this.touch.lastCenter = center; // Track center for pan delta
+			this.touch.startPanX = this.panX;
+			this.touch.startPanY = this.panY;
+		}
+	}, { passive: false });
 
-				this.touch.active = true;
-				this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
-				this.touch.startZoom = this.currentZoom;
-				this.touch.anchorScreen = { x: anchorX, y: anchorY };
-				this.touch.anchorCanvas = { x: canvasX, y: canvasY };
-			}
-		}, { passive: false });
+	container.addEventListener('touchmove', (e) => {
+		if (this.touch.active && e.touches.length === 2) {
+			e.preventDefault();
 
-		container.addEventListener('touchmove', (e) => {
-			if (this.touch.active && e.touches.length === 2) {
-				e.preventDefault();
+			const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
+			const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
 
-				const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
-				const scale = currentDistance / this.touch.startDistance;
+			// Calculate zoom factor
+			const scale = currentDistance / this.touch.startDistance;
+			
+			// Detect if this is primarily a pan (distance barely changed) or zoom
+			const distanceChange = Math.abs(currentDistance - this.touch.startDistance);
+			const isPanning = distanceChange < 10; // Less than 10px change = panning
+
+			if (isPanning) {
+				// TWO-FINGER PAN: Apply pan delta
+				const deltaX = currentCenter.x - this.touch.lastCenter.x;
+				const deltaY = currentCenter.y - this.touch.lastCenter.y;
+
+				this.panX += deltaX;
+				this.panY += deltaY;
+
+				// Update last center for next delta
+				this.touch.lastCenter = currentCenter;
+			} else {
+				// PINCH ZOOM: Apply zoom with anchor
 				const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
 
 				const newCanvasX = this.touch.anchorCanvas.x * newZoom;
@@ -704,24 +727,25 @@ class GlitterEditor {
 				if (this.currentZoomIndex === -1) {
 					this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
 				}
-
-				this.applyZoomTransform();
-				this.updateZoomUI();
-				this.updateTransparencyGrid();
-				this.updateStatusBar();
 			}
-		}, { passive: false });
 
-		container.addEventListener('touchend', (e) => {
-			if (e.touches.length < 2) {
-				this.touch.active = false;
-			}
-		});
+			this.applyZoomTransform();
+			this.updateZoomUI();
+			this.updateTransparencyGrid();
+			this.updateStatusBar();
+		}
+	}, { passive: false });
 
-		container.addEventListener('touchcancel', () => {
+	container.addEventListener('touchend', (e) => {
+		if (e.touches.length < 2) {
 			this.touch.active = false;
-		});
-	}
+		}
+	});
+
+	container.addEventListener('touchcancel', () => {
+		this.touch.active = false;
+	});
+}
 
 	updateZoomUI() {
 		const percentage = Math.round(this.currentZoom * 100);
@@ -1725,6 +1749,11 @@ class GlitterEditor {
 		document.getElementById('fitScreen').addEventListener('click', () => this.zoomToFit());
 		document.getElementById('fillScreen').addEventListener('click', () => this.zoomToFill());
 
+		// --- PAN CONTROLS ---
+		document.getElementById('centerHorizontal').addEventListener('click', () => this.centerHorizontal());
+		document.getElementById('centerVertical').addEventListener('click', () => this.centerVertical());
+
+
 		// --- WINDOW RESIZE ---
 		window.addEventListener('resize', () => this.handleWindowResize());
 
@@ -2076,16 +2105,64 @@ class GlitterEditor {
 
 	setTool(tool) {
 		this.currentTool = tool;
-		document.getElementById('selectTool').classList.toggle('active', tool === 'select');
-		document.getElementById('colorPickerTool').classList.toggle('active', tool === 'colorPicker');
-		document.getElementById('handTool').classList.toggle('active', tool === 'hand');
-		document.getElementById('zoomTool').classList.toggle('active', tool === 'zoom');
-		document.getElementById('previewWrapper').classList.toggle('color-picker-mode', tool === 'colorPicker');
 
-		this.updateZoomUI();
+		// Update tool buttons
+		document.querySelectorAll('.toolbar-group button').forEach(btn => {
+			btn.classList.remove('active');
+		});
 
-		document.getElementById('zoomControls').style.display = this.originalImage ? 'flex' : 'none';
+		document.getElementById(`${tool}Tool`).classList.add('active');
+
+		// Update cursor classes
+		this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor', 'zoom-out-mode');
+		this.previewWrapper.classList.remove('color-picker-mode');
+
+		// Show/hide controls based on active tool
+		const zoomControls = document.getElementById('zoomControls');
+		const panControls = document.getElementById('panControls');
+
+		// Hide both by default
+		zoomControls.classList.remove('visible');
+		panControls.classList.remove('visible');
+
+		if (tool === 'zoom') {
+			this.previewContainer.classList.add('zoom-cursor');
+			zoomControls.classList.add('visible');
+		} else if (tool === 'hand') {
+			this.previewContainer.classList.add('hand-cursor');
+			panControls.classList.add('visible');
+		} else if (tool === 'colorPicker') {
+			this.previewWrapper.classList.add('color-picker-mode');
+		}
 	}
+
+centerHorizontal() {
+	if (!this.originalImage) return;
+
+	const containerRect = this.previewContainer.getBoundingClientRect();
+	const scaledWidth = this.previewCanvas.width * this.currentZoom;
+
+	// Center horizontally, keep vertical position
+	this.panX = (containerRect.width - scaledWidth) / 2;
+
+	this.applyZoomTransform();
+	this.updateStatusBar();
+}
+
+centerVertical() {
+	if (!this.originalImage) return;
+
+	const containerRect = this.previewContainer.getBoundingClientRect();
+	const scaledHeight = this.previewCanvas.height * this.currentZoom;
+
+	// Center vertically, keep horizontal position
+	this.panY = (containerRect.height - scaledHeight) / 2;
+
+	this.applyZoomTransform();
+	this.updateStatusBar();
+}
+
+
 
 	handleKeyUp(e) {
 		if (e.key === 'Alt') {

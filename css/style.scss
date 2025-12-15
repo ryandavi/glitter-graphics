@@ -847,7 +847,7 @@ input[type="range"] {
 	flex-direction: column;
 
 	>.image-dropzone-wrapper {
-		padding: var(--spacing-lg);
+		padding: var(--spacing-md);
 
 		>#imageUpload {
 			display: none;
@@ -1094,6 +1094,33 @@ input[type="range"] {
 					}
 				}
 			}
+
+			>.layer-drag-handle {
+				display: none; // Hidden on desktop
+				width: 24px;
+				height: 28px;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+				cursor: grab;
+				color: var(--color-text-secondary);
+				opacity: 0.5;
+				transition: opacity var(--transition-fast);
+
+				
+				
+				.icon {
+					width: 16px;
+					height: 16px;
+				}
+				
+				&:active {
+					cursor: grabbing;
+				}
+				
+			}
+
+
 		}
 
 		>.layer-insertion-line {
@@ -1933,12 +1960,34 @@ input[type="range"] {
 
 	>.zoom-fit-btn {
 		align-self: stretch;
-
-
-
-
 	}
 }
+
+
+.pan-controls {
+	position: absolute;
+	bottom: var(--spacing-lg);
+	left: 50%;
+	transform: translateX(-50%);
+	display: none;
+	align-items: center;
+	gap: var(--spacing-sm);
+	z-index: 10;
+
+	@include floating-ui;
+
+	&.visible {
+		display: flex;
+	}
+
+	> .btn-icon {
+		width: 32px;
+		height: 32px;
+	}
+}
+
+
+
 
 /* ===== EXPORT PROGRESS ===== */
 .export-progress {
@@ -2341,7 +2390,7 @@ input[type="range"] {
 
 
 
-@media (max-width: 1400px) {
+@media (max-width: 1440px) {
 	:root {
 		--layer-panel-width: 300px;
 		--glitter-swatch-columns: 3;
@@ -2373,39 +2422,77 @@ input[type="range"] {
 	display: none; // Hidden by default
 }
 
-// Mobile top nav and bottom nav controlled differently
-@media (max-width: 800px) {
-	// Top nav shows when .visible (both tabs)
-	.mobile-top-nav.visible {
-		display: flex;
-	}
-	
-	// Bottom nav ONLY shows in preview tab (not image tab)
-	body.mobile-preview-tab .mobile-bottom-nav.visible {
-		display: flex;
-	}
-
-}
-
-
 @media (max-width: 800px) {
 
+	// ============================================
+	// MOBILE VARIABLES
+	// ============================================
 	:root {
 		--glitter-swatch-columns: 6;
-
 	}
 
 
+	// ============================================
+	// GLOBAL MOBILE OVERRIDES
+	// ============================================
+	
+	.status-bar {
+		display: none;
+	}
 
+	.app-header {
+		height: var(--mobile-header-height);
+	}
+
+	.section-header {
+		cursor: pointer;
+	}
+
+	// Fix image upload overlay visibility on mobile
+	.image-container > .image-dropzone-wrapper > .image-dropzone.has-image > .image-upload-overlay {
+		opacity: 1;
+	}
+
+
+	// ============================================
+	// TOOLBAR (Preview tab only)
+	// ============================================
+	
 	.toolbar {
+		position: fixed;
+		top: 50%;
+		left: var(--spacing-md);
+		transform: translateY(-50%);
+		width: var(--toolbar-width);
+		height: auto;
+		z-index: 9999;
+		display: none; // Hidden by default, shown in preview tab
+		padding: var(--spacing-sm);
 		@include floating-ui;
+
+		> .toolbar-spacer {
+			display: none;
+		}
+
+		> .toolbar-group + .toolbar-group {
+			margin: 0;
+			padding: 0;
+			border: unset;
+		}
+
+		#shortcutsBtn {
+			display: none;
+		}
 	}
 
 
-	/* ===== MOBILE NAVIGATION ===== */
+	// ============================================
+	// MOBILE NAVIGATION
+	// ============================================
+
+	// Top Navigation (Image/Preview tabs)
 	.mobile-top-nav {
 		position: fixed;
-		display: flex;
 		top: var(--mobile-header-height);
 		left: 0;
 		right: 0;
@@ -2413,6 +2500,11 @@ input[type="range"] {
 		background: var(--color-bg-secondary);
 		border-bottom: 2px solid var(--color-border);
 		z-index: 10001;
+		display: none; // Hidden by default
+
+		&.visible {
+			display: flex;
+		}
 
 		.mobile-tab-btn {
 			flex: 1;
@@ -2443,6 +2535,7 @@ input[type="range"] {
 		}
 	}
 
+	// Bottom Navigation (Glitter/Layers drawers)
 	.mobile-bottom-nav {
 		position: fixed;
 		bottom: 0;
@@ -2454,14 +2547,15 @@ input[type="range"] {
 		gap: var(--spacing-sm);
 		padding: var(--spacing-sm);
 		z-index: 10001;
+		display: none; // Hidden by default, shown in preview tab
 
 		.mobile-drawer-btn {
 			flex: 1;
 			padding: var(--spacing-md);
-
 			@include text-sm;
+			@include windows7-button(true);
 
-
+			// Layers drawer button with swatch
 			&[data-drawer="layers"] {
 				display: flex;
 				align-items: center;
@@ -2471,7 +2565,6 @@ input[type="range"] {
 					width: 18px;
 					height: 18px;
 					border-radius: var(--radius-sm);
-
 					background-size: cover;
 					background-position: center;
 					flex-shrink: 0;
@@ -2501,12 +2594,6 @@ input[type="range"] {
 					}
 				}
 			}
-
-
-
-			@include windows7-button(true);
-
-
 		}
 
 		.mobile-add-layer-btn {
@@ -2514,11 +2601,6 @@ input[type="range"] {
 			height: unset;
 			flex-shrink: 0;
 			padding: var(--spacing-md);
-
-			
-
-
-
 
 			&:disabled {
 				opacity: var(--disabled-opacity);
@@ -2529,87 +2611,18 @@ input[type="range"] {
 	}
 
 
-
-
-
-.layer-drag-handle {
-    display: none; // Hidden on desktop
-    width: 24px;
-    height: 28px;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    cursor: grab;
-    color: var(--color-text-secondary);
-    opacity: 0.5;
-    transition: opacity var(--transition-fast);
-    
-    .icon {
-        width: 16px;
-        height: 16px;
-    }
-    
-    &:active {
-        cursor: grabbing;
-    }
-    
-    // Show on mobile
-    @media (max-width: 800px) {
-        display: flex;
-    }
-}
-
-
-
-	.section-header {
-		cursor: pointer;
-	}
-
-	/* Hide desktop-only elements */
-	.status-bar {
-		display: none;
-	}
-
-	.app-header {
-		height: var(--mobile-header-height);
-	}
-
-	/* Toolbar - only visible in preview tab */
-	.toolbar {
-		position: fixed;
-		top: 50%;
-		left: var(--spacing-md);
-		transform: translateY(-50%);
-		width: var(--toolbar-width);
-		height: auto;
-		z-index: 9999;
-		display: none;
-		padding: var(--spacing-sm);
-
-		>.toolbar-spacer {
-			display: none;
-		}
-
-		>.toolbar-group+.toolbar-group {
-			margin: 0;
-			padding: 0;
-			border: unset;
-		}
-
-		#shortcutsBtn {
-			display: none;
-		}
-	}
-
-
-	/* Main content adjustments */
+	// ============================================
+	// MAIN CONTENT STRUCTURE
+	// ============================================
+	
 	.main-content {
 		position: relative;
 		padding-top: var(--mobile-top-nav-height);
 
-		>.left-panel,
-		>.glitter-column,
-		>.right-panel {
+		// All panels start hidden and positioned
+		> .left-panel,
+		> .glitter-column,
+		> .right-panel {
 			position: fixed;
 			width: 100%;
 			top: calc(var(--mobile-top-nav-height) + var(--mobile-header-height));
@@ -2620,21 +2633,32 @@ input[type="range"] {
 	}
 
 
-	.layers-section>.layers-list>.layer-item>.layer-actions>.layer-action-btn.goto-glitter {
-		display: flex;
+	// ============================================
+	// COMPONENT-SPECIFIC MOBILE ADJUSTMENTS
+	// ============================================
+
+	// Layer items: Show drag handles and goto-glitter button on mobile
+	.layers-section > .layers-list > .layer-item {
+		> .layer-drag-handle {
+			display: flex;
+		}
+
+		> .layer-actions > .layer-action-btn.goto-glitter {
+			display: flex;
+		}
 	}
 
 
+	// ============================================
+	// TAB-SPECIFIC STATES
+	// ============================================
 
-	/* ===== IMAGE TAB ===== */
+	// IMAGE TAB: Show left panel with image upload only
 	body.mobile-image-tab {
-		.main-content>.left-panel {
+		.main-content > .left-panel {
 			display: flex;
-			/* Fallback for older browsers */
 			height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
-			/* Modern browsers with dynamic viewport */
-			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
-
+			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height)); // Modern dynamic viewport
 
 			.layers-section {
 				display: none;
@@ -2649,45 +2673,41 @@ input[type="range"] {
 					display: none;
 				}
 
-				>.image-dropzone-wrapper {
+				> .image-dropzone-wrapper {
 					height: 100%;
 					display: flex;
 
-					>.image-dropzone {
+					> .image-dropzone {
 						flex: 1;
 					}
-
-
 				}
 			}
 		}
 	}
 
-	.image-container > .image-dropzone-wrapper > .image-dropzone.has-image > .image-upload-overlay {
-		opacity: 1;
-	}
-
-	/* ===== PREVIEW TAB ===== */
+	// PREVIEW TAB: Show right panel with preview + toolbar + bottom nav
 	body.mobile-preview-tab {
-		.mobile-bottom-nav {
-			display: flex;
-		}
-
+		
+		// Show toolbar (floating on left side)
 		.toolbar {
 			display: flex;
 		}
 
-		.main-content>.right-panel {
+		// Show bottom navigation
+		.mobile-bottom-nav.visible {
 			display: flex;
-			/* Fallback for older browsers */
+		}
+
+		// Show preview area
+		.main-content > .right-panel {
+			display: flex;
 			height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
-			/* Modern browsers with dynamic viewport */
-			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
+			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height)); // Modern dynamic viewport
 			padding-bottom: var(--mobile-bottom-nav-height);
 		}
 
-		/* Drawers overlay above preview */
-		&.glitterOpen .main-content>.glitter-column {
+		// GLITTER DRAWER: Overlay above preview
+		&.glitterOpen .main-content > .glitter-column {
 			display: flex;
 			height: var(--mobile-drawer-height);
 			top: auto;
@@ -2697,7 +2717,8 @@ input[type="range"] {
 			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
 		}
 
-		&.layersOpen .main-content>.left-panel {
+		// LAYERS DRAWER: Overlay above preview
+		&.layersOpen .main-content > .left-panel {
 			display: flex;
 			height: var(--mobile-drawer-height);
 			top: auto;
@@ -2712,6 +2733,12 @@ input[type="range"] {
 		}
 	}
 }
+
+
+
+
+
+
 
 
 
