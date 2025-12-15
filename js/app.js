@@ -605,6 +605,812 @@ class ViewportManager {
 	}
 }
 
+// ============================================
+// LAYER MANAGER CLASS
+// Handles all layer CRUD operations, selection, reordering, and rendering
+// ============================================
+class LayerManager {
+	constructor(editor) {
+		// Reference to main editor for callbacks
+		this.editor = editor;
+		
+		// Layer state
+		this.layers = [];
+		this.activeLayerId = null;
+		
+		// Drag and drop state (desktop)
+		this.draggedLayerId = null;
+		this.dropTargetId = null;
+		this.dropInsertAbove = false;
+		this.dragScrollInterval = null;
+		
+		// Touch drag state (mobile)
+		this.touchDragStartY = 0;
+		this.touchDragLastY = 0;
+		
+		// DOM references
+		this.layersListContainer = document.getElementById('layersList');
+		this.glitterBackgroundsContainer = editor.glitterBackgroundsContainer;
+		
+		this.setupContainerEvents();
+	}
+	
+	// ===== INITIALIZATION =====
+	
+	setupContainerEvents() {
+		// Layer deselection when clicking empty space
+		this.layersListContainer.addEventListener('click', (e) => {
+			if (e.target === this.layersListContainer) {
+				this.setActiveLayer(null);
+			}
+		});
+		
+		// Handle dragging over empty space at bottom
+		this.layersListContainer.addEventListener('dragover', (e) => {
+			if (this.draggedLayerId && e.target === this.layersListContainer) {
+				e.preventDefault();
+				const layerItems = this.layersListContainer.querySelectorAll('.layer-item');
+				if (layerItems.length === 0) return;
+				
+				const lastItem = layerItems[layerItems.length - 1];
+				const lastRect = lastItem.getBoundingClientRect();
+			}
+		});
+		
+		// Drop handler for container
+		this.layersListContainer.addEventListener('drop', (e) => {
+			if (e.target === this.layersListContainer) {
+				this.handleLayerDrop(e, null);
+			}
+		});
+	}
+	
+	// ===== LAYER CRUD =====
+	
+	generateLayerId() {
+		return `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+	}
+	
+	createLayer() {
+		if (this.layers.length >= CONFIG.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+			return null;
+		}
+		
+		const layer = {
+			id: this.generateLayerId(),
+			visible: true,
+			selections: [],
+			selectedGlitterIndex: CONFIG.defaultGlitterIndex,
+			settings: {
+				threshold: CONFIG.defaultThreshold,
+				feather: CONFIG.defaultFeather,
+				scale: CONFIG.defaultScale,
+				opacity: CONFIG.defaultOpacity,
+				contiguous: false,
+				invert: false,
+				multiSelect: false
+			}
+		};
+		
+		return layer;
+	}
+	
+	addLayer() {
+		const layer = this.createLayer();
+		if (!layer) return;
+		
+		this.layers.push(layer);
+		this.setActiveLayer(layer.id);
+		this.renderLayersList();
+		this.editor.saveState();
+		this.editor.updateActionButtons();
+		this.editor.updateStatus('Layer added');
+	}
+	
+	deleteLayer(layerId) {
+		if (this.layers.length <= 1) {
+			this.editor.showError('Cannot delete the last layer');
+			return;
+		}
+		
+		const index = this.layers.findIndex(l => l.id === layerId);
+		if (index === -1) return;
+		
+		this.layers.splice(index, 1);
+		
+		if (this.activeLayerId === layerId) {
+			const newActiveIndex = Math.max(0, index - 1);
+			this.setActiveLayer(this.layers[newActiveIndex].id);
+		}
+		
+		this.renderLayersList();
+		this.editor.saveState();
+		this.editor.updatePreview();
+		this.editor.updateActionButtons();
+		this.editor.updateStatus('Layer deleted');
+	}
+	
+	toggleLayerVisibility(layerId) {
+		const layer = this.layers.find(l => l.id === layerId);
+		if (!layer) return;
+		
+		layer.visible = !layer.visible;
+		this.renderLayersList();
+		this.editor.saveState();
+		this.editor.updatePreview();
+	}
+	
+	// ===== LAYER SELECTION =====
+	
+	setActiveLayer(layerId) {
+		this.activeLayerId = layerId;
+		this.renderLayersList();
+		
+		if (layerId === null) {
+			// Show empty states
+			this.editor.showLayerSettingsEmptyState();
+			this.editor.showGlitterSettingsEmptyState();
+			// Collapse both sections
+			this.editor.collapseLayerSettings();
+			this.editor.collapseGlitterSettings();
+			this.editor.clearPreview();
+		} else {
+			// Hide empty states, show controls
+			this.editor.hideLayerSettingsEmptyState();
+			this.editor.hideGlitterSettingsEmptyState();
+			this.editor.loadActiveLayerSettings();
+			this.editor.updateGlitterSelection();
+		}
+		
+		this.editor.updatePreview();
+		this.editor.updateGlitterOptionsState();
+		window.dispatchEvent(new CustomEvent('layerChanged'));
+	}
+	
+	getActiveLayer() {
+		return this.layers.find(l => l.id === this.activeLayerId);
+	}
+	
+	// ===== LAYER NAVIGATION =====
+	
+	goToGlitter(layerId) {
+		const layer = this.layers.find(l => l.id === layerId);
+		if (!layer) return;
+		
+		const glitterIndex = layer.selectedGlitterIndex;
+		
+		// Select this layer
+		this.setActiveLayer(layerId);
+		
+		// On mobile, open the glitter drawer first
+		if (window.innerWidth <= 800 && this.editor.mobileManager) {
+			this.editor.mobileManager.toggleDrawer('glitter');
+		}
+		
+		// Scroll to the glitter option
+		this.scrollToGlitter(glitterIndex);
+	}
+	
+	scrollToGlitter(glitterIndex) {
+		const glitterOption = document.querySelector(`.glitter-option[data-index="${glitterIndex}"]`);
+		if (!glitterOption) return;
+		
+		const glitterOptions = document.querySelector('.glitter-options');
+		if (!glitterOptions) return;
+		
+		// Scroll the glitter option into view
+		glitterOption.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center'
+		});
+		
+		// Brief highlight effect
+		glitterOption.classList.add('highlight');
+		setTimeout(() => {
+			glitterOption.classList.remove('highlight');
+		}, 1000);
+	}
+	
+	// ===== LAYER PICKING (SELECT TOOL) =====
+	
+	handleLayerPick(x, y) {
+		// Check layers from top to bottom (end to start of array)
+		for (let i = this.layers.length - 1; i >= 0; i--) {
+			const layer = this.layers[i];
+			
+			// Skip invisible layers
+			if (!layer.visible) continue;
+			
+			// Skip layers without selections
+			if (!layer.selections || layer.selections.length === 0) continue;
+			
+			// Check if this pixel is covered by this layer's selection
+			if (this.isPixelInLayerSelection(layer, x, y)) {
+				this.setActiveLayer(layer.id);
+				const glitterName = this.editor.glitterGifs[layer.selectedGlitterIndex]?.name || 'Layer';
+				this.editor.updateStatus(`Selected: ${glitterName}`);
+				
+				// Brief visual feedback
+				const flash = document.createElement('div');
+				flash.className = 'layer-pick-flash';
+				flash.style.left = (x / this.editor.previewCanvas.width * 100) + '%';
+				flash.style.top = (y / this.editor.previewCanvas.height * 100) + '%';
+				this.editor.previewWrapper.appendChild(flash);
+				setTimeout(() => flash.remove(), 300);
+				
+				return;
+			}
+		}
+		
+		// Nothing clicked - deselect
+		this.setActiveLayer(null);
+		this.editor.updateStatus('No layer at this location');
+	}
+	
+	isPixelInLayerSelection(layer, x, y) {
+		const pixelIndex = y * this.editor.originalCanvas.width + x;
+		const i = pixelIndex * 4;
+		
+		const pixelR = this.editor.originalImageData.data[i];
+		const pixelG = this.editor.originalImageData.data[i + 1];
+		const pixelB = this.editor.originalImageData.data[i + 2];
+		const pixelAlpha = this.editor.originalAlphaChannel[pixelIndex];
+		
+		// Check if pixel is transparent
+		if (pixelAlpha < CONFIG.alphaThreshold) {
+			return false;
+		}
+		
+		// Check if pixel matches any of this layer's color selections
+		const threshold = layer.settings.threshold;
+		const invert = layer.settings.invert;
+		
+		for (const sel of layer.selections) {
+			const distance = Math.sqrt(
+				Math.pow(pixelR - sel.r, 2) +
+				Math.pow(pixelG - sel.g, 2) +
+				Math.pow(pixelB - sel.b, 2)
+			);
+			
+			const matches = distance <= threshold;
+			if (invert ? !matches : matches) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	// ===== RENDERING =====
+	
+	renderLayersList() {
+		const container = this.layersListContainer;
+		
+		// Add insertion line if it doesn't exist
+		let insertionLine = container.querySelector('.layer-insertion-line');
+		if (!insertionLine) {
+			insertionLine = document.createElement('div');
+			insertionLine.className = 'layer-insertion-line';
+			container.appendChild(insertionLine);
+		}
+		
+		container.innerHTML = '';
+		container.appendChild(insertionLine);
+		
+		// Render layers in reverse order (visual stacking)
+		[...this.layers].reverse().forEach((layer, index) => {
+			const layerEl = this.createLayerElement(layer);
+			container.appendChild(layerEl);
+		});
+		
+		// Update layer count displays
+		this.updateLayerCount();
+		
+		// Update add button states
+		const addLayerBtn = document.getElementById('addLayerBtn');
+		if (addLayerBtn) {
+			addLayerBtn.disabled = this.layers.length >= CONFIG.maxLayers;
+		}
+		
+		const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
+		if (mobileAddBtn) {
+			mobileAddBtn.disabled = this.layers.length >= CONFIG.maxLayers;
+		}
+		
+		// Update mobile swatch
+		this.updateMobileLayersSwatch();
+	}
+	
+	createLayerElement(layer) {
+		const layerEl = document.createElement('div');
+		layerEl.className = 'layer-item';
+		layerEl.dataset.layerId = layer.id;
+		layerEl.draggable = true;
+		
+		if (layer.id === this.activeLayerId) {
+			layerEl.classList.add('active');
+		}
+		
+		// Swatch
+		const swatch = document.createElement('div');
+		swatch.className = 'layer-swatch';
+		const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
+		if (glitter) {
+			swatch.style.backgroundImage = `url(${glitter.url})`;
+			if (glitter.isPixelated) {
+				swatch.classList.add('pixelated');
+			}
+		}
+		
+		// Double-click swatch to go to glitter
+		swatch.addEventListener('dblclick', (e) => {
+			e.stopPropagation();
+			this.goToGlitter(layer.id);
+		});
+		
+		// Info
+		const info = document.createElement('div');
+		info.className = 'layer-info';
+		const colorText = document.createElement('div');
+		colorText.className = 'layer-color';
+		
+		if (glitter) {
+			colorText.textContent = `${glitter.category} - ${glitter.name}`;
+		} else {
+			colorText.textContent = 'No glitter';
+		}
+		
+		info.appendChild(colorText);
+		
+		// Drag handle (mobile only)
+		const dragHandle = document.createElement('div');
+		dragHandle.className = 'layer-drag-handle';
+		dragHandle.innerHTML = `
+			<svg class="icon" viewBox="0 0 24 24">
+				<path d="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z" fill="currentColor"/>
+			</svg>
+		`;
+		
+		// Actions
+		const actions = document.createElement('div');
+		actions.className = 'layer-actions';
+		
+		const visBtn = this.createIconButton({
+			className: 'layer-action-btn visibility' + (!layer.visible ? ' hidden' : ''),
+			label: 'Layer Visibility',
+			title: layer.visible ? 'Hide layer' : 'Show layer',
+			iconType: 'eye',
+			onClick: (e) => {
+				e.stopPropagation();
+				this.toggleLayerVisibility(layer.id);
+			}
+		});
+		
+		const arrowBtn = this.createIconButton({
+			className: 'layer-action-btn goto-glitter',
+			label: 'Go To',
+			title: 'Go to glitter',
+			iconType: 'chevron-right',
+			onClick: (e) => {
+				e.stopPropagation();
+				this.goToGlitter(layer.id);
+			}
+		});
+		
+		const delBtn = this.createIconButton({
+			className: 'layer-action-btn delete',
+			label: 'Delete',
+			title: 'Delete layer',
+			iconType: 'x-mark',
+			onClick: (e) => {
+				e.stopPropagation();
+				if (confirm('Delete this layer?')) {
+					this.deleteLayer(layer.id);
+				}
+			}
+		});
+		
+		actions.append(arrowBtn, visBtn, delBtn);
+		layerEl.append(dragHandle, swatch, info, actions);
+		layerEl.onclick = () => this.setActiveLayer(layer.id);
+		
+		// Drag and drop events
+		layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
+		layerEl.addEventListener('dragover', (e) => this.handleLayerDragOver(e, layer.id));
+		layerEl.addEventListener('dragleave', (e) => this.handleLayerDragLeave(e));
+		layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
+		layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
+		
+		// Touch events
+		layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
+		layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
+		layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
+		
+		return layerEl;
+	}
+	
+	createIconButton({ className = '', id = '', disabled = false, title = '', iconType = '', label = '', onClick }) {
+		const btn = document.createElement('button');
+		btn.className = "btn-icon icon-wrapper " + className;
+		if (id) btn.id = id;
+		if (disabled) btn.disabled = true;
+		if (title) btn.title = title;
+		
+		if (iconType) {
+			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.classList.add('icon');
+			const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+			use.setAttribute('href', `#icon-${iconType}`);
+			svg.appendChild(use);
+			btn.appendChild(svg);
+		}
+		
+		if (label) {
+			const span = document.createElement('span');
+			span.className = 'name';
+			span.textContent = label;
+			btn.appendChild(span);
+		}
+		
+		if (onClick) btn.onclick = onClick;
+		
+		return btn;
+	}
+	
+	updateLayerCount() {
+		const layerCount = document.querySelector('.section-header-title-count');
+		if (layerCount) {
+			layerCount.setAttribute('data-count', this.layers.length);
+		}
+		
+		const mobileLayersCount = document.querySelector('.mobile-layers-count');
+		if (mobileLayersCount) {
+			mobileLayersCount.setAttribute('data-count', this.layers.length);
+		}
+	}
+	
+	updateMobileLayersSwatch() {
+		const mobileLayersSwatch = document.querySelector('.mobile-layers-swatch');
+		if (!mobileLayersSwatch) return;
+		
+		const activeLayer = this.getActiveLayer();
+		
+		if (!activeLayer) {
+			mobileLayersSwatch.classList.add('empty');
+			mobileLayersSwatch.classList.remove('pixelated');
+			mobileLayersSwatch.style.backgroundImage = '';
+			return;
+		}
+		
+		const glitter = this.editor.glitterGifs[activeLayer.selectedGlitterIndex];
+		if (glitter) {
+			mobileLayersSwatch.classList.remove('empty');
+			mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
+			
+			if (glitter.isPixelated) {
+				mobileLayersSwatch.classList.add('pixelated');
+			} else {
+				mobileLayersSwatch.classList.remove('pixelated');
+			}
+		} else {
+			mobileLayersSwatch.classList.add('empty');
+			mobileLayersSwatch.classList.remove('pixelated');
+			mobileLayersSwatch.style.backgroundImage = '';
+		}
+	}
+	
+	// ===== DRAG AND DROP (DESKTOP) =====
+	
+	handleLayerDragStart(event, layerId) {
+		this.draggedLayerId = layerId;
+		event.target.classList.add('dragging');
+		event.dataTransfer.effectAllowed = 'move';
+		event.dataTransfer.setData('text/html', event.target.innerHTML);
+	}
+	
+	handleLayerDragOver(event, targetLayerId) {
+		event.preventDefault();
+		event.dataTransfer.dropEffect = 'move';
+		
+		if (!this.draggedLayerId) return;
+		
+		// Call existing scroll handler
+		this.handleLayerDragScroll(event);
+		
+		const targetElement = event.currentTarget;
+		const rect = targetElement.getBoundingClientRect();
+		const containerRect = this.layersListContainer.getBoundingClientRect();
+		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+		
+		const midpoint = rect.top + rect.height / 2;
+		const insertAbove = event.clientY < midpoint;
+		
+		const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
+		const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
+		
+		if (targetIndex === draggedIndex) {
+			insertionLine.classList.remove('visible');
+			return;
+		}
+		if (targetIndex === draggedIndex - 1 && insertAbove) {
+			insertionLine.classList.remove('visible');
+			return;
+		}
+		if (targetIndex === draggedIndex + 1 && !insertAbove) {
+			insertionLine.classList.remove('visible');
+			return;
+		}
+		
+		let lineY;
+		const LAYER_MARGIN_BOTTOM = 6;
+		const INSERTION_LINE_HEIGHT = 2;
+		const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
+		const scrollTop = this.layersListContainer.scrollTop;
+		
+		if (insertAbove) {
+			lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
+		} else {
+			lineY = rect.bottom - containerRect.top + scrollTop + offset;
+		}
+		
+		insertionLine.style.top = lineY + 'px';
+		insertionLine.classList.add('visible');
+		
+		this.dropInsertAbove = insertAbove;
+		this.dropTargetId = targetLayerId;
+	}
+	
+	handleLayerDragLeave(event) {
+		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+		
+		if (!this.layersListContainer.contains(event.relatedTarget)) {
+			insertionLine.classList.remove('visible');
+		}
+	}
+	
+	handleLayerDrop(event, targetLayerId) {
+		event.preventDefault();
+		
+		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+		insertionLine.classList.remove('visible');
+		
+		if (!this.draggedLayerId) return;
+		
+		// Use stored values from dragover
+		targetLayerId = this.dropTargetId;
+		const insertAbove = this.dropInsertAbove;
+		
+		if (!targetLayerId || this.draggedLayerId === targetLayerId) return;
+		
+		const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
+		const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
+		
+		if (draggedIndex === -1 || targetIndex === -1) return;
+		
+		// Remove the dragged layer
+		const [draggedLayer] = this.layers.splice(draggedIndex, 1);
+		
+		// Recalculate target index after removal
+		let newTargetIndex = this.layers.findIndex(l => l.id === targetLayerId);
+		
+		// Visual order is reversed!
+		// "Above" visually = higher index in array = AFTER target
+		// "Below" visually = lower index in array = AT target
+		let newIndex = insertAbove ? newTargetIndex + 1 : newTargetIndex;
+		
+		// Insert at new position
+		this.layers.splice(newIndex, 0, draggedLayer);
+		
+		// OPTIMIZED: Just reorder DOM instead of recreating
+		this.reorderLayerElements();
+		this.reorderGlitterBackgrounds();
+		this.editor.saveState();
+	}
+	
+	handleLayerDragEnd(event) {
+		event.target.classList.remove('dragging');
+		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+		insertionLine.classList.remove('visible');
+		
+		if (this.dragScrollInterval) {
+			clearInterval(this.dragScrollInterval);
+			this.dragScrollInterval = null;
+		}
+		
+		this.draggedLayerId = null;
+	}
+	
+	handleLayerDragScroll(event) {
+		if (!this.draggedLayerId) return;
+		
+		const rect = this.layersListContainer.getBoundingClientRect();
+		const scrollZone = CONFIG.scrollZoneSize;
+		const scrollSpeed = CONFIG.scrollSpeed;
+		
+		const mouseY = event.clientY - rect.top;
+		const listHeight = rect.height;
+		
+		// Clear existing interval
+		if (this.dragScrollInterval) {
+			clearInterval(this.dragScrollInterval);
+			this.dragScrollInterval = null;
+		}
+		
+		// Scroll up when near top
+		if (mouseY < scrollZone && mouseY > 0) {
+			this.dragScrollInterval = setInterval(() => {
+				this.layersListContainer.scrollTop = Math.max(0, this.layersListContainer.scrollTop - scrollSpeed);
+			}, 16);
+		}
+		// Scroll down when near bottom
+		else if (mouseY > listHeight - scrollZone && mouseY < listHeight) {
+			this.dragScrollInterval = setInterval(() => {
+				const maxScroll = this.layersListContainer.scrollHeight - this.layersListContainer.clientHeight;
+				this.layersListContainer.scrollTop = Math.min(maxScroll, this.layersListContainer.scrollTop + scrollSpeed);
+			}, 16);
+		}
+	}
+	
+	// ===== TOUCH DRAG (MOBILE) =====
+	
+	handleLayerTouchStart(event, layerId) {
+		// ONLY start drag if touching the drag handle specifically
+		if (!event.target.closest('.layer-drag-handle')) {
+			return; // Allow normal tap to select, scrolling, button clicks
+		}
+		
+		this.draggedLayerId = layerId;
+		event.currentTarget.classList.add('dragging');
+		
+		const touch = event.touches[0];
+		this.touchDragStartY = touch.clientY;
+		this.touchDragLastY = touch.clientY;
+		
+		event.preventDefault(); // Only prevent when actually dragging
+	}
+	
+	handleLayerTouchMove(event) {
+		if (!this.draggedLayerId) return;
+		
+		const touch = event.touches[0];
+		this.touchDragLastY = touch.clientY;
+		
+		// Find which layer element we're over
+		const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+		
+		// Don't target the layer we're currently dragging
+		const targetLayer = elements.find(el =>
+			el.classList.contains('layer-item') &&
+			el.dataset.layerId !== this.draggedLayerId
+		);
+		
+		if (targetLayer && targetLayer.dataset.layerId) {
+			const targetLayerId = targetLayer.dataset.layerId;
+			
+			const rect = targetLayer.getBoundingClientRect();
+			const midpoint = rect.top + rect.height / 2;
+			const insertAbove = touch.clientY < midpoint;
+			
+			// Show insertion line
+			const containerRect = this.layersListContainer.getBoundingClientRect();
+			const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+			
+			let lineY;
+			const LAYER_MARGIN_BOTTOM = 6;
+			const INSERTION_LINE_HEIGHT = 2;
+			const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
+			const scrollTop = this.layersListContainer.scrollTop;
+			
+			if (insertAbove) {
+				lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
+			} else {
+				lineY = rect.bottom - containerRect.top + scrollTop + offset;
+			}
+			
+			insertionLine.style.top = lineY + 'px';
+			insertionLine.classList.add('visible');
+			
+			this.dropTargetId = targetLayerId;
+			this.dropInsertAbove = insertAbove;
+		}
+		
+		event.preventDefault();
+	}
+	
+	handleLayerTouchEnd(event) {
+		if (!this.draggedLayerId) return;
+		
+		// Find the dragged element and remove dragging class
+		const draggedElement = document.querySelector(`[data-layer-id="${this.draggedLayerId}"]`);
+		if (draggedElement) {
+			draggedElement.classList.remove('dragging');
+		}
+		
+		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+		insertionLine.classList.remove('visible');
+		
+		// Perform the actual reordering using stored values
+		if (this.dropTargetId && this.draggedLayerId !== this.dropTargetId) {
+			const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
+			
+			// Remove the dragged layer first
+			if (draggedIndex !== -1) {
+				const [draggedLayer] = this.layers.splice(draggedIndex, 1);
+				
+				// Recalculate target index after removal (items might have shifted)
+				let newTargetIndex = this.layers.findIndex(l => l.id === this.dropTargetId);
+				
+				// "Insert Above" visually means a higher index in the array (rendered bottom-to-top)
+				let newIndex = this.dropInsertAbove ? newTargetIndex + 1 : newTargetIndex;
+				
+				this.layers.splice(newIndex, 0, draggedLayer);
+				this.reorderLayerElements();
+				this.reorderGlitterBackgrounds();
+				this.editor.saveState();
+			}
+		}
+		
+		this.draggedLayerId = null;
+		this.dropTargetId = null;
+		this.dropInsertAbove = false;
+	}
+	
+	// ===== OPTIMIZED REORDERING =====
+	
+	reorderLayerElements() {
+		const container = this.layersListContainer;
+		const insertionLine = container.querySelector('.layer-insertion-line');
+		
+		// Get all existing layer elements
+		const existingElements = new Map();
+		container.querySelectorAll('.layer-item').forEach(el => {
+			existingElements.set(el.dataset.layerId, el);
+		});
+		
+		// Reorder them to match layers array (reversed for display)
+		const fragment = document.createDocumentFragment();
+		
+		[...this.layers].reverse().forEach(layer => {
+			const element = existingElements.get(layer.id);
+			if (element) {
+				// Update active state
+				element.classList.toggle('active', layer.id === this.activeLayerId);
+				fragment.appendChild(element);
+			}
+		});
+		
+		// Clear and re-append in correct order
+		container.innerHTML = '';
+		container.appendChild(insertionLine);
+		container.appendChild(fragment);
+	}
+	
+	reorderGlitterBackgrounds() {
+		const container = this.glitterBackgroundsContainer;
+		
+		// Get existing background elements
+		const existingBgs = new Map();
+		container.querySelectorAll('.glitter-background').forEach(bg => {
+			existingBgs.set(bg.dataset.layerId, bg);
+		});
+		
+		// Reorder them to match layers array
+		const fragment = document.createDocumentFragment();
+		
+		this.layers.forEach(layer => {
+			const bg = existingBgs.get(layer.id);
+			if (bg) {
+				fragment.appendChild(bg);
+			}
+		});
+		
+		container.innerHTML = '';
+		container.appendChild(fragment);
+	}
+}
+
+
 
 class GlitterEditor {
 	constructor() {
@@ -632,9 +1438,7 @@ class GlitterEditor {
 
 		this.exporter = new GifExporter();
 
-		// Auto-scroll for layer dragging
-		this.dragScrollInterval = null;
-		this.draggedLayerId = null;
+
 
 
 		// Export settings
@@ -652,10 +1456,7 @@ class GlitterEditor {
 		this.exportStartTime = 0;
 		this.exportCancelled = false;
 
-		// Layer system
-		this.layers = [];
-		this.activeLayerId = null;
-		this.draggedLayerId = null;
+
 
 		// Preview mode
 		this.showAllLayers = true;
@@ -675,6 +1476,9 @@ class GlitterEditor {
 		// Viewport manager (handles zoom, pan, touch)
 		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
 
+		// Layer manager (handles all layer operations and rendering)
+		this.layerManager = new LayerManager(this);
+
 
 		// Filter state
 		this.activeFilters = {
@@ -692,6 +1496,23 @@ class GlitterEditor {
 		this.initializeCollapsibleSections();
 		this.initializeShortcutsModal();
 		this.initializeExportSettings();
+	}
+
+	// Convenience accessors for layer state
+	get layers() {
+		return this.layerManager.layers;
+	}
+
+	set layers(value) {
+		this.layerManager.layers = value;
+	}
+
+	get activeLayerId() {
+		return this.layerManager.activeLayerId;
+	}
+
+	set activeLayerId(value) {
+		this.layerManager.activeLayerId = value;
 	}
 
 	initializeExportSettings() {
@@ -804,7 +1625,7 @@ class GlitterEditor {
 		});
 
 		// Update UI
-		this.renderLayersList();
+		this.layerManager.renderLayersList();
 		this.updateGlitterSelection();
 		this.updatePreview();
 		this.saveState();
@@ -897,7 +1718,7 @@ class GlitterEditor {
 		});
 
 		// Update UI
-		this.renderLayersList();
+		this.layerManager.renderLayersList();
 		this.updateGlitterSelection();
 		this.updatePreview();
 		this.saveState();
@@ -1056,146 +1877,11 @@ class GlitterEditor {
 
 	// ===== LAYER MANAGEMENT =====
 
-	generateLayerId() {
-		return `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-	}
 
-	createLayer() {
-		if (this.layers.length >= CONFIG.maxLayers) {
-			this.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
-			return null;
-		}
 
-		const layer = {
-			id: this.generateLayerId(),
-			visible: true,
-			selections: [],
-			selectedGlitterIndex: CONFIG.defaultGlitterIndex,
-			settings: {
-				threshold: CONFIG.defaultThreshold,
-				feather: CONFIG.defaultFeather,
-				scale: CONFIG.defaultScale,
-				opacity: CONFIG.defaultOpacity,
-				contiguous: false,
-				invert: false,
-				multiSelect: false
-			}
-		};
 
-		return layer;
-	}
 
-	addLayer() {
-		const layer = this.createLayer();
-		if (!layer) return;
 
-		this.layers.push(layer);
-		this.setActiveLayer(layer.id);
-		this.renderLayersList();
-		this.saveState();
-		this.updateActionButtons();
-		this.updateStatus('Layer added');
-	}
-
-	deleteLayer(layerId) {
-		if (this.layers.length <= 1) {
-			this.showError('Cannot delete the last layer');
-			return;
-		}
-
-		const index = this.layers.findIndex(l => l.id === layerId);
-		if (index === -1) return;
-
-		this.layers.splice(index, 1);
-
-		if (this.activeLayerId === layerId) {
-			const newActiveIndex = Math.max(0, index - 1);
-			this.setActiveLayer(this.layers[newActiveIndex].id);
-		}
-
-		this.renderLayersList();
-		this.saveState();
-		this.updatePreview();
-		this.updateActionButtons();
-		this.updateStatus('Layer deleted');
-	}
-
-	toggleLayerVisibility(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer) return;
-
-		layer.visible = !layer.visible;
-		this.renderLayersList();
-		this.saveState();
-		this.updatePreview();
-	}
-
-	goToGlitter(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer) return;
-
-		const glitterIndex = layer.selectedGlitterIndex;
-
-		// select this layer
-		this.setActiveLayer(layerId);
-
-		// On mobile, open the glitter drawer first
-		if (window.innerWidth <= 800 && this.mobileManager) {
-			this.mobileManager.toggleDrawer('glitter');
-		}
-
-		// Scroll to the glitter option
-		this.scrollToGlitter(glitterIndex);
-	}
-
-	scrollToGlitter(glitterIndex) {
-		const glitterOption = document.querySelector(`.glitter-option[data-index="${glitterIndex}"]`);
-		if (!glitterOption) return;
-
-		const glitterOptions = document.querySelector('.glitter-options');
-		if (!glitterOptions) return;
-
-		// Scroll the glitter option into view
-		glitterOption.scrollIntoView({
-			behavior: 'smooth',
-			block: 'center'
-		});
-
-		// Brief highlight effect
-		glitterOption.classList.add('highlight');
-		setTimeout(() => {
-			glitterOption.classList.remove('highlight');
-		}, 1000);
-	}
-
-	setActiveLayer(layerId) {
-		this.activeLayerId = layerId;
-		this.renderLayersList();
-
-		if (layerId === null) {
-			// Show empty states
-			this.showLayerSettingsEmptyState();
-			this.showGlitterSettingsEmptyState();
-			// Collapse both sections
-			this.collapseLayerSettings();
-			this.collapseGlitterSettings();
-			this.clearPreview();
-		} else {
-			// Hide empty states, show controls
-			this.hideLayerSettingsEmptyState();
-			this.hideGlitterSettingsEmptyState();
-			this.loadActiveLayerSettings();
-			this.updateGlitterSelection();
-		}
-
-		this.updatePreview();
-		this.updateGlitterOptionsState();
-		window.dispatchEvent(new CustomEvent('layerChanged'));
-	}
-
-	getActiveLayer() {
-		return this.layers.find(l => l.id === this.activeLayerId);
-	}
 
 	// ===== UX: EMPTY STATE MANAGEMENT =====
 
@@ -1253,7 +1939,7 @@ class GlitterEditor {
 	}
 
 	loadActiveLayerSettings() {
-		const layer = this.getActiveLayer();
+		const layer = this.layerManager.getActiveLayer();
 		if (!layer) return;
 
 		const s = layer.settings;
@@ -1292,7 +1978,7 @@ class GlitterEditor {
 			multiSelect: document.getElementById('multiSelect').checked
 		};
 
-		const activeLayer = this.getActiveLayer();
+		const activeLayer = this.layerManager.getActiveLayer();
 		if (activeLayer) {
 			activeLayer.settings = settings;
 		}
@@ -1313,7 +1999,7 @@ class GlitterEditor {
 	}
 
 	updateGlitterSelection() {
-		const layer = this.getActiveLayer();
+		const layer = this.layerManager.getActiveLayer();
 
 		document.querySelectorAll('.glitter-option').forEach((opt) => {
 			// If layer exists, check index. If no layer (null), always false.
@@ -1322,555 +2008,9 @@ class GlitterEditor {
 		});
 	}
 
-	handleLayerDragStart(event, layerId) {
-		this.draggedLayerId = layerId;
-		event.target.classList.add('dragging');
-		event.dataTransfer.effectAllowed = 'move';
-		event.dataTransfer.setData('text/html', event.target.innerHTML);
-	}
 
-	handleLayerDragOver(event, targetLayerId) {
-		event.preventDefault();
-		event.dataTransfer.dropEffect = 'move';
 
-		if (!this.draggedLayerId) return;
 
-		// Call existing scroll handler
-		this.handleLayerDragScroll(event);
-
-		const targetElement = event.currentTarget;
-		const rect = targetElement.getBoundingClientRect();
-		const layersList = document.getElementById('layersList');
-		const containerRect = layersList.getBoundingClientRect();
-		const insertionLine = document.querySelector('.layer-insertion-line');
-
-		const midpoint = rect.top + rect.height / 2;
-		const insertAbove = event.clientY < midpoint;
-
-		const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-		const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
-
-		if (targetIndex === draggedIndex) {
-			insertionLine.classList.remove('visible');
-			return;
-		}
-		if (targetIndex === draggedIndex - 1 && insertAbove) {
-			insertionLine.classList.remove('visible');
-			return;
-		}
-		if (targetIndex === draggedIndex + 1 && !insertAbove) {
-			insertionLine.classList.remove('visible');
-			return;
-		}
-
-		let lineY;
-		let LAYER_MARGIN_BOTTOM = 6;
-		let INSERTION_LINE_HEIGHT = 2;
-		let offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
-
-		const scrollTop = layersList.scrollTop;
-
-		if (insertAbove) {
-			lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
-		} else {
-			lineY = rect.bottom - containerRect.top + scrollTop + offset;
-		}
-
-		insertionLine.style.top = lineY + 'px';
-		insertionLine.classList.add('visible');
-
-		this.dropInsertAbove = insertAbove;
-		this.dropTargetId = targetLayerId;
-	}
-
-	handleLayerDragLeave(event) {
-		// Only hide if leaving the layers list entirely
-		const layersList = document.getElementById('layersList');
-		const insertionLine = document.querySelector('.layer-insertion-line');
-
-		if (!layersList.contains(event.relatedTarget)) {
-			insertionLine.classList.remove('visible');
-		}
-	}
-
-	handleLayerDragScroll(event) {
-		if (!this.draggedLayerId) return;
-
-		const layersList = document.getElementById('layersList');
-		const rect = layersList.getBoundingClientRect();
-		const scrollZone = CONFIG.scrollZoneSize;
-		const scrollSpeed = CONFIG.scrollSpeed;
-
-		const mouseY = event.clientY - rect.top;
-		const listHeight = rect.height;
-
-		// Clear existing interval
-		if (this.dragScrollInterval) {
-			clearInterval(this.dragScrollInterval);
-			this.dragScrollInterval = null;
-		}
-
-		// Scroll up when near top
-		if (mouseY < scrollZone && mouseY > 0) {
-			this.dragScrollInterval = setInterval(() => {
-				layersList.scrollTop = Math.max(0, layersList.scrollTop - scrollSpeed);
-			}, 16);
-		}
-		// Scroll down when near bottom
-		else if (mouseY > listHeight - scrollZone && mouseY < listHeight) {
-			this.dragScrollInterval = setInterval(() => {
-				const maxScroll = layersList.scrollHeight - layersList.clientHeight;
-				layersList.scrollTop = Math.min(maxScroll, layersList.scrollTop + scrollSpeed);
-			}, 16);
-		}
-	}
-
-	handleLayerTouchStart(event, layerId) {
-		// ONLY start drag if touching the drag handle specifically
-		if (!event.target.closest('.layer-drag-handle')) {
-			return; // Allow normal tap to select, scrolling, button clicks
-		}
-
-		this.draggedLayerId = layerId;
-		event.currentTarget.classList.add('dragging');
-
-		const touch = event.touches[0];
-		this.touchDragStartY = touch.clientY;
-		this.touchDragLastY = touch.clientY;
-
-		event.preventDefault(); // Only prevent when actually dragging
-	}
-
-	handleLayerTouchMove(event) {
-		if (!this.draggedLayerId) return;
-
-		const touch = event.touches[0];
-		this.touchDragLastY = touch.clientY;
-
-		// Find which layer element we're over
-		const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
-
-		// FIX 1: Add check to ensure we aren't targeting the layer we are currently dragging
-		const targetLayer = elements.find(el =>
-			el.classList.contains('layer-item') &&
-			el.dataset.layerId !== this.draggedLayerId
-		);
-
-		if (targetLayer && targetLayer.dataset.layerId) {
-			const targetLayerId = targetLayer.dataset.layerId;
-
-			const rect = targetLayer.getBoundingClientRect();
-			const midpoint = rect.top + rect.height / 2;
-			const insertAbove = touch.clientY < midpoint;
-
-			// Show insertion line
-			const layersList = document.getElementById('layersList');
-			const containerRect = layersList.getBoundingClientRect();
-			const insertionLine = document.querySelector('.layer-insertion-line');
-
-			let lineY;
-			const LAYER_MARGIN_BOTTOM = 6;
-			const INSERTION_LINE_HEIGHT = 2;
-			const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
-			const scrollTop = layersList.scrollTop;
-
-			if (insertAbove) {
-				lineY = rect.top - containerRect.top + scrollTop - LAYER_MARGIN_BOTTOM + offset;
-			} else {
-				lineY = rect.bottom - containerRect.top + scrollTop + offset;
-			}
-
-			insertionLine.style.top = lineY + 'px';
-			insertionLine.classList.add('visible');
-
-			this.dropTargetId = targetLayerId;
-			this.dropInsertAbove = insertAbove;
-		}
-
-		event.preventDefault();
-	}
-
-	handleLayerTouchEnd(event) {
-		if (!this.draggedLayerId) return;
-
-		// Find the dragged element and remove dragging class
-		const draggedElement = document.querySelector(`[data-layer-id="${this.draggedLayerId}"]`);
-		if (draggedElement) {
-			draggedElement.classList.remove('dragging');
-		}
-
-		const insertionLine = document.querySelector('.layer-insertion-line');
-		insertionLine.classList.remove('visible');
-
-		// Perform the actual reordering using stored values
-		if (this.dropTargetId && this.draggedLayerId !== this.dropTargetId) {
-			const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-
-			// Remove the dragged layer first
-			if (draggedIndex !== -1) {
-				const [draggedLayer] = this.layers.splice(draggedIndex, 1);
-
-				// Recalculate target index after removal (items might have shifted)
-				let newTargetIndex = this.layers.findIndex(l => l.id === this.dropTargetId);
-
-				// FIX 2: Fixed inverted logic. 
-				// "Insert Above" visually means a higher index in the array (rendered bottom-to-top)
-				let newIndex = this.dropInsertAbove ? newTargetIndex + 1 : newTargetIndex;
-
-				this.layers.splice(newIndex, 0, draggedLayer);
-				this.reorderLayerElements();
-				this.reorderGlitterBackgrounds();
-				this.saveState();
-			}
-		}
-
-		this.draggedLayerId = null;
-		this.dropTargetId = null;
-		this.dropInsertAbove = false;
-	}
-
-	handleLayerDrop(event, targetLayerId) {
-		event.preventDefault();
-
-		const insertionLine = document.querySelector('.layer-insertion-line');
-		insertionLine.classList.remove('visible');
-
-		if (!this.draggedLayerId) return;
-
-		// Use stored values from dragover
-		targetLayerId = this.dropTargetId;
-		const insertAbove = this.dropInsertAbove;
-
-		if (!targetLayerId || this.draggedLayerId === targetLayerId) return;
-
-		const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-		const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
-
-		if (draggedIndex === -1 || targetIndex === -1) return;
-
-		// Remove the dragged layer
-		const [draggedLayer] = this.layers.splice(draggedIndex, 1);
-
-		// Recalculate target index after removal
-		let newTargetIndex = this.layers.findIndex(l => l.id === targetLayerId);
-
-		// IMPORTANT: Visual order is reversed!
-		// "Above" visually = higher index in array = AFTER target
-		// "Below" visually = lower index in array = AT target
-		let newIndex = insertAbove ? newTargetIndex + 1 : newTargetIndex;
-
-		// Insert at new position
-		this.layers.splice(newIndex, 0, draggedLayer);
-
-		// OPTIMIZED: Just reorder DOM instead of recreating
-		this.reorderLayerElements();
-		this.reorderGlitterBackgrounds();
-		this.saveState();
-		// No updatePreview() needed - visual stacking order changed but render is same
-	}
-
-	// Fast reordering - just moves existing DOM elements
-	reorderLayerElements() {
-		const container = document.getElementById('layersList');
-		const insertionLine = container.querySelector('.layer-insertion-line');
-
-		// Get all existing layer elements
-		const existingElements = new Map();
-		container.querySelectorAll('.layer-item').forEach(el => {
-			existingElements.set(el.dataset.layerId, el);
-		});
-
-		// Reorder them to match layers array (reversed for display)
-		const fragment = document.createDocumentFragment();
-
-		[...this.layers].reverse().forEach(layer => {
-			const element = existingElements.get(layer.id);
-			if (element) {
-				// Update active state
-				element.classList.toggle('active', layer.id === this.activeLayerId);
-				fragment.appendChild(element);
-			}
-		});
-
-		// Clear and re-append in correct order
-		container.innerHTML = '';
-		container.appendChild(insertionLine);
-		container.appendChild(fragment);
-	}
-
-	// Fast reordering for glitter backgrounds
-	reorderGlitterBackgrounds() {
-		const container = this.glitterBackgroundsContainer;
-
-		// Get existing background elements
-		const existingBgs = new Map();
-		container.querySelectorAll('.glitter-background').forEach(bg => {
-			existingBgs.set(bg.dataset.layerId, bg);
-		});
-
-		// Reorder them to match layers array
-		const fragment = document.createDocumentFragment();
-
-		this.layers.forEach(layer => {
-			const bg = existingBgs.get(layer.id);
-			if (bg) {
-				fragment.appendChild(bg);
-			}
-		});
-
-		container.innerHTML = '';
-		container.appendChild(fragment);
-	}
-
-	handleLayerDragEnd(event) {
-		event.target.classList.remove('dragging');
-		const insertionLine = document.querySelector('.layer-insertion-line');
-		insertionLine.classList.remove('visible');
-
-		if (this.dragScrollInterval) {
-			clearInterval(this.dragScrollInterval);
-			this.dragScrollInterval = null;
-		}
-
-		this.draggedLayerId = null;
-	}
-
-	renderLayersList() {
-		const container = document.getElementById('layersList');
-
-		// Add insertion line if it doesn't exist
-		let insertionLine = container.querySelector('.layer-insertion-line');
-		if (!insertionLine) {
-			insertionLine = document.createElement('div');
-			insertionLine.className = 'layer-insertion-line';
-			container.appendChild(insertionLine);
-		}
-
-		container.innerHTML = '';
-		container.appendChild(insertionLine);
-
-		// Handle dragging over empty space at bottom
-		container.addEventListener('dragover', (e) => {
-			// Only handle if target is the container itself (not a layer item)
-			if (this.draggedLayerId && e.target === container) {
-				e.preventDefault();
-
-				const layerItems = container.querySelectorAll('.layer-item');
-				if (layerItems.length === 0) return;
-
-				// Check if mouse is actually below all layer items
-				const lastItem = layerItems[layerItems.length - 1];
-				const lastRect = lastItem.getBoundingClientRect();
-
-
-			}
-		});
-
-		// Also add drop handler for container
-		container.addEventListener('drop', (e) => {
-			if (e.target === container) {
-				this.handleLayerDrop(e, null);
-			}
-		});
-
-		[...this.layers].reverse().forEach((layer, index) => {
-			const layerEl = document.createElement('div');
-			layerEl.className = 'layer-item';
-			layerEl.dataset.layerId = layer.id;
-			layerEl.draggable = true;
-
-			if (layer.id === this.activeLayerId) {
-				layerEl.classList.add('active');
-			}
-
-			const swatch = document.createElement('div');
-			swatch.className = 'layer-swatch';
-			const glitter = this.glitterGifs[layer.selectedGlitterIndex];
-			if (glitter) {
-				swatch.style.backgroundImage = `url(${glitter.url})`;
-				if (glitter.isPixelated) {
-					swatch.classList.add('pixelated');
-				}
-			}
-
-			// Double-click swatch to go to glitter
-			swatch.addEventListener('dblclick', (e) => {
-				e.stopPropagation();
-				this.goToGlitter(layer.id);
-			});
-
-			const info = document.createElement('div');
-			info.className = 'layer-info';
-			const colorText = document.createElement('div');
-			colorText.className = 'layer-color';
-
-			if (glitter) {
-				colorText.textContent = `${glitter.category} - ${glitter.name}`;
-			} else {
-				colorText.textContent = 'No glitter';
-			}
-
-			info.appendChild(colorText);
-
-			// Create drag handle (mobile only)
-			const dragHandle = document.createElement('div');
-			dragHandle.className = 'layer-drag-handle';
-			dragHandle.innerHTML = `
-				<svg class="icon" viewBox="0 0 24 24">
-					<path d="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z" fill="currentColor"/>
-				</svg>
-			`;
-
-
-			const actions = document.createElement('div');
-			actions.className = 'layer-actions';
-
-
-
-
-			const visBtn = this.createIconButton({
-				className: 'layer-action-btn visibility' + (!layer.visible ? ' hidden' : ''),
-				label: 'Layer Visibility',
-				title: layer.visible ? 'Hide layer' : 'Show layer',
-				iconType: 'eye',
-				onClick: (e) => {
-					e.stopPropagation();
-					this.toggleLayerVisibility(layer.id);
-				}
-			});
-
-			const arrowBtn = this.createIconButton({
-				className: 'layer-action-btn goto-glitter',
-				label: 'Go To',
-				title: 'Go to glitter',
-				iconType: 'chevron-right',
-				onClick: (e) => {
-					e.stopPropagation();
-					this.goToGlitter(layer.id);
-				}
-			});
-
-			const delBtn = this.createIconButton({
-				className: 'layer-action-btn delete',
-				label: 'Delete',
-				title: 'Delete layer',
-				iconType: 'x-mark',
-				onClick: (e) => {
-					e.stopPropagation();
-					if (confirm('Delete this layer?')) this.deleteLayer(layer.id);
-				}
-			});
-
-
-
-
-
-
-
-			actions.append(arrowBtn, visBtn, delBtn);
-			layerEl.append(dragHandle, swatch, info, actions);
-			layerEl.onclick = () => this.setActiveLayer(layer.id);
-
-			// Drag and drop events
-			layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
-			layerEl.addEventListener('dragover', (e) => this.handleLayerDragOver(e, layer.id));
-			layerEl.addEventListener('dragleave', (e) => this.handleLayerDragLeave(e));
-			layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
-			layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
-
-			layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
-			layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
-			layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
-
-
-			container.appendChild(layerEl);
-		});
-
-		// Update layer count
-		const layerCount = document.querySelector('.section-header-title-count');
-		if (layerCount) {
-			layerCount.setAttribute('data-count', this.layers.length);
-		}
-
-		// Update mobile layers count
-		const mobileLayersCount = document.querySelector('.mobile-layers-count');
-		if (mobileLayersCount) {
-			mobileLayersCount.setAttribute('data-count', this.layers.length);
-		}
-
-		document.getElementById('addLayerBtn').disabled = this.layers.length >= CONFIG.maxLayers;
-
-		// Update mobile add button if it exists
-		const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
-		if (mobileAddBtn) {
-			mobileAddBtn.disabled = this.layers.length >= CONFIG.maxLayers;
-		}
-
-		// ADD THIS LINE:
-		this.updateMobileLayersSwatch();
-
-	}
-
-
-	updateMobileLayersSwatch() {
-		const mobileLayersSwatch = document.querySelector('.mobile-layers-swatch');
-		if (!mobileLayersSwatch) return;
-
-		const activeLayer = this.getActiveLayer();
-
-		if (!activeLayer) {
-			// No active layer - show empty state
-			mobileLayersSwatch.classList.add('empty');
-			mobileLayersSwatch.classList.remove('pixelated');
-			mobileLayersSwatch.style.backgroundImage = '';
-			return;
-		}
-
-		const glitter = this.glitterGifs[activeLayer.selectedGlitterIndex];
-		if (glitter) {
-			mobileLayersSwatch.classList.remove('empty');
-			mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
-
-			if (glitter.isPixelated) {
-				mobileLayersSwatch.classList.add('pixelated');
-			} else {
-				mobileLayersSwatch.classList.remove('pixelated');
-			}
-		} else {
-			// Layer exists but no glitter selected
-			mobileLayersSwatch.classList.add('empty');
-			mobileLayersSwatch.classList.remove('pixelated');
-			mobileLayersSwatch.style.backgroundImage = '';
-		}
-	}
-
-	createIconButton({ className = '', id = '', disabled = false, title = '', iconType = '', label = '', onClick }) {
-		const btn = document.createElement('button');
-		btn.className = "btn-icon icon-wrapper " + className;
-		if (id) btn.id = id;
-		if (disabled) btn.disabled = true;
-		if (title) btn.title = title;
-
-		if (iconType) {
-			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-			svg.classList.add('icon');
-			const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-			use.setAttribute('href', `#icon-${iconType}`);
-			svg.appendChild(use);
-			btn.appendChild(svg);
-		}
-
-		if (label) {
-			const span = document.createElement('span');
-			span.className = 'name';
-			span.textContent = label;
-			btn.appendChild(span);
-		}
-
-		if (onClick) btn.onclick = onClick;
-
-		return btn;
-	}
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
@@ -2062,16 +2202,9 @@ class GlitterEditor {
 		});
 
 		// --- LAYER ACTIONS ---
-		document.getElementById('addLayerBtn').addEventListener('click', () => this.addLayer());
+		document.getElementById('addLayerBtn').addEventListener('click', () => this.layerManager.addLayer());
 
-		// --- LAYER DESELECTION ---
-		const layersList = document.getElementById('layersList');
-		layersList.addEventListener('click', (e) => {
-			// Only deselect if clicking the container itself
-			if (e.target === layersList) {
-				this.setActiveLayer(null);
-			}
-		});
+
 
 		// --- IMAGE HANDLING ---
 		document.getElementById('imageClearBtn').addEventListener('click', () => this.clearImage());
@@ -2121,7 +2254,7 @@ class GlitterEditor {
 		document.getElementById('multiSelect').addEventListener('change', (e) => {
 
 			// If multi-select is disabled, clear all selections except the first
-			const layer = this.getActiveLayer();
+			const layer = this.layerManager.getActiveLayer();
 			if (!e.target.checked && layer && layer.selections.length > 1) {
 				layer.selections = [layer.selections[0]];
 			}
@@ -2483,7 +2616,7 @@ class GlitterEditor {
 
 		this.activeLayerId = state.activeLayerId;
 
-		this.renderLayersList();
+		this.layerManager.renderLayersList();
 		this.loadActiveLayerSettings();
 		this.updateGlitterSelection();
 		this.updatePreview();
@@ -2587,8 +2720,8 @@ class GlitterEditor {
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
-		this.layers = [];
-		this.activeLayerId = null; // Important: set to null
+this.layerManager.layers = [];
+this.layerManager.activeLayerId = null;
 
 		// Reset UI
 		document.getElementById('imageUpload').value = '';
@@ -2622,7 +2755,7 @@ class GlitterEditor {
 		this.resetViewport();
 		this.updateZoomUI();
 
-		this.renderLayersList();
+		this.layerManager.renderLayersList();
 		this.updateHistoryButtons();
 		this.updateActionButtons();
 		this.updateGlitterOptionsState();
@@ -2904,7 +3037,7 @@ class GlitterEditor {
 
 	async selectGlitter(index) {
 
-		const layer = this.getActiveLayer();
+		const layer = this.layerManager.getActiveLayer();
 		if (!layer) {
 			// UX: Don't allow selection when no layer is active
 			return;
@@ -2933,7 +3066,7 @@ class GlitterEditor {
 		}
 
 		this.updateGlitterSelection();
-		this.renderLayersList();
+		this.layerManager.renderLayersList();
 
 		if (layer.selections.length > 0) {
 			this.updatePreview();
@@ -2997,19 +3130,19 @@ class GlitterEditor {
 			document.getElementById('dropzoneContent').classList.remove('visible');
 			this.originalCanvas.classList.add('visible');
 
-			// Clear previous layers and glitter
-			this.layers = [];
-			this.glitterBackgroundsContainer.innerHTML = '';
+// Clear previous layers and glitter
+this.layers = [];
+this.glitterBackgroundsContainer.innerHTML = '';
 
-			if (CONFIG.createDefaultLayerOnLoad) {
-				const layer = this.createLayer();
-				this.layers.push(layer);
-				this.setActiveLayer(layer.id); // Use setActiveLayer instead of directly setting activeLayerId
-			} else {
-				this.activeLayerId = null;
-				this.showLayerSettingsEmptyState();
-				this.showGlitterSettingsEmptyState();
-			}
+if (CONFIG.createDefaultLayerOnLoad) {
+	const layer = this.layerManager.createLayer();
+	this.layers.push(layer);
+	this.layerManager.setActiveLayer(layer.id);
+} else {
+	this.activeLayerId = null;
+	this.showLayerSettingsEmptyState();
+	this.showGlitterSettingsEmptyState();
+}
 
 			this.history = [{
 				layers: this.layers.map(layer => ({
@@ -3023,7 +3156,7 @@ class GlitterEditor {
 			}];
 			this.historyIndex = 0;
 
-			this.renderLayersList();
+			this.layerManager.renderLayersList();
 			this.updateHistoryButtons();
 			this.updateActionButtons();
 			this.updateStatusBar();
@@ -3087,16 +3220,16 @@ class GlitterEditor {
 			return;
 		}
 
-		// Select Tool: Pick layer at click location
-		if (this.currentTool === 'select') {
-			this.handleLayerPick(x, y);
-			return;
-		}
+// Select Tool: Pick layer at click location
+if (this.currentTool === 'select') {
+	this.layerManager.handleLayerPick(x, y);
+	return;
+}
 
 		// Color Picker Tool
 		// Color Picker Tool
 		if (this.currentTool === 'colorPicker') {
-			let layer = this.getActiveLayer();
+			let layer = this.layerManager.getActiveLayer();
 
 			// If no active layer, find an empty one or create new
 			if (!layer) {
@@ -3104,18 +3237,18 @@ class GlitterEditor {
 				const emptyLayer = this.layers.find(l => !l.selections || l.selections.length === 0);
 
 				if (emptyLayer) {
-					// Reuse empty layer
-					this.setActiveLayer(emptyLayer.id);
-					layer = emptyLayer;
-					this.updateStatus('Selected empty layer');
+// Reuse empty layer
+this.layerManager.setActiveLayer(emptyLayer.id);
+layer = emptyLayer;
+this.updateStatus('Selected empty layer');
 				} else {
-					// All layers have selections - create a new one
-					const newLayer = this.createLayer();
-					this.layers.push(newLayer);
-					this.setActiveLayer(newLayer.id);
-					this.renderLayersList();
-					layer = newLayer;
-					this.updateStatus('Created new layer');
+// All layers have selections - create a new one
+const newLayer = this.layerManager.createLayer();
+this.layers.push(newLayer);
+this.layerManager.setActiveLayer(newLayer.id);
+this.layerManager.renderLayersList();
+layer = newLayer;
+this.updateStatus('Created new layer');
 				}
 			}
 
@@ -3135,88 +3268,24 @@ class GlitterEditor {
 			const multiSelect = layer.settings.multiSelect;
 			if (!multiSelect) layer.selections = [];
 
-			layer.selections.push({ r, g, b, x, y });
-			this.renderLayersList();
-			this.saveState();
-			this.updatePreview();
-			this.updateActionButtons();
-			this.updateSelectedColorsDisplay();
+layer.selections.push({ r, g, b, x, y });
+this.layerManager.renderLayersList();
+this.saveState();
+this.updatePreview();
+this.updateActionButtons();
+this.updateSelectedColorsDisplay();
 
 			this.updateStatus(`Selected RGB(${r}, ${g}, ${b}) at (${x}, ${y})`);
 		}
 	}
 
-	handleLayerPick(x, y) {
-		// Check layers from top to bottom (end to start of array)
-		for (let i = this.layers.length - 1; i >= 0; i--) {
-			const layer = this.layers[i];
 
-			// Skip invisible layers
-			if (!layer.visible) continue;
 
-			// Skip layers without selections
-			if (!layer.selections || layer.selections.length === 0) continue;
 
-			// Check if this pixel is covered by this layer's selection
-			if (this.isPixelInLayerSelection(layer, x, y)) {
-				this.setActiveLayer(layer.id);
-				const glitterName = this.glitterGifs[layer.selectedGlitterIndex]?.name || 'Layer';
-				this.updateStatus(`Selected: ${glitterName}`);
-
-				// Brief visual feedback
-				const flash = document.createElement('div');
-				flash.className = 'layer-pick-flash';
-				flash.style.left = (x / this.previewCanvas.width * 100) + '%';
-				flash.style.top = (y / this.previewCanvas.height * 100) + '%';
-				this.previewWrapper.appendChild(flash);
-				setTimeout(() => flash.remove(), 300);
-
-				return;
-			}
-		}
-
-		// Nothing clicked - deselect
-		this.setActiveLayer(null);
-		this.updateStatus('No layer at this location');
-	}
-
-	isPixelInLayerSelection(layer, x, y) {
-		const pixelIndex = y * this.originalCanvas.width + x;
-		const i = pixelIndex * 4;
-
-		const pixelR = this.originalImageData.data[i];
-		const pixelG = this.originalImageData.data[i + 1];
-		const pixelB = this.originalImageData.data[i + 2];
-		const pixelAlpha = this.originalAlphaChannel[pixelIndex];
-
-		// Check if pixel is transparent
-		if (pixelAlpha < CONFIG.alphaThreshold) {
-			return false;
-		}
-
-		// Check if pixel matches any of this layer's color selections
-		const threshold = layer.settings.threshold;
-		const invert = layer.settings.invert;
-
-		for (const sel of layer.selections) {
-			const distance = Math.sqrt(
-				Math.pow(pixelR - sel.r, 2) +
-				Math.pow(pixelG - sel.g, 2) +
-				Math.pow(pixelB - sel.b, 2)
-			);
-
-			const matches = distance <= threshold;
-			if (invert ? !matches : matches) {
-				return true;
-			}
-		}
-
-		return false;
-	}
 
 	updateSelectedColorsDisplay() {
 		const container = document.getElementById('selectedColorsDisplay');
-		const layer = this.getActiveLayer();
+		const layer = this.layerManager.getActiveLayer();
 
 		if (!layer || layer.selections.length === 0) {
 			container.innerHTML = '<span class="empty-state-text">None</span>';
@@ -3249,11 +3318,11 @@ class GlitterEditor {
 	}
 
 	removeColorSelection(index) {
-		const layer = this.getActiveLayer();
+		const layer = this.layerManager.getActiveLayer();
 		if (!layer) return;
 
 		layer.selections.splice(index, 1);
-		this.renderLayersList();
+		this.layerManager.renderLayersList();
 		this.saveState();
 
 		if (layer.selections.length > 0) {
@@ -3286,7 +3355,7 @@ class GlitterEditor {
 
 		const layersToShow = this.showAllLayers
 			? this.layers.filter(l => l.visible && l.selections.length > 0)
-			: [this.getActiveLayer()].filter(l => l && l.visible && l.selections.length > 0);
+			: [this.layerManager.getActiveLayer()].filter(l => l && l.visible && l.selections.length > 0);
 
 		if (layersToShow.length === 0) {
 			this.clearPreview();
@@ -4679,7 +4748,7 @@ class MobileManager {
 		const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
 		if (mobileAddLayerBtn) {
 			mobileAddLayerBtn.addEventListener('click', () => {
-				this.editor.addLayer();
+				this.editor.layerManager.addLayer();
 			});
 		}
 
