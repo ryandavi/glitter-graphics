@@ -2609,24 +2609,17 @@ async loadStickerImageData(layer) {
 		}
 	}
 
-	updateTransparencyGrid() {
-		if (!this.previewContainer.classList.contains('transparent-bg')) return;
+updateTransparencyGrid() {
+    if (!this.previewContainer.classList.contains('transparent-bg')) return;
 
-		const baseSize = CONFIG.baseGridSize;
-		const size = baseSize * this.viewport.currentZoom;
-		const half = size / 2;
+    const baseSize = CONFIG.baseGridSize;
+    const size = baseSize * this.viewport.currentZoom;
+    const half = size / 2;
 
-		this.previewContainer.style.backgroundSize = `${size}px ${size}px`;
-		this.previewContainer.style.backgroundPosition =
-			`${this.panX}px ${this.panY}px, ${this.panX}px ${this.panY + half}px, ${this.panX + half}px ${this.panY - half}px, ${this.panX - half}px ${this.panY}px`;
-	}
-
-	// ===== LAYER MANAGEMENT =====
-
-
-
-
-
+    this.previewContainer.style.backgroundSize = `${size}px ${size}px`;
+    this.previewContainer.style.backgroundPosition =
+        `${this.viewport.panX}px ${this.viewport.panY}px, ${this.viewport.panX}px ${this.viewport.panY + half}px, ${this.viewport.panX + half}px ${this.viewport.panY - half}px, ${this.viewport.panX - half}px ${this.viewport.panY}px`;
+}
 
 
 	// ===== UX: EMPTY STATE MANAGEMENT =====
