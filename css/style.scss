@@ -1,18 +1,22 @@
 /* ===== CSS VARIABLES ===== */
 :root {
 	/* Base color scales */
-	--gray-100: #e0e0e0; /* lightest */
+	--gray-100: #e0e0e0;
+	/* lightest */
 	--gray-200: #888;
 	--gray-300: #666;
 	--gray-400: #4a4a4a;
 	--gray-500: #3a3a3a;
 	--gray-600: #2a2a2a;
 	--gray-700: #222;
-	--gray-800: #1a1a1a; /* darkest */
+	--gray-800: #1a1a1a;
+	/* darkest */
 
-	--blue-100: #449eff; /* lightest */
+	--blue-100: #449eff;
+	/* lightest */
 	--blue-200: #007bff;
-	--blue-300: #0070e7; /* darkest */
+	--blue-300: #0070e7;
+	/* darkest */
 
 	--red-100: #d32f2f;
 	--green-100: #4caf50;
@@ -75,14 +79,15 @@
 	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
 	--glitter-swatch-columns: 4;
 	--color-filter-chip-size: 32px;
-	
-	/* MOBILE */
-	--mobile-menu-height: 60px;
-	--mobile-header-height: 60px;
-	--mobile-top-nav-height: 50px;
-	--mobile-bottom-nav-height: 60px;
-	--mobile-drawer-height: 50dvh;
-	--mobile-breakpoint: 800px;
+
+/* MOBILE */
+--mobile-menu-height: 60px;
+--mobile-header-height: 60px;
+--mobile-top-nav-height: 50px;
+--mobile-bottom-nav-height: 60px;
+--mobile-drawer-height: 50vh; /* Fallback for older browsers */
+--mobile-drawer-height: 50dvh; /* Modern browsers override */
+--mobile-breakpoint: 800px;
 
 	/* z indexes */
 	--modal-z-index: 20000;
@@ -102,46 +107,51 @@
 }
 
 @mixin bar-base {
-  background-image: linear-gradient(to top, var(--gray-700) 50%, var(--gray-300) 100%);
-  text-shadow: 0 1px 1px #000;
-  color: var(--color-text-primary);
+	background-image: linear-gradient(to top, var(--gray-700) 50%, var(--gray-300) 100%);
+	text-shadow: 0 1px 1px #000;
+	color: var(--color-text-primary);
 }
 
 @mixin hover-states($hover: false) {
-  @if $hover {
-    &:not(:disabled):hover { filter: brightness(1.15); }
-    &:not(:disabled):active { filter: brightness(0.85); }
-  }
+	@if $hover {
+		&:not(:disabled):hover {
+			filter: brightness(1.15);
+		}
+
+		&:not(:disabled):active {
+			filter: brightness(0.85);
+		}
+	}
 }
 
 @mixin windows7-bar($hover: false) {
-  &.app-header {
-    @include bar-base;
-  }
+	&.app-header {
+		@include bar-base;
+	}
 
-  &.section-header {
-    @include bar-base;
+	&.section-header {
+		@include bar-base;
 
-    > .section-header-title {
-      color: var(--color-text-primary);
-    }
+		>.section-header-title {
+			color: var(--color-text-primary);
+		}
 
-    @include hover-states($hover);
+		@include hover-states($hover);
 
-  }
+	}
 
-  &.collapsible-section {
-    > .section-header {
-      @include bar-base;
+	&.collapsible-section {
+		>.section-header {
+			@include bar-base;
 
-      > .section-header-title {
-        color: #fff;
-      }
+			>.section-header-title {
+				color: #fff;
+			}
 
-      @include hover-states($hover);
+			@include hover-states($hover);
 
-    }
-  }
+		}
+	}
 }
 
 @mixin windows7-window {
@@ -231,18 +241,18 @@
 }
 
 @mixin secondary-button-filters {
-  &:before {
-    filter: saturate(0.3) contrast(0.7) brightness(0.8);
-    transition: filter 0.2s;
-  }
+	&:before {
+		filter: saturate(0.3) contrast(0.7) brightness(0.8);
+		transition: filter 0.2s;
+	}
 
-  &:hover:before {
-    filter: saturate(0.5) contrast(0.9) brightness(1);
-  }
+	&:hover:before {
+		filter: saturate(0.5) contrast(0.9) brightness(1);
+	}
 
-  &:active:before {
-    filter: saturate(0.7) contrast(1.1) brightness(1.15);
-  }
+	&:active:before {
+		filter: saturate(0.7) contrast(1.1) brightness(1.15);
+	}
 }
 
 @mixin windows7-button($inactiveIsSecondary: false) {
@@ -290,6 +300,7 @@
 		filter: brightness(1.2) saturate(1.1);
 	}
 
+
 	&:active:not(:disabled):before {
 		filter: brightness(1) contrast(1.2) saturate(1.1);
 		border-top-color: black;
@@ -301,17 +312,17 @@
 		cursor: not-allowed;
 	}
 
-// Usage for inactiveIsSecondary
-@if $inactiveIsSecondary {
-  &:not(.active) {
-    @include secondary-button-filters;
-  }
-}
+	// Usage for inactiveIsSecondary
+	@if $inactiveIsSecondary {
+		&:not(.active):not(.primary) {
+			@include secondary-button-filters;
+		}
+	}
 
-// Usage for .secondary class
-&.secondary {
-  @include secondary-button-filters;
-}
+	// Usage for .secondary class
+	&.secondary {
+		@include secondary-button-filters;
+	}
 
 
 }
@@ -401,7 +412,12 @@ body {
 	background: var(--color-bg-primary);
 	color: var(--color-text-primary);
 	overflow: hidden;
+
+	/* Fallback for older browsers */
 	height: 100vh;
+	/* Modern browsers with dynamic viewport */
+	height: 100dvh;
+
 }
 
 /* ===== REUSABLE COMPONENTS ===== */
@@ -511,7 +527,7 @@ input[type="range"] {
 		>svg.icon {
 			width: 28px;
 			height: 28px;
-			
+
 
 			+span.name {
 				display: block;
@@ -548,7 +564,7 @@ input[type="range"] {
 	padding: 0;
 	color: var(--color-text-secondary);
 
-	
+
 
 	&:hover {
 		background: var(--color-bg-tertiary);
@@ -698,7 +714,10 @@ input[type="range"] {
 .app-container {
 	display: flex;
 	flex-direction: column;
+	/* Fallback for older browsers */
 	height: 100vh;
+	/* Modern browsers with dynamic viewport */
+	height: 100dvh;
 }
 
 /* ===== HEADER ===== */
@@ -995,9 +1014,7 @@ input[type="range"] {
 				border-color: var(--color-accent);
 				background: #2a3a4a;
 
-				>.layer-swatch {
-					outline-color: var(--color-text-tertiary);
-				}
+
 			}
 
 			&.dragging {
@@ -1010,8 +1027,7 @@ input[type="range"] {
 				border-radius: var(--radius-sm);
 				background-size: cover;
 				flex-shrink: 0;
-				outline: 2px solid var(--color-border);
-				outline-offset: 2px;
+
 
 				transition: opacity var(--transition-fast);
 
@@ -1049,7 +1065,7 @@ input[type="range"] {
 					width: 28px;
 					height: 28px;
 
-	
+
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -1134,7 +1150,7 @@ input[type="range"] {
 			text-transform: uppercase;
 			color: var(--color-text-secondary);
 
-			
+
 
 			>.section-header-title-icon {
 				color: var(--color-text-tertiary);
@@ -1167,7 +1183,7 @@ input[type="range"] {
 				width: 32px;
 				height: 32px;
 
-	
+
 
 				&.visible {
 					visibility: visible;
@@ -1212,7 +1228,7 @@ input[type="range"] {
 						background-color: unset;
 					}
 
-					&.collapsed .icon{
+					&.collapsed .icon {
 						transform: rotate(-90deg);
 					}
 				}
@@ -2083,8 +2099,18 @@ input[type="range"] {
 		border: 1px solid var(--color-border-hover);
 		border-radius: var(--radius-lg);
 		width: 700px;
-		max-width: 90vw;
+
+		/* Fallback for older browsers */
 		max-height: 90vh;
+		/* Modern browsers with dynamic viewport */
+		max-height: 90dvh;
+
+		/* Fallback for older browsers */
+		max-width: 90vw;
+		/* Modern browsers with dynamic viewport */
+		max-width: 90dvw;
+
+
 		display: flex;
 		flex-direction: column;
 		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
@@ -2115,9 +2141,7 @@ input[type="range"] {
 
 			}
 
-			>.modal-close {
-
-			}
+			>.modal-close {}
 
 		}
 
@@ -2126,7 +2150,11 @@ input[type="range"] {
 			overflow-y: auto;
 			color: var(--color-text-secondary);
 			line-height: 1.55;
+
+			/* Fallback for older browsers */
 			max-height: 70vh;
+			/* Modern browsers with dynamic viewport */
+			max-height: 70dvh;
 
 
 			a {
@@ -2172,9 +2200,9 @@ input[type="range"] {
 			}
 
 
-			>h2 + p,
-			>h2 + ol,
-			>h2 + ul,
+			>h2+p,
+			>h2+ol,
+			>h2+ul,
 
 			>h3+p,
 			>h3+ol,
@@ -2339,11 +2367,26 @@ input[type="range"] {
 
 /* ===== MOBILE LAYOUT ===== */
 
+// Mobile controls visibility
 .mobile-bottom-nav,
-.mobile-top-nav,
-.mobile-swatch {
+.mobile-top-nav {
 	display: none; // Hidden by default
 }
+
+// Mobile top nav and bottom nav controlled differently
+@media (max-width: 800px) {
+	// Top nav shows when .visible (both tabs)
+	.mobile-top-nav.visible {
+		display: flex;
+	}
+	
+	// Bottom nav ONLY shows in preview tab (not image tab)
+	body.mobile-preview-tab .mobile-bottom-nav.visible {
+		display: flex;
+	}
+
+}
+
 
 @media (max-width: 800px) {
 
@@ -2352,8 +2395,9 @@ input[type="range"] {
 
 	}
 
-	.toolbar,
-	.mobile-swatch {
+
+
+	.toolbar {
 		@include floating-ui;
 	}
 
@@ -2427,8 +2471,7 @@ input[type="range"] {
 					width: 18px;
 					height: 18px;
 					border-radius: var(--radius-sm);
-					outline: 2px solid var(--gray-100);
-					outline-offset: 2px;
+
 					background-size: cover;
 					background-position: center;
 					flex-shrink: 0;
@@ -2472,9 +2515,9 @@ input[type="range"] {
 			flex-shrink: 0;
 			padding: var(--spacing-md);
 
-			@include windows7-button();
+			
 
-	
+
 
 
 			&:disabled {
@@ -2486,51 +2529,36 @@ input[type="range"] {
 	}
 
 
-	body.mobile-preview-tab .mobile-swatch.visible {
-		// CHANGED: added .visible
-		display: block;
-	}
 
 
-	// Mobile Swatch Display (only shown in mobile preview tab when layer is active)
-	.mobile-swatch {
-		position: absolute;
-		top: var(--spacing-md);
-		left: var(--spacing-md);
-		z-index: 1000;
-		cursor: pointer;
-		transition: all var(--transition-fast);
 
-		&:hover {
-			border-color: var(--color-accent);
-			transform: scale(1.05);
-		}
+.layer-drag-handle {
+    display: none; // Hidden on desktop
+    width: 24px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: grab;
+    color: var(--color-text-secondary);
+    opacity: 0.5;
+    transition: opacity var(--transition-fast);
+    
+    .icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    &:active {
+        cursor: grabbing;
+    }
+    
+    // Show on mobile
+    @media (max-width: 800px) {
+        display: flex;
+    }
+}
 
-		>.mobile-swatch-icon {
-			width: 40px;
-			height: 40px;
-			border-radius: var(--radius-sm);
-			background-size: cover;
-			background-position: center;
-			border: 1px solid var(--color-border);
-
-
-			&.pixelated {
-				image-rendering: pixelated;
-			}
-		}
-
-		>.mobile-swatch-label {
-			font-size: var(--font-size-xs);
-			text-align: center;
-			color: var(--color-text-secondary);
-			font-weight: 600;
-			letter-spacing: 0.5px;
-			text-transform: uppercase;
-			display: none;
-			margin-top: var(--spacing-xs);
-		}
-	}
 
 
 	.section-header {
@@ -2562,7 +2590,7 @@ input[type="range"] {
 			display: none;
 		}
 
-		> .toolbar-group + .toolbar-group {
+		>.toolbar-group+.toolbar-group {
 			margin: 0;
 			padding: 0;
 			border: unset;
@@ -2602,7 +2630,11 @@ input[type="range"] {
 	body.mobile-image-tab {
 		.main-content>.left-panel {
 			display: flex;
+			/* Fallback for older browsers */
+			height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
+			/* Modern browsers with dynamic viewport */
 			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
+
 
 			.layers-section {
 				display: none;
@@ -2631,6 +2663,10 @@ input[type="range"] {
 		}
 	}
 
+	.image-container > .image-dropzone-wrapper > .image-dropzone.has-image > .image-upload-overlay {
+		opacity: 1;
+	}
+
 	/* ===== PREVIEW TAB ===== */
 	body.mobile-preview-tab {
 		.mobile-bottom-nav {
@@ -2643,6 +2679,9 @@ input[type="range"] {
 
 		.main-content>.right-panel {
 			display: flex;
+			/* Fallback for older browsers */
+			height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
+			/* Modern browsers with dynamic viewport */
 			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
 			padding-bottom: var(--mobile-bottom-nav-height);
 		}
@@ -2844,12 +2883,6 @@ input[type="range"] {
 			}
 		}
 	}
-
-
-
-
-
-
 }
 
 #settingsModal {
@@ -2995,7 +3028,7 @@ input[type="range"] {
 	align-items: center;
 	justify-content: center;
 	display: inline-flex;
-	
+
 	>svg.icon {
 		width: 1em;
 		height: 1em;

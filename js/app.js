@@ -156,13 +156,14 @@ class GlitterEditor {
 		this.lastViewportHeight = 0;
 
 		// Touch gesture state
-		this.touch = {
-			active: false,
-			startDistance: 0,
-			startZoom: 1,
-			startPan: { x: 0, y: 0 },
-			lastCenter: { x: 0, y: 0 }
-		};
+// Touch gesture state
+this.touch = {
+    active: false,
+    startDistance: 0,
+    startZoom: 1,
+    anchorScreen: { x: 0, y: 0 },
+    anchorCanvas: { x: 0, y: 0 }
+};
 
 
 		// Filter state
@@ -647,108 +648,80 @@ class GlitterEditor {
 		this.previewContainer.classList.remove('panning');
 	}
 
-	setupTouchGestures() {
-		const container = this.previewContainer;
+setupTouchGestures() {
+    const container = this.previewContainer;
 
-		const getTouchDistance = (touch1, touch2) => {
-			const dx = touch2.clientX - touch1.clientX;
-			const dy = touch2.clientY - touch1.clientY;
-			return Math.sqrt(dx * dx + dy * dy);
-		};
+    const getTouchDistance = (touch1, touch2) => {
+        const dx = touch2.clientX - touch1.clientX;
+        const dy = touch2.clientY - touch1.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
 
-		const getTouchCenter = (touch1, touch2) => {
-			return {
-				x: (touch1.clientX + touch2.clientX) / 2,
-				y: (touch1.clientY + touch2.clientY) / 2
-			};
-		};
+    const getTouchCenter = (touch1, touch2) => {
+        return {
+            x: (touch1.clientX + touch2.clientX) / 2,
+            y: (touch1.clientY + touch2.clientY) / 2
+        };
+    };
 
-		container.addEventListener('touchstart', (e) => {
-			if (e.touches.length === 2) {
-				e.preventDefault();
+    container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
 
-				this.touch.active = true;
-				this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
-				this.touch.startZoom = this.currentZoom;
-				this.touch.startPan = { x: this.panX, y: this.panY };
-				this.touch.lastCenter = getTouchCenter(e.touches[0], e.touches[1]);
-			}
-		}, { passive: false });
+            const center = getTouchCenter(e.touches[0], e.touches[1]);
+            
+            const rect = container.getBoundingClientRect();
+            const anchorX = center.x - rect.left;
+            const anchorY = center.y - rect.top;
+            
+            const canvasX = (anchorX - this.panX) / this.currentZoom;
+            const canvasY = (anchorY - this.panY) / this.currentZoom;
 
-		container.addEventListener('touchmove', (e) => {
-			if (this.touch.active && e.touches.length === 2) {
-				e.preventDefault();
+            this.touch.active = true;
+            this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
+            this.touch.startZoom = this.currentZoom;
+            this.touch.anchorScreen = { x: anchorX, y: anchorY };
+            this.touch.anchorCanvas = { x: canvasX, y: canvasY };
+        }
+    }, { passive: false });
 
-				// Calculate new distance and zoom
-				const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
-				const scale = currentDistance / this.touch.startDistance;
-				const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
+    container.addEventListener('touchmove', (e) => {
+        if (this.touch.active && e.touches.length === 2) {
+            e.preventDefault();
 
-				// Calculate center point movement for panning
-				const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
-				const deltaCenterX = currentCenter.x - this.touch.lastCenter.x;
-				const deltaCenterY = currentCenter.y - this.touch.lastCenter.y;
+            const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+            const scale = currentDistance / this.touch.startDistance;
+            const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
 
-				// Update zoom and pan
-				this.currentZoom = newZoom;
-				this.panX = this.touch.startPan.x + deltaCenterX;
-				this.panY = this.touch.startPan.y + deltaCenterY;
+            const newCanvasX = this.touch.anchorCanvas.x * newZoom;
+            const newCanvasY = this.touch.anchorCanvas.y * newZoom;
+            
+            this.panX = this.touch.anchorScreen.x - newCanvasX;
+            this.panY = this.touch.anchorScreen.y - newCanvasY;
+            this.currentZoom = newZoom;
 
-				// Update zoom index for consistency
-				this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
-				if (this.currentZoomIndex === -1) {
-					this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
-				}
+            this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
+            if (this.currentZoomIndex === -1) {
+                this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
+            }
 
-				// Apply changes
-				this.applyZoomTransform();
-				this.updateZoomUI();
-				this.updateTransparencyGrid();
-				this.updateStatusBar();
-			}
-		}, { passive: false });
+            this.applyZoomTransform();
+            this.updateZoomUI();
+            this.updateTransparencyGrid();
+            this.updateStatusBar();
+        }
+    }, { passive: false });
 
-		container.addEventListener('touchend', (e) => {
-			if (e.touches.length < 2) {
-				this.touch.active = false;
-			}
-		});
+    container.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) {
+            this.touch.active = false;
+        }
+    });
 
-		container.addEventListener('touchcancel', () => {
-			this.touch.active = false;
-		});
-
-this.previewContainer.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1 && this.currentTool === 'hand') {
-        const touch = e.touches[0];
-        // Now valid: startPan accepts numbers
-        this.startPan(touch.clientX, touch.clientY); 
-        e.preventDefault();
-    }
-}, { passive: false });
-
-		this.previewContainer.addEventListener('touchmove', (e) => {
-			if (e.touches.length === 1 && this.isPanning) {
-				const touch = e.touches[0];
-				const deltaX = touch.clientX - this.panStartX;
-				const deltaY = touch.clientY - this.panStartY;
-
-				this.panX = this.lastPanX + deltaX;
-				this.panY = this.lastPanY + deltaY;
-
-				this.applyZoomTransform();
-				e.preventDefault();
-			}
-		}, { passive: false });
-
-		this.previewContainer.addEventListener('touchend', (e) => {
-			if (this.isPanning && e.touches.length === 0) {
-				this.endPan();
-			}
-		});
-
-
-	}
+    container.addEventListener('touchcancel', () => {
+        this.touch.active = false;
+    });
+}
 
 	updateZoomUI() {
 		const percentage = Math.round(this.currentZoom * 100);
@@ -1150,21 +1123,21 @@ this.previewContainer.addEventListener('touchstart', (e) => {
 		}
 	}
 
-	handleLayerTouchStart(event, layerId) {
-		// Only start drag if touching the drag handle area (not buttons)
-		if (event.target.closest('.layer-actions')) {
-			return; // Don't drag if touching buttons
-		}
+handleLayerTouchStart(event, layerId) {
+    // ONLY start drag if touching the drag handle specifically
+    if (!event.target.closest('.layer-drag-handle')) {
+        return; // Allow normal tap to select, scrolling, button clicks
+    }
 
-		this.draggedLayerId = layerId;
-		event.currentTarget.classList.add('dragging');
+    this.draggedLayerId = layerId;
+    event.currentTarget.classList.add('dragging');
 
-		const touch = event.touches[0];
-		this.touchDragStartY = touch.clientY;
-		this.touchDragLastY = touch.clientY;
+    const touch = event.touches[0];
+    this.touchDragStartY = touch.clientY;
+    this.touchDragLastY = touch.clientY;
 
-		event.preventDefault();
-	}
+    event.preventDefault(); // Only prevent when actually dragging
+}
 
 	handleLayerTouchMove(event) {
 		if (!this.draggedLayerId) return;
@@ -1437,6 +1410,16 @@ this.previewContainer.addEventListener('touchstart', (e) => {
 
 			info.appendChild(colorText);
 
+			// Create drag handle (mobile only)
+			const dragHandle = document.createElement('div');
+			dragHandle.className = 'layer-drag-handle';
+			dragHandle.innerHTML = `
+				<svg class="icon" viewBox="0 0 24 24">
+					<path d="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z" fill="currentColor"/>
+				</svg>
+			`;
+
+
 			const actions = document.createElement('div');
 			actions.className = 'layer-actions';
 
@@ -1482,9 +1465,8 @@ this.previewContainer.addEventListener('touchstart', (e) => {
 
 
 
-			actions.append(arrowBtn, visBtn, delBtn);  // CHANGED: added arrowBtn
-
-			layerEl.append(swatch, info, actions);
+			actions.append(arrowBtn, visBtn, delBtn);
+			layerEl.append(dragHandle, swatch, info, actions);
 			layerEl.onclick = () => this.setActiveLayer(layer.id);
 
 			// Drag and drop events
@@ -3812,26 +3794,34 @@ async _handleFileSave(blob, callbacks) {
 		img.src = blobUrl;
 
 		// 4. Configure UI Logic
-		if (isIOS) {
-			// --- iOS Logic ---
-			
-			// DISABLE "Open GIF" & "Save" (Direct download fails/breaks on iOS)
-			configureBtn(openBtn, false); 
-			configureBtn(saveBtn, false);
+if (isIOS) {
+    // --- iOS Logic ---
+    
+    // DISABLE "Open GIF" & "Save" (Direct download fails/breaks on iOS)
+    configureBtn(openBtn, false); 
+    configureBtn(saveBtn, false);
 
-			if (canShare) {
-				// ENABLE "Share" (mapped to Save Image)
-				configureBtn(shareBtn, true, "Save Image");
-				
-				instructions.innerHTML = `
-					<p><strong>Ready!</strong> Tap the <strong>"Save Image"</strong> button below <br>
-					to save the animation to your Photos.</p>`;
-			} else {
-				// Fallback (Rare old iOS)
-				configureBtn(shareBtn, false);
-				instructions.innerHTML = `<p>Long-press the image to save.</p>`;
-			}
-		} 
+    if (canShare) {
+        // ENABLE "Share" (mapped to Save Image)
+        configureBtn(shareBtn, true, "Save Image");
+        
+        instructions.innerHTML = `
+            <p><strong>Ready!</strong> Tap <strong>"Save Image"</strong> below to save to Photos.</p>
+            <p class="text-muted" style="margin-top: 8px; font-size: 12px;">
+                <strong>Why can't I just tap and hold?</strong><br>
+                iOS doesn't support saving animated GIFs directly from the browser. 
+                Using the Share button preserves the animation properly.
+            </p>`;
+    } else {
+        // Fallback (Rare old iOS)
+        configureBtn(shareBtn, false);
+        instructions.innerHTML = `
+            <p>Long-press the image to save.</p>
+            <p class="text-muted" style="margin-top: 8px; font-size: 12px;">
+                Note: This may save as a still image. Update iOS to use the Share feature for full animation support.
+            </p>`;
+    }
+}
 		else {
 			// --- Desktop / Android Logic ---
 			
@@ -4273,148 +4263,62 @@ class MobileManager {
 		this.setupImageEvents();
 	}
 
-	init() {
-		console.log('Mobile: Initializing mobile manager');
-		this.createMobileControls();
-		this.createMobileSwatch();
-		this.setupEventListeners();
-		this.switchTab('image');
-		console.log('Mobile: Initialization complete, on image tab');
-	}
+init() {
+    console.log('Mobile: Initializing mobile manager');
+    this.showMobileControls();
+    this.setupEventListeners();
+    this.switchTab('image');
+    console.log('Mobile: Initialization complete, on image tab');
+}
 
-	createMobileSwatch() {
-		// Check if already exists
-		if (document.querySelector('.mobile-swatch')) {
-			return;
-		}
 
-		const previewContainer = document.getElementById('previewContainer');
+showMobileControls() {
+    const topNav = document.querySelector('.mobile-top-nav');
+    const bottomNav = document.querySelector('.mobile-bottom-nav');
 
-		const swatch = document.createElement('div');
-		swatch.className = 'mobile-swatch';
-		swatch.innerHTML = `
-		<div class="mobile-swatch-icon"></div>
-		<div class="mobile-swatch-label">Glitter</div>
-	`;
+    
+    if (topNav) topNav.classList.add('visible');
+    if (bottomNav) bottomNav.classList.add('visible');
+    
+    // Update initial state based on whether image exists
+    const previewTab = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+    if (previewTab) {
+        previewTab.disabled = !this.editor.originalImage;
+    }
+    
 
-		swatch.addEventListener('click', () => {
-			this.toggleDrawer('glitter');
-		});
+    
 
-		previewContainer.appendChild(swatch);
-
-		// Initial update
-		this.updateMobileSwatch();
-	}
-
-	updateMobileSwatch() {
-		const swatch = document.querySelector('.mobile-swatch');
-		if (!swatch) return;
-
-		const icon = swatch.querySelector('.mobile-swatch-icon');
-		const layer = this.editor.getActiveLayer();
-
-const layersSwatch = document.querySelector('.mobile-layers-swatch');
-if (layersSwatch) {
-	if (layer) {
-		const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
-		if (glitter) {
-			layersSwatch.style.backgroundImage = `url(${glitter.url})`;
-			layersSwatch.classList.remove('empty');
-			if (glitter.isPixelated) {
-				layersSwatch.classList.add('pixelated');
-			} else {
-				layersSwatch.classList.remove('pixelated');
-			}
-		} else {
-			layersSwatch.style.backgroundImage = '';
-			layersSwatch.classList.add('empty');
-			layersSwatch.classList.remove('pixelated');
-		}
-	} else {
-		layersSwatch.style.backgroundImage = '';
-		layersSwatch.classList.add('empty');
-		layersSwatch.classList.remove('pixelated');
-	}
+    
+    console.log('Mobile: Controls shown');
 }
 
 
 
-
-
-
-
-		
-	}
-
-
-	createMobileControls() {
-		const mainContent = document.querySelector('.main-content');
-
-		if (document.querySelector('.mobile-top-nav')) {
-			console.log('Mobile: Controls already exist, skipping creation');
-			return;
-		}
-
-		// Check if image exists to set initial disabled state
-		const hasImage = this.editor.originalImage !== null;
-
-		// Create top nav (Image/Preview tabs)
-		const topNav = document.createElement('div');
-		topNav.className = 'mobile-top-nav';
-		topNav.innerHTML = `
-		<button class="mobile-tab-btn active" data-tab="image">Image</button>
-		<button class="mobile-tab-btn" data-tab="preview" ${!hasImage ? 'disabled' : ''}>Preview</button>
-	`;
-
-		// Create bottom nav (Glitter/Layers drawer buttons)
-		const bottomNav = document.createElement('div');
-		bottomNav.className = 'mobile-bottom-nav';
-		bottomNav.innerHTML = `
-	<button class="mobile-drawer-btn" data-drawer="layers">
-		<div class="mobile-layers-swatch empty"></div>
-		Layers
-		<span class="mobile-layers-count" data-count="0"></span>
-	</button>
-
-	<button class="btn-icon mobile-add-layer-btn active icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
-		<svg class="icon">
-			<use href="#icon-plus"></use>
-		</svg>
-		<span class="name">Add Layer</span>
-	</button>
-
-	
-
-	<button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
-`;
-
-		document.body.insertBefore(topNav, document.body.firstChild);
-		document.body.appendChild(bottomNav);
-
-		console.log('Mobile: Navigation created');
-	}
-
 setupEventListeners() {
-		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-			btn.addEventListener('click', () => {
-				this.switchTab(btn.dataset.tab);
-			});
-		});
+    // Tab buttons
+    document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            this.switchTab(btn.dataset.tab);
+        });
+    });
 
-		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
-			btn.addEventListener('click', () => {
-				this.toggleDrawer(btn.dataset.drawer);
-			});
-		});
+    // Drawer buttons
+    document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            this.toggleDrawer(btn.dataset.drawer);
+        });
+    });
 
-		// Add layer button
-		const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
-		if (mobileAddLayerBtn) {
-			mobileAddLayerBtn.addEventListener('click', () => {
-				this.editor.addLayer();
-			});
-		}
+
+
+    // Add layer button
+    const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
+    if (mobileAddLayerBtn) {
+        mobileAddLayerBtn.addEventListener('click', () => {
+            this.editor.addLayer();
+        });
+    }
 
 		// Close drawer when clicking on section headers (but not action buttons or collapsible sections)
 		document.querySelectorAll('.section-header').forEach(header => {
@@ -4497,11 +4401,7 @@ setupEventListeners() {
         }
     });
 
-		window.addEventListener('layerChanged', () => {
-			if (this.isMobile) {
-				this.updateMobileSwatch();
-			}
-		});
+
 
 
 	}
@@ -4607,23 +4507,23 @@ setupResizeObserver() {
 		});
 	}
 
-	cleanup() {
-		console.log('Mobile: Starting cleanup');
+cleanup() {
+    console.log('Mobile: Starting cleanup');
 
-		// Remove mobile navigation
-		const topNav = document.querySelector('.mobile-top-nav');
-		const bottomNav = document.querySelector('.mobile-bottom-nav');
-		const swatch = document.querySelector('.mobile-swatch');
+    // Hide mobile navigation
+    const topNav = document.querySelector('.mobile-top-nav');
+    const bottomNav = document.querySelector('.mobile-bottom-nav');
+    const swatch = document.querySelector('.mobile-swatch');
 
-		if (topNav) topNav.remove();
-		if (bottomNav) bottomNav.remove();
-		if (swatch) swatch.remove();
+    if (topNav) topNav.classList.remove('visible');
+    if (bottomNav) bottomNav.classList.remove('visible');
+    if (swatch) swatch.classList.remove('visible');
 
-		// Remove all mobile classes
-		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
+    // Remove all mobile classes
+    document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
 
-		console.log('Mobile: Cleanup complete, restored to desktop layout');
-	}
+    console.log('Mobile: Cleanup complete, restored to desktop layout');
+}
 }
 
 
