@@ -156,14 +156,14 @@ class GlitterEditor {
 		this.lastViewportHeight = 0;
 
 		// Touch gesture state
-// Touch gesture state
-this.touch = {
-    active: false,
-    startDistance: 0,
-    startZoom: 1,
-    anchorScreen: { x: 0, y: 0 },
-    anchorCanvas: { x: 0, y: 0 }
-};
+		// Touch gesture state
+		this.touch = {
+			active: false,
+			startDistance: 0,
+			startZoom: 1,
+			anchorScreen: { x: 0, y: 0 },
+			anchorCanvas: { x: 0, y: 0 }
+		};
 
 
 		// Filter state
@@ -560,7 +560,7 @@ this.touch = {
 		if (!this.previewCanvas.width) return;
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
-		
+
 		// Safety check: If container is hidden (e.g., mobile upload tab), 
 		// width will be 0. We can't calculate fit yet.
 		if (containerRect.width === 0 || containerRect.height === 0) return;
@@ -616,11 +616,11 @@ this.touch = {
 		if (!this.originalImage) return;
 
 		this.isPanning = true;
-		
+
 		// Store the starting coordinates
 		this.panStartX = x;
 		this.panStartY = y;
-		
+
 		// Store the current pan position to calculate offsets later
 		this.lastPanX = this.panX;
 		this.lastPanY = this.panY;
@@ -648,80 +648,80 @@ this.touch = {
 		this.previewContainer.classList.remove('panning');
 	}
 
-setupTouchGestures() {
-    const container = this.previewContainer;
+	setupTouchGestures() {
+		const container = this.previewContainer;
 
-    const getTouchDistance = (touch1, touch2) => {
-        const dx = touch2.clientX - touch1.clientX;
-        const dy = touch2.clientY - touch1.clientY;
-        return Math.sqrt(dx * dx + dy * dy);
-    };
+		const getTouchDistance = (touch1, touch2) => {
+			const dx = touch2.clientX - touch1.clientX;
+			const dy = touch2.clientY - touch1.clientY;
+			return Math.sqrt(dx * dx + dy * dy);
+		};
 
-    const getTouchCenter = (touch1, touch2) => {
-        return {
-            x: (touch1.clientX + touch2.clientX) / 2,
-            y: (touch1.clientY + touch2.clientY) / 2
-        };
-    };
+		const getTouchCenter = (touch1, touch2) => {
+			return {
+				x: (touch1.clientX + touch2.clientX) / 2,
+				y: (touch1.clientY + touch2.clientY) / 2
+			};
+		};
 
-    container.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-            e.preventDefault();
+		container.addEventListener('touchstart', (e) => {
+			if (e.touches.length === 2) {
+				e.preventDefault();
 
-            const center = getTouchCenter(e.touches[0], e.touches[1]);
-            
-            const rect = container.getBoundingClientRect();
-            const anchorX = center.x - rect.left;
-            const anchorY = center.y - rect.top;
-            
-            const canvasX = (anchorX - this.panX) / this.currentZoom;
-            const canvasY = (anchorY - this.panY) / this.currentZoom;
+				const center = getTouchCenter(e.touches[0], e.touches[1]);
 
-            this.touch.active = true;
-            this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
-            this.touch.startZoom = this.currentZoom;
-            this.touch.anchorScreen = { x: anchorX, y: anchorY };
-            this.touch.anchorCanvas = { x: canvasX, y: canvasY };
-        }
-    }, { passive: false });
+				const rect = container.getBoundingClientRect();
+				const anchorX = center.x - rect.left;
+				const anchorY = center.y - rect.top;
 
-    container.addEventListener('touchmove', (e) => {
-        if (this.touch.active && e.touches.length === 2) {
-            e.preventDefault();
+				const canvasX = (anchorX - this.panX) / this.currentZoom;
+				const canvasY = (anchorY - this.panY) / this.currentZoom;
 
-            const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
-            const scale = currentDistance / this.touch.startDistance;
-            const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
+				this.touch.active = true;
+				this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
+				this.touch.startZoom = this.currentZoom;
+				this.touch.anchorScreen = { x: anchorX, y: anchorY };
+				this.touch.anchorCanvas = { x: canvasX, y: canvasY };
+			}
+		}, { passive: false });
 
-            const newCanvasX = this.touch.anchorCanvas.x * newZoom;
-            const newCanvasY = this.touch.anchorCanvas.y * newZoom;
-            
-            this.panX = this.touch.anchorScreen.x - newCanvasX;
-            this.panY = this.touch.anchorScreen.y - newCanvasY;
-            this.currentZoom = newZoom;
+		container.addEventListener('touchmove', (e) => {
+			if (this.touch.active && e.touches.length === 2) {
+				e.preventDefault();
 
-            this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
-            if (this.currentZoomIndex === -1) {
-                this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
-            }
+				const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+				const scale = currentDistance / this.touch.startDistance;
+				const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
 
-            this.applyZoomTransform();
-            this.updateZoomUI();
-            this.updateTransparencyGrid();
-            this.updateStatusBar();
-        }
-    }, { passive: false });
+				const newCanvasX = this.touch.anchorCanvas.x * newZoom;
+				const newCanvasY = this.touch.anchorCanvas.y * newZoom;
 
-    container.addEventListener('touchend', (e) => {
-        if (e.touches.length < 2) {
-            this.touch.active = false;
-        }
-    });
+				this.panX = this.touch.anchorScreen.x - newCanvasX;
+				this.panY = this.touch.anchorScreen.y - newCanvasY;
+				this.currentZoom = newZoom;
 
-    container.addEventListener('touchcancel', () => {
-        this.touch.active = false;
-    });
-}
+				this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
+				if (this.currentZoomIndex === -1) {
+					this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
+				}
+
+				this.applyZoomTransform();
+				this.updateZoomUI();
+				this.updateTransparencyGrid();
+				this.updateStatusBar();
+			}
+		}, { passive: false });
+
+		container.addEventListener('touchend', (e) => {
+			if (e.touches.length < 2) {
+				this.touch.active = false;
+			}
+		});
+
+		container.addEventListener('touchcancel', () => {
+			this.touch.active = false;
+		});
+	}
 
 	updateZoomUI() {
 		const percentage = Math.round(this.currentZoom * 100);
@@ -1123,21 +1123,21 @@ setupTouchGestures() {
 		}
 	}
 
-handleLayerTouchStart(event, layerId) {
-    // ONLY start drag if touching the drag handle specifically
-    if (!event.target.closest('.layer-drag-handle')) {
-        return; // Allow normal tap to select, scrolling, button clicks
-    }
+	handleLayerTouchStart(event, layerId) {
+		// ONLY start drag if touching the drag handle specifically
+		if (!event.target.closest('.layer-drag-handle')) {
+			return; // Allow normal tap to select, scrolling, button clicks
+		}
 
-    this.draggedLayerId = layerId;
-    event.currentTarget.classList.add('dragging');
+		this.draggedLayerId = layerId;
+		event.currentTarget.classList.add('dragging');
 
-    const touch = event.touches[0];
-    this.touchDragStartY = touch.clientY;
-    this.touchDragLastY = touch.clientY;
+		const touch = event.touches[0];
+		this.touchDragStartY = touch.clientY;
+		this.touchDragLastY = touch.clientY;
 
-    event.preventDefault(); // Only prevent when actually dragging
-}
+		event.preventDefault(); // Only prevent when actually dragging
+	}
 
 	handleLayerTouchMove(event) {
 		if (!this.draggedLayerId) return;
@@ -1147,10 +1147,10 @@ handleLayerTouchStart(event, layerId) {
 
 		// Find which layer element we're over
 		const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
-		
+
 		// FIX 1: Add check to ensure we aren't targeting the layer we are currently dragging
-		const targetLayer = elements.find(el => 
-			el.classList.contains('layer-item') && 
+		const targetLayer = elements.find(el =>
+			el.classList.contains('layer-item') &&
 			el.dataset.layerId !== this.draggedLayerId
 		);
 
@@ -1203,14 +1203,14 @@ handleLayerTouchStart(event, layerId) {
 		// Perform the actual reordering using stored values
 		if (this.dropTargetId && this.draggedLayerId !== this.dropTargetId) {
 			const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
-			
+
 			// Remove the dragged layer first
 			if (draggedIndex !== -1) {
 				const [draggedLayer] = this.layers.splice(draggedIndex, 1);
-				
+
 				// Recalculate target index after removal (items might have shifted)
 				let newTargetIndex = this.layers.findIndex(l => l.id === this.dropTargetId);
-				
+
 				// FIX 2: Fixed inverted logic. 
 				// "Insert Above" visually means a higher index in the array (rendered bottom-to-top)
 				let newIndex = this.dropInsertAbove ? newTargetIndex + 1 : newTargetIndex;
@@ -1503,6 +1503,43 @@ handleLayerTouchStart(event, layerId) {
 		if (mobileAddBtn) {
 			mobileAddBtn.disabled = this.layers.length >= CONFIG.maxLayers;
 		}
+
+		// ADD THIS LINE:
+		this.updateMobileLayersSwatch();
+
+	}
+
+
+	updateMobileLayersSwatch() {
+		const mobileLayersSwatch = document.querySelector('.mobile-layers-swatch');
+		if (!mobileLayersSwatch) return;
+
+		const activeLayer = this.getActiveLayer();
+
+		if (!activeLayer) {
+			// No active layer - show empty state
+			mobileLayersSwatch.classList.add('empty');
+			mobileLayersSwatch.classList.remove('pixelated');
+			mobileLayersSwatch.style.backgroundImage = '';
+			return;
+		}
+
+		const glitter = this.glitterGifs[activeLayer.selectedGlitterIndex];
+		if (glitter) {
+			mobileLayersSwatch.classList.remove('empty');
+			mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
+
+			if (glitter.isPixelated) {
+				mobileLayersSwatch.classList.add('pixelated');
+			} else {
+				mobileLayersSwatch.classList.remove('pixelated');
+			}
+		} else {
+			// Layer exists but no glitter selected
+			mobileLayersSwatch.classList.add('empty');
+			mobileLayersSwatch.classList.remove('pixelated');
+			mobileLayersSwatch.style.backgroundImage = '';
+		}
 	}
 
 	createIconButton({ className = '', id = '', disabled = false, title = '', iconType = '', label = '', onClick }) {
@@ -1710,15 +1747,15 @@ handleLayerTouchStart(event, layerId) {
 		}, { passive: false });
 
 		// --- PAN HANDLERS ---
-this.previewContainer.addEventListener('mousedown', (e) => {
-    // Check for Hand Tool OR Spacebar key
-    if (this.currentTool === 'hand' || e.code === 'Space') {
-        // Prevent default browser dragging
-        e.preventDefault(); 
-        // Pass specific X/Y coordinates to the new function
-        this.startPan(e.clientX, e.clientY);
-    }
-});
+		this.previewContainer.addEventListener('mousedown', (e) => {
+			// Check for Hand Tool OR Spacebar key
+			if (this.currentTool === 'hand' || e.code === 'Space') {
+				// Prevent default browser dragging
+				e.preventDefault();
+				// Pass specific X/Y coordinates to the new function
+				this.startPan(e.clientX, e.clientY);
+			}
+		});
 
 
 
@@ -2626,8 +2663,8 @@ this.previewContainer.addEventListener('mousedown', (e) => {
 			}
 
 			// Reset viewport (zoom and pan)
-    this.resetZoomSmart(); 
-    this.updateZoomUI();
+			this.resetZoomSmart();
+			this.updateZoomUI();
 
 			const dropzone = document.getElementById('imageDropzone');
 			dropzone.classList.add('has-image');
@@ -3744,16 +3781,16 @@ class GifExporter {
 		return result;
 	}
 
-async _handleFileSave(blob, callbacks) {
+	async _handleFileSave(blob, callbacks) {
 		console.log('_handleFileSave called with blob size:', blob.size);
 		callbacks.onProgress(100, 'Export complete!', 0, 0);
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete();
 
 		// 1. Create File object (Required for navigator.share)
-		const file = new File([blob], this.config.fileName, { 
+		const file = new File([blob], this.config.fileName, {
 			type: 'image/gif',
-			lastModified: Date.now() 
+			lastModified: Date.now()
 		});
 
 		// 2. Create Blob URL
@@ -3768,7 +3805,7 @@ async _handleFileSave(blob, callbacks) {
 		const img = document.getElementById('exportPreviewImage');
 		const instructions = modal.querySelector('.export-preview-instructions');
 		const closeBtn = document.getElementById('closeExportPreviewModal');
-		
+
 		// Button Elements
 		const shareBtn = document.getElementById('exportPreviewShare');
 		const openBtn = document.getElementById('exportPreviewOpen');
@@ -3794,37 +3831,37 @@ async _handleFileSave(blob, callbacks) {
 		img.src = blobUrl;
 
 		// 4. Configure UI Logic
-if (isIOS) {
-    // --- iOS Logic ---
-    
-    // DISABLE "Open GIF" & "Save" (Direct download fails/breaks on iOS)
-    configureBtn(openBtn, false); 
-    configureBtn(saveBtn, false);
+		if (isIOS) {
+			// --- iOS Logic ---
 
-    if (canShare) {
-        // ENABLE "Share" (mapped to Save Image)
-        configureBtn(shareBtn, true, "Save Image");
-        
-        instructions.innerHTML = `
+			// DISABLE "Open GIF" & "Save" (Direct download fails/breaks on iOS)
+			configureBtn(openBtn, false);
+			configureBtn(saveBtn, false);
+
+			if (canShare) {
+				// ENABLE "Share" (mapped to Save Image)
+				configureBtn(shareBtn, true, "Save Image");
+
+				instructions.innerHTML = `
             <p><strong>Ready!</strong> Tap <strong>"Save Image"</strong> below to save to Photos.</p>
             <p class="text-muted" style="margin-top: 8px; font-size: 12px;">
                 <strong>Why can't I just tap and hold?</strong><br>
                 iOS doesn't support saving animated GIFs directly from the browser. 
                 Using the Share button preserves the animation properly.
             </p>`;
-    } else {
-        // Fallback (Rare old iOS)
-        configureBtn(shareBtn, false);
-        instructions.innerHTML = `
+			} else {
+				// Fallback (Rare old iOS)
+				configureBtn(shareBtn, false);
+				instructions.innerHTML = `
             <p>Long-press the image to save.</p>
             <p class="text-muted" style="margin-top: 8px; font-size: 12px;">
                 Note: This may save as a still image. Update iOS to use the Share feature for full animation support.
             </p>`;
-    }
-}
+			}
+		}
 		else {
 			// --- Desktop / Android Logic ---
-			
+
 			// ENABLE "Open GIF" & "Save" (Standard browser features)
 			configureBtn(openBtn, true);
 			configureBtn(saveBtn, true);
@@ -4263,62 +4300,62 @@ class MobileManager {
 		this.setupImageEvents();
 	}
 
-init() {
-    console.log('Mobile: Initializing mobile manager');
-    this.showMobileControls();
-    this.setupEventListeners();
-    this.switchTab('image');
-    console.log('Mobile: Initialization complete, on image tab');
-}
+	init() {
+		console.log('Mobile: Initializing mobile manager');
+		this.showMobileControls();
+		this.setupEventListeners();
+		this.switchTab('image');
+		console.log('Mobile: Initialization complete, on image tab');
+	}
 
 
-showMobileControls() {
-    const topNav = document.querySelector('.mobile-top-nav');
-    const bottomNav = document.querySelector('.mobile-bottom-nav');
+	showMobileControls() {
+		const topNav = document.querySelector('.mobile-top-nav');
+		const bottomNav = document.querySelector('.mobile-bottom-nav');
 
-    
-    if (topNav) topNav.classList.add('visible');
-    if (bottomNav) bottomNav.classList.add('visible');
-    
-    // Update initial state based on whether image exists
-    const previewTab = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-    if (previewTab) {
-        previewTab.disabled = !this.editor.originalImage;
-    }
-    
 
-    
+		if (topNav) topNav.classList.add('visible');
+		if (bottomNav) bottomNav.classList.add('visible');
 
-    
-    console.log('Mobile: Controls shown');
-}
+		// Update initial state based on whether image exists
+		const previewTab = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+		if (previewTab) {
+			previewTab.disabled = !this.editor.originalImage;
+		}
 
 
 
-setupEventListeners() {
-    // Tab buttons
-    document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            this.switchTab(btn.dataset.tab);
-        });
-    });
 
-    // Drawer buttons
-    document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            this.toggleDrawer(btn.dataset.drawer);
-        });
-    });
+
+		console.log('Mobile: Controls shown');
+	}
 
 
 
-    // Add layer button
-    const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
-    if (mobileAddLayerBtn) {
-        mobileAddLayerBtn.addEventListener('click', () => {
-            this.editor.addLayer();
-        });
-    }
+	setupEventListeners() {
+		// Tab buttons
+		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+			btn.addEventListener('click', () => {
+				this.switchTab(btn.dataset.tab);
+			});
+		});
+
+		// Drawer buttons
+		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
+			btn.addEventListener('click', () => {
+				this.toggleDrawer(btn.dataset.drawer);
+			});
+		});
+
+
+
+		// Add layer button
+		const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
+		if (mobileAddLayerBtn) {
+			mobileAddLayerBtn.addEventListener('click', () => {
+				this.editor.addLayer();
+			});
+		}
 
 		// Close drawer when clicking on section headers (but not action buttons or collapsible sections)
 		document.querySelectorAll('.section-header').forEach(header => {
@@ -4332,7 +4369,7 @@ setupEventListeners() {
 
 					// FIX: Don't close if this header belongs to a collapsible section (like Settings)
 					if (header.closest('.collapsible-section')) {
-						return; 
+						return;
 					}
 
 					this.closeAllDrawers();
@@ -4348,116 +4385,112 @@ setupEventListeners() {
 		});
 	}
 	setupImageEvents() {
-    window.addEventListener('imageLoaded', () => {
-        if (this.isMobile) {
-            // 1. HIDE THE CANVAS INSTANTLY
-            // We set opacity to 0 so the user doesn't see the "jump" 
-            // from 100% to "Fit"
-            this.editor.previewWrapper.style.opacity = '0';
-            this.editor.previewWrapper.style.transition = 'none'; // Disable transition for the reset
+		window.addEventListener('imageLoaded', () => {
+			if (this.isMobile) {
+				// 1. HIDE THE CANVAS INSTANTLY
+				// We set opacity to 0 so the user doesn't see the "jump" 
+				// from 100% to "Fit"
+				this.editor.previewWrapper.style.opacity = '0';
+				this.editor.previewWrapper.style.transition = 'none'; // Disable transition for the reset
 
-            // Enable preview tab
-            const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-            if (previewBtn) {
-                previewBtn.disabled = false;
-            }
+				// Enable preview tab
+				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+				if (previewBtn) {
+					previewBtn.disabled = false;
+				}
 
-            // Switch to preview (Container becomes display:block, but opacity is 0)
-            this.switchTab('preview');
+				// Switch to preview (Container becomes display:block, but opacity is 0)
+				this.switchTab('preview');
 
-            // Wait for tab switch layout to apply
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    // Update dimensions
-                    this.editor.performResizeUpdate();
-                    
-                    // Apply the sizing math
-                    this.editor.resetZoomSmart();
-                    this.editor.updateZoomUI();
+				// Wait for tab switch layout to apply
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						// Update dimensions
+						this.editor.performResizeUpdate();
 
-                    // 2. SHOW THE CANVAS
-                    // Now that the size is correct, fade it back in
-                    // Optional: Add a slight transition for a smooth feel
-                    this.editor.previewWrapper.style.transition = 'opacity 0.2s ease';
-                    this.editor.previewWrapper.style.opacity = '1';
-                    
-                    // Clean up transition property after animation allows panning to feel responsive again
-                    setTimeout(() => {
-                        this.editor.previewWrapper.style.transition = '';
-                    }, 250);
-                });
-            });
-        }
-    });
+						// Apply the sizing math
+						this.editor.resetZoomSmart();
+						this.editor.updateZoomUI();
 
-    window.addEventListener('imageRemoved', () => {
-        if (this.isMobile) {
-            const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-            if (previewBtn) previewBtn.disabled = true;
-            this.switchTab('image');
-            this.closeAllDrawers();
-            // Reset opacity just in case
-            this.editor.previewWrapper.style.opacity = '1';
-        }
-    });
+						// 2. SHOW THE CANVAS
+						// Now that the size is correct, fade it back in
+						// Optional: Add a slight transition for a smooth feel
+						this.editor.previewWrapper.style.transition = 'opacity 0.2s ease';
+						this.editor.previewWrapper.style.opacity = '1';
 
+						// Clean up transition property after animation allows panning to feel responsive again
+						setTimeout(() => {
+							this.editor.previewWrapper.style.transition = '';
+						}, 250);
+					});
+				});
+			}
+		});
 
-
-
+		window.addEventListener('imageRemoved', () => {
+			if (this.isMobile) {
+				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+				if (previewBtn) previewBtn.disabled = true;
+				this.switchTab('image');
+				this.closeAllDrawers();
+				// Reset opacity just in case
+				this.editor.previewWrapper.style.opacity = '1';
+			}
+		});
 	}
 
-setupResizeObserver() {
-    let resizeTimer;
+	setupResizeObserver() {
+		let resizeTimer;
 
-    this.resizeObserver = new ResizeObserver(entries => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            const newWidth = window.innerWidth;
-            const nowMobile = newWidth <= 800;
+		this.resizeObserver = new ResizeObserver(entries => {
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => {
+				const newWidth = window.innerWidth;
+				const nowMobile = newWidth <= 800;
 
-            if (!this.isMobile && nowMobile) {
-                // Switching TO Mobile
-                console.log('Mobile: Switching to mobile mode');
-                this.isMobile = true;
-                this.init(); // This defaults to 'image' tab usually
+				if (!this.isMobile && nowMobile) {
+					// Switching TO Mobile
+					console.log('Mobile: Switching to mobile mode');
+					this.isMobile = true;
+					this.init(); // This defaults to 'image' tab usually
 
-                // FIX: Check if we have an image
-                if (this.editor.originalImage) {
-                    // 1. Force switch to preview tab so the container becomes visible (has width/height)
-                    this.switchTab('preview');
-                    
-                    // 2. Wait for the DOM to render the tab switch
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            // 3. Now reset dimensions - container is visible, so math will work
-                            this.editor.performResizeUpdate(); // Updates internal dimension tracking
-                            this.editor.resetViewport();       // Calculates center based on new dimensions
-                            this.editor.updateZoomUI();
-                            this.editor.updateTransparencyGrid();
-                        });
-                    });
-                }
+					// FIX: Check if we have an image
+					if (this.editor.originalImage) {
+						// 1. Force switch to preview tab so the container becomes visible (has width/height)
+						this.switchTab('preview');
 
-            } else if (this.isMobile && !nowMobile) {
-                // Switching TO Desktop
-                console.log('Mobile: Switching to desktop mode');
-                this.isMobile = false;
-                this.cleanup();
-                
-                // Reset desktop view nicely
-                setTimeout(() => {
-                    if (this.editor.originalImage) {
-                        this.editor.performResizeUpdate();
-                        this.editor.resetViewport();
-                        this.editor.updateZoomUI();
-                    }
-                }, 50);
-            }
-        }, 250);
-    });
+						// 2. Wait for the DOM to render the tab switch
+						requestAnimationFrame(() => {
+							requestAnimationFrame(() => {
+								// 3. Now reset dimensions - container is visible, so math will work
+								this.editor.performResizeUpdate(); // Updates internal dimension tracking
+								this.editor.resetViewport();       // Calculates center based on new dimensions
+								this.editor.updateZoomUI();
+								this.editor.updateTransparencyGrid();
+							});
+						});
+					}
 
-    this.resizeObserver.observe(document.body);
-}
+				} else if (this.isMobile && !nowMobile) {
+					// Switching TO Desktop
+					console.log('Mobile: Switching to desktop mode');
+					this.isMobile = false;
+					this.cleanup();
+
+					// Reset desktop view nicely
+					setTimeout(() => {
+						if (this.editor.originalImage) {
+							this.editor.performResizeUpdate();
+							this.editor.resetViewport();
+							this.editor.updateZoomUI();
+						}
+					}, 50);
+				}
+			}, 250);
+		});
+
+		this.resizeObserver.observe(document.body);
+	}
 
 	switchTab(tab) {
 		console.log('Mobile: Switching to tab:', tab);
@@ -4507,23 +4540,23 @@ setupResizeObserver() {
 		});
 	}
 
-cleanup() {
-    console.log('Mobile: Starting cleanup');
+	cleanup() {
+		console.log('Mobile: Starting cleanup');
 
-    // Hide mobile navigation
-    const topNav = document.querySelector('.mobile-top-nav');
-    const bottomNav = document.querySelector('.mobile-bottom-nav');
-    const swatch = document.querySelector('.mobile-swatch');
+		// Hide mobile navigation
+		const topNav = document.querySelector('.mobile-top-nav');
+		const bottomNav = document.querySelector('.mobile-bottom-nav');
+		const swatch = document.querySelector('.mobile-swatch');
 
-    if (topNav) topNav.classList.remove('visible');
-    if (bottomNav) bottomNav.classList.remove('visible');
-    if (swatch) swatch.classList.remove('visible');
+		if (topNav) topNav.classList.remove('visible');
+		if (bottomNav) bottomNav.classList.remove('visible');
+		if (swatch) swatch.classList.remove('visible');
 
-    // Remove all mobile classes
-    document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
+		// Remove all mobile classes
+		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
 
-    console.log('Mobile: Cleanup complete, restored to desktop layout');
-}
+		console.log('Mobile: Cleanup complete, restored to desktop layout');
+	}
 }
 
 
