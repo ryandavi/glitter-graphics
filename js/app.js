@@ -5590,60 +5590,40 @@ class MobileManager {
 			});
 		});
 	}
-	setupImageEvents() {
-		window.addEventListener('imageLoaded', () => {
-			if (this.isMobile) {
-				// 1. HIDE THE CANVAS INSTANTLY
-				// We set opacity to 0 so the user doesn't see the "jump" 
-				// from 100% to "Fit"
-				this.editor.previewWrapper.style.opacity = '0';
-				this.editor.previewWrapper.style.transition = 'none'; // Disable transition for the reset
+setupImageEvents() {
+	window.addEventListener('imageLoaded', () => {
+		if (this.isMobile) {
+			// 1. HIDE THE CANVAS INSTANTLY
+			this.editor.previewWrapper.style.opacity = '0';
+			this.editor.previewWrapper.style.transition = 'none';
 
-				// Enable preview tab
-				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-				if (previewBtn) {
-					previewBtn.disabled = false;
-				}
+			// Enable preview tab
+			const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+			if (previewBtn) {
+				previewBtn.disabled = false;
+			}
 
-				// Switch to preview (Container becomes display:block, but opacity is 0)
-				this.switchTab('preview');
+			// Switch to preview
+			this.switchTab('preview');
 
-				// Wait for tab switch layout to apply
+			// Wait for tab switch layout to apply
+			requestAnimationFrame(() => {
 				requestAnimationFrame(() => {
-					requestAnimationFrame(() => {
-						// Update dimensions
-						this.editor.viewport.performResizeUpdate();
+					// Update dimensions
+					this.editor.viewport.performResizeUpdate();
 
-						// Apply the sizing math
-						this.editor.resetZoomSmart();
-						this.editor.updateZoomUI();
+					// Apply the sizing math - FIX: viewport.resetZoomSmart()
+					this.editor.viewport.resetZoomSmart();
+					this.editor.updateZoomUI();
 
-						// 2. SHOW THE CANVAS
-						// Now that the size is correct, fade it back in
-						// Optional: Add a slight transition for a smooth feel
-						this.editor.previewWrapper.style.transition = 'opacity 0.2s ease';
-						this.editor.previewWrapper.style.opacity = '1';
-
-						// Clean up transition property after animation allows panning to feel responsive again
-						setTimeout(() => {
-							this.editor.previewWrapper.style.transition = '';
-						}, 250);
-					});
+					// 2. Make canvas visible with transition
+					this.editor.previewWrapper.style.transition = '';
+					this.editor.previewWrapper.style.opacity = '1';
 				});
-			}
-		});
-
-		window.addEventListener('imageRemoved', () => {
-			if (this.isMobile) {
-				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-				if (previewBtn) previewBtn.disabled = true;
-				this.switchTab('image');
-				this.closeAllDrawers();
-				// Reset opacity just in case
-				this.editor.previewWrapper.style.opacity = '1';
-			}
-		});
-	}
+			});
+		}
+	});
+}
 
 	setupResizeObserver() {
 		let resizeTimer;
@@ -5767,13 +5747,16 @@ class MobileManager {
 
 
 
+// CORRECT - everything inside IIFE
 (async () => {
 	const editor = new GlitterEditor();
 	await editor.init();
-	window.editor = editor; // Make accessible globally if needed
+	
+	// Initialize managers after editor is ready
+	const tooltips = new TooltipManager();
+	const mobileManager = new MobileManager(editor);
+	editor.mobileManager = mobileManager;
+	
+	// Make editor globally accessible (optional, useful for debugging)
+	window.editor = editor;
 })();
-
-
-const tooltips = new TooltipManager();
-const mobileManager = new MobileManager(editor);
-editor.mobileManager = mobileManager;
