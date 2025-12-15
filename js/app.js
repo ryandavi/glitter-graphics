@@ -39,6 +39,27 @@ const CONFIG = {
 	// zoom
 	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
 
+
+	// Stickers
+	maxStickers: 50,
+	maxStickerUploadSize: 5 * 1024 * 1024, // 5MB
+	allowedStickerTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+	defaultStickerOpacity: 100,
+	defaultStickerScale: { x: 100, y: 100 },
+	defaultStickerRotation: 0,
+	rotationSnapTolerance: 5, // degrees
+
+	// Artboard
+	showArtboardBorder: false,
+	artboardBorderColor: '#00ffff',
+	artboardBorderWidth: 2,
+	artboardBorderStyle: 'dashed', // 'solid' | 'dashed'
+
+	// Export (extend existing)
+	defaultExportStickers: true,
+	defaultExportGlitter: true,
+
+
 	// export settings (defaults)
 	defaultExportQuality: 10,
 	defaultExportDitherEnabled: true,
@@ -74,6 +95,67 @@ const CONFIG = {
 	},
 
 };
+
+
+// ============================================
+// STICKER MANAGER CLASS
+// Handles all sticker logic
+// ============================================
+class StickerManager {
+  constructor(editor) {
+    this.editor = editor;
+    this.presetStickers = [];
+    this.userStickers = [];
+    this.activeFilters = {
+      search: '',
+      categories: new Set(),
+      tags: new Set(),
+      colors: new Set(),
+      animated: null  // null | true | false
+    };
+  }
+
+  async loadPresetStickers() {
+    // Fetch from database
+    // Store in this.presetStickers
+  }
+
+  async handleUserUpload(file) {
+    // 1. Validate file (type, size)
+    // 2. Create blob URL
+    // 3. Detect if animated GIF
+    // 4. Detect actual transparency (scan pixels)
+    // 5. Parse frames if animated
+    // 6. Add to this.userStickers
+  }
+
+  detectActualTransparency(imageData) {
+    // Scan pixel alpha values, NOT palette
+    for (let i = 3; i < imageData.data.length; i += 4) {
+      if (imageData.data[i] < 255) return true;
+    }
+    return false;
+  }
+
+  async parseAnimatedGif(file) {
+    // Use existing GIF parsing logic
+    // Return frames array
+  }
+
+  applyFilters() {
+    // Filter stickers based on activeFilters
+    // Return filtered array
+  }
+
+  searchStickers(query) {
+    // Search by name, tags
+  }
+
+  getStickerById(id) {
+    // Find in presetStickers or userStickers
+  }
+}
+
 
 
 // ============================================
