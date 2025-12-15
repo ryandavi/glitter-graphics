@@ -2485,11 +2485,28 @@ centerVertical() {
 		const height = reader.height;
 
 		const frames = [];
+
+		// After decoding the GIF, check for phantom transparency
+		const hasTransparentColorIndex = reader.raw.gce && reader.raw.gce.transparentColorIndex !== null;
+		let actuallyHasTransparentPixels = false;
+
 		for (let i = 0; i < frameCount; i++) {
 			const pixels = new Uint8ClampedArray(width * height * 4);
 			reader.decodeAndBlitFrameRGBA(i, pixels);
-			frames.push(new ImageData(pixels, width, height));
+			
+			for (let j = 3; j < pixels.length; j += 4) {
+				if (pixels[j] < 255) {
+					actuallyHasTransparentPixels = true;
+					break;
+				}
+			}
+			if (actuallyHasTransparentPixels) break;
 		}
+
+		if (hasTransparentColorIndex && !actuallyHasTransparentPixels) {
+			console.warn(`⚠️ GIF has transparent palette entry but no transparent pixels. Consider re-exporting without transparency.`);
+		}
+
 
 		return {
 			width, height, frames, frameCount,
