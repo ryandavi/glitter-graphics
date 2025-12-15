@@ -76,6 +76,7 @@
   --mobile-drawer-height: 50vh; /* Fallback for older browsers */
   --mobile-drawer-height: 50dvh; /* Modern browsers override */
   --mobile-breakpoint: 800px;
+  --mobile-toolbar-width: 50px;
   /* z indexes */
   --modal-z-index: 20000;
   --mobile-menu-z-index: 2000;
@@ -2145,7 +2146,7 @@ input[type=range]::-moz-range-thumb {
     top: 50%;
     left: var(--spacing-md);
     transform: translateY(-50%);
-    width: var(--toolbar-width);
+    width: var(--mobile-toolbar-width);
     height: auto;
     z-index: 9999;
     display: none;

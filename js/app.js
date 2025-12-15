@@ -2473,46 +2473,77 @@ centerVertical() {
 		}
 	}
 
-	async parseGifFromUrl(url) {
+async parseGifFromUrl(url) {
+	try {
+		// Step 1: Fetch
 		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+		}
+
+		// Step 2: Get array buffer
 		const arrayBuffer = await response.arrayBuffer();
+		if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+			throw new Error('Empty or invalid file');
+		}
+
+		// Step 3: Create GIF reader
 		const uintArray = new Uint8Array(arrayBuffer);
-		const reader = new GifReader(uintArray);
+		let reader;
+		try {
+			reader = new GifReader(uintArray);
+		} catch (e) {
+			throw new Error(`Invalid GIF format: ${e.message}`);
+		}
 
-		const frameCount = reader.numFrames();
-		const frameInfo = reader.frameInfo(0);
-		const width = reader.width;
-		const height = reader.height;
+		// Step 4: Get frame count
+		let frameCount;
+		try {
+			frameCount = reader.numFrames();
+		} catch (e) {
+			throw new Error(`Failed to read frame count: ${e.message}`);
+		}
 
+		if (frameCount === 0) {
+			throw new Error('GIF has 0 frames');
+		}
+
+		// Step 5: Get metadata
+		let frameInfo, width, height;
+		try {
+			frameInfo = reader.frameInfo(0);
+			width = reader.width;
+			height = reader.height;
+		} catch (e) {
+			throw new Error(`Failed to read GIF metadata: ${e.message}`);
+		}
+
+		// Step 6: Decode frames
 		const frames = [];
-
-		// After decoding the GIF, check for phantom transparency
-		const hasTransparentColorIndex = reader.raw.gce && reader.raw.gce.transparentColorIndex !== null;
-		let actuallyHasTransparentPixels = false;
-
 		for (let i = 0; i < frameCount; i++) {
-			const pixels = new Uint8ClampedArray(width * height * 4);
-			reader.decodeAndBlitFrameRGBA(i, pixels);
-			
-			for (let j = 3; j < pixels.length; j += 4) {
-				if (pixels[j] < 255) {
-					actuallyHasTransparentPixels = true;
-					break;
-				}
+			try {
+				const pixels = new Uint8ClampedArray(width * height * 4);
+				reader.decodeAndBlitFrameRGBA(i, pixels);
+				frames.push(new ImageData(pixels, width, height));
+			} catch (e) {
+				throw new Error(`Failed to decode frame ${i + 1}/${frameCount}: ${e.message}`);
 			}
-			if (actuallyHasTransparentPixels) break;
 		}
-
-		if (hasTransparentColorIndex && !actuallyHasTransparentPixels) {
-			console.warn(`⚠️ GIF has transparent palette entry but no transparent pixels. Consider re-exporting without transparency.`);
-		}
-
 
 		return {
-			width, height, frames, frameCount,
+			width,
+			height,
+			frames,
+			frameCount,
 			frameDelay: frameInfo.delay * 10 || 100
 		};
+
+	} catch (error) {
+		// Re-throw with file info for debugging
+		console.error(`[parseGifFromUrl] Error loading ${url}:`, error);
+		throw new Error(`Failed to parse GIF: ${error.message}`);
 	}
+}
 
 	displayGlitterOptions() {
 		const container = document.getElementById('glitterOptions');
