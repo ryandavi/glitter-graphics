@@ -15,7 +15,7 @@ const CONFIG = {
 	defaultScale: 100,
 	defaultOpacity: 100,
 	alphaThreshold: 254,
-	featherDebounceMs: 300,
+	sliderDebounceMs: 150,
 
 	// glitter
 	defaultGlitterIndex: 0,
@@ -2190,6 +2190,7 @@ class GlitterEditor {
 		this.historyIndex = -1;
 
 		this.featherTimeout = null;
+		this.sliderTimeout = null;
 
 		// Viewport manager (handles zoom, pan, touch)
 		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
@@ -3017,33 +3018,34 @@ async loadStickerImageData(layer) {
 			this.glitterGlobal = e.target.checked;
 		});
 
-		const thresholdSlider = document.getElementById('threshold');
-		thresholdSlider.addEventListener('input', () => {
-			this.saveActiveLayerSettings(true, false);
-			this.updatePreview();
-		});
-		thresholdSlider.addEventListener('change', () => this.saveState());
+// --- LAYER SETTINGS CONTROLS ---
+const thresholdSlider = document.getElementById('threshold');
+thresholdSlider.addEventListener('input', () => {
+    this.saveActiveLayerSettings(true, false);
+    this.debouncedSliderUpdate('threshold');  // CHANGED
+});
+thresholdSlider.addEventListener('change', () => this.saveState());
 
-		const featherSlider = document.getElementById('feather');
-		featherSlider.addEventListener('input', () => {
-			this.saveActiveLayerSettings(true, false);
-			this.debouncedUpdatePreview();
-		});
-		featherSlider.addEventListener('change', () => this.saveState());
+const featherSlider = document.getElementById('feather');
+featherSlider.addEventListener('input', () => {
+    this.saveActiveLayerSettings(true, false);
+    this.debouncedSliderUpdate('feather');  // CHANGED
+});
+featherSlider.addEventListener('change', () => this.saveState());
 
-		const scaleSlider = document.getElementById('scale');
-		scaleSlider.addEventListener('input', () => {
-			this.saveActiveLayerSettings(false, true);
-			this.updatePreview();
-		});
-		scaleSlider.addEventListener('change', () => this.saveState());
+const scaleSlider = document.getElementById('scale');
+scaleSlider.addEventListener('input', () => {
+    this.saveActiveLayerSettings(false, true);
+    this.debouncedSliderUpdate('scale');  // CHANGED
+});
+scaleSlider.addEventListener('change', () => this.saveState());
 
-		const opacitySlider = document.getElementById('opacity');
-		opacitySlider.addEventListener('input', () => {
-			this.saveActiveLayerSettings(false, true);
-			this.updatePreview();
-		});
-		opacitySlider.addEventListener('change', () => this.saveState());
+const opacitySlider = document.getElementById('opacity');
+opacitySlider.addEventListener('input', () => {
+    this.saveActiveLayerSettings(false, true);
+    this.debouncedSliderUpdate('opacity');  // CHANGED
+});
+opacitySlider.addEventListener('change', () => this.saveState());
 
 		// --- SEARCH & FILTERS ---
 		document.getElementById('glitterSearch').addEventListener('input', (e) => this.handleSearchInput(e.target.value));
@@ -3534,13 +3536,14 @@ async redo() {
 		window.dispatchEvent(new Event('imageRemoved'));
 	}
 
-	debouncedUpdatePreview() {
-		clearTimeout(this.featherTimeout);
-		this.featherTimeout = setTimeout(() => {
-			this.saveActiveLayerSettings(true, false);
+
+	debouncedSliderUpdate(sliderType) {
+		clearTimeout(this.sliderTimeout);
+		this.sliderTimeout = setTimeout(() => {
 			this.updatePreview();
-		}, CONFIG.featherDebounceMs);
+		}, CONFIG.sliderDebounceMs);
 	}
+
 
 	// ===== GLITTER LOADING =====
 	async loadGlitterGifs() {
@@ -3953,23 +3956,39 @@ async redo() {
 		}
 	}
 
-	updatePreviewScale() {
-		document.querySelectorAll('.glitter-bg-layer').forEach(bg => {
-			bg.style.width = this.originalCanvas.width + 'px';
-			bg.style.height = this.originalCanvas.height + 'px';
+updatePreviewScale() {
+    console.log('updatePreviewScale called');
+    console.log('Found glitter backgrounds:', document.querySelectorAll('.glitter-bg-layer').length);
+    
+    document.querySelectorAll('.glitter-bg-layer').forEach(bg => {
+        bg.style.width = this.originalCanvas.width + 'px';
+        bg.style.height = this.originalCanvas.height + 'px';
 
-			const layerId = bg.dataset.layerId;
-			const layer = this.layers.find(l => l.id === layerId);
-			if (layer) {
-				const glitter = this.glitterGifs[layer.selectedGlitterIndex];
-				if (glitter && glitter.frames) {
-					const glitterScale = layer.settings.scale / 100;
-					const scaledGlitterSize = Math.round(glitter.frames.width * glitterScale);
-					bg.style.backgroundSize = `${scaledGlitterSize}px`;
-				}
-			}
-		});
-	}
+        const layerId = bg.dataset.layerId;
+        console.log('Processing layerId:', layerId);
+        
+        const layer = this.layerManager.layers.find(l => l.id === layerId);
+        console.log('Found layer?', !!layer, layer);
+        
+        if (layer) {
+            const glitter = this.glitterGifs[layer.selectedGlitterIndex];
+            console.log('Found glitter?', !!glitter, 'at index:', layer.selectedGlitterIndex);
+            
+            if (glitter) {
+                const glitterScale = layer.settings.scale / 100;
+                console.log('Scale:', glitterScale);
+                
+                const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
+                console.log('Base size:', baseSize, 'frames exist?', !!glitter.frames);
+                
+                const scaledGlitterSize = Math.round(baseSize * glitterScale);
+                console.log('Setting backgroundSize to:', scaledGlitterSize + 'px');
+                
+                bg.style.backgroundSize = `${scaledGlitterSize}px`;
+            }
+        }
+    });
+}
 
 	handleCanvasClick(event) {
 		if (!this.originalImageData) return;
@@ -4217,11 +4236,16 @@ renderStickers(layersToShow) {
 			if (glitter.isPixelated) {
 				bg.classList.add('pixelated');
 			}
-			bg.dataset.layerId = layer.id;
-			bg.style.backgroundImage = `url(${glitter.url})`;
 
-			bg.style.width = width + 'px';
-			bg.style.height = height + 'px';
+bg.dataset.layerId = layer.id;
+bg.style.backgroundImage = `url(${glitter.url})`;
+
+// ADD: Set initial backgroundSize (will be updated by updatePreviewScale if frames exist)
+bg.style.backgroundSize = 'auto';  // Natural size as fallback
+
+bg.style.width = width + 'px';
+bg.style.height = height + 'px';
+
 			bg.style.position = 'absolute';
 			bg.style.top = '0';
 			bg.style.left = '0';
