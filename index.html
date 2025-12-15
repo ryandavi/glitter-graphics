@@ -115,15 +115,14 @@
 			</div>
 
 			<div class="main-content">
+
+				
 				<!-- Left Panel -->
 				<div class="left-panel">
-
 					<!-- Image Section -->
 					<div class="image-container section">
 						<div class="section-header section-header-with-action">
-
 							<h3 class="section-header-title">
-								<!-- Layers Icon-->
 								<span class="section-header-title-icon icon-wrapper sm">
 									<svg class="icon">
 										<use href="#icon-image"></use>
@@ -132,9 +131,7 @@
 								</span>
 								<span class="section-header-title-text">Image</span>
 							</h3>
-
-							<button class="section-header-action btn-icon icon-wrapper" id="imageClearBtn"
-								title="Remove Image">
+							<button class="section-header-action btn-icon icon-wrapper" id="imageClearBtn" title="Remove Image">
 								<svg class="icon">
 									<use href="#icon-x-mark"></use>
 								</svg>
@@ -145,7 +142,6 @@
 							<div class="image-dropzone" id="imageDropzone">
 								<div class="dropzone-content visible" id="dropzoneContent">
 									<div class="dropzone-icon">
-										<!-- Image Icon-->
 										<span class="icon-wrapper xl">
 											<svg class="icon">
 												<use href="#icon-image"></use>
@@ -159,7 +155,6 @@
 								<canvas id="originalCanvas"></canvas>
 								<div class="image-upload-overlay">
 									<div class="image-upload-overlay-icon">
-										<!-- Image Icon-->
 										<span class="icon-wrapper xl">
 											<svg class="icon">
 												<use href="#icon-image"></use>
@@ -174,24 +169,20 @@
 						</div>
 					</div>
 
-					<!-- Layers -->
+					<!-- Layers Section (list only) -->
 					<div class="layers-section section">
 						<div class="section-header section-header-with-action">
 							<h3 class="section-header-title">
-
-								<!-- Layers Icon-->
 								<span class="section-header-title-icon icon-wrapper sm">
 									<svg class="icon">
 										<use href="#icon-layers"></use>
 									</svg>
 									<span class="name">Layers</span>
 								</span>
-
 								<span class="section-header-title-text">Layers</span>
 								<span class="section-header-title-count" data-count="0"></span>
 							</h3>
-							<button class="section-header-action btn-icon icon-wrapper" id="addLayerBtn" disabled
-								title="Add new layer">
+							<button class="section-header-action btn-icon icon-wrapper" id="addLayerBtn" disabled title="Add new layer">
 								<svg class="icon">
 									<use href="#icon-plus"></use>
 								</svg>
@@ -199,98 +190,86 @@
 							</button>
 						</div>
 						<div class="section-content layers-list" id="layersList"></div>
+					</div>
 
-						<!-- Layer Settings -->
-						<div class="section collapsible-section">
-							<div class="section-header section-header-with-action" id="layerSettingsHeader">
-
-								<!-- Layer Settings Header-->
-								<h3 class="section-header-title">
-									<!-- Layers Icon-->
-									<span class="section-header-title-icon icon-wrapper sm">
-										<svg class="icon">
-											<use href="#icon-sliders"></use>
-										</svg>
-										<span class="name">Slider</span>
-									</span>
-									<span class="section-header-title-text">Layer Settings</span>
-								</h3>
-
-								<div class="section-header-action btn-icon visible collapsed" id="layerSettingsToggle">
-									<!-- Chevron Icon-->
-									<span class="icon-wrapper">
-										<svg class="icon">
-											<use href="#icon-chevron-down"></use>
-										</svg>
-									</span>
-								</div>
+					<!-- Layer Settings Section (independent) -->
+					<div class="layer-settings-section section collapsible-section">
+						<div class="section-header section-header-with-action" id="layerSettingsHeader">
+							<h3 class="section-header-title">
+								<span class="section-header-title-icon icon-wrapper sm">
+									<svg class="icon">
+										<use href="#icon-sliders"></use>
+									</svg>
+									<span class="name">Sliders</span>
+								</span>
+								<span class="section-header-title-text">Layer Settings</span>
+							</h3>
+							<div class="section-header-action btn-icon visible collapsed" id="layerSettingsToggle">
+								<span class="icon-wrapper">
+									<svg class="icon">
+										<use href="#icon-chevron-down"></use>
+									</svg>
+								</span>
 							</div>
-
-							<!-- Layer Settings Content -->
-							<div class="section-content" id="layerSettingsContent">
-								<div class="settings-empty-state visible" id="layerSettingsEmpty">
-									<div class="empty-state-icon">📋</div>
-									<div class="empty-state-text">No layer selected</div>
-								</div>
-								<div id="layerSettingsControls">
-									<div class="settings-subsection">
-										<div class="subsection-content-group">
-											<div class="subsection-title">Selection Options</div>
-											<div class="subsection-content">
-												<div class="tool-options-group">
-													<label class="checkbox-group">
-														<input type="checkbox" id="contiguous">
-														<span
-															title="Select only connected pixels of the same color">Contiguous</span>
-													</label>
-													<label class="checkbox-group">
-														<input type="checkbox" id="invert">
-														<span
-															title="Invert the selection (select everything except the chosen color)">Invert</span>
-													</label>
-													<label class="checkbox-group">
-														<input type="checkbox" id="multiSelect">
-														<span
-															title="Select multiple colors on the same layer">Multi-Select</span>
-													</label>
-												</div>
-											</div>
-										</div>
-										<div class="subsection-content-group">
-											<div class="subsection-title">Color Selections</div>
-											<div class="subsection-content">
-												<div class="selected-colors-display" id="selectedColorsDisplay">
-													<span class="empty-state-text">None</span>
-												</div>
-											</div>
-										</div>
-										<div class="subsection-content-group">
-											<div class="subsection-title">
-												<span>Refine Selection</span>
+						</div>
+						<div class="section-content" id="layerSettingsContent">
+							<div class="settings-empty-state visible" id="layerSettingsEmpty">
+								<div class="empty-state-icon">📋</div>
+								<div class="empty-state-text">No layer selected</div>
+							</div>
+							<div id="layerSettingsControls">
+								<div class="settings-subsection">
+									<div class="subsection-content-group">
+										<div class="subsection-title">Selection Options</div>
+										<div class="subsection-content">
+											<div class="tool-options-group">
 												<label class="checkbox-group">
-													<input type="checkbox" id="refineGlobal">
-													<span title="Apply refinement settings to every layer">Global</span>
+													<input type="checkbox" id="contiguous">
+													<span title="Select only connected pixels of the same color">Contiguous</span>
+												</label>
+												<label class="checkbox-group">
+													<input type="checkbox" id="invert">
+													<span title="Invert the selection (select everything except the chosen color)">Invert</span>
+												</label>
+												<label class="checkbox-group">
+													<input type="checkbox" id="multiSelect">
+													<span title="Select multiple colors on the same layer">Multi-Select</span>
 												</label>
 											</div>
-											<div class="refine-group">
-												<div class="slider-group">
-													<div class="setting-header">
-														<span class="setting-label"
-															title="Color similarity range (0-255)">Threshold</span>
-														<span class="setting-value" id="thresholdValue">50</span>
-													</div>
-													<input type="range" id="threshold" min="0" max="255" value="50">
-													<button class="btn-text" id="resetThreshold">Reset</button>
+										</div>
+									</div>
+									<div class="subsection-content-group">
+										<div class="subsection-title">Color Selections</div>
+										<div class="subsection-content">
+											<div class="selected-colors-display" id="selectedColorsDisplay">
+												<span class="empty-state-text">None</span>
+											</div>
+										</div>
+									</div>
+									<div class="subsection-content-group">
+										<div class="subsection-title">
+											<span>Refine Selection</span>
+											<label class="checkbox-group">
+												<input type="checkbox" id="refineGlobal">
+												<span title="Apply refinement settings to every layer">Global</span>
+											</label>
+										</div>
+										<div class="refine-group">
+											<div class="slider-group">
+												<div class="setting-header">
+													<span class="setting-label" title="Color similarity range (0-255)">Threshold</span>
+													<span class="setting-value" id="thresholdValue">50</span>
 												</div>
-												<div class="slider-group">
-													<div class="setting-header">
-														<span class="setting-label"
-															title="Soften selection edges">Feather</span>
-														<span class="setting-value" id="featherValue">0</span>
-													</div>
-													<input type="range" id="feather" min="0" max="20" value="0">
-													<button class="btn-text" id="resetFeather">Reset</button>
+												<input type="range" id="threshold" min="0" max="255" value="50">
+												<button class="btn-text" id="resetThreshold">Reset</button>
+											</div>
+											<div class="slider-group">
+												<div class="setting-header">
+													<span class="setting-label" title="Smooth selection edges">Feather</span>
+													<span class="setting-value" id="featherValue">0</span>
 												</div>
+												<input type="range" id="feather" min="0" max="50" value="0">
+												<button class="btn-text" id="resetFeather">Reset</button>
 											</div>
 										</div>
 									</div>
@@ -301,172 +280,155 @@
 				</div>
 
 				<!-- Glitter Column -->
-				<div class="glitter-column section">
-					<div class="section-header glitter-header section-header-with-action">
 
-						<h3 class="section-header-title">
-							<!-- Layers Icon-->
-							<span class="section-header-title-icon icon-wrapper sm">
-								<svg class="icon">
-									<use href="#icon-glitter"></use>
-								</svg>
-								<span class="name">Glitter</span>
-							</span>
-							<span class="section-header-title-text">Glitter</span>
-						</h3>
+<div class="glitter-column">
+  <!-- Glitter Header & Search Section -->
+  <div class="section">
+    <div class="section-header glitter-header section-header-with-action">
+      <h3 class="section-header-title">
+        <span class="section-header-title-icon icon-wrapper sm">
+          <svg class="icon">
+            <use href="#icon-glitter"></use>
+          </svg>
+          <span class="name">Glitter</span>
+        </span>
+        <span class="section-header-title-text">Glitter</span>
+      </h3>
+      <button class="section-header-action btn-icon icon-wrapper" id="glitterClearBtn" title="Remove Glitter">
+        <svg class="icon">
+          <use href="#icon-x-mark"></use>
+        </svg>
+        <span class="name">Remove Glitter</span>
+      </button>
+    </div>
 
-						<button class="section-header-action btn-icon" id="glitterClearBtn"
-							title="Remove Glitter">✕</button>
-					</div>
+    <!-- Glitter Search -->
+    <div class="section-content" id="glitterSearchSection">
+      <div class="glitter-search">
+        <div class="search-toggle-row">
+          <div class="search-input-wrapper">
+            <input type="text" id="glitterSearch" placeholder="Search by name or tag...">
+          </div>
+          <button class="btn-icon icon-wrapper" id="filterToggleBtn" title="Toggle filters">
+            <svg class="icon">
+              <use href="#icon-filter"></use>
+            </svg>
+            <span class="name">Filter</span>
+          </button>
+        </div>
+        <div class="filters-container" id="filtersContainer">
+          <div class="filters-container-inner">
+            <div class="filter-section">
+              <div class="filter-label">Filter</div>
+              <div class="filter-chips">
+                <label class="checkbox-group" id="searchNameOnlyWrapper">
+                  <input type="checkbox" id="searchNameOnly">
+                  <span>Search by name only</span>
+                </label>
+              </div>
+            </div>
+            <div class="filter-section">
+              <div class="filter-label">Colors</div>
+              <div class="color-filter-chips">
+                <div class="filter-chip color-filter-chip" data-color="red" data-filter="color" title="Red"></div>
+                <div class="filter-chip color-filter-chip" data-color="orange" data-filter="color" title="Orange"></div>
+                <div class="filter-chip color-filter-chip" data-color="yellow" data-filter="color" title="Yellow"></div>
+                <div class="filter-chip color-filter-chip" data-color="green" data-filter="color" title="Green"></div>
+                <div class="filter-chip color-filter-chip" data-color="blue" data-filter="color" title="Blue"></div>
+                <div class="filter-chip color-filter-chip" data-color="purple" data-filter="color" title="Purple"></div>
+                <div class="filter-chip color-filter-chip" data-color="pink" data-filter="color" title="Pink"></div>
+                <div class="filter-chip color-filter-chip" data-color="neutrals" data-filter="color" title="Neutrals"></div>
+                <div class="filter-chip color-filter-chip" data-color="earth-tone" data-filter="color" title="Earth Tone"></div>
+                <div class="filter-chip color-filter-chip" data-color="metal" data-filter="color" title="Metal"></div>
+              </div>
+            </div>
+            <div class="filter-section">
+              <div class="filter-label">Tone</div>
+              <div class="filter-chips">
+                <div class="filter-chip text-filter-chip" data-color="light" data-filter="color" title="Light">Light</div>
+                <div class="filter-chip text-filter-chip" data-color="midtone" data-filter="color" title="Midtone">Midtone</div>
+                <div class="filter-chip text-filter-chip" data-color="dark" data-filter="color" title="dark">Dark</div>
+                <div class="filter-chip text-filter-chip" data-color="pastel" data-filter="color" title="Pastel">Pastel</div>
+                <div class="filter-chip text-filter-chip" data-color="neon" data-filter="color" title="Neon">Neon</div>
+                <div class="filter-chip text-filter-chip" data-color="jewel" data-filter="color" title="Jewel Tone">Jewel Tone</div>
+              </div>
+            </div>
+            <div class="filter-section">
+              <div class="filter-label">Vibe</div>
+              <div class="filter-chips">
+                <div class="filter-chip text-filter-chip" data-color="pattern" data-filter="color" title="Pattern">Pattern</div>
+                <div class="filter-chip text-filter-chip" data-color="multicolor" data-filter="color" title="Multicolor">Multicolor</div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-text" id="clearFiltersBtn" disabled>Clear all filters</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-					<!-- Glitter Search -->
-					<div class="glitter-search">
-						<div class="search-toggle-row">
-							<div class="search-input-wrapper">
-								<input type="text" id="glitterSearch" placeholder="Search by name or tag...">
-							</div>
-							<button class="btn-icon icon-wrapper" id="filterToggleBtn" title="Toggle filters">
-								<svg class="icon">
-									<use href="#icon-filter"></use>
-								</svg>
-								<span class="name">Filter</span>
-							</button>
-						</div>
-						<div class="filters-container" id="filtersContainer">
-							<div class="filters-container-inner">
-								<div class="filter-section">
-									<div class="filter-label">Filter</div>
-									<div class="filter-chips">
-										<label class="checkbox-group" id="searchNameOnlyWrapper">
-											<input type="checkbox" id="searchNameOnly">
-											<span>Search by name only</span>
-										</label>
-									</div>
-								</div>
-								<div class="filter-section">
-									<div class="filter-label">Colors</div>
-									<div class="color-filter-chips">
-										<div class="filter-chip color-filter-chip" data-color="red" data-filter="color"
-											title="Red"></div>
-										<div class="filter-chip color-filter-chip" data-color="orange"
-											data-filter="color" title="Orange"></div>
-										<div class="filter-chip color-filter-chip" data-color="yellow"
-											data-filter="color" title="Yellow"></div>
-										<div class="filter-chip color-filter-chip" data-color="green"
-											data-filter="color" title="Green"></div>
-										<div class="filter-chip color-filter-chip" data-color="blue" data-filter="color"
-											title="Blue"></div>
-										<div class="filter-chip color-filter-chip" data-color="purple"
-											data-filter="color" title="Purple"></div>
-										<div class="filter-chip color-filter-chip" data-color="pink" data-filter="color"
-											title="Pink"></div>
-										<div class="filter-chip color-filter-chip" data-color="neutrals"
-											data-filter="color" title="Neutrals"></div>
-										<div class="filter-chip color-filter-chip" data-color="earth-tone"
-											data-filter="color" title="Earth Tone"></div>
-										<div class="filter-chip color-filter-chip" data-color="metal"
-											data-filter="color" title="Metal"></div>
-									</div>
-								</div>
-								<div class="filter-section">
-									<div class="filter-label">Tone</div>
-									<div class="filter-chips">
-										<div class="filter-chip text-filter-chip" data-color="light" data-filter="color"
-											title="Light">Light</div>
-										<div class="filter-chip text-filter-chip" data-color="midtone"
-											data-filter="color" title="Midtone">Midtone</div>
-										<div class="filter-chip text-filter-chip" data-color="dark" data-filter="color"
-											title="dark">Dark</div>
-										<div class="filter-chip text-filter-chip" data-color="pastel"
-											data-filter="color" title="Pastel">Pastel</div>
-										<div class="filter-chip text-filter-chip" data-color="neon" data-filter="color"
-											title="Neon">Neon</div>
-										<div class="filter-chip text-filter-chip" data-color="jewel" data-filter="color"
-											title="Jewel Tone">Jewel Tone</div>
-									</div>
-								</div>
-								<div class="filter-section">
-									<div class="filter-label">Vibe</div>
-									<div class="filter-chips">
-										<div class="filter-chip text-filter-chip" data-color="pattern"
-											data-filter="color" title="Pattern">Pattern</div>
-										<div class="filter-chip text-filter-chip" data-color="multicolor"
-											data-filter="color" title="Multicolor">Multicolor</div>
-									</div>
-								</div>
-							</div>
-							<button class="btn-text" id="clearFiltersBtn" disabled>Clear all filters</button>
-						</div>
-					</div>
+  <!-- Glitter Options (list) -->
+  <div class="glitter-options" id="glitterOptions"></div>
 
-					<!-- Glitter Options -->
-					<div class="glitter-options" id="glitterOptions"></div>
-
-					<!-- Glitter Settings -->
-					<div class="collapsible-section section">
-						<div class="section-header section-header-with-action" id="glitterSettingsHeader">
-
-							<h3 class="section-header-title">
-								<!-- Layers Icon-->
-								<span class="section-header-title-icon icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-sliders"></use>
-									</svg>
-									<span class="name">Sliders</span>
-								</span>
-								<span class="section-header-title-text">Glitter Settings</span>
-							</h3>
-
-							<div class="section-header-action btn-icon visible collapsed" id="glitterSettingsToggle">
-								<!-- Chevron Icon-->
-								<span class="icon-wrapper">
-									<svg class="icon">
-										<use href="#icon-chevron-down"></use>
-									</svg>
-								</span>
-							</div>
-						</div>
-						<div class="section-content" id="glitterSettingsContent">
-							<div class="settings-empty-state visible" id="glitterSettingsEmpty">
-								<div class="empty-state-icon">✨</div>
-								<div class="empty-state-text">No layer selected</div>
-							</div>
-							<div id="glitterSettingsControls">
-								<div class="settings-subsection">
-									<div class="subsection-content-group">
-										<div class="subsection-title">
-											<span>Appearance</span>
-											<label class="checkbox-group">
-												<input type="checkbox" id="glitterGlobal">
-												<span title="Apply settings to all glitter layers">Global</span>
-											</label>
-										</div>
-										<div class="refine-group">
-											<div class="slider-group">
-												<div class="setting-header">
-													<span class="setting-label"
-														title="Scale glitter pattern size">Scale</span>
-													<span class="setting-value" id="scaleValue">100%</span>
-												</div>
-												<input type="range" id="scale" min="25" max="300" value="100">
-												<button class="btn-text" id="resetScale">Reset</button>
-											</div>
-											<div class="slider-group">
-												<div class="setting-header">
-													<span class="setting-label"
-														title="Glitter effect intensity">Opacity</span>
-													<span class="setting-value" id="opacityValue">100%</span>
-												</div>
-												<input type="range" id="opacity" min="0" max="100" value="100">
-												<button class="btn-text" id="resetOpacity">Reset</button>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+  <!-- Glitter Settings Section (independent) -->
+  <div class="glitter-settings-section section collapsible-section">
+    <div class="section-header section-header-with-action" id="glitterSettingsHeader">
+      <h3 class="section-header-title">
+        <span class="section-header-title-icon icon-wrapper sm">
+          <svg class="icon">
+            <use href="#icon-sliders"></use>
+          </svg>
+          <span class="name">Sliders</span>
+        </span>
+        <span class="section-header-title-text">Glitter Settings</span>
+      </h3>
+      <div class="section-header-action btn-icon visible collapsed" id="glitterSettingsToggle">
+        <span class="icon-wrapper">
+          <svg class="icon">
+            <use href="#icon-chevron-down"></use>
+          </svg>
+        </span>
+      </div>
+    </div>
+    <div class="section-content" id="glitterSettingsContent">
+      <div class="settings-empty-state visible" id="glitterSettingsEmpty">
+        <div class="empty-state-icon">✨</div>
+        <div class="empty-state-text">No layer selected</div>
+      </div>
+      <div id="glitterSettingsControls">
+        <div class="settings-subsection">
+          <div class="subsection-content-group">
+            <div class="subsection-title">
+              <span>Appearance</span>
+              <label class="checkbox-group">
+                <input type="checkbox" id="glitterGlobal">
+                <span title="Apply settings to all glitter layers">Global</span>
+              </label>
+            </div>
+            <div class="refine-group">
+              <div class="slider-group">
+                <div class="setting-header">
+                  <span class="setting-label" title="Scale glitter pattern size">Scale</span>
+                  <span class="setting-value" id="scaleValue">100%</span>
+                </div>
+                <input type="range" id="scale" min="25" max="300" value="100">
+                <button class="btn-text" id="resetScale">Reset</button>
+              </div>
+              <div class="slider-group">
+                <div class="setting-header">
+                  <span class="setting-label" title="Glitter effect intensity">Opacity</span>
+                  <span class="setting-value" id="opacityValue">100%</span>
+                </div>
+                <input type="range" id="opacity" min="0" max="100" value="100">
+                <button class="btn-text" id="resetOpacity">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 				<!-- Right Panel -->
 				<div class="right-panel">
@@ -548,7 +510,7 @@
 								<span class="name">Fill Screen</span>
 							</button>
 
-							
+
 						</div>
 
 						<!-- Pan Controls -->
@@ -944,7 +906,7 @@
 				<p>All glitters are ethically sourced from <strong class="context"
 						data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive">GifCities</strong><sup>[26]</sup>,
 					Angelfire and Tripod websites. Original file names are mostly retained.</p>
-					<p>Beyond Geocities backup archives, and the few remaining personal website hosting sites, many resources have been lost to time. Even in cases where archives exist, accompanying images were often not included, leaving only fragments of these sacred artifacts to be rediscovered and reconstructed here. Some of the surviving hypertexts are presented below in the "External Links" section.</p>
+				<p>Beyond Geocities backup archives, and the few remaining personal website hosting sites, many resources have been lost to time. Even in cases where archives exist, accompanying images were often not included, leaving only fragments of these sacred artifacts to be rediscovered and reconstructed here. Some of the surviving hypertexts are presented below in the "External Links" section.</p>
 				<h4>Version History</h4>
 				<ul>
 					<li>December 17, 2025 — Beta Release</li>
@@ -1070,23 +1032,45 @@
 	</div>
 
 
-<!-- Mobile Bottom Navigation -->
-<div class="mobile-bottom-nav">
-    <button class="mobile-drawer-btn" data-drawer="layers">
-        <div class="mobile-layers-swatch empty"></div>
-        Layers
-        <span class="mobile-layers-count" data-count="0"></span>
-    </button>
+	<!-- Mobile Bottom Navigation -->
+	<div class="mobile-bottom-nav">
+		<button class="mobile-drawer-btn" data-drawer="layers">
+			<div class="mobile-layers-swatch empty"></div>
+			Layers
+			<span class="mobile-layers-count" data-count="0"></span>
+		</button>
 
-    <button class="btn-icon mobile-add-layer-btn active icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
-        <svg class="icon">
-            <use href="#icon-plus"></use>
-        </svg>
-        <span class="name">Add Layer</span>
-    </button>
+		<button class="mobile-drawer-btn" data-drawer="layer-settings" id="mobileLayerSettingsBtn">
+			<span class="icon-wrapper sm">
+				<svg class="icon">
+					<use href="#icon-sliders"></use>
+				</svg>
+			</span>
+			Layer
+		</button>
 
-    <button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
-</div>
+
+
+
+		<button class="btn-icon mobile-add-layer-btn active icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
+			<svg class="icon">
+				<use href="#icon-plus"></use>
+			</svg>
+			<span class="name">Add Layer</span>
+		</button>
+
+		<button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
+
+		<button class="mobile-drawer-btn" data-drawer="glitter-settings" id="mobileGlitterSettingsBtn">
+			<span class="icon-wrapper sm">
+				<svg class="icon">
+					<use href="#icon-sliders"></use>
+				</svg>
+			</span>
+			Glitter
+		</button>
+
+	</div>
 
 
 	<!-- SVG Sprite Definition (Place at the bottom of your body tag) -->
@@ -1217,15 +1201,15 @@
 				</symbol>
 
 				<symbol id="icon-arrows-up-down" viewBox="0 0 640 640">
-					<path d="M342.6 41.4C330.1 28.9 309.8 28.9 297.3 41.4L201.3 137.4C188.8 149.9 188.8 170.2 201.3 182.7C213.8 195.2 234.1 195.2 246.6 182.7L288 141.3L288 498.7L246.6 457.4C234.1 444.9 213.8 444.9 201.3 457.4C188.8 469.9 188.8 490.2 201.3 502.7L297.3 598.7C303.3 604.7 311.4 608.1 319.9 608.1C328.4 608.1 336.5 604.7 342.5 598.7L438.5 502.7C451 490.2 451 469.9 438.5 457.4C426 444.9 405.7 444.9 393.2 457.4L351.8 498.8L351.8 141.3L393.2 182.7C405.7 195.2 426 195.2 438.5 182.7C451 170.2 451 149.9 438.5 137.4L342.5 41.4z"/>
+					<path d="M342.6 41.4C330.1 28.9 309.8 28.9 297.3 41.4L201.3 137.4C188.8 149.9 188.8 170.2 201.3 182.7C213.8 195.2 234.1 195.2 246.6 182.7L288 141.3L288 498.7L246.6 457.4C234.1 444.9 213.8 444.9 201.3 457.4C188.8 469.9 188.8 490.2 201.3 502.7L297.3 598.7C303.3 604.7 311.4 608.1 319.9 608.1C328.4 608.1 336.5 604.7 342.5 598.7L438.5 502.7C451 490.2 451 469.9 438.5 457.4C426 444.9 405.7 444.9 393.2 457.4L351.8 498.8L351.8 141.3L393.2 182.7C405.7 195.2 426 195.2 438.5 182.7C451 170.2 451 149.9 438.5 137.4L342.5 41.4z" />
 				</symbol>
 
 				<symbol id="icon-arrows-left-right" viewBox="0 0 640 640">
-					<path d="M502.6 438.6L598.6 342.6C611.1 330.1 611.1 309.8 598.6 297.3L502.6 201.3C490.1 188.8 469.8 188.8 457.3 201.3C444.8 213.8 444.8 234.1 457.3 246.6L498.7 288L141.2 288L182.6 246.6C195.1 234.1 195.1 213.8 182.6 201.3C170.1 188.8 149.8 188.8 137.3 201.3L41.3 297.3C35.3 303.3 31.9 311.4 31.9 319.9C31.9 328.4 35.3 336.5 41.3 342.5L137.3 438.5C149.8 451 170.1 451 182.6 438.5C195.1 426 195.1 405.7 182.6 393.2L141.2 351.8L498.7 351.8L457.3 393.2C444.8 405.7 444.8 426 457.3 438.5C469.8 451 490.1 451 502.6 438.5z"/>
+					<path d="M502.6 438.6L598.6 342.6C611.1 330.1 611.1 309.8 598.6 297.3L502.6 201.3C490.1 188.8 469.8 188.8 457.3 201.3C444.8 213.8 444.8 234.1 457.3 246.6L498.7 288L141.2 288L182.6 246.6C195.1 234.1 195.1 213.8 182.6 201.3C170.1 188.8 149.8 188.8 137.3 201.3L41.3 297.3C35.3 303.3 31.9 311.4 31.9 319.9C31.9 328.4 35.3 336.5 41.3 342.5L137.3 438.5C149.8 451 170.1 451 182.6 438.5C195.1 426 195.1 405.7 182.6 393.2L141.2 351.8L498.7 351.8L457.3 393.2C444.8 405.7 444.8 426 457.3 438.5C469.8 451 490.1 451 502.6 438.5z" />
 				</symbol>
 
 				<symbol id="icon-maximize" viewBox="0 0 640 640">
-					<path d="M264 96L120 96C106.7 96 96 106.7 96 120L96 264C96 273.7 101.8 282.5 110.8 286.2C119.8 289.9 130.1 287.8 137 281L177 241L256 320L177 399L137 359C130.1 352.1 119.8 350.1 110.8 353.8C101.8 357.5 96 366.3 96 376L96 520C96 533.3 106.7 544 120 544L264 544C273.7 544 282.5 538.2 286.2 529.2C289.9 520.2 287.9 509.9 281 503L241 463L320 384L399 463L359 503C352.1 509.9 350.1 520.2 353.8 529.2C357.5 538.2 366.3 544 376 544L520 544C533.3 544 544 533.3 544 520L544 376C544 366.3 538.2 357.5 529.2 353.8C520.2 350.1 509.9 352.1 503 359L463 399L384 320L463 241L503 281C509.9 287.9 520.2 289.9 529.2 286.2C538.2 282.5 544 273.7 544 264L544 120C544 106.7 533.3 96 520 96L376 96C366.3 96 357.5 101.8 353.8 110.8C350.1 119.8 352.2 130.1 359 137L399 177L320 256L241 177L281 137C287.9 130.1 289.9 119.8 286.2 110.8C282.5 101.8 273.7 96 264 96z"/>
+					<path d="M264 96L120 96C106.7 96 96 106.7 96 120L96 264C96 273.7 101.8 282.5 110.8 286.2C119.8 289.9 130.1 287.8 137 281L177 241L256 320L177 399L137 359C130.1 352.1 119.8 350.1 110.8 353.8C101.8 357.5 96 366.3 96 376L96 520C96 533.3 106.7 544 120 544L264 544C273.7 544 282.5 538.2 286.2 529.2C289.9 520.2 287.9 509.9 281 503L241 463L320 384L399 463L359 503C352.1 509.9 350.1 520.2 353.8 529.2C357.5 538.2 366.3 544 376 544L520 544C533.3 544 544 533.3 544 520L544 376C544 366.3 538.2 357.5 529.2 353.8C520.2 350.1 509.9 352.1 503 359L463 399L384 320L463 241L503 281C509.9 287.9 520.2 289.9 529.2 286.2C538.2 282.5 544 273.7 544 264L544 120C544 106.7 533.3 96 520 96L376 96C366.3 96 357.5 101.8 353.8 110.8C350.1 119.8 352.2 130.1 359 137L399 177L320 256L241 177L281 137C287.9 130.1 289.9 119.8 286.2 110.8C282.5 101.8 273.7 96 264 96z" />
 				</symbol>
 
 
@@ -1237,7 +1221,7 @@
 
 		</defs>
 	</svg>
-	
+
 	<script src="https://unpkg.com/omggif@1.0.10/omggif.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
 	<script src="js/app.js"></script>

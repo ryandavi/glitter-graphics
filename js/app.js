@@ -1339,38 +1339,38 @@ class LayerManager {
 		return `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 	}
 
-createLayer(type = 'glitter-fill') {  // ADD type parameter
-	if (this.layers.length >= CONFIG.maxLayers) {
-		this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
-		return null;
-	}
-	
-	// Only create glitter-fill layers here
-	// Stickers created via stickerManager.createStickerLayer()
-	if (type !== 'glitter-fill') {
-		console.error('Use stickerManager.createStickerLayer() for sticker layers');
-		return null;
-	}
-	
-	const layer = {
-		id: this.generateLayerId(),
-		type: 'glitter-fill',  // ADD THIS
-		visible: true,
-		selections: [],
-		selectedGlitterIndex: CONFIG.defaultGlitterIndex,
-		settings: {
-			threshold: CONFIG.defaultThreshold,
-			feather: CONFIG.defaultFeather,
-			scale: CONFIG.defaultScale,
-			opacity: CONFIG.defaultOpacity,
-			contiguous: false,
-			invert: false,
-			multiSelect: false
+	createLayer(type = 'glitter-fill') {  // ADD type parameter
+		if (this.layers.length >= CONFIG.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+			return null;
 		}
-	};
-	
-	return layer;
-}
+
+		// Only create glitter-fill layers here
+		// Stickers created via stickerManager.createStickerLayer()
+		if (type !== 'glitter-fill') {
+			console.error('Use stickerManager.createStickerLayer() for sticker layers');
+			return null;
+		}
+
+		const layer = {
+			id: this.generateLayerId(),
+			type: 'glitter-fill',  // ADD THIS
+			visible: true,
+			selections: [],
+			selectedGlitterIndex: CONFIG.defaultGlitterIndex,
+			settings: {
+				threshold: CONFIG.defaultThreshold,
+				feather: CONFIG.defaultFeather,
+				scale: CONFIG.defaultScale,
+				opacity: CONFIG.defaultOpacity,
+				contiguous: false,
+				invert: false,
+				multiSelect: false
+			}
+		};
+
+		return layer;
+	}
 
 	addLayer() {
 		const layer = this.createLayer();
@@ -1384,53 +1384,53 @@ createLayer(type = 'glitter-fill') {  // ADD type parameter
 		this.editor.updateStatus('Layer added');
 	}
 
-deleteLayer(layerId) {
-	if (this.layers.length <= 1) {
-		this.editor.showError('Cannot delete the last layer');
-		return;
-	}
-	
-	const index = this.layers.findIndex(l => l.id === layerId);
-	if (index === -1) return;
-	
-	// ADD: Clean up sticker if it's a sticker layer
-	const layer = this.layers[index];
-	if (layer.type === 'sticker' && this.editor.stickerManager) {
-		this.editor.stickerManager.removeSticker(layerId);
-	}
-	
-	this.layers.splice(index, 1);
-	
-	if (this.activeLayerId === layerId) {
-		const newActiveIndex = Math.max(0, index - 1);
-		this.setActiveLayer(this.layers[newActiveIndex].id);
-	}
-	
-	this.renderLayersList();
-	this.editor.saveState();
-	this.editor.updatePreview();
-	this.editor.updateActionButtons();
-	this.editor.updateStatus('Layer deleted');
-}
-
-toggleLayerVisibility(layerId) {
-	const layer = this.layers.find(l => l.id === layerId);
-	if (!layer) return;
-	
-	layer.visible = !layer.visible;
-	
-	// ADD: Update sticker element visibility
-	if (layer.type === 'sticker' && this.editor.stickerManager) {
-		const element = this.editor.stickerManager.stickerElements.get(layerId);
-		if (element) {
-			element.style.display = layer.visible ? 'block' : 'none';
+	deleteLayer(layerId) {
+		if (this.layers.length <= 1) {
+			this.editor.showError('Cannot delete the last layer');
+			return;
 		}
+
+		const index = this.layers.findIndex(l => l.id === layerId);
+		if (index === -1) return;
+
+		// ADD: Clean up sticker if it's a sticker layer
+		const layer = this.layers[index];
+		if (layer.type === 'sticker' && this.editor.stickerManager) {
+			this.editor.stickerManager.removeSticker(layerId);
+		}
+
+		this.layers.splice(index, 1);
+
+		if (this.activeLayerId === layerId) {
+			const newActiveIndex = Math.max(0, index - 1);
+			this.setActiveLayer(this.layers[newActiveIndex].id);
+		}
+
+		this.renderLayersList();
+		this.editor.saveState();
+		this.editor.updatePreview();
+		this.editor.updateActionButtons();
+		this.editor.updateStatus('Layer deleted');
 	}
-	
-	this.renderLayersList();
-	this.editor.saveState();
-	this.editor.updatePreview();
-}
+
+	toggleLayerVisibility(layerId) {
+		const layer = this.layers.find(l => l.id === layerId);
+		if (!layer) return;
+
+		layer.visible = !layer.visible;
+
+		// ADD: Update sticker element visibility
+		if (layer.type === 'sticker' && this.editor.stickerManager) {
+			const element = this.editor.stickerManager.stickerElements.get(layerId);
+			if (element) {
+				element.style.display = layer.visible ? 'block' : 'none';
+			}
+		}
+
+		this.renderLayersList();
+		this.editor.saveState();
+		this.editor.updatePreview();
+	}
 
 	// ===== LAYER SELECTION =====
 
@@ -1613,69 +1613,69 @@ toggleLayerVisibility(layerId) {
 		this.updateMobileLayersSwatch();
 	}
 
-createLayerElement(layer) {
-	const layerEl = document.createElement('div');
-	layerEl.className = 'layer-item';
-	layerEl.dataset.layerId = layer.id;
-	layerEl.draggable = true;
-	
-	if (layer.id === this.activeLayerId) {
-		layerEl.classList.add('active');
-	}
-	
-	// Swatch
-	const swatch = document.createElement('div');
-	swatch.className = 'layer-swatch';
-	
-	// CHANGE: Handle different layer types
-	if (layer.type === 'sticker') {
-		// Show sticker thumbnail
-		swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
-		swatch.style.backgroundSize = 'contain';
-		swatch.style.backgroundPosition = 'center';
-		swatch.style.backgroundRepeat = 'no-repeat';
-		swatch.style.imageRendering = 'pixelated';
-	} else {
-		// Show glitter swatch (existing code)
-		const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
-		if (glitter) {
-			swatch.style.backgroundImage = `url(${glitter.url})`;
-			if (glitter.isPixelated) {
-				swatch.classList.add('pixelated');
+	createLayerElement(layer) {
+		const layerEl = document.createElement('div');
+		layerEl.className = 'layer-item';
+		layerEl.dataset.layerId = layer.id;
+		layerEl.draggable = true;
+
+		if (layer.id === this.activeLayerId) {
+			layerEl.classList.add('active');
+		}
+
+		// Swatch
+		const swatch = document.createElement('div');
+		swatch.className = 'layer-swatch';
+
+		// CHANGE: Handle different layer types
+		if (layer.type === 'sticker') {
+			// Show sticker thumbnail
+			swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
+			swatch.style.backgroundSize = 'contain';
+			swatch.style.backgroundPosition = 'center';
+			swatch.style.backgroundRepeat = 'no-repeat';
+			swatch.style.imageRendering = 'pixelated';
+		} else {
+			// Show glitter swatch (existing code)
+			const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
+			if (glitter) {
+				swatch.style.backgroundImage = `url(${glitter.url})`;
+				if (glitter.isPixelated) {
+					swatch.classList.add('pixelated');
+				}
 			}
 		}
-	}
-	
-	// Double-click swatch behavior
-	swatch.addEventListener('dblclick', (e) => {
-		e.stopPropagation();
+
+		// Double-click swatch behavior
+		swatch.addEventListener('dblclick', (e) => {
+			e.stopPropagation();
+			if (layer.type === 'sticker') {
+				// TODO: Could open sticker picker or transform tool
+				console.log('Edit sticker:', layer.id);
+			} else {
+				this.goToGlitter(layer.id);
+			}
+		});
+
+		// Info
+		const info = document.createElement('div');
+		info.className = 'layer-info';
+		const colorText = document.createElement('div');
+		colorText.className = 'layer-color';
+
+		// CHANGE: Display name based on layer type
 		if (layer.type === 'sticker') {
-			// TODO: Could open sticker picker or transform tool
-			console.log('Edit sticker:', layer.id);
+			colorText.textContent = layer.name || 'Sticker';
 		} else {
-			this.goToGlitter(layer.id);
+			const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
+			if (glitter) {
+				colorText.textContent = `${glitter.category} - ${glitter.name}`;
+			} else {
+				colorText.textContent = 'No glitter';
+			}
 		}
-	});
-	
-	// Info
-	const info = document.createElement('div');
-	info.className = 'layer-info';
-	const colorText = document.createElement('div');
-	colorText.className = 'layer-color';
-	
-	// CHANGE: Display name based on layer type
-	if (layer.type === 'sticker') {
-		colorText.textContent = layer.name || 'Sticker';
-	} else {
-		const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
-		if (glitter) {
-			colorText.textContent = `${glitter.category} - ${glitter.name}`;
-		} else {
-			colorText.textContent = 'No glitter';
-		}
-	}
-	
-	info.appendChild(colorText);
+
+		info.appendChild(colorText);
 
 		// Drag handle (mobile only)
 		const dragHandle = document.createElement('div');
@@ -2100,32 +2100,32 @@ createLayerElement(layer) {
 		container.appendChild(fragment);
 	}
 
-reorderGlitterBackgrounds() {
-	const container = this.glitterBackgroundsContainer;
-	
-	// Get existing background AND sticker elements
-	const existingElements = new Map();
-	container.querySelectorAll('.glitter-background, .sticker-element').forEach(el => {
-		existingElements.set(el.dataset.layerId, el);
-	});
-	
-	// Reorder them to match layers array
-	const fragment = document.createDocumentFragment();
-	
-	this.layers.forEach(layer => {
-		const el = existingElements.get(layer.id);
-		if (el) {
-			// Update z-index based on position
-			if (layer.type === 'sticker') {
-				el.style.zIndex = this.editor.stickerManager.getLayerZIndex(layer.id);
+	reorderGlitterBackgrounds() {
+		const container = this.glitterBackgroundsContainer;
+
+		// Get existing background AND sticker elements
+		const existingElements = new Map();
+		container.querySelectorAll('.glitter-background, .sticker-element').forEach(el => {
+			existingElements.set(el.dataset.layerId, el);
+		});
+
+		// Reorder them to match layers array
+		const fragment = document.createDocumentFragment();
+
+		this.layers.forEach(layer => {
+			const el = existingElements.get(layer.id);
+			if (el) {
+				// Update z-index based on position
+				if (layer.type === 'sticker') {
+					el.style.zIndex = this.editor.stickerManager.getLayerZIndex(layer.id);
+				}
+				fragment.appendChild(el);
 			}
-			fragment.appendChild(el);
-		}
-	});
-	
-	container.innerHTML = '';
-	container.appendChild(fragment);
-}
+		});
+
+		container.innerHTML = '';
+		container.appendChild(fragment);
+	}
 }
 
 
@@ -2244,21 +2244,21 @@ class GlitterEditor {
 		}
 	}
 
-async loadStickerImageData(layer) {
-	return new Promise((resolve, reject) => {
-		const img = new Image();
-		img.onload = () => {
-			const canvas = document.createElement('canvas');
-			canvas.width = img.naturalWidth;
-			canvas.height = img.naturalHeight;
-			const ctx = canvas.getContext('2d');
-			ctx.drawImage(img, 0, 0);
-			resolve(ctx.getImageData(0, 0, canvas.width, canvas.height));
-		};
-		img.onerror = reject;
-		img.src = layer.stickerData.url;
-	});
-}
+	async loadStickerImageData(layer) {
+		return new Promise((resolve, reject) => {
+			const img = new Image();
+			img.onload = () => {
+				const canvas = document.createElement('canvas');
+				canvas.width = img.naturalWidth;
+				canvas.height = img.naturalHeight;
+				const ctx = canvas.getContext('2d');
+				ctx.drawImage(img, 0, 0);
+				resolve(ctx.getImageData(0, 0, canvas.width, canvas.height));
+			};
+			img.onerror = reject;
+			img.src = layer.stickerData.url;
+		});
+	}
 
 
 	initializeExportSettings() {
@@ -2609,17 +2609,17 @@ async loadStickerImageData(layer) {
 		}
 	}
 
-updateTransparencyGrid() {
-    if (!this.previewContainer.classList.contains('transparent-bg')) return;
+	updateTransparencyGrid() {
+		if (!this.previewContainer.classList.contains('transparent-bg')) return;
 
-    const baseSize = CONFIG.baseGridSize;
-    const size = baseSize * this.viewport.currentZoom;
-    const half = size / 2;
+		const baseSize = CONFIG.baseGridSize;
+		const size = baseSize * this.viewport.currentZoom;
+		const half = size / 2;
 
-    this.previewContainer.style.backgroundSize = `${size}px ${size}px`;
-    this.previewContainer.style.backgroundPosition =
-        `${this.viewport.panX}px ${this.viewport.panY}px, ${this.viewport.panX}px ${this.viewport.panY + half}px, ${this.viewport.panX + half}px ${this.viewport.panY - half}px, ${this.viewport.panX - half}px ${this.viewport.panY}px`;
-}
+		this.previewContainer.style.backgroundSize = `${size}px ${size}px`;
+		this.previewContainer.style.backgroundPosition =
+			`${this.viewport.panX}px ${this.viewport.panY}px, ${this.viewport.panX}px ${this.viewport.panY + half}px, ${this.viewport.panX + half}px ${this.viewport.panY - half}px, ${this.viewport.panX - half}px ${this.viewport.panY}px`;
+	}
 
 
 	// ===== UX: EMPTY STATE MANAGEMENT =====
@@ -3011,34 +3011,34 @@ updateTransparencyGrid() {
 			this.glitterGlobal = e.target.checked;
 		});
 
-// --- LAYER SETTINGS CONTROLS ---
-const thresholdSlider = document.getElementById('threshold');
-thresholdSlider.addEventListener('input', () => {
-    this.saveActiveLayerSettings(true, false);
-    this.debouncedSliderUpdate('threshold');  // CHANGED
-});
-thresholdSlider.addEventListener('change', () => this.saveState());
+		// --- LAYER SETTINGS CONTROLS ---
+		const thresholdSlider = document.getElementById('threshold');
+		thresholdSlider.addEventListener('input', () => {
+			this.saveActiveLayerSettings(true, false);
+			this.debouncedSliderUpdate('threshold');  // CHANGED
+		});
+		thresholdSlider.addEventListener('change', () => this.saveState());
 
-const featherSlider = document.getElementById('feather');
-featherSlider.addEventListener('input', () => {
-    this.saveActiveLayerSettings(true, false);
-    this.debouncedSliderUpdate('feather');  // CHANGED
-});
-featherSlider.addEventListener('change', () => this.saveState());
+		const featherSlider = document.getElementById('feather');
+		featherSlider.addEventListener('input', () => {
+			this.saveActiveLayerSettings(true, false);
+			this.debouncedSliderUpdate('feather');  // CHANGED
+		});
+		featherSlider.addEventListener('change', () => this.saveState());
 
-const scaleSlider = document.getElementById('scale');
-scaleSlider.addEventListener('input', () => {
-    this.saveActiveLayerSettings(false, true);
-    this.debouncedSliderUpdate('scale');  // CHANGED
-});
-scaleSlider.addEventListener('change', () => this.saveState());
+		const scaleSlider = document.getElementById('scale');
+		scaleSlider.addEventListener('input', () => {
+			this.saveActiveLayerSettings(false, true);
+			this.debouncedSliderUpdate('scale');  // CHANGED
+		});
+		scaleSlider.addEventListener('change', () => this.saveState());
 
-const opacitySlider = document.getElementById('opacity');
-opacitySlider.addEventListener('input', () => {
-    this.saveActiveLayerSettings(false, true);
-    this.debouncedSliderUpdate('opacity');  // CHANGED
-});
-opacitySlider.addEventListener('change', () => this.saveState());
+		const opacitySlider = document.getElementById('opacity');
+		opacitySlider.addEventListener('input', () => {
+			this.saveActiveLayerSettings(false, true);
+			this.debouncedSliderUpdate('opacity');  // CHANGED
+		});
+		opacitySlider.addEventListener('change', () => this.saveState());
 
 		// --- SEARCH & FILTERS ---
 		document.getElementById('glitterSearch').addEventListener('input', (e) => this.handleSearchInput(e.target.value));
@@ -3321,86 +3321,86 @@ opacitySlider.addEventListener('change', () => this.saveState());
 
 	// ===== HISTORY =====
 
-saveState() {
-	const state = {
-		layers: this.layers.map(layer => {
-			// Handle sticker layers differently
-			if (layer.type === 'sticker' && this.stickerManager) {
-				return this.stickerManager.serializeSticker(layer);
-			}
-			// Glitter-fill layers (existing)
-			return {
-				id: layer.id,
-				type: layer.type || 'glitter-fill', // Add type for backwards compatibility
-				visible: layer.visible,
-				selections: JSON.parse(JSON.stringify(layer.selections)),
-				selectedGlitterIndex: layer.selectedGlitterIndex,
-				settings: { ...layer.settings }
-			};
-		}),
-		activeLayerId: this.activeLayerId
-	};
+	saveState() {
+		const state = {
+			layers: this.layers.map(layer => {
+				// Handle sticker layers differently
+				if (layer.type === 'sticker' && this.stickerManager) {
+					return this.stickerManager.serializeSticker(layer);
+				}
+				// Glitter-fill layers (existing)
+				return {
+					id: layer.id,
+					type: layer.type || 'glitter-fill', // Add type for backwards compatibility
+					visible: layer.visible,
+					selections: JSON.parse(JSON.stringify(layer.selections)),
+					selectedGlitterIndex: layer.selectedGlitterIndex,
+					settings: { ...layer.settings }
+				};
+			}),
+			activeLayerId: this.activeLayerId
+		};
 
-	this.history = this.history.slice(0, this.historyIndex + 1);
+		this.history = this.history.slice(0, this.historyIndex + 1);
 
-	if (this.history.length >= CONFIG.historyLimit) {
-		this.history.shift();
-	} else {
-		this.historyIndex++;
+		if (this.history.length >= CONFIG.historyLimit) {
+			this.history.shift();
+		} else {
+			this.historyIndex++;
+		}
+
+		this.history.push(state);
+		this.updateHistoryButtons();
 	}
 
-	this.history.push(state);
-	this.updateHistoryButtons();
-}
+	async restoreState(state) {
+		// Restore layers with async sticker deserialization
+		this.layers = [];
 
-async restoreState(state) {
-	// Restore layers with async sticker deserialization
-	this.layers = [];
-	
-	for (const layerData of state.layers) {
-		if (layerData.type === 'sticker' && this.stickerManager) {
-			// Deserialize sticker layer
-			const restoredLayer = await this.stickerManager.deserializeSticker(layerData);
-			if (restoredLayer) {
-				this.layers.push(restoredLayer);
+		for (const layerData of state.layers) {
+			if (layerData.type === 'sticker' && this.stickerManager) {
+				// Deserialize sticker layer
+				const restoredLayer = await this.stickerManager.deserializeSticker(layerData);
+				if (restoredLayer) {
+					this.layers.push(restoredLayer);
+				}
+			} else {
+				// Glitter-fill layer (existing)
+				this.layers.push({
+					id: layerData.id,
+					type: layerData.type || 'glitter-fill',
+					visible: layerData.visible,
+					selections: JSON.parse(JSON.stringify(layerData.selections)),
+					selectedGlitterIndex: layerData.selectedGlitterIndex,
+					settings: { ...layerData.settings }
+				});
 			}
-		} else {
-			// Glitter-fill layer (existing)
-			this.layers.push({
-				id: layerData.id,
-				type: layerData.type || 'glitter-fill',
-				visible: layerData.visible,
-				selections: JSON.parse(JSON.stringify(layerData.selections)),
-				selectedGlitterIndex: layerData.selectedGlitterIndex,
-				settings: { ...layerData.settings }
-			});
+		}
+
+		this.activeLayerId = state.activeLayerId;
+
+		this.layerManager.renderLayersList();
+		this.loadActiveLayerSettings();
+		this.updateGlitterSelection();
+		this.updatePreview(); // This will re-render stickers via renderStickers()
+		this.updateActionButtons();
+	}
+
+	async undo() {
+		if (this.historyIndex > 0) {
+			this.historyIndex--;
+			await this.restoreState(this.history[this.historyIndex]);
+			this.updateHistoryButtons();
 		}
 	}
 
-	this.activeLayerId = state.activeLayerId;
-
-	this.layerManager.renderLayersList();
-	this.loadActiveLayerSettings();
-	this.updateGlitterSelection();
-	this.updatePreview(); // This will re-render stickers via renderStickers()
-	this.updateActionButtons();
-}
-
-async undo() {
-	if (this.historyIndex > 0) {
-		this.historyIndex--;
-		await this.restoreState(this.history[this.historyIndex]);
-		this.updateHistoryButtons();
+	async redo() {
+		if (this.historyIndex < this.history.length - 1) {
+			this.historyIndex++;
+			await this.restoreState(this.history[this.historyIndex]);
+			this.updateHistoryButtons();
+		}
 	}
-}
-
-async redo() {
-	if (this.historyIndex < this.history.length - 1) {
-		this.historyIndex++;
-		await this.restoreState(this.history[this.historyIndex]);
-		this.updateHistoryButtons();
-	}
-}
 
 	updateHistoryButtons() {
 		document.getElementById('undoTool').disabled = this.historyIndex <= 0;
@@ -3949,39 +3949,39 @@ async redo() {
 		}
 	}
 
-updatePreviewScale() {
-    console.log('updatePreviewScale called');
-    console.log('Found glitter backgrounds:', document.querySelectorAll('.glitter-bg-layer').length);
-    
-    document.querySelectorAll('.glitter-bg-layer').forEach(bg => {
-        bg.style.width = this.originalCanvas.width + 'px';
-        bg.style.height = this.originalCanvas.height + 'px';
+	updatePreviewScale() {
+		console.log('updatePreviewScale called');
+		console.log('Found glitter backgrounds:', document.querySelectorAll('.glitter-bg-layer').length);
 
-        const layerId = bg.dataset.layerId;
-        console.log('Processing layerId:', layerId);
-        
-        const layer = this.layerManager.layers.find(l => l.id === layerId);
-        console.log('Found layer?', !!layer, layer);
-        
-        if (layer) {
-            const glitter = this.glitterGifs[layer.selectedGlitterIndex];
-            console.log('Found glitter?', !!glitter, 'at index:', layer.selectedGlitterIndex);
-            
-            if (glitter) {
-                const glitterScale = layer.settings.scale / 100;
-                console.log('Scale:', glitterScale);
-                
-                const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
-                console.log('Base size:', baseSize, 'frames exist?', !!glitter.frames);
-                
-                const scaledGlitterSize = Math.round(baseSize * glitterScale);
-                console.log('Setting backgroundSize to:', scaledGlitterSize + 'px');
-                
-                bg.style.backgroundSize = `${scaledGlitterSize}px`;
-            }
-        }
-    });
-}
+		document.querySelectorAll('.glitter-bg-layer').forEach(bg => {
+			bg.style.width = this.originalCanvas.width + 'px';
+			bg.style.height = this.originalCanvas.height + 'px';
+
+			const layerId = bg.dataset.layerId;
+			console.log('Processing layerId:', layerId);
+
+			const layer = this.layerManager.layers.find(l => l.id === layerId);
+			console.log('Found layer?', !!layer, layer);
+
+			if (layer) {
+				const glitter = this.glitterGifs[layer.selectedGlitterIndex];
+				console.log('Found glitter?', !!glitter, 'at index:', layer.selectedGlitterIndex);
+
+				if (glitter) {
+					const glitterScale = layer.settings.scale / 100;
+					console.log('Scale:', glitterScale);
+
+					const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
+					console.log('Base size:', baseSize, 'frames exist?', !!glitter.frames);
+
+					const scaledGlitterSize = Math.round(baseSize * glitterScale);
+					console.log('Setting backgroundSize to:', scaledGlitterSize + 'px');
+
+					bg.style.backgroundSize = `${scaledGlitterSize}px`;
+				}
+			}
+		});
+	}
 
 	handleCanvasClick(event) {
 		if (!this.originalImageData) return;
@@ -4115,65 +4115,65 @@ updatePreviewScale() {
 		this.updateSelectedColorsDisplay();
 	}
 
-clearPreview() {
-	if (this.originalImageData) {
-		this.previewCtx.putImageData(this.originalImageData, 0, 0);
-	} else {
-		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-	}
+	clearPreview() {
+		if (this.originalImageData) {
+			this.previewCtx.putImageData(this.originalImageData, 0, 0);
+		} else {
+			this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+		}
 
-	// Clear glitter backgrounds
-	this.glitterBackgroundsContainer.innerHTML = '';
-	
-	// ADD: Clear sticker elements
-	if (this.stickerManager) {
-		this.stickerManager.stickerElements.forEach((element, layerId) => {
-			if (element.parentNode) {
-				element.parentNode.removeChild(element);
-			}
-		});
-		this.stickerManager.stickerElements.clear();
+		// Clear glitter backgrounds
+		this.glitterBackgroundsContainer.innerHTML = '';
+
+		// ADD: Clear sticker elements
+		if (this.stickerManager) {
+			this.stickerManager.stickerElements.forEach((element, layerId) => {
+				if (element.parentNode) {
+					element.parentNode.removeChild(element);
+				}
+			});
+			this.stickerManager.stickerElements.clear();
+		}
 	}
-}
 
 	// ===== PREVIEW & RENDERING =====
 
-updatePreview() {
-	if (!this.originalImageData) {
-		this.clearPreview();
-		return;
-	}
-
-	const layersToShow = this.showAllLayers
-		? this.layers.filter(l => l.visible && (
-			(l.type === 'glitter-fill' && l.selections.length > 0) ||
-			l.type === 'sticker'  // ADD THIS
-		))
-		: [this.layerManager.getActiveLayer()].filter(l => l && l.visible && (
-			(l.type === 'glitter-fill' && l.selections.length > 0) ||
-			l.type === 'sticker'  // ADD THIS
-		));
-
-	if (layersToShow.length === 0) {
-		this.clearPreview();
-		return;
-	}
-
-	this.renderPreviewCanvas(layersToShow);
-	this.renderGlitterBackgrounds(layersToShow);
-	this.renderStickers(layersToShow);  // ADD THIS LINE
-	this.updatePreviewScale();
-}
-
-renderStickers(layersToShow) {
-	if (!this.stickerManager) return;
-	
-	layersToShow.forEach(layer => {
-		if (layer.type === 'sticker') {
-			this.stickerManager.renderSticker(layer);
+	updatePreview() {
+		if (!this.originalImageData) {
+			this.clearPreview();
+			return;
 		}
-	});
-}
+
+		const layersToShow = this.showAllLayers
+			? this.layers.filter(l => l.visible && (
+				(l.type === 'glitter-fill' && l.selections.length > 0) ||
+				l.type === 'sticker'  // ADD THIS
+			))
+			: [this.layerManager.getActiveLayer()].filter(l => l && l.visible && (
+				(l.type === 'glitter-fill' && l.selections.length > 0) ||
+				l.type === 'sticker'  // ADD THIS
+			));
+
+		if (layersToShow.length === 0) {
+			this.clearPreview();
+			return;
+		}
+
+		this.renderPreviewCanvas(layersToShow);
+		this.renderGlitterBackgrounds(layersToShow);
+		this.renderStickers(layersToShow);  // ADD THIS LINE
+		this.updatePreviewScale();
+	}
+
+	renderStickers(layersToShow) {
+		if (!this.stickerManager) return;
+
+		layersToShow.forEach(layer => {
+			if (layer.type === 'sticker') {
+				this.stickerManager.renderSticker(layer);
+			}
+		});
+	}
 
 
 
@@ -4230,14 +4230,14 @@ renderStickers(layersToShow) {
 				bg.classList.add('pixelated');
 			}
 
-bg.dataset.layerId = layer.id;
-bg.style.backgroundImage = `url(${glitter.url})`;
+			bg.dataset.layerId = layer.id;
+			bg.style.backgroundImage = `url(${glitter.url})`;
 
-// ADD: Set initial backgroundSize (will be updated by updatePreviewScale if frames exist)
-bg.style.backgroundSize = 'auto';  // Natural size as fallback
+			// ADD: Set initial backgroundSize (will be updated by updatePreviewScale if frames exist)
+			bg.style.backgroundSize = 'auto';  // Natural size as fallback
 
-bg.style.width = width + 'px';
-bg.style.height = height + 'px';
+			bg.style.width = width + 'px';
+			bg.style.height = height + 'px';
 
 			bg.style.position = 'absolute';
 			bg.style.top = '0';
@@ -4537,65 +4537,65 @@ class GifExporter {
 	}
 
 
-_renderStickerToCanvas(layer, ctx, frameIndex, canvasWidth, canvasHeight) {
-	const { transform, frames, isAnimated, width, height, url } = layer.stickerData;
-	
-	// Determine which frame to use
-	let imageData;
-	if (isAnimated && frames) {
-		const frameCount = frames.frames.length;
-		const stickerFrameIndex = frameIndex % frameCount;
-		imageData = frames.frames[stickerFrameIndex].data;
-	} else {
-		// Static image - need to load it
-		// For now, we'll need to pre-load sticker images during export prep
-		console.warn('Static sticker export not yet implemented');
-		return;
+	_renderStickerToCanvas(layer, ctx, frameIndex, canvasWidth, canvasHeight) {
+		const { transform, frames, isAnimated, width, height, url } = layer.stickerData;
+
+		// Determine which frame to use
+		let imageData;
+		if (isAnimated && frames) {
+			const frameCount = frames.frames.length;
+			const stickerFrameIndex = frameIndex % frameCount;
+			imageData = frames.frames[stickerFrameIndex].data;
+		} else {
+			// Static image - need to load it
+			// For now, we'll need to pre-load sticker images during export prep
+			console.warn('Static sticker export not yet implemented');
+			return;
+		}
+
+		// Create temporary canvas for the sticker frame
+		const tempCanvas = document.createElement('canvas');
+		tempCanvas.width = width;
+		tempCanvas.height = height;
+		const tempCtx = tempCanvas.getContext('2d');
+		tempCtx.putImageData(imageData, 0, 0);
+
+		// Calculate transform
+		const centerX = transform.position.x;
+		const centerY = transform.position.y;
+		const scaleX = transform.scale.x / 100;
+		const scaleY = transform.scale.y / 100;
+		const rotation = transform.rotation * Math.PI / 180;
+
+		// Apply transforms to main canvas
+		ctx.save();
+		ctx.globalAlpha = transform.opacity / 100;
+
+		// Translate to center point
+		ctx.translate(centerX, centerY);
+
+		// Rotate
+		if (rotation !== 0) {
+			ctx.rotate(rotation);
+		}
+
+		// Scale
+		ctx.scale(
+			scaleX * (transform.flipX ? -1 : 1),
+			scaleY * (transform.flipY ? -1 : 1)
+		);
+
+		// Draw sticker (centered on origin)
+		ctx.drawImage(
+			tempCanvas,
+			-width / 2,
+			-height / 2,
+			width,
+			height
+		);
+
+		ctx.restore();
 	}
-	
-	// Create temporary canvas for the sticker frame
-	const tempCanvas = document.createElement('canvas');
-	tempCanvas.width = width;
-	tempCanvas.height = height;
-	const tempCtx = tempCanvas.getContext('2d');
-	tempCtx.putImageData(imageData, 0, 0);
-	
-	// Calculate transform
-	const centerX = transform.position.x;
-	const centerY = transform.position.y;
-	const scaleX = transform.scale.x / 100;
-	const scaleY = transform.scale.y / 100;
-	const rotation = transform.rotation * Math.PI / 180;
-	
-	// Apply transforms to main canvas
-	ctx.save();
-	ctx.globalAlpha = transform.opacity / 100;
-	
-	// Translate to center point
-	ctx.translate(centerX, centerY);
-	
-	// Rotate
-	if (rotation !== 0) {
-		ctx.rotate(rotation);
-	}
-	
-	// Scale
-	ctx.scale(
-		scaleX * (transform.flipX ? -1 : 1),
-		scaleY * (transform.flipY ? -1 : 1)
-	);
-	
-	// Draw sticker (centered on origin)
-	ctx.drawImage(
-		tempCanvas,
-		-width / 2,
-		-height / 2,
-		width,
-		height
-	);
-	
-	ctx.restore();
-}
 
 
 	async process(params) {
@@ -4778,98 +4778,98 @@ _renderStickerToCanvas(layer, ctx, frameIndex, canvasWidth, canvasHeight) {
 		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
 	}
 
-_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings) {
-	const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
-	const ctx = this.ctx;
-	const hCtx = this.helperCtx;
+	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings) {
+		const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
+		const ctx = this.ctx;
+		const hCtx = this.helperCtx;
 
-	// A. Clear canvas
-	this.canvas.width = width;
-	this.canvas.height = height;
-	ctx.clearRect(0, 0, width, height);
+		// A. Clear canvas
+		this.canvas.width = width;
+		this.canvas.height = height;
+		ctx.clearRect(0, 0, width, height);
 
-	// B. Draw Background Image
-	if (exportSettings.baseImage) {
-		const bgImage = new ImageData(originalData, width, height);
-		ctx.putImageData(bgImage, 0, 0);
-	}
-
-	// C. Composite Glitter Layers
-	layers.forEach(layer => {
-		// Skip non-glitter layers
-		if (layer.type !== 'glitter-fill') return;
-		
-		const maskCanvas = maskCanvases.get(layer.id);
-		if (!maskCanvas) return;
-
-		const glitter = library[layer.selectedGlitterIndex];
-		const frames = glitter.frames.frames;
-		const fIdx = frameIndex % frames.length;
-		const glitterFrame = frames[fIdx];
-
-		// Save state so previous layers don't corrupt this one
-		hCtx.save();
-
-		// 1. Pattern Fill
-		hCtx.clearRect(0, 0, width, height);
-
-		const patternSource = document.createElement('canvas');
-		patternSource.width = glitterFrame.width;
-		patternSource.height = glitterFrame.height;
-		patternSource.getContext('2d').putImageData(glitterFrame.data, 0, 0);
-
-		const pattern = hCtx.createPattern(patternSource, 'repeat');
-		const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-		const matrix = new DOMMatrix();
-		matrix.scaleSelf(scale, scale);
-		pattern.setTransform(matrix);
-
-		hCtx.globalAlpha = layer.settings.opacity / 100;
-		hCtx.fillStyle = pattern;
-		hCtx.fillRect(0, 0, width, height);
-
-		// 2. Apply Mask
-		hCtx.globalCompositeOperation = 'destination-in';
-		hCtx.globalAlpha = 1.0;
-		hCtx.drawImage(maskCanvas, 0, 0);
-
-		// Restore state (resets composite op and alpha)
-		hCtx.restore();
-
-		// 3. Composite onto main canvas
-		ctx.drawImage(this.helperCanvas, 0, 0);
-	});
-
-	// D. Render Sticker Layers (NEW)
-	layers.forEach(layer => {
-		if (layer.type === 'sticker' && layer.visible) {
-			this._renderStickerToCanvas(layer, ctx, frameIndex, width, height);
+		// B. Draw Background Image
+		if (exportSettings.baseImage) {
+			const bgImage = new ImageData(originalData, width, height);
+			ctx.putImageData(bgImage, 0, 0);
 		}
-	});
 
-	// E. Handle Transparency
-	if (exportSettings.transparency && safeKey) {
-		const imgData = ctx.getImageData(0, 0, width, height);
-		const data = imgData.data;
+		// C. Composite Glitter Layers
+		layers.forEach(layer => {
+			// Skip non-glitter layers
+			if (layer.type !== 'glitter-fill') return;
 
-		for (let i = 0; i < width * height; i++) {
-			const pixelIndex = i;
-			const alpha = originalAlpha[pixelIndex];
+			const maskCanvas = maskCanvases.get(layer.id);
+			if (!maskCanvas) return;
 
-			if (alpha < alphaThreshold) {
-				const pIdx = i * 4;
-				data[pIdx] = safeKey.r;
-				data[pIdx + 1] = safeKey.g;
-				data[pIdx + 2] = safeKey.b;
-				data[pIdx + 3] = 255;
+			const glitter = library[layer.selectedGlitterIndex];
+			const frames = glitter.frames.frames;
+			const fIdx = frameIndex % frames.length;
+			const glitterFrame = frames[fIdx];
+
+			// Save state so previous layers don't corrupt this one
+			hCtx.save();
+
+			// 1. Pattern Fill
+			hCtx.clearRect(0, 0, width, height);
+
+			const patternSource = document.createElement('canvas');
+			patternSource.width = glitterFrame.width;
+			patternSource.height = glitterFrame.height;
+			patternSource.getContext('2d').putImageData(glitterFrame.data, 0, 0);
+
+			const pattern = hCtx.createPattern(patternSource, 'repeat');
+			const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+			const matrix = new DOMMatrix();
+			matrix.scaleSelf(scale, scale);
+			pattern.setTransform(matrix);
+
+			hCtx.globalAlpha = layer.settings.opacity / 100;
+			hCtx.fillStyle = pattern;
+			hCtx.fillRect(0, 0, width, height);
+
+			// 2. Apply Mask
+			hCtx.globalCompositeOperation = 'destination-in';
+			hCtx.globalAlpha = 1.0;
+			hCtx.drawImage(maskCanvas, 0, 0);
+
+			// Restore state (resets composite op and alpha)
+			hCtx.restore();
+
+			// 3. Composite onto main canvas
+			ctx.drawImage(this.helperCanvas, 0, 0);
+		});
+
+		// D. Render Sticker Layers (NEW)
+		layers.forEach(layer => {
+			if (layer.type === 'sticker' && layer.visible) {
+				this._renderStickerToCanvas(layer, ctx, frameIndex, width, height);
 			}
+		});
+
+		// E. Handle Transparency
+		if (exportSettings.transparency && safeKey) {
+			const imgData = ctx.getImageData(0, 0, width, height);
+			const data = imgData.data;
+
+			for (let i = 0; i < width * height; i++) {
+				const pixelIndex = i;
+				const alpha = originalAlpha[pixelIndex];
+
+				if (alpha < alphaThreshold) {
+					const pIdx = i * 4;
+					data[pIdx] = safeKey.r;
+					data[pIdx + 1] = safeKey.g;
+					data[pIdx + 2] = safeKey.b;
+					data[pIdx + 3] = 255;
+				}
+			}
+
+			ctx.putImageData(imgData, 0, 0);
 		}
 
-		ctx.putImageData(imgData, 0, 0);
+		return ctx.getImageData(0, 0, width, height);
 	}
-
-	return ctx.getImageData(0, 0, width, height);
-}
 
 	_parseHexColor(hex) {
 		hex = hex.replace('#', '');
@@ -5514,6 +5514,9 @@ class MobileManager {
 		this.activeTab = 'image'; // image or preview
 		this.activeDrawer = null; // glitter or layers or null
 		this.resizeObserver = null;
+		
+		// 1. Initialize the flag
+		this.eventsBound = false; 
 
 		if (this.isMobile) {
 			this.init();
@@ -5536,7 +5539,6 @@ class MobileManager {
 		const topNav = document.querySelector('.mobile-top-nav');
 		const bottomNav = document.querySelector('.mobile-bottom-nav');
 
-
 		if (topNav) topNav.classList.add('visible');
 		if (bottomNav) bottomNav.classList.add('visible');
 
@@ -5546,16 +5548,16 @@ class MobileManager {
 			previewTab.disabled = !this.editor.originalImage;
 		}
 
-
-
-
+		this.updateLayerSettingsButtonState();
+		this.updateGlitterSettingsButtonState();
 
 		console.log('Mobile: Controls shown');
 	}
 
-
-
 	setupEventListeners() {
+		// 2. Stop if events are already set up
+		if (this.eventsBound) return;
+
 		// Tab buttons
 		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
 			btn.addEventListener('click', () => {
@@ -5565,12 +5567,21 @@ class MobileManager {
 
 		// Drawer buttons
 		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
-			btn.addEventListener('click', () => {
+			btn.addEventListener('click', (e) => {
+				// Prevent immediate propagation to avoid conflicts
+				e.stopPropagation();
 				this.toggleDrawer(btn.dataset.drawer);
 			});
 		});
 
 
+		window.addEventListener('layerChanged', () => {
+			this.updateLayerSettingsButtonState();
+			this.updateGlitterSettingsButtonState();
+		});
+
+		this.updateLayerSettingsButtonState();
+		this.updateGlitterSettingsButtonState();
 
 		// Add layer button
 		const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
@@ -5580,24 +5591,25 @@ class MobileManager {
 			});
 		}
 
-		// Close drawer when clicking on section headers (but not action buttons or collapsible sections)
+		// Close drawer when clicking on section headers
 		document.querySelectorAll('.section-header').forEach(header => {
 			header.addEventListener('click', (e) => {
-				// Only close if mobile and a drawer is open
-				if (this.isMobile && this.activeDrawer) {
-					// Don't close if clicking on the action button or its children
-					if (e.target.closest('.section-header-action')) {
-						return;
-					}
+				if (!this.isMobile || !this.activeDrawer) return;
 
-					// FIX: Don't close if this header belongs to a collapsible section (like Settings)
-					if (header.closest('.collapsible-section')) {
-						return;
-					}
+				if (e.target.closest('.section-header-action')) return;
 
+				if (header.id === 'layerSettingsHeader' || header.id === 'glitterSettingsHeader') {
+					e.preventDefault();
+					e.stopPropagation();
+					e.stopImmediatePropagation();
+					this.closeAllDrawers();
+					return;
+				}
+
+				if (!header.closest('.collapsible-section')) {
 					this.closeAllDrawers();
 				}
-			});
+			}, { capture: true });
 		});
 
 		// Prevent action buttons from triggering header click
@@ -5606,41 +5618,36 @@ class MobileManager {
 				e.stopPropagation();
 			});
 		});
+
+		// 3. Mark events as bound
+		this.eventsBound = true;
 	}
-setupImageEvents() {
-	window.addEventListener('imageLoaded', () => {
-		if (this.isMobile) {
-			// 1. HIDE THE CANVAS INSTANTLY
-			this.editor.previewWrapper.style.opacity = '0';
-			this.editor.previewWrapper.style.transition = 'none';
 
-			// Enable preview tab
-			const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-			if (previewBtn) {
-				previewBtn.disabled = false;
-			}
+	setupImageEvents() {
+		window.addEventListener('imageLoaded', () => {
+			if (this.isMobile) {
+				this.editor.previewWrapper.style.opacity = '0';
+				this.editor.previewWrapper.style.transition = 'none';
 
-			// Switch to preview
-			this.switchTab('preview');
+				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
+				if (previewBtn) {
+					previewBtn.disabled = false;
+				}
 
-			// Wait for tab switch layout to apply
-			requestAnimationFrame(() => {
+				this.switchTab('preview');
+
 				requestAnimationFrame(() => {
-					// Update dimensions
-					this.editor.viewport.performResizeUpdate();
-
-					// Apply the sizing math - FIX: viewport.resetZoomSmart()
-					this.editor.viewport.resetZoomSmart();
-					this.editor.updateZoomUI();
-
-					// 2. Make canvas visible with transition
-					this.editor.previewWrapper.style.transition = '';
-					this.editor.previewWrapper.style.opacity = '1';
+					requestAnimationFrame(() => {
+						this.editor.viewport.performResizeUpdate();
+						this.editor.viewport.resetZoomSmart();
+						this.editor.updateZoomUI();
+						this.editor.previewWrapper.style.transition = '';
+						this.editor.previewWrapper.style.opacity = '1';
+					});
 				});
-			});
-		}
-	});
-}
+			}
+		});
+	}
 
 	setupResizeObserver() {
 		let resizeTimer;
@@ -5655,19 +5662,14 @@ setupImageEvents() {
 					// Switching TO Mobile
 					console.log('Mobile: Switching to mobile mode');
 					this.isMobile = true;
-					this.init(); // This defaults to 'image' tab usually
+					this.init(); 
 
-					// FIX: Check if we have an image
 					if (this.editor.originalImage) {
-						// 1. Force switch to preview tab so the container becomes visible (has width/height)
 						this.switchTab('preview');
-
-						// 2. Wait for the DOM to render the tab switch
 						requestAnimationFrame(() => {
 							requestAnimationFrame(() => {
-								// 3. Now reset dimensions - container is visible, so math will work
-								this.editor.viewport.performResizeUpdate(); // Updates internal dimension tracking
-								this.editor.viewport.resetViewport();       // Calculates center based on new dimensions
+								this.editor.viewport.performResizeUpdate(); 
+								this.editor.viewport.resetViewport();       
 								this.editor.updateZoomUI();
 								this.editor.updateTransparencyGrid();
 							});
@@ -5680,7 +5682,6 @@ setupImageEvents() {
 					this.isMobile = false;
 					this.cleanup();
 
-					// Reset desktop view nicely
 					setTimeout(() => {
 						if (this.editor.originalImage) {
 							this.editor.viewport.performResizeUpdate();
@@ -5699,64 +5700,105 @@ setupImageEvents() {
 		console.log('Mobile: Switching to tab:', tab);
 		this.activeTab = tab;
 
-		// Update tab button states
 		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
 			btn.classList.toggle('active', btn.dataset.tab === tab);
 		});
 
-		// Close any open drawers
 		this.closeAllDrawers();
 
-		// Remove all tab classes
 		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab');
-
-		// Add the active tab class
 		document.body.classList.add(`mobile-${tab}-tab`);
-
-		console.log('Mobile: Tab switched to:', tab);
 	}
 
 	toggleDrawer(drawer) {
 		console.log('Mobile: Toggling drawer:', drawer);
-
-		// If clicking the currently open drawer, close it
+		
 		if (this.activeDrawer === drawer) {
+			// Closing
 			this.closeAllDrawers();
 		} else {
-			// Close any open drawer and open the new one
+			// Opening
 			this.closeAllDrawers();
-			this.activeDrawer = drawer;
-			document.body.classList.add(`${drawer}Open`);
 
-			// Update button states
-			document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
-				btn.classList.toggle('active', btn.dataset.drawer === drawer);
-			});
+			// Logic simplified: we rely on single-event binding now.
+			setTimeout(() => {
+				this.activeDrawer = drawer;
+
+				const camelCase = drawer.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+				const className = camelCase + 'Open';
+				document.body.classList.add(className);
+
+				document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
+					btn.classList.toggle('active', btn.dataset.drawer === drawer);
+				});
+			}, 0);
+		}
+	}
+
+	updateLayerSettingsButtonState() {
+		if (!this.isMobile) return;
+		const btn = document.getElementById('mobileLayerSettingsBtn');
+		if (!btn) return;
+		const hasActiveLayer = this.editor.layerManager.getActiveLayer() !== null;
+		btn.disabled = !hasActiveLayer;
+	}
+
+	updateGlitterSettingsButtonState() {
+		if (!this.isMobile) return;
+		const btn = document.getElementById('mobileGlitterSettingsBtn');
+		if (!btn) return;
+		const hasActiveLayer = this.editor.layerManager.getActiveLayer() !== null;
+		btn.disabled = !hasActiveLayer;
+	}
+
+	openSettingsDrawer() {
+		const activeLayer = this.editor.layerManager.getActiveLayer();
+
+		if (activeLayer) {
+			document.body.classList.add('settingsOpen');
+			document.body.classList.remove('show-glitter-settings');
+		} else if (this.editor.layerManager.layers.length > 0) {
+			document.body.classList.add('settingsOpen', 'show-glitter-settings');
+		} else {
+			document.body.classList.add('settingsOpen');
+			document.body.classList.remove('show-glitter-settings');
 		}
 	}
 
 	closeAllDrawers() {
 		this.activeDrawer = null;
-		document.body.classList.remove('glitterOpen', 'layersOpen');
+		document.body.classList.remove(
+			'glitterOpen',
+			'layersOpen',
+			'layerSettingsOpen',
+			'glitterSettingsOpen'
+		);
 		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
 			btn.classList.remove('active');
 		});
 	}
 
 	cleanup() {
+		// Note: Cleanup does NOT remove event listeners because
+		// removing anonymous functions is difficult. 
+		// We rely on 'eventsBound' to prevent duplication upon re-init.
+
 		console.log('Mobile: Starting cleanup');
 
-		// Hide mobile navigation
 		const topNav = document.querySelector('.mobile-top-nav');
 		const bottomNav = document.querySelector('.mobile-bottom-nav');
-		const swatch = document.querySelector('.mobile-swatch');
 
 		if (topNav) topNav.classList.remove('visible');
 		if (bottomNav) bottomNav.classList.remove('visible');
-		if (swatch) swatch.classList.remove('visible');
 
-		// Remove all mobile classes
-		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab', 'glitterOpen', 'layersOpen');
+		document.body.classList.remove(
+			'mobile-image-tab',
+			'mobile-preview-tab',
+			'glitterOpen',
+			'layersOpen',
+			'layerSettingsOpen',
+			'glitterSettingsOpen'
+		);
 
 		console.log('Mobile: Cleanup complete, restored to desktop layout');
 	}
@@ -5768,12 +5810,12 @@ setupImageEvents() {
 (async () => {
 	const editor = new GlitterEditor();
 	await editor.init();
-	
+
 	// Initialize managers after editor is ready
 	const tooltips = new TooltipManager();
 	const mobileManager = new MobileManager(editor);
 	editor.mobileManager = mobileManager;
-	
+
 	// Make editor globally accessible (optional, useful for debugging)
 	window.editor = editor;
 })();
