@@ -75,6 +75,537 @@ const CONFIG = {
 
 };
 
+
+// ============================================
+// VIEWPORT MANAGER CLASS
+// Handles all zoom, pan, and coordinate conversion logic
+// ============================================
+class ViewportManager {
+	constructor(previewContainer, previewWrapper) {
+		// DOM references
+		this.previewContainer = previewContainer;
+		this.previewWrapper = previewWrapper;
+
+		// Zoom state
+		this.currentZoom = 1;
+		this.currentZoomIndex = CONFIG.zoomLevels.indexOf(1);
+		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3; // Fallback
+
+		// Pan state
+		this.panX = 0;
+		this.panY = 0;
+		this.isPanning = false;
+		this.panStartX = 0;
+		this.panStartY = 0;
+		this.lastPanX = 0;
+		this.lastPanY = 0;
+
+		// Resize tracking
+		this.lastViewportWidth = 0;
+		this.lastViewportHeight = 0;
+		this.resizeTimeout = null;
+
+		// Touch gesture state
+		this.touch = {
+			active: false,
+			startDistance: 0,
+			startZoom: 1,
+			anchorScreen: { x: 0, y: 0 },
+			anchorCanvas: { x: 0, y: 0 },
+			lastCenter: { x: 0, y: 0 },
+			startPanX: 0,
+			startPanY: 0
+		};
+
+		// Canvas dimensions (set by editor when image loads)
+		this.canvasWidth = 0;
+		this.canvasHeight = 0;
+
+		// Initialize
+		this.initializeViewportDimensions();
+		this.setupEventListeners();
+	}
+
+	// ===== INITIALIZATION =====
+
+	initializeViewportDimensions() {
+		const rect = this.previewContainer.getBoundingClientRect();
+		this.lastViewportWidth = rect.width;
+		this.lastViewportHeight = rect.height;
+	}
+
+	setupEventListeners() {
+		// Window resize
+		window.addEventListener('resize', () => this.handleWindowResize());
+
+		// Mouse pan
+		this.previewContainer.addEventListener('mousedown', (e) => {
+			if (e.button === 0) { // Left click only
+				this._handlePanStart(e);
+			}
+		});
+
+		this.previewContainer.addEventListener('mousemove', (e) => {
+			this._handlePanMove(e);
+		});
+
+		this.previewContainer.addEventListener('mouseup', () => {
+			this.endPan();
+		});
+
+		this.previewContainer.addEventListener('mouseleave', () => {
+			this.endPan();
+		});
+
+		// Touch gestures
+		this.setupTouchGestures();
+	}
+
+	// ===== PUBLIC API =====
+
+	/**
+	 * Set canvas dimensions (called by editor when image loads)
+	 */
+	setCanvasDimensions(width, height) {
+		this.canvasWidth = width;
+		this.canvasHeight = height;
+	}
+
+	/**
+	 * Convert screen coordinates to canvas coordinates
+	 * Essential for sticker placement, selection, etc.
+	 */
+	screenToCanvas(screenX, screenY) {
+		const rect = this.previewContainer.getBoundingClientRect();
+		const containerX = screenX - rect.left;
+		const containerY = screenY - rect.top;
+
+		const canvasX = (containerX - this.panX) / this.currentZoom;
+		const canvasY = (containerY - this.panY) / this.currentZoom;
+
+		return { x: canvasX, y: canvasY };
+	}
+
+	/**
+	 * Check if canvas coordinates are within bounds
+	 */
+	isWithinCanvas(canvasX, canvasY) {
+		return canvasX >= 0 &&
+			canvasX < this.canvasWidth &&
+			canvasY >= 0 &&
+			canvasY < this.canvasHeight;
+	}
+
+	/**
+	 * Get current zoom percentage
+	 */
+	getZoomPercentage() {
+		return Math.round(this.currentZoom * 100);
+	}
+
+	// ===== ZOOM METHODS =====
+
+	setZoom(newZoom, clickX = null, clickY = null) {
+		if (!this.canvasWidth) return;
+
+		const oldZoom = this.currentZoom;
+
+		// Clamp zoom
+		this.currentZoom = Math.max(
+			CONFIG.zoomLevels[0],
+			Math.min(CONFIG.zoomLevels[CONFIG.zoomLevels.length - 1], newZoom)
+		);
+
+		// Update zoom index for UI
+		let closestDiff = Number.MAX_VALUE;
+		let closestIndex = 0;
+		CONFIG.zoomLevels.forEach((z, i) => {
+			const diff = Math.abs(this.currentZoom - z);
+			if (diff < closestDiff) {
+				closestDiff = diff;
+				closestIndex = i;
+			}
+		});
+		this.currentZoomIndex = closestIndex;
+
+		// Get container dimensions
+		const containerRect = this.previewContainer.getBoundingClientRect();
+		const viewportW = containerRect.width;
+		const viewportH = containerRect.height;
+
+		// Determine anchor point
+		let anchorContainerX, anchorContainerY;
+
+		if (clickX !== null && clickY !== null) {
+			// Mouse zoom: anchor at click position
+			anchorContainerX = clickX - containerRect.left;
+			anchorContainerY = clickY - containerRect.top;
+		} else {
+			// Button zoom: anchor at viewport center
+			anchorContainerX = viewportW / 2;
+			anchorContainerY = viewportH / 2;
+		}
+
+		// Convert anchor to canvas coordinates
+		const imagePixelX = (anchorContainerX - this.panX) / oldZoom;
+		const imagePixelY = (anchorContainerY - this.panY) / oldZoom;
+
+		// Calculate new pan to keep anchor point stationary
+		this.panX = anchorContainerX - (imagePixelX * this.currentZoom);
+		this.panY = anchorContainerY - (imagePixelY * this.currentZoom);
+
+		// Apply transform and notify
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
+
+	zoomIn(clickX = null, clickY = null) {
+		if (this.currentZoomIndex < CONFIG.zoomLevels.length - 1) {
+			this.setZoom(CONFIG.zoomLevels[this.currentZoomIndex + 1], clickX, clickY);
+		} else {
+			const nextZoom = this.currentZoom * 1.5;
+			this.setZoom(nextZoom, clickX, clickY);
+		}
+	}
+
+	zoomOut(clickX = null, clickY = null) {
+		if (this.currentZoomIndex > 0) {
+			this.setZoom(CONFIG.zoomLevels[this.currentZoomIndex - 1], clickX, clickY);
+		} else {
+			const nextZoom = this.currentZoom / 1.5;
+			this.setZoom(nextZoom, clickX, clickY);
+		}
+	}
+
+	zoomToFit() {
+		if (!this.canvasWidth) return;
+
+		const containerRect = this.previewContainer.getBoundingClientRect();
+		const padding = 40;
+
+		const scaleX = (containerRect.width - padding) / this.canvasWidth;
+		const scaleY = (containerRect.height - padding) / this.canvasHeight;
+		const fitZoom = Math.min(scaleX, scaleY);
+
+		this.currentZoom = fitZoom;
+
+		// Update zoom index
+		this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= fitZoom);
+		if (this.currentZoomIndex === -1) this.currentZoomIndex = 0;
+
+		// Center the canvas
+		this.panX = (containerRect.width - (this.canvasWidth * fitZoom)) / 2;
+		this.panY = (containerRect.height - (this.canvasHeight * fitZoom)) / 2;
+
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
+
+	zoomToFill() {
+		if (!this.canvasWidth) return;
+
+		const containerRect = this.previewContainer.getBoundingClientRect();
+		const padding = 40;
+
+		const scaleX = (containerRect.width - padding) / this.canvasWidth;
+		const scaleY = (containerRect.height - padding) / this.canvasHeight;
+		const fillZoom = Math.max(scaleX, scaleY);
+
+		this.currentZoom = fillZoom;
+
+		// Update zoom index
+		this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= fillZoom);
+		if (this.currentZoomIndex === -1) this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
+
+		// Center the canvas
+		this.panX = (containerRect.width - (this.canvasWidth * fillZoom)) / 2;
+		this.panY = (containerRect.height - (this.canvasHeight * fillZoom)) / 2;
+
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
+
+	resetZoom() {
+		if (!this.canvasWidth) return;
+
+		const containerRect = this.previewContainer.getBoundingClientRect();
+
+		this.currentZoom = 1;
+		this.currentZoomIndex = CONFIG.zoomLevels.indexOf(1);
+		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3;
+
+		// Center the canvas
+		this.panX = (containerRect.width - this.canvasWidth) / 2;
+		this.panY = (containerRect.height - this.canvasHeight) / 2;
+
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
+
+	resetZoomSmart() {
+		if (!this.canvasWidth) return;
+
+		const containerRect = this.previewContainer.getBoundingClientRect();
+
+		// Safety check for hidden container
+		if (containerRect.width === 0 || containerRect.height === 0) return;
+
+		const padding = 40;
+		const scaleX = (containerRect.width - padding) / this.canvasWidth;
+		const scaleY = (containerRect.height - padding) / this.canvasHeight;
+		const fitZoom = Math.min(scaleX, scaleY);
+
+		// If image needs to shrink to fit, do it. Otherwise 100%
+		if (fitZoom < 1) {
+			this.zoomToFit();
+		} else {
+			this.resetViewport();
+		}
+	}
+
+	resetViewport() {
+		if (!this.canvasWidth) return;
+
+		const containerRect = this.previewContainer.getBoundingClientRect();
+
+		// Sync resize tracking
+		this.lastViewportWidth = containerRect.width;
+		this.lastViewportHeight = containerRect.height;
+
+		this.currentZoom = 1;
+		this.currentZoomIndex = CONFIG.zoomLevels.indexOf(1);
+		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3;
+
+		// Center the canvas
+		this.panX = (containerRect.width - this.canvasWidth) / 2;
+		this.panY = (containerRect.height - this.canvasHeight) / 2;
+
+		this.applyTransform();
+	}
+
+	// ===== CENTERING METHODS =====
+
+	centerHorizontal() {
+		if (!this.canvasWidth) return;
+
+		const containerRect = this.previewContainer.getBoundingClientRect();
+		const scaledWidth = this.canvasWidth * this.currentZoom;
+
+		// Center horizontally, keep vertical position
+		this.panX = (containerRect.width - scaledWidth) / 2;
+
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
+
+	centerVertical() {
+		if (!this.canvasWidth) return;
+
+		const containerRect = this.previewContainer.getBoundingClientRect();
+		const scaledHeight = this.canvasHeight * this.currentZoom;
+
+		// Center vertically, keep horizontal position
+		this.panY = (containerRect.height - scaledHeight) / 2;
+
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
+
+	// ===== PAN METHODS =====
+
+	startPan(x, y) {
+		if (!this.canvasWidth) return;
+
+		this.isPanning = true;
+		this.panStartX = x;
+		this.panStartY = y;
+		this.lastPanX = this.panX;
+		this.lastPanY = this.panY;
+
+		this.previewContainer.classList.add('panning');
+	}
+
+	endPan() {
+		if (!this.isPanning) return;
+
+		this.isPanning = false;
+		this.previewContainer.classList.remove('panning');
+	}
+
+	// ===== TOUCH GESTURES =====
+
+	setupTouchGestures() {
+		const container = this.previewContainer;
+
+		const getTouchDistance = (touch1, touch2) => {
+			const dx = touch2.clientX - touch1.clientX;
+			const dy = touch2.clientY - touch1.clientY;
+			return Math.sqrt(dx * dx + dy * dy);
+		};
+
+		const getTouchCenter = (touch1, touch2) => {
+			return {
+				x: (touch1.clientX + touch2.clientX) / 2,
+				y: (touch1.clientY + touch2.clientY) / 2
+			};
+		};
+
+		container.addEventListener('touchstart', (e) => {
+			if (e.touches.length === 2) {
+				e.preventDefault();
+
+				const center = getTouchCenter(e.touches[0], e.touches[1]);
+				const rect = container.getBoundingClientRect();
+				const anchorX = center.x - rect.left;
+				const anchorY = center.y - rect.top;
+
+				const canvasX = (anchorX - this.panX) / this.currentZoom;
+				const canvasY = (anchorY - this.panY) / this.currentZoom;
+
+				this.touch.active = true;
+				this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
+				this.touch.startZoom = this.currentZoom;
+				this.touch.anchorScreen = { x: anchorX, y: anchorY };
+				this.touch.anchorCanvas = { x: canvasX, y: canvasY };
+				this.touch.lastCenter = center; // Track center for pan delta
+				this.touch.startPanX = this.panX;
+				this.touch.startPanY = this.panY;
+			}
+		}, { passive: false });
+
+		container.addEventListener('touchmove', (e) => {
+			if (this.touch.active && e.touches.length === 2) {
+				e.preventDefault();
+
+				const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
+				const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+
+				// Calculate zoom factor
+				const scale = currentDistance / this.touch.startDistance;
+
+				// Detect if this is primarily a pan (distance barely changed) or zoom
+				const distanceChange = Math.abs(currentDistance - this.touch.startDistance);
+				const isPanning = distanceChange < 10; // Less than 10px change = panning
+
+				if (isPanning) {
+					// TWO-FINGER PAN: Apply pan delta
+					const deltaX = currentCenter.x - this.touch.lastCenter.x;
+					const deltaY = currentCenter.y - this.touch.lastCenter.y;
+
+					this.panX += deltaX;
+					this.panY += deltaY;
+
+					// Update last center for next delta
+					this.touch.lastCenter = currentCenter;
+				} else {
+					// PINCH ZOOM: Apply zoom with anchor
+					const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
+
+					const newCanvasX = this.touch.anchorCanvas.x * newZoom;
+					const newCanvasY = this.touch.anchorCanvas.y * newZoom;
+
+					this.panX = this.touch.anchorScreen.x - newCanvasX;
+					this.panY = this.touch.anchorScreen.y - newCanvasY;
+					this.currentZoom = newZoom;
+
+					// Update zoom index
+					this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
+					if (this.currentZoomIndex === -1) {
+						this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
+					}
+				}
+
+				this.applyTransform();
+				this._notifyViewportChanged();
+			}
+		}, { passive: false });
+
+		container.addEventListener('touchend', (e) => {
+			if (e.touches.length < 2) {
+				this.touch.active = false;
+			}
+		});
+
+		container.addEventListener('touchcancel', () => {
+			this.touch.active = false;
+		});
+	}
+
+	// ===== RESIZE HANDLING =====
+
+	handleWindowResize() {
+		clearTimeout(this.resizeTimeout);
+		this.resizeTimeout = setTimeout(() => {
+			this.performResizeUpdate();
+		}, 100);
+	}
+
+	performResizeUpdate() {
+		const containerRect = this.previewContainer.getBoundingClientRect();
+		const newWidth = containerRect.width;
+		const newHeight = containerRect.height;
+
+		// If canvas exists, adjust pan to keep centered
+		if (this.canvasWidth) {
+			const deltaX = newWidth - this.lastViewportWidth;
+			const deltaY = newHeight - this.lastViewportHeight;
+
+			this.panX += deltaX / 2;
+			this.panY += deltaY / 2;
+
+			this.applyTransform();
+			this._notifyViewportChanged();
+
+			// Optional: auto-fit on resize
+			this.zoomToFit();
+		}
+
+		// Update stored dimensions
+		this.lastViewportWidth = newWidth;
+		this.lastViewportHeight = newHeight;
+	}
+
+	// ===== TRANSFORM APPLICATION =====
+
+	applyTransform() {
+		this.previewWrapper.style.transform =
+			`translate(${this.panX}px, ${this.panY}px) scale(${this.currentZoom})`;
+	}
+
+	// ===== PRIVATE HELPERS =====
+
+	_handlePanStart(e) {
+		// Will be controlled by editor based on current tool
+		// Editor will call startPan() when appropriate
+	}
+
+	_handlePanMove(e) {
+		if (!this.isPanning) return;
+
+		const deltaX = e.clientX - this.panStartX;
+		const deltaY = e.clientY - this.panStartY;
+
+		this.panX = this.lastPanX + deltaX;
+		this.panY = this.lastPanY + deltaY;
+
+		this.applyTransform();
+		e.preventDefault();
+	}
+
+	_notifyViewportChanged() {
+		// Dispatch custom event for editor to listen to
+		window.dispatchEvent(new CustomEvent('viewportChanged', {
+			detail: {
+				zoom: this.currentZoom,
+				zoomPercentage: this.getZoomPercentage(),
+				panX: this.panX,
+				panY: this.panY
+			}
+		}));
+	}
+}
+
+
 class GlitterEditor {
 	constructor() {
 		this.originalCanvas = document.getElementById('originalCanvas');
@@ -133,16 +664,7 @@ class GlitterEditor {
 		this.refineGlobal = CONFIG.refineGlobalDefault;
 		this.glitterGlobal = CONFIG.glitterGlobalDefault;
 
-		// Zoom & Pan system
-		this.currentZoom = 1;
-		this.currentZoomIndex = CONFIG.zoomLevels.indexOf(1);
-		this.panX = 0;
-		this.panY = 0;
-		this.isPanning = false;
-		this.panStartX = 0;
-		this.panStartY = 0;
-		this.lastPanX = 0;
-		this.lastPanY = 0;
+
 
 		this.currentTool = 'select';
 		this.history = [];
@@ -150,20 +672,8 @@ class GlitterEditor {
 
 		this.featherTimeout = null;
 
-		// Resize handling
-		this.resizeTimeout = null;
-		this.lastViewportWidth = 0;
-		this.lastViewportHeight = 0;
-
-		// Touch gesture state
-		// Touch gesture state
-		this.touch = {
-			active: false,
-			startDistance: 0,
-			startZoom: 1,
-			anchorScreen: { x: 0, y: 0 },
-			anchorCanvas: { x: 0, y: 0 }
-		};
+		// Viewport manager (handles zoom, pan, touch)
+		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
 
 
 		// Filter state
@@ -398,362 +908,130 @@ class GlitterEditor {
 		}
 	}
 
-	// ===== ZOOM & PAN FUNCTIONS =====
 
-	setZoom(newZoom, clickX = null, clickY = null) {
-		if (!this.originalImage) return;
 
-		const oldZoom = this.currentZoom;
 
-		// 1. Clamp Zoom
-		this.currentZoom = Math.max(CONFIG.zoomLevels[0], Math.min(CONFIG.zoomLevels[CONFIG.zoomLevels.length - 1], newZoom));
 
-		// Update active index for UI
-		let closestDiff = Number.MAX_VALUE;
-		let closestIndex = 0;
-		CONFIG.zoomLevels.forEach((z, i) => {
-			const diff = Math.abs(this.currentZoom - z);
-			if (diff < closestDiff) {
-				closestDiff = diff;
-				closestIndex = i;
-			}
-		});
-		this.currentZoomIndex = closestIndex;
-
-		// 2. Get Dimensions
-		const containerRect = this.previewContainer.getBoundingClientRect();
-		const viewportW = containerRect.width;
-		const viewportH = containerRect.height;
-
-		// 3. Determine the "Anchor Point" (The pixel on the image we want to keep stationary)
-		// relative to the container's top-left
-		let anchorContainerX, anchorContainerY;
-
-		if (clickX !== null && clickY !== null) {
-			// MOUSE ZOOM: The anchor is the mouse position
-			anchorContainerX = clickX - containerRect.left;
-			anchorContainerY = clickY - containerRect.top;
-		} else {
-			// BUTTON ZOOM: The anchor is the center of the viewport
-			anchorContainerX = viewportW / 2;
-			anchorContainerY = viewportH / 2;
-		}
-
-		// 4. Convert Anchor Point to "Image Coordinates" (The pixel inside the image)
-		// Formula: ImagePixel = (ScreenCoord - CurrentPan) / OldZoom
-		const imagePixelX = (anchorContainerX - this.panX) / oldZoom;
-		const imagePixelY = (anchorContainerY - this.panY) / oldZoom;
-
-		// 5. Calculate New Pan
-		// We want that same ImagePixel to be at the AnchorPoint after the new scale
-		// Formula: NewPan = ScreenCoord - (ImagePixel * NewZoom)
-		this.panX = anchorContainerX - (imagePixelX * this.currentZoom);
-		this.panY = anchorContainerY - (imagePixelY * this.currentZoom);
-
-		// 6. Apply
-		this.applyZoomTransform();
-		this.updateZoomUI();
-		this.updateTransparencyGrid();
-		this.updateStatusBar();
-	}
-
-	applyZoomTransform() {
-		this.previewWrapper.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.currentZoom})`;
-	}
-
-	zoomIn(clickX = null, clickY = null) {
-		if (this.currentZoomIndex < CONFIG.zoomLevels.length - 1) {
-			this.setZoom(CONFIG.zoomLevels[this.currentZoomIndex + 1], clickX, clickY);
-		} else {
-			// Allow zooming past max array if triggered manually, or just cap it
-			const nextZoom = this.currentZoom * 1.5; // fallback
-			this.setZoom(nextZoom, clickX, clickY);
-		}
-	}
-
-	zoomOut(clickX = null, clickY = null) {
-		if (this.currentZoomIndex > 0) {
-			this.setZoom(CONFIG.zoomLevels[this.currentZoomIndex - 1], clickX, clickY);
-		} else {
-			const nextZoom = this.currentZoom / 1.5;
-			this.setZoom(nextZoom, clickX, clickY);
-		}
-	}
-
-	zoomToFit() {
-		if (!this.originalImage) return;
-
-		const containerRect = this.previewContainer.getBoundingClientRect();
-		const padding = 40;
-
-		// Calculate ratios based on available space
-		const scaleX = (containerRect.width - padding) / this.previewCanvas.width;
-		const scaleY = (containerRect.height - padding) / this.previewCanvas.height;
-
-		// Fit = smallest ratio
-		const fitZoom = Math.min(scaleX, scaleY);
-
-		// Apply zoom directly
-		this.currentZoom = fitZoom;
-
-		// Recalculate index
-		this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= fitZoom);
-		if (this.currentZoomIndex === -1) this.currentZoomIndex = 0;
-
-		// CENTER IT: (ContainerSize - ImageSize)/2
-		this.panX = (containerRect.width - (this.previewCanvas.width * fitZoom)) / 2;
-		this.panY = (containerRect.height - (this.previewCanvas.height * fitZoom)) / 2;
-
-		this.applyZoomTransform();
-		this.updateZoomUI();
-		this.updateTransparencyGrid();
-		this.updateStatusBar();
-	}
-
-	zoomToFill() {
-		if (!this.originalImage) return;
-
-		const containerRect = this.previewContainer.getBoundingClientRect();
-		const padding = 40;
-
-		const scaleX = (containerRect.width - padding) / this.previewCanvas.width;
-		const scaleY = (containerRect.height - padding) / this.previewCanvas.height;
-
-		// Fill = largest ratio
-		const fillZoom = Math.max(scaleX, scaleY);
-
-		this.currentZoom = fillZoom;
-
-		this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= fillZoom);
-		if (this.currentZoomIndex === -1) this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
-
-		// CENTER IT
-		this.panX = (containerRect.width - (this.previewCanvas.width * fillZoom)) / 2;
-		this.panY = (containerRect.height - (this.previewCanvas.height * fillZoom)) / 2;
-
-		this.applyZoomTransform();
-		this.updateZoomUI();
-		this.updateTransparencyGrid();
-		this.updateStatusBar();
-	}
-
-	resetZoom() {
-		if (!this.originalImage) return;
-
-		const containerRect = this.previewContainer.getBoundingClientRect();
-
-		this.currentZoom = 1;
-		this.currentZoomIndex = CONFIG.zoomLevels.indexOf(1);
-		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3;
-
-		// CENTER IT
-		this.panX = (containerRect.width - this.previewCanvas.width) / 2;
-		this.panY = (containerRect.height - this.previewCanvas.height) / 2;
-
-		this.applyZoomTransform();
-		this.updateZoomUI();
-		this.updateTransparencyGrid();
-		this.updateStatusBar();
-	}
-
-	resetZoomSmart() {
-		if (!this.previewCanvas.width) return;
-
-		const containerRect = this.previewContainer.getBoundingClientRect();
-
-		// Safety check: If container is hidden (e.g., mobile upload tab), 
-		// width will be 0. We can't calculate fit yet.
-		if (containerRect.width === 0 || containerRect.height === 0) return;
-
-		const padding = 40; // Match the padding used in zoomToFit
-
-		// Calculate what the zoom WOULD be if we fitted it
-		const scaleX = (containerRect.width - padding) / this.previewCanvas.width;
-		const scaleY = (containerRect.height - padding) / this.previewCanvas.height;
-		const fitZoom = Math.min(scaleX, scaleY);
-
-		// If the image needs to shrink to fit (< 1), do it.
-		// Otherwise, default to 100% (1).
-		if (fitZoom < 1) {
-			this.zoomToFit();
-		} else {
-			this.resetViewport();
-		}
-	}
-
-	resetViewport() {
-		if (!this.previewCanvas.width) return;
-
-		const containerRect = this.previewContainer.getBoundingClientRect();
-
-		// Sync resize tracking
-		this.lastViewportWidth = containerRect.width;
-		this.lastViewportHeight = containerRect.height;
-
-		this.currentZoom = 1;
-		this.currentZoomIndex = CONFIG.zoomLevels.indexOf(1);
-		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3; // Default fallback
-
-		// Start centered
-		this.panX = (containerRect.width - this.previewCanvas.width) / 2;
-		this.panY = (containerRect.height - this.previewCanvas.height) / 2;
-
-		this.applyZoomTransform();
-	}
 
 	handleCanvasZoomClick(event) {
 		if (this.currentTool !== 'zoom' || !this.originalImage) return;
 
-		// Pass the raw client coordinates
 		if (event.altKey) {
-			this.zoomOut(event.clientX, event.clientY);
+			this.viewport.zoomOut(event.clientX, event.clientY);
 		} else {
-			this.zoomIn(event.clientX, event.clientY);
+			this.viewport.zoomIn(event.clientX, event.clientY);
 		}
 	}
 
-	startPan(x, y) {
-		if (!this.originalImage) return;
 
-		this.isPanning = true;
 
-		// Store the starting coordinates
-		this.panStartX = x;
-		this.panStartY = y;
+	setupTouchGestures() {
+		const container = this.previewContainer;
 
-		// Store the current pan position to calculate offsets later
-		this.lastPanX = this.panX;
-		this.lastPanY = this.panY;
-
-		this.previewContainer.classList.add('panning');
-	}
-
-	handlePan(event) {
-		if (!this.isPanning) return;
-
-		const deltaX = event.clientX - this.panStartX;
-		const deltaY = event.clientY - this.panStartY;
-
-		this.panX = this.lastPanX + deltaX;
-		this.panY = this.lastPanY + deltaY;
-
-		this.applyZoomTransform();
-		event.preventDefault();
-	}
-
-	endPan() {
-		if (!this.isPanning) return;
-
-		this.isPanning = false;
-		this.previewContainer.classList.remove('panning');
-	}
-
-setupTouchGestures() {
-	const container = this.previewContainer;
-
-	const getTouchDistance = (touch1, touch2) => {
-		const dx = touch2.clientX - touch1.clientX;
-		const dy = touch2.clientY - touch1.clientY;
-		return Math.sqrt(dx * dx + dy * dy);
-	};
-
-	const getTouchCenter = (touch1, touch2) => {
-		return {
-			x: (touch1.clientX + touch2.clientX) / 2,
-			y: (touch1.clientY + touch2.clientY) / 2
+		const getTouchDistance = (touch1, touch2) => {
+			const dx = touch2.clientX - touch1.clientX;
+			const dy = touch2.clientY - touch1.clientY;
+			return Math.sqrt(dx * dx + dy * dy);
 		};
-	};
 
-	container.addEventListener('touchstart', (e) => {
-		if (e.touches.length === 2) {
-			e.preventDefault();
+		const getTouchCenter = (touch1, touch2) => {
+			return {
+				x: (touch1.clientX + touch2.clientX) / 2,
+				y: (touch1.clientY + touch2.clientY) / 2
+			};
+		};
 
-			const center = getTouchCenter(e.touches[0], e.touches[1]);
+		container.addEventListener('touchstart', (e) => {
+			if (e.touches.length === 2) {
+				e.preventDefault();
 
-			const rect = container.getBoundingClientRect();
-			const anchorX = center.x - rect.left;
-			const anchorY = center.y - rect.top;
+				const center = getTouchCenter(e.touches[0], e.touches[1]);
 
-			const canvasX = (anchorX - this.panX) / this.currentZoom;
-			const canvasY = (anchorY - this.panY) / this.currentZoom;
+				const rect = container.getBoundingClientRect();
+				const anchorX = center.x - rect.left;
+				const anchorY = center.y - rect.top;
 
-			this.touch.active = true;
-			this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
-			this.touch.startZoom = this.currentZoom;
-			this.touch.anchorScreen = { x: anchorX, y: anchorY };
-			this.touch.anchorCanvas = { x: canvasX, y: canvasY };
-			this.touch.lastCenter = center; // Track center for pan delta
-			this.touch.startPanX = this.panX;
-			this.touch.startPanY = this.panY;
-		}
-	}, { passive: false });
+				const canvasX = (anchorX - this.panX) / this.viewport.currentZoom;
+				const canvasY = (anchorY - this.panY) / this.viewport.currentZoom;
 
-	container.addEventListener('touchmove', (e) => {
-		if (this.touch.active && e.touches.length === 2) {
-			e.preventDefault();
-
-			const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
-			const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
-
-			// Calculate zoom factor
-			const scale = currentDistance / this.touch.startDistance;
-			
-			// Detect if this is primarily a pan (distance barely changed) or zoom
-			const distanceChange = Math.abs(currentDistance - this.touch.startDistance);
-			const isPanning = distanceChange < 10; // Less than 10px change = panning
-
-			if (isPanning) {
-				// TWO-FINGER PAN: Apply pan delta
-				const deltaX = currentCenter.x - this.touch.lastCenter.x;
-				const deltaY = currentCenter.y - this.touch.lastCenter.y;
-
-				this.panX += deltaX;
-				this.panY += deltaY;
-
-				// Update last center for next delta
-				this.touch.lastCenter = currentCenter;
-			} else {
-				// PINCH ZOOM: Apply zoom with anchor
-				const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
-
-				const newCanvasX = this.touch.anchorCanvas.x * newZoom;
-				const newCanvasY = this.touch.anchorCanvas.y * newZoom;
-
-				this.panX = this.touch.anchorScreen.x - newCanvasX;
-				this.panY = this.touch.anchorScreen.y - newCanvasY;
-				this.currentZoom = newZoom;
-
-				this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
-				if (this.currentZoomIndex === -1) {
-					this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
-				}
+				this.touch.active = true;
+				this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
+				this.touch.startZoom = this.viewport.currentZoom;
+				this.touch.anchorScreen = { x: anchorX, y: anchorY };
+				this.touch.anchorCanvas = { x: canvasX, y: canvasY };
+				this.touch.lastCenter = center; // Track center for pan delta
+				this.touch.startPanX = this.panX;
+				this.touch.startPanY = this.panY;
 			}
+		}, { passive: false });
 
-			this.applyZoomTransform();
-			this.updateZoomUI();
-			this.updateTransparencyGrid();
-			this.updateStatusBar();
-		}
-	}, { passive: false });
+		container.addEventListener('touchmove', (e) => {
+			if (this.touch.active && e.touches.length === 2) {
+				e.preventDefault();
 
-	container.addEventListener('touchend', (e) => {
-		if (e.touches.length < 2) {
+				const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
+				const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+
+				// Calculate zoom factor
+				const scale = currentDistance / this.touch.startDistance;
+
+				// Detect if this is primarily a pan (distance barely changed) or zoom
+				const distanceChange = Math.abs(currentDistance - this.touch.startDistance);
+				const isPanning = distanceChange < 10; // Less than 10px change = panning
+
+				if (isPanning) {
+					// TWO-FINGER PAN: Apply pan delta
+					const deltaX = currentCenter.x - this.touch.lastCenter.x;
+					const deltaY = currentCenter.y - this.touch.lastCenter.y;
+
+					this.panX += deltaX;
+					this.panY += deltaY;
+
+					// Update last center for next delta
+					this.touch.lastCenter = currentCenter;
+				} else {
+					// PINCH ZOOM: Apply zoom with anchor
+					const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
+
+					const newCanvasX = this.touch.anchorCanvas.x * newZoom;
+					const newCanvasY = this.touch.anchorCanvas.y * newZoom;
+
+					this.panX = this.touch.anchorScreen.x - newCanvasX;
+					this.panY = this.touch.anchorScreen.y - newCanvasY;
+					this.viewport.currentZoom = newZoom;
+
+					this.viewport.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
+					if (this.viewport.currentZoomIndex === -1) {
+						this.viewport.currentZoomIndex = CONFIG.zoomLevels.length - 1;
+					}
+				}
+
+				this.applyZoomTransform();
+				this.updateZoomUI();
+				this.updateTransparencyGrid();
+				this.updateStatusBar();
+			}
+		}, { passive: false });
+
+		container.addEventListener('touchend', (e) => {
+			if (e.touches.length < 2) {
+				this.touch.active = false;
+			}
+		});
+
+		container.addEventListener('touchcancel', () => {
 			this.touch.active = false;
-		}
-	});
-
-	container.addEventListener('touchcancel', () => {
-		this.touch.active = false;
-	});
-}
+		});
+	}
 
 	updateZoomUI() {
-		const percentage = Math.round(this.currentZoom * 100);
+		const percentage = this.viewport.getZoomPercentage();
 		document.getElementById('zoomPercentage').textContent = `${percentage}%`;
 		document.getElementById('statusZoom').textContent = `${percentage}%`;
 
-		document.getElementById('zoomOut').disabled = this.currentZoomIndex <= 0;
-		document.getElementById('zoomIn').disabled = this.currentZoomIndex >= CONFIG.zoomLevels.length - 1;
+
+		document.getElementById('zoomOut').disabled = this.viewport.currentZoomIndex <= 0;
+		document.getElementById('zoomIn').disabled = this.viewport.currentZoomIndex >= CONFIG.zoomLevels.length - 1;
 
 		// Update cursor
 		this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor');
@@ -768,7 +1046,7 @@ setupTouchGestures() {
 		if (!this.previewContainer.classList.contains('transparent-bg')) return;
 
 		const baseSize = CONFIG.baseGridSize;
-		const size = baseSize * this.currentZoom;
+		const size = baseSize * this.viewport.currentZoom;
 		const half = size / 2;
 
 		this.previewContainer.style.backgroundSize = `${size}px ${size}px`;
@@ -1743,61 +2021,35 @@ setupTouchGestures() {
 		document.getElementById('clearAllTool').addEventListener('click', () => this.resetAll());
 
 		// --- ZOOM CONTROLS ---
-		document.getElementById('zoomIn').addEventListener('click', () => this.zoomIn());
-		document.getElementById('zoomOut').addEventListener('click', () => this.zoomOut());
-		document.getElementById('zoomPercentage').addEventListener('click', () => this.resetZoom());
-		document.getElementById('fitScreen').addEventListener('click', () => this.zoomToFit());
-		document.getElementById('fillScreen').addEventListener('click', () => this.zoomToFill());
+		document.getElementById('zoomIn').addEventListener('click', () => this.viewport.zoomIn());
+		document.getElementById('zoomOut').addEventListener('click', () => this.viewport.zoomOut());
+		document.getElementById('zoomPercentage').addEventListener('click', () => this.viewport.resetZoom());
+		document.getElementById('fitScreen').addEventListener('click', () => this.viewport.zoomToFit());
+		document.getElementById('fillScreen').addEventListener('click', () => this.viewport.zoomToFill());
 
 		// --- PAN CONTROLS ---
-		document.getElementById('centerHorizontal').addEventListener('click', () => this.centerHorizontal());
-		document.getElementById('centerVertical').addEventListener('click', () => this.centerVertical());
+		document.getElementById('centerHorizontal').addEventListener('click', () => this.viewport.centerHorizontal());
+		document.getElementById('centerVertical').addEventListener('click', () => this.viewport.centerVertical());
 
-
-		// --- WINDOW RESIZE ---
-		window.addEventListener('resize', () => this.handleWindowResize());
-
-		// Initialize dimensions on load
-		const rect = this.previewContainer.getBoundingClientRect();
-		this.lastViewportWidth = rect.width;
-		this.lastViewportHeight = rect.height;
 
 		// --- SCROLL ZOOM ---
 		this.previewContainer.addEventListener('wheel', (e) => {
 			if (this.currentTool === 'zoom' && this.originalImage) {
 				e.preventDefault();
-				// No params = zoom toward center of viewport
 				if (e.deltaY < 0) {
-					this.zoomIn();
+					this.viewport.zoomIn();
 				} else {
-					this.zoomOut();
+					this.viewport.zoomOut();
 				}
 			}
 		}, { passive: false });
 
 		// --- PAN HANDLERS ---
 		this.previewContainer.addEventListener('mousedown', (e) => {
-			// Check for Hand Tool OR Spacebar key
 			if (this.currentTool === 'hand' || e.code === 'Space') {
-				// Prevent default browser dragging
 				e.preventDefault();
-				// Pass specific X/Y coordinates to the new function
-				this.startPan(e.clientX, e.clientY);
+				this.viewport.startPan(e.clientX, e.clientY);
 			}
-		});
-
-
-
-		this.previewContainer.addEventListener('mousemove', (e) => {
-			this.handlePan(e);
-		});
-
-		this.previewContainer.addEventListener('mouseup', () => {
-			this.endPan();
-		});
-
-		this.previewContainer.addEventListener('mouseleave', () => {
-			this.endPan();
 		});
 
 
@@ -2018,44 +2270,17 @@ setupTouchGestures() {
 		document.addEventListener('keydown', (e) => this.handleKeyboard(e));
 		document.addEventListener('keyup', (e) => this.handleKeyUp(e));
 
-		// --- TOUCH GESTURES ---
-		this.setupTouchGestures();
-
-
-	}
-
-	handleWindowResize() {
-		clearTimeout(this.resizeTimeout);
-		this.resizeTimeout = setTimeout(() => {
-			this.performResizeUpdate();
-		}, 100); // 100ms debounce
-	}
-
-	performResizeUpdate() {
-		const containerRect = this.previewContainer.getBoundingClientRect();
-		const newWidth = containerRect.width;
-		const newHeight = containerRect.height;
-
-		// If we have an image, adjust the pan to keep it centered relative to the change
-		if (this.originalImage) {
-			const deltaX = newWidth - this.lastViewportWidth;
-			const deltaY = newHeight - this.lastViewportHeight;
-
-			// Shift the pan by half the delta to keep the image in the visual center
-			this.panX += deltaX / 2;
-			this.panY += deltaY / 2;
-
-			this.applyZoomTransform();
+		// Listen for viewport changes
+		window.addEventListener('viewportChanged', (e) => {
+			this.updateZoomUI();
 			this.updateTransparencyGrid();
+			this.updateStatusBar();
+		});
 
-			// Optional: If you want to force "Fit Screen" behavior on resize instead of maintaining position:
-			this.zoomToFit();
-		}
 
-		// Update stored dimensions for next time
-		this.lastViewportWidth = newWidth;
-		this.lastViewportHeight = newHeight;
 	}
+
+
 
 	toggleFilters() {
 		const container = document.getElementById('filtersContainer');
@@ -2136,31 +2361,6 @@ setupTouchGestures() {
 		}
 	}
 
-centerHorizontal() {
-	if (!this.originalImage) return;
-
-	const containerRect = this.previewContainer.getBoundingClientRect();
-	const scaledWidth = this.previewCanvas.width * this.currentZoom;
-
-	// Center horizontally, keep vertical position
-	this.panX = (containerRect.width - scaledWidth) / 2;
-
-	this.applyZoomTransform();
-	this.updateStatusBar();
-}
-
-centerVertical() {
-	if (!this.originalImage) return;
-
-	const containerRect = this.previewContainer.getBoundingClientRect();
-	const scaledHeight = this.previewCanvas.height * this.currentZoom;
-
-	// Center vertically, keep horizontal position
-	this.panY = (containerRect.height - scaledHeight) / 2;
-
-	this.applyZoomTransform();
-	this.updateStatusBar();
-}
 
 
 
@@ -2473,77 +2673,77 @@ centerVertical() {
 		}
 	}
 
-async parseGifFromUrl(url) {
-	try {
-		// Step 1: Fetch
-		const response = await fetch(url);
-		if (!response.ok) {
-			throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-		}
-
-		// Step 2: Get array buffer
-		const arrayBuffer = await response.arrayBuffer();
-		if (!arrayBuffer || arrayBuffer.byteLength === 0) {
-			throw new Error('Empty or invalid file');
-		}
-
-		// Step 3: Create GIF reader
-		const uintArray = new Uint8Array(arrayBuffer);
-		let reader;
+	async parseGifFromUrl(url) {
 		try {
-			reader = new GifReader(uintArray);
-		} catch (e) {
-			throw new Error(`Invalid GIF format: ${e.message}`);
-		}
-
-		// Step 4: Get frame count
-		let frameCount;
-		try {
-			frameCount = reader.numFrames();
-		} catch (e) {
-			throw new Error(`Failed to read frame count: ${e.message}`);
-		}
-
-		if (frameCount === 0) {
-			throw new Error('GIF has 0 frames');
-		}
-
-		// Step 5: Get metadata
-		let frameInfo, width, height;
-		try {
-			frameInfo = reader.frameInfo(0);
-			width = reader.width;
-			height = reader.height;
-		} catch (e) {
-			throw new Error(`Failed to read GIF metadata: ${e.message}`);
-		}
-
-		// Step 6: Decode frames
-		const frames = [];
-		for (let i = 0; i < frameCount; i++) {
-			try {
-				const pixels = new Uint8ClampedArray(width * height * 4);
-				reader.decodeAndBlitFrameRGBA(i, pixels);
-				frames.push(new ImageData(pixels, width, height));
-			} catch (e) {
-				throw new Error(`Failed to decode frame ${i + 1}/${frameCount}: ${e.message}`);
+			// Step 1: Fetch
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 			}
+
+			// Step 2: Get array buffer
+			const arrayBuffer = await response.arrayBuffer();
+			if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+				throw new Error('Empty or invalid file');
+			}
+
+			// Step 3: Create GIF reader
+			const uintArray = new Uint8Array(arrayBuffer);
+			let reader;
+			try {
+				reader = new GifReader(uintArray);
+			} catch (e) {
+				throw new Error(`Invalid GIF format: ${e.message}`);
+			}
+
+			// Step 4: Get frame count
+			let frameCount;
+			try {
+				frameCount = reader.numFrames();
+			} catch (e) {
+				throw new Error(`Failed to read frame count: ${e.message}`);
+			}
+
+			if (frameCount === 0) {
+				throw new Error('GIF has 0 frames');
+			}
+
+			// Step 5: Get metadata
+			let frameInfo, width, height;
+			try {
+				frameInfo = reader.frameInfo(0);
+				width = reader.width;
+				height = reader.height;
+			} catch (e) {
+				throw new Error(`Failed to read GIF metadata: ${e.message}`);
+			}
+
+			// Step 6: Decode frames
+			const frames = [];
+			for (let i = 0; i < frameCount; i++) {
+				try {
+					const pixels = new Uint8ClampedArray(width * height * 4);
+					reader.decodeAndBlitFrameRGBA(i, pixels);
+					frames.push(new ImageData(pixels, width, height));
+				} catch (e) {
+					throw new Error(`Failed to decode frame ${i + 1}/${frameCount}: ${e.message}`);
+				}
+			}
+
+			return {
+				width,
+				height,
+				frames,
+				frameCount,
+				frameDelay: frameInfo.delay * 10 || 100
+			};
+
+		} catch (error) {
+			// Re-throw with file info for debugging
+			console.error(`[parseGifFromUrl] Error loading ${url}:`, error);
+			throw new Error(`Failed to parse GIF: ${error.message}`);
 		}
-
-		return {
-			width,
-			height,
-			frames,
-			frameCount,
-			frameDelay: frameInfo.delay * 10 || 100
-		};
-
-	} catch (error) {
-		// Re-throw with file info for debugging
-		console.error(`[parseGifFromUrl] Error loading ${url}:`, error);
-		throw new Error(`Failed to parse GIF: ${error.message}`);
 	}
-}
 
 	displayGlitterOptions() {
 		const container = document.getElementById('glitterOptions');
@@ -2787,8 +2987,9 @@ async parseGifFromUrl(url) {
 				this.originalAlphaChannel[i] = this.originalImageData.data[i * 4 + 3];
 			}
 
-			// Reset viewport (zoom and pan)
-			this.resetZoomSmart();
+			// Tell viewport about canvas dimensions
+			this.viewport.setCanvasDimensions(this.previewCanvas.width, this.previewCanvas.height);
+			this.viewport.resetZoomSmart();
 			this.updateZoomUI();
 
 			const dropzone = document.getElementById('imageDropzone');
@@ -2843,7 +3044,7 @@ async parseGifFromUrl(url) {
 			const dims = `${this.originalCanvas.width} × ${this.originalCanvas.height}px`;
 			document.getElementById('statusDimensions').textContent = dims;
 
-			const zoomPct = Math.round(this.currentZoom * 100);
+			const zoomPct = Math.round(this.viewport.currentZoom * 100);
 			document.getElementById('statusZoom').textContent = `${zoomPct}%`;
 		} else {
 			document.getElementById('statusDimensions').textContent = '';
@@ -4531,7 +4732,7 @@ class MobileManager {
 				requestAnimationFrame(() => {
 					requestAnimationFrame(() => {
 						// Update dimensions
-						this.editor.performResizeUpdate();
+						this.editor.viewport.performResizeUpdate();
 
 						// Apply the sizing math
 						this.editor.resetZoomSmart();
@@ -4588,8 +4789,8 @@ class MobileManager {
 						requestAnimationFrame(() => {
 							requestAnimationFrame(() => {
 								// 3. Now reset dimensions - container is visible, so math will work
-								this.editor.performResizeUpdate(); // Updates internal dimension tracking
-								this.editor.resetViewport();       // Calculates center based on new dimensions
+								this.editor.viewport.performResizeUpdate(); // Updates internal dimension tracking
+								this.editor.viewport.resetViewport();       // Calculates center based on new dimensions
 								this.editor.updateZoomUI();
 								this.editor.updateTransparencyGrid();
 							});
@@ -4605,8 +4806,8 @@ class MobileManager {
 					// Reset desktop view nicely
 					setTimeout(() => {
 						if (this.editor.originalImage) {
-							this.editor.performResizeUpdate();
-							this.editor.resetViewport();
+							this.editor.viewport.performResizeUpdate();
+							this.editor.viewport.resetViewport();
 							this.editor.updateZoomUI();
 						}
 					}, 50);
