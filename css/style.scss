@@ -85,7 +85,7 @@
 	--mobile-menu-height: 60px;
 	--mobile-header-height: 60px;
 	--mobile-top-nav-height: 50px;
-	--mobile-bottom-nav-height: 70px;
+	--mobile-bottom-nav-height: 60px;
 	--mobile-drawer-height: 50vh;
 	/* Fallback for older browsers */
 	--mobile-drawer-height: 50dvh;
@@ -2622,14 +2622,8 @@ input[type="range"] {
 
 		.mobile-drawer-btn-group {
 			display: flex;
-			gap: var(--spacing-sm);
+			gap: var(--spacing-xs);
 			flex: 1; /* takes remaining space */
-
-			background-color: var(--gray-600);
-			padding: var(--spacing-sm);
-			border-radius: var(--radius-md);
-
-		
 
 			&.small {
 				flex: 0 0 auto; /* only as wide as its content */
@@ -2646,7 +2640,7 @@ input[type="range"] {
 				&[data-drawer="layers"] {
 					display: flex;
 					align-items: center;
-					gap: var(--spacing-md);
+					gap: var(--spacing-base);
 
 					.mobile-layers-swatch {
 						width: 18px;
@@ -2690,7 +2684,7 @@ input[type="range"] {
 			}
 
 			> .mobile-add-layer-btn {
-				width: 60px;
+				width: 50px;
 				height: unset;
 				flex-shrink: 0;
 				padding: var(--spacing-md);
@@ -2820,13 +2814,15 @@ input[type="range"] {
 		&.glitterSettingsOpen .main-content>.glitter-column {
 			display: flex;
 			height: auto;
-			max-height: var(--mobile-drawer-height);
+			
 			top: auto;
 			bottom: var(--mobile-bottom-nav-height);
 			z-index: 10000;
 			border-top: 1 solid var(--color-border);
 			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
 
+			max-height: var(--mobile-drawer-height);
+			min-height: 20dvh;
 
 
 		}
