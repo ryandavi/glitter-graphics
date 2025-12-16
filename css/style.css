@@ -292,6 +292,7 @@ input[type=range]::-moz-range-thumb {
   overflow: hidden;
   text-overflow: ellipsis;
   outline: none;
+  transform: translateZ(0);
 }
 .btn:disabled,
 .btn-icon:disabled,
@@ -312,6 +313,7 @@ input[type=range]::-moz-range-thumb {
   cursor: pointer;
   font-size: var(--font-size-base);
   border-radius: var(--radius-sm);
+  transform: translateZ(0);
   --win7-btn-gradient-start: #bfdbf7;
   --win7-btn-gradient-mid: #6986be;
   --win7-btn-gradient-dark: #032768;
@@ -384,6 +386,7 @@ input[type=range]::-moz-range-thumb {
   cursor: pointer;
   font-size: var(--font-size-base);
   border-radius: var(--radius-sm);
+  transform: translateZ(0);
   --win7-btn-gradient-start: #bfdbf7;
   --win7-btn-gradient-mid: #6986be;
   --win7-btn-gradient-dark: #032768;
@@ -478,6 +481,7 @@ input[type=range]::-moz-range-thumb {
   cursor: pointer;
   font-size: var(--font-size-base);
   border-radius: var(--radius-sm);
+  transform: translateZ(0);
   --win7-btn-gradient-start: #bfdbf7;
   --win7-btn-gradient-mid: #6986be;
   --win7-btn-gradient-dark: #032768;
@@ -777,6 +781,7 @@ input[type=range]::-moz-range-thumb {
   cursor: pointer;
   font-size: var(--font-size-base);
   border-radius: var(--radius-sm);
+  transform: translateZ(0);
   --win7-btn-gradient-start: #bfdbf7;
   --win7-btn-gradient-mid: #6986be;
   --win7-btn-gradient-dark: #032768;
@@ -873,6 +878,7 @@ input[type=range]::-moz-range-thumb {
   transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
 }
 .image-container > .image-dropzone-wrapper > .image-dropzone:hover {
   border-color: #6a6a6a;
@@ -987,6 +993,7 @@ input[type=range]::-moz-range-thumb {
   cursor: pointer;
   transition: all var(--transition-fast);
   overflow: hidden;
+  transform: translateZ(0);
 }
 .layers-section > .layers-list > .layer-item:hover {
   background: #252525;
@@ -1436,6 +1443,7 @@ input[type=range]::-moz-range-thumb {
   overflow: hidden;
   cursor: pointer;
   transition: all var(--transition-fast);
+  transform: translateZ(0);
 }
 .glitter-column > .glitter-options > .glitter-category > .glitter-grid > .glitter-option:hover {
   outline-color: var(--color-border-hover);
@@ -2273,6 +2281,7 @@ input[type=range]::-moz-range-thumb {
     cursor: pointer;
     font-size: var(--font-size-base);
     border-radius: var(--radius-sm);
+    transform: translateZ(0);
     --win7-btn-gradient-start: #bfdbf7;
     --win7-btn-gradient-mid: #6986be;
     --win7-btn-gradient-dark: #032768;

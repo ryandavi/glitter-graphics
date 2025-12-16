@@ -270,6 +270,8 @@
 	font-size: var(--font-size-base);
 	border-radius: var(--radius-sm);
 
+	transform: translateZ(0); // ios fix for radius + hidden
+
 	--win7-btn-gradient-start: #bfdbf7;
 	--win7-btn-gradient-mid: #6986be;
 	--win7-btn-gradient-dark: #032768;
@@ -505,6 +507,8 @@ input[type="range"] {
 	text-overflow: ellipsis;
 	// remove outline on focus
 	outline: none;
+
+	transform: translateZ(0); // ios fix for radius + hidden
 
 	&:disabled {
 		opacity: var(--disabled-opacity);
@@ -877,6 +881,8 @@ input[type="range"] {
 			position: relative;
 			overflow: hidden;
 
+			transform: translateZ(0); // ios fix for radius + hidden
+
 			&:hover {
 				border-color: #6a6a6a;
 				background: var(--color-bg-tertiary);
@@ -1016,6 +1022,8 @@ input[type="range"] {
 			cursor: pointer;
 			transition: all var(--transition-fast);
 			overflow: hidden;
+
+			transform: translateZ(0); // ios fix for radius + hidden
 
 			&:hover {
 				background: #252525;
@@ -1535,6 +1543,8 @@ input[type="range"] {
 					overflow: hidden;
 					cursor: pointer;
 					transition: all var(--transition-fast);
+
+					transform: translateZ(0); // ios fix for radius + hidden
 
 
 					&:hover {
