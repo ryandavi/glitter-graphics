@@ -96,11 +96,12 @@ const CONFIG = {
 
 };
 
+const LayerType = {
+  GLITTER_FILL: 'glitter-fill',
+  STICKER: 'sticker',
+};
 
-// ============================================
-// STICKER MANAGER CLASS
-// Handles all sticker logic
-// ============================================
+
 // ============================================
 // STICKER MANAGER CLASS
 // Handles all sticker-related operations
@@ -348,7 +349,7 @@ class StickerManager {
 		// Create layer object
 		const layer = {
 			id: this.editor.layerManager.generateLayerId(),
-			type: 'sticker',
+			type: LayerType.STICKER,
 			name: sticker.name,
 			visible: true,
 			locked: false,
@@ -412,7 +413,7 @@ class StickerManager {
 	// ===== RENDERING =====
 
 	renderSticker(layer) {
-		if (layer.type !== 'sticker') return;
+		if (layer.type !== LayerType.STICKER) return;
 
 		// Remove existing element if any
 		this.removeStickerElement(layer.id);
@@ -489,7 +490,7 @@ class StickerManager {
 
 	startStickerAnimation(layerId) {
 		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-		if (!layer || layer.type !== 'sticker' || !layer.stickerData.isAnimated) {
+		if (!layer || layer.type !== LayerType.STICKER || !layer.stickerData.isAnimated) {
 			return;
 		}
 
@@ -539,7 +540,7 @@ class StickerManager {
 
 	updateStickerTransform(layerId, updates) {
 		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-		if (!layer || layer.type !== 'sticker') return;
+		if (!layer || layer.type !== LayerType.STICKER) return;
 
 		const { transform } = layer.stickerData;
 
@@ -1365,7 +1366,7 @@ class LayerManager {
 		return `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 	}
 
-	createLayer(type = 'glitter-fill') {  // ADD type parameter
+	createLayer(type = LayerType.GLITTER_FILL) {  // ADD type parameter
 		if (this.layers.length >= CONFIG.maxLayers) {
 			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
 			return null;
@@ -1373,14 +1374,14 @@ class LayerManager {
 
 		// Only create glitter-fill layers here
 		// Stickers created via stickerManager.createStickerLayer()
-		if (type !== 'glitter-fill') {
+		if (type !== LayerType.GLITTER_FILL) {
 			console.error('Use stickerManager.createStickerLayer() for sticker layers');
 			return null;
 		}
 
 		const layer = {
 			id: this.generateLayerId(),
-			type: 'glitter-fill',  // ADD THIS
+			type: LayerType.GLITTER_FILL,  // ADD THIS
 			visible: true,
 			selections: [],
 			selectedGlitterIndex: CONFIG.defaultGlitterIndex,
@@ -1421,7 +1422,7 @@ class LayerManager {
 
 		// ADD: Clean up sticker if it's a sticker layer
 		const layer = this.layers[index];
-		if (layer.type === 'sticker' && this.editor.stickerManager) {
+		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
 			this.editor.stickerManager.removeSticker(layerId);
 		}
 
@@ -1446,7 +1447,7 @@ class LayerManager {
 		layer.visible = !layer.visible;
 
 		// ADD: Update sticker element visibility
-		if (layer.type === 'sticker' && this.editor.stickerManager) {
+		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
 			const element = this.editor.stickerManager.stickerElements.get(layerId);
 			if (element) {
 				element.style.display = layer.visible ? 'block' : 'none';
@@ -1654,7 +1655,7 @@ class LayerManager {
 		swatch.className = 'layer-swatch';
 
 		// CHANGE: Handle different layer types
-		if (layer.type === 'sticker') {
+		if (layer.type === LayerType.STICKER) {
 			// Show sticker thumbnail
 			swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
 			swatch.style.backgroundSize = 'contain';
@@ -1675,7 +1676,7 @@ class LayerManager {
 		// Double-click swatch behavior
 		swatch.addEventListener('dblclick', (e) => {
 			e.stopPropagation();
-			if (layer.type === 'sticker') {
+			if (layer.type === LayerType.STICKER) {
 				// TODO: Could open sticker picker or transform tool
 				console.log('Edit sticker:', layer.id);
 			} else {
@@ -1690,8 +1691,8 @@ class LayerManager {
 		colorText.className = 'layer-color';
 
 		// CHANGE: Display name based on layer type
-		if (layer.type === 'sticker') {
-			colorText.textContent = layer.name || 'Sticker';
+		if (layer.type === LayerType.STICKER) {
+			colorText.textContent = layer.name || LayerType.STICKER;
 		} else {
 			const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
 			if (glitter) {
@@ -2142,7 +2143,7 @@ class LayerManager {
 			const el = existingElements.get(layer.id);
 			if (el) {
 				// Update z-index based on position
-				if (layer.type === 'sticker') {
+				if (layer.type === LayerType.STICKER) {
 					el.style.zIndex = this.editor.stickerManager.getLayerZIndex(layer.id);
 				}
 				fragment.appendChild(el);
@@ -3252,13 +3253,13 @@ class GlitterEditor {
 		const state = {
 			layers: this.layers.map(layer => {
 				// Handle sticker layers differently
-				if (layer.type === 'sticker' && this.stickerManager) {
+				if (layer.type === LayerType.STICKER && this.stickerManager) {
 					return this.stickerManager.serializeSticker(layer);
 				}
 				// Glitter-fill layers (existing)
 				return {
 					id: layer.id,
-					type: layer.type || 'glitter-fill', // Add type for backwards compatibility
+					type: layer.type || LayerType.GLITTER_FILL, // Add type for backwards compatibility
 					visible: layer.visible,
 					selections: JSON.parse(JSON.stringify(layer.selections)),
 					selectedGlitterIndex: layer.selectedGlitterIndex,
@@ -3285,7 +3286,7 @@ class GlitterEditor {
 		this.layers = [];
 
 		for (const layerData of state.layers) {
-			if (layerData.type === 'sticker' && this.stickerManager) {
+			if (layerData.type === LayerType.STICKER && this.stickerManager) {
 				// Deserialize sticker layer
 				const restoredLayer = await this.stickerManager.deserializeSticker(layerData);
 				if (restoredLayer) {
@@ -3295,7 +3296,7 @@ class GlitterEditor {
 				// Glitter-fill layer (existing)
 				this.layers.push({
 					id: layerData.id,
-					type: layerData.type || 'glitter-fill',
+					type: layerData.type || LayerType.GLITTER_FILL,
 					visible: layerData.visible,
 					selections: JSON.parse(JSON.stringify(layerData.selections)),
 					selectedGlitterIndex: layerData.selectedGlitterIndex,
@@ -4073,12 +4074,12 @@ class GlitterEditor {
 
 		const layersToShow = this.showAllLayers
 			? this.layers.filter(l => l.visible && (
-				(l.type === 'glitter-fill' && l.selections.length > 0) ||
-				l.type === 'sticker'  // ADD THIS
+				(l.type === LayerType.GLITTER_FILL && l.selections.length > 0) ||
+				l.type === LayerType.STICKER  // ADD THIS
 			))
 			: [this.layerManager.getActiveLayer()].filter(l => l && l.visible && (
-				(l.type === 'glitter-fill' && l.selections.length > 0) ||
-				l.type === 'sticker'  // ADD THIS
+				(l.type === LayerType.GLITTER_FILL && l.selections.length > 0) ||
+				l.type === LayerType.STICKER  // ADD THIS
 			));
 
 		if (layersToShow.length === 0) {
@@ -4096,7 +4097,7 @@ class GlitterEditor {
 		if (!this.stickerManager) return;
 
 		layersToShow.forEach(layer => {
-			if (layer.type === 'sticker') {
+			if (layer.type === LayerType.STICKER) {
 				this.stickerManager.renderSticker(layer);
 			}
 		});
@@ -4724,7 +4725,7 @@ class GifExporter {
 		// C. Composite Glitter Layers
 		layers.forEach(layer => {
 			// Skip non-glitter layers
-			if (layer.type !== 'glitter-fill') return;
+			if (layer.type !== LayerType.GLITTER_FILL) return;
 
 			const maskCanvas = maskCanvases.get(layer.id);
 			if (!maskCanvas) return;
@@ -4769,7 +4770,7 @@ class GifExporter {
 
 		// D. Render Sticker Layers (NEW)
 		layers.forEach(layer => {
-			if (layer.type === 'sticker' && layer.visible) {
+			if (layer.type === LayerType.STICKER && layer.visible) {
 				this._renderStickerToCanvas(layer, ctx, frameIndex, width, height);
 			}
 		});
