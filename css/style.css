@@ -72,7 +72,7 @@
   --mobile-menu-height: 60px;
   --mobile-header-height: 60px;
   --mobile-top-nav-height: 50px;
-  --mobile-bottom-nav-height: 60px;
+  --mobile-bottom-nav-height: 70px;
   --mobile-drawer-height: 50vh;
   /* Fallback for older browsers */
   --mobile-drawer-height: 50dvh;
@@ -2222,7 +2222,7 @@ input[type=range]::-moz-range-thumb {
     right: 0;
     height: var(--mobile-top-nav-height);
     background: var(--color-bg-secondary);
-    border-bottom: 2px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
     z-index: 10001;
     display: none;
   }
@@ -2261,13 +2261,24 @@ input[type=range]::-moz-range-thumb {
     right: 0;
     height: var(--mobile-bottom-nav-height);
     background: var(--color-bg-secondary);
-    border-top: 2px solid var(--color-border);
+    border-top: 1px solid var(--color-border);
     gap: var(--spacing-sm);
     padding: var(--spacing-sm);
     z-index: 10001;
     display: none;
   }
-  .mobile-bottom-nav .mobile-drawer-btn {
+  .mobile-bottom-nav .mobile-drawer-btn-group {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex: 1; /* takes remaining space */
+    background-color: var(--gray-600);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+  }
+  .mobile-bottom-nav .mobile-drawer-btn-group.small {
+    flex: 0 0 auto; /* only as wide as its content */
+  }
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn {
     flex: 1;
     padding: var(--spacing-md);
     font-size: var(--font-size-sm);
@@ -2287,7 +2298,7 @@ input[type=range]::-moz-range-thumb {
     --win7-btn-gradient-dark: #032768;
     --win7-btn-gradient-end: #89e8fc;
   }
-  .mobile-bottom-nav .mobile-drawer-btn:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:before {
     display: block;
     content: "";
     width: 100%;
@@ -2299,47 +2310,47 @@ input[type=range]::-moz-range-thumb {
     transition: filter var(--transition-base);
     background-image: linear-gradient(to bottom, var(--win7-btn-gradient-start) 0%, var(--win7-btn-gradient-mid) 40%, var(--win7-btn-gradient-dark) 50%, var(--win7-btn-gradient-dark) 70%, var(--win7-btn-gradient-end) 100%);
   }
-  .mobile-bottom-nav .mobile-drawer-btn.mobile-drawer-btn:before, .mobile-bottom-nav .mobile-drawer-btn.btn:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.mobile-drawer-btn:before, .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.btn:before {
     z-index: -1;
   }
-  .mobile-bottom-nav .mobile-drawer-btn:hover:not(:disabled):before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:hover:not(:disabled):before {
     filter: brightness(1.2) saturate(1.1);
   }
-  .mobile-bottom-nav .mobile-drawer-btn:active:not(:disabled):before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:active:not(:disabled):before {
     filter: brightness(1) contrast(1.2) saturate(1.1);
     border-top-color: black;
     border-bottom-color: white;
   }
-  .mobile-bottom-nav .mobile-drawer-btn:disabled {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:disabled {
     opacity: var(--disabled-opacity);
     cursor: not-allowed;
   }
-  .mobile-bottom-nav .mobile-drawer-btn:not(.active):not(.primary):before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:not(.active):not(.primary):before {
     filter: saturate(0.3) contrast(0.7) brightness(0.8);
     transition: filter 0.2s;
   }
-  .mobile-bottom-nav .mobile-drawer-btn:not(.active):not(.primary):hover:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:not(.active):not(.primary):hover:before {
     filter: saturate(0.5) contrast(0.9) brightness(1);
   }
-  .mobile-bottom-nav .mobile-drawer-btn:not(.active):not(.primary):active:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:not(.active):not(.primary):active:before {
     filter: saturate(0.7) contrast(1.1) brightness(1.15);
   }
-  .mobile-bottom-nav .mobile-drawer-btn.secondary:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.secondary:before {
     filter: saturate(0.3) contrast(0.7) brightness(0.8);
     transition: filter 0.2s;
   }
-  .mobile-bottom-nav .mobile-drawer-btn.secondary:hover:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.secondary:hover:before {
     filter: saturate(0.5) contrast(0.9) brightness(1);
   }
-  .mobile-bottom-nav .mobile-drawer-btn.secondary:active:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.secondary:active:before {
     filter: saturate(0.7) contrast(1.1) brightness(1.15);
   }
-  .mobile-bottom-nav .mobile-drawer-btn[data-drawer=layers] {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
   }
-  .mobile-bottom-nav .mobile-drawer-btn[data-drawer=layers] .mobile-layers-swatch {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] .mobile-layers-swatch {
     width: 18px;
     height: 18px;
     border-radius: var(--radius-sm);
@@ -2347,29 +2358,35 @@ input[type=range]::-moz-range-thumb {
     background-position: center;
     flex-shrink: 0;
   }
-  .mobile-bottom-nav .mobile-drawer-btn[data-drawer=layers] .mobile-layers-swatch.empty {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] .mobile-layers-swatch.empty {
     background-image: linear-gradient(45deg, white 25%, transparent 25%), linear-gradient(-45deg, white 25%, transparent 25%), linear-gradient(45deg, transparent 75%, white 75%), linear-gradient(-45deg, transparent 75%, white 75%);
     background-size: 8px 8px;
     background-position: 0 0, 0 4px, 4px -4px, -4px 0;
   }
-  .mobile-bottom-nav .mobile-drawer-btn[data-drawer=layers] .mobile-layers-swatch.pixelated {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] .mobile-layers-swatch.pixelated {
     image-rendering: pixelated;
   }
-  .mobile-bottom-nav .mobile-drawer-btn[data-drawer=layers] .mobile-layers-count {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] .mobile-layers-count {
     margin-left: auto;
     font-size: var(--font-size-xs);
     opacity: 0.7;
   }
-  .mobile-bottom-nav .mobile-drawer-btn[data-drawer=layers] .mobile-layers-count::before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] .mobile-layers-count::before {
     content: attr(data-count);
   }
-  .mobile-bottom-nav .mobile-add-layer-btn {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.small {
+    flex: 0 0 auto; /* only as wide as its content */
+    aspect-ratio: 1/1;
+  }
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-add-layer-btn {
     width: 60px;
     height: unset;
     flex-shrink: 0;
     padding: var(--spacing-md);
+    flex: 0 0 auto; /* only as wide as its content */
+    aspect-ratio: 1/1;
   }
-  .mobile-bottom-nav .mobile-add-layer-btn:disabled {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-add-layer-btn:disabled {
     opacity: var(--disabled-opacity);
     cursor: not-allowed;
     transform: none;
@@ -2440,7 +2457,7 @@ input[type=range]::-moz-range-thumb {
     top: auto;
     bottom: var(--mobile-bottom-nav-height);
     z-index: 10000;
-    border-top: 2px solid var(--color-border);
+    border-top: 1 solid var(--color-border);
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
   }
   body.mobile-preview-tab.glitterOpen .main-content > .glitter-column .glitter-settings-section {
@@ -2458,10 +2475,15 @@ input[type=range]::-moz-range-thumb {
     display: flex;
     flex-direction: column;
     flex: 1;
-    overflow-y: auto;
+    overflow: hidden;
+  }
+  body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .layer-settings-section .section-header {
+    flex-shrink: 0;
   }
   body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .layer-settings-section .section-content {
     display: block !important;
+    overflow-y: auto;
+    flex: 1;
   }
   body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .layer-settings-section .section-header-action {
     visibility: hidden;
@@ -2474,10 +2496,15 @@ input[type=range]::-moz-range-thumb {
     display: flex;
     flex-direction: column;
     flex: 1;
-    overflow-y: auto;
+    overflow: hidden;
+  }
+  body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column .glitter-settings-section .section-header {
+    flex-shrink: 0;
   }
   body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column .glitter-settings-section .section-content {
     display: block !important;
+    overflow-y: auto;
+    flex: 1;
   }
   body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column .glitter-settings-section .section-header-action {
     visibility: hidden;

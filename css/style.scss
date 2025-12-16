@@ -85,7 +85,7 @@
 	--mobile-menu-height: 60px;
 	--mobile-header-height: 60px;
 	--mobile-top-nav-height: 50px;
-	--mobile-bottom-nav-height: 60px;
+	--mobile-bottom-nav-height: 70px;
 	--mobile-drawer-height: 50vh;
 	/* Fallback for older browsers */
 	--mobile-drawer-height: 50dvh;
@@ -463,8 +463,8 @@ input[type="range"] {
 	-webkit-appearance: none;
 
 	touch-action: none;
-    padding: 15px 5px;
-    border-radius: 100px;
+	padding: 15px 5px;
+	border-radius: 100px;
 
 	&::-webkit-slider-thumb {
 		-webkit-appearance: none;
@@ -561,6 +561,7 @@ input[type="range"] {
 		border-color: var(--color-accent-hover);
 	}
 
+
 	@include windows7-button(true);
 
 
@@ -590,6 +591,9 @@ input[type="range"] {
 		background: var(--color-accent);
 		border-color: var(--color-accent-hover);
 	}
+
+
+
 
 	@include windows7-button(true);
 }
@@ -2563,7 +2567,7 @@ input[type="range"] {
 		right: 0;
 		height: var(--mobile-top-nav-height);
 		background: var(--color-bg-secondary);
-		border-bottom: 2px solid var(--color-border);
+		border-bottom: 1px solid var(--color-border);
 		z-index: 10001;
 		display: none; // Hidden by default
 
@@ -2608,71 +2612,105 @@ input[type="range"] {
 		right: 0;
 		height: var(--mobile-bottom-nav-height);
 		background: var(--color-bg-secondary);
-		border-top: 2px solid var(--color-border);
+		border-top: 1px solid var(--color-border);
 		gap: var(--spacing-sm);
 		padding: var(--spacing-sm);
 		z-index: 10001;
 		display: none; // Hidden by default, shown in preview tab
 
-		.mobile-drawer-btn {
-			flex: 1;
-			padding: var(--spacing-md);
-			@include text-sm;
-			@include windows7-button(true);
 
-			// Layers drawer button with swatch
-			&[data-drawer="layers"] {
-				display: flex;
-				align-items: center;
-				gap: var(--spacing-md);
 
-				.mobile-layers-swatch {
-					width: 18px;
-					height: 18px;
-					border-radius: var(--radius-sm);
-					background-size: cover;
-					background-position: center;
-					flex-shrink: 0;
+		.mobile-drawer-btn-group {
+			display: flex;
+			gap: var(--spacing-sm);
+			flex: 1; /* takes remaining space */
 
-					&.empty {
-						background-image:
-							linear-gradient(45deg, white 25%, transparent 25%),
-							linear-gradient(-45deg, white 25%, transparent 25%),
-							linear-gradient(45deg, transparent 75%, white 75%),
-							linear-gradient(-45deg, transparent 75%, white 75%);
-						background-size: 8px 8px;
-						background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+			background-color: var(--gray-600);
+			padding: var(--spacing-sm);
+			border-radius: var(--radius-md);
+
+		
+
+			&.small {
+				flex: 0 0 auto; /* only as wide as its content */
+			}
+
+
+			> .mobile-drawer-btn {
+				flex: 1;
+				padding: var(--spacing-md);
+				@include text-sm;
+				@include windows7-button(true);
+
+				// Layers drawer button with swatch
+				&[data-drawer="layers"] {
+					display: flex;
+					align-items: center;
+					gap: var(--spacing-md);
+
+					.mobile-layers-swatch {
+						width: 18px;
+						height: 18px;
+						border-radius: var(--radius-sm);
+						background-size: cover;
+						background-position: center;
+						flex-shrink: 0;
+
+						&.empty {
+							background-image:
+								linear-gradient(45deg, white 25%, transparent 25%),
+								linear-gradient(-45deg, white 25%, transparent 25%),
+								linear-gradient(45deg, transparent 75%, white 75%),
+								linear-gradient(-45deg, transparent 75%, white 75%);
+							background-size: 8px 8px;
+							background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+						}
+
+						&.pixelated {
+							image-rendering: pixelated;
+						}
 					}
 
-					&.pixelated {
-						image-rendering: pixelated;
+					.mobile-layers-count {
+						margin-left: auto;
+						font-size: var(--font-size-xs);
+						opacity: 0.7;
+
+						&::before {
+							content: attr(data-count);
+						}
 					}
 				}
 
-				.mobile-layers-count {
-					margin-left: auto;
-					font-size: var(--font-size-xs);
-					opacity: 0.7;
+				&.small {
+					flex: 0 0 auto; /* only as wide as its content */
+					aspect-ratio: 1 / 1;
+				}
 
-					&::before {
-						content: attr(data-count);
-					}
+			}
+
+			> .mobile-add-layer-btn {
+				width: 60px;
+				height: unset;
+				flex-shrink: 0;
+				padding: var(--spacing-md);
+
+				flex: 0 0 auto; /* only as wide as its content */
+				aspect-ratio: 1 / 1;
+
+
+
+				&:disabled {
+					opacity: var(--disabled-opacity);
+					cursor: not-allowed;
+					transform: none;
 				}
 			}
+
+
 		}
 
-		.mobile-add-layer-btn {
-			width: 60px;
-			height: unset;
-			flex-shrink: 0;
-			padding: var(--spacing-md);
 
-			&:disabled {
-				opacity: var(--disabled-opacity);
-				cursor: not-allowed;
-				transform: none;
-			}
-		}
 	}
 
 
@@ -2726,37 +2764,38 @@ input[type="range"] {
 	// ============================================
 
 	// IMAGE TAB: Show left panel with image upload only
-body.mobile-image-tab {
-	.main-content > .left-panel {
-		display: flex;
-		height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
-		height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
-
-		.layers-section,
-		.layer-settings-section {  // Add this
-			display: none;
-		}
-
-		.image-container {
-			flex: 1;
+	body.mobile-image-tab {
+		.main-content>.left-panel {
 			display: flex;
-			flex-direction: column;
+			height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
+			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
 
-			.section-header {
+			.layers-section,
+			.layer-settings-section {
+				// Add this
 				display: none;
 			}
 
-			> .image-dropzone-wrapper {
-				height: 100%;
+			.image-container {
+				flex: 1;
 				display: flex;
+				flex-direction: column;
 
-				> .image-dropzone {
-					flex: 1;
+				.section-header {
+					display: none;
+				}
+
+				>.image-dropzone-wrapper {
+					height: 100%;
+					display: flex;
+
+					>.image-dropzone {
+						flex: 1;
+					}
 				}
 			}
 		}
 	}
-}
 
 	// PREVIEW TAB: Show right panel with preview + toolbar + bottom nav
 	body.mobile-preview-tab {
@@ -2775,63 +2814,96 @@ body.mobile-image-tab {
 			padding-bottom: var(--mobile-bottom-nav-height);
 		}
 
-	&.glitterOpen .main-content > .glitter-column,
-	&.layersOpen .main-content > .left-panel,
-	&.layerSettingsOpen .main-content > .left-panel,
-	&.glitterSettingsOpen .main-content > .glitter-column {
-		display: flex;
-		height: auto;
-		max-height: var(--mobile-drawer-height);
-		top: auto;
-		bottom: var(--mobile-bottom-nav-height);
-		z-index: 10000;
-		border-top: 2px solid var(--color-border);
-		box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
-
-
-		
-	}
-
-	
-	// Specific drawer behaviors
-	&.glitterOpen .main-content > .glitter-column {
-		.glitter-settings-section { display: none; }
-	}
-	
-	&.layersOpen .main-content > .left-panel {
-		.image-container,
-		.layer-settings-section { display: none; }
-	}
-	
-	&.layerSettingsOpen .main-content > .left-panel {
-		.image-container,
-		.layers-section { display: none; }
-		
-		.layer-settings-section {
+		&.glitterOpen .main-content>.glitter-column,
+		&.layersOpen .main-content>.left-panel,
+		&.layerSettingsOpen .main-content>.left-panel,
+		&.glitterSettingsOpen .main-content>.glitter-column {
 			display: flex;
-			flex-direction: column;
-			flex: 1;
-			overflow-y: auto;
-			
-			.section-content { display: block !important; }
-			.section-header-action { visibility: hidden; }
+			height: auto;
+			max-height: var(--mobile-drawer-height);
+			top: auto;
+			bottom: var(--mobile-bottom-nav-height);
+			z-index: 10000;
+			border-top: 1 solid var(--color-border);
+			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+
+
+
 		}
-	}
-	
-	&.glitterSettingsOpen .main-content > .glitter-column {
-		> .section,
-		.glitter-options { display: none; }
-		
-		.glitter-settings-section {
-			display: flex;
-			flex-direction: column;
-			flex: 1;
-			overflow-y: auto;
-			
-			.section-content { display: block !important; }
-			.section-header-action { visibility: hidden; }
+
+
+		// Specific drawer behaviors
+		&.glitterOpen .main-content>.glitter-column {
+			.glitter-settings-section {
+				display: none;
+			}
 		}
-	}
+
+		&.layersOpen .main-content>.left-panel {
+
+			.image-container,
+			.layer-settings-section {
+				display: none;
+			}
+		}
+
+		&.layerSettingsOpen .main-content>.left-panel {
+
+			.image-container,
+			.layers-section {
+				display: none;
+			}
+
+			.layer-settings-section {
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+				overflow: hidden; // Changed from overflow-y: auto
+
+				.section-header {
+					flex-shrink: 0; // Prevent header from scrolling
+				}
+
+				.section-content {
+					display: block !important;
+					overflow-y: auto; // Move scroll to content only
+					flex: 1; // Fill remaining space
+				}
+
+				.section-header-action {
+					visibility: hidden;
+				}
+			}
+		}
+
+		&.glitterSettingsOpen .main-content>.glitter-column {
+
+			>.section,
+			.glitter-options {
+				display: none;
+			}
+
+			.glitter-settings-section {
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+				overflow: hidden; // Changed from overflow-y: auto
+
+				.section-header {
+					flex-shrink: 0; // Prevent header from scrolling
+				}
+
+				.section-content {
+					display: block !important;
+					overflow-y: auto; // Move scroll to content only
+					flex: 1; // Fill remaining space
+				}
+
+				.section-header-action {
+					visibility: hidden;
+				}
+			}
+		}
 
 
 	}
