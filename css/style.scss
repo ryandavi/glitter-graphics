@@ -671,6 +671,7 @@ input[type="range"] {
 		cursor: pointer;
 		text-transform: uppercase;
 		position: relative;
+		text-align: center;
 
 		&:hover {
 			background-color: var(--color-text-tertiary);
