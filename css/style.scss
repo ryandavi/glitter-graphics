@@ -1402,6 +1402,10 @@ input[type="range"] {
 			}
 		}
 	}
+
+	+ .settings-subsection {
+		margin-top: var(--spacing-md);
+	}
 }
 
 .refine-group {
@@ -1939,12 +1943,25 @@ input[type="range"] {
 	touch-action: none;
 
 	&.transparent-bg {
-		background-image:
-			linear-gradient(45deg, #333 25%, transparent 25%),
-			linear-gradient(-45deg, #333 25%, transparent 25%),
-			linear-gradient(45deg, transparent 75%, #333 75%),
-			linear-gradient(-45deg, transparent 75%, #333 75%);
-		background-color: var(--color-bg-tertiary);
+
+		.preview-wrapper {
+			background-image:
+				linear-gradient(45deg, #333 25%, transparent 25%),
+				linear-gradient(-45deg, #333 25%, transparent 25%),
+				linear-gradient(45deg, transparent 75%, #333 75%),
+				linear-gradient(-45deg, transparent 75%, #333 75%);
+			background-color: var(--color-bg-tertiary);
+		}
+	}
+
+	&.bounds {
+		.preview-wrapper {
+		outline: solid dashed var(--gray-400);
+		overflow: hidden;
+		outline-offset: -2px; /* Draws inside the canvas edge */
+	box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 8px rgba(0,0,0,0.5); /* Drop shadow for contrast */
+
+		}
 	}
 
 	&.zoom-cursor {
@@ -1969,12 +1986,16 @@ input[type="range"] {
 	top: var(--spacing-lg);
 	left: 0;
 	right: 0;
-	display: flex;
+	display: none;
 	justify-content: space-between;
 	align-items: center;
 	padding: 0 var(--spacing-lg);
 	z-index: 10;
 	pointer-events: none;
+
+	&.visible {
+		display: flex;
+	}
 
 	>* {
 		pointer-events: auto;
@@ -2574,6 +2595,7 @@ input[type="range"] {
 
 .gallery-search-section {
 	display: none;
+	padding: 0;
 
 	&.visible {
 		display: block;
@@ -3380,11 +3402,6 @@ input[type="range"] {
 }
 
 
-#layerTypePickerModal {
-	// ============================================
-// LAYER TYPE PICKER MODAL
-// ============================================
-
 .layer-type-options {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
@@ -3428,9 +3445,6 @@ input[type="range"] {
 			color: var(--color-text-secondary);
 		}
 	}
-}
-
-
 }
 
 
@@ -3667,15 +3681,16 @@ input[type="range"] {
 
 /* Sidebar Section Management */
 
-// 1. Standard Sections (Settings, Search, Info)
-#welcomeSection,
-#glitterSettingsSection,
-#layerSettingsSection,
-#stickerSettingsSection,
-#noLayerSettingsSection,
-#baseLayerSettingsSection, // <--- NEW
+.welcome-section,
+.glitter-settings-section,
+.layer-settings-section,
+.sticker-settings-section,
+.no-layer-settings-section,
+.base-layer-settings-section,
 #glitterSearchSection,
-#stickersSearchSection {
+#stickersSearchSection,
+#glitterGridContainer,
+#stickerGridContainer {
     display: none; // Hide by default
 
     &.visible {
@@ -3699,107 +3714,43 @@ input[type="range"] {
 
 
 
-
-
-
-
 /* Project Metadata Styling */
 .project-meta-stats {
     display: flex;
     justify-content: center;
     gap: 20px;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid var(--color-border);
     width: 100%;
-}
 
-.meta-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-}
-
-.meta-stat .label {
-    font-size: 11px;
-    color: var(--color-text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.meta-stat .value {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--color-text-secondary);
-    font-family: var(--font-mono);
-}
-
-/* Quick Actions Grid */
-.quick-actions-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 10px;
-
-	> .quick-action-card {
+	.meta-stat {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		gap: 8px;
-		padding: 12px 8px;
-		min-height: 80px;
+		gap: 2px;
 
-		background: var(--color-bg-secondary);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		cursor: pointer;
-
-		// radius fix
-		transform: translateZ(0);
-
-		&:hover {
-			background: var(--color-bg-tertiary);
-			border-color: var(--color-accent);
-			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-
-			.icon-wrapper {
-				color: var(--color-accent);
-			}
-		}
-
-		&:active {
-			transform: translateY(0);
-		}
-
-		.icon-wrapper {
-			color: var(--color-text-secondary);
-		}
-
-		.action-name {
+		.label {
 			font-size: 11px;
-			font-weight: 500;
-			color: var(--color-text-primary);
-			text-align: center;
+			color: var(--color-text-tertiary);
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
 		}
+
+		.value {
+			font-size: 13px;
+			font-weight: 600;
+			color: var(--color-text-secondary);
+			font-family: var(--font-mono);
+		}
+
+
 	}
 
 
 
+
 }
 
 
 
 
-/* Grid Containers - Hidden by default */
-#glitterGridContainer,
-#stickerGridContainer {
-    display: none;
-}
 
-/* Show when visible class is added */
-#glitterGridContainer.visible,
-#stickerGridContainer.visible {
-    display: block;
-}
+

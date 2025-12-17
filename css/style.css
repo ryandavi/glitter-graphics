@@ -1312,6 +1312,9 @@ input[type=range]::-moz-range-thumb {
 .settings-subsection > .subsection-content-group > .subsection-content + .subsection-title {
   margin-top: var(--spacing-sm);
 }
+.settings-subsection + .settings-subsection {
+  margin-top: var(--spacing-md);
+}
 
 .refine-group {
   display: grid;
@@ -1743,9 +1746,15 @@ input[type=range]::-moz-range-thumb {
   cursor: default;
   touch-action: none;
 }
-.preview-container.transparent-bg {
+.preview-container.transparent-bg .preview-wrapper {
   background-image: linear-gradient(45deg, #333 25%, transparent 25%), linear-gradient(-45deg, #333 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #333 75%), linear-gradient(-45deg, transparent 75%, #333 75%);
   background-color: var(--color-bg-tertiary);
+}
+.preview-container.bounds .preview-wrapper {
+  outline: solid dashed var(--gray-400);
+  overflow: hidden;
+  outline-offset: -2px; /* Draws inside the canvas edge */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5); /* Drop shadow for contrast */
 }
 .preview-container.zoom-cursor {
   cursor: zoom-in;
@@ -1765,12 +1774,15 @@ input[type=range]::-moz-range-thumb {
   top: var(--spacing-lg);
   left: 0;
   right: 0;
-  display: flex;
+  display: none;
   justify-content: space-between;
   align-items: center;
   padding: 0 var(--spacing-lg);
   z-index: 10;
   pointer-events: none;
+}
+.preview-controls.visible {
+  display: flex;
 }
 .preview-controls > * {
   pointer-events: auto;
@@ -2245,6 +2257,7 @@ input[type=range]::-moz-range-thumb {
 
 .gallery-search-section {
   display: none;
+  padding: 0;
 }
 .gallery-search-section.visible {
   display: block;
@@ -2820,12 +2833,12 @@ input[type=range]::-moz-range-thumb {
   background-color: rgba(0, 102, 204, 0.05);
 }
 
-#layerTypePickerModal .layer-type-options {
+.layer-type-options {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-md);
 }
-#layerTypePickerModal .layer-type-options > .layer-type-option {
+.layer-type-options > .layer-type-option {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2838,23 +2851,23 @@ input[type=range]::-moz-range-thumb {
   transition: all var(--transition-fast);
   text-align: center;
 }
-#layerTypePickerModal .layer-type-options > .layer-type-option:hover {
+.layer-type-options > .layer-type-option:hover {
   background: var(--color-bg-tertiary);
   border-color: var(--color-accent);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
-#layerTypePickerModal .layer-type-options > .layer-type-option .icon-wrapper {
+.layer-type-options > .layer-type-option .icon-wrapper {
   color: var(--color-text-tertiary);
   margin-bottom: var(--spacing-base);
 }
-#layerTypePickerModal .layer-type-options > .layer-type-option:hover .icon-wrapper {
+.layer-type-options > .layer-type-option:hover .icon-wrapper {
   opacity: 1;
 }
-#layerTypePickerModal .layer-type-options > .layer-type-option .layer-type-name {
+.layer-type-options > .layer-type-option .layer-type-name {
   font-size: var(--font-size-lg);
   color: var(--color-text-primary);
 }
-#layerTypePickerModal .layer-type-options > .layer-type-option .layer-type-description {
+.layer-type-options > .layer-type-option .layer-type-description {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   color: var(--color-text-secondary);
@@ -3058,24 +3071,28 @@ input[type=range]::-moz-range-thumb {
 }
 
 /* Sidebar Section Management */
-#welcomeSection,
-#glitterSettingsSection,
-#layerSettingsSection,
-#stickerSettingsSection,
-#noLayerSettingsSection,
-#baseLayerSettingsSection,
+.welcome-section,
+.glitter-settings-section,
+.layer-settings-section,
+.sticker-settings-section,
+.no-layer-settings-section,
+.base-layer-settings-section,
 #glitterSearchSection,
-#stickersSearchSection {
+#stickersSearchSection,
+#glitterGridContainer,
+#stickerGridContainer {
   display: none;
 }
-#welcomeSection.visible,
-#glitterSettingsSection.visible,
-#layerSettingsSection.visible,
-#stickerSettingsSection.visible,
-#noLayerSettingsSection.visible,
-#baseLayerSettingsSection.visible,
+.welcome-section.visible,
+.glitter-settings-section.visible,
+.layer-settings-section.visible,
+.sticker-settings-section.visible,
+.no-layer-settings-section.visible,
+.base-layer-settings-section.visible,
 #glitterSearchSection.visible,
-#stickersSearchSection.visible {
+#stickersSearchSection.visible,
+#glitterGridContainer.visible,
+#stickerGridContainer.visible {
   display: block;
 }
 
@@ -3093,83 +3110,23 @@ input[type=range]::-moz-range-thumb {
   display: flex;
   justify-content: center;
   gap: 20px;
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid var(--color-border);
   width: 100%;
 }
-
-.meta-stat {
+.project-meta-stats .meta-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
 }
-
-.meta-stat .label {
+.project-meta-stats .meta-stat .label {
   font-size: 11px;
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
-.meta-stat .value {
+.project-meta-stats .meta-stat .value {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-secondary);
   font-family: var(--font-mono);
-}
-
-/* Quick Actions Grid */
-.quick-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 10px;
-}
-.quick-actions-grid > .quick-action-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 8px;
-  min-height: 80px;
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transform: translateZ(0);
-}
-.quick-actions-grid > .quick-action-card:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-accent);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-.quick-actions-grid > .quick-action-card:hover .icon-wrapper {
-  color: var(--color-accent);
-}
-.quick-actions-grid > .quick-action-card:active {
-  transform: translateY(0);
-}
-.quick-actions-grid > .quick-action-card .icon-wrapper {
-  color: var(--color-text-secondary);
-}
-.quick-actions-grid > .quick-action-card .action-name {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  text-align: center;
-}
-
-/* Grid Containers - Hidden by default */
-#glitterGridContainer,
-#stickerGridContainer {
-  display: none;
-}
-
-/* Show when visible class is added */
-#glitterGridContainer.visible,
-#stickerGridContainer.visible {
-  display: block;
 }/*# sourceMappingURL=style.css.map */

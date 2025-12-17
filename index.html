@@ -43,11 +43,11 @@
 				<div class="toolbar-group" id="toolbarToolsGroup">
 					<button class="btn-icon icon-wrapper" id="selectTool" title="Select (V)">
 						<svg class="icon">
-							<use href="#icon-cursor"></use>
+							<use href="#icon-hand-pointer"></use>
 						</svg>
 						<span class="name">Select</span>
 					</button>
-					<button class="btn-icon icon-wrapper" id="handTool" title="Pan Tool (H)" disabled>
+					<button class="btn-icon icon-wrapper" id="handTool" title="Move Tool (H)" disabled>
 						<svg class="icon">
 							<use href="#icon-move"></use>
 						</svg>
@@ -657,6 +657,8 @@
 						<div class="section-content">
 
 							<div class="empty-state visible">
+
+
 								<div class="empty-state-icon icon-wrapper xl">
 									<svg class="icon">
 										<use href="#icon-layers"></use>
@@ -666,46 +668,56 @@
 								<div class="empty-state-subtext">
 									Select a layer from the list or add new content below.
 								</div>
-
-								<!-- Project Meta Info -->
-								<div class="project-meta-stats">
-									<div class="meta-stat">
-										<span class="label">Dimensions</span>
-										<span class="value" id="quickMetaDimensions">-- x --</span>
-									</div>
-									<div class="meta-stat">
-										<span class="label">Layers</span>
-										<span class="value" id="quickMetaLayerCount">0</span>
-									</div>
-								</div>
 							</div>
 
-							<!-- Specific Quick Actions -->
-							<div class="subsection-content-group">
-								<div class="subsection-title">Add Design</div>
+							<!-- Project Meta Info -->
+							<div class="settings-subsection">
+								<div class="subsection-content-group">
+									<div class="subsection-title">Meta Info</div>
+									<div class="project-meta-stats">
+										<div class="meta-stat">
+											<span class="label">Dimensions</span>
+											<span class="value" id="quickMetaDimensions">-- x --</span>
+										</div>
+										<div class="meta-stat">
+											<span class="label">Layers</span>
+											<span class="value" id="quickMetaLayerCount">0</span>
+										</div>
+									</div>
+								</div>
 
-								<!-- Grid with 2 columns now -->
-								<div class="quick-actions-grid" style="grid-template-columns: 1fr 1fr;">
+								<!-- Specific Quick Actions -->
+								<div class="subsection-content-group">
+									<div class="subsection-title">Quick Add</div>
 
-									<!-- Add Glitter Fill -->
-									<button class="quick-action-card" id="quickActionAddGlitter">
-										<span class="icon-wrapper lg">
-											<svg class="icon">
-												<use href="#icon-glitter"></use>
-											</svg>
-										</span>
-										<span class="action-name">Glitter Fill</span>
-									</button>
 
-									<!-- Add Sticker -->
-									<button class="quick-action-card" id="quickActionAddSticker">
-										<span class="icon-wrapper lg">
-											<svg class="icon">
-												<use href="#icon-sticker"></use>
-											</svg>
-										</span>
-										<span class="action-name">Sticker</span>
-									</button>
+									<!-- Quick Add -->
+									<div class="layer-type-options quick-add">
+										<button class="layer-type-option" data-layer-type="glitter-fill" id="quickActionAddGlitter">
+
+
+											<span class="layer-type-icon icon-wrapper">
+												<svg class="icon">
+													<use href="#icon-glitter"></use>
+												</svg>
+											</span>
+
+											<span class="layer-type-name">Glitter Fill</span>
+											<span class="layer-type-description">Apply glitter effects to selected colors</span>
+										</button>
+
+										<button class="layer-type-option" data-layer-type="sticker" id="quickActionAddSticker">
+											<span class="layer-type-icon icon-wrapper">
+												<svg class="icon">
+													<use href="#icon-sticker"></use>
+												</svg>
+											</span>
+											<span class="layer-type-name">Sticker</span>
+											<span class="layer-type-description">Add images and graphics</span>
+										</button>
+									</div>
+
+
 
 								</div>
 							</div>
@@ -718,7 +730,7 @@
 				<!-- Right Panel -->
 				<div class="right-panel">
 					<div class="preview-container" id="previewContainer">
-						<div class="preview-controls">
+						<div class="preview-controls" id="previewControls">
 							<div class="preview-controls-center">
 								<button class="preview-mode-toggle btn-icon icon-wrapper" id="previewModeToggle"
 									title="View only selected layer's glitter" disabled>
@@ -728,12 +740,21 @@
 									<span class="name">Solo Mode</span>
 								</button>
 								<button class="transparency-toggle btn-icon icon-wrapper" id="transparencyToggle"
-									title="Toggle Transparency">
+									title="Toggle Transparency" disabled>
 									<svg class="icon">
 										<use href="#icon-checkerboard"></use>
 									</svg>
 									<span class="name">Transparency</span>
 								</button>
+
+								<button class="bounds-toggle btn-icon icon-wrapper" id="boundsToggle"
+									title="Toggle Bounds" disabled>
+									<svg class="icon">
+										<use href="#icon-square"></use>
+									</svg>
+									<span class="name">Bounds</span>
+								</button>
+
 							</div>
 							<div class="preview-controls-right">
 
@@ -774,11 +795,6 @@
 								</svg>
 								<span class="name">Zoom Out</span>
 							</button>
-
-							<!--
-							<button class="zoom-fit-btn btn" id="fitScreen" title="Fit Screen (Ctrl+0)">Fit</button>
-							<button class="zoom-fit-btn btn" id="fillScreen" title="Fill Screen">Fill</button>
-							-->
 
 							<!-- Fit/Fill Screen -->
 							<button class="icon-wrapper btn-icon" id="fitScreen" title="Fit Screen (Ctrl+0)">
@@ -828,6 +844,7 @@
 			<span class="status-bar-field status-zoom" id="statusZoom"></span>
 		</div>
 	</div>
+
 	<!-- Export Progress -->
 	<div class="export-progress" id="exportProgress">
 		<div class="export-progress-bar">
@@ -837,6 +854,7 @@
 		<div class="export-progress-time" id="exportProgressTime"></div>
 		<button class="btn export-progress-cancel" id="exportProgressCancel">Cancel</button>
 	</div>
+
 	<!-- Error Toast -->
 	<div class="error-toast" id="errorToast">
 		<span id="errorText"></span>
@@ -912,9 +930,6 @@
 						<span class="name">Add New layer</span>
 					</span>
 
-
-
-
 					<span class="modal-title-text">Add New layer</span>
 				</div>
 
@@ -927,6 +942,7 @@
 
 			</div>
 
+			<!-- Add Layer Type -->
 			<div class="modal-body">
 				<div class="layer-type-options">
 					<button class="layer-type-option" data-layer-type="glitter-fill">
@@ -1658,12 +1674,21 @@
 					<path d="M416 160C416 124.7 444.7 96 480 96C515.3 96 544 124.7 544 160L544 192C544 209.7 558.3 224 576 224C593.7 224 608 209.7 608 192L608 160C608 89.3 550.7 32 480 32C409.3 32 352 89.3 352 160L352 224L192 224C156.7 224 128 252.7 128 288L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 288C512 252.7 483.3 224 448 224L416 224L416 160z" />
 				</symbol>
 
+				<symbol id="icon-hand-pointer" viewBox="0 0 640 640">
+					<path d="M224 104C224 81.9 241.9 64 264 64C286.1 64 304 81.9 304 104L304 252.2C312.5 244.6 323.7 240 336 240C356.6 240 374.2 253 381 271.2C389.8 261.9 402.2 256 416 256C441.3 256 462 275.5 463.9 300.3C472.4 292.6 483.7 288 496 288C522.5 288 544 309.5 544 336L544 448C544 518.7 486.7 576 416 576L330.7 576C325.7 576 320.8 575.7 316 575C260.7 569.4 209.8 541 176 496L104 400C90.7 382.3 94.3 357.3 112 344C129.7 330.7 154.7 334.3 168 352L224 426.7L224 104zM336 368C336 359.2 328.8 352 320 352C311.2 352 304 359.2 304 368L304 464C304 472.8 311.2 480 320 480C328.8 480 336 472.8 336 464L336 368zM384 352C375.2 352 368 359.2 368 368L368 464C368 472.8 375.2 480 384 480C392.8 480 400 472.8 400 464L400 368C400 359.2 392.8 352 384 352zM464 368C464 359.2 456.8 352 448 352C439.2 352 432 359.2 432 368L432 464C432 472.8 439.2 480 448 480C456.8 480 464 472.8 464 464L464 368z" />
+				</symbol>
+
+<symbol id="icon-square" viewBox="0 0 640 640">
+	<path d="M480 144C488.8 144 496 151.2 496 160L496 480C496 488.8 488.8 496 480 496L160 496C151.2 496 144 488.8 144 480L144 160C144 151.2 151.2 144 160 144L480 144zM160 96C124.7 96 96 124.7 96 160L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 160C544 124.7 515.3 96 480 96L160 96z"/></symbol>
+
+
 
 		</defs>
 	</svg>
 
 	<script src="https://unpkg.com/omggif@1.0.10/omggif.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+	<script src="js/other.js"></script>
 	<script src="js/app.js"></script>
 </body>
 

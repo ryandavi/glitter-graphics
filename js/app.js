@@ -108,6 +108,12 @@ const LayerType = {
 	BASE_IMAGE: 'base-image',
 };
 
+const ToolType = {
+	SELECT: 'select',
+	COLOR_PICKER: 'colorPicker',
+	HAND: 'hand',
+	ZOOM: 'zoom'
+};
 
 // ============================================
 // STICKER MANAGER CLASS
@@ -153,7 +159,7 @@ class StickerManager {
 		this.renderStickerPicker();
 	}
 
-// In StickerManager class
+	// In StickerManager class
 
 	attachDragListeners(element, layerId) {
 		let isDragging = false;
@@ -162,7 +168,7 @@ class StickerManager {
 
 		const startDrag = (clientX, clientY) => {
 			// Only allow dragging if Select Tool is active
-			if (this.editor.currentTool !== 'select') return;
+			if (this.editor.currentTool !== ToolType.SELECT) return;
 
 			// Only allow dragging if this is the active layer
 			if (this.editor.layerManager.activeLayerId !== layerId) {
@@ -194,7 +200,7 @@ class StickerManager {
 
 			// Adjust for Zoom Level (Crucial for accuracy)
 			const zoom = this.editor.viewport.currentZoom;
-			
+
 			// Update Position
 			this.updateStickerTransform(layerId, {
 				position: {
@@ -202,7 +208,7 @@ class StickerManager {
 					y: initialStickerY + (dy / zoom)
 				}
 			});
-			
+
 			// Update Settings UI if open
 			this.editor.loadStickerSettings(layer);
 		};
@@ -216,7 +222,7 @@ class StickerManager {
 
 		// --- MOUSE EVENTS ---
 		element.addEventListener('mousedown', (e) => {
-			if (this.editor.currentTool === 'select') {
+			if (this.editor.currentTool === ToolType.SELECT) {
 				e.stopPropagation(); // Stop Viewport Pan
 				e.preventDefault();
 				startDrag(e.clientX, e.clientY);
@@ -235,7 +241,7 @@ class StickerManager {
 
 		// --- TOUCH EVENTS (One Finger) ---
 		element.addEventListener('touchstart', (e) => {
-			if (this.editor.currentTool === 'select' && e.touches.length === 1) {
+			if (this.editor.currentTool === ToolType.SELECT && e.touches.length === 1) {
 				e.stopPropagation(); // Stop Viewport Pan
 				e.preventDefault();
 				startDrag(e.touches[0].clientX, e.touches[0].clientY);
@@ -253,111 +259,111 @@ class StickerManager {
 	}
 
 
-setupUI() {
-    // 1. Get the Main Wrapper
-    this.stickerPanel = document.getElementById('stickersOptions');
+	setupUI() {
+		// 1. Get the Main Wrapper
+		this.stickerPanel = document.getElementById('stickersOptions');
 
-    // 2. Get the specific internal containers
-    this.stickerGridContainer = document.getElementById('stickerGridContainer');
-    this.stickerSearchEmptyState = document.getElementById('stickerSearchEmptyState');
+		// 2. Get the specific internal containers
+		this.stickerGridContainer = document.getElementById('stickerGridContainer');
+		this.stickerSearchEmptyState = document.getElementById('stickerSearchEmptyState');
 
-    // 3. Search inputs
-    this.stickerSearch = document.getElementById('stickersSearch');
-    this.stickerFilterToggle = document.getElementById('stickerFilterToggleBtn');
-    this.stickerFiltersContainer = document.getElementById('stickerFiltersContainer');
-    this.clearStickerFiltersBtn = document.getElementById('clearStickerFiltersBtn');
-    this.stickerCategoryChips = document.getElementById('stickerCategoryChips');
+		// 3. Search inputs
+		this.stickerSearch = document.getElementById('stickersSearch');
+		this.stickerFilterToggle = document.getElementById('stickerFilterToggleBtn');
+		this.stickerFiltersContainer = document.getElementById('stickerFiltersContainer');
+		this.clearStickerFiltersBtn = document.getElementById('clearStickerFiltersBtn');
+		this.stickerCategoryChips = document.getElementById('stickerCategoryChips');
 
-    // 4. Set up event listeners
-    this.setupStickerSearchListeners();
-}
+		// 4. Set up event listeners
+		this.setupStickerSearchListeners();
+	}
 
-replaceActiveSticker(stickerId) {
+	replaceActiveSticker(stickerId) {
 		const activeLayer = this.editor.layerManager.getActiveLayer();
-        const stickerInfo = this.getStickerById(stickerId);
+		const stickerInfo = this.getStickerById(stickerId);
 
 		// Only proceed if we have a sticker and the active layer is a sticker layer
 		if (!stickerInfo || !activeLayer || activeLayer.type !== LayerType.STICKER) {
-            return;
-        }
+			return;
+		}
 
-        // Update Layer Metadata
-        activeLayer.name = stickerInfo.name;
-        activeLayer.stickerSourceId = stickerInfo.id;
+		// Update Layer Metadata
+		activeLayer.name = stickerInfo.name;
+		activeLayer.stickerSourceId = stickerInfo.id;
 
-        // Update Sticker Data
-        activeLayer.stickerData.url = stickerInfo.url;
-        activeLayer.stickerData.name = stickerInfo.name;
-        activeLayer.stickerData.source = stickerInfo.source;
-        activeLayer.stickerData.width = stickerInfo.width;
-        activeLayer.stickerData.height = stickerInfo.height;
-        activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
-        activeLayer.stickerData.isEmpty = false; // Ensure it's marked as full
+		// Update Sticker Data
+		activeLayer.stickerData.url = stickerInfo.url;
+		activeLayer.stickerData.name = stickerInfo.name;
+		activeLayer.stickerData.source = stickerInfo.source;
+		activeLayer.stickerData.width = stickerInfo.width;
+		activeLayer.stickerData.height = stickerInfo.height;
+		activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+		activeLayer.stickerData.isEmpty = false; // Ensure it's marked as full
 
-        // Note: We DO NOT reset transform (x, y, rotation) so the user 
-        // can swap styles without losing their placement.
-        
-        // Re-render
-        this.renderSticker(activeLayer);
-        this.editor.layerManager.renderLayersList(); // Update thumbnail in layer list
-        this.editor.saveState();
+		// Note: We DO NOT reset transform (x, y, rotation) so the user 
+		// can swap styles without losing their placement.
+
+		// Re-render
+		this.renderSticker(activeLayer);
+		this.editor.layerManager.renderLayersList(); // Update thumbnail in layer list
+		this.editor.saveState();
 	}
 
 
-	 async addNewStickerLayer(stickerId) {
-        if (!this.editor.originalImage) {
-            this.editor.showError('Please load an image first');
-            return;
-        }
+	async addNewStickerLayer(stickerId) {
+		if (!this.editor.originalImage) {
+			this.editor.showError('Please load an image first');
+			return;
+		}
 
-        // 1. Force creation of a NEW layer
-        const layer = await this.createStickerLayer(stickerId);
-        
-        if (layer) {
-            this.editor.updateStatus('New sticker layer added');
-        }
-    }
+		// 1. Force creation of a NEW layer
+		const layer = await this.createStickerLayer(stickerId);
+
+		if (layer) {
+			this.editor.updateStatus('New sticker layer added');
+		}
+	}
 
 
 
-createEmptyStickerLayer() {
-        return {
-            id: this.editor.layerManager.generateLayerId(),
-            type: LayerType.STICKER,
-            name: 'New Sticker',
-            visible: true,
-            locked: false,
-            stickerSourceId: null,
+	createEmptyStickerLayer() {
+		return {
+			id: this.editor.layerManager.generateLayerId(),
+			type: LayerType.STICKER,
+			name: 'New Sticker',
+			visible: true,
+			locked: false,
+			stickerSourceId: null,
 
-            stickerData: {
-                isEmpty: true, // FLAG: This layer is waiting for content
-                url: null,     // No image yet
-                name: 'Select a Sticker',
-                source: null,
-                isAnimated: false,
-                width: 100,
-                height: 100,
-                
-                // Default Transform
-                transform: {
-                    position: {
-                        x: this.editor.originalCanvas.width / 2,
-                        y: this.editor.originalCanvas.height / 2
-                    },
-                    rotation: CONFIG.defaultStickerRotation,
-                    scale: {
-                        x: CONFIG.defaultStickerScale.x,
-                        y: CONFIG.defaultStickerScale.y
-                    },
-                    proportionalScale: true,
-                    opacity: CONFIG.defaultStickerOpacity,
-                    flipX: false,
-                    flipY: false
-                },
-                element: null
-            }
-        };
-    }
+			stickerData: {
+				isEmpty: true, // FLAG: This layer is waiting for content
+				url: null,     // No image yet
+				name: 'Select a Sticker',
+				source: null,
+				isAnimated: false,
+				width: 100,
+				height: 100,
+
+				// Default Transform
+				transform: {
+					position: {
+						x: this.editor.originalCanvas.width / 2,
+						y: this.editor.originalCanvas.height / 2
+					},
+					rotation: CONFIG.defaultStickerRotation,
+					scale: {
+						x: CONFIG.defaultStickerScale.x,
+						y: CONFIG.defaultStickerScale.y
+					},
+					proportionalScale: true,
+					opacity: CONFIG.defaultStickerOpacity,
+					flipX: false,
+					flipY: false
+				},
+				element: null
+			}
+		};
+	}
 
 	// ===== PRESET STICKERS =====
 
@@ -607,28 +613,28 @@ createEmptyStickerLayer() {
 
 	// ===== RENDERING =====
 
-    // 1. New Helper Method
-    updateSelectionHighlight(activeLayerId) {
-        this.stickerElements.forEach((element, layerId) => {
-            if (layerId === activeLayerId) {
-                element.classList.add('selected');
-            } else {
-                element.classList.remove('selected');
-            }
-        });
-    }
+	// 1. New Helper Method
+	updateSelectionHighlight(activeLayerId) {
+		this.stickerElements.forEach((element, layerId) => {
+			if (layerId === activeLayerId) {
+				element.classList.add('selected');
+			} else {
+				element.classList.remove('selected');
+			}
+		});
+	}
 
-    // 2. Update renderSticker to check selection status immediately
-// In StickerManager class -> renderSticker(layer)
+	// 2. Update renderSticker to check selection status immediately
+	// In StickerManager class -> renderSticker(layer)
 
 	renderSticker(layer) {
 		if (layer.type !== LayerType.STICKER) return;
 
 		// ... (checks for empty layer) ...
-        if (layer.stickerData.isEmpty || !layer.stickerData.url) {
-            this.removeStickerElement(layer.id);
-            return;
-        }
+		if (layer.stickerData.isEmpty || !layer.stickerData.url) {
+			this.removeStickerElement(layer.id);
+			return;
+		}
 
 		// Remove existing element
 		this.removeStickerElement(layer.id);
@@ -789,7 +795,7 @@ createEmptyStickerLayer() {
 
 	// ===== STICKER PICKER UI =====
 
-renderStickerPicker() {
+	renderStickerPicker() {
 		// 1. Get Elements
 		const container = document.getElementById('stickerGridContainer');
 		const emptyState = document.getElementById('stickerSearchEmptyState');
@@ -824,7 +830,7 @@ renderStickerPicker() {
 		// 5. Render Categories
 		Object.keys(byCategory).sort().forEach(categoryName => {
 			const stickers = byCategory[categoryName];
-			
+
 			// Category Wrapper
 			const categoryDiv = document.createElement('div');
 			categoryDiv.className = 'sticker-category';
@@ -878,7 +884,7 @@ renderStickerPicker() {
 
 			categoryDiv.appendChild(title);
 			categoryDiv.appendChild(grid);
-			
+
 			// Append to the Grid Container (not the main panel)
 			container.appendChild(categoryDiv);
 		});
@@ -905,7 +911,7 @@ renderStickerPicker() {
 			} else if (tabName === 'stickers') {
 				stickersSearch.classList.add('visible');
 				glitterSearch.classList.remove('visible');
-			}else{
+			} else {
 				glitterSearch.classList.remove('visible');
 				stickersSearch.classList.remove('visible');
 			}
@@ -1032,46 +1038,46 @@ renderStickerPicker() {
 		});
 	}
 
-    async addStickerToCanvas(stickerId) {
-        if (!this.editor.originalImage) {
-            this.editor.showError('Please load an image first');
-            return;
-        }
+	async addStickerToCanvas(stickerId) {
+		if (!this.editor.originalImage) {
+			this.editor.showError('Please load an image first');
+			return;
+		}
 
-        const activeLayer = this.editor.layerManager.getActiveLayer();
-        const stickerInfo = this.getStickerById(stickerId);
+		const activeLayer = this.editor.layerManager.getActiveLayer();
+		const stickerInfo = this.getStickerById(stickerId);
 
-        if (!stickerInfo) return;
+		if (!stickerInfo) return;
 
-        // LOGIC: If active layer is an Empty Sticker Layer, populate it.
-        // Otherwise, create a NEW layer.
-        if (activeLayer && activeLayer.type === LayerType.STICKER && activeLayer.stickerData.isEmpty) {
-            
-            // Populate the existing layer
-            activeLayer.name = stickerInfo.name;
-            activeLayer.stickerSourceId = stickerInfo.id;
-            
-            // Fill data
-            activeLayer.stickerData.isEmpty = false; // It is now full
-            activeLayer.stickerData.url = stickerInfo.url;
-            activeLayer.stickerData.name = stickerInfo.name;
-            activeLayer.stickerData.source = stickerInfo.source;
-            activeLayer.stickerData.width = stickerInfo.width;
-            activeLayer.stickerData.height = stickerInfo.height;
-            activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+		// LOGIC: If active layer is an Empty Sticker Layer, populate it.
+		// Otherwise, create a NEW layer.
+		if (activeLayer && activeLayer.type === LayerType.STICKER && activeLayer.stickerData.isEmpty) {
 
-            // Render
-            this.renderSticker(activeLayer);
-            this.editor.layerManager.renderLayersList(); // Update thumbnail
-            this.editor.updateStatus('Sticker placed');
-            this.editor.saveState();
+			// Populate the existing layer
+			activeLayer.name = stickerInfo.name;
+			activeLayer.stickerSourceId = stickerInfo.id;
 
-        } else {
-            // Standard behavior: New Layer
-            await this.createStickerLayer(stickerId);
-            this.editor.updateStatus('Sticker added');
-        }
-    }
+			// Fill data
+			activeLayer.stickerData.isEmpty = false; // It is now full
+			activeLayer.stickerData.url = stickerInfo.url;
+			activeLayer.stickerData.name = stickerInfo.name;
+			activeLayer.stickerData.source = stickerInfo.source;
+			activeLayer.stickerData.width = stickerInfo.width;
+			activeLayer.stickerData.height = stickerInfo.height;
+			activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+
+			// Render
+			this.renderSticker(activeLayer);
+			this.editor.layerManager.renderLayersList(); // Update thumbnail
+			this.editor.updateStatus('Sticker placed');
+			this.editor.saveState();
+
+		} else {
+			// Standard behavior: New Layer
+			await this.createStickerLayer(stickerId);
+			this.editor.updateStatus('Sticker added');
+		}
+	}
 
 
 
@@ -1189,6 +1195,662 @@ renderStickerPicker() {
 		// Clear maps
 		this.stickerElements.clear();
 		this.animationFrames.clear();
+	}
+}
+
+// ============================================
+// GLITTER MANAGER CLASS
+// Handles glitter library, filtering, rendering, and logic
+// ============================================
+class GlitterManager {
+	constructor(editor) {
+		this.editor = editor;
+
+		// Data
+		this.glitterGifs = [];
+
+		// Filter State
+		this.activeFilters = {
+			colors: new Set(),
+			tones: new Set(), // Kept for compatibility if used in JSON
+			special: new Set(),
+			search: '',
+			nameOnly: false
+		};
+
+		// DOM Elements
+		this.gridContainer = document.getElementById('glitterGridContainer');
+		this.backgroundsContainer = editor.glitterBackgroundsContainer;
+	}
+
+	async init() {
+		this.setupEventListeners();
+		await this.loadGlitterGifs();
+	}
+
+	// ===== EVENT LISTENERS =====
+
+	setupEventListeners() {
+		// Filter Toggle
+		const filterToggleBtn = document.getElementById('filterToggleBtn');
+		if (filterToggleBtn) {
+			filterToggleBtn.addEventListener('click', () => this.toggleFiltersUI());
+		}
+
+		// Clear Filters
+		const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+		if (clearFiltersBtn) {
+			clearFiltersBtn.addEventListener('click', () => this.clearAllFilters());
+		}
+
+		// Search Input
+		const glitterSearch = document.getElementById('glitterSearch');
+		if (glitterSearch) {
+			glitterSearch.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
+		}
+
+		// Name Only Checkbox
+		const searchNameOnly = document.getElementById('searchNameOnly');
+		if (searchNameOnly) {
+			searchNameOnly.addEventListener('change', (e) => {
+				this.activeFilters.nameOnly = e.target.checked;
+				this.applyFilters();
+				this.updateClearFiltersButton();
+			});
+		}
+
+		// Static Filter Chips
+		document.querySelectorAll('#filtersContainer .filter-chip').forEach(chip => {
+			chip.addEventListener('click', () => this.toggleFilter(chip));
+		});
+	}
+
+	toggleFiltersUI() {
+		const container = document.getElementById('filtersContainer');
+		const btn = document.getElementById('filterToggleBtn');
+		const isVisible = container.classList.toggle('visible');
+		btn.classList.toggle('active', isVisible);
+	}
+
+	// ===== LOADING & PARSING =====
+
+	async loadGlitterGifs() {
+		this.glitterGifs = [];
+		try {
+			const res = await fetch('data/swatches.json');
+			const json = await res.json();
+
+			json.forEach(config => {
+				this.glitterGifs.push({
+					id: config.id,
+					url: config.url,
+					name: config.name || 'Unnamed',
+					generatedName: config.generatedName || null,
+					frames: null,
+					brightness: config.brightness || null,
+					sortOrder: config.sortOrder || 0,
+					hue: config.hue || null,
+					colorCodes: config.colorCodes || [],
+					frameCount: config.frameCount || 0,
+					frameRate: config.frameRate || 10,
+					isVariableFramerate: config.isVariableFramerate || false,
+					category: config.category || 'Uncategorized',
+					isPixelated: config.isPixelated || false,
+					tags: config.tags || []
+				});
+			});
+
+			if (this.glitterGifs.length > 0) {
+				this.renderGlitterPicker();
+			}
+		} catch (error) {
+			console.error('Failed to load swatches:', error);
+			this.editor.showError('Failed to load glitter library');
+		}
+	}
+
+	async parseGifFromUrl(url) {
+		// Used by both selection logic and Export logic
+		try {
+			const response = await fetch(url);
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			const arrayBuffer = await response.arrayBuffer();
+			if (!arrayBuffer || arrayBuffer.byteLength === 0) throw new Error('Empty file');
+
+			const uintArray = new Uint8Array(arrayBuffer);
+			const reader = new GifReader(uintArray); // Assumes omggif.js is loaded globally
+			const frameCount = reader.numFrames();
+
+			if (frameCount === 0) throw new Error('GIF has 0 frames');
+
+			const frameInfo = reader.frameInfo(0);
+			const width = reader.width;
+			const height = reader.height;
+			const frames = [];
+
+			for (let i = 0; i < frameCount; i++) {
+				const pixels = new Uint8ClampedArray(width * height * 4);
+				reader.decodeAndBlitFrameRGBA(i, pixels);
+				frames.push(new ImageData(pixels, width, height));
+			}
+
+			return {
+				width,
+				height,
+				frames,
+				frameCount,
+				frameDelay: frameInfo.delay * 10 || 100
+			};
+		} catch (error) {
+			console.error(`[parseGifFromUrl] Error loading ${url}:`, error);
+			throw error;
+		}
+	}
+
+	// ===== PICKER UI & FILTERING =====
+
+	renderGlitterPicker() {
+		if (!this.gridContainer) return;
+		this.gridContainer.innerHTML = '';
+
+		const categories = {};
+		this.glitterGifs.forEach((glitter, index) => {
+			if (!categories[glitter.category]) {
+				categories[glitter.category] = [];
+			}
+			categories[glitter.category].push({ glitter, index });
+		});
+
+		Object.entries(categories).forEach(([category, items]) => {
+			const categoryDiv = document.createElement('div');
+			categoryDiv.className = 'glitter-category';
+			categoryDiv.dataset.category = category;
+
+			const title = document.createElement('div');
+			title.className = 'category-title';
+			title.textContent = category;
+			categoryDiv.appendChild(title);
+
+			const grid = document.createElement('div');
+			grid.className = 'glitter-grid';
+
+			items.forEach(({ glitter, index }) => {
+				const option = document.createElement('div');
+				option.className = 'glitter-option' + (glitter.isPixelated ? ' pixelated' : '');
+				option.title = glitter.name;
+				option.dataset.index = index;
+				option.dataset.name = glitter.name.toLowerCase();
+				option.dataset.category = glitter.category.toLowerCase();
+				option.dataset.tags = (glitter.tags || []).join(' ').toLowerCase();
+				option.dataset.hue = glitter.hue;
+
+				const img = document.createElement('img');
+				img.src = glitter.url;
+				option.appendChild(img);
+				option.addEventListener('click', () => this.selectGlitter(index));
+
+				grid.appendChild(option);
+			});
+
+			categoryDiv.appendChild(grid);
+			this.gridContainer.appendChild(categoryDiv);
+		});
+
+		this.applyFilters();
+	}
+
+	handleSearchInput(searchTerm) {
+		this.activeFilters.search = searchTerm.toLowerCase().trim();
+		this.applyFilters();
+	}
+
+	toggleFilter(chip) {
+		const filterType = chip.dataset.filter;
+		const value = chip.dataset.value || chip.dataset.color;
+
+		chip.classList.toggle('active');
+
+		if (filterType === 'color') {
+			if (this.activeFilters.colors.has(value)) {
+				this.activeFilters.colors.delete(value);
+			} else {
+				this.activeFilters.colors.add(value);
+			}
+		}
+		// Add other filter types here if needed (tone, special)
+
+		this.applyFilters();
+		this.updateClearFiltersButton();
+	}
+
+	clearAllFilters() {
+		this.activeFilters.colors.clear();
+		this.activeFilters.search = '';
+		this.activeFilters.nameOnly = false;
+
+		const searchInput = document.getElementById('glitterSearch');
+		if (searchInput) searchInput.value = '';
+
+		const nameOnlyCheck = document.getElementById('searchNameOnly');
+		if (nameOnlyCheck) nameOnlyCheck.checked = false;
+
+		document.querySelectorAll('.filter-chip').forEach(chip => {
+			chip.classList.remove('active');
+		});
+
+		this.applyFilters();
+		this.updateClearFiltersButton();
+
+		// Close filter drawer
+		const container = document.getElementById('filtersContainer');
+		const btn = document.getElementById('filterToggleBtn');
+		if (container) container.classList.remove('visible');
+		if (btn) btn.classList.remove('active');
+	}
+
+	updateClearFiltersButton() {
+		const hasActiveFilters =
+			this.activeFilters.colors.size > 0 ||
+			this.activeFilters.search !== '' ||
+			this.activeFilters.nameOnly;
+
+		const btn = document.getElementById('clearFiltersBtn');
+		if (btn) btn.disabled = !hasActiveFilters;
+	}
+
+	applyFilters() {
+		const categories = document.querySelectorAll('.glitter-category');
+		let totalVisibleCount = 0;
+
+		categories.forEach(category => {
+			const options = category.querySelectorAll('.glitter-option');
+			let visibleCount = 0;
+
+			options.forEach(option => {
+				const name = (option.dataset.name || '').toLowerCase();
+				const tagsString = (option.dataset.tags || '').toLowerCase();
+				const tags = tagsString.split(' ').filter(t => t.length > 0);
+
+				let matches = true;
+
+				// Search filter
+				if (this.activeFilters.search) {
+					const term = this.activeFilters.search;
+					if (this.activeFilters.nameOnly) {
+						if (!name.includes(term)) matches = false;
+					} else {
+						if (!name.includes(term) && !tagsString.includes(term)) {
+							matches = false;
+						}
+					}
+				}
+
+				// Color filter
+				if (matches && this.activeFilters.colors.size > 0) {
+					const hasColor = [...this.activeFilters.colors].some(color => tags.includes(color));
+					if (!hasColor) matches = false;
+				}
+
+				option.style.display = matches ? 'block' : 'none';
+				if (matches) visibleCount++;
+			});
+
+			category.style.display = visibleCount > 0 ? 'block' : 'none';
+			totalVisibleCount += visibleCount;
+		});
+
+		// Toggle Empty State
+		const emptyState = document.getElementById('glitterEmptyState');
+		if (emptyState && this.gridContainer) {
+			if (totalVisibleCount === 0) {
+				emptyState.classList.add('visible');
+				this.gridContainer.classList.remove('visible');
+			} else {
+				emptyState.classList.remove('visible');
+				this.gridContainer.classList.add('visible');
+			}
+		}
+	}
+
+	// ===== SELECTION LOGIC =====
+
+	async selectGlitter(index) {
+		if (!this.editor.originalImage) {
+			this.editor.showError('Please load an image first');
+			return;
+		}
+
+		const layer = this.editor.layerManager.getActiveLayer();
+		if (!layer) {
+			this.editor.showError('Please select a glitter fill layer');
+			return;
+		}
+
+		if (layer.type !== LayerType.GLITTER_FILL) {
+			this.editor.showError('You can only add a glitter to a glitter-fill layer');
+			return;
+		}
+
+		layer.selectedGlitterIndex = index;
+
+		const glitter = this.glitterGifs[index];
+		if (!glitter) return;
+
+		// Lazy load frames
+		if (!glitter.frames) {
+			this.editor.updateStatus(`Downloading ${glitter.name} glitter...`);
+			document.body.style.cursor = 'wait';
+
+			try {
+				const frames = await this.parseGifFromUrl(glitter.url);
+				glitter.frames = frames;
+			} catch (error) {
+				console.error('Failed to load glitter:', error);
+				this.editor.showError(`Failed to load ${glitter.name} glitter`);
+				document.body.style.cursor = 'default';
+				return;
+			} finally {
+				document.body.style.cursor = 'default';
+			}
+		}
+
+		this.editor.updateGlitterSelection();
+		this.editor.layerManager.renderLayersList();
+
+		if (layer.selections.length > 0) {
+			this.editor.updatePreview();
+		}
+
+		this.editor.updateActionButtons();
+		this.editor.saveState();
+		this.editor.updateStatus(`Selected ${glitter.name}`);
+		window.dispatchEvent(new CustomEvent('layerChanged'));
+	}
+
+	randomizeGlitter(category = null) {
+		const layers = this.editor.layers;
+		if (layers.length === 0) return;
+
+		let availableGlitters = this.glitterGifs;
+		if (category) {
+			availableGlitters = this.glitterGifs.filter(g =>
+				g.category.toLowerCase() === category.toLowerCase()
+			);
+			if (availableGlitters.length === 0) return;
+		}
+
+		// Apply Replacements
+		layers.forEach(layer => {
+			if (layer.type !== LayerType.GLITTER_FILL) return;
+
+			const oldIndex = layer.selectedGlitterIndex;
+			// Filter out current so we get a change
+			const choices = availableGlitters.filter((g, idx) => {
+				const gIndex = this.glitterGifs.findIndex(gl => gl.url === g.url);
+				return gIndex !== oldIndex;
+			});
+
+			if (choices.length > 0) {
+				const randomGlitter = choices[Math.floor(Math.random() * choices.length)];
+				layer.selectedGlitterIndex = this.glitterGifs.findIndex(g => g.url === randomGlitter.url);
+			}
+		});
+
+		this.editor.layerManager.renderLayersList();
+		this.editor.updateGlitterSelection();
+		this.editor.updatePreview();
+		this.editor.saveState();
+	}
+
+	// ===== RENDERING (CANVAS/DOM) =====
+
+	renderGlitterBackgrounds(layersToShow) {
+		this.backgroundsContainer.innerHTML = '';
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+
+		layersToShow.forEach(layer => {
+			if (layer.type !== LayerType.GLITTER_FILL) return;
+
+			const glitter = this.glitterGifs[layer.selectedGlitterIndex];
+			if (!glitter) return;
+
+			// Generate Mask
+			const mask = this.createMaskForLayer(layer);
+			if (layer.settings.feather > 0) {
+				this.applyFeatherToMask(mask, layer.settings.feather);
+			}
+
+			// Create Mask Canvas
+			const maskCanvas = document.createElement('canvas');
+			maskCanvas.width = width;
+			maskCanvas.height = height;
+			const maskCtx = maskCanvas.getContext('2d');
+			const maskData = maskCtx.createImageData(width, height);
+
+			for (let i = 0; i < width * height; i++) {
+				const maskValue = mask[i];
+				const idx = i * 4;
+				// Only write alpha where mask exists
+				maskData.data[idx + 3] = maskValue;
+			}
+			maskCtx.putImageData(maskData, 0, 0);
+
+			// Create DOM Element
+			const bg = document.createElement('div');
+			bg.className = 'glitter-background glitter-bg-layer visible';
+			if (glitter.isPixelated) bg.classList.add('pixelated');
+
+			bg.dataset.layerId = layer.id;
+			bg.style.backgroundImage = `url(${glitter.url})`;
+			bg.style.backgroundSize = 'auto'; // Will be updated by scaling logic
+			bg.style.width = width + 'px';
+			bg.style.height = height + 'px';
+			bg.style.position = 'absolute';
+			bg.style.top = '0';
+			bg.style.left = '0';
+			bg.style.zIndex = '100'; // Above canvas
+			bg.style.pointerEvents = 'none';
+			bg.style.opacity = layer.settings.opacity / 100;
+
+			// Apply Mask Image
+			const maskDataURL = maskCanvas.toDataURL();
+			bg.style.maskImage = `url(${maskDataURL})`;
+			bg.style.webkitMaskImage = `url(${maskDataURL})`;
+			bg.style.maskSize = `${width}px ${height}px`;
+			bg.style.webkitMaskSize = `${width}px ${height}px`;
+			bg.style.maskRepeat = 'no-repeat';
+			bg.style.webkitMaskRepeat = 'no-repeat';
+
+			this.backgroundsContainer.appendChild(bg);
+		});
+	}
+
+// --- NEW: Helper to create a single glitter element without appending it ---
+	createGlitterElement(layer) {
+		if (layer.type !== LayerType.GLITTER_FILL) return null;
+
+		const glitter = this.glitterGifs[layer.selectedGlitterIndex];
+		if (!glitter) return null;
+
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+
+		// Generate Mask
+		const mask = this.createMaskForLayer(layer);
+		if (layer.settings.feather > 0) {
+			this.applyFeatherToMask(mask, layer.settings.feather);
+		}
+
+		// Create Mask Canvas
+		const maskCanvas = document.createElement('canvas');
+		maskCanvas.width = width;
+		maskCanvas.height = height;
+		const maskCtx = maskCanvas.getContext('2d');
+		const maskData = maskCtx.createImageData(width, height);
+
+		for (let i = 0; i < width * height; i++) {
+			const maskValue = mask[i];
+			const idx = i * 4;
+			// Only write alpha where mask exists
+			maskData.data[idx + 3] = maskValue;
+		}
+		maskCtx.putImageData(maskData, 0, 0);
+
+		// Create DOM Element
+		const bg = document.createElement('div');
+		bg.className = 'glitter-background glitter-bg-layer visible';
+		if (glitter.isPixelated) bg.classList.add('pixelated');
+
+		bg.dataset.layerId = layer.id;
+		bg.style.backgroundImage = `url(${glitter.url})`;
+		
+		// Scale logic
+		const glitterScale = layer.settings.scale / 100;
+		const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
+		const scaledGlitterSize = Math.round(baseSize * glitterScale);
+		bg.style.backgroundSize = `${scaledGlitterSize}px`;
+
+		bg.style.width = width + 'px';
+		bg.style.height = height + 'px';
+		bg.style.position = 'absolute';
+		bg.style.top = '0';
+		bg.style.left = '0';
+		// Remove explicit z-index here; DOM order will handle it
+		// bg.style.zIndex = '100'; 
+		bg.style.pointerEvents = 'none';
+		bg.style.opacity = layer.settings.opacity / 100;
+
+		// Apply Mask Image
+		const maskDataURL = maskCanvas.toDataURL();
+		bg.style.maskImage = `url(${maskDataURL})`;
+		bg.style.webkitMaskImage = `url(${maskDataURL})`;
+		bg.style.maskSize = `${width}px ${height}px`;
+		bg.style.webkitMaskSize = `${width}px ${height}px`;
+		bg.style.maskRepeat = 'no-repeat';
+		bg.style.webkitMaskRepeat = 'no-repeat';
+
+		return bg;
+	}
+
+
+	updatePreviewScale() {
+		document.querySelectorAll('.glitter-bg-layer').forEach(bg => {
+			bg.style.width = this.editor.originalCanvas.width + 'px';
+			bg.style.height = this.editor.originalCanvas.height + 'px';
+
+			const layerId = bg.dataset.layerId;
+			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+
+			if (layer && layer.type === LayerType.GLITTER_FILL) {
+				const glitter = this.glitterGifs[layer.selectedGlitterIndex];
+				if (glitter) {
+					const glitterScale = layer.settings.scale / 100;
+					const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
+					const scaledGlitterSize = Math.round(baseSize * glitterScale);
+					bg.style.backgroundSize = `${scaledGlitterSize}px`;
+				}
+			}
+		});
+	}
+
+	// ===== MASKING UTILITIES =====
+
+	createMaskForLayer(layer) {
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+		const len = width * height;
+
+		const mask = new Uint8Array(len);
+		const thresholdSq = layer.settings.threshold * layer.settings.threshold;
+		const data = this.editor.originalImageData.data;
+		const alphaChannel = this.editor.originalAlphaChannel;
+
+		layer.selections.forEach(sel => {
+			if (layer.settings.contiguous) {
+				this.floodFill(mask, sel.x, sel.y, sel, thresholdSq);
+			} else {
+				for (let i = 0; i < len; i++) {
+					if (mask[i] === 255) continue;
+					if (alphaChannel[i] < CONFIG.alphaThreshold) continue;
+
+					const idx = i * 4;
+					const r = data[idx];
+					const g = data[idx + 1];
+					const b = data[idx + 2];
+
+					if (this.colorDistanceSq(r, g, b, sel.r, sel.g, sel.b) <= thresholdSq) {
+						mask[i] = 255;
+					}
+				}
+			}
+		});
+
+		if (layer.settings.invert) {
+			for (let i = 0; i < len; i++) {
+				if (alphaChannel[i] >= CONFIG.alphaThreshold) {
+					mask[i] = 255 - mask[i];
+				}
+			}
+		}
+
+		return mask;
+	}
+
+	floodFill(mask, startX, startY, targetColor, thresholdSq) {
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+		const totalPixels = width * height;
+		const data = this.editor.originalImageData.data;
+		const alphaChannel = this.editor.originalAlphaChannel;
+
+		const stack = [startY * width + startX];
+
+		while (stack.length > 0) {
+			const idx = stack.pop();
+			if (mask[idx] === 255) continue;
+
+			const r = data[idx * 4];
+			const g = data[idx * 4 + 1];
+			const b = data[idx * 4 + 2];
+
+			if (alphaChannel[idx] >= CONFIG.alphaThreshold &&
+				this.colorDistanceSq(r, g, b, targetColor.r, targetColor.g, targetColor.b) <= thresholdSq) {
+
+				mask[idx] = 255;
+
+				if ((idx + 1) % width !== 0 && mask[idx + 1] === 0) stack.push(idx + 1);
+				if (idx % width !== 0 && mask[idx - 1] === 0) stack.push(idx - 1);
+				if (idx + width < totalPixels && mask[idx + width] === 0) stack.push(idx + width);
+				if (idx - width >= 0 && mask[idx - width] === 0) stack.push(idx - width);
+			}
+		}
+	}
+
+	applyFeatherToMask(mask, radius) {
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+		const tempMask = new Uint8Array(mask);
+
+		for (let y = 0; y < height; y++) {
+			for (let x = 0; x < width; x++) {
+				let sum = 0, count = 0;
+				for (let dy = -radius; dy <= radius; dy++) {
+					for (let dx = -radius; dx <= radius; dx++) {
+						const nx = x + dx, ny = y + dy;
+						if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+							sum += tempMask[ny * width + nx];
+							count++;
+						}
+					}
+				}
+				mask[y * width + x] = Math.round(sum / count);
+			}
+		}
+	}
+
+	colorDistanceSq(r1, g1, b1, r2, g2, b2) {
+		return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
 	}
 }
 
@@ -1813,7 +2475,7 @@ class LayerManager {
 		return `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 	}
 
-	createBaseImageLayer(){
+	createBaseImageLayer() {
 		const layer = {
 			id: this.generateLayerId(),
 			type: LayerType.BASE_IMAGE,
@@ -1858,39 +2520,38 @@ class LayerManager {
 		return layer;
 	}
 
-// In LayerManager class
+	// In LayerManager class
 
-    addLayer(type = LayerType.GLITTER_FILL) {
-        // Check max layers
-        if (this.layers.length >= CONFIG.maxLayers) {
-            this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
-            return;
-        }
+	addLayer(type = LayerType.GLITTER_FILL) {
+		// Check max layers
+		if (this.layers.length >= CONFIG.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+			return;
+		}
 
-        let layer;
+		let layer;
 
-        if (type === LayerType.STICKER) {
-            // Create an EMPTY sticker layer
-            layer = this.editor.stickerManager.createEmptyStickerLayer();
-        } else {
-            // Create a standard glitter layer
-            layer = this.createLayer(LayerType.GLITTER_FILL);
-			this.editor.setTool('colorPicker');
-        }
+		if (type === LayerType.STICKER) {
+			// Create an EMPTY sticker layer
+			layer = this.editor.stickerManager.createEmptyStickerLayer();
+		} else {
+			// Create a standard glitter layer
+			layer = this.createLayer(LayerType.GLITTER_FILL);
+		}
 
-        if (!layer) return;
+		if (!layer) return;
 
-        this.layers.push(layer);
-        this.setActiveLayer(layer.id);
-        this.renderLayersList();
-        
-        // Save state
-        this.editor.saveState();
-        this.editor.updateActionButtons();
-        
-        const msg = type === LayerType.STICKER ? 'Empty sticker layer added' : 'Layer added';
-        this.editor.updateStatus(msg);
-    }
+		this.layers.push(layer);
+		this.setActiveLayer(layer.id);
+		this.renderLayersList();
+
+		// Save state
+		this.editor.saveState();
+		this.editor.updateActionButtons();
+
+		const msg = type === LayerType.STICKER ? 'Empty sticker layer added' : 'Layer added';
+		this.editor.updateStatus(msg);
+	}
 
 	deleteLayer(layerId) {
 
@@ -1952,59 +2613,72 @@ class LayerManager {
 
 
 
-setActiveLayer(layerId) {
-        this.activeLayerId = layerId;
-        this.renderLayersList();
+	setActiveLayer(layerId) {
+		this.activeLayerId = layerId;
+		this.renderLayersList();
 
-        const layer = this.layers.find(l => l.id === layerId);
+		const layer = this.layers.find(l => l.id === layerId);
 
-        // 1. Update Sticker Highlights
-        if (this.editor.stickerManager) {
-            this.editor.stickerManager.updateSelectionHighlight(layerId);
-        }
+		// ============================================================
+		// NEW: AUTO-SWITCH TOOL BASED ON LAYER TYPE
+		// ============================================================
+		if (layer) {
+			if (layer.type === LayerType.GLITTER_FILL) {
+				// Glitter Fill -> Color Picker (to add more glitter)
+				this.editor.setTool(ToolType.COLOR_PICKER);
+			} else if (layer.type === LayerType.STICKER) {
+				// Sticker -> Select Tool (to move/resize)
+				this.editor.setTool(ToolType.SELECT);
+			}
+		}
 
-        // 2. Update Base Image Highlight
-        // Strict check: Only add class if layer exists AND is Base Image.
-        // Explicitly remove it in all other cases.
-        if (this.editor.previewCanvas) {
-            const isBaseImage = layer && layer.type === LayerType.BASE_IMAGE;
-            
-            // Use 'selected' if that is your global CSS preference, 
-            // or 'selected-base' if you want specific styling.
-            // We force a boolean (!!isBaseImage) to ensure correct toggle behavior.
-            this.editor.previewCanvas.classList.toggle('selected-base', !!isBaseImage);
-            
-            // Safety: Ensure we don't have lingering 'selected' class if you use that generic name too
-            if (!isBaseImage) {
-                this.editor.previewCanvas.classList.remove('selected'); 
-            }
-        }
+		// 1. Update Sticker Highlights
+		if (this.editor.stickerManager) {
+			this.editor.stickerManager.updateSelectionHighlight(layerId);
+		}
 
-        // 3. Update Side Panel UI
-        this.editor.updateSidePanelUI(layer);
+		// 2. Update Base Image Highlight
+		// Strict check: Only add class if layer exists AND is Base Image.
+		// Explicitly remove it in all other cases.
+		if (this.editor.previewCanvas) {
+			const isBaseImage = layer && layer.type === LayerType.BASE_IMAGE;
 
-        // 4. Load settings
-        if (layer) {
-            if (layer.type === LayerType.STICKER) {
-                this.editor.hideStickerSettingsEmptyState();
-                this.editor.loadStickerSettings(layer);
-            } else if (layer.type === LayerType.GLITTER_FILL) {
-                this.editor.hideLayerSettingsEmptyState();
-                this.editor.hideGlitterSettingsEmptyState();
-                this.editor.loadActiveLayerSettings();
-                this.editor.updateGlitterSelection();
-            }
-        } else {
-            // No layer selected: Ensure empty states are shown
-            this.editor.showLayerSettingsEmptyState();
-            this.editor.showGlitterSettingsEmptyState();
-            this.editor.showStickerSettingsEmptyState();
-        }
+			// Use 'selected' if that is your global CSS preference, 
+			// or 'selected-base' if you want specific styling.
+			// We force a boolean (!!isBaseImage) to ensure correct toggle behavior.
+			this.editor.previewCanvas.classList.toggle('selected-base', !!isBaseImage);
 
-        window.dispatchEvent(new CustomEvent('layerChanged', {
-            detail: { layerId, layer }
-        }));
-    }
+			// Safety: Ensure we don't have lingering 'selected' class if you use that generic name too
+			if (!isBaseImage) {
+				this.editor.previewCanvas.classList.remove('selected');
+			}
+		}
+
+		// 3. Update Side Panel UI
+		this.editor.updateSidePanelUI(layer);
+
+		// 4. Load settings
+		if (layer) {
+			if (layer.type === LayerType.STICKER) {
+				this.editor.hideStickerSettingsEmptyState();
+				this.editor.loadStickerSettings(layer);
+			} else if (layer.type === LayerType.GLITTER_FILL) {
+				this.editor.hideLayerSettingsEmptyState();
+				this.editor.hideGlitterSettingsEmptyState();
+				this.editor.loadActiveLayerSettings();
+				this.editor.updateGlitterSelection();
+			}
+		} else {
+			// No layer selected: Ensure empty states are shown
+			this.editor.showLayerSettingsEmptyState();
+			this.editor.showGlitterSettingsEmptyState();
+			this.editor.showStickerSettingsEmptyState();
+		}
+
+		window.dispatchEvent(new CustomEvent('layerChanged', {
+			detail: { layerId, layer }
+		}));
+	}
 
 
 
@@ -2054,7 +2728,7 @@ setActiveLayer(layerId) {
 
 	// ===== LAYER PICKING (SELECT TOOL) =====
 
-// In LayerManager class
+	// In LayerManager class
 
 	handleLayerPick(x, y) {
 		// Check layers from top to bottom (visual order)
@@ -2069,32 +2743,32 @@ setActiveLayer(layerId) {
 			// 2. Check Hit based on Layer Type
 			if (layer.type === LayerType.STICKER) {
 				isHit = this.isPointInSticker(layer, x, y);
-			} 
-            else if (layer.type === LayerType.GLITTER_FILL) {
-                // Existing logic: Check if pixel matches selection criteria
+			}
+			else if (layer.type === LayerType.GLITTER_FILL) {
+				// Existing logic: Check if pixel matches selection criteria
 				if (layer.selections && layer.selections.length > 0) {
 					isHit = this.isPixelInLayerSelection(layer, x, y);
 				}
-			} 
-            else if (layer.type === LayerType.BASE_IMAGE) {
-                // Base image covers the whole canvas (if loaded)
-                // Since we iterate top-down, we only hit this if nothing above it was clicked
+			}
+			else if (layer.type === LayerType.BASE_IMAGE) {
+				// Base image covers the whole canvas (if loaded)
+				// Since we iterate top-down, we only hit this if nothing above it was clicked
 				if (this.editor.originalImage) {
-                    isHit = true;
-                }
+					isHit = true;
+				}
 			}
 
 			// 3. If Hit, Select and Return
 			if (isHit) {
 				this.setActiveLayer(layer.id);
-				
-                // UX Feedback
-                let name = 'Layer';
-                if(layer.type === LayerType.STICKER) name = layer.name;
-                else if(layer.type === LayerType.BASE_IMAGE) name = "Base Image";
-                else if(layer.type === LayerType.GLITTER_FILL) {
-                    name = this.editor.glitterGifs[layer.selectedGlitterIndex]?.name || 'Glitter';
-                }
+
+				// UX Feedback
+				let name = 'Layer';
+				if (layer.type === LayerType.STICKER) name = layer.name;
+				else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
+				else if (layer.type === LayerType.GLITTER_FILL) {
+					name = this.editor.glitterManager.glitterGifs[layer.selectedGlitterIndex]?.name || 'Glitter';
+				}
 
 				this.editor.updateStatus(`Selected: ${name}`);
 
@@ -2115,38 +2789,38 @@ setActiveLayer(layerId) {
 		this.editor.updateStatus('No layer at this location');
 	}
 
-    // --- NEW HELPER METHOD ---
-    // Calculates if click (x,y) is inside a rotated/scaled sticker
+	// --- NEW HELPER METHOD ---
+	// Calculates if click (x,y) is inside a rotated/scaled sticker
 	isPointInSticker(layer, clickX, clickY) {
-        if (layer.stickerData.isEmpty || !layer.stickerData.url) return false;
+		if (layer.stickerData.isEmpty || !layer.stickerData.url) return false;
 
 		const t = layer.stickerData.transform;
-        const w = layer.stickerData.width;
-        const h = layer.stickerData.height;
+		const w = layer.stickerData.width;
+		const h = layer.stickerData.height;
 
-        // 1. Translate click relative to sticker center
-        let dx = clickX - t.position.x;
-        let dy = clickY - t.position.y;
+		// 1. Translate click relative to sticker center
+		let dx = clickX - t.position.x;
+		let dy = clickY - t.position.y;
 
-        // 2. Un-rotate (Rotate click point by -angle)
-        const angleRad = -t.rotation * (Math.PI / 180);
-        const rx = dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
-        const ry = dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
+		// 2. Un-rotate (Rotate click point by -angle)
+		const angleRad = -t.rotation * (Math.PI / 180);
+		const rx = dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
+		const ry = dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
 
-        // 3. Un-scale
-        // Note: transform.scale is in percentage (e.g. 100), so we divide by 100
-        const sx = t.scale.x / 100;
-        const sy = t.scale.y / 100;
+		// 3. Un-scale
+		// Note: transform.scale is in percentage (e.g. 100), so we divide by 100
+		const sx = t.scale.x / 100;
+		const sy = t.scale.y / 100;
 
-        const lx = rx / sx;
-        const ly = ry / sy;
+		const lx = rx / sx;
+		const ly = ry / sy;
 
-        // 4. Check boundaries
-        // Since (0,0) is now the center, we check against +/- half width/height
-        const halfW = w / 2;
-        const halfH = h / 2;
+		// 4. Check boundaries
+		// Since (0,0) is now the center, we check against +/- half width/height
+		const halfW = w / 2;
+		const halfH = h / 2;
 
-        return (lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH);
+		return (lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH);
 	}
 
 	isPixelInLayerSelection(layer, x, y) {
@@ -2223,15 +2897,15 @@ setActiveLayer(layerId) {
 		this.updateMobileLayersSwatch();
 	}
 
-createLayerElement(layer) {
+	createLayerElement(layer) {
 		const layerEl = document.createElement('div');
 		layerEl.className = 'layer-item';
 		layerEl.dataset.layerId = layer.id;
-		
-        // Only allow dragging if not locked
-        if (!layer.locked) {
-		    layerEl.draggable = true;
-        }
+
+		// Only allow dragging if not locked
+		if (!layer.locked) {
+			layerEl.draggable = true;
+		}
 
 		if (layer.id === this.activeLayerId) {
 			layerEl.classList.add('active');
@@ -2240,43 +2914,44 @@ createLayerElement(layer) {
 		// 1. Drag Handle
 		const dragHandle = document.createElement('div');
 		dragHandle.className = 'layer-drag-handle';
-        
-        // Only show drag handle icon if not locked
-        if (!layer.locked) {
-            dragHandle.innerHTML = `
+
+		// Only show drag handle icon if not locked
+		if (!layer.locked) {
+			dragHandle.innerHTML = `
                 <svg class="icon" viewBox="0 0 24 24">
                     <path d="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z" fill="currentColor"/>
                 </svg>
             `;
-        } else {
-            // Optional: You can leave it empty, or add a small lock indicator here too
-            dragHandle.style.cursor = 'default';
-        }
+		} else {
+			// Optional: You can leave it empty, or add a small lock indicator here too
+			dragHandle.style.cursor = 'default';
+		}
 
 		// 2. Swatch (Thumbnail)
 		const swatch = document.createElement('div');
 		swatch.className = 'layer-swatch';
 
 		if (layer.type === LayerType.STICKER) {
-            // Sticker Logic
+			// Sticker Logic
 			swatch.classList.add('sticker');
-            if (layer.stickerData.isEmpty) {
-                swatch.classList.add('empty');
-                swatch.innerHTML = '<span>?</span>';
-            } else {
-			    swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
-            }
+			if (layer.stickerData.isEmpty) {
+				swatch.classList.add('empty');
+				swatch.innerHTML = '<span>?</span>';
+			} else {
+				swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
+			}
 		} else if (layer.type === LayerType.BASE_IMAGE) {
-            // --- FIX: Base Image Thumbnail ---
-            if (this.editor.originalImage) {
-                swatch.style.backgroundImage = `url(${this.editor.originalImage.src})`;
+			// --- FIX: Base Image Thumbnail ---
+			if (this.editor.originalImage) {
+				swatch.style.backgroundImage = `url(${this.editor.originalImage.src})`;
 				swatch.classList.add('baseImage');
-            }
-        } else {
-            // Glitter Logic
-			const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
+			}
+		} else {
+			// Glitter Logic
+			const glitter = this.editor.glitterManager.glitterGifs[layer.selectedGlitterIndex];
 			if (glitter) {
 				swatch.style.backgroundImage = `url(${glitter.url})`;
+
 				swatch.classList.add('glitter');
 				if (glitter.isPixelated) swatch.classList.add('pixelated');
 
@@ -2296,14 +2971,14 @@ createLayerElement(layer) {
 		// 3. Info (Name)
 		const info = document.createElement('div');
 		info.className = 'layer-info';
-		
-        const nameText = document.createElement('div');
+
+		const nameText = document.createElement('div');
 		nameText.className = 'layer-name'; // Changed from layer-color for semantics
 
 		if (layer.type === LayerType.STICKER) {
 			nameText.textContent = layer.name || 'Sticker';
 		} else if (layer.type === LayerType.GLITTER_FILL) {
-			const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
+			const glitter = this.editor.glitterManager.glitterGifs[layer.selectedGlitterIndex];
 			nameText.textContent = glitter ? `${glitter.category} - ${glitter.name}` : 'No glitter';
 		} else if (layer.type === LayerType.BASE_IMAGE) {
 			nameText.textContent = 'Base Image';
@@ -2328,22 +3003,22 @@ createLayerElement(layer) {
 		const actions = document.createElement('div');
 		actions.className = 'layer-actions';
 
-        // A. Go To Arrow (Only for Glitter/Stickers)
-        if (layer.type !== LayerType.BASE_IMAGE) {
-            const arrowBtn = this.createIconButton({
-                className: 'layer-action-btn goto-glitter',
-                title: 'Go to settings',
-                iconType: 'chevron-right',
-                onClick: (e) => {
-                    e.stopPropagation();
-                    // Just selecting the layer triggers the UI update
-                    this.setActiveLayer(layer.id);
-                }
-            });
-            actions.appendChild(arrowBtn);
-        }
+		// A. Go To Arrow (Only for Glitter/Stickers)
+		if (layer.type !== LayerType.BASE_IMAGE) {
+			const arrowBtn = this.createIconButton({
+				className: 'layer-action-btn goto-glitter',
+				title: 'Go to settings',
+				iconType: 'chevron-right',
+				onClick: (e) => {
+					e.stopPropagation();
+					// Just selecting the layer triggers the UI update
+					this.setActiveLayer(layer.id);
+				}
+			});
+			actions.appendChild(arrowBtn);
+		}
 
-        // B. Visibility
+		// B. Visibility
 		const visBtn = this.createIconButton({
 			className: 'layer-action-btn visibility' + (!layer.visible ? ' hidden' : ''),
 			title: layer.visible ? 'Hide layer' : 'Show layer',
@@ -2353,44 +3028,44 @@ createLayerElement(layer) {
 				this.toggleLayerVisibility(layer.id);
 			}
 		});
-        actions.appendChild(visBtn);
+		actions.appendChild(visBtn);
 
-        // C. Lock vs Delete
-        if (layer.locked) {
-            // --- FIX: Show Lock Icon for Base Layer ---
-            
-        } else {
-            // Show Delete for other layers
-            const delBtn = this.createIconButton({
-                className: 'layer-action-btn delete',
-                title: 'Delete layer',
-                iconType: 'x-mark',
-                onClick: (e) => {
-                    e.stopPropagation();
-                    if (confirm('Delete this layer?')) {
-                        this.deleteLayer(layer.id);
-                    }
-                }
-            });
-            actions.appendChild(delBtn);
-        }
+		// C. Lock vs Delete
+		if (layer.locked) {
+			// --- FIX: Show Lock Icon for Base Layer ---
+
+		} else {
+			// Show Delete for other layers
+			const delBtn = this.createIconButton({
+				className: 'layer-action-btn delete',
+				title: 'Delete layer',
+				iconType: 'x-mark',
+				onClick: (e) => {
+					e.stopPropagation();
+					if (confirm('Delete this layer?')) {
+						this.deleteLayer(layer.id);
+					}
+				}
+			});
+			actions.appendChild(delBtn);
+		}
 
 		layerEl.append(dragHandle, swatch, info, actions);
 		layerEl.onclick = () => this.setActiveLayer(layer.id);
 
-        // Attach Drag Events only if not locked
-        if (!layer.locked) {
-            layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
-            layerEl.addEventListener('dragover', (e) => this.handleLayerDragOver(e, layer.id));
-            layerEl.addEventListener('dragleave', (e) => this.handleLayerDragLeave(e));
-            layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
-            layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
-            
-            // Touch
-            layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
-            layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
-            layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
-        }
+		// Attach Drag Events only if not locked
+		if (!layer.locked) {
+			layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
+			layerEl.addEventListener('dragover', (e) => this.handleLayerDragOver(e, layer.id));
+			layerEl.addEventListener('dragleave', (e) => this.handleLayerDragLeave(e));
+			layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
+			layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
+
+			// Touch
+			layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
+			layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
+			layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
+		}
 
 		return layerEl;
 	}
@@ -2448,7 +3123,7 @@ createLayerElement(layer) {
 			return;
 		}
 
-		const glitter = this.editor.glitterGifs[activeLayer.selectedGlitterIndex];
+		const glitter = this.editor.glitterManager.glitterGifs[activeLayer.selectedGlitterIndex];
 		if (glitter) {
 			mobileLayersSwatch.classList.remove('empty');
 			mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
@@ -2467,7 +3142,7 @@ createLayerElement(layer) {
 
 	// ===== DRAG AND DROP (DESKTOP) =====
 
-handleLayerDragStart(event, layerId) {
+	handleLayerDragStart(event, layerId) {
 		// NEW: Check if layer is locked
 		const layer = this.layers.find(l => l.id === layerId);
 		if (layer && layer.locked) {
@@ -2481,9 +3156,9 @@ handleLayerDragStart(event, layerId) {
 		event.dataTransfer.setData('text/html', event.target.innerHTML);
 	}
 
-handleLayerDragOver(event, targetLayerId) {
+	handleLayerDragOver(event, targetLayerId) {
 		event.preventDefault();
-		
+
 		if (!this.draggedLayerId) return;
 
 		// Call existing scroll handler
@@ -2504,7 +3179,7 @@ handleLayerDragOver(event, targetLayerId) {
 		// ============================================================
 		// NEW: Lock Constraint Logic
 		// ============================================================
-		
+
 		// 1. Don't allow dropping onto itself
 		if (targetIndex === draggedIndex) {
 			insertionLine.classList.remove('visible');
@@ -2532,7 +3207,7 @@ handleLayerDragOver(event, targetLayerId) {
 
 		// Calculate Line Position
 		event.dataTransfer.dropEffect = 'move';
-		
+
 		let lineY;
 		const LAYER_MARGIN_BOTTOM = 6;
 		const INSERTION_LINE_HEIGHT = 2;
@@ -2645,10 +3320,10 @@ handleLayerDragOver(event, targetLayerId) {
 
 	// ===== TOUCH DRAG (MOBILE) =====
 
-handleLayerTouchStart(event, layerId) {
+	handleLayerTouchStart(event, layerId) {
 		// ONLY start drag if touching the drag handle specifically
 		if (!event.target.closest('.layer-drag-handle')) {
-			return; 
+			return;
 		}
 
 		// NEW: Check if layer is locked
@@ -2664,10 +3339,10 @@ handleLayerTouchStart(event, layerId) {
 		this.touchDragStartY = touch.clientY;
 		this.touchDragLastY = touch.clientY;
 
-		event.preventDefault(); 
+		event.preventDefault();
 	}
 
-handleLayerTouchMove(event) {
+	handleLayerTouchMove(event) {
 		if (!this.draggedLayerId) return;
 
 		const touch = event.touches[0];
@@ -2724,10 +3399,10 @@ handleLayerTouchMove(event) {
 			this.dropTargetId = targetLayerId;
 			this.dropInsertAbove = insertAbove;
 		} else {
-            // Hide line if not over a valid target
-            insertionLine.classList.remove('visible');
-            this.dropTargetId = null;
-        }
+			// Hide line if not over a valid target
+			insertionLine.classList.remove('visible');
+			this.dropTargetId = null;
+		}
 
 		event.preventDefault();
 	}
@@ -2883,36 +3558,22 @@ class GlitterEditor {
 
 
 
-		this.currentTool = 'select';
+		this.currentTool = ToolType.SELECT;
 		this.history = [];
 		this.historyIndex = -1;
 
-		this.featherTimeout = null;
-		this.sliderTimeout = null;
-
-		// Viewport manager (handles zoom, pan, touch)
+		// Initialize Managers
 		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
-
-		// Layer manager (handles all layer operations and rendering)
 		this.layerManager = new LayerManager(this);
-
-		// Sticker manager
 		this.stickerManager = new StickerManager(this);
+		this.glitterManager = new GlitterManager(this); // <--- Make sure this is here
 
-
-		// Filter state
-		this.activeFilters = {
-			colors: new Set(),
-			tones: new Set(),
-			special: new Set(),
-			search: '',
-			nameOnly: false
-		};
+		// REMOVE THIS: this.activeFilters = { ... }; 
 
 		this.setTool(CONFIG.defaultTool);
 
 		this.setupEventListeners();
-		this.loadGlitterGifs();
+
 		this.initializeCollapsibleSections();
 		this.initializeShortcutsModal();
 		this.initializeExportSettings();
@@ -2939,82 +3600,83 @@ class GlitterEditor {
 	// Add this method to the GlitterEditor class
 
 
-updateSidePanelUI(layer) {
-    // 1. Define ALL possible sections to hide them first
-    const allSections = [
-        'welcomeSection', // <--- IMPORTANT: Ensure this is here
-        'noLayerSettingsSection',
-        'baseLayerSettingsSection', 
-        'glitterSettingsSection',
-        'layerSettingsSection',
-        'glitterOptions',
-        'glitterSearchSection',
-        'stickerSettingsSection',
-        'stickersOptions',
-        'stickersSearchSection'
-    ];
+	updateSidePanelUI(layer) {
+		// 1. Define ALL possible sections to hide them first
+		const allSections = [
+			'welcomeSection', // <--- IMPORTANT: Ensure this is here
+			'noLayerSettingsSection',
+			'baseLayerSettingsSection',
+			'glitterSettingsSection',
+			'layerSettingsSection',
+			'glitterOptions',
+			'glitterSearchSection',
+			'stickerSettingsSection',
+			'stickersOptions',
+			'stickersSearchSection'
+		];
 
-    // 2. Hide everything
-    allSections.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.classList.remove('visible');
-            el.style.display = ''; 
-        }
-    });
+		// 2. Hide everything
+		allSections.forEach(id => {
+			const el = document.getElementById(id);
+			if (el) {
+				el.classList.remove('visible');
+				el.style.display = '';
+			}
+		});
 
-    // 3. Determine what to show
-    let showIds = [];
+		// 3. Determine what to show
+		let showIds = [];
 
-    // CASE 1: No Image Loaded (Show Welcome)
-    if (!this.originalImage) {
-        showIds = ['welcomeSection'];
-    }
-    // CASE 2: Image Loaded, but No Layer Selected
-    else if (!layer) {
-        showIds = ['noLayerSettingsSection'];
-        this.updateNoLayerMetaInfo();
-    } 
-    // CASE 3: Base Layer Selected
-    else if (layer.type === LayerType.BASE_IMAGE) {
-        showIds = ['baseLayerSettingsSection'];
-    }
-    // CASE 4: Glitter Layer
-    else if (layer.type === LayerType.GLITTER_FILL) {
-        showIds = ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'];
-    } 
-    // CASE 5: Sticker Layer
-    else if (layer.type === LayerType.STICKER) {
-        showIds = ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'];
-    }
+		// CASE 1: No Image Loaded (Show Welcome)
+		if (!this.originalImage) {
+			showIds = ['welcomeSection'];
+		}
+		// CASE 2: Image Loaded, but No Layer Selected
+		else if (!layer) {
+			showIds = ['noLayerSettingsSection'];
+			this.updateNoLayerMetaInfo();
+		}
+		// CASE 3: Base Layer Selected
+		else if (layer.type === LayerType.BASE_IMAGE) {
+			showIds = ['baseLayerSettingsSection'];
+		}
+		// CASE 4: Glitter Layer
+		else if (layer.type === LayerType.GLITTER_FILL) {
+			showIds = ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'];
+		}
+		// CASE 5: Sticker Layer
+		else if (layer.type === LayerType.STICKER) {
+			showIds = ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'];
+		}
 
-    // 4. Show the specific sections
-    showIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('visible');
-    });
-}
+		// 4. Show the specific sections
+		showIds.forEach(id => {
+			const el = document.getElementById(id);
+			if (el) el.classList.add('visible');
+		});
+	}
 
-// NEW HELPER METHOD
-updateNoLayerMetaInfo() {
-    const dimEl = document.getElementById('quickMetaDimensions');
-    const countEl = document.getElementById('quickMetaLayerCount');
+	// NEW HELPER METHOD
+	updateNoLayerMetaInfo() {
+		const dimEl = document.getElementById('quickMetaDimensions');
+		const countEl = document.getElementById('quickMetaLayerCount');
 
-    if (this.originalImage) {
-        if(dimEl) dimEl.textContent = `${this.originalCanvas.width} x ${this.originalCanvas.height}`;
-        if(countEl) countEl.textContent = this.layers.length;
-    } else {
-        if(dimEl) dimEl.textContent = "-- x --";
-        if(countEl) countEl.textContent = "0";
-    }
-}
+		if (this.originalImage) {
+			if (dimEl) dimEl.textContent = `${this.originalCanvas.width} x ${this.originalCanvas.height}`;
+			if (countEl) countEl.textContent = this.layers.length;
+		} else {
+			if (dimEl) dimEl.textContent = "-- x --";
+			if (countEl) countEl.textContent = "0";
+		}
+	}
 
 	async init() {
 		// Initialize sticker manager
 		this.stickerManager = new StickerManager(this);
 		await this.stickerManager.init();
+		await this.glitterManager.init(); // NEW
 
-		
+
 		this.updateSidePanelUI(null);
 	}
 
@@ -3085,172 +3747,11 @@ updateNoLayerMetaInfo() {
 		updateMatteColorVisibility();
 	}
 
-	// ===== RANDOMIZE GLITTER =====
-	randomizeGlitter(category = null) {
-		if (this.layers.length === 0) {
-			console.log('No layers to randomize');
-			return;
-		}
 
-		// Get available glitters (optionally filtered by category)
-		let availableGlitters = this.glitterGifs;
-		if (category) {
-			availableGlitters = this.glitterGifs.filter(g =>
-				g.category.toLowerCase() === category.toLowerCase()
-			);
-			if (availableGlitters.length === 0) {
-				console.log(`No glitters found in category: ${category}`);
-				console.log('Available categories:', [...new Set(this.glitterGifs.map(g => g.category))].join(', '));
-				return;
-			}
-		}
 
-		// Group layers by their current glitter index
-		const glitterGroups = new Map();
-		this.layers.forEach(layer => {
-			const currentIndex = layer.selectedGlitterIndex;
-			if (!glitterGroups.has(currentIndex)) {
-				glitterGroups.set(currentIndex, []);
-			}
-			glitterGroups.get(currentIndex).push(layer);
-		});
-
-		// Create a mapping of old index -> new index
-		const replacementMap = new Map();
-		glitterGroups.forEach((layers, oldIndex) => {
-			// Filter out the current glitter
-			const choices = availableGlitters.filter(g => {
-				const gIndex = this.glitterGifs.findIndex(gl => gl.url === g.url);
-				return gIndex !== oldIndex;
-			});
-
-			if (choices.length === 0) {
-				console.warn(`No alternative glitters available for index ${oldIndex}`);
-				replacementMap.set(oldIndex, oldIndex);
-				return;
-			}
-
-			// Pick a random glitter from available glitters
-			const randomGlitter = choices[Math.floor(Math.random() * choices.length)];
-			// Find the index in the full glitterGifs array
-			const newIndex = this.glitterGifs.findIndex(g => g.url === randomGlitter.url);
-			replacementMap.set(oldIndex, newIndex);
-		});
-
-		// Apply the replacements
-		this.layers.forEach(layer => {
-			const oldIndex = layer.selectedGlitterIndex;
-			const newIndex = replacementMap.get(oldIndex);
-			layer.selectedGlitterIndex = newIndex;
-		});
-
-		// Update UI
-		this.layerManager.renderLayersList();
-		this.updateGlitterSelection();
-		this.updatePreview();
-		this.saveState();
-
-		console.log(`✨ Randomized ${this.layers.length} layers. ${glitterGroups.size} unique glitters changed.`);
-		if (category) {
-			console.log(`   Category filter: ${category}`);
-		}
-	}
-
-	randomizeGlitterAdvanced(category = null) {
-		if (this.layers.length === 0) {
-			console.log('No layers to randomize');
-			return;
-		}
-
-		// Group layers by their current glitter index
-		const glitterGroups = new Map();
-		this.layers.forEach(layer => {
-			const currentIndex = layer.selectedGlitterIndex;
-			if (!glitterGroups.has(currentIndex)) {
-				glitterGroups.set(currentIndex, []);
-			}
-			glitterGroups.get(currentIndex).push(layer);
-		});
-
-		// Create a mapping of old index -> new index
-		const replacementMap = new Map();
-		glitterGroups.forEach((layers, oldIndex) => {
-			const currentGlitter = this.glitterGifs[oldIndex];
-			const currentTags = currentGlitter.tags || [];
-
-			const hasLight = currentTags.includes('light');
-			const hasDark = currentTags.includes('dark');
-
-			// DEBUG: Log what we're looking for
-			console.log(`\n🔍 Looking for match for "${currentGlitter.name}"`);
-			console.log(`   Tags:`, currentTags);
-			console.log(`   hasLight: ${hasLight}, hasDark: ${hasDark}`);
-
-			// Filter glitters based on light/dark matching
-			let matchingGlitters = this.glitterGifs.filter((g, idx) => {
-				// Never choose itself
-				if (idx === oldIndex) return false;
-
-				// Apply category filter if specified
-				if (category && g.category.toLowerCase() !== category.toLowerCase()) {
-					return false;
-				}
-
-				const tags = g.tags || [];
-
-				// If current has 'light', new must have 'light'
-				if (hasLight) {
-					return tags.includes('light');
-				}
-				// If current has 'dark', new must have 'dark'
-				else if (hasDark) {
-					return tags.includes('dark');
-				}
-				// If current has neither, new must also have neither
-				else {
-					return !tags.includes('light') && !tags.includes('dark');
-				}
-			});
-
-			console.log(`   Found ${matchingGlitters.length} matches`);
-			if (matchingGlitters.length > 0) {
-				console.log(`   Examples:`, matchingGlitters.slice(0, 3).map(g => g.name));
-			}
-
-			if (matchingGlitters.length === 0) {
-				console.warn(`❌ No matching glitters found for "${currentGlitter.name}" (${hasLight ? 'light' : hasDark ? 'dark' : 'neutral'}). Keeping original.`);
-				replacementMap.set(oldIndex, oldIndex);
-				return;
-			}
-
-			// Pick random from matching glitters
-			const randomGlitter = matchingGlitters[Math.floor(Math.random() * matchingGlitters.length)];
-			const newIndex = this.glitterGifs.findIndex(g => g.url === randomGlitter.url);
-			console.log(`   ✅ Chose: "${randomGlitter.name}"`);
-			replacementMap.set(oldIndex, newIndex);
-		});
-
-		// Apply the replacements
-		this.layers.forEach(layer => {
-			const oldIndex = layer.selectedGlitterIndex;
-			const newIndex = replacementMap.get(oldIndex);
-			layer.selectedGlitterIndex = newIndex;
-		});
-
-		// Update UI
-		this.layerManager.renderLayersList();
-		this.updateGlitterSelection();
-		this.updatePreview();
-		this.saveState();
-
-		console.log(`\n✨ Advanced randomize: ${this.layers.length} layers. ${glitterGroups.size} unique glitters changed (matching light/dark tags).`);
-		if (category) {
-			console.log(`   Category filter: ${category}`);
-		}
-	}
 
 	handleCanvasZoomClick(event) {
-		if (this.currentTool !== 'zoom' || !this.originalImage) return;
+		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
 
 		if (event.altKey) {
 			this.viewport.zoomOut(event.clientX, event.clientY);
@@ -3270,9 +3771,9 @@ updateNoLayerMetaInfo() {
 
 		// Update cursor
 		this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor');
-		if (this.currentTool === 'zoom') {
+		if (this.currentTool === ToolType.ZOOM) {
 			this.previewContainer.classList.add('zoom-cursor');
-		} else if (this.currentTool === 'hand') {
+		} else if (this.currentTool === ToolType.HAND) {
 			this.previewContainer.classList.add('hand-cursor');
 		}
 	}
@@ -3284,8 +3785,8 @@ updateNoLayerMetaInfo() {
 		const size = baseSize * this.viewport.currentZoom;
 		const half = size / 2;
 
-		this.previewContainer.style.backgroundSize = `${size}px ${size}px`;
-		this.previewContainer.style.backgroundPosition =
+		this.previewWrapper.style.backgroundSize = `${size}px ${size}px`;
+		this.previewWrapper.style.backgroundPosition =
 			`${this.viewport.panX}px ${this.viewport.panY}px, ${this.viewport.panX}px ${this.viewport.panY + half}px, ${this.viewport.panX + half}px ${this.viewport.panY - half}px, ${this.viewport.panX - half}px ${this.viewport.panY}px`;
 	}
 
@@ -3478,7 +3979,7 @@ updateNoLayerMetaInfo() {
 
 
 
-saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
+	saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 		const settings = {
 			threshold: parseInt(document.getElementById('threshold').value),
 			feather: parseInt(document.getElementById('feather').value),
@@ -3693,31 +4194,31 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 		// Layer Type Picker Modal
 
 
-    const layerTypeButtons = document.querySelectorAll('.layer-type-option');
-    const layerModal = document.getElementById('layerTypePickerModal');
+		const layerTypeButtons = document.querySelectorAll('.layer-type-option');
+		const layerModal = document.getElementById('layerTypePickerModal');
 
-    layerTypeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // 1. Get the type from your HTML data attribute
-            const type = btn.dataset.layerType; // returns "glitter-fill" or "sticker"
+		layerTypeButtons.forEach(btn => {
+			btn.addEventListener('click', () => {
+				// 1. Get the type from your HTML data attribute
+				const type = btn.dataset.layerType; // returns "glitter-fill" or "sticker"
 
-            // 2. Map string to LayerType constant
-            let layerType;
-            if (type === 'sticker') {
-                layerType = LayerType.STICKER;
-            } else {
-                layerType = LayerType.GLITTER_FILL;
-            }
+				// 2. Map string to LayerType constant
+				let layerType;
+				if (type === 'sticker') {
+					layerType = LayerType.STICKER;
+				} else {
+					layerType = LayerType.GLITTER_FILL;
+				}
 
-            // 3. Add the layer
-            this.layerManager.addLayer(layerType);
+				// 3. Add the layer
+				this.layerManager.addLayer(layerType);
 
-            // 4. Close the modal
-            if (layerModal) layerModal.classList.remove('visible');
-        });
-    });
+				// 4. Close the modal
+				if (layerModal) layerModal.classList.remove('visible');
+			});
+		});
 
-// --- LAYER ACTIONS ---
+		// --- LAYER ACTIONS ---
 		const addLayerBtn = document.getElementById('addLayerBtn');
 		if (addLayerBtn) {
 			addLayerBtn.addEventListener('click', () => {
@@ -3758,71 +4259,13 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 		const redoTool = document.getElementById('redoTool');
 		const clearAllTool = document.getElementById('clearAllTool');
 
-		if (selectTool) selectTool.addEventListener('click', () => this.setTool('select'));
-		if (colorPickerTool) colorPickerTool.addEventListener('click', () => this.setTool('colorPicker'));
-		if (handTool) handTool.addEventListener('click', () => this.setTool('hand'));
-		if (zoomTool) zoomTool.addEventListener('click', () => this.setTool('zoom'));
+		if (selectTool) selectTool.addEventListener('click', () => this.setTool(ToolType.SELECT));
+		if (colorPickerTool) colorPickerTool.addEventListener('click', () => this.setTool(ToolType.COLOR_PICKER));
+		if (handTool) handTool.addEventListener('click', () => this.setTool(ToolType.HAND));
+		if (zoomTool) zoomTool.addEventListener('click', () => this.setTool(ToolType.ZOOM));
 		if (undoTool) undoTool.addEventListener('click', () => this.undo());
 		if (redoTool) redoTool.addEventListener('click', () => this.redo());
 		if (clearAllTool) clearAllTool.addEventListener('click', () => this.resetAll());
-
-
-
-
-
-    // --- NO LAYER SELECTED QUICK ACTIONS ---
-
-    // 1. Add Glitter Fill
-    const quickAddGlitter = document.getElementById('quickActionAddGlitter');
-    if (quickAddGlitter) {
-        quickAddGlitter.addEventListener('click', () => {
-            this.layerManager.addLayer(LayerType.GLITTER_FILL);
-        });
-    }
-
-    // 2. Add Sticker (UPDATED)
-    const quickAddSticker = document.getElementById('quickActionAddSticker');
-    if (quickAddSticker) {
-        quickAddSticker.addEventListener('click', () => {
-             // Create an empty sticker layer immediately
-             // This automatically handles switching the Gallery UI to stickers
-             this.layerManager.addLayer(LayerType.STICKER);
-        });
-    }
-
-
-
-// --- GLITTER FILTERS & SEARCH ---
-		const filterToggleBtn = document.getElementById('filterToggleBtn');
-		if (filterToggleBtn) {
-			filterToggleBtn.addEventListener('click', () => this.toggleFilters());
-		}
-
-		const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-		if (clearFiltersBtn) {
-			clearFiltersBtn.addEventListener('click', () => this.clearAllFilters());
-		}
-
-		const glitterSearch = document.getElementById('glitterSearch');
-		if (glitterSearch) {
-			glitterSearch.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
-		}
-
-		const searchNameOnly = document.getElementById('searchNameOnly');
-		if (searchNameOnly) {
-			searchNameOnly.addEventListener('change', (e) => {
-				this.activeFilters.nameOnly = e.target.checked;
-				this.applyFilters();
-				this.updateClearFiltersButton();
-			});
-		}
-
-		// Attach listeners to the static filter chips (Color, Tone, etc.)
-		document.querySelectorAll('#filtersContainer .filter-chip').forEach(chip => {
-			chip.addEventListener('click', () => this.toggleFilter(chip));
-		});
-
-
 
 		// --- ZOOM CONTROLS ---
 		const zoomIn = document.getElementById('zoomIn');
@@ -3846,7 +4289,7 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 
 		// --- SCROLL ZOOM ---
 		this.previewContainer.addEventListener('wheel', (e) => {
-			if (this.currentTool === 'zoom' && this.originalImage) {
+			if (this.currentTool === ToolType.ZOOM && this.originalImage) {
 				e.preventDefault();
 				if (e.deltaY < 0) {
 					this.viewport.zoomIn();
@@ -3858,7 +4301,7 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 
 		// --- PAN HANDLERS ---
 		this.previewContainer.addEventListener('mousedown', (e) => {
-			if (this.currentTool === 'hand' || e.code === 'Space') {
+			if (this.currentTool === ToolType.HAND || e.code === 'Space') {
 				e.preventDefault();
 				this.viewport.startPan(e.clientX, e.clientY);
 			}
@@ -3904,9 +4347,9 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 
 		// --- CANVAS INTERACTION ---
 		this.previewWrapper.addEventListener('click', (e) => {
-			if (this.currentTool === 'colorPicker' || this.currentTool === 'select') {
+			if (this.currentTool === ToolType.COLOR_PICKER || this.currentTool === ToolType.SELECT) {
 				this.handleCanvasClick(e);
-			} else if (this.currentTool === 'zoom') {
+			} else if (this.currentTool === ToolType.ZOOM) {
 				this.handleCanvasZoomClick(e);
 			}
 		});
@@ -3915,13 +4358,13 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 		// NEW: DESELECT WHEN CLICKING OUTSIDE CANVAS
 		// ============================================================
 		this.previewContainer.addEventListener('mousedown', (e) => {
-            // Check if we are clicking the grey background (container) directly
-            // or the wrapper (if it has padding/margins that aren't the canvas)
+			// Check if we are clicking the grey background (container) directly
+			// or the wrapper (if it has padding/margins that aren't the canvas)
 			if (e.target === this.previewContainer || e.target === this.previewWrapper) {
-                // Ensure we aren't panning with the Hand tool (optional, based on preference)
-                if (this.currentTool === 'select') {
-				    this.layerManager.setActiveLayer(null);
-                }
+				// Ensure we aren't panning with the Hand tool (optional, based on preference)
+				if (this.currentTool === ToolType.SELECT) {
+					this.layerManager.setActiveLayer(null);
+				}
 			}
 		});
 
@@ -3966,26 +4409,26 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 		if (refineGlobal) {
 			refineGlobal.addEventListener('change', (e) => {
 				this.refineGlobal = e.target.checked;
-                if (this.refineGlobal) {
-                    // Force sync current input values to all glitter layers
-                    this.saveActiveLayerSettings(true, false);
-                    this.updatePreview();
-                    this.saveState();
-                    this.updateStatus('Global threshold/feather applied');
-                }
+				if (this.refineGlobal) {
+					// Force sync current input values to all glitter layers
+					this.saveActiveLayerSettings(true, false);
+					this.updatePreview();
+					this.saveState();
+					this.updateStatus('Global threshold/feather applied');
+				}
 			});
 		}
 
 		if (glitterGlobal) {
 			glitterGlobal.addEventListener('change', (e) => {
 				this.glitterGlobal = e.target.checked;
-                if (this.glitterGlobal) {
-                    // Force sync current input values to all glitter layers
-                    this.saveActiveLayerSettings(false, true);
-                    this.updatePreview();
-                    this.saveState();
-                    this.updateStatus('Global scale/opacity applied');
-                }
+				if (this.glitterGlobal) {
+					// Force sync current input values to all glitter layers
+					this.saveActiveLayerSettings(false, true);
+					this.updatePreview();
+					this.saveState();
+					this.updateStatus('Global scale/opacity applied');
+				}
 			});
 		}
 
@@ -4035,10 +4478,20 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 			previewModeToggle.addEventListener('click', () => {
 				this.showAllLayers = !this.showAllLayers;
 				const btn = previewModeToggle;
-				
+
 				btn.classList.toggle('active', !this.showAllLayers);
 				btn.title = this.showAllLayers ? 'Show only active layer' : 'Show all layers';
 				this.updatePreview();
+			});
+		}
+
+		// -- BOUNDS TOGGLES ---
+		const boundsToggle = document.getElementById('boundsToggle');
+		if (boundsToggle) {
+			boundsToggle.addEventListener('click', () => {
+				const toggle = boundsToggle;
+				const isActive = toggle.classList.toggle('active');
+				this.previewContainer.classList.toggle('bounds', isActive);
 			});
 		}
 
@@ -4425,13 +4878,6 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 		});
 	}
 
-	toggleFilters() {
-		const container = document.getElementById('filtersContainer');
-		const btn = document.getElementById('filterToggleBtn');
-		const isVisible = container.classList.toggle('visible');
-		btn.classList.toggle('active', isVisible);
-	}
-
 	setupSliderDisplay(sliderId, displayId, suffix) {
 		document.getElementById(sliderId).addEventListener('input', (e) => {
 			document.getElementById(displayId).textContent = e.target.value + suffix;
@@ -4471,49 +4917,61 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 		}
 	}
 
+
 	setTool(tool) {
 		this.currentTool = tool;
 
-		// Update tool buttons
+		// 1. Update Toolbar Buttons
 		document.querySelectorAll('.toolbar-group button').forEach(btn => {
 			btn.classList.remove('active');
 		});
 
-		document.getElementById(`${tool}Tool`).classList.add('active');
+		const activeBtn = document.getElementById(`${tool}Tool`);
+		if (activeBtn) activeBtn.classList.add('active');
 
-		// Update cursor classes
-		this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor', 'zoom-out-mode');
-		this.previewWrapper.classList.remove('color-picker-mode');
+		// 2. Update Cursors
+		if (this.previewContainer) {
+			this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor', 'zoom-out-mode');
+			if (tool === ToolType.ZOOM) {
+				this.previewContainer.classList.add('zoom-cursor');
+			} else if (tool === ToolType.HAND) {
+				this.previewContainer.classList.add('hand-cursor');
+			}
+		}
 
-		// Show/hide controls based on active tool
+		if (this.previewWrapper) {
+			this.previewWrapper.classList.remove('color-picker-mode');
+			if (tool === ToolType.COLOR_PICKER) {
+				this.previewWrapper.classList.add('color-picker-mode');
+			}
+		}
+
+		// 3. Update Floating Controls (Zoom / Pan)
 		const zoomControls = document.getElementById('zoomControls');
 		const panControls = document.getElementById('panControls');
 
-		// Hide both by default
-		zoomControls.classList.remove('visible');
-		panControls.classList.remove('visible');
+		// First, hide everything
+		if (zoomControls) zoomControls.classList.remove('visible');
+		if (panControls) panControls.classList.remove('visible');
 
-		if (tool === 'zoom') {
-			this.previewContainer.classList.add('zoom-cursor');
+		// Then show only what is needed
+		if (tool === ToolType.ZOOM && zoomControls) {
 			zoomControls.classList.add('visible');
-		} else if (tool === 'hand') {
-			this.previewContainer.classList.add('hand-cursor');
+		} else if (tool === ToolType.HAND && panControls) {
 			panControls.classList.add('visible');
-		} else if (tool === 'colorPicker') {
-			this.previewWrapper.classList.add('color-picker-mode');
 		}
 	}
 
 	handleKeyUp(e) {
 		if (e.key === 'Alt') {
-			if (this.currentTool === 'zoom') {
+			if (this.currentTool === ToolType.ZOOM) {
 				this.previewContainer.classList.remove('zoom-out-mode');
 			}
 		}
 	}
 
 	handleKeyboard(e) {
-		if (e.key === 'Alt' && this.currentTool === 'zoom') {
+		if (e.key === 'Alt' && this.currentTool === ToolType.ZOOM) {
 			this.previewContainer.classList.add('zoom-out-mode');
 		}
 
@@ -4549,19 +5007,19 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 			}
 
 			// If no modal open, switch to select tool
-			this.setTool('select');
+			this.setTool(ToolType.SELECT);
 		}
 
 
-		if (e.key === 'v' || e.key === 'V') this.setTool('select');
+		if (e.key === 'v' || e.key === 'V') this.setTool(ToolType.SELECT);
 		if (e.key === 'i' || e.key === 'I') {
-			if (this.originalImage) this.setTool('colorPicker');
+			if (this.originalImage) this.setTool(ToolType.COLOR_PICKER);
 		}
 		if (e.key === 'h' || e.key === 'H') {
-			if (this.originalImage) this.setTool('hand');
+			if (this.originalImage) this.setTool(ToolType.HAND);
 		}
 		if (e.key === 'z' || e.key === 'Z') {
-			if (!e.ctrlKey && !e.metaKey && this.originalImage) this.setTool('zoom');
+			if (!e.ctrlKey && !e.metaKey && this.originalImage) this.setTool(ToolType.ZOOM);
 		}
 
 		if (this.originalImage) {
@@ -4596,14 +5054,14 @@ saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 
 	// ===== HISTORY =====
 
-saveState() {
+	saveState() {
 		const state = {
 			layers: this.layers.map(layer => {
 				// 1. STICKER LAYERS
 				if (layer.type === LayerType.STICKER && this.stickerManager) {
 					return this.stickerManager.serializeSticker(layer);
 				}
-				
+
 				// 2. BASE IMAGE LAYERS (New fix)
 				// Base layers don't have selections or settings to save
 				if (layer.type === LayerType.BASE_IMAGE) {
@@ -4642,7 +5100,7 @@ saveState() {
 		this.updateHistoryButtons();
 	}
 
-async restoreState(state) {
+	async restoreState(state) {
 		// Restore layers with async sticker deserialization
 		this.layers = [];
 
@@ -4681,7 +5139,7 @@ async restoreState(state) {
 		this.layerManager.renderLayersList();
 		this.loadActiveLayerSettings();
 		this.updateGlitterSelection();
-		this.updatePreview(); 
+		this.updatePreview();
 		this.updateActionButtons();
 	}
 	async undo() {
@@ -4705,7 +5163,7 @@ async restoreState(state) {
 		document.getElementById('redoTool').disabled = this.historyIndex >= this.history.length - 1;
 	}
 
-	updateActionButtons() {
+updateActionButtons() {
 		const hasImage = this.originalImage !== null;
 
 		// Check if any layers have content (glitter selections OR stickers)
@@ -4727,9 +5185,26 @@ async restoreState(state) {
 		const zoomControls = document.getElementById('zoomControls');
 		const addBtn = document.getElementById('addLayerBtn');
 		const previewToggle = document.getElementById('previewModeToggle');
+		const transparencyToggle = document.getElementById('transparencyToggle');
+		const boundsToggle = document.getElementById('boundsToggle');
+		
+		// --- NEW: Reference the container ---
+		const previewControls = document.getElementById('previewControls');
 
 		if (clearAllTool) clearAllTool.disabled = !hasImage;
 		if (exportGif) exportGif.disabled = !hasAnySelection;
+
+		if (transparencyToggle) transparencyToggle.disabled = !hasImage;
+		if (boundsToggle) boundsToggle.disabled = !hasImage;
+
+		// --- NEW: Toggle visibility of the controls container ---
+		if (previewControls) {
+			if (hasImage) {
+				previewControls.classList.add('visible');
+			} else {
+				previewControls.classList.remove('visible');
+			}
+		}
 
 		if (imageClearBtn) {
 			if (hasImage) {
@@ -4799,7 +5274,7 @@ async restoreState(state) {
 		}
 	}
 
-	clearImage() {
+clearImage() {
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
@@ -4819,11 +5294,21 @@ async restoreState(state) {
 		const originalCanvas = this.originalCanvas;
 		originalCanvas.classList.remove('visible');
 
-		// Reset transparency background
+		// Reset Transparency Toggle & Background
 		this.previewContainer.classList.remove('transparent-bg');
 		this.previewContainer.style.backgroundSize = '';
 		this.previewContainer.style.backgroundPosition = '';
-		document.getElementById('transparencyToggle').classList.remove('active');
+		const transparencyToggle = document.getElementById('transparencyToggle');
+		if (transparencyToggle) transparencyToggle.classList.remove('active');
+
+		// Reset Bounds Toggle & Container Class
+		this.previewContainer.classList.remove('bounds');
+		const boundsToggle = document.getElementById('boundsToggle');
+		if (boundsToggle) boundsToggle.classList.remove('active');
+		
+		// --- NEW: Hide the controls container immediately ---
+		const previewControls = document.getElementById('previewControls');
+		if (previewControls) previewControls.classList.remove('visible');
 
 		this.clearPreview();
 		this.glitterBackgroundsContainer.innerHTML = '';
@@ -4835,22 +5320,20 @@ async restoreState(state) {
 		this.collapseGlitterSettings();
 
 		document.getElementById('selectedColorsDisplay').innerHTML = '<span class="empty-state-text">None</span>';
-		this.clearAllFilters();
+		this.glitterManager.clearAllFilters();
 
 		this.resetViewport();
 		this.updateZoomUI();
 
 		this.layerManager.renderLayersList();
 		this.updateHistoryButtons();
-		this.updateActionButtons();
-		// this.updateGlitterOptionsState();
-		this.setTool('select');
+		this.updateActionButtons(); 
+		this.setTool(ToolType.SELECT);
 		this.updateStatus('Load an image to begin');
 		this.updateStatusBar();
 
 		window.dispatchEvent(new Event('imageRemoved'));
 	}
-
 
 	debouncedSliderUpdate(sliderType) {
 		clearTimeout(this.sliderTimeout);
@@ -4861,344 +5344,9 @@ async restoreState(state) {
 
 
 	// ===== GLITTER LOADING =====
-	async loadGlitterGifs() {
-		this.glitterGifs = [];
-
-		const res = await fetch('data/swatches.json');
-		const json = await res.json();
-
-		json.forEach(config => {
-			this.glitterGifs.push({
-				id: config.id,
-				url: config.url,
-				name: config.name || 'Unnamed',
-				generatedName: config.generatedName || null,
-				frames: null,
-				brightness: config.brightness || null,
-				sortOrder: config.sortOrder || 0,
-				hue: config.hue || null,
-				colorCodes: config.colorCodes || [],
-				frameCount: config.frameCount || 0,
-				frameRate: config.frameRate || 10,
-				isVariableFramerate: config.isVariableFramerate || false,
-				category: config.category || 'Uncategorized',
-				isPixelated: config.isPixelated || false,
-				tags: config.tags || []
-			});
-		});
-
-		if (this.glitterGifs.length > 0) {
-			this.displayGlitterOptions();
-		}
-	}
-
-	async parseGifFromUrl(url) {
-		try {
-			// Step 1: Fetch
-			const response = await fetch(url);
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-			}
-
-			// Step 2: Get array buffer
-			const arrayBuffer = await response.arrayBuffer();
-			if (!arrayBuffer || arrayBuffer.byteLength === 0) {
-				throw new Error('Empty or invalid file');
-			}
-
-			// Step 3: Create GIF reader
-			const uintArray = new Uint8Array(arrayBuffer);
-			let reader;
-			try {
-				reader = new GifReader(uintArray);
-			} catch (e) {
-				throw new Error(`Invalid GIF format: ${e.message}`);
-			}
-
-			// Step 4: Get frame count
-			let frameCount;
-			try {
-				frameCount = reader.numFrames();
-			} catch (e) {
-				throw new Error(`Failed to read frame count: ${e.message}`);
-			}
-
-			if (frameCount === 0) {
-				throw new Error('GIF has 0 frames');
-			}
-
-			// Step 5: Get metadata
-			let frameInfo, width, height;
-			try {
-				frameInfo = reader.frameInfo(0);
-				width = reader.width;
-				height = reader.height;
-			} catch (e) {
-				throw new Error(`Failed to read GIF metadata: ${e.message}`);
-			}
-
-			// Step 6: Decode frames
-			const frames = [];
-			for (let i = 0; i < frameCount; i++) {
-				try {
-					const pixels = new Uint8ClampedArray(width * height * 4);
-					reader.decodeAndBlitFrameRGBA(i, pixels);
-					frames.push(new ImageData(pixels, width, height));
-				} catch (e) {
-					throw new Error(`Failed to decode frame ${i + 1}/${frameCount}: ${e.message}`);
-				}
-			}
-
-			return {
-				width,
-				height,
-				frames,
-				frameCount,
-				frameDelay: frameInfo.delay * 10 || 100
-			};
-
-		} catch (error) {
-			// Re-throw with file info for debugging
-			console.error(`[parseGifFromUrl] Error loading ${url}:`, error);
-			throw new Error(`Failed to parse GIF: ${error.message}`);
-		}
-	}
-
-displayGlitterOptions() {
-    // 1. Target the NEW Sub-Container
-    const container = document.getElementById('glitterGridContainer');
-    if (!container) return; // Safety check
-
-    container.innerHTML = ''; // Clear only the grid, leave empty state alone
-
-    const categories = {};
-    this.glitterGifs.forEach((glitter, index) => {
-        if (!categories[glitter.category]) {
-            categories[glitter.category] = [];
-        }
-        categories[glitter.category].push({ glitter, index });
-    });
-
-    Object.entries(categories).forEach(([category, items]) => {
-			const categoryDiv = document.createElement('div');
-			categoryDiv.className = 'glitter-category';
-			categoryDiv.dataset.category = category;
-
-			const title = document.createElement('div');
-			title.className = 'category-title';
-			title.textContent = category;
-			categoryDiv.appendChild(title);
-
-			const grid = document.createElement('div');
-			grid.className = 'glitter-grid';
-
-			items.forEach(({ glitter, index }) => {
-				const option = document.createElement('div');
-				option.className = 'glitter-option' + (glitter.isPixelated ? ' pixelated' : '');
-             option.title = glitter.name;
-             option.dataset.index = index;
-             option.dataset.name = glitter.name.toLowerCase();
-             option.dataset.category = glitter.category.toLowerCase();
-             option.dataset.tags = (glitter.tags || []).join(' ').toLowerCase();
-             option.dataset.hue = glitter.hue;
-
-             const img = document.createElement('img');
-             img.src = glitter.url;
-             option.appendChild(img);
-             option.addEventListener('click', () => this.selectGlitter(index));
-             
-             grid.appendChild(option);
-        });
-
-        categoryDiv.appendChild(grid);
-        container.appendChild(categoryDiv);
-    });
-    
-    // Initialize filter state
-    this.applyFilters(); 
-}
-
-	handleSearchInput(searchTerm) {
-		this.activeFilters.search = searchTerm.toLowerCase().trim();
-		this.applyFilters();
-	}
-
-	toggleFilter(chip) {
-		console.log('toggleFilter called:', chip, chip.dataset);
-		const filterType = chip.dataset.filter;
-		const value = chip.dataset.value || chip.dataset.color;
-
-		console.log('filterType:', filterType, 'value:', value);
-
-		chip.classList.toggle('active');
-		console.log('chip classes after toggle:', chip.className);
-
-		console.log('About to check if filterType === color:', filterType === 'color');
-
-		if (filterType === 'color') {
-			if (this.activeFilters.colors.has(value)) {
-				this.activeFilters.colors.delete(value);
-			} else {
-				this.activeFilters.colors.add(value);
-			}
-		}
-
-		console.log('activeFilters.colors:', this.activeFilters.colors);
-
-		this.applyFilters();
-		this.updateClearFiltersButton();
-	}
-
-	clearAllFilters() {
-		this.activeFilters.colors.clear();
-		this.activeFilters.search = '';
-		this.activeFilters.nameOnly = false;
-
-		document.getElementById('glitterSearch').value = '';
-		document.getElementById('searchNameOnly').checked = false;
-		document.querySelectorAll('.filter-chip').forEach(chip => {
-			chip.classList.remove('active');
-		});
-
-		this.applyFilters();
-		this.updateClearFiltersButton();
-
-		this.toggleFilters();
-	}
-
-	updateClearFiltersButton() {
-		const hasActiveFilters =
-			this.activeFilters.colors.size > 0 ||
-			this.activeFilters.tones.size > 0 ||
-			this.activeFilters.special.size > 0 ||
-			this.activeFilters.search !== '' ||
-			this.activeFilters.nameOnly;
-
-		document.getElementById('clearFiltersBtn').disabled = !hasActiveFilters;
-
-
-	}
-
-applyFilters() {
-    const categories = document.querySelectorAll('.glitter-category');
-    let totalVisibleCount = 0; // Track total visible items
-
-    categories.forEach(category => {
-        const options = category.querySelectorAll('.glitter-option');
-        let visibleCount = 0;
-
-        options.forEach(option => {
-            const name = (option.dataset.name || '').toLowerCase();
-            const tagsString = (option.dataset.tags || '').toLowerCase();
-            const tags = tagsString.split(' ').filter(t => t.length > 0);
-
-            let matches = true;
-
-            // Search filter
-            if (this.activeFilters.search) {
-                const term = this.activeFilters.search;
-                if (this.activeFilters.nameOnly) {
-                    if (!name.includes(term)) matches = false;
-                } else {
-                    if (!name.includes(term) && !tagsString.includes(term)) {
-                        matches = false;
-                    }
-                }
-            }
-
-            // Chip filters
-            if (matches && this.activeFilters.colors.size > 0) {
-                const hasColor = [...this.activeFilters.colors].some(color => tags.includes(color));
-                if (!hasColor) matches = false;
-            }
-
-            option.style.display = matches ? 'block' : 'none';
-            if (matches) visibleCount++;
-        });
-
-        // Hide empty categories
-        category.style.display = visibleCount > 0 ? 'block' : 'none';
-        totalVisibleCount += visibleCount;
-    });
-
-    // ==========================================
-    // TOGGLE EMPTY STATE
-    // ==========================================
-    const emptyState = document.getElementById('glitterEmptyState');
-    const gridContainer = document.getElementById('glitterGridContainer');
-
-    if (emptyState && gridContainer) {
-        if (totalVisibleCount === 0) {
-            // SHOW Empty State, HIDE Grid
-            emptyState.classList.add('visible');
-            gridContainer.classList.remove('visible');
-        } else {
-            // HIDE Empty State, SHOW Grid
-            emptyState.classList.remove('visible');
-            gridContainer.classList.add('visible');
-        }
-    }
-}
-
-	async selectGlitter(index) {
 
 
 
-		if (!this.originalImage) {
-			this.showError('Please load an image first');
-			return;
-		}
-
-		const layer = this.layerManager.getActiveLayer();
-		if (!layer) {
-			this.showError('Please select a glitter fill layer');
-			return;
-		}
-
-		
-		if (layer.type !== LayerType.GLITTER_FILL) {
-			this.showError('You can only add a glitter to a glitter-fill layer');
-			return;
-		}
-
-		layer.selectedGlitterIndex = index;
-
-		const glitter = this.glitterGifs[index];
-		if (!glitter) return;
-
-		if (!glitter.frames) {
-			this.updateStatus(`Downloading ${glitter.name} glitter...`);
-			document.body.style.cursor = 'wait';
-
-			try {
-				const frames = await this.parseGifFromUrl(glitter.url);
-				glitter.frames = frames;
-			} catch (error) {
-				console.error('Failed to load glitter:', error);
-				this.showError(`Failed to load ${glitter.name} glitter`);
-				document.body.style.cursor = 'default';
-				return;
-			} finally {
-				document.body.style.cursor = 'default';
-			}
-		}
-
-		this.updateGlitterSelection();
-		this.layerManager.renderLayersList();
-
-		if (layer.selections.length > 0) {
-			this.updatePreview();
-		}
-
-		this.updateActionButtons();
-
-		if (this.originalImage) {
-			this.saveState();
-		}
-
-		this.updateStatus(`Selected ${glitter.name}`);
-		window.dispatchEvent(new CustomEvent('layerChanged'));
-	}
 
 	// ===== IMAGE LOADING =====
 
@@ -5252,48 +5400,48 @@ applyFilters() {
 			this.layers = [];
 			this.glitterBackgroundsContainer.innerHTML = '';
 
-            // 1. Create Base Image Layer
-			if(CONFIG.createBaseImageLayerOnLoad){
+			// 1. Create Base Image Layer
+			if (CONFIG.createBaseImageLayerOnLoad) {
 				const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
 				this.layers.push(layer);
-                // Set it active immediately
+				// Set it active immediately
 				this.layerManager.setActiveLayer(layer.id);
 			}
 
-            // 2. Create Default Glitter Layer (Optional)
+			// 2. Create Default Glitter Layer (Optional)
 			if (CONFIG.createDefaultLayerOnLoad) {
 				const layer = this.layerManager.createLayer();
 				this.layers.push(layer);
-                // If created, this becomes the new active layer
+				// If created, this becomes the new active layer
 				this.layerManager.setActiveLayer(layer.id);
 			} else {
-                // 3. If NO default layer is created, check if we have a Base Layer
-                if (this.layers.length > 0) {
-                    // Ensure the existing Base Layer stays selected and UI updates
-                    this.layerManager.setActiveLayer(this.layers[0].id);
-                } else {
-                    // Only if completely empty do we reset to null
-                    this.activeLayerId = null;
-                    this.updateSidePanelUI(null);
-                }
+				// 3. If NO default layer is created, check if we have a Base Layer
+				if (this.layers.length > 0) {
+					// Ensure the existing Base Layer stays selected and UI updates
+					this.layerManager.setActiveLayer(this.layers[0].id);
+				} else {
+					// Only if completely empty do we reset to null
+					this.activeLayerId = null;
+					this.updateSidePanelUI(null);
+				}
 			}
 
-            // 4. Reset History
+			// 4. Reset History
 			this.history = [{
 				layers: this.layers.map(layer => {
-                    if (layer.type === LayerType.BASE_IMAGE) {
-                         return { id: layer.id, type: LayerType.BASE_IMAGE, visible: layer.visible, locked: layer.locked };
-                    }
-                    // ... (rest of history mapping logic) ...
-                    return {
-                        id: layer.id,
-                        type: layer.type || LayerType.GLITTER_FILL,
-                        visible: layer.visible,
-                        selections: [],
-                        selectedGlitterIndex: layer.selectedGlitterIndex,
-                        settings: { ...layer.settings }
-                    };
-                }),
+					if (layer.type === LayerType.BASE_IMAGE) {
+						return { id: layer.id, type: LayerType.BASE_IMAGE, visible: layer.visible, locked: layer.locked };
+					}
+					// ... (rest of history mapping logic) ...
+					return {
+						id: layer.id,
+						type: layer.type || LayerType.GLITTER_FILL,
+						visible: layer.visible,
+						selections: [],
+						selectedGlitterIndex: layer.selectedGlitterIndex,
+						settings: { ...layer.settings }
+					};
+				}),
 				activeLayerId: this.activeLayerId
 			}];
 			this.historyIndex = 0;
@@ -5304,7 +5452,7 @@ applyFilters() {
 			this.updateStatusBar();
 
 			this.previewCtx.putImageData(this.originalImageData, 0, 0);
-			// this.setTool('colorPicker');
+			// this.setTool(ToolType.COLOR_PICKER);
 			// this.updateStatus('Click on the preview to select a color');
 
 			window.dispatchEvent(new Event('imageLoaded'));
@@ -5327,41 +5475,9 @@ applyFilters() {
 		}
 	}
 
-	updatePreviewScale() {
-		console.log('updatePreviewScale called');
-		console.log('Found glitter backgrounds:', document.querySelectorAll('.glitter-bg-layer').length);
 
-		document.querySelectorAll('.glitter-bg-layer').forEach(bg => {
-			bg.style.width = this.originalCanvas.width + 'px';
-			bg.style.height = this.originalCanvas.height + 'px';
 
-			const layerId = bg.dataset.layerId;
-			console.log('Processing layerId:', layerId);
-
-			const layer = this.layerManager.layers.find(l => l.id === layerId);
-			console.log('Found layer?', !!layer, layer);
-
-			if (layer) {
-				const glitter = this.glitterGifs[layer.selectedGlitterIndex];
-				console.log('Found glitter?', !!glitter, 'at index:', layer.selectedGlitterIndex);
-
-				if (glitter) {
-					const glitterScale = layer.settings.scale / 100;
-					console.log('Scale:', glitterScale);
-
-					const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
-					console.log('Base size:', baseSize, 'frames exist?', !!glitter.frames);
-
-					const scaledGlitterSize = Math.round(baseSize * glitterScale);
-					console.log('Setting backgroundSize to:', scaledGlitterSize + 'px');
-
-					bg.style.backgroundSize = `${scaledGlitterSize}px`;
-				}
-			}
-		});
-	}
-
-handleCanvasClick(event) {
+	handleCanvasClick(event) {
 		if (!this.originalImageData) return;
 
 		// ... (Coordinate calculation logic stays the same) ...
@@ -5378,19 +5494,19 @@ handleCanvasClick(event) {
 		}
 
 		// Select Tool: Pick layer at click location
-		if (this.currentTool === 'select') {
+		if (this.currentTool === ToolType.SELECT) {
 			this.layerManager.handleLayerPick(x, y);
 			return;
 		}
 
 		// Color Picker Tool
-		if (this.currentTool === 'colorPicker') {
+		if (this.currentTool === ToolType.COLOR_PICKER) {
 			let layer = this.layerManager.getActiveLayer();
 
 			// ============================================================
 			// UPDATED LOGIC START
 			// ============================================================
-			
+
 			if (!layer) {
 				this.updateStatus('Please select the Base Image or a Glitter Layer.');
 				return;
@@ -5414,7 +5530,7 @@ handleCanvasClick(event) {
 				this.updateStatus('Color Picker disabled on Sticker layers.');
 				return;
 			}
-			
+
 			// ============================================================
 			// UPDATED LOGIC END
 			// ============================================================
@@ -5537,6 +5653,7 @@ handleCanvasClick(event) {
 
 	// ===== PREVIEW & RENDERING =====
 
+	// In GlitterEditor class
 	updatePreview() {
 		if (!this.originalImageData) {
 			this.clearPreview();
@@ -5546,11 +5663,11 @@ handleCanvasClick(event) {
 		const layersToShow = this.showAllLayers
 			? this.layers.filter(l => l.visible && (
 				(l.type === LayerType.GLITTER_FILL && l.selections.length > 0) ||
-				l.type === LayerType.STICKER  // ADD THIS
+				l.type === LayerType.STICKER
 			))
 			: [this.layerManager.getActiveLayer()].filter(l => l && l.visible && (
 				(l.type === LayerType.GLITTER_FILL && l.selections.length > 0) ||
-				l.type === LayerType.STICKER  // ADD THIS
+				l.type === LayerType.STICKER
 			));
 
 		if (layersToShow.length === 0) {
@@ -5559,9 +5676,14 @@ handleCanvasClick(event) {
 		}
 
 		this.renderPreviewCanvas(layersToShow);
-		this.renderGlitterBackgrounds(layersToShow);
-		this.renderStickers(layersToShow);  // ADD THIS LINE
-		this.updatePreviewScale();
+
+		// NEW: Use the manager to render the glitter backgrounds
+		this.glitterManager.renderGlitterBackgrounds(layersToShow);
+
+		this.renderStickers(layersToShow);
+
+		// NEW: Use the manager to update scales
+		this.glitterManager.updatePreviewScale();
 	}
 
 	renderStickers(layersToShow) {
@@ -5576,14 +5698,14 @@ handleCanvasClick(event) {
 
 
 
-renderPreviewCanvas(layersToShow) {
+	renderPreviewCanvas(layersToShow) {
 		// Clear canvas first
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 
 		// ============================================================
 		// UPDATED LOGIC: BASE IMAGE VISIBILITY
 		// ============================================================
-		
+
 		// Find the Base Image layer in the stack
 		const baseLayer = this.layers.find(l => l.type === LayerType.BASE_IMAGE);
 
@@ -5596,185 +5718,6 @@ renderPreviewCanvas(layersToShow) {
 		this.previewCtx.putImageData(this.originalImageData, 0, 0);
 	}
 
-	renderGlitterBackgrounds(layersToShow) {
-		this.glitterBackgroundsContainer.innerHTML = '';
-
-		const width = this.originalCanvas.width;
-		const height = this.originalCanvas.height;
-
-		layersToShow.forEach(layer => {
-			const glitter = this.glitterGifs[layer.selectedGlitterIndex];
-			if (!glitter) return;
-
-			const mask = this.createMaskForLayer(layer);
-			if (layer.settings.feather > 0) {
-				this.applyFeatherToMask(mask, layer.settings.feather);
-			}
-
-			const maskCanvas = document.createElement('canvas');
-			maskCanvas.width = width;
-			maskCanvas.height = height;
-			const maskCtx = maskCanvas.getContext('2d');
-			const maskData = maskCtx.createImageData(width, height);
-
-			for (let i = 0; i < width * height; i++) {
-				const alpha = this.originalAlphaChannel[i];
-				const maskValue = mask[i];
-				const idx = i * 4;
-
-				if (alpha >= CONFIG.alphaThreshold && maskValue > 0) {
-					maskData.data[idx] = 0;
-					maskData.data[idx + 1] = 0;
-					maskData.data[idx + 2] = 0;
-					maskData.data[idx + 3] = maskValue;
-				} else {
-					maskData.data[idx] = 0;
-					maskData.data[idx + 1] = 0;
-					maskData.data[idx + 2] = 0;
-					maskData.data[idx + 3] = 0;
-				}
-			}
-
-			maskCtx.putImageData(maskData, 0, 0);
-
-			const bg = document.createElement('div');
-			bg.className = 'glitter-background glitter-bg-layer visible';
-			if (glitter.isPixelated) {
-				bg.classList.add('pixelated');
-			}
-
-			bg.dataset.layerId = layer.id;
-			bg.style.backgroundImage = `url(${glitter.url})`;
-
-			// ADD: Set initial backgroundSize (will be updated by updatePreviewScale if frames exist)
-			bg.style.backgroundSize = 'auto';  // Natural size as fallback
-
-			bg.style.width = width + 'px';
-			bg.style.height = height + 'px';
-
-			bg.style.position = 'absolute';
-			bg.style.top = '0';
-			bg.style.left = '0';
-
-			// --- CHANGED: Increase Z-Index to ensure it sits over the canvas ---
-			bg.style.zIndex = '100';
-			// -------------------------------------------------------------------
-
-			bg.style.pointerEvents = 'none';
-
-			// --- ADDED: Apply Opacity here so transparent glitters fade correctly ---
-			bg.style.opacity = layer.settings.opacity / 100;
-			// ------------------------------------------------------------------------
-
-			const maskDataURL = maskCanvas.toDataURL();
-			bg.style.maskImage = `url(${maskDataURL})`;
-			bg.style.webkitMaskImage = `url(${maskDataURL})`;
-
-			bg.style.maskSize = `${width}px ${height}px`;
-			bg.style.webkitMaskSize = `${width}px ${height}px`;
-			bg.style.maskRepeat = 'no-repeat';
-			bg.style.webkitMaskRepeat = 'no-repeat';
-
-			this.glitterBackgroundsContainer.appendChild(bg);
-		});
-	}
-
-	createMaskForLayer(layer) {
-		const width = this.originalCanvas.width;
-		const height = this.originalCanvas.height;
-		const len = width * height;
-
-		const mask = new Uint8Array(len);
-		const thresholdSq = layer.settings.threshold * layer.settings.threshold;
-		const data = this.originalImageData.data;
-		const alphaChannel = this.originalAlphaChannel;
-
-		layer.selections.forEach(sel => {
-			if (layer.settings.contiguous) {
-				this.floodFill(mask, sel.x, sel.y, sel, thresholdSq);
-			} else {
-				for (let i = 0; i < len; i++) {
-					if (mask[i] === 255) continue;
-					if (alphaChannel[i] < CONFIG.alphaThreshold) continue;
-
-					const idx = i * 4;
-					const r = data[idx];
-					const g = data[idx + 1];
-					const b = data[idx + 2];
-
-					if (this.colorDistanceSq(r, g, b, sel.r, sel.g, sel.b) <= thresholdSq) {
-						mask[i] = 255;
-					}
-				}
-			}
-		});
-
-		if (layer.settings.invert) {
-			for (let i = 0; i < len; i++) {
-				if (alphaChannel[i] >= CONFIG.alphaThreshold) {
-					mask[i] = 255 - mask[i];
-				}
-			}
-		}
-
-		return mask;
-	}
-
-	colorDistanceSq(r1, g1, b1, r2, g2, b2) {
-		return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
-	}
-
-	floodFill(mask, startX, startY, targetColor, thresholdSq) {
-		const width = this.originalCanvas.width;
-		const height = this.originalCanvas.height;
-		const totalPixels = width * height;
-		const data = this.originalImageData.data;
-		const alphaChannel = this.originalAlphaChannel;
-
-		const stack = [startY * width + startX];
-
-		while (stack.length > 0) {
-			const idx = stack.pop();
-			if (mask[idx] === 255) continue;
-
-			const r = data[idx * 4];
-			const g = data[idx * 4 + 1];
-			const b = data[idx * 4 + 2];
-
-			if (alphaChannel[idx] >= CONFIG.alphaThreshold &&
-				this.colorDistanceSq(r, g, b, targetColor.r, targetColor.g, targetColor.b) <= thresholdSq) {
-
-				mask[idx] = 255;
-
-				if ((idx + 1) % width !== 0 && mask[idx + 1] === 0) stack.push(idx + 1);
-				if (idx % width !== 0 && mask[idx - 1] === 0) stack.push(idx - 1);
-				if (idx + width < totalPixels && mask[idx + width] === 0) stack.push(idx + width);
-				if (idx - width >= 0 && mask[idx - width] === 0) stack.push(idx - width);
-			}
-		}
-	}
-
-	applyFeatherToMask(mask, radius) {
-		const width = this.originalCanvas.width;
-		const height = this.originalCanvas.height;
-		const tempMask = new Uint8Array(mask);
-
-		for (let y = 0; y < height; y++) {
-			for (let x = 0; x < width; x++) {
-				let sum = 0, count = 0;
-				for (let dy = -radius; dy <= radius; dy++) {
-					for (let dx = -radius; dx <= radius; dx++) {
-						const nx = x + dx, ny = y + dy;
-						if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-							sum += tempMask[ny * width + nx];
-							count++;
-						}
-					}
-				}
-				mask[y * width + x] = Math.round(sum / count);
-			}
-		}
-	}
 
 	// ===== EXPORT PROGRESS =====
 	showExportProgress() {
@@ -5847,13 +5790,9 @@ renderPreviewCanvas(layersToShow) {
 
 		const exportParams = {
 			visibleLayers: visibleLayers,
-			glitterGifs: this.glitterGifs,
+			glitterGifs: this.glitterManager.glitterGifs, // UPDATED
 			canvasData: {
-				width: this.originalCanvas.width,
-				height: this.originalCanvas.height,
-				originalData: this.originalImageData.data,
-				originalAlpha: this.originalAlphaChannel,
-				alphaThreshold: CONFIG.alphaThreshold
+				// ... existing data ...
 			},
 			exportSettings: this.exportSettings,
 			callbacks: {
@@ -5866,11 +5805,13 @@ renderPreviewCanvas(layersToShow) {
 					exportBtn.disabled = false;
 					this.hideExportProgress();
 				},
-				parseGif: (url) => this.parseGifFromUrl(url),
+				// UPDATED: Delegate to manager
+				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
 				createMask: (layer) => {
-					const mask = this.createMaskForLayer(layer);
+					// UPDATED: Delegate to manager
+					const mask = this.glitterManager.createMaskForLayer(layer);
 					if (layer.settings.feather > 0) {
-						this.applyFeatherToMask(mask, layer.settings.feather);
+						this.glitterManager.applyFeatherToMask(mask, layer.settings.feather);
 					}
 					return mask;
 				}
@@ -6562,360 +6503,6 @@ class GifExporter {
 
 
 }
-
-// ============================================
-// TOOLTIP MANAGER CLASS
-// ============================================
-class TooltipManager {
-	constructor(options = {}) {
-		this.config = {
-			gap: 8,                  // Distance from the element
-			viewportPadding: 10,     // Buffer from screen edges
-			dismissOnScroll: true,   // Hide on scroll
-			oneAtATime: true,        // Only one open at a time
-			placement: 'bottom',        // Primary Axis: top, bottom, left, right
-			alignment: 'center',     // Secondary Axis: center, left, right, top, bottom
-			...options
-		};
-
-		this.activeTooltip = null;
-		this.activeElement = null;
-		this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-		this.scrollContainers = new Set();
-
-		this.handleScroll = this.handleScroll.bind(this);
-		this.handleResize = this.handleResize.bind(this);
-		this.handleOutsideClick = this.handleOutsideClick.bind(this);
-
-		this.init();
-	}
-
-	init() {
-		this.attachTooltipListeners();
-		this.attachGlobalListeners();
-	}
-
-	findScrollableParent(element) {
-		let parent = element.parentElement;
-		while (parent) {
-			const style = window.getComputedStyle(parent);
-			if (['auto', 'scroll'].includes(style.overflow) ||
-				['auto', 'scroll'].includes(style.overflowY)) {
-				return parent;
-			}
-			parent = parent.parentElement;
-		}
-		return window;
-	}
-
-	attachTooltipListeners() {
-		document.querySelectorAll('[data-tooltip]').forEach(el => {
-			if (this.isTouchDevice) {
-				el.addEventListener('click', (e) => this.handleMobileClick(e, el));
-			} else {
-				el.addEventListener('mouseenter', () => this.show(el));
-				el.addEventListener('mouseleave', () => this.hide(el));
-			}
-
-			if (this.config.dismissOnScroll) {
-				const scrollParent = this.findScrollableParent(el);
-				if (!this.scrollContainers.has(scrollParent)) {
-					this.scrollContainers.add(scrollParent);
-					scrollParent.addEventListener('scroll', this.handleScroll, {
-						passive: true
-					});
-				}
-			}
-		});
-	}
-
-	attachGlobalListeners() {
-		if (this.config.dismissOnScroll) {
-			window.addEventListener('scroll', this.handleScroll, {
-				passive: true
-			});
-		}
-		if (this.isTouchDevice) {
-			document.addEventListener('click', this.handleOutsideClick);
-		}
-		window.addEventListener('resize', this.handleResize);
-	}
-
-	show(element) {
-		if (this.config.oneAtATime) {
-			this.dismissAll();
-		}
-
-		const tooltip = document.createElement('div');
-		tooltip.className = 'tooltip';
-		tooltip.textContent = element.dataset.tooltip;
-
-		// Read overrides from data attributes, fallback to config
-		tooltip.dataset.placement = element.dataset.placement || this.config.placement;
-		tooltip.dataset.alignment = element.dataset.alignment || this.config.alignment;
-
-		document.body.appendChild(tooltip);
-
-		this.position(tooltip, element);
-
-		element._tooltip = tooltip;
-		this.activeTooltip = tooltip;
-		this.activeElement = element;
-	}
-
-	// --- POSITIONING LOGIC ---
-
-	position(tooltip, element) {
-		const rect = element.getBoundingClientRect();
-		const tooltipRect = tooltip.getBoundingClientRect();
-
-		let preferredPlacement = tooltip.dataset.placement;
-		const preferredAlignment = tooltip.dataset.alignment;
-
-		// 1. Calculate preferred coordinates based on placement + alignment
-		let coords = this.getCoords(preferredPlacement, preferredAlignment, rect, tooltipRect);
-
-		// 2. Check collision with viewport edges (Main Axis flip)
-		if (this.isOutOfBounds(coords, tooltipRect)) {
-			const flippedPlacement = this.getOppositePlacement(preferredPlacement);
-			const flippedCoords = this.getCoords(flippedPlacement, preferredAlignment, rect, tooltipRect);
-
-			// If flipped fits better (or isn't strictly worse), use it
-			if (!this.isOutOfBounds(flippedCoords, tooltipRect)) {
-				coords = flippedCoords;
-				preferredPlacement = flippedPlacement;
-			}
-		}
-
-		// 3. Clamp Secondary Axis 
-		// (Ensure it doesn't slide off screen left/right if placed top/bottom, etc.)
-		coords = this.clampToViewport(coords, tooltipRect);
-
-		// 4. Apply absolute position including current scroll offset
-		tooltip.style.left = (coords.left + window.scrollX) + 'px';
-		tooltip.style.top = (coords.top + window.scrollY) + 'px';
-	}
-
-	getCoords(placement, alignment, targetRect, tooltipRect) {
-		const gap = this.config.gap;
-		let top, left;
-
-		// Logic split by axis
-		switch (placement) {
-			case 'top':
-				top = targetRect.top - tooltipRect.height - gap;
-				left = this.getHorizontalAlignment(alignment, targetRect, tooltipRect);
-				break;
-			case 'bottom':
-				top = targetRect.bottom + gap;
-				left = this.getHorizontalAlignment(alignment, targetRect, tooltipRect);
-				break;
-			case 'left':
-				left = targetRect.left - tooltipRect.width - gap;
-				top = this.getVerticalAlignment(alignment, targetRect, tooltipRect);
-				break;
-			case 'right':
-				left = targetRect.right + gap;
-				top = this.getVerticalAlignment(alignment, targetRect, tooltipRect);
-				break;
-			default: // Fallback to top/center
-				top = targetRect.top - tooltipRect.height - gap;
-				left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
-		}
-
-		return { top, left };
-	}
-
-	// Calculate X position based on alignment (left, center, right)
-	getHorizontalAlignment(align, target, tooltip) {
-		if (align === 'left' || align === 'start') {
-			return target.left;
-		}
-		if (align === 'right' || align === 'end') {
-			return target.right - tooltip.width;
-		}
-		// Default center
-		return target.left + (target.width / 2) - (tooltip.width / 2);
-	}
-
-	// Calculate Y position based on alignment (top, center, bottom)
-	getVerticalAlignment(align, target, tooltip) {
-		if (align === 'top' || align === 'start') {
-			return target.top;
-		}
-		if (align === 'bottom' || align === 'end') {
-			return target.bottom - tooltip.height;
-		}
-		// Default center
-		return target.top + (target.height / 2) - (tooltip.height / 2);
-	}
-
-	getOppositePlacement(placement) {
-		const opposites = {
-			'top': 'bottom',
-			'bottom': 'top',
-			'left': 'right',
-			'right': 'left'
-		};
-		return opposites[placement] || 'top';
-	}
-
-	isOutOfBounds(coords, tooltipRect) {
-		const padding = this.config.viewportPadding;
-		return (
-			coords.top < padding ||
-			coords.left < padding ||
-			coords.top + tooltipRect.height > window.innerHeight - padding ||
-			coords.left + tooltipRect.width > window.innerWidth - padding
-		);
-	}
-
-	clampToViewport(coords, tooltipRect) {
-		const padding = this.config.viewportPadding;
-
-		// Clamp Horizontal
-		const maxLeft = window.innerWidth - tooltipRect.width - padding;
-		coords.left = Math.max(padding, Math.min(coords.left, maxLeft));
-
-		// Clamp Vertical
-		const maxTop = window.innerHeight - tooltipRect.height - padding;
-		coords.top = Math.max(padding, Math.min(coords.top, maxTop));
-
-		return coords;
-	}
-
-	// --- END POSITIONING LOGIC ---
-
-	hide(element) {
-		if (element._tooltip) {
-			element._tooltip.remove();
-			element._tooltip = null;
-			if (this.activeElement === element) {
-				this.activeTooltip = null;
-				this.activeElement = null;
-			}
-		}
-	}
-
-	dismissAll() {
-		document.querySelectorAll('.tooltip').forEach(t => t.remove());
-		document.querySelectorAll('[data-tooltip]').forEach(el => el._tooltip = null);
-		this.activeTooltip = null;
-		this.activeElement = null;
-	}
-
-	handleMobileClick(e, element) {
-		e.preventDefault();
-		e.stopPropagation();
-		element._tooltip ? this.hide(element) : this.show(element);
-	}
-
-	handleScroll() { this.dismissAll(); }
-	handleResize() { this.dismissAll(); }
-
-	handleOutsideClick(e) {
-		if (!e.target.closest('[data-tooltip], .tooltip')) {
-			this.dismissAll();
-		}
-	}
-
-
-
-	destroy() {
-		this.dismissAll();
-		this.scrollContainers.forEach(container => {
-			container.removeEventListener('scroll', this.handleScroll);
-		});
-		this.scrollContainers.clear();
-		window.removeEventListener('scroll', this.handleScroll);
-		window.removeEventListener('resize', this.handleResize);
-		document.removeEventListener('click', this.handleOutsideClick);
-	}
-
-	refresh() {
-		this.attachTooltipListeners();
-	}
-}
-
-// Pixel Scaler
-document.querySelectorAll('img[data-pixel-scale]').forEach(img => {
-	const s = Number(img.dataset.pixelScale);
-	img.style.width = img.naturalWidth * s + 'px';
-	img.style.height = img.naturalHeight * s + 'px';
-	img.style.imageRendering = 'pixelated';
-});
-
-// Reference linking and highlighting functionality
-document.addEventListener('DOMContentLoaded', function () {
-	const modalBody = document.querySelector('#aboutModal .modal-body');
-
-	// Add IDs to sup elements and make them clickable
-	const sups = modalBody.querySelectorAll('sup');
-	sups.forEach((sup, index) => {
-		const refNum = sup.textContent.match(/\d+/)[0];
-		// Add both a unique ID and a class for the reference number
-		sup.id = `ref-link-${refNum}-${index}`;
-		sup.classList.add(`ref-${refNum}`);
-		sup.style.cursor = 'pointer';
-
-		sup.addEventListener('click', function (e) {
-			e.preventDefault();
-			const targetRef = modalBody.querySelector(`#ref-${refNum}`);
-			if (targetRef) {
-				// Remove any existing highlights
-				modalBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
-
-				// Scroll to reference
-				targetRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-				// Highlight the reference
-				targetRef.classList.add('highlight');
-				setTimeout(() => targetRef.classList.remove('highlight'), 2000);
-			}
-		});
-	});
-
-	// Add IDs to reference list items and make them clickable
-	const refList = modalBody.querySelector('h3:has(+ ol) + ol');
-	if (refList) {
-		const refItems = refList.querySelectorAll('li');
-		refItems.forEach((item, index) => {
-			const refNum = index + 1;
-			item.id = `ref-${refNum}`;
-			item.style.cursor = 'pointer';
-
-			item.addEventListener('click', function (e) {
-				// Don't trigger if clicking on a link
-				if (e.target.tagName === 'A') return;
-
-				e.preventDefault();
-
-				// Find ALL occurrences of this reference number
-				const targetSups = modalBody.querySelectorAll(`sup.ref-${refNum}`);
-
-				if (targetSups.length > 0) {
-					// Remove any existing highlights
-					modalBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
-
-					// Scroll to first mention
-					targetSups[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-					// Highlight ALL matching sup elements
-					targetSups.forEach(sup => {
-						sup.classList.add('highlight');
-					});
-
-					// Remove highlights after 2 seconds
-					setTimeout(() => {
-						targetSups.forEach(sup => {
-							sup.classList.remove('highlight');
-						});
-					}, 2000);
-				}
-			});
-		});
-	}
-});
 
 // ============================================
 // MOBILE MANAGER CLASS
