@@ -1,9 +1,9 @@
 [
     {
-        "id": 3,
+        "id": 1,
         "name": "Spinning Star",
         "filename": "spinning-star.gif",
-        "url": "images/sticker/animated/star.gif",
+        "url": "images/stickers/shapes/star.gif",
         "category": "animated",
         "tags": [
             "star",
@@ -26,5 +26,32 @@
         "file_size": 45600,
         "sort_order": 1,
         "featured": true
+    },
+    {
+        "id": 2,
+        "name": "Red Rose",
+        "filename": "red-rose.gif",
+        "url": "images/stickers/flower/rose_red-green-glitter.gif",
+        "category": "animated",
+        "tags": [
+            "red",
+            "rose",
+            "animated",
+            "sparkle",
+            "transparent"
+        ],
+        "colors": [
+            "#FF0000",
+            "#FFFFFF",
+            "#FFA500"
+        ],
+        "width": 81,
+        "height": 131,
+        "frame_count": 24,
+        "file_size": 45600,
+        "sort_order": 1,
+        "featured": true,
+        "is_animated": true,
+        "has_transparency": true
     }
 ]

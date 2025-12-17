@@ -179,6 +179,7 @@
 									</svg>
 									<span class="name">Layers</span>
 								</span>
+
 								<span class="section-header-title-text">Layers</span>
 								<span class="section-header-title-count" data-count="0"></span>
 							</h3>
@@ -192,91 +193,6 @@
 						<div class="section-content layers-list" id="layersList"></div>
 					</div>
 
-					<!-- Layer Settings Section (independent) -->
-					<div class="layer-settings-section section collapsible-section">
-						<div class="section-header section-header-with-action" id="layerSettingsHeader">
-							<h3 class="section-header-title">
-								<span class="section-header-title-icon icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-sliders"></use>
-									</svg>
-									<span class="name">Sliders</span>
-								</span>
-								<span class="section-header-title-text">Layer Settings</span>
-							</h3>
-							<div class="section-header-action btn-icon visible collapsed" id="layerSettingsToggle">
-								<span class="icon-wrapper">
-									<svg class="icon">
-										<use href="#icon-chevron-down"></use>
-									</svg>
-								</span>
-							</div>
-						</div>
-						<div class="section-content" id="layerSettingsContent">
-							<div class="settings-empty-state visible" id="layerSettingsEmpty">
-								<div class="empty-state-icon">📋</div>
-								<div class="empty-state-text">No layer selected</div>
-							</div>
-							<div id="layerSettingsControls">
-								<div class="settings-subsection">
-									<div class="subsection-content-group">
-										<div class="subsection-title">Selection Options</div>
-										<div class="subsection-content">
-											<div class="tool-options-group">
-												<label class="checkbox-group">
-													<input type="checkbox" id="contiguous">
-													<span title="Select only connected pixels of the same color">Contiguous</span>
-												</label>
-												<label class="checkbox-group">
-													<input type="checkbox" id="invert">
-													<span title="Invert the selection (select everything except the chosen color)">Invert</span>
-												</label>
-												<label class="checkbox-group">
-													<input type="checkbox" id="multiSelect">
-													<span title="Select multiple colors on the same layer">Multi-Select</span>
-												</label>
-											</div>
-										</div>
-									</div>
-									<div class="subsection-content-group">
-										<div class="subsection-title">Color Selections</div>
-										<div class="subsection-content">
-											<div class="selected-colors-display" id="selectedColorsDisplay">
-												<span class="empty-state-text">None</span>
-											</div>
-										</div>
-									</div>
-									<div class="subsection-content-group">
-										<div class="subsection-title">
-											<span>Refine Selection</span>
-											<label class="checkbox-group">
-												<input type="checkbox" id="refineGlobal">
-												<span title="Apply refinement settings to every layer">Global</span>
-											</label>
-										</div>
-										<div class="refine-group">
-											<div class="slider-group">
-												<div class="setting-header">
-													<span class="setting-label" title="Color similarity range (0-255)">Threshold</span>
-													<span class="setting-value" id="thresholdValue">50</span>
-												</div>
-												<input type="range" id="threshold" min="0" max="255" value="50">
-												<button class="btn-text" id="resetThreshold">Reset</button>
-											</div>
-											<div class="slider-group">
-												<div class="setting-header">
-													<span class="setting-label" title="Smooth selection edges">Feather</span>
-													<span class="setting-value" id="featherValue">0</span>
-												</div>
-												<input type="range" id="feather" min="0" max="50" value="0">
-												<button class="btn-text" id="resetFeather">Reset</button>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
 
 
 
@@ -297,7 +213,7 @@
 									</svg>
 									<span class="name">Gallery</span>
 								</span>
-								<span class="section-header-title-text">Gallery</span>
+								<span class="section-header-title-text">Design</span>
 							</h3>
 							<div class="section-header-action btn-icon collapsed" id="galleryToggle">
 								<span class="icon-wrapper">
@@ -308,28 +224,8 @@
 							</div>
 						</div>
 
-						<!-- Gallery Tabs -->
-						<div class="gallery-tabs">
-							<button class="gallery-tab active" data-gallery-tab="glitter">
-								<span class="icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-glitter"></use>
-									</svg>
-								</span>
-								<span>Glitter</span>
-							</button>
-							<button class="gallery-tab" data-gallery-tab="stickers">
-								<span class="icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-image"></use>
-									</svg>
-								</span>
-								<span>Stickers</span>
-							</button>
-						</div>
-
 						<!-- Glitter Search (visible by default) -->
-						<div class="section-content gallery-search-section visible" id="glitterSearchSection">
+						<div class="section-content gallery-search-section" id="glitterSearchSection">
 							<div class="glitter-search">
 								<div class="search-toggle-row">
 									<div class="search-input-wrapper">
@@ -428,22 +324,36 @@
 						</div>
 					</div>
 
-					<!-- Glitter Options (visible by default) -->
-					<div class="glitter-options gallery-content visible" id="glitterOptions" data-gallery-content="glitter">
-						<!-- Populated by existing glitter rendering code -->
+					<!-- Glitter Options -->
+					<div class="glitter-options gallery-content" id="glitterOptions" data-gallery-content="glitter">
+
+						<!-- 1. Glitter Empty State -->
+						<div class="empty-state" id="glitterEmptyState">
+							<div class="empty-state-icon">🔍</div>
+							<div class="empty-state-text">No glitter found</div>
+							<div class="empty-state-subtext">Try clearing your filters</div>
+						</div>
+
+						<!-- 2. Glitter Grid Container (JS writes here) -->
+						<div id="glitterGridContainer"></div>
 					</div>
 
-					<!-- Stickers Options (hidden by default) -->
+					<!-- Stickers Options -->
 					<div class="stickers-options gallery-content" id="stickersOptions" data-gallery-content="stickers">
-						<div class="stickers-empty-state">
+
+						<!-- 1. Sticker Empty State -->
+						<div class="empty-state" id="stickerSearchEmptyState">
 							<div class="empty-state-icon">🖼️</div>
-							<div class="empty-state-text">No stickers available</div>
+							<div class="empty-state-text">No stickers found</div>
+							<div class="empty-state-subtext">Try clearing your filters</div>
 						</div>
-						<!-- Populated by renderStickerPicker() -->
+
+						<!-- 2. Sticker Grid Container (JS writes here) -->
+						<div id="stickerGridContainer"></div>
 					</div>
 
 					<!-- Glitter Settings Section -->
-					<div class="glitter-settings-section section collapsible-section">
+					<div class="glitter-settings-section section collapsible-section" id="glitterSettingsSection">
 						<div class="section-header section-header-with-action" id="glitterSettingsHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
@@ -463,7 +373,7 @@
 							</div>
 						</div>
 						<div class="section-content" id="glitterSettingsContent">
-							<div class="settings-empty-state visible" id="glitterSettingsEmpty">
+							<div class="empty-state visible" id="glitterSettingsEmpty">
 								<div class="empty-state-icon">✨</div>
 								<div class="empty-state-text">No layer selected</div>
 							</div>
@@ -502,7 +412,7 @@
 					</div>
 
 					<!-- Sticker Settings Section -->
-					<div class="sticker-settings-section section collapsible-section">
+					<div class="sticker-settings-section section collapsible-section" id="stickerSettingsSection">
 						<div class="section-header section-header-with-action" id="stickerSettingsHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
@@ -522,7 +432,7 @@
 							</div>
 						</div>
 						<div class="section-content" id="stickerSettingsContent">
-							<div class="settings-empty-state visible" id="stickerSettingsEmpty">
+							<div class="empty-state visible" id="stickerSettingsEmpty">
 								<div class="empty-state-icon">🖼️</div>
 								<div class="empty-state-text">No sticker layer selected</div>
 							</div>
@@ -628,6 +538,179 @@
 						</div>
 					</div>
 
+					<!-- Layer Settings Section -->
+					<div class="layer-settings-section section collapsible-section" id="layerSettingsSection">
+						<div class="section-header section-header-with-action" id="layerSettingsHeader">
+							<h3 class="section-header-title">
+								<span class="section-header-title-icon icon-wrapper sm">
+									<svg class="icon">
+										<use href="#icon-sliders"></use>
+									</svg>
+									<span class="name">Sliders</span>
+								</span>
+								<span class="section-header-title-text">Tool Settings</span>
+							</h3>
+							<div class="section-header-action btn-icon visible collapsed" id="layerSettingsToggle">
+								<span class="icon-wrapper">
+									<svg class="icon">
+										<use href="#icon-chevron-down"></use>
+									</svg>
+								</span>
+							</div>
+						</div>
+						<div class="section-content" id="layerSettingsContent">
+							<div class="empty-state visible" id="layerSettingsEmpty">
+								<div class="empty-state-icon">📋</div>
+								<div class="empty-state-text">No layer selected</div>
+							</div>
+							<div id="layerSettingsControls">
+								<div class="settings-subsection">
+									<div class="subsection-content-group">
+										<div class="subsection-title">Selection Options</div>
+										<div class="subsection-content">
+											<div class="tool-options-group">
+												<label class="checkbox-group">
+													<input type="checkbox" id="contiguous">
+													<span title="Select only connected pixels of the same color">Contiguous</span>
+												</label>
+												<label class="checkbox-group">
+													<input type="checkbox" id="invert">
+													<span title="Invert the selection (select everything except the chosen color)">Invert</span>
+												</label>
+												<label class="checkbox-group">
+													<input type="checkbox" id="multiSelect">
+													<span title="Select multiple colors on the same layer">Multi-Select</span>
+												</label>
+											</div>
+										</div>
+									</div>
+									<div class="subsection-content-group">
+										<div class="subsection-title">Color Selections</div>
+										<div class="subsection-content">
+											<div class="selected-colors-display" id="selectedColorsDisplay">
+												<span class="empty-state-text">None</span>
+											</div>
+										</div>
+									</div>
+									<div class="subsection-content-group">
+										<div class="subsection-title">
+											<span>Refine Selection</span>
+											<label class="checkbox-group">
+												<input type="checkbox" id="refineGlobal">
+												<span title="Apply refinement settings to every layer">Global</span>
+											</label>
+										</div>
+										<div class="refine-group">
+											<div class="slider-group">
+												<div class="setting-header">
+													<span class="setting-label" title="Color similarity range (0-255)">Threshold</span>
+													<span class="setting-value" id="thresholdValue">50</span>
+												</div>
+												<input type="range" id="threshold" min="0" max="255" value="50">
+												<button class="btn-text" id="resetThreshold">Reset</button>
+											</div>
+											<div class="slider-group">
+												<div class="setting-header">
+													<span class="setting-label" title="Smooth selection edges">Feather</span>
+													<span class="setting-value" id="featherValue">0</span>
+												</div>
+												<input type="range" id="feather" min="0" max="50" value="0">
+												<button class="btn-text" id="resetFeather">Reset</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Base Layer Settings Section -->
+					<div class="base-layer-settings-section section" id="baseLayerSettingsSection">
+						<div class="section-content">
+							<div class="empty-state visible">
+								<div class="empty-state-icon icon-wrapper xl">
+									<svg class="icon">
+										<use href="#icon-lock"></use>
+									</svg>
+								</div>
+								<div class="empty-state-text">Base Image Locked</div>
+								<div class="empty-state-subtext">
+									The background image layer is locked and cannot be moved or deleted.
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- 1. WELCOME SECTION (No Image Loaded) -->
+					<div class="welcome-section section" id="welcomeSection">
+						<div class="section-content">
+							<div class="empty-state visible">
+								<div class="empty-state-text">
+									Upload an image to start designing.
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- 2. NO LAYER SELECTED SECTION (Image Loaded, but nothing selected) -->
+					<div class="no-layer-settings-section section" id="noLayerSettingsSection">
+						<div class="section-content">
+
+							<div class="empty-state visible">
+								<div class="empty-state-icon icon-wrapper xl">
+									<svg class="icon">
+										<use href="#icon-layers"></use>
+									</svg>
+								</div>
+								<div class="empty-state-text">No Layer Selected</div>
+								<div class="empty-state-subtext">
+									Select a layer from the list or add new content below.
+								</div>
+
+								<!-- Project Meta Info -->
+								<div class="project-meta-stats">
+									<div class="meta-stat">
+										<span class="label">Dimensions</span>
+										<span class="value" id="quickMetaDimensions">-- x --</span>
+									</div>
+									<div class="meta-stat">
+										<span class="label">Layers</span>
+										<span class="value" id="quickMetaLayerCount">0</span>
+									</div>
+								</div>
+							</div>
+
+							<!-- Specific Quick Actions -->
+							<div class="subsection-content-group">
+								<div class="subsection-title">Add Design</div>
+
+								<!-- Grid with 2 columns now -->
+								<div class="quick-actions-grid" style="grid-template-columns: 1fr 1fr;">
+
+									<!-- Add Glitter Fill -->
+									<button class="quick-action-card" id="quickActionAddGlitter">
+										<span class="icon-wrapper lg">
+											<svg class="icon">
+												<use href="#icon-glitter"></use>
+											</svg>
+										</span>
+										<span class="action-name">Glitter Fill</span>
+									</button>
+
+									<!-- Add Sticker -->
+									<button class="quick-action-card" id="quickActionAddSticker">
+										<span class="icon-wrapper lg">
+											<svg class="icon">
+												<use href="#icon-sticker"></use>
+											</svg>
+										</span>
+										<span class="action-name">Sticker</span>
+									</button>
+
+								</div>
+							</div>
+						</div>
+					</div>
 
 
 				</div>
@@ -811,6 +894,69 @@
 					<span class="name">Open GIF</span>
 				</button>
 
+			</div>
+		</div>
+	</div>
+
+	<!-- Layer Type Picker Modal -->
+	<div class="modal-overlay" id="layerTypePickerModal">
+		<div class="modal-content modal-sm">
+
+			<div class="modal-header">
+
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon">
+							<use href="#icon-layers"></use>
+						</svg>
+						<span class="name">Add New layer</span>
+					</span>
+
+
+
+
+					<span class="modal-title-text">Add New layer</span>
+				</div>
+
+				<button class="btn-icon icon-wrapper modal-close" id="closeLayerTypePickerModal">
+					<svg class="icon">
+						<use href="#icon-x-mark"></use>
+					</svg>
+					<span class="name">Close</span>
+				</button>
+
+			</div>
+
+			<div class="modal-body">
+				<div class="layer-type-options">
+					<button class="layer-type-option" data-layer-type="glitter-fill">
+
+
+						<span class="layer-type-icon icon-wrapper xl">
+							<svg class="icon">
+								<use href="#icon-glitter"></use>
+							</svg>
+						</span>
+
+
+
+						<span class="layer-type-name">Glitter Fill</span>
+						<span class="layer-type-description">Apply glitter effects to selected colors</span>
+					</button>
+					<button class="layer-type-option" data-layer-type="sticker">
+
+						<span class="layer-type-icon icon-wrapper xl">
+							<svg class="icon">
+								<use href="#icon-sticker"></use>
+							</svg>
+						</span>
+
+
+
+						<span class="layer-type-name">Sticker</span>
+						<span class="layer-type-description">Add images and graphics</span>
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -1124,7 +1270,7 @@
 						data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive">GifCities</strong><sup>[34]</sup>,
 					Angelfire and Tripod websites. Original file names are mostly retained.</p>
 
-				<p>Beyond Geocities backup archives and the few remaining personal website hosting services, many resources have been lost to time. Even in cases where archives exist, accompanying images were often not preserved, leaving only fragments of these sacred artifacts to be rediscovered and reconstructed here. The loss of external hosting sites like <strong class="context" data-tooltip="Early image and file hosting service commonly used on personal websites and Ebay auctions">Boomspeed</strong><sup>[35]</sup>, <strong class="context" data-tooltip="Free image hosting service popular in the mid-2000s">TinyPic</strong><sup>[36]</sup>, and <strong class="context" data-tooltip="Image hosting service later converted into a paid platform with watermarking">Photobucket</strong><sup>[37]</sup> is particularly notable, as limited bandwidth and storage on personal hosting services meant images were frequently stored off-site rather than locally. These platforms have since shut down—or, in the case of Photobucket, been acquired and converted into a paid service that either requires payment or imposes large watermarks on retained images—resulting in the loss of countless uploads.</p>
+				<p>Beyond Geocities backup archives and the few remaining personal website hosting services, many resources have been lost to time. Even in cases where archives exist, accompanying images were often not preserved, leaving only fragments of these sacred artifacts to be rediscovered and reconstructed here. The loss of external hosting sites like <strong class="context" data-tooltip="Early image and file hosting service commonly used on personal websites and Ebay auctions">Boomspeed</strong><sup>[35]</sup>, <strong class="context" data-tooltip="Free image hosting service popular in the mid-2000s">TinyPic</strong><sup>[36]</sup>, and <strong class="context" data-tooltip="Image hosting service later converted into a paid platform with watermarking">Photobucket</strong><sup>[37]</sup> is particularly notable, as limited bandwidth and storage on personal hosting services meant images were frequently stored off-site rather than locally. These platforms have since shut down, or in the case of Photobucket, were acquired and converted into a paid service that extorts users by keeping large watermarks on their images unless they pay.</p>
 
 				<p>Some surviving hypertexts are presented below in the "Original Resources" section, though the archived editing tools are no longer available for use, as they were rendered server-side.</p>
 
@@ -1238,9 +1384,11 @@
 				<ul>
 					<li>"<a href="https://glittermaker.com/" target="_blank" rel="noopener noreferrer">GlitterMaker</a>". <em>Pittsburgh Web Design by Websomniac, Corp.</em></li>
 
-					<li>"<a href="https://web.archive.org/web/20060410152919/http://www2.glitteryourway.com/" target="_blank" rel="noopener noreferrer">GlitterYourWay</a>". <em>Archived</em> from the original on 10 April 2006.</li>
+					<li>"<a href="https://www.glitteryourway.com/" target="_blank" rel="noopener noreferrer">GlitterYourWay</a>". <a href="https://web.archive.org/web/20060410152919/http://www2.glitteryourway.com/" target="_blank" rel="noopener noreferrer"><em>Archived</em></a> from the original on 10 April 2006.</li>
 
-					<li>"<a href="https://web.archive.org/web/20060410155311/http://www.myglitterromance.com/" target="_blank" rel="noopener noreferrer">MyGlitterRomance</a>". <em>Archived</em> from the original on 10 April 2006.</li>
+					<li>"<a href="https://www.myglitterromance.com/" target="_blank" rel="noopener noreferrer">MyGlitterRomance</a>". <a href="https://web.archive.org/web/20060410155311/http://www.myglitterromance.com/" target="_blank" rel="noopener noreferrer"><em>Archived</em></a> from the original on 10 April 2006.</li>
+
+
 					<li>Kimble, Katrina "Mz.Kathy". "<a class="external"
 							href="http://geocities.com/katrinakimble/page1.html" target="_blank"
 							rel="noopener noreferrer">Dolls and other sigs</a>". <em>GeoCities</em>. <a class="external"
@@ -1497,11 +1645,18 @@
 					<path d="M264 96L120 96C106.7 96 96 106.7 96 120L96 264C96 273.7 101.8 282.5 110.8 286.2C119.8 289.9 130.1 287.8 137 281L177 241L256 320L177 399L137 359C130.1 352.1 119.8 350.1 110.8 353.8C101.8 357.5 96 366.3 96 376L96 520C96 533.3 106.7 544 120 544L264 544C273.7 544 282.5 538.2 286.2 529.2C289.9 520.2 287.9 509.9 281 503L241 463L320 384L399 463L359 503C352.1 509.9 350.1 520.2 353.8 529.2C357.5 538.2 366.3 544 376 544L520 544C533.3 544 544 533.3 544 520L544 376C544 366.3 538.2 357.5 529.2 353.8C520.2 350.1 509.9 352.1 503 359L463 399L384 320L463 241L503 281C509.9 287.9 520.2 289.9 529.2 286.2C538.2 282.5 544 273.7 544 264L544 120C544 106.7 533.3 96 520 96L376 96C366.3 96 357.5 101.8 353.8 110.8C350.1 119.8 352.2 130.1 359 137L399 177L320 256L241 177L281 137C287.9 130.1 289.9 119.8 286.2 110.8C282.5 101.8 273.7 96 264 96z" />
 				</symbol>
 
+				<symbol id="icon-sticker" viewBox="0 0 640 640">
+					<path d="M160 544C124.7 544 96 515.3 96 480L96 160C96 124.7 124.7 96 160 96L480 96C515.3 96 544 124.7 544 160L544 373.5C544 390.5 537.3 406.8 525.3 418.8L418.7 525.3C406.7 537.3 390.4 544 373.4 544L160 544zM485.5 368L392 368C378.7 368 368 378.7 368 392L368 485.5L485.5 368z" />
+				</symbol>
 
 
+				<symbol id="icon-lock" viewBox="0 0 640 640">
+					<path d="M256 160L256 224L384 224L384 160C384 124.7 355.3 96 320 96C284.7 96 256 124.7 256 160zM192 224L192 160C192 89.3 249.3 32 320 32C390.7 32 448 89.3 448 160L448 224C483.3 224 512 252.7 512 288L512 512C512 547.3 483.3 576 448 576L192 576C156.7 576 128 547.3 128 512L128 288C128 252.7 156.7 224 192 224z" />
+				</symbol>
 
-
-
+				<symbol id="icon-unlock" viewBox="0 0 640 640">
+					<path d="M416 160C416 124.7 444.7 96 480 96C515.3 96 544 124.7 544 160L544 192C544 209.7 558.3 224 576 224C593.7 224 608 209.7 608 192L608 160C608 89.3 550.7 32 480 32C409.3 32 352 89.3 352 160L352 224L192 224C156.7 224 128 252.7 128 288L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 288C512 252.7 483.3 224 448 224L416 224L416 160z" />
+				</symbol>
 
 
 		</defs>

@@ -99,6 +99,14 @@
 }
 
 
+@mixin selected {
+	outline: 2px dashed #00ffff;
+	outline-offset: -2px; /* Draws inside the canvas edge */
+
+box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 8px rgba(0,0,0,0.5); /* Drop shadow for contrast */
+
+}
+
 @mixin text-xs {
 	font-size: var(--font-size-xs);
 	letter-spacing: 0.75px;
@@ -866,8 +874,6 @@ input[type="range"] {
 	flex-direction: column;
 
 	>.image-dropzone-wrapper {
-		padding: var(--spacing-md);
-
 		>#imageUpload {
 			display: none;
 		}
@@ -932,7 +938,6 @@ input[type="range"] {
 
 				>.image-upload-overlay-icon {
 					font-size: 32px;
-					margin-bottom: var(--spacing-sm);
 				}
 
 				>.image-upload-overlay-text {
@@ -957,7 +962,6 @@ input[type="range"] {
 
 				>.dropzone-icon {
 					font-size: 48px;
-					margin-bottom: var(--spacing-md);
 					opacity: 0.5;
 				}
 
@@ -1049,11 +1053,37 @@ input[type="range"] {
 				width: 28px;
 				height: 28px;
 				border-radius: var(--radius-sm);
+				overflow: hidden;
+
 				background-size: cover;
 				flex-shrink: 0;
 
+				display: flex;
+				align-items: center;
+				justify-content: center;
 
 				transition: opacity var(--transition-fast);
+
+				transform: translateZ(0); // ios fix for radius + hidden
+
+				&.sticker {
+					background-size: contain;
+					background-position: center;
+					background-repeat: no-repeat;
+				}
+
+				&.empty {
+					outline: 2px solid var(--gray-100);
+					outline-offset: 2px;
+					background-color: var(--gray-300);
+				}
+
+
+				&.baseImage {
+					background-size: cover;
+					background-position: center;
+					background-repeat: no-repeat;
+				}
 
 				&:hover {
 					opacity: 0.8;
@@ -1069,6 +1099,21 @@ input[type="range"] {
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
+
+				>.layer-name {
+					color: var(--color-text-primary);
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
+
+				>.layer-type {
+					@include text-sm;
+					color: var(--color-text-secondary);
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
 
 				>.layer-color {
 					@include text-sm;
@@ -1174,6 +1219,7 @@ input[type="range"] {
 
 
 .layer-settings-section {
+
 	position: relative;
 	z-index: 100;
 	box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
@@ -1268,7 +1314,10 @@ input[type="range"] {
 		}
 	}
 
-	>.section-content {}
+	>.section-content {
+
+		padding: var(--spacing-md);
+	}
 
 	/* Collapsible Section */
 	&.collapsible-section {
@@ -1380,6 +1429,7 @@ input[type="range"] {
 		padding: 3px 0;
 		border: 1px solid transparent;
 	}
+	
 
 	>.selected-color-chip {
 		display: flex;
@@ -1422,7 +1472,7 @@ input[type="range"] {
 }
 
 /* Empty States */
-.settings-empty-state {
+.empty-state {
 	padding: var(--spacing-lg);
 	text-align: center;
 	display: none;
@@ -1440,6 +1490,12 @@ input[type="range"] {
 
 	>.empty-state-text {
 		font-size: var(--font-size-base);
+		color: var(--color-text-secondary);
+	}
+
+	>.empty-state-subtext {
+		margin-top: var(--spacing-xs);
+		font-size: var(--font-size-sm);
 		color: var(--color-text-tertiary);
 	}
 }
@@ -1460,6 +1516,21 @@ input[type="range"] {
 	transform-origin: center;
 	pointer-events: auto;
 	will-change: transform;
+
+   pointer-events: auto !important; /* Allow clicking the sticker */
+    cursor: move; /* Show move cursor */
+    touch-action: none; /* Prevent browser scrolling on mobile while dragging */
+
+	&.dragging {
+		cursor: grabbing;
+		
+	}
+
+
+	&.selected {
+		@include selected();
+		z-index: 1000 !important; /* Bring selected sticker to very top */
+	}
 
 	img {
 		width: 100%;
@@ -1506,25 +1577,10 @@ input[type="range"] {
 		z-index: 0;
 
 
-		>.glitter-empty-state {
-			padding: 40px var(--spacing-xl);
-			text-align: center;
-			color: var(--color-text-tertiary);
-
-			>.glitter-empty-state-icon {
-				font-size: 48px;
-				margin-bottom: var(--spacing-md);
-				opacity: 0.3;
-			}
-
-			>.glitter-empty-state-text {
-				font-size: var(--font-size-lg);
-			}
-		}
 
 
 
-		>.glitter-category {
+		.glitter-category {
 			margin-bottom: var(--spacing-xl);
 
 			>.category-title {
@@ -1986,6 +2042,12 @@ input[type="range"] {
 		display: block;
 		max-width: none;
 		max-height: none;
+
+		&.selected-base {
+			@include selected();
+
+		}
+
 	}
 }
 
@@ -2535,6 +2597,7 @@ input[type="range"] {
 .sticker-position-group {
 	display: flex;
 	gap: var(--spacing-md);
+	width: 100%;
 
 	.input-group {
 		flex: 1;
@@ -2594,22 +2657,6 @@ input[type="range"] {
 	padding: var(--spacing-lg);
 	position: relative;
 	z-index: 0;
-
-	.stickers-empty-state {
-		padding: 40px var(--spacing-xl);
-		text-align: center;
-		color: var(--color-text-tertiary);
-
-		.empty-state-icon {
-			font-size: 48px;
-			margin-bottom: var(--spacing-md);
-			opacity: 0.3;
-		}
-
-		.empty-state-text {
-			font-size: var(--font-size-lg);
-		}
-	}
 
 	.sticker-category {
 		margin-bottom: var(--spacing-xl);
@@ -3332,6 +3379,62 @@ input[type="range"] {
 
 }
 
+
+#layerTypePickerModal {
+	// ============================================
+// LAYER TYPE PICKER MODAL
+// ============================================
+
+.layer-type-options {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: var(--spacing-md);
+
+	> .layer-type-option {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-xl);
+		background: var(--color-bg-secondary);
+		border: 2px solid var(--color-border);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		text-align: center;
+
+		&:hover {
+			background: var(--color-bg-tertiary);
+			border-color: var(--color-accent);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		}
+
+		.icon-wrapper {
+			color: var(--color-text-tertiary);
+			margin-bottom: var(--spacing-base);
+		}
+
+		&:hover .icon-wrapper {
+			opacity: 1;
+		}
+
+		.layer-type-name {
+			font-size: var(--font-size-lg);
+			color: var(--color-text-primary);
+		}
+
+		.layer-type-description {
+			@include text-sm;
+			color: var(--color-text-secondary);
+		}
+	}
+}
+
+
+}
+
+
+
 #shortcutsModal {
 
 	/* KEYBOARD SHORTCUTS */
@@ -3560,4 +3663,143 @@ input[type="range"] {
 		}
 	}
 
+}
+
+/* Sidebar Section Management */
+
+// 1. Standard Sections (Settings, Search, Info)
+#welcomeSection,
+#glitterSettingsSection,
+#layerSettingsSection,
+#stickerSettingsSection,
+#noLayerSettingsSection,
+#baseLayerSettingsSection, // <--- NEW
+#glitterSearchSection,
+#stickersSearchSection {
+    display: none; // Hide by default
+
+    &.visible {
+        display: block;
+    }
+}
+
+// 2. Gallery/Option Sections (Grids)
+#glitterOptions,
+#stickersOptions {
+    display: none;
+
+    &.visible {
+        display: grid;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+/* Project Metadata Styling */
+.project-meta-stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--color-border);
+    width: 100%;
+}
+
+.meta-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.meta-stat .label {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meta-stat .value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+}
+
+/* Quick Actions Grid */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+
+	> .quick-action-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 12px 8px;
+		min-height: 80px;
+
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+
+		// radius fix
+		transform: translateZ(0);
+
+		&:hover {
+			background: var(--color-bg-tertiary);
+			border-color: var(--color-accent);
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+			.icon-wrapper {
+				color: var(--color-accent);
+			}
+		}
+
+		&:active {
+			transform: translateY(0);
+		}
+
+		.icon-wrapper {
+			color: var(--color-text-secondary);
+		}
+
+		.action-name {
+			font-size: 11px;
+			font-weight: 500;
+			color: var(--color-text-primary);
+			text-align: center;
+		}
+	}
+
+
+
+}
+
+
+
+
+/* Grid Containers - Hidden by default */
+#glitterGridContainer,
+#stickerGridContainer {
+    display: none;
+}
+
+/* Show when visible class is added */
+#glitterGridContainer.visible,
+#stickerGridContainer.visible {
+    display: block;
 }

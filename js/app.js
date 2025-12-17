@@ -23,7 +23,10 @@ const CONFIG = {
 
 	// layers
 	exportFrameRateSource: 'first-layer',
-	createDefaultLayerOnLoad: true,
+	createDefaultLayerOnLoad: false,
+	createBaseImageLayerOnLoad: true,
+
+
 	scrollZoneSize: 50,
 	scrollSpeed: 10,
 
@@ -150,20 +153,211 @@ class StickerManager {
 		this.renderStickerPicker();
 	}
 
-	setupUI() {
-		// Set up UI references
-		this.stickerPanel = document.getElementById('stickersOptions');
-		this.stickerGrid = document.getElementById('stickersOptions');
-		this.stickerSearch = document.getElementById('stickersSearch');
-		this.stickerFilterToggle = document.getElementById('stickerFilterToggleBtn');
-		this.stickerFiltersContainer = document.getElementById('stickerFiltersContainer');
-		this.clearStickerFiltersBtn = document.getElementById('clearStickerFiltersBtn');
-		this.stickerCategoryChips = document.getElementById('stickerCategoryChips');
+// In StickerManager class
 
-		// Set up event listeners
-		this.setupStickerSearchListeners();
-		this.setupGalleryTabs();
+	attachDragListeners(element, layerId) {
+		let isDragging = false;
+		let startX, startY;
+		let initialStickerX, initialStickerY;
+
+		const startDrag = (clientX, clientY) => {
+			// Only allow dragging if Select Tool is active
+			if (this.editor.currentTool !== 'select') return;
+
+			// Only allow dragging if this is the active layer
+			if (this.editor.layerManager.activeLayerId !== layerId) {
+				this.editor.layerManager.setActiveLayer(layerId);
+			}
+
+			isDragging = true;
+			element.classList.add('dragging');
+
+			startX = clientX;
+			startY = clientY;
+
+			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+			if (!layer) return;
+
+			initialStickerX = layer.stickerData.transform.position.x;
+			initialStickerY = layer.stickerData.transform.position.y;
+		};
+
+		const onMove = (clientX, clientY) => {
+			if (!isDragging) return;
+
+			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+			if (!layer) return;
+
+			// Calculate Delta
+			const dx = clientX - startX;
+			const dy = clientY - startY;
+
+			// Adjust for Zoom Level (Crucial for accuracy)
+			const zoom = this.editor.viewport.currentZoom;
+			
+			// Update Position
+			this.updateStickerTransform(layerId, {
+				position: {
+					x: initialStickerX + (dx / zoom),
+					y: initialStickerY + (dy / zoom)
+				}
+			});
+			
+			// Update Settings UI if open
+			this.editor.loadStickerSettings(layer);
+		};
+
+		const endDrag = () => {
+			if (!isDragging) return;
+			isDragging = false;
+			element.classList.remove('dragging');
+			this.editor.saveState(); // Save for Undo
+		};
+
+		// --- MOUSE EVENTS ---
+		element.addEventListener('mousedown', (e) => {
+			if (this.editor.currentTool === 'select') {
+				e.stopPropagation(); // Stop Viewport Pan
+				e.preventDefault();
+				startDrag(e.clientX, e.clientY);
+			}
+		});
+
+		window.addEventListener('mousemove', (e) => {
+			if (isDragging) {
+				e.preventDefault();
+				onMove(e.clientX, e.clientY);
+			}
+		});
+
+		window.addEventListener('mouseup', endDrag);
+
+
+		// --- TOUCH EVENTS (One Finger) ---
+		element.addEventListener('touchstart', (e) => {
+			if (this.editor.currentTool === 'select' && e.touches.length === 1) {
+				e.stopPropagation(); // Stop Viewport Pan
+				e.preventDefault();
+				startDrag(e.touches[0].clientX, e.touches[0].clientY);
+			}
+		}, { passive: false });
+
+		window.addEventListener('touchmove', (e) => {
+			if (isDragging && e.touches.length === 1) {
+				e.preventDefault(); // Stop Browser Scroll
+				onMove(e.touches[0].clientX, e.touches[0].clientY);
+			}
+		}, { passive: false });
+
+		window.addEventListener('touchend', endDrag);
 	}
+
+
+setupUI() {
+    // 1. Get the Main Wrapper
+    this.stickerPanel = document.getElementById('stickersOptions');
+
+    // 2. Get the specific internal containers
+    this.stickerGridContainer = document.getElementById('stickerGridContainer');
+    this.stickerSearchEmptyState = document.getElementById('stickerSearchEmptyState');
+
+    // 3. Search inputs
+    this.stickerSearch = document.getElementById('stickersSearch');
+    this.stickerFilterToggle = document.getElementById('stickerFilterToggleBtn');
+    this.stickerFiltersContainer = document.getElementById('stickerFiltersContainer');
+    this.clearStickerFiltersBtn = document.getElementById('clearStickerFiltersBtn');
+    this.stickerCategoryChips = document.getElementById('stickerCategoryChips');
+
+    // 4. Set up event listeners
+    this.setupStickerSearchListeners();
+}
+
+replaceActiveSticker(stickerId) {
+		const activeLayer = this.editor.layerManager.getActiveLayer();
+        const stickerInfo = this.getStickerById(stickerId);
+
+		// Only proceed if we have a sticker and the active layer is a sticker layer
+		if (!stickerInfo || !activeLayer || activeLayer.type !== LayerType.STICKER) {
+            return;
+        }
+
+        // Update Layer Metadata
+        activeLayer.name = stickerInfo.name;
+        activeLayer.stickerSourceId = stickerInfo.id;
+
+        // Update Sticker Data
+        activeLayer.stickerData.url = stickerInfo.url;
+        activeLayer.stickerData.name = stickerInfo.name;
+        activeLayer.stickerData.source = stickerInfo.source;
+        activeLayer.stickerData.width = stickerInfo.width;
+        activeLayer.stickerData.height = stickerInfo.height;
+        activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+        activeLayer.stickerData.isEmpty = false; // Ensure it's marked as full
+
+        // Note: We DO NOT reset transform (x, y, rotation) so the user 
+        // can swap styles without losing their placement.
+        
+        // Re-render
+        this.renderSticker(activeLayer);
+        this.editor.layerManager.renderLayersList(); // Update thumbnail in layer list
+        this.editor.saveState();
+	}
+
+
+	 async addNewStickerLayer(stickerId) {
+        if (!this.editor.originalImage) {
+            this.editor.showError('Please load an image first');
+            return;
+        }
+
+        // 1. Force creation of a NEW layer
+        const layer = await this.createStickerLayer(stickerId);
+        
+        if (layer) {
+            this.editor.updateStatus('New sticker layer added');
+        }
+    }
+
+
+
+createEmptyStickerLayer() {
+        return {
+            id: this.editor.layerManager.generateLayerId(),
+            type: LayerType.STICKER,
+            name: 'New Sticker',
+            visible: true,
+            locked: false,
+            stickerSourceId: null,
+
+            stickerData: {
+                isEmpty: true, // FLAG: This layer is waiting for content
+                url: null,     // No image yet
+                name: 'Select a Sticker',
+                source: null,
+                isAnimated: false,
+                width: 100,
+                height: 100,
+                
+                // Default Transform
+                transform: {
+                    position: {
+                        x: this.editor.originalCanvas.width / 2,
+                        y: this.editor.originalCanvas.height / 2
+                    },
+                    rotation: CONFIG.defaultStickerRotation,
+                    scale: {
+                        x: CONFIG.defaultStickerScale.x,
+                        y: CONFIG.defaultStickerScale.y
+                    },
+                    proportionalScale: true,
+                    opacity: CONFIG.defaultStickerOpacity,
+                    flipX: false,
+                    flipY: false
+                },
+                element: null
+            }
+        };
+    }
 
 	// ===== PRESET STICKERS =====
 
@@ -348,9 +542,6 @@ class StickerManager {
 			return null;
 		}
 
-		// NO NEED TO LOAD FRAMES - browser handles animation natively!
-		// Frames are only loaded during export
-
 		// Create layer object
 		const layer = {
 			id: this.editor.layerManager.generateLayerId(),
@@ -416,40 +607,66 @@ class StickerManager {
 
 	// ===== RENDERING =====
 
+    // 1. New Helper Method
+    updateSelectionHighlight(activeLayerId) {
+        this.stickerElements.forEach((element, layerId) => {
+            if (layerId === activeLayerId) {
+                element.classList.add('selected');
+            } else {
+                element.classList.remove('selected');
+            }
+        });
+    }
+
+    // 2. Update renderSticker to check selection status immediately
+// In StickerManager class -> renderSticker(layer)
+
 	renderSticker(layer) {
 		if (layer.type !== LayerType.STICKER) return;
 
-		// Remove existing element if any
+		// ... (checks for empty layer) ...
+        if (layer.stickerData.isEmpty || !layer.stickerData.url) {
+            this.removeStickerElement(layer.id);
+            return;
+        }
+
+		// Remove existing element
 		this.removeStickerElement(layer.id);
 
-		// Create DOM element
 		const element = document.createElement('div');
 		element.className = 'sticker-element';
 		element.dataset.layerId = layer.id;
 
-		// Create image element
-		const img = document.createElement('img');
-		img.src = layer.stickerData.url;  // Just use the URL - browser handles animation!
-		img.draggable = false;
+		// Selection Highlight Check
+		if (this.editor.layerManager.activeLayerId === layer.id) {
+			element.classList.add('selected');
+		}
 
-		// Apply pixelated rendering if needed
+		// Create Image
+		const img = document.createElement('img');
+		img.src = layer.stickerData.url;
+		img.draggable = false; // Important: Disable native drag
+
 		if (layer.stickerData.width < 100 && layer.stickerData.height < 100) {
 			img.style.imageRendering = 'pixelated';
 		}
 
 		element.appendChild(img);
 
-		// Apply initial transform
+		// Apply Transform
 		this.applyStickerTransform(element, layer);
 
-		// Add to container
+		// Add to Container
 		this.editor.glitterBackgroundsContainer.appendChild(element);
 
-		// Store reference
+		// Store Reference
 		layer.stickerData.element = element;
 		this.stickerElements.set(layer.id, element);
 
-		// No need to start animation - browser does it automatically!
+		// ============================================================
+		// NEW: ATTACH DRAG LISTENERS
+		// ============================================================
+		this.attachDragListeners(element, layer.id);
 	}
 
 	applyStickerTransform(element, layer) {
@@ -572,12 +789,31 @@ class StickerManager {
 
 	// ===== STICKER PICKER UI =====
 
-	renderStickerPicker() {
-		if (!this.stickerPanel) return;
+renderStickerPicker() {
+		// 1. Get Elements
+		const container = document.getElementById('stickerGridContainer');
+		const emptyState = document.getElementById('stickerSearchEmptyState');
 
+		// Safety Check: If container is missing, we can't render
+		if (!container) return;
+
+		// 2. Get Data & Clear Grid
 		const filteredStickers = this.applyFilters();
+		container.innerHTML = '';
 
-		// Group by category
+		// 3. Handle Visibility (Empty vs Content)
+		if (filteredStickers.length === 0) {
+			// Show Empty State, Hide Grid
+			if (emptyState) emptyState.classList.add('visible');
+			container.classList.remove('visible');
+			return; // Stop rendering
+		} else {
+			// Hide Empty State, Show Grid
+			if (emptyState) emptyState.classList.remove('visible');
+			container.classList.add('visible');
+		}
+
+		// 4. Group by Category
 		const byCategory = {};
 		filteredStickers.forEach(sticker => {
 			const cat = sticker.category || 'uncategorized';
@@ -585,46 +821,39 @@ class StickerManager {
 			byCategory[cat].push(sticker);
 		});
 
-		// Clear existing content
-		this.stickerPanel.innerHTML = '';
-
-		if (filteredStickers.length === 0) {
-			this.stickerPanel.innerHTML = `
-			<div class="stickers-empty-state">
-				<div class="empty-state-icon">🔍</div>
-				<div class="empty-state-text">No stickers found</div>
-			</div>
-		`;
-			return;
-		}
-
-		// Render each category
+		// 5. Render Categories
 		Object.keys(byCategory).sort().forEach(categoryName => {
 			const stickers = byCategory[categoryName];
+			
+			// Category Wrapper
 			const categoryDiv = document.createElement('div');
 			categoryDiv.className = 'sticker-category';
 
+			// Title
 			const title = document.createElement('div');
 			title.className = 'category-title';
 			title.textContent = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
 
+			// Grid
 			const grid = document.createElement('div');
 			grid.className = 'sticker-grid';
 
+			// Individual Stickers
 			stickers.forEach(sticker => {
 				const option = document.createElement('div');
 				option.className = 'sticker-option';
 				option.dataset.stickerId = sticker.id;
 				option.title = sticker.name;
 
+				// Visual indicators
 				if (sticker.isAnimated) {
 					option.classList.add('animated');
 				}
-
 				if (sticker.width < 100 && sticker.height < 100) {
 					option.classList.add('pixelated');
 				}
 
+				// Image
 				const img = document.createElement('img');
 				img.src = sticker.thumbnailUrl || sticker.url;
 				img.alt = sticker.name;
@@ -632,9 +861,16 @@ class StickerManager {
 
 				option.appendChild(img);
 
-				// Double-click to add sticker
-				option.addEventListener('dblclick', async () => {
-					await this.addStickerToCanvas(sticker.id);
+				// Interaction
+				option.addEventListener('click', () => {
+					const activeLayer = this.editor.layerManager.getActiveLayer();
+					// If a sticker layer is currently active, replace the image
+					if (activeLayer && activeLayer.type === LayerType.STICKER) {
+						this.replaceActiveSticker(sticker.id);
+					} else {
+						// Otherwise, add a new sticker layer
+						this.addStickerToCanvas(sticker.id);
+					}
 				});
 
 				grid.appendChild(option);
@@ -642,29 +878,16 @@ class StickerManager {
 
 			categoryDiv.appendChild(title);
 			categoryDiv.appendChild(grid);
-			this.stickerPanel.appendChild(categoryDiv);
+			
+			// Append to the Grid Container (not the main panel)
+			container.appendChild(categoryDiv);
 		});
 
-		// Populate category chips if not already done
+		// 6. Update Category Chips (if needed)
 		this.populateCategoryChips();
 	}
 
-
-	setupGalleryTabs() {
-		const tabs = document.querySelectorAll('.gallery-tab');
-		tabs.forEach(tab => {
-			tab.addEventListener('click', () => {
-				const tabName = tab.dataset.galleryTab;
-				this.switchGalleryTab(tabName);
-			});
-		});
-	}
-
-	switchGalleryTab(tabName) {
-		// Update tab buttons
-		document.querySelectorAll('.gallery-tab').forEach(tab => {
-			tab.classList.toggle('active', tab.dataset.galleryTab === tabName);
-		});
+	switchGalleryTab(tabName = null) {
 
 		// Update content sections using .visible class
 		document.querySelectorAll('.gallery-content').forEach(content => {
@@ -682,6 +905,9 @@ class StickerManager {
 			} else if (tabName === 'stickers') {
 				stickersSearch.classList.add('visible');
 				glitterSearch.classList.remove('visible');
+			}else{
+				glitterSearch.classList.remove('visible');
+				stickersSearch.classList.remove('visible');
 			}
 		}
 
@@ -806,22 +1032,46 @@ class StickerManager {
 		});
 	}
 
-	async addStickerToCanvas(stickerId) {
-		if (!this.editor.originalImage) {
-			this.editor.showError('Please load an image first');
-			return;
-		}
+    async addStickerToCanvas(stickerId) {
+        if (!this.editor.originalImage) {
+            this.editor.showError('Please load an image first');
+            return;
+        }
 
-		try {
-			const layer = await this.createStickerLayer(stickerId);
-			if (layer) {
-				this.editor.updateStatus('Sticker added');
-			}
-		} catch (error) {
-			console.error('Failed to add sticker:', error);
-			this.editor.showError('Failed to add sticker');
-		}
-	}
+        const activeLayer = this.editor.layerManager.getActiveLayer();
+        const stickerInfo = this.getStickerById(stickerId);
+
+        if (!stickerInfo) return;
+
+        // LOGIC: If active layer is an Empty Sticker Layer, populate it.
+        // Otherwise, create a NEW layer.
+        if (activeLayer && activeLayer.type === LayerType.STICKER && activeLayer.stickerData.isEmpty) {
+            
+            // Populate the existing layer
+            activeLayer.name = stickerInfo.name;
+            activeLayer.stickerSourceId = stickerInfo.id;
+            
+            // Fill data
+            activeLayer.stickerData.isEmpty = false; // It is now full
+            activeLayer.stickerData.url = stickerInfo.url;
+            activeLayer.stickerData.name = stickerInfo.name;
+            activeLayer.stickerData.source = stickerInfo.source;
+            activeLayer.stickerData.width = stickerInfo.width;
+            activeLayer.stickerData.height = stickerInfo.height;
+            activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+
+            // Render
+            this.renderSticker(activeLayer);
+            this.editor.layerManager.renderLayersList(); // Update thumbnail
+            this.editor.updateStatus('Sticker placed');
+            this.editor.saveState();
+
+        } else {
+            // Standard behavior: New Layer
+            await this.createStickerLayer(stickerId);
+            this.editor.updateStatus('Sticker added');
+        }
+    }
 
 
 
@@ -1563,6 +1813,17 @@ class LayerManager {
 		return `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 	}
 
+	createBaseImageLayer(){
+		const layer = {
+			id: this.generateLayerId(),
+			type: LayerType.BASE_IMAGE,
+			image: null,
+			visible: true,
+			locked: true
+		};
+		return layer;
+	}
+
 	createLayer(type = LayerType.GLITTER_FILL) {  // ADD type parameter
 		if (this.layers.length >= CONFIG.maxLayers) {
 			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
@@ -1580,6 +1841,7 @@ class LayerManager {
 			id: this.generateLayerId(),
 			type: LayerType.GLITTER_FILL,  // ADD THIS
 			visible: true,
+			locked: false,
 			selections: [],
 			selectedGlitterIndex: CONFIG.defaultGlitterIndex,
 			settings: {
@@ -1596,19 +1858,43 @@ class LayerManager {
 		return layer;
 	}
 
-	addLayer() {
-		const layer = this.createLayer();
-		if (!layer) return;
+// In LayerManager class
 
-		this.layers.push(layer);
-		this.setActiveLayer(layer.id);
-		this.renderLayersList();
-		this.editor.saveState();
-		this.editor.updateActionButtons();
-		this.editor.updateStatus('Layer added');
-	}
+    addLayer(type = LayerType.GLITTER_FILL) {
+        // Check max layers
+        if (this.layers.length >= CONFIG.maxLayers) {
+            this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+            return;
+        }
+
+        let layer;
+
+        if (type === LayerType.STICKER) {
+            // Create an EMPTY sticker layer
+            layer = this.editor.stickerManager.createEmptyStickerLayer();
+        } else {
+            // Create a standard glitter layer
+            layer = this.createLayer(LayerType.GLITTER_FILL);
+			this.editor.setTool('colorPicker');
+        }
+
+        if (!layer) return;
+
+        this.layers.push(layer);
+        this.setActiveLayer(layer.id);
+        this.renderLayersList();
+        
+        // Save state
+        this.editor.saveState();
+        this.editor.updateActionButtons();
+        
+        const msg = type === LayerType.STICKER ? 'Empty sticker layer added' : 'Layer added';
+        this.editor.updateStatus(msg);
+    }
 
 	deleteLayer(layerId) {
+
+
 		if (this.layers.length <= 1) {
 			this.editor.showError('Cannot delete the last layer');
 			return;
@@ -1616,6 +1902,12 @@ class LayerManager {
 
 		const index = this.layers.findIndex(l => l.id === layerId);
 		if (index === -1) return;
+
+		// if layer is locked
+		if (this.layers[index].locked) {
+			this.editor.showError('Cannot delete locked layer');
+			return;
+		}
 
 		// ADD: Clean up sticker if it's a sticker layer
 		const layer = this.layers[index];
@@ -1658,51 +1950,62 @@ class LayerManager {
 
 	// ===== LAYER SELECTION =====
 
-	setActiveLayer(layerId) {
-		this.activeLayerId = layerId;
-		this.renderLayersList();
 
-		const layer = this.layers.find(l => l.id === layerId);
 
-		// Update settings panels based on layer type
-		if (layer) {
-			if (layer.type === LayerType.STICKER) {
-				// Show sticker settings, hide layer settings
-				this.editor.hideStickerSettingsEmptyState();
-				this.editor.showLayerSettingsEmptyState();
-				this.editor.showGlitterSettingsEmptyState();
+setActiveLayer(layerId) {
+        this.activeLayerId = layerId;
+        this.renderLayersList();
 
-				this.editor.loadStickerSettings(layer);
-			} else if (layer.type === LayerType.GLITTER_FILL) {
-				// Show layer settings, hide sticker settings
-				this.editor.hideLayerSettingsEmptyState();
-				this.editor.showStickerSettingsEmptyState();
+        const layer = this.layers.find(l => l.id === layerId);
 
-				this.editor.loadActiveLayerSettings();
-				this.editor.updateGlitterSelection();
+        // 1. Update Sticker Highlights
+        if (this.editor.stickerManager) {
+            this.editor.stickerManager.updateSelectionHighlight(layerId);
+        }
 
-				if (layer.selections.length > 0) {
-					this.editor.hideGlitterSettingsEmptyState();
-				} else {
-					this.editor.showGlitterSettingsEmptyState();
-				}
-			}
+        // 2. Update Base Image Highlight
+        // Strict check: Only add class if layer exists AND is Base Image.
+        // Explicitly remove it in all other cases.
+        if (this.editor.previewCanvas) {
+            const isBaseImage = layer && layer.type === LayerType.BASE_IMAGE;
+            
+            // Use 'selected' if that is your global CSS preference, 
+            // or 'selected-base' if you want specific styling.
+            // We force a boolean (!!isBaseImage) to ensure correct toggle behavior.
+            this.editor.previewCanvas.classList.toggle('selected-base', !!isBaseImage);
+            
+            // Safety: Ensure we don't have lingering 'selected' class if you use that generic name too
+            if (!isBaseImage) {
+                this.editor.previewCanvas.classList.remove('selected'); 
+            }
+        }
 
-			// Auto-switch gallery tab
-			if (this.editor.stickerManager) {
-				if (layer.type === LayerType.STICKER) {
-					this.editor.stickerManager.switchGalleryTab('stickers');
-				} else if (layer.type === LayerType.GLITTER_FILL) {
-					this.editor.stickerManager.switchGalleryTab('glitter');
-				}
-			}
-		}
+        // 3. Update Side Panel UI
+        this.editor.updateSidePanelUI(layer);
 
-		// Trigger custom event
-		window.dispatchEvent(new CustomEvent('layerChanged', {
-			detail: { layerId, layer }
-		}));
-	}
+        // 4. Load settings
+        if (layer) {
+            if (layer.type === LayerType.STICKER) {
+                this.editor.hideStickerSettingsEmptyState();
+                this.editor.loadStickerSettings(layer);
+            } else if (layer.type === LayerType.GLITTER_FILL) {
+                this.editor.hideLayerSettingsEmptyState();
+                this.editor.hideGlitterSettingsEmptyState();
+                this.editor.loadActiveLayerSettings();
+                this.editor.updateGlitterSelection();
+            }
+        } else {
+            // No layer selected: Ensure empty states are shown
+            this.editor.showLayerSettingsEmptyState();
+            this.editor.showGlitterSettingsEmptyState();
+            this.editor.showStickerSettingsEmptyState();
+        }
+
+        window.dispatchEvent(new CustomEvent('layerChanged', {
+            detail: { layerId, layer }
+        }));
+    }
+
 
 
 	getActiveLayer() {
@@ -1751,24 +2054,51 @@ class LayerManager {
 
 	// ===== LAYER PICKING (SELECT TOOL) =====
 
+// In LayerManager class
+
 	handleLayerPick(x, y) {
-		// Check layers from top to bottom (end to start of array)
+		// Check layers from top to bottom (visual order)
 		for (let i = this.layers.length - 1; i >= 0; i--) {
 			const layer = this.layers[i];
 
-			// Skip invisible layers
+			// 1. Skip invisible layers
 			if (!layer.visible) continue;
 
-			// Skip layers without selections
-			if (!layer.selections || layer.selections.length === 0) continue;
+			let isHit = false;
 
-			// Check if this pixel is covered by this layer's selection
-			if (this.isPixelInLayerSelection(layer, x, y)) {
+			// 2. Check Hit based on Layer Type
+			if (layer.type === LayerType.STICKER) {
+				isHit = this.isPointInSticker(layer, x, y);
+			} 
+            else if (layer.type === LayerType.GLITTER_FILL) {
+                // Existing logic: Check if pixel matches selection criteria
+				if (layer.selections && layer.selections.length > 0) {
+					isHit = this.isPixelInLayerSelection(layer, x, y);
+				}
+			} 
+            else if (layer.type === LayerType.BASE_IMAGE) {
+                // Base image covers the whole canvas (if loaded)
+                // Since we iterate top-down, we only hit this if nothing above it was clicked
+				if (this.editor.originalImage) {
+                    isHit = true;
+                }
+			}
+
+			// 3. If Hit, Select and Return
+			if (isHit) {
 				this.setActiveLayer(layer.id);
-				const glitterName = this.editor.glitterGifs[layer.selectedGlitterIndex]?.name || 'Layer';
-				this.editor.updateStatus(`Selected: ${glitterName}`);
+				
+                // UX Feedback
+                let name = 'Layer';
+                if(layer.type === LayerType.STICKER) name = layer.name;
+                else if(layer.type === LayerType.BASE_IMAGE) name = "Base Image";
+                else if(layer.type === LayerType.GLITTER_FILL) {
+                    name = this.editor.glitterGifs[layer.selectedGlitterIndex]?.name || 'Glitter';
+                }
 
-				// Brief visual feedback
+				this.editor.updateStatus(`Selected: ${name}`);
+
+				// Visual feedback (flash)
 				const flash = document.createElement('div');
 				flash.className = 'layer-pick-flash';
 				flash.style.left = (x / this.editor.previewCanvas.width * 100) + '%';
@@ -1776,13 +2106,47 @@ class LayerManager {
 				this.editor.previewWrapper.appendChild(flash);
 				setTimeout(() => flash.remove(), 300);
 
-				return;
+				return; // Stop checking lower layers
 			}
 		}
 
-		// Nothing clicked - deselect
+		// If loop finishes with no hits
 		this.setActiveLayer(null);
 		this.editor.updateStatus('No layer at this location');
+	}
+
+    // --- NEW HELPER METHOD ---
+    // Calculates if click (x,y) is inside a rotated/scaled sticker
+	isPointInSticker(layer, clickX, clickY) {
+        if (layer.stickerData.isEmpty || !layer.stickerData.url) return false;
+
+		const t = layer.stickerData.transform;
+        const w = layer.stickerData.width;
+        const h = layer.stickerData.height;
+
+        // 1. Translate click relative to sticker center
+        let dx = clickX - t.position.x;
+        let dy = clickY - t.position.y;
+
+        // 2. Un-rotate (Rotate click point by -angle)
+        const angleRad = -t.rotation * (Math.PI / 180);
+        const rx = dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
+        const ry = dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
+
+        // 3. Un-scale
+        // Note: transform.scale is in percentage (e.g. 100), so we divide by 100
+        const sx = t.scale.x / 100;
+        const sy = t.scale.y / 100;
+
+        const lx = rx / sx;
+        const ly = ry / sy;
+
+        // 4. Check boundaries
+        // Since (0,0) is now the center, we check against +/- half width/height
+        const halfW = w / 2;
+        const halfH = h / 2;
+
+        return (lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH);
 	}
 
 	isPixelInLayerSelection(layer, x, y) {
@@ -1859,86 +2223,129 @@ class LayerManager {
 		this.updateMobileLayersSwatch();
 	}
 
-	createLayerElement(layer) {
+createLayerElement(layer) {
 		const layerEl = document.createElement('div');
 		layerEl.className = 'layer-item';
 		layerEl.dataset.layerId = layer.id;
-		layerEl.draggable = true;
+		
+        // Only allow dragging if not locked
+        if (!layer.locked) {
+		    layerEl.draggable = true;
+        }
 
 		if (layer.id === this.activeLayerId) {
 			layerEl.classList.add('active');
 		}
 
-		// Swatch
+		// 1. Drag Handle
+		const dragHandle = document.createElement('div');
+		dragHandle.className = 'layer-drag-handle';
+        
+        // Only show drag handle icon if not locked
+        if (!layer.locked) {
+            dragHandle.innerHTML = `
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z" fill="currentColor"/>
+                </svg>
+            `;
+        } else {
+            // Optional: You can leave it empty, or add a small lock indicator here too
+            dragHandle.style.cursor = 'default';
+        }
+
+		// 2. Swatch (Thumbnail)
 		const swatch = document.createElement('div');
 		swatch.className = 'layer-swatch';
 
-		// CHANGE: Handle different layer types
 		if (layer.type === LayerType.STICKER) {
-			// Show sticker thumbnail
-			swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
-			swatch.style.backgroundSize = 'contain';
-			swatch.style.backgroundPosition = 'center';
-			swatch.style.backgroundRepeat = 'no-repeat';
-			swatch.style.imageRendering = 'pixelated';
-		} else {
-			// Show glitter swatch (existing code)
+            // Sticker Logic
+			swatch.classList.add('sticker');
+            if (layer.stickerData.isEmpty) {
+                swatch.classList.add('empty');
+                swatch.innerHTML = '<span>?</span>';
+            } else {
+			    swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
+            }
+		} else if (layer.type === LayerType.BASE_IMAGE) {
+            // --- FIX: Base Image Thumbnail ---
+            if (this.editor.originalImage) {
+                swatch.style.backgroundImage = `url(${this.editor.originalImage.src})`;
+				swatch.classList.add('baseImage');
+            }
+        } else {
+            // Glitter Logic
 			const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
 			if (glitter) {
 				swatch.style.backgroundImage = `url(${glitter.url})`;
-				if (glitter.isPixelated) {
-					swatch.classList.add('pixelated');
-				}
+				swatch.classList.add('glitter');
+				if (glitter.isPixelated) swatch.classList.add('pixelated');
+
 			}
 		}
 
 		// Double-click swatch behavior
 		swatch.addEventListener('dblclick', (e) => {
 			e.stopPropagation();
-			if (layer.type === LayerType.STICKER) {
-				// TODO: Could open sticker picker or transform tool
-				console.log('Edit sticker:', layer.id);
-			} else {
+			if (layer.type === LayerType.GLITTER_FILL) {
 				this.goToGlitter(layer.id);
 			}
 		});
 
-		// Info
+
+
+		// 3. Info (Name)
 		const info = document.createElement('div');
 		info.className = 'layer-info';
-		const colorText = document.createElement('div');
-		colorText.className = 'layer-color';
+		
+        const nameText = document.createElement('div');
+		nameText.className = 'layer-name'; // Changed from layer-color for semantics
 
-		// CHANGE: Display name based on layer type
 		if (layer.type === LayerType.STICKER) {
-			colorText.textContent = layer.name || LayerType.STICKER;
-		} else {
+			nameText.textContent = layer.name || 'Sticker';
+		} else if (layer.type === LayerType.GLITTER_FILL) {
 			const glitter = this.editor.glitterGifs[layer.selectedGlitterIndex];
-			if (glitter) {
-				colorText.textContent = `${glitter.category} - ${glitter.name}`;
-			} else {
-				colorText.textContent = 'No glitter';
-			}
+			nameText.textContent = glitter ? `${glitter.category} - ${glitter.name}` : 'No glitter';
+		} else if (layer.type === LayerType.BASE_IMAGE) {
+			nameText.textContent = 'Base Image';
 		}
 
-		info.appendChild(colorText);
+		info.appendChild(nameText);
 
-		// Drag handle (mobile only)
-		const dragHandle = document.createElement('div');
-		dragHandle.className = 'layer-drag-handle';
-		dragHandle.innerHTML = `
-			<svg class="icon" viewBox="0 0 24 24">
-				<path d="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z" fill="currentColor"/>
-			</svg>
-		`;
+		// 3.5 layer type
+		const typeText = document.createElement('div');
+		typeText.className = 'layer-type';
+		if (layer.type === LayerType.STICKER) {
+			typeText.textContent = 'Sticker';
+		} else if (layer.type === LayerType.GLITTER_FILL) {
+			typeText.textContent = 'Glitter';
+		} else if (layer.type === LayerType.BASE_IMAGE) {
+			typeText.textContent = 'Image';
+		}
+		info.appendChild(typeText);
 
-		// Actions
+
+		// 4. Actions
 		const actions = document.createElement('div');
 		actions.className = 'layer-actions';
 
+        // A. Go To Arrow (Only for Glitter/Stickers)
+        if (layer.type !== LayerType.BASE_IMAGE) {
+            const arrowBtn = this.createIconButton({
+                className: 'layer-action-btn goto-glitter',
+                title: 'Go to settings',
+                iconType: 'chevron-right',
+                onClick: (e) => {
+                    e.stopPropagation();
+                    // Just selecting the layer triggers the UI update
+                    this.setActiveLayer(layer.id);
+                }
+            });
+            actions.appendChild(arrowBtn);
+        }
+
+        // B. Visibility
 		const visBtn = this.createIconButton({
 			className: 'layer-action-btn visibility' + (!layer.visible ? ' hidden' : ''),
-			label: 'Layer Visibility',
 			title: layer.visible ? 'Hide layer' : 'Show layer',
 			iconType: 'eye',
 			onClick: (e) => {
@@ -1946,46 +2353,44 @@ class LayerManager {
 				this.toggleLayerVisibility(layer.id);
 			}
 		});
+        actions.appendChild(visBtn);
 
-		const arrowBtn = this.createIconButton({
-			className: 'layer-action-btn goto-glitter',
-			label: 'Go To',
-			title: 'Go to glitter',
-			iconType: 'chevron-right',
-			onClick: (e) => {
-				e.stopPropagation();
-				this.goToGlitter(layer.id);
-			}
-		});
+        // C. Lock vs Delete
+        if (layer.locked) {
+            // --- FIX: Show Lock Icon for Base Layer ---
+            
+        } else {
+            // Show Delete for other layers
+            const delBtn = this.createIconButton({
+                className: 'layer-action-btn delete',
+                title: 'Delete layer',
+                iconType: 'x-mark',
+                onClick: (e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this layer?')) {
+                        this.deleteLayer(layer.id);
+                    }
+                }
+            });
+            actions.appendChild(delBtn);
+        }
 
-		const delBtn = this.createIconButton({
-			className: 'layer-action-btn delete',
-			label: 'Delete',
-			title: 'Delete layer',
-			iconType: 'x-mark',
-			onClick: (e) => {
-				e.stopPropagation();
-				if (confirm('Delete this layer?')) {
-					this.deleteLayer(layer.id);
-				}
-			}
-		});
-
-		actions.append(arrowBtn, visBtn, delBtn);
 		layerEl.append(dragHandle, swatch, info, actions);
 		layerEl.onclick = () => this.setActiveLayer(layer.id);
 
-		// Drag and drop events
-		layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
-		layerEl.addEventListener('dragover', (e) => this.handleLayerDragOver(e, layer.id));
-		layerEl.addEventListener('dragleave', (e) => this.handleLayerDragLeave(e));
-		layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
-		layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
-
-		// Touch events
-		layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
-		layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
-		layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
+        // Attach Drag Events only if not locked
+        if (!layer.locked) {
+            layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
+            layerEl.addEventListener('dragover', (e) => this.handleLayerDragOver(e, layer.id));
+            layerEl.addEventListener('dragleave', (e) => this.handleLayerDragLeave(e));
+            layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
+            layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
+            
+            // Touch
+            layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
+            layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
+            layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
+        }
 
 		return layerEl;
 	}
@@ -2062,17 +2467,23 @@ class LayerManager {
 
 	// ===== DRAG AND DROP (DESKTOP) =====
 
-	handleLayerDragStart(event, layerId) {
+handleLayerDragStart(event, layerId) {
+		// NEW: Check if layer is locked
+		const layer = this.layers.find(l => l.id === layerId);
+		if (layer && layer.locked) {
+			event.preventDefault();
+			return;
+		}
+
 		this.draggedLayerId = layerId;
 		event.target.classList.add('dragging');
 		event.dataTransfer.effectAllowed = 'move';
 		event.dataTransfer.setData('text/html', event.target.innerHTML);
 	}
 
-	handleLayerDragOver(event, targetLayerId) {
+handleLayerDragOver(event, targetLayerId) {
 		event.preventDefault();
-		event.dataTransfer.dropEffect = 'move';
-
+		
 		if (!this.draggedLayerId) return;
 
 		// Call existing scroll handler
@@ -2083,16 +2494,33 @@ class LayerManager {
 		const containerRect = this.layersListContainer.getBoundingClientRect();
 		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
 
+		// Calculate drop position
 		const midpoint = rect.top + rect.height / 2;
-		const insertAbove = event.clientY < midpoint;
+		const insertAbove = event.clientY < midpoint; // Visually above (higher array index)
 
 		const draggedIndex = this.layers.findIndex(l => l.id === this.draggedLayerId);
 		const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
 
+		// ============================================================
+		// NEW: Lock Constraint Logic
+		// ============================================================
+		
+		// 1. Don't allow dropping onto itself
 		if (targetIndex === draggedIndex) {
 			insertionLine.classList.remove('visible');
 			return;
 		}
+
+		// 2. Prevent dropping BELOW the bottom-most layer if it is locked
+		// In the array, index 0 is the bottom. 'insertAbove = false' means visually below.
+		if (targetIndex === 0 && this.layers[0].locked && !insertAbove) {
+			insertionLine.classList.remove('visible');
+			this.dropTargetId = null; // Ensure drop is invalidated
+			return;
+		}
+		// ============================================================
+
+		// Standard adjacency checks (don't show line if dropping exactly where it already is)
 		if (targetIndex === draggedIndex - 1 && insertAbove) {
 			insertionLine.classList.remove('visible');
 			return;
@@ -2102,6 +2530,9 @@ class LayerManager {
 			return;
 		}
 
+		// Calculate Line Position
+		event.dataTransfer.dropEffect = 'move';
+		
 		let lineY;
 		const LAYER_MARGIN_BOTTOM = 6;
 		const INSERTION_LINE_HEIGHT = 2;
@@ -2214,10 +2645,16 @@ class LayerManager {
 
 	// ===== TOUCH DRAG (MOBILE) =====
 
-	handleLayerTouchStart(event, layerId) {
+handleLayerTouchStart(event, layerId) {
 		// ONLY start drag if touching the drag handle specifically
 		if (!event.target.closest('.layer-drag-handle')) {
-			return; // Allow normal tap to select, scrolling, button clicks
+			return; 
+		}
+
+		// NEW: Check if layer is locked
+		const layer = this.layers.find(l => l.id === layerId);
+		if (layer && layer.locked) {
+			return;
 		}
 
 		this.draggedLayerId = layerId;
@@ -2227,10 +2664,10 @@ class LayerManager {
 		this.touchDragStartY = touch.clientY;
 		this.touchDragLastY = touch.clientY;
 
-		event.preventDefault(); // Only prevent when actually dragging
+		event.preventDefault(); 
 	}
 
-	handleLayerTouchMove(event) {
+handleLayerTouchMove(event) {
 		if (!this.draggedLayerId) return;
 
 		const touch = event.touches[0];
@@ -2245,16 +2682,29 @@ class LayerManager {
 			el.dataset.layerId !== this.draggedLayerId
 		);
 
+		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+
 		if (targetLayer && targetLayer.dataset.layerId) {
 			const targetLayerId = targetLayer.dataset.layerId;
+			const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
 
 			const rect = targetLayer.getBoundingClientRect();
 			const midpoint = rect.top + rect.height / 2;
 			const insertAbove = touch.clientY < midpoint;
 
+			// ============================================================
+			// NEW: Lock Constraint Logic (Mobile)
+			// ============================================================
+			// Prevent dropping BELOW the bottom-most layer if it is locked
+			if (targetIndex === 0 && this.layers[0].locked && !insertAbove) {
+				insertionLine.classList.remove('visible');
+				this.dropTargetId = null;
+				return; // Exit early
+			}
+			// ============================================================
+
 			// Show insertion line
 			const containerRect = this.layersListContainer.getBoundingClientRect();
-			const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
 
 			let lineY;
 			const LAYER_MARGIN_BOTTOM = 6;
@@ -2273,7 +2723,11 @@ class LayerManager {
 
 			this.dropTargetId = targetLayerId;
 			this.dropInsertAbove = insertAbove;
-		}
+		} else {
+            // Hide line if not over a valid target
+            insertionLine.classList.remove('visible');
+            this.dropTargetId = null;
+        }
 
 		event.preventDefault();
 	}
@@ -2481,15 +2935,87 @@ class GlitterEditor {
 		this.layerManager.activeLayerId = value;
 	}
 
+
+	// Add this method to the GlitterEditor class
+
+
+updateSidePanelUI(layer) {
+    // 1. Define ALL possible sections to hide them first
+    const allSections = [
+        'welcomeSection', // <--- IMPORTANT: Ensure this is here
+        'noLayerSettingsSection',
+        'baseLayerSettingsSection', 
+        'glitterSettingsSection',
+        'layerSettingsSection',
+        'glitterOptions',
+        'glitterSearchSection',
+        'stickerSettingsSection',
+        'stickersOptions',
+        'stickersSearchSection'
+    ];
+
+    // 2. Hide everything
+    allSections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.remove('visible');
+            el.style.display = ''; 
+        }
+    });
+
+    // 3. Determine what to show
+    let showIds = [];
+
+    // CASE 1: No Image Loaded (Show Welcome)
+    if (!this.originalImage) {
+        showIds = ['welcomeSection'];
+    }
+    // CASE 2: Image Loaded, but No Layer Selected
+    else if (!layer) {
+        showIds = ['noLayerSettingsSection'];
+        this.updateNoLayerMetaInfo();
+    } 
+    // CASE 3: Base Layer Selected
+    else if (layer.type === LayerType.BASE_IMAGE) {
+        showIds = ['baseLayerSettingsSection'];
+    }
+    // CASE 4: Glitter Layer
+    else if (layer.type === LayerType.GLITTER_FILL) {
+        showIds = ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'];
+    } 
+    // CASE 5: Sticker Layer
+    else if (layer.type === LayerType.STICKER) {
+        showIds = ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'];
+    }
+
+    // 4. Show the specific sections
+    showIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('visible');
+    });
+}
+
+// NEW HELPER METHOD
+updateNoLayerMetaInfo() {
+    const dimEl = document.getElementById('quickMetaDimensions');
+    const countEl = document.getElementById('quickMetaLayerCount');
+
+    if (this.originalImage) {
+        if(dimEl) dimEl.textContent = `${this.originalCanvas.width} x ${this.originalCanvas.height}`;
+        if(countEl) countEl.textContent = this.layers.length;
+    } else {
+        if(dimEl) dimEl.textContent = "-- x --";
+        if(countEl) countEl.textContent = "0";
+    }
+}
+
 	async init() {
 		// Initialize sticker manager
 		this.stickerManager = new StickerManager(this);
 		await this.stickerManager.init();
 
-		// Set default gallery tab to glitter
-		if (this.stickerManager.switchGalleryTab) {
-			this.stickerManager.switchGalleryTab(CONFIG.defaultGalleryTab);
-		}
+		
+		this.updateSidePanelUI(null);
 	}
 
 	async loadStickerImageData(layer) {
@@ -2952,7 +3478,7 @@ class GlitterEditor {
 
 
 
-	saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
+saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 		const settings = {
 			threshold: parseInt(document.getElementById('threshold').value),
 			feather: parseInt(document.getElementById('feather').value),
@@ -2964,21 +3490,30 @@ class GlitterEditor {
 		};
 
 		const activeLayer = this.layerManager.getActiveLayer();
-		if (activeLayer) {
+		// Only apply to active layer if it is a Glitter Fill layer
+		if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL) {
 			activeLayer.settings = settings;
 		}
 
+		// Handle Global Refine (Threshold/Feather)
 		if (this.refineGlobal && refineOnly) {
 			this.layers.forEach(layer => {
-				layer.settings.threshold = settings.threshold;
-				layer.settings.feather = settings.feather;
+				// FIX: Only apply to Glitter Fill layers
+				if (layer.type === LayerType.GLITTER_FILL && layer.settings) {
+					layer.settings.threshold = settings.threshold;
+					layer.settings.feather = settings.feather;
+				}
 			});
 		}
 
+		// Handle Global Glitter (Scale/Opacity)
 		if (this.glitterGlobal && glitterOnly) {
 			this.layers.forEach(layer => {
-				layer.settings.scale = settings.scale;
-				layer.settings.opacity = settings.opacity;
+				// FIX: Only apply to Glitter Fill layers
+				if (layer.type === LayerType.GLITTER_FILL && layer.settings) {
+					layer.settings.scale = settings.scale;
+					layer.settings.opacity = settings.opacity;
+				}
 			});
 		}
 	}
@@ -2995,6 +3530,8 @@ class GlitterEditor {
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
+
+		// ===== LAYER SETTINGS =====
 		const layerSettingsHeader = document.getElementById('layerSettingsHeader');
 		const layerSettingsContent = document.getElementById('layerSettingsContent');
 		const layerSettingsToggle = document.getElementById('layerSettingsToggle');
@@ -3008,6 +3545,8 @@ class GlitterEditor {
 			layerSettingsToggle.classList.toggle('collapsed', !isOpen);
 		});
 
+
+		// ===== GLITTER SETTINGS =====
 		const glitterSettingsHeader = document.getElementById('glitterSettingsHeader');
 		const glitterSettingsContent = document.getElementById('glitterSettingsContent');
 		const glitterSettingsToggle = document.getElementById('glitterSettingsToggle');
@@ -3019,6 +3558,20 @@ class GlitterEditor {
 		glitterSettingsHeader.addEventListener('click', () => {
 			const isOpen = glitterSettingsContent.classList.toggle('visible');
 			glitterSettingsToggle.classList.toggle('collapsed', !isOpen);
+		});
+
+		// ===== STICKER SETTINGS =====
+		const stickerSettingsHeader = document.getElementById('stickerSettingsHeader');
+		const stickerSettingsContent = document.getElementById('stickerSettingsContent');
+		const stickerSettingsToggle = document.getElementById('stickerSettingsToggle');
+
+		// Start collapsed with empty state showing
+		stickerSettingsToggle.classList.add('collapsed');
+		this.showStickerSettingsEmptyState();
+
+		stickerSettingsHeader.addEventListener('click', () => {
+			const isOpen = stickerSettingsContent.classList.toggle('visible');
+			stickerSettingsToggle.classList.toggle('collapsed', !isOpen);
 		});
 	}
 
@@ -3075,11 +3628,17 @@ class GlitterEditor {
 		const aboutBtn = document.getElementById('aboutBtn');
 		const closeAbout = document.getElementById('closeAboutModal');
 
+		// Layer Type Picker Modal Events
+		const layerTypePickerModal = document.getElementById('layerTypePickerModal');
+		const closeLayerTypePicker = document.getElementById('closeLayerTypePickerModal');
+
 		// Function to close all modals
 		const closeAllModals = () => {
 			shortcutsModal.classList.remove('visible');
 			aboutModal.classList.remove('visible');
 			settingsModal.classList.remove('visible');
+			layerTypePickerModal.classList.remove('visible');
+
 		};
 
 		// Shortcuts Modal Events
@@ -3129,6 +3688,64 @@ class GlitterEditor {
 				aboutModal.classList.remove('visible');
 			}
 		});
+
+
+		// Layer Type Picker Modal
+
+
+    const layerTypeButtons = document.querySelectorAll('.layer-type-option');
+    const layerModal = document.getElementById('layerTypePickerModal');
+
+    layerTypeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // 1. Get the type from your HTML data attribute
+            const type = btn.dataset.layerType; // returns "glitter-fill" or "sticker"
+
+            // 2. Map string to LayerType constant
+            let layerType;
+            if (type === 'sticker') {
+                layerType = LayerType.STICKER;
+            } else {
+                layerType = LayerType.GLITTER_FILL;
+            }
+
+            // 3. Add the layer
+            this.layerManager.addLayer(layerType);
+
+            // 4. Close the modal
+            if (layerModal) layerModal.classList.remove('visible');
+        });
+    });
+
+// --- LAYER ACTIONS ---
+		const addLayerBtn = document.getElementById('addLayerBtn');
+		if (addLayerBtn) {
+			addLayerBtn.addEventListener('click', () => {
+				// Don't add layer yet. Just open the modal.
+				const modal = document.getElementById('layerTypePickerModal');
+				if (modal) modal.classList.add('visible');
+			});
+		}
+
+		// Don't forget the mobile button if you have one!
+		const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
+		if (mobileAddBtn) {
+			mobileAddBtn.addEventListener('click', () => {
+				const modal = document.getElementById('layerTypePickerModal');
+				if (modal) modal.classList.add('visible');
+			});
+		}
+
+
+		closeLayerTypePicker.addEventListener('click', () => {
+			layerTypePickerModal.classList.remove('visible');
+		});
+
+		layerTypePickerModal.addEventListener('click', (e) => {
+			if (e.target === layerTypePickerModal) {
+				layerTypePickerModal.classList.remove('visible');
+			}
+		});
 	}
 
 	setupEventListeners() {
@@ -3148,6 +3765,64 @@ class GlitterEditor {
 		if (undoTool) undoTool.addEventListener('click', () => this.undo());
 		if (redoTool) redoTool.addEventListener('click', () => this.redo());
 		if (clearAllTool) clearAllTool.addEventListener('click', () => this.resetAll());
+
+
+
+
+
+    // --- NO LAYER SELECTED QUICK ACTIONS ---
+
+    // 1. Add Glitter Fill
+    const quickAddGlitter = document.getElementById('quickActionAddGlitter');
+    if (quickAddGlitter) {
+        quickAddGlitter.addEventListener('click', () => {
+            this.layerManager.addLayer(LayerType.GLITTER_FILL);
+        });
+    }
+
+    // 2. Add Sticker (UPDATED)
+    const quickAddSticker = document.getElementById('quickActionAddSticker');
+    if (quickAddSticker) {
+        quickAddSticker.addEventListener('click', () => {
+             // Create an empty sticker layer immediately
+             // This automatically handles switching the Gallery UI to stickers
+             this.layerManager.addLayer(LayerType.STICKER);
+        });
+    }
+
+
+
+// --- GLITTER FILTERS & SEARCH ---
+		const filterToggleBtn = document.getElementById('filterToggleBtn');
+		if (filterToggleBtn) {
+			filterToggleBtn.addEventListener('click', () => this.toggleFilters());
+		}
+
+		const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+		if (clearFiltersBtn) {
+			clearFiltersBtn.addEventListener('click', () => this.clearAllFilters());
+		}
+
+		const glitterSearch = document.getElementById('glitterSearch');
+		if (glitterSearch) {
+			glitterSearch.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
+		}
+
+		const searchNameOnly = document.getElementById('searchNameOnly');
+		if (searchNameOnly) {
+			searchNameOnly.addEventListener('change', (e) => {
+				this.activeFilters.nameOnly = e.target.checked;
+				this.applyFilters();
+				this.updateClearFiltersButton();
+			});
+		}
+
+		// Attach listeners to the static filter chips (Color, Tone, etc.)
+		document.querySelectorAll('#filtersContainer .filter-chip').forEach(chip => {
+			chip.addEventListener('click', () => this.toggleFilter(chip));
+		});
+
+
 
 		// --- ZOOM CONTROLS ---
 		const zoomIn = document.getElementById('zoomIn');
@@ -3195,9 +3870,7 @@ class GlitterEditor {
 			return false;
 		});
 
-		// --- LAYER ACTIONS ---
-		const addLayerBtn = document.getElementById('addLayerBtn');
-		if (addLayerBtn) addLayerBtn.addEventListener('click', () => this.layerManager.addLayer());
+
 
 		// --- IMAGE HANDLING ---
 		const imageClearBtn = document.getElementById('imageClearBtn');
@@ -3238,12 +3911,27 @@ class GlitterEditor {
 			}
 		});
 
+		// ============================================================
+		// NEW: DESELECT WHEN CLICKING OUTSIDE CANVAS
+		// ============================================================
+		this.previewContainer.addEventListener('mousedown', (e) => {
+            // Check if we are clicking the grey background (container) directly
+            // or the wrapper (if it has padding/margins that aren't the canvas)
+			if (e.target === this.previewContainer || e.target === this.previewWrapper) {
+                // Ensure we aren't panning with the Hand tool (optional, based on preference)
+                if (this.currentTool === 'select') {
+				    this.layerManager.setActiveLayer(null);
+                }
+			}
+		});
+
 		// --- LAYER SETTINGS CONTROLS ---
 		const contiguous = document.getElementById('contiguous');
 		const invert = document.getElementById('invert');
 		const multiSelect = document.getElementById('multiSelect');
 		const refineGlobal = document.getElementById('refineGlobal');
 		const glitterGlobal = document.getElementById('glitterGlobal');
+
 
 		if (contiguous) {
 			contiguous.addEventListener('change', () => {
@@ -3278,12 +3966,26 @@ class GlitterEditor {
 		if (refineGlobal) {
 			refineGlobal.addEventListener('change', (e) => {
 				this.refineGlobal = e.target.checked;
+                if (this.refineGlobal) {
+                    // Force sync current input values to all glitter layers
+                    this.saveActiveLayerSettings(true, false);
+                    this.updatePreview();
+                    this.saveState();
+                    this.updateStatus('Global threshold/feather applied');
+                }
 			});
 		}
 
 		if (glitterGlobal) {
 			glitterGlobal.addEventListener('change', (e) => {
 				this.glitterGlobal = e.target.checked;
+                if (this.glitterGlobal) {
+                    // Force sync current input values to all glitter layers
+                    this.saveActiveLayerSettings(false, true);
+                    this.updatePreview();
+                    this.saveState();
+                    this.updateStatus('Global scale/opacity applied');
+                }
 			});
 		}
 
@@ -3333,7 +4035,7 @@ class GlitterEditor {
 			previewModeToggle.addEventListener('click', () => {
 				this.showAllLayers = !this.showAllLayers;
 				const btn = previewModeToggle;
-				btn.textContent = this.showAllLayers ? '👁️ Solo Mode' : '✓ Solo Mode';
+				
 				btn.classList.toggle('active', !this.showAllLayers);
 				btn.title = this.showAllLayers ? 'Show only active layer' : 'Show all layers';
 				this.updatePreview();
@@ -3820,6 +4522,11 @@ class GlitterEditor {
 			const shortcutsModal = document.getElementById('shortcutsModal');
 			const aboutModal = document.getElementById('aboutModal');
 			const settingsModal = document.getElementById('settingsModal');
+			const layerTypePickerModal = document.getElementById('layerTypePickerModal');
+
+
+
+
 
 			if (settingsModal.classList.contains('visible')) {
 				settingsModal.classList.remove('visible');
@@ -3833,6 +4540,11 @@ class GlitterEditor {
 
 			if (aboutModal.classList.contains('visible')) {
 				aboutModal.classList.remove('visible');
+				return;
+			}
+
+			if (layerTypePickerModal.classList.contains('visible')) {
+				layerTypePickerModal.classList.remove('visible');
 				return;
 			}
 
@@ -3884,21 +4596,35 @@ class GlitterEditor {
 
 	// ===== HISTORY =====
 
-	saveState() {
+saveState() {
 		const state = {
 			layers: this.layers.map(layer => {
-				// Handle sticker layers differently
+				// 1. STICKER LAYERS
 				if (layer.type === LayerType.STICKER && this.stickerManager) {
 					return this.stickerManager.serializeSticker(layer);
 				}
-				// Glitter-fill layers (existing)
+				
+				// 2. BASE IMAGE LAYERS (New fix)
+				// Base layers don't have selections or settings to save
+				if (layer.type === LayerType.BASE_IMAGE) {
+					return {
+						id: layer.id,
+						type: LayerType.BASE_IMAGE,
+						visible: layer.visible,
+						locked: layer.locked
+					};
+				}
+
+				// 3. GLITTER FILL LAYERS (Default)
 				return {
 					id: layer.id,
-					type: layer.type || LayerType.GLITTER_FILL, // Add type for backwards compatibility
+					type: layer.type || LayerType.GLITTER_FILL,
 					visible: layer.visible,
-					selections: JSON.parse(JSON.stringify(layer.selections)),
+					// Safely handle selections: if undefined, save as empty array
+					selections: layer.selections ? JSON.parse(JSON.stringify(layer.selections)) : [],
 					selectedGlitterIndex: layer.selectedGlitterIndex,
-					settings: { ...layer.settings }
+					// Safely handle settings
+					settings: layer.settings ? { ...layer.settings } : {}
 				};
 			}),
 			activeLayerId: this.activeLayerId
@@ -3916,26 +4642,36 @@ class GlitterEditor {
 		this.updateHistoryButtons();
 	}
 
-	async restoreState(state) {
+async restoreState(state) {
 		// Restore layers with async sticker deserialization
 		this.layers = [];
 
 		for (const layerData of state.layers) {
 			if (layerData.type === LayerType.STICKER && this.stickerManager) {
-				// Deserialize sticker layer
+				// 1. Sticker Layer
 				const restoredLayer = await this.stickerManager.deserializeSticker(layerData);
 				if (restoredLayer) {
 					this.layers.push(restoredLayer);
 				}
+			} else if (layerData.type === LayerType.BASE_IMAGE) {
+				// 2. Base Image Layer (New fix)
+				this.layers.push({
+					id: layerData.id,
+					type: LayerType.BASE_IMAGE,
+					visible: layerData.visible,
+					locked: layerData.locked,
+					image: null // Image is global (this.originalImage), this layer is just for z-index/visibility
+				});
 			} else {
-				// Glitter-fill layer (existing)
+				// 3. Glitter-fill layer (existing)
 				this.layers.push({
 					id: layerData.id,
 					type: layerData.type || LayerType.GLITTER_FILL,
 					visible: layerData.visible,
-					selections: JSON.parse(JSON.stringify(layerData.selections)),
+					// Safe parsing for selections
+					selections: layerData.selections ? JSON.parse(JSON.stringify(layerData.selections)) : [],
 					selectedGlitterIndex: layerData.selectedGlitterIndex,
-					settings: { ...layerData.settings }
+					settings: layerData.settings ? { ...layerData.settings } : {}
 				});
 			}
 		}
@@ -3945,10 +4681,9 @@ class GlitterEditor {
 		this.layerManager.renderLayersList();
 		this.loadActiveLayerSettings();
 		this.updateGlitterSelection();
-		this.updatePreview(); // This will re-render stickers via renderStickers()
+		this.updatePreview(); 
 		this.updateActionButtons();
 	}
-
 	async undo() {
 		if (this.historyIndex > 0) {
 			this.historyIndex--;
@@ -4078,6 +4813,8 @@ class GlitterEditor {
 		const dropzoneContent = document.getElementById('dropzoneContent');
 		dropzoneContent.classList.add('visible');
 
+		this.updateSidePanelUI(null);
+
 		// Clear canvas
 		const originalCanvas = this.originalCanvas;
 		originalCanvas.classList.remove('visible');
@@ -4106,7 +4843,7 @@ class GlitterEditor {
 		this.layerManager.renderLayersList();
 		this.updateHistoryButtons();
 		this.updateActionButtons();
-		this.updateGlitterOptionsState();
+		// this.updateGlitterOptionsState();
 		this.setTool('select');
 		this.updateStatus('Load an image to begin');
 		this.updateStatusBar();
@@ -4227,19 +4964,22 @@ class GlitterEditor {
 		}
 	}
 
-	displayGlitterOptions() {
-		const container = document.getElementById('glitterOptions');
-		container.innerHTML = '';
+displayGlitterOptions() {
+    // 1. Target the NEW Sub-Container
+    const container = document.getElementById('glitterGridContainer');
+    if (!container) return; // Safety check
 
-		const categories = {};
-		this.glitterGifs.forEach((glitter, index) => {
-			if (!categories[glitter.category]) {
-				categories[glitter.category] = [];
-			}
-			categories[glitter.category].push({ glitter, index });
-		});
+    container.innerHTML = ''; // Clear only the grid, leave empty state alone
 
-		Object.entries(categories).forEach(([category, items]) => {
+    const categories = {};
+    this.glitterGifs.forEach((glitter, index) => {
+        if (!categories[glitter.category]) {
+            categories[glitter.category] = [];
+        }
+        categories[glitter.category].push({ glitter, index });
+    });
+
+    Object.entries(categories).forEach(([category, items]) => {
 			const categoryDiv = document.createElement('div');
 			categoryDiv.className = 'glitter-category';
 			categoryDiv.dataset.category = category;
@@ -4255,33 +4995,28 @@ class GlitterEditor {
 			items.forEach(({ glitter, index }) => {
 				const option = document.createElement('div');
 				option.className = 'glitter-option' + (glitter.isPixelated ? ' pixelated' : '');
-				option.title = glitter.name;
-				option.dataset.index = index;
-				option.dataset.name = glitter.name.toLowerCase();
-				option.dataset.category = glitter.category.toLowerCase();
-				option.dataset.tags = (glitter.tags || []).join(' ').toLowerCase();
+             option.title = glitter.name;
+             option.dataset.index = index;
+             option.dataset.name = glitter.name.toLowerCase();
+             option.dataset.category = glitter.category.toLowerCase();
+             option.dataset.tags = (glitter.tags || []).join(' ').toLowerCase();
+             option.dataset.hue = glitter.hue;
 
-				option.dataset.hue = glitter.hue;
-				option.dataset.brightness = glitter.brightness;
-				option.dataset.sortOrder = glitter.sortOrder
+             const img = document.createElement('img');
+             img.src = glitter.url;
+             option.appendChild(img);
+             option.addEventListener('click', () => this.selectGlitter(index));
+             
+             grid.appendChild(option);
+        });
 
-				const img = document.createElement('img');
-				img.src = glitter.url;
-				img.alt = glitter.name;
-
-				option.appendChild(img);
-				option.addEventListener('click', () => this.selectGlitter(index));
-				grid.appendChild(option);
-			});
-
-			categoryDiv.appendChild(grid);
-			container.appendChild(categoryDiv);
-		});
-
-		// ADD THESE TWO LINES HERE ↓
-		// Initialize disabled state for all glitter options
-		this.updateGlitterOptionsState();
-	}
+        categoryDiv.appendChild(grid);
+        container.appendChild(categoryDiv);
+    });
+    
+    // Initialize filter state
+    this.applyFilters(); 
+}
 
 	handleSearchInput(searchTerm) {
 		this.activeFilters.search = searchTerm.toLowerCase().trim();
@@ -4344,51 +5079,85 @@ class GlitterEditor {
 
 	}
 
-	applyFilters() {
-		const categories = document.querySelectorAll('.glitter-category');
+applyFilters() {
+    const categories = document.querySelectorAll('.glitter-category');
+    let totalVisibleCount = 0; // Track total visible items
 
-		categories.forEach(category => {
-			const options = category.querySelectorAll('.glitter-option');
-			let visibleCount = 0;
+    categories.forEach(category => {
+        const options = category.querySelectorAll('.glitter-option');
+        let visibleCount = 0;
 
-			options.forEach(option => {
-				const name = (option.dataset.name || '').toLowerCase();
-				const tagsString = (option.dataset.tags || '').toLowerCase();
-				const tags = tagsString.split(' ').filter(t => t.length > 0);
+        options.forEach(option => {
+            const name = (option.dataset.name || '').toLowerCase();
+            const tagsString = (option.dataset.tags || '').toLowerCase();
+            const tags = tagsString.split(' ').filter(t => t.length > 0);
 
-				let matches = true;
+            let matches = true;
 
-				if (this.activeFilters.search) {
-					const term = this.activeFilters.search;
-					if (this.activeFilters.nameOnly) {
-						if (!name.includes(term)) matches = false;
-					} else {
-						if (!name.includes(term) && !tagsString.includes(term)) {
-							matches = false;
-						}
-					}
-				}
+            // Search filter
+            if (this.activeFilters.search) {
+                const term = this.activeFilters.search;
+                if (this.activeFilters.nameOnly) {
+                    if (!name.includes(term)) matches = false;
+                } else {
+                    if (!name.includes(term) && !tagsString.includes(term)) {
+                        matches = false;
+                    }
+                }
+            }
 
-				if (matches && this.activeFilters.colors.size > 0) {
-					const hasColor = [...this.activeFilters.colors].some(color => tags.includes(color));
-					if (!hasColor) matches = false;
-				}
+            // Chip filters
+            if (matches && this.activeFilters.colors.size > 0) {
+                const hasColor = [...this.activeFilters.colors].some(color => tags.includes(color));
+                if (!hasColor) matches = false;
+            }
 
-				option.style.display = matches ? 'block' : 'none';
-				if (matches) {
-					visibleCount++;
-				}
-			});
+            option.style.display = matches ? 'block' : 'none';
+            if (matches) visibleCount++;
+        });
 
-			category.style.display = visibleCount > 0 ? 'block' : 'none';
-		});
-	}
+        // Hide empty categories
+        category.style.display = visibleCount > 0 ? 'block' : 'none';
+        totalVisibleCount += visibleCount;
+    });
+
+    // ==========================================
+    // TOGGLE EMPTY STATE
+    // ==========================================
+    const emptyState = document.getElementById('glitterEmptyState');
+    const gridContainer = document.getElementById('glitterGridContainer');
+
+    if (emptyState && gridContainer) {
+        if (totalVisibleCount === 0) {
+            // SHOW Empty State, HIDE Grid
+            emptyState.classList.add('visible');
+            gridContainer.classList.remove('visible');
+        } else {
+            // HIDE Empty State, SHOW Grid
+            emptyState.classList.remove('visible');
+            gridContainer.classList.add('visible');
+        }
+    }
+}
 
 	async selectGlitter(index) {
 
+
+
+		if (!this.originalImage) {
+			this.showError('Please load an image first');
+			return;
+		}
+
 		const layer = this.layerManager.getActiveLayer();
 		if (!layer) {
-			// UX: Don't allow selection when no layer is active
+			this.showError('Please select a glitter fill layer');
+			return;
+		}
+
+		
+		if (layer.type !== LayerType.GLITTER_FILL) {
+			this.showError('You can only add a glitter to a glitter-fill layer');
 			return;
 		}
 
@@ -4483,24 +5252,48 @@ class GlitterEditor {
 			this.layers = [];
 			this.glitterBackgroundsContainer.innerHTML = '';
 
+            // 1. Create Base Image Layer
+			if(CONFIG.createBaseImageLayerOnLoad){
+				const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
+				this.layers.push(layer);
+                // Set it active immediately
+				this.layerManager.setActiveLayer(layer.id);
+			}
+
+            // 2. Create Default Glitter Layer (Optional)
 			if (CONFIG.createDefaultLayerOnLoad) {
 				const layer = this.layerManager.createLayer();
 				this.layers.push(layer);
+                // If created, this becomes the new active layer
 				this.layerManager.setActiveLayer(layer.id);
 			} else {
-				this.activeLayerId = null;
-				this.showLayerSettingsEmptyState();
-				this.showGlitterSettingsEmptyState();
+                // 3. If NO default layer is created, check if we have a Base Layer
+                if (this.layers.length > 0) {
+                    // Ensure the existing Base Layer stays selected and UI updates
+                    this.layerManager.setActiveLayer(this.layers[0].id);
+                } else {
+                    // Only if completely empty do we reset to null
+                    this.activeLayerId = null;
+                    this.updateSidePanelUI(null);
+                }
 			}
 
+            // 4. Reset History
 			this.history = [{
-				layers: this.layers.map(layer => ({
-					id: layer.id,
-					visible: layer.visible,
-					selections: [],
-					selectedGlitterIndex: layer.selectedGlitterIndex,
-					settings: { ...layer.settings }
-				})),
+				layers: this.layers.map(layer => {
+                    if (layer.type === LayerType.BASE_IMAGE) {
+                         return { id: layer.id, type: LayerType.BASE_IMAGE, visible: layer.visible, locked: layer.locked };
+                    }
+                    // ... (rest of history mapping logic) ...
+                    return {
+                        id: layer.id,
+                        type: layer.type || LayerType.GLITTER_FILL,
+                        visible: layer.visible,
+                        selections: [],
+                        selectedGlitterIndex: layer.selectedGlitterIndex,
+                        settings: { ...layer.settings }
+                    };
+                }),
 				activeLayerId: this.activeLayerId
 			}];
 			this.historyIndex = 0;
@@ -4511,8 +5304,8 @@ class GlitterEditor {
 			this.updateStatusBar();
 
 			this.previewCtx.putImageData(this.originalImageData, 0, 0);
-			this.setTool('colorPicker');
-			this.updateStatus('Click on the preview to select a color');
+			// this.setTool('colorPicker');
+			// this.updateStatus('Click on the preview to select a color');
 
 			window.dispatchEvent(new Event('imageLoaded'));
 
@@ -4568,16 +5361,15 @@ class GlitterEditor {
 		});
 	}
 
-	handleCanvasClick(event) {
+handleCanvasClick(event) {
 		if (!this.originalImageData) return;
 
+		// ... (Coordinate calculation logic stays the same) ...
 		const rect = this.previewCanvas.getBoundingClientRect();
 		const clickX = event.clientX - rect.left;
 		const clickY = event.clientY - rect.top;
-
 		const scaleX = this.previewCanvas.width / rect.width;
 		const scaleY = this.previewCanvas.height / rect.height;
-
 		const x = Math.floor(clickX * scaleX);
 		const y = Math.floor(clickY * scaleY);
 
@@ -4592,30 +5384,40 @@ class GlitterEditor {
 		}
 
 		// Color Picker Tool
-		// Color Picker Tool
 		if (this.currentTool === 'colorPicker') {
 			let layer = this.layerManager.getActiveLayer();
 
-			// If no active layer, find an empty one or create new
+			// ============================================================
+			// UPDATED LOGIC START
+			// ============================================================
+			
 			if (!layer) {
-				// Try to find a layer with no selections
-				const emptyLayer = this.layers.find(l => !l.selections || l.selections.length === 0);
-
-				if (emptyLayer) {
-					// Reuse empty layer
-					this.layerManager.setActiveLayer(emptyLayer.id);
-					layer = emptyLayer;
-					this.updateStatus('Selected empty layer');
-				} else {
-					// All layers have selections - create a new one
-					const newLayer = this.layerManager.createLayer();
-					this.layers.push(newLayer);
-					this.layerManager.setActiveLayer(newLayer.id);
-					this.layerManager.renderLayersList();
-					layer = newLayer;
-					this.updateStatus('Created new layer');
-				}
+				this.updateStatus('Please select the Base Image or a Glitter Layer.');
+				return;
 			}
+
+			// Case 1: Base Image is Selected -> Create NEW Glitter Layer
+			if (layer.type === LayerType.BASE_IMAGE) {
+				const newLayer = this.layerManager.createLayer();
+				this.layers.push(newLayer);
+				this.layerManager.setActiveLayer(newLayer.id);
+				this.layerManager.renderLayersList();
+				layer = newLayer; // Switch target to the new layer
+				this.updateStatus('Created new layer from Base Image');
+			}
+			// Case 2: Glitter Fill Layer is Selected -> Use it
+			else if (layer.type === LayerType.GLITTER_FILL) {
+				// Continue using this layer
+			}
+			// Case 3: Sticker (or other) -> Block
+			else {
+				this.updateStatus('Color Picker disabled on Sticker layers.');
+				return;
+			}
+			
+			// ============================================================
+			// UPDATED LOGIC END
+			// ============================================================
 
 			const pixelIndex = y * this.originalCanvas.width + x;
 			const alpha = this.originalAlphaChannel[pixelIndex];
@@ -4630,6 +5432,7 @@ class GlitterEditor {
 			const g = this.originalImageData.data[i + 1];
 			const b = this.originalImageData.data[i + 2];
 
+			// Now safe to access settings because we ensured layer is GLITTER_FILL
 			const multiSelect = layer.settings.multiSelect;
 			if (!multiSelect) layer.selections = [];
 
@@ -4773,9 +5576,23 @@ class GlitterEditor {
 
 
 
-	renderPreviewCanvas(layersToShow) {
-		// Just draw the original image. The glitter sits on top as a DOM element.
+renderPreviewCanvas(layersToShow) {
+		// Clear canvas first
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+
+		// ============================================================
+		// UPDATED LOGIC: BASE IMAGE VISIBILITY
+		// ============================================================
+		
+		// Find the Base Image layer in the stack
+		const baseLayer = this.layers.find(l => l.type === LayerType.BASE_IMAGE);
+
+		// If the base layer exists and is set to hidden, stop here (leave canvas transparent)
+		if (baseLayer && !baseLayer.visible) {
+			return;
+		}
+
+		// Otherwise, draw the original image
 		this.previewCtx.putImageData(this.originalImageData, 0, 0);
 	}
 
