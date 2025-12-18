@@ -1331,7 +1331,14 @@ input[type=range]::-moz-range-thumb {
   font-size: var(--font-size-base);
 }
 
-.selected-colors-display {
+.color-selection .empty-state {
+  padding: 3px 0;
+  border: 1px solid transparent;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
+}
+.color-selection .selected-colors-display {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
@@ -1339,11 +1346,7 @@ input[type=range]::-moz-range-thumb {
   letter-spacing: 0.75px;
   text-transform: uppercase;
 }
-.selected-colors-display > .empty-state-text {
-  padding: 3px 0;
-  border: 1px solid transparent;
-}
-.selected-colors-display > .selected-color-chip {
+.color-selection .selected-colors-display > .selected-color-chip {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -1352,14 +1355,14 @@ input[type=range]::-moz-range-thumb {
   border: 1px solid var(--color-border);
   border-radius: 12px;
 }
-.selected-colors-display > .selected-color-chip > .selected-color-swatch {
+.color-selection .selected-colors-display > .selected-color-chip > .selected-color-swatch {
   width: 14px;
   height: 14px;
   border-radius: var(--radius-full);
   border: 1px solid var(--color-border);
   flex-shrink: 0;
 }
-.selected-colors-display > .selected-color-chip > .selected-color-remove {
+.color-selection .selected-colors-display > .selected-color-chip > .selected-color-remove {
   background: none;
   border: none;
   color: var(--color-text-tertiary);
@@ -1374,7 +1377,7 @@ input[type=range]::-moz-range-thumb {
   line-height: 1;
   margin-left: 4px;
 }
-.selected-colors-display > .selected-color-chip > .selected-color-remove:hover {
+.color-selection .selected-colors-display > .selected-color-chip > .selected-color-remove:hover {
   color: #ff4444;
 }
 
@@ -1837,7 +1840,7 @@ input[type=range]::-moz-range-thumb {
   max-width: none;
   max-height: none;
 }
-.preview-wrapper canvas#previewCanvas.selected-base {
+.preview-wrapper canvas#previewCanvas.selected {
   outline: 2px dashed #00ffff;
   outline-offset: -2px; /* Draws inside the canvas edge */
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5); /* Drop shadow for contrast */

@@ -1422,54 +1422,58 @@ input[type="range"] {
 	letter-spacing: 0.5px;
 	font-size: var(--font-size-base);
 }
-
-.selected-colors-display {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--spacing-xs);
-	@include text-xs;
-
-	>.empty-state-text {
-		padding: 3px 0;
-		border: 1px solid transparent;
-	}
-	
-
-	>.selected-color-chip {
-		display: flex;
-		align-items: center;
-		gap: var(--spacing-sm);
-		padding: 3px var(--spacing-sm) 3px 3px;
-		background: var(--color-bg-secondary);
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-
-
-		>.selected-color-swatch {
-			width: 14px;
-			height: 14px;
-			border-radius: var(--radius-full);
-			border: 1px solid var(--color-border);
-			flex-shrink: 0;
+.color-selection {
+		.empty-state {
+			padding: 3px 0;
+			border: 1px solid transparent;
+			@include text-xs;
 		}
 
-		>.selected-color-remove {
-			background: none;
-			border: none;
-			color: var(--color-text-tertiary);
-			cursor: pointer;
-			padding: 0;
-			width: 12px;
-			height: 12px;
+	 .selected-colors-display {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-xs);
+		@include text-xs;
+
+
+		
+
+		>.selected-color-chip {
 			display: flex;
 			align-items: center;
-			justify-content: center;
-			font-size: var(--font-size-base);
-			line-height: 1;
-			margin-left: 4px;
+			gap: var(--spacing-sm);
+			padding: 3px var(--spacing-sm) 3px 3px;
+			background: var(--color-bg-secondary);
+			border: 1px solid var(--color-border);
+			border-radius: 12px;
 
-			&:hover {
-				color: #ff4444;
+
+			>.selected-color-swatch {
+				width: 14px;
+				height: 14px;
+				border-radius: var(--radius-full);
+				border: 1px solid var(--color-border);
+				flex-shrink: 0;
+			}
+
+			>.selected-color-remove {
+				background: none;
+				border: none;
+				color: var(--color-text-tertiary);
+				cursor: pointer;
+				padding: 0;
+				width: 12px;
+				height: 12px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: var(--font-size-base);
+				line-height: 1;
+				margin-left: 4px;
+
+				&:hover {
+					color: #ff4444;
+				}
 			}
 		}
 	}
@@ -2064,7 +2068,7 @@ input[type="range"] {
 		max-width: none;
 		max-height: none;
 
-		&.selected-base {
+		&.selected {
 			@include selected();
 
 		}
