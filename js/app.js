@@ -110,8 +110,8 @@ const LayerType = {
 
 const ToolType = {
 	SELECT: 'select',
-	COLOR_PICKER: 'colorPicker',
 	HAND: 'hand',
+	COLOR_PICKER: 'colorPicker',
 	ZOOM: 'zoom'
 };
 
@@ -158,6 +158,35 @@ class StickerManager {
 		await this.loadPresetStickers();
 		this.renderStickerPicker();
 	}
+
+
+
+
+cloneStickerElement(sourceLayer, clonedLayer) {
+	const sourceElement = this.editor.glitterBackgroundsContainer.querySelector(
+		`.sticker-element[data-layer-id="${sourceLayer.id}"]`
+	);
+	
+	if (!sourceElement) return;
+
+	const clonedElement = sourceElement.cloneNode(true);
+	clonedElement.dataset.layerId = clonedLayer.id;
+	
+	// Remove the 'selected' class if present
+	clonedElement.classList.remove('selected');
+	
+	// Apply transform to match cloned layer data
+	this.applyStickerTransform(clonedElement, clonedLayer);
+	
+	// Add to container
+	this.editor.glitterBackgroundsContainer.appendChild(clonedElement);
+	
+	// Store reference
+	this.stickerElements.set(clonedLayer.id, clonedElement);
+	
+	// Attach drag listeners
+	this.attachDragListeners(clonedElement, clonedLayer.id);
+}
 
 	// In StickerManager class
 
@@ -278,36 +307,34 @@ class StickerManager {
 		this.setupStickerSearchListeners();
 	}
 
-	replaceActiveSticker(stickerId) {
-		const activeLayer = this.editor.layerManager.getActiveLayer();
-		const stickerInfo = this.getStickerById(stickerId);
+replaceActiveSticker(stickerId) {
+	const activeLayer = this.editor.layerManager.getActiveLayer();
+	const stickerInfo = this.getStickerById(stickerId);
 
-		// Only proceed if we have a sticker and the active layer is a sticker layer
-		if (!stickerInfo || !activeLayer || activeLayer.type !== LayerType.STICKER) {
-			return;
-		}
-
-		// Update Layer Metadata
-		activeLayer.name = stickerInfo.name;
-		activeLayer.stickerSourceId = stickerInfo.id;
-
-		// Update Sticker Data
-		activeLayer.stickerData.url = stickerInfo.url;
-		activeLayer.stickerData.name = stickerInfo.name;
-		activeLayer.stickerData.source = stickerInfo.source;
-		activeLayer.stickerData.width = stickerInfo.width;
-		activeLayer.stickerData.height = stickerInfo.height;
-		activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
-		activeLayer.stickerData.isEmpty = false; // Ensure it's marked as full
-
-		// Note: We DO NOT reset transform (x, y, rotation) so the user 
-		// can swap styles without losing their placement.
-
-		// Re-render
-		this.renderSticker(activeLayer);
-		this.editor.layerManager.renderLayersList(); // Update thumbnail in layer list
-		this.editor.saveState();
+	// Only proceed if we have a sticker and the active layer is a sticker layer
+	if (!stickerInfo || !activeLayer || activeLayer.type !== LayerType.STICKER) {
+		return;
 	}
+
+	// Update Layer Metadata
+	activeLayer.name = stickerInfo.name;
+	activeLayer.stickerSourceId = stickerInfo.id;
+
+	// Update Sticker Data
+	activeLayer.stickerData.url = stickerInfo.url;
+	activeLayer.stickerData.name = stickerInfo.name;
+	activeLayer.stickerData.source = stickerInfo.source;
+	activeLayer.stickerData.width = stickerInfo.width;
+	activeLayer.stickerData.height = stickerInfo.height;
+	activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+	activeLayer.stickerData.isEmpty = false;
+
+	// Re-render
+	this.renderSticker(activeLayer);
+	this.editor.layerManager.renderLayersList();
+	this.editor.updateStickerSelection(); // ADD THIS
+	this.editor.saveState();
+}
 
 
 	async addNewStickerLayer(stickerId) {
@@ -556,6 +583,7 @@ class StickerManager {
 			visible: true,
 			locked: false,
 
+
 			stickerSourceId: stickerSourceId,
 
 			stickerData: {
@@ -603,6 +631,8 @@ class StickerManager {
 
 		// Render the sticker (browser handles animation automatically)
 		this.renderSticker(layer);
+
+		this.editor.updateStickerSelection(); // ADD THIS
 
 		// Save state
 		this.editor.saveState();
@@ -653,9 +683,9 @@ class StickerManager {
 		img.src = layer.stickerData.url;
 		img.draggable = false; // Important: Disable native drag
 
-		if (layer.stickerData.width < 100 && layer.stickerData.height < 100) {
+		//if (layer.stickerData.width < 100 && layer.stickerData.height < 100) {
 			img.style.imageRendering = 'pixelated';
-		}
+		//}
 
 		element.appendChild(img);
 
@@ -700,15 +730,11 @@ class StickerManager {
 			opacity: ${transform.opacity / 100};
 			pointer-events: ${layer.visible ? 'auto' : 'none'};
 			display: ${layer.visible ? 'block' : 'none'};
-			z-index: ${this.getLayerZIndex(layer.id)};
+			z-index: ${this.editor.layerManager.getLayerZIndex(layer.id)};
 		`;
 	}
 
-	getLayerZIndex(layerId) {
-		// Z-index based on layer stack position
-		const index = this.editor.layerManager.layers.findIndex(l => l.id === layerId);
-		return index !== -1 ? index + 100 : 100;
-	}
+
 
 	// ===== ANIMATION =====
 
@@ -1649,7 +1675,10 @@ class GlitterManager {
 			bg.style.position = 'absolute';
 			bg.style.top = '0';
 			bg.style.left = '0';
-			bg.style.zIndex = '100'; // Above canvas
+
+						
+			bg.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+
 			bg.style.pointerEvents = 'none';
 			bg.style.opacity = layer.settings.opacity / 100;
 
@@ -2469,6 +2498,12 @@ class LayerManager {
 		});
 	}
 
+
+getLayerZIndex(layerId) {
+    const index = this.layers.findIndex(l => l.id === layerId);
+    return index !== -1 ? index + 1 : 1;
+}
+
 	// ===== LAYER CRUD =====
 
 	generateLayerId() {
@@ -2657,27 +2692,32 @@ class LayerManager {
 		// 3. Update Side Panel UI
 		this.editor.updateSidePanelUI(layer);
 
-		// 4. Load settings
-		if (layer) {
-			if (layer.type === LayerType.STICKER) {
-				this.editor.hideStickerSettingsEmptyState();
-				this.editor.loadStickerSettings(layer);
-			} else if (layer.type === LayerType.GLITTER_FILL) {
-				this.editor.hideLayerSettingsEmptyState();
-				this.editor.hideGlitterSettingsEmptyState();
-				this.editor.loadActiveLayerSettings();
-				this.editor.updateGlitterSelection();
-			}
-		} else {
-			// No layer selected: Ensure empty states are shown
-			this.editor.showLayerSettingsEmptyState();
-			this.editor.showGlitterSettingsEmptyState();
-			this.editor.showStickerSettingsEmptyState();
-		}
+// 4. Load settings
+if (layer) {
+	if (layer.type === LayerType.STICKER) {
+		this.editor.hideStickerSettingsEmptyState();
+		this.editor.loadStickerSettings(layer);
+		this.editor.updateStickerSelection(); // ADD THIS LINE
+	} else if (layer.type === LayerType.GLITTER_FILL) {
+		this.editor.hideLayerSettingsEmptyState();
+		this.editor.hideGlitterSettingsEmptyState();
+		this.editor.loadActiveLayerSettings();
+		this.editor.updateGlitterSelection();
+	}
+} else {
+	// No layer selected: Ensure empty states are shown
+	this.editor.showLayerSettingsEmptyState();
+	this.editor.showGlitterSettingsEmptyState();
+	this.editor.showStickerSettingsEmptyState();
+}
 
 		window.dispatchEvent(new CustomEvent('layerChanged', {
 			detail: { layerId, layer }
 		}));
+
+		this.editor.updatePreview();
+
+		
 	}
 
 
@@ -2725,6 +2765,50 @@ class LayerManager {
 			glitterOption.classList.remove('highlight');
 		}, 1000);
 	}
+
+
+goToSticker(layerId) {
+	const layer = this.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.STICKER) return;
+
+	// Select this layer
+	this.setActiveLayer(layerId);
+
+	// On mobile, open the appropriate drawer
+	if (window.innerWidth <= 800 && this.editor.mobileManager) {
+		// For stickers, we might want to open a sticker picker drawer
+		// For now, just open the sticker settings
+		this.editor.mobileManager.toggleDrawer('layer-settings');
+	}
+
+	// Optionally scroll to the sticker in the sticker picker
+	// (similar to how glitter scrolls to the selected glitter)
+	const stickerId = layer.stickerSourceId;
+	if (stickerId) {
+		this.scrollToSticker(stickerId);
+	}
+}
+
+scrollToSticker(stickerId) {
+	const stickerOption = document.querySelector(`.sticker-option[data-sticker-id="${stickerId}"]`);
+	if (!stickerOption) return;
+
+	const stickerContainer = stickerOption.closest('.sticker-grid-container, #stickerGridContainer');
+	if (!stickerContainer) return;
+
+	// Scroll the sticker option into view
+	stickerOption.scrollIntoView({
+		behavior: 'smooth',
+		block: 'center'
+	});
+
+	// Brief highlight effect
+	stickerOption.classList.add('highlight');
+	setTimeout(() => {
+		stickerOption.classList.remove('highlight');
+	}, 1000);
+}
+
 
 	// ===== LAYER PICKING (SELECT TOOL) =====
 
@@ -2897,6 +2981,102 @@ class LayerManager {
 		this.updateMobileLayersSwatch();
 	}
 
+cloneLayer(layerId) {
+	const sourceLayer = this.layers.find(l => l.id === layerId);
+	if (!sourceLayer) return null;
+
+	// Can't clone locked layers (base image)
+	if (sourceLayer.locked) {
+		this.editor.showError('Cannot clone locked layer');
+		return null;
+	}
+
+	// Check max layers
+	if (this.layers.length >= CONFIG.maxLayers) {
+		this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+		return null;
+	}
+
+	// Create new layer based on type
+	let clonedLayer;
+
+if (sourceLayer.type === LayerType.STICKER) {
+	// Clone sticker layer - deep copy the stickerData structure
+	clonedLayer = {
+		id: this.generateLayerId(),
+		type: LayerType.STICKER,
+		name: sourceLayer.name, // COPY THE NAME
+		visible: sourceLayer.visible,
+		locked: false,
+		stickerSourceId: sourceLayer.stickerSourceId, // Make sure this is copied!
+		stickerData: {
+			url: sourceLayer.stickerData.url,
+			name: sourceLayer.stickerData.name, // COPY THE NAME IN STICKER DATA TOO
+			source: sourceLayer.stickerData.source,
+			width: sourceLayer.stickerData.width,
+			height: sourceLayer.stickerData.height,
+			isEmpty: sourceLayer.stickerData.isEmpty,
+			isAnimated: sourceLayer.stickerData.isAnimated,
+			frames: sourceLayer.stickerData.frames, // Reference is fine, frames are immutable
+			transform: {
+				position: { 
+					x: sourceLayer.stickerData.transform.position.x,
+					y: sourceLayer.stickerData.transform.position.y
+				},
+				scale: {
+					x: sourceLayer.stickerData.transform.scale.x,
+					y: sourceLayer.stickerData.transform.scale.y
+				},
+				rotation: sourceLayer.stickerData.transform.rotation,
+				opacity: sourceLayer.stickerData.transform.opacity,
+				flipX: sourceLayer.stickerData.transform.flipX,
+				flipY: sourceLayer.stickerData.transform.flipY
+			}
+			// Don't copy element - it will be created fresh
+		}
+	};
+
+	// Clone the DOM element via stickerManager
+	this.editor.stickerManager.cloneStickerElement(sourceLayer, clonedLayer);
+
+	} else {
+		// Clone glitter layer
+		clonedLayer = {
+			id: this.generateLayerId(),
+			type: LayerType.GLITTER_FILL,
+			visible: sourceLayer.visible,
+			locked: false,
+			selections: sourceLayer.selections.map(sel => ({ ...sel })),
+			selectedGlitterIndex: sourceLayer.selectedGlitterIndex,
+			settings: { ...sourceLayer.settings }
+		};
+
+		// Clone the glitter background element
+		const sourceElement = this.glitterBackgroundsContainer.querySelector(
+			`[data-layer-id="${sourceLayer.id}"]`
+		);
+		if (sourceElement) {
+			const clonedElement = sourceElement.cloneNode(true);
+			clonedElement.dataset.layerId = clonedLayer.id;
+			this.glitterBackgroundsContainer.appendChild(clonedElement);
+		}
+	}
+
+	// Find original layer index and insert clone right after it
+	// (Higher index = visually above in the stack)
+	const sourceIndex = this.layers.findIndex(l => l.id === layerId);
+	this.layers.splice(sourceIndex + 1, 0, clonedLayer);
+
+	// Make the clone active and re-render
+	this.setActiveLayer(clonedLayer.id);
+	this.renderLayersList();
+	this.reorderGlitterBackgrounds();
+
+	this.editor.saveState();
+	this.editor.updateActionButtons();
+
+	return clonedLayer;
+}
 	createLayerElement(layer) {
 		const layerEl = document.createElement('div');
 		layerEl.className = 'layer-item';
@@ -2959,10 +3139,12 @@ class LayerManager {
 		}
 
 		// Double-click swatch behavior
-		swatch.addEventListener('dblclick', (e) => {
+		swatch.addEventListener('click', (e) => {
 			e.stopPropagation();
 			if (layer.type === LayerType.GLITTER_FILL) {
 				this.goToGlitter(layer.id);
+			}else if (layer.type === LayerType.STICKER) {
+				this.goToSticker(layer.id);
 			}
 		});
 
@@ -3007,16 +3189,36 @@ class LayerManager {
 		if (layer.type !== LayerType.BASE_IMAGE) {
 			const arrowBtn = this.createIconButton({
 				className: 'layer-action-btn goto-glitter',
-				title: 'Go to settings',
+				title: layer.type === LayerType.STICKER ? 'Go to sticker' : 'Go to glitter',
 				iconType: 'chevron-right',
 				onClick: (e) => {
 					e.stopPropagation();
-					// Just selecting the layer triggers the UI update
-					this.setActiveLayer(layer.id);
+					if (layer.type === LayerType.STICKER) {
+						this.goToSticker(layer.id);
+					} else {
+						this.goToGlitter(layer.id);
+					}
 				}
 			});
 			actions.appendChild(arrowBtn);
 		}
+
+
+		// Clone Layer
+		if(!layer.locked){
+			const cloneBtn = this.createIconButton({
+				className: 'layer-action-btn clone',
+				title: 'Clone layer',
+				iconType: 'clone',
+				onClick: (e) => {
+					e.stopPropagation();
+					this.cloneLayer(layer.id);
+				}
+			});
+			actions.appendChild(cloneBtn);
+
+		}
+
 
 		// B. Visibility
 		const visBtn = this.createIconButton({
@@ -3054,18 +3256,21 @@ class LayerManager {
 		layerEl.onclick = () => this.setActiveLayer(layer.id);
 
 		// Attach Drag Events only if not locked
-		if (!layer.locked) {
-			layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
-			layerEl.addEventListener('dragover', (e) => this.handleLayerDragOver(e, layer.id));
-			layerEl.addEventListener('dragleave', (e) => this.handleLayerDragLeave(e));
-			layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
-			layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
+// Attach Drag Events (even for locked layers, so we can drop AROUND them)
+layerEl.addEventListener('dragover', (e) => this.handleLayerDragOver(e, layer.id));
+layerEl.addEventListener('dragleave', (e) => this.handleLayerDragLeave(e));
+layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
+layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
 
-			// Touch
-			layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
-			layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
-			layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
-		}
+// Only attach drag START and touch events if not locked
+if (!layer.locked) {
+	layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
+	
+	// Touch
+	layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
+	layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
+	layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
+}
 
 		return layerEl;
 	}
@@ -3227,13 +3432,16 @@ class LayerManager {
 		this.dropTargetId = targetLayerId;
 	}
 
-	handleLayerDragLeave(event) {
-		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+handleLayerDragLeave(event) {
+	const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
 
-		if (!this.layersListContainer.contains(event.relatedTarget)) {
-			insertionLine.classList.remove('visible');
-		}
+	// Only hide the visual line, don't clear the drop target
+	// This allows drops to work even if you drag slightly outside the container
+	if (!this.layersListContainer.contains(event.relatedTarget)) {
+		insertionLine.classList.remove('visible');
+		// DON'T clear this.dropTargetId here - keep the last valid drop position
 	}
+}
 
 	handleLayerDrop(event, targetLayerId) {
 		event.preventDefault();
@@ -3492,7 +3700,7 @@ class LayerManager {
 			if (el) {
 				// Update z-index based on position
 				if (layer.type === LayerType.STICKER) {
-					el.style.zIndex = this.editor.stickerManager.getLayerZIndex(layer.id);
+					el.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
 				}
 				fragment.appendChild(el);
 			}
@@ -4028,6 +4236,31 @@ class GlitterEditor {
 			opt.classList.toggle('selected', isSelected);
 		});
 	}
+
+updateStickerSelection() {
+	const layer = this.layerManager.getActiveLayer();
+	
+	// Early return if no sticker layer is active
+	if (!layer || layer.type !== LayerType.STICKER || !layer.stickerSourceId) {
+		// Just clear all selections if no valid sticker layer
+		document.querySelectorAll('.sticker-option').forEach((opt) => {
+			opt.classList.remove('selected');
+		});
+		return;
+	}
+
+	// Now we know we have a valid sticker layer with a source ID
+	document.querySelectorAll('.sticker-option').forEach((opt) => {
+
+		const isSelected = layer ? parseInt(opt.dataset.stickerId) === layer.stickerSourceId : false;
+		
+		if (isSelected) {
+			opt.classList.add('selected');
+		} else {
+			opt.classList.remove('selected');
+		}
+	});
+}
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {

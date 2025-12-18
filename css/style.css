@@ -2353,7 +2353,8 @@ input[type=range]::-moz-range-thumb {
   outline-color: var(--color-border-hover);
 }
 .stickers-options .sticker-category .sticker-grid .sticker-option.selected {
-  outline-color: var(--color-accent);
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
 }
 .stickers-options .sticker-category .sticker-grid .sticker-option.disabled {
   cursor: not-allowed;
@@ -2775,12 +2776,13 @@ input[type=range]::-moz-range-thumb {
     opacity: 0;
   }
 }
+.sticker-option.highlight,
 .glitter-option.highlight {
   outline-color: var(--color-accent);
-  animation: glitterPulse 0.5s ease-in-out 2;
+  animation: elementPulse 0.5s ease-in-out 2;
 }
 
-@keyframes glitterPulse {
+@keyframes elementPulse {
   0%, 100% {
     transform: scale(1);
   }
