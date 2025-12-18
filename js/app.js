@@ -800,6 +800,45 @@ replaceActiveSticker(stickerId) {
 		}
 	}
 
+
+// ===== CENTERING METHODS =====
+
+// ===== CENTERING METHODS =====
+
+centerStickerHorizontal(layerId) {
+	const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.STICKER) return;
+
+	// Get canvas center
+	const canvasWidth = this.editor.originalCanvas.width;
+	const centerX = canvasWidth / 2;
+
+	this.updateStickerTransform(layerId, {
+		position: { x: centerX }
+	});
+
+	// Update settings UI
+	this.editor.loadStickerSettings(layer);
+	this.editor.saveState();
+}
+
+centerStickerVertical(layerId) {
+	const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.STICKER) return;
+
+	// Get canvas center
+	const canvasHeight = this.editor.originalCanvas.height;
+	const centerY = canvasHeight / 2;
+
+	this.updateStickerTransform(layerId, {
+		position: { y: centerY }
+	});
+
+	// Update settings UI
+	this.editor.loadStickerSettings(layer);
+	this.editor.saveState();
+}
+
 	// ===== LAYER REMOVAL =====
 
 	removeSticker(layerId) {
@@ -2672,6 +2711,23 @@ getLayerZIndex(layerId) {
 			this.editor.stickerManager.updateSelectionHighlight(layerId);
 		}
 
+		// NEW: Update sticker center controls visibility
+
+		const stickerCenterControls = document.getElementById('stickerCenterControls');
+		if (stickerCenterControls){
+			const shouldShow = this.editor.currentTool === ToolType.SELECT && layer && layer.type === LayerType.STICKER;
+
+			if (shouldShow) {
+				stickerCenterControls.classList.add('visible');
+			} else {
+				stickerCenterControls.classList.remove('visible');
+			}
+		}
+
+
+
+
+
 		// 2. Update Base Image Highlight
 		// Strict check: Only add class if layer exists AND is Base Image.
 		// Explicitly remove it in all other cases.
@@ -3805,9 +3861,6 @@ class GlitterEditor {
 	}
 
 
-	// Add this method to the GlitterEditor class
-
-
 	updateSidePanelUI(layer) {
 		// 1. Define ALL possible sections to hide them first
 		const allSections = [
@@ -4520,6 +4573,27 @@ updateStickerSelection() {
 		if (centerHorizontal) centerHorizontal.addEventListener('click', () => this.viewport.centerHorizontal());
 		if (centerVertical) centerVertical.addEventListener('click', () => this.viewport.centerVertical());
 
+
+		// --- STICKER CENTER CONTROLS ---
+		const centerStickerHorizontal = document.getElementById('centerStickerHorizontal');
+		const centerStickerVertical = document.getElementById('centerStickerVertical');
+
+		if (centerStickerHorizontal) centerStickerHorizontal.addEventListener('click', () => {
+			const layer = this.layerManager.getActiveLayer();
+			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+				this.stickerManager.centerStickerHorizontal(layer.id);
+			}
+		});
+
+		if (centerStickerVertical) centerStickerVertical.addEventListener('click', () => {
+			const layer = this.layerManager.getActiveLayer();
+			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+				this.stickerManager.centerStickerVertical(layer.id);
+			}
+		});
+
+
+
 		// --- SCROLL ZOOM ---
 		this.previewContainer.addEventListener('wheel', (e) => {
 			if (this.currentTool === ToolType.ZOOM && this.originalImage) {
@@ -5179,20 +5253,29 @@ updateStickerSelection() {
 			}
 		}
 
-		// 3. Update Floating Controls (Zoom / Pan)
+		// 3. Update Floating Controls (Zoom / Pan / Sticker Center)
 		const zoomControls = document.getElementById('zoomControls');
 		const panControls = document.getElementById('panControls');
+		const stickerCenterControls = document.getElementById('stickerCenterControls');
 
 		// First, hide everything
 		if (zoomControls) zoomControls.classList.remove('visible');
 		if (panControls) panControls.classList.remove('visible');
+		if (stickerCenterControls) stickerCenterControls.classList.remove('visible');
 
 		// Then show only what is needed
 		if (tool === ToolType.ZOOM && zoomControls) {
 			zoomControls.classList.add('visible');
 		} else if (tool === ToolType.HAND && panControls) {
 			panControls.classList.add('visible');
+		} else if (tool === ToolType.SELECT && stickerCenterControls) {
+			// Show sticker center controls only if active layer is a sticker
+			const layer = this.layerManager.getActiveLayer();
+			if (layer && layer.type === LayerType.STICKER) {
+				stickerCenterControls.classList.add('visible');
+			}
 		}
+
 	}
 
 	handleKeyUp(e) {
@@ -5450,14 +5533,6 @@ updateActionButtons() {
 		if (colorPickerTool) colorPickerTool.disabled = !hasImage;
 		if (handTool) handTool.disabled = !hasImage;
 		if (zoomTool) zoomTool.disabled = !hasImage;
-
-		if (zoomControls) {
-			if (hasImage) {
-				zoomControls.classList.add('visible');
-			} else {
-				zoomControls.classList.remove('visible');
-			}
-		}
 
 		// UX: Can't add layers until image is loaded
 		if (addBtn) {

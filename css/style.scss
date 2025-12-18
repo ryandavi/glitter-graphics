@@ -2072,8 +2072,11 @@ input[type="range"] {
 	}
 }
 
-/* Zoom Controls */
-.zoom-controls {
+
+/* ===== BOTTOM TOOL UI ===== */
+.zoom-controls,
+.sticker-center-controls,
+.pan-controls {
 	position: absolute;
 	bottom: var(--spacing-lg);
 	left: 50%;
@@ -2093,6 +2096,10 @@ input[type="range"] {
 		width: 32px;
 		height: 32px;
 	}
+}
+
+/* Zoom Controls */
+.zoom-controls {
 
 	>.zoom-percentage {
 		min-width: 60px;
@@ -2120,27 +2127,6 @@ input[type="range"] {
 	}
 }
 
-.pan-controls {
-	position: absolute;
-	bottom: var(--spacing-lg);
-	left: 50%;
-	transform: translateX(-50%);
-	display: none;
-	align-items: center;
-	gap: var(--spacing-sm);
-	z-index: 10;
-
-	@include floating-ui;
-
-	&.visible {
-		display: flex;
-	}
-
-	>.btn-icon {
-		width: 32px;
-		height: 32px;
-	}
-}
 
 /* ===== EXPORT PROGRESS ===== */
 .export-progress {

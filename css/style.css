@@ -1843,8 +1843,10 @@ input[type=range]::-moz-range-thumb {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5); /* Drop shadow for contrast */
 }
 
-/* Zoom Controls */
-.zoom-controls {
+/* ===== BOTTOM TOOL UI ===== */
+.zoom-controls,
+.sticker-center-controls,
+.pan-controls {
   position: absolute;
   bottom: var(--spacing-lg);
   left: 50%;
@@ -1858,13 +1860,19 @@ input[type=range]::-moz-range-thumb {
   border: 1px solid var(--color-border);
   padding: var(--spacing-sm);
 }
-.zoom-controls.visible {
+.zoom-controls.visible,
+.sticker-center-controls.visible,
+.pan-controls.visible {
   display: flex;
 }
-.zoom-controls > .btn-icon {
+.zoom-controls > .btn-icon,
+.sticker-center-controls > .btn-icon,
+.pan-controls > .btn-icon {
   width: 32px;
   height: 32px;
 }
+
+/* Zoom Controls */
 .zoom-controls > .zoom-percentage {
   min-width: 60px;
   text-align: center;
@@ -1886,28 +1894,6 @@ input[type=range]::-moz-range-thumb {
 }
 .zoom-controls > .zoom-fit-btn {
   align-self: stretch;
-}
-
-.pan-controls {
-  position: absolute;
-  bottom: var(--spacing-lg);
-  left: 50%;
-  transform: translateX(-50%);
-  display: none;
-  align-items: center;
-  gap: var(--spacing-sm);
-  z-index: 10;
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  padding: var(--spacing-sm);
-}
-.pan-controls.visible {
-  display: flex;
-}
-.pan-controls > .btn-icon {
-  width: 32px;
-  height: 32px;
 }
 
 /* ===== EXPORT PROGRESS ===== */
