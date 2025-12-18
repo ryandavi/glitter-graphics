@@ -329,10 +329,15 @@ class StickerManager {
 		activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
 		activeLayer.stickerData.isEmpty = false;
 
+		// Clear cached frame data when changing sticker
+		activeLayer.stickerData.frames = null;
+		activeLayer.stickerData.isFlattened = false;
+		activeLayer.stickerData.staticImageData = null;
+
 		// Re-render
 		this.renderSticker(activeLayer);
 		this.editor.layerManager.renderLayersList();
-		this.editor.updateStickerSelection(); // ADD THIS
+		this.editor.updateStickerSelection();
 		this.editor.saveState();
 	}
 
@@ -1374,8 +1379,8 @@ class GlitterManager {
 		}
 	}
 
+	// In GlitterManager class - update parseGifFromUrl:
 	async parseGifFromUrl(url) {
-		// Used by both selection logic and Export logic
 		try {
 			const response = await fetch(url);
 			if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -1383,7 +1388,7 @@ class GlitterManager {
 			if (!arrayBuffer || arrayBuffer.byteLength === 0) throw new Error('Empty file');
 
 			const uintArray = new Uint8Array(arrayBuffer);
-			const reader = new GifReader(uintArray); // Assumes omggif.js is loaded globally
+			const reader = new GifReader(uintArray);
 			const frameCount = reader.numFrames();
 
 			if (frameCount === 0) throw new Error('GIF has 0 frames');
@@ -1394,9 +1399,19 @@ class GlitterManager {
 			const frames = [];
 
 			for (let i = 0; i < frameCount; i++) {
+				const info = reader.frameInfo(i);
 				const pixels = new Uint8ClampedArray(width * height * 4);
 				reader.decodeAndBlitFrameRGBA(i, pixels);
-				frames.push(new ImageData(pixels, width, height));
+
+				// CRITICAL: Must return object with imageData property, not just ImageData
+				frames.push({
+					imageData: new ImageData(pixels, width, height),
+					disposal: info.disposal,
+					x: info.x || 0,
+					y: info.y || 0,
+					width: info.width || width,
+					height: info.height || height
+				});
 			}
 
 			return {
@@ -6063,10 +6078,23 @@ class GlitterEditor {
 	}
 
 	async exportAnimatedGif() {
-		const visibleLayers = this.layers.filter(l => l.visible && l.selections.length > 0);
+		// Filter visible layers - handle different layer types
+		const visibleLayers = this.layers.filter(l => {
+			if (!l.visible) return false;
+
+			if (l.type === LayerType.GLITTER_FILL) {
+				return l.selections && l.selections.length > 0;
+			} else if (l.type === LayerType.STICKER) {
+				return !l.stickerData.isEmpty; // Has actual sticker content
+			} else if (l.type === LayerType.BASE_IMAGE) {
+				return false; // Base image is handled via exportSettings.baseImage
+			}
+
+			return false;
+		});
 
 		if (visibleLayers.length === 0) {
-			this.showError('No visible layers with selections!');
+			this.showError('No visible layers with content to export!');
 			return;
 		}
 
@@ -6074,7 +6102,6 @@ class GlitterEditor {
 		exportBtn.disabled = true;
 		this.showExportProgress();
 
-		// Read current settings from DOM
 		// Read current settings from DOM
 		const qualityInput = document.getElementById('exportQuality');
 		const ditherEnabledInput = document.getElementById('exportDitherEnabled');
@@ -6098,9 +6125,13 @@ class GlitterEditor {
 
 		const exportParams = {
 			visibleLayers: visibleLayers,
-			glitterGifs: this.glitterManager.glitterGifs, // UPDATED
+			glitterGifs: this.glitterManager.glitterGifs,
 			canvasData: {
-				// ... existing data ...
+				width: this.originalCanvas.width,
+				height: this.originalCanvas.height,
+				originalData: new Uint8ClampedArray(this.originalImageData.data),
+				originalAlpha: this.originalAlphaChannel,
+				alphaThreshold: CONFIG.alphaThreshold
 			},
 			exportSettings: this.exportSettings,
 			callbacks: {
@@ -6113,10 +6144,8 @@ class GlitterEditor {
 					exportBtn.disabled = false;
 					this.hideExportProgress();
 				},
-				// UPDATED: Delegate to manager
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
 				createMask: (layer) => {
-					// UPDATED: Delegate to manager
 					const mask = this.glitterManager.createMaskForLayer(layer);
 					if (layer.settings.feather > 0) {
 						this.glitterManager.applyFeatherToMask(mask, layer.settings.feather);
@@ -6199,19 +6228,31 @@ class GifExporter {
 	}
 
 
-	_renderStickerToCanvas(layer, ctx, frameIndex, canvasWidth, canvasHeight) {
-		const { transform, frames, isAnimated, width, height, url } = layer.stickerData;
 
-		// Determine which frame to use
+
+	_renderStickerToCanvas(layer, ctx, frameIndex) {
+		const { transform, isAnimated, width, height } = layer.stickerData;
+
+		// Determine which frame/image to use
 		let imageData;
-		if (isAnimated && frames) {
-			const frameCount = frames.frames.length;
+		if (isAnimated && layer.stickerData.frames) {
+			const frameCount = layer.stickerData.frames.frames.length;
 			const stickerFrameIndex = frameIndex % frameCount;
-			imageData = frames.frames[stickerFrameIndex].data;
+			const frame = layer.stickerData.frames.frames[stickerFrameIndex];
+
+			// Handle both ImageData objects and frame objects with .data property
+			if (frame instanceof ImageData) {
+				imageData = frame;
+			} else if (frame.data instanceof ImageData) {
+				imageData = frame.data;
+			} else {
+				console.error('[GifExporter] Invalid sticker frame format', frame);
+				return;
+			}
+		} else if (layer.stickerData.staticImageData) {
+			imageData = layer.stickerData.staticImageData;
 		} else {
-			// Static image - need to load it
-			// For now, we'll need to pre-load sticker images during export prep
-			console.warn('Static sticker export not yet implemented');
+			console.error('[GifExporter] No image data for sticker layer', layer.id);
 			return;
 		}
 
@@ -6219,10 +6260,13 @@ class GifExporter {
 		const tempCanvas = document.createElement('canvas');
 		tempCanvas.width = width;
 		tempCanvas.height = height;
-		const tempCtx = tempCanvas.getContext('2d');
+		const tempCtx = tempCanvas.getContext('2d', {
+			willReadFrequently: true,
+			alpha: true
+		});
 		tempCtx.putImageData(imageData, 0, 0);
 
-		// Calculate transform
+		// Calculate transform values
 		const centerX = transform.position.x;
 		const centerY = transform.position.y;
 		const scaleX = transform.scale.x / 100;
@@ -6231,6 +6275,10 @@ class GifExporter {
 
 		// Apply transforms to main canvas
 		ctx.save();
+
+		// CRITICAL: Disable image smoothing to prevent antialiasing artifacts
+		ctx.imageSmoothingEnabled = false;
+
 		ctx.globalAlpha = transform.opacity / 100;
 
 		// Translate to center point
@@ -6241,7 +6289,7 @@ class GifExporter {
 			ctx.rotate(rotation);
 		}
 
-		// Scale
+		// Scale (including flips)
 		ctx.scale(
 			scaleX * (transform.flipX ? -1 : 1),
 			scaleY * (transform.flipY ? -1 : 1)
@@ -6269,7 +6317,7 @@ class GifExporter {
 
 		// 2. De-Optimize Frames (Flatten disposal methods)
 		callbacks.onProgress(5, 'Processing frames...', 0, 0);
-		this._deoptimizeGlitterFrames(visibleLayers, glitterGifs);
+		this._deoptimizeAnimatedFrames(visibleLayers, glitterGifs);
 
 		// 3. CHECK FOR TRANSPARENCY
 		const hasTransparency = this._hasTransparency(canvasData);
@@ -6291,7 +6339,7 @@ class GifExporter {
 		const totalFrames = this._calculateTotalFrames(visibleLayers, glitterGifs, exportSettings.maxFrames);
 		callbacks.onStatus(`Rendering ${totalFrames} frames...`);
 
-		// 5. Prepare Masks
+		// 5. Prepare Masks (only for glitter layers)
 		callbacks.onProgress(10, 'Preparing masks...', 0, totalFrames);
 		const maskCanvases = new Map();
 
@@ -6299,15 +6347,21 @@ class GifExporter {
 		this.helperCanvas.height = canvasData.height;
 
 		visibleLayers.forEach(layer => {
+			// Only create masks for glitter layers
+			if (layer.type !== LayerType.GLITTER_FILL) return;
+
 			const rawMask = callbacks.createMask(layer);
 			const maskCanvas = this._createMaskCanvas(rawMask, canvasData.width, canvasData.height);
 			maskCanvases.set(layer.id, maskCanvas);
 		});
-
 		// 6. Setup Encoder
 		// Disable dithering when we need transparency
 		const needsTransparency = hasTransparency && exportSettings.transparency;
 
+
+
+
+		
 		const gifOptions = {
 			workers: this.config.workers,
 			quality: exportSettings.quality,
@@ -6328,22 +6382,35 @@ class GifExporter {
 
 		const gif = new GIF(gifOptions);
 
-		// 7. Render Loop
-		this.canvas.width = canvasData.width;
-		this.canvas.height = canvasData.height;
+// 7. Render Loop
+this.canvas.width = canvasData.width;
+this.canvas.height = canvasData.height;
 
-		for (let f = 0; f < totalFrames; f++) {
-			const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey, exportSettings);
+for (let f = 0; f < totalFrames; f++) {
+	const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey, exportSettings);
 
-			// Around line 105, REMOVE dispose: 2 again:
-			gif.addFrame(frameData, {
-				delay: exportSettings.frameDelay,
-				copy: true
-				// NO dispose property - we're providing full frames
-			});
-			const progressPercent = 10 + Math.floor((f / totalFrames) * 65);
-			callbacks.onProgress(progressPercent, `Rendering frame ${f + 1}/${totalFrames}...`, f + 1, totalFrames);
+	// DEBUG: Check problem frames
+	if (f === 2 || f === 3 || f === 14 || f === 17) {
+		let safeKeyInFrame = 0;
+		let blackInFrame = 0;
+		for (let i = 0; i < frameData.data.length; i += 4) {
+			if (frameData.data[i] === 1 && frameData.data[i+1] === 1 && frameData.data[i+2] === 1 && frameData.data[i+3] === 255) {
+				safeKeyInFrame++;
+			}
+			if (frameData.data[i] === 0 && frameData.data[i+1] === 0 && frameData.data[i+2] === 0 && frameData.data[i+3] === 255) {
+				blackInFrame++;
+			}
 		}
+		console.log(`[ENCODER FRAME ${f}] Safe key RGB(1,1,1): ${safeKeyInFrame}, Black RGB(0,0,0): ${blackInFrame}`);
+	}
+
+	gif.addFrame(frameData, {
+		delay: exportSettings.frameDelay,
+		copy: true
+	});
+	const progressPercent = 10 + Math.floor((f / totalFrames) * 65);
+	callbacks.onProgress(progressPercent, `Rendering frame ${f + 1}/${totalFrames}...`, f + 1, totalFrames);
+}
 
 		// 8. Output
 		callbacks.onProgress(75, 'Encoding GIF...', totalFrames, totalFrames);
@@ -6372,31 +6439,41 @@ class GifExporter {
 	// --- HELPER METHODS ---
 
 	_findSafeTransparencyKey(layers, library, canvasData) {
-		const candidates = [
-			{ name: 'DarkGray1', hex: 0x010101, r: 1, g: 1, b: 1 },
-			{ name: 'DarkGray2', hex: 0x020202, r: 2, g: 2, b: 2 },
-			{ name: 'DarkGray3', hex: 0x030303, r: 3, g: 3, b: 3 },
-			{ name: 'OffGreen1', hex: 0x00FE00, r: 0, g: 254, b: 0 },
-			{ name: 'OffGreen2', hex: 0x01FF00, r: 1, g: 255, b: 0 },
-			{ name: 'Green', hex: 0x00FF00, r: 0, g: 255, b: 0 },
-			{ name: 'Magenta', hex: 0xFF00FF, r: 255, g: 0, b: 255 },
-			{ name: 'Blue', hex: 0x0000FF, r: 0, g: 0, b: 255 },
-			{ name: 'Red', hex: 0xFF0000, r: 255, g: 0, b: 0 },
-			{ name: 'Yellow', hex: 0xFFFF00, r: 255, g: 255, b: 0 },
-			{ name: 'Cyan', hex: 0x00FFFF, r: 0, g: 255, b: 255 }
-		];
+const candidates = [
+    // Use colors far from black - start with bright magenta
+    { name: 'Magenta', r: 255, g: 0, b: 255, hex: 0xFF00FF },
+    { name: 'Cyan', r: 0, g: 255, b: 255, hex: 0x00FFFF },
+    { name: 'Yellow', r: 255, g: 255, b: 0, hex: 0xFFFF00 },
+    // Fallback to originals if needed
+    { name: 'DarkGray1', r: 1, g: 1, b: 1, hex: 0x010101 },
+    { name: 'DarkGray2', r: 2, g: 2, b: 2, hex: 0x020202 },
+    { name: 'DarkGray3', r: 3, g: 3, b: 3, hex: 0x030303 },
+    { name: 'OffGreen', r: 0, g: 1, b: 0, hex: 0x000100 }
+];
 
-		const glitterFrames = [];
+		// Collect all frames from all sources
+		const allFrames = [];
+
 		layers.forEach(layer => {
-			const glitter = library[layer.selectedGlitterIndex];
-			if (glitter?.frames?.frames) {
-				glitterFrames.push(...glitter.frames.frames);
+			if (layer.type === LayerType.GLITTER_FILL) {
+				const glitter = library[layer.selectedGlitterIndex];
+				if (glitter?.frames?.frames) {
+					allFrames.push(...glitter.frames.frames);
+				}
+			} else if (layer.type === LayerType.STICKER) {
+				const stickerData = layer.stickerData;
+				if (stickerData.isAnimated && stickerData.frames?.frames) {
+					allFrames.push(...stickerData.frames.frames);
+				} else if (!stickerData.isAnimated && stickerData.staticImageData) {
+					allFrames.push({ data: stickerData.staticImageData });
+				}
 			}
 		});
 
 		for (const candidate of candidates) {
 			let isSafe = true;
 
+			// Check base image
 			const imgData = canvasData.originalData;
 			const imgLen = imgData.length;
 
@@ -6414,12 +6491,13 @@ class GifExporter {
 
 			if (!isSafe) continue;
 
-			for (const frame of glitterFrames) {
-				const data = frame.data;
+			// Check all frames (glitter and stickers)
+			for (const frame of allFrames) {
+				const data = frame.data.data || frame.data; // Handle both ImageData and raw arrays
 				const len = data.length;
 
 				for (let i = 0; i < len; i += 4) {
-					if (data[i + 3] === 0) continue;
+					if (data[i + 3] === 0) continue; // Skip transparent pixels
 					if (data[i] === candidate.r &&
 						data[i + 1] === candidate.g &&
 						data[i + 2] === candidate.b) {
@@ -6450,15 +6528,65 @@ class GifExporter {
 		this.canvas.height = height;
 		ctx.clearRect(0, 0, width, height);
 
-		// B. Draw Background Image
+		// Track safe key pixels through the rendering pipeline
+		let safeKeyCountAfterBase = 0;
+		let safeKeyCountFinal = 0;
+		let blackCountFinal = 0;
+
+		// B. Draw Background Image with transparency handling
 		if (exportSettings.baseImage) {
-			const bgImage = new ImageData(originalData, width, height);
+			const bgImage = new ImageData(new Uint8ClampedArray(originalData), width, height);
+
+			// If we need transparency, replace transparent base image pixels with safe key FIRST
+			if (safeKey && exportSettings.transparency) {
+				const data = bgImage.data;
+				for (let i = 0; i < originalAlpha.length; i++) {
+					if (originalAlpha[i] < alphaThreshold) {
+						const offset = i * 4;
+						data[offset] = safeKey.r;
+						data[offset + 1] = safeKey.g;
+						data[offset + 2] = safeKey.b;
+						data[offset + 3] = 255;
+					}
+				}
+			} else if (!exportSettings.transparency) {
+				// Apply matte color to transparent areas of base image
+				const data = bgImage.data;
+
+				const matteColor = exportSettings.matteColor || '#ffffff';
+				const r = parseInt(matteColor.slice(1, 3), 16);
+				const g = parseInt(matteColor.slice(3, 5), 16);
+				const b = parseInt(matteColor.slice(5, 7), 16);
+
+				for (let i = 0; i < originalAlpha.length; i++) {
+					if (originalAlpha[i] < alphaThreshold) {
+						const offset = i * 4;
+						data[offset] = r;
+						data[offset + 1] = g;
+						data[offset + 2] = b;
+						data[offset + 3] = 255;
+					}
+				}
+			}
+
 			ctx.putImageData(bgImage, 0, 0);
+
+			// Count safe key after base
+			if (safeKey && exportSettings.transparency) {
+				const checkData = ctx.getImageData(0, 0, width, height);
+				for (let i = 0; i < checkData.data.length; i += 4) {
+					if (checkData.data[i] === safeKey.r &&
+						checkData.data[i + 1] === safeKey.g &&
+						checkData.data[i + 2] === safeKey.b &&
+						checkData.data[i + 3] === 255) {
+						safeKeyCountAfterBase++;
+					}
+				}
+			}
 		}
 
 		// C. Composite Glitter Layers
-		layers.forEach(layer => {
-			// Skip non-glitter layers
+		layers.forEach((layer, layerIdx) => {
 			if (layer.type !== LayerType.GLITTER_FILL) return;
 
 			const maskCanvas = maskCanvases.get(layer.id);
@@ -6469,16 +6597,26 @@ class GifExporter {
 			const fIdx = frameIndex % frames.length;
 			const glitterFrame = frames[fIdx];
 
-			// Save state so previous layers don't corrupt this one
 			hCtx.save();
 
 			// 1. Pattern Fill
 			hCtx.clearRect(0, 0, width, height);
 
 			const patternSource = document.createElement('canvas');
-			patternSource.width = glitterFrame.width;
-			patternSource.height = glitterFrame.height;
-			patternSource.getContext('2d').putImageData(glitterFrame.data, 0, 0);
+
+			// Handle both ImageData objects and frame objects with .data property
+			let frameImageData;
+			if (glitterFrame instanceof ImageData) {
+				frameImageData = glitterFrame;
+				patternSource.width = glitterFrame.width;
+				patternSource.height = glitterFrame.height;
+			} else {
+				frameImageData = glitterFrame.data;
+				patternSource.width = glitterFrame.width;
+				patternSource.height = glitterFrame.height;
+			}
+
+			patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
 
 			const pattern = hCtx.createPattern(patternSource, 'repeat');
 			const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
@@ -6495,42 +6633,292 @@ class GifExporter {
 			hCtx.globalAlpha = 1.0;
 			hCtx.drawImage(maskCanvas, 0, 0);
 
-			// Restore state (resets composite op and alpha)
 			hCtx.restore();
 
 			// 3. Composite onto main canvas
 			ctx.drawImage(this.helperCanvas, 0, 0);
 		});
 
-		// D. Render Sticker Layers (NEW)
-		layers.forEach(layer => {
-			if (layer.type === LayerType.STICKER && layer.visible) {
-				this._renderStickerToCanvas(layer, ctx, frameIndex, width, height);
-			}
+		// D. Composite Sticker Layers
+		layers.forEach((layer, layerIdx) => {
+			if (layer.type !== LayerType.STICKER) return;
+
+			this._renderStickerToCanvas(layer, ctx, frameIndex);
 		});
 
-		// E. Handle Transparency
-		if (exportSettings.transparency && safeKey) {
-			const imgData = ctx.getImageData(0, 0, width, height);
-			const data = imgData.data;
+		// E. Count final pixels and log if there's a problem
+		if (safeKey && exportSettings.transparency) {
+			const finalData = ctx.getImageData(0, 0, width, height);
+			let blackPixelsWhereKeyShouldBe = 0; // Black pixels in areas that started as safe key
 
-			for (let i = 0; i < width * height; i++) {
-				const pixelIndex = i;
-				const alpha = originalAlpha[pixelIndex];
+			for (let i = 0; i < finalData.data.length; i += 4) {
+				const pixelIndex = i / 4;
 
-				if (alpha < alphaThreshold) {
-					const pIdx = i * 4;
-					data[pIdx] = safeKey.r;
-					data[pIdx + 1] = safeKey.g;
-					data[pIdx + 2] = safeKey.b;
-					data[pIdx + 3] = 255;
+				if (finalData.data[i] === safeKey.r &&
+					finalData.data[i + 1] === safeKey.g &&
+					finalData.data[i + 2] === safeKey.b &&
+					finalData.data[i + 3] === 255) {
+					safeKeyCountFinal++;
+				}
+
+				// Check if this pixel is black
+				if (finalData.data[i] === 0 &&
+					finalData.data[i + 1] === 0 &&
+					finalData.data[i + 2] === 0 &&
+					finalData.data[i + 3] === 255) {
+					blackCountFinal++;
+
+					// Check if this was originally a transparent area in the base image
+					if (originalAlpha[pixelIndex] < alphaThreshold) {
+						blackPixelsWhereKeyShouldBe++;
+					}
 				}
 			}
 
-			ctx.putImageData(imgData, 0, 0);
+			// Log only if there's actual transparency corruption
+			if (blackPixelsWhereKeyShouldBe > 100) {
+				console.log(`[FRAME ${frameIndex}] TRANSPARENCY CORRUPTED: ${blackPixelsWhereKeyShouldBe} black pixels in transparent areas!`);
+			}
+
+
+			// Log if safe key was corrupted (black appearing where transparency should be)
+			const safeKeyLoss = safeKeyCountAfterBase - safeKeyCountFinal;
+			if (safeKeyLoss > 100 || blackPixelsWhereKeyShouldBe > 100) {
+				console.log(`[FRAME ${frameIndex}] PROBLEM: Lost ${safeKeyLoss} safe key pixels, ${blackPixelsWhereKeyShouldBe} black pixels in transparent areas (total black: ${blackCountFinal})`);
+			}
 		}
 
 		return ctx.getImageData(0, 0, width, height);
+	}
+
+
+	async _parseGifWithMetadata(url) {
+		try {
+			const response = await fetch(url);
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			const arrayBuffer = await response.arrayBuffer();
+			if (!arrayBuffer || arrayBuffer.byteLength === 0) throw new Error('Empty file');
+
+			const uintArray = new Uint8Array(arrayBuffer);
+			const reader = new GifReader(uintArray);
+			const frameCount = reader.numFrames();
+
+			if (frameCount === 0) throw new Error('GIF has 0 frames');
+
+			const width = reader.width;
+			const height = reader.height;
+			const frames = [];
+
+			for (let i = 0; i < frameCount; i++) {
+				const frameInfo = reader.frameInfo(i);
+
+				// Get full canvas data
+				const fullPixels = new Uint8ClampedArray(width * height * 4);
+				reader.decodeAndBlitFrameRGBA(i, fullPixels);
+
+				// Extract patch dimensions
+				const patchX = frameInfo.x || 0;
+				const patchY = frameInfo.y || 0;
+				const patchW = frameInfo.width || width;
+				const patchH = frameInfo.height || height;
+
+				// Extract the patch from full canvas
+				const patchData = new Uint8ClampedArray(patchW * patchH * 4);
+				for (let y = 0; y < patchH; y++) {
+					for (let x = 0; x < patchW; x++) {
+						const srcIdx = ((patchY + y) * width + (patchX + x)) * 4;
+						const dstIdx = (y * patchW + x) * 4;
+						patchData[dstIdx] = fullPixels[srcIdx];
+						patchData[dstIdx + 1] = fullPixels[srcIdx + 1];
+						patchData[dstIdx + 2] = fullPixels[srcIdx + 2];
+						patchData[dstIdx + 3] = fullPixels[srcIdx + 3];
+					}
+				}
+
+				// Return in same format as glitter parser expects
+				frames.push({
+					data: patchData,  // Patch-sized raw data
+					width: patchW,
+					height: patchH,
+					x: patchX,
+					y: patchY,
+					disposal: frameInfo.disposal
+				});
+			}
+
+			return {
+				width,
+				height,
+				frames,
+				frameCount
+			};
+		} catch (error) {
+			console.error(`[_parseGifWithMetadata] Error loading ${url}:`, error);
+			throw error;
+		}
+	}
+
+	_deoptimizeAnimatedFrames(layers, library) {
+		layers.forEach(layer => {
+			let glitter, name, isSticker;
+
+			if (layer.type === LayerType.GLITTER_FILL) {
+				glitter = library[layer.selectedGlitterIndex];
+				if (!glitter.frames || glitter.isFlattened) return;
+				name = glitter.name;
+				isSticker = false;
+			} else if (layer.type === LayerType.STICKER && layer.stickerData.isAnimated) {
+				const stickerData = layer.stickerData;
+				if (!stickerData.frames || stickerData.isFlattened) return;
+				glitter = { frames: stickerData.frames };
+				name = stickerData.name;
+				isSticker = true;
+			} else {
+				return;
+			}
+
+			let glitterHasTransparency = false;
+			const rawFrames = glitter.frames.frames;
+			const width = glitter.frames.width;
+			const height = glitter.frames.height;
+			const flattenedFrames = [];
+
+			const canvas = document.createElement('canvas');
+			canvas.width = width;
+			canvas.height = height;
+			const ctx = canvas.getContext('2d', { willReadFrequently: true });
+			ctx.imageSmoothingEnabled = false; // ADD THIS
+
+			const tempCanvas = document.createElement('canvas');
+			tempCanvas.width = width;
+			tempCanvas.height = height;
+			const tempCtx = tempCanvas.getContext('2d');
+			tempCtx.imageSmoothingEnabled = false; // ADD THIS
+
+			let previousFrameData = null;
+
+			// Detect if this GIF uses deltas or needs clearing
+			let usesDeltas = false;
+			let needsClearing = false;
+			let isAnimation = false;
+			let differentPercent = 0;
+
+			if (rawFrames.length > 1) {
+				const frame1Data = rawFrames[0].imageData.data;
+				const frame2Data = rawFrames[1].imageData.data;
+				let transparentCount = 0;
+				let opaqueCount = 0;
+				let differentPixels = 0;
+
+				for (let i = 0; i < frame2Data.length; i += 4) {
+					const alpha = frame2Data[i + 3];
+
+					if (alpha === 0) transparentCount++;
+					else if (alpha === 255) opaqueCount++;
+
+					// Check if pixel is different from frame 1
+					if (Math.abs(frame1Data[i] - frame2Data[i]) > 10 ||
+						Math.abs(frame1Data[i + 1] - frame2Data[i + 1]) > 10 ||
+						Math.abs(frame1Data[i + 2] - frame2Data[i + 2]) > 10 ||
+						Math.abs(frame1Data[i + 3] - frame2Data[i + 3]) > 10) {
+						differentPixels++;
+					}
+				}
+
+				const totalPixels = frame2Data.length / 4;
+				const transparentPercent = (transparentCount / totalPixels) * 100;
+				differentPercent = (differentPixels / totalPixels) * 100;
+
+				// Refined delta detection
+				usesDeltas = (transparentPercent > 60 || transparentPercent < 30);
+
+				// Animation detection
+				isAnimation = transparentPercent >= 30 && transparentPercent <= 60 && differentPercent < 25;
+
+				// Needs clearing
+				needsClearing = (differentPercent > 20 && !usesDeltas) || isAnimation;
+
+				console.log(`[DEBUG] "${name}" - Frame 2: ${transparentPercent.toFixed(1)}% transparent, ${differentPercent.toFixed(1)}% different, usesDeltas: ${usesDeltas}, isAnimation: ${isAnimation}, needsClearing: ${needsClearing}`);
+			}
+
+			// Determine disposal strategy for ALL frames (not per-frame)
+			let disposalStrategy;
+
+			if (usesDeltas) {
+				disposalStrategy = 1; // Stack deltas
+				console.log(`[DISPOSAL] "${name}": Strategy = STACK (usesDeltas)`);
+			} else if (isSticker && glitterHasTransparency) {
+				if (needsClearing && differentPercent > 40) {
+					disposalStrategy = 2; // Clear for very different stickers
+					console.log(`[DISPOSAL] "${name}": Strategy = CLEAR (sticker+trans+diff>40)`);
+				} else {
+					disposalStrategy = 1; // Stack for similar transparent stickers
+					console.log(`[DISPOSAL] "${name}": Strategy = STACK (sticker+trans+diff<40)`);
+				}
+			} else if (needsClearing || (glitterHasTransparency && !isSticker)) {
+				disposalStrategy = 2; // Clear for changing glitter or transparent glitter
+				console.log(`[DISPOSAL] "${name}": Strategy = CLEAR (needsClearing or glitter+trans)`);
+			} else {
+				disposalStrategy = 1; // Default: stack
+				console.log(`[DISPOSAL] "${name}": Strategy = STACK (default)`);
+			}
+
+			for (let i = 0; i < rawFrames.length; i++) {
+				const frame = rawFrames[i];
+
+				// Use the calculated strategy for all frames
+				const disposal = disposalStrategy;
+
+				if (i === 0) {
+					console.log(`[DISPOSAL] "${name}": Using disposal=${disposal} for all ${rawFrames.length} frames`);
+				}
+
+				// Handle disposal of PREVIOUS frame
+				if (i > 0 && disposal === 2) {
+					ctx.clearRect(0, 0, width, height);
+				} else if (i > 0 && disposal === 3 && previousFrameData) {
+					ctx.putImageData(previousFrameData, 0, 0);
+				}
+
+				// Save previous frame if next frame might need it
+				if (disposal === 3) {
+					previousFrameData = ctx.getImageData(0, 0, width, height);
+				}
+
+				// Draw current frame
+				tempCtx.putImageData(frame.imageData, 0, 0);
+				ctx.drawImage(tempCanvas, 0, 0);
+
+				// Capture the composited result
+				const flattenedData = ctx.getImageData(0, 0, width, height);
+
+				flattenedFrames.push({
+					data: flattenedData,
+					width,
+					height
+				});
+
+				// Check FIRST FRAME ONLY for actual transparency
+				if (i === 0) {
+					const checkData = flattenedData.data;
+					for (let j = 3; j < checkData.length; j += 4) {
+						if (checkData[j] < 255) {
+							glitterHasTransparency = true;
+							break;
+						}
+					}
+					console.log(`[GifExporter] "${name}" (${isSticker ? 'sticker' : 'glitter'}) has transparency: ${glitterHasTransparency}, disposal: ${disposal}`);
+				}
+			}
+
+			glitter.frames.frames = flattenedFrames;
+
+			if (layer.type === LayerType.GLITTER_FILL) {
+				library[layer.selectedGlitterIndex].isFlattened = true;
+			} else if (layer.type === LayerType.STICKER) {
+				layer.stickerData.isFlattened = true;
+			}
+		});
 	}
 
 	_parseHexColor(hex) {
@@ -6563,97 +6951,123 @@ class GifExporter {
 		return c;
 	}
 
-	_deoptimizeGlitterFrames(layers, library) {
-		layers.forEach(layer => {
-			const glitter = library[layer.selectedGlitterIndex];
-			if (glitter.isFlattened) return;
+	async _parseGifWithMetadata(url) {
+		try {
+			const response = await fetch(url);
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			const arrayBuffer = await response.arrayBuffer();
+			if (!arrayBuffer || arrayBuffer.byteLength === 0) throw new Error('Empty file');
 
-			const rawFrames = glitter.frames.frames;
-			const width = glitter.frames.width;
-			const height = glitter.frames.height;
+			const uintArray = new Uint8Array(arrayBuffer);
+			const reader = new GifReader(uintArray);
+			const frameCount = reader.numFrames();
 
-			this.helperCanvas.width = width;
-			this.helperCanvas.height = height;
-			const ctx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
+			if (frameCount === 0) throw new Error('GIF has 0 frames');
 
-			const tempC = document.createElement('canvas');
-			const tempCtx = tempC.getContext('2d');
+			const width = reader.width;
+			const height = reader.height;
+			const frames = [];
 
-			const flattenedFrames = [];
-			let previousFrameData = ctx.getImageData(0, 0, width, height);
+			for (let i = 0; i < frameCount; i++) {
+				const frameInfo = reader.frameInfo(i);
+				const pixels = new Uint8ClampedArray(width * height * 4);
+				reader.decodeAndBlitFrameRGBA(i, pixels);
 
-			// We'll detect transparency from the FIRST FLATTENED FRAME
-			let glitterHasTransparency = false;
-
-			for (let i = 0; i < rawFrames.length; i++) {
-				const frame = rawFrames[i];
-				const dims = { x: frame.x || 0, y: frame.y || 0, w: frame.width || width, h: frame.height || height };
-
-				const patchData = new ImageData(frame.data, dims.w, dims.h);
-				tempC.width = dims.w;
-				tempC.height = dims.h;
-				tempCtx.putImageData(patchData, 0, 0);
-
-				if (frame.disposal === 3) previousFrameData = ctx.getImageData(0, 0, width, height);
-
-				ctx.drawImage(tempC, dims.x, dims.y);
-
-				const flattenedData = ctx.getImageData(0, 0, width, height);
-
-				flattenedFrames.push({
-					data: flattenedData,
-					width, height
+				// Store as ImageData (decodeAndBlitFrameRGBA gives us full canvas)
+				frames.push({
+					data: new ImageData(pixels, width, height), // Full canvas ImageData
+					width: frameInfo.width || width,
+					height: frameInfo.height || height,
+					x: frameInfo.x || 0,
+					y: frameInfo.y || 0,
+					disposal: frameInfo.disposal
 				});
-
-				// Check FIRST FRAME ONLY for actual transparency
-				if (i === 0) {
-					const checkData = flattenedData.data;
-					for (let j = 3; j < checkData.length; j += 4) {
-						if (checkData[j] < 255) {
-							glitterHasTransparency = true;
-							break;
-						}
-					}
-					console.log(`[GifExporter] Glitter "${glitter.name}" has transparency: ${glitterHasTransparency}`);
-				}
-
-				// If glitter has transparency anywhere, ALL frames must clear (disposal=2)
-				// Otherwise use stacking (disposal=1) for opaque glitter
-				const disposal = glitterHasTransparency
-					? 2
-					: (frame.disposal !== undefined ? frame.disposal : 1);
-
-				if (disposal === 2) ctx.clearRect(dims.x, dims.y, dims.w, dims.h);
-				else if (disposal === 3) ctx.putImageData(previousFrameData, 0, 0);
 			}
 
-			glitter.frames.frames = flattenedFrames;
-			glitter.isFlattened = true;
-		});
+			return {
+				width,
+				height,
+				frames,
+				frameCount
+			};
+		} catch (error) {
+			console.error(`[_parseGifWithMetadata] Error loading ${url}:`, error);
+			throw error;
+		}
 	}
 
 	async _loadMissingFrames(layers, library, callbacks) {
 		for (const layer of layers) {
-			const glitter = library[layer.selectedGlitterIndex];
-			if (!glitter.frames) {
-				callbacks.onStatus(`Loading ${glitter.name}...`);
-				try {
-					glitter.frames = await callbacks.parseGif(glitter.url);
-				} catch (e) {
-					throw new Error(`Failed to load ${glitter.name}`);
+			if (layer.type === LayerType.GLITTER_FILL) {
+				// Handle glitter layers
+				const glitter = library[layer.selectedGlitterIndex];
+				if (!glitter.frames) {
+					callbacks.onStatus(`Loading ${glitter.name}...`);
+					try {
+						glitter.frames = await callbacks.parseGif(glitter.url);
+					} catch (e) {
+						throw new Error(`Failed to load ${glitter.name}`);
+					}
+				}
+			} else if (layer.type === LayerType.STICKER) {
+				// Handle sticker layers
+				const stickerData = layer.stickerData;
+
+				if (stickerData.isAnimated && !stickerData.frames) {
+					callbacks.onStatus(`Loading ${stickerData.name}...`);
+					try {
+						// Use same parser as glitter
+						stickerData.frames = await callbacks.parseGif(stickerData.url);
+					} catch (e) {
+						throw new Error(`Failed to load sticker ${stickerData.name}`);
+					}
+				} else if (!stickerData.isAnimated && !stickerData.staticImageData) {
+					// Load static image
+					callbacks.onStatus(`Loading ${stickerData.name}...`);
+					try {
+						stickerData.staticImageData = await this._loadStaticImage(stickerData.url, stickerData.width, stickerData.height);
+					} catch (e) {
+						throw new Error(`Failed to load static sticker ${stickerData.name}`);
+					}
 				}
 			}
 		}
 	}
 
+
+	async _loadStaticImage(url, width, height) {
+		return new Promise((resolve, reject) => {
+			const img = new Image();
+			img.onload = () => {
+				const canvas = document.createElement('canvas');
+				canvas.width = width;
+				canvas.height = height;
+				const ctx = canvas.getContext('2d');
+				ctx.drawImage(img, 0, 0);
+				const imageData = ctx.getImageData(0, 0, width, height);
+				resolve(imageData);
+			};
+			img.onerror = () => reject(new Error('Failed to load image'));
+			img.src = url;
+		});
+	}
+
 	_calculateTotalFrames(layers, library, maxFrames) {
 		const counts = layers.map(l => {
-			const glitter = library[l.selectedGlitterIndex];
-			if (!glitter || !glitter.frames || !glitter.frames.frames) {
-				console.error('Missing frames for layer', l.id, 'glitter index', l.selectedGlitterIndex);
-				return 1;
+			if (l.type === LayerType.GLITTER_FILL) {
+				const glitter = library[l.selectedGlitterIndex];
+				if (!glitter || !glitter.frames || !glitter.frames.frames) {
+					console.error('Missing frames for glitter layer', l.id);
+					return 1;
+				}
+				return glitter.frames.frames.length;
+			} else if (l.type === LayerType.STICKER) {
+				if (l.stickerData.isAnimated && l.stickerData.frames?.frames) {
+					return l.stickerData.frames.frames.length;
+				}
+				return 1; // Static stickers = 1 frame
 			}
-			return glitter.frames.frames.length;
+			return 1;
 		});
 
 		let total = counts[0] || 1;
@@ -6662,7 +7076,7 @@ class GifExporter {
 		}
 
 		const result = Math.min(total, maxFrames);
-		console.log('Calculated total frames:', result, 'from counts:', counts);
+		console.log('[GifExporter] Calculated total frames:', result, 'from counts:', counts);
 		return result;
 	}
 
@@ -6728,20 +7142,20 @@ class GifExporter {
 				configureBtn(shareBtn, true, "Save Image");
 
 				instructions.innerHTML = `
-            <p><strong>Ready!</strong> Tap <strong>"Save Image"</strong> below to save to Photos.</p>
-            <p class="text-muted" style="margin-top: 8px; font-size: 12px;">
-                <strong>Why can't I just tap and hold?</strong><br>
-                iOS doesn't support saving animated GIFs directly from the browser. 
-                Using the Share button preserves the animation properly.
-            </p>`;
+		<p><strong>Ready!</strong> Tap <strong>"Save Image"</strong> below to save to Photos.</p>
+		<p class="text-muted" style="margin-top: 8px; font-size: 12px;">
+			<strong>Why can't I just tap and hold?</strong><br>
+			iOS doesn't support saving animated GIFs directly from the browser. 
+			Using the Share button preserves the animation properly.
+		</p>`;
 			} else {
 				// Fallback (Rare old iOS)
 				configureBtn(shareBtn, false);
 				instructions.innerHTML = `
-            <p>Long-press the image to save.</p>
-            <p class="text-muted" style="margin-top: 8px; font-size: 12px;">
-                Note: This may save as a still image. Update iOS to use the Share feature for full animation support.
-            </p>`;
+		<p>Long-press the image to save.</p>
+		<p class="text-muted" style="margin-top: 8px; font-size: 12px;">
+			Note: This may save as a still image. Update iOS to use the Share feature for full animation support.
+		</p>`;
 			}
 		}
 		else {

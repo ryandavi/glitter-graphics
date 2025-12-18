@@ -1426,12 +1426,12 @@ input[type=range]::-moz-range-thumb {
 }
 .sticker-element.dragging {
   cursor: grabbing;
+  z-index: 1000 !important; /* Bring selected sticker to very top */
 }
 .sticker-element.selected {
   outline: 2px dashed #00ffff;
   outline-offset: -2px; /* Draws inside the canvas edge */
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5); /* Drop shadow for contrast */
-  z-index: 1000 !important; /* Bring selected sticker to very top */
 }
 .sticker-element img {
   width: 100%;

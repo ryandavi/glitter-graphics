@@ -1531,13 +1531,14 @@ input[type="range"] {
 
 	&.dragging {
 		cursor: grabbing;
+		z-index: 1000 !important; /* Bring selected sticker to very top */
 		
 	}
 
 
 	&.selected {
 		@include selected();
-		z-index: 1000 !important; /* Bring selected sticker to very top */
+		
 	}
 
 	img {
