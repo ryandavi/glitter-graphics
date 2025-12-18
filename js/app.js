@@ -117,25 +117,88 @@ const ToolType = {
 };
 
 class ContentManager {
-	constructor(editor) {
+	constructor(editor, type) {
 		this.editor = editor;
-		this.type = null;
+		this.type = type; // 'sticker' | 'glitter'
 
-		// Data
-		this.content = []; // this.presetStickers, this.glitterGifs
+		// content
+		this.content = [];
 		this.userContent = [];
 
-		// Filter State
-		this.activeFilters = {search: ''};
+		// filters
+		this.activeFilters = {
+			search: '',
+			categories: new Set(),
+			tags: new Set(),
+			colors: new Set(),
+			animated: null
+		};
 
-		// UI Elements (set during init)
-		this.panel = null; // this.stickerPanel, this.gridContainer
-		this.panelGrid = null; // this.stickerGrid, this.backgroundsContainer
+		// ui
+		this.ui = {
+			panel: null,
+			gridContainer: null,
+			emptyState: null,
+			searchInput: null,
+			filterToggle: null,
+			clearFiltersBtn: null
+		};
 	}
 
+	async init() {
+		this.setupUI();
+		this.attachBaseListeners();
+		await this.loadContent();
+		this.renderPicker();
+	}
 
-	async init(){
+	handleSearch(query) {
+		this.activeFilters.search = query.toLowerCase().trim();
+		this.renderPicker();
+	}
 
+	getItemById(id) {
+		return this.content.find(item => item.id === id) || 
+			   this.userContent.find(item => item.id === id);
+	}
+
+	updatePickerVisibility(visibleCount) {
+		if (!this.ui.gridContainer) return;
+		const hasContent = visibleCount > 0;
+		if (this.ui.emptyState) this.ui.emptyState.classList.toggle('visible', !hasContent);
+		this.ui.gridContainer.classList.toggle('visible', hasContent);
+	}
+
+	attachBaseListeners() {
+		if (this.ui.searchInput) {
+			this.ui.searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
+		}
+		if (this.ui.clearFiltersBtn) {
+			this.ui.clearFiltersBtn.addEventListener('click', () => this.clearFilters());
+		}
+	}
+
+	clearFilters() {
+		for (let key in this.activeFilters) {
+			const val = this.activeFilters[key];
+			
+			// The fix: Ensure val is not null/undefined before checking instanceof
+			if (val && val instanceof Set) { 
+				val.clear();
+			} else if (typeof val === 'string') {
+				this.activeFilters[key] = '';
+			} else {
+				this.activeFilters[key] = null;
+			}
+		}
+
+		if (this.ui.searchInput) this.ui.searchInput.value = '';
+		
+		if (this.ui.panel) {
+			this.ui.panel.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+		}
+
+		this.renderPicker();
 	}
 }
 
@@ -145,11 +208,7 @@ class ContentManager {
 // ============================================
 class StickerManager extends ContentManager {
 	constructor(editor) {
-		super(editor);
-
-		// Sticker libraries
-		this.presetStickers = [];           // Database stickers
-		this.userStickers = [];             // Session uploads
+		super(editor, 'sticker');
 
 		// Active filters for sticker picker UI
 		this.activeFilters = {
@@ -157,7 +216,7 @@ class StickerManager extends ContentManager {
 			categories: new Set(),
 			tags: new Set(),
 			colors: new Set(),
-			animated: null                  // null | true | false
+			animated: null
 		};
 
 		// Sticker DOM elements (layerId -> HTMLElement)
@@ -166,23 +225,25 @@ class StickerManager extends ContentManager {
 		// Animation frame tracking (layerId -> animationFrameId)
 		this.animationFrames = new Map();
 
-		// UI references (set during init)
-		this.stickerPanel = null;
-		this.stickerGrid = null;
-
-		// Transform state for active sticker editing
-		this.activeTransform = null;
-		this.transformHandles = null;
 	}
 
-	// ===== INITIALIZATION =====
+	setupUI() {
+		this.ui = {
+			panel: document.getElementById('stickersOptions'),
+			gridContainer: document.getElementById('stickerGridContainer'),
 
-	async init() {
-		this.setupUI();
-		await this.loadPresetStickers();
-		this.renderStickerPicker();
+			// search
+			emptyState: document.getElementById('stickerSearchEmptyState'),
+			searchInput: document.getElementById('stickersSearch'),
+			filterToggle: document.getElementById('stickerFilterToggleBtn'),
+			filtersContainer: document.getElementById('stickerFiltersContainer'),
+			clearFiltersBtn: document.getElementById('clearStickerFiltersBtn'),
+			categoryChips: document.getElementById('stickerCategoryChips')
+		};
+		this.setupEventListeners();
 	}
 
+	
 	cloneStickerElement(sourceLayer, clonedLayer) {
 		const sourceElement = this.editor.glitterBackgroundsContainer.querySelector(
 			`.sticker-element[data-layer-id="${sourceLayer.id}"]`
@@ -208,8 +269,6 @@ class StickerManager extends ContentManager {
 		// Attach drag listeners
 		this.attachDragListeners(clonedElement, clonedLayer.id);
 	}
-
-	// In StickerManager class
 
 	attachDragListeners(element, layerId) {
 		let isDragging = false;
@@ -308,26 +367,6 @@ class StickerManager extends ContentManager {
 		window.addEventListener('touchend', endDrag);
 	}
 
-
-	setupUI() {
-		// 1. Get the Main Wrapper
-		this.stickerPanel = document.getElementById('stickersOptions');
-
-		// 2. Get the specific internal containers
-		this.stickerGridContainer = document.getElementById('stickerGridContainer');
-		this.stickerSearchEmptyState = document.getElementById('stickerSearchEmptyState');
-
-		// 3. Search inputs
-		this.stickerSearch = document.getElementById('stickersSearch');
-		this.stickerFilterToggle = document.getElementById('stickerFilterToggleBtn');
-		this.stickerFiltersContainer = document.getElementById('stickerFiltersContainer');
-		this.clearStickerFiltersBtn = document.getElementById('clearStickerFiltersBtn');
-		this.stickerCategoryChips = document.getElementById('stickerCategoryChips');
-
-		// 4. Set up event listeners
-		this.setupStickerSearchListeners();
-	}
-
 	replaceActiveSticker(stickerId) {
 		const activeLayer = this.editor.layerManager.getActiveLayer();
 		const stickerInfo = this.getStickerById(stickerId);
@@ -362,7 +401,6 @@ class StickerManager extends ContentManager {
 		this.editor.saveState();
 	}
 
-
 	async addNewStickerLayer(stickerId) {
 		if (!this.editor.originalImage) {
 			this.editor.showError('Please load an image first');
@@ -376,8 +414,6 @@ class StickerManager extends ContentManager {
 			this.editor.updateStatus('New sticker layer added');
 		}
 	}
-
-
 
 	createEmptyStickerLayer() {
 		return {
@@ -420,12 +456,12 @@ class StickerManager extends ContentManager {
 
 	// ===== PRESET STICKERS =====
 
-	async loadPresetStickers() {
+	async loadContent() {
 		try {
 			const response = await fetch('data/stickers.json');
 			const data = await response.json();
 
-			this.presetStickers = data.map(item => ({
+			this.content = data.map(item => ({
 				id: item.id,
 				name: item.name,
 				filename: item.filename,
@@ -455,7 +491,7 @@ class StickerManager extends ContentManager {
 				source: 'preset'
 			}));
 
-			console.log(`Loaded ${this.presetStickers.length} preset stickers`);
+			console.log(`Loaded ${this.content.length} preset stickers`);
 		} catch (error) {
 			console.error('Failed to load preset stickers:', error);
 			this.editor.showError('Failed to load sticker library');
@@ -499,8 +535,8 @@ class StickerManager extends ContentManager {
 			error: null
 		};
 
-		this.userStickers.push(userSticker);
-		this.renderStickerPicker();
+		this.userContent.push(userSticker);
+		this.renderPicker();
 
 		// 4. Process asynchronously
 		try {
@@ -509,7 +545,7 @@ class StickerManager extends ContentManager {
 			console.error('Failed to process uploaded sticker:', error);
 			userSticker.error = error.message;
 			userSticker.isLoading = false;
-			this.renderStickerPicker();
+			this.renderPicker();
 		}
 
 		return userSticker;
@@ -530,7 +566,7 @@ class StickerManager extends ContentManager {
 		}
 
 		// Check sticker count
-		if (this.userStickers.length >= CONFIG.maxStickers) {
+		if (this.userContent.length >= CONFIG.maxStickers) {
 			this.editor.showError(`Maximum ${CONFIG.maxStickers} uploaded stickers reached.`);
 			return false;
 		}
@@ -575,7 +611,7 @@ class StickerManager extends ContentManager {
 
 		// Mark as loaded
 		userSticker.isLoading = false;
-		this.renderStickerPicker();
+		this.renderPicker();
 
 		console.log('Processed uploaded sticker:', userSticker);
 	}
@@ -855,7 +891,7 @@ class StickerManager extends ContentManager {
 
 	// ===== STICKER PICKER UI =====
 
-	renderStickerPicker() {
+	renderPicker() {
 		// 1. Get Elements
 		const container = document.getElementById('stickerGridContainer');
 		const emptyState = document.getElementById('stickerSearchEmptyState');
@@ -953,25 +989,25 @@ class StickerManager extends ContentManager {
 		this.populateCategoryChips();
 	}
 
-	setupStickerSearchListeners() {
+	setupEventListeners() {
 		// Search input
-		if (this.stickerSearch) {
-			this.stickerSearch.addEventListener('input', (e) => {
-				this.searchStickers(e.target.value);
+		if (this.ui.searchInput) {
+			this.ui.searchInput.addEventListener('input', (e) => {
+				this.handleSearch(e.target.value);
 			});
 		}
 
 		// Filter toggle
-		if (this.stickerFilterToggle) {
-			this.stickerFilterToggle.addEventListener('click', () => {
-				this.stickerFiltersContainer.classList.toggle('visible');
-				this.stickerFilterToggle.classList.toggle('active');
+		if (this.ui.filterToggle) {
+			this.ui.filterToggle.addEventListener('click', () => {
+				this.ui.filtersContainer.classList.toggle('visible');
+				this.ui.filterToggle.classList.toggle('active');
 			});
 		}
 
 		// Clear filters
-		if (this.clearStickerFiltersBtn) {
-			this.clearStickerFiltersBtn.addEventListener('click', () => {
+		if (this.ui.clearFiltersBtn) {
+			this.ui.clearFiltersBtn.addEventListener('click', () => {
 				this.clearStickerFilters();
 			});
 		}
@@ -992,7 +1028,7 @@ class StickerManager extends ContentManager {
 					this.activeFilters.animated = isAnimated;
 				}
 
-				this.renderStickerPicker();
+				this.renderPicker();
 				this.updateClearFiltersButton();
 			});
 		});
@@ -1000,8 +1036,8 @@ class StickerManager extends ContentManager {
 
 	clearStickerFilters() {
 		// Clear search
-		if (this.stickerSearch) {
-			this.stickerSearch.value = '';
+		if (this.ui.searchInput) {
+			this.ui.searchInput.value = '';
 		}
 
 		// Clear filter state
@@ -1018,7 +1054,7 @@ class StickerManager extends ContentManager {
 			chip.classList.remove('active');
 		});
 
-		this.renderStickerPicker();
+		this.renderPicker();
 		this.updateClearFiltersButton();
 	}
 
@@ -1030,17 +1066,17 @@ class StickerManager extends ContentManager {
 			this.activeFilters.colors.size > 0 ||
 			this.activeFilters.animated !== null;
 
-		if (this.clearStickerFiltersBtn) {
-			this.clearStickerFiltersBtn.disabled = !hasFilters;
+		if (this.ui.clearFiltersBtn) {
+			this.ui.clearFiltersBtn.disabled = !hasFilters;
 		}
 	}
 
 	populateCategoryChips() {
-		if (!this.stickerCategoryChips || this.stickerCategoryChips.children.length > 0) return;
+		if (!this.ui.categoryChips || this.ui.categoryChips.children.length > 0) return;
 
 		// Get unique categories
 		const categories = new Set();
-		[...this.presetStickers, ...this.userStickers].forEach(sticker => {
+		[...this.content, ...this.userContent].forEach(sticker => {
 			if (sticker.category) categories.add(sticker.category);
 		});
 
@@ -1062,11 +1098,11 @@ class StickerManager extends ContentManager {
 					this.activeFilters.categories.add(category);
 				}
 
-				this.renderStickerPicker();
+				this.renderPicker();
 				this.updateClearFiltersButton();
 			});
 
-			this.stickerCategoryChips.appendChild(chip);
+			this.ui.categoryChips.appendChild(chip);
 		});
 	}
 
@@ -1112,7 +1148,7 @@ class StickerManager extends ContentManager {
 	}
 
 	applyFilters() {
-		const allStickers = [...this.presetStickers, ...this.userStickers];
+		const allStickers = [...this.content, ...this.userContent];
 
 		return allStickers.filter(sticker => {
 			// Search filter
@@ -1157,14 +1193,14 @@ class StickerManager extends ContentManager {
 		});
 	}
 
-	searchStickers(query) {
+	handleSearch(query) {
 		this.activeFilters.search = query;
-		this.renderStickerPicker();
+		this.renderPicker();
 	}
 
 	getStickerById(id) {
-		return this.presetStickers.find(s => s.id === id) ||
-			this.userStickers.find(s => s.id === id);
+		return this.content.find(s => s.id === id) ||
+			this.userContent.find(s => s.id === id);
 	}
 
 	// ===== SERIALIZATION =====
@@ -1216,7 +1252,7 @@ class StickerManager extends ContentManager {
 		});
 
 		// Revoke blob URLs for user uploads
-		this.userStickers.forEach(sticker => {
+		this.userContent.forEach(sticker => {
 			if (sticker.url.startsWith('blob:')) {
 				URL.revokeObjectURL(sticker.url);
 			}
@@ -1234,28 +1270,29 @@ class StickerManager extends ContentManager {
 // ============================================
 class GlitterManager extends ContentManager {
 	constructor(editor) {
-		super(editor);
-
-		// Data
-		this.glitterGifs = [];
+		super(editor, 'glitter');
 
 		// Filter State
-		this.activeFilters = {
-			colors: new Set(),
-			tones: new Set(), // Kept for compatibility if used in JSON
+		Object.assign(this.activeFilters, {
+			tones: new Set(),
 			special: new Set(),
-			search: '',
 			nameOnly: false
-		};
-
-		// DOM Elements
-		this.gridContainer = document.getElementById('glitterGridContainer');
-		this.backgroundsContainer = editor.glitterBackgroundsContainer;
+		});
 	}
 
-	async init() {
+	setupUI() {
+		this.ui = {
+			panel: document.getElementById('glitterOptions'),
+			gridContainer: document.getElementById('glitterGridContainer'),
+
+			// search
+			emptyState: document.getElementById('glitterEmptyState'),
+			searchInput: document.getElementById('glitterSearch'),
+			filterToggle: document.getElementById('filterToggleBtn'),
+			filtersContainer: document.getElementById('filtersContainer'),
+			clearFiltersBtn: document.getElementById('clearFiltersBtn')
+		};
 		this.setupEventListeners();
-		await this.loadGlitterGifs();
 	}
 
 	// ===== EVENT LISTENERS =====
@@ -1265,18 +1302,6 @@ class GlitterManager extends ContentManager {
 		const filterToggleBtn = document.getElementById('filterToggleBtn');
 		if (filterToggleBtn) {
 			filterToggleBtn.addEventListener('click', () => this.toggleFiltersUI());
-		}
-
-		// Clear Filters
-		const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-		if (clearFiltersBtn) {
-			clearFiltersBtn.addEventListener('click', () => this.clearAllFilters());
-		}
-
-		// Search Input
-		const glitterSearch = document.getElementById('glitterSearch');
-		if (glitterSearch) {
-			glitterSearch.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
 		}
 
 		// Name Only Checkbox
@@ -1304,14 +1329,14 @@ class GlitterManager extends ContentManager {
 
 	// ===== LOADING & PARSING =====
 
-	async loadGlitterGifs() {
-		this.glitterGifs = [];
+	async loadContent() {
+		this.content = [];
 		try {
 			const res = await fetch('data/swatches.json');
 			const json = await res.json();
 
 			json.forEach(config => {
-				this.glitterGifs.push({
+				this.content.push({
 					id: config.id,
 					url: config.url,
 					name: config.name || 'Unnamed',
@@ -1329,10 +1354,6 @@ class GlitterManager extends ContentManager {
 					tags: config.tags || []
 				});
 			});
-
-			if (this.glitterGifs.length > 0) {
-				this.renderGlitterPicker();
-			}
 		} catch (error) {
 			console.error('Failed to load swatches:', error);
 			this.editor.showError('Failed to load glitter library');
@@ -1389,12 +1410,12 @@ class GlitterManager extends ContentManager {
 
 	// ===== PICKER UI & FILTERING =====
 
-	renderGlitterPicker() {
-		if (!this.gridContainer) return;
-		this.gridContainer.innerHTML = '';
+	renderPicker() {
+		if (!this.ui.gridContainer) return;
+		this.ui.gridContainer.innerHTML = '';
 
 		const categories = {};
-		this.glitterGifs.forEach((glitter, index) => {
+		this.content.forEach((glitter, index) => {
 			if (!categories[glitter.category]) {
 				categories[glitter.category] = [];
 			}
@@ -1433,13 +1454,13 @@ class GlitterManager extends ContentManager {
 			});
 
 			categoryDiv.appendChild(grid);
-			this.gridContainer.appendChild(categoryDiv);
+			this.ui.gridContainer.appendChild(categoryDiv);
 		});
 
 		this.applyFilters();
 	}
 
-	handleSearchInput(searchTerm) {
+	handleSearch(searchTerm) {
 		this.activeFilters.search = searchTerm.toLowerCase().trim();
 		this.applyFilters();
 	}
@@ -1541,13 +1562,13 @@ class GlitterManager extends ContentManager {
 
 		// Toggle Empty State
 		const emptyState = document.getElementById('glitterEmptyState');
-		if (emptyState && this.gridContainer) {
+		if (emptyState && this.ui.gridContainer) {
 			if (totalVisibleCount === 0) {
 				emptyState.classList.add('visible');
-				this.gridContainer.classList.remove('visible');
+				this.ui.gridContainer.classList.remove('visible');
 			} else {
 				emptyState.classList.remove('visible');
-				this.gridContainer.classList.add('visible');
+				this.ui.gridContainer.classList.add('visible');
 			}
 		}
 	}
@@ -1573,7 +1594,7 @@ class GlitterManager extends ContentManager {
 
 		layer.selectedGlitterIndex = index;
 
-		const glitter = this.glitterGifs[index];
+		const glitter = this.content[index];
 		if (!glitter) return;
 
 		// Lazy load frames
@@ -1611,9 +1632,9 @@ class GlitterManager extends ContentManager {
 		const layers = this.editor.layers;
 		if (layers.length === 0) return;
 
-		let availableGlitters = this.glitterGifs;
+		let availableGlitters = this.content;
 		if (category) {
-			availableGlitters = this.glitterGifs.filter(g =>
+			availableGlitters = this.content.filter(g =>
 				g.category.toLowerCase() === category.toLowerCase()
 			);
 			if (availableGlitters.length === 0) return;
@@ -1626,13 +1647,13 @@ class GlitterManager extends ContentManager {
 			const oldIndex = layer.selectedGlitterIndex;
 			// Filter out current so we get a change
 			const choices = availableGlitters.filter((g, idx) => {
-				const gIndex = this.glitterGifs.findIndex(gl => gl.url === g.url);
+				const gIndex = this.content.findIndex(gl => gl.url === g.url);
 				return gIndex !== oldIndex;
 			});
 
 			if (choices.length > 0) {
 				const randomGlitter = choices[Math.floor(Math.random() * choices.length)];
-				layer.selectedGlitterIndex = this.glitterGifs.findIndex(g => g.url === randomGlitter.url);
+				layer.selectedGlitterIndex = this.content.findIndex(g => g.url === randomGlitter.url);
 			}
 		});
 
@@ -1645,14 +1666,14 @@ class GlitterManager extends ContentManager {
 	// ===== RENDERING (CANVAS/DOM) =====
 
 	renderGlitterBackgrounds(layersToShow) {
-		this.backgroundsContainer.innerHTML = '';
+		this.editor.glitterBackgroundsContainer.innerHTML = '';
 		const width = this.editor.originalCanvas.width;
 		const height = this.editor.originalCanvas.height;
 
 		layersToShow.forEach(layer => {
 			if (layer.type !== LayerType.GLITTER_FILL) return;
 
-			const glitter = this.glitterGifs[layer.selectedGlitterIndex];
+			const glitter = this.content[layer.selectedGlitterIndex];
 			if (!glitter) return;
 
 			// Generate Mask
@@ -1705,7 +1726,7 @@ class GlitterManager extends ContentManager {
 			bg.style.maskRepeat = 'no-repeat';
 			bg.style.webkitMaskRepeat = 'no-repeat';
 
-			this.backgroundsContainer.appendChild(bg);
+			this.editor.glitterBackgroundsContainer.appendChild(bg);
 		});
 	}
 
@@ -1713,7 +1734,7 @@ class GlitterManager extends ContentManager {
 	createGlitterElement(layer) {
 		if (layer.type !== LayerType.GLITTER_FILL) return null;
 
-		const glitter = this.glitterGifs[layer.selectedGlitterIndex];
+		const glitter = this.content[layer.selectedGlitterIndex];
 		if (!glitter) return null;
 
 		const width = this.editor.originalCanvas.width;
@@ -1786,7 +1807,7 @@ class GlitterManager extends ContentManager {
 			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
 
 			if (layer && layer.type === LayerType.GLITTER_FILL) {
-				const glitter = this.glitterGifs[layer.selectedGlitterIndex];
+				const glitter = this.content[layer.selectedGlitterIndex];
 				if (glitter) {
 					const glitterScale = layer.settings.scale / 100;
 					const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
@@ -2477,7 +2498,7 @@ class LayerManager {
 
 		// DOM references
 		this.layersListContainer = document.getElementById('layersList');
-		this.glitterBackgroundsContainer = editor.glitterBackgroundsContainer;
+		this.glitterBackgroundsContainer = this.editor.glitterBackgroundsContainer;
 
 		this.setupContainerEvents();
 	}
@@ -2570,52 +2591,52 @@ class LayerManager {
 	}
 
 
-insertLayer(layer) {
-    // Insert above the currently selected layer, or at the top if none selected
-    if (this.activeLayerId) {
-        const activeIndex = this.layers.findIndex(l => l.id === this.activeLayerId);
-        if (activeIndex !== -1) {
-            // Insert above (higher index = visually above)
-            this.layers.splice(activeIndex + 1, 0, layer);
-        } else {
-            // Fallback if active layer not found
-            this.layers.push(layer);
-        }
-    } else {
-        // No active layer - add to top
-        this.layers.push(layer);
-    }
-    
-    this.setActiveLayer(layer.id);
-    this.renderLayersList();
-}
+	insertLayer(layer) {
+		// Insert above the currently selected layer, or at the top if none selected
+		if (this.activeLayerId) {
+			const activeIndex = this.layers.findIndex(l => l.id === this.activeLayerId);
+			if (activeIndex !== -1) {
+				// Insert above (higher index = visually above)
+				this.layers.splice(activeIndex + 1, 0, layer);
+			} else {
+				// Fallback if active layer not found
+				this.layers.push(layer);
+			}
+		} else {
+			// No active layer - add to top
+			this.layers.push(layer);
+		}
+
+		this.setActiveLayer(layer.id);
+		this.renderLayersList();
+	}
 
 
 
-addLayer(type = LayerType.GLITTER_FILL) {
-    // Check max layers
-    if (this.layers.length >= CONFIG.maxLayers) {
-        this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
-        return;
-    }
+	addLayer(type = LayerType.GLITTER_FILL) {
+		// Check max layers
+		if (this.layers.length >= CONFIG.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+			return;
+		}
 
-    let layer;
+		let layer;
 
-    if (type === LayerType.STICKER) {
-        layer = this.editor.stickerManager.createEmptyStickerLayer();
-    } else {
-        layer = this.createLayer(LayerType.GLITTER_FILL);
-    }
+		if (type === LayerType.STICKER) {
+			layer = this.editor.stickerManager.createEmptyStickerLayer();
+		} else {
+			layer = this.createLayer(LayerType.GLITTER_FILL);
+		}
 
-    if (!layer) return;
+		if (!layer) return;
 
-    this.insertLayer(layer);  // Use the new method
+		this.insertLayer(layer);  // Use the new method
 
-    // Save state
-    this.editor.saveState();
-    this.editor.updateActionButtons();
+		// Save state
+		this.editor.saveState();
+		this.editor.updateActionButtons();
 
-    const msg = type === LayerType.STICKER ? 'Empty sticker layer added' : 'Layer added';
+		const msg = type === LayerType.STICKER ? 'Empty sticker layer added' : 'Layer added';
 		this.editor.updateStatus(msg);
 	}
 
@@ -2893,7 +2914,7 @@ addLayer(type = LayerType.GLITTER_FILL) {
 				if (layer.type === LayerType.STICKER) name = layer.name;
 				else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
 				else if (layer.type === LayerType.GLITTER_FILL) {
-					name = this.editor.glitterManager.glitterGifs[layer.selectedGlitterIndex]?.name || 'Glitter';
+					name = this.editor.glitterManager.content[layer.selectedGlitterIndex]?.name || 'Glitter';
 				}
 
 				this.editor.updateStatus(`Selected: ${name}`);
@@ -3170,7 +3191,7 @@ addLayer(type = LayerType.GLITTER_FILL) {
 			}
 		} else {
 			// Glitter Logic
-			const glitter = this.editor.glitterManager.glitterGifs[layer.selectedGlitterIndex];
+			const glitter = this.editor.glitterManager.content[layer.selectedGlitterIndex];
 			if (glitter) {
 				swatch.style.backgroundImage = `url(${glitter.url})`;
 
@@ -3202,7 +3223,7 @@ addLayer(type = LayerType.GLITTER_FILL) {
 		if (layer.type === LayerType.STICKER) {
 			nameText.textContent = layer.name || 'Sticker';
 		} else if (layer.type === LayerType.GLITTER_FILL) {
-			const glitter = this.editor.glitterManager.glitterGifs[layer.selectedGlitterIndex];
+			const glitter = this.editor.glitterManager.content[layer.selectedGlitterIndex];
 			nameText.textContent = glitter ? `${glitter.category} - ${glitter.name}` : 'No glitter';
 		} else if (layer.type === LayerType.BASE_IMAGE) {
 			nameText.textContent = 'Base Image';
@@ -3370,7 +3391,7 @@ addLayer(type = LayerType.GLITTER_FILL) {
 			return;
 		}
 
-		const glitter = this.editor.glitterManager.glitterGifs[activeLayer.selectedGlitterIndex];
+		const glitter = this.editor.glitterManager.content[activeLayer.selectedGlitterIndex];
 		if (glitter) {
 			mobileLayersSwatch.classList.remove('empty');
 			mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
@@ -3725,37 +3746,37 @@ addLayer(type = LayerType.GLITTER_FILL) {
 		container.appendChild(fragment);
 	}
 
-// In LayerManager.js
+	// In LayerManager.js
 
-reorderGlitterBackgrounds() {
-    const container = this.glitterBackgroundsContainer;
+	reorderGlitterBackgrounds() {
+		const container = this.glitterBackgroundsContainer;
 
-    // Get existing background AND sticker elements
-    const existingElements = new Map();
-    container.querySelectorAll('.glitter-background, .sticker-element').forEach(el => {
-        existingElements.set(el.dataset.layerId, el);
-    });
+		// Get existing background AND sticker elements
+		const existingElements = new Map();
+		container.querySelectorAll('.glitter-background, .sticker-element').forEach(el => {
+			existingElements.set(el.dataset.layerId, el);
+		});
 
-    // Reorder them to match layers array
-    const fragment = document.createDocumentFragment();
+		// Reorder them to match layers array
+		const fragment = document.createDocumentFragment();
 
-    this.layers.forEach(layer => {
-        const el = existingElements.get(layer.id);
-        if (el) {
-            // =======================================================
-            // THE FIX:
-            // Remove the conditional check. Update the z-index for 
-            // every element (glitter or sticker) found.
-            // =======================================================
-            el.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
-            
-            fragment.appendChild(el);
-        }
-    });
+		this.layers.forEach(layer => {
+			const el = existingElements.get(layer.id);
+			if (el) {
+				// =======================================================
+				// THE FIX:
+				// Remove the conditional check. Update the z-index for 
+				// every element (glitter or sticker) found.
+				// =======================================================
+				el.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
 
-    container.innerHTML = '';
-    container.appendChild(fragment);
-}
+				fragment.appendChild(el);
+			}
+		});
+
+		container.innerHTML = '';
+		container.appendChild(fragment);
+	}
 }
 
 // ============================================
@@ -3781,11 +3802,11 @@ class GlitterEditor {
 
 
 
-		
+
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
-		this.glitterGifs = [];
+		this.content = [];
 
 		this.exporter = new GifExporter();
 
@@ -5804,7 +5825,7 @@ class GlitterEditor {
 
 		// Select Tool: Pick layer at click location
 		if (this.currentTool === ToolType.SELECT) {
-			if(CONFIG.autoSelect === true) this.layerManager.handleLayerPick(x, y);
+			if (CONFIG.autoSelect === true) this.layerManager.handleLayerPick(x, y);
 			return;
 		}
 
@@ -5821,13 +5842,13 @@ class GlitterEditor {
 				return;
 			}
 
-// Case 1: Base Image is Selected -> Create NEW Glitter Layer
-if (layer.type === LayerType.BASE_IMAGE) {
-    const newLayer = this.layerManager.createLayer();
-    this.layerManager.insertLayer(newLayer);  // Use the new method
-    layer = newLayer; // Switch target to the new layer
-    this.updateStatus('Created new layer from Base Image');
-}
+			// Case 1: Base Image is Selected -> Create NEW Glitter Layer
+			if (layer.type === LayerType.BASE_IMAGE) {
+				const newLayer = this.layerManager.createLayer();
+				this.layerManager.insertLayer(newLayer);  // Use the new method
+				layer = newLayer; // Switch target to the new layer
+				this.updateStatus('Created new layer from Base Image');
+			}
 			// Case 2: Glitter Fill Layer is Selected -> Use it
 			else if (layer.type === LayerType.GLITTER_FILL) {
 				// Continue using this layer
@@ -6111,7 +6132,7 @@ if (layer.type === LayerType.BASE_IMAGE) {
 
 		const exportParams = {
 			visibleLayers: visibleLayers,
-			glitterGifs: this.glitterManager.glitterGifs,
+			glitterGifs: this.glitterManager.content,
 			canvasData: {
 				width: this.originalCanvas.width,
 				height: this.originalCanvas.height,
@@ -6347,7 +6368,7 @@ class GifExporter {
 
 
 
-		
+
 		const gifOptions = {
 			workers: this.config.workers,
 			quality: exportSettings.quality,
@@ -6368,35 +6389,35 @@ class GifExporter {
 
 		const gif = new GIF(gifOptions);
 
-// 7. Render Loop
-this.canvas.width = canvasData.width;
-this.canvas.height = canvasData.height;
+		// 7. Render Loop
+		this.canvas.width = canvasData.width;
+		this.canvas.height = canvasData.height;
 
-for (let f = 0; f < totalFrames; f++) {
-	const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey, exportSettings);
+		for (let f = 0; f < totalFrames; f++) {
+			const frameData = this._renderFrame(f, canvasData, visibleLayers, glitterGifs, maskCanvases, safeKey, exportSettings);
 
-	// DEBUG: Check problem frames
-	if (f === 2 || f === 3 || f === 14 || f === 17) {
-		let safeKeyInFrame = 0;
-		let blackInFrame = 0;
-		for (let i = 0; i < frameData.data.length; i += 4) {
-			if (frameData.data[i] === 1 && frameData.data[i+1] === 1 && frameData.data[i+2] === 1 && frameData.data[i+3] === 255) {
-				safeKeyInFrame++;
+			// DEBUG: Check problem frames
+			if (f === 2 || f === 3 || f === 14 || f === 17) {
+				let safeKeyInFrame = 0;
+				let blackInFrame = 0;
+				for (let i = 0; i < frameData.data.length; i += 4) {
+					if (frameData.data[i] === 1 && frameData.data[i + 1] === 1 && frameData.data[i + 2] === 1 && frameData.data[i + 3] === 255) {
+						safeKeyInFrame++;
+					}
+					if (frameData.data[i] === 0 && frameData.data[i + 1] === 0 && frameData.data[i + 2] === 0 && frameData.data[i + 3] === 255) {
+						blackInFrame++;
+					}
+				}
+				console.log(`[ENCODER FRAME ${f}] Safe key RGB(1,1,1): ${safeKeyInFrame}, Black RGB(0,0,0): ${blackInFrame}`);
 			}
-			if (frameData.data[i] === 0 && frameData.data[i+1] === 0 && frameData.data[i+2] === 0 && frameData.data[i+3] === 255) {
-				blackInFrame++;
-			}
+
+			gif.addFrame(frameData, {
+				delay: exportSettings.frameDelay,
+				copy: true
+			});
+			const progressPercent = 10 + Math.floor((f / totalFrames) * 65);
+			callbacks.onProgress(progressPercent, `Rendering frame ${f + 1}/${totalFrames}...`, f + 1, totalFrames);
 		}
-		console.log(`[ENCODER FRAME ${f}] Safe key RGB(1,1,1): ${safeKeyInFrame}, Black RGB(0,0,0): ${blackInFrame}`);
-	}
-
-	gif.addFrame(frameData, {
-		delay: exportSettings.frameDelay,
-		copy: true
-	});
-	const progressPercent = 10 + Math.floor((f / totalFrames) * 65);
-	callbacks.onProgress(progressPercent, `Rendering frame ${f + 1}/${totalFrames}...`, f + 1, totalFrames);
-}
 
 		// 8. Output
 		callbacks.onProgress(75, 'Encoding GIF...', totalFrames, totalFrames);
@@ -6425,17 +6446,17 @@ for (let f = 0; f < totalFrames; f++) {
 	// --- HELPER METHODS ---
 
 	_findSafeTransparencyKey(layers, library, canvasData) {
-const candidates = [
-    // Use colors far from black - start with bright magenta
-    { name: 'Magenta', r: 255, g: 0, b: 255, hex: 0xFF00FF },
-    { name: 'Cyan', r: 0, g: 255, b: 255, hex: 0x00FFFF },
-    { name: 'Yellow', r: 255, g: 255, b: 0, hex: 0xFFFF00 },
-    // Fallback to originals if needed
-    { name: 'DarkGray1', r: 1, g: 1, b: 1, hex: 0x010101 },
-    { name: 'DarkGray2', r: 2, g: 2, b: 2, hex: 0x020202 },
-    { name: 'DarkGray3', r: 3, g: 3, b: 3, hex: 0x030303 },
-    { name: 'OffGreen', r: 0, g: 1, b: 0, hex: 0x000100 }
-];
+		const candidates = [
+			// Use colors far from black - start with bright magenta
+			{ name: 'Magenta', r: 255, g: 0, b: 255, hex: 0xFF00FF },
+			{ name: 'Cyan', r: 0, g: 255, b: 255, hex: 0x00FFFF },
+			{ name: 'Yellow', r: 255, g: 255, b: 0, hex: 0xFFFF00 },
+			// Fallback to originals if needed
+			{ name: 'DarkGray1', r: 1, g: 1, b: 1, hex: 0x010101 },
+			{ name: 'DarkGray2', r: 2, g: 2, b: 2, hex: 0x020202 },
+			{ name: 'DarkGray3', r: 3, g: 3, b: 3, hex: 0x030303 },
+			{ name: 'OffGreen', r: 0, g: 1, b: 0, hex: 0x000100 }
+		];
 
 		// Collect all frames from all sources
 		const allFrames = [];
