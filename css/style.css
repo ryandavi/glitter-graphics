@@ -1455,62 +1455,6 @@ input[type=range]::-moz-range-thumb {
   flex-direction: column;
   order: 1;
 }
-.design-panel > .glitter-options {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--spacing-lg);
-  position: relative;
-  z-index: 0;
-}
-.design-panel > .glitter-options .glitter-category {
-  margin-bottom: var(--spacing-xl);
-}
-.design-panel > .glitter-options .glitter-category > .category-title {
-  font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  margin-bottom: var(--spacing-md);
-}
-.design-panel > .glitter-options .glitter-category > .glitter-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
-  gap: var(--spacing-sm);
-}
-.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option {
-  aspect-ratio: 1;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  transform: translateZ(0);
-}
-.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option:hover {
-  outline-color: var(--color-border-hover);
-}
-.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option.selected {
-  outline-color: var(--color-accent);
-}
-.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option.disabled {
-  cursor: not-allowed;
-  pointer-events: none;
-}
-.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option.disabled:hover {
-  outline-color: transparent;
-}
-.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option > img {
-  width: 100%;
-  height: 100%;
-  -o-object-fit: cover;
-     object-fit: cover;
-  display: block;
-}
-.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option.pixelated > img {
-  image-rendering: pixelated;
-}
 .design-panel > .collapsible-section {
   position: relative;
   z-index: 100;
@@ -2307,17 +2251,17 @@ input[type=range]::-moz-range-thumb {
   display: block;
 }
 
-.stickers-options {
+.asset-options {
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-lg);
   position: relative;
   z-index: 0;
 }
-.stickers-options .sticker-category {
+.asset-options .asset-category {
   margin-bottom: var(--spacing-xl);
 }
-.stickers-options .sticker-category .category-title {
+.asset-options .asset-category > .category-title {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   font-weight: 600;
@@ -2325,50 +2269,58 @@ input[type=range]::-moz-range-thumb {
   text-transform: uppercase;
   margin-bottom: var(--spacing-md);
 }
-.stickers-options .sticker-category .sticker-grid {
+.asset-options .asset-category > .asset-grid {
   display: grid;
   grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
   gap: var(--spacing-sm);
 }
-.stickers-options .sticker-category .sticker-grid .sticker-option {
+.asset-options .asset-category > .asset-grid > .asset-option {
   aspect-ratio: 1;
   outline: 2px solid transparent;
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
   cursor: pointer;
   transition: all var(--transition-fast);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
   transform: translateZ(0);
-  background: var(--color-bg-tertiary);
-  position: relative;
 }
-.stickers-options .sticker-category .sticker-grid .sticker-option:hover {
+.asset-options .asset-category > .asset-grid > .asset-option.highlight {
+  outline-color: var(--color-accent);
+  animation: elementPulse 0.5s ease-in-out 2;
+}
+.asset-options .asset-category > .asset-grid > .asset-option:hover {
   outline-color: var(--color-border-hover);
 }
-.stickers-options .sticker-category .sticker-grid .sticker-option.selected {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
+.asset-options .asset-category > .asset-grid > .asset-option.selected {
+  outline-color: var(--color-accent);
 }
-.stickers-options .sticker-category .sticker-grid .sticker-option.disabled {
+.asset-options .asset-category > .asset-grid > .asset-option.disabled {
   cursor: not-allowed;
   pointer-events: none;
   opacity: 0.5;
 }
-.stickers-options .sticker-category .sticker-grid .sticker-option.disabled:hover {
+.asset-options .asset-category > .asset-grid > .asset-option.disabled:hover {
   outline-color: transparent;
 }
-.stickers-options .sticker-category .sticker-grid .sticker-option img {
+.asset-options .asset-category > .asset-grid > .asset-option > img {
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  -o-object-fit: cover;
+     object-fit: cover;
   display: block;
-  padding: var(--spacing-xs);
 }
-.stickers-options .sticker-category .sticker-grid .sticker-option.pixelated img {
+.asset-options .asset-category > .asset-grid > .asset-option.pixelated img {
   image-rendering: pixelated;
 }
-.stickers-options .sticker-category .sticker-grid .sticker-option.animated::after {
+.asset-options.stickers-options .asset-category > .asset-grid > .asset-option {
+  background: var(--color-bg-tertiary);
+}
+.asset-options.stickers-options .asset-category > .asset-grid > .asset-option img {
+  -o-object-fit: contain;
+     object-fit: contain;
+  padding: var(--spacing-xs);
+}
+.asset-options.stickers-options .asset-category > .asset-grid > .asset-option.animated::after {
   content: "▶";
   position: absolute;
   bottom: 2px;
@@ -2725,7 +2677,7 @@ input[type=range]::-moz-range-thumb {
     visibility: hidden;
   }
   body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel > .section,
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-options {
+  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .asset-options {
     display: none;
   }
   body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-settings-section {
@@ -2769,12 +2721,6 @@ input[type=range]::-moz-range-thumb {
     opacity: 0;
   }
 }
-.sticker-option.highlight,
-.glitter-option.highlight {
-  outline-color: var(--color-accent);
-  animation: elementPulse 0.5s ease-in-out 2;
-}
-
 @keyframes elementPulse {
   0%, 100% {
     transform: scale(1);

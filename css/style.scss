@@ -1576,86 +1576,6 @@ input[type="range"] {
 	flex-direction: column;
 	order: 1;
 
-
-
-
-	>.glitter-options {
-		flex: 1;
-		overflow-y: auto;
-		padding: var(--spacing-lg);
-
-		position: relative;
-		z-index: 0;
-
-
-
-
-
-		.glitter-category {
-			margin-bottom: var(--spacing-xl);
-
-			>.category-title {
-				@include text-sm;
-				font-weight: 600;
-				color: var(--color-text-tertiary);
-				text-transform: uppercase;
-				margin-bottom: var(--spacing-md);
-			}
-
-			>.glitter-grid {
-				display: grid;
-				grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
-				gap: var(--spacing-sm);
-
-				>.glitter-option {
-					aspect-ratio: 1;
-					outline: 2px solid transparent;
-					outline-offset: 2px;
-					border-radius: var(--radius-sm);
-					overflow: hidden;
-					cursor: pointer;
-					transition: all var(--transition-fast);
-
-					transform: translateZ(0); // ios fix for radius + hidden
-
-
-					&:hover {
-						outline-color: var(--color-border-hover);
-					}
-
-					&.selected {
-						outline-color: var(--color-accent);
-					}
-
-					&.disabled {
-
-						cursor: not-allowed;
-
-
-
-						pointer-events: none; // ← ADD THIS LINE
-
-						&:hover {
-							outline-color: transparent;
-						}
-					}
-
-					>img {
-						width: 100%;
-						height: 100%;
-						object-fit: cover;
-						display: block;
-					}
-
-					&.pixelated>img {
-						image-rendering: pixelated;
-					}
-				}
-			}
-		}
-
-	}
-
 	>.collapsible-section {
 		position: relative;
 		z-index: 100;
@@ -2672,21 +2592,21 @@ input[type="range"] {
 
 
 
-// ============================================
-// STICKERS OPTIONS
-// ============================================
 
-.stickers-options {
+// ============================================
+// GLITTER OPTIONS
+// ============================================
+.asset-options  {
 	flex: 1;
 	overflow-y: auto;
 	padding: var(--spacing-lg);
 	position: relative;
 	z-index: 0;
 
-	.sticker-category {
+	.asset-category {
 		margin-bottom: var(--spacing-xl);
 
-		.category-title {
+		>.category-title {
 			@include text-sm;
 			font-weight: 600;
 			color: var(--color-text-tertiary);
@@ -2694,30 +2614,35 @@ input[type="range"] {
 			margin-bottom: var(--spacing-md);
 		}
 
-		.sticker-grid {
+		>.asset-grid {
 			display: grid;
 			grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
 			gap: var(--spacing-sm);
 
-			.sticker-option {
+			>.asset-option {
 				aspect-ratio: 1;
 				outline: 2px solid transparent;
 				outline-offset: 2px;
-				border-radius: var(--radius-sm);
-				overflow: hidden;
 				cursor: pointer;
 				transition: all var(--transition-fast);
-				transform: translateZ(0);
-				background: var(--color-bg-tertiary);
-				position: relative;
+
+				// ios fix for radius + hidden
+				border-radius: var(--radius-sm);
+				overflow: hidden;
+				transform: translateZ(0); 
+
+				&.highlight {
+					outline-color: var(--color-accent);
+					animation: elementPulse 0.5s ease-in-out 2;
+				}
+
 
 				&:hover {
 					outline-color: var(--color-border-hover);
 				}
 
 				&.selected {
-					outline: 2px solid var(--color-accent);
-					outline-offset: -2px;
+					outline-color: var(--color-accent);
 				}
 
 				&.disabled {
@@ -2730,39 +2655,54 @@ input[type="range"] {
 					}
 				}
 
-				img {
+				>img {
 					width: 100%;
 					height: 100%;
-					object-fit: contain;
+					object-fit: cover;
 					display: block;
-					padding: var(--spacing-xs);
 				}
 
 				&.pixelated img {
 					image-rendering: pixelated;
 				}
 
-				// Animated indicator
-				&.animated::after {
-					content: '▶';
-					position: absolute;
-					bottom: 2px;
-					right: 2px;
-					background: rgba(0, 0, 0, 0.7);
-					color: white;
-					font-size: 8px;
-					padding: 2px 3px;
-					border-radius: var(--radius-xs);
-					pointer-events: none;
-				}
+
+
+
 			}
 		}
 	}
+
+	&.stickers-options  {
+		.asset-category {
+			>.asset-grid {
+				>.asset-option {
+					background: var(--color-bg-tertiary);
+					img {
+						object-fit: contain;
+						padding: var(--spacing-xs);
+					}
+
+					&.animated::after {
+						content: '▶';
+						position: absolute;
+						bottom: 2px;
+						right: 2px;
+						background: rgba(0, 0, 0, 0.7);
+						color: white;
+						font-size: 8px;
+						padding: 2px 3px;
+						border-radius: var(--radius-xs);
+						pointer-events: none;
+					}
+
+				}
+			}
+		}
+
+	}
+
 }
-
-
-
-
 
 
 
@@ -3223,7 +3163,7 @@ input[type="range"] {
 		&.glitterSettingsOpen .main-content>.design-panel {
 
 			>.section,
-			.glitter-options {
+			.asset-options {
 				display: none;
 			}
 
@@ -3324,12 +3264,7 @@ input[type="range"] {
 	}
 }
 
-// Add highlight effect for glitter options
-.sticker-option.highlight,
-.glitter-option.highlight {
-	outline-color: var(--color-accent);
-	animation: elementPulse 0.5s ease-in-out 2;
-}
+
 
 @keyframes elementPulse {
 
