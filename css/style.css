@@ -1447,7 +1447,7 @@ input[type=range]::-moz-range-thumb {
 }
 
 /* ===== GLITTER COLUMN ===== */
-.glitter-column {
+.design-panel {
   width: var(--glitter-panel-width);
   background: var(--color-bg-primary);
   border-left: 1px solid var(--color-border);
@@ -1455,17 +1455,17 @@ input[type=range]::-moz-range-thumb {
   flex-direction: column;
   order: 1;
 }
-.glitter-column > .glitter-options {
+.design-panel > .glitter-options {
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-lg);
   position: relative;
   z-index: 0;
 }
-.glitter-column > .glitter-options .glitter-category {
+.design-panel > .glitter-options .glitter-category {
   margin-bottom: var(--spacing-xl);
 }
-.glitter-column > .glitter-options .glitter-category > .category-title {
+.design-panel > .glitter-options .glitter-category > .category-title {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   font-weight: 600;
@@ -1473,12 +1473,12 @@ input[type=range]::-moz-range-thumb {
   text-transform: uppercase;
   margin-bottom: var(--spacing-md);
 }
-.glitter-column > .glitter-options .glitter-category > .glitter-grid {
+.design-panel > .glitter-options .glitter-category > .glitter-grid {
   display: grid;
   grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
   gap: var(--spacing-sm);
 }
-.glitter-column > .glitter-options .glitter-category > .glitter-grid > .glitter-option {
+.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option {
   aspect-ratio: 1;
   outline: 2px solid transparent;
   outline-offset: 2px;
@@ -1488,30 +1488,30 @@ input[type=range]::-moz-range-thumb {
   transition: all var(--transition-fast);
   transform: translateZ(0);
 }
-.glitter-column > .glitter-options .glitter-category > .glitter-grid > .glitter-option:hover {
+.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option:hover {
   outline-color: var(--color-border-hover);
 }
-.glitter-column > .glitter-options .glitter-category > .glitter-grid > .glitter-option.selected {
+.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option.selected {
   outline-color: var(--color-accent);
 }
-.glitter-column > .glitter-options .glitter-category > .glitter-grid > .glitter-option.disabled {
+.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option.disabled {
   cursor: not-allowed;
   pointer-events: none;
 }
-.glitter-column > .glitter-options .glitter-category > .glitter-grid > .glitter-option.disabled:hover {
+.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option.disabled:hover {
   outline-color: transparent;
 }
-.glitter-column > .glitter-options .glitter-category > .glitter-grid > .glitter-option > img {
+.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option > img {
   width: 100%;
   height: 100%;
   -o-object-fit: cover;
      object-fit: cover;
   display: block;
 }
-.glitter-column > .glitter-options .glitter-category > .glitter-grid > .glitter-option.pixelated > img {
+.design-panel > .glitter-options .glitter-category > .glitter-grid > .glitter-option.pixelated > img {
   image-rendering: pixelated;
 }
-.glitter-column > .collapsible-section {
+.design-panel > .collapsible-section {
   position: relative;
   z-index: 100;
   box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
@@ -1808,17 +1808,18 @@ input[type=range]::-moz-range-thumb {
   transform-origin: 0 0;
   will-change: transform;
 }
-.preview-wrapper > canvas#previewCanvas,
-.preview-wrapper #glitterBackgroundsContainer > .glitter-background {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  width: 100%;
-  height: 100%;
-}
 .preview-wrapper.color-picker-mode {
   cursor: crosshair;
 }
-.preview-wrapper #glitterBackgroundsContainer > .glitter-background {
+.preview-wrapper > .preview-canvas,
+.preview-wrapper .glitter-backgrounds-container > .glitter-background {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  width: 100%;
+  height: 100%;
+}
+.preview-wrapper .glitter-backgrounds-container > .glitter-background {
   position: absolute;
   top: 0;
   left: 0;
@@ -1827,23 +1828,26 @@ input[type=range]::-moz-range-thumb {
   background-repeat: repeat;
   display: none;
 }
-.preview-wrapper #glitterBackgroundsContainer > .glitter-background.visible {
+.preview-wrapper .glitter-backgrounds-container > .glitter-background.visible {
   display: block;
 }
-.preview-wrapper #glitterBackgroundsContainer > .glitter-background.pixelated {
+.preview-wrapper .glitter-backgrounds-container > .glitter-background.pixelated {
   image-rendering: pixelated;
 }
-.preview-wrapper canvas#previewCanvas {
+.preview-wrapper .preview-canvas {
   position: relative;
   z-index: 2;
   display: block;
   max-width: none;
   max-height: none;
 }
-.preview-wrapper canvas#previewCanvas.selected {
+.preview-wrapper .preview-canvas.selected {
   outline: 2px dashed #00ffff;
   outline-offset: -2px; /* Draws inside the canvas edge */
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5); /* Drop shadow for contrast */
+}
+.preview-wrapper.hasImage .preview-canvas {
+  outline: 1px solid var(--gray-600);
 }
 
 /* ===== BOTTOM TOOL UI ===== */
@@ -2416,10 +2420,10 @@ input[type=range]::-moz-range-thumb {
     top: 0;
     z-index: 10;
   }
-  body.mobile-preview-tab.glitterOpen .main-content > .glitter-column .gallery-tabs {
+  body.mobile-preview-tab.glitterOpen .main-content > .design-panel .gallery-tabs {
     flex-shrink: 0;
   }
-  body.mobile-preview-tab.glitterOpen .main-content > .glitter-column .gallery-content {
+  body.mobile-preview-tab.glitterOpen .main-content > .design-panel .gallery-content {
     overflow-y: auto;
     flex: 1;
   }
@@ -2627,7 +2631,7 @@ input[type=range]::-moz-range-thumb {
     padding-top: var(--mobile-top-nav-height);
   }
   .main-content > .left-panel,
-  .main-content > .glitter-column,
+  .main-content > .design-panel,
   .main-content > .right-panel {
     position: fixed;
     width: 100%;
@@ -2681,7 +2685,7 @@ input[type=range]::-moz-range-thumb {
     height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
     padding-bottom: var(--mobile-bottom-nav-height);
   }
-  body.mobile-preview-tab.glitterOpen .main-content > .glitter-column, body.mobile-preview-tab.layersOpen .main-content > .left-panel, body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel, body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column {
+  body.mobile-preview-tab.glitterOpen .main-content > .design-panel, body.mobile-preview-tab.layersOpen .main-content > .left-panel, body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel, body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel {
     display: flex;
     height: auto;
     top: auto;
@@ -2692,7 +2696,7 @@ input[type=range]::-moz-range-thumb {
     max-height: var(--mobile-drawer-height);
     min-height: 20dvh;
   }
-  body.mobile-preview-tab.glitterOpen .main-content > .glitter-column .glitter-settings-section {
+  body.mobile-preview-tab.glitterOpen .main-content > .design-panel .glitter-settings-section {
     display: none;
   }
   body.mobile-preview-tab.layersOpen .main-content > .left-panel .image-container,
@@ -2720,25 +2724,25 @@ input[type=range]::-moz-range-thumb {
   body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .layer-settings-section .section-header-action {
     visibility: hidden;
   }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column > .section,
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column .glitter-options {
+  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel > .section,
+  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-options {
     display: none;
   }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column .glitter-settings-section {
+  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-settings-section {
     display: flex;
     flex-direction: column;
     flex: 1;
     overflow: hidden;
   }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column .glitter-settings-section .section-header {
+  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-settings-section .section-header {
     flex-shrink: 0;
   }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column .glitter-settings-section .section-content {
+  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-settings-section .section-content {
     display: block !important;
     overflow-y: auto;
     flex: 1;
   }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .glitter-column .glitter-settings-section .section-header-action {
+  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-settings-section .section-header-action {
     visibility: hidden;
   }
 }

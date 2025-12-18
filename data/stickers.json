@@ -1998,5 +1998,26 @@
     "file_size": 15919,
     "sort_order": 84,
     "featured": false
+  },
+    {
+    "id": 85,
+    "name": "Ayumi Hamasaki A Logo",
+    "filename": "ayumi-hamasaki_pink-glitter.gif",
+    "url": "images/stickers/logo/ayumi-hamasaki_pink-glitter.gif",
+    "category": "logo",
+    "tags": [
+      "pink",
+      "glitter",
+      "logo"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 188,
+    "height": 142,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
   }
 ]

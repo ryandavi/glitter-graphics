@@ -5,8 +5,8 @@ const CONFIG = {
 	defaultTool: "select",
 
 	// image
-	maxImageWidth: 1200,
-	maxImageHeight: 1200,
+	maxImageWidth: 800,
+	maxImageHeight: 800,
 	maxFileSizeMB: 10,
 
 	// selection
@@ -78,6 +78,7 @@ const CONFIG = {
 
 	// debug
 	forceIOSExportPreview: false,  // Set to true to test iOS export modal on desktop
+	autoSelect: false,
 
 	// shortcuts
 	shortcuts: {
@@ -115,13 +116,36 @@ const ToolType = {
 	ZOOM: 'zoom'
 };
 
+class ContentManager {
+	constructor(editor) {
+		this.editor = editor;
+		this.type = null;
+
+		// Data
+		this.content = []; // this.presetStickers, this.glitterGifs
+		this.userContent = [];
+
+		// Filter State
+		this.activeFilters = {search: ''};
+
+		// UI Elements (set during init)
+		this.panel = null; // this.stickerPanel, this.gridContainer
+		this.panelGrid = null; // this.stickerGrid, this.backgroundsContainer
+	}
+
+
+	async init(){
+
+	}
+}
+
 // ============================================
 // STICKER MANAGER CLASS
 // Handles all sticker-related operations
 // ============================================
-class StickerManager {
+class StickerManager extends ContentManager {
 	constructor(editor) {
-		this.editor = editor;
+		super(editor);
 
 		// Sticker libraries
 		this.presetStickers = [];           // Database stickers
@@ -158,9 +182,6 @@ class StickerManager {
 		await this.loadPresetStickers();
 		this.renderStickerPicker();
 	}
-
-
-
 
 	cloneStickerElement(sourceLayer, clonedLayer) {
 		const sourceElement = this.editor.glitterBackgroundsContainer.querySelector(
@@ -648,7 +669,6 @@ class StickerManager {
 
 	// ===== RENDERING =====
 
-	// 1. New Helper Method
 	updateSelectionHighlight(activeLayerId) {
 		this.stickerElements.forEach((element, layerId) => {
 			if (layerId === activeLayerId) {
@@ -658,9 +678,6 @@ class StickerManager {
 			}
 		});
 	}
-
-	// 2. Update renderSticker to check selection status immediately
-	// In StickerManager class -> renderSticker(layer)
 
 	renderSticker(layer) {
 		if (layer.type !== LayerType.STICKER) return;
@@ -739,30 +756,7 @@ class StickerManager {
 		`;
 	}
 
-
-
-	// ===== ANIMATION =====
-
-	startStickerAnimation(layerId) {
-		// Browser handles animation natively - no manual frame swapping needed
-		// This method is only used during export
-		return;
-	}
-
-	stopStickerAnimation(layerId) {
-		// No animation to stop since browser handles it
-		// This method is only used during export cleanup
-		const frameId = this.animationFrames.get(layerId);
-		if (frameId) {
-			cancelAnimationFrame(frameId);
-			this.animationFrames.delete(layerId);
-		}
-	}
-
 	// ===== TRANSFORM UPDATES =====
-
-	// REPLACE updateStickerTransform() in StickerManager class
-
 	updateStickerTransform(layerId, updates) {
 		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
 		if (!layer || layer.type !== LayerType.STICKER) return;
@@ -805,9 +799,6 @@ class StickerManager {
 		}
 	}
 
-
-	// ===== CENTERING METHODS =====
-
 	// ===== CENTERING METHODS =====
 
 	centerStickerHorizontal(layerId) {
@@ -847,7 +838,6 @@ class StickerManager {
 	// ===== LAYER REMOVAL =====
 
 	removeSticker(layerId) {
-		// No need to stop animation - browser handles it
 		// Just remove DOM element
 		this.removeStickerElement(layerId);
 
@@ -961,34 +951,6 @@ class StickerManager {
 
 		// 6. Update Category Chips (if needed)
 		this.populateCategoryChips();
-	}
-
-	switchGalleryTab(tabName = null) {
-
-		// Update content sections using .visible class
-		document.querySelectorAll('.gallery-content').forEach(content => {
-			content.classList.toggle('visible', content.dataset.galleryContent === tabName);
-		});
-
-		// Update search sections using .visible class
-		const glitterSearch = document.getElementById('glitterSearchSection');
-		const stickersSearch = document.getElementById('stickersSearchSection');
-
-		if (glitterSearch && stickersSearch) {
-			if (tabName === 'glitter') {
-				glitterSearch.classList.add('visible');
-				stickersSearch.classList.remove('visible');
-			} else if (tabName === 'stickers') {
-				stickersSearch.classList.add('visible');
-				glitterSearch.classList.remove('visible');
-			} else {
-				glitterSearch.classList.remove('visible');
-				stickersSearch.classList.remove('visible');
-			}
-		}
-
-		// Store current tab
-		this.currentTab = tabName;
 	}
 
 	setupStickerSearchListeners() {
@@ -1149,8 +1111,6 @@ class StickerManager {
 		}
 	}
 
-
-
 	applyFilters() {
 		const allStickers = [...this.presetStickers, ...this.userStickers];
 
@@ -1272,9 +1232,9 @@ class StickerManager {
 // GLITTER MANAGER CLASS
 // Handles glitter library, filtering, rendering, and logic
 // ============================================
-class GlitterManager {
+class GlitterManager extends ContentManager {
 	constructor(editor) {
-		this.editor = editor;
+		super(editor);
 
 		// Data
 		this.glitterGifs = [];
@@ -2609,38 +2569,56 @@ class LayerManager {
 		return layer;
 	}
 
-	// In LayerManager class
 
-	addLayer(type = LayerType.GLITTER_FILL) {
-		// Check max layers
-		if (this.layers.length >= CONFIG.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
-			return;
-		}
+insertLayer(layer) {
+    // Insert above the currently selected layer, or at the top if none selected
+    if (this.activeLayerId) {
+        const activeIndex = this.layers.findIndex(l => l.id === this.activeLayerId);
+        if (activeIndex !== -1) {
+            // Insert above (higher index = visually above)
+            this.layers.splice(activeIndex + 1, 0, layer);
+        } else {
+            // Fallback if active layer not found
+            this.layers.push(layer);
+        }
+    } else {
+        // No active layer - add to top
+        this.layers.push(layer);
+    }
+    
+    this.setActiveLayer(layer.id);
+    this.renderLayersList();
+}
 
-		let layer;
 
-		if (type === LayerType.STICKER) {
-			// Create an EMPTY sticker layer
-			layer = this.editor.stickerManager.createEmptyStickerLayer();
-		} else {
-			// Create a standard glitter layer
-			layer = this.createLayer(LayerType.GLITTER_FILL);
-		}
 
-		if (!layer) return;
+addLayer(type = LayerType.GLITTER_FILL) {
+    // Check max layers
+    if (this.layers.length >= CONFIG.maxLayers) {
+        this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+        return;
+    }
 
-		this.layers.push(layer);
-		this.setActiveLayer(layer.id);
-		this.renderLayersList();
+    let layer;
 
-		// Save state
-		this.editor.saveState();
-		this.editor.updateActionButtons();
+    if (type === LayerType.STICKER) {
+        layer = this.editor.stickerManager.createEmptyStickerLayer();
+    } else {
+        layer = this.createLayer(LayerType.GLITTER_FILL);
+    }
 
-		const msg = type === LayerType.STICKER ? 'Empty sticker layer added' : 'Layer added';
+    if (!layer) return;
+
+    this.insertLayer(layer);  // Use the new method
+
+    // Save state
+    this.editor.saveState();
+    this.editor.updateActionButtons();
+
+    const msg = type === LayerType.STICKER ? 'Empty sticker layer added' : 'Layer added';
 		this.editor.updateStatus(msg);
 	}
+
 
 	deleteLayer(layerId) {
 
@@ -3747,32 +3725,37 @@ class LayerManager {
 		container.appendChild(fragment);
 	}
 
-	reorderGlitterBackgrounds() {
-		const container = this.glitterBackgroundsContainer;
+// In LayerManager.js
 
-		// Get existing background AND sticker elements
-		const existingElements = new Map();
-		container.querySelectorAll('.glitter-background, .sticker-element').forEach(el => {
-			existingElements.set(el.dataset.layerId, el);
-		});
+reorderGlitterBackgrounds() {
+    const container = this.glitterBackgroundsContainer;
 
-		// Reorder them to match layers array
-		const fragment = document.createDocumentFragment();
+    // Get existing background AND sticker elements
+    const existingElements = new Map();
+    container.querySelectorAll('.glitter-background, .sticker-element').forEach(el => {
+        existingElements.set(el.dataset.layerId, el);
+    });
 
-		this.layers.forEach(layer => {
-			const el = existingElements.get(layer.id);
-			if (el) {
-				// Update z-index based on position
-				if (layer.type === LayerType.STICKER) {
-					el.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
-				}
-				fragment.appendChild(el);
-			}
-		});
+    // Reorder them to match layers array
+    const fragment = document.createDocumentFragment();
 
-		container.innerHTML = '';
-		container.appendChild(fragment);
-	}
+    this.layers.forEach(layer => {
+        const el = existingElements.get(layer.id);
+        if (el) {
+            // =======================================================
+            // THE FIX:
+            // Remove the conditional check. Update the z-index for 
+            // every element (glitter or sticker) found.
+            // =======================================================
+            el.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+            
+            fragment.appendChild(el);
+        }
+    });
+
+    container.innerHTML = '';
+    container.appendChild(fragment);
+}
 }
 
 // ============================================
@@ -3797,6 +3780,8 @@ class GlitterEditor {
 		this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
 
 
+
+		
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
@@ -5597,6 +5582,8 @@ class GlitterEditor {
 		this.layerManager.layers = [];
 		this.layerManager.activeLayerId = null;
 
+		this.previewWrapper.classList.remove('hasImage'); // <-- ADD THIS LINE
+
 		// Reset UI
 		document.getElementById('imageUpload').value = '';
 		document.getElementById('imageDropzone').classList.remove('has-image');
@@ -5698,6 +5685,7 @@ class GlitterEditor {
 
 			this.previewWrapper.style.width = width + 'px';
 			this.previewWrapper.style.height = height + 'px';
+			this.previewWrapper.classList.add('hasImage'); // <-- ADD THIS LINE
 
 			this.originalCtx.drawImage(img, 0, 0, width, height);
 			this.originalImageData = this.originalCtx.getImageData(0, 0, width, height);
@@ -5816,7 +5804,7 @@ class GlitterEditor {
 
 		// Select Tool: Pick layer at click location
 		if (this.currentTool === ToolType.SELECT) {
-			this.layerManager.handleLayerPick(x, y);
+			if(CONFIG.autoSelect === true) this.layerManager.handleLayerPick(x, y);
 			return;
 		}
 
@@ -5833,15 +5821,13 @@ class GlitterEditor {
 				return;
 			}
 
-			// Case 1: Base Image is Selected -> Create NEW Glitter Layer
-			if (layer.type === LayerType.BASE_IMAGE) {
-				const newLayer = this.layerManager.createLayer();
-				this.layers.push(newLayer);
-				this.layerManager.setActiveLayer(newLayer.id);
-				this.layerManager.renderLayersList();
-				layer = newLayer; // Switch target to the new layer
-				this.updateStatus('Created new layer from Base Image');
-			}
+// Case 1: Base Image is Selected -> Create NEW Glitter Layer
+if (layer.type === LayerType.BASE_IMAGE) {
+    const newLayer = this.layerManager.createLayer();
+    this.layerManager.insertLayer(newLayer);  // Use the new method
+    layer = newLayer; // Switch target to the new layer
+    this.updateStatus('Created new layer from Base Image');
+}
 			// Case 2: Glitter Fill Layer is Selected -> Use it
 			else if (layer.type === LayerType.GLITTER_FILL) {
 				// Continue using this layer
