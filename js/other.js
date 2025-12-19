@@ -1,11 +1,44 @@
+const initPixelScaler = () => {
+    const images = document.querySelectorAll('img[data-pixel-scale]');
 
-// Pixel Scaler
-document.querySelectorAll('img[data-pixel-scale]').forEach(img => {
-	const s = Number(img.dataset.pixelScale);
-	img.style.width = img.naturalWidth * s + 'px';
-	img.style.height = img.naturalHeight * s + 'px';
-	img.style.imageRendering = 'pixelated';
-});
+    const scaleImages = () => {
+        images.forEach(img => {
+            // Ensure image is loaded before calculating
+            if (!img.complete || img.naturalWidth === 0) {
+                img.onload = scaleImages;
+                return;
+            }
+
+            const scale = Number(img.dataset.pixelScale) || 1;
+            const targetWidth = img.naturalWidth * scale;
+            
+            // Set the "ideal" width. 
+            // The CSS max-width: 100% will automatically shrink it 
+            // if the parent is smaller than this value.
+            img.style.width = `${targetWidth}px`;
+        });
+    };
+
+    // Debounce function: limits how often the scaler runs
+    const debounce = (func, wait) => {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    };
+
+    // Initial Run
+    scaleImages();
+
+    // Responsive Listeners
+    window.addEventListener('resize', debounce(scaleImages, 150));
+};
+
+// Run on DOM ready
+document.addEventListener('DOMContentLoaded', initPixelScaler);
+
+
 
 // Reference linking and highlighting functionality
 document.addEventListener('DOMContentLoaded', function () {

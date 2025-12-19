@@ -27,9 +27,17 @@
 				</a>
 			</div>
 			<div class="app-header-right">
-				<button class="btn-icon icon-wrapper" id="aboutBtn" title="About">
+
+				<button class="btn-icon icon-wrapper" id="guideBtn" title="Info">
 					<svg class="icon">
 						<use href="#icon-question-circle"></use>
+					</svg>
+					<span class="name">Guide</span>
+				</button>
+
+				<button class="btn-icon icon-wrapper" id="aboutBtn" title="About">
+					<svg class="icon">
+						<use href="#icon-circle-info"></use>
 					</svg>
 					<span class="name">About</span>
 				</button>
@@ -672,19 +680,6 @@
 
 							<!-- Project Meta Info -->
 							<div class="settings-subsection">
-								<div class="subsection-content-group">
-									<div class="subsection-title">Meta Info</div>
-									<div class="project-meta-stats">
-										<div class="meta-stat">
-											<span class="label">Dimensions</span>
-											<span class="value" id="quickMetaDimensions">-- x --</span>
-										</div>
-										<div class="meta-stat">
-											<span class="label">Layers</span>
-											<span class="value" id="quickMetaLayerCount">0</span>
-										</div>
-									</div>
-								</div>
 
 								<!-- Specific Quick Actions -->
 								<div class="subsection-content-group">
@@ -1025,7 +1020,7 @@
 			<div class="modal-body">
 				<div class="settings-group">
 					<!-- Composition Group -->
-					<div class="settings-group-title">Composition</div>
+					<div class="settings-group-title">Export</div>
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Base Image</div>
@@ -1060,6 +1055,21 @@
 						<div class="settings-row-label-desc">Background color for transparent areas when transparency is
 							disabled.</div>
 					</div>
+
+					<!-- Watermark -->
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Watermark</div>
+							<div class="settings-row-control">
+								<label class="checkbox-group-simple">
+									<input type="checkbox" id="exportWatermarkEnabled">
+								</label>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Add a cheeky little watermark overlay to the exported GIF.</div>
+					</div>
+
+
 					<!-- Encoding Group -->
 					<div class="settings-group-title">Encoding</div>
 					<div class="settings-row">
@@ -1193,7 +1203,7 @@
 				<div class="modal-title">
 					<span class="modal-icon icon-wrapper">
 						<svg class="icon">
-							<use href="#icon-question-circle"></use>
+							<use href="#icon-circle-info"></use>
 						</svg>
 						<span class="name">About</span>
 					</span>
@@ -1209,14 +1219,13 @@
 				</button>
 			</div>
 			<div class="modal-body">
-				<img src="images/welcome.gif" data-pixel-scale="2" class="center" style="margin-bottom: 20px;"
+				<img src="images/stickers/text/welcome.gif" data-pixel-scale="3" class="center" style="margin-bottom: 20px;"
 					alt="Welcome to Glitter Graphics">
 				<p><strong class="context"
 						data-tooltip="Also known as Sparkly GIFs or Blingees, named after the popular website that allowed for their creation">Glitter Graphics</strong> are a form of maximalist digital art and a distinct visual style that was
 					popular online in the 2000s.</p>
-
 				<h3>Origins and Early Development</h3>
-				<p>They emerged in online forum <strong class="context"
+				<p><em>Glitter Graphics</em> emerged in online forum <strong class="context"
 						data-tooltip="A feature on forums that allowed users to attach a block of information to the end of each of their posts">signatures</strong>
 					and on early personal website-building platforms that led the first wave of user-generated content
 					online, such as <strong class="context"
@@ -1244,69 +1253,100 @@
 						data-tooltip="A social networking service launched in 2003. It became the first platform to reach a global audience and had a major impact on technology, pop culture, and music. It remained the largest social network until Facebook surpassed it in 2009.">MySpace</strong><sup>[10]</sup> profiles. </p>
 
 				<h3>The GeoCities Aesthetic</h3>
-				<p>While GeoCities was the most well-known free hosting service, Tripod, Angelfire, Homestead, and others were equally important to the ecosystem. Over time, "GeoCities" evolved beyond the actual service to describe an aesthetic: amateur websites assembled from freely available elements rather than professional layouts. Professional sites were typically created as coherent 800×600 graphics in Photoshop, sliced into smaller images and then reassembled in HTML. The GeoCities PageBuilder tool and its DIY ethos became so influential that the name now serves as shorthand for visual eclecticism and resourcefulness across the amateur web. It was within these personal spaces that glitter graphics were first developed, establishing techniques that would later migrate to social platforms.</p>
+				<p>While GeoCities was the most well-known free hosting service, Tripod, Angelfire, Homestead, and others were equally important to the ecosystem. Over time, "GeoCities" evolved beyond the actual service to describe an aesthetic: amateur websites assembled from freely available elements rather than professional layouts. Professional website designs were typically created as 800×600 graphics in Photoshop, sliced into smaller images and then reassembled in HTML. The GeoCities PageBuilder tool and its DIY ethos provided amateurs the ability to create their own website without code and became so influential that the name now serves as shorthand for visual eclecticism and resourcefulness across the web. It was within these personal spaces that glitter graphics were first developed, establishing techniques that would later migrate to social platforms.</p>
 
 				<h3>The Web 2.0 Transition</h3>
-				<p>The year 2004 marked a turning point. <strong class="context"
+				<p><strong class="context"
 						data-tooltip="A social networking service launched in 2004. It is the largest social networking service in the world, with over 3 billion users.">Facebook</strong><sup>[11]</sup>'s launch and the popularization of "<strong class="context"
-						data-tooltip="The second generation of the World Wide Web, emphasizing user-generated content, ease of use, participatory culture and interoperability">Web 2.0</strong>"<sup>[12]</sup> signaled a shift from user-owned digital spaces to content generation within platforms. <strong class="context"
+						data-tooltip="The second generation of the World Wide Web, emphasizing user-generated content, ease of use, participatory culture and interoperability">Web 2.0</strong>"<sup>[12]</sup> signaled a shift from user-owned digital spaces to content generation within platforms. Around this time, <strong class="context"
 						data-tooltip="An open-source web browser developed by Mozilla Foundation">Mozilla Firefox</strong><sup>[13]</sup> challenged <strong class="context"
 						data-tooltip="Microsoft's web browser that dominated the market in the early 2000s">Internet Explorer</strong><sup>[14]</sup>'s dominance in the stagnant browser market. Firefox's strong promotion of <strong class="context"
 						data-tooltip="World Wide Web Consortium, an international organization that develops open standards for the web">W3C</strong><sup>[15]</sup> standards compliance shifted web development away from "best viewed in <strong class="context" data-tooltip="Internet Explorer">IE</strong>" toward cross-browser, standards-based design—a cornerstone of Web 2.0's interactive, platform-agnostic sites. The personal homepage, once central to online identity, began to feel antiquated as people migrated to centralized social networks.</p>
 
-				<p>During this transition, <strong class="context"
-						data-tooltip="Web-based tool for creating layered glitter graphics with decorative stamps">Blingee</strong><sup>[16]</sup> emerged as a Web 2.0 service that democratized the creation of maximalist glitter graphics. It allowed users to layer multiple decorative "stamps" (often pre-glittered) into composite images, and maintained the open, sharing-focused ethos of Web 1.0 by letting users upload custom stamps and make them freely available to everyone.</p>
+				<p>Although most free hosting services closed or went paid-only by 2009, glitter graphics persisted on MySpace and particularly Facebook, where middle-aged and elderly users embraced the practice of posting daily greetings and holiday wishes<sup>[20]</sup>.</p>
+				<h3>Blingee</h3>
+				<p>
+					<strong class="context"
+						data-tooltip="Web-based tool for creating layered glitter graphics with decorative stamps">Blingee</strong><sup>[16]</sup>
+					was a web-based platform dedicated to creating glitter graphics, while individual creations were commonly referred to as
+					<strong>Blingees</strong>. Launched in June 2006 as part of the
+					<strong class="context"
+						data-tooltip="A network of teen-focused websites operated by Bauer Publishing, including PopJam, Dollie, and other youth-oriented online communities">Bauer Teen Network</strong><sup>[17]</sup>,
+					the site offered an accessible browser-based editor that allowed users to layer decorative “stamps”—ranging from simple animated glitter and twinkling stars to complex image overlays—onto uploaded photographs.
+				</p>
 
-				<p>Although most free hosting services closed or went paid-only by 2009, glitter graphics persisted on MySpace and particularly Facebook, where middle-aged and elderly users embraced the practice of posting daily greetings and holiday wishes<sup>[17]</sup>. These graphics represent something distinct from classic 90s animated GIFs, reaction images, or memes—they're a specific cultural artifact of early social media, marking time through visual rituals.</p>
+				<p>
+					Users could build personal collections of <em>Blingees</em> and upload custom stamps to share freely with the community,
+					preserving Web 1.0's collaborative ethos within an increasingly centralized social web. Blingee gained significant traction
+					among MySpace users for profile avatars and decorative images, reaching peak popularity in 2007. The platform fostered
+					a social ecosystem where users formed groups, participated in contests, and rated each other's creations, with finished Blingees
+					spreading across MySpace,
+					<strong class="context"
+						data-tooltip="A social networking service launched in 2003 that was particularly popular in Latin America, Central Africa, and Southeast Asia">Hi5</strong><sup>[18]</sup>,
+					<strong class="context"
+						data-tooltip="A social networking service for teenagers launched in 2005 that included website building tools">Piczo</strong><sup>[19]</sup>,
+					and personal blogs.
+				</p>
+
+				<p>
+					The platform faced a near-shutdown in August 2015, which was averted by widespread user outcry and emergency funding, after which
+					previously premium features were made freely available. Blingee ultimately closed permanently in June 2024, unable to overcome
+					technical challenges following the deprecation of
+					<strong class="context"
+						data-tooltip="A multimedia software platform discontinued by Adobe in 2020 after years of security vulnerabilities">Adobe Flash</strong>
+					in 2021.
+				</p>
+
+
 
 				<h3>Contemporary Resurgence</h3>
 				<p>Today they resurface in nostalgic internet communities, on platforms like <strong class="context"
-						data-tooltip="A free web hosting service launched in 2013 as a spiritual successor to GeoCities">Neocities</strong><sup>[18]</sup> that deliberately embrace early web aesthetics, and linger in GIF keyboards like <strong class="context"
-						data-tooltip="A GIF keyboard and search platform">Tenor</strong><sup>[19]</sup> and <strong
-						class="context" data-tooltip="A GIF search engine and platform">GIPHY</strong><sup>[20]</sup>.
+						data-tooltip="A free web hosting service launched in 2013 as a spiritual successor to GeoCities">Neocities</strong><sup>[21]</sup> that deliberately embrace early web aesthetics, and linger in GIF keyboards like <strong class="context"
+						data-tooltip="A GIF keyboard and search platform">Tenor</strong><sup>[22]</sup> and <strong
+						class="context" data-tooltip="A GIF search engine and platform">GIPHY</strong><sup>[23]</sup>.
 				</p>
 
 				<p>The aesthetic influence of glitter graphics has extended into contemporary art and popular culture,
 					particularly within <strong class="context"
 						data-tooltip="Artwork and artistic practices that use the internet as a primary medium">Net
-						Art</strong><sup>[21]</sup> and digital culture movements that celebrate early web aesthetics.
+						Art</strong><sup>[24]</sup> and digital culture movements that celebrate early web aesthetics.
 					The artwork for <strong class="context"
-						data-tooltip="British rapper, singer, and songwriter">M.I.A.</strong><sup>[22]</sup>'s 2010 single <strong
-						class="context" data-tooltip="Single from the album /\/\ /\ Y /\">XXXO</strong><sup>[23]</sup>
+						data-tooltip="British rapper, singer, and songwriter">M.I.A.</strong><sup>[25]</sup>'s 2010 single <strong
+						class="context" data-tooltip="Single from the album /\/\ /\ Y /\">XXXO</strong><sup>[26]</sup>
 					directly references the Blingee style, with its music video featuring glittering floral graphics and
 					decorative stamps characteristic of the maximalist aesthetic, embracing the vernacular visual
 					language of early social media culture.</p>
 
 				<h3>Technical Foundation</h3>
-				<p>The <strong class="context" data-tooltip="Graphics Interchange Format">GIF</strong><sup>[24]</sup> format, introduced in 1987 by <strong class="context"
-						data-tooltip="American Internet company that provided the first major commercial online service">CompuServe</strong><sup>[25]</sup>, became the foundation for animated glitter graphics due to its support for multiple frames and widespread browser compatibility. The engineering lead on the team that created the format, <strong class="context"
+				<p>The <strong class="context" data-tooltip="Graphics Interchange Format">GIF</strong><sup>[27]</sup> format, introduced in 1987 by <strong class="context"
+						data-tooltip="American Internet company that provided the first major commercial online service">CompuServe</strong><sup>[28]</sup>, became the foundation for animated glitter graphics due to its support for multiple frames and widespread browser compatibility. The engineering lead on the team that created the format, <strong class="context"
 						data-tooltip="American computer scientist who led the team that created the GIF format">Steve
-						Wilhite</strong><sup>[26]</sup>, insists it's pronounced the same as <span class="context"
-						data-tooltip="the American peanut butter brand">Jif</span><sup>[27]</sup>, sparking one of the
-					internet's most heated debates. Dictionaries list both hard and soft 'G' pronunciations as acceptable<sup>[28]</sup>. I pronounce GIF with a hard 'G' and solidified my pronunciation by age 6, so he should have spoke up sooner. May he rest in peace though.</p>
+						Wilhite</strong><sup>[29]</sup>, insists it's pronounced the same as <span class="context"
+						data-tooltip="the American peanut butter brand">Jif</span><sup>[30]</sup>, sparking one of the
+					internet's most heated debates. Dictionaries list both hard and soft 'G' pronunciations as acceptable<sup>[31]</sup>. I pronounce GIF with a hard 'G' and solidified my pronunciation by age 6, so he should have spoke up sooner. May he rest in peace though.</p>
 
 				<p>Early glitter graphics were created using digital art programs such as <strong class="context"
 						data-tooltip="Adobe's image editing program that allowed frame animation and GIF creation">Adobe
-						ImageReady</strong><sup>[29]</sup> and <strong class="context"
+						ImageReady</strong><sup>[32]</sup> and <strong class="context"
 						data-tooltip="A raster and vector graphics editor, later acquired by Corel">JASC Paint Shop
-						Pro</strong><sup>[30]</sup>'s companion program <strong class="context"
+						Pro</strong><sup>[33]</sup>'s companion program <strong class="context"
 						data-tooltip="Program used for creating simple animations and GIFs">Animation
-						Shop</strong><sup>[31]</sup>, which provided more affordable image editing options for
+						Shop</strong><sup>[34]</sup>, which provided more affordable image editing options for
 					entry-level graphic designers. Websites such as Blingee,
 					<strong class="context"
-						data-tooltip="Web-based tool for creating glitter graphics">PicMix</strong><sup>[32]</sup>, and
+						data-tooltip="Web-based tool for creating glitter graphics">PicMix</strong><sup>[35]</sup>, and
 					<strong class="context"
 						data-tooltip="Web-based tool for creating glitter graphics and animations">Online Image
-						Editor</strong><sup>[33]</sup> provided free, accessible tools for easily creating this style of
+						Editor</strong><sup>[36]</sup> provided free, accessible tools for easily creating this style of
 					graphics.
 				</p>
 
 				<h3>This Website</h3>
 				<p>All glitters and stickers are ethically sourced from <strong class="context"
-						data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive">GifCities</strong><sup>[34]</sup>,
+						data-tooltip="the Geocities Animated GIF Search hosted by the Internet Archive">GifCities</strong><sup>[37]</sup>,
 					Angelfire and Tripod websites. Original file names are mostly retained.</p>
 
-				<p>Beyond Geocities backup archives and the few remaining personal website hosting services, many resources have been lost to time. Even in cases where archives exist, accompanying images were often not preserved, leaving only fragments of these sacred artifacts to be rediscovered and reconstructed here. The loss of external hosting sites like <strong class="context" data-tooltip="Early image and file hosting service commonly used on personal websites and Ebay auctions">Boomspeed</strong><sup>[35]</sup>, <strong class="context" data-tooltip="Free image hosting service popular in the mid-2000s">TinyPic</strong><sup>[36]</sup>, and <strong class="context" data-tooltip="Image hosting service later converted into a paid platform with watermarking">Photobucket</strong><sup>[37]</sup> is particularly notable, as limited bandwidth and storage on personal hosting services meant images were frequently stored off-site rather than locally. These platforms have since shut down, or in the case of Photobucket, were acquired and converted into a paid service that extorts users by keeping large watermarks on their images unless they pay.</p>
+				<p>Beyond Geocities backup archives and the few remaining personal website hosting services, many resources have been lost to time. Even in cases where archives exist, accompanying images were often not preserved, leaving only fragments of these sacred artifacts to be rediscovered and reconstructed here. The loss of external hosting sites like <strong class="context" data-tooltip="Early image and file hosting service commonly used on personal websites and Ebay auctions">Boomspeed</strong><sup>[38]</sup>, <strong class="context" data-tooltip="Free image hosting service popular in the mid-2000s">TinyPic</strong><sup>[39]</sup>, and <strong class="context" data-tooltip="Image hosting service later converted into a paid platform with watermarking">Photobucket</strong><sup>[40]</sup> is particularly notable, as limited bandwidth and storage on personal hosting services meant images were frequently stored off-site rather than locally. These platforms have since shut down, or in the case of Photobucket, were acquired and converted into a paid service that extorts users by keeping large watermarks on their images unless they pay.</p>
 
 				<p>Some surviving hypertexts are presented below in the "Original Resources" section, though the archived editing tools are no longer available for use, as they were rendered server-side.</p>
 
@@ -1362,6 +1402,12 @@
 							rel="noopener noreferrer">Blingee</a>". <a class="external"
 							href="https://web.archive.org/web/20091021203517/http://blingee.com/" target="_blank"
 							rel="noopener noreferrer">Archived</a> from the original on 21 October 2009.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Bauer_Media_Group" target="_blank"
+							rel="noopener noreferrer">Bauer Media Group</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Hi5" target="_blank"
+							rel="noopener noreferrer">Hi5</a>". <em>Wikipedia</em>.</li>
+					<li>"<a class="external" href="https://en.wikipedia.org/wiki/Piczo" target="_blank"
+							rel="noopener noreferrer">Piczo</a>". <em>Wikipedia</em>.</li>
 					<li>"<a class="external" href="https://haveagood.today/" target="_blank" rel="noopener noreferrer">Perpetual Calendar</a>". A project exploring daily greeting image culture.</li>
 					<li>"<a class="external" href="https://neocities.org/" target="_blank"
 							rel="noopener noreferrer">Neocities</a>".</li>
@@ -1373,7 +1419,7 @@
 							rel="noopener noreferrer">Internet art</a>". <em>Wikipedia</em>.</li>
 					<li>"<a class="external" href="https://en.wikipedia.org/wiki/M.I.A._(rapper)" target="_blank"
 							rel="noopener noreferrer">M.I.A.</a>". <em>Wikipedia</em>.</li>
-					<li>"<a class="external" href="https://www.youtube.com/watch?v=sfbQ5mHWkOs" target="_blank"
+					<li>"<a class="external" href="https://www.youtube.com/watch?v=2uYs0gJD-LE" target="_blank"
 							rel="noopener noreferrer">M.I.A. - XXXO (Official Video)</a>". <em>YouTube</em>.</li>
 					<li>"<a class="external" href="https://en.wikipedia.org/wiki/GIF" target="_blank"
 							rel="noopener noreferrer">GIF</a>". <em>Wikipedia</em>.</li>
@@ -1493,6 +1539,593 @@
 		</div>
 	</div>
 
+	<!-- Guide Modal -->
+	<div class="modal-overlay" id="guideModal">
+		<div class="modal-content">
+			<div class="modal-header">
+
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon">
+							<use href="#icon-question-circle"></use>
+						</svg>
+					</span>
+
+					<span class="modal-title-text">Guide</span>
+				</div>
+
+
+				<button class="btn-icon icon-wrapper modal-close" id="closeGuideModal">
+					<svg class="icon">
+						<use href="#icon-x-mark"></use>
+					</svg>
+					<span class="name">Image</span>
+				</button>
+
+			</div>
+			<div class="modal-body">
+
+
+<div class="guide-content">
+
+	<!-- GETTING STARTED -->
+	<div class="guide-section">
+		<h3>
+			<span class="icon-wrapper">
+				<svg class="icon"><use href="#icon-image"></use></svg>
+			</span>
+			Getting Started
+		</h3>
+		
+		<div class="guide-subsection">
+			<h4>Upload Your Image</h4>
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-image"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Click <strong>Choose File</strong> to upload an image (PNG, JPG, or GIF).
+					<ul>
+						<li>This becomes your <strong>Base Image</strong> – the foundation of your canvas for glitter effects and stickers.</li>
+						<li>If your image is larger than 800x800, it will be resized to fit the constraints.</li>
+						<li>Maximum file size: 10MB.</li>
+					</ul>	
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- BASICS -->
+	<div class="guide-section">
+		<h3>
+			<span class="icon-wrapper">
+				<svg class="icon"><use href="#icon-sliders"></use></svg>
+			</span>
+			Basics
+		</h3>
+		
+		<div class="guide-subsection">
+			<h4>Tools</h4>
+			<p>Some tools have context-specific options that appear when selected.</p>
+			
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-hand-pointer"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Select Tool (V)</strong> – Pick layers and move stickers. When a sticker is selected, alignment buttons appear:
+					<ul>
+						<li>Align center horizontally</li>
+						<li>Align center vertically</li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-hand"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Hand Tool (H)</strong> – Pan around the canvas. Context toolbar includes alignment options:
+					<ul>
+						<li>Align center horizontally</li>
+						<li>Align center vertically</li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-magic-wand"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Color Picker (I)</strong> – Click colors on the base image to create glitter selections.
+				</div>
+			</div>
+
+
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-magnifying-glass"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Zoom Tool (Z)</strong> – Click to zoom in, hold <strong>Alt</strong> and click to zoom out. Context toolbar includes:
+					<ul>
+						<li><strong>Fit</strong> – Zoom to fit the entire image on screen</li>
+						<li><strong>Fill</strong> – Zoom to fill screen with image</li>
+						<li><strong>100%</strong> – Reset to actual size</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div class="guide-subsection">
+			<h4>Working with Layers</h4>
+			<p>The <strong>Layer Panel</strong> lets you manage all layers.</p>
+			
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-plus"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Click <strong>+</strong> to add a new <strong>Glitter Fill</strong> or <strong>Sticker</strong> layer.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-move"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Drag layers up/down to reorder them (top layers appear in front).
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-eye"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Click the <strong>eye icon</strong> to show/hide layers.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-lock"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Click the <strong>lock icon</strong> to prevent changes.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-clone"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Click the <strong>duplicate icon</strong> to copy a layer with all its settings.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-trash"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Click the <strong>trash icon</strong> to delete a layer.
+				</div>
+			</div>
+		</div>
+
+		<div class="guide-subsection">
+			<h4>Canvas View Options</h4>
+			<p>Control what you see on the canvas.</p>
+			
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-square"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Toggle Bounds</strong> – Show/hide bounding boxes around stickers.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-checkerboard"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Toggle Transparency</strong> – Show/hide the checkerboard pattern behind transparent areas.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-eye"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Show Only Active Layer</strong> – Isolate the currently selected layer.
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- GLITTER -->
+	<div class="guide-section">
+		<h3>
+			<span class="icon-wrapper">
+				<svg class="icon"><use href="#icon-glitter"></use></svg>
+			</span>
+			Glitter
+		</h3>
+		
+		<div class="guide-subsection">
+			<h4>Create a Glitter Layer</h4>
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-plus"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					In the <strong>Layer Panel</strong>, click <strong>+</strong> and choose <strong>Glitter Fill</strong>.
+					<ul>
+						<li>This creates a new layer to add glitter effects.</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div class="guide-subsection">
+			<h4>Select Colors</h4>
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-magic-wand"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Use the <strong>Color Picker Tool (I)</strong> to click any color in your base image.
+					<ul>
+						<li>This tells the glitter layer which parts to fill.</li>
+						<li>A glitter layer will be empty until a selection is made.</li>
+					</ul>
+				</div>
+			</div>
+
+			<h4>Selection Options</h4>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Multi-Select</strong> – Pick multiple colors on the same layer.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Threshold</strong> – Sets the tolerance for color matching when selecting areas to fill with glitter.
+					<ul>
+						<li><strong>Lower values</strong> – Selects colors very close to the one clicked for precise selections.</li>
+						<li><strong>Higher values</strong> – Selects a broader range of similar colors across the entire image.</li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Feather</strong> – Softens the edges of your selection for smoother blending.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Contiguous</strong> – Only selects connected areas of the same color, preventing scattered pixel selection.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Invert</strong> – Select everything except the color clicked.
+				</div>
+			</div>
+		</div>
+
+		<div class="guide-subsection">
+			<h4>Choose Your Glitter</h4>
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-glitter"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Browse the glitter gallery and click any glitter to apply it to your selected colors. Use search and filters to find specific styles, colors, or categories.
+				</div>
+			</div>
+		</div>
+
+		<div class="guide-subsection">
+			<h4>Adjust Glitter Settings</h4>
+			<p>In the <strong>Glitter Settings</strong> panel, customize your glitter layer:</p>
+			
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-sliders"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Scale</strong> – Makes the glitter pattern larger or smaller.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-sliders"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Opacity</strong> – Controls transparency (100% = fully visible, 0% = invisible).
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Apply Globally</strong> – Apply scale, opacity, threshold, and feather settings across all glitter layers.
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- STICKERS -->
+	<div class="guide-section">
+		<h3>
+			<span class="icon-wrapper">
+				<svg class="icon"><use href="#icon-sticker"></use></svg>
+			</span>
+			Stickers
+		</h3>
+		
+		<div class="guide-subsection">
+			<h4>Add Stickers</h4>
+			<p>Create a <strong>Sticker</strong> layer to add decorative images on top of glitter.</p>
+			
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-plus"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Click <strong>+</strong> in the Layer Panel and choose <strong>Sticker</strong>.
+					<ul>
+						<li>The sticker layer will be empty until a sticker is chosen.</li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-sticker"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Browse the sticker gallery and click one to add it.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-hand-pointer"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Use the <strong>Select Tool (V)</strong> to drag and move the sticker.
+				</div>
+			</div>
+
+			<h4>Sticker Settings</h4>
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-sliders"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Opacity</strong> – Control transparency.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-sliders"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Rotation</strong> – Spin the sticker (–180° to 180°).
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-arrows-left-right"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					<strong>Scale X & Y</strong> – Resize width and height independently.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Proportional Scale</strong> – When enabled, X and Y scale together to maintain aspect ratio. Disable to stretch or squash the sticker.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Flip Horizontally/Vertically</strong> – Mirror the sticker.
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- EXPORT -->
+	<div class="guide-section">
+		<h3>
+			<span class="icon-wrapper">
+				<svg class="icon"><use href="#icon-export"></use></svg>
+			</span>
+			Export
+		</h3>
+		
+		<div class="guide-subsection">
+			<h4>Export Your Creation</h4>
+			<p>When ready to save:</p>
+			
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-gear"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Open the <strong>Settings Modal</strong> to customize export options.
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm">
+						<svg class="icon"><use href="#icon-export"></use></svg>
+					</span>
+				</div>
+				<div class="guide-item-content">
+					Click <strong>Export</strong> to generate your animated GIF.
+				</div>
+			</div>
+
+			<h4>Export Settings (in Settings Modal)</h4>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Base Image</strong> – Include/exclude the original image.
+				</div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Transparency</strong> – Preserve transparent areas.
+				</div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Quality</strong> – Lower values = better quality but slower (1 is best).
+				</div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Frame Delay</strong> – Animation speed (110ms is classic).
+				</div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Max Frames</strong> – Limit animation length.
+				</div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					<strong>Dithering</strong> – Algorithm for color reduction (GIFs can contain up to 256 colors from the 24-bit RGB color space).
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ETC -->
+	<div class="guide-section">
+		<h3>
+			<span class="icon-wrapper">
+				<svg class="icon"><use href="#icon-question-circle"></use></svg>
+			</span>
+			Etc
+		</h3>
+		
+		<div class="guide-subsection">
+			<h4>Tips</h4>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					Try different threshold values to select exactly the colors you want.
+				</div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					Enable <strong>Show Only Active Layer</strong> to focus on one layer at a time.
+				</div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon"></div>
+				<div class="guide-item-content">
+					Use <strong>Apply Globally</strong> for consistent settings across all glitter layers.
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+
+
+			</div>
+		</div>
+	</div>
 
 	<!-- Mobile Bottom Navigation -->
 	<div class="mobile-bottom-nav">
@@ -1698,18 +2331,24 @@
 					<path d="M224 104C224 81.9 241.9 64 264 64C286.1 64 304 81.9 304 104L304 252.2C312.5 244.6 323.7 240 336 240C356.6 240 374.2 253 381 271.2C389.8 261.9 402.2 256 416 256C441.3 256 462 275.5 463.9 300.3C472.4 292.6 483.7 288 496 288C522.5 288 544 309.5 544 336L544 448C544 518.7 486.7 576 416 576L330.7 576C325.7 576 320.8 575.7 316 575C260.7 569.4 209.8 541 176 496L104 400C90.7 382.3 94.3 357.3 112 344C129.7 330.7 154.7 334.3 168 352L224 426.7L224 104zM336 368C336 359.2 328.8 352 320 352C311.2 352 304 359.2 304 368L304 464C304 472.8 311.2 480 320 480C328.8 480 336 472.8 336 464L336 368zM384 352C375.2 352 368 359.2 368 368L368 464C368 472.8 375.2 480 384 480C392.8 480 400 472.8 400 464L400 368C400 359.2 392.8 352 384 352zM464 368C464 359.2 456.8 352 448 352C439.2 352 432 359.2 432 368L432 464C432 472.8 439.2 480 448 480C456.8 480 464 472.8 464 464L464 368z" />
 				</symbol>
 
-<symbol id="icon-square" viewBox="0 0 640 640">
-	<path d="M480 144C488.8 144 496 151.2 496 160L496 480C496 488.8 488.8 496 480 496L160 496C151.2 496 144 488.8 144 480L144 160C144 151.2 151.2 144 160 144L480 144zM160 96C124.7 96 96 124.7 96 160L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 160C544 124.7 515.3 96 480 96L160 96z"/></symbol>
+				<symbol id="icon-square" viewBox="0 0 640 640">
+					<path d="M480 144C488.8 144 496 151.2 496 160L496 480C496 488.8 488.8 496 480 496L160 496C151.2 496 144 488.8 144 480L144 160C144 151.2 151.2 144 160 144L480 144zM160 96C124.7 96 96 124.7 96 160L96 480C96 515.3 124.7 544 160 544L480 544C515.3 544 544 515.3 544 480L544 160C544 124.7 515.3 96 480 96L160 96z" />
+				</symbol>
 
 
-	<symbol id="icon-clone" viewBox="0 0 640 640">
-		<path d="M352 512L128 512L128 288L176 288L176 224L128 224C92.7 224 64 252.7 64 288L64 512C64 547.3 92.7 576 128 576L352 576C387.3 576 416 547.3 416 512L416 464L352 464L352 512zM288 416L512 416C547.3 416 576 387.3 576 352L576 128C576 92.7 547.3 64 512 64L288 64C252.7 64 224 92.7 224 128L224 352C224 387.3 252.7 416 288 416z"/>
-	</symbol>
+				<symbol id="icon-clone" viewBox="0 0 640 640">
+					<path d="M352 512L128 512L128 288L176 288L176 224L128 224C92.7 224 64 252.7 64 288L64 512C64 547.3 92.7 576 128 576L352 576C387.3 576 416 547.3 416 512L416 464L352 464L352 512zM288 416L512 416C547.3 416 576 387.3 576 352L576 128C576 92.7 547.3 64 512 64L288 64C252.7 64 224 92.7 224 128L224 352C224 387.3 252.7 416 288 416z" />
+				</symbol>
 
 
-<symbol id="icon-hand" viewBox="0 0 640 640">
-	<path d="M352 96C352 78.3 337.7 64 320 64C302.3 64 288 78.3 288 96L288 304C288 312.8 280.8 320 272 320C263.2 320 256 312.8 256 304L256 128C256 110.3 241.7 96 224 96C206.3 96 192 110.3 192 128L192 400C192 401.5 192 403.1 192.1 404.6L131.6 347C115.6 331.8 90.3 332.4 75 348.4C59.7 364.4 60.4 389.7 76.4 405L188.8 512C231.9 553.1 289.2 576 348.8 576L368 576C465.2 576 544 497.2 544 400L544 192C544 174.3 529.7 160 512 160C494.3 160 480 174.3 480 192L480 304C480 312.8 472.8 320 464 320C455.2 320 448 312.8 448 304L448 128C448 110.3 433.7 96 416 96C398.3 96 384 110.3 384 128L384 304C384 312.8 376.8 320 368 320C359.2 320 352 312.8 352 304L352 96z"/>
-</symbol>
+				<symbol id="icon-hand" viewBox="0 0 640 640">
+					<path d="M352 96C352 78.3 337.7 64 320 64C302.3 64 288 78.3 288 96L288 304C288 312.8 280.8 320 272 320C263.2 320 256 312.8 256 304L256 128C256 110.3 241.7 96 224 96C206.3 96 192 110.3 192 128L192 400C192 401.5 192 403.1 192.1 404.6L131.6 347C115.6 331.8 90.3 332.4 75 348.4C59.7 364.4 60.4 389.7 76.4 405L188.8 512C231.9 553.1 289.2 576 348.8 576L368 576C465.2 576 544 497.2 544 400L544 192C544 174.3 529.7 160 512 160C494.3 160 480 174.3 480 192L480 304C480 312.8 472.8 320 464 320C455.2 320 448 312.8 448 304L448 128C448 110.3 433.7 96 416 96C398.3 96 384 110.3 384 128L384 304C384 312.8 376.8 320 368 320C359.2 320 352 312.8 352 304L352 96z" />
+				</symbol>
+
+
+				<symbol id="icon-circle-info" viewBox="0 0 640 640">
+					<path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM288 224C288 206.3 302.3 192 320 192C337.7 192 352 206.3 352 224C352 241.7 337.7 256 320 256C302.3 256 288 241.7 288 224zM280 288L328 288C341.3 288 352 298.7 352 312L352 400L360 400C373.3 400 384 410.7 384 424C384 437.3 373.3 448 360 448L280 448C266.7 448 256 437.3 256 424C256 410.7 266.7 400 280 400L304 400L304 336L280 336C266.7 336 256 325.3 256 312C256 298.7 266.7 288 280 288z" />
+				</symbol>
 
 
 

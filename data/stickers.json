@@ -2019,5 +2019,26 @@
     "file_size": 15919,
     "sort_order": 84,
     "featured": false
+  },
+    {
+    "id": 86,
+    "name": "Ayumi Hamasaki A Small Logo",
+    "filename": "ayumi-hamasaki_small_pink-glitter.gif",
+    "url": "images/stickers/logo/ayumi-hamasaki_small_pink-glitter.gif",
+    "category": "logo",
+    "tags": [
+      "pink",
+      "glitter",
+      "logo"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 94,
+    "height": 71,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
   }
 ]
