@@ -2715,6 +2715,16 @@ input[type="range"] {
 					height: 100%;
 					object-fit: cover;
 					display: block;
+
+						user-drag: none;
+					-webkit-user-drag: none;
+					user-select: none;
+					-moz-user-select: none;
+					-webkit-user-select: none;
+					-ms-user-select: none;
+
+
+
 				}
 
 				&.pixelated img {

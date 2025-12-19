@@ -2724,6 +2724,21 @@ class LayerManager {
 			detail: { layerId, layer }
 		}));
 
+		if(layer && layer.type === LayerType.STICKER) {
+			this.editor.updateStatus(`Selected sticker: ${layer ? layer.name : 'None'}`);
+		}else if (layer && layer.type === LayerType.BASE_IMAGE) {
+			this.editor.updateStatus(`Selected base image`);
+		}else if (layer && layer.type === LayerType.GLITTER_FILL) {
+			this.editor.updateStatus(`Selected glitter: ${this.editor.glitterManager.content[layer.selectedGlitterIndex]?.name}`);
+
+			
+
+		} else {
+			this.editor.updateStatus(`Delected layer`);
+		}
+
+
+
 		this.editor.updatePreview();
 	}
 

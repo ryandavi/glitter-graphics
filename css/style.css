@@ -2342,6 +2342,12 @@ input[type=range]::-moz-range-thumb {
   -o-object-fit: cover;
      object-fit: cover;
   display: block;
+  user-drag: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 .asset-options .asset-category > .asset-grid > .asset-option.pixelated img {
   image-rendering: pixelated;
