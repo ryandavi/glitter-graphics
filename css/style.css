@@ -20,6 +20,8 @@
   --red-100: #d32f2f;
   --green-100: #4caf50;
   --orange-100: #ff9800;
+  --orange-500: #ff6f00;
+  --orange-800: #a52e08;
   /* Colors */
   --color-bg-primary: var(--gray-600);
   --color-bg-secondary: var(--gray-800);
@@ -36,6 +38,7 @@
   --color-danger: var(--red-100);
   --color-success: var(--green-100);
   --color-warning: var(--orange-100);
+  --color-warning-text: var(--orange-800);
   --disabled-opacity: .25;
   /* Spacing */
   --spacing-xs: 4px;
@@ -2136,6 +2139,30 @@ input[type=range]::-moz-range-thumb {
 #exportPreviewModal .export-preview-instructions p strong {
   color: var(--color-text-primary);
 }
+#exportPreviewModal .export-stats {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+#exportPreviewModal .export-stats > .size-warning,
+#exportPreviewModal .export-stats > span {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: 1000px;
+  white-space: nowrap;
+}
+#exportPreviewModal .export-stats > span {
+  background: var(--color-bg-tertiary);
+}
+#exportPreviewModal .export-stats > .size-warning {
+  background: var(--color-warning);
+  color: var(--color-warning-text);
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.25px;
+  text-transform: uppercase;
+}
 #exportPreviewModal .modal-footer {
   padding: var(--spacing-lg);
   border-top: 1px solid var(--color-border);
@@ -2200,11 +2227,11 @@ input[type=range]::-moz-range-thumb {
   display: block;
 }
 
-.gallery-search-section {
+.section > .gallery-search-section {
   display: none;
   padding: 0;
 }
-.gallery-search-section.visible {
+.section > .gallery-search-section.visible {
   display: block;
 }
 
@@ -2266,8 +2293,8 @@ input[type=range]::-moz-range-thumb {
   position: relative;
   z-index: 0;
 }
-.asset-options .asset-category {
-  margin-bottom: var(--spacing-xl);
+.asset-options .asset-category + .asset-category {
+  margin-top: var(--spacing-xl);
 }
 .asset-options .asset-category > .category-title {
   font-size: var(--font-size-sm);
