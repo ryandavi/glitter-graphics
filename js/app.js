@@ -21,6 +21,11 @@ const CONFIG = {
 	defaultGlitterIndex: 0,
 	glitterGifs: [],
 
+	// selected outline
+	selectedGlitterOffset: 2,
+	selectedGlitterWidth: 2,
+
+
 	// layers
 	exportFrameRateSource: 'first-layer',
 	createDefaultLayerOnLoad: false,
@@ -1550,69 +1555,68 @@ class GlitterManager extends ContentManager {
 
 	// ===== RENDERING (CANVAS/DOM) =====
 
-	renderGlitterBackgrounds(layersToShow) {
-		this.editor.glitterBackgroundsContainer.innerHTML = '';
-		const width = this.editor.originalCanvas.width;
-		const height = this.editor.originalCanvas.height;
+renderGlitterBackgrounds(layersToShow) {
+    this.editor.glitterBackgroundsContainer.innerHTML = '';
+    const width = this.editor.originalCanvas.width;
+    const height = this.editor.originalCanvas.height;
 
-		layersToShow.forEach(layer => {
-			if (layer.type !== LayerType.GLITTER_FILL) return;
+    layersToShow.forEach(layer => {
+        if (layer.type !== LayerType.GLITTER_FILL) return;
 
-			const glitter = this.content[layer.selectedGlitterIndex];
-			if (!glitter) return;
+        const glitter = this.content[layer.selectedGlitterIndex];
+        if (!glitter) return;
 
-			// Generate Mask
-			const mask = this.createMaskForLayer(layer);
-			if (layer.settings.feather > 0) {
-				this.applyFeatherToMask(mask, layer.settings.feather);
-			}
+        // 1. Create the WRAPPER
+        // This handles the drop-shadow filter and selection
+        const wrapper = document.createElement('div');
+        wrapper.className = 'glitter-element';
+        wrapper.dataset.layerId = layer.id;
+        wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+        
+        // Apply selected class if active
+        if (layer.id === this.editor.layerManager.activeLayerId) {
+            wrapper.classList.add('selected');
+        }
 
-			// Create Mask Canvas
-			const maskCanvas = document.createElement('canvas');
-			maskCanvas.width = width;
-			maskCanvas.height = height;
-			const maskCtx = maskCanvas.getContext('2d');
-			const maskData = maskCtx.createImageData(width, height);
+        // 2. Create the INNER Background
+        // This handles the glitter texture and the MASK
+        const inner = document.createElement('div');
+        inner.className = 'glitter-background visible';
+        if (glitter.isPixelated) inner.classList.add('pixelated');
 
-			for (let i = 0; i < width * height; i++) {
-				const maskValue = mask[i];
-				const idx = i * 4;
-				// Only write alpha where mask exists
-				maskData.data[idx + 3] = maskValue;
-			}
-			maskCtx.putImageData(maskData, 0, 0);
+        // Apply glitter texture
+        inner.style.backgroundImage = `url(${glitter.url})`;
+        inner.style.opacity = layer.settings.opacity / 100;
+        
+        const glitterScale = layer.settings.scale / 100;
+        const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
+        inner.style.backgroundSize = `${Math.round(baseSize * glitterScale)}px`;
 
-			// Create DOM Element
-			const bg = document.createElement('div');
-			bg.className = 'glitter-background glitter-bg-layer visible';
-			if (glitter.isPixelated) bg.classList.add('pixelated');
+        // Generate Mask
+        const mask = this.createMaskForLayer(layer);
+        if (layer.settings.feather > 0) {
+            this.applyFeatherToMask(mask, layer.settings.feather);
+        }
 
-			bg.dataset.layerId = layer.id;
-			bg.style.backgroundImage = `url(${glitter.url})`;
-			bg.style.backgroundSize = 'auto'; // Will be updated by scaling logic
-			bg.style.width = width + 'px';
-			bg.style.height = height + 'px';
-			bg.style.position = 'absolute';
-			bg.style.top = '0';
-			bg.style.left = '0';
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = width;
+        maskCanvas.height = height;
+        const maskCtx = maskCanvas.getContext('2d');
+        const maskData = maskCtx.createImageData(width, height);
+        for (let i = 0; i < width * height; i++) {
+            maskData.data[i * 4 + 3] = mask[i];
+        }
+        maskCtx.putImageData(maskData, 0, 0);
 
-			bg.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+        const maskDataURL = maskCanvas.toDataURL();
+        inner.style.maskImage = `url(${maskDataURL})`;
+        inner.style.webkitMaskImage = `url(${maskDataURL})`;
 
-			bg.style.pointerEvents = 'none';
-			bg.style.opacity = layer.settings.opacity / 100;
-
-			// Apply Mask Image
-			const maskDataURL = maskCanvas.toDataURL();
-			bg.style.maskImage = `url(${maskDataURL})`;
-			bg.style.webkitMaskImage = `url(${maskDataURL})`;
-			bg.style.maskSize = `${width}px ${height}px`;
-			bg.style.webkitMaskSize = `${width}px ${height}px`;
-			bg.style.maskRepeat = 'no-repeat';
-			bg.style.webkitMaskRepeat = 'no-repeat';
-
-			this.editor.glitterBackgroundsContainer.appendChild(bg);
-		});
-	}
+        // 3. Assemble
+        wrapper.appendChild(inner);
+        this.editor.glitterBackgroundsContainer.appendChild(wrapper);
+    });
+}
 
 	// --- Helper to create a single glitter element without appending it ---
 	createGlitterElement(layer) {
@@ -1705,47 +1709,47 @@ class GlitterManager extends ContentManager {
 
 	// ===== MASKING UTILITIES =====
 
-createMaskForLayer(layer) {
-    const width = this.editor.originalCanvas.width;
-    const height = this.editor.originalCanvas.height;
-    const len = width * height;
+	createMaskForLayer(layer) {
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+		const len = width * height;
 
-    const mask = new Uint8Array(len);
-    const thresholdSq = layer.settings.threshold * layer.settings.threshold;
-    const data = this.editor.originalImageData.data;
-    const alphaChannel = this.editor.originalAlphaChannel;
+		const mask = new Uint8Array(len);
+		const thresholdSq = layer.settings.threshold * layer.settings.threshold;
+		const data = this.editor.originalImageData.data;
+		const alphaChannel = this.editor.originalAlphaChannel;
 
-    layer.selections.forEach(sel => {
-        if (layer.settings.contiguous) {
-            this.floodFill(mask, sel.x, sel.y, sel, thresholdSq);
-        } else {
-            for (let i = 0; i < len; i++) {
-                if (mask[i] === 255) continue;
+		layer.selections.forEach(sel => {
+			if (layer.settings.contiguous) {
+				this.floodFill(mask, sel.x, sel.y, sel, thresholdSq);
+			} else {
+				for (let i = 0; i < len; i++) {
+					if (mask[i] === 255) continue;
 
-                // --- NEW LOGIC START ---
-                if (sel.isTransparent) {
-                    // If we selected transparency, only match other transparent pixels
-                    if (alphaChannel[i] < CONFIG.alphaThreshold) {
-                        mask[i] = 255;
-                    }
-                    continue; // Skip the color math below
-                }
+					// --- NEW LOGIC START ---
+					if (sel.isTransparent) {
+						// If we selected transparency, only match other transparent pixels
+						if (alphaChannel[i] < CONFIG.alphaThreshold) {
+							mask[i] = 255;
+						}
+						continue; // Skip the color math below
+					}
 
-                // If we selected a color, IGNORE transparent pixels
-                if (alphaChannel[i] < CONFIG.alphaThreshold) continue;
-                // --- NEW LOGIC END ---
+					// If we selected a color, IGNORE transparent pixels
+					if (alphaChannel[i] < CONFIG.alphaThreshold) continue;
+					// --- NEW LOGIC END ---
 
-                const idx = i * 4;
-                const r = data[idx];
-                const g = data[idx + 1];
-                const b = data[idx + 2];
+					const idx = i * 4;
+					const r = data[idx];
+					const g = data[idx + 1];
+					const b = data[idx + 2];
 
-                if (this.colorDistanceSq(r, g, b, sel.r, sel.g, sel.b) <= thresholdSq) {
-                    mask[i] = 255;
-                }
-            }
-        }
-    });
+					if (this.colorDistanceSq(r, g, b, sel.r, sel.g, sel.b) <= thresholdSq) {
+						mask[i] = 255;
+					}
+				}
+			}
+		});
 
 		if (layer.settings.invert) {
 			for (let i = 0; i < len; i++) {
@@ -1758,66 +1762,66 @@ createMaskForLayer(layer) {
 		return mask;
 	}
 
-floodFill(mask, startX, startY, targetColor, thresholdSq) {
-    const width = this.editor.originalCanvas.width;
-    const height = this.editor.originalCanvas.height;
-    const totalPixels = width * height;
-    const data = this.editor.originalImageData.data;
-    const alphaChannel = this.editor.originalAlphaChannel;
+	floodFill(mask, startX, startY, targetColor, thresholdSq) {
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+		const totalPixels = width * height;
+		const data = this.editor.originalImageData.data;
+		const alphaChannel = this.editor.originalAlphaChannel;
 
-    // The stack contains the 1D index of the pixel
-    const stack = [startY * width + startX];
+		// The stack contains the 1D index of the pixel
+		const stack = [startY * width + startX];
 
-    while (stack.length > 0) {
-        const idx = stack.pop();
+		while (stack.length > 0) {
+			const idx = stack.pop();
 
-        // 1. Skip if this pixel is already marked in the mask
-        if (mask[idx] === 255) continue;
+			// 1. Skip if this pixel is already marked in the mask
+			if (mask[idx] === 255) continue;
 
-        const r = data[idx * 4];
-        const g = data[idx * 4 + 1];
-        const b = data[idx * 4 + 2];
-        const alpha = alphaChannel[idx];
+			const r = data[idx * 4];
+			const g = data[idx * 4 + 1];
+			const b = data[idx * 4 + 2];
+			const alpha = alphaChannel[idx];
 
-        let isMatch = false;
+			let isMatch = false;
 
-        // 2. DECISION LOGIC: 
-        // If we are looking for transparency vs looking for a specific color
-        if (targetColor.isTransparent) {
-            // Match only if the current pixel is also transparent
-            isMatch = (alpha < CONFIG.alphaThreshold);
-        } else {
-            // Match only if the current pixel is OPAQUE and the color is within the threshold
-            isMatch = (alpha >= CONFIG.alphaThreshold &&
-                      this.colorDistanceSq(r, g, b, targetColor.r, targetColor.g, targetColor.b) <= thresholdSq);
-        }
+			// 2. DECISION LOGIC: 
+			// If we are looking for transparency vs looking for a specific color
+			if (targetColor.isTransparent) {
+				// Match only if the current pixel is also transparent
+				isMatch = (alpha < CONFIG.alphaThreshold);
+			} else {
+				// Match only if the current pixel is OPAQUE and the color is within the threshold
+				isMatch = (alpha >= CONFIG.alphaThreshold &&
+					this.colorDistanceSq(r, g, b, targetColor.r, targetColor.g, targetColor.b) <= thresholdSq);
+			}
 
-        if (isMatch) {
-            // Mark the pixel as part of the mask
-            mask[idx] = 255;
+			if (isMatch) {
+				// Mark the pixel as part of the mask
+				mask[idx] = 255;
 
-            // 3. ADD NEIGHBORS (Right, Left, Down, Up)
-            // Check bounds to prevent wrapping around the edges of the image
-            
-            // Right
-            if ((idx + 1) % width !== 0 && mask[idx + 1] === 0) {
-                stack.push(idx + 1);
-            }
-            // Left
-            if (idx % width !== 0 && mask[idx - 1] === 0) {
-                stack.push(idx - 1);
-            }
-            // Down
-            if (idx + width < totalPixels && mask[idx + width] === 0) {
-                stack.push(idx + width);
-            }
-            // Up
-            if (idx - width >= 0 && mask[idx - width] === 0) {
-                stack.push(idx - width);
-            }
-        }
-    }
-}
+				// 3. ADD NEIGHBORS (Right, Left, Down, Up)
+				// Check bounds to prevent wrapping around the edges of the image
+
+				// Right
+				if ((idx + 1) % width !== 0 && mask[idx + 1] === 0) {
+					stack.push(idx + 1);
+				}
+				// Left
+				if (idx % width !== 0 && mask[idx - 1] === 0) {
+					stack.push(idx - 1);
+				}
+				// Down
+				if (idx + width < totalPixels && mask[idx + width] === 0) {
+					stack.push(idx + width);
+				}
+				// Up
+				if (idx - width >= 0 && mask[idx - width] === 0) {
+					stack.push(idx - width);
+				}
+			}
+		}
+	}
 
 	applyFeatherToMask(mask, radius) {
 		const width = this.editor.originalCanvas.width;
@@ -1978,59 +1982,61 @@ class ViewportManager {
 
 	// ===== ZOOM METHODS =====
 
-	setZoom(newZoom, clickX = null, clickY = null) {
-		if (!this.canvasWidth) return;
+setZoom(newZoom, clickX = null, clickY = null) {
+    if (!this.canvasWidth) return;
 
-		const oldZoom = this.currentZoom;
+    const oldZoom = this.currentZoom;
+    const containerRect = this.previewContainer.getBoundingClientRect();
 
-		// Clamp zoom
-		this.currentZoom = Math.max(
-			CONFIG.zoomLevels[0],
-			Math.min(CONFIG.zoomLevels[CONFIG.zoomLevels.length - 1], newZoom)
-		);
+    // 1. Get the click position relative to the container
+    let screenX, screenY;
+    if (clickX !== null && clickY !== null) {
+        screenX = clickX - containerRect.left;
+        screenY = clickY - containerRect.top;
+    } else {
+        screenX = containerRect.width / 2;
+        screenY = containerRect.height / 2;
+    }
 
-		// Update zoom index for UI
-		let closestDiff = Number.MAX_VALUE;
-		let closestIndex = 0;
-		CONFIG.zoomLevels.forEach((z, i) => {
-			const diff = Math.abs(this.currentZoom - z);
-			if (diff < closestDiff) {
-				closestDiff = diff;
-				closestIndex = i;
-			}
-		});
-		this.currentZoomIndex = closestIndex;
+    // 2. Find where that click lands in "Canvas Pixel" space
+    let canvasX = (screenX - this.panX) / oldZoom;
+    let canvasY = (screenY - this.panY) / oldZoom;
 
-		// Get container dimensions
-		const containerRect = this.previewContainer.getBoundingClientRect();
-		const viewportW = containerRect.width;
-		const viewportH = containerRect.height;
+    // 3. PHOTOSHOP CLAMP:
+    // If we clicked in the grey area, snap the anchor to the nearest image edge
+    const clampedCanvasX = Math.max(0, Math.min(this.canvasWidth, canvasX));
+    const clampedCanvasY = Math.max(0, Math.min(this.canvasHeight, canvasY));
 
-		// Determine anchor point
-		let anchorContainerX, anchorContainerY;
+    // 4. Find where that clamped "Edge Pixel" is currently located on the screen
+    // This is our fixed anchor point.
+    const anchorX = this.panX + (clampedCanvasX * oldZoom);
+    const anchorY = this.panY + (clampedCanvasY * oldZoom);
 
-		if (clickX !== null && clickY !== null) {
-			// Mouse zoom: anchor at click position
-			anchorContainerX = clickX - containerRect.left;
-			anchorContainerY = clickY - containerRect.top;
-		} else {
-			// Button zoom: anchor at viewport center
-			anchorContainerX = viewportW / 2;
-			anchorContainerY = viewportH / 2;
-		}
+    // 5. Update the Zoom Level
+    this.currentZoom = Math.max(
+        CONFIG.zoomLevels[0],
+        Math.min(CONFIG.zoomLevels[CONFIG.zoomLevels.length - 1], newZoom)
+    );
 
-		// Convert anchor to canvas coordinates
-		const imagePixelX = (anchorContainerX - this.panX) / oldZoom;
-		const imagePixelY = (anchorContainerY - this.panY) / oldZoom;
+    // Update index for UI
+    let closestDiff = Number.MAX_VALUE;
+    CONFIG.zoomLevels.forEach((z, i) => {
+        const diff = Math.abs(this.currentZoom - z);
+        if (diff < closestDiff) {
+            closestDiff = diff;
+            this.currentZoomIndex = i;
+        }
+    });
 
-		// Calculate new pan to keep anchor point stationary
-		this.panX = anchorContainerX - (imagePixelX * this.currentZoom);
-		this.panY = anchorContainerY - (imagePixelY * this.currentZoom);
+    // 6. Calculate new Pan
+    // The new pan is: Screen Anchor Position - (Clamped Canvas Pixel * New Zoom)
+    // This ensures the edge of the image stays exactly where it was on screen.
+    this.panX = anchorX - (clampedCanvasX * this.currentZoom);
+    this.panY = anchorY - (clampedCanvasY * this.currentZoom);
 
-		// Apply transform and notify
-		this.applyTransform();
-		this._notifyViewportChanged();
-	}
+    this.applyTransform();
+    this._notifyViewportChanged();
+}
 
 	zoomIn(clickX = null, clickY = null) {
 		if (this.currentZoomIndex < CONFIG.zoomLevels.length - 1) {
@@ -2363,10 +2369,33 @@ class ViewportManager {
 
 	// ===== TRANSFORM APPLICATION =====
 
-	applyTransform() {
-		this.previewWrapper.style.transform =
-			`translate(${this.panX}px, ${this.panY}px) scale(${this.currentZoom})`;
-	}
+applyTransform() {
+    // 1. Apply the visual transform
+    this.previewWrapper.style.transform = 
+        `translate(${this.panX}px, ${this.panY}px) scale(${this.currentZoom})`;
+
+    // 2. Pass the zoom value to CSS as a variable
+    // We set it on previewWrapper so all children (stickers, canvas) can see it
+    this.previewWrapper.style.setProperty('--zoom', this.currentZoom);
+
+
+   // Update the SVG filter radius to stay consistent with zoom
+    const filter = document.getElementById('selection-glow');
+if (filter) {
+    const outer = filter.querySelector('feMorphology[result="outer_edge"]');
+    const inner = filter.querySelector('feMorphology[result="inner_edge"]');
+    
+    // CALCULATIONS
+    // Divide by zoom to keep them visually consistent on screen
+    const scaledOffset = CONFIG.selectedGlitterOffset; //  / this.currentZoom;
+    const scaledTotal = Math.max(scaledOffset + 0.5, (CONFIG.selectedGlitterOffset + CONFIG.selectedGlitterWidth) / this.currentZoom);
+
+    if (inner) inner.setAttribute('radius', scaledOffset);
+    if (outer) outer.setAttribute('radius', scaledTotal);
+}
+
+
+}
 
 	// ===== PRIVATE HELPERS =====
 
@@ -2637,7 +2666,7 @@ class LayerManager {
 
 
 
-		// Update sticker center controls visibility
+		// Update sticker center controls visibility - context dependent
 		const stickerCenterControls = document.getElementById('stickerCenterControls');
 		if (stickerCenterControls) {
 			const shouldShow = this.editor.currentTool === ToolType.SELECT && layer && layer.type === LayerType.STICKER;
@@ -2648,6 +2677,7 @@ class LayerManager {
 				stickerCenterControls.classList.remove('visible');
 			}
 		}
+		
 
 
 
@@ -2657,8 +2687,6 @@ class LayerManager {
 		if (this.editor.previewCanvas) {
 			const isBaseImage = layer && layer.type === LayerType.BASE_IMAGE;
 
-			// Use 'selected' if that is your global CSS preference, 
-			// or 'selected-base' if you want specific styling.
 			// We force a boolean (!!isBaseImage) to ensure correct toggle behavior.
 			this.editor.previewCanvas.classList.toggle('selected', !!isBaseImage);
 
@@ -3048,7 +3076,7 @@ class LayerManager {
 		// Make the clone active and re-render
 		this.setActiveLayer(clonedLayer.id);
 		this.renderLayersList();
-		this.reorderGlitterBackgrounds();
+		this.reorderLayers();
 
 		this.editor.saveState();
 		this.editor.updateActionButtons();
@@ -3455,8 +3483,8 @@ class LayerManager {
 		this.layers.splice(newIndex, 0, draggedLayer);
 
 		// OPTIMIZED: Just reorder DOM instead of recreating
-		this.reorderLayerElements();
-		this.reorderGlitterBackgrounds();
+		this.reorderLayerItems();
+		this.reorderLayers();
 		this.editor.saveState();
 	}
 
@@ -3620,8 +3648,8 @@ class LayerManager {
 				let newIndex = this.dropInsertAbove ? newTargetIndex + 1 : newTargetIndex;
 
 				this.layers.splice(newIndex, 0, draggedLayer);
-				this.reorderLayerElements();
-				this.reorderGlitterBackgrounds();
+				this.reorderLayerItems();
+				this.reorderLayers();
 				this.editor.saveState();
 			}
 		}
@@ -3633,7 +3661,8 @@ class LayerManager {
 
 	// ===== OPTIMIZED REORDERING =====
 
-	reorderLayerElements() {
+	// In Layer Panel
+	reorderLayerItems() {
 		const container = this.layersListContainer;
 		const insertionLine = container.querySelector('.layer-insertion-line');
 
@@ -3661,14 +3690,13 @@ class LayerManager {
 		container.appendChild(fragment);
 	}
 
-	// In LayerManager.js
-
-	reorderGlitterBackgrounds() {
+	// In Preview
+	reorderLayers() {
 		const container = this.glitterBackgroundsContainer;
 
 		// Get existing background AND sticker elements
 		const existingElements = new Map();
-		container.querySelectorAll('.glitter-background, .sticker-element').forEach(el => {
+		container.querySelectorAll('.glitter-element, .sticker-element').forEach(el => {
 			existingElements.set(el.dataset.layerId, el);
 		});
 
@@ -3930,15 +3958,19 @@ class GlitterEditor {
 
 
 
-	handleCanvasZoomClick(event) {
-		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
+handleCanvasZoomClick(event) {
+    if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
 
-		if (event.altKey) {
-			this.viewport.zoomOut(event.clientX, event.clientY);
-		} else {
-			this.viewport.zoomIn(event.clientX, event.clientY);
-		}
-	}
+    // Photoshop Alt-Click to zoom out
+    if (event.altKey) {
+        this.viewport.zoomOut(event.clientX, event.clientY);
+    } else {
+        this.viewport.zoomIn(event.clientX, event.clientY);
+    }
+    
+    // Optional: Update status to show new zoom
+    this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
+}
 
 	updateZoomUI() {
 		const percentage = this.viewport.getZoomPercentage();
@@ -4589,27 +4621,13 @@ class GlitterEditor {
 			});
 		}
 
-		// --- CANVAS INTERACTION ---
-		this.previewWrapper.addEventListener('click', (e) => {
-			if (this.currentTool === ToolType.COLOR_PICKER || this.currentTool === ToolType.SELECT) {
-				this.handleCanvasClick(e);
-			} else if (this.currentTool === ToolType.ZOOM) {
-				this.handleCanvasZoomClick(e);
-			}
-		});
+
 
 		// ============================================================
 		// DESELECT WHEN CLICKING OUTSIDE CANVAS
 		// ============================================================
-		this.previewContainer.addEventListener('mousedown', (e) => {
-			// Check if we are clicking the grey background (container) directly
-			// or the wrapper (if it has padding/margins that aren't the canvas)
-			if (e.target === this.previewContainer || e.target === this.previewWrapper) {
-				// Ensure we aren't panning with the Hand tool (optional, based on preference)
-				if (this.currentTool === ToolType.SELECT) {
-					this.layerManager.setActiveLayer(null);
-				}
-			}
+		this.previewContainer.addEventListener('pointerdown', (e) => {
+			this.handlePreviewContainerClick(e);
 		});
 
 		// --- LAYER SETTINGS CONTROLS ---
@@ -5137,6 +5155,8 @@ class GlitterEditor {
 		});
 	}
 
+
+
 	setupResetButton(sliderId, defaultValue) {
 		const resetBtnId = 'reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1);
 		const resetBtn = document.getElementById(resetBtnId);
@@ -5264,7 +5284,7 @@ class GlitterEditor {
 				return;
 			}
 
-			if(guideModal.classList.contains('visible')) {
+			if (guideModal.classList.contains('visible')) {
 				guideModal.classList.remove('visible');
 				return;
 			}
@@ -5582,7 +5602,7 @@ class GlitterEditor {
 		document.getElementById('selectedColorsEmpty').classList.add('visible');
 		document.getElementById('selectedColorsDisplay').innerHTML = '';
 
-		this.glitterManager.clearAllFilters();
+		this.glitterManager.clearFilters();
 
 		this.viewport.resetViewport();
 		this.updateZoomUI();
@@ -5668,7 +5688,7 @@ class GlitterEditor {
 				const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
 				this.layers.push(layer);
 				// Set it active immediately
-				this.layerManager.setActiveLayer(layer.id);
+				// this.layerManager.setActiveLayer(layer.id);
 			}
 
 			// 2. Create Default Glitter Layer (Optional)
@@ -5681,7 +5701,7 @@ class GlitterEditor {
 				// 3. If NO default layer is created, check if we have a Base Layer
 				if (this.layers.length > 0) {
 					// Ensure the existing Base Layer stays selected and UI updates
-					this.layerManager.setActiveLayer(this.layers[0].id);
+					// this.layerManager.setActiveLayer(this.layers[0].id);
 				} else {
 					// Only if completely empty do we reset to null
 					this.activeLayerId = null;
@@ -5709,6 +5729,7 @@ class GlitterEditor {
 			}];
 			this.historyIndex = 0;
 
+			this.updateSidePanelUI();
 			this.layerManager.renderLayersList();
 			this.updateHistoryButtons();
 			this.updateActionButtons();
@@ -5739,22 +5760,65 @@ class GlitterEditor {
 	}
 
 
+	handlePreviewContainerClick(e) {
+     if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+    const hitSticker = e.target.closest('.sticker-element');
+    const hitCanvas = e.target === this.previewCanvas;
+    // We treat stickers and the canvas as the "Image Area"
+    const hitImageArea = hitCanvas || hitSticker;
+
+    // Gatekeeper: If they clicked a button/sidebar, stop here.
+    const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
+    if (!isWorkspace) return;
+
+    switch (this.currentTool) {
+        case ToolType.SELECT:
+            if (hitSticker) return; 
+            if (!hitImageArea || (hitCanvas && !CONFIG.autoSelect)) {
+                this.layerManager.setActiveLayer(null);
+            }
+            break;
+
+        case ToolType.COLOR_PICKER:
+            if (hitImageArea) {
+                // EXPLICITLY call the picking logic here
+                this.handleCanvasClick(e); 
+            } else {
+                this.updateStatus('Click on the preview to select a color');
+            }
+            break;
+
+        case ToolType.ZOOM:
+            if (this.originalImage) {
+                this.handleCanvasZoomClick(e);
+            }
+            break;
+    }
+	}
+
 
 	handleCanvasClick(event) {
-		if (!this.originalImageData) return;
+    if (!this.originalImageData) return;
 
-		// ... (Coordinate calculation logic stays the same) ...
-		const rect = this.previewCanvas.getBoundingClientRect();
-		const clickX = event.clientX - rect.left;
-		const clickY = event.clientY - rect.top;
-		const scaleX = this.previewCanvas.width / rect.width;
-		const scaleY = this.previewCanvas.height / rect.height;
-		const x = Math.floor(clickX * scaleX);
-		const y = Math.floor(clickY * scaleY);
+    // CRITICAL: Always use the canvas rect, regardless of what element was clicked
+    const rect = this.previewCanvas.getBoundingClientRect();
+    
+    // Calculate click position relative to the canvas element on screen
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
 
-		if (x < 0 || x >= this.previewCanvas.width || y < 0 || y >= this.previewCanvas.height) {
-			return;
-		}
+    // Account for the difference between the element's CSS size and its actual pixel resolution
+    const scaleX = this.previewCanvas.width / rect.width;
+    const scaleY = this.previewCanvas.height / rect.height;
+
+    const x = Math.floor(clickX * scaleX);
+    const y = Math.floor(clickY * scaleY);
+
+    // Bounds check
+    if (x < 0 || x >= this.previewCanvas.width || y < 0 || y >= this.previewCanvas.height) {
+        return;
+    }
 
 		// Select Tool: Pick layer at click location
 		if (this.currentTool === ToolType.SELECT) {
@@ -5764,86 +5828,84 @@ class GlitterEditor {
 
 		// Color Picker Tool
 		if (this.currentTool === ToolType.COLOR_PICKER) {
-			let layer = this.layerManager.getActiveLayer();
 
-			// ============================================================
-			// UPDATED LOGIC START
-			// ============================================================
-
-			if (!layer) {
-				this.updateStatus('Please select the Base Image or a Glitter Layer.');
-				return;
-			}
-
-			// Case 1: Base Image is Selected -> Create NEW Glitter Layer
-			if (layer.type === LayerType.BASE_IMAGE) {
-				const newLayer = this.layerManager.createLayer();
-				this.layerManager.insertLayer(newLayer);  // Use the new method
-				layer = newLayer; // Switch target to the new layer
-				this.updateStatus('Created new layer from Base Image');
-			}
-			// Case 2: Glitter Fill Layer is Selected -> Use it
-			else if (layer.type === LayerType.GLITTER_FILL) {
-				// Continue using this layer
-			}
-			// Case 3: Sticker (or other) -> Block
-			else {
-				this.updateStatus('Color Picker disabled on Sticker layers.');
-				return;
-			}
-
-			// ============================================================
-			// UPDATED LOGIC END
-			// ============================================================
-
-				const pixelIndex = y * this.originalCanvas.width + x;
-				const alpha = this.originalAlphaChannel[pixelIndex];
-				const isTransparent = alpha < CONFIG.alphaThreshold;
-
-				// 1. Config Check: Block if transparent and selection isn't allowed
-				if (isTransparent && !CONFIG.allowTransparentSelection) {
-					this.updateStatus('Cannot select transparent pixels');
-					return;
-				}
-
-				const i = pixelIndex * 4;
-
-				// 2. Data Extraction
-				// If it's transparent, we force RGB to 0 to be clean, 
-				// because the 'isTransparent' flag will do the heavy lifting in the mask logic.
-				const r = isTransparent ? 0 : this.originalImageData.data[i];
-				const g = isTransparent ? 0 : this.originalImageData.data[i + 1];
-				const b = isTransparent ? 0 : this.originalImageData.data[i + 2];
-
-				// 3. Multi-Select Logic
-				// If multi-select is off, clear previous selections
-				const multiSelect = layer.settings.multiSelect;
-				if (!multiSelect) layer.selections = [];
-
-				// 4. Save the Selection
-				layer.selections.push({ 
-					r, g, b, x, y, 
-					isTransparent: isTransparent 
-				});
-
-				// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)
-				this.layerManager.renderLayersList();
-				this.saveState(); // For Undo/Redo
-				this.updatePreview(); // To show the new glitter fill immediately
-				this.updateActionButtons(); 
-				this.updateSelectedColorsDisplay(); // To show "Transparent" or the RGB values in the sidebar
-
-				// 6. Status Feedback
-				if (isTransparent) {
-					this.updateStatus(`Selected Transparency at (${x}, ${y})`);
-				} else {
-					this.updateStatus(`Selected RGB(${r}, ${g}, ${b}) at (${x}, ${y})`);
-				}
+			this.glitterFillSelector(x, y);
+			return;
 		}
 	}
 
 
 
+	glitterFillSelector(x, y) {
+		let layer = this.layerManager.getActiveLayer();
+
+		if (!layer) {
+			this.updateStatus('Please select the Base Image or a Glitter Layer.');
+			return;
+		}
+
+		// Case 1: Base Image is Selected -> Create NEW Glitter Layer
+		if (layer.type === LayerType.BASE_IMAGE) {
+			const newLayer = this.layerManager.createLayer();
+			this.layerManager.insertLayer(newLayer);  // Use the new method
+			layer = newLayer; // Switch target to the new layer
+			this.updateStatus('Created new layer from Base Image');
+		}
+		// Case 2: Glitter Fill Layer is Selected -> Use it
+		else if (layer.type === LayerType.GLITTER_FILL) {
+			// Continue using this layer
+		}
+		// Case 3: Sticker (or other) -> Block
+		else {
+			this.updateStatus('Color Picker disabled on Sticker layers.');
+			return;
+		}
+
+
+		const pixelIndex = y * this.originalCanvas.width + x;
+		const alpha = this.originalAlphaChannel[pixelIndex];
+		const isTransparent = alpha < CONFIG.alphaThreshold;
+
+		// 1. Config Check: Block if transparent and selection isn't allowed
+		if (isTransparent && !CONFIG.allowTransparentSelection) {
+			this.updateStatus('Cannot select transparent pixels');
+			return;
+		}
+
+		const i = pixelIndex * 4;
+
+		// 2. Data Extraction
+		// If it's transparent, we force RGB to 0 to be clean, 
+		// because the 'isTransparent' flag will do the heavy lifting in the mask logic.
+		const r = isTransparent ? 0 : this.originalImageData.data[i];
+		const g = isTransparent ? 0 : this.originalImageData.data[i + 1];
+		const b = isTransparent ? 0 : this.originalImageData.data[i + 2];
+
+		// 3. Multi-Select Logic
+		// If multi-select is off, clear previous selections
+		const multiSelect = layer.settings.multiSelect;
+		if (!multiSelect) layer.selections = [];
+
+		// 4. Save the Selection
+		layer.selections.push({
+			r, g, b, x, y,
+			isTransparent: isTransparent
+		});
+
+		// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)
+		this.layerManager.renderLayersList();
+		this.saveState(); // For Undo/Redo
+		this.updatePreview(); // To show the new glitter fill immediately
+		this.updateActionButtons();
+		this.updateSelectedColorsDisplay(); // To show "Transparent" or the RGB values in the sidebar
+
+		// 6. Status Feedback
+		if (isTransparent) {
+			this.updateStatus(`Selected Transparency at (${x}, ${y})`);
+		} else {
+			this.updateStatus(`Selected RGB(${r}, ${g}, ${b}) at (${x}, ${y})`);
+		}
+	}
 
 
 	// REPLACE updateSelectedColorsDisplay() in GlitterEditor class
@@ -6160,8 +6222,7 @@ class GifExporter {
 
 		this.config = {
 			workers: 4,
-			// Quality 1 = Best (samples every pixel). Critical for pixel art accuracy.
-			quality: 1,
+			quality: 1, // Quality 1 = Best (samples every pixel). Critical for pixel art accuracy.
 			workerScript: 'js/gif.worker.js', //  isLocal ? 'js/gif.worker.js' : 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
 			fileName: 'ryandavi-com_glitter.gif',
 			timing: { forceDelay: 100, maxFrames: 60 },
@@ -6194,37 +6255,37 @@ class GifExporter {
 		return false; // No transparency in image
 	}
 
-// Add this inside the GifExporter class
-_formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
+	// Add this inside the GifExporter class
+	_formatBytes(bytes, decimals = 2) {
+		if (bytes === 0) return '0 Bytes';
+		const k = 1024;
+		const dm = decimals < 0 ? 0 : decimals;
+		const sizes = ['Bytes', 'KB', 'MB'];
+		const i = Math.floor(Math.log(bytes) / Math.log(k));
+		return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+	}
 
 
-_getSizeWarningsHTML(bytes) {
-    const MB = 1024 * 1024;
+	_getSizeWarningsHTML(bytes) {
+		const MB = 1024 * 1024;
 
-    const warningsConfig = [
-        { message: "Too big for Discord", limit: 10 * MB },
-        { message: "Too big for Discord Nitro", limit: 500 * MB },
-        { message: "Too big for Twitter", limit: 15 * MB },
-        { message: "Kind of huge for a typical GIF...", limit: 50 * MB } // maximum size warning
-    ];
+		const warningsConfig = [
+			{ message: "Too big for Discord", limit: 10 * MB },
+			{ message: "Too big for Discord Nitro", limit: 500 * MB },
+			{ message: "Too big for Twitter", limit: 15 * MB },
+			{ message: "Kind of huge for a typical GIF...", limit: 50 * MB } // maximum size warning
+		];
 
-    const warnings = warningsConfig
-        .filter(w => bytes > w.limit)
-        .map(w => {
-            const title = `${this._formatBytes(w.limit)} limit`;
-            const text = `${w.message}`;
-            return `<div class="size-warning" data-tooltip="${title}">${text}</div>`;
-        });
+		const warnings = warningsConfig
+			.filter(w => bytes > w.limit)
+			.map(w => {
+				const title = `${this._formatBytes(w.limit)} limit`;
+				const text = `${w.message}`;
+				return `<div class="size-warning" data-tooltip="${title}">${text}</div>`;
+			});
 
-    return warnings.join('');
-}
+		return warnings.join('');
+	}
 
 
 
@@ -6310,6 +6371,15 @@ _getSizeWarningsHTML(bytes) {
 		ctx.restore();
 	}
 
+	_isTransparencyFilled(layers) {
+		return layers.some(layer => {
+			return layer.visible &&
+				layer.type === LayerType.GLITTER_FILL &&
+				layer.settings.opacity === 100 &&
+				layer.selections.some(sel => sel.isTransparent);
+		});
+	}
+
 
 	async process(params) {
 		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks } = params;
@@ -6336,15 +6406,19 @@ _getSizeWarningsHTML(bytes) {
 			this._deoptimizeWatermarkFrames(watermark);
 		}
 
-		// 3. CHECK FOR TRANSPARENCY
-		const hasTransparency = this._hasTransparency(canvasData);
-		if (this.config.debug) console.log(`[GifExporter] Image has transparency: ${hasTransparency}`);
+		// 3. TRANSPARENCY DETECTION
+		const originalHasTransparency = this._hasTransparency(canvasData);
+		if (this.config.debug) console.log(`[GifExporter] Original image has transparency: ${originalHasTransparency}`);
 
-		// Need a safe key if EITHER the image has transparency OR we're exporting glitter-only
-		const needsSafeKey = hasTransparency || !exportSettings.baseImage;
+		// New logic: Check if transparency is consumed by an opaque glitter layer
+		const transparencyIsFilled = this._isTransparencyFilled(visibleLayers);
+		if (this.config.debug) console.log(`[GifExporter] Transparency is being consumed by an opaque layer: ${transparencyIsFilled}`);
 
-		// Only find a safe key if we actually need transparency
-		const safeKey = needsSafeKey
+		// We only need a GIF transparency key if the image HAS transparency,
+		// it ISN'T filled by a glitter layer, and the user HAS transparency enabled.
+		const needsTransparency = originalHasTransparency && !transparencyIsFilled && exportSettings.transparency;
+
+		const safeKey = needsTransparency
 			? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData, watermark)
 			: null;
 
@@ -6356,7 +6430,7 @@ _getSizeWarningsHTML(bytes) {
 		const totalFrames = this._calculateTotalFrames(visibleLayers, glitterGifs, exportSettings.maxFrames);
 		callbacks.onStatus(`Rendering ${totalFrames} frames...`);
 
-		// 5. Prepare Masks (only for glitter layers)
+		// 5. Prepare Masks
 		callbacks.onProgress(10, 'Preparing masks...', 0, totalFrames);
 		const maskCanvases = new Map();
 
@@ -6364,7 +6438,6 @@ _getSizeWarningsHTML(bytes) {
 		this.helperCanvas.height = canvasData.height;
 
 		visibleLayers.forEach(layer => {
-			// Only create masks for glitter layers
 			if (layer.type !== LayerType.GLITTER_FILL) return;
 
 			const rawMask = callbacks.createMask(layer);
@@ -6373,24 +6446,21 @@ _getSizeWarningsHTML(bytes) {
 		});
 
 		// 6. Setup Encoder
-		// Disable dithering when we need transparency
-		const needsTransparency = hasTransparency && exportSettings.transparency;
-
 		const gifOptions = {
 			workers: this.config.workers,
 			quality: exportSettings.quality,
 			width: canvasData.width,
 			height: canvasData.height,
 			workerScript: this.config.workerScript,
+			// Disable dithering when we need transparency to prevent artifacting
 			dither: needsTransparency
 				? false
 				: (exportSettings.ditherEnabled ? exportSettings.ditherType : false)
 		};
 
-		// Enable transparency if user wants it and we have a safe key
 		if (needsTransparency && safeKey) {
 			gifOptions.transparent = safeKey.hex;
-			gifOptions.background = safeKey.hex;  // MUST BE safeKey.hex, not 0
+			gifOptions.background = safeKey.hex;
 			if (this.config.debug) console.log('[GifExporter] Transparency enabled with key:', safeKey.hex);
 		}
 
@@ -6409,23 +6479,9 @@ _getSizeWarningsHTML(bytes) {
 				maskCanvases,
 				safeKey,
 				exportSettings,
-				watermark  // <-- Add watermark parameter
+				watermark,
+				needsTransparency // Pass the helper flag
 			);
-
-			// DEBUG: Check problem frames
-			if (f === 2 || f === 3 || f === 14 || f === 17) {
-				let safeKeyInFrame = 0;
-				let blackInFrame = 0;
-				for (let i = 0; i < frameData.data.length; i += 4) {
-					if (frameData.data[i] === 1 && frameData.data[i + 1] === 1 && frameData.data[i + 2] === 1 && frameData.data[i + 3] === 255) {
-						safeKeyInFrame++;
-					}
-					if (frameData.data[i] === 0 && frameData.data[i + 1] === 0 && frameData.data[i + 2] === 0 && frameData.data[i + 3] === 255) {
-						blackInFrame++;
-					}
-				}
-				if (this.config.debug) console.log(`[ENCODER FRAME ${f}] Safe key RGB(1,1,1): ${safeKeyInFrame}, Black RGB(0,0,0): ${blackInFrame}`);
-			}
 
 			gif.addFrame(frameData, {
 				delay: exportSettings.frameDelay,
@@ -6453,7 +6509,8 @@ _getSizeWarningsHTML(bytes) {
 			frames: totalFrames,
 			workers: this.config.workers,
 			quality: exportSettings.quality,
-			key: safeKey
+			key: safeKey,
+			transparencyActive: needsTransparency
 		});
 
 		gif.render();
@@ -6550,119 +6607,125 @@ _getSizeWarningsHTML(bytes) {
 		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
 	}
 
-_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings, watermark = null) {
-	const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
-	const ctx = this.ctx;
-	const hCtx = this.helperCtx;
+	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings, watermark = null, needsTransparency = false) {
+		const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
+		const ctx = this.ctx;
+		const hCtx = this.helperCtx;
 
-	// 1. Reset/Setup Canvas
-	this.canvas.width = width;
-	this.canvas.height = height;
-	ctx.clearRect(0, 0, width, height);
+		// 1. Reset/Setup Canvas
+		this.canvas.width = width;
+		this.canvas.height = height;
+		ctx.clearRect(0, 0, width, height);
 
-	// 2. Identify Base Image Visibility
-	const baseLayer = layers.find(l => l.type === LayerType.BASE_IMAGE);
-	const isBaseLayerVisible = baseLayer ? (baseLayer.visible !== false) : false;
-	const shouldRenderBase = exportSettings.baseImage && isBaseLayerVisible;
+		// 2. Identify Base Image Visibility
+		const baseLayer = layers.find(l => l.type === LayerType.BASE_IMAGE);
+		const isBaseLayerVisible = baseLayer ? (baseLayer.visible !== false) : false;
+		const shouldRenderBase = exportSettings.baseImage && isBaseLayerVisible;
 
-	// 3. Determine Background Fill Color
-	let bgR, bgG, bgB;
-	if (safeKey && exportSettings.transparency) {
-		bgR = safeKey.r;
-		bgG = safeKey.g;
-		bgB = safeKey.b;
-	} else {
-		const matte = this._parseHexColor(exportSettings.matteColor || '#ffffff');
-		bgR = matte.r;
-		bgG = matte.g;
-		bgB = matte.b;
-	}
+		// 3. Determine Background Fill Color
+		let bgR, bgG, bgB;
+		if (needsTransparency && safeKey) {
+			bgR = safeKey.r;
+			bgG = safeKey.g;
+			bgB = safeKey.b;
+		} else {
+			const matte = this._parseHexColor(exportSettings.matteColor || '#ffffff');
+			bgR = matte.r;
+			bgG = matte.g;
+			bgB = matte.b;
+		}
 
-	// 4. Draw Base Image or Fill Matte Background
-	// FIX: We always fill the background first to prevent black exports.
-	ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
-	ctx.fillRect(0, 0, width, height);
+		// 4. Draw Base Image or Fill Background
+		ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
+		ctx.fillRect(0, 0, width, height);
 
-	if (shouldRenderBase) {
-		if (exportSettings.transparency) {
-			// SCENARIO A: GIF Transparency is ENABLED.
-			// We must strictly replace semi-transparent pixels with the SafeKey color.
-			// This prevents "halos" because the GIF encoder only recognizes one exact color as transparent.
-			const bgImage = new ImageData(new Uint8ClampedArray(originalData), width, height);
-			const data = bgImage.data;
+		if (shouldRenderBase) {
+			if (needsTransparency) {
+				// SCENARIO A: GIF Transparency is ACTIVE.
+				const bgImage = new ImageData(new Uint8ClampedArray(originalData), width, height);
+				const data = bgImage.data;
 
-			for (let i = 0; i < originalAlpha.length; i++) {
-				if (originalAlpha[i] < alphaThreshold) {
-					const offset = i * 4;
-					data[offset] = bgR;
-					data[offset + 1] = bgG;
-					data[offset + 2] = bgB;
-					data[offset + 3] = 255; 
+				for (let i = 0; i < originalAlpha.length; i++) {
+					if (originalAlpha[i] < alphaThreshold) {
+						const offset = i * 4;
+						data[offset] = bgR;
+						data[offset + 1] = bgG;
+						data[offset + 2] = bgB;
+						data[offset + 3] = 255;
+					}
+				}
+				ctx.putImageData(bgImage, 0, 0);
+			} else {
+				// SCENARIO B: GIF Transparency is INACTIVE (Matte mode or Consumption mode).
+				hCtx.canvas.width = width;
+				hCtx.canvas.height = height;
+				hCtx.putImageData(new ImageData(new Uint8ClampedArray(originalData), width, height), 0, 0);
+				ctx.drawImage(this.helperCanvas, 0, 0);
+			}
+		}
+
+		// 5. Composite Glitter Layers
+		layers.forEach((layer) => {
+			if (layer.visible === false || layer.type !== LayerType.GLITTER_FILL) return;
+
+			const maskCanvas = maskCanvases.get(layer.id);
+			if (!maskCanvas) return;
+
+			const glitter = library[layer.selectedGlitterIndex];
+			const frames = glitter.frames.frames;
+			const fIdx = frameIndex % frames.length;
+			const glitterFrame = frames[fIdx];
+
+			hCtx.save();
+			hCtx.clearRect(0, 0, width, height);
+
+			const patternSource = document.createElement('canvas');
+			let frameImageData = (glitterFrame instanceof ImageData) ? glitterFrame : glitterFrame.data;
+			patternSource.width = frameImageData.width;
+			patternSource.height = frameImageData.height;
+			patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
+
+			const pattern = hCtx.createPattern(patternSource, 'repeat');
+			const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+			const matrix = new DOMMatrix().scaleSelf(scale, scale);
+			pattern.setTransform(matrix);
+
+			hCtx.globalAlpha = layer.settings.opacity / 100;
+			hCtx.fillStyle = pattern;
+			hCtx.fillRect(0, 0, width, height);
+
+			hCtx.globalCompositeOperation = 'destination-in';
+			hCtx.drawImage(maskCanvas, 0, 0);
+
+			hCtx.restore();
+			ctx.drawImage(this.helperCanvas, 0, 0);
+		});
+
+		// 6. Composite Sticker Layers
+		layers.forEach((layer) => {
+			if (layer.visible === false || layer.type !== LayerType.STICKER) return;
+			this._renderStickerToCanvas(layer, ctx, frameIndex);
+		});
+
+		// 7. Render Watermark
+		if (exportSettings.watermarkEnabled && watermark) {
+			this._renderWatermarkToCanvas(watermark, ctx, width, height, frameIndex);
+		}
+
+		// 8. Debug logic for problem frames
+		if (this.config.debug && (frameIndex === 0 || frameIndex === 1)) {
+			let safeKeyInFrame = 0;
+			let data = ctx.getImageData(0, 0, width, height).data;
+			for (let i = 0; i < data.length; i += 4) {
+				if (data[i] === bgR && data[i + 1] === bgG && data[i + 2] === bgB) {
+					safeKeyInFrame++;
 				}
 			}
-			ctx.putImageData(bgImage, 0, 0);
-		} else {
-			// SCENARIO B: GIF Transparency is DISABLED (Matte mode).
-			// We don't need the manual loop. Standard drawImage will blend 
-			// semi-transparent pixels against the matte color we filled above.
-			hCtx.canvas.width = width;
-			hCtx.canvas.height = height;
-			hCtx.putImageData(new ImageData(new Uint8ClampedArray(originalData), width, height), 0, 0);
-			ctx.drawImage(this.helperCanvas, 0, 0);
+			console.log(`[GifExporter] Frame ${frameIndex} background color pixels: ${safeKeyInFrame}`);
 		}
+
+		return ctx.getImageData(0, 0, width, height);
 	}
-
-	// 5. Composite Glitter Layers
-	layers.forEach((layer) => {
-		if (layer.visible === false || layer.type !== LayerType.GLITTER_FILL) return;
-
-		const maskCanvas = maskCanvases.get(layer.id);
-		if (!maskCanvas) return;
-
-		const glitter = library[layer.selectedGlitterIndex];
-		const frames = glitter.frames.frames;
-		const fIdx = frameIndex % frames.length;
-		const glitterFrame = frames[fIdx];
-
-		hCtx.save();
-		hCtx.clearRect(0, 0, width, height);
-
-		const patternSource = document.createElement('canvas');
-		let frameImageData = (glitterFrame instanceof ImageData) ? glitterFrame : glitterFrame.data;
-		patternSource.width = frameImageData.width;
-		patternSource.height = frameImageData.height;
-		patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
-
-		const pattern = hCtx.createPattern(patternSource, 'repeat');
-		const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-		const matrix = new DOMMatrix().scaleSelf(scale, scale);
-		pattern.setTransform(matrix);
-
-		hCtx.globalAlpha = layer.settings.opacity / 100;
-		hCtx.fillStyle = pattern;
-		hCtx.fillRect(0, 0, width, height);
-
-		hCtx.globalCompositeOperation = 'destination-in';
-		hCtx.globalAlpha = 1.0;
-		hCtx.drawImage(maskCanvas, 0, 0);
-
-		hCtx.restore();
-		ctx.drawImage(this.helperCanvas, 0, 0);
-	});
-
-	// 6. Composite Sticker Layers
-	layers.forEach((layer) => {
-		if (layer.visible === false || layer.type !== LayerType.STICKER) return;
-		this._renderStickerToCanvas(layer, ctx, frameIndex);
-	});
-
-	// 7. Render Watermark
-	if (exportSettings.watermarkEnabled && watermark) {
-		this._renderWatermarkToCanvas(watermark, ctx, width, height, frameIndex);
-	}
-
-	return ctx.getImageData(0, 0, width, height);
-}
 
 	async _parseGifWithMetadata(url) {
 		try {
@@ -7213,45 +7276,45 @@ _renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exp
 		return result;
 	}
 
-_handleFileSave(blob, callbacks, frameCount) { // Add frameCount here
-    if (this.config.debug) console.log('_handleFileSave called with blob size:', blob.size);
-    callbacks.onProgress(100, 'Export complete!', 0, 0);
-    callbacks.onStatus('Export complete!');
-    callbacks.onComplete();
+	_handleFileSave(blob, callbacks, frameCount) { // Add frameCount here
+		if (this.config.debug) console.log('_handleFileSave called with blob size:', blob.size);
+		callbacks.onProgress(100, 'Export complete!', 0, 0);
+		callbacks.onStatus('Export complete!');
+		callbacks.onComplete();
 
-    const file = new File([blob], this.config.fileName, {
-        type: 'image/gif',
-        lastModified: Date.now()
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    // Pass frameCount and blob.size to the preview modal
-    this._showExportPreviewModal(url, file, frameCount, blob.size);
-}
-
-
-
-
-_showExportPreviewModal(blobUrl, file, frameCount, fileSize) { // Add params
-    const modal = document.getElementById('exportPreviewModal');
-    const img = document.getElementById('exportPreviewImage');
-    const instructions = modal.querySelector('.export-preview-instructions');
-    const closeBtn = document.getElementById('closeExportPreviewModal');
-
-    // Stats Elements
-	const exportStats = document.getElementById('exportStats');
-
-	if(exportStats){
-		const statSize = document.getElementById('exportStatSize');
-		const statFrames = document.getElementById('exportStatFrames');
-
-		// remove .size-warning elements from exportStats
-		const sizeWarnings = exportStats.querySelectorAll('.size-warning');
-		sizeWarnings.forEach(warning => {
-			warning.remove();
+		const file = new File([blob], this.config.fileName, {
+			type: 'image/gif',
+			lastModified: Date.now()
 		});
-	
+
+		const url = URL.createObjectURL(blob);
+
+		// Pass frameCount and blob.size to the preview modal
+		this._showExportPreviewModal(url, file, frameCount, blob.size);
+	}
+
+
+
+
+	_showExportPreviewModal(blobUrl, file, frameCount, fileSize) { // Add params
+		const modal = document.getElementById('exportPreviewModal');
+		const img = document.getElementById('exportPreviewImage');
+		const instructions = modal.querySelector('.export-preview-instructions');
+		const closeBtn = document.getElementById('closeExportPreviewModal');
+
+		// Stats Elements
+		const exportStats = document.getElementById('exportStats');
+
+		if (exportStats) {
+			const statSize = document.getElementById('exportStatSize');
+			const statFrames = document.getElementById('exportStatFrames');
+
+			// remove .size-warning elements from exportStats
+			const sizeWarnings = exportStats.querySelectorAll('.size-warning');
+			sizeWarnings.forEach(warning => {
+				warning.remove();
+			});
+
 
 			if (statFrames) {
 				statFrames.textContent = `Frames: ${frameCount != null ? frameCount : 'Unknown'}`;

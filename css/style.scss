@@ -44,6 +44,8 @@
 	--color-warning: var(--orange-100);
 	--color-warning-text: var(--orange-800);
 
+	--selected-outline-color: var(--color-accent-border);
+
 	--disabled-opacity: .25;
 
 	/* Spacing */
@@ -103,13 +105,22 @@
 
 
 @mixin selected {
-	outline: 2px dashed #00ffff;
-	outline-offset: -2px; /* Draws inside the canvas edge */
+    // 1. Calculate the dynamic thickness (minimum 1px)
+    $thickness: max(1px, calc(2px / var(--zoom, 1)));
+    
+    // 2. Apply to outline
+    outline-width: $thickness;
+    outline-style: dashed;
+    outline-color: var(--selected-outline-color);
+    
+    // 3. Scale the offset so it stays "tight" to the edge
+    // We use min() here because it's a negative number
+    outline-offset: min(-1px, calc(-2px / var(--zoom, 1)));
 
-box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 0 8px rgba(0,0,0,0.5); /* Drop shadow for contrast */
-
-
-
+    // 4. Scale the shadow so the glow and contrast line stay consistent
+    box-shadow: 
+        0 0 0 max(1px, calc(1px / var(--zoom, 1))) rgba(0, 0, 0, 0.5), 
+        0 0 max(4px, calc(8px / var(--zoom, 1))) rgba(0, 0, 0, 0.5);
 }
 
 @mixin text-xs {
@@ -636,7 +647,8 @@ input[type="range"] {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: var(--spacing-sm);
+	margin-bottom: var(--spacing-xs);
+	width: 100%;
 
 	>.setting-label {
 		@include text-sm;
@@ -715,9 +727,12 @@ input[type="range"] {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-sm);
+	align-items: flex-end;
 
 	button.btn-text {
-		text-align: right;
+    text-align: right;
+    padding: var(--spacing-xs);
+    width: fit-content;
 	}
 
 }
@@ -1528,6 +1543,45 @@ input[type="range"] {
 
 
 
+.glitter-element {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; // Wrapper must be full size of workspace
+    height: 100%;
+    pointer-events: none;
+    will-change: filter;
+
+    // THE MAGIC: Drop-shadow on the parent follows the child's mask shape
+    &.selected {
+
+		filter: url(#selection-glow) drop-shadow(0 0px 3px rgb(0, 0, 0));
+    }
+
+    // This matches your previous .glitter-background CSS
+    .glitter-background {
+        width: 100%;
+        height: 100%;
+        background-repeat: repeat;
+        display: none;
+
+        mask-size: 100% 100%;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: 100% 100%;
+        -webkit-mask-repeat: no-repeat;
+
+        &.visible {
+            display: block;
+        }
+
+        &.pixelated {
+            image-rendering: pixelated;
+        }
+    }
+}
+
+
+
 .sticker-element {
 	position: absolute;
 	transform-origin: center;
@@ -1546,7 +1600,6 @@ input[type="range"] {
 
 	&.selected {
 		@include selected();
-		
 	}
 
 	img {
@@ -1974,23 +2027,7 @@ input[type="range"] {
 	}
 
 	.glitter-backgrounds-container {
-		>.glitter-background {
-			position: absolute;
-			top: 0;
-			left: 0;
-			z-index: 1;
-			pointer-events: none;
-			background-repeat: repeat;
-			display: none;
 
-			&.visible {
-				display: block;
-			}
-
-			&.pixelated {
-				image-rendering: pixelated;
-			}
-		}
 	}
 
 	.preview-canvas {
@@ -2020,6 +2057,13 @@ input[type="range"] {
 		}
 	}
 }
+
+
+
+
+
+
+
 
 
 /* ===== BOTTOM TOOL UI ===== */
@@ -2561,6 +2605,7 @@ input[type="range"] {
 			border-radius: var(--radius-sm);
 			color: var(--color-text-primary);
 			font-size: var(--font-size-base);
+			width: 100%;
 
 			&:focus {
 				outline: none;
@@ -3843,8 +3888,6 @@ input[type="range"] {
 
 
 }
-
-
 
 
 

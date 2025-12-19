@@ -654,7 +654,7 @@
 						<div class="section-content">
 							<div class="empty-state visible">
 								<div class="empty-state-text">
-									Upload an image to start designing.
+									Load an image to start designing.
 								</div>
 							</div>
 						</div>
@@ -1592,7 +1592,7 @@
 						</h3>
 
 						<div class="guide-subsection">
-							<h4>Upload Your Image</h4>
+							<h4>Load Your Image</h4>
 							<div class="guide-item">
 								<div class="guide-item-icon">
 									<span class="icon-wrapper sm">
@@ -1602,7 +1602,7 @@
 									</span>
 								</div>
 								<div class="guide-item-content">
-									Click <strong>Choose File</strong> to upload an image (PNG, JPG, or GIF).
+									Click <strong>Choose File</strong> to load an image (PNG, JPG, or GIF).
 									<ul>
 										<li>This becomes your <strong>Base Image</strong> – the foundation of your canvas for glitter effects and stickers.</li>
 										<li>If your image is larger than 800x800, it will be resized to fit the constraints.</li>
@@ -2596,6 +2596,35 @@
 
 		</defs>
 	</svg>
+
+<svg style="position: absolute; width: 0; height: 0;">
+  <filter id="selection-glow" x="-20%" y="-20%" width="140%" height="140%">
+    <!-- 1. Expand shapes -->
+    <feMorphology operator="dilate" radius="4" in="SourceAlpha" result="outer_edge" />
+    <feMorphology operator="dilate" radius="2" in="SourceAlpha" result="inner_edge" />
+    
+    <!-- 2. Create the ring -->
+    <feComposite in="outer_edge" in2="inner_edge" operator="out" result="ring" />
+    
+    <!-- 3. COLOR & OPACITY -->
+
+    <feFlood 
+  flood-color="var(--selected-outline-color, #00ffff)" 
+  flood-opacity=".5" 
+  result="color" 
+/>
+    
+    <!-- 4. Apply color to ring -->
+    <feComposite in="color" in2="ring" operator="in" result="outline" />
+    
+    <!-- 5. Merge -->
+    <feMerge>
+      <feMergeNode in="outline" />
+      <feMergeNode in="SourceGraphic" />
+    </feMerge>
+  </filter>
+</svg>
+
 
 	<script src="https://unpkg.com/omggif@1.0.10/omggif.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
