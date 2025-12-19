@@ -887,7 +887,7 @@
 						</svg>
 						<span class="name">Export</span>
 					</span>
-					<span class="modal-title-text">Save to Photos</span>
+					<span class="modal-title-text">Export</span>
 				</div>
 				<button class="btn-icon icon-wrapper modal-close" id="closeExportPreviewModal">
 					<svg class="icon">
@@ -904,10 +904,10 @@
 
 				<!-- STATS -->
 
-					<div class="export-stats" id="exportStats">
-						<span id="exportStatFrames">Frames: 0</span>
-						<span id="exportStatSize">Size: 0 KB</span>
-					</div>
+				<div class="export-stats" id="exportStats">
+					<span id="exportStatFrames">Frames: 0</span>
+					<span id="exportStatSize">Size: 0 KB</span>
+				</div>
 
 				<!-- INSTRUCTIONS -->
 				<div class="export-preview-instructions">
@@ -1309,7 +1309,7 @@
 
 
 
-				<h3>Contemporary Resurgence</h3>
+				<h3>Impact</h3>
 				<p>Today they resurface in nostalgic internet communities, on platforms like <strong class="context"
 						data-tooltip="A free web hosting service launched in 2013 as a spiritual successor to GeoCities">Neocities</strong><sup>[21]</sup> that deliberately embrace early web aesthetics, and linger in GIF keyboards like <strong class="context"
 						data-tooltip="A GIF keyboard and search platform">Tenor</strong><sup>[22]</sup> and <strong
@@ -1358,7 +1358,7 @@
 
 				<p>Beyond Geocities backup archives and the few remaining personal website hosting services, many resources have been lost to time. Even in cases where archives exist, accompanying images were often not preserved, leaving only fragments of these sacred artifacts to be rediscovered and reconstructed here. The loss of external hosting sites like <strong class="context" data-tooltip="Early image and file hosting service commonly used on personal websites and Ebay auctions">Boomspeed</strong><sup>[38]</sup>, <strong class="context" data-tooltip="Free image hosting service popular in the mid-2000s">TinyPic</strong><sup>[39]</sup>, and <strong class="context" data-tooltip="Image hosting service later converted into a paid platform with watermarking">Photobucket</strong><sup>[40]</sup> is particularly notable, as limited bandwidth and storage on personal hosting services meant images were frequently stored off-site rather than locally. These platforms have since shut down, or in the case of Photobucket, were acquired and converted into a paid service that extorts users by keeping large watermarks on their images unless they pay.</p>
 
-				<p>Some surviving hypertexts are presented below in the "Original Resources" section, though the archived editing tools are no longer available for use, as they were rendered server-side.</p>
+				<p>Some surviving hypertexts are presented below in the "Original Resources" section, though the archived editing tools are no longer available for use, as they were rendered server-side and cannot be archived.</p>
 
 
 
@@ -1576,563 +1576,792 @@
 			<div class="modal-body">
 
 
-<div class="guide-content">
-
-	<!-- GETTING STARTED -->
-	<div class="guide-section">
-		<h3>
-			<span class="icon-wrapper">
-				<svg class="icon"><use href="#icon-image"></use></svg>
-			</span>
-			Getting Started
-		</h3>
-		
-		<div class="guide-subsection">
-			<h4>Upload Your Image</h4>
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-image"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Click <strong>Choose File</strong> to upload an image (PNG, JPG, or GIF).
-					<ul>
-						<li>This becomes your <strong>Base Image</strong> – the foundation of your canvas for glitter effects and stickers.</li>
-						<li>If your image is larger than 800x800, it will be resized to fit the constraints.</li>
-						<li>Maximum file size: 10MB.</li>
-					</ul>	
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- BASICS -->
-	<div class="guide-section">
-		<h3>
-			<span class="icon-wrapper">
-				<svg class="icon"><use href="#icon-sliders"></use></svg>
-			</span>
-			Basics
-		</h3>
-		
-		<div class="guide-subsection">
-			<h4>Tools</h4>
-			<p>Some tools have context-specific options that appear when selected.</p>
-			
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-hand-pointer"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Select Tool (V)</strong> – Pick layers and move stickers. When a sticker is selected, alignment buttons appear:
-					<ul>
-						<li>Align center horizontally</li>
-						<li>Align center vertically</li>
-					</ul>
-				</div>
-			</div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-hand"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Hand Tool (H)</strong> – Pan around the canvas. Context toolbar includes alignment options:
-					<ul>
-						<li>Align center horizontally</li>
-						<li>Align center vertically</li>
-					</ul>
-				</div>
-			</div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-magic-wand"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Color Picker (I)</strong> – Click colors on the base image to create glitter selections.
-				</div>
-			</div>
 
 
+				<div class="guide-content">
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-magnifying-glass"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Zoom Tool (Z)</strong> – Click to zoom in, hold <strong>Alt</strong> and click to zoom out. Context toolbar includes:
-					<ul>
-						<li><strong>Fit</strong> – Zoom to fit the entire image on screen</li>
-						<li><strong>Fill</strong> – Zoom to fill screen with image</li>
-						<li><strong>100%</strong> – Reset to actual size</li>
-					</ul>
-				</div>
-			</div>
-		</div>
+					<!-- GETTING STARTED -->
+					<div class="guide-section">
+						<h3>
+							<span class="icon-wrapper">
+								<svg class="icon">
+									<use href="#icon-image"></use>
+								</svg>
+							</span>
+							Getting Started
+						</h3>
 
-		<div class="guide-subsection">
-			<h4>Working with Layers</h4>
-			<p>The <strong>Layer Panel</strong> lets you manage all layers.</p>
-			
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-plus"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Click <strong>+</strong> to add a new <strong>Glitter Fill</strong> or <strong>Sticker</strong> layer.
-				</div>
-			</div>
+						<div class="guide-subsection">
+							<h4>Upload Your Image</h4>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-image"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									Click <strong>Choose File</strong> to upload an image (PNG, JPG, or GIF).
+									<ul>
+										<li>This becomes your <strong>Base Image</strong> – the foundation of your canvas for glitter effects and stickers.</li>
+										<li>If your image is larger than 800x800, it will be resized to fit the constraints.</li>
+										<li>Maximum file size: 10MB.</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-move"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Drag layers up/down to reorder them (top layers appear in front).
-				</div>
-			</div>
+					<!-- BASICS -->
+					<div class="guide-section">
+						<h3>
+							<span class="icon-wrapper">
+								<svg class="icon">
+									<use href="#icon-sliders"></use>
+								</svg>
+							</span>
+							Basics
+						</h3>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-eye"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Click the <strong>eye icon</strong> to show/hide layers.
-				</div>
-			</div>
+						<div class="guide-subsection">
+							<h4>Tools</h4>
+							<p>Some tools show context-specific options that appear only when certain elements or layers are selected.</p>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-lock"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Click the <strong>lock icon</strong> to prevent changes.
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-hand-pointer"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Select Tool (V)</strong> – Pick layers and move stickers.</p>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-clone"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Click the <strong>duplicate icon</strong> to copy a layer with all its settings.
-				</div>
-			</div>
+									<p>When a sticker is selected, alignment buttons appear:</p>
+									<ul>
+										<li>Center sticker horizontally</li>
+										<li>Center sticker vertically</li>
+									</ul>
+								</div>
+							</div>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-trash"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Click the <strong>trash icon</strong> to delete a layer.
-				</div>
-			</div>
-		</div>
-
-		<div class="guide-subsection">
-			<h4>Canvas View Options</h4>
-			<p>Control what you see on the canvas.</p>
-			
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-square"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Toggle Bounds</strong> – Show/hide bounding boxes around stickers.
-				</div>
-			</div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-checkerboard"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Toggle Transparency</strong> – Show/hide the checkerboard pattern behind transparent areas.
-				</div>
-			</div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-eye"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Show Only Active Layer</strong> – Isolate the currently selected layer.
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- GLITTER -->
-	<div class="guide-section">
-		<h3>
-			<span class="icon-wrapper">
-				<svg class="icon"><use href="#icon-glitter"></use></svg>
-			</span>
-			Glitter
-		</h3>
-		
-		<div class="guide-subsection">
-			<h4>Create a Glitter Layer</h4>
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-plus"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					In the <strong>Layer Panel</strong>, click <strong>+</strong> and choose <strong>Glitter Fill</strong>.
-					<ul>
-						<li>This creates a new layer to add glitter effects.</li>
-					</ul>
-				</div>
-			</div>
-		</div>
-
-		<div class="guide-subsection">
-			<h4>Choose Your Glitter</h4>
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-glitter"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Browse the glitter gallery and click any glitter to apply it to your selected colors. Use search and filters to find specific styles, colors, or categories.
-				</div>
-			</div>
-		</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-hand"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Hand Tool (H)</strong> – Click and drag to pan around the canvas.</p>
+									<ul>
+										<li>On touch devices, use one or two fingers to pan</li>
+									</ul>
 
 
-		<div class="guide-subsection">
-			<h4>Select Colors</h4>
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-magic-wand"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Use the <strong>Color Picker Tool (I)</strong> to click any color in your base image.
-					<ul>
-						<li>This tells the glitter layer which parts to fill.</li>
-						<li>A glitter layer will be empty until a selection is made.</li>
-					</ul>
-				</div>
-			</div>
+									<p>Context toolbar alignment options:</p>
+									<ul>
+										<li>Center canvas horizontally</li>
+										<li>Center canvas vertically</li>
+									</ul>
+								</div>
+							</div>
 
-			<h4>Selection Options</h4>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Multi-Select</strong> – Pick multiple colors on the same layer.
-				</div>
-			</div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Threshold</strong> – Sets the tolerance for color matching when selecting areas to fill with glitter.
-					<ul>
-						<li><strong>Lower values</strong> – Selects colors very close to the one clicked for precise selections.</li>
-						<li><strong>Higher values</strong> – Selects a broader range of similar colors across the entire image.</li>
-					</ul>
-				</div>
-			</div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Feather</strong> – Softens the edges of your selection for smoother blending.
-				</div>
-			</div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Contiguous</strong> – Only selects connected areas of the same color, preventing scattered pixel selection.
-				</div>
-			</div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Invert</strong> – Select everything except the color clicked.
-				</div>
-			</div>
-		</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-magic-wand"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Color Picker (I)</strong> – Click colors on the base image to create glitter selections.</p>
+								</div>
+							</div>
 
 
 
-		<div class="guide-subsection">
-			<h4>Adjust Glitter Settings</h4>
-			<p>In the <strong>Glitter Settings</strong> panel, customize your glitter layer:</p>
-			
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-sliders"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Scale</strong> – Makes the glitter pattern larger or smaller.
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-magnifying-glass"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Zoom Tool (Z)</strong> – To zoom in, click the canvas.</p>
+									<ul>
+										<li>On touch devices, use two-finger pinch to zoom.</li>
+									</ul>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-sliders"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Opacity</strong> – Controls transparency (100% = fully visible, 0% = invisible).
-				</div>
-			</div>
 
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Apply Globally</strong> – Apply scale, opacity, threshold, and feather settings across all glitter layers.
-				</div>
-			</div>
-		</div>
-	</div>
+									<p>Context toolbar zoom options:</p>
+									<ul>
+										<li>Click the current zoom percentage to reset zoom to 100%</li>
+										<li><strong>Fit</strong> – Zoom to fit the entire image on screen</li>
+										<li><strong>Fill</strong> – Zoom to fill screen with image</li>
+									</ul>
+								</div>
+							</div>
+						</div>
 
-	<!-- STICKERS -->
-	<div class="guide-section">
-		<h3>
-			<span class="icon-wrapper">
-				<svg class="icon"><use href="#icon-sticker"></use></svg>
-			</span>
-			Stickers
-		</h3>
-		
-		<div class="guide-subsection">
-			<h4>Add Stickers</h4>
-			<p>Create a <strong>Sticker</strong> layer to add decorative images on top of glitter.</p>
-			
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-plus"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Click <strong>+</strong> in the Layer Panel and choose <strong>Sticker</strong>.
-					<ul>
-						<li>The sticker layer will be empty until a sticker is chosen.</li>
-					</ul>
-				</div>
-			</div>
+						<div class="guide-subsection">
+							<h4>Working with Layers</h4>
+							<p>The <strong>Layer Panel</strong> lets you manage all layers.</p>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-sticker"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Browse the sticker gallery and click one to add it.
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-plus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Click <strong>+</strong> to add a new <strong>Glitter Fill</strong> or <strong>Sticker</strong> layer.</p>
+								</div>
+							</div>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-hand-pointer"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Use the <strong>Select Tool (V)</strong> to drag and move the sticker.
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-move"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Drag layers up/down to reorder them (top layers appear in front).</p>
+									<ul>
+										<li>On touch devices, use the handles to drag layers.</li>
+									</ul>
+								</div>
+							</div>
 
-			<h4>Sticker Settings</h4>
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-sliders"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Opacity</strong> – Control transparency.
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-eye"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Click the <strong>eye icon</strong> to show/hide layers.</p>
+								</div>
+							</div>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-sliders"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Rotation</strong> – Spin the sticker (–180° to 180°).
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-lock"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Click the <strong>lock icon</strong> to prevent changes.</p>
+								</div>
+							</div>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-arrows-left-right"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					<strong>Scale X & Y</strong> – Resize width and height independently.
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-clone"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Click the <strong>duplicate icon</strong> to copy a layer with all its settings.</p>
+								</div>
+							</div>
 
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Proportional Scale</strong> – When enabled, X and Y scale together to maintain aspect ratio. Disable to stretch or squash the sticker.
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-trash"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Click the <strong>trash icon</strong> to delete a layer.</p>
+								</div>
+							</div>
+						</div>
 
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Flip Horizontally/Vertically</strong> – Mirror the sticker.
-				</div>
-			</div>
-		</div>
-	</div>
+						<div class="guide-subsection">
+							<h4>Canvas View Options</h4>
+							<p>Control what you see on the canvas.</p>
 
-	<!-- EXPORT -->
-	<div class="guide-section">
-		<h3>
-			<span class="icon-wrapper">
-				<svg class="icon"><use href="#icon-export"></use></svg>
-			</span>
-			Export
-		</h3>
-		
-		<div class="guide-subsection">
-			<h4>Export Your Creation</h4>
-			<p>When ready to save:</p>
-			
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-gear"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Open the <strong>Settings Modal</strong> to customize export options.
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-square"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Toggle Bounds</strong> – Show/hide bounding boxes around stickers.</p>
+								</div>
+							</div>
 
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm">
-						<svg class="icon"><use href="#icon-export"></use></svg>
-					</span>
-				</div>
-				<div class="guide-item-content">
-					Click <strong>Export</strong> to generate your animated GIF.
-				</div>
-			</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-checkerboard"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Toggle Transparency</strong> – Show/hide the checkerboard pattern behind transparent areas.</p>
+								</div>
+							</div>
 
-			<h4>Export Settings (in Settings Modal)</h4>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Base Image</strong> – Include/exclude the original image.
-				</div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Transparency</strong> – Preserve transparent areas.
-				</div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Quality</strong> – Lower values = better quality but slower (1 is best).
-				</div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Frame Delay</strong> – Animation speed (110ms is classic).
-				</div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Max Frames</strong> – Limit animation length.
-				</div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					<strong>Dithering</strong> – Algorithm for color reduction (GIFs can contain up to 256 colors from the 24-bit RGB color space).
-				</div>
-			</div>
-		</div>
-	</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-eye"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Show Only Active Layer</strong> – Isolate the currently selected layer.</p>
+								</div>
+							</div>
+						</div>
+					</div>
 
-	<!-- ETC -->
-	<div class="guide-section">
-		<h3>
-			<span class="icon-wrapper">
-				<svg class="icon"><use href="#icon-question-circle"></use></svg>
-			</span>
-			Etc
-		</h3>
-		
-		<div class="guide-subsection">
-			<h4>Tips</h4>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					Try different threshold values to select exactly the colors you want.
-				</div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					Enable <strong>Show Only Active Layer</strong> to focus on one layer at a time.
-				</div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon"></div>
-				<div class="guide-item-content">
-					Use <strong>Apply Globally</strong> for consistent settings across all glitter layers.
-				</div>
-			</div>
-		</div>
-	</div>
+					<!-- GLITTER -->
+					<div class="guide-section">
+						<h3>
+							<span class="icon-wrapper">
+								<svg class="icon">
+									<use href="#icon-glitter"></use>
+								</svg>
+							</span>
+							Glitter
+						</h3>
 
-</div>
+						<div class="guide-subsection">
+							<h4>Create a Glitter Layer</h4>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-plus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>In the <strong>Layer Panel</strong>, click <strong>+</strong> and choose <strong>Glitter Fill</strong>.</p>
+									<ul>
+										<li>This creates a new layer to add glitter effects.</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
+						<div class="guide-subsection">
+							<h4>Choose Your Glitter</h4>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-glitter"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Browse the glitter gallery and click any glitter to apply it to your selected colors.</p>
+									<ul>
+										<li>Use search and filters to find specific styles, colors, or categories.</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
+
+						<div class="guide-subsection">
+							<h4>Select Colors</h4>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-magic-wand"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Use the <strong>Color Picker Tool (I)</strong> to click any color in your base image.</p>
+									<ul>
+										<li>This tells the glitter layer which parts to fill.</li>
+										<li>A glitter layer will be empty until a selection is made.</li>
+									</ul>
+								</div>
+							</div>
+
+							<h4>Selection Options</h4>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Multi-Select</strong> – Make multiple selections on the same layer.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Threshold</strong> – Sets the tolerance for color matching when selecting areas to fill with glitter.</p>
+									<ul>
+										<li><strong>Lower values</strong> – Selects colors very close to the one clicked for precise selections.</li>
+										<li><strong>Higher values</strong> – Selects a broader range of similar colors across the entire image.</li>
+									</ul>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Feather</strong> – Softens the edges of your selection for smoother blending.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Contiguous</strong> – Only selects connected areas of the same color, preventing scattered pixel selection.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Invert</strong> – Select everything except the color clicked.</p>
+								</div>
+							</div>
+						</div>
+
+
+
+						<div class="guide-subsection">
+							<h4>Adjust Glitter Settings</h4>
+							<p>In the <strong>Glitter Settings</strong> panel, customize your glitter layer:</p>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-sliders"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Scale</strong> – Makes the glitter pattern larger or smaller.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-sliders"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Opacity</strong> – Controls transparency (100% = fully visible, 0% = invisible).</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Apply Globally</strong> – Apply scale, opacity, threshold, and feather settings across all glitter layers.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- STICKERS -->
+					<div class="guide-section">
+						<h3>
+							<span class="icon-wrapper">
+								<svg class="icon">
+									<use href="#icon-sticker"></use>
+								</svg>
+							</span>
+							Stickers
+						</h3>
+
+						<div class="guide-subsection">
+							<h4>Add Stickers</h4>
+							<p>Create a <strong>Sticker</strong> layer to add decorative images on top of glitter.</p>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-plus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									Click <strong>+</strong> in the Layer Panel and choose <strong>Sticker</strong>.
+									<ul>
+										<li>The sticker layer will be empty until a sticker is chosen.</li>
+									</ul>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-sticker"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									Browse the sticker gallery and click one to add it.
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-hand-pointer"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									Use the <strong>Select Tool (V)</strong> to drag and move the sticker.
+								</div>
+							</div>
+
+							<h4>Sticker Settings</h4>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-sliders"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Opacity</strong> – Control transparency.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-sliders"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Rotation</strong> – Spin the sticker (–180° to 180°).</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-arrows-left-right"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Scale X & Y</strong> – Resize width and height independently.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Proportional Scale</strong> – When enabled, X and Y scale together to maintain aspect ratio. Disable to stretch or squash the sticker.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Flip Horizontally/Vertically</strong> – Mirror the sticker.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- EXPORT -->
+					<div class="guide-section">
+						<h3>
+							<span class="icon-wrapper">
+								<svg class="icon">
+									<use href="#icon-export"></use>
+								</svg>
+							</span>
+							Export
+						</h3>
+
+						<div class="guide-subsection">
+							<h4>Exporting</h4>
+							<p>When ready to save, export your design.</p>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-gear"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Open the <strong>Settings Modal</strong> to customize export options.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-export"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Click <strong>Export</strong> to generate your animated GIF.</p>
+								</div>
+							</div>
+
+							<h4>Export Settings (in Settings Modal):</h4>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Base Image</strong> – Include/exclude the original image.</p>
+								</div>
+							</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Transparency</strong> – Preserve transparent areas.</p>
+								</div>
+							</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Matte Color</strong> – When transparency is disabled, it will replace transparent areas with this color.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Quality</strong> – Lower values = better quality but slower (1 is best).</p>
+								</div>
+							</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Frame Delay</strong> – Animation speed (110ms is classic).</p>
+								</div>
+							</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Max Frames</strong> – Limit animation length.</p>
+								</div>
+							</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p><strong>Dithering</strong> – Algorithm for color reduction.</p>
+									<ul>
+										<li>GIFs can contain up to 256 colors from the 24-bit RGB color space.</li>
+										<li>Dithering adds controlled noise or patterns to simulate more colors.</li>
+										<li>Dithering is not available when exporting base images with transparency.</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- ETC -->
+					<div class="guide-section">
+						<h3>
+							<span class="icon-wrapper">
+								<svg class="icon">
+									<use href="#icon-question-circle"></use>
+								</svg>
+							</span>
+							Etcetera
+						</h3>
+
+						<div class="guide-subsection">
+							<h4>Tips</h4>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Try different threshold values to fine-tune your glitter fill selections.</p>
+								</div>
+							</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Enable <strong>Show Only Active Layer</strong> to focus on one layer at a time.</p>
+								</div>
+							</div>
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Use <strong>Apply Globally</strong> for consistent settings across all glitter layers.</p>
+								</div>
+							</div>
+
+							<div class="guide-item">
+								<div class="guide-item-icon">
+									<span class="icon-wrapper sm">
+										<svg class="icon">
+											<use href="#icon-minus"></use>
+										</svg>
+									</span>
+								</div>
+								<div class="guide-item-content">
+									<p>Adding more layers or animations with differing frame counts will increase render times.</p>
+									<ul>
+										<li>The system figures out a frame sequence that lets all layers loop together smoothly, even if they have different numbers of frames—this can result in many frames and increase the file size.</li>
+										<li>On some devices, rendering large or intricate designs may impact performance.</li>
+									</ul>
+
+
+								</div>
+							</div>
+
+
+						</div>
+					</div>
+
+				</div>
 
 
 

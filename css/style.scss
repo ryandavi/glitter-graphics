@@ -2308,59 +2308,6 @@ input[type="range"] {
 			}
 
 
-			
-			p+h2,
-			ol+h2,
-			ul+h2,
-
-			p+h3,
-			ol+h3,
-			ul+h3 {
-				margin-top: var(--spacing-xl);
-
-			}
-
-			p+p,
-			p+h4,
-			ol+h4,
-			ul+h4 {
-				margin-top: var(--spacing-md);
-			}
-
-
-			h2+p,
-			h2+ol,
-			h2+ul,
-
-			h3+p,
-			h3+ol,
-			h3+ul,
-
-			ol+p,
-			ul+p,
-
-			ol+ol,
-			ul+ul,
-
-
-
-			p+h5,
-			ol+h5,
-			ul+h5,
-
-			ol+ul,
-			ul+ol {
-				margin-top: var(--spacing-sm);
-			}
-
-
-			h4+ul,
-			h4+ol,
-
-			h5+ul,
-			h5+ol {
-				margin-top: var(--spacing-xs);
-			}
 
 
 		}
@@ -3364,6 +3311,65 @@ input[type="range"] {
 	}
 
 
+				
+			p+h2,
+			ol+h2,
+			ul+h2,
+
+			p+h3,
+			ol+h3,
+			ul+h3 {
+				margin-top: var(--spacing-xl);
+
+			}
+
+			p+p,
+			p+h4,
+			ol+h4,
+			ul+h4 {
+				margin-top: var(--spacing-md);
+			}
+
+
+			h2+p,
+			h2+ol,
+			h2+ul,
+
+			h3+p,
+			h3+ol,
+			h3+ul,
+
+			ol+p,
+			ul+p,
+
+			p+ol,
+			p+ul,
+
+			ol+ol,
+			ul+ul,
+
+
+
+			p+h5,
+			ol+h5,
+			ul+h5,
+
+			ol+ul,
+			ul+ol {
+				margin-top: var(--spacing-sm);
+			}
+
+
+			h4+ul,
+			h4+ol,
+
+			h5+ul,
+			h5+ol {
+				margin-top: var(--spacing-xs);
+			}
+
+
+
 
 	/* Highlight animation for references */
 	.highlight {
@@ -3522,20 +3528,18 @@ input[type="range"] {
 			}
 
 			> .guide-subsection {
-				padding: var(--spacing-md);
+				padding: var(--spacing-lg);
 				background-color: #2f2f2f;
 				border-radius: var(--spacing-md);
 				display: flex;
 				flex-direction: column;
-				gap: var(--spacing-sm);
+				
 
 				> h4 {
 
 				}
 
-				> p {
-					margin-bottom: var(--spacing-xs);
-				}
+
 
 				.guide-item {
 					display: grid;
@@ -3562,10 +3566,34 @@ input[type="range"] {
 						
 
 					}
+
+					+ .guide-item {
+						margin-top: var(--spacing-base);
+					}
+
+					+ h4 {
+						margin-top: var(--spacing-md);
+					}
 				}
 
-				.guide-item + h4 {
+
+
+
+				
+
+				
+				p + .guide-item {
 					margin-top: var(--spacing-md);
+				}
+
+				h4 + .guide-item,
+				ul + p,
+				p + p {
+					margin-top: var(--spacing-sm);
+				}
+
+				p + ul {
+					margin-top: var(--spacing-xs);
 				}
 			}
 		}
