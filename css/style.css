@@ -183,10 +183,13 @@ body {
 /* ===== REUSABLE COMPONENTS ===== */
 img[data-pixel-scale] {
   display: block;
-  max-width: 100%; /* Never wider than parent */
-  height: auto; /* Maintain aspect ratio */
+  max-width: 100%;
+  /* Never wider than parent */
+  height: auto;
+  /* Maintain aspect ratio */
   image-rendering: pixelated;
-  image-rendering: crisp-edges; /* Fallback for older browsers */
+  image-rendering: crisp-edges;
+  /* Fallback for older browsers */
 }
 
 .tooltip {
@@ -1462,13 +1465,17 @@ input[type=range]::-moz-range-thumb {
   transform-origin: center;
   pointer-events: auto;
   will-change: transform;
-  pointer-events: auto !important; /* Allow clicking the sticker */
-  cursor: move; /* Show move cursor */
-  touch-action: none; /* Prevent browser scrolling on mobile while dragging */
+  pointer-events: auto !important;
+  /* Allow clicking the sticker */
+  cursor: move;
+  /* Show move cursor */
+  touch-action: none;
+  /* Prevent browser scrolling on mobile while dragging */
 }
 .sticker-element.dragging {
   cursor: grabbing;
-  z-index: 1000 !important; /* Bring selected sticker to very top */
+  z-index: 1000 !important;
+  /* Bring selected sticker to very top */
 }
 .sticker-element.selected {
   outline-width: max(1px, 2px / var(--zoom, 1));
@@ -1744,8 +1751,10 @@ input[type=range]::-moz-range-thumb {
 .preview-container.bounds .preview-wrapper {
   outline: solid dashed var(--gray-400);
   overflow: hidden;
-  outline-offset: -2px; /* Draws inside the canvas edge */
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5); /* Drop shadow for contrast */
+  outline-offset: -2px;
+  /* Draws inside the canvas edge */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5);
+  /* Drop shadow for contrast */
 }
 .preview-container.zoom-cursor {
   cursor: zoom-in;
@@ -2485,10 +2494,12 @@ input[type=range]::-moz-range-thumb {
   .mobile-bottom-nav .mobile-drawer-btn-group {
     display: flex;
     gap: var(--spacing-xs);
-    flex: 1; /* takes remaining space */
+    flex: 1;
+    /* takes remaining space */
   }
   .mobile-bottom-nav .mobile-drawer-btn-group.small {
-    flex: 0 0 auto; /* only as wide as its content */
+    flex: 0 0 auto;
+    /* only as wide as its content */
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn {
     flex: 1;
@@ -2587,7 +2598,8 @@ input[type=range]::-moz-range-thumb {
     content: attr(data-count);
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.small {
-    flex: 0 0 auto; /* only as wide as its content */
+    flex: 0 0 auto;
+    /* only as wide as its content */
     aspect-ratio: 1/1;
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-add-layer-btn {
@@ -2595,7 +2607,8 @@ input[type=range]::-moz-range-thumb {
     height: unset;
     flex-shrink: 0;
     padding: var(--spacing-md);
-    flex: 0 0 auto; /* only as wide as its content */
+    flex: 0 0 auto;
+    /* only as wide as its content */
     aspect-ratio: 1/1;
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-add-layer-btn:disabled {
@@ -2952,6 +2965,9 @@ input[type=range]::-moz-range-thumb {
   display: flex;
   flex-direction: column;
 }
+#guideModal .guide-content > .guide-section > .guide-subsection > h4 {
+  font-size: 1.1em;
+}
 #guideModal .guide-content > .guide-section > .guide-subsection .guide-item {
   display: grid;
   grid-template-columns: 24px 1fr;
@@ -2987,6 +3003,7 @@ input[type=range]::-moz-range-thumb {
 #guideModal .guide-content > .guide-section > .guide-subsection p + p {
   margin-top: var(--spacing-sm);
 }
+#guideModal .guide-content > .guide-section > .guide-subsection h4 + p,
 #guideModal .guide-content > .guide-section > .guide-subsection p + ul {
   margin-top: var(--spacing-xs);
 }
@@ -3173,30 +3190,4 @@ input[type=range]::-moz-range-thumb {
 #glitterOptions.visible,
 #stickersOptions.visible {
   display: grid;
-}
-
-/* Project Metadata Styling */
-.project-meta-stats {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-}
-.project-meta-stats .meta-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-.project-meta-stats .meta-stat .label {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.project-meta-stats .meta-stat .value {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  font-family: var(--font-mono);
 }/*# sourceMappingURL=style.css.map */

@@ -1331,7 +1331,7 @@
 				<p>The <strong class="context" data-tooltip="Graphics Interchange Format">GIF</strong><sup>[27]</sup> format, introduced in 1987 by <strong class="context"
 						data-tooltip="American Internet company that provided the first major commercial online service">CompuServe</strong><sup>[28]</sup>, became the foundation for animated glitter graphics due to its support for multiple frames and widespread browser compatibility. The engineering lead on the team that created the format, <strong class="context"
 						data-tooltip="American computer scientist who led the team that created the GIF format">Steve
-						Wilhite</strong><sup>[29]</sup>, insists it's pronounced the same as <span class="context"
+						Wilhite</strong><sup>[29]</sup>, insisted that it's pronounced the same as <span class="context"
 						data-tooltip="the American peanut butter brand">Jif</span><sup>[30]</sup>, sparking one of the
 					internet's most heated debates. Dictionaries list both hard and soft 'G' pronunciations as acceptable<sup>[31]</sup>. I pronounce GIF with a hard 'G' and solidified my pronunciation by age 6, so he should have spoke up sooner. May he rest in peace though.</p>
 
@@ -2597,33 +2597,32 @@
 		</defs>
 	</svg>
 
-<svg style="position: absolute; width: 0; height: 0;">
-  <filter id="selection-glow" x="-20%" y="-20%" width="140%" height="140%">
-    <!-- 1. Expand shapes -->
-    <feMorphology operator="dilate" radius="4" in="SourceAlpha" result="outer_edge" />
-    <feMorphology operator="dilate" radius="2" in="SourceAlpha" result="inner_edge" />
-    
-    <!-- 2. Create the ring -->
-    <feComposite in="outer_edge" in2="inner_edge" operator="out" result="ring" />
-    
-    <!-- 3. COLOR & OPACITY -->
+	<svg style="position: absolute; width: 0; height: 0;">
+		<filter id="selection-glow" x="-20%" y="-20%" width="140%" height="140%">
+			<!-- 1. Expand shapes -->
+			<feMorphology operator="dilate" radius="4" in="SourceAlpha" result="outer_edge" />
+			<feMorphology operator="dilate" radius="2" in="SourceAlpha" result="inner_edge" />
 
-    <feFlood 
-  flood-color="var(--selected-outline-color, #00ffff)" 
-  flood-opacity=".5" 
-  result="color" 
-/>
-    
-    <!-- 4. Apply color to ring -->
-    <feComposite in="color" in2="ring" operator="in" result="outline" />
-    
-    <!-- 5. Merge -->
-    <feMerge>
-      <feMergeNode in="outline" />
-      <feMergeNode in="SourceGraphic" />
-    </feMerge>
-  </filter>
-</svg>
+			<!-- 2. Create the ring -->
+			<feComposite in="outer_edge" in2="inner_edge" operator="out" result="ring" />
+
+			<!-- 3. COLOR & OPACITY -->
+
+			<feFlood
+				flood-color="var(--selected-outline-color, #00ffff)"
+				flood-opacity=".5"
+				result="color" />
+
+			<!-- 4. Apply color to ring -->
+			<feComposite in="color" in2="ring" operator="in" result="outline" />
+
+			<!-- 5. Merge -->
+			<feMerge>
+				<feMergeNode in="outline" />
+				<feMergeNode in="SourceGraphic" />
+			</feMerge>
+		</filter>
+	</svg>
 
 
 	<script src="https://unpkg.com/omggif@1.0.10/omggif.js"></script>

@@ -2388,7 +2388,7 @@ if (filter) {
     // CALCULATIONS
     // Divide by zoom to keep them visually consistent on screen
     const scaledOffset = CONFIG.selectedGlitterOffset; //  / this.currentZoom;
-    const scaledTotal = Math.max(scaledOffset + 0.5, (CONFIG.selectedGlitterOffset + CONFIG.selectedGlitterWidth) / this.currentZoom);
+    const scaledTotal = Math.max(scaledOffset + 1, (CONFIG.selectedGlitterOffset + CONFIG.selectedGlitterWidth) / this.currentZoom);
 
     if (inner) inner.setAttribute('radius', scaledOffset);
     if (outer) outer.setAttribute('radius', scaledTotal);
@@ -3779,6 +3779,7 @@ class GlitterEditor {
 		this.glitterGlobal = CONFIG.glitterGlobalDefault;
 
 
+		this.isSaved = false;
 
 		this.currentTool = ToolType.SELECT;
 		this.history = [];
@@ -3800,6 +3801,8 @@ class GlitterEditor {
 		this.initializeShortcutsModal();
 		this.initializeExportSettings();
 	}
+
+
 
 	// Convenience accessors for layer state
 	get layers() {
@@ -4561,6 +4564,13 @@ handleCanvasZoomClick(event) {
 			}
 		});
 
+		// --- PREVENT LEAVING IF UNSAVED ---
+			window.addEventListener('beforeunload', (e) => {
+			if ((this.originalImage || this.historyIndex > 0) && !this.isSaved) {
+				e.preventDefault();
+				e.returnValue = '';
+			}
+		});
 
 
 		// --- SCROLL ZOOM ---
@@ -5729,6 +5739,9 @@ handleCanvasZoomClick(event) {
 			}];
 			this.historyIndex = 0;
 
+			// 5. reset saved
+			this.isSaved = false;
+
 			this.updateSidePanelUI();
 			this.layerManager.renderLayersList();
 			this.updateHistoryButtons();
@@ -6164,6 +6177,7 @@ handleCanvasZoomClick(event) {
 				},
 				onComplete: () => {
 					exportBtn.disabled = false;
+					this.isSaved = true;
 					this.hideExportProgress();
 				},
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
