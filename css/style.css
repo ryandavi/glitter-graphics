@@ -172,7 +172,6 @@ a:hover {
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   overflow: hidden;
@@ -180,6 +179,11 @@ body {
   height: 100vh;
   /* Modern browsers with dynamic viewport */
   height: 100dvh;
+}
+
+body, input, textarea, button, select {
+  font-family: "Google Sans Code", monospace;
+  font-optical-sizing: auto;
 }
 
 /* ===== REUSABLE COMPONENTS ===== */
@@ -2400,6 +2404,9 @@ input[type=range]::-moz-range-thumb {
     --layer-panel-width: 300px;
     --glitter-swatch-columns: 3;
   }
+  .layer-type-options {
+    flex-direction: column;
+  }
 }
 @media (max-width: 1200px) {
   :root {
@@ -2884,9 +2891,8 @@ input[type=range]::-moz-range-thumb {
 }
 
 .layer-type-options {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-md);
+  display: flex;
+  gap: var(--spacing-base);
 }
 .layer-type-options > .layer-type-option {
   display: flex;
@@ -2900,6 +2906,7 @@ input[type=range]::-moz-range-thumb {
   cursor: pointer;
   transition: all var(--transition-fast);
   text-align: center;
+  flex: 1;
 }
 .layer-type-options > .layer-type-option:hover {
   background: var(--color-bg-tertiary);
@@ -3225,4 +3232,13 @@ input[type=range]::-moz-range-thumb {
 #glitterOptions.visible,
 #stickersOptions.visible {
   display: grid;
+}
+
+.section.welcome-section > .section-content, .section.base-layer-settings-section > .section-content, .section.no-layer-settings-section > .section-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-base);
+}
+.section.welcome-section > .section-content > .empty-state, .section.base-layer-settings-section > .section-content > .empty-state, .section.no-layer-settings-section > .section-content > .empty-state {
+  background-color: #2f2f2f;
 }/*# sourceMappingURL=style.css.map */

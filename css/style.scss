@@ -441,7 +441,7 @@ a:hover {
 }
 
 body {
-	font-family: system-ui, -apple-system, sans-serif;
+
 	background: var(--color-bg-primary);
 	color: var(--color-text-primary);
 	overflow: hidden;
@@ -452,6 +452,12 @@ body {
 	height: 100dvh;
 
 }
+
+body, input, textarea, button, select {
+  font-family: "Google Sans Code", monospace;
+  font-optical-sizing: auto;
+}
+
 
 /* ===== REUSABLE COMPONENTS ===== */
 
@@ -2824,6 +2830,10 @@ input[type="range"] {
 		--glitter-swatch-columns: 3;
 	}
 
+	.layer-type-options {
+		flex-direction:column;
+	}
+
 }
 
 
@@ -3502,9 +3512,8 @@ input[type="range"] {
 
 
 .layer-type-options {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: var(--spacing-md);
+	display: flex;
+	gap: var(--spacing-base);
 
 	>.layer-type-option {
 		display: flex;
@@ -3518,6 +3527,7 @@ input[type="range"] {
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		text-align: center;
+		flex: 1;
 
 		&:hover {
 			background: var(--color-bg-tertiary);
@@ -3908,5 +3918,19 @@ input[type="range"] {
 	}
 }
 
-
-
+.section {
+	&.welcome-section,
+	&.base-layer-settings-section,
+	&.no-layer-settings-section {
+		> .section-content {
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-base);
+			
+			>.empty-state {
+				background-color: #2f2f2f;
+			}
+			
+		}
+	}
+}
