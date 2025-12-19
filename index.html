@@ -199,6 +199,25 @@
 							</button>
 						</div>
 						<div class="section-content layers-list" id="layersList"></div>
+						<div class="layers-section-bottom-bar" id="layersSectionBottomBar">
+
+							<!-- add glitter layer -->
+							<button class="btn-icon icon-wrapper add sm" title="Add new glitter layer" id="layersBarAddGlitter" disabled><svg class="icon"><use href="#icon-glitter"></use></svg></button>
+
+							<!-- add sticker layer -->
+							<button class="btn-icon icon-wrapper add sm" title="Add new sticker layer" id="layersBarAddSticker" disabled><svg class="icon"><use href="#icon-sticker"></use></svg></button>
+
+							<!-- go to selected -->
+							<button class="btn-icon icon-wrapper go-to sm" title="Go to selected layer" id="layersBarGoToSelected" disabled><svg class="icon"><use href="#icon-chevron-right"></use></svg></button>
+
+							<!-- duplicate selected -->
+							<button class="btn-icon icon-wrapper clone sm" title="Clone selected layer" id="layersBarCloneSelected" disabled><svg class="icon"><use href="#icon-clone"></use></svg></button>
+
+							<!-- delete selected -->
+							<button class="btn-icon icon-wrapper delete sm" title="Delete selected layer" id="layersBarDeleteSelected" disabled><svg class="icon"><use href="#icon-trash"></use></svg></button>
+
+
+						</div>
 					</div>
 
 
@@ -451,11 +470,11 @@
 										<div class="subsection-title">Position</div>
 										<div class="subsection-content">
 											<div class="sticker-position-group">
-												<div class="input-group">
+												<div class="input-group horizontal">
 													<label for="stickerPosX">X</label>
 													<input type="number" id="stickerPosX" readonly>
 												</div>
-												<div class="input-group">
+												<div class="input-group horizontal">
 													<label for="stickerPosY">Y</label>
 													<input type="number" id="stickerPosY" readonly>
 												</div>
@@ -1906,13 +1925,14 @@
 									<ul>
 										<li>This tells the glitter layer which parts to fill.</li>
 										<li>A glitter layer will be empty until a selection is made.</li>
+										<li>When a selection is made, the fill will be outlined in blue to better visualize the area. This outline is only visible in the preview.</li>
 									</ul>
 								</div>
 							</div>
 
 							<h4>Selection Options</h4>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -1925,7 +1945,7 @@
 							</div>
 
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -1942,7 +1962,7 @@
 							</div>
 
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -1955,7 +1975,7 @@
 							</div>
 
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -1968,7 +1988,7 @@
 							</div>
 
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2014,7 +2034,7 @@
 							</div>
 
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2126,7 +2146,7 @@
 							</div>
 
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2139,7 +2159,7 @@
 							</div>
 
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2196,7 +2216,7 @@
 
 							<h4>Export Settings (in Settings Modal):</h4>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2208,7 +2228,7 @@
 								</div>
 							</div>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2220,7 +2240,7 @@
 								</div>
 							</div>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2233,7 +2253,7 @@
 							</div>
 
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2245,7 +2265,7 @@
 								</div>
 							</div>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2257,7 +2277,7 @@
 								</div>
 							</div>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2269,7 +2289,7 @@
 								</div>
 							</div>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2302,7 +2322,7 @@
 						<div class="guide-subsection">
 							<h4>Tips</h4>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2314,7 +2334,7 @@
 								</div>
 							</div>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2326,7 +2346,7 @@
 								</div>
 							</div>
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>
@@ -2339,7 +2359,7 @@
 							</div>
 
 							<div class="guide-item">
-								<div class="guide-item-icon">
+								<div class="guide-item-icon empty">
 									<span class="icon-wrapper sm">
 										<svg class="icon">
 											<use href="#icon-minus"></use>

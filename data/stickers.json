@@ -3,13 +3,13 @@
     "id": 1,
     "name": "Butterfly Gold Glitter",
     "filename": "butterfly_gold-glitter.gif",
-    "url": "images/stickers/animals/butterfly_gold-glitter.gif",
-    "category": "animals",
+    "url": "images/stickers/animal/butterfly_gold-glitter.gif",
+    "category": "animal",
     "tags": [
       "butterfly",
       "gold",
       "glitter",
-      "animals",
+      "animal",
       "insect"
     ],
     "colors": [],
@@ -27,13 +27,13 @@
     "id": 2,
     "name": "Butterfly Rainbow Glitter",
     "filename": "butterfly_rainbow-glitter.gif",
-    "url": "images/stickers/animals/butterfly_rainbow-glitter.gif",
-    "category": "animals",
+    "url": "images/stickers/animal/butterfly_rainbow-glitter.gif",
+    "category": "animal",
     "tags": [
       "butterfly",
       "rainbow",
       "glitter",
-      "animals",
+      "animal",
       "colorful"
     ],
     "colors": [],
@@ -51,13 +51,13 @@
     "id": 3,
     "name": "Dove Gold Glitter",
     "filename": "dove_gold-glitter.gif",
-    "url": "images/stickers/animals/dove_gold-glitter.gif",
-    "category": "animals",
+    "url": "images/stickers/animal/dove_gold-glitter.gif",
+    "category": "animal",
     "tags": [
       "dove",
       "gold",
       "glitter",
-      "animals",
+      "animal",
       "bird"
     ],
     "colors": [],
@@ -737,12 +737,12 @@
     "id": 32,
     "name": "Rainbow Glitter",
     "filename": "rainbow_glitter.gif",
-    "url": "images/stickers/shapes/rainbow_glitter.gif",
-    "category": "shapes",
+    "url": "images/stickers/shape/rainbow_glitter.gif",
+    "category": "shape",
     "tags": [
       "rainbow",
       "glitter",
-      "shapes",
+      "shape",
       "colorful"
     ],
     "colors": [],
@@ -760,13 +760,13 @@
     "id": 33,
     "name": "Red Heart Rotate",
     "filename": "red_heart_rotate.gif",
-    "url": "images/stickers/shapes/red_heart_rotate.gif",
-    "category": "shapes",
+    "url": "images/stickers/shape/red_heart_rotate.gif",
+    "category": "shape",
     "tags": [
       "red",
       "heart",
       "rotate",
-      "shapes",
+      "shape",
       "love"
     ],
     "colors": [],
@@ -784,14 +784,14 @@
     "id": 34,
     "name": "Red Heart Rotate 2",
     "filename": "red_heart_rotate_2.gif",
-    "url": "images/stickers/shapes/red_heart_rotate_2.gif",
-    "category": "shapes",
+    "url": "images/stickers/shape/red_heart_rotate_2.gif",
+    "category": "shape",
     "tags": [
       "red",
       "heart",
       "rotate",
       "2",
-      "shapes",
+      "shape",
       "love"
     ],
     "colors": [],
@@ -809,11 +809,11 @@
     "id": 35,
     "name": "Star",
     "filename": "star.gif",
-    "url": "images/stickers/shapes/star.gif",
-    "category": "shapes",
+    "url": "images/stickers/shape/star.gif",
+    "category": "shape",
     "tags": [
       "star",
-      "shapes",
+      "shape",
       "basic"
     ],
     "colors": [],
@@ -831,13 +831,13 @@
     "id": 36,
     "name": "Star Pink Glitter",
     "filename": "star_pink-glitter.gif",
-    "url": "images/stickers/shapes/star_pink-glitter.gif",
-    "category": "shapes",
+    "url": "images/stickers/shape/star_pink-glitter.gif",
+    "category": "shape",
     "tags": [
       "star",
       "pink",
       "glitter",
-      "shapes"
+      "shape"
     ],
     "colors": [],
     "text": "",
@@ -854,13 +854,13 @@
     "id": 37,
     "name": "Star Silver Glitter",
     "filename": "star_silver-glitter.gif",
-    "url": "images/stickers/shapes/star_silver-glitter.gif",
-    "category": "shapes",
+    "url": "images/stickers/shape/star_silver-glitter.gif",
+    "category": "shape",
     "tags": [
       "star",
       "silver",
       "glitter",
-      "shapes"
+      "shape"
     ],
     "colors": [],
     "text": "",
@@ -877,14 +877,14 @@
     "id": 38,
     "name": "Star Ring Rotate Red",
     "filename": "star-ring_rotate_red.gif",
-    "url": "images/stickers/shapes/star-ring_rotate_red.gif",
-    "category": "shapes",
+    "url": "images/stickers/shape/star-ring_rotate_red.gif",
+    "category": "shape",
     "tags": [
       "star",
       "ring",
       "rotate",
       "red",
-      "shapes"
+      "shape"
     ],
     "colors": [],
     "text": "",
@@ -901,14 +901,14 @@
     "id": 39,
     "name": "Star Ring Rotate Silver",
     "filename": "star-ring_rotate_silver.gif",
-    "url": "images/stickers/shapes/star-ring_rotate_silver.gif",
-    "category": "shapes",
+    "url": "images/stickers/shape/star-ring_rotate_silver.gif",
+    "category": "shape",
     "tags": [
       "star",
       "ring",
       "rotate",
       "silver",
-      "shapes"
+      "shape"
     ],
     "colors": [],
     "text": "",
@@ -2040,5 +2040,165 @@
     "file_size": 15919,
     "sort_order": 84,
     "featured": false
+  },
+    {
+    "id": 87,
+    "name": "Chrome Frame",
+    "filename": "frame_chrome.gif",
+    "url": "images/stickers/frame/frame_chrome.gif",
+    "category": "frame",
+    "tags": [
+      "frame",
+      "chrome"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 400,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
+  },
+    {
+    "id": 88,
+    "name": "Silver Frame",
+    "filename": "frame_silver.gif",
+    "url": "images/stickers/frame/frame_silver.gif",
+    "category": "frame",
+    "tags": [
+      "frame",
+      "silver"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 400,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
+  },
+    {
+    "id": 89,
+    "name": "Red Glitter Heart",
+    "filename": "heart_red-glitter.gif",
+    "url": "images/stickers/frame/heart_red-glitter.gif",
+    "category": "frame",
+    "tags": [
+      "heart",
+      "red",
+      "glitter"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 185,
+    "height": 150,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
+  },
+    {
+    "id": 90,
+    "name": "Purple Glitter Rhinestone Heart",
+    "filename": "heart_rhinestone_purple-glitter.gif",
+    "url": "images/stickers/frame/heart_rhinestone_purple-glitter.gif",
+    "category": "frame",
+    "tags": [
+      "heart",
+      "purple",
+      "glitter",
+      "rhinestone"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 185,
+    "height": 151,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
+  },
+    {
+    "id": 91,
+    "name": "Silver Glitter Rhinestone Heart",
+    "filename": "heart_rhinestone_silver-glitter.gif",
+    "url": "images/stickers/frame/heart_rhinestone_silver-glitter.gif",
+    "category": "frame",
+    "tags": [
+      "heart",
+      "silver",
+      "glitter",
+      "rhinestone"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 185,
+    "height": 151,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
+  },
+    {
+    "id": 92,
+    "name": "Pink Jewel Heart Frame",
+    "filename": "heart-frame_pink-jewel.gif",
+    "url": "images/stickers/frame/heart-frame_pink-jewel.gif",
+    "category": "frame",
+    "tags": [
+      "heart",
+      "pink",
+      "jewel"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 400,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
+  },
+    {
+    "id": 93,
+    "name": "Gold Glitter Leaf Frame",
+    "filename": "leaf_gold-glitter.gif",
+    "url": "images/stickers/frame/leaf_gold-glitter.gif",
+    "category": "frame",
+    "tags": [
+      "gold",
+      "leaf",
+      "glitter",
+      "frame"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 400,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
   }
+
+
+
+
+
+
+
+
+
+
+
+  
 ]

@@ -79,12 +79,15 @@
 	--header-height: 60px;
 	--toolbar-width: 60px;
 
+	--icon-size: 40px;
+	--icon-size-sm: 30px;
+
 
 	/* PANELS */
 	--layer-panel-width: 450px;
 	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
 	--glitter-swatch-columns: 4;
-	--color-filter-chip-size: 32px;
+	--color-filter-chip-size: var(--icon-size-sm);
 
 	/* MOBILE */
 	--mobile-menu-height: 60px;
@@ -476,7 +479,7 @@ img[data-pixel-scale] {
 
 
 
-	max-width: 240px;
+	max-width: 2var(--icon-size);
 	width: max-content;
 
 	@include windows7-tooltip;
@@ -570,8 +573,8 @@ input[type="range"] {
 		gap: var(--spacing-sm);
 
 		>svg.icon {
-			width: 28px;
-			height: 28px;
+			width: var(--icon-size-sm);
+			height: var(--icon-size-sm);
 
 
 			+span.name {
@@ -599,8 +602,8 @@ input[type="range"] {
 }
 
 .btn-icon {
-	width: 40px;
-	height: 40px;
+	width: var(--icon-size);
+	height: var(--icon-size);
 	background: var(--color-bg-primary);
 	border: 1px solid var(--color-border);
 	display: flex;
@@ -964,7 +967,7 @@ input[type="range"] {
 
 
 				>.image-upload-overlay-icon {
-					font-size: 32px;
+					font-size: var(--icon-size-sm);
 				}
 
 				>.image-upload-overlay-text {
@@ -1050,7 +1053,7 @@ input[type="range"] {
 			display: flex;
 			align-items: center;
 			gap: var(--spacing-md);
-			padding: var(--spacing-md);
+			padding: var(--spacing-base);
 			background: var(--color-bg-tertiary);
 			border: 2px solid transparent;
 			border-radius: var(--radius-md);
@@ -1077,8 +1080,8 @@ input[type="range"] {
 			}
 
 			>.layer-swatch {
-				width: 28px;
-				height: 28px;
+				width: var(--icon-size-sm);
+				height: var(--icon-size-sm);
 				border-radius: var(--radius-sm);
 				overflow: hidden;
 
@@ -1129,6 +1132,7 @@ input[type="range"] {
 
 				>.layer-name {
 					color: var(--color-text-primary);
+					font-size: var(--font-size-base);
 					white-space: nowrap;
 					overflow: hidden;
 					text-overflow: ellipsis;
@@ -1158,8 +1162,8 @@ input[type="range"] {
 
 				>.layer-action-btn {
 
-					width: 28px;
-					height: 28px;
+					width: var(--icon-size-sm);
+					height: var(--icon-size-sm);
 
 
 					display: flex;
@@ -1194,7 +1198,7 @@ input[type="range"] {
 			>.layer-drag-handle {
 				display: none; // Hidden on desktop
 				width: 24px;
-				height: 28px;
+				height: var(--icon-size-sm);
 				align-items: center;
 				justify-content: center;
 				flex-shrink: 0;
@@ -1260,6 +1264,21 @@ input[type="range"] {
 	flex-shrink: 0;
 }
 
+.layers-section-bottom-bar {
+	box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
+	padding: var(--spacing-sm);
+
+    align-items: center;
+    justify-content: flex-end;
+    display: flex;
+    gap: var(--spacing-sm);
+
+	.icon-wrapper {
+		width: var(--icon-size-sm);
+   		height: var(--icon-size-sm);
+	}
+}
+
 
 
 .section {
@@ -1321,8 +1340,8 @@ input[type="range"] {
 				visibility: hidden;
 				pointer-events: none;
 
-				width: 32px;
-				height: 32px;
+				width: var(--icon-size-sm);
+				height: var(--icon-size-sm);
 
 
 
@@ -1343,7 +1362,7 @@ input[type="range"] {
 
 	>.section-content {
 
-		padding: var(--spacing-md);
+		padding: var(--spacing-base);
 	}
 
 	/* Collapsible Section */
@@ -2094,8 +2113,8 @@ input[type="range"] {
 	}
 
 	>.btn-icon {
-		width: 32px;
-		height: 32px;
+		width: var(--icon-size-sm);
+		height: var(--icon-size-sm);
 	}
 }
 
@@ -2142,7 +2161,7 @@ input[type="range"] {
 	min-width: 400px;
 	max-width: 500px;
 	z-index: 2000;
-	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 10px var(--icon-size) rgba(0, 0, 0, 0.5);
 	opacity: 0;
 	pointer-events: none;
 	transition: opacity var(--transition-base);
@@ -2600,6 +2619,13 @@ input[type="range"] {
 		flex-direction: column;
 		gap: var(--spacing-xs);
 
+		&.horizontal {
+			flex-direction: row;
+			gap: var(--spacing-sm);
+			align-items: center;
+			justify-content: center;
+		}
+
 		label {
 			font-size: var(--font-size-sm);
 			color: var(--color-text-secondary);
@@ -2792,7 +2818,7 @@ input[type="range"] {
 
 
 
-@media (max-width: 1440px) {
+@media (max-width: 1600px) {
 	:root {
 		--layer-panel-width: 300px;
 		--glitter-swatch-columns: 3;
@@ -2803,7 +2829,7 @@ input[type="range"] {
 
 @media (max-width: 1200px) {
 	:root {
-		--glitter-panel-width: 200px;
+		--glitter-panel-width: 250px;
 		--glitter-swatch-columns: 2;
 	}
 }
@@ -3311,8 +3337,8 @@ input[type="range"] {
 // Layer pick visual feedback (shown for all users)
 .layer-pick-flash {
 	position: absolute;
-	width: 40px;
-	height: 40px;
+	width: var(--icon-size);
+	height: var(--icon-size);
 	margin-left: -20px;
 	margin-top: -20px;
 	border: 3px solid var(--color-accent);
@@ -3623,6 +3649,15 @@ input[type="range"] {
 						justify-content: center;
 						flex-shrink: 0;
 
+						&:not(.empty) {
+							background-color: var(--color-bg-tertiary);
+							border-radius: var(--radius-md);
+						}
+
+						&.empty {
+							color: var(--color-text-tertiary);
+						}
+
 						.icon-wrapper {
 							width: 20px;
 							height: 20px;
@@ -3742,7 +3777,7 @@ input[type="range"] {
 
 					>input[type="color"] {
 						width: 50px;
-						height: 32px;
+						height: 28px;
 						border: 1px solid var(--color-border);
 						border-radius: var(--radius-sm);
 						cursor: pointer;
