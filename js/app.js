@@ -653,15 +653,6 @@ class StickerManager extends ContentManager {
 		});
 	}
 
-	matchesColors(item) {
-		if (!item.tags) return false;
-
-		// Check tags array (same as glitter) - case insensitive
-		return [...this.activeFilters.colors].some(color =>
-			item.tags.some(tag => tag.toLowerCase() === color.toLowerCase())
-		);
-	}
-
 	matchesChildFilters(item) {
 		// Animated filter
 		if (this.activeFilters.animated !== null) {
@@ -1433,6 +1424,12 @@ class GlitterManager extends ContentManager {
 		return layer;
 	}
 
+	customizeItemElement(element, item) {
+		if (item.isPixelated) {
+			element.classList.add('pixelated');
+		}
+	}
+
 	// ===== FILTERING =====
 
 	matchesSearch(item) {
@@ -1447,13 +1444,6 @@ class GlitterManager extends ContentManager {
 		}
 	}
 
-	matchesColors(item) {
-		if (!item.tags) return false;
-
-		return [...this.activeFilters.colors].some(color =>
-			item.tags.some(tag => tag.toLowerCase() === color.toLowerCase())
-		);
-	}
 
 	matchesChildFilters(item) {
 		if (!item.tags) return false;
@@ -1479,16 +1469,10 @@ class GlitterManager extends ContentManager {
 		return true;
 	}
 
-	customizeItemElement(element, item) {
-		if (item.isPixelated) {
-			element.classList.add('pixelated');
-		}
-	}
 
 	handleItemClick(item) {
 		this.selectGlitter(item.id);
 	}
-
 
 	clearFilters() {
 		// Call parent clearFilters
@@ -1584,7 +1568,6 @@ class GlitterManager extends ContentManager {
 			throw error;
 		}
 	}
-
 
 
 
@@ -1700,9 +1683,6 @@ class GlitterManager extends ContentManager {
 	}
 
 	renderLayer(layer, width, height) {
-
-
-
 		if (layer.type !== LayerType.GLITTER_FILL) return;
 
 		const glitter = this.getItemById(layer.selectedGlitterId);
@@ -1740,8 +1720,6 @@ class GlitterManager extends ContentManager {
 			this.applyFeatherToMask(mask, layer.settings.feather);
 		}
 
-
-
 		const maskCanvas = document.createElement('canvas');
 		maskCanvas.width = width;
 		maskCanvas.height = height;
@@ -1762,75 +1740,6 @@ class GlitterManager extends ContentManager {
 
 		// Store reference
 		this.layerElements.set(layer.id, wrapper);
-	}
-
-
-	// --- Helper to create a single glitter element without appending it ---
-	createGlitterElement(layer) {
-		if (layer.type !== LayerType.GLITTER_FILL) return null;
-
-		const glitter = this.getItemById(layer.selectedGlitterId);
-		if (!glitter) return null;
-
-		const width = this.editor.originalCanvas.width;
-		const height = this.editor.originalCanvas.height;
-
-		// Generate Mask
-		const mask = this.createMaskForLayer(layer);
-		if (layer.settings.feather > 0) {
-			this.applyFeatherToMask(mask, layer.settings.feather);
-		}
-
-		// Create Mask Canvas
-		const maskCanvas = document.createElement('canvas');
-		maskCanvas.width = width;
-		maskCanvas.height = height;
-		const maskCtx = maskCanvas.getContext('2d');
-		const maskData = maskCtx.createImageData(width, height);
-
-		for (let i = 0; i < width * height; i++) {
-			const maskValue = mask[i];
-			const idx = i * 4;
-			// Only write alpha where mask exists
-			maskData.data[idx + 3] = maskValue;
-		}
-		maskCtx.putImageData(maskData, 0, 0);
-
-		// Create DOM Element
-		const bg = document.createElement('div');
-		bg.className = 'glitter-background glitter-bg-layer visible';
-		if (glitter.isPixelated) bg.classList.add('pixelated');
-
-		bg.dataset.layerId = layer.id;
-		bg.style.backgroundImage = `url(${glitter.url})`;
-
-		// Scale logic
-		const glitterScale = layer.settings.scale / 100;
-		const baseSize = (glitter.frames && glitter.frames.width) ?
-			glitter.frames.width : 50;
-		const scaledGlitterSize = Math.round(baseSize * glitterScale);
-		bg.style.backgroundSize = `${scaledGlitterSize}px`;
-
-		bg.style.width = width + 'px';
-		bg.style.height = height + 'px';
-		bg.style.position = 'absolute';
-		bg.style.top = '0';
-		bg.style.left = '0';
-		// Remove explicit z-index here; DOM order will handle it
-		// bg.style.zIndex = '100'; 
-		bg.style.pointerEvents = 'none';
-		bg.style.opacity = layer.settings.opacity / 100;
-
-		// Apply Mask Image
-		const maskDataURL = maskCanvas.toDataURL();
-		bg.style.maskImage = `url(${maskDataURL})`;
-		bg.style.webkitMaskImage = `url(${maskDataURL})`;
-		bg.style.maskSize = `${width}px ${height}px`;
-		bg.style.webkitMaskSize = `${width}px ${height}px`;
-		bg.style.maskRepeat = 'no-repeat';
-		bg.style.webkitMaskRepeat = 'no-repeat';
-
-		return bg;
 	}
 
 	updatePreviewScale() {
@@ -2840,7 +2749,7 @@ class LayerManager {
 
 
 		} else {
-			this.editor.updateStatus(`Delected layer`);
+			this.editor.updateStatus(`Deselected layer`);
 		}
 
 
