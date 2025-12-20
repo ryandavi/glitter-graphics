@@ -158,7 +158,7 @@ include_once('includes/config.php');
 
             <div class="existing-categories">
                 <h4>Existing Categories</h4>
-                <div id="categoryList"></div>
+                <div class="category-list" id="categoryList"></div>
             </div>
             </div>
 
@@ -205,7 +205,7 @@ include_once('includes/config.php');
 
             <div>
                 <h4>Existing Tags</h4>
-                <div id="tagList"></div>
+                <div class="tag-management-list" id="tagList"></div>
             </div>
             </div>
 

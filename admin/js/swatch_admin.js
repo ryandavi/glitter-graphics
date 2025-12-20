@@ -968,10 +968,8 @@
                 const grouped = this.groupTagsByCategory();
 
                 const html = grouped.map(group => `
-                    <div style="margin-bottom: 16px;">
-                        <h5 style="font-size: 12px; color: var(--color-text-secondary); text-transform: uppercase; margin-bottom: 8px;">
-                            ${group.category}
-                        </h5>
+                    <div>
+                        <h5>${group.category}</h5>
                         ${group.tags.map(tag => `
                             <div class="management-item">
                                 <div class="management-item-info">

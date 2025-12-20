@@ -50,7 +50,7 @@ body {
 }
 
 .sidebar-header h2 {
-    margin: 0 0 12px 0;
+    margin: 0 0 16px 0;
     font-size: 18px;
 }
 
@@ -76,7 +76,7 @@ body {
 }
 
 .category-group {
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
 .category-label {
@@ -132,7 +132,7 @@ body {
 .drag-handle {
     color: var(--color-text-secondary);
     cursor: grab;
-    font-size: 16px;
+    font-size: 12px;
 }
 
 .drag-handle:active {
@@ -172,7 +172,7 @@ padding: 16px;
     color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin: 0 0 12px 0;
+    margin: 0 0 16px 0;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--color-border);
 }
@@ -218,7 +218,7 @@ padding: 16px;
 
     label {
         display: block;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
         color: var(--color-text-secondary);
         font-size: 12px;
         text-transform: uppercase;
@@ -334,16 +334,16 @@ input[type="checkbox"] {
 
 .tag-list {
     display: flex;
+
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 12px;
 }
 
 .tag {
-    padding: 4px 12px;
+    padding: 4px 16px;
     background: var(--color-bg-tertiary);
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: 16px;
     font-size: 12px;
     display: flex;
     align-items: center;
@@ -351,8 +351,8 @@ input[type="checkbox"] {
 }
 
 .tag-color {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     border: 1px solid var(--color-border);
 }
@@ -363,13 +363,14 @@ input[type="checkbox"] {
     color: var(--color-danger);
     cursor: pointer;
     padding: 0;
-    font-size: 16px;
+    font-size: 12px;
     line-height: 1;
 }
 
 .tag-select-container {
     display: flex;
     gap: 8px;
+    margin-top: 16px;
 }
 
 .tag-select-container select {
@@ -394,7 +395,7 @@ input[type="checkbox"] {
     border-top: 1px solid var(--color-border);
     padding: 16px 20px;
     display: flex;
-    gap: 12px;
+    gap: 16px;
     align-items: center;
 }
 
@@ -447,7 +448,7 @@ input[type="checkbox"] {
 
 /* Category/Tag Management Lists */
 .management-item {
-    padding: 12px;
+    padding: 16px;
     background: var(--color-bg-tertiary);
     border: 1px solid var(--color-border);
     border-radius: 4px;
@@ -472,7 +473,7 @@ input[type="checkbox"] {
 }
 
 .management-item-delete {
-    padding: 6px 12px;
+    padding: 6px 16px;
     background: var(--color-danger);
     color: white;
     border: none;
@@ -486,14 +487,14 @@ input[type="checkbox"] {
 }
 
 .analyze-result-item {
-    padding: 12px;
+    padding: 16px;
     background: var(--color-bg-tertiary);
     border: 1px solid var(--color-border);
     border-radius: 4px;
     margin-bottom: 8px;
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 16px;
 }
 
 .analyze-result-item input[type="checkbox"] {
@@ -593,10 +594,20 @@ input[type="checkbox"] {
             flex-direction: column;
             gap: 16px;
 
+            h5, 
             h4 {
                 padding: 0;
                 margin: 0;
-                margin-bottom: 8px;
+
+                +.management-item,
+                
+                + .tag-management-list,
+                + .category-list,
+                + .form-group,
+                + .form-row,
+                + p {
+                    margin-top: 16px;
+                }
             }
             p {
                 padding: 0;
@@ -624,7 +635,7 @@ input[type="checkbox"] {
 .browse-btn {
     display: inline-flex;
     align-items: center;
-    padding: 6px 12px;
+    padding: 6px 16px;
     border: 1px solid var(--color-border);
     border-radius: 6px;
     background: var(--color-bg-secondary);
