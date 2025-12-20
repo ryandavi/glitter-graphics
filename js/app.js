@@ -2999,7 +2999,33 @@ class LayerManager {
 
 		// Update mobile swatch
 		this.updateMobileLayersSwatch();
+
+		// Update bottom bar buttons
+		this.updateBottomBarButtons();
+
 	}
+
+
+updateBottomBarButtons() {
+    const selectedLayer = this.getActiveLayer();
+    const canAddLayers = this.layers.length < CONFIG.maxLayers;
+    const canInteractWithSelected = selectedLayer && selectedLayer.type !== LayerType.BASE_IMAGE;
+    
+    // Add buttons - only check max layers
+    const addGlitterBtn = document.getElementById('layersBarAddGlitter');
+    const addStickerBtn = document.getElementById('layersBarAddSticker');
+    if (addGlitterBtn) addGlitterBtn.disabled = !canAddLayers;
+    if (addStickerBtn) addStickerBtn.disabled = !canAddLayers;
+    
+    // Buttons requiring selection (but not base)
+    const goToBtn = document.getElementById('layersBarGoToSelected');
+    const cloneBtn = document.getElementById('layersBarCloneSelected');
+    const deleteBtn = document.getElementById('layersBarDeleteSelected');
+    
+    if (goToBtn) goToBtn.disabled = !canInteractWithSelected;
+    if (cloneBtn) cloneBtn.disabled = !canInteractWithSelected || !canAddLayers;
+    if (deleteBtn) deleteBtn.disabled = !canInteractWithSelected;
+}
 
 	cloneLayer(layerId) {
 		const sourceLayer = this.layers.find(l => l.id === layerId);
@@ -4510,7 +4536,6 @@ handleCanvasZoomClick(event) {
 			});
 		}
 
-
 		closeLayerTypePicker.addEventListener('click', () => {
 			layerTypePickerModal.classList.remove('visible');
 		});
@@ -4520,6 +4545,55 @@ handleCanvasZoomClick(event) {
 				layerTypePickerModal.classList.remove('visible');
 			}
 		});
+
+// --- LAYER BOTTOM BAR BUTTONS ---
+const layersBarAddGlitter = document.getElementById('layersBarAddGlitter');
+const layersBarAddSticker = document.getElementById('layersBarAddSticker');
+const layersBarGoToSelected = document.getElementById('layersBarGoToSelected');
+const layersBarCloneSelected = document.getElementById('layersBarCloneSelected');
+const layersBarDeleteSelected = document.getElementById('layersBarDeleteSelected');
+
+if (layersBarAddGlitter) {
+    layersBarAddGlitter.addEventListener('click', () => {
+        this.layerManager.addLayer(LayerType.GLITTER_FILL);
+    });
+}
+
+if (layersBarAddSticker) {
+    layersBarAddSticker.addEventListener('click', () => {
+        this.layerManager.addLayer(LayerType.STICKER);
+    });
+}
+
+if (layersBarGoToSelected) {
+    layersBarGoToSelected.addEventListener('click', () => {
+        const selectedLayer = this.layerManager.getActiveLayer();
+        if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
+        
+        if (selectedLayer.type === LayerType.GLITTER_FILL) {
+            this.layerManager.goToGlitter(selectedLayer.id);
+        } else if (selectedLayer.type === LayerType.STICKER) {
+            this.layerManager.goToSticker(selectedLayer.id);
+        }
+    });
+}
+
+if (layersBarCloneSelected) {
+    layersBarCloneSelected.addEventListener('click', () => {
+        const selectedLayer = this.layerManager.getActiveLayer();
+        if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
+        this.layerManager.cloneLayer(selectedLayer.id);
+    });
+}
+
+if (layersBarDeleteSelected) {
+    layersBarDeleteSelected.addEventListener('click', () => {
+        const selectedLayer = this.layerManager.getActiveLayer();
+        if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
+        this.layerManager.deleteLayer(selectedLayer.id);
+    });
+}
+
 	}
 
 	setupEventListeners() {
@@ -4718,6 +4792,12 @@ handleCanvasZoomClick(event) {
 				}
 			});
 		}
+
+		// --- SLIDER DISPLAY UPDATES ---
+		this.setupSliderDisplay('threshold', 'thresholdValue', '');
+		this.setupSliderDisplay('feather', 'featherValue', '');
+		this.setupSliderDisplay('scale', 'scaleValue', '%');
+		this.setupSliderDisplay('opacity', 'opacityValue', '%');
 
 		// --- THRESHOLD SLIDER ---
 		const thresholdSlider = document.getElementById('threshold');
