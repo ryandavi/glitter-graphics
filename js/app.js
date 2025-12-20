@@ -6220,6 +6220,7 @@ if (layersBarDeleteSelected) {
 	hideExportProgress() {
 		document.getElementById('exportProgress').classList.remove('visible');
 	}
+	
 
 	async exportAnimatedGif() {
 		// Filter visible layers - handle different layer types
