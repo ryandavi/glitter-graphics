@@ -210,6 +210,142 @@ class ContentManager {
 
 	// ===== SEARCH & FILTERS =====
 
+toggleFilterChip(chip) {
+	const filterType = chip.dataset.filter; // 'color', 'tone', 'special', 'category', 'tags'
+	const value = chip.dataset.value || chip.dataset.color;
+	
+	// Map filter types to activeFilters properties
+const filterMap = {
+	'color': 'colors',
+	'tone': 'tones',
+	'special': 'special',
+	'category': 'categories',
+	'tag': 'tags',
+	'vibe': 'vibes'
+};
+	
+	const filterKey = filterMap[filterType];
+	if (!filterKey || !this.activeFilters[filterKey]) {
+		console.warn(`Unknown filter type: ${filterType}`);
+		return;
+	}
+	
+	// Toggle chip active state
+	chip.classList.toggle('active');
+	
+	// Update the corresponding filter Set
+	const filterSet = this.activeFilters[filterKey];
+	if (filterSet.has(value)) {
+		filterSet.delete(value);
+	} else {
+		filterSet.add(value);
+	}
+	
+	// Re-render and update UI
+	this.renderPicker();
+	this.updateClearFiltersButton();
+}
+
+applyFilters() {
+	const allContent = this.getAllContent();
+	
+	return allContent.filter(item => {
+		// Search filter - delegates to child for custom logic
+		if (this.activeFilters.search) {
+			if (!this.matchesSearch(item)) return false;
+		}
+		
+		// Category filter
+		if (this.activeFilters.categories.size > 0) {
+			if (!this.activeFilters.categories.has(item.category)) {
+				return false;
+			}
+		}
+		
+		// Tag filter (generic tags)
+		if (this.activeFilters.tags.size > 0) {
+			const hasMatchingTag = item.tags?.some(tag =>
+				this.activeFilters.tags.has(tag)
+			);
+			if (!hasMatchingTag) return false;
+		}
+		
+		// Color filter - delegates to child for custom storage
+		if (this.activeFilters.colors.size > 0) {
+			if (!this.matchesColors(item)) return false;
+		}
+		
+		// Child-specific filters (tones, special, animated, etc.)
+		if (!this.matchesChildFilters(item)) return false;
+		
+		return true;
+	});
+}
+
+matchesSearch(item) {
+	const query = this.activeFilters.search.toLowerCase();
+	const nameMatch = item.name.toLowerCase().includes(query);
+	const tagMatch = item.tags?.some(tag => 
+		tag.toLowerCase().includes(query)
+	);
+	return nameMatch || tagMatch;
+}
+
+matchesColors(item) {
+	if (!item.tags) return false;
+	
+	return [...this.activeFilters.colors].some(color =>
+		item.tags.some(tag => tag.toLowerCase() === color.toLowerCase())
+	);
+}
+
+matchesChildFilters(item) {
+	return true; // Override in child classes
+}
+
+customizeItemElement(element, item) {
+	// Override in child classes to add custom classes/attributes
+}
+
+createItemElement(item, index = null) {
+	const option = document.createElement('div');
+	option.className = 'asset-option';
+	option.title = item.name;
+	
+	// Set both data-id and data-index for compatibility
+	option.dataset.id = item.id;
+	if (index !== null) {
+		option.dataset.index = index;
+	}
+	
+	// Allow children to add custom classes/attributes
+	this.customizeItemElement(option, item);
+	
+	// Add image
+	const img = document.createElement('img');
+	img.src = item.url;
+	option.appendChild(img);
+	
+	// Wire up click handler (delegate to child)
+	option.addEventListener('click', () => {
+		this.handleItemClick(item, index);
+	});
+	
+	return option;
+}
+
+handleItemClick(item, index = null) {
+	throw new Error('handleItemClick() must be implemented by child class');
+}
+
+setupFilterChips() {
+	// Override in child classes
+}
+
+	getAllContent() {
+		return [...this.content, ...this.userContent];
+	}
+
 	handleSearch(query) {
 		this.activeFilters.search = query.toLowerCase().trim();
 		this.renderPicker();
@@ -261,12 +397,11 @@ class ContentManager {
 		}
 
 		// Clear all active filter chips in the panel
-		if (this.ui.panel) {
-			this.ui.panel.querySelectorAll('.filter-chip').forEach(chip => {
-				chip.classList.remove('active');
-			});
-		}
-
+if (this.ui.filtersContainer) {
+	this.ui.filtersContainer.querySelectorAll('.filter-chip').forEach(chip => {
+		chip.classList.remove('active');
+	});
+}
 		// Re-render and update button state
 		this.renderPicker();
 		this.updateClearFiltersButton();
@@ -318,10 +453,12 @@ class ContentManager {
 			const categoryDiv = this.createCategoryElement(category);
 			const grid = categoryDiv.querySelector('.asset-grid');
 
-			items.forEach(item => {
-				const option = this.createItemElement(item);
-				grid.appendChild(option);
-			});
+items.forEach(item => {
+	// Find original index in content array (needed for glitter)
+	const originalIndex = this.content.indexOf(item);
+	const option = this.createItemElement(item, originalIndex);
+	grid.appendChild(option);
+});
 
 			this.ui.gridContainer.appendChild(categoryDiv);
 		});
@@ -365,12 +502,7 @@ class ContentManager {
 		throw new Error('loadContent() must be implemented by child class');
 	}
 
-	createItemElement(item) {
-		throw new Error('createItemElement() must be implemented by child class');
-	}
-	applyFilters() {
-		throw new Error('applyFilters() must be implemented by child class');
-	}
+
 }
 
 // ============================================
@@ -378,16 +510,18 @@ class ContentManager {
 // Handles all sticker-related operations
 // ============================================
 class StickerManager extends ContentManager {
-	constructor(editor) {
-		super(editor, 'sticker');
+constructor(editor) {
+	super(editor, 'sticker');
 
-		// NO need to re-declare activeFilters - inherited from parent!
-		// Parent already has: search, categories, tags, colors, animated
+	// Add sticker-specific filters to base activeFilters
+	Object.assign(this.activeFilters, {
+		vibes: new Set()
+	});
 
-		// Sticker-specific properties
-		this.stickerElements = new Map(); // layerId -> HTMLElement
-		this.animationFrames = new Map(); // layerId -> animationFrameId
-	}
+	// Sticker-specific properties
+	this.stickerElements = new Map(); // layerId -> HTMLElement
+	this.animationFrames = new Map(); // layerId -> animationFrameId
+}
 
 	setupUI() {
 		this.ui = {
@@ -402,35 +536,94 @@ class StickerManager extends ContentManager {
 		};
 	}
 
-	setupEventListeners() {
-		// Call parent to setup base listeners (search, filter toggle, clear filters)
-		super.setupEventListeners();
+setupEventListeners() {
+	// Call parent to setup base listeners
+	super.setupEventListeners();
+	
+	// Setup filter chips
+	this.setupFilterChips();
+}
 
-		// Add sticker-specific listeners
 
-		// Animated filter chips
-		document.querySelectorAll('[data-filter="animated"]').forEach(chip => {
-			chip.addEventListener('click', () => {
-				const isAnimated = chip.dataset.animated === 'true';
-
-				if (chip.classList.contains('active')) {
-					// Deactivate
-					chip.classList.remove('active');
-					this.activeFilters.animated = null;
-				} else {
-					// Activate and deactivate siblings
-					document.querySelectorAll('[data-filter="animated"]').forEach(c => {
-						c.classList.remove('active');
-					});
-					chip.classList.add('active');
-					this.activeFilters.animated = isAnimated;
-				}
-
-				this.renderPicker();
-				this.updateClearFiltersButton();
-			});
+setupFilterChips() {
+	// Wire up color filter chips in sticker container
+	if (this.ui.filtersContainer) {
+		this.ui.filtersContainer.querySelectorAll('.color-filter-chip').forEach(chip => {
+			chip.addEventListener('click', () => this.toggleFilterChip(chip));
+		});
+		
+		// Wire up vibe filter chips
+		this.ui.filtersContainer.querySelectorAll('[data-filter="vibe"]').forEach(chip => {
+			chip.addEventListener('click', () => this.toggleFilterChip(chip));
 		});
 	}
+	
+	// Animated filter chips (mutually exclusive - these need special handling)
+	document.querySelectorAll('[data-filter="animated"]').forEach(chip => {
+		chip.addEventListener('click', () => {
+			const isAnimated = chip.dataset.animated === 'true';
+			
+			if (chip.classList.contains('active')) {
+				// Deactivate
+				chip.classList.remove('active');
+				this.activeFilters.animated = null;
+			} else {
+				// Activate and deactivate siblings
+				document.querySelectorAll('[data-filter="animated"]').forEach(c => {
+					c.classList.remove('active');
+				});
+				chip.classList.add('active');
+				this.activeFilters.animated = isAnimated;
+			}
+			
+			this.renderPicker();
+			this.updateClearFiltersButton();
+		});
+	});
+}
+
+
+matchesColors(item) {
+	if (!item.tags) return false;
+	
+	// Check tags array (same as glitter) - case insensitive
+	return [...this.activeFilters.colors].some(color =>
+		item.tags.some(tag => tag.toLowerCase() === color.toLowerCase())
+	);
+}
+
+matchesChildFilters(item) {
+	// Animated filter
+	if (this.activeFilters.animated !== null) {
+		if (item.isAnimated !== this.activeFilters.animated) {
+			return false;
+		}
+	}
+	
+	// Vibe filter - check tags array (case insensitive)
+	if (this.activeFilters.vibes.size > 0) {
+		if (!item.tags) return false;
+		
+		const tags = item.tags.map(t => t.toLowerCase());
+		const hasVibe = [...this.activeFilters.vibes].some(vibe =>
+			tags.includes(vibe.toLowerCase())
+		);
+		if (!hasVibe) return false;
+	}
+	
+	return true;
+}
+
+customizeItemElement(element, item) {
+	if (item.isAnimated) element.classList.add('animated');
+	if (item.hasTransparency) element.classList.add('has-transparency');
+}
+
+handleItemClick(item, index) {
+	this.addStickerToCanvas(item.id);
+}
+
+
 
 	// Sticker-specific method
 	populateCategoryChips() {
@@ -446,23 +639,12 @@ class StickerManager extends ContentManager {
 		Array.from(categories).sort().forEach(category => {
 			const chip = document.createElement('div');
 			chip.className = 'filter-chip text-filter-chip';
-			chip.dataset.category = category;
-			chip.dataset.filter = 'category';
+chip.dataset.value = category;  // Changed from dataset.category
+chip.dataset.filter = 'category';
 			chip.textContent = category.charAt(0).toUpperCase() + category.slice(1);
 			chip.title = category;
 
-			chip.addEventListener('click', () => {
-				if (chip.classList.contains('active')) {
-					chip.classList.remove('active');
-					this.activeFilters.categories.delete(category);
-				} else {
-					chip.classList.add('active');
-					this.activeFilters.categories.add(category);
-				}
-
-				this.renderPicker();
-				this.updateClearFiltersButton();
-			});
+			chip.addEventListener('click', () => this.toggleFilterChip(chip));
 
 			this.ui.categoryChips.appendChild(chip);
 		});
@@ -515,81 +697,8 @@ class StickerManager extends ContentManager {
 		}
 	}
 
-	// ===== PICKER UI =====
 
-	createItemElement(sticker) {
-		const option = document.createElement('div');
-		option.className = 'asset-option';
 
-		// Add sticker-specific classes
-		if (sticker.isAnimated) option.classList.add('animated');
-		if (sticker.hasTransparency) option.classList.add('has-transparency');
-
-		option.title = sticker.name;
-		option.dataset.id = sticker.id;
-
-		const img = document.createElement('img');
-		img.src = sticker.url;
-		option.appendChild(img);
-
-		option.addEventListener('click', () => {
-			this.addStickerToCanvas(sticker.id);
-		});
-
-		return option;
-	}
-
-	applyFilters() {
-		const allStickers = [...this.content, ...this.userContent];
-
-		return allStickers.filter(sticker => {
-			// Search filter
-			if (this.activeFilters.search) {
-				const query = this.activeFilters.search.toLowerCase();
-				const nameMatch = sticker.name.toLowerCase().includes(query);
-				const tagMatch = sticker.tags?.some(tag => tag.toLowerCase().includes(query));
-				if (!nameMatch && !tagMatch) return false;
-			}
-
-			// Category filter
-			if (this.activeFilters.categories.size > 0) {
-				if (!this.activeFilters.categories.has(sticker.category)) {
-					return false;
-				}
-			}
-
-			// Tag filter
-			if (this.activeFilters.tags.size > 0) {
-				const hasMatchingTag = sticker.tags?.some(tag =>
-					this.activeFilters.tags.has(tag)
-				);
-				if (!hasMatchingTag) return false;
-			}
-
-			// Color filter
-			if (this.activeFilters.colors.size > 0) {
-				const hasMatchingColor = sticker.colors?.some(color =>
-					this.activeFilters.colors.has(color)
-				);
-				if (!hasMatchingColor) return false;
-			}
-
-			// Animated filter
-			if (this.activeFilters.animated !== null) {
-				if (sticker.isAnimated !== this.activeFilters.animated) {
-					return false;
-				}
-			}
-
-			return true;
-		});
-	}
-
-	// ===== UTILITY =====
-
-	getStickerById(id) {
-		return this.getItemById(id); // Use parent method
-	}
 
 	// ===== USER UPLOADS =====
 
@@ -724,7 +833,7 @@ class StickerManager extends ContentManager {
 
 	async createStickerLayer(stickerSourceId) {
 		// Find sticker in library
-		const sticker = this.getStickerById(stickerSourceId);
+		const sticker = this.getItemById(stickerSourceId);
 		if (!sticker) {
 			console.error('Sticker not found:', stickerSourceId);
 			return null;
@@ -840,7 +949,7 @@ class StickerManager extends ContentManager {
 		}
 
 		const activeLayer = this.editor.layerManager.getActiveLayer();
-		const stickerInfo = this.getStickerById(stickerId);
+		const stickerInfo = this.getItemById(stickerId);
 
 		if (!stickerInfo) return;
 
@@ -1197,7 +1306,7 @@ class StickerManager extends ContentManager {
 
 	async deserializeSticker(layerData) {
 		// Restore sticker layer from serialized data
-		const sticker = this.getStickerById(layerData.stickerSourceId);
+		const sticker = this.getItemById(layerData.stickerSourceId);
 		if (!sticker) {
 			console.warn('Sticker not found during deserialization:', layerData.stickerSourceId);
 			return null;
@@ -1270,46 +1379,87 @@ class GlitterManager extends ContentManager {
 		};
 	}
 
-	setupEventListeners() {
-		// Call parent to setup base listeners
-		super.setupEventListeners();
-
-		// Add glitter-specific listeners
-
-		// Name Only Checkbox
-		const searchNameOnly = document.getElementById('searchNameOnly');
-		if (searchNameOnly) {
-			searchNameOnly.addEventListener('change', (e) => {
-				this.activeFilters.nameOnly = e.target.checked;
-				this.applyFilters();
-				this.updateClearFiltersButton();
-			});
-		}
-
-		// Static Filter Chips (colors, tones, special)
-		document.querySelectorAll('#filtersContainer .filter-chip').forEach(chip => {
-			chip.addEventListener('click', () => this.toggleFilter(chip));
+setupEventListeners() {
+	// Call parent to setup base listeners
+	super.setupEventListeners();
+	
+	// Setup filter chips
+	this.setupFilterChips();
+	
+	// Name Only Checkbox
+	const searchNameOnly = document.getElementById('searchNameOnly');
+	if (searchNameOnly) {
+		searchNameOnly.addEventListener('change', (e) => {
+			this.activeFilters.nameOnly = e.target.checked;
+			this.renderPicker();
+			this.updateClearFiltersButton();
 		});
 	}
+}
 
-	toggleFilter(chip) {
-		const filterType = chip.dataset.filter;
-		const value = chip.dataset.value || chip.dataset.color;
-
-		chip.classList.toggle('active');
-
-		if (filterType === 'color') {
-			if (this.activeFilters.colors.has(value)) {
-				this.activeFilters.colors.delete(value);
-			} else {
-				this.activeFilters.colors.add(value);
-			}
-		}
-		// Add other filter types (tone, special) here if needed
-
-		this.applyFilters();
-		this.updateClearFiltersButton();
+setupFilterChips() {
+	// Wire up all filter chips in the filters container
+	if (this.ui.filtersContainer) {
+		this.ui.filtersContainer.querySelectorAll('.filter-chip').forEach(chip => {
+			chip.addEventListener('click', () => this.toggleFilterChip(chip));
+		});
 	}
+}
+
+matchesSearch(item) {
+	const query = this.activeFilters.search.toLowerCase();
+	const name = item.name.toLowerCase();
+	
+	if (this.activeFilters.nameOnly) {
+		return name.includes(query);
+	} else {
+		const tagsString = (item.tags || []).join(' ').toLowerCase();
+		return name.includes(query) || tagsString.includes(query);
+	}
+}
+
+matchesColors(item) {
+	if (!item.tags) return false;
+	
+	return [...this.activeFilters.colors].some(color =>
+		item.tags.some(tag => tag.toLowerCase() === color.toLowerCase())
+	);
+}
+
+matchesChildFilters(item) {
+	if (!item.tags) return false;
+	
+	const tags = item.tags.map(t => t.toLowerCase());
+	
+	// Tone filter
+	if (this.activeFilters.tones.size > 0) {
+		const hasTone = [...this.activeFilters.tones].some(tone =>
+			tags.includes(tone.toLowerCase())
+		);
+		if (!hasTone) return false;
+	}
+	
+	// Special filter
+	if (this.activeFilters.special.size > 0) {
+		const hasSpecial = [...this.activeFilters.special].some(special =>
+			tags.includes(special.toLowerCase())
+		);
+		if (!hasSpecial) return false;
+	}
+	
+	return true;
+}
+
+customizeItemElement(element, item) {
+	if (item.isPixelated) {
+		element.classList.add('pixelated');
+	}
+}
+
+handleItemClick(item, index) {
+	this.selectGlitter(index);
+}
+
 
 	clearFilters() {
 		// Call parent clearFilters
@@ -1400,68 +1550,8 @@ class GlitterManager extends ContentManager {
 		}
 	}
 
-	// ===== PICKER UI & FILTERING =====
 
-	createItemElement(glitter) {
-		const index = this.content.indexOf(glitter);
 
-		const option = document.createElement('div');
-		option.className = 'asset-option' + (glitter.isPixelated ? ' pixelated' : '');
-		option.title = glitter.name;
-		option.dataset.index = index;
-		option.dataset.name = glitter.name.toLowerCase();
-		option.dataset.category = glitter.category.toLowerCase();
-		option.dataset.tags = (glitter.tags || []).join(' ').toLowerCase();
-		option.dataset.hue = glitter.hue;
-
-		const img = document.createElement('img');
-		img.src = glitter.url;
-		option.appendChild(img);
-		option.addEventListener('click', () => this.selectGlitter(index));
-
-		return option;
-	}
-
-	applyFilters() {
-		// Return filtered array of glitter items
-		return this.content.filter(glitter => {
-			const name = glitter.name.toLowerCase();
-			const tagsString = (glitter.tags || []).join(' ').toLowerCase();
-			const tags = tagsString.split(' ').filter(t => t.length > 0);
-
-			// Search filter
-			if (this.activeFilters.search) {
-				const term = this.activeFilters.search;
-				if (this.activeFilters.nameOnly) {
-					if (!name.includes(term)) return false;
-				} else {
-					if (!name.includes(term) && !tagsString.includes(term)) {
-						return false;
-					}
-				}
-			}
-
-			// Color filter
-			if (this.activeFilters.colors.size > 0) {
-				const hasColor = [...this.activeFilters.colors].some(color => tags.includes(color));
-				if (!hasColor) return false;
-			}
-
-			// Tone filter (if you add this)
-			if (this.activeFilters.tones.size > 0) {
-				const hasTone = [...this.activeFilters.tones].some(tone => tags.includes(tone));
-				if (!hasTone) return false;
-			}
-
-			// Special filter (if you add this)
-			if (this.activeFilters.special.size > 0) {
-				const hasSpecial = [...this.activeFilters.special].some(special => tags.includes(special));
-				if (!hasSpecial) return false;
-			}
-
-			return true;
-		});
-	}
 
 	// ===== SELECTION LOGIC =====
 
@@ -6220,7 +6310,7 @@ if (layersBarDeleteSelected) {
 	hideExportProgress() {
 		document.getElementById('exportProgress').classList.remove('visible');
 	}
-	
+
 
 	async exportAnimatedGif() {
 		// Filter visible layers - handle different layer types
