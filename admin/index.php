@@ -46,7 +46,7 @@ include_once('includes/config.php');
                     <p>Choose a swatch from the list or add a new one.</p>
                 </div>
 
-                <div id="editorContent" style="display: none;">
+                <div id="editorContent" class="editor-content">
                     <!-- Editor populated by JavaScript -->
                 </div>
             </div>
@@ -64,56 +64,80 @@ include_once('includes/config.php');
     <!-- Add Swatch Modal -->
     <div class="modal" id="addModal">
         <div class="modal-content">
-            <h3 class="modal-title">Add New Swatch</h3>
-            <div class="form-group">
-                <label>Name</label>
-                <input type="text" id="newSwatchName" placeholder="My Glitter">
+
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Swatch</h3>
             </div>
 
-            <div class="form-group">
-                <label>Category & File</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 4px;">
-                    <select id="quickCategory" style="flex: 1;" onchange="app.updateFilePath()">
-                        <option value="">Select category...</option>
-                        <!-- Populated from this.categories -->
-                    </select>
-                    <input type="file" id="filePathInput" accept=".gif" style="display: none;" onchange="app.handleFileSelection(event)">
-                    <label for="filePathInput" class="btn btn-secondary" style="margin: 0; cursor: pointer;">
-                        Browse…
-                    </label>
+
+            <div class="modal-body">
+
+            <div class="form-section">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="newSwatchName" placeholder="My Glitter">
                 </div>
-                <input type="text" id="newSwatchUrl" placeholder="images/glitter/sparkle/my-glitter.gif" style="width: 100%;">
-            </div>
 
-            <div style="display: flex; gap: 8px; margin-top: 20px;">
+                <div class="form-group">
+                    <label>Category & File</label>
+                    <div style="display: flex; gap: 8px; margin-bottom: 4px;">
+                        <select id="quickCategory" style="flex: 1;" onchange="app.updateFilePath()">
+                            <option value="">Select category...</option>
+                            <!-- Populated from this.categories -->
+                        </select>
+                        <input type="file" id="filePathInput" accept=".gif" style="display: none;" onchange="app.handleFileSelection(event)">
+                        <label for="filePathInput" class="btn btn-secondary" style="margin: 0; cursor: pointer;">
+                            Browse…
+                        </label>
+                    </div>
+                    <input type="text" id="newSwatchUrl" placeholder="images/glitter/sparkle/my-glitter.gif" style="width: 100%;">
+                </div>
+            </div>
+</div>
+
+            <div class="modal-footer">
                 <button class="btn btn-primary" onclick="app.addSwatch()">Add</button>
                 <button class="btn btn-secondary" onclick="app.hideAddModal()">Cancel</button>
             </div>
+
+
         </div>
+
     </div>
 
     <!-- Analyze Results Modal -->
     <div class="modal" id="analyzeModal">
         <div class="modal-content" style="max-width: 500px;">
+
+        <div class="modal-header">
             <h3 class="modal-title">Auto-Analysis Results</h3>
-            <p style="color: var(--color-text-secondary); font-size: 13px; margin-bottom: 16px;">
+</div>
+
+            <div class="modal-body">
+            <p>
                 Select which fields to apply:
             </p>
             <div id="analyzeResults"></div>
-            <div style="display: flex; gap: 8px; margin-top: 20px;">
+            </div>
+
+            <div class="modal-footer">
                 <button class="btn btn-primary" onclick="app.applyAnalysis()">Apply Selected</button>
                 <button class="btn btn-secondary" onclick="app.hideAnalyzeModal()">Cancel</button>
             </div>
+
         </div>
     </div>
 
     <!-- Manage Categories Modal -->
     <div class="modal" id="manageCategoriesModal">
         <div class="modal-content" style="max-width: 600px;">
-            <h3 class="modal-title">Manage Categories</h3>
+            <div class="modal-header">
+                 <h3 class="modal-title">Manage Categories</h3>
+            </div>
 
-            <div style="margin-bottom: 20px;">
-                <h4 style="font-size: 14px; margin-bottom: 12px;">Add New Category</h4>
+            <div class="modal-body">
+            <div class="form-section new-category">
+                <h4>Add New Category</h4>
                 <div class="form-group">
                     <label>Name</label>
                     <input type="text" id="newCategoryName" placeholder="Category Name">
@@ -126,27 +150,39 @@ include_once('includes/config.php');
                     <label>Description</label>
                     <input type="text" id="newCategoryDescription" placeholder="Optional description">
                 </div>
+
+                <div class="form-group buttons">
                 <button class="btn btn-primary" onclick="app.addCategory()">Add Category</button>
+                </div>
             </div>
 
-            <div>
-                <h4 style="font-size: 14px; margin-bottom: 12px;">Existing Categories</h4>
-                <div id="categoryList" style="max-height: 300px; overflow-y: auto;"></div>
+            <div class="existing-categories">
+                <h4>Existing Categories</h4>
+                <div id="categoryList"></div>
+            </div>
             </div>
 
-            <div style="margin-top: 20px;">
+            <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="app.hideManageCategoriesModal()">Close</button>
             </div>
+
+
         </div>
+
+        
     </div>
 
     <!-- Manage Tags Modal -->
     <div class="modal" id="manageTagsModal">
-        <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
-            <h3 class="modal-title">Manage Tags</h3>
+        <div class="modal-content">
 
-            <div style="margin-bottom: 20px;">
-                <h4 style="font-size: 14px; margin-bottom: 12px;">Add New Tag</h4>
+            <div class="modal-header">
+                 <h3 class="modal-title">Manage Tags</h3>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-section">
+                <h4>Add New Tag</h4>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Name</label>
@@ -161,15 +197,19 @@ include_once('includes/config.php');
                     <label>Hex Color (optional, for color tags)</label>
                     <input type="text" id="newTagHexColor" placeholder="#FF0000">
                 </div>
+
+                <div class="form-group buttons">
                 <button class="btn btn-primary" onclick="app.addNewTag()">Add Tag</button>
+                </div>
             </div>
 
             <div>
-                <h4 style="font-size: 14px; margin-bottom: 12px;">Existing Tags</h4>
+                <h4>Existing Tags</h4>
                 <div id="tagList"></div>
             </div>
+            </div>
 
-            <div style="margin-top: 20px;">
+            <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="app.hideManageTagsModal()">Close</button>
             </div>
         </div>

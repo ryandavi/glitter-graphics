@@ -1228,6 +1228,7 @@
 						<div class="settings-row-label-desc">Lower values = better quality but slower encoding. Higher
 							values = faster but may lose color accuracy.</div>
 					</div>
+
 					<!-- Animation Group -->
 					<div class="settings-group-title">Animation</div>
 					<div class="settings-row">
@@ -1264,6 +1265,35 @@
 						</div>
 						<div class="settings-row-label-desc">Maximum frames to export. Higher = longer animation but larger file size.</div>
 					</div>
+
+<div class="settings-row">
+	<div class="settings-row-header">
+		<div class="settings-row-label-main">Frame Skip</div>
+		<div class="settings-row-control">
+			<select id="exportFrameSkip">
+				<option value="1" selected>All Frames</option>
+				<option value="2">Every 2nd (50%)</option>
+				<option value="3">Every 3rd (33%)</option>
+				<option value="4">Every 4th (25%)</option>
+				<option value="5">Every 5th (20%)</option>
+			</select>
+		</div>
+	</div>
+	<div class="settings-row-label-desc">Skip frames to reduce file size. Higher values = smaller file but choppier animation.</div>
+</div>
+
+
+<div class="settings-row">
+	<div class="settings-row-header">
+		<div class="settings-row-label-main">Reverse Animation</div>
+		<div class="settings-row-control">
+			<input type="checkbox" id="exportReverse" class="toggle-input">
+		</div>
+	</div>
+	<div class="settings-row-label-desc">Play animation backwards.</div>
+</div>
+
+					
 				</div>
 			</div>
 		</div>

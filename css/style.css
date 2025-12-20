@@ -2118,6 +2118,10 @@ input[type=range]::-moz-range-thumb {
 .modal-overlay > .modal-content > .modal-body ul {
   margin-left: 1.5em;
 }
+.modal-overlay > .modal-content > .modal-footer {
+  display: flex;
+  gap: 8px;
+}
 
 #exportPreviewModal .modal-body {
   padding: 0;

@@ -110,6 +110,7 @@
                         
                         <div class="form-group">
                             <label>URL</label>
+                            
                             <input type="text" id="url" value="${s.url || ''}">
                             <img src="${CONFIG.image_base_path}${s.url}" class="preview-image" alt="Preview">
                         </div>
@@ -159,7 +160,7 @@
                     <div class="form-section">
                         <h3 class="form-section-title">Color Data</h3>
                         
-                        <div class="form-group">
+                        <div class="form-group color-codes">
                             <label>Color Codes</label>
                             <div class="color-inputs" id="colorInputs">
                                 ${colors.map((color, i) => this.renderColorInput(color.trim(), i)).join('')}
