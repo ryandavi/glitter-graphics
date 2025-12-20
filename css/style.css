@@ -208,7 +208,7 @@ img[data-pixel-scale] {
   border: 1px solid var(--color-border-hover);
   text-transform: uppercase;
   pointer-events: none;
-  max-width: 2var --icon-size;
+  max-width: 240px;
   width: -moz-max-content;
   width: max-content;
   /* Windows 7 CSS Variables */
@@ -1109,10 +1109,8 @@ input[type=range]::-moz-range-thumb {
 .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.goto-glitter {
   display: none;
 }
-.layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.delete:hover {
-  background: var(--color-danger);
-  border-color: var(--color-danger);
-  color: white;
+.layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.clone {
+  display: none;
 }
 .layers-section > .layers-list > .layer-item > .layer-drag-handle {
   display: none;
@@ -2110,7 +2108,9 @@ input[type=range]::-moz-range-thumb {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.modal-overlay > .modal-content > .modal-body ol,
+.modal-overlay > .modal-content > .modal-body ol {
+  margin-left: 2.5em;
+}
 .modal-overlay > .modal-content > .modal-body ul {
   margin-left: 1.5em;
 }
@@ -2169,6 +2169,7 @@ input[type=range]::-moz-range-thumb {
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: 1000px;
   white-space: nowrap;
+  font-size: var(--font-size-sm);
 }
 #exportPreviewModal .export-stats > span {
   background: var(--color-bg-tertiary);
@@ -2824,6 +2825,9 @@ input[type=range]::-moz-range-thumb {
 }
 #aboutModal .context:hover {
   color: var(--color-text-primary);
+}
+#aboutModal p .context {
+  display: inline-block;
 }
 #aboutModal p + h2,
 #aboutModal ol + h2,

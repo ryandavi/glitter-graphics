@@ -5410,6 +5410,22 @@ if (layersBarDeleteSelected) {
 			if (!e.ctrlKey && !e.metaKey && this.originalImage) this.setTool(ToolType.ZOOM);
 		}
 
+		// ADD THIS: Delete or Backspace: Delete selected layer
+		if (e.key === 'Delete' || e.key === 'Backspace') {
+			const selectedLayer = this.layerManager.getActiveLayer();
+			
+			// Only delete if a layer is selected and it's not the base image
+			if (selectedLayer && selectedLayer.type !== LayerType.BASE_IMAGE) {
+				e.preventDefault(); // Prevent browser back navigation on Backspace
+				
+				if (confirm('Delete this layer?')) {
+					this.layerManager.deleteLayer(selectedLayer.id);
+				}
+			}
+			return;
+		}
+
+
 		if (this.originalImage) {
 			if ((e.ctrlKey || e.metaKey) && e.key === '0') {
 				e.preventDefault();

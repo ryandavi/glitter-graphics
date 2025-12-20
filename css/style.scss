@@ -485,7 +485,7 @@ img[data-pixel-scale] {
 
 
 
-	max-width: 2var(--icon-size);
+	max-width: 240px;
 	width: max-content;
 
 	@include windows7-tooltip;
@@ -1193,11 +1193,11 @@ input[type="range"] {
 						display: none;
 					}
 
-					&.delete:hover {
-						background: var(--color-danger);
-						border-color: var(--color-danger);
-						color: white;
+					&.clone {
+						display: none;
 					}
+
+
 				}
 			}
 
@@ -2379,7 +2379,10 @@ input[type="range"] {
 				}
 			}
 
-			ol,
+			ol {
+				margin-left: 2.5em;
+			}
+
 			ul {
 				margin-left: 1.5em;
 			}
@@ -2466,6 +2469,7 @@ input[type="range"] {
 			padding: var(--spacing-sm) var(--spacing-lg);
 			border-radius: 1000px;
 			white-space: nowrap;
+			font-size: var(--font-size-sm);
 		}
 
 		>span {
@@ -3414,7 +3418,11 @@ input[type="range"] {
 		}
 	}
 
-
+	p {
+		.context {
+			display: inline-block;
+		}
+	}
 
 	p+h2,
 	ol+h2,
