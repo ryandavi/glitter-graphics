@@ -100,7 +100,7 @@
 						</svg>
 						<span class="name">Move</span>
 					</button>
-					<button class="btn-icon icon-wrapper" id="colorPickerTool" title="Color Picker (I)" disabled>
+					<button class="btn-icon icon-wrapper" id="colorPickerTool" title="Glitter Color Picker (I)" disabled>
 						<svg class="icon">
 							<use href="#icon-magic-wand"></use>
 						</svg>
@@ -351,6 +351,14 @@
 												<div class="filter-chip text-filter-chip" data-color="jewel" data-filter="tone" title="Jewel Tone">Jewel Tone</div>
 											</div>
 										</div>
+
+										<div class="filter-section">
+											<div class="filter-label">Category</div>
+											<div class="filter-chips" id="glitterCategoryChips">
+												<!-- Populated dynamically from glitter data -->
+											</div>
+										</div>
+
 										<div class="filter-section">
 											<div class="filter-label">Vibe</div>
 											<div class="filter-chips">
@@ -378,45 +386,45 @@
 										<span class="name">Filter</span>
 									</button>
 								</div>
-<div class="filters-container" id="stickerFiltersContainer">
-	<div class="filters-container-inner">
-		<div class="filter-section">
-			<div class="filter-label">Type</div>
-			<div class="filter-chips">
-				<div class="filter-chip text-filter-chip" data-animated="true" data-filter="animated" title="Animated">Animated</div>
-				<div class="filter-chip text-filter-chip" data-animated="false" data-filter="animated" title="Static">Static</div>
-			</div>
-		</div>
-		<div class="filter-section">
-			<div class="filter-label">Colors</div>
-			<div class="color-filter-chips">
-				<div class="filter-chip color-filter-chip" data-color="red" data-filter="color" title="Red"></div>
-				<div class="filter-chip color-filter-chip" data-color="orange" data-filter="color" title="Orange"></div>
-				<div class="filter-chip color-filter-chip" data-color="yellow" data-filter="color" title="Yellow"></div>
-				<div class="filter-chip color-filter-chip" data-color="green" data-filter="color" title="Green"></div>
-				<div class="filter-chip color-filter-chip" data-color="blue" data-filter="color" title="Blue"></div>
-				<div class="filter-chip color-filter-chip" data-color="purple" data-filter="color" title="Purple"></div>
-				<div class="filter-chip color-filter-chip" data-color="pink" data-filter="color" title="Pink"></div>
-			</div>
-		</div>
-		<div class="filter-section">
-			<div class="filter-label">Vibe</div>
-			<div class="filter-chips">
-				<div class="filter-chip text-filter-chip" data-color="glitter" data-filter="vibe" title="Glitter">Glitter</div>
-				<div class="filter-chip text-filter-chip" data-color="pixel" data-filter="vibe" title="Pixel">Pixel</div>
-				<div class="filter-chip text-filter-chip" data-color="emo" data-filter="vibe" title="Emo">Emo</div>
-				<div class="filter-chip text-filter-chip" data-color="holiday" data-filter="vibe" title="Holiday">Holiday</div>
-			</div>
-		</div>
-		<div class="filter-section">
-			<div class="filter-label">Category</div>
-			<div class="filter-chips" id="stickerCategoryChips">
-				<!-- Populated dynamically from sticker data -->
-			</div>
-		</div>
-	</div>
-	<button class="btn-text" id="clearStickerFiltersBtn" disabled>Clear all filters</button>
-</div>
+								<div class="filters-container" id="stickerFiltersContainer">
+									<div class="filters-container-inner">
+										<div class="filter-section">
+											<div class="filter-label">Type</div>
+											<div class="filter-chips">
+												<div class="filter-chip text-filter-chip" data-animated="true" data-filter="animated" title="Animated">Animated</div>
+												<div class="filter-chip text-filter-chip" data-animated="false" data-filter="animated" title="Static">Static</div>
+											</div>
+										</div>
+										<div class="filter-section">
+											<div class="filter-label">Colors</div>
+											<div class="color-filter-chips">
+												<div class="filter-chip color-filter-chip" data-color="red" data-filter="color" title="Red"></div>
+												<div class="filter-chip color-filter-chip" data-color="orange" data-filter="color" title="Orange"></div>
+												<div class="filter-chip color-filter-chip" data-color="yellow" data-filter="color" title="Yellow"></div>
+												<div class="filter-chip color-filter-chip" data-color="green" data-filter="color" title="Green"></div>
+												<div class="filter-chip color-filter-chip" data-color="blue" data-filter="color" title="Blue"></div>
+												<div class="filter-chip color-filter-chip" data-color="purple" data-filter="color" title="Purple"></div>
+												<div class="filter-chip color-filter-chip" data-color="pink" data-filter="color" title="Pink"></div>
+											</div>
+										</div>
+										<div class="filter-section">
+											<div class="filter-label">Vibe</div>
+											<div class="filter-chips">
+												<div class="filter-chip text-filter-chip" data-color="glitter" data-filter="vibe" title="Glitter">Glitter</div>
+												<div class="filter-chip text-filter-chip" data-color="pixel" data-filter="vibe" title="Pixel">Pixel</div>
+												<div class="filter-chip text-filter-chip" data-color="emo" data-filter="vibe" title="Emo">Emo</div>
+												<div class="filter-chip text-filter-chip" data-color="holiday" data-filter="vibe" title="Holiday">Holiday</div>
+											</div>
+										</div>
+										<div class="filter-section">
+											<div class="filter-label">Category</div>
+											<div class="filter-chips" id="stickerCategoryChips">
+												<!-- Populated dynamically from sticker data -->
+											</div>
+										</div>
+									</div>
+									<button class="btn-text" id="clearStickerFiltersBtn" disabled>Clear all filters</button>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -1768,7 +1776,7 @@
 									</span>
 								</div>
 								<div class="guide-item-content">
-									<p><strong>Color Picker (I)</strong> – Click colors on the base image to create glitter selections.</p>
+									<p><strong>Glitter Color Picker (I)</strong> – With a glitter layer selected, click on the canvas to create a selection based on the base image.</p>
 								</div>
 							</div>
 
@@ -1991,7 +1999,7 @@
 									</span>
 								</div>
 								<div class="guide-item-content">
-									<p>Use the <strong>Color Picker Tool (I)</strong> to click any color in your base image.</p>
+									<p>Use the <strong>Glitter Color Picker Tool (I)</strong> to click any color in your base image.</p>
 									<ul>
 										<li>This tells the glitter layer which parts to fill.</li>
 										<li>A glitter layer will be empty until a selection is made.</li>

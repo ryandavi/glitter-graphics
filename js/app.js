@@ -169,6 +169,55 @@ class ContentManager {
 		this.layerElements = new Map(); // layerId -> HTMLElement
 	}
 
+scrollToContent(contentId) {
+	if (!this.ui.gridContainer) return;
+	
+	// Find the asset option by data-id within this manager's grid
+	const assetOption = this.ui.gridContainer.querySelector(`.asset-option[data-id="${contentId}"]`);
+	if (!assetOption) {
+		console.warn(`${this.contentType} with id ${contentId} not found in picker`);
+		return;
+	}
+	
+	// Scroll into view smoothly
+	assetOption.scrollIntoView({
+		behavior: 'smooth',
+		block: 'center'
+	});
+	
+	// Brief highlight effect
+	assetOption.classList.add('highlight');
+	setTimeout(() => {
+		assetOption.classList.remove('highlight');
+	}, 1000);
+}
+
+
+	populateCategoryChips() {
+		if (!this.ui.categoryChips || this.ui.categoryChips.children.length > 0) return;
+
+		// Get unique categories
+		const categories = new Set();
+		[...this.content, ...this.userContent].forEach(sticker => {
+			if (sticker.category) categories.add(sticker.category);
+		});
+
+		// Create chips
+		Array.from(categories).forEach(category => {
+			const chip = document.createElement('div');
+			chip.className = 'filter-chip text-filter-chip';
+			chip.dataset.value = category;  // Changed from dataset.category
+			chip.dataset.filter = 'category';
+			chip.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+			chip.title = category;
+
+			chip.addEventListener('click', () => this.toggleFilterChip(chip));
+
+			this.ui.categoryChips.appendChild(chip);
+		});
+	}
+
+
 	getLayerType() {
 		return null;
 	}
@@ -334,16 +383,13 @@ class ContentManager {
 		// Override in child classes to add custom classes/attributes
 	}
 
-	createItemElement(item, index = null) {
+	createItemElement(item) {
 		const option = document.createElement('div');
 		option.className = 'asset-option';
 		option.title = item.name;
 
 		// Set both data-id and data-index for compatibility
 		option.dataset.id = item.id;
-		if (index !== null) {
-			option.dataset.index = index;
-		}
 
 		// Allow children to add custom classes/attributes
 		this.customizeItemElement(option, item);
@@ -355,13 +401,13 @@ class ContentManager {
 
 		// Wire up click handler (delegate to child)
 		option.addEventListener('click', () => {
-			this.handleItemClick(item, index);
+			this.handleItemClick(item);
 		});
 
 		return option;
 	}
 
-	handleItemClick(item, index = null) {
+	handleItemClick(item) {
 		throw new Error('handleItemClick() must be implemented by child class');
 	}
 
@@ -481,9 +527,7 @@ class ContentManager {
 			const grid = categoryDiv.querySelector('.asset-grid');
 
 			items.forEach(item => {
-				// Find original index in content array (needed for glitter)
-				const originalIndex = this.content.indexOf(item);
-				const option = this.createItemElement(item, originalIndex);
+				const option = this.createItemElement(item);
 				grid.appendChild(option);
 			});
 
@@ -645,33 +689,8 @@ class StickerManager extends ContentManager {
 		if (item.hasTransparency) element.classList.add('has-transparency');
 	}
 
-	handleItemClick(item, index) {
+	handleItemClick(item) {
 		this.addStickerToCanvas(item.id);
-	}
-
-	// Sticker-specific method
-	populateCategoryChips() {
-		if (!this.ui.categoryChips || this.ui.categoryChips.children.length > 0) return;
-
-		// Get unique categories
-		const categories = new Set();
-		[...this.content, ...this.userContent].forEach(sticker => {
-			if (sticker.category) categories.add(sticker.category);
-		});
-
-		// Create chips
-		Array.from(categories).sort().forEach(category => {
-			const chip = document.createElement('div');
-			chip.className = 'filter-chip text-filter-chip';
-			chip.dataset.value = category;  // Changed from dataset.category
-			chip.dataset.filter = 'category';
-			chip.textContent = category.charAt(0).toUpperCase() + category.slice(1);
-			chip.title = category;
-
-			chip.addEventListener('click', () => this.toggleFilterChip(chip));
-
-			this.ui.categoryChips.appendChild(chip);
-		});
 	}
 
 	// ===== LOADING =====
@@ -1260,7 +1279,6 @@ async createStickerLayer(stickerSourceId) {
 
 		// Clean up maps
 		this.layerElements.delete(layerId);
-		this.animationFrames.delete(layerId);
 	}
 
 	removeStickerElement(layerId) {
@@ -1306,10 +1324,6 @@ async createStickerLayer(stickerSourceId) {
 	// ===== CLEANUP =====
 
 	destroy() {
-		// Stop all animations
-		this.animationFrames.forEach((frameId, layerId) => {
-			cancelAnimationFrame(frameId);
-		});
 
 		// Remove all sticker elements
 		this.layerElements.forEach((element, layerId) => {
@@ -1327,7 +1341,6 @@ async createStickerLayer(stickerSourceId) {
 
 		// Clear maps
 		this.layerElements.clear();
-		this.animationFrames.clear();
 	}
 }
 
@@ -1348,32 +1361,32 @@ class GlitterManager extends ContentManager {
 	}
 
 
-	createLayer() {  // ADD type parameter
-		if (this.editor.layerManager.layers.length >= CONFIG.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
-			return null;
-		}
-
-		const layer = {
-			id: this.editor.layerManager.generateLayerId(),
-			type: this.getLayerType(),
-			visible: true,
-			locked: false,
-			selections: [],
-			selectedGlitterIndex: CONFIG.defaultGlitterIndex,
-			settings: {
-				threshold: CONFIG.defaultThreshold,
-				feather: CONFIG.defaultFeather,
-				scale: CONFIG.defaultScale,
-				opacity: CONFIG.defaultOpacity,
-				contiguous: false,
-				invert: false,
-				multiSelect: false
-			}
-		};
-
-		return layer;
+createLayer() {
+	if (this.editor.layerManager.layers.length >= CONFIG.maxLayers) {
+		this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+		return null;
 	}
+
+	const layer = {
+		id: this.editor.layerManager.generateLayerId(),
+		type: this.getLayerType(),
+		visible: true,
+		locked: false,
+		selections: [],
+		selectedGlitterId: this.content[CONFIG.defaultGlitterIndex]?.id, // CHANGED: Use ID instead of index
+		settings: {
+			threshold: CONFIG.defaultThreshold,
+			feather: CONFIG.defaultFeather,
+			scale: CONFIG.defaultScale,
+			opacity: CONFIG.defaultOpacity,
+			contiguous: false,
+			invert: false,
+			multiSelect: false
+		}
+	};
+
+	return layer;
+}
 
 
 
@@ -1390,9 +1403,15 @@ class GlitterManager extends ContentManager {
 			searchInput: document.getElementById('glitterSearch'),
 			filterToggle: document.getElementById('filterToggleBtn'),
 			filtersContainer: document.getElementById('filtersContainer'),
-			clearFiltersBtn: document.getElementById('clearFiltersBtn')
+			clearFiltersBtn: document.getElementById('clearFiltersBtn'),
+			categoryChips: document.getElementById('glitterCategoryChips')
+			
 		};
 	}
+
+
+
+
 
 	setupEventListeners() {
 		// Call parent to setup base listeners
@@ -1471,8 +1490,8 @@ class GlitterManager extends ContentManager {
 		}
 	}
 
-	handleItemClick(item, index) {
-		this.selectGlitter(index);
+	handleItemClick(item) {
+		this.selectGlitter(item.id);
 	}
 
 
@@ -1512,6 +1531,12 @@ class GlitterManager extends ContentManager {
 					tags: config.tags || []
 				});
 			});
+
+			console.log(`Loaded ${this.content.length} swatches`);
+
+			// Populate category chips after loading
+			this.populateCategoryChips();
+
 		} catch (error) {
 			console.error('Failed to load swatches:', error);
 			this.editor.showError('Failed to load glitter library');
@@ -1587,9 +1612,10 @@ class GlitterManager extends ContentManager {
 			return;
 		}
 
-		layer.selectedGlitterIndex = index;
+		layer.selectedGlitterId = index; // this.content[index].id;
 
-		const glitter = this.content[index];
+		const glitter = this.content.find(c => c.id === index);
+
 		if (!glitter) return;
 
 		// Lazy load frames
@@ -1639,7 +1665,7 @@ class GlitterManager extends ContentManager {
 		layers.forEach(layer => {
 			if (layer.type !== LayerType.GLITTER_FILL) return;
 
-			const oldIndex = layer.selectedGlitterIndex;
+			const oldGlitterId = layer.selectedGlitterId;
 			// Filter out current so we get a change
 			const choices = availableGlitters.filter((g, idx) => {
 				const gIndex = this.content.findIndex(gl => gl.url === g.url);
@@ -1648,7 +1674,7 @@ class GlitterManager extends ContentManager {
 
 			if (choices.length > 0) {
 				const randomGlitter = choices[Math.floor(Math.random() * choices.length)];
-				layer.selectedGlitterIndex = this.content.findIndex(g => g.url === randomGlitter.url);
+				layer.selectedGlitterId = randomGlitter.id;
 			}
 		});
 
@@ -1682,7 +1708,7 @@ class GlitterManager extends ContentManager {
 
 		if (layer.type !== LayerType.GLITTER_FILL) return;
 
-		const glitter = this.content[layer.selectedGlitterIndex];
+		const glitter = this.getItemById(layer.selectedGlitterId);
 		if (!glitter) return;
 
 		// 1. Create the WRAPPER
@@ -1746,7 +1772,7 @@ class GlitterManager extends ContentManager {
 	createGlitterElement(layer) {
 		if (layer.type !== LayerType.GLITTER_FILL) return null;
 
-		const glitter = this.content[layer.selectedGlitterIndex];
+		const glitter = this.getItemById(layer.selectedGlitterId);
 		if (!glitter) return null;
 
 		const width = this.editor.originalCanvas.width;
@@ -1819,7 +1845,7 @@ class GlitterManager extends ContentManager {
 			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
 
 			if (layer && layer.type === LayerType.GLITTER_FILL) {
-				const glitter = this.content[layer.selectedGlitterIndex];
+				const glitter = this.getItemById(layer.selectedGlitterId);
 				if (glitter) {
 					const glitterScale = layer.settings.scale / 100;
 					const baseSize = (glitter.frames && glitter.frames.width) ?
@@ -2811,7 +2837,8 @@ class LayerManager {
 		} else if (layer && layer.type === LayerType.BASE_IMAGE) {
 			this.editor.updateStatus(`Selected base image`);
 		} else if (layer && layer.type === LayerType.GLITTER_FILL) {
-			this.editor.updateStatus(`Selected glitter: ${this.editor.glitterManager.content[layer.selectedGlitterIndex]?.name}`);
+const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+this.editor.updateStatus(`Selected glitter: ${glitter?.name || 'Unknown'}`);
 
 
 
@@ -2830,84 +2857,42 @@ class LayerManager {
 
 	// ===== LAYER NAVIGATION =====
 
-	goToGlitter(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer) return;
-
-		const glitterIndex = layer.selectedGlitterIndex;
-
-		// Select this layer
-		this.setActiveLayer(layerId);
-
-		// On mobile, open the glitter drawer first
-		if (window.innerWidth <= 800 && this.editor.mobileManager) {
-			this.editor.mobileManager.toggleDrawer('glitter');
-		}
-
-		// Scroll to the glitter option
-		this.scrollToGlitter(glitterIndex);
+goToGlitter(layerId) {
+	const layer = this.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
+	
+	// Select this layer
+	this.setActiveLayer(layerId);
+	
+	// On mobile, open the glitter drawer
+	if (window.innerWidth <= 800 && this.editor.mobileManager) {
+		this.editor.mobileManager.toggleDrawer('glitter');
 	}
-
-	scrollToGlitter(glitterIndex) {
-		const glitterOption = document.querySelector(`.asset-option[data-index="${glitterIndex}"]`);
-		if (!glitterOption) return;
-
-		const glitterOptions = document.querySelector('.asset-options');
-		if (!glitterOptions) return;
-
-		// Scroll the glitter option into view
-		glitterOption.scrollIntoView({
-			behavior: 'smooth',
-			block: 'center'
-		});
-
-		// Brief highlight effect
-		glitterOption.classList.add('highlight');
-		setTimeout(() => {
-			glitterOption.classList.remove('highlight');
-		}, 1000);
+	
+	// Scroll to the glitter in the picker
+	if (layer.selectedGlitterId !== undefined) {
+		this.editor.glitterManager.scrollToContent(layer.selectedGlitterId);
 	}
+}
 
-
-	goToSticker(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer || layer.type !== LayerType.STICKER) return;
-
-		// Select this layer
-		this.setActiveLayer(layerId);
-
-		// On mobile, open the stickers drawer
-		if (window.innerWidth <= 800 && this.editor.mobileManager) {
-			this.editor.mobileManager.toggleDrawer('glitter'); // Opens the content drawer (stickers tab)
-		}
-
-		// Scroll to the sticker in the sticker picker
-		const stickerId = layer.stickerSourceId;
-		if (stickerId) {
-			this.scrollToSticker(stickerId);
-		}
+goToSticker(layerId) {
+	const layer = this.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.STICKER) return;
+	
+	// Select this layer
+	this.setActiveLayer(layerId);
+	
+	// On mobile, open the stickers drawer
+	if (window.innerWidth <= 800 && this.editor.mobileManager) {
+		this.editor.mobileManager.toggleDrawer('glitter'); // Opens content drawer (stickers tab)
 	}
-
-	scrollToSticker(stickerId) {
-		// Updated selector to match new structure
-		const stickerOption = document.querySelector(`#stickerGridContainer .asset-option[data-id="${stickerId}"]`);
-		if (!stickerOption) return;
-
-		const stickerContainer = document.querySelector('#stickerGridContainer');
-		if (!stickerContainer) return;
-
-		// Scroll the sticker option into view
-		stickerOption.scrollIntoView({
-			behavior: 'smooth',
-			block: 'center'
-		});
-
-		// Brief highlight effect
-		stickerOption.classList.add('highlight');
-		setTimeout(() => {
-			stickerOption.classList.remove('highlight');
-		}, 1000);
+	
+	// Scroll to the sticker in the picker
+	if (layer.stickerSourceId) {
+		this.editor.stickerManager.scrollToContent(layer.stickerSourceId);
 	}
+}
+
 
 
 	// ===== LAYER PICKING (SELECT TOOL) =====
@@ -2951,7 +2936,8 @@ class LayerManager {
 				if (layer.type === LayerType.STICKER) name = layer.name;
 				else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
 				else if (layer.type === LayerType.GLITTER_FILL) {
-					name = this.editor.glitterManager.content[layer.selectedGlitterIndex]?.name || 'Glitter';
+const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+name = glitter?.name || 'Glitter';
 				}
 
 				this.editor.updateStatus(`Selected: ${name}`);
@@ -3174,7 +3160,7 @@ class LayerManager {
 				visible: sourceLayer.visible,
 				locked: false,
 				selections: sourceLayer.selections.map(sel => ({ ...sel })),
-				selectedGlitterIndex: sourceLayer.selectedGlitterIndex,
+				selectedGlitterId: sourceLayer.selectedGlitterId, // CHANGED
 				settings: { ...sourceLayer.settings }
 			};
 
@@ -3255,7 +3241,7 @@ class LayerManager {
 			}
 		} else {
 			// Glitter Logic
-			const glitter = this.editor.glitterManager.content[layer.selectedGlitterIndex];
+			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
 			if (glitter) {
 				swatch.style.backgroundImage = `url(${glitter.url})`;
 
@@ -3287,7 +3273,7 @@ class LayerManager {
 		if (layer.type === LayerType.STICKER) {
 			nameText.textContent = layer.name || 'Sticker';
 		} else if (layer.type === LayerType.GLITTER_FILL) {
-			const glitter = this.editor.glitterManager.content[layer.selectedGlitterIndex];
+			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
 			nameText.textContent = glitter ? `${glitter.category} - ${glitter.name}` : 'No glitter';
 		} else if (layer.type === LayerType.BASE_IMAGE) {
 			nameText.textContent = 'Base Image';
@@ -3455,7 +3441,7 @@ class LayerManager {
 			return;
 		}
 
-		const glitter = this.editor.glitterManager.content[activeLayer.selectedGlitterIndex];
+		const glitter = this.editor.glitterManager.getItemById(activeLayer.selectedGlitterId);
 		if (glitter) {
 			mobileLayersSwatch.classList.remove('empty');
 			mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
@@ -4355,15 +4341,17 @@ class GlitterEditor {
 		}
 	}
 
-	updateGlitterSelection() {
-		const layer = this.layerManager.getActiveLayer();
-
-		document.querySelectorAll('.asset-option').forEach((opt) => {
-			// If layer exists, check index. If no layer (null), always false.
-			const isSelected = layer ? parseInt(opt.dataset.index) === layer.selectedGlitterIndex : false;
-			opt.classList.toggle('selected', isSelected);
-		});
-	}
+updateGlitterSelection() {
+	const layer = this.layerManager.getActiveLayer();
+	const glitterOptions = document.querySelectorAll('.asset-options .asset-option');
+	
+	glitterOptions.forEach(opt => {
+		// Compare IDs instead of indices
+		const isSelected = layer && layer.type === LayerType.GLITTER_FILL && 
+		                  parseInt(opt.dataset.id) === layer.selectedGlitterId;
+		opt.classList.toggle('selected', isSelected);
+	});
+}
 
 	updateStickerSelection() {
 		const layer = this.layerManager.getActiveLayer();
@@ -5564,7 +5552,7 @@ class GlitterEditor {
 					visible: layer.visible,
 					// Safely handle selections: if undefined, save as empty array
 					selections: layer.selections ? JSON.parse(JSON.stringify(layer.selections)) : [],
-					selectedGlitterIndex: layer.selectedGlitterIndex,
+					selectedGlitterId: layer.selectedGlitterId, // CHANGED
 					// Safely handle settings
 					settings: layer.settings ? { ...layer.settings } : {}
 				};
@@ -5612,7 +5600,7 @@ class GlitterEditor {
 					visible: layerData.visible,
 					// Safe parsing for selections
 					selections: layerData.selections ? JSON.parse(JSON.stringify(layerData.selections)) : [],
-					selectedGlitterIndex: layerData.selectedGlitterIndex,
+					selectedGlitterId: layerData.selectedGlitterId, // CHANGED
 					settings: layerData.settings ? { ...layerData.settings } : {}
 				});
 			}
@@ -5922,7 +5910,7 @@ class GlitterEditor {
 						type: layer.type || LayerType.GLITTER_FILL,
 						visible: layer.visible,
 						selections: [],
-						selectedGlitterIndex: layer.selectedGlitterIndex,
+						selectedGlitterId: layer.selectedGlitterId,
 						settings: { ...layer.settings }
 					};
 				}),
@@ -6603,17 +6591,24 @@ class GifExporter {
 			this._deoptimizeWatermarkFrames(watermark);
 		}
 
-		// 3. TRANSPARENCY DETECTION
-		const originalHasTransparency = this._hasTransparency(canvasData);
-		if (this.config.debug) console.log(`[GifExporter] Original image has transparency: ${originalHasTransparency}`);
+// Around line 6596-6611 - Fix transparency detection when base is off
+// 3. TRANSPARENCY DETECTION
+const originalHasTransparency = this._hasTransparency(canvasData);
+const transparencyIsFilled = this._isTransparencyFilled(visibleLayers);
 
-		// New logic: Check if transparency is consumed by an opaque glitter layer
-		const transparencyIsFilled = this._isTransparencyFilled(visibleLayers);
-		if (this.config.debug) console.log(`[GifExporter] Transparency is being consumed by an opaque layer: ${transparencyIsFilled}`);
+// Check if the base layer is actually being rendered
+const baseLayer = visibleLayers.find(l => l.type === LayerType.BASE_IMAGE);
+const baseIsEffectivelyVisible = baseLayer && (baseLayer.visible !== false) && exportSettings.baseImage;
 
-		// We only need a GIF transparency key if the image HAS transparency,
-		// it ISN'T filled by a glitter layer, and the user HAS transparency enabled.
-		const needsTransparency = originalHasTransparency && !transparencyIsFilled && exportSettings.transparency;
+// If the base layer is hidden, the background is effectively transparent
+const effectiveHasTransparency = !baseIsEffectivelyVisible || originalHasTransparency;
+
+// FIXED: When base is off, honor transparency setting regardless of fill
+// When base is ON, only enable transparency if it's not being consumed by opaque fill
+const needsTransparency = exportSettings.transparency && (
+	!baseIsEffectivelyVisible || // Base off = always respect transparency checkbox
+	(effectiveHasTransparency && !transparencyIsFilled) // Base on = only if not filled
+);
 
 		const safeKey = needsTransparency
 			? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData, watermark)
@@ -6733,7 +6728,8 @@ class GifExporter {
 
 		layers.forEach(layer => {
 			if (layer.type === LayerType.GLITTER_FILL) {
-				const glitter = library[layer.selectedGlitterIndex];
+				// BOO
+				const glitter = library.find(g => g.id === layer.selectedGlitterId);
 				if (glitter?.frames?.frames) {
 					allFrames.push(...glitter.frames.frames);
 				}
@@ -6868,7 +6864,7 @@ class GifExporter {
 			const maskCanvas = maskCanvases.get(layer.id);
 			if (!maskCanvas) return;
 
-			const glitter = library[layer.selectedGlitterIndex];
+			const glitter = library.find(g => g.id === layer.selectedGlitterId);
 			const frames = glitter.frames.frames;
 			const fIdx = frameIndex % frames.length;
 			const glitterFrame = frames[fIdx];
@@ -6990,50 +6986,55 @@ class GifExporter {
 		}
 	}
 
-	_deoptimizeAnimatedFrames(layers, library) {
-		layers.forEach(layer => {
-			let glitter, name, isSticker;
+_deoptimizeAnimatedFrames(layers, library) {
+	layers.forEach(layer => {
+		let glitter, name, isSticker;
 
-			if (layer.type === LayerType.GLITTER_FILL) {
-				glitter = library[layer.selectedGlitterIndex];
-				if (!glitter.frames || glitter.isFlattened) return;
-				name = glitter.name;
-				isSticker = false;
-			} else if (layer.type === LayerType.STICKER && layer.stickerData.isAnimated) {
-				const stickerData = layer.stickerData;
-				if (!stickerData.frames || stickerData.isFlattened) return;
-				glitter = { frames: stickerData.frames };
-				name = stickerData.name;
-				isSticker = true;
-			} else {
-				return;
-			}
+		if (layer.type === LayerType.GLITTER_FILL) {
+			glitter = library.find(g => g.id === layer.selectedGlitterId);
+			if (!glitter.frames || glitter.isFlattened) return;
+			name = glitter.name;
+			isSticker = false;
+		} else if (layer.type === LayerType.STICKER && layer.stickerData.isAnimated) {
+			const stickerData = layer.stickerData;
+			if (!stickerData.frames || stickerData.isFlattened) return;
+			glitter = { frames: stickerData.frames };
+			name = stickerData.name;
+			isSticker = true;
+		} else {
+			return;
+		}
 
-			let glitterHasTransparency = false;
-			const rawFrames = glitter.frames.frames;
-			const width = glitter.frames.width;
-			const height = glitter.frames.height;
-			const flattenedFrames = [];
+		let glitterHasTransparency = false;
+		const rawFrames = glitter.frames.frames;
+		const width = glitter.frames.width;
+		const height = glitter.frames.height;
+		const flattenedFrames = [];
 
-			const canvas = document.createElement('canvas');
-			canvas.width = width;
-			canvas.height = height;
-			const ctx = canvas.getContext('2d', { willReadFrequently: true });
-			ctx.imageSmoothingEnabled = false; // ADD THIS
+		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.imageSmoothingEnabled = false;
 
-			const tempCanvas = document.createElement('canvas');
-			tempCanvas.width = width;
-			tempCanvas.height = height;
-			const tempCtx = tempCanvas.getContext('2d');
-			tempCtx.imageSmoothingEnabled = false; // ADD THIS
+		const tempCanvas = document.createElement('canvas');
+		tempCanvas.width = width;
+		tempCanvas.height = height;
+		const tempCtx = tempCanvas.getContext('2d');
+		tempCtx.imageSmoothingEnabled = false;
 
-			let previousFrameData = null;
+		let previousFrameData = null;
 
-			// Detect if this GIF uses deltas or needs clearing
+		// NEW APPROACH: Use original disposal methods for stickers, 
+		// analyze for glitter
+		let useOriginalDisposal = isSticker;
+		let calculatedDisposal = null;
+
+		if (!useOriginalDisposal) {
+			// Only analyze disposal for glitter (old logic)
 			let usesDeltas = false;
 			let needsClearing = false;
 			let isAnimation = false;
-			let differentPercent = 0;
 
 			if (rawFrames.length > 1) {
 				const frame1Data = rawFrames[0].imageData.data;
@@ -7048,7 +7049,6 @@ class GifExporter {
 					if (alpha === 0) transparentCount++;
 					else if (alpha === 255) opaqueCount++;
 
-					// Check if pixel is different from frame 1
 					if (Math.abs(frame1Data[i] - frame2Data[i]) > 10 ||
 						Math.abs(frame1Data[i + 1] - frame2Data[i + 1]) > 10 ||
 						Math.abs(frame1Data[i + 2] - frame2Data[i + 2]) > 10 ||
@@ -7059,99 +7059,87 @@ class GifExporter {
 
 				const totalPixels = frame2Data.length / 4;
 				const transparentPercent = (transparentCount / totalPixels) * 100;
-				differentPercent = (differentPixels / totalPixels) * 100;
+				const differentPercent = (differentPixels / totalPixels) * 100;
 
-				// Refined delta detection
 				usesDeltas = (transparentPercent > 60 || transparentPercent < 30);
-
-				// Animation detection
 				isAnimation = transparentPercent >= 30 && transparentPercent <= 60 && differentPercent < 25;
-
-				// Needs clearing
 				needsClearing = (differentPercent > 20 && !usesDeltas) || isAnimation;
 
 				if (this.config.debug) console.log(`[DEBUG] "${name}" - Frame 2: ${transparentPercent.toFixed(1)}% transparent, ${differentPercent.toFixed(1)}% different, usesDeltas: ${usesDeltas}, isAnimation: ${isAnimation}, needsClearing: ${needsClearing}`);
 			}
 
-			// Determine disposal strategy for ALL frames (not per-frame)
-			let disposalStrategy;
-
+			// Calculate disposal for glitter
 			if (usesDeltas) {
-				disposalStrategy = 1; // Stack deltas
-				if (this.config.debug) console.log(`[DISPOSAL] "${name}": Strategy = STACK (usesDeltas)`);
-			} else if (isSticker && glitterHasTransparency) {
-				if (needsClearing && differentPercent > 40) {
-					disposalStrategy = 2; // Clear for very different stickers
-					if (this.config.debug) console.log(`[DISPOSAL] "${name}": Strategy = CLEAR (sticker+trans+diff>40)`);
-				} else {
-					disposalStrategy = 1; // Stack for similar transparent stickers
-					if (this.config.debug) console.log(`[DISPOSAL] "${name}": Strategy = STACK (sticker+trans+diff<40)`);
-				}
-			} else if (needsClearing || (glitterHasTransparency && !isSticker)) {
-				disposalStrategy = 2; // Clear for changing glitter or transparent glitter
-				if (this.config.debug) console.log(`[DISPOSAL] "${name}": Strategy = CLEAR (needsClearing or glitter+trans)`);
+				calculatedDisposal = 1;
+			} else if (needsClearing || glitterHasTransparency) {
+				calculatedDisposal = 2;
 			} else {
-				disposalStrategy = 1; // Default: stack
-				if (this.config.debug) console.log(`[DISPOSAL] "${name}": Strategy = STACK (default)`);
+				calculatedDisposal = 1;
 			}
 
-			for (let i = 0; i < rawFrames.length; i++) {
-				const frame = rawFrames[i];
+			if (this.config.debug) console.log(`[DISPOSAL] "${name}": Calculated strategy = ${calculatedDisposal === 1 ? 'STACK' : 'CLEAR'}`);
+		} else {
+			if (this.config.debug) console.log(`[DISPOSAL] "${name}": Using original frame disposal methods (sticker)`);
+		}
 
-				// Use the calculated strategy for all frames
-				const disposal = disposalStrategy;
+		for (let i = 0; i < rawFrames.length; i++) {
+			const frame = rawFrames[i];
 
-				if (i === 0) {
-					if (this.config.debug) console.log(`[DISPOSAL] "${name}": Using disposal=${disposal} for all ${rawFrames.length} frames`);
-				}
+			// Use original disposal for stickers, calculated for glitter
+			const disposal = useOriginalDisposal ? (frame.disposal || 2) : calculatedDisposal;
 
-				// Handle disposal of PREVIOUS frame
-				if (i > 0 && disposal === 2) {
-					ctx.clearRect(0, 0, width, height);
-				} else if (i > 0 && disposal === 3 && previousFrameData) {
-					ctx.putImageData(previousFrameData, 0, 0);
-				}
+			if (i === 0 && !useOriginalDisposal) {
+				if (this.config.debug) console.log(`[DISPOSAL] "${name}": Using disposal=${disposal} for all ${rawFrames.length} frames`);
+			}
 
-				// Save previous frame if next frame might need it
-				if (disposal === 3) {
-					previousFrameData = ctx.getImageData(0, 0, width, height);
-				}
+			// Handle disposal of PREVIOUS frame
+			if (i > 0 && disposal === 2) {
+				ctx.clearRect(0, 0, width, height);
+			} else if (i > 0 && disposal === 3 && previousFrameData) {
+				ctx.putImageData(previousFrameData, 0, 0);
+			}
 
-				// Draw current frame
-				tempCtx.putImageData(frame.imageData, 0, 0);
-				ctx.drawImage(tempCanvas, 0, 0);
+			// Save previous frame if next frame might need it
+			if (disposal === 3) {
+				previousFrameData = ctx.getImageData(0, 0, width, height);
+			}
 
-				// Capture the composited result
-				const flattenedData = ctx.getImageData(0, 0, width, height);
+			// Draw current frame
+			tempCtx.putImageData(frame.imageData, 0, 0);
+			ctx.drawImage(tempCanvas, 0, 0);
 
-				flattenedFrames.push({
-					data: flattenedData,
-					width,
-					height
-				});
+			// Capture the composited result
+			const flattenedData = ctx.getImageData(0, 0, width, height);
 
-				// Check FIRST FRAME ONLY for actual transparency
-				if (i === 0) {
-					const checkData = flattenedData.data;
-					for (let j = 3; j < checkData.length; j += 4) {
-						if (checkData[j] < 255) {
-							glitterHasTransparency = true;
-							break;
-						}
+			flattenedFrames.push({
+				data: flattenedData,
+				width,
+				height
+			});
+
+			// Check FIRST FRAME ONLY for actual transparency
+			if (i === 0) {
+				const checkData = flattenedData.data;
+				for (let j = 3; j < checkData.length; j += 4) {
+					if (checkData[j] < 255) {
+						glitterHasTransparency = true;
+						break;
 					}
-					if (this.config.debug) console.log(`[GifExporter] "${name}" (${isSticker ? 'sticker' : 'glitter'}) has transparency: ${glitterHasTransparency}, disposal: ${disposal}`);
 				}
+				if (this.config.debug) console.log(`[GifExporter] "${name}" (${isSticker ? 'sticker' : 'glitter'}) has transparency: ${glitterHasTransparency}, disposal: ${disposal}`);
 			}
+		}
 
-			glitter.frames.frames = flattenedFrames;
+		glitter.frames.frames = flattenedFrames;
 
-			if (layer.type === LayerType.GLITTER_FILL) {
-				library[layer.selectedGlitterIndex].isFlattened = true;
-			} else if (layer.type === LayerType.STICKER) {
-				layer.stickerData.isFlattened = true;
-			}
-		});
-	}
+		if (layer.type === LayerType.GLITTER_FILL) {
+			const glitter = library.find(g => g.id === layer.selectedGlitterId);
+			if (glitter) glitter.isFlattened = true;
+		} else if (layer.type === LayerType.STICKER) {
+			layer.stickerData.isFlattened = true;
+		}
+	});
+}
 
 	_deoptimizeWatermarkFrames(watermark) {
 		if (!watermark || !watermark.isAnimated) return;
@@ -7336,7 +7324,7 @@ class GifExporter {
 		for (const layer of layers) {
 			if (layer.type === LayerType.GLITTER_FILL) {
 				// Handle glitter layers
-				const glitter = library[layer.selectedGlitterIndex];
+				const glitter = library.find(g => g.id === layer.selectedGlitterId);
 				if (!glitter.frames) {
 					callbacks.onStatus(`Loading ${glitter.name}...`);
 					try {
@@ -7448,7 +7436,7 @@ class GifExporter {
 	_calculateTotalFrames(layers, library, maxFrames) {
 		const counts = layers.map(l => {
 			if (l.type === LayerType.GLITTER_FILL) {
-				const glitter = library[l.selectedGlitterIndex];
+				const glitter = library.find(g => g.id === l.selectedGlitterId);
 				if (!glitter || !glitter.frames || !glitter.frames.frames) {
 					if (this.config.debug) console.error('Missing frames for glitter layer', l.id);
 					return 1;
@@ -7461,9 +7449,12 @@ class GifExporter {
 				return 1; // Static stickers = 1 frame
 			}
 			return 1;
-		});
+		}).filter(count => count > 0); // Add filter
+		
+	if (counts.length === 0) return 1; // Add safety check
+	
+	let total = counts[0];
 
-		let total = counts[0] || 1;
 		if (counts.length > 1) {
 			total = counts.reduce((acc, val) => this.lcm(acc, val), total);
 		}
