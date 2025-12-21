@@ -150,6 +150,7 @@ class ContentManager {
 		// Base filter state - children can extend this
 		this.activeFilters = {
 			search: '',
+			nameOnly: false,
 			categories: new Set(),
 			tags: new Set(),
 			colors: new Set(),
@@ -164,7 +165,8 @@ class ContentManager {
 			searchInput: null,
 			filterToggle: null,
 			filtersContainer: null,
-			clearFiltersBtn: null
+			clearFiltersBtn: null,
+			searchNameOnly: null
 		};
 
 		this.layerElements = new Map(); // layerId -> HTMLElement
@@ -205,6 +207,15 @@ class ContentManager {
 		if (this.ui.clearFiltersBtn) {
 			this.ui.clearFiltersBtn.addEventListener('click', () => {
 				this.clearFilters();
+			});
+		}
+
+		// Name Only Checkbox
+		if (this.ui.searchNameOnly) {
+			this.ui.searchNameOnly.addEventListener('change', (e) => {
+				this.activeFilters.nameOnly = e.target.checked;
+				this.renderPicker();
+				this.updateClearFiltersButton();
 			});
 		}
 
@@ -465,6 +476,10 @@ class ContentManager {
 			}
 		}
 
+		// Name
+
+		if (this.ui.searchNameOnly) this.ui.searchNameOnly.checked = false;
+
 		// Clear search input
 		if (this.ui.searchInput) {
 			this.ui.searchInput.value = '';
@@ -605,7 +620,9 @@ class StickerManager extends ContentManager {
 			filterToggle: document.getElementById('stickerFilterToggleBtn'),
 			filtersContainer: document.getElementById('stickerFiltersContainer'),
 			clearFiltersBtn: document.getElementById('clearStickerFiltersBtn'),
-			categoryChips: document.getElementById('stickerCategoryChips') // sticker-specific
+			categoryChips: document.getElementById('stickerCategoryChips'),
+			searchNameOnly: document.getElementById('searchStickerNameOnly')
+
 		};
 	}
 
@@ -1354,8 +1371,7 @@ class GlitterManager extends ContentManager {
 		// Add glitter-specific filters to base activeFilters
 		Object.assign(this.activeFilters, {
 			tones: new Set(),
-			special: new Set(),
-			nameOnly: false
+			special: new Set()
 		});
 	}
 
@@ -1372,7 +1388,8 @@ class GlitterManager extends ContentManager {
 			filterToggle: document.getElementById('filterToggleBtn'),
 			filtersContainer: document.getElementById('filtersContainer'),
 			clearFiltersBtn: document.getElementById('clearFiltersBtn'),
-			categoryChips: document.getElementById('glitterCategoryChips')
+			categoryChips: document.getElementById('glitterCategoryChips'),
+			searchNameOnly: document.getElementById('searchGlitterNameOnly')
 
 		};
 	}
@@ -1384,15 +1401,7 @@ class GlitterManager extends ContentManager {
 		// Setup filter chips
 		this.setupFilterChips();
 
-		// Name Only Checkbox
-		const searchNameOnly = document.getElementById('searchNameOnly');
-		if (searchNameOnly) {
-			searchNameOnly.addEventListener('change', (e) => {
-				this.activeFilters.nameOnly = e.target.checked;
-				this.renderPicker();
-				this.updateClearFiltersButton();
-			});
-		}
+
 	}
 
 	setupFilterChips() {
@@ -1482,14 +1491,7 @@ class GlitterManager extends ContentManager {
 		this.selectGlitter(item.id);
 	}
 
-	clearFilters() {
-		// Call parent clearFilters
-		super.clearFilters();
 
-		// Clear glitter-specific UI elements
-		const nameOnlyCheck = document.getElementById('searchNameOnly');
-		if (nameOnlyCheck) nameOnlyCheck.checked = false;
-	}
 
 	// ===== LOADING & PARSING =====
 
@@ -4658,9 +4660,9 @@ class GlitterEditor {
 			if (this.currentTool === ToolType.ZOOM && this.originalImage) {
 				e.preventDefault();
 				if (e.deltaY < 0) {
-					this.viewport.zoomIn();
+					this.viewport.zoomIn(e.clientX, e.clientY);
 				} else {
-					this.viewport.zoomOut();
+					this.viewport.zoomOut(e.clientX, e.clientY);
 				}
 			}
 		}, { passive: false });
@@ -5362,6 +5364,21 @@ class GlitterEditor {
 	}
 
 	handleKeyboard(e) {
+		// Don't trigger shortcuts when typing in input fields
+		const activeElement = document.activeElement;
+		const isTyping = activeElement && (
+			activeElement.tagName === 'INPUT' ||
+			activeElement.tagName === 'TEXTAREA' ||
+			activeElement.isContentEditable
+		);
+
+		// Allow Escape to work in inputs (to blur/close things)
+		// Allow Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z for undo/redo
+		if (isTyping && e.key !== 'Escape' && 
+			!((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z'))) {
+			return;
+		}
+
 		if (e.key === 'Alt' && this.currentTool === ToolType.ZOOM) {
 			this.previewContainer.classList.add('zoom-out-mode');
 		}
@@ -5415,7 +5432,7 @@ class GlitterEditor {
 			if (!e.ctrlKey && !e.metaKey && this.originalImage) this.setTool(ToolType.ZOOM);
 		}
 
-		// ADD THIS: Delete or Backspace: Delete selected layer
+		// Delete or Backspace: Delete selected layer
 		if (e.key === 'Delete' || e.key === 'Backspace') {
 			const selectedLayer = this.layerManager.getActiveLayer();
 

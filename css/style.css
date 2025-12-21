@@ -2837,6 +2837,45 @@ input[type=range]::-moz-range-thumb {
   margin: 0 auto;
   text-align: center;
 }
+#aboutModal .toc {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-xl) 0;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  max-width: 100%;
+}
+#aboutModal .toc a {
+  width: 100%;
+  display: inline-block;
+}
+#aboutModal .toc > h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-md);
+}
+#aboutModal .toc > ol {
+  margin: 0;
+  padding-left: 2em;
+}
+#aboutModal .toc > ol li {
+  margin: var(--spacing-xs) 0;
+}
+#aboutModal .toc > ol li a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+#aboutModal .toc > ol li a:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+#aboutModal .toc > ol li ol {
+  margin-top: var(--spacing-xs);
+  margin-left: 2em;
+}
+#aboutModal .toc > ol li ol li {
+  list-style-type: lower-alpha;
+}
 #aboutModal .figure-wrapper {
   display: flex;
   align-items: center;
@@ -2846,6 +2885,7 @@ input[type=range]::-moz-range-thumb {
 #aboutModal .figure-wrapper > figure {
   border: 1px solid var(--color-border);
   background-color: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
   min-width: 100px;
   max-width: 80%;
   padding: var(--spacing-md);
@@ -3051,6 +3091,12 @@ input[type=range]::-moz-range-thumb {
   text-align: center;
 }
 
+#guideModal .modal-hero-image {
+  background: url("../images/glitter/sparkle/glitter_sapphire.gif") repeat;
+}
+#guideModal .modal-hero-image > h2 {
+  display: none;
+}
 #guideModal .guide-content {
   display: flex;
   flex-direction: column;

@@ -3442,6 +3442,58 @@ input[type="range"] {
 		text-align: center;
 	}
 
+	.toc {
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		padding: var(--spacing-lg);
+		margin: var(--spacing-xl) 0;
+		border-radius: var(--radius-sm);
+		display: inline-block;
+		max-width: 100%;
+
+		a {
+			width: 100%;
+    		display: inline-block;
+		}
+
+		
+		> h3 {
+			margin: 0 0 var(--spacing-md) 0;
+			font-size: var(--font-size-md);
+		}
+		
+		> ol {
+			margin: 0;
+			padding-left: 2em;
+			
+			li {
+				margin: var(--spacing-xs) 0;
+				
+				a {
+					color: var(--color-text-secondary);
+					text-decoration: none;
+					
+					&:hover {
+						color: var(--color-accent);
+						text-decoration: underline;
+					}
+				}
+				
+				// Nested list
+				ol {
+					margin-top: var(--spacing-xs);
+					margin-left: 2em;
+					
+					li {
+						list-style-type: lower-alpha;
+					}
+				}
+			}
+		}
+	}
+
+
+
 
 .figure-wrapper {
 	display: flex;
@@ -3452,6 +3504,7 @@ input[type="range"] {
 	> figure {
 		border: 1px solid var(--color-border);
 		background-color: var(--color-bg-tertiary);
+		border-radius: var(--radius-sm);
 
 		min-width: 100px;
 		max-width: 80%;
@@ -3724,6 +3777,16 @@ input[type="range"] {
 }
 
 #guideModal {
+
+	.modal-hero-image{
+		//tiled background
+		background: url("../images/glitter/sparkle/glitter_sapphire.gif") repeat;
+		>h2 {
+			display: none;
+		}
+	}
+
+
 	.guide-content {
 		display: flex;
 		flex-direction: column;
