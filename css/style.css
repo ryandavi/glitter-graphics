@@ -2829,6 +2829,9 @@ input[type=range]::-moz-range-thumb {
 #aboutModal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
 }
+#aboutModal .modal-hero-image > h2 {
+  display: none;
+}
 #aboutModal .center {
   display: block;
   margin: 0 auto;

@@ -3431,6 +3431,9 @@ input[type="range"] {
 	.modal-hero-image{
 		//tiled background
 		background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
+		>h2 {
+			display: none;
+		}
 	}
 
 	.center {
