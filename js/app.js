@@ -4297,8 +4297,6 @@ class GlitterEditor {
 			const isSelected = String(opt.dataset.id) === String(layer.stickerSourceId);
 			opt.classList.toggle('selected', isSelected);
 		});
-
-		console.log(1);
 	}
 
 	// ===== INITIALIZATION =====
