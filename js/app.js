@@ -8,6 +8,7 @@ const CONFIG = {
 	maxImageWidth: 800,
 	maxImageHeight: 800,
 	maxFileSizeMB: 10,
+	blankImageDefaultColor: '#ffffff',
 
 	// selection
 	defaultThreshold: 50,
@@ -370,14 +371,17 @@ class ContentManager {
 		});
 	}
 
-	matchesSearch(item) {
-		const query = this.activeFilters.search.toLowerCase();
-		const nameMatch = item.name.toLowerCase().includes(query);
-		const tagMatch = item.tags?.some(tag =>
-			tag.toLowerCase().includes(query)
-		);
-		return nameMatch || tagMatch;
-	}
+matchesSearch(item) {
+    const query = this.activeFilters.search.toLowerCase();
+    const name = item.name.toLowerCase();
+
+    if (this.activeFilters.nameOnly) {
+        return name.includes(query);
+    } else {
+        const tagsString = (item.tags || []).join(' ').toLowerCase();
+        return name.includes(query) || tagsString.includes(query);
+    }
+}
 
 	matchesColors(item) {
 		if (!item.tags) return false;
@@ -1448,18 +1452,6 @@ class GlitterManager extends ContentManager {
 	}
 
 	// ===== FILTERING =====
-
-	matchesSearch(item) {
-		const query = this.activeFilters.search.toLowerCase();
-		const name = item.name.toLowerCase();
-
-		if (this.activeFilters.nameOnly) {
-			return name.includes(query);
-		} else {
-			const tagsString = (item.tags || []).join(' ').toLowerCase();
-			return name.includes(query) || tagsString.includes(query);
-		}
-	}
 
 
 	matchesChildFilters(item) {
@@ -4681,7 +4673,16 @@ class GlitterEditor {
 			return false;
 		});
 
-
+		// -- QUICK ADD BLANK BASE IMAGE --
+		const options = document.querySelectorAll('.blank-image-option');
+		options.forEach(option => {
+			option.addEventListener('click', async () => {
+				const width = parseInt(option.dataset.width);
+				const height = parseInt(option.dataset.height);
+				const color = option.dataset.color || CONFIG.blankImageDefaultColor;
+				await this.loadBlankImage(width, height, color);
+			});
+		});
 
 		// --- IMAGE HANDLING ---
 		const imageClearBtn = document.getElementById('imageClearBtn');
@@ -4728,6 +4729,8 @@ class GlitterEditor {
 		const multiSelect = document.getElementById('multiSelect');
 		const refineGlobal = document.getElementById('refineGlobal');
 		const glitterGlobal = document.getElementById('glitterGlobal');
+
+
 
 
 		if (contiguous) {
@@ -5148,6 +5151,8 @@ class GlitterEditor {
 			}
 		}
 
+
+
 		// --- EXPORT & GLOBAL ---
 		const exportGif = document.getElementById('exportGif');
 		if (exportGif) exportGif.addEventListener('click', () => this.exportAnimatedGif());
@@ -5300,6 +5305,29 @@ class GlitterEditor {
 			resetBtn.disabled = parseInt(slider.value) === defaultValue;
 		}
 	}
+
+
+async loadBlankImage(width, height, color = CONFIG.blankImageDefaultColor) {
+	const canvas = document.createElement('canvas');
+	canvas.width = width;
+	canvas.height = height;
+	const ctx = canvas.getContext('2d');
+	
+	ctx.fillStyle = color;
+	ctx.fillRect(0, 0, width, height);
+	
+	const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+	const file = new File([blob], `blank_${width}x${height}.png`, { type: 'image/png' });
+	
+	const fakeEvent = {
+		target: {
+			files: [file]
+		}
+	};
+	
+	await this.loadImage(fakeEvent);
+	this.updateStatus(`Loaded blank ${width}×${height} canvas`);
+}
 
 
 	setTool(tool) {

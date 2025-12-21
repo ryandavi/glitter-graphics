@@ -2420,7 +2420,7 @@ input[type=range]::-moz-range-thumb {
   pointer-events: none;
 }
 
-@media (max-width: 1600px) {
+@media (max-width: 1700px) {
   :root {
     --layer-panel-width: 300px;
     --glitter-swatch-columns: 3;
@@ -3360,4 +3360,62 @@ input[type=range]::-moz-range-thumb {
 }
 .section.welcome-section > .section-content > .empty-state, .section.base-layer-settings-section > .section-content > .empty-state, .section.no-layer-settings-section > .section-content > .empty-state {
   background-color: #2f2f2f;
+}
+
+.welcome-section .blank-image-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+.welcome-section .blank-image-grid .blank-image-option {
+  min-width: 0;
+  background: var(--color-bg-tertiary);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-md);
+}
+.welcome-section .blank-image-grid .blank-image-option:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-primary);
+}
+.welcome-section .blank-image-grid .blank-image-option:active {
+  transform: scale(0.98);
+}
+.welcome-section .blank-image-grid .blank-image-option .blank-preview-wrapper {
+  width: 60%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+.welcome-section .blank-image-grid .blank-image-option .blank-preview {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.welcome-section .blank-image-grid .blank-image-option .blank-preview.wide {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+.welcome-section .blank-image-grid .blank-image-option .blank-dimensions {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-xs);
+}
+.welcome-section .blank-image-grid .blank-image-option .blank-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  height: calc(var(--font-size-xs) * 1.2);
 }/*# sourceMappingURL=style.css.map */
