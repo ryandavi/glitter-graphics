@@ -440,6 +440,10 @@ a:hover {
 	background: #5a5a5a;
 }
 
+
+
+
+
 body {
 
 	background: var(--color-bg-primary);
@@ -2374,6 +2378,21 @@ input[type="range"] {
 			/* Modern browsers with dynamic viewport */
 			max-height: 70dvh;
 
+			>.modal-hero-image {
+				margin-bottom: 20px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 30dvh;
+				padding: var(--spacing-xl);
+
+				// ios fix for radius + hidden
+				border-radius: var(--radius-md);
+				overflow: hidden;
+				transform: translateZ(0);
+				
+			}
+
 
 			a {
 				&:hover {
@@ -3408,11 +3427,75 @@ input[type="range"] {
 
 
 #aboutModal {
+
+	.modal-hero-image{
+		//tiled background
+		background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
+	}
+
 	.center {
 		display: block;
 		margin: 0 auto;
 		text-align: center;
 	}
+
+
+.figure-wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: var(--spacing-lg) 0;
+
+	> figure {
+		border: 1px solid var(--color-border);
+		background-color: var(--color-bg-tertiary);
+
+		min-width: 100px;
+		max-width: 80%;
+
+		padding: var(--spacing-md);
+		display: inline-block;
+
+
+		> img {
+			width: 100%;
+			height: auto;
+			image-rendering: pixelated;
+			display: block; // removes inline-gap weirdness
+		}
+
+		> figcaption {
+			margin-top: var(--spacing-md);
+			font-size: var(--font-size-sm);
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-xs);
+			line-height: 1.4;
+
+			// title / citation
+			> cite {
+				font-style: normal;
+				font-weight: 600;
+				letter-spacing: 0.01em;
+			}
+
+			// descriptive body
+			> .figure-description {
+				color: var(--color-text-secondary);
+			}
+
+			// rights / attribution
+			> .figure-credit {
+				margin-top: var(--spacing-xs);
+				font-size: var(--font-size-xs);
+				color: var(--color-text-tertiary);
+				opacity: 0.85;
+			}
+		}
+	}
+}
+
+
 
 	.context {
 		font-weight: bold;
@@ -3435,6 +3518,9 @@ input[type="range"] {
 			display: inline-block;
 		}
 	}
+
+
+	.figure-wrapper + h3,
 
 	p+h2,
 	ol+h2,

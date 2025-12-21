@@ -2107,6 +2107,17 @@ input[type=range]::-moz-range-thumb {
   /* Modern browsers with dynamic viewport */
   max-height: 70dvh;
 }
+.modal-overlay > .modal-content > .modal-body > .modal-hero-image {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30dvh;
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transform: translateZ(0);
+}
 .modal-overlay > .modal-content > .modal-body a:hover {
   background: url("../images/glitter/sparkle/glitter_white.gif") repeat;
   -webkit-background-clip: text;
@@ -2815,10 +2826,55 @@ input[type=range]::-moz-range-thumb {
 #aboutModal {
   /* Highlight animation for references */
 }
+#aboutModal .modal-hero-image {
+  background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
+}
 #aboutModal .center {
   display: block;
   margin: 0 auto;
   text-align: center;
+}
+#aboutModal .figure-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: var(--spacing-lg) 0;
+}
+#aboutModal .figure-wrapper > figure {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-tertiary);
+  min-width: 100px;
+  max-width: 80%;
+  padding: var(--spacing-md);
+  display: inline-block;
+}
+#aboutModal .figure-wrapper > figure > img {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  display: block;
+}
+#aboutModal .figure-wrapper > figure > figcaption {
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  line-height: 1.4;
+}
+#aboutModal .figure-wrapper > figure > figcaption > cite {
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+#aboutModal .figure-wrapper > figure > figcaption > .figure-description {
+  color: var(--color-text-secondary);
+}
+#aboutModal .figure-wrapper > figure > figcaption > .figure-credit {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  opacity: 0.85;
 }
 #aboutModal .context {
   font-weight: bold;
@@ -2838,6 +2894,7 @@ input[type=range]::-moz-range-thumb {
 #aboutModal p .context {
   display: inline-block;
 }
+#aboutModal .figure-wrapper + h3,
 #aboutModal p + h2,
 #aboutModal ol + h2,
 #aboutModal ul + h2,
