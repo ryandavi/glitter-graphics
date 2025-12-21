@@ -2335,7 +2335,6 @@ input[type=range]::-moz-range-thumb {
 .asset-options {
   flex: 1;
   overflow-y: auto;
-  padding: var(--spacing-lg);
   position: relative;
   z-index: 0;
 }
@@ -2418,6 +2417,10 @@ input[type=range]::-moz-range-thumb {
   padding: 2px 3px;
   border-radius: var(--radius-xs);
   pointer-events: none;
+}
+
+.grid-container {
+  padding: var(--spacing-lg);
 }
 
 @media (max-width: 1700px) {
@@ -3418,4 +3421,49 @@ input[type=range]::-moz-range-thumb {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   height: calc(var(--font-size-xs) * 1.2);
+}
+
+/* ===== STICKER UPLOAD MODAL ===== */
+#stickerUploadModal .upload-dropzone {
+  border: 2px dashed var(--color-border-hover);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: var(--color-bg-secondary);
+}
+#stickerUploadModal .upload-dropzone:hover {
+  border-color: var(--color-accent);
+  background: var(--color-bg-tertiary);
+}
+#stickerUploadModal .upload-dropzone.drag-over {
+  border-color: var(--color-accent);
+  background: #2a3a4a;
+  border-style: solid;
+}
+#stickerUploadModal .upload-dropzone .dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+#stickerUploadModal .upload-dropzone .dropzone-icon {
+  opacity: 0.5;
+}
+#stickerUploadModal .upload-dropzone .dropzone-text {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+#stickerUploadModal .upload-dropzone .dropzone-subtext {
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
+}
+
+.gallery-header-actions {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--spacing-sm);
 }/*# sourceMappingURL=style.css.map */

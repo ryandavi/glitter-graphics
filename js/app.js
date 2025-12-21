@@ -531,32 +531,39 @@ matchesSearch(item) {
 
 	// ===== PICKER RENDERING =====
 
-	renderPicker() {
-		if (!this.ui.gridContainer) return;
-		this.ui.gridContainer.innerHTML = '';
+renderPicker() {
+	if (!this.ui.gridContainer) return;
+	this.ui.gridContainer.innerHTML = '';
 
-		// Get filtered content
-		const filteredContent = this.applyFilters();
+	// Get filtered content
+	const filteredContent = this.applyFilters();
 
-		// Group by category
-		const categories = this.groupByCategory(filteredContent);
+	// Group by category
+	const categories = this.groupByCategory(filteredContent);
 
-		// Render each category
-		Object.entries(categories).forEach(([category, items]) => {
-			const categoryDiv = this.createCategoryElement(category);
-			const grid = categoryDiv.querySelector('.asset-grid');
+	// Sort categories - User Uploads first, then alphabetically
+	const sortedCategories = Object.entries(categories).sort(([catA], [catB]) => {
+		if (catA === 'User Uploads') return -1;
+		if (catB === 'User Uploads') return 1;
+		return catA.localeCompare(catB);
+	});
 
-			items.forEach(item => {
-				const option = this.createItemElement(item);
-				grid.appendChild(option);
-			});
+	// Render each category
+	sortedCategories.forEach(([category, items]) => {
+		const categoryDiv = this.createCategoryElement(category);
+		const grid = categoryDiv.querySelector('.asset-grid');
 
-			this.ui.gridContainer.appendChild(categoryDiv);
+		items.forEach(item => {
+			const option = this.createItemElement(item);
+			grid.appendChild(option);
 		});
 
-		// Update visibility
-		this.updatePickerVisibility(filteredContent.length);
-	}
+		this.ui.gridContainer.appendChild(categoryDiv);
+	});
+
+	// Update visibility
+	this.updatePickerVisibility(filteredContent.length);
+}
 
 	groupByCategory(items) {
 		const categories = {};
@@ -764,30 +771,31 @@ class StickerManager extends ContentManager {
 		const blobUrl = URL.createObjectURL(file);
 		const uploadId = `user-upload-${Date.now()}`;
 
-		// 3. Create entry with loading state
-		const userSticker = {
-			id: uploadId,
-			name: file.name,
-			url: blobUrl,
-			source: 'user-upload',
+// 3. Create entry with loading state
+const userSticker = {
+	id: uploadId,
+	name: file.name,
+	url: blobUrl,
+	source: 'user-upload',
+	category: 'User Uploads',  // ADD THIS LINE
 
-			// File info
-			fileSize: file.size,
-			mimeType: file.type,
-			uploadedAt: Date.now(),
+	// File info
+	fileSize: file.size,
+	mimeType: file.type,
+	uploadedAt: Date.now(),
 
-			// Initially unknown - will be detected
-			isAnimated: false,
-			hasTransparency: false,
-			width: 0,
-			height: 0,
-			frameCount: null,
-			frames: null,
+	// Initially unknown - will be detected
+	isAnimated: false,
+	hasTransparency: false,
+	width: 0,
+	height: 0,
+	frameCount: null,
+	frames: null,
 
-			// State
-			isLoading: true,
-			error: null
-		};
+	// State
+	isLoading: true,
+	error: null
+};
 
 		this.userContent.push(userSticker);
 		this.renderPicker();
@@ -4383,6 +4391,88 @@ class GlitterEditor {
 		});
 
 
+
+
+
+
+
+// Sticker Upload Modal Events
+const stickerUploadModal = document.getElementById('stickerUploadModal');
+const closeStickerUploadModal = document.getElementById('closeStickerUploadModal');
+const uploadStickerBtn = document.getElementById('uploadStickerBtn');
+const stickerUploadDropzone = document.getElementById('stickerUploadDropzone');
+const stickerUploadInput = document.getElementById('stickerUploadInput');
+
+if (uploadStickerBtn && stickerUploadModal) {
+	// Open modal
+	uploadStickerBtn.addEventListener('click', () => {
+		closeAllModals();
+		stickerUploadModal.classList.add('visible');
+	});
+
+	// Close modal
+	closeStickerUploadModal.addEventListener('click', () => {
+		stickerUploadModal.classList.remove('visible');
+	});
+
+	// Close on overlay click
+	stickerUploadModal.addEventListener('click', (e) => {
+		if (e.target === stickerUploadModal) {
+			stickerUploadModal.classList.remove('visible');
+		}
+	});
+
+	// Dropzone click to open file picker
+	stickerUploadDropzone.addEventListener('click', () => {
+		stickerUploadInput.click();
+	});
+
+	// Handle file selection
+	stickerUploadInput.addEventListener('change', async (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			await this.stickerManager.handleUserUpload(file);
+			stickerUploadModal.classList.remove('visible');
+			stickerUploadInput.value = ''; // Reset input
+		}
+	});
+
+	// Drag and drop events
+	stickerUploadDropzone.addEventListener('dragover', (e) => {
+		e.preventDefault();
+		stickerUploadDropzone.classList.add('drag-over');
+	});
+
+	stickerUploadDropzone.addEventListener('dragleave', () => {
+		stickerUploadDropzone.classList.remove('drag-over');
+	});
+
+	stickerUploadDropzone.addEventListener('drop', async (e) => {
+		e.preventDefault();
+		stickerUploadDropzone.classList.remove('drag-over');
+		
+		const file = e.dataTransfer.files[0];
+		if (file) {
+			await this.stickerManager.handleUserUpload(file);
+			stickerUploadModal.classList.remove('visible');
+		}
+	});
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		// Settings Modal
 		const settingsModal = document.getElementById('settingsModal');
 		const settingsBtn = document.getElementById('settingsBtn');
@@ -4409,7 +4499,7 @@ class GlitterEditor {
 			settingsModal.classList.remove('visible');
 			layerTypePickerModal.classList.remove('visible');
 			guideModal.classList.remove('visible');
-
+			stickerUploadModal.classList.remove('visible'); // Add this line
 		};
 
 		// Shortcuts Modal Events
@@ -4477,6 +4567,16 @@ class GlitterEditor {
 		});
 
 
+
+
+
+
+
+
+
+
+
+		
 		// Layer Type Picker Modal
 		const layerTypeButtons = document.querySelectorAll('.layer-type-option');
 		const layerModal = document.getElementById('layerTypePickerModal');

@@ -463,7 +463,7 @@
 						</div>
 
 						<!-- 2. Glitter Grid Container (JS writes here) -->
-						<div id="glitterGridContainer"></div>
+						<div class="grid-container" id="glitterGridContainer"></div>
 					</div>
 
 					<!-- Stickers Options -->
@@ -476,8 +476,18 @@
 							<div class="empty-state-subtext">Try clearing your filters</div>
 						</div>
 
-						<!-- 2. Sticker Grid Container (JS writes here) -->
-						<div id="stickerGridContainer"></div>
+						<!-- 2. Upload Sticker Button -->
+						<div class="gallery-header-actions">
+							<button class="btn-text-with-icon icon-wrapper btn-secondary" id="uploadStickerBtn">
+								<svg class="icon">
+									<use href="#icon-plus"></use>
+								</svg>
+								<span class="name">Add custom Sticker</span>
+							</button>
+						</div>
+
+						<!-- 3. Sticker Grid Container (JS writes here) -->
+						<div class="grid-container"id="stickerGridContainer"></div>
 					</div>
 
 					<!-- Glitter Settings Section -->
@@ -2746,6 +2756,48 @@
 			</div>
 		</div>
 	</div>
+
+
+<!-- Sticker Upload Modal -->
+<div class="modal-overlay" id="stickerUploadModal">
+	<div class="modal-content modal-sm">
+		<div class="modal-header">
+			<div class="modal-title">
+				<span class="modal-icon icon-wrapper">
+					<svg class="icon">
+						<use href="#icon-sticker"></use>
+					</svg>
+					<span class="name">Upload Sticker</span>
+				</span>
+				<span class="modal-title-text">Upload Sticker</span>
+			</div>
+			<button class="btn-icon icon-wrapper modal-close" id="closeStickerUploadModal">
+				<svg class="icon">
+					<use href="#icon-x-mark"></use>
+				</svg>
+				<span class="name">Close</span>
+			</button>
+		</div>
+		<div class="modal-body">
+			<div class="upload-dropzone" id="stickerUploadDropzone">
+				<div class="dropzone-content">
+					<div class="dropzone-icon">
+						<span class="icon-wrapper xl">
+							<svg class="icon">
+								<use href="#icon-sticker"></use>
+							</svg>
+							<span class="name">Sticker</span>
+						</span>
+					</div>
+					<div class="dropzone-text">Drop sticker here or click to browse</div>
+					<div class="dropzone-subtext">PNG, JPG, GIF, or WebP • Max 5MB</div>
+				</div>
+			</div>
+			<input type="file" id="stickerUploadInput" accept="image/png,image/jpeg,image/gif,image/webp" style="display: none;">
+		</div>
+	</div>
+</div>
+
 
 	<!-- Mobile Bottom Navigation -->
 	<div class="mobile-bottom-nav">
