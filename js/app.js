@@ -1386,7 +1386,7 @@ class StickerManager extends ContentManager {
 		this.applyTransform(element, layer);
 
 		// Add to Container
-		this.editor.glitterBackgroundsContainer.appendChild(element);
+		this.editor.canvasElementsContainer.appendChild(element);
 
 		// Store Reference
 		layer.stickerData.element = element;
@@ -1509,7 +1509,7 @@ class StickerManager extends ContentManager {
 	// ===== DRAG AND DROP =====
 
 	cloneStickerElement(sourceLayer, clonedLayer) {
-		const sourceElement = this.editor.glitterBackgroundsContainer.querySelector(
+		const sourceElement = this.editor.canvasElementsContainer.querySelector(
 			`.sticker-element[data-layer-id="${sourceLayer.id}"]`
 		);
 
@@ -1525,7 +1525,7 @@ class StickerManager extends ContentManager {
 		this.applyTransform(clonedElement, clonedLayer);
 
 		// Add to container
-		this.editor.glitterBackgroundsContainer.appendChild(clonedElement);
+		this.editor.canvasElementsContainer.appendChild(clonedElement);
 
 		// Store reference
 		this.layerElements.set(clonedLayer.id, clonedElement);
@@ -2179,7 +2179,7 @@ class GlitterManager extends ContentManager {
 
 		// 3. Assemble
 		wrapper.appendChild(inner);
-		this.editor.glitterBackgroundsContainer.appendChild(wrapper);
+		this.editor.canvasElementsContainer.appendChild(wrapper);
 
 		// Store reference
 		this.layerElements.set(layer.id, wrapper);
@@ -2871,7 +2871,7 @@ class LayerManager {
 
 		// DOM references
 		this.layersListContainer = document.getElementById('layersList');
-		this.glitterBackgroundsContainer = this.editor.glitterBackgroundsContainer;
+		this.canvasElementsContainer = this.editor.canvasElementsContainer;
 
 		this.setupContainerEvents();
 	}
@@ -3438,13 +3438,13 @@ class LayerManager {
 			};
 
 			// Clone the glitter background element
-			const sourceElement = this.glitterBackgroundsContainer.querySelector(
+			const sourceElement = this.canvasElementsContainer.querySelector(
 				`[data-layer-id="${sourceLayer.id}"]`
 			);
 			if (sourceElement) {
 				const clonedElement = sourceElement.cloneNode(true);
 				clonedElement.dataset.layerId = clonedLayer.id;
-				this.glitterBackgroundsContainer.appendChild(clonedElement);
+				this.canvasElementsContainer.appendChild(clonedElement);
 			}
 		}
 
@@ -4078,7 +4078,7 @@ class LayerManager {
 
 	// In Preview
 	reorderLayers() {
-		const container = this.glitterBackgroundsContainer;
+		const container = this.canvasElementsContainer;
 
 		// Get existing background AND sticker elements
 		const existingElements = new Map();
@@ -4119,12 +4119,12 @@ class GlitterEditor {
 		this.previewCanvas = document.getElementById('previewCanvas');
 		this.previewContainer = document.getElementById('previewContainer');
 		this.previewWrapper = document.getElementById('previewWrapper');
-		this.glitterBackgroundsContainer = document.getElementById('glitterBackgroundsContainer');
+		this.canvasElementsContainer = document.getElementById('canvasElementsContainer');
 
 		// Ensure the canvas is the base layer and glitter sits on top
 		this.previewCanvas.style.zIndex = '1';
-		this.glitterBackgroundsContainer.style.zIndex = '10';
-		this.glitterBackgroundsContainer.style.pointerEvents = 'none'; // Allows clicking through to canvas
+		this.canvasElementsContainer.style.zIndex = '10';
+		this.canvasElementsContainer.style.pointerEvents = 'none'; // Allows clicking through to canvas
 
 		this.originalCtx = this.originalCanvas.getContext('2d', { willReadFrequently: true });
 		this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
@@ -6247,7 +6247,7 @@ class GlitterEditor {
 		if (previewControls) previewControls.classList.remove('visible');
 
 		this.clearPreview();
-		this.glitterBackgroundsContainer.innerHTML = '';
+		this.canvasElementsContainer.innerHTML = '';
 
 		// UX: Reset to empty state properly
 		this.showLayerSettingsEmptyState();
@@ -6338,7 +6338,7 @@ class GlitterEditor {
 
 			// Clear previous layers and glitter
 			this.layers = [];
-			this.glitterBackgroundsContainer.innerHTML = '';
+			this.canvasElementsContainer.innerHTML = '';
 
 			// 1. Create Base Image Layer
 			if (CONFIG.createBaseImageLayerOnLoad) {
@@ -6735,7 +6735,7 @@ handlePreviewContainerClick(e) {
 		}
 
 		// Clear glitter backgrounds
-		this.glitterBackgroundsContainer.innerHTML = '';
+		this.canvasElementsContainer.innerHTML = '';
 
 		// ADD: Clear sticker elements
 		if (this.stickerManager) {

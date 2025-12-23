@@ -1837,7 +1837,7 @@ input[type=range]::-moz-range-thumb {
   cursor: crosshair;
 }
 .preview-wrapper > .preview-canvas,
-.preview-wrapper .glitter-backgrounds-container > .glitter-background {
+.preview-wrapper .canvas-elements-container > .glitter-background {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
