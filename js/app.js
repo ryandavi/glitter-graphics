@@ -8165,7 +8165,7 @@ class GifExporter {
 		<p class="text-muted" style="margin-top: 8px; font-size: 12px;">
 			<strong>Why can't I just tap and hold?</strong><br>
 			iOS doesn't support saving animated GIFs created dynamically in the browser. 
-			Using the Share button preserves the animation properly.
+			Using the Share button preserves the animation properly. I know it's annoying.
 		</p>`;
 			} else {
 				// Fallback (Rare old iOS)

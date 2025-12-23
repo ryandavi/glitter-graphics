@@ -1850,7 +1850,6 @@ input[type=range]::-moz-range-thumb {
   display: block;
   max-width: none;
   max-height: none;
-  pointer-events: none;
 }
 .preview-wrapper .preview-canvas.selected {
   outline-width: max(1px, 2px / var(--zoom, 1));

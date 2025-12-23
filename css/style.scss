@@ -2076,15 +2076,12 @@ input[type="range"] {
 		height: 100%;
 	}
 
-	.glitter-backgrounds-container {}
-
 	.preview-canvas {
 		position: relative;
 		z-index: 2;
 		display: block;
 		max-width: none;
 		max-height: none;
-		pointer-events: none;
 
 
 		&.selected {
