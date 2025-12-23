@@ -3687,7 +3687,8 @@ input[type="range"] {
 	display: none;
 
 	&.visible {
-		display: grid;
+		display: flex;
+		flex-direction: column;
 	}
 }
 

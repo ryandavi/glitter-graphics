@@ -3027,7 +3027,8 @@ input[type=range]::-moz-range-thumb {
 }
 #glitterOptions.visible,
 #stickersOptions.visible {
-  display: grid;
+  display: flex;
+  flex-direction: column;
 }
 
 .section.welcome-section > .section-content, .section.base-layer-settings-section > .section-content, .section.no-layer-settings-section > .section-content {
