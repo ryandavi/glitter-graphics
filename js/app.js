@@ -152,7 +152,12 @@ class TouchGestureHandler {
 		this.gestureLockedUntilRelease = false;
 		
 		// Touch tracking
-		this.touches = new Map(); // touchId -> {x, y, startX, startY}
+		this.touches = new Map();
+		
+		// Touch count stability tracking (prevents false single-touch detection)
+		this.touchCountHistory = []; // Last few frames
+		this.historyLength = 3; // Number of frames to average
+		this.stableTouchCount = 0;
 		
 		// Gesture data
 		this.startData = {
@@ -170,8 +175,9 @@ class TouchGestureHandler {
 		};
 		
 		// Configuration
-		this.minPinchMovement = 10; // Minimum pixel movement to detect pinch vs pan
+		this.minPinchMovement = 10;
 		this.rotationEnabled = callbacks.onRotate !== undefined;
+		this.preventPropagation = callbacks.preventPropagation !== false; // Default true
 		
 		this.setupEventListeners();
 	}
@@ -183,18 +189,39 @@ class TouchGestureHandler {
 		this.element.addEventListener('touchcancel', (e) => this.handleTouchCancel(e), { passive: false });
 	}
 	
+	// Update touch count with stability checking
+	updateStableTouchCount() {
+		this.touchCountHistory.push(this.touches.size);
+		
+		if (this.touchCountHistory.length > this.historyLength) {
+			this.touchCountHistory.shift();
+		}
+		
+		// Use the maximum count from recent history
+		// This prevents momentary single-touch false positives
+		this.stableTouchCount = Math.max(...this.touchCountHistory);
+	}
+	
 	handleTouchStart(e) {
+		// CRITICAL: Stop propagation for sticker elements
+		if (this.preventPropagation) {
+			e.stopPropagation();
+		}
+		
 		// Add all new touches to our tracking
 		for (let touch of e.changedTouches) {
 			this.touches.set(touch.identifier, {
 				x: touch.clientX,
 				y: touch.clientY,
 				startX: touch.clientX,
-				startY: touch.clientY
+				startY: touch.clientY,
+				prevX: touch.clientX,
+				prevY: touch.clientY
 			});
 		}
 		
-		const touchCount = this.touches.size;
+		this.updateStableTouchCount();
+		const touchCount = this.stableTouchCount;
 		
 		// If we're already in a gesture, don't start a new one
 		if (this.gestureLockedUntilRelease) {
@@ -202,54 +229,82 @@ class TouchGestureHandler {
 			return;
 		}
 		
-		// Determine gesture type based on touch count
+		// Determine gesture type based on stable touch count
 		if (touchCount === 1) {
 			this.startSinglePan();
-		} else if (touchCount === 2) {
-			e.preventDefault(); // Prevent scrolling for two-finger gestures
+		} else if (touchCount >= 2) {
+			e.preventDefault();
 			this.startTwoFingerGesture();
 		}
 	}
 	
 	handleTouchMove(e) {
+		// CRITICAL: Stop propagation for sticker elements
+		if (this.preventPropagation) {
+			e.stopPropagation();
+		}
+		
 		// Update all touch positions
 		for (let touch of e.changedTouches) {
 			const tracked = this.touches.get(touch.identifier);
 			if (tracked) {
+				tracked.prevX = tracked.x;
+				tracked.prevY = tracked.y;
 				tracked.x = touch.clientX;
 				tracked.y = touch.clientY;
 			}
 		}
 		
-		const touchCount = this.touches.size;
+		this.updateStableTouchCount();
+		const touchCount = this.stableTouchCount;
 		
-		// Process based on current state
+		// CRITICAL: Once in a two-finger gesture, STAY in it
+		// Don't switch to single-pan even if touch count momentarily drops
+		if (this.state === 'pinch_zoom' || this.state === 'two_pan') {
+			// Only process if we have at least 2 touches in our Map
+			if (this.touches.size >= 2) {
+				e.preventDefault();
+				this.updateTwoFingerGesture();
+			}
+			// If touch count drops below 2, just skip this frame
+			return;
+		}
+		
+		// Process single-pan
 		if (this.state === 'single_pan' && touchCount === 1) {
 			e.preventDefault();
 			this.updateSinglePan();
-		} else if ((this.state === 'pinch_zoom' || this.state === 'two_pan') && touchCount === 2) {
-			e.preventDefault();
-			this.updateTwoFingerGesture();
 		}
 	}
 	
 	handleTouchEnd(e) {
+		// CRITICAL: Stop propagation for sticker elements
+		if (this.preventPropagation) {
+			e.stopPropagation();
+		}
+		
 		// Remove ended touches
 		for (let touch of e.changedTouches) {
 			this.touches.delete(touch.identifier);
 		}
 		
+		this.updateStableTouchCount();
 		const touchCount = this.touches.size;
 		
-		// If all touches are released, reset state
+		// If all touches are released, reset completely
 		if (touchCount === 0) {
 			this.state = 'idle';
 			this.gestureLockedUntilRelease = false;
+			this.touchCountHistory = [];
+			this.stableTouchCount = 0;
+			
+			if (this.callbacks.onGestureEnd) {
+				this.callbacks.onGestureEnd();
+			}
 		}
-		// If we were doing a two-finger gesture and one finger lifted, end the gesture
-		else if ((this.state === 'pinch_zoom' || this.state === 'two_pan') && touchCount === 1) {
-			this.state = 'idle';
-			this.gestureLockedUntilRelease = true; // Lock until all fingers are released
+		// If we were doing a two-finger gesture and one finger lifted, lock until fully released
+		else if ((this.state === 'pinch_zoom' || this.state === 'two_pan') && touchCount < 2) {
+			this.gestureLockedUntilRelease = true;
 		}
 	}
 	
@@ -271,20 +326,13 @@ class TouchGestureHandler {
 	
 	updateSinglePan() {
 		const touch = Array.from(this.touches.values())[0];
-		const deltaX = touch.x - touch.startX;
-		const deltaY = touch.y - touch.startY;
+		if (!touch) return;
+		
+		const incrementalDeltaX = touch.x - touch.prevX;
+		const incrementalDeltaY = touch.y - touch.prevY;
 		
 		if (this.callbacks.onSinglePan) {
-			// Pass incremental delta since last frame
-			const prevX = touch.prevX || touch.startX;
-			const prevY = touch.prevY || touch.startY;
-			const incrementalDeltaX = touch.x - prevX;
-			const incrementalDeltaY = touch.y - prevY;
-			
 			this.callbacks.onSinglePan(incrementalDeltaX, incrementalDeltaY, touch.x, touch.y);
-			
-			touch.prevX = touch.x;
-			touch.prevY = touch.y;
 		}
 	}
 	
@@ -292,6 +340,8 @@ class TouchGestureHandler {
 	
 	startTwoFingerGesture() {
 		const touchArray = Array.from(this.touches.values());
+		if (touchArray.length < 2) return;
+		
 		const [touch1, touch2] = touchArray;
 		
 		// Calculate initial metrics
@@ -314,6 +364,8 @@ class TouchGestureHandler {
 	
 	updateTwoFingerGesture() {
 		const touchArray = Array.from(this.touches.values());
+		if (touchArray.length < 2) return;
+		
 		const [touch1, touch2] = touchArray;
 		
 		// Calculate current metrics
@@ -326,7 +378,7 @@ class TouchGestureHandler {
 		const distanceChange = Math.abs(currentDistance - this.startData.distance);
 		const isPinching = distanceChange > this.minPinchMovement;
 		
-		// Transition state if needed
+		// Transition state if needed (only once)
 		if (this.state === 'two_pan' && isPinching) {
 			this.state = 'pinch_zoom';
 		}
@@ -336,8 +388,11 @@ class TouchGestureHandler {
 			// Calculate scale change since last frame
 			const scale = currentDistance / this.lastData.distance;
 			
-			if (this.callbacks.onPinchZoom) {
-				this.callbacks.onPinchZoom(scale, currentCenterX, currentCenterY);
+			// Only apply if scale change is meaningful (prevents jitter)
+			if (Math.abs(scale - 1.0) > 0.001) {
+				if (this.callbacks.onPinchZoom) {
+					this.callbacks.onPinchZoom(scale, currentCenterX, currentCenterY);
+				}
 			}
 			
 			// Handle rotation if enabled
@@ -346,17 +401,20 @@ class TouchGestureHandler {
 				// Normalize angle delta to -180 to 180 range
 				const normalizedDelta = ((angleDelta + 180) % 360) - 180;
 				
-				if (Math.abs(normalizedDelta) > 0.5) { // Minimum rotation threshold
+				if (Math.abs(normalizedDelta) > 0.5) {
 					this.callbacks.onRotate(normalizedDelta, currentCenterX, currentCenterY);
 				}
 			}
 		} else if (this.state === 'two_pan') {
-			// Two-finger pan - calculate center movement
+			// Two-finger pan
 			const deltaX = currentCenterX - this.lastData.centerX;
 			const deltaY = currentCenterY - this.lastData.centerY;
 			
-			if (this.callbacks.onTwoPan) {
-				this.callbacks.onTwoPan(deltaX, deltaY, currentCenterX, currentCenterY);
+			// Only apply if movement is meaningful
+			if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+				if (this.callbacks.onTwoPan) {
+					this.callbacks.onTwoPan(deltaX, deltaY, currentCenterX, currentCenterY);
+				}
 			}
 		}
 		
@@ -395,6 +453,8 @@ class TouchGestureHandler {
 		this.touches.clear();
 		this.state = 'idle';
 		this.gestureLockedUntilRelease = false;
+		this.touchCountHistory = [];
+		this.stableTouchCount = 0;
 	}
 	
 	destroy() {
@@ -405,7 +465,6 @@ class TouchGestureHandler {
 		this.reset();
 	}
 }
-
 
 // ============================================
 // CONTENT MANAGER BASE CLASS
@@ -1480,6 +1539,9 @@ setupStickerTouchGestures(element, layerId) {
 	let startTransform = null;
 	
 	const handler = new TouchGestureHandler(element, {
+		// CRITICAL: Stickers MUST stop propagation to prevent viewport zoom
+		preventPropagation: true,
+		
 		onGestureStart: (gestureType) => {
 			// Store initial transform state
 			startTransform = {
@@ -1487,6 +1549,9 @@ setupStickerTouchGestures(element, layerId) {
 				rotation: layer.stickerData.transform.rotation,
 				position: { ...layer.stickerData.transform.position }
 			};
+			
+			// Make this layer active when touched
+			this.editor.layerManager.setActiveLayer(layerId);
 		},
 		
 		onSinglePan: (deltaX, deltaY, touchX, touchY) => {
@@ -1507,10 +1572,13 @@ setupStickerTouchGestures(element, layerId) {
 		
 		onPinchZoom: (scale, centerX, centerY) => {
 			// Scale the sticker (respecting proportional scale)
-			const newScaleX = startTransform.scale.x * scale;
+			const currentScaleX = layer.stickerData.transform.scale.x;
+			const currentScaleY = layer.stickerData.transform.scale.y;
+			
+			const newScaleX = currentScaleX * scale;
 			const newScaleY = layer.stickerData.transform.proportionalScale 
 				? newScaleX 
-				: startTransform.scale.y * scale;
+				: currentScaleY * scale;
 			
 			// Clamp scale values
 			const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
@@ -1528,7 +1596,7 @@ setupStickerTouchGestures(element, layerId) {
 		},
 		
 		onRotate: (angleDelta, centerX, centerY) => {
-			// Update rotation
+			// Update rotation incrementally
 			const newRotation = (layer.stickerData.transform.rotation + angleDelta) % 360;
 			
 			this.updateTransform(layerId, {
@@ -1537,13 +1605,18 @@ setupStickerTouchGestures(element, layerId) {
 			
 			// Update settings UI
 			this.editor.loadStickerSettings(layer);
+		},
+		
+		onGestureEnd: () => {
+			// Save state when all touches are released
+			this.editor.saveState();
 		}
 	});
 	
 	// Store handler on element for cleanup
 	element._touchHandler = handler;
 	
-	// Add CSS to indicate touch interactivity
+	// Ensure proper touch handling
 	element.style.touchAction = 'none';
 }
 
@@ -2599,12 +2672,16 @@ class ViewportManager {
 
 setupTouchGestures() {
 	const handler = new TouchGestureHandler(this.previewContainer, {
+		// Viewport does NOT stop propagation (it's the outermost handler)
+		preventPropagation: false,
+		
 		onSinglePan: (deltaX, deltaY) => {
 			this.panX += deltaX;
 			this.panY += deltaY;
 			this.applyTransform();
 			this._notifyViewportChanged();
 		},
+		
 		onPinchZoom: (scale, centerX, centerY) => {
 			const rect = this.previewContainer.getBoundingClientRect();
 			const anchorX = centerX - rect.left;
@@ -2630,6 +2707,7 @@ setupTouchGestures() {
 			this.applyTransform();
 			this._notifyViewportChanged();
 		},
+		
 		onTwoPan: (deltaX, deltaY) => {
 			this.panX += deltaX;
 			this.panY += deltaY;
@@ -2638,9 +2716,9 @@ setupTouchGestures() {
 		}
 	});
 
-	// Store handler for cleanup if needed
 	this.touchHandler = handler;
 }
+
 
 
 	// ===== RESIZE HANDLING =====
