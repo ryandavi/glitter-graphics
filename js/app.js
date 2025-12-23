@@ -3527,35 +3527,41 @@ class LayerManager {
 
 
 
-		// 3. Info (Name)
+		// 3. Info (Name & Type)
 		const info = document.createElement('div');
 		info.className = 'layer-info';
 
 		const nameText = document.createElement('div');
-		nameText.className = 'layer-name'; // Changed from layer-color for semantics
+		nameText.className = 'layer-name';
 
-		if (layer.type === LayerType.STICKER) {
-			nameText.textContent = layer.name || 'Sticker';
-		} else if (layer.type === LayerType.GLITTER_FILL) {
-			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
-			nameText.textContent = glitter ? `${glitter.category} - ${glitter.name}` : 'No glitter';
-		} else if (layer.type === LayerType.BASE_IMAGE) {
-			nameText.textContent = 'Base Image';
-		}
-
-		info.appendChild(nameText);
-
-		// 3.5 layer type
 		const typeText = document.createElement('div');
 		typeText.className = 'layer-type';
-		if (layer.type === LayerType.STICKER) {
-			typeText.textContent = 'Sticker';
-		} else if (layer.type === LayerType.GLITTER_FILL) {
-			typeText.textContent = 'Glitter';
-		} else if (layer.type === LayerType.BASE_IMAGE) {
-			typeText.textContent = 'Image';
+
+		switch (layer.type) {
+			case LayerType.STICKER: {
+				const sticker = this.editor.stickerManager.getItemById(layer.stickerSourceId); // Changed this line
+				nameText.textContent = layer.name || 'Sticker';
+				typeText.textContent = sticker?.category ? `${sticker.category}` : 'Sticker';
+				break;
+			}
+			case LayerType.GLITTER_FILL: {
+				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+				nameText.textContent = glitter ? glitter.name : 'No glitter';
+				typeText.textContent = glitter?.category ? `${glitter.category}` : 'Glitter';
+				break;
+			}
+			case LayerType.BASE_IMAGE:
+				nameText.textContent = 'Base Image';
+				typeText.textContent = 'Image';
+				break;
+			default:
+				nameText.textContent = 'Unknown Layer';
+				typeText.textContent = 'Unknown';
 		}
-		info.appendChild(typeText);
+
+		info.append(nameText, typeText);
+
+
 
 
 		// 4. Actions
@@ -4684,6 +4690,8 @@ class GlitterEditor {
 			glitterSettingsToggle.classList.toggle('collapsed', !isOpen);
 		});
 
+
+
 		// ===== STICKER SETTINGS =====
 		const stickerSettingsHeader = document.getElementById('stickerSettingsHeader');
 		const stickerSettingsContent = document.getElementById('stickerSettingsContent');
@@ -5266,6 +5274,12 @@ class GlitterEditor {
 		this.setupSliderDisplay('scale', 'scaleValue', '%');
 		this.setupSliderDisplay('opacity', 'opacityValue', '%');
 
+		// --- RESET BUTTONS ---
+		this.setupResetButton('threshold', CONFIG.defaultThreshold);
+		this.setupResetButton('feather', CONFIG.defaultFeather);
+		this.setupResetButton('scale', CONFIG.defaultScale);
+		this.setupResetButton('opacity', CONFIG.defaultOpacity);
+
 		// --- THRESHOLD SLIDER ---
 		const thresholdSlider = document.getElementById('threshold');
 		if (thresholdSlider) {
@@ -5611,15 +5625,7 @@ class GlitterEditor {
 				});
 			}
 
-			// Sticker Settings Toggle (collapsible)
-			const stickerSettingsToggle = document.getElementById('stickerSettingsToggle');
-			const stickerSettingsContent = document.getElementById('stickerSettingsContent');
-			if (stickerSettingsToggle && stickerSettingsContent) {
-				stickerSettingsToggle.addEventListener('click', () => {
-					const isCollapsed = stickerSettingsToggle.classList.toggle('collapsed');
-					stickerSettingsContent.classList.toggle('visible', !isCollapsed);
-				});
-			}
+
 		}
 
 
@@ -6433,7 +6439,8 @@ class GlitterEditor {
 					// EXPLICITLY call the picking logic here
 					this.handleCanvasClick(e);
 				} else {
-					this.updateStatus('Click on the preview to select a color');
+					this.setTool(ToolType.SELECT);
+					// this.updateStatus('Click on the preview to select a color');
 				}
 				break;
 

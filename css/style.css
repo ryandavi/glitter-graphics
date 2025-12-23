@@ -1085,6 +1085,7 @@ input[type=range]::-moz-range-thumb {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-transform: uppercase;
 }
 .layers-section > .layers-list > .layer-item > .layer-info > .layer-color {
   font-size: var(--font-size-sm);
