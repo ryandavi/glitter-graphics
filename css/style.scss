@@ -2057,6 +2057,7 @@ input[type="range"] {
 	left: 0;
 	transform-origin: 0 0;
 	will-change: transform;
+	pointer-events: auto;
 
 	&.color-picker-mode {
 		cursor: crosshair;
@@ -2083,6 +2084,7 @@ input[type="range"] {
 		display: block;
 		max-width: none;
 		max-height: none;
+		pointer-events: none;
 
 
 		&.selected {
@@ -2702,16 +2704,6 @@ input[type="range"] {
 	}
 }
 
-// Ensure sticker settings controls hidden by default
-#stickerSettingsControls {
-	display: none;
-
-	&.visible {
-		display: block;
-	}
-}
-
-
 
 
 
@@ -2932,11 +2924,51 @@ input[type="range"] {
 
 
 
+// layer type options
+.layer-type-options {
+	display: flex;
+	gap: var(--spacing-base);
 
+	>.layer-type-option {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-xl);
+		background: var(--color-bg-secondary);
+		border: 2px solid var(--color-border);
+		border-radius: var(--radius-md);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		text-align: center;
+		flex: 1;
 
+		&:hover {
+			background: var(--color-bg-tertiary);
+			border-color: var(--color-accent);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		}
 
+		.icon-wrapper {
+			color: var(--color-text-tertiary);
+			margin-bottom: var(--spacing-base);
+		}
 
+		&:hover .icon-wrapper {
+			opacity: 1;
+		}
 
+		.layer-type-name {
+			font-size: var(--font-size-lg);
+			color: var(--color-text-primary);
+		}
+
+		.layer-type-description {
+			@include text-sm;
+			color: var(--color-text-secondary);
+		}
+	}
+}
 
 // Layer pick visual feedback (shown for all users)
 .layer-pick-flash {
@@ -2952,6 +2984,7 @@ input[type="range"] {
 	z-index: 1000;
 }
 
+
 @keyframes pickFlash {
 	0% {
 		transform: scale(0.5);
@@ -2963,8 +2996,6 @@ input[type="range"] {
 		opacity: 0;
 	}
 }
-
-
 
 @keyframes elementPulse {
 
@@ -2978,13 +3009,7 @@ input[type="range"] {
 	}
 }
 
-
-
-
-
-
-
-
+/* ===== ABOUT MODAL ===== */
 #aboutModal {
 
 
@@ -3270,56 +3295,7 @@ input[type="range"] {
 
 }
 
-
-
-
-.layer-type-options {
-	display: flex;
-	gap: var(--spacing-base);
-
-	>.layer-type-option {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--spacing-sm);
-		padding: var(--spacing-xl);
-		background: var(--color-bg-secondary);
-		border: 2px solid var(--color-border);
-		border-radius: var(--radius-md);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		text-align: center;
-		flex: 1;
-
-		&:hover {
-			background: var(--color-bg-tertiary);
-			border-color: var(--color-accent);
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-		}
-
-		.icon-wrapper {
-			color: var(--color-text-tertiary);
-			margin-bottom: var(--spacing-base);
-		}
-
-		&:hover .icon-wrapper {
-			opacity: 1;
-		}
-
-		.layer-type-name {
-			font-size: var(--font-size-lg);
-			color: var(--color-text-primary);
-		}
-
-		.layer-type-description {
-			@include text-sm;
-			color: var(--color-text-secondary);
-		}
-	}
-}
-
-
-
+/* ===== SHORTCUTS MODAL ===== */
 #shortcutsModal {
 
 	/* KEYBOARD SHORTCUTS */
@@ -3376,6 +3352,7 @@ input[type="range"] {
 	}
 }
 
+/* ===== GUIDE MODAL ===== */
 #guideModal {
 
 	.modal-hero-image {
@@ -3488,6 +3465,7 @@ input[type="range"] {
 	}
 }
 
+/* ===== SETTINGS MODAL ===== */
 #settingsModal {
 
 	/* SETTINGS MODAL SPECIFIC */
@@ -3590,216 +3568,6 @@ input[type="range"] {
 	}
 }
 
-/*
-#icon-magic-wand
-#icon-eye-dropper
-#icon-cursor
-#icon-pointer
-#icon-magnifying-glass
-#icon-undo
-#icon-redo
-#icon-trash
-#icon-gear
-#icon-keyboard
-#icon-move
-
-#icon-filter
-#icon-eye
-#icon-eye-slash
-
-#icon-check
-#icon-checkerboard
-#icon-image
-
-#icon-plus
-#icon-minus
-#icon-x-mark
-
-#icon-chevron-down
-#icon-chevron-left
-#icon-chevron-right
-#icon-chevron-up
-
-#icon-export
-#icon-share
-
-#icon-question-circle
-*/
-
-.icon-wrapper {
-	aspect-ratio: 1/1;
-	align-items: center;
-	justify-content: center;
-	display: inline-flex;
-
-	>svg.icon {
-		width: 1em;
-		height: 1em;
-		font-size: 24px;
-		fill: currentColor;
-		/* Inherits the color of the text */
-		display: inline-block;
-		vertical-align: middle;
-		z-index: 1;
-
-		+span.name {
-			display: none;
-			z-index: 1;
-		}
-	}
-
-	&.sm {
-		>svg.icon {
-			font-size: 16px;
-		}
-	}
-
-	&.xl {
-		>svg.icon {
-			font-size: 48px;
-		}
-	}
-
-}
-
-/* Sidebar Section Management */
-
-.welcome-section,
-.glitter-settings-section,
-.layer-settings-section,
-.sticker-settings-section,
-.no-layer-settings-section,
-.base-layer-settings-section,
-#glitterSearchSection,
-#stickersSearchSection,
-#glitterGridContainer,
-#stickerGridContainer {
-	display: none; // Hide by default
-
-	&.visible {
-		display: block;
-	}
-}
-
-// 2. Gallery/Option Sections (Grids)
-#glitterOptions,
-#stickersOptions {
-	display: none;
-
-	&.visible {
-		display: flex;
-		flex-direction: column;
-	}
-}
-
-.section {
-
-	&.welcome-section,
-	&.base-layer-settings-section,
-	&.no-layer-settings-section {
-		>.section-content {
-			display: flex;
-			flex-direction: column;
-			gap: var(--spacing-base);
-
-			>.empty-state {
-				background-color: #2f2f2f;
-			}
-
-		}
-	}
-}
-
-
-.welcome-section {
-	.blank-image-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: var(--spacing-sm);
-		margin-top: var(--spacing-md);
-
-		.blank-image-option {
-			min-width: 0;
-
-			background: var(--color-bg-tertiary);
-			border: 2px solid var(--color-border);
-			border-radius: var(--radius-md);
-			cursor: pointer;
-			transition: all var(--transition-fast);
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			padding: var(--spacing-md);
-
-			&:hover {
-				border-color: var(--color-border-hover);
-				background: var(--color-bg-primary);
-			}
-
-			&:active {
-				transform: scale(0.98);
-			}
-
-			.blank-preview-wrapper {
-				width: 60%;
-				aspect-ratio: 1;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding: 8px;
-			}
-
-			.blank-preview {
-				width: auto;
-				height: 100%;
-				max-width: 100%;
-				aspect-ratio: 1;
-				border: 1px solid var(--color-border);
-				border-radius: var(--radius-sm);
-
-				&.wide {
-					width: 100%;
-					height: auto;
-					max-height: 100%;
-				}
-			}
-
-			.blank-dimensions {
-				font-size: var(--font-size-sm);
-				font-weight: 600;
-				color: var(--color-text-primary);
-				margin-top: var(--spacing-xs);
-			}
-
-			.blank-label {
-				font-size: var(--font-size-xs);
-				color: var(--color-text-tertiary);
-				height: calc(var(--font-size-xs) * 1.2);
-			}
-		}
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ===== STICKER UPLOAD MODAL ===== */
 #stickerUploadModal {
 	.upload-dropzone {
@@ -3845,9 +3613,208 @@ input[type="range"] {
 	}
 }
 
+.icon-wrapper {
+	aspect-ratio: 1/1;
+	align-items: center;
+	justify-content: center;
+	display: inline-flex;
+
+	>svg.icon {
+		width: 1em;
+		height: 1em;
+		font-size: 24px;
+		fill: currentColor;
+		/* Inherits the color of the text */
+		display: inline-block;
+		vertical-align: middle;
+		z-index: 1;
+
+		+span.name {
+			display: none;
+			z-index: 1;
+		}
+	}
+
+	&.sm {
+		>svg.icon {
+			font-size: 16px;
+		}
+	}
+
+	&.xl {
+		>svg.icon {
+			font-size: 48px;
+		}
+	}
+
+}
+
+
+
+/* Sidebar Section Management */
+.welcome-section,
+.no-layer-settings-section,
+.base-layer-settings-section,
+
+.gallery-search-section,
+.gallery-search-section,
+.glitter-grid-container,
+.sticker-grid-container {
+	display: none; // Hide by default
+
+	&.visible {
+		display: block;
+		overflow-y: auto;
+	}
+}
+
+
+/* Collapsible Section Management */
+.sticker-settings-section,
+.glitter-settings-section,
+.layer-settings-section {
+	display: none; // Hide by default
+	&.visible {
+		flex-shrink: 1;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+
+		>.section-content {
+			flex-shrink: 1;
+			overflow-y: auto;
+			max-height: 33dvh;
+		}
+	}
+}
+
+
+
+// 2. Gallery/Option Sections
+.glitter-options,
+.sticker-options {
+	display: none;
+
+	&.visible {
+		display: flex;
+		flex-direction: column;
+	}
+}
+
+.section {
+	&.welcome-section,
+	&.base-layer-settings-section,
+	&.no-layer-settings-section {
+		>.section-content {
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-base);
+
+			>.empty-state {
+				background-color: #2f2f2f;
+			}
+
+		}
+	}
+
+	&.welcome-section {
+		.blank-image-grid {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: var(--spacing-sm);
+			margin-top: var(--spacing-md);
+
+			.blank-image-option {
+				min-width: 0;
+
+				background: var(--color-bg-tertiary);
+				border: 2px solid var(--color-border);
+				border-radius: var(--radius-md);
+				cursor: pointer;
+				transition: all var(--transition-fast);
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				padding: var(--spacing-md);
+
+				&:hover {
+					border-color: var(--color-border-hover);
+					background: var(--color-bg-primary);
+				}
+
+				&:active {
+					transform: scale(0.98);
+				}
+
+				.blank-preview-wrapper {
+					width: 60%;
+					aspect-ratio: 1;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					padding: 8px;
+				}
+
+				.blank-preview {
+					width: auto;
+					height: 100%;
+					max-width: 100%;
+					aspect-ratio: 1;
+					border: 1px solid var(--color-border);
+					border-radius: var(--radius-sm);
+
+					&.wide {
+						width: 100%;
+						height: auto;
+						max-height: 100%;
+					}
+				}
+
+				.blank-dimensions {
+					font-size: var(--font-size-sm);
+					font-weight: 600;
+					color: var(--color-text-primary);
+					margin-top: var(--spacing-xs);
+				}
+
+				.blank-label {
+					font-size: var(--font-size-xs);
+					color: var(--color-text-tertiary);
+					height: calc(var(--font-size-xs) * 1.2);
+				}
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .gallery-header-actions {
 	padding: var(--spacing-lg);
 	border-bottom: 1px solid var(--color-border);
+	border-top: 1px solid var(--color-border);
 	display: flex;
 	gap: var(--spacing-sm);
 }
@@ -3902,15 +3869,15 @@ input[type="range"] {
 		white-space: wrap;
 	}
 
-.glitter-element {
-	&.selected {
-		filter: unset;
+	.glitter-element {
+		&.selected {
+			filter: unset;
+		}
 	}
-}
 
-#aboutModal .figure-wrapper > figure {
-	max-width: 100%;
-}
+	#aboutModal .figure-wrapper>figure {
+		max-width: 100%;
+	}
 
 
 
@@ -4337,7 +4304,5 @@ input[type="range"] {
 				}
 			}
 		}
-
-
 	}
 }

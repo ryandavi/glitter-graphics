@@ -186,12 +186,13 @@ class TouchGestureHandler {
 		this.setupEventListeners();
 	}
 
-	setupEventListeners() {
-		this.element.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
-		this.element.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
-		this.element.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
-		this.element.addEventListener('touchcancel', (e) => this.handleTouchCancel(e), { passive: false });
-	}
+setupEventListeners() {
+	const capturePhase = this.callbacks.capturePhase || false;
+	this.element.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false, capture: capturePhase });
+	this.element.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false, capture: capturePhase });
+	this.element.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false, capture: capturePhase });
+	this.element.addEventListener('touchcancel', (e) => this.handleTouchCancel(e), { passive: false, capture: capturePhase });
+}
 
 	// Update touch count with stability checking
 	updateStableTouchCount() {
@@ -206,14 +207,19 @@ class TouchGestureHandler {
 		this.stableTouchCount = Math.max(...this.touchCountHistory);
 	}
 
-	handleTouchStart(e) {
-		// CRITICAL: Stop propagation for sticker elements
-		if (this.preventPropagation) {
-			e.stopPropagation();
-		}
+handleTouchStart(e) {
+	// CRITICAL: Stop propagation for sticker elements
+	if (this.preventPropagation) {
+		e.stopPropagation();
+	}
+	
+	// ALWAYS prevent default for viewport touch gestures
+	if (!this.preventPropagation && e.touches.length >= 2) {
+		e.preventDefault();
+	}
 
-		// Add all new touches to our tracking
-		for (let touch of e.changedTouches) {
+	// Add all new touches to our tracking
+	for (let touch of e.changedTouches) {
 			this.touches.set(touch.identifier, {
 				x: touch.clientX,
 				y: touch.clientY,
@@ -2691,10 +2697,11 @@ class ViewportManager {
 
 	// ===== TOUCH GESTURES =====
 
-	setupTouchGestures() {
-		const handler = new TouchGestureHandler(this.previewContainer, {
-			// Viewport does NOT stop propagation (it's the outermost handler)
-			preventPropagation: false,
+setupTouchGestures() {
+	const handler = new TouchGestureHandler(this.previewContainer, {
+		// Viewport does NOT stop propagation (it's the outermost handler)
+		preventPropagation: false,
+		capturePhase: true,  // ADD THIS
 
 			onSinglePan: (deltaX, deltaY) => {
 				this.panX += deltaX;
@@ -3075,9 +3082,11 @@ class LayerManager {
 				// if selection of this layer is empty, set tool to color picker
 				if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
 					this.editor.setTool(ToolType.COLOR_PICKER);
+					console.log("NOO");
 				}else{
 					// if selection of this layer is not empty, set tool to select
 					this.editor.setTool(ToolType.SELECT);
+					console.log("LULU");
 				}
 					
 				this.editor.updateGlitterSelection();
@@ -6411,13 +6420,17 @@ class GlitterEditor {
 	}
 
 
-	handlePreviewContainerClick(e) {
-		if (e.pointerType === 'mouse' && e.button !== 0) return;
+handlePreviewContainerClick(e) {
+	if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-		const hitSticker = e.target.closest('.sticker-element');
-		const hitCanvas = e.target === this.previewCanvas;
-		// We treat stickers and the canvas as the "Image Area"
-		const hitImageArea = hitCanvas || hitSticker;
+	const hitSticker = e.target.closest('.sticker-element');
+	
+	// Check if click is within the canvas area using viewport coordinates
+	const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
+	const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
+	
+	// We treat stickers and the canvas as the "Image Area"
+	const hitImageArea = hitCanvas || hitSticker;
 
 		// Gatekeeper: If they clicked a button/sidebar, stop here.
 		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
