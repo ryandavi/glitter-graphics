@@ -137,6 +137,277 @@ const ToolType = {
 };
 
 // ============================================
+// TOUCH GESTURE HANDLER CLASS
+// Reusable touch gesture state machine for viewport and sticker interactions
+// Prevents gesture conflicts with proper locking and state transitions
+// ============================================
+
+class TouchGestureHandler {
+	constructor(element, callbacks = {}) {
+		this.element = element;
+		this.callbacks = callbacks;
+		
+		// Gesture state machine
+		this.state = 'idle'; // idle, single_pan, pinch_zoom, two_pan
+		this.gestureLockedUntilRelease = false;
+		
+		// Touch tracking
+		this.touches = new Map(); // touchId -> {x, y, startX, startY}
+		
+		// Gesture data
+		this.startData = {
+			distance: 0,
+			angle: 0,
+			centerX: 0,
+			centerY: 0
+		};
+		
+		this.lastData = {
+			distance: 0,
+			angle: 0,
+			centerX: 0,
+			centerY: 0
+		};
+		
+		// Configuration
+		this.minPinchMovement = 10; // Minimum pixel movement to detect pinch vs pan
+		this.rotationEnabled = callbacks.onRotate !== undefined;
+		
+		this.setupEventListeners();
+	}
+	
+	setupEventListeners() {
+		this.element.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
+		this.element.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
+		this.element.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
+		this.element.addEventListener('touchcancel', (e) => this.handleTouchCancel(e), { passive: false });
+	}
+	
+	handleTouchStart(e) {
+		// Add all new touches to our tracking
+		for (let touch of e.changedTouches) {
+			this.touches.set(touch.identifier, {
+				x: touch.clientX,
+				y: touch.clientY,
+				startX: touch.clientX,
+				startY: touch.clientY
+			});
+		}
+		
+		const touchCount = this.touches.size;
+		
+		// If we're already in a gesture, don't start a new one
+		if (this.gestureLockedUntilRelease) {
+			e.preventDefault();
+			return;
+		}
+		
+		// Determine gesture type based on touch count
+		if (touchCount === 1) {
+			this.startSinglePan();
+		} else if (touchCount === 2) {
+			e.preventDefault(); // Prevent scrolling for two-finger gestures
+			this.startTwoFingerGesture();
+		}
+	}
+	
+	handleTouchMove(e) {
+		// Update all touch positions
+		for (let touch of e.changedTouches) {
+			const tracked = this.touches.get(touch.identifier);
+			if (tracked) {
+				tracked.x = touch.clientX;
+				tracked.y = touch.clientY;
+			}
+		}
+		
+		const touchCount = this.touches.size;
+		
+		// Process based on current state
+		if (this.state === 'single_pan' && touchCount === 1) {
+			e.preventDefault();
+			this.updateSinglePan();
+		} else if ((this.state === 'pinch_zoom' || this.state === 'two_pan') && touchCount === 2) {
+			e.preventDefault();
+			this.updateTwoFingerGesture();
+		}
+	}
+	
+	handleTouchEnd(e) {
+		// Remove ended touches
+		for (let touch of e.changedTouches) {
+			this.touches.delete(touch.identifier);
+		}
+		
+		const touchCount = this.touches.size;
+		
+		// If all touches are released, reset state
+		if (touchCount === 0) {
+			this.state = 'idle';
+			this.gestureLockedUntilRelease = false;
+		}
+		// If we were doing a two-finger gesture and one finger lifted, end the gesture
+		else if ((this.state === 'pinch_zoom' || this.state === 'two_pan') && touchCount === 1) {
+			this.state = 'idle';
+			this.gestureLockedUntilRelease = true; // Lock until all fingers are released
+		}
+	}
+	
+	handleTouchCancel(e) {
+		// Treat cancel the same as end
+		this.handleTouchEnd(e);
+	}
+	
+	// ===== SINGLE FINGER PAN =====
+	
+	startSinglePan() {
+		this.state = 'single_pan';
+		this.gestureLockedUntilRelease = true;
+		
+		if (this.callbacks.onGestureStart) {
+			this.callbacks.onGestureStart('single_pan');
+		}
+	}
+	
+	updateSinglePan() {
+		const touch = Array.from(this.touches.values())[0];
+		const deltaX = touch.x - touch.startX;
+		const deltaY = touch.y - touch.startY;
+		
+		if (this.callbacks.onSinglePan) {
+			// Pass incremental delta since last frame
+			const prevX = touch.prevX || touch.startX;
+			const prevY = touch.prevY || touch.startY;
+			const incrementalDeltaX = touch.x - prevX;
+			const incrementalDeltaY = touch.y - prevY;
+			
+			this.callbacks.onSinglePan(incrementalDeltaX, incrementalDeltaY, touch.x, touch.y);
+			
+			touch.prevX = touch.x;
+			touch.prevY = touch.y;
+		}
+	}
+	
+	// ===== TWO FINGER GESTURES =====
+	
+	startTwoFingerGesture() {
+		const touchArray = Array.from(this.touches.values());
+		const [touch1, touch2] = touchArray;
+		
+		// Calculate initial metrics
+		this.startData.distance = this.getTouchDistance(touch1, touch2);
+		this.startData.angle = this.getTouchAngle(touch1, touch2);
+		this.startData.centerX = (touch1.x + touch2.x) / 2;
+		this.startData.centerY = (touch1.y + touch2.y) / 2;
+		
+		// Copy to lastData
+		this.lastData = { ...this.startData };
+		
+		// Start in two_pan state, we'll switch to pinch if needed
+		this.state = 'two_pan';
+		this.gestureLockedUntilRelease = true;
+		
+		if (this.callbacks.onGestureStart) {
+			this.callbacks.onGestureStart('two_finger');
+		}
+	}
+	
+	updateTwoFingerGesture() {
+		const touchArray = Array.from(this.touches.values());
+		const [touch1, touch2] = touchArray;
+		
+		// Calculate current metrics
+		const currentDistance = this.getTouchDistance(touch1, touch2);
+		const currentAngle = this.getTouchAngle(touch1, touch2);
+		const currentCenterX = (touch1.x + touch2.x) / 2;
+		const currentCenterY = (touch1.y + touch2.y) / 2;
+		
+		// Determine if we're pinching based on distance change
+		const distanceChange = Math.abs(currentDistance - this.startData.distance);
+		const isPinching = distanceChange > this.minPinchMovement;
+		
+		// Transition state if needed
+		if (this.state === 'two_pan' && isPinching) {
+			this.state = 'pinch_zoom';
+		}
+		
+		// Process based on state
+		if (this.state === 'pinch_zoom') {
+			// Calculate scale change since last frame
+			const scale = currentDistance / this.lastData.distance;
+			
+			if (this.callbacks.onPinchZoom) {
+				this.callbacks.onPinchZoom(scale, currentCenterX, currentCenterY);
+			}
+			
+			// Handle rotation if enabled
+			if (this.rotationEnabled && this.callbacks.onRotate) {
+				const angleDelta = currentAngle - this.lastData.angle;
+				// Normalize angle delta to -180 to 180 range
+				const normalizedDelta = ((angleDelta + 180) % 360) - 180;
+				
+				if (Math.abs(normalizedDelta) > 0.5) { // Minimum rotation threshold
+					this.callbacks.onRotate(normalizedDelta, currentCenterX, currentCenterY);
+				}
+			}
+		} else if (this.state === 'two_pan') {
+			// Two-finger pan - calculate center movement
+			const deltaX = currentCenterX - this.lastData.centerX;
+			const deltaY = currentCenterY - this.lastData.centerY;
+			
+			if (this.callbacks.onTwoPan) {
+				this.callbacks.onTwoPan(deltaX, deltaY, currentCenterX, currentCenterY);
+			}
+		}
+		
+		// Update last data
+		this.lastData.distance = currentDistance;
+		this.lastData.angle = currentAngle;
+		this.lastData.centerX = currentCenterX;
+		this.lastData.centerY = currentCenterY;
+	}
+	
+	// ===== UTILITY METHODS =====
+	
+	getTouchDistance(touch1, touch2) {
+		const dx = touch2.x - touch1.x;
+		const dy = touch2.y - touch1.y;
+		return Math.sqrt(dx * dx + dy * dy);
+	}
+	
+	getTouchAngle(touch1, touch2) {
+		const dx = touch2.x - touch1.x;
+		const dy = touch2.y - touch1.y;
+		return Math.atan2(dy, dx) * (180 / Math.PI);
+	}
+	
+	// ===== PUBLIC API =====
+	
+	isActive() {
+		return this.state !== 'idle';
+	}
+	
+	getCurrentState() {
+		return this.state;
+	}
+	
+	reset() {
+		this.touches.clear();
+		this.state = 'idle';
+		this.gestureLockedUntilRelease = false;
+	}
+	
+	destroy() {
+		this.element.removeEventListener('touchstart', this.handleTouchStart);
+		this.element.removeEventListener('touchmove', this.handleTouchMove);
+		this.element.removeEventListener('touchend', this.handleTouchEnd);
+		this.element.removeEventListener('touchcancel', this.handleTouchCancel);
+		this.reset();
+	}
+}
+
+
+// ============================================
 // CONTENT MANAGER BASE CLASS
 // Handles common functionality for content pickers (glitter/stickers)
 // ============================================
@@ -1196,108 +1467,163 @@ const userSticker = {
 		this.attachDragListeners(clonedElement, clonedLayer.id);
 	}
 
-	attachDragListeners(element, layerId) {
-		let isDragging = false;
-		let startX, startY;
-		let initialStickerX, initialStickerY;
-
-		const startDrag = (clientX, clientY) => {
-			// Only allow dragging if Select Tool is active
-			if (this.editor.currentTool !== ToolType.SELECT) return;
-
-			// Only allow dragging if this is the active layer
-			if (this.editor.layerManager.activeLayerId !== layerId) {
-				this.editor.layerManager.setActiveLayer(layerId);
-			}
-
-			isDragging = true;
-			element.classList.add('dragging');
-
-			startX = clientX;
-			startY = clientY;
-
-			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-			if (!layer) return;
-
-			initialStickerX = layer.stickerData.transform.position.x;
-			initialStickerY = layer.stickerData.transform.position.y;
-		};
-
-		const onMove = (clientX, clientY) => {
-			if (!isDragging) return;
-
-			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-			if (!layer) return;
-
-			// Calculate Delta
-			const dx = clientX - startX;
-			const dy = clientY - startY;
-
-			// Adjust for Zoom Level (Crucial for accuracy)
-			const zoom = this.editor.viewport.currentZoom;
-
-			// Update Position
+setupStickerTouchGestures(element, layerId) {
+	// Remove any existing gesture handler
+	if (element._touchHandler) {
+		element._touchHandler.destroy();
+	}
+	
+	const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.STICKER) return;
+	
+	const viewport = this.editor.viewport;
+	let startTransform = null;
+	
+	const handler = new TouchGestureHandler(element, {
+		onGestureStart: (gestureType) => {
+			// Store initial transform state
+			startTransform = {
+				scale: { ...layer.stickerData.transform.scale },
+				rotation: layer.stickerData.transform.rotation,
+				position: { ...layer.stickerData.transform.position }
+			};
+		},
+		
+		onSinglePan: (deltaX, deltaY, touchX, touchY) => {
+			// Convert screen delta to canvas coordinates
+			const canvasDeltaX = deltaX / viewport.currentZoom;
+			const canvasDeltaY = deltaY / viewport.currentZoom;
+			
 			this.updateTransform(layerId, {
 				position: {
-					x: initialStickerX + (dx / zoom),
-					y: initialStickerY + (dy / zoom)
+					x: layer.stickerData.transform.position.x + canvasDeltaX,
+					y: layer.stickerData.transform.position.y + canvasDeltaY
 				}
 			});
-
-			// Update Settings UI if open
+			
+			// Update settings UI
 			this.editor.loadStickerSettings(layer);
-		};
-
-		const endDrag = () => {
-			if (!isDragging) return;
-			isDragging = false;
-			element.classList.remove('dragging');
-
-			// Set flag to prevent immediate layer picking
-			this.editor.justCompletedDrag = true;
-			requestAnimationFrame(() => {
-				this.editor.justCompletedDrag = false;
+		},
+		
+		onPinchZoom: (scale, centerX, centerY) => {
+			// Scale the sticker (respecting proportional scale)
+			const newScaleX = startTransform.scale.x * scale;
+			const newScaleY = layer.stickerData.transform.proportionalScale 
+				? newScaleX 
+				: startTransform.scale.y * scale;
+			
+			// Clamp scale values
+			const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
+			const clampedScaleY = Math.max(10, Math.min(500, newScaleY));
+			
+			this.updateTransform(layerId, {
+				scale: {
+					x: clampedScaleX,
+					y: clampedScaleY
+				}
 			});
+			
+			// Update settings UI
+			this.editor.loadStickerSettings(layer);
+		},
+		
+		onRotate: (angleDelta, centerX, centerY) => {
+			// Update rotation
+			const newRotation = (layer.stickerData.transform.rotation + angleDelta) % 360;
+			
+			this.updateTransform(layerId, {
+				rotation: newRotation
+			});
+			
+			// Update settings UI
+			this.editor.loadStickerSettings(layer);
+		}
+	});
+	
+	// Store handler on element for cleanup
+	element._touchHandler = handler;
+	
+	// Add CSS to indicate touch interactivity
+	element.style.touchAction = 'none';
+}
 
+
+attachDragListeners(element, layerId) {
+	// MOUSE DRAG (existing code - keep as is)
+	let isDragging = false;
+	let startX = 0;
+	let startY = 0;
+	let startCanvasX = 0;
+	let startCanvasY = 0;
+
+	const handleMouseDown = (e) => {
+		if (e.button !== 0) return; // Left click only
+		
+		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+		if (!layer || !layer.visible || layer.locked) return;
+
+		e.preventDefault();
+		e.stopPropagation();
+
+		isDragging = true;
+		startX = e.clientX;
+		startY = e.clientY;
+
+		const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+		startCanvasX = canvasPos.x;
+		startCanvasY = canvasPos.y;
+
+		this.editor.layerManager.setActiveLayer(layerId);
+
+		document.addEventListener('mousemove', handleMouseMove);
+		document.addEventListener('mouseup', handleMouseUp);
+	};
+
+	const handleMouseMove = (e) => {
+		if (!isDragging) return;
+
+		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+		if (!layer) return;
+
+		const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+		const deltaX = canvasPos.x - startCanvasX;
+		const deltaY = canvasPos.y - startCanvasY;
+
+		const newX = layer.stickerData.transform.position.x + deltaX;
+		const newY = layer.stickerData.transform.position.y + deltaY;
+
+		this.updateTransform(layerId, {
+			position: { x: newX, y: newY }
+		});
+
+		startCanvasX = canvasPos.x;
+		startCanvasY = canvasPos.y;
+
+		this.editor.loadStickerSettings(layer);
+	};
+
+	const handleMouseUp = () => {
+		if (isDragging) {
+			isDragging = false;
 			this.editor.saveState();
-		};
+			document.removeEventListener('mousemove', handleMouseMove);
+			document.removeEventListener('mouseup', handleMouseUp);
+		}
+	};
 
-		// --- MOUSE EVENTS ---
-		element.addEventListener('mousedown', (e) => {
-			if (this.editor.currentTool === ToolType.SELECT) {
-				e.stopPropagation(); // Stop Viewport Pan
-				e.preventDefault();
-				startDrag(e.clientX, e.clientY);
-			}
-		});
+	element.addEventListener('mousedown', handleMouseDown);
 
-		window.addEventListener('mousemove', (e) => {
-			if (isDragging) {
-				e.preventDefault();
-				onMove(e.clientX, e.clientY);
-			}
-		});
-
-		window.addEventListener('mouseup', endDrag);
-
-		// --- TOUCH EVENTS (One Finger) ---
-		element.addEventListener('touchstart', (e) => {
-			if (this.editor.currentTool === ToolType.SELECT && e.touches.length === 1) {
-				e.stopPropagation(); // Stop Viewport Pan
-				e.preventDefault();
-				startDrag(e.touches[0].clientX, e.touches[0].clientY);
-			}
-		}, { passive: false });
-
-		window.addEventListener('touchmove', (e) => {
-			if (isDragging && e.touches.length === 1) {
-				e.preventDefault(); // Stop Browser Scroll
-				onMove(e.touches[0].clientX, e.touches[0].clientY);
-			}
-		}, { passive: false });
-
-		window.addEventListener('touchend', endDrag);
-	}
+	// TOUCH GESTURES (new code)
+	this.setupStickerTouchGestures(element, layerId);
+	
+	// Add touchend handler to save state
+	element.addEventListener('touchend', (e) => {
+		if (e.touches.length === 0) {
+			// All touches released, save state
+			this.editor.saveState();
+		}
+	});
+}
 
 	// ===== LAYER REMOVAL =====
 
@@ -1312,6 +1638,13 @@ const userSticker = {
 	removeStickerElement(layerId) {
 		const element = this.layerElements.get(layerId);
 		if (element && element.parentNode) {
+
+			// Clean up touch handler
+			if (element._touchHandler) {
+				element._touchHandler.destroy();
+			}
+
+
 			element.parentNode.removeChild(element);
 		}
 	}
@@ -1945,21 +2278,6 @@ class ViewportManager {
 		this.lastViewportHeight = 0;
 		this.resizeTimeout = null;
 
-		// Touch gesture state
-		this.touch = {
-			active: false,
-			startDistance: 0,
-			startZoom: 1,
-			anchorScreen: { x: 0, y: 0 },
-			anchorCanvas: { x: 0, y: 0 },
-			lastCenter: { x: 0, y: 0 },
-			startPanX: 0,
-			startPanY: 0,
-			// Add single finger tracking:
-			singleFingerPan: false,
-			singleFingerStart: { x: 0, y: 0 }
-		};
-
 		// Canvas dimensions (set by editor when image loads)
 		this.canvasWidth = 0;
 		this.canvasHeight = 0;
@@ -2279,125 +2597,51 @@ class ViewportManager {
 
 	// ===== TOUCH GESTURES =====
 
-	setupTouchGestures() {
-		const container = this.previewContainer;
+setupTouchGestures() {
+	const handler = new TouchGestureHandler(this.previewContainer, {
+		onSinglePan: (deltaX, deltaY) => {
+			this.panX += deltaX;
+			this.panY += deltaY;
+			this.applyTransform();
+			this._notifyViewportChanged();
+		},
+		onPinchZoom: (scale, centerX, centerY) => {
+			const rect = this.previewContainer.getBoundingClientRect();
+			const anchorX = centerX - rect.left;
+			const anchorY = centerY - rect.top;
 
-		const getTouchDistance = (touch1, touch2) => {
-			const dx = touch2.clientX - touch1.clientX;
-			const dy = touch2.clientY - touch1.clientY;
-			return Math.sqrt(dx * dx + dy * dy);
-		};
+			const canvasX = (anchorX - this.panX) / this.currentZoom;
+			const canvasY = (anchorY - this.panY) / this.currentZoom;
 
-		const getTouchCenter = (touch1, touch2) => {
-			return {
-				x: (touch1.clientX + touch2.clientX) / 2,
-				y: (touch1.clientY + touch2.clientY) / 2
-			};
-		};
+			const newZoom = Math.max(0.1, Math.min(16, this.currentZoom * scale));
+			
+			const newCanvasX = canvasX * newZoom;
+			const newCanvasY = canvasY * newZoom;
 
-		container.addEventListener('touchstart', (e) => {
-			if (e.touches.length === 1) {
-				// Single finger - prepare for pan
-				this.touch.singleFingerPan = true;
-				this.touch.singleFingerStart = {
-					x: e.touches[0].clientX,
-					y: e.touches[0].clientY
-				};
-				this.touch.startPanX = this.panX;
-				this.touch.startPanY = this.panY;
-			} else if (e.touches.length === 2) {
-				// Two fingers - disable single pan, start pinch/pan
-				e.preventDefault();
-				this.touch.singleFingerPan = false;
+			this.panX = anchorX - newCanvasX;
+			this.panY = anchorY - newCanvasY;
+			this.currentZoom = newZoom;
 
-				const center = getTouchCenter(e.touches[0], e.touches[1]);
-				const rect = container.getBoundingClientRect();
-				const anchorX = center.x - rect.left;
-				const anchorY = center.y - rect.top;
-
-				const canvasX = (anchorX - this.panX) / this.currentZoom;
-				const canvasY = (anchorY - this.panY) / this.currentZoom;
-
-				this.touch.active = true;
-				this.touch.startDistance = getTouchDistance(e.touches[0], e.touches[1]);
-				this.touch.startZoom = this.currentZoom;
-				this.touch.anchorScreen = { x: anchorX, y: anchorY };
-				this.touch.anchorCanvas = { x: canvasX, y: canvasY };
-				this.touch.lastCenter = center;
-				this.touch.startPanX = this.panX;
-				this.touch.startPanY = this.panY;
+			this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
+			if (this.currentZoomIndex === -1) {
+				this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
 			}
-		}, { passive: false });
 
-		container.addEventListener('touchmove', (e) => {
-			// Handle single finger pan
-			if (e.touches.length === 1 && this.touch.singleFingerPan) {
-				e.preventDefault();
+			this.applyTransform();
+			this._notifyViewportChanged();
+		},
+		onTwoPan: (deltaX, deltaY) => {
+			this.panX += deltaX;
+			this.panY += deltaY;
+			this.applyTransform();
+			this._notifyViewportChanged();
+		}
+	});
 
-				const deltaX = e.touches[0].clientX - this.touch.singleFingerStart.x;
-				const deltaY = e.touches[0].clientY - this.touch.singleFingerStart.y;
+	// Store handler for cleanup if needed
+	this.touchHandler = handler;
+}
 
-				this.panX = this.touch.startPanX + deltaX;
-				this.panY = this.touch.startPanY + deltaY;
-
-				this.applyTransform();
-				this._notifyViewportChanged();
-			}
-			// Handle two finger pinch/pan
-			else if (this.touch.active && e.touches.length === 2) {
-				e.preventDefault();
-
-				const currentCenter = getTouchCenter(e.touches[0], e.touches[1]);
-				const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
-
-				const scale = currentDistance / this.touch.startDistance;
-				const distanceChange = Math.abs(currentDistance - this.touch.startDistance);
-				const isPanning = distanceChange < 10;
-
-				if (isPanning) {
-					// Two-finger pan
-					const deltaX = currentCenter.x - this.touch.lastCenter.x;
-					const deltaY = currentCenter.y - this.touch.lastCenter.y;
-
-					this.panX += deltaX;
-					this.panY += deltaY;
-					this.touch.lastCenter = currentCenter;
-				} else {
-					// Pinch zoom - keep anchor fixed to prevent jumping
-					const newZoom = Math.max(0.1, Math.min(16, this.touch.startZoom * scale));
-
-					const newCanvasX = this.touch.anchorCanvas.x * newZoom;
-					const newCanvasY = this.touch.anchorCanvas.y * newZoom;
-
-					this.panX = this.touch.anchorScreen.x - newCanvasX;
-					this.panY = this.touch.anchorScreen.y - newCanvasY;
-					this.currentZoom = newZoom;
-
-					this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
-					if (this.currentZoomIndex === -1) {
-						this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
-					}
-				}
-
-				this.applyTransform();
-				this._notifyViewportChanged();
-			}
-		}, { passive: false });
-
-		container.addEventListener('touchend', (e) => {
-			if (e.touches.length === 0) {
-				this.touch.singleFingerPan = false;
-				this.touch.active = false;
-			} else if (e.touches.length < 2) {
-				this.touch.active = false;
-			}
-		});
-
-		container.addEventListener('touchcancel', () => {
-			this.touch.active = false;
-			this.touch.singleFingerPan = false;
-		});
-	}
 
 	// ===== RESIZE HANDLING =====
 
