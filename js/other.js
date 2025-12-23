@@ -40,77 +40,89 @@ document.addEventListener('DOMContentLoaded', initPixelScaler);
 
 
 
-// Reference linking and highlighting functionality
-document.addEventListener('DOMContentLoaded', function () {
-	const modalBody = document.querySelector('#aboutModal .modal-body');
 
-	// Add IDs to sup elements and make them clickable
+// Combined Reference Highlighting and Smooth Scroll for Modal
+document.addEventListener('DOMContentLoaded', () => {
+	const modal = document.querySelector('#aboutModal');
+	if (!modal) return;
+	const modalBody = modal.querySelector('.modal-body');
+	if (!modalBody) return;
+
+	// Utility: Remove highlights
+	const clearHighlights = () => {
+		modalBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+	};
+
+	// Utility: Scroll element into view inside modal
+	const scrollToElement = (el, block = 'start') => {
+		el.scrollIntoView({ behavior: 'smooth', block, inline: 'nearest' });
+	};
+
+	// --- Reference Highlighting ---
 	const sups = modalBody.querySelectorAll('sup');
 	sups.forEach((sup, index) => {
-		const refNum = sup.textContent.match(/\d+/)[0];
-		// Add both a unique ID and a class for the reference number
+		const match = sup.textContent.match(/\d+/);
+		if (!match) return;
+
+		const refNum = match[0];
 		sup.id = `ref-link-${refNum}-${index}`;
 		sup.classList.add(`ref-${refNum}`);
 		sup.style.cursor = 'pointer';
 
-		sup.addEventListener('click', function (e) {
+		sup.addEventListener('click', e => {
 			e.preventDefault();
 			const targetRef = modalBody.querySelector(`#ref-${refNum}`);
-			if (targetRef) {
-				// Remove any existing highlights
-				modalBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+			if (!targetRef) return;
 
-				// Scroll to reference
-				targetRef.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-				// Highlight the reference
-				targetRef.classList.add('highlight');
-				setTimeout(() => targetRef.classList.remove('highlight'), 2000);
-			}
+			clearHighlights();
+			targetRef.classList.add('highlight');
+			scrollToElement(targetRef, 'center');
+			setTimeout(() => targetRef.classList.remove('highlight'), 2000);
 		});
 	});
 
-	// Add IDs to reference list items and make them clickable
-	const refList = modalBody.querySelector('h3:has(+ ol) + ol');
+	// --- Reference List Highlighting ---
+	const refList = modalBody.querySelector('ol#AboutReferencesList');
 	if (refList) {
-		const refItems = refList.querySelectorAll('li');
-		refItems.forEach((item, index) => {
+		refList.querySelectorAll('li').forEach((item, index) => {
 			const refNum = index + 1;
 			item.id = `ref-${refNum}`;
 			item.style.cursor = 'pointer';
 
-			item.addEventListener('click', function (e) {
-				// Don't trigger if clicking on a link
+			item.addEventListener('click', e => {
 				if (e.target.tagName === 'A') return;
-
 				e.preventDefault();
 
-				// Find ALL occurrences of this reference number
 				const targetSups = modalBody.querySelectorAll(`sup.ref-${refNum}`);
+				if (!targetSups.length) return;
 
-				if (targetSups.length > 0) {
-					// Remove any existing highlights
-					modalBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
-
-					// Scroll to first mention
-					targetSups[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-					// Highlight ALL matching sup elements
-					targetSups.forEach(sup => {
-						sup.classList.add('highlight');
-					});
-
-					// Remove highlights after 2 seconds
-					setTimeout(() => {
-						targetSups.forEach(sup => {
-							sup.classList.remove('highlight');
-						});
-					}, 2000);
-				}
+				clearHighlights();
+				targetSups.forEach(sup => sup.classList.add('highlight'));
+				scrollToElement(targetSups[0], 'center');
+				setTimeout(() => targetSups.forEach(sup => sup.classList.remove('highlight')), 2000);
 			});
 		});
 	}
+
+	// --- Smooth Scroll for Other Anchors ---
+	modal.querySelectorAll('a[href^="#"]').forEach(link => {
+		if (link.getAttribute('href').match(/^#ref-/)) return; // Skip reference links
+
+		link.addEventListener('click', e => {
+			const targetId = link.getAttribute('href').slice(1);
+			const targetEl = modal.querySelector(`#${targetId}`);
+			if (!targetEl) return;
+
+			e.preventDefault();
+			scrollToElement(targetEl, 'start');
+		});
+	});
 });
+
+
+
+
+
 
 // ============================================
 // TOOLTIP MANAGER CLASS
