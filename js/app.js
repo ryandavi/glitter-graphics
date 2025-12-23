@@ -8148,6 +8148,9 @@ class GifExporter {
 		if (isIOS) {
 			// --- iOS Logic ---
 
+			// disable right click on image
+			img.oncontextmenu = () => false;
+
 			// DISABLE "Open GIF" & "Save" (Direct download fails/breaks on iOS)
 			configureBtn(openBtn, false);
 			configureBtn(saveBtn, false);
@@ -8156,11 +8159,12 @@ class GifExporter {
 				// ENABLE "Share" (mapped to Save Image)
 				configureBtn(shareBtn, true, "Save Image");
 
+
 				instructions.innerHTML = `
 		<p><strong>Ready!</strong> Tap <strong>"Save Image"</strong> below to save to Photos.</p>
 		<p class="text-muted" style="margin-top: 8px; font-size: 12px;">
 			<strong>Why can't I just tap and hold?</strong><br>
-			iOS doesn't support saving animated GIFs directly from the browser. 
+			iOS doesn't support saving animated GIFs created dynamically in the browser. 
 			Using the Share button preserves the animation properly.
 		</p>`;
 			} else {
@@ -8175,6 +8179,9 @@ class GifExporter {
 		}
 		else {
 			// --- Desktop / Android Logic ---
+
+			// enable right click on image
+			img.oncontextmenu = () => true;
 
 			// ENABLE "Open GIF" & "Save" (Standard browser features)
 			configureBtn(openBtn, true);
