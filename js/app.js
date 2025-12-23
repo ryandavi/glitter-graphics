@@ -18,6 +18,10 @@ const CONFIG = {
 	alphaThreshold: 254,
 	sliderDebounceMs: 150,
 
+	// Mobile touch
+	mobileBreakpoint: 768,
+	mobileStickerHitAreaPadding: 20, // Extra pixels for easier touch targets
+
 	// glitter
 	defaultGlitterId: 111,
 
@@ -146,19 +150,19 @@ class TouchGestureHandler {
 	constructor(element, callbacks = {}) {
 		this.element = element;
 		this.callbacks = callbacks;
-		
+
 		// Gesture state machine
 		this.state = 'idle'; // idle, single_pan, pinch_zoom, two_pan
 		this.gestureLockedUntilRelease = false;
-		
+
 		// Touch tracking
 		this.touches = new Map();
-		
+
 		// Touch count stability tracking (prevents false single-touch detection)
 		this.touchCountHistory = []; // Last few frames
 		this.historyLength = 3; // Number of frames to average
 		this.stableTouchCount = 0;
-		
+
 		// Gesture data
 		this.startData = {
 			distance: 0,
@@ -166,48 +170,48 @@ class TouchGestureHandler {
 			centerX: 0,
 			centerY: 0
 		};
-		
+
 		this.lastData = {
 			distance: 0,
 			angle: 0,
 			centerX: 0,
 			centerY: 0
 		};
-		
+
 		// Configuration
 		this.minPinchMovement = 10;
 		this.rotationEnabled = callbacks.onRotate !== undefined;
 		this.preventPropagation = callbacks.preventPropagation !== false; // Default true
-		
+
 		this.setupEventListeners();
 	}
-	
+
 	setupEventListeners() {
 		this.element.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
 		this.element.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
 		this.element.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
 		this.element.addEventListener('touchcancel', (e) => this.handleTouchCancel(e), { passive: false });
 	}
-	
+
 	// Update touch count with stability checking
 	updateStableTouchCount() {
 		this.touchCountHistory.push(this.touches.size);
-		
+
 		if (this.touchCountHistory.length > this.historyLength) {
 			this.touchCountHistory.shift();
 		}
-		
+
 		// Use the maximum count from recent history
 		// This prevents momentary single-touch false positives
 		this.stableTouchCount = Math.max(...this.touchCountHistory);
 	}
-	
+
 	handleTouchStart(e) {
 		// CRITICAL: Stop propagation for sticker elements
 		if (this.preventPropagation) {
 			e.stopPropagation();
 		}
-		
+
 		// Add all new touches to our tracking
 		for (let touch of e.changedTouches) {
 			this.touches.set(touch.identifier, {
@@ -219,16 +223,16 @@ class TouchGestureHandler {
 				prevY: touch.clientY
 			});
 		}
-		
+
 		this.updateStableTouchCount();
 		const touchCount = this.stableTouchCount;
-		
+
 		// If we're already in a gesture, don't start a new one
 		if (this.gestureLockedUntilRelease) {
 			e.preventDefault();
 			return;
 		}
-		
+
 		// Determine gesture type based on stable touch count
 		if (touchCount === 1) {
 			this.startSinglePan();
@@ -237,13 +241,13 @@ class TouchGestureHandler {
 			this.startTwoFingerGesture();
 		}
 	}
-	
+
 	handleTouchMove(e) {
 		// CRITICAL: Stop propagation for sticker elements
 		if (this.preventPropagation) {
 			e.stopPropagation();
 		}
-		
+
 		// Update all touch positions
 		for (let touch of e.changedTouches) {
 			const tracked = this.touches.get(touch.identifier);
@@ -254,10 +258,10 @@ class TouchGestureHandler {
 				tracked.y = touch.clientY;
 			}
 		}
-		
+
 		this.updateStableTouchCount();
 		const touchCount = this.stableTouchCount;
-		
+
 		// CRITICAL: Once in a two-finger gesture, STAY in it
 		// Don't switch to single-pan even if touch count momentarily drops
 		if (this.state === 'pinch_zoom' || this.state === 'two_pan') {
@@ -269,138 +273,136 @@ class TouchGestureHandler {
 			// If touch count drops below 2, just skip this frame
 			return;
 		}
-		
+
 		// Process single-pan
 		if (this.state === 'single_pan' && touchCount === 1) {
 			e.preventDefault();
 			this.updateSinglePan();
 		}
 	}
-	
+
 	handleTouchEnd(e) {
 		// CRITICAL: Stop propagation for sticker elements
 		if (this.preventPropagation) {
 			e.stopPropagation();
 		}
-		
+
 		// Remove ended touches
 		for (let touch of e.changedTouches) {
 			this.touches.delete(touch.identifier);
 		}
-		
+
 		this.updateStableTouchCount();
 		const touchCount = this.touches.size;
-		
+
 		// If all touches are released, reset completely
 		if (touchCount === 0) {
 			this.state = 'idle';
 			this.gestureLockedUntilRelease = false;
 			this.touchCountHistory = [];
 			this.stableTouchCount = 0;
-			
+
 			if (this.callbacks.onGestureEnd) {
 				this.callbacks.onGestureEnd();
 			}
 		}
-		// If we were doing a two-finger gesture and one finger lifted, lock until fully released
-		else if ((this.state === 'pinch_zoom' || this.state === 'two_pan') && touchCount < 2) {
-			this.gestureLockedUntilRelease = true;
-		}
+		// REMOVED: The "else if" that locked gesture when dropping below 2 fingers
+		// This was preventing viewport pinch zoom after sticker interaction
 	}
-	
+
 	handleTouchCancel(e) {
 		// Treat cancel the same as end
 		this.handleTouchEnd(e);
 	}
-	
+
 	// ===== SINGLE FINGER PAN =====
-	
+
 	startSinglePan() {
 		this.state = 'single_pan';
 		this.gestureLockedUntilRelease = true;
-		
+
 		if (this.callbacks.onGestureStart) {
 			this.callbacks.onGestureStart('single_pan');
 		}
 	}
-	
+
 	updateSinglePan() {
 		const touch = Array.from(this.touches.values())[0];
 		if (!touch) return;
-		
+
 		const incrementalDeltaX = touch.x - touch.prevX;
 		const incrementalDeltaY = touch.y - touch.prevY;
-		
+
 		if (this.callbacks.onSinglePan) {
 			this.callbacks.onSinglePan(incrementalDeltaX, incrementalDeltaY, touch.x, touch.y);
 		}
 	}
-	
+
 	// ===== TWO FINGER GESTURES =====
-	
+
 	startTwoFingerGesture() {
 		const touchArray = Array.from(this.touches.values());
 		if (touchArray.length < 2) return;
-		
+
 		const [touch1, touch2] = touchArray;
-		
+
 		// Calculate initial metrics
 		this.startData.distance = this.getTouchDistance(touch1, touch2);
 		this.startData.angle = this.getTouchAngle(touch1, touch2);
 		this.startData.centerX = (touch1.x + touch2.x) / 2;
 		this.startData.centerY = (touch1.y + touch2.y) / 2;
-		
+
 		// Copy to lastData
 		this.lastData = { ...this.startData };
-		
+
 		// Start in two_pan state, we'll switch to pinch if needed
 		this.state = 'two_pan';
 		this.gestureLockedUntilRelease = true;
-		
+
 		if (this.callbacks.onGestureStart) {
 			this.callbacks.onGestureStart('two_finger');
 		}
 	}
-	
+
 	updateTwoFingerGesture() {
 		const touchArray = Array.from(this.touches.values());
 		if (touchArray.length < 2) return;
-		
+
 		const [touch1, touch2] = touchArray;
-		
+
 		// Calculate current metrics
 		const currentDistance = this.getTouchDistance(touch1, touch2);
 		const currentAngle = this.getTouchAngle(touch1, touch2);
 		const currentCenterX = (touch1.x + touch2.x) / 2;
 		const currentCenterY = (touch1.y + touch2.y) / 2;
-		
+
 		// Determine if we're pinching based on distance change
 		const distanceChange = Math.abs(currentDistance - this.startData.distance);
 		const isPinching = distanceChange > this.minPinchMovement;
-		
+
 		// Transition state if needed (only once)
 		if (this.state === 'two_pan' && isPinching) {
 			this.state = 'pinch_zoom';
 		}
-		
+
 		// Process based on state
 		if (this.state === 'pinch_zoom') {
 			// Calculate scale change since last frame
 			const scale = currentDistance / this.lastData.distance;
-			
+
 			// Only apply if scale change is meaningful (prevents jitter)
 			if (Math.abs(scale - 1.0) > 0.001) {
 				if (this.callbacks.onPinchZoom) {
 					this.callbacks.onPinchZoom(scale, currentCenterX, currentCenterY);
 				}
 			}
-			
+
 			// Handle rotation if enabled
 			if (this.rotationEnabled && this.callbacks.onRotate) {
 				const angleDelta = currentAngle - this.lastData.angle;
 				// Normalize angle delta to -180 to 180 range
 				const normalizedDelta = ((angleDelta + 180) % 360) - 180;
-				
+
 				if (Math.abs(normalizedDelta) > 0.5) {
 					this.callbacks.onRotate(normalizedDelta, currentCenterX, currentCenterY);
 				}
@@ -409,7 +411,7 @@ class TouchGestureHandler {
 			// Two-finger pan
 			const deltaX = currentCenterX - this.lastData.centerX;
 			const deltaY = currentCenterY - this.lastData.centerY;
-			
+
 			// Only apply if movement is meaningful
 			if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
 				if (this.callbacks.onTwoPan) {
@@ -417,38 +419,38 @@ class TouchGestureHandler {
 				}
 			}
 		}
-		
+
 		// Update last data
 		this.lastData.distance = currentDistance;
 		this.lastData.angle = currentAngle;
 		this.lastData.centerX = currentCenterX;
 		this.lastData.centerY = currentCenterY;
 	}
-	
+
 	// ===== UTILITY METHODS =====
-	
+
 	getTouchDistance(touch1, touch2) {
 		const dx = touch2.x - touch1.x;
 		const dy = touch2.y - touch1.y;
 		return Math.sqrt(dx * dx + dy * dy);
 	}
-	
+
 	getTouchAngle(touch1, touch2) {
 		const dx = touch2.x - touch1.x;
 		const dy = touch2.y - touch1.y;
 		return Math.atan2(dy, dx) * (180 / Math.PI);
 	}
-	
+
 	// ===== PUBLIC API =====
-	
+
 	isActive() {
 		return this.state !== 'idle';
 	}
-	
+
 	getCurrentState() {
 		return this.state;
 	}
-	
+
 	reset() {
 		this.touches.clear();
 		this.state = 'idle';
@@ -456,7 +458,7 @@ class TouchGestureHandler {
 		this.touchCountHistory = [];
 		this.stableTouchCount = 0;
 	}
-	
+
 	destroy() {
 		this.element.removeEventListener('touchstart', this.handleTouchStart);
 		this.element.removeEventListener('touchmove', this.handleTouchMove);
@@ -701,17 +703,17 @@ class ContentManager {
 		});
 	}
 
-matchesSearch(item) {
-    const query = this.activeFilters.search.toLowerCase();
-    const name = item.name.toLowerCase();
+	matchesSearch(item) {
+		const query = this.activeFilters.search.toLowerCase();
+		const name = item.name.toLowerCase();
 
-    if (this.activeFilters.nameOnly) {
-        return name.includes(query);
-    } else {
-        const tagsString = (item.tags || []).join(' ').toLowerCase();
-        return name.includes(query) || tagsString.includes(query);
-    }
-}
+		if (this.activeFilters.nameOnly) {
+			return name.includes(query);
+		} else {
+			const tagsString = (item.tags || []).join(' ').toLowerCase();
+			return name.includes(query) || tagsString.includes(query);
+		}
+	}
 
 	matchesColors(item) {
 		if (!item.tags) return false;
@@ -861,39 +863,39 @@ matchesSearch(item) {
 
 	// ===== PICKER RENDERING =====
 
-renderPicker() {
-	if (!this.ui.gridContainer) return;
-	this.ui.gridContainer.innerHTML = '';
+	renderPicker() {
+		if (!this.ui.gridContainer) return;
+		this.ui.gridContainer.innerHTML = '';
 
-	// Get filtered content
-	const filteredContent = this.applyFilters();
+		// Get filtered content
+		const filteredContent = this.applyFilters();
 
-	// Group by category
-	const categories = this.groupByCategory(filteredContent);
+		// Group by category
+		const categories = this.groupByCategory(filteredContent);
 
-	// Sort categories - User Uploads first, then alphabetically
-	const sortedCategories = Object.entries(categories).sort(([catA], [catB]) => {
-		if (catA === 'User Uploads') return -1;
-		if (catB === 'User Uploads') return 1;
-		return catA.localeCompare(catB);
-	});
-
-	// Render each category
-	sortedCategories.forEach(([category, items]) => {
-		const categoryDiv = this.createCategoryElement(category);
-		const grid = categoryDiv.querySelector('.asset-grid');
-
-		items.forEach(item => {
-			const option = this.createItemElement(item);
-			grid.appendChild(option);
+		// Sort categories - User Uploads first, then alphabetically
+		const sortedCategories = Object.entries(categories).sort(([catA], [catB]) => {
+			if (catA === 'User Uploads') return -1;
+			if (catB === 'User Uploads') return 1;
+			return catA.localeCompare(catB);
 		});
 
-		this.ui.gridContainer.appendChild(categoryDiv);
-	});
+		// Render each category
+		sortedCategories.forEach(([category, items]) => {
+			const categoryDiv = this.createCategoryElement(category);
+			const grid = categoryDiv.querySelector('.asset-grid');
 
-	// Update visibility
-	this.updatePickerVisibility(filteredContent.length);
-}
+			items.forEach(item => {
+				const option = this.createItemElement(item);
+				grid.appendChild(option);
+			});
+
+			this.ui.gridContainer.appendChild(categoryDiv);
+		});
+
+		// Update visibility
+		this.updatePickerVisibility(filteredContent.length);
+	}
 
 	groupByCategory(items) {
 		const categories = {};
@@ -1101,31 +1103,31 @@ class StickerManager extends ContentManager {
 		const blobUrl = URL.createObjectURL(file);
 		const uploadId = `user-upload-${Date.now()}`;
 
-// 3. Create entry with loading state
-const userSticker = {
-	id: uploadId,
-	name: file.name,
-	url: blobUrl,
-	source: 'user-upload',
-	category: 'User Uploads',  // ADD THIS LINE
+		// 3. Create entry with loading state
+		const userSticker = {
+			id: uploadId,
+			name: file.name,
+			url: blobUrl,
+			source: 'user-upload',
+			category: 'User Uploads',  // ADD THIS LINE
 
-	// File info
-	fileSize: file.size,
-	mimeType: file.type,
-	uploadedAt: Date.now(),
+			// File info
+			fileSize: file.size,
+			mimeType: file.type,
+			uploadedAt: Date.now(),
 
-	// Initially unknown - will be detected
-	isAnimated: false,
-	hasTransparency: false,
-	width: 0,
-	height: 0,
-	frameCount: null,
-	frames: null,
+			// Initially unknown - will be detected
+			isAnimated: false,
+			hasTransparency: false,
+			width: 0,
+			height: 0,
+			frameCount: null,
+			frames: null,
 
-	// State
-	isLoading: true,
-	error: null
-};
+			// State
+			isLoading: true,
+			error: null
+		};
 
 		this.userContent.push(userSticker);
 		this.renderPicker();
@@ -1539,22 +1541,31 @@ setupStickerTouchGestures(element, layerId) {
 	let startTransform = null;
 	
 	const handler = new TouchGestureHandler(element, {
-		// CRITICAL: Stickers MUST stop propagation to prevent viewport zoom
+		// CRITICAL: Only stop propagation if sticker is selected
 		preventPropagation: true,
 		
 		onGestureStart: (gestureType) => {
-			// Store initial transform state
+			const isSelected = this.editor.layerManager.activeLayerId === layerId;
+			
+			// If not selected, just select it (don't transform yet)
+			if (!isSelected) {
+				this.editor.layerManager.setActiveLayer(layerId);
+				return;
+			}
+			
+			// Store initial transform state only if selected
 			startTransform = {
 				scale: { ...layer.stickerData.transform.scale },
 				rotation: layer.stickerData.transform.rotation,
 				position: { ...layer.stickerData.transform.position }
 			};
-			
-			// Make this layer active when touched
-			this.editor.layerManager.setActiveLayer(layerId);
 		},
 		
 		onSinglePan: (deltaX, deltaY, touchX, touchY) => {
+			// Only pan if already selected
+			const isSelected = this.editor.layerManager.activeLayerId === layerId;
+			if (!isSelected || !startTransform) return;
+			
 			// Convert screen delta to canvas coordinates
 			const canvasDeltaX = deltaX / viewport.currentZoom;
 			const canvasDeltaY = deltaY / viewport.currentZoom;
@@ -1571,6 +1582,10 @@ setupStickerTouchGestures(element, layerId) {
 		},
 		
 		onPinchZoom: (scale, centerX, centerY) => {
+			// Only scale if already selected
+			const isSelected = this.editor.layerManager.activeLayerId === layerId;
+			if (!isSelected || !startTransform) return;
+			
 			// Scale the sticker (respecting proportional scale)
 			const currentScaleX = layer.stickerData.transform.scale.x;
 			const currentScaleY = layer.stickerData.transform.scale.y;
@@ -1596,6 +1611,10 @@ setupStickerTouchGestures(element, layerId) {
 		},
 		
 		onRotate: (angleDelta, centerX, centerY) => {
+			// Only rotate if already selected
+			const isSelected = this.editor.layerManager.activeLayerId === layerId;
+			if (!isSelected || !startTransform) return;
+			
 			// Update rotation incrementally
 			const newRotation = (layer.stickerData.transform.rotation + angleDelta) % 360;
 			
@@ -1608,8 +1627,11 @@ setupStickerTouchGestures(element, layerId) {
 		},
 		
 		onGestureEnd: () => {
-			// Save state when all touches are released
-			this.editor.saveState();
+			// Save state when all touches are released (only if we were transforming)
+			if (startTransform) {
+				this.editor.saveState();
+			}
+			startTransform = null;
 		}
 	});
 	
@@ -1620,83 +1642,82 @@ setupStickerTouchGestures(element, layerId) {
 	element.style.touchAction = 'none';
 }
 
+	attachDragListeners(element, layerId) {
+		// MOUSE DRAG (existing code - keep as is)
+		let isDragging = false;
+		let startX = 0;
+		let startY = 0;
+		let startCanvasX = 0;
+		let startCanvasY = 0;
 
-attachDragListeners(element, layerId) {
-	// MOUSE DRAG (existing code - keep as is)
-	let isDragging = false;
-	let startX = 0;
-	let startY = 0;
-	let startCanvasX = 0;
-	let startCanvasY = 0;
+		const handleMouseDown = (e) => {
+			if (e.button !== 0) return; // Left click only
 
-	const handleMouseDown = (e) => {
-		if (e.button !== 0) return; // Left click only
-		
-		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-		if (!layer || !layer.visible || layer.locked) return;
+			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+			if (!layer || !layer.visible || layer.locked) return;
 
-		e.preventDefault();
-		e.stopPropagation();
+			e.preventDefault();
+			e.stopPropagation();
 
-		isDragging = true;
-		startX = e.clientX;
-		startY = e.clientY;
+			isDragging = true;
+			startX = e.clientX;
+			startY = e.clientY;
 
-		const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
-		startCanvasX = canvasPos.x;
-		startCanvasY = canvasPos.y;
+			const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+			startCanvasX = canvasPos.x;
+			startCanvasY = canvasPos.y;
 
-		this.editor.layerManager.setActiveLayer(layerId);
+			this.editor.layerManager.setActiveLayer(layerId);
 
-		document.addEventListener('mousemove', handleMouseMove);
-		document.addEventListener('mouseup', handleMouseUp);
-	};
+			document.addEventListener('mousemove', handleMouseMove);
+			document.addEventListener('mouseup', handleMouseUp);
+		};
 
-	const handleMouseMove = (e) => {
-		if (!isDragging) return;
+		const handleMouseMove = (e) => {
+			if (!isDragging) return;
 
-		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-		if (!layer) return;
+			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+			if (!layer) return;
 
-		const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
-		const deltaX = canvasPos.x - startCanvasX;
-		const deltaY = canvasPos.y - startCanvasY;
+			const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+			const deltaX = canvasPos.x - startCanvasX;
+			const deltaY = canvasPos.y - startCanvasY;
 
-		const newX = layer.stickerData.transform.position.x + deltaX;
-		const newY = layer.stickerData.transform.position.y + deltaY;
+			const newX = layer.stickerData.transform.position.x + deltaX;
+			const newY = layer.stickerData.transform.position.y + deltaY;
 
-		this.updateTransform(layerId, {
-			position: { x: newX, y: newY }
+			this.updateTransform(layerId, {
+				position: { x: newX, y: newY }
+			});
+
+			startCanvasX = canvasPos.x;
+			startCanvasY = canvasPos.y;
+
+			this.editor.loadStickerSettings(layer);
+		};
+
+		const handleMouseUp = () => {
+			if (isDragging) {
+				isDragging = false;
+				this.editor.saveState();
+				document.removeEventListener('mousemove', handleMouseMove);
+				document.removeEventListener('mouseup', handleMouseUp);
+			}
+		};
+
+		element.addEventListener('mousedown', handleMouseDown);
+
+		// TOUCH GESTURES (new code)
+		this.setupStickerTouchGestures(element, layerId);
+
+		// Add touchend handler to save state
+		element.addEventListener('touchend', (e) => {
+			if (e.touches.length === 0) {
+				// All touches released, save state
+				this.editor.saveState();
+			}
 		});
-
-		startCanvasX = canvasPos.x;
-		startCanvasY = canvasPos.y;
-
-		this.editor.loadStickerSettings(layer);
-	};
-
-	const handleMouseUp = () => {
-		if (isDragging) {
-			isDragging = false;
-			this.editor.saveState();
-			document.removeEventListener('mousemove', handleMouseMove);
-			document.removeEventListener('mouseup', handleMouseUp);
-		}
-	};
-
-	element.addEventListener('mousedown', handleMouseDown);
-
-	// TOUCH GESTURES (new code)
-	this.setupStickerTouchGestures(element, layerId);
-	
-	// Add touchend handler to save state
-	element.addEventListener('touchend', (e) => {
-		if (e.touches.length === 0) {
-			// All touches released, save state
-			this.editor.saveState();
-		}
-	});
-}
+	}
 
 	// ===== LAYER REMOVAL =====
 
@@ -2670,54 +2691,54 @@ class ViewportManager {
 
 	// ===== TOUCH GESTURES =====
 
-setupTouchGestures() {
-	const handler = new TouchGestureHandler(this.previewContainer, {
-		// Viewport does NOT stop propagation (it's the outermost handler)
-		preventPropagation: false,
-		
-		onSinglePan: (deltaX, deltaY) => {
-			this.panX += deltaX;
-			this.panY += deltaY;
-			this.applyTransform();
-			this._notifyViewportChanged();
-		},
-		
-		onPinchZoom: (scale, centerX, centerY) => {
-			const rect = this.previewContainer.getBoundingClientRect();
-			const anchorX = centerX - rect.left;
-			const anchorY = centerY - rect.top;
+	setupTouchGestures() {
+		const handler = new TouchGestureHandler(this.previewContainer, {
+			// Viewport does NOT stop propagation (it's the outermost handler)
+			preventPropagation: false,
 
-			const canvasX = (anchorX - this.panX) / this.currentZoom;
-			const canvasY = (anchorY - this.panY) / this.currentZoom;
+			onSinglePan: (deltaX, deltaY) => {
+				this.panX += deltaX;
+				this.panY += deltaY;
+				this.applyTransform();
+				this._notifyViewportChanged();
+			},
 
-			const newZoom = Math.max(0.1, Math.min(16, this.currentZoom * scale));
-			
-			const newCanvasX = canvasX * newZoom;
-			const newCanvasY = canvasY * newZoom;
+			onPinchZoom: (scale, centerX, centerY) => {
+				const rect = this.previewContainer.getBoundingClientRect();
+				const anchorX = centerX - rect.left;
+				const anchorY = centerY - rect.top;
 
-			this.panX = anchorX - newCanvasX;
-			this.panY = anchorY - newCanvasY;
-			this.currentZoom = newZoom;
+				const canvasX = (anchorX - this.panX) / this.currentZoom;
+				const canvasY = (anchorY - this.panY) / this.currentZoom;
 
-			this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
-			if (this.currentZoomIndex === -1) {
-				this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
+				const newZoom = Math.max(0.1, Math.min(16, this.currentZoom * scale));
+
+				const newCanvasX = canvasX * newZoom;
+				const newCanvasY = canvasY * newZoom;
+
+				this.panX = anchorX - newCanvasX;
+				this.panY = anchorY - newCanvasY;
+				this.currentZoom = newZoom;
+
+				this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
+				if (this.currentZoomIndex === -1) {
+					this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
+				}
+
+				this.applyTransform();
+				this._notifyViewportChanged();
+			},
+
+			onTwoPan: (deltaX, deltaY) => {
+				this.panX += deltaX;
+				this.panY += deltaY;
+				this.applyTransform();
+				this._notifyViewportChanged();
 			}
+		});
 
-			this.applyTransform();
-			this._notifyViewportChanged();
-		},
-		
-		onTwoPan: (deltaX, deltaY) => {
-			this.panX += deltaX;
-			this.panY += deltaY;
-			this.applyTransform();
-			this._notifyViewportChanged();
-		}
-	});
-
-	this.touchHandler = handler;
-}
+		this.touchHandler = handler;
+	}
 
 
 
@@ -3010,8 +3031,6 @@ class LayerManager {
 
 		const layer = this.layers.find(l => l.id === layerId);
 
-
-
 		// Update sticker center controls visibility - context dependent
 		const stickerCenterControls = document.getElementById('stickerCenterControls');
 		if (stickerCenterControls) {
@@ -3023,8 +3042,6 @@ class LayerManager {
 				stickerCenterControls.classList.remove('visible');
 			}
 		}
-
-
 
 
 		// 2. Update Base Image Highlight
@@ -3048,12 +3065,21 @@ class LayerManager {
 		// 4. Load settings
 		if (layer) {
 			if (layer.type === LayerType.STICKER) {
+				this.editor.setTool(ToolType.SELECT);
+
 				this.editor.hideStickerSettingsEmptyState();
 				this.editor.loadStickerSettings(layer);
-				this.editor.setTool(ToolType.SELECT);
 				this.editor.updateStickerSelection(); // <-- ADD THIS LINE
-			} else if (layer.type === LayerType.GLITTER_FILL) {
-				this.editor.setTool(ToolType.COLOR_PICKER);
+		} else if (layer.type === LayerType.GLITTER_FILL) {
+
+				// if selection of this layer is empty, set tool to color picker
+				if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
+					this.editor.setTool(ToolType.COLOR_PICKER);
+				}else{
+					// if selection of this layer is not empty, set tool to select
+					this.editor.setTool(ToolType.SELECT);
+				}
+					
 				this.editor.updateGlitterSelection();
 				this.editor.hideLayerSettingsEmptyState();
 				this.editor.hideGlitterSettingsEmptyState();
@@ -4089,7 +4115,9 @@ class GlitterEditor {
 		this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
 
 
-
+		// Mobile detection
+		this.isMobile = window.innerWidth <= 800;
+		this.originalImage = null;
 
 		this.originalImage = null;
 		this.originalImageData = null;
@@ -4316,6 +4344,9 @@ class GlitterEditor {
 
 
 	handleCanvasZoomClick(event) {
+		// Disable click-to-zoom on mobile
+		if (this.isMobile) return;
+
 		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
 
 		// Photoshop Alt-Click to zoom out
@@ -4716,68 +4747,68 @@ class GlitterEditor {
 
 
 
-// Sticker Upload Modal Events
-const stickerUploadModal = document.getElementById('stickerUploadModal');
-const closeStickerUploadModal = document.getElementById('closeStickerUploadModal');
-const uploadStickerBtn = document.getElementById('uploadStickerBtn');
-const stickerUploadDropzone = document.getElementById('stickerUploadDropzone');
-const stickerUploadInput = document.getElementById('stickerUploadInput');
+		// Sticker Upload Modal Events
+		const stickerUploadModal = document.getElementById('stickerUploadModal');
+		const closeStickerUploadModal = document.getElementById('closeStickerUploadModal');
+		const uploadStickerBtn = document.getElementById('uploadStickerBtn');
+		const stickerUploadDropzone = document.getElementById('stickerUploadDropzone');
+		const stickerUploadInput = document.getElementById('stickerUploadInput');
 
-if (uploadStickerBtn && stickerUploadModal) {
-	// Open modal
-	uploadStickerBtn.addEventListener('click', () => {
-		closeAllModals();
-		stickerUploadModal.classList.add('visible');
-	});
+		if (uploadStickerBtn && stickerUploadModal) {
+			// Open modal
+			uploadStickerBtn.addEventListener('click', () => {
+				closeAllModals();
+				stickerUploadModal.classList.add('visible');
+			});
 
-	// Close modal
-	closeStickerUploadModal.addEventListener('click', () => {
-		stickerUploadModal.classList.remove('visible');
-	});
+			// Close modal
+			closeStickerUploadModal.addEventListener('click', () => {
+				stickerUploadModal.classList.remove('visible');
+			});
 
-	// Close on overlay click
-	stickerUploadModal.addEventListener('click', (e) => {
-		if (e.target === stickerUploadModal) {
-			stickerUploadModal.classList.remove('visible');
+			// Close on overlay click
+			stickerUploadModal.addEventListener('click', (e) => {
+				if (e.target === stickerUploadModal) {
+					stickerUploadModal.classList.remove('visible');
+				}
+			});
+
+			// Dropzone click to open file picker
+			stickerUploadDropzone.addEventListener('click', () => {
+				stickerUploadInput.click();
+			});
+
+			// Handle file selection
+			stickerUploadInput.addEventListener('change', async (e) => {
+				const file = e.target.files[0];
+				if (file) {
+					await this.stickerManager.handleUserUpload(file);
+					stickerUploadModal.classList.remove('visible');
+					stickerUploadInput.value = ''; // Reset input
+				}
+			});
+
+			// Drag and drop events
+			stickerUploadDropzone.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				stickerUploadDropzone.classList.add('drag-over');
+			});
+
+			stickerUploadDropzone.addEventListener('dragleave', () => {
+				stickerUploadDropzone.classList.remove('drag-over');
+			});
+
+			stickerUploadDropzone.addEventListener('drop', async (e) => {
+				e.preventDefault();
+				stickerUploadDropzone.classList.remove('drag-over');
+
+				const file = e.dataTransfer.files[0];
+				if (file) {
+					await this.stickerManager.handleUserUpload(file);
+					stickerUploadModal.classList.remove('visible');
+				}
+			});
 		}
-	});
-
-	// Dropzone click to open file picker
-	stickerUploadDropzone.addEventListener('click', () => {
-		stickerUploadInput.click();
-	});
-
-	// Handle file selection
-	stickerUploadInput.addEventListener('change', async (e) => {
-		const file = e.target.files[0];
-		if (file) {
-			await this.stickerManager.handleUserUpload(file);
-			stickerUploadModal.classList.remove('visible');
-			stickerUploadInput.value = ''; // Reset input
-		}
-	});
-
-	// Drag and drop events
-	stickerUploadDropzone.addEventListener('dragover', (e) => {
-		e.preventDefault();
-		stickerUploadDropzone.classList.add('drag-over');
-	});
-
-	stickerUploadDropzone.addEventListener('dragleave', () => {
-		stickerUploadDropzone.classList.remove('drag-over');
-	});
-
-	stickerUploadDropzone.addEventListener('drop', async (e) => {
-		e.preventDefault();
-		stickerUploadDropzone.classList.remove('drag-over');
-		
-		const file = e.dataTransfer.files[0];
-		if (file) {
-			await this.stickerManager.handleUserUpload(file);
-			stickerUploadModal.classList.remove('visible');
-		}
-	});
-}
 
 
 
@@ -4896,7 +4927,7 @@ if (uploadStickerBtn && stickerUploadModal) {
 
 
 
-		
+
 		// Layer Type Picker Modal
 		const layerTypeButtons = document.querySelectorAll('.layer-type-option');
 		const layerModal = document.getElementById('layerTypePickerModal');
@@ -5066,6 +5097,26 @@ if (uploadStickerBtn && stickerUploadModal) {
 			}
 		});
 
+		// --- MOBILE DETECTION ---
+		window.addEventListener('resize', () => {
+			const wasMobile = this.isMobile;
+			this.isMobile = window.innerWidth <= 800;
+
+			if (wasMobile !== this.isMobile) {
+				// Update viewport and sticker interactions on mobile state change
+				if (this.stickerManager) {
+					this.layerManager.layers.forEach(layer => {
+						if (layer.type === LayerType.STICKER) {
+							const element = this.stickerManager.layerElements.get(layer.id);
+							if (element) {
+								// Recreate touch gestures with new mobile state
+								this.stickerManager.setupStickerTouchGestures(element, layer.id);
+							}
+						}
+					});
+				}
+			}
+		});
 
 		// --- SCROLL ZOOM ---
 		this.previewContainer.addEventListener('wheel', (e) => {
@@ -5727,27 +5778,27 @@ if (uploadStickerBtn && stickerUploadModal) {
 	}
 
 
-async loadBlankImage(width, height, color = CONFIG.blankImageDefaultColor) {
-	const canvas = document.createElement('canvas');
-	canvas.width = width;
-	canvas.height = height;
-	const ctx = canvas.getContext('2d');
-	
-	ctx.fillStyle = color;
-	ctx.fillRect(0, 0, width, height);
-	
-	const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-	const file = new File([blob], `blank_${width}x${height}.png`, { type: 'image/png' });
-	
-	const fakeEvent = {
-		target: {
-			files: [file]
-		}
-	};
-	
-	await this.loadImage(fakeEvent);
-	this.updateStatus(`Loaded blank ${width}×${height} canvas`);
-}
+	async loadBlankImage(width, height, color = CONFIG.blankImageDefaultColor) {
+		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext('2d');
+
+		ctx.fillStyle = color;
+		ctx.fillRect(0, 0, width, height);
+
+		const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+		const file = new File([blob], `blank_${width}x${height}.png`, { type: 'image/png' });
+
+		const fakeEvent = {
+			target: {
+				files: [file]
+			}
+		};
+
+		await this.loadImage(fakeEvent);
+		this.updateStatus(`Loaded blank ${width}×${height} canvas`);
+	}
 
 
 	setTool(tool) {
@@ -5822,7 +5873,7 @@ async loadBlankImage(width, height, color = CONFIG.blankImageDefaultColor) {
 
 		// Allow Escape to work in inputs (to blur/close things)
 		// Allow Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z for undo/redo
-		if (isTyping && e.key !== 'Escape' && 
+		if (isTyping && e.key !== 'Escape' &&
 			!((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z'))) {
 			return;
 		}
