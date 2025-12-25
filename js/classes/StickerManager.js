@@ -808,17 +808,18 @@ setupStickerTouchGestures(element, layerId) {
 
 	// ===== SERIALIZATION =====
 
-	serializeSticker(layer) {
-		// For undo/redo - exclude non-serializable data
-		return {
-			...layer,
-			stickerData: {
-				...layer.stickerData,
-				element: null,    // Can't serialize DOM
-				frames: null      // Don't need frames for undo/redo - reload from URL on restore
-			}
-		};
-	}
+serializeSticker(layer) {
+	// For undo/redo - exclude non-serializable data
+	return {
+		...layer,
+		stickerSourceId: layer.stickerSourceId, // CRITICAL: Must preserve this
+		stickerData: {
+			...layer.stickerData,
+			element: null,    // Can't serialize DOM
+			frames: null      // Don't need frames for undo/redo - reload from URL on restore
+		}
+	};
+}
 
 	async deserializeSticker(layerData) {
 		// Restore sticker layer from serialized data

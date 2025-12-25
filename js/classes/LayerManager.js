@@ -185,97 +185,59 @@ class LayerManager {
 
 	// ===== LAYER SELECTION =====
 
-	setActiveLayer(layerId) {
-		this.activeLayerId = layerId;
-		this.renderLayersList();
+setActiveLayer(layerId) {
+	this.activeLayerId = layerId;
+	this.renderLayersList();
 
-		const layer = this.layers.find(l => l.id === layerId);
+	const layer = this.layers.find(l => l.id === layerId);
 
-		// Update sticker center controls visibility - context dependent
-		const stickerCenterControls = document.getElementById('stickerCenterControls');
-		if (stickerCenterControls) {
-			const shouldShow = this.editor.currentTool === ToolType.SELECT && layer && layer.type === LayerType.STICKER;
+	// Update context toolbars (replaces old manual visibility code)
+	this.editor.updateContextToolbars();
 
-			if (shouldShow) {
-				stickerCenterControls.classList.add('visible');
-			} else {
-				stickerCenterControls.classList.remove('visible');
-			}
-		}
-
-
-		// 2. Update Base Image Highlight
-		// Strict check: Only add class if layer exists AND is Base Image.
-		// Explicitly remove it in all other cases.
-		if (this.editor.previewCanvas) {
-			const isBaseImage = layer && layer.type === LayerType.BASE_IMAGE;
-
-			// We force a boolean (!!isBaseImage) to ensure correct toggle behavior.
-			this.editor.previewCanvas.classList.toggle('selected', !!isBaseImage);
-
-			// Safety: Ensure we don't have lingering 'selected' class if you use that generic name too
-			if (!isBaseImage) {
-				this.editor.previewCanvas.classList.remove('selected');
-			}
-		}
-
-		// 3. Update Side Panel UI
-		this.editor.updateSidePanelUI(layer);
-
-		// 4. Load settings
-		if (layer) {
-			if (layer.type === LayerType.STICKER) {
-				this.editor.setTool(ToolType.SELECT);
-
-				this.editor.hideStickerSettingsEmptyState();
-				this.editor.loadStickerSettings(layer);
-				this.editor.updateStickerSelection(); // <-- ADD THIS LINE
-		} else if (layer.type === LayerType.GLITTER_FILL) {
-
-				// if selection of this layer is empty, set tool to color picker
-				if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
-					this.editor.setTool(ToolType.COLOR_PICKER);
-					console.log("NOO");
-				}else{
-					// if selection of this layer is not empty, set tool to select
-					this.editor.setTool(ToolType.SELECT);
-					console.log("LULU");
-				}
-					
-				this.editor.updateGlitterSelection();
-				this.editor.hideLayerSettingsEmptyState();
-				this.editor.hideGlitterSettingsEmptyState();
-				this.editor.loadActiveLayerSettings();
-			}
-		} else {
-			// No layer selected: Ensure empty states are shown
-			this.editor.showLayerSettingsEmptyState();
-			this.editor.showGlitterSettingsEmptyState();
-			this.editor.showStickerSettingsEmptyState();
-		}
-
-		window.dispatchEvent(new CustomEvent('layerChanged', {
-			detail: { layerId, layer }
-		}));
-
-		if (layer && layer.type === LayerType.STICKER) {
-			this.editor.updateStatus(`Selected sticker: ${layer ? layer.name : 'None'}`);
-		} else if (layer && layer.type === LayerType.BASE_IMAGE) {
-			this.editor.updateStatus(`Selected base image`);
-		} else if (layer && layer.type === LayerType.GLITTER_FILL) {
-			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
-			this.editor.updateStatus(`Selected glitter: ${glitter?.name || 'Unknown'}`);
-
-
-
-		} else {
-			this.editor.updateStatus(`Deselected layer`);
-		}
-
-
-
-		this.editor.updatePreview();
+	// Update Base Image Highlight
+	if (this.editor.previewCanvas) {
+		const isBaseImage = layer && layer.type === LayerType.BASE_IMAGE;
+		this.editor.previewCanvas.classList.toggle('selected', !!isBaseImage);
 	}
+
+	// Update Side Panel UI
+	this.editor.updateSidePanelUI(layer);
+
+	// Load settings based on layer type
+	if (layer) {
+		if (layer.type === LayerType.STICKER) {
+			this.editor.setTool(ToolType.SELECT);
+			this.editor.hideStickerSettingsEmptyState();
+			this.editor.loadStickerSettings(layer);
+			this.editor.updateStickerSelection();
+		} else if (layer.type === LayerType.GLITTER_FILL) {
+			// Auto-switch to color picker if layer has no selections yet
+			if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
+				this.editor.setTool(ToolType.COLOR_PICKER);
+			} else {
+				this.editor.setTool(ToolType.SELECT);
+			}
+			
+			this.editor.updateGlitterSelection();
+			this.editor.hideLayerSettingsEmptyState();
+			this.editor.hideGlitterSettingsEmptyState();
+			this.editor.loadActiveLayerSettings();
+		}
+	} else {
+		// No layer selected: Ensure empty states are shown
+		this.editor.showLayerSettingsEmptyState();
+		this.editor.showGlitterSettingsEmptyState();
+		this.editor.showStickerSettingsEmptyState();
+	}
+
+	window.dispatchEvent(new CustomEvent('layerChanged', {
+		detail: { layerId, layer }
+	}));
+
+	if (layer && layer.type === LayerType.STICKER) {
+		this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
+	}
+}
 
 	getActiveLayer() {
 		return this.layers.find(l => l.id === this.activeLayerId);
