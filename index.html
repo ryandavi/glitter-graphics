@@ -628,7 +628,7 @@
 											<span>Scale</span>
 											<label class="checkbox-group">
 												<input type="checkbox" id="stickerProportionalScale" checked>
-												<span title="Keep aspect ratio when scaling">Proportional Scale</span>
+												<span title="Keep aspect ratio when scaling">Proportional</span>
 											</label>
 
 										</div>
@@ -1211,8 +1211,15 @@
 				</div>
 			</div>
 
-			<div class="modal-footer">
-				<button class="btn-text-with-icon icon-wrapper btn-primary" id="createCanvasBtn">
+			<div class="modal-footer right">
+
+				<!-- Cancel -->
+				<button class="btn-text icon-wrapper cancel" id="createCanvasCloseBtn">
+Cancel
+				</button>
+
+				<!-- Create Canvas -->
+				<button class="btn-text-with-icon icon-wrapper primary" id="createCanvasBtn">
 					<svg class="icon">
 						<use href="#icon-plus"></use>
 					</svg>

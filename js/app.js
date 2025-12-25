@@ -260,7 +260,6 @@ class GlitterEditor {
 		this.initializeExportSettings();
 	}
 
-
 	// ===== DEBUG CONFIGURATION LOADER =====
 	async loadDebugConfig() {
 		if (!DEBUG_CONFIG.enabled) return;
@@ -319,8 +318,7 @@ class GlitterEditor {
 		console.log('[DEBUG] Debug configuration loaded successfully');
 	}
 
-
-	// Convenience accessors for layer state
+	// ===== GETTERS & SETTERS =====
 	get layers() {
 		return this.layerManager.layers;
 	}
@@ -337,62 +335,7 @@ class GlitterEditor {
 		this.layerManager.activeLayerId = value;
 	}
 
-
-	updateSidePanelUI(layer) {
-		// 1. Define ALL possible sections to hide them first
-		const allSections = [
-			'welcomeSection', // <--- IMPORTANT: Ensure this is here
-			'noLayerSettingsSection',
-			'baseLayerSettingsSection',
-			'glitterSettingsSection',
-			'layerSettingsSection',
-			'glitterOptions',
-			'glitterSearchSection',
-			'stickerSettingsSection',
-			'stickersOptions',
-			'stickersSearchSection'
-		];
-
-		// 2. Hide everything
-		allSections.forEach(id => {
-			const el = document.getElementById(id);
-			if (el) {
-				el.classList.remove('visible');
-				el.style.display = '';
-			}
-		});
-
-		// 3. Determine what to show
-		let showIds = [];
-
-		// CASE 1: No Image Loaded (Show Welcome)
-		if (!this.originalImage) {
-			showIds = ['welcomeSection'];
-		}
-		// CASE 2: Image Loaded, but No Layer Selected
-		else if (!layer) {
-			showIds = ['noLayerSettingsSection'];
-		}
-		// CASE 3: Base Layer Selected
-		else if (layer.type === LayerType.BASE_IMAGE) {
-			showIds = ['baseLayerSettingsSection'];
-		}
-		// CASE 4: Glitter Layer
-		else if (layer.type === LayerType.GLITTER_FILL) {
-			showIds = ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'];
-		}
-		// CASE 5: Sticker Layer
-		else if (layer.type === LayerType.STICKER) {
-			showIds = ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'];
-		}
-
-		// 4. Show the specific sections
-		showIds.forEach(id => {
-			const el = document.getElementById(id);
-			if (el) el.classList.add('visible');
-		});
-	}
-
+	// ===== INITIALIZATION =====
 
 	async init() {
 		// Initialize sticker manager
@@ -480,24 +423,59 @@ class GlitterEditor {
 		updateMatteColorVisibility();
 	}
 
+	updateSidePanelUI(layer) {
+		// 1. Define ALL possible sections to hide them first
+		const allSections = [
+			'welcomeSection', 
+			'noLayerSettingsSection',
+			'baseLayerSettingsSection',
+			'glitterSettingsSection',
+			'layerSettingsSection',
+			'glitterOptions',
+			'glitterSearchSection',
+			'stickerSettingsSection',
+			'stickersOptions',
+			'stickersSearchSection'
+		];
 
+		// 2. Hide everything
+		allSections.forEach(id => {
+			const el = document.getElementById(id);
+			if (el) {
+				el.classList.remove('visible');
+				el.style.display = '';
+			}
+		});
 
+		// 3. Determine what to show
+		let showIds = [];
 
-	handleCanvasZoomClick(event) {
-		// Disable click-to-zoom on mobile
-		if (this.isMobile) return;
-
-		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
-
-		// Photoshop Alt-Click to zoom out
-		if (event.altKey) {
-			this.viewport.zoomOut(event.clientX, event.clientY);
-		} else {
-			this.viewport.zoomIn(event.clientX, event.clientY);
+		// CASE 1: No Image Loaded (Show Welcome)
+		if (!this.originalImage) {
+			showIds = ['welcomeSection'];
+		}
+		// CASE 2: Image Loaded, but No Layer Selected
+		else if (!layer) {
+			showIds = ['noLayerSettingsSection'];
+		}
+		// CASE 3: Base Layer Selected
+		else if (layer.type === LayerType.BASE_IMAGE) {
+			showIds = ['baseLayerSettingsSection'];
+		}
+		// CASE 4: Glitter Layer
+		else if (layer.type === LayerType.GLITTER_FILL) {
+			showIds = ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'];
+		}
+		// CASE 5: Sticker Layer
+		else if (layer.type === LayerType.STICKER) {
+			showIds = ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'];
 		}
 
-		// Optional: Update status to show new zoom
-		this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
+		// 4. Show the specific sections
+		showIds.forEach(id => {
+			const el = document.getElementById(id);
+			if (el) el.classList.add('visible');
+		});
 	}
 
 	updateZoomUI() {
@@ -663,7 +641,6 @@ class GlitterEditor {
 		this.updateSelectedColorsDisplay();
 	}
 
-
 	loadStickerSettings(layer) {
 		if (!layer || layer.type !== LayerType.STICKER) return;
 
@@ -716,8 +693,6 @@ class GlitterEditor {
 		if (flipX) flipX.checked = transform.flipX;
 		if (flipY) flipY.checked = transform.flipY;
 	}
-
-
 
 	saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
 		const settings = {
@@ -840,6 +815,7 @@ class GlitterEditor {
 			stickerSettingsToggle.classList.toggle('collapsed', !isOpen);
 		});
 	}
+
 	initializeShortcutsModal() {
 		const list = document.getElementById('shortcutList');
 
@@ -880,13 +856,7 @@ class GlitterEditor {
 	}
 
 
-
-
-
-
-
-
-
+	// ===== EVENT LISTENERS =====
 
 	setupEventListeners() {
 		this.setupToolbarListeners();
@@ -988,7 +958,6 @@ class GlitterEditor {
 		});
 	}
 
-	// ===== PAN CONTROL LISTENERS =====
 	setupPanListeners() {
 		const controls = [
 			{ id: 'centerCanvasHorizontal', handler: () => this.viewport.centerHorizontal() },
@@ -1001,7 +970,6 @@ class GlitterEditor {
 		});
 	}
 
-	// ===== STICKER CENTER CONTROL LISTENERS =====
 	setupStickerCenterListeners() {
 		const centerStickerHorizontal = document.getElementById('centerStickerHorizontal');
 		const centerStickerVertical = document.getElementById('centerStickerVertical');
@@ -1025,8 +993,6 @@ class GlitterEditor {
 		}
 	}
 
-	// ===== COLOR PICKER CONTEXT LISTENERS =====
-	// ===== COLOR PICKER CONTEXT LISTENERS =====
 	setupColorPickerContextListeners() {
 		const contextThreshold = document.getElementById('contextThreshold');
 		const contextThresholdValue = document.getElementById('contextThresholdValue');
@@ -1089,7 +1055,6 @@ class GlitterEditor {
 		}
 	}
 
-	// ===== LAYER SETTINGS LISTENERS =====
 	setupLayerSettingsListeners() {
 		const contiguous = document.getElementById('contiguous');
 		const invert = document.getElementById('invert');
@@ -1159,7 +1124,6 @@ class GlitterEditor {
 		}
 	}
 
-	// ===== SLIDER LISTENERS =====
 	setupSliderListeners() {
 		// Threshold
 		this.setupSlider('threshold', 'thresholdValue', '', (e) => {
@@ -1213,7 +1177,6 @@ class GlitterEditor {
 		}
 	}
 
-	// ===== STICKER SETTINGS LISTENERS =====
 	setupStickerSettingsListeners() {
 		this.setupStickerPositionListeners();
 		this.setupStickerRotationListeners();
@@ -1281,7 +1244,6 @@ class GlitterEditor {
 			});
 		}
 	}
-
 	setupStickerScaleListeners() {
 		const scaleX = document.getElementById('stickerScaleX');
 		const scaleXValue = document.getElementById('stickerScaleXValue');
@@ -1467,7 +1429,6 @@ class GlitterEditor {
 		}
 	}
 
-	// ===== EXPORT LISTENERS =====
 	setupExportListeners() {
 		const exportGif = document.getElementById('exportGif');
 		if (exportGif) {
@@ -1502,7 +1463,6 @@ class GlitterEditor {
 		});
 	}
 
-	// ===== IMAGE LISTENERS =====
 	setupImageListeners() {
 		const imageUpload = document.getElementById('imageUpload');
 		const imageDropzone = document.getElementById('imageDropzone');
@@ -1559,6 +1519,7 @@ class GlitterEditor {
 		}
 	}
 
+
 	initializeNewCanvasModal() {
 		const widthInput = document.getElementById('newCanvasWidth');
 		const heightInput = document.getElementById('newCanvasHeight');
@@ -1598,9 +1559,10 @@ class GlitterEditor {
 		this.updateOrientationButtons(CONFIG.defaultCanvasPreset.width, CONFIG.defaultCanvasPreset.height);
 	}
 
-
 	setupNewCanvasModalListeners() {
 		const createBtn = document.getElementById('createCanvasBtn');
+		const cancelBtn = document.getElementById('createCanvasCloseBtn');
+
 		const widthInput = document.getElementById('newCanvasWidth');
 		const heightInput = document.getElementById('newCanvasHeight');
 		const colorInput = document.getElementById('newCanvasColor');
@@ -1691,6 +1653,12 @@ class GlitterEditor {
 				this.modalManager.close('newCanvasModal');
 			});
 		}
+
+		if(cancelBtn) {
+			cancelBtn.addEventListener('click', () => {
+				this.modalManager.close('newCanvasModal');
+			});
+		}
 	}
 
 	updateOrientationButtons(width, height) {
@@ -1720,7 +1688,6 @@ class GlitterEditor {
 		}
 	}
 
-	// ===== MODAL LISTENERS =====
 	setupModalListeners() {
 		this.modalManager = new ModalManager();
 
@@ -1798,18 +1765,9 @@ class GlitterEditor {
 		// Setup modal-specific interactions
 		this.setupLayerTypePickerListeners();
 		this.setupLayerPanelListeners();
-		this.setupQuickActionListeners();
 		this.setupStickerUploadModalListeners();
 		this.setupNewCanvasModalListeners();
 	}
-
-
-
-
-
-
-
-
 
 	setupLayerTypePickerListeners() {
 		const layerTypeButtons = document.querySelectorAll('.layer-type-option');
@@ -1872,25 +1830,6 @@ class GlitterEditor {
 					await this.stickerManager.handleUserUpload(file);
 					this.modalManager.close('stickerUploadModal');
 				}
-			});
-		}
-	}
-
-	setupQuickActionListeners() {
-		const quickActionAddGlitter = document.getElementById('quickActionAddGlitter');
-		const quickActionAddSticker = document.getElementById('quickActionAddSticker');
-
-		if (quickActionAddGlitter) {
-			quickActionAddGlitter.addEventListener('click', () => {
-				// Create new glitter layer
-				this.layerManager.addLayer(LayerType.GLITTER_FILL);
-			});
-		}
-
-		if (quickActionAddSticker) {
-			quickActionAddSticker.addEventListener('click', () => {
-				// Create new sticker layer (NOT upload modal)
-				this.layerManager.addLayer(LayerType.STICKER);
 			});
 		}
 	}
@@ -1967,12 +1906,6 @@ class GlitterEditor {
 		}
 	}
 
-
-
-
-
-
-	// ===== PREVIEW LISTENERS =====
 	setupPreviewListeners() {
 		const previewToggle = document.getElementById('previewToggle');
 		const transparencyToggle = document.getElementById('transparencyToggle');
@@ -2059,8 +1992,6 @@ class GlitterEditor {
 		}, { passive: false });
 	}
 
-
-
 	updateResetButton(sliderId) {
 		const resetBtn = document.getElementById('reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1));
 		const slider = document.getElementById(sliderId);
@@ -2069,7 +2000,6 @@ class GlitterEditor {
 			resetBtn.disabled = parseInt(slider.value) === defaultValue;
 		}
 	}
-
 
 	async loadBlankImage(width, height, color = CONFIG.defaultCanvasPreset.color) {
 		const canvas = document.createElement('canvas');
@@ -2196,7 +2126,6 @@ class GlitterEditor {
 			contextSelectionCount.textContent = count > 1 ? count : '';
 		}
 	}
-
 
 	handleKeyUp(e) {
 		if (e.key === 'Alt') {
@@ -2584,11 +2513,6 @@ class GlitterEditor {
 	}
 
 
-	// ===== GLITTER LOADING =====
-
-
-
-
 	// ===== IMAGE LOADING =====
 
 	async loadImage(event) {
@@ -2722,6 +2646,7 @@ class GlitterEditor {
 	}
 
 
+	// ===== CLICK HANDLERS =====
 	handlePreviewContainerClick(e) {
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
 
@@ -2772,7 +2697,6 @@ class GlitterEditor {
 		}
 	}
 
-
 	handleCanvasClick(event) {
 		if (!this.originalImageData) return;
 
@@ -2808,6 +2732,23 @@ class GlitterEditor {
 			this.handleColorPickerClick(x, y);
 			return;
 		}
+	}
+
+	handleCanvasZoomClick(event) {
+		// Disable click-to-zoom on mobile
+		if (this.isMobile) return;
+
+		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
+
+		// Photoshop Alt-Click to zoom out
+		if (event.altKey) {
+			this.viewport.zoomOut(event.clientX, event.clientY);
+		} else {
+			this.viewport.zoomIn(event.clientX, event.clientY);
+		}
+
+		// Optional: Update status to show new zoom
+		this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
 	}
 
 
@@ -2971,9 +2912,6 @@ class GlitterEditor {
 		}
 	}
 
-
-	// REPLACE updateSelectedColorsDisplay() in GlitterEditor class
-
 	updateSelectedColorsDisplay() {
 		const container = document.getElementById('selectedColorsDisplay');
 		if (!container) return;
@@ -3034,9 +2972,6 @@ class GlitterEditor {
 		this.updateSelectedColorsDisplay();
 	}
 
-
-
-
 	clearPreview() {
 		if (this.originalImageData) {
 			this.previewCtx.putImageData(this.originalImageData, 0, 0);
@@ -3060,7 +2995,6 @@ class GlitterEditor {
 
 	// ===== PREVIEW & RENDERING =====
 
-	// In GlitterEditor class
 	updatePreview() {
 		if (!this.originalImageData) {
 			this.clearPreview();
@@ -3093,9 +3027,6 @@ class GlitterEditor {
 		this.glitterManager.updatePreviewScale();
 	}
 
-
-
-
 	renderPreviewCanvas(layersToShow) {
 		// Clear canvas first
 		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
@@ -3115,7 +3046,6 @@ class GlitterEditor {
 		// Otherwise, draw the original image
 		this.previewCtx.putImageData(this.originalImageData, 0, 0);
 	}
-
 
 	// ===== EXPORT PROGRESS =====
 	showExportProgress() {
