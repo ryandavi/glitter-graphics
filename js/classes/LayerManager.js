@@ -185,20 +185,42 @@ class LayerManager {
 
 	// ===== LAYER SELECTION =====
 
+updateSelectionHighlight(layerId) {
+	// Clear ALL previous selection highlights
+	const previewContainer = this.editor.previewCanvas?.parentElement;
+	if (previewContainer) {
+		previewContainer.querySelectorAll('.selected').forEach(el => {
+			el.classList.remove('selected');
+		});
+	}
+
+	// Apply selection highlight to the specified layer
+	const layer = this.layers.find(l => l.id === layerId);
+	if (!layer) return;
+
+	if (layer.type === LayerType.BASE_IMAGE && this.editor.previewCanvas) {
+		this.editor.previewCanvas.classList.add('selected');
+	} else if (layer.type === LayerType.STICKER) {
+		const element = this.editor.stickerManager.layerElements.get(layer.id);
+		if (element) element.classList.add('selected');
+	} else if (layer.type === LayerType.GLITTER_FILL) {
+		const element = this.editor.glitterManager.layerElements.get(layer.id);
+		if (element) element.classList.add('selected');
+	}
+}
+
+
 setActiveLayer(layerId) {
 	this.activeLayerId = layerId;
 	this.renderLayersList();
 
 	const layer = this.layers.find(l => l.id === layerId);
 
-	// Update context toolbars (replaces old manual visibility code)
+	// Update context toolbars
 	this.editor.updateContextToolbars();
 
-	// Update Base Image Highlight
-	if (this.editor.previewCanvas) {
-		const isBaseImage = layer && layer.type === LayerType.BASE_IMAGE;
-		this.editor.previewCanvas.classList.toggle('selected', !!isBaseImage);
-	}
+	// Update selection highlight
+	this.updateSelectionHighlight(layerId);
 
 	// Update Side Panel UI
 	this.editor.updateSidePanelUI(layer);
@@ -238,6 +260,8 @@ setActiveLayer(layerId) {
 		this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
 	}
 }
+
+
 
 	getActiveLayer() {
 		return this.layers.find(l => l.id === this.activeLayerId);

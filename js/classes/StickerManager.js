@@ -425,11 +425,6 @@ class StickerManager extends ContentManager {
 		element.className = 'sticker-element';
 		element.dataset.layerId = layer.id;
 
-		// Selection Highlight Check
-		if (this.editor.layerManager.activeLayerId === layer.id) {
-			element.classList.add('selected');
-		}
-
 		// Create Image
 		const img = document.createElement('img');
 		img.src = layer.stickerData.url;
@@ -451,6 +446,10 @@ class StickerManager extends ContentManager {
 
 		// Attach drag listeners
 		this.attachDragListeners(element, layer.id);
+
+// Update selection highlight for this layer if it's active
+this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
+
 	}
 
 	applyTransform(element, layer) {

@@ -331,11 +331,6 @@ class GlitterManager extends ContentManager {
 		wrapper.dataset.layerId = layer.id;
 		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
 
-		// Apply selected class if active
-		if (layer.id === this.editor.layerManager.activeLayerId) {
-			wrapper.classList.add('selected');
-		}
-
 		// 2. Create the INNER Background
 		// This handles the glitter texture and the MASK
 		const inner = document.createElement('div');
@@ -376,6 +371,10 @@ class GlitterManager extends ContentManager {
 
 		// Store reference
 		this.layerElements.set(layer.id, wrapper);
+
+// Update selection highlight for this layer if it's active
+this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
+
 	}
 
 	updatePreviewScale() {
