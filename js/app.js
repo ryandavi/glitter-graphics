@@ -1716,8 +1716,6 @@ initializeNewCanvasModal() {
 
 
 setupNewCanvasModalListeners() {
-	const modal = document.getElementById('newCanvasModal');
-	const closeBtn = document.getElementById('closeNewCanvasModal');
 	const createBtn = document.getElementById('createCanvasBtn');
 	const widthInput = document.getElementById('newCanvasWidth');
 	const heightInput = document.getElementById('newCanvasHeight');
@@ -1728,23 +1726,6 @@ setupNewCanvasModalListeners() {
 	const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
 	const colorRow = document.getElementById('canvasColorRow');
 
-	console.log('canvas modal listeners');
-
-	// Close modal
-	if (closeBtn) {
-		closeBtn.addEventListener('click', () => {
-			modal.classList.remove('visible');
-		});
-	}
-
-	if (modal) {
-		modal.addEventListener('click', (e) => {
-			if (e.target === modal) {
-				modal.classList.remove('visible');
-			}
-		});
-	}
-
 	// Preset buttons
 	presetButtons.forEach(btn => {
 		btn.addEventListener('click', () => {
@@ -1754,55 +1735,48 @@ setupNewCanvasModalListeners() {
 			if (widthInput) widthInput.value = width;
 			if (heightInput) heightInput.value = height;
 			
-			// Update active state
 			presetButtons.forEach(b => b.classList.remove('active'));
 			btn.classList.add('active');
 			
-			// Update orientation buttons
 			this.updateOrientationButtons(width, height);
 		});
 	});
 
-	// Orientation toggle
+	// Orientation toggle - Portrait
+	if (orientationPortrait) {
+		orientationPortrait.addEventListener('click', () => {
+			const width = parseInt(widthInput.value);
+			const height = parseInt(heightInput.value);
+			
+			if (width === height) return;
+			
+			if (width > height) {
+				widthInput.value = height;
+				heightInput.value = width;
+			}
+			
+			this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
+		});
+	}
 
-if (orientationPortrait) {
-	orientationPortrait.addEventListener('click', () => {
-		const width = parseInt(widthInput.value);
-		const height = parseInt(heightInput.value);
-		
-		// Don't do anything if already square
-		if (width === height) return;
-		
-		// If currently landscape, swap to portrait
-		if (width > height) {
-			widthInput.value = height;
-			heightInput.value = width;
-		}
-		
-		this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
-	});
-}
+	// Orientation toggle - Landscape
+	if (orientationLandscape) {
+		orientationLandscape.addEventListener('click', () => {
+			const width = parseInt(widthInput.value);
+			const height = parseInt(heightInput.value);
+			
+			if (width === height) return;
+			
+			if (height > width) {
+				widthInput.value = height;
+				heightInput.value = width;
+			}
+			
+			this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
+		});
+	}
 
-// Orientation toggle - Landscape
-if (orientationLandscape) {
-	orientationLandscape.addEventListener('click', () => {
-		const width = parseInt(widthInput.value);
-		const height = parseInt(heightInput.value);
-		
-		// Don't do anything if already square
-		if (width === height) return;
-		
-		// If currently portrait, swap to landscape
-		if (height > width) {
-			widthInput.value = height;
-			heightInput.value = width;
-		}
-		
-		this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
-	});
-}
-
-	// Dimension inputs - update orientation when manually changed
+	// Dimension inputs
 	if (widthInput && heightInput) {
 		const updateOrientation = () => {
 			this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
@@ -1816,11 +1790,7 @@ if (orientationLandscape) {
 	backgroundRadios.forEach(radio => {
 		radio.addEventListener('change', (e) => {
 			if (colorRow) {
-				// colorRow.style.display = e.target.value === 'color' ? 'flex' : 'none';
-
-
 				colorRow.classList.toggle('disabled', radio.value !== 'color');
-
 			}
 		});
 	});
@@ -1828,14 +1798,13 @@ if (orientationLandscape) {
 	// Create button
 	if (createBtn) {
 		createBtn.addEventListener('click', async () => {
-			console.log('Creating new canvas...');
 			const width = parseInt(widthInput.value);
 			const height = parseInt(heightInput.value);
 			const backgroundType = document.querySelector('input[name="canvasBackground"]:checked').value;
 			const color = backgroundType === 'color' ? colorInput.value : 'transparent';
 			
 			await this.loadBlankImage(width, height, color);
-			modal.classList.remove('visible');
+			this.modalManager.close('newCanvasModal');
 		});
 	}
 }
@@ -1869,68 +1838,71 @@ updateOrientationButtons(width, height) {
 
 // ===== MODAL LISTENERS =====
 setupModalListeners() {
-	this.setupShortcutsModalListeners();
-	this.setupSettingsModalListeners();
-	this.setupAboutModalListeners();
-	this.setupGuideModalListeners();
+	this.modalManager = new ModalManager();
+
+	// Simple modals (just open/close)
+	this.modalManager
+		.register('shortcutsModal', {
+			openBtnId: 'shortcutsBtn',
+			closeBtnId: 'closeShortcutsModal'
+		})
+		.register('settingsModal', {
+			openBtnId: 'settingsBtn',
+			closeBtnId: 'closeSettingsModal'
+		})
+		.register('aboutModal', {
+			openBtnId: 'aboutBtn',
+			closeBtnId: 'closeAboutModal'
+		})
+		.register('guideModal', {
+			openBtnId: 'guideBtn',
+			closeBtnId: 'closeGuideModal'
+		})
+		.register('layerTypePickerModal', {
+			closeBtnId: 'closeLayerTypePickerModal'
+		})
+		.register('stickerUploadModal', {
+			closeBtnId: 'closeStickerUploadModal'
+		})
+		.register('newCanvasModal', {
+			closeBtnId: 'closeNewCanvasModal',
+			onOpen: () => this.initializeNewCanvasModal()
+		});
+
+	// Setup modal-specific interactions
 	this.setupLayerTypePickerListeners();
 	this.setupStickerUploadModalListeners();
-	this.setupExportPreviewModalListeners();
 	this.setupNewCanvasModalListeners();
 }
 
-setupShortcutsModalListeners() {
-	const modal = document.getElementById('shortcutsModal');
-	const openBtn = document.getElementById('shortcutsBtn');
-	const closeBtn = document.getElementById('closeShortcutsModal');
-	
-	this.setupModalOpenClose(modal, openBtn, closeBtn);
+
+
+setupLayerTypePickerButtons() {
+    const layerTypeButtons = document.querySelectorAll('.layer-type-option');
+    layerTypeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.layerType;
+            const layerType = type === 'sticker' ? LayerType.STICKER : LayerType.GLITTER_FILL;
+            this.layerManager.addLayer(layerType);
+            this.modalManager.close('layerTypePickerModal');
+        });
+    });
 }
 
-setupSettingsModalListeners() {
-	const modal = document.getElementById('settingsModal');
-	const openBtn = document.getElementById('settingsBtn');
-	const closeBtn = document.getElementById('closeSettingsModal');
-	
-	this.setupModalOpenClose(modal, openBtn, closeBtn);
+setupNewCanvasControls() {
+    // All the preset buttons, orientation, color picker, etc.
+    // This stays in app.js because it's app-specific
+    const createBtn = document.getElementById('createCanvasBtn');
+    createBtn?.addEventListener('click', async () => {
+        // ... your creation logic
+        this.modalManager.close('newCanvasModal');
+    });
 }
 
-setupAboutModalListeners() {
-	const modal = document.getElementById('aboutModal');
-	const openBtn = document.getElementById('aboutBtn');
-	const closeBtn = document.getElementById('closeAboutModal');
-	
-	this.setupModalOpenClose(modal, openBtn, closeBtn);
-}
 
-setupGuideModalListeners() {
-	const modal = document.getElementById('guideModal');
-	const openBtn = document.getElementById('guideBtn');
-	const closeBtn = document.getElementById('closeGuideModal');
-	
-	this.setupModalOpenClose(modal, openBtn, closeBtn);
-}
 
 setupLayerTypePickerListeners() {
-	const modal = document.getElementById('layerTypePickerModal');
-	const closeBtn = document.getElementById('closeLayerTypePickerModal');
 	const layerTypeButtons = document.querySelectorAll('.layer-type-option');
-	
-	// Close button
-	if (closeBtn) {
-		closeBtn.addEventListener('click', () => {
-			modal.classList.remove('visible');
-		});
-	}
-	
-	// Click outside to close
-	if (modal) {
-		modal.addEventListener('click', (e) => {
-			if (e.target === modal) {
-				modal.classList.remove('visible');
-			}
-		});
-	}
 	
 	// Layer type option buttons
 	layerTypeButtons.forEach(btn => {
@@ -1938,105 +1910,20 @@ setupLayerTypePickerListeners() {
 			const type = btn.dataset.layerType;
 			const layerType = type === 'sticker' ? LayerType.STICKER : LayerType.GLITTER_FILL;
 			
-			this.layerManager.addLayer(layerType);
-			modal.classList.remove('visible');
-		});
-	});
-	
-	// Add layer button (opens modal)
-	const addLayerBtn = document.getElementById('addLayerBtn');
-	if (addLayerBtn) {
-		addLayerBtn.addEventListener('click', () => {
-			modal.classList.add('visible');
-		});
-	}
-	
-	// Mobile add layer button
-	const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
-	if (mobileAddBtn) {
-		mobileAddBtn.addEventListener('click', () => {
-			modal.classList.add('visible');
-		});
-	}
-	
-	// Bottom bar quick-add buttons
-	const layersBarAddGlitter = document.getElementById('layersBarAddGlitter');
-	const layersBarAddSticker = document.getElementById('layersBarAddSticker');
-	
-	if (layersBarAddGlitter) {
-		layersBarAddGlitter.addEventListener('click', () => {
-			this.layerManager.addLayer(LayerType.GLITTER_FILL);
-		});
-	}
-	
-	if (layersBarAddSticker) {
-		layersBarAddSticker.addEventListener('click', () => {
-			this.layerManager.addLayer(LayerType.STICKER);
-		});
-	}
-	
-	// Bottom bar other buttons
-	const layersBarGoToSelected = document.getElementById('layersBarGoToSelected');
-	const layersBarCloneSelected = document.getElementById('layersBarCloneSelected');
-	const layersBarDeleteSelected = document.getElementById('layersBarDeleteSelected');
-	
-	if (layersBarGoToSelected) {
-		layersBarGoToSelected.addEventListener('click', () => {
-			const selectedLayer = this.layerManager.getActiveLayer();
-			if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
-			
-			if (selectedLayer.type === LayerType.GLITTER_FILL) {
-				this.layerManager.goToGlitter(selectedLayer.id);
-			} else if (selectedLayer.type === LayerType.STICKER) {
-				this.layerManager.goToSticker(selectedLayer.id);
+			if (layerType === LayerType.STICKER) {
+				this.modalManager.close('layerTypePickerModal');
+				this.modalManager.open('stickerUploadModal');
+			} else {
+				this.layerManager.addLayer(layerType);
+				this.modalManager.close('layerTypePickerModal');
 			}
 		});
-	}
-	
-	if (layersBarCloneSelected) {
-		layersBarCloneSelected.addEventListener('click', () => {
-			const selectedLayer = this.layerManager.getActiveLayer();
-			if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
-			this.layerManager.cloneLayer(selectedLayer.id);
-		});
-	}
-	
-	if (layersBarDeleteSelected) {
-		layersBarDeleteSelected.addEventListener('click', () => {
-			const selectedLayer = this.layerManager.getActiveLayer();
-			if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
-			this.layerManager.deleteLayer(selectedLayer.id);
-		});
-	}
+	});
 }
 
 setupStickerUploadModalListeners() {
-	const modal = document.getElementById('stickerUploadModal');
-	const openBtn = document.getElementById('uploadStickerBtn');
-	const closeBtn = document.getElementById('closeStickerUploadModal');
 	const dropzone = document.getElementById('stickerUploadDropzone');
 	const input = document.getElementById('stickerUploadInput');
-	
-	if (!modal || !openBtn) return;
-	
-	// Open
-	openBtn.addEventListener('click', () => {
-		this.closeAllModals();
-		modal.classList.add('visible');
-	});
-	
-	// Close
-	if (closeBtn) {
-		closeBtn.addEventListener('click', () => {
-			modal.classList.remove('visible');
-		});
-	}
-	
-	modal.addEventListener('click', (e) => {
-		if (e.target === modal) {
-			modal.classList.remove('visible');
-		}
-	});
 	
 	// Dropzone click
 	if (dropzone && input) {
@@ -2051,7 +1938,7 @@ setupStickerUploadModalListeners() {
 			const file = e.target.files[0];
 			if (file) {
 				await this.stickerManager.handleUserUpload(file);
-				modal.classList.remove('visible');
+				this.modalManager.close('stickerUploadModal');
 				input.value = '';
 			}
 		});
@@ -2075,7 +1962,7 @@ setupStickerUploadModalListeners() {
 			const file = e.dataTransfer.files[0];
 			if (file) {
 				await this.stickerManager.handleUserUpload(file);
-				modal.classList.remove('visible');
+				this.modalManager.close('stickerUploadModal');
 			}
 		});
 	}
@@ -2086,45 +1973,8 @@ setupExportPreviewModalListeners() {
 	// when the modal is shown. No static listeners needed here.
 }
 
-// ===== HELPER: Standard modal open/close pattern =====
-setupModalOpenClose(modal, openBtn, closeBtn) {
-	if (!modal) return;
-	
-	if (openBtn) {
-		openBtn.addEventListener('click', () => {
-			this.closeAllModals();
-			modal.classList.add('visible');
-		});
-	}
-	
-	if (closeBtn) {
-		closeBtn.addEventListener('click', () => {
-			modal.classList.remove('visible');
-		});
-	}
-	
-	modal.addEventListener('click', (e) => {
-		if (e.target === modal) {
-			modal.classList.remove('visible');
-		}
-	});
-}
 
-closeAllModals() {
-	const modals = [
-		'shortcutsModal',
-		'aboutModal',
-		'settingsModal',
-		'layerTypePickerModal',
-		'guideModal',
-		'stickerUploadModal'
-	];
-	
-	modals.forEach(id => {
-		const modal = document.getElementById(id);
-		if (modal) modal.classList.remove('visible');
-	});
-}
+
 
 // ===== PREVIEW LISTENERS =====
 setupPreviewListeners() {
@@ -2380,48 +2230,15 @@ updateColorPickerControls() {
 			this.previewContainer.classList.add('zoom-out-mode');
 		}
 
-		if (e.key === 'Escape') {
-			// Check if any modal is open
-			const shortcutsModal = document.getElementById('shortcutsModal');
-			const aboutModal = document.getElementById('aboutModal');
-			const settingsModal = document.getElementById('settingsModal');
-			const layerTypePickerModal = document.getElementById('layerTypePickerModal');
-			const guideModal = document.getElementById('guideModal');
-			const newCanvasModal = document.getElementById('newCanvasModal');
-
-			if (settingsModal.classList.contains('visible')) {
-				settingsModal.classList.remove('visible');
-				return;
-			}
-
-			if (shortcutsModal.classList.contains('visible')) {
-				shortcutsModal.classList.remove('visible');
-				return;
-			}
-
-			if (aboutModal.classList.contains('visible')) {
-				aboutModal.classList.remove('visible');
-				return;
-			}
-
-			if (layerTypePickerModal.classList.contains('visible')) {
-				layerTypePickerModal.classList.remove('visible');
-				return;
-			}
-
-			if (guideModal.classList.contains('visible')) {
-				guideModal.classList.remove('visible');
-				return;
-			}
-
-			if (newCanvasModal.classList.contains('visible')) {
-				newCanvasModal.classList.remove('visible');
-				return;
-			}
-
-			// If no modal open, switch to select tool
-			this.setTool(ToolType.SELECT);
-		}
+if (e.key === 'Escape') {
+	// Let ModalManager handle modal closing
+	if (this.modalManager.closeTopModal()) {
+		return; // A modal was closed, we're done
+	}
+	
+	// No modal was open, switch to select tool
+	this.setTool(ToolType.SELECT);
+}
 
 
 		if (e.key === 'v' || e.key === 'V') this.setTool(ToolType.SELECT);
