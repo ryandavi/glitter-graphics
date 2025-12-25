@@ -2188,7 +2188,89 @@
     "file_size": 15919,
     "sort_order": 84,
     "featured": false
+  },
+    {
+    "id": 94,
+    "name": "Gold Gangsta Necklace",
+    "filename": "gangsta_necklace_gold.gif",
+    "url": "images/stickers/jewelry/gangsta_necklace_gold.gif",
+    "category": "jewelry",
+    "tags": [
+      "gold",
+      "jewelry",
+      "gangsta",
+      "necklace",
+      "classic"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 190,
+    "height": 178,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
+  },
+    {
+    "id": 95,
+    "name": "Snoop Dogg Dance",
+    "filename": "snoop-dog_dance.gif",
+    "url": "images/stickers/people/snoop-dogg_dance.gif",
+    "category": "people",
+    "attribution": "Snoop Dogg - Drop It Like It's Hot (2004)",
+    "tags": [
+      "snoop dogg",
+      "dance",
+      "gangsta",
+      "hip hop",
+      "black",
+      "white",
+      "Drop It Like It's Hot",
+      "classic"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 58,
+    "height": 130,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
+  },
+    {
+    "id": 96,
+    "name": "Sexy Arrow",
+    "filename": "sexy_arrow_purple.gif",
+    "url": "images/stickers/text/sexy_arrow_purple.gif",
+    "category": "text",
+    "tags": [
+      "sexy",
+      "arrow",
+      "purple",
+      "red",
+      "classic"
+    ],
+    "colors": [],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 112,
+    "height": 86,
+    "frame_count": 3,
+    "file_size": 15919,
+    "sort_order": 84,
+    "featured": false
   }
+
+
+
+
+
+
+
+
+
 
 
 
