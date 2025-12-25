@@ -1922,6 +1922,7 @@ input[type=range]::-moz-range-thumb {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   padding: var(--spacing-sm);
+  pointer-events: auto;
 }
 .zoom-controls.visible,
 .sticker-center-controls.visible,
@@ -3295,6 +3296,7 @@ input[type=range]::-moz-range-thumb {
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-border);
     padding: var(--spacing-sm);
+    pointer-events: auto;
   }
   .toolbar > .toolbar-spacer {
     display: none;
