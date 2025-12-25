@@ -146,14 +146,14 @@ const ToolType = {
 // ============================================
 const DEBUG_CONFIG = {
 	enabled: false,  // Set to true to enable debug mode
-	
+
 	// Blank canvas settings (loads automatically if enabled)
 	canvas: {
 		width: 800,
 		height: 800,
 		color: '#ffffff'
 	},
-	
+
 	// Preset sticker layers - just specify ID and position
 	// System will fill in all other defaults automatically
 	stickers: [
@@ -262,62 +262,62 @@ class GlitterEditor {
 
 
 	// ===== DEBUG CONFIGURATION LOADER =====
-async loadDebugConfig() {
-	if (!DEBUG_CONFIG.enabled) return;
-	
-	console.log('[DEBUG] Loading debug configuration...');
-	
-	// 1. Load blank canvas
-	await this.loadBlankImage(
-		DEBUG_CONFIG.canvas.width,
-		DEBUG_CONFIG.canvas.height,
-		DEBUG_CONFIG.canvas.color
-	);
-	
-	// Wait for image to fully load
-	await new Promise(resolve => {
-		const checkImage = setInterval(() => {
-			if (this.originalImage) {
-				clearInterval(checkImage);
-				resolve();
+	async loadDebugConfig() {
+		if (!DEBUG_CONFIG.enabled) return;
+
+		console.log('[DEBUG] Loading debug configuration...');
+
+		// 1. Load blank canvas
+		await this.loadBlankImage(
+			DEBUG_CONFIG.canvas.width,
+			DEBUG_CONFIG.canvas.height,
+			DEBUG_CONFIG.canvas.color
+		);
+
+		// Wait for image to fully load
+		await new Promise(resolve => {
+			const checkImage = setInterval(() => {
+				if (this.originalImage) {
+					clearInterval(checkImage);
+					resolve();
+				}
+			}, 50);
+		});
+
+		// 2. Load each sticker preset
+		for (const stickerPreset of DEBUG_CONFIG.stickers) {
+			const stickerId = stickerPreset.id;
+			const stickerInfo = this.stickerManager.getItemById(stickerId);
+
+			if (!stickerInfo) {
+				console.warn(`[DEBUG] Sticker ID ${stickerId} not found, skipping`);
+				continue;
 			}
-		}, 50);
-	});
-	
-	// 2. Load each sticker preset
-	for (const stickerPreset of DEBUG_CONFIG.stickers) {
-		const stickerId = stickerPreset.id;
-		const stickerInfo = this.stickerManager.getItemById(stickerId);
-		
-		if (!stickerInfo) {
-			console.warn(`[DEBUG] Sticker ID ${stickerId} not found, skipping`);
-			continue;
+
+			// Create the sticker layer with default settings
+			const layer = this.stickerManager.createLayer(stickerId);
+
+			// Override position from preset
+			layer.stickerData.transform.position.x = stickerPreset.x;
+			layer.stickerData.transform.position.y = stickerPreset.y;
+
+			// Insert layer
+			this.layerManager.insertLayer(layer);
+
+			// Render the sticker
+			this.stickerManager.renderLayer(layer);
+
+			console.log(`[DEBUG] Loaded sticker: ${stickerInfo.name} at (${stickerPreset.x}, ${stickerPreset.y})`);
 		}
-		
-		// Create the sticker layer with default settings
-		const layer = this.stickerManager.createLayer(stickerId);
-		
-		// Override position from preset
-		layer.stickerData.transform.position.x = stickerPreset.x;
-		layer.stickerData.transform.position.y = stickerPreset.y;
-		
-		// Insert layer
-		this.layerManager.insertLayer(layer);
-		
-		// Render the sticker
-		this.stickerManager.renderLayer(layer);
-		
-		console.log(`[DEBUG] Loaded sticker: ${stickerInfo.name} at (${stickerPreset.x}, ${stickerPreset.y})`);
+
+		// 3. Update UI
+		this.layerManager.renderLayersList();
+		this.updatePreview();
+		this.updateActionButtons();
+		this.saveState();
+
+		console.log('[DEBUG] Debug configuration loaded successfully');
 	}
-	
-	// 3. Update UI
-	this.layerManager.renderLayersList();
-	this.updatePreview();
-	this.updateActionButtons();
-	this.saveState();
-	
-	console.log('[DEBUG] Debug configuration loaded successfully');
-}
 
 
 	// Convenience accessors for layer state
@@ -840,1230 +840,1244 @@ async loadDebugConfig() {
 			stickerSettingsToggle.classList.toggle('collapsed', !isOpen);
 		});
 	}
-initializeShortcutsModal() {
-	const list = document.getElementById('shortcutList');
-	
-	Object.entries(CONFIG.shortcuts).forEach(([category, shortcutArray]) => {
-		const group = document.createElement('div');
-		group.className = 'shortcut-group';
+	initializeShortcutsModal() {
+		const list = document.getElementById('shortcutList');
 
-		const title = document.createElement('div');
-		title.className = 'shortcut-group-title';
-		title.textContent = category.charAt(0).toUpperCase() + category.slice(1);
-		group.appendChild(title);
+		Object.entries(CONFIG.shortcuts).forEach(([category, shortcutArray]) => {
+			const group = document.createElement('div');
+			group.className = 'shortcut-group';
 
-		shortcutArray.forEach(sc => {
-			const item = document.createElement('div');
-			item.className = 'shortcut-item';
+			const title = document.createElement('div');
+			title.className = 'shortcut-group-title';
+			title.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+			group.appendChild(title);
 
-			const action = document.createElement('div');
-			action.className = 'shortcut-action';
-			action.textContent = sc.action;
+			shortcutArray.forEach(sc => {
+				const item = document.createElement('div');
+				item.className = 'shortcut-item';
 
-			const keys = document.createElement('div');
-			keys.className = 'shortcut-keys';
+				const action = document.createElement('div');
+				action.className = 'shortcut-action';
+				action.textContent = sc.action;
 
-			sc.key.split(' + ').forEach(k => {
-				const el = document.createElement('span');
-				el.className = 'kbd';
-				el.textContent = k;
-				keys.appendChild(el);
+				const keys = document.createElement('div');
+				keys.className = 'shortcut-keys';
+
+				sc.key.split(' + ').forEach(k => {
+					const el = document.createElement('span');
+					el.className = 'kbd';
+					el.textContent = k;
+					keys.appendChild(el);
+				});
+
+				item.appendChild(action);
+				item.appendChild(keys);
+				group.appendChild(item);
 			});
 
-			item.appendChild(action);
-			item.appendChild(keys);
-			group.appendChild(item);
-		});
-
-		list.appendChild(group);
-	});
-}
-
-
-setupLayerTypePickerListeners() {
-	const modal = document.getElementById('layerTypePickerModal');
-	const closeBtn = document.getElementById('closeLayerTypePickerModal');
-	const layerTypeButtons = document.querySelectorAll('.layer-type-option');
-	
-	// Close button
-	if (closeBtn) {
-		closeBtn.addEventListener('click', () => {
-			modal.classList.remove('visible');
+			list.appendChild(group);
 		});
 	}
-	
-	// Click outside to close
-	if (modal) {
-		modal.addEventListener('click', (e) => {
-			if (e.target === modal) {
-				modal.classList.remove('visible');
+
+
+
+
+
+
+
+
+
+
+	setupEventListeners() {
+		this.setupToolbarListeners();
+		this.setupZoomListeners();
+		this.setupPanListeners();
+		this.setupStickerCenterListeners();
+		this.setupColorPickerContextListeners();
+		this.setupLayerSettingsListeners();
+		this.setupSliderListeners();
+		this.setupStickerSettingsListeners();
+		this.setupExportListeners();
+		this.setupImageListeners();
+		this.setupModalListeners();
+		this.setupPreviewListeners();
+		this.setupGlobalListeners();
+	}
+
+	// ===== HELPER: Attach slider with live update and reset =====
+	setupSlider(sliderId, valueId, suffix, updateCallback, resetValue) {
+		const slider = document.getElementById(sliderId);
+		const valueDisplay = document.getElementById(valueId);
+		const resetBtn = document.getElementById('reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1));
+
+		if (!slider || !valueDisplay) return;
+
+		// Live value display
+		slider.addEventListener('input', (e) => {
+			valueDisplay.textContent = e.target.value + suffix;
+			if (resetBtn) {
+				resetBtn.disabled = parseInt(slider.value) === resetValue;
 			}
+			if (updateCallback) updateCallback(e);
 		});
-	}
-	
-	// Layer type option buttons
-	layerTypeButtons.forEach(btn => {
-		btn.addEventListener('click', () => {
-			const type = btn.dataset.layerType;
-			const layerType = type === 'sticker' ? LayerType.STICKER : LayerType.GLITTER_FILL;
-			
-			this.layerManager.addLayer(layerType);
-			modal.classList.remove('visible');
-		});
-	});
-	
-	// Add layer button (opens modal)
-	const addLayerBtn = document.getElementById('addLayerBtn');
-	if (addLayerBtn) {
-		addLayerBtn.addEventListener('click', () => {
-			modal.classList.add('visible');
-		});
-	}
-	
-	// Mobile add layer button
-	const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
-	if (mobileAddBtn) {
-		mobileAddBtn.addEventListener('click', () => {
-			modal.classList.add('visible');
-		});
-	}
-	
-	// Bottom bar quick-add buttons
-	const layersBarAddGlitter = document.getElementById('layersBarAddGlitter');
-	const layersBarAddSticker = document.getElementById('layersBarAddSticker');
-	
-	if (layersBarAddGlitter) {
-		layersBarAddGlitter.addEventListener('click', () => {
-			this.layerManager.addLayer(LayerType.GLITTER_FILL);
-		});
-	}
-	
-	if (layersBarAddSticker) {
-		layersBarAddSticker.addEventListener('click', () => {
-			this.layerManager.addLayer(LayerType.STICKER);
-		});
-	}
-	
-	// Bottom bar other buttons
-	const layersBarGoToSelected = document.getElementById('layersBarGoToSelected');
-	const layersBarCloneSelected = document.getElementById('layersBarCloneSelected');
-	const layersBarDeleteSelected = document.getElementById('layersBarDeleteSelected');
-	
-	if (layersBarGoToSelected) {
-		layersBarGoToSelected.addEventListener('click', () => {
-			const selectedLayer = this.layerManager.getActiveLayer();
-			if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
-			
-			if (selectedLayer.type === LayerType.GLITTER_FILL) {
-				this.layerManager.goToGlitter(selectedLayer.id);
-			} else if (selectedLayer.type === LayerType.STICKER) {
-				this.layerManager.goToSticker(selectedLayer.id);
-			}
-		});
-	}
-	
-	if (layersBarCloneSelected) {
-		layersBarCloneSelected.addEventListener('click', () => {
-			const selectedLayer = this.layerManager.getActiveLayer();
-			if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
-			this.layerManager.cloneLayer(selectedLayer.id);
-		});
-	}
-	
-	if (layersBarDeleteSelected) {
-		layersBarDeleteSelected.addEventListener('click', () => {
-			const selectedLayer = this.layerManager.getActiveLayer();
-			if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
-			this.layerManager.deleteLayer(selectedLayer.id);
-		});
-	}
-}
 
-
-
-
-
-
-
-
-setupEventListeners() {
-	this.setupToolbarListeners();
-	this.setupZoomListeners();
-	this.setupPanListeners();
-	this.setupStickerCenterListeners();
-	this.setupColorPickerContextListeners();
-	this.setupLayerSettingsListeners();
-	this.setupSliderListeners();
-	this.setupStickerSettingsListeners();
-	this.setupExportListeners();
-	this.setupImageListeners();
-	this.setupModalListeners();
-	this.setupPreviewListeners();
-	this.setupGlobalListeners();
-}
-
-// ===== HELPER: Attach slider with live update and reset =====
-setupSlider(sliderId, valueId, suffix, updateCallback, resetValue) {
-	const slider = document.getElementById(sliderId);
-	const valueDisplay = document.getElementById(valueId);
-	const resetBtn = document.getElementById('reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1));
-	
-	if (!slider || !valueDisplay) return;
-	
-	// Live value display
-	slider.addEventListener('input', (e) => {
-		valueDisplay.textContent = e.target.value + suffix;
+		// Reset button
 		if (resetBtn) {
+			resetBtn.addEventListener('click', () => {
+				slider.value = resetValue;
+				valueDisplay.textContent = resetValue + suffix;
+				slider.dispatchEvent(new Event('input'));
+				slider.dispatchEvent(new Event('change'));
+				resetBtn.disabled = true;
+			});
 			resetBtn.disabled = parseInt(slider.value) === resetValue;
 		}
-		if (updateCallback) updateCallback(e);
-	});
-	
-	// Reset button
-	if (resetBtn) {
-		resetBtn.addEventListener('click', () => {
-			slider.value = resetValue;
-			valueDisplay.textContent = resetValue + suffix;
-			slider.dispatchEvent(new Event('input'));
-			slider.dispatchEvent(new Event('change'));
-			resetBtn.disabled = true;
-		});
-		resetBtn.disabled = parseInt(slider.value) === resetValue;
 	}
-}
 
-// ===== HELPER: Attach checkbox that syncs with another checkbox =====
-syncCheckboxes(sourceId, targetId) {
-	const source = document.getElementById(sourceId);
-	const target = document.getElementById(targetId);
-	
-	if (!source || !target) return;
-	
-	source.addEventListener('change', (e) => {
-		target.checked = e.target.checked;
-	});
-}
+	// ===== HELPER: Attach checkbox that syncs with another checkbox =====
+	syncCheckboxes(sourceId, targetId) {
+		const source = document.getElementById(sourceId);
+		const target = document.getElementById(targetId);
 
-// ===== TOOLBAR LISTENERS =====
-setupToolbarListeners() {
-	const tools = [
-		{ id: 'selectTool', type: ToolType.SELECT },
-		{ id: 'colorPickerTool', type: ToolType.COLOR_PICKER },
-		{ id: 'handTool', type: ToolType.HAND },
-		{ id: 'zoomTool', type: ToolType.ZOOM }
-	];
-	
-	tools.forEach(({ id, type }) => {
-		const btn = document.getElementById(id);
-		if (btn) btn.addEventListener('click', () => this.setTool(type));
-	});
-	
-	const actions = [
-		{ id: 'undoTool', handler: () => this.undo() },
-		{ id: 'redoTool', handler: () => this.redo() },
-		{ id: 'clearAllTool', handler: () => this.resetAll() }
-	];
-	
-	actions.forEach(({ id, handler }) => {
-		const btn = document.getElementById(id);
-		if (btn) btn.addEventListener('click', handler);
-	});
-}
+		if (!source || !target) return;
 
-// ===== ZOOM CONTROL LISTENERS =====
-setupZoomListeners() {
-	const controls = [
-		{ id: 'zoomIn', handler: () => this.viewport.zoomIn() },
-		{ id: 'zoomOut', handler: () => this.viewport.zoomOut() },
-		{ id: 'zoomPercentage', handler: () => this.viewport.resetZoom() },
-		{ id: 'fitScreen', handler: () => this.viewport.zoomToFit() },
-		{ id: 'fillScreen', handler: () => this.viewport.zoomToFill() }
-	];
-	
-	controls.forEach(({ id, handler }) => {
-		const btn = document.getElementById(id);
-		if (btn) btn.addEventListener('click', handler);
-	});
-}
-
-// ===== PAN CONTROL LISTENERS =====
-setupPanListeners() {
-	const controls = [
-		{ id: 'centerCanvasHorizontal', handler: () => this.viewport.centerHorizontal() },
-		{ id: 'centerCanvasVertical', handler: () => this.viewport.centerVertical() }
-	];
-	
-	controls.forEach(({ id, handler }) => {
-		const btn = document.getElementById(id);
-		if (btn) btn.addEventListener('click', handler);
-	});
-}
-
-// ===== STICKER CENTER CONTROL LISTENERS =====
-setupStickerCenterListeners() {
-	const centerStickerHorizontal = document.getElementById('centerStickerHorizontal');
-	const centerStickerVertical = document.getElementById('centerStickerVertical');
-
-	if (centerStickerHorizontal) {
-		centerStickerHorizontal.addEventListener('click', () => {
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				this.stickerManager.centerHorizontal(layer.id);
-			}
+		source.addEventListener('change', (e) => {
+			target.checked = e.target.checked;
 		});
 	}
 
-	if (centerStickerVertical) {
-		centerStickerVertical.addEventListener('click', () => {
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				this.stickerManager.centerVertical(layer.id);
-			}
-		});
-	}
-}
+	// ===== TOOLBAR LISTENERS =====
+	setupToolbarListeners() {
+		const tools = [
+			{ id: 'selectTool', type: ToolType.SELECT },
+			{ id: 'colorPickerTool', type: ToolType.COLOR_PICKER },
+			{ id: 'handTool', type: ToolType.HAND },
+			{ id: 'zoomTool', type: ToolType.ZOOM }
+		];
 
-// ===== COLOR PICKER CONTEXT LISTENERS =====
-// ===== COLOR PICKER CONTEXT LISTENERS =====
-setupColorPickerContextListeners() {
-	const contextThreshold = document.getElementById('contextThreshold');
-	const contextThresholdValue = document.getElementById('contextThresholdValue');
-	const contextMultiSelect = document.getElementById('contextMultiSelect');
-	const contextContiguous = document.getElementById('contextContiguous');
-	
-	// Threshold slider
-	if (contextThreshold && contextThresholdValue) {
-		contextThreshold.addEventListener('input', (e) => {
-			const value = e.target.value;
-			contextThresholdValue.textContent = value;
-			
-			// Sync with design panel
-			const threshold = document.getElementById('threshold');
-			const thresholdValue = document.getElementById('thresholdValue');
-			if (threshold) threshold.value = value;
-			if (thresholdValue) thresholdValue.textContent = value;
-			
-			this.updateResetButton('threshold');
-			
-			// Save and debounce preview update
-			this.saveActiveLayerSettings(true, false);
-			this.debouncedSliderUpdate('threshold');
+		tools.forEach(({ id, type }) => {
+			const btn = document.getElementById(id);
+			if (btn) btn.addEventListener('click', () => this.setTool(type));
 		});
-		
-		contextThreshold.addEventListener('change', () => {
-			this.saveState();
-		});
-	}
-	
-	// Multi-select checkbox
-	if (contextMultiSelect) {
-		contextMultiSelect.addEventListener('change', (e) => {
-			const multiSelect = document.getElementById('multiSelect');
-			if (multiSelect) multiSelect.checked = e.target.checked;
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (!e.target.checked && layer && layer.selections.length > 1) {
-				layer.selections = [layer.selections[0]];
-			}
-			
-			this.saveActiveLayerSettings();
-			this.updatePreview();
-			this.updateSelectedColorsDisplay();
-			this.updateColorPickerControls();
-			this.saveState();
-		});
-	}
-	
-	// Contiguous checkbox
-	if (contextContiguous) {
-		contextContiguous.addEventListener('change', (e) => {
-			const contiguous = document.getElementById('contiguous');
-			if (contiguous) contiguous.checked = e.target.checked;
-			
-			this.saveActiveLayerSettings();
-			this.updatePreview();
-			this.saveState();
-		});
-	}
-}
 
-// ===== LAYER SETTINGS LISTENERS =====
-setupLayerSettingsListeners() {
-	const contiguous = document.getElementById('contiguous');
-	const invert = document.getElementById('invert');
-	const multiSelect = document.getElementById('multiSelect');
-	const refineGlobal = document.getElementById('refineGlobal');
-	const glitterGlobal = document.getElementById('glitterGlobal');
+		const actions = [
+			{ id: 'undoTool', handler: () => this.undo() },
+			{ id: 'redoTool', handler: () => this.redo() },
+			{ id: 'clearAllTool', handler: () => this.resetAll() }
+		];
 
-	if (contiguous) {
-		contiguous.addEventListener('change', (e) => {
-			const contextContiguous = document.getElementById('contextContiguous');
-			if (contextContiguous) contextContiguous.checked = e.target.checked;
-			
-			this.saveActiveLayerSettings();
-			this.updatePreview();
-			this.saveState();
+		actions.forEach(({ id, handler }) => {
+			const btn = document.getElementById(id);
+			if (btn) btn.addEventListener('click', handler);
 		});
 	}
 
-	if (invert) {
-		invert.addEventListener('change', () => {
-			this.saveActiveLayerSettings();
-			this.updatePreview();
-			this.saveState();
+	// ===== ZOOM CONTROL LISTENERS =====
+	setupZoomListeners() {
+		const controls = [
+			{ id: 'zoomIn', handler: () => this.viewport.zoomIn() },
+			{ id: 'zoomOut', handler: () => this.viewport.zoomOut() },
+			{ id: 'zoomPercentage', handler: () => this.viewport.resetZoom() },
+			{ id: 'fitScreen', handler: () => this.viewport.zoomToFit() },
+			{ id: 'fillScreen', handler: () => this.viewport.zoomToFill() }
+		];
+
+		controls.forEach(({ id, handler }) => {
+			const btn = document.getElementById(id);
+			if (btn) btn.addEventListener('click', handler);
 		});
 	}
 
-	if (multiSelect) {
-		multiSelect.addEventListener('change', (e) => {
-			const contextMultiSelect = document.getElementById('contextMultiSelect');
-			if (contextMultiSelect) contextMultiSelect.checked = e.target.checked;
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (!e.target.checked && layer && layer.selections.length > 1) {
-				layer.selections = [layer.selections[0]];
-			}
-			
-			this.saveActiveLayerSettings();
-			this.updatePreview();
-			this.updateSelectedColorsDisplay();
-			this.updateColorPickerControls();
-			this.saveState();
+	// ===== PAN CONTROL LISTENERS =====
+	setupPanListeners() {
+		const controls = [
+			{ id: 'centerCanvasHorizontal', handler: () => this.viewport.centerHorizontal() },
+			{ id: 'centerCanvasVertical', handler: () => this.viewport.centerVertical() }
+		];
+
+		controls.forEach(({ id, handler }) => {
+			const btn = document.getElementById(id);
+			if (btn) btn.addEventListener('click', handler);
 		});
 	}
 
-	if (refineGlobal) {
-		refineGlobal.addEventListener('change', (e) => {
-			this.refineGlobal = e.target.checked;
-			if (this.refineGlobal) {
-				this.saveActiveLayerSettings(true, false);
-				this.updatePreview();
-				this.saveState();
-				this.updateStatus('Global threshold/feather applied');
-			}
-		});
-	}
+	// ===== STICKER CENTER CONTROL LISTENERS =====
+	setupStickerCenterListeners() {
+		const centerStickerHorizontal = document.getElementById('centerStickerHorizontal');
+		const centerStickerVertical = document.getElementById('centerStickerVertical');
 
-	if (glitterGlobal) {
-		glitterGlobal.addEventListener('change', (e) => {
-			this.glitterGlobal = e.target.checked;
-			if (this.glitterGlobal) {
-				this.saveActiveLayerSettings(false, true);
-				this.updatePreview();
-				this.saveState();
-				this.updateStatus('Global scale/opacity applied');
-			}
-		});
-	}
-}
-
-// ===== SLIDER LISTENERS =====
-setupSliderListeners() {
-	// Threshold
-	this.setupSlider('threshold', 'thresholdValue', '', (e) => {
-		// Sync with context toolbar
-		const contextThreshold = document.getElementById('contextThreshold');
-		const contextThresholdValue = document.getElementById('contextThresholdValue');
-		if (contextThreshold) contextThreshold.value = e.target.value;
-		if (contextThresholdValue) contextThresholdValue.textContent = e.target.value;
-	}, CONFIG.defaultThreshold);
-	
-	const threshold = document.getElementById('threshold');
-	if (threshold) {
-		threshold.addEventListener('input', () => {
-			this.saveActiveLayerSettings(true, false);
-			this.debouncedSliderUpdate('threshold');
-		});
-		threshold.addEventListener('change', () => this.saveState());
-	}
-	
-	// Feather
-	this.setupSlider('feather', 'featherValue', '', null, CONFIG.defaultFeather);
-	const feather = document.getElementById('feather');
-	if (feather) {
-		feather.addEventListener('input', () => {
-			this.saveActiveLayerSettings(true, false);
-			this.debouncedSliderUpdate('feather');
-		});
-		feather.addEventListener('change', () => this.saveState());
-	}
-	
-	// Scale
-	this.setupSlider('scale', 'scaleValue', '%', null, CONFIG.defaultScale);
-	const scale = document.getElementById('scale');
-	if (scale) {
-		scale.addEventListener('input', () => {
-			this.saveActiveLayerSettings(false, true);
-			this.debouncedSliderUpdate('scale');
-		});
-		scale.addEventListener('change', () => this.saveState());
-	}
-	
-	// Opacity
-	this.setupSlider('opacity', 'opacityValue', '%', null, CONFIG.defaultOpacity);
-	const opacity = document.getElementById('opacity');
-	if (opacity) {
-		opacity.addEventListener('input', () => {
-			this.saveActiveLayerSettings(false, true);
-			this.debouncedSliderUpdate('opacity');
-		});
-		opacity.addEventListener('change', () => this.saveState());
-	}
-}
-
-// ===== STICKER SETTINGS LISTENERS =====
-setupStickerSettingsListeners() {
-	this.setupStickerPositionListeners();
-	this.setupStickerRotationListeners();
-	this.setupStickerScaleListeners();
-	this.setupStickerOpacityListeners();
-	this.setupStickerFlipListeners();
-}
-
-setupStickerPositionListeners() {
-	const posX = document.getElementById('stickerPosX');
-	const posY = document.getElementById('stickerPosY');
-	
-	const updatePosition = () => {
-		const layer = this.layerManager.getActiveLayer();
-		if (!layer || layer.type !== LayerType.STICKER || !this.stickerManager) return;
-		
-		this.stickerManager.updateTransform(layer.id, {
-			position: {
-				x: parseFloat(posX.value),
-				y: parseFloat(posY.value)
-			}
-		});
-	};
-	
-	if (posX) {
-		posX.addEventListener('input', updatePosition);
-		posX.addEventListener('change', () => this.saveState());
-	}
-	
-	if (posY) {
-		posY.addEventListener('input', updatePosition);
-		posY.addEventListener('change', () => this.saveState());
-	}
-}
-
-setupStickerRotationListeners() {
-	const rotation = document.getElementById('stickerRotation');
-	const rotationValue = document.getElementById('stickerRotationValue');
-	const resetBtn = document.getElementById('resetStickerRotation');
-	
-	if (rotation && rotationValue) {
-		rotation.addEventListener('input', (e) => {
-			const value = parseFloat(e.target.value);
-			rotationValue.textContent = Math.round(value) + '°';
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				this.stickerManager.updateTransform(layer.id, { rotation: value });
-			}
-		});
-		
-		rotation.addEventListener('change', () => this.saveState());
-	}
-	
-	if (resetBtn) {
-		resetBtn.addEventListener('click', () => {
-			if (rotation) rotation.value = CONFIG.defaultStickerRotation;
-			if (rotationValue) rotationValue.textContent = CONFIG.defaultStickerRotation + '°';
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				this.stickerManager.updateTransform(layer.id, { rotation: CONFIG.defaultStickerRotation });
-				this.saveState();
-			}
-		});
-	}
-}
-
-setupStickerScaleListeners() {
-	const scaleX = document.getElementById('stickerScaleX');
-	const scaleXValue = document.getElementById('stickerScaleXValue');
-	const scaleY = document.getElementById('stickerScaleY');
-	const scaleYValue = document.getElementById('stickerScaleYValue');
-	const proportionalScale = document.getElementById('stickerProportionalScale');
-	const resetScaleX = document.getElementById('resetStickerScaleX');
-	const resetScaleY = document.getElementById('resetStickerScaleY');
-	
-	// Scale X
-	if (scaleX && scaleXValue) {
-		scaleX.addEventListener('input', (e) => {
-			const value = parseFloat(e.target.value);
-			scaleXValue.textContent = Math.round(value) + '%';
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleY && scaleYValue) {
-						scaleY.value = value;
-						scaleYValue.textContent = Math.round(value) + '%';
-					}
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { x: value, y: value }
-					});
-				} else {
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { x: value }
-					});
+		if (centerStickerHorizontal) {
+			centerStickerHorizontal.addEventListener('click', () => {
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					this.stickerManager.centerHorizontal(layer.id);
 				}
-			}
-		});
-		
-		scaleX.addEventListener('change', () => this.saveState());
-	}
-	
-	// Scale Y
-	if (scaleY && scaleYValue) {
-		scaleY.addEventListener('input', (e) => {
-			const value = parseFloat(e.target.value);
-			scaleYValue.textContent = Math.round(value) + '%';
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleX && scaleXValue) {
-						scaleX.value = value;
-						scaleXValue.textContent = Math.round(value) + '%';
-					}
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { x: value, y: value }
-					});
-				} else {
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { y: value }
-					});
-				}
-			}
-		});
-		
-		scaleY.addEventListener('change', () => this.saveState());
-	}
-	
-	// Proportional scale toggle
-	if (proportionalScale) {
-		proportionalScale.addEventListener('change', (e) => {
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER) {
-				layer.stickerData.transform.proportionalScale = e.target.checked;
-				this.saveState();
-			}
-		});
-	}
-	
-	// Reset Scale X
-	if (resetScaleX) {
-		resetScaleX.addEventListener('click', () => {
-			if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
-			if (scaleXValue) scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleY && scaleYValue) {
-						scaleY.value = CONFIG.defaultStickerScale;
-						scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
-					}
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-					});
-				} else {
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { x: CONFIG.defaultStickerScale }
-					});
-				}
-				this.saveState();
-			}
-		});
-	}
-	
-	// Reset Scale Y
-	if (resetScaleY) {
-		resetScaleY.addEventListener('click', () => {
-			if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
-			if (scaleYValue) scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleX && scaleXValue) {
-						scaleX.value = CONFIG.defaultStickerScale;
-						scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
-					}
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-					});
-				} else {
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { y: CONFIG.defaultStickerScale }
-					});
-				}
-				this.saveState();
-			}
-		});
-	}
-}
-
-setupStickerOpacityListeners() {
-	const opacity = document.getElementById('stickerOpacity');
-	const opacityValue = document.getElementById('stickerOpacityValue');
-	const resetBtn = document.getElementById('resetStickerOpacity');
-	
-	if (opacity && opacityValue) {
-		opacity.addEventListener('input', (e) => {
-			const value = parseFloat(e.target.value);
-			opacityValue.textContent = Math.round(value) + '%';
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				this.stickerManager.updateTransform(layer.id, { opacity: value });
-			}
-		});
-		
-		opacity.addEventListener('change', () => this.saveState());
-	}
-	
-	if (resetBtn) {
-		resetBtn.addEventListener('click', () => {
-			if (opacity) opacity.value = CONFIG.defaultStickerOpacity;
-			if (opacityValue) opacityValue.textContent = CONFIG.defaultStickerOpacity + '%';
-			
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				this.stickerManager.updateTransform(layer.id, { opacity: CONFIG.defaultStickerOpacity });
-				this.saveState();
-			}
-		});
-	}
-}
-
-setupStickerFlipListeners() {
-	const flipX = document.getElementById('stickerFlipX');
-	const flipY = document.getElementById('stickerFlipY');
-	
-	if (flipX) {
-		flipX.addEventListener('change', (e) => {
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				this.stickerManager.updateTransform(layer.id, { flipX: e.target.checked });
-				this.saveState();
-			}
-		});
-	}
-	
-	if (flipY) {
-		flipY.addEventListener('change', (e) => {
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				this.stickerManager.updateTransform(layer.id, { flipY: e.target.checked });
-				this.saveState();
-			}
-		});
-	}
-}
-
-// ===== EXPORT LISTENERS =====
-setupExportListeners() {
-	const exportGif = document.getElementById('exportGif');
-	if (exportGif) {
-		exportGif.addEventListener('click', () => this.exportAnimatedGif());
-	}
-	
-	this.setupExportSettingsListeners();
-}
-
-setupExportSettingsListeners() {
-	const settings = [
-		{ id: 'exportQuality', prop: 'quality', parser: parseInt },
-		{ id: 'exportDitherEnabled', prop: 'ditherEnabled', parser: (el) => el.checked },
-		{ id: 'exportDitherType', prop: 'ditherType', parser: (el) => el.value },
-		{ id: 'exportBaseImage', prop: 'baseImage', parser: (el) => el.checked },
-		{ id: 'exportTransparency', prop: 'transparency', parser: (el) => el.checked },
-		{ id: 'exportMatteColor', prop: 'matteColor', parser: (el) => el.value },
-		{ id: 'exportFrameDelay', prop: 'frameDelay', parser: parseInt },
-		{ id: 'exportMaxFrames', prop: 'maxFrames', parser: parseInt },
-		{ id: 'exportFrameSkip', prop: 'exportFrameSkip', parser: parseInt },
-		{ id: 'exportReverse', prop: 'exportReverse', parser: (el) => el.checked },
-		{ id: 'exportWatermarkEnabled', prop: 'watermarkEnabled', parser: (el) => el.checked }
-	];
-	
-	settings.forEach(({ id, prop, parser }) => {
-		const element = document.getElementById(id);
-		if (element) {
-			element.addEventListener('change', (e) => {
-				this.exportSettings[prop] = parser(element);
 			});
 		}
-	});
-	
-	// Special handling for dither type visibility
-	const ditherEnabled = document.getElementById('exportDitherEnabled');
-	const ditherTypeRow = document.getElementById('ditherTypeRow');
-	if (ditherEnabled && ditherTypeRow) {
-		ditherEnabled.addEventListener('change', (e) => {
-			ditherTypeRow.style.display = e.target.checked ? 'flex' : 'none';
-		});
-	}
-	
-	// Special handling for matte color visibility
-	const transparency = document.getElementById('exportTransparency');
-	const matteColorRow = document.getElementById('matteColorRow');
-	if (transparency && matteColorRow) {
-		transparency.addEventListener('change', (e) => {
-			matteColorRow.style.display = e.target.checked ? 'none' : 'flex';
-		});
-	}
-}
 
-// ===== IMAGE LISTENERS =====
-setupImageListeners() {
-	const imageUpload = document.getElementById('imageUpload');
-	const imageDropzone = document.getElementById('imageDropzone');
-	const imageClearBtn = document.getElementById('imageClearBtn');
-
-	// New Canvas button
-const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
-if (openNewCanvasBtn) {
-	openNewCanvasBtn.addEventListener('click', () => {
-		const modal = document.getElementById('newCanvasModal');
-		if (modal) {
-			modal.classList.add('visible');
-			this.initializeNewCanvasModal(); // <-- ADD THIS LINE
+		if (centerStickerVertical) {
+			centerStickerVertical.addEventListener('click', () => {
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					this.stickerManager.centerVertical(layer.id);
+				}
+			});
 		}
-	});
-}
-
-	if (imageUpload) {
-		imageUpload.addEventListener('change', (e) => this.loadImage(e));
 	}
 
-	if (imageDropzone) {
-		imageDropzone.addEventListener('click', () => {
-			imageUpload.click();
-		});
+	// ===== COLOR PICKER CONTEXT LISTENERS =====
+	// ===== COLOR PICKER CONTEXT LISTENERS =====
+	setupColorPickerContextListeners() {
+		const contextThreshold = document.getElementById('contextThreshold');
+		const contextThresholdValue = document.getElementById('contextThresholdValue');
+		const contextMultiSelect = document.getElementById('contextMultiSelect');
+		const contextContiguous = document.getElementById('contextContiguous');
 
-		imageDropzone.addEventListener('dragover', (e) => {
-			e.preventDefault();
-			imageDropzone.classList.add('drag-over');
-		});
+		// Threshold slider
+		if (contextThreshold && contextThresholdValue) {
+			contextThreshold.addEventListener('input', (e) => {
+				const value = e.target.value;
+				contextThresholdValue.textContent = value;
 
-		imageDropzone.addEventListener('dragleave', () => {
-			imageDropzone.classList.remove('drag-over');
-		});
+				// Sync with design panel
+				const threshold = document.getElementById('threshold');
+				const thresholdValue = document.getElementById('thresholdValue');
+				if (threshold) threshold.value = value;
+				if (thresholdValue) thresholdValue.textContent = value;
 
-		imageDropzone.addEventListener('drop', async (e) => {
-			e.preventDefault();
-			imageDropzone.classList.remove('drag-over');
+				this.updateResetButton('threshold');
 
-			const file = e.dataTransfer.files[0];
-			if (file && file.type.startsWith('image/')) {
-				const fakeEvent = { target: { files: [file] } };
-				await this.loadImage(fakeEvent);
+				// Save and debounce preview update
+				this.saveActiveLayerSettings(true, false);
+				this.debouncedSliderUpdate('threshold');
+			});
+
+			contextThreshold.addEventListener('change', () => {
+				this.saveState();
+			});
+		}
+
+		// Multi-select checkbox
+		if (contextMultiSelect) {
+			contextMultiSelect.addEventListener('change', (e) => {
+				const multiSelect = document.getElementById('multiSelect');
+				if (multiSelect) multiSelect.checked = e.target.checked;
+
+				const layer = this.layerManager.getActiveLayer();
+				if (!e.target.checked && layer && layer.selections.length > 1) {
+					layer.selections = [layer.selections[0]];
+				}
+
+				this.saveActiveLayerSettings();
+				this.updatePreview();
+				this.updateSelectedColorsDisplay();
+				this.updateColorPickerControls();
+				this.saveState();
+			});
+		}
+
+		// Contiguous checkbox
+		if (contextContiguous) {
+			contextContiguous.addEventListener('change', (e) => {
+				const contiguous = document.getElementById('contiguous');
+				if (contiguous) contiguous.checked = e.target.checked;
+
+				this.saveActiveLayerSettings();
+				this.updatePreview();
+				this.saveState();
+			});
+		}
+	}
+
+	// ===== LAYER SETTINGS LISTENERS =====
+	setupLayerSettingsListeners() {
+		const contiguous = document.getElementById('contiguous');
+		const invert = document.getElementById('invert');
+		const multiSelect = document.getElementById('multiSelect');
+		const refineGlobal = document.getElementById('refineGlobal');
+		const glitterGlobal = document.getElementById('glitterGlobal');
+
+		if (contiguous) {
+			contiguous.addEventListener('change', (e) => {
+				const contextContiguous = document.getElementById('contextContiguous');
+				if (contextContiguous) contextContiguous.checked = e.target.checked;
+
+				this.saveActiveLayerSettings();
+				this.updatePreview();
+				this.saveState();
+			});
+		}
+
+		if (invert) {
+			invert.addEventListener('change', () => {
+				this.saveActiveLayerSettings();
+				this.updatePreview();
+				this.saveState();
+			});
+		}
+
+		if (multiSelect) {
+			multiSelect.addEventListener('change', (e) => {
+				const contextMultiSelect = document.getElementById('contextMultiSelect');
+				if (contextMultiSelect) contextMultiSelect.checked = e.target.checked;
+
+				const layer = this.layerManager.getActiveLayer();
+				if (!e.target.checked && layer && layer.selections.length > 1) {
+					layer.selections = [layer.selections[0]];
+				}
+
+				this.saveActiveLayerSettings();
+				this.updatePreview();
+				this.updateSelectedColorsDisplay();
+				this.updateColorPickerControls();
+				this.saveState();
+			});
+		}
+
+		if (refineGlobal) {
+			refineGlobal.addEventListener('change', (e) => {
+				this.refineGlobal = e.target.checked;
+				if (this.refineGlobal) {
+					this.saveActiveLayerSettings(true, false);
+					this.updatePreview();
+					this.saveState();
+					this.updateStatus('Global threshold/feather applied');
+				}
+			});
+		}
+
+		if (glitterGlobal) {
+			glitterGlobal.addEventListener('change', (e) => {
+				this.glitterGlobal = e.target.checked;
+				if (this.glitterGlobal) {
+					this.saveActiveLayerSettings(false, true);
+					this.updatePreview();
+					this.saveState();
+					this.updateStatus('Global scale/opacity applied');
+				}
+			});
+		}
+	}
+
+	// ===== SLIDER LISTENERS =====
+	setupSliderListeners() {
+		// Threshold
+		this.setupSlider('threshold', 'thresholdValue', '', (e) => {
+			// Sync with context toolbar
+			const contextThreshold = document.getElementById('contextThreshold');
+			const contextThresholdValue = document.getElementById('contextThresholdValue');
+			if (contextThreshold) contextThreshold.value = e.target.value;
+			if (contextThresholdValue) contextThresholdValue.textContent = e.target.value;
+		}, CONFIG.defaultThreshold);
+
+		const threshold = document.getElementById('threshold');
+		if (threshold) {
+			threshold.addEventListener('input', () => {
+				this.saveActiveLayerSettings(true, false);
+				this.debouncedSliderUpdate('threshold');
+			});
+			threshold.addEventListener('change', () => this.saveState());
+		}
+
+		// Feather
+		this.setupSlider('feather', 'featherValue', '', null, CONFIG.defaultFeather);
+		const feather = document.getElementById('feather');
+		if (feather) {
+			feather.addEventListener('input', () => {
+				this.saveActiveLayerSettings(true, false);
+				this.debouncedSliderUpdate('feather');
+			});
+			feather.addEventListener('change', () => this.saveState());
+		}
+
+		// Scale
+		this.setupSlider('scale', 'scaleValue', '%', null, CONFIG.defaultScale);
+		const scale = document.getElementById('scale');
+		if (scale) {
+			scale.addEventListener('input', () => {
+				this.saveActiveLayerSettings(false, true);
+				this.debouncedSliderUpdate('scale');
+			});
+			scale.addEventListener('change', () => this.saveState());
+		}
+
+		// Opacity
+		this.setupSlider('opacity', 'opacityValue', '%', null, CONFIG.defaultOpacity);
+		const opacity = document.getElementById('opacity');
+		if (opacity) {
+			opacity.addEventListener('input', () => {
+				this.saveActiveLayerSettings(false, true);
+				this.debouncedSliderUpdate('opacity');
+			});
+			opacity.addEventListener('change', () => this.saveState());
+		}
+	}
+
+	// ===== STICKER SETTINGS LISTENERS =====
+	setupStickerSettingsListeners() {
+		this.setupStickerPositionListeners();
+		this.setupStickerRotationListeners();
+		this.setupStickerScaleListeners();
+		this.setupStickerOpacityListeners();
+		this.setupStickerFlipListeners();
+	}
+
+	setupStickerPositionListeners() {
+		const posX = document.getElementById('stickerPosX');
+		const posY = document.getElementById('stickerPosY');
+
+		const updatePosition = () => {
+			const layer = this.layerManager.getActiveLayer();
+			if (!layer || layer.type !== LayerType.STICKER || !this.stickerManager) return;
+
+			this.stickerManager.updateTransform(layer.id, {
+				position: {
+					x: parseFloat(posX.value),
+					y: parseFloat(posY.value)
+				}
+			});
+		};
+
+		if (posX) {
+			posX.addEventListener('input', updatePosition);
+			posX.addEventListener('change', () => this.saveState());
+		}
+
+		if (posY) {
+			posY.addEventListener('input', updatePosition);
+			posY.addEventListener('change', () => this.saveState());
+		}
+	}
+
+	setupStickerRotationListeners() {
+		const rotation = document.getElementById('stickerRotation');
+		const rotationValue = document.getElementById('stickerRotationValue');
+		const resetBtn = document.getElementById('resetStickerRotation');
+
+		if (rotation && rotationValue) {
+			rotation.addEventListener('input', (e) => {
+				const value = parseFloat(e.target.value);
+				rotationValue.textContent = Math.round(value) + '°';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					this.stickerManager.updateTransform(layer.id, { rotation: value });
+				}
+			});
+
+			rotation.addEventListener('change', () => this.saveState());
+		}
+
+		if (resetBtn) {
+			resetBtn.addEventListener('click', () => {
+				if (rotation) rotation.value = CONFIG.defaultStickerRotation;
+				if (rotationValue) rotationValue.textContent = CONFIG.defaultStickerRotation + '°';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					this.stickerManager.updateTransform(layer.id, { rotation: CONFIG.defaultStickerRotation });
+					this.saveState();
+				}
+			});
+		}
+	}
+
+	setupStickerScaleListeners() {
+		const scaleX = document.getElementById('stickerScaleX');
+		const scaleXValue = document.getElementById('stickerScaleXValue');
+		const scaleY = document.getElementById('stickerScaleY');
+		const scaleYValue = document.getElementById('stickerScaleYValue');
+		const proportionalScale = document.getElementById('stickerProportionalScale');
+		const resetScaleX = document.getElementById('resetStickerScaleX');
+		const resetScaleY = document.getElementById('resetStickerScaleY');
+
+		// Scale X
+		if (scaleX && scaleXValue) {
+			scaleX.addEventListener('input', (e) => {
+				const value = parseFloat(e.target.value);
+				scaleXValue.textContent = Math.round(value) + '%';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					if (proportionalScale && proportionalScale.checked) {
+						if (scaleY && scaleYValue) {
+							scaleY.value = value;
+							scaleYValue.textContent = Math.round(value) + '%';
+						}
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: value, y: value }
+						});
+					} else {
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: value }
+						});
+					}
+				}
+			});
+
+			scaleX.addEventListener('change', () => this.saveState());
+		}
+
+		// Scale Y
+		if (scaleY && scaleYValue) {
+			scaleY.addEventListener('input', (e) => {
+				const value = parseFloat(e.target.value);
+				scaleYValue.textContent = Math.round(value) + '%';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					if (proportionalScale && proportionalScale.checked) {
+						if (scaleX && scaleXValue) {
+							scaleX.value = value;
+							scaleXValue.textContent = Math.round(value) + '%';
+						}
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: value, y: value }
+						});
+					} else {
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { y: value }
+						});
+					}
+				}
+			});
+
+			scaleY.addEventListener('change', () => this.saveState());
+		}
+
+		// Proportional scale toggle
+		if (proportionalScale) {
+			proportionalScale.addEventListener('change', (e) => {
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER) {
+					layer.stickerData.transform.proportionalScale = e.target.checked;
+					this.saveState();
+				}
+			});
+		}
+
+		// Reset Scale X
+		if (resetScaleX) {
+			resetScaleX.addEventListener('click', () => {
+				if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
+				if (scaleXValue) scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					if (proportionalScale && proportionalScale.checked) {
+						if (scaleY && scaleYValue) {
+							scaleY.value = CONFIG.defaultStickerScale;
+							scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+						}
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
+						});
+					} else {
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: CONFIG.defaultStickerScale }
+						});
+					}
+					this.saveState();
+				}
+			});
+		}
+
+		// Reset Scale Y
+		if (resetScaleY) {
+			resetScaleY.addEventListener('click', () => {
+				if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
+				if (scaleYValue) scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					if (proportionalScale && proportionalScale.checked) {
+						if (scaleX && scaleXValue) {
+							scaleX.value = CONFIG.defaultStickerScale;
+							scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+						}
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
+						});
+					} else {
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { y: CONFIG.defaultStickerScale }
+						});
+					}
+					this.saveState();
+				}
+			});
+		}
+	}
+
+	setupStickerOpacityListeners() {
+		const opacity = document.getElementById('stickerOpacity');
+		const opacityValue = document.getElementById('stickerOpacityValue');
+		const resetBtn = document.getElementById('resetStickerOpacity');
+
+		if (opacity && opacityValue) {
+			opacity.addEventListener('input', (e) => {
+				const value = parseFloat(e.target.value);
+				opacityValue.textContent = Math.round(value) + '%';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					this.stickerManager.updateTransform(layer.id, { opacity: value });
+				}
+			});
+
+			opacity.addEventListener('change', () => this.saveState());
+		}
+
+		if (resetBtn) {
+			resetBtn.addEventListener('click', () => {
+				if (opacity) opacity.value = CONFIG.defaultStickerOpacity;
+				if (opacityValue) opacityValue.textContent = CONFIG.defaultStickerOpacity + '%';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					this.stickerManager.updateTransform(layer.id, { opacity: CONFIG.defaultStickerOpacity });
+					this.saveState();
+				}
+			});
+		}
+	}
+
+	setupStickerFlipListeners() {
+		const flipX = document.getElementById('stickerFlipX');
+		const flipY = document.getElementById('stickerFlipY');
+
+		if (flipX) {
+			flipX.addEventListener('change', (e) => {
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					this.stickerManager.updateTransform(layer.id, { flipX: e.target.checked });
+					this.saveState();
+				}
+			});
+		}
+
+		if (flipY) {
+			flipY.addEventListener('change', (e) => {
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					this.stickerManager.updateTransform(layer.id, { flipY: e.target.checked });
+					this.saveState();
+				}
+			});
+		}
+	}
+
+	// ===== EXPORT LISTENERS =====
+	setupExportListeners() {
+		const exportGif = document.getElementById('exportGif');
+		if (exportGif) {
+			exportGif.addEventListener('click', () => this.exportAnimatedGif());
+		}
+
+		this.setupExportSettingsListeners();
+	}
+
+	setupExportSettingsListeners() {
+		const settings = [
+			{ id: 'exportQuality', prop: 'quality', parser: parseInt },
+			{ id: 'exportDitherEnabled', prop: 'ditherEnabled', parser: (el) => el.checked },
+			{ id: 'exportDitherType', prop: 'ditherType', parser: (el) => el.value },
+			{ id: 'exportBaseImage', prop: 'baseImage', parser: (el) => el.checked },
+			{ id: 'exportTransparency', prop: 'transparency', parser: (el) => el.checked },
+			{ id: 'exportMatteColor', prop: 'matteColor', parser: (el) => el.value },
+			{ id: 'exportFrameDelay', prop: 'frameDelay', parser: parseInt },
+			{ id: 'exportMaxFrames', prop: 'maxFrames', parser: parseInt },
+			{ id: 'exportFrameSkip', prop: 'exportFrameSkip', parser: parseInt },
+			{ id: 'exportReverse', prop: 'exportReverse', parser: (el) => el.checked },
+			{ id: 'exportWatermarkEnabled', prop: 'watermarkEnabled', parser: (el) => el.checked }
+		];
+
+		settings.forEach(({ id, prop, parser }) => {
+			const element = document.getElementById(id);
+			if (element) {
+				element.addEventListener('change', (e) => {
+					this.exportSettings[prop] = parser(element);
+				});
 			}
 		});
-	}
 
-	if (imageClearBtn) {
-		imageClearBtn.addEventListener('click', () => {
-			if (confirm('Are you sure you want to remove the image? This will clear the image and all layers.')) {
-				this.clearImage();
-			}
-		});
-	}
-}
-
-initializeNewCanvasModal() {
-	const widthInput = document.getElementById('newCanvasWidth');
-	const heightInput = document.getElementById('newCanvasHeight');
-	const colorInput = document.getElementById('newCanvasColor');
-	const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
-	const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
-	const colorRow = document.getElementById('canvasColorRow');
-	
-	// Reset to defaults
-	if (widthInput) widthInput.value = CONFIG.defaultCanvasPreset.width;
-	if (heightInput) heightInput.value = CONFIG.defaultCanvasPreset.height;
-	if (colorInput) colorInput.value = CONFIG.defaultCanvasPreset.color;
-	
-	// Reset background to "Color" option
-	const colorRadio = document.querySelector('input[name="canvasBackground"][value="color"]');
-	if (colorRadio) colorRadio.checked = true;
-	
-	// Enable color row since we default to color background
-	if (colorRow) colorRow.classList.remove('disabled');
-	
-	// Find and activate matching preset
-	let matchingPreset = null;
-	presetButtons.forEach(btn => {
-		btn.classList.remove('active');
-		const width = parseInt(btn.dataset.width);
-		const height = parseInt(btn.dataset.height);
-		if (width === CONFIG.defaultCanvasPreset.width && height === CONFIG.defaultCanvasPreset.height) {
-			matchingPreset = btn;
+		// Special handling for dither type visibility
+		const ditherEnabled = document.getElementById('exportDitherEnabled');
+		const ditherTypeRow = document.getElementById('ditherTypeRow');
+		if (ditherEnabled && ditherTypeRow) {
+			ditherEnabled.addEventListener('change', (e) => {
+				ditherTypeRow.style.display = e.target.checked ? 'flex' : 'none';
+			});
 		}
-	});
-	
-	if (matchingPreset) {
-		matchingPreset.classList.add('active');
+
+		// Special handling for matte color visibility
+		const transparency = document.getElementById('exportTransparency');
+		const matteColorRow = document.getElementById('matteColorRow');
+		if (transparency && matteColorRow) {
+			transparency.addEventListener('change', (e) => {
+				matteColorRow.style.display = e.target.checked ? 'none' : 'flex';
+			});
+		}
 	}
-	
-	// Update orientation buttons based on default dimensions
-	this.updateOrientationButtons(CONFIG.defaultCanvasPreset.width, CONFIG.defaultCanvasPreset.height);
-}
 
+	// ===== IMAGE LISTENERS =====
+	setupImageListeners() {
+		const imageUpload = document.getElementById('imageUpload');
+		const imageDropzone = document.getElementById('imageDropzone');
+		const imageClearBtn = document.getElementById('imageClearBtn');
 
-setupNewCanvasModalListeners() {
-	const createBtn = document.getElementById('createCanvasBtn');
-	const widthInput = document.getElementById('newCanvasWidth');
-	const heightInput = document.getElementById('newCanvasHeight');
-	const colorInput = document.getElementById('newCanvasColor');
-	const orientationPortrait = document.getElementById('orientationPortrait');
-	const orientationLandscape = document.getElementById('orientationLandscape');
-	const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
-	const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
-	const colorRow = document.getElementById('canvasColorRow');
+		// New Canvas button
+		const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
+		if (openNewCanvasBtn) {
+			openNewCanvasBtn.addEventListener('click', () => {
+				const modal = document.getElementById('newCanvasModal');
+				if (modal) {
+					modal.classList.add('visible');
+					this.initializeNewCanvasModal(); // <-- ADD THIS LINE
+				}
+			});
+		}
 
-	// Preset buttons
-	presetButtons.forEach(btn => {
-		btn.addEventListener('click', () => {
+		if (imageUpload) {
+			imageUpload.addEventListener('change', (e) => this.loadImage(e));
+		}
+
+		if (imageDropzone) {
+			imageDropzone.addEventListener('click', () => {
+				imageUpload.click();
+			});
+
+			imageDropzone.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				imageDropzone.classList.add('drag-over');
+			});
+
+			imageDropzone.addEventListener('dragleave', () => {
+				imageDropzone.classList.remove('drag-over');
+			});
+
+			imageDropzone.addEventListener('drop', async (e) => {
+				e.preventDefault();
+				imageDropzone.classList.remove('drag-over');
+
+				const file = e.dataTransfer.files[0];
+				if (file && file.type.startsWith('image/')) {
+					const fakeEvent = { target: { files: [file] } };
+					await this.loadImage(fakeEvent);
+				}
+			});
+		}
+
+		if (imageClearBtn) {
+			imageClearBtn.addEventListener('click', () => {
+				if (confirm('Are you sure you want to remove the image? This will clear the image and all layers.')) {
+					this.clearImage();
+				}
+			});
+		}
+	}
+
+	initializeNewCanvasModal() {
+		const widthInput = document.getElementById('newCanvasWidth');
+		const heightInput = document.getElementById('newCanvasHeight');
+		const colorInput = document.getElementById('newCanvasColor');
+		const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
+		const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
+		const colorRow = document.getElementById('canvasColorRow');
+
+		// Reset to defaults
+		if (widthInput) widthInput.value = CONFIG.defaultCanvasPreset.width;
+		if (heightInput) heightInput.value = CONFIG.defaultCanvasPreset.height;
+		if (colorInput) colorInput.value = CONFIG.defaultCanvasPreset.color;
+
+		// Reset background to "Color" option
+		const colorRadio = document.querySelector('input[name="canvasBackground"][value="color"]');
+		if (colorRadio) colorRadio.checked = true;
+
+		// Enable color row since we default to color background
+		if (colorRow) colorRow.classList.remove('disabled');
+
+		// Find and activate matching preset
+		let matchingPreset = null;
+		presetButtons.forEach(btn => {
+			btn.classList.remove('active');
 			const width = parseInt(btn.dataset.width);
 			const height = parseInt(btn.dataset.height);
-			
-			if (widthInput) widthInput.value = width;
-			if (heightInput) heightInput.value = height;
-			
-			presetButtons.forEach(b => b.classList.remove('active'));
-			btn.classList.add('active');
-			
-			this.updateOrientationButtons(width, height);
-		});
-	});
-
-	// Orientation toggle - Portrait
-	if (orientationPortrait) {
-		orientationPortrait.addEventListener('click', () => {
-			const width = parseInt(widthInput.value);
-			const height = parseInt(heightInput.value);
-			
-			if (width === height) return;
-			
-			if (width > height) {
-				widthInput.value = height;
-				heightInput.value = width;
-			}
-			
-			this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
-		});
-	}
-
-	// Orientation toggle - Landscape
-	if (orientationLandscape) {
-		orientationLandscape.addEventListener('click', () => {
-			const width = parseInt(widthInput.value);
-			const height = parseInt(heightInput.value);
-			
-			if (width === height) return;
-			
-			if (height > width) {
-				widthInput.value = height;
-				heightInput.value = width;
-			}
-			
-			this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
-		});
-	}
-
-	// Dimension inputs
-	if (widthInput && heightInput) {
-		const updateOrientation = () => {
-			this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
-		};
-		
-		widthInput.addEventListener('input', updateOrientation);
-		heightInput.addEventListener('input', updateOrientation);
-	}
-
-	// Background type toggle
-	backgroundRadios.forEach(radio => {
-		radio.addEventListener('change', (e) => {
-			if (colorRow) {
-				colorRow.classList.toggle('disabled', radio.value !== 'color');
+			if (width === CONFIG.defaultCanvasPreset.width && height === CONFIG.defaultCanvasPreset.height) {
+				matchingPreset = btn;
 			}
 		});
-	});
 
-	// Create button
-	if (createBtn) {
-		createBtn.addEventListener('click', async () => {
-			const width = parseInt(widthInput.value);
-			const height = parseInt(heightInput.value);
-			const backgroundType = document.querySelector('input[name="canvasBackground"]:checked').value;
-			const color = backgroundType === 'color' ? colorInput.value : 'transparent';
-			
-			await this.loadBlankImage(width, height, color);
-			this.modalManager.close('newCanvasModal');
-		});
+		if (matchingPreset) {
+			matchingPreset.classList.add('active');
+		}
+
+		// Update orientation buttons based on default dimensions
+		this.updateOrientationButtons(CONFIG.defaultCanvasPreset.width, CONFIG.defaultCanvasPreset.height);
 	}
-}
 
-updateOrientationButtons(width, height) {
-	const portraitBtn = document.getElementById('orientationPortrait');
-	const landscapeBtn = document.getElementById('orientationLandscape');
-	
-	if (!portraitBtn || !landscapeBtn) return;
-	
-	// Check if square
-	const isSquare = width === height;
-	
-	// Disable buttons if square
-	portraitBtn.disabled = isSquare;
-	landscapeBtn.disabled = isSquare;
-	
-	// Remove active from both
-	portraitBtn.classList.remove('active');
-	landscapeBtn.classList.remove('active');
-	
-	// Only set active state if not square
-	if (!isSquare) {
-		if (height > width) {
-			portraitBtn.classList.add('active');
-		} else if (width > height) {
-			landscapeBtn.classList.add('active');
+
+	setupNewCanvasModalListeners() {
+		const createBtn = document.getElementById('createCanvasBtn');
+		const widthInput = document.getElementById('newCanvasWidth');
+		const heightInput = document.getElementById('newCanvasHeight');
+		const colorInput = document.getElementById('newCanvasColor');
+		const orientationPortrait = document.getElementById('orientationPortrait');
+		const orientationLandscape = document.getElementById('orientationLandscape');
+		const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
+		const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
+		const colorRow = document.getElementById('canvasColorRow');
+
+		// Preset buttons
+		presetButtons.forEach(btn => {
+			btn.addEventListener('click', () => {
+				const width = parseInt(btn.dataset.width);
+				const height = parseInt(btn.dataset.height);
+
+				if (widthInput) widthInput.value = width;
+				if (heightInput) heightInput.value = height;
+
+				presetButtons.forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+
+				this.updateOrientationButtons(width, height);
+			});
+		});
+
+		// Orientation toggle - Portrait
+		if (orientationPortrait) {
+			orientationPortrait.addEventListener('click', () => {
+				const width = parseInt(widthInput.value);
+				const height = parseInt(heightInput.value);
+
+				if (width === height) return;
+
+				if (width > height) {
+					widthInput.value = height;
+					heightInput.value = width;
+				}
+
+				this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
+			});
+		}
+
+		// Orientation toggle - Landscape
+		if (orientationLandscape) {
+			orientationLandscape.addEventListener('click', () => {
+				const width = parseInt(widthInput.value);
+				const height = parseInt(heightInput.value);
+
+				if (width === height) return;
+
+				if (height > width) {
+					widthInput.value = height;
+					heightInput.value = width;
+				}
+
+				this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
+			});
+		}
+
+		// Dimension inputs
+		if (widthInput && heightInput) {
+			const updateOrientation = () => {
+				this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
+			};
+
+			widthInput.addEventListener('input', updateOrientation);
+			heightInput.addEventListener('input', updateOrientation);
+		}
+
+		// Background type toggle
+		backgroundRadios.forEach(radio => {
+			radio.addEventListener('change', (e) => {
+				if (colorRow) {
+					colorRow.classList.toggle('disabled', radio.value !== 'color');
+				}
+			});
+		});
+
+		// Create button
+		if (createBtn) {
+			createBtn.addEventListener('click', async () => {
+				const width = parseInt(widthInput.value);
+				const height = parseInt(heightInput.value);
+				const backgroundType = document.querySelector('input[name="canvasBackground"]:checked').value;
+				const color = backgroundType === 'color' ? colorInput.value : 'transparent';
+
+				await this.loadBlankImage(width, height, color);
+				this.modalManager.close('newCanvasModal');
+			});
 		}
 	}
-}
 
-// ===== MODAL LISTENERS =====
-setupModalListeners() {
-	this.modalManager = new ModalManager();
+	updateOrientationButtons(width, height) {
+		const portraitBtn = document.getElementById('orientationPortrait');
+		const landscapeBtn = document.getElementById('orientationLandscape');
 
-	// Simple modals (just open/close)
-	this.modalManager
-		.register('shortcutsModal', {
-			openBtnId: 'shortcutsBtn',
-			closeBtnId: 'closeShortcutsModal'
-		})
-		.register('settingsModal', {
-			openBtnId: 'settingsBtn',
-			closeBtnId: 'closeSettingsModal'
-		})
-		.register('aboutModal', {
-			openBtnId: 'aboutBtn',
-			closeBtnId: 'closeAboutModal'
-		})
-		.register('guideModal', {
-			openBtnId: 'guideBtn',
-			closeBtnId: 'closeGuideModal'
-		})
-		.register('layerTypePickerModal', {
-			closeBtnId: 'closeLayerTypePickerModal'
-		})
-		.register('stickerUploadModal', {
-			closeBtnId: 'closeStickerUploadModal'
-		})
-		.register('newCanvasModal', {
+		if (!portraitBtn || !landscapeBtn) return;
+
+		// Check if square
+		const isSquare = width === height;
+
+		// Disable buttons if square
+		portraitBtn.disabled = isSquare;
+		landscapeBtn.disabled = isSquare;
+
+		// Remove active from both
+		portraitBtn.classList.remove('active');
+		landscapeBtn.classList.remove('active');
+
+		// Only set active state if not square
+		if (!isSquare) {
+			if (height > width) {
+				portraitBtn.classList.add('active');
+			} else if (width > height) {
+				landscapeBtn.classList.add('active');
+			}
+		}
+	}
+
+	// ===== MODAL LISTENERS =====
+	setupModalListeners() {
+		this.modalManager = new ModalManager();
+
+		// Simple modals (inline content)
+		this.modalManager
+			.register('shortcutsModal', {
+				openBtnId: 'shortcutsBtn',
+				closeBtnId: 'closeShortcutsModal',
+				resetScrollOnOpen: true
+			})
+			.register('settingsModal', {
+				openBtnId: 'settingsBtn',
+				closeBtnId: 'closeSettingsModal',
+				resetScrollOnOpen: true
+			});
+
+		// External content modals with utils.js initialization
+		this.modalManager
+			.register('aboutModal', {
+				openBtnId: 'aboutBtn',
+				closeBtnId: 'closeAboutModal',
+				externalContentUrl: 'modals/about.html',
+				cacheContent: true,
+				resetScrollOnOpen: true,
+				onContentLoaded: (modalBody) => {
+					// Initialize pixel-scaled images
+					initPixelScalerInContainer(modalBody);
+
+					// Initialize references (sup ↔ reference list interaction)
+					initModalReferences(modalBody, {
+						referenceListSelector: 'ol#AboutReferencesList'
+					});
+
+					// Initialize smooth scrolling for TOC and anchors
+					const modal = document.getElementById('aboutModal');
+					initModalSmoothScroll(modal);
+				}
+			})
+			.register('guideModal', {
+				openBtnId: 'guideBtn',
+				closeBtnId: 'closeGuideModal',
+				externalContentUrl: 'modals/guide.html',
+				cacheContent: true,
+				resetScrollOnOpen: true,
+				onContentLoaded: (modalBody) => {
+					// Initialize pixel-scaled images (for screenshots)
+					initPixelScalerInContainer(modalBody);
+
+					// Initialize smooth scrolling for TOC navigation
+					const modal = document.getElementById('guideModal');
+					initModalSmoothScroll(modal);
+				}
+			});
+
+		// Layer type picker modal (no open button - opened programmatically)
+		this.modalManager.register('layerTypePickerModal', {
+			closeBtnId: 'closeLayerTypePickerModal',
+			resetScrollOnOpen: false
+		});
+
+		// Sticker upload modal - ONLY uploadStickerBtn opens this
+		this.modalManager.register('stickerUploadModal', {
+			openBtnId: 'uploadStickerBtn',
+			closeBtnId: 'closeStickerUploadModal',
+			resetScrollOnOpen: false
+		});
+
+		// New canvas modal
+		this.modalManager.register('newCanvasModal', {
 			closeBtnId: 'closeNewCanvasModal',
+			resetScrollOnOpen: true,
 			onOpen: () => this.initializeNewCanvasModal()
 		});
 
-	// Setup modal-specific interactions
-	this.setupLayerTypePickerListeners();
-	this.setupStickerUploadModalListeners();
-	this.setupNewCanvasModalListeners();
-}
+		// Setup modal-specific interactions
+		this.setupLayerTypePickerListeners();
+		this.setupLayerPanelListeners();
+		this.setupQuickActionListeners();
+		this.setupStickerUploadModalListeners();
+		this.setupNewCanvasModalListeners();
+	}
 
 
 
-setupLayerTypePickerButtons() {
-    const layerTypeButtons = document.querySelectorAll('.layer-type-option');
-    layerTypeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const type = btn.dataset.layerType;
-            const layerType = type === 'sticker' ? LayerType.STICKER : LayerType.GLITTER_FILL;
-            this.layerManager.addLayer(layerType);
-            this.modalManager.close('layerTypePickerModal');
-        });
-    });
-}
-
-setupNewCanvasControls() {
-    // All the preset buttons, orientation, color picker, etc.
-    // This stays in app.js because it's app-specific
-    const createBtn = document.getElementById('createCanvasBtn');
-    createBtn?.addEventListener('click', async () => {
-        // ... your creation logic
-        this.modalManager.close('newCanvasModal');
-    });
-}
 
 
 
-setupLayerTypePickerListeners() {
-	const layerTypeButtons = document.querySelectorAll('.layer-type-option');
-	
-	// Layer type option buttons
-	layerTypeButtons.forEach(btn => {
-		btn.addEventListener('click', () => {
-			const type = btn.dataset.layerType;
-			const layerType = type === 'sticker' ? LayerType.STICKER : LayerType.GLITTER_FILL;
-			
-			if (layerType === LayerType.STICKER) {
-				this.modalManager.close('layerTypePickerModal');
-				this.modalManager.open('stickerUploadModal');
-			} else {
+
+
+
+	setupLayerTypePickerListeners() {
+		const layerTypeButtons = document.querySelectorAll('.layer-type-option');
+
+		layerTypeButtons.forEach(btn => {
+			btn.addEventListener('click', () => {
+				const type = btn.dataset.layerType;
+				const layerType = type === 'sticker' ? LayerType.STICKER : LayerType.GLITTER_FILL;
+
+				// Create new layer (sticker OR glitter)
 				this.layerManager.addLayer(layerType);
 				this.modalManager.close('layerTypePickerModal');
-			}
-		});
-	});
-}
-
-setupStickerUploadModalListeners() {
-	const dropzone = document.getElementById('stickerUploadDropzone');
-	const input = document.getElementById('stickerUploadInput');
-	
-	// Dropzone click
-	if (dropzone && input) {
-		dropzone.addEventListener('click', () => {
-			input.click();
-		});
-	}
-	
-	// File selection
-	if (input) {
-		input.addEventListener('change', async (e) => {
-			const file = e.target.files[0];
-			if (file) {
-				await this.stickerManager.handleUserUpload(file);
-				this.modalManager.close('stickerUploadModal');
-				input.value = '';
-			}
-		});
-	}
-	
-	// Drag and drop
-	if (dropzone) {
-		dropzone.addEventListener('dragover', (e) => {
-			e.preventDefault();
-			dropzone.classList.add('drag-over');
-		});
-		
-		dropzone.addEventListener('dragleave', () => {
-			dropzone.classList.remove('drag-over');
-		});
-		
-		dropzone.addEventListener('drop', async (e) => {
-			e.preventDefault();
-			dropzone.classList.remove('drag-over');
-			
-			const file = e.dataTransfer.files[0];
-			if (file) {
-				await this.stickerManager.handleUserUpload(file);
-				this.modalManager.close('stickerUploadModal');
-			}
-		});
-	}
-}
-
-setupExportPreviewModalListeners() {
-	// Note: Export preview modal handlers are setup dynamically in GifExporter
-	// when the modal is shown. No static listeners needed here.
-}
-
-
-
-
-// ===== PREVIEW LISTENERS =====
-setupPreviewListeners() {
-	const previewToggle = document.getElementById('previewToggle');
-	const transparencyToggle = document.getElementById('transparencyToggle');
-	const boundsToggle = document.getElementById('boundsToggle');
-
-	if (previewToggle) {
-		previewToggle.addEventListener('click', () => this.togglePreview());
-	}
-
-	if (transparencyToggle) {
-		transparencyToggle.addEventListener('click', () => {
-			const isActive = transparencyToggle.classList.toggle('active');
-			this.previewContainer.classList.toggle('transparent-bg', isActive);
-			
-			if (isActive) {
-				this.updateTransparencyGrid();
-			} else {
-				this.previewContainer.style.backgroundSize = '';
-				this.previewContainer.style.backgroundPosition = '';
-			}
+			});
 		});
 	}
 
-	if (boundsToggle) {
-		boundsToggle.addEventListener('click', () => {
-			const isActive = boundsToggle.classList.toggle('active');
-			this.previewContainer.classList.toggle('bounds', isActive);
-		});
-	}
+	setupStickerUploadModalListeners() {
+		// Note: Modal open/close is handled by ModalManager
+		// uploadStickerBtn opens the modal via ModalManager.register()
 
-	this.previewContainer.addEventListener('pointerdown', (e) => {
-		this.handlePreviewContainerClick(e);
-	});
-}
+		const dropzone = document.getElementById('stickerUploadDropzone');
+		const input = document.getElementById('stickerUploadInput');
 
-// ===== GLOBAL LISTENERS =====
-setupGlobalListeners() {
-	// Keyboard
-	document.addEventListener('keydown', (e) => this.handleKeyboard(e));
-	document.addEventListener('keyup', (e) => this.handleKeyUp(e));
-
-	// Viewport changes
-	window.addEventListener('viewportChanged', () => {
-		this.updateZoomUI();
-		this.updateTransparencyGrid();
-		this.updateStatusBar();
-	});
-
-	// Prevent leaving if unsaved
-	window.addEventListener('beforeunload', (e) => {
-		if ((this.originalImage || this.historyIndex > 0) && !this.isSaved) {
-			e.preventDefault();
-			e.returnValue = '';
+		// Dropzone click
+		if (dropzone && input) {
+			dropzone.addEventListener('click', () => {
+				input.click();
+			});
 		}
-	});
 
-	// Mobile detection and responsive handling
-	window.addEventListener('resize', () => {
-		const wasMobile = this.isMobile;
-		this.isMobile = window.innerWidth <= 800;
-
-		if (wasMobile !== this.isMobile && this.stickerManager) {
-			this.layerManager.layers.forEach(layer => {
-				if (layer.type === LayerType.STICKER) {
-					const element = this.stickerManager.layerElements.get(layer.id);
-					if (element) {
-						this.stickerManager.setupStickerTouchGestures(element, layer.id);
-					}
+		// File selection
+		if (input) {
+			input.addEventListener('change', async (e) => {
+				const file = e.target.files[0];
+				if (file) {
+					await this.stickerManager.handleUserUpload(file);
+					this.modalManager.close('stickerUploadModal');
+					input.value = '';
 				}
 			});
 		}
-	});
 
-	// Scroll zoom
-	this.previewContainer.addEventListener('wheel', (e) => {
-		if (this.currentTool === ToolType.ZOOM && this.originalImage) {
-			e.preventDefault();
-			if (e.deltaY < 0) {
-				this.viewport.zoomIn();
-			} else {
-				this.viewport.zoomOut();
-			}
+		// Drag and drop
+		if (dropzone) {
+			dropzone.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				dropzone.classList.add('drag-over');
+			});
+
+			dropzone.addEventListener('dragleave', () => {
+				dropzone.classList.remove('drag-over');
+			});
+
+			dropzone.addEventListener('drop', async (e) => {
+				e.preventDefault();
+				dropzone.classList.remove('drag-over');
+
+				const file = e.dataTransfer.files[0];
+				if (file) {
+					await this.stickerManager.handleUserUpload(file);
+					this.modalManager.close('stickerUploadModal');
+				}
+			});
 		}
-	}, { passive: false });
-}
+	}
 
-	
+	setupQuickActionListeners() {
+		const quickActionAddGlitter = document.getElementById('quickActionAddGlitter');
+		const quickActionAddSticker = document.getElementById('quickActionAddSticker');
+
+		if (quickActionAddGlitter) {
+			quickActionAddGlitter.addEventListener('click', () => {
+				// Create new glitter layer
+				this.layerManager.addLayer(LayerType.GLITTER_FILL);
+			});
+		}
+
+		if (quickActionAddSticker) {
+			quickActionAddSticker.addEventListener('click', () => {
+				// Create new sticker layer (NOT upload modal)
+				this.layerManager.addLayer(LayerType.STICKER);
+			});
+		}
+	}
+
+	setupLayerPanelListeners() {
+		// Add layer buttons - open layer type picker
+		const addLayerBtn = document.getElementById('addLayerBtn');
+		if (addLayerBtn) {
+			addLayerBtn.addEventListener('click', () => {
+				this.modalManager.open('layerTypePickerModal');
+			});
+		}
+
+		const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
+		if (mobileAddBtn) {
+			mobileAddBtn.addEventListener('click', () => {
+				this.modalManager.open('layerTypePickerModal');
+			});
+		}
+
+		// Bottom bar quick-add buttons - create layers directly
+		const layersBarAddGlitter = document.getElementById('layersBarAddGlitter');
+		const layersBarAddSticker = document.getElementById('layersBarAddSticker');
+
+		if (layersBarAddGlitter) {
+			layersBarAddGlitter.addEventListener('click', () => {
+				this.layerManager.addLayer(LayerType.GLITTER_FILL);
+			});
+		}
+
+		if (layersBarAddSticker) {
+			layersBarAddSticker.addEventListener('click', () => {
+				// Create new sticker layer (NOT upload modal)
+				this.layerManager.addLayer(LayerType.STICKER);
+			});
+		}
+
+		// Bottom bar action buttons
+		const layersBarGoToSelected = document.getElementById('layersBarGoToSelected');
+		const layersBarCloneSelected = document.getElementById('layersBarCloneSelected');
+		const layersBarDeleteSelected = document.getElementById('layersBarDeleteSelected');
+
+		if (layersBarGoToSelected) {
+			layersBarGoToSelected.addEventListener('click', () => {
+				const selectedLayer = this.layerManager.getActiveLayer();
+				if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
+
+				if (selectedLayer.type === LayerType.GLITTER_FILL) {
+					this.layerManager.goToGlitter(selectedLayer.id);
+				} else if (selectedLayer.type === LayerType.STICKER) {
+					this.layerManager.goToSticker(selectedLayer.id);
+				}
+			});
+		}
+
+		if (layersBarCloneSelected) {
+			layersBarCloneSelected.addEventListener('click', () => {
+				const selectedLayer = this.layerManager.getActiveLayer();
+				if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
+				this.layerManager.cloneLayer(selectedLayer.id);
+			});
+		}
+
+		if (layersBarDeleteSelected) {
+			layersBarDeleteSelected.addEventListener('click', () => {
+				const selectedLayer = this.layerManager.getActiveLayer();
+				if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
+
+				// Add delete confirmation
+				if (confirm('Delete this layer?')) {
+					this.layerManager.deleteLayer(selectedLayer.id);
+				}
+			});
+		}
+	}
+
+
+
+
+
+
+	// ===== PREVIEW LISTENERS =====
+	setupPreviewListeners() {
+		const previewToggle = document.getElementById('previewToggle');
+		const transparencyToggle = document.getElementById('transparencyToggle');
+		const boundsToggle = document.getElementById('boundsToggle');
+
+		if (previewToggle) {
+			previewToggle.addEventListener('click', () => this.togglePreview());
+		}
+
+		if (transparencyToggle) {
+			transparencyToggle.addEventListener('click', () => {
+				const isActive = transparencyToggle.classList.toggle('active');
+				this.previewContainer.classList.toggle('transparent-bg', isActive);
+
+				if (isActive) {
+					this.updateTransparencyGrid();
+				} else {
+					this.previewContainer.style.backgroundSize = '';
+					this.previewContainer.style.backgroundPosition = '';
+				}
+			});
+		}
+
+		if (boundsToggle) {
+			boundsToggle.addEventListener('click', () => {
+				const isActive = boundsToggle.classList.toggle('active');
+				this.previewContainer.classList.toggle('bounds', isActive);
+			});
+		}
+
+		this.previewContainer.addEventListener('pointerdown', (e) => {
+			this.handlePreviewContainerClick(e);
+		});
+	}
+
+	// ===== GLOBAL LISTENERS =====
+	setupGlobalListeners() {
+		// Keyboard
+		document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+		document.addEventListener('keyup', (e) => this.handleKeyUp(e));
+
+		// Viewport changes
+		window.addEventListener('viewportChanged', () => {
+			this.updateZoomUI();
+			this.updateTransparencyGrid();
+			this.updateStatusBar();
+		});
+
+		// Prevent leaving if unsaved
+		window.addEventListener('beforeunload', (e) => {
+			if ((this.originalImage || this.historyIndex > 0) && !this.isSaved) {
+				e.preventDefault();
+				e.returnValue = '';
+			}
+		});
+
+		// Mobile detection and responsive handling
+		window.addEventListener('resize', () => {
+			const wasMobile = this.isMobile;
+			this.isMobile = window.innerWidth <= 800;
+
+			if (wasMobile !== this.isMobile && this.stickerManager) {
+				this.layerManager.layers.forEach(layer => {
+					if (layer.type === LayerType.STICKER) {
+						const element = this.stickerManager.layerElements.get(layer.id);
+						if (element) {
+							this.stickerManager.setupStickerTouchGestures(element, layer.id);
+						}
+					}
+				});
+			}
+		});
+
+		// Scroll zoom
+		this.previewContainer.addEventListener('wheel', (e) => {
+			if (this.currentTool === ToolType.ZOOM && this.originalImage) {
+				e.preventDefault();
+				if (e.deltaY < 0) {
+					this.viewport.zoomIn();
+				} else {
+					this.viewport.zoomOut();
+				}
+			}
+		}, { passive: false });
+	}
+
+
 
 	updateResetButton(sliderId) {
 		const resetBtn = document.getElementById('reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1));
@@ -2075,131 +2089,131 @@ setupGlobalListeners() {
 	}
 
 
-async loadBlankImage(width, height, color = CONFIG.defaultCanvasPreset.color) {
-	const canvas = document.createElement('canvas');
-	canvas.width = width;
-	canvas.height = height;
-	const ctx = canvas.getContext('2d');
+	async loadBlankImage(width, height, color = CONFIG.defaultCanvasPreset.color) {
+		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext('2d');
 
-	// Handle transparent background
-	if (color === 'transparent') {
-		// Leave canvas transparent (don't fill)
-	} else {
-		ctx.fillStyle = color;
-		ctx.fillRect(0, 0, width, height);
-	}
-
-	const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-	const fileName = color === 'transparent' 
-		? `blank_${width}x${height}_transparent.png`
-		: `blank_${width}x${height}.png`;
-	const file = new File([blob], fileName, { type: 'image/png' });
-
-	const fakeEvent = {
-		target: {
-			files: [file]
+		// Handle transparent background
+		if (color === 'transparent') {
+			// Leave canvas transparent (don't fill)
+		} else {
+			ctx.fillStyle = color;
+			ctx.fillRect(0, 0, width, height);
 		}
-	};
 
-	await this.loadImage(fakeEvent);
-	this.updateStatus(`Created ${width}×${height} canvas`);
-}
+		const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+		const fileName = color === 'transparent'
+			? `blank_${width}x${height}_transparent.png`
+			: `blank_${width}x${height}.png`;
+		const file = new File([blob], fileName, { type: 'image/png' });
 
-setTool(tool) {
-	this.currentTool = tool;
+		const fakeEvent = {
+			target: {
+				files: [file]
+			}
+		};
 
-	// 1. Update Toolbar Buttons
-	document.querySelectorAll('.toolbar-group button').forEach(btn => {
-		btn.classList.remove('active');
-	});
+		await this.loadImage(fakeEvent);
+		this.updateStatus(`Created ${width}×${height} canvas`);
+	}
 
-	const activeBtn = document.getElementById(`${tool}Tool`);
-	if (activeBtn) activeBtn.classList.add('active');
+	setTool(tool) {
+		this.currentTool = tool;
 
-	// 2. Update Cursors
-	if (this.previewContainer) {
-		this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor', 'zoom-out-mode');
-		if (tool === ToolType.ZOOM) {
-			this.previewContainer.classList.add('zoom-cursor');
-		} else if (tool === ToolType.HAND) {
-			this.previewContainer.classList.add('hand-cursor');
+		// 1. Update Toolbar Buttons
+		document.querySelectorAll('.toolbar-group button').forEach(btn => {
+			btn.classList.remove('active');
+		});
+
+		const activeBtn = document.getElementById(`${tool}Tool`);
+		if (activeBtn) activeBtn.classList.add('active');
+
+		// 2. Update Cursors
+		if (this.previewContainer) {
+			this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor', 'zoom-out-mode');
+			if (tool === ToolType.ZOOM) {
+				this.previewContainer.classList.add('zoom-cursor');
+			} else if (tool === ToolType.HAND) {
+				this.previewContainer.classList.add('hand-cursor');
+			}
+		}
+
+		if (this.previewWrapper) {
+			this.previewWrapper.classList.remove('color-picker-mode');
+			if (tool === ToolType.COLOR_PICKER) {
+				this.previewWrapper.classList.add('color-picker-mode');
+			}
+		}
+
+		// 3. Update Context Toolbars
+		this.updateContextToolbars();
+	}
+
+
+	updateContextToolbars() {
+		const zoomControls = document.getElementById('zoomControls');
+		const panControls = document.getElementById('panControls');
+		const stickerCenterControls = document.getElementById('stickerCenterControls');
+		const colorPickerControls = document.getElementById('colorPickerControls');
+
+		// Hide all first
+		if (zoomControls) zoomControls.classList.remove('visible');
+		if (panControls) panControls.classList.remove('visible');
+		if (stickerCenterControls) stickerCenterControls.classList.remove('visible');
+		if (colorPickerControls) colorPickerControls.classList.remove('visible');
+
+		const layer = this.layerManager.getActiveLayer();
+
+		// Show appropriate toolbar based on current tool and layer state
+		if (this.currentTool === ToolType.ZOOM && zoomControls) {
+			zoomControls.classList.add('visible');
+		} else if (this.currentTool === ToolType.HAND && panControls) {
+			panControls.classList.add('visible');
+		} else if (this.currentTool === ToolType.SELECT && stickerCenterControls) {
+			if (layer && layer.type === LayerType.STICKER) {
+				stickerCenterControls.classList.add('visible');
+			}
+		} else if (this.currentTool === ToolType.COLOR_PICKER && colorPickerControls) {
+			if (layer && layer.type === LayerType.GLITTER_FILL && layer.selections && layer.selections.length > 0) {
+				this.updateColorPickerControls();
+				colorPickerControls.classList.add('visible');
+			}
 		}
 	}
 
-	if (this.previewWrapper) {
-		this.previewWrapper.classList.remove('color-picker-mode');
-		if (tool === ToolType.COLOR_PICKER) {
-			this.previewWrapper.classList.add('color-picker-mode');
+	updateColorPickerControls() {
+		console.log(`Updating color picker controls`);
+		const layer = this.layerManager.getActiveLayer();
+		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
+
+		console.log(`Updating color picker controls for layer ${layer.id}`);
+
+		const contextThreshold = document.getElementById('contextThreshold');
+		const contextThresholdValue = document.getElementById('contextThresholdValue');
+		const contextMultiSelect = document.getElementById('contextMultiSelect');
+		const contextContiguous = document.getElementById('contextContiguous');
+		const contextSelectionCount = document.getElementById('contextSelectionCount');
+
+		if (contextThreshold && contextThresholdValue) {
+			contextThreshold.value = layer.settings.threshold;
+			contextThresholdValue.textContent = layer.settings.threshold;
+		}
+
+		if (contextMultiSelect) {
+			contextMultiSelect.checked = layer.settings.multiSelect;
+		}
+
+		if (contextContiguous) {
+			contextContiguous.checked = layer.settings.contiguous;
+		}
+
+		if (contextSelectionCount) {
+			const count = layer.selections ? layer.selections.length : 0;
+			contextSelectionCount.textContent = count > 1 ? count : '';
 		}
 	}
-
-	// 3. Update Context Toolbars
-	this.updateContextToolbars();
-}
-
-
-updateContextToolbars() {
-	const zoomControls = document.getElementById('zoomControls');
-	const panControls = document.getElementById('panControls');
-	const stickerCenterControls = document.getElementById('stickerCenterControls');
-	const colorPickerControls = document.getElementById('colorPickerControls');
-
-	// Hide all first
-	if (zoomControls) zoomControls.classList.remove('visible');
-	if (panControls) panControls.classList.remove('visible');
-	if (stickerCenterControls) stickerCenterControls.classList.remove('visible');
-	if (colorPickerControls) colorPickerControls.classList.remove('visible');
-
-	const layer = this.layerManager.getActiveLayer();
-	
-	// Show appropriate toolbar based on current tool and layer state
-	if (this.currentTool === ToolType.ZOOM && zoomControls) {
-		zoomControls.classList.add('visible');
-	} else if (this.currentTool === ToolType.HAND && panControls) {
-		panControls.classList.add('visible');
-	} else if (this.currentTool === ToolType.SELECT && stickerCenterControls) {
-		if (layer && layer.type === LayerType.STICKER) {
-			stickerCenterControls.classList.add('visible');
-		}
-	} else if (this.currentTool === ToolType.COLOR_PICKER && colorPickerControls) {
-		if (layer && layer.type === LayerType.GLITTER_FILL && layer.selections && layer.selections.length > 0) {
-			this.updateColorPickerControls();
-			colorPickerControls.classList.add('visible');
-		}
-	}
-}
-
-updateColorPickerControls() {
-	console.log(`Updating color picker controls`);
-	const layer = this.layerManager.getActiveLayer();
-	if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
-
-	console.log(`Updating color picker controls for layer ${layer.id}`);
-	
-	const contextThreshold = document.getElementById('contextThreshold');
-	const contextThresholdValue = document.getElementById('contextThresholdValue');
-	const contextMultiSelect = document.getElementById('contextMultiSelect');
-	const contextContiguous = document.getElementById('contextContiguous');
-	const contextSelectionCount = document.getElementById('contextSelectionCount');
-	
-	if (contextThreshold && contextThresholdValue) {
-		contextThreshold.value = layer.settings.threshold;
-		contextThresholdValue.textContent = layer.settings.threshold;
-	}
-	
-	if (contextMultiSelect) {
-		contextMultiSelect.checked = layer.settings.multiSelect;
-	}
-	
-	if (contextContiguous) {
-		contextContiguous.checked = layer.settings.contiguous;
-	}
-	
-	if (contextSelectionCount) {
-		const count = layer.selections ? layer.selections.length : 0;
-		contextSelectionCount.textContent = count > 1 ? count : '';
-	}
-}
 
 
 	handleKeyUp(e) {
@@ -2230,15 +2244,15 @@ updateColorPickerControls() {
 			this.previewContainer.classList.add('zoom-out-mode');
 		}
 
-if (e.key === 'Escape') {
-	// Let ModalManager handle modal closing
-	if (this.modalManager.closeTopModal()) {
-		return; // A modal was closed, we're done
-	}
-	
-	// No modal was open, switch to select tool
-	this.setTool(ToolType.SELECT);
-}
+		if (e.key === 'Escape') {
+			// Let ModalManager handle modal closing
+			if (this.modalManager.closeTopModal()) {
+				return; // A modal was closed, we're done
+			}
+
+			// No modal was open, switch to select tool
+			this.setTool(ToolType.SELECT);
+		}
 
 
 		if (e.key === 'v' || e.key === 'V') this.setTool(ToolType.SELECT);
@@ -2726,17 +2740,17 @@ if (e.key === 'Escape') {
 	}
 
 
-handlePreviewContainerClick(e) {
-	if (e.pointerType === 'mouse' && e.button !== 0) return;
+	handlePreviewContainerClick(e) {
+		if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-	const hitSticker = e.target.closest('.sticker-element');
-	
-	// Check if click is within the canvas area using viewport coordinates
-	const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
-	const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
-	
-	// We treat stickers and the canvas as the "Image Area"
-	const hitImageArea = hitCanvas || hitSticker;
+		const hitSticker = e.target.closest('.sticker-element');
+
+		// Check if click is within the canvas area using viewport coordinates
+		const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
+		const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
+
+		// We treat stickers and the canvas as the "Image Area"
+		const hitImageArea = hitCanvas || hitSticker;
 
 		// Gatekeeper: If they clicked a button/sidebar, stop here.
 		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;

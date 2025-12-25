@@ -2488,6 +2488,9 @@ input[type="range"] {
 			/* Modern browsers with dynamic viewport */
 			max-height: 70dvh;
 
+
+			
+
 			>.modal-hero-image {
 				margin-bottom: 20px;
 				display: flex;
@@ -2521,6 +2524,91 @@ input[type="range"] {
 			}
 
 
+.toc {
+	background: var(--color-bg-secondary);
+	border: 1px solid var(--color-border);
+	padding: var(--spacing-lg);
+	margin: var(--spacing-xl) 0;
+	border-radius: var(--radius-sm);
+	display: inline-flex;
+	flex-direction: column;
+
+
+	>h3 {
+		margin: 0 0 var(--spacing-md) 0;
+		font-size: var(--font-size-md);
+	}
+
+
+	>ol {
+		list-style: none;
+		margin: 0;
+		padding-left: 0;
+		counter-reset: item;
+
+		>li {
+			counter-increment: item;
+			display: grid;
+			grid-template-columns: auto 1fr;
+			column-gap: 0.5em;
+			align-items: start;
+			padding: 1px;
+
+			a {
+				color: var(--color-text-secondary);
+				text-decoration: none;
+
+				&:hover {
+					color: var(--color-accent);
+					text-decoration: underline;
+				}
+			}
+
+			&::before {
+				content: counter(item) ".";
+				grid-column: 1;
+				align-self: start;
+			}
+
+			/* main content (link) */
+			> :not(ol) {
+				grid-column: 2;
+			}
+
+			/* nested list should also align under content */
+			>ol {
+				grid-column: 2;
+				margin-top: 0.25em;
+				margin-left: 0;
+				counter-reset: subitem;
+
+				>li {
+					counter-increment: subitem;
+					display: grid;
+					grid-template-columns: auto 1fr;
+					column-gap: 0.5em;
+					align-items: start;
+					padding: 1px;
+
+					&::before {
+						content: counter(item) "." counter(subitem);
+						grid-column: 1;
+						align-self: start;
+					}
+
+					> :not(ol) {
+						grid-column: 2;
+					}
+				}
+			}
+		}
+	}
+
+}
+
+
+
+
 
 
 		}
@@ -2542,6 +2630,34 @@ input[type="range"] {
 
 
 }
+
+
+
+
+// Modal loading states
+.modal-loading,
+.modal-error {
+	padding: var(--spacing-xl);
+	text-align: center;
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-lg);
+}
+
+.modal-error {
+	color: var(--color-danger);
+}
+
+// Highlight animation (for reference scrolling)
+@keyframes highlight {
+	0%, 100% { background-color: transparent; }
+	50% { background-color: rgba(0, 102, 204, 0.2); }
+}
+
+.highlight {
+	animation: highlight 2s ease;
+}
+
+
 
 
 /* ===== NEW CANVAS MODAL ===== */
@@ -3197,6 +3313,25 @@ input[type="range"] {
 	}
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ===== ABOUT MODAL ===== */
 #aboutModal {
 
@@ -3220,86 +3355,6 @@ input[type="range"] {
 
 
 
-
-	.toc {
-		background: var(--color-bg-secondary);
-		border: 1px solid var(--color-border);
-		padding: var(--spacing-lg);
-		margin: var(--spacing-xl) 0;
-		border-radius: var(--radius-sm);
-
-
-		>h3 {
-			margin: 0 0 var(--spacing-md) 0;
-			font-size: var(--font-size-md);
-		}
-
-
-		>ol {
-			list-style: none;
-			margin: 0;
-			padding-left: 0;
-			counter-reset: item;
-
-			>li {
-				counter-increment: item;
-				display: grid;
-				grid-template-columns: auto 1fr;
-				column-gap: 0.5em;
-				align-items: start;
-				padding: 1px;
-
-				a {
-					color: var(--color-text-secondary);
-					text-decoration: none;
-
-					&:hover {
-						color: var(--color-accent);
-						text-decoration: underline;
-					}
-				}
-
-				&::before {
-					content: counter(item) ".";
-					grid-column: 1;
-					align-self: start;
-				}
-
-				/* main content (link) */
-				> :not(ol) {
-					grid-column: 2;
-				}
-
-				/* nested list should also align under content */
-				>ol {
-					grid-column: 2;
-					margin-top: 0.25em;
-					margin-left: 0;
-					counter-reset: subitem;
-
-					>li {
-						counter-increment: subitem;
-						display: grid;
-						grid-template-columns: auto 1fr;
-						column-gap: 0.5em;
-						align-items: start;
-						padding: 1px;
-
-						&::before {
-							content: counter(item) "." counter(subitem);
-							grid-column: 1;
-							align-self: start;
-						}
-
-						> :not(ol) {
-							grid-column: 2;
-						}
-					}
-				}
-			}
-		}
-
-	}
 
 
 
@@ -3659,106 +3714,106 @@ input[type="range"] {
 
 }
 
-	/* SETTINGS MODAL SPECIFIC */
-	.settings-group {
-		margin-bottom: var(--spacing-xl);
+/* SETTINGS MODAL SPECIFIC */
+.settings-group {
+	margin-bottom: var(--spacing-xl);
 
-		&:last-child {
-			margin-bottom: 0;
+	&:last-child {
+		margin-bottom: 0;
+	}
+
+	>.settings-group-title {
+		font-size: var(--font-size-md);
+		font-weight: 600;
+		color: var(--color-text-primary);
+		margin-bottom: var(--spacing-md);
+		padding-bottom: var(--spacing-sm);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	>.settings-row+.settings-group-title {
+		margin-top: var(--spacing-xl);
+	}
+
+	>.settings-row {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		
+
+		+ .settings-row {
+			margin-top: var(--spacing-lg);
 		}
 
-		>.settings-group-title {
-			font-size: var(--font-size-md);
-			font-weight: 600;
-			color: var(--color-text-primary);
-			margin-bottom: var(--spacing-md);
-			padding-bottom: var(--spacing-sm);
-			border-bottom: 1px solid var(--color-border);
+		&.disabled {
+			opacity: var(--disabled-opacity);
+			pointer-events: none;
 		}
 
-		>.settings-row+.settings-group-title {
-			margin-top: var(--spacing-xl);
-		}
 
-		>.settings-row {
+
+		>.settings-row-header {
 			display: flex;
-			flex-direction: column;
-			gap: 6px;
-			
+			justify-content: space-between;
+			align-items: center;
+			gap: var(--spacing-md);
 
-			+ .settings-row {
-				margin-top: var(--spacing-lg);
+			>.settings-row-label-main {
+				font-size: var(--font-size-md);
+				color: var(--color-text-secondary);
+				font-weight: 500;
 			}
 
-			&.disabled {
-				opacity: var(--disabled-opacity);
-				pointer-events: none;
-			}
+			>.settings-row-control {
+				min-width: 120px;
+				text-align: right;
 
+				>select {
+					width: 100%;
+					padding: var(--spacing-sm) var(--spacing-md);
+					background: var(--color-bg-secondary);
+					border: 1px solid var(--color-border);
+					border-radius: var(--radius-sm);
+					color: var(--color-text-primary);
+					@include text-sm;
+					cursor: pointer;
 
-
-			>.settings-row-header {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				gap: var(--spacing-md);
-
-				>.settings-row-label-main {
-					font-size: var(--font-size-md);
-					color: var(--color-text-secondary);
-					font-weight: 500;
+					&:focus {
+						outline: none;
+						border-color: var(--color-accent);
+					}
 				}
 
-				>.settings-row-control {
-					min-width: 120px;
-					text-align: right;
+				>input[type="color"] {
+					width: 50px;
+					height: 28px;
+					border: 1px solid var(--color-border);
+					border-radius: var(--radius-sm);
+					cursor: pointer;
+					background: transparent;
 
-					>select {
-						width: 100%;
-						padding: var(--spacing-sm) var(--spacing-md);
-						background: var(--color-bg-secondary);
-						border: 1px solid var(--color-border);
-						border-radius: var(--radius-sm);
-						color: var(--color-text-primary);
-						@include text-sm;
-						cursor: pointer;
-
-						&:focus {
-							outline: none;
-							border-color: var(--color-accent);
-						}
+					&::-webkit-color-swatch-wrapper {
+						padding: 2px;
 					}
 
-					>input[type="color"] {
-						width: 50px;
-						height: 28px;
-						border: 1px solid var(--color-border);
-						border-radius: var(--radius-sm);
-						cursor: pointer;
-						background: transparent;
-
-						&::-webkit-color-swatch-wrapper {
-							padding: 2px;
-						}
-
-						&::-webkit-color-swatch {
-							border: none;
-							border-radius: 3px;
-						}
+					&::-webkit-color-swatch {
+						border: none;
+						border-radius: 3px;
 					}
 				}
 			}
+		}
 
-			>.settings-row-label-desc {
-				font-size: var(--font-size-base);
-				color: var(--color-text-tertiary);
-				width: 50%;
-				min-width: 300px;
-				max-width: 50%;
-				padding-left: 0;
-			}
+		>.settings-row-label-desc {
+			font-size: var(--font-size-base);
+			color: var(--color-text-tertiary);
+			width: 50%;
+			min-width: 300px;
+			max-width: 50%;
+			padding-left: 0;
 		}
 	}
+}
 
 /* ===== STICKER UPLOAD MODAL ===== */
 #stickerUploadModal {

@@ -2221,6 +2221,75 @@ input[type=range]::-moz-range-thumb {
 .modal-overlay > .modal-content > .modal-body ul {
   margin-left: 1.5em;
 }
+.modal-overlay > .modal-content > .modal-body .toc {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-lg);
+  margin: var(--spacing-xl) 0;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  flex-direction: column;
+}
+.modal-overlay > .modal-content > .modal-body .toc > h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-md);
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  counter-reset: item;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li {
+  counter-increment: item;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  -moz-column-gap: 0.5em;
+       column-gap: 0.5em;
+  align-items: start;
+  padding: 1px;
+  /* main content (link) */
+  /* nested list should also align under content */
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li a:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li::before {
+  content: counter(item) ".";
+  grid-column: 1;
+  align-self: start;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > :not(ol) {
+  grid-column: 2;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol {
+  grid-column: 2;
+  margin-top: 0.25em;
+  margin-left: 0;
+  counter-reset: subitem;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li {
+  counter-increment: subitem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  -moz-column-gap: 0.5em;
+       column-gap: 0.5em;
+  align-items: start;
+  padding: 1px;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li::before {
+  content: counter(item) "." counter(subitem);
+  grid-column: 1;
+  align-self: start;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li > ol > li > :not(ol) {
+  grid-column: 2;
+}
 .modal-overlay > .modal-content > .modal-footer {
   padding: var(--spacing-lg);
   border-top: 1px solid var(--color-border);
@@ -2228,6 +2297,30 @@ input[type=range]::-moz-range-thumb {
   align-items: center;
   justify-content: center;
   gap: var(--spacing-md);
+}
+
+.modal-loading,
+.modal-error {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.modal-error {
+  color: var(--color-danger);
+}
+
+@keyframes highlight {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(0, 102, 204, 0.2);
+  }
+}
+.highlight {
+  animation: highlight 2s ease;
 }
 
 /* ===== NEW CANVAS MODAL ===== */
@@ -2667,73 +2760,6 @@ input[type=range]::-moz-range-thumb {
   display: block;
   margin: 0 auto;
   text-align: center;
-}
-#aboutModal .toc {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  padding: var(--spacing-lg);
-  margin: var(--spacing-xl) 0;
-  border-radius: var(--radius-sm);
-}
-#aboutModal .toc > h3 {
-  margin: 0 0 var(--spacing-md) 0;
-  font-size: var(--font-size-md);
-}
-#aboutModal .toc > ol {
-  list-style: none;
-  margin: 0;
-  padding-left: 0;
-  counter-reset: item;
-}
-#aboutModal .toc > ol > li {
-  counter-increment: item;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  -moz-column-gap: 0.5em;
-       column-gap: 0.5em;
-  align-items: start;
-  padding: 1px;
-  /* main content (link) */
-  /* nested list should also align under content */
-}
-#aboutModal .toc > ol > li a {
-  color: var(--color-text-secondary);
-  text-decoration: none;
-}
-#aboutModal .toc > ol > li a:hover {
-  color: var(--color-accent);
-  text-decoration: underline;
-}
-#aboutModal .toc > ol > li::before {
-  content: counter(item) ".";
-  grid-column: 1;
-  align-self: start;
-}
-#aboutModal .toc > ol > li > :not(ol) {
-  grid-column: 2;
-}
-#aboutModal .toc > ol > li > ol {
-  grid-column: 2;
-  margin-top: 0.25em;
-  margin-left: 0;
-  counter-reset: subitem;
-}
-#aboutModal .toc > ol > li > ol > li {
-  counter-increment: subitem;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  -moz-column-gap: 0.5em;
-       column-gap: 0.5em;
-  align-items: start;
-  padding: 1px;
-}
-#aboutModal .toc > ol > li > ol > li::before {
-  content: counter(item) "." counter(subitem);
-  grid-column: 1;
-  align-self: start;
-}
-#aboutModal .toc > ol > li > ol > li > :not(ol) {
-  grid-column: 2;
 }
 #aboutModal .figure-wrapper {
   display: flex;

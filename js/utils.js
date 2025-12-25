@@ -1,52 +1,23 @@
-const initPixelScaler = () => {
-    const images = document.querySelectorAll('img[data-pixel-scale]');
+// ============================================
+// MODAL UTILITIES
+// ============================================
 
-    const scaleImages = () => {
-        images.forEach(img => {
-            // Ensure image is loaded before calculating
-            if (!img.complete || img.naturalWidth === 0) {
-                img.onload = scaleImages;
-                return;
-            }
-
-            const scale = Number(img.dataset.pixelScale) || 1;
-            const targetWidth = img.naturalWidth * scale;
-            
-            // Set the "ideal" width. 
-            // The CSS max-width: 100% will automatically shrink it 
-            // if the parent is smaller than this value.
-            img.style.width = `${targetWidth}px`;
-        });
-    };
-
-    // Debounce function: limits how often the scaler runs
-    const debounce = (func, wait) => {
-        let timeout;
-        return (...args) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    };
-
-    // Initial Run
-    scaleImages();
-
-    // Responsive Listeners
-    window.addEventListener('resize', debounce(scaleImages, 150));
-};
-
-// Run on DOM ready
-document.addEventListener('DOMContentLoaded', initPixelScaler);
-
-
-
-
-// Combined Reference Highlighting and Smooth Scroll for Modal
-document.addEventListener('DOMContentLoaded', () => {
-	const modal = document.querySelector('#aboutModal');
-	if (!modal) return;
-	const modalBody = modal.querySelector('.modal-body');
+/**
+ * Initialize reference highlighting and smooth scrolling for a modal
+ * Call this after loading modal content
+ * 
+ * @param {HTMLElement} modalBody - The .modal-body element
+ * @param {Object} options - Configuration
+ * @param {string} options.referenceListSelector - Selector for reference list (default: 'ol')
+ * @param {number} options.highlightDuration - How long to highlight (default: 2000ms)
+ */
+const initModalReferences = (modalBody, options = {}) => {
 	if (!modalBody) return;
+
+	const config = {
+		referenceListSelector: options.referenceListSelector || 'ol',
+		highlightDuration: options.highlightDuration || 2000
+	};
 
 	// Utility: Remove highlights
 	const clearHighlights = () => {
@@ -77,12 +48,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			clearHighlights();
 			targetRef.classList.add('highlight');
 			scrollToElement(targetRef, 'center');
-			setTimeout(() => targetRef.classList.remove('highlight'), 2000);
+			setTimeout(() => targetRef.classList.remove('highlight'), config.highlightDuration);
 		});
 	});
 
 	// --- Reference List Highlighting ---
-	const refList = modalBody.querySelector('ol#AboutReferencesList');
+	const refList = modalBody.querySelector(config.referenceListSelector);
 	if (refList) {
 		refList.querySelectorAll('li').forEach((item, index) => {
 			const refNum = index + 1;
@@ -99,14 +70,29 @@ document.addEventListener('DOMContentLoaded', () => {
 				clearHighlights();
 				targetSups.forEach(sup => sup.classList.add('highlight'));
 				scrollToElement(targetSups[0], 'center');
-				setTimeout(() => targetSups.forEach(sup => sup.classList.remove('highlight')), 2000);
+				setTimeout(() => targetSups.forEach(sup => sup.classList.remove('highlight')), config.highlightDuration);
 			});
 		});
 	}
+};
 
-	// --- Smooth Scroll for Other Anchors ---
+/**
+ * Initialize smooth scrolling for all anchor links in a modal
+ * 
+ * @param {HTMLElement} modal - The modal element
+ */
+const initModalSmoothScroll = (modal) => {
+	if (!modal) return;
+
+	// Utility: Scroll element into view
+	const scrollToElement = (el, block = 'start') => {
+		el.scrollIntoView({ behavior: 'smooth', block, inline: 'nearest' });
+	};
+
+	// Handle all anchor links
 	modal.querySelectorAll('a[href^="#"]').forEach(link => {
-		if (link.getAttribute('href').match(/^#ref-/)) return; // Skip reference links
+		// Skip reference links (handled by initModalReferences)
+		if (link.getAttribute('href').match(/^#ref-/)) return;
 
 		link.addEventListener('click', e => {
 			const targetId = link.getAttribute('href').slice(1);
@@ -117,11 +103,81 @@ document.addEventListener('DOMContentLoaded', () => {
 			scrollToElement(targetEl, 'start');
 		});
 	});
-});
+};
 
+/**
+ * Initialize pixel-scaled images in a container
+ * 
+ * @param {HTMLElement} container - Container to search for images (default: document)
+ */
+const initPixelScalerInContainer = (container = document) => {
+	const images = container.querySelectorAll('img[data-pixel-scale]');
+	if (images.length === 0) return;
 
+	const scaleImages = () => {
+		images.forEach(img => {
+			// Ensure image is loaded before calculating
+			if (!img.complete || img.naturalWidth === 0) {
+				img.onload = scaleImages;
+				return;
+			}
 
+			const scale = Number(img.dataset.pixelScale) || 1;
+			const targetWidth = img.naturalWidth * scale;
+			
+			// Set the "ideal" width. 
+			// The CSS max-width: 100% will automatically shrink it 
+			// if the parent is smaller than this value.
+			img.style.width = `${targetWidth}px`;
+		});
+	};
 
+	// Initial Run
+	scaleImages();
+};
+
+// ============================================
+// PIXEL SCALER (Global initialization)
+// ============================================
+const initPixelScaler = () => {
+	const images = document.querySelectorAll('img[data-pixel-scale]');
+
+	const scaleImages = () => {
+		images.forEach(img => {
+			// Ensure image is loaded before calculating
+			if (!img.complete || img.naturalWidth === 0) {
+				img.onload = scaleImages;
+				return;
+			}
+
+			const scale = Number(img.dataset.pixelScale) || 1;
+			const targetWidth = img.naturalWidth * scale;
+			
+			// Set the "ideal" width. 
+			// The CSS max-width: 100% will automatically shrink it 
+			// if the parent is smaller than this value.
+			img.style.width = `${targetWidth}px`;
+		});
+	};
+
+	// Debounce function: limits how often the scaler runs
+	const debounce = (func, wait) => {
+		let timeout;
+		return (...args) => {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => func.apply(this, args), wait);
+		};
+	};
+
+	// Initial Run
+	scaleImages();
+
+	// Responsive Listeners
+	window.addEventListener('resize', debounce(scaleImages, 150));
+};
+
+// Run on DOM ready
+document.addEventListener('DOMContentLoaded', initPixelScaler);
 
 
 // ============================================
@@ -333,25 +389,18 @@ class TooltipManager {
 
 	clampToViewport(coords, tooltipRect) {
 		const padding = this.config.viewportPadding;
-
-		// Clamp Horizontal
-		const maxLeft = window.innerWidth - tooltipRect.width - padding;
-		coords.left = Math.max(padding, Math.min(coords.left, maxLeft));
-
-		// Clamp Vertical
-		const maxTop = window.innerHeight - tooltipRect.height - padding;
-		coords.top = Math.max(padding, Math.min(coords.top, maxTop));
-
-		return coords;
+		return {
+			left: Math.max(padding, Math.min(coords.left, window.innerWidth - tooltipRect.width - padding)),
+			top: Math.max(padding, Math.min(coords.top, window.innerHeight - tooltipRect.height - padding))
+		};
 	}
 
-	// --- END POSITIONING LOGIC ---
-
 	hide(element) {
-		if (element._tooltip) {
-			element._tooltip.remove();
-			element._tooltip = null;
-			if (this.activeElement === element) {
+		const tooltip = element._tooltip;
+		if (tooltip) {
+			tooltip.remove();
+			delete element._tooltip;
+			if (this.activeTooltip === tooltip) {
 				this.activeTooltip = null;
 				this.activeElement = null;
 			}
@@ -359,39 +408,35 @@ class TooltipManager {
 	}
 
 	dismissAll() {
-		document.querySelectorAll('.tooltip').forEach(t => t.remove());
-		document.querySelectorAll('[data-tooltip]').forEach(el => el._tooltip = null);
-		this.activeTooltip = null;
-		this.activeElement = null;
+		document.querySelectorAll('[data-tooltip]').forEach(el => {
+			if (el._tooltip) this.hide(el);
+		});
 	}
 
-	handleMobileClick(e, element) {
-		e.preventDefault();
-		e.stopPropagation();
-		element._tooltip ? this.hide(element) : this.show(element);
+	handleScroll() {
+		this.dismissAll();
 	}
 
-	handleScroll() { this.dismissAll(); }
-	handleResize() { this.dismissAll(); }
-
-	handleOutsideClick(e) {
-		if (!e.target.closest('[data-tooltip], .tooltip')) {
-			this.dismissAll();
+	handleResize() {
+		if (this.activeTooltip && this.activeElement) {
+			this.position(this.activeTooltip, this.activeElement);
 		}
 	}
 
-	destroy() {
-		this.dismissAll();
-		this.scrollContainers.forEach(container => {
-			container.removeEventListener('scroll', this.handleScroll);
-		});
-		this.scrollContainers.clear();
-		window.removeEventListener('scroll', this.handleScroll);
-		window.removeEventListener('resize', this.handleResize);
-		document.removeEventListener('click', this.handleOutsideClick);
+	handleMobileClick(e, element) {
+		if (element._tooltip) {
+			this.hide(element);
+		} else {
+			this.show(element);
+		}
 	}
 
-	refresh() {
-		this.attachTooltipListeners();
+	handleOutsideClick(e) {
+		if (this.activeTooltip && !this.activeElement.contains(e.target)) {
+			this.dismissAll();
+		}
 	}
 }
+
+// Global instance
+const tooltipManager = new TooltipManager();
