@@ -8,7 +8,7 @@ const CONFIG = {
 	maxImageWidth: 800,
 	maxImageHeight: 800,
 	maxFileSizeMB: 10,
-	blankImageDefaultColor: '#ffffff',
+	defaultCanvasPreset: { width: 400, height: 400, color: '#ffffff' },
 
 	// selection
 	defaultThreshold: 50,
@@ -1625,13 +1625,16 @@ setupImageListeners() {
 	const imageClearBtn = document.getElementById('imageClearBtn');
 
 	// New Canvas button
-	const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
-	if (openNewCanvasBtn) {
-		openNewCanvasBtn.addEventListener('click', () => {
-			const modal = document.getElementById('newCanvasModal');
-			if (modal) modal.classList.add('visible');
-		});
-	}
+const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
+if (openNewCanvasBtn) {
+	openNewCanvasBtn.addEventListener('click', () => {
+		const modal = document.getElementById('newCanvasModal');
+		if (modal) {
+			modal.classList.add('visible');
+			this.initializeNewCanvasModal(); // <-- ADD THIS LINE
+		}
+	});
+}
 
 	if (imageUpload) {
 		imageUpload.addEventListener('change', (e) => this.loadImage(e));
@@ -1671,6 +1674,46 @@ setupImageListeners() {
 		});
 	}
 }
+
+initializeNewCanvasModal() {
+	const widthInput = document.getElementById('newCanvasWidth');
+	const heightInput = document.getElementById('newCanvasHeight');
+	const colorInput = document.getElementById('newCanvasColor');
+	const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
+	const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
+	const colorRow = document.getElementById('canvasColorRow');
+	
+	// Reset to defaults
+	if (widthInput) widthInput.value = CONFIG.defaultCanvasPreset.width;
+	if (heightInput) heightInput.value = CONFIG.defaultCanvasPreset.height;
+	if (colorInput) colorInput.value = CONFIG.defaultCanvasPreset.color;
+	
+	// Reset background to "Color" option
+	const colorRadio = document.querySelector('input[name="canvasBackground"][value="color"]');
+	if (colorRadio) colorRadio.checked = true;
+	
+	// Enable color row since we default to color background
+	if (colorRow) colorRow.classList.remove('disabled');
+	
+	// Find and activate matching preset
+	let matchingPreset = null;
+	presetButtons.forEach(btn => {
+		btn.classList.remove('active');
+		const width = parseInt(btn.dataset.width);
+		const height = parseInt(btn.dataset.height);
+		if (width === CONFIG.defaultCanvasPreset.width && height === CONFIG.defaultCanvasPreset.height) {
+			matchingPreset = btn;
+		}
+	});
+	
+	if (matchingPreset) {
+		matchingPreset.classList.add('active');
+	}
+	
+	// Update orientation buttons based on default dimensions
+	this.updateOrientationButtons(CONFIG.defaultCanvasPreset.width, CONFIG.defaultCanvasPreset.height);
+}
+
 
 setupNewCanvasModalListeners() {
 	const modal = document.getElementById('newCanvasModal');
@@ -2182,7 +2225,7 @@ setupGlobalListeners() {
 	}
 
 
-async loadBlankImage(width, height, color = CONFIG.blankImageDefaultColor) {
+async loadBlankImage(width, height, color = CONFIG.defaultCanvasPreset.color) {
 	const canvas = document.createElement('canvas');
 	canvas.width = width;
 	canvas.height = height;

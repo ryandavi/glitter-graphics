@@ -278,7 +278,6 @@ input[type=number] {
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
-  text-align: right;
 }
 textarea:focus,
 input[type=text]:focus,
@@ -3011,14 +3010,13 @@ input[type=range]::-moz-range-thumb {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: var(--spacing-lg);
+}
+.settings-group > .settings-row + .settings-row {
+  margin-top: var(--spacing-lg);
 }
 .settings-group > .settings-row.disabled {
   opacity: var(--disabled-opacity);
   pointer-events: none;
-}
-.settings-group > .settings-row:last-child {
-  margin-bottom: 0;
 }
 .settings-group > .settings-row > .settings-row-header {
   display: flex;
