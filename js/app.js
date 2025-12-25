@@ -2743,6 +2743,11 @@ class GlitterEditor {
 	handlePreviewContainerClick(e) {
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
 
+	if (e.target.closest('[class*="-controls"]')) {
+		return;
+	}
+
+
 		const hitSticker = e.target.closest('.sticker-element');
 
 		// Check if click is within the canvas area using viewport coordinates
