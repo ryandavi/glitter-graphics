@@ -185,81 +185,81 @@ class LayerManager {
 
 	// ===== LAYER SELECTION =====
 
-updateSelectionHighlight(layerId) {
-	// Clear ALL previous selection highlights
-	const previewContainer = this.editor.previewCanvas?.parentElement;
-	if (previewContainer) {
-		previewContainer.querySelectorAll('.selected').forEach(el => {
-			el.classList.remove('selected');
-		});
-	}
-
-	// Apply selection highlight to the specified layer
-	const layer = this.layers.find(l => l.id === layerId);
-	if (!layer) return;
-
-	if (layer.type === LayerType.BASE_IMAGE && this.editor.previewCanvas) {
-		this.editor.previewCanvas.classList.add('selected');
-	} else if (layer.type === LayerType.STICKER) {
-		const element = this.editor.stickerManager.layerElements.get(layer.id);
-		if (element) element.classList.add('selected');
-	} else if (layer.type === LayerType.GLITTER_FILL) {
-		const element = this.editor.glitterManager.layerElements.get(layer.id);
-		if (element) element.classList.add('selected');
-	}
-}
-
-
-setActiveLayer(layerId) {
-	this.activeLayerId = layerId;
-	this.renderLayersList();
-
-	const layer = this.layers.find(l => l.id === layerId);
-
-	// Update context toolbars
-	this.editor.updateContextToolbars();
-
-	// Update selection highlight
-	this.updateSelectionHighlight(layerId);
-
-	// Update Side Panel UI
-	this.editor.updateSidePanelUI(layer);
-
-	// Load settings based on layer type
-	if (layer) {
-		if (layer.type === LayerType.STICKER) {
-			this.editor.setTool(ToolType.SELECT);
-			this.editor.hideStickerSettingsEmptyState();
-			this.editor.loadStickerSettings(layer);
-			this.editor.updateStickerSelection();
-		} else if (layer.type === LayerType.GLITTER_FILL) {
-			// Auto-switch to color picker if layer has no selections yet
-			if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
-				this.editor.setTool(ToolType.COLOR_PICKER);
-			} else {
-				this.editor.setTool(ToolType.SELECT);
-			}
-			
-			this.editor.updateGlitterSelection();
-			this.editor.hideLayerSettingsEmptyState();
-			this.editor.hideGlitterSettingsEmptyState();
-			this.editor.loadActiveLayerSettings();
+	updateSelectionHighlight(layerId) {
+		// Clear ALL previous selection highlights
+		const previewContainer = this.editor.previewCanvas?.parentElement;
+		if (previewContainer) {
+			previewContainer.querySelectorAll('.selected').forEach(el => {
+				el.classList.remove('selected');
+			});
 		}
-	} else {
-		// No layer selected: Ensure empty states are shown
-		this.editor.showLayerSettingsEmptyState();
-		this.editor.showGlitterSettingsEmptyState();
-		this.editor.showStickerSettingsEmptyState();
+
+		// Apply selection highlight to the specified layer
+		const layer = this.layers.find(l => l.id === layerId);
+		if (!layer) return;
+
+		if (layer.type === LayerType.BASE_IMAGE && this.editor.previewCanvas) {
+			this.editor.previewCanvas.classList.add('selected');
+		} else if (layer.type === LayerType.STICKER) {
+			const element = this.editor.stickerManager.layerElements.get(layer.id);
+			if (element) element.classList.add('selected');
+		} else if (layer.type === LayerType.GLITTER_FILL) {
+			const element = this.editor.glitterManager.layerElements.get(layer.id);
+			if (element) element.classList.add('selected');
+		}
 	}
 
-	window.dispatchEvent(new CustomEvent('layerChanged', {
-		detail: { layerId, layer }
-	}));
 
-	if (layer && layer.type === LayerType.STICKER) {
-		this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
+	setActiveLayer(layerId) {
+		this.activeLayerId = layerId;
+		this.renderLayersList();
+
+		const layer = this.layers.find(l => l.id === layerId);
+
+		// Update context toolbars
+		this.editor.updateContextToolbars();
+
+		// Update selection highlight
+		this.updateSelectionHighlight(layerId);
+
+		// Update Side Panel UI
+		this.editor.updateSidePanelUI(layer);
+
+		// Load settings based on layer type
+		if (layer) {
+			if (layer.type === LayerType.STICKER) {
+				this.editor.setTool(ToolType.SELECT);
+				this.editor.hideStickerSettingsEmptyState();
+				this.editor.loadStickerSettings(layer);
+				this.editor.updateStickerSelection();
+			} else if (layer.type === LayerType.GLITTER_FILL) {
+				// Auto-switch to color picker if layer has no selections yet
+				if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
+					this.editor.setTool(ToolType.COLOR_PICKER);
+				} else {
+					this.editor.setTool(ToolType.SELECT);
+				}
+
+				this.editor.updateGlitterSelection();
+				this.editor.hideLayerSettingsEmptyState();
+				this.editor.hideGlitterSettingsEmptyState();
+				this.editor.loadActiveLayerSettings();
+			}
+		} else {
+			// No layer selected: Ensure empty states are shown
+			this.editor.showLayerSettingsEmptyState();
+			this.editor.showGlitterSettingsEmptyState();
+			this.editor.showStickerSettingsEmptyState();
+		}
+
+		window.dispatchEvent(new CustomEvent('layerChanged', {
+			detail: { layerId, layer }
+		}));
+
+		if (layer && layer.type === LayerType.STICKER) {
+			this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
+		}
 	}
-}
 
 
 
