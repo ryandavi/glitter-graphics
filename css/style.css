@@ -3044,6 +3044,7 @@ input[type=range]::-moz-range-thumb {
 .settings-group > .settings-row.disabled {
   opacity: var(--disabled-opacity);
   pointer-events: none;
+  cursor: not-allowed;
 }
 .settings-group > .settings-row > .settings-row-header {
   display: flex;

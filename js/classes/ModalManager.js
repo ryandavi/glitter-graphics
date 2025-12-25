@@ -1,15 +1,7 @@
-// js/ModalManager.js
-
-/**
- * ModalManager - Centralized modal handling
- * 
- * Handles:
- * - Open/close behavior
- * - Escape key to close
- * - Click outside to close
- * - External content loading
- * - Callbacks for custom logic
- */
+// ============================================
+// MODAL MANAGER CLASS
+// Handles all modal-related operations
+// ============================================
 class ModalManager {
 	constructor() {
 		this.modals = new Map();
@@ -99,9 +91,6 @@ class ModalManager {
 		});
 	}
 
-	/**
-	 * Open a modal by ID
-	 */
 	async open(id) {
 		const config = this.modals.get(id);
 		if (!config) {
@@ -128,9 +117,6 @@ class ModalManager {
 		}
 	}
 
-	/**
-	 * Close a modal by ID
-	 */
 	close(id) {
 		const config = this.modals.get(id);
 		if (!config) {
@@ -150,9 +136,6 @@ class ModalManager {
 		}
 	}
 
-	/**
-	 * Load external content into modal
-	 */
 	async loadExternalContent(config) {
 		// Return cached content if available
 		if (config.cacheContent && config.contentLoaded) {
@@ -198,9 +181,6 @@ class ModalManager {
 		}
 	}
 
-	/**
-	 * Reset scroll position to top of modal body
-	 */
 	resetScroll(config) {
 		const modalBody = config.modal.querySelector('.modal-body');
 		if (modalBody) {
@@ -208,9 +188,6 @@ class ModalManager {
 		}
 	}
 
-	/**
-	 * Reload external content (bypass cache)
-	 */
 	async reloadContent(id) {
 		const config = this.modals.get(id);
 		if (!config || !config.externalContentUrl) {

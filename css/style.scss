@@ -3750,6 +3750,7 @@ input[type="range"] {
 		&.disabled {
 			opacity: var(--disabled-opacity);
 			pointer-events: none;
+			cursor: not-allowed;
 		}
 
 

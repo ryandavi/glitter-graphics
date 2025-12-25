@@ -1500,24 +1500,6 @@ class GlitterEditor {
 				});
 			}
 		});
-
-		// Special handling for dither type visibility
-		const ditherEnabled = document.getElementById('exportDitherEnabled');
-		const ditherTypeRow = document.getElementById('ditherTypeRow');
-		if (ditherEnabled && ditherTypeRow) {
-			ditherEnabled.addEventListener('change', (e) => {
-				ditherTypeRow.style.display = e.target.checked ? 'flex' : 'none';
-			});
-		}
-
-		// Special handling for matte color visibility
-		const transparency = document.getElementById('exportTransparency');
-		const matteColorRow = document.getElementById('matteColorRow');
-		if (transparency && matteColorRow) {
-			transparency.addEventListener('change', (e) => {
-				matteColorRow.style.display = e.target.checked ? 'none' : 'flex';
-			});
-		}
 	}
 
 	// ===== IMAGE LISTENERS =====
