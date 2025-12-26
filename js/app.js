@@ -98,6 +98,9 @@ const CONFIG = {
 	watermarkOpacity: 100, // 0-100
 	watermarkScale: 100, // percentage
 
+	// Mobile Configuration
+	mobileBreakpoint: 800, // Width in pixels where mobile mode activates
+
 
 	// debug
 	forceIOSExportPreview: false,  // Set to true to test iOS export modal on desktop
@@ -195,8 +198,7 @@ class GlitterEditor {
 		this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
 
 
-		// Mobile detection
-		this.isMobile = window.innerWidth <= 800;
+
 		this.originalImage = null;
 
 		this.originalImage = null;
@@ -248,6 +250,8 @@ class GlitterEditor {
 		this.layerManager = new LayerManager(this);
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this); // <--- Make sure this is here
+		this.mobileManager = new MobileManager(this);
+
 
 		// REMOVE THIS: this.activeFilters = { ... }; 
 
@@ -785,6 +789,7 @@ class GlitterEditor {
 		});
 
 
+
 		// ===== GLITTER SETTINGS =====
 		const glitterSettingsHeader = document.getElementById('glitterSettingsHeader');
 		const glitterSettingsContent = document.getElementById('glitterSettingsContent');
@@ -800,6 +805,7 @@ class GlitterEditor {
 		});
 
 
+		
 
 		// ===== STICKER SETTINGS =====
 		const stickerSettingsHeader = document.getElementById('stickerSettingsHeader');
@@ -1846,6 +1852,11 @@ class GlitterEditor {
 		const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
 		if (mobileAddBtn) {
 			mobileAddBtn.addEventListener('click', () => {
+				// Close all mobile menus first
+				if (this.mobileManager && this.mobileManager.isMobile) {
+					this.mobileManager.closeAllDrawers();
+					this.mobileManager.closeSettings();
+				}
 				this.modalManager.open('layerTypePickerModal');
 			});
 		}
@@ -1962,22 +1973,6 @@ class GlitterEditor {
 			}
 		});
 
-		// Mobile detection and responsive handling
-		window.addEventListener('resize', () => {
-			const wasMobile = this.isMobile;
-			this.isMobile = window.innerWidth <= 800;
-
-			if (wasMobile !== this.isMobile && this.stickerManager) {
-				this.layerManager.layers.forEach(layer => {
-					if (layer.type === LayerType.STICKER) {
-						const element = this.stickerManager.layerElements.get(layer.id);
-						if (element) {
-							this.stickerManager.setupStickerTouchGestures(element, layer.id);
-						}
-					}
-				});
-			}
-		});
 
 		// Scroll zoom
 		this.previewContainer.addEventListener('wheel', (e) => {
@@ -3211,10 +3206,8 @@ class GlitterEditor {
 	const editor = new GlitterEditor();
 	await editor.init();
 
-	// Initialize managers after editor is ready
+	// Initialize tooltip manager
 	const tooltips = new TooltipManager();
-	const mobileManager = new MobileManager(editor);
-	editor.mobileManager = mobileManager;
 
 	// Load debug configuration if enabled
 	if (DEBUG_CONFIG.enabled) {

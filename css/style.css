@@ -85,6 +85,7 @@
   /* Modern browsers override */
   --mobile-breakpoint: 800px;
   --mobile-toolbar-width: 50px;
+  --mobile-settings-handle-height: 18px;
   /* z indexes */
   --modal-z-index: 20000;
   --mobile-menu-z-index: 2000;
@@ -2669,9 +2670,6 @@ input[type=range]::-moz-range-thumb {
     --layer-panel-width: 300px;
     --glitter-swatch-columns: 3;
   }
-  .layer-type-options {
-    flex-direction: column;
-  }
 }
 @media (max-width: 1200px) {
   :root {
@@ -3243,9 +3241,9 @@ input[type=range]::-moz-range-thumb {
   gap: var(--spacing-sm);
 }
 
-/* ===== MOBILE LAYOUT ===== */
 .mobile-bottom-nav,
-.mobile-top-nav {
+.mobile-top-nav,
+.mobile-settings-drawer {
   display: none;
 }
 
@@ -3253,38 +3251,51 @@ input[type=range]::-moz-range-thumb {
   :root {
     --glitter-swatch-columns: 6;
   }
-  a.external {
-    white-space: wrap;
+  body {
+    overflow: hidden;
   }
-  .glitter-element.selected {
-    filter: unset;
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
   }
-  #aboutModal .figure-wrapper > figure {
-    max-width: 100%;
-  }
-  .status-bar {
-    display: none;
-  }
-  .app-header {
-    height: var(--mobile-header-height);
-  }
-  .section-header {
-    cursor: pointer;
-  }
-  .image-container > .image-dropzone-wrapper > .image-dropzone.has-image > .image-upload-overlay {
-    opacity: 1;
-  }
-  .gallery-tabs {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  body.mobile-preview-tab.glitterOpen .main-content > .design-panel .gallery-tabs {
+  .header {
     flex-shrink: 0;
   }
-  body.mobile-preview-tab.glitterOpen .main-content > .design-panel .gallery-content {
-    overflow-y: auto;
+  .main-content {
+    position: relative;
     flex: 1;
+    overflow: hidden;
+    padding-top: var(--mobile-top-nav-height);
+  }
+  .main-content > .left-panel,
+  .main-content > .design-panel,
+  .main-content > .right-panel {
+    position: fixed;
+    width: 100%;
+    top: calc(var(--mobile-top-nav-height) + var(--mobile-header-height));
+    left: 0;
+    z-index: 1000;
+    display: none;
+  }
+  .left-panel,
+  .design-panel,
+  .right-panel {
+    position: static;
+    width: 100%;
+    height: auto;
+    flex: 1;
+  }
+  .section.collapsible-section {
+    border: 0;
+  }
+  .layers-section > .layers-list > .layer-item > .layer-drag-handle {
+    display: flex;
+  }
+  .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.goto-glitter {
+    display: flex;
   }
   .toolbar {
     position: fixed;
@@ -3322,7 +3333,6 @@ input[type=range]::-moz-range-thumb {
     background: var(--color-bg-secondary);
     border-bottom: 1px solid var(--color-border);
     z-index: 10001;
-    display: none;
   }
   .mobile-top-nav.visible {
     display: flex;
@@ -3363,17 +3373,14 @@ input[type=range]::-moz-range-thumb {
     gap: var(--spacing-sm);
     padding: var(--spacing-sm);
     z-index: 10001;
-    display: none;
   }
   .mobile-bottom-nav .mobile-drawer-btn-group {
     display: flex;
     gap: var(--spacing-xs);
     flex: 1;
-    /* takes remaining space */
   }
   .mobile-bottom-nav .mobile-drawer-btn-group.small {
     flex: 0 0 auto;
-    /* only as wide as its content */
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn {
     flex: 1;
@@ -3473,7 +3480,6 @@ input[type=range]::-moz-range-thumb {
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.small {
     flex: 0 0 auto;
-    /* only as wide as its content */
     aspect-ratio: 1/1;
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-add-layer-btn {
@@ -3482,7 +3488,6 @@ input[type=range]::-moz-range-thumb {
     flex-shrink: 0;
     padding: var(--spacing-md);
     flex: 0 0 auto;
-    /* only as wide as its content */
     aspect-ratio: 1/1;
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-add-layer-btn:disabled {
@@ -3490,28 +3495,70 @@ input[type=range]::-moz-range-thumb {
     cursor: not-allowed;
     transform: none;
   }
-  .main-content {
-    position: relative;
-    padding-top: var(--mobile-top-nav-height);
+  .section > .section-header {
+    cursor: pointer;
   }
-  .main-content > .left-panel,
-  .main-content > .design-panel,
-  .main-content > .right-panel {
-    position: fixed;
-    width: 100%;
-    top: calc(var(--mobile-top-nav-height) + var(--mobile-header-height));
-    left: 0;
-    z-index: 1000;
+  .layers-section-bottom-bar {
     display: none;
   }
-  .section.collapsible-section {
-    border: 0;
+  .mobile-settings-drawer {
+    position: fixed;
+    bottom: var(--mobile-bottom-nav-height);
+    left: 0;
+    right: 0;
+    background: var(--color-bg-primary);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    transform: translateY(calc(100% - var(--mobile-settings-handle-height)));
+    transition: transform var(--transition-base);
+    max-height: 60vh;
   }
-  .layers-section > .layers-list > .layer-item > .layer-drag-handle {
+  .mobile-settings-drawer .mobile-settings-handle {
+    height: var(--mobile-settings-handle-height);
+    padding: var(--spacing-xs) 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    background: var(--color-bg-primary);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .mobile-settings-drawer .mobile-settings-handle .mobile-settings-handle-bar {
+    width: 40px;
+    height: 4px;
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+  .mobile-settings-drawer .mobile-settings-content {
+    overflow-y: auto;
+    flex: 1;
+  }
+  .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible,
+  .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible,
+  .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible {
+    display: flex;
+    flex-direction: column;
+    border: none;
+    margin: 0;
+    padding: 0;
+  }
+  .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible .section-header,
+  .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible .section-header,
+  .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header {
+    position: sticky;
+    top: 0;
+    background: var(--color-bg-primary);
+    z-index: 1;
+  }
+  .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible .section-header .section-header-action,
+  .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible .section-header .section-header-action,
+  .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header .section-header-action {
     display: flex;
   }
-  .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.goto-glitter {
-    display: flex;
+  .mobile-settings-drawer .mobile-settings-content .collapsible-section + .collapsible-section {
+    border-top: 1px solid var(--color-border);
   }
   body.mobile-image-tab .main-content > .left-panel {
     display: flex;
@@ -3537,11 +3584,19 @@ input[type=range]::-moz-range-thumb {
   body.mobile-image-tab .main-content > .left-panel .image-container > .image-dropzone-wrapper > .image-dropzone {
     flex: 1;
   }
+  body.mobile-image-tab .mobile-settings-drawer,
+  body.mobile-image-tab .mobile-bottom-nav {
+    display: none;
+  }
   body.mobile-preview-tab .toolbar {
     display: flex;
   }
-  body.mobile-preview-tab .mobile-bottom-nav.visible {
+  body.mobile-preview-tab .mobile-bottom-nav {
     display: flex;
+  }
+  body.mobile-preview-tab .mobile-settings-drawer {
+    display: flex;
+    flex-direction: column;
   }
   body.mobile-preview-tab .main-content > .right-panel {
     display: flex;
@@ -3549,64 +3604,47 @@ input[type=range]::-moz-range-thumb {
     height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
     padding-bottom: var(--mobile-bottom-nav-height);
   }
-  body.mobile-preview-tab.glitterOpen .main-content > .design-panel, body.mobile-preview-tab.layersOpen .main-content > .left-panel, body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel, body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel {
+  body.designOpen .main-content > .design-panel {
     display: flex;
     height: auto;
     top: auto;
     bottom: var(--mobile-bottom-nav-height);
     z-index: 10000;
-    border-top: 1 solid var(--color-border);
+    border-top: 1px solid var(--color-border);
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
     max-height: var(--mobile-drawer-height);
-    min-height: 20dvh;
+    height: 100%;
   }
-  body.mobile-preview-tab.glitterOpen .main-content > .design-panel .glitter-settings-section {
+  body.designOpen .main-content > .design-panel .glitter-settings-section,
+  body.designOpen .main-content > .design-panel .sticker-settings-section {
     display: none;
   }
-  body.mobile-preview-tab.layersOpen .main-content > .left-panel .image-container,
-  body.mobile-preview-tab.layersOpen .main-content > .left-panel .layer-settings-section {
-    display: none;
-  }
-  body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .image-container,
-  body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .layers-section {
-    display: none;
-  }
-  body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .layer-settings-section {
+  body.layersOpen .main-content > .left-panel {
     display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
+    height: auto;
+    top: auto;
+    bottom: var(--mobile-bottom-nav-height);
+    z-index: 10000;
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+    max-height: var(--mobile-drawer-height);
+    height: 100%;
   }
-  body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .layer-settings-section .section-header {
-    flex-shrink: 0;
-  }
-  body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .layer-settings-section .section-content {
-    display: block !important;
-    overflow-y: auto;
-    flex: 1;
-  }
-  body.mobile-preview-tab.layerSettingsOpen .main-content > .left-panel .layer-settings-section .section-header-action {
-    visibility: hidden;
-  }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel > .section,
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .asset-options {
+  body.layersOpen .main-content > .left-panel .image-container,
+  body.layersOpen .main-content > .left-panel .layer-settings-section {
     display: none;
   }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-settings-section {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
+  body.mobileSettingsOpen .mobile-settings-drawer {
+    transform: translateY(0);
   }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-settings-section .section-header {
-    flex-shrink: 0;
+  body.mobile-image-tab .mobile-settings-drawer,
+  body.mobile-preview-tab:not(.has-layer-settings) .mobile-settings-drawer {
+    transform: translateY(100%);
   }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-settings-section .section-content {
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
     display: block !important;
-    overflow-y: auto;
-    flex: 1;
-  }
-  body.mobile-preview-tab.glitterSettingsOpen .main-content > .design-panel .glitter-settings-section .section-header-action {
-    visibility: hidden;
   }
 }/*# sourceMappingURL=style.css.map */

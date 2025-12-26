@@ -111,14 +111,25 @@ class LayerManager {
 
 		if (type === LayerType.STICKER) {
 			layer = this.editor.stickerManager.createLayer();
-		} else {
+		} else if (type === LayerType.GLITTER_FILL) {
 			layer = this.editor.glitterManager.createLayer();
+		}else{
+			console.log('Invalid layer type');
 		}
 
 		if (!layer) return;  // Factory returns null if max reached
 
 		this.insertLayer(layer);
 		this.setActiveLayer(layer.id);
+
+		// On mobile, open design panel when glitter or sticker layer is added
+		if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
+			if (type === LayerType.GLITTER_FILL || type === LayerType.STICKER) {
+				this.editor.mobileManager.toggleDrawer('design');
+			}
+		}
+
+
 		this.renderLayersList();
 		this.editor.saveState();
 		this.editor.updateActionButtons();
@@ -211,6 +222,11 @@ class LayerManager {
 
 
 	setActiveLayer(layerId) {
+
+	if (this.activeLayerId === layerId) {
+		return;
+	}
+
 		this.activeLayerId = layerId;
 		this.renderLayersList();
 
@@ -252,9 +268,16 @@ class LayerManager {
 			this.editor.showStickerSettingsEmptyState();
 		}
 
-		window.dispatchEvent(new CustomEvent('layerChanged', {
-			detail: { layerId, layer }
-		}));
+		// Add/remove body class for mobile settings drawer visibility
+		if (layerId) {
+			document.body.classList.add('has-active-layer');
+		} else {
+			document.body.classList.remove('has-active-layer');
+		}
+
+		console.log('Layer changed to', layerId);
+
+		window.dispatchEvent(new CustomEvent('layerChanged'));
 
 		if (layer && layer.type === LayerType.STICKER) {
 			this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
@@ -269,41 +292,41 @@ class LayerManager {
 
 	// ===== LAYER NAVIGATION =====
 
-	goToGlitter(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
+goToGlitter(layerId) {
+	const layer = this.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
 
-		// Select this layer
-		this.setActiveLayer(layerId);
+	// Select this layer
+	this.setActiveLayer(layerId);
 
-		// On mobile, open the glitter drawer
-		if (window.innerWidth <= 800 && this.editor.mobileManager) {
-			this.editor.mobileManager.toggleDrawer('glitter');
-		}
-
-		// Scroll to the glitter in the picker
-		if (layer.selectedGlitterId !== undefined) {
-			this.editor.glitterManager.scrollToContent(layer.selectedGlitterId);
-		}
+	// On mobile, open the design drawer
+	if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
+		this.editor.mobileManager.toggleDrawer('design');
 	}
 
-	goToSticker(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer || layer.type !== LayerType.STICKER) return;
-
-		// Select this layer
-		this.setActiveLayer(layerId);
-
-		// On mobile, open the stickers drawer
-		if (window.innerWidth <= 800 && this.editor.mobileManager) {
-			this.editor.mobileManager.toggleDrawer('glitter'); // Opens content drawer (stickers tab)
-		}
-
-		// Scroll to the sticker in the picker
-		if (layer.stickerSourceId) {
-			this.editor.stickerManager.scrollToContent(layer.stickerSourceId);
-		}
+	// Scroll to the glitter in the picker
+	if (layer.selectedGlitterId !== undefined) {
+		this.editor.glitterManager.scrollToContent(layer.selectedGlitterId);
 	}
+}
+
+goToSticker(layerId) {
+	const layer = this.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.STICKER) return;
+
+	// Select this layer
+	this.setActiveLayer(layerId);
+
+	// On mobile, open the design drawer
+	if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
+		this.editor.mobileManager.toggleDrawer('design');
+	}
+
+	// Scroll to the sticker in the picker
+	if (layer.stickerSourceId) {
+		this.editor.stickerManager.scrollToContent(layer.stickerSourceId);
+	}
+}
 
 
 
@@ -784,7 +807,14 @@ class LayerManager {
 		}
 
 		layerEl.append(dragHandle, swatch, info, actions);
-		layerEl.onclick = () => this.setActiveLayer(layer.id);
+layerEl.onclick = () => {
+	// Dispatch custom event for mobile manager
+	window.dispatchEvent(new CustomEvent('layerItemClick', {
+		detail: { layerId: layer.id }
+	}));
+	
+	this.setActiveLayer(layer.id);
+};
 
 		// Attach Drag Events only if not locked
 		// Attach Drag Events (even for locked layers, so we can drop AROUND them)
@@ -846,13 +876,23 @@ class LayerManager {
 		}
 	}
 
-	updateMobileLayersSwatch() {
-		const mobileLayersSwatch = document.querySelector('.mobile-layers-swatch');
-		if (!mobileLayersSwatch) return;
+updateMobileLayersSwatch() {
+	const mobileLayersSwatch = document.querySelector('.mobile-layers-swatch');
+	if (!mobileLayersSwatch) return;
 
-		const activeLayer = this.getActiveLayer();
+	const activeLayer = this.getActiveLayer();
 
-		if (!activeLayer) {
+	if (!activeLayer) {
+		mobileLayersSwatch.classList.add('empty');
+		mobileLayersSwatch.classList.remove('pixelated');
+		mobileLayersSwatch.style.backgroundImage = '';
+		return;
+	}
+
+	// Handle different layer types
+	if (activeLayer.type === LayerType.GLITTER_FILL) {
+		// Check if glitter has been selected
+		if (activeLayer.selectedGlitterId === undefined || activeLayer.selectedGlitterId === null) {
 			mobileLayersSwatch.classList.add('empty');
 			mobileLayersSwatch.classList.remove('pixelated');
 			mobileLayersSwatch.style.backgroundImage = '';
@@ -863,7 +903,6 @@ class LayerManager {
 		if (glitter) {
 			mobileLayersSwatch.classList.remove('empty');
 			mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
-
 			if (glitter.isPixelated) {
 				mobileLayersSwatch.classList.add('pixelated');
 			} else {
@@ -874,7 +913,43 @@ class LayerManager {
 			mobileLayersSwatch.classList.remove('pixelated');
 			mobileLayersSwatch.style.backgroundImage = '';
 		}
+	} else if (activeLayer.type === LayerType.STICKER) {
+		// Check if sticker has been selected
+		if (!activeLayer.stickerSourceId) {
+			mobileLayersSwatch.classList.add('empty');
+			mobileLayersSwatch.classList.remove('pixelated');
+			mobileLayersSwatch.style.backgroundImage = '';
+			return;
+		}
+
+		const sticker = this.editor.stickerManager.getItemById(activeLayer.stickerSourceId);
+		if (sticker) {
+			mobileLayersSwatch.classList.remove('empty');
+			mobileLayersSwatch.style.backgroundImage = `url(${sticker.url})`;
+			if (sticker.isPixelated) {
+				mobileLayersSwatch.classList.add('pixelated');
+			} else {
+				mobileLayersSwatch.classList.remove('pixelated');
+			}
+		} else {
+			mobileLayersSwatch.classList.add('empty');
+			mobileLayersSwatch.classList.remove('pixelated');
+			mobileLayersSwatch.style.backgroundImage = '';
+		}
+	} else if (activeLayer.type === LayerType.BASE_IMAGE) {
+		// Show a preview of the canvas
+		if (this.editor.originalCanvas) {
+			const canvas = this.editor.originalCanvas;
+			mobileLayersSwatch.classList.remove('empty');
+			mobileLayersSwatch.style.backgroundImage = `url(${canvas.toDataURL()})`;
+			mobileLayersSwatch.classList.remove('pixelated');
+		} else {
+			mobileLayersSwatch.classList.add('empty');
+			mobileLayersSwatch.classList.remove('pixelated');
+			mobileLayersSwatch.style.backgroundImage = '';
+		}
 	}
+}
 
 	// ===== DRAG AND DROP (DESKTOP) =====
 

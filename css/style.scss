@@ -100,6 +100,7 @@
 	/* Modern browsers override */
 	--mobile-breakpoint: 800px;
 	--mobile-toolbar-width: 50px;
+	--mobile-settings-handle-height: 18px;
 
 	/* z indexes */
 	--modal-z-index: 20000;
@@ -3176,9 +3177,6 @@ input[type="range"] {
 		--glitter-swatch-columns: 3;
 	}
 
-	.layer-type-options {
-		flex-direction: column;
-	}
 
 }
 
@@ -4038,14 +4036,15 @@ input[type="range"] {
 
 
 
-
-
-/* ===== MOBILE LAYOUT ===== */
+// ============================================
+// MOBILE STYLES
+// ============================================
 
 // Mobile controls visibility
 .mobile-bottom-nav,
-.mobile-top-nav {
-	display: none; // Hidden by default
+.mobile-top-nav,
+.mobile-settings-drawer {
+	display: none; // Hidden by default on desktop
 }
 
 @media (max-width: 800px) {
@@ -4058,60 +4057,80 @@ input[type="range"] {
 	}
 
 
-	a.external {
-		white-space: wrap;
+	// ============================================
+	// LAYOUT ADJUSTMENTS
+	// ============================================
+
+	body {
+		overflow: hidden;
 	}
 
-	.glitter-element {
-		&.selected {
-			filter: unset;
+	.app-container {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		height: 100dvh;
+		overflow: hidden;
+	}
+
+	.header {
+		flex-shrink: 0;
+	}
+
+	.main-content {
+		position: relative;
+		flex: 1;
+		overflow: hidden;
+		padding-top: var(--mobile-top-nav-height);
+
+		> .left-panel,
+		> .design-panel,
+		> .right-panel {
+			position: fixed;
+			width: 100%;
+			top: calc(var(--mobile-top-nav-height) + var(--mobile-header-height));
+			left: 0;
+			z-index: 1000;
+			display: none;
 		}
 	}
 
-	#aboutModal .figure-wrapper>figure {
-		max-width: 100%;
+
+	// ============================================
+	// PANELS
+	// ============================================
+
+	.left-panel,
+	.design-panel,
+	.right-panel {
+		position: static;
+		width: 100%;
+		height: auto;
+		flex: 1;
 	}
 
+	.section.collapsible-section {
+		border: 0;
+	}
 
 
 	// ============================================
-	// GLOBAL MOBILE OVERRIDES
+	// LAYERS
 	// ============================================
 
-	.status-bar {
-		display: none;
-	}
+	.layers-section {
+		> .layers-list {
+			> .layer-item {
+				> .layer-drag-handle {
+					display: flex;
+				}
 
-	.app-header {
-		height: var(--mobile-header-height);
-	}
-
-	.section-header {
-		cursor: pointer;
-	}
-
-	// Fix image upload overlay visibility on mobile
-	.image-container>.image-dropzone-wrapper>.image-dropzone.has-image>.image-upload-overlay {
-		opacity: 1;
-	}
-
-
-	// Gallery tabs work the same on mobile
-	.gallery-tabs {
-		position: sticky;
-		top: 0;
-		z-index: 10;
-	}
-
-	// Mobile drawer shows glitter column with tabs
-	body.mobile-preview-tab.glitterOpen .main-content>.design-panel {
-		.gallery-tabs {
-			flex-shrink: 0;
-		}
-
-		.gallery-content {
-			overflow-y: auto;
-			flex: 1;
+				> .layer-actions {
+					> .layer-action-btn.goto-glitter {
+						display: flex;
+					}
+				}
+			}
 		}
 	}
 
@@ -4132,11 +4151,11 @@ input[type="range"] {
 		padding: var(--spacing-sm);
 		@include floating-ui;
 
-		>.toolbar-spacer {
+		> .toolbar-spacer {
 			display: none;
 		}
 
-		>.toolbar-group+.toolbar-group {
+		> .toolbar-group + .toolbar-group {
 			margin: 0;
 			padding: 0;
 			border: unset;
@@ -4162,7 +4181,6 @@ input[type="range"] {
 		background: var(--color-bg-secondary);
 		border-bottom: 1px solid var(--color-border);
 		z-index: 10001;
-		display: none; // Hidden by default
 
 		&.visible {
 			display: flex;
@@ -4197,7 +4215,7 @@ input[type="range"] {
 		}
 	}
 
-	// Bottom Navigation (Glitter/Layers drawers)
+	// Bottom Navigation (Layers/Design drawers)
 	.mobile-bottom-nav {
 		position: fixed;
 		bottom: 0;
@@ -4209,29 +4227,22 @@ input[type="range"] {
 		gap: var(--spacing-sm);
 		padding: var(--spacing-sm);
 		z-index: 10001;
-		display: none; // Hidden by default, shown in preview tab
-
-
 
 		.mobile-drawer-btn-group {
 			display: flex;
 			gap: var(--spacing-xs);
 			flex: 1;
-			/* takes remaining space */
 
 			&.small {
 				flex: 0 0 auto;
-				/* only as wide as its content */
 			}
 
-
-			>.mobile-drawer-btn {
+			> .mobile-drawer-btn {
 				flex: 1;
 				padding: var(--spacing-md);
 				@include text-sm;
 				@include windows7-button(true);
 
-				// Layers drawer button with swatch
 				&[data-drawer="layers"] {
 					display: flex;
 					align-items: center;
@@ -4273,23 +4284,17 @@ input[type="range"] {
 
 				&.small {
 					flex: 0 0 auto;
-					/* only as wide as its content */
-					aspect-ratio: 1 / 1;
+					aspect-ratio: 1/1;
 				}
-
 			}
 
-			>.mobile-add-layer-btn {
+			> .mobile-add-layer-btn {
 				width: 50px;
 				height: unset;
 				flex-shrink: 0;
 				padding: var(--spacing-md);
-
 				flex: 0 0 auto;
-				/* only as wide as its content */
-				aspect-ratio: 1 / 1;
-
-
+				aspect-ratio: 1/1;
 
 				&:disabled {
 					opacity: var(--disabled-opacity);
@@ -4297,73 +4302,112 @@ input[type="range"] {
 					transform: none;
 				}
 			}
-
-
-		}
-
-
-	}
-
-
-	// ============================================
-	// MAIN CONTENT STRUCTURE
-	// ============================================
-
-	.main-content {
-		position: relative;
-		padding-top: var(--mobile-top-nav-height);
-
-		// All panels start hidden and positioned
-		>.left-panel,
-		>.design-panel,
-		>.right-panel {
-			position: fixed;
-			width: 100%;
-			top: calc(var(--mobile-top-nav-height) + var(--mobile-header-height));
-			left: 0;
-			z-index: 1000;
-			display: none;
 		}
 	}
 
 
-	// ============================================
-	// COMPONENT-SPECIFIC MOBILE ADJUSTMENTS
-	// ============================================
-
-
-
-	.section.collapsible-section {
-		border: 0;
-	}
-
-
-	// Layer items: Show drag handles and goto-glitter button on mobile
-	.layers-section>.layers-list>.layer-item {
-		>.layer-drag-handle {
-			display: flex;
-		}
-
-		>.layer-actions>.layer-action-btn.goto-glitter {
-			display: flex;
+	.section {
+		> .section-header {
+			cursor: pointer;
 		}
 	}
 
+	.layers-section-bottom-bar {
+		display: none;
+	}
 
 	// ============================================
-	// TAB-SPECIFIC STATES
+	// MOBILE SETTINGS DRAWER
 	// ============================================
 
-	// IMAGE TAB: Show left panel with image upload only
+.mobile-settings-drawer {
+	position: fixed;
+	bottom: var(--mobile-bottom-nav-height);
+	left: 0;
+	right: 0;
+	background: var(--color-bg-primary);
+	border-top: 1px solid var(--color-border);
+	box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+	z-index: 10000;
+	transform: translateY(calc(100% - var(--mobile-settings-handle-height)));
+	transition: transform var(--transition-base);
+	max-height: 60vh;
+
+	.mobile-settings-handle {
+		height: var(--mobile-settings-handle-height);
+		padding: var(--spacing-xs) 0;
+		cursor: pointer;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-shrink: 0;
+		background: var(--color-bg-primary);
+		border-bottom: 1px solid var(--color-border);
+
+		.mobile-settings-handle-bar {
+			width: 40px;
+			height: 4px;
+			background: var(--color-border);
+			border-radius: 2px;
+		}
+	}
+
+	.mobile-settings-content {
+		overflow-y: auto;
+		flex: 1;
+
+
+
+		.layer-settings-section,
+		.glitter-settings-section,
+		.sticker-settings-section {
+			&.visible {
+				display: flex;
+				flex-direction: column;
+				border: none;
+				margin: 0;
+				padding: 0;
+
+				.section-header {
+					position: sticky;
+					top: 0;
+					background: var(--color-bg-primary);
+					z-index: 1;
+
+					.section-header-action {
+						display: flex;
+					}
+				}
+
+				.section-content {
+					// padding: 0 var(--spacing-md) var(--spacing-md);
+				}
+			}
+		}
+
+		.collapsible-section {
+			+ .collapsible-section {
+				        border-top: 1px solid var(--color-border);
+			}
+		}
+
+
+	}
+}
+
+	// ============================================
+	// TAB STATES
+	// ============================================
+
+	// Image Tab (Upload/Canvas)
 	body.mobile-image-tab {
-		.main-content>.left-panel {
+		.main-content > .left-panel {
 			display: flex;
 			height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
 			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
 
 			.layers-section,
 			.layer-settings-section {
-				// Add this
 				display: none;
 			}
 
@@ -4376,126 +4420,115 @@ input[type="range"] {
 					display: none;
 				}
 
-				>.image-dropzone-wrapper {
+				> .image-dropzone-wrapper {
 					height: 100%;
 					display: flex;
 
-					>.image-dropzone {
+					> .image-dropzone {
 						flex: 1;
 					}
 				}
 			}
 		}
+
+		.mobile-settings-drawer,
+		.mobile-bottom-nav {
+			display: none;
+		}
 	}
 
-	// PREVIEW TAB: Show right panel with preview + toolbar + bottom nav
+	// Preview Tab (Editor)
 	body.mobile-preview-tab {
 		.toolbar {
 			display: flex;
 		}
 
-		.mobile-bottom-nav.visible {
+		.mobile-bottom-nav {
 			display: flex;
 		}
 
-		.main-content>.right-panel {
+		.mobile-settings-drawer {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.main-content > .right-panel {
 			display: flex;
 			height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
 			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
 			padding-bottom: var(--mobile-bottom-nav-height);
 		}
+	}
 
-		&.glitterOpen .main-content>.design-panel,
-		&.layersOpen .main-content>.left-panel,
-		&.layerSettingsOpen .main-content>.left-panel,
-		&.glitterSettingsOpen .main-content>.design-panel {
+
+	// ============================================
+	// DRAWER STATES
+	// ============================================
+
+	body.designOpen {
+		.main-content > .design-panel {
 			display: flex;
 			height: auto;
-
 			top: auto;
 			bottom: var(--mobile-bottom-nav-height);
 			z-index: 10000;
-			border-top: 1 solid var(--color-border);
+			border-top: 1px solid var(--color-border);
 			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
-
 			max-height: var(--mobile-drawer-height);
-			min-height: 20dvh;
+			// min-height: 20dvh;
+			height: 100%;
 
 
-		}
-
-
-		// Specific drawer behaviors
-		&.glitterOpen .main-content>.design-panel {
-			.glitter-settings-section {
+			.glitter-settings-section,
+			.sticker-settings-section {
 				display: none;
 			}
 		}
+	}
 
-		&.layersOpen .main-content>.left-panel {
+	body.layersOpen {
+		.main-content > .left-panel {
+			display: flex;
+			height: auto;
+			top: auto;
+			bottom: var(--mobile-bottom-nav-height);
+			z-index: 10000;
+			border-top: 1px solid var(--color-border);
+			box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+			max-height: var(--mobile-drawer-height);
+			height: 100%;
+			//min-height: 20dvh;
 
 			.image-container,
 			.layer-settings-section {
 				display: none;
 			}
 		}
+	}
 
-		&.layerSettingsOpen .main-content>.left-panel {
-
-			.image-container,
-			.layers-section {
-				display: none;
-			}
-
-			.layer-settings-section {
-				display: flex;
-				flex-direction: column;
-				flex: 1;
-				overflow: hidden; // Changed from overflow-y: auto
-
-				.section-header {
-					flex-shrink: 0; // Prevent header from scrolling
-				}
-
-				.section-content {
-					display: block !important;
-					overflow-y: auto; // Move scroll to content only
-					flex: 1; // Fill remaining space
-				}
-
-				.section-header-action {
-					visibility: hidden;
-				}
-			}
+	// When settings are open, transform to show full drawer
+	body.mobileSettingsOpen {
+		.mobile-settings-drawer {
+			transform: translateY(0);
 		}
+	}
 
-		&.glitterSettingsOpen .main-content>.design-panel {
+// Hide handle completely when no active layer or on image tab
+body.mobile-image-tab .mobile-settings-drawer,
+body.mobile-preview-tab:not(.has-layer-settings) .mobile-settings-drawer {
+	transform: translateY(100%);
+}
 
-			>.section,
-			.asset-options {
-				display: none;
-			}
 
-			.glitter-settings-section {
-				display: flex;
-				flex-direction: column;
-				flex: 1;
-				overflow: hidden; // Changed from overflow-y: auto
+	// ============================================
+	// UTILITY CLASSES
+	// ============================================
 
-				.section-header {
-					flex-shrink: 0; // Prevent header from scrolling
-				}
+	.desktop-only {
+		display: none !important;
+	}
 
-				.section-content {
-					display: block !important;
-					overflow-y: auto; // Move scroll to content only
-					flex: 1; // Fill remaining space
-				}
-
-				.section-header-action {
-					visibility: hidden;
-				}
-			}
-		}
+	.mobile-only {
+		display: block !important;
 	}
 }

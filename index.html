@@ -963,18 +963,20 @@
 								<span class="context-value" id="contextThresholdValue">50</span>
 							</div>
 
-							<!-- Multi-Select Toggle -->
-							<label class="context-checkbox-group">
-								<input type="checkbox" id="contextMultiSelect">
-								<span>Multi</span>
-								<span class="context-count" id="contextSelectionCount"></span>
-							</label>
+							<div>
+								<!-- Multi-Select Toggle -->
+								<label class="context-checkbox-group">
+									<input type="checkbox" id="contextMultiSelect">
+									<span>Multi</span>
+									<span class="context-count" id="contextSelectionCount"></span>
+								</label>
 
-							<!-- Contiguous Toggle -->
-							<label class="context-checkbox-group">
-								<input type="checkbox" id="contextContiguous">
-								<span>Contiguous</span>
-							</label>
+								<!-- Contiguous Toggle -->
+								<label class="context-checkbox-group">
+									<input type="checkbox" id="contextContiguous">
+									<span>Contiguous</span>
+								</label>
+							</div>
 						</div>
 
 
@@ -1690,52 +1692,39 @@ Cancel
 	</div>
 
 
-	<!-- Mobile Bottom Navigation -->
-	<div class="mobile-bottom-nav">
-
-
-
-		<div class="mobile-drawer-btn-group">
-			<button class="mobile-drawer-btn" data-drawer="layers">
-				<div class="mobile-layers-swatch empty"></div>
-				Layers
-				<span class="mobile-layers-count" data-count="0"></span>
-			</button>
-
-			<button class="mobile-drawer-btn settings-btn small" data-drawer="layer-settings" id="mobileLayerSettingsBtn">
-				<span class="icon-wrapper sm">
-					<svg class="icon">
-						<use href="#icon-sliders"></use>
-					</svg>
-				</span>
-			</button>
-		</div>
-
-
-
-		<div class="mobile-drawer-btn-group small">
-			<button class="btn-icon mobile-add-layer-btn active icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
-				<svg class="icon">
-					<use href="#icon-plus"></use>
-				</svg>
-				<span class="name">Add Layer</span>
-			</button>
-		</div>
-
-
-		<div class="mobile-drawer-btn-group">
-			<button class="mobile-drawer-btn" data-drawer="glitter">Glitter</button>
-
-			<button class="mobile-drawer-btn small" data-drawer="glitter-settings" id="mobileGlitterSettingsBtn">
-				<span class="icon-wrapper sm">
-					<svg class="icon">
-						<use href="#icon-sliders"></use>
-					</svg>
-				</span>
-			</button>
-		</div>
-
+<!-- Mobile Bottom Navigation -->
+<div class="mobile-bottom-nav">
+	<div class="mobile-drawer-btn-group">
+		<button class="mobile-drawer-btn" data-drawer="layers">
+			<div class="mobile-layers-swatch empty"></div>
+			Layers
+			<span class="mobile-layers-count" data-count="0"></span>
+		</button>
 	</div>
+
+	<div class="mobile-drawer-btn-group small">
+		<button class="btn-icon mobile-add-layer-btn active icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
+			<svg class="icon">
+				<use href="#icon-plus"></use>
+			</svg>
+			<span class="name">Add Layer</span>
+		</button>
+	</div>
+
+	<div class="mobile-drawer-btn-group">
+		<button class="mobile-drawer-btn" data-drawer="design">Design</button>
+	</div>
+</div>
+
+<!-- Mobile Settings Drawer -->
+<div class="mobile-settings-drawer">
+	<div class="mobile-settings-handle">
+		<div class="mobile-settings-handle-bar"></div>
+	</div>
+	<div class="mobile-settings-content" id="mobileSettingsContainer">
+		<!-- Desktop settings sections will be moved here temporarily on mobile -->
+	</div>
+</div>
 
 
 	<!-- SVG Sprite Definition (Place at the bottom of your body tag) -->
