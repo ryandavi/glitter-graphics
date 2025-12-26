@@ -102,6 +102,9 @@ class MobileManager {
 
 		// Layer selection triggers settings
 		window.addEventListener('layerChanged', () => {
+
+			console.log('Mobile: Layer changed to', this.editor.layerManager.getActiveLayer());
+
 			const activeLayer = this.editor.layerManager.getActiveLayer();
 
 			// Don't open settings if a modal is currently open
@@ -109,6 +112,7 @@ class MobileManager {
 
 			if (activeLayer && this.isMobile && this.activeTab === 'preview' && !isModalOpen) {
 				// openSettings() will add has-layer-settings if layer has settings
+				console.log('Mobile: Opening settings for layer', activeLayer);
 				this.openSettings(activeLayer);
 			} else if (!activeLayer) {
 				// No layer selected, close settings and remove has-layer-settings
@@ -315,8 +319,8 @@ class MobileManager {
 				this.collapseAllSections();
 
 				// Also close the settings drawer to collapsed state
-				document.body.classList.remove('mobileSettingsOpen');
-				this.settingsOpen = false;
+				//document.body.classList.remove('mobileSettingsOpen');
+				//this.settingsOpen = false;
 			}
 		} else {
 			// Opening different drawer (or opening for first time)
@@ -327,10 +331,8 @@ class MobileManager {
 				const prevCamelCase = this.activeDrawer.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 				const prevClassName = prevCamelCase + 'Open';
 				document.body.classList.remove(prevClassName);
-			} else {
-				// No active drawer, close settings
-				this.closeSettings();
 			}
+			// Don't close settings when opening a drawer - they're independent
 
 			// Add new drawer class immediately (no setTimeout to prevent flash)
 			this.activeDrawer = drawer;
@@ -347,16 +349,16 @@ class MobileManager {
 
 	openSettings(layer) {
 		if (!this.isMobile || !layer) return;
-
 		const mobileContainer = document.getElementById('mobileSettingsContainer');
 		if (!mobileContainer) return;
 
-		// Close any open drawers first
-		this.closeAllDrawers();
+		// Conditionally close drawers based on config
+		if (CONFIG.mobileAutoCloseDesignDrawer) {
+			this.closeAllDrawers();
+		}
 
 		// Clear container
 		mobileContainer.innerHTML = '';
-
 		let hasSettings = false;
 
 		// Move appropriate settings based on layer type
@@ -388,7 +390,8 @@ class MobileManager {
 			document.body.classList.add('mobileSettingsOpen');
 			document.body.classList.add('has-layer-settings');
 		} else {
-			// Layer has no settings, close drawer
+			// Layer has no settings (like base image), close drawer and remove class
+			document.body.classList.remove('has-layer-settings');
 			this.closeSettings();
 		}
 	}

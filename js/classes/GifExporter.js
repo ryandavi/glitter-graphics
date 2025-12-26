@@ -1196,7 +1196,7 @@ class GifExporter {
 
 
 				instructions.innerHTML = `
-		<p><strong>Ready!</strong> Tap <strong>"Save Image"</strong> below to save to Photos.</p>
+		<p>Tap <strong>"Save Image"</strong> below to save to Photos.</p>
 		<p class="text-muted" style="margin-top: 8px; font-size: 12px;">
 			<strong>Why can't I just tap and hold?</strong><br>
 			iOS doesn't support saving animated GIFs created dynamically in the browser. 

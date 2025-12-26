@@ -357,55 +357,56 @@ class StickerManager extends ContentManager {
 		};
 	}
 
-	async addStickerToCanvas(stickerId) {
-		if (!this.editor.originalImage) {
-			this.editor.showError('Please load an image first');
-			return;
-		}
+async addStickerToCanvas(stickerId) {
+    if (!this.editor.originalImage) {
+        this.editor.showError('Please load an image first');
+        return;
+    }
 
-		const activeLayer = this.editor.layerManager.getActiveLayer();
-		const stickerInfo = this.getItemById(stickerId);
+    const activeLayer = this.editor.layerManager.getActiveLayer();
+    const stickerInfo = this.getItemById(stickerId);
 
-		if (!stickerInfo) return;
+    if (!stickerInfo) return;
 
-		// LOGIC: If active layer is a STICKER layer, replace it.
-		// Otherwise, create a NEW layer.
-		if (activeLayer && activeLayer.type === LayerType.STICKER) {
-			// Replace the sticker in the current layer
-			activeLayer.name = stickerInfo.name;
-			activeLayer.stickerSourceId = stickerInfo.id;
+    // LOGIC: If active layer is a STICKER layer, replace it.
+    // Otherwise, create a NEW layer.
+    if (activeLayer && activeLayer.type === LayerType.STICKER) {
+        // Replace the sticker in the current layer
+        activeLayer.name = stickerInfo.name;
+        activeLayer.stickerSourceId = stickerInfo.id;
 
-			// Update data
-			activeLayer.stickerData.isEmpty = false;
-			activeLayer.stickerData.url = stickerInfo.url;
-			activeLayer.stickerData.name = stickerInfo.name;
-			activeLayer.stickerData.source = stickerInfo.source;
-			activeLayer.stickerData.width = stickerInfo.width;
-			activeLayer.stickerData.height = stickerInfo.height;
-			activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+        // Update data
+        activeLayer.stickerData.isEmpty = false;
+        activeLayer.stickerData.url = stickerInfo.url;
+        activeLayer.stickerData.name = stickerInfo.name;
+        activeLayer.stickerData.source = stickerInfo.source;
+        activeLayer.stickerData.width = stickerInfo.width;
+        activeLayer.stickerData.height = stickerInfo.height;
+        activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
 
-			// Clear cached frame data when changing sticker
-			activeLayer.stickerData.frames = null;
-			activeLayer.stickerData.staticImageData = null;  // ADD THIS
-			activeLayer.stickerData.isFlattened = false;     // ADD THIS
+        // Clear cached frame data when changing sticker
+        activeLayer.stickerData.frames = null;
+        activeLayer.stickerData.staticImageData = null;
+        activeLayer.stickerData.isFlattened = false;
 
-			// Clear cached frame data when changing sticker
-			activeLayer.stickerData.frames = null;
+        // Render
+        this.renderLayer(activeLayer);
+        this.editor.layerManager.renderLayersList();
+        this.editor.updateStickerSelection();
+        this.editor.updateStatus('Sticker replaced');
+        this.editor.saveState();
+        
+        // Dispatch layerChanged event (consistent with selectGlitter)
+        window.dispatchEvent(new CustomEvent('layerChanged'));
 
-			// Render
-			this.renderLayer(activeLayer);
-			this.editor.layerManager.renderLayersList();
-			this.editor.updateStickerSelection();
-			this.editor.updateStatus('Sticker replaced');
-			this.editor.saveState();
-
-		} else {
-			// Create NEW layer (when on glitter layer or base layer)
-			await this.createStickerLayer(stickerId);
-			this.editor.updateStickerSelection();
-			this.editor.updateStatus('Sticker added');
-		}
-	}
+    } else {
+        // Create NEW layer (when on glitter layer or base layer)
+        await this.createStickerLayer(stickerId);
+        this.editor.updateStickerSelection();
+        this.editor.updateStatus('Sticker added');
+        // layerChanged is already dispatched by setActiveLayer() in createStickerLayer()
+    }
+}
 
 	// ===== RENDERING =====
 

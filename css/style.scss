@@ -4328,7 +4328,7 @@ input[type="range"] {
 	background: var(--color-bg-primary);
 	border-top: 1px solid var(--color-border);
 	box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
-	z-index: 10000;
+	z-index: 9999;
 	transform: translateY(calc(100% - var(--mobile-settings-handle-height)));
 	transition: transform var(--transition-base);
 	max-height: 60vh;

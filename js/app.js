@@ -21,6 +21,8 @@ const CONFIG = {
 	// Mobile touch
 	mobileBreakpoint: 768,
 	mobileStickerHitAreaPadding: 20, // Extra pixels for easier touch targets
+	mobileAutoCloseDesignDrawer: true, // Close design drawer after selecting glitter/sticker
+	mobileOpenDrawOnLayerAdd: true,
 
 	// glitter
 	defaultGlitterId: 111,
@@ -805,7 +807,7 @@ class GlitterEditor {
 		});
 
 
-		
+
 
 		// ===== STICKER SETTINGS =====
 		const stickerSettingsHeader = document.getElementById('stickerSettingsHeader');
@@ -1775,20 +1777,37 @@ class GlitterEditor {
 		this.setupNewCanvasModalListeners();
 	}
 
-	setupLayerTypePickerListeners() {
-		const layerTypeButtons = document.querySelectorAll('.layer-type-option');
+setupLayerTypePickerListeners() {
+    const layerTypeButtons = document.querySelectorAll('.layer-type-option');
 
-		layerTypeButtons.forEach(btn => {
-			btn.addEventListener('click', () => {
-				const type = btn.dataset.layerType;
-				const layerType = type === 'sticker' ? LayerType.STICKER : LayerType.GLITTER_FILL;
+    layerTypeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.layerType;
+            
+            // Map dataset value to LayerType enum
+            let layerType;
+            switch(type) {
+                case 'sticker':
+                    layerType = LayerType.STICKER;
+                    break;
+                case 'glitter-fill':
+                    layerType = LayerType.GLITTER_FILL;
+                    break;
+                default:
+                    console.error('Unknown layer type:', type);
+                    return;
+            }
 
-				// Create new layer (sticker OR glitter)
-				this.layerManager.addLayer(layerType);
-				this.modalManager.close('layerTypePickerModal');
-			});
-		});
-	}
+            // Close modal FIRST, then add layer
+            this.modalManager.close('layerTypePickerModal');
+            
+            // Small delay to ensure modal close completes
+            requestAnimationFrame(() => {
+                this.layerManager.addLayer(layerType);
+            });
+        });
+    });
+}
 
 	setupStickerUploadModalListeners() {
 		// Note: Modal open/close is handled by ModalManager

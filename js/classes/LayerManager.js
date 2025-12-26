@@ -106,37 +106,38 @@ class LayerManager {
 	}
 
 	// In LayerManager
-	addLayer(type = LayerType.GLITTER_FILL) {
-		let layer;
+addLayer(type = LayerType.GLITTER_FILL) {
+    let layer;
 
-		if (type === LayerType.STICKER) {
-			layer = this.editor.stickerManager.createLayer();
-		} else if (type === LayerType.GLITTER_FILL) {
-			layer = this.editor.glitterManager.createLayer();
-		}else{
-			console.log('Invalid layer type');
-		}
+    if (type === LayerType.STICKER) {
+        layer = this.editor.stickerManager.createLayer();
+    } else if (type === LayerType.GLITTER_FILL) {
+        layer = this.editor.glitterManager.createLayer();
+    } else {
+        console.log('Invalid layer type');
+    }
 
-		if (!layer) return;  // Factory returns null if max reached
+    if (!layer) return;  // Factory returns null if max reached
 
-		this.insertLayer(layer);
-		this.setActiveLayer(layer.id);
+    this.insertLayer(layer);
+    this.setActiveLayer(layer.id);
 
-		// On mobile, open design panel when glitter or sticker layer is added
-		if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
-			if (type === LayerType.GLITTER_FILL || type === LayerType.STICKER) {
-				this.editor.mobileManager.toggleDrawer('design');
-			}
-		}
+    // On mobile, open design panel when glitter or sticker layer is added
+    if (this.editor.mobileManager && this.editor.mobileManager.isMobile && CONFIG.mobileOpenDrawOnLayerAdd) {
+        if (type === LayerType.GLITTER_FILL || type === LayerType.STICKER) {
+            this.editor.mobileManager.toggleDrawer('design');
+        }
+    }
 
+    this.renderLayersList();
+    this.editor.saveState();
+    this.editor.updateActionButtons();
 
-		this.renderLayersList();
-		this.editor.saveState();
-		this.editor.updateActionButtons();
-
-		const msg = type === LayerType.STICKER ? 'Empty sticker layer added' : 'Layer added';
-		this.editor.updateStatus(msg);
-	}
+    const msg = type === LayerType.STICKER ?
+        'New sticker layer added' :
+        'New glitter fill layer added';
+    this.editor.updateStatus(msg);
+}
 
 
 	deleteLayer(layerId) {
@@ -275,7 +276,6 @@ class LayerManager {
 			document.body.classList.remove('has-active-layer');
 		}
 
-		console.log('Layer changed to', layerId);
 
 		window.dispatchEvent(new CustomEvent('layerChanged'));
 

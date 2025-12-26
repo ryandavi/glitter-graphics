@@ -372,8 +372,8 @@ class GlitterManager extends ContentManager {
 		// Store reference
 		this.layerElements.set(layer.id, wrapper);
 
-// Update selection highlight for this layer if it's active
-this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
+		// Update selection highlight for this layer if it's active
+		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
 
 	}
 
