@@ -18,12 +18,14 @@ const CONFIG = {
 	alphaThreshold: 254,
 	sliderDebounceMs: 150,
 
-	// Mobile touch
-	mobileBreakpoint: 768,
+	// Mobile
 	mobileStickerHitAreaPadding: 20, // Extra pixels for easier touch targets
 	mobileAutoCloseDesignDrawer: true, // Close design drawer after selecting glitter/sticker
 	mobileOpenDrawOnLayerAdd: true,
+	mobileBreakpoint: 800, // Width in pixels where mobile mode activates
 
+
+	
 	// glitter
 	defaultGlitterId: 111,
 
@@ -99,10 +101,6 @@ const CONFIG = {
 	watermarkPaddingY: 5, // pixels from edge
 	watermarkOpacity: 100, // 0-100
 	watermarkScale: 100, // percentage
-
-	// Mobile Configuration
-	mobileBreakpoint: 800, // Width in pixels where mobile mode activates
-
 
 	// debug
 	forceIOSExportPreview: false,  // Set to true to test iOS export modal on desktop
@@ -1732,6 +1730,11 @@ class GlitterEditor {
 					// Initialize smooth scrolling for TOC and anchors
 					const modal = document.getElementById('aboutModal');
 					initModalSmoothScroll(modal);
+
+					// Initialize tooltips for dynamically loaded content
+					initTooltipsInContainer(modalBody);
+
+
 				}
 			})
 			.register('guideModal', {

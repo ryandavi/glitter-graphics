@@ -1196,9 +1196,9 @@ class GifExporter {
 
 
 				instructions.innerHTML = `
-		<p>Tap <strong>"Save Image"</strong> below to save to Photos.</p>
-		<p class="text-muted" style="margin-top: 8px; font-size: 12px;">
-			<strong>Why can't I just tap and hold?</strong><br>
+		<p>Tap <strong>"Save Image"</strong> below to save to Files or share.</p>
+		<p class="text-muted"><strong>Why can't I just tap and hold?</strong>
+		<p class="text-muted">
 			iOS doesn't support saving animated GIFs created dynamically in the browser. 
 			Using the Share button preserves the animation properly. I know it's annoying.
 		</p>`;
@@ -1207,7 +1207,7 @@ class GifExporter {
 				configureBtn(shareBtn, false);
 				instructions.innerHTML = `
 		<p>Long-press the image to save.</p>
-		<p class="text-muted" style="margin-top: 8px; font-size: 12px;">
+		<p class="text-muted">
 			Note: This may save as a still image. Update iOS to use the Share feature for full animation support.
 		</p>`;
 			}

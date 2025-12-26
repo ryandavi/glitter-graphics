@@ -2,15 +2,6 @@
 // MODAL UTILITIES
 // ============================================
 
-/**
- * Initialize reference highlighting and smooth scrolling for a modal
- * Call this after loading modal content
- * 
- * @param {HTMLElement} modalBody - The .modal-body element
- * @param {Object} options - Configuration
- * @param {string} options.referenceListSelector - Selector for reference list (default: 'ol')
- * @param {number} options.highlightDuration - How long to highlight (default: 2000ms)
- */
 const initModalReferences = (modalBody, options = {}) => {
 	if (!modalBody) return;
 
@@ -76,11 +67,6 @@ const initModalReferences = (modalBody, options = {}) => {
 	}
 };
 
-/**
- * Initialize smooth scrolling for all anchor links in a modal
- * 
- * @param {HTMLElement} modal - The modal element
- */
 const initModalSmoothScroll = (modal) => {
 	if (!modal) return;
 
@@ -105,11 +91,6 @@ const initModalSmoothScroll = (modal) => {
 	});
 };
 
-/**
- * Initialize pixel-scaled images in a container
- * 
- * @param {HTMLElement} container - Container to search for images (default: document)
- */
 const initPixelScalerInContainer = (container = document) => {
 	const images = container.querySelectorAll('img[data-pixel-scale]');
 	if (images.length === 0) return;
@@ -179,24 +160,27 @@ const initPixelScaler = () => {
 // Run on DOM ready
 document.addEventListener('DOMContentLoaded', initPixelScaler);
 
-
+// ============================================
+// TOOLTIP MANAGER CLASS
+// ============================================
 // ============================================
 // TOOLTIP MANAGER CLASS
 // ============================================
 class TooltipManager {
 	constructor(options = {}) {
 		this.config = {
-			gap: 8,                  // Distance from the element
+			gap: 12,                 // Distance from the cursor
 			viewportPadding: 10,     // Buffer from screen edges
 			dismissOnScroll: true,   // Hide on scroll
 			oneAtATime: true,        // Only one open at a time
-			placement: 'bottom',        // Primary Axis: top, bottom, left, right
+			placement: 'bottom',     // Primary Axis: top, bottom, left, right
 			alignment: 'center',     // Secondary Axis: center, left, right, top, bottom
 			...options
 		};
 
 		this.activeTooltip = null;
 		this.activeElement = null;
+		this.activeCoords = null; // Store cursor/touch position
 		this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 		this.scrollContainers = new Set();
 
@@ -230,7 +214,7 @@ class TooltipManager {
 			if (this.isTouchDevice) {
 				el.addEventListener('click', (e) => this.handleMobileClick(e, el));
 			} else {
-				el.addEventListener('mouseenter', () => this.show(el));
+				el.addEventListener('mouseenter', (e) => this.show(el, e));
 				el.addEventListener('mouseleave', () => this.hide(el));
 			}
 
@@ -258,10 +242,31 @@ class TooltipManager {
 		window.addEventListener('resize', this.handleResize);
 	}
 
-	show(element) {
+	show(element, event) {
 		if (this.config.oneAtATime) {
 			this.dismissAll();
 		}
+
+		// Capture cursor/touch position
+		let x, y;
+		if (event) {
+			if (event.touches && event.touches.length > 0) {
+				// Touch event
+				x = event.touches[0].clientX;
+				y = event.touches[0].clientY;
+			} else {
+				// Mouse event
+				x = event.clientX;
+				y = event.clientY;
+			}
+		} else {
+			// Fallback to element center if no event
+			const rect = element.getBoundingClientRect();
+			x = rect.left + rect.width / 2;
+			y = rect.top + rect.height / 2;
+		}
+
+		this.activeCoords = { x, y };
 
 		const tooltip = document.createElement('div');
 		tooltip.className = 'tooltip';
@@ -283,19 +288,28 @@ class TooltipManager {
 	// --- POSITIONING LOGIC ---
 
 	position(tooltip, element) {
-		const rect = element.getBoundingClientRect();
 		const tooltipRect = tooltip.getBoundingClientRect();
+
+		// Use stored cursor/touch coordinates instead of element bounds
+		const cursorRect = {
+			left: this.activeCoords.x,
+			top: this.activeCoords.y,
+			right: this.activeCoords.x,
+			bottom: this.activeCoords.y,
+			width: 0,
+			height: 0
+		};
 
 		let preferredPlacement = tooltip.dataset.placement;
 		const preferredAlignment = tooltip.dataset.alignment;
 
 		// 1. Calculate preferred coordinates based on placement + alignment
-		let coords = this.getCoords(preferredPlacement, preferredAlignment, rect, tooltipRect);
+		let coords = this.getCoords(preferredPlacement, preferredAlignment, cursorRect, tooltipRect);
 
 		// 2. Check collision with viewport edges (Main Axis flip)
 		if (this.isOutOfBounds(coords, tooltipRect)) {
 			const flippedPlacement = this.getOppositePlacement(preferredPlacement);
-			const flippedCoords = this.getCoords(flippedPlacement, preferredAlignment, rect, tooltipRect);
+			const flippedCoords = this.getCoords(flippedPlacement, preferredAlignment, cursorRect, tooltipRect);
 
 			// If flipped fits better (or isn't strictly worse), use it
 			if (!this.isOutOfBounds(flippedCoords, tooltipRect)) {
@@ -305,7 +319,6 @@ class TooltipManager {
 		}
 
 		// 3. Clamp Secondary Axis 
-		// (Ensure it doesn't slide off screen left/right if placed top/bottom, etc.)
 		coords = this.clampToViewport(coords, tooltipRect);
 
 		// 4. Apply absolute position including current scroll offset
@@ -335,9 +348,9 @@ class TooltipManager {
 				left = targetRect.right + gap;
 				top = this.getVerticalAlignment(alignment, targetRect, tooltipRect);
 				break;
-			default: // Fallback to top/center
-				top = targetRect.top - tooltipRect.height - gap;
-				left = targetRect.left + (targetRect.width / 2) - (tooltipRect.width / 2);
+			default: // Fallback to bottom/center
+				top = targetRect.bottom + gap;
+				left = targetRect.left - (tooltipRect.width / 2);
 		}
 
 		return { top, left };
@@ -351,8 +364,8 @@ class TooltipManager {
 		if (align === 'right' || align === 'end') {
 			return target.right - tooltip.width;
 		}
-		// Default center
-		return target.left + (target.width / 2) - (tooltip.width / 2);
+		// Default center - center tooltip on cursor point
+		return target.left - (tooltip.width / 2);
 	}
 
 	// Calculate Y position based on alignment (top, center, bottom)
@@ -363,8 +376,8 @@ class TooltipManager {
 		if (align === 'bottom' || align === 'end') {
 			return target.bottom - tooltip.height;
 		}
-		// Default center
-		return target.top + (target.height / 2) - (tooltip.height / 2);
+		// Default center - center tooltip on cursor point
+		return target.top - (tooltip.height / 2);
 	}
 
 	getOppositePlacement(placement) {
@@ -403,6 +416,7 @@ class TooltipManager {
 			if (this.activeTooltip === tooltip) {
 				this.activeTooltip = null;
 				this.activeElement = null;
+				this.activeCoords = null;
 			}
 		}
 	}
@@ -427,7 +441,7 @@ class TooltipManager {
 		if (element._tooltip) {
 			this.hide(element);
 		} else {
-			this.show(element);
+			this.show(element, e);
 		}
 	}
 
@@ -440,3 +454,39 @@ class TooltipManager {
 
 // Global instance
 const tooltipManager = new TooltipManager();
+
+/**
+ * Initialize tooltips in a specific container (for dynamically loaded content)
+ * 
+ * @param {HTMLElement} container - Container to search for tooltip elements
+ */
+const initTooltipsInContainer = (container = document) => {
+	if (!container) return;
+
+	const elements = container.querySelectorAll('[data-tooltip]');
+	if (elements.length === 0) return;
+
+	elements.forEach(el => {
+		// Skip if already initialized (prevent double-binding)
+		if (el._tooltipInitialized) return;
+		el._tooltipInitialized = true;
+
+		if (tooltipManager.isTouchDevice) {
+			el.addEventListener('click', (e) => tooltipManager.handleMobileClick(e, el));
+		} else {
+			el.addEventListener('mouseenter', (e) => tooltipManager.show(el, e));
+			el.addEventListener('mouseleave', () => tooltipManager.hide(el));
+		}
+
+		// Handle dismiss on scroll
+		if (tooltipManager.config.dismissOnScroll) {
+			const scrollParent = tooltipManager.findScrollableParent(el);
+			if (!tooltipManager.scrollContainers.has(scrollParent)) {
+				tooltipManager.scrollContainers.add(scrollParent);
+				scrollParent.addEventListener('scroll', tooltipManager.handleScroll, {
+					passive: true
+				});
+			}
+		}
+	});
+};

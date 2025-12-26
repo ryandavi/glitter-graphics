@@ -38,6 +38,9 @@
 	--color-accent-hover: var(--blue-300);
 	--color-accent-light: var(--blue-100);
 	--color-accent-border: var(--blue-200);
+	--color-accent-active: var(--blue-400);
+	--color-accent-visited: var(--blue-100);
+
 
 	--color-danger: var(--red-100);
 	--color-success: var(--green-100);
@@ -395,33 +398,64 @@ textarea {
 
 /* ===== LINKS ===== */
 
-a,
-a:visited {
+
+
+a {
 	color: var(--color-accent);
-}
+	text-decoration: underline;
+	text-decoration-thickness: 0.08em;
+	text-underline-offset: 0.15em;
+	transition: color 0.15s ease, text-decoration-color 0.15s ease;
 
-a.external {
-	display: inline-flex;
-	align-items: center;
-	white-space: nowrap;
-	gap: 0.3em;
-	/* spacing between text and icon */
-
-	&::after {
-		content: "";
-		flex-shrink: 0;
-		width: 0.857em;
-		height: 0.857em;
-		background-image: url(https://en.wikipedia.org/w/skins/Vector/resources/skins.vector.styles/images/link-external-small-ltr-progressive.svg?fb64d);
-		background-size: contain;
-		background-repeat: no-repeat;
+	&:hover {
+		color: var(--color-accent-hover);
+		text-decoration-color: currentColor;
 	}
 
+	&:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 0.15em;
+		border-radius: 0.15em;
+	}
+
+	&:active {
+		color: var(--color-accent-active);
+	}
+
+	&:visited {
+		color: var(--color-accent-visited);
+	}
+
+	&:visited:hover {
+		color: var(--color-accent-hover);
+	}
+
+	// External links (auto-detected)
+	&[target="_blank"] {
+		padding-right: 1.25em;
+		position: relative;
+
+		&::after {
+			content: '';
+			position: absolute;
+			width: 0.85em;
+			height: 0.85em;
+			margin-left: 0.25em;
+			background: url(https://en.wikipedia.org/w/skins/Vector/resources/skins.vector.styles/images/link-external-small-ltr-progressive.svg)
+				no-repeat center / contain;
+			transform: translateY(0.15em);
+		}
+	}
+
+	// Current / active navigation
+	&[aria-current='page'] {
+		font-weight: 600;
+		text-decoration-thickness: 0.12em;
+	}
 }
 
-a:hover {
-	color: var(--color-accent-hover);
-}
+
+
 
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar {
@@ -1637,7 +1671,7 @@ input[type="range"] {
 	pointer-events: none;
 	will-change: filter;
 
-	// THE MAGIC: Drop-shadow on the parent follows the child's mask shape
+	// Drop-shadow on the parent follows the child's mask shape
 	&.selected {
 
 		filter: url(#selection-glow) drop-shadow(0 0px 3px rgb(0, 0, 0));
@@ -2801,6 +2835,7 @@ input[type="range"] {
 
 			&.text-muted {
 				@include text-sm;
+				margin-top: 8px;
 				color: var(--color-text-tertiary);
 			}
 
@@ -3360,7 +3395,11 @@ input[type="range"] {
 
 
 
-
+.glitter-element {
+	&.selected {
+		filter: unset;
+	}
+}
 
 
 
