@@ -2799,9 +2799,6 @@ body.tool-select .sticker-element:not(.selected):hover {
   margin: 0 auto;
   text-align: center;
 }
-#aboutModal .glitter-element.selected {
-  filter: unset;
-}
 #aboutModal .figure-wrapper {
   display: flex;
   align-items: center;
@@ -3295,6 +3292,9 @@ body.tool-select .sticker-element:not(.selected):hover {
   .pan-controls,
   .color-picker-controls {
     transform: translateX(-50%) translateY(-15px);
+  }
+  .glitter-element.selected {
+    filter: unset;
   }
   body {
     overflow: hidden;

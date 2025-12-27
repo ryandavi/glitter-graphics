@@ -715,13 +715,13 @@ goToSticker(layerId) {
 			case LayerType.STICKER: {
 				const sticker = this.editor.stickerManager.getItemById(layer.stickerSourceId); // Changed this line
 				nameText.textContent = layer.name || 'Sticker';
-				typeText.textContent = sticker?.category ? `${sticker.category}` : 'Sticker';
+				typeText.textContent = sticker?.category ? `Sticker / ${sticker.category}` : 'Sticker';
 				break;
 			}
 			case LayerType.GLITTER_FILL: {
 				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
 				nameText.textContent = glitter ? glitter.name : 'No glitter';
-				typeText.textContent = glitter?.category ? `${glitter.category}` : 'Glitter';
+				typeText.textContent = glitter?.category ? `Glitter / ${glitter.category}` : 'Glitter';
 				break;
 			}
 			case LayerType.BASE_IMAGE:
