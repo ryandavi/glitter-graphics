@@ -1145,55 +1145,90 @@ _standardLCM(layerFrameCounts, maxFrames) {
 
 _smartReduceFrames(layerFrameCounts, maxFrames) {
 	const reductions = [];
-	const reducedCounts = new Map();
+	let reducedCounts = new Map(layerFrameCounts); // Start with original counts
 
+	// Step 1: Round to multiples of 3 (if close)
 	layerFrameCounts.forEach((originalCount, layerId) => {
-		let reducedCount = originalCount;
-		let reason = null;
-
-		// Round to multiple of 3 if within 20%
 		const nearestMultipleOf3 = Math.round(originalCount / 3) * 3;
 		const difference = Math.abs(originalCount - nearestMultipleOf3);
 		const percentDiff = difference / originalCount;
 
-	// Round to multiple of 3 if within 10% (stricter)
-	if (nearestMultipleOf3 > 0 && percentDiff <= 0.10 && nearestMultipleOf3 !== originalCount) {
-		reducedCount = nearestMultipleOf3;
-		reason = 'rounded-to-multiple-of-3';
-	}
-
-	// Aggressively reduce high frame counts (>24) - higher threshold
-	if (reducedCount > 24) {
-		while (reducedCount > 24) {
-			reducedCount = Math.ceil(reducedCount / 2);
-		}
-		reducedCount = Math.max(3, Math.round(reducedCount / 3) * 3);
-		reason = reason ? 'rounded-and-reduced' : 'high-frame-reduction';
-	}
-
-		reducedCounts.set(layerId, reducedCount);
-
-		if (reducedCount !== originalCount) {
+		if (nearestMultipleOf3 > 0 && percentDiff <= 0.20 && nearestMultipleOf3 !== originalCount) {
+			reducedCounts.set(layerId, nearestMultipleOf3);
 			reductions.push({
 				layerId,
 				original: originalCount,
-				reduced: reducedCount,
-				reason
+				reduced: nearestMultipleOf3,
+				reason: 'rounded-to-multiple-of-3'
 			});
 		}
 	});
 
-	// Calculate LCM with reduced counts
-	const counts = Array.from(reducedCounts.values()).filter(c => c > 0);
-	let total = counts[0];
-	if (counts.length > 1) {
-		total = counts.reduce((acc, val) => this.lcm(acc, val), total);
+	// Step 2: Calculate initial LCM
+	let counts = Array.from(reducedCounts.values()).filter(c => c > 0);
+	let totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
+
+	// Step 3: Apply tiered reductions based on total frames
+	let threshold, divisor, tier;
+	
+	if (totalFrames > 90) {
+		threshold = 12;
+		divisor = 2;
+		tier = 4;
+	} else if (totalFrames > 60) {
+		threshold = 18;
+		divisor = 1.5;
+		tier = 3;
+	} else if (totalFrames > 36) {
+		threshold = 24;
+		divisor = 1.5;
+		tier = 2;
+	} else {
+		// No reduction needed
+		return {
+			totalFrames: Math.min(totalFrames, maxFrames),
+			frameMap: reducedCounts,
+			reductions
+		};
 	}
 
-	const totalFrames = Math.min(total, maxFrames);
+	if (this.config.debug) console.log(`[Smart Reduction] Total frames: ${totalFrames}, applying Tier ${tier} (threshold: ${threshold})`);
+
+	// Apply tier-based reduction
+	reducedCounts.forEach((count, layerId) => {
+		if (count > threshold) {
+			let newCount = count;
+			while (newCount > threshold) {
+				newCount = Math.ceil(newCount / divisor);
+			}
+			newCount = Math.max(3, Math.round(newCount / 3) * 3);
+
+			if (newCount !== count) {
+				reducedCounts.set(layerId, newCount);
+				
+				// Update or add reduction record
+				const existingIdx = reductions.findIndex(r => r.layerId === layerId);
+				if (existingIdx >= 0) {
+					reductions[existingIdx].reduced = newCount;
+					reductions[existingIdx].reason = 'tier-' + tier + '-reduction';
+				} else {
+					reductions.push({
+						layerId,
+						original: layerFrameCounts.get(layerId),
+						reduced: newCount,
+						reason: 'tier-' + tier + '-reduction'
+					});
+				}
+			}
+		}
+	});
+
+	// Recalculate final LCM
+	counts = Array.from(reducedCounts.values()).filter(c => c > 0);
+	totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
 
 	return {
-		totalFrames,
+		totalFrames: Math.min(totalFrames, maxFrames),
 		frameMap: reducedCounts,
 		reductions
 	};

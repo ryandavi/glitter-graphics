@@ -970,6 +970,8 @@ input[type="range"] {
 	display: flex;
 	flex-direction: column;
 
+	background: var(--color-bg-primary);
+
 	>.image-dropzone-wrapper {
 		>#imageUpload {
 			display: none;
@@ -1099,6 +1101,8 @@ input[type="range"] {
 	display: flex;
 	flex-direction: column;
 	overflow-y: auto;
+
+	background: var(--color-bg-primary);
 
 	>.section-header {
 		flex-shrink: 0;
@@ -1345,6 +1349,8 @@ input[type="range"] {
 	justify-content: flex-end;
 	display: flex;
 	gap: var(--spacing-sm);
+
+	background: var(--color-bg-secondary);
 
 	.icon-wrapper {
 		width: var(--icon-size-sm);
