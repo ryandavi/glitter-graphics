@@ -224,9 +224,9 @@ addLayer(type = LayerType.GLITTER_FILL) {
 
 	setActiveLayer(layerId) {
 
-	if (this.activeLayerId === layerId) {
-		return;
-	}
+		if (this.activeLayerId === layerId) {
+			return;
+		}
 
 		this.activeLayerId = layerId;
 		this.renderLayersList();
@@ -238,6 +238,9 @@ addLayer(type = LayerType.GLITTER_FILL) {
 
 		// Update selection highlight
 		this.updateSelectionHighlight(layerId);
+
+		// Update preview (important for solo mode)
+		this.editor.updatePreview();
 
 		// Update Side Panel UI
 		this.editor.updateSidePanelUI(layer);

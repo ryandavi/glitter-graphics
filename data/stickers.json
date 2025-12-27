@@ -12,16 +12,13 @@
       "animal",
       "insect"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 143,
     "height": 140,
     "frame_count": 3,
     "file_size": 12016,
-    "sort_order": 1,
-    "featured": false
+    "sort_order": 1
   },
   {
     "id": 2,
@@ -36,16 +33,13 @@
       "animal",
       "colorful"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 162,
     "height": 143,
     "frame_count": 2,
     "file_size": 16193,
-    "sort_order": 2,
-    "featured": false
+    "sort_order": 2
   },
   {
     "id": 3,
@@ -60,16 +54,13 @@
       "animal",
       "bird"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 358,
     "height": 179,
     "frame_count": 3,
     "file_size": 13742,
-    "sort_order": 3,
-    "featured": false
+    "sort_order": 3
   },
   {
     "id": 4,
@@ -83,16 +74,13 @@
       "character",
       "cute"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 60,
     "height": 60,
     "frame_count": 2,
     "file_size": 4623,
-    "sort_order": 4,
-    "featured": false
+    "sort_order": 4
   },
   {
     "id": 5,
@@ -107,16 +95,13 @@
       "glitter",
       "decorative"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 385,
     "height": 143,
     "frame_count": 2,
     "file_size": 3671,
-    "sort_order": 5,
-    "featured": false
+    "sort_order": 5
   },
   {
     "id": 6,
@@ -130,16 +115,13 @@
       "glitter",
       "nature"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 76,
     "height": 93,
     "frame_count": 3,
     "file_size": 6181,
-    "sort_order": 6,
-    "featured": false
+    "sort_order": 6
   },
   {
     "id": 7,
@@ -154,16 +136,13 @@
       "glitter",
       "nature"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 289,
     "height": 106,
     "frame_count": 2,
     "file_size": 5858,
-    "sort_order": 7,
-    "featured": false
+    "sort_order": 7
   },
   {
     "id": 8,
@@ -178,16 +157,13 @@
       "flower",
       "nature"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 248,
     "height": 293,
     "frame_count": 3,
     "file_size": 73547,
-    "sort_order": 8,
-    "featured": false
+    "sort_order": 8
   },
   {
     "id": 9,
@@ -202,16 +178,13 @@
       "flower",
       "nature"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 219,
     "height": 277,
     "frame_count": 3,
     "file_size": 62515,
-    "sort_order": 9,
-    "featured": false
+    "sort_order": 9
   },
   {
     "id": 10,
@@ -225,16 +198,13 @@
       "flower",
       "nature"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 65,
     "height": 74,
     "frame_count": 5,
     "file_size": 10367,
-    "sort_order": 10,
-    "featured": false
+    "sort_order": 10
   },
   {
     "id": 11,
@@ -248,16 +218,13 @@
       "flower",
       "nature"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 110,
     "height": 114,
     "frame_count": 21,
     "file_size": 32095,
-    "sort_order": 11,
-    "featured": false
+    "sort_order": 11
   },
   {
     "id": 12,
@@ -273,16 +240,13 @@
       "glitter",
       "flower"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 100,
     "height": 150,
     "frame_count": 10,
     "file_size": 10343,
-    "sort_order": 12,
-    "featured": false
+    "sort_order": 12
   },
   {
     "id": 13,
@@ -297,16 +261,13 @@
       "glitter",
       "flower"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 91,
     "height": 131,
     "frame_count": 3,
     "file_size": 4165,
-    "sort_order": 13,
-    "featured": false
+    "sort_order": 13
   },
   {
     "id": 14,
@@ -320,16 +281,13 @@
       "spin",
       "flower"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 133,
     "height": 100,
     "frame_count": 15,
     "file_size": 39581,
-    "sort_order": 14,
-    "featured": false
+    "sort_order": 14
   },
   {
     "id": 15,
@@ -343,16 +301,13 @@
       "sparkle",
       "flower"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 277,
     "height": 238,
     "frame_count": 5,
     "file_size": 108717,
-    "sort_order": 15,
-    "featured": false
+    "sort_order": 15
   },
   {
     "id": 16,
@@ -367,20 +322,17 @@
       "flower",
       "nature"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 350,
     "height": 330,
     "frame_count": 2,
     "file_size": 101258,
-    "sort_order": 16,
-    "featured": false
+    "sort_order": 16
   },
   {
     "id": 17,
-    "name": "Playboy Silver Glitter",
+    "name": "Playboy Silver Glitter Logo",
     "filename": "playboy_silver-glitter.gif",
     "url": "images/stickers/logo/playboy_silver-glitter.gif",
     "category": "logo",
@@ -391,16 +343,13 @@
       "logo",
       "bunny"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 71,
     "height": 107,
     "frame_count": 3,
     "file_size": 3374,
-    "sort_order": 17,
-    "featured": false
+    "sort_order": 17
   },
   {
     "id": 18,
@@ -415,16 +364,13 @@
       "object",
       "retro"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 63,
     "height": 144,
     "frame_count": 18,
     "file_size": 16847,
-    "sort_order": 18,
-    "featured": false
+    "sort_order": 18
   },
   {
     "id": 19,
@@ -438,40 +384,33 @@
       "object",
       "leaf"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 60,
     "height": 100,
     "frame_count": 6,
     "file_size": 5224,
-    "sort_order": 19,
-    "featured": false
+    "sort_order": 19
   },
   {
     "id": 20,
-    "name": "Weed Lit 2",
+    "name": "Weed Lit",
     "filename": "weed_lit-2.gif",
     "url": "images/stickers/object/weed_lit-2.gif",
     "category": "object",
     "tags": [
       "weed",
       "lit",
-      "2",
       "object",
       "leaf"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 90,
     "height": 100,
     "frame_count": 12,
     "file_size": 13064,
-    "sort_order": 20,
-    "featured": false
+    "sort_order": 20
   },
   {
     "id": 21,
@@ -487,16 +426,13 @@
       "object",
       "drink"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 233,
     "height": 150,
     "frame_count": 3,
     "file_size": 21824,
-    "sort_order": 21,
-    "featured": false
+    "sort_order": 21
   },
   {
     "id": 22,
@@ -510,16 +446,13 @@
       "people",
       "fire"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 30,
     "height": 55,
     "frame_count": 32,
     "file_size": 16948,
-    "sort_order": 22,
-    "featured": false
+    "sort_order": 22
   },
   {
     "id": 23,
@@ -533,40 +466,33 @@
       "people",
       "love"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 132,
     "height": 70,
     "frame_count": 4,
     "file_size": 9631,
-    "sort_order": 23,
-    "featured": false
+    "sort_order": 23
   },
   {
     "id": 24,
-    "name": "Lips Kiss 2",
+    "name": "Lips Kiss",
     "filename": "lips_kiss_2.gif",
     "url": "images/stickers/people/lips_kiss_2.gif",
     "category": "people",
     "tags": [
       "lips",
       "kiss",
-      "2",
       "people",
       "love"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 110,
     "height": 77,
     "frame_count": 13,
     "file_size": 18167,
-    "sort_order": 24,
-    "featured": false
+    "sort_order": 24
   },
   {
     "id": 25,
@@ -581,16 +507,13 @@
       "glitter",
       "people"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 362,
     "height": 270,
     "frame_count": 3,
     "file_size": 18696,
-    "sort_order": 25,
-    "featured": false
+    "sort_order": 25
   },
   {
     "id": 26,
@@ -604,20 +527,17 @@
       "glitter",
       "people"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 105,
     "height": 65,
     "frame_count": 3,
     "file_size": 7373,
-    "sort_order": 26,
-    "featured": false
+    "sort_order": 26
   },
   {
     "id": 27,
-    "name": "Lips Pink Glitter 2",
+    "name": "Lips Pink Glitter",
     "filename": "lips_pink-glitter-2.gif",
     "url": "images/stickers/people/lips_pink-glitter-2.gif",
     "category": "people",
@@ -625,19 +545,15 @@
       "lips",
       "pink",
       "glitter",
-      "2",
       "people"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 181,
     "height": 150,
     "frame_count": 3,
     "file_size": 45802,
-    "sort_order": 27,
-    "featured": false
+    "sort_order": 27
   },
   {
     "id": 28,
@@ -651,20 +567,17 @@
       "glitter",
       "people"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 105,
     "height": 65,
     "frame_count": 3,
     "file_size": 6027,
-    "sort_order": 28,
-    "featured": false
+    "sort_order": 28
   },
   {
     "id": 29,
-    "name": "Lips Purple Glitter 2",
+    "name": "Lips Purple Glitter",
     "filename": "lips_purple-glitter-2.gif",
     "url": "images/stickers/people/lips_purple-glitter-2.gif",
     "category": "people",
@@ -672,19 +585,15 @@
       "lips",
       "purple",
       "glitter",
-      "2",
       "people"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 100,
     "height": 89,
     "frame_count": 3,
     "file_size": 3376,
-    "sort_order": 29,
-    "featured": false
+    "sort_order": 29
   },
   {
     "id": 30,
@@ -698,16 +607,13 @@
       "glitter",
       "people"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 110,
     "height": 82,
     "frame_count": 3,
     "file_size": 6515,
-    "sort_order": 30,
-    "featured": false
+    "sort_order": 30
   },
   {
     "id": 31,
@@ -722,208 +628,17 @@
       "people",
       "support"
     ],
-    "colors": [],
-    "text": "",
     "is_animated": true,
     "has_transparency": true,
     "width": 111,
     "height": 111,
     "frame_count": 13,
     "file_size": 52385,
-    "sort_order": 31,
-    "featured": false
-  },
-  {
-    "id": 32,
-    "name": "Rainbow Glitter",
-    "filename": "rainbow_glitter.gif",
-    "url": "images/stickers/shape/rainbow_glitter.gif",
-    "category": "shape",
-    "tags": [
-      "rainbow",
-      "glitter",
-      "shape",
-      "colorful"
-    ],
-    "colors": [],
-    "text": "",
-    "is_animated": true,
-    "has_transparency": true,
-    "width": 255,
-    "height": 139,
-    "frame_count": 3,
-    "file_size": 41077,
-    "sort_order": 32,
-    "featured": false
-  },
-  {
-    "id": 33,
-    "name": "Red Heart Rotate",
-    "filename": "red_heart_rotate.gif",
-    "url": "images/stickers/shape/red_heart_rotate.gif",
-    "category": "shape",
-    "tags": [
-      "red",
-      "heart",
-      "rotate",
-      "shape",
-      "love"
-    ],
-    "colors": [],
-    "text": "",
-    "is_animated": true,
-    "has_transparency": true,
-    "width": 75,
-    "height": 75,
-    "frame_count": 12,
-    "file_size": 8162,
-    "sort_order": 33,
-    "featured": false
-  },
-  {
-    "id": 34,
-    "name": "Red Heart Rotate 2",
-    "filename": "red_heart_rotate_2.gif",
-    "url": "images/stickers/shape/red_heart_rotate_2.gif",
-    "category": "shape",
-    "tags": [
-      "red",
-      "heart",
-      "rotate",
-      "2",
-      "shape",
-      "love"
-    ],
-    "colors": [],
-    "text": "",
-    "is_animated": true,
-    "has_transparency": true,
-    "width": 90,
-    "height": 90,
-    "frame_count": 6,
-    "file_size": 12516,
-    "sort_order": 34,
-    "featured": false
-  },
-  {
-    "id": 35,
-    "name": "Star",
-    "filename": "star.gif",
-    "url": "images/stickers/shape/star.gif",
-    "category": "shape",
-    "tags": [
-      "star",
-      "shape",
-      "basic"
-    ],
-    "colors": [],
-    "text": "",
-    "is_animated": true,
-    "has_transparency": true,
-    "width": 32,
-    "height": 32,
-    "frame_count": 14,
-    "file_size": 5106,
-    "sort_order": 35,
-    "featured": false
-  },
-  {
-    "id": 36,
-    "name": "Star Pink Glitter",
-    "filename": "star_pink-glitter.gif",
-    "url": "images/stickers/shape/star_pink-glitter.gif",
-    "category": "shape",
-    "tags": [
-      "star",
-      "pink",
-      "glitter",
-      "shape"
-    ],
-    "colors": [],
-    "text": "",
-    "is_animated": true,
-    "has_transparency": true,
-    "width": 62,
-    "height": 63,
-    "frame_count": 3,
-    "file_size": 4720,
-    "sort_order": 36,
-    "featured": false
-  },
-  {
-    "id": 37,
-    "name": "Star Silver Glitter",
-    "filename": "star_silver-glitter.gif",
-    "url": "images/stickers/shape/star_silver-glitter.gif",
-    "category": "shape",
-    "tags": [
-      "star",
-      "silver",
-      "glitter",
-      "shape"
-    ],
-    "colors": [],
-    "text": "",
-    "is_animated": true,
-    "has_transparency": true,
-    "width": 119,
-    "height": 83,
-    "frame_count": 3,
-    "file_size": 4400,
-    "sort_order": 37,
-    "featured": false
-  },
-  {
-    "id": 38,
-    "name": "Star Ring Rotate Red",
-    "filename": "star-ring_rotate_red.gif",
-    "url": "images/stickers/shape/star-ring_rotate_red.gif",
-    "category": "shape",
-    "tags": [
-      "star",
-      "ring",
-      "rotate",
-      "red",
-      "shape"
-    ],
-    "colors": [],
-    "text": "",
-    "is_animated": true,
-    "has_transparency": true,
-    "width": 120,
-    "height": 62,
-    "frame_count": 6,
-    "file_size": 6607,
-    "sort_order": 38,
-    "featured": false
-  },
-  {
-    "id": 39,
-    "name": "Star Ring Rotate Silver",
-    "filename": "star-ring_rotate_silver.gif",
-    "url": "images/stickers/shape/star-ring_rotate_silver.gif",
-    "category": "shape",
-    "tags": [
-      "star",
-      "ring",
-      "rotate",
-      "silver",
-      "shape"
-    ],
-    "colors": [],
-    "text": "",
-    "is_animated": true,
-    "has_transparency": true,
-    "width": 120,
-    "height": 61,
-    "frame_count": 6,
-    "file_size": 6619,
-    "sort_order": 39,
-    "featured": false
+    "sort_order": 31
   },
   {
     "id": 40,
-    "name": "Aloha Hibiscus Pink Glitter",
+    "name": "Aloha Hibiscus Pink Glitter Text",
     "filename": "aloha_hibiscus_pink-glitter.gif",
     "url": "images/stickers/text/aloha_hibiscus_pink-glitter.gif",
     "category": "text",
@@ -931,11 +646,8 @@
       "aloha",
       "hibiscus",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Aloha Hibiscus",
     "is_animated": true,
     "has_transparency": true,
@@ -943,23 +655,19 @@
     "height": 90,
     "frame_count": 3,
     "file_size": 32233,
-    "sort_order": 40,
-    "featured": false
+    "sort_order": 40
   },
   {
     "id": 41,
-    "name": "Angel Blue Glitter",
+    "name": "Angel Blue Glitter Text",
     "filename": "angel_blue-glitter.gif",
     "url": "images/stickers/text/angel_blue-glitter.gif",
     "category": "text",
     "tags": [
       "angel",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Angel",
     "is_animated": true,
     "has_transparency": true,
@@ -967,23 +675,19 @@
     "height": 49,
     "frame_count": 3,
     "file_size": 10506,
-    "sort_order": 41,
-    "featured": false
+    "sort_order": 41
   },
   {
     "id": 42,
-    "name": "Babyface Red Glitter",
+    "name": "Babyface Red Glitter Text",
     "filename": "babyface_red-glitter.gif",
     "url": "images/stickers/text/babyface_red-glitter.gif",
     "category": "text",
     "tags": [
       "babyface",
       "red",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Babyface",
     "is_animated": true,
     "has_transparency": true,
@@ -991,12 +695,11 @@
     "height": 57,
     "frame_count": 3,
     "file_size": 19223,
-    "sort_order": 42,
-    "featured": false
+    "sort_order": 42
   },
   {
     "id": 43,
-    "name": "Baby Girl Gothic Pink Glitter",
+    "name": "Baby Girl Gothic Pink Glitter Text",
     "filename": "baby-girl_gothic_pink-glitter.gif",
     "url": "images/stickers/text/baby-girl_gothic_pink-glitter.gif",
     "category": "text",
@@ -1005,11 +708,8 @@
       "girl",
       "gothic",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Baby Girl",
     "is_animated": true,
     "has_transparency": true,
@@ -1017,12 +717,11 @@
     "height": 136,
     "frame_count": 3,
     "file_size": 57692,
-    "sort_order": 43,
-    "featured": false
+    "sort_order": 43
   },
   {
     "id": 44,
-    "name": "Baby Gurl Red Glitter",
+    "name": "Baby Gurl Red Glitter Text",
     "filename": "baby-gurl_red-glitter.gif",
     "url": "images/stickers/text/baby-gurl_red-glitter.gif",
     "category": "text",
@@ -1030,11 +729,8 @@
       "baby",
       "gurl",
       "red",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Baby Gurl",
     "is_animated": true,
     "has_transparency": true,
@@ -1042,23 +738,19 @@
     "height": 58,
     "frame_count": 3,
     "file_size": 14015,
-    "sort_order": 44,
-    "featured": false
+    "sort_order": 44
   },
   {
     "id": 45,
-    "name": "Beautiful Blue Glitter",
+    "name": "Beautiful Blue Glitter Text",
     "filename": "beautiful_blue-glitter.gif",
     "url": "images/stickers/text/beautiful_blue-glitter.gif",
     "category": "text",
     "tags": [
       "beautiful",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Beautiful",
     "is_animated": true,
     "has_transparency": true,
@@ -1066,12 +758,11 @@
     "height": 78,
     "frame_count": 3,
     "file_size": 33900,
-    "sort_order": 45,
-    "featured": false
+    "sort_order": 45
   },
   {
     "id": 46,
-    "name": "Blonde Angel Blue Glitter",
+    "name": "Blonde Angel Blue Glitter Text",
     "filename": "blonde-angel_blue-glitter.gif",
     "url": "images/stickers/text/blonde-angel_blue-glitter.gif",
     "category": "text",
@@ -1079,11 +770,8 @@
       "blonde",
       "angel",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Blonde Angel",
     "is_animated": true,
     "has_transparency": true,
@@ -1091,23 +779,19 @@
     "height": 59,
     "frame_count": 3,
     "file_size": 9353,
-    "sort_order": 46,
-    "featured": false
+    "sort_order": 46
   },
   {
     "id": 47,
-    "name": "Blondie Purple Glitter",
+    "name": "Blondie Purple Glitter Text",
     "filename": "blondie_purple-glitter.gif",
     "url": "images/stickers/text/blondie_purple-glitter.gif",
     "category": "text",
     "tags": [
       "blondie",
       "purple",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Blondie",
     "is_animated": true,
     "has_transparency": true,
@@ -1115,12 +799,11 @@
     "height": 57,
     "frame_count": 3,
     "file_size": 13331,
-    "sort_order": 47,
-    "featured": false
+    "sort_order": 47
   },
   {
     "id": 48,
-    "name": "Butterfly Princess Pink Glitter",
+    "name": "Butterfly Princess Pink Glitter Text",
     "filename": "butterfly-princess_pink-glitter.gif",
     "url": "images/stickers/text/butterfly-princess_pink-glitter.gif",
     "category": "text",
@@ -1128,11 +811,8 @@
       "butterfly",
       "princess",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Butterfly Princess",
     "is_animated": true,
     "has_transparency": true,
@@ -1140,23 +820,19 @@
     "height": 190,
     "frame_count": 3,
     "file_size": 25517,
-    "sort_order": 48,
-    "featured": false
+    "sort_order": 48
   },
   {
     "id": 49,
-    "name": "Chiquita Pink Glitter",
+    "name": "Chiquita Pink Glitter Text",
     "filename": "chiquita_pink-glitter.gif",
     "url": "images/stickers/text/chiquita_pink-glitter.gif",
     "category": "text",
     "tags": [
       "chiquita",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Chiquita",
     "is_animated": true,
     "has_transparency": true,
@@ -1164,23 +840,19 @@
     "height": 400,
     "frame_count": 2,
     "file_size": 68902,
-    "sort_order": 49,
-    "featured": false
+    "sort_order": 49
   },
   {
     "id": 50,
-    "name": "Crazy Blue Glitter",
+    "name": "Crazy Blue Glitter Text",
     "filename": "crazy_blue-glitter.gif",
     "url": "images/stickers/text/crazy_blue-glitter.gif",
     "category": "text",
     "tags": [
       "crazy",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Crazy",
     "is_animated": true,
     "has_transparency": true,
@@ -1188,23 +860,19 @@
     "height": 56,
     "frame_count": 3,
     "file_size": 9116,
-    "sort_order": 50,
-    "featured": false
+    "sort_order": 50
   },
   {
     "id": 51,
-    "name": "Cutie Purple Glitter",
+    "name": "Cutie Purple Glitter Text",
     "filename": "cutie_purple-glitter.gif",
     "url": "images/stickers/text/cutie_purple-glitter.gif",
     "category": "text",
     "tags": [
       "cutie",
       "purple",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Cutie",
     "is_animated": true,
     "has_transparency": true,
@@ -1212,12 +880,11 @@
     "height": 74,
     "frame_count": 3,
     "file_size": 5578,
-    "sort_order": 51,
-    "featured": false
+    "sort_order": 51
   },
   {
     "id": 53,
-    "name": "Girly Pink Purple Glitter",
+    "name": "Girly Pink Purple Glitter Text",
     "filename": "girly_pink-purple-glitter.gif",
     "url": "images/stickers/text/girly_pink-purple-glitter.gif",
     "category": "text",
@@ -1225,11 +892,8 @@
       "girly",
       "pink",
       "purple",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Girly",
     "is_animated": true,
     "has_transparency": true,
@@ -1237,23 +901,19 @@
     "height": 69,
     "frame_count": 3,
     "file_size": 5641,
-    "sort_order": 53,
-    "featured": false
+    "sort_order": 53
   },
   {
     "id": 54,
-    "name": "Glow Pink Glitter",
+    "name": "Glow Pink Glitter Text",
     "filename": "glow_pink-glitter.gif",
     "url": "images/stickers/text/glow_pink-glitter.gif",
     "category": "text",
     "tags": [
       "glow",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Glow",
     "is_animated": true,
     "has_transparency": true,
@@ -1261,21 +921,17 @@
     "height": 83,
     "frame_count": 3,
     "file_size": 4848,
-    "sort_order": 54,
-    "featured": false
+    "sort_order": 54
   },
   {
     "id": 55,
-    "name": "Gorgeous",
+    "name": "Gorgeous Text",
     "filename": "gorgeous.gif",
     "url": "images/stickers/text/gorgeous.gif",
     "category": "text",
     "tags": [
-      "gorgeous",
-      "text",
-      "word"
+      "gorgeous"
     ],
-    "colors": [],
     "text": "Gorgeous",
     "is_animated": true,
     "has_transparency": true,
@@ -1283,12 +939,11 @@
     "height": 85,
     "frame_count": 3,
     "file_size": 14078,
-    "sort_order": 55,
-    "featured": false
+    "sort_order": 55
   },
   {
     "id": 56,
-    "name": "Happy New Year Silver Glitter",
+    "name": "Happy New Year Silver Glitter Text",
     "filename": "happy-new-year_silver-glitter.gif",
     "url": "images/stickers/text/happy-new-year_silver-glitter.gif",
     "category": "text",
@@ -1297,11 +952,8 @@
       "new",
       "year",
       "silver",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Happy New Year",
     "is_animated": true,
     "has_transparency": true,
@@ -1309,23 +961,19 @@
     "height": 60,
     "frame_count": 2,
     "file_size": 10266,
-    "sort_order": 56,
-    "featured": false
+    "sort_order": 56
   },
   {
     "id": 57,
-    "name": "Heartbreaker Red Glitter",
+    "name": "Heartbreaker Red Glitter Text",
     "filename": "heartbreaker_red-glitter.gif",
     "url": "images/stickers/text/heartbreaker_red-glitter.gif",
     "category": "text",
     "tags": [
       "heartbreaker",
       "red",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Heartbreaker",
     "is_animated": true,
     "has_transparency": true,
@@ -1333,12 +981,11 @@
     "height": 71,
     "frame_count": 3,
     "file_size": 10593,
-    "sort_order": 57,
-    "featured": false
+    "sort_order": 57
   },
   {
     "id": 58,
-    "name": "Heaven Sent Blue Glitter",
+    "name": "Heaven Sent Blue Glitter Text",
     "filename": "heaven-sent_blue-glitter.gif",
     "url": "images/stickers/text/heaven-sent_blue-glitter.gif",
     "category": "text",
@@ -1346,11 +993,8 @@
       "heaven",
       "sent",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Heaven Sent",
     "is_animated": true,
     "has_transparency": true,
@@ -1358,12 +1002,11 @@
     "height": 95,
     "frame_count": 3,
     "file_size": 31279,
-    "sort_order": 58,
-    "featured": false
+    "sort_order": 58
   },
   {
     "id": 59,
-    "name": "Hello Butterflies Purple Glitter",
+    "name": "Hello Butterflies Purple Glitter Text",
     "filename": "hello_butterflies_purple-glitter.gif",
     "url": "images/stickers/text/hello_butterflies_purple-glitter.gif",
     "category": "text",
@@ -1371,11 +1014,8 @@
       "hello",
       "butterflies",
       "purple",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Hello",
     "is_animated": true,
     "has_transparency": true,
@@ -1383,12 +1023,11 @@
     "height": 82,
     "frame_count": 3,
     "file_size": 7463,
-    "sort_order": 59,
-    "featured": false
+    "sort_order": 59
   },
   {
     "id": 60,
-    "name": "I Miss You Red Glitter",
+    "name": "I Miss You Red Glitter Text",
     "filename": "i-miss-you_red-glitter.gif",
     "url": "images/stickers/text/i-miss-you_red-glitter.gif",
     "category": "text",
@@ -1397,11 +1036,8 @@
       "miss",
       "you",
       "red",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "I Miss You",
     "is_animated": true,
     "has_transparency": true,
@@ -1409,12 +1045,11 @@
     "height": 89,
     "frame_count": 3,
     "file_size": 4257,
-    "sort_order": 60,
-    "featured": false
+    "sort_order": 60
   },
   {
     "id": 61,
-    "name": "Keepin It Gangsta Blue Glitter",
+    "name": "Keepin It Gangsta Blue Glitter Text",
     "filename": "keepin-it-gangsta_blue-glitter.gif",
     "url": "images/stickers/text/keepin-it-gangsta_blue-glitter.gif",
     "category": "text",
@@ -1423,11 +1058,8 @@
       "it",
       "gangsta",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Keepin It Gangsta",
     "is_animated": true,
     "has_transparency": true,
@@ -1435,23 +1067,19 @@
     "height": 67,
     "frame_count": 3,
     "file_size": 25333,
-    "sort_order": 61,
-    "featured": false
+    "sort_order": 61
   },
   {
     "id": 62,
-    "name": "Love Always Glitter",
+    "name": "Love Always Glitter Text",
     "filename": "love-always_glitter.gif",
     "url": "images/stickers/text/love-always_glitter.gif",
     "category": "text",
     "tags": [
       "love",
       "always",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Love Always",
     "is_animated": true,
     "has_transparency": true,
@@ -1459,12 +1087,11 @@
     "height": 55,
     "frame_count": 3,
     "file_size": 27379,
-    "sort_order": 62,
-    "featured": false
+    "sort_order": 62
   },
   {
     "id": 63,
-    "name": "Much Appreciated Pink Glitter",
+    "name": "Much Appreciated Pink Glitter Text",
     "filename": "much-appreciated_pink-glitter.gif",
     "url": "images/stickers/text/much-appreciated_pink-glitter.gif",
     "category": "text",
@@ -1472,11 +1099,8 @@
       "much",
       "appreciated",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Much Appreciated",
     "is_animated": true,
     "has_transparency": true,
@@ -1484,12 +1108,11 @@
     "height": 190,
     "frame_count": 2,
     "file_size": 9515,
-    "sort_order": 63,
-    "featured": false
+    "sort_order": 63
   },
   {
     "id": 64,
-    "name": "Muchas Gracias A Todo Blue Glitter",
+    "name": "Muchas Gracias A Todo Blue Glitter Text",
     "filename": "muchas-gracias-a-todo_blue-glitter.gif",
     "url": "images/stickers/text/muchas-gracias-a-todo_blue-glitter.gif",
     "category": "text",
@@ -1499,11 +1122,8 @@
       "a",
       "todo",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Muchas Gracias A Todo",
     "is_animated": true,
     "has_transparency": true,
@@ -1511,12 +1131,11 @@
     "height": 69,
     "frame_count": 3,
     "file_size": 31966,
-    "sort_order": 64,
-    "featured": false
+    "sort_order": 64
   },
   {
     "id": 65,
-    "name": "My Friends Pink Glitter",
+    "name": "My Friends Pink Glitter Text",
     "filename": "my-friends_pink-glitter.gif",
     "url": "images/stickers/text/my-friends_pink-glitter.gif",
     "category": "text",
@@ -1524,11 +1143,8 @@
       "my",
       "friends",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "My Friends",
     "is_animated": true,
     "has_transparency": true,
@@ -1536,23 +1152,19 @@
     "height": 66,
     "frame_count": 3,
     "file_size": 6486,
-    "sort_order": 65,
-    "featured": false
+    "sort_order": 65
   },
   {
     "id": 66,
-    "name": "Naughty Pink Glitter",
+    "name": "Naughty Pink Glitter Text",
     "filename": "naughty_pink-glitter.gif",
     "url": "images/stickers/text/naughty_pink-glitter.gif",
     "category": "text",
     "tags": [
       "naughty",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Naughty",
     "is_animated": true,
     "has_transparency": true,
@@ -1560,12 +1172,11 @@
     "height": 69,
     "frame_count": 3,
     "file_size": 10073,
-    "sort_order": 66,
-    "featured": false
+    "sort_order": 66
   },
   {
     "id": 67,
-    "name": "Naughty Pink Red Glitter",
+    "name": "Naughty Pink Red Glitter Text",
     "filename": "naughty_pink-red-glitter.gif",
     "url": "images/stickers/text/naughty_pink-red-glitter.gif",
     "category": "text",
@@ -1573,11 +1184,8 @@
       "naughty",
       "pink",
       "red",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Naughty",
     "is_animated": true,
     "has_transparency": true,
@@ -1585,12 +1193,11 @@
     "height": 58,
     "frame_count": 3,
     "file_size": 16483,
-    "sort_order": 67,
-    "featured": false
+    "sort_order": 67
   },
   {
     "id": 68,
-    "name": "Princess Silver Red Glitter",
+    "name": "Princess Silver Red Glitter Text",
     "filename": "princess_silver-red-glitter.gif",
     "url": "images/stickers/text/princess_silver-red-glitter.gif",
     "category": "text",
@@ -1598,11 +1205,8 @@
       "princess",
       "silver",
       "red",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Princess",
     "is_animated": true,
     "has_transparency": true,
@@ -1610,12 +1214,11 @@
     "height": 96,
     "frame_count": 2,
     "file_size": 20180,
-    "sort_order": 68,
-    "featured": false
+    "sort_order": 68
   },
   {
     "id": 69,
-    "name": "Shy Little Me Blue Glitter",
+    "name": "Shy Little Me Blue Glitter Text",
     "filename": "shy-little-me_blue-glitter.gif",
     "url": "images/stickers/text/shy-little-me_blue-glitter.gif",
     "category": "text",
@@ -1624,11 +1227,8 @@
       "little",
       "me",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Shy Little Me",
     "is_animated": true,
     "has_transparency": true,
@@ -1636,23 +1236,19 @@
     "height": 82,
     "frame_count": 20,
     "file_size": 50888,
-    "sort_order": 69,
-    "featured": false
+    "sort_order": 69
   },
   {
     "id": 70,
-    "name": "Smile Purple Glitter",
+    "name": "Smile Purple Glitter Text",
     "filename": "smile_purple-glitter.gif",
     "url": "images/stickers/text/smile_purple-glitter.gif",
     "category": "text",
     "tags": [
       "smile",
       "purple",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Smile",
     "is_animated": true,
     "has_transparency": true,
@@ -1660,23 +1256,19 @@
     "height": 87,
     "frame_count": 3,
     "file_size": 12656,
-    "sort_order": 70,
-    "featured": false
+    "sort_order": 70
   },
   {
     "id": 71,
-    "name": "Smile Rainbow Glitter",
+    "name": "Smile Rainbow Glitter Text",
     "filename": "smile_rainbow-glitter.gif",
     "url": "images/stickers/text/smile_rainbow-glitter.gif",
     "category": "text",
     "tags": [
       "smile",
       "rainbow",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Smile",
     "is_animated": true,
     "has_transparency": true,
@@ -1684,23 +1276,19 @@
     "height": 66,
     "frame_count": 4,
     "file_size": 8253,
-    "sort_order": 71,
-    "featured": false
+    "sort_order": 71
   },
   {
     "id": 72,
-    "name": "Spoiled Purple Glitter",
+    "name": "Spoiled Purple Glitter Text",
     "filename": "spoiled_purple-glitter.gif",
     "url": "images/stickers/text/spoiled_purple-glitter.gif",
     "category": "text",
     "tags": [
       "spoiled",
       "purple",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Spoiled",
     "is_animated": true,
     "has_transparency": true,
@@ -1708,23 +1296,19 @@
     "height": 48,
     "frame_count": 3,
     "file_size": 8905,
-    "sort_order": 72,
-    "featured": false
+    "sort_order": 72
   },
   {
     "id": 73,
-    "name": "Star Yellow Glitter",
+    "name": "Star Yellow Glitter Text",
     "filename": "star_yellow-glitter.gif",
     "url": "images/stickers/text/star_yellow-glitter.gif",
     "category": "text",
     "tags": [
       "star",
       "yellow",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Star",
     "is_animated": true,
     "has_transparency": true,
@@ -1732,23 +1316,19 @@
     "height": 70,
     "frame_count": 3,
     "file_size": 15204,
-    "sort_order": 73,
-    "featured": false
+    "sort_order": 73
   },
   {
     "id": 74,
-    "name": "Stars Pink Glitter",
+    "name": "Stars Pink Glitter Text",
     "filename": "stars_pink-glitter.gif",
     "url": "images/stickers/text/stars_pink-glitter.gif",
     "category": "text",
     "tags": [
       "stars",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Stars",
     "is_animated": true,
     "has_transparency": true,
@@ -1756,12 +1336,11 @@
     "height": 205,
     "frame_count": 3,
     "file_size": 15518,
-    "sort_order": 74,
-    "featured": false
+    "sort_order": 74
   },
   {
     "id": 75,
-    "name": "Sweet Angel Pink Glitter",
+    "name": "Sweet Angel Pink Glitter Text",
     "filename": "sweet-angel_pink-glitter.gif",
     "url": "images/stickers/text/sweet-angel_pink-glitter.gif",
     "category": "text",
@@ -1769,11 +1348,8 @@
       "sweet",
       "angel",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Sweet Angel",
     "is_animated": true,
     "has_transparency": true,
@@ -1781,23 +1357,19 @@
     "height": 63,
     "frame_count": 3,
     "file_size": 11844,
-    "sort_order": 75,
-    "featured": false
+    "sort_order": 75
   },
   {
     "id": 76,
-    "name": "Sweetie Red Glitter",
+    "name": "Sweetie Red Glitter Text",
     "filename": "sweetie_red-glitter.gif",
     "url": "images/stickers/text/sweetie_red-glitter.gif",
     "category": "text",
     "tags": [
       "sweetie",
       "red",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Sweetie",
     "is_animated": true,
     "has_transparency": true,
@@ -1805,23 +1377,19 @@
     "height": 53,
     "frame_count": 3,
     "file_size": 7107,
-    "sort_order": 76,
-    "featured": false
+    "sort_order": 76
   },
   {
     "id": 77,
-    "name": "Sweety Pink Glitter",
+    "name": "Sweety Pink Glitter Text",
     "filename": "sweety_pink-glitter.gif",
     "url": "images/stickers/text/sweety_pink-glitter.gif",
     "category": "text",
     "tags": [
       "sweety",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Sweety",
     "is_animated": true,
     "has_transparency": true,
@@ -1829,12 +1397,11 @@
     "height": 191,
     "frame_count": 3,
     "file_size": 9482,
-    "sort_order": 77,
-    "featured": false
+    "sort_order": 77
   },
   {
     "id": 78,
-    "name": "Tortured Heart Red Glitter",
+    "name": "Tortured Heart Red Glitter Text",
     "filename": "tortured-heart_red-glitter.gif",
     "url": "images/stickers/text/tortured-heart_red-glitter.gif",
     "category": "text",
@@ -1842,11 +1409,8 @@
       "tortured",
       "heart",
       "red",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Tortured Heart",
     "is_animated": true,
     "has_transparency": true,
@@ -1854,21 +1418,17 @@
     "height": 65,
     "frame_count": 3,
     "file_size": 5250,
-    "sort_order": 78,
-    "featured": false
+    "sort_order": 78
   },
   {
     "id": 79,
-    "name": "Welcome",
+    "name": "Welcome Text",
     "filename": "welcome.gif",
     "url": "images/stickers/text/welcome.gif",
     "category": "text",
     "tags": [
-      "welcome",
-      "text",
-      "word"
+      "welcome"
     ],
-    "colors": [],
     "text": "Welcome",
     "is_animated": true,
     "has_transparency": true,
@@ -1876,23 +1436,19 @@
     "height": 31,
     "frame_count": 3,
     "file_size": 11388,
-    "sort_order": 79,
-    "featured": false
+    "sort_order": 79
   },
   {
     "id": 80,
-    "name": "Welcome Blue Glitter",
+    "name": "Welcome Blue Glitter Text",
     "filename": "welcome_blue-glitter.gif",
     "url": "images/stickers/text/welcome_blue-glitter.gif",
     "category": "text",
     "tags": [
       "welcome",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Welcome",
     "is_animated": true,
     "has_transparency": true,
@@ -1900,23 +1456,19 @@
     "height": 84,
     "frame_count": 3,
     "file_size": 13376,
-    "sort_order": 80,
-    "featured": false
+    "sort_order": 80
   },
   {
     "id": 81,
-    "name": "Welcome Pink Glitter",
+    "name": "Welcome Pink Glitter Text",
     "filename": "welcome_pink-glitter.gif",
     "url": "images/stickers/text/welcome_pink-glitter.gif",
     "category": "text",
     "tags": [
       "welcome",
       "pink",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Welcome",
     "is_animated": true,
     "has_transparency": true,
@@ -1924,23 +1476,19 @@
     "height": 79,
     "frame_count": 3,
     "file_size": 42342,
-    "sort_order": 81,
-    "featured": false
+    "sort_order": 81
   },
   {
     "id": 82,
-    "name": "Welcome Purple Glitter",
+    "name": "Welcome Purple Glitter Text",
     "filename": "welcome_purple-glitter.gif",
     "url": "images/stickers/text/welcome_purple-glitter.gif",
     "category": "text",
     "tags": [
       "welcome",
       "purple",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Welcome",
     "is_animated": true,
     "has_transparency": true,
@@ -1948,23 +1496,19 @@
     "height": 79,
     "frame_count": 3,
     "file_size": 45855,
-    "sort_order": 82,
-    "featured": false
+    "sort_order": 82
   },
   {
     "id": 83,
-    "name": "Welcome Red Glitter",
+    "name": "Welcome Red Glitter Text",
     "filename": "welcome_red-glitter.gif",
     "url": "images/stickers/text/welcome_red-glitter.gif",
     "category": "text",
     "tags": [
       "welcome",
       "red",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Welcome",
     "is_animated": true,
     "has_transparency": true,
@@ -1972,23 +1516,19 @@
     "height": 165,
     "frame_count": 3,
     "file_size": 11039,
-    "sort_order": 83,
-    "featured": false
+    "sort_order": 83
   },
   {
     "id": 84,
-    "name": "Whimsy Blue Glitter",
+    "name": "Whimsy Blue Glitter Text",
     "filename": "whimsy_blue-glitter.gif",
     "url": "images/stickers/text/whimsy_blue-glitter.gif",
     "category": "text",
     "tags": [
       "whimsy",
       "blue",
-      "glitter",
-      "text",
-      "word"
+      "glitter"
     ],
-    "colors": [],
     "text": "Whimsy",
     "is_animated": true,
     "has_transparency": true,
@@ -1996,12 +1536,11 @@
     "height": 67,
     "frame_count": 3,
     "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "sort_order": 84
   },
-    {
+  {
     "id": 85,
-    "name": "Ayumi Hamasaki A Logo",
+    "name": "Ayumi Hamasaki A Logo Pink Glitter",
     "filename": "ayumi-hamasaki_pink-glitter.gif",
     "url": "images/stickers/logo/ayumi-hamasaki_pink-glitter.gif",
     "category": "logo",
@@ -2010,19 +1549,17 @@
       "glitter",
       "logo"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 188,
     "height": 142,
     "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "file_size": 18313,
+    "sort_order": 85
   },
-    {
+  {
     "id": 86,
-    "name": "Ayumi Hamasaki A Small Logo",
+    "name": "Ayumi Hamasaki A Small Logo Pink Glitter",
     "filename": "ayumi-hamasaki_small_pink-glitter.gif",
     "url": "images/stickers/logo/ayumi-hamasaki_small_pink-glitter.gif",
     "category": "logo",
@@ -2031,17 +1568,15 @@
       "glitter",
       "logo"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 94,
     "height": 71,
     "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "file_size": 8315,
+    "sort_order": 86
   },
-    {
+  {
     "id": 87,
     "name": "Chrome Frame",
     "filename": "frame_chrome.gif",
@@ -2051,17 +1586,15 @@
       "frame",
       "chrome"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 400,
     "height": 400,
-    "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "frame_count": 24,
+    "file_size": 385345,
+    "sort_order": 87
   },
-    {
+  {
     "id": 88,
     "name": "Silver Frame",
     "filename": "frame_silver.gif",
@@ -2071,19 +1604,17 @@
       "frame",
       "silver"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 400,
     "height": 400,
-    "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "frame_count": 4,
+    "file_size": 84276,
+    "sort_order": 88
   },
-    {
+  {
     "id": 89,
-    "name": "Red Glitter Heart",
+    "name": "Red Glitter Heart Frame",
     "filename": "heart_red-glitter.gif",
     "url": "images/stickers/frame/heart_red-glitter.gif",
     "category": "frame",
@@ -2092,19 +1623,17 @@
       "red",
       "glitter"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 185,
     "height": 150,
     "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "file_size": 9144,
+    "sort_order": 89
   },
-    {
+  {
     "id": 90,
-    "name": "Purple Glitter Rhinestone Heart",
+    "name": "Purple Glitter Rhinestone Heart Frame",
     "filename": "heart_rhinestone_purple-glitter.gif",
     "url": "images/stickers/frame/heart_rhinestone_purple-glitter.gif",
     "category": "frame",
@@ -2114,19 +1643,17 @@
       "glitter",
       "rhinestone"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 185,
     "height": 151,
     "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "file_size": 15618,
+    "sort_order": 90
   },
-    {
+  {
     "id": 91,
-    "name": "Silver Glitter Rhinestone Heart",
+    "name": "Silver Glitter Rhinestone Heart Frame",
     "filename": "heart_rhinestone_silver-glitter.gif",
     "url": "images/stickers/frame/heart_rhinestone_silver-glitter.gif",
     "category": "frame",
@@ -2136,17 +1663,15 @@
       "glitter",
       "rhinestone"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
-    "width": 185,
-    "height": 151,
+    "width": 191,
+    "height": 157,
     "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "file_size": 8461,
+    "sort_order": 91
   },
-    {
+  {
     "id": 92,
     "name": "Pink Jewel Heart Frame",
     "filename": "heart-frame_pink-jewel.gif",
@@ -2157,17 +1682,15 @@
       "pink",
       "jewel"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 400,
     "height": 400,
     "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "file_size": 122647,
+    "sort_order": 92
   },
-    {
+  {
     "id": 93,
     "name": "Gold Glitter Leaf Frame",
     "filename": "leaf_gold-glitter.gif",
@@ -2179,40 +1702,15 @@
       "glitter",
       "frame"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 400,
     "height": 400,
     "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "file_size": 40462,
+    "sort_order": 93
   },
-    {
-    "id": 94,
-    "name": "Gold Gangsta Necklace",
-    "filename": "gangsta_necklace_gold.gif",
-    "url": "images/stickers/jewelry/gangsta_necklace_gold.gif",
-    "category": "jewelry",
-    "tags": [
-      "gold",
-      "jewelry",
-      "gangsta",
-      "necklace",
-      "classic"
-    ],
-    "colors": [],
-    "is_animated": true,
-    "has_transparency": true,
-    "width": 190,
-    "height": 178,
-    "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
-  },
-    {
+  {
     "id": 95,
     "name": "Snoop Dogg Dance",
     "filename": "snoop-dog_dance.gif",
@@ -2229,19 +1727,17 @@
       "Drop It Like It's Hot",
       "classic"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 58,
     "height": 130,
-    "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "frame_count": 40,
+    "file_size": 178525,
+    "sort_order": 95
   },
-    {
+  {
     "id": 96,
-    "name": "Sexy Arrow",
+    "name": "Sexy Purple Arrow Text",
     "filename": "sexy_arrow_purple.gif",
     "url": "images/stickers/text/sexy_arrow_purple.gif",
     "category": "text",
@@ -2252,35 +1748,2641 @@
       "red",
       "classic"
     ],
-    "colors": [],
     "is_animated": true,
     "has_transparency": true,
     "width": 112,
     "height": 86,
+    "frame_count": 5,
+    "file_size": 9306,
+    "sort_order": 96
+  },
+  {
+    "id": 97,
+    "name": "Butterflies Red",
+    "filename": "butterflies_red.gif",
+    "url": "images/stickers/animal/butterflies_red.gif",
+    "category": "animal",
+    "tags": [
+      "butterflies",
+      "animal",
+      "insect"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 320,
+    "frame_count": 120,
+    "file_size": 512476,
+    "sort_order": 97
+  },
+  {
+    "id": 98,
+    "name": "Butterfly Blue Purple",
+    "filename": "butterfly_blue-purple.gif",
+    "url": "images/stickers/animal/butterfly_blue-purple.gif",
+    "category": "animal",
+    "tags": [
+      "butterfly",
+      "animal",
+      "insect"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 92,
+    "height": 92,
     "frame_count": 3,
-    "file_size": 15919,
-    "sort_order": 84,
-    "featured": false
+    "file_size": 17919,
+    "sort_order": 98
+  },
+  {
+    "id": 99,
+    "name": "Butterfly Orange",
+    "filename": "butterfly_orange.gif",
+    "url": "images/stickers/animal/butterfly_orange.gif",
+    "category": "animal",
+    "tags": [
+      "butterfly",
+      "animal"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 105,
+    "height": 82,
+    "frame_count": 4,
+    "file_size": 14249,
+    "sort_order": 99
+  },
+  {
+    "id": 100,
+    "name": "Butterfly Pink",
+    "filename": "butterfly_pink.gif",
+    "url": "images/stickers/animal/butterfly_pink.gif",
+    "category": "animal",
+    "tags": [
+      "butterfly",
+      "animal"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 120,
+    "height": 120,
+    "frame_count": 4,
+    "file_size": 13922,
+    "sort_order": 100
+  },
+  {
+    "id": 101,
+    "name": "Butterfly Red",
+    "filename": "butterfly_red.gif",
+    "url": "images/stickers/animal/butterfly_red.gif",
+    "category": "animal",
+    "tags": [
+      "butterfly",
+      "animal"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 90,
+    "height": 100,
+    "frame_count": 8,
+    "file_size": 22111,
+    "sort_order": 101
+  },
+  {
+    "id": 102,
+    "name": "Butterfly Red",
+    "filename": "butterfly_red_2.gif",
+    "url": "images/stickers/animal/butterfly_red_2.gif",
+    "category": "animal",
+    "tags": [
+      "butterfly",
+      "animal"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 120,
+    "height": 120,
+    "frame_count": 4,
+    "file_size": 17387,
+    "sort_order": 102
+  },
+  {
+    "id": 103,
+    "name": "Cardinal Blue",
+    "filename": "cardinal_blue.gif",
+    "url": "images/stickers/animal/cardinal_blue.gif",
+    "category": "animal",
+    "tags": [
+      "cardinal",
+      "bird",
+      "animal"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 200,
+    "height": 200,
+    "frame_count": 12,
+    "file_size": 101247,
+    "sort_order": 103
+  },
+  {
+    "id": 104,
+    "name": "Flying Dove Illustration White",
+    "filename": "dove-illustration_flying_white.gif",
+    "url": "images/stickers/animal/dove-illustration_flying_white.gif",
+    "category": "animal",
+    "tags": [
+      "dove",
+      "flying",
+      "bird",
+      "illustration"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 320,
+    "frame_count": 3,
+    "file_size": 48886,
+    "sort_order": 104
+  },
+  {
+    "id": 105,
+    "name": "Big Dove White",
+    "filename": "dove_big_white.gif",
+    "url": "images/stickers/animal/dove_big_white.gif",
+    "category": "animal",
+    "tags": [
+      "dove",
+      "bird",
+      "animal"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 400,
+    "frame_count": 4,
+    "file_size": 122092,
+    "sort_order": 105
+  },
+  {
+    "id": 106,
+    "name": "Flying Dove White",
+    "filename": "dove_flying_white.gif",
+    "url": "images/stickers/animal/dove_flying_white.gif",
+    "category": "animal",
+    "tags": [
+      "dove",
+      "flying",
+      "bird"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 134,
+    "height": 99,
+    "frame_count": 18,
+    "file_size": 49543,
+    "sort_order": 106
+  },
+  {
+    "id": 107,
+    "name": "Kissing Birds Blue Pink",
+    "filename": "two-birds_kiss_blue-pink.gif",
+    "url": "images/stickers/animal/two-birds_kiss_blue-pink.gif",
+    "category": "animal",
+    "tags": [
+      "birds",
+      "kissing",
+      "love",
+      "animal"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 150,
+    "height": 64,
+    "frame_count": 18,
+    "file_size": 21640,
+    "sort_order": 107
+  },
+  {
+    "id": 108,
+    "name": "Emo Checkerboard Rainbow",
+    "filename": "checkerboard_emo_rainbow.gif",
+    "url": "images/stickers/background/checkerboard_emo_rainbow.gif",
+    "category": "background",
+    "tags": [
+      "checkerboard",
+      "emo",
+      "rainbow",
+      "pattern"
+    ],
+    "is_animated": true,
+    "has_transparency": false,
+    "width": 500,
+    "height": 500,
+    "frame_count": 9,
+    "file_size": 157484,
+    "sort_order": 108
+  },
+  {
+    "id": 109,
+    "name": "Crown Gold Glitter",
+    "filename": "crown_gold-glitter.gif",
+    "url": "images/stickers/clothing/crown_gold-glitter.gif",
+    "category": "clothing",
+    "tags": [
+      "crown",
+      "tiara",
+      "princess",
+      "king"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 150,
+    "height": 150,
+    "frame_count": 3,
+    "file_size": 14524,
+    "sort_order": 109
+  },
+  {
+    "id": 110,
+    "name": "Bow Pink Glitter",
+    "filename": "bow_pink-glitter.gif",
+    "url": "images/stickers/clothing/bow_pink-glitter.gif",
+    "category": "clothing",
+    "tags": [
+      "bow",
+      "ribbon",
+      "coquette",
+      "cute"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 99,
+    "height": 89,
+    "frame_count": 3,
+    "file_size": 15571,
+    "sort_order": 110
+  },
+  {
+    "id": 111,
+    "name": "Gem Pink",
+    "filename": "gem_pink.gif",
+    "url": "images/stickers/decorative/gem_pink.gif",
+    "category": "decorative",
+    "tags": [
+      "gem",
+      "jewel",
+      "diamond",
+      "crystal"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 31,
+    "height": 32,
+    "frame_count": 4,
+    "file_size": 6367,
+    "sort_order": 111
+  },
+  {
+    "id": 112,
+    "name": "Heart Gem Yellow",
+    "filename": "heart-gem_yellow.gif",
+    "url": "images/stickers/decorative/heart-gem_yellow.gif",
+    "category": "decorative",
+    "tags": [
+      "heart",
+      "gem",
+      "jewel",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 40,
+    "height": 32,
+    "frame_count": 7,
+    "file_size": 11700,
+    "sort_order": 112
+  },
+  {
+    "id": 113,
+    "name": "Heart Pink Glitter",
+    "filename": "heart_pink-glitter.gif",
+    "url": "images/stickers/decorative/heart_pink-glitter.gif",
+    "category": "decorative",
+    "tags": [
+      "heart",
+      "love",
+      "glitter"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 123,
+    "height": 81,
+    "frame_count": 3,
+    "file_size": 20443,
+    "sort_order": 113
+  },
+  {
+    "id": 114,
+    "name": "Heart Silver Glitter",
+    "filename": "heart_silver-glitter.gif",
+    "url": "images/stickers/decorative/heart_silver-glitter.gif",
+    "category": "decorative",
+    "tags": [
+      "heart",
+      "love",
+      "glitter"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 66,
+    "height": 58,
+    "frame_count": 3,
+    "file_size": 6434,
+    "sort_order": 114
+  },
+  {
+    "id": 115,
+    "name": "Chrome Hearts Red",
+    "filename": "hearts_red-chrome.gif",
+    "url": "images/stickers/decorative/hearts_red-chrome.gif",
+    "category": "decorative",
+    "tags": [
+      "hearts",
+      "chrome",
+      "red",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 198,
+    "height": 82,
+    "frame_count": 11,
+    "file_size": 24193,
+    "sort_order": 115
+  },
+  {
+    "id": 116,
+    "name": "Pearl White",
+    "filename": "pearl_white.gif",
+    "url": "images/stickers/decorative/pearl_white.gif",
+    "category": "decorative",
+    "tags": [
+      "pearl",
+      "jewelry",
+      "decorative"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 47,
+    "height": 80,
+    "frame_count": 8,
+    "file_size": 23351,
+    "sort_order": 116
+  },
+  {
+    "id": 117,
+    "name": "Rainbow Glitter",
+    "filename": "rainbow_glitter.gif",
+    "url": "images/stickers/decorative/rainbow_glitter.gif",
+    "category": "decorative",
+    "tags": [
+      "rainbow",
+      "colorful",
+      "pride"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 255,
+    "height": 139,
+    "frame_count": 3,
+    "file_size": 41077,
+    "sort_order": 117
+  },
+  {
+    "id": 118,
+    "name": "Rotating Heart Red",
+    "filename": "red_heart_rotate.gif",
+    "url": "images/stickers/decorative/red_heart_rotate.gif",
+    "category": "decorative",
+    "tags": [
+      "heart",
+      "rotating",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 75,
+    "height": 75,
+    "frame_count": 12,
+    "file_size": 8162,
+    "sort_order": 118
+  },
+  {
+    "id": 119,
+    "name": "Rotating Heart Red",
+    "filename": "red_heart_rotate_2.gif",
+    "url": "images/stickers/decorative/red_heart_rotate_2.gif",
+    "category": "decorative",
+    "tags": [
+      "heart",
+      "rotating",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 90,
+    "height": 90,
+    "frame_count": 6,
+    "file_size": 12516,
+    "sort_order": 119
+  },
+  {
+    "id": 120,
+    "name": "Sketchy Heart Red",
+    "filename": "sketchy-heart_red.gif",
+    "url": "images/stickers/decorative/sketchy-heart_red.gif",
+    "category": "decorative",
+    "tags": [
+      "heart",
+      "sketchy",
+      "hand-drawn",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 50,
+    "height": 50,
+    "frame_count": 9,
+    "file_size": 2920,
+    "sort_order": 120
+  },
+  {
+    "id": 121,
+    "name": "Sketchy Heart White Pink",
+    "filename": "sketchy-heart_white-pink.gif",
+    "url": "images/stickers/decorative/sketchy-heart_white-pink.gif",
+    "category": "decorative",
+    "tags": [
+      "heart",
+      "sketchy",
+      "hand-drawn",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 24,
+    "height": 19,
+    "frame_count": 2,
+    "file_size": 378,
+    "sort_order": 121
+  },
+  {
+    "id": 122,
+    "name": "Skull and Crossbones Pink Glitter",
+    "filename": "skull-crossbones_pink-glitter.gif",
+    "url": "images/stickers/decorative/skull-crossbones_pink-glitter.gif",
+    "category": "decorative",
+    "tags": [
+      "skull",
+      "crossbones",
+      "skeleton",
+      "emo",
+      "pirate"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 438,
+    "height": 288,
+    "frame_count": 3,
+    "file_size": 62532,
+    "sort_order": 122
+  },
+  {
+    "id": 123,
+    "name": "Skull and Crossbones Pink Glitter",
+    "filename": "skull-crossbones_pink-glitter_2.gif",
+    "url": "images/stickers/decorative/skull-crossbones_pink-glitter_2.gif",
+    "category": "decorative",
+    "tags": [
+      "skull",
+      "crossbones",
+      "skeleton",
+      "emo"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 164,
+    "height": 169,
+    "frame_count": 3,
+    "file_size": 11804,
+    "sort_order": 123
+  },
+  {
+    "id": 124,
+    "name": "Star Ring Rotating Red",
+    "filename": "star-ring_rotate_red.gif",
+    "url": "images/stickers/decorative/star-ring_rotate_red.gif",
+    "category": "decorative",
+    "tags": [
+      "star",
+      "ring",
+      "rotating",
+      "decorative"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 120,
+    "height": 62,
+    "frame_count": 6,
+    "file_size": 6607,
+    "sort_order": 124
+  },
+  {
+    "id": 125,
+    "name": "Star Ring Rotating Silver",
+    "filename": "star-ring_rotate_silver.gif",
+    "url": "images/stickers/decorative/star-ring_rotate_silver.gif",
+    "category": "decorative",
+    "tags": [
+      "star",
+      "ring",
+      "rotating",
+      "decorative"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 120,
+    "height": 61,
+    "frame_count": 6,
+    "file_size": 6619,
+    "sort_order": 125
+  },
+  {
+    "id": 126,
+    "name": "Star Sparkle",
+    "filename": "star.gif",
+    "url": "images/stickers/decorative/star.gif",
+    "category": "decorative",
+    "tags": [
+      "star",
+      "sparkle",
+      "decorative"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 32,
+    "height": 32,
+    "frame_count": 14,
+    "file_size": 5106,
+    "sort_order": 126
+  },
+  {
+    "id": 127,
+    "name": "Star Pink Glitter",
+    "filename": "star_pink-glitter.gif",
+    "url": "images/stickers/decorative/star_pink-glitter.gif",
+    "category": "decorative",
+    "tags": [
+      "star",
+      "glitter",
+      "sparkle"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 62,
+    "height": 63,
+    "frame_count": 3,
+    "file_size": 4720,
+    "sort_order": 127
+  },
+  {
+    "id": 128,
+    "name": "Star Silver Glitter",
+    "filename": "star_silver-glitter.gif",
+    "url": "images/stickers/decorative/star_silver-glitter.gif",
+    "category": "decorative",
+    "tags": [
+      "star",
+      "glitter",
+      "sparkle"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 119,
+    "height": 83,
+    "frame_count": 3,
+    "file_size": 4400,
+    "sort_order": 128
+  },
+  {
+    "id": 129,
+    "name": "Thumbs Up Emoji Yellow",
+    "filename": "emoji_thumbs-up_yellow.gif",
+    "url": "images/stickers/emoji/emoji_thumbs-up_yellow.gif",
+    "category": "emoji",
+    "tags": [
+      "thumbs up",
+      "emoji",
+      "yellow",
+      "like"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 298,
+    "height": 152,
+    "frame_count": 4,
+    "file_size": 34532,
+    "sort_order": 129
+  },
+  {
+    "id": 130,
+    "name": "Love Kaomoji Pink",
+    "filename": "kaomoji_love_pink.gif",
+    "url": "images/stickers/emoji/kaomoji_love_pink.gif",
+    "category": "emoji",
+    "tags": [
+      "kaomoji",
+      "love",
+      "pink",
+      "cute"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 87,
+    "height": 28,
+    "frame_count": 2,
+    "file_size": 2213,
+    "sort_order": 130
+  },
+  {
+    "id": 131,
+    "name": "Bong Smilie Yellow",
+    "filename": "smilie_bong_yellow.gif",
+    "url": "images/stickers/emoji/smilie_bong_yellow.gif",
+    "category": "emoji",
+    "tags": [
+      "bong",
+      "weed",
+      "420",
+      "smilie",
+      "emoji"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 26,
+    "height": 28,
+    "frame_count": 26,
+    "file_size": 10854,
+    "sort_order": 131
+  },
+  {
+    "id": 132,
+    "name": "Callalillies and Hummingbirds Yellow Green",
+    "filename": "callalillies_hummingbirds_yellow-green.gif",
+    "url": "images/stickers/flower/callalillies_hummingbirds_yellow-green.gif",
+    "category": "flower",
+    "tags": [
+      "callalillies",
+      "hummingbirds",
+      "birds",
+      "flower",
+      "nature"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 358,
+    "frame_count": 3,
+    "file_size": 130637,
+    "sort_order": 132
+  },
+  {
+    "id": 133,
+    "name": "Small Flower Red",
+    "filename": "flower-small_red.gif",
+    "url": "images/stickers/flower/flower-small_red.gif",
+    "category": "flower",
+    "tags": [
+      "flower",
+      "small",
+      "nature"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 40,
+    "height": 32,
+    "frame_count": 5,
+    "file_size": 8170,
+    "sort_order": 133
+  },
+  {
+    "id": 134,
+    "name": "Hibiscus Red",
+    "filename": "hibiscus_red.gif",
+    "url": "images/stickers/flower/hibiscus_red.gif",
+    "category": "flower",
+    "tags": [
+      "hibiscus",
+      "tropical",
+      "flower"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 51,
+    "height": 50,
+    "frame_count": 21,
+    "file_size": 15158,
+    "sort_order": 134
+  },
+  {
+    "id": 135,
+    "name": "Small Marijuana Leaf Green Glitter",
+    "filename": "marijuana-leaf-small_green-glitter.gif",
+    "url": "images/stickers/flower/marijuana-leaf-small_green-glitter.gif",
+    "category": "flower",
+    "tags": [
+      "marijuana",
+      "weed",
+      "420",
+      "leaf"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 41,
+    "height": 43,
+    "frame_count": 3,
+    "file_size": 3382,
+    "sort_order": 135
+  },
+  {
+    "id": 136,
+    "name": "Small Marijuana Leaf Green Glitter",
+    "filename": "marijuana-leaf-small_green-glitter_2.gif",
+    "url": "images/stickers/flower/marijuana-leaf-small_green-glitter_2.gif",
+    "category": "flower",
+    "tags": [
+      "marijuana",
+      "weed",
+      "420",
+      "leaf"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 20,
+    "height": 20,
+    "frame_count": 3,
+    "file_size": 1898,
+    "sort_order": 136
+  },
+  {
+    "id": 137,
+    "name": "Small Marijuana Leaf Green Glitter",
+    "filename": "marijuana-leaf-small_green-glitter_3.gif",
+    "url": "images/stickers/flower/marijuana-leaf-small_green-glitter_3.gif",
+    "category": "flower",
+    "tags": [
+      "marijuana",
+      "weed",
+      "420",
+      "leaf"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 100,
+    "height": 100,
+    "frame_count": 25,
+    "file_size": 28062,
+    "sort_order": 137
+  },
+  {
+    "id": 138,
+    "name": "Marijuana Leaf Green Glitter",
+    "filename": "marijuana-leaf_green-glitter.gif",
+    "url": "images/stickers/flower/marijuana-leaf_green-glitter.gif",
+    "category": "flower",
+    "tags": [
+      "marijuana",
+      "weed",
+      "420",
+      "leaf"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 200,
+    "height": 200,
+    "frame_count": 3,
+    "file_size": 11495,
+    "sort_order": 138
+  },
+  {
+    "id": 139,
+    "name": "Marijuana Leaf Green Glitter",
+    "filename": "marijuana-leaf_green-glitter_2.gif",
+    "url": "images/stickers/flower/marijuana-leaf_green-glitter_2.gif",
+    "category": "flower",
+    "tags": [
+      "marijuana",
+      "weed",
+      "420",
+      "leaf"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 200,
+    "height": 200,
+    "frame_count": 3,
+    "file_size": 45871,
+    "sort_order": 139
+  },
+  {
+    "id": 140,
+    "name": "Rose In Heart Red Gold Glitter",
+    "filename": "rose-in-heart_red-gold-glitter.gif",
+    "url": "images/stickers/flower/rose-in-heart_red-gold-glitter.gif",
+    "category": "flower",
+    "tags": [
+      "rose",
+      "heart",
+      "love",
+      "flower"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 110,
+    "height": 112,
+    "frame_count": 3,
+    "file_size": 22357,
+    "sort_order": 140
+  },
+  {
+    "id": 141,
+    "name": "Rose Bouquet Pink Silver Glitter",
+    "filename": "rose_bouquet_pink-silver-glitter.gif",
+    "url": "images/stickers/flower/rose_bouquet_pink-silver-glitter.gif",
+    "category": "flower",
+    "tags": [
+      "rose",
+      "bouquet",
+      "flowers",
+      "nature"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 242,
+    "height": 266,
+    "frame_count": 3,
+    "file_size": 25538,
+    "sort_order": 141
+  },
+  {
+    "id": 142,
+    "name": "Roses Glitter Blue",
+    "filename": "roses_glitter_blue.gif",
+    "url": "images/stickers/flower/roses_glitter_blue.gif",
+    "category": "flower",
+    "tags": [
+      "roses",
+      "glitter",
+      "flower"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 302,
+    "height": 247,
+    "frame_count": 3,
+    "file_size": 84741,
+    "sort_order": 142
+  },
+  {
+    "id": 143,
+    "name": "Big Sparkle Frame",
+    "filename": "big-sparkle-frame.gif",
+    "url": "images/stickers/frame/big-sparkle-frame.gif",
+    "category": "frame",
+    "tags": [
+      "sparkle",
+      "frame",
+      "border"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 400,
+    "frame_count": 12,
+    "file_size": 396660,
+    "sort_order": 143
+  },
+  {
+    "id": 144,
+    "name": "Confetti Gold Glitter Frame",
+    "filename": "confetti_gold-glitter.gif",
+    "url": "images/stickers/frame/confetti_gold-glitter.gif",
+    "category": "frame",
+    "tags": [
+      "confetti",
+      "glitter",
+      "frame",
+      "border"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 400,
+    "frame_count": 2,
+    "file_size": 9733,
+    "sort_order": 144
+  },
+  {
+    "id": 145,
+    "name": "Heart Frame Pink Glitter",
+    "filename": "heart-frame_pink-glitter.gif",
+    "url": "images/stickers/frame/heart-frame_pink-glitter.gif",
+    "category": "frame",
+    "tags": [
+      "heart",
+      "frame",
+      "glitter",
+      "border",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 154,
+    "height": 127,
+    "frame_count": 3,
+    "file_size": 5892,
+    "sort_order": 145
+  },
+  {
+    "id": 146,
+    "name": "Rose Heart Frame Red",
+    "filename": "rose-heart_frame_red.gif",
+    "url": "images/stickers/frame/rose-heart_frame_red.gif",
+    "category": "frame",
+    "tags": [
+      "rose",
+      "heart",
+      "frame",
+      "border",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 320,
+    "height": 320,
+    "frame_count": 27,
+    "file_size": 371065,
+    "sort_order": 146
+  },
+  {
+    "id": 147,
+    "name": "Bling Bling Necklace Gold Silver",
+    "filename": "bling-bling-necklace_gold-silver.gif",
+    "url": "images/stickers/jewelry/bling-bling-necklace_gold-silver.gif",
+    "category": "jewelry",
+    "tags": [
+      "bling bling",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Bling Bling",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 150,
+    "height": 150,
+    "frame_count": 12,
+    "file_size": 88793,
+    "sort_order": 147
+  },
+  {
+    "id": 148,
+    "name": "Bling Bling Necklace Rose Gold",
+    "filename": "bling-bling-necklace_rose-gold.gif",
+    "url": "images/stickers/jewelry/bling-bling-necklace_rose-gold.gif",
+    "category": "jewelry",
+    "tags": [
+      "bling bling",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Bling Bling",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 135,
+    "height": 146,
+    "frame_count": 12,
+    "file_size": 112966,
+    "sort_order": 148
+  },
+  {
+    "id": 149,
+    "name": "Bling Bling Necklace Silver",
+    "filename": "bling-bling-necklace_silver.gif",
+    "url": "images/stickers/jewelry/bling-bling-necklace_silver.gif",
+    "category": "jewelry",
+    "tags": [
+      "bling bling",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Bling Bling",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 146,
+    "height": 149,
+    "frame_count": 3,
+    "file_size": 12431,
+    "sort_order": 149
+  },
+  {
+    "id": 150,
+    "name": "Cutie Necklace Blue Pink",
+    "filename": "cutie-necklace_blue-pink.gif",
+    "url": "images/stickers/jewelry/cutie-necklace_blue-pink.gif",
+    "category": "jewelry",
+    "tags": [
+      "cutie",
+      "necklace",
+      "jewelry",
+      "cute"
+    ],
+    "text": "Cutie",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 160,
+    "height": 96,
+    "frame_count": 13,
+    "file_size": 35496,
+    "sort_order": 150
+  },
+  {
+    "id": 151,
+    "name": "Dollar Sign Necklace Gold",
+    "filename": "dollar-sign-necklace_gold.gif",
+    "url": "images/stickers/jewelry/dollar-sign-necklace_gold.gif",
+    "category": "jewelry",
+    "tags": [
+      "dollar sign",
+      "necklace",
+      "jewelry",
+      "money"
+    ],
+    "text": "$",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 240,
+    "height": 320,
+    "frame_count": 10,
+    "file_size": 158509,
+    "sort_order": 151
+  },
+  {
+    "id": 152,
+    "name": "Dollar Sign Necklace Green Glitter Sparkle",
+    "filename": "dollar-sign-necklace_sparkle_green-glitter.gif",
+    "url": "images/stickers/jewelry/dollar-sign-necklace_sparkle_green-glitter.gif",
+    "category": "jewelry",
+    "tags": [
+      "dollar sign",
+      "necklace",
+      "jewelry",
+      "money",
+      "sparkle"
+    ],
+    "text": "$",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 125,
+    "height": 100,
+    "frame_count": 10,
+    "file_size": 16860,
+    "sort_order": 152
+  },
+  {
+    "id": 153,
+    "name": "Gangsta Necklace Gold",
+    "filename": "gangsta-necklace_gold.gif",
+    "url": "images/stickers/jewelry/gangsta-necklace_gold.gif",
+    "category": "jewelry",
+    "tags": [
+      "gangsta",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Gangsta",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 250,
+    "height": 250,
+    "frame_count": 12,
+    "file_size": 213854,
+    "sort_order": 153
+  },
+  {
+    "id": 154,
+    "name": "Gangsta Necklace Gold",
+    "filename": "gangsta-necklace_gold_2.gif",
+    "url": "images/stickers/jewelry/gangsta-necklace_gold_2.gif",
+    "category": "jewelry",
+    "tags": [
+      "gangsta",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Gangsta",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 190,
+    "height": 178,
+    "frame_count": 12,
+    "file_size": 143085,
+    "sort_order": 154
+  },
+  {
+    "id": 155,
+    "name": "Gangsta Necklace Gold",
+    "filename": "gangsta-necklace_gold_4.gif",
+    "url": "images/stickers/jewelry/gangsta-necklace_gold_4.gif",
+    "category": "jewelry",
+    "tags": [
+      "gangsta",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Gangsta",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 190,
+    "height": 178,
+    "frame_count": 12,
+    "file_size": 129754,
+    "sort_order": 155
+  },
+  {
+    "id": 156,
+    "name": "Gangsta Necklace Gold",
+    "filename": "gangsta-necklace_gold_5.gif",
+    "url": "images/stickers/jewelry/gangsta-necklace_gold_5.gif",
+    "category": "jewelry",
+    "tags": [
+      "gangsta",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Gangsta",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 190,
+    "height": 178,
+    "frame_count": 12,
+    "file_size": 129754,
+    "sort_order": 156
+  },
+  {
+    "id": 157,
+    "name": "Gangsta Necklace Silver",
+    "filename": "gangsta-necklace_silver.gif",
+    "url": "images/stickers/jewelry/gangsta-necklace_silver.gif",
+    "category": "jewelry",
+    "tags": [
+      "gangsta",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Gangsta",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 190,
+    "height": 178,
+    "frame_count": 12,
+    "file_size": 142473,
+    "sort_order": 157
+  },
+  {
+    "id": 158,
+    "name": "Gangsta Necklace Silver",
+    "filename": "gangsta-necklace_silver_2.gif",
+    "url": "images/stickers/jewelry/gangsta-necklace_silver_2.gif",
+    "category": "jewelry",
+    "tags": [
+      "gangsta",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Gangsta",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 250,
+    "height": 250,
+    "frame_count": 12,
+    "file_size": 213857,
+    "sort_order": 158
+  },
+  {
+    "id": 159,
+    "name": "Gangsta Pendant Gold Silver",
+    "filename": "gangsta_gold-silver.gif",
+    "url": "images/stickers/jewelry/gangsta_gold-silver.gif",
+    "category": "jewelry",
+    "tags": [
+      "gangsta",
+      "jewelry",
+      "pendant"
+    ],
+    "text": "Gangsta",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 100,
+    "height": 80,
+    "frame_count": 15,
+    "file_size": 36459,
+    "sort_order": 159
+  },
+  {
+    "id": 160,
+    "name": "Gangsta Necklace Gold",
+    "filename": "gangsta_necklace_gold_3.gif",
+    "url": "images/stickers/jewelry/gangsta_necklace_gold_3.gif",
+    "category": "jewelry",
+    "tags": [
+      "gangsta",
+      "necklace",
+      "jewelry",
+      "chain"
+    ],
+    "text": "Gangsta",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 100,
+    "height": 80,
+    "frame_count": 12,
+    "file_size": 39901,
+    "sort_order": 160
+  },
+  {
+    "id": 161,
+    "name": "Hottie Necklace Hot Pink Silver",
+    "filename": "hottie-necklace_hot-pink-silver.gif",
+    "url": "images/stickers/jewelry/hottie-necklace_hot-pink-silver.gif",
+    "category": "jewelry",
+    "tags": [
+      "hottie",
+      "necklace",
+      "jewelry",
+      "sexy"
+    ],
+    "text": "Hottie",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 200,
+    "height": 200,
+    "frame_count": 12,
+    "file_size": 65531,
+    "sort_order": 161
+  },
+  {
+    "id": 162,
+    "name": "Naughty Necklace Pink",
+    "filename": "naughty-necklace_pink.gif",
+    "url": "images/stickers/jewelry/naughty-necklace_pink.gif",
+    "category": "jewelry",
+    "tags": [
+      "naughty",
+      "necklace",
+      "jewelry"
+    ],
+    "text": "Naughty",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 200,
+    "height": 200,
+    "frame_count": 12,
+    "file_size": 184981,
+    "sort_order": 162
+  },
+  {
+    "id": 163,
+    "name": "Pimpin Necklace Silver",
+    "filename": "pimpin-necklace_silver.gif",
+    "url": "images/stickers/jewelry/pimpin-necklace_silver.gif",
+    "category": "jewelry",
+    "tags": [
+      "pimpin",
+      "necklace",
+      "jewelry"
+    ],
+    "text": "Pimpin",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 221,
+    "height": 200,
+    "frame_count": 12,
+    "file_size": 191608,
+    "sort_order": 163
+  },
+  {
+    "id": 164,
+    "name": "Tupac Necklace Gold",
+    "filename": "tupac-necklace_gold.gif",
+    "url": "images/stickers/jewelry/tupac-necklace_gold.gif",
+    "category": "jewelry",
+    "tags": [
+      "tupac",
+      "necklace",
+      "jewelry",
+      "hip hop",
+      "2pac"
+    ],
+    "text": "Tupac",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 150,
+    "height": 150,
+    "frame_count": 5,
+    "file_size": 28315,
+    "sort_order": 164
+  },
+  {
+    "id": 165,
+    "name": "Cigar",
+    "filename": "cigar.gif",
+    "url": "images/stickers/object/cigar.gif",
+    "category": "object",
+    "tags": [
+      "cigar",
+      "smoking",
+      "object"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 53,
+    "height": 100,
+    "frame_count": 4,
+    "file_size": 5635,
+    "sort_order": 165
+  },
+  {
+    "id": 166,
+    "name": "Fire",
+    "filename": "fire_1.gif",
+    "url": "images/stickers/object/fire_1.gif",
+    "category": "object",
+    "tags": [
+      "fire",
+      "flames",
+      "hot"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 29,
+    "height": 67,
+    "frame_count": 5,
+    "file_size": 2861,
+    "sort_order": 166
+  },
+  {
+    "id": 167,
+    "name": "Fire",
+    "filename": "fire_2.gif",
+    "url": "images/stickers/object/fire_2.gif",
+    "category": "object",
+    "tags": [
+      "fire",
+      "flames",
+      "hot"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 185,
+    "height": 160,
+    "frame_count": 12,
+    "file_size": 125111,
+    "sort_order": 167
+  },
+  {
+    "id": 168,
+    "name": "Fire",
+    "filename": "fire_3.gif",
+    "url": "images/stickers/object/fire_3.gif",
+    "category": "object",
+    "tags": [
+      "fire",
+      "flames",
+      "hot"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 29,
+    "height": 67,
+    "frame_count": 5,
+    "file_size": 2861,
+    "sort_order": 168
+  },
+  {
+    "id": 169,
+    "name": "Fire",
+    "filename": "fire_4.gif",
+    "url": "images/stickers/object/fire_4.gif",
+    "category": "object",
+    "tags": [
+      "fire",
+      "flames",
+      "hot"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 410,
+    "height": 400,
+    "frame_count": 46,
+    "file_size": 1883876,
+    "sort_order": 169
+  },
+  {
+    "id": 170,
+    "name": "Money Stacks Gold Glitter Green",
+    "filename": "money-stacks_gold-glitter-green.gif",
+    "url": "images/stickers/object/money-stacks_gold-glitter-green.gif",
+    "category": "object",
+    "tags": [
+      "money",
+      "stacks",
+      "cash",
+      "wealth"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 349,
+    "height": 221,
+    "frame_count": 3,
+    "file_size": 125705,
+    "sort_order": 170
+  },
+  {
+    "id": 171,
+    "name": "Waving Money Green",
+    "filename": "money_wave_green.gif",
+    "url": "images/stickers/object/money_wave_green.gif",
+    "category": "object",
+    "tags": [
+      "money",
+      "cash",
+      "wave",
+      "wealth"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 150,
+    "height": 88,
+    "frame_count": 8,
+    "file_size": 62440,
+    "sort_order": 171
+  },
+  {
+    "id": 172,
+    "name": "Rotating Weed Leaf Green",
+    "filename": "weed_rotating_green.gif",
+    "url": "images/stickers/object/weed_rotating_green.gif",
+    "category": "object",
+    "tags": [
+      "weed",
+      "marijuana",
+      "rotating",
+      "420",
+      "leaf"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 135,
+    "height": 240,
+    "frame_count": 90,
+    "file_size": 1582834,
+    "sort_order": 172
+  },
+  {
+    "id": 173,
+    "name": "Snoop Dogg Dancing Big",
+    "filename": "snoop-dog_dance_big.gif",
+    "url": "images/stickers/people/snoop-dogg_dance_big.gif",
+    "category": "people",
+    "tags": [
+      "snoop dogg",
+      "dancing",
+      "rapper",
+      "hip hop"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 97,
+    "height": 200,
+    "frame_count": 58,
+    "file_size": 302789,
+    "sort_order": 173
+  },
+  {
+    "id": 174,
+    "name": "Confetti Gold",
+    "filename": "confetti_gold.gif",
+    "url": "images/stickers/sparkle/confetti_gold.gif",
+    "category": "sparkle",
+    "tags": [
+      "confetti",
+      "party",
+      "celebration"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 189,
+    "height": 203,
+    "frame_count": 3,
+    "file_size": 5763,
+    "sort_order": 174
+  },
+  {
+    "id": 175,
+    "name": "Corner Sparkle Rainbow",
+    "filename": "corner_sparkle_rainbow.gif",
+    "url": "images/stickers/sparkle/corner_sparkle_rainbow.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "corner",
+      "rainbow",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 138,
+    "height": 123,
+    "frame_count": 7,
+    "file_size": 8744,
+    "sort_order": 175
+  },
+  {
+    "id": 176,
+    "name": "Fireworks Yellow Pink",
+    "filename": "fireworks_yellow-pink.gif",
+    "url": "images/stickers/sparkle/fireworks_yellow-pink.gif",
+    "category": "sparkle",
+    "tags": [
+      "fireworks",
+      "party",
+      "celebration"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 139,
+    "height": 146,
+    "frame_count": 14,
+    "file_size": 27145,
+    "sort_order": 176
+  },
+  {
+    "id": 177,
+    "name": "Exploding Hearts Red",
+    "filename": "heaers_exploding_red.gif",
+    "url": "images/stickers/sparkle/heaers_exploding_red.gif",
+    "category": "sparkle",
+    "tags": [
+      "hearts",
+      "exploding",
+      "love",
+      "burst"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 75,
+    "height": 125,
+    "frame_count": 12,
+    "file_size": 3561,
+    "sort_order": 177
+  },
+  {
+    "id": 178,
+    "name": "Exploding Hearts Pink",
+    "filename": "hearts_exploding_pink.gif",
+    "url": "images/stickers/sparkle/hearts_exploding_pink.gif",
+    "category": "sparkle",
+    "tags": [
+      "hearts",
+      "exploding",
+      "love",
+      "burst"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 168,
+    "height": 215,
+    "frame_count": 9,
+    "file_size": 27957,
+    "sort_order": 178
+  },
+  {
+    "id": 179,
+    "name": "Falling Hearts Pink",
+    "filename": "hearts_falling_pink.gif",
+    "url": "images/stickers/sparkle/hearts_falling_pink.gif",
+    "category": "sparkle",
+    "tags": [
+      "hearts",
+      "falling",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 120,
+    "height": 140,
+    "frame_count": 20,
+    "file_size": 28018,
+    "sort_order": 179
+  },
+  {
+    "id": 180,
+    "name": "Floating Hearts Pink",
+    "filename": "hearts_floating_pink.gif",
+    "url": "images/stickers/sparkle/hearts_floating_pink.gif",
+    "category": "sparkle",
+    "tags": [
+      "hearts",
+      "floating",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 200,
+    "height": 100,
+    "frame_count": 23,
+    "file_size": 14915,
+    "sort_order": 180
+  },
+  {
+    "id": 181,
+    "name": "Floating Hearts Red",
+    "filename": "hearts_floating_red.gif",
+    "url": "images/stickers/sparkle/hearts_floating_red.gif",
+    "category": "sparkle",
+    "tags": [
+      "hearts",
+      "floating",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 200,
+    "height": 100,
+    "frame_count": 23,
+    "file_size": 27849,
+    "sort_order": 181
+  },
+  {
+    "id": 182,
+    "name": "Floating Hearts Red",
+    "filename": "hearts_floating_red_2.gif",
+    "url": "images/stickers/sparkle/hearts_floating_red_2.gif",
+    "category": "sparkle",
+    "tags": [
+      "hearts",
+      "floating",
+      "love"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 170,
+    "height": 210,
+    "frame_count": 8,
+    "file_size": 7011,
+    "sort_order": 182
+  },
+  {
+    "id": 183,
+    "name": "Hearts Pink Glitter",
+    "filename": "hearts_pink-glitter.gif",
+    "url": "images/stickers/sparkle/hearts_pink-glitter.gif",
+    "category": "sparkle",
+    "tags": [
+      "hearts",
+      "sparkle",
+      "love",
+      "glitter"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 46,
+    "height": 51,
+    "frame_count": 2,
+    "file_size": 857,
+    "sort_order": 183
+  },
+  {
+    "id": 184,
+    "name": "Falling Rose Petals Red",
+    "filename": "rose-petals_falling_red.gif",
+    "url": "images/stickers/sparkle/rose-petals_falling_red.gif",
+    "category": "sparkle",
+    "tags": [
+      "rose petals",
+      "falling",
+      "flowers",
+      "romantic"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 312,
+    "height": 224,
+    "frame_count": 53,
+    "file_size": 44388,
+    "sort_order": 184
+  },
+  {
+    "id": 185,
+    "name": "Shooting Star Yellow",
+    "filename": "shooting-star_yellow.gif",
+    "url": "images/stickers/sparkle/shooting-star_yellow.gif",
+    "category": "sparkle",
+    "tags": [
+      "shooting star",
+      "sparkle",
+      "wish"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 130,
+    "height": 130,
+    "frame_count": 20,
+    "file_size": 16308,
+    "sort_order": 185
+  },
+  {
+    "id": 186,
+    "name": "Falling Snow White",
+    "filename": "snow_falling_white.gif",
+    "url": "images/stickers/sparkle/snow_falling_white.gif",
+    "category": "sparkle",
+    "tags": [
+      "snow",
+      "falling",
+      "winter",
+      "weather"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 400,
+    "frame_count": 22,
+    "file_size": 124277,
+    "sort_order": 186
+  },
+  {
+    "id": 187,
+    "name": "Sparkle Stars Black Background",
+    "filename": "sparkle-stars_black-background.gif",
+    "url": "images/stickers/sparkle/sparkle-stars_black-background.gif",
+    "category": "sparkle",
+    "tags": [
+      "stars",
+      "sparkle",
+      "night sky"
+    ],
+    "is_animated": true,
+    "has_transparency": false,
+    "width": 64,
+    "height": 64,
+    "frame_count": 4,
+    "file_size": 1346,
+    "sort_order": 187
+  },
+  {
+    "id": 188,
+    "name": "Big Sparkle White",
+    "filename": "sparkle_big_white.gif",
+    "url": "images/stickers/sparkle/sparkle_big_white.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "big",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 108,
+    "height": 110,
+    "frame_count": 10,
+    "file_size": 6521,
+    "sort_order": 188
+  },
+  {
+    "id": 189,
+    "name": "Sparkle Blue",
+    "filename": "sparkle_blue.gif",
+    "url": "images/stickers/sparkle/sparkle_blue.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 52,
+    "height": 46,
+    "frame_count": 10,
+    "file_size": 2944,
+    "sort_order": 189
+  },
+  {
+    "id": 190,
+    "name": "Sparkle Blue",
+    "filename": "sparkle_blue_2.gif",
+    "url": "images/stickers/sparkle/sparkle_blue_2.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 64,
+    "height": 64,
+    "frame_count": 4,
+    "file_size": 1708,
+    "sort_order": 190
+  },
+  {
+    "id": 191,
+    "name": "Sparkle Blue",
+    "filename": "sparkle_blue_3.gif",
+    "url": "images/stickers/sparkle/sparkle_blue_3.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 32,
+    "height": 32,
+    "frame_count": 16,
+    "file_size": 2978,
+    "sort_order": 191
+  },
+  {
+    "id": 192,
+    "name": "Sparkle Blue",
+    "filename": "sparkle_blue_4.gif",
+    "url": "images/stickers/sparkle/sparkle_blue_4.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 100,
+    "height": 70,
+    "frame_count": 3,
+    "file_size": 1348,
+    "sort_order": 192
+  },
+  {
+    "id": 193,
+    "name": "Sparkle Gold",
+    "filename": "sparkle_gold.gif",
+    "url": "images/stickers/sparkle/sparkle_gold.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 400,
+    "frame_count": 4,
+    "file_size": 27040,
+    "sort_order": 193
+  },
+  {
+    "id": 194,
+    "name": "Sparkle Green",
+    "filename": "sparkle_green.gif",
+    "url": "images/stickers/sparkle/sparkle_green.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 32,
+    "height": 32,
+    "frame_count": 16,
+    "file_size": 2891,
+    "sort_order": 194
+  },
+  {
+    "id": 195,
+    "name": "Sparkle Orange",
+    "filename": "sparkle_orange.gif",
+    "url": "images/stickers/sparkle/sparkle_orange.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 32,
+    "height": 32,
+    "frame_count": 16,
+    "file_size": 2473,
+    "sort_order": 195
+  },
+  {
+    "id": 196,
+    "name": "Sparkle Pink",
+    "filename": "sparkle_pink.gif",
+    "url": "images/stickers/sparkle/sparkle_pink.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 52,
+    "height": 46,
+    "frame_count": 11,
+    "file_size": 2160,
+    "sort_order": 196
+  },
+  {
+    "id": 197,
+    "name": "Sparkle Pink",
+    "filename": "sparkle_pink_2.gif",
+    "url": "images/stickers/sparkle/sparkle_pink_2.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 64,
+    "height": 64,
+    "frame_count": 4,
+    "file_size": 1708,
+    "sort_order": 197
+  },
+  {
+    "id": 198,
+    "name": "Sparkle Pink",
+    "filename": "sparkle_pink_3.gif",
+    "url": "images/stickers/sparkle/sparkle_pink_3.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 32,
+    "height": 32,
+    "frame_count": 16,
+    "file_size": 2634,
+    "sort_order": 198
+  },
+  {
+    "id": 199,
+    "name": "Sparkle Purple",
+    "filename": "sparkle_purple.gif",
+    "url": "images/stickers/sparkle/sparkle_purple.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 32,
+    "height": 32,
+    "frame_count": 16,
+    "file_size": 2437,
+    "sort_order": 199
+  },
+  {
+    "id": 200,
+    "name": "Rainbow Sparkle",
+    "filename": "sparkle_rainbow.gif",
+    "url": "images/stickers/sparkle/sparkle_rainbow.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "rainbow",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 32,
+    "height": 32,
+    "frame_count": 16,
+    "file_size": 2508,
+    "sort_order": 200
+  },
+  {
+    "id": 201,
+    "name": "Rainbow Sparkle",
+    "filename": "sparkle_rainbow_2.gif",
+    "url": "images/stickers/sparkle/sparkle_rainbow_2.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "rainbow",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 65,
+    "height": 73,
+    "frame_count": 4,
+    "file_size": 1433,
+    "sort_order": 201
+  },
+  {
+    "id": 202,
+    "name": "Sparkle Silver",
+    "filename": "sparkle_silver.gif",
+    "url": "images/stickers/sparkle/sparkle_silver.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 52,
+    "height": 46,
+    "frame_count": 11,
+    "file_size": 2658,
+    "sort_order": 202
+  },
+  {
+    "id": 203,
+    "name": "Sparkle Silver",
+    "filename": "sparkle_silver_2.gif",
+    "url": "images/stickers/sparkle/sparkle_silver_2.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 64,
+    "height": 64,
+    "frame_count": 4,
+    "file_size": 1708,
+    "sort_order": 203
+  },
+  {
+    "id": 204,
+    "name": "Sparkle Silver",
+    "filename": "sparkle_silver_3.gif",
+    "url": "images/stickers/sparkle/sparkle_silver_3.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 32,
+    "height": 32,
+    "frame_count": 16,
+    "file_size": 2257,
+    "sort_order": 204
+  },
+  {
+    "id": 205,
+    "name": "Sparkle White",
+    "filename": "sparkle_white.gif",
+    "url": "images/stickers/sparkle/sparkle_white.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 156,
+    "height": 160,
+    "frame_count": 3,
+    "file_size": 2650,
+    "sort_order": 205
+  },
+  {
+    "id": 206,
+    "name": "Sparkle Yellow",
+    "filename": "sparkle_yellow.gif",
+    "url": "images/stickers/sparkle/sparkle_yellow.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 64,
+    "height": 64,
+    "frame_count": 4,
+    "file_size": 1639,
+    "sort_order": 206
+  },
+  {
+    "id": 207,
+    "name": "Sparkle Yellow",
+    "filename": "sparkle_yellow_2.gif",
+    "url": "images/stickers/sparkle/sparkle_yellow_2.gif",
+    "category": "sparkle",
+    "tags": [
+      "sparkle",
+      "shimmer"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 32,
+    "height": 32,
+    "frame_count": 16,
+    "file_size": 2535,
+    "sort_order": 207
+  },
+  {
+    "id": 208,
+    "name": "Falling Stars Rainbow Pastel",
+    "filename": "stars_falling_rainbow-pastel.gif",
+    "url": "images/stickers/sparkle/stars_falling_rainbow-pastel.gif",
+    "category": "sparkle",
+    "tags": [
+      "stars",
+      "falling",
+      "rainbow",
+      "pastel"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 320,
+    "height": 320,
+    "frame_count": 54,
+    "file_size": 94125,
+    "sort_order": 208
+  },
+  {
+    "id": 209,
+    "name": "Sparkling Stars Pink Glitter",
+    "filename": "stars_pink-glitter.gif",
+    "url": "images/stickers/sparkle/stars_pink-glitter.gif",
+    "category": "sparkle",
+    "tags": [
+      "stars",
+      "sparkle",
+      "glitter"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 149,
+    "height": 123,
+    "frame_count": 3,
+    "file_size": 4918,
+    "sort_order": 209
+  },
+  {
+    "id": 210,
+    "name": "Stars Yellow",
+    "filename": "stars_yellow.gif",
+    "url": "images/stickers/sparkle/stars_yellow.gif",
+    "category": "sparkle",
+    "tags": [
+      "stars",
+      "sparkle"
+    ],
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 150,
+    "height": 150,
+    "frame_count": 13,
+    "file_size": 39136,
+    "sort_order": 210
+  },
+  {
+    "id": 211,
+    "name": "420 Rotate Green Text",
+    "filename": "420_rotate_green.gif",
+    "url": "images/stickers/text/420_rotate_green.gif",
+    "category": "text",
+    "tags": [
+      "420",
+      "weed",
+      "marijuana",
+      "rotating"
+    ],
+    "text": "420",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 332,
+    "height": 168,
+    "frame_count": 20,
+    "file_size": 129674,
+    "sort_order": 211
+  },
+  {
+    "id": 212,
+    "name": "Bling Bling Silver Glitter Text",
+    "filename": "bling-bling_silver-glitter.gif",
+    "url": "images/stickers/text/bling-bling_silver-glitter.gif",
+    "category": "text",
+    "tags": [
+      "bling bling",
+      "glitter",
+      "sparkle"
+    ],
+    "text": "Bling Bling",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 223,
+    "height": 184,
+    "frame_count": 3,
+    "file_size": 55568,
+    "sort_order": 212
+  },
+  {
+    "id": 213,
+    "name": "Dope Marijuana Leaf Green Glitter Text",
+    "filename": "dope_marijuana-leaf_green-glitter.gif",
+    "url": "images/stickers/text/dope_marijuana-leaf_green-glitter.gif",
+    "category": "text",
+    "tags": [
+      "dope",
+      "marijuana",
+      "weed",
+      "420",
+      "leaf"
+    ],
+    "text": "Dope",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 250,
+    "height": 260,
+    "frame_count": 3,
+    "file_size": 114769,
+    "sort_order": 213
+  },
+  {
+    "id": 214,
+    "name": "Emo Rainbow Gradient Text",
+    "filename": "emo_rainbow-gradient-pink-orange-yellow-green.gif",
+    "url": "images/stickers/text/emo_rainbow-gradient-pink-orange-yellow-green.gif",
+    "category": "text",
+    "tags": [
+      "emo",
+      "rainbow",
+      "gradient"
+    ],
+    "text": "Emo",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 100,
+    "height": 57,
+    "frame_count": 6,
+    "file_size": 15151,
+    "sort_order": 214
+  },
+  {
+    "id": 215,
+    "name": "Emo Wings Black Pink Text",
+    "filename": "emo_wings_black-pink.gif",
+    "url": "images/stickers/text/emo_wings_black-pink.gif",
+    "category": "text",
+    "tags": [
+      "emo",
+      "wings",
+      "goth"
+    ],
+    "text": "Emo",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 414,
+    "height": 136,
+    "frame_count": 3,
+    "file_size": 65575,
+    "sort_order": 215
+  },
+  {
+    "id": 216,
+    "name": "Gangsta Princess Heart Tiara Silver Glitter Pink Text",
+    "filename": "gangsta-pirncess_heart-tiara_silver-glitter-pink.gif",
+    "url": "images/stickers/text/gangsta-pirncess_heart-tiara_silver-glitter-pink.gif",
+    "category": "text",
+    "tags": [
+      "gangsta",
+      "princess",
+      "tiara",
+      "heart"
+    ],
+    "text": "Gangsta Princess",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 388,
+    "height": 314,
+    "frame_count": 3,
+    "file_size": 101343,
+    "sort_order": 216
+  },
+  {
+    "id": 217,
+    "name": "Gangsta Purple Ember Glitter Text",
+    "filename": "gangsta_purple-ember-glitter.gif",
+    "url": "images/stickers/text/gangsta_purple-ember-glitter.gif",
+    "category": "text",
+    "tags": [
+      "gangsta",
+      "ember",
+      "glitter"
+    ],
+    "text": "Gangsta",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 136,
+    "height": 39,
+    "frame_count": 4,
+    "file_size": 13350,
+    "sort_order": 217
+  },
+  {
+    "id": 218,
+    "name": "Good Morning Blue Bird Flower Text",
+    "filename": "good-morning_blue-bird_flower_blue.gif",
+    "url": "images/stickers/text/good-morning_blue-bird_flower_blue.gif",
+    "category": "text",
+    "tags": [
+      "good morning",
+      "bird",
+      "flower"
+    ],
+    "text": "Good Morning",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 155,
+    "height": 120,
+    "frame_count": 3,
+    "file_size": 26960,
+    "sort_order": 218
+  },
+  {
+    "id": 219,
+    "name": "Good Morning Butterfly Blue Text",
+    "filename": "good-morning_butterfly_blue.gif",
+    "url": "images/stickers/text/good-morning_butterfly_blue.gif",
+    "category": "text",
+    "tags": [
+      "good morning",
+      "butterfly"
+    ],
+    "text": "Good Morning",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 396,
+    "height": 357,
+    "frame_count": 3,
+    "file_size": 84711,
+    "sort_order": 219
+  },
+  {
+    "id": 220,
+    "name": "Good Morning Gradient Star Orange Yellow Blue Text",
+    "filename": "good-morning_gradient-star_orange-yellow-blue.gif",
+    "url": "images/stickers/text/good-morning_gradient-star_orange-yellow-blue.gif",
+    "category": "text",
+    "tags": [
+      "good morning",
+      "star",
+      "gradient"
+    ],
+    "text": "Good Morning",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 190,
+    "frame_count": 3,
+    "file_size": 46730,
+    "sort_order": 220
+  },
+  {
+    "id": 221,
+    "name": "Good Morning Rose Red Text",
+    "filename": "good-morning_rose_red.gif",
+    "url": "images/stickers/text/good-morning_rose_red.gif",
+    "category": "text",
+    "tags": [
+      "good morning",
+      "rose"
+    ],
+    "text": "Good Morning",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 325,
+    "frame_count": 3,
+    "file_size": 129678,
+    "sort_order": 221
+  },
+  {
+    "id": 222,
+    "name": "Happy New Year Rainbow Confetti Text",
+    "filename": "happy-near-year_rainbow-confetti.gif",
+    "url": "images/stickers/text/happy-near-year_rainbow-confetti.gif",
+    "category": "text",
+    "tags": [
+      "happy new year",
+      "new year",
+      "confetti",
+      "rainbow"
+    ],
+    "text": "Happy New Year",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 93,
+    "frame_count": 4,
+    "file_size": 47950,
+    "sort_order": 222
+  },
+  {
+    "id": 223,
+    "name": "Happy New Year Snow Red Blue Text",
+    "filename": "happy-new-year_snow_red-blue.gif",
+    "url": "images/stickers/text/happy-new-year_snow_red-blue.gif",
+    "category": "text",
+    "tags": [
+      "happy new year",
+      "new year",
+      "snow"
+    ],
+    "text": "Happy New Year",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 191,
+    "height": 83,
+    "frame_count": 4,
+    "file_size": 8646,
+    "sort_order": 223
+  },
+  {
+    "id": 224,
+    "name": "I Love You Heart Arrow Red Text",
+    "filename": "i-love-you_heart-arrow_red.gif",
+    "url": "images/stickers/text/i-love-you_heart-arrow_red.gif",
+    "category": "text",
+    "tags": [
+      "i love you",
+      "heart",
+      "arrow",
+      "love"
+    ],
+    "text": "I Love You",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 100,
+    "height": 86,
+    "frame_count": 4,
+    "file_size": 17480,
+    "sort_order": 224
+  },
+  {
+    "id": 225,
+    "name": "I Love You Heart Rose Pink Text",
+    "filename": "i-love-you_heart-rose_pink.gif",
+    "url": "images/stickers/text/i-love-you_heart-rose_pink.gif",
+    "category": "text",
+    "tags": [
+      "i love you",
+      "heart",
+      "rose",
+      "love"
+    ],
+    "text": "I Love You",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 370,
+    "height": 400,
+    "frame_count": 3,
+    "file_size": 172159,
+    "sort_order": 225
+  },
+  {
+    "id": 226,
+    "name": "Emo Pink Heart Text",
+    "filename": "less-than-three_emo_pink.gif",
+    "url": "images/stickers/text/less-than-three_emo_pink.gif",
+    "category": "text",
+    "tags": [
+      "less than three",
+      "heart",
+      "emo"
+    ],
+    "text": "<3",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 50,
+    "height": 50,
+    "frame_count": 4,
+    "file_size": 7740,
+    "sort_order": 226
+  },
+  {
+    "id": 227,
+    "name": "Love Emo Hearts Black Pink Text",
+    "filename": "love-emo_hearts_black-pink.gif",
+    "url": "images/stickers/text/love-emo_hearts_black-pink.gif",
+    "category": "text",
+    "tags": [
+      "love",
+      "emo",
+      "hearts"
+    ],
+    "text": "Love",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 254,
+    "height": 200,
+    "frame_count": 3,
+    "file_size": 62927,
+    "sort_order": 227
+  },
+  {
+    "id": 228,
+    "name": "Love Me Like I Love You Heart Pink Text",
+    "filename": "love-me-like-i-love-you_heart_pink.gif",
+    "url": "images/stickers/text/love-me-like-i-love-you_heart_pink.gif",
+    "category": "text",
+    "tags": [
+      "love me like i love you",
+      "heart",
+      "love"
+    ],
+    "text": "Love me like I love you",
+    "is_animated": true,
+    "has_transparency": false,
+    "width": 498,
+    "height": 396,
+    "frame_count": 3,
+    "file_size": 262261,
+    "sort_order": 228
+  },
+  {
+    "id": 229,
+    "name": "Love You Hearts Pink Red Text",
+    "filename": "love-you_hearts_pink-red.gif",
+    "url": "images/stickers/text/love-you_hearts_pink-red.gif",
+    "category": "text",
+    "tags": [
+      "love you",
+      "hearts",
+      "love"
+    ],
+    "text": "Love You",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 400,
+    "height": 330,
+    "frame_count": 3,
+    "file_size": 178267,
+    "sort_order": 229
+  },
+  {
+    "id": 230,
+    "name": "So Emo It Hurts Heart Black Pink Text",
+    "filename": "so-emo-it-hurts_heart_black-pink.gif",
+    "url": "images/stickers/text/so-emo-it-hurts_heart_black-pink.gif",
+    "category": "text",
+    "tags": [
+      "so emo it hurts",
+      "emo",
+      "heart"
+    ],
+    "text": "So emo it hurts",
+    "is_animated": true,
+    "has_transparency": true,
+    "width": 200,
+    "height": 114,
+    "frame_count": 3,
+    "file_size": 40979,
+    "sort_order": 230
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 ]

@@ -1706,14 +1706,9 @@ input[type="range"] {
 	transform-origin: center;
 	pointer-events: auto;
 	will-change: transform;
-
 	pointer-events: auto !important;
-	/* Allow clicking the sticker */
-	cursor: move;
-	/* Show move cursor */
 	touch-action: none;
-	/* Prevent browser scrolling on mobile while dragging */
-
+	
 	&.dragging {
 		cursor: grabbing;
 		z-index: 1000 !important;
@@ -1735,6 +1730,20 @@ input[type="range"] {
 		image-rendering: pixelated;
 	}
 }
+
+
+
+body.tool-select {
+	.sticker-element {
+		cursor: move;
+
+		&:not(.selected):hover {
+			outline: 1px dashed rgba(0, 0, 0, 0.25);
+			outline-offset: -1px;
+		}
+	}
+}
+
 
 .layer-swatch {
 

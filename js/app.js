@@ -94,7 +94,7 @@ const CONFIG = {
 	defaultExportReverse: false,
 
 	// watermark
-	defaultExportWatermarkEnabled: true,
+	defaultExportWatermarkEnabled: false,
 	watermarkUrl: 'images/watermark/2.png', // Set your watermark URL here
 	watermarkPosition: 'bottom-right', // 'top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right', 'center'
 	watermarkPaddingX: 5, // pixels from edge
@@ -1939,8 +1939,20 @@ setupLayerTypePickerListeners() {
 		}
 	}
 
+togglePreview() {
+	this.showAllLayers = !this.showAllLayers;
+	
+	const previewToggle = document.getElementById('previewModeToggle');
+	if (previewToggle) {
+		previewToggle.classList.toggle('active', !this.showAllLayers);
+	}
+	
+	this.updatePreview();
+	this.updateActionButtons(); // Updates the button title
+}
+
 	setupPreviewListeners() {
-		const previewToggle = document.getElementById('previewToggle');
+		const previewToggle = document.getElementById('previewModeToggle');
 		const transparencyToggle = document.getElementById('transparencyToggle');
 		const boundsToggle = document.getElementById('boundsToggle');
 
@@ -2048,37 +2060,43 @@ setupLayerTypePickerListeners() {
 		this.updateStatus(`Created ${width}×${height} canvas`);
 	}
 
-	setTool(tool) {
-		this.currentTool = tool;
+setTool(tool) {
+	this.currentTool = tool;
 
-		// 1. Update Toolbar Buttons
-		document.querySelectorAll('.toolbar-group button').forEach(btn => {
-			btn.classList.remove('active');
-		});
+	// Remove all tool classes from body
+	document.body.classList.remove('tool-select', 'tool-hand', 'tool-colorPicker', 'tool-zoom');
+	
+	// Add current tool class
+	document.body.classList.add(`tool-${tool}`);
 
-		const activeBtn = document.getElementById(`${tool}Tool`);
-		if (activeBtn) activeBtn.classList.add('active');
+	// 1. Update Toolbar Buttons
+	document.querySelectorAll('.toolbar-group button').forEach(btn => {
+		btn.classList.remove('active');
+	});
 
-		// 2. Update Cursors
-		if (this.previewContainer) {
-			this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor', 'zoom-out-mode');
-			if (tool === ToolType.ZOOM) {
-				this.previewContainer.classList.add('zoom-cursor');
-			} else if (tool === ToolType.HAND) {
-				this.previewContainer.classList.add('hand-cursor');
-			}
+	const activeBtn = document.getElementById(`${tool}Tool`);
+	if (activeBtn) activeBtn.classList.add('active');
+
+	// 2. Update Cursors
+	if (this.previewContainer) {
+		this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor', 'zoom-out-mode');
+		if (tool === ToolType.ZOOM) {
+			this.previewContainer.classList.add('zoom-cursor');
+		} else if (tool === ToolType.HAND) {
+			this.previewContainer.classList.add('hand-cursor');
 		}
-
-		if (this.previewWrapper) {
-			this.previewWrapper.classList.remove('color-picker-mode');
-			if (tool === ToolType.COLOR_PICKER) {
-				this.previewWrapper.classList.add('color-picker-mode');
-			}
-		}
-
-		// 3. Update Context Toolbars
-		this.updateContextToolbars();
 	}
+
+	if (this.previewWrapper) {
+		this.previewWrapper.classList.remove('color-picker-mode');
+		if (tool === ToolType.COLOR_PICKER) {
+			this.previewWrapper.classList.add('color-picker-mode');
+		}
+	}
+
+	// 3. Update Context Toolbars
+	this.updateContextToolbars();
+}
 
 
 	updateContextToolbars() {
@@ -2667,9 +2685,11 @@ setupLayerTypePickerListeners() {
 	handlePreviewContainerClick(e) {
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-	if (e.target.closest('[class*="-controls"]')) {
-		return;
-	}
+
+		
+		if (e.target.closest('[class*="-controls"]')) {
+			return;
+		}
 
 
 		const hitSticker = e.target.closest('.sticker-element');
@@ -2705,6 +2725,11 @@ setupLayerTypePickerListeners() {
 					// this.updateStatus('Click on the preview to select a color');
 				}
 				break;
+
+			case ToolType.HAND:
+				// Start panning
+				this.viewport.startPan(e.clientX, e.clientY);
+			break;
 
 			case ToolType.ZOOM:
 				if (this.originalImage) {

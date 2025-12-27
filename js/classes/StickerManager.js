@@ -608,6 +608,12 @@ setupStickerTouchGestures(element, layerId) {
 		preventPropagation: true,
 		
 		onGestureStart: (gestureType) => {
+
+			// Don't select stickers when using pan or zoom tools
+			if (this.editor.currentTool === ToolType.HAND || this.editor.currentTool === ToolType.ZOOM) {
+				return;
+			}
+
 			const isSelected = this.editor.layerManager.activeLayerId === layerId;
 			
 			// If not selected, just select it (don't transform yet)
@@ -715,6 +721,11 @@ setupStickerTouchGestures(element, layerId) {
 
 		const handleMouseDown = (e) => {
 			if (e.button !== 0) return; // Left click only
+
+			// Don't select stickers when using pan or zoom tools
+			if (this.editor.currentTool === ToolType.HAND || this.editor.currentTool === ToolType.ZOOM) {
+				return;
+			}
 
 			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
 			if (!layer || !layer.visible || layer.locked) return;
