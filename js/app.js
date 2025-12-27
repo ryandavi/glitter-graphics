@@ -93,6 +93,8 @@ const CONFIG = {
 	defaultExportFrameSkip: 1,
 	defaultExportReverse: false,
 
+	defaultExportSmartFrameReduction: true,
+
 	// watermark
 	defaultExportWatermarkEnabled: false,
 	watermarkUrl: 'images/watermark/2.png', // Set your watermark URL here
@@ -220,7 +222,8 @@ class GlitterEditor {
 			matteColor: CONFIG.defaultExportMatteColor,
 			watermarkEnabled: CONFIG.defaultExportWatermarkEnabled,
 			exportFrameSkip: CONFIG.defaultExportFrameSkip,
-			exportReverse: CONFIG.defaultExportReverse
+			exportReverse: CONFIG.defaultExportReverse,
+			smartFrameReduction: CONFIG.defaultExportSmartFrameReduction
 		};
 
 		this.exportStartTime = 0;
@@ -385,6 +388,7 @@ class GlitterEditor {
 		const watermarkEnabledCheckbox = document.getElementById('exportWatermarkEnabled');
 		const exportFrameSkipSelect = document.getElementById('exportFrameSkip');
 		const exportReverseCheckbox = document.getElementById('exportReverse');
+		
 
 
 		if (qualitySelect) qualitySelect.value = CONFIG.defaultExportQuality;
@@ -398,6 +402,7 @@ class GlitterEditor {
 		if (watermarkEnabledCheckbox) watermarkEnabledCheckbox.checked = CONFIG.defaultExportWatermarkEnabled;
 		if (exportFrameSkipSelect) exportFrameSkipSelect.value = CONFIG.defaultExportFrameSkip;
 		if (exportReverseCheckbox) exportReverseCheckbox.checked = CONFIG.defaultExportReverse;
+		
 
 		// Show/hide dither type dropdown based on enabled checkbox
 		const updateDitherTypeVisibility = () => {
@@ -1951,40 +1956,54 @@ togglePreview() {
 	this.updateActionButtons(); // Updates the button title
 }
 
-	setupPreviewListeners() {
-		const previewToggle = document.getElementById('previewModeToggle');
-		const transparencyToggle = document.getElementById('transparencyToggle');
-		const boundsToggle = document.getElementById('boundsToggle');
+setupPreviewListeners() {
+	const previewToggle = document.getElementById('previewModeToggle');
+	const transparencyToggle = document.getElementById('transparencyToggle');
+	const boundsToggle = document.getElementById('boundsToggle');
 
-		if (previewToggle) {
-			previewToggle.addEventListener('click', () => this.togglePreview());
-		}
+	if (previewToggle) {
+		previewToggle.addEventListener('click', () => this.togglePreview());
+	}
 
-		if (transparencyToggle) {
-			transparencyToggle.addEventListener('click', () => {
-				const isActive = transparencyToggle.classList.toggle('active');
-				this.previewContainer.classList.toggle('transparent-bg', isActive);
+	if (transparencyToggle) {
+		transparencyToggle.addEventListener('click', () => {
+			const isActive = transparencyToggle.classList.toggle('active');
+			this.previewContainer.classList.toggle('transparent-bg', isActive);
 
-				if (isActive) {
-					this.updateTransparencyGrid();
-				} else {
-					this.previewContainer.style.backgroundSize = '';
-					this.previewContainer.style.backgroundPosition = '';
-				}
-			});
-		}
-
-		if (boundsToggle) {
-			boundsToggle.addEventListener('click', () => {
-				const isActive = boundsToggle.classList.toggle('active');
-				this.previewContainer.classList.toggle('bounds', isActive);
-			});
-		}
-
-		this.previewContainer.addEventListener('pointerdown', (e) => {
-			this.handlePreviewContainerClick(e);
+			if (isActive) {
+				this.updateTransparencyGrid();
+			} else {
+				this.previewContainer.style.backgroundSize = '';
+				this.previewContainer.style.backgroundPosition = '';
+			}
 		});
 	}
+
+	if (boundsToggle) {
+		boundsToggle.addEventListener('click', () => {
+			const isActive = boundsToggle.classList.toggle('active');
+			this.previewContainer.classList.toggle('bounds', isActive);
+		});
+	}
+
+	this.previewContainer.addEventListener('pointerdown', (e) => {
+		this.handlePreviewContainerClick(e);
+	});
+
+	// Prevent right-click context menu on preview area
+	this.previewContainer.addEventListener('contextmenu', (e) => {
+		// Always prevent on canvas
+		if (e.target === this.previewCanvas) {
+			e.preventDefault();
+			return;
+		}
+		
+		// When zoom tool is active, prevent anywhere in container for zoom out functionality
+		if (this.currentTool === ToolType.ZOOM) {
+			e.preventDefault();
+		}
+	});
+}
 
 	// ===== GLOBAL LISTENERS =====
 	setupGlobalListeners() {
@@ -2683,9 +2702,13 @@ setTool(tool) {
 
 	// ===== CLICK HANDLERS =====
 	handlePreviewContainerClick(e) {
-		if (e.pointerType === 'mouse' && e.button !== 0) return;
-
-
+		// Allow right-click for zoom tool, block other non-left clicks
+		if (e.pointerType === 'mouse' && e.button !== 0) {
+			// Allow right-click (button 2) only for zoom tool
+			if (!(e.button === 2 && this.currentTool === ToolType.ZOOM)) {
+				return;
+			}
+		}
 		
 		if (e.target.closest('[class*="-controls"]')) {
 			return;
@@ -2776,22 +2799,22 @@ setTool(tool) {
 		}
 	}
 
-	handleCanvasZoomClick(event) {
-		// Disable click-to-zoom on mobile
-		if (this.isMobile) return;
+handleCanvasZoomClick(event) {
+	// Disable click-to-zoom on mobile
+	if (this.isMobile) return;
 
-		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
+	if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
 
-		// Photoshop Alt-Click to zoom out
-		if (event.altKey) {
-			this.viewport.zoomOut(event.clientX, event.clientY);
-		} else {
-			this.viewport.zoomIn(event.clientX, event.clientY);
-		}
-
-		// Optional: Update status to show new zoom
-		this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
+	// Photoshop Alt-Click OR right-click to zoom out
+	if (event.altKey || event.button === 2) {
+		this.viewport.zoomOut(event.clientX, event.clientY);
+	} else {
+		this.viewport.zoomIn(event.clientX, event.clientY);
 	}
+
+	// Optional: Update status to show new zoom
+	this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
+}
 
 
 	handleColorPickerClick(x, y) {
@@ -3174,6 +3197,8 @@ setTool(tool) {
 		this.exportSettings.watermarkEnabled = watermarkEnabledInput ? watermarkEnabledInput.checked : CONFIG.defaultExportWatermarkEnabled;
 		this.exportSettings.exportFrameSkip = exportFrameSkipInput ? parseInt(exportFrameSkipInput.value) : CONFIG.defaultExportFrameSkip;
 		this.exportSettings.exportReverse = exportReverseInput ? exportReverseInput.checked : CONFIG.defaultExportReverse;
+		this.exportSettings.smartFrameReduction = CONFIG.defaultExportSmartFrameReduction;
+
 
 		console.log('Export settings:', this.exportSettings);
 
