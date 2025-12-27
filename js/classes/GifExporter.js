@@ -1145,7 +1145,7 @@ _standardLCM(layerFrameCounts, maxFrames) {
 
 _smartReduceFrames(layerFrameCounts, maxFrames) {
 	const reductions = [];
-	let reducedCounts = new Map(layerFrameCounts); // Start with original counts
+	let reducedCounts = new Map(layerFrameCounts);
 
 	// Step 1: Round to multiples of 3 (if close)
 	layerFrameCounts.forEach((originalCount, layerId) => {
@@ -1168,57 +1168,36 @@ _smartReduceFrames(layerFrameCounts, maxFrames) {
 	let counts = Array.from(reducedCounts.values()).filter(c => c > 0);
 	let totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
 
-	// Step 3: Apply tiered reductions based on total frames
-	let threshold, divisor, tier;
-	
-	if (totalFrames > 90) {
-		threshold = 12;
-		divisor = 2;
-		tier = 4;
-	} else if (totalFrames > 60) {
-		threshold = 18;
-		divisor = 1.5;
-		tier = 3;
-	} else if (totalFrames > 36) {
-		threshold = 24;
-		divisor = 1.5;
-		tier = 2;
-	} else {
-		// No reduction needed
-		return {
-			totalFrames: Math.min(totalFrames, maxFrames),
-			frameMap: reducedCounts,
-			reductions
-		};
-	}
-
-	if (this.config.debug) console.log(`[Smart Reduction] Total frames: ${totalFrames}, applying Tier ${tier} (threshold: ${threshold})`);
-
-	// Apply tier-based reduction
+	// Step 3: Cap individual animations based on their size
 	reducedCounts.forEach((count, layerId) => {
-		if (count > threshold) {
-			let newCount = count;
-			while (newCount > threshold) {
-				newCount = Math.ceil(newCount / divisor);
-			}
-			newCount = Math.max(3, Math.round(newCount / 3) * 3);
-
-			if (newCount !== count) {
-				reducedCounts.set(layerId, newCount);
-				
-				// Update or add reduction record
-				const existingIdx = reductions.findIndex(r => r.layerId === layerId);
-				if (existingIdx >= 0) {
-					reductions[existingIdx].reduced = newCount;
-					reductions[existingIdx].reason = 'tier-' + tier + '-reduction';
-				} else {
-					reductions.push({
-						layerId,
-						original: layerFrameCounts.get(layerId),
-						reduced: newCount,
-						reason: 'tier-' + tier + '-reduction'
-					});
-				}
+		let targetCap = null;
+		
+		if (count > 60) {
+			// Very long animations: cap at 30
+			targetCap = 30;
+		} else if (count > 36) {
+			// Long animations: cap at 24
+			targetCap = 24;
+		} else if (count > 24) {
+			// Medium-long: cap at 18
+			targetCap = 18;
+		}
+		
+		if (targetCap && count > targetCap) {
+			const newCount = targetCap;
+			reducedCounts.set(layerId, newCount);
+			
+			const existingIdx = reductions.findIndex(r => r.layerId === layerId);
+			if (existingIdx >= 0) {
+				reductions[existingIdx].reduced = newCount;
+				reductions[existingIdx].reason = 'capped-at-' + targetCap;
+			} else {
+				reductions.push({
+					layerId,
+					original: layerFrameCounts.get(layerId),
+					reduced: newCount,
+					reason: 'capped-at-' + targetCap
+				});
 			}
 		}
 	});
