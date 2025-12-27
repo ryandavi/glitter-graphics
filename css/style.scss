@@ -4114,6 +4114,13 @@ body.tool-select {
 		--glitter-swatch-columns: 6;
 	}
 
+.zoom-controls,
+.sticker-center-controls,
+.pan-controls,
+.color-picker-controls {
+	transform: translateX(-50%) translateY(-15px);
+}
+
 
 	// ============================================
 	// LAYOUT ADJUSTMENTS

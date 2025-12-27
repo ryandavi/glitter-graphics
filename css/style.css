@@ -2466,6 +2466,7 @@ body.tool-select .sticker-element:not(.selected):hover {
   justify-content: center;
 }
 #exportPreviewModal .export-stats > .size-warning,
+#exportPreviewModal .export-stats > .smart-reduction-badge,
 #exportPreviewModal .export-stats > span {
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: 1000px;
@@ -2478,6 +2479,14 @@ body.tool-select .sticker-element:not(.selected):hover {
 #exportPreviewModal .export-stats > .size-warning {
   background: var(--color-warning);
   color: var(--color-warning-text);
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.25px;
+  text-transform: uppercase;
+}
+#exportPreviewModal .export-stats > .smart-reduction-badge {
+  background: var(--color-accent);
+  color: white;
   font-weight: bold;
   font-size: var(--font-size-sm);
   letter-spacing: 0.25px;
@@ -3277,6 +3286,12 @@ body.tool-select .sticker-element:not(.selected):hover {
 @media (max-width: 800px) {
   :root {
     --glitter-swatch-columns: 6;
+  }
+  .zoom-controls,
+  .sticker-center-controls,
+  .pan-controls,
+  .color-picker-controls {
+    transform: translateX(-50%) translateY(-15px);
   }
   body {
     overflow: hidden;
