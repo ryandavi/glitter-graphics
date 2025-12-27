@@ -1156,19 +1156,20 @@ _smartReduceFrames(layerFrameCounts, maxFrames) {
 		const difference = Math.abs(originalCount - nearestMultipleOf3);
 		const percentDiff = difference / originalCount;
 
-		if (nearestMultipleOf3 > 0 && percentDiff <= 0.20 && nearestMultipleOf3 !== originalCount) {
-			reducedCount = nearestMultipleOf3;
-			reason = 'rounded-to-multiple-of-3';
-		}
+	// Round to multiple of 3 if within 10% (stricter)
+	if (nearestMultipleOf3 > 0 && percentDiff <= 0.10 && nearestMultipleOf3 !== originalCount) {
+		reducedCount = nearestMultipleOf3;
+		reason = 'rounded-to-multiple-of-3';
+	}
 
-		// Aggressively reduce high frame counts (>12)
-		if (reducedCount > 12) {
-			while (reducedCount > 12) {
-				reducedCount = Math.ceil(reducedCount / 2);
-			}
-			reducedCount = Math.max(3, Math.round(reducedCount / 3) * 3);
-			reason = reason ? 'rounded-and-reduced' : 'high-frame-reduction';
+	// Aggressively reduce high frame counts (>24) - higher threshold
+	if (reducedCount > 24) {
+		while (reducedCount > 24) {
+			reducedCount = Math.ceil(reducedCount / 2);
 		}
+		reducedCount = Math.max(3, Math.round(reducedCount / 3) * 3);
+		reason = reason ? 'rounded-and-reduced' : 'high-frame-reduction';
+	}
 
 		reducedCounts.set(layerId, reducedCount);
 
