@@ -145,6 +145,58 @@ const ToolType = {
 	ZOOM: 'zoom'
 };
 
+// Layer UI Configuration - Single source of truth for what UI elements each layer type needs
+const LAYER_UI_CONFIG = {
+	// Special states (not layer types)
+	NO_IMAGE: {
+		designPanelSections: ['welcomeSection'],
+		mobileSettingsSections: [],
+		panelMode: 'welcome'
+	},
+	NO_LAYER: {
+		designPanelSections: ['noLayerSettingsSection'],
+		mobileSettingsSections: [],
+		panelMode: 'no-layer'
+	},
+	
+	// Layer types
+	[LayerType.BASE_IMAGE]: {
+		designPanelSections: ['baseLayerSettingsSection'],
+		mobileSettingsSections: [],
+		panelMode: 'base-layer',
+		onActivate: (editor, layer) => {
+			editor.showLayerSettingsEmptyState();
+		}
+	},
+	
+	[LayerType.GLITTER_FILL]: {
+		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'],
+		mobileSettingsSections: ['tool', 'glitter'],
+		panelMode: 'glitter',
+		onActivate: (editor, layer) => {
+			// Auto-switch to color picker if layer has no selections yet
+			if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
+				editor.setTool(ToolType.COLOR_PICKER);
+			}
+			editor.updateGlitterSelection();
+			editor.hideLayerSettingsEmptyState();
+			editor.hideGlitterSettingsEmptyState();
+			editor.loadActiveLayerSettings();
+		}
+	},
+	
+	[LayerType.STICKER]: {
+		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'],
+		mobileSettingsSections: ['sticker'],
+		panelMode: 'sticker',
+		onActivate: (editor, layer) => {
+			editor.setTool(ToolType.SELECT);
+			editor.hideStickerSettingsEmptyState();
+			editor.loadStickerSettings(layer);
+			editor.updateStickerSelection();
+		}
+	}
+};
 // ============================================
 // DEBUG CONFIGURATION
 // Set enabled: true to auto-load preset stickers for testing
@@ -435,72 +487,54 @@ class GlitterEditor {
 		updateMatteColorVisibility();
 	}
 
-	updateSidePanelUI(layer) {
-		// 1. Define ALL possible sections to hide them first
-		const allSections = [
-			'welcomeSection', 
-			'noLayerSettingsSection',
-			'baseLayerSettingsSection',
-			'glitterSettingsSection',
-			'layerSettingsSection',
-			'glitterOptions',
-			'glitterSearchSection',
-			'stickerSettingsSection',
-			'stickersOptions',
-			'stickersSearchSection'
-		];
+updateSidePanelUI(layer) {
+	// 1. Define ALL possible sections to hide them first
+	const allSections = [
+		'welcomeSection', 
+		'noLayerSettingsSection',
+		'baseLayerSettingsSection',
+		'glitterSettingsSection',
+		'layerSettingsSection',
+		'glitterOptions',
+		'glitterSearchSection',
+		'stickerSettingsSection',
+		'stickersOptions',
+		'stickersSearchSection'
+	];
 
-		// 2. Hide everything
-		allSections.forEach(id => {
+	// 2. Hide everything
+	allSections.forEach(id => {
+		const el = document.getElementById(id);
+		if (el) {
+			el.classList.remove('visible');
+			el.style.display = '';
+		}
+	});
+
+	// 3. Determine which config to use
+	let config;
+	if (!this.originalImage) {
+		config = LAYER_UI_CONFIG.NO_IMAGE;
+	} else if (!layer) {
+		config = LAYER_UI_CONFIG.NO_LAYER;
+	} else {
+		config = LAYER_UI_CONFIG[layer.type];
+	}
+
+	// 4. Show the appropriate sections
+	if (config) {
+		config.designPanelSections.forEach(id => {
 			const el = document.getElementById(id);
-			if (el) {
-				el.classList.remove('visible');
-				el.style.display = '';
-			}
+			if (el) el.classList.add('visible');
 		});
 
-// 3. Determine what to show
-let showIds = [];
-let panelMode = ''; // ADD THIS LINE
-
-// CASE 1: No Image Loaded (Show Welcome)
-if (!this.originalImage) {
-	showIds = ['welcomeSection'];
-	panelMode = 'welcome'; // ADD THIS LINE
-}
-// CASE 2: Image Loaded, but No Layer Selected
-else if (!layer) {
-	showIds = ['noLayerSettingsSection'];
-	panelMode = 'no-layer'; // ADD THIS LINE
-}
-// CASE 3: Base Layer Selected
-else if (layer.type === LayerType.BASE_IMAGE) {
-	showIds = ['baseLayerSettingsSection'];
-	panelMode = 'base-layer'; // ADD THIS LINE
-}
-// CASE 4: Glitter Layer
-else if (layer.type === LayerType.GLITTER_FILL) {
-	showIds = ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'];
-	panelMode = 'glitter'; // ADD THIS LINE
-}
-// CASE 5: Sticker Layer
-else if (layer.type === LayerType.STICKER) {
-	showIds = ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'];
-	panelMode = 'sticker'; // ADD THIS LINE
-}
-
-// 3.5 SET DATA ATTRIBUTE - ADD THIS BLOCK
-const designPanel = document.getElementById('designPanel');
-if (designPanel) {
-	designPanel.dataset.panelMode = panelMode;
-}
-
-// 4. Show the specific sections
-showIds.forEach(id => {
-	const el = document.getElementById(id);
-	if (el) el.classList.add('visible');
-});
+		// 5. Set panel mode
+		const designPanel = document.getElementById('designPanel');
+		if (designPanel) {
+			designPanel.dataset.panelMode = config.panelMode;
+		}
 	}
+}
 
 	updateZoomUI() {
 		const percentage = this.viewport.getZoomPercentage();

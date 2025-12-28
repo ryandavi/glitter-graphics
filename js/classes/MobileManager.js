@@ -46,18 +46,24 @@ class MobileManager {
 		// Switch to image tab FIRST (this calls closeSettings which moves sections back)
 		this.switchTab('image');
 
-		// THEN prepare settings AFTER switching tabs
-		const activeLayer = this.editor.layerManager.getActiveLayer();
-		console.log('Mobile: Active layer on init:', activeLayer);
+// THEN prepare settings AFTER switching tabs
+const activeLayer = this.editor.layerManager.getActiveLayer();
+console.log('Mobile: Active layer on init:', activeLayer);
 
-		if (activeLayer && (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.STICKER)) {
-			// Prepare settings AFTER tab switch
-			console.log('Mobile: Preparing settings for layer:', activeLayer.type);
-			this.prepareSettings(activeLayer);
-		}
+if (activeLayer && this.hasLayerSettings(activeLayer)) {
+	// Prepare settings AFTER tab switch
+	console.log('Mobile: Preparing settings for layer:', activeLayer.type);
+	this.prepareSettings(activeLayer);
+}
 
-		console.log('Mobile: Initialization complete, on image tab');
+console.log('Mobile: Initialization complete, on image tab');
 	}
+
+hasLayerSettings(layer) {
+    if (!layer) return false;
+    const config = LAYER_UI_CONFIG[layer.type];
+    return config && config.mobileSettingsSections && config.mobileSettingsSections.length > 0;
+}
 
 	cacheSettingsSections() {
 		// Cache references to settings sections
@@ -126,34 +132,33 @@ class MobileManager {
 		}
 
 		// Layer selection triggers settings preparation (not auto-open)
-		window.addEventListener('layerChanged', () => {
-			if (!this.isMobile) return; // Only handle this on mobile
+window.addEventListener('layerChanged', () => {
+	if (!this.isMobile) return; // Only handle this on mobile
 
-			console.log('Mobile: Layer changed to', this.editor.layerManager.getActiveLayer());
+	console.log('Mobile: Layer changed to', this.editor.layerManager.getActiveLayer());
 
-			const activeLayer = this.editor.layerManager.getActiveLayer();
-			const settingsBtn = document.getElementById('mobileSettingsBtn');
+	const activeLayer = this.editor.layerManager.getActiveLayer();
+	const settingsBtn = document.getElementById('mobileSettingsBtn');
 
-			if (activeLayer) {
-				const hasSettings = activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.STICKER;
+	if (activeLayer) {
+		const hasSettings = this.hasLayerSettings(activeLayer);
 
-				if (hasSettings) {
-					// Prepare settings (moves to mobile container) but don't auto-open
-					this.prepareSettings(activeLayer);
-				} else {
-					// No settings for this layer type
-					document.body.classList.remove('has-layer-settings');
-					if (settingsBtn) settingsBtn.disabled = true;
-					this.closeSettings();
-				}
-			} else {
-				// No layer selected
-				document.body.classList.remove('has-layer-settings');
-				if (settingsBtn) settingsBtn.disabled = true;
-				this.closeSettings();
-			}
-		});
-
+		if (hasSettings) {
+			// Prepare settings (moves to mobile container) but don't auto-open
+			this.prepareSettings(activeLayer);
+		} else {
+			// No settings for this layer type
+			document.body.classList.remove('has-layer-settings');
+			if (settingsBtn) settingsBtn.disabled = true;
+			this.closeSettings();
+		}
+	} else {
+		// No layer selected
+		document.body.classList.remove('has-layer-settings');
+		if (settingsBtn) settingsBtn.disabled = true;
+		this.closeSettings();
+	}
+});
 
 		// Close drawer when clicking on panel headers (Design, Layers)
 		// But NOT collapsible section headers inside settings
@@ -260,30 +265,30 @@ class MobileManager {
 
 
 
-					if (this.editor.originalImage) {
-						this.switchTab('preview');
+if (this.editor.originalImage) {
+	this.switchTab('preview');
 
-						// Re-prepare settings after switching to preview
-						const activeLayer = this.editor.layerManager.getActiveLayer();
-						const settingsBtn = document.getElementById('mobileSettingsBtn');
+	// Re-prepare settings after switching to preview
+	const activeLayer = this.editor.layerManager.getActiveLayer();
+	const settingsBtn = document.getElementById('mobileSettingsBtn');
 
-						if (activeLayer && (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.STICKER)) {
-							this.prepareSettings(activeLayer);
-						} else {
-							// Base image or no layer - disable button
-							if (settingsBtn) settingsBtn.disabled = true;
-							document.body.classList.remove('has-layer-settings');
-						}
+	if (activeLayer && this.hasLayerSettings(activeLayer)) {
+		this.prepareSettings(activeLayer);
+	} else {
+		// Base image or no layer - disable button
+		if (settingsBtn) settingsBtn.disabled = true;
+		document.body.classList.remove('has-layer-settings');
+	}
 
-						requestAnimationFrame(() => {
-							requestAnimationFrame(() => {
-								this.editor.viewport.performResizeUpdate();
-								this.editor.viewport.resetViewport();
-								this.editor.updateZoomUI();
-								this.editor.updateTransparencyGrid();
-							});
-						});
-					}
+	requestAnimationFrame(() => {
+		requestAnimationFrame(() => {
+			this.editor.viewport.performResizeUpdate();
+			this.editor.viewport.resetViewport();
+			this.editor.updateZoomUI();
+			this.editor.updateTransparencyGrid();
+		});
+	});
+}
 
 
 
@@ -380,78 +385,60 @@ class MobileManager {
 		}
 	}
 
-	prepareSettings(layer) {
-		console.log('Mobile: prepareSettings called', { isMobile: this.isMobile, layer: layer?.type });
-
-		if (!this.isMobile || !layer) {
-			console.log('Mobile: prepareSettings early return');
-			return;
-		}
-
-		const mobileContainer = document.getElementById('mobileSettingsContainer');
-		if (!mobileContainer) {
-			console.log('Mobile: mobileSettingsContainer not found!');
-			return;
-		}
-
-		// Conditionally close drawers based on config
-		if (CONFIG.mobileAutoCloseDesignDrawer) {
-			this.closeAllDrawers();
-		}
-
-		// Clear container
-		mobileContainer.innerHTML = '';
-		let hasSettings = false;
-
-		console.log('Mobile: Moving sections to container...');
-
-		// Move appropriate settings based on layer type
-		if (layer.type === LayerType.GLITTER_FILL) {
-			if (this.settingsSections.tool) {
-				console.log('Mobile: Moving tool section');
-				mobileContainer.appendChild(this.settingsSections.tool);
-				this.settingsSections.tool.classList.add('visible');
-				hasSettings = true;
-			} else {
-				console.log('Mobile: No tool section found');
-			}
-			if (this.settingsSections.glitter) {
-				console.log('Mobile: Moving glitter section');
-				mobileContainer.appendChild(this.settingsSections.glitter);
-				this.settingsSections.glitter.classList.add('visible');
-				hasSettings = true;
-			} else {
-				console.log('Mobile: No glitter section found');
-			}
-		} else if (layer.type === LayerType.STICKER) {
-			if (this.settingsSections.sticker) {
-				console.log('Mobile: Moving sticker section');
-				mobileContainer.appendChild(this.settingsSections.sticker);
-				this.settingsSections.sticker.classList.add('visible');
-				hasSettings = true;
-			} else {
-				console.log('Mobile: No sticker section found');
-			}
-		}
-
-		console.log('Mobile: hasSettings:', hasSettings);
-		console.log('Mobile: Container children:', mobileContainer.children.length);
-
-		// Collapse all sections
-		this.collapseAllSections();
-
-		// Update button state but DON'T auto-open
-		const settingsBtn = document.getElementById('mobileSettingsBtn');
-		if (hasSettings) {
-			document.body.classList.add('has-layer-settings');
-			if (settingsBtn) settingsBtn.disabled = false;
-		} else {
-			document.body.classList.remove('has-layer-settings');
-			if (settingsBtn) settingsBtn.disabled = true;
-			this.closeSettings();
-		}
+prepareSettings(layer) {
+	const mobileContainer = document.querySelector('.mobile-settings-content');
+	if (!mobileContainer) {
+		console.log('Mobile: No mobile settings container found');
+		return;
 	}
 
+	// Conditionally close drawers based on config
+	if (CONFIG.mobileAutoCloseDesignDrawer) {
+		this.closeAllDrawers();
+	}
+
+	// Clear container
+	mobileContainer.innerHTML = '';
+	let hasSettings = false;
+
+	console.log('Mobile: Moving sections to container...');
+
+	// Get the UI config for this layer type
+	const config = LAYER_UI_CONFIG[layer.type];
+	if (!config || !config.mobileSettingsSections) {
+		console.log('Mobile: No settings for this layer type');
+		return;
+	}
+
+	// Move the appropriate sections based on config
+	config.mobileSettingsSections.forEach(sectionKey => {
+		const section = this.settingsSections[sectionKey];
+		if (section) {
+			console.log(`Mobile: Moving ${sectionKey} section`);
+			mobileContainer.appendChild(section);
+			section.classList.add('visible');
+			hasSettings = true;
+		} else {
+			console.log(`Mobile: No ${sectionKey} section found`);
+		}
+	});
+
+	console.log('Mobile: hasSettings:', hasSettings);
+	console.log('Mobile: Container children:', mobileContainer.children.length);
+
+	// Collapse all sections
+	this.collapseAllSections();
+
+	// Update button state but DON'T auto-open
+	const settingsBtn = document.getElementById('mobileSettingsBtn');
+	if (hasSettings) {
+		document.body.classList.add('has-layer-settings');
+		if (settingsBtn) settingsBtn.disabled = false;
+	} else {
+		document.body.classList.remove('has-layer-settings');
+		if (settingsBtn) settingsBtn.disabled = true;
+	}
+}
 	collapseAllSections() {
 		const panel = document.querySelector('.mobile-settings-content');
 		if (!panel) return;
@@ -555,49 +542,42 @@ class MobileManager {
 
 	}
 
-	cleanup() {
-		console.log('Mobile: Starting cleanup');
+cleanup() {
+	console.log('Mobile: Starting cleanup');
 
-		const topNav = document.querySelector('.mobile-top-nav');
-		const bottomNav = document.querySelector('.mobile-bottom-nav');
+	const topNav = document.querySelector('.mobile-top-nav');
+	const bottomNav = document.querySelector('.mobile-bottom-nav');
 
-		if (topNav) topNav.classList.remove('visible');
-		if (bottomNav) bottomNav.classList.remove('visible');
+	if (topNav) topNav.classList.remove('visible');
+	if (bottomNav) bottomNav.classList.remove('visible');
 
-		// Return settings sections before cleanup
-		this.returnSettingsSections();
+	// Return settings sections before cleanup
+	this.returnSettingsSections();
 
-		document.body.classList.remove(
-			'mobile-image-tab',
-			'mobile-preview-tab',
-			'designOpen',
-			'layersOpen',
-			'mobileSettingsOpen',
-			'has-layer-settings'
-		);
+	document.body.classList.remove(
+		'mobile-image-tab',
+		'mobile-preview-tab',
+		'designOpen',
+		'layersOpen',
+		'mobileSettingsOpen',
+		'has-layer-settings'
+	);
 
-		this.closeSettings();
+	this.closeSettings();
 
-		// Restore desktop layer display state
-		const activeLayer = this.editor.layerManager.getActiveLayer();
-		if (activeLayer) {
-			// Force desktop UI update based on layer type
-			if (activeLayer.type === LayerType.GLITTER_FILL) {
-				this.editor.hideLayerSettingsEmptyState();
-				this.editor.hideGlitterSettingsEmptyState();
-				this.editor.loadActiveLayerSettings();
-			} else if (activeLayer.type === LayerType.STICKER) {
-				this.editor.hideStickerSettingsEmptyState();
-				this.editor.loadStickerSettings(activeLayer);
-			} else if (activeLayer.type === LayerType.BASE_IMAGE) {
-				this.editor.showLayerSettingsEmptyState();
-			}
-		} else {
-			this.editor.showLayerSettingsEmptyState();
-			this.editor.showGlitterSettingsEmptyState();
-			this.editor.showStickerSettingsEmptyState();
+	// Restore desktop layer display state
+	const activeLayer = this.editor.layerManager.getActiveLayer();
+	if (activeLayer) {
+		const config = LAYER_UI_CONFIG[activeLayer.type];
+		if (config && config.onActivate) {
+			config.onActivate(this.editor, activeLayer);
 		}
-
-		console.log('Mobile: Cleanup complete, restored to desktop layout');
+	} else {
+		this.editor.showLayerSettingsEmptyState();
+		this.editor.showGlitterSettingsEmptyState();
+		this.editor.showStickerSettingsEmptyState();
 	}
+
+	console.log('Mobile: Cleanup complete, restored to desktop layout');
+}
 }

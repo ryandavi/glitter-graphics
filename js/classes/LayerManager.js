@@ -222,71 +222,54 @@ addLayer(type = LayerType.GLITTER_FILL) {
 	}
 
 
-	setActiveLayer(layerId) {
-
-		if (this.activeLayerId === layerId) {
-			return;
-		}
-
-		this.activeLayerId = layerId;
-		this.renderLayersList();
-
-		const layer = this.layers.find(l => l.id === layerId);
-
-		// Update context toolbars
-		this.editor.updateContextToolbars();
-
-		// Update selection highlight
-		this.updateSelectionHighlight(layerId);
-
-		// Update preview (important for solo mode)
-		this.editor.updatePreview();
-
-		// Update Side Panel UI
-		this.editor.updateSidePanelUI(layer);
-
-		// Load settings based on layer type
-		if (layer) {
-			if (layer.type === LayerType.STICKER) {
-				this.editor.setTool(ToolType.SELECT);
-				this.editor.hideStickerSettingsEmptyState();
-				this.editor.loadStickerSettings(layer);
-				this.editor.updateStickerSelection();
-			} else if (layer.type === LayerType.GLITTER_FILL) {
-				// Auto-switch to color picker if layer has no selections yet
-				if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
-					this.editor.setTool(ToolType.COLOR_PICKER);
-				} else {
-					// this.editor.setTool(ToolType.SELECT);
-				}
-
-				this.editor.updateGlitterSelection();
-				this.editor.hideLayerSettingsEmptyState();
-				this.editor.hideGlitterSettingsEmptyState();
-				this.editor.loadActiveLayerSettings();
-			}
-		} else {
-			// No layer selected: Ensure empty states are shown
-			this.editor.showLayerSettingsEmptyState();
-			this.editor.showGlitterSettingsEmptyState();
-			this.editor.showStickerSettingsEmptyState();
-		}
-
-		// Add/remove body class for mobile settings drawer visibility
-		if (layerId) {
-			document.body.classList.add('has-active-layer');
-		} else {
-			document.body.classList.remove('has-active-layer');
-		}
-
-
-		window.dispatchEvent(new CustomEvent('layerChanged'));
-
-		if (layer && layer.type === LayerType.STICKER) {
-			this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
-		}
+setActiveLayer(layerId) {
+	if (this.activeLayerId === layerId) {
+		return;
 	}
 
+	this.activeLayerId = layerId;
+	this.renderLayersList();
+
+	const layer = this.layers.find(l => l.id === layerId);
+
+	// Update context toolbars
+	this.editor.updateContextToolbars();
+
+	// Update selection highlight
+	this.updateSelectionHighlight(layerId);
+
+	// Update preview (important for solo mode)
+	this.editor.updatePreview();
+
+	// Update Side Panel UI
+	this.editor.updateSidePanelUI(layer);
+
+	// Execute layer-specific activation logic
+	if (layer) {
+		const config = LAYER_UI_CONFIG[layer.type];
+		if (config && config.onActivate) {
+			config.onActivate(this.editor, layer);
+		}
+	} else {
+		// No layer selected: Ensure empty states are shown
+		this.editor.showLayerSettingsEmptyState();
+		this.editor.showGlitterSettingsEmptyState();
+		this.editor.showStickerSettingsEmptyState();
+	}
+
+	// Add/remove body class for mobile settings drawer visibility
+	if (layerId) {
+		document.body.classList.add('has-active-layer');
+	} else {
+		document.body.classList.remove('has-active-layer');
+	}
+
+	window.dispatchEvent(new CustomEvent('layerChanged'));
+
+	if (layer && layer.type === LayerType.STICKER) {
+		this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
+	}
+}
 
 
 	getActiveLayer() {
