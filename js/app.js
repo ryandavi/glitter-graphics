@@ -244,7 +244,7 @@ class GlitterEditor {
 
 		this.isSaved = false;
 
-		this.currentTool = ToolType.SELECT;
+		this.currentTool = null;
 		this.history = [];
 		this.historyIndex = -1;
 
