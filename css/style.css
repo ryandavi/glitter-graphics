@@ -412,20 +412,20 @@ input[type=range]::-moz-range-thumb {
   filter: saturate(0.3) contrast(0.7) brightness(0.8);
   transition: filter 0.2s;
 }
-.btn:not(.active):not(.primary):hover:before {
+.btn:not(.active):not(.primary):not(:disabled):hover:before {
   filter: saturate(0.5) contrast(0.9) brightness(1);
 }
-.btn:not(.active):not(.primary):active:before {
+.btn:not(.active):not(.primary):not(:disabled):active:before {
   filter: saturate(0.7) contrast(1.1) brightness(1.15);
 }
 .btn.secondary:before {
   filter: saturate(0.3) contrast(0.7) brightness(0.8);
   transition: filter 0.2s;
 }
-.btn.secondary:hover:before {
+.btn.secondary:not(:disabled):hover:before {
   filter: saturate(0.5) contrast(0.9) brightness(1);
 }
-.btn.secondary:active:before {
+.btn.secondary:not(:disabled):active:before {
   filter: saturate(0.7) contrast(1.1) brightness(1.15);
 }
 
@@ -503,20 +503,20 @@ input[type=range]::-moz-range-thumb {
   filter: saturate(0.3) contrast(0.7) brightness(0.8);
   transition: filter 0.2s;
 }
-.btn-text-with-icon:not(.active):not(.primary):hover:before {
+.btn-text-with-icon:not(.active):not(.primary):not(:disabled):hover:before {
   filter: saturate(0.5) contrast(0.9) brightness(1);
 }
-.btn-text-with-icon:not(.active):not(.primary):active:before {
+.btn-text-with-icon:not(.active):not(.primary):not(:disabled):active:before {
   filter: saturate(0.7) contrast(1.1) brightness(1.15);
 }
 .btn-text-with-icon.secondary:before {
   filter: saturate(0.3) contrast(0.7) brightness(0.8);
   transition: filter 0.2s;
 }
-.btn-text-with-icon.secondary:hover:before {
+.btn-text-with-icon.secondary:not(:disabled):hover:before {
   filter: saturate(0.5) contrast(0.9) brightness(1);
 }
-.btn-text-with-icon.secondary:active:before {
+.btn-text-with-icon.secondary:not(:disabled):active:before {
   filter: saturate(0.7) contrast(1.1) brightness(1.15);
 }
 
@@ -548,7 +548,7 @@ input[type=range]::-moz-range-thumb {
   --win7-btn-gradient-dark: #032768;
   --win7-btn-gradient-end: #89e8fc;
 }
-.btn-icon:hover {
+.btn-icon:not(:disabled):hover {
   background: var(--color-bg-tertiary);
   border-color: var(--color-border-hover);
 }
@@ -588,20 +588,20 @@ input[type=range]::-moz-range-thumb {
   filter: saturate(0.3) contrast(0.7) brightness(0.8);
   transition: filter 0.2s;
 }
-.btn-icon:not(.active):not(.primary):hover:before {
+.btn-icon:not(.active):not(.primary):not(:disabled):hover:before {
   filter: saturate(0.5) contrast(0.9) brightness(1);
 }
-.btn-icon:not(.active):not(.primary):active:before {
+.btn-icon:not(.active):not(.primary):not(:disabled):active:before {
   filter: saturate(0.7) contrast(1.1) brightness(1.15);
 }
 .btn-icon.secondary:before {
   filter: saturate(0.3) contrast(0.7) brightness(0.8);
   transition: filter 0.2s;
 }
-.btn-icon.secondary:hover:before {
+.btn-icon.secondary:not(:disabled):hover:before {
   filter: saturate(0.5) contrast(0.9) brightness(1);
 }
-.btn-icon.secondary:active:before {
+.btn-icon.secondary:not(:disabled):active:before {
   filter: saturate(0.7) contrast(1.1) brightness(1.15);
 }
 
@@ -885,20 +885,20 @@ input[type=range]::-moz-range-thumb {
   filter: saturate(0.3) contrast(0.7) brightness(0.8);
   transition: filter 0.2s;
 }
-.toolbar > .toolbar-group > .btn-icon:not(.active):not(.primary):hover:before {
+.toolbar > .toolbar-group > .btn-icon:not(.active):not(.primary):not(:disabled):hover:before {
   filter: saturate(0.5) contrast(0.9) brightness(1);
 }
-.toolbar > .toolbar-group > .btn-icon:not(.active):not(.primary):active:before {
+.toolbar > .toolbar-group > .btn-icon:not(.active):not(.primary):not(:disabled):active:before {
   filter: saturate(0.7) contrast(1.1) brightness(1.15);
 }
 .toolbar > .toolbar-group > .btn-icon.secondary:before {
   filter: saturate(0.3) contrast(0.7) brightness(0.8);
   transition: filter 0.2s;
 }
-.toolbar > .toolbar-group > .btn-icon.secondary:hover:before {
+.toolbar > .toolbar-group > .btn-icon.secondary:not(:disabled):hover:before {
   filter: saturate(0.5) contrast(0.9) brightness(1);
 }
-.toolbar > .toolbar-group > .btn-icon.secondary:active:before {
+.toolbar > .toolbar-group > .btn-icon.secondary:not(:disabled):active:before {
   filter: saturate(0.7) contrast(1.1) brightness(1.15);
 }
 
@@ -3295,12 +3295,6 @@ body.tool-select .sticker-element:not(.selected):hover {
   :root {
     --glitter-swatch-columns: 6;
   }
-  .zoom-controls,
-  .sticker-center-controls,
-  .pan-controls,
-  .color-picker-controls {
-    transform: translateX(-50%) translateY(-15px);
-  }
   .glitter-element.selected {
     filter: unset;
   }
@@ -3486,20 +3480,20 @@ body.tool-select .sticker-element:not(.selected):hover {
     filter: saturate(0.3) contrast(0.7) brightness(0.8);
     transition: filter 0.2s;
   }
-  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:not(.active):not(.primary):hover:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:not(.active):not(.primary):not(:disabled):hover:before {
     filter: saturate(0.5) contrast(0.9) brightness(1);
   }
-  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:not(.active):not(.primary):active:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:not(.active):not(.primary):not(:disabled):active:before {
     filter: saturate(0.7) contrast(1.1) brightness(1.15);
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.secondary:before {
     filter: saturate(0.3) contrast(0.7) brightness(0.8);
     transition: filter 0.2s;
   }
-  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.secondary:hover:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.secondary:not(:disabled):hover:before {
     filter: saturate(0.5) contrast(0.9) brightness(1);
   }
-  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.secondary:active:before {
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.secondary:not(:disabled):active:before {
     filter: saturate(0.7) contrast(1.1) brightness(1.15);
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] {
@@ -3559,34 +3553,39 @@ body.tool-select .sticker-element:not(.selected):hover {
     bottom: var(--mobile-bottom-nav-height);
     left: 0;
     right: 0;
-    background: var(--color-bg-primary);
+    background: var(--color-bg-tertiary);
     border-top: 1px solid var(--color-border);
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
     z-index: 9999;
-    transform: translateY(calc(100% - var(--mobile-settings-handle-height)));
+    transform: translateY(100%);
     transition: transform var(--transition-base);
     max-height: 60vh;
+    padding: var(--spacing-md);
   }
-  .mobile-settings-drawer .mobile-settings-handle {
-    height: var(--mobile-settings-handle-height);
-    padding: var(--spacing-xs) 0;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-shrink: 0;
-    background: var(--color-bg-primary);
-    border-bottom: 1px solid var(--color-border);
+  .mobile-settings-drawer .mobile-settings-btn {
+    position: absolute;
+    top: -76px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
-  .mobile-settings-drawer .mobile-settings-handle .mobile-settings-handle-bar {
-    width: 40px;
-    height: 4px;
-    background: var(--color-border);
-    border-radius: 2px;
+  .mobile-settings-drawer .mobile-settings-btn:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+  .mobile-settings-drawer .mobile-settings-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
   .mobile-settings-drawer .mobile-settings-content {
     overflow-y: auto;
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  .mobile-settings-drawer .mobile-settings-content .collapsible-section {
+    border-radius: var(--radius-sm);
   }
   .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible,
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible,
@@ -3610,8 +3609,8 @@ body.tool-select .sticker-element:not(.selected):hover {
   .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header .section-header-action {
     display: flex;
   }
-  .mobile-settings-drawer .mobile-settings-content .collapsible-section + .collapsible-section {
-    border-top: 1px solid var(--color-border);
+  body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
+    display: flex;
   }
   body.mobile-image-tab .main-content > .left-panel {
     display: flex;

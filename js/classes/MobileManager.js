@@ -32,9 +32,30 @@ class MobileManager {
 	init() {
 		console.log('Mobile: Initializing mobile manager');
 		this.cacheSettingsSections();
+
+		// Debug: Check if sections were cached
+		console.log('Mobile: Cached sections:', {
+			tool: !!this.settingsSections.tool,
+			glitter: !!this.settingsSections.glitter,
+			sticker: !!this.settingsSections.sticker
+		});
+
 		this.showMobileControls();
 		this.setupEventListeners();
+
+		// Switch to image tab FIRST (this calls closeSettings which moves sections back)
 		this.switchTab('image');
+
+		// THEN prepare settings AFTER switching tabs
+		const activeLayer = this.editor.layerManager.getActiveLayer();
+		console.log('Mobile: Active layer on init:', activeLayer);
+
+		if (activeLayer && (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.STICKER)) {
+			// Prepare settings AFTER tab switch
+			console.log('Mobile: Preparing settings for layer:', activeLayer.type);
+			this.prepareSettings(activeLayer);
+		}
+
 		console.log('Mobile: Initialization complete, on image tab');
 	}
 
@@ -92,54 +113,47 @@ class MobileManager {
 		});
 
 
-		// Settings drawer handle
-		const settingsHandle = document.querySelector('.mobile-settings-handle');
-		if (settingsHandle) {
-			settingsHandle.addEventListener('click', () => {
-				this.toggleSettings();
+
+
+		// Settings button
+		const settingsBtn = document.getElementById('mobileSettingsBtn');
+		if (settingsBtn) {
+			settingsBtn.addEventListener('click', () => {
+				if (!settingsBtn.disabled) {
+					this.toggleSettings();
+				}
 			});
 		}
 
-		// Layer selection triggers settings
+		// Layer selection triggers settings preparation (not auto-open)
 		window.addEventListener('layerChanged', () => {
+			if (!this.isMobile) return; // Only handle this on mobile
 
 			console.log('Mobile: Layer changed to', this.editor.layerManager.getActiveLayer());
 
 			const activeLayer = this.editor.layerManager.getActiveLayer();
+			const settingsBtn = document.getElementById('mobileSettingsBtn');
 
-			// Don't open settings if a modal is currently open
-			const isModalOpen = document.querySelector('.modal-overlay.visible');
-
-			if (activeLayer && this.isMobile && this.activeTab === 'preview' && !isModalOpen) {
-				// openSettings() will add has-layer-settings if layer has settings
-				console.log('Mobile: Opening settings for layer', activeLayer);
-				this.openSettings(activeLayer);
-			} else if (!activeLayer) {
-				// No layer selected, close settings and remove has-layer-settings
-				document.body.classList.remove('has-layer-settings');
-				this.closeSettings();
-			} else {
-				// Layer selected but we're not opening settings (modal open, wrong tab, etc)
-				// Still check if we should show/hide the handle based on layer type
+			if (activeLayer) {
 				const hasSettings = activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.STICKER;
+
 				if (hasSettings) {
-					document.body.classList.add('has-layer-settings');
+					// Prepare settings (moves to mobile container) but don't auto-open
+					this.prepareSettings(activeLayer);
 				} else {
+					// No settings for this layer type
 					document.body.classList.remove('has-layer-settings');
+					if (settingsBtn) settingsBtn.disabled = true;
+					this.closeSettings();
 				}
+			} else {
+				// No layer selected
+				document.body.classList.remove('has-layer-settings');
+				if (settingsBtn) settingsBtn.disabled = true;
+				this.closeSettings();
 			}
 		});
 
-		// Settings collapsible headers - make them close the drawer
-		document.querySelectorAll('.mobile-settings-drawer .section-header').forEach(header => {
-			header.addEventListener('click', (e) => {
-				// Don't close if clicking the collapse button
-				if (e.target.closest('.section-header-action')) return;
-
-				// Close settings drawer
-				this.closeSettings();
-			});
-		});
 
 		// Close drawer when clicking on panel headers (Design, Layers)
 		// But NOT collapsible section headers inside settings
@@ -244,8 +258,23 @@ class MobileManager {
 						});
 					}
 
+
+
 					if (this.editor.originalImage) {
 						this.switchTab('preview');
+
+						// Re-prepare settings after switching to preview
+						const activeLayer = this.editor.layerManager.getActiveLayer();
+						const settingsBtn = document.getElementById('mobileSettingsBtn');
+
+						if (activeLayer && (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.STICKER)) {
+							this.prepareSettings(activeLayer);
+						} else {
+							// Base image or no layer - disable button
+							if (settingsBtn) settingsBtn.disabled = true;
+							document.body.classList.remove('has-layer-settings');
+						}
+
 						requestAnimationFrame(() => {
 							requestAnimationFrame(() => {
 								this.editor.viewport.performResizeUpdate();
@@ -255,6 +284,10 @@ class MobileManager {
 							});
 						});
 					}
+
+
+
+
 
 				} else if (this.isMobile && !nowMobile) {
 					// Switching TO Desktop
@@ -347,10 +380,19 @@ class MobileManager {
 		}
 	}
 
-	openSettings(layer) {
-		if (!this.isMobile || !layer) return;
+	prepareSettings(layer) {
+		console.log('Mobile: prepareSettings called', { isMobile: this.isMobile, layer: layer?.type });
+
+		if (!this.isMobile || !layer) {
+			console.log('Mobile: prepareSettings early return');
+			return;
+		}
+
 		const mobileContainer = document.getElementById('mobileSettingsContainer');
-		if (!mobileContainer) return;
+		if (!mobileContainer) {
+			console.log('Mobile: mobileSettingsContainer not found!');
+			return;
+		}
 
 		// Conditionally close drawers based on config
 		if (CONFIG.mobileAutoCloseDesignDrawer) {
@@ -361,37 +403,51 @@ class MobileManager {
 		mobileContainer.innerHTML = '';
 		let hasSettings = false;
 
+		console.log('Mobile: Moving sections to container...');
+
 		// Move appropriate settings based on layer type
 		if (layer.type === LayerType.GLITTER_FILL) {
 			if (this.settingsSections.tool) {
+				console.log('Mobile: Moving tool section');
 				mobileContainer.appendChild(this.settingsSections.tool);
 				this.settingsSections.tool.classList.add('visible');
 				hasSettings = true;
+			} else {
+				console.log('Mobile: No tool section found');
 			}
 			if (this.settingsSections.glitter) {
+				console.log('Mobile: Moving glitter section');
 				mobileContainer.appendChild(this.settingsSections.glitter);
 				this.settingsSections.glitter.classList.add('visible');
 				hasSettings = true;
+			} else {
+				console.log('Mobile: No glitter section found');
 			}
 		} else if (layer.type === LayerType.STICKER) {
 			if (this.settingsSections.sticker) {
+				console.log('Mobile: Moving sticker section');
 				mobileContainer.appendChild(this.settingsSections.sticker);
 				this.settingsSections.sticker.classList.add('visible');
 				hasSettings = true;
+			} else {
+				console.log('Mobile: No sticker section found');
 			}
 		}
 
-		// Collapse all sections before opening
+		console.log('Mobile: hasSettings:', hasSettings);
+		console.log('Mobile: Container children:', mobileContainer.children.length);
+
+		// Collapse all sections
 		this.collapseAllSections();
 
-		// Only open settings if we actually found settings to show
+		// Update button state but DON'T auto-open
+		const settingsBtn = document.getElementById('mobileSettingsBtn');
 		if (hasSettings) {
-			this.settingsOpen = true;
-			document.body.classList.add('mobileSettingsOpen');
 			document.body.classList.add('has-layer-settings');
+			if (settingsBtn) settingsBtn.disabled = false;
 		} else {
-			// Layer has no settings (like base image), close drawer and remove class
 			document.body.classList.remove('has-layer-settings');
+			if (settingsBtn) settingsBtn.disabled = true;
 			this.closeSettings();
 		}
 	}
@@ -424,23 +480,28 @@ class MobileManager {
 
 
 	toggleSettings() {
+		const settingsBtn = document.getElementById('mobileSettingsBtn');
+
 		if (this.settingsOpen) {
 			// Closing drawer - collapse all sections
 			this.collapseAllSections();
 			this.settingsOpen = false;
 			document.body.classList.remove('mobileSettingsOpen');
+			if (settingsBtn) settingsBtn.classList.remove('active');
 		} else {
 			// Opening drawer - ensure all sections are collapsed
 			this.collapseAllSections();
 			this.settingsOpen = true;
 			document.body.classList.add('mobileSettingsOpen');
+			if (settingsBtn) settingsBtn.classList.add('active');
 		}
 	}
 
 	closeSettings() {
 		this.settingsOpen = false;
 		document.body.classList.remove('mobileSettingsOpen');
-		// Don't remove has-layer-settings - it should persist if layer still has settings
+		const settingsBtn = document.getElementById('mobileSettingsBtn');
+		if (settingsBtn) settingsBtn.classList.remove('active');
 
 		// Collapse all sections
 		this.collapseAllSections();
@@ -459,7 +520,7 @@ class MobileManager {
 			if (originalParent && !originalParent.contains(this.settingsSections.tool)) {
 				originalParent.appendChild(this.settingsSections.tool);
 			}
-			this.settingsSections.tool.classList.remove('visible');
+			// Don't remove visible - desktop needs it
 		}
 
 		// Return glitter settings
@@ -468,7 +529,7 @@ class MobileManager {
 			if (originalParent && !originalParent.contains(this.settingsSections.glitter)) {
 				originalParent.appendChild(this.settingsSections.glitter);
 			}
-			this.settingsSections.glitter.classList.remove('visible');
+			// Don't remove visible - desktop needs it
 		}
 
 		// Return sticker settings
@@ -477,7 +538,7 @@ class MobileManager {
 			if (originalParent && !originalParent.contains(this.settingsSections.sticker)) {
 				originalParent.appendChild(this.settingsSections.sticker);
 			}
-			this.settingsSections.sticker.classList.remove('visible');
+			// Don't remove visible - desktop needs it
 		}
 
 		// Clear container
@@ -511,10 +572,31 @@ class MobileManager {
 			'mobile-preview-tab',
 			'designOpen',
 			'layersOpen',
-			'mobileSettingsOpen'
+			'mobileSettingsOpen',
+			'has-layer-settings'
 		);
 
 		this.closeSettings();
+
+		// Restore desktop layer display state
+		const activeLayer = this.editor.layerManager.getActiveLayer();
+		if (activeLayer) {
+			// Force desktop UI update based on layer type
+			if (activeLayer.type === LayerType.GLITTER_FILL) {
+				this.editor.hideLayerSettingsEmptyState();
+				this.editor.hideGlitterSettingsEmptyState();
+				this.editor.loadActiveLayerSettings();
+			} else if (activeLayer.type === LayerType.STICKER) {
+				this.editor.hideStickerSettingsEmptyState();
+				this.editor.loadStickerSettings(activeLayer);
+			} else if (activeLayer.type === LayerType.BASE_IMAGE) {
+				this.editor.showLayerSettingsEmptyState();
+			}
+		} else {
+			this.editor.showLayerSettingsEmptyState();
+			this.editor.showGlitterSettingsEmptyState();
+			this.editor.showStickerSettingsEmptyState();
+		}
 
 		console.log('Mobile: Cleanup complete, restored to desktop layout');
 	}

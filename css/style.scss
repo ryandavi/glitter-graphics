@@ -282,11 +282,11 @@
 		transition: filter 0.2s;
 	}
 
-	&:hover:before {
+	&:not(:disabled):hover:before {
 		filter: saturate(0.5) contrast(0.9) brightness(1);
 	}
 
-	&:active:before {
+	&:not(:disabled):active:before {
 		filter: saturate(0.7) contrast(1.1) brightness(1.15);
 	}
 }
@@ -692,7 +692,7 @@ input[type="range"] {
 
 
 
-	&:hover {
+	&:not(:disabled):hover {
 		background: var(--color-bg-tertiary);
 		border-color: var(--color-border-hover);
 	}
@@ -4150,17 +4150,6 @@ body.tool-select {
 	}
 
 	// ============================================
-	// MOVE UP CONTROLS A LITTLE (FOR DRAWER)
-	// ============================================
-
-	.zoom-controls,
-	.sticker-center-controls,
-	.pan-controls,
-	.color-picker-controls {
-		transform: translateX(-50%) translateY(-15px);
-	}
-
-	// ============================================
 	// REMOVE SVG OUTLINE ON GLITTER ELEMENTS (SLOW ON MOBILE)
 	// ============================================
 	.glitter-element {
@@ -4434,80 +4423,91 @@ body.tool-select {
 	// MOBILE SETTINGS DRAWER
 	// ============================================
 
-	.mobile-settings-drawer {
-		position: fixed;
-		bottom: var(--mobile-bottom-nav-height);
-		left: 0;
-		right: 0;
-		background: var(--color-bg-primary);
-		border-top: 1px solid var(--color-border);
-		box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
-		z-index: 9999;
-		transform: translateY(calc(100% - var(--mobile-settings-handle-height)));
-		transition: transform var(--transition-base);
-		max-height: 60vh;
+.mobile-settings-drawer {
+	position: fixed;
+	bottom: var(--mobile-bottom-nav-height);
+	left: 0;
+	right: 0;
+	    background: var(--color-bg-tertiary);
+	border-top: 1px solid var(--color-border);
+	box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+	z-index: 9999;
+	transform: translateY(100%);
+	transition: transform var(--transition-base);
+	max-height: 60vh;
 
-		.mobile-settings-handle {
-			height: var(--mobile-settings-handle-height);
-			padding: var(--spacing-xs) 0;
-			cursor: pointer;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			flex-shrink: 0;
-			background: var(--color-bg-primary);
-			border-bottom: 1px solid var(--color-border);
+	    padding: var(--spacing-md);
 
-			.mobile-settings-handle-bar {
-				width: 40px;
-				height: 4px;
-				background: var(--color-border);
-				border-radius: 2px;
-			}
+
+
+	.mobile-settings-btn {
+		position: absolute;
+		top: -76px; // Button height (56px) + gap (20px)
+		right: 20px;
+		width: 56px;
+		height: 56px;
+
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+
+		
+		&:active:not(:disabled) {
+			transform: scale(0.95);
 		}
-
-		.mobile-settings-content {
-			overflow-y: auto;
-			flex: 1;
-
-
-
-			.layer-settings-section,
-			.glitter-settings-section,
-			.sticker-settings-section {
-				&.visible {
-					display: flex;
-					flex-direction: column;
-					border: none;
-					margin: 0;
-					padding: 0;
-
-					.section-header {
-						position: sticky;
-						top: 0;
-						background: var(--color-bg-primary);
-						z-index: 1;
-
-						.section-header-action {
-							display: flex;
-						}
-					}
-
-					.section-content {
-						// padding: 0 var(--spacing-md) var(--spacing-md);
-					}
-				}
-			}
-
-			.collapsible-section {
-				+.collapsible-section {
-					border-top: 1px solid var(--color-border);
-				}
-			}
-
-
+		
+		&:disabled {
+			opacity: 0.4;
+			cursor: not-allowed;
+			
 		}
 	}
+
+	.mobile-settings-content {
+		overflow-y: auto;
+		flex: 1;
+        display: flex;
+        flex-direction: column;
+		gap: var(--spacing-md);
+
+
+		.collapsible-section {
+				border-radius: var(--radius-sm);
+		}
+
+		.layer-settings-section,
+		.glitter-settings-section,
+		.sticker-settings-section {
+			&.visible {
+				display: flex;
+				flex-direction: column;
+				border: none;
+				margin: 0;
+				padding: 0;
+
+				.section-header {
+					position: sticky;
+					top: 0;
+					background: var(--color-bg-primary);
+					z-index: 1;
+
+					.section-header-action {
+						display: flex;
+					}
+				}
+
+				.section-content {
+					// padding: 0 var(--spacing-md) var(--spacing-md);
+				}
+			}
+		}
+
+
+	}
+}
+
+body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
+	display: flex;
+}
 
 	// ============================================
 	// TAB STATES
@@ -4854,3 +4854,5 @@ body.tool-select {
 		}
 	}
 }
+
+
