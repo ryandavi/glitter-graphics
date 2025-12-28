@@ -4433,7 +4433,7 @@ body.tool-select {
 	box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
 	z-index: 9999;
 	transform: translateY(100%);
-	transition: transform var(--transition-base);
+	// transition: transform var(--transition-base);
 	max-height: 60vh;
 
 	    padding: var(--spacing-md);
@@ -4441,11 +4441,11 @@ body.tool-select {
 
 
 	.mobile-settings-btn {
-		position: absolute;
-		top: -76px; // Button height (56px) + gap (20px)
-		right: 20px;
-		width: 56px;
-		height: 56px;
+	position: absolute;
+	top: calc(0px - var(--icon-size) - var(--spacing-lg)); // Button height + spacing below content
+	right: var(--spacing-lg);
+
+
 
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 

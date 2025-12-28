@@ -3558,16 +3558,13 @@ body.tool-select .sticker-element:not(.selected):hover {
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
     z-index: 9999;
     transform: translateY(100%);
-    transition: transform var(--transition-base);
     max-height: 60vh;
     padding: var(--spacing-md);
   }
   .mobile-settings-drawer .mobile-settings-btn {
     position: absolute;
-    top: -76px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
+    top: calc(0px - var(--icon-size) - var(--spacing-lg));
+    right: var(--spacing-lg);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
   .mobile-settings-drawer .mobile-settings-btn:active:not(:disabled) {
