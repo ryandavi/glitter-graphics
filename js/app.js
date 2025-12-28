@@ -2774,42 +2774,42 @@ setTool(tool) {
 		}
 	}
 
-	handleCanvasClick(event) {
-		if (!this.originalImageData) return;
+handleCanvasClick(event) {
+	if (!this.originalImageData) return;
 
-		// CRITICAL: Always use the canvas rect, regardless of what element was clicked
-		const rect = this.previewCanvas.getBoundingClientRect();
+	// CRITICAL: Always use the canvas rect, regardless of what element was clicked
+	const rect = this.previewCanvas.getBoundingClientRect();
 
-		// Calculate click position relative to the canvas element on screen
-		const clickX = event.clientX - rect.left;
-		const clickY = event.clientY - rect.top;
+	// Calculate click position relative to the canvas element on screen
+	const clickX = event.clientX - rect.left;
+	const clickY = event.clientY - rect.top;
 
-		// Account for the difference between the element's CSS size and its actual pixel resolution
-		const scaleX = this.previewCanvas.width / rect.width;
-		const scaleY = this.previewCanvas.height / rect.height;
+	// Account for the difference between the element's CSS size and its actual pixel resolution
+	const scaleX = this.previewCanvas.width / rect.width;
+	const scaleY = this.previewCanvas.height / rect.height;
 
-		const x = Math.floor(clickX * scaleX);
-		const y = Math.floor(clickY * scaleY);
+	const x = Math.floor(clickX * scaleX);
+	const y = Math.floor(clickY * scaleY);
 
-		// Bounds check
-		if (x < 0 || x >= this.previewCanvas.width || y < 0 || y >= this.previewCanvas.height) {
-			return;
-		}
-
-		// Select Tool: Pick layer at click location
-		if (this.currentTool === ToolType.SELECT) {
-			if (CONFIG.autoSelect === true && !this.justCompletedDrag) {
-				this.layerManager.handleLayerPick(x, y);
-			}
-			return;
-		}
-
-		// Color Picker Tool
-		if (this.currentTool === ToolType.COLOR_PICKER) {
-			this.handleColorPickerClick(x, y);
-			return;
-		}
+	// Bounds check
+	if (x < 0 || x >= this.previewCanvas.width || y < 0 || y >= this.previewCanvas.height) {
+		return;
 	}
+
+	// Select Tool: Pick layer at click location
+	if (this.currentTool === ToolType.SELECT) {
+		if (CONFIG.autoSelect === true && !this.justCompletedDrag) {
+			this.layerManager.handleLayerPick(x, y);
+		}
+		return;
+	}
+
+	// Color Picker Tool
+	if (this.currentTool === ToolType.COLOR_PICKER) {
+		this.handleColorPickerClick(x, y, event);
+		return;
+	}
+}
 
 handleCanvasZoomClick(event) {
 	// Disable click-to-zoom on mobile
@@ -2829,165 +2829,177 @@ handleCanvasZoomClick(event) {
 }
 
 
-	handleColorPickerClick(x, y) {
-		let layer = this.layerManager.getActiveLayer();
+handleColorPickerClick(x, y, event) {
+	let layer = this.layerManager.getActiveLayer();
 
-		// If no layer selected, try to select a layer at this location
-		if (!layer) {
-			for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
-				const testLayer = this.layerManager.layers[i];
-				if (!testLayer.visible) continue;
+	// If no layer selected, try to select a layer at this location
+	if (!layer) {
+		for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
+			const testLayer = this.layerManager.layers[i];
+			if (!testLayer.visible) continue;
 
-				let isHit = false;
+			let isHit = false;
 
-				if (testLayer.type === LayerType.GLITTER_FILL) {
-					if (testLayer.selections && testLayer.selections.length > 0) {
-						isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
-					}
-				} else if (testLayer.type === LayerType.BASE_IMAGE) {
-					if (this.originalImage) {
-						isHit = true;
-					}
-				}
-
-				if (isHit) {
-					this.layerManager.setActiveLayer(testLayer.id);
-					layer = testLayer;
-					break;
-				}
-			}
-
-			if (!layer) {
-				this.updateStatus('Please select the Base Image or a Glitter Layer.');
-				return;
-			}
-		}
-
-		// Handle based on selected layer type
-		if (layer.type === LayerType.GLITTER_FILL) {
-			// Always add to glitter layer
-			this.glitterFillSelector(x, y);
-
-		} else if (layer.type === LayerType.BASE_IMAGE) {
-			// Check config for auto-creation
-			if (CONFIG.autoCreateGlitterLayer) {
-				const newLayer = this.glitterManager.createLayer();
-				this.layerManager.insertLayer(newLayer);
-				this.glitterFillSelector(x, y);
-			} else {
-				this.updateStatus('Please create a glitter layer first');
-			}
-
-		} else if (layer.type === LayerType.STICKER) {
-			// Check if click is actually on the sticker
-			const hitSticker = this.layerManager.isPointInSticker(layer, x, y);
-
-			if (hitSticker) {
-				// Clicking on sticker itself - disabled
-				this.updateStatus('Color Picker disabled on Sticker layers.');
-				return;
-			}
-
-			// Clicking outside sticker - find/create glitter layer at this location
-			let glitterLayer = null;
-
-			for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
-				const testLayer = this.layerManager.layers[i];
-				if (!testLayer.visible || testLayer.type !== LayerType.GLITTER_FILL) continue;
-
+			if (testLayer.type === LayerType.GLITTER_FILL) {
 				if (testLayer.selections && testLayer.selections.length > 0) {
-					const isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
-					if (isHit) {
-						glitterLayer = testLayer;
-						break;
-					}
+					isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
+				}
+			} else if (testLayer.type === LayerType.BASE_IMAGE) {
+				if (this.originalImage) {
+					isHit = true;
 				}
 			}
 
-			if (glitterLayer) {
-				this.layerManager.setActiveLayer(glitterLayer.id);
-			} else {
-				const newLayer = this.glitterManager.createLayer();
-				this.layerManager.insertLayer(newLayer);
+			if (isHit) {
+				this.layerManager.setActiveLayer(testLayer.id);
+				layer = testLayer;
+				break;
 			}
-
-			this.glitterFillSelector(x, y);
 		}
-	}
-
-	glitterFillSelector(x, y) {
-		let layer = this.layerManager.getActiveLayer();
 
 		if (!layer) {
 			this.updateStatus('Please select the Base Image or a Glitter Layer.');
 			return;
 		}
+	}
 
-		// Case 1: Base Image is Selected -> Create NEW Glitter Layer
-		if (layer.type === LayerType.BASE_IMAGE) {
+	// Handle based on selected layer type
+	if (layer.type === LayerType.GLITTER_FILL) {
+		// Always add to glitter layer
+		this.glitterFillSelector(x, y, event);
+
+	} else if (layer.type === LayerType.BASE_IMAGE) {
+		// Check config for auto-creation
+		if (CONFIG.autoCreateGlitterLayer) {
 			const newLayer = this.glitterManager.createLayer();
-			this.layerManager.insertLayer(newLayer);  // Use the new method
-			layer = newLayer; // Switch target to the new layer
-			this.updateStatus('Created new layer from Base Image');
+			this.layerManager.insertLayer(newLayer);
+			this.glitterFillSelector(x, y, event);
+		} else {
+			this.updateStatus('Please create a glitter layer first');
 		}
-		// Case 2: Glitter Fill Layer is Selected -> Use it
-		else if (layer.type === LayerType.GLITTER_FILL) {
-			// Continue using this layer
-		}
-		// Case 3: Sticker (or other) -> Block
-		else {
+
+	} else if (layer.type === LayerType.STICKER) {
+		// Check if click is actually on the sticker
+		const hitSticker = this.layerManager.isPointInSticker(layer, x, y);
+
+		if (hitSticker) {
+			// Clicking on sticker itself - disabled
 			this.updateStatus('Color Picker disabled on Sticker layers.');
 			return;
 		}
 
+		// Clicking outside sticker - find/create glitter layer at this location
+		let glitterLayer = null;
 
-		const pixelIndex = y * this.originalCanvas.width + x;
-		const alpha = this.originalAlphaChannel[pixelIndex];
-		const isTransparent = alpha < CONFIG.alphaThreshold;
+		for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
+			const testLayer = this.layerManager.layers[i];
+			if (!testLayer.visible || testLayer.type !== LayerType.GLITTER_FILL) continue;
 
-		// 1. Config Check: Block if transparent and selection isn't allowed
-		if (isTransparent && !CONFIG.allowTransparentSelection) {
-			this.updateStatus('Cannot select transparent pixels');
-			return;
+			if (testLayer.selections && testLayer.selections.length > 0) {
+				const isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
+				if (isHit) {
+					glitterLayer = testLayer;
+					break;
+				}
+			}
 		}
 
-		const i = pixelIndex * 4;
-
-		// 2. Data Extraction
-		// If it's transparent, we force RGB to 0 to be clean, 
-		// because the 'isTransparent' flag will do the heavy lifting in the mask logic.
-		const r = isTransparent ? 0 : this.originalImageData.data[i];
-		const g = isTransparent ? 0 : this.originalImageData.data[i + 1];
-		const b = isTransparent ? 0 : this.originalImageData.data[i + 2];
-
-		// 3. Multi-Select Logic
-		// If multi-select is off, clear previous selections
-		const multiSelect = layer.settings.multiSelect;
-		if (!multiSelect) layer.selections = [];
-
-		// 4. Save the Selection
-		layer.selections.push({
-			r, g, b, x, y,
-			isTransparent: isTransparent
-		});
-
-		// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)
-		this.layerManager.renderLayersList();
-		this.saveState(); // For Undo/Redo
-		this.updatePreview(); // To show the new glitter fill immediately
-		this.updateActionButtons();
-		this.updateSelectedColorsDisplay(); // To show "Transparent" or the RGB values in the sidebar
-
-		// Update context toolbars (show color picker controls if we now have selections)
-		this.updateContextToolbars();
-
-		// 6. Status Feedback
-		if (isTransparent) {
-			this.updateStatus(`Selected Transparency at (${x}, ${y})`);
+		if (glitterLayer) {
+			this.layerManager.setActiveLayer(glitterLayer.id);
 		} else {
-			this.updateStatus(`Selected RGB(${r}, ${g}, ${b}) at (${x}, ${y})`);
+			const newLayer = this.glitterManager.createLayer();
+			this.layerManager.insertLayer(newLayer);
 		}
+
+		this.glitterFillSelector(x, y, event);
 	}
+}
+
+glitterFillSelector(x, y, event) {
+	let layer = this.layerManager.getActiveLayer();
+
+	if (!layer) {
+		this.updateStatus('Please select the Base Image or a Glitter Layer.');
+		return;
+	}
+
+	// Case 1: Base Image is Selected -> Create NEW Glitter Layer
+	if (layer.type === LayerType.BASE_IMAGE) {
+		const newLayer = this.glitterManager.createLayer();
+		this.layerManager.insertLayer(newLayer);  // Use the new method
+		layer = newLayer; // Switch target to the new layer
+		this.updateStatus('Created new layer from Base Image');
+	}
+	// Case 2: Glitter Fill Layer is Selected -> Use it
+	else if (layer.type === LayerType.GLITTER_FILL) {
+		// Continue using this layer
+	}
+	// Case 3: Sticker (or other) -> Block
+	else {
+		this.updateStatus('Color Picker disabled on Sticker layers.');
+		return;
+	}
+
+	const pixelIndex = y * this.originalCanvas.width + x;
+	const alpha = this.originalAlphaChannel[pixelIndex];
+	const isTransparent = alpha < CONFIG.alphaThreshold;
+
+	// 1. Config Check: Block if transparent and selection isn't allowed
+	if (isTransparent && !CONFIG.allowTransparentSelection) {
+		this.updateStatus('Cannot select transparent pixels');
+		return;
+	}
+
+	const i = pixelIndex * 4;
+
+	// 2. Data Extraction
+	// If it's transparent, we force RGB to 0 to be clean, 
+	// because the 'isTransparent' flag will do the heavy lifting in the mask logic.
+	const r = isTransparent ? 0 : this.originalImageData.data[i];
+	const g = isTransparent ? 0 : this.originalImageData.data[i + 1];
+	const b = isTransparent ? 0 : this.originalImageData.data[i + 2];
+
+	// 3. Multi-Select Logic with Shift Key Support
+	const shiftPressed = event && event.shiftKey;
+	
+	// If Shift is pressed, enable multi-select
+	if (shiftPressed && !layer.settings.multiSelect) {
+		layer.settings.multiSelect = true;
+		
+		// Update UI checkboxes
+		const multiSelect = document.getElementById('multiSelect');
+		const contextMultiSelect = document.getElementById('contextMultiSelect');
+		if (multiSelect) multiSelect.checked = true;
+		if (contextMultiSelect) contextMultiSelect.checked = true;
+		
+		this.updateStatus('Multi-select enabled');
+	}
+	
+	// If multi-select is off (and shift wasn't pressed), clear previous selections
+	const multiSelect = layer.settings.multiSelect;
+	if (!multiSelect) layer.selections = [];
+
+	// 4. Save the Selection
+	layer.selections.push({
+		r, g, b, x, y,
+		isTransparent: isTransparent
+	});
+
+	// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)
+	this.layerManager.renderLayersList();
+	this.saveState(); // For Undo/Redo
+	this.updatePreview(); // To show the new glitter fill immediately
+	this.updateActionButtons();
+	this.updateSelectedColorsDisplay(); // To show "Transparent" or the RGB values in the sidebar
+
+	// Update context toolbars (show color picker controls if we now have selections)
+	this.updateContextToolbars();
+
+	// 6. Auto-Switch to Select Tool (if configured)
+	if (CONFIG.autoSwitchAfterPick && this.currentTool === ToolType.COLOR_PICKER) {
+		this.setTool(ToolType.SELECT);
+	}
+}
 
 	updateSelectedColorsDisplay() {
 		const container = document.getElementById('selectedColorsDisplay');

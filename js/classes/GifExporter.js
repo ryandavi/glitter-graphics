@@ -82,17 +82,17 @@ class GifExporter {
 
 		// Determine which frame/image to use
 		let imageData;
-if (isAnimated && layer.stickerData.frames) {
-	const frameCount = layer.stickerData.frames.frames.length;
-	
-	// Use frameMap for smart reduction
-	let stickerFrameIndex = frameIndex % frameCount;
-	if (this.frameMap && this.frameMap.has(layer.id)) {
-		const reducedFrameCount = this.frameMap.get(layer.id);
-		stickerFrameIndex = Math.floor((frameIndex % reducedFrameCount) / reducedFrameCount * frameCount);
-	}
-	
-	const frame = layer.stickerData.frames.frames[stickerFrameIndex];
+		if (isAnimated && layer.stickerData.frames) {
+			const frameCount = layer.stickerData.frames.frames.length;
+
+			// Use frameMap for smart reduction
+			let stickerFrameIndex = frameIndex % frameCount;
+			if (this.frameMap && this.frameMap.has(layer.id)) {
+				const reducedFrameCount = this.frameMap.get(layer.id);
+				stickerFrameIndex = Math.floor((frameIndex % reducedFrameCount) / reducedFrameCount * frameCount);
+			}
+
+			const frame = layer.stickerData.frames.frames[stickerFrameIndex];
 
 			// Handle both ImageData objects and frame objects with .data property
 			if (frame instanceof ImageData) {
@@ -509,58 +509,60 @@ if (isAnimated && layer.stickerData.frames) {
 			}
 		}
 
-		// 5. Composite Glitter Layers
-		layers.forEach((layer) => {
-			if (layer.visible === false || layer.type !== LayerType.GLITTER_FILL) return;
+// 5. Composite Glitter and Sticker Layers (in correct z-order)
+layers.forEach((layer) => {
+	if (layer.visible === false) return;
 
-			const maskCanvas = maskCanvases.get(layer.id);
-			if (!maskCanvas) return;
+	if (layer.type === LayerType.GLITTER_FILL) {
+		// Render glitter layer
+		const maskCanvas = maskCanvases.get(layer.id);
+		if (!maskCanvas) return;
 
-const glitter = library.find(g => g.id === layer.selectedGlitterId);
-const frames = glitter.frames.frames;
+		const glitter = library.find(g => g.id === layer.selectedGlitterId);
+		const frames = glitter.frames.frames;
 
-// Use frameMap for smart reduction
-let fIdx = frameIndex % frames.length;
-if (frameMap && frameMap.has(layer.id)) {
-	const reducedFrameCount = frameMap.get(layer.id);
-	const originalFrameCount = frames.length;
-	fIdx = Math.floor((frameIndex % reducedFrameCount) / reducedFrameCount * originalFrameCount);
-}
+		// Use frameMap for smart reduction
+		let fIdx = frameIndex % frames.length;
+		if (frameMap && frameMap.has(layer.id)) {
+			const reducedFrameCount = frameMap.get(layer.id);
+			const originalFrameCount = frames.length;
+			fIdx = Math.floor((frameIndex % reducedFrameCount) / reducedFrameCount * originalFrameCount);
+		}
 
-const glitterFrame = frames[fIdx];
+		const glitterFrame = frames[fIdx];
 
-			hCtx.save();
-			hCtx.clearRect(0, 0, width, height);
+		hCtx.save();
+		hCtx.clearRect(0, 0, width, height);
 
-			const patternSource = document.createElement('canvas');
-			let frameImageData = (glitterFrame instanceof ImageData) ? glitterFrame : glitterFrame.data;
-			patternSource.width = frameImageData.width;
-			patternSource.height = frameImageData.height;
-			patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
+		const patternSource = document.createElement('canvas');
+		let frameImageData = (glitterFrame instanceof ImageData) ?
+			glitterFrame : glitterFrame.data;
+		patternSource.width = frameImageData.width;
+		patternSource.height = frameImageData.height;
+		patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
 
-			const pattern = hCtx.createPattern(patternSource, 'repeat');
-			const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-			const matrix = new DOMMatrix().scaleSelf(scale, scale);
-			pattern.setTransform(matrix);
+		const pattern = hCtx.createPattern(patternSource, 'repeat');
+		const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+		const matrix = new DOMMatrix().scaleSelf(scale, scale);
+		pattern.setTransform(matrix);
 
-			hCtx.globalAlpha = layer.settings.opacity / 100;
-			hCtx.fillStyle = pattern;
-			hCtx.fillRect(0, 0, width, height);
+		hCtx.globalAlpha = layer.settings.opacity / 100;
+		hCtx.fillStyle = pattern;
+		hCtx.fillRect(0, 0, width, height);
 
-			hCtx.globalCompositeOperation = 'destination-in';
-			hCtx.drawImage(maskCanvas, 0, 0);
+		hCtx.globalCompositeOperation = 'destination-in';
+		hCtx.drawImage(maskCanvas, 0, 0);
 
-			hCtx.restore();
-			ctx.drawImage(this.helperCanvas, 0, 0);
-		});
+		hCtx.restore();
+		ctx.drawImage(this.helperCanvas, 0, 0);
 
-		// 6. Composite Sticker Layers
-		layers.forEach((layer) => {
-			if (layer.visible === false || layer.type !== LayerType.STICKER) return;
-			this._renderLayerToCanvas(layer, ctx, frameIndex);
-		});
+	} else if (layer.type === LayerType.STICKER) {
+		// Render sticker layer
+		this._renderLayerToCanvas(layer, ctx, frameIndex);
+	}
+});
 
-		// 7. Render Watermark
+// 6. Render Watermark
 		if (exportSettings.watermarkEnabled && watermark) {
 			this._renderWatermarkToCanvas(watermark, ctx, width, height, frameIndex);
 		}
@@ -1088,196 +1090,196 @@ const glitterFrame = frames[fIdx];
 		});
 	}
 
-_calculateTotalFrames(layers, library, maxFrames, smartFrameReduction = false) {
-	const layerFrameCounts = new Map();
-	
-	layers.forEach(l => {
-		let count = 1;
-		if (l.type === LayerType.GLITTER_FILL) {
-			const glitter = library.find(g => g.id === l.selectedGlitterId);
-			if (glitter?.frames?.frames) {
-				count = glitter.frames.frames.length;
-			}
-		} else if (l.type === LayerType.STICKER) {
-			if (l.stickerData.isAnimated && l.stickerData.frames?.frames) {
-				count = l.stickerData.frames.frames.length;
-			}
-		}
-		layerFrameCounts.set(l.id, count);
-	});
+	_calculateTotalFrames(layers, library, maxFrames, smartFrameReduction = false) {
+		const layerFrameCounts = new Map();
 
-	if (layerFrameCounts.size === 0) {
-		if (this.config.debug) console.warn('[GifExporter] No valid layers, defaulting to 1 frame');
-		return { totalFrames: 1, frameMap: new Map(), reductions: [] };
-	}
-
-	// Apply smart reduction or standard LCM
-	const result = smartFrameReduction
-		? this._smartReduceFrames(layerFrameCounts, maxFrames)
-		: this._standardLCM(layerFrameCounts, maxFrames);
-
-	if (this.config.debug) {
-		console.log('[GifExporter] Calculated total frames:', result.totalFrames);
-		if (result.reductions.length > 0) {
-			console.log('[GifExporter] Smart reductions applied:', result.reductions);
-		}
-	}
-
-	return result;
-}
-
-_standardLCM(layerFrameCounts, maxFrames) {
-	const counts = Array.from(layerFrameCounts.values()).filter(c => c > 0);
-	
-	let total = counts[0];
-	if (counts.length > 1) {
-		total = counts.reduce((acc, val) => this.lcm(acc, val), total);
-	}
-
-	const totalFrames = Math.min(total, maxFrames);
-	
-	return {
-		totalFrames,
-		frameMap: layerFrameCounts,
-		reductions: []
-	};
-}
-
-_smartReduceFrames(layerFrameCounts, maxFrames) {
-	const reductions = [];
-	let reducedCounts = new Map(layerFrameCounts);
-
-	// Step 1: Round to multiples of 3 (if close)
-	layerFrameCounts.forEach((originalCount, layerId) => {
-		const nearestMultipleOf3 = Math.round(originalCount / 3) * 3;
-		const difference = Math.abs(originalCount - nearestMultipleOf3);
-		const percentDiff = difference / originalCount;
-
-		if (nearestMultipleOf3 > 0 && percentDiff <= 0.20 && nearestMultipleOf3 !== originalCount) {
-			reducedCounts.set(layerId, nearestMultipleOf3);
-			reductions.push({
-				layerId,
-				original: originalCount,
-				reduced: nearestMultipleOf3,
-				reason: 'rounded-to-multiple-of-3'
-			});
-		}
-	});
-
-	// Step 2: Calculate initial LCM
-	let counts = Array.from(reducedCounts.values()).filter(c => c > 0);
-	let totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
-
-	// Step 3: Cap individual animations based on their size
-	reducedCounts.forEach((count, layerId) => {
-		let targetCap = null;
-		
-		if (count > 60) {
-			// Very long animations: cap at 30
-			targetCap = 30;
-		} else if (count > 36) {
-			// Long animations: cap at 24
-			targetCap = 24;
-		} else if (count > 24) {
-			// Medium-long: cap at 18
-			targetCap = 18;
-		}
-		
-		if (targetCap && count > targetCap) {
-			const newCount = targetCap;
-			reducedCounts.set(layerId, newCount);
-			
-			const existingIdx = reductions.findIndex(r => r.layerId === layerId);
-			if (existingIdx >= 0) {
-				reductions[existingIdx].reduced = newCount;
-				reductions[existingIdx].reason = 'capped-at-' + targetCap;
-			} else {
-				reductions.push({
-					layerId,
-					original: layerFrameCounts.get(layerId),
-					reduced: newCount,
-					reason: 'capped-at-' + targetCap
-				});
-			}
-		}
-	});
-
-	// Recalculate final LCM
-	counts = Array.from(reducedCounts.values()).filter(c => c > 0);
-	totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
-
-	return {
-		totalFrames: Math.min(totalFrames, maxFrames),
-		frameMap: reducedCounts,
-		reductions
-	};
-}
-
-_handleFileSave(blob, callbacks, frameCount, reductions = []) {
-	if (this.config.debug) console.log('_handleFileSave called with blob size:', blob.size);
-	callbacks.onProgress(100, 'Export complete!', 0, 0);
-	callbacks.onStatus('Export complete!');
-	callbacks.onComplete({
-		smartReduced: reductions.length > 0,
-		frameReductions: reductions
-	});
-
-	const file = new File([blob], this.config.fileName, {
-		type: 'image/gif',
-		lastModified: Date.now()
-	});
-
-	const url = URL.createObjectURL(blob);
-
-	// Pass frameCount, blob.size, and reductions to the preview modal
-	this._showExportPreviewModal(url, file, frameCount, blob.size, reductions);
-}
-
-
-
-
-_showExportPreviewModal(blobUrl, file, frameCount, fileSize, reductions = []) {
-	const modal = document.getElementById('exportPreviewModal');
-	const img = document.getElementById('exportPreviewImage');
-	const instructions = modal.querySelector('.export-preview-instructions');
-	const closeBtn = document.getElementById('closeExportPreviewModal');
-
-	// Stats Elements
-	const exportStats = document.getElementById('exportStats');
-
-	if (exportStats) {
-		const statSize = document.getElementById('exportStatSize');
-		const statFrames = document.getElementById('exportStatFrames');
-
-		// remove .size-warning and .smart-reduction-badge elements from exportStats
-		const previousBadges = exportStats.querySelectorAll('.size-warning, .smart-reduction-badge');
-		previousBadges.forEach(badge => {
-			badge.remove();
-		});
-
-
-		if (statFrames) {
-			statFrames.textContent = `Frames: ${frameCount != null ? frameCount : 'Unknown'}`;
-		}
-
-		// Set stats text
-		if (statSize) {
-			statSize.textContent = `Size: ${fileSize != null ? this._formatBytes(fileSize) : 'Unknown'}`;
-
-			if (fileSize != null) {
-				const warnings = this._getSizeWarningsHTML(fileSize);
-				if (warnings) {
-					exportStats.insertAdjacentHTML('beforeend', warnings);
+		layers.forEach(l => {
+			let count = 1;
+			if (l.type === LayerType.GLITTER_FILL) {
+				const glitter = library.find(g => g.id === l.selectedGlitterId);
+				if (glitter?.frames?.frames) {
+					count = glitter.frames.frames.length;
+				}
+			} else if (l.type === LayerType.STICKER) {
+				if (l.stickerData.isAnimated && l.stickerData.frames?.frames) {
+					count = l.stickerData.frames.frames.length;
 				}
 			}
+			layerFrameCounts.set(l.id, count);
+		});
+
+		if (layerFrameCounts.size === 0) {
+			if (this.config.debug) console.warn('[GifExporter] No valid layers, defaulting to 1 frame');
+			return { totalFrames: 1, frameMap: new Map(), reductions: [] };
 		}
 
-		// Add smart reduction badge if applied
-		if (reductions.length > 0) {
-			const badge = `<span class="smart-reduction-badge" data-tooltip="Optimized ${reductions.length} layer${reductions.length > 1 ? 's' : ''} for smaller file size">Smart Reduced</span>`;
-			exportStats.insertAdjacentHTML('beforeend', badge);
+		// Apply smart reduction or standard LCM
+		const result = smartFrameReduction
+			? this._smartReduceFrames(layerFrameCounts, maxFrames)
+			: this._standardLCM(layerFrameCounts, maxFrames);
+
+		if (this.config.debug) {
+			console.log('[GifExporter] Calculated total frames:', result.totalFrames);
+			if (result.reductions.length > 0) {
+				console.log('[GifExporter] Smart reductions applied:', result.reductions);
+			}
 		}
+
+		return result;
 	}
+
+	_standardLCM(layerFrameCounts, maxFrames) {
+		const counts = Array.from(layerFrameCounts.values()).filter(c => c > 0);
+
+		let total = counts[0];
+		if (counts.length > 1) {
+			total = counts.reduce((acc, val) => this.lcm(acc, val), total);
+		}
+
+		const totalFrames = Math.min(total, maxFrames);
+
+		return {
+			totalFrames,
+			frameMap: layerFrameCounts,
+			reductions: []
+		};
+	}
+
+	_smartReduceFrames(layerFrameCounts, maxFrames) {
+		const reductions = [];
+		let reducedCounts = new Map(layerFrameCounts);
+
+		// Step 1: Round to multiples of 3 (if close)
+		layerFrameCounts.forEach((originalCount, layerId) => {
+			const nearestMultipleOf3 = Math.round(originalCount / 3) * 3;
+			const difference = Math.abs(originalCount - nearestMultipleOf3);
+			const percentDiff = difference / originalCount;
+
+			if (nearestMultipleOf3 > 0 && percentDiff <= 0.20 && nearestMultipleOf3 !== originalCount) {
+				reducedCounts.set(layerId, nearestMultipleOf3);
+				reductions.push({
+					layerId,
+					original: originalCount,
+					reduced: nearestMultipleOf3,
+					reason: 'rounded-to-multiple-of-3'
+				});
+			}
+		});
+
+		// Step 2: Calculate initial LCM
+		let counts = Array.from(reducedCounts.values()).filter(c => c > 0);
+		let totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
+
+		// Step 3: Cap individual animations based on their size
+		reducedCounts.forEach((count, layerId) => {
+			let targetCap = null;
+
+			if (count > 60) {
+				// Very long animations: cap at 30
+				targetCap = 30;
+			} else if (count > 36) {
+				// Long animations: cap at 24
+				targetCap = 24;
+			} else if (count > 24) {
+				// Medium-long: cap at 18
+				targetCap = 18;
+			}
+
+			if (targetCap && count > targetCap) {
+				const newCount = targetCap;
+				reducedCounts.set(layerId, newCount);
+
+				const existingIdx = reductions.findIndex(r => r.layerId === layerId);
+				if (existingIdx >= 0) {
+					reductions[existingIdx].reduced = newCount;
+					reductions[existingIdx].reason = 'capped-at-' + targetCap;
+				} else {
+					reductions.push({
+						layerId,
+						original: layerFrameCounts.get(layerId),
+						reduced: newCount,
+						reason: 'capped-at-' + targetCap
+					});
+				}
+			}
+		});
+
+		// Recalculate final LCM
+		counts = Array.from(reducedCounts.values()).filter(c => c > 0);
+		totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
+
+		return {
+			totalFrames: Math.min(totalFrames, maxFrames),
+			frameMap: reducedCounts,
+			reductions
+		};
+	}
+
+	_handleFileSave(blob, callbacks, frameCount, reductions = []) {
+		if (this.config.debug) console.log('_handleFileSave called with blob size:', blob.size);
+		callbacks.onProgress(100, 'Export complete!', 0, 0);
+		callbacks.onStatus('Export complete!');
+		callbacks.onComplete({
+			smartReduced: reductions.length > 0,
+			frameReductions: reductions
+		});
+
+		const file = new File([blob], this.config.fileName, {
+			type: 'image/gif',
+			lastModified: Date.now()
+		});
+
+		const url = URL.createObjectURL(blob);
+
+		// Pass frameCount, blob.size, and reductions to the preview modal
+		this._showExportPreviewModal(url, file, frameCount, blob.size, reductions);
+	}
+
+
+
+
+	_showExportPreviewModal(blobUrl, file, frameCount, fileSize, reductions = []) {
+		const modal = document.getElementById('exportPreviewModal');
+		const img = document.getElementById('exportPreviewImage');
+		const instructions = modal.querySelector('.export-preview-instructions');
+		const closeBtn = document.getElementById('closeExportPreviewModal');
+
+		// Stats Elements
+		const exportStats = document.getElementById('exportStats');
+
+		if (exportStats) {
+			const statSize = document.getElementById('exportStatSize');
+			const statFrames = document.getElementById('exportStatFrames');
+
+			// remove .size-warning and .smart-reduction-badge elements from exportStats
+			const previousBadges = exportStats.querySelectorAll('.size-warning, .smart-reduction-badge');
+			previousBadges.forEach(badge => {
+				badge.remove();
+			});
+
+
+			if (statFrames) {
+				statFrames.textContent = `Frames: ${frameCount != null ? frameCount : 'Unknown'}`;
+			}
+
+			// Set stats text
+			if (statSize) {
+				statSize.textContent = `Size: ${fileSize != null ? this._formatBytes(fileSize) : 'Unknown'}`;
+
+				if (fileSize != null) {
+					const warnings = this._getSizeWarningsHTML(fileSize);
+					if (warnings) {
+						exportStats.insertAdjacentHTML('beforeend', warnings);
+					}
+				}
+			}
+
+			// Add smart reduction badge if applied
+			if (reductions.length > 0) {
+				const badge = `<span class="smart-reduction-badge" data-tooltip="Optimized ${reductions.length} layer${reductions.length > 1 ? 's' : ''} for smaller file size">Smart Reduced</span>`;
+				exportStats.insertAdjacentHTML('beforeend', badge);
+			}
+		}
 
 
 
