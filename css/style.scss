@@ -3029,6 +3029,7 @@ body.tool-select {
 	>.gallery-search-section {
 		display: none;
 		padding: 0;
+		    border-bottom: 1px solid var(--color-border);
 
 		&.visible {
 			display: block;
@@ -4706,7 +4707,8 @@ body.tool-select {
 	>.asset-browser-content {
 		flex: 1;
 		padding: var(--spacing-md);
-		    overflow-y: auto;
+		overflow-y: auto;
+		scrollbar-gutter: stable;
 
 
 		>.empty-state,

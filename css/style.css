@@ -2565,6 +2565,7 @@ body.tool-select .sticker-element:not(.selected):hover {
 .section > .gallery-search-section {
   display: none;
   padding: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 .section > .gallery-search-section.visible {
   display: block;
@@ -3743,6 +3744,7 @@ body.tool-select .sticker-element:not(.selected):hover {
   flex: 1;
   padding: var(--spacing-md);
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 .asset-browser > .asset-browser-content > .empty-state,
 .asset-browser > .asset-browser-content > .category-grid,
