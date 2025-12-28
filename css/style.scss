@@ -497,7 +497,13 @@ input,
 textarea,
 button,
 select {
-	font-family: "Google Sans Code", monospace;
+font-family:
+  "Segoe UI",
+  "Tahoma",
+  "Verdana",
+  "Consolas",
+  "Google Sans Code",
+  monospace;
 	font-optical-sizing: auto;
 }
 
@@ -2358,7 +2364,7 @@ body.tool-select {
 	padding: var(--spacing-lg);
 	min-width: 400px;
 	max-width: 500px;
-	z-index: 2000;
+	z-index: 10000;
 	box-shadow: 0 10px var(--icon-size) rgba(0, 0, 0, 0.5);
 	opacity: 0;
 	pointer-events: none;
@@ -4683,17 +4689,14 @@ body.tool-select {
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-bg-secondary);
 
-		>.asset-browser-back {
-			background: transparent;
-			border: none;
-			color: var(--color-text-primary);
-			cursor: pointer;
-			padding: var(--spacing-sm);
-			font-size: var(--font-size-base);
+		>button {
 
-			&:hover {
-				color: var(--color-accent);
-			}
+
+			width: var(--icon-size-sm);
+    		height: var(--icon-size-sm);
+			flex-shrink: 0;
+
+
 
 			&:disabled {
 				cursor: not-allowed;
@@ -4705,6 +4708,11 @@ body.tool-select {
 			font-weight: 600;
 			font-size: var(--font-size-lg);
 			color: var(--color-text-primary);
+
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
 		}
 	}
 
@@ -4729,7 +4737,7 @@ body.tool-select {
 
 		>.category-grid {
 			grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-			gap: var(--spacing-md);
+			gap: var(--spacing-sm);
 
 
 
@@ -4742,7 +4750,7 @@ body.tool-select {
 				transition: all 0.2s ease;
 				display: flex;
 				flex-direction: column;
-				gap: var(--spacing-sm);
+				gap: var(--spacing-xs);
 
 				&:hover {
 					border-color: var(--category-color, var(--color-accent));
@@ -4780,10 +4788,16 @@ body.tool-select {
 					font-weight: 600;
 					color: var(--color-text-primary);
 					text-align: center;
+					font-size: var(--font-size-sm);
+
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
 				}
 
 				>.category-card-count {
-					font-size: var(--font-size-sm);
+					font-size: var(--font-size-xs);
 					color: var(--color-text-secondary);
 					text-align: center;
 				}

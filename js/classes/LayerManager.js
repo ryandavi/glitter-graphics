@@ -257,7 +257,7 @@ addLayer(type = LayerType.GLITTER_FILL) {
 				if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
 					this.editor.setTool(ToolType.COLOR_PICKER);
 				} else {
-					this.editor.setTool(ToolType.SELECT);
+					// this.editor.setTool(ToolType.SELECT);
 				}
 
 				this.editor.updateGlitterSelection();

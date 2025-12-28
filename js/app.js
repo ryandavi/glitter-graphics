@@ -2107,6 +2107,7 @@ setTool(tool) {
 
 	// 1. Update Toolbar Buttons
 	document.querySelectorAll('.toolbar-group button').forEach(btn => {
+		console.log('🔧 Removing active tool button:', btn.id);
 		btn.classList.remove('active');
 	});
 
@@ -2176,6 +2177,8 @@ setTool(tool) {
 		if (colorPickerControls) colorPickerControls.classList.remove('visible');
 
 		const layer = this.layerManager.getActiveLayer();
+
+		console.log(`0Updating context toolbars` + colorPickerControls);
 
 		// Show appropriate toolbar based on current tool and layer state
 		if (this.currentTool === ToolType.ZOOM && zoomControls) {
