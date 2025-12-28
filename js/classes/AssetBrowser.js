@@ -451,17 +451,44 @@ checkAndLoadMore() {
 		const sentinelRect = this.elements.sentinel.getBoundingClientRect();
 		const scrollRect = this.scrollContainer.getBoundingClientRect();
 		
+		// Check if sentinel is within viewport + buffer zone (like our IntersectionObserver rootMargin)
+		const bufferZone = 400; // Load until sentinel is well beyond viewport
+		const isSentinelNearViewport = sentinelRect.top < (scrollRect.bottom + bufferZone);
+		
 		console.log('[Browser] Checking viewport fill:', {
 			sentinelTop: sentinelRect.top,
 			scrollBottom: scrollRect.bottom,
-			currentOffset: this.currentOffset,
-			isVisible: sentinelRect.top < scrollRect.bottom
+			buffer: bufferZone,
+			threshold: scrollRect.bottom + bufferZone,
+			isSentinelNear: isSentinelNearViewport,
+			currentOffset: this.currentOffset
 		});
 		
-		// If sentinel is visible within the scroll container
-		if (sentinelRect.top < scrollRect.bottom) {
-			console.log('[Browser] Loading more to fill viewport...');
-			this.loadMoreItems();
+		// If sentinel is within our buffer zone, keep loading
+		if (isSentinelNearViewport) {
+			console.log('[Browser] Sentinel within buffer zone, loading more...');
+			
+			// Check if there are more items to load based on current state
+			if (this.state === 'CATEGORY_DETAIL') {
+				const allItems = this.getFilteredItems();
+				const categoryItems = allItems.filter(item => item.category === this.currentCategoryId);
+				
+				if (this.currentOffset < categoryItems.length) {
+					this.loadCategoryItems(); // This will recursively call checkAndLoadMore again
+				} else {
+					console.log('[Browser] No more items to load');
+				}
+			} else if (this.state === 'SEARCH_RESULTS') {
+				const allItems = this.getFilteredItems();
+				
+				if (this.currentOffset < allItems.length) {
+					this.loadSearchItems(); // This will recursively call checkAndLoadMore again
+				} else {
+					console.log('[Browser] No more items to load');
+				}
+			}
+		} else {
+			console.log('[Browser] Viewport filled - sentinel well beyond view');
 		}
 	});
 }
