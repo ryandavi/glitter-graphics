@@ -3321,3 +3321,32 @@ glitterFillSelector(x, y, event) {
 	// Make editor globally accessible (optional, useful for debugging)
 	window.editor = editor;
 })();
+
+
+// TEMPORARY: Touch fix test button
+document.getElementById('testTouchFix')?.addEventListener('click', () => {
+	const tests = [];
+	
+	// Check if TouchGestureHandler exists
+	tests.push('TouchGestureHandler: ' + (typeof TouchGestureHandler !== 'undefined' ? '✓' : '✗'));
+	
+	// Check if viewport has touch handler
+	tests.push('Viewport touch: ' + (this.viewport?.touchHandler ? '✓' : '✗'));
+	
+	// Check sticker count
+	const stickers = document.querySelectorAll('.sticker-element');
+	tests.push('Stickers: ' + stickers.length);
+	
+	// Check if stickers have touch handlers
+	let stickerHandlers = 0;
+	stickers.forEach(s => { if (s._touchHandler) stickerHandlers++; });
+	tests.push('Sticker handlers: ' + stickerHandlers + '/' + stickers.length);
+	
+	// Check current tool
+	tests.push('Tool: ' + this.currentTool);
+	
+	// Check mobile mode
+	tests.push('Mobile mode: ' + (this.isMobile ? '✓' : '✗'));
+	
+	alert(tests.join('\n'));
+});
