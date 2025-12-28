@@ -145,7 +145,7 @@ async initBrowser() {
 	async loadContent() {
 		this.content = [];
 		try {
-			const res = await fetch('data/swatches.json');
+			const res = await fetch('data/glitter.json');
 			const json = await res.json();
 
 			json.forEach(config => {

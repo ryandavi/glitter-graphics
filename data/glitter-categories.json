@@ -1,37 +1,44 @@
 [
-  {
-    "id": "Classic Sparkle",
-    "name": "Classic Sparkle",
-    "icon": "images/glitter/sparkle/glitter_crimson.gif",
-    "color": "#ff69b4",
-    "description": "Classic sparkle glitter effects"
-  },
-  {
-    "id": "Ember",
-    "name": "Ember",
-    "icon": "images/glitter/ember/ember_sapphire.gif",
-    "color": "#ff4500",
-    "description": "Ember glow effects"
-  },
-  {
-    "id": "Noise",
-    "name": "Noise",
-    "icon": "images/glitter/noise/noise_yellow.gif",
-    "color": "#888888",
-    "description": "Noise texture effects"
-  },
-  {
-    "id": "Sparkle",
-    "name": "Sparkle",
-    "icon": "images/glitter/sparkle_2/sparkle_green.gif",
-    "color": "#ffd700",
-    "description": "Sparkle effects"
-  },
-  {
-    "id": "Etc",
-    "name": "Etc",
-    "icon": "images/glitter/etc/etc_blue-green.gif",
-    "color": "#9370db",
-    "description": "Other effects"
-  }
+    {
+        "id": "sparkle",
+        "name": "Classic Sparkle",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Classic sparkle glitter effects"
+    },
+    {
+        "id": "ember",
+        "name": "Ember",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Ember-style glitter effects"
+    },
+    {
+        "id": "noise",
+        "name": "Noise",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Noise-based glitter effects"
+    },
+    {
+        "id": "sparkle-2",
+        "name": "Sparkle",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Miscellaneous glitter effects"
+    },
+    {
+        "id": "etc",
+        "name": "Etc",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Temporary/experimental glitter effects"
+    },
+    {
+        "id": "transparent",
+        "name": "transparent",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Transparent Glitter effects"
+    }
 ]

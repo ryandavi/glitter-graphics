@@ -15,7 +15,7 @@ include_once('includes/config.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swatch Editor</title>
+    <title>Glitter Admin</title>
 
     <link rel="stylesheet" href="css/swatch_admin.css">
 
@@ -26,8 +26,8 @@ include_once('includes/config.php');
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2>Swatches</h2>
-                <button class="add-swatch-btn" onclick="app.showAddModal()">+ Add New Swatch</button>
+                <h2>Glitter</h2>
+                <button class="add-swatch-btn" onclick="app.showAddModal()">+ Add New</button>
                 <div style="display: flex; gap: 8px; margin-top: 8px;">
                     <button class="btn btn-secondary" style="flex: 1; padding: 6px; font-size: 12px;" onclick="app.showManageCategoriesModal()">Manage Categories</button>
                     <button class="btn btn-secondary" style="flex: 1; padding: 6px; font-size: 12px;" onclick="app.showManageTagsModal()">Manage Tags</button>
@@ -42,8 +42,8 @@ include_once('includes/config.php');
         <div class="main-content">
             <div class="content-scroll" id="contentScroll">
                 <div class="empty-state" id="emptyState">
-                    <h2>Select a swatch to edit</h2>
-                    <p>Choose a swatch from the list or add a new one.</p>
+                    <h2>Select a glitter to edit</h2>
+                    <p>Choose a glitter from the list or add a new one.</p>
                 </div>
 
                 <div id="editorContent" class="editor-content">
@@ -54,9 +54,11 @@ include_once('includes/config.php');
             <!-- Fixed Footer -->
             <div class="fixed-footer">
                 <span class="status-message" id="statusMessage">Ready</span>
-                <button class="btn btn-secondary" onclick="app.exportJSON()">Save to swatches.json</button>
-                <button class="btn btn-primary" onclick="app.saveSwatch()">Save Changes</button>
-                <button class="btn btn-danger" onclick="app.deleteSwatch()">Delete</button>
+                <div class="footer-actions">
+                    <button class="btn btn-secondary" onclick="app.exportJSON()">Export glitter.json</button>
+                    <button class="btn btn-secondary" onclick="app.exportCategoriesJSON()">Export glitter-categories.json</button>
+                    <button class="btn btn-primary" onclick="app.saveSwatch()">Save Changes</button>
+                </div>
             </div>
         </div>
     </div>
@@ -214,6 +216,129 @@ include_once('includes/config.php');
             </div>
         </div>
     </div>
+
+<!-- Category Management Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Manage Categories</h3>
+                <button class="close-btn" onclick="app.hideCategoryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="category-manager">
+                    <!-- Add New Category Form -->
+                    <div class="category-form-section">
+                        <h4>Add New Category</h4>
+                        <div class="form-row">
+                            <label>
+                                Name:
+                                <input type="text" id="newCategoryName" placeholder="e.g., Classic Sparkle">
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                Slug:
+                                <input type="text" id="newCategorySlug" placeholder="e.g., classic-sparkle">
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                Description:
+                                <textarea id="newCategoryDescription" rows="2" placeholder="Category description"></textarea>
+                            </label>
+                        </div>
+                        <div class="form-row">
+                            <label>
+                                Icon Path:
+                                <input type="text" id="newCategoryIcon" placeholder="images/glitter/sparkle/icon.gif">
+                            </label>
+                        </div>
+
+                        <div class="form-row">
+                            <label>
+                                Color:
+                                <input type="color" id="newCategoryColor" value="#ff69b4">
+                            </label>
+                        </div>
+
+
+                        <div class="form-row">
+                            <label>
+                                Sort Order:
+                                <input type="number" id="newCategorySortOrder" value="0" min="0">
+                            </label>
+                        </div>
+                        <button class="btn btn-primary" onclick="app.addCategory()">Add Category</button>
+                    </div>
+
+                    <!-- Existing Categories List -->
+                    <div class="category-list-section">
+                        <h4>Existing Categories</h4>
+                        <div id="categoriesList" class="categories-list">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div class="modal" id="editCategoryModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Edit Category</h3>
+                <button class="close-btn" onclick="app.hideEditCategoryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editCategoryId">
+                <div class="form-row">
+                    <label>
+                        Name:
+                        <input type="text" id="editCategoryName">
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>
+                        Slug:
+                        <input type="text" id="editCategorySlug">
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>
+                        Description:
+                        <textarea id="editCategoryDescription" rows="2"></textarea>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <label>
+                        Icon Path:
+                        <input type="text" id="editCategoryIcon" placeholder="images/glitter/sparkle/icon.gif">
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <label>
+                        Color:
+                        <input type="color" id="editCategoryColor">
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <label>
+                        Sort Order:
+                        <input type="number" id="editCategorySortOrder" min="0">
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="app.hideEditCategoryModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="app.saveCategory()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     <script>
         const CONFIG = <?php echo json_encode($CONFIG); ?>;

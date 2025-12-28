@@ -8,12 +8,13 @@
                 this.init();
             }
 
-            async init() {
-                await this.loadCategories();
-                await this.loadTags();
-                await this.loadSwatches();
-                this.setupDragAndDrop();
-            }
+async init() {
+    await this.loadCategories();
+    await this.loadTags();
+    await this.loadSwatches();
+    this.setupDragAndDrop();
+    this.setupCategoryFormHelpers(); // Add this line
+}
 
             async loadSwatches() {
                 const response = await fetch('includes/api.php?action=list&_=' + Date.now());
@@ -643,22 +644,39 @@
                 this.showStatus('Analysis applied!', 'success');
             }
 
-            async exportJSON() {
-                this.showStatus('Exporting...');
+async exportCategoriesJSON() {
+    this.showStatus('Exporting categories...');
 
-                const response = await fetch('includes/api.php?action=save_export', {
-                    method: 'POST'
-                });
+    const response = await fetch('includes/api.php?action=save_categories_export&type=glitter', {
+        method: 'POST'
+    });
 
-                const result = await response.json();
+    const result = await response.json();
 
-                if (result.success) {
-                    this.showStatus(`Saved to ${result.path} (${result.bytes} bytes)`, 'success');
-                } else {
-                    alert('Error: ' + result.error);
-                    this.showStatus('Export failed', 'error');
-                }
-            }
+    if (result.success) {
+        this.showStatus(`Categories saved to ${result.path} (${result.bytes} bytes)`, 'success');
+    } else {
+        alert('Error: ' + result.error);
+        this.showStatus('Category export failed', 'error');
+    }
+}
+
+async exportJSON() {
+    this.showStatus('Exporting...');
+
+    const response = await fetch('includes/api.php?action=save_export&type=glitter', {
+        method: 'POST'
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        this.showStatus(`Saved to ${result.path} (${result.bytes} bytes)`, 'success');
+    } else {
+        alert('Error: ' + result.error);
+        this.showStatus('Export failed', 'error');
+    }
+}
 
             showAddModal() {
                 const modal = document.getElementById('addModal');
@@ -940,6 +958,191 @@
                     alert(result.error);
                 }
             }
+
+
+showManageCategoriesModal() {
+    document.getElementById('categoryModal').classList.add('active');
+    this.renderCategoriesList();
+}
+
+hideCategoryModal() {
+    document.getElementById('categoryModal').classList.remove('active');
+}
+
+async renderCategoriesList() {
+    const response = await fetch('includes/api.php?action=categories&type=glitter');
+    const categories = await response.json();
+
+    const container = document.getElementById('categoriesList');
+    
+    if (categories.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No categories yet</p>';
+        return;
+    }
+
+    container.innerHTML = categories.map(cat => `
+        <div class="category-item">
+            ${cat.color ? `<div class="category-color-preview" style="background: ${cat.color}"></div>` : ''}
+            ${cat.icon ? `<img src="../${cat.icon}" class="category-icon-preview" alt="${cat.name}">` : '<div class="category-icon-preview"></div>'}
+            <div class="category-info">
+                <div class="category-name">${cat.name}</div>
+                <div class="category-slug">${cat.slug}</div>
+            </div>
+            <div class="category-actions">
+                <button class="btn btn-secondary" onclick="app.editCategory(${cat.id})">Edit</button>
+                <button class="btn btn-danger" onclick="app.deleteCategory(${cat.id})">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async addCategory() {
+    const data = {
+        name: document.getElementById('newCategoryName').value,
+        slug: document.getElementById('newCategorySlug').value,
+        description: document.getElementById('newCategoryDescription').value,
+        icon: document.getElementById('newCategoryIcon').value,
+        color: document.getElementById('newCategoryColor').value,
+        sort_order: parseInt(document.getElementById('newCategorySortOrder').value)
+    };
+
+    if (!data.name || !data.slug) {
+        alert('Name and slug are required');
+        return;
+    }
+
+    const response = await fetch('includes/api.php?action=add_category&type=glitter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        // Clear form
+        document.getElementById('newCategoryName').value = '';
+        document.getElementById('newCategorySlug').value = '';
+        document.getElementById('newCategoryDescription').value = '';
+        document.getElementById('newCategoryIcon').value = '';
+        document.getElementById('newCategoryColor').value = '#ff69b4';
+        document.getElementById('newCategorySortOrder').value = '0';
+
+        // Reload categories
+        await this.loadCategories();
+        this.renderCategoriesList();
+        this.showStatus('Category added successfully', 'success');
+    } else {
+        alert('Error: ' + result.error);
+    }
+}
+
+async editCategory(id) {
+    const response = await fetch(`includes/api.php?action=categories&type=glitter`);
+    const categories = await response.json();
+    const category = categories.find(c => parseInt(c.id) === parseInt(id)); // Convert both to numbers
+
+    if (!category) {
+        alert('Category not found');
+        console.log('Looking for ID:', id, 'in categories:', categories);
+        return;
+    }
+
+    // Populate edit form
+    document.getElementById('editCategoryId').value = category.id;
+    document.getElementById('editCategoryName').value = category.name;
+    document.getElementById('editCategorySlug').value = category.slug;
+    document.getElementById('editCategoryDescription').value = category.description || '';
+    document.getElementById('editCategoryIcon').value = category.icon || '';
+    document.getElementById('editCategoryColor').value = category.color || '#ff69b4';
+    document.getElementById('editCategorySortOrder').value = category.sort_order || 0;
+
+    // Show modal
+    document.getElementById('editCategoryModal').classList.add('active');
+}
+
+hideEditCategoryModal() {
+    document.getElementById('editCategoryModal').classList.remove('active');
+}
+
+async saveCategory() {
+    const data = {
+        id: parseInt(document.getElementById('editCategoryId').value),
+        name: document.getElementById('editCategoryName').value,
+        slug: document.getElementById('editCategorySlug').value,
+        description: document.getElementById('editCategoryDescription').value,
+        icon: document.getElementById('editCategoryIcon').value,
+        color: document.getElementById('editCategoryColor').value,
+        sort_order: parseInt(document.getElementById('editCategorySortOrder').value)
+    };
+
+    if (!data.name || !data.slug) {
+        alert('Name and slug are required');
+        return;
+    }
+
+    const response = await fetch('includes/api.php?action=update_category&type=glitter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        this.hideEditCategoryModal();
+        await this.loadCategories();
+        this.renderCategoriesList();
+        this.showStatus('Category updated successfully', 'success');
+    } else {
+        alert('Error: ' + result.error);
+    }
+}
+
+async deleteCategory(id) {
+    if (!confirm('Delete this category? This action cannot be undone.')) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('id', id);
+
+    const response = await fetch('includes/api.php?action=delete_category&type=glitter', {
+        method: 'POST',
+        body: formData
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        await this.loadCategories();
+        this.renderCategoriesList();
+        this.showStatus('Category deleted successfully', 'success');
+    } else {
+        alert('Error: ' + result.error);
+    }
+}
+
+
+setupCategoryFormHelpers() {
+    // Auto-generate slug from name
+    const nameInput = document.getElementById('newCategoryName');
+    const slugInput = document.getElementById('newCategorySlug');
+
+    if (nameInput && slugInput) {
+        nameInput.addEventListener('input', () => {
+            // Only auto-generate if slug is empty or was auto-generated
+            const slug = nameInput.value
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+            
+            slugInput.value = slug;
+        });
+    }
+}
+
 
             showManageTagsModal() {
                 this.renderTagList();
