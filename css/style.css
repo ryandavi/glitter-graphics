@@ -1608,6 +1608,10 @@ body.tool-select .sticker-element:not(.selected):hover {
   z-index: 100;
   box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
 }
+.design-panel[data-panel-mode=sticker] > .section > .section-header.glitter-header > .section-header-action {
+  visibility: visible;
+  pointer-events: auto;
+}
 
 .glitter-search {
   display: flex;
@@ -2626,7 +2630,7 @@ body.tool-select .sticker-element:not(.selected):hover {
 .asset-options .asset-category + .asset-category {
   margin-top: var(--spacing-xl);
 }
-.asset-options .asset-category > .category-title {
+.asset-options .asset-category .category-title {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   font-weight: 600;
@@ -2634,12 +2638,12 @@ body.tool-select .sticker-element:not(.selected):hover {
   text-transform: uppercase;
   margin-bottom: var(--spacing-md);
 }
-.asset-options .asset-category > .asset-grid {
+.asset-options .asset-grid {
   display: grid;
   grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
   gap: var(--spacing-sm);
 }
-.asset-options .asset-category > .asset-grid > .asset-option {
+.asset-options .asset-grid > .asset-option {
   aspect-ratio: 1;
   outline: 2px solid transparent;
   outline-offset: 2px;
@@ -2649,25 +2653,25 @@ body.tool-select .sticker-element:not(.selected):hover {
   overflow: hidden;
   transform: translateZ(0);
 }
-.asset-options .asset-category > .asset-grid > .asset-option.highlight {
+.asset-options .asset-grid > .asset-option.highlight {
   outline-color: var(--color-accent);
   animation: elementPulse 0.5s ease-in-out 2;
 }
-.asset-options .asset-category > .asset-grid > .asset-option:hover {
+.asset-options .asset-grid > .asset-option:hover {
   outline-color: var(--color-border-hover);
 }
-.asset-options .asset-category > .asset-grid > .asset-option.selected {
+.asset-options .asset-grid > .asset-option.selected {
   outline-color: var(--color-accent);
 }
-.asset-options .asset-category > .asset-grid > .asset-option.disabled {
+.asset-options .asset-grid > .asset-option.disabled {
   cursor: not-allowed;
   pointer-events: none;
   opacity: 0.5;
 }
-.asset-options .asset-category > .asset-grid > .asset-option.disabled:hover {
+.asset-options .asset-grid > .asset-option.disabled:hover {
   outline-color: transparent;
 }
-.asset-options .asset-category > .asset-grid > .asset-option > img {
+.asset-options .asset-grid > .asset-option > img {
   width: 100%;
   height: 100%;
   -o-object-fit: cover;
@@ -2680,18 +2684,18 @@ body.tool-select .sticker-element:not(.selected):hover {
   -webkit-user-select: none;
   -ms-user-select: none;
 }
-.asset-options .asset-category > .asset-grid > .asset-option.pixelated img {
+.asset-options .asset-grid > .asset-option.pixelated img {
   image-rendering: pixelated;
 }
-.asset-options.stickers-options .asset-category > .asset-grid > .asset-option {
+.asset-options.stickers-options .asset-grid > .asset-option {
   background: var(--color-bg-tertiary);
 }
-.asset-options.stickers-options .asset-category > .asset-grid > .asset-option img {
+.asset-options.stickers-options .asset-grid > .asset-option img {
   -o-object-fit: contain;
      object-fit: contain;
   padding: var(--spacing-xs);
 }
-.asset-options.stickers-options .asset-category > .asset-grid > .asset-option.animated::after {
+.asset-options.stickers-options .asset-grid > .asset-option.animated::after {
   content: "▶";
   position: absolute;
   bottom: 2px;
@@ -3277,14 +3281,6 @@ body.tool-select .sticker-element:not(.selected):hover {
   flex-direction: column;
 }
 
-.gallery-header-actions {
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--color-border);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
 .mobile-bottom-nav,
 .mobile-top-nav,
 .mobile-settings-drawer {
@@ -3700,4 +3696,141 @@ body.tool-select .sticker-element:not(.selected):hover {
   .mobile-only {
     display: block !important;
   }
+}
+.asset-options[data-browser-state=category-list] .asset-browser-header {
+  display: none;
+}
+
+/* ===== ASSET BROWSER ===== */
+.asset-browser {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+.asset-browser:not(.visible) {
+  display: none;
+}
+.asset-browser > .asset-browser-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+.asset-browser > .asset-browser-header > .asset-browser-back {
+  background: transparent;
+  border: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-base);
+}
+.asset-browser > .asset-browser-header > .asset-browser-back:hover {
+  color: var(--color-accent);
+}
+.asset-browser > .asset-browser-header > .asset-browser-back:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.asset-browser > .asset-browser-header > .asset-browser-title {
+  font-weight: 600;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+.asset-browser > .asset-browser-content {
+  flex: 1;
+  padding: var(--spacing-md);
+  overflow-y: auto;
+}
+.asset-browser > .asset-browser-content > .empty-state,
+.asset-browser > .asset-browser-content > .category-grid,
+.asset-browser > .asset-browser-content > .asset-grid {
+  display: none;
+}
+.asset-browser > .asset-browser-content > .empty-state.visible,
+.asset-browser > .asset-browser-content > .category-grid.visible,
+.asset-browser > .asset-browser-content > .asset-grid.visible {
+  display: grid;
+}
+.asset-browser > .asset-browser-content > .category-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+}
+.asset-browser > .asset-browser-content > .category-grid > .category-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.asset-browser > .asset-browser-content > .category-grid > .category-card:hover {
+  border-color: var(--category-color, var(--color-accent));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-image {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-image > img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: contain;
+     object-fit: contain;
+  image-rendering: pixelated;
+}
+.asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-image.category-card-glitter-bg {
+  background-repeat: repeat;
+  background-size: auto;
+  image-rendering: pixelated;
+}
+.asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+.asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+.asset-browser > .asset-browser-content > .search-results-container {
+  display: none;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+.asset-browser > .asset-browser-content > .search-results-container.visible {
+  display: flex;
+}
+.asset-browser > .asset-browser-content > .search-results-container > .category-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.asset-browser > .asset-browser-content > .search-results-container > .category-section > .category-section-header {
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  padding: var(--spacing-md) 0 var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-md);
+}
+.asset-browser > .asset-browser-content > .search-results-container > .category-section > .category-section-header:not(:first-child) {
+  margin-top: var(--spacing-lg);
+}
+.asset-browser > .asset-browser-sentinel {
+  height: 1px;
+  visibility: hidden;
 }/*# sourceMappingURL=style.css.map */

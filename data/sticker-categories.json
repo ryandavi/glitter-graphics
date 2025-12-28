@@ -1,0 +1,47 @@
+[
+
+  {
+    "id": "User Uploads",
+    "name": "User Uploads",
+    "icon": "/stickers/user-upload-icon.png",
+    "color": "#00bcd4",
+    "description": "Your uploaded stickers"
+  },
+
+
+  {
+    "id": "animal",
+    "name": "Animals",
+    "icon": "images/stickers/animal/butterfly_rainbow-glitter.gif",
+    "color": "#8b4513",
+    "description": "Animal stickers"
+  },
+  {
+    "id": "character",
+    "name": "Characters",
+    "icon": "images/stickers/character/star_dance.gif",
+    "color": "#ff6b6b",
+    "description": "Character stickers"
+  },
+  {
+    "id": "decorative",
+    "name": "Decorative",
+    "icon": "images/stickers/decorative/rainbow_glitter.gif",
+    "color": "#9370db",
+    "description": "Decorative elements"
+  },
+  {
+    "id": "flower",
+    "name": "Flowers",
+    "icon": "images/stickers/flower/rose_rotate.gif",
+    "color": "#98fb98",
+    "description": "Flower stickers"
+  },
+  {
+    "id": "logo",
+    "name": "Logos",
+    "icon": "images/stickers/logo/playboy_silver-glitter.gif",
+    "color": "#4169e1",
+    "description": "Logo stickers"
+  }
+]

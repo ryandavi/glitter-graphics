@@ -456,35 +456,47 @@ class GlitterEditor {
 			}
 		});
 
-		// 3. Determine what to show
-		let showIds = [];
+// 3. Determine what to show
+let showIds = [];
+let panelMode = ''; // ADD THIS LINE
 
-		// CASE 1: No Image Loaded (Show Welcome)
-		if (!this.originalImage) {
-			showIds = ['welcomeSection'];
-		}
-		// CASE 2: Image Loaded, but No Layer Selected
-		else if (!layer) {
-			showIds = ['noLayerSettingsSection'];
-		}
-		// CASE 3: Base Layer Selected
-		else if (layer.type === LayerType.BASE_IMAGE) {
-			showIds = ['baseLayerSettingsSection'];
-		}
-		// CASE 4: Glitter Layer
-		else if (layer.type === LayerType.GLITTER_FILL) {
-			showIds = ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'];
-		}
-		// CASE 5: Sticker Layer
-		else if (layer.type === LayerType.STICKER) {
-			showIds = ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'];
-		}
+// CASE 1: No Image Loaded (Show Welcome)
+if (!this.originalImage) {
+	showIds = ['welcomeSection'];
+	panelMode = 'welcome'; // ADD THIS LINE
+}
+// CASE 2: Image Loaded, but No Layer Selected
+else if (!layer) {
+	showIds = ['noLayerSettingsSection'];
+	panelMode = 'no-layer'; // ADD THIS LINE
+}
+// CASE 3: Base Layer Selected
+else if (layer.type === LayerType.BASE_IMAGE) {
+	showIds = ['baseLayerSettingsSection'];
+	panelMode = 'base-layer'; // ADD THIS LINE
+}
+// CASE 4: Glitter Layer
+else if (layer.type === LayerType.GLITTER_FILL) {
+	showIds = ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'];
+	panelMode = 'glitter'; // ADD THIS LINE
+}
+// CASE 5: Sticker Layer
+else if (layer.type === LayerType.STICKER) {
+	showIds = ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'];
+	panelMode = 'sticker'; // ADD THIS LINE
+}
 
-		// 4. Show the specific sections
-		showIds.forEach(id => {
-			const el = document.getElementById(id);
-			if (el) el.classList.add('visible');
-		});
+// 3.5 SET DATA ATTRIBUTE - ADD THIS BLOCK
+const designPanel = document.getElementById('designPanel');
+if (designPanel) {
+	designPanel.dataset.panelMode = panelMode;
+}
+
+// 4. Show the specific sections
+showIds.forEach(id => {
+	const el = document.getElementById(id);
+	if (el) el.classList.add('visible');
+});
 	}
 
 	updateZoomUI() {

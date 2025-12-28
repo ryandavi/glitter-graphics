@@ -10,7 +10,26 @@ class StickerManager extends ContentManager {
 		Object.assign(this.activeFilters, {
 			vibes: new Set()
 		});
+
+		this.useBrowser = true;
 	}
+
+async initBrowser() {
+	this.browser = new AssetBrowser(this, {
+		browser: 'stickerBrowser',
+		backBtn: 'stickerBrowserBack',
+		title: 'stickerBrowserTitle',
+		content: 'stickerBrowserContent',
+		categoryGrid: 'stickerCategoryGrid',
+		searchResults: 'stickerSearchResults',
+		itemGrid: 'stickerItemGrid',
+		sentinel: 'stickerBrowserSentinel',
+		emptyState: 'stickerBrowserEmpty',
+		emptyText: 'stickerBrowserEmptyText'
+	}, 'Stickers');
+	
+	await this.browser.init('data/sticker-categories.json');
+}
 
 
 	getLayerType() {
@@ -192,17 +211,26 @@ class StickerManager extends ContentManager {
 			error: null
 		};
 
-		this.userContent.push(userSticker);
-		this.renderPicker();
+this.userContent.push(userSticker);
+
+if (this.browser) {
+	this.browser.refresh();
+} else {
+	this.renderPicker();
+}
 
 		// 4. Process asynchronously
 		try {
 			await this.processUploadedSticker(userSticker, file);
 		} catch (error) {
-			console.error('Failed to process uploaded sticker:', error);
-			userSticker.error = error.message;
-			userSticker.isLoading = false;
-			this.renderPicker();
+userSticker.error = error.message;
+userSticker.isLoading = false;
+
+if (this.browser) {
+	this.browser.refresh();
+} else {
+	this.renderPicker();
+}
 		}
 
 		return userSticker;
@@ -267,8 +295,14 @@ class StickerManager extends ContentManager {
 		userSticker.hasTransparency = this.detectActualTransparency(imageData);
 
 		// Mark as loaded
-		userSticker.isLoading = false;
-		this.renderPicker();
+userSticker.isLoading = false;
+
+if (this.browser) {
+	// Navigate to User Uploads category
+	this.browser.setState('CATEGORY_DETAIL', 'User Uploads');
+} else {
+	this.renderPicker();
+}
 
 		console.log('Processed uploaded sticker:', userSticker);
 	}
@@ -357,56 +391,56 @@ class StickerManager extends ContentManager {
 		};
 	}
 
-async addStickerToCanvas(stickerId) {
-    if (!this.editor.originalImage) {
-        this.editor.showError('Please load an image first');
-        return;
-    }
+	async addStickerToCanvas(stickerId) {
+		if (!this.editor.originalImage) {
+			this.editor.showError('Please load an image first');
+			return;
+		}
 
-    const activeLayer = this.editor.layerManager.getActiveLayer();
-    const stickerInfo = this.getItemById(stickerId);
+		const activeLayer = this.editor.layerManager.getActiveLayer();
+		const stickerInfo = this.getItemById(stickerId);
 
-    if (!stickerInfo) return;
+		if (!stickerInfo) return;
 
-    // LOGIC: If active layer is a STICKER layer, replace it.
-    // Otherwise, create a NEW layer.
-    if (activeLayer && activeLayer.type === LayerType.STICKER) {
-        // Replace the sticker in the current layer
-        activeLayer.name = stickerInfo.name;
-        activeLayer.stickerSourceId = stickerInfo.id;
+		// LOGIC: If active layer is a STICKER layer, replace it.
+		// Otherwise, create a NEW layer.
+		if (activeLayer && activeLayer.type === LayerType.STICKER) {
+			// Replace the sticker in the current layer
+			activeLayer.name = stickerInfo.name;
+			activeLayer.stickerSourceId = stickerInfo.id;
 
-        // Update data
-        activeLayer.stickerData.isEmpty = false;
-        activeLayer.stickerData.url = stickerInfo.url;
-        activeLayer.stickerData.name = stickerInfo.name;
-        activeLayer.stickerData.source = stickerInfo.source;
-        activeLayer.stickerData.width = stickerInfo.width;
-        activeLayer.stickerData.height = stickerInfo.height;
-        activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+			// Update data
+			activeLayer.stickerData.isEmpty = false;
+			activeLayer.stickerData.url = stickerInfo.url;
+			activeLayer.stickerData.name = stickerInfo.name;
+			activeLayer.stickerData.source = stickerInfo.source;
+			activeLayer.stickerData.width = stickerInfo.width;
+			activeLayer.stickerData.height = stickerInfo.height;
+			activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
 
-        // Clear cached frame data when changing sticker
-        activeLayer.stickerData.frames = null;
-        activeLayer.stickerData.staticImageData = null;
-        activeLayer.stickerData.isFlattened = false;
+			// Clear cached frame data when changing sticker
+			activeLayer.stickerData.frames = null;
+			activeLayer.stickerData.staticImageData = null;
+			activeLayer.stickerData.isFlattened = false;
 
-        // Render
-        this.renderLayer(activeLayer);
-        this.editor.layerManager.renderLayersList();
-        this.editor.updateStickerSelection();
-        this.editor.updateStatus('Sticker replaced');
-        this.editor.saveState();
-        
-        // Dispatch layerChanged event (consistent with selectGlitter)
-        window.dispatchEvent(new CustomEvent('layerChanged'));
+			// Render
+			this.renderLayer(activeLayer);
+			this.editor.layerManager.renderLayersList();
+			this.editor.updateStickerSelection();
+			this.editor.updateStatus('Sticker replaced');
+			this.editor.saveState();
 
-    } else {
-        // Create NEW layer (when on glitter layer or base layer)
-        await this.createStickerLayer(stickerId);
-        this.editor.updateStickerSelection();
-        this.editor.updateStatus('Sticker added');
-        // layerChanged is already dispatched by setActiveLayer() in createStickerLayer()
-    }
-}
+			// Dispatch layerChanged event (consistent with selectGlitter)
+			window.dispatchEvent(new CustomEvent('layerChanged'));
+
+		} else {
+			// Create NEW layer (when on glitter layer or base layer)
+			await this.createStickerLayer(stickerId);
+			this.editor.updateStickerSelection();
+			this.editor.updateStatus('Sticker added');
+			// layerChanged is already dispatched by setActiveLayer() in createStickerLayer()
+		}
+	}
 
 	// ===== RENDERING =====
 
@@ -448,8 +482,8 @@ async addStickerToCanvas(stickerId) {
 		// Attach drag listeners
 		this.attachDragListeners(element, layer.id);
 
-// Update selection highlight for this layer if it's active
-this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
+		// Update selection highlight for this layer if it's active
+		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
 
 	}
 
@@ -591,125 +625,125 @@ this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activ
 		this.attachDragListeners(clonedElement, clonedLayer.id);
 	}
 
-setupStickerTouchGestures(element, layerId) {
-	// Remove any existing gesture handler
-	if (element._touchHandler) {
-		element._touchHandler.destroy();
-	}
-	
-	const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-	if (!layer || layer.type !== LayerType.STICKER) return;
-	
-	const viewport = this.editor.viewport;
-	let startTransform = null;
-	
-	const handler = new TouchGestureHandler(element, {
-		// CRITICAL: Only stop propagation if sticker is selected
-		preventPropagation: true,
-		
-		onGestureStart: (gestureType) => {
-
-			// Don't select stickers when using pan or zoom tools
-			if (this.editor.currentTool === ToolType.HAND || this.editor.currentTool === ToolType.ZOOM) {
-				return;
-			}
-
-			const isSelected = this.editor.layerManager.activeLayerId === layerId;
-			
-			// If not selected, just select it (don't transform yet)
-			if (!isSelected) {
-				this.editor.layerManager.setActiveLayer(layerId);
-				return;
-			}
-			
-			// Store initial transform state only if selected
-			startTransform = {
-				scale: { ...layer.stickerData.transform.scale },
-				rotation: layer.stickerData.transform.rotation,
-				position: { ...layer.stickerData.transform.position }
-			};
-		},
-		
-		onSinglePan: (deltaX, deltaY, touchX, touchY) => {
-			// Only pan if already selected
-			const isSelected = this.editor.layerManager.activeLayerId === layerId;
-			if (!isSelected || !startTransform) return;
-			
-			// Convert screen delta to canvas coordinates
-			const canvasDeltaX = deltaX / viewport.currentZoom;
-			const canvasDeltaY = deltaY / viewport.currentZoom;
-			
-			this.updateTransform(layerId, {
-				position: {
-					x: layer.stickerData.transform.position.x + canvasDeltaX,
-					y: layer.stickerData.transform.position.y + canvasDeltaY
-				}
-			});
-			
-			// Update settings UI
-			this.editor.loadStickerSettings(layer);
-		},
-		
-		onPinchZoom: (scale, centerX, centerY) => {
-			// Only scale if already selected
-			const isSelected = this.editor.layerManager.activeLayerId === layerId;
-			if (!isSelected || !startTransform) return;
-			
-			// Scale the sticker (respecting proportional scale)
-			const currentScaleX = layer.stickerData.transform.scale.x;
-			const currentScaleY = layer.stickerData.transform.scale.y;
-			
-			const newScaleX = currentScaleX * scale;
-			const newScaleY = layer.stickerData.transform.proportionalScale 
-				? newScaleX 
-				: currentScaleY * scale;
-			
-			// Clamp scale values
-			const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
-			const clampedScaleY = Math.max(10, Math.min(500, newScaleY));
-			
-			this.updateTransform(layerId, {
-				scale: {
-					x: clampedScaleX,
-					y: clampedScaleY
-				}
-			});
-			
-			// Update settings UI
-			this.editor.loadStickerSettings(layer);
-		},
-		
-		onRotate: (angleDelta, centerX, centerY) => {
-			// Only rotate if already selected
-			const isSelected = this.editor.layerManager.activeLayerId === layerId;
-			if (!isSelected || !startTransform) return;
-			
-			// Update rotation incrementally
-			const newRotation = (layer.stickerData.transform.rotation + angleDelta) % 360;
-			
-			this.updateTransform(layerId, {
-				rotation: newRotation
-			});
-			
-			// Update settings UI
-			this.editor.loadStickerSettings(layer);
-		},
-		
-		onGestureEnd: () => {
-			// Save state when all touches are released (only if we were transforming)
-			if (startTransform) {
-				this.editor.saveState();
-			}
-			startTransform = null;
+	setupStickerTouchGestures(element, layerId) {
+		// Remove any existing gesture handler
+		if (element._touchHandler) {
+			element._touchHandler.destroy();
 		}
-	});
-	
-	// Store handler on element for cleanup
-	element._touchHandler = handler;
-	
-	// Ensure proper touch handling
-	element.style.touchAction = 'none';
-}
+
+		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+		if (!layer || layer.type !== LayerType.STICKER) return;
+
+		const viewport = this.editor.viewport;
+		let startTransform = null;
+
+		const handler = new TouchGestureHandler(element, {
+			// CRITICAL: Only stop propagation if sticker is selected
+			preventPropagation: true,
+
+			onGestureStart: (gestureType) => {
+
+				// Don't select stickers when using pan or zoom tools
+				if (this.editor.currentTool === ToolType.HAND || this.editor.currentTool === ToolType.ZOOM) {
+					return;
+				}
+
+				const isSelected = this.editor.layerManager.activeLayerId === layerId;
+
+				// If not selected, just select it (don't transform yet)
+				if (!isSelected) {
+					this.editor.layerManager.setActiveLayer(layerId);
+					return;
+				}
+
+				// Store initial transform state only if selected
+				startTransform = {
+					scale: { ...layer.stickerData.transform.scale },
+					rotation: layer.stickerData.transform.rotation,
+					position: { ...layer.stickerData.transform.position }
+				};
+			},
+
+			onSinglePan: (deltaX, deltaY, touchX, touchY) => {
+				// Only pan if already selected
+				const isSelected = this.editor.layerManager.activeLayerId === layerId;
+				if (!isSelected || !startTransform) return;
+
+				// Convert screen delta to canvas coordinates
+				const canvasDeltaX = deltaX / viewport.currentZoom;
+				const canvasDeltaY = deltaY / viewport.currentZoom;
+
+				this.updateTransform(layerId, {
+					position: {
+						x: layer.stickerData.transform.position.x + canvasDeltaX,
+						y: layer.stickerData.transform.position.y + canvasDeltaY
+					}
+				});
+
+				// Update settings UI
+				this.editor.loadStickerSettings(layer);
+			},
+
+			onPinchZoom: (scale, centerX, centerY) => {
+				// Only scale if already selected
+				const isSelected = this.editor.layerManager.activeLayerId === layerId;
+				if (!isSelected || !startTransform) return;
+
+				// Scale the sticker (respecting proportional scale)
+				const currentScaleX = layer.stickerData.transform.scale.x;
+				const currentScaleY = layer.stickerData.transform.scale.y;
+
+				const newScaleX = currentScaleX * scale;
+				const newScaleY = layer.stickerData.transform.proportionalScale
+					? newScaleX
+					: currentScaleY * scale;
+
+				// Clamp scale values
+				const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
+				const clampedScaleY = Math.max(10, Math.min(500, newScaleY));
+
+				this.updateTransform(layerId, {
+					scale: {
+						x: clampedScaleX,
+						y: clampedScaleY
+					}
+				});
+
+				// Update settings UI
+				this.editor.loadStickerSettings(layer);
+			},
+
+			onRotate: (angleDelta, centerX, centerY) => {
+				// Only rotate if already selected
+				const isSelected = this.editor.layerManager.activeLayerId === layerId;
+				if (!isSelected || !startTransform) return;
+
+				// Update rotation incrementally
+				const newRotation = (layer.stickerData.transform.rotation + angleDelta) % 360;
+
+				this.updateTransform(layerId, {
+					rotation: newRotation
+				});
+
+				// Update settings UI
+				this.editor.loadStickerSettings(layer);
+			},
+
+			onGestureEnd: () => {
+				// Save state when all touches are released (only if we were transforming)
+				if (startTransform) {
+					this.editor.saveState();
+				}
+				startTransform = null;
+			}
+		});
+
+		// Store handler on element for cleanup
+		element._touchHandler = handler;
+
+		// Ensure proper touch handling
+		element.style.touchAction = 'none';
+	}
 
 	attachDragListeners(element, layerId) {
 		// MOUSE DRAG (existing code - keep as is)
@@ -819,18 +853,18 @@ setupStickerTouchGestures(element, layerId) {
 
 	// ===== SERIALIZATION =====
 
-serializeSticker(layer) {
-	// For undo/redo - exclude non-serializable data
-	return {
-		...layer,
-		stickerSourceId: layer.stickerSourceId, // CRITICAL: Must preserve this
-		stickerData: {
-			...layer.stickerData,
-			element: null,    // Can't serialize DOM
-			frames: null      // Don't need frames for undo/redo - reload from URL on restore
-		}
-	};
-}
+	serializeSticker(layer) {
+		// For undo/redo - exclude non-serializable data
+		return {
+			...layer,
+			stickerSourceId: layer.stickerSourceId, // CRITICAL: Must preserve this
+			stickerData: {
+				...layer.stickerData,
+				element: null,    // Can't serialize DOM
+				frames: null      // Don't need frames for undo/redo - reload from URL on restore
+			}
+		};
+	}
 
 	async deserializeSticker(layerData) {
 		// Restore sticker layer from serialized data

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "Classic Sparkle",
+    "name": "Classic Sparkle",
+    "icon": "images/glitter/sparkle/glitter_crimson.gif",
+    "color": "#ff69b4",
+    "description": "Classic sparkle glitter effects"
+  },
+  {
+    "id": "Ember",
+    "name": "Ember",
+    "icon": "images/glitter/ember/ember_sapphire.gif",
+    "color": "#ff4500",
+    "description": "Ember glow effects"
+  },
+  {
+    "id": "Noise",
+    "name": "Noise",
+    "icon": "images/glitter/noise/noise_yellow.gif",
+    "color": "#888888",
+    "description": "Noise texture effects"
+  },
+  {
+    "id": "Sparkle",
+    "name": "Sparkle",
+    "icon": "images/glitter/sparkle_2/sparkle_green.gif",
+    "color": "#ffd700",
+    "description": "Sparkle effects"
+  },
+  {
+    "id": "Etc",
+    "name": "Etc",
+    "icon": "images/glitter/etc/etc_blue-green.gif",
+    "color": "#9370db",
+    "description": "Other effects"
+  }
+]

@@ -11,7 +11,28 @@ class GlitterManager extends ContentManager {
 			tones: new Set(),
 			special: new Set()
 		});
+
+    // ADD THIS:
+    this.useBrowser = true;
+
 	}
+
+async initBrowser() {
+	this.browser = new AssetBrowser(this, {
+		browser: 'glitterBrowser',
+		backBtn: 'glitterBrowserBack',
+		title: 'glitterBrowserTitle',
+		content: 'glitterBrowserContent',
+		categoryGrid: 'glitterCategoryGrid',
+		searchResults: 'glitterSearchResults',
+		itemGrid: 'glitterItemGrid',
+		sentinel: 'glitterBrowserSentinel',
+		emptyState: 'glitterBrowserEmpty',
+		emptyText: 'glitterBrowserEmptyText'
+	}, 'Glitter');
+	
+	await this.browser.init('data/glitter-categories.json');
+}
 
 	getLayerType() {
 		return LayerType.GLITTER_FILL;

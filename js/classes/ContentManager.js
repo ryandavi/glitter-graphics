@@ -10,6 +10,10 @@ class ContentManager {
 		this.content = [];
 		this.userContent = [];
 
+		// ADD THIS:
+		this.browser = null;
+		this.useBrowser = false; // Toggle for browser mode
+
 		// Base filter state - children can extend this
 		this.activeFilters = {
 			search: '',
@@ -35,14 +39,23 @@ class ContentManager {
 		this.layerElements = new Map(); // layerId -> HTMLElement
 	}
 
-	async init() {
-		this.setupUI(); // Must be implemented by child
-		this.setupEventListeners(); // Base + child-specific
-		await this.loadContent(); // Must be implemented by child
-		this.renderPicker(); // Must be implemented by child
-	}
+async init() {
+    this.setupUI();
+    this.setupEventListeners();
+    await this.loadContent();
+    
+    // Initialize browser if enabled
+    if (this.useBrowser) {
+        await this.initBrowser();
+    } else {
+        this.renderPicker();
+    }
+}
 
-
+async initBrowser() {
+    // Must be implemented by child with proper element IDs
+    throw new Error('initBrowser() must be implemented by child class');
+}
 
 	// ===== UI SETUP (must be overridden by child) =====
 	setupUI() {
@@ -92,28 +105,31 @@ class ContentManager {
 		return null;
 	}
 
-	scrollToContent(contentId) {
+scrollToContent(contentId) {
+	if (this.browser) {
+		// Use browser's navigation
+		this.browser.navigateToItem(contentId);
+	} else {
+		// Fallback to old method
 		if (!this.ui.gridContainer) return;
 
-		// Find the asset option by data-id within this manager's grid
 		const assetOption = this.ui.gridContainer.querySelector(`.asset-option[data-id="${contentId}"]`);
 		if (!assetOption) {
 			console.warn(`${this.getLayerType?.() ?? 'Layer'} with id ${contentId} not found in picker`);
 			return;
 		}
 
-		// Scroll into view smoothly
 		assetOption.scrollIntoView({
 			behavior: 'smooth',
 			block: 'center'
 		});
 
-		// Brief highlight effect
 		assetOption.classList.add('highlight');
 		setTimeout(() => {
 			assetOption.classList.remove('highlight');
 		}, 1000);
 	}
+}
 
 
 	populateCategoryChips() {
@@ -195,7 +211,11 @@ class ContentManager {
 		}
 
 		// Re-render and update UI
-		this.renderPicker();
+		if (this.browser) {
+			this.browser.refresh();
+		} else {
+			this.renderPicker();
+		}
 		this.updateClearFiltersButton();
 	}
 
@@ -301,7 +321,13 @@ class ContentManager {
 
 	handleSearch(query) {
 		this.activeFilters.search = query.toLowerCase().trim();
-		this.renderPicker();
+
+		if (this.browser) {
+			this.browser.handleSearch(query);
+		} else {
+			this.renderPicker();
+		}
+
 		this.updateClearFiltersButton();
 	}
 
@@ -345,7 +371,6 @@ class ContentManager {
 		}
 
 		// Name
-
 		if (this.ui.searchNameOnly) this.ui.searchNameOnly.checked = false;
 
 		// Clear search input
@@ -359,8 +384,13 @@ class ContentManager {
 				chip.classList.remove('active');
 			});
 		}
+
 		// Re-render and update button state
-		this.renderPicker();
+		if (this.browser) {
+			this.browser.setState('CATEGORY_LIST'); // CHANGED: Reset to category list
+		} else {
+			this.renderPicker();
+		}
 		this.updateClearFiltersButton();
 
 		// Close filter drawer
@@ -371,7 +401,6 @@ class ContentManager {
 			this.ui.filterToggle.classList.remove('active');
 		}
 	}
-
 	// ===== UTILITY METHODS =====
 
 	getItemById(id) {
