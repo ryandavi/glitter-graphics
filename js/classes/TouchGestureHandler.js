@@ -76,17 +76,29 @@ handleTouchStart(e) {
 		e.preventDefault();
 	}
 
+	// NEW: If this is a viewport handler and touch started on a sticker, ignore it
+	if (!this.preventPropagation && this.callbacks.capturePhase) {
+		// Check if any touch is starting on a sticker element
+		for (let touch of e.changedTouches) {
+			const target = document.elementFromPoint(touch.clientX, touch.clientY);
+			if (target && target.closest('.sticker-element')) {
+				console.log('🌍 VIEWPORT: Ignoring touch on sticker element');
+				return; // Don't process this touch at all
+			}
+		}
+	}
+
 	// Add all new touches to our tracking
 	for (let touch of e.changedTouches) {
-			this.touches.set(touch.identifier, {
-				x: touch.clientX,
-				y: touch.clientY,
-				startX: touch.clientX,
-				startY: touch.clientY,
-				prevX: touch.clientX,
-				prevY: touch.clientY
-			});
-		}
+		this.touches.set(touch.identifier, {
+			x: touch.clientX,
+			y: touch.clientY,
+			startX: touch.clientX,
+			startY: touch.clientY,
+			prevX: touch.clientX,
+			prevY: touch.clientY
+		});
+	}
 
 		this.updateStableTouchCount();
 		const touchCount = this.stableTouchCount;

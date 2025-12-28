@@ -634,6 +634,8 @@ setupStickerTouchGestures(element, layerId) {
 	const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
 	if (!layer || layer.type !== LayerType.STICKER) return;
 
+	console.log('🎨 STICKER: Setting up touch handler for layer', layerId);
+
 	const viewport = this.editor.viewport;
 	let startTransform = null;
 
@@ -642,12 +644,16 @@ setupStickerTouchGestures(element, layerId) {
 		preventPropagation: true,
 
 		onGestureStart: (gestureType) => {
+			console.log('🎨 STICKER: Gesture started -', gestureType, 'layer:', layerId);
+			
 			// Don't select stickers when using pan or zoom tools
 			if (this.editor.currentTool === ToolType.HAND || this.editor.currentTool === ToolType.ZOOM) {
+				console.log('🎨 STICKER: Ignoring - wrong tool');
 				return;
 			}
 
 			const isSelected = this.editor.layerManager.activeLayerId === layerId;
+			console.log('🎨 STICKER: Was selected?', isSelected);
 
 			// ALWAYS store transform state on gesture start
 			// This ensures first touch will have transform data
@@ -659,14 +665,20 @@ setupStickerTouchGestures(element, layerId) {
 
 			// If not selected, select it (but transform is already stored)
 			if (!isSelected) {
+				console.log('🎨 STICKER: Selecting layer', layerId);
 				this.editor.layerManager.setActiveLayer(layerId);
 			}
 		},
 
 		onSinglePan: (deltaX, deltaY, touchX, touchY) => {
+			console.log('🎨 STICKER: Single pan', deltaX, deltaY);
+			
 			// Only pan if already selected
 			const isSelected = this.editor.layerManager.activeLayerId === layerId;
-			if (!isSelected || !startTransform) return;
+			if (!isSelected || !startTransform) {
+				console.log('🎨 STICKER: Ignoring pan - not selected or no transform');
+				return;
+			}
 
 			// Convert screen delta to canvas coordinates
 			const canvasDeltaX = deltaX / viewport.currentZoom;
@@ -684,6 +696,8 @@ setupStickerTouchGestures(element, layerId) {
 		},
 
 		onPinchZoom: (scale, centerX, centerY) => {
+			console.log('🎨 STICKER: Pinch zoom', scale);
+			
 			// Only scale if already selected
 			const isSelected = this.editor.layerManager.activeLayerId === layerId;
 			if (!isSelected || !startTransform) return;
@@ -713,6 +727,8 @@ setupStickerTouchGestures(element, layerId) {
 		},
 
 		onRotate: (angleDelta, centerX, centerY) => {
+			console.log('🎨 STICKER: Rotate', angleDelta);
+			
 			// Only rotate if already selected
 			const isSelected = this.editor.layerManager.activeLayerId === layerId;
 			if (!isSelected || !startTransform) return;
@@ -729,6 +745,7 @@ setupStickerTouchGestures(element, layerId) {
 		},
 
 		onGestureEnd: () => {
+			console.log('🎨 STICKER: Gesture ended');
 			// Save state when all touches are released (only if we were transforming)
 			if (startTransform) {
 				this.editor.saveState();

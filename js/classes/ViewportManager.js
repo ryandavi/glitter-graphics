@@ -352,7 +352,12 @@ setupTouchGestures() {
 		preventPropagation: false,
 		capturePhase: true,
 
+		onGestureStart: (gestureType) => {
+			console.log('🌍 VIEWPORT: Gesture started -', gestureType);
+		},
+
 		onSinglePan: (deltaX, deltaY) => {
+			console.log('🌍 VIEWPORT: Single pan', deltaX, deltaY);
 			this.panX += deltaX;
 			this.panY += deltaY;
 			this.applyTransform();
@@ -360,6 +365,7 @@ setupTouchGestures() {
 		},
 
 		onPinchZoom: (scale, centerX, centerY) => {
+			console.log('🌍 VIEWPORT: Pinch zoom', scale);
 			const rect = this.previewContainer.getBoundingClientRect();
 			const anchorX = centerX - rect.left;
 			const anchorY = centerY - rect.top;
@@ -386,17 +392,21 @@ setupTouchGestures() {
 		},
 
 		onTwoPan: (deltaX, deltaY) => {
+			console.log('🌍 VIEWPORT: Two finger pan', deltaX, deltaY);
 			this.panX += deltaX;
 			this.panY += deltaY;
 			this.applyTransform();
 			this._notifyViewportChanged();
+		},
+
+		onGestureEnd: () => {
+			console.log('🌍 VIEWPORT: Gesture ended');
 		}
 		// NO onRotate callback - viewport should not rotate
 	});
 
 	this.touchHandler = handler;
 }
-
 
 
 	// ===== RESIZE HANDLING =====
