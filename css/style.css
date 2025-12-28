@@ -72,7 +72,7 @@
   --icon-size: 40px;
   --icon-size-sm: 30px;
   /* PANELS */
-  --layer-panel-width: 450px;
+  --layer-panel-width: 400px;
   --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
   --glitter-swatch-columns: 4;
   --color-filter-chip-size: var(--icon-size-sm);
@@ -1488,21 +1488,28 @@ input[type=range]::-moz-range-thumb {
   padding: var(--spacing-lg);
   text-align: center;
   display: none;
+  gap: var(--spacing-lg);
 }
 .empty-state.visible {
   display: block;
 }
-.empty-state > .empty-state-icon {
+.empty-state .empty-state-inner-wrapper {
+  max-width: 250px;
+  gap: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+}
+.empty-state .empty-state-icon {
   font-size: 48px;
   margin-bottom: var(--spacing-md);
   opacity: 0.3;
   display: none;
 }
-.empty-state > .empty-state-text {
+.empty-state .empty-state-text {
   font-size: var(--font-size-base);
   color: var(--color-text-secondary);
 }
-.empty-state > .empty-state-subtext {
+.empty-state .empty-state-subtext {
   margin-top: var(--spacing-xs);
   font-size: var(--font-size-sm);
   color: var(--color-text-tertiary);
@@ -3262,10 +3269,11 @@ body.tool-select .sticker-element:not(.selected):hover {
 }
 .section.welcome-section > .section-content > .empty-state, .section.base-layer-settings-section > .section-content > .empty-state, .section.no-layer-settings-section > .section-content > .empty-state {
   background-color: #2f2f2f;
+  align-items: center;
+  justify-content: center;
 }
 .section.welcome-section > .section-content > .empty-state.visible, .section.base-layer-settings-section > .section-content > .empty-state.visible, .section.no-layer-settings-section > .section-content > .empty-state.visible {
   display: flex;
-  gap: var(--spacing-base);
   flex-direction: column;
 }
 

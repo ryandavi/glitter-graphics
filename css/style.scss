@@ -87,7 +87,7 @@
 
 
 	/* PANELS */
-	--layer-panel-width: 450px;
+	--layer-panel-width: 400px;
 	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
 	--glitter-swatch-columns: 4;
 	--color-filter-chip-size: var(--icon-size-sm);
@@ -1633,24 +1633,32 @@ input[type="range"] {
 	padding: var(--spacing-lg);
 	text-align: center;
 	display: none;
+	gap: var(--spacing-lg);
 
 	&.visible {
 		display: block;
 	}
 
-	>.empty-state-icon {
+	.empty-state-inner-wrapper {
+		max-width: 250px;
+		gap: var(--spacing-lg);
+		display: flex;
+		flex-direction: column;
+	}
+
+	.empty-state-icon {
 		font-size: 48px;
 		margin-bottom: var(--spacing-md);
 		opacity: 0.3;
 		display: none;
 	}
 
-	>.empty-state-text {
+	.empty-state-text {
 		font-size: var(--font-size-base);
 		color: var(--color-text-secondary);
 	}
 
-	>.empty-state-subtext {
+	.empty-state-subtext {
 		margin-top: var(--spacing-xs);
 		font-size: var(--font-size-sm);
 		color: var(--color-text-tertiary);
@@ -4022,11 +4030,17 @@ body.tool-select {
 
 			>.empty-state {
 				background-color: #2f2f2f;
+				align-items: center;
+    			justify-content: center;
+
 
 				&.visible {
 					display: flex;
-					gap: var(--spacing-base);
+
 					flex-direction:column;
+
+
+
 				}
 			}
 
