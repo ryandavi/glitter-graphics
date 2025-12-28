@@ -350,51 +350,52 @@ setupTouchGestures() {
 	const handler = new TouchGestureHandler(this.previewContainer, {
 		// Viewport does NOT stop propagation (it's the outermost handler)
 		preventPropagation: false,
-		capturePhase: true,  // ADD THIS
+		capturePhase: true,
 
-			onSinglePan: (deltaX, deltaY) => {
-				this.panX += deltaX;
-				this.panY += deltaY;
-				this.applyTransform();
-				this._notifyViewportChanged();
-			},
+		onSinglePan: (deltaX, deltaY) => {
+			this.panX += deltaX;
+			this.panY += deltaY;
+			this.applyTransform();
+			this._notifyViewportChanged();
+		},
 
-			onPinchZoom: (scale, centerX, centerY) => {
-				const rect = this.previewContainer.getBoundingClientRect();
-				const anchorX = centerX - rect.left;
-				const anchorY = centerY - rect.top;
+		onPinchZoom: (scale, centerX, centerY) => {
+			const rect = this.previewContainer.getBoundingClientRect();
+			const anchorX = centerX - rect.left;
+			const anchorY = centerY - rect.top;
 
-				const canvasX = (anchorX - this.panX) / this.currentZoom;
-				const canvasY = (anchorY - this.panY) / this.currentZoom;
+			const canvasX = (anchorX - this.panX) / this.currentZoom;
+			const canvasY = (anchorY - this.panY) / this.currentZoom;
 
-				const newZoom = Math.max(0.1, Math.min(16, this.currentZoom * scale));
+			const newZoom = Math.max(0.1, Math.min(16, this.currentZoom * scale));
 
-				const newCanvasX = canvasX * newZoom;
-				const newCanvasY = canvasY * newZoom;
+			const newCanvasX = canvasX * newZoom;
+			const newCanvasY = canvasY * newZoom;
 
-				this.panX = anchorX - newCanvasX;
-				this.panY = anchorY - newCanvasY;
-				this.currentZoom = newZoom;
+			this.panX = anchorX - newCanvasX;
+			this.panY = anchorY - newCanvasY;
+			this.currentZoom = newZoom;
 
-				this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
-				if (this.currentZoomIndex === -1) {
-					this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
-				}
-
-				this.applyTransform();
-				this._notifyViewportChanged();
-			},
-
-			onTwoPan: (deltaX, deltaY) => {
-				this.panX += deltaX;
-				this.panY += deltaY;
-				this.applyTransform();
-				this._notifyViewportChanged();
+			this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
+			if (this.currentZoomIndex === -1) {
+				this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
 			}
-		});
 
-		this.touchHandler = handler;
-	}
+			this.applyTransform();
+			this._notifyViewportChanged();
+		},
+
+		onTwoPan: (deltaX, deltaY) => {
+			this.panX += deltaX;
+			this.panY += deltaY;
+			this.applyTransform();
+			this._notifyViewportChanged();
+		}
+		// NO onRotate callback - viewport should not rotate
+	});
+
+	this.touchHandler = handler;
+}
 
 
 

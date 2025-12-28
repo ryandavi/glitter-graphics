@@ -531,6 +531,8 @@ input[type=range]::-moz-range-thumb {
   font-size: var(--font-size-xl);
   padding: 0;
   color: var(--color-text-secondary);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   background: none;
   overflow: hidden;
   color: var(--gray-100);
@@ -1974,6 +1976,7 @@ body.tool-select .sticker-element:not(.selected):hover {
 .color-picker-controls > .btn-icon {
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
+  touch-action: manipulation;
 }
 
 /* Zoom Controls */
@@ -3835,4 +3838,10 @@ body.tool-select .sticker-element:not(.selected):hover {
 .asset-browser > .asset-browser-sentinel {
   height: 1px;
   visibility: hidden;
+}
+
+@media (max-width: 800px) {
+  .asset-browser > .asset-browser-content > .category-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
 }/*# sourceMappingURL=style.css.map */

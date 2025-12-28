@@ -625,125 +625,124 @@ if (this.browser) {
 		this.attachDragListeners(clonedElement, clonedLayer.id);
 	}
 
-	setupStickerTouchGestures(element, layerId) {
-		// Remove any existing gesture handler
-		if (element._touchHandler) {
-			element._touchHandler.destroy();
-		}
-
-		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-		if (!layer || layer.type !== LayerType.STICKER) return;
-
-		const viewport = this.editor.viewport;
-		let startTransform = null;
-
-		const handler = new TouchGestureHandler(element, {
-			// CRITICAL: Only stop propagation if sticker is selected
-			preventPropagation: true,
-
-			onGestureStart: (gestureType) => {
-
-				// Don't select stickers when using pan or zoom tools
-				if (this.editor.currentTool === ToolType.HAND || this.editor.currentTool === ToolType.ZOOM) {
-					return;
-				}
-
-				const isSelected = this.editor.layerManager.activeLayerId === layerId;
-
-				// If not selected, just select it (don't transform yet)
-				if (!isSelected) {
-					this.editor.layerManager.setActiveLayer(layerId);
-					return;
-				}
-
-				// Store initial transform state only if selected
-				startTransform = {
-					scale: { ...layer.stickerData.transform.scale },
-					rotation: layer.stickerData.transform.rotation,
-					position: { ...layer.stickerData.transform.position }
-				};
-			},
-
-			onSinglePan: (deltaX, deltaY, touchX, touchY) => {
-				// Only pan if already selected
-				const isSelected = this.editor.layerManager.activeLayerId === layerId;
-				if (!isSelected || !startTransform) return;
-
-				// Convert screen delta to canvas coordinates
-				const canvasDeltaX = deltaX / viewport.currentZoom;
-				const canvasDeltaY = deltaY / viewport.currentZoom;
-
-				this.updateTransform(layerId, {
-					position: {
-						x: layer.stickerData.transform.position.x + canvasDeltaX,
-						y: layer.stickerData.transform.position.y + canvasDeltaY
-					}
-				});
-
-				// Update settings UI
-				this.editor.loadStickerSettings(layer);
-			},
-
-			onPinchZoom: (scale, centerX, centerY) => {
-				// Only scale if already selected
-				const isSelected = this.editor.layerManager.activeLayerId === layerId;
-				if (!isSelected || !startTransform) return;
-
-				// Scale the sticker (respecting proportional scale)
-				const currentScaleX = layer.stickerData.transform.scale.x;
-				const currentScaleY = layer.stickerData.transform.scale.y;
-
-				const newScaleX = currentScaleX * scale;
-				const newScaleY = layer.stickerData.transform.proportionalScale
-					? newScaleX
-					: currentScaleY * scale;
-
-				// Clamp scale values
-				const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
-				const clampedScaleY = Math.max(10, Math.min(500, newScaleY));
-
-				this.updateTransform(layerId, {
-					scale: {
-						x: clampedScaleX,
-						y: clampedScaleY
-					}
-				});
-
-				// Update settings UI
-				this.editor.loadStickerSettings(layer);
-			},
-
-			onRotate: (angleDelta, centerX, centerY) => {
-				// Only rotate if already selected
-				const isSelected = this.editor.layerManager.activeLayerId === layerId;
-				if (!isSelected || !startTransform) return;
-
-				// Update rotation incrementally
-				const newRotation = (layer.stickerData.transform.rotation + angleDelta) % 360;
-
-				this.updateTransform(layerId, {
-					rotation: newRotation
-				});
-
-				// Update settings UI
-				this.editor.loadStickerSettings(layer);
-			},
-
-			onGestureEnd: () => {
-				// Save state when all touches are released (only if we were transforming)
-				if (startTransform) {
-					this.editor.saveState();
-				}
-				startTransform = null;
-			}
-		});
-
-		// Store handler on element for cleanup
-		element._touchHandler = handler;
-
-		// Ensure proper touch handling
-		element.style.touchAction = 'none';
+setupStickerTouchGestures(element, layerId) {
+	// Remove any existing gesture handler
+	if (element._touchHandler) {
+		element._touchHandler.destroy();
 	}
+
+	const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.STICKER) return;
+
+	const viewport = this.editor.viewport;
+	let startTransform = null;
+
+	const handler = new TouchGestureHandler(element, {
+		// Stop propagation to prevent viewport from also handling
+		preventPropagation: true,
+
+		onGestureStart: (gestureType) => {
+			// Don't select stickers when using pan or zoom tools
+			if (this.editor.currentTool === ToolType.HAND || this.editor.currentTool === ToolType.ZOOM) {
+				return;
+			}
+
+			const isSelected = this.editor.layerManager.activeLayerId === layerId;
+
+			// ALWAYS store transform state on gesture start
+			// This ensures first touch will have transform data
+			startTransform = {
+				scale: { ...layer.stickerData.transform.scale },
+				rotation: layer.stickerData.transform.rotation,
+				position: { ...layer.stickerData.transform.position }
+			};
+
+			// If not selected, select it (but transform is already stored)
+			if (!isSelected) {
+				this.editor.layerManager.setActiveLayer(layerId);
+			}
+		},
+
+		onSinglePan: (deltaX, deltaY, touchX, touchY) => {
+			// Only pan if already selected
+			const isSelected = this.editor.layerManager.activeLayerId === layerId;
+			if (!isSelected || !startTransform) return;
+
+			// Convert screen delta to canvas coordinates
+			const canvasDeltaX = deltaX / viewport.currentZoom;
+			const canvasDeltaY = deltaY / viewport.currentZoom;
+
+			this.updateTransform(layerId, {
+				position: {
+					x: layer.stickerData.transform.position.x + canvasDeltaX,
+					y: layer.stickerData.transform.position.y + canvasDeltaY
+				}
+			});
+
+			// Update settings UI
+			this.editor.loadStickerSettings(layer);
+		},
+
+		onPinchZoom: (scale, centerX, centerY) => {
+			// Only scale if already selected
+			const isSelected = this.editor.layerManager.activeLayerId === layerId;
+			if (!isSelected || !startTransform) return;
+
+			// Scale the sticker (respecting proportional scale)
+			const currentScaleX = layer.stickerData.transform.scale.x;
+			const currentScaleY = layer.stickerData.transform.scale.y;
+
+			const newScaleX = currentScaleX * scale;
+			const newScaleY = layer.stickerData.transform.proportionalScale
+				? newScaleX
+				: currentScaleY * scale;
+
+			// Clamp scale values
+			const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
+			const clampedScaleY = Math.max(10, Math.min(500, newScaleY));
+
+			this.updateTransform(layerId, {
+				scale: {
+					x: clampedScaleX,
+					y: clampedScaleY
+				}
+			});
+
+			// Update settings UI
+			this.editor.loadStickerSettings(layer);
+		},
+
+		onRotate: (angleDelta, centerX, centerY) => {
+			// Only rotate if already selected
+			const isSelected = this.editor.layerManager.activeLayerId === layerId;
+			if (!isSelected || !startTransform) return;
+
+			// Update rotation incrementally
+			const newRotation = (layer.stickerData.transform.rotation + angleDelta) % 360;
+
+			this.updateTransform(layerId, {
+				rotation: newRotation
+			});
+
+			// Update settings UI
+			this.editor.loadStickerSettings(layer);
+		},
+
+		onGestureEnd: () => {
+			// Save state when all touches are released (only if we were transforming)
+			if (startTransform) {
+				this.editor.saveState();
+			}
+			startTransform = null;
+		}
+	});
+
+	// Store handler on element for cleanup
+	element._touchHandler = handler;
+
+	// Ensure proper touch handling
+	element.style.touchAction = 'none';
+}
 
 	attachDragListeners(element, layerId) {
 		// MOUSE DRAG (existing code - keep as is)

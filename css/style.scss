@@ -679,6 +679,11 @@ input[type="range"] {
 	padding: 0;
 	color: var(--color-text-secondary);
 
+	// Improve touch responsiveness
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+
+
 
 
 	&:hover {
@@ -2236,16 +2241,17 @@ body.tool-select {
 	gap: var(--spacing-sm);
 	z-index: 10;
 
-
 	@include floating-ui;
 
 	&.visible {
 		display: flex;
 	}
 
-	>.btn-icon {
+	> .btn-icon {
 		width: var(--icon-size-sm);
 		height: var(--icon-size-sm);
+		// Prevent touch gestures from interfering with button clicks
+		touch-action: manipulation;
 	}
 }
 
@@ -4818,5 +4824,19 @@ body.tool-select {
 	>.asset-browser-sentinel {
 		height: 1px;
 		visibility: hidden;
+	}
+}
+
+
+
+
+
+@media (max-width: 800px) {
+	.asset-browser {
+		>.asset-browser-content {
+			>.category-grid {
+				grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+			}
+		}
 	}
 }

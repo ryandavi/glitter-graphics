@@ -2092,21 +2092,14 @@ setupPreviewListeners() {
 	}
 
 setTool(tool) {
+	if (this.currentTool === tool) return;
+
 	this.currentTool = tool;
 
-	// Remove all tool classes from body
-	document.body.classList.remove('tool-select', 'tool-hand', 'tool-colorPicker', 'tool-zoom');
-	
-	// Add current tool class
-	document.body.classList.add(`tool-${tool}`);
-
-	// 1. Update Toolbar Buttons
-	document.querySelectorAll('.toolbar-group button').forEach(btn => {
-		btn.classList.remove('active');
+	// 1. Update Toolbar
+	document.querySelectorAll('.tool-btn').forEach(btn => {
+		btn.classList.toggle('active', btn.dataset.tool === tool);
 	});
-
-	const activeBtn = document.getElementById(`${tool}Tool`);
-	if (activeBtn) activeBtn.classList.add('active');
 
 	// 2. Update Cursors
 	if (this.previewContainer) {
@@ -2123,6 +2116,21 @@ setTool(tool) {
 		if (tool === ToolType.COLOR_PICKER) {
 			this.previewWrapper.classList.add('color-picker-mode');
 		}
+	}
+
+	// NEW: Manage sticker pointer-events based on tool
+	// When in Hand or Zoom tool, stickers should not capture touch events
+	const allStickers = this.canvasElementsContainer.querySelectorAll('.sticker-element');
+	if (tool === ToolType.HAND || tool === ToolType.ZOOM) {
+		// Disable sticker interaction - viewport gestures only
+		allStickers.forEach(sticker => {
+			sticker.style.pointerEvents = 'none';
+		});
+	} else {
+		// Enable sticker interaction
+		allStickers.forEach(sticker => {
+			sticker.style.pointerEvents = 'auto';
+		});
 	}
 
 	// 3. Update Context Toolbars
