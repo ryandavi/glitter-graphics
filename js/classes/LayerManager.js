@@ -338,6 +338,13 @@ goToSticker(layerId) {
 	// In LayerManager class
 
 	handleLayerPick(x, y) {
+
+	// Prevent layer picking during touch gestures
+	if (this.editor.touchGestureActive) {
+		console.log('🎯 LAYER PICK: Blocked - touch gesture active');
+		return;
+	}
+
 		// Check layers from top to bottom (visual order)
 		for (let i = this.layers.length - 1; i >= 0; i--) {
 			const layer = this.layers[i];

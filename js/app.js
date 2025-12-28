@@ -210,6 +210,9 @@ class GlitterEditor {
 
 		this.exporter = null;
 
+
+		this.touchGestureActive = false;
+
 		// Export settings
 		this.exportSettings = {
 			quality: CONFIG.defaultExportQuality,
@@ -2096,10 +2099,32 @@ setTool(tool) {
 
 	this.currentTool = tool;
 
-	// 1. Update Toolbar
-	document.querySelectorAll('.tool-btn').forEach(btn => {
-		btn.classList.toggle('active', btn.dataset.tool === tool);
+	// Remove all tool classes from body
+	document.body.classList.remove('tool-select', 'tool-hand', 'tool-colorPicker', 'tool-zoom');
+	
+	// Add current tool class
+	document.body.classList.add(`tool-${tool}`);
+
+	// 1. Update Toolbar Buttons
+	document.querySelectorAll('.toolbar-group button').forEach(btn => {
+		btn.classList.remove('active');
 	});
+
+	// Fix: The tool name needs to match the button ID exactly
+	const toolButtonIds = {
+		'select': 'selectTool',
+		'hand': 'handTool',
+		'colorPicker': 'colorPickerTool',
+		'zoom': 'zoomTool'
+	};
+
+	const activeBtn = document.getElementById(toolButtonIds[tool]);
+	if (activeBtn) {
+		console.log('🔧 Setting active tool button:', toolButtonIds[tool]);
+		activeBtn.classList.add('active');
+	} else {
+		console.warn('🔧 Tool button not found:', toolButtonIds[tool]);
+	}
 
 	// 2. Update Cursors
 	if (this.previewContainer) {

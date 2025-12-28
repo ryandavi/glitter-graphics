@@ -348,12 +348,13 @@ class ViewportManager {
 
 setupTouchGestures() {
 	const handler = new TouchGestureHandler(this.previewContainer, {
-		// Viewport does NOT stop propagation (it's the outermost handler)
 		preventPropagation: false,
 		capturePhase: true,
 
 		onGestureStart: (gestureType) => {
 			console.log('🌍 VIEWPORT: Gesture started -', gestureType);
+			// Set flag to prevent layer selection
+			if (window.editor) window.editor.touchGestureActive = true;
 		},
 
 		onSinglePan: (deltaX, deltaY) => {
@@ -401,8 +402,13 @@ setupTouchGestures() {
 
 		onGestureEnd: () => {
 			console.log('🌍 VIEWPORT: Gesture ended');
+			// Clear flag after a short delay to prevent immediate layer selection
+			if (window.editor) {
+				setTimeout(() => {
+					window.editor.touchGestureActive = false;
+				}, 100);
+			}
 		}
-		// NO onRotate callback - viewport should not rotate
 	});
 
 	this.touchHandler = handler;

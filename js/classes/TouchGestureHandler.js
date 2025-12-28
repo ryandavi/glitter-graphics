@@ -100,23 +100,31 @@ handleTouchStart(e) {
 		});
 	}
 
-		this.updateStableTouchCount();
-		const touchCount = this.stableTouchCount;
+	this.updateStableTouchCount();
+	const touchCount = this.stableTouchCount;
 
-		// If we're already in a gesture, don't start a new one
-		if (this.gestureLockedUntilRelease) {
-			e.preventDefault();
-			return;
-		}
-
-		// Determine gesture type based on stable touch count
-		if (touchCount === 1) {
-			this.startSinglePan();
-		} else if (touchCount >= 2) {
-			e.preventDefault();
-			this.startTwoFingerGesture();
-		}
+	// CRITICAL FIX: Allow transition from single-pan to two-finger gesture
+	// If we're in single-pan and a second finger comes down, upgrade to two-finger
+	if (this.state === 'single_pan' && touchCount >= 2) {
+		console.log('👆 Transitioning from single-pan to two-finger gesture');
+		this.state = 'idle'; // Reset state so we can start two-finger gesture
+		this.gestureLockedUntilRelease = false;
 	}
+
+	// If we're already in a gesture (and not transitioning), don't start a new one
+	if (this.gestureLockedUntilRelease) {
+		e.preventDefault();
+		return;
+	}
+
+	// Determine gesture type based on stable touch count
+	if (touchCount === 1) {
+		this.startSinglePan();
+	} else if (touchCount >= 2) {
+		e.preventDefault();
+		this.startTwoFingerGesture();
+	}
+}
 
 	handleTouchMove(e) {
 		// CRITICAL: Stop propagation for sticker elements
@@ -240,68 +248,73 @@ handleTouchStart(e) {
 		}
 	}
 
-	updateTwoFingerGesture() {
-		const touchArray = Array.from(this.touches.values());
-		if (touchArray.length < 2) return;
+updateTwoFingerGesture() {
+	const touchArray = Array.from(this.touches.values());
+	if (touchArray.length < 2) return;
 
-		const [touch1, touch2] = touchArray;
+	const [touch1, touch2] = touchArray;
 
-		// Calculate current metrics
-		const currentDistance = this.getTouchDistance(touch1, touch2);
-		const currentAngle = this.getTouchAngle(touch1, touch2);
-		const currentCenterX = (touch1.x + touch2.x) / 2;
-		const currentCenterY = (touch1.y + touch2.y) / 2;
+	// Calculate current metrics
+	const currentDistance = this.getTouchDistance(touch1, touch2);
+	const currentAngle = this.getTouchAngle(touch1, touch2);
+	const currentCenterX = (touch1.x + touch2.x) / 2;
+	const currentCenterY = (touch1.y + touch2.y) / 2;
 
-		// Determine if we're pinching based on distance change
-		const distanceChange = Math.abs(currentDistance - this.startData.distance);
-		const isPinching = distanceChange > this.minPinchMovement;
+	// Determine if we're pinching based on distance change
+	const distanceChange = Math.abs(currentDistance - this.startData.distance);
+	const isPinching = distanceChange > this.minPinchMovement;
 
-		// Transition state if needed (only once)
-		if (this.state === 'two_pan' && isPinching) {
-			this.state = 'pinch_zoom';
-		}
+	console.log('✌️ Two-finger state:', this.state, 'distance change:', distanceChange, 'isPinching:', isPinching);
 
-		// Process based on state
-		if (this.state === 'pinch_zoom') {
-			// Calculate scale change since last frame
-			const scale = currentDistance / this.lastData.distance;
-
-			// Only apply if scale change is meaningful (prevents jitter)
-			if (Math.abs(scale - 1.0) > 0.001) {
-				if (this.callbacks.onPinchZoom) {
-					this.callbacks.onPinchZoom(scale, currentCenterX, currentCenterY);
-				}
-			}
-
-			// Handle rotation if enabled
-			if (this.rotationEnabled && this.callbacks.onRotate) {
-				const angleDelta = currentAngle - this.lastData.angle;
-				// Normalize angle delta to -180 to 180 range
-				const normalizedDelta = ((angleDelta + 180) % 360) - 180;
-
-				if (Math.abs(normalizedDelta) > 0.5) {
-					this.callbacks.onRotate(normalizedDelta, currentCenterX, currentCenterY);
-				}
-			}
-		} else if (this.state === 'two_pan') {
-			// Two-finger pan
-			const deltaX = currentCenterX - this.lastData.centerX;
-			const deltaY = currentCenterY - this.lastData.centerY;
-
-			// Only apply if movement is meaningful
-			if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
-				if (this.callbacks.onTwoPan) {
-					this.callbacks.onTwoPan(deltaX, deltaY, currentCenterX, currentCenterY);
-				}
-			}
-		}
-
-		// Update last data
-		this.lastData.distance = currentDistance;
-		this.lastData.angle = currentAngle;
-		this.lastData.centerX = currentCenterX;
-		this.lastData.centerY = currentCenterY;
+	// Transition state if needed (only once)
+	if (this.state === 'two_pan' && isPinching) {
+		console.log('✌️ Transitioning from two_pan to pinch_zoom');
+		this.state = 'pinch_zoom';
 	}
+
+	// Process based on state
+	if (this.state === 'pinch_zoom') {
+		// Calculate scale change since last frame
+		const scale = currentDistance / this.lastData.distance;
+
+		// Only apply if scale change is meaningful (prevents jitter)
+		if (Math.abs(scale - 1.0) > 0.001) {
+			if (this.callbacks.onPinchZoom) {
+				this.callbacks.onPinchZoom(scale, currentCenterX, currentCenterY);
+			}
+		}
+
+		// Handle rotation if enabled
+		if (this.rotationEnabled && this.callbacks.onRotate) {
+			const angleDelta = currentAngle - this.lastData.angle;
+			// Normalize angle delta to -180 to 180 range
+			const normalizedDelta = ((angleDelta + 180) % 360) - 180;
+
+			if (Math.abs(normalizedDelta) > 0.5) {
+				this.callbacks.onRotate(normalizedDelta, currentCenterX, currentCenterY);
+			}
+		}
+	} else if (this.state === 'two_pan') {
+		// Two-finger pan
+		const deltaX = currentCenterX - this.lastData.centerX;
+		const deltaY = currentCenterY - this.lastData.centerY;
+
+		console.log('✌️ Two-pan delta:', deltaX, deltaY);
+
+		// Only apply if movement is meaningful
+		if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+			if (this.callbacks.onTwoPan) {
+				this.callbacks.onTwoPan(deltaX, deltaY, currentCenterX, currentCenterY);
+			}
+		}
+	}
+
+	// Update last data
+	this.lastData.distance = currentDistance;
+	this.lastData.angle = currentAngle;
+	this.lastData.centerX = currentCenterX;
+	this.lastData.centerY = currentCenterY;
+}
 
 	// ===== UTILITY METHODS =====
 
