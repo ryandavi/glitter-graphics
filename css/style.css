@@ -3871,4 +3871,9 @@ body.tool-select .sticker-element:not(.selected):hover {
   .asset-browser > .asset-browser-content > .category-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
+}
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
 }/*# sourceMappingURL=style.css.map */

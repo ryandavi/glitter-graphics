@@ -2322,6 +2322,28 @@
         "sort_order": 21
     },
     {
+        "id": 22,
+        "name": "Flame Purple",
+        "filename": "flame_purple.gif",
+        "url": "images/stickers/people/flame_purple.gif",
+        "category": "object",
+        "attribution": null,
+        "sticker_text": null,
+        "tags": [
+            "fire",
+            "flame",
+            "purple"
+        ],
+        "is_animated": 1,
+        "has_transparency": 1,
+        "is_active": 1,
+        "width": 30,
+        "height": 55,
+        "frame_count": 32,
+        "file_size": 16948,
+        "sort_order": 0
+    },
+    {
         "id": 155,
         "name": "Cigar",
         "filename": "cigar.gif",
@@ -2505,29 +2527,6 @@
         "frame_count": 90,
         "file_size": 1582834,
         "sort_order": 172
-    },
-    {
-        "id": 22,
-        "name": "Flame Purple",
-        "filename": "flame_purple.gif",
-        "url": "images/stickers/people/flame_purple.gif",
-        "category": "people",
-        "attribution": "",
-        "sticker_text": null,
-        "tags": [
-            "fire",
-            "flame",
-            "people",
-            "purple"
-        ],
-        "is_animated": 1,
-        "has_transparency": 1,
-        "is_active": 1,
-        "width": 30,
-        "height": 55,
-        "frame_count": 32,
-        "file_size": 16948,
-        "sort_order": 22
     },
     {
         "id": 23,

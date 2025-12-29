@@ -31,7 +31,7 @@ constructor(contentManager, elementIds, displayName) {
 	
 	// Store parent containers
 	this.assetOptions = this.elements.browser.closest('.asset-options');
-	this.scrollContainer = this.elements.content; // this.assetOptions; // The actual scrollable element
+	this.scrollContainer = this.elements.browser.closest('.asset-options'); // The actual scrollable element // this.elements.content; //
 	
 	this.observer = null;
 }
