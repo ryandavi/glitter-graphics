@@ -22,8 +22,9 @@ protected function formatAssetForExport($asset, $tags)
         'attribution' => $asset['attribution'] ?? null,
         'sticker_text' => $asset['sticker_text'] ?? null,
         'tags' => $tags,
-        'is_animated' => (bool)$asset['is_animated'],
-        'has_transparency' => (bool)$asset['has_transparency'],
+        'is_animated' => (int)$asset['is_animated'],
+        'has_transparency' => (int)$asset['has_transparency'],
+        'is_active' => (int)$asset['is_active'],
         'width' => (int)($asset['width'] ?? 0),
         'height' => (int)($asset['height'] ?? 0),
         'frame_count' => (int)($asset['frame_count'] ?? 0),
@@ -32,14 +33,18 @@ protected function formatAssetForExport($asset, $tags)
     ];
 }
 
-    protected function getAssetSpecificFields()
-    {
-        return [
-            'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text'],
-            'int' => ['sticker_category_id', 'is_animated', 'has_transparency', 'is_active', 'width', 'height', 'frame_count', 'file_size', 'sort_order'],
-            'float' => []
-        ];
-    }
+
+
+
+protected function getAssetSpecificFields()
+{
+    return [
+        'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text'],
+        'int' => ['sticker_category_id', 'width', 'height', 'frame_count', 'file_size', 'sort_order'],
+        'float' => [],
+        'bool' => ['is_animated', 'has_transparency', 'is_active']
+    ];
+}
 
 public function updateSticker($data)
 {
@@ -47,17 +52,17 @@ public function updateSticker($data)
     $fields = [];
     $fieldTypes = $this->getAssetSpecificFields();
 
-foreach ($fieldTypes['string'] as $field) {
-    if (array_key_exists($field, $data)) {
-        // Handle NULL values for optional string fields
-        if ($data[$field] === null || $data[$field] === '') {
-            $fields[] = "$field = NULL";
-        } else {
-            $value = $this->db->escape($data[$field]);
-            $fields[] = "$field = '$value'";
+    foreach ($fieldTypes['string'] as $field) {
+        if (array_key_exists($field, $data)) {
+            // Handle NULL values for optional string fields
+            if ($data[$field] === null || $data[$field] === '') {
+                $fields[] = "$field = NULL";
+            } else {
+                $value = $this->db->escape($data[$field]);
+                $fields[] = "$field = '$value'";
+            }
         }
     }
-}
 
     foreach ($fieldTypes['int'] as $field) {
         if (isset($data[$field])) {
@@ -65,6 +70,17 @@ foreach ($fieldTypes['string'] as $field) {
             $fields[] = "$field = $value";
         }
     }
+
+foreach ($fieldTypes['bool'] as $field) {
+    // Only update if passed (PATCH compliant)
+    if (array_key_exists($field, $data)) {
+        // Handles: true, 1, "1", "true", "on" => 1
+        // Handles: false, 0, "0", "false", "off", null => 0
+        $val = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
+        $value = $val ? 1 : 0;
+        $fields[] = "$field = $value";
+    }
+}
 
     // IMPORTANT: Reset sort_order to 0 when category changes
     // This prevents stickers from appearing in separate groups
@@ -76,9 +92,19 @@ foreach ($fieldTypes['string'] as $field) {
         throw new Exception('No fields to update');
     }
 
+
+
     $table = $this->tables['table'];
     $sql = "UPDATE $table SET " . implode(', ', $fields) . " WHERE id = $id";
+
+ 
+
     $this->db->query($sql);
+
+
+
+
+    
 
     // Update tags if provided
     if (isset($data['tags'])) {
@@ -89,6 +115,10 @@ foreach ($fieldTypes['string'] as $field) {
             $this->db->query("INSERT INTO $tagsMapTable (sticker_id, sticker_tag_id) VALUES ($id, $tagId)");
         }
     }
+
+
+
+    
 
     return ['success' => true];
 }

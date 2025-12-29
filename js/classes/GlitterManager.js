@@ -41,8 +41,6 @@ async initBrowser() {
 	setupUI() {
 		this.ui = {
 			panel: document.getElementById('glitterOptions'),
-			gridContainer: document.getElementById('glitterGridContainer'),
-			emptyState: document.getElementById('glitterEmptyState'),
 			searchInput: document.getElementById('glitterSearch'),
 			filterToggle: document.getElementById('filterToggleBtn'),
 			filtersContainer: document.getElementById('filtersContainer'),

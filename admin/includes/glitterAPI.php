@@ -30,21 +30,23 @@ class GlitterAPI extends AssetAPI
             'colorCodes' => $colorCodes,
             'frameCount' => (int)($asset['frame_count'] ?? 0),
             'frameRate' => (int)($asset['frame_rate'] ?? 10),
-            'isVariableFramerate' => (bool)$asset['is_variable_framerate'],
+            'isVariableFramerate' => (int)$asset['is_variable_framerate'],
             'category' => $asset['category_slug'],
-            'isPixelated' => (bool)$asset['is_pixelated'],
+            'isPixelated' => (int)$asset['is_pixelated'],
+            'isActive' => (int)$asset['is_active'],
             'tags' => $tags
         ];
     }
 
-    protected function getAssetSpecificFields()
-    {
-        return [
-            'string' => ['name', 'url', 'generated_name', 'color_codes'],
-            'int' => ['glitter_category_id', 'is_pixelated', 'is_active', 'frame_count', 'frame_rate', 'is_variable_framerate', 'sort_order'],
-            'float' => ['hue', 'color_value']
-        ];
-    }
+protected function getAssetSpecificFields()
+{
+    return [
+        'string' => ['name', 'url', 'generated_name', 'color_codes'],
+        'int' => ['glitter_category_id', 'frame_count', 'frame_rate', 'sort_order'],
+        'float' => ['hue', 'color_value'],
+        'bool' => ['is_pixelated', 'is_active', 'is_variable_framerate']
+    ];
+}
 
     public function updateGlitter($data)
     {
@@ -72,6 +74,17 @@ class GlitterAPI extends AssetAPI
                 $fields[] = "$field = $value";
             }
         }
+
+foreach ($fieldTypes['bool'] as $field) {
+    // Only update if passed (PATCH compliant)
+    if (array_key_exists($field, $data)) {
+        // Handles: true, 1, "1", "true", "on" => 1
+        // Handles: false, 0, "0", "false", "off", null => 0
+        $val = filter_var($data[$field], FILTER_VALIDATE_BOOLEAN);
+        $value = $val ? 1 : 0;
+        $fields[] = "$field = $value";
+    }
+}
 
         if (empty($fields)) {
             throw new Exception('No fields to update');

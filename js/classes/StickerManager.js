@@ -39,8 +39,6 @@ class StickerManager extends ContentManager {
 	setupUI() {
 		this.ui = {
 			panel: document.getElementById('stickersOptions'),
-			gridContainer: document.getElementById('stickerGridContainer'),
-			emptyState: document.getElementById('stickerSearchEmptyState'),
 			searchInput: document.getElementById('stickersSearch'),
 			filterToggle: document.getElementById('stickerFilterToggleBtn'),
 			filtersContainer: document.getElementById('stickerFiltersContainer'),
@@ -90,7 +88,7 @@ class StickerManager extends ContentManager {
 					this.activeFilters.animated = isAnimated;
 				}
 
-				this.renderPicker();
+				this.browser.refresh();
 				this.updateClearFiltersButton();
 			});
 		});
@@ -213,16 +211,11 @@ async handleUserUpload(file) {
 
 	this.userContent.push(userSticker);
 
-	if (this.browser) {
-		this.browser.refresh();
-		
-		// Navigate to User Uploads immediately to show loading state
-		setTimeout(() => {
-			this.browser.setState('CATEGORY_DETAIL', 'user-uploads');
-		}, 50);
-	} else {
-		this.renderPicker();
-	}
+	// Navigate to User Uploads immediately to show loading state
+	setTimeout(() => {
+		this.browser.setState('CATEGORY_DETAIL', 'user-uploads');
+	}, 50);
+
 
 	// 4. Process asynchronously
 	try {
@@ -231,11 +224,7 @@ async handleUserUpload(file) {
 		userSticker.error = error.message;
 		userSticker.isLoading = false;
 
-		if (this.browser) {
-			this.browser.refresh();
-		} else {
-			this.renderPicker();
-		}
+		this.browser.refresh();
 	}
 
 	return userSticker;
@@ -302,11 +291,7 @@ async processUploadedSticker(userSticker, file) {
 	userSticker.isLoading = false;
 
 	// Refresh to update the item from loading state to loaded
-	if (this.browser) {
-		this.browser.refresh();
-	} else {
-		this.renderPicker();
-	}
+this.browser.refresh();
 
 	console.log('Processed uploaded sticker:', userSticker);
 }

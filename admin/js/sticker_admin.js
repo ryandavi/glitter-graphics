@@ -66,7 +66,7 @@ class StickerEditor extends AssetEditor {
                     <div class="form-group">
                         <label>&nbsp;</label>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="is_active" ${s.is_active ? 'checked' : ''}>
+                            <input type="checkbox" id="is_active" ${s.is_active === '1'  ? 'checked' : ''}>
                             <label for="is_active">Active</label>
                         </div>
                     </div>
@@ -114,14 +114,14 @@ class StickerEditor extends AssetEditor {
                     <div class="form-group">
                         <label>&nbsp;</label>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="is_animated" ${s.is_animated ? 'checked' : ''}>
+                            <input type="checkbox" id="is_animated" ${s.is_animated === '1'  ? 'checked' : ''}>
                             <label for="is_animated">Animated</label>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>&nbsp;</label>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="has_transparency" ${s.has_transparency ? 'checked' : ''}>
+                            <input type="checkbox" id="has_transparency" ${s.has_transparency === '1'  ? 'checked' : ''}>
                             <label for="has_transparency">Has Transparency</label>
                         </div>
                     </div>

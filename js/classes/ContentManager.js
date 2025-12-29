@@ -27,8 +27,6 @@ class ContentManager {
 		// UI references - children define specific IDs in setupUI()
 		this.ui = {
 			panel: null,
-			gridContainer: null,
-			emptyState: null,
 			searchInput: null,
 			filterToggle: null,
 			filtersContainer: null,
@@ -43,13 +41,7 @@ async init() {
     this.setupUI();
     this.setupEventListeners();
     await this.loadContent();
-    
-    // Initialize browser if enabled
-    if (this.useBrowser) {
-        await this.initBrowser();
-    } else {
-        this.renderPicker();
-    }
+    await this.initBrowser();
 }
 
 async initBrowser() {
@@ -89,13 +81,13 @@ async initBrowser() {
 		}
 
 		// Name Only Checkbox
-		if (this.ui.searchNameOnly) {
-			this.ui.searchNameOnly.addEventListener('change', (e) => {
-				this.activeFilters.nameOnly = e.target.checked;
-				this.renderPicker();
-				this.updateClearFiltersButton();
-			});
-		}
+if (this.ui.searchNameOnly) {
+    this.ui.searchNameOnly.addEventListener('change', (e) => {
+        this.activeFilters.nameOnly = e.target.checked;
+        this.browser.refresh();        // ← REPLACE WITH THIS
+        this.updateClearFiltersButton();
+    });
+}
 
 		// Child classes can add more listeners by overriding and calling super.setupEventListeners()
 	}
@@ -106,29 +98,7 @@ async initBrowser() {
 	}
 
 scrollToContent(contentId) {
-	if (this.browser) {
-		// Use browser's navigation
-		this.browser.navigateToItem(contentId);
-	} else {
-		// Fallback to old method
-		if (!this.ui.gridContainer) return;
-
-		const assetOption = this.ui.gridContainer.querySelector(`.asset-option[data-id="${contentId}"]`);
-		if (!assetOption) {
-			console.warn(`${this.getLayerType?.() ?? 'Layer'} with id ${contentId} not found in picker`);
-			return;
-		}
-
-		assetOption.scrollIntoView({
-			behavior: 'smooth',
-			block: 'center'
-		});
-
-		assetOption.classList.add('highlight');
-		setTimeout(() => {
-			assetOption.classList.remove('highlight');
-		}, 1000);
-	}
+    this.browser.navigateToItem(contentId);
 }
 
 
@@ -210,12 +180,9 @@ scrollToContent(contentId) {
 			filterSet.add(value);
 		}
 
-		// Re-render and update UI
-		if (this.browser) {
-			this.browser.refresh();
-		} else {
-			this.renderPicker();
-		}
+// Re-render and update UI
+this.browser.refresh();
+
 		this.updateClearFiltersButton();
 	}
 
@@ -319,17 +286,11 @@ scrollToContent(contentId) {
 		return [...this.content, ...this.userContent];
 	}
 
-	handleSearch(query) {
-		this.activeFilters.search = query.toLowerCase().trim();
-
-		if (this.browser) {
-			this.browser.handleSearch(query);
-		} else {
-			this.renderPicker();
-		}
-
-		this.updateClearFiltersButton();
-	}
+handleSearch(query) {
+    this.activeFilters.search = query.toLowerCase().trim();
+    this.browser.handleSearch(query);
+    this.updateClearFiltersButton();
+}
 
 	toggleFiltersUI() {
 		if (!this.ui.filtersContainer || !this.ui.filterToggle) return;
@@ -386,11 +347,8 @@ scrollToContent(contentId) {
 		}
 
 		// Re-render and update button state
-		if (this.browser) {
-			this.browser.setState('CATEGORY_LIST'); // CHANGED: Reset to category list
-		} else {
-			this.renderPicker();
-		}
+		this.browser.setState('CATEGORY_LIST');
+
 		this.updateClearFiltersButton();
 
 		// Close filter drawer
@@ -408,84 +366,7 @@ scrollToContent(contentId) {
 			this.userContent.find(item => item.id === id);
 	}
 
-	updatePickerVisibility(visibleCount) {
-		if (!this.ui.gridContainer) return;
 
-		const hasContent = visibleCount > 0;
-
-		if (this.ui.emptyState) {
-			this.ui.emptyState.classList.toggle('visible', !hasContent);
-		}
-
-		this.ui.gridContainer.classList.toggle('visible', hasContent);
-	}
-
-
-
-	// ===== PICKER RENDERING =====
-
-	renderPicker() {
-		if (!this.ui.gridContainer) return;
-		this.ui.gridContainer.innerHTML = '';
-
-		// Get filtered content
-		const filteredContent = this.applyFilters();
-
-		// Group by category
-		const categories = this.groupByCategory(filteredContent);
-
-		// Sort categories - User Uploads first, then alphabetically
-		const sortedCategories = Object.entries(categories).sort(([catA], [catB]) => {
-			if (catA === 'User Uploads') return -1;
-			if (catB === 'User Uploads') return 1;
-			return catA.localeCompare(catB);
-		});
-
-		// Render each category
-		sortedCategories.forEach(([category, items]) => {
-			const categoryDiv = this.createCategoryElement(category);
-			const grid = categoryDiv.querySelector('.asset-grid');
-
-			items.forEach(item => {
-				const option = this.createItemElement(item);
-				grid.appendChild(option);
-			});
-
-			this.ui.gridContainer.appendChild(categoryDiv);
-		});
-
-		// Update visibility
-		this.updatePickerVisibility(filteredContent.length);
-	}
-
-	groupByCategory(items) {
-		const categories = {};
-		items.forEach(item => {
-			const category = item.category || 'Uncategorized';
-			if (!categories[category]) {
-				categories[category] = [];
-			}
-			categories[category].push(item);
-		});
-		return categories;
-	}
-
-	createCategoryElement(categoryName) {
-		const categoryDiv = document.createElement('div');
-		categoryDiv.className = 'asset-category';
-		categoryDiv.dataset.category = categoryName;
-
-		const title = document.createElement('div');
-		title.className = 'category-title';
-		title.textContent = categoryName;
-		categoryDiv.appendChild(title);
-
-		const grid = document.createElement('div');
-		grid.className = 'asset-grid';
-		categoryDiv.appendChild(grid);
-
-		return categoryDiv;
-	}
 
 	// ===== ABSTRACT METHODS (must be implemented by children) =====
 

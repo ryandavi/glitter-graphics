@@ -811,10 +811,8 @@ updateGlitterSelection() {
 updateStickerSelection() {
 	const layer = this.layerManager.getActiveLayer();
 
-	// Query all sticker options in BOTH traditional grid AND asset browser
-	const stickerOptions = document.querySelectorAll(
-		'#stickerGridContainer .asset-option, #stickerItemGrid .asset-option, #stickerSearchResults .asset-option'
-	);
+	// Get all sticker options (from asset browser)
+	const stickerOptions = document.querySelectorAll('.asset-options .asset-option');
 
 	// Early return if no sticker layer is active
 	if (!layer || layer.type !== LayerType.STICKER || !layer.stickerSourceId) {

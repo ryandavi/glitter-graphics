@@ -67,14 +67,14 @@
 			</div>
 			<div class="app-header-right">
 
-				<button class="btn-icon icon-wrapper" id="guideBtn" title="Info">
+				<button class="btn-icon-simple icon-wrapper" id="guideBtn" title="Info">
 					<svg class="icon">
 						<use href="#icon-question-circle"></use>
 					</svg>
 					<span class="name">Guide</span>
 				</button>
 
-				<button class="btn-icon icon-wrapper" id="aboutBtn" title="About">
+				<button class="btn-icon-simple icon-wrapper" id="aboutBtn" title="About">
 					<svg class="icon">
 						<use href="#icon-circle-info"></use>
 					</svg>
@@ -241,27 +241,27 @@
 						<div class="layers-section-bottom-bar" id="layersSectionBottomBar">
 
 							<!-- add glitter layer -->
-							<button class="btn-icon icon-wrapper add sm" title="Add new glitter layer" id="layersBarAddGlitter" disabled><svg class="icon">
+							<button class="btn-icon-simple icon-wrapper add sm" title="Add new glitter layer" id="layersBarAddGlitter" disabled><svg class="icon">
 									<use href="#icon-glitter"></use>
 								</svg></button>
 
 							<!-- add sticker layer -->
-							<button class="btn-icon icon-wrapper add sm" title="Add new sticker layer" id="layersBarAddSticker" disabled><svg class="icon">
+							<button class="btn-icon-simple icon-wrapper add sm" title="Add new sticker layer" id="layersBarAddSticker" disabled><svg class="icon">
 									<use href="#icon-sticker"></use>
 								</svg></button>
 
 							<!-- duplicate selected -->
-							<button class="btn-icon icon-wrapper clone sm" title="Clone selected layer" id="layersBarCloneSelected" disabled><svg class="icon">
+							<button class="btn-icon-simple icon-wrapper clone sm" title="Clone selected layer" id="layersBarCloneSelected" disabled><svg class="icon">
 									<use href="#icon-clone"></use>
 								</svg></button>
 
 							<!-- go to selected -->
-							<button class="btn-icon icon-wrapper go-to sm" title="Go to selected layer" id="layersBarGoToSelected" disabled><svg class="icon">
+							<button class="btn-icon-simple icon-wrapper go-to sm" title="Go to selected layer" id="layersBarGoToSelected" disabled><svg class="icon">
 									<use href="#icon-chevron-right"></use>
 								</svg></button>
 
 							<!-- delete selected -->
-							<button class="btn-icon icon-wrapper delete sm" title="Delete selected layer" id="layersBarDeleteSelected" disabled><svg class="icon">
+							<button class="btn-icon-simple icon-wrapper delete sm" title="Delete selected layer" id="layersBarDeleteSelected" disabled><svg class="icon">
 									<use href="#icon-trash"></use>
 								</svg></button>
 
@@ -459,68 +459,61 @@
 						</div>
 					</div>
 
-<!-- Glitter Options -->
-<div class="asset-options glitter-options gallery-content" id="glitterOptions" data-gallery-content="glitter">
+					<!-- Glitter Options -->
+					<div class="asset-options glitter-options gallery-content" id="glitterOptions" data-gallery-content="glitter">
 
-    <!-- 1. Glitter Empty State -->
-    <div class="empty-state" id="glitterEmptyState">
-        <div class="empty-state-icon">🔍</div>
-        <div class="empty-state-text">No glitter found</div>
-        <div class="empty-state-subtext">Try clearing your filters</div>
-    </div>
 
-<!-- 2. Asset Browser Structure -->
-<div class="asset-browser" id="glitterBrowser">
-    <!-- Browser Header -->
-    <div class="asset-browser-header">
+
+						<!-- 2. Asset Browser Structure -->
+						<div class="asset-browser" id="glitterBrowser">
+							<!-- Browser Header -->
+							<div class="asset-browser-header">
 
 
 
 
-		<button class="btn-icon icon-wrapper " id="glitterBrowserBack" disabled>
-			<svg class="icon">
-				<use href="#icon-chevron-left"></use>
-			</svg>
-			<span class="name">Back</span>
-		</button>
+								<button class="btn-icon-simple icon-wrapper " id="glitterBrowserBack" disabled>
+									<svg class="icon">
+										<use href="#icon-chevron-left"></use>
+									</svg>
+									<span class="name">Back</span>
+								</button>
 
 
-        <div class="asset-browser-title" id="glitterBrowserTitle">Glitter</div>
-    </div>
+								<div class="asset-browser-title" id="glitterBrowserTitle">Glitter</div>
+							</div>
 
-    <!-- Browser Content -->
-    <div class="asset-browser-content" id="glitterBrowserContent">
-        <!-- Empty State -->
-        <div class="empty-state" id="glitterBrowserEmpty">
-            <div class="empty-state-icon">🔍</div>
-            <div class="empty-state-text" id="glitterBrowserEmptyText">No items found</div>
-        </div>
-        
-        <!-- Category Grid (shown by default) -->
-        <div class="category-grid" id="glitterCategoryGrid"></div>
-        
-        <!-- Search Results Container -->
-        <div class="search-results-container" id="glitterSearchResults"></div>
-        
-        <!-- Item Grid (shown when viewing single category) -->
-        <div class="asset-grid" id="glitterItemGrid"></div>
+							<!-- Browser Content -->
+							<div class="asset-browser-content" id="glitterBrowserContent">
+								<!-- Empty State -->
+								<div class="empty-state" id="glitterBrowserEmpty">
+									<div class="empty-state-icon">🔍</div>
+									<div class="empty-state-text" id="glitterBrowserEmptyText">No items found</div>
+								</div>
 
+								<!-- Category Grid (shown by default) -->
+								<div class="category-grid" id="glitterCategoryGrid"></div>
 
+								<!-- Search Results Container -->
+								<div class="search-results-container" id="glitterSearchResults"></div>
 
-	    <!-- Sentinel for lazy loading -->
-    <div class="asset-browser-sentinel" id="glitterBrowserSentinel"></div>
-
-    </div>
-
-    
-
-</div>
+								<!-- Item Grid (shown when viewing single category) -->
+								<div class="asset-grid" id="glitterItemGrid"></div>
 
 
 
-    <!-- 3. Fallback: Traditional Grid Container (if browser disabled) -->
-    <div class="grid-container glitter-grid-container" id="glitterGridContainer"></div>
-</div>
+								<!-- Sentinel for lazy loading -->
+								<div class="asset-browser-sentinel" id="glitterBrowserSentinel"></div>
+
+							</div>
+
+
+
+						</div>
+
+
+
+					</div>
 
 
 
@@ -528,65 +521,57 @@
 
 
 
-<!-- Stickers Options -->
-<div class="asset-options stickers-options gallery-content" id="stickersOptions" data-gallery-content="stickers">
-
-
-    <!-- 1. Sticker Empty State -->
-    <div class="empty-state" id="stickerSearchEmptyState">
-        <div class="empty-state-icon">🖼️</div>
-        <div class="empty-state-text">No stickers found</div>
-        <div class="empty-state-subtext">Try clearing your filters</div>
-    </div>
-
-<!-- 2. Asset Browser Structure -->
-<div class="asset-browser" id="stickerBrowser">
-    <!-- Browser Header -->
-    <div class="asset-browser-header">
-
-
-		<button class="btn-icon icon-wrapper" id="stickerBrowserBack" disabled>
-			<svg class="icon">
-				<use href="#icon-chevron-left"></use>
-			</svg>
-			<span class="name">Back</span>
-		</button>
+					<!-- Stickers Options -->
+					<div class="asset-options stickers-options gallery-content" id="stickersOptions" data-gallery-content="stickers">
 
 
 
-        <div class="asset-browser-title" id="stickerBrowserTitle">Stickers</div>
-    </div>
-
-    <!-- Browser Content -->
-    <div class="asset-browser-content" id="stickerBrowserContent">
-        <!-- Empty State -->
-        <div class="empty-state" id="stickerBrowserEmpty">
-            <div class="empty-state-icon">🔍</div>
-            <div class="empty-state-text" id="stickerBrowserEmptyText">No items found</div>
-        </div>
-        
-        <!-- Category Grid (shown by default) -->
-        <div class="category-grid" id="stickerCategoryGrid"></div>
-        
-        <!-- Search Results Container -->
-        <div class="search-results-container" id="stickerSearchResults"></div>
-        
-        <!-- Item Grid (shown when viewing single category) -->
-        <div class="asset-grid" id="stickerItemGrid"></div>
-
-	    <!-- Sentinel for lazy loading -->
-    <div class="asset-browser-sentinel" id="stickerBrowserSentinel"></div>
-
-    </div>
+						<!-- 2. Asset Browser Structure -->
+						<div class="asset-browser" id="stickerBrowser">
+							<!-- Browser Header -->
+							<div class="asset-browser-header">
 
 
-    
+								<button class="btn-icon-simple icon-wrapper" id="stickerBrowserBack" disabled>
+									<svg class="icon">
+										<use href="#icon-chevron-left"></use>
+									</svg>
+									<span class="name">Back</span>
+								</button>
 
-</div>
 
-    <!-- 3. Fallback: Traditional Grid Container (if browser disabled) -->
-    <div class="grid-container sticker-grid-container" id="stickerGridContainer"></div>
-</div>
+
+								<div class="asset-browser-title" id="stickerBrowserTitle">Stickers</div>
+							</div>
+
+							<!-- Browser Content -->
+							<div class="asset-browser-content" id="stickerBrowserContent">
+								<!-- Empty State -->
+								<div class="empty-state" id="stickerBrowserEmpty">
+									<div class="empty-state-icon">🔍</div>
+									<div class="empty-state-text" id="stickerBrowserEmptyText">No items found</div>
+								</div>
+
+								<!-- Category Grid (shown by default) -->
+								<div class="category-grid" id="stickerCategoryGrid"></div>
+
+								<!-- Search Results Container -->
+								<div class="search-results-container" id="stickerSearchResults"></div>
+
+								<!-- Item Grid (shown when viewing single category) -->
+								<div class="asset-grid" id="stickerItemGrid"></div>
+
+								<!-- Sentinel for lazy loading -->
+								<div class="asset-browser-sentinel" id="stickerBrowserSentinel"></div>
+
+							</div>
+
+
+
+
+						</div>
+
+					</div>
 
 
 
@@ -887,7 +872,7 @@
 
 
 							<div class="empty-state visible">
-								
+
 								<div class="empty-state-inner-wrapper">
 									<div class="empt-state-text">Load an image to start designing.</div>
 									<div class="empty-state-subtext">Or start with a blank canvas:</div>
@@ -897,9 +882,9 @@
 										</svg>
 										<span class="name">New Blank Canvas</span>
 									</button>
-									</div>
-
 								</div>
+
+							</div>
 
 
 						</div>
@@ -1236,8 +1221,8 @@
 
 
 
-</div>
-<div class="settings-row">
+					</div>
+					<div class="settings-row">
 
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Height</div>
@@ -1247,8 +1232,8 @@
 						</div>
 
 
-</div>
-<div class="settings-row">
+					</div>
+					<div class="settings-row">
 
 
 						<!-- Orientation Toggle -->
@@ -1322,7 +1307,7 @@
 
 				<!-- Cancel -->
 				<button class="btn-text icon-wrapper cancel" id="createCanvasCloseBtn">
-Cancel
+					Cancel
 				</button>
 
 				<!-- Create Canvas -->
@@ -1797,49 +1782,49 @@ Cancel
 	</div>
 
 
-<!-- Mobile Bottom Navigation -->
-<div class="mobile-bottom-nav">
-	<div class="mobile-drawer-btn-group">
-		<button class="mobile-drawer-btn" data-drawer="layers">
-			<div class="mobile-layers-swatch empty"></div>
-			Layers
-			<span class="mobile-layers-count" data-count="0"></span>
-		</button>
+	<!-- Mobile Bottom Navigation -->
+	<div class="mobile-bottom-nav">
+		<div class="mobile-drawer-btn-group">
+			<button class="mobile-drawer-btn" data-drawer="layers">
+				<div class="mobile-layers-swatch empty"></div>
+				Layers
+				<span class="mobile-layers-count" data-count="0"></span>
+			</button>
+		</div>
+
+		<div class="mobile-drawer-btn-group small">
+			<button class="btn-icon mobile-add-layer-btn active icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
+				<svg class="icon">
+					<use href="#icon-plus"></use>
+				</svg>
+				<span class="name">Add Layer</span>
+			</button>
+		</div>
+
+		<div class="mobile-drawer-btn-group">
+			<button class="mobile-drawer-btn" data-drawer="design">Design</button>
+		</div>
 	</div>
 
-	<div class="mobile-drawer-btn-group small">
-		<button class="btn-icon mobile-add-layer-btn active icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
+
+
+
+
+	<!-- Mobile Settings Drawer -->
+	<div class="mobile-settings-drawer">
+
+
+		<button id="mobileSettingsBtn" class="icon-wrapper btn-icon mobile-settings-btn" disabled>
 			<svg class="icon">
-				<use href="#icon-plus"></use>
+				<use href="#icon-sliders"></use>
 			</svg>
-			<span class="name">Add Layer</span>
+			<span class="name">Slider Settings</span>
 		</button>
+
+		<div class="mobile-settings-content" id="mobileSettingsContainer">
+			<!-- Desktop settings sections will be moved here temporarily on mobile -->
+		</div>
 	</div>
-
-	<div class="mobile-drawer-btn-group">
-		<button class="mobile-drawer-btn" data-drawer="design">Design</button>
-	</div>
-</div>
-
-
-
-
-
-<!-- Mobile Settings Drawer -->
-<div class="mobile-settings-drawer">
-
-
-	<button id="mobileSettingsBtn" class="icon-wrapper btn-icon mobile-settings-btn" disabled>
-		<svg class="icon">
-			<use href="#icon-sliders"></use>
-		</svg>
-		<span class="name">Slider Settings</span>
-	</button>
-
-  <div class="mobile-settings-content" id="mobileSettingsContainer">
-    <!-- Desktop settings sections will be moved here temporarily on mobile -->
-  </div>
-</div>
 
 
 
@@ -1972,9 +1957,9 @@ Cancel
 					<path d="M384 64C366.3 64 352 78.3 352 96C352 113.7 366.3 128 384 128L466.7 128L265.3 329.4C252.8 341.9 252.8 362.2 265.3 374.7C277.8 387.2 298.1 387.2 310.6 374.7L512 173.3L512 256C512 273.7 526.3 288 544 288C561.7 288 576 273.7 576 256L576 96C576 78.3 561.7 64 544 64L384 64zM144 160C99.8 160 64 195.8 64 240L64 496C64 540.2 99.8 576 144 576L400 576C444.2 576 480 540.2 480 496L480 416C480 398.3 465.7 384 448 384C430.3 384 416 398.3 416 416L416 496C416 504.8 408.8 512 400 512L144 512C135.2 512 128 504.8 128 496L128 240C128 231.2 135.2 224 144 224L224 224C241.7 224 256 209.7 256 192C256 174.3 241.7 160 224 160L144 160z" />
 				</symbol>
 
-<symbol id="icon-arrow-left" viewBox="0 0 640 640">
-	<path d="M73.4 297.4C60.9 309.9 60.9 330.2 73.4 342.7L233.4 502.7C245.9 515.2 266.2 515.2 278.7 502.7C291.2 490.2 291.2 469.9 278.7 457.4L173.3 352L544 352C561.7 352 576 337.7 576 320C576 302.3 561.7 288 544 288L173.3 288L278.7 182.6C291.2 170.1 291.2 149.8 278.7 137.3C266.2 124.8 245.9 124.8 233.4 137.3L73.4 297.3z"/>
-</symbol>
+				<symbol id="icon-arrow-left" viewBox="0 0 640 640">
+					<path d="M73.4 297.4C60.9 309.9 60.9 330.2 73.4 342.7L233.4 502.7C245.9 515.2 266.2 515.2 278.7 502.7C291.2 490.2 291.2 469.9 278.7 457.4L173.3 352L544 352C561.7 352 576 337.7 576 320C576 302.3 561.7 288 544 288L173.3 288L278.7 182.6C291.2 170.1 291.2 149.8 278.7 137.3C266.2 124.8 245.9 124.8 233.4 137.3L73.4 297.3z" />
+				</symbol>
 
 
 				<symbol id="icon-arrows-up-down" viewBox="0 0 640 640">
@@ -2077,7 +2062,7 @@ Cancel
 	<script src="js/utils.js"></script>
 
 	<!-- Classes -->
-	 	<script src="js/classes/ModalManager.js"></script>
+	<script src="js/classes/ModalManager.js"></script>
 	<script src="js/classes/GifExporter.js"></script>
 	<script src="js/classes/ViewportManager.js"></script>
 
@@ -2085,7 +2070,7 @@ Cancel
 	<script src="js/classes/LayerManager.js"></script>
 
 	<!-- Content -->
-	 <script src="js/classes/AssetBrowser.js"></script> 
+	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
 	<script src="js/classes/GlitterManager.js"></script>
 	<script src="js/classes/StickerManager.js"></script>
@@ -2099,7 +2084,7 @@ Cancel
 	<!-- TEMPORARY: Mobile debugging console -->
 
 	<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-	<script>eruda.init();</script>
+	<script>// eruda.init();</script>
 </body>
 
 </html>

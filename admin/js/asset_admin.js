@@ -160,6 +160,10 @@ renderAssetList() {
 async saveAsset() {
     if (!this.currentAsset) return;
 
+    // SAVE SCROLL POSITION
+    const contentScroll = document.getElementById('contentScroll');
+    const scrollTop = contentScroll ? contentScroll.scrollTop : 0;
+
     // Get data from child class
     const data = this.getAssetDataFromForm();
     
@@ -177,10 +181,13 @@ async saveAsset() {
 
     if (result.success) {
         this.showStatus('Saved!', 'success');
-        // Reload the list from server to get proper category grouping
         await this.loadAssets();
-        // Re-select current item to update editor
-        await this.selectAsset(this.currentAsset.id);
+        
+        // RESTORE SCROLL POSITION
+        setTimeout(() => {
+            const contentScroll = document.getElementById('contentScroll');
+            if (contentScroll) contentScroll.scrollTop = scrollTop;
+        }, 0);
     } else {
         this.showStatus('Error: ' + result.error, 'error');
     }
