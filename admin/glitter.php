@@ -23,7 +23,7 @@ include_once('includes/config.php');
 
 <body>
     <div class="container">
-       
+
         <!-- Header -->
         <div class="header">
             <h1><a href="index.php">Glitter Admin</a> / Glitter</h1>
@@ -33,7 +33,7 @@ include_once('includes/config.php');
             </ul>
         </div>
 
-         <!-- Sidebar -->
+        <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
                 <h2>Glitter</h2>
@@ -84,28 +84,28 @@ include_once('includes/config.php');
 
             <div class="modal-body">
 
-            <div class="form-section">
-                <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" id="newSwatchName" placeholder="My Glitter">
-                </div>
-
-                <div class="form-group">
-                    <label>Category & File</label>
-                    <div style="display: flex; gap: 8px; margin-bottom: 4px;">
-                        <select id="quickCategory" style="flex: 1;" onchange="app.updateFilePath()">
-                            <option value="">Select category...</option>
-                            <!-- Populated from this.categories -->
-                        </select>
-                        <input type="file" id="filePathInput" accept=".gif" style="display: none;" onchange="app.handleFileSelection(event)">
-                        <label for="filePathInput" class="btn btn-secondary" style="margin: 0; cursor: pointer;">
-                            Browse…
-                        </label>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="newSwatchName" placeholder="My Glitter">
                     </div>
-                    <input type="text" id="newSwatchUrl" placeholder="images/glitter/sparkle/my-glitter.gif" style="width: 100%;">
+
+                    <div class="form-group">
+                        <label>Category & File</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 4px;">
+                            <select id="quickCategory" style="flex: 1;" onchange="app.updateFilePath()">
+                                <option value="">Select category...</option>
+                                <!-- Populated from this.categories -->
+                            </select>
+                            <input type="file" id="filePathInput" accept=".gif" style="display: none;" onchange="app.handleFileSelection(event)">
+                            <label for="filePathInput" class="btn btn-secondary" style="margin: 0; cursor: pointer;">
+                                Browse…
+                            </label>
+                        </div>
+                        <input type="text" id="newSwatchUrl" placeholder="images/glitter/sparkle/my-glitter.gif" style="width: 100%;">
+                    </div>
                 </div>
             </div>
-</div>
 
             <div class="modal-footer">
                 <button class="btn btn-primary" onclick="app.addSwatch()">Add</button>
@@ -121,15 +121,15 @@ include_once('includes/config.php');
     <div class="modal" id="analyzeModal">
         <div class="modal-content" style="max-width: 500px;">
 
-        <div class="modal-header">
-            <h3 class="modal-title">Auto-Analysis Results</h3>
-</div>
+            <div class="modal-header">
+                <h3 class="modal-title">Auto-Analysis Results</h3>
+            </div>
 
             <div class="modal-body">
-            <p>
-                Select which fields to apply:
-            </p>
-            <div id="analyzeResults"></div>
+                <p>
+                    Select which fields to apply:
+                </p>
+                <div id="analyzeResults"></div>
             </div>
 
             <div class="modal-footer">
@@ -144,34 +144,34 @@ include_once('includes/config.php');
     <div class="modal" id="manageCategoriesModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                 <h3 class="modal-title">Manage Categories</h3>
+                <h3 class="modal-title">Manage Categories</h3>
             </div>
 
             <div class="modal-body">
-            <div class="form-section new-category">
-                <h4>Add New Category</h4>
-                <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" id="newCategoryName" placeholder="Category Name">
-                </div>
-                <div class="form-group">
-                    <label>Slug</label>
-                    <input type="text" id="newCategorySlug" placeholder="category-slug">
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <input type="text" id="newCategoryDescription" placeholder="Optional description">
+                <div class="form-section new-category">
+                    <h4>Add New Category</h4>
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="newCategoryName" placeholder="Category Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Slug</label>
+                        <input type="text" id="newCategorySlug" placeholder="category-slug">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="newCategoryDescription" placeholder="Optional description">
+                    </div>
+
+                    <div class="form-group buttons">
+                        <button class="btn btn-primary" onclick="app.addCategory()">Add Category</button>
+                    </div>
                 </div>
 
-                <div class="form-group buttons">
-                <button class="btn btn-primary" onclick="app.addCategory()">Add Category</button>
+                <div class="existing-categories">
+                    <h4>Existing Categories</h4>
+                    <div class="category-list" id="categoryList"></div>
                 </div>
-            </div>
-
-            <div class="existing-categories">
-                <h4>Existing Categories</h4>
-                <div class="category-list" id="categoryList"></div>
-            </div>
             </div>
 
             <div class="modal-footer">
@@ -181,7 +181,7 @@ include_once('includes/config.php');
 
         </div>
 
-        
+
     </div>
 
     <!-- Manage Tags Modal -->
@@ -189,36 +189,39 @@ include_once('includes/config.php');
         <div class="modal-content">
 
             <div class="modal-header">
-                 <h3 class="modal-title">Manage Tags</h3>
+                <h3 class="modal-title">Manage Tags</h3>
             </div>
 
             <div class="modal-body">
                 <div class="form-section">
-                <h4>Add New Tag</h4>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" id="newTagName" placeholder="Tag Name">
+                    <h4>Add New Tag</h4>
+
+                    <div class="form-wrapper">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" id="newTagName" placeholder="Tag Name">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="newTagCategory"></select>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label>Category</label>
-                        <select id="newTagCategory"></select>
+                        <label>Hex Color (optional, for color tags)</label>
+                        <input type="text" id="newTagHexColor" placeholder="#FF0000">
+                    </div>
+
+                    <div class="form-group buttons">
+                        <button class="btn btn-primary" onclick="app.addNewTag()">Add Tag</button>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Hex Color (optional, for color tags)</label>
-                    <input type="text" id="newTagHexColor" placeholder="#FF0000">
-                </div>
+</div>
 
-                <div class="form-group buttons">
-                <button class="btn btn-primary" onclick="app.addNewTag()">Add Tag</button>
+                <div>
+                    <h4>Existing Tags</h4>
+                    <div class="tag-management-list" id="tagList"></div>
                 </div>
-            </div>
-
-            <div>
-                <h4>Existing Tags</h4>
-                <div class="tag-management-list" id="tagList"></div>
-            </div>
             </div>
 
             <div class="modal-footer">
@@ -227,7 +230,7 @@ include_once('includes/config.php');
         </div>
     </div>
 
-<!-- Category Management Modal -->
+    <!-- Category Management Modal -->
     <div class="modal" id="categoryModal">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
@@ -239,46 +242,49 @@ include_once('includes/config.php');
                     <!-- Add New Category Form -->
                     <div class="category-form-section">
                         <h4>Add New Category</h4>
+
+                        <div class="form-wrapper">
                         <div class="form-row">
-                            <label>
-                                Name:
-                                <input type="text" id="newCategoryName" placeholder="e.g., Classic Sparkle">
-                            </label>
+                            <label>Name:</label>
+                            <input type="text" id="newCategoryName" placeholder="e.g., Classic Sparkle">
+
                         </div>
                         <div class="form-row">
                             <label>
-                                Slug:
-                                <input type="text" id="newCategorySlug" placeholder="e.g., classic-sparkle">
-                            </label>
+                                Slug:</label>
+                            <input type="text" id="newCategorySlug" placeholder="e.g., classic-sparkle">
+
                         </div>
                         <div class="form-row">
                             <label>
-                                Description:
-                                <textarea id="newCategoryDescription" rows="2" placeholder="Category description"></textarea>
-                            </label>
+                                Description:</label>
+                            <textarea id="newCategoryDescription" rows="2" placeholder="Category description"></textarea>
+
                         </div>
                         <div class="form-row">
                             <label>
-                                Icon Path:
-                                <input type="text" id="newCategoryIcon" placeholder="images/glitter/sparkle/icon.gif">
-                            </label>
+                                Icon Path:</label>
+                            <input type="text" id="newCategoryIcon" placeholder="images/glitter/sparkle/icon.gif">
+
                         </div>
 
                         <div class="form-row">
                             <label>
-                                Color:
-                                <input type="color" id="newCategoryColor" value="#ff69b4">
-                            </label>
+                                Color:</label>
+                            <input type="color" id="newCategoryColor" value="#ff69b4">
+
                         </div>
 
 
                         <div class="form-row">
                             <label>
-                                Sort Order:
-                                <input type="number" id="newCategorySortOrder" value="0" min="0">
-                            </label>
+                                Sort Order:</label>
+                            <input type="number" id="newCategorySortOrder" value="0" min="0">
+
                         </div>
                         <button class="btn btn-primary" onclick="app.addCategory()">Add Category</button>
+
+</div>
                     </div>
 
                     <!-- Existing Categories List -->
@@ -301,49 +307,53 @@ include_once('includes/config.php');
                 <button class="close-btn" onclick="app.hideEditCategoryModal()">×</button>
             </div>
             <div class="modal-body">
+
+            <div class="form-wrapper">
                 <input type="hidden" id="editCategoryId">
                 <div class="form-row">
                     <label>
-                        Name:
-                        <input type="text" id="editCategoryName">
-                    </label>
+                        Name:</label>
+                    <input type="text" id="editCategoryName">
+
                 </div>
                 <div class="form-row">
                     <label>
-                        Slug:
-                        <input type="text" id="editCategorySlug">
-                    </label>
+                        Slug:</label>
+                    <input type="text" id="editCategorySlug">
+
                 </div>
                 <div class="form-row">
                     <label>
-                        Description:
-                        <textarea id="editCategoryDescription" rows="2"></textarea>
-                    </label>
+                        Description: </label>
+                    <textarea id="editCategoryDescription" rows="2"></textarea>
+
                 </div>
                 <div class="form-row">
                     <label>
-                        Icon Path:
-                        <input type="text" id="editCategoryIcon" placeholder="images/glitter/sparkle/icon.gif">
-                    </label>
+                        Icon Path: </label>
+                    <input type="text" id="editCategoryIcon" placeholder="images/glitter/sparkle/icon.gif">
+
                 </div>
 
                 <div class="form-row">
                     <label>
-                        Color:
-                        <input type="color" id="editCategoryColor">
-                    </label>
+                        Color:</label>
+                    <input type="color" id="editCategoryColor">
+
                 </div>
 
                 <div class="form-row">
                     <label>
-                        Sort Order:
-                        <input type="number" id="editCategorySortOrder" min="0">
-                    </label>
+                        Sort Order:</label>
+                    <input type="number" id="editCategorySortOrder" min="0">
+
                 </div>
                 <div class="form-actions">
                     <button class="btn btn-secondary" onclick="app.hideEditCategoryModal()">Cancel</button>
                     <button class="btn btn-primary" onclick="app.saveCategory()">Save Changes</button>
                 </div>
+
+</div>
             </div>
         </div>
     </div>

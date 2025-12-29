@@ -2,106 +2,106 @@
     {
         "id": "animal",
         "name": "animal",
-        "icon": "",
+        "icon": "images/stickers/animal/butterfly_rainbow-glitter.gif",
         "color": "#ff69b4",
         "description": "Stickers in the animal category"
     },
     {
         "id": "character",
         "name": "character",
-        "icon": "",
+        "icon": "images/stickers/character/star_dance.gif",
         "color": "#ff69b4",
         "description": "Stickers in the character category"
     },
     {
         "id": "decorative",
         "name": "decorative",
-        "icon": "",
+        "icon": "images/stickers/decorative/rainbow_glitter.gif",
         "color": "#ff69b4",
         "description": "Stickers in the decorative category"
     },
     {
         "id": "flower",
         "name": "flower",
-        "icon": "",
+        "icon": "images/stickers/flower/rose_red-green-glitter.gif",
         "color": "#ff69b4",
         "description": "Stickers in the flower category"
     },
     {
         "id": "logo",
         "name": "logo",
-        "icon": "",
+        "icon": "images/stickers/logo/playboy_silver-glitter.gif",
         "color": "#ff69b4",
         "description": "Stickers in the logo category"
     },
     {
         "id": "object",
         "name": "object",
-        "icon": "",
+        "icon": "images/stickers/object/money_wave_green.gif",
         "color": "#ff69b4",
         "description": "Stickers in the object category"
     },
     {
         "id": "people",
         "name": "people",
-        "icon": "",
+        "icon": "images/stickers/people/lips_red-glitter.gif",
         "color": "#ff69b4",
         "description": "Stickers in the people category"
     },
     {
         "id": "text",
         "name": "text",
-        "icon": "",
+        "icon": "images/stickers/text/sexy_arrow_purple.gif",
         "color": "#ff69b4",
         "description": "Stickers in the text category"
     },
     {
         "id": "frame",
         "name": "frame",
-        "icon": "",
+        "icon": "images/stickers/frame/rose-heart_frame_red.gif",
         "color": "#ff69b4",
         "description": "Stickers in the frame category"
     },
     {
         "id": "background",
         "name": "background",
-        "icon": "",
+        "icon": "images/stickers/background/checkerboard_emo_rainbow.gif",
         "color": "#ff69b4",
         "description": "Stickers in the background category"
     },
     {
         "id": "clothing",
         "name": "clothing",
-        "icon": "",
+        "icon": "images/stickers/clothing/crown_gold-glitter.gif",
         "color": "#ff69b4",
         "description": "Stickers in the clothing category"
     },
     {
         "id": "emoji",
         "name": "emoji",
-        "icon": "",
+        "icon": "images/stickers/emoji/emoji_thumbs-up_yellow.gif",
         "color": "#ff69b4",
         "description": "Stickers in the emoji category"
     },
     {
         "id": "jewelry",
         "name": "jewelry",
-        "icon": "",
+        "icon": "images/stickers/jewelry/gangsta-necklace_gold_4.gif",
         "color": "#ff69b4",
         "description": "Stickers in the jewelry category"
     },
     {
         "id": "sparkle",
         "name": "sparkle",
-        "icon": "",
+        "icon": "images/stickers/sparkle/fireworks_yellow-pink.gif",
         "color": "#ff69b4",
         "description": "Stickers in the sparkle category"
     },
     {
         "id": "user-uploads",
         "name": "User Uploads",
-        "icon": "",
+        "icon": "images/stickers/decorative/heart_pink-glitter.gif",
         "color": "#ff69b4",
-        "description": ""
+        "description": "Stickers uploaded by user"
     }
 ]

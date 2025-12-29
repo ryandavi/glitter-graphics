@@ -389,20 +389,24 @@ class AssetEditor {
         }
     }
 
-    editCategory(id) {
-        const category = this.categories.find(c => c.id === id);
-        if (!category) return;
-
-        document.getElementById('editCategoryId').value = category.id;
-        document.getElementById('editCategoryName').value = category.name;
-        document.getElementById('editCategorySlug').value = category.slug;
-        document.getElementById('editCategoryDescription').value = category.description || '';
-        document.getElementById('editCategoryIcon').value = category.icon || '';
-        document.getElementById('editCategoryColor').value = category.color || '#ff69b4';
-        document.getElementById('editCategorySortOrder').value = category.sort_order || 0;
-
-        document.getElementById('editCategoryModal').classList.add('active');
+editCategory(id) {
+    // Convert to int to ensure type match
+    const category = this.categories.find(c => parseInt(c.id) === parseInt(id));
+    if (!category) {
+        console.log('Category not found - ID:', id, 'Categories:', this.categories);
+        return;
     }
+
+    document.getElementById('editCategoryId').value = category.id;
+    document.getElementById('editCategoryName').value = category.name;
+    document.getElementById('editCategorySlug').value = category.slug;
+    document.getElementById('editCategoryDescription').value = category.description || '';
+    document.getElementById('editCategoryIcon').value = category.icon || '';
+    document.getElementById('editCategoryColor').value = category.color || '#ff69b4';
+    document.getElementById('editCategorySortOrder').value = category.sort_order || 0;
+
+    document.getElementById('editCategoryModal').classList.add('active');
+}
 
     hideEditCategoryModal() {
         document.getElementById('editCategoryModal').classList.remove('active');

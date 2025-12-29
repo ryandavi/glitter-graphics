@@ -137,6 +137,7 @@ body {
     h1 {
         margin: 0;
         color: var(--text-secondary);
+
         a {
             text-decoration: none;
             color: var(--text-primary);
@@ -155,13 +156,15 @@ body {
 
         li {
             &.current {
-                color: var(--accent-primary);
+                color: var(--text-primary);
+                text-decoration: underline;
+
             }
         }
 
         a {
             text-decoration: none;
-            color: var(--text-primary);
+            color: var(--accent-primary);
 
             &:hover {
                 text-decoration: underline;
@@ -314,6 +317,15 @@ body {
     display: none;
     max-width: 800px;
     margin: 0 auto;
+
+
+    .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    }
+
+
 }
 
 // ============================================
@@ -324,9 +336,6 @@ body {
     background-color: var(--bg-elevated);
     border-radius: var(--radius-xl);
 
-    + .form-section {
-        margin-top: var(--spacing-lg);
-    }
 }
 
 .form-section-title,
@@ -341,18 +350,12 @@ h3 {
 }
 
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-lg);
 
     .form-group + .form-group {
         margin-top: 0;
     }
 
-    + .form-row,
-    + .form-group {
-        margin-top: var(--spacing-lg);
-    }
+ 
 }
 
 .form-group + .form-row,
@@ -375,20 +378,54 @@ h3 {
         border-radius: var(--radius-xl);
     }
 
-    label {
-        display: block;
-        margin-bottom: var(--spacing-xs);
-        color: var(--text-secondary);
-        font-size: var(--font-size-sm);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+
+}
+
+
+.form-wrapper {
+        display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+h4 {
+    + .categories-list,
+    + .form-wrapper {
+        margin-top: var(--spacing-lg);
     }
 }
+
+.form-row,
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+
+    > label {
+        display: block;
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+
+    }
+}
+
+.form-row + .form-group {
+    margin-top: var(--spacing-lg);
+}
+
+.form-section {
+    + .form-section {
+        margin-top: var(--spacing-lg);
+    }
+}
+
 
 input[type="text"],
 input[type="number"],
 input[type="url"],
-input[type="color"],
 select,
 textarea {
     width: 100%;
@@ -408,7 +445,8 @@ textarea {
 }
 
 input[type="color"] {
-    min-height: 100px;
+    min-height: 50px;
+    aspect-ratio: 1/1
 }
 
 textarea {
@@ -622,6 +660,12 @@ input[type="checkbox"] {
     &:hover {
         opacity: var(--opacity-hover);
     }
+}
+
+.tag-section {
+        display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
 }
 
 .tag-select-container {
@@ -840,7 +884,7 @@ input[type="checkbox"] {
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: var(--spacing-lg);
+            gap: var(--spacing-md);
 
             h5, 
             h4 {
@@ -931,25 +975,9 @@ input[type="checkbox"] {
     }
 }
 
-.form-row {
-    margin-bottom: var(--spacing-lg);
 
-    label {
-        display: block;
-        font-size: var(--font-size-sm);
-        color: var(--text-secondary);
-        margin-bottom: var(--spacing-xs);
 
-        input[type="text"],
-        input[type="number"],
-        input[type="color"],
-        input[type="url"],
-        textarea,
-        select {
-            margin-top: var(--spacing-xs);
-        }
-    }
-}
+
 
 .form-actions {
     display: flex;
@@ -964,7 +992,6 @@ input[type="checkbox"] {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    max-height: 500px;
     overflow-y: auto;
     
     // Custom scrollbar

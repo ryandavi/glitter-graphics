@@ -158,106 +158,135 @@ class StickerEditor extends AssetEditor {
 
     // ===== ANALYZE STICKER =====
 
-    async analyzeCurrentSticker() {
-        if (!this.currentAsset) return;
+async analyzeCurrentSticker() {
+    if (!this.currentAsset) return;
 
-        this.showStatus('Analyzing sticker...');
+    this.showStatus('Analyzing sticker...');
 
-        try {
-            const response = await fetch(`includes/api.php?action=analyze&id=${this.currentAsset.id}&type=glitter`);
-            const analysis = await response.json();
+    try {
+        const response = await fetch(`includes/api.php?action=analyze&id=${this.currentAsset.id}&type=sticker`);
+        const analysis = await response.json();
 
-            if (analysis.error) {
-                alert('Analysis failed: ' + analysis.error);
-                this.showStatus('Analysis failed', 'error');
-                return;
-            }
-
-            // Show modal with results
-            this.showAnalyzeModal(analysis);
-
-        } catch (error) {
-            alert('Analysis error: ' + error.message);
-            this.showStatus('Analysis error', 'error');
+        if (analysis.error) {
+            alert('Analysis failed: ' + analysis.error);
+            this.showStatus('Analysis failed', 'error');
+            return;
         }
+
+        // Show modal with results
+        this.showAnalyzeModal(analysis);
+
+    } catch (error) {
+        alert('Analysis error: ' + error.message);
+        this.showStatus('Analysis error', 'error');
     }
+}
 
-    async showAnalyzeModal(analysis) {
-        const modal = document.getElementById('analyzeModal');
-        const resultsDiv = document.getElementById('analyzeResults');
+async showAnalyzeModal(analysis) {
+    const modal = document.getElementById('analyzeModal');
+    const resultsDiv = document.getElementById('analyzeResults');
 
-        // Get actual image dimensions and file size from the file
-        const imagePath = CONFIG.image_base_path + this.currentAsset.url;
-        const imageData = await this.getImageData(imagePath);
+    // Get actual image dimensions and file size from the file
+    const imagePath = CONFIG.image_base_path + this.currentAsset.url;
+    const imageData = await this.getImageData(imagePath, analysis.frame_count);
 
-        // Merge analysis with image data
-        const fullAnalysis = {
-            ...analysis,
-            ...imageData
-        };
+    // Merge analysis with image data
+    const fullAnalysis = {
+        ...analysis,
+        ...imageData
+    };
 
-        const fields = [
-            { key: 'width', label: 'Width (px)', value: fullAnalysis.width || 'N/A' },
-            { key: 'height', label: 'Height (px)', value: fullAnalysis.height || 'N/A' },
-            { key: 'frame_count', label: 'Frame Count', value: fullAnalysis.frame_count || 1 },
-            { key: 'file_size', label: 'File Size (bytes)', value: fullAnalysis.file_size || 'N/A' },
-            { key: 'is_animated', label: 'Animated', value: fullAnalysis.is_animated ? 'Yes' : 'No' },
-            { key: 'has_transparency', label: 'Has Transparency', value: fullAnalysis.has_transparency ? 'Yes' : 'No' }
-        ];
+    const fields = [
+        { key: 'width', label: 'Width (px)', value: fullAnalysis.width || 'N/A' },
+        { key: 'height', label: 'Height (px)', value: fullAnalysis.height || 'N/A' },
+        { key: 'frame_count', label: 'Frame Count', value: fullAnalysis.frame_count || 1 },
+        { key: 'file_size', label: 'File Size (bytes)', value: fullAnalysis.file_size || 'N/A' },
+        { key: 'is_animated', label: 'Animated', value: fullAnalysis.is_animated ? 'Yes' : 'No' },
+        { key: 'has_transparency', label: 'Has Transparency', value: fullAnalysis.has_transparency ? 'Yes' : 'No' }
+    ];
 
-        resultsDiv.innerHTML = fields.map(field => `
-            <div class="analyze-result-item">
-                <input type="checkbox" id="apply_${field.key}" checked>
-                <div class="analyze-result-content">
-                    <div class="analyze-result-label">${field.label}</div>
-                    <div class="analyze-result-value">${field.value}</div>
-                </div>
+    resultsDiv.innerHTML = fields.map(field => `
+        <div class="analyze-result-item">
+            <input type="checkbox" id="apply_${field.key}" checked>
+            <div class="analyze-result-content">
+                <div class="analyze-result-label">${field.label}</div>
+                <div class="analyze-result-value">${field.value}</div>
             </div>
-        `).join('');
+        </div>
+    `).join('');
 
-        this.pendingAnalysis = fullAnalysis;
-        modal.classList.add('active');
-    }
+    this.pendingAnalysis = fullAnalysis;
+    modal.classList.add('active');
+}
 
     // Helper to get image dimensions and file size
-    async getImageData(imagePath) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                // Fetch file size
-                fetch(imagePath)
-                    .then(response => response.blob())
-                    .then(blob => {
-                        resolve({
-                            width: img.naturalWidth,
-                            height: img.naturalHeight,
-                            file_size: blob.size,
-                            is_animated: this.pendingAnalysis?.frame_count > 1,
-                            has_transparency: false // GIF transparency detection would need canvas
-                        });
-                    })
-                    .catch(() => {
-                        resolve({
-                            width: img.naturalWidth,
-                            height: img.naturalHeight,
-                            file_size: null,
-                            is_animated: false,
-                            has_transparency: false
-                        });
+async getImageData(imagePath, frameCount) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = () => {
+            // Create canvas to check transparency
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(img, 0, 0);
+            
+            // Check for transparency
+            let hasTransparency = false;
+            try {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Check alpha channel
+                for (let i = 3; i < data.length; i += 4) {
+                    if (data[i] < 255) {
+                        hasTransparency = true;
+                        break;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not check transparency:', e);
+                hasTransparency = false;
+            }
+            
+            // Fetch file size
+            fetch(imagePath)
+                .then(response => response.blob())
+                .then(blob => {
+                    resolve({
+                        width: img.naturalWidth,
+                        height: img.naturalHeight,
+                        file_size: blob.size,
+                        is_animated: frameCount > 1,
+                        has_transparency: hasTransparency
                     });
-            };
-            img.onerror = () => {
-                resolve({
-                    width: null,
-                    height: null,
-                    file_size: null,
-                    is_animated: false,
-                    has_transparency: false
+                })
+                .catch(() => {
+                    resolve({
+                        width: img.naturalWidth,
+                        height: img.naturalHeight,
+                        file_size: null,
+                        is_animated: frameCount > 1,
+                        has_transparency: hasTransparency
+                    });
                 });
-            };
-            img.src = imagePath;
-        });
-    }
+        };
+        
+        img.onerror = () => {
+            resolve({
+                width: null,
+                height: null,
+                file_size: null,
+                is_animated: false,
+                has_transparency: false
+            });
+        };
+        
+        img.src = imagePath;
+    });
+}
 
     hideAnalyzeModal() {
         document.getElementById('analyzeModal').classList.remove('active');

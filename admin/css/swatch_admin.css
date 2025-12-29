@@ -110,11 +110,12 @@ body {
   font-size: var(--font-size-lg);
 }
 .header ul li.current {
-  color: var(--accent-primary);
+  color: var(--text-primary);
+  text-decoration: underline;
 }
 .header ul a {
   text-decoration: none;
-  color: var(--text-primary);
+  color: var(--accent-primary);
 }
 .header ul a:hover {
   text-decoration: underline;
@@ -252,14 +253,16 @@ body {
   max-width: 800px;
   margin: 0 auto;
 }
+.editor-content .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
 
 .form-section {
   padding: var(--spacing-lg);
   background-color: var(--bg-elevated);
   border-radius: var(--radius-xl);
-}
-.form-section + .form-section {
-  margin-top: var(--spacing-lg);
 }
 
 .form-section-title,
@@ -273,17 +276,8 @@ h3 {
   border-bottom: 1px solid var(--border-primary);
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-lg);
-}
 .form-row .form-group + .form-group {
   margin-top: 0;
-}
-.form-row + .form-row,
-.form-row + .form-group {
-  margin-top: var(--spacing-lg);
 }
 
 .form-group + .form-row,
@@ -303,19 +297,44 @@ h3 {
   background-color: var(--bg-input);
   border-radius: var(--radius-xl);
 }
-.form-group label {
+
+.form-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+h4 + .categories-list,
+h4 + .form-wrapper {
+  margin-top: var(--spacing-lg);
+}
+
+.form-row,
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.form-row > label,
+.form-group > label {
   display: block;
-  margin-bottom: var(--spacing-xs);
-  color: var(--text-secondary);
   font-size: var(--font-size-sm);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.form-row + .form-group {
+  margin-top: var(--spacing-lg);
+}
+
+.form-section + .form-section {
+  margin-top: var(--spacing-lg);
 }
 
 input[type=text],
 input[type=number],
 input[type=url],
-input[type=color],
 select,
 textarea {
   width: 100%;
@@ -331,7 +350,6 @@ textarea {
 input[type=text]:focus,
 input[type=number]:focus,
 input[type=url]:focus,
-input[type=color]:focus,
 select:focus,
 textarea:focus {
   outline: none;
@@ -339,7 +357,8 @@ textarea:focus {
 }
 
 input[type=color] {
-  min-height: 100px;
+  min-height: 50px;
+  aspect-ratio: 1/1;
 }
 
 textarea {
@@ -538,6 +557,12 @@ input[type=checkbox] {
   opacity: var(--opacity-hover);
 }
 
+.tag-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
 .tag-select-container {
   display: flex;
   gap: var(--spacing-sm);
@@ -730,7 +755,7 @@ input[type=checkbox] {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 .modal > .modal-content > .modal-body h5,
 .modal > .modal-content > .modal-body h4 {
@@ -814,24 +839,6 @@ input[type=checkbox] {
   font-weight: var(--font-weight-semibold);
 }
 
-.form-row {
-  margin-bottom: var(--spacing-lg);
-}
-.form-row label {
-  display: block;
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-xs);
-}
-.form-row label input[type=text],
-.form-row label input[type=number],
-.form-row label input[type=color],
-.form-row label input[type=url],
-.form-row label textarea,
-.form-row label select {
-  margin-top: var(--spacing-xs);
-}
-
 .form-actions {
   display: flex;
   gap: var(--spacing-md);
@@ -845,7 +852,6 @@ input[type=checkbox] {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
-  max-height: 500px;
   overflow-y: auto;
 }
 .categories-list::-webkit-scrollbar {

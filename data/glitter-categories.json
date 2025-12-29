@@ -2,42 +2,42 @@
     {
         "id": "sparkle",
         "name": "Classic Sparkle",
-        "icon": "",
+        "icon": "images/glitter/sparkle/glitter_crimson.gif",
         "color": "#ff69b4",
         "description": "Classic sparkle glitter effects"
     },
     {
         "id": "ember",
         "name": "Ember",
-        "icon": "",
+        "icon": "images/glitter/ember/ember_gold.gif",
         "color": "#ff69b4",
         "description": "Ember-style glitter effects"
     },
     {
         "id": "noise",
         "name": "Noise",
-        "icon": "",
+        "icon": "images/glitter/noise/noise_lime.gif",
         "color": "#ff69b4",
         "description": "Noise-based glitter effects"
     },
     {
         "id": "sparkle-2",
         "name": "Sparkle",
-        "icon": "",
+        "icon": "images/glitter/sparkle_2/sparkle_blue.gif",
         "color": "#ff69b4",
         "description": "Miscellaneous glitter effects"
     },
     {
         "id": "etc",
         "name": "Etc",
-        "icon": "",
+        "icon": "images/glitter/etc/etc_lavender.gif",
         "color": "#ff69b4",
         "description": "Temporary/experimental glitter effects"
     },
     {
         "id": "transparent",
         "name": "Transparent",
-        "icon": "",
+        "icon": "images/glitter/transparent/transparent_pink-sparkle.gif",
         "color": "#ff69b4",
         "description": "Transparent Glitter effects"
     }
