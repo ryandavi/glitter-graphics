@@ -76,7 +76,7 @@ public function exportCategories()
     $assetTable = $this->tables['table'];
     $categoryIdField = $this->assetType . '_category_id';
     
-    // For stickers: order by item count (most items first)
+    // For stickers: "User Uploads" first, then by item count (most items first)
     // For glitter: use sort_order
     if ($this->assetType === 'sticker') {
         $sql = "
@@ -84,7 +84,10 @@ public function exportCategories()
             FROM $table c
             LEFT JOIN $assetTable a ON c.id = a.$categoryIdField
             GROUP BY c.id
-            ORDER BY item_count DESC, c.name
+            ORDER BY 
+                CASE WHEN c.name = 'User Uploads' THEN 0 ELSE 1 END,
+                item_count DESC, 
+                c.name
         ";
     } else {
         $sql = "SELECT * FROM $table ORDER BY sort_order";
