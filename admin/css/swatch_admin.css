@@ -78,7 +78,46 @@ body {
 .container {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "header header" "sidebar main";
   height: 100vh;
+}
+
+.header {
+  grid-area: header;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  padding: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header h1 {
+  margin: 0;
+  color: var(--text-secondary);
+}
+.header h1 a {
+  text-decoration: none;
+  color: var(--text-primary);
+}
+.header h1 a:hover {
+  text-decoration: underline;
+}
+.header ul {
+  list-style-type: none;
+  display: flex;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-lg);
+}
+.header ul li.current {
+  color: var(--accent-primary);
+}
+.header ul a {
+  text-decoration: none;
+  color: var(--text-primary);
+}
+.header ul a:hover {
+  text-decoration: underline;
 }
 
 .sidebar {
@@ -87,6 +126,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  grid-area: sidebar;
 }
 
 .sidebar-header {
@@ -188,6 +228,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  grid-area: main;
 }
 
 .content-scroll {

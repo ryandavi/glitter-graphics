@@ -1,47 +1,107 @@
 [
-
-  {
-    "id": "User Uploads",
-    "name": "User Uploads",
-    "icon": "/stickers/user-upload-icon.png",
-    "color": "#00bcd4",
-    "description": "Your uploaded stickers"
-  },
-
-
-  {
-    "id": "animal",
-    "name": "Animals",
-    "icon": "images/stickers/animal/butterfly_rainbow-glitter.gif",
-    "color": "#8b4513",
-    "description": "Animal stickers"
-  },
-  {
-    "id": "character",
-    "name": "Characters",
-    "icon": "images/stickers/character/star_dance.gif",
-    "color": "#ff6b6b",
-    "description": "Character stickers"
-  },
-  {
-    "id": "decorative",
-    "name": "Decorative",
-    "icon": "images/stickers/decorative/rainbow_glitter.gif",
-    "color": "#9370db",
-    "description": "Decorative elements"
-  },
-  {
-    "id": "flower",
-    "name": "Flowers",
-    "icon": "images/stickers/flower/rose_rotate.gif",
-    "color": "#98fb98",
-    "description": "Flower stickers"
-  },
-  {
-    "id": "logo",
-    "name": "Logos",
-    "icon": "images/stickers/logo/playboy_silver-glitter.gif",
-    "color": "#4169e1",
-    "description": "Logo stickers"
-  }
+    {
+        "id": "animal",
+        "name": "animal",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the animal category"
+    },
+    {
+        "id": "character",
+        "name": "character",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the character category"
+    },
+    {
+        "id": "decorative",
+        "name": "decorative",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the decorative category"
+    },
+    {
+        "id": "flower",
+        "name": "flower",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the flower category"
+    },
+    {
+        "id": "logo",
+        "name": "logo",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the logo category"
+    },
+    {
+        "id": "object",
+        "name": "object",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the object category"
+    },
+    {
+        "id": "people",
+        "name": "people",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the people category"
+    },
+    {
+        "id": "text",
+        "name": "text",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the text category"
+    },
+    {
+        "id": "frame",
+        "name": "frame",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the frame category"
+    },
+    {
+        "id": "background",
+        "name": "background",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the background category"
+    },
+    {
+        "id": "clothing",
+        "name": "clothing",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the clothing category"
+    },
+    {
+        "id": "emoji",
+        "name": "emoji",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the emoji category"
+    },
+    {
+        "id": "jewelry",
+        "name": "jewelry",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the jewelry category"
+    },
+    {
+        "id": "sparkle",
+        "name": "sparkle",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": "Stickers in the sparkle category"
+    },
+    {
+        "id": "user-uploads",
+        "name": "User Uploads",
+        "icon": "",
+        "color": "#ff69b4",
+        "description": ""
+    }
 ]
