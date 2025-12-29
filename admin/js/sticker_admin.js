@@ -76,6 +76,13 @@ class StickerEditor extends AssetEditor {
                     <label>Attribution (optional)</label>
                     <input type="text" id="attribution" value="${s.attribution || ''}" placeholder="Artist name or source">
                 </div>
+
+                <div class="form-group">
+                    <label>Sticker Text (optional)</label>
+                    <input type="text" id="sticker_text" value="${s.sticker_text || ''}" placeholder="Text present in the sticker" maxlength="255">
+                </div>
+
+
             </div>
 
             <div class="form-section">
@@ -138,13 +145,16 @@ class StickerEditor extends AssetEditor {
     // ===== GET FORM DATA =====
 
 getAssetDataFromForm() {
+
+
     return {
         id: this.currentAsset.id,
         name: document.getElementById('name').value,
         filename: document.getElementById('filename').value,
         url: document.getElementById('url').value,
-        sticker_category_id: parseInt(document.getElementById('category_id').value), // Must be sticker_category_id
+        sticker_category_id: parseInt(document.getElementById('category_id').value),
         attribution: document.getElementById('attribution').value || null,
+        sticker_text: document.getElementById('sticker_text').value || null,
         width: parseInt(document.getElementById('width').value) || 0,
         height: parseInt(document.getElementById('height').value) || 0,
         file_size: parseInt(document.getElementById('file_size').value) || 0,

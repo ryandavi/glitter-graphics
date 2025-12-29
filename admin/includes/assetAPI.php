@@ -90,7 +90,13 @@ public function exportCategories()
                 c.name
         ";
     } else {
-        $sql = "SELECT * FROM $table ORDER BY sort_order";
+        $sql = "
+            SELECT c.*, COUNT(a.id) as item_count
+            FROM $table c
+            LEFT JOIN $assetTable a ON c.id = a.$categoryIdField
+            GROUP BY c.id
+            ORDER BY c.sort_order
+        ";
     }
     
     $result = $this->db->query($sql);
@@ -98,11 +104,12 @@ public function exportCategories()
     $categories = [];
     while ($row = $result->fetch_assoc()) {
         $categories[] = [
-            'id' => $row['slug'], // Use slug as ID for frontend
+            'id' => $row['slug'],
             'name' => $row['name'],
             'icon' => isset($row['icon']) ? $row['icon'] : '',
             'color' => isset($row['color']) ? $row['color'] : '#ff69b4',
-            'description' => isset($row['description']) ? $row['description'] : ''
+            'description' => isset($row['description']) ? $row['description'] : '',
+            'count' => isset($row['item_count']) ? intval($row['item_count']) : 0
         ];
     }
 

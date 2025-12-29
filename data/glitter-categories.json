@@ -4,41 +4,47 @@
         "name": "Classic Sparkle",
         "icon": "images/glitter/sparkle/glitter_crimson.gif",
         "color": "#ff69b4",
-        "description": "Classic sparkle glitter effects"
+        "description": "Classic sparkle glitter effects",
+        "count": 70
     },
     {
         "id": "ember",
         "name": "Ember",
         "icon": "images/glitter/ember/ember_gold.gif",
         "color": "#ff69b4",
-        "description": "Ember-style glitter effects"
+        "description": "Ember-style glitter effects",
+        "count": 9
     },
     {
         "id": "noise",
         "name": "Noise",
         "icon": "images/glitter/noise/noise_lime.gif",
         "color": "#ff69b4",
-        "description": "Noise-based glitter effects"
+        "description": "Noise-based glitter effects",
+        "count": 8
     },
     {
         "id": "sparkle-2",
         "name": "Other Sparkle",
         "icon": "images/glitter/sparkle_2/sparkle_blue.gif",
         "color": "#ff69b4",
-        "description": "Miscellaneous glitter effects"
+        "description": "Miscellaneous glitter effects",
+        "count": 5
     },
     {
         "id": "etc",
         "name": "Etc",
         "icon": "images/glitter/etc/etc_lavender.gif",
         "color": "#ff69b4",
-        "description": "Temporary/experimental glitter effects"
+        "description": "Temporary/experimental glitter effects",
+        "count": 15
     },
     {
         "id": "transparent",
         "name": "Transparent",
         "icon": "images/glitter/transparent/transparent_pink-sparkle.gif",
         "color": "#ff69b4",
-        "description": "Transparent Glitter effects"
+        "description": "Transparent Glitter effects",
+        "count": 4
     }
 ]

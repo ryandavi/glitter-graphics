@@ -11,30 +11,31 @@ class StickerAPI extends AssetAPI
         parent::__construct($db, $config, 'sticker');
     }
 
-    protected function formatAssetForExport($asset, $tags)
-    {
-        return [
-            'id' => (int)$asset['id'],
-            'name' => $asset['name'],
-            'filename' => $asset['filename'],
-            'url' => $asset['url'],
-            'category' => $asset['category_slug'],
-            'attribution' => $asset['attribution'] ?? null,
-            'tags' => $tags,
-            'is_animated' => (bool)$asset['is_animated'],
-            'has_transparency' => (bool)$asset['has_transparency'],
-            'width' => (int)($asset['width'] ?? 0),
-            'height' => (int)($asset['height'] ?? 0),
-            'frame_count' => (int)($asset['frame_count'] ?? 0),
-            'file_size' => (int)($asset['file_size'] ?? 0),
-            'sort_order' => (int)($asset['sort_order'] ?? 0)
-        ];
-    }
+protected function formatAssetForExport($asset, $tags)
+{
+    return [
+        'id' => (int)$asset['id'],
+        'name' => $asset['name'],
+        'filename' => $asset['filename'],
+        'url' => $asset['url'],
+        'category' => $asset['category_slug'],
+        'attribution' => $asset['attribution'] ?? null,
+        'sticker_text' => $asset['sticker_text'] ?? null,
+        'tags' => $tags,
+        'is_animated' => (bool)$asset['is_animated'],
+        'has_transparency' => (bool)$asset['has_transparency'],
+        'width' => (int)($asset['width'] ?? 0),
+        'height' => (int)($asset['height'] ?? 0),
+        'frame_count' => (int)($asset['frame_count'] ?? 0),
+        'file_size' => (int)($asset['file_size'] ?? 0),
+        'sort_order' => (int)($asset['sort_order'] ?? 0)
+    ];
+}
 
     protected function getAssetSpecificFields()
     {
         return [
-            'string' => ['name', 'filename', 'url', 'attribution'],
+            'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text'],
             'int' => ['sticker_category_id', 'is_animated', 'has_transparency', 'is_active', 'width', 'height', 'frame_count', 'file_size', 'sort_order'],
             'float' => []
         ];
@@ -46,12 +47,17 @@ public function updateSticker($data)
     $fields = [];
     $fieldTypes = $this->getAssetSpecificFields();
 
-    foreach ($fieldTypes['string'] as $field) {
-        if (isset($data[$field])) {
+foreach ($fieldTypes['string'] as $field) {
+    if (array_key_exists($field, $data)) {
+        // Handle NULL values for optional string fields
+        if ($data[$field] === null || $data[$field] === '') {
+            $fields[] = "$field = NULL";
+        } else {
             $value = $this->db->escape($data[$field]);
             $fields[] = "$field = '$value'";
         }
     }
+}
 
     foreach ($fieldTypes['int'] as $field) {
         if (isset($data[$field])) {

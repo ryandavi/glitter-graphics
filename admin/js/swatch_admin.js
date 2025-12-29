@@ -32,40 +32,71 @@ async init() {
                 this.tags = await response.json();
             }
 
-            renderSwatchList() {
-                const container = document.getElementById('swatchList');
-                let html = '';
-                let currentCategory = '';
+renderSwatchList() {
+    const container = document.getElementById('swatchList');
+    let html = '';
+    
+    // Get the 10 most recently added items (highest IDs)
+    const recentSwatches = [...this.swatches]
+        .sort((a, b) => b.id - a.id)
+        .slice(0, 10);
+    
+    // Render "Recently Added" section (NOT draggable)
+    if (recentSwatches.length > 0) {
+        html += `<details class="category-group" id="category-recently-added" open>
+            <summary class="category-label">Recently Added</summary>
+            <div class="category-items">`;
+        
+        recentSwatches.forEach(swatch => {
+            const active = this.currentSwatch && this.currentSwatch.id === swatch.id ? 'active' : '';
+            
+            html += `
+                <div class="swatch-item ${active}" 
+                     data-id="${swatch.id}" 
+                     onclick="app.selectSwatch(${swatch.id})">
+                    <div class="swatch-thumb" style="background-image: url('${CONFIG.image_base_path}${swatch.url}');"></div>
+                    <span class="swatch-name">${swatch.name}</span>
+                </div>
+            `;
+        });
+        
+        html += '</div></details>';
+    }
+    
+    // Render regular category groups (draggable)
+    let currentCategory = '';
+    this.swatches.forEach((swatch, index) => {
+        if (swatch.category_name !== currentCategory) {
+            if (currentCategory) html += '</div></details>';
+            currentCategory = swatch.category_name;
+            const categorySlug = currentCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            html += `<details class="category-group" id="category-${categorySlug}" open>
+                <summary class="category-label">${currentCategory}</summary>
+                <div class="category-items">`;
+        }
 
-                this.swatches.forEach((swatch, index) => {
-                    if (swatch.category_name !== currentCategory) {
-                        if (currentCategory) html += '</div>';
-                        currentCategory = swatch.category_name;
-                        html += `<div class="category-group">
-                            <div class="category-label">${currentCategory}</div>`;
-                    }
+        const active = this.currentSwatch && this.currentSwatch.id === swatch.id ? 'active' : '';
+        
+        html += `
+            <div class="swatch-item ${active}" 
+                 data-id="${swatch.id}" 
+                 draggable="true"
+                 onclick="app.selectSwatch(${swatch.id})">
+                <span class="drag-handle">⋮⋮</span>
+                <div class="swatch-thumb" style="background-image: url('${CONFIG.image_base_path}${swatch.url}');"></div>
+                <span class="swatch-name">${swatch.name}</span>
+            </div>
+        `;
+    });
 
-                    const active = this.currentSwatch && this.currentSwatch.id === swatch.id ? 'active' : '';
-                    html += `
-                        <div class="swatch-item ${active}" 
-                             data-id="${swatch.id}" 
-                             draggable="true"
-                             onclick="app.selectSwatch(${swatch.id})">
-                            <span class="drag-handle">⋮⋮</span>
-                            <div class="swatch-thumb" style="background-image: url('${CONFIG.image_base_path}${swatch.url}');"></div>
-                            <span class="swatch-name">${swatch.name}</span>
-                        </div>
-                    `;
-                });
+    if (currentCategory) html += '</div></details>';
+    container.innerHTML = html;
 
-                if (currentCategory) html += '</div>';
-                container.innerHTML = html;
-
-                // Restore scroll position
-                if (this.scrollPosition !== undefined) {
-                    container.scrollTop = this.scrollPosition;
-                }
-            }
+    // Restore scroll position
+    if (this.scrollPosition !== undefined) {
+        container.scrollTop = this.scrollPosition;
+    }
+}
 
             async selectSwatch(id) {
                 // Save scroll position

@@ -58,19 +58,22 @@ class AssetEditor {
 
     // ===== ASSET LIST RENDERING =====
 
-    renderAssetList() {
-        const container = document.getElementById(this.config.listContainerId);
-        let html = '';
-        let currentCategory = '';
-
-        this.assets.forEach((asset, index) => {
-            if (asset.category_name !== currentCategory) {
-                if (currentCategory) html += '</div>';
-                currentCategory = asset.category_name;
-                html += `<div class="category-group">
-                    <div class="category-label">${currentCategory}</div>`;
-            }
-
+renderAssetList() {
+    const container = document.getElementById(this.config.listContainerId);
+    let html = '';
+    
+    // Get the 10 most recently added items (highest IDs)
+    const recentAssets = [...this.assets]
+        .sort((a, b) => b.id - a.id)
+        .slice(0, 10);
+    
+    // Render "Recently Added" section
+    if (recentAssets.length > 0) {
+        html += `<details class="category-group" id="category-recently-added" open>
+            <summary class="category-label">Recently Added</summary>
+            <div class="category-items">`;
+        
+        recentAssets.forEach(asset => {
             const active = this.currentAsset && this.currentAsset.id === asset.id ? 'active' : '';
             const draggable = this.config.enableSorting ? 'draggable="true"' : '';
             const dragHandle = this.config.enableSorting ? '<span class="drag-handle">⋮⋮</span>' : '';
@@ -86,15 +89,46 @@ class AssetEditor {
                 </div>
             `;
         });
-
-        if (currentCategory) html += '</div>';
-        container.innerHTML = html;
-
-        // Restore scroll position
-        if (this.scrollPosition !== undefined) {
-            container.scrollTop = this.scrollPosition;
-        }
+        
+        html += '</div></details>';
     }
+    
+    // Render regular category groups
+    let currentCategory = '';
+    this.assets.forEach((asset, index) => {
+        if (asset.category_name !== currentCategory) {
+            if (currentCategory) html += '</div></details>';
+            currentCategory = asset.category_name;
+            const categorySlug = currentCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            html += `<details class="category-group" id="category-${categorySlug}" open>
+                <summary class="category-label">${currentCategory}</summary>
+                <div class="category-items">`;
+        }
+
+        const active = this.currentAsset && this.currentAsset.id === asset.id ? 'active' : '';
+        const draggable = this.config.enableSorting ? 'draggable="true"' : '';
+        const dragHandle = this.config.enableSorting ? '<span class="drag-handle">⋮⋮</span>' : '';
+        
+        html += `
+            <div class="swatch-item ${active}" 
+                 data-id="${asset.id}" 
+                 ${draggable}
+                 onclick="app.selectAsset(${asset.id})">
+                ${dragHandle}
+                ${this.renderAssetThumbnail(asset)}
+                <span class="swatch-name">${asset.name}</span>
+            </div>
+        `;
+    });
+
+    if (currentCategory) html += '</div></details>';
+    container.innerHTML = html;
+
+    // Restore scroll position
+    if (this.scrollPosition !== undefined) {
+        container.scrollTop = this.scrollPosition;
+    }
+}
 
     // Override in child class for custom thumbnail rendering
     renderAssetThumbnail(asset) {
