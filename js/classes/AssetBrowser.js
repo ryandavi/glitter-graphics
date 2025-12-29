@@ -324,7 +324,7 @@ updateCategoryCounts() {
 		} else {
 			card.innerHTML = `
 				<div class="category-card-image">
-					<img src="${category.icon}" alt="${category.name}">
+					<img src="${category.icon}" draggable="false" alt="${category.name}">
 				</div>
 				<div class="category-card-name">${category.name}</div>
 				<div class="category-card-count">${count} ${count === 1 ? 'item' : 'items'}</div>
@@ -434,15 +434,18 @@ loadMoreItems() {
 			return; // No more items to load
 		}
 		
-		batch.forEach(item => {
-			const element = this.createItemElement(item);
-			this.elements.itemGrid.appendChild(element);
-		});
-		
-		this.currentOffset += batch.length;
-		
-		// Check if we need to load more to fill viewport
-		this.checkAndLoadMore();
+batch.forEach(item => {
+	const element = this.createItemElement(item);
+	this.elements.itemGrid.appendChild(element);
+});
+
+this.currentOffset += batch.length;
+
+// Update selection state for newly rendered items
+this.contentManager.updateSelection();
+
+// Check if we need to load more to fill viewport
+this.checkAndLoadMore();
 	}
 
 checkAndLoadMore() {
@@ -569,10 +572,13 @@ loadSearchItems() {
 		currentGrid.appendChild(element);
 	});
 	
-	this.currentOffset += batch.length;
-	
-	// Check if we need to load more
-	this.checkAndLoadMore();
+this.currentOffset += batch.length;
+
+// Update selection state for newly rendered items
+this.contentManager.updateSelection();
+
+// Check if we need to load more
+this.checkAndLoadMore();
 }
 
 	showEmptyState(message) {

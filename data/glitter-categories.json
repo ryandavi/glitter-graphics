@@ -22,7 +22,7 @@
     },
     {
         "id": "sparkle-2",
-        "name": "Sparkle",
+        "name": "Other Sparkle",
         "icon": "images/glitter/sparkle_2/sparkle_blue.gif",
         "color": "#ff69b4",
         "description": "Miscellaneous glitter effects"

@@ -339,6 +339,11 @@ async initBrowser() {
 
 	}
 
+updateSelection() {
+	// Delegate to main editor's update method
+	this.editor.updateGlitterSelection();
+}
+
 	renderLayer(layer, width, height) {
 		if (layer.type !== LayerType.GLITTER_FILL) return;
 

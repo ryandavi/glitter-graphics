@@ -40,46 +40,52 @@ class StickerAPI extends AssetAPI
         ];
     }
 
-    public function updateSticker($data)
-    {
-        $id = (int)$data['id'];
-        $fields = [];
-        $fieldTypes = $this->getAssetSpecificFields();
+public function updateSticker($data)
+{
+    $id = (int)$data['id'];
+    $fields = [];
+    $fieldTypes = $this->getAssetSpecificFields();
 
-        foreach ($fieldTypes['string'] as $field) {
-            if (isset($data[$field])) {
-                $value = $this->db->escape($data[$field]);
-                $fields[] = "$field = '$value'";
-            }
+    foreach ($fieldTypes['string'] as $field) {
+        if (isset($data[$field])) {
+            $value = $this->db->escape($data[$field]);
+            $fields[] = "$field = '$value'";
         }
-
-        foreach ($fieldTypes['int'] as $field) {
-            if (isset($data[$field])) {
-                $value = $data[$field] !== '' ? (int)$data[$field] : 'NULL';
-                $fields[] = "$field = $value";
-            }
-        }
-
-        if (empty($fields)) {
-            throw new Exception('No fields to update');
-        }
-
-        $table = $this->tables['table'];
-        $sql = "UPDATE $table SET " . implode(', ', $fields) . " WHERE id = $id";
-        $this->db->query($sql);
-
-        // Update tags if provided
-        if (isset($data['tags'])) {
-            $tagsMapTable = $this->tables['tags_map_table'];
-            $this->db->query("DELETE FROM $tagsMapTable WHERE sticker_id = $id");
-            foreach ($data['tags'] as $tagId) {
-                $tagId = (int)$tagId;
-                $this->db->query("INSERT INTO $tagsMapTable (sticker_id, sticker_tag_id) VALUES ($id, $tagId)");
-            }
-        }
-
-        return ['success' => true];
     }
+
+    foreach ($fieldTypes['int'] as $field) {
+        if (isset($data[$field])) {
+            $value = $data[$field] !== '' ? (int)$data[$field] : 'NULL';
+            $fields[] = "$field = $value";
+        }
+    }
+
+    // IMPORTANT: Reset sort_order to 0 when category changes
+    // This prevents stickers from appearing in separate groups
+    if (isset($data['sticker_category_id'])) {
+        $fields[] = "sort_order = 0";
+    }
+
+    if (empty($fields)) {
+        throw new Exception('No fields to update');
+    }
+
+    $table = $this->tables['table'];
+    $sql = "UPDATE $table SET " . implode(', ', $fields) . " WHERE id = $id";
+    $this->db->query($sql);
+
+    // Update tags if provided
+    if (isset($data['tags'])) {
+        $tagsMapTable = $this->tables['tags_map_table'];
+        $this->db->query("DELETE FROM $tagsMapTable WHERE sticker_id = $id");
+        foreach ($data['tags'] as $tagId) {
+            $tagId = (int)$tagId;
+            $this->db->query("INSERT INTO $tagsMapTable (sticker_id, sticker_tag_id) VALUES ($id, $tagId)");
+        }
+    }
+
+    return ['success' => true];
+}
 
     public function deleteSticker($id)
     {

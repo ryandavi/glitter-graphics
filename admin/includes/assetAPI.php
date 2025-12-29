@@ -73,7 +73,24 @@ abstract class AssetAPI
 public function exportCategories()
 {
     $table = $this->tables['categories_table'];
-    $result = $this->db->query("SELECT * FROM $table ORDER BY sort_order");
+    $assetTable = $this->tables['table'];
+    $categoryIdField = $this->assetType . '_category_id';
+    
+    // For stickers: order by item count (most items first)
+    // For glitter: use sort_order
+    if ($this->assetType === 'sticker') {
+        $sql = "
+            SELECT c.*, COUNT(a.id) as item_count
+            FROM $table c
+            LEFT JOIN $assetTable a ON c.id = a.$categoryIdField
+            GROUP BY c.id
+            ORDER BY item_count DESC, c.name
+        ";
+    } else {
+        $sql = "SELECT * FROM $table ORDER BY sort_order";
+    }
+    
+    $result = $this->db->query($sql);
 
     $categories = [];
     while ($row = $result->fetch_assoc()) {
@@ -216,28 +233,38 @@ public function updateCategory($data)
 
     // ===== ASSET METHODS =====
     
-    public function listAssets()
-    {
-        $assetTable = $this->tables['table'];
-        $categoriesTable = $this->tables['categories_table'];
-        $categoryIdField = $this->assetType . '_category_id';
-        
-        $sql = "
-            SELECT a.*, c.name as category_name, c.slug as category_slug
-            FROM $assetTable a 
-            JOIN $categoriesTable c ON a.$categoryIdField = c.id 
-            ORDER BY c.sort_order, a.sort_order, a.name
-        ";
+public function listAssets()
+{
+    $assetTable = $this->tables['table'];
+    $categoriesTable = $this->tables['categories_table'];
+    $categoryIdField = $this->assetType . '_category_id';
+    
+    // For stickers: alphabetical category order, then by name (ignore sort_order)
+    // For glitter: use sort_order as before
+    $orderByMap = [
+        'sticker' => 'c.name, a.id, a.name',
+    ];
 
-        $result = $this->db->query($sql);
+    $orderBy = $orderByMap[$this->assetType]
+        ?? 'c.sort_order, a.sort_order, a.name';
 
-        $assets = [];
-        while ($row = $result->fetch_assoc()) {
-            $assets[] = $row;
-        }
+    
+    $sql = "
+        SELECT a.*, c.name as category_name, c.slug as category_slug
+        FROM $assetTable a 
+        JOIN $categoriesTable c ON a.$categoryIdField = c.id 
+        ORDER BY $orderBy
+    ";
 
-        return $assets;
+    $result = $this->db->query($sql);
+
+    $assets = [];
+    while ($row = $result->fetch_assoc()) {
+        $assets[] = $row;
     }
+
+    return $assets;
+}
 
     public function getAsset($id)
     {

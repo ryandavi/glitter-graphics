@@ -444,6 +444,11 @@ if (this.browser) {
 
 	// ===== RENDERING =====
 
+updateSelection() {
+	// Delegate to main editor's update method
+	this.editor.updateStickerSelection();
+}
+
 	renderLayer(layer) {
 		if (layer.type !== LayerType.STICKER) return;
 

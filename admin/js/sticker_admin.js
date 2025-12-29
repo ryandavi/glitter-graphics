@@ -137,25 +137,24 @@ class StickerEditor extends AssetEditor {
 
     // ===== GET FORM DATA =====
 
-    getAssetDataFromForm() {
-        return {
-            id: this.currentAsset.id,
-            name: document.getElementById('name').value,
-            filename: document.getElementById('filename').value,
-            url: document.getElementById('url').value,
-            sticker_category_id: parseInt(document.getElementById('category_id').value),
-            attribution: document.getElementById('attribution').value || null,
-            width: parseInt(document.getElementById('width').value) || 0,
-            height: parseInt(document.getElementById('height').value) || 0,
-            file_size: parseInt(document.getElementById('file_size').value) || 0,
-            frame_count: parseInt(document.getElementById('frame_count').value) || 1,
-            is_animated: document.getElementById('is_animated').checked ? 1 : 0,
-            has_transparency: document.getElementById('has_transparency').checked ? 1 : 0,
-            is_active: document.getElementById('is_active').checked ? 1 : 0,
-            tags: this.currentAsset.tags.map(t => t.id)
-        };
-    }
-
+getAssetDataFromForm() {
+    return {
+        id: this.currentAsset.id,
+        name: document.getElementById('name').value,
+        filename: document.getElementById('filename').value,
+        url: document.getElementById('url').value,
+        sticker_category_id: parseInt(document.getElementById('category_id').value), // Must be sticker_category_id
+        attribution: document.getElementById('attribution').value || null,
+        width: parseInt(document.getElementById('width').value) || 0,
+        height: parseInt(document.getElementById('height').value) || 0,
+        file_size: parseInt(document.getElementById('file_size').value) || 0,
+        frame_count: parseInt(document.getElementById('frame_count').value) || 1,
+        is_animated: document.getElementById('is_animated').checked ? 1 : 0,
+        has_transparency: document.getElementById('has_transparency').checked ? 1 : 0,
+        is_active: document.getElementById('is_active').checked ? 1 : 0,
+        tags: this.currentAsset.tags.map(t => t.id)
+    };
+}
     // ===== ANALYZE STICKER =====
 
 async analyzeCurrentSticker() {

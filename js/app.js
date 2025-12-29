@@ -792,38 +792,44 @@ updateSidePanelUI(layer) {
 		}
 	}
 
-	updateGlitterSelection() {
-		const layer = this.layerManager.getActiveLayer();
-		const glitterOptions = document.querySelectorAll('.asset-options .asset-option');
+updateGlitterSelection() {
+	const layer = this.layerManager.getActiveLayer();
+	
+	// Query all glitter options in BOTH traditional grid AND asset browser
+	const glitterOptions = document.querySelectorAll(
+		'.asset-options .asset-option, #glitterItemGrid .asset-option, #glitterSearchResults .asset-option'
+	);
 
-		glitterOptions.forEach(opt => {
-			// Compare IDs instead of indices
-			const isSelected = layer && layer.type === LayerType.GLITTER_FILL &&
-				parseInt(opt.dataset.id) === layer.selectedGlitterId;
-			opt.classList.toggle('selected', isSelected);
-		});
+	glitterOptions.forEach(opt => {
+		// Compare IDs instead of indices
+		const isSelected = layer && layer.type === LayerType.GLITTER_FILL &&
+			parseInt(opt.dataset.id) === layer.selectedGlitterId;
+		opt.classList.toggle('selected', isSelected);
+	});
+}
+
+updateStickerSelection() {
+	const layer = this.layerManager.getActiveLayer();
+
+	// Query all sticker options in BOTH traditional grid AND asset browser
+	const stickerOptions = document.querySelectorAll(
+		'#stickerGridContainer .asset-option, #stickerItemGrid .asset-option, #stickerSearchResults .asset-option'
+	);
+
+	// Early return if no sticker layer is active
+	if (!layer || layer.type !== LayerType.STICKER || !layer.stickerSourceId) {
+		// Clear all selections
+		stickerOptions.forEach(opt => opt.classList.remove('selected'));
+		return;
 	}
 
-	updateStickerSelection() {
-		const layer = this.layerManager.getActiveLayer();
-
-		// Get all sticker options in the grid
-		const stickerOptions = document.querySelectorAll('#stickerGridContainer .asset-option');
-
-		// Early return if no sticker layer is active
-		if (!layer || layer.type !== LayerType.STICKER || !layer.stickerSourceId) {
-			// Clear all selections
-			stickerOptions.forEach(opt => opt.classList.remove('selected'));
-			return;
-		}
-
-		// Mark the matching sticker as selected
-		stickerOptions.forEach(opt => {
-			// Convert both to strings for comparison (or both to numbers)
-			const isSelected = String(opt.dataset.id) === String(layer.stickerSourceId);
-			opt.classList.toggle('selected', isSelected);
-		});
-	}
+	// Mark the matching sticker as selected
+	stickerOptions.forEach(opt => {
+		// Convert both to strings for comparison (or both to numbers)
+		const isSelected = String(opt.dataset.id) === String(layer.stickerSourceId);
+		opt.classList.toggle('selected', isSelected);
+	});
+}
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {

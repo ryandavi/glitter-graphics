@@ -123,31 +123,34 @@ class AssetEditor {
 
     // ===== SAVE/DELETE OPERATIONS =====
 
-    async saveAsset() {
-        if (!this.currentAsset) return;
+async saveAsset() {
+    if (!this.currentAsset) return;
 
-        // Get data from child class
-        const data = this.getAssetDataFromForm();
-        
-        this.showStatus('Saving...');
+    // Get data from child class
+    const data = this.getAssetDataFromForm();
+    
+    this.showStatus('Saving...');
 
-        const response = await fetch(`includes/api.php?action=update&type=${this.config.assetType}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
+    const response = await fetch(`includes/api.php?action=update&type=${this.config.assetType}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    });
 
-        const result = await response.json();
+    const result = await response.json();
 
-        if (result.success) {
-            this.showStatus('Saved!', 'success');
-            await this.loadAssets();
-        } else {
-            this.showStatus('Error: ' + result.error, 'error');
-        }
+    if (result.success) {
+        this.showStatus('Saved!', 'success');
+        // Reload the list from server to get proper category grouping
+        await this.loadAssets();
+        // Re-select current item to update editor
+        await this.selectAsset(this.currentAsset.id);
+    } else {
+        this.showStatus('Error: ' + result.error, 'error');
     }
+}
 
     // Must be overridden by child class
     getAssetDataFromForm() {

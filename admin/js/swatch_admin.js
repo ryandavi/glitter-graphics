@@ -119,11 +119,11 @@ async init() {
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Category</label>
-                                <select id="category_id">
-                                    ${this.categories.map(cat => 
-                                        `<option value="${cat.id}" ${cat.id == s.category_id ? 'selected' : ''}>${cat.name}</option>`
-                                    ).join('')}
-                                </select>
+<select id="category_id">
+    ${this.categories.map(cat => 
+        `<option value="${cat.id}" ${cat.id == s.glitter_category_id ? 'selected' : ''}>${cat.name}</option>`
+    ).join('')}
+</select>
                             </div>
                             <div class="form-group">
                                 <label>&nbsp;</label>
@@ -327,49 +327,50 @@ async init() {
                 this.updateTagDisplay();
             }
 
-            async saveSwatch() {
-                if (!this.currentSwatch) return;
+async saveSwatch() {
+    if (!this.currentSwatch) return;
 
+    // Collect color codes from the multiple color inputs
+    const colorInputs = document.querySelectorAll('#colorInputs input[type="text"]');
+    const colorCodes = Array.from(colorInputs).map(input => input.value).join(',');
 
-                const data = {
-                    id: this.currentSwatch.id,
-                    name: document.getElementById('name').value,
-                    url: document.getElementById('url').value,
-                    generated_name: document.getElementById('generated_name').value,
-                    category_id: document.getElementById('category_id').value,
-                    is_pixelated: document.getElementById('is_pixelated').checked ? 1 : 0,
-                    is_active: document.getElementById('is_active').checked ? 1 : 0,
-                    frame_count: document.getElementById('frame_count').value,
-                    frame_rate: document.getElementById('frame_rate').value,
-                    is_variable_framerate: document.getElementById('is_variable_framerate').checked ? 1 : 0,
-                    color_value: document.getElementById('color_value').value,
-                    hue: document.getElementById('hue').value,
-                    sort_order: document.getElementById('sort_order').value,
-                    color_codes: this.getColorCodes(),
-                    tags: this.currentSwatch.tags.map(t => t.id)
-                };
+    const data = {
+        id: this.currentSwatch.id,
+        name: document.getElementById('name').value,
+        url: document.getElementById('url').value,
+        generated_name: document.getElementById('generated_name').value,
+        glitter_category_id: parseInt(document.getElementById('category_id').value),
+        is_pixelated: document.getElementById('is_pixelated').checked ? 1 : 0,
+        is_active: document.getElementById('is_active').checked ? 1 : 0,
+        hue: parseFloat(document.getElementById('hue').value) || null,
+        color_value: parseFloat(document.getElementById('color_value').value) || null,
+        color_codes: colorCodes,
+        frame_count: parseInt(document.getElementById('frame_count').value) || 0,
+        frame_rate: parseInt(document.getElementById('frame_rate').value) || 10,
+        is_variable_framerate: document.getElementById('is_variable_framerate').checked ? 1 : 0,
+        tags: this.currentSwatch.tags.map(t => t.id)
+    };
 
+    this.showStatus('Saving...');
 
+    const response = await fetch('includes/api.php?action=update&type=glitter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
 
-                this.showStatus('Saving...');
+    const result = await response.json();
 
-                const response = await fetch('includes/api.php?action=update', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    this.showStatus('Saved!', 'success');
-
-                } else {
-                    this.showStatus('Error: ' + result.error, 'error');
-                }
-            }
+    if (result.success) {
+        this.showStatus('Saved!', 'success');
+        // Reload the list from server to get proper category grouping
+        await this.loadSwatches();
+        // Re-select current item to update editor
+        await this.selectSwatch(this.currentSwatch.id);
+    } else {
+        this.showStatus('Error: ' + result.error, 'error');
+    }
+}
 
             getColorCodes() {
                 const container = document.getElementById('colorInputs');
