@@ -1109,9 +1109,18 @@
 
 <!-- Helpful Message -->
 <div class="helpful-message" id="helpfulMessage">
-	<div class="helpful-message-icon">💡</div>
-	<div class="helpful-message-text" id="helpfulMessageText"></div>
-	<button class="helpful-message-close" id="helpfulMessageClose" title="Close hint">×</button>
+	<span class="helpful-message-icon icon-wrapper">
+		<svg class="icon">
+			<use href="#icon-circle-info"></use>
+		</svg>
+	</span>
+	<div class="helpful-message-content">
+		<div class="helpful-message-text" id="helpfulMessageText"></div>
+		<div class="helpful-message-actions">
+			<button class="helpful-message-disable" id="helpfulMessageDisable">Don't show hints</button>
+			<button class="helpful-message-close" id="helpfulMessageClose" title="Close hint">×</button>
+		</div>
+	</div>
 </div>
 
 					</div>
@@ -2034,6 +2043,11 @@
 				<symbol id="icon-circle-info" viewBox="0 0 640 640">
 					<path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM288 224C288 206.3 302.3 192 320 192C337.7 192 352 206.3 352 224C352 241.7 337.7 256 320 256C302.3 256 288 241.7 288 224zM280 288L328 288C341.3 288 352 298.7 352 312L352 400L360 400C373.3 400 384 410.7 384 424C384 437.3 373.3 448 360 448L280 448C266.7 448 256 437.3 256 424C256 410.7 266.7 400 280 400L304 400L304 336L280 336C266.7 336 256 325.3 256 312C256 298.7 266.7 288 280 288z" />
 				</symbol>
+
+
+<symbol id="icon-lightbulb" viewBox="0 0 640 640">
+	<path d="M420.9 448C428.2 425.7 442.8 405.5 459.3 388.1C492 353.7 512 307.2 512 256C512 150 426 64 320 64C214 64 128 150 128 256C128 307.2 148 353.7 180.7 388.1C197.2 405.5 211.9 425.7 219.1 448L420.8 448zM416 496L224 496L224 512C224 556.2 259.8 592 304 592L336 592C380.2 592 416 556.2 416 512L416 496zM312 176C272.2 176 240 208.2 240 248C240 261.3 229.3 272 216 272C202.7 272 192 261.3 192 248C192 181.7 245.7 128 312 128C325.3 128 336 138.7 336 152C336 165.3 325.3 176 312 176z"/>
+	</symbol>
 
 
 				<!-- Portrait icon -->

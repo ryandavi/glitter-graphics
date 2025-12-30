@@ -268,22 +268,6 @@ class GlitterEditor {
 
 		this.touchGestureActive = false;
 
-		// Export settings
-		this.exportSettings = {
-			quality: CONFIG.defaultExportQuality,
-			ditherEnabled: CONFIG.defaultExportDitherEnabled,
-			ditherType: CONFIG.defaultExportDitherType,
-			frameDelay: CONFIG.defaultExportFrameDelay,
-			maxFrames: CONFIG.defaultExportMaxFrames,
-			baseImage: CONFIG.defaultExportBaseImage,
-			transparency: CONFIG.defaultExportTransparency,
-			matteColor: CONFIG.defaultExportMatteColor,
-			watermarkEnabled: CONFIG.defaultExportWatermarkEnabled,
-			exportFrameSkip: CONFIG.defaultExportFrameSkip,
-			exportReverse: CONFIG.defaultExportReverse,
-			smartFrameReduction: CONFIG.defaultExportSmartFrameReduction
-		};
-
 		this.exportStartTime = 0;
 		this.exportCancelled = false;
 
@@ -1617,31 +1601,7 @@ class GlitterEditor {
 
 
 
-	setupExportSettingsListeners() {
-		const settings = [
-			{ id: 'exportQuality', prop: 'quality', parser: parseInt },
-			{ id: 'exportDitherEnabled', prop: 'ditherEnabled', parser: (el) => el.checked },
-			{ id: 'exportDitherType', prop: 'ditherType', parser: (el) => el.value },
-			{ id: 'exportBaseImage', prop: 'baseImage', parser: (el) => el.checked },
-			{ id: 'exportTransparency', prop: 'transparency', parser: (el) => el.checked },
-			{ id: 'exportMatteColor', prop: 'matteColor', parser: (el) => el.value },
-			{ id: 'exportFrameDelay', prop: 'frameDelay', parser: parseInt },
-			{ id: 'exportMaxFrames', prop: 'maxFrames', parser: parseInt },
-			{ id: 'exportFrameSkip', prop: 'exportFrameSkip', parser: parseInt },
-			{ id: 'exportReverse', prop: 'exportReverse', parser: (el) => el.checked },
-			{ id: 'exportWatermarkEnabled', prop: 'watermarkEnabled', parser: (el) => el.checked }
-		];
 
-		settings.forEach(({ id, prop, parser }) => {
-			const element = document.getElementById(id);
-			if (element) {
-				element.addEventListener('change', (e) => {
-					this.exportSettings[prop] = parser(element);
-					this.saveSettingsToStorage();
-				});
-			}
-		});
-	}
 
 	setupImageListeners() {
 		const imageUpload = document.getElementById('imageUpload');
@@ -2359,13 +2319,12 @@ class GlitterEditor {
 	// ===== HELPFUL MESSAGES =====
 
 
-
-// Update updateHelpfulMessage():
 updateHelpfulMessage() {
 	const message = document.getElementById('helpfulMessage');
 	const text = document.getElementById('helpfulMessageText');
 	const activeLayer = this.layerManager.getActiveLayer();
 	const currentTool = this.currentTool;
+	const isMobile = this.mobileManager && this.mobileManager.isMobile;
 	
 	// Check if hints are enabled
 	if (!this.showHints) {
@@ -2381,53 +2340,88 @@ updateHelpfulMessage() {
 	
 	let hint = '';
 	
-	// Color picker tool hints
-	if (currentTool === ToolType.COLOR_PICKER) {
+	// Priority hints - show specific layer state hints first
+	
+	// Sticker with content placed
+	if (activeLayer && activeLayer.type === LayerType.STICKER && activeLayer.stickerSourceId) {
+		if (isMobile) {
+			hint = 'Tap the settings button to rotate, scale, or flip your sticker';
+		} else {
+			hint = 'Use the settings panel to rotate, scale, flip, or adjust opacity';
+		}
+	}
+	// Glitter layer with selections and glitter chosen
+	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
+		activeLayer.selections && activeLayer.selections.length > 0 && 
+		activeLayer.selectedGlitterId) {
+		if (isMobile) {
+			hint = 'Tap the settings button to adjust scale, opacity, or refine your selection';
+		} else {
+			hint = 'Use the settings panel to adjust scale, opacity, threshold, or feather';
+		}
+	}
+	// Glitter layer with selection but no glitter chosen
+	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
+		activeLayer.selections && activeLayer.selections.length > 0 && 
+		!activeLayer.selectedGlitterId) {
+		hint = 'Choose a glitter style from the gallery to apply it';
+	}
+	
+	// Tool-specific hints
+	else if (currentTool === ToolType.COLOR_PICKER) {
 		if (!activeLayer || activeLayer.type === LayerType.BASE_IMAGE) {
-			hint = 'Click on the base image to create a glitter fill layer—anywhere you want a color fill, that is';
+			hint = 'Click anywhere on your image to create a glitter fill layer';
 		} else if (activeLayer.type === LayerType.GLITTER_FILL) {
 			if (!activeLayer.selections || activeLayer.selections.length === 0) {
 				if (!activeLayer.selectedGlitterId) {
-					hint = 'Choose a glitter style from the gallery, then click colors on your image to fill';
+					hint = 'Choose a glitter style from the gallery, then click colors to fill';
 				} else {
-					hint = 'Click anywhere on the image to make a glitter fill selection';
+					hint = 'Click colors on your image to select areas for glitter';
 				}
 			} else if (document.getElementById('multiSelect')?.checked && activeLayer.selections.length === 1) {
-				hint = 'Multi-select is enabled—click additional colors to add to your selection';
+				hint = 'Multi-select is on—click more colors to expand your selection';
 			}
 		} else if (activeLayer.type === LayerType.STICKER) {
-			hint = 'Switch to the select tool to move stickers, or create a new glitter layer';
+			if (isMobile) {
+				hint = 'Switch to select tool to move stickers, or add a glitter layer';
+			} else {
+				hint = 'Switch to select tool to move stickers, or add a glitter layer';
+			}
 		}
 	}
 	
 	// Select tool hints
 	else if (currentTool === ToolType.SELECT) {
 		if (!activeLayer) {
-			hint = 'Add a sticker layer to use the select tool, or switch to color picker to create glitter';
+			hint = 'Add a sticker layer to move items around, or use color picker for glitter';
 		} else if (activeLayer.type === LayerType.STICKER) {
 			if (!activeLayer.stickerSourceId) {
-				hint = 'Choose a sticker from the gallery to place on your canvas';
+				hint = 'Choose a sticker from the gallery to place it on your canvas';
+			} else {
+				// Already handled by priority hint above
+				hint = '';
 			}
 		} else if (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.BASE_IMAGE) {
-			hint = 'Switch to the color picker tool to create glitter selections, or add a sticker layer';
+			hint = 'Switch to color picker to add glitter, or add a sticker layer';
 		}
 	}
 	
 	// Hand tool hint
 	else if (currentTool === ToolType.HAND) {
-		hint = 'Drag to pan the canvas';
+		if (isMobile) {
+			hint = 'Use one or two fingers to pan around the canvas';
+		} else {
+			hint = 'Click and drag to move around the canvas';
+		}
 	}
 	
 	// Zoom tool hint
 	else if (currentTool === ToolType.ZOOM) {
-		hint = 'Click to zoom in • Shift+click to zoom out';
-	}
-	
-	// Glitter layer with selection but no glitter chosen
-	if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
-		activeLayer.selections && activeLayer.selections.length > 0 && 
-		!activeLayer.selectedGlitterId) {
-		hint = 'Choose a glitter style from the gallery above';
+		if (isMobile) {
+			hint = 'Pinch to zoom in and out';
+		} else {
+			hint = 'Click to zoom in • Shift+click to zoom out';
+		}
 	}
 	
 	// Update visibility and text
@@ -2439,12 +2433,36 @@ updateHelpfulMessage() {
 	}
 }
 
+
+
+
 setupHelpfulMessageListeners() {
 	// Close button - just dismiss current hint
 	const closeBtn = document.getElementById('helpfulMessageClose');
 	if (closeBtn) {
 		closeBtn.addEventListener('click', () => {
 			this.currentHintDismissed = true;
+			document.getElementById('helpfulMessage')?.classList.remove('visible');
+		});
+	}
+	
+	// Disable button - turn off hints entirely
+	const disableBtn = document.getElementById('helpfulMessageDisable');
+	if (disableBtn) {
+		disableBtn.addEventListener('click', () => {
+			// Disable hints
+			this.showHints = false;
+			
+			// Update checkbox in settings
+			const showHintsInput = document.getElementById('showHelpfulHints');
+			if (showHintsInput) {
+				showHintsInput.checked = false;
+			}
+			
+			// Save to storage
+			this.saveSettingsToStorage();
+			
+			// Hide message
 			document.getElementById('helpfulMessage')?.classList.remove('visible');
 		});
 	}

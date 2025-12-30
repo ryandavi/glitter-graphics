@@ -85,6 +85,8 @@
 	--icon-size: 40px;
 	--icon-size-sm: 30px;
 
+	--icon-size-md: 35px;
+
 
 	/* PANELS */
 	--layer-panel-width: 400px;
@@ -4919,19 +4921,17 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 }
 
 
-
-
 .helpful-message {
 	display: none;
 	position: absolute;
-	top: var(--spacing-md);
+	top: calc(60px + var(--spacing-md));
 	left: 50%;
 	transform: translateX(-50%);
 	max-width: 400px;
 	width: calc(100% - var(--spacing-xl));
 	z-index: 100;
 	
-	align-items: center;
+	align-items: flex-start;
 	gap: var(--spacing-sm);
 	padding: var(--spacing-md);
 	background: var(--color-bg-tertiary);
@@ -4944,16 +4944,52 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 	}
 	
 	.helpful-message-icon {
-		font-size: var(--font-size-xl);
 		flex-shrink: 0;
 		opacity: 0.7;
+		margin-top: 2px;
+		
+		.icon {
+			width: var(--icon-size-md);
+			height: var(--icon-size-md);
+		}
+	}
+	
+	.helpful-message-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		min-width: 0; // Allow text to wrap
 	}
 	
 	.helpful-message-text {
-		flex: 1;
 		font-size: var(--font-size-sm);
 		color: var(--color-text-secondary);
 		line-height: 1.4;
+	}
+	
+	.helpful-message-actions {
+		display: flex;
+		gap: var(--spacing-xs);
+		align-items: center;
+		align-self: flex-end; // Align to right on desktop
+	}
+	
+	.helpful-message-disable {
+		padding: var(--spacing-xs) var(--spacing-sm);
+		border: none;
+		background: var(--color-bg-secondary);
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-xs);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		white-space: nowrap;
+		
+		&:hover {
+			background: var(--color-bg-hover);
+			color: var(--color-text-primary);
+		}
 	}
 	
 	.helpful-message-close {
@@ -4983,7 +5019,17 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 // Mobile adjustments
 @media (max-width: 800px) {
 	.helpful-message {
-		top: calc(var(--mobile-top-nav-height) + var(--spacing-md));
-		max-width: calc(100% - var(--spacing-lg) * 2);
+		top: calc(var(--mobile-top-nav-height) + var(--spacing-lg) + var(--spacing-sm));
+		max-width: calc(70% - var(--spacing-lg) * 2);
+		min-width: 200px;
+		
+		.helpful-message-actions {
+			align-self: stretch; // Full width on mobile
+			justify-content: space-between; // Spread buttons apart
+		}
+		
+		.helpful-message-disable {
+			flex: 1; // Take available space
+		}
 	}
 }
