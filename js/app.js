@@ -2318,11 +2318,13 @@ class GlitterEditor {
 
 	// ===== HELPFUL MESSAGES =====
 
-
 updateHelpfulMessage() {
 	const message = document.getElementById('helpfulMessage');
 	const text = document.getElementById('helpfulMessageText');
 	const description = document.getElementById('helpfulMessageDescription');
+	const toolLabel = document.getElementById('helpfulMessageTool');
+	const toolIcon = document.getElementById('helpfulMessageToolIcon');
+	const toolName = document.getElementById('helpfulMessageToolName');
 	const activeLayer = this.layerManager.getActiveLayer();
 	const currentTool = this.currentTool;
 	const isMobile = this.mobileManager && this.mobileManager.isMobile;
@@ -2341,29 +2343,41 @@ updateHelpfulMessage() {
 	
 	let hint = '';
 	let context = '';
+	let showTool = false;
+	let toolIconId = '';
+	let toolLabelText = '';
 	
-	// PRIORITY 1: Critical layer states that need attention (always show these first)
+	// Map tool to icon and name
+	const getToolInfo = (tool) => {
+		const toolMap = {
+			[ToolType.SELECT]: { icon: 'icon-hand-pointer', name: 'Select Tool' },
+			[ToolType.COLOR_PICKER]: { icon: 'icon-magic-wand', name: 'Color Picker' },
+			[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
+			[ToolType.ZOOM]: { icon: 'icon-magnifying-glass', name: 'Zoom Tool' }
+		};
+		return toolMap[tool] || { icon: '', name: '' };
+	};
 	
-	// Empty sticker layer
+	// PRIORITY 1: Critical layer states (don't show tool label for these)
+	
 	if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
 		hint = 'No sticker chosen—select a sticker from the gallery to place on your canvas';
 	}
-	// Glitter layer with selection but no glitter chosen
 	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
 		activeLayer.selections && activeLayer.selections.length > 0 && 
 		!activeLayer.selectedGlitterId) {
 		hint = 'No glitter selected—choose a glitter style from the gallery to apply it';
 	}
-	// Empty glitter layer (no selection)
 	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
 		(!activeLayer.selections || activeLayer.selections.length === 0) &&
 		currentTool !== ToolType.COLOR_PICKER) {
 		hint = 'Selection is empty—switch to color picker to add glitter to this layer';
 	}
 	
-	// PRIORITY 2: Tool-specific actions (what you can do RIGHT NOW)
+	// PRIORITY 2: Tool-specific actions (SHOW tool label for these)
 	
 	else if (currentTool === ToolType.ZOOM) {
+		showTool = true;
 		if (isMobile) {
 			hint = 'Pinch to zoom in and out';
 		} else {
@@ -2372,6 +2386,7 @@ updateHelpfulMessage() {
 	}
 	
 	else if (currentTool === ToolType.HAND) {
+		showTool = true;
 		if (isMobile) {
 			hint = 'Use one or two fingers to pan around the canvas';
 		} else {
@@ -2380,6 +2395,7 @@ updateHelpfulMessage() {
 	}
 	
 	else if (currentTool === ToolType.COLOR_PICKER) {
+		showTool = true;
 		if (!activeLayer || activeLayer.type === LayerType.BASE_IMAGE) {
 			hint = 'Click anywhere on your image to create a glitter fill layer';
 			context = 'Glitter fills are based on color selection from your base image.';
@@ -2394,7 +2410,6 @@ updateHelpfulMessage() {
 			} else if (document.getElementById('multiSelect')?.checked && activeLayer.selections.length === 1) {
 				hint = 'Multi-select is on—click more colors to expand your selection';
 			} else {
-				// Has selections, show enhancement tip
 				hint = 'Click more colors to add to selection, or adjust settings to refine';
 				context = 'Threshold controls color tolerance. Feather softens edges.';
 			}
@@ -2404,10 +2419,10 @@ updateHelpfulMessage() {
 	}
 	
 	else if (currentTool === ToolType.SELECT) {
+		showTool = true;
 		if (!activeLayer) {
 			hint = 'Add a sticker layer to move items around, or use color picker for glitter';
 		} else if (activeLayer.type === LayerType.STICKER && activeLayer.stickerSourceId) {
-			// Sticker is placed - show manipulation tips
 			if (isMobile) {
 				hint = 'Drag to move, pinch to scale and rotate';
 				context = 'Or tap settings button to adjust position, flip, and opacity.';
@@ -2420,9 +2435,8 @@ updateHelpfulMessage() {
 		}
 	}
 	
-	// PRIORITY 3: Enhancement tips for complete layers (only if no tool action shown)
+	// PRIORITY 3: Enhancement tips (don't show tool label)
 	
-	// Glitter layer complete with selections and glitter
 	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
 		activeLayer.selections && activeLayer.selections.length > 0 && 
 		activeLayer.selectedGlitterId) {
@@ -2433,6 +2447,16 @@ updateHelpfulMessage() {
 			hint = 'Use the settings panel to adjust scale, opacity, threshold, or feather';
 			context = 'Threshold controls color tolerance. Feather softens edges.';
 		}
+	}
+	
+	// Update tool label
+	if (showTool && toolLabel && toolIcon && toolName) {
+		const toolInfo = getToolInfo(currentTool);
+		toolIcon.setAttribute('href', `#${toolInfo.icon}`);
+		toolName.textContent = toolInfo.name;
+		toolLabel.style.display = 'flex';
+	} else if (toolLabel) {
+		toolLabel.style.display = 'none';
 	}
 	
 	// Update visibility and text

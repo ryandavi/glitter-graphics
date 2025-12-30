@@ -84,7 +84,7 @@
 
 	--icon-size: 40px;
 	--icon-size-sm: 30px;
-
+	--icon-size-xs: 20px;
 	--icon-size-md: 35px;
 
 
@@ -4944,12 +4944,11 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 	
 	.helpful-message-icon {
 		flex-shrink: 0;
-		opacity: 0.7;
-		margin-top: 2px;
+		color: var(--color-text-tertiary);
 		
 		.icon {
-			width: var(--icon-size-md);
-			height: var(--icon-size-md);
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
 		}
 	}
 	
@@ -4957,8 +4956,39 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
+		gap: var(--spacing-xs);
+		min-width: 0;
+	}
+	
+	.helpful-message-tool {
+		display: none;
+		align-items: center;
 		gap: var(--spacing-sm);
-		min-width: 0; // Allow text to wrap
+		padding-bottom: var(--spacing-xs);
+		border-bottom: 1px solid var(--color-border);
+		margin-bottom: var(--spacing-xs);
+		
+		&:not(:empty) {
+			display: flex;
+		}
+		
+		.helpful-message-tool-icon {
+			flex-shrink: 0;
+			opacity: 0.8;
+			
+			.icon {
+				width: var(--icon-size-xs);
+				height: var(--icon-size-xs);
+			}
+		}
+		
+		.helpful-message-tool-name {
+			font-size: var(--font-size-xs);
+			font-weight: 600;
+			color: var(--color-text-primary);
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
 	}
 	
 	.helpful-message-text {
@@ -4982,7 +5012,8 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 		display: flex;
 		gap: var(--spacing-xs);
 		align-items: center;
-		align-self: flex-end; // Align to right on desktop
+		align-self: flex-end;
+		margin-top: var(--spacing-xs);
 	}
 	
 	.helpful-message-disable {
@@ -5034,12 +5065,12 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 		min-width: 200px;
 		
 		.helpful-message-actions {
-			align-self: stretch; // Full width on mobile
-			justify-content: space-between; // Spread buttons apart
+			align-self: stretch;
+			justify-content: space-between;
 		}
 		
 		.helpful-message-disable {
-			flex: 1; // Take available space
+			flex: 1;
 		}
 	}
 }
