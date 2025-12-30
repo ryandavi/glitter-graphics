@@ -2396,7 +2396,7 @@ updateHelpfulMessage() {
 			hint = 'Add a sticker layer to move items around, or use color picker for glitter';
 		} else if (activeLayer.type === LayerType.STICKER) {
 			if (!activeLayer.stickerSourceId) {
-				hint = 'Choose a sticker from the gallery to place it on your canvas';
+				hint = 'Your sticker layer is empty—choose a sticker from the gallery to place it on your canvas';
 			} else {
 				// Already handled by priority hint above
 				hint = '';
