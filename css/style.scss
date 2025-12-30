@@ -1738,8 +1738,7 @@ input[type="range"] {
 
 	// Drop-shadow on the parent follows the child's mask shape
 	&.selected {
-
-		filter: url(#selection-glow) drop-shadow(0 0px 3px rgb(0, 0, 0));
+		// filter: url(#selection-glow) drop-shadow(0 0px 3px rgb(0, 0, 0));
 	}
 
 	// This matches your previous .glitter-background CSS
