@@ -269,6 +269,10 @@ setActiveLayer(layerId) {
 	if (layer && layer.type === LayerType.STICKER) {
 		this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
 	}
+
+	// Update helpful message
+	this.editor.updateHelpfulMessage();
+
 }
 
 

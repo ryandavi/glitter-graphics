@@ -81,7 +81,7 @@ const CONFIG = {
 	defaultExportGlitter: true,
 
 
-	// export settings (defaults)
+	// settings (defaults)
 	defaultExportQuality: 10,
 	defaultExportDitherEnabled: true,
 	defaultExportDitherType: 'FloydSteinberg',
@@ -92,8 +92,8 @@ const CONFIG = {
 	defaultExportMatteColor: '#ffffff',
 	defaultExportFrameSkip: 1,
 	defaultExportReverse: false,
-
 	defaultExportSmartFrameReduction: true,
+	defaultShowHints: true,
 
 	// watermark
 	defaultExportWatermarkEnabled: false,
@@ -311,7 +311,7 @@ class GlitterEditor {
 		this.mobileManager = new MobileManager(this);
 
 
-		// REMOVE THIS: this.activeFilters = { ... }; 
+		this.hintsClosedThisSession = CONFIG.defaultShowHints;
 
 		this.setTool(CONFIG.defaultTool);
 
@@ -443,6 +443,7 @@ class GlitterEditor {
 		const watermarkEnabledCheckbox = document.getElementById('exportWatermarkEnabled');
 		const exportFrameSkipSelect = document.getElementById('exportFrameSkip');
 		const exportReverseCheckbox = document.getElementById('exportReverse');
+		const showHintsInput = document.getElementById('showHelpfulHints');
 		
 
 
@@ -457,6 +458,7 @@ class GlitterEditor {
 		if (watermarkEnabledCheckbox) watermarkEnabledCheckbox.checked = CONFIG.defaultExportWatermarkEnabled;
 		if (exportFrameSkipSelect) exportFrameSkipSelect.value = CONFIG.defaultExportFrameSkip;
 		if (exportReverseCheckbox) exportReverseCheckbox.checked = CONFIG.defaultExportReverse;
+		if (showHintsInput) showHintsInput.checked = CONFIG.defaultShowHints;
 		
 
 		// Show/hide dither type dropdown based on enabled checkbox
@@ -481,6 +483,13 @@ class GlitterEditor {
 
 		if (transparencyCheckbox) {
 			transparencyCheckbox.addEventListener('change', updateMatteColorVisibility);
+		}
+
+		// Helpful hints setting
+		if (showHintsInput) {
+			showHintsInput.addEventListener('change', (e) => {
+				this.updateHelpfulMessage();
+			});
 		}
 
 		// Initial visibility states
@@ -806,6 +815,10 @@ updateGlitterSelection() {
 			parseInt(opt.dataset.id) === layer.selectedGlitterId;
 		opt.classList.toggle('selected', isSelected);
 	});
+
+	// Update helpful message
+	this.updateHelpfulMessage();
+
 }
 
 updateStickerSelection() {
@@ -936,6 +949,7 @@ updateStickerSelection() {
 		this.setupModalListeners();
 		this.setupPreviewListeners();
 		this.setupGlobalListeners();
+		this.setupHelpfulMessageListeners();
 	}
 
 	// ===== HELPER: Attach slider with live update and reset =====
@@ -979,6 +993,30 @@ updateStickerSelection() {
 			target.checked = e.target.checked;
 		});
 	}
+
+setupHelpfulMessageListeners() {
+	// Close button
+	const closeBtn = document.getElementById('helpfulMessageClose');
+	if (closeBtn) {
+		closeBtn.addEventListener('click', () => {
+			this.hintsClosedThisSession = true;
+			document.getElementById('helpfulMessage')?.classList.remove('visible');
+		});
+	}
+	
+	// Settings toggle
+	const showHints = document.getElementById('showHints');
+	if (showHints) {
+		showHints.addEventListener('change', () => {
+			// If re-enabled, reset the session flag
+			if (showHints.checked) {
+				this.hintsClosedThisSession = false;
+			}
+			this.updateHelpfulMessage();
+		});
+	}
+}
+
 
 	// ===== TOOLBAR LISTENERS =====
 	setupToolbarListeners() {
@@ -1186,6 +1224,13 @@ updateStickerSelection() {
 				}
 			});
 		}
+
+	// Multi-select checkbox
+	document.getElementById('multiSelect')?.addEventListener('change', () => {
+		this.updateHelpfulMessage();
+	});
+
+
 	}
 
 	setupSliderListeners() {
@@ -2145,7 +2190,6 @@ setTool(tool) {
 
 	// 1. Update Toolbar Buttons
 	document.querySelectorAll('.toolbar-group button').forEach(btn => {
-		console.log('🔧 Removing active tool button:', btn.id);
 		btn.classList.remove('active');
 	});
 
@@ -2159,10 +2203,7 @@ setTool(tool) {
 
 	const activeBtn = document.getElementById(toolButtonIds[tool]);
 	if (activeBtn) {
-		console.log('🔧 Setting active tool button:', toolButtonIds[tool]);
 		activeBtn.classList.add('active');
-	} else {
-		console.warn('🔧 Tool button not found:', toolButtonIds[tool]);
 	}
 
 	// 2. Update Cursors
@@ -2199,6 +2240,13 @@ setTool(tool) {
 
 	// 3. Update Context Toolbars
 	this.updateContextToolbars();
+
+	
+	// Update helpful message
+	this.updateHelpfulMessage();
+	
+	this.updateStatus(`Active tool: ${tool}`);
+
 }
 
 
@@ -2235,6 +2283,94 @@ setTool(tool) {
 		}
 	}
 
+// ===== HELPFUL MESSAGES =====
+
+updateHelpfulMessage() {
+	const message = document.getElementById('helpfulMessage');
+	const text = document.getElementById('helpfulMessageText');
+	const activeLayer = this.layerManager.getActiveLayer();
+	const currentTool = this.currentTool;
+	
+	// Check if hints are enabled in settings
+	const showHintsInput = document.getElementById('showHelpfulHints');
+	const showHints = showHintsInput ? showHintsInput.checked : CONFIG.showHelpfulHints;
+	
+	if (!showHints) {
+		message.classList.remove('visible');
+		return;
+	}
+	
+	// Check if hints are manually closed this session
+	if (this.hintsClosedThisSession) {
+		message.classList.remove('visible');
+		return;
+	}
+	
+	// Don't show hints before image is loaded
+	if (!this.originalImage) {
+		message.classList.remove('visible');
+		return;
+	}
+	
+	let hint = '';
+	
+	// Color picker tool hints
+	if (currentTool === ToolType.COLOR_PICKER) {
+		if (!activeLayer || activeLayer.type === LayerType.BASE_IMAGE) {
+			hint = 'Click on the base image to create a glitter fill layer—anywhere you want a color fill, that is';
+		} else if (activeLayer.type === LayerType.GLITTER_FILL) {
+			if (!activeLayer.selections || activeLayer.selections.length === 0) {
+				if (!activeLayer.selectedGlitterId) {
+					hint = 'Choose a glitter style from the gallery, then click colors on your image to fill';
+				} else {
+					hint = 'Click anywhere on the image to make a glitter fill selection';
+				}
+			} else if (document.getElementById('multiSelect')?.checked && activeLayer.selections.length === 1) {
+				hint = 'Multi-select is enabled—click additional colors to add to your selection';
+			}
+		} else if (activeLayer.type === LayerType.STICKER) {
+			hint = 'Switch to the select tool to move stickers, or create a new glitter layer';
+		}
+	}
+	
+	// Select tool hints
+	else if (currentTool === ToolType.SELECT) {
+		if (!activeLayer) {
+			hint = 'Add a sticker layer to use the select tool, or switch to color picker to create glitter';
+		} else if (activeLayer.type === LayerType.STICKER) {
+			if (!activeLayer.stickerSourceId) {
+				hint = 'Choose a sticker from the gallery to place on your canvas';
+			}
+		} else if (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.BASE_IMAGE) {
+			hint = 'Switch to the color picker tool to create glitter selections, or add a sticker layer';
+		}
+	}
+	
+	// Hand tool hint
+	else if (currentTool === ToolType.HAND) {
+		hint = 'Drag to pan the canvas';
+	}
+	
+	// Zoom tool hint
+	else if (currentTool === ToolType.ZOOM) {
+		hint = 'Click to zoom in • Shift+click to zoom out';
+	}
+	
+	// Glitter layer with selection but no glitter chosen
+	if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
+		activeLayer.selections && activeLayer.selections.length > 0 && 
+		!activeLayer.selectedGlitterId) {
+		hint = 'Choose a glitter style from the gallery above';
+	}
+	
+	// Update visibility and text
+	if (hint) {
+		text.textContent = hint;
+		message.classList.add('visible');
+	} else {
+		message.classList.remove('visible');
+	}
+}
 	updateColorPickerControls() {
 		console.log(`Updating color picker controls`);
 		const layer = this.layerManager.getActiveLayer();
@@ -3059,6 +3195,13 @@ glitterFillSelector(x, y, event) {
 		isTransparent: isTransparent
 	});
 
+
+
+	// 6. Auto-Switch to Select Tool (if configured)
+	if (CONFIG.autoSwitchAfterPick && this.currentTool === ToolType.COLOR_PICKER) {
+		this.setTool(ToolType.SELECT);
+	}
+
 	// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)
 	this.layerManager.renderLayersList();
 	this.saveState(); // For Undo/Redo
@@ -3069,10 +3212,9 @@ glitterFillSelector(x, y, event) {
 	// Update context toolbars (show color picker controls if we now have selections)
 	this.updateContextToolbars();
 
-	// 6. Auto-Switch to Select Tool (if configured)
-	if (CONFIG.autoSwitchAfterPick && this.currentTool === ToolType.COLOR_PICKER) {
-		this.setTool(ToolType.SELECT);
-	}
+	// Update helpful message
+	this.updateHelpfulMessage();
+	
 }
 
 	updateSelectedColorsDisplay() {

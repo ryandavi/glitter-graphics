@@ -123,6 +123,10 @@ class StickerManager extends ContentManager {
 
 	handleItemClick(item) {
 		this.addStickerToCanvas(item.id);
+
+	// Update helpful message
+	this.editor.updateHelpfulMessage();
+
 	}
 
 	// ===== LOADING =====

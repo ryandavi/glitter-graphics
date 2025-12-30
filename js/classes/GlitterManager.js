@@ -282,6 +282,10 @@ async initBrowser() {
 		this.editor.saveState();
 		this.editor.updateStatus(`Selected ${glitter.name}`);
 		window.dispatchEvent(new CustomEvent('layerChanged'));
+
+		// Update helpful message
+		this.editor.updateHelpfulMessage();
+
 	}
 
 	randomizeGlitter(category = null) {

@@ -955,6 +955,8 @@
 				<!-- Right Panel -->
 				<div class="right-panel">
 					<div class="preview-container" id="previewContainer">
+
+						<!-- Preview Controls -->
 						<div class="preview-controls" id="previewControls">
 							<div class="preview-controls-center">
 								<button class="preview-mode-toggle btn-icon icon-wrapper" id="previewModeToggle"
@@ -994,6 +996,8 @@
 
 							</div>
 						</div>
+
+						<!-- Preview Wrapper -->
 						<div class="preview-wrapper" id="previewWrapper">
 							<div class="canvas-elements-container" id="canvasElementsContainer"></div>
 							<canvas class="preview-canvas" id="previewCanvas"></canvas>
@@ -1103,12 +1107,12 @@
 							</button>
 						</div>
 
-						<!-- Helpful Message -->
-						<div class="helpful-message" id="helpfulMessage">
-							<div class="helpful-message-content">
-								<span class="helpful-message-text" id="helpfulMessageText"></span>
-							</div>
-						</div>
+<!-- Helpful Message -->
+<div class="helpful-message" id="helpfulMessage">
+	<div class="helpful-message-icon">💡</div>
+	<div class="helpful-message-text" id="helpfulMessageText"></div>
+	<button class="helpful-message-close" id="helpfulMessageClose" title="Close hint">×</button>
+</div>
 
 					</div>
 				</div>
@@ -1162,6 +1166,10 @@
 
 
 				<div class="settings-group">
+
+
+
+
 
 
 					<!-- Presets -->
@@ -1476,6 +1484,22 @@
 			</div>
 			<div class="modal-body">
 				<div class="settings-group">
+
+					<!-- Interface Group -->
+					<div class="settings-group-title">Interface</div>
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Helpful Hints</div>
+							<div class="settings-row-control">
+								<label class="checkbox-group-simple">
+									<input type="checkbox" id="showHelpfulHints">
+								</label>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div>
+					</div>
+
+
 					<!-- Composition Group -->
 					<div class="settings-group-title">Export</div>
 					<div class="settings-row" style="display: none">
