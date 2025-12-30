@@ -271,6 +271,7 @@ setActiveLayer(layerId) {
 	}
 
 	// Update helpful message
+	this.editor.currentHintDismissed = false;
 	this.editor.updateHelpfulMessage();
 
 }
