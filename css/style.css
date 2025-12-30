@@ -1567,9 +1567,6 @@ input[type=range]::-moz-range-thumb {
   pointer-events: none;
   will-change: filter;
 }
-.glitter-element.selected {
-  filter: url(#selection-glow) drop-shadow(0 0px 3px rgb(0, 0, 0));
-}
 .glitter-element .glitter-background {
   width: 100%;
   height: 100%;
@@ -1622,6 +1619,9 @@ body.tool-select .sticker-element {
 body.tool-select .sticker-element:not(.selected):hover {
   outline: 1px dashed rgba(0, 0, 0, 0.25);
   outline-offset: -1px;
+}
+body.tool-select .preview-canvas {
+  cursor: pointer;
 }
 
 .layer-swatch[style*=contain] {
