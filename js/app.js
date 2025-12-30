@@ -2322,6 +2322,7 @@ class GlitterEditor {
 updateHelpfulMessage() {
 	const message = document.getElementById('helpfulMessage');
 	const text = document.getElementById('helpfulMessageText');
+	const description = document.getElementById('helpfulMessageDescription');
 	const activeLayer = this.layerManager.getActiveLayer();
 	const currentTool = this.currentTool;
 	const isMobile = this.mobileManager && this.mobileManager.isMobile;
@@ -2339,83 +2340,29 @@ updateHelpfulMessage() {
 	}
 	
 	let hint = '';
+	let context = '';
 	
-	// Priority hints - show specific layer state hints first
+	// PRIORITY 1: Critical layer states that need attention (always show these first)
 	
-	// Sticker with content placed
-	if (activeLayer && activeLayer.type === LayerType.STICKER && activeLayer.stickerSourceId) {
-		if (isMobile) {
-			hint = 'Tap the settings button to rotate, scale, or flip your sticker';
-		} else {
-			hint = 'Use the settings panel to rotate, scale, flip, or adjust opacity';
-		}
-	}
-	// Glitter layer with selections and glitter chosen
-	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
-		activeLayer.selections && activeLayer.selections.length > 0 && 
-		activeLayer.selectedGlitterId) {
-		if (isMobile) {
-			hint = 'Tap the settings button to adjust scale, opacity, or refine your selection';
-		} else {
-			hint = 'Use the settings panel to adjust scale, opacity, threshold, or feather';
-		}
+	// Empty sticker layer
+	if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
+		hint = 'No sticker chosen—select a sticker from the gallery to place on your canvas';
 	}
 	// Glitter layer with selection but no glitter chosen
 	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
 		activeLayer.selections && activeLayer.selections.length > 0 && 
 		!activeLayer.selectedGlitterId) {
-		hint = 'Choose a glitter style from the gallery to apply it';
+		hint = 'No glitter selected—choose a glitter style from the gallery to apply it';
+	}
+	// Empty glitter layer (no selection)
+	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
+		(!activeLayer.selections || activeLayer.selections.length === 0) &&
+		currentTool !== ToolType.COLOR_PICKER) {
+		hint = 'Selection is empty—switch to color picker to add glitter to this layer';
 	}
 	
-	// Tool-specific hints
-	else if (currentTool === ToolType.COLOR_PICKER) {
-		if (!activeLayer || activeLayer.type === LayerType.BASE_IMAGE) {
-			hint = 'Click anywhere on your image to create a glitter fill layer';
-		} else if (activeLayer.type === LayerType.GLITTER_FILL) {
-			if (!activeLayer.selections || activeLayer.selections.length === 0) {
-				if (!activeLayer.selectedGlitterId) {
-					hint = 'Choose a glitter style from the gallery, then click colors to fill';
-				} else {
-					hint = 'Click colors on your image to select areas for glitter';
-				}
-			} else if (document.getElementById('multiSelect')?.checked && activeLayer.selections.length === 1) {
-				hint = 'Multi-select is on—click more colors to expand your selection';
-			}
-		} else if (activeLayer.type === LayerType.STICKER) {
-			if (isMobile) {
-				hint = 'Switch to select tool to move stickers, or add a glitter layer';
-			} else {
-				hint = 'Switch to select tool to move stickers, or add a glitter layer';
-			}
-		}
-	}
+	// PRIORITY 2: Tool-specific actions (what you can do RIGHT NOW)
 	
-	// Select tool hints
-	else if (currentTool === ToolType.SELECT) {
-		if (!activeLayer) {
-			hint = 'Add a sticker layer to move items around, or use color picker for glitter';
-		} else if (activeLayer.type === LayerType.STICKER) {
-			if (!activeLayer.stickerSourceId) {
-				hint = 'Your sticker layer is empty—choose a sticker from the gallery to place it on your canvas';
-			} else {
-				// Already handled by priority hint above
-				hint = '';
-			}
-		} else if (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.BASE_IMAGE) {
-			hint = 'Switch to color picker to add glitter, or add a sticker layer';
-		}
-	}
-	
-	// Hand tool hint
-	else if (currentTool === ToolType.HAND) {
-		if (isMobile) {
-			hint = 'Use one or two fingers to pan around the canvas';
-		} else {
-			hint = 'Click and drag to move around the canvas';
-		}
-	}
-	
-	// Zoom tool hint
 	else if (currentTool === ToolType.ZOOM) {
 		if (isMobile) {
 			hint = 'Pinch to zoom in and out';
@@ -2424,16 +2371,79 @@ updateHelpfulMessage() {
 		}
 	}
 	
+	else if (currentTool === ToolType.HAND) {
+		if (isMobile) {
+			hint = 'Use one or two fingers to pan around the canvas';
+		} else {
+			hint = 'Click and drag to move around the canvas';
+		}
+	}
+	
+	else if (currentTool === ToolType.COLOR_PICKER) {
+		if (!activeLayer || activeLayer.type === LayerType.BASE_IMAGE) {
+			hint = 'Click anywhere on your image to create a glitter fill layer';
+			context = 'Glitter fills are based on color selection from your base image.';
+		} else if (activeLayer.type === LayerType.GLITTER_FILL) {
+			if (!activeLayer.selections || activeLayer.selections.length === 0) {
+				if (!activeLayer.selectedGlitterId) {
+					hint = 'Choose a glitter style from the gallery, then click colors to fill';
+				} else {
+					hint = 'Click colors on your image to select areas for glitter';
+					context = 'Threshold determines how similar colors need to be to get selected together.';
+				}
+			} else if (document.getElementById('multiSelect')?.checked && activeLayer.selections.length === 1) {
+				hint = 'Multi-select is on—click more colors to expand your selection';
+			} else {
+				// Has selections, show enhancement tip
+				hint = 'Click more colors to add to selection, or adjust settings to refine';
+				context = 'Threshold controls color tolerance. Feather softens edges.';
+			}
+		} else if (activeLayer.type === LayerType.STICKER) {
+			hint = 'Switch to select tool to move stickers, or add a glitter layer';
+		}
+	}
+	
+	else if (currentTool === ToolType.SELECT) {
+		if (!activeLayer) {
+			hint = 'Add a sticker layer to move items around, or use color picker for glitter';
+		} else if (activeLayer.type === LayerType.STICKER && activeLayer.stickerSourceId) {
+			// Sticker is placed - show manipulation tips
+			if (isMobile) {
+				hint = 'Drag to move, pinch to scale and rotate';
+				context = 'Or tap settings button to adjust position, flip, and opacity.';
+			} else {
+				hint = 'Drag to move your sticker';
+				context = 'Use the settings panel to rotate, scale, flip, or adjust opacity.';
+			}
+		} else if (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.BASE_IMAGE) {
+			hint = 'Switch to color picker to add or modify glitter, or add a sticker layer';
+		}
+	}
+	
+	// PRIORITY 3: Enhancement tips for complete layers (only if no tool action shown)
+	
+	// Glitter layer complete with selections and glitter
+	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
+		activeLayer.selections && activeLayer.selections.length > 0 && 
+		activeLayer.selectedGlitterId) {
+		if (isMobile) {
+			hint = 'Tap settings to adjust scale, opacity, or refine your selection';
+			context = 'Threshold controls color tolerance—higher values select more similar colors.';
+		} else {
+			hint = 'Use the settings panel to adjust scale, opacity, threshold, or feather';
+			context = 'Threshold controls color tolerance. Feather softens edges.';
+		}
+	}
+	
 	// Update visibility and text
 	if (hint && !this.currentHintDismissed) {
 		text.textContent = hint;
+		description.textContent = context;
 		message.classList.add('visible');
 	} else {
 		message.classList.remove('visible');
 	}
 }
-
-
 
 
 setupHelpfulMessageListeners() {

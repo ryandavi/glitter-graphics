@@ -4920,7 +4920,6 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
   }
 }
 
-
 .helpful-message {
 	display: none;
 	position: absolute;
@@ -4966,6 +4965,17 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 		font-size: var(--font-size-sm);
 		color: var(--color-text-secondary);
 		line-height: 1.4;
+	}
+	
+	.helpful-message-description {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		line-height: 1.4;
+		display: none;
+		
+		&:not(:empty) {
+			display: block;
+		}
 	}
 	
 	.helpful-message-actions {
