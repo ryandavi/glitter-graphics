@@ -1327,10 +1327,17 @@ removeSticker(layerId) {
 	}
 
 	async deserializeSticker(layerData) {
+		// Handle empty sticker layers (no sticker selected yet)
+		if (!layerData.stickerSourceId) {
+			// Empty layer - just return the data as-is
+			return layerData;
+		}
+		
 		// Restore sticker layer from serialized data
 		const sticker = this.getItemById(layerData.stickerSourceId);
 		if (!sticker) {
 			console.warn('Sticker not found during deserialization:', layerData.stickerSourceId);
+			// Return null so this layer gets skipped during restore
 			return null;
 		}
 
