@@ -255,15 +255,10 @@ class GlitterEditor {
 		this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
 
 
-
-		this.originalImage = null;
-
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
 		this.content = [];
-
-		this.exporter = null;
 
 
 		this.touchGestureActive = false;
@@ -367,6 +362,37 @@ class GlitterEditor {
 		console.log('[DEBUG] Debug configuration loaded successfully');
 	}
 
+	// ===== UTILITY METHODS =====
+
+	// Execute async function with element disabled
+	async withDisabled(element, asyncFn) {
+		if (!element) return;
+		element.disabled = true;
+		try {
+			await asyncFn();
+		} finally {
+			element.disabled = false;
+		}
+	}
+
+	// Common layer update pattern
+	updateLayerAndSave(updatePreview = true) {
+		this.saveActiveLayerSettings();
+		if (updatePreview) {
+			this.updatePreview();
+		}
+		this.saveState();
+	}
+
+	// Layer type helpers
+	isGlitterLayer(layer) {
+		return layer && layer.type === LayerType.GLITTER_FILL;
+	}
+
+	isStickerLayer(layer) {
+		return layer && layer.type === LayerType.STICKER;
+	}
+
 	// ===== GETTERS & SETTERS =====
 	get layers() {
 		return this.layerManager.layers;
@@ -398,21 +424,6 @@ class GlitterEditor {
 		this.updateSidePanelUI(null);
 	}
 
-	async loadStickerImageData(layer) {
-		return new Promise((resolve, reject) => {
-			const img = new Image();
-			img.onload = () => {
-				const canvas = document.createElement('canvas');
-				canvas.width = img.naturalWidth;
-				canvas.height = img.naturalHeight;
-				const ctx = canvas.getContext('2d');
-				ctx.drawImage(img, 0, 0);
-				resolve(ctx.getImageData(0, 0, canvas.width, canvas.height));
-			};
-			img.onerror = reject;
-			img.src = layer.stickerData.url;
-		});
-	}
 
 
 	// ===== SETTINGS PERSISTENCE =====
@@ -1066,17 +1077,22 @@ class GlitterEditor {
 	}
 
 	// ===== HELPER: Attach checkbox that syncs with another checkbox =====
-	syncCheckboxes(sourceId, targetId) {
-		const source = document.getElementById(sourceId);
-		const target = document.getElementById(targetId);
+	syncCheckboxes(id1, id2, bidirectional = true) {
+		const elem1 = document.getElementById(id1);
+		const elem2 = document.getElementById(id2);
 
-		if (!source || !target) return;
+		if (!elem1 || !elem2) return;
 
-		source.addEventListener('change', (e) => {
-			target.checked = e.target.checked;
+		elem1.addEventListener('change', (e) => {
+			elem2.checked = e.target.checked;
 		});
-	}
 
+		if (bidirectional) {
+			elem2.addEventListener('change', (e) => {
+				elem1.checked = e.target.checked;
+			});
+		}
+	}
 
 
 	// ===== TOOLBAR LISTENERS =====
@@ -1186,12 +1202,9 @@ class GlitterEditor {
 			});
 		}
 
-		// Multi-select checkbox
+		// Multi-select is handled by bidirectional sync
 		if (contextMultiSelect) {
 			contextMultiSelect.addEventListener('change', (e) => {
-				const multiSelect = document.getElementById('multiSelect');
-				if (multiSelect) multiSelect.checked = e.target.checked;
-
 				const layer = this.layerManager.getActiveLayer();
 				if (!e.target.checked && layer && layer.selections.length > 1) {
 					layer.selections = [layer.selections[0]];
@@ -1205,15 +1218,10 @@ class GlitterEditor {
 			});
 		}
 
-		// Contiguous checkbox
+		// Contiguous is handled by bidirectional sync
 		if (contextContiguous) {
-			contextContiguous.addEventListener('change', (e) => {
-				const contiguous = document.getElementById('contiguous');
-				if (contiguous) contiguous.checked = e.target.checked;
-
-				this.saveActiveLayerSettings();
-				this.updatePreview();
-				this.saveState();
+			contextContiguous.addEventListener('change', () => {
+				this.updateLayerAndSave();
 			});
 		}
 	}
@@ -1225,30 +1233,26 @@ class GlitterEditor {
 		const refineGlobal = document.getElementById('refineGlobal');
 		const glitterGlobal = document.getElementById('glitterGlobal');
 
-		if (contiguous) {
-			contiguous.addEventListener('change', (e) => {
-				const contextContiguous = document.getElementById('contextContiguous');
-				if (contextContiguous) contextContiguous.checked = e.target.checked;
+		// Sync contiguous checkboxes bidirectionally
+		this.syncCheckboxes('contiguous', 'contextContiguous');
 
-				this.saveActiveLayerSettings();
-				this.updatePreview();
-				this.saveState();
+		if (contiguous) {
+			contiguous.addEventListener('change', () => {
+				this.updateLayerAndSave();
 			});
 		}
 
 		if (invert) {
 			invert.addEventListener('change', () => {
-				this.saveActiveLayerSettings();
-				this.updatePreview();
-				this.saveState();
+				this.updateLayerAndSave();
 			});
 		}
 
+		// Sync multi-select checkboxes bidirectionally
+		this.syncCheckboxes('multiSelect', 'contextMultiSelect');
+
 		if (multiSelect) {
 			multiSelect.addEventListener('change', (e) => {
-				const contextMultiSelect = document.getElementById('contextMultiSelect');
-				if (contextMultiSelect) contextMultiSelect.checked = e.target.checked;
-
 				const layer = this.layerManager.getActiveLayer();
 				if (!e.target.checked && layer && layer.selections.length > 1) {
 					layer.selections = [layer.selections[0]];
@@ -1304,47 +1308,22 @@ class GlitterEditor {
 			if (contextThresholdValue) contextThresholdValue.textContent = e.target.value;
 		}, CONFIG.defaultThreshold);
 
-		const threshold = document.getElementById('threshold');
-		if (threshold) {
-			threshold.addEventListener('input', () => {
-				this.saveActiveLayerSettings(true, false);
-				this.debouncedSliderUpdate('threshold');
-			});
-			threshold.addEventListener('change', () => this.saveState());
-		}
+		// Helper to attach debounced slider updates
+		const attachSliderDebounce = (sliderId, saveRefine, saveGlitter) => {
+			const slider = document.getElementById(sliderId);
+			if (slider) {
+				slider.addEventListener('input', () => {
+					this.saveActiveLayerSettings(saveRefine, saveGlitter);
+					this.debouncedSliderUpdate(sliderId);
+				});
+				slider.addEventListener('change', () => this.saveState());
+			}
+		};
 
-		// Feather
-		this.setupSlider('feather', 'featherValue', '', null, CONFIG.defaultFeather);
-		const feather = document.getElementById('feather');
-		if (feather) {
-			feather.addEventListener('input', () => {
-				this.saveActiveLayerSettings(true, false);
-				this.debouncedSliderUpdate('feather');
-			});
-			feather.addEventListener('change', () => this.saveState());
-		}
-
-		// Scale
-		this.setupSlider('scale', 'scaleValue', '%', null, CONFIG.defaultScale);
-		const scale = document.getElementById('scale');
-		if (scale) {
-			scale.addEventListener('input', () => {
-				this.saveActiveLayerSettings(false, true);
-				this.debouncedSliderUpdate('scale');
-			});
-			scale.addEventListener('change', () => this.saveState());
-		}
-
-		// Opacity
-		this.setupSlider('opacity', 'opacityValue', '%', null, CONFIG.defaultOpacity);
-		const opacity = document.getElementById('opacity');
-		if (opacity) {
-			opacity.addEventListener('input', () => {
-				this.saveActiveLayerSettings(false, true);
-				this.debouncedSliderUpdate('opacity');
-			});
-			opacity.addEventListener('change', () => this.saveState());
-		}
+		attachSliderDebounce('threshold', true, false);
+		attachSliderDebounce('feather', true, false);
+		attachSliderDebounce('scale', false, true);
+		attachSliderDebounce('opacity', false, true);
 	}
 
 	setupStickerSettingsListeners() {
@@ -1575,33 +1554,22 @@ class GlitterEditor {
 	}
 
 	setupStickerFlipListeners() {
-		const flipX = document.getElementById('stickerFlipX');
-		const flipY = document.getElementById('stickerFlipY');
+		const attachFlip = (checkboxId, property) => {
+			const checkbox = document.getElementById(checkboxId);
+			if (checkbox) {
+				checkbox.addEventListener('change', (e) => {
+					const layer = this.layerManager.getActiveLayer();
+					if (this.isStickerLayer(layer) && this.stickerManager) {
+						this.stickerManager.updateTransform(layer.id, { [property]: e.target.checked });
+						this.saveState();
+					}
+				});
+			}
+		};
 
-		if (flipX) {
-			flipX.addEventListener('change', (e) => {
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					this.stickerManager.updateTransform(layer.id, { flipX: e.target.checked });
-					this.saveState();
-				}
-			});
-		}
-
-		if (flipY) {
-			flipY.addEventListener('change', (e) => {
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					this.stickerManager.updateTransform(layer.id, { flipY: e.target.checked });
-					this.saveState();
-				}
-			});
-		}
+		attachFlip('stickerFlipX', 'flipX');
+		attachFlip('stickerFlipY', 'flipY');
 	}
-
-
-
-
 
 	setupImageListeners() {
 		const imageUpload = document.getElementById('imageUpload');
@@ -1615,7 +1583,7 @@ class GlitterEditor {
 				const modal = document.getElementById('newCanvasModal');
 				if (modal) {
 					modal.classList.add('visible');
-					this.initializeNewCanvasModal(); // <-- ADD THIS LINE
+					this.initializeNewCanvasModal();
 				}
 			});
 		}
@@ -2209,10 +2177,10 @@ class GlitterEditor {
 	}
 
 	setTool(tool) {
-	if (this.currentTool === tool) return;
-	
-	this.currentTool = tool;
-	this.currentHintDismissed = false; // Reset dismissed flag when tool changes
+		if (this.currentTool === tool) return;
+
+		this.currentTool = tool;
+		this.currentHintDismissed = false; // Reset dismissed flag when tool changes
 
 
 		// Remove all tool classes from body
@@ -2318,204 +2286,204 @@ class GlitterEditor {
 
 	// ===== HELPFUL MESSAGES =====
 
-updateHelpfulMessage() {
-	const message = document.getElementById('helpfulMessage');
-	const text = document.getElementById('helpfulMessageText');
-	const description = document.getElementById('helpfulMessageDescription');
-	const toolLabel = document.getElementById('helpfulMessageTool');
-	const toolIcon = document.getElementById('helpfulMessageToolIcon');
-	const toolName = document.getElementById('helpfulMessageToolName');
-	const activeLayer = this.layerManager.getActiveLayer();
-	const currentTool = this.currentTool;
-	const isMobile = this.mobileManager && this.mobileManager.isMobile;
-	
-	// Check if hints are enabled
-	if (!this.showHints) {
-		message.classList.remove('visible');
-		return;
-	}
-	
-	// Don't show hints before image is loaded
-	if (!this.originalImage) {
-		message.classList.remove('visible');
-		return;
-	}
-	
-	let hint = '';
-	let context = '';
-	let showTool = false;
-	let toolIconId = '';
-	let toolLabelText = '';
-	
-	// Map tool to icon and name
-	const getToolInfo = (tool) => {
-		const toolMap = {
-			[ToolType.SELECT]: { icon: 'icon-hand-pointer', name: 'Select Tool' },
-			[ToolType.COLOR_PICKER]: { icon: 'icon-magic-wand', name: 'Color Picker' },
-			[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
-			[ToolType.ZOOM]: { icon: 'icon-magnifying-glass', name: 'Zoom Tool' }
+	updateHelpfulMessage() {
+		const message = document.getElementById('helpfulMessage');
+		const text = document.getElementById('helpfulMessageText');
+		const description = document.getElementById('helpfulMessageDescription');
+		const toolLabel = document.getElementById('helpfulMessageTool');
+		const toolIcon = document.getElementById('helpfulMessageToolIcon');
+		const toolName = document.getElementById('helpfulMessageToolName');
+		const activeLayer = this.layerManager.getActiveLayer();
+		const currentTool = this.currentTool;
+		const isMobile = this.mobileManager && this.mobileManager.isMobile;
+
+		// Check if hints are enabled
+		if (!this.showHints) {
+			message.classList.remove('visible');
+			return;
+		}
+
+		// Don't show hints before image is loaded
+		if (!this.originalImage) {
+			message.classList.remove('visible');
+			return;
+		}
+
+		let hint = '';
+		let context = '';
+		let showTool = false;
+		let toolIconId = '';
+		let toolLabelText = '';
+
+		// Map tool to icon and name
+		const getToolInfo = (tool) => {
+			const toolMap = {
+				[ToolType.SELECT]: { icon: 'icon-hand-pointer', name: 'Select Tool' },
+				[ToolType.COLOR_PICKER]: { icon: 'icon-magic-wand', name: 'Color Picker' },
+				[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
+				[ToolType.ZOOM]: { icon: 'icon-magnifying-glass', name: 'Zoom Tool' }
+			};
+			return toolMap[tool] || { icon: '', name: '' };
 		};
-		return toolMap[tool] || { icon: '', name: '' };
-	};
-	
-	// PRIORITY 1: Critical layer states (don't show tool label for these)
-	
-	if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
-		hint = 'No sticker chosen—select a sticker from the gallery to place on your canvas';
-	}
-	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
-		activeLayer.selections && activeLayer.selections.length > 0 && 
-		!activeLayer.selectedGlitterId) {
-		hint = 'No glitter selected—choose a glitter style from the gallery to apply it';
-	}
-	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
-		(!activeLayer.selections || activeLayer.selections.length === 0) &&
-		currentTool !== ToolType.COLOR_PICKER) {
-		hint = 'Selection is empty—switch to color picker to add glitter to this layer';
-	}
-	
-	// PRIORITY 2: Tool-specific actions (SHOW tool label for these)
-	
-	else if (currentTool === ToolType.ZOOM) {
-		showTool = true;
-		if (isMobile) {
-			hint = 'Pinch to zoom in and out';
-		} else {
-			hint = 'Click to zoom in • Shift+click to zoom out';
+
+		// PRIORITY 1: Critical layer states (don't show tool label for these)
+
+		if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
+			hint = 'No sticker chosen—select a sticker from the gallery to place on your canvas';
 		}
-	}
-	
-	else if (currentTool === ToolType.HAND) {
-		showTool = true;
-		if (isMobile) {
-			hint = 'Use one or two fingers to pan around the canvas';
-		} else {
-			hint = 'Click and drag to move around the canvas';
+		else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL &&
+			activeLayer.selections && activeLayer.selections.length > 0 &&
+			!activeLayer.selectedGlitterId) {
+			hint = 'No glitter selected—choose a glitter style from the gallery to apply it';
 		}
-	}
-	
-	else if (currentTool === ToolType.COLOR_PICKER) {
-		showTool = true;
-		if (!activeLayer || activeLayer.type === LayerType.BASE_IMAGE) {
-			hint = 'Click anywhere on your image to create a glitter fill layer';
-			context = 'Glitter fills are based on color selection from your base image.';
-		} else if (activeLayer.type === LayerType.GLITTER_FILL) {
-			if (!activeLayer.selections || activeLayer.selections.length === 0) {
-				if (!activeLayer.selectedGlitterId) {
-					hint = 'Choose a glitter style from the gallery, then click colors to fill';
-				} else {
-					hint = 'Click colors on your image to select areas for glitter';
-					context = 'Threshold determines how similar colors need to be to get selected together.';
-				}
-			} else if (document.getElementById('multiSelect')?.checked && activeLayer.selections.length === 1) {
-				hint = 'Multi-select is on—click more colors to expand your selection';
+		else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL &&
+			(!activeLayer.selections || activeLayer.selections.length === 0) &&
+			currentTool !== ToolType.COLOR_PICKER) {
+			hint = 'Selection is empty—switch to color picker to add glitter to this layer';
+		}
+
+		// PRIORITY 2: Tool-specific actions (SHOW tool label for these)
+
+		else if (currentTool === ToolType.ZOOM) {
+			showTool = true;
+			if (isMobile) {
+				hint = 'Pinch to zoom in and out';
 			} else {
-				hint = 'Click more colors to add to selection, or adjust settings to refine';
+				hint = 'Click to zoom in • Shift+click to zoom out';
+			}
+		}
+
+		else if (currentTool === ToolType.HAND) {
+			showTool = true;
+			if (isMobile) {
+				hint = 'Use one or two fingers to pan around the canvas';
+			} else {
+				hint = 'Click and drag to move around the canvas';
+			}
+		}
+
+		else if (currentTool === ToolType.COLOR_PICKER) {
+			showTool = true;
+			if (!activeLayer || activeLayer.type === LayerType.BASE_IMAGE) {
+				hint = 'Click anywhere on your image to create a glitter fill layer';
+				context = 'Glitter fills are based on color selection from your base image.';
+			} else if (activeLayer.type === LayerType.GLITTER_FILL) {
+				if (!activeLayer.selections || activeLayer.selections.length === 0) {
+					if (!activeLayer.selectedGlitterId) {
+						hint = 'Choose a glitter style from the gallery, then click colors to fill';
+					} else {
+						hint = 'Click colors on your image to select areas for glitter';
+						context = 'Threshold determines how similar colors need to be to get selected together.';
+					}
+				} else if (document.getElementById('multiSelect')?.checked && activeLayer.selections.length === 1) {
+					hint = 'Multi-select is on—click more colors to expand your selection';
+				} else {
+					hint = 'Click more colors to add to selection, or adjust settings to refine';
+					context = 'Threshold controls color tolerance. Feather softens edges.';
+				}
+			} else if (activeLayer.type === LayerType.STICKER) {
+				hint = 'Switch to select tool to move stickers, or add a glitter layer';
+			}
+		}
+
+		else if (currentTool === ToolType.SELECT) {
+			showTool = true;
+			if (!activeLayer) {
+				hint = 'Add a sticker layer to move items around, or use color picker for glitter';
+			} else if (activeLayer.type === LayerType.STICKER && activeLayer.stickerSourceId) {
+				if (isMobile) {
+					hint = 'Drag to move, pinch to scale and rotate';
+					context = 'Or tap settings button to adjust position, flip, and opacity.';
+				} else {
+					hint = 'Drag to move your sticker';
+					context = 'Use the settings panel to rotate, scale, flip, or adjust opacity.';
+				}
+			} else if (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.BASE_IMAGE) {
+				hint = 'Switch to color picker to add or modify glitter, or add a sticker layer';
+			}
+		}
+
+		// PRIORITY 3: Enhancement tips (don't show tool label)
+
+		else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL &&
+			activeLayer.selections && activeLayer.selections.length > 0 &&
+			activeLayer.selectedGlitterId) {
+			if (isMobile) {
+				hint = 'Tap settings to adjust scale, opacity, or refine your selection';
+				context = 'Threshold controls color tolerance—higher values select more similar colors.';
+			} else {
+				hint = 'Use the settings panel to adjust scale, opacity, threshold, or feather';
 				context = 'Threshold controls color tolerance. Feather softens edges.';
 			}
-		} else if (activeLayer.type === LayerType.STICKER) {
-			hint = 'Switch to select tool to move stickers, or add a glitter layer';
 		}
-	}
-	
-	else if (currentTool === ToolType.SELECT) {
-		showTool = true;
-		if (!activeLayer) {
-			hint = 'Add a sticker layer to move items around, or use color picker for glitter';
-		} else if (activeLayer.type === LayerType.STICKER && activeLayer.stickerSourceId) {
-			if (isMobile) {
-				hint = 'Drag to move, pinch to scale and rotate';
-				context = 'Or tap settings button to adjust position, flip, and opacity.';
-			} else {
-				hint = 'Drag to move your sticker';
-				context = 'Use the settings panel to rotate, scale, flip, or adjust opacity.';
-			}
-		} else if (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.BASE_IMAGE) {
-			hint = 'Switch to color picker to add or modify glitter, or add a sticker layer';
+
+		// Update tool label
+		if (showTool && toolLabel && toolIcon && toolName) {
+			const toolInfo = getToolInfo(currentTool);
+			toolIcon.setAttribute('href', `#${toolInfo.icon}`);
+			toolName.textContent = toolInfo.name;
+			toolLabel.style.display = 'flex';
+		} else if (toolLabel) {
+			toolLabel.style.display = 'none';
 		}
-	}
-	
-	// PRIORITY 3: Enhancement tips (don't show tool label)
-	
-	else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL && 
-		activeLayer.selections && activeLayer.selections.length > 0 && 
-		activeLayer.selectedGlitterId) {
-		if (isMobile) {
-			hint = 'Tap settings to adjust scale, opacity, or refine your selection';
-			context = 'Threshold controls color tolerance—higher values select more similar colors.';
+
+		// Update visibility and text
+		if (hint && !this.currentHintDismissed) {
+			text.textContent = hint;
+			description.textContent = context;
+			message.classList.add('visible');
 		} else {
-			hint = 'Use the settings panel to adjust scale, opacity, threshold, or feather';
-			context = 'Threshold controls color tolerance. Feather softens edges.';
+			message.classList.remove('visible');
 		}
 	}
-	
-	// Update tool label
-	if (showTool && toolLabel && toolIcon && toolName) {
-		const toolInfo = getToolInfo(currentTool);
-		toolIcon.setAttribute('href', `#${toolInfo.icon}`);
-		toolName.textContent = toolInfo.name;
-		toolLabel.style.display = 'flex';
-	} else if (toolLabel) {
-		toolLabel.style.display = 'none';
-	}
-	
-	// Update visibility and text
-	if (hint && !this.currentHintDismissed) {
-		text.textContent = hint;
-		description.textContent = context;
-		message.classList.add('visible');
-	} else {
-		message.classList.remove('visible');
-	}
-}
 
 
-setupHelpfulMessageListeners() {
-	const helpfulMessage = document.getElementById('helpfulMessage');
-	
-	// Prevent clicks from propagating to canvas/tools below
-	if (helpfulMessage) {
-		helpfulMessage.addEventListener('mousedown', (e) => {
-			e.stopPropagation();
-		});
-		helpfulMessage.addEventListener('click', (e) => {
-			e.stopPropagation();
-		});
-		helpfulMessage.addEventListener('pointerdown', (e) => {
-			e.stopPropagation();
-		});
+	setupHelpfulMessageListeners() {
+		const helpfulMessage = document.getElementById('helpfulMessage');
+
+		// Prevent clicks from propagating to canvas/tools below
+		if (helpfulMessage) {
+			helpfulMessage.addEventListener('mousedown', (e) => {
+				e.stopPropagation();
+			});
+			helpfulMessage.addEventListener('click', (e) => {
+				e.stopPropagation();
+			});
+			helpfulMessage.addEventListener('pointerdown', (e) => {
+				e.stopPropagation();
+			});
+		}
+
+		// Close button - just dismiss current hint
+		const closeBtn = document.getElementById('helpfulMessageClose');
+		if (closeBtn) {
+			closeBtn.addEventListener('click', () => {
+				this.currentHintDismissed = true;
+				document.getElementById('helpfulMessage')?.classList.remove('visible');
+			});
+		}
+
+		// Disable button - turn off hints entirely
+		const disableBtn = document.getElementById('helpfulMessageDisable');
+		if (disableBtn) {
+			disableBtn.addEventListener('click', () => {
+				// Disable hints
+				this.showHints = false;
+
+				// Update checkbox in settings
+				const showHintsInput = document.getElementById('showHelpfulHints');
+				if (showHintsInput) {
+					showHintsInput.checked = false;
+				}
+
+				// Save to storage
+				this.saveSettingsToStorage();
+
+				// Hide message
+				document.getElementById('helpfulMessage')?.classList.remove('visible');
+			});
+		}
 	}
-	
-	// Close button - just dismiss current hint
-	const closeBtn = document.getElementById('helpfulMessageClose');
-	if (closeBtn) {
-		closeBtn.addEventListener('click', () => {
-			this.currentHintDismissed = true;
-			document.getElementById('helpfulMessage')?.classList.remove('visible');
-		});
-	}
-	
-	// Disable button - turn off hints entirely
-	const disableBtn = document.getElementById('helpfulMessageDisable');
-	if (disableBtn) {
-		disableBtn.addEventListener('click', () => {
-			// Disable hints
-			this.showHints = false;
-			
-			// Update checkbox in settings
-			const showHintsInput = document.getElementById('showHelpfulHints');
-			if (showHintsInput) {
-				showHintsInput.checked = false;
-			}
-			
-			// Save to storage
-			this.saveSettingsToStorage();
-			
-			// Hide message
-			document.getElementById('helpfulMessage')?.classList.remove('visible');
-		});
-	}
-}
 
 
 
@@ -3436,7 +3404,7 @@ setupHelpfulMessageListeners() {
 		// Clear glitter backgrounds
 		this.canvasElementsContainer.innerHTML = '';
 
-		// ADD: Clear sticker elements
+		// Clear sticker elements
 		if (this.stickerManager) {
 			this.stickerManager.layerElements.forEach((element, layerId) => {
 				if (element.parentNode) {
@@ -3537,78 +3505,78 @@ setupHelpfulMessageListeners() {
 	}
 
 
-async exportAnimatedGif() {
-	// Filter visible layers
-	const visibleLayers = this.layers.filter(l => {
-		if (!l.visible) return false;
-		if (l.type === LayerType.GLITTER_FILL) {
-			return l.selections && l.selections.length > 0;
-		} else if (l.type === LayerType.STICKER) {
-			return !l.stickerData.isEmpty;
-		} else if (l.type === LayerType.BASE_IMAGE) {
-			return true;
+	async exportAnimatedGif() {
+		// Filter visible layers
+		const visibleLayers = this.layers.filter(l => {
+			if (!l.visible) return false;
+			if (l.type === LayerType.GLITTER_FILL) {
+				return l.selections && l.selections.length > 0;
+			} else if (l.type === LayerType.STICKER) {
+				return !l.stickerData.isEmpty;
+			} else if (l.type === LayerType.BASE_IMAGE) {
+				return true;
+			}
+			return false;
+		});
+
+		if (visibleLayers.length === 0) {
+			this.showError('No visible layers with content to export!');
+			return;
 		}
-		return false;
-	});
 
-	if (visibleLayers.length === 0) {
-		this.showError('No visible layers with content to export!');
-		return;
-	}
+		const exportBtn = document.getElementById('exportGif');
+		exportBtn.disabled = true;
+		this.showExportProgress();
 
-	const exportBtn = document.getElementById('exportGif');
-	exportBtn.disabled = true;
-	this.showExportProgress();
+		// USE this.exportSettings directly - no DOM reading!
+		console.log('Export settings:', this.exportSettings);
 
-	// USE this.exportSettings directly - no DOM reading!
-	console.log('Export settings:', this.exportSettings);
-
-	const exportParams = {
-		visibleLayers: visibleLayers,
-		glitterGifs: this.glitterManager.content,
-		canvasData: {
-			width: this.originalCanvas.width,
-			height: this.originalCanvas.height,
-			originalData: new Uint8ClampedArray(this.originalImageData.data),
-			originalAlpha: this.originalAlphaChannel,
-			alphaThreshold: CONFIG.alphaThreshold
-		},
-		exportSettings: this.exportSettings,
-		callbacks: {
-			onStatus: (msg) => this.updateStatus(msg),
-			onProgress: (percent, text, currentFrame, totalFrames) => {
-				if (this.exportCancelled) throw new Error('Export cancelled');
-				this.updateExportProgress(percent, text, currentFrame, totalFrames);
+		const exportParams = {
+			visibleLayers: visibleLayers,
+			glitterGifs: this.glitterManager.content,
+			canvasData: {
+				width: this.originalCanvas.width,
+				height: this.originalCanvas.height,
+				originalData: new Uint8ClampedArray(this.originalImageData.data),
+				originalAlpha: this.originalAlphaChannel,
+				alphaThreshold: CONFIG.alphaThreshold
 			},
-			onComplete: () => {
-				exportBtn.disabled = false;
-				this.isSaved = true;
-				this.hideExportProgress();
-			},
-			parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
-			createMask: (layer) => {
-				const mask = this.glitterManager.createMaskForLayer(layer);
-				if (layer.settings.feather > 0) {
-					this.glitterManager.applyFeatherToMask(mask, layer.settings.feather);
+			exportSettings: this.exportSettings,
+			callbacks: {
+				onStatus: (msg) => this.updateStatus(msg),
+				onProgress: (percent, text, currentFrame, totalFrames) => {
+					if (this.exportCancelled) throw new Error('Export cancelled');
+					this.updateExportProgress(percent, text, currentFrame, totalFrames);
+				},
+				onComplete: () => {
+					exportBtn.disabled = false;
+					this.isSaved = true;
+					this.hideExportProgress();
+				},
+				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
+				createMask: (layer) => {
+					const mask = this.glitterManager.createMaskForLayer(layer);
+					if (layer.settings.feather > 0) {
+						this.glitterManager.applyFeatherToMask(mask, layer.settings.feather);
+					}
+					return mask;
 				}
-				return mask;
 			}
-		}
-	};
+		};
 
-	setTimeout(async () => {
-		try {
-			await this.exporter.process(exportParams);
-		} catch (error) {
-			console.error('Export error:', error);
-			exportBtn.disabled = false;
-			this.hideExportProgress();
-			if (error.message !== 'Export cancelled') {
-				this.showError('Export failed: ' + error.message);
+		setTimeout(async () => {
+			try {
+				await this.exporter.process(exportParams);
+			} catch (error) {
+				console.error('Export error:', error);
+				exportBtn.disabled = false;
+				this.hideExportProgress();
+				if (error.message !== 'Export cancelled') {
+					this.showError('Export failed: ' + error.message);
+				}
 			}
-		}
-	}, 50);
-}
+		}, 50);
+	}
 
 	showError(message) {
 		const toast = document.getElementById('errorToast');
@@ -3630,8 +3598,6 @@ async exportAnimatedGif() {
 		document.getElementById('statusText').textContent = message;
 	}
 }
-
-
 
 
 // everything inside IIFE
