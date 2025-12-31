@@ -2471,6 +2471,21 @@ updateHelpfulMessage() {
 
 
 setupHelpfulMessageListeners() {
+	const helpfulMessage = document.getElementById('helpfulMessage');
+	
+	// Prevent clicks from propagating to canvas/tools below
+	if (helpfulMessage) {
+		helpfulMessage.addEventListener('mousedown', (e) => {
+			e.stopPropagation();
+		});
+		helpfulMessage.addEventListener('click', (e) => {
+			e.stopPropagation();
+		});
+		helpfulMessage.addEventListener('pointerdown', (e) => {
+			e.stopPropagation();
+		});
+	}
+	
 	// Close button - just dismiss current hint
 	const closeBtn = document.getElementById('helpfulMessageClose');
 	if (closeBtn) {

@@ -2381,6 +2381,12 @@ body.tool-select .preview-canvas {
 }
 .modal-overlay > .modal-content > .modal-footer.right {
   justify-content: flex-end;
+  align-items: stretch;
+}
+.modal-overlay > .modal-content > .modal-footer.right > button {
+  display: flex;
+  align-items: center;
+  aspect-ratio: unset;
 }
 
 .modal-loading,
@@ -3895,6 +3901,8 @@ body.tool-select .preview-canvas {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+  cursor: default;
 }
 .helpful-message.visible {
   display: flex;

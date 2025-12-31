@@ -2759,6 +2759,13 @@ body.tool-select {
 
 			&.right {
 				justify-content: flex-end;
+				align-items: stretch;
+
+				> button {
+					  display: flex;
+  align-items: center;
+  aspect-ratio: unset;
+				}
 			}
 
 		}
@@ -4937,6 +4944,9 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-sm);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+	pointer-events: auto; // Make sure it captures clicks
+	cursor: default;
 	
 	&.visible {
 		display: flex;
