@@ -238,6 +238,16 @@ setActiveLayer(layerId) {
 	// Update selection highlight
 	this.updateSelectionHighlight(layerId);
 
+	// NEW: Update transform handles
+	if (this.editor.stickerManager) {
+		const layer = this.layers.find(l => l.id === layerId);
+		if (layer && layer.type === LayerType.STICKER && this.editor.currentTool === ToolType.SELECT) {
+			this.editor.stickerManager.createTransformHandles(layerId);
+		} else {
+			this.editor.stickerManager.removeTransformHandles();
+		}
+	}
+
 	// Update preview (important for solo mode)
 	this.editor.updatePreview();
 
@@ -325,12 +335,22 @@ goToSticker(layerId) {
 
 	// In LayerManager class
 
-	handleLayerPick(x, y) {
-
+handleLayerPick(x, y) {
 	// Prevent layer picking during touch gestures
 	if (this.editor.touchGestureActive) {
 		console.log('🎯 LAYER PICK: Blocked - touch gesture active');
 		return;
+	}
+	
+	// NEW: Prevent layer picking when transform handles are being interacted with
+	if (this.editor.stickerManager && this.editor.stickerManager.isDraggingHandle) {
+		return;
+	}
+	
+	// NEW: Check if click is on transform handles (they have very high z-index)
+	const clickedElement = document.elementFromPoint(x, y);
+	if (clickedElement && clickedElement.closest('.transform-handles')) {
+		return; // Don't pick layers when clicking handles
 	}
 
 		// Check layers from top to bottom (visual order)

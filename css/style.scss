@@ -5089,3 +5089,81 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 		}
 	}
 }
+
+
+// Transform Handles (Figma-style)
+.transform-handles {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	z-index: 10000;
+}
+
+.transform-bounding-box {
+	border: var(--color-accent) solid;
+	border-width: 1.5px;
+	box-sizing: border-box;
+	pointer-events: auto; // Now draggable
+	cursor: move;
+}
+
+// Real hitbox wrappers (not pseudo-elements)
+.transform-handle-wrapper {
+	pointer-events: auto;
+	position: absolute;
+	
+	// Large hitbox for corners
+	&[data-handle-type^="corner-"] {
+		width: 32px;
+		height: 32px;
+	}
+	
+	// Large hitbox for rotation
+	&[data-handle-type="rotation"] {
+		width: 40px;
+		height: 40px;
+	}
+	
+	// Center the visual handle inside wrapper
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.transform-handle {
+	pointer-events: none; // Wrapper handles clicks
+	box-sizing: border-box;
+	
+	&.transform-handle-corner {
+		width: 8px;
+		height: 8px;
+		background: var(--color-text-primary);
+		border: 1.5px solid var(--color-bg-secondary);
+		border-radius: 2px;
+	}
+	
+	&.transform-handle-rotation {
+		width: 10px;
+		height: 10px;
+		background: var(--color-text-primary);
+		border: 1.5px solid var(--color-bg-secondary);
+		border-radius: 50%;
+	}
+}
+
+// Hover states on wrappers
+.transform-handle-wrapper:hover .transform-handle {
+	background: var(--color-accent);
+}
+
+.transform-rotation-line {
+	background: var(--color-accent);
+	pointer-events: none;
+}
+
+.sticker-element.has-transform-handles {
+	pointer-events: none !important;
+}

@@ -12,6 +12,11 @@ class StickerManager extends ContentManager {
 		});
 
 		this.useBrowser = true;
+
+		this.transformHandles = null;      // Container for handle elements
+		this.activeHandleType = null;      // Which handle is being dragged
+		this.dragStartState = null;        // Initial state when drag starts
+		this.isDraggingHandle = false;     // Flag to prevent conflicts with sticker drag
 	}
 
 	async initBrowser() {
@@ -128,6 +133,413 @@ class StickerManager extends ContentManager {
 	this.editor.updateHelpfulMessage();
 
 	}
+
+// ===== TRANSFORM HANDLES =====
+
+createTransformHandles(layerId) {
+	// Check if handles are enabled
+	if (!CONFIG.stickerHandles.enabled) return;
+	
+	// NEW: Don't show handles on mobile (use touch gestures instead)
+	if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
+		return;
+	}
+	
+	// Only create handles in SELECT tool mode
+	if (this.editor.currentTool !== ToolType.SELECT) return;
+	
+	const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.STICKER) return;
+	
+	// Don't create handles for empty sticker layers
+	if (!layer.stickerData || layer.stickerData.isEmpty || !layer.stickerData.url) {
+		return;
+	}
+	
+	// Remove existing handles first
+	this.removeTransformHandles();
+	
+	// Disable pointer events on sticker element
+	const stickerElement = this.layerElements.get(layerId);
+	if (stickerElement) {
+		stickerElement.classList.add('has-transform-handles');
+	}
+	
+	// Create container
+	// Create container
+	const container = document.createElement('div');
+	container.className = 'transform-handles';
+	container.dataset.layerId = layerId;
+	
+	// Create bounding box (DRAGGABLE for moving sticker)
+	const boundingBox = document.createElement('div');
+	boundingBox.className = 'transform-bounding-box';
+	boundingBox.dataset.handleType = 'move'; // NEW - make it a draggable handle
+	container.appendChild(boundingBox);
+	
+	// Create corner handles WITH REAL HITBOXES
+	const corners = ['tl', 'tr', 'br', 'bl'];
+	corners.forEach(corner => {
+		const handleWrapper = document.createElement('div');
+		handleWrapper.className = 'transform-handle-wrapper';
+		handleWrapper.dataset.handleType = `corner-${corner}`;
+		
+		const handle = document.createElement('div');
+		handle.className = `transform-handle transform-handle-corner corner-${corner}`;
+		
+		handleWrapper.appendChild(handle);
+		container.appendChild(handleWrapper);
+	});
+	
+	// Create rotation handle WITH REAL HITBOX
+	const rotationLine = document.createElement('div');
+	rotationLine.className = 'transform-rotation-line';
+	container.appendChild(rotationLine);
+	
+	const rotationWrapper = document.createElement('div');
+	rotationWrapper.className = 'transform-handle-wrapper';
+	rotationWrapper.dataset.handleType = 'rotation';
+	
+	const rotationHandle = document.createElement('div');
+	rotationHandle.className = 'transform-handle transform-handle-rotation';
+	
+	rotationWrapper.appendChild(rotationHandle);
+	container.appendChild(rotationWrapper);
+	
+	// Add to canvas
+	this.editor.canvasElementsContainer.appendChild(container);
+	this.transformHandles = container;
+	
+	// Position handles
+	this.updateHandlePositions(layerId);
+	
+	// Attach event listeners
+	this.attachHandleListeners(layerId);
+}
+
+updateHandlePositions(layerId) {
+	if (!this.transformHandles) return;
+	
+	const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+	if (!layer || layer.type !== LayerType.STICKER) return;
+	
+	const { transform } = layer.stickerData;
+	const { width, height } = layer.stickerData;
+	
+	// Calculate display dimensions
+	const displayWidth = width * (transform.scale.x / 100);
+	const displayHeight = height * (transform.scale.y / 100);
+	
+	// Get rotation in radians
+	const rotationRad = (transform.rotation * Math.PI) / 180;
+	const cos = Math.cos(rotationRad);
+	const sin = Math.sin(rotationRad);
+	
+	// Half dimensions
+	const hw = displayWidth / 2;
+	const hh = displayHeight / 2;
+	
+	// Corner positions in local space (before rotation)
+	const corners = {
+		tl: { x: -hw, y: -hh },
+		tr: { x: hw, y: -hh },
+		br: { x: hw, y: hh },
+		bl: { x: -hw, y: hh }
+	};
+	
+	// Rotate corners and translate to position
+	const rotatedCorners = {};
+	Object.keys(corners).forEach(key => {
+		const local = corners[key];
+		rotatedCorners[key] = {
+			x: transform.position.x + (local.x * cos - local.y * sin),
+			y: transform.position.y + (local.x * sin + local.y * cos)
+		};
+	});
+	
+	// Position bounding box (now draggable)
+	const boundingBox = this.transformHandles.querySelector('.transform-bounding-box');
+	if (boundingBox) {
+		boundingBox.style.cssText = `
+			position: absolute;
+			left: ${transform.position.x}px;
+			top: ${transform.position.y}px;
+			width: ${displayWidth}px;
+			height: ${displayHeight}px;
+			transform: translate(-50%, -50%) rotate(${transform.rotation}deg);
+			pointer-events: auto;
+			cursor: move;
+		`;
+	}
+	
+	// Position corner handle WRAPPERS
+	Object.keys(rotatedCorners).forEach(corner => {
+		const wrapper = this.transformHandles.querySelector(`[data-handle-type="corner-${corner}"]`);
+		if (wrapper) {
+			const pos = rotatedCorners[corner];
+			wrapper.style.cssText = `
+				position: absolute;
+				left: ${pos.x}px;
+				top: ${pos.y}px;
+				transform: translate(-50%, -50%);
+			`;
+			
+			// Update cursor based on rotation
+			wrapper.style.cursor = this.getCornerCursor(corner, transform.rotation);
+		}
+	});
+	
+	// Position rotation handle (above top center)
+	const config = CONFIG.stickerHandles;
+	const topCenterLocal = { x: 0, y: -hh - config.rotationHandleDistance };
+	const topCenter = {
+		x: transform.position.x + (topCenterLocal.x * cos - topCenterLocal.y * sin),
+		y: transform.position.y + (topCenterLocal.x * sin + topCenterLocal.y * cos)
+	};
+	
+	const rotationWrapper = this.transformHandles.querySelector('[data-handle-type="rotation"]');
+	if (rotationWrapper) {
+		rotationWrapper.style.cssText = `
+			position: absolute;
+			left: ${topCenter.x}px;
+			top: ${topCenter.y}px;
+			transform: translate(-50%, -50%);
+			cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='white' stroke='black' stroke-width='1' d='M12 3v4m0 10v4M3 12h4m10 0h4M6.34 6.34l2.83 2.83m5.66 5.66l2.83 2.83M6.34 17.66l2.83-2.83m5.66-5.66l2.83-2.83'/%3E%3C/svg%3E") 12 12, auto;
+		`;
+	}
+	
+	// Position rotation line (from top center of box to rotation handle)
+	const rotationLine = this.transformHandles.querySelector('.transform-rotation-line');
+	if (rotationLine) {
+		const topBoxLocal = { x: 0, y: -hh };
+		const topBox = {
+			x: transform.position.x + (topBoxLocal.x * cos - topBoxLocal.y * sin),
+			y: transform.position.y + (topBoxLocal.x * sin + topBoxLocal.y * cos)
+		};
+		
+		const lineLength = config.rotationHandleDistance;
+		const lineAngle = transform.rotation;
+		
+		rotationLine.style.cssText = `
+			position: absolute;
+			left: ${topBox.x}px;
+			top: ${topBox.y}px;
+			width: ${config.boundingBoxWidth}px;
+			height: ${lineLength}px;
+			transform: translate(-50%, 0) rotate(${lineAngle}deg);
+			transform-origin: top center;
+			pointer-events: none;
+		`;
+	}
+}
+
+removeTransformHandles() {
+	if (this.transformHandles) {
+		// Re-enable pointer events on sticker
+		const layerId = this.transformHandles.dataset.layerId;
+		const stickerElement = this.layerElements.get(layerId);
+		if (stickerElement) {
+			stickerElement.classList.remove('has-transform-handles');
+		}
+		
+		if (this.transformHandles.parentNode) {
+			this.transformHandles.parentNode.removeChild(this.transformHandles);
+		}
+	}
+	this.transformHandles = null;
+	this.activeHandleType = null;
+	this.dragStartState = null;
+}
+
+attachHandleListeners(layerId) {
+	if (!this.transformHandles) return;
+	
+	// Get all handle elements (corners, rotation, AND bounding box)
+	const handles = this.transformHandles.querySelectorAll('[data-handle-type]');
+	
+	handles.forEach(handle => {
+		const handleType = handle.dataset.handleType;
+		
+		handle.addEventListener('mousedown', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+			
+			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+			if (!layer) return;
+			
+			this.activeHandleType = handleType;
+			this.isDraggingHandle = true;
+			
+			// Store initial state
+			this.dragStartState = {
+				mouseX: e.clientX,
+				mouseY: e.clientY,
+				canvasX: this.editor.viewport.screenToCanvas(e.clientX, e.clientY).x,
+				canvasY: this.editor.viewport.screenToCanvas(e.clientX, e.clientY).y,
+				transform: {
+					position: { ...layer.stickerData.transform.position },
+					scale: { ...layer.stickerData.transform.scale },
+					rotation: layer.stickerData.transform.rotation
+				},
+				width: layer.stickerData.width,
+				height: layer.stickerData.height
+			};
+			
+			// Attach global listeners
+			document.addEventListener('mousemove', this.handleMouseMove);
+			document.addEventListener('mouseup', this.handleMouseUp);
+		});
+	});
+	
+	// Bind methods to preserve context
+	this.handleMouseMove = this.handleMouseMove.bind(this);
+	this.handleMouseUp = this.handleMouseUp.bind(this);
+}
+
+handleMouseMove = (e) => {
+	if (!this.activeHandleType || !this.dragStartState) return;
+	
+	const layer = this.editor.layerManager.getActiveLayer();
+	if (!layer || layer.type !== LayerType.STICKER) return;
+	
+	if (this.activeHandleType.startsWith('corner-')) {
+		this.handleCornerDrag(e, layer);
+	} else if (this.activeHandleType === 'rotation') {
+		this.handleRotationDrag(e, layer);
+	} else if (this.activeHandleType === 'move') {
+		this.handleMoveDrag(e, layer);
+	}
+	
+	// Update UI
+	this.editor.loadStickerSettings(layer);
+};
+
+handleMoveDrag(e, layer) {
+	const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+	
+	const deltaX = canvasPos.x - this.dragStartState.canvasX;
+	const deltaY = canvasPos.y - this.dragStartState.canvasY;
+	
+	const newX = this.dragStartState.transform.position.x + deltaX;
+	const newY = this.dragStartState.transform.position.y + deltaY;
+	
+	this.updateTransform(layer.id, {
+		position: { x: newX, y: newY }
+	});
+	
+	this.updateHandlePositions(layer.id);
+}
+
+
+handleMouseUp = () => {
+	if (this.isDraggingHandle) {
+		this.editor.saveState();
+	}
+	
+	this.activeHandleType = null;
+	this.dragStartState = null;
+	this.isDraggingHandle = false;
+	
+	document.removeEventListener('mousemove', this.handleMouseMove);
+	document.removeEventListener('mouseup', this.handleMouseUp);
+};
+
+handleCornerDrag(e, layer) {
+	const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+	const { transform } = layer.stickerData;
+	
+	// Calculate distance from center to mouse
+	const dx = canvasPos.x - transform.position.x;
+	const dy = canvasPos.y - transform.position.y;
+	const currentDistance = Math.sqrt(dx * dx + dy * dy);
+	
+	// Calculate initial distance (from corner to center)
+	const startState = this.dragStartState;
+	const startWidth = startState.width * (startState.transform.scale.x / 100);
+	const startHeight = startState.height * (startState.transform.scale.y / 100);
+	const initialDistance = Math.sqrt((startWidth / 2) ** 2 + (startHeight / 2) ** 2);
+	
+	// Calculate scale factor
+	const scaleFactor = currentDistance / initialDistance;
+	
+	// Apply proportional scaling
+	let newScaleX = startState.transform.scale.x * scaleFactor;
+	let newScaleY = startState.transform.scale.y * scaleFactor;
+	
+	// Clamp to min/max
+	newScaleX = Math.max(CONFIG.stickerHandles.minScale || 10, Math.min(CONFIG.stickerHandles.maxScale || 500, newScaleX));
+	newScaleY = Math.max(CONFIG.stickerHandles.minScale || 10, Math.min(CONFIG.stickerHandles.maxScale || 500, newScaleY));
+	
+	this.updateTransform(layer.id, {
+		scale: { x: newScaleX, y: newScaleY }
+	});
+	
+	this.updateHandlePositions(layer.id);
+}
+
+handleRotationDrag(e, layer) {
+	const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+	const { transform } = layer.stickerData;
+	
+	// Calculate angle from center to mouse
+	const dx = canvasPos.x - transform.position.x;
+	const dy = canvasPos.y - transform.position.y;
+	let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+	
+	// Adjust for rotation handle being at top (90 degrees offset)
+	angle += 90;
+	
+	// Normalize to -180 to 180 range (to match slider)
+	if (angle > 180) {
+		angle -= 360;
+	} else if (angle <= -180) {
+		angle += 360;
+	}
+	
+	this.updateTransform(layer.id, {
+		rotation: angle
+	});
+	
+	this.updateHandlePositions(layer.id);
+}
+
+getCornerCursor(corner, rotation) {
+	// Normalize rotation to 0-360
+	const normalizedRotation = ((rotation % 360) + 360) % 360;
+	
+	// Map corners to their base angle (degrees)
+	const cornerAngles = {
+		tl: 315,  // Top-left: northwest
+		tr: 45,   // Top-right: northeast
+		br: 135,  // Bottom-right: southeast
+		bl: 225   // Bottom-left: southwest
+	};
+	
+	// Add rotation to corner's base angle
+	const totalAngle = (cornerAngles[corner] + normalizedRotation) % 360;
+	
+	// Map angle ranges to cursors (45° segments)
+	// 0° = right, 90° = down, 180° = left, 270° = up
+	if (totalAngle >= 337.5 || totalAngle < 22.5) {
+		return 'ew-resize';      // horizontal
+	} else if (totalAngle >= 22.5 && totalAngle < 67.5) {
+		return 'nesw-resize';    // northeast-southwest
+	} else if (totalAngle >= 67.5 && totalAngle < 112.5) {
+		return 'ns-resize';      // vertical
+	} else if (totalAngle >= 112.5 && totalAngle < 157.5) {
+		return 'nwse-resize';    // northwest-southeast
+	} else if (totalAngle >= 157.5 && totalAngle < 202.5) {
+		return 'ew-resize';      // horizontal
+	} else if (totalAngle >= 202.5 && totalAngle < 247.5) {
+		return 'nesw-resize';    // northeast-southwest
+	} else if (totalAngle >= 247.5 && totalAngle < 292.5) {
+		return 'ns-resize';      // vertical
+	} else {
+		return 'nwse-resize';    // northwest-southeast
+	}
+}
+
 
 	// ===== LOADING =====
 
@@ -367,10 +779,10 @@ this.browser.refresh();
 						y: this.editor.originalCanvas.height / 2
 					},
 					rotation: CONFIG.defaultStickerRotation,
-					scale: {
-						x: CONFIG.defaultStickerScale.x,
-						y: CONFIG.defaultStickerScale.y
-					},
+scale: {
+    x: CONFIG.defaultStickerScale,  // CORRECT
+    y: CONFIG.defaultStickerScale   // CORRECT
+},
 					proportionalScale: true,
 					opacity: CONFIG.defaultStickerOpacity,
 					flipX: false,
@@ -483,36 +895,40 @@ this.browser.refresh();
 		// Update selection highlight for this layer if it's active
 		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
 
+	// Create transform handles if this is the active layer and tool is SELECT
+	if (layer.id === this.editor.layerManager.activeLayerId && this.editor.currentTool === ToolType.SELECT) {
+		this.createTransformHandles(layer.id);
 	}
+}
 
-	applyTransform(element, layer) {
-		const { transform } = layer.stickerData;
-		const { width, height } = layer.stickerData;
+applyTransform(element, layer) {
+	const { transform } = layer.stickerData;
+	const { width, height } = layer.stickerData;
 
-		// Calculate actual display size
-		const displayWidth = width * (transform.scale.x / 100);
-		const displayHeight = height * (transform.scale.y / 100);
+	// Calculate actual display size
+	const displayWidth = width * (transform.scale.x / 100);
+	const displayHeight = height * (transform.scale.y / 100);
 
-		// Apply CSS transform
-		const transforms = [
-			`translate(-50%, -50%)`,                          // Center on position
-			`translate(${transform.position.x}px, ${transform.position.y}px)`,
-			`rotate(${transform.rotation}deg)`,
-			`scaleX(${transform.flipX ? -1 : 1})`,
-			`scaleY(${transform.flipY ? -1 : 1})`
-		];
+	// Apply CSS transform
+	const transforms = [
+		`translate(-50%, -50%)`,
+		`translate(${transform.position.x}px, ${transform.position.y}px)`,
+		`rotate(${transform.rotation}deg)`,
+		`scaleX(${transform.flipX ? -1 : 1})`,
+		`scaleY(${transform.flipY ? -1 : 1})`
+	];
 
-		element.style.cssText = `
-			position: absolute;
-			width: ${displayWidth}px;
-			height: ${displayHeight}px;
-			transform: ${transforms.join(' ')};
-			opacity: ${transform.opacity / 100};
-			pointer-events: ${layer.visible ? 'auto' : 'none'};
-			display: ${layer.visible ? 'block' : 'none'};
-			z-index: ${this.editor.layerManager.getLayerZIndex(layer.id)};
-		`;
-	}
+	element.style.cssText = `
+		position: absolute;
+		width: ${displayWidth}px;
+		height: ${displayHeight}px;
+		transform: ${transforms.join(' ')};
+		opacity: ${transform.opacity / 100};
+		pointer-events: ${layer.visible ? 'auto' : 'none'};
+		display: ${layer.visible ? 'block' : 'none'};
+		z-index: ${this.editor.layerManager.getLayerZIndex(layer.id)};
+	`;
+}
 
 
 	// ===== TRANSFORM UPDATES =====
@@ -523,6 +939,8 @@ this.browser.refresh();
 
 		const { transform } = layer.stickerData;
 
+
+		
 		// Apply updates
 		if (updates.position) {
 			transform.position.x = updates.position.x ?? transform.position.x;
@@ -535,6 +953,7 @@ this.browser.refresh();
 			transform.scale.x = updates.scale.x ?? transform.scale.x;
 			transform.scale.y = updates.scale.y ?? transform.scale.y;
 		}
+
 
 		if (updates.rotation !== undefined) {
 			transform.rotation = updates.rotation;
@@ -552,12 +971,21 @@ this.browser.refresh();
 			transform.flipY = updates.flipY;
 		}
 
-		// Re-render with updated transform
-		const element = this.layerElements.get(layerId);
-		if (element) {
-			this.applyTransform(element, layer);
-		}
+	// Re-render with updated transform
+	const element = this.layerElements.get(layerId);
+	if (element) {
+		this.applyTransform(element, layer);
 	}
+	
+	// NEW: Update handle positions if they exist
+	if (this.transformHandles && this.transformHandles.dataset.layerId === layerId) {
+		this.updateHandlePositions(layerId);
+	}
+
+
+
+	
+}
 
 	// ===== CENTERING METHODS =====
 
@@ -767,13 +1195,16 @@ this.browser.refresh();
 		let startCanvasX = 0;
 		let startCanvasY = 0;
 
-		const handleMouseDown = (e) => {
-			if (e.button !== 0) return; // Left click only
-
-			// Don't select stickers when using pan or zoom tools
-			if (this.editor.currentTool === ToolType.HAND || this.editor.currentTool === ToolType.ZOOM) {
-				return;
-			}
+const handleMouseDown = (e) => {
+	if (e.button !== 0) return; // Left click only
+	
+	// NEW: Don't interfere with handle dragging
+	if (this.isDraggingHandle) return;
+	
+	// Don't select stickers when using pan or zoom tools
+	if (this.editor.currentTool === ToolType.HAND || this.editor.currentTool === ToolType.ZOOM) {
+		return;
+	}
 
 			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
 			if (!layer || !layer.visible || layer.locked) return;
@@ -843,9 +1274,14 @@ this.browser.refresh();
 
 	// ===== LAYER REMOVAL =====
 
-	removeSticker(layerId) {
-		// Just remove DOM element
-		this.removeStickerElement(layerId);
+removeSticker(layerId) {
+	// NEW: Remove transform handles first
+	if (this.transformHandles && this.transformHandles.dataset.layerId === layerId) {
+		this.removeTransformHandles();
+	}
+	
+	// Just remove DOM element
+	this.removeStickerElement(layerId);
 
 		// Clean up maps
 		this.layerElements.delete(layerId);

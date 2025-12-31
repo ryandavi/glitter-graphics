@@ -63,7 +63,7 @@ const CONFIG = {
 	maxStickerUploadSize: 5 * 1024 * 1024, // 5MB
 	allowedStickerTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
 	defaultStickerOpacity: 100,
-	defaultStickerScale: { x: 100, y: 100 },
+	defaultStickerScale: 100,  // CORRECTED
 	defaultStickerRotation: 0,
 	rotationSnapTolerance: 5, // degrees
 
@@ -126,6 +126,25 @@ const CONFIG = {
 	forceIOSExportPreview: false, // Set to true to test iOS export modal on desktop
 	autoSelect: true,
 	autoCreateGlitterLayer: true,
+
+
+	// ========================================
+	// UI - Sticker Handles
+	// ========================================
+stickerHandles: {
+	enabled: true,
+	cornerSize: 8,
+	rotationHandleRadius: 5,
+	rotationHandleDistance: 30,
+	handleFill: '#ffffff',
+	handleStroke: 'var(--color-bg-secondary)',
+	handleStrokeWidth: 1.5,
+	boundingBoxColor: 'var(--color-accent)',
+	boundingBoxWidth: 1.5,
+	handleHitboxPadding: 8,
+	minScale: 10,   // ADD THIS - minimum 10%
+	maxScale: 500,  // ADD THIS - maximum 500%
+},
 
 	// ========================================
 	// SHORTCUTS
@@ -335,7 +354,6 @@ class GlitterEditor {
 	async loadDebugConfig() {
 		if (!DEBUG_CONFIG.enabled) return;
 
-		console.log('[DEBUG] Loading debug configuration...');
 
 		// 1. Load blank canvas
 		await this.loadBlankImage(
@@ -386,7 +404,6 @@ class GlitterEditor {
 		this.updateActionButtons();
 		this.saveState();
 
-		console.log('[DEBUG] Debug configuration loaded successfully');
 	}
 
 	// ===== UTILITY METHODS =====
@@ -1424,132 +1441,127 @@ if (multiSelect) {
 			});
 		}
 	}
-	setupStickerScaleListeners() {
-		const scaleX = document.getElementById('stickerScaleX');
-		const scaleXValue = document.getElementById('stickerScaleXValue');
-		const scaleY = document.getElementById('stickerScaleY');
-		const scaleYValue = document.getElementById('stickerScaleYValue');
-		const proportionalScale = document.getElementById('stickerProportionalScale');
-		const resetScaleX = document.getElementById('resetStickerScaleX');
-		const resetScaleY = document.getElementById('resetStickerScaleY');
+setupStickerScaleListeners() {
+	const scaleX = document.getElementById('stickerScaleX');
+	const scaleXValue = document.getElementById('stickerScaleXValue');
+	const scaleY = document.getElementById('stickerScaleY');
+	const scaleYValue = document.getElementById('stickerScaleYValue');
+	const proportionalScale = document.getElementById('stickerProportionalScale');
+	const resetScaleX = document.getElementById('resetStickerScaleX');
+	const resetScaleY = document.getElementById('resetStickerScaleY');
 
-		// Scale X
-		if (scaleX && scaleXValue) {
-			scaleX.addEventListener('input', (e) => {
-				const value = parseFloat(e.target.value);
-				scaleXValue.textContent = Math.round(value) + '%';
+	// Scale X
+	if (scaleX && scaleXValue) {
+		scaleX.addEventListener('input', (e) => {
+			const value = parseFloat(e.target.value);
+			scaleXValue.textContent = Math.round(value) + '%';
 
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					if (proportionalScale && proportionalScale.checked) {
-						if (scaleY && scaleYValue) {
-							scaleY.value = value;
-							scaleYValue.textContent = Math.round(value) + '%';
-						}
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: value, y: value }
-						});
-					} else {
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: value }
-						});
+			const layer = this.layerManager.getActiveLayer();
+			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+				if (proportionalScale && proportionalScale.checked) {
+					if (scaleY && scaleYValue) {
+						scaleY.value = value;
+						scaleYValue.textContent = Math.round(value) + '%';
 					}
+					this.stickerManager.updateTransform(layer.id, {
+						scale: { x: value, y: value }
+					});
+				} else {
+					// Only pass x - let updateTransform preserve y
+					this.stickerManager.updateTransform(layer.id, {
+						scale: { x: value }
+					});
 				}
-			});
+			}
+		});
 
-			scaleX.addEventListener('change', () => this.saveState());
-		}
-
-		// Scale Y
-		if (scaleY && scaleYValue) {
-			scaleY.addEventListener('input', (e) => {
-				const value = parseFloat(e.target.value);
-				scaleYValue.textContent = Math.round(value) + '%';
-
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					if (proportionalScale && proportionalScale.checked) {
-						if (scaleX && scaleXValue) {
-							scaleX.value = value;
-							scaleXValue.textContent = Math.round(value) + '%';
-						}
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: value, y: value }
-						});
-					} else {
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { y: value }
-						});
-					}
-				}
-			});
-
-			scaleY.addEventListener('change', () => this.saveState());
-		}
-
-		// Proportional scale toggle
-		if (proportionalScale) {
-			proportionalScale.addEventListener('change', (e) => {
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER) {
-					layer.stickerData.transform.proportionalScale = e.target.checked;
-					this.saveState();
-				}
-			});
-		}
-
-		// Reset Scale X
-		if (resetScaleX) {
-			resetScaleX.addEventListener('click', () => {
-				if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
-				if (scaleXValue) scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
-
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					if (proportionalScale && proportionalScale.checked) {
-						if (scaleY && scaleYValue) {
-							scaleY.value = CONFIG.defaultStickerScale;
-							scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
-						}
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-						});
-					} else {
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: CONFIG.defaultStickerScale }
-						});
-					}
-					this.saveState();
-				}
-			});
-		}
-
-		// Reset Scale Y
-		if (resetScaleY) {
-			resetScaleY.addEventListener('click', () => {
-				if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
-				if (scaleYValue) scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
-
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					if (proportionalScale && proportionalScale.checked) {
-						if (scaleX && scaleXValue) {
-							scaleX.value = CONFIG.defaultStickerScale;
-							scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
-						}
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-						});
-					} else {
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { y: CONFIG.defaultStickerScale }
-						});
-					}
-					this.saveState();
-				}
-			});
-		}
+		scaleX.addEventListener('change', () => this.saveState());
 	}
+
+	// Scale Y
+	if (scaleY && scaleYValue) {
+		scaleY.addEventListener('input', (e) => {
+			const value = parseFloat(e.target.value);
+			scaleYValue.textContent = Math.round(value) + '%';
+
+			const layer = this.layerManager.getActiveLayer();
+			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+				if (proportionalScale && proportionalScale.checked) {
+					if (scaleX && scaleXValue) {
+						scaleX.value = value;
+						scaleXValue.textContent = Math.round(value) + '%';
+					}
+					this.stickerManager.updateTransform(layer.id, {
+						scale: { x: value, y: value }
+					});
+				} else {
+					// Only pass y - let updateTransform preserve x
+					this.stickerManager.updateTransform(layer.id, {
+						scale: { y: value }
+					});
+				}
+			}
+		});
+
+		scaleY.addEventListener('change', () => this.saveState());
+	}
+
+// Reset Scale X
+if (resetScaleX) {
+	resetScaleX.addEventListener('click', () => {
+		if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
+		if (scaleXValue) scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+
+		const layer = this.layerManager.getActiveLayer();
+		if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+			if (proportionalScale && proportionalScale.checked) {
+				if (scaleY && scaleYValue) {
+					scaleY.value = CONFIG.defaultStickerScale;
+					scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+				}
+				this.stickerManager.updateTransform(layer.id, {
+					scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
+				});
+			} else {
+				// FIXED: Only pass x property
+				this.stickerManager.updateTransform(layer.id, {
+					scale: { x: CONFIG.defaultStickerScale }
+				});
+			}
+			this.saveState();
+		}
+	});
+}
+
+// Reset Scale Y
+if (resetScaleY) {
+	resetScaleY.addEventListener('click', () => {
+		if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
+		if (scaleYValue) scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+
+		const layer = this.layerManager.getActiveLayer();
+		if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+			if (proportionalScale && proportionalScale.checked) {
+				if (scaleX && scaleXValue) {
+					scaleX.value = CONFIG.defaultStickerScale;
+					scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+				}
+				this.stickerManager.updateTransform(layer.id, {
+					scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
+				});
+			} else {
+				// FIXED: Only pass y property
+				this.stickerManager.updateTransform(layer.id, {
+					scale: { y: CONFIG.defaultStickerScale }
+				});
+			}
+			this.saveState();
+		}
+	});
+}
+
+
+}
 
 	setupStickerOpacityListeners() {
 		const opacity = document.getElementById('stickerOpacity');
@@ -2251,6 +2263,16 @@ if (multiSelect) {
 			this.previewWrapper.classList.remove('color-picker-mode');
 			if (tool === ToolType.COLOR_PICKER) {
 				this.previewWrapper.classList.add('color-picker-mode');
+			}
+		}
+
+		// NEW: Handle transform handles visibility
+		if (this.stickerManager) {
+			const activeLayer = this.layerManager.getActiveLayer();
+			if (tool === ToolType.SELECT && activeLayer && activeLayer.type === LayerType.STICKER) {
+				this.stickerManager.createTransformHandles(activeLayer.id);
+			} else {
+				this.stickerManager.removeTransformHandles();
 			}
 		}
 
@@ -3063,67 +3085,73 @@ if (multiSelect) {
 	}
 
 	// ===== CLICK HANDLERS =====
-	handlePreviewContainerClick(e) {
-		// Allow right-click for zoom tool, block other non-left clicks
-		if (e.pointerType === 'mouse' && e.button !== 0) {
-			// Allow right-click (button 2) only for zoom tool
-			if (!(e.button === 2 && this.currentTool === ToolType.ZOOM)) {
-				return;
-			}
-		}
-
-		if (e.target.closest('[class*="-controls"]')) {
+handlePreviewContainerClick(e) {
+	// NEW: Don't handle clicks on transform handles
+	const clickedElement = e.target;
+	if (clickedElement.closest('.transform-handles') || 
+	    clickedElement.closest('.transform-handle-wrapper') ||
+	    clickedElement.classList.contains('transform-bounding-box')) {
+		return; // Let the handle's own event handler deal with it
+	}
+	
+	// Allow right-click for zoom tool, block other non-left clicks
+	if (e.pointerType === 'mouse' && e.button !== 0) {
+		// Allow right-click (button 2) only for zoom tool
+		if (!(e.button === 2 && this.currentTool === ToolType.ZOOM)) {
 			return;
-		}
-
-
-		const hitSticker = e.target.closest('.sticker-element');
-
-		// Check if click is within the canvas area using viewport coordinates
-		const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
-		const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
-
-		// We treat stickers and the canvas as the "Image Area"
-		const hitImageArea = hitCanvas || hitSticker;
-
-		// Gatekeeper: If they clicked a button/sidebar, stop here.
-		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
-		if (!isWorkspace) return;
-
-		switch (this.currentTool) {
-			case ToolType.SELECT:
-				if (hitSticker) return;
-				if (hitImageArea && hitCanvas) {
-					// Call handleCanvasClick to trigger layer picking
-					this.handleCanvasClick(e);
-				} else if (!hitImageArea) {
-					this.layerManager.setActiveLayer(null);
-				}
-				break;
-
-			case ToolType.COLOR_PICKER:
-				if (hitImageArea) {
-					// EXPLICITLY call the picking logic here
-					this.handleCanvasClick(e);
-				} else {
-					this.setTool(ToolType.SELECT);
-					// this.updateStatus('Click on the preview to select a color');
-				}
-				break;
-
-			case ToolType.HAND:
-				// Start panning
-				this.viewport.startPan(e.clientX, e.clientY);
-				break;
-
-			case ToolType.ZOOM:
-				if (this.originalImage) {
-					this.handleCanvasZoomClick(e);
-				}
-				break;
 		}
 	}
 
+	if (e.target.closest('[class*="-controls"]')) {
+		return;
+	}
+
+	const hitSticker = e.target.closest('.sticker-element');
+
+	// Check if click is within the canvas area using viewport coordinates
+	const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
+	const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
+
+	// We treat stickers and the canvas as the "Image Area"
+	const hitImageArea = hitCanvas || hitSticker;
+
+	// Gatekeeper: If they clicked a button/sidebar, stop here.
+	const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
+	if (!isWorkspace) return;
+
+	switch (this.currentTool) {
+		case ToolType.SELECT:
+			if (hitSticker) return;
+			if (hitImageArea && hitCanvas) {
+				// Call handleCanvasClick to trigger layer picking
+				this.handleCanvasClick(e);
+			} else if (!hitImageArea) {
+				this.layerManager.setActiveLayer(null);
+			}
+			break;
+
+		case ToolType.COLOR_PICKER:
+			if (hitImageArea) {
+				// EXPLICITLY call the picking logic here
+				this.handleCanvasClick(e);
+			} else {
+				this.setTool(ToolType.SELECT);
+				// this.updateStatus('Click on the preview to select a color');
+			}
+			break;
+
+		case ToolType.HAND:
+			// Start panning
+			this.viewport.startPan(e.clientX, e.clientY);
+			break;
+
+		case ToolType.ZOOM:
+			if (this.originalImage) {
+				this.handleCanvasZoomClick(e);
+			}
+			break;
+	}
+}
 	handleCanvasClick(event) {
 		if (!this.originalImageData) return;
 
