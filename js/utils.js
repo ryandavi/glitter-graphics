@@ -105,7 +105,7 @@ const initPixelScalerInContainer = (container = document) => {
 
 			const scale = Number(img.dataset.pixelScale) || 1;
 			const targetWidth = img.naturalWidth * scale;
-			
+
 			// Set the "ideal" width. 
 			// The CSS max-width: 100% will automatically shrink it 
 			// if the parent is smaller than this value.
@@ -133,7 +133,7 @@ const initPixelScaler = () => {
 
 			const scale = Number(img.dataset.pixelScale) || 1;
 			const targetWidth = img.naturalWidth * scale;
-			
+
 			// Set the "ideal" width. 
 			// The CSS max-width: 100% will automatically shrink it 
 			// if the parent is smaller than this value.
@@ -163,9 +163,7 @@ document.addEventListener('DOMContentLoaded', initPixelScaler);
 // ============================================
 // TOOLTIP MANAGER CLASS
 // ============================================
-// ============================================
-// TOOLTIP MANAGER CLASS
-// ============================================
+
 class TooltipManager {
 	constructor(options = {}) {
 		this.config = {
@@ -455,11 +453,6 @@ class TooltipManager {
 // Global instance
 const tooltipManager = new TooltipManager();
 
-/**
- * Initialize tooltips in a specific container (for dynamically loaded content)
- * 
- * @param {HTMLElement} container - Container to search for tooltip elements
- */
 const initTooltipsInContainer = (container = document) => {
 	if (!container) return;
 

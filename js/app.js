@@ -1,67 +1,64 @@
 const CONFIG = {
-	// app
+	// ========================================
+	// APPLICATION
+	// ========================================
 	maxLayers: 25,
 	historyLimit: 30,
 	defaultTool: "select",
+	createDefaultLayerOnLoad: false,
+	createBaseImageLayerOnLoad: true,
 
-	// image
+	// ========================================
+	// CANVAS & IMAGE
+	// ========================================
 	maxImageWidth: 800,
 	maxImageHeight: 800,
 	maxFileSizeMB: 10,
 	defaultCanvasPreset: { width: 400, height: 400, color: '#ffffff' },
+	baseGridSize: 20, // Transparency grid
 
-	// selection
+	// Artboard
+	showArtboardBorder: false,
+	artboardBorderColor: '#00ffff',
+	artboardBorderWidth: 2,
+	artboardBorderStyle: 'dashed', // 'solid' | 'dashed'
+
+	// ========================================
+	// LAYERS
+	// ========================================
+	exportFrameRateSource: 'first-layer',
+	layerSettingsOpenByDefault: false,
+
+	// Layer List Drag
+	scrollZoneSize: 50,
+	scrollSpeed: 10,
+
+	// ========================================
+	// TOOLS - Selection
+	// ========================================
 	defaultThreshold: 50,
 	defaultFeather: 0,
 	defaultScale: 100,
 	defaultOpacity: 100,
 	alphaThreshold: 254,
 	sliderDebounceMs: 150,
+	allowTransparentSelection: true,
 
-	// Mobile
-	mobileStickerHitAreaPadding: 20, // Extra pixels for easier touch targets
-	mobileAutoCloseDesignDrawer: true, // Close design drawer after selecting glitter/sticker
-	mobileOpenDrawOnLayerAdd: true,
-	mobileBreakpoint: 800, // Width in pixels where mobile mode activates
-
-
-
-	// glitter
+	// ========================================
+	// TOOLS - Glitter
+	// ========================================
 	defaultGlitterId: 111,
-
-	// Preview - selected outline
-	selectedGlitterOffset: 2,
-	selectedGlitterWidth: 2,
-
-
-	// Layer List
-	exportFrameRateSource: 'first-layer',
-	createDefaultLayerOnLoad: false,
-	createBaseImageLayerOnLoad: true,
-
-	allowTransparentSelection: true, // If true, allows picking/filling with transparency
-
-	// Layer list - drag
-	scrollZoneSize: 50,
-	scrollSpeed: 10,
-
-	// settings
-	layerSettingsOpenByDefault: false,
 	glitterSettingsOpenByDefault: false,
 	refineGlobalDefault: false,
 	glitterGlobalDefault: false,
 
-	// transparency grid
-	baseGridSize: 20,
+	// Preview - Selected Outline
+	selectedGlitterOffset: 2,
+	selectedGlitterWidth: 2,
 
-	// zoom
-	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
-
-
-	// Gallery
-	defaultGalleryTab: 'glitter', // 'glitter' | 'stickers'
-
-	// Stickers
+	// ========================================
+	// TOOLS - Stickers
+	// ========================================
 	maxStickers: 50,
 	maxStickerUploadSize: 5 * 1024 * 1024, // 5MB
 	allowedStickerTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
@@ -70,50 +67,69 @@ const CONFIG = {
 	defaultStickerRotation: 0,
 	rotationSnapTolerance: 5, // degrees
 
-	// Artboard
-	showArtboardBorder: false,
-	artboardBorderColor: '#00ffff',
-	artboardBorderWidth: 2,
-	artboardBorderStyle: 'dashed', // 'solid' | 'dashed'
+	// ========================================
+	// UI - Zoom
+	// ========================================
+	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
 
-	// Export (extend existing)
-	defaultExportStickers: true,
+	// ========================================
+	// UI - Gallery
+	// ========================================
+	defaultGalleryTab: 'glitter', // 'glitter' | 'stickers'
+
+	// ========================================
+	// MOBILE
+	// ========================================
+	mobileBreakpoint: 800, // Width in pixels where mobile mode activates
+	mobileStickerHitAreaPadding: 20, // Extra pixels for easier touch targets
+	mobileAutoCloseDesignDrawer: true, // Close design drawer after selecting glitter/sticker
+	mobileOpenDrawOnLayerAdd: true,
+
+	// ========================================
+	// EXPORT
+	// ========================================
+	// General
+	defaultExportBaseImage: true,
 	defaultExportGlitter: true,
+	defaultExportStickers: true,
+	defaultExportTransparency: true,
+	defaultExportMatteColor: '#ffffff',
 
-
-	// settings (defaults)
+	// Quality & Rendering
 	defaultExportQuality: 10,
 	defaultExportDitherEnabled: true,
 	defaultExportDitherType: 'FloydSteinberg',
+
+	// Frame Control
 	defaultExportFrameDelay: 110,
 	defaultExportMaxFrames: 60,
 	maxFramesHardLimit: 1000, // Very high limit when "no limit" is selected
-	defaultExportBaseImage: true,
-	defaultExportTransparency: true,
-	defaultExportMatteColor: '#ffffff',
 	defaultExportFrameSkip: 1,
 	defaultExportReverse: false,
 	defaultExportSmartFrameReduction: true,
-	defaultShowHints: true,
 
-
-
-
-	// watermark
+	// Watermark
 	defaultExportWatermarkEnabled: false,
-	watermarkUrl: 'images/watermark/2.png', // Set your watermark URL here
+	watermarkUrl: 'images/watermark/2.png',
 	watermarkPosition: 'bottom-right', // 'top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right', 'center'
 	watermarkPaddingX: 5, // pixels from edge
 	watermarkPaddingY: 5, // pixels from edge
 	watermarkOpacity: 100, // 0-100
 	watermarkScale: 100, // percentage
 
-	// debug
-	forceIOSExportPreview: false,  // Set to true to test iOS export modal on desktop
+	// UI
+	defaultShowHints: true,
+
+	// ========================================
+	// DEBUG
+	// ========================================
+	forceIOSExportPreview: false, // Set to true to test iOS export modal on desktop
 	autoSelect: true,
 	autoCreateGlitterLayer: true,
 
-	// shortcuts
+	// ========================================
+	// SHORTCUTS
+	// ========================================
 	shortcuts: {
 		tools: [
 			{ key: 'V', action: 'Select Tool' },
@@ -133,7 +149,6 @@ const CONFIG = {
 			{ key: 'Ctrl + Shift + Z', action: 'Redo' },
 		]
 	},
-
 };
 
 const LayerType = {
@@ -201,6 +216,7 @@ const LAYER_UI_CONFIG = {
 		}
 	}
 };
+
 // ============================================
 // DEBUG CONFIGURATION
 // Set enabled: true to auto-load preset stickers for testing
@@ -225,104 +241,95 @@ const DEBUG_CONFIG = {
 };
 
 
-
-
-
-
-
-
-
-
-
 // ============================================
 // GLITTER EDITOR CLASS
 // Contains all the logic for the glitter editor - UI and functionality
 // ============================================
 
 class GlitterEditor {
-constructor() {
-	// ============================================================================
-	// DOM REFERENCES
-	// ============================================================================
-	this.originalCanvas = document.getElementById('originalCanvas');
-	this.previewCanvas = document.getElementById('previewCanvas');
-	this.previewContainer = document.getElementById('previewContainer');
-	this.previewWrapper = document.getElementById('previewWrapper');
-	this.canvasElementsContainer = document.getElementById('canvasElementsContainer');
+	constructor() {
+		// ============================================================================
+		// DOM REFERENCES
+		// ============================================================================
+		this.originalCanvas = document.getElementById('originalCanvas');
+		this.previewCanvas = document.getElementById('previewCanvas');
+		this.previewContainer = document.getElementById('previewContainer');
+		this.previewWrapper = document.getElementById('previewWrapper');
+		this.canvasElementsContainer = document.getElementById('canvasElementsContainer');
 
-	// ============================================================================
-	// CANVAS SETUP
-	// ============================================================================
-	this.previewCanvas.style.zIndex = '1';
-	this.canvasElementsContainer.style.zIndex = '10';
-	this.canvasElementsContainer.style.pointerEvents = 'none'; // Allows clicking through to canvas
+		// ============================================================================
+		// CANVAS SETUP
+		// ============================================================================
+		this.previewCanvas.style.zIndex = '1';
+		this.canvasElementsContainer.style.zIndex = '10';
+		this.canvasElementsContainer.style.pointerEvents = 'none'; // Allows clicking through to canvas
 
-	this.originalCtx = this.originalCanvas.getContext('2d', { willReadFrequently: true });
-	this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
+		this.originalCtx = this.originalCanvas.getContext('2d', { willReadFrequently: true });
+		this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
 
-	// ============================================================================
-	// IMAGE DATA
-	// ============================================================================
-	this.originalImage = null;
-	this.originalImageData = null;
-	this.originalAlphaChannel = null;
+		// ============================================================================
+		// IMAGE DATA
+		// ============================================================================
+		this.originalImage = null;
+		this.originalImageData = null;
+		this.originalAlphaChannel = null;
 
-	// ============================================================================
-	// CONTENT & LAYERS
-	// ============================================================================
-	this.content = [];
+		// ============================================================================
+		// CONTENT & LAYERS
+		// ============================================================================
+		this.content = [];
 
-	// ============================================================================
-	// TOOL & HISTORY
-	// ============================================================================
-	this.currentTool = null;
-	this.history = [];
-	this.historyIndex = -1;
+		// ============================================================================
+		// TOOL & HISTORY
+		// ============================================================================
+		this.currentTool = null;
+		this.history = [];
+		this.historyIndex = -1;
 
-	// ============================================================================
-	// DISPLAY SETTINGS
-	// ============================================================================
-	this.showAllLayers = true;
-	this.showHints = CONFIG.defaultShowHints;
-	this.currentHintDismissed = false;
+		// ============================================================================
+		// DISPLAY SETTINGS
+		// ============================================================================
+		this.showAllLayers = true;
+		this.showHints = CONFIG.defaultShowHints;
+		this.currentHintDismissed = false;
 
-	// ============================================================================
-	// GLOBAL SETTINGS
-	// ============================================================================
-	this.refineGlobal = CONFIG.refineGlobalDefault;
-	this.glitterGlobal = CONFIG.glitterGlobalDefault;
+		// ============================================================================
+		// GLOBAL SETTINGS
+		// ============================================================================
+		this.refineGlobal = CONFIG.refineGlobalDefault;
+		this.glitterGlobal = CONFIG.glitterGlobalDefault;
 
-	// ============================================================================
-	// STATE FLAGS
-	// ============================================================================
-	this.isSaved = false;
-	this.touchGestureActive = false;
-	this.justCompletedDrag = false; // Flag to prevent layer picking immediately after drag
+		// ============================================================================
+		// STATE FLAGS
+		// ============================================================================
+		this.isSaved = false;
+		this.touchGestureActive = false;
+		this.justCompletedDrag = false; // Flag to prevent layer picking immediately after drag
 
-	// ============================================================================
-	// EXPORT STATE
-	// ============================================================================
-	this.exportStartTime = 0;
-	this.exportCancelled = false;
+		// ============================================================================
+		// EXPORT STATE
+		// ============================================================================
+		this.exportStartTime = 0;
+		this.exportCancelled = false;
 
-	// ============================================================================
-	// MANAGERS
-	// ============================================================================
-	this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
-	this.layerManager = new LayerManager(this);
-	this.stickerManager = new StickerManager(this);
-	this.glitterManager = new GlitterManager(this);
-	this.mobileManager = new MobileManager(this);
+		// ============================================================================
+		// MANAGERS
+		// ============================================================================
+		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
+		this.layerManager = new LayerManager(this);
+		this.stickerManager = new StickerManager(this);
+		this.glitterManager = new GlitterManager(this);
+		this.mobileManager = new MobileManager(this);
 
-	// ============================================================================
-	// INITIALIZATION
-	// ============================================================================
-	this.setTool(CONFIG.defaultTool);
-	this.setupEventListeners();
-	this.initializeCollapsibleSections();
-	this.initializeShortcutsModal();
-	this.initializeExportSettings();
-}
+		// ============================================================================
+		// INITIALIZATION
+		// ============================================================================
+		this.setTool(CONFIG.defaultTool);
+		this.setupEventListeners();
+		this.initializeCollapsibleSections();
+		this.initializeShortcutsModal();
+		this.initializeExportSettings();
+	}
 
 	// ===== DEBUG CONFIGURATION LOADER =====
 	async loadDebugConfig() {
@@ -438,31 +445,26 @@ constructor() {
 		this.exporter = new GifExporter();
 		await this.stickerManager.init();
 		await this.glitterManager.init(); // NEW
-
-
-
 		this.updateSidePanelUI(null);
 	}
 
-
-
 	// ===== SETTINGS PERSISTENCE =====
 
-saveSettingsToStorage() {
-	const settings = {
-		exportQuality: this.exportSettings.quality,
-		exportDitherEnabled: this.exportSettings.ditherEnabled,
-		exportDitherType: this.exportSettings.ditherType,
-		exportFrameDelay: this.exportSettings.frameDelay,
-		exportMaxFrames: this.exportSettings.maxFrames,
-		exportTransparency: this.exportSettings.transparency,
-		exportMatteColor: this.exportSettings.matteColor,
-		exportWatermarkEnabled: this.exportSettings.watermarkEnabled,
-		exportFrameSkip: this.exportSettings.exportFrameSkip,
-		exportReverse: this.exportSettings.exportReverse,
-		exportSmartFrameReduction: this.exportSettings.smartFrameReduction,
-		showHelpfulHints: this.showHints
-	};
+	saveSettingsToStorage() {
+		const settings = {
+			exportQuality: this.exportSettings.quality,
+			exportDitherEnabled: this.exportSettings.ditherEnabled,
+			exportDitherType: this.exportSettings.ditherType,
+			exportFrameDelay: this.exportSettings.frameDelay,
+			exportMaxFrames: this.exportSettings.maxFrames,
+			exportTransparency: this.exportSettings.transparency,
+			exportMatteColor: this.exportSettings.matteColor,
+			exportWatermarkEnabled: this.exportSettings.watermarkEnabled,
+			exportFrameSkip: this.exportSettings.exportFrameSkip,
+			exportReverse: this.exportSettings.exportReverse,
+			exportSmartFrameReduction: this.exportSettings.smartFrameReduction,
+			showHelpfulHints: this.showHints
+		};
 
 		try {
 			localStorage.setItem('glitterEditorSettings', JSON.stringify(settings));
@@ -491,20 +493,20 @@ saveSettingsToStorage() {
 		const savedSettings = this.loadSettingsFromStorage();
 
 		// Initialize this.exportSettings with saved or default values
-	this.exportSettings = {
-		quality: savedSettings?.exportQuality ?? CONFIG.defaultExportQuality,
-		ditherEnabled: savedSettings?.exportDitherEnabled ?? CONFIG.defaultExportDitherEnabled,
-		ditherType: savedSettings?.exportDitherType ?? CONFIG.defaultExportDitherType,
-		frameDelay: savedSettings?.exportFrameDelay ?? CONFIG.defaultExportFrameDelay,
-		maxFrames: savedSettings?.exportMaxFrames ?? CONFIG.defaultExportMaxFrames,
-		baseImage: CONFIG.defaultExportBaseImage, // Not persisted
-		transparency: savedSettings?.exportTransparency ?? CONFIG.defaultExportTransparency,
-		matteColor: savedSettings?.exportMatteColor ?? CONFIG.defaultExportMatteColor,
-		watermarkEnabled: savedSettings?.exportWatermarkEnabled ?? CONFIG.defaultExportWatermarkEnabled,
-		exportFrameSkip: savedSettings?.exportFrameSkip ?? CONFIG.defaultExportFrameSkip,
-		exportReverse: savedSettings?.exportReverse ?? CONFIG.defaultExportReverse,
-		smartFrameReduction: savedSettings?.exportSmartFrameReduction ?? CONFIG.defaultExportSmartFrameReduction
-	};
+		this.exportSettings = {
+			quality: savedSettings?.exportQuality ?? CONFIG.defaultExportQuality,
+			ditherEnabled: savedSettings?.exportDitherEnabled ?? CONFIG.defaultExportDitherEnabled,
+			ditherType: savedSettings?.exportDitherType ?? CONFIG.defaultExportDitherType,
+			frameDelay: savedSettings?.exportFrameDelay ?? CONFIG.defaultExportFrameDelay,
+			maxFrames: savedSettings?.exportMaxFrames ?? CONFIG.defaultExportMaxFrames,
+			baseImage: CONFIG.defaultExportBaseImage, // Not persisted
+			transparency: savedSettings?.exportTransparency ?? CONFIG.defaultExportTransparency,
+			matteColor: savedSettings?.exportMatteColor ?? CONFIG.defaultExportMatteColor,
+			watermarkEnabled: savedSettings?.exportWatermarkEnabled ?? CONFIG.defaultExportWatermarkEnabled,
+			exportFrameSkip: savedSettings?.exportFrameSkip ?? CONFIG.defaultExportFrameSkip,
+			exportReverse: savedSettings?.exportReverse ?? CONFIG.defaultExportReverse,
+			smartFrameReduction: savedSettings?.exportSmartFrameReduction ?? CONFIG.defaultExportSmartFrameReduction
+		};
 
 		// Update this.showHints
 		this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.defaultShowHints;
@@ -516,22 +518,22 @@ saveSettingsToStorage() {
 		this.setupExportSettingsListeners();
 	}
 
-syncExportSettingsToUI() {
-	const uiElements = {
-		exportQuality: { value: this.exportSettings.quality },
-		exportDitherEnabled: { checked: this.exportSettings.ditherEnabled },
-		exportDitherType: { value: this.exportSettings.ditherType },
-		exportBaseImage: { checked: this.exportSettings.baseImage },
-		exportTransparency: { checked: this.exportSettings.transparency },
-		exportMatteColor: { value: this.exportSettings.matteColor },
-		exportFrameDelay: { value: this.exportSettings.frameDelay },
-		exportMaxFrames: { value: this.exportSettings.maxFrames },
-		exportWatermarkEnabled: { checked: this.exportSettings.watermarkEnabled },
-		exportFrameSkip: { value: this.exportSettings.exportFrameSkip },
-		exportReverse: { checked: this.exportSettings.exportReverse },
-		exportSmartFrameReduction: { checked: this.exportSettings.smartFrameReduction },
-		showHelpfulHints: { checked: this.showHints }
-	};
+	syncExportSettingsToUI() {
+		const uiElements = {
+			exportQuality: { value: this.exportSettings.quality },
+			exportDitherEnabled: { checked: this.exportSettings.ditherEnabled },
+			exportDitherType: { value: this.exportSettings.ditherType },
+			exportBaseImage: { checked: this.exportSettings.baseImage },
+			exportTransparency: { checked: this.exportSettings.transparency },
+			exportMatteColor: { value: this.exportSettings.matteColor },
+			exportFrameDelay: { value: this.exportSettings.frameDelay },
+			exportMaxFrames: { value: this.exportSettings.maxFrames },
+			exportWatermarkEnabled: { checked: this.exportSettings.watermarkEnabled },
+			exportFrameSkip: { value: this.exportSettings.exportFrameSkip },
+			exportReverse: { checked: this.exportSettings.exportReverse },
+			exportSmartFrameReduction: { checked: this.exportSettings.smartFrameReduction },
+			showHelpfulHints: { checked: this.showHints }
+		};
 
 		Object.entries(uiElements).forEach(([id, props]) => {
 			const element = document.getElementById(id);
@@ -554,23 +556,22 @@ syncExportSettingsToUI() {
 	}
 
 
-setupExportSettingsListeners() {
-
-	// Map UI elements to exportSettings properties
-	const settingsMap = [
-		{ id: 'exportQuality', prop: 'quality', parse: (v) => parseInt(v) },
-		{ id: 'exportDitherEnabled', prop: 'ditherEnabled', parse: (v) => v },
-		{ id: 'exportDitherType', prop: 'ditherType', parse: (v) => v },
-		{ id: 'exportBaseImage', prop: 'baseImage', parse: (v) => v },
-		{ id: 'exportTransparency', prop: 'transparency', parse: (v) => v },
-		{ id: 'exportMatteColor', prop: 'matteColor', parse: (v) => v },
-		{ id: 'exportFrameDelay', prop: 'frameDelay', parse: (v) => parseInt(v) },
-		{ id: 'exportMaxFrames', prop: 'maxFrames', parse: (v) => v === 'unlimited' ? CONFIG.maxFramesHardLimit : parseInt(v) },
-		{ id: 'exportWatermarkEnabled', prop: 'watermarkEnabled', parse: (v) => v },
-		{ id: 'exportFrameSkip', prop: 'exportFrameSkip', parse: (v) => parseInt(v) },
-		{ id: 'exportReverse', prop: 'exportReverse', parse: (v) => v },
-		{ id: 'exportSmartFrameReduction', prop: 'smartFrameReduction', parse: (v) => v }
-	];
+	setupExportSettingsListeners() {
+		// Map UI elements to exportSettings properties
+		const settingsMap = [
+			{ id: 'exportQuality', prop: 'quality', parse: (v) => parseInt(v) },
+			{ id: 'exportDitherEnabled', prop: 'ditherEnabled', parse: (v) => v },
+			{ id: 'exportDitherType', prop: 'ditherType', parse: (v) => v },
+			{ id: 'exportBaseImage', prop: 'baseImage', parse: (v) => v },
+			{ id: 'exportTransparency', prop: 'transparency', parse: (v) => v },
+			{ id: 'exportMatteColor', prop: 'matteColor', parse: (v) => v },
+			{ id: 'exportFrameDelay', prop: 'frameDelay', parse: (v) => parseInt(v) },
+			{ id: 'exportMaxFrames', prop: 'maxFrames', parse: (v) => v === 'unlimited' ? CONFIG.maxFramesHardLimit : parseInt(v) },
+			{ id: 'exportWatermarkEnabled', prop: 'watermarkEnabled', parse: (v) => v },
+			{ id: 'exportFrameSkip', prop: 'exportFrameSkip', parse: (v) => parseInt(v) },
+			{ id: 'exportReverse', prop: 'exportReverse', parse: (v) => v },
+			{ id: 'exportSmartFrameReduction', prop: 'smartFrameReduction', parse: (v) => v }
+		];
 
 		settingsMap.forEach(({ id, prop, parse }) => {
 			const element = document.getElementById(id);
@@ -610,8 +611,6 @@ setupExportSettingsListeners() {
 			exportGif.addEventListener('click', () => this.exportAnimatedGif());
 		}
 	}
-
-
 
 	updateSidePanelUI(layer) {
 		// 1. Define ALL possible sections to hide them first
@@ -976,8 +975,6 @@ setupExportSettingsListeners() {
 			layerSettingsToggle.classList.toggle('collapsed', !isOpen);
 		});
 
-
-
 		// ===== GLITTER SETTINGS =====
 		const glitterSettingsHeader = document.getElementById('glitterSettingsHeader');
 		const glitterSettingsContent = document.getElementById('glitterSettingsContent');
@@ -991,9 +988,6 @@ setupExportSettingsListeners() {
 			const isOpen = glitterSettingsContent.classList.toggle('visible');
 			glitterSettingsToggle.classList.toggle('collapsed', !isOpen);
 		});
-
-
-
 
 		// ===== STICKER SETTINGS =====
 		const stickerSettingsHeader = document.getElementById('stickerSettingsHeader');
@@ -1049,7 +1043,6 @@ setupExportSettingsListeners() {
 		});
 	}
 
-
 	// ===== EVENT LISTENERS =====
 
 	setupEventListeners() {
@@ -1100,22 +1093,32 @@ setupExportSettingsListeners() {
 	}
 
 	// ===== HELPER: Attach checkbox that syncs with another checkbox =====
-	syncCheckboxes(id1, id2, bidirectional = true) {
-		const elem1 = document.getElementById(id1);
-		const elem2 = document.getElementById(id2);
+syncCheckboxes(id1, id2, bidirectional = true) {
+    const elem1 = document.getElementById(id1);
+    const elem2 = document.getElementById(id2);
 
-		if (!elem1 || !elem2) return;
+    if (!elem1 || !elem2) return;
 
-		elem1.addEventListener('change', (e) => {
-			elem2.checked = e.target.checked;
-		});
+    let syncing = false;
 
-		if (bidirectional) {
-			elem2.addEventListener('change', (e) => {
-				elem1.checked = e.target.checked;
-			});
-		}
-	}
+    elem1.addEventListener('change', (e) => {
+        if (syncing) return;
+        syncing = true;
+        elem2.checked = e.target.checked;
+        elem2.dispatchEvent(new Event('change'));
+        syncing = false;
+    });
+
+    if (bidirectional) {
+        elem2.addEventListener('change', (e) => {
+            if (syncing) return;
+            syncing = true;
+            elem1.checked = e.target.checked;
+            elem1.dispatchEvent(new Event('change'));
+            syncing = false;
+        });
+    }
+}
 
 
 	// ===== TOOLBAR LISTENERS =====
@@ -1225,21 +1228,12 @@ setupExportSettingsListeners() {
 			});
 		}
 
-		// Multi-select is handled by bidirectional sync
-		if (contextMultiSelect) {
-			contextMultiSelect.addEventListener('change', (e) => {
-				const layer = this.layerManager.getActiveLayer();
-				if (!e.target.checked && layer && layer.selections.length > 1) {
-					layer.selections = [layer.selections[0]];
-				}
-
-				this.saveActiveLayerSettings();
-				this.updatePreview();
-				this.updateSelectedColorsDisplay();
-				this.updateColorPickerControls();
-				this.saveState();
-			});
-		}
+// Multi-select is handled by bidirectional sync
+if (contextMultiSelect) {
+    contextMultiSelect.addEventListener('change', (e) => {
+        this.handleMultiSelectChange(e.target.checked);
+    });
+}
 
 		// Contiguous is handled by bidirectional sync
 		if (contextContiguous) {
@@ -1248,6 +1242,31 @@ setupExportSettingsListeners() {
 			});
 		}
 	}
+
+handleMultiSelectChange(checked) {
+    const layer = this.layerManager.getActiveLayer();
+    if (!layer) return;
+    
+    // Update layer directly
+    layer.settings.multiSelect = checked;
+    
+    // If turning off multi-select and we have multiple selections, keep only first
+    if (!checked && layer.selections && layer.selections.length > 1) {
+        layer.selections = [layer.selections[0]];
+    }
+
+    // Update the count
+    const contextSelectionCount = document.getElementById('contextSelectionCount');
+    if (contextSelectionCount) {
+        const count = layer.selections ? layer.selections.length : 0;
+        contextSelectionCount.textContent = count > 1 ? count : '';
+    }
+
+    this.updatePreview();
+    this.updateSelectedColorsDisplay();
+    this.saveState();
+}
+
 
 	setupLayerSettingsListeners() {
 		const contiguous = document.getElementById('contiguous');
@@ -1274,20 +1293,11 @@ setupExportSettingsListeners() {
 		// Sync multi-select checkboxes bidirectionally
 		this.syncCheckboxes('multiSelect', 'contextMultiSelect');
 
-		if (multiSelect) {
-			multiSelect.addEventListener('change', (e) => {
-				const layer = this.layerManager.getActiveLayer();
-				if (!e.target.checked && layer && layer.selections.length > 1) {
-					layer.selections = [layer.selections[0]];
-				}
-
-				this.saveActiveLayerSettings();
-				this.updatePreview();
-				this.updateSelectedColorsDisplay();
-				this.updateColorPickerControls();
-				this.saveState();
-			});
-		}
+if (multiSelect) {
+    multiSelect.addEventListener('change', (e) => {
+        this.handleMultiSelectChange(e.target.checked);
+    });
+}
 
 		if (refineGlobal) {
 			refineGlobal.addEventListener('change', (e) => {
@@ -1317,8 +1327,6 @@ setupExportSettingsListeners() {
 		document.getElementById('multiSelect')?.addEventListener('change', () => {
 			this.updateHelpfulMessage();
 		});
-
-
 	}
 
 	setupSliderListeners() {
@@ -2146,7 +2154,6 @@ setupExportSettingsListeners() {
 			}
 		});
 
-
 		// Scroll zoom
 		this.previewContainer.addEventListener('wheel', (e) => {
 			if (this.currentTool === ToolType.ZOOM && this.originalImage) {
@@ -2288,8 +2295,6 @@ setupExportSettingsListeners() {
 
 		const layer = this.layerManager.getActiveLayer();
 
-		console.log(`0Updating context toolbars` + colorPickerControls);
-
 		// Show appropriate toolbar based on current tool and layer state
 		if (this.currentTool === ToolType.ZOOM && zoomControls) {
 			zoomControls.classList.add('visible');
@@ -2401,7 +2406,7 @@ setupExportSettingsListeners() {
 				} else if (document.getElementById('multiSelect')?.checked && activeLayer.selections.length === 1) {
 					hint = 'Multi-select is on—click more colors to expand your selection';
 				} else {
-					hint = 'Click more colors to add to selection, or adjust settings to refine';
+					hint = 'Click again to change the color selection, or adjust settings to refine';
 					context = 'Threshold controls color tolerance. Feather softens edges.';
 				}
 			} else if (activeLayer.type === LayerType.STICKER) {
@@ -2507,9 +2512,6 @@ setupExportSettingsListeners() {
 			});
 		}
 	}
-
-
-
 
 	updateColorPickerControls() {
 		console.log(`Updating color picker controls`);
@@ -2930,7 +2932,6 @@ setupExportSettingsListeners() {
 
 
 	// ===== IMAGE LOADING =====
-
 	async loadImage(event) {
 		const file = event.target.files[0];
 		if (!file) return;
@@ -3061,7 +3062,6 @@ setupExportSettingsListeners() {
 		}
 	}
 
-
 	// ===== CLICK HANDLERS =====
 	handlePreviewContainerClick(e) {
 		// Allow right-click for zoom tool, block other non-left clicks
@@ -3177,7 +3177,6 @@ setupExportSettingsListeners() {
 		// Optional: Update status to show new zoom
 		this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
 	}
-
 
 	handleColorPickerClick(x, y, event) {
 		let layer = this.layerManager.getActiveLayer();
@@ -3334,8 +3333,6 @@ setupExportSettingsListeners() {
 			r, g, b, x, y,
 			isTransparent: isTransparent
 		});
-
-
 
 		// 6. Auto-Switch to Select Tool (if configured)
 		if (CONFIG.autoSwitchAfterPick && this.currentTool === ToolType.COLOR_PICKER) {
@@ -3526,55 +3523,53 @@ setupExportSettingsListeners() {
 		document.getElementById('exportProgress').classList.remove('visible');
 	}
 
+	validateExportSettings() {
+		const settings = this.exportSettings;
 
-validateExportSettings() {
-	const settings = this.exportSettings;
-	
-	// Validate and clamp frame delay (minimum 20ms)
-	if (typeof settings.frameDelay !== 'number' || settings.frameDelay < 20) {
-		console.warn('Invalid frameDelay, clamping to 20ms');
-		settings.frameDelay = 20;
-	}
-	
-	// Validate and clamp max frames (1 to hard limit)
-	const hardLimit = CONFIG.maxFramesHardLimit || 1000;
-	if (typeof settings.maxFrames !== 'number' || settings.maxFrames < 1) {
-		console.warn('Invalid maxFrames, setting to default');
-		settings.maxFrames = CONFIG.defaultExportMaxFrames;
-	} else if (settings.maxFrames > hardLimit) {
-		console.warn(`maxFrames exceeds hard limit, capping at ${hardLimit}`);
-		settings.maxFrames = hardLimit;
-	}
-	
-	// Validate quality (1-30)
-	if (typeof settings.quality !== 'number' || settings.quality < 1 || settings.quality > 30) {
-		console.warn('Invalid quality, setting to default');
-		settings.quality = CONFIG.defaultExportQuality;
-	}
-	
-	// Validate frame skip (must be positive integer)
-	if (typeof settings.exportFrameSkip !== 'number' || settings.exportFrameSkip < 1) {
-		console.warn('Invalid exportFrameSkip, setting to 1');
-		settings.exportFrameSkip = 1;
-	}
-	
-	// Validate boolean settings
-	settings.ditherEnabled = Boolean(settings.ditherEnabled);
-	settings.baseImage = Boolean(settings.baseImage);
-	settings.transparency = Boolean(settings.transparency);
-	settings.watermarkEnabled = Boolean(settings.watermarkEnabled);
-	settings.exportReverse = Boolean(settings.exportReverse);
-	settings.smartFrameReduction = Boolean(settings.smartFrameReduction);
-	
-	// Validate string settings
-	if (typeof settings.ditherType !== 'string' || !settings.ditherType) {
-		settings.ditherType = CONFIG.defaultExportDitherType;
-	}
-	if (typeof settings.matteColor !== 'string' || !settings.matteColor.match(/^#[0-9A-Fa-f]{6}$/)) {
-		settings.matteColor = CONFIG.defaultExportMatteColor;
-	}
-}
+		// Validate and clamp frame delay (minimum 20ms)
+		if (typeof settings.frameDelay !== 'number' || settings.frameDelay < 20) {
+			console.warn('Invalid frameDelay, clamping to 20ms');
+			settings.frameDelay = 20;
+		}
 
+		// Validate and clamp max frames (1 to hard limit)
+		const hardLimit = CONFIG.maxFramesHardLimit || 1000;
+		if (typeof settings.maxFrames !== 'number' || settings.maxFrames < 1) {
+			console.warn('Invalid maxFrames, setting to default');
+			settings.maxFrames = CONFIG.defaultExportMaxFrames;
+		} else if (settings.maxFrames > hardLimit) {
+			console.warn(`maxFrames exceeds hard limit, capping at ${hardLimit}`);
+			settings.maxFrames = hardLimit;
+		}
+
+		// Validate quality (1-30)
+		if (typeof settings.quality !== 'number' || settings.quality < 1 || settings.quality > 30) {
+			console.warn('Invalid quality, setting to default');
+			settings.quality = CONFIG.defaultExportQuality;
+		}
+
+		// Validate frame skip (must be positive integer)
+		if (typeof settings.exportFrameSkip !== 'number' || settings.exportFrameSkip < 1) {
+			console.warn('Invalid exportFrameSkip, setting to 1');
+			settings.exportFrameSkip = 1;
+		}
+
+		// Validate boolean settings
+		settings.ditherEnabled = Boolean(settings.ditherEnabled);
+		settings.baseImage = Boolean(settings.baseImage);
+		settings.transparency = Boolean(settings.transparency);
+		settings.watermarkEnabled = Boolean(settings.watermarkEnabled);
+		settings.exportReverse = Boolean(settings.exportReverse);
+		settings.smartFrameReduction = Boolean(settings.smartFrameReduction);
+
+		// Validate string settings
+		if (typeof settings.ditherType !== 'string' || !settings.ditherType) {
+			settings.ditherType = CONFIG.defaultExportDitherType;
+		}
+		if (typeof settings.matteColor !== 'string' || !settings.matteColor.match(/^#[0-9A-Fa-f]{6}$/)) {
+			settings.matteColor = CONFIG.defaultExportMatteColor;
+		}
+	}
 
 	async exportAnimatedGif() {
 		// Filter visible layers
