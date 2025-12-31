@@ -1311,7 +1311,17 @@ removeSticker(layerId) {
 			stickerData: {
 				...layer.stickerData,
 				element: null,    // Can't serialize DOM
-				frames: null      // Don't need frames for undo/redo - reload from URL on restore
+				frames: null,      // Don't need frames for undo/redo - reload from URL on restore
+				// CRITICAL FIX: Deep copy transform object for undo/redo
+				transform: {
+					position: { ...layer.stickerData.transform.position },
+					scale: { ...layer.stickerData.transform.scale },
+					rotation: layer.stickerData.transform.rotation,
+					proportionalScale: layer.stickerData.transform.proportionalScale,
+					opacity: layer.stickerData.transform.opacity,
+					flipX: layer.stickerData.transform.flipX,
+					flipY: layer.stickerData.transform.flipY
+				}
 			}
 		};
 	}
