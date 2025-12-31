@@ -1,5 +1,29 @@
 [
     {
+        "id": 1,
+        "name": "Gold Glitter Butterfly",
+        "filename": "butterfly_gold-glitter.gif",
+        "url": "images/stickers/animal/butterfly_gold-glitter.gif",
+        "category": "animal",
+        "attribution": null,
+        "sticker_text": null,
+        "tags": [
+            "animal",
+            "butterfly",
+            "glitter",
+            "gold",
+            "insect"
+        ],
+        "is_animated": 1,
+        "has_transparency": 1,
+        "is_active": 1,
+        "width": 143,
+        "height": 140,
+        "frame_count": 3,
+        "file_size": 12016,
+        "sort_order": 0
+    },
+    {
         "id": 2,
         "name": "Rainbow Glitter Butterfly",
         "filename": "butterfly_rainbow-glitter.gif",
@@ -322,30 +346,6 @@
         "frame_count": 9,
         "file_size": 157484,
         "sort_order": 108
-    },
-    {
-        "id": 1,
-        "name": "Gold Glitter Butterfly",
-        "filename": "butterfly_gold-glitter.gif",
-        "url": "images/stickers/animal/butterfly_gold-glitter.gif",
-        "category": "character",
-        "attribution": "",
-        "sticker_text": null,
-        "tags": [
-            "animal",
-            "butterfly",
-            "glitter",
-            "gold",
-            "insect"
-        ],
-        "is_animated": 1,
-        "has_transparency": 1,
-        "is_active": 1,
-        "width": 143,
-        "height": 140,
-        "frame_count": 3,
-        "file_size": 12016,
-        "sort_order": 10
     },
     {
         "id": 4,

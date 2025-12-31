@@ -239,70 +239,89 @@ const DEBUG_CONFIG = {
 // ============================================
 
 class GlitterEditor {
-	constructor() {
-		this.originalCanvas = document.getElementById('originalCanvas');
-		this.previewCanvas = document.getElementById('previewCanvas');
-		this.previewContainer = document.getElementById('previewContainer');
-		this.previewWrapper = document.getElementById('previewWrapper');
-		this.canvasElementsContainer = document.getElementById('canvasElementsContainer');
+constructor() {
+	// ============================================================================
+	// DOM REFERENCES
+	// ============================================================================
+	this.originalCanvas = document.getElementById('originalCanvas');
+	this.previewCanvas = document.getElementById('previewCanvas');
+	this.previewContainer = document.getElementById('previewContainer');
+	this.previewWrapper = document.getElementById('previewWrapper');
+	this.canvasElementsContainer = document.getElementById('canvasElementsContainer');
 
-		// Ensure the canvas is the base layer and glitter sits on top
-		this.previewCanvas.style.zIndex = '1';
-		this.canvasElementsContainer.style.zIndex = '10';
-		this.canvasElementsContainer.style.pointerEvents = 'none'; // Allows clicking through to canvas
+	// ============================================================================
+	// CANVAS SETUP
+	// ============================================================================
+	this.previewCanvas.style.zIndex = '1';
+	this.canvasElementsContainer.style.zIndex = '10';
+	this.canvasElementsContainer.style.pointerEvents = 'none'; // Allows clicking through to canvas
 
-		this.originalCtx = this.originalCanvas.getContext('2d', { willReadFrequently: true });
-		this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
+	this.originalCtx = this.originalCanvas.getContext('2d', { willReadFrequently: true });
+	this.previewCtx = this.previewCanvas.getContext('2d', { willReadFrequently: true });
 
+	// ============================================================================
+	// IMAGE DATA
+	// ============================================================================
+	this.originalImage = null;
+	this.originalImageData = null;
+	this.originalAlphaChannel = null;
 
-		this.originalImage = null;
-		this.originalImageData = null;
-		this.originalAlphaChannel = null;
-		this.content = [];
+	// ============================================================================
+	// CONTENT & LAYERS
+	// ============================================================================
+	this.content = [];
 
+	// ============================================================================
+	// TOOL & HISTORY
+	// ============================================================================
+	this.currentTool = null;
+	this.history = [];
+	this.historyIndex = -1;
 
-		this.touchGestureActive = false;
+	// ============================================================================
+	// DISPLAY SETTINGS
+	// ============================================================================
+	this.showAllLayers = true;
+	this.showHints = CONFIG.defaultShowHints;
+	this.currentHintDismissed = false;
 
-		this.exportStartTime = 0;
-		this.exportCancelled = false;
+	// ============================================================================
+	// GLOBAL SETTINGS
+	// ============================================================================
+	this.refineGlobal = CONFIG.refineGlobalDefault;
+	this.glitterGlobal = CONFIG.glitterGlobalDefault;
 
-		// Preview mode
-		this.showAllLayers = true;
+	// ============================================================================
+	// STATE FLAGS
+	// ============================================================================
+	this.isSaved = false;
+	this.touchGestureActive = false;
+	this.justCompletedDrag = false; // Flag to prevent layer picking immediately after drag
 
-		// Global settings mode
-		this.refineGlobal = CONFIG.refineGlobalDefault;
-		this.glitterGlobal = CONFIG.glitterGlobalDefault;
+	// ============================================================================
+	// EXPORT STATE
+	// ============================================================================
+	this.exportStartTime = 0;
+	this.exportCancelled = false;
 
+	// ============================================================================
+	// MANAGERS
+	// ============================================================================
+	this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
+	this.layerManager = new LayerManager(this);
+	this.stickerManager = new StickerManager(this);
+	this.glitterManager = new GlitterManager(this);
+	this.mobileManager = new MobileManager(this);
 
-		this.isSaved = false;
-
-		this.currentTool = null;
-		this.history = [];
-		this.historyIndex = -1;
-
-		// Flag to prevent layer picking immediately after drag
-		this.justCompletedDrag = false;
-
-		// Initialize Managers
-		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
-		this.layerManager = new LayerManager(this);
-		this.stickerManager = new StickerManager(this);
-		this.glitterManager = new GlitterManager(this);
-		this.mobileManager = new MobileManager(this);
-
-
-		this.showHints = CONFIG.defaultShowHints;
-		this.currentHintDismissed = false;
-
-
-		this.setTool(CONFIG.defaultTool);
-
-		this.setupEventListeners();
-
-		this.initializeCollapsibleSections();
-		this.initializeShortcutsModal();
-		this.initializeExportSettings();
-	}
+	// ============================================================================
+	// INITIALIZATION
+	// ============================================================================
+	this.setTool(CONFIG.defaultTool);
+	this.setupEventListeners();
+	this.initializeCollapsibleSections();
+	this.initializeShortcutsModal();
+	this.initializeExportSettings();
+}
 
 	// ===== DEBUG CONFIGURATION LOADER =====
 	async loadDebugConfig() {
@@ -3416,7 +3435,6 @@ class GlitterEditor {
 	}
 
 	// ===== PREVIEW & RENDERING =====
-
 	updatePreview() {
 		if (!this.originalImageData) {
 			this.clearPreview();

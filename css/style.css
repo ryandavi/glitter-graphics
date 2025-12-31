@@ -1407,6 +1407,9 @@ input[type=range]::-moz-range-thumb {
   flex-direction: column;
   gap: var(--spacing-md);
 }
+.settings-subsection .layer-type-options > .layer-type-option {
+  background-color: var(--color-bg-primary);
+}
 .settings-subsection > .subsection-content-group {
   display: flex;
   flex-direction: column;
@@ -3897,7 +3900,7 @@ body.tool-select .preview-canvas {
   align-items: flex-start;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
-  background: var(--color-bg-tertiary);
+  background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -3972,7 +3975,7 @@ body.tool-select .preview-canvas {
 .helpful-message .helpful-message-disable {
   padding: var(--spacing-xs) var(--spacing-sm);
   border: none;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
   border-radius: var(--radius-sm);
