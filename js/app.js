@@ -3102,9 +3102,9 @@ handlePreviewContainerClick(e) {
 		}
 	}
 
-	if (e.target.closest('[class*="-controls"]')) {
-		return;
-	}
+if (e.target.closest('.ui-ignore-gestures')) {
+    return;
+}
 
 	const hitSticker = e.target.closest('.sticker-element');
 

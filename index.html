@@ -956,8 +956,15 @@
 				<div class="right-panel">
 					<div class="preview-container" id="previewContainer">
 
+						<!-- Preview Wrapper -->
+						<div class="preview-wrapper" id="previewWrapper">
+							<div class="canvas-elements-container" id="canvasElementsContainer"></div>
+							<canvas class="preview-canvas" id="previewCanvas"></canvas>
+						</div>
+
+
 						<!-- Preview Controls -->
-						<div class="preview-controls" id="previewControls">
+						<div class="preview-controls ui-ignore-gestures" id="previewControls">
 							<div class="preview-controls-center">
 								<button class="preview-mode-toggle btn-icon icon-wrapper" id="previewModeToggle"
 									title="View only selected layer's glitter" disabled>
@@ -997,14 +1004,9 @@
 							</div>
 						</div>
 
-						<!-- Preview Wrapper -->
-						<div class="preview-wrapper" id="previewWrapper">
-							<div class="canvas-elements-container" id="canvasElementsContainer"></div>
-							<canvas class="preview-canvas" id="previewCanvas"></canvas>
-						</div>
 
 						<!-- Zoom Controls -->
-						<div class="zoom-controls" id="zoomControls">
+						<div class="zoom-controls ui-ignore-gestures" id="zoomControls">
 
 							<!-- Zoom Out Button -->
 							<button class="icon-wrapper btn-icon" id="zoomOut" title="Zoom Out (-)">
@@ -1044,7 +1046,7 @@
 						</div>
 
 						<!-- Color Picker Controls -->
-						<div class="color-picker-controls" id="colorPickerControls">
+						<div class="color-picker-controls ui-ignore-gestures" id="colorPickerControls">
 							<!-- Threshold Slider -->
 							<div class="context-slider-group">
 								<span class="context-label">Threshold</span>
@@ -1070,7 +1072,7 @@
 
 
 						<!-- Pan Controls -->
-						<div class="pan-controls" id="panControls">
+						<div class="pan-controls ui-ignore-gestures" id="panControls">
 							<!-- Center Horizontally -->
 							<button class="icon-wrapper btn-icon" id="centerCanvasHorizontal" title="Center Horizontally">
 								<svg class="icon">
@@ -1089,7 +1091,7 @@
 						</div>
 
 						<!-- Sticker Center Controls -->
-						<div class="sticker-center-controls" id="stickerCenterControls">
+						<div class="sticker-center-controls ui-ignore-gestures" id="stickerCenterControls">
 							<!-- Center Sticker Horizontally -->
 							<button class="icon-wrapper btn-icon" id="centerStickerHorizontal" title="Center Sticker Horizontally">
 								<svg class="icon">
@@ -1107,30 +1109,30 @@
 							</button>
 						</div>
 
-<!-- Helpful Message -->
-<div class="helpful-message" id="helpfulMessage">
-	<span class="helpful-message-icon icon-wrapper">
-		<svg class="icon">
-			<use href="#icon-circle-info"></use>
-		</svg>
-	</span>
-	<div class="helpful-message-content">
-		<div class="helpful-message-tool" id="helpfulMessageTool">
-			<span class="helpful-message-tool-icon icon-wrapper">
-				<svg class="icon">
-					<use href="#icon-hand-pointer" id="helpfulMessageToolIcon"></use>
-				</svg>
-			</span>
-			<span class="helpful-message-tool-name" id="helpfulMessageToolName">Select Tool</span>
-		</div>
-		<div class="helpful-message-text" id="helpfulMessageText"></div>
-		<div class="helpful-message-description" id="helpfulMessageDescription"></div>
-		<div class="helpful-message-actions">
-			<button class="helpful-message-disable" id="helpfulMessageDisable">Don't show hints</button>
-			<button class="helpful-message-close" id="helpfulMessageClose" title="Close hint">×</button>
-		</div>
-	</div>
-</div>
+						<!-- Helpful Message -->
+						<div class="helpful-message ui-ignore-gestures" id="helpfulMessage">
+							<span class="helpful-message-icon icon-wrapper">
+								<svg class="icon">
+									<use href="#icon-circle-info"></use>
+								</svg>
+							</span>
+							<div class="helpful-message-content">
+								<div class="helpful-message-tool" id="helpfulMessageTool">
+									<span class="helpful-message-tool-icon icon-wrapper">
+										<svg class="icon">
+											<use href="#icon-hand-pointer" id="helpfulMessageToolIcon"></use>
+										</svg>
+									</span>
+									<span class="helpful-message-tool-name" id="helpfulMessageToolName">Select Tool</span>
+								</div>
+								<div class="helpful-message-text" id="helpfulMessageText"></div>
+								<div class="helpful-message-description" id="helpfulMessageDescription"></div>
+								<div class="helpful-message-actions">
+									<button class="helpful-message-disable" id="helpfulMessageDisable">Don't show hints</button>
+									<button class="helpful-message-close" id="helpfulMessageClose" title="Close hint">×</button>
+								</div>
+							</div>
+						</div>
 
 					</div>
 				</div>
