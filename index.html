@@ -1635,6 +1635,7 @@
 						<div class="settings-row-label-desc">Time between frames in milliseconds. Lower = faster
 							animation.</div>
 					</div>
+
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Max Frames</div>
@@ -1646,10 +1647,23 @@
 									<option value="60">60 frames</option>
 									<option value="80">80 frames</option>
 									<option value="100">100 frames</option>
+									<option value="unlimited">No Limit</option>
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Maximum frames to export. Higher = longer animation but larger file size.</div>
+						<div class="settings-row-label-desc">Maximum frames to export. Higher = longer animation but larger file size. "No Limit" caps at 1000 frames.</div>
+					</div>
+
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Smart Frame Reduction</div>
+							<div class="settings-row-control">
+								<label class="checkbox-group-simple">
+									<input type="checkbox" id="exportSmartFrameReduction">
+								</label>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Intelligently reduce frame counts to optimize file size while maintaining animation quality.</div>
 					</div>
 
 					<div class="settings-row">
