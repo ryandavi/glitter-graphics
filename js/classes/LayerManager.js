@@ -574,16 +574,17 @@ handleLayerPick(x, y) {
 				visible: sourceLayer.visible,
 				locked: false,
 				stickerSourceId: sourceLayer.stickerSourceId, // Make sure this is copied!
-				stickerData: {
-					url: sourceLayer.stickerData.url,
-					name: sourceLayer.stickerData.name, // COPY THE NAME IN STICKER DATA TOO
-					source: sourceLayer.stickerData.source,
-					width: sourceLayer.stickerData.width,
-					height: sourceLayer.stickerData.height,
-					isEmpty: sourceLayer.stickerData.isEmpty,
-					isAnimated: sourceLayer.stickerData.isAnimated,
-					frames: sourceLayer.stickerData.frames, // Reference is fine, frames are immutable
-					transform: {
+stickerData: {
+    url: sourceLayer.stickerData.url,
+    name: sourceLayer.stickerData.name,
+    source: sourceLayer.stickerData.source,
+    width: sourceLayer.stickerData.width,
+    height: sourceLayer.stickerData.height,
+    isEmpty: sourceLayer.stickerData.isEmpty,
+    isAnimated: sourceLayer.stickerData.isAnimated,
+    frames: sourceLayer.stickerData.frames,
+    isFlattened: sourceLayer.stickerData.isFlattened, // ADD THIS LINE
+    transform: {
 						position: {
 							x: sourceLayer.stickerData.transform.position.x,
 							y: sourceLayer.stickerData.transform.position.y
