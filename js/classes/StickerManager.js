@@ -1074,15 +1074,28 @@ updateTransform(layerId, updates) {
 			preventPropagation: true,
 
 onGestureStart: (gestureType) => {
-	console.log('🎨 STICKER: Gesture started -', gestureType, 'layer:', layerId);
+    console.log('🎨 STICKER: Gesture started -', gestureType, 'layer:', layerId);
 
-	// Don't select stickers when using pan, zoom, or color picker tools
-	if (this.editor.currentTool === ToolType.HAND || 
-	    this.editor.currentTool === ToolType.ZOOM ||
-	    this.editor.currentTool === ToolType.COLOR_PICKER) {
-		console.log('🎨 STICKER: Ignoring - wrong tool');
-		return;
-	}
+    // DEBUG: Log current tool values
+    console.log('🎨 STICKER DEBUG:', {
+        currentTool: this.editor.currentTool,
+        ToolType_HAND: ToolType.HAND,
+        ToolType_ZOOM: ToolType.ZOOM,
+        ToolType_COLOR_PICKER: ToolType.COLOR_PICKER,
+        ToolType_SELECT: ToolType.SELECT,
+        isHand: this.editor.currentTool === ToolType.HAND,
+        isZoom: this.editor.currentTool === ToolType.ZOOM,
+        isColorPicker: this.editor.currentTool === ToolType.COLOR_PICKER,
+        isSelect: this.editor.currentTool === ToolType.SELECT
+    });
+
+    // Don't select stickers when using pan, zoom, or color picker tools
+    if (this.editor.currentTool === ToolType.HAND || 
+        this.editor.currentTool === ToolType.ZOOM ||
+        this.editor.currentTool === ToolType.COLOR_PICKER) {
+        console.log('🎨 STICKER: Ignoring - wrong tool');
+        return;
+    }
 
 				const isSelected = this.editor.layerManager.activeLayerId === layerId;
 				console.log('🎨 STICKER: Was selected?', isSelected);

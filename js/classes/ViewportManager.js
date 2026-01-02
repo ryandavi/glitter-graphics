@@ -347,12 +347,20 @@ class ViewportManager {
 	// ===== TOUCH GESTURES =====
 
 setupTouchGestures() {
-    this.isTouchActive = false; // Track if ANY touch is happening (tap or gesture)
-    this.isGestureActive = false; // Track if gesture (not simple tap) is happening
+    this.isTouchActive = false;
+    this.isGestureActive = false;
     
     this.touchHandler = new TouchGestureHandler(this.previewContainer, {
         
-        // IMMEDIATE notification when touch starts (before we know if tap or gesture)
+        // Check if we should ignore this target (skip stickers for viewport handler)
+        shouldIgnoreTarget: (target) => {
+            if (target && target.closest('.sticker-element')) {
+                console.log('🎯 Viewport: Skipping sticker element');
+                return true; // Skip it
+            }
+            return false; // Handle it
+        },
+        
         onTouchStart: () => {
             console.log('👆 Touch started (any type)');
             this.isTouchActive = true;
