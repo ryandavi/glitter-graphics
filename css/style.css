@@ -2120,13 +2120,17 @@ body.tool-select .preview-canvas {
   border: 1px solid var(--color-border-hover);
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
-  min-width: 400px;
-  max-width: 500px;
   z-index: 10000;
   box-shadow: 0 10px var(--icon-size) rgba(0, 0, 0, 0.5);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--transition-base);
+  width: 100%;
+  min-width: 200px;
+  /* Fallback for older browsers */
+  max-width: 90vw;
+  /* Modern browsers with dynamic viewport */
+  max-width: 90dvw;
 }
 .export-progress.visible {
   opacity: 1;
