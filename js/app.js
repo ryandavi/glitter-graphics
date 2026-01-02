@@ -3166,40 +3166,51 @@ class GlitterEditor {
 			return;
 		}
 
-		// 3. MOUSE BUTTON CHECKS
-		if (e.button === 1) return;
-		if ((e.button === 2 && this.currentTool !== ToolType.ZOOM) ||
-			(e.button === 2 && this.currentTool === ToolType.ZOOM)) {
-			return;
-		}
+// 3. MOUSE BUTTON CHECKS
+if (e.button === 1) return; // Ignore middle mouse button
+// Ignore right-click for all tools EXCEPT zoom tool
+if (e.button === 2 && this.currentTool !== ToolType.ZOOM) {
+    return;
+}
 
 		// 4. EVENT TYPE FILTERING - Different tools need different events
 		// HAND tool needs pointerdown to start dragging
 		// Other tools need click to prevent double-firing
 
-		if (this.currentTool === ToolType.HAND) {
-			// Hand tool: ONLY respond to pointerdown (ignore click)
-			if (e.type === 'click') {
-				console.log('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
-				return;
-			}
-			// On mobile, also ignore pointerdown (touch handlers manage it)
-			if (this.isMobile && e.type === 'pointerdown') {
-				console.log('🚫 HAND tool: Ignoring pointerdown on mobile (touch handles it)');
-				return;
-			}
+// 4. EVENT TYPE FILTERING - Different tools need different events
+// HAND tool needs pointerdown to start dragging
+// Other tools need click to prevent double-firing
+
+if (this.currentTool === ToolType.HAND) {
+	// Hand tool: ONLY respond to pointerdown (ignore click)
+	if (e.type === 'click') {
+		console.log('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
+		return;
+	}
+	// On mobile, also ignore pointerdown (touch handlers manage it)
+	if (this.isMobile && e.type === 'pointerdown') {
+		console.log('🚫 HAND tool: Ignoring pointerdown on mobile (touch handles it)');
+		return;
+	}
+} else {
+	// Other tools (SELECT, COLOR_PICKER, ZOOM): ONLY respond to click
+	// EXCEPT: ZOOM tool with right-click needs pointerdown (right-click doesn't fire 'click')
+	if (e.type === 'pointerdown' || e.type === 'mousedown') {
+		// Allow pointerdown for zoom tool with right-click
+		if (this.currentTool === ToolType.ZOOM && e.button === 2) {
+			console.log('✅ ZOOM tool: Allowing right-click pointerdown');
+			// Continue to handle this event
 		} else {
-			// Other tools (SELECT, COLOR_PICKER, ZOOM): ONLY respond to click
-			if (e.type === 'pointerdown' || e.type === 'mousedown') {
-				console.log('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
-				return;
-			}
-			// On mobile, verify it's a simple tap
-			if (this.isMobile && !e.isSimpleTap) {
-				console.log('🚫 Mobile: Not a verified simple tap');
-				return;
-			}
+			console.log('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
+			return;
 		}
+	}
+	// On mobile, verify it's a simple tap
+	if (this.isMobile && !e.isSimpleTap) {
+		console.log('🚫 Mobile: Not a verified simple tap');
+		return;
+	}
+}
 
 		const hitSticker = e.target.closest('.sticker-element');
 
