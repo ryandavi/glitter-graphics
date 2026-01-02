@@ -131,20 +131,20 @@ const CONFIG = {
 	// ========================================
 	// UI - Sticker Handles
 	// ========================================
-stickerHandles: {
-	enabled: true,
-	cornerSize: 8,
-	rotationHandleRadius: 5,
-	rotationHandleDistance: 30,
-	handleFill: '#ffffff',
-	handleStroke: 'var(--color-bg-secondary)',
-	handleStrokeWidth: 1.5,
-	boundingBoxColor: 'var(--color-accent)',
-	boundingBoxWidth: 1.5,
-	handleHitboxPadding: 8,
-	minScale: 10,   // ADD THIS - minimum 10%
-	maxScale: 500,  // ADD THIS - maximum 500%
-},
+	stickerHandles: {
+		enabled: true,
+		cornerSize: 8,
+		rotationHandleRadius: 5,
+		rotationHandleDistance: 30,
+		handleFill: '#ffffff',
+		handleStroke: 'var(--color-bg-secondary)',
+		handleStrokeWidth: 1.5,
+		boundingBoxColor: 'var(--color-accent)',
+		boundingBoxWidth: 1.5,
+		handleHitboxPadding: 8,
+		minScale: 10,   // ADD THIS - minimum 10%
+		maxScale: 500,  // ADD THIS - maximum 500%
+	},
 
 	// ========================================
 	// SHORTCUTS
@@ -1081,27 +1081,27 @@ class GlitterEditor {
 	}
 
 
-	
-setupMobileClickProtection() {
-    if (!this.isMobile) return;
-    
-    console.log('🛡️ Setting up mobile click protection');
-    
-    // ONLY block clicks on mobile (not pointerdown/mousedown - those are needed)
-    // Add a CAPTURE phase click blocker - runs BEFORE normal click handlers
-    this.previewContainer.addEventListener('click', (e) => {
-        // ONLY allow clicks that are explicitly marked as verified simple taps
-        if (!e.isSimpleTap) {
-            console.log('🚫 CAPTURE PHASE: Blocking non-verified click');
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation(); // Stop ALL other listeners
-            return false;
-        }
-        
-        console.log('✅ CAPTURE PHASE: Allowing verified simple tap');
-    }, { capture: true });
-}
+
+	setupMobileClickProtection() {
+		if (!this.isMobile) return;
+
+		console.log('🛡️ Setting up mobile click protection');
+
+		// ONLY block clicks on mobile (not pointerdown/mousedown - those are needed)
+		// Add a CAPTURE phase click blocker - runs BEFORE normal click handlers
+		this.previewContainer.addEventListener('click', (e) => {
+			// ONLY allow clicks that are explicitly marked as verified simple taps
+			if (!e.isSimpleTap) {
+				console.log('🚫 CAPTURE PHASE: Blocking non-verified click');
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation(); // Stop ALL other listeners
+				return false;
+			}
+
+			console.log('✅ CAPTURE PHASE: Allowing verified simple tap');
+		}, { capture: true });
+	}
 
 
 	// ===== HELPER: Attach slider with live update and reset =====
@@ -1135,32 +1135,32 @@ setupMobileClickProtection() {
 	}
 
 	// ===== HELPER: Attach checkbox that syncs with another checkbox =====
-syncCheckboxes(id1, id2, bidirectional = true) {
-    const elem1 = document.getElementById(id1);
-    const elem2 = document.getElementById(id2);
+	syncCheckboxes(id1, id2, bidirectional = true) {
+		const elem1 = document.getElementById(id1);
+		const elem2 = document.getElementById(id2);
 
-    if (!elem1 || !elem2) return;
+		if (!elem1 || !elem2) return;
 
-    let syncing = false;
+		let syncing = false;
 
-    elem1.addEventListener('change', (e) => {
-        if (syncing) return;
-        syncing = true;
-        elem2.checked = e.target.checked;
-        elem2.dispatchEvent(new Event('change'));
-        syncing = false;
-    });
+		elem1.addEventListener('change', (e) => {
+			if (syncing) return;
+			syncing = true;
+			elem2.checked = e.target.checked;
+			elem2.dispatchEvent(new Event('change'));
+			syncing = false;
+		});
 
-    if (bidirectional) {
-        elem2.addEventListener('change', (e) => {
-            if (syncing) return;
-            syncing = true;
-            elem1.checked = e.target.checked;
-            elem1.dispatchEvent(new Event('change'));
-            syncing = false;
-        });
-    }
-}
+		if (bidirectional) {
+			elem2.addEventListener('change', (e) => {
+				if (syncing) return;
+				syncing = true;
+				elem1.checked = e.target.checked;
+				elem1.dispatchEvent(new Event('change'));
+				syncing = false;
+			});
+		}
+	}
 
 
 	// ===== TOOLBAR LISTENERS =====
@@ -1270,12 +1270,12 @@ syncCheckboxes(id1, id2, bidirectional = true) {
 			});
 		}
 
-// Multi-select is handled by bidirectional sync
-if (contextMultiSelect) {
-    contextMultiSelect.addEventListener('change', (e) => {
-        this.handleMultiSelectChange(e.target.checked);
-    });
-}
+		// Multi-select is handled by bidirectional sync
+		if (contextMultiSelect) {
+			contextMultiSelect.addEventListener('change', (e) => {
+				this.handleMultiSelectChange(e.target.checked);
+			});
+		}
 
 		// Contiguous is handled by bidirectional sync
 		if (contextContiguous) {
@@ -1285,29 +1285,29 @@ if (contextMultiSelect) {
 		}
 	}
 
-handleMultiSelectChange(checked) {
-    const layer = this.layerManager.getActiveLayer();
-    if (!layer) return;
-    
-    // Update layer directly
-    layer.settings.multiSelect = checked;
-    
-    // If turning off multi-select and we have multiple selections, keep only first
-    if (!checked && layer.selections && layer.selections.length > 1) {
-        layer.selections = [layer.selections[0]];
-    }
+	handleMultiSelectChange(checked) {
+		const layer = this.layerManager.getActiveLayer();
+		if (!layer) return;
 
-    // Update the count
-    const contextSelectionCount = document.getElementById('contextSelectionCount');
-    if (contextSelectionCount) {
-        const count = layer.selections ? layer.selections.length : 0;
-        contextSelectionCount.textContent = count > 1 ? count : '';
-    }
+		// Update layer directly
+		layer.settings.multiSelect = checked;
 
-    this.updatePreview();
-    this.updateSelectedColorsDisplay();
-    this.saveState();
-}
+		// If turning off multi-select and we have multiple selections, keep only first
+		if (!checked && layer.selections && layer.selections.length > 1) {
+			layer.selections = [layer.selections[0]];
+		}
+
+		// Update the count
+		const contextSelectionCount = document.getElementById('contextSelectionCount');
+		if (contextSelectionCount) {
+			const count = layer.selections ? layer.selections.length : 0;
+			contextSelectionCount.textContent = count > 1 ? count : '';
+		}
+
+		this.updatePreview();
+		this.updateSelectedColorsDisplay();
+		this.saveState();
+	}
 
 
 	setupLayerSettingsListeners() {
@@ -1335,11 +1335,11 @@ handleMultiSelectChange(checked) {
 		// Sync multi-select checkboxes bidirectionally
 		this.syncCheckboxes('multiSelect', 'contextMultiSelect');
 
-if (multiSelect) {
-    multiSelect.addEventListener('change', (e) => {
-        this.handleMultiSelectChange(e.target.checked);
-    });
-}
+		if (multiSelect) {
+			multiSelect.addEventListener('change', (e) => {
+				this.handleMultiSelectChange(e.target.checked);
+			});
+		}
 
 		if (refineGlobal) {
 			refineGlobal.addEventListener('change', (e) => {
@@ -1466,127 +1466,127 @@ if (multiSelect) {
 			});
 		}
 	}
-setupStickerScaleListeners() {
-	const scaleX = document.getElementById('stickerScaleX');
-	const scaleXValue = document.getElementById('stickerScaleXValue');
-	const scaleY = document.getElementById('stickerScaleY');
-	const scaleYValue = document.getElementById('stickerScaleYValue');
-	const proportionalScale = document.getElementById('stickerProportionalScale');
-	const resetScaleX = document.getElementById('resetStickerScaleX');
-	const resetScaleY = document.getElementById('resetStickerScaleY');
+	setupStickerScaleListeners() {
+		const scaleX = document.getElementById('stickerScaleX');
+		const scaleXValue = document.getElementById('stickerScaleXValue');
+		const scaleY = document.getElementById('stickerScaleY');
+		const scaleYValue = document.getElementById('stickerScaleYValue');
+		const proportionalScale = document.getElementById('stickerProportionalScale');
+		const resetScaleX = document.getElementById('resetStickerScaleX');
+		const resetScaleY = document.getElementById('resetStickerScaleY');
 
-	// Scale X
-	if (scaleX && scaleXValue) {
-		scaleX.addEventListener('input', (e) => {
-			const value = parseFloat(e.target.value);
-			scaleXValue.textContent = Math.round(value) + '%';
+		// Scale X
+		if (scaleX && scaleXValue) {
+			scaleX.addEventListener('input', (e) => {
+				const value = parseFloat(e.target.value);
+				scaleXValue.textContent = Math.round(value) + '%';
 
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleY && scaleYValue) {
-						scaleY.value = value;
-						scaleYValue.textContent = Math.round(value) + '%';
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					if (proportionalScale && proportionalScale.checked) {
+						if (scaleY && scaleYValue) {
+							scaleY.value = value;
+							scaleYValue.textContent = Math.round(value) + '%';
+						}
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: value, y: value }
+						});
+					} else {
+						// Only pass x - let updateTransform preserve y
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: value }
+						});
 					}
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { x: value, y: value }
-					});
-				} else {
-					// Only pass x - let updateTransform preserve y
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { x: value }
-					});
 				}
-			}
-		});
+			});
 
-		scaleX.addEventListener('change', () => this.saveState());
-	}
+			scaleX.addEventListener('change', () => this.saveState());
+		}
 
-	// Scale Y
-	if (scaleY && scaleYValue) {
-		scaleY.addEventListener('input', (e) => {
-			const value = parseFloat(e.target.value);
-			scaleYValue.textContent = Math.round(value) + '%';
+		// Scale Y
+		if (scaleY && scaleYValue) {
+			scaleY.addEventListener('input', (e) => {
+				const value = parseFloat(e.target.value);
+				scaleYValue.textContent = Math.round(value) + '%';
 
-			const layer = this.layerManager.getActiveLayer();
-			if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleX && scaleXValue) {
-						scaleX.value = value;
-						scaleXValue.textContent = Math.round(value) + '%';
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					if (proportionalScale && proportionalScale.checked) {
+						if (scaleX && scaleXValue) {
+							scaleX.value = value;
+							scaleXValue.textContent = Math.round(value) + '%';
+						}
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: value, y: value }
+						});
+					} else {
+						// Only pass y - let updateTransform preserve x
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { y: value }
+						});
 					}
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { x: value, y: value }
-					});
-				} else {
-					// Only pass y - let updateTransform preserve x
-					this.stickerManager.updateTransform(layer.id, {
-						scale: { y: value }
-					});
 				}
-			}
-		});
+			});
 
-		scaleY.addEventListener('change', () => this.saveState());
+			scaleY.addEventListener('change', () => this.saveState());
+		}
+
+		// Reset Scale X
+		if (resetScaleX) {
+			resetScaleX.addEventListener('click', () => {
+				if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
+				if (scaleXValue) scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					if (proportionalScale && proportionalScale.checked) {
+						if (scaleY && scaleYValue) {
+							scaleY.value = CONFIG.defaultStickerScale;
+							scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+						}
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
+						});
+					} else {
+						// FIXED: Only pass x property
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: CONFIG.defaultStickerScale }
+						});
+					}
+					this.saveState();
+				}
+			});
+		}
+
+		// Reset Scale Y
+		if (resetScaleY) {
+			resetScaleY.addEventListener('click', () => {
+				if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
+				if (scaleYValue) scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+					if (proportionalScale && proportionalScale.checked) {
+						if (scaleX && scaleXValue) {
+							scaleX.value = CONFIG.defaultStickerScale;
+							scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+						}
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
+						});
+					} else {
+						// FIXED: Only pass y property
+						this.stickerManager.updateTransform(layer.id, {
+							scale: { y: CONFIG.defaultStickerScale }
+						});
+					}
+					this.saveState();
+				}
+			});
+		}
+
+
 	}
-
-// Reset Scale X
-if (resetScaleX) {
-	resetScaleX.addEventListener('click', () => {
-		if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
-		if (scaleXValue) scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
-
-		const layer = this.layerManager.getActiveLayer();
-		if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-			if (proportionalScale && proportionalScale.checked) {
-				if (scaleY && scaleYValue) {
-					scaleY.value = CONFIG.defaultStickerScale;
-					scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
-				}
-				this.stickerManager.updateTransform(layer.id, {
-					scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-				});
-			} else {
-				// FIXED: Only pass x property
-				this.stickerManager.updateTransform(layer.id, {
-					scale: { x: CONFIG.defaultStickerScale }
-				});
-			}
-			this.saveState();
-		}
-	});
-}
-
-// Reset Scale Y
-if (resetScaleY) {
-	resetScaleY.addEventListener('click', () => {
-		if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
-		if (scaleYValue) scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
-
-		const layer = this.layerManager.getActiveLayer();
-		if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-			if (proportionalScale && proportionalScale.checked) {
-				if (scaleX && scaleXValue) {
-					scaleX.value = CONFIG.defaultStickerScale;
-					scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
-				}
-				this.stickerManager.updateTransform(layer.id, {
-					scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-				});
-			} else {
-				// FIXED: Only pass y property
-				this.stickerManager.updateTransform(layer.id, {
-					scale: { y: CONFIG.defaultStickerScale }
-				});
-			}
-			this.saveState();
-		}
-	});
-}
-
-
-}
 
 	setupStickerOpacityListeners() {
 		const opacity = document.getElementById('stickerOpacity');
@@ -2151,14 +2151,14 @@ if (resetScaleY) {
 			});
 		}
 
-// In setupEventListeners() or wherever you set up preview container events
-this.previewContainer.addEventListener('pointerdown', (e) => {
-    this.handlePreviewContainerClick(e);
-});
+		// In setupEventListeners() or wherever you set up preview container events
+		this.previewContainer.addEventListener('pointerdown', (e) => {
+			this.handlePreviewContainerClick(e);
+		});
 
-this.previewContainer.addEventListener('click', (e) => {
-    this.handlePreviewContainerClick(e);
-});
+		this.previewContainer.addEventListener('click', (e) => {
+			this.handlePreviewContainerClick(e);
+		});
 
 		// Prevent right-click context menu on preview area
 		this.previewContainer.addEventListener('contextmenu', (e) => {
@@ -2518,66 +2518,66 @@ this.previewContainer.addEventListener('click', (e) => {
 	}
 
 
-setupHelpfulMessageListeners() {
-    const helpfulMessage = document.getElementById('helpfulMessage');
+	setupHelpfulMessageListeners() {
+		const helpfulMessage = document.getElementById('helpfulMessage');
 
-    // Prevent clicks from propagating to canvas/tools below
-    if (helpfulMessage) {
-        helpfulMessage.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-        });
-        helpfulMessage.addEventListener('pointerdown', (e) => {
-            e.stopPropagation();
-        });
-        
-        // CLICK-TO-DISMISS: Click anywhere on message to dismiss
-        // EXCEPT on the "Don't show hints" button
-        helpfulMessage.addEventListener('click', (e) => {
-            e.stopPropagation();
-            
-            // Don't dismiss if clicking the "Don't show hints" button
-            if (e.target.closest('#helpfulMessageDisable')) {
-                return; // Let the button handle it
-            }
-            
-            // Dismiss the current hint
-            this.currentHintDismissed = true;
-            helpfulMessage.classList.remove('visible');
-        });
-    }
+		// Prevent clicks from propagating to canvas/tools below
+		if (helpfulMessage) {
+			helpfulMessage.addEventListener('mousedown', (e) => {
+				e.stopPropagation();
+			});
+			helpfulMessage.addEventListener('pointerdown', (e) => {
+				e.stopPropagation();
+			});
 
-    // Close button - now redundant but keep for explicit close action
-    const closeBtn = document.getElementById('helpfulMessageClose');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent double-handling
-            // The parent click handler will dismiss
-        });
-    }
+			// CLICK-TO-DISMISS: Click anywhere on message to dismiss
+			// EXCEPT on the "Don't show hints" button
+			helpfulMessage.addEventListener('click', (e) => {
+				e.stopPropagation();
 
-    // Disable button - turn off hints entirely
-    const disableBtn = document.getElementById('helpfulMessageDisable');
-    if (disableBtn) {
-        disableBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent the parent click handler
-            
-            // Disable hints
-            this.showHints = false;
+				// Don't dismiss if clicking the "Don't show hints" button
+				if (e.target.closest('#helpfulMessageDisable')) {
+					return; // Let the button handle it
+				}
 
-            // Update checkbox in settings
-            const showHintsInput = document.getElementById('showHelpfulHints');
-            if (showHintsInput) {
-                showHintsInput.checked = false;
-            }
+				// Dismiss the current hint
+				this.currentHintDismissed = true;
+				helpfulMessage.classList.remove('visible');
+			});
+		}
 
-            // Save to storage
-            this.saveSettingsToStorage();
+		// Close button - now redundant but keep for explicit close action
+		const closeBtn = document.getElementById('helpfulMessageClose');
+		if (closeBtn) {
+			closeBtn.addEventListener('click', (e) => {
+				e.stopPropagation(); // Prevent double-handling
+				// The parent click handler will dismiss
+			});
+		}
 
-            // Hide message
-            helpfulMessage.classList.remove('visible');
-        });
-    }
-}
+		// Disable button - turn off hints entirely
+		const disableBtn = document.getElementById('helpfulMessageDisable');
+		if (disableBtn) {
+			disableBtn.addEventListener('click', (e) => {
+				e.stopPropagation(); // Prevent the parent click handler
+
+				// Disable hints
+				this.showHints = false;
+
+				// Update checkbox in settings
+				const showHintsInput = document.getElementById('showHelpfulHints');
+				if (showHintsInput) {
+					showHintsInput.checked = false;
+				}
+
+				// Save to storage
+				this.saveSettingsToStorage();
+
+				// Hide message
+				helpfulMessage.classList.remove('visible');
+			});
+		}
+	}
 
 	updateColorPickerControls() {
 		console.log(`Updating color picker controls`);
@@ -3131,249 +3131,249 @@ setupHelpfulMessageListeners() {
 	// ===== CLICK HANDLERS =====
 
 
-handlePreviewContainerClick(e) {
-    console.log('📍 Click handler fired', e.type, e.isSimpleTap);
-    
-    // 1. IGNORE TRANSFORM HANDLES
-    if (e.target.closest('.transform-handles') || 
-        e.target.classList.contains('transform-bounding-box')) return;
+	handlePreviewContainerClick(e) {
+		console.log('📍 Click handler fired', e.type, e.isSimpleTap);
 
-    // 2. IGNORE UI ELEMENTS
-    if (e.target.closest('.ui-ignore-gestures')) {
-        return;
-    }
+		// 1. IGNORE TRANSFORM HANDLES
+		if (e.target.closest('.transform-handles') ||
+			e.target.classList.contains('transform-bounding-box')) return;
 
-    // 3. MOUSE BUTTON CHECKS
-    if (e.button === 1) return; 
-    if ((e.button === 2 && this.currentTool !== ToolType.ZOOM) || 
-        (e.button === 2 && this.currentTool === ToolType.ZOOM)) {
-        return;
-    }
+		// 2. IGNORE UI ELEMENTS
+		if (e.target.closest('.ui-ignore-gestures')) {
+			return;
+		}
 
-    // 4. EVENT TYPE FILTERING - Different tools need different events
-    // HAND tool needs pointerdown to start dragging
-    // Other tools need click to prevent double-firing
-    
-    if (this.currentTool === ToolType.HAND) {
-        // Hand tool: ONLY respond to pointerdown (ignore click)
-        if (e.type === 'click') {
-            console.log('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
-            return;
-        }
-        // On mobile, also ignore pointerdown (touch handlers manage it)
-        if (this.isMobile && e.type === 'pointerdown') {
-            console.log('🚫 HAND tool: Ignoring pointerdown on mobile (touch handles it)');
-            return;
-        }
-    } else {
-        // Other tools (SELECT, COLOR_PICKER, ZOOM): ONLY respond to click
-        if (e.type === 'pointerdown' || e.type === 'mousedown') {
-            console.log('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
-            return;
-        }
-        // On mobile, verify it's a simple tap
-        if (this.isMobile && !e.isSimpleTap) {
-            console.log('🚫 Mobile: Not a verified simple tap');
-            return;
-        }
-    }
+		// 3. MOUSE BUTTON CHECKS
+		if (e.button === 1) return;
+		if ((e.button === 2 && this.currentTool !== ToolType.ZOOM) ||
+			(e.button === 2 && this.currentTool === ToolType.ZOOM)) {
+			return;
+		}
 
-    const hitSticker = e.target.closest('.sticker-element');
+		// 4. EVENT TYPE FILTERING - Different tools need different events
+		// HAND tool needs pointerdown to start dragging
+		// Other tools need click to prevent double-firing
 
-    // Check if click is within the canvas area using viewport coordinates
-    const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
-    const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
-
-    // We treat stickers and the canvas as the "Image Area"
-    const hitImageArea = hitCanvas || hitSticker;
-
-    // Gatekeeper: If they clicked a button/sidebar, stop here
-    const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
-    if (!isWorkspace) return;
-
-    switch (this.currentTool) {
-        case ToolType.SELECT:
-            if (hitSticker) return;
-            if (hitImageArea && hitCanvas) {
-                const rect = this.previewCanvas.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const clickY = e.clientY - rect.top;
-                const scaleX = this.previewCanvas.width / rect.width;
-                const scaleY = this.previewCanvas.height / rect.height;
-                const x = Math.floor(clickX * scaleX);
-                const y = Math.floor(clickY * scaleY);
-                
-                this.handleLayerSelectAction(x, y);
-            } else if (!hitImageArea) {
-                this.layerManager.setActiveLayer(null);
-            }
-            break;
-
-        case ToolType.COLOR_PICKER:
-            if (hitImageArea && hitCanvas) {
-                const rect = this.previewCanvas.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const clickY = e.clientY - rect.top;
-                const scaleX = this.previewCanvas.width / rect.width;
-                const scaleY = this.previewCanvas.height / rect.height;
-                const x = Math.floor(clickX * scaleX);
-                const y = Math.floor(clickY * scaleY);
-                
-                this.handleColorPickAction(x, y, e);
-            } else {
-                this.setTool(ToolType.SELECT);
-            }
-            break;
-
-        case ToolType.HAND:
-            // At this point we know it's pointerdown on desktop (click was filtered out above)
-            this.viewport.startPan(e.clientX, e.clientY);
-            break;
-
-        case ToolType.ZOOM:
-            if (this.originalImage) {
-                this.handleZoomAction(e.clientX, e.clientY, {
-                    zoomOut: e.altKey || e.button === 2
-                });
-            }
-            break;
-    }
-}
-
-	handleColorPickAction(x, y, event = null) {
-	if (this.currentTool !== ToolType.COLOR_PICKER) return;
-
-	let layer = this.layerManager.getActiveLayer();
-
-	// If no layer selected, try to select a layer at this location
-	if (!layer) {
-		for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
-			const testLayer = this.layerManager.layers[i];
-			if (!testLayer.visible) continue;
-
-			let isHit = false;
-
-			if (testLayer.type === LayerType.GLITTER_FILL) {
-				if (testLayer.selections && testLayer.selections.length > 0) {
-					isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
-				}
-			} else if (testLayer.type === LayerType.BASE_IMAGE) {
-				if (this.originalImage) {
-					isHit = true;
-				}
+		if (this.currentTool === ToolType.HAND) {
+			// Hand tool: ONLY respond to pointerdown (ignore click)
+			if (e.type === 'click') {
+				console.log('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
+				return;
 			}
-
-			if (isHit) {
-				this.layerManager.setActiveLayer(testLayer.id);
-				layer = testLayer;
-				break;
+			// On mobile, also ignore pointerdown (touch handlers manage it)
+			if (this.isMobile && e.type === 'pointerdown') {
+				console.log('🚫 HAND tool: Ignoring pointerdown on mobile (touch handles it)');
+				return;
+			}
+		} else {
+			// Other tools (SELECT, COLOR_PICKER, ZOOM): ONLY respond to click
+			if (e.type === 'pointerdown' || e.type === 'mousedown') {
+				console.log('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
+				return;
+			}
+			// On mobile, verify it's a simple tap
+			if (this.isMobile && !e.isSimpleTap) {
+				console.log('🚫 Mobile: Not a verified simple tap');
+				return;
 			}
 		}
 
-		if (!layer) {
-			this.updateStatus('Please select the Base Image or a Glitter Layer.');
-			return;
+		const hitSticker = e.target.closest('.sticker-element');
+
+		// Check if click is within the canvas area using viewport coordinates
+		const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
+		const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
+
+		// We treat stickers and the canvas as the "Image Area"
+		const hitImageArea = hitCanvas || hitSticker;
+
+		// Gatekeeper: If they clicked a button/sidebar, stop here
+		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
+		if (!isWorkspace) return;
+
+		switch (this.currentTool) {
+			case ToolType.SELECT:
+				if (hitSticker) return;
+				if (hitImageArea && hitCanvas) {
+					const rect = this.previewCanvas.getBoundingClientRect();
+					const clickX = e.clientX - rect.left;
+					const clickY = e.clientY - rect.top;
+					const scaleX = this.previewCanvas.width / rect.width;
+					const scaleY = this.previewCanvas.height / rect.height;
+					const x = Math.floor(clickX * scaleX);
+					const y = Math.floor(clickY * scaleY);
+
+					this.handleLayerSelectAction(x, y);
+				} else if (!hitImageArea) {
+					this.layerManager.setActiveLayer(null);
+				}
+				break;
+
+			case ToolType.COLOR_PICKER:
+				if (hitImageArea && hitCanvas) {
+					const rect = this.previewCanvas.getBoundingClientRect();
+					const clickX = e.clientX - rect.left;
+					const clickY = e.clientY - rect.top;
+					const scaleX = this.previewCanvas.width / rect.width;
+					const scaleY = this.previewCanvas.height / rect.height;
+					const x = Math.floor(clickX * scaleX);
+					const y = Math.floor(clickY * scaleY);
+
+					this.handleColorPickAction(x, y, e);
+				} else {
+					this.setTool(ToolType.SELECT);
+				}
+				break;
+
+			case ToolType.HAND:
+				// At this point we know it's pointerdown on desktop (click was filtered out above)
+				this.viewport.startPan(e.clientX, e.clientY);
+				break;
+
+			case ToolType.ZOOM:
+				if (this.originalImage) {
+					this.handleZoomAction(e.clientX, e.clientY, {
+						zoomOut: e.altKey || e.button === 2
+					});
+				}
+				break;
 		}
 	}
 
-	// Handle based on selected layer type
-	if (layer.type === LayerType.GLITTER_FILL) {
-		this.glitterFillSelector(x, y, event);
+	handleColorPickAction(x, y, event = null) {
+		if (this.currentTool !== ToolType.COLOR_PICKER) return;
 
-	} else if (layer.type === LayerType.BASE_IMAGE) {
-		if (CONFIG.autoCreateGlitterLayer) {
-			const newLayer = this.glitterManager.createLayer();
-			this.layerManager.insertLayer(newLayer);
-			this.glitterFillSelector(x, y, event);
-		} else {
-			this.updateStatus('Please create a glitter layer first');
-		}
+		let layer = this.layerManager.getActiveLayer();
 
-	} else if (layer.type === LayerType.STICKER) {
-		const hitSticker = this.layerManager.isPointInSticker(layer, x, y);
+		// If no layer selected, try to select a layer at this location
+		if (!layer) {
+			for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
+				const testLayer = this.layerManager.layers[i];
+				if (!testLayer.visible) continue;
 
-		if (hitSticker) {
-			this.updateStatus('Color Picker disabled on Sticker layers.');
-			return;
-		}
+				let isHit = false;
 
-		let glitterLayer = null;
+				if (testLayer.type === LayerType.GLITTER_FILL) {
+					if (testLayer.selections && testLayer.selections.length > 0) {
+						isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
+					}
+				} else if (testLayer.type === LayerType.BASE_IMAGE) {
+					if (this.originalImage) {
+						isHit = true;
+					}
+				}
 
-		for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
-			const testLayer = this.layerManager.layers[i];
-			if (!testLayer.visible || testLayer.type !== LayerType.GLITTER_FILL) continue;
-
-			if (testLayer.selections && testLayer.selections.length > 0) {
-				const isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
 				if (isHit) {
-					glitterLayer = testLayer;
+					this.layerManager.setActiveLayer(testLayer.id);
+					layer = testLayer;
 					break;
 				}
 			}
+
+			if (!layer) {
+				this.updateStatus('Please select the Base Image or a Glitter Layer.');
+				return;
+			}
 		}
 
-		if (glitterLayer) {
-			this.layerManager.setActiveLayer(glitterLayer.id);
+		// Handle based on selected layer type
+		if (layer.type === LayerType.GLITTER_FILL) {
+			this.glitterFillSelector(x, y, event);
+
+		} else if (layer.type === LayerType.BASE_IMAGE) {
+			if (CONFIG.autoCreateGlitterLayer) {
+				const newLayer = this.glitterManager.createLayer();
+				this.layerManager.insertLayer(newLayer);
+				this.glitterFillSelector(x, y, event);
+			} else {
+				this.updateStatus('Please create a glitter layer first');
+			}
+
+		} else if (layer.type === LayerType.STICKER) {
+			const hitSticker = this.layerManager.isPointInSticker(layer, x, y);
+
+			if (hitSticker) {
+				this.updateStatus('Color Picker disabled on Sticker layers.');
+				return;
+			}
+
+			let glitterLayer = null;
+
+			for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
+				const testLayer = this.layerManager.layers[i];
+				if (!testLayer.visible || testLayer.type !== LayerType.GLITTER_FILL) continue;
+
+				if (testLayer.selections && testLayer.selections.length > 0) {
+					const isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
+					if (isHit) {
+						glitterLayer = testLayer;
+						break;
+					}
+				}
+			}
+
+			if (glitterLayer) {
+				this.layerManager.setActiveLayer(glitterLayer.id);
+			} else {
+				const newLayer = this.glitterManager.createLayer();
+				this.layerManager.insertLayer(newLayer);
+			}
+
+			this.glitterFillSelector(x, y, event);
+		}
+	}
+
+	handleLayerSelectAction(x, y) {
+		if (this.currentTool !== ToolType.SELECT) return;
+		if (!CONFIG.autoSelect || this.justCompletedDrag) return;
+
+		this.layerManager.handleLayerPick(x, y);
+	}
+
+	handleZoomAction(clientX, clientY, options = {}) {
+		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
+
+		if (options.zoomOut) {
+			this.viewport.zoomOut(clientX, clientY);
 		} else {
-			const newLayer = this.glitterManager.createLayer();
-			this.layerManager.insertLayer(newLayer);
+			this.viewport.zoomIn(clientX, clientY);
 		}
 
-		this.glitterFillSelector(x, y, event);
-	}
-}
-
-handleLayerSelectAction(x, y) {
-	if (this.currentTool !== ToolType.SELECT) return;
-	if (!CONFIG.autoSelect || this.justCompletedDrag) return;
-
-	this.layerManager.handleLayerPick(x, y);
-}
-
-handleZoomAction(clientX, clientY, options = {}) {
-	if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
-
-	if (options.zoomOut) {
-		this.viewport.zoomOut(clientX, clientY);
-	} else {
-		this.viewport.zoomIn(clientX, clientY);
+		this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
 	}
 
-	this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
-}
 
 
+	handleCanvasZoomClick(event) {
+		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
 
-handleCanvasZoomClick(event) {
-	if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
+		// On mobile, only zoom if it was a simple tap (not pan/pinch)
+		if (this.isMobile) {
+			// The viewport touch handler will call this via onSimpleTap callback
+			// So if we're here on mobile, it's already verified as a simple tap
+			console.log('📱 Mobile tap-to-zoom allowed (simple tap verified)');
+		}
 
-	// On mobile, only zoom if it was a simple tap (not pan/pinch)
-	if (this.isMobile) {
-		// The viewport touch handler will call this via onSimpleTap callback
-		// So if we're here on mobile, it's already verified as a simple tap
-		console.log('📱 Mobile tap-to-zoom allowed (simple tap verified)');
+		// Photoshop Alt-Click OR right-click to zoom out
+		if (event.altKey || event.button === 2) {
+			this.viewport.zoomOut();
+		} else {
+			// Zoom in at the click point
+			const rect = this.previewCanvas.getBoundingClientRect();
+			const clickX = event.clientX - rect.left + this.previewContainer.scrollLeft;
+			const clickY = event.clientY - rect.top + this.previewContainer.scrollTop;
+
+			this.viewport.zoomIn();
+
+			// After zoom, try to center the clicked point
+			requestAnimationFrame(() => {
+				const newRect = this.previewCanvas.getBoundingClientRect();
+				const scrollX = (clickX * this.viewport.currentZoom) - (this.previewContainer.clientWidth / 2);
+				const scrollY = (clickY * this.viewport.currentZoom) - (this.previewContainer.clientHeight / 2);
+				this.previewContainer.scrollTo(scrollX, scrollY);
+			});
+		}
 	}
-
-	// Photoshop Alt-Click OR right-click to zoom out
-	if (event.altKey || event.button === 2) {
-		this.viewport.zoomOut();
-	} else {
-		// Zoom in at the click point
-		const rect = this.previewCanvas.getBoundingClientRect();
-		const clickX = event.clientX - rect.left + this.previewContainer.scrollLeft;
-		const clickY = event.clientY - rect.top + this.previewContainer.scrollTop;
-
-		this.viewport.zoomIn();
-
-		// After zoom, try to center the clicked point
-		requestAnimationFrame(() => {
-			const newRect = this.previewCanvas.getBoundingClientRect();
-			const scrollX = (clickX * this.viewport.currentZoom) - (this.previewContainer.clientWidth / 2);
-			const scrollY = (clickY * this.viewport.currentZoom) - (this.previewContainer.clientHeight / 2);
-			this.previewContainer.scrollTo(scrollX, scrollY);
-		});
-	}
-}
 
 
 

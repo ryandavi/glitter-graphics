@@ -187,7 +187,10 @@
 						</div>
 						<div class="section-content image-dropzone-wrapper">
 							<div class="image-dropzone" id="imageDropzone">
+								
 								<div class="dropzone-content visible" id="dropzoneContent">
+
+									<!-- Default -->
 									<div class="dropzone-icon">
 										<span class="icon-wrapper xl">
 											<svg class="icon">
@@ -198,19 +201,29 @@
 									</div>
 									<div class="dropzone-text">Drop image here or click to browse</div>
 									<div class="dropzone-subtext">Max 10MB, 800 × 800px</div>
+
 								</div>
+
 								<canvas id="originalCanvas"></canvas>
+
 								<div class="image-upload-overlay">
-									<div class="image-upload-overlay-icon">
+
+									<!-- Hover -->
+									<div class="dropzone-icon">
 										<span class="icon-wrapper xl">
 											<svg class="icon">
 												<use href="#icon-image"></use>
 											</svg>
-											<span class="name">Image</span>
+											<span class="name">Change Image</span>
 										</span>
 									</div>
-									<div class="image-upload-overlay-text">Change Image</div>
+									<div class="dropzone-text">Drop image here or click to browse</div>
+									<div class="dropzone-subtext">Max 10MB, 800 × 800px</div>
+
+
+
 								</div>
+
 							</div>
 							<input type="file" id="imageUpload" accept="image/*">
 						</div>
@@ -577,7 +590,7 @@
 
 
 
-					<!-- Glitter Settings Section -->
+					<!-- Glitter Properties Section -->
 					<div class="glitter-settings-section section collapsible-section" id="glitterSettingsSection">
 						<div class="section-header section-header-with-action" id="glitterSettingsHeader">
 							<h3 class="section-header-title">
@@ -587,7 +600,7 @@
 									</svg>
 									<span class="name">Sliders</span>
 								</span>
-								<span class="section-header-title-text">Glitter Settings</span>
+								<span class="section-header-title-text">Glitter Properties</span>
 							</h3>
 							<div class="section-header-action btn-icon visible collapsed" id="glitterSettingsToggle">
 								<span class="icon-wrapper">
@@ -636,7 +649,7 @@
 						</div>
 					</div>
 
-					<!-- Sticker Settings Section -->
+					<!-- Sticker Properties Section -->
 					<div class="sticker-settings-section section collapsible-section" id="stickerSettingsSection">
 						<div class="section-header section-header-with-action" id="stickerSettingsHeader">
 							<h3 class="section-header-title">
@@ -646,7 +659,7 @@
 									</svg>
 									<span class="name">Sliders</span>
 								</span>
-								<span class="section-header-title-text">Sticker Settings</span>
+								<span class="section-header-title-text">Sticker Properties</span>
 							</h3>
 							<div class="section-header-action btn-icon visible collapsed" id="stickerSettingsToggle">
 								<span class="icon-wrapper">
@@ -867,28 +880,23 @@
 					</div>
 
 					<!-- 1. WELCOME SECTION (No Image Loaded) -->
-					<div class="welcome-section section" id="welcomeSection">
-						<div class="section-content">
+<div class="welcome-section section visible" id="welcomeSection">
+    <div class="section-content">
+        <div class="empty-state visible">
+            <div class="empty-state-inner-wrapper">
 
-
-							<div class="empty-state visible">
-
-								<div class="empty-state-inner-wrapper">
-									<div class="empt-state-text">Load an image to start designing.</div>
-									<div class="empty-state-subtext">Or start with a blank canvas:</div>
-									<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openNewCanvasBtn">
-										<svg class="icon">
-											<use href="#icon-plus"></use>
-										</svg>
-										<span class="name">New Blank Canvas</span>
-									</button>
-								</div>
-
-							</div>
-
-
-						</div>
-					</div>
+                <div class="empty-state-text">No image loaded</div>
+                <div class="empty-state-subtext">Upload an image to start designing, or create a blank canvas</div>
+                <button class="btn-text-with-icon icon-wrapper btn-secondary" id="openNewCanvasBtn">
+                    <svg class="icon">
+                        <use href="#icon-plus"></use>
+                    </svg>
+                    <span class="name">New Blank Canvas</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 					<!-- 2. NO LAYER SELECTED SECTION (Image Loaded, but nothing selected) -->
 					<div class="no-layer-settings-section section" id="noLayerSettingsSection">
@@ -1505,9 +1513,17 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Helpful Hints</div>
 							<div class="settings-row-control">
-								<label class="checkbox-group-simple">
-									<input type="checkbox" id="showHelpfulHints">
-								</label>
+
+
+							<label class="switch" for="showHelpfulHints">
+								<input type="checkbox" id="showHelpfulHints" />
+								<div class="slider round"></div>
+							</label>
+
+
+
+
+
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div>
@@ -1520,9 +1536,14 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Base Image</div>
 							<div class="settings-row-control">
-								<label class="checkbox-group-simple">
-									<input type="checkbox" id="exportBaseImage">
-								</label>
+
+
+							<label class="switch" for="exportBaseImage">
+								<input type="checkbox" id="exportBaseImage" />
+								<div class="slider round"></div>
+							</label>
+
+								
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Include the base image in the export. When disabled, only
@@ -1532,9 +1553,13 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Transparency</div>
 							<div class="settings-row-control">
-								<label class="checkbox-group-simple">
-									<input type="checkbox" id="exportTransparency">
-								</label>
+
+							<label class="switch" for="exportTransparency">
+								<input type="checkbox" id="exportTransparency" />
+								<div class="slider round"></div>
+							</label>
+
+
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Preserve transparent areas from the original image if it has it. When
@@ -1556,9 +1581,14 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Watermark</div>
 							<div class="settings-row-control">
-								<label class="checkbox-group-simple">
-									<input type="checkbox" id="exportWatermarkEnabled">
-								</label>
+
+
+							<label class="switch" for="exportWatermarkEnabled">
+								<input type="checkbox" id="exportWatermarkEnabled" />
+								<div class="slider round"></div>
+							</label>
+
+
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Add a cheeky little watermark overlay to the exported GIF.</div>
@@ -1571,9 +1601,15 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Dithering</div>
 							<div class="settings-row-control">
-								<label class="checkbox-group-simple">
-									<input type="checkbox" id="exportDitherEnabled">
-								</label>
+
+
+
+							<label class="switch" for="exportDitherEnabled">
+								<input type="checkbox" id="exportDitherEnabled" />
+								<div class="slider round"></div>
+							</label>
+
+
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Reduces color banding in gradients. Disable for sharper
@@ -1660,9 +1696,13 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Smart Frame Reduction</div>
 							<div class="settings-row-control">
-								<label class="checkbox-group-simple">
-									<input type="checkbox" id="exportSmartFrameReduction">
-								</label>
+
+							<label class="switch" for="exportSmartFrameReduction">
+								<input type="checkbox" id="exportSmartFrameReduction" />
+								<div class="slider round"></div>
+							</label>
+
+
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Intelligently reduce frame counts to optimize file size while maintaining animation quality.</div>
@@ -1689,8 +1729,15 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Reverse Animation</div>
 							<div class="settings-row-control">
-								<input type="checkbox" id="exportReverse" class="toggle-input">
+
+							<label class="switch" for="exportReverse">
+								<input type="checkbox" id="exportReverse" />
+								<div class="slider round"></div>
+							</label>
 							</div>
+
+
+
 						</div>
 						<div class="settings-row-label-desc">Play animation backwards.</div>
 					</div>
