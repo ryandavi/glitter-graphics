@@ -347,16 +347,39 @@ class ViewportManager {
 	// ===== TOUCH GESTURES =====
 
 setupTouchGestures() {
-    // Kill any existing browser click listeners if you can, 
-    // or rely on the Mock Event gatekeeper.
+    this.isTouchActive = false; // Track if ANY touch is happening (tap or gesture)
+    this.isGestureActive = false; // Track if gesture (not simple tap) is happening
     
     this.touchHandler = new TouchGestureHandler(this.previewContainer, {
+        
+        // IMMEDIATE notification when touch starts (before we know if tap or gesture)
+        onTouchStart: () => {
+            console.log('👆 Touch started (any type)');
+            this.isTouchActive = true;
+        },
+        
+        // Notification when touch ends (with info about whether it was a tap)
+        onTouchEnd: (wasSimpleTap) => {
+            console.log('👆 Touch ended, was simple tap:', wasSimpleTap);
+            // Small delay before clearing touch state to prevent ghost clicks
+            setTimeout(() => {
+                this.isTouchActive = false;
+            }, 50);
+        },
+        
+        onGestureStart: (gestureType) => {
+            console.log('🎯 Gesture started:', gestureType);
+            this.isGestureActive = true;
+        },
+        
+        onGestureEnd: () => {
+            console.log('🎯 Gesture ended');
+            this.isGestureActive = false;
+        },
         
         // === 1. SINGLE PAN ===
         onSinglePan: (dx, dy) => {
             console.log('👆 1-Finger Pan:', dx, dy);
-            // DIRECTLY APPLY PAN (Bypassing tool checks for debugging)
-            // If this works, you can wrap it in: if(window.editor.currentTool === ToolType.HAND) { ... }
             this.panX += dx;
             this.panY += dy;
             this.applyTransform();
@@ -370,7 +393,6 @@ setupTouchGestures() {
             const anchorX = cx - rect.left;
             const anchorY = cy - rect.top;
             
-            // Calculate Zoom
             const canvasX = (anchorX - this.panX) / this.currentZoom;
             const canvasY = (anchorY - this.panY) / this.currentZoom;
             
@@ -416,7 +438,6 @@ setupTouchGestures() {
         }
     });
 }
-
 
 	// ===== RESIZE HANDLING =====
 

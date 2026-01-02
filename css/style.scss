@@ -4949,29 +4949,35 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 }
 
 .helpful-message {
-	display: none;
-	position: absolute;
-	top: calc(60px + var(--spacing-md));
-	left: 50%;
-	transform: translateX(-50%);
-	max-width: 400px;
-	width: calc(100% - var(--spacing-xl));
-	z-index: 100;
-	
-	align-items: flex-start;
-	gap: var(--spacing-sm);
-	padding: var(--spacing-md);
-	background: var(--color-bg-secondary);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    display: none;
+    position: absolute;
+    top: calc(60px + var(--spacing-md));
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 400px;
+    width: calc(100% - var(--spacing-xl));
+    z-index: 100;
+    
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 
-	pointer-events: auto; // Make sure it captures clicks
-	cursor: default;
-	
-	&.visible {
-		display: flex;
-	}
+    pointer-events: auto;
+    cursor: pointer; // Make it clear the entire thing is clickable
+    transition: all var(--transition-fast);
+    
+    &:hover {
+        border-color: var(--color-border-hover);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    
+    &.visible {
+        display: flex;
+    }
 	
 	.helpful-message-icon {
 		flex-shrink: 0;
@@ -5047,22 +5053,23 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 		margin-top: var(--spacing-xs);
 	}
 	
-	.helpful-message-disable {
-		padding: var(--spacing-xs) var(--spacing-sm);
-		border: none;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-secondary);
-		font-size: var(--font-size-xs);
-		border-radius: var(--radius-sm);
-		cursor: pointer;
-		transition: all var(--transition-fast);
-		white-space: nowrap;
-		
-		&:hover {
-			background: var(--color-bg-hover);
-			color: var(--color-text-primary);
-		}
-	}
+    .helpful-message-disable {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border: none;
+        background: var(--color-bg-tertiary);
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-xs);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        white-space: nowrap;
+        pointer-events: auto; // Ensure button clicks work
+        
+        &:hover {
+            background: var(--color-bg-hover);
+            color: var(--color-text-primary);
+        }
+    }
 	
 	.helpful-message-close {
 		flex-shrink: 0;
@@ -5080,6 +5087,8 @@ body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
 		justify-content: center;
 		border-radius: var(--radius-sm);
 		transition: all var(--transition-fast);
+
+		display: none;
 		
 		&:hover {
 			background: var(--color-bg-hover);

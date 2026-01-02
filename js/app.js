@@ -1063,6 +1063,7 @@ class GlitterEditor {
 	// ===== EVENT LISTENERS =====
 
 	setupEventListeners() {
+		this.setupMobileClickProtection();
 		this.setupToolbarListeners();
 		this.setupZoomListeners();
 		this.setupPanListeners();
@@ -1078,6 +1079,30 @@ class GlitterEditor {
 		this.setupGlobalListeners();
 		this.setupHelpfulMessageListeners();
 	}
+
+
+	
+setupMobileClickProtection() {
+    if (!this.isMobile) return;
+    
+    console.log('🛡️ Setting up mobile click protection');
+    
+    // ONLY block clicks on mobile (not pointerdown/mousedown - those are needed)
+    // Add a CAPTURE phase click blocker - runs BEFORE normal click handlers
+    this.previewContainer.addEventListener('click', (e) => {
+        // ONLY allow clicks that are explicitly marked as verified simple taps
+        if (!e.isSimpleTap) {
+            console.log('🚫 CAPTURE PHASE: Blocking non-verified click');
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation(); // Stop ALL other listeners
+            return false;
+        }
+        
+        console.log('✅ CAPTURE PHASE: Allowing verified simple tap');
+    }, { capture: true });
+}
+
 
 	// ===== HELPER: Attach slider with live update and reset =====
 	setupSlider(sliderId, valueId, suffix, updateCallback, resetValue) {
@@ -2126,9 +2151,14 @@ if (resetScaleY) {
 			});
 		}
 
-		this.previewContainer.addEventListener('pointerdown', (e) => {
-			this.handlePreviewContainerClick(e);
-		});
+// In setupEventListeners() or wherever you set up preview container events
+this.previewContainer.addEventListener('pointerdown', (e) => {
+    this.handlePreviewContainerClick(e);
+});
+
+this.previewContainer.addEventListener('click', (e) => {
+    this.handlePreviewContainerClick(e);
+});
 
 		// Prevent right-click context menu on preview area
 		this.previewContainer.addEventListener('contextmenu', (e) => {
@@ -2488,52 +2518,66 @@ if (resetScaleY) {
 	}
 
 
-	setupHelpfulMessageListeners() {
-		const helpfulMessage = document.getElementById('helpfulMessage');
+setupHelpfulMessageListeners() {
+    const helpfulMessage = document.getElementById('helpfulMessage');
 
-		// Prevent clicks from propagating to canvas/tools below
-		if (helpfulMessage) {
-			helpfulMessage.addEventListener('mousedown', (e) => {
-				e.stopPropagation();
-			});
-			helpfulMessage.addEventListener('click', (e) => {
-				e.stopPropagation();
-			});
-			helpfulMessage.addEventListener('pointerdown', (e) => {
-				e.stopPropagation();
-			});
-		}
+    // Prevent clicks from propagating to canvas/tools below
+    if (helpfulMessage) {
+        helpfulMessage.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+        helpfulMessage.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+        });
+        
+        // CLICK-TO-DISMISS: Click anywhere on message to dismiss
+        // EXCEPT on the "Don't show hints" button
+        helpfulMessage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Don't dismiss if clicking the "Don't show hints" button
+            if (e.target.closest('#helpfulMessageDisable')) {
+                return; // Let the button handle it
+            }
+            
+            // Dismiss the current hint
+            this.currentHintDismissed = true;
+            helpfulMessage.classList.remove('visible');
+        });
+    }
 
-		// Close button - just dismiss current hint
-		const closeBtn = document.getElementById('helpfulMessageClose');
-		if (closeBtn) {
-			closeBtn.addEventListener('click', () => {
-				this.currentHintDismissed = true;
-				document.getElementById('helpfulMessage')?.classList.remove('visible');
-			});
-		}
+    // Close button - now redundant but keep for explicit close action
+    const closeBtn = document.getElementById('helpfulMessageClose');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent double-handling
+            // The parent click handler will dismiss
+        });
+    }
 
-		// Disable button - turn off hints entirely
-		const disableBtn = document.getElementById('helpfulMessageDisable');
-		if (disableBtn) {
-			disableBtn.addEventListener('click', () => {
-				// Disable hints
-				this.showHints = false;
+    // Disable button - turn off hints entirely
+    const disableBtn = document.getElementById('helpfulMessageDisable');
+    if (disableBtn) {
+        disableBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent the parent click handler
+            
+            // Disable hints
+            this.showHints = false;
 
-				// Update checkbox in settings
-				const showHintsInput = document.getElementById('showHelpfulHints');
-				if (showHintsInput) {
-					showHintsInput.checked = false;
-				}
+            // Update checkbox in settings
+            const showHintsInput = document.getElementById('showHelpfulHints');
+            if (showHintsInput) {
+                showHintsInput.checked = false;
+            }
 
-				// Save to storage
-				this.saveSettingsToStorage();
+            // Save to storage
+            this.saveSettingsToStorage();
 
-				// Hide message
-				document.getElementById('helpfulMessage')?.classList.remove('visible');
-			});
-		}
-	}
+            // Hide message
+            helpfulMessage.classList.remove('visible');
+        });
+    }
+}
 
 	updateColorPickerControls() {
 		console.log(`Updating color picker controls`);
@@ -3085,113 +3129,116 @@ if (resetScaleY) {
 	}
 
 	// ===== CLICK HANDLERS =====
+
+
 handlePreviewContainerClick(e) {
+    console.log('📍 Click handler fired', e.type, e.isSimpleTap);
+    
     // 1. IGNORE TRANSFORM HANDLES
     if (e.target.closest('.transform-handles') || 
         e.target.classList.contains('transform-bounding-box')) return;
 
-    // ============================================================
-    // 2. THE TIME-BASED GATEKEEPER (Fixes Desktop & Mobile)
-    // ============================================================
-    const isGhostClick = this.lastTouchEndTime && (Date.now() - this.lastTouchEndTime < 500);
-
-    if (isGhostClick && !e.isSimpleTap) {
-        // This is a browser ghost click following a touch. Block it.
-        console.log('👻 Blocking Ghost Click');
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-    }
-
-
-    // ============================================================
-
-    // 3. IGNORE UI ELEMENTS
+    // 2. IGNORE UI ELEMENTS
     if (e.target.closest('.ui-ignore-gestures')) {
         return;
     }
 
-    // 4. MOUSE BUTTON CHECKS
+    // 3. MOUSE BUTTON CHECKS
     if (e.button === 1) return; 
     if ((e.button === 2 && this.currentTool !== ToolType.ZOOM) || 
         (e.button === 2 && this.currentTool === ToolType.ZOOM)) {
         return;
     }
 
-	// ignore clicks on elements with the 'ui-ignore-gestures' class
-	if (e.target.closest('.ui-ignore-gestures')) {
-		return;
-	}
+    // 4. EVENT TYPE FILTERING - Different tools need different events
+    // HAND tool needs pointerdown to start dragging
+    // Other tools need click to prevent double-firing
+    
+    if (this.currentTool === ToolType.HAND) {
+        // Hand tool: ONLY respond to pointerdown (ignore click)
+        if (e.type === 'click') {
+            console.log('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
+            return;
+        }
+        // On mobile, also ignore pointerdown (touch handlers manage it)
+        if (this.isMobile && e.type === 'pointerdown') {
+            console.log('🚫 HAND tool: Ignoring pointerdown on mobile (touch handles it)');
+            return;
+        }
+    } else {
+        // Other tools (SELECT, COLOR_PICKER, ZOOM): ONLY respond to click
+        if (e.type === 'pointerdown' || e.type === 'mousedown') {
+            console.log('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
+            return;
+        }
+        // On mobile, verify it's a simple tap
+        if (this.isMobile && !e.isSimpleTap) {
+            console.log('🚫 Mobile: Not a verified simple tap');
+            return;
+        }
+    }
 
-	// NEW: On mobile, ignore clicks if a gesture is active (not a simple tap)
-	if (this.isMobile && this.viewport.touchHandler && !e.isSimpleTap) {
-		console.log('📱 Ignoring click - gesture in progress (not a simple tap)');
-		return;
-	}
+    const hitSticker = e.target.closest('.sticker-element');
 
-	const hitSticker = e.target.closest('.sticker-element');
+    // Check if click is within the canvas area using viewport coordinates
+    const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
+    const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
 
-	// Check if click is within the canvas area using viewport coordinates
-	const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
-	const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
+    // We treat stickers and the canvas as the "Image Area"
+    const hitImageArea = hitCanvas || hitSticker;
 
-	// We treat stickers and the canvas as the "Image Area"
-	const hitImageArea = hitCanvas || hitSticker;
+    // Gatekeeper: If they clicked a button/sidebar, stop here
+    const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
+    if (!isWorkspace) return;
 
-	// Gatekeeper: If they clicked a button/sidebar, stop here.
-	const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
-	if (!isWorkspace) return;
+    switch (this.currentTool) {
+        case ToolType.SELECT:
+            if (hitSticker) return;
+            if (hitImageArea && hitCanvas) {
+                const rect = this.previewCanvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+                const scaleX = this.previewCanvas.width / rect.width;
+                const scaleY = this.previewCanvas.height / rect.height;
+                const x = Math.floor(clickX * scaleX);
+                const y = Math.floor(clickY * scaleY);
+                
+                this.handleLayerSelectAction(x, y);
+            } else if (!hitImageArea) {
+                this.layerManager.setActiveLayer(null);
+            }
+            break;
 
-switch (this.currentTool) {
-		case ToolType.SELECT:
-			if (hitSticker) return;
-			if (hitImageArea && hitCanvas) {
-				// Convert to canvas pixels
-				const rect = this.previewCanvas.getBoundingClientRect();
-				const clickX = e.clientX - rect.left;
-				const clickY = e.clientY - rect.top;
-				const scaleX = this.previewCanvas.width / rect.width;
-				const scaleY = this.previewCanvas.height / rect.height;
-				const x = Math.floor(clickX * scaleX);
-				const y = Math.floor(clickY * scaleY);
-				
-				this.handleLayerSelectAction(x, y);
-			} else if (!hitImageArea) {
-				this.layerManager.setActiveLayer(null);
-			}
-			break;
+        case ToolType.COLOR_PICKER:
+            if (hitImageArea && hitCanvas) {
+                const rect = this.previewCanvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+                const scaleX = this.previewCanvas.width / rect.width;
+                const scaleY = this.previewCanvas.height / rect.height;
+                const x = Math.floor(clickX * scaleX);
+                const y = Math.floor(clickY * scaleY);
+                
+                this.handleColorPickAction(x, y, e);
+            } else {
+                this.setTool(ToolType.SELECT);
+            }
+            break;
 
-		case ToolType.COLOR_PICKER:
-			if (hitImageArea && hitCanvas) {
-				// Convert to canvas pixels
-				const rect = this.previewCanvas.getBoundingClientRect();
-				const clickX = e.clientX - rect.left;
-				const clickY = e.clientY - rect.top;
-				const scaleX = this.previewCanvas.width / rect.width;
-				const scaleY = this.previewCanvas.height / rect.height;
-				const x = Math.floor(clickX * scaleX);
-				const y = Math.floor(clickY * scaleY);
-				
-				this.handleColorPickAction(x, y, e);
-			} else {
-				this.setTool(ToolType.SELECT);
-			}
-			break;
+        case ToolType.HAND:
+            // At this point we know it's pointerdown on desktop (click was filtered out above)
+            this.viewport.startPan(e.clientX, e.clientY);
+            break;
 
-		case ToolType.HAND:
-			this.viewport.startPan(e.clientX, e.clientY);
-			break;
-
-		case ToolType.ZOOM:
-			if (this.originalImage) {
-				this.handleZoomAction(e.clientX, e.clientY, {
-					zoomOut: e.altKey || e.button === 2
-				});
-			}
-			break;
-	}
+        case ToolType.ZOOM:
+            if (this.originalImage) {
+                this.handleZoomAction(e.clientX, e.clientY, {
+                    zoomOut: e.altKey || e.button === 2
+                });
+            }
+            break;
+    }
 }
-
 
 	handleColorPickAction(x, y, event = null) {
 	if (this.currentTool !== ToolType.COLOR_PICKER) return;

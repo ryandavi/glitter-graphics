@@ -3919,7 +3919,12 @@ body.tool-select .preview-canvas {
   border-radius: var(--radius-sm);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   pointer-events: auto;
-  cursor: default;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.helpful-message:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 .helpful-message.visible {
   display: flex;
@@ -3996,6 +4001,7 @@ body.tool-select .preview-canvas {
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
+  pointer-events: auto;
 }
 .helpful-message .helpful-message-disable:hover {
   background: var(--color-bg-hover);
@@ -4017,6 +4023,7 @@ body.tool-select .preview-canvas {
   justify-content: center;
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
+  display: none;
 }
 .helpful-message .helpful-message-close:hover {
   background: var(--color-bg-hover);
