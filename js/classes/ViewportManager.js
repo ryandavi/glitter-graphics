@@ -347,126 +347,101 @@ class ViewportManager {
 	// ===== TOUCH GESTURES =====
 
 setupTouchGestures() {
-	const handler = new TouchGestureHandler(this.previewContainer, {
-		preventPropagation: false,
-		capturePhase: true,
+    const handler = new TouchGestureHandler(this.previewContainer, {
+        preventPropagation: false,
+        capturePhase: true,
 
-		onGestureStart: (gestureType) => {
-			console.log('🌍 VIEWPORT: Gesture started -', gestureType);
-			// Set flag to prevent layer selection
-			if (window.editor) window.editor.touchGestureActive = true;
-		},
+        onGestureStart: (gestureType) => {
+            if (window.editor) window.editor.touchGestureActive = true;
+        },
 
-		onSinglePan: (deltaX, deltaY) => {
-			console.log('🌍 VIEWPORT: Single pan', deltaX, deltaY);
-			this.panX += deltaX;
-			this.panY += deltaY;
-			this.applyTransform();
-			this._notifyViewportChanged();
-		},
+        onSinglePan: (deltaX, deltaY) => {
+            // Check if we are allowed to pan (e.g. only Hand tool)
+            // Or allow it always if that's your design preference
+            if (window.editor && window.editor.currentTool === 'HAND') {
+                this.panX += deltaX;
+                this.panY += deltaY;
+                this.applyTransform();
+                this._notifyViewportChanged();
+            }
+        },
 
-		onPinchZoom: (scale, centerX, centerY) => {
-			console.log('🌍 VIEWPORT: Pinch zoom', scale);
-			const rect = this.previewContainer.getBoundingClientRect();
-			const anchorX = centerX - rect.left;
-			const anchorY = centerY - rect.top;
+        onPinchZoom: (scale, centerX, centerY) => {
+            // ... (Your existing pinch zoom logic is fine) ...
+            const rect = this.previewContainer.getBoundingClientRect();
+            const anchorX = centerX - rect.left;
+            const anchorY = centerY - rect.top;
 
-			const canvasX = (anchorX - this.panX) / this.currentZoom;
-			const canvasY = (anchorY - this.panY) / this.currentZoom;
+            const canvasX = (anchorX - this.panX) / this.currentZoom;
+            const canvasY = (anchorY - this.panY) / this.currentZoom;
 
-			const newZoom = Math.max(0.1, Math.min(16, this.currentZoom * scale));
+            const newZoom = Math.max(0.1, Math.min(16, this.currentZoom * scale));
 
-			const newCanvasX = canvasX * newZoom;
-			const newCanvasY = canvasY * newZoom;
+            const newCanvasX = canvasX * newZoom;
+            const newCanvasY = canvasY * newZoom;
 
-			this.panX = anchorX - newCanvasX;
-			this.panY = anchorY - newCanvasY;
-			this.currentZoom = newZoom;
+            this.panX = anchorX - newCanvasX;
+            this.panY = anchorY - newCanvasY;
+            this.currentZoom = newZoom;
+            
+            // Sync with zoom levels logic...
+            this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
+            if (this.currentZoomIndex === -1) this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
 
-			this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
-			if (this.currentZoomIndex === -1) {
-				this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
-			}
+            this.applyTransform();
+            this._notifyViewportChanged();
+        },
 
-			this.applyTransform();
-			this._notifyViewportChanged();
-		},
+        onTwoPan: (deltaX, deltaY) => {
+            this.panX += deltaX;
+            this.panY += deltaY;
+            this.applyTransform();
+            this._notifyViewportChanged();
+        },
 
-		onTwoPan: (deltaX, deltaY) => {
-			console.log('🌍 VIEWPORT: Two finger pan', deltaX, deltaY);
-			this.panX += deltaX;
-			this.panY += deltaY;
-			this.applyTransform();
-			this._notifyViewportChanged();
-		},
+        // ============================================================
+        // UPDATED SIMPLE TAP HANDLER
+        // ============================================================
+        onSimpleTap: (x, y) => {
+            console.log('🌍 VIEWPORT: Simple tap at', x, y);
 
-		// NEW: Simple tap callback - triggers tool actions only for taps
-		onSimpleTap: (x, y) => {
-			console.log('🌍 VIEWPORT: Simple tap at', x, y);
+            if (!window.editor) return;
 
-			// NEW: Check if tap is on transform handle - ignore if so
-			const target = document.elementFromPoint(x, y);
-			if (target && (
-				target.closest('.transform-handles') ||
-				target.closest('.transform-handle-wrapper') ||
-				target.classList.contains('transform-bounding-box')
-			)) {
-				console.log('🎯 Mobile: Ignoring tap on transform handle');
-				return;
-			}
-			
-			if (!window.editor) return;
-			const editor = window.editor;
-			
-			// Convert screen to canvas pixels
-			const rect = editor.previewCanvas.getBoundingClientRect();
-			const clickX = x - rect.left;
-			const clickY = y - rect.top;
-			const scaleX = editor.previewCanvas.width / rect.width;
-			const scaleY = editor.previewCanvas.height / rect.height;
-			const canvasX = Math.floor(clickX * scaleX);
-			const canvasY = Math.floor(clickY * scaleY);
-			
-			// Check bounds
-			const inBounds = canvasX >= 0 && canvasX < editor.previewCanvas.width &&
-			                 canvasY >= 0 && canvasY < editor.previewCanvas.height;
-			
-			if (!inBounds) {
-				console.log('🌍 Tap outside canvas');
-				return;
-			}
-			
-			// Call appropriate tool action
-			switch (editor.currentTool) {
-				case ToolType.ZOOM:
-					// Zoom uses screen coordinates
-					editor.handleZoomAction(x, y);
-					break;
-					
-				case ToolType.COLOR_PICKER:
-					// Color picker uses canvas pixels
-					editor.handleColorPickAction(canvasX, canvasY);
-					break;
-					
-				case ToolType.SELECT:
-					// Selection uses canvas pixels
-					editor.handleLayerSelectAction(canvasX, canvasY);
-					break;
-			}
-		},
+            // 1. Get the element that was tapped
+            const target = document.elementFromPoint(x, y);
 
-		onGestureEnd: () => {
-			console.log('🌍 VIEWPORT: Gesture ended');
-			// Clear flag after a short delay to prevent immediate layer selection
-			if (window.editor) {
-				setTimeout(() => {
-					window.editor.touchGestureActive = false;
-				}, 100);
-			}
-		}
-	});
+            // 2. Create a "Fake" Mouse Event
+            // We flag it with isSimpleTap: true so the Main Class accepts it
+            const mockEvent = {
+                target: target,
+                clientX: x,
+                clientY: y,
+                button: 0,      // Left click
+                altKey: false,
+                ctrlKey: false,
+                shiftKey: false,
+                type: 'click',  // Pretend to be a click
+                isSimpleTap: true, // THE KEY PASSKEY
+                preventDefault: () => {},
+                stopPropagation: () => {}
+            };
 
-	this.touchHandler = handler;
+            // 3. Pass it to your main handler
+            // This recycles all your existing Color Picker / Zoom / Select logic!
+            console.log("👆 Injecting mobile tap into main click handler");
+            window.editor.handlePreviewContainerClick(mockEvent);
+        },
+
+        onGestureEnd: () => {
+            if (window.editor) {
+                setTimeout(() => {
+                    window.editor.touchGestureActive = false;
+                }, 100);
+            }
+        }
+    });
+
+    this.touchHandler = handler;
 }
 
 

@@ -3086,22 +3086,39 @@ if (resetScaleY) {
 
 	// ===== CLICK HANDLERS =====
 handlePreviewContainerClick(e) {
-	// NEW: Don't handle clicks on transform handles - let handle listeners work
-	const clickedElement = e.target;
-	if (clickedElement.closest('.transform-handles') || 
-	    clickedElement.closest('.transform-handle-wrapper') ||
-	    clickedElement.classList.contains('transform-bounding-box')) {
-		console.log('🎯 Ignoring click on transform handle');
-		return; // Let the handle's own event handler deal with it
-	}
+    // 1. IGNORE TRANSFORM HANDLES (Keep this at the very top)
+    const clickedElement = e.target;
+    if (clickedElement.closest('.transform-handles') || 
+        clickedElement.closest('.transform-handle-wrapper') ||
+        clickedElement.classList.contains('transform-bounding-box')) {
+        return; 
+    }
 
-	// Early exits for wrong button or tool
-	if (e.button === 1) return; // Ignore middle-clicks entirely
-	if ((e.button === 2 && this.currentTool !== ToolType.ZOOM) || 
-		(e.button === 2 && this.currentTool === ToolType.ZOOM)) {
-		return;
-	}
+    // ============================================================
+    // 2. THE GHOST CLICK CHECK (Paste your snippet here)
+    // ============================================================
+    // If we are on mobile, we ignore standard browser 'click' events.
+    // We ONLY accept events that have the special flag 'isSimpleTap'
+    // which comes from our custom touch system.
+    if (this.isMobile && e.type === 'click' && !e.isSimpleTap) {
+        // console.log('🛑 Ignoring native ghost click');
+        return;
+    }
+    // ============================================================
 
+    // 3. IGNORE UI ELEMENTS
+    if (e.target.closest('.ui-ignore-gestures')) {
+        return;
+    }
+
+    // 4. MOUSE BUTTON CHECKS
+    if (e.button === 1) return; 
+    if ((e.button === 2 && this.currentTool !== ToolType.ZOOM) || 
+        (e.button === 2 && this.currentTool === ToolType.ZOOM)) {
+        return;
+    }
+
+	// ignore clicks on elements with the 'ui-ignore-gestures' class
 	if (e.target.closest('.ui-ignore-gestures')) {
 		return;
 	}
