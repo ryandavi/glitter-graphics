@@ -3086,24 +3086,24 @@ if (resetScaleY) {
 
 	// ===== CLICK HANDLERS =====
 handlePreviewContainerClick(e) {
-    // 1. IGNORE TRANSFORM HANDLES (Keep this at the very top)
-    const clickedElement = e.target;
-    if (clickedElement.closest('.transform-handles') || 
-        clickedElement.closest('.transform-handle-wrapper') ||
-        clickedElement.classList.contains('transform-bounding-box')) {
-        return; 
-    }
+    // 1. IGNORE TRANSFORM HANDLES
+    if (e.target.closest('.transform-handles') || 
+        e.target.classList.contains('transform-bounding-box')) return;
 
     // ============================================================
-    // 2. THE GHOST CLICK CHECK (Paste your snippet here)
+    // 2. THE TIME-BASED GATEKEEPER (Fixes Desktop & Mobile)
     // ============================================================
-    // If we are on mobile, we ignore standard browser 'click' events.
-    // We ONLY accept events that have the special flag 'isSimpleTap'
-    // which comes from our custom touch system.
-    if (this.isMobile && e.type === 'click' && !e.isSimpleTap) {
-        // console.log('🛑 Ignoring native ghost click');
+    const isGhostClick = this.lastTouchEndTime && (Date.now() - this.lastTouchEndTime < 500);
+
+    if (isGhostClick && !e.isSimpleTap) {
+        // This is a browser ghost click following a touch. Block it.
+        console.log('👻 Blocking Ghost Click');
+        e.preventDefault();
+        e.stopPropagation();
         return;
     }
+
+
     // ============================================================
 
     // 3. IGNORE UI ELEMENTS

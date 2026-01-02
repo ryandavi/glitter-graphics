@@ -347,101 +347,74 @@ class ViewportManager {
 	// ===== TOUCH GESTURES =====
 
 setupTouchGestures() {
-    const handler = new TouchGestureHandler(this.previewContainer, {
-        preventPropagation: false,
-        capturePhase: true,
-
-        onGestureStart: (gestureType) => {
-            if (window.editor) window.editor.touchGestureActive = true;
+    // Kill any existing browser click listeners if you can, 
+    // or rely on the Mock Event gatekeeper.
+    
+    this.touchHandler = new TouchGestureHandler(this.previewContainer, {
+        
+        // === 1. SINGLE PAN ===
+        onSinglePan: (dx, dy) => {
+            console.log('👆 1-Finger Pan:', dx, dy);
+            // DIRECTLY APPLY PAN (Bypassing tool checks for debugging)
+            // If this works, you can wrap it in: if(window.editor.currentTool === ToolType.HAND) { ... }
+            this.panX += dx;
+            this.panY += dy;
+            this.applyTransform();
+            this._notifyViewportChanged();
         },
 
-        onSinglePan: (deltaX, deltaY) => {
-            // Check if we are allowed to pan (e.g. only Hand tool)
-            // Or allow it always if that's your design preference
-            if (window.editor && window.editor.currentTool === 'HAND') {
-                this.panX += deltaX;
-                this.panY += deltaY;
-                this.applyTransform();
-                this._notifyViewportChanged();
-            }
-        },
-
-        onPinchZoom: (scale, centerX, centerY) => {
-            // ... (Your existing pinch zoom logic is fine) ...
+        // === 2. PINCH ZOOM ===
+        onPinchZoom: (scale, cx, cy) => {
+            console.log('🤏 Pinch:', scale);
             const rect = this.previewContainer.getBoundingClientRect();
-            const anchorX = centerX - rect.left;
-            const anchorY = centerY - rect.top;
-
+            const anchorX = cx - rect.left;
+            const anchorY = cy - rect.top;
+            
+            // Calculate Zoom
             const canvasX = (anchorX - this.panX) / this.currentZoom;
             const canvasY = (anchorY - this.panY) / this.currentZoom;
+            
+            let newZoom = this.currentZoom * scale;
+            newZoom = Math.max(0.1, Math.min(16, newZoom));
 
-            const newZoom = Math.max(0.1, Math.min(16, this.currentZoom * scale));
-
-            const newCanvasX = canvasX * newZoom;
-            const newCanvasY = canvasY * newZoom;
-
-            this.panX = anchorX - newCanvasX;
-            this.panY = anchorY - newCanvasY;
+            this.panX = anchorX - (canvasX * newZoom);
+            this.panY = anchorY - (canvasY * newZoom);
             this.currentZoom = newZoom;
             
-            // Sync with zoom levels logic...
-            this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= newZoom);
-            if (this.currentZoomIndex === -1) this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
-
             this.applyTransform();
             this._notifyViewportChanged();
         },
 
-        onTwoPan: (deltaX, deltaY) => {
-            this.panX += deltaX;
-            this.panY += deltaY;
+        // === 3. TWO FINGER PAN ===
+        onTwoPan: (dx, dy) => {
+            this.panX += dx;
+            this.panY += dy;
             this.applyTransform();
             this._notifyViewportChanged();
         },
 
-        // ============================================================
-        // UPDATED SIMPLE TAP HANDLER
-        // ============================================================
+        // === 4. TAP (THE CLICK REPLACEMENT) ===
         onSimpleTap: (x, y) => {
-            console.log('🌍 VIEWPORT: Simple tap at', x, y);
-
+            console.log('✅ Clean Tap Detected');
             if (!window.editor) return;
 
-            // 1. Get the element that was tapped
             const target = document.elementFromPoint(x, y);
-
-            // 2. Create a "Fake" Mouse Event
-            // We flag it with isSimpleTap: true so the Main Class accepts it
+            
+            // Create Fake Event
             const mockEvent = {
                 target: target,
                 clientX: x,
                 clientY: y,
-                button: 0,      // Left click
-                altKey: false,
-                ctrlKey: false,
-                shiftKey: false,
-                type: 'click',  // Pretend to be a click
-                isSimpleTap: true, // THE KEY PASSKEY
+                button: 0,
+                type: 'click',
+                isSimpleTap: true, // PASSKEY
                 preventDefault: () => {},
                 stopPropagation: () => {}
             };
 
-            // 3. Pass it to your main handler
-            // This recycles all your existing Color Picker / Zoom / Select logic!
-            console.log("👆 Injecting mobile tap into main click handler");
             window.editor.handlePreviewContainerClick(mockEvent);
-        },
-
-        onGestureEnd: () => {
-            if (window.editor) {
-                setTimeout(() => {
-                    window.editor.touchGestureActive = false;
-                }, 100);
-            }
         }
     });
-
-    this.touchHandler = handler;
 }
 
 
