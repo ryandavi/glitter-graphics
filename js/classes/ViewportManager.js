@@ -402,23 +402,56 @@ setupTouchGestures() {
 
 		// NEW: Simple tap callback - triggers tool actions only for taps
 		onSimpleTap: (x, y) => {
-			console.log('🌍 VIEWPORT: Simple tap detected at', x, y);
+			console.log('🌍 VIEWPORT: Simple tap at', x, y);
+
+			// NEW: Check if tap is on transform handle - ignore if so
+			const target = document.elementFromPoint(x, y);
+			if (target && (
+				target.closest('.transform-handles') ||
+				target.closest('.transform-handle-wrapper') ||
+				target.classList.contains('transform-bounding-box')
+			)) {
+				console.log('🎯 Mobile: Ignoring tap on transform handle');
+				return;
+			}
 			
-			// Create synthetic event with isSimpleTap flag
-			const syntheticEvent = new PointerEvent('pointerdown', {
-				bubbles: true,
-				cancelable: true,
-				clientX: x,
-				clientY: y,
-				button: 0
-			});
+			if (!window.editor) return;
+			const editor = window.editor;
 			
-			// Mark this as a verified simple tap
-			syntheticEvent.isSimpleTap = true;
+			// Convert screen to canvas pixels
+			const rect = editor.previewCanvas.getBoundingClientRect();
+			const clickX = x - rect.left;
+			const clickY = y - rect.top;
+			const scaleX = editor.previewCanvas.width / rect.width;
+			const scaleY = editor.previewCanvas.height / rect.height;
+			const canvasX = Math.floor(clickX * scaleX);
+			const canvasY = Math.floor(clickY * scaleY);
 			
-			// Dispatch to editor's click handler
-			if (window.editor) {
-				window.editor.handlePreviewContainerClick(syntheticEvent);
+			// Check bounds
+			const inBounds = canvasX >= 0 && canvasX < editor.previewCanvas.width &&
+			                 canvasY >= 0 && canvasY < editor.previewCanvas.height;
+			
+			if (!inBounds) {
+				console.log('🌍 Tap outside canvas');
+				return;
+			}
+			
+			// Call appropriate tool action
+			switch (editor.currentTool) {
+				case ToolType.ZOOM:
+					// Zoom uses screen coordinates
+					editor.handleZoomAction(x, y);
+					break;
+					
+				case ToolType.COLOR_PICKER:
+					// Color picker uses canvas pixels
+					editor.handleColorPickAction(canvasX, canvasY);
+					break;
+					
+				case ToolType.SELECT:
+					// Selection uses canvas pixels
+					editor.handleLayerSelectAction(canvasX, canvasY);
+					break;
 			}
 		},
 

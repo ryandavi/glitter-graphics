@@ -3086,8 +3086,17 @@ if (resetScaleY) {
 
 	// ===== CLICK HANDLERS =====
 handlePreviewContainerClick(e) {
+	// NEW: Don't handle clicks on transform handles - let handle listeners work
+	const clickedElement = e.target;
+	if (clickedElement.closest('.transform-handles') || 
+	    clickedElement.closest('.transform-handle-wrapper') ||
+	    clickedElement.classList.contains('transform-bounding-box')) {
+		console.log('🎯 Ignoring click on transform handle');
+		return; // Let the handle's own event handler deal with it
+	}
+
 	// Early exits for wrong button or tool
-	if (e.button === 1) return;
+	if (e.button === 1) return; // Ignore middle-clicks entirely
 	if ((e.button === 2 && this.currentTool !== ToolType.ZOOM) || 
 		(e.button === 2 && this.currentTool === ToolType.ZOOM)) {
 		return;
@@ -3116,76 +3125,160 @@ handlePreviewContainerClick(e) {
 	const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
 	if (!isWorkspace) return;
 
-	switch (this.currentTool) {
+switch (this.currentTool) {
 		case ToolType.SELECT:
 			if (hitSticker) return;
 			if (hitImageArea && hitCanvas) {
-				// Call handleCanvasClick to trigger layer picking
-				this.handleCanvasClick(e);
+				// Convert to canvas pixels
+				const rect = this.previewCanvas.getBoundingClientRect();
+				const clickX = e.clientX - rect.left;
+				const clickY = e.clientY - rect.top;
+				const scaleX = this.previewCanvas.width / rect.width;
+				const scaleY = this.previewCanvas.height / rect.height;
+				const x = Math.floor(clickX * scaleX);
+				const y = Math.floor(clickY * scaleY);
+				
+				this.handleLayerSelectAction(x, y);
 			} else if (!hitImageArea) {
 				this.layerManager.setActiveLayer(null);
 			}
 			break;
 
 		case ToolType.COLOR_PICKER:
-			if (hitImageArea) {
-				// EXPLICITLY call the picking logic here
-				this.handleCanvasClick(e);
+			if (hitImageArea && hitCanvas) {
+				// Convert to canvas pixels
+				const rect = this.previewCanvas.getBoundingClientRect();
+				const clickX = e.clientX - rect.left;
+				const clickY = e.clientY - rect.top;
+				const scaleX = this.previewCanvas.width / rect.width;
+				const scaleY = this.previewCanvas.height / rect.height;
+				const x = Math.floor(clickX * scaleX);
+				const y = Math.floor(clickY * scaleY);
+				
+				this.handleColorPickAction(x, y, e);
 			} else {
 				this.setTool(ToolType.SELECT);
-				// this.updateStatus('Click on the preview to select a color');
 			}
 			break;
 
 		case ToolType.HAND:
-			// Start panning
 			this.viewport.startPan(e.clientX, e.clientY);
 			break;
 
 		case ToolType.ZOOM:
 			if (this.originalImage) {
-				this.handleCanvasZoomClick(e);
+				this.handleZoomAction(e.clientX, e.clientY, {
+					zoomOut: e.altKey || e.button === 2
+				});
 			}
 			break;
 	}
 }
 
-	handleCanvasClick(event) {
-		if (!this.originalImageData) return;
 
-		// CRITICAL: Always use the canvas rect, regardless of what element was clicked
-		const rect = this.previewCanvas.getBoundingClientRect();
+	handleColorPickAction(x, y, event = null) {
+	if (this.currentTool !== ToolType.COLOR_PICKER) return;
 
-		// Calculate click position relative to the canvas element on screen
-		const clickX = event.clientX - rect.left;
-		const clickY = event.clientY - rect.top;
+	let layer = this.layerManager.getActiveLayer();
 
-		// Account for the difference between the element's CSS size and its actual pixel resolution
-		const scaleX = this.previewCanvas.width / rect.width;
-		const scaleY = this.previewCanvas.height / rect.height;
+	// If no layer selected, try to select a layer at this location
+	if (!layer) {
+		for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
+			const testLayer = this.layerManager.layers[i];
+			if (!testLayer.visible) continue;
 
-		const x = Math.floor(clickX * scaleX);
-		const y = Math.floor(clickY * scaleY);
+			let isHit = false;
 
-		// Bounds check
-		if (x < 0 || x >= this.previewCanvas.width || y < 0 || y >= this.previewCanvas.height) {
-			return;
-		}
-
-		// Select Tool: Pick layer at click location
-		if (this.currentTool === ToolType.SELECT) {
-			if (CONFIG.autoSelect === true && !this.justCompletedDrag) {
-				this.layerManager.handleLayerPick(x, y);
+			if (testLayer.type === LayerType.GLITTER_FILL) {
+				if (testLayer.selections && testLayer.selections.length > 0) {
+					isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
+				}
+			} else if (testLayer.type === LayerType.BASE_IMAGE) {
+				if (this.originalImage) {
+					isHit = true;
+				}
 			}
-			return;
+
+			if (isHit) {
+				this.layerManager.setActiveLayer(testLayer.id);
+				layer = testLayer;
+				break;
+			}
 		}
 
-		// Color Picker Tool
-		if (this.currentTool === ToolType.COLOR_PICKER) {
-			this.handleColorPickerClick(x, y, event);
+		if (!layer) {
+			this.updateStatus('Please select the Base Image or a Glitter Layer.');
 			return;
 		}
 	}
+
+	// Handle based on selected layer type
+	if (layer.type === LayerType.GLITTER_FILL) {
+		this.glitterFillSelector(x, y, event);
+
+	} else if (layer.type === LayerType.BASE_IMAGE) {
+		if (CONFIG.autoCreateGlitterLayer) {
+			const newLayer = this.glitterManager.createLayer();
+			this.layerManager.insertLayer(newLayer);
+			this.glitterFillSelector(x, y, event);
+		} else {
+			this.updateStatus('Please create a glitter layer first');
+		}
+
+	} else if (layer.type === LayerType.STICKER) {
+		const hitSticker = this.layerManager.isPointInSticker(layer, x, y);
+
+		if (hitSticker) {
+			this.updateStatus('Color Picker disabled on Sticker layers.');
+			return;
+		}
+
+		let glitterLayer = null;
+
+		for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
+			const testLayer = this.layerManager.layers[i];
+			if (!testLayer.visible || testLayer.type !== LayerType.GLITTER_FILL) continue;
+
+			if (testLayer.selections && testLayer.selections.length > 0) {
+				const isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
+				if (isHit) {
+					glitterLayer = testLayer;
+					break;
+				}
+			}
+		}
+
+		if (glitterLayer) {
+			this.layerManager.setActiveLayer(glitterLayer.id);
+		} else {
+			const newLayer = this.glitterManager.createLayer();
+			this.layerManager.insertLayer(newLayer);
+		}
+
+		this.glitterFillSelector(x, y, event);
+	}
+}
+
+handleLayerSelectAction(x, y) {
+	if (this.currentTool !== ToolType.SELECT) return;
+	if (!CONFIG.autoSelect || this.justCompletedDrag) return;
+
+	this.layerManager.handleLayerPick(x, y);
+}
+
+handleZoomAction(clientX, clientY, options = {}) {
+	if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
+
+	if (options.zoomOut) {
+		this.viewport.zoomOut(clientX, clientY);
+	} else {
+		this.viewport.zoomIn(clientX, clientY);
+	}
+
+	this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
+}
+
+
 
 handleCanvasZoomClick(event) {
 	if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
@@ -3218,91 +3311,7 @@ handleCanvasZoomClick(event) {
 	}
 }
 
-	handleColorPickerClick(x, y, event) {
-		let layer = this.layerManager.getActiveLayer();
 
-		// If no layer selected, try to select a layer at this location
-		if (!layer) {
-			for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
-				const testLayer = this.layerManager.layers[i];
-				if (!testLayer.visible) continue;
-
-				let isHit = false;
-
-				if (testLayer.type === LayerType.GLITTER_FILL) {
-					if (testLayer.selections && testLayer.selections.length > 0) {
-						isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
-					}
-				} else if (testLayer.type === LayerType.BASE_IMAGE) {
-					if (this.originalImage) {
-						isHit = true;
-					}
-				}
-
-				if (isHit) {
-					this.layerManager.setActiveLayer(testLayer.id);
-					layer = testLayer;
-					break;
-				}
-			}
-
-			if (!layer) {
-				this.updateStatus('Please select the Base Image or a Glitter Layer.');
-				return;
-			}
-		}
-
-		// Handle based on selected layer type
-		if (layer.type === LayerType.GLITTER_FILL) {
-			// Always add to glitter layer
-			this.glitterFillSelector(x, y, event);
-
-		} else if (layer.type === LayerType.BASE_IMAGE) {
-			// Check config for auto-creation
-			if (CONFIG.autoCreateGlitterLayer) {
-				const newLayer = this.glitterManager.createLayer();
-				this.layerManager.insertLayer(newLayer);
-				this.glitterFillSelector(x, y, event);
-			} else {
-				this.updateStatus('Please create a glitter layer first');
-			}
-
-		} else if (layer.type === LayerType.STICKER) {
-			// Check if click is actually on the sticker
-			const hitSticker = this.layerManager.isPointInSticker(layer, x, y);
-
-			if (hitSticker) {
-				// Clicking on sticker itself - disabled
-				this.updateStatus('Color Picker disabled on Sticker layers.');
-				return;
-			}
-
-			// Clicking outside sticker - find/create glitter layer at this location
-			let glitterLayer = null;
-
-			for (let i = this.layerManager.layers.length - 1; i >= 0; i--) {
-				const testLayer = this.layerManager.layers[i];
-				if (!testLayer.visible || testLayer.type !== LayerType.GLITTER_FILL) continue;
-
-				if (testLayer.selections && testLayer.selections.length > 0) {
-					const isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
-					if (isHit) {
-						glitterLayer = testLayer;
-						break;
-					}
-				}
-			}
-
-			if (glitterLayer) {
-				this.layerManager.setActiveLayer(glitterLayer.id);
-			} else {
-				const newLayer = this.glitterManager.createLayer();
-				this.layerManager.insertLayer(newLayer);
-			}
-
-			this.glitterFillSelector(x, y, event);
-		}
-	}
 
 	glitterFillSelector(x, y, event) {
 		let layer = this.layerManager.getActiveLayer();
