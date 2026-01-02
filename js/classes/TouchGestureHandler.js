@@ -11,8 +11,9 @@ class TouchGestureHandler {
 		this.callbacks = callbacks;
 
 		// Gesture state machine
-		this.state = 'idle'; // idle, single_pan, pinch_zoom, two_pan
+		this.state = 'idle';
 		this.gestureLockedUntilRelease = false;
+		this.everEnteredGesture = false; // NEW: Track if we started any gesture
 
 		// Touch tracking
 		this.touches = new Map();
@@ -220,47 +221,47 @@ class TouchGestureHandler {
 		}
 	}
 
-	handleTouchEnd(e) {
-		// CRITICAL: Stop propagation for sticker elements
-		if (this.preventPropagation) {
-			e.stopPropagation();
-		}
-
-		// SIMPLE TAP DETECTION: Check if this was a simple tap
-		const wasSimpleTap = this.isSimpleTap && 
-			this.touches.size === 1 && 
-			(Date.now() - this.tapStartTime) <= this.tapMaxDuration &&
-			this.totalMovement <= this.tapMaxMovement;
-
-		if (wasSimpleTap && this.callbacks.onSimpleTap) {
-			const touch = Array.from(this.touches.values())[0];
-			console.log('✅ Simple tap detected at', touch.x, touch.y);
-			this.callbacks.onSimpleTap(touch.x, touch.y);
-		}
-
-		// Remove ended touches
-		for (let touch of e.changedTouches) {
-			this.touches.delete(touch.identifier);
-		}
-
-		this.updateStableTouchCount();
-		const touchCount = this.touches.size;
-
-		// If all touches are released, reset completely
-		if (touchCount === 0) {
-			this.state = 'idle';
-			this.gestureLockedUntilRelease = false;
-			this.touchCountHistory = [];
-			this.stableTouchCount = 0;
-			this.isSimpleTap = true; // Reset for next gesture
-
-			if (this.callbacks.onGestureEnd) {
-				this.callbacks.onGestureEnd();
-			}
-		}
-		// REMOVED: The "else if" that locked gesture when dropping below 2 fingers
-		// This was preventing viewport pinch zoom after sticker interaction
+handleTouchEnd(e) {
+	// CRITICAL: Stop propagation for sticker elements
+	if (this.preventPropagation) {
+		e.stopPropagation();
 	}
+
+	// SIMPLE TAP DETECTION: Check if this was a simple tap
+	const wasSimpleTap = this.isSimpleTap && 
+		this.touches.size === 1 && 
+		!this.everEnteredGesture && // NEW: Only tap if we NEVER started a gesture
+		(Date.now() - this.tapStartTime) <= this.tapMaxDuration &&
+		this.totalMovement <= this.tapMaxMovement;
+
+	if (wasSimpleTap && this.callbacks.onSimpleTap) {
+		const touch = Array.from(this.touches.values())[0];
+		console.log('✅ Simple tap detected at', touch.x, touch.y);
+		this.callbacks.onSimpleTap(touch.x, touch.y);
+	}
+
+	// Remove ended touches
+	for (let touch of e.changedTouches) {
+		this.touches.delete(touch.identifier);
+	}
+
+	this.updateStableTouchCount();
+	const touchCount = this.touches.size;
+
+	// If all touches are released, reset completely
+	if (touchCount === 0) {
+		this.state = 'idle';
+		this.gestureLockedUntilRelease = false;
+		this.touchCountHistory = [];
+		this.stableTouchCount = 0;
+		this.isSimpleTap = true; // Reset for next gesture
+		this.everEnteredGesture = false; // NEW: Reset for next gesture
+
+		if (this.callbacks.onGestureEnd) {
+			this.callbacks.onGestureEnd();
+		}
+	}
+}
 
 	handleTouchCancel(e) {
 		// Treat cancel the same as end
@@ -269,14 +270,15 @@ class TouchGestureHandler {
 
 	// ===== SINGLE FINGER PAN =====
 
-	startSinglePan() {
-		this.state = 'single_pan';
-		this.gestureLockedUntilRelease = true;
+startSinglePan() {
+	this.state = 'single_pan';
+	this.gestureLockedUntilRelease = true;
+	this.everEnteredGesture = true; // NEW: We started panning
 
-		if (this.callbacks.onGestureStart) {
-			this.callbacks.onGestureStart('single_pan');
-		}
+	if (this.callbacks.onGestureStart) {
+		this.callbacks.onGestureStart('single_pan');
 	}
+}
 
 	updateSinglePan() {
 		const touch = Array.from(this.touches.values())[0];
@@ -292,29 +294,30 @@ class TouchGestureHandler {
 
 	// ===== TWO FINGER GESTURES =====
 
-	startTwoFingerGesture() {
-		const touchArray = Array.from(this.touches.values());
-		if (touchArray.length < 2) return;
+startTwoFingerGesture() {
+	const touchArray = Array.from(this.touches.values());
+	if (touchArray.length < 2) return;
 
-		const [touch1, touch2] = touchArray;
+	const [touch1, touch2] = touchArray;
 
-		// Calculate initial metrics
-		this.startData.distance = this.getTouchDistance(touch1, touch2);
-		this.startData.angle = this.getTouchAngle(touch1, touch2);
-		this.startData.centerX = (touch1.x + touch2.x) / 2;
-		this.startData.centerY = (touch1.y + touch2.y) / 2;
+	// Calculate initial metrics
+	this.startData.distance = this.getTouchDistance(touch1, touch2);
+	this.startData.angle = this.getTouchAngle(touch1, touch2);
+	this.startData.centerX = (touch1.x + touch2.x) / 2;
+	this.startData.centerY = (touch1.y + touch2.y) / 2;
 
-		// Copy to lastData
-		this.lastData = { ...this.startData };
+	// Copy to lastData
+	this.lastData = { ...this.startData };
 
-		// Start in two_pan state, we'll switch to pinch if needed
-		this.state = 'two_pan';
-		this.gestureLockedUntilRelease = true;
+	// Start in two_pan state, we'll switch to pinch if needed
+	this.state = 'two_pan';
+	this.gestureLockedUntilRelease = true;
+	this.everEnteredGesture = true; // NEW: We started two-finger gesture
 
-		if (this.callbacks.onGestureStart) {
-			this.callbacks.onGestureStart('two_finger');
-		}
+	if (this.callbacks.onGestureStart) {
+		this.callbacks.onGestureStart('two_finger');
 	}
+}
 
 	updateTwoFingerGesture() {
 		const touchArray = Array.from(this.touches.values());
