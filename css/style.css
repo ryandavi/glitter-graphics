@@ -31,6 +31,8 @@
   --color-text-primary: var(--gray-100);
   --color-text-secondary: var(--gray-200);
   --color-text-tertiary: var(--gray-300);
+  --color-bg-translucent: rgb(26, 26, 26, .95);
+  --color-shadow: rgba(0, 0, 0, 0.25);
   --color-accent: var(--blue-200);
   --color-accent-hover: var(--blue-300);
   --color-accent-light: var(--blue-100);
@@ -1956,7 +1958,7 @@ body.tool-select .preview-canvas {
   left: 50%;
   transform: translateX(-50%);
   border-radius: var(--radius-sm);
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
   padding: var(--spacing-sm);
   pointer-events: auto;
@@ -2020,7 +2022,7 @@ body.tool-select .preview-canvas {
   gap: var(--spacing-sm);
   z-index: 10;
   border-radius: var(--radius-sm);
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
   padding: var(--spacing-sm);
   pointer-events: auto;
@@ -2116,21 +2118,20 @@ body.tool-select .preview-canvas {
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.95);
-  border: 1px solid var(--color-border-hover);
-  border-radius: var(--radius-lg);
   padding: var(--spacing-lg);
-  z-index: 10000;
-  box-shadow: 0 10px var(--icon-size) rgba(0, 0, 0, 0.5);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--transition-base);
   width: 100%;
-  min-width: 200px;
-  /* Fallback for older browsers */
-  max-width: 90vw;
-  /* Modern browsers with dynamic viewport */
-  max-width: 90dvw;
+  min-width: 100px;
+  max-width: 300px;
+  background: var(--color-bg-translucent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  z-index: 10000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  transition: all var(--transition-base);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
 }
 .export-progress.visible {
   opacity: 1;
@@ -3433,7 +3434,7 @@ body.tool-select .preview-canvas {
     display: none;
     padding: var(--spacing-sm);
     border-radius: var(--radius-sm);
-    background: var(--color-bg-secondary);
+    background: var(--color-bg-translucent);
     border: 1px solid var(--color-border);
     padding: var(--spacing-sm);
     pointer-events: auto;
@@ -3775,6 +3776,12 @@ body.tool-select .preview-canvas {
   body.mobile-preview-tab:not(.has-layer-settings) .mobile-settings-drawer {
     transform: translateY(100%);
   }
+  .export-progress {
+    /* Fallback for older browsers */
+    max-width: 90vw;
+    /* Modern browsers with dynamic viewport */
+    max-width: 90dvw;
+  }
   .desktop-only {
     display: none !important;
   }
@@ -3950,17 +3957,20 @@ body.tool-select .preview-canvas {
   align-items: flex-start;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   pointer-events: auto;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  background: var(--color-bg-translucent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  z-index: 10000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  transition: all var(--transition-base);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
 }
 .helpful-message:hover {
   border-color: var(--color-border-hover);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 2px var(--color-shadow);
 }
 .helpful-message.visible {
   display: flex;
@@ -4038,10 +4048,12 @@ body.tool-select .preview-canvas {
   transition: all var(--transition-fast);
   white-space: nowrap;
   pointer-events: auto;
+  outline: 1px solid transparent;
 }
 .helpful-message .helpful-message-disable:hover {
-  background: var(--color-bg-hover);
+  background: var(--color-bg-secondary);
   color: var(--color-text-primary);
+  outline: 1px solid var(--color-border-hover);
 }
 .helpful-message .helpful-message-close {
   flex-shrink: 0;
@@ -4062,7 +4074,7 @@ body.tool-select .preview-canvas {
   display: none;
 }
 .helpful-message .helpful-message-close:hover {
-  background: var(--color-bg-hover);
+  background: var(--color-bg-secondary);
   color: var(--color-text-primary);
 }
 
