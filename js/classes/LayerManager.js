@@ -662,6 +662,24 @@ handleLayerPick(x, y) {
 		dragHandle.className = 'layer-drag-handle';
 
 		// Only show drag handle icon if not locked
+
+		dragHandle.innerHTML = `
+
+
+				<div class="icon icon-wrapper ${!layer.locked ? 'active' : ''}">
+					<svg class="icon">
+						<use href="#icon-grip-vertical"></use>
+					</svg>
+					<span class="name">About</span>
+				</div>
+
+
+
+		`;
+
+
+
+		/*
 		if (!layer.locked) {
 			dragHandle.innerHTML = `
                 <svg class="icon" viewBox="0 0 24 24">
@@ -672,6 +690,7 @@ handleLayerPick(x, y) {
 			// Optional: You can leave it empty, or add a small lock indicator here too
 			dragHandle.style.cursor = 'default';
 		}
+			*/
 
 		// 2. Swatch (Thumbnail)
 		const swatch = document.createElement('div');

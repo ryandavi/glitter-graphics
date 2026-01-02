@@ -81,7 +81,7 @@
   --color-filter-chip-size: var(--icon-size-sm);
   /* MOBILE */
   --mobile-menu-height: 60px;
-  --mobile-header-height: 60px;
+  --mobile-header-height: 50px;
   --mobile-top-nav-height: 50px;
   --mobile-bottom-nav-height: 60px;
   --mobile-drawer-height: 50vh;
@@ -1080,7 +1080,7 @@ input[type=range]::-moz-range-thumb {
 .layers-section > .layers-list > .layer-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   padding: var(--spacing-base);
   background: var(--color-bg-tertiary);
   border: 2px solid transparent;
@@ -1196,19 +1196,21 @@ input[type=range]::-moz-range-thumb {
 }
 .layers-section > .layers-list > .layer-item > .layer-drag-handle {
   display: none;
-  width: 24px;
   height: var(--icon-size-sm);
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   cursor: grab;
   color: var(--color-text-secondary);
-  opacity: 0.5;
   transition: opacity var(--transition-fast);
 }
-.layers-section > .layers-list > .layer-item > .layer-drag-handle .icon {
+.layers-section > .layers-list > .layer-item > .layer-drag-handle > .icon > .icon {
   width: 16px;
   height: 16px;
+}
+.layers-section > .layers-list > .layer-item > .layer-drag-handle > .icon:not(.active) {
+  opacity: 0.2;
+  cursor: default;
 }
 .layers-section > .layers-list > .layer-item > .layer-drag-handle:active {
   cursor: grabbing;
@@ -3376,6 +3378,9 @@ body.tool-select .preview-canvas {
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
+  }
+  .app-container > .app-header {
+    height: var(--mobile-header-height);
   }
   .header {
     flex-shrink: 0;

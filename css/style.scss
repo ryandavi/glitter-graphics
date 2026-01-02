@@ -100,7 +100,7 @@
 
 	/* MOBILE */
 	--mobile-menu-height: 60px;
-	--mobile-header-height: 60px;
+	--mobile-header-height: 50px;
 	--mobile-top-nav-height: 50px;
 	--mobile-bottom-nav-height: 60px;
 	--mobile-drawer-height: 50vh;
@@ -1174,7 +1174,7 @@ input[type="range"] {
 		>.layer-item {
 			display: flex;
 			align-items: center;
-			gap: var(--spacing-md);
+			gap: var(--spacing-sm);
 			padding: var(--spacing-base);
 			background: var(--color-bg-tertiary);
 			border: 2px solid transparent;
@@ -1293,7 +1293,6 @@ input[type="range"] {
 					width: var(--icon-size-sm);
 					height: var(--icon-size-sm);
 
-
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -1325,21 +1324,31 @@ input[type="range"] {
 
 			>.layer-drag-handle {
 				display: none; // Hidden on desktop
-				width: 24px;
 				height: var(--icon-size-sm);
 				align-items: center;
 				justify-content: center;
 				flex-shrink: 0;
 				cursor: grab;
 				color: var(--color-text-secondary);
-				opacity: 0.5;
+
 				transition: opacity var(--transition-fast);
 
 
 
-				.icon {
-					width: 16px;
-					height: 16px;
+
+
+
+				> .icon {
+
+					>.icon {
+						width: 16px;
+						height: 16px;
+					}
+
+					&:not(.active){
+						opacity: .2;
+						cursor: default;
+					}
 				}
 
 				&:active {
@@ -4258,6 +4267,11 @@ body.tool-select {
 		height: 100vh;
 		height: 100dvh;
 		overflow: hidden;
+		>.app-header {
+			height: var(--mobile-header-height);
+		}
+
+
 	}
 
 	.header {
