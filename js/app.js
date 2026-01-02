@@ -1881,17 +1881,21 @@ class GlitterEditor {
 		this.modalManager = new ModalManager();
 
 		// Simple modals (inline content)
-		this.modalManager
-			.register('shortcutsModal', {
-				openBtnId: 'shortcutsBtn',
-				closeBtnId: 'closeShortcutsModal',
-				resetScrollOnOpen: true
-			})
-			.register('settingsModal', {
-				openBtnId: 'settingsBtn',
-				closeBtnId: 'closeSettingsModal',
-				resetScrollOnOpen: true
-			});
+	this.modalManager
+		.register('shortcutsModal', {
+			openBtnId: 'shortcutsBtn',
+			closeBtnId: 'closeShortcutsModal',
+			resetScrollOnOpen: true
+		})
+		.register('settingsModal', {
+			openBtnId: 'settingsBtn',
+			closeBtnId: 'closeSettingsModal',
+			resetScrollOnOpen: true
+		})
+		.register('exportPreviewModal', {  // ADD THIS
+			closeBtnId: 'closeExportPreviewModal',
+			resetScrollOnOpen: false
+		});
 
 		// External content modals with utils.js initialization
 		this.modalManager

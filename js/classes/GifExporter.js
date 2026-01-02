@@ -1090,43 +1090,43 @@ layers.forEach((layer) => {
 		});
 	}
 
-	_calculateTotalFrames(layers, library, maxFrames, smartFrameReduction = false) {
-		const layerFrameCounts = new Map();
+_calculateTotalFrames(layers, library, maxFrames, smartFrameReduction = false) {
+	const layerFrameCounts = new Map();
 
-		layers.forEach(l => {
-			let count = 1;
-			if (l.type === LayerType.GLITTER_FILL) {
-				const glitter = library.find(g => g.id === l.selectedGlitterId);
-				if (glitter?.frames?.frames) {
-					count = glitter.frames.frames.length;
-				}
-			} else if (l.type === LayerType.STICKER) {
-				if (l.stickerData.isAnimated && l.stickerData.frames?.frames) {
-					count = l.stickerData.frames.frames.length;
-				}
+	layers.forEach(l => {
+		let count = 1;
+		if (l.type === LayerType.GLITTER_FILL) {
+			const glitter = library.find(g => g.id === l.selectedGlitterId);
+			if (glitter?.frames?.frames) {
+				count = glitter.frames.frames.length;
 			}
-			layerFrameCounts.set(l.id, count);
-		});
-
-		if (layerFrameCounts.size === 0) {
-			if (this.config.debug) console.warn('[GifExporter] No valid layers, defaulting to 1 frame');
-			return { totalFrames: 1, frameMap: new Map(), reductions: [] };
-		}
-
-		// Apply smart reduction or standard LCM
-		const result = smartFrameReduction
-			? this._smartReduceFrames(layerFrameCounts, maxFrames)
-			: this._standardLCM(layerFrameCounts, maxFrames);
-
-		if (this.config.debug) {
-			console.log('[GifExporter] Calculated total frames:', result.totalFrames);
-			if (result.reductions.length > 0) {
-				console.log('[GifExporter] Smart reductions applied:', result.reductions);
+		} else if (l.type === LayerType.STICKER) {
+			if (l.stickerData.isAnimated && l.stickerData.frames?.frames) {
+				count = l.stickerData.frames.frames.length;
 			}
 		}
+		layerFrameCounts.set(l.id, count);
+	});
 
-		return result;
+	if (layerFrameCounts.size === 0) {
+		if (this.config.debug) console.warn('[GifExporter] No valid layers, defaulting to 1 frame');
+		return { totalFrames: 1, frameMap: new Map(), reductions: [] };
 	}
+
+	// Apply smart reduction or standard LCM
+	const result = smartFrameReduction
+		? this._smartReduceFrames(layerFrameCounts, maxFrames, layers) // PASS LAYERS
+		: this._standardLCM(layerFrameCounts, maxFrames);
+
+	if (this.config.debug) {
+		console.log('[GifExporter] Calculated total frames:', result.totalFrames);
+		if (result.reductions.length > 0) {
+			console.log('[GifExporter] Smart reductions applied:', result.reductions);
+		}
+	}
+
+	return result;
+}
 
 	_standardLCM(layerFrameCounts, maxFrames) {
 		const counts = Array.from(layerFrameCounts.values()).filter(c => c > 0);
@@ -1145,75 +1145,96 @@ layers.forEach((layer) => {
 		};
 	}
 
-	_smartReduceFrames(layerFrameCounts, maxFrames) {
-		const reductions = [];
-		let reducedCounts = new Map(layerFrameCounts);
+_smartReduceFrames(layerFrameCounts, maxFrames, layers) {
+	const reductions = [];
+	let reducedCounts = new Map(layerFrameCounts);
 
-		// Step 1: Round to multiples of 3 (if close)
+	// Check if we have glitter layers with multiple frames
+	const hasMultiFrameGlitter = layers.some(layer => 
+		layer.type === LayerType.GLITTER_FILL && layerFrameCounts.get(layer.id) > 1
+	);
+
+	// Step 1: Round to multiples of 3 ONLY if there are multi-frame glitter layers AND it helps
+	if (hasMultiFrameGlitter) {
+		// Calculate original LCM first
+		const originalCounts = Array.from(reducedCounts.values()).filter(c => c > 0);
+		const originalLCM = originalCounts.reduce((acc, val) => this.lcm(acc, val), originalCounts[0]);
+
 		layerFrameCounts.forEach((originalCount, layerId) => {
 			const nearestMultipleOf3 = Math.round(originalCount / 3) * 3;
 			const difference = Math.abs(originalCount - nearestMultipleOf3);
 			const percentDiff = difference / originalCount;
 
+			// Only round if within 20% AND nearestMultipleOf3 is valid
 			if (nearestMultipleOf3 > 0 && percentDiff <= 0.20 && nearestMultipleOf3 !== originalCount) {
-				reducedCounts.set(layerId, nearestMultipleOf3);
-				reductions.push({
-					layerId,
-					original: originalCount,
-					reduced: nearestMultipleOf3,
-					reason: 'rounded-to-multiple-of-3'
-				});
-			}
-		});
-
-		// Step 2: Calculate initial LCM
-		let counts = Array.from(reducedCounts.values()).filter(c => c > 0);
-		let totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
-
-		// Step 3: Cap individual animations based on their size
-		reducedCounts.forEach((count, layerId) => {
-			let targetCap = null;
-
-			if (count > 60) {
-				// Very long animations: cap at 30
-				targetCap = 30;
-			} else if (count > 36) {
-				// Long animations: cap at 24
-				targetCap = 24;
-			} else if (count > 24) {
-				// Medium-long: cap at 18
-				targetCap = 18;
-			}
-
-			if (targetCap && count > targetCap) {
-				const newCount = targetCap;
-				reducedCounts.set(layerId, newCount);
-
-				const existingIdx = reductions.findIndex(r => r.layerId === layerId);
-				if (existingIdx >= 0) {
-					reductions[existingIdx].reduced = newCount;
-					reductions[existingIdx].reason = 'capped-at-' + targetCap;
-				} else {
+				// Test if this reduction would help the final LCM
+				const testMap = new Map(reducedCounts);
+				testMap.set(layerId, nearestMultipleOf3);
+				const testCounts = Array.from(testMap.values()).filter(c => c > 0);
+				const testLCM = testCounts.reduce((acc, val) => this.lcm(acc, val), testCounts[0]);
+				
+				// Only apply if it reduces LCM by at least 10%
+				if (testLCM < originalLCM * 0.9) {
+					reducedCounts.set(layerId, nearestMultipleOf3);
 					reductions.push({
 						layerId,
-						original: layerFrameCounts.get(layerId),
-						reduced: newCount,
-						reason: 'capped-at-' + targetCap
+						original: originalCount,
+						reduced: nearestMultipleOf3,
+						reason: 'rounded-to-multiple-of-3'
 					});
 				}
 			}
 		});
-
-		// Recalculate final LCM
-		counts = Array.from(reducedCounts.values()).filter(c => c > 0);
-		totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
-
-		return {
-			totalFrames: Math.min(totalFrames, maxFrames),
-			frameMap: reducedCounts,
-			reductions
-		};
 	}
+
+	// Step 2: Calculate initial LCM
+	let counts = Array.from(reducedCounts.values()).filter(c => c > 0);
+	let totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
+
+	// Step 3: Cap individual animations based on their size
+	reducedCounts.forEach((count, layerId) => {
+		let targetCap = null;
+
+		if (count > 60) {
+			// Very long animations: cap at 30
+			targetCap = 30;
+		} else if (count > 36) {
+			// Long animations: cap at 24
+			targetCap = 24;
+		} else if (count > 24) {
+			// Medium-long: cap at 18
+			targetCap = 18;
+		}
+
+		if (targetCap && count > targetCap) {
+			const newCount = targetCap;
+			reducedCounts.set(layerId, newCount);
+
+			const existingIdx = reductions.findIndex(r => r.layerId === layerId);
+			if (existingIdx >= 0) {
+				reductions[existingIdx].reduced = newCount;
+				reductions[existingIdx].reason = 'capped-at-' + targetCap;
+			} else {
+				reductions.push({
+					layerId,
+					original: layerFrameCounts.get(layerId),
+					reduced: newCount,
+					reason: 'capped-at-' + targetCap
+				});
+			}
+		}
+	});
+
+	// Recalculate final LCM
+	counts = Array.from(reducedCounts.values()).filter(c => c > 0);
+	totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
+
+	return {
+		totalFrames: Math.min(totalFrames, maxFrames),
+		frameMap: reducedCounts,
+		reductions
+	};
+}
 
 	_handleFileSave(blob, callbacks, frameCount, reductions = []) {
 		if (this.config.debug) console.log('_handleFileSave called with blob size:', blob.size);
