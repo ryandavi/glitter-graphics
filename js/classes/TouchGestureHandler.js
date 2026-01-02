@@ -2,6 +2,7 @@
 // TOUCH GESTURE HANDLER CLASS
 // Reusable touch gesture state machine for viewport and sticker interactions
 // Prevents gesture conflicts with proper locking and state transitions
+// NOW WITH SIMPLE TAP DETECTION
 // ============================================
 
 class TouchGestureHandler {
@@ -20,6 +21,15 @@ class TouchGestureHandler {
 		this.touchCountHistory = []; // Last few frames
 		this.historyLength = 3; // Number of frames to average
 		this.stableTouchCount = 0;
+
+		// SIMPLE TAP DETECTION
+		this.tapStartTime = 0;
+		this.tapStartX = 0;
+		this.tapStartY = 0;
+		this.totalMovement = 0;
+		this.isSimpleTap = true; // Assume tap until proven otherwise
+		this.tapMaxMovement = 10; // pixels
+		this.tapMaxDuration = 300; // milliseconds
 
 		// Gesture data
 		this.startData = {
@@ -44,13 +54,13 @@ class TouchGestureHandler {
 		this.setupEventListeners();
 	}
 
-setupEventListeners() {
-	const capturePhase = this.callbacks.capturePhase || false;
-	this.element.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false, capture: capturePhase });
-	this.element.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false, capture: capturePhase });
-	this.element.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false, capture: capturePhase });
-	this.element.addEventListener('touchcancel', (e) => this.handleTouchCancel(e), { passive: false, capture: capturePhase });
-}
+	setupEventListeners() {
+		const capturePhase = this.callbacks.capturePhase || false;
+		this.element.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false, capture: capturePhase });
+		this.element.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false, capture: capturePhase });
+		this.element.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false, capture: capturePhase });
+		this.element.addEventListener('touchcancel', (e) => this.handleTouchCancel(e), { passive: false, capture: capturePhase });
+	}
 
 	// Update touch count with stability checking
 	updateStableTouchCount() {
@@ -65,82 +75,116 @@ setupEventListeners() {
 		this.stableTouchCount = Math.max(...this.touchCountHistory);
 	}
 
-handleTouchStart(e) {
-    // CRITICAL: Stop propagation for sticker elements
-    if (this.preventPropagation) {
-        e.stopPropagation();
-    }
-    
-    // ALWAYS prevent default for viewport touch gestures
-    if (!this.preventPropagation && e.touches.length >= 2) {
-        e.preventDefault();
-    }
+	handleTouchStart(e) {
+		// CRITICAL: Stop propagation for sticker elements
+		if (this.preventPropagation) {
+			e.stopPropagation();
+		}
 
-    // NEW: If this is a viewport handler and touch started on a sticker, ignore it
-    if (!this.preventPropagation && this.callbacks.capturePhase) {
-        // Check if any touch is starting on a sticker element
-        for (let touch of e.changedTouches) {
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (target && target.closest('.sticker-element')) {
-                console.log('🌍 VIEWPORT: Ignoring touch on sticker element');
-                return; // Don't process this touch at all
-            }
-        }
-    }
+		// ALWAYS prevent default for viewport touch gestures
+		if (!this.preventPropagation && e.touches.length >= 2) {
+			e.preventDefault();
+		}
 
-    // NEW: Ignore touches on UI controls
-    if (!this.preventPropagation) {
-        for (let touch of e.changedTouches) {
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (target && target.closest('.ui-ignore-gestures')) {
-                console.log('🌍 VIEWPORT: Ignoring touch on UI control');
-                return; // Don't process touches on UI elements
-            }
-        }
-    }
+		// NEW: If this is a viewport handler and touch started on a sticker, ignore it
+		if (!this.preventPropagation && this.callbacks.capturePhase) {
+			// Check if any touch is starting on a sticker element
+			for (let touch of e.changedTouches) {
+				const target = document.elementFromPoint(touch.clientX, touch.clientY);
+				if (target && target.closest('.sticker-element')) {
+					console.log('🌍 VIEWPORT: Ignoring touch on sticker element');
+					return; // Don't process this touch at all
+				}
+			}
+		}
 
-	// Add all new touches to our tracking
-	for (let touch of e.changedTouches) {
-		this.touches.set(touch.identifier, {
-			x: touch.clientX,
-			y: touch.clientY,
-			startX: touch.clientX,
-			startY: touch.clientY,
-			prevX: touch.clientX,
-			prevY: touch.clientY
-		});
+		// NEW: Ignore touches on UI controls
+		if (!this.preventPropagation) {
+			for (let touch of e.changedTouches) {
+				const target = document.elementFromPoint(touch.clientX, touch.clientY);
+				if (target && target.closest('.ui-ignore-gestures')) {
+					console.log('🌍 VIEWPORT: Ignoring touch on UI control');
+					return; // Don't process touches on UI elements
+				}
+			}
+		}
+
+		// SIMPLE TAP DETECTION: Reset tap tracking on new touch start
+		if (e.touches.length === 1 && this.touches.size === 0) {
+			const touch = e.changedTouches[0];
+			this.tapStartTime = Date.now();
+			this.tapStartX = touch.clientX;
+			this.tapStartY = touch.clientY;
+			this.totalMovement = 0;
+			this.isSimpleTap = true;
+		} else {
+			// More than one touch = not a simple tap
+			this.isSimpleTap = false;
+		}
+
+		// Add all new touches to our tracking
+		for (let touch of e.changedTouches) {
+			this.touches.set(touch.identifier, {
+				x: touch.clientX,
+				y: touch.clientY,
+				startX: touch.clientX,
+				startY: touch.clientY,
+				prevX: touch.clientX,
+				prevY: touch.clientY
+			});
+		}
+
+		this.updateStableTouchCount();
+		const touchCount = this.stableTouchCount;
+
+		// CRITICAL FIX: Allow transition from single-pan to two-finger gesture
+		// If we're in single-pan and a second finger comes down, upgrade to two-finger
+		if (this.state === 'single_pan' && touchCount >= 2) {
+			console.log('👆 Transitioning from single-pan to two-finger gesture');
+			this.state = 'idle'; // Reset state so we can start two-finger gesture
+			this.gestureLockedUntilRelease = false;
+			this.isSimpleTap = false; // Not a simple tap anymore
+		}
+
+		// If we're already in a gesture (and not transitioning), don't start a new one
+		if (this.gestureLockedUntilRelease) {
+			e.preventDefault();
+			return;
+		}
+
+		// Determine gesture type based on stable touch count
+		if (touchCount === 1) {
+			this.startSinglePan();
+		} else if (touchCount >= 2) {
+			e.preventDefault();
+			this.startTwoFingerGesture();
+			this.isSimpleTap = false; // Two fingers = not a tap
+		}
 	}
-
-	this.updateStableTouchCount();
-	const touchCount = this.stableTouchCount;
-
-	// CRITICAL FIX: Allow transition from single-pan to two-finger gesture
-	// If we're in single-pan and a second finger comes down, upgrade to two-finger
-	if (this.state === 'single_pan' && touchCount >= 2) {
-		console.log('👆 Transitioning from single-pan to two-finger gesture');
-		this.state = 'idle'; // Reset state so we can start two-finger gesture
-		this.gestureLockedUntilRelease = false;
-	}
-
-	// If we're already in a gesture (and not transitioning), don't start a new one
-	if (this.gestureLockedUntilRelease) {
-		e.preventDefault();
-		return;
-	}
-
-	// Determine gesture type based on stable touch count
-	if (touchCount === 1) {
-		this.startSinglePan();
-	} else if (touchCount >= 2) {
-		e.preventDefault();
-		this.startTwoFingerGesture();
-	}
-}
 
 	handleTouchMove(e) {
 		// CRITICAL: Stop propagation for sticker elements
 		if (this.preventPropagation) {
 			e.stopPropagation();
+		}
+
+		// SIMPLE TAP DETECTION: Track total movement
+		if (this.isSimpleTap && this.touches.size === 1) {
+			const touch = e.touches[0];
+			const deltaX = touch.clientX - this.tapStartX;
+			const deltaY = touch.clientY - this.tapStartY;
+			const movement = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+			
+			this.totalMovement += movement;
+			
+			if (this.totalMovement > this.tapMaxMovement) {
+				this.isSimpleTap = false;
+				console.log('👆 Not a simple tap - moved', this.totalMovement, 'pixels');
+			}
+			
+			// Update tap start for next frame
+			this.tapStartX = touch.clientX;
+			this.tapStartY = touch.clientY;
 		}
 
 		// Update all touch positions
@@ -182,6 +226,18 @@ handleTouchStart(e) {
 			e.stopPropagation();
 		}
 
+		// SIMPLE TAP DETECTION: Check if this was a simple tap
+		const wasSimpleTap = this.isSimpleTap && 
+			this.touches.size === 1 && 
+			(Date.now() - this.tapStartTime) <= this.tapMaxDuration &&
+			this.totalMovement <= this.tapMaxMovement;
+
+		if (wasSimpleTap && this.callbacks.onSimpleTap) {
+			const touch = Array.from(this.touches.values())[0];
+			console.log('✅ Simple tap detected at', touch.x, touch.y);
+			this.callbacks.onSimpleTap(touch.x, touch.y);
+		}
+
 		// Remove ended touches
 		for (let touch of e.changedTouches) {
 			this.touches.delete(touch.identifier);
@@ -196,6 +252,7 @@ handleTouchStart(e) {
 			this.gestureLockedUntilRelease = false;
 			this.touchCountHistory = [];
 			this.stableTouchCount = 0;
+			this.isSimpleTap = true; // Reset for next gesture
 
 			if (this.callbacks.onGestureEnd) {
 				this.callbacks.onGestureEnd();
@@ -259,73 +316,73 @@ handleTouchStart(e) {
 		}
 	}
 
-updateTwoFingerGesture() {
-	const touchArray = Array.from(this.touches.values());
-	if (touchArray.length < 2) return;
+	updateTwoFingerGesture() {
+		const touchArray = Array.from(this.touches.values());
+		if (touchArray.length < 2) return;
 
-	const [touch1, touch2] = touchArray;
+		const [touch1, touch2] = touchArray;
 
-	// Calculate current metrics
-	const currentDistance = this.getTouchDistance(touch1, touch2);
-	const currentAngle = this.getTouchAngle(touch1, touch2);
-	const currentCenterX = (touch1.x + touch2.x) / 2;
-	const currentCenterY = (touch1.y + touch2.y) / 2;
+		// Calculate current metrics
+		const currentDistance = this.getTouchDistance(touch1, touch2);
+		const currentAngle = this.getTouchAngle(touch1, touch2);
+		const currentCenterX = (touch1.x + touch2.x) / 2;
+		const currentCenterY = (touch1.y + touch2.y) / 2;
 
-	// Determine if we're pinching based on distance change
-	const distanceChange = Math.abs(currentDistance - this.startData.distance);
-	const isPinching = distanceChange > this.minPinchMovement;
+		// Determine if we're pinching based on distance change
+		const distanceChange = Math.abs(currentDistance - this.startData.distance);
+		const isPinching = distanceChange > this.minPinchMovement;
 
-	console.log('✌️ Two-finger state:', this.state, 'distance change:', distanceChange, 'isPinching:', isPinching);
+		console.log('✌️ Two-finger state:', this.state, 'distance change:', distanceChange, 'isPinching:', isPinching);
 
-	// Transition state if needed (only once)
-	if (this.state === 'two_pan' && isPinching) {
-		console.log('✌️ Transitioning from two_pan to pinch_zoom');
-		this.state = 'pinch_zoom';
+		// Transition state if needed (only once)
+		if (this.state === 'two_pan' && isPinching) {
+			console.log('✌️ Transitioning from two_pan to pinch_zoom');
+			this.state = 'pinch_zoom';
+		}
+
+		// Process based on state
+		if (this.state === 'pinch_zoom') {
+			// Calculate scale change since last frame
+			const scale = currentDistance / this.lastData.distance;
+
+			// Only apply if scale change is meaningful (prevents jitter)
+			if (Math.abs(scale - 1.0) > 0.001) {
+				if (this.callbacks.onPinchZoom) {
+					this.callbacks.onPinchZoom(scale, currentCenterX, currentCenterY);
+				}
+			}
+
+			// Handle rotation if enabled
+			if (this.rotationEnabled && this.callbacks.onRotate) {
+				const angleDelta = currentAngle - this.lastData.angle;
+				// Normalize angle delta to -180 to 180 range
+				const normalizedDelta = ((angleDelta + 180) % 360) - 180;
+
+				if (Math.abs(normalizedDelta) > 0.5) {
+					this.callbacks.onRotate(normalizedDelta, currentCenterX, currentCenterY);
+				}
+			}
+		} else if (this.state === 'two_pan') {
+			// Two-finger pan
+			const deltaX = currentCenterX - this.lastData.centerX;
+			const deltaY = currentCenterY - this.lastData.centerY;
+
+			console.log('✌️ Two-pan delta:', deltaX, deltaY);
+
+			// Only apply if movement is meaningful
+			if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+				if (this.callbacks.onTwoPan) {
+					this.callbacks.onTwoPan(deltaX, deltaY, currentCenterX, currentCenterY);
+				}
+			}
+		}
+
+		// Update last data
+		this.lastData.distance = currentDistance;
+		this.lastData.angle = currentAngle;
+		this.lastData.centerX = currentCenterX;
+		this.lastData.centerY = currentCenterY;
 	}
-
-	// Process based on state
-	if (this.state === 'pinch_zoom') {
-		// Calculate scale change since last frame
-		const scale = currentDistance / this.lastData.distance;
-
-		// Only apply if scale change is meaningful (prevents jitter)
-		if (Math.abs(scale - 1.0) > 0.001) {
-			if (this.callbacks.onPinchZoom) {
-				this.callbacks.onPinchZoom(scale, currentCenterX, currentCenterY);
-			}
-		}
-
-		// Handle rotation if enabled
-		if (this.rotationEnabled && this.callbacks.onRotate) {
-			const angleDelta = currentAngle - this.lastData.angle;
-			// Normalize angle delta to -180 to 180 range
-			const normalizedDelta = ((angleDelta + 180) % 360) - 180;
-
-			if (Math.abs(normalizedDelta) > 0.5) {
-				this.callbacks.onRotate(normalizedDelta, currentCenterX, currentCenterY);
-			}
-		}
-	} else if (this.state === 'two_pan') {
-		// Two-finger pan
-		const deltaX = currentCenterX - this.lastData.centerX;
-		const deltaY = currentCenterY - this.lastData.centerY;
-
-		console.log('✌️ Two-pan delta:', deltaX, deltaY);
-
-		// Only apply if movement is meaningful
-		if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
-			if (this.callbacks.onTwoPan) {
-				this.callbacks.onTwoPan(deltaX, deltaY, currentCenterX, currentCenterY);
-			}
-		}
-	}
-
-	// Update last data
-	this.lastData.distance = currentDistance;
-	this.lastData.angle = currentAngle;
-	this.lastData.centerX = currentCenterX;
-	this.lastData.centerY = currentCenterY;
-}
 
 	// ===== UTILITY METHODS =====
 
@@ -351,12 +408,18 @@ updateTwoFingerGesture() {
 		return this.state;
 	}
 
+	wasSimpleTap() {
+		return this.isSimpleTap;
+	}
+
 	reset() {
 		this.touches.clear();
 		this.state = 'idle';
 		this.gestureLockedUntilRelease = false;
 		this.touchCountHistory = [];
 		this.stableTouchCount = 0;
+		this.isSimpleTap = true;
+		this.totalMovement = 0;
 	}
 
 	destroy() {

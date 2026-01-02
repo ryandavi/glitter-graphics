@@ -2272,6 +2272,10 @@ body.tool-select .preview-canvas {
 .modal-overlay > .modal-content > .modal-header > .modal-title > .modal-icon {
   color: var(--color-text-tertiary);
 }
+.modal-overlay > .modal-content > .modal-header > .modal-close {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
 .modal-overlay > .modal-content > .modal-body {
   padding: var(--spacing-lg);
   overflow-y: auto;
@@ -2500,6 +2504,16 @@ body.tool-select .preview-canvas {
      object-fit: contain;
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+       user-select: none;
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  #exportPreviewModal .export-preview-image-container img {
+    pointer-events: auto;
+  }
 }
 #exportPreviewModal .export-preview-instructions {
   text-align: center;

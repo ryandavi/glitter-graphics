@@ -2610,7 +2610,10 @@ body.tool-select {
 
 			}
 
-			>.modal-close {}
+			>.modal-close {
+				width: var(--icon-size-sm);
+   				 height: var(--icon-size-sm);
+			}
 
 		}
 
@@ -2930,6 +2933,19 @@ body.tool-select {
 			object-fit: contain;
 			border-radius: var(--radius-sm);
 			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			user-select: none;
+			pointer-events: none; // Completely disable interaction on iOS
+			
+			// Re-enable pointer events on desktop
+			@media (hover: hover) and (pointer: fine) {
+				pointer-events: auto;
+			}
+
+
+
 		}
 	}
 

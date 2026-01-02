@@ -400,6 +400,28 @@ setupTouchGestures() {
 			this._notifyViewportChanged();
 		},
 
+		// NEW: Simple tap callback - triggers tool actions only for taps
+		onSimpleTap: (x, y) => {
+			console.log('🌍 VIEWPORT: Simple tap detected at', x, y);
+			
+			// Create synthetic event with isSimpleTap flag
+			const syntheticEvent = new PointerEvent('pointerdown', {
+				bubbles: true,
+				cancelable: true,
+				clientX: x,
+				clientY: y,
+				button: 0
+			});
+			
+			// Mark this as a verified simple tap
+			syntheticEvent.isSimpleTap = true;
+			
+			// Dispatch to editor's click handler
+			if (window.editor) {
+				window.editor.handlePreviewContainerClick(syntheticEvent);
+			}
+		},
+
 		onGestureEnd: () => {
 			console.log('🌍 VIEWPORT: Gesture ended');
 			// Clear flag after a short delay to prevent immediate layer selection

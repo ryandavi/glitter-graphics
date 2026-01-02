@@ -3086,25 +3086,22 @@ if (resetScaleY) {
 
 	// ===== CLICK HANDLERS =====
 handlePreviewContainerClick(e) {
-	// NEW: Don't handle clicks on transform handles
-	const clickedElement = e.target;
-	if (clickedElement.closest('.transform-handles') || 
-	    clickedElement.closest('.transform-handle-wrapper') ||
-	    clickedElement.classList.contains('transform-bounding-box')) {
-		return; // Let the handle's own event handler deal with it
-	}
-	
-	// Allow right-click for zoom tool, block other non-left clicks
-	if (e.pointerType === 'mouse' && e.button !== 0) {
-		// Allow right-click (button 2) only for zoom tool
-		if (!(e.button === 2 && this.currentTool === ToolType.ZOOM)) {
-			return;
-		}
+	// Early exits for wrong button or tool
+	if (e.button === 1) return;
+	if ((e.button === 2 && this.currentTool !== ToolType.ZOOM) || 
+		(e.button === 2 && this.currentTool === ToolType.ZOOM)) {
+		return;
 	}
 
-if (e.target.closest('.ui-ignore-gestures')) {
-    return;
-}
+	if (e.target.closest('.ui-ignore-gestures')) {
+		return;
+	}
+
+	// NEW: On mobile, ignore clicks if a gesture is active (not a simple tap)
+	if (this.isMobile && this.viewport.touchHandler && !e.isSimpleTap) {
+		console.log('📱 Ignoring click - gesture in progress (not a simple tap)');
+		return;
+	}
 
 	const hitSticker = e.target.closest('.sticker-element');
 
@@ -3189,22 +3186,36 @@ if (e.target.closest('.ui-ignore-gestures')) {
 		}
 	}
 
-	handleCanvasZoomClick(event) {
-		// Disable click-to-zoom on mobile
-		if (this.isMobile) return;
+handleCanvasZoomClick(event) {
+	if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
 
-		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
-
-		// Photoshop Alt-Click OR right-click to zoom out
-		if (event.altKey || event.button === 2) {
-			this.viewport.zoomOut(event.clientX, event.clientY);
-		} else {
-			this.viewport.zoomIn(event.clientX, event.clientY);
-		}
-
-		// Optional: Update status to show new zoom
-		this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
+	// On mobile, only zoom if it was a simple tap (not pan/pinch)
+	if (this.isMobile) {
+		// The viewport touch handler will call this via onSimpleTap callback
+		// So if we're here on mobile, it's already verified as a simple tap
+		console.log('📱 Mobile tap-to-zoom allowed (simple tap verified)');
 	}
+
+	// Photoshop Alt-Click OR right-click to zoom out
+	if (event.altKey || event.button === 2) {
+		this.viewport.zoomOut();
+	} else {
+		// Zoom in at the click point
+		const rect = this.previewCanvas.getBoundingClientRect();
+		const clickX = event.clientX - rect.left + this.previewContainer.scrollLeft;
+		const clickY = event.clientY - rect.top + this.previewContainer.scrollTop;
+
+		this.viewport.zoomIn();
+
+		// After zoom, try to center the clicked point
+		requestAnimationFrame(() => {
+			const newRect = this.previewCanvas.getBoundingClientRect();
+			const scrollX = (clickX * this.viewport.currentZoom) - (this.previewContainer.clientWidth / 2);
+			const scrollY = (clickY * this.viewport.currentZoom) - (this.previewContainer.clientHeight / 2);
+			this.previewContainer.scrollTo(scrollX, scrollY);
+		});
+	}
+}
 
 	handleColorPickerClick(x, y, event) {
 		let layer = this.layerManager.getActiveLayer();
