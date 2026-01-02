@@ -5278,7 +5278,7 @@ body.tool-select {
       bottom: var(--switch-padding);
       width: var(--knob-size);
       height: var(--knob-size);
-      background-color: #fff;
+      background-color: var(--color-text-primary);
       transition: var(--slider-speed);
     }
   }

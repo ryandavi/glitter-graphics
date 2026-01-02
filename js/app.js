@@ -66,6 +66,7 @@ const CONFIG = {
 	defaultStickerScale: 100,  // CORRECTED
 	defaultStickerRotation: 0,
 	rotationSnapTolerance: 5, // degrees
+	roundStickerTransforms: true,  // Round position and rotation to integers
 
 	// ========================================
 	// UI - Zoom
@@ -852,6 +853,12 @@ class GlitterEditor {
 		if (posX) posX.value = Math.round(transform.position.x);
 		if (posY) posY.value = Math.round(transform.position.y);
 
+		// Snap to Integer
+		const snapToInteger = document.getElementById('stickerSnapToInteger');
+		if (snapToInteger) {
+			snapToInteger.checked = transform.snapToInteger ?? false;
+		}
+
 		// Rotation
 		const rotation = document.getElementById('stickerRotation');
 		const rotationValue = document.getElementById('stickerRotationValue');
@@ -1410,28 +1417,34 @@ class GlitterEditor {
 	setupStickerPositionListeners() {
 		const posX = document.getElementById('stickerPosX');
 		const posY = document.getElementById('stickerPosY');
+		const snapToInteger = document.getElementById('stickerSnapToInteger');
 
-		const updatePosition = () => {
-			const layer = this.layerManager.getActiveLayer();
-			if (!layer || layer.type !== LayerType.STICKER || !this.stickerManager) return;
+		// Snap to Integer checkbox
+		if (snapToInteger) {
+			snapToInteger.addEventListener('change', (e) => {
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.STICKER) {
+					// Update the layer's snap setting
+					layer.stickerData.transform.snapToInteger = e.target.checked;
 
-			this.stickerManager.updateTransform(layer.id, {
-				position: {
-					x: parseFloat(posX.value),
-					y: parseFloat(posY.value)
+					// If enabling, immediately round current values
+					if (e.target.checked && this.stickerManager) {
+						this.stickerManager.updateTransform(layer.id, {
+							position: {
+								x: Math.round(layer.stickerData.transform.position.x),
+								y: Math.round(layer.stickerData.transform.position.y)
+							},
+							rotation: Math.round(layer.stickerData.transform.rotation)
+						});
+						this.loadStickerSettings(layer);
+					}
+					this.saveState();
 				}
 			});
-		};
-
-		if (posX) {
-			posX.addEventListener('input', updatePosition);
-			posX.addEventListener('change', () => this.saveState());
 		}
 
-		if (posY) {
-			posY.addEventListener('input', updatePosition);
-			posY.addEventListener('change', () => this.saveState());
-		}
+		// Position inputs are readonly but we can update them
+		// No listeners needed since they're readonly
 	}
 
 	setupStickerRotationListeners() {
@@ -3134,6 +3147,12 @@ class GlitterEditor {
 	handlePreviewContainerClick(e) {
 		console.log('📍 Click handler fired', e.type, e.isSimpleTap);
 
+		// 0. IGNORE IF JUST FINISHED HANDLE DRAGGING
+		if (this.ignoreNextClick) {
+			console.log('🚫 Ignoring click - just finished handle drag');
+			return;
+		}
+
 		// 1. IGNORE TRANSFORM HANDLES
 		if (e.target.closest('.transform-handles') ||
 			e.target.classList.contains('transform-bounding-box')) return;
@@ -3278,9 +3297,12 @@ class GlitterEditor {
 
 		// Handle based on selected layer type
 		if (layer.type === LayerType.GLITTER_FILL) {
+
+			// fill normally
 			this.glitterFillSelector(x, y, event);
 
 		} else if (layer.type === LayerType.BASE_IMAGE) {
+
 			if (CONFIG.autoCreateGlitterLayer) {
 				const newLayer = this.glitterManager.createLayer();
 				this.layerManager.insertLayer(newLayer);
@@ -3293,7 +3315,14 @@ class GlitterEditor {
 			const hitSticker = this.layerManager.isPointInSticker(layer, x, y);
 
 			if (hitSticker) {
-				this.updateStatus('Color Picker disabled on Sticker layers.');
+
+				if (CONFIG.autoCreateGlitterLayer) {
+					const newLayer = this.glitterManager.createLayer();
+					this.layerManager.insertLayer(newLayer);
+					this.glitterFillSelector(x, y, event);
+				}else{
+					this.updateStatus('Color Picker disabled on Sticker layers.');
+				}
 				return;
 			}
 
