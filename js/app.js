@@ -3149,6 +3149,7 @@ handlePreviewContainerClick(e) {
 			break;
 	}
 }
+
 	handleCanvasClick(event) {
 		if (!this.originalImageData) return;
 
