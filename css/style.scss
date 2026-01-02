@@ -2656,6 +2656,11 @@ body.tool-select {
 				justify-content: center;
 				gap: var(--spacing-base);
 
+				>.modal-title-text {
+					position: relative;
+   					 top: -.05em;
+				}
+
 				>.modal-icon {
 					color: var(--color-text-tertiary);
 				}

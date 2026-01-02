@@ -2293,6 +2293,10 @@ body.tool-select .preview-canvas {
   justify-content: center;
   gap: var(--spacing-base);
 }
+.modal-overlay > .modal-content > .modal-header > .modal-title > .modal-title-text {
+  position: relative;
+  top: -0.05em;
+}
 .modal-overlay > .modal-content > .modal-header > .modal-title > .modal-icon {
   color: var(--color-text-tertiary);
 }
