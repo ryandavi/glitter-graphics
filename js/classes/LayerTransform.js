@@ -149,27 +149,39 @@ class LayerTransform {
 	
 	// ===== CENTERING METHODS =====
 	
-	centerHorizontal() {
-		const canvasWidth = this.editor.originalCanvas.width;
-		const centerX = canvasWidth / 2;
-		
-		this.updateTransform({
-			position: { x: centerX }
-		});
-		
-		this.editor.saveState();
-	}
+centerHorizontal() {
+    const canvasWidth = this.editor.originalCanvas.width;
+    const centerX = canvasWidth / 2;
+    
+    this.updateTransform({
+        position: { x: centerX }
+    });
+    
+    // Re-apply transform to element
+    if (this.element) {
+        const dimensions = this.getDimensions();
+        this.applyTransform(this.element, dimensions);
+    }
+    
+    this.editor.saveState();
+}
 	
-	centerVertical() {
-		const canvasHeight = this.editor.originalCanvas.height;
-		const centerY = canvasHeight / 2;
-		
-		this.updateTransform({
-			position: { y: centerY }
-		});
-		
-		this.editor.saveState();
-	}
+centerVertical() {
+    const canvasHeight = this.editor.originalCanvas.height;
+    const centerY = canvasHeight / 2;
+    
+    this.updateTransform({
+        position: { y: centerY }
+    });
+    
+    // Re-apply transform to element
+    if (this.element) {
+        const dimensions = this.getDimensions();
+        this.applyTransform(this.element, dimensions);
+    }
+    
+    this.editor.saveState();
+}
 	
 	// ===== MOUSE DRAG HANDLING =====
 	
