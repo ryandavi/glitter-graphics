@@ -1070,7 +1070,6 @@ input[type=range]::-moz-range-thumb {
 .layers-section > .section-header {
   flex-shrink: 0;
   z-index: 100;
-  box-shadow: 0px 5px 3px 0px rgba(0, 0, 0, 0.13);
 }
 .layers-section > .layers-list {
   flex: 1 1 auto;
@@ -1236,30 +1235,21 @@ input[type=range]::-moz-range-thumb {
 .layers-section > .collapsible-section {
   position: relative;
   z-index: 100;
-  box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
 }
 
+.glitter-settings-section,
 .layer-settings-section {
   position: relative;
   z-index: 100;
-  box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
-  flex-shrink: 0;
-}
-
-.glitter-settings-section {
-  position: relative;
-  z-index: 100;
-  box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
   flex-shrink: 0;
 }
 
 .layers-section-bottom-bar {
-  box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xs);
   align-items: center;
   justify-content: flex-end;
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   background: var(--color-bg-secondary);
 }
 .layers-section-bottom-bar .icon-wrapper {
@@ -1671,7 +1661,6 @@ body.tool-select .preview-canvas {
 .design-panel > .collapsible-section {
   position: relative;
   z-index: 100;
-  box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
 }
 .design-panel[data-panel-mode=sticker] > .section > .section-header.glitter-header > .section-header-action {
   visibility: visible;
@@ -1683,7 +1672,6 @@ body.tool-select .preview-canvas {
   flex-direction: column;
   position: relative;
   z-index: 100;
-  box-shadow: 0px 5px 3px 0px rgba(0, 0, 0, 0.13);
 }
 .glitter-search > .search-toggle-row {
   display: flex;
@@ -1903,7 +1891,6 @@ body.tool-select .preview-canvas {
   display: block;
   position: relative;
   overflow: hidden;
-  background: var(--color-bg-tertiary);
   -webkit-user-select: none;
      -moz-user-select: none;
           user-select: none;
@@ -2671,7 +2658,6 @@ body.tool-select .preview-canvas {
 .sticker-settings-section {
   position: relative;
   z-index: 100;
-  box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
   flex-shrink: 0;
 }
 
@@ -4058,7 +4044,6 @@ body.tool-select .preview-canvas {
   outline: 1px solid transparent;
 }
 .helpful-message .helpful-message-disable:hover {
-  background: var(--color-bg-secondary);
   color: var(--color-text-primary);
   outline: 1px solid var(--color-border-hover);
 }
@@ -4078,7 +4063,6 @@ body.tool-select .preview-canvas {
   justify-content: center;
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
-  display: none;
 }
 .helpful-message .helpful-message-close:hover {
   background: var(--color-bg-secondary);

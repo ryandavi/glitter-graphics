@@ -2568,6 +2568,11 @@ class GlitterEditor {
 		if (closeBtn) {
 			closeBtn.addEventListener('click', (e) => {
 				e.stopPropagation(); // Prevent double-handling
+
+				// Dismiss the current hint
+				this.currentHintDismissed = true;
+				helpfulMessage.classList.remove('visible');
+
 				// The parent click handler will dismiss
 			});
 		}
