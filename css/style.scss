@@ -940,6 +940,8 @@ input[type="range"] {
 
 	@include windows7-bar();
 
+	box-shadow: 0 2px 2px var(--color-shadow);
+
 
 	>.app-header-left {
 		display: flex;

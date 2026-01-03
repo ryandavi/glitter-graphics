@@ -788,6 +788,7 @@ input[type=range]::-moz-range-thumb {
   justify-content: space-between;
   padding: var(--spacing-md);
   flex-shrink: 0;
+  box-shadow: 0 2px 2px var(--color-shadow);
 }
 .app-header.app-header {
   background-image: linear-gradient(to top, var(--gray-700) 50%, var(--gray-300) 100%);
