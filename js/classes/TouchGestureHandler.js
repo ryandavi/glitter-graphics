@@ -206,11 +206,17 @@ class TouchGestureHandler {
     }
 
 
-    handleDocumentEnd(e) {
-        // Only process touches that are tracked by THIS handler
-        for (let t of e.changedTouches) {
-            if (this.touches.has(t.identifier)) {
-                console.log('📄 Document caught orphaned touch:', t.identifier);
+handleDocumentEnd(e) {
+    // Only process touches that are tracked by THIS handler AND ended outside our element
+    for (let t of e.changedTouches) {
+        if (this.touches.has(t.identifier)) {
+            // Check if touch ended on our element
+            const target = document.elementFromPoint(t.clientX, t.clientY);
+            const endedOnElement = this.element.contains(target);
+            
+            // Only clean up if touch ended OUTSIDE our element (truly orphaned)
+            if (!endedOnElement) {
+                console.log('📄 Document caught orphaned touch:', t.identifier, '@ position', t.clientX, t.clientY);
                 // Clean up this touch
                 this.touches.delete(t.identifier);
 
@@ -223,11 +229,14 @@ class TouchGestureHandler {
                 } else if (this.touches.size < 2 && this.state === 'pinching') {
                     this.state = 'idle';
                 }
+            } else {
+                console.log('📄 Document end on element - letting handleEnd process it');
             }
         }
-
-        console.log('📄 Document end - touches remaining:', this.touches.size);
     }
+
+    console.log('📄 Document end - touches remaining:', this.touches.size);
+}
 
     // --- Helpers ---
 
