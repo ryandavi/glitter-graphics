@@ -31,7 +31,7 @@
   --color-text-primary: var(--gray-100);
   --color-text-secondary: var(--gray-200);
   --color-text-tertiary: var(--gray-300);
-  --color-bg-translucent: rgb(26, 26, 26, .95);
+  --color-bg-translucent: rgb(22 22 22 / 95%);
   --color-shadow: rgba(0, 0, 0, 0.25);
   --color-accent: var(--blue-200);
   --color-accent-hover: var(--blue-300);
@@ -71,7 +71,7 @@
   --transition-base: 0.3s;
   /* Sizes */
   --header-height: 60px;
-  --toolbar-width: 60px;
+  --toolbar-width: 50px;
   --icon-size: 30px;
   --icon-size-sm: 30px;
   --icon-size-xs: 20px;
@@ -775,6 +775,7 @@ input[type=range]::-moz-range-thumb {
   height: 100vh;
   /* Modern browsers with dynamic viewport */
   height: 100dvh;
+  background-color: var(--color-bg-secondary);
 }
 
 /* ===== HEADER ===== */
@@ -852,11 +853,11 @@ input[type=range]::-moz-range-thumb {
 /* ===== TOOLBAR ===== */
 .toolbar {
   width: var(--toolbar-width);
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-primary);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   gap: 5px;
   flex-shrink: 0;
 }
@@ -3941,7 +3942,7 @@ body.tool-select .preview-canvas {
 .helpful-message {
   display: none;
   position: absolute;
-  top: calc(60px + var(--spacing-md));
+  top: calc(44px + var(--spacing-md));
   left: 50%;
   transform: translateX(-50%);
   max-width: 400px;
@@ -4071,7 +4072,7 @@ body.tool-select .preview-canvas {
 
 @media (max-width: 800px) {
   .helpful-message {
-    top: calc(var(--mobile-top-nav-height) + var(--spacing-lg) + var(--spacing-sm));
+    top: calc(44px + var(--spacing-from-edge));
     max-width: calc(70% - var(--spacing-lg) * 2);
     min-width: 200px;
   }

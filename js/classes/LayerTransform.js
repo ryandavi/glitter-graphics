@@ -45,6 +45,11 @@ class LayerTransform {
 			`scaleY(${transform.flipY ? -1 : 1})`
 		];
 		
+		// Determine pointer-events based on tool mode
+		// Only allow interaction in SELECT tool
+		const isSelectTool = this.editor.currentTool === ToolType.SELECT;
+		const pointerEvents = (this.layer.visible && isSelectTool) ? 'auto' : 'none';
+		
 		// Apply styles
 		element.style.cssText = `
 			position: absolute;
@@ -52,7 +57,7 @@ class LayerTransform {
 			height: ${displayHeight}px;
 			transform: ${transforms.join(' ')};
 			opacity: ${transform.opacity / 100};
-			pointer-events: ${this.layer.visible ? 'auto' : 'none'};
+			pointer-events: ${pointerEvents};
 			display: ${this.layer.visible ? 'block' : 'none'};
 			z-index: ${this.editor.layerManager.getLayerZIndex(this.layer.id)};
 		`;
@@ -217,20 +222,28 @@ class LayerTransform {
 			
 			e.preventDefault();
 			
+			// Convert current mouse position to canvas coordinates
 			const currentCanvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+			
+			// Calculate delta from last position
 			const deltaX = currentCanvasPos.x - startCanvasX;
 			const deltaY = currentCanvasPos.y - startCanvasY;
 			
+			// Get current transform
 			const transform = this.getTransform();
-			const baseX = transform.position.x;
-			const baseY = transform.position.y;
 			
+			// Apply delta to current position
 			this.updateTransform({
 				position: {
-					x: baseX + deltaX,
-					y: baseY + deltaY
+					x: transform.position.x + deltaX,
+					y: transform.position.y + deltaY
 				}
 			});
+			
+			// ✅ CRITICAL: Update start position for next frame
+			// Without this, delta accumulates and sticker flies away!
+			startCanvasX = currentCanvasPos.x;
+			startCanvasY = currentCanvasPos.y;
 			
 			// Re-apply transform to element
 			const dimensions = this.getDimensions();
@@ -269,13 +282,22 @@ class LayerTransform {
 		let startTransform = null;
 		
 		const handler = new TouchGestureHandler(element, {
-			preventPropagation: true,
+			// CRITICAL: Don't prevent default when using non-SELECT tools
+			// This allows simple taps to pass through to the canvas
+			preventPropagation: false,  // Let events bubble up
+			
+			// Skip sticker touches entirely when not in SELECT tool
+			shouldIgnoreTarget: (target) => {
+				if (this.editor.currentTool !== ToolType.SELECT) {
+					console.log('🎯 LayerTransform: Ignoring touch - not SELECT tool');
+					return true;  // Let the touch pass through to canvas
+				}
+				return false;
+			},
 			
 			onGestureStart: (gestureType) => {
-				// Don't select when using pan, zoom, or color picker tools
-				if (this.editor.currentTool === ToolType.HAND || 
-					this.editor.currentTool === ToolType.ZOOM ||
-					this.editor.currentTool === ToolType.COLOR_PICKER) {
+				// Double-check tool mode (already filtered by shouldIgnoreTarget)
+				if (this.editor.currentTool !== ToolType.SELECT) {
 					return;
 				}
 				
