@@ -1,32 +1,34 @@
 class TouchGestureHandler {
-    constructor(element, callbacks = {}) {
-        this.element = element;
-        this.callbacks = callbacks;
+constructor(element, callbacks = {}) {
+    this.element = element;
+    this.callbacks = callbacks;
 
-        // State
-        this.state = 'idle';
-        this.touches = new Map();
+    // State
+    this.state = 'idle';
+    this.touches = new Map();
+    this.hadGestureActivity = false; // Track if we've had any actual pan/pinch activity
 
-        // Store bound functions for removal
-        this.boundHandleStart = this.handleStart.bind(this);
-        this.boundHandleMove = this.handleMove.bind(this);
-        this.boundHandleEnd = this.handleEnd.bind(this);
-        // NEW: Document-level bound functions (to catch touches that end outside element)
-        this.boundHandleDocumentEnd = this.handleDocumentEnd.bind(this);
+    // Store bound functions for removal
+    this.boundHandleStart = this.handleStart.bind(this);
+    this.boundHandleMove = this.handleMove.bind(this);
+    this.boundHandleEnd = this.handleEnd.bind(this);
+    // NEW: Document-level bound functions (to catch touches that end outside element)
+    this.boundHandleDocumentEnd = this.handleDocumentEnd.bind(this);
 
-        // Tap Data
-        this.startPos = { x: 0, y: 0 };
-        this.startTime = 0;
+    // Tap Data
+    this.startPos = { x: 0, y: 0 };
+    this.startTime = 0;
 
-        // Two Finger Data
-        this.lastDist = 0;
-        this.lastCenter = { x: 0, y: 0 };
+    // Two Finger Data
+    this.lastDist = 0;
+    this.lastCenter = { x: 0, y: 0 };
+    this.lastAngle = 0; // Add this if not present
 
-        // Config
-        this.tapThreshold = 10; // pixels
+    // Config
+    this.tapThreshold = 10; // pixels
 
-        this.setupEventListeners();
-    }
+    this.setupEventListeners();
+}
 
     setupEventListeners() {
         const opt = { passive: false, capture: true };
@@ -40,171 +42,276 @@ class TouchGestureHandler {
         document.addEventListener('touchcancel', this.boundHandleDocumentEnd, opt);
     }
 
+handleStart(e) {
+    console.log('🟢 handleStart - changedTouches:', e.changedTouches.length, 'existing touches:', this.touches.size);
 
-    handleStart(e) {
-        console.log('🟢 handleStart - changedTouches:', e.changedTouches.length, 'existing touches:', this.touches.size);
+    // CRITICAL: Check if touch started on UI elements
+    const touch = e.changedTouches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
 
-        // CRITICAL: Check if touch started on UI elements
-        const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    // If touching UI controls, don't interfere at all
+    if (target && target.closest('.ui-ignore-gestures')) {
+        console.log('🎯 Touch on UI element - ignoring completely');
+        // Don't track this touch, don't prevent default, just exit
+        return;
+    }
 
-        // If touching UI controls, don't interfere at all
-        if (target && target.closest('.ui-ignore-gestures')) {
-            console.log('🎯 Touch on UI element - ignoring completely');
-            // Don't track this touch, don't prevent default, just exit
-            return;
-        }
+    // Check if this is a fresh start (no existing touches)
+    if (this.touches.size === 0) {
+        this.hadGestureActivity = false; // Reset gesture tracking
+        console.log('  🔄 Reset gesture activity tracking');
+    }
 
-        // Optional callback to check if we should ignore this target
-        if (this.callbacks.shouldIgnoreTarget && this.callbacks.shouldIgnoreTarget(target)) {
-            console.log('🎯 Target ignored by shouldIgnoreTarget callback');
-            return;
-        }
-
-        // For canvas touches: prevent default to stop browser behavior
-        if (e.cancelable) e.preventDefault();
-        e.stopPropagation();
-
-        // Track touches
+    // Check if we should ignore this target for gestures (but still track for tap detection)
+    const shouldIgnore = this.callbacks.shouldIgnoreTarget && this.callbacks.shouldIgnoreTarget(target);
+    
+    if (shouldIgnore) {
+        console.log('🎯 Target ignored by shouldIgnoreTarget callback - tracking for tap only');
+        
+        // Track touches for tap detection only
         for (let t of e.changedTouches) {
-            console.log('  ➕ Adding touch:', t.identifier, 'at', t.clientX, t.clientY);
-            this.touches.set(t.identifier, { x: t.clientX, y: t.clientY });
+            console.log('  ➕ Adding touch (tap-only):', t.identifier, 'at', t.clientX, t.clientY);
+            this.touches.set(t.identifier, { x: t.clientX, y: t.clientY, tapOnly: true });
         }
-
+        
         const count = this.touches.size;
         console.log('  📊 Total touches now:', count);
-
-        // Determine State
+        
+        // Set state to pending for tap detection
         if (count === 1) {
             const t = Array.from(this.touches.values())[0];
+            console.log('  🎯 State change: idle → pending (tap-only mode)');
             this.state = 'pending';
             this.startPos = { x: t.x, y: t.y };
             this.startTime = Date.now();
         }
-        else if (count >= 2) {
-            console.log('  🎯 State change: → pinching (count >= 2)');
-            this.state = 'pinching';
-            this.initPinchData();
-            if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('two_finger');
-        }
+        
+        // Don't prevent default or start gestures - let it pass through
+        return;
     }
-    handleMove(e) {
-        // Check if touching UI element
-        const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        if (target && target.closest('.ui-ignore-gestures')) {
-            console.log('🚫 handleMove on UI - ignoring');
-            return; // Ignore moves on UI
-        }
 
-        // Optional callback to check if we should ignore this target
-        if (this.callbacks.shouldIgnoreTarget && this.callbacks.shouldIgnoreTarget(target)) {
-            console.log('🚫 handleMove on ignored target');
-            return;
-        }
+    // For canvas touches: prevent default to stop browser behavior
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
 
-        if (e.cancelable) e.preventDefault();
-        e.stopPropagation();
+    // Track touches normally
+    for (let t of e.changedTouches) {
+        console.log('  ➕ Adding touch:', t.identifier, 'at', t.clientX, t.clientY);
+        this.touches.set(t.identifier, { x: t.clientX, y: t.clientY });
+    }
 
-        console.log('🔄 handleMove - state:', this.state, 'touches:', this.touches.size, 'changedTouches:', e.changedTouches.length);
+    const count = this.touches.size;
+    console.log('  📊 Total touches now:', count);
 
-        // Update Coords
+    // Determine State
+    if (count === 1) {
+        const t = Array.from(this.touches.values())[0];
+        console.log('  🎯 State change: idle → pending');
+        this.state = 'pending';
+        this.startPos = { x: t.x, y: t.y };
+        this.startTime = Date.now();
+    }
+    else if (count >= 2) {
+        console.log('  🎯 State change: → pinching (count >= 2)');
+        this.state = 'pinching';
+        this.hadGestureActivity = true; // Mark that we've had gesture activity
+        this.initPinchData();
+        if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('two_finger');
+    }
+}
+
+handleMove(e) {
+    // Check if touching UI element
+    const touch = e.changedTouches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (target && target.closest('.ui-ignore-gestures')) {
+        console.log('🚫 handleMove on UI - ignoring');
+        return; // Ignore moves on UI
+    }
+
+    // Check if this is a tap-only touch (from ignored target)
+    const firstTouch = this.touches.get(e.changedTouches[0].identifier);
+    if (firstTouch && firstTouch.tapOnly) {
+        console.log('🚫 handleMove on tap-only touch - checking for movement');
+        
+        // Update coords to detect if tap threshold exceeded
         for (let t of e.changedTouches) {
             const rec = this.touches.get(t.identifier);
             if (rec) {
                 rec.x = t.clientX;
                 rec.y = t.clientY;
-            } else {
-                console.warn('  ⚠️ Touch', t.identifier, 'not found in Map!');
             }
         }
-
-        // Logic
+        
+        // If moved beyond tap threshold, cancel tap detection
         if (this.state === 'pending') {
             const t = Array.from(this.touches.values())[0];
             const dx = t.x - this.startPos.x;
             const dy = t.y - this.startPos.y;
             const dist = Math.hypot(dx, dy);
-
+            
             if (dist > this.tapThreshold) {
-                console.log('  🎯 State change: pending → panning');
-                this.state = 'panning';
-                this.startPos = { x: t.x, y: t.y };
-                if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('single_pan');
+                console.log('🚫 Tap-only touch moved beyond threshold - canceling tap');
+                this.state = 'idle';
+                this.hadGestureActivity = true; // Prevent tap from firing
             }
         }
+        
+        return; // Don't process gestures for tap-only touches
+    }
 
-        if (this.state === 'panning') {
-            const t = Array.from(this.touches.values())[0];
-            const dx = t.x - this.startPos.x;
-            const dy = t.y - this.startPos.y;
+    // Optional callback to check if we should ignore this target
+    if (this.callbacks.shouldIgnoreTarget && this.callbacks.shouldIgnoreTarget(target)) {
+        console.log('🚫 handleMove on ignored target');
+        return;
+    }
 
-            if (this.callbacks.onSinglePan) {
-                this.callbacks.onSinglePan(dx, dy, t.x, t.y);
-            }
-            this.startPos = { x: t.x, y: t.y };
-        }
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
 
-        if (this.state === 'pinching' && this.touches.size >= 2) {
-            this.updatePinch();
+    console.log('🔄 handleMove - state:', this.state, 'touches:', this.touches.size, 'changedTouches:', e.changedTouches.length);
+
+    // Update Coords
+    for (let t of e.changedTouches) {
+        const rec = this.touches.get(t.identifier);
+        if (rec) {
+            rec.x = t.clientX;
+            rec.y = t.clientY;
+        } else {
+            console.warn('  ⚠️ Touch', t.identifier, 'not found in Map!');
         }
     }
 
-    handleEnd(e) {
-        console.log('🔴 handleEnd - changedTouches:', e.changedTouches.length, 'existing touches before cleanup:', this.touches.size);
+    // Logic
+    if (this.state === 'pending') {
+        const t = Array.from(this.touches.values())[0];
+        const dx = t.x - this.startPos.x;
+        const dy = t.y - this.startPos.y;
+        const dist = Math.hypot(dx, dy);
 
-        // CRITICAL: ALWAYS remove touches FIRST, before any other logic
-        // This prevents ghost touches from accumulating
-        for (let t of e.changedTouches) {
-            console.log('  ➖ Deleting touch:', t.identifier);
-            this.touches.delete(t.identifier);
+        if (dist > this.tapThreshold) {
+            console.log('  🎯 State change: pending → panning');
+            this.state = 'panning';
+            this.hadGestureActivity = true; // Mark that we've had gesture activity
+            this.startPos = { x: t.x, y: t.y };
+            if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('single_pan');
         }
+    }
 
-        console.log('  📊 Touches remaining:', this.touches.size);
+    if (this.state === 'panning') {
+        const t = Array.from(this.touches.values())[0];
+        const dx = t.x - this.startPos.x;
+        const dy = t.y - this.startPos.y;
 
-        // Check if ended on UI element
-        const touch = e.changedTouches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        if (target && target.closest('.ui-ignore-gestures')) {
-            // Just update state and exit - touches already deleted above
-            if (this.touches.size === 0) {
-                this.state = 'idle';
-            }
-            return;
+        if (this.callbacks.onSinglePan) {
+            this.callbacks.onSinglePan(dx, dy, t.x, t.y);
         }
+        this.startPos = { x: t.x, y: t.y };
+    }
 
-        // Optional callback to check if we should ignore this target
-        if (this.callbacks.shouldIgnoreTarget && this.callbacks.shouldIgnoreTarget(target)) {
-            // Just update state and exit - touches already deleted above
-            if (this.touches.size === 0) {
-                this.state = 'idle';
-            }
-            return;
-        }
+    if (this.state === 'pinching' && this.touches.size >= 2) {
+        this.updatePinch();
+    }
+}
 
-        if (e.cancelable) e.preventDefault();
-        e.stopPropagation();
+handleEnd(e) {
+    console.log('🔴 handleEnd - changedTouches:', e.changedTouches.length, 'existing touches before cleanup:', this.touches.size);
 
-        // Tap Detection - ONLY fire if still 'pending'
-        if (this.state === 'pending' && this.touches.size === 0) {
-            const duration = Date.now() - this.startTime;
-            if (duration < 300) {
-                console.log('✅ Simple tap detected');
-                if (this.callbacks.onSimpleTap) {
-                    this.callbacks.onSimpleTap(this.startPos.x, this.startPos.y);
-                }
-            }
-        }
+    // CRITICAL: ALWAYS remove touches FIRST, before any other logic
+    // This prevents ghost touches from accumulating
+    for (let t of e.changedTouches) {
+        console.log('  ➖ Deleting touch:', t.identifier);
+        this.touches.delete(t.identifier);
+    }
 
-        // Reset State
+    console.log('  📊 Touches remaining:', this.touches.size);
+
+    // Check if ended on UI element
+    const touch = e.changedTouches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (target && target.closest('.ui-ignore-gestures')) {
+        // Just update state and exit - touches already deleted above
         if (this.touches.size === 0) {
             this.state = 'idle';
+            this.hadGestureActivity = false;
             if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
         } else if (this.touches.size < 2 && this.state === 'pinching') {
+            // Transition from pinch to panning (not pending)
+            console.log('  🎯 State change: pinching → panning (UI element, one finger lifted)');
+            const remainingTouch = Array.from(this.touches.values())[0];
+            this.state = 'panning';
+            this.startPos = { x: remainingTouch.x, y: remainingTouch.y };
+            this.startTime = Date.now();
+            if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
+            if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('single_pan');
+        }
+        return;
+    }
+
+    // Optional callback to check if we should ignore this target
+    if (this.callbacks.shouldIgnoreTarget && this.callbacks.shouldIgnoreTarget(target)) {
+        // Just update state and exit - touches already deleted above
+        if (this.touches.size === 0) {
             this.state = 'idle';
+            this.hadGestureActivity = false;
+            if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
+        } else if (this.touches.size < 2 && this.state === 'pinching') {
+            // Transition from pinch to panning (not pending)
+            console.log('  🎯 State change: pinching → panning (ignored target, one finger lifted)');
+            const remainingTouch = Array.from(this.touches.values())[0];
+            this.state = 'panning';
+            this.startPos = { x: remainingTouch.x, y: remainingTouch.y };
+            this.startTime = Date.now();
+            if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
+            if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('single_pan');
+        }
+        return;
+    }
+
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
+
+    // Tap Detection - ONLY fire if still 'pending' AND no gesture activity occurred
+    if (this.state === 'pending' && this.touches.size === 0 && !this.hadGestureActivity) {
+        const duration = Date.now() - this.startTime;
+        if (duration < 300) {
+            console.log('✅ Simple tap detected');
+            if (this.callbacks.onSimpleTap) {
+                this.callbacks.onSimpleTap(this.startPos.x, this.startPos.y);
+            }
         }
     }
 
+    // Reset State
+    if (this.touches.size === 0) {
+        // All touches gone - return to idle
+        console.log('  🎯 State change: → idle (all touches gone)');
+        this.state = 'idle';
+        this.hadGestureActivity = false; // Reset for next gesture
+        if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
+    } else if (this.touches.size < 2 && this.state === 'pinching') {
+        // CRITICAL FIX: Transitioning from pinch (2+ fingers) to single finger
+        // Transition to PANNING state (not pending) so user can continue immediately
+        console.log('  🎯 State change: pinching → panning (one finger lifted, one remains)');
+        
+        // End the pinch gesture
+        if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
+        
+        // Reset to panning state with the remaining touch
+        const remainingTouch = Array.from(this.touches.values())[0];
+        this.state = 'panning';
+        this.startPos = { x: remainingTouch.x, y: remainingTouch.y };
+        this.startTime = Date.now();
+        
+        // Start a new single-finger pan gesture
+        if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('single_pan');
+        
+        console.log('  📍 Reset startPos to remaining touch:', this.startPos);
+    } else if (this.touches.size === 1 && this.state === 'panning') {
+        // Single finger pan is still active - don't change state
+        console.log('  ✅ Single-finger pan continuing');
+    }
+}
 
 handleDocumentEnd(e) {
     // Only process touches that are tracked by THIS handler AND ended outside our element
@@ -222,12 +329,31 @@ handleDocumentEnd(e) {
 
                 // Update state if needed
                 if (this.touches.size === 0) {
+                    console.log('  🎯 State change: → idle (document cleanup, all touches gone)');
                     this.state = 'idle';
+                    this.hadGestureActivity = false;
                     if (this.callbacks.onGestureEnd) {
                         this.callbacks.onGestureEnd();
                     }
                 } else if (this.touches.size < 2 && this.state === 'pinching') {
-                    this.state = 'idle';
+                    // CRITICAL FIX: Transition from pinch to panning with remaining touch
+                    console.log('  🎯 State change: pinching → panning (document cleanup, one finger remains)');
+                    
+                    // End the pinch gesture
+                    if (this.callbacks.onGestureEnd) {
+                        this.callbacks.onGestureEnd();
+                    }
+                    
+                    // Reset to panning state with the remaining touch
+                    const remainingTouch = Array.from(this.touches.values())[0];
+                    this.state = 'panning';
+                    this.startPos = { x: remainingTouch.x, y: remainingTouch.y };
+                    this.startTime = Date.now();
+                    
+                    // Start a new single-finger pan gesture
+                    if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('single_pan');
+                    
+                    console.log('  📍 Reset startPos to remaining touch:', this.startPos);
                 }
             } else {
                 console.log('📄 Document end on element - letting handleEnd process it');
