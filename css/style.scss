@@ -1723,6 +1723,10 @@ input[type="range"] {
 	display: none;
 	gap: var(--spacing-lg);
 
+
+
+	
+
 	&.visible {
 		display: block;
 	}
@@ -2040,7 +2044,7 @@ body.tool-select {
 		>.filter-chips {
 			display: flex;
 			flex-wrap: wrap;
-			gap: var(--spacing-md);
+			gap: var(--spacing-base);
 		}
 
 		>.color-filter-chips {
@@ -4877,6 +4881,18 @@ body.tool-select {
 		// overflow-y: auto;
 
 
+		>.empty-state {
+			padding: var(--spacing-md);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+			background-color: #2f2f2f;
+
+			.empty-state-text {
+				font-size: var(--font-size-sm);
+				color: var(--color-text-secondary);
+				text-align: center;
+			}
+		}
 
 
 
@@ -4884,6 +4900,10 @@ body.tool-select {
 		>.category-grid,
 		>.asset-grid {
 			display: none;
+
+
+
+			
 
 			&.visible {
 				display: grid;

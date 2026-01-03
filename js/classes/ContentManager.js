@@ -37,17 +37,17 @@ class ContentManager {
 		this.layerElements = new Map(); // layerId -> HTMLElement
 	}
 
-async init() {
-    this.setupUI();
-    this.setupEventListeners();
-    await this.loadContent();
-    await this.initBrowser();
-}
+	async init() {
+		this.setupUI();
+		this.setupEventListeners();
+		await this.loadContent();
+		await this.initBrowser();
+	}
 
-async initBrowser() {
-    // Must be implemented by child with proper element IDs
-    throw new Error('initBrowser() must be implemented by child class');
-}
+	async initBrowser() {
+		// Must be implemented by child with proper element IDs
+		throw new Error('initBrowser() must be implemented by child class');
+	}
 
 	// ===== UI SETUP (must be overridden by child) =====
 	setupUI() {
@@ -81,13 +81,13 @@ async initBrowser() {
 		}
 
 		// Name Only Checkbox
-if (this.ui.searchNameOnly) {
-    this.ui.searchNameOnly.addEventListener('change', (e) => {
-        this.activeFilters.nameOnly = e.target.checked;
-        this.browser.refresh();        // ← REPLACE WITH THIS
-        this.updateClearFiltersButton();
-    });
-}
+		if (this.ui.searchNameOnly) {
+			this.ui.searchNameOnly.addEventListener('change', (e) => {
+				this.activeFilters.nameOnly = e.target.checked;
+				this.browser.refresh();        // ← REPLACE WITH THIS
+				this.updateClearFiltersButton();
+			});
+		}
 
 		// Child classes can add more listeners by overriding and calling super.setupEventListeners()
 	}
@@ -97,9 +97,9 @@ if (this.ui.searchNameOnly) {
 		return null;
 	}
 
-scrollToContent(contentId) {
-    this.browser.navigateToItem(contentId);
-}
+	scrollToContent(contentId) {
+		this.browser.navigateToItem(contentId);
+	}
 
 
 	populateCategoryChips() {
@@ -180,8 +180,8 @@ scrollToContent(contentId) {
 			filterSet.add(value);
 		}
 
-// Re-render and update UI
-this.browser.refresh();
+		// Re-render and update UI
+		this.browser.refresh();
 
 		this.updateClearFiltersButton();
 	}
@@ -286,11 +286,11 @@ this.browser.refresh();
 		return [...this.content, ...this.userContent];
 	}
 
-handleSearch(query) {
-    this.activeFilters.search = query.toLowerCase().trim();
-    this.browser.handleSearch(query);
-    this.updateClearFiltersButton();
-}
+	handleSearch(query) {
+		this.activeFilters.search = query.toLowerCase().trim();
+		this.browser.handleSearch(query);
+		this.updateClearFiltersButton();
+	}
 
 	toggleFiltersUI() {
 		if (!this.ui.filtersContainer || !this.ui.filterToggle) return;

@@ -1770,7 +1770,7 @@ body.tool-select .preview-canvas {
 .filters-container .filter-section > .filter-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-base);
 }
 .filters-container .filter-section > .color-filter-chips {
   display: grid;
@@ -3826,6 +3826,17 @@ body.tool-select .preview-canvas {
 .asset-browser > .asset-browser-content {
   flex: 1;
   padding: var(--spacing-md);
+}
+.asset-browser > .asset-browser-content > .empty-state {
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: #2f2f2f;
+}
+.asset-browser > .asset-browser-content > .empty-state .empty-state-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 .asset-browser > .asset-browser-content > .empty-state,
 .asset-browser > .asset-browser-content > .category-grid,

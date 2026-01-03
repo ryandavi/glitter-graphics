@@ -183,13 +183,14 @@ class StickerManager extends ContentManager {
 		// Get unique categories from content
 		const categories = [...new Set(this.content.map(item => item.category))].sort();
 
-		// Create chips
+
 		this.ui.categoryChips.innerHTML = categories.map(cat => {
+			const name = cat.charAt(0).toUpperCase() + cat.slice(1);
 			const slug = cat.toLowerCase().replace(/\s+/g, '-');
 			return `
-				<button class="filter-chip" data-filter="category" data-value="${cat}">
-					${cat}
-				</button>
+				<div class="filter-chip" data-filter="category" data-value="${cat}">
+					${name}
+				</div>
 			`;
 		}).join('');
 
