@@ -104,44 +104,45 @@ applyTransform(element, dimensions) {
      * Update transform properties and re-apply to element
      * @param {Object} updates - Object with properties to update (position, scale, rotation, opacity, flipX, flipY)
      */
-    updateTransform(updates) {
-        const transform = this.getTransform();
+updateTransform(updates) {
+    const transform = this.getTransform();
 
-        // Apply updates
-        if (updates.position) {
-            const newX = updates.position.x ?? transform.position.x;
-            const newY = updates.position.y ?? transform.position.y;
+    // Apply updates
+    if (updates.position) {
+        const newX = updates.position.x ?? transform.position.x;
+        const newY = updates.position.y ?? transform.position.y;
 
-            transform.position.x = CONFIG.roundStickerTransforms ? Math.round(newX) : newX;
-            transform.position.y = CONFIG.roundStickerTransforms ? Math.round(newY) : newY;
-        }
-
-        if (updates.scale) {
-            transform.scale.x = updates.scale.x ?? transform.scale.x;
-            transform.scale.y = updates.scale.y ?? transform.scale.y;
-        }
-
-        if (updates.rotation !== undefined) {
-            transform.rotation = CONFIG.roundStickerTransforms ? Math.round(updates.rotation) : updates.rotation;
-        }
-
-        if (updates.opacity !== undefined) {
-            transform.opacity = updates.opacity;
-        }
-
-        if (updates.flipX !== undefined) {
-            transform.flipX = updates.flipX;
-        }
-
-        if (updates.flipY !== undefined) {
-            transform.flipY = updates.flipY;
-        }
-
-        // Update transform handles if they exist
-        if (this.transformHandles) {
-            this.updateHandlePositions();
-        }
+        transform.position.x = CONFIG.roundStickerTransforms ? Math.round(newX) : newX;
+        transform.position.y = CONFIG.roundStickerTransforms ? Math.round(newY) : newY;
     }
+
+    if (updates.scale) {
+        transform.scale.x = updates.scale.x ?? transform.scale.x;
+        transform.scale.y = updates.scale.y ?? transform.scale.y;
+    }
+
+    if (updates.rotation !== undefined) {
+        // Normalize rotation to 0-360 range
+        let newRotation = CONFIG.roundStickerTransforms ? Math.round(updates.rotation) : updates.rotation;
+        newRotation = newRotation % 360;
+        if (newRotation < 0) newRotation += 360;
+        transform.rotation = newRotation;
+    }
+
+    if (updates.opacity !== undefined) {
+        transform.opacity = updates.opacity;
+    }
+
+    if (updates.flipX !== undefined) {
+        transform.flipX = updates.flipX;
+    }
+
+    if (updates.flipY !== undefined) {
+        transform.flipY = updates.flipY;
+    }
+
+    // REMOVED: Handle update now happens in StickerManager after applyTransform
+}
 
     // ===== HELPER METHODS =====
 

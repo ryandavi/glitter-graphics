@@ -500,26 +500,31 @@ class StickerManager extends ContentManager {
 
 	// ===== TRANSFORM UPDATES (Delegation to LayerTransform) =====
 
-	updateTransform(layerId, updates) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
+updateTransform(layerId, updates) {
+    const transform = this.layerTransforms.get(layerId);
+    if (!transform) return;
 
-		// Delegate to LayerTransform
-		transform.updateTransform(updates);
+    // Delegate to LayerTransform
+    transform.updateTransform(updates);
 
-		// Re-apply transform to element
-		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-		if (layer) {
-			const element = this.layerElements.get(layerId);
-			if (element) {
-				const dimensions = {
-					width: layer.stickerData.width,
-					height: layer.stickerData.height
-				};
-				transform.applyTransform(element, dimensions);
-			}
-		}
-	}
+    // Re-apply transform to element
+    const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+    if (layer) {
+        const element = this.layerElements.get(layerId);
+        if (element) {
+            const dimensions = {
+                width: layer.stickerData.width,
+                height: layer.stickerData.height
+            };
+            transform.applyTransform(element, dimensions);
+            
+            // MOVED: Update handles AFTER applying transform
+            if (transform.transformHandles) {
+                transform.updateHandlePositions();
+            }
+        }
+    }
+}
 
 	// ===== CENTERING METHODS (Delegation to LayerTransform) =====
 
