@@ -87,6 +87,13 @@ setupIntersectionObserver() {
 			}
 			
 			this.setState('CATEGORY_LIST');
+
+			// Scroll to top when changing states
+			if (this.scrollContainer) {
+				this.scrollContainer.scrollTop = 0;
+			}
+
+
 		});
 	}
 	// ===== STATE MANAGEMENT =====
