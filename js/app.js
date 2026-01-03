@@ -2944,72 +2944,90 @@ class GlitterEditor {
 	}
 
 	clearImage() {
+		// ======================
+		// Core image + data state
+		// ======================
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
+
 		this.layerManager.layers = [];
 		this.layerManager.activeLayerId = null;
 
+		// ======================
+		// Preview + canvas state
+		// ======================
 		this.previewWrapper.classList.remove('hasImage');
-
-		// Reset UI
-		document.getElementById('imageUpload').value = '';
-		document.getElementById('imageDropzone').classList.remove('has-image');
-
-		const dropzoneContent = document.getElementById('dropzoneContent');
-		dropzoneContent.classList.add('visible');
-
-		this.updateSidePanelUI(null);
-
-		// remove selected from #previewCanvas
 		this.previewCanvas.classList.remove('selected');
-
-		// Clear canvas
 		this.originalCanvas.classList.remove('visible');
-
-		// Reset Transparency Toggle & Background
-		this.previewContainer.classList.remove('transparent-bg');
-		this.previewContainer.style.backgroundSize = '';
-		this.previewContainer.style.backgroundPosition = '';
-		const transparencyToggle = document.getElementById('transparencyToggle');
-		if (transparencyToggle) transparencyToggle.classList.remove('active');
-
-		// Reset Bounds Toggle & Container Class
-		this.previewContainer.classList.remove('bounds');
-		const boundsToggle = document.getElementById('boundsToggle');
-		if (boundsToggle) boundsToggle.classList.remove('active');
-
-		// --- Hide the controls container immediately ---
-		const previewControls = document.getElementById('previewControls');
-		if (previewControls) previewControls.classList.remove('visible');
 
 		this.clearPreview();
 		this.canvasElementsContainer.innerHTML = '';
 
-		// UX: Reset to empty state properly
+		// ======================
+		// Upload / dropzone UI
+		// ======================
+		document.getElementById('imageUpload').value = '';
+		document.getElementById('imageDropzone').classList.remove('has-image');
+		document.getElementById('dropzoneContent').classList.add('visible');
+
+		// ======================
+		// Preview container toggles
+		// ======================
+		this.previewContainer.classList.remove('transparent-bg', 'bounds');
+		this.previewContainer.style.backgroundSize = '';
+		this.previewContainer.style.backgroundPosition = '';
+
+		const transparencyToggle = document.getElementById('transparencyToggle');
+		if (transparencyToggle) transparencyToggle.classList.remove('active');
+
+		const boundsToggle = document.getElementById('boundsToggle');
+		if (boundsToggle) boundsToggle.classList.remove('active');
+
+		const previewControls = document.getElementById('previewControls');
+		if (previewControls) previewControls.classList.remove('visible');
+
+		// ======================
+		// Side panels & empty states
+		// ======================
+		this.updateSidePanelUI(null);
+
 		this.showLayerSettingsEmptyState();
 		this.showGlitterSettingsEmptyState();
 		this.collapseLayerSettings();
 		this.collapseGlitterSettings();
 
-		// reset selected colors
+		// ======================
+		// Selected colors
+		// ======================
 		document.getElementById('selectedColorsEmpty').classList.add('visible');
 		document.getElementById('selectedColorsDisplay').innerHTML = '';
 
+		// ======================
+		// Managers & viewport
+		// ======================
 		this.glitterManager.clearFilters();
-
 		this.viewport.resetViewport();
 		this.updateZoomUI();
 
+		// ======================
+		// UI refresh + tool state
+		// ======================
+		this.updateHelpfulMessage();
 		this.layerManager.renderLayersList();
 		this.updateHistoryButtons();
 		this.updateActionButtons();
+
 		this.setTool(ToolType.SELECT);
 		this.updateStatus('Load an image to begin');
 		this.updateStatusBar();
 
+		// ======================
+		// Global event
+		// ======================
 		window.dispatchEvent(new Event('imageRemoved'));
 	}
+
 
 	debouncedSliderUpdate(sliderType) {
 		clearTimeout(this.sliderTimeout);
@@ -3153,136 +3171,136 @@ class GlitterEditor {
 	// ===== CLICK HANDLERS =====
 
 
-handlePreviewContainerClick(e) {
-    console.log('📍 Click handler fired', e.type, e.isSimpleTap);
+	handlePreviewContainerClick(e) {
+		console.log('📍 Click handler fired', e.type, e.isSimpleTap);
 
-    // 0. IGNORE IF JUST FINISHED HANDLE DRAGGING
-    if (this.ignoreNextClick) {
-        console.log('🚫 Ignoring click - just finished handle drag');
-        return;
-    }
+		// 0. IGNORE IF JUST FINISHED HANDLE DRAGGING
+		if (this.ignoreNextClick) {
+			console.log('🚫 Ignoring click - just finished handle drag');
+			return;
+		}
 
-    // 1. IGNORE TRANSFORM HANDLES
-    if (e.target.closest('.transform-handles') ||
-        e.target.classList.contains('transform-bounding-box')) return;
+		// 1. IGNORE TRANSFORM HANDLES
+		if (e.target.closest('.transform-handles') ||
+			e.target.classList.contains('transform-bounding-box')) return;
 
-    // 2. IGNORE UI ELEMENTS
-    if (e.target.closest('.ui-ignore-gestures')) {
-        return;
-    }
+		// 2. IGNORE UI ELEMENTS
+		if (e.target.closest('.ui-ignore-gestures')) {
+			return;
+		}
 
-    // 3. MOUSE BUTTON CHECKS
-    if (e.button === 1) return; // Ignore middle mouse button
-    // Ignore right-click for all tools EXCEPT zoom tool
-    if (e.button === 2 && this.currentTool !== ToolType.ZOOM) {
-        return;
-    }
+		// 3. MOUSE BUTTON CHECKS
+		if (e.button === 1) return; // Ignore middle mouse button
+		// Ignore right-click for all tools EXCEPT zoom tool
+		if (e.button === 2 && this.currentTool !== ToolType.ZOOM) {
+			return;
+		}
 
-    // 4. EVENT TYPE FILTERING - Different tools need different events
-    // HAND tool needs pointerdown to start dragging
-    // Other tools need click to prevent double-firing
+		// 4. EVENT TYPE FILTERING - Different tools need different events
+		// HAND tool needs pointerdown to start dragging
+		// Other tools need click to prevent double-firing
 
-    if (this.currentTool === ToolType.HAND) {
-        // Hand tool: ONLY respond to pointerdown (ignore click)
-        if (e.type === 'click') {
-            console.log('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
-            return;
-        }
-        // On mobile, also ignore pointerdown (touch handlers manage it)
-        if (this.isMobile && e.type === 'pointerdown') {
-            console.log('🚫 HAND tool: Ignoring pointerdown on mobile (touch handles it)');
-            return;
-        }
-    } else {
-        // Other tools (SELECT, COLOR_PICKER, ZOOM): ONLY respond to click
-        // EXCEPT: ZOOM tool with right-click needs pointerdown (right-click doesn't fire 'click')
-        // EXCEPT: SELECT tool on sticker elements - let mousedown pass through to sticker handlers
-        if (e.type === 'pointerdown' || e.type === 'mousedown') {
-            // Allow pointerdown for zoom tool with right-click
-            if (this.currentTool === ToolType.ZOOM && e.button === 2) {
-                console.log('✅ ZOOM tool: Allowing right-click pointerdown');
-                // Continue to handle this event
-            }
-            // CRITICAL FIX: Allow mousedown on stickers to pass through to their drag handlers
-            else if (this.currentTool === ToolType.SELECT && e.target.closest('.sticker-element')) {
-                console.log('✅ SELECT tool: Allowing sticker mousedown to pass through');
-                // Don't return - let it fall through, but don't process it here
-                // The sticker's own mousedown handler will handle it
-                return;
-            }
-            else {
-                console.log('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
-                return;
-            }
-        }
-        // On mobile, verify it's a simple tap
-        if (this.isMobile && !e.isSimpleTap) {
-            console.log('🚫 Mobile: Not a verified simple tap');
-            return;
-        }
-    }
+		if (this.currentTool === ToolType.HAND) {
+			// Hand tool: ONLY respond to pointerdown (ignore click)
+			if (e.type === 'click') {
+				console.log('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
+				return;
+			}
+			// On mobile, also ignore pointerdown (touch handlers manage it)
+			if (this.isMobile && e.type === 'pointerdown') {
+				console.log('🚫 HAND tool: Ignoring pointerdown on mobile (touch handles it)');
+				return;
+			}
+		} else {
+			// Other tools (SELECT, COLOR_PICKER, ZOOM): ONLY respond to click
+			// EXCEPT: ZOOM tool with right-click needs pointerdown (right-click doesn't fire 'click')
+			// EXCEPT: SELECT tool on sticker elements - let mousedown pass through to sticker handlers
+			if (e.type === 'pointerdown' || e.type === 'mousedown') {
+				// Allow pointerdown for zoom tool with right-click
+				if (this.currentTool === ToolType.ZOOM && e.button === 2) {
+					console.log('✅ ZOOM tool: Allowing right-click pointerdown');
+					// Continue to handle this event
+				}
+				// CRITICAL FIX: Allow mousedown on stickers to pass through to their drag handlers
+				else if (this.currentTool === ToolType.SELECT && e.target.closest('.sticker-element')) {
+					console.log('✅ SELECT tool: Allowing sticker mousedown to pass through');
+					// Don't return - let it fall through, but don't process it here
+					// The sticker's own mousedown handler will handle it
+					return;
+				}
+				else {
+					console.log('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
+					return;
+				}
+			}
+			// On mobile, verify it's a simple tap
+			if (this.isMobile && !e.isSimpleTap) {
+				console.log('🚫 Mobile: Not a verified simple tap');
+				return;
+			}
+		}
 
-    const hitSticker = e.target.closest('.sticker-element');
+		const hitSticker = e.target.closest('.sticker-element');
 
-    // Check if click is within the canvas area using viewport coordinates
-    const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
-    const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
+		// Check if click is within the canvas area using viewport coordinates
+		const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
+		const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
 
-    // We treat stickers and the canvas as the "Image Area"
-    const hitImageArea = hitCanvas || hitSticker;
+		// We treat stickers and the canvas as the "Image Area"
+		const hitImageArea = hitCanvas || hitSticker;
 
-    // Gatekeeper: If they clicked a button/sidebar, stop here
-    const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
-    if (!isWorkspace) return;
+		// Gatekeeper: If they clicked a button/sidebar, stop here
+		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
+		if (!isWorkspace) return;
 
-    switch (this.currentTool) {
-        case ToolType.SELECT:
-            if (hitSticker) return; // Sticker's own handler will handle it
-            if (hitImageArea && hitCanvas) {
-                const rect = this.previewCanvas.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const clickY = e.clientY - rect.top;
-                const scaleX = this.previewCanvas.width / rect.width;
-                const scaleY = this.previewCanvas.height / rect.height;
-                const x = Math.floor(clickX * scaleX);
-                const y = Math.floor(clickY * scaleY);
+		switch (this.currentTool) {
+			case ToolType.SELECT:
+				if (hitSticker) return; // Sticker's own handler will handle it
+				if (hitImageArea && hitCanvas) {
+					const rect = this.previewCanvas.getBoundingClientRect();
+					const clickX = e.clientX - rect.left;
+					const clickY = e.clientY - rect.top;
+					const scaleX = this.previewCanvas.width / rect.width;
+					const scaleY = this.previewCanvas.height / rect.height;
+					const x = Math.floor(clickX * scaleX);
+					const y = Math.floor(clickY * scaleY);
 
-                this.handleLayerSelectAction(x, y);
-            } else if (!hitImageArea) {
-                this.layerManager.setActiveLayer(null);
-            }
-            break;
+					this.handleLayerSelectAction(x, y);
+				} else if (!hitImageArea) {
+					this.layerManager.setActiveLayer(null);
+				}
+				break;
 
-        case ToolType.COLOR_PICKER:
-            if (hitImageArea && hitCanvas) {
-                const rect = this.previewCanvas.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const clickY = e.clientY - rect.top;
-                const scaleX = this.previewCanvas.width / rect.width;
-                const scaleY = this.previewCanvas.height / rect.height;
-                const x = Math.floor(clickX * scaleX);
-                const y = Math.floor(clickY * scaleY);
+			case ToolType.COLOR_PICKER:
+				if (hitImageArea && hitCanvas) {
+					const rect = this.previewCanvas.getBoundingClientRect();
+					const clickX = e.clientX - rect.left;
+					const clickY = e.clientY - rect.top;
+					const scaleX = this.previewCanvas.width / rect.width;
+					const scaleY = this.previewCanvas.height / rect.height;
+					const x = Math.floor(clickX * scaleX);
+					const y = Math.floor(clickY * scaleY);
 
-                this.handleColorPickAction(x, y, e);
-            } else {
-                this.setTool(ToolType.SELECT);
-            }
-            break;
+					this.handleColorPickAction(x, y, e);
+				} else {
+					this.setTool(ToolType.SELECT);
+				}
+				break;
 
-        case ToolType.HAND:
-            // At this point we know it's pointerdown on desktop (click was filtered out above)
-            this.viewport.startPan(e.clientX, e.clientY);
-            break;
+			case ToolType.HAND:
+				// At this point we know it's pointerdown on desktop (click was filtered out above)
+				this.viewport.startPan(e.clientX, e.clientY);
+				break;
 
-        case ToolType.ZOOM:
-            if (this.originalImage) {
-                this.handleZoomAction(e.clientX, e.clientY, {
-                    zoomOut: e.altKey || e.button === 2
-                });
-            }
-            break;
-    }
-}
+			case ToolType.ZOOM:
+				if (this.originalImage) {
+					this.handleZoomAction(e.clientX, e.clientY, {
+						zoomOut: e.altKey || e.button === 2
+					});
+				}
+				break;
+		}
+	}
 	handleColorPickAction(x, y, event = null) {
 		if (this.currentTool !== ToolType.COLOR_PICKER) return;
 
