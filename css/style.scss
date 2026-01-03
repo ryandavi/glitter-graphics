@@ -5362,14 +5362,13 @@ body.tool-select {
 .design-panel,
 .left-panel {
 	background: unset;
-	padding: var(--spacing-md);
-	gap: var(--spacing-md);
+	padding: var(--spacing-base);
+	gap: var(--spacing-base);
 	border: unset;
 }
 
 .toolbar {
-
-	margin: var(--spacing-md);
+	margin: var(--spacing-base);
 	margin-right: 0;
 }
 
