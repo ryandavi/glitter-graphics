@@ -509,60 +509,60 @@ class GifExporter {
 			}
 		}
 
-// 5. Composite Glitter and Sticker Layers (in correct z-order)
-layers.forEach((layer) => {
-	if (layer.visible === false) return;
+		// 5. Composite Glitter and Sticker Layers (in correct z-order)
+		layers.forEach((layer) => {
+			if (layer.visible === false) return;
 
-	if (layer.type === LayerType.GLITTER_FILL) {
-		// Render glitter layer
-		const maskCanvas = maskCanvases.get(layer.id);
-		if (!maskCanvas) return;
+			if (layer.type === LayerType.GLITTER_FILL) {
+				// Render glitter layer
+				const maskCanvas = maskCanvases.get(layer.id);
+				if (!maskCanvas) return;
 
-		const glitter = library.find(g => g.id === layer.selectedGlitterId);
-		const frames = glitter.frames.frames;
+				const glitter = library.find(g => g.id === layer.selectedGlitterId);
+				const frames = glitter.frames.frames;
 
-		// Use frameMap for smart reduction
-		let fIdx = frameIndex % frames.length;
-		if (frameMap && frameMap.has(layer.id)) {
-			const reducedFrameCount = frameMap.get(layer.id);
-			const originalFrameCount = frames.length;
-			fIdx = Math.floor((frameIndex % reducedFrameCount) / reducedFrameCount * originalFrameCount);
-		}
+				// Use frameMap for smart reduction
+				let fIdx = frameIndex % frames.length;
+				if (frameMap && frameMap.has(layer.id)) {
+					const reducedFrameCount = frameMap.get(layer.id);
+					const originalFrameCount = frames.length;
+					fIdx = Math.floor((frameIndex % reducedFrameCount) / reducedFrameCount * originalFrameCount);
+				}
 
-		const glitterFrame = frames[fIdx];
+				const glitterFrame = frames[fIdx];
 
-		hCtx.save();
-		hCtx.clearRect(0, 0, width, height);
+				hCtx.save();
+				hCtx.clearRect(0, 0, width, height);
 
-		const patternSource = document.createElement('canvas');
-		let frameImageData = (glitterFrame instanceof ImageData) ?
-			glitterFrame : glitterFrame.data;
-		patternSource.width = frameImageData.width;
-		patternSource.height = frameImageData.height;
-		patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
+				const patternSource = document.createElement('canvas');
+				let frameImageData = (glitterFrame instanceof ImageData) ?
+					glitterFrame : glitterFrame.data;
+				patternSource.width = frameImageData.width;
+				patternSource.height = frameImageData.height;
+				patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
 
-		const pattern = hCtx.createPattern(patternSource, 'repeat');
-		const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-		const matrix = new DOMMatrix().scaleSelf(scale, scale);
-		pattern.setTransform(matrix);
+				const pattern = hCtx.createPattern(patternSource, 'repeat');
+				const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+				const matrix = new DOMMatrix().scaleSelf(scale, scale);
+				pattern.setTransform(matrix);
 
-		hCtx.globalAlpha = layer.settings.opacity / 100;
-		hCtx.fillStyle = pattern;
-		hCtx.fillRect(0, 0, width, height);
+				hCtx.globalAlpha = layer.settings.opacity / 100;
+				hCtx.fillStyle = pattern;
+				hCtx.fillRect(0, 0, width, height);
 
-		hCtx.globalCompositeOperation = 'destination-in';
-		hCtx.drawImage(maskCanvas, 0, 0);
+				hCtx.globalCompositeOperation = 'destination-in';
+				hCtx.drawImage(maskCanvas, 0, 0);
 
-		hCtx.restore();
-		ctx.drawImage(this.helperCanvas, 0, 0);
+				hCtx.restore();
+				ctx.drawImage(this.helperCanvas, 0, 0);
 
-	} else if (layer.type === LayerType.STICKER) {
-		// Render sticker layer
-		this._renderLayerToCanvas(layer, ctx, frameIndex);
-	}
-});
+			} else if (layer.type === LayerType.STICKER) {
+				// Render sticker layer
+				this._renderLayerToCanvas(layer, ctx, frameIndex);
+			}
+		});
 
-// 6. Render Watermark
+		// 6. Render Watermark
 		if (exportSettings.watermarkEnabled && watermark) {
 			this._renderWatermarkToCanvas(watermark, ctx, width, height, frameIndex);
 		}
@@ -688,6 +688,18 @@ layers.forEach((layer) => {
 			let previousFrameData = null;
 			let previousDisposal = null; // Track PREVIOUS frame's disposal
 
+			// CRITICAL: Check for transparency in raw frames BEFORE disposal calculation
+			if (rawFrames.length > 0 && rawFrames[0].imageData) {
+				const firstFrameData = rawFrames[0].imageData.data;
+				for (let j = 3; j < firstFrameData.length; j += 4) {
+					if (firstFrameData[j] < 255) {
+						glitterHasTransparency = true;
+						if (this.config.debug) console.log(`[GifExporter] "${name}" pre-check: Has transparency detected`);
+						break;
+					}
+				}
+			}
+
 			// NEW APPROACH: Use original disposal methods for stickers, 
 			// analyze for glitter
 			let useOriginalDisposal = isSticker;
@@ -731,16 +743,35 @@ layers.forEach((layer) => {
 					if (this.config.debug) console.log(`[DEBUG] "${name}" - Frame 2: ${transparentPercent.toFixed(1)}% transparent, ${differentPercent.toFixed(1)}% different, usesDeltas: ${usesDeltas}, isAnimation: ${isAnimation}, needsClearing: ${needsClearing}`);
 				}
 
+
+				/*
+				Disposal Method 1 (STACK):
+				- Leaves the previous frame on the canvas
+				- Draws the new frame on top of it
+				- Used for opaque animations or delta-based GIFs (only pixels that changed)
+				
+				Disposal Method 2 (CLEAR):
+				- Clears the canvas to transparent/background
+				- Then draws the new frame from scratch
+				- Used for transparent animations where each frame is independent
+				
+				Disposal Method 3 (RESTORE):
+				- Restores to the state before the previous frame was drawn
+				- Rarely used
+				*/
+
 				// Calculate disposal for glitter
-				if (usesDeltas) {
+				// PRIORITY: Transparency always requires CLEAR
+				if (glitterHasTransparency) {
+					calculatedDisposal = 2;
+				} else if (usesDeltas) {
 					calculatedDisposal = 1;
-				} else if (needsClearing || glitterHasTransparency) {
+				} else if (needsClearing) {
 					calculatedDisposal = 2;
 				} else {
 					calculatedDisposal = 1;
 				}
-
-				if (this.config.debug) console.log(`[DISPOSAL] "${name}": Calculated strategy = ${calculatedDisposal === 1 ? 'STACK' : 'CLEAR'}`);
+				if (this.config.debug) console.log(`[DISPOSAL] "${name}": Calculated strategy = ${calculatedDisposal === 1 ? 'STACK' : 'CLEAR'} (hasTransparency: ${glitterHasTransparency})`);
 			} else {
 				if (this.config.debug) console.log(`[DISPOSAL] "${name}": Using original frame disposal methods (sticker)`);
 			}
@@ -1090,43 +1121,43 @@ layers.forEach((layer) => {
 		});
 	}
 
-_calculateTotalFrames(layers, library, maxFrames, smartFrameReduction = false) {
-	const layerFrameCounts = new Map();
+	_calculateTotalFrames(layers, library, maxFrames, smartFrameReduction = false) {
+		const layerFrameCounts = new Map();
 
-	layers.forEach(l => {
-		let count = 1;
-		if (l.type === LayerType.GLITTER_FILL) {
-			const glitter = library.find(g => g.id === l.selectedGlitterId);
-			if (glitter?.frames?.frames) {
-				count = glitter.frames.frames.length;
+		layers.forEach(l => {
+			let count = 1;
+			if (l.type === LayerType.GLITTER_FILL) {
+				const glitter = library.find(g => g.id === l.selectedGlitterId);
+				if (glitter?.frames?.frames) {
+					count = glitter.frames.frames.length;
+				}
+			} else if (l.type === LayerType.STICKER) {
+				if (l.stickerData.isAnimated && l.stickerData.frames?.frames) {
+					count = l.stickerData.frames.frames.length;
+				}
 			}
-		} else if (l.type === LayerType.STICKER) {
-			if (l.stickerData.isAnimated && l.stickerData.frames?.frames) {
-				count = l.stickerData.frames.frames.length;
+			layerFrameCounts.set(l.id, count);
+		});
+
+		if (layerFrameCounts.size === 0) {
+			if (this.config.debug) console.warn('[GifExporter] No valid layers, defaulting to 1 frame');
+			return { totalFrames: 1, frameMap: new Map(), reductions: [] };
+		}
+
+		// Apply smart reduction or standard LCM
+		const result = smartFrameReduction
+			? this._smartReduceFrames(layerFrameCounts, maxFrames, layers) // PASS LAYERS
+			: this._standardLCM(layerFrameCounts, maxFrames);
+
+		if (this.config.debug) {
+			console.log('[GifExporter] Calculated total frames:', result.totalFrames);
+			if (result.reductions.length > 0) {
+				console.log('[GifExporter] Smart reductions applied:', result.reductions);
 			}
 		}
-		layerFrameCounts.set(l.id, count);
-	});
 
-	if (layerFrameCounts.size === 0) {
-		if (this.config.debug) console.warn('[GifExporter] No valid layers, defaulting to 1 frame');
-		return { totalFrames: 1, frameMap: new Map(), reductions: [] };
+		return result;
 	}
-
-	// Apply smart reduction or standard LCM
-	const result = smartFrameReduction
-		? this._smartReduceFrames(layerFrameCounts, maxFrames, layers) // PASS LAYERS
-		: this._standardLCM(layerFrameCounts, maxFrames);
-
-	if (this.config.debug) {
-		console.log('[GifExporter] Calculated total frames:', result.totalFrames);
-		if (result.reductions.length > 0) {
-			console.log('[GifExporter] Smart reductions applied:', result.reductions);
-		}
-	}
-
-	return result;
-}
 
 	_standardLCM(layerFrameCounts, maxFrames) {
 		const counts = Array.from(layerFrameCounts.values()).filter(c => c > 0);
@@ -1145,96 +1176,96 @@ _calculateTotalFrames(layers, library, maxFrames, smartFrameReduction = false) {
 		};
 	}
 
-_smartReduceFrames(layerFrameCounts, maxFrames, layers) {
-	const reductions = [];
-	let reducedCounts = new Map(layerFrameCounts);
+	_smartReduceFrames(layerFrameCounts, maxFrames, layers) {
+		const reductions = [];
+		let reducedCounts = new Map(layerFrameCounts);
 
-	// Check if we have glitter layers with multiple frames
-	const hasMultiFrameGlitter = layers.some(layer => 
-		layer.type === LayerType.GLITTER_FILL && layerFrameCounts.get(layer.id) > 1
-	);
+		// Check if we have glitter layers with multiple frames
+		const hasMultiFrameGlitter = layers.some(layer =>
+			layer.type === LayerType.GLITTER_FILL && layerFrameCounts.get(layer.id) > 1
+		);
 
-	// Step 1: Round to multiples of 3 ONLY if there are multi-frame glitter layers AND it helps
-	if (hasMultiFrameGlitter) {
-		// Calculate original LCM first
-		const originalCounts = Array.from(reducedCounts.values()).filter(c => c > 0);
-		const originalLCM = originalCounts.reduce((acc, val) => this.lcm(acc, val), originalCounts[0]);
+		// Step 1: Round to multiples of 3 ONLY if there are multi-frame glitter layers AND it helps
+		if (hasMultiFrameGlitter) {
+			// Calculate original LCM first
+			const originalCounts = Array.from(reducedCounts.values()).filter(c => c > 0);
+			const originalLCM = originalCounts.reduce((acc, val) => this.lcm(acc, val), originalCounts[0]);
 
-		layerFrameCounts.forEach((originalCount, layerId) => {
-			const nearestMultipleOf3 = Math.round(originalCount / 3) * 3;
-			const difference = Math.abs(originalCount - nearestMultipleOf3);
-			const percentDiff = difference / originalCount;
+			layerFrameCounts.forEach((originalCount, layerId) => {
+				const nearestMultipleOf3 = Math.round(originalCount / 3) * 3;
+				const difference = Math.abs(originalCount - nearestMultipleOf3);
+				const percentDiff = difference / originalCount;
 
-			// Only round if within 20% AND nearestMultipleOf3 is valid
-			if (nearestMultipleOf3 > 0 && percentDiff <= 0.20 && nearestMultipleOf3 !== originalCount) {
-				// Test if this reduction would help the final LCM
-				const testMap = new Map(reducedCounts);
-				testMap.set(layerId, nearestMultipleOf3);
-				const testCounts = Array.from(testMap.values()).filter(c => c > 0);
-				const testLCM = testCounts.reduce((acc, val) => this.lcm(acc, val), testCounts[0]);
-				
-				// Only apply if it reduces LCM by at least 10%
-				if (testLCM < originalLCM * 0.9) {
-					reducedCounts.set(layerId, nearestMultipleOf3);
+				// Only round if within 20% AND nearestMultipleOf3 is valid
+				if (nearestMultipleOf3 > 0 && percentDiff <= 0.20 && nearestMultipleOf3 !== originalCount) {
+					// Test if this reduction would help the final LCM
+					const testMap = new Map(reducedCounts);
+					testMap.set(layerId, nearestMultipleOf3);
+					const testCounts = Array.from(testMap.values()).filter(c => c > 0);
+					const testLCM = testCounts.reduce((acc, val) => this.lcm(acc, val), testCounts[0]);
+
+					// Only apply if it reduces LCM by at least 10%
+					if (testLCM < originalLCM * 0.9) {
+						reducedCounts.set(layerId, nearestMultipleOf3);
+						reductions.push({
+							layerId,
+							original: originalCount,
+							reduced: nearestMultipleOf3,
+							reason: 'rounded-to-multiple-of-3'
+						});
+					}
+				}
+			});
+		}
+
+		// Step 2: Calculate initial LCM
+		let counts = Array.from(reducedCounts.values()).filter(c => c > 0);
+		let totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
+
+		// Step 3: Cap individual animations based on their size
+		reducedCounts.forEach((count, layerId) => {
+			let targetCap = null;
+
+			if (count > 60) {
+				// Very long animations: cap at 30
+				targetCap = 30;
+			} else if (count > 36) {
+				// Long animations: cap at 24
+				targetCap = 24;
+			} else if (count > 24) {
+				// Medium-long: cap at 18
+				targetCap = 18;
+			}
+
+			if (targetCap && count > targetCap) {
+				const newCount = targetCap;
+				reducedCounts.set(layerId, newCount);
+
+				const existingIdx = reductions.findIndex(r => r.layerId === layerId);
+				if (existingIdx >= 0) {
+					reductions[existingIdx].reduced = newCount;
+					reductions[existingIdx].reason = 'capped-at-' + targetCap;
+				} else {
 					reductions.push({
 						layerId,
-						original: originalCount,
-						reduced: nearestMultipleOf3,
-						reason: 'rounded-to-multiple-of-3'
+						original: layerFrameCounts.get(layerId),
+						reduced: newCount,
+						reason: 'capped-at-' + targetCap
 					});
 				}
 			}
 		});
+
+		// Recalculate final LCM
+		counts = Array.from(reducedCounts.values()).filter(c => c > 0);
+		totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
+
+		return {
+			totalFrames: Math.min(totalFrames, maxFrames),
+			frameMap: reducedCounts,
+			reductions
+		};
 	}
-
-	// Step 2: Calculate initial LCM
-	let counts = Array.from(reducedCounts.values()).filter(c => c > 0);
-	let totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
-
-	// Step 3: Cap individual animations based on their size
-	reducedCounts.forEach((count, layerId) => {
-		let targetCap = null;
-
-		if (count > 60) {
-			// Very long animations: cap at 30
-			targetCap = 30;
-		} else if (count > 36) {
-			// Long animations: cap at 24
-			targetCap = 24;
-		} else if (count > 24) {
-			// Medium-long: cap at 18
-			targetCap = 18;
-		}
-
-		if (targetCap && count > targetCap) {
-			const newCount = targetCap;
-			reducedCounts.set(layerId, newCount);
-
-			const existingIdx = reductions.findIndex(r => r.layerId === layerId);
-			if (existingIdx >= 0) {
-				reductions[existingIdx].reduced = newCount;
-				reductions[existingIdx].reason = 'capped-at-' + targetCap;
-			} else {
-				reductions.push({
-					layerId,
-					original: layerFrameCounts.get(layerId),
-					reduced: newCount,
-					reason: 'capped-at-' + targetCap
-				});
-			}
-		}
-	});
-
-	// Recalculate final LCM
-	counts = Array.from(reducedCounts.values()).filter(c => c > 0);
-	totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
-
-	return {
-		totalFrames: Math.min(totalFrames, maxFrames),
-		frameMap: reducedCounts,
-		reductions
-	};
-}
 
 	_handleFileSave(blob, callbacks, frameCount, reductions = []) {
 		if (this.config.debug) console.log('_handleFileSave called with blob size:', blob.size);
