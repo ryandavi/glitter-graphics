@@ -423,11 +423,9 @@ class StickerManager extends ContentManager {
 			this.editor.updateStatus('Sticker replaced');
 			this.editor.saveState();
 
-// Show settings content now that sticker is selected
-const stickerContent = document.getElementById('stickerSettingsContent');
-if (stickerContent) stickerContent.classList.add('visible');
-this.editor.hideStickerSettingsEmptyState();
-this.editor.loadStickerSettings(activeLayer);
+			// Hide empty state and load settings
+			this.editor.hideStickerSettingsEmptyState();
+			this.editor.loadStickerSettings(activeLayer);
 
 		} else {
 			// Create NEW layer

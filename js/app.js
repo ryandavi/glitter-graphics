@@ -235,7 +235,7 @@ const LAYER_UI_CONFIG = {
         const stickerContent = document.getElementById('stickerSettingsContent');
         if (layer.stickerSourceId) {
             // Has sticker - show content and controls
-            if (stickerContent) stickerContent.classList.add('visible');
+            // if (stickerContent) stickerContent.classList.add('visible');
             editor.hideStickerSettingsEmptyState();
             editor.loadStickerSettings(layer);
         } else {

@@ -5543,8 +5543,12 @@ body.tool-select {
 	>.setting-label {
 		@include text-sm;
 		color: var(--color-text-secondary);
-		cursor: help;
+		
 		position: relative;
+
+		&[data-tooltip] {
+			cursor: help;
+		}
 
 		+.setting-value {
 			@include text-sm;

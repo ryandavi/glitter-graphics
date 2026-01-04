@@ -4362,8 +4362,10 @@ body.tool-select .preview-canvas {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   color: var(--color-text-secondary);
-  cursor: help;
   position: relative;
+}
+.setting-header > .setting-label[data-tooltip] {
+  cursor: help;
 }
 .setting-header > .setting-label + .setting-value {
   font-size: var(--font-size-sm);
