@@ -5414,7 +5414,6 @@ body.tool-select {
 		gap: var(--spacing-sm);
 		align-items: flex-start;
 
-		display: none;
 
 		.asset-info-thumbnail {
 			width: 48px;
@@ -5480,6 +5479,21 @@ body.tool-select {
 					font-weight: 500;
 					line-height: 1.2;
 
+					max-width: 200px;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+
+					&.badge-variable-fps {
+						background: rgba(245, 158, 11, 0.15);
+						color: rgb(251, 191, 36);
+						border: 1px solid rgba(245, 158, 11, 0.3);
+					}
+
+
+
+
+
 					&.badge-category {
 						background: var(--color-bg-tertiary);
 						color: var(--color-text-secondary);
@@ -5520,6 +5534,7 @@ body.tool-select {
 		font-weight: 500;
 		font-variant-numeric: tabular-nums;
 	}
+
 
 
 

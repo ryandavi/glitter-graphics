@@ -249,6 +249,45 @@ const LAYER_UI_CONFIG = {
 }
 };
 
+// Configuration for different asset types
+const ASSET_TYPE_CONFIG = {
+    glitter: {
+        prefix: 'glitterAsset',
+        managerKey: 'glitterManager',
+        renderThumbnail: (thumbnail, asset) => {
+            thumbnail.className = 'asset-info-thumbnail glitter-bg';
+            thumbnail.style.backgroundImage = `url(${asset.url})`;
+            thumbnail.innerHTML = '';
+        },
+        getExtraBadges: (asset) => {
+            // Glitter-specific badges if needed
+            return [];
+        }
+    },
+    sticker: {
+        prefix: 'stickerAsset',
+        managerKey: 'stickerManager',
+        renderThumbnail: (thumbnail, asset) => {
+            thumbnail.className = 'asset-info-thumbnail';
+            thumbnail.style.backgroundImage = '';
+            thumbnail.innerHTML = `<img src="${asset.url}" alt="${asset.name}">`;
+        },
+        getExtraBadges: (asset) => {
+            const badges = [];
+            
+            // Sticker text badge
+            if (asset.sticker_text) {
+                badges.push({
+                    class: 'badge-text',
+                    text: `Text: "${asset.sticker_text}"`
+                });
+            }
+            
+            return badges;
+        }
+    }
+};
+
 // ============================================
 // DEBUG CONFIGURATION
 // Set enabled: true to auto-load preset stickers for testing
@@ -797,56 +836,81 @@ showStickerSettingsEmptyState() {
 		if (toggle) toggle.classList.add('collapsed');
 	}
 
-	
-updateGlitterAssetInfo(glitter) {
-    if (!glitter) return;
+
+
+updateAssetInfo(asset, type) {
+    if (!asset) return;
     
-    const thumbnail = document.getElementById('glitterAssetThumbnail');
-    const name = document.getElementById('glitterAssetName');
-    const badges = document.getElementById('glitterAssetBadges');
-    const size = document.getElementById('glitterAssetSize');
-    const frames = document.getElementById('glitterAssetFrames');
+    const config = ASSET_TYPE_CONFIG[type];
+    if (!config) {
+        console.warn(`Unknown asset type: ${type}`);
+        return;
+    }
+    
+    const { prefix, managerKey, renderThumbnail, getExtraBadges } = config;
+    const manager = this[managerKey];
+    
+    const thumbnail = document.getElementById(`${prefix}Thumbnail`);
+    const name = document.getElementById(`${prefix}Name`);
+    const badges = document.getElementById(`${prefix}Badges`);
+    const size = document.getElementById(`${prefix}Size`);
+    const frames = document.getElementById(`${prefix}Frames`);
     
     // Thumbnail with click handler
     if (thumbnail) {
-        thumbnail.className = 'asset-info-thumbnail glitter-bg';
-        thumbnail.style.backgroundImage = `url(${glitter.url})`;
-        thumbnail.innerHTML = '';
+        renderThumbnail(thumbnail, asset);
         thumbnail.style.cursor = 'pointer';
         
         // Remove old listeners and add new one
         thumbnail.replaceWith(thumbnail.cloneNode(true));
-        const newThumbnail = document.getElementById('glitterAssetThumbnail');
+        const newThumbnail = document.getElementById(`${prefix}Thumbnail`);
+        
+        // Re-render after cloning
+        renderThumbnail(newThumbnail, asset);
+        
         newThumbnail.addEventListener('click', () => {
-            if (this.glitterManager && this.glitterManager.browser) {
-                this.glitterManager.browser.navigateToItem(glitter.id);
+            if (manager && manager.browser) {
+                manager.browser.navigateToItem(asset.id);
             }
         });
     }
-
-
     
     // Name
-    if (name) name.textContent = glitter.name || 'Undefined';
+    if (name) name.textContent = asset.name || 'Undefined';
     
     // Badges
     if (badges) {
         const badgeHTML = [];
         
         // Category badge (clickable)
-        if (glitter.category) {
-            const categoryName = glitter.category.charAt(0).toUpperCase() + glitter.category.slice(1);
-            badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${glitter.category}">${categoryName}</div>`);
+        if (asset.category) {
+            const categoryName = asset.category.charAt(0).toUpperCase() + asset.category.slice(1);
+            badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${asset.category}">${categoryName}</div>`);
         }
         
         // Animated badge
-        if (glitter.isAnimated) {
+        if (asset.isAnimated) {
             badgeHTML.push('<div class="asset-info-badge badge-animated">Animated</div>');
         }
         
+
         // Transparency badge
-        if (glitter.hasTransparency) {
-            badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparency</div>');
+        if (asset.hasTransparency) {
+            badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparent</div>');
+        }
+
+        // Variable frame rate badge
+        if (asset.isVariableFramerate) {
+            badgeHTML.push('<div class="asset-info-badge badge-variable-fps">Variable FPS</div>');
+        }
+        
+        
+        // Type-specific badges
+        if (getExtraBadges) {
+            const extraBadges = getExtraBadges(asset);
+            extraBadges.forEach(badge => {
+                badgeHTML.push(`<div class="asset-info-badge ${badge.class}">${badge.text}</div>`);
+            });
         }
         
         badges.innerHTML = badgeHTML.join('');
@@ -855,8 +919,8 @@ updateGlitterAssetInfo(glitter) {
         const categoryBadge = badges.querySelector('.badge-category');
         if (categoryBadge) {
             categoryBadge.addEventListener('click', () => {
-                if (this.glitterManager && this.glitterManager.browser) {
-                    this.glitterManager.browser.navigateToItem(glitter.id);
+                if (manager && manager.browser) {
+                    manager.browser.navigateToItem(asset.id);
                 }
             });
         }
@@ -864,105 +928,46 @@ updateGlitterAssetInfo(glitter) {
     
     // Size - handle undefined
     if (size) {
-        if (glitter.width && glitter.height) {
-            size.textContent = `${glitter.width} × ${glitter.height} px`;
+        if (asset.width && asset.height) {
+            size.textContent = `${asset.width} × ${asset.height} px`;
         } else {
             size.textContent = 'Undefined';
         }
     }
     
-    // Frames - handle undefined
+    // Frames and frame rate - handle undefined
     if (frames) {
-        if (glitter.frameCount !== undefined && glitter.frameCount !== null) {
-            frames.textContent = glitter.frameCount;
+        let frameText = '';
+        
+        if (asset.frameCount !== undefined && asset.frameCount !== null) {
+            frameText = `${asset.frameCount}`;
+            
+            // Add frame rate if available and animated
+            if (asset.isAnimated && asset.frameRate) {
+
+				if(asset.isVariableFramerate) {
+					frameText += ` @ Variable fps`;
+				}else{
+					frameText += ` @ ${asset.frameRate} fps`;
+				}
+                
+            }
         } else {
-            frames.textContent = 'Undefined';
+            frameText = 'Undefined';
         }
+        
+        frames.textContent = frameText;
     }
+}
+
+// Convenience wrappers
+updateGlitterAssetInfo(glitter) {
+    this.updateAssetInfo(glitter, 'glitter');
 }
 
 updateStickerAssetInfo(sticker) {
-    if (!sticker) return;
-    
-    const thumbnail = document.getElementById('stickerAssetThumbnail');
-    const name = document.getElementById('stickerAssetName');
-    const badges = document.getElementById('stickerAssetBadges');
-    const size = document.getElementById('stickerAssetSize');
-    const frames = document.getElementById('stickerAssetFrames');
-    
-    // Thumbnail with click handler
-    if (thumbnail) {
-        thumbnail.className = 'asset-info-thumbnail';
-        thumbnail.style.backgroundImage = '';
-        thumbnail.innerHTML = `<img src="${sticker.url}" alt="${sticker.name}">`;
-        thumbnail.style.cursor = 'pointer';
-        
-        // Remove old listeners and add new one
-        thumbnail.replaceWith(thumbnail.cloneNode(true));
-        const newThumbnail = document.getElementById('stickerAssetThumbnail');
-        newThumbnail.innerHTML = `<img src="${sticker.url}" alt="${sticker.name}">`;
-        newThumbnail.addEventListener('click', () => {
-            if (this.stickerManager && this.stickerManager.browser) {
-                this.stickerManager.browser.navigateToItem(sticker.id);
-            }
-        });
-    }
-    
-    // Name
-    if (name) name.textContent = sticker.name || 'Undefined';
-    
-    // Badges
-    if (badges) {
-        const badgeHTML = [];
-        
-        // Category badge (clickable)
-        if (sticker.category) {
-            const categoryName = sticker.category.charAt(0).toUpperCase() + sticker.category.slice(1);
-            badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${sticker.category}">${categoryName}</div>`);
-        }
-        
-        // Animated badge
-        if (sticker.isAnimated) {
-            badgeHTML.push('<div class="asset-info-badge badge-animated">Animated</div>');
-        }
-        
-        // Transparency badge
-        if (sticker.hasTransparency) {
-            badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparency</div>');
-        }
-        
-        badges.innerHTML = badgeHTML.join('');
-        
-        // Add click listener to category badge
-        const categoryBadge = badges.querySelector('.badge-category');
-        if (categoryBadge) {
-            categoryBadge.addEventListener('click', () => {
-                if (this.stickerManager && this.stickerManager.browser) {
-                    this.stickerManager.browser.navigateToItem(sticker.id);
-                }
-            });
-        }
-    }
-    
-    // Size - handle undefined
-    if (size) {
-        if (sticker.width && sticker.height) {
-            size.textContent = `${sticker.width} × ${sticker.height} px`;
-        } else {
-            size.textContent = 'Undefined';
-        }
-    }
-    
-    // Frames - handle undefined
-    if (frames) {
-        if (sticker.frameCount !== undefined && sticker.frameCount !== null) {
-            frames.textContent = sticker.frameCount;
-        } else {
-            frames.textContent = 'Undefined';
-        }
-    }
+    this.updateAssetInfo(sticker, 'sticker');
 }
-
 
 
 	loadActiveLayerSettings() {

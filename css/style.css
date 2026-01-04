@@ -4252,7 +4252,6 @@ body.tool-select .preview-canvas {
   display: flex;
   gap: var(--spacing-sm);
   align-items: flex-start;
-  display: none;
 }
 .asset-info-header .asset-info-thumbnail {
   width: 48px;
@@ -4313,6 +4312,15 @@ body.tool-select .preview-canvas {
   font-size: 11px;
   font-weight: 500;
   line-height: 1.2;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.asset-info-header .asset-info-details .asset-info-badges .asset-info-badge.badge-variable-fps {
+  background: rgba(245, 158, 11, 0.15);
+  color: rgb(251, 191, 36);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 .asset-info-header .asset-info-details .asset-info-badges .asset-info-badge.badge-category {
   background: var(--color-bg-tertiary);
