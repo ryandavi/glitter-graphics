@@ -283,6 +283,11 @@ async initBrowser() {
 		this.editor.updateStatus(`Selected ${glitter.name}`);
 		window.dispatchEvent(new CustomEvent('layerChanged'));
 
+
+		if (glitter) {
+			this.editor.updateGlitterAssetInfo(glitter);
+		}
+
 		// Update helpful message
 		this.editor.updateHelpfulMessage();
 
