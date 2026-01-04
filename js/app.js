@@ -224,17 +224,29 @@ const LAYER_UI_CONFIG = {
 		}
 	},
 
-	[LayerType.STICKER]: {
-		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'],
-		mobileSettingsSections: ['sticker'],
-		panelMode: 'sticker',
-		onActivate: (editor, layer) => {
-			editor.setTool(ToolType.SELECT);
-			editor.hideStickerSettingsEmptyState();
-			editor.loadStickerSettings(layer);
-			editor.updateStickerSelection();
-		}
-	}
+[LayerType.STICKER]: {
+    designPanelSections: ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'],
+    mobileSettingsSections: ['sticker'],
+    panelMode: 'sticker',
+    onActivate: (editor, layer) => {
+        editor.setTool(ToolType.SELECT);
+        
+        // Check if sticker is actually selected
+        const stickerContent = document.getElementById('stickerSettingsContent');
+        if (layer.stickerSourceId) {
+            // Has sticker - show content and controls
+            if (stickerContent) stickerContent.classList.add('visible');
+            editor.hideStickerSettingsEmptyState();
+            editor.loadStickerSettings(layer);
+        } else {
+            // No sticker selected - hide content, show empty state
+            if (stickerContent) stickerContent.classList.remove('visible');
+            editor.showStickerSettingsEmptyState();
+        }
+        
+        editor.updateStickerSelection();
+    }
+}
 };
 
 // ============================================
@@ -764,12 +776,12 @@ class GlitterEditor {
 		});
 	}
 
-	showStickerSettingsEmptyState() {
-		const empty = document.getElementById('stickerSettingsEmpty');
-		const controls = document.getElementById('stickerSettingsControls');
-		if (empty) empty.classList.add('visible');
-		if (controls) controls.classList.remove('visible');
-	}
+showStickerSettingsEmptyState() {
+    const empty = document.getElementById('stickerSettingsEmpty');
+    const controls = document.getElementById('stickerSettingsControls');
+    if (empty) empty.classList.add('visible');
+    if (controls) controls.classList.remove('visible');
+}
 
 	hideStickerSettingsEmptyState() {
 		const empty = document.getElementById('stickerSettingsEmpty');
@@ -784,6 +796,172 @@ class GlitterEditor {
 		if (content) content.classList.remove('visible');
 		if (toggle) toggle.classList.add('collapsed');
 	}
+
+	
+updateGlitterAssetInfo(glitter) {
+    if (!glitter) return;
+    
+    const thumbnail = document.getElementById('glitterAssetThumbnail');
+    const name = document.getElementById('glitterAssetName');
+    const badges = document.getElementById('glitterAssetBadges');
+    const size = document.getElementById('glitterAssetSize');
+    const frames = document.getElementById('glitterAssetFrames');
+    
+    // Thumbnail with click handler
+    if (thumbnail) {
+        thumbnail.className = 'asset-info-thumbnail glitter-bg';
+        thumbnail.style.backgroundImage = `url(${glitter.url})`;
+        thumbnail.innerHTML = '';
+        thumbnail.style.cursor = 'pointer';
+        
+        // Remove old listeners and add new one
+        thumbnail.replaceWith(thumbnail.cloneNode(true));
+        const newThumbnail = document.getElementById('glitterAssetThumbnail');
+        newThumbnail.addEventListener('click', () => {
+            if (this.glitterManager && this.glitterManager.browser) {
+                this.glitterManager.browser.navigateToItem(glitter.id);
+            }
+        });
+    }
+    
+    // Name
+    if (name) name.textContent = glitter.name || 'Undefined';
+    
+    // Badges
+    if (badges) {
+        const badgeHTML = [];
+        
+        // Category badge (clickable)
+        if (glitter.category) {
+            const categoryName = glitter.category.charAt(0).toUpperCase() + glitter.category.slice(1);
+            badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${glitter.category}">${categoryName}</div>`);
+        }
+        
+        // Animated badge
+        if (glitter.isAnimated) {
+            badgeHTML.push('<div class="asset-info-badge badge-animated">Animated</div>');
+        }
+        
+        // Transparency badge
+        if (glitter.hasTransparency) {
+            badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparency</div>');
+        }
+        
+        badges.innerHTML = badgeHTML.join('');
+        
+        // Add click listener to category badge
+        const categoryBadge = badges.querySelector('.badge-category');
+        if (categoryBadge) {
+            categoryBadge.addEventListener('click', () => {
+                if (this.glitterManager && this.glitterManager.browser) {
+                    this.glitterManager.browser.navigateToItem(glitter.id);
+                }
+            });
+        }
+    }
+    
+    // Size - handle undefined
+    if (size) {
+        if (glitter.width && glitter.height) {
+            size.textContent = `${glitter.width} × ${glitter.height} px`;
+        } else {
+            size.textContent = 'Undefined';
+        }
+    }
+    
+    // Frames - handle undefined
+    if (frames) {
+        if (glitter.frameCount !== undefined && glitter.frameCount !== null) {
+            frames.textContent = glitter.frameCount;
+        } else {
+            frames.textContent = 'Undefined';
+        }
+    }
+}
+
+updateStickerAssetInfo(sticker) {
+    if (!sticker) return;
+    
+    const thumbnail = document.getElementById('stickerAssetThumbnail');
+    const name = document.getElementById('stickerAssetName');
+    const badges = document.getElementById('stickerAssetBadges');
+    const size = document.getElementById('stickerAssetSize');
+    const frames = document.getElementById('stickerAssetFrames');
+    
+    // Thumbnail with click handler
+    if (thumbnail) {
+        thumbnail.className = 'asset-info-thumbnail';
+        thumbnail.style.backgroundImage = '';
+        thumbnail.innerHTML = `<img src="${sticker.url}" alt="${sticker.name}">`;
+        thumbnail.style.cursor = 'pointer';
+        
+        // Remove old listeners and add new one
+        thumbnail.replaceWith(thumbnail.cloneNode(true));
+        const newThumbnail = document.getElementById('stickerAssetThumbnail');
+        newThumbnail.innerHTML = `<img src="${sticker.url}" alt="${sticker.name}">`;
+        newThumbnail.addEventListener('click', () => {
+            if (this.stickerManager && this.stickerManager.browser) {
+                this.stickerManager.browser.navigateToItem(sticker.id);
+            }
+        });
+    }
+    
+    // Name
+    if (name) name.textContent = sticker.name || 'Undefined';
+    
+    // Badges
+    if (badges) {
+        const badgeHTML = [];
+        
+        // Category badge (clickable)
+        if (sticker.category) {
+            const categoryName = sticker.category.charAt(0).toUpperCase() + sticker.category.slice(1);
+            badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${sticker.category}">${categoryName}</div>`);
+        }
+        
+        // Animated badge
+        if (sticker.isAnimated) {
+            badgeHTML.push('<div class="asset-info-badge badge-animated">Animated</div>');
+        }
+        
+        // Transparency badge
+        if (sticker.hasTransparency) {
+            badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparency</div>');
+        }
+        
+        badges.innerHTML = badgeHTML.join('');
+        
+        // Add click listener to category badge
+        const categoryBadge = badges.querySelector('.badge-category');
+        if (categoryBadge) {
+            categoryBadge.addEventListener('click', () => {
+                if (this.stickerManager && this.stickerManager.browser) {
+                    this.stickerManager.browser.navigateToItem(sticker.id);
+                }
+            });
+        }
+    }
+    
+    // Size - handle undefined
+    if (size) {
+        if (sticker.width && sticker.height) {
+            size.textContent = `${sticker.width} × ${sticker.height} px`;
+        } else {
+            size.textContent = 'Undefined';
+        }
+    }
+    
+    // Frames - handle undefined
+    if (frames) {
+        if (sticker.frameCount !== undefined && sticker.frameCount !== null) {
+            frames.textContent = sticker.frameCount;
+        } else {
+            frames.textContent = 'Undefined';
+        }
+    }
+}
+
+
 
 	loadActiveLayerSettings() {
 		const layer = this.layerManager.getActiveLayer();
@@ -838,6 +1016,13 @@ class GlitterEditor {
 			opacityValue.textContent = s.opacity + '%';
 			this.updateResetButton('opacity');
 		}
+
+if (layer.selectedGlitterId) {
+    const glitter = this.glitterManager.getItemById(layer.selectedGlitterId);
+    if (glitter) {
+        this.updateGlitterAssetInfo(glitter);
+    }
+}
 
 		this.updateSelectedColorsDisplay();
 	}
@@ -899,6 +1084,15 @@ class GlitterEditor {
 		const flipY = document.getElementById('stickerFlipY');
 		if (flipX) flipX.checked = transform.flipX;
 		if (flipY) flipY.checked = transform.flipY;
+
+// Update sticker asset info
+if (layer.stickerSourceId) {
+    const sticker = this.stickerManager.getItemById(layer.stickerSourceId);
+    if (sticker) {
+        this.updateStickerAssetInfo(sticker);
+    }
+}
+
 	}
 
 	saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
@@ -2370,9 +2564,17 @@ class GlitterEditor {
 		} else if (this.currentTool === ToolType.HAND && panControls) {
 			panControls.classList.add('visible');
 		} else if (this.currentTool === ToolType.SELECT && stickerCenterControls) {
-			if (layer && layer.type === LayerType.STICKER) {
-				stickerCenterControls.classList.add('visible');
-			}
+// When a sticker layer is selected
+if (layer && layer.type === LayerType.STICKER) {
+    if (layer.stickerSourceId) {
+        // Has a sticker selected - show controls
+        this.hideStickerSettingsEmptyState();
+        this.loadStickerSettings(layer); // This will populate asset info
+    } else {
+        // No sticker selected yet - show empty state, hide controls
+        this.showStickerSettingsEmptyState();
+    }
+}
 		} else if (this.currentTool === ToolType.COLOR_PICKER && colorPickerControls) {
 			if (layer && layer.type === LayerType.GLITTER_FILL && layer.selections && layer.selections.length > 0) {
 				this.updateColorPickerControls();

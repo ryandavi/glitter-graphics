@@ -721,8 +721,48 @@
 								<div class="empty-state-icon">✨</div>
 								<div class="empty-state-text">No layer selected</div>
 							</div>
+
 							<div id="glitterSettingsControls">
 								<div class="settings-subsection">
+
+									<!-- Asset Info -->
+									<div class="subsection-content-group">
+
+										<div class="subsection-title">Asset</div>
+
+										<!-- Asset Info Header -->
+										<div class="asset-info-header">
+											<div class="asset-info-thumbnail" id="glitterAssetThumbnail"></div>
+											<div class="asset-info-details">
+												<div class="asset-info-name" id="glitterAssetName"></div>
+												<div class="asset-info-badges" id="glitterAssetBadges"></div>
+											</div>
+										</div>
+
+
+										<div class="settings-group-two-column">
+											<!-- Size -->
+											<div class="setting-column">
+												<div class="setting-header">
+													<span class="setting-label">Size</span>
+												</div>
+												<span class="setting-value" id="glitterAssetSize"></span>
+											</div>
+
+
+											<!-- Frames -->
+											<div class="setting-column">
+												<div class="setting-header">
+													<span class="setting-label">Frames</span>
+												</div>
+												<span class="setting-value" id="glitterAssetFrames"></span>
+											</div>
+										</div>
+
+									</div>
+
+
+
 									<div class="subsection-content-group">
 										<div class="subsection-title">
 											<span>Appearance</span>
@@ -731,8 +771,8 @@
 												<span title="Apply settings to all glitter layers">Global</span>
 											</label>
 										</div>
-										<div class="refine-group">
-											<div class="slider-group">
+										<div class="settings-group-two-column">
+											<div class="setting-column right">
 												<div class="setting-header">
 													<span class="setting-label" title="Scale glitter pattern size">Scale</span>
 													<span class="setting-value" id="scaleValue">100%</span>
@@ -740,7 +780,7 @@
 												<input type="range" id="scale" min="25" max="300" value="100">
 												<button class="btn-text" id="resetScale">Reset</button>
 											</div>
-											<div class="slider-group">
+											<div class="setting-column right">
 												<div class="setting-header">
 													<span class="setting-label" title="Glitter effect intensity">Opacity</span>
 													<span class="setting-value" id="opacityValue">100%</span>
@@ -780,8 +820,57 @@
 								<div class="empty-state-icon">🖼️</div>
 								<div class="empty-state-text">No sticker layer selected</div>
 							</div>
+
+
 							<div id="stickerSettingsControls">
+
+
+
+
+
+
+
 								<div class="settings-subsection">
+
+									<!-- Asset Info -->
+									<div class="subsection-content-group">
+
+										<div class="subsection-title">Asset</div>
+
+										<!-- Asset Info Header -->
+										<div class="asset-info-header">
+											<div class="asset-info-thumbnail" id="stickerAssetThumbnail"></div>
+											<div class="asset-info-details">
+												<div class="asset-info-name" id="stickerAssetName"></div>
+												<div class="asset-info-badges" id="stickerAssetBadges"></div>
+											</div>
+										</div>
+
+
+										<div class="settings-group-two-column">
+
+											<!-- Size -->
+											<div class="setting-column">
+												<div class="setting-header">
+													<span class="setting-label">Size</span>
+												</div>
+												<span class="setting-value" id="stickerAssetSize"></span>
+											</div>
+
+
+											<!-- Frames -->
+											<div class="setting-column">
+												<div class="setting-header">
+													<span class="setting-label">Frames</span>
+												</div>
+												<span class="setting-value" id="stickerAssetFrames"></span>
+											</div>
+
+										</div>
+
+									</div>
+
+
 									<!-- Position -->
 									<div class="subsection-content-group">
 										<div class="subsection-title">Position</div>
@@ -802,9 +891,9 @@
 									<!-- Transform -->
 									<div class="subsection-content-group">
 										<div class="subsection-title">Transform</div>
-										<div class="refine-group">
+										<div class="settings-group-two-column">
 											<!-- Rotation -->
-											<div class="slider-group">
+											<div class="setting-column right">
 												<div class="setting-header">
 													<span class="setting-label">Rotation</span>
 													<span class="setting-value" id="stickerRotationValue">0°</span>
@@ -814,7 +903,7 @@
 											</div>
 
 											<!-- Opacity -->
-											<div class="slider-group">
+											<div class="setting-column right">
 												<div class="setting-header">
 													<span class="setting-label">Opacity</span>
 													<span class="setting-value" id="stickerOpacityValue">100%</span>
@@ -835,9 +924,9 @@
 											</label>
 
 										</div>
-										<div class="refine-group">
+										<div class="settings-group-two-column">
 											<!-- Scale X -->
-											<div class="slider-group">
+											<div class="setting-column right">
 												<div class="setting-header">
 													<span class="setting-label">Scale X</span>
 													<span class="setting-value" id="stickerScaleXValue">100%</span>
@@ -847,7 +936,7 @@
 											</div>
 
 											<!-- Scale Y -->
-											<div class="slider-group">
+											<div class="setting-column right">
 												<div class="setting-header">
 													<span class="setting-label">Scale Y</span>
 													<span class="setting-value" id="stickerScaleYValue">100%</span>
@@ -944,8 +1033,8 @@
 												<span title="Apply refinement settings to every layer">Global</span>
 											</label>
 										</div>
-										<div class="refine-group">
-											<div class="slider-group">
+										<div class="settings-group-two-column">
+											<div class="setting-column right">
 												<div class="setting-header">
 													<span class="setting-label" title="Color similarity range (0-255)">Threshold</span>
 													<span class="setting-value" id="thresholdValue">50</span>
@@ -953,7 +1042,7 @@
 												<input type="range" id="threshold" min="0" max="255" value="50">
 												<button class="btn-text" id="resetThreshold">Reset</button>
 											</div>
-											<div class="slider-group">
+											<div class="setting-column right">
 												<div class="setting-header">
 													<span class="setting-label" title="Smooth selection edges">Feather</span>
 													<span class="setting-value" id="featherValue">0</span>
@@ -1350,7 +1439,7 @@
 			<div class="modal-footer right">
 
 				<!-- Cancel -->
-				<button class="btn icon-wrapper cancel secondary" id="createCanvasCloseBtn">
+				<button class="btn-simple cancel secondary" id="createCanvasCloseBtn">
 					Cancel
 				</button>
 

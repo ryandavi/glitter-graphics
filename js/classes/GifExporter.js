@@ -1297,7 +1297,7 @@ _smartReduceFrames(layerFrameCounts, maxFrames, layers) {
 
 			// Add smart reduction badge if applied
 			if (reductions.length > 0) {
-				const badge = `<span class="smart-reduction-badge" data-tooltip="Optimized ${reductions.length} layer${reductions.length > 1 ? 's' : ''} for smaller file size">Smart Reduced</span>`;
+				const badge = `<span class="smart-reduction-badge" title="Optimized ${reductions.length} layer${reductions.length > 1 ? 's' : ''} for smaller file size">Smart Reduced</span>`;
 				exportStats.insertAdjacentHTML('beforeend', badge);
 			}
 		}
