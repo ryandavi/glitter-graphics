@@ -87,16 +87,26 @@ try {
             }
             break;
 
-case 'analyze':
-    $id = (int)$_GET['id'];
-    if ($assetType === 'glitter') {
-        echo json_encode($api->analyzeGlitter($id));
-    } else if ($assetType === 'sticker') {
-        echo json_encode($api->analyzeSticker($id));
-    } else {
-        throw new Exception('Analyze not available for this asset type');
-    }
-    break;
+        case 'analyze':
+            $id = (int)$_GET['id'];
+            if ($assetType === 'glitter') {
+                echo json_encode($api->analyzeGlitter($id));
+            } else if ($assetType === 'sticker') {
+                echo json_encode($api->analyzeSticker($id));
+            } else {
+                throw new Exception('Analyze not available for this asset type');
+            }
+            break;
+
+        case 'analyze_all':
+            if ($assetType === 'glitter') {
+                echo json_encode($api->analyzeAllGlitter());
+            } else if ($assetType === 'sticker') {
+                echo json_encode($api->analyzeAllStickers());
+            } else {
+                throw new Exception('Bulk analyze not available for this asset type');
+            }
+            break;
 
         // ===== EXPORT OPERATIONS =====
         case 'export':

@@ -1,78 +1,57 @@
-
-class SwatchEditor {
+// ============================================
+// GLITTER EDITOR CLASS
+// ============================================
+class GlitterEditor {
     constructor() {
         this.swatches = [];
+        this.currentSwatch = null;
         this.categories = [];
         this.tags = [];
-        this.currentSwatch = null;
+        this.tagCategories = [];
+        this.scrollPosition = undefined;
+        this.analysisResults = null;
+
         this.init();
     }
 
     async init() {
         await this.loadCategories();
-        await this.loadTags();
         await this.loadSwatches();
+        await this.loadTags();
         this.setupDragAndDrop();
-        this.setupCategoryFormHelpers(); // Add this line
+    }
+
+    async loadCategories() {
+        const response = await fetch('includes/api.php?action=categories&type=glitter');
+        this.categories = await response.json();
     }
 
     async loadSwatches() {
-        const response = await fetch('includes/api.php?action=list&_=' + Date.now());
+        const response = await fetch('includes/api.php?action=list&type=glitter');
         this.swatches = await response.json();
         this.renderSwatchList();
     }
 
-    async loadCategories() {
-        const response = await fetch('includes/api.php?action=categories');
-        this.categories = await response.json();
-    }
-
     async loadTags() {
-        const response = await fetch('includes/api.php?action=tags');
-        this.tags = await response.json();
+        const tagsResponse = await fetch('includes/api.php?action=tags&type=glitter');
+        this.tags = await tagsResponse.json();
+
+        const tagCategoriesResponse = await fetch('includes/api.php?action=tag_categories&type=glitter');
+        this.tagCategories = await tagCategoriesResponse.json();
     }
 
     renderSwatchList() {
         const container = document.getElementById('swatchList');
         let html = '';
+        let currentCategory = null;
 
-        // Get the 10 most recently added items (highest IDs)
-        const recentSwatches = [...this.swatches]
-            .sort((a, b) => b.id - a.id)
-            .slice(0, 10);
-
-        // Render "Recently Added" section (NOT draggable)
-        if (recentSwatches.length > 0) {
-            html += `<details class="category-group" id="category-recently-added" open>
-            <summary class="category-label">Recently Added</summary>
-            <div class="category-items">`;
-
-            recentSwatches.forEach(swatch => {
-                const active = this.currentSwatch && this.currentSwatch.id === swatch.id ? 'active' : '';
-
-                html += `
-                <div class="swatch-item ${active}" 
-                     data-id="${swatch.id}" 
-                     onclick="app.selectSwatch(${swatch.id})">
-                    <div class="swatch-thumb" style="background-image: url('${CONFIG.image_base_path}${swatch.url}');"></div>
-                    <span class="swatch-name">${swatch.name}</span>
-                </div>
-            `;
-            });
-
-            html += '</div></details>';
-        }
-
-        // Render regular category groups (draggable)
-        let currentCategory = '';
-        this.swatches.forEach((swatch, index) => {
-            if (swatch.category_name !== currentCategory) {
+        this.swatches.forEach(swatch => {
+            if (swatch.category_slug !== currentCategory) {
                 if (currentCategory) html += '</div></details>';
-                currentCategory = swatch.category_name;
-                const categorySlug = currentCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                html += `<details class="category-group" id="category-${categorySlug}" open>
-                <summary class="category-label">${currentCategory}</summary>
-                <div class="category-items">`;
+                currentCategory = swatch.category_slug;
+                html += `<details open>
+                    <summary>${swatch.category_name}</summary>
+                    <div class="category-swatches">`;
             }
 
             const active = this.currentSwatch && this.currentSwatch.id === swatch.id ? 'active' : '';
@@ -102,7 +81,7 @@ class SwatchEditor {
         // Save scroll position
         this.scrollPosition = document.getElementById('swatchList').scrollTop;
 
-        const response = await fetch(`includes/api.php?action=get&id=${id}`);
+        const response = await fetch(`includes/api.php?action=get&id=${id}&type=glitter`);
         this.currentSwatch = await response.json();
         this.renderEditor();
         this.renderSwatchList(); // Update active state
@@ -170,21 +149,58 @@ class SwatchEditor {
                     </div>
                     
                     <div class="form-section">
-                        <h3 class="form-section-title">Frame Data</h3>
+                        <h3 class="form-section-title">Technical Properties</h3>
+                        
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Frame Count</label>
-                                <input type="number" id="frame_count" value="${s.frame_count || ''}">
+                                <label>Width (px)</label>
+                                <input type="number" id="width" value="${s.width || ''}" min="0">
                             </div>
                             <div class="form-group">
-                                <label>Frame Rate (centiseconds)</label>
-                                <input type="number" id="frame_rate" value="${s.frame_rate || ''}">
+                                <label>Height (px)</label>
+                                <input type="number" id="height" value="${s.height || ''}" min="0">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="is_variable_framerate" ${s.is_variable_framerate === '1' ? 'checked' : ''}>
-                                <label for="is_variable_framerate">Variable Frame Rate</label>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>File Size (bytes)</label>
+                                <input type="number" id="file_size" value="${s.file_size || ''}" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Frame Count</label>
+                                <input type="number" id="frame_count" value="${s.frame_count || ''}" min="1">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Frame Rate (centiseconds)</label>
+                                <input type="number" id="frame_rate" value="${s.frame_rate || ''}" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="is_variable_framerate" ${s.is_variable_framerate === '1' ? 'checked' : ''}>
+                                    <label for="is_variable_framerate">Variable Frame Rate</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="is_animated" ${s.is_animated === '1' ? 'checked' : ''}>
+                                    <label for="is_animated">Animated</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="has_transparency" ${s.has_transparency === '1' ? 'checked' : ''}>
+                                    <label for="has_transparency">Has Transparency</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -203,155 +219,104 @@ class SwatchEditor {
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Color Value (brightness)</label>
-                                <input type="number" id="color_value" value="${s.color_value !== null ? s.color_value : ''}" min="0" max="1">
+                                <input type="number" id="color_value" value="${s.color_value !== null ? s.color_value : ''}" step="0.001">
                             </div>
                             <div class="form-group">
-                                <label>Hue (0-1, neutrals=1.1)</label>
-                                <input type="text" id="hue" value="${s.hue || ''}">
+                                <label>Hue</label>
+                                <input type="number" id="hue" value="${s.hue || ''}" step="0.001">
                             </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Sort Order</label>
-                            <input type="number" id="sort_order" value="${s.sort_order || ''}">
-                        </div>
                     </div>
-                    
+
                     <div class="form-section">
                         <h3 class="form-section-title">Tags</h3>
-                        <div class="tag-list">
-                            ${s.tags.map(tag => `
-                                <div class="tag">
-                                    ${tag.hex_color ? `<span class="tag-color" style="background: ${tag.hex_color};"></span>` : ''}
-                                    ${tag.name}
-                                    <button class="tag-remove" onclick="app.removeTag(${tag.id})">×</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="tag-select-container">
-                            <select id="tagSelect">
-                                <option value="">Select tag...</option>
-                                ${this.groupTagsByCategory().map(group => `
-                                    <optgroup label="${group.category}">
-                                        ${group.tags.map(tag => `
-                                            <option value="${tag.id}" ${s.tags.some(t => t.id == tag.id) ? 'disabled' : ''}>
-                                                ${tag.name}
-                                            </option>
-                                        `).join('')}
-                                    </optgroup>
-                                `).join('')}
+                        <div class="tag-section">
+                            <div class="tag-list" id="tagList"></div>
+                            <select id="tagSelect" onchange="app.addTag(); this.value='';">
+                                <!-- Populated by updateTagDisplay -->
                             </select>
-                            <button class="tag-add-btn" onclick="app.addTag()">Add</button>
                         </div>
                     </div>
                 `;
+
+        this.updateTagDisplay();
     }
 
     renderColorInput(color, index) {
         return `
-                    <div class="color-input-wrapper">
-                        <input type="color" value="${color}" onchange="app.updateColorText(${index}, this.value)">
-                        <input type="text" value="${color}" onchange="app.updateColorPicker(${index}, this.value)" placeholder="#FF0000">
-                        <button class="color-remove-btn" onclick="app.removeColor(${index})">×</button>
-                    </div>
-                `;
+            <div class="color-input-wrapper">
+                <input type="color" value="${color}" onchange="app.syncColorInputs(${index})">
+                <input type="text" value="${color}" onchange="app.syncColorInputs(${index})">
+                <button class="color-remove-btn" onclick="app.removeColorInput(${index})">×</button>
+            </div>
+        `;
     }
 
-    groupTagsByCategory() {
-        const grouped = {};
-        this.tags.forEach(tag => {
-            if (!grouped[tag.category_name]) {
-                grouped[tag.category_name] = [];
-            }
-            grouped[tag.category_name].push(tag);
-        });
+    syncColorInputs(index) {
+        const wrapper = document.querySelectorAll('.color-input-wrapper')[index];
+        const colorPicker = wrapper.querySelector('input[type="color"]');
+        const textInput = wrapper.querySelector('input[type="text"]');
 
-        return Object.entries(grouped).map(([category, tags]) => ({
-            category,
-            tags
-        }));
+        if (event.target === colorPicker) {
+            textInput.value = colorPicker.value;
+        } else {
+            colorPicker.value = textInput.value;
+        }
     }
 
     addColorInput() {
         const container = document.getElementById('colorInputs');
         const index = container.children.length;
-        const div = document.createElement('div');
-        div.innerHTML = this.renderColorInput('#FF0000', index);
-        container.appendChild(div.firstElementChild);
+        container.insertAdjacentHTML('beforeend', this.renderColorInput('#000000', index));
     }
 
-    removeColor(index) {
+    removeColorInput(index) {
         const container = document.getElementById('colorInputs');
-
-        const colorGroups = container.querySelectorAll('.color-input-wrapper');
-
-        const colors = Array.from(colorGroups).map(group =>
-            group.querySelector('input[type="text"]').value
-        );
-
-        colors.splice(index, 1);
-
-        container.innerHTML = colors
-            .map((color, i) => this.renderColorInput(color, i))
-            .join('');
-    }
-
-
-    updateColorPicker(index, value) {
-        if (/^#[0-9A-F]{6}$/i.test(value)) {
-            const container = document.getElementById('colorInputs');
-            const colorInput = container.children[index].querySelector('input[type="color"]');
-            colorInput.value = value.toUpperCase();
-        }
-    }
-
-    async addTag() {
-        const tagId = document.getElementById('tagSelect').value;
-        if (!tagId) return;
-
-        const tag = this.tags.find(t => t.id == tagId);
-        if (!tag) return;
-
-        // Add to current swatch tags
-        this.currentSwatch.tags.push(tag);
-
-        // Update just the tag display, not the entire editor
-        this.updateTagDisplay();
+        container.children[index].remove();
     }
 
     updateTagDisplay() {
-        const s = this.currentSwatch;
-        const tagListHtml = s.tags.map(tag => `
-        <div class="tag">
-            ${tag.hex_color ? `<span class="tag-color" style="background: ${tag.hex_color};"></span>` : ''}
-            ${tag.name}
-            <button class="tag-remove" onclick="app.removeTag(${tag.id})">×</button>
-        </div>
-    `).join('');
-
-        // Find the tag list container and update it
-        const tagListContainer = document.querySelector('.tag-list');
-        if (tagListContainer) {
-            tagListContainer.innerHTML = tagListHtml;
+        // Update tag list
+        const tagList = document.getElementById('tagList');
+        if (tagList && this.currentSwatch) {
+            tagList.innerHTML = this.currentSwatch.tags.map(tag => `
+                <div class="tag">
+                    ${tag.name}
+                    <button onclick="app.removeTag(${tag.id})">×</button>
+                </div>
+            `).join('');
         }
 
-        // Update the select to disable already-added tags
-        const select = document.getElementById('tagSelect');
-        if (select) {
-            const grouped = this.groupTagsByCategory();
-            select.innerHTML = `<option value="">Select tag...</option>` + grouped.map(group => `
-            <optgroup label="${group.category}">
-                ${group.tags.map(tag => `
-                    <option value="${tag.id}" ${s.tags.some(t => t.id == tag.id) ? 'disabled' : ''}>
-                        ${tag.name}
-                    </option>
-                `).join('')}
-            </optgroup>
-        `).join('');
+        // Update tag select
+        const tagSelect = document.getElementById('tagSelect');
+        if (tagSelect) {
+            const availableTags = this.tags.filter(tag =>
+                !this.currentSwatch.tags.find(t => t.id == tag.id)
+            );
+
+            tagSelect.innerHTML = `
+            <option value="">Add a tag...</option>
+            ${this.tagCategories.map(category => `
+                <optgroup label="${category.name}">
+                    ${availableTags.filter(tag => tag.tag_category_id == category.id).map(tag => `
+                        <option value="${tag.id}">${tag.name}</option>
+                    `).join('')}
+                </optgroup>
+            `).join('')}
+        `;
         }
     }
 
+    addTag() {
+        const tagId = parseInt(document.getElementById('tagSelect').value);
+        if (!tagId) return;
 
+        const tag = this.tags.find(t => t.id === tagId);
+        if (tag && !this.currentSwatch.tags.find(t => t.id === tagId)) {
+            this.currentSwatch.tags.push(tag);
+            this.updateTagDisplay();
+        }
+    }
 
     removeTag(tagId) {
         this.currentSwatch.tags = this.currentSwatch.tags.filter(t => t.id != tagId);
@@ -360,7 +325,6 @@ class SwatchEditor {
 
     async saveSwatch() {
         if (!this.currentSwatch) return;
-
 
         // SAVE SCROLL POSITION
         const contentScroll = document.getElementById('contentScroll');
@@ -384,11 +348,15 @@ class SwatchEditor {
             frame_count: parseInt(document.getElementById('frame_count').value) || 0,
             frame_rate: parseInt(document.getElementById('frame_rate').value) || 10,
             is_variable_framerate: document.getElementById('is_variable_framerate').checked ? 1 : 0,
+            width: parseInt(document.getElementById('width').value) || 0,
+            height: parseInt(document.getElementById('height').value) || 0,
+            file_size: parseInt(document.getElementById('file_size').value) || 0,
+            is_animated: document.getElementById('is_animated').checked ? 1 : 0,
+            has_transparency: document.getElementById('has_transparency').checked ? 1 : 0,
             tags: this.currentSwatch.tags.map(t => t.id)
         };
 
         this.showStatus('Saving...');
-
 
         const response = await fetch('includes/api.php?action=update&type=glitter', {
             method: 'POST',
@@ -410,23 +378,9 @@ class SwatchEditor {
                 const contentScroll = document.getElementById('contentScroll');
                 if (contentScroll) contentScroll.scrollTop = scrollTop;
             }, 0);
-
-
         } else {
             this.showStatus('Error: ' + result.error, 'error');
         }
-    }
-
-    getColorCodes() {
-        const container = document.getElementById('colorInputs');
-        const colors = [];
-        for (let child of container.children) {
-            const input = child.querySelector('input[type="text"]');
-            if (input && input.value) {
-                colors.push(input.value.trim());
-            }
-        }
-        return colors.join(',');
     }
 
     async deleteSwatch() {
@@ -437,7 +391,7 @@ class SwatchEditor {
         const formData = new FormData();
         formData.append('id', this.currentSwatch.id);
 
-        await fetch('includes/api.php?action=delete', {
+        await fetch('includes/api.php?action=delete&type=glitter', {
             method: 'POST',
             body: formData
         });
@@ -455,7 +409,7 @@ class SwatchEditor {
 
         this.showStatus('Analyzing...');
 
-        const response = await fetch(`includes/api.php?action=analyze&id=${this.currentSwatch.id}`);
+        const response = await fetch(`includes/api.php?action=analyze&id=${this.currentSwatch.id}&type=glitter`);
         const analysis = await response.json();
 
         if (analysis.error) {
@@ -463,10 +417,37 @@ class SwatchEditor {
             return;
         }
 
-        console.log('Analysis results:', analysis); // DEBUG
         this.analysisResults = analysis;
         this.showAnalyzeModal();
         this.showStatus('Analysis complete!', 'success');
+    }
+
+    async analyzeBulk() {
+        if (!confirm('This will analyze ALL glitter assets and update their technical properties. This may take several minutes. Continue?')) {
+            return;
+        }
+
+        this.showStatus('Starting bulk analysis...');
+
+        try {
+            const response = await fetch('includes/api.php?action=analyze_all&type=glitter', {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showStatus(`Bulk analysis complete! Updated ${result.updated} glitter assets.`, 'success');
+                await this.loadSwatches();
+                if (this.currentSwatch) {
+                    await this.selectSwatch(this.currentSwatch.id);
+                }
+            } else {
+                this.showStatus('Error: ' + (result.error || 'Unknown error'), 'error');
+            }
+        } catch (error) {
+            this.showStatus('Error: ' + error.message, 'error');
+        }
     }
 
     showAnalyzeModal() {
@@ -484,6 +465,30 @@ class SwatchEditor {
         });
 
         const resultsHtml = `
+        <div class="analyze-result-item">
+            <input type="checkbox" id="apply_width" checked>
+            <div class="analyze-result-content">
+                <div class="analyze-result-label">Width</div>
+                <div class="analyze-result-value">${analysis.width || 'N/A'} px</div>
+            </div>
+        </div>
+        
+        <div class="analyze-result-item">
+            <input type="checkbox" id="apply_height" checked>
+            <div class="analyze-result-content">
+                <div class="analyze-result-label">Height</div>
+                <div class="analyze-result-value">${analysis.height || 'N/A'} px</div>
+            </div>
+        </div>
+        
+        <div class="analyze-result-item">
+            <input type="checkbox" id="apply_file_size" checked>
+            <div class="analyze-result-content">
+                <div class="analyze-result-label">File Size</div>
+                <div class="analyze-result-value">${analysis.file_size || 'N/A'} bytes</div>
+            </div>
+        </div>
+        
         <div class="analyze-result-item">
             <input type="checkbox" id="apply_frame_count" checked>
             <div class="analyze-result-content">
@@ -505,6 +510,22 @@ class SwatchEditor {
             <div class="analyze-result-content">
                 <div class="analyze-result-label">Variable Frame Rate</div>
                 <div class="analyze-result-value">${analysis.is_variable_framerate ? 'Yes' : 'No'}</div>
+            </div>
+        </div>
+        
+        <div class="analyze-result-item">
+            <input type="checkbox" id="apply_is_animated" checked>
+            <div class="analyze-result-content">
+                <div class="analyze-result-label">Animated</div>
+                <div class="analyze-result-value">${analysis.is_animated ? 'Yes' : 'No'}</div>
+            </div>
+        </div>
+        
+        <div class="analyze-result-item">
+            <input type="checkbox" id="apply_has_transparency" checked>
+            <div class="analyze-result-content">
+                <div class="analyze-result-label">Has Transparency</div>
+                <div class="analyze-result-value">${analysis.has_transparency ? 'Yes' : 'No'}</div>
             </div>
         </div>
         
@@ -556,12 +577,12 @@ class SwatchEditor {
                 <input type="checkbox" id="apply_suggested_tags" checked>
                 <div class="analyze-result-content">
                     <div class="analyze-result-label">Suggested Tags</div>
-                    <div class="analyze-result-value" id="suggestedTagsList">
+                    <div class="analyze-result-value">
                         ${availableTags.map(tag => `
-                            <div style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--color-bg-tertiary); border-radius: 4px; margin: 2px; font-size: 12px;">
-                                <input type="checkbox" id="tag_suggest_${tag.id}" checked style="margin: 0;">
-                                <label for="tag_suggest_${tag.id}" style="cursor: pointer;">${tag.name}</label>
-                            </div>
+                            <label style="display: inline-block; margin-right: 12px;">
+                                <input type="checkbox" id="tag_suggest_${tag.id}" checked>
+                                ${tag.name}
+                            </label>
                         `).join('')}
                     </div>
                 </div>
@@ -573,36 +594,6 @@ class SwatchEditor {
         document.getElementById('analyzeModal').classList.add('active');
     }
 
-    generateTagsFromColorName(colorName) {
-        const words = colorName.toLowerCase().split(/[\s-]+/);
-        const tagWords = [
-            // Base colors
-            'red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown',
-            'cyan', 'magenta', 'teal', 'lime', 'indigo', 'violet',
-            // Neutrals
-            'white', 'gray', 'grey', 'black', 'beige', 'tan', 'charcoal',
-            // Brightness/value
-            'light', 'dark', 'mid', 'very',
-            // Saturation/tone
-            'bright', 'neon', 'pastel', 'vivid', 'muted', 'desaturated', 'deep',
-            // Temperature
-            'warm', 'cool',
-            // Special
-            'multicolor', 'rainbow'
-        ];
-
-        return words.filter(word => tagWords.includes(word));
-    }
-
-    removeAnalysisColor(index) {
-        const colors = this.analysisResults.color_codes.split(',');
-        colors.splice(index, 1);
-        this.analysisResults.color_codes = colors.join(',');
-
-        // Re-render the modal
-        this.showAnalyzeModal();
-    }
-
     hideAnalyzeModal() {
         document.getElementById('analyzeModal').classList.remove('active');
     }
@@ -610,29 +601,37 @@ class SwatchEditor {
     applyAnalysis() {
         const analysis = this.analysisResults;
 
-        console.log('=== APPLY ANALYSIS START ===');
-        console.log('Current swatch:', this.currentSwatch);
-        console.log('Analysis data:', analysis);
+        // Apply technical properties
+        if (document.getElementById('apply_width').checked) {
+            document.getElementById('width').value = analysis.width || '';
+        }
+
+        if (document.getElementById('apply_height').checked) {
+            document.getElementById('height').value = analysis.height || '';
+        }
+
+        if (document.getElementById('apply_file_size').checked) {
+            document.getElementById('file_size').value = analysis.file_size || '';
+        }
 
         if (document.getElementById('apply_frame_count').checked) {
-            const input = document.getElementById('frame_count');
-            if (input) {
-                input.value = analysis.frame_count || '';
-            }
+            document.getElementById('frame_count').value = analysis.frame_count || '';
         }
 
         if (document.getElementById('apply_frame_rate').checked) {
-            const input = document.getElementById('frame_rate');
-            if (input) {
-                input.value = analysis.frame_rate || '';
-            }
+            document.getElementById('frame_rate').value = analysis.frame_rate || '';
         }
 
         if (document.getElementById('apply_is_variable_framerate').checked) {
-            const input = document.getElementById('is_variable_framerate');
-            if (input) {
-                input.checked = analysis.is_variable_framerate;
-            }
+            document.getElementById('is_variable_framerate').checked = analysis.is_variable_framerate;
+        }
+
+        if (document.getElementById('apply_is_animated').checked) {
+            document.getElementById('is_animated').checked = analysis.is_animated;
+        }
+
+        if (document.getElementById('apply_has_transparency').checked) {
+            document.getElementById('has_transparency').checked = analysis.has_transparency;
         }
 
         if (document.getElementById('apply_color_codes').checked) {
@@ -644,24 +643,15 @@ class SwatchEditor {
         }
 
         if (document.getElementById('apply_color_value').checked) {
-            const input = document.getElementById('color_value');
-            if (input) {
-                input.value = analysis.color_value !== null ? analysis.color_value : '';
-            }
+            document.getElementById('color_value').value = analysis.color_value !== null ? analysis.color_value : '';
         }
 
         if (document.getElementById('apply_hue').checked) {
-            const input = document.getElementById('hue');
-            if (input) {
-                input.value = analysis.hue || '';
-            }
+            document.getElementById('hue').value = analysis.hue || '';
         }
 
         if (document.getElementById('apply_generated_name').checked) {
-            const input = document.getElementById('generated_name');
-            if (input) {
-                input.value = analysis.generated_name || '';
-            }
+            document.getElementById('generated_name').value = analysis.generated_name || '';
         }
 
         // Apply suggested tags
@@ -677,335 +667,29 @@ class SwatchEditor {
                 }
             });
 
-            // DON'T call renderEditor() - use updateTagDisplay() instead
             this.updateTagDisplay();
         }
-
-        console.log('=== FINAL INPUT VALUES ===');
-        console.log('frame_count:', document.getElementById('frame_count')?.value);
-        console.log('generated_name:', document.getElementById('generated_name')?.value);
-        console.log('color_value:', document.getElementById('color_value')?.value);
 
         this.hideAnalyzeModal();
         this.showStatus('Analysis applied!', 'success');
     }
 
-    async exportCategoriesJSON() {
-        this.showStatus('Exporting categories...');
-
-        const response = await fetch('includes/api.php?action=save_categories_export&type=glitter', {
-            method: 'POST'
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            this.showStatus(`Categories saved to ${result.path} (${result.bytes} bytes)`, 'success');
-        } else {
-            alert('Error: ' + result.error);
-            this.showStatus('Category export failed', 'error');
-        }
+    removeAnalysisColor(index) {
+        const colors = this.analysisResults.color_codes.split(',');
+        colors.splice(index, 1);
+        this.analysisResults.color_codes = colors.join(',');
+        this.showAnalyzeModal();
     }
 
-    async exportJSON() {
-        this.showStatus('Exporting...');
-
-        const response = await fetch('includes/api.php?action=save_export&type=glitter', {
-            method: 'POST'
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            this.showStatus(`Saved to ${result.path} (${result.bytes} bytes)`, 'success');
-        } else {
-            alert('Error: ' + result.error);
-            this.showStatus('Export failed', 'error');
-        }
+    generateTagsFromColorName(colorName) {
+        if (!colorName) return [];
+        
+        const words = colorName.toLowerCase().split(/[\s-_]+/);
+        return words.filter(word => word.length > 3);
     }
 
-    showAddModal() {
-        const modal = document.getElementById('addModal');
-        const quickCategory = document.getElementById('quickCategory');
-
-        // Build options with both id and slug
-        const options = this.categories.map(cat =>
-            `<option value="${cat.slug}" data-id="${cat.id}">${cat.name}</option>`
-        ).join('');
-
-        quickCategory.innerHTML = '<option value="">Select category...</option>' + options;
-
-        modal.classList.add('active');
-    }
-
-    handleFileSelection(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const category = document.getElementById('quickCategory').value;
-        if (!category) {
-            alert('Please select a category first');
-            event.target.value = '';
-            return;
-        }
-
-        const path = `images/glitter/${category}/${file.name}`;
-        document.getElementById('newSwatchUrl').value = path;
-        event.target.value = '';
-    }
-
-    updateFilePath() {
-        const category = document.getElementById('quickCategory').value;
-        const currentPath = document.getElementById('newSwatchUrl').value;
-
-        if (!category || !currentPath) return;
-
-        // Extract filename from current path
-        // Match pattern: images/glitter/{old-category}/{filename}
-        const match = currentPath.match(/images\/glitter\/[^\/]+\/(.+)$/);
-
-        if (match) {
-            const filename = match[1];
-            const newPath = `images/glitter/${category}/${filename}`;
-            document.getElementById('newSwatchUrl').value = newPath;
-        }
-    }
-
-    hideAddModal() {
-        document.getElementById('addModal').classList.remove('active');
-        document.getElementById('newSwatchName').value = '';
-        document.getElementById('newSwatchUrl').value = '';
-        document.getElementById('quickCategory').value = '';
-    }
-
-    async addSwatch() {
-        const name = document.getElementById('newSwatchName').value;
-        const url = document.getElementById('newSwatchUrl').value;
-        const categorySlug = document.getElementById('quickCategory').value;
-
-        if (!name || !url || !categorySlug) {
-            alert('Please fill in all fields');
-            return;
-        }
-
-        // Find category ID from slug
-        const category = this.categories.find(c => c.slug === categorySlug);
-        if (!category) {
-            alert('Invalid category selected');
-            return;
-        }
-
-        const data = {
-            name: name,
-            url: url,
-            category_id: category.id
-        };
-
-        const response = await fetch('includes/api.php?action=add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            this.hideAddModal();
-            await this.loadSwatches();
-            await this.selectSwatch(result.id);
-            this.showStatus('Swatch added!', 'success');
-        } else {
-            alert('Error: ' + result.error);
-        }
-    }
-
-    setupDragAndDrop() {
-        let draggedItem = null;
-        let scrollInterval = null;
-        const sidebar = document.getElementById('swatchList');
-
-        document.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('swatch-item')) {
-                draggedItem = e.target;
-                e.target.classList.add('dragging');
-            }
-        });
-
-        document.addEventListener('dragend', (e) => {
-            if (e.target.classList.contains('swatch-item')) {
-                e.target.classList.remove('dragging');
-
-                // Clear scroll interval
-                if (scrollInterval) {
-                    clearInterval(scrollInterval);
-                    scrollInterval = null;
-                }
-
-                this.saveOrder();
-            }
-        });
-
-        document.addEventListener('dragover', (e) => {
-            e.preventDefault();
-
-            // Auto-scroll sidebar when dragging near edges
-            if (draggedItem) {
-                const sidebarRect = sidebar.getBoundingClientRect();
-                const mouseY = e.clientY;
-                const scrollThreshold = 50;
-                const scrollSpeed = 10;
-
-                // Clear existing interval
-                if (scrollInterval) {
-                    clearInterval(scrollInterval);
-                    scrollInterval = null;
-                }
-
-                // Scroll up
-                if (mouseY < sidebarRect.top + scrollThreshold) {
-                    scrollInterval = setInterval(() => {
-                        sidebar.scrollTop -= scrollSpeed;
-                    }, 20);
-                }
-                // Scroll down
-                else if (mouseY > sidebarRect.bottom - scrollThreshold) {
-                    scrollInterval = setInterval(() => {
-                        sidebar.scrollTop += scrollSpeed;
-                    }, 20);
-                }
-            }
-
-            const target = e.target.closest('.swatch-item');
-            if (target && draggedItem && target !== draggedItem) {
-                const container = target.parentElement;
-                const items = [...container.querySelectorAll('.swatch-item')];
-                const dragIndex = items.indexOf(draggedItem);
-                const targetIndex = items.indexOf(target);
-
-                if (dragIndex < targetIndex) {
-                    target.after(draggedItem);
-                } else {
-                    target.before(draggedItem);
-                }
-            }
-        });
-    }
-
-    async saveOrder() {
-        const items = document.querySelectorAll('.swatch-item');
-        const order = Array.from(items).map(item => item.dataset.id);
-
-        const response = await fetch('includes/api.php?action=reorder', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                order
-            })
-        });
-
-        const result = await response.json();
-        console.log('Reorder response:', result);
-
-        if (result.success) {
-            this.showStatus('Order saved', 'success');
-
-            // Reload swatches
-            await this.loadSwatches();
-            await this.selectSwatch(this.currentSwatch.id);
-
-        } else {
-            this.showStatus('Error saving order: ' + (result.error || 'Unknown error'), 'error');
-        }
-    }
-
-    showManageCategoriesModal() {
-        this.renderCategoryList();
-        document.getElementById('manageCategoriesModal').classList.add('active');
-    }
-
-    hideManageCategoriesModal() {
-        document.getElementById('manageCategoriesModal').classList.remove('active');
-    }
-
-    async renderCategoryList() {
-        await this.loadCategories();
-
-        const html = this.categories.map(cat => `
-                    <div class="management-item">
-                        <div class="management-item-info">
-                            <div class="management-item-name">${cat.name}</div>
-                            <div class="management-item-meta">Slug: ${cat.slug} | Sort: ${cat.sort_order}</div>
-                        </div>
-                        <button class="management-item-delete" onclick="app.deleteCategory(${cat.id}, '${cat.name}')">Delete</button>
-                    </div>
-                `).join('');
-
-        document.getElementById('categoryList').innerHTML = html;
-    }
-
-    async addCategory() {
-        const name = document.getElementById('newCategoryName').value;
-        const slug = document.getElementById('newCategorySlug').value;
-        const description = document.getElementById('newCategoryDescription').value;
-
-        if (!name || !slug) {
-            alert('Name and slug are required');
-            return;
-        }
-
-        const data = {
-            name,
-            slug,
-            description
-        };
-
-        const response = await fetch('includes/api.php?action=add_category', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            document.getElementById('newCategoryName').value = '';
-            document.getElementById('newCategorySlug').value = '';
-            document.getElementById('newCategoryDescription').value = '';
-            await this.renderCategoryList();
-            this.showStatus('Category added!', 'success');
-        } else {
-            alert('Error: ' + result.error);
-        }
-    }
-
-    async deleteCategory(id, name) {
-        if (!confirm(`Delete category "${name}"? This will fail if any swatches use it.`)) return;
-
-        const formData = new FormData();
-        formData.append('id', id);
-
-        const response = await fetch('includes/api.php?action=delete_category', {
-            method: 'POST',
-            body: formData
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            await this.renderCategoryList();
-            this.showStatus('Category deleted!', 'success');
-        } else {
-            alert(result.error);
-        }
-    }
-
-
+    // ===== CATEGORY MANAGEMENT =====
+    
     showManageCategoriesModal() {
         document.getElementById('categoryModal').classList.add('active');
         this.renderCategoriesList();
@@ -1020,42 +704,42 @@ class SwatchEditor {
         const categories = await response.json();
 
         const container = document.getElementById('categoriesList');
-
+        
         if (categories.length === 0) {
             container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No categories yet</p>';
             return;
         }
 
         container.innerHTML = categories.map(cat => `
-        <div class="category-item">
-            ${cat.color ? `<div class="category-color-preview" style="background: ${cat.color}"></div>` : ''}
-            ${cat.icon ? `<img src="../${cat.icon}" class="category-icon-preview" alt="${cat.name}">` : '<div class="category-icon-preview"></div>'}
-            <div class="category-info">
-                <div class="category-name">${cat.name}</div>
-                <div class="category-slug">${cat.slug}</div>
+            <div class="category-item">
+                ${cat.color ? `<div class="category-color-preview" style="background: ${cat.color}"></div>` : ''}
+                ${cat.icon ? `<img src="${CONFIG.image_base_path}${cat.icon}" alt="${cat.name}" class="category-icon">` : ''}
+                <div class="category-info">
+                    <div class="category-name">${cat.name}</div>
+                    <div class="category-slug">${cat.slug}</div>
+                </div>
+                <div class="category-actions">
+                    <button class="btn btn-sm" onclick="app.editCategory(${cat.id})">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteCategory(${cat.id})">Delete</button>
+                </div>
             </div>
-            <div class="category-actions">
-                <button class="btn btn-secondary" onclick="app.editCategory(${cat.id})">Edit</button>
-                <button class="btn btn-danger" onclick="app.deleteCategory(${cat.id})">Delete</button>
-            </div>
-        </div>
-    `).join('');
+        `).join('');
     }
 
     async addCategory() {
-        const data = {
-            name: document.getElementById('newCategoryName').value,
-            slug: document.getElementById('newCategorySlug').value,
-            description: document.getElementById('newCategoryDescription').value,
-            icon: document.getElementById('newCategoryIcon').value,
-            color: document.getElementById('newCategoryColor').value,
-            sort_order: parseInt(document.getElementById('newCategorySortOrder').value)
-        };
+        const name = document.getElementById('newCategoryName').value.trim();
+        const slug = document.getElementById('newCategorySlug').value.trim();
+        const description = document.getElementById('newCategoryDescription').value.trim();
+        const icon = document.getElementById('newCategoryIcon').value.trim();
+        const color = document.getElementById('newCategoryColor').value;
+        const sortOrder = parseInt(document.getElementById('newCategorySortOrder').value) || 0;
 
-        if (!data.name || !data.slug) {
+        if (!name || !slug) {
             alert('Name and slug are required');
             return;
         }
+
+        const data = { name, slug, description, icon, color, sort_order: sortOrder };
 
         const response = await fetch('includes/api.php?action=add_category&type=glitter', {
             method: 'POST',
@@ -1084,13 +768,12 @@ class SwatchEditor {
     }
 
     async editCategory(id) {
-        const response = await fetch(`includes/api.php?action=categories&type=glitter`);
+        const response = await fetch('includes/api.php?action=categories&type=glitter');
         const categories = await response.json();
-        const category = categories.find(c => parseInt(c.id) === parseInt(id)); // Convert both to numbers
+        const category = categories.find(c => parseInt(c.id) === parseInt(id));
 
         if (!category) {
             alert('Category not found');
-            console.log('Looking for ID:', id, 'in categories:', categories);
             return;
         }
 
@@ -1103,7 +786,7 @@ class SwatchEditor {
         document.getElementById('editCategoryColor').value = category.color || '#ff69b4';
         document.getElementById('editCategorySortOrder').value = category.sort_order || 0;
 
-        // Show modal
+        // Show edit modal
         document.getElementById('editCategoryModal').classList.add('active');
     }
 
@@ -1112,20 +795,20 @@ class SwatchEditor {
     }
 
     async saveCategory() {
-        const data = {
-            id: parseInt(document.getElementById('editCategoryId').value),
-            name: document.getElementById('editCategoryName').value,
-            slug: document.getElementById('editCategorySlug').value,
-            description: document.getElementById('editCategoryDescription').value,
-            icon: document.getElementById('editCategoryIcon').value,
-            color: document.getElementById('editCategoryColor').value,
-            sort_order: parseInt(document.getElementById('editCategorySortOrder').value)
-        };
+        const id = parseInt(document.getElementById('editCategoryId').value);
+        const name = document.getElementById('editCategoryName').value.trim();
+        const slug = document.getElementById('editCategorySlug').value.trim();
+        const description = document.getElementById('editCategoryDescription').value.trim();
+        const icon = document.getElementById('editCategoryIcon').value.trim();
+        const color = document.getElementById('editCategoryColor').value;
+        const sortOrder = parseInt(document.getElementById('editCategorySortOrder').value) || 0;
 
-        if (!data.name || !data.slug) {
+        if (!name || !slug) {
             alert('Name and slug are required');
             return;
         }
+
+        const data = { id, name, slug, description, icon, color, sort_order: sortOrder };
 
         const response = await fetch('includes/api.php?action=update_category&type=glitter', {
             method: 'POST',
@@ -1146,7 +829,7 @@ class SwatchEditor {
     }
 
     async deleteCategory(id) {
-        if (!confirm('Delete this category? This action cannot be undone.')) {
+        if (!confirm('Delete this category? All glitter in this category will need to be reassigned.')) {
             return;
         }
 
@@ -1163,97 +846,190 @@ class SwatchEditor {
         if (result.success) {
             await this.loadCategories();
             this.renderCategoriesList();
-            this.showStatus('Category deleted successfully', 'success');
+            this.showStatus('Category deleted', 'success');
         } else {
             alert('Error: ' + result.error);
         }
     }
 
-
-    setupCategoryFormHelpers() {
-        // Auto-generate slug from name
-        const nameInput = document.getElementById('newCategoryName');
-        const slugInput = document.getElementById('newCategorySlug');
-
-        if (nameInput && slugInput) {
-            nameInput.addEventListener('input', () => {
-                // Only auto-generate if slug is empty or was auto-generated
-                const slug = nameInput.value
-                    .toLowerCase()
-                    .trim()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-+|-+$/g, '');
-
-                slugInput.value = slug;
-            });
-        }
-    }
-
+    // ===== TAG MANAGEMENT =====
 
     showManageTagsModal() {
-        this.renderTagList();
-
-        // Populate tag category dropdown
-        const select = document.getElementById('newTagCategory');
-
-        fetch('includes/api.php?action=tag_categories')
-            .then(r => r.json())
-            .then(categories => {
-                select.innerHTML = categories
-                    .map(cat => `<option value="${cat.id}">${cat.name}</option>`)
-                    .join('');
-            });
-
-        document.getElementById('manageTagsModal').classList.add('active');
+        document.getElementById('tagModal').classList.add('active');
+        this.renderTagManagementList();
     }
 
     hideManageTagsModal() {
-        document.getElementById('manageTagsModal').classList.remove('active');
+        document.getElementById('tagModal').classList.remove('active');
     }
 
-    async renderTagList() {
-        await this.loadTags();
+    async renderTagManagementList() {
+        const container = document.querySelector('.tag-management-list');
+        
+        if (this.tagCategories.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No tag categories yet</p>';
+            return;
+        }
 
-        const grouped = this.groupTagsByCategory();
-
-        const html = grouped.map(group => `
-                    <div>
-                        <h5>${group.category}</h5>
-                        ${group.tags.map(tag => `
-                            <div class="management-item">
-                                <div class="management-item-info">
-                                    <div class="management-item-name">
-                                        ${tag.hex_color ? `<span class="tag-color" style="background: ${tag.hex_color}; display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; border: 1px solid var(--color-border);"></span>` : ''}
-                                        ${tag.name}
-                                    </div>
-                                    <div class="management-item-meta">Slug: ${tag.slug}</div>
+        container.innerHTML = this.tagCategories.map(category => {
+            const tagsInCategory = this.tags.filter(tag => tag.tag_category_id == category.id);
+            
+            return `
+                <div class="tag-category-section">
+                    <h5>${category.name}</h5>
+                    ${tagsInCategory.length > 0 ? `
+                        <div class="tag-management-items">
+                            ${tagsInCategory.map(tag => `
+                                <div class="tag-management-item">
+                                    <span>${tag.name}</span>
+                                    ${tag.hex_color ? `<span class="tag-color-preview" style="background: ${tag.hex_color}"></span>` : ''}
+                                    <button class="btn btn-sm btn-danger" onclick="app.deleteTag(${tag.id})">Delete</button>
                                 </div>
-                                <button class="management-item-delete" onclick="app.deleteTag(${tag.id}, '${tag.name}')">Delete</button>
-                            </div>
-                        `).join('')}
-                    </div>
-                `).join('');
-
-        document.getElementById('tagList').innerHTML = html;
+                            `).join('')}
+                        </div>
+                    ` : '<p style="color: var(--text-secondary); font-size: 12px;">No tags in this category</p>'}
+                </div>
+            `;
+        }).join('');
     }
 
     async addNewTag() {
-        const name = document.getElementById('newTagName').value;
-        const tagCategoryId = document.getElementById('newTagCategory').value;
-        const hexColor = document.getElementById('newTagHexColor').value;
+        const name = document.getElementById('newTagName').value.trim();
+        const categoryId = parseInt(document.getElementById('newTagCategory').value);
+        const hexColor = document.getElementById('newTagHexColor').value.trim();
 
-        if (!name || !tagCategoryId) {
+        if (!name || !categoryId) {
             alert('Name and category are required');
             return;
         }
 
-        const data = {
-            name,
-            tag_category_id: tagCategoryId,
-            hex_color: hexColor
+        const data = { 
+            name, 
+            tag_category_id: categoryId,
+            hex_color: hexColor || null
         };
 
-        const response = await fetch('includes/api.php?action=add_tag', {
+        const response = await fetch('includes/api.php?action=add_tag&type=glitter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Clear form
+            document.getElementById('newTagName').value = '';
+            document.getElementById('newTagCategory').value = '';
+            document.getElementById('newTagHexColor').value = '';
+
+            // Reload tags
+            await this.loadTags();
+            this.renderTagManagementList();
+            this.showStatus('Tag added successfully', 'success');
+        } else {
+            alert('Error: ' + result.error);
+        }
+    }
+
+    async deleteTag(id) {
+        if (!confirm('Delete this tag?')) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('id', id);
+
+        const response = await fetch('includes/api.php?action=delete_tag&type=glitter', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            await this.loadTags();
+            this.renderTagManagementList();
+            this.showStatus('Tag deleted', 'success');
+        } else {
+            alert('Error: ' + result.error);
+        }
+    }
+
+    // ===== ADD NEW GLITTER =====
+
+    showAddModal() {
+        const modal = document.getElementById('addModal');
+        const quickCategory = document.getElementById('quickCategory');
+
+        // Build options with both id and slug
+        const options = this.categories.map(cat =>
+            `<option value="${cat.slug}" data-id="${cat.id}">${cat.name}</option>`
+        ).join('');
+
+        quickCategory.innerHTML = '<option value="">Select category...</option>' + options;
+
+        modal.classList.add('active');
+    }
+
+    hideAddModal() {
+        document.getElementById('addModal').classList.remove('active');
+    }
+
+    handleFileSelection(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const category = document.getElementById('quickCategory').value;
+        if (!category) {
+            alert('Please select a category first');
+            event.target.value = '';
+            return;
+        }
+
+        const path = `images/glitter/${category}/${file.name}`;
+        document.getElementById('newSwatchUrl').value = path;
+        event.target.value = '';
+    }
+
+    updateFilePath() {
+        const category = document.getElementById('quickCategory').value;
+        const currentPath = document.getElementById('newSwatchUrl').value;
+
+        if (!category || !currentPath) return;
+
+        // Extract filename from current path
+        const match = currentPath.match(/images\/glitter\/[^\/]+\/(.+)$/);
+
+        if (match) {
+            const filename = match[1];
+            const newPath = `images/glitter/${category}/${filename}`;
+            document.getElementById('newSwatchUrl').value = newPath;
+        }
+    }
+
+    async addSwatch() {
+        const name = document.getElementById('newSwatchName').value.trim();
+        const url = document.getElementById('newSwatchUrl').value.trim();
+        const categorySlug = document.getElementById('quickCategory').value;
+
+        if (!name || !url || !categorySlug) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        const select = document.getElementById('quickCategory');
+        const categoryId = select.options[select.selectedIndex].dataset.id;
+
+        const data = {
+            name: name,
+            url: url,
+            category_id: parseInt(categoryId)
+        };
+
+        this.showStatus('Adding...');
+
+        const response = await fetch('includes/api.php?action=add&type=glitter', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1264,50 +1040,132 @@ class SwatchEditor {
         const result = await response.json();
 
         if (result.success) {
-            document.getElementById('newTagName').value = '';
-            document.getElementById('newTagHexColor').value = '';
-            await this.renderTagList();
-            await this.loadTags(); // Refresh for the main editor
-            this.showStatus('Tag added!', 'success');
+            this.hideAddModal();
+            await this.loadSwatches();
+            this.showStatus('Glitter added!', 'success');
+
+            // Clear form
+            document.getElementById('newSwatchName').value = '';
+            document.getElementById('newSwatchUrl').value = '';
+            document.getElementById('quickCategory').value = '';
         } else {
             alert('Error: ' + result.error);
         }
     }
 
-    async deleteTag(id, name) {
-        if (!confirm(`Delete tag "${name}"? This will remove it from all swatches that use it.`)) return;
+    // ===== EXPORT =====
 
-        const formData = new FormData();
-        formData.append('id', id);
+    async exportJSON() {
+        this.showStatus('Exporting...');
 
-        const response = await fetch('includes/api.php?action=delete_tag', {
-            method: 'POST',
-            body: formData
+        const response = await fetch('includes/api.php?action=save_export&type=glitter', {
+            method: 'POST'
         });
 
         const result = await response.json();
 
         if (result.success) {
-            await this.renderTagList();
-            await this.loadTags(); // Refresh for the main editor
-
-            const msg = result.removed_from > 0 ?
-                `Tag deleted! Removed from ${result.removed_from} swatch(es).` :
-                'Tag deleted!';
-            this.showStatus(msg, 'success');
+            this.showStatus(`Saved to ${result.path} (${result.bytes} bytes)`, 'success');
         } else {
             alert('Error: ' + result.error);
+            this.showStatus('Export failed', 'error');
         }
     }
+
+    async exportCategoriesJSON() {
+        this.showStatus('Exporting categories...');
+
+        const response = await fetch('includes/api.php?action=save_categories_export&type=glitter', {
+            method: 'POST'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            this.showStatus(`Categories saved to ${result.path} (${result.bytes} bytes)`, 'success');
+        } else {
+            alert('Error: ' + result.error);
+            this.showStatus('Category export failed', 'error');
+        }
+    }
+
+    // ===== DRAG AND DROP =====
+
+    setupDragAndDrop() {
+        const container = document.getElementById('swatchList');
+        let draggedElement = null;
+
+        container.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('swatch-item')) {
+                draggedElement = e.target;
+                e.target.classList.add('dragging');
+            }
+        });
+
+        container.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('swatch-item')) {
+                e.target.classList.remove('dragging');
+                this.saveOrder();
+            }
+        });
+
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = this.getDragAfterElement(container, e.clientY);
+            if (afterElement == null) {
+                const categoryContainer = draggedElement.closest('.category-swatches');
+                if (categoryContainer) {
+                    categoryContainer.appendChild(draggedElement);
+                }
+            } else {
+                afterElement.parentNode.insertBefore(draggedElement, afterElement);
+            }
+        });
+    }
+
+    getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.swatch-item:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    async saveOrder() {
+        const items = document.querySelectorAll('.swatch-item');
+        const order = Array.from(items).map(item => parseInt(item.dataset.id));
+
+        const response = await fetch('includes/api.php?action=reorder&type=glitter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            this.showStatus('Order saved', 'success');
+        }
+    }
+
+    // ===== UTILITIES =====
 
     showStatus(message, type = 'info') {
         const status = document.getElementById('statusMessage');
         status.textContent = message;
-
+        status.className = `status-message ${type}`;
         setTimeout(() => {
-            status.textContent = 'Ready';
+            status.textContent = '';
+            status.className = 'status-message';
         }, 3000);
     }
 }
 
-const app = new SwatchEditor();
+// Initialize
+const app = new GlitterEditor();

@@ -146,7 +146,11 @@ async initBrowser() {
 			const res = await fetch('data/glitter.json');
 			const json = await res.json();
 
+			
+
 			json.forEach(config => {
+
+
 				this.content.push({
 					id: config.id,
 					url: config.url,
@@ -160,6 +164,11 @@ async initBrowser() {
 					frameCount: config.frameCount || 0,
 					frameRate: config.frameRate || 10,
 					isVariableFramerate: config.isVariableFramerate || false,
+					isAnimated: config.isAnimated || false,
+					hasTransparency: config.hasTransparency || false,
+					width: config.width || 0,
+					height: config.height || 0,
+					fileSize: config.fileSize || 0,
 					category: config.category || 'Uncategorized',
 					isPixelated: config.isPixelated || false,
 					tags: config.tags || []

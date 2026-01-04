@@ -42,6 +42,9 @@ include_once('includes/config.php');
                     <button class="btn btn-secondary" style="flex: 1; padding: 6px; font-size: 12px;" onclick="app.showManageCategoriesModal()">Manage Categories</button>
                     <button class="btn btn-secondary" style="flex: 1; padding: 6px; font-size: 12px;" onclick="app.showManageTagsModal()">Manage Tags</button>
                 </div>
+                <div style="margin-top: 8px;">
+                    <button class="btn btn-primary" style="width: 100%; padding: 8px; font-size: 12px; background: var(--status-warning);" onclick="app.analyzeBulk()">🔍 Bulk Analyze All</button>
+                </div>
             </div>
             <div class="swatch-list" id="swatchList">
                 <!-- Populated by JavaScript -->
@@ -63,169 +66,125 @@ include_once('includes/config.php');
 
             <!-- Fixed Footer -->
             <div class="fixed-footer">
-                <span class="status-message" id="statusMessage">Ready</span>
-                <div class="footer-actions">
-                    <button class="btn btn-secondary" onclick="app.exportJSON()">Export glitter.json</button>
-                    <button class="btn btn-secondary" onclick="app.exportCategoriesJSON()">Export glitter-categories.json</button>
-                    <button class="btn btn-primary" onclick="app.saveSwatch()">Save Changes</button>
+                <span class="status-message" id="statusMessage"></span>
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="app.exportJSON()">Export JSON</button>
+                    <button class="btn btn-secondary" onclick="app.exportCategoriesJSON()">Export Categories</button>
+                    <button class="btn btn-danger" onclick="app.deleteSwatch()">Delete</button>
+                    <button class="btn btn-primary" onclick="app.saveSwatch()">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Add Swatch Modal -->
+    <!-- Add Modal -->
     <div class="modal" id="addModal">
         <div class="modal-content">
-
             <div class="modal-header">
-                <h3 class="modal-title">Add New Swatch</h3>
+                <h3>Add New Glitter</h3>
+                <button class="close-btn" onclick="app.hideAddModal()">×</button>
             </div>
-
-
             <div class="modal-body">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="quickCategory" onchange="app.updateFilePath()">
+                        <!-- Populated by JavaScript -->
+                    </select>
+                </div>
 
-                <div class="form-section">
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" id="newSwatchName" placeholder="My Glitter">
-                    </div>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="newSwatchName" placeholder="e.g., Pink Sparkle">
+                </div>
 
-                    <div class="form-group">
-                        <label>Category & File</label>
-                        <div style="display: flex; gap: 8px; margin-bottom: 4px;">
-                            <select id="quickCategory" style="flex: 1;" onchange="app.updateFilePath()">
-                                <option value="">Select category...</option>
-                                <!-- Populated from this.categories -->
-                            </select>
-                            <input type="file" id="filePathInput" accept=".gif" style="display: none;" onchange="app.handleFileSelection(event)">
-                            <label for="filePathInput" class="btn btn-secondary" style="margin: 0; cursor: pointer;">
-                                Browse…
-                            </label>
-                        </div>
-                        <input type="text" id="newSwatchUrl" placeholder="images/glitter/sparkle/my-glitter.gif" style="width: 100%;">
-                    </div>
+                <div class="form-group">
+                    <label>URL</label>
+                    <input type="text" id="newSwatchUrl" placeholder="images/glitter/sparkle/pink.gif">
+                </div>
+
+                <div class="form-group">
+                    <label>Or Upload File</label>
+                    <input type="file" accept="image/*" onchange="app.handleFileSelection(event)">
+                    <small>Select a category first, then choose a file</small>
                 </div>
             </div>
-
             <div class="modal-footer">
-                <button class="btn btn-primary" onclick="app.addSwatch()">Add</button>
                 <button class="btn btn-secondary" onclick="app.hideAddModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="app.addSwatch()">Add Glitter</button>
             </div>
-
-
         </div>
-
     </div>
 
-    <!-- Analyze Results Modal -->
+    <!-- Analyze Modal -->
     <div class="modal" id="analyzeModal">
-        <div class="modal-content" style="max-width: 500px;">
-
-            <div class="modal-header">
-                <h3 class="modal-title">Auto-Analysis Results</h3>
-            </div>
-
-            <div class="modal-body">
-                <p>
-                    Select which fields to apply:
-                </p>
-                <div id="analyzeResults"></div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="app.applyAnalysis()">Apply Selected</button>
-                <button class="btn btn-secondary" onclick="app.hideAnalyzeModal()">Cancel</button>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- Manage Categories Modal -->
-    <div class="modal" id="manageCategoriesModal">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h3 class="modal-title">Manage Categories</h3>
+                <h3>Analysis Results</h3>
+                <button class="close-btn" onclick="app.hideAnalyzeModal()">×</button>
             </div>
-
             <div class="modal-body">
-                <div class="form-section new-category">
-                    <h4>Add New Category</h4>
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" id="newCategoryName" placeholder="Category Name">
-                    </div>
-                    <div class="form-group">
-                        <label>Slug</label>
-                        <input type="text" id="newCategorySlug" placeholder="category-slug">
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <input type="text" id="newCategoryDescription" placeholder="Optional description">
-                    </div>
-
-                    <div class="form-group buttons">
-                        <button class="btn btn-primary" onclick="app.addCategory()">Add Category</button>
-                    </div>
-                </div>
-
-                <div class="existing-categories">
-                    <h4>Existing Categories</h4>
-                    <div class="category-list" id="categoryList"></div>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Select which properties to apply to the current glitter:
+                </p>
+                <div id="analyzeResults">
+                    <!-- Populated by JavaScript -->
                 </div>
             </div>
-
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="app.hideManageCategoriesModal()">Close</button>
+                <button class="btn btn-secondary" onclick="app.hideAnalyzeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="app.applyAnalysis()">Apply Selected</button>
             </div>
-
-
         </div>
-
-
     </div>
 
-    <!-- Manage Tags Modal -->
-    <div class="modal" id="manageTagsModal">
-        <div class="modal-content">
-
+    <!-- Tag Management Modal -->
+    <div class="modal" id="tagModal">
+        <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
-                <h3 class="modal-title">Manage Tags</h3>
+                <h3>Manage Tags</h3>
+                <button class="close-btn" onclick="app.hideManageTagsModal()">×</button>
             </div>
-
             <div class="modal-body">
-                <div class="form-section">
-                    <h4>Add New Tag</h4>
+                <div class="tag-manager">
+                    <div>
+                        <h4>Add New Tag</h4>
+                        <div class="tag-form-section">
+                            <div class="form-group">
+                                <label>Tag Name</label>
+                                <input type="text" id="newTagName" placeholder="e.g., Holographic">
+                            </div>
 
-                    <div class="form-wrapper">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Name</label>
-                            <input type="text" id="newTagName" placeholder="Tag Name">
+                            <div class="form-group">
+                                <label>Tag Category</label>
+                                <select id="newTagCategory">
+                                    <!-- Populated by JavaScript -->
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Hex Color (optional, for color tags)</label>
+                                <input type="text" id="newTagHexColor" placeholder="#FF0000">
+                            </div>
+
+                            <div class="form-group buttons">
+                                <button class="btn btn-primary" onclick="app.addNewTag()">Add Tag</button>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Category</label>
-                            <select id="newTagCategory"></select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Hex Color (optional, for color tags)</label>
-                        <input type="text" id="newTagHexColor" placeholder="#FF0000">
+
+
                     </div>
 
-                    <div class="form-group buttons">
-                        <button class="btn btn-primary" onclick="app.addNewTag()">Add Tag</button>
+                    <div>
+                        <h4>Existing Tags</h4>
+                        <div class="tag-management-list">
+                            <!-- Populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
-</div>
 
-                <div>
-                    <h4>Existing Tags</h4>
-                    <div class="tag-management-list" id="tagList"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="app.hideManageTagsModal()">Close</button>
                 </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="app.hideManageTagsModal()">Close</button>
             </div>
         </div>
     </div>
@@ -245,25 +204,26 @@ include_once('includes/config.php');
 
                         <div class="form-wrapper">
                         <div class="form-row">
-                            <label>Name:</label>
-                            <input type="text" id="newCategoryName" placeholder="e.g., Classic Sparkle">
+                            <label>
+                                Name:</label>
+                            <input type="text" id="newCategoryName" placeholder="e.g., Sparkle">
 
                         </div>
                         <div class="form-row">
                             <label>
                                 Slug:</label>
-                            <input type="text" id="newCategorySlug" placeholder="e.g., classic-sparkle">
+                            <input type="text" id="newCategorySlug" placeholder="e.g., sparkle">
 
                         </div>
                         <div class="form-row">
                             <label>
-                                Description:</label>
-                            <textarea id="newCategoryDescription" rows="2" placeholder="Category description"></textarea>
+                                Description: </label>
+                            <textarea id="newCategoryDescription" rows="2" placeholder="Optional description"></textarea>
 
                         </div>
                         <div class="form-row">
                             <label>
-                                Icon Path:</label>
+                                Icon Path: </label>
                             <input type="text" id="newCategoryIcon" placeholder="images/glitter/sparkle/icon.gif">
 
                         </div>
@@ -275,22 +235,22 @@ include_once('includes/config.php');
 
                         </div>
 
-
                         <div class="form-row">
                             <label>
                                 Sort Order:</label>
-                            <input type="number" id="newCategorySortOrder" value="0" min="0">
+                            <input type="number" id="newCategorySortOrder" min="0" value="0">
 
                         </div>
-                        <button class="btn btn-primary" onclick="app.addCategory()">Add Category</button>
-
+                        <div class="form-row">
+                            <button class="btn btn-primary" onclick="app.addCategory()">Add Category</button>
+                        </div>
 </div>
                     </div>
 
                     <!-- Existing Categories List -->
-                    <div class="category-list-section">
+                    <div class="categories-list-section">
                         <h4>Existing Categories</h4>
-                        <div id="categoriesList" class="categories-list">
+                        <div id="categoriesList">
                             <!-- Populated by JavaScript -->
                         </div>
                     </div>

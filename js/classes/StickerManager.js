@@ -140,7 +140,7 @@ class StickerManager extends ContentManager {
 			this.content = data.map(item => ({
 				id: item.id,
 				name: item.name,
-				filename: item.filename,
+				// filename: item.filename,
 				url: item.url,
 				thumbnailUrl: item.thumbnail_url || item.url,
 
@@ -152,10 +152,12 @@ class StickerManager extends ContentManager {
 				// Technical properties
 				isAnimated: item.is_animated || false,
 				hasTransparency: item.has_transparency || false,
-				width: item.width,
-				height: item.height,
+				width: item.width || 0,
+				height: item.height || 0,
 				frameCount: item.frame_count || 1,
-				fileSize: item.file_size,
+				frameRate: item.frame_rate || 10,  // ADD THIS
+				isVariableFramerate: item.is_variable_framerate || false,  // ADD THIS
+				fileSize: item.file_size || 0,
 
 				// Pre-parsed data (optional)
 				frames: null,

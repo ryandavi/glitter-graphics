@@ -823,6 +823,8 @@ updateGlitterAssetInfo(glitter) {
             }
         });
     }
+
+
     
     // Name
     if (name) name.textContent = glitter.name || 'Undefined';
@@ -1017,12 +1019,12 @@ updateStickerAssetInfo(sticker) {
 			this.updateResetButton('opacity');
 		}
 
-if (layer.selectedGlitterId) {
-    const glitter = this.glitterManager.getItemById(layer.selectedGlitterId);
-    if (glitter) {
-        this.updateGlitterAssetInfo(glitter);
-    }
-}
+		if (layer.selectedGlitterId) {
+			const glitter = this.glitterManager.getItemById(layer.selectedGlitterId);
+			if (glitter) {
+				this.updateGlitterAssetInfo(glitter);
+			}
+		}
 
 		this.updateSelectedColorsDisplay();
 	}
@@ -1085,13 +1087,13 @@ if (layer.selectedGlitterId) {
 		if (flipX) flipX.checked = transform.flipX;
 		if (flipY) flipY.checked = transform.flipY;
 
-// Update sticker asset info
-if (layer.stickerSourceId) {
-    const sticker = this.stickerManager.getItemById(layer.stickerSourceId);
-    if (sticker) {
-        this.updateStickerAssetInfo(sticker);
-    }
-}
+		// Update sticker asset info
+		if (layer.stickerSourceId) {
+			const sticker = this.stickerManager.getItemById(layer.stickerSourceId);
+			if (sticker) {
+				this.updateStickerAssetInfo(sticker);
+			}
+		}
 
 	}
 

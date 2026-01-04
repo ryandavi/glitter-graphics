@@ -20,6 +20,8 @@
         "width": 143,
         "height": 140,
         "frame_count": 3,
+        "frame_rate": 8,
+        "is_variable_framerate": 0,
         "file_size": 12016,
         "sort_order": 0
     },
@@ -44,6 +46,8 @@
         "width": 162,
         "height": 143,
         "frame_count": 2,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 16193,
         "sort_order": 0
     },
@@ -68,6 +72,8 @@
         "width": 358,
         "height": 179,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 13742,
         "sort_order": 3
     },
@@ -91,6 +97,8 @@
         "width": 400,
         "height": 320,
         "frame_count": 120,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 512476,
         "sort_order": 97
     },
@@ -115,6 +123,8 @@
         "width": 92,
         "height": 92,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 17919,
         "sort_order": 98
     },
@@ -137,6 +147,8 @@
         "width": 105,
         "height": 82,
         "frame_count": 4,
+        "frame_rate": 12,
+        "is_variable_framerate": 0,
         "file_size": 14249,
         "sort_order": 99
     },
@@ -159,6 +171,8 @@
         "width": 120,
         "height": 120,
         "frame_count": 4,
+        "frame_rate": 15,
+        "is_variable_framerate": 0,
         "file_size": 13922,
         "sort_order": 100
     },
@@ -181,6 +195,8 @@
         "width": 90,
         "height": 100,
         "frame_count": 8,
+        "frame_rate": 15,
+        "is_variable_framerate": 0,
         "file_size": 22111,
         "sort_order": 101
     },
@@ -203,6 +219,8 @@
         "width": 120,
         "height": 120,
         "frame_count": 4,
+        "frame_rate": 15,
+        "is_variable_framerate": 0,
         "file_size": 17387,
         "sort_order": 102
     },
@@ -226,6 +244,8 @@
         "width": 200,
         "height": 200,
         "frame_count": 12,
+        "frame_rate": 12,
+        "is_variable_framerate": 0,
         "file_size": 101247,
         "sort_order": 103
     },
@@ -250,6 +270,8 @@
         "width": 400,
         "height": 320,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 48886,
         "sort_order": 104
     },
@@ -273,6 +295,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 4,
+        "frame_rate": 20,
+        "is_variable_framerate": 0,
         "file_size": 122092,
         "sort_order": 105
     },
@@ -296,6 +320,8 @@
         "width": 134,
         "height": 99,
         "frame_count": 18,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 49543,
         "sort_order": 106
     },
@@ -321,6 +347,8 @@
         "width": 150,
         "height": 64,
         "frame_count": 18,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 21640,
         "sort_order": 0
     },
@@ -344,6 +372,8 @@
         "width": 500,
         "height": 500,
         "frame_count": 9,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 157484,
         "sort_order": 108
     },
@@ -367,6 +397,8 @@
         "width": 60,
         "height": 60,
         "frame_count": 2,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 4623,
         "sort_order": 4
     },
@@ -392,6 +424,8 @@
         "width": 150,
         "height": 150,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 14524,
         "sort_order": 109
     },
@@ -417,6 +451,8 @@
         "width": 99,
         "height": 89,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 15571,
         "sort_order": 110
     },
@@ -441,6 +477,8 @@
         "width": 385,
         "height": 143,
         "frame_count": 2,
+        "frame_rate": 11,
+        "is_variable_framerate": 0,
         "file_size": 3671,
         "sort_order": 5
     },
@@ -465,6 +503,8 @@
         "width": 31,
         "height": 32,
         "frame_count": 4,
+        "frame_rate": 12,
+        "is_variable_framerate": 0,
         "file_size": 6367,
         "sort_order": 111
     },
@@ -489,6 +529,8 @@
         "width": 40,
         "height": 32,
         "frame_count": 7,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 11700,
         "sort_order": 112
     },
@@ -512,6 +554,8 @@
         "width": 123,
         "height": 81,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 20443,
         "sort_order": 113
     },
@@ -535,6 +579,8 @@
         "width": 66,
         "height": 58,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 6434,
         "sort_order": 114
     },
@@ -558,6 +604,8 @@
         "width": 198,
         "height": 82,
         "frame_count": 11,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 24193,
         "sort_order": 115
     },
@@ -581,6 +629,8 @@
         "width": 47,
         "height": 80,
         "frame_count": 8,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 23351,
         "sort_order": 116
     },
@@ -604,6 +654,8 @@
         "width": 255,
         "height": 139,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 41077,
         "sort_order": 117
     },
@@ -627,6 +679,8 @@
         "width": 75,
         "height": 75,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 8162,
         "sort_order": 118
     },
@@ -650,6 +704,8 @@
         "width": 90,
         "height": 90,
         "frame_count": 6,
+        "frame_rate": 20,
+        "is_variable_framerate": 0,
         "file_size": 12516,
         "sort_order": 119
     },
@@ -674,6 +730,8 @@
         "width": 50,
         "height": 50,
         "frame_count": 9,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 2920,
         "sort_order": 120
     },
@@ -699,6 +757,8 @@
         "width": 24,
         "height": 19,
         "frame_count": 2,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 378,
         "sort_order": 121
     },
@@ -725,6 +785,8 @@
         "width": 438,
         "height": 288,
         "frame_count": 3,
+        "frame_rate": 1,
+        "is_variable_framerate": 0,
         "file_size": 62532,
         "sort_order": 122
     },
@@ -750,6 +812,8 @@
         "width": 164,
         "height": 169,
         "frame_count": 3,
+        "frame_rate": 1,
+        "is_variable_framerate": 0,
         "file_size": 11804,
         "sort_order": 123
     },
@@ -772,8 +836,10 @@
         "has_transparency": 1,
         "is_active": 1,
         "width": 120,
-        "height": 62,
+        "height": 60,
         "frame_count": 6,
+        "frame_rate": 1,
+        "is_variable_framerate": 0,
         "file_size": 6607,
         "sort_order": 124
     },
@@ -798,6 +864,8 @@
         "width": 120,
         "height": 61,
         "frame_count": 6,
+        "frame_rate": 15,
+        "is_variable_framerate": 0,
         "file_size": 6619,
         "sort_order": 125
     },
@@ -817,9 +885,11 @@
         "is_animated": 1,
         "has_transparency": 1,
         "is_active": 1,
-        "width": 32,
-        "height": 32,
+        "width": 31,
+        "height": 29,
         "frame_count": 14,
+        "frame_rate": 4,
+        "is_variable_framerate": 0,
         "file_size": 5106,
         "sort_order": 126
     },
@@ -843,6 +913,8 @@
         "width": 62,
         "height": 63,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 4720,
         "sort_order": 127
     },
@@ -866,6 +938,8 @@
         "width": 119,
         "height": 83,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 4400,
         "sort_order": 128
     },
@@ -889,6 +963,8 @@
         "width": 298,
         "height": 152,
         "frame_count": 4,
+        "frame_rate": 100,
+        "is_variable_framerate": 0,
         "file_size": 34532,
         "sort_order": 129
     },
@@ -912,6 +988,8 @@
         "width": 87,
         "height": 28,
         "frame_count": 2,
+        "frame_rate": 20,
+        "is_variable_framerate": 0,
         "file_size": 2213,
         "sort_order": 130
     },
@@ -937,6 +1015,8 @@
         "width": 26,
         "height": 28,
         "frame_count": 26,
+        "frame_rate": 1,
+        "is_variable_framerate": 1,
         "file_size": 10854,
         "sort_order": 131
     },
@@ -960,6 +1040,8 @@
         "width": 76,
         "height": 93,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 6181,
         "sort_order": 6
     },
@@ -984,6 +1066,8 @@
         "width": 289,
         "height": 106,
         "frame_count": 2,
+        "frame_rate": 11,
+        "is_variable_framerate": 0,
         "file_size": 5858,
         "sort_order": 7
     },
@@ -1008,6 +1092,8 @@
         "width": 248,
         "height": 293,
         "frame_count": 3,
+        "frame_rate": 20,
+        "is_variable_framerate": 0,
         "file_size": 73547,
         "sort_order": 8
     },
@@ -1032,6 +1118,8 @@
         "width": 219,
         "height": 277,
         "frame_count": 3,
+        "frame_rate": 30,
+        "is_variable_framerate": 0,
         "file_size": 62515,
         "sort_order": 9
     },
@@ -1055,6 +1143,8 @@
         "width": 65,
         "height": 74,
         "frame_count": 5,
+        "frame_rate": 20,
+        "is_variable_framerate": 0,
         "file_size": 10367,
         "sort_order": 10
     },
@@ -1078,6 +1168,8 @@
         "width": 110,
         "height": 114,
         "frame_count": 21,
+        "frame_rate": 1,
+        "is_variable_framerate": 0,
         "file_size": 32095,
         "sort_order": 11
     },
@@ -1103,6 +1195,8 @@
         "width": 100,
         "height": 150,
         "frame_count": 10,
+        "frame_rate": 12,
+        "is_variable_framerate": 0,
         "file_size": 10343,
         "sort_order": 12
     },
@@ -1127,6 +1221,8 @@
         "width": 91,
         "height": 131,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 4165,
         "sort_order": 13
     },
@@ -1150,6 +1246,8 @@
         "width": 133,
         "height": 100,
         "frame_count": 15,
+        "frame_rate": 14,
+        "is_variable_framerate": 0,
         "file_size": 39581,
         "sort_order": 14
     },
@@ -1173,6 +1271,8 @@
         "width": 277,
         "height": 238,
         "frame_count": 5,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 108717,
         "sort_order": 15
     },
@@ -1197,6 +1297,8 @@
         "width": 350,
         "height": 330,
         "frame_count": 2,
+        "frame_rate": 20,
+        "is_variable_framerate": 0,
         "file_size": 101258,
         "sort_order": 16
     },
@@ -1223,6 +1325,8 @@
         "width": 400,
         "height": 358,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 130637,
         "sort_order": 132
     },
@@ -1246,6 +1350,8 @@
         "width": 40,
         "height": 32,
         "frame_count": 5,
+        "frame_rate": 9,
+        "is_variable_framerate": 0,
         "file_size": 8170,
         "sort_order": 133
     },
@@ -1269,6 +1375,8 @@
         "width": 51,
         "height": 50,
         "frame_count": 21,
+        "frame_rate": 5,
+        "is_variable_framerate": 0,
         "file_size": 15158,
         "sort_order": 134
     },
@@ -1294,6 +1402,8 @@
         "width": 41,
         "height": 43,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 3382,
         "sort_order": 135
     },
@@ -1319,6 +1429,8 @@
         "width": 20,
         "height": 20,
         "frame_count": 3,
+        "frame_rate": 1,
+        "is_variable_framerate": 0,
         "file_size": 1898,
         "sort_order": 136
     },
@@ -1344,6 +1456,8 @@
         "width": 100,
         "height": 100,
         "frame_count": 25,
+        "frame_rate": 1,
+        "is_variable_framerate": 0,
         "file_size": 28062,
         "sort_order": 137
     },
@@ -1369,6 +1483,8 @@
         "width": 200,
         "height": 200,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 11495,
         "sort_order": 138
     },
@@ -1394,6 +1510,8 @@
         "width": 200,
         "height": 200,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 45871,
         "sort_order": 139
     },
@@ -1420,6 +1538,8 @@
         "width": 110,
         "height": 112,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 22357,
         "sort_order": 140
     },
@@ -1446,6 +1566,8 @@
         "width": 242,
         "height": 266,
         "frame_count": 3,
+        "frame_rate": 12,
+        "is_variable_framerate": 0,
         "file_size": 25538,
         "sort_order": 141
     },
@@ -1469,6 +1591,8 @@
         "width": 302,
         "height": 247,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 84741,
         "sort_order": 142
     },
@@ -1490,6 +1614,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 24,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 385345,
         "sort_order": 87
     },
@@ -1511,6 +1637,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 84276,
         "sort_order": 88
     },
@@ -1533,6 +1661,8 @@
         "width": 185,
         "height": 150,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 9144,
         "sort_order": 89
     },
@@ -1556,6 +1686,8 @@
         "width": 185,
         "height": 151,
         "frame_count": 3,
+        "frame_rate": 1,
+        "is_variable_framerate": 0,
         "file_size": 15618,
         "sort_order": 90
     },
@@ -1579,6 +1711,8 @@
         "width": 191,
         "height": 157,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 8461,
         "sort_order": 91
     },
@@ -1601,6 +1735,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 122647,
         "sort_order": 92
     },
@@ -1624,6 +1760,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 40462,
         "sort_order": 93
     },
@@ -1646,6 +1784,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 396660,
         "sort_order": 143
     },
@@ -1670,6 +1810,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 2,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 9733,
         "sort_order": 144
     },
@@ -1695,6 +1837,8 @@
         "width": 154,
         "height": 127,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 5892,
         "sort_order": 145
     },
@@ -1720,6 +1864,8 @@
         "width": 320,
         "height": 320,
         "frame_count": 27,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 371065,
         "sort_order": 146
     },
@@ -1745,6 +1891,8 @@
         "width": 150,
         "height": 150,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 88793,
         "sort_order": 147
     },
@@ -1769,6 +1917,8 @@
         "width": 135,
         "height": 146,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 112966,
         "sort_order": 148
     },
@@ -1793,6 +1943,8 @@
         "width": 146,
         "height": 149,
         "frame_count": 3,
+        "frame_rate": 1,
+        "is_variable_framerate": 0,
         "file_size": 12431,
         "sort_order": 149
     },
@@ -1818,6 +1970,8 @@
         "width": 160,
         "height": 96,
         "frame_count": 13,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 35496,
         "sort_order": 150
     },
@@ -1842,6 +1996,8 @@
         "width": 240,
         "height": 320,
         "frame_count": 10,
+        "frame_rate": 100,
+        "is_variable_framerate": 0,
         "file_size": 158509,
         "sort_order": 151
     },
@@ -1868,6 +2024,8 @@
         "width": 125,
         "height": 100,
         "frame_count": 10,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 16860,
         "sort_order": 152
     },
@@ -1892,6 +2050,8 @@
         "width": 250,
         "height": 250,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 213854,
         "sort_order": 153
     },
@@ -1916,6 +2076,8 @@
         "width": 190,
         "height": 178,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 143085,
         "sort_order": 154
     },
@@ -1940,6 +2102,8 @@
         "width": 190,
         "height": 178,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 129754,
         "sort_order": 155
     },
@@ -1964,6 +2128,8 @@
         "width": 190,
         "height": 178,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 129754,
         "sort_order": 156
     },
@@ -1988,6 +2154,8 @@
         "width": 190,
         "height": 178,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 142473,
         "sort_order": 157
     },
@@ -2012,6 +2180,8 @@
         "width": 250,
         "height": 250,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 213857,
         "sort_order": 158
     },
@@ -2036,6 +2206,8 @@
         "width": 100,
         "height": 80,
         "frame_count": 15,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 36459,
         "sort_order": 159
     },
@@ -2060,6 +2232,8 @@
         "width": 100,
         "height": 80,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 39901,
         "sort_order": 160
     },
@@ -2085,6 +2259,8 @@
         "width": 200,
         "height": 200,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 65531,
         "sort_order": 161
     },
@@ -2108,6 +2284,8 @@
         "width": 200,
         "height": 200,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 184981,
         "sort_order": 162
     },
@@ -2131,6 +2309,8 @@
         "width": 221,
         "height": 200,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 191608,
         "sort_order": 163
     },
@@ -2156,6 +2336,8 @@
         "width": 150,
         "height": 150,
         "frame_count": 5,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 28315,
         "sort_order": 164
     },
@@ -2180,6 +2362,8 @@
         "width": 71,
         "height": 107,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 3374,
         "sort_order": 17
     },
@@ -2202,6 +2386,8 @@
         "width": 188,
         "height": 142,
         "frame_count": 3,
+        "frame_rate": 11,
+        "is_variable_framerate": 0,
         "file_size": 18313,
         "sort_order": 85
     },
@@ -2224,6 +2410,8 @@
         "width": 94,
         "height": 71,
         "frame_count": 3,
+        "frame_rate": 11,
+        "is_variable_framerate": 0,
         "file_size": 8315,
         "sort_order": 86
     },
@@ -2248,6 +2436,8 @@
         "width": 63,
         "height": 144,
         "frame_count": 18,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 16847,
         "sort_order": 18
     },
@@ -2271,6 +2461,8 @@
         "width": 60,
         "height": 100,
         "frame_count": 6,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 5224,
         "sort_order": 19
     },
@@ -2294,6 +2486,8 @@
         "width": 90,
         "height": 100,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 13064,
         "sort_order": 20
     },
@@ -2318,6 +2512,8 @@
         "width": 233,
         "height": 150,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 21824,
         "sort_order": 21
     },
@@ -2338,8 +2534,10 @@
         "has_transparency": 1,
         "is_active": 1,
         "width": 30,
-        "height": 55,
+        "height": 54,
         "frame_count": 32,
+        "frame_rate": 5,
+        "is_variable_framerate": 0,
         "file_size": 16948,
         "sort_order": 0
     },
@@ -2362,6 +2560,8 @@
         "width": 53,
         "height": 100,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 5635,
         "sort_order": 165
     },
@@ -2384,6 +2584,8 @@
         "width": 29,
         "height": 67,
         "frame_count": 5,
+        "frame_rate": 30,
+        "is_variable_framerate": 0,
         "file_size": 2861,
         "sort_order": 166
     },
@@ -2406,6 +2608,8 @@
         "width": 185,
         "height": 160,
         "frame_count": 12,
+        "frame_rate": 15,
+        "is_variable_framerate": 0,
         "file_size": 125111,
         "sort_order": 167
     },
@@ -2428,6 +2632,8 @@
         "width": 29,
         "height": 67,
         "frame_count": 5,
+        "frame_rate": 13,
+        "is_variable_framerate": 0,
         "file_size": 2861,
         "sort_order": 168
     },
@@ -2450,6 +2656,8 @@
         "width": 410,
         "height": 400,
         "frame_count": 46,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 1883876,
         "sort_order": 169
     },
@@ -2476,6 +2684,8 @@
         "width": 349,
         "height": 221,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 125705,
         "sort_order": 170
     },
@@ -2500,6 +2710,8 @@
         "width": 150,
         "height": 88,
         "frame_count": 8,
+        "frame_rate": 5,
+        "is_variable_framerate": 0,
         "file_size": 62440,
         "sort_order": 171
     },
@@ -2525,6 +2737,8 @@
         "width": 135,
         "height": 240,
         "frame_count": 90,
+        "frame_rate": 3,
+        "is_variable_framerate": 0,
         "file_size": 1582834,
         "sort_order": 172
     },
@@ -2548,6 +2762,8 @@
         "width": 132,
         "height": 70,
         "frame_count": 4,
+        "frame_rate": 30,
+        "is_variable_framerate": 0,
         "file_size": 9631,
         "sort_order": 23
     },
@@ -2571,6 +2787,8 @@
         "width": 110,
         "height": 77,
         "frame_count": 13,
+        "frame_rate": 0,
+        "is_variable_framerate": 1,
         "file_size": 18167,
         "sort_order": 24
     },
@@ -2595,6 +2813,8 @@
         "width": 362,
         "height": 270,
         "frame_count": 3,
+        "frame_rate": 11,
+        "is_variable_framerate": 0,
         "file_size": 18696,
         "sort_order": 25
     },
@@ -2618,6 +2838,8 @@
         "width": 105,
         "height": 65,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 7373,
         "sort_order": 26
     },
@@ -2641,6 +2863,8 @@
         "width": 181,
         "height": 150,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 45802,
         "sort_order": 27
     },
@@ -2664,6 +2888,8 @@
         "width": 105,
         "height": 65,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 6027,
         "sort_order": 28
     },
@@ -2687,6 +2913,8 @@
         "width": 100,
         "height": 89,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 3376,
         "sort_order": 29
     },
@@ -2710,6 +2938,8 @@
         "width": 110,
         "height": 82,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 6515,
         "sort_order": 30
     },
@@ -2734,6 +2964,8 @@
         "width": 111,
         "height": 111,
         "frame_count": 13,
+        "frame_rate": 11,
+        "is_variable_framerate": 0,
         "file_size": 52385,
         "sort_order": 31
     },
@@ -2761,6 +2993,8 @@
         "width": 58,
         "height": 130,
         "frame_count": 40,
+        "frame_rate": 6,
+        "is_variable_framerate": 1,
         "file_size": 178525,
         "sort_order": 95
     },
@@ -2784,6 +3018,8 @@
         "width": 97,
         "height": 200,
         "frame_count": 58,
+        "frame_rate": 4,
+        "is_variable_framerate": 0,
         "file_size": 302789,
         "sort_order": 173
     },
@@ -2807,6 +3043,8 @@
         "width": 189,
         "height": 203,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 5763,
         "sort_order": 174
     },
@@ -2829,6 +3067,8 @@
         "width": 138,
         "height": 123,
         "frame_count": 7,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 8744,
         "sort_order": 175
     },
@@ -2853,6 +3093,8 @@
         "width": 139,
         "height": 146,
         "frame_count": 14,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 27145,
         "sort_order": 176
     },
@@ -2877,6 +3119,8 @@
         "width": 75,
         "height": 125,
         "frame_count": 12,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 3561,
         "sort_order": 177
     },
@@ -2901,6 +3145,8 @@
         "width": 168,
         "height": 215,
         "frame_count": 9,
+        "frame_rate": 12,
+        "is_variable_framerate": 0,
         "file_size": 27957,
         "sort_order": 178
     },
@@ -2924,6 +3170,8 @@
         "width": 120,
         "height": 140,
         "frame_count": 20,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 28018,
         "sort_order": 179
     },
@@ -2947,6 +3195,8 @@
         "width": 200,
         "height": 100,
         "frame_count": 23,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 14915,
         "sort_order": 180
     },
@@ -2970,6 +3220,8 @@
         "width": 200,
         "height": 100,
         "frame_count": 23,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 27849,
         "sort_order": 181
     },
@@ -2993,6 +3245,8 @@
         "width": 170,
         "height": 210,
         "frame_count": 8,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 7011,
         "sort_order": 182
     },
@@ -3017,6 +3271,8 @@
         "width": 46,
         "height": 51,
         "frame_count": 2,
+        "frame_rate": 0,
+        "is_variable_framerate": 0,
         "file_size": 857,
         "sort_order": 183
     },
@@ -3041,6 +3297,8 @@
         "width": 312,
         "height": 224,
         "frame_count": 53,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 44388,
         "sort_order": 184
     },
@@ -3064,6 +3322,8 @@
         "width": 130,
         "height": 130,
         "frame_count": 20,
+        "frame_rate": 10,
+        "is_variable_framerate": 1,
         "file_size": 16308,
         "sort_order": 185
     },
@@ -3088,6 +3348,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 22,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 124277,
         "sort_order": 186
     },
@@ -3111,7 +3373,9 @@
         "width": 64,
         "height": 64,
         "frame_count": 4,
-        "file_size": 1346,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
+        "file_size": 1062,
         "sort_order": 187
     },
     {
@@ -3133,6 +3397,8 @@
         "width": 108,
         "height": 110,
         "frame_count": 10,
+        "frame_rate": 20,
+        "is_variable_framerate": 0,
         "file_size": 6521,
         "sort_order": 188
     },
@@ -3154,6 +3420,8 @@
         "width": 52,
         "height": 46,
         "frame_count": 10,
+        "frame_rate": 5,
+        "is_variable_framerate": 0,
         "file_size": 2944,
         "sort_order": 189
     },
@@ -3175,6 +3443,8 @@
         "width": 64,
         "height": 64,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 1708,
         "sort_order": 190
     },
@@ -3196,6 +3466,8 @@
         "width": 32,
         "height": 32,
         "frame_count": 16,
+        "frame_rate": 8,
+        "is_variable_framerate": 0,
         "file_size": 2978,
         "sort_order": 191
     },
@@ -3217,6 +3489,8 @@
         "width": 100,
         "height": 70,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 1348,
         "sort_order": 192
     },
@@ -3238,6 +3512,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 27040,
         "sort_order": 193
     },
@@ -3259,6 +3535,8 @@
         "width": 32,
         "height": 32,
         "frame_count": 16,
+        "frame_rate": 8,
+        "is_variable_framerate": 0,
         "file_size": 2891,
         "sort_order": 194
     },
@@ -3280,6 +3558,8 @@
         "width": 32,
         "height": 32,
         "frame_count": 16,
+        "frame_rate": 8,
+        "is_variable_framerate": 0,
         "file_size": 2473,
         "sort_order": 195
     },
@@ -3301,6 +3581,8 @@
         "width": 52,
         "height": 46,
         "frame_count": 11,
+        "frame_rate": 5,
+        "is_variable_framerate": 0,
         "file_size": 2160,
         "sort_order": 196
     },
@@ -3322,6 +3604,8 @@
         "width": 64,
         "height": 64,
         "frame_count": 4,
+        "frame_rate": 5,
+        "is_variable_framerate": 0,
         "file_size": 1708,
         "sort_order": 197
     },
@@ -3343,6 +3627,8 @@
         "width": 32,
         "height": 32,
         "frame_count": 16,
+        "frame_rate": 8,
+        "is_variable_framerate": 0,
         "file_size": 2634,
         "sort_order": 198
     },
@@ -3364,6 +3650,8 @@
         "width": 32,
         "height": 32,
         "frame_count": 16,
+        "frame_rate": 8,
+        "is_variable_framerate": 0,
         "file_size": 2437,
         "sort_order": 199
     },
@@ -3385,6 +3673,8 @@
         "width": 32,
         "height": 32,
         "frame_count": 16,
+        "frame_rate": 8,
+        "is_variable_framerate": 0,
         "file_size": 2508,
         "sort_order": 200
     },
@@ -3406,6 +3696,8 @@
         "width": 65,
         "height": 73,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 1433,
         "sort_order": 201
     },
@@ -3427,6 +3719,8 @@
         "width": 52,
         "height": 46,
         "frame_count": 11,
+        "frame_rate": 5,
+        "is_variable_framerate": 0,
         "file_size": 2658,
         "sort_order": 202
     },
@@ -3448,6 +3742,8 @@
         "width": 64,
         "height": 64,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 1708,
         "sort_order": 203
     },
@@ -3469,6 +3765,8 @@
         "width": 32,
         "height": 32,
         "frame_count": 16,
+        "frame_rate": 8,
+        "is_variable_framerate": 0,
         "file_size": 2257,
         "sort_order": 204
     },
@@ -3490,6 +3788,8 @@
         "width": 156,
         "height": 160,
         "frame_count": 3,
+        "frame_rate": 15,
+        "is_variable_framerate": 0,
         "file_size": 2650,
         "sort_order": 205
     },
@@ -3511,6 +3811,8 @@
         "width": 64,
         "height": 64,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 1639,
         "sort_order": 206
     },
@@ -3532,6 +3834,8 @@
         "width": 32,
         "height": 32,
         "frame_count": 16,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 2535,
         "sort_order": 207
     },
@@ -3555,6 +3859,8 @@
         "width": 320,
         "height": 320,
         "frame_count": 54,
+        "frame_rate": 4,
+        "is_variable_framerate": 0,
         "file_size": 94125,
         "sort_order": 208
     },
@@ -3577,6 +3883,8 @@
         "width": 150,
         "height": 150,
         "frame_count": 13,
+        "frame_rate": 13,
+        "is_variable_framerate": 0,
         "file_size": 39136,
         "sort_order": 210
     },
@@ -3599,6 +3907,8 @@
         "width": 390,
         "height": 90,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 32233,
         "sort_order": 40
     },
@@ -3621,6 +3931,8 @@
         "width": 98,
         "height": 49,
         "frame_count": 3,
+        "frame_rate": 16,
+        "is_variable_framerate": 0,
         "file_size": 10506,
         "sort_order": 41
     },
@@ -3643,6 +3955,8 @@
         "width": 268,
         "height": 57,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 19223,
         "sort_order": 42
     },
@@ -3666,6 +3980,8 @@
         "width": 424,
         "height": 136,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 57692,
         "sort_order": 43
     },
@@ -3688,6 +4004,8 @@
         "width": 287,
         "height": 58,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 14015,
         "sort_order": 44
     },
@@ -3710,6 +4028,8 @@
         "width": 375,
         "height": 78,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 33900,
         "sort_order": 45
     },
@@ -3732,6 +4052,8 @@
         "width": 284,
         "height": 59,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 9353,
         "sort_order": 46
     },
@@ -3754,6 +4076,8 @@
         "width": 168,
         "height": 57,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 13331,
         "sort_order": 47
     },
@@ -3776,6 +4100,8 @@
         "width": 291,
         "height": 190,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 25517,
         "sort_order": 48
     },
@@ -3798,6 +4124,8 @@
         "width": 400,
         "height": 400,
         "frame_count": 2,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 68902,
         "sort_order": 49
     },
@@ -3820,6 +4148,8 @@
         "width": 183,
         "height": 56,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 9116,
         "sort_order": 50
     },
@@ -3842,6 +4172,8 @@
         "width": 123,
         "height": 74,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 5578,
         "sort_order": 51
     },
@@ -3865,6 +4197,8 @@
         "width": 184,
         "height": 69,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 5641,
         "sort_order": 53
     },
@@ -3887,6 +4221,8 @@
         "width": 182,
         "height": 83,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 4848,
         "sort_order": 54
     },
@@ -3907,6 +4243,8 @@
         "width": 341,
         "height": 85,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 14078,
         "sort_order": 55
     },
@@ -3929,6 +4267,8 @@
         "width": 462,
         "height": 60,
         "frame_count": 2,
+        "frame_rate": 11,
+        "is_variable_framerate": 0,
         "file_size": 10266,
         "sort_order": 56
     },
@@ -3951,6 +4291,8 @@
         "width": 349,
         "height": 71,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 10593,
         "sort_order": 57
     },
@@ -3973,6 +4315,8 @@
         "width": 401,
         "height": 95,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 31279,
         "sort_order": 58
     },
@@ -3996,6 +4340,8 @@
         "width": 244,
         "height": 82,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 7463,
         "sort_order": 59
     },
@@ -4018,6 +4364,8 @@
         "width": 269,
         "height": 89,
         "frame_count": 3,
+        "frame_rate": 15,
+        "is_variable_framerate": 0,
         "file_size": 4257,
         "sort_order": 60
     },
@@ -4040,6 +4388,8 @@
         "width": 365,
         "height": 67,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 25333,
         "sort_order": 61
     },
@@ -4061,6 +4411,8 @@
         "width": 493,
         "height": 55,
         "frame_count": 3,
+        "frame_rate": 15,
+        "is_variable_framerate": 0,
         "file_size": 27379,
         "sort_order": 62
     },
@@ -4083,6 +4435,8 @@
         "width": 388,
         "height": 190,
         "frame_count": 2,
+        "frame_rate": 10,
+        "is_variable_framerate": 1,
         "file_size": 9515,
         "sort_order": 63
     },
@@ -4105,6 +4459,8 @@
         "width": 703,
         "height": 69,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 31966,
         "sort_order": 64
     },
@@ -4124,9 +4480,11 @@
         "is_animated": 1,
         "has_transparency": 1,
         "is_active": 1,
-        "width": 358,
-        "height": 66,
+        "width": 357,
+        "height": 65,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 6486,
         "sort_order": 65
     },
@@ -4149,6 +4507,8 @@
         "width": 242,
         "height": 69,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 10073,
         "sort_order": 66
     },
@@ -4172,6 +4532,8 @@
         "width": 354,
         "height": 58,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 16483,
         "sort_order": 67
     },
@@ -4195,6 +4557,8 @@
         "width": 316,
         "height": 96,
         "frame_count": 2,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 20180,
         "sort_order": 68
     },
@@ -4217,6 +4581,8 @@
         "width": 248,
         "height": 82,
         "frame_count": 20,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 50888,
         "sort_order": 69
     },
@@ -4239,6 +4605,8 @@
         "width": 230,
         "height": 87,
         "frame_count": 3,
+        "frame_rate": 5,
+        "is_variable_framerate": 0,
         "file_size": 12656,
         "sort_order": 70
     },
@@ -4261,6 +4629,8 @@
         "width": 183,
         "height": 66,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 8253,
         "sort_order": 71
     },
@@ -4283,6 +4653,8 @@
         "width": 167,
         "height": 48,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 8905,
         "sort_order": 72
     },
@@ -4305,6 +4677,8 @@
         "width": 240,
         "height": 70,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 15204,
         "sort_order": 73
     },
@@ -4327,6 +4701,8 @@
         "width": 359,
         "height": 205,
         "frame_count": 3,
+        "frame_rate": 11,
+        "is_variable_framerate": 0,
         "file_size": 15518,
         "sort_order": 74
     },
@@ -4349,6 +4725,8 @@
         "width": 395,
         "height": 63,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 11844,
         "sort_order": 75
     },
@@ -4371,6 +4749,8 @@
         "width": 277,
         "height": 53,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 7107,
         "sort_order": 0
     },
@@ -4393,6 +4773,8 @@
         "width": 357,
         "height": 191,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 9482,
         "sort_order": 77
     },
@@ -4415,6 +4797,8 @@
         "width": 293,
         "height": 65,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 5250,
         "sort_order": 78
     },
@@ -4435,6 +4819,8 @@
         "width": 130,
         "height": 31,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 11388,
         "sort_order": 79
     },
@@ -4457,6 +4843,8 @@
         "width": 551,
         "height": 84,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 13376,
         "sort_order": 80
     },
@@ -4479,6 +4867,8 @@
         "width": 394,
         "height": 79,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 42342,
         "sort_order": 81
     },
@@ -4501,6 +4891,8 @@
         "width": 394,
         "height": 79,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 45855,
         "sort_order": 82
     },
@@ -4523,6 +4915,8 @@
         "width": 301,
         "height": 165,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 11039,
         "sort_order": 83
     },
@@ -4545,6 +4939,8 @@
         "width": 285,
         "height": 67,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 15919,
         "sort_order": 0
     },
@@ -4569,6 +4965,8 @@
         "width": 112,
         "height": 86,
         "frame_count": 5,
+        "frame_rate": 12,
+        "is_variable_framerate": 0,
         "file_size": 9306,
         "sort_order": 96
     },
@@ -4593,6 +4991,8 @@
         "width": 332,
         "height": 168,
         "frame_count": 20,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 129674,
         "sort_order": 211
     },
@@ -4616,6 +5016,8 @@
         "width": 223,
         "height": 184,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 55568,
         "sort_order": 212
     },
@@ -4642,6 +5044,8 @@
         "width": 250,
         "height": 260,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 114769,
         "sort_order": 213
     },
@@ -4668,6 +5072,8 @@
         "width": 100,
         "height": 57,
         "frame_count": 6,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 15151,
         "sort_order": 214
     },
@@ -4692,6 +5098,8 @@
         "width": 414,
         "height": 136,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 65575,
         "sort_order": 215
     },
@@ -4717,6 +5125,8 @@
         "width": 388,
         "height": 314,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 101343,
         "sort_order": 216
     },
@@ -4740,6 +5150,8 @@
         "width": 136,
         "height": 39,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 13350,
         "sort_order": 217
     },
@@ -4763,6 +5175,8 @@
         "width": 155,
         "height": 120,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 26960,
         "sort_order": 218
     },
@@ -4785,6 +5199,8 @@
         "width": 396,
         "height": 357,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 84711,
         "sort_order": 219
     },
@@ -4810,6 +5226,8 @@
         "width": 400,
         "height": 190,
         "frame_count": 3,
+        "frame_rate": 30,
+        "is_variable_framerate": 0,
         "file_size": 46730,
         "sort_order": 220
     },
@@ -4832,6 +5250,8 @@
         "width": 400,
         "height": 325,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 129678,
         "sort_order": 221
     },
@@ -4854,6 +5274,8 @@
         "width": 400,
         "height": 93,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 47950,
         "sort_order": 0
     },
@@ -4877,6 +5299,8 @@
         "width": 191,
         "height": 83,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 8646,
         "sort_order": 223
     },
@@ -4901,6 +5325,8 @@
         "width": 100,
         "height": 86,
         "frame_count": 4,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 17480,
         "sort_order": 224
     },
@@ -4925,6 +5351,8 @@
         "width": 370,
         "height": 400,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 172159,
         "sort_order": 225
     },
@@ -4948,6 +5376,8 @@
         "width": 50,
         "height": 50,
         "frame_count": 4,
+        "frame_rate": 11,
+        "is_variable_framerate": 0,
         "file_size": 7740,
         "sort_order": 0
     },
@@ -4972,6 +5402,8 @@
         "width": 254,
         "height": 200,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 62927,
         "sort_order": 227
     },
@@ -4990,11 +5422,13 @@
             "pink"
         ],
         "is_animated": 1,
-        "has_transparency": 1,
+        "has_transparency": 0,
         "is_active": 1,
-        "width": 4987,
+        "width": 498,
         "height": 396,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 262261,
         "sort_order": 0
     },
@@ -5019,6 +5453,8 @@
         "width": 400,
         "height": 330,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 178267,
         "sort_order": 0
     },
@@ -5038,11 +5474,13 @@
             "so emo it hurts"
         ],
         "is_animated": 1,
-        "has_transparency": 0,
+        "has_transparency": 1,
         "is_active": 1,
         "width": 200,
         "height": 114,
         "frame_count": 3,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
         "file_size": 40979,
         "sort_order": 0
     }

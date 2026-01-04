@@ -112,6 +112,20 @@ class StickerEditor extends AssetEditor {
 
                 <div class="form-row">
                     <div class="form-group">
+                        <label>Frame Rate (centiseconds)</label>
+                        <input type="number" id="frame_rate" value="${s.frame_rate || ''}" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="is_variable_framerate" ${s.is_variable_framerate === '1' ? 'checked' : ''}>
+                            <label for="is_variable_framerate">Variable Frame Rate</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
                         <label>&nbsp;</label>
                         <div class="checkbox-group">
                             <input type="checkbox" id="is_animated" ${s.is_animated === '1'  ? 'checked' : ''}>
@@ -144,185 +158,154 @@ class StickerEditor extends AssetEditor {
 
     // ===== GET FORM DATA =====
 
-getAssetDataFromForm() {
+    getAssetDataFromForm() {
+        return {
+            id: this.currentAsset.id,
+            name: document.getElementById('name').value,
+            filename: document.getElementById('filename').value,
+            url: document.getElementById('url').value,
+            sticker_category_id: parseInt(document.getElementById('category_id').value),
+            attribution: document.getElementById('attribution').value || null,
+            sticker_text: document.getElementById('sticker_text').value || null,
+            width: parseInt(document.getElementById('width').value) || 0,
+            height: parseInt(document.getElementById('height').value) || 0,
+            file_size: parseInt(document.getElementById('file_size').value) || 0,
+            frame_count: parseInt(document.getElementById('frame_count').value) || 1,
+            frame_rate: parseInt(document.getElementById('frame_rate').value) || 10,
+            is_variable_framerate: document.getElementById('is_variable_framerate').checked ? 1 : 0,
+            is_animated: document.getElementById('is_animated').checked ? 1 : 0,
+            has_transparency: document.getElementById('has_transparency').checked ? 1 : 0,
+            is_active: document.getElementById('is_active').checked ? 1 : 0,
+            tags: this.currentAsset.tags.map(t => t.id)
+        };
+    }
 
-
-    return {
-        id: this.currentAsset.id,
-        name: document.getElementById('name').value,
-        filename: document.getElementById('filename').value,
-        url: document.getElementById('url').value,
-        sticker_category_id: parseInt(document.getElementById('category_id').value),
-        attribution: document.getElementById('attribution').value || null,
-        sticker_text: document.getElementById('sticker_text').value || null,
-        width: parseInt(document.getElementById('width').value) || 0,
-        height: parseInt(document.getElementById('height').value) || 0,
-        file_size: parseInt(document.getElementById('file_size').value) || 0,
-        frame_count: parseInt(document.getElementById('frame_count').value) || 1,
-        is_animated: document.getElementById('is_animated').checked ? 1 : 0,
-        has_transparency: document.getElementById('has_transparency').checked ? 1 : 0,
-        is_active: document.getElementById('is_active').checked ? 1 : 0,
-        tags: this.currentAsset.tags.map(t => t.id)
-    };
-}
     // ===== ANALYZE STICKER =====
 
-async analyzeCurrentSticker() {
-    if (!this.currentAsset) return;
+    async analyzeCurrentSticker() {
+        if (!this.currentAsset) return;
 
-    this.showStatus('Analyzing sticker...');
+        this.showStatus('Analyzing sticker...');
 
-    try {
-        const response = await fetch(`includes/api.php?action=analyze&id=${this.currentAsset.id}&type=sticker`);
-        const analysis = await response.json();
+        try {
+            const response = await fetch(`includes/api.php?action=analyze&id=${this.currentAsset.id}&type=sticker`);
+            const analysis = await response.json();
 
-        if (analysis.error) {
-            alert('Analysis failed: ' + analysis.error);
-            this.showStatus('Analysis failed', 'error');
+            if (analysis.error) {
+                alert('Analysis failed: ' + analysis.error);
+                this.showStatus('Analysis failed', 'error');
+                return;
+            }
+
+            // Show modal with results
+            this.showAnalyzeModal(analysis);
+
+        } catch (error) {
+            alert('Analysis error: ' + error.message);
+            this.showStatus('Analysis error', 'error');
+        }
+    }
+
+    async analyzeBulk() {
+        if (!confirm('This will analyze ALL sticker assets and update their technical properties. This may take several minutes. Continue?')) {
             return;
         }
 
-        // Show modal with results
-        this.showAnalyzeModal(analysis);
+        this.showStatus('Starting bulk analysis...');
 
-    } catch (error) {
-        alert('Analysis error: ' + error.message);
-        this.showStatus('Analysis error', 'error');
-    }
-}
-
-async showAnalyzeModal(analysis) {
-    const modal = document.getElementById('analyzeModal');
-    const resultsDiv = document.getElementById('analyzeResults');
-
-    // Get actual image dimensions and file size from the file
-    const imagePath = CONFIG.image_base_path + this.currentAsset.url;
-    const imageData = await this.getImageData(imagePath, analysis.frame_count);
-
-    // Merge analysis with image data
-    const fullAnalysis = {
-        ...analysis,
-        ...imageData
-    };
-
-    const fields = [
-        { key: 'width', label: 'Width (px)', value: fullAnalysis.width || 'N/A' },
-        { key: 'height', label: 'Height (px)', value: fullAnalysis.height || 'N/A' },
-        { key: 'frame_count', label: 'Frame Count', value: fullAnalysis.frame_count || 1 },
-        { key: 'file_size', label: 'File Size (bytes)', value: fullAnalysis.file_size || 'N/A' },
-        { key: 'is_animated', label: 'Animated', value: fullAnalysis.is_animated ? 'Yes' : 'No' },
-        { key: 'has_transparency', label: 'Has Transparency', value: fullAnalysis.has_transparency ? 'Yes' : 'No' }
-    ];
-
-    resultsDiv.innerHTML = fields.map(field => `
-        <div class="analyze-result-item">
-            <input type="checkbox" id="apply_${field.key}" checked>
-            <div class="analyze-result-content">
-                <div class="analyze-result-label">${field.label}</div>
-                <div class="analyze-result-value">${field.value}</div>
-            </div>
-        </div>
-    `).join('');
-
-    this.pendingAnalysis = fullAnalysis;
-    modal.classList.add('active');
-}
-
-    // Helper to get image dimensions and file size
-async getImageData(imagePath, frameCount) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        img.onload = () => {
-            // Create canvas to check transparency
-            const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            ctx.drawImage(img, 0, 0);
-            
-            // Check for transparency
-            let hasTransparency = false;
-            try {
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                
-                // Check alpha channel
-                for (let i = 3; i < data.length; i += 4) {
-                    if (data[i] < 255) {
-                        hasTransparency = true;
-                        break;
-                    }
-                }
-            } catch (e) {
-                console.warn('Could not check transparency:', e);
-                hasTransparency = false;
-            }
-            
-            // Fetch file size
-            fetch(imagePath)
-                .then(response => response.blob())
-                .then(blob => {
-                    resolve({
-                        width: img.naturalWidth,
-                        height: img.naturalHeight,
-                        file_size: blob.size,
-                        is_animated: frameCount > 1,
-                        has_transparency: hasTransparency
-                    });
-                })
-                .catch(() => {
-                    resolve({
-                        width: img.naturalWidth,
-                        height: img.naturalHeight,
-                        file_size: null,
-                        is_animated: frameCount > 1,
-                        has_transparency: hasTransparency
-                    });
-                });
-        };
-        
-        img.onerror = () => {
-            resolve({
-                width: null,
-                height: null,
-                file_size: null,
-                is_animated: false,
-                has_transparency: false
+        try {
+            const response = await fetch('includes/api.php?action=analyze_all&type=sticker', {
+                method: 'POST'
             });
-        };
-        
-        img.src = imagePath;
-    });
-}
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showStatus(`Bulk analysis complete! Updated ${result.updated} sticker assets.`, 'success');
+                await this.loadAssets();
+                if (this.currentAsset) {
+                    await this.selectAsset(this.currentAsset.id);
+                }
+            } else {
+                this.showStatus('Error: ' + (result.error || 'Unknown error'), 'error');
+            }
+        } catch (error) {
+            this.showStatus('Error: ' + error.message, 'error');
+        }
+    }
+
+    async showAnalyzeModal(analysis) {
+        const modal = document.getElementById('analyzeModal');
+        const resultsDiv = document.getElementById('analyzeResults');
+
+        const fields = [
+            { key: 'width', label: 'Width (px)', value: analysis.width || 'N/A' },
+            { key: 'height', label: 'Height (px)', value: analysis.height || 'N/A' },
+            { key: 'file_size', label: 'File Size (bytes)', value: analysis.file_size || 'N/A' },
+            { key: 'frame_count', label: 'Frame Count', value: analysis.frame_count || 1 },
+            { key: 'frame_rate', label: 'Frame Rate (centiseconds)', value: analysis.frame_rate !== null && analysis.frame_rate !== undefined ? analysis.frame_rate : 'N/A' },
+            { key: 'is_variable_framerate', label: 'Variable Frame Rate', value: analysis.is_variable_framerate ? 'Yes' : 'No' },
+            { key: 'is_animated', label: 'Animated', value: analysis.is_animated ? 'Yes' : 'No' },
+            { key: 'has_transparency', label: 'Has Transparency', value: analysis.has_transparency ? 'Yes' : 'No' }
+        ];
+
+        resultsDiv.innerHTML = fields.map(field => `
+            <div class="analyze-result-item">
+                <input type="checkbox" id="apply_${field.key}" checked>
+                <div class="analyze-result-content">
+                    <div class="analyze-result-label">${field.label}</div>
+                    <div class="analyze-result-value">${field.value}</div>
+                </div>
+            </div>
+        `).join('');
+
+        this.analysisResults = analysis;
+        modal.classList.add('active');
+    }
 
     hideAnalyzeModal() {
         document.getElementById('analyzeModal').classList.remove('active');
-        this.pendingAnalysis = null;
     }
 
     applyAnalysis() {
-        if (!this.pendingAnalysis) return;
+        const analysis = this.analysisResults;
 
-        const checkboxes = document.querySelectorAll('#analyzeResults input[type="checkbox"]:checked');
-        const selectedFields = Array.from(checkboxes).map(cb => cb.value);
+        if (document.getElementById('apply_width').checked) {
+            document.getElementById('width').value = analysis.width || '';
+        }
 
-        selectedFields.forEach(field => {
-            const input = document.getElementById(field);
-            if (input) {
-                if (input.type === 'checkbox') {
-                    input.checked = this.pendingAnalysis[field];
-                } else {
-                    input.value = this.pendingAnalysis[field];
-                }
-            }
-        });
+        if (document.getElementById('apply_height').checked) {
+            document.getElementById('height').value = analysis.height || '';
+        }
+
+        if (document.getElementById('apply_file_size').checked) {
+            document.getElementById('file_size').value = analysis.file_size || '';
+        }
+
+        if (document.getElementById('apply_frame_count').checked) {
+            document.getElementById('frame_count').value = analysis.frame_count || 1;
+        }
+
+        if (document.getElementById('apply_frame_rate').checked) {
+            document.getElementById('frame_rate').value = analysis.frame_rate || '';
+        }
+
+        if (document.getElementById('apply_is_variable_framerate').checked) {
+            document.getElementById('is_variable_framerate').checked = analysis.is_variable_framerate;
+        }
+
+        if (document.getElementById('apply_is_animated').checked) {
+            document.getElementById('is_animated').checked = analysis.is_animated;
+        }
+
+        if (document.getElementById('apply_has_transparency').checked) {
+            document.getElementById('has_transparency').checked = analysis.has_transparency;
+        }
 
         this.hideAnalyzeModal();
         this.showStatus('Analysis applied!', 'success');
     }
 }
 
-// Initialize the editor
+// Initialize
 const app = new StickerEditor();
