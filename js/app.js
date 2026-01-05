@@ -224,68 +224,68 @@ const LAYER_UI_CONFIG = {
 		}
 	},
 
-[LayerType.STICKER]: {
-    designPanelSections: ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'],
-    mobileSettingsSections: ['sticker'],
-    panelMode: 'sticker',
-    onActivate: (editor, layer) => {
-        editor.setTool(ToolType.SELECT);
-        
-        // Check if sticker is actually selected
-        const stickerContent = document.getElementById('stickerSettingsContent');
-        if (layer.stickerSourceId) {
-            // Has sticker - show content and controls
-            // if (stickerContent) stickerContent.classList.add('visible');
-            editor.hideStickerSettingsEmptyState();
-            editor.loadStickerSettings(layer);
-        } else {
-            // No sticker selected - hide content, show empty state
-            if (stickerContent) stickerContent.classList.remove('visible');
-            editor.showStickerSettingsEmptyState();
-        }
-        
-        editor.updateStickerSelection();
-    }
-}
+	[LayerType.STICKER]: {
+		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'],
+		mobileSettingsSections: ['sticker'],
+		panelMode: 'sticker',
+		onActivate: (editor, layer) => {
+			editor.setTool(ToolType.SELECT);
+
+			// Check if sticker is actually selected
+			const stickerContent = document.getElementById('stickerSettingsContent');
+			if (layer.stickerSourceId) {
+				// Has sticker - show content and controls
+				// if (stickerContent) stickerContent.classList.add('visible');
+				editor.hideStickerSettingsEmptyState();
+				editor.loadStickerSettings(layer);
+			} else {
+				// No sticker selected - hide content, show empty state
+				if (stickerContent) stickerContent.classList.remove('visible');
+				editor.showStickerSettingsEmptyState();
+			}
+
+			editor.updateStickerSelection();
+		}
+	}
 };
 
 // Configuration for different asset types
 const ASSET_TYPE_CONFIG = {
-    glitter: {
-        prefix: 'glitterAsset',
-        managerKey: 'glitterManager',
-        renderThumbnail: (thumbnail, asset) => {
-            thumbnail.className = 'asset-info-thumbnail glitter-bg';
-            thumbnail.style.backgroundImage = `url(${asset.url})`;
-            thumbnail.innerHTML = '';
-        },
-        getExtraBadges: (asset) => {
-            // Glitter-specific badges if needed
-            return [];
-        }
-    },
-    sticker: {
-        prefix: 'stickerAsset',
-        managerKey: 'stickerManager',
-        renderThumbnail: (thumbnail, asset) => {
-            thumbnail.className = 'asset-info-thumbnail';
-            thumbnail.style.backgroundImage = '';
-            thumbnail.innerHTML = `<img src="${asset.url}" alt="${asset.name}">`;
-        },
-        getExtraBadges: (asset) => {
-            const badges = [];
-            
-            // Sticker text badge
-            if (asset.sticker_text) {
-                badges.push({
-                    class: 'badge-text',
-                    text: `Text: "${asset.sticker_text}"`
-                });
-            }
-            
-            return badges;
-        }
-    }
+	glitter: {
+		prefix: 'glitterAsset',
+		managerKey: 'glitterManager',
+		renderThumbnail: (thumbnail, asset) => {
+			thumbnail.className = 'asset-info-thumbnail glitter-bg';
+			thumbnail.style.backgroundImage = `url(${asset.url})`;
+			thumbnail.innerHTML = '';
+		},
+		getExtraBadges: (asset) => {
+			// Glitter-specific badges if needed
+			return [];
+		}
+	},
+	sticker: {
+		prefix: 'stickerAsset',
+		managerKey: 'stickerManager',
+		renderThumbnail: (thumbnail, asset) => {
+			thumbnail.className = 'asset-info-thumbnail';
+			thumbnail.style.backgroundImage = '';
+			thumbnail.innerHTML = `<img src="${asset.url}" alt="${asset.name}">`;
+		},
+		getExtraBadges: (asset) => {
+			const badges = [];
+
+			// Sticker text badge
+			if (asset.sticker_text) {
+				badges.push({
+					class: 'badge-text',
+					text: `Text: "${asset.sticker_text}"`
+				});
+			}
+
+			return badges;
+		}
+	}
 };
 
 // ============================================
@@ -557,35 +557,35 @@ class GlitterEditor {
 
 	// ===== EXPORT SETTINGS =====
 
-	initializeExportSettings() {
-		// Load saved settings or use defaults
-		const savedSettings = this.loadSettingsFromStorage();
+initializeExportSettings() {
+	const savedSettings = this.loadSettingsFromStorage();
 
-		// Initialize this.exportSettings with saved or default values
-		this.exportSettings = {
-			quality: savedSettings?.exportQuality ?? CONFIG.defaultExportQuality,
-			ditherEnabled: savedSettings?.exportDitherEnabled ?? CONFIG.defaultExportDitherEnabled,
-			ditherType: savedSettings?.exportDitherType ?? CONFIG.defaultExportDitherType,
-			frameDelay: savedSettings?.exportFrameDelay ?? CONFIG.defaultExportFrameDelay,
-			maxFrames: savedSettings?.exportMaxFrames ?? CONFIG.defaultExportMaxFrames,
-			baseImage: CONFIG.defaultExportBaseImage, // Not persisted
-			transparency: savedSettings?.exportTransparency ?? CONFIG.defaultExportTransparency,
-			matteColor: savedSettings?.exportMatteColor ?? CONFIG.defaultExportMatteColor,
-			watermarkEnabled: savedSettings?.exportWatermarkEnabled ?? CONFIG.defaultExportWatermarkEnabled,
-			exportFrameSkip: savedSettings?.exportFrameSkip ?? CONFIG.defaultExportFrameSkip,
-			exportReverse: savedSettings?.exportReverse ?? CONFIG.defaultExportReverse,
-			smartFrameReduction: savedSettings?.exportSmartFrameReduction ?? CONFIG.defaultExportSmartFrameReduction
-		};
+	// Initialize export settings with saved values or defaults
+	this.exportSettings = {
+		quality: savedSettings?.exportQuality ?? CONFIG.defaultExportQuality,
+		ditherEnabled: savedSettings?.exportDitherEnabled ?? CONFIG.defaultExportDitherEnabled,
+		ditherType: savedSettings?.exportDitherType ?? CONFIG.defaultExportDitherType,
+		baseImage: savedSettings?.exportBaseImage ?? CONFIG.defaultExportBaseImage,
+		frameDelay: savedSettings?.exportFrameDelay ?? CONFIG.defaultExportFrameDelay,
+		maxFrames: savedSettings?.exportMaxFrames ?? CONFIG.defaultExportMaxFrames,
+		transparency: savedSettings?.exportTransparency ?? CONFIG.defaultExportTransparency,
+		matteColor: savedSettings?.exportMatteColor ?? CONFIG.defaultExportMatteColor,
+		watermarkEnabled: savedSettings?.exportWatermarkEnabled ?? CONFIG.defaultExportWatermarkEnabled,
+		exportFrameSkip: savedSettings?.exportFrameSkip ?? CONFIG.defaultExportFrameSkip,
+		exportReverse: savedSettings?.exportReverse ?? CONFIG.defaultExportReverse,
+		smartFrameReduction: savedSettings?.exportSmartFrameReduction ?? CONFIG.defaultExportSmartFrameReduction
+	};
 
-		// Update this.showHints
-		this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.defaultShowHints;
+	// Update this.showHints
+	this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.defaultShowHints;
 
-		// Sync UI to match exportSettings
-		this.syncExportSettingsToUI();
+	// Sync UI to match exportSettings
+	this.syncExportSettingsToUI();
 
-		// Setup listeners
-		this.setupExportSettingsListeners();
-	}
+	// Setup listeners
+	this.setupExportSettingsListeners();
+	this.setupSettingsResetListeners(); // ADD THIS LINE
+}
 
 	syncExportSettingsToUI() {
 		const uiElements = {
@@ -673,6 +673,114 @@ class GlitterEditor {
 			});
 		}
 	}
+
+setupSettingsResetListeners() {
+	// Per-section reset buttons
+	document.querySelectorAll('.reset-section-btn').forEach(btn => {
+		btn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			const section = btn.dataset.section;
+			this.resetSettingsSection(section);
+		});
+	});
+
+	// Reset all button
+	const resetAllBtn = document.querySelector('.reset-all-settings-btn');
+	if (resetAllBtn) {
+		resetAllBtn.addEventListener('click', () => {
+			this.resetAllSettings();
+		});
+	}
+}
+
+resetSettingsSection(section) {
+	const sectionName = this.getSectionDisplayName(section);
+	
+	if (!confirm(`Reset all ${sectionName} to defaults?`)) {
+		return;
+	}
+
+	switch(section) {
+		case 'interface':
+			this.showHints = CONFIG.defaultShowHints;
+			break;
+
+		case 'export':
+			this.exportSettings.baseImage = CONFIG.defaultExportBaseImage;
+			this.exportSettings.transparency = CONFIG.defaultExportTransparency;
+			this.exportSettings.matteColor = CONFIG.defaultExportMatteColor;
+			this.exportSettings.watermarkEnabled = CONFIG.defaultExportWatermarkEnabled;
+			break;
+
+		case 'encoding':
+			this.exportSettings.ditherEnabled = CONFIG.defaultExportDitherEnabled;
+			this.exportSettings.ditherType = CONFIG.defaultExportDitherType;
+			this.exportSettings.quality = CONFIG.defaultExportQuality;
+			break;
+
+		case 'framecontrol':
+			this.exportSettings.frameDelay = CONFIG.defaultExportFrameDelay;
+			this.exportSettings.maxFrames = CONFIG.defaultExportMaxFrames;
+			this.exportSettings.smartFrameReduction = CONFIG.defaultExportSmartFrameReduction;
+			this.exportSettings.exportFrameSkip = CONFIG.defaultExportFrameSkip;
+			this.exportSettings.exportReverse = CONFIG.defaultExportReverse;
+			break;
+	}
+
+	this.syncExportSettingsToUI();
+	this.saveSettingsToStorage();
+}
+
+resetAllSettings() {
+	if (!confirm('Reset ALL settings to defaults? This will reset export settings, interface preferences, and all other settings.')) {
+		return;
+	}
+
+	// Reset all export settings
+	this.exportSettings = {
+		quality: CONFIG.defaultExportQuality,
+		ditherEnabled: CONFIG.defaultExportDitherEnabled,
+		ditherType: CONFIG.defaultExportDitherType,
+		baseImage: CONFIG.defaultExportBaseImage,
+		transparency: CONFIG.defaultExportTransparency,
+		matteColor: CONFIG.defaultExportMatteColor,
+		frameDelay: CONFIG.defaultExportFrameDelay,
+		maxFrames: CONFIG.defaultExportMaxFrames,
+		watermarkEnabled: CONFIG.defaultExportWatermarkEnabled,
+		exportFrameSkip: CONFIG.defaultExportFrameSkip,
+		exportReverse: CONFIG.defaultExportReverse,
+		smartFrameReduction: CONFIG.defaultExportSmartFrameReduction
+	};
+
+	// Reset UI preferences
+	this.showHints = CONFIG.defaultShowHints;
+
+	this.syncExportSettingsToUI();
+	this.saveSettingsToStorage();
+}
+
+getSectionDisplayName(section) {
+	const names = {
+		'interface': 'Interface Settings',
+		'export': 'Export Settings',
+		'encoding': 'Encoding Settings',
+		'framecontrol': 'Frame Control Settings'
+	};
+	return names[section] || 'Settings';
+}
+
+
+
+	getSectionDisplayName(section) {
+		const names = {
+			'interface': 'Interface Settings',
+			'export': 'Export Settings',
+			'encoding': 'Encoding Settings',
+			'framecontrol': 'Frame Control Settings'
+		};
+		return names[section] || 'Settings';
+	}
+
 
 	setupExportListeners() {
 		const exportGif = document.getElementById('exportGif');
@@ -815,12 +923,12 @@ class GlitterEditor {
 		});
 	}
 
-showStickerSettingsEmptyState() {
-    const empty = document.getElementById('stickerSettingsEmpty');
-    const controls = document.getElementById('stickerSettingsControls');
-    if (empty) empty.classList.add('visible');
-    if (controls) controls.classList.remove('visible');
-}
+	showStickerSettingsEmptyState() {
+		const empty = document.getElementById('stickerSettingsEmpty');
+		const controls = document.getElementById('stickerSettingsControls');
+		if (empty) empty.classList.add('visible');
+		if (controls) controls.classList.remove('visible');
+	}
 
 	hideStickerSettingsEmptyState() {
 		const empty = document.getElementById('stickerSettingsEmpty');
@@ -838,136 +946,136 @@ showStickerSettingsEmptyState() {
 
 
 
-updateAssetInfo(asset, type) {
-    if (!asset) return;
-    
-    const config = ASSET_TYPE_CONFIG[type];
-    if (!config) {
-        console.warn(`Unknown asset type: ${type}`);
-        return;
-    }
-    
-    const { prefix, managerKey, renderThumbnail, getExtraBadges } = config;
-    const manager = this[managerKey];
-    
-    const thumbnail = document.getElementById(`${prefix}Thumbnail`);
-    const name = document.getElementById(`${prefix}Name`);
-    const badges = document.getElementById(`${prefix}Badges`);
-    const size = document.getElementById(`${prefix}Size`);
-    const frames = document.getElementById(`${prefix}Frames`);
-    
-    // Thumbnail with click handler
-    if (thumbnail) {
-        renderThumbnail(thumbnail, asset);
-        thumbnail.style.cursor = 'pointer';
-        
-        // Remove old listeners and add new one
-        thumbnail.replaceWith(thumbnail.cloneNode(true));
-        const newThumbnail = document.getElementById(`${prefix}Thumbnail`);
-        
-        // Re-render after cloning
-        renderThumbnail(newThumbnail, asset);
-        
-        newThumbnail.addEventListener('click', () => {
-            if (manager && manager.browser) {
-                manager.browser.navigateToItem(asset.id);
-            }
-        });
-    }
-    
-    // Name
-    if (name) name.textContent = asset.name || 'Undefined';
-    
-    // Badges
-    if (badges) {
-        const badgeHTML = [];
-        
-        // Category badge (clickable)
-        if (asset.category) {
-            const categoryName = asset.category.charAt(0).toUpperCase() + asset.category.slice(1);
-            badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${asset.category}">${categoryName}</div>`);
-        }
-        
-        // Animated badge
-        if (asset.isAnimated) {
-            badgeHTML.push('<div class="asset-info-badge badge-animated">Animated</div>');
-        }
-        
+	updateAssetInfo(asset, type) {
+		if (!asset) return;
 
-        // Transparency badge
-        if (asset.hasTransparency) {
-            badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparent</div>');
-        }
+		const config = ASSET_TYPE_CONFIG[type];
+		if (!config) {
+			console.warn(`Unknown asset type: ${type}`);
+			return;
+		}
 
-        // Variable frame rate badge
-        if (asset.isVariableFramerate) {
-            badgeHTML.push('<div class="asset-info-badge badge-variable-fps">Variable FPS</div>');
-        }
-        
-        
-        // Type-specific badges
-        if (getExtraBadges) {
-            const extraBadges = getExtraBadges(asset);
-            extraBadges.forEach(badge => {
-                badgeHTML.push(`<div class="asset-info-badge ${badge.class}">${badge.text}</div>`);
-            });
-        }
-        
-        badges.innerHTML = badgeHTML.join('');
-        
-        // Add click listener to category badge
-        const categoryBadge = badges.querySelector('.badge-category');
-        if (categoryBadge) {
-            categoryBadge.addEventListener('click', () => {
-                if (manager && manager.browser) {
-                    manager.browser.navigateToItem(asset.id);
-                }
-            });
-        }
-    }
-    
-    // Size - handle undefined
-    if (size) {
-        if (asset.width && asset.height) {
-            size.textContent = `${asset.width} × ${asset.height} px`;
-        } else {
-            size.textContent = 'Undefined';
-        }
-    }
-    
-    // Frames and frame rate - handle undefined
-    if (frames) {
-        let frameText = '';
-        
-        if (asset.frameCount !== undefined && asset.frameCount !== null) {
-            frameText = `${asset.frameCount}`;
-            
-            // Add frame rate if available and animated
-            if (asset.isAnimated && asset.frameRate) {
+		const { prefix, managerKey, renderThumbnail, getExtraBadges } = config;
+		const manager = this[managerKey];
 
-				if(asset.isVariableFramerate) {
-					frameText += ` @ Variable fps`;
-				}else{
-					frameText += ` @ ${asset.frameRate} fps`;
+		const thumbnail = document.getElementById(`${prefix}Thumbnail`);
+		const name = document.getElementById(`${prefix}Name`);
+		const badges = document.getElementById(`${prefix}Badges`);
+		const size = document.getElementById(`${prefix}Size`);
+		const frames = document.getElementById(`${prefix}Frames`);
+
+		// Thumbnail with click handler
+		if (thumbnail) {
+			renderThumbnail(thumbnail, asset);
+			thumbnail.style.cursor = 'pointer';
+
+			// Remove old listeners and add new one
+			thumbnail.replaceWith(thumbnail.cloneNode(true));
+			const newThumbnail = document.getElementById(`${prefix}Thumbnail`);
+
+			// Re-render after cloning
+			renderThumbnail(newThumbnail, asset);
+
+			newThumbnail.addEventListener('click', () => {
+				if (manager && manager.browser) {
+					manager.browser.navigateToItem(asset.id);
 				}
-                
-            }
-        } else {
-            frameText = 'Undefined';
-        }
-        
-        frames.textContent = frameText;
-    }
-}
+			});
+		}
 
-// Convenience wrappers
-updateGlitterAssetInfo(glitter) {
-    this.updateAssetInfo(glitter, 'glitter');
-}
+		// Name
+		if (name) name.textContent = asset.name || 'Undefined';
 
-updateStickerAssetInfo(sticker) {
-    this.updateAssetInfo(sticker, 'sticker');
-}
+		// Badges
+		if (badges) {
+			const badgeHTML = [];
+
+			// Category badge (clickable)
+			if (asset.category) {
+				const categoryName = asset.category.charAt(0).toUpperCase() + asset.category.slice(1);
+				badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${asset.category}">${categoryName}</div>`);
+			}
+
+			// Animated badge
+			if (asset.isAnimated) {
+				badgeHTML.push('<div class="asset-info-badge badge-animated">Animated</div>');
+			}
+
+
+			// Transparency badge
+			if (asset.hasTransparency) {
+				badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparent</div>');
+			}
+
+			// Variable frame rate badge
+			if (asset.isVariableFramerate) {
+				badgeHTML.push('<div class="asset-info-badge badge-variable-fps">Variable FPS</div>');
+			}
+
+
+			// Type-specific badges
+			if (getExtraBadges) {
+				const extraBadges = getExtraBadges(asset);
+				extraBadges.forEach(badge => {
+					badgeHTML.push(`<div class="asset-info-badge ${badge.class}">${badge.text}</div>`);
+				});
+			}
+
+			badges.innerHTML = badgeHTML.join('');
+
+			// Add click listener to category badge
+			const categoryBadge = badges.querySelector('.badge-category');
+			if (categoryBadge) {
+				categoryBadge.addEventListener('click', () => {
+					if (manager && manager.browser) {
+						manager.browser.navigateToItem(asset.id);
+					}
+				});
+			}
+		}
+
+		// Size - handle undefined
+		if (size) {
+			if (asset.width && asset.height) {
+				size.textContent = `${asset.width} × ${asset.height} px`;
+			} else {
+				size.textContent = 'Undefined';
+			}
+		}
+
+		// Frames and frame rate - handle undefined
+		if (frames) {
+			let frameText = '';
+
+			if (asset.frameCount !== undefined && asset.frameCount !== null) {
+				frameText = `${asset.frameCount}`;
+
+				// Add frame rate if available and animated
+				if (asset.isAnimated && asset.frameRate) {
+
+					if (asset.isVariableFramerate) {
+						frameText += ` @ Variable fps`;
+					} else {
+						frameText += ` @ ${asset.frameRate} fps`;
+					}
+
+				}
+			} else {
+				frameText = 'Undefined';
+			}
+
+			frames.textContent = frameText;
+		}
+	}
+
+	// Convenience wrappers
+	updateGlitterAssetInfo(glitter) {
+		this.updateAssetInfo(glitter, 'glitter');
+	}
+
+	updateStickerAssetInfo(sticker) {
+		this.updateAssetInfo(sticker, 'sticker');
+	}
 
 
 	loadActiveLayerSettings() {
@@ -1951,7 +2059,7 @@ updateStickerAssetInfo(sticker) {
 
 	setupNewCanvasModalListeners() {
 		const createBtn = document.getElementById('createCanvasBtn');
-		const cancelBtn = document.getElementById('createCanvasCloseBtn');
+
 
 		const widthInput = document.getElementById('newCanvasWidth');
 		const heightInput = document.getElementById('newCanvasHeight');
@@ -2044,11 +2152,6 @@ updateStickerAssetInfo(sticker) {
 			});
 		}
 
-		if (cancelBtn) {
-			cancelBtn.addEventListener('click', () => {
-				this.modalManager.close('newCanvasModal');
-			});
-		}
 	}
 
 	updateOrientationButtons(width, height) {
@@ -2090,7 +2193,7 @@ updateStickerAssetInfo(sticker) {
 			})
 			.register('settingsModal', {
 				openBtnId: 'settingsBtn',
-				closeBtnId: 'closeSettingsModal',
+				closeBtnId: ['closeSettingsModal', 'closeSettingsModalFooter'],
 				resetScrollOnOpen: true
 			})
 			.register('exportPreviewModal', {  // ADD THIS
@@ -2156,7 +2259,7 @@ updateStickerAssetInfo(sticker) {
 
 		// New canvas modal
 		this.modalManager.register('newCanvasModal', {
-			closeBtnId: 'closeNewCanvasModal',
+			closeBtnId: ['closeNewCanvasModal', 'createCanvasCloseBtn'],
 			resetScrollOnOpen: true,
 			onOpen: () => this.initializeNewCanvasModal()
 		});
@@ -2571,17 +2674,17 @@ updateStickerAssetInfo(sticker) {
 		} else if (this.currentTool === ToolType.HAND && panControls) {
 			panControls.classList.add('visible');
 		} else if (this.currentTool === ToolType.SELECT && stickerCenterControls) {
-// When a sticker layer is selected
-if (layer && layer.type === LayerType.STICKER) {
-    if (layer.stickerSourceId) {
-        // Has a sticker selected - show controls
-        this.hideStickerSettingsEmptyState();
-        this.loadStickerSettings(layer); // This will populate asset info
-    } else {
-        // No sticker selected yet - show empty state, hide controls
-        this.showStickerSettingsEmptyState();
-    }
-}
+			// When a sticker layer is selected
+			if (layer && layer.type === LayerType.STICKER) {
+				if (layer.stickerSourceId) {
+					// Has a sticker selected - show controls
+					this.hideStickerSettingsEmptyState();
+					this.loadStickerSettings(layer); // This will populate asset info
+				} else {
+					// No sticker selected yet - show empty state, hide controls
+					this.showStickerSettingsEmptyState();
+				}
+			}
 		} else if (this.currentTool === ToolType.COLOR_PICKER && colorPickerControls) {
 			if (layer && layer.type === LayerType.GLITTER_FILL && layer.selections && layer.selections.length > 0) {
 				this.updateColorPickerControls();

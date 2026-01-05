@@ -1613,46 +1613,42 @@
 
 
 			</div>
-			<div class="modal-body">
+
+<div class="modal-body">
 				<div class="settings-group">
 
 					<!-- Interface Group -->
-					<div class="settings-group-title">Interface</div>
+					<div class="settings-group-title">
+						Interface
+						<button class="btn-text small reset-section-btn" data-section="interface">Reset</button>
+					</div>
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Helpful Hints</div>
 							<div class="settings-row-control">
-
-
 								<label class="switch" for="showHelpfulHints">
 									<input type="checkbox" id="showHelpfulHints" />
 									<div class="slider round"></div>
 								</label>
-
-
-
-
-
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div>
 					</div>
 
 
-					<!-- Composition Group -->
-					<div class="settings-group-title">Export</div>
+					<!-- Export Group -->
+					<div class="settings-group-title">
+						Export
+						<button class="btn-text small reset-section-btn" data-section="export">Reset</button>
+					</div>
 					<div class="settings-row" style="display: none">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Base Image</div>
 							<div class="settings-row-control">
-
-
 								<label class="switch" for="exportBaseImage">
 									<input type="checkbox" id="exportBaseImage" />
 									<div class="slider round"></div>
 								</label>
-
-
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Include the base image in the export. When disabled, only
@@ -1662,13 +1658,10 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Transparency</div>
 							<div class="settings-row-control">
-
 								<label class="switch" for="exportTransparency">
 									<input type="checkbox" id="exportTransparency" />
 									<div class="slider round"></div>
 								</label>
-
-
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Preserve transparent areas from the original image if it has it. When
@@ -1690,14 +1683,10 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Watermark</div>
 							<div class="settings-row-control">
-
-
 								<label class="switch" for="exportWatermarkEnabled">
 									<input type="checkbox" id="exportWatermarkEnabled" />
 									<div class="slider round"></div>
 								</label>
-
-
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Add a cheeky little watermark overlay to the exported GIF.</div>
@@ -1705,132 +1694,119 @@
 
 
 					<!-- Encoding Group -->
-					<div class="settings-group-title">Encoding</div>
+					<div class="settings-group-title">
+						Encoding
+						<button class="btn-text small reset-section-btn" data-section="encoding">Reset</button>
+					</div>
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Dithering</div>
 							<div class="settings-row-control">
-
-
-
 								<label class="switch" for="exportDitherEnabled">
 									<input type="checkbox" id="exportDitherEnabled" />
 									<div class="slider round"></div>
 								</label>
-
-
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Reduces color banding in gradients. Disable for sharper
-							edges. Dithering does not apply to images with transparency.</div>
+							edges.</div>
 					</div>
 					<div class="settings-row" id="ditherTypeRow">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Dithering Algorithm</div>
+							<div class="settings-row-label-main">Dithering Type</div>
 							<div class="settings-row-control">
 								<select id="exportDitherType">
 									<option value="FloydSteinberg">Floyd-Steinberg</option>
-									<option value="FloydSteinberg-serpentine">Floyd-Steinberg Serpentine</option>
 									<option value="FalseFloydSteinberg">False Floyd-Steinberg</option>
-									<option value="FalseFloydSteinberg-serpentine">False Floyd-Steinberg Serpentine
-									</option>
 									<option value="Stucki">Stucki</option>
-									<option value="Stucki-serpentine">Stucki Serpentine</option>
 									<option value="Atkinson">Atkinson</option>
-									<option value="Atkinson-serpentine">Atkinson Serpentine</option>
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Different algorithms produce different visual results.
-						</div>
+						<div class="settings-row-label-desc">Different algorithms for dithering patterns.</div>
 					</div>
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Quality</div>
 							<div class="settings-row-control">
 								<select id="exportQuality">
-									<option value="1">1 - Best Quality (Slowest)</option>
-									<option value="5">5 - High Quality</option>
-									<option value="10">10 - Good Quality</option>
-									<option value="15">15 - Medium Quality</option>
-									<option value="20">20 - Lower Quality (Faster)</option>
-									<option value="30">30 - Lowest Quality (Fastest)</option>
+									<option value="1">Best (slowest)</option>
+									<option value="10">Good</option>
+									<option value="20">Fast</option>
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Lower values = better quality but slower encoding. Higher
-							values = faster but may lose color accuracy.</div>
+						<div class="settings-row-label-desc">Lower numbers = better quality but slower export.</div>
 					</div>
 
-					<!-- Animation Group -->
-					<div class="settings-group-title">Animation</div>
+
+					<!-- Frame Control Group -->
+					<div class="settings-group-title">
+						Frame Control
+						<button class="btn-text small reset-section-btn" data-section="framecontrol">Reset</button>
+					</div>
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Frame Delay</div>
 							<div class="settings-row-control">
 								<select id="exportFrameDelay">
-									<option value="50">50ms - Very Fast</option>
-									<option value="75">75ms - Fast</option>
-									<option value="100">100ms - Normal</option>
-									<option value="110">110ms - Classic</option>
-									<option value="120">120ms</option>
-									<option value="150">150ms - Slow</option>
-									<option value="200">200ms - Very Slow</option>
+									<option value="50">50ms (20 FPS)</option>
+									<option value="67">67ms (15 FPS)</option>
+									<option value="83">83ms (12 FPS)</option>
+									<option value="100">100ms (10 FPS)</option>
+									<option value="110">110ms (9 FPS)</option>
+									<option value="125">125ms (8 FPS)</option>
+									<option value="167">167ms (6 FPS)</option>
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Time between frames in milliseconds. Lower = faster
-							animation.</div>
+						<div class="settings-row-label-desc">Time between frames. Lower = faster animation.</div>
 					</div>
-
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Max Frames</div>
 							<div class="settings-row-control">
 								<select id="exportMaxFrames">
-									<option value="20">20 frames</option>
 									<option value="30">30 frames</option>
-									<option value="40">40 frames</option>
 									<option value="60">60 frames</option>
-									<option value="80">80 frames</option>
-									<option value="100">100 frames</option>
-									<option value="unlimited">No Limit</option>
+									<option value="90">90 frames</option>
+									<option value="120">120 frames</option>
+									<option value="unlimited">Unlimited</option>
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Maximum frames to export. Higher = longer animation but larger file size. "No Limit" caps at 1000 frames.</div>
+						<div class="settings-row-label-desc">Maximum number of frames to render. Higher = larger file size.</div>
 					</div>
 
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Smart Frame Reduction</div>
 							<div class="settings-row-control">
-
 								<label class="switch" for="exportSmartFrameReduction">
 									<input type="checkbox" id="exportSmartFrameReduction" />
 									<div class="slider round"></div>
 								</label>
-
-
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Intelligently reduce frame counts to optimize file size while maintaining animation quality.</div>
+						<div class="settings-row-label-desc">Automatically detect and remove duplicate frames to reduce file
+							size.</div>
 					</div>
+
 
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Frame Skip</div>
 							<div class="settings-row-control">
 								<select id="exportFrameSkip">
-									<option value="1" selected>Don't Skip</option>
-									<option value="2">Every 2nd (50%)</option>
-									<option value="3">Every 3rd (33%)</option>
-									<option value="4">Every 4th (25%)</option>
-									<option value="5">Every 5th (20%)</option>
+									<option value="1">Every frame</option>
+									<option value="2">Every 2nd frame</option>
+									<option value="3">Every 3rd frame</option>
+									<option value="4">Every 4th frame</option>
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Skip frames to reduce file size. Higher values = smaller file but choppier animation.</div>
+						<div class="settings-row-label-desc">Skip frames to reduce file size and speed up rendering.
+							Higher values = smaller file but choppier animation.</div>
 					</div>
 
 
@@ -1838,22 +1814,30 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Reverse Animation</div>
 							<div class="settings-row-control">
-
 								<label class="switch" for="exportReverse">
 									<input type="checkbox" id="exportReverse" />
 									<div class="slider round"></div>
 								</label>
 							</div>
-
-
-
 						</div>
 						<div class="settings-row-label-desc">Play animation backwards.</div>
 					</div>
 
 
 				</div>
+				
+
 			</div>
+
+				<!-- Footer with Reset All button -->
+				<div class="modal-footer left-right">
+					<button class="btn-text secondary reset-all-settings-btn">
+						Reset All Settings
+					</button>
+					<button class="btn-simple modal-close" id="closeSettingsModalFooter">Close</button>
+				</div>
+
+
 		</div>
 	</div>
 

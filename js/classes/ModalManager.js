@@ -8,80 +8,90 @@ class ModalManager {
 		this.setupGlobalListeners();
 	}
 
-	/**
-	 * Register a modal with the manager
-	 * 
-	 * @param {string} id - Modal element ID
-	 * @param {Object} options - Configuration
-	 * @param {string} options.openBtnId - ID of button that opens modal
-	 * @param {string} options.closeBtnId - ID of button that closes modal
-	 * @param {Function} options.onOpen - Callback when modal opens
-	 * @param {Function} options.onClose - Callback when modal closes
-	 * @param {boolean} options.closeOnOutsideClick - Close when clicking overlay (default: true)
-	 * @param {boolean} options.closeOnEscape - Close on Escape key (default: true)
-	 * @param {string} options.externalContentUrl - URL to load content from
-	 * @param {boolean} options.cacheContent - Cache loaded content (default: true)
-	 * @param {boolean} options.resetScrollOnOpen - Reset scroll to top on open (default: true)
-	 * @param {boolean} options.resetScrollOnClose - Reset scroll to top on close (default: false)
-	 * @param {Function} options.onContentLoaded - Callback after external content loads
-	 * @returns {ModalManager} - For chaining
-	 */
-	register(id, options = {}) {
-		const modal = document.getElementById(id);
-		if (!modal) {
-			console.warn(`Modal not found: ${id}`);
-			return this;
-		}
-
-		const config = {
-			id,
-			modal,
-			openBtn: options.openBtnId ? document.getElementById(options.openBtnId) : null,
-			closeBtn: options.closeBtnId ? document.getElementById(options.closeBtnId) : null,
-			onOpen: options.onOpen || null,
-			onClose: options.onClose || null,
-			closeOnOutsideClick: options.closeOnOutsideClick !== false,
-			closeOnEscape: options.closeOnEscape !== false,
-			
-			// External content options
-			externalContentUrl: options.externalContentUrl || null,
-			cacheContent: options.cacheContent !== false,
-			contentLoaded: false,
-			cachedContent: null,
-			
-			// Scroll behavior
-			resetScrollOnOpen: options.resetScrollOnOpen !== false,
-			resetScrollOnClose: options.resetScrollOnClose || false,
-			
-			// Content loaded callback
-			onContentLoaded: options.onContentLoaded || null
-		};
-
-		this.modals.set(id, config);
-		this.setupModalListeners(config);
-		
+/**
+ * Register a modal with the manager
+ * 
+ * @param {string} id - Modal element ID
+ * @param {Object} options - Configuration
+ * @param {string} options.openBtnId - ID of button that opens modal
+ * @param {string|string[]} options.closeBtnId - ID(s) of button(s) that close modal
+ * @param {Function} options.onOpen - Callback when modal opens
+ * @param {Function} options.onClose - Callback when modal closes
+ * @param {boolean} options.closeOnOutsideClick - Close when clicking overlay (default: true)
+ * @param {boolean} options.closeOnEscape - Close on Escape key (default: true)
+ * @param {string} options.externalContentUrl - URL to load content from
+ * @param {boolean} options.cacheContent - Cache loaded content (default: true)
+ * @param {boolean} options.resetScrollOnOpen - Reset scroll to top on open (default: true)
+ * @param {boolean} options.resetScrollOnClose - Reset scroll to top on close (default: false)
+ * @param {Function} options.onContentLoaded - Callback after external content loads
+ * @returns {ModalManager} - For chaining
+ */
+register(id, options = {}) {
+	const modal = document.getElementById(id);
+	if (!modal) {
+		console.warn(`Modal not found: ${id}`);
 		return this;
 	}
 
-	setupModalListeners(config) {
-		const { modal, openBtn, closeBtn, closeOnOutsideClick } = config;
+	// Support both single closeBtnId and array of closeBtnIds
+	const closeBtnIds = Array.isArray(options.closeBtnId) 
+		? options.closeBtnId 
+		: (options.closeBtnId ? [options.closeBtnId] : []);
 
-		if (openBtn) {
-			openBtn.addEventListener('click', () => this.open(config.id));
-		}
+	const closeButtons = closeBtnIds
+		.map(id => document.getElementById(id))
+		.filter(btn => btn !== null);
 
-		if (closeBtn) {
-			closeBtn.addEventListener('click', () => this.close(config.id));
-		}
+	const config = {
+		id,
+		modal,
+		openBtn: options.openBtnId ? document.getElementById(options.openBtnId) : null,
+		closeButtons: closeButtons, // Changed from closeBtn to closeButtons (array)
+		onOpen: options.onOpen || null,
+		onClose: options.onClose || null,
+		closeOnOutsideClick: options.closeOnOutsideClick !== false,
+		closeOnEscape: options.closeOnEscape !== false,
+		
+		// External content options
+		externalContentUrl: options.externalContentUrl || null,
+		cacheContent: options.cacheContent !== false,
+		contentLoaded: false,
+		cachedContent: null,
+		
+		// Scroll behavior
+		resetScrollOnOpen: options.resetScrollOnOpen !== false,
+		resetScrollOnClose: options.resetScrollOnClose || false,
+		
+		// Content loaded callback
+		onContentLoaded: options.onContentLoaded || null
+	};
 
-		if (closeOnOutsideClick) {
-			modal.addEventListener('click', (e) => {
-				if (e.target === modal) {
-					this.close(config.id);
-				}
-			});
-		}
+	this.modals.set(id, config);
+	this.setupModalListeners(config);
+	
+	return this;
+}
+
+setupModalListeners(config) {
+	const { modal, openBtn, closeButtons, closeOnOutsideClick } = config;
+
+	if (openBtn) {
+		openBtn.addEventListener('click', () => this.open(config.id));
 	}
+
+	// Setup all close buttons
+	closeButtons.forEach(closeBtn => {
+		closeBtn.addEventListener('click', () => this.close(config.id));
+	});
+
+	if (closeOnOutsideClick) {
+		modal.addEventListener('click', (e) => {
+			if (e.target === modal) {
+				this.close(config.id);
+			}
+		});
+	}
+}
 
 	setupGlobalListeners() {
 		document.addEventListener('keydown', (e) => {
