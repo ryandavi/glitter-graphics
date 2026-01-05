@@ -27,33 +27,43 @@ class GifAnalyzer
         return array_merge($frameData, $colorData);
     }
 
-    private function extractFrameData()
-    {
-        $fileContent = file_get_contents($this->imagePath);
-        $frameDelays = [];
-        $pos = 0;
+private function extractFrameData()
+{
+    // Detect image type - PNG/JPG have no frame data
+    $imageInfo = @getimagesize($this->imagePath);
+    if ($imageInfo && $imageInfo[2] !== IMAGETYPE_GIF) {
+        return [
+            'frame_count' => 1,
+            'frame_rate' => 0,
+            'is_variable_framerate' => 0
+        ];
+    }
 
-        while ($pos < strlen($fileContent)) {
-            // Look for Graphics Control Extension
-            $pos = strpos($fileContent, "\x21\xF9\x04", $pos);
-            if ($pos === false) break;
+    $fileContent = file_get_contents($this->imagePath);
+    $frameDelays = [];
+    $pos = 0;
 
-            // Frame delay is at offset +4 and +5 (little endian, in centiseconds)
-            if ($pos + 7 < strlen($fileContent)) {
-                $delay = ord($fileContent[$pos + 4]) + (ord($fileContent[$pos + 5]) * 256);
-                $frameDelays[] = $delay;
-            }
+    while ($pos < strlen($fileContent)) {
+        // Look for Graphics Control Extension
+        $pos = strpos($fileContent, "\x21\xF9\x04", $pos);
+        if ($pos === false) break;
 
-            $pos += 3;  // Important: skip past current marker
+        // Frame delay is at offset +4 and +5 (little endian, in centiseconds)
+        if ($pos + 7 < strlen($fileContent)) {
+            $delay = ord($fileContent[$pos + 4]) + (ord($fileContent[$pos + 5]) * 256);
+            $frameDelays[] = $delay;
         }
 
-        if (empty($frameDelays)) {
-            return [
-                'frame_count' => 1,
-                'frame_rate' => 10,
-                'is_variable_framerate' => 0
-            ];
-        }
+        $pos += 3;  // Important: skip past current marker
+    }
+
+    if (empty($frameDelays)) {
+        return [
+            'frame_count' => 1,
+            'frame_rate' => 0,
+            'is_variable_framerate' => 0
+        ];
+    }
 
         // Find most common delay
         $delayCounts = array_count_values($frameDelays);
@@ -70,13 +80,32 @@ class GifAnalyzer
         ];
     }
 
-    private function extractColorData()
-    {
-        // Use first frame for color analysis
-        $image = imagecreatefromgif($this->imagePath);
-        if (!$image) {
-            throw new Exception('Could not create image from GIF');
-        }
+private function extractColorData()
+{
+    // Detect image type and load accordingly
+    $imageInfo = @getimagesize($this->imagePath);
+    if (!$imageInfo) {
+        throw new Exception('Could not read image file');
+    }
+
+    $image = false;
+    switch ($imageInfo[2]) {
+        case IMAGETYPE_GIF:
+            $image = @imagecreatefromgif($this->imagePath);
+            break;
+        case IMAGETYPE_JPEG:
+            $image = @imagecreatefromjpeg($this->imagePath);
+            break;
+        case IMAGETYPE_PNG:
+            $image = @imagecreatefrompng($this->imagePath);
+            break;
+        default:
+            throw new Exception('Unsupported image type. Only GIF, PNG, and JPG are supported.');
+    }
+
+    if (!$image) {
+        throw new Exception('Could not create image from file');
+    }
 
         $width = imagesx($image);
         $height = imagesy($image);

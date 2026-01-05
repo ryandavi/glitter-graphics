@@ -185,32 +185,47 @@ protected function formatAssetForExport($asset, $tags)
         $height = $imageInfo ? $imageInfo[1] : 0;
 
 // Check for transparency (actual transparent pixels, not just palette)
+// Check for transparency (actual transparent pixels, not just palette)
 $hasTransparency = 0;
-if ($imageInfo && $imageInfo[2] === IMAGETYPE_GIF) {
-    $image = @imagecreatefromgif($filePath);
-    if ($image) {
-        $transparentIndex = imagecolortransparent($image);
-        
-        // Only mark as transparent if pixels actually use the transparent color
-        if ($transparentIndex >= 0) {
-            $width = imagesx($image);
-            $height = imagesy($image);
-            $foundTransparent = false;
-            
-            // Sample pixels to check if transparent color is actually used
-            for ($y = 0; $y < $height && !$foundTransparent; $y += max(1, floor($height / 20))) {
-                for ($x = 0; $x < $width && !$foundTransparent; $x += max(1, floor($width / 20))) {
-                    if (imagecolorat($image, $x, $y) === $transparentIndex) {
-                        $foundTransparent = true;
+if ($imageInfo) {
+    $image = false;
+    switch ($imageInfo[2]) {
+        case IMAGETYPE_GIF:
+            $image = @imagecreatefromgif($filePath);
+            break;
+        case IMAGETYPE_PNG:
+            $image = @imagecreatefrompng($filePath);
+            break;
+        case IMAGETYPE_JPEG:
+            $image = @imagecreatefromjpeg($filePath);
+            break;
+    }
+    
+            if ($image) {
+                $width = imagesx($image);
+                $height = imagesy($image);
+                $foundTransparent = false;
+                if ($imageInfo[2] === IMAGETYPE_PNG) {
+                    $foundTransparent = true;
+                } else if ($imageInfo[2] === IMAGETYPE_GIF) {
+                    // GIF uses transparent color index
+                    $transparentIndex = imagecolortransparent($image);
+                    if ($transparentIndex >= 0) {
+                        for ($y = 0; $y < $height && !$foundTransparent; $y += max(1, floor($height / 20))) {
+                            for ($x = 0; $x < $width && !$foundTransparent; $x += max(1, floor($width / 20))) {
+                                if (imagecolorat($image, $x, $y) === $transparentIndex) {
+                                    $foundTransparent = true;
+                                }
+                            }
+                        }
                     }
                 }
+
+                // JPG doesn't support transparency
+
+                $hasTransparency = $foundTransparent ? 1 : 0;
+                imagedestroy($image);
             }
-            
-            $hasTransparency = $foundTransparent ? 1 : 0;
-        }
-        
-        imagedestroy($image);
-    }
 }
 
         // Combine all analysis data

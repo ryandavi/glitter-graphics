@@ -88,7 +88,7 @@ applyTransform(element, dimensions) {
         `touch-action: none`
     ].join('; ') + ';';
     
-    console.log('📐 Applying transform:', {
+    if(CONFIG.debug) console.log('📐 Applying transform:', {
         position: transform.position,
         displayWidth,
         displayHeight,

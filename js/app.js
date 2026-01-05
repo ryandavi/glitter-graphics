@@ -127,6 +127,7 @@ const CONFIG = {
 	forceIOSExportPreview: false, // Set to true to test iOS export modal on desktop
 	autoSelect: true,
 	autoCreateGlitterLayer: true,
+	debug: false,
 
 
 	// ========================================
@@ -1044,28 +1045,32 @@ getSectionDisplayName(section) {
 		}
 
 		// Frames and frame rate - handle undefined
-		if (frames) {
-			let frameText = '';
 
-			if (asset.frameCount !== undefined && asset.frameCount !== null) {
+
+
+
+		let frameText = '';
+
+		if (asset.frameCount !== undefined && asset.frameCount !== null) {
+			// Add frame rate if available and animated
+			if (asset.isAnimated && asset.frameRate) {
 				frameText = `${asset.frameCount}`;
 
-				// Add frame rate if available and animated
-				if (asset.isAnimated && asset.frameRate) {
-
-					if (asset.isVariableFramerate) {
-						frameText += ` @ Variable fps`;
-					} else {
-						frameText += ` @ ${asset.frameRate} fps`;
-					}
-
+				if (asset.isVariableFramerate) {
+					frameText += ` @ Variable fps`;
+				} else {
+					frameText += ` @ ${asset.frameRate} fps`;
 				}
-			} else {
-				frameText = 'Undefined';
-			}
 
-			frames.textContent = frameText;
+			}else{
+				frameText = 'Static';
+			}
+		} else {
+			frameText = 'Undefined';
 		}
+
+		frames.textContent = frameText;
+		
 	}
 
 	// Convenience wrappers

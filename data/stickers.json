@@ -403,6 +403,26 @@
         "sort_order": 4
     },
     {
+        "id": 220,
+        "name": "Cunty Coffee Cup",
+        "filename": "cunty-coffee-cup.png",
+        "url": "images/stickers/character/cunty-coffee-cup.png",
+        "category": "character",
+        "attribution": null,
+        "sticker_text": null,
+        "tags": [],
+        "is_animated": 0,
+        "has_transparency": 1,
+        "is_active": 1,
+        "width": 500,
+        "height": 350,
+        "frame_count": 1,
+        "frame_rate": 10,
+        "is_variable_framerate": 0,
+        "file_size": 58524,
+        "sort_order": 0
+    },
+    {
         "id": 99,
         "name": "Crown Gold Glitter",
         "filename": "crown_gold-glitter.gif",
