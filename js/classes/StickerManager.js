@@ -204,6 +204,24 @@ class StickerManager extends ContentManager {
 
 	// ===== UPLOAD HANDLING =====
 
+	validateUpload(file) {
+		// Check file type
+		const validTypes = ['image/png', 'image/gif', 'image/jpeg', 'image/jpg', 'image/webp'];
+		if (!validTypes.includes(file.type)) {
+			this.editor.showError('Please upload a valid image file (PNG, GIF, JPG, or WebP)');
+			return false;
+		}
+
+		// Check file size (10MB limit)
+		const maxSize = 10 * 1024 * 1024;
+		if (file.size > maxSize) {
+			this.editor.showError('File is too large. Maximum size is 10MB.');
+			return false;
+		}
+
+		return true;
+	}
+
 	async handleUserUpload(file) {
 		// 1. Validate
 		if (!this.validateUpload(file)) {
