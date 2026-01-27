@@ -206,9 +206,9 @@ class StickerManager extends ContentManager {
 
 	validateUpload(file) {
 		// Check file type
-		const validTypes = ['image/png', 'image/gif', 'image/jpeg', 'image/jpg', 'image/webp'];
+		const validTypes = ['image/png', 'image/gif', 'image/jpeg', 'image/jpg'];
 		if (!validTypes.includes(file.type)) {
-			this.editor.showError('Please upload a valid image file (PNG, GIF, JPG, or WebP)');
+			this.editor.showError('Please upload a valid image file (PNG, GIF, or JPG)');
 			return false;
 		}
 
