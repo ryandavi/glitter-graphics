@@ -2249,6 +2249,9 @@ getSectionDisplayName(section) {
 				}
 			});
 
+
+
+
 		// Layer type picker modal (no open button - opened programmatically)
 		this.modalManager.register('layerTypePickerModal', {
 			closeBtnId: 'closeLayerTypePickerModal',
@@ -2269,12 +2272,93 @@ getSectionDisplayName(section) {
 			onOpen: () => this.initializeNewCanvasModal()
 		});
 
+		// Welcome modal (no open button - shown automatically on first visit)
+		this.modalManager.register('welcomeModal', {
+			closeBtnId: 'closeWelcomeModal',
+			resetScrollOnOpen: false,
+			onClose: () => {
+				// Mark as seen when close button is clicked
+				const checkbox = document.getElementById('welcomeDontShowAgain');
+				if (checkbox && checkbox.checked) {
+					try {
+						localStorage.setItem('glitterEditor_welcomeModalSeen', 'true');
+					} catch (e) {
+						console.warn('Failed to save welcome modal preference:', e);
+					}
+				}
+			}
+		});
+
+		// Setup welcome modal button listeners
+		this.setupWelcomeModalListeners();
+
+		// Check if should show welcome modal on page load
+		this.checkWelcomeModal();
+
+
 		// Setup modal-specific interactions
 		this.setupLayerTypePickerListeners();
 		this.setupLayerPanelListeners();
 		this.setupStickerUploadModalListeners();
 		this.setupNewCanvasModalListeners();
 	}
+
+async checkWelcomeModal() {
+	const storageKey = 'glitterEditor_welcomeModalSeen';
+	
+	try {
+		const hasBeenSeen = localStorage.getItem(storageKey) === 'true';
+		
+		if (!hasBeenSeen) {
+			// Pre-load guide modal content silently before showing welcome modal
+			const guideConfig = this.modalManager.modals.get('guideModal');
+			if (guideConfig && guideConfig.externalContentUrl) {
+				await this.modalManager.loadExternalContent(guideConfig);
+			}
+			
+			// Small delay so page loads first
+			setTimeout(() => {
+				this.modalManager.open('welcomeModal');
+			}, 500);
+		}
+	} catch (e) {
+		console.warn('Failed to check welcome modal status:', e);
+	}
+}
+
+setupWelcomeModalListeners() {
+	const storageKey = 'glitterEditor_welcomeModalSeen';
+	
+	const takeTourBtn = document.getElementById('welcomeTakeTourBtn');
+	const startCreatingBtn = document.getElementById('welcomeStartCreatingBtn');
+	const dontShowCheckbox = document.getElementById('welcomeDontShowAgain');
+	
+	const markAsSeenIfChecked = () => {
+		if (dontShowCheckbox && dontShowCheckbox.checked) {
+			try {
+				localStorage.setItem(storageKey, 'true');
+			} catch (e) {
+				console.warn('Failed to save welcome modal preference:', e);
+			}
+		}
+	};
+	
+	if (takeTourBtn) {
+		takeTourBtn.addEventListener('click', () => {
+			markAsSeenIfChecked();
+			this.modalManager.close('welcomeModal');
+			this.modalManager.open('guideModal');
+		});
+	}
+	
+	if (startCreatingBtn) {
+		startCreatingBtn.addEventListener('click', () => {
+			markAsSeenIfChecked();
+			this.modalManager.close('welcomeModal');
+		});
+	}
+}
+
 
 	setupLayerTypePickerListeners() {
 		const layerTypeButtons = document.querySelectorAll('.layer-type-option');
