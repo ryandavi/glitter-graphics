@@ -180,45 +180,124 @@ class GifExporter {
 	}
 
 	_renderTextLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null, textMaskCanvases = null) {
-		const textMaskCanvas = textMaskCanvases?.get(layer.id);
-		if (!textMaskCanvas) {
+		const textMasks = textMaskCanvases?.get(layer.id);
+		if (!textMasks?.fill) {
 			throw new Error(`Missing text mask for layer ${layer.id}`);
 		}
 
-		const frames = flattenedFrameMap?.get(layer.id);
-		if (!frames?.length) {
-			throw new Error(`Missing flattened glitter frames for text layer ${layer.id}`);
+		const shadow = layer.textData.shadow;
+		if (shadow && textMasks.shadow) {
+			this._renderFilledTextMaskToCanvas(
+				layer,
+				ctx,
+				frameIndex,
+				textMasks.shadow,
+				this._getTextEffectSource(layer, 'shadow'),
+				this._getTextFrameKey(layer, 'shadow'),
+				frameMap,
+				flattenedFrameMap
+			);
 		}
 
-		const reducedFrameCount = frameMap?.get(layer.id);
-		const frameIndexForLayer = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
-		const frameImageData = frames[frameIndexForLayer];
-		if (!frameImageData) {
-			throw new Error(`Invalid glitter frame for text layer ${layer.id} frame ${frameIndexForLayer}`);
+		const border = layer.textData.border;
+		if (border?.widthPx > 0 && textMasks.border) {
+			this._renderFilledTextMaskToCanvas(
+				layer,
+				ctx,
+				frameIndex,
+				textMasks.border,
+				this._getTextEffectSource(layer, 'border'),
+				this._getTextFrameKey(layer, 'border'),
+				frameMap,
+				flattenedFrameMap
+			);
 		}
 
-		const fillCanvas = document.createElement('canvas');
-		fillCanvas.width = textMaskCanvas.width;
-		fillCanvas.height = textMaskCanvas.height;
-		const fillCtx = fillCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		this._renderFilledTextMaskToCanvas(
+			layer,
+			ctx,
+			frameIndex,
+			textMasks.fill,
+			this._getTextEffectSource(layer, 'fill'),
+			this._getTextFrameKey(layer, 'fill'),
+			frameMap,
+			flattenedFrameMap
+		);
+	}
 
-		const patternSource = document.createElement('canvas');
-		patternSource.width = frameImageData.width;
-		patternSource.height = frameImageData.height;
-		patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
+	_getTextFrameKey(layer, slot) {
+		return `${layer.id}:${slot}`;
+	}
 
-		const pattern = fillCtx.createPattern(patternSource, 'repeat');
-		const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-		const matrix = new DOMMatrix().scaleSelf(scale, scale);
-		pattern.setTransform(matrix);
+	_getTextEffectSource(layer, effectName) {
+		if (effectName === 'fill') {
+			return {
+				mode: 'glitter',
+				glitterId: layer.selectedGlitterId,
+				opacity: layer.settings.opacity / 100
+			};
+		}
 
-		fillCtx.clearRect(0, 0, fillCanvas.width, fillCanvas.height);
-		fillCtx.globalAlpha = layer.settings.opacity / 100;
-		fillCtx.fillStyle = pattern;
-		fillCtx.fillRect(0, 0, fillCanvas.width, fillCanvas.height);
-		fillCtx.globalCompositeOperation = 'destination-in';
-		fillCtx.drawImage(textMaskCanvas, 0, 0);
-		fillCtx.globalCompositeOperation = 'source-over';
+		const effectData = layer.textData?.[effectName];
+		if (!effectData) {
+			return null;
+		}
+
+		if (effectData.glitterId) {
+			return {
+				mode: 'glitter',
+				glitterId: effectData.glitterId,
+				opacity: 1
+			};
+		}
+
+		return {
+			mode: 'solid',
+			color: effectData.color || '#000000',
+			opacity: 1
+		};
+	}
+
+	_getTextEffectGlitterSources(layer) {
+		const sources = [{
+			key: this._getTextFrameKey(layer, 'fill'),
+			slot: 'fill',
+			glitterId: layer.selectedGlitterId
+		}];
+
+		if (layer.textData?.border?.glitterId) {
+			sources.push({
+				key: this._getTextFrameKey(layer, 'border'),
+				slot: 'border',
+				glitterId: layer.textData.border.glitterId
+			});
+		}
+
+		if (layer.textData?.shadow?.glitterId) {
+			sources.push({
+				key: this._getTextFrameKey(layer, 'shadow'),
+				slot: 'shadow',
+				glitterId: layer.textData.shadow.glitterId
+			});
+		}
+
+		return sources;
+	}
+
+	_renderFilledTextMaskToCanvas(layer, ctx, frameIndex, maskCanvas, source, sourceKey, frameMap, flattenedFrameMap) {
+		if (!maskCanvas || !source) {
+			return;
+		}
+
+		const fillCanvas = this._createFilledMaskCanvas(
+			maskCanvas,
+			source,
+			layer,
+			frameIndex,
+			sourceKey,
+			frameMap,
+			flattenedFrameMap
+		);
 
 		this._drawTransformedCanvas(
 			ctx,
@@ -227,6 +306,121 @@ class GifExporter {
 			layer.textData.width,
 			layer.textData.height
 		);
+	}
+
+	_createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, sourceKey, frameMap, flattenedFrameMap) {
+		const fillCanvas = document.createElement('canvas');
+		fillCanvas.width = maskCanvas.width;
+		fillCanvas.height = maskCanvas.height;
+		const fillCtx = fillCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
+
+		fillCtx.clearRect(0, 0, fillCanvas.width, fillCanvas.height);
+		fillCtx.globalAlpha = source.opacity ?? 1;
+
+		if (source.mode === 'solid') {
+			fillCtx.fillStyle = source.color;
+		} else {
+			const frameImageData = this._getFrameImageForKey(sourceKey, frameIndex, frameMap, flattenedFrameMap);
+			const patternSource = document.createElement('canvas');
+			patternSource.width = frameImageData.width;
+			patternSource.height = frameImageData.height;
+			patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
+
+			const pattern = fillCtx.createPattern(patternSource, 'repeat');
+			const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+			const matrix = new DOMMatrix().scaleSelf(scale, scale);
+			pattern.setTransform(matrix);
+			fillCtx.fillStyle = pattern;
+		}
+
+		fillCtx.fillRect(0, 0, fillCanvas.width, fillCanvas.height);
+		fillCtx.globalCompositeOperation = 'destination-in';
+		fillCtx.drawImage(maskCanvas, 0, 0);
+		fillCtx.globalCompositeOperation = 'source-over';
+
+		return fillCanvas;
+	}
+
+	_getFrameImageForKey(sourceKey, frameIndex, frameMap, flattenedFrameMap) {
+		const frames = flattenedFrameMap?.get(sourceKey);
+		if (!frames?.length) {
+			throw new Error(`Missing flattened glitter frames for ${sourceKey}`);
+		}
+
+		const reducedFrameCount = frameMap?.get(sourceKey);
+		const frameIndexForLayer = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
+		const frameImageData = frames[frameIndexForLayer];
+		if (!frameImageData) {
+			throw new Error(`Invalid glitter frame for ${sourceKey} frame ${frameIndexForLayer}`);
+		}
+
+		return frameImageData;
+	}
+
+	_buildTextMaskEntry(layer, fillMaskCanvas) {
+		const entry = {
+			fill: fillMaskCanvas,
+			border: null,
+			shadow: null
+		};
+
+		if (layer.textData?.shadow) {
+			entry.shadow = this._createOffsetMaskCanvas(
+				fillMaskCanvas,
+				layer.textData.shadow.offsetX || 0,
+				layer.textData.shadow.offsetY || 0
+			);
+		}
+
+		if (layer.textData?.border?.widthPx > 0) {
+			entry.border = this._createBorderMaskCanvas(
+				fillMaskCanvas,
+				layer.textData.border.widthPx,
+				layer.settings.opacity < 100
+			);
+		}
+
+		return entry;
+	}
+
+	_createOffsetMaskCanvas(sourceCanvas, offsetX, offsetY) {
+		const canvas = document.createElement('canvas');
+		canvas.width = sourceCanvas.width;
+		canvas.height = sourceCanvas.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		ctx.drawImage(sourceCanvas, offsetX, offsetY);
+		return canvas;
+	}
+
+	_createBorderMaskCanvas(fillMaskCanvas, widthPx, cutOutFill = false) {
+		const canvas = document.createElement('canvas');
+		canvas.width = fillMaskCanvas.width;
+		canvas.height = fillMaskCanvas.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+
+		const radius = Math.max(1, widthPx);
+		const steps = widthPx > 6 ? 16 : 8;
+		const seen = new Set();
+
+		for (let index = 0; index < steps; index++) {
+			const angle = (Math.PI * 2 * index) / steps;
+			const x = Math.round(Math.cos(angle) * radius);
+			const y = Math.round(Math.sin(angle) * radius);
+			const key = `${x},${y}`;
+			if (seen.has(key) || (x === 0 && y === 0)) {
+				continue;
+			}
+			seen.add(key);
+			ctx.drawImage(fillMaskCanvas, x, y);
+		}
+
+		if (cutOutFill) {
+			ctx.globalCompositeOperation = 'destination-out';
+			ctx.drawImage(fillMaskCanvas, 0, 0);
+			ctx.globalCompositeOperation = 'source-over';
+		}
+
+		return canvas;
 	}
 
 	_isTransparencyFilled(layers, maskDataMap, canvasData) {
@@ -280,7 +474,8 @@ class GifExporter {
 
 		for (const layer of visibleLayers) {
 			if (layer.type !== LayerType.TEXT_GLITTER) continue;
-			textMaskCanvases.set(layer.id, await callbacks.renderTextMask(layer));
+			const fillMaskCanvas = await callbacks.renderTextMask(layer);
+			textMaskCanvases.set(layer.id, this._buildTextMaskEntry(layer, fillMaskCanvas));
 		}
 
 		// 1.75. Load Watermark (if enabled)
@@ -473,11 +668,18 @@ class GifExporter {
 		const allFrames = [];
 
 		layers.forEach(layer => {
-			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) {
+			if (layer.type === LayerType.GLITTER_FILL) {
 				const frames = flattenedFrameMap?.get(layer.id);
 				if (frames?.length) {
 					allFrames.push(...frames);
 				}
+			} else if (layer.type === LayerType.TEXT_GLITTER) {
+				this._getTextEffectGlitterSources(layer).forEach((source) => {
+					const frames = flattenedFrameMap?.get(source.key);
+					if (frames?.length) {
+						allFrames.push(...frames);
+					}
+				});
 			} else if (layer.type === LayerType.STICKER) {
 				const stickerData = layer.stickerData;
 				if (stickerData.isAnimated) {
@@ -756,26 +958,7 @@ class GifExporter {
 
 	_buildFlattenedFrameMap(layers, library) {
 		const flattenedFrameMap = new Map();
-
-		layers.forEach(layer => {
-			let animation, name, isSticker;
-
-			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) {
-				const glitter = library.find(g => g.id === layer.selectedGlitterId);
-				if (!glitter?.frames?.frames?.length) return;
-				animation = glitter.frames;
-				name = glitter.name;
-				isSticker = false;
-			} else if (layer.type === LayerType.STICKER && layer.stickerData.isAnimated) {
-				const stickerData = layer.stickerData;
-				if (!stickerData.frames?.frames?.length) return;
-				animation = stickerData.frames;
-				name = stickerData.name;
-				isSticker = true;
-			} else {
-				return;
-			}
-
+		const flattenSource = (mapKey, animation, name, isSticker) => {
 			let glitterHasTransparency = false;
 			const rawFrames = animation.frames;
 			const width = animation.width;
@@ -795,9 +978,8 @@ class GifExporter {
 			tempCtx.imageSmoothingEnabled = false;
 
 			let previousFrameData = null;
-			let previousDisposal = null; // Track PREVIOUS frame's disposal
+			let previousDisposal = null;
 
-			// CRITICAL: Check for transparency in raw frames BEFORE disposal calculation
 			if (rawFrames.length > 0) {
 				const firstFrameImage = this._getFrameImageData(rawFrames[0], width, height);
 				if (!firstFrameImage) {
@@ -814,13 +996,10 @@ class GifExporter {
 				}
 			}
 
-			// Stickers keep their original disposal methods. Glitter still uses
-			// the existing heuristic analysis below.
 			let useOriginalDisposal = isSticker;
 			let calculatedDisposal = null;
 
 			if (!useOriginalDisposal) {
-				// Only analyze disposal for glitter (old logic)
 				let usesDeltas = false;
 				let needsClearing = false;
 				let isAnimation = false;
@@ -863,25 +1042,6 @@ class GifExporter {
 					dbg(`[DEBUG] "${name}" - Frame 2: ${transparentPercent.toFixed(1)}% transparent, ${differentPercent.toFixed(1)}% different, usesDeltas: ${usesDeltas}, isAnimation: ${isAnimation}, needsClearing: ${needsClearing}`);
 				}
 
-
-				/*
-				Disposal Method 1 (STACK):
-				- Leaves the previous frame on the canvas
-				- Draws the new frame on top of it
-				- Used for opaque animations or delta-based GIFs (only pixels that changed)
-				
-				Disposal Method 2 (CLEAR):
-				- Clears the canvas to transparent/background
-				- Then draws the new frame from scratch
-				- Used for transparent animations where each frame is independent
-				
-				Disposal Method 3 (RESTORE):
-				- Restores to the state before the previous frame was drawn
-				- Rarely used
-				*/
-
-				// Calculate disposal for glitter
-				// PRIORITY: Transparency always requires CLEAR
 				if (glitterHasTransparency) {
 					calculatedDisposal = 2;
 				} else if (usesDeltas) {
@@ -903,32 +1063,26 @@ class GifExporter {
 					throw new Error(`Invalid frame ${i} for "${name}"`);
 				}
 
-				// Get THIS frame's disposal (will be used NEXT iteration)
 				const currentDisposal = useOriginalDisposal
 					? (frame.disposal === 0 || frame.disposal == null ? 1 : frame.disposal)
 					: calculatedDisposal;
 
-				// Apply the previous frame's disposal before drawing this frame.
 				if (i > 0 && previousDisposal === 2) {
 					ctx.clearRect(0, 0, width, height);
 				} else if (i > 0 && previousDisposal === 3 && previousFrameData) {
 					ctx.putImageData(previousFrameData, 0, 0);
 				}
 
-				// Save canvas state if THIS frame needs it for NEXT frame
 				if (currentDisposal === 3) {
 					previousFrameData = ctx.getImageData(0, 0, width, height);
 				}
 
-				// Draw current frame
 				tempCtx.putImageData(frameImageData, 0, 0);
 				ctx.drawImage(tempCanvas, 0, 0);
 
-				// Capture the composited result
 				const flattenedData = ctx.getImageData(0, 0, width, height);
 				flattenedFrames.push(flattenedData);
 
-				// Check FIRST FRAME ONLY for actual transparency
 				if (i === 0) {
 					const checkData = flattenedData.data;
 					for (let j = 3; j < checkData.length; j += 4) {
@@ -940,11 +1094,34 @@ class GifExporter {
 					dbg(`[GifExporter] "${name}" (${isSticker ? 'sticker' : 'glitter'}) has transparency: ${glitterHasTransparency}, disposal: ${currentDisposal}`);
 				}
 
-				// Save disposal for NEXT iteration
 				previousDisposal = currentDisposal;
 			}
 
-			flattenedFrameMap.set(layer.id, flattenedFrames);
+			flattenedFrameMap.set(mapKey, flattenedFrames);
+		};
+
+		layers.forEach((layer) => {
+			if (layer.type === LayerType.GLITTER_FILL) {
+				const glitter = library.find(g => g.id === layer.selectedGlitterId);
+				if (!glitter?.frames?.frames?.length) return;
+				flattenSource(layer.id, glitter.frames, glitter.name, false);
+				return;
+			}
+
+			if (layer.type === LayerType.TEXT_GLITTER) {
+				this._getTextEffectGlitterSources(layer).forEach((source) => {
+					const glitter = library.find(g => g.id === source.glitterId);
+					if (!glitter?.frames?.frames?.length) return;
+					flattenSource(source.key, glitter.frames, `${glitter.name} (${source.slot})`, false);
+				});
+				return;
+			}
+
+			if (layer.type === LayerType.STICKER && layer.stickerData.isAnimated) {
+				const stickerData = layer.stickerData;
+				if (!stickerData.frames?.frames?.length) return;
+				flattenSource(layer.id, stickerData.frames, stickerData.name, true);
+			}
 		});
 
 		return flattenedFrameMap;
@@ -1090,9 +1267,11 @@ class GifExporter {
 
 	async _loadMissingFrames(layers, library, callbacks) {
 		for (const layer of layers) {
-			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) {
-				// Handle glitter layers
+			if (layer.type === LayerType.GLITTER_FILL) {
 				const glitter = library.find(g => g.id === layer.selectedGlitterId);
+				if (!glitter) {
+					throw new Error(`Missing glitter ${layer.selectedGlitterId}`);
+				}
 				if (!glitter.frames) {
 					callbacks.onStatus(`Loading ${glitter.name}...`);
 					try {
@@ -1101,13 +1280,27 @@ class GifExporter {
 						throw new Error(`Failed to load ${glitter.name}`);
 					}
 				}
-
-				if (layer.type === LayerType.TEXT_GLITTER) {
-					try {
-						await callbacks.ensureTextFont(layer.textData.fontId);
-					} catch (e) {
-						throw new Error(e.message);
+			} else if (layer.type === LayerType.TEXT_GLITTER) {
+				for (const source of this._getTextEffectGlitterSources(layer)) {
+					const glitter = library.find(g => g.id === source.glitterId);
+					if (!glitter) {
+						throw new Error(`Missing glitter ${source.glitterId}`);
 					}
+
+					if (!glitter.frames) {
+						callbacks.onStatus(`Loading ${glitter.name}...`);
+						try {
+							glitter.frames = await callbacks.parseGif(glitter.url);
+						} catch (e) {
+							throw new Error(`Failed to load ${glitter.name}`);
+						}
+					}
+				}
+
+				try {
+					await callbacks.ensureTextFont(layer.textData.fontId);
+				} catch (e) {
+					throw new Error(e.message);
 				}
 			} else if (layer.type === LayerType.STICKER) {
 				// Handle sticker layers
@@ -1235,18 +1428,26 @@ class GifExporter {
 		const layerFrameCounts = new Map();
 
 		layers.forEach(l => {
-			let count = 1;
-			if (l.type === LayerType.GLITTER_FILL || l.type === LayerType.TEXT_GLITTER) {
+			if (l.type === LayerType.GLITTER_FILL) {
 				const glitter = library.find(g => g.id === l.selectedGlitterId);
 				if (glitter?.frames?.frames) {
-					count = glitter.frames.frames.length;
+					layerFrameCounts.set(l.id, glitter.frames.frames.length);
+				} else {
+					layerFrameCounts.set(l.id, 1);
 				}
+			} else if (l.type === LayerType.TEXT_GLITTER) {
+				this._getTextEffectGlitterSources(l).forEach((source) => {
+					const glitter = library.find(g => g.id === source.glitterId);
+					const count = glitter?.frames?.frames?.length || 1;
+					layerFrameCounts.set(source.key, count);
+				});
 			} else if (l.type === LayerType.STICKER) {
 				if (l.stickerData.isAnimated && l.stickerData.frames?.frames) {
-					count = l.stickerData.frames.frames.length;
+					layerFrameCounts.set(l.id, l.stickerData.frames.frames.length);
+				} else {
+					layerFrameCounts.set(l.id, 1);
 				}
 			}
-			layerFrameCounts.set(l.id, count);
 		});
 
 		if (layerFrameCounts.size === 0) {
@@ -1291,10 +1492,19 @@ class GifExporter {
 		let reducedCounts = new Map(layerFrameCounts);
 
 		// Check if we have glitter layers with multiple frames
-		const hasMultiFrameGlitter = layers.some(layer =>
-			(layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) &&
-			layerFrameCounts.get(layer.id) > 1
-		);
+		const hasMultiFrameGlitter = layers.some((layer) => {
+			if (layer.type === LayerType.GLITTER_FILL) {
+				return (layerFrameCounts.get(layer.id) || 0) > 1;
+			}
+
+			if (layer.type === LayerType.TEXT_GLITTER) {
+				return this._getTextEffectGlitterSources(layer).some((source) =>
+					(layerFrameCounts.get(source.key) || 0) > 1
+				);
+			}
+
+			return false;
+		});
 
 		// Step 1: Round to multiples of 3 ONLY if there are multi-frame glitter layers AND it helps
 		if (hasMultiFrameGlitter) {

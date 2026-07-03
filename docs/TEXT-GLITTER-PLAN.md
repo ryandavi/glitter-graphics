@@ -1,7 +1,7 @@
 # Text Glitter Layers — Implementation Plan
 
-**Date:** 2026-07-02 · **Status:** Planned, not started
-**Companion docs:** `docs/AUDIT.md`, `docs/MASK-FEATURE-PLAN.md`
+**Date:** 2026-07-02 · **Status:** Goal T-1 SHIPPED (commit 5fe928d, 2026-07-03). Fable §8 review checklist done 2026-07-03 (code-level items all pass; the antialiasing *visual* side-by-side remains a manual pass). Post-T-1 UX round + measurement fix: see `docs/UX-PLAN.md`. Goal T-2 prompt added below; T-3 (point/area text) lives in UX-PLAN.
+**Companion docs:** `docs/AUDIT.md`, `docs/MASK-FEATURE-PLAN.md`, `docs/UX-PLAN.md`
 
 ## Product model
 
@@ -87,6 +87,8 @@ Everything is plain JSON → **serializes through the existing history system wi
 
 `TextGlitterManager.renderTextMask(layer)` → offscreen canvas in **text-local space**:
 measure each line (`ctx.measureText` + `actualBoundingBoxAscent/Descent`, manual per-character advance when `letterSpacing ≠ 0`), size the canvas to the text block + small padding, `fillText` each line in white. The canvas **alpha is the mask**. Cached per `(text, fontId, fontSize, letterSpacing, lineHeight, align)`; invalidated on any text setting change. `textData.width/height` updated from the measurement (feeds `LayerTransform.getDimensions()`).
+
+**Amended 2026-07-03 (UX-PLAN §2):** sizing from `'Hg'` metrics + advance widths clipped display-face ink (swash overhangs, tall caps) → cut-off previews and a grey sheared edge in exports. `getMeasurementEntry` now measures **per-line actual ink bounds** and sizes the canvas to the union of the layout box and the ink, and the DOM span gets per-side padding (`entry.paddingBox`) so the CSS layout box stays aligned with the mask. Anything extending the mask (T-2's border/shadow, T-3's wrap) must extend the ink-bounds math, not reintroduce fixed padding.
 
 ### DOM preview — CSS does the work
 
@@ -250,4 +252,41 @@ CONSTRAINTS
 
 ACCEPTANCE CRITERIA
 All nine items in plan §7, verified manually. Additionally: run an export containing one glitter-fill layer, one animated sticker, and two text layers with different fonts/glitters — every element must appear correctly in the GIF, twice in a row.
+```
+
+### Goal T-2 — Text border & drop shadow
+
+```
+/goal Add border (outline) and drop shadow options to text glitter layers in the editor at c:\xampp\htdocs\glitter (vanilla JS, no build system). Design: docs/TEXT-GLITTER-PLAN.md §4.5 — follow it precisely. Goal T-1 is merged (commit 5fe928d) and textData already reserves border: null and shadow: null; also read docs/UX-PLAN.md §2 first — the measurement code now computes per-line ink bounds and per-side paddingBox, and this goal must extend that math, not fight it.
+
+OBJECTIVE
+Each text layer optionally gets a border and/or a drop shadow, each with its own swatch: solid color OR a glitter from the existing browser (glitterId wins if set). Schema per plan §4.5:
+  border: null | { widthPx, glitterId, color }
+  shadow: null | { offsetX, offsetY, glitterId, color }
+
+RENDERING (offset-copies technique, plan §4.5 — one method, both pipelines)
+- Shadow: same glyph mask drawn offset by (offsetX, offsetY) BEHIND the fill, filled with the shadow swatch. DOM: duplicated inner span (own background-image + background-clip:text, translated, z-index below the fill span). Export: pattern-fill (or solid fill) masked by the offset text mask, drawn before the fill.
+- Border: N offset copies of the glyph mask in a circle of radius widthPx (8 thin / 16 thick), unioned into a border mask, behind the fill. DOM: stacked spans. Export: N drawImage of the cached text mask into a border-mask canvas, one pattern/solid fill. If fill opacity < 100, destination-out the fill mask from the border mask in the export path (accept the minor DOM discrepancy per plan).
+- Draw order: shadow → border → fill.
+- MEASUREMENT: border widthPx and shadow offsets ENLARGE the ink bounds — getMeasurementEntry's ink union (UX-PLAN §2) must account for them so nothing clips; cache key gains the border/shadow params. textData.width/height stay equal to the mask canvas dims (export transform-draw is 1:1).
+
+MODIFIED FILES
+- js/classes/TextGlitterManager.js: schema activation, measurement extension, DOM span stack, settings UI (two toggles, each expanding width-or-offset slider + swatch chip + solid color input, per the design-system patterns in plan §4).
+- js/classes/GlitterManager.js: selectGlitter gains a selection-target concept (fill / border / shadow) for text layers — the glitter browser targets whichever slot's chip opened it (plan §4.5 UI sketch).
+- js/classes/GifExporter.js: text branch renders shadow/border passes; _loadMissingFrames, _calculateTotalFrames and transparency-key scanning consider up to three glitter ids per text layer (plan §4.5 costs paragraph).
+- index.html / css/style.css: toggles, sliders, chips, span-stack styles.
+
+CONSTRAINTS
+- null border/shadow = exactly T-1 behavior, byte-identical masks for the same inputs (zero regression when the feature is unused).
+- Plain JSON through history/clone with zero special-casing; one history entry per control change (plan §4 granularity).
+- textContent only, never innerHTML, for anything containing the user's string.
+- Design-system patterns per plan §4 (btn-simple, checkbox-group, setting-column sliders via setupSlider).
+- LayerTransform.js unchanged.
+
+ACCEPTANCE CRITERIA
+1. Border-only, shadow-only, and both together render in preview and export identically (side-by-side check), with solid and with glitter swatches, including a DIFFERENT glitter per slot.
+2. Nothing clips: big border width + far shadow offset on a swashy font (Pacifico) stays fully inside the box in preview and export.
+3. Toggling either off returns the layer to exactly its previous look; undo/redo steps through all border/shadow edits.
+4. Export with three glitter ids on one text layer animates all three correctly; frame count math still right; export twice in a row.
+5. Layers without border/shadow: no observable change anywhere.
 ```

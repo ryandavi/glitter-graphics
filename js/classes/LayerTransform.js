@@ -41,6 +41,29 @@ class LayerTransform {
         });
     }
 
+    getLayerElementSelector() {
+        return [
+            `.sticker-element[data-layer-id="${this.layer.id}"]`,
+            `.text-glitter-element[data-layer-id="${this.layer.id}"]`
+        ].join(', ');
+    }
+
+    refreshElementReference() {
+        const layerElement = document.querySelector(this.getLayerElementSelector());
+        if (layerElement) {
+            this.element = layerElement;
+            return layerElement;
+        }
+        return null;
+    }
+
+    supportsEdgeResize() {
+        return Boolean(
+            this.layer.type === LayerType.TEXT_GLITTER &&
+            this.editor.textGlitterManager?.canResizeBoxEdges?.(this.layer)
+        );
+    }
+
     // ===== CORE TRANSFORM APPLICATION =====
 
     /**
@@ -55,7 +78,7 @@ applyTransform(element, dimensions) {
         console.warn('⚠️ applyTransform called with null element - attempting to refresh reference');
         
         // Try to get the current element from the layer manager
-        const layerElement = document.querySelector(`.sticker-element[data-layer-id="${this.layer.id}"]`);
+        const layerElement = this.refreshElementReference();
         
         if (layerElement) {
             dbg('✅ Found fresh element reference');
@@ -114,8 +137,14 @@ applyTransform(element, dimensions) {
         displayHeight,
         transformString: transforms.join(' ')
     });
-    
+
     element.style.cssText = styleString;
+
+    // Text previews render in local space and scale via a CSS transform on the
+    // inner stack — keep it in sync (drags call applyTransform without renderLayer).
+    if (this.layer.type === LayerType.TEXT_GLITTER) {
+        this.editor.textGlitterManager?.syncElementScale?.(this.layer, element);
+    }
 }
 
     // ===== TRANSFORM UPDATES =====
@@ -201,6 +230,24 @@ updateTransform(updates) {
             };
         }
         throw new Error('Layer does not have dimensions');
+    }
+
+    getHandleFrame() {
+        const dimensions = this.getDimensions();
+        const textFrame = this.layer.type === LayerType.TEXT_GLITTER
+            ? this.editor.textGlitterManager?.getTextFrame?.(this.layer)
+            : null;
+
+        if (textFrame) {
+            return textFrame;
+        }
+
+        return {
+            width: dimensions.width,
+            height: dimensions.height,
+            offsetX: 0,
+            offsetY: 0
+        };
     }
 
     // ===== CENTERING METHODS =====
@@ -324,7 +371,7 @@ const handleMouseMove = (e) => {
     // CRITICAL FIX: Ensure we have a valid element reference
     // If this.element is null (e.g., after selection re-render), get fresh reference
     if (!this.element) {
-        const layerElement = document.querySelector(`.sticker-element[data-layer-id="${this.layer.id}"]`);
+        const layerElement = this.refreshElementReference();
         if (layerElement) {
             dbg('✅ Refreshed element reference in mousemove');
             this.element = layerElement;
@@ -545,7 +592,7 @@ createTransformHandles() {
     // CRITICAL: Ensure we have a valid element reference
     // The element might be null or stale after layer selection/re-render
     if (!this.element) {
-        const layerElement = document.querySelector(`.sticker-element[data-layer-id="${this.layer.id}"]`);
+        const layerElement = this.refreshElementReference();
         if (layerElement) {
             dbg('✅ Refreshed element reference in createTransformHandles');
             this.element = layerElement;
@@ -592,6 +639,21 @@ createTransformHandles() {
         handleWrapper.appendChild(handle);
         container.appendChild(handleWrapper);
     });
+
+    if (this.supportsEdgeResize()) {
+        const edges = ['top', 'right', 'bottom', 'left'];
+        edges.forEach(edge => {
+            const handleWrapper = document.createElement('div');
+            handleWrapper.className = 'transform-handle-wrapper';
+            handleWrapper.dataset.handleType = `edge-${edge}`;
+
+            const handle = document.createElement('div');
+            handle.className = `transform-handle transform-handle-edge edge-${edge}`;
+
+            handleWrapper.appendChild(handle);
+            container.appendChild(handleWrapper);
+        });
+    }
     
     // Create rotation handle
     const rotationLine = document.createElement('div');
@@ -626,17 +688,22 @@ createTransformHandles() {
         if (!this.transformHandles) return;
 
         const transform = this.getTransform();
-        const dimensions = this.getDimensions();
+        const frame = this.getHandleFrame();
         const config = CONFIG.stickerHandles;
 
         // Calculate display dimensions
-        const displayWidth = dimensions.width * (transform.scale.x / 100);
-        const displayHeight = dimensions.height * (transform.scale.y / 100);
+        const displayWidth = frame.width * (transform.scale.x / 100);
+        const displayHeight = frame.height * (transform.scale.y / 100);
 
         // Get rotation in radians
         const rotationRad = (transform.rotation * Math.PI) / 180;
         const cos = Math.cos(rotationRad);
         const sin = Math.sin(rotationRad);
+        // Frame offsets are text-local units; scale them into display space.
+        const frameOffsetX = frame.offsetX * (transform.scale.x / 100);
+        const frameOffsetY = frame.offsetY * (transform.scale.y / 100);
+        const centerX = transform.position.x + frameOffsetX * cos - frameOffsetY * sin;
+        const centerY = transform.position.y + frameOffsetX * sin + frameOffsetY * cos;
 
         // Half dimensions
         const hw = displayWidth / 2;
@@ -650,14 +717,22 @@ createTransformHandles() {
             bl: { x: -hw, y: hh }
         };
 
+        const edges = {
+            top: { x: 0, y: -hh },
+            right: { x: hw, y: 0 },
+            bottom: { x: 0, y: hh },
+            left: { x: -hw, y: 0 }
+        };
+
         // Rotate corners and translate to position
+        const rotatePoint = (local) => ({
+            x: centerX + (local.x * cos - local.y * sin),
+            y: centerY + (local.x * sin + local.y * cos)
+        });
+
         const rotatedCorners = {};
         Object.keys(corners).forEach(key => {
-            const local = corners[key];
-            rotatedCorners[key] = {
-                x: transform.position.x + (local.x * cos - local.y * sin),
-                y: transform.position.y + (local.x * sin + local.y * cos)
-            };
+            rotatedCorners[key] = rotatePoint(corners[key]);
         });
 
         // Position bounding box
@@ -665,8 +740,8 @@ createTransformHandles() {
         if (boundingBox) {
             boundingBox.style.cssText = `
 				position: absolute;
-				left: ${transform.position.x}px;
-				top: ${transform.position.y}px;
+				left: ${centerX}px;
+				top: ${centerY}px;
 				width: ${displayWidth}px;
 				height: ${displayHeight}px;
 				transform: translate(-50%, -50%) rotate(${transform.rotation}deg);
@@ -690,11 +765,27 @@ createTransformHandles() {
             }
         });
 
+        if (this.supportsEdgeResize()) {
+            Object.keys(edges).forEach(edge => {
+                const wrapper = this.transformHandles.querySelector(`[data-handle-type="edge-${edge}"]`);
+                if (!wrapper) return;
+
+                const pos = rotatePoint(edges[edge]);
+                wrapper.style.cssText = `
+					position: absolute;
+					left: ${pos.x}px;
+					top: ${pos.y}px;
+					transform: translate(-50%, -50%);
+				`;
+                wrapper.style.cursor = this.getEdgeCursor(edge, transform.rotation);
+            });
+        }
+
         // Position rotation handle (above top center)
         const topCenterLocal = { x: 0, y: -hh - config.rotationHandleDistance };
         const topCenter = {
-            x: transform.position.x + (topCenterLocal.x * cos - topCenterLocal.y * sin),
-            y: transform.position.y + (topCenterLocal.x * sin + topCenterLocal.y * cos)
+            x: centerX + (topCenterLocal.x * cos - topCenterLocal.y * sin),
+            y: centerY + (topCenterLocal.x * sin + topCenterLocal.y * cos)
         };
 
         const rotationWrapper = this.transformHandles.querySelector('[data-handle-type="rotation"]');
@@ -713,8 +804,8 @@ createTransformHandles() {
         if (rotationLine) {
             const topBoxLocal = { x: 0, y: -hh };
             const topBox = {
-                x: transform.position.x + (topBoxLocal.x * cos - topBoxLocal.y * sin),
-                y: transform.position.y + (topBoxLocal.x * sin + topBoxLocal.y * cos)
+                x: centerX + (topBoxLocal.x * cos - topBoxLocal.y * sin),
+                y: centerY + (topBoxLocal.x * sin + topBoxLocal.y * cos)
             };
 
             const lineLength = config.rotationHandleDistance;
@@ -797,7 +888,11 @@ removeTransformHandles() {
                         rotation: transform.rotation
                     },
                     width: dimensions.width,
-                    height: dimensions.height
+                    height: dimensions.height,
+                    boxWidth: this.layer.textData?.boxWidth ?? null,
+                    boxHeight: this.layer.textData?.boxHeight ?? null,
+                    handleFrame: this.getHandleFrame(),
+                    textBoxFrame: this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) ?? null
                 };
 
                 // Attach global listeners
@@ -815,6 +910,8 @@ removeTransformHandles() {
 
         if (this.activeHandleType.startsWith('corner-')) {
             this.handleCornerDrag(e);
+        } else if (this.activeHandleType.startsWith('edge-')) {
+            this.handleEdgeResizeDrag(e);
         } else if (this.activeHandleType === 'rotation') {
             this.handleRotationDrag(e);
         } else if (this.activeHandleType === 'move') {
@@ -878,47 +975,37 @@ removeTransformHandles() {
      * Handle dragging of corner handles (scale)
      */
     handleCornerDrag(e) {
+        // Corners always SCALE — point and box text alike (box resizing is the
+        // edge handles' job). Measured against the handle frame, which for text
+        // is the visible frame (ink or box), not the padded mask canvas.
         const transform = this.getTransform();
         const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+        const start = this.dragStartState;
+        const frame = start.handleFrame || { width: start.width, height: start.height, offsetX: 0, offsetY: 0 };
 
-        // Get vector from center to mouse in canvas space
-        const centerX = transform.position.x;
-        const centerY = transform.position.y;
+        // Frame center in canvas space at drag start (fixed reference while scaling)
+        const worldRotationRad = (transform.rotation * Math.PI) / 180;
+        const worldCos = Math.cos(worldRotationRad);
+        const worldSin = Math.sin(worldRotationRad);
+        const startOffsetX = frame.offsetX * (start.transform.scale.x / 100);
+        const startOffsetY = frame.offsetY * (start.transform.scale.y / 100);
+        const centerX = start.transform.position.x + startOffsetX * worldCos - startOffsetY * worldSin;
+        const centerY = start.transform.position.y + startOffsetX * worldSin + startOffsetY * worldCos;
+
+        // Rotate mouse vector back to local space
         const vectorX = canvasPos.x - centerX;
         const vectorY = canvasPos.y - centerY;
-
-        // Rotate vector back to local space
-        const rotationRad = -(transform.rotation * Math.PI) / 180;
+        const rotationRad = -worldRotationRad;
         const cos = Math.cos(rotationRad);
         const sin = Math.sin(rotationRad);
         const localX = vectorX * cos - vectorY * sin;
         const localY = vectorX * sin + vectorY * cos;
 
-        // Calculate new scale based on corner
-        const corner = this.activeHandleType.replace('corner-', '');
-        const startWidth = this.dragStartState.width * (this.dragStartState.transform.scale.x / 100);
-        const startHeight = this.dragStartState.height * (this.dragStartState.transform.scale.y / 100);
-
-        let newWidth, newHeight;
-
-        // Determine new dimensions based on which corner
-        if (corner === 'br' || corner === 'tr') {
-            newWidth = Math.abs(localX) * 2;
-        } else {
-            newWidth = Math.abs(localX) * 2;
-        }
-
-        if (corner === 'br' || corner === 'bl') {
-            newHeight = Math.abs(localY) * 2;
-        } else {
-            newHeight = Math.abs(localY) * 2;
-        }
-
-        // Convert to scale percentage
-        const newScaleX = (newWidth / this.dragStartState.width) * 100;
+        // Convert to scale percentage against the frame's local size
+        const newScaleX = (Math.abs(localX) * 2 / frame.width) * 100;
         const newScaleY = transform.proportionalScale
             ? newScaleX
-            : (newHeight / this.dragStartState.height) * 100;
+            : (Math.abs(localY) * 2 / frame.height) * 100;
 
         // Clamp values
         const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
@@ -935,6 +1022,31 @@ removeTransformHandles() {
         const dimensions = this.getDimensions();
         this.applyTransform(this.element, dimensions);
 
+        this.updateHandlePositions();
+    }
+
+    handleEdgeResizeDrag(e) {
+        const edge = this.activeHandleType.replace('edge-', '');
+        const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+
+        if (!this.editor.textGlitterManager?.resizeBoxFromHandle) {
+            return;
+        }
+
+        const didResize = this.editor.textGlitterManager.resizeBoxFromHandle(
+            this.layer,
+            edge,
+            this.dragStartState,
+            canvasPos
+        );
+
+        if (!didResize) {
+            return;
+        }
+
+        this.element = this.editor.textGlitterManager.layerElements.get(this.layer.id) || this.element;
+        const dimensions = this.getDimensions();
+        this.applyTransform(this.element, dimensions);
         this.updateHandlePositions();
     }
 
@@ -999,6 +1111,17 @@ removeTransformHandles() {
 
         const finalIndex = (baseIndex + cursorIndex) % 8;
         return cursors[finalIndex];
+    }
+
+    getEdgeCursor(edge, rotation) {
+        let angle = rotation % 360;
+        if (angle < 0) angle += 360;
+
+        const baseIndex = (edge === 'top' || edge === 'bottom') ? 1 : 3;
+        const cursorIndex = Math.round(angle / 45) % 8;
+        const cursors = ['nwse-resize', 'ns-resize', 'nesw-resize', 'ew-resize', 'nwse-resize', 'ns-resize', 'nesw-resize', 'ew-resize'];
+
+        return cursors[(baseIndex + cursorIndex) % 8];
     }
 
     /**

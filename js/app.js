@@ -519,6 +519,26 @@ resetAllSettings() {
 				designPanel.dataset.panelMode = config.panelMode;
 			}
 		}
+
+		if (this.syncCollapsibleSections) {
+			this.syncCollapsibleSections(this.getPreferredDesignSection(layer));
+		}
+	}
+
+	getPreferredDesignSection(layer) {
+		if (!this.originalImage || !layer || layer.type === LayerType.BASE_IMAGE) {
+			return 'designGallery';
+		}
+
+		if (layer.type === LayerType.TEXT_GLITTER) {
+			return 'textSettings';
+		}
+
+		if (layer.type === LayerType.STICKER) {
+			return 'stickerSettings';
+		}
+
+		return 'glitterSettings';
 	}
 
 	updateZoomUI() {
@@ -956,6 +976,9 @@ resetAllSettings() {
 
 	updateGlitterSelection() {
 		const layer = this.layerManager.getActiveLayer();
+		const selectedGlitterId = layer?.type === LayerType.TEXT_GLITTER
+			? this.textGlitterManager?.resolveSelectedGlitterId(layer)
+			: layer?.selectedGlitterId;
 
 		// Query all glitter options in BOTH traditional grid AND asset browser
 		const glitterOptions = document.querySelectorAll(
@@ -964,7 +987,7 @@ resetAllSettings() {
 
 		glitterOptions.forEach(opt => {
 			const isSelected = layer && (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) &&
-				parseInt(opt.dataset.id) === layer.selectedGlitterId;
+				parseInt(opt.dataset.id, 10) === selectedGlitterId;
 			opt.classList.toggle('selected', isSelected);
 		});
 
@@ -996,61 +1019,74 @@ resetAllSettings() {
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
+		const sections = ['designGallery', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings'];
 
-		// ===== LAYER SETTINGS =====
-		const layerSettingsHeader = document.getElementById('layerSettingsHeader');
-		const layerSettingsContent = document.getElementById('layerSettingsContent');
-		const layerSettingsToggle = document.getElementById('layerSettingsToggle');
+		const setOpen = (name, isOpen, accordion = false) => {
+			const section = document.getElementById(`${name}Section`);
+			const content = document.getElementById(`${name}Content`);
+			const toggle = document.getElementById(`${name}Toggle`);
+			if (section) section.classList.toggle('is-open', isOpen);
+			if (content) content.classList.toggle('visible', isOpen);
+			if (toggle) toggle.classList.toggle('collapsed', !isOpen);
 
-		// Start collapsed with empty state showing
-		layerSettingsToggle.classList.add('collapsed');
-		this.showLayerSettingsEmptyState();
+			if (isOpen && accordion && CONFIG.designPanelAccordion) {
+				sections.forEach((other) => {
+					if (other !== name) setOpen(other, false, false);
+				});
+			}
+		};
+		this.setCollapsibleSectionOpen = setOpen;
 
-		layerSettingsHeader.addEventListener('click', () => {
-			const isOpen = layerSettingsContent.classList.toggle('visible');
-			layerSettingsToggle.classList.toggle('collapsed', !isOpen);
-		});
-
-		// ===== GLITTER SETTINGS =====
-		const glitterSettingsHeader = document.getElementById('glitterSettingsHeader');
-		const glitterSettingsContent = document.getElementById('glitterSettingsContent');
-		const glitterSettingsToggle = document.getElementById('glitterSettingsToggle');
-
-		// Start collapsed with empty state showing
-		glitterSettingsToggle.classList.add('collapsed');
-		this.showGlitterSettingsEmptyState();
-
-		glitterSettingsHeader.addEventListener('click', () => {
-			const isOpen = glitterSettingsContent.classList.toggle('visible');
-			glitterSettingsToggle.classList.toggle('collapsed', !isOpen);
-		});
-
-		// ===== STICKER SETTINGS =====
-		const stickerSettingsHeader = document.getElementById('stickerSettingsHeader');
-		const stickerSettingsContent = document.getElementById('stickerSettingsContent');
-		const stickerSettingsToggle = document.getElementById('stickerSettingsToggle');
-
-		// Start collapsed with empty state showing
-		stickerSettingsToggle.classList.add('collapsed');
-		this.showStickerSettingsEmptyState();
-
-		stickerSettingsHeader.addEventListener('click', () => {
-			const isOpen = stickerSettingsContent.classList.toggle('visible');
-			stickerSettingsToggle.classList.toggle('collapsed', !isOpen);
-		});
-
-		// ===== TEXT SETTINGS =====
-		const textSettingsHeader = document.getElementById('textSettingsHeader');
-		const textSettingsContent = document.getElementById('textSettingsContent');
-		const textSettingsToggle = document.getElementById('textSettingsToggle');
-
-		if (textSettingsHeader && textSettingsContent && textSettingsToggle) {
-			textSettingsToggle.classList.add('collapsed');
-			textSettingsHeader.addEventListener('click', () => {
-				const isOpen = textSettingsContent.classList.toggle('visible');
-				textSettingsToggle.classList.toggle('collapsed', !isOpen);
+		this.syncCollapsibleSections = (preferredName = null) => {
+			const visibleSections = sections.filter((name) => {
+				const section = document.getElementById(`${name}Section`);
+				if (!section) return false;
+				return name === 'designGallery' || section.classList.contains('visible');
 			});
-		}
+
+			if (!visibleSections.length) {
+				return;
+			}
+
+			const openSections = visibleSections.filter((name) => {
+				const content = document.getElementById(`${name}Content`);
+				return content?.classList.contains('visible');
+			});
+
+			const targetName = visibleSections.includes(preferredName)
+				? preferredName
+				: (openSections[0] || visibleSections[0]);
+
+			sections.forEach((name) => {
+				const shouldOpen = name === targetName;
+				setOpen(name, shouldOpen, false);
+			});
+		};
+
+		sections.forEach((name) => {
+			const header = document.getElementById(`${name}Header`);
+			const content = document.getElementById(`${name}Content`);
+			const toggle = document.getElementById(`${name}Toggle`);
+			if (!header || !content || !toggle) return;
+
+			// Start with Design open and the rest collapsed
+			setOpen(name, name === 'designGallery');
+
+			header.addEventListener('click', (event) => {
+				if (event.target.closest('[data-no-accordion-toggle]')) {
+					return;
+				}
+
+				const isOpen = !content.classList.contains('visible');
+				setOpen(name, isOpen, true);
+			});
+		});
+
+		this.syncCollapsibleSections('designGallery');
+
+		this.showLayerSettingsEmptyState();
+		this.showGlitterSettingsEmptyState();
+		this.showStickerSettingsEmptyState();
 	}
 
 	initializeShortcutsModal() {

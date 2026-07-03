@@ -490,10 +490,30 @@ class LayerManager {
 		if (!layer.textData?.text?.trim()) return false;
 
 		const t = layer.textData.transform;
-		const w = layer.textData.width;
-		const h = layer.textData.height;
 
-		return this.isPointInTransformBox(t, w, h, clickX, clickY);
+		// Hit-test the visible frame (box rect / ink bounds), not the padded mask canvas
+		const frame = this.editor.textGlitterManager?.getTextFrame?.(layer);
+		if (!frame) {
+			return this.isPointInTransformBox(t, layer.textData.width, layer.textData.height, clickX, clickY);
+		}
+
+		const rotationRad = (t.rotation * Math.PI) / 180;
+		const cos = Math.cos(rotationRad);
+		const sin = Math.sin(rotationRad);
+		const offsetX = frame.offsetX * (t.scale.x / 100);
+		const offsetY = frame.offsetY * (t.scale.y / 100);
+		const frameCenter = {
+			x: t.position.x + offsetX * cos - offsetY * sin,
+			y: t.position.y + offsetX * sin + offsetY * cos
+		};
+
+		return this.isPointInTransformBox(
+			{ ...t, position: frameCenter },
+			frame.width,
+			frame.height,
+			clickX,
+			clickY
+		);
 	}
 
 	isPixelInLayerSelection(layer, x, y) {

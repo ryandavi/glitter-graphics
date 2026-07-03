@@ -305,8 +305,8 @@
 				<!-- DesignColumn -->
 				<div class="design-panel" id="designPanel">
 					<!-- Gallery Header with Tabs -->
-					<div class="section main-section">
-						<div class="section-header glitter-header section-header-with-action">
+					<div class="section main-section collapsible-section visible" id="designGallerySection">
+						<div class="section-header glitter-header section-header-with-action" id="designGalleryHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
 									<svg class="icon">
@@ -316,15 +316,22 @@
 								</span>
 								<span class="section-header-title-text">Design</span>
 							</h3>
-
-
-							<div class="section-header-action btn-icon" id="uploadStickerBtn">
-								<span class="icon-wrapper">
-									<svg class="icon">
-										<use href="#icon-plus"></use>
-									</svg>
-									<span class="name">Add Custom Sticker</span>
-								</span>
+							<div class="section-header-actions">
+								<div class="section-header-action btn-icon" id="uploadStickerBtn" data-no-accordion-toggle="true">
+									<span class="icon-wrapper">
+										<svg class="icon">
+											<use href="#icon-plus"></use>
+										</svg>
+										<span class="name">Add Custom Sticker</span>
+									</span>
+								</div>
+								<div class="section-header-action btn-icon visible" id="designGalleryToggle">
+									<span class="icon-wrapper">
+										<svg class="icon">
+											<use href="#icon-chevron-down"></use>
+										</svg>
+									</span>
+								</div>
 							</div>
 
 
@@ -339,7 +346,7 @@
 
 						</div>
 
-						<div class="section-content">
+						<div class="section-content" id="designGalleryContent">
 
 							<!-- Glitter Search (visible by default) -->
 							<div class="section-content gallery-search-section" id="glitterSearchSection">
@@ -1082,7 +1089,12 @@
 									</div>
 								</div>
 								<div class="subsection-content-group">
-									<div class="subsection-title">Layout</div>
+								<div class="subsection-title">Layout</div>
+									<div class="control-group-label">Type</div>
+									<div class="tool-options-group text-box-mode-group">
+										<button class="btn-simple active" type="button" data-text-box-mode="auto">Point</button>
+										<button class="btn-simple" type="button" data-text-box-mode="fixed">Box</button>
+									</div>
 									<div class="settings-group-two-column">
 										<div class="setting-column right">
 											<div class="setting-header">
@@ -1101,11 +1113,19 @@
 											<button class="btn-text" id="resetTextLetterSpacing" type="button">Reset</button>
 										</div>
 									</div>
+									<div class="control-group-label text-valign-label">Vertical</div>
+									<div class="tool-options-group text-valign-group">
+										<button class="btn-simple active" type="button" data-text-valign="top">Top</button>
+										<button class="btn-simple" type="button" data-text-valign="middle">Middle</button>
+										<button class="btn-simple" type="button" data-text-valign="bottom">Bottom</button>
+									</div>
+									<div class="control-group-label text-align-label">Paragraph</div>
 									<div class="tool-options-group text-align-group">
 										<button class="btn-simple active" type="button" data-text-align="left">Left</button>
 										<button class="btn-simple" type="button" data-text-align="center">Center</button>
 										<button class="btn-simple" type="button" data-text-align="right">Right</button>
 									</div>
+									<div class="text-box-hint" id="textBoxModeHint">Point text hugs the copy. Switch to Box for wrapping and edge resizing.</div>
 								</div>
 								<div class="subsection-content-group">
 									<div class="subsection-title">Fill</div>
@@ -1125,6 +1145,94 @@
 											</div>
 											<input type="range" id="textTextureOpacity" min="0" max="100" value="100">
 											<button class="btn-text" id="resetTextTextureOpacity" type="button">Reset</button>
+										</div>
+									</div>
+								</div>
+								<div class="subsection-content-group">
+									<div class="subsection-title">Effects</div>
+									<div class="subsection-note">Border and shadow each keep their own source. Pick glitter or solid separately for each one.</div>
+									<div class="subsection-content">
+										<div class="tool-options-group">
+											<label class="checkbox-group">
+												<input type="checkbox" id="textBorderEnabled">
+												<span>Border</span>
+											</label>
+											<label class="checkbox-group">
+												<input type="checkbox" id="textShadowEnabled">
+												<span>Shadow</span>
+											</label>
+										</div>
+									</div>
+									<div class="text-effect-controls" id="textBorderControls">
+										<div class="settings-group-two-column">
+											<div class="setting-column right">
+												<div class="setting-header">
+													<span class="setting-label">Border Width</span>
+													<span class="setting-value" id="textBorderWidthValue">4px</span>
+												</div>
+												<input type="range" id="textBorderWidth" min="1" max="24" value="4">
+												<button class="btn-text" id="resetTextBorderWidth" type="button">Reset</button>
+											</div>
+											<div class="setting-column right">
+												<div class="setting-header">
+													<span class="setting-label">Source</span>
+												</div>
+												<button class="btn-simple text-effect-source" id="textBorderGlitterChip" type="button">
+													<span class="text-effect-source-swatch" id="textBorderGlitterSwatch"></span>
+													<span class="text-effect-source-label" id="textBorderGlitterLabel">Choose Border Glitter</span>
+												</button>
+												<div class="text-effect-actions">
+													<span class="text-effect-source-value" id="textBorderSourceValue">Solid</span>
+													<button class="btn-text" id="textBorderUseColor" type="button">Use Solid Color</button>
+												</div>
+											</div>
+										</div>
+										<div class="text-effect-color-row">
+											<div class="setting-header">
+												<span class="setting-label">Solid Color</span>
+											</div>
+											<input type="color" id="textBorderColor" value="#000000">
+										</div>
+									</div>
+									<div class="text-effect-controls" id="textShadowControls">
+										<div class="settings-group-two-column">
+											<div class="setting-column right">
+												<div class="setting-header">
+													<span class="setting-label">Offset X</span>
+													<span class="setting-value" id="textShadowOffsetXValue">6px</span>
+												</div>
+												<input type="range" id="textShadowOffsetX" min="-60" max="60" value="6">
+												<button class="btn-text" id="resetTextShadowOffsetX" type="button">Reset</button>
+											</div>
+											<div class="setting-column right">
+												<div class="setting-header">
+													<span class="setting-label">Offset Y</span>
+													<span class="setting-value" id="textShadowOffsetYValue">6px</span>
+												</div>
+												<input type="range" id="textShadowOffsetY" min="-60" max="60" value="6">
+												<button class="btn-text" id="resetTextShadowOffsetY" type="button">Reset</button>
+											</div>
+										</div>
+										<div class="settings-group-two-column">
+											<div class="setting-column right">
+												<div class="setting-header">
+													<span class="setting-label">Source</span>
+												</div>
+												<button class="btn-simple text-effect-source" id="textShadowGlitterChip" type="button">
+													<span class="text-effect-source-swatch" id="textShadowGlitterSwatch"></span>
+													<span class="text-effect-source-label" id="textShadowGlitterLabel">Choose Shadow Glitter</span>
+												</button>
+												<div class="text-effect-actions">
+													<span class="text-effect-source-value" id="textShadowSourceValue">Solid</span>
+													<button class="btn-text" id="textShadowUseColor" type="button">Use Solid Color</button>
+												</div>
+											</div>
+											<div class="setting-column right text-effect-color-row">
+												<div class="setting-header">
+													<span class="setting-label">Solid Color</span>
+												</div>
+												<input type="color" id="textShadowColor" value="#000000">
+											</div>
 										</div>
 									</div>
 								</div>

@@ -1031,6 +1031,7 @@ input[type=range]::-moz-range-thumb {
   -o-object-fit: contain;
      object-fit: contain;
   image-rendering: crisp-edges;
+  image-rendering: pixelated;
   display: none;
   pointer-events: none;
 }
@@ -1326,15 +1327,23 @@ input[type=range]::-moz-range-thumb {
 .section > .section-header > .section-header-title {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  flex: 1 1 auto;
+  min-width: 0;
   gap: var(--spacing-base);
   font-size: var(--font-size-base);
   font-weight: 600;
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
+.section > .section-header > .section-header-title > .section-header-title-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .section > .section-header > .section-header-title > .section-header-title-icon {
   color: var(--color-text-tertiary);
+  flex-shrink: 0;
 }
 .section > .section-header > .section-header-title > .section-header-title-count {
   font-size: var(--font-size-sm);
@@ -1351,10 +1360,17 @@ input[type=range]::-moz-range-thumb {
   pointer-events: none;
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
+  flex-shrink: 0;
 }
 .section > .section-header.section-header-with-action > .section-header-action.visible {
   visibility: visible;
   pointer-events: auto;
+}
+.section > .section-header > .section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
 }
 .section > .section-header.section-header-with-action > .section-header-action#addLayerBtn:not(.visible) {
   visibility: visible;
@@ -1647,18 +1663,21 @@ input[type=range]::-moz-range-thumb {
   pointer-events: auto !important;
   will-change: transform;
   touch-action: none;
+  overflow: visible;
 }
-.text-glitter-element.selected {
-  outline-width: max(1px, 2px / var(--zoom, 1));
-  outline-style: dashed;
-  outline-color: var(--selected-outline-color);
-  outline-offset: min(-1px, -2px / var(--zoom, 1));
-  box-shadow: 0 0 0 max(1px, 1px / var(--zoom, 1)) rgba(0, 0, 0, 0.5), 0 0 max(4px, 8px / var(--zoom, 1)) rgba(0, 0, 0, 0.5);
+/* Local-space surface: sized to the mask canvas in text-local px and scaled by
+   a CSS transform (set from JS), so glyphs/padding/clip scale with the layer
+   exactly like the export path scales the rendered canvas. */
+.text-glitter-stack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
 }
 .text-glitter-content {
-  display: block;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   box-sizing: border-box;
   padding: var(--text-mask-padding, 8px);
   background-repeat: repeat;
@@ -1669,9 +1688,43 @@ input[type=range]::-moz-range-thumb {
   white-space: pre-wrap;
   word-break: break-word;
   overflow: visible;
+  pointer-events: none;
 }
 .text-glitter-content.pixelated {
   image-rendering: pixelated;
+}
+/* Selection/hover outline drawn at the text frame (--tf-* vars set from JS:
+   the box rect in Box mode, the visible ink bounds in Point mode) — not at the
+   padded wrapper, which is larger than the art. */
+.text-glitter-stack::after {
+  content: "";
+  position: absolute;
+  top: var(--tf-top, 0);
+  right: var(--tf-right, 0);
+  bottom: var(--tf-bottom, 0);
+  left: var(--tf-left, 0);
+  display: none;
+  pointer-events: none;
+}
+.text-glitter-element.selected > .text-glitter-stack::after {
+  display: block;
+  outline-width: max(1px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1)));
+  outline-style: dashed;
+  outline-color: var(--selected-outline-color);
+  outline-offset: min(-1px, calc(-2px / var(--zoom, 1) / var(--layer-scale, 1)));
+  box-shadow: 0 0 0 max(1px, calc(1px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5), 0 0 max(4px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5);
+}
+.text-glitter-element.text-overflowing.selected > .text-glitter-stack::before {
+  content: "";
+  position: absolute;
+  right: calc(var(--tf-right, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
+  bottom: calc(var(--tf-bottom, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
+  width: 0;
+  height: 0;
+  border-left: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid transparent;
+  border-top: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid rgba(245, 158, 11, 0.95);
+  pointer-events: none;
+  z-index: 1;
 }
 
 body.tool-select .sticker-element {
@@ -1684,7 +1737,8 @@ body.tool-select .sticker-element:not(.selected):hover {
 body.tool-select .text-glitter-element {
   cursor: move;
 }
-body.tool-select .text-glitter-element:not(.selected):hover {
+body.tool-select .text-glitter-element:not(.selected):hover > .text-glitter-stack::after {
+  display: block;
   outline: 1px dashed rgba(0, 0, 0, 0.25);
   outline-offset: -1px;
 }
@@ -1703,7 +1757,33 @@ body.tool-select .preview-canvas {
   border-left: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   order: 1;
+}
+.design-panel > .section.main-section {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+.design-panel > .section.main-section.is-open {
+  flex: 1 1 auto;
+}
+.design-panel > .section.main-section > .section-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.design-panel > .section.main-section > .section-content {
+  padding: 0;
+  min-height: 0;
+  background-color: var(--color-bg-primary);
+}
+.design-panel > .section.main-section > .section-content.visible {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
 }
 .design-panel > .section > .section-content {
   padding: 0;
@@ -1712,7 +1792,25 @@ body.tool-select .preview-canvas {
   position: relative;
   z-index: 100;
 }
-.design-panel[data-panel-mode=sticker] > .section > .section-header.glitter-header > .section-header-action {
+/* An open settings section takes the remaining panel height and scrolls its
+   own content, so long sections (Text Properties) can't push the other
+   collapsed headers off screen. */
+.design-panel > .section.collapsible-section.is-open:not(.main-section) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.design-panel > .section.collapsible-section.is-open:not(.main-section) > .section-header {
+  flex-shrink: 0;
+}
+.design-panel > .section.collapsible-section.is-open:not(.main-section) > .section-content.visible {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.design-panel[data-panel-mode=sticker] > .section > .section-header.glitter-header #uploadStickerBtn {
   visibility: visible;
   pointer-events: auto;
 }
@@ -2012,6 +2110,12 @@ body.tool-select .preview-canvas {
   transform-origin: 0 0;
   will-change: transform;
   pointer-events: auto;
+  /* image-rendering inherits: one declaration keeps every canvas, img, and
+     background-image inside the zoomed wrapper hard-pixeled instead of
+     bilinear-smoothed when the zoom transform upscales them. pixelated must
+     come LAST — the later declaration wins, crisp-edges is only the fallback. */
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
 }
 .preview-wrapper.color-picker-mode {
   cursor: crosshair;
@@ -2019,8 +2123,9 @@ body.tool-select .preview-canvas {
 .preview-wrapper > .preview-canvas,
 .preview-wrapper > .mask-overlay-canvas,
 .preview-wrapper .canvas-elements-container > .glitter-background {
-  image-rendering: pixelated;
+  /* crisp-edges first: it's the FALLBACK — the later pixelated must win */
   image-rendering: crisp-edges;
+  image-rendering: pixelated;
   -ms-interpolation-mode: nearest-neighbor;
   width: 100%;
   height: 100%;
@@ -3468,23 +3573,31 @@ body.mask-editing .sticker-element {
 /* Collapsible Section Management */
 .sticker-settings-section,
 .glitter-settings-section,
+.text-settings-section,
 .layer-settings-section {
   display: none;
 }
 .sticker-settings-section.visible,
 .glitter-settings-section.visible,
+.text-settings-section.visible,
 .layer-settings-section.visible {
-  flex-shrink: 1;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
 }
-.sticker-settings-section.visible > .section-content,
-.glitter-settings-section.visible > .section-content,
-.layer-settings-section.visible > .section-content {
-  flex-shrink: 1;
+.sticker-settings-section.visible.is-open,
+.glitter-settings-section.visible.is-open,
+.text-settings-section.visible.is-open,
+.layer-settings-section.visible.is-open {
+  flex: 1 1 auto;
+}
+.sticker-settings-section.visible.is-open > .section-content.visible,
+.glitter-settings-section.visible.is-open > .section-content.visible,
+.text-settings-section.visible.is-open > .section-content.visible,
+.layer-settings-section.visible.is-open > .section-content.visible {
   overflow-y: auto;
-  max-height: 33dvh;
+  overscroll-behavior: contain;
 }
 
 .glitter-options,
@@ -3839,6 +3952,7 @@ body.mask-editing .sticker-element {
   }
   .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible,
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible,
+  .mobile-settings-drawer .mobile-settings-content .text-settings-section.visible,
   .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible {
     display: flex;
     flex-direction: column;
@@ -3848,6 +3962,7 @@ body.mask-editing .sticker-element {
   }
   .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible .section-header,
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible .section-header,
+  .mobile-settings-drawer .mobile-settings-content .text-settings-section.visible .section-header,
   .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header {
     position: sticky;
     top: 0;
@@ -3856,6 +3971,7 @@ body.mask-editing .sticker-element {
   }
   .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible .section-header .section-header-action,
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible .section-header .section-header-action,
+  .mobile-settings-drawer .mobile-settings-content .text-settings-section.visible .section-header .section-header-action,
   .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header .section-header-action {
     display: flex;
   }
@@ -4304,6 +4420,10 @@ body.mask-editing .sticker-element {
   width: 32px;
   height: 32px;
 }
+.transform-handle-wrapper[data-handle-type^=edge-] {
+  width: 36px;
+  height: 36px;
+}
 .transform-handle-wrapper[data-handle-type=rotation] {
   width: 40px;
   height: 40px;
@@ -4327,6 +4447,13 @@ body.mask-editing .sticker-element {
   border: 1.5px solid var(--color-bg-secondary);
   border-radius: 50%;
 }
+.transform-handle.transform-handle-edge {
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid var(--color-bg-secondary);
+  border-radius: 50%;
+}
 
 .transform-handle-wrapper:hover .transform-handle {
   background: var(--color-accent);
@@ -4338,6 +4465,9 @@ body.mask-editing .sticker-element {
 }
 
 .sticker-element.has-transform-handles {
+  pointer-events: none !important;
+}
+.text-glitter-element.has-transform-handles {
   pointer-events: none !important;
 }
 
@@ -4413,14 +4543,23 @@ body.mask-editing .sticker-element {
 }
 
 /* FIX */
-.design-panel > .section.main-section {
-  flex: 1;
-}
 .design-panel > .section.collapsible-section {
   flex-shrink: 0;
 }
 .design-panel > .section.collapsible-section > .section-content {
   padding: var(--spacing-md);
+}
+.design-panel > .section.collapsible-section > .section-content:not(.visible) {
+  display: none;
+}
+.design-panel > .section.collapsible-section.is-open > .section-content.visible {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.design-panel > .section.main-section.collapsible-section > .section-content {
+  padding: 0;
 }
 .design-panel > .section:not(.collapsible-section) {
   display: flex;
@@ -4441,6 +4580,22 @@ body.mask-editing .sticker-element {
   flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
+  overflow: hidden;
+}
+.design-panel > .section.main-section > .section-content > .section-content {
+  flex-shrink: 0;
+}
+.design-panel > .section.main-section > .section-content > .asset-options {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.design-panel > .section.main-section > .section-content > .asset-options .asset-browser-content {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.design-panel > .section.main-section.is-open > .section-content.visible {
   overflow: hidden;
 }
 .design-panel > .section:not(.collapsible-section) > .section-content > .asset-options .asset-browser-content {
@@ -4608,25 +4763,148 @@ body.mask-editing .sticker-element {
   min-height: 96px;
   resize: vertical;
 }
+.text-settings-section > .section-content.visible {
+  gap: var(--spacing-md);
+}
 .text-input-group {
   width: 100%;
 }
+.subsection-note {
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  color: var(--color-text-tertiary);
+}
 .text-font-picker {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--spacing-sm);
   width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .text-font-option {
-  min-width: calc(50% - var(--spacing-sm));
+  flex-shrink: 0;
+  width: 100%;
   text-transform: none;
   justify-content: flex-start;
 }
 .text-align-group {
   margin-top: var(--spacing-md);
 }
+.control-group-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
 .text-align-group > .btn-simple {
   flex: 1;
+}
+.text-box-mode-group > .btn-simple {
+  flex: 1;
+}
+.text-valign-group > .btn-simple {
+  flex: 1;
+}
+.text-box-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}
+/* Point text has no frame to align within — hide alignment controls
+   (dataset set by TextGlitterManager.updateBoxModeSelection) */
+#textSettingsSection[data-box-mode=auto] .text-valign-group,
+#textSettingsSection[data-box-mode=auto] .text-valign-label,
+#textSettingsSection[data-box-mode=auto] .text-align-group,
+#textSettingsSection[data-box-mode=auto] .text-align-label {
+  display: none;
+}
+.text-effect-controls {
+  display: none;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+}
+.text-effect-controls.visible {
+  display: flex;
+}
+.text-effect-source {
+  width: 100%;
+  min-height: 44px;
+  justify-content: flex-start;
+  gap: var(--spacing-sm);
+  text-transform: none;
+}
+.text-effect-source > * {
+  pointer-events: none;
+}
+.text-effect-source.target-active {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent-border);
+}
+.text-effect-source-swatch {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  background-size: cover;
+  background-position: center;
+}
+.text-effect-source-swatch.pixelated {
+  image-rendering: pixelated;
+}
+.text-effect-source-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.text-effect-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.text-effect-source-value {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 var(--spacing-sm);
+  border-radius: 999px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.4px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+.text-effect-color-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+.text-effect-color-row input[type=color] {
+  width: 56px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+}
+.text-effect-color-row input[type=color]::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+.text-effect-color-row input[type=color]::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
 }
 
 /* Setting Headers (label + value pairs) */

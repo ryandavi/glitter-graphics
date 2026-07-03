@@ -257,8 +257,6 @@ async initBrowser() {
 			this.editor.showError('You can only add a glitter to a glitter-fill or text layer');
 			return;
 		}
-
-		layer.selectedGlitterId = id; // this.content[index].id;
 		const glitter = this.getItemById(id);
 
 		if (!glitter) {
@@ -284,19 +282,46 @@ async initBrowser() {
 			}
 		}
 
+		if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
+			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer);
+			if (target === 'border') {
+				const border = this.editor.textGlitterManager.ensureEffectData(layer, 'border');
+				border.glitterId = id;
+			} else if (target === 'shadow') {
+				const shadow = this.editor.textGlitterManager.ensureEffectData(layer, 'shadow');
+				shadow.glitterId = id;
+			} else {
+				layer.selectedGlitterId = id;
+			}
+		} else {
+			layer.selectedGlitterId = id;
+		}
+
 		this.editor.updateGlitterSelection();
 		this.editor.layerManager.renderLayersList();
 
 		if (layer.type === LayerType.TEXT_GLITTER) {
-			this.editor.textGlitterManager?.updateExistingBackground(layer);
-			this.editor.updatePreview();
+			await this.editor.textGlitterManager?.refreshLayer(layer, {
+				saveHistory: false,
+				refreshLayerList: false,
+				refreshPreview: false
+			});
 		} else if (hasMaskContent(layer)) {
 			this.editor.updatePreview();
 		}
 
 		this.editor.updateActionButtons();
 		this.editor.saveState();
-		this.editor.updateStatus(`Selected ${glitter.name}`);
+		if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
+			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer);
+			if (target === 'border' || target === 'shadow') {
+				this.editor.updateStatus(`Selected ${glitter.name} for the text ${target}`);
+			} else {
+				this.editor.updateStatus(`Selected ${glitter.name} for the text fill`);
+			}
+		} else {
+			this.editor.updateStatus(`Selected ${glitter.name}`);
+		}
 		window.dispatchEvent(new CustomEvent('layerChanged'));
 
 

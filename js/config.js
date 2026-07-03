@@ -29,6 +29,7 @@ const CONFIG = {
 	// ========================================
 	exportFrameRateSource: 'first-layer',
 	layerSettingsOpenByDefault: false,
+	designPanelAccordion: true,
 
 	// Layer List Drag
 	scrollZoneSize: 50,
@@ -89,6 +90,9 @@ const CONFIG = {
 		fontsManifest: 'data/fonts.json',
 		defaultFontId: 'luckiest-guy',
 		defaultText: 'sparkle',
+		defaultBoxMode: 'auto',
+		defaultVerticalAlign: 'top',
+		minBoxSize: 4,
 		defaultFontSize: 64,
 		minFontSize: 12,
 		maxFontSize: 256,
@@ -97,7 +101,8 @@ const CONFIG = {
 		maxLetterSpacing: 40,
 		lineHeight: 1.1,
 		maskPadding: 8,
-		maxTextLength: 200
+		maxTextLength: 200,
+		crispEdges: true
 	},
 
 	// ========================================
