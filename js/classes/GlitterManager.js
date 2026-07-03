@@ -12,8 +12,15 @@ class GlitterManager extends ContentManager {
 			special: new Set()
 		});
 
-    // ADD THIS:
-    this.useBrowser = true;
+		this.useBrowser = true;
+		this.paintMasks = new Map();
+		this.paintHistory = new Map();
+		this.paintHistoryBytes = 0;
+		this.paintHistoryByteLimit = Math.max(
+			CONFIG.maxImageWidth * CONFIG.maxImageHeight * 2 * CONFIG.historyLimit * 2,
+			64 * 1024 * 1024
+		);
+		this.nextPaintVersion = 1;
 
 	}
 
@@ -82,6 +89,8 @@ async initBrowser() {
 			type: this.getLayerType(),
 			visible: true,
 			locked: false,
+			maskVersion: 0,
+			maskHasContent: false,
 			selections: [],
 			selectedGlitterId: CONFIG.defaultGlitterId,
 			settings: {
@@ -278,7 +287,7 @@ async initBrowser() {
 		this.editor.updateGlitterSelection();
 		this.editor.layerManager.renderLayersList();
 
-		if (layer.selections.length > 0) {
+		if (hasMaskContent(layer)) {
 			this.editor.updatePreview();
 		}
 
@@ -326,7 +335,29 @@ updateSelection() {
 	this.editor.updateGlitterSelection();
 }
 
-	renderLayer(layer, width, height) {
+	renderContent(layersToShow) {
+		// Reconcile instead of ContentManager's clear-and-rebuild: recreating a
+		// glitter element restarts its animated GIF background and reloads its
+		// mask blob, which flashes the layer unmasked for a frame.
+		const layerType = this.getLayerType();
+		const width = this.editor.originalCanvas?.width;
+		const height = this.editor.originalCanvas?.height;
+
+		const keep = new Set();
+		layersToShow.forEach((layer) => {
+			if (layer.type === layerType) keep.add(layer.id);
+		});
+
+		Array.from(this.layerElements.keys()).forEach((layerId) => {
+			if (!keep.has(layerId)) this.removeLayerElement(layerId);
+		});
+
+		layersToShow.forEach((layer) => {
+			if (layer.type === layerType) this.renderLayer(layer, width, height);
+		});
+	}
+
+	renderLayer(layer, width, height, options = {}) {
 		if (layer.type !== LayerType.GLITTER_FILL) return;
 
 		const glitter = this.getItemById(layer.selectedGlitterId);
@@ -364,13 +395,18 @@ updateSelection() {
 		const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
 		inner.style.backgroundSize = `${Math.round(baseSize * glitterScale)}px`;
 
-		const maskObjectUrl = this.getMaskObjectUrlForLayer(layer, width, height);
+		const maskObjectUrl = this.getMaskObjectUrlForLayer(layer, width, height, options);
 		if (maskObjectUrl) {
 			inner.style.maskImage = `url(${maskObjectUrl})`;
 			inner.style.webkitMaskImage = `url(${maskObjectUrl})`;
+			inner.style.visibility = '';
 		} else {
+			// No decoded mask yet (first render of this layer): keep the element
+			// hidden until applyMaskObjectUrl reveals it — an unmasked frame
+			// paints glitter over the whole canvas.
 			inner.style.maskImage = 'none';
 			inner.style.webkitMaskImage = 'none';
+			inner.style.visibility = 'hidden';
 		}
 
 		// 3. Assemble
@@ -394,6 +430,9 @@ updateSelection() {
 		this.removeLayerElement(layer.id);
 		this.revokeMaskImageCache(layer);
 		delete layer._maskCache;
+		delete layer._selectionMaskCache;
+		this.removePaintMask(layer.id);
+		this.editor.maskCompositor?.invalidate(layer.id);
 	}
 
 	removeLayerElement(layerId) {
@@ -421,26 +460,19 @@ updateSelection() {
 
 		inner.style.maskImage = `url(${url})`;
 		inner.style.webkitMaskImage = `url(${url})`;
+		inner.style.visibility = '';
 	}
 
-	getMaskObjectUrlForLayer(layer, width, height) {
-		const mask = this.createMaskForLayer(layer);
-		const cacheKey = `${layer._maskCache?.key || ''}|${width}x${height}`;
+	getMaskObjectUrlForLayer(layer, width, height, options = {}) {
+		const draftMask = Boolean(options.draftMask);
+		const cacheKey = `${this.editor.maskCompositor.getCacheKey(layer, { draft: draftMask })}|${width}x${height}`;
 		const currentCache = layer._maskImageCache;
 
 		if (currentCache?.key === cacheKey) {
 			return currentCache.url || null;
 		}
 
-		const maskCanvas = document.createElement('canvas');
-		maskCanvas.width = width;
-		maskCanvas.height = height;
-		const maskCtx = maskCanvas.getContext('2d');
-		const maskData = maskCtx.createImageData(width, height);
-		for (let i = 0; i < width * height; i++) {
-			maskData.data[i * 4 + 3] = mask[i];
-		}
-		maskCtx.putImageData(maskData, 0, 0);
+		const maskCanvas = this.editor.maskCompositor.getMaskCanvas(layer, { draft: draftMask });
 
 		layer._maskImageCache = {
 			key: cacheKey,
@@ -467,20 +499,94 @@ updateSelection() {
 				return;
 			}
 
-			if (latestCache.url && latestCache.url !== nextUrl) {
-				URL.revokeObjectURL(latestCache.url);
-			}
+			// Decode the blob before touching the style and keep the old URL
+			// alive until the swap lands — otherwise the element renders a
+			// frame with a missing mask (visible flash while painting/picking).
+			const img = new Image();
+			img.onload = () => {
+				const cacheNow = layer._maskImageCache;
+				if (!cacheNow || cacheNow.key !== cacheKey) {
+					URL.revokeObjectURL(nextUrl);
+					return;
+				}
 
-			layer._maskImageCache = {
-				key: cacheKey,
-				url: nextUrl,
-				pending: false
+				const previousUrl = cacheNow.url;
+				layer._maskImageCache = {
+					key: cacheKey,
+					url: nextUrl,
+					pending: false
+				};
+
+				this.applyMaskObjectUrl(layer.id, nextUrl);
+
+				if (previousUrl && previousUrl !== nextUrl) {
+					URL.revokeObjectURL(previousUrl);
+				}
 			};
-
-			this.applyMaskObjectUrl(layer.id, nextUrl);
+			img.onerror = () => URL.revokeObjectURL(nextUrl);
+			img.src = nextUrl;
 		}, 'image/png');
 
 		return currentCache?.url || null;
+	}
+
+	getSelectionCacheKey(layer) {
+		return JSON.stringify([
+			layer.selections,
+			layer.settings.threshold,
+			layer.settings.contiguous
+		]);
+	}
+
+	createSelectionMaskForLayer(layer) {
+		const cacheKey = this.getSelectionCacheKey(layer);
+		if (layer._selectionMaskCache?.key === cacheKey) {
+			return new Uint8Array(layer._selectionMaskCache.mask);
+		}
+
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+		const len = width * height;
+		const mask = new Uint8Array(len);
+		const thresholdSq = layer.settings.threshold * layer.settings.threshold;
+		const data = this.editor.originalImageData.data;
+		const alphaChannel = this.editor.originalAlphaChannel;
+
+		layer.selections.forEach(sel => {
+			if (layer.settings.contiguous) {
+				this.floodFill(mask, sel.x, sel.y, sel, thresholdSq);
+				return;
+			}
+
+			for (let i = 0; i < len; i++) {
+				if (mask[i] === 255) continue;
+
+				if (sel.isTransparent) {
+					if (alphaChannel[i] < CONFIG.alphaThreshold) {
+						mask[i] = 255;
+					}
+					continue;
+				}
+
+				if (alphaChannel[i] < CONFIG.alphaThreshold) continue;
+
+				const idx = i * 4;
+				const r = data[idx];
+				const g = data[idx + 1];
+				const b = data[idx + 2];
+
+				if (this.colorDistanceSq(r, g, b, sel.r, sel.g, sel.b) <= thresholdSq) {
+					mask[i] = 255;
+				}
+			}
+		});
+
+		layer._selectionMaskCache = {
+			key: cacheKey,
+			mask: new Uint8Array(mask)
+		};
+
+		return new Uint8Array(mask);
 	}
 
 	createMaskForLayer(layer) {
@@ -499,43 +605,8 @@ updateSelection() {
 		const width = this.editor.originalCanvas.width;
 		const height = this.editor.originalCanvas.height;
 		const len = width * height;
-
-		const mask = new Uint8Array(len);
-		const thresholdSq = layer.settings.threshold * layer.settings.threshold;
-		const data = this.editor.originalImageData.data;
+		const mask = this.createSelectionMaskForLayer(layer);
 		const alphaChannel = this.editor.originalAlphaChannel;
-
-		layer.selections.forEach(sel => {
-			if (layer.settings.contiguous) {
-				this.floodFill(mask, sel.x, sel.y, sel, thresholdSq);
-			} else {
-				for (let i = 0; i < len; i++) {
-					if (mask[i] === 255) continue;
-
-					// --- NEW LOGIC START ---
-					if (sel.isTransparent) {
-						// If we selected transparency, only match other transparent pixels
-						if (alphaChannel[i] < CONFIG.alphaThreshold) {
-							mask[i] = 255;
-						}
-						continue; // Skip the color math below
-					}
-
-					// If we selected a color, IGNORE transparent pixels
-					if (alphaChannel[i] < CONFIG.alphaThreshold) continue;
-					// --- NEW LOGIC END ---
-
-					const idx = i * 4;
-					const r = data[idx];
-					const g = data[idx + 1];
-					const b = data[idx + 2];
-
-					if (this.colorDistanceSq(r, g, b, sel.r, sel.g, sel.b) <= thresholdSq) {
-						mask[i] = 255;
-					}
-				}
-			}
-		});
 
 		if (layer.settings.invert) {
 			for (let i = 0; i < len; i++) {
@@ -555,6 +626,316 @@ updateSelection() {
 		};
 
 		return new Uint8Array(mask);
+	}
+
+	getPaintMask(layerId) {
+		return this.paintMasks.get(layerId) || null;
+	}
+
+	ensurePaintMask(layerId) {
+		if (this.paintMasks.has(layerId)) {
+			return this.paintMasks.get(layerId);
+		}
+
+		const width = this.editor.originalCanvas.width;
+		const height = this.editor.originalCanvas.height;
+		const paint = {
+			add: document.createElement('canvas'),
+			sub: document.createElement('canvas'),
+			version: 0,
+			liveRevision: 0,
+			hasContent: false
+		};
+
+		paint.add.width = width;
+		paint.add.height = height;
+		paint.sub.width = width;
+		paint.sub.height = height;
+
+		this.paintMasks.set(layerId, paint);
+		return paint;
+	}
+
+	removePaintMask(layerId) {
+		this.paintMasks.delete(layerId);
+	}
+
+	clearAllPaintData() {
+		this.paintMasks.clear();
+		this.paintHistory.clear();
+		this.paintHistoryBytes = 0;
+		this.nextPaintVersion = 1;
+		this.editor.maskCompositor?.reset();
+	}
+
+	paintCanvasHasContent(canvas) {
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+		for (let i = 3; i < data.length; i += 4) {
+			if (data[i] > 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	commitPaintState(layer) {
+		if (!layer || layer.type !== LayerType.GLITTER_FILL) {
+			return 0;
+		}
+
+		const paint = this.paintMasks.get(layer.id);
+		if (!paint) {
+			return layer.maskVersion || 0;
+		}
+
+		const snapshot = this.capturePaintSnapshot(paint);
+		const version = this.nextPaintVersion++;
+		paint.version = version;
+		paint.liveRevision = 0;
+		paint.hasContent = snapshot.hasContent;
+
+		this.storePaintSnapshot(layer.id, {
+			version,
+			add: snapshot.add,
+			sub: snapshot.sub,
+			hasContent: snapshot.hasContent,
+			bytes: snapshot.bytes,
+			timestamp: performance.now()
+		});
+
+		layer.maskVersion = version;
+		layer.maskHasContent = snapshot.hasContent;
+		this.editor.maskCompositor?.invalidate(layer.id);
+
+		return version;
+	}
+
+	storePaintSnapshot(layerId, snapshot) {
+		const snapshots = this.paintHistory.get(layerId) || [];
+		snapshots.push(snapshot);
+		this.paintHistoryBytes += snapshot.bytes;
+		this.paintHistory.set(layerId, snapshots);
+	}
+
+	findPaintSnapshot(layerId, version) {
+		const snapshots = this.paintHistory.get(layerId);
+		if (!snapshots?.length) {
+			return null;
+		}
+
+		for (let i = snapshots.length - 1; i >= 0; i--) {
+			if (snapshots[i].version === version) {
+				return snapshots[i];
+			}
+		}
+
+		return null;
+	}
+
+	restorePaintState(layers) {
+		const activeIds = new Set();
+
+		layers.forEach((layer) => {
+			if (layer.type !== LayerType.GLITTER_FILL) {
+				return;
+			}
+
+			activeIds.add(layer.id);
+
+			if (!layer.maskVersion) {
+				this.removePaintMask(layer.id);
+				layer.maskHasContent = false;
+				layer.maskVersion = 0;
+				this.editor.maskCompositor?.invalidate(layer.id);
+				return;
+			}
+
+			const snapshot = this.findPaintSnapshot(layer.id, layer.maskVersion);
+			if (!snapshot) {
+				this.removePaintMask(layer.id);
+				layer.maskHasContent = false;
+				layer.maskVersion = 0;
+				this.editor.maskCompositor?.invalidate(layer.id);
+				return;
+			}
+
+			const paint = this.ensurePaintMask(layer.id);
+			this.blitAlphaToCanvas(paint.add, snapshot.add);
+			this.blitAlphaToCanvas(paint.sub, snapshot.sub);
+			paint.version = snapshot.version;
+			paint.liveRevision = 0;
+			paint.hasContent = snapshot.hasContent;
+			layer.maskHasContent = snapshot.hasContent;
+			this.editor.maskCompositor?.invalidate(layer.id);
+		});
+
+		this.paintMasks.forEach((_, layerId) => {
+			if (!activeIds.has(layerId)) {
+				this.paintMasks.delete(layerId);
+			}
+		});
+	}
+
+	clearPaintForLayer(layer) {
+		if (!layer || layer.type !== LayerType.GLITTER_FILL) {
+			return false;
+		}
+
+		if (!layer.maskHasContent && !this.paintMasks.has(layer.id) && !layer.maskVersion) {
+			return false;
+		}
+
+		const paint = this.ensurePaintMask(layer.id);
+		paint.add.getContext('2d', { willReadFrequently: true }).clearRect(0, 0, paint.add.width, paint.add.height);
+		paint.sub.getContext('2d', { willReadFrequently: true }).clearRect(0, 0, paint.sub.width, paint.sub.height);
+		paint.liveRevision++;
+		this.commitPaintState(layer);
+		this.editor.maskCompositor?.invalidate(layer.id);
+		return true;
+	}
+
+	clonePaintData(sourceLayer, clonedLayer) {
+		if (!sourceLayer || !clonedLayer || sourceLayer.type !== LayerType.GLITTER_FILL) {
+			return;
+		}
+
+		const sourceVersion = sourceLayer.maskVersion || 0;
+		if (!sourceVersion && !this.paintMasks.has(sourceLayer.id)) {
+			clonedLayer.maskVersion = 0;
+			clonedLayer.maskHasContent = false;
+			return;
+		}
+
+		let snapshot = sourceVersion ? this.findPaintSnapshot(sourceLayer.id, sourceVersion) : null;
+		if (!snapshot) {
+			const livePaint = this.paintMasks.get(sourceLayer.id);
+			if (!livePaint) {
+				clonedLayer.maskVersion = 0;
+				clonedLayer.maskHasContent = false;
+				return;
+			}
+			snapshot = this.capturePaintSnapshot(livePaint);
+		}
+
+		const clonedPaint = this.ensurePaintMask(clonedLayer.id);
+		this.blitAlphaToCanvas(clonedPaint.add, snapshot.add);
+		this.blitAlphaToCanvas(clonedPaint.sub, snapshot.sub);
+		clonedPaint.hasContent = snapshot.hasContent;
+		clonedPaint.liveRevision = 0;
+		this.commitPaintState(clonedLayer);
+	}
+
+	capturePaintSnapshot(paint) {
+		const add = this.extractAlphaFromCanvas(paint.add);
+		const sub = this.extractAlphaFromCanvas(paint.sub);
+		const hasContent = add.some((value) => value > 0) || sub.some((value) => value > 0);
+		return {
+			add,
+			sub,
+			hasContent,
+			bytes: add.byteLength + sub.byteLength
+		};
+	}
+
+	extractAlphaFromCanvas(canvas) {
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+		const alpha = new Uint8Array(canvas.width * canvas.height);
+		for (let i = 0; i < alpha.length; i++) {
+			alpha[i] = imageData[i * 4 + 3];
+		}
+		return alpha;
+	}
+
+	blitAlphaToCanvas(canvas, alpha) {
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		const imageData = ctx.createImageData(canvas.width, canvas.height);
+		for (let i = 0; i < alpha.length; i++) {
+			imageData.data[i * 4 + 3] = alpha[i];
+		}
+		ctx.putImageData(imageData, 0, 0);
+	}
+
+	prunePaintHistory() {
+		const referenced = this.collectReferencedMaskVersions();
+		let nextByteTotal = 0;
+
+		this.paintHistory.forEach((snapshots, layerId) => {
+			const keepVersions = referenced.get(layerId);
+			const keptSnapshots = snapshots.filter((snapshot) => keepVersions?.has(snapshot.version));
+			if (keptSnapshots.length > 0) {
+				this.paintHistory.set(layerId, keptSnapshots);
+				nextByteTotal += keptSnapshots.reduce((sum, snapshot) => sum + snapshot.bytes, 0);
+			} else {
+				this.paintHistory.delete(layerId);
+			}
+		});
+
+		this.paintHistoryBytes = nextByteTotal;
+
+		if (this.paintHistoryBytes <= this.paintHistoryByteLimit) {
+			return;
+		}
+
+		const orderedSnapshots = [];
+		this.paintHistory.forEach((snapshots, layerId) => {
+			snapshots.forEach((snapshot) => {
+				orderedSnapshots.push({ layerId, snapshot });
+			});
+		});
+
+		orderedSnapshots.sort((left, right) => left.snapshot.timestamp - right.snapshot.timestamp);
+
+		// Over budget: evict oldest first. Everything left is referenced by some
+		// history state (unreferenced snapshots were dropped above), so eviction
+		// trades deep-undo paint fidelity for bounded memory — restorePaintState
+		// clears paint gracefully when a snapshot is missing. Never evict a live
+		// layer's current version; that one backs the state the user is looking at.
+		const liveVersions = new Map();
+		(this.editor.layerManager?.layers || []).forEach((layer) => {
+			if (layer.type === LayerType.GLITTER_FILL && layer.maskVersion) {
+				liveVersions.set(layer.id, layer.maskVersion);
+			}
+		});
+
+		for (const entry of orderedSnapshots) {
+			if (this.paintHistoryBytes <= this.paintHistoryByteLimit) {
+				break;
+			}
+
+			if (liveVersions.get(entry.layerId) === entry.snapshot.version) {
+				continue;
+			}
+
+			const snapshots = this.paintHistory.get(entry.layerId);
+			if (!snapshots) continue;
+
+			const filtered = snapshots.filter((snapshot) => snapshot.version !== entry.snapshot.version);
+			this.paintHistory.set(entry.layerId, filtered);
+			this.paintHistoryBytes -= entry.snapshot.bytes;
+		}
+	}
+
+	collectReferencedMaskVersions() {
+		const referenced = new Map();
+		const history = this.editor.historyManager?.history || [];
+
+		history.forEach((state) => {
+			state.layers.forEach((layer) => {
+				if (layer.type !== LayerType.GLITTER_FILL || !layer.maskVersion) {
+					return;
+				}
+
+				if (!referenced.has(layer.id)) {
+					referenced.set(layer.id, new Set());
+				}
+
+				referenced.get(layer.id).add(layer.maskVersion);
+			});
+		});
+
+		return referenced;
 	}
 
 	floodFill(mask, startX, startY, targetColor, thresholdSq) {

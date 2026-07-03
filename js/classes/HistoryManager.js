@@ -26,6 +26,8 @@ class HistoryManager {
 					id: layer.id,
 					type: layer.type || LayerType.GLITTER_FILL,
 					visible: layer.visible,
+					locked: layer.locked,
+					maskVersion: layer.maskVersion || 0,
 					selections: layer.selections ? JSON.parse(JSON.stringify(layer.selections)) : [],
 					selectedGlitterId: layer.selectedGlitterId,
 					settings: layer.settings ? { ...layer.settings } : {}
@@ -47,10 +49,12 @@ class HistoryManager {
 		}
 
 		this.history.push(state);
+		this.editor.glitterManager?.prunePaintHistory();
 		this.updateButtons();
 	}
 
 	async restoreState(state) {
+		this.editor.maskEditor?.handleStateRestore();
 		this.editor.layers = [];
 
 		for (const layerData of state.layers) {
@@ -72,6 +76,9 @@ class HistoryManager {
 					id: layerData.id,
 					type: layerData.type || LayerType.GLITTER_FILL,
 					visible: layerData.visible,
+					locked: layerData.locked,
+					maskVersion: layerData.maskVersion || 0,
+					maskHasContent: false,
 					selections: layerData.selections ? JSON.parse(JSON.stringify(layerData.selections)) : [],
 					selectedGlitterId: layerData.selectedGlitterId,
 					settings: layerData.settings ? { ...layerData.settings } : {}
@@ -79,6 +86,7 @@ class HistoryManager {
 			}
 		}
 
+		this.editor.glitterManager?.restorePaintState(this.editor.layers);
 		this.editor.activeLayerId = state.activeLayerId;
 
 		this.editor.layerManager.renderLayersList();
@@ -117,6 +125,7 @@ class HistoryManager {
 			this.historyIndex = -1;
 		}
 
+		this.editor.glitterManager?.prunePaintHistory();
 		this.updateButtons();
 	}
 

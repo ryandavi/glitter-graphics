@@ -13,9 +13,11 @@
 
 **Relationship to the mask feature:** independent — text layers do *not* use the painted-mask system, and neither feature blocks the other. They share existing infrastructure (`LayerTransform`, `LAYER_UI_CONFIG`, the glitter browser) rather than each other's new code. Keep the plans separate; build text after the audit goals land (either before or after the mask feature — mask first is the suggested order simply because it's already specced and queued).
 
-**If the mask feature lands first:** the type-switch chains this plan touches (`app.js` visibility filters, `HistoryManager.createStateSnapshot`/`restoreState`, `LayerManager` per-type branches) will already have mask-related changes to the `GLITTER_FILL` case — add the `TEXT_GLITTER` case as a sibling branch, don't re-derive those functions from this doc's line numbers/snippets (they'll have shifted).
+**The mask feature HAS landed first (M-1 + tool refactor, 2026-07-03).** Consequences for this plan: the type-switch chains (`app.js` visibility filters, `HistoryManager.createStateSnapshot`/`restoreState`, `LayerManager` per-type branches) already carry mask-related `GLITTER_FILL` changes — add `TEXT_GLITTER` as a sibling branch, don't re-derive those functions from this doc's snippets. `layerHasVisibleContent()` already exists in `js/config.js` next to `LAYER_UI_CONFIG` — add a `TEXT_GLITTER` case there; the three visibility call sites already route through it. `ToolType.BRUSH` exists; glitter layers' `onActivate` checks `currentTool !== ToolType.BRUSH` before auto-switching tools — the `TEXT_GLITTER` `onActivate` must not steal the tool either (go to SELECT only if the current tool is layer-inappropriate).
 
-Out of scope for v1: text outline/stroke, per-character styling, text on a path, painted masks on text layers, user font uploads, emoji.
+Out of scope for v1: per-character styling, text on a path, painted masks on text layers, user font uploads, emoji. Border (outline) and drop shadow are **designed but deferred** — see §4.5; v1 must reserve their schema fields.
+
+**Crisp edges are the default and only mode (matches MASK-FEATURE-PLAN §12 decision 5):** no feather/soften controls on text layers. Glyph edges get whatever antialiasing the font rasterizer produces — identical in preview and export since both use the same engine — and nothing beyond that.
 
 ---
 
@@ -48,6 +50,8 @@ Out of scope for v1: text outline/stroke, per-character styling, text on a path,
 [{ "id": "luckiest-guy", "name": "Luckiest Guy", "file": "fonts/luckiest-guy.woff2",
    "weight": 400, "fallback": "cursive", "featured": true }]
 ```
+
+**Status: the font assets are already in the repo (added 2026-07-02)** — all 10 latin-subset woff2 files in `fonts/`, plus `data/fonts.json` and `fonts/OFL.txt`. Implementation consumes them as-is; no downloading step remains.
 
 Files live in `fonts/`. Fonts load lazily via `FontFace` — the picker loads all faces when first opened (small files, one-time), and `TextGlitterManager.ensureFontLoaded(id)` awaits before any mask render. Adding a font later = drop in a woff2 + one JSON entry, no code.
 
@@ -100,6 +104,8 @@ This gives **animated glitter inside crisp text for free** — the GIF animates 
 
 *(Note: `applyTransform` writes `element.style.cssText` wholesale — the text-specific styles must be applied to an inner child element, or the manager re-applies them after transform. Use an inner `<span class="text-glitter-content">`.)*
 
+**No-flicker invariant (learned in the mask feature — MASK-FEATURE-PLAN §12 decision 6):** `TextGlitterManager` MUST override `ContentManager.renderContent` with the same reconcile-in-place pattern `GlitterManager.renderContent` now uses (remove stale elements, update live ones, never clear-and-rebuild). The base class destroys and recreates every element on each `updatePreview` — which fires on every keystroke debounce, slider change, and history step — restarting the animated GIF background each time (visible blink) and re-rasterizing the text mid-typing. Text layers have no mask blobs, so this is the one invariant from decision 6 that applies — copy the GlitterManager override, don't inherit the base behavior.
+
 **Security note:** the text string is user input rendered into the DOM. Set it via `span.textContent = layer.textData.text`, never `innerHTML` — the inner span must never be built from a template string containing the raw text.
 
 ### GIF export
@@ -114,8 +120,36 @@ New branch in `GifExporter._renderFrame`'s layer loop (mirrors the sticker branc
 - **Layer type picker modal** gets a third option ("Text"); optional quick-add button in the layers bottom bar next to the existing glitter/sticker buttons.
 - **Design panel:** new `textSettingsSection` registered in `LAYER_UI_CONFIG[TEXT_GLITTER]` — `designPanelSections: ['glitterSearchSection', 'glitterOptions', 'textSettingsSection', 'layerSettingsSection']` so the **existing glitter browser is reused** for picking the fill. `mobileSettingsSections: ['tool', 'glitter', 'text']` (text section cached/moved by MobileManager like the others).
 - **Text section controls:** textarea (multiline), font picker (each option rendered in its own face), font size slider, letter-spacing slider, alignment segmented control. Scale/opacity of the glitter texture reuse the existing glitter settings sliders.
+- **Design-system conformance (learned in the mask UI pass, 2026-07-03):** panel buttons are plain `btn-simple` (`btn-text-with-icon` is a modal/welcome-only pattern); boolean options are `checkbox-group` inside `tool-options-group`; sliders use `setting-column`/`settings-group-two-column` wired through `setupSlider()` (live value + reset); the alignment control follows the `mask-mode-buttons` segmented `btn-simple` pattern (see the Paint/Erase pair). Any view-only toggle belongs in preview-controls, not the panel. Control labels must use the same name everywhere they appear (panel, tooltips, hints).
 - New layer starts with placeholder text (`CONFIG.textLayers.defaultText`) pre-selected in the textarea so typing replaces it immediately; the layer renders centered on canvas from the first keystroke (debounced ~150 ms re-measure, reuse `CONFIG.sliderDebounceMs`).
+- **History granularity:** one history entry per typing pause (saveState on the debounce boundary), never per keystroke — same principle as one-entry-per-stroke in the mask feature. Font/size/spacing/alignment changes are one entry each.
 - Layer list: name = text excerpt (first ~18 chars), type line = `Text / <glitter name>`, swatch = glitter thumbnail with a "T" glyph overlay.
+
+## 4.5. Border & drop shadow (designed 2026-07-03, deferred to Goal T-2)
+
+Ryan's ask: text should optionally get a **border (outline)** and/or a **drop shadow**, each with its own swatch — solid color *or* glitter. Designed now so T-1's schema doesn't paint us into a corner; **not built in T-1**.
+
+**Schema (T-1 must reserve these, shipping as `null`):**
+
+```js
+textData: {
+  ...,
+  border: null | { widthPx: 4, glitterId: null, color: '#000000' },   // glitterId wins if set
+  shadow: null | { offsetX: 6, offsetY: 6, glitterId: null, color: '#000000' }
+}
+```
+
+Plain JSON → flows through history/clone untouched, and `null` means T-1 behavior exactly.
+
+**Rendering technique — offset-copies, one method for both pipelines:**
+
+- **Shadow:** draw the same glyph mask offset by `(offsetX, offsetY)` *behind* the fill, filled with the shadow's swatch. DOM: a duplicated inner span (own `background-image` + `background-clip: text`, translated, `z-index` below the fill span). Export: same pattern-fill as the main branch, mask drawn at the offset, before the fill.
+- **Border:** `-webkit-text-stroke` can't take a glitter fill, so build the outline as **N offset copies of the glyph mask arranged in a circle of radius `widthPx`** (8 copies for thin, 16 for thick), unioned, behind the fill — the classic shadow-stroke trick. The fill draws on top, so the visible result is a ring. Works *identically* in DOM (N stacked spans) and export (N offset `drawImage` of the cached text mask into a border-mask canvas, then pattern-fill). If fill opacity < 100 the interior of the border union would show through — in that case `destination-out` the fill mask from the border mask in the export path, and accept the minor DOM discrepancy or clip likewise with an extra canvas.
+- **Draw order:** shadow → border → fill.
+
+**UI sketch:** two toggles in `textSettingsSection` (Border / Shadow), each expanding a row: width or offset slider + a swatch chip that opens the existing glitter browser targeted at that slot, plus a solid-color fallback input. The browser reuse needs a "selection target" concept (fill / border / shadow) — small extension to `GlitterManager.selectGlitter`'s text branch.
+
+**Costs to acknowledge:** each glitter-filled border/shadow multiplies export pattern fills per frame (shadow ×1, border ×N drawImages but only 1 pattern fill of the unioned mask), and `_calculateTotalFrames`/transparency-key scanning must consider up to three glitter ids per text layer. All contained in TextGlitterManager + GifExporter's text branch.
 
 ## 5. Integration points (the "same concept, one representation" checklist)
 
@@ -124,7 +158,7 @@ Every site below currently switches on sticker/glitter/base — each needs a tex
 | Site | Change |
 |---|---|
 | `js/classes/HistoryManager.js createStateSnapshot()` / `restoreState()` (history logic lives here since audit Goal 4, NOT in app.js) | plain JSON copy branch for `TEXT_GLITTER` (textData + selectedGlitterId + settings) |
-| `app.js updatePreview()` layer filter, `updateActionButtons()` `hasAnySelection`, `exportAnimatedGif()` visible-layer filter | these are three copies of the same per-type conditional (see current `app.js:2802-2813`); `docs/MASK-FEATURE-PLAN.md` §6.5 proposes collapsing all three into one `layerHasVisibleContent(layer)` dispatcher — if that lands first, add the `TEXT_GLITTER` case there instead of re-duplicating the three-site edit; if this plan lands first, build that dispatcher now rather than adding a third copy of the pattern |
+| `layerHasVisibleContent()` in `js/config.js` | **already exists** (mask feature landed first) — add one `TEXT_GLITTER` case returning `layer.textData.text.trim() !== ''`; the three visibility call sites (updatePreview filter, updateActionButtons, exportAnimatedGif filter) already route through it, do not touch them |
 | `GlitterManager.selectGlitter()` | accept TEXT_GLITTER layers (currently errors on non-glitter-fill); on select, update the text element's background-image |
 | `LayerManager.handleLayerPick` | hit-test with the same rotated-box math as `isPointInSticker` — generalize it to `isPointInTransformBox(transform, width, height, x, y)` and use for both |
 | `LayerManager.createLayerElement` / `updateMobileLayersSwatch` / `cloneLayer` | text branches (clone is a plain deep copy — trivially safe) |
@@ -188,12 +222,13 @@ OBJECTIVE
 New layer type 'text-glitter': user types text, chooses a font from a curated self-hosted set and a glitter from the existing browser; the text shape masks the glitter. Text layers transform like stickers and export to GIF with animated glitter inside the letters.
 
 NEW FILES
-- js/classes/TextGlitterManager.js — fonts manifest loading, FontFace lazy loading with ensureFontLoaded(id), createLayer(), renderLayer() (DOM element with inner span using background-clip:text per plan §3), renderTextMask(layer) with measurement + caching, text settings UI wiring.
-- data/fonts.json — manifest per plan §1.
-- fonts/*.woff2 — download the 10 faces listed in plan §1 from google-webfonts-helper (latin subset, woff2 only). All are OFL; include fonts/OFL.txt.
+- js/classes/TextGlitterManager.js — fonts manifest loading, FontFace lazy loading with ensureFontLoaded(id), createLayer(), renderLayer() (DOM element with inner span using background-clip:text per plan §3), renderTextMask(layer) with measurement + caching, text settings UI wiring. MUST override renderContent with the reconcile-in-place pattern from GlitterManager.renderContent (plan §3 no-flicker invariant) — never inherit ContentManager's clear-and-rebuild.
+
+ALREADY IN THE REPO (do not create or download): data/fonts.json (manifest per plan §1), fonts/*.woff2 (all 10 faces, latin subset), fonts/OFL.txt. Consume them exactly as committed — font ids in code must match the manifest ids.
 
 MODIFIED FILES — follow the integration table in plan §5 exactly:
-- js/app.js: LayerType.TEXT_GLITTER, CONFIG.textLayers block (plan §6), LAYER_UI_CONFIG entry, updatePreview/updateActionButtons/exportAnimatedGif visibility condition, updateHelpfulMessage hints, text settings listeners.
+- js/config.js: LayerType.TEXT_GLITTER, CONFIG.textLayers block (plan §6), LAYER_UI_CONFIG entry, TEXT_GLITTER case in the existing layerHasVisibleContent() (the visibility call sites already route through it).
+- js/app.js: updateHelpfulMessage hints, text settings listeners.
 - js/classes/HistoryManager.js (NOT app.js — history was extracted there in audit Goal 4): createStateSnapshot/restoreState text branch (plain JSON copy of textData + selectedGlitterId + settings).
 - js/classes/GlitterManager.js: selectGlitter accepts text layers and refreshes their element's background-image.
 - js/classes/LayerManager.js: addLayer/createLayerElement/updateMobileLayersSwatch/cloneLayer text branches; generalize isPointInSticker into isPointInTransformBox and use it for both stickers and text hit-testing.
@@ -202,6 +237,10 @@ MODIFIED FILES — follow the integration table in plan §5 exactly:
 - css/style.css: text element styles (background-clip:text, transparent color), font picker, "T" swatch overlay.
 
 CONSTRAINTS
+- textData must include `border: null` and `shadow: null` (reserved per plan §4.5 — no UI, no rendering in this goal).
+- UI must follow the design-system patterns listed in plan §4 (btn-simple, checkbox-group, setting-column sliders via setupSlider, segmented btn-simple pairs; no btn-text-with-icon in panels).
+- History: one saveState per typing pause (debounce boundary), never per keystroke; one per font/size/spacing/alignment change (plan §4).
+- TEXT_GLITTER's LAYER_UI_CONFIG onActivate must not steal the active tool if the user holds the Mask Brush or another still-valid tool — switch to SELECT only when the current tool cannot operate on a text layer.
 - LayerTransform.js must not need modification (its textData support already exists) — if something seems to require changing it, re-read plan §3's inner-span note first.
 - Fonts must be awaited (document.fonts / FontFace.load) before ANY canvas fillText — an export with a fallback font is a failed export. ensureFontLoaded must be called from layer creation/render/restore paths, not only from the font picker UI (plan §1) — undo/redo/clone/reload must not silently fall back to a default font.
 - ensureFontLoaded must reject with a clear error on fetch failure, surfaced as a toast (mirror the sticker img.onerror pattern) — never let a failed font load hang or silently draw with a fallback.

@@ -75,6 +75,8 @@ class GlitterEditor {
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this);
 		this.mobileManager = new MobileManager(this);
+		this.maskCompositor = new MaskCompositor(this);
+		this.maskEditor = new MaskEditor(this);
 		this.historyManager = new HistoryManager(this);
 
 		// ============================================================================
@@ -816,6 +818,7 @@ resetAllSettings() {
 		}
 
 		this.updateSelectedColorsDisplay();
+		this.maskEditor?.loadLayer(layer);
 	}
 
 	loadStickerSettings(layer) {
@@ -901,6 +904,7 @@ resetAllSettings() {
 		// Only apply to active layer if it is a Glitter Fill layer
 		if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL) {
 			activeLayer.settings = settings;
+			this.maskCompositor.invalidate(activeLayer.id);
 		}
 
 		// Handle Global Refine (Threshold/Feather)
@@ -910,6 +914,7 @@ resetAllSettings() {
 				if (layer.type === LayerType.GLITTER_FILL && layer.settings) {
 					layer.settings.threshold = settings.threshold;
 					layer.settings.feather = settings.feather;
+					this.maskCompositor.invalidate(layer.id);
 				}
 			});
 		}
@@ -921,6 +926,7 @@ resetAllSettings() {
 				if (layer.type === LayerType.GLITTER_FILL && layer.settings) {
 					layer.settings.scale = settings.scale;
 					layer.settings.opacity = settings.opacity;
+					this.maskCompositor.invalidate(layer.id);
 				}
 			});
 		}
@@ -1062,6 +1068,7 @@ resetAllSettings() {
 		this.setupColorPickerContextListeners();
 		this.setupLayerSettingsListeners();
 		this.setupSliderListeners();
+		this.setupMaskEditorListeners();
 		this.setupStickerSettingsListeners();
 		this.setupExportListeners();
 		this.setupImageListeners();
@@ -1137,6 +1144,7 @@ resetAllSettings() {
 		const tools = [
 			{ id: 'selectTool', type: ToolType.SELECT },
 			{ id: 'colorPickerTool', type: ToolType.COLOR_PICKER },
+			{ id: 'brushTool', type: ToolType.BRUSH },
 			{ id: 'handTool', type: ToolType.HAND },
 			{ id: 'zoomTool', type: ToolType.ZOOM }
 		];
@@ -1297,7 +1305,16 @@ resetAllSettings() {
 
 		if (invert) {
 			invert.addEventListener('change', () => {
-				this.updateLayerAndSave();
+				this.saveActiveLayerSettings();
+				const layer = this.layerManager.getActiveLayer();
+				if (layer && layer.type === LayerType.GLITTER_FILL && (layer.maskVersion || this.glitterManager.getPaintMask(layer.id))) {
+					this.glitterManager.commitPaintState(layer);
+				}
+				this.updatePreview();
+				this.layerManager.renderLayersList();
+				this.updateActionButtons();
+				this.maskEditor?.loadLayer(layer);
+				this.saveState();
 			});
 		}
 
@@ -1366,6 +1383,22 @@ resetAllSettings() {
 		attachSliderDebounce('feather', true, false);
 		attachSliderDebounce('scale', false, true);
 		attachSliderDebounce('opacity', false, true);
+	}
+
+	setupMaskEditorListeners() {
+		this.setupSlider('maskBrushSize', 'maskBrushSizeValue', 'px', () => {
+			this.maskEditor?._updateBrushCursorSize();
+		}, CONFIG.maskBrush.defaultSize);
+
+		this.setupSlider('maskBrushSoftness', 'maskBrushSoftnessValue', '%', () => {
+			this.maskEditor?.renderOverlay();
+		}, CONFIG.maskBrush.defaultSoftness);
+
+		this.setupSlider('maskBrushFlow', 'maskBrushFlowValue', '%', () => {
+			this.maskEditor?.renderOverlay();
+		}, CONFIG.maskBrush.defaultFlow);
+
+		this.maskEditor?.setupUIListeners();
 	}
 
 	setupStickerSettingsListeners() {
@@ -2221,7 +2254,7 @@ setupWelcomeModalListeners() {
 		// Prevent right-click context menu on preview area
 		this.previewContainer.addEventListener('contextmenu', (e) => {
 			// Always prevent on canvas
-			if (e.target === this.previewCanvas) {
+			if (e.target === this.previewCanvas || e.target === document.getElementById('maskOverlayCanvas')) {
 				e.preventDefault();
 				return;
 			}
@@ -2244,6 +2277,8 @@ setupWelcomeModalListeners() {
 			this.updateZoomUI();
 			this.updateTransparencyGrid();
 			this.updateStatusBar();
+			this.maskEditor?._updateBrushCursorSize();
+			this.maskEditor?.renderOverlay();
 		});
 
 		// Prevent leaving if unsaved
@@ -2307,6 +2342,8 @@ setupWelcomeModalListeners() {
 	}
 
 	setTool(tool) {
+		if (tool === ToolType.BRUSH && !this.maskEditor?.canActivate()) return;
+
 		if (this.currentTool === tool) return;
 
 		this.currentTool = tool;
@@ -2314,7 +2351,7 @@ setupWelcomeModalListeners() {
 
 
 		// Remove all tool classes from body
-		document.body.classList.remove('tool-select', 'tool-hand', 'tool-colorPicker', 'tool-zoom');
+		document.body.classList.remove('tool-select', 'tool-hand', 'tool-colorPicker', 'tool-zoom', 'tool-brush');
 
 		// Add current tool class
 		document.body.classList.add(`tool-${tool}`);
@@ -2329,6 +2366,7 @@ setupWelcomeModalListeners() {
 			'select': 'selectTool',
 			'hand': 'handTool',
 			'colorPicker': 'colorPickerTool',
+			'brush': 'brushTool',
 			'zoom': 'zoomTool'
 		};
 
@@ -2378,6 +2416,9 @@ setupWelcomeModalListeners() {
 				sticker.style.pointerEvents = 'auto';
 			});
 		}
+
+		// Sync mask editing with the active tool (enter/exit brush painting)
+		this.maskEditor?.onToolChanged(tool);
 
 		// 3. Update Context Toolbars
 		this.updateContextToolbars();
@@ -2473,19 +2514,29 @@ setupWelcomeModalListeners() {
 		};
 
 		// PRIORITY 1: Critical layer states (don't show tool label for these)
+		if (this.maskEditor?.isEditing && activeLayer?.type === LayerType.GLITTER_FILL) {
+			hint = this.maskEditor.mode === 'sub'
+				? 'Paint to erase glitter from this layer'
+				: 'Paint to add glitter directly to this layer';
+			context = 'Switch to Erase to remove painted or color-picked areas. Press Esc to exit.';
+		}
+		else if (this.maskEditor?.isEditing) {
+			hint = 'Paint anywhere to create a new glitter layer';
+			context = 'The brush works on glitter layers — painting here starts one automatically.';
+		}
 
-		if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
+		else if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
 			hint = 'No sticker chosen—select a sticker from the gallery to place on your canvas';
 		}
 		else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL &&
-			activeLayer.selections && activeLayer.selections.length > 0 &&
+			hasMaskContent(activeLayer) &&
 			!activeLayer.selectedGlitterId) {
 			hint = 'No glitter selected—choose a glitter style from the gallery to apply it';
 		}
 		else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL &&
-			(!activeLayer.selections || activeLayer.selections.length === 0) &&
+			!hasMaskContent(activeLayer) &&
 			currentTool !== ToolType.COLOR_PICKER) {
-			hint = 'Selection is empty—switch to color picker to add glitter to this layer';
+			hint = 'Selection is empty—switch to the color picker or Mask Brush to add glitter to this layer';
 		}
 
 		// PRIORITY 2: Tool-specific actions (SHOW tool label for these)
@@ -2514,11 +2565,11 @@ setupWelcomeModalListeners() {
 				hint = 'Click anywhere on your image to create a glitter fill layer';
 				context = 'Glitter fills are based on color selection from your base image.';
 			} else if (activeLayer.type === LayerType.GLITTER_FILL) {
-				if (!activeLayer.selections || activeLayer.selections.length === 0) {
+				if (!hasMaskContent(activeLayer)) {
 					if (!activeLayer.selectedGlitterId) {
-						hint = 'Choose a glitter style from the gallery, then click colors to fill';
+						hint = 'Choose a glitter style from the gallery, then click colors or paint to fill';
 					} else {
-						hint = 'Click colors on your image to select areas for glitter';
+						hint = 'Click colors on your image to select areas for glitter, or use the Mask Brush (B) to paint directly';
 						context = 'Threshold determines how similar colors need to be to get selected together.';
 					}
 				} else if (document.getElementById('multiSelect')?.checked && activeLayer.selections.length === 1) {
@@ -2545,21 +2596,21 @@ setupWelcomeModalListeners() {
 					context = 'Use the settings panel to rotate, scale, flip, or adjust opacity.';
 				}
 			} else if (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.BASE_IMAGE) {
-				hint = 'Switch to color picker to add or modify glitter, or add a sticker layer';
+				hint = 'Switch to the color picker or Mask Brush to add or modify glitter, or add a sticker layer';
 			}
 		}
 
 		// PRIORITY 3: Enhancement tips (don't show tool label)
 
 		else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL &&
-			activeLayer.selections && activeLayer.selections.length > 0 &&
+			hasMaskContent(activeLayer) &&
 			activeLayer.selectedGlitterId) {
 			if (isMobile) {
 				hint = 'Tap settings to adjust scale, opacity, or refine your selection';
 				context = 'Threshold controls color tolerance—higher values select more similar colors.';
 			} else {
-				hint = 'Use the settings panel to adjust scale, opacity, threshold, or feather';
-				context = 'Threshold controls color tolerance. Feather softens edges.';
+				hint = 'Use the settings panel to adjust scale, opacity, threshold, or feather — or paint with the Mask Brush';
+				context = 'Threshold controls color tolerance. Feather softens edges. The Mask Brush adds painted detail.';
 			}
 		}
 
@@ -2725,6 +2776,9 @@ setupWelcomeModalListeners() {
 		if (e.key === 'i' || e.key === 'I') {
 			if (this.originalImage) this.setTool(ToolType.COLOR_PICKER);
 		}
+		if (e.key === 'b' || e.key === 'B') {
+			this.setTool(ToolType.BRUSH); // setTool no-ops if brush can't activate
+		}
 		if (e.key === 'h' || e.key === 'H') {
 			if (this.originalImage) this.setTool(ToolType.HAND);
 		}
@@ -2802,15 +2856,7 @@ setupWelcomeModalListeners() {
 	updateActionButtons() {
 		const hasImage = this.originalImage !== null;
 
-		// Check if any layers have content (glitter selections OR stickers)
-		const hasAnySelection = this.layers.some(l => {
-			if (l.type === LayerType.STICKER) {
-				return true; // Sticker layers always have content
-			} else if (l.type === LayerType.GLITTER_FILL) {
-				return l.selections && l.selections.length > 0;
-			}
-			return false;
-		});
+		const hasAnySelection = this.layers.some((layer) => layerHasVisibleContent(layer));
 
 		const clearAllTool = document.getElementById('clearAllTool');
 		const exportGif = document.getElementById('exportGif');
@@ -2853,6 +2899,7 @@ setupWelcomeModalListeners() {
 		if (colorPickerTool) colorPickerTool.disabled = !hasImage;
 		if (handTool) handTool.disabled = !hasImage;
 		if (zoomTool) zoomTool.disabled = !hasImage;
+		this.maskEditor?.updateToolButtonState();
 
 		// UX: Can't add layers until image is loaded
 		if (addBtn) {
@@ -2912,12 +2959,14 @@ setupWelcomeModalListeners() {
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
+		this.maskEditor?.exitEditMode({ commitStroke: false });
 		this.layerManager.clearBaseImageSwatchCache();
 
 		if (this.glitterManager) {
 			this.layerManager.layers.forEach(layer => {
 				this.glitterManager.releaseLayerResources(layer);
 			});
+			this.glitterManager.clearAllPaintData();
 		}
 
 		this.layerManager.layers = [];
@@ -3070,6 +3119,12 @@ setupWelcomeModalListeners() {
 			this.originalCanvas.classList.add('visible');
 
 			// Clear previous layers and glitter
+			if (this.glitterManager) {
+				this.layerManager.layers.forEach((layer) => {
+					this.glitterManager.releaseLayerResources(layer);
+				});
+				this.glitterManager.clearAllPaintData();
+			}
 			this.layers = [];
 			this.canvasElementsContainer.innerHTML = '';
 
@@ -3272,7 +3327,7 @@ setupWelcomeModalListeners() {
 				let isHit = false;
 
 				if (testLayer.type === LayerType.GLITTER_FILL) {
-					if (testLayer.selections && testLayer.selections.length > 0) {
+					if (hasMaskContent(testLayer)) {
 						isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
 					}
 				} else if (testLayer.type === LayerType.BASE_IMAGE) {
@@ -3331,7 +3386,7 @@ setupWelcomeModalListeners() {
 				const testLayer = this.layerManager.layers[i];
 				if (!testLayer.visible || testLayer.type !== LayerType.GLITTER_FILL) continue;
 
-				if (testLayer.selections && testLayer.selections.length > 0) {
+				if (hasMaskContent(testLayer)) {
 					const isHit = this.layerManager.isPixelInLayerSelection(testLayer, x, y);
 					if (isHit) {
 						glitterLayer = testLayer;
@@ -3505,7 +3560,7 @@ setupWelcomeModalListeners() {
 		layer.selections.splice(index, 1);
 		this.saveState();
 
-		if (layer.selections.length > 0) {
+		if (hasMaskContent(layer)) {
 			this.updatePreview();
 		} else {
 			this.clearPreview();
@@ -3549,14 +3604,8 @@ setupWelcomeModalListeners() {
 		}
 
 		const layersToShow = this.showAllLayers
-			? this.layers.filter(l => l.visible && (
-				(l.type === LayerType.GLITTER_FILL && l.selections.length > 0) ||
-				l.type === LayerType.STICKER
-			))
-			: [this.layerManager.getActiveLayer()].filter(l => l && l.visible && (
-				(l.type === LayerType.GLITTER_FILL && l.selections.length > 0) ||
-				l.type === LayerType.STICKER
-			));
+			? this.layers.filter(l => l.visible && layerHasVisibleContent(l))
+			: [this.layerManager.getActiveLayer()].filter(l => l && l.visible && layerHasVisibleContent(l));
 
 		if (layersToShow.length === 0) {
 			this.clearPreview();
@@ -3678,14 +3727,7 @@ setupWelcomeModalListeners() {
 		// Filter visible layers
 		const visibleLayers = this.layers.filter(l => {
 			if (!l.visible) return false;
-			if (l.type === LayerType.GLITTER_FILL) {
-				return l.selections && l.selections.length > 0;
-			} else if (l.type === LayerType.STICKER) {
-				return !l.stickerData.isEmpty;
-			} else if (l.type === LayerType.BASE_IMAGE) {
-				return true;
-			}
-			return false;
+			return layerHasVisibleContent(l);
 		});
 
 		if (visibleLayers.length === 0) {
@@ -3734,7 +3776,7 @@ setupWelcomeModalListeners() {
 					}
 				},
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
-				createMask: (layer) => this.glitterManager.createMaskForLayer(layer)
+				createMask: (layer) => this.maskCompositor.getMaskData(layer)
 			}
 		};
 

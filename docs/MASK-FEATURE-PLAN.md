@@ -83,9 +83,7 @@ Cache key: `(selectionsKey, threshold, contiguous, invert, feather, paintMask.ve
 
 New file `js/classes/MaskEditor.js`. One instance owned by the editor; operates on the active glitter layer's PaintMask.
 
-**Mode:** "Edit Mask" is a *mode*, not a toolbar tool. Entering it:
-- adds `body.mask-editing`, forces SELECT-tool-like state, disables layer picking and sticker `pointer-events`, shows the overlay;
-- Esc, the toggle button, or switching layers exits (committing any in-flight stroke).
+**Tool, not mode (revised 2026-07-03, decision 7 — supersedes the original "mode" design):** painting is `ToolType.BRUSH`, a first-class toolbar tool (`#brushTool`, shortcut **B**), enabled whenever an image is loaded — full color-picker parity: painting while a non-glitter layer is active **auto-creates a glitter layer** (gated on `CONFIG.autoCreateGlitterLayer`, same as the picker) and paints into it. `setTool` drives `MaskEditor.onToolChanged()`, which enters/exits the edit state; the panel's "Edit Mask" button is just a shortcut that toggles the Brush tool. Entering still adds `body.mask-editing`, disables layer picking and sticker `pointer-events`, and shows the overlay. Esc or any tool switch exits (committing any in-flight stroke). The brush persists across **all** layer switches (retargeting glitter layers, going dormant over non-glitter ones) — it only releases via an explicit tool change or a lifecycle exit (undo restore, image clear). A glitter layer's `onActivate` auto-switch to the color picker is suppressed while the brush is active.
 
 **Stamping:**
 - A stamp is a radial-gradient circle: `innerRadius = size/2 × (1 − softness)`, fading to transparent at `size/2`; stamp alpha = `flow`.
@@ -108,19 +106,19 @@ New file `js/classes/MaskEditor.js`. One instance owned by the editor; operates 
 
 ```
 Mask ────────────────────────────────
-[ ✏ Edit Mask ]            (toggle button, prominent)
-Mode:      [ Add | Subtract ]         (segmented)
+[ Mask Brush ]                 (btn-simple, full width, .active while the tool is held; shortcut B)
+[ Paint | Erase ]              (segmented btn-simple pair — internally still add/sub)
 Size:      ○────────  40px   [reset]
-Softness:  ○────────  50%    [reset]
+Softness:  ○────────  0%     [reset]
 Flow:      ○────────  100%   [reset]
-[✓] Show mask overlay
-[ Invert ]  [ Clear Paint ]
-(Feather: reuse the existing feather slider — do not duplicate the control;
- it already lives in this panel and feeds the same compositor.)
+[✓] Invert                     (checkbox-group, mirrors Selection Options' Invert)
+[ Clear Paint ]                (btn-simple, confirmation dialog)
 ```
 
+*(Revised 2026-07-03 for design-system consistency: `btn-text-with-icon` is a modal/welcome pattern, not a panel pattern — the toggle is a plain `btn-simple`. "Add/Subtract" renamed "Paint/Erase" in the UI. The mask-overlay toggle is NOT in this panel — it's a view option, so it lives in the preview-controls strip as a `btn-icon` toggle alongside Transparency/Bounds, enabled only while the brush is active. Invert appears here as a `checkbox-group` — the same control style as Selection Options — implemented as a mirror of the `#invert` checkbox (it forwards through #invert's change event so the commit/history path runs exactly once; `MaskEditor.loadLayer` keeps both in sync).)*
+
 - Sliders wire through the existing `setupSlider()` helper (live value + reset button).
-- **Invert** toggles the existing `layer.settings.invert` (live, non-destructive) and records history — matches spec ("Invert Mask … creates history entries") without inventing a second invert.
+- **Invert** (Selection Options checkbox) toggles the existing `layer.settings.invert` (live, non-destructive) and records history — matches spec ("Invert Mask … creates history entries") without inventing a second invert.
 - **Clear Paint** clears `add`+`sub` (color-pick selections keep their existing chip UI with per-chip remove). Confirmation dialog, history entry.
 - Layer list: small brush badge on layers that have paint (nice-to-have, Phase 3).
 - Hints: extend `updateHelpfulMessage()` — empty glitter layer hint becomes "click colors with the picker *or* Edit Mask to paint glitter directly"; while editing: "Paint to add glitter • hold [X]/switch to Subtract to erase".
@@ -134,6 +132,8 @@ Integrates with the existing snapshot history rather than replacing it:
 - `HistoryManager.restoreState()` (`js/classes/HistoryManager.js` — history logic was extracted out of app.js in audit Goal 4): for each glitter layer, if the restored `maskVersion` differs from the live one, blit the matching snapshot back into the paint canvases and `maskCompositor.invalidate(layerId)`.
 - `editor.historyManager.saveState()` is called once on stroke **end** (pointer up), never per stamp → "each stroke = one history action".
 - **Phase-3 optimization** (only if profiling demands): replace full snapshots with stroke-bounding-box before/after patches.
+
+> **Invariant change — note for future features:** this is the point where a history state stops being a self-contained JSON document. `maskVersion` is a pointer into `GlitterManager.paintHistory`'s binary snapshots, which live outside the `JSON.parse(JSON.stringify())` path. Undo/redo handles this correctly per this section, but any *future* save/load or share-composition feature can no longer serialize a document by dumping a history state — painted masks would be silently lost. Such a feature must encode the paint canvases separately (e.g. PNG data URLs keyed by layer id). Text glitter layers deliberately do NOT have this problem (all plain JSON).
 
 ## 6.5. Shared "does this layer render anything" predicate
 
@@ -176,7 +176,7 @@ These are the places that currently assume "glitter mask ⇔ selections exist" �
 ```js
 maskBrush: {
   defaultSize: 40, minSize: 1, maxSize: 300,      // canvas px
-  defaultSoftness: 50,                            // 0–100
+  defaultSoftness: 0,                             // 0–100; sharp by default (decision 5)
   defaultFlow: 100,                               // 1–100
   stampSpacing: 0.25,                             // fraction of size
   overlayColor: '#ff2d8a', overlayOpacity: 0.45,
@@ -225,6 +225,9 @@ Multiple masks per layer · replace/paint-through modes · lasso/polygon/pen/vec
 2. **Subtract erases color-picked areas — confirmed.** It's the only coherent meaning of "erase glitter out." Later threshold increases can select new area that a prior Subtract stroke still keeps erased — that is correct behavior (the user's erase intent wins).
 3. **Feather switches to Gaussian (`ctx.filter: blur()`) inside the shared compositor,** for both preview and export — parity is inherent because both read the same composited pixels. Existing compositions will feather marginally softer; that's an improvement, not a regression, and there are no saved documents to migrate. The separable box blur (audit M1) is still implemented as the fallback for environments without `ctx.filter` support.
 4. **Brush size range 1–300px, default 40.** 300 ≈ 37% of the max 800px canvas — enough to fill large regions in a few strokes without making the slider's useful range mushy. Revisit only if user feedback asks for a fill-bucket, which is out of scope.
+5. **Sharp brush edge by default (Ryan, 2026-07-02, post-M-1).** `defaultSoftness: 0` — the hard pixel edge matches the aesthetic the app comes from; softness stays available on the slider for those who want it. Implementation note: at softness 0 the stamp must be drawn as a filled `arc()`, not a radial gradient — a gradient whose inner radius equals its outer radius is degenerate and paints nothing per canvas spec. The same crispness principle applies to text glitter layers (no feather/soften controls on text; see TEXT-GLITTER-PLAN).
+6. **No-flicker rendering invariants (post-M-1 flash fixes — three of them, all required):** (a) never swap `mask-image` to an undecoded URL — new blob URLs are preloaded via an `Image` and applied `onload`, previous URL revoked only after the swap; (b) never destroy-and-recreate live glitter elements — `GlitterManager.renderContent` overrides ContentManager's clear-and-rebuild with a reconcile (remove stale, update in place), because a recreated element restarts its GIF background and reloads its mask (guaranteed bare frame); (c) never render a glitter element unmasked — when a layer has no decoded mask URL yet (first render), the inner element stays `visibility: hidden` until `applyMaskObjectUrl` reveals it, otherwise the first stroke on an empty layer flashes glitter across the whole canvas.
+7. **Brush is a toolbar tool, not an "Edit Mask" mode (Ryan + Fable, 2026-07-03, implemented post-M-1).** Rationale: discoverability (the mode toggle was buried in a collapsed settings subsection), consistency with the app's tools-act-on-active-layer model (color picker precedent), and it deletes hand-rolled mode plumbing (`setTool` already owns exclusivity, cursors, hints, context toolbars). The panel button stays as a shortcut. §4's tool paragraph is the authoritative behavior spec; Goal M-2 below is written against the tool model.
 
 ## 13. Execution split
 
@@ -249,7 +252,7 @@ Multiple masks per layer · replace/paint-through modes · lasso/polygon/pen/vec
 ```
 /goal Implement painted bitmap masks for glitter layers in the editor at c:\xampp\htdocs\glitter (vanilla JS, no build system). Full design: docs/MASK-FEATURE-PLAN.md — follow it precisely; sections 1–8 are the spec.
 
-PREREQUISITE: the perf pass from docs/AUDIT.md Goal 3 items 8–9 (separable feather blur, mask caching) must be merged first. If absent, implement those two items as the first commit.
+PREREQUISITE — already satisfied, do not re-implement: audit Goal 3 items 8–9 (separable feather blur, mask caching) are merged and verified in the tree (GlitterManager.applyFeatherToMask prefix-sum blur, layer._maskCache). Build on them.
 
 OBJECTIVE
 Each glitter-fill layer gains an editable painted mask (Add/Subtract brush). Final mask = invert(clamp(selectionMask ∪ paintAdd − paintSub)) with feather, produced by ONE shared compositor used by DOM preview, overlay, and GIF export.
@@ -261,7 +264,7 @@ NEW FILES
 MODIFIED FILES
 - js/config.js or js/app.js CONFIG: add maskBrush block per plan §8.
 - js/classes/GlitterManager.js: paintMasks Map<layerId,{add,sub,version}> with lifecycle (create lazily, clone on cloneLayer, drop on delete/clearImage); renderLayer uses maskCompositor.getMaskCanvas + toBlob object URL instead of inline mask + toDataURL.
-- js/app.js: (a) exportAnimatedGif createMask callback → maskCompositor.getMaskData; remove the separate feather call. (b) Replace every `selections.length > 0` gate listed in plan §7 with hasMaskContent(layer). (c) Mask UI section wiring (Edit Mask toggle, Add/Subtract, size/softness/flow via existing setupSlider helper, overlay toggle, Clear Paint with confirm, Invert wired to settings.invert).
+- js/app.js: (a) exportAnimatedGif createMask callback → maskCompositor.getMaskData; remove the separate feather call. (b) Build the shared layerHasVisibleContent(layer) dispatcher per plan §6.5 (one function, in ContentManager.js next to normalizeAsset or in config.js next to LAYER_UI_CONFIG) and route the three per-type visibility conditionals (updatePreview filter, updateActionButtons hasAnySelection, exportAnimatedGif filter) through it — its GLITTER_FILL case is hasMaskContent(layer) (= selections.length > 0 || non-empty paint). Replace the remaining `selections.length > 0` gates listed in plan §7 with hasMaskContent(layer) directly. (c) Mask UI section wiring (Edit Mask toggle, Add/Subtract, size/softness/flow via existing setupSlider helper, overlay toggle, Clear Paint with confirm, Invert wired to settings.invert).
 - js/classes/HistoryManager.js (history logic lives here since audit Goal 4, NOT in app.js): createStateSnapshot/restoreState — glitter layer state gains maskVersion; restore blits the matching COW snapshot back into GlitterManager's paint canvases and calls maskCompositor.invalidate(layerId) (plan §6).
 - js/classes/LayerManager.js: isPixelInLayerSelection → sample maskCompositor.getMaskData for glitter layers.
 - index.html: Mask section markup inside glitterSettingsSection (follow existing collapsible-section / settings-row patterns and icon sprite usage); overlay canvas element inside previewWrapper.
@@ -287,22 +290,26 @@ ACCEPTANCE CRITERIA (plan §10, items 1–9 minus mobile)
 ### Goal M-2 — Mask editing on mobile + lifecycle polish
 
 ```
-/goal Extend the painted glitter mask feature (see docs/MASK-FEATURE-PLAN.md, implemented per Goal M-1) to mobile, and close the lifecycle edge cases. Repo: c:\xampp\htdocs\glitter.
+/goal Extend the painted glitter mask feature (see docs/MASK-FEATURE-PLAN.md, implemented per Goal M-1 and refactored per §12 decision 7) to mobile, and close the lifecycle edge cases. Repo: c:\xampp\htdocs\glitter.
+
+CONTEXT: painting is ToolType.BRUSH, a toolbar tool (see plan §4's tool paragraph — the authoritative behavior spec). MaskEditor.canActivate() currently returns false on mobile, making the whole feature desktop-only. setTool → MaskEditor.onToolChanged() drives enter/exit; exitEditMode reverts the tool to SELECT unless the exit came from a tool change.
 
 EXACT CHANGES
-1. Touch routing (plan §4): when editor.maskEditor.isActive, the viewport TouchGestureHandler's onSinglePan routes to maskEditor stroke painting (screen→canvas via viewport.screenToCanvas); pinch and two-finger pan continue to zoom/pan the viewport; a second finger landing mid-stroke cancels the uncommitted stroke before the pinch starts. Per plan §11.5.3: cancel MUST restore from a scratch copy of add/sub taken at stroke start, NOT from the COW history ring — restoring "the last history snapshot" would also undo the action before this stroke. onSimpleTap while editing paints a single stamp.
-2. Mobile UI: verify the Mask section flows into the mobile settings drawer via the existing LAYER_UI_CONFIG mobileSettingsSections mechanism; Edit Mask must exit when the settings drawer closes, tab switches (MobileManager.switchTab), or the layer changes.
-3. Lifecycle: exiting mask edit on — layer deletion, image clear (clearImage), undo/redo that removes the layer, and desktop↔mobile mode switch (MobileManager resize observer). Each must commit or discard the in-flight stroke cleanly and remove the overlay/cursor.
-4. Brush cursor on touch: hide the circle cursor (no hover); instead show a brief stamp-size ring at touch start.
-5. Hints: extend updateHelpfulMessage per plan §5 (empty glitter layer mentions painting; active edit mode shows add/subtract hint; mobile variant wording).
-6. Clear Paint / Invert confirmations sized for touch; ensure history entries fire.
+1. Enable the brush on mobile: remove the isMobile guard from MaskEditor.canActivate(). Desktop pointer painting must stay pointer-events-based and must continue to ignore pointerType 'touch' in _shouldHandleEvent — on mobile, painting routes EXCLUSIVELY through TouchGestureHandler (next item), never through the raw pointer listeners.
+2. Touch routing (plan §4): when currentTool === ToolType.BRUSH, the viewport TouchGestureHandler's onSinglePan routes to maskEditor stroke painting (screen→canvas via viewport.screenToCanvas); pinch and two-finger pan continue to zoom/pan the viewport; a second finger landing mid-stroke cancels the uncommitted stroke before the pinch starts. Per plan §11.5.3: cancel MUST restore from the scratch copy of add/sub taken at stroke start (MaskEditor._cancelStroke already does this — reuse it, do NOT touch the COW history ring). onSimpleTap while the brush is active paints a single stamp.
+3. Mobile UI: the brush must be reachable from the mobile tool section (LAYER_UI_CONFIG mobileSettingsSections 'tool' mechanism — verify #brushTool appears and works there) and the Mask section must flow into the mobile settings drawer. The tool must revert to SELECT when the settings drawer closes or the tab switches (MobileManager.switchTab). Layer switches do NOT release the brush (it retargets glitter layers, goes dormant over non-glitter ones, and painting on a non-glitter layer auto-creates a glitter layer — CONFIG.autoCreateGlitterLayer parity, already implemented on desktop; make sure the auto-create path works from a touch stroke too).
+4. Lifecycle: brush reverts to SELECT (committing or discarding the in-flight stroke cleanly, removing overlay/cursor) on — layer deletion, image clear (clearImage), undo/redo that removes the layer, and desktop↔mobile mode switch (MobileManager resize observer; if canActivate() becomes false while the brush is active, exit).
+5. Brush cursor on touch: hide the circle cursor (no hover); instead show a brief stamp-size ring at touch start.
+6. Hints: extend updateHelpfulMessage per plan §5 (empty glitter layer mentions painting; active brush shows add/subtract hint; mobile variant wording).
+7. Clear Paint / Invert confirmations sized for touch; ensure history entries fire.
 
 CONSTRAINTS
 - Do not modify TouchGestureHandler's internal state machine; integrate via its existing callbacks/shouldIgnoreTarget only.
+- Do not reintroduce a separate "edit mode" — all enter/exit goes through setTool/onToolChanged.
 - No regressions to existing mobile flows: sticker drag/pinch/rotate, viewport pan/zoom, tap-to-select, drawers.
 
 ACCEPTANCE CRITERIA
-- On a touch device/emulator: enter Edit Mask, one-finger paint, two-finger zoom mid-session, resume painting — no ghost strokes, no stuck states.
-- Rotating between mobile/desktop widths mid-edit exits cleanly.
-- All Goal M-1 acceptance criteria still pass on desktop.
+- On a touch device/emulator: activate the brush, one-finger paint, two-finger zoom mid-session, resume painting — no ghost strokes, no stuck states.
+- Rotating between mobile/desktop widths mid-paint exits cleanly to SELECT.
+- All Goal M-1 acceptance criteria still pass on desktop, including: B shortcut, brush toolbar button enable/disable, glitter→glitter switch keeps the brush.
 ```

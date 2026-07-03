@@ -185,12 +185,28 @@ class GifExporter {
 		ctx.restore();
 	}
 
-	_isTransparencyFilled(layers) {
+	_isTransparencyFilled(layers, maskDataMap, canvasData) {
 		return layers.some(layer => {
-			return layer.visible &&
-				layer.type === LayerType.GLITTER_FILL &&
-				layer.settings.opacity === 100 &&
-				layer.selections.some(sel => sel.isTransparent);
+			if (
+				!layer.visible ||
+				layer.type !== LayerType.GLITTER_FILL ||
+				layer.settings.opacity !== 100
+			) {
+				return false;
+			}
+
+			const maskData = maskDataMap.get(layer.id);
+			if (!maskData) {
+				return false;
+			}
+
+			for (let i = 0; i < maskData.length; i++) {
+				if (maskData[i] > 0 && canvasData.originalAlpha[i] < canvasData.alphaThreshold) {
+					return true;
+				}
+			}
+
+			return false;
 		});
 	}
 
@@ -205,7 +221,19 @@ class GifExporter {
 		callbacks.onProgress(0, 'Loading glitter frames...', 0, 0);
 		await this._loadMissingFrames(visibleLayers, glitterGifs, callbacks);
 
-		// 1.5. Load Watermark (if enabled)
+		// 1.5. Prepare masks so preview and export share identical data
+		callbacks.onProgress(3, 'Preparing masks...', 0, 0);
+		const maskDataMap = new Map();
+		const maskCanvases = new Map();
+		visibleLayers.forEach((layer) => {
+			if (layer.type !== LayerType.GLITTER_FILL) return;
+
+			const rawMask = callbacks.createMask(layer);
+			maskDataMap.set(layer.id, rawMask);
+			maskCanvases.set(layer.id, this._createMaskCanvas(rawMask, canvasData.width, canvasData.height));
+		});
+
+		// 1.75. Load Watermark (if enabled)
 		let watermark = null;
 		if (exportSettings.watermarkEnabled) {
 			watermark = await this._loadWatermark(callbacks);
@@ -226,7 +254,7 @@ class GifExporter {
 		// Around line 6596-6611 - Fix transparency detection when base is off
 		// 3. TRANSPARENCY DETECTION
 		const originalHasTransparency = this._hasTransparency(canvasData);
-		const transparencyIsFilled = this._isTransparencyFilled(visibleLayers);
+		const transparencyIsFilled = this._isTransparencyFilled(visibleLayers, maskDataMap, canvasData);
 
 		// Check if the base layer is actually being rendered
 		const baseLayer = visibleLayers.find(l => l.type === LayerType.BASE_IMAGE);
@@ -260,18 +288,8 @@ class GifExporter {
 
 		// 5. Prepare Masks
 		callbacks.onProgress(10, 'Preparing masks...', 0, totalFrames);
-		const maskCanvases = new Map();
-
 		this.helperCanvas.width = canvasData.width;
 		this.helperCanvas.height = canvasData.height;
-
-		visibleLayers.forEach(layer => {
-			if (layer.type !== LayerType.GLITTER_FILL) return;
-
-			const rawMask = callbacks.createMask(layer);
-			const maskCanvas = this._createMaskCanvas(rawMask, canvasData.width, canvasData.height);
-			maskCanvases.set(layer.id, maskCanvas);
-		});
 
 		// 6. Setup Encoder with Adaptive Quality
 		let finalQuality = exportSettings.quality;

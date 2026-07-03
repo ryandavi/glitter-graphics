@@ -44,6 +44,18 @@ const CONFIG = {
 	alphaThreshold: 254,
 	sliderDebounceMs: 150,
 	allowTransparentSelection: true,
+	maskBrush: {
+		defaultSize: 40,
+		minSize: 1,
+		maxSize: 300,
+		defaultSoftness: 0,
+		defaultFlow: 100,
+		stampSpacing: 0.25,
+		overlayColor: '#ff2d8a',
+		overlayOpacity: 0.45,
+		cursorStroke: '#ffffff',
+		livePreviewThrottle: 'raf'
+	},
 
 	// ========================================
 	// TOOLS - Glitter
@@ -182,8 +194,33 @@ const ToolType = {
 	SELECT: 'select',
 	HAND: 'hand',
 	COLOR_PICKER: 'colorPicker',
+	BRUSH: 'brush',
 	ZOOM: 'zoom'
 };
+
+function hasMaskContent(layer) {
+	return Boolean(
+		layer &&
+		layer.type === LayerType.GLITTER_FILL &&
+		(
+			(Array.isArray(layer.selections) && layer.selections.length > 0) ||
+			layer.maskHasContent
+		)
+	);
+}
+
+function layerHasVisibleContent(layer) {
+	switch (layer?.type) {
+		case LayerType.STICKER:
+			return !layer.stickerData || !layer.stickerData.isEmpty;
+		case LayerType.GLITTER_FILL:
+			return hasMaskContent(layer);
+		case LayerType.BASE_IMAGE:
+			return true;
+		default:
+			return false;
+	}
+}
 
 const LAYER_UI_CONFIG = {
 	NO_IMAGE: {
@@ -211,7 +248,7 @@ const LAYER_UI_CONFIG = {
 		mobileSettingsSections: ['tool', 'glitter'],
 		panelMode: 'glitter',
 		onActivate: (editor, layer) => {
-			if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
+			if (!hasMaskContent(layer) && layer.selectedGlitterId && editor.currentTool !== ToolType.BRUSH) {
 				editor.setTool(ToolType.COLOR_PICKER);
 			}
 			editor.updateGlitterSelection();

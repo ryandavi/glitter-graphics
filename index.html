@@ -106,6 +106,12 @@
 						</svg>
 						<span class="name">Color Selection</span>
 					</button>
+					<button class="btn-icon icon-wrapper" id="brushTool" title="Mask Brush (B)" disabled>
+						<svg class="icon">
+							<use href="#icon-brush"></use>
+						</svg>
+						<span class="name">Mask Brush</span>
+					</button>
 					<button class="btn-icon icon-wrapper" id="zoomTool" title="Zoom (Z)" disabled>
 						<svg class="icon">
 							<use href="#icon-magnifying-glass"></use>
@@ -794,6 +800,57 @@
 											</div>
 										</div>
 									</div>
+
+									<div class="subsection-content-group mask-settings-group">
+										<div class="subsection-title">Mask</div>
+										<div class="subsection-content mask-settings-content">
+											<button class="btn-simple" id="editMaskToggle" type="button" title="Toggle the Mask Brush tool (B)">Mask Brush</button>
+
+											<div class="mask-mode-buttons">
+												<button class="btn-simple active" id="maskModeAdd" type="button" data-mask-mode="add" title="Paint glitter onto this layer">Paint</button>
+												<button class="btn-simple" id="maskModeSubtract" type="button" data-mask-mode="sub" title="Erase glitter — painted and color-picked areas alike">Erase</button>
+											</div>
+
+											<div class="settings-group-two-column">
+												<div class="setting-column right">
+													<div class="setting-header">
+														<span class="setting-label">Size</span>
+														<span class="setting-value" id="maskBrushSizeValue">40px</span>
+													</div>
+													<input type="range" id="maskBrushSize" min="1" max="300" value="40">
+													<button class="btn-text" id="resetMaskBrushSize" type="button">Reset</button>
+												</div>
+												<div class="setting-column right">
+													<div class="setting-header">
+														<span class="setting-label">Softness</span>
+														<span class="setting-value" id="maskBrushSoftnessValue">0%</span>
+													</div>
+													<input type="range" id="maskBrushSoftness" min="0" max="100" value="0">
+													<button class="btn-text" id="resetMaskBrushSoftness" type="button">Reset</button>
+												</div>
+											</div>
+
+											<div class="setting-column right">
+												<div class="setting-header">
+													<span class="setting-label">Flow</span>
+													<span class="setting-value" id="maskBrushFlowValue">100%</span>
+												</div>
+												<input type="range" id="maskBrushFlow" min="1" max="100" value="100">
+												<button class="btn-text" id="resetMaskBrushFlow" type="button">Reset</button>
+											</div>
+
+											<div class="tool-options-group">
+												<label class="checkbox-group">
+													<input type="checkbox" id="maskInvertToggle">
+													<span title="Invert the mask — glitter covers everything except the selected and painted areas">Invert</span>
+												</label>
+											</div>
+
+											<div class="tool-options-group mask-settings-actions">
+												<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
+											</div>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -1077,6 +1134,10 @@
 						<div class="preview-wrapper" id="previewWrapper">
 							<div class="canvas-elements-container" id="canvasElementsContainer"></div>
 							<canvas class="preview-canvas" id="previewCanvas"></canvas>
+							<canvas class="mask-overlay-canvas" id="maskOverlayCanvas"></canvas>
+						</div>
+						<div class="mask-brush-cursor" id="maskBrushCursor">
+							<span class="mask-brush-cursor-dot"></span>
 						</div>
 
 
@@ -1104,6 +1165,14 @@
 										<use href="#icon-square"></use>
 									</svg>
 									<span class="name">Bounds</span>
+								</button>
+
+								<button class="mask-overlay-toggle btn-icon icon-wrapper active" id="maskOverlayToggle"
+									title="Toggle Mask Overlay" disabled>
+									<svg class="icon">
+										<use href="#icon-brush"></use>
+									</svg>
+									<span class="name">Mask Overlay</span>
 								</button>
 
 							</div>
@@ -2108,6 +2177,10 @@
 				<path
 					d="M342.6 73.4C330.1 60.9 309.8 60.9 297.3 73.4L233.3 137.4C220.8 149.9 220.8 170.2 233.3 182.7C245.8 195.2 266.1 195.2 278.6 182.7L288 173.3L288 288L173.3 288L182.7 278.6C195.2 266.1 195.2 245.8 182.7 233.3C170.2 220.8 149.9 220.8 137.4 233.3L73.4 297.3C60.9 309.8 60.9 330.1 73.4 342.6L137.4 406.6C149.9 419.1 170.2 419.1 182.7 406.6C195.2 394.1 195.2 373.8 182.7 361.3L173.3 351.9L288 351.9L288 466.6L278.6 457.2C266.1 444.7 245.8 444.7 233.3 457.2C220.8 469.7 220.8 490 233.3 502.5L297.3 566.5C309.8 579 330.1 579 342.6 566.5L406.6 502.5C419.1 490 419.1 469.7 406.6 457.2C394.1 444.7 373.8 444.7 361.3 457.2L351.9 466.6L351.9 351.9L466.6 351.9L457.2 361.3C444.7 373.8 444.7 394.1 457.2 406.6C469.7 419.1 490 419.1 502.5 406.6L566.5 342.6C579 330.1 579 309.8 566.5 297.3L502.5 233.3C490 220.8 469.7 220.8 457.2 233.3C444.7 245.8 444.7 266.1 457.2 278.6L466.6 288L351.9 288L351.9 173.3L361.3 182.7C373.8 195.2 394.1 195.2 406.6 182.7C419.1 170.2 419.1 149.9 406.6 137.4L342.6 73.4z" />
 			</symbol>
+			<symbol id="icon-brush" viewBox="0 0 512 512">
+				<path
+					d="M167.02 309.34c-40.12 2.58-76.53 17.86-97.19 72.3-2.35 6.21-8 9.98-14.59 9.98-11.11 0-45.46-27.67-55.25-34.35C0 439.62 37.93 512 128 512c75.86 0 128-43.77 128-120.19 0-3.11-.65-6.08-.97-9.13l-88.01-73.34zM457.89 0c-15.16 0-29.37 6.71-40.21 16.45C213.27 199.05 192 203.34 192 257.09c0 13.7 3.25 26.76 8.73 38.7l63.82 53.18c7.21 1.8 14.64 3.03 22.39 3.03 62.11 0 98.11-45.47 211.16-256.9 7.38-14.28 13.9-29.71 13.9-45.74C512 20.64 486.66 0 457.89 0z" />
+			</symbol>
 			<symbol id="icon-magic-wand" viewBox="0 0 640 640">
 				<path
 					d="M295.4 37L310.2 73.8L347 88.6C350 89.8 352 92.8 352 96C352 99.2 350 102.2 347 103.4L310.2 118.2L295.4 155C294.2 158 291.2 160 288 160C284.8 160 281.8 158 280.6 155L265.8 118.2L229 103.4C226 102.2 224 99.2 224 96C224 92.8 226 89.8 229 88.6L265.8 73.8L280.6 37C281.8 34 284.8 32 288 32C291.2 32 294.2 34 295.4 37zM142.7 105.7L164.2 155.8L214.3 177.3C220.2 179.8 224 185.6 224 192C224 198.4 220.2 204.2 214.3 206.7L164.2 228.2L142.7 278.3C140.2 284.2 134.4 288 128 288C121.6 288 115.8 284.2 113.3 278.3L91.8 228.2L41.7 206.7C35.8 204.2 32 198.4 32 192C32 185.6 35.8 179.8 41.7 177.3L91.8 155.8L113.3 105.7C115.8 99.8 121.6 96 128 96C134.4 96 140.2 99.8 142.7 105.7zM496 368C502.4 368 508.2 371.8 510.7 377.7L532.2 427.8L582.3 449.3C588.2 451.8 592 457.6 592 464C592 470.4 588.2 476.2 582.3 478.7L532.2 500.2L510.7 550.3C508.2 556.2 502.4 560 496 560C489.6 560 483.8 556.2 481.3 550.3L459.8 500.2L409.7 478.7C403.8 476.2 400 470.4 400 464C400 457.6 403.8 451.8 409.7 449.3L459.8 427.8L481.3 377.7C483.8 371.8 489.6 368 496 368zM492 64C503 64 513.6 68.4 521.5 76.2L563.8 118.5C571.6 126.4 576 137 576 148C576 159 571.6 169.6 563.8 177.5L475.6 265.7L374.3 164.4L462.5 76.2C470.4 68.4 481 64 492 64zM76.2 462.5L340.4 198.3L441.7 299.6L177.5 563.8C169.6 571.6 159 576 148 576C137 576 126.4 571.6 118.5 563.8L76.2 521.5C68.4 513.6 64 503 64 492C64 481 68.4 470.4 76.2 462.5z" />
@@ -2349,6 +2422,8 @@
 	<script src="js/classes/GifExporter.js"></script>
 	<script src="js/classes/ViewportManager.js"></script>
 	<script src="js/classes/HistoryManager.js"></script>
+	<script src="js/classes/MaskCompositor.js"></script>
+	<script src="js/classes/MaskEditor.js"></script>
 
 	<!-- Layers-->
 	<script src="js/classes/LayerManager.js"></script>

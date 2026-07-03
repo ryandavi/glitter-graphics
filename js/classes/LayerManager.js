@@ -232,6 +232,7 @@ class LayerManager {
 		}
 
 		this.activeLayerId = layerId;
+		this.editor.maskEditor?.handleLayerChange(layerId);
 		this.updateActiveLayerListSelection();
 		this.updateMobileLayersSwatch();
 		this.updateBottomBarButtons();
@@ -373,8 +374,7 @@ class LayerManager {
 				isHit = this.isPointInSticker(layer, x, y);
 			}
 			else if (layer.type === LayerType.GLITTER_FILL) {
-				// Existing logic: Check if pixel matches selection criteria
-				if (layer.selections && layer.selections.length > 0) {
+				if (hasMaskContent(layer)) {
 					isHit = this.isPixelInLayerSelection(layer, x, y);
 				}
 			}
@@ -418,7 +418,25 @@ class LayerManager {
 		this.editor.updateStatus('No layer at this location');
 	}
 
-	// --- NEW HELPER METHOD ---
+	isPointInTransformBox(transform, width, height, clickX, clickY) {
+		let dx = clickX - transform.position.x;
+		let dy = clickY - transform.position.y;
+
+		const angleRad = -transform.rotation * (Math.PI / 180);
+		const rx = dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
+		const ry = dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
+
+		const sx = transform.scale.x / 100;
+		const sy = transform.scale.y / 100;
+		const lx = rx / sx;
+		const ly = ry / sy;
+
+		const halfW = width / 2;
+		const halfH = height / 2;
+
+		return (lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH);
+	}
+
 	// Calculates if click (x,y) is inside a rotated/scaled sticker
 	isPointInSticker(layer, clickX, clickY) {
 		if (layer.stickerData.isEmpty || !layer.stickerData.url) return false;
@@ -427,63 +445,22 @@ class LayerManager {
 		const w = layer.stickerData.width;
 		const h = layer.stickerData.height;
 
-		// 1. Translate click relative to sticker center
-		let dx = clickX - t.position.x;
-		let dy = clickY - t.position.y;
-
-		// 2. Un-rotate (Rotate click point by -angle)
-		const angleRad = -t.rotation * (Math.PI / 180);
-		const rx = dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
-		const ry = dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
-
-		// 3. Un-scale
-		// Note: transform.scale is in percentage (e.g. 100), so we divide by 100
-		const sx = t.scale.x / 100;
-		const sy = t.scale.y / 100;
-
-		const lx = rx / sx;
-		const ly = ry / sy;
-
-		// 4. Check boundaries
-		// Since (0,0) is now the center, we check against +/- half width/height
-		const halfW = w / 2;
-		const halfH = h / 2;
-
-		return (lx >= -halfW && lx <= halfW && ly >= -halfH && ly <= halfH);
+		return this.isPointInTransformBox(t, w, h, clickX, clickY);
 	}
 
 	isPixelInLayerSelection(layer, x, y) {
-		const pixelIndex = y * this.editor.originalCanvas.width + x;
-		const i = pixelIndex * 4;
-
-		const pixelR = this.editor.originalImageData.data[i];
-		const pixelG = this.editor.originalImageData.data[i + 1];
-		const pixelB = this.editor.originalImageData.data[i + 2];
-		const pixelAlpha = this.editor.originalAlphaChannel[pixelIndex];
-
-		// Check if pixel is transparent
-		if (pixelAlpha < CONFIG.alphaThreshold) {
+		if (!this.editor.originalCanvas) {
 			return false;
 		}
 
-		// Check if pixel matches any of this layer's color selections
-		const threshold = layer.settings.threshold;
-		const invert = layer.settings.invert;
-
-		for (const sel of layer.selections) {
-			const distance = Math.sqrt(
-				Math.pow(pixelR - sel.r, 2) +
-				Math.pow(pixelG - sel.g, 2) +
-				Math.pow(pixelB - sel.b, 2)
-			);
-
-			const matches = distance <= threshold;
-			if (invert ? !matches : matches) {
-				return true;
-			}
+		const canvasX = Math.floor(x);
+		const canvasY = Math.floor(y);
+		if (canvasX < 0 || canvasY < 0 || canvasX >= this.editor.originalCanvas.width || canvasY >= this.editor.originalCanvas.height) {
+			return false;
 		}
 
-		return false;
+		const pixelIndex = canvasY * this.editor.originalCanvas.width + canvasX;
+		return this.editor.maskCompositor.getMaskData(layer)[pixelIndex] > 0;
 	}
 
 	// ===== RENDERING =====
@@ -636,6 +613,8 @@ class LayerManager {
 				type: LayerType.GLITTER_FILL,
 				visible: sourceLayer.visible,
 				locked: false,
+				maskVersion: 0,
+				maskHasContent: false,
 				selections: sourceLayer.selections.map(sel => ({ ...sel })),
 				selectedGlitterId: sourceLayer.selectedGlitterId,
 				settings: { ...sourceLayer.settings }
@@ -650,6 +629,8 @@ class LayerManager {
 				clonedElement.dataset.layerId = clonedLayer.id;
 				this.canvasElementsContainer.appendChild(clonedElement);
 			}
+
+			this.editor.glitterManager.clonePaintData(sourceLayer, clonedLayer);
 		}
 
 		// Find original layer index and insert clone right after it
