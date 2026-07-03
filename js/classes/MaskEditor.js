@@ -14,8 +14,10 @@ class MaskEditor {
 		this.livePreviewQueued = false;
 		this.liveOverlayQueued = false;
 		this.cursorVisible = false;
+		this.touchRingTimeout = null;
 		this.stampCacheKey = '';
 		this.stampCanvas = null;
+		this.overlayPatternCache = new Map();
 		this.ui = {
 			toggle: document.getElementById('editMaskToggle'),
 			modeButtons: Array.from(document.querySelectorAll('[data-mask-mode]')),
@@ -53,13 +55,22 @@ class MaskEditor {
 			this.renderOverlay();
 		});
 
-		this.ui.clearButton?.addEventListener('click', () => {
+		this.ui.clearButton?.addEventListener('click', async () => {
 			const layer = this.editor.layerManager.getActiveLayer();
 			if (!layer || layer.type !== LayerType.GLITTER_FILL) {
 				return;
 			}
 
-			if (!layer.maskHasContent || !confirm('Clear painted mask for this layer?')) {
+			if (!layer.maskHasContent) {
+				return;
+			}
+
+			const confirmed = await this.editor.confirmAction({
+				title: 'Clear Paint?',
+				message: 'Remove all painted strokes from this layer? Color selections will stay in place.',
+				confirmLabel: 'Clear Paint'
+			});
+			if (!confirmed) {
 				return;
 			}
 
@@ -91,10 +102,7 @@ class MaskEditor {
 	canActivate() {
 		// Color-picker parity: usable whenever an image is loaded — painting on
 		// a non-glitter layer auto-creates a glitter layer (see _handlePointerDown).
-		return Boolean(
-			!this.editor.mobileManager?.isMobile &&
-			this.editor.originalImage
-		);
+		return Boolean(this.editor.originalImage);
 	}
 
 	onToolChanged(tool) {
@@ -178,6 +186,32 @@ class MaskEditor {
 		this.loadLayer(this.editor.layerManager.getActiveLayer());
 	}
 
+	releaseBrushTool(options = {}) {
+		const { commitStroke = false } = options;
+
+		if (!this.isEditing && this.editor.currentTool !== ToolType.BRUSH) {
+			return;
+		}
+
+		if (this.isEditing) {
+			this.exitEditMode({ commitStroke, switchTool: false });
+		}
+
+		if (this.editor.currentTool === ToolType.BRUSH) {
+			this.editor.setTool(ToolType.SELECT);
+		}
+	}
+
+	handleLayerDeleted(layerId) {
+		if (!layerId || this.editor.currentTool !== ToolType.BRUSH) {
+			return;
+		}
+
+		if (!this.currentLayerId || this.currentLayerId === layerId || this.isEditing) {
+			this.releaseBrushTool({ commitStroke: false });
+		}
+	}
+
 	updateToolButtonState() {
 		const enabled = this.canActivate();
 		if (this.ui.toggle) {
@@ -218,6 +252,31 @@ class MaskEditor {
 		this.editor.updateHelpfulMessage();
 	}
 
+	toggleMode() {
+		this.setMode(this.mode === 'add' ? 'sub' : 'add');
+	}
+
+	adjustBrushSize(delta) {
+		const slider = document.getElementById('maskBrushSize');
+		if (!slider) {
+			return false;
+		}
+
+		const currentValue = parseInt(slider.value || CONFIG.maskBrush.defaultSize, 10);
+		const nextValue = Math.max(
+			CONFIG.maskBrush.minSize,
+			Math.min(CONFIG.maskBrush.maxSize, currentValue + delta)
+		);
+
+		if (nextValue === currentValue) {
+			return false;
+		}
+
+		slider.value = String(nextValue);
+		slider.dispatchEvent(new Event('input'));
+		return true;
+	}
+
 	renderOverlay() {
 		if (!this.overlayCtx || !this.ui.overlayCanvas) {
 			return;
@@ -229,7 +288,7 @@ class MaskEditor {
 		this.ui.overlayCanvas.width = width;
 		this.ui.overlayCanvas.height = height;
 
-		if (!this.isEditing || !this.showOverlay || !layer || layer.type !== LayerType.GLITTER_FILL) {
+		if (!this.isEditing || !this.strokeActive || !this.showOverlay || !layer || layer.type !== LayerType.GLITTER_FILL) {
 			this._clearOverlay();
 			return;
 		}
@@ -237,13 +296,24 @@ class MaskEditor {
 		const maskCanvas = this.editor.maskCompositor.getMaskCanvas(layer, {
 			draft: this.strokeActive
 		});
+		const { fillColor, stripeColor } = this._getOverlayPalette(layer);
 
 		this.overlayCtx.clearRect(0, 0, width, height);
 		this.overlayCtx.globalAlpha = CONFIG.maskBrush.overlayOpacity;
 		this.overlayCtx.drawImage(maskCanvas, 0, 0);
 		this.overlayCtx.globalCompositeOperation = 'source-in';
-		this.overlayCtx.fillStyle = CONFIG.maskBrush.overlayColor;
+		this.overlayCtx.fillStyle = fillColor;
 		this.overlayCtx.fillRect(0, 0, width, height);
+		const stripePattern = this._getOverlayStripePattern(stripeColor);
+		if (stripePattern) {
+			this.overlayCtx.globalCompositeOperation = 'source-atop';
+			this.overlayCtx.globalAlpha = Math.min(
+				1,
+				CONFIG.maskBrush.overlayOpacity + (CONFIG.maskBrush.overlayStripeOpacityBoost || 0)
+			);
+			this.overlayCtx.fillStyle = stripePattern;
+			this.overlayCtx.fillRect(0, 0, width, height);
+		}
 		this.overlayCtx.globalCompositeOperation = 'source-over';
 		this.overlayCtx.globalAlpha = 1;
 	}
@@ -260,44 +330,21 @@ class MaskEditor {
 	}
 
 	_handlePointerDown(event) {
-		if (!this._shouldHandleEvent(event) || event.button !== 0) {
+		if (this._shouldShowTouchRingForPointer(event)) {
+			this._showTouchRing(event.clientX, event.clientY);
 			return;
 		}
 
-		const point = this._getCanvasPoint(event);
-		if (!point) {
+		if (!this._shouldHandleEvent(event) || event.button !== 0) {
 			return;
 		}
 
 		event.preventDefault();
 		event.stopPropagation();
 
-		let layer = this.editor.layerManager.getActiveLayer();
-		if (!layer || layer.type !== LayerType.GLITTER_FILL) {
-			// Same convention as the color picker on a non-glitter layer:
-			// auto-create a glitter layer and work in it.
-			if (!CONFIG.autoCreateGlitterLayer) {
-				this.editor.updateStatus('Select a glitter layer to paint on');
-				return;
-			}
-
-			layer = this.editor.glitterManager.createLayer();
-			if (!layer) return; // maxLayers reached — createLayer already showed the error
-			this.editor.layerManager.insertLayer(layer);
-			this.editor.layerManager.setActiveLayer(layer.id);
-			this.editor.layerManager.renderLayersList();
-		}
-
-		const paint = this.editor.glitterManager.ensurePaintMask(layer.id);
-		this.strokeActive = true;
-		this.strokeChanged = false;
-		this.activePointerId = event.pointerId;
-		this.lastPoint = point;
-		this.currentLayerId = layer.id;
-		this._captureScratchCanvases(paint);
-		this.editor.previewContainer.setPointerCapture?.(event.pointerId);
-
-		this._stampAtPoint(layer, paint, point.x, point.y);
+		this._startStrokeFromScreenPoint(event.clientX, event.clientY, {
+			pointerId: event.pointerId
+		});
 		this._updateCursorPosition(event);
 	}
 
@@ -357,6 +404,66 @@ class MaskEditor {
 
 		event.preventDefault();
 		event.stopPropagation();
+	}
+
+	handleTouchPan(screenX, screenY) {
+		if (!this.isEditing || this.editor.currentTool !== ToolType.BRUSH) {
+			return false;
+		}
+
+		const point = this._getCanvasPointFromScreen(screenX, screenY);
+		if (!point) {
+			return false;
+		}
+
+		if (!this.strokeActive) {
+			const started = this._startStrokeFromScreenPoint(screenX, screenY, {
+				showTouchRing: true
+			});
+			if (!started) {
+				return false;
+			}
+
+			return true;
+		}
+
+		const layer = this.editor.layerManager.getActiveLayer();
+		const paint = layer ? this.editor.glitterManager.getPaintMask(layer.id) : null;
+		if (!layer || layer.id !== this.currentLayerId || !paint) {
+			return false;
+		}
+
+		this._stampAlongPath(layer, paint, this.lastPoint, point);
+		this.lastPoint = point;
+		return true;
+	}
+
+	handleTouchTap(screenX, screenY) {
+		if (!this.isEditing || this.editor.currentTool !== ToolType.BRUSH) {
+			return false;
+		}
+
+		const started = this._startStrokeFromScreenPoint(screenX, screenY, {
+			showTouchRing: true
+		});
+		if (!started) {
+			return false;
+		}
+
+		this._finishStroke();
+		return true;
+	}
+
+	handleTouchGestureStart(gestureType) {
+		if (gestureType === 'two_finger' && this.strokeActive) {
+			this._cancelStroke();
+		}
+	}
+
+	handleTouchGestureEnd() {
+		if (this.strokeActive) {
+			this._finishStroke();
+		}
 	}
 
 	_finishStroke() {
@@ -420,6 +527,7 @@ class MaskEditor {
 		this.scratchSubCanvas = null;
 		this.livePreviewQueued = false;
 		this.liveOverlayQueued = false;
+		this.renderOverlay();
 	}
 
 	_captureScratchCanvases(paint) {
@@ -432,6 +540,61 @@ class MaskEditor {
 		this.scratchSubCanvas.width = paint.sub.width;
 		this.scratchSubCanvas.height = paint.sub.height;
 		this.scratchSubCanvas.getContext('2d', { willReadFrequently: true }).drawImage(paint.sub, 0, 0);
+	}
+
+	_startStrokeFromScreenPoint(screenX, screenY, options = {}) {
+		const point = this._getCanvasPointFromScreen(screenX, screenY);
+		if (!point) {
+			return false;
+		}
+
+		const layer = this._ensurePaintableLayer();
+		if (!layer) {
+			return false;
+		}
+
+		const paint = this.editor.glitterManager.ensurePaintMask(layer.id);
+		this.strokeActive = true;
+		this.strokeChanged = false;
+		this.activePointerId = options.pointerId ?? null;
+		this.lastPoint = point;
+		this.currentLayerId = layer.id;
+		this._captureScratchCanvases(paint);
+
+		if (options.pointerId !== undefined && options.pointerId !== null) {
+			this.editor.previewContainer.setPointerCapture?.(options.pointerId);
+		}
+
+		if (options.showTouchRing) {
+			this._showTouchRing(screenX, screenY);
+		}
+
+		this._stampAtPoint(layer, paint, point.x, point.y);
+		return true;
+	}
+
+	_ensurePaintableLayer() {
+		let layer = this.editor.layerManager.getActiveLayer();
+		if (layer && layer.type === LayerType.GLITTER_FILL) {
+			return layer;
+		}
+
+		// Same convention as the color picker on a non-glitter layer:
+		// auto-create a glitter layer and work in it.
+		if (!CONFIG.autoCreateGlitterLayer) {
+			this.editor.updateStatus('Select a glitter layer to paint on');
+			return null;
+		}
+
+		layer = this.editor.glitterManager.createLayer();
+		if (!layer) {
+			return null; // maxLayers reached — createLayer already showed the error
+		}
+
+		this.editor.layerManager.insertLayer(layer);
+		this.editor.layerManager.setActiveLayer(layer.id);
+		this.editor.layerManager.renderLayersList();
+		return layer;
 	}
 
 	_stampAlongPath(layer, paint, fromPoint, toPoint) {
@@ -479,7 +642,6 @@ class MaskEditor {
 		layer.maskHasContent = true;
 		this.strokeChanged = true;
 		this._queueOverlayRefresh();
-		this._queueLivePreviewRefresh(layer);
 	}
 
 	_queueOverlayRefresh() {
@@ -553,7 +715,11 @@ class MaskEditor {
 	}
 
 	_getCanvasPoint(event) {
-		const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+		return this._getCanvasPointFromScreen(event.clientX, event.clientY);
+	}
+
+	_getCanvasPointFromScreen(screenX, screenY) {
+		const point = this.editor.viewport.screenToCanvas(screenX, screenY);
 		if (!this.editor.viewport.isWithinCanvas(point.x, point.y)) {
 			return null;
 		}
@@ -581,7 +747,7 @@ class MaskEditor {
 	}
 
 	_updateCursorPosition(event) {
-		if (!this.ui.cursor || !this.isEditing) {
+		if (!this.ui.cursor || !this.isEditing || this.editor.mobileManager?.isMobile) {
 			return;
 		}
 
@@ -603,6 +769,53 @@ class MaskEditor {
 		this.cursorVisible = true;
 	}
 
+	_shouldShowTouchRingForPointer(event) {
+		if (!this.isEditing || !this.editor.mobileManager?.isMobile) {
+			return false;
+		}
+
+		if (this.editor.currentTool !== ToolType.BRUSH || event.pointerType !== 'touch') {
+			return false;
+		}
+
+		if (event.target.closest('.ui-ignore-gestures') || event.target.closest('.transform-handles')) {
+			return false;
+		}
+
+		return Boolean(this._getCanvasPointFromScreen(event.clientX, event.clientY));
+	}
+
+	_showTouchRing(screenX, screenY) {
+		if (!this.ui.cursor || !this.isEditing) {
+			return;
+		}
+
+		clearTimeout(this.touchRingTimeout);
+
+		const rect = this.editor.previewContainer.getBoundingClientRect();
+		const point = this._getCanvasPointFromScreen(screenX, screenY);
+		if (!point) {
+			this._hideCursor();
+			return;
+		}
+
+		const screenOffsetX = screenX - rect.left;
+		const screenOffsetY = screenY - rect.top;
+		const diameter = this.getBrushSize() * this.editor.viewport.currentZoom;
+		this.ui.cursor.style.width = `${diameter}px`;
+		this.ui.cursor.style.height = `${diameter}px`;
+		this.ui.cursor.style.left = `${screenOffsetX}px`;
+		this.ui.cursor.style.top = `${screenOffsetY}px`;
+		this.ui.cursor.classList.add('visible', 'touch-preview');
+		this.cursorVisible = true;
+
+		this.touchRingTimeout = setTimeout(() => {
+			if (this.ui.cursor?.classList.contains('touch-preview')) {
+				this._hideCursor();
+			}
+		}, 220);
+	}
+
 	_updateBrushCursorSize() {
 		if (!this.cursorVisible || !this.ui.cursor) {
 			return;
@@ -618,7 +831,8 @@ class MaskEditor {
 			return;
 		}
 
-		this.ui.cursor.classList.remove('visible');
+		clearTimeout(this.touchRingTimeout);
+		this.ui.cursor.classList.remove('visible', 'touch-preview');
 		this.cursorVisible = false;
 	}
 
@@ -634,6 +848,98 @@ class MaskEditor {
 		this.ui.modeButtons.forEach((button) => {
 			button.classList.toggle('active', button.dataset.maskMode === this.mode);
 		});
+	}
+
+	_getOverlayPalette(layer) {
+		const glitter = layer?.selectedGlitterId
+			? this.editor.glitterManager?.getItemById(layer.selectedGlitterId)
+			: null;
+		const fillColor = this._normalizeOverlayColor(glitter?.colorCodes?.[0]) || CONFIG.maskBrush.overlayColor;
+		return {
+			fillColor,
+			stripeColor: this._getContrastColor(fillColor)
+		};
+	}
+
+	_getOverlayStripePattern(color) {
+		if (!this.overlayCtx) {
+			return null;
+		}
+
+		if (this.overlayPatternCache.has(color)) {
+			return this.overlayPatternCache.get(color);
+		}
+
+		const patternCanvas = document.createElement('canvas');
+		patternCanvas.width = 8;
+		patternCanvas.height = 8;
+		const patternCtx = patternCanvas.getContext('2d', { willReadFrequently: true });
+		if (!patternCtx) {
+			return null;
+		}
+
+		patternCtx.clearRect(0, 0, 8, 8);
+		patternCtx.strokeStyle = this._withAlpha(color, 0.65);
+		patternCtx.lineWidth = 2;
+		patternCtx.beginPath();
+		patternCtx.moveTo(-2, 8);
+		patternCtx.lineTo(8, -2);
+		patternCtx.moveTo(2, 10);
+		patternCtx.lineTo(10, 2);
+		patternCtx.stroke();
+
+		const pattern = this.overlayCtx.createPattern(patternCanvas, 'repeat');
+		this.overlayPatternCache.set(color, pattern);
+		return pattern;
+	}
+
+	_normalizeOverlayColor(value) {
+		if (typeof value !== 'string') {
+			return null;
+		}
+
+		const hex = value.trim();
+		if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+			return hex;
+		}
+
+		if (/^#[0-9a-fA-F]{3}$/.test(hex)) {
+			return '#' + hex.slice(1).split('').map((char) => char + char).join('');
+		}
+
+		return null;
+	}
+
+	_getContrastColor(hex) {
+		const rgb = this._hexToRgb(hex);
+		if (!rgb) {
+			return '#ffffff';
+		}
+
+		const luminance = ((0.299 * rgb.r) + (0.587 * rgb.g) + (0.114 * rgb.b)) / 255;
+		return luminance > 0.6 ? '#111111' : '#ffffff';
+	}
+
+	_hexToRgb(hex) {
+		const normalized = this._normalizeOverlayColor(hex);
+		if (!normalized) {
+			return null;
+		}
+
+		return {
+			r: parseInt(normalized.slice(1, 3), 16),
+			g: parseInt(normalized.slice(3, 5), 16),
+			b: parseInt(normalized.slice(5, 7), 16)
+		};
+	}
+
+	_withAlpha(hex, alpha) {
+		const rgb = this._hexToRgb(hex);
+		if (!rgb) {
+			return `rgba(255, 255, 255, ${alpha})`;
+		}
+
+		return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 	}
 
 	getBrushSize() {

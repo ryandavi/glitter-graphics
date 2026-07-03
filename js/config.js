@@ -52,7 +52,8 @@ const CONFIG = {
 		defaultFlow: 100,
 		stampSpacing: 0.25,
 		overlayColor: '#ff2d8a',
-		overlayOpacity: 0.45,
+		overlayOpacity: 0.65,
+		overlayStripeOpacityBoost: 0.15,
 		cursorStroke: '#ffffff',
 		livePreviewThrottle: 'raf'
 	},
@@ -167,8 +168,13 @@ const CONFIG = {
 		tools: [
 			{ key: 'V', action: 'Select Tool' },
 			{ key: 'I', action: 'Color Picker Tool' },
+			{ key: 'B', action: 'Mask Brush Tool' },
 			{ key: 'H', action: 'Hand Tool' },
 			{ key: 'Z', action: 'Zoom Tool' },
+		],
+		brush: [
+			{ key: 'X', action: 'Swap Paint/Erase (Mask Brush)' },
+			{ key: '[ / ]', action: 'Decrease/Increase Brush Size' },
 		],
 		view: [
 			{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)' },

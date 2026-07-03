@@ -60,6 +60,8 @@ class GlitterEditor {
 		this.isSaved = false;
 		this.touchGestureActive = false;
 		this.justCompletedDrag = false; // Flag to prevent layer picking immediately after drag
+		this.pendingConfirmationResolve = null;
+		this.pendingConfirmationValue = false;
 
 		// ============================================================================
 		// EXPORT STATE
@@ -1304,9 +1306,28 @@ resetAllSettings() {
 		}
 
 		if (invert) {
-			invert.addEventListener('change', () => {
-				this.saveActiveLayerSettings();
+			invert.addEventListener('change', async () => {
 				const layer = this.layerManager.getActiveLayer();
+				if (!layer) {
+					return;
+				}
+
+				if (this.mobileManager?.isMobile) {
+					const confirmed = await this.confirmAction({
+						title: 'Invert Mask?',
+						message: invert.checked
+							? 'Invert this layer mask so glitter fills everything except the selected and painted areas?'
+							: 'Return this layer mask to its normal, non-inverted state?',
+						confirmLabel: 'Apply'
+					});
+					if (!confirmed) {
+						invert.checked = Boolean(layer.settings?.invert);
+						this.maskEditor?.loadLayer(layer);
+						return;
+					}
+				}
+
+				this.saveActiveLayerSettings();
 				if (layer && layer.type === LayerType.GLITTER_FILL && (layer.maskVersion || this.glitterManager.getPaintMask(layer.id))) {
 					this.glitterManager.commitPaintState(layer);
 				}
@@ -1885,6 +1906,11 @@ resetAllSettings() {
 			.register('exportPreviewModal', {  // ADD THIS
 				closeBtnId: 'closeExportPreviewModal',
 				resetScrollOnOpen: false
+			})
+			.register('confirmationModal', {
+				closeBtnId: ['confirmationModalClose', 'confirmationCancelBtn'],
+				resetScrollOnOpen: false,
+				onClose: () => this.resolvePendingConfirmation(this.pendingConfirmationValue)
 			});
 
 		// External content modals with utils.js initialization
@@ -1978,6 +2004,7 @@ resetAllSettings() {
 
 
 		// Setup modal-specific interactions
+		this.setupConfirmationModalListeners();
 		this.setupLayerTypePickerListeners();
 		this.setupLayerPanelListeners();
 		this.setupStickerUploadModalListeners();
@@ -2039,6 +2066,62 @@ setupWelcomeModalListeners() {
 		});
 	}
 }
+
+	setupConfirmationModalListeners() {
+		const confirmBtn = document.getElementById('confirmationConfirmBtn');
+		if (confirmBtn) {
+			confirmBtn.addEventListener('click', () => {
+				this.pendingConfirmationValue = true;
+				this.modalManager.close('confirmationModal');
+			});
+		}
+	}
+
+	resolvePendingConfirmation(value) {
+		if (!this.pendingConfirmationResolve) {
+			this.pendingConfirmationValue = false;
+			return;
+		}
+
+		const resolve = this.pendingConfirmationResolve;
+		this.pendingConfirmationResolve = null;
+		this.pendingConfirmationValue = false;
+		resolve(Boolean(value));
+	}
+
+	confirmAction(options = {}) {
+		const {
+			title = 'Confirm',
+			message = 'Are you sure?',
+			confirmLabel = 'Confirm',
+			cancelLabel = 'Cancel'
+		} = options;
+
+		if (!this.modalManager || !document.getElementById('confirmationModal')) {
+			return Promise.resolve(confirm(message));
+		}
+
+		if (this.pendingConfirmationResolve) {
+			this.resolvePendingConfirmation(false);
+		}
+
+		const titleNode = document.getElementById('confirmationModalTitle');
+		const messageNode = document.getElementById('confirmationModalMessage');
+		const confirmBtn = document.getElementById('confirmationConfirmBtn');
+		const cancelBtn = document.getElementById('confirmationCancelBtn');
+
+		if (titleNode) titleNode.textContent = title;
+		if (messageNode) messageNode.textContent = message;
+		if (confirmBtn) confirmBtn.textContent = confirmLabel;
+		if (cancelBtn) cancelBtn.textContent = cancelLabel;
+
+		this.pendingConfirmationValue = false;
+
+		return new Promise((resolve) => {
+			this.pendingConfirmationResolve = resolve;
+			this.modalManager.open('confirmationModal');
+		});
+	}
 
 
 	setupLayerTypePickerListeners() {
@@ -2507,6 +2590,7 @@ setupWelcomeModalListeners() {
 			const toolMap = {
 				[ToolType.SELECT]: { icon: 'icon-hand-pointer', name: 'Select Tool' },
 				[ToolType.COLOR_PICKER]: { icon: 'icon-magic-wand', name: 'Color Picker' },
+				[ToolType.BRUSH]: { icon: 'icon-brush', name: 'Mask Brush' },
 				[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
 				[ToolType.ZOOM]: { icon: 'icon-magnifying-glass', name: 'Zoom Tool' }
 			};
@@ -2515,14 +2599,23 @@ setupWelcomeModalListeners() {
 
 		// PRIORITY 1: Critical layer states (don't show tool label for these)
 		if (this.maskEditor?.isEditing && activeLayer?.type === LayerType.GLITTER_FILL) {
-			hint = this.maskEditor.mode === 'sub'
-				? 'Paint to erase glitter from this layer'
-				: 'Paint to add glitter directly to this layer';
-			context = 'Switch to Erase to remove painted or color-picked areas. Press Esc to exit.';
+			if (isMobile) {
+				hint = this.maskEditor.mode === 'sub'
+					? 'Drag to erase glitter from this layer'
+					: 'Drag to paint glitter directly onto this layer';
+				context = 'Tap once for a single stamp. Use two fingers to pan or zoom, and switch Paint/Erase to add or remove glitter.';
+			} else {
+				hint = this.maskEditor.mode === 'sub'
+					? 'Drag to erase glitter from this layer'
+					: 'Drag to paint glitter directly onto this layer';
+				context = 'Press X to swap Paint/Erase, use [ or ] to resize the brush, and press Esc or change tools to exit the Mask Brush.';
+			}
 		}
 		else if (this.maskEditor?.isEditing) {
-			hint = 'Paint anywhere to create a new glitter layer';
-			context = 'The brush works on glitter layers — painting here starts one automatically.';
+			hint = isMobile
+				? 'Drag here to create a new glitter layer and start painting'
+				: 'Paint here to create a new glitter layer automatically';
+			context = 'The Mask Brush targets glitter layers. Starting a stroke on another layer creates a new glitter layer for you.';
 		}
 
 		else if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
@@ -2536,7 +2629,12 @@ setupWelcomeModalListeners() {
 		else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL &&
 			!hasMaskContent(activeLayer) &&
 			currentTool !== ToolType.COLOR_PICKER) {
-			hint = 'Selection is empty—switch to the color picker or Mask Brush to add glitter to this layer';
+			hint = isMobile
+				? 'This glitter layer is empty—use the color picker or Mask Brush to add glitter'
+				: 'This glitter layer is empty—use the Color Picker or Mask Brush to add glitter';
+			context = isMobile
+				? 'Tap colors to build a selection, or paint directly in the editor.'
+				: 'Click colors to build a selection, or paint directly with the Mask Brush.';
 		}
 
 		// PRIORITY 2: Tool-specific actions (SHOW tool label for these)
@@ -2784,6 +2882,26 @@ setupWelcomeModalListeners() {
 		}
 		if (e.key === 'z' || e.key === 'Z') {
 			if (!e.ctrlKey && !e.metaKey && this.originalImage) this.setTool(ToolType.ZOOM);
+		}
+
+		if (this.currentTool === ToolType.BRUSH && !e.ctrlKey && !e.metaKey && !e.altKey) {
+			if (e.key === 'x' || e.key === 'X') {
+				e.preventDefault();
+				this.maskEditor?.toggleMode();
+				return;
+			}
+
+			if (e.code === 'BracketLeft') {
+				e.preventDefault();
+				this.maskEditor?.adjustBrushSize(e.shiftKey ? -10 : -5);
+				return;
+			}
+
+			if (e.code === 'BracketRight') {
+				e.preventDefault();
+				this.maskEditor?.adjustBrushSize(e.shiftKey ? 10 : 5);
+				return;
+			}
 		}
 
 		// Delete or Backspace: Delete selected layer

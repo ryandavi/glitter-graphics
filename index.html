@@ -1657,6 +1657,34 @@
 		</div>
 	</div>
 
+	<!-- Confirmation Modal -->
+	<div class="modal-overlay" id="confirmationModal">
+		<div class="modal-content modal-sm confirmation-modal">
+			<div class="modal-header">
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon">
+							<use href="#icon-circle-info"></use>
+						</svg>
+					</span>
+					<span class="modal-title-text" id="confirmationModalTitle">Confirm</span>
+				</div>
+				<button class="btn-icon icon-wrapper modal-close" id="confirmationModalClose">
+					<svg class="icon">
+						<use href="#icon-x"></use>
+					</svg>
+				</button>
+			</div>
+			<div class="modal-body">
+				<p id="confirmationModalMessage">Are you sure?</p>
+			</div>
+			<div class="modal-footer right">
+				<button class="btn-simple secondary" id="confirmationCancelBtn">Cancel</button>
+				<button class="btn-simple" id="confirmationConfirmBtn">Confirm</button>
+			</div>
+		</div>
+	</div>
+
 	<!-- Settings Modal -->
 	<div class="modal-overlay" id="settingsModal">
 		<div class="modal-content">

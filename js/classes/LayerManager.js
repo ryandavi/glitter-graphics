@@ -160,6 +160,10 @@ class LayerManager {
 
 		// Clean up the live sticker element before removing the layer.
 		const layer = this.layers[index];
+		if (this.editor.currentTool === ToolType.BRUSH) {
+			this.editor.maskEditor?.handleLayerDeleted(layerId);
+		}
+
 		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
 			this.editor.stickerManager.removeSticker(layerId);
 		} else if (layer.type === LayerType.GLITTER_FILL && this.editor.glitterManager) {
@@ -723,6 +727,9 @@ class LayerManager {
 		const nameText = document.createElement('div');
 		nameText.className = 'layer-name';
 
+		const metaRow = document.createElement('div');
+		metaRow.className = 'layer-meta';
+
 		const typeText = document.createElement('div');
 		typeText.className = 'layer-type';
 
@@ -748,7 +755,17 @@ class LayerManager {
 				typeText.textContent = 'Unknown';
 		}
 
-		info.append(nameText, typeText);
+		metaRow.appendChild(typeText);
+
+		if (layer.type === LayerType.GLITTER_FILL && layer.maskHasContent) {
+			const paintBadge = document.createElement('span');
+			paintBadge.className = 'layer-badge layer-badge-paint';
+			paintBadge.textContent = 'Paint';
+			paintBadge.title = 'This glitter layer has painted mask strokes';
+			metaRow.appendChild(paintBadge);
+		}
+
+		info.append(nameText, metaRow);
 
 
 

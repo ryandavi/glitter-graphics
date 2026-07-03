@@ -354,6 +354,11 @@ setupTouchGestures() {
         
         // Check if we should ignore this target (skip stickers for viewport handler)
         shouldIgnoreTarget: (target) => {
+            const editor = window.editor;
+            if (editor?.currentTool === ToolType.BRUSH) {
+                return false;
+            }
+
             if (target && target.closest('.sticker-element')) {
                 dbg('🎯 Viewport: Skipping sticker element');
                 return true; // Skip it
@@ -378,16 +383,30 @@ setupTouchGestures() {
         onGestureStart: (gestureType) => {
             dbg('🎯 Gesture started:', gestureType);
             this.isGestureActive = true;
+            if (window.editor) {
+                window.editor.touchGestureActive = true;
+                window.editor.maskEditor?.handleTouchGestureStart(gestureType);
+            }
         },
         
         onGestureEnd: () => {
             dbg('🎯 Gesture ended');
             this.isGestureActive = false;
+            if (window.editor) {
+                window.editor.touchGestureActive = false;
+                window.editor.maskEditor?.handleTouchGestureEnd();
+            }
         },
         
         // === 1. SINGLE PAN ===
-        onSinglePan: (dx, dy) => {
+        onSinglePan: (dx, dy, touchX, touchY) => {
             dbg('👆 1-Finger Pan:', dx, dy);
+            const editor = window.editor;
+            if (editor?.currentTool === ToolType.BRUSH && editor.maskEditor?.isEditing) {
+                editor.maskEditor.handleTouchPan(touchX, touchY);
+                return;
+            }
+
             this.panX += dx;
             this.panY += dy;
             this.applyTransform();
@@ -429,6 +448,11 @@ setupTouchGestures() {
         onSimpleTap: (x, y) => {
             dbg('✅ Clean Tap Detected');
             if (!window.editor) return;
+
+            if (window.editor.currentTool === ToolType.BRUSH && window.editor.maskEditor?.isEditing) {
+                window.editor.maskEditor.handleTouchTap(x, y);
+                return;
+            }
 
             const target = document.elementFromPoint(x, y);
             

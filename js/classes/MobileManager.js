@@ -248,6 +248,9 @@ class MobileManager {
 if (!this.isMobile && nowMobile) {
     // Switching TO Mobile
     dbg('Mobile: Switching to mobile mode');
+    if (this.editor.currentTool === ToolType.BRUSH) {
+        this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+    }
     this.isMobile = true;
     this.init();
 
@@ -284,6 +287,9 @@ if (!this.isMobile && nowMobile) {
 } else if (this.isMobile && !nowMobile) {
     // Switching TO Desktop
     dbg('Mobile: Switching to desktop mode');
+    if (this.editor.currentTool === ToolType.BRUSH) {
+        this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+    }
     this.isMobile = false;
     this.cleanup();
 
@@ -305,6 +311,7 @@ if (!this.isMobile && nowMobile) {
 
 	switchTab(tab) {
 		dbg('Mobile: Switching to tab:', tab);
+		const isTabChange = this.activeTab !== tab;
 		this.activeTab = tab;
 
 		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
@@ -316,7 +323,7 @@ if (!this.isMobile && nowMobile) {
 		// Collapse settings sections when switching tabs
 		this.collapseAllSections();
 
-		this.closeSettings();
+		this.closeSettings({ releaseBrush: isTabChange });
 
 		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab');
 		document.body.classList.add(`mobile-${tab}-tab`);
@@ -447,11 +454,7 @@ if (!this.isMobile && nowMobile) {
 		const settingsBtn = document.getElementById('mobileSettingsBtn');
 
 		if (this.settingsOpen) {
-			// Closing drawer - collapse all sections
-			this.collapseAllSections();
-			this.settingsOpen = false;
-			document.body.classList.remove('mobileSettingsOpen');
-			if (settingsBtn) settingsBtn.classList.remove('active');
+			this.closeSettings({ releaseBrush: true });
 		} else {
 			// Opening drawer - ensure all sections are collapsed
 			this.collapseAllSections();
@@ -461,7 +464,13 @@ if (!this.isMobile && nowMobile) {
 		}
 	}
 
-	closeSettings() {
+	closeSettings(options = {}) {
+		const { releaseBrush = false } = options;
+
+		if (releaseBrush && this.editor.currentTool === ToolType.BRUSH) {
+			this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+		}
+
 		this.settingsOpen = false;
 		document.body.classList.remove('mobileSettingsOpen');
 		const settingsBtn = document.getElementById('mobileSettingsBtn');
