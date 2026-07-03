@@ -11,116 +11,446 @@ abstract class AssetAPI
 
     public function __construct($db, $config, $assetType)
     {
+        if (!isset($config['asset_types'][$assetType])) {
+            throw new InvalidArgumentException('Invalid asset type');
+        }
+
         $this->db = $db;
         $this->config = $config;
         $this->assetType = $assetType;
         $this->tables = $config['asset_types'][$assetType];
     }
 
-    // ===== ABSTRACT METHODS (must be implemented by child classes) =====
-    
     abstract protected function formatAssetForExport($asset, $tags);
     abstract protected function getAssetSpecificFields();
-    
-    // ===== CATEGORY METHODS =====
-    
-    public function getCategories()
-    {
-        $table = $this->tables['categories_table'];
-        $result = $this->db->query("SELECT * FROM $table ORDER BY sort_order");
 
-        $categories = [];
+    protected function getNullableStringFields()
+    {
+        return [];
+    }
+
+    protected function getUpdateExtraAssignments($data)
+    {
+        return [];
+    }
+
+    protected function getAssetDisplayName()
+    {
+        return ucfirst($this->assetType);
+    }
+
+    protected function getCategoryIdField()
+    {
+        return $this->assetType . '_category_id';
+    }
+
+    protected function getAssetIdField()
+    {
+        return $this->assetType . '_id';
+    }
+
+    protected function getTagIdField()
+    {
+        return $this->assetType . '_tag_id';
+    }
+
+    protected function getTagCategoryIdField()
+    {
+        return $this->assetType . '_tag_category_id';
+    }
+
+    protected function fetchAllAssoc($result)
+    {
+        $rows = [];
         while ($row = $result->fetch_assoc()) {
-            $categories[] = $row;
+            $rows[] = $row;
         }
 
-        return $categories;
+        return $rows;
+    }
+
+    protected function fetchOneAssoc($result)
+    {
+        $row = $result->fetch_assoc();
+        return $row ?: null;
+    }
+
+    protected function normalizeBoolean($value)
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+    }
+
+    protected function buildAssetUpdatePayload($data, $extraAssignments = [])
+    {
+        $fieldTypes = $this->getAssetSpecificFields();
+        $nullableStringFields = array_flip($this->getNullableStringFields());
+        $assignments = [];
+        $types = '';
+        $params = [];
+
+        foreach ($fieldTypes['string'] as $field) {
+            if (!array_key_exists($field, $data)) {
+                continue;
+            }
+
+            if (
+                isset($nullableStringFields[$field]) &&
+                ($data[$field] === null || $data[$field] === '')
+            ) {
+                $assignments[] = "$field = NULL";
+                continue;
+            }
+
+            $assignments[] = "$field = ?";
+            $types .= 's';
+            $params[] = (string)$data[$field];
+        }
+
+        foreach ($fieldTypes['int'] as $field) {
+            if (!array_key_exists($field, $data)) {
+                continue;
+            }
+
+            if ($data[$field] === '' || $data[$field] === null) {
+                $assignments[] = "$field = NULL";
+                continue;
+            }
+
+            $assignments[] = "$field = ?";
+            $types .= 'i';
+            $params[] = (int)$data[$field];
+        }
+
+        foreach ($fieldTypes['float'] as $field) {
+            if (!array_key_exists($field, $data)) {
+                continue;
+            }
+
+            if ($data[$field] === '' || $data[$field] === null) {
+                $assignments[] = "$field = NULL";
+                continue;
+            }
+
+            $assignments[] = "$field = ?";
+            $types .= 'd';
+            $params[] = (float)$data[$field];
+        }
+
+        foreach ($fieldTypes['bool'] as $field) {
+            if (!array_key_exists($field, $data)) {
+                continue;
+            }
+
+            $assignments[] = "$field = ?";
+            $types .= 'i';
+            $params[] = $this->normalizeBoolean($data[$field]);
+        }
+
+        foreach ($extraAssignments as $assignment) {
+            $assignments[] = $assignment;
+        }
+
+        return [$assignments, $types, $params];
+    }
+
+    protected function updateAssetRecord($id, $data, $extraAssignments = [])
+    {
+        list($assignments, $types, $params) = $this->buildAssetUpdatePayload($data, $extraAssignments);
+
+        if (empty($assignments)) {
+            throw new Exception('No fields to update');
+        }
+
+        $sql = "UPDATE {$this->tables['table']} SET " . implode(', ', $assignments) . " WHERE id = ?";
+        $types .= 'i';
+        $params[] = (int)$id;
+        $stmt = $this->db->prepare($sql, $types, $params);
+        $stmt->close();
+    }
+
+    protected function saveAssetTags($assetId, $tagIds)
+    {
+        $assetId = (int)$assetId;
+        $tagsMapTable = $this->tables['tags_map_table'];
+        $assetIdField = $this->getAssetIdField();
+        $tagIdField = $this->getTagIdField();
+
+        $deleteStmt = $this->db->prepare(
+            "DELETE FROM $tagsMapTable WHERE $assetIdField = ?",
+            'i',
+            [$assetId]
+        );
+        $deleteStmt->close();
+
+        $insertSql = "INSERT INTO $tagsMapTable ($assetIdField, $tagIdField) VALUES (?, ?)";
+        foreach ($tagIds as $tagId) {
+            $insertStmt = $this->db->prepare($insertSql, 'ii', [$assetId, (int)$tagId]);
+            $insertStmt->close();
+        }
+    }
+
+    protected function deleteAssetRecord($id)
+    {
+        $assetId = (int)$id;
+        $tagsMapTable = $this->tables['tags_map_table'];
+        $assetTable = $this->tables['table'];
+        $assetIdField = $this->getAssetIdField();
+
+        $tagsStmt = $this->db->prepare(
+            "DELETE FROM $tagsMapTable WHERE $assetIdField = ?",
+            'i',
+            [$assetId]
+        );
+        $tagsStmt->close();
+
+        $assetStmt = $this->db->prepare(
+            "DELETE FROM $assetTable WHERE id = ?",
+            'i',
+            [$assetId]
+        );
+        $assetStmt->close();
+    }
+
+    protected function reorderAssetsByIds($order)
+    {
+        $table = $this->tables['table'];
+        $sql = "UPDATE $table SET sort_order = ? WHERE id = ?";
+
+        foreach ($order as $index => $id) {
+            $stmt = $this->db->prepare($sql, 'ii', [(int)$index, (int)$id]);
+            $stmt->close();
+        }
+    }
+
+    protected function getAssetUrlById($id)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT url FROM {$this->tables['table']} WHERE id = ?",
+            'i',
+            [(int)$id]
+        );
+        $result = $stmt->get_result();
+        $asset = $this->fetchOneAssoc($result);
+        $stmt->close();
+
+        return $asset;
+    }
+
+    protected function getActiveAssetRows()
+    {
+        $stmt = $this->db->prepare(
+            "SELECT id, url FROM {$this->tables['table']} WHERE is_active = ?",
+            'i',
+            [1]
+        );
+        $result = $stmt->get_result();
+        $rows = $this->fetchAllAssoc($result);
+        $stmt->close();
+
+        return $rows;
+    }
+
+    protected function persistAnalysis($id, $analysis)
+    {
+        $table = $this->tables['table'];
+        $sql = "
+            UPDATE $table
+            SET width = ?,
+                height = ?,
+                file_size = ?,
+                frame_count = ?,
+                frame_rate = ?,
+                is_variable_framerate = ?,
+                is_animated = ?,
+                has_transparency = ?
+            WHERE id = ?
+        ";
+
+        $stmt = $this->db->prepare(
+            $sql,
+            'iiiiiiiii',
+            [
+                (int)$analysis['width'],
+                (int)$analysis['height'],
+                (int)$analysis['file_size'],
+                (int)$analysis['frame_count'],
+                (int)$analysis['frame_rate'],
+                (int)$analysis['is_variable_framerate'],
+                (int)$analysis['is_animated'],
+                (int)$analysis['has_transparency'],
+                (int)$id,
+            ]
+        );
+        $stmt->close();
+    }
+
+    protected function performAnalysis($url)
+    {
+        require_once('gifAnalyzer.php');
+
+        $analyzer = new GifAnalyzer("../" . $url, $this->config);
+        $analysis = $analyzer->analyze();
+
+        $filePath = "../../" . $url;
+        $fileSize = file_exists($filePath) ? filesize($filePath) : 0;
+        $imageInfo = @getimagesize($filePath);
+        $width = $imageInfo ? $imageInfo[0] : 0;
+        $height = $imageInfo ? $imageInfo[1] : 0;
+        $hasTransparency = 0;
+
+        if ($imageInfo) {
+            $image = false;
+            switch ($imageInfo[2]) {
+                case IMAGETYPE_GIF:
+                    $image = @imagecreatefromgif($filePath);
+                    break;
+                case IMAGETYPE_PNG:
+                    $image = @imagecreatefrompng($filePath);
+                    break;
+                case IMAGETYPE_JPEG:
+                    $image = @imagecreatefromjpeg($filePath);
+                    break;
+            }
+
+            if ($image) {
+                $width = imagesx($image);
+                $height = imagesy($image);
+                $foundTransparent = false;
+
+                if ($imageInfo[2] === IMAGETYPE_PNG) {
+                    $foundTransparent = true;
+                } else if ($imageInfo[2] === IMAGETYPE_GIF) {
+                    $transparentIndex = imagecolortransparent($image);
+                    if ($transparentIndex >= 0) {
+                        for ($y = 0; $y < $height && !$foundTransparent; $y += max(1, floor($height / 20))) {
+                            for ($x = 0; $x < $width && !$foundTransparent; $x += max(1, floor($width / 20))) {
+                                if (imagecolorat($image, $x, $y) === $transparentIndex) {
+                                    $foundTransparent = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $hasTransparency = $foundTransparent ? 1 : 0;
+                imagedestroy($image);
+            }
+        }
+
+        return array_merge($analysis, [
+            'width' => $width,
+            'height' => $height,
+            'file_size' => $fileSize,
+            'has_transparency' => $hasTransparency,
+            'is_animated' => ($analysis['frame_count'] ?? 1) > 1 ? 1 : 0,
+        ]);
+    }
+
+    public function getCategories()
+    {
+        $result = $this->db->query(
+            "SELECT * FROM {$this->tables['categories_table']} ORDER BY sort_order"
+        );
+
+        return $this->fetchAllAssoc($result);
     }
 
     public function addCategory($data)
     {
-        $table = $this->tables['categories_table'];
-        $name = $this->db->escape($data['name']);
-        $slug = $this->db->escape($data['slug']);
-        $description = isset($data['description']) ? $this->db->escape($data['description']) : '';
-        $sortOrder = (int)($data['sort_order'] ?? 999);
+        $stmt = $this->db->prepare(
+            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, sort_order) VALUES (?, ?, ?, ?)",
+            'sssi',
+            [
+                (string)$data['name'],
+                (string)$data['slug'],
+                (string)($data['description'] ?? ''),
+                (int)($data['sort_order'] ?? 999),
+            ]
+        );
+        $stmt->close();
 
-        $sql = "INSERT INTO $table (name, slug, description, sort_order) 
-                VALUES ('$name', '$slug', '$description', $sortOrder)";
-
-        $this->db->query($sql);
         return ['success' => true, 'id' => $this->db->lastInsertId()];
     }
 
     public function deleteCategory($id)
     {
-        $table = $this->tables['categories_table'];
+        $categoryId = (int)$id;
         $assetTable = $this->tables['table'];
-        $categoryIdField = $this->assetType . '_category_id';
-        
-        // Check if any assets use this category
-        $result = $this->db->query("SELECT COUNT(*) as count FROM $assetTable WHERE $categoryIdField = $id");
-        $row = $result->fetch_assoc();
+        $categoriesTable = $this->tables['categories_table'];
+        $categoryIdField = $this->getCategoryIdField();
 
-        if ($row['count'] > 0) {
+        $countStmt = $this->db->prepare(
+            "SELECT COUNT(*) AS count FROM $assetTable WHERE $categoryIdField = ?",
+            'i',
+            [$categoryId]
+        );
+        $countResult = $countStmt->get_result();
+        $row = $this->fetchOneAssoc($countResult);
+        $countStmt->close();
+
+        if ((int)$row['count'] > 0) {
             return ['success' => false, 'error' => 'Cannot delete category - ' . $row['count'] . ' asset(s) use it'];
         }
 
-        $this->db->query("DELETE FROM $table WHERE id = $id");
+        $deleteStmt = $this->db->prepare(
+            "DELETE FROM $categoriesTable WHERE id = ?",
+            'i',
+            [$categoryId]
+        );
+        $deleteStmt->close();
+
         return ['success' => true];
     }
 
-public function exportCategories()
-{
-    $table = $this->tables['categories_table'];
-    $assetTable = $this->tables['table'];
-    $categoryIdField = $this->assetType . '_category_id';
-    
-    // For stickers: "User Uploads" first, then by item count (most items first)
-    // For glitter: use sort_order
-    if ($this->assetType === 'sticker') {
-        $sql = "
-            SELECT c.*, COUNT(a.id) as item_count
-            FROM $table c
-            LEFT JOIN $assetTable a ON c.id = a.$categoryIdField
-            GROUP BY c.id
-            ORDER BY 
-                CASE WHEN c.name = 'User Uploads' THEN 0 ELSE 1 END,
-                item_count DESC, 
-                c.name
-        ";
-    } else {
-        $sql = "
-            SELECT c.*, COUNT(a.id) as item_count
-            FROM $table c
-            LEFT JOIN $assetTable a ON c.id = a.$categoryIdField
-            GROUP BY c.id
-            ORDER BY c.sort_order
-        ";
-    }
-    
-    $result = $this->db->query($sql);
+    public function exportCategories()
+    {
+        $table = $this->tables['categories_table'];
+        $assetTable = $this->tables['table'];
+        $categoryIdField = $this->getCategoryIdField();
 
-    $categories = [];
-    while ($row = $result->fetch_assoc()) {
-        $categories[] = [
-            'id' => $row['slug'],
-            'name' => $row['name'],
-            'icon' => isset($row['icon']) ? $row['icon'] : '',
-            'color' => isset($row['color']) ? $row['color'] : '#ff69b4',
-            'description' => isset($row['description']) ? $row['description'] : '',
-            'count' => isset($row['item_count']) ? intval($row['item_count']) : 0
-        ];
-    }
+        if ($this->assetType === 'sticker') {
+            $sql = "
+                SELECT c.*, COUNT(a.id) AS item_count
+                FROM $table c
+                LEFT JOIN $assetTable a ON c.id = a.$categoryIdField
+                GROUP BY c.id
+                ORDER BY
+                    CASE WHEN c.name = 'User Uploads' THEN 0 ELSE 1 END,
+                    item_count DESC,
+                    c.name
+            ";
+        } else {
+            $sql = "
+                SELECT c.*, COUNT(a.id) AS item_count
+                FROM $table c
+                LEFT JOIN $assetTable a ON c.id = a.$categoryIdField
+                GROUP BY c.id
+                ORDER BY c.sort_order
+            ";
+        }
 
-    return $categories;
-}
+        $result = $this->db->query($sql);
+        $rows = $this->fetchAllAssoc($result);
+        $categories = [];
+
+        foreach ($rows as $row) {
+            $categories[] = [
+                'id' => $row['slug'],
+                'name' => $row['name'],
+                'icon' => isset($row['icon']) ? $row['icon'] : '',
+                'color' => isset($row['color']) ? $row['color'] : '#ff69b4',
+                'description' => isset($row['description']) ? $row['description'] : '',
+                'count' => isset($row['item_count']) ? (int)$row['item_count'] : 0,
+            ];
+        }
+
+        return $categories;
+    }
 
     public function saveCategoriesExport()
     {
         $categories = $this->exportCategories();
         $jsonPath = "../../" . $this->tables['categories_json_file'];
-
         $json = json_encode($categories, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         $result = file_put_contents($jsonPath, $json);
 
@@ -131,166 +461,168 @@ public function exportCategories()
         return ['success' => true, 'path' => $jsonPath, 'bytes' => $result];
     }
 
+    public function updateCategory($data)
+    {
+        $id = (int)$data['id'];
+        $fields = [];
+        $types = '';
+        $params = [];
 
-public function updateCategory($data)
-{
-    $table = $this->tables['categories_table'];
-    $id = (int)$data['id'];
-    $fields = [];
+        foreach (['name', 'slug', 'description', 'icon', 'color'] as $field) {
+            if (!array_key_exists($field, $data)) {
+                continue;
+            }
 
-    $stringFields = ['name', 'slug', 'description', 'icon', 'color'];
-    $intFields = ['sort_order'];
-
-    foreach ($stringFields as $field) {
-        if (isset($data[$field])) {
-            $value = $this->db->escape($data[$field]);
-            $fields[] = "$field = '$value'";
+            $fields[] = "$field = ?";
+            $types .= 's';
+            $params[] = (string)$data[$field];
         }
-    }
 
-    foreach ($intFields as $field) {
-        if (isset($data[$field])) {
-            $value = (int)$data[$field];
-            $fields[] = "$field = $value";
+        if (array_key_exists('sort_order', $data)) {
+            $fields[] = "sort_order = ?";
+            $types .= 'i';
+            $params[] = (int)$data['sort_order'];
         }
+
+        if (empty($fields)) {
+            throw new Exception('No fields to update');
+        }
+
+        $sql = "UPDATE {$this->tables['categories_table']} SET " . implode(', ', $fields) . " WHERE id = ?";
+        $types .= 'i';
+        $params[] = $id;
+        $stmt = $this->db->prepare($sql, $types, $params);
+        $stmt->close();
+
+        return ['success' => true];
     }
 
-    if (empty($fields)) {
-        throw new Exception('No fields to update');
-    }
-
-    $sql = "UPDATE $table SET " . implode(', ', $fields) . " WHERE id = $id";
-    $this->db->query($sql);
-
-    return ['success' => true];
-}
-
-
-    // ===== TAG METHODS =====
-    
     public function getTags()
     {
         $tagsTable = $this->tables['tags_table'];
         $tagCategoriesTable = $this->tables['tag_categories_table'];
-        $tagCategoryIdField = $this->assetType . '_tag_category_id';
-        
-        $result = $this->db->query("
-            SELECT t.*, tc.name as category_name 
-            FROM $tagsTable t 
-            JOIN $tagCategoriesTable tc ON t.$tagCategoryIdField = tc.id 
+        $tagCategoryIdField = $this->getTagCategoryIdField();
+
+        $sql = "
+            SELECT t.*, tc.name AS category_name
+            FROM $tagsTable t
+            JOIN $tagCategoriesTable tc ON t.$tagCategoryIdField = tc.id
             ORDER BY tc.sort_order, t.name
-        ");
+        ";
 
-        $tags = [];
-        while ($row = $result->fetch_assoc()) {
-            $tags[] = $row;
-        }
-
-        return $tags;
+        $result = $this->db->query($sql);
+        return $this->fetchAllAssoc($result);
     }
 
     public function getTagCategories()
     {
-        $table = $this->tables['tag_categories_table'];
-        $result = $this->db->query("SELECT * FROM $table ORDER BY sort_order");
+        $result = $this->db->query(
+            "SELECT * FROM {$this->tables['tag_categories_table']} ORDER BY sort_order"
+        );
 
-        $categories = [];
-        while ($row = $result->fetch_assoc()) {
-            $categories[] = $row;
-        }
-
-        return $categories;
+        return $this->fetchAllAssoc($result);
     }
 
     public function addTag($data)
     {
-        $tagsTable = $this->tables['tags_table'];
-        $tagCategoryIdField = $this->assetType . '_tag_category_id';
-        
-        $name = $this->db->escape($data['name']);
-        $slug = strtolower(str_replace(' ', '-', $data['name']));
-        $slug = $this->db->escape($slug);
-        $tagCategoryId = (int)$data['tag_category_id'];
-        $hexColor = isset($data['hex_color']) && $data['hex_color'] ?
-            $this->db->escape($data['hex_color']) : 'NULL';
+        $tagCategoryId = $data['tag_category_id'] ?? $data['category_id'] ?? null;
+        if ($tagCategoryId === null) {
+            throw new Exception('tag_category_id is required');
+        }
 
-        $sql = "INSERT INTO $tagsTable ($tagCategoryIdField, name, slug, hex_color) 
-                VALUES ($tagCategoryId, '$name', '$slug', " .
-            ($hexColor === 'NULL' ? 'NULL' : "'$hexColor'") . ")";
+        $hexColor = isset($data['hex_color']) && $data['hex_color'] !== ''
+            ? (string)$data['hex_color']
+            : null;
 
-        $this->db->query($sql);
+        $stmt = $this->db->prepare(
+            "INSERT INTO {$this->tables['tags_table']} ({$this->getTagCategoryIdField()}, name, slug, hex_color) VALUES (?, ?, ?, ?)",
+            'isss',
+            [
+                (int)$tagCategoryId,
+                (string)$data['name'],
+                strtolower(str_replace(' ', '-', (string)$data['name'])),
+                $hexColor,
+            ]
+        );
+        $stmt->close();
+
         return ['success' => true, 'id' => $this->db->lastInsertId()];
     }
 
     public function deleteTag($id)
     {
+        $tagId = (int)$id;
         $tagsTable = $this->tables['tags_table'];
         $tagsMapTable = $this->tables['tags_map_table'];
-        $tagIdField = $this->assetType . '_tag_id';
-        
-        // Check if any assets use this tag
-        $result = $this->db->query("SELECT COUNT(*) as count FROM $tagsMapTable WHERE $tagIdField = $id");
-        $row = $result->fetch_assoc();
+        $tagIdField = $this->getTagIdField();
 
-        if ($row['count'] > 0) {
-            // Remove tag from all assets
-            $this->db->query("DELETE FROM $tagsMapTable WHERE $tagIdField = $id");
+        $countStmt = $this->db->prepare(
+            "SELECT COUNT(*) AS count FROM $tagsMapTable WHERE $tagIdField = ?",
+            'i',
+            [$tagId]
+        );
+        $countResult = $countStmt->get_result();
+        $row = $this->fetchOneAssoc($countResult);
+        $countStmt->close();
+
+        if ((int)$row['count'] > 0) {
+            $mapStmt = $this->db->prepare(
+                "DELETE FROM $tagsMapTable WHERE $tagIdField = ?",
+                'i',
+                [$tagId]
+            );
+            $mapStmt->close();
         }
 
-        $this->db->query("DELETE FROM $tagsTable WHERE id = $id");
-        return ['success' => true, 'removed_from' => $row['count']];
+        $tagStmt = $this->db->prepare(
+            "DELETE FROM $tagsTable WHERE id = ?",
+            'i',
+            [$tagId]
+        );
+        $tagStmt->close();
+
+        return ['success' => true, 'removed_from' => (int)$row['count']];
     }
 
-    // ===== ASSET METHODS =====
-    
-public function listAssets()
-{
-    $assetTable = $this->tables['table'];
-    $categoriesTable = $this->tables['categories_table'];
-    $categoryIdField = $this->assetType . '_category_id';
-    
-    // For stickers: alphabetical category order, then by name (ignore sort_order)
-    // For glitter: use sort_order as before
-    $orderByMap = [
-        'sticker' => 'c.name, a.id, a.name',
-    ];
+    public function listAssets()
+    {
+        $assetTable = $this->tables['table'];
+        $categoriesTable = $this->tables['categories_table'];
+        $categoryIdField = $this->getCategoryIdField();
+        $orderByMap = [
+            'sticker' => 'c.name, a.id, a.name',
+        ];
+        $orderBy = isset($orderByMap[$this->assetType])
+            ? $orderByMap[$this->assetType]
+            : 'c.sort_order, a.sort_order, a.name';
 
-    $orderBy = $orderByMap[$this->assetType]
-        ?? 'c.sort_order, a.sort_order, a.name';
+        $sql = "
+            SELECT a.*, c.name AS category_name, c.slug AS category_slug
+            FROM $assetTable a
+            JOIN $categoriesTable c ON a.$categoryIdField = c.id
+            ORDER BY $orderBy
+        ";
 
-    
-    $sql = "
-        SELECT a.*, c.name as category_name, c.slug as category_slug
-        FROM $assetTable a 
-        JOIN $categoriesTable c ON a.$categoryIdField = c.id 
-        ORDER BY $orderBy
-    ";
-
-    $result = $this->db->query($sql);
-
-    $assets = [];
-    while ($row = $result->fetch_assoc()) {
-        $assets[] = $row;
+        $result = $this->db->query($sql);
+        return $this->fetchAllAssoc($result);
     }
-
-    return $assets;
-}
 
     public function getAsset($id)
     {
-        $assetTable = $this->tables['table'];
-        
-        // Get asset data
-        $result = $this->db->query("SELECT * FROM $assetTable WHERE id = $id");
-        $asset = $result->fetch_assoc();
+        $stmt = $this->db->prepare(
+            "SELECT * FROM {$this->tables['table']} WHERE id = ?",
+            'i',
+            [(int)$id]
+        );
+        $result = $stmt->get_result();
+        $asset = $this->fetchOneAssoc($result);
+        $stmt->close();
 
         if (!$asset) {
             throw new Exception('Asset not found');
         }
 
-        // Get tags
         $asset['tags'] = $this->getAssetTags($id);
-
         return $asset;
     }
 
@@ -299,25 +631,84 @@ public function listAssets()
         $tagsTable = $this->tables['tags_table'];
         $tagCategoriesTable = $this->tables['tag_categories_table'];
         $tagsMapTable = $this->tables['tags_map_table'];
-        $assetIdField = $this->assetType . '_id';
-        $tagIdField = $this->assetType . '_tag_id';
-        $tagCategoryIdField = $this->assetType . '_tag_category_id';
-        
-        $result = $this->db->query("
-            SELECT t.id, t.name, t.hex_color, tc.name as category_name
+        $assetIdField = $this->getAssetIdField();
+        $tagIdField = $this->getTagIdField();
+        $tagCategoryIdField = $this->getTagCategoryIdField();
+
+        $sql = "
+            SELECT t.id, t.name, t.hex_color, tc.name AS category_name
             FROM $tagsMapTable tm
             JOIN $tagsTable t ON tm.$tagIdField = t.id
             JOIN $tagCategoriesTable tc ON t.$tagCategoryIdField = tc.id
-            WHERE tm.$assetIdField = $assetId
+            WHERE tm.$assetIdField = ?
             ORDER BY tc.sort_order, t.name
-        ");
+        ";
 
-        $tags = [];
-        while ($tag = $result->fetch_assoc()) {
-            $tags[] = $tag;
-        }
+        $stmt = $this->db->prepare($sql, 'i', [(int)$assetId]);
+        $result = $stmt->get_result();
+        $tags = $this->fetchAllAssoc($result);
+        $stmt->close();
 
         return $tags;
+    }
+
+    public function updateAsset($data)
+    {
+        $this->updateAssetRecord(
+            (int)$data['id'],
+            $data,
+            $this->getUpdateExtraAssignments($data)
+        );
+
+        if (isset($data['tags'])) {
+            $this->saveAssetTags($data['id'], $data['tags']);
+        }
+
+        return ['success' => true];
+    }
+
+    public function deleteAsset($id)
+    {
+        $this->deleteAssetRecord($id);
+        return ['success' => true];
+    }
+
+    public function reorderAssets($data)
+    {
+        $this->reorderAssetsByIds($data['order']);
+        return ['success' => true];
+    }
+
+    public function analyzeAsset($id)
+    {
+        $asset = $this->getAssetUrlById($id);
+        if (!$asset) {
+            throw new Exception($this->getAssetDisplayName() . ' not found');
+        }
+
+        return $this->performAnalysis($asset['url']);
+    }
+
+    public function analyzeAllAssets()
+    {
+        $updated = 0;
+        $errors = [];
+
+        foreach ($this->getActiveAssetRows() as $asset) {
+            try {
+                $analysis = $this->performAnalysis($asset['url']);
+                $this->persistAnalysis($asset['id'], $analysis);
+                $updated++;
+            } catch (Exception $e) {
+                $errors[] = 'ID ' . $asset['id'] . ': ' . $e->getMessage();
+            }
+        }
+
+        return [
+            'success' => true,
+            'updated' => $updated,
+            'errors' => $errors,
+        ];
     }
 
     public function exportAssets()
@@ -326,13 +717,10 @@ public function listAssets()
         $formatted = [];
 
         foreach ($assets as $asset) {
-            // Get tags for this asset
             $tags = $this->getAssetTags($asset['id']);
-            $tagNames = array_map(function($tag) {
+            $tagNames = array_map(function ($tag) {
                 return $tag['name'];
             }, $tags);
-
-            // Format for app consumption (child class defines specifics)
             $formatted[] = $this->formatAssetForExport($asset, $tagNames);
         }
 
@@ -343,7 +731,6 @@ public function listAssets()
     {
         $assets = $this->exportAssets();
         $jsonPath = "../../" . $this->tables['json_file'];
-
         $json = json_encode($assets, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         $result = file_put_contents($jsonPath, $json);
 

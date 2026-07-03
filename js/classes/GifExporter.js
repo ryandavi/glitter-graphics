@@ -3,16 +3,13 @@
 // ============================================
 class GifExporter {
 	constructor() {
-		const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-
-
 		this.config = {
 			workers: 4,
 			quality: 1,
 			workerScript: 'js/gif.worker.js',
 			fileName: 'ryandavi-com_glitter.gif',
 			timing: { forceDelay: 100, maxFrames: 60 },
-			debug: true,
+			debug: typeof CONFIG !== 'undefined' ? CONFIG.debug : false,
 			watermarkAlphaThreshold: 128,
 			useAdaptiveQuality: false // Add this flag
 		};
@@ -70,6 +67,42 @@ class GifExporter {
 		return warnings.join('');
 	}
 
+	_getFrameImageData(frame, fallbackWidth = null, fallbackHeight = null) {
+		if (frame instanceof ImageData) {
+			return frame;
+		}
+
+		if (frame?.imageData instanceof ImageData) {
+			return frame.imageData;
+		}
+
+		if (frame?.data instanceof ImageData) {
+			return frame.data;
+		}
+
+		if (frame?.data instanceof Uint8ClampedArray) {
+			const width = frame.width || fallbackWidth;
+			const height = frame.height || fallbackHeight;
+			if (width && height && frame.data.length === width * height * 4) {
+				return new ImageData(new Uint8ClampedArray(frame.data), width, height);
+			}
+		}
+
+		return null;
+	}
+
+	_getReducedFrameIndex(frameIndex, originalFrameCount, reducedFrameCount = null) {
+		if (!originalFrameCount) {
+			return 0;
+		}
+
+		if (!reducedFrameCount || reducedFrameCount <= 0) {
+			return frameIndex % originalFrameCount;
+		}
+
+		const normalizedIndex = (frameIndex % reducedFrameCount) / reducedFrameCount;
+		return Math.min(originalFrameCount - 1, Math.floor(normalizedIndex * originalFrameCount));
+	}
 
 
 
@@ -77,37 +110,28 @@ class GifExporter {
 
 
 
-	_renderLayerToCanvas(layer, ctx, frameIndex) {
+
+	_renderLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null) {
 		const { transform, isAnimated, width, height } = layer.stickerData;
 
 		// Determine which frame/image to use
 		let imageData;
 		if (isAnimated && layer.stickerData.frames) {
-			const frameCount = layer.stickerData.frames.frames.length;
-
-			// Use frameMap for smart reduction
-			let stickerFrameIndex = frameIndex % frameCount;
-			if (this.frameMap && this.frameMap.has(layer.id)) {
-				const reducedFrameCount = this.frameMap.get(layer.id);
-				stickerFrameIndex = Math.floor((frameIndex % reducedFrameCount) / reducedFrameCount * frameCount);
+			const frames = flattenedFrameMap?.get(layer.id);
+			if (!frames?.length) {
+				throw new Error(`Missing flattened sticker frames for layer ${layer.id}`);
 			}
 
-			const frame = layer.stickerData.frames.frames[stickerFrameIndex];
-
-			// Handle both ImageData objects and frame objects with .data property
-			if (frame instanceof ImageData) {
-				imageData = frame;
-			} else if (frame.data instanceof ImageData) {
-				imageData = frame.data;
-			} else {
-				if (this.config.debug) console.error('[GifExporter] Invalid sticker frame format', frame);
-				return;
+			const reducedFrameCount = frameMap?.get(layer.id);
+			const stickerFrameIndex = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
+			imageData = frames[stickerFrameIndex];
+			if (!imageData) {
+				throw new Error(`Invalid sticker frame format for layer ${layer.id} frame ${stickerFrameIndex}`);
 			}
 		} else if (layer.stickerData.staticImageData) {
 			imageData = layer.stickerData.staticImageData;
 		} else {
-			if (this.config.debug) console.error('[GifExporter] No image data for sticker layer', layer.id);
-			return;
+			throw new Error(`No image data for sticker layer ${layer.id}`);
 		}
 
 		// Create temporary canvas for the sticker frame
@@ -186,13 +210,13 @@ class GifExporter {
 		if (exportSettings.watermarkEnabled) {
 			watermark = await this._loadWatermark(callbacks);
 			if (watermark) {
-				if (this.config.debug) console.log('[GifExporter] Watermark loaded:', watermark);
+				dbg('[GifExporter] Watermark loaded:', watermark);
 			}
 		}
 
 		// 2. De-Optimize Frames
 		callbacks.onProgress(5, 'Processing frames...', 0, 0);
-		this._deoptimizeAnimatedFrames(visibleLayers, glitterGifs);
+		const flattenedFrameMap = this._buildFlattenedFrameMap(visibleLayers, glitterGifs);
 
 		// De-optimize watermark if animated
 		if (watermark && watermark.isAnimated) {
@@ -211,7 +235,7 @@ class GifExporter {
 		// If the base layer is hidden, the background is effectively transparent
 		const effectiveHasTransparency = !baseIsEffectivelyVisible || originalHasTransparency;
 
-		// FIXED: When base is off, honor transparency setting regardless of fill
+		// When base is off, honor transparency setting regardless of fill.
 		// When base is ON, only enable transparency if it's not being consumed by opaque fill
 		const needsTransparency = exportSettings.transparency && (
 			!baseIsEffectivelyVisible || // Base off = always respect transparency checkbox
@@ -219,11 +243,11 @@ class GifExporter {
 		);
 
 		const safeKey = needsTransparency
-			? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData, watermark)
+			? this._findSafeTransparencyKey(visibleLayers, glitterGifs, canvasData, watermark, flattenedFrameMap)
 			: null;
 
 		if (safeKey) {
-			if (this.config.debug) console.log(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
+			dbg(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
 		}
 
 		// 4. Synchronization
@@ -231,9 +255,6 @@ class GifExporter {
 		const totalFrames = frameCalc.totalFrames;
 		const frameMap = frameCalc.frameMap;
 		const reductions = frameCalc.reductions;
-
-		// Store frameMap on instance for _renderLayerToCanvas to access
-		this.frameMap = frameMap;
 
 		callbacks.onStatus(`Rendering ${totalFrames} frames...`);
 
@@ -258,9 +279,9 @@ class GifExporter {
 		if (this.config.useAdaptiveQuality && !exportSettings.quality) {
 			const pixelCount = canvasData.width * canvasData.height;
 			finalQuality = pixelCount > 100000 ? 10 : 5;
-			if (this.config.debug) console.log(`[GifExporter] Using adaptive quality: ${finalQuality} (${pixelCount} pixels)`);
+			dbg(`[GifExporter] Using adaptive quality: ${finalQuality} (${pixelCount} pixels)`);
 		} else {
-			if (this.config.debug) console.log(`[GifExporter] Using fixed quality: ${finalQuality}`);
+			dbg(`[GifExporter] Using fixed quality: ${finalQuality}`);
 		}
 
 		const gifOptions = {
@@ -277,7 +298,7 @@ class GifExporter {
 		if (needsTransparency && safeKey) {
 			gifOptions.transparent = safeKey.hex;
 			gifOptions.background = safeKey.hex;
-			if (this.config.debug) console.log('[GifExporter] Transparency enabled with key:', safeKey.hex);
+			dbg('[GifExporter] Transparency enabled with key:', safeKey.hex);
 		}
 
 		const gif = new GIF(gifOptions);
@@ -286,7 +307,7 @@ class GifExporter {
 		this.canvas.width = canvasData.width;
 		this.canvas.height = canvasData.height;
 
-		const frameSkip = exportSettings.frameSkip || 1;
+		const frameSkip = exportSettings.exportFrameSkip || 1;
 		const framesToRender = [];
 
 		// Build list of frames to actually render
@@ -297,11 +318,11 @@ class GifExporter {
 		}
 
 		// Apply reverse if enabled
-		if (exportSettings.reverse) {
+		if (exportSettings.exportReverse) {
 			framesToRender.reverse();
 		}
 
-		if (this.config.debug) console.log(`[GifExporter] Rendering ${framesToRender.length} of ${totalFrames} frames (skip: ${frameSkip}, reverse: ${!!exportSettings.reverse})`);
+		dbg(`[GifExporter] Rendering ${framesToRender.length} of ${totalFrames} frames (skip: ${frameSkip}, reverse: ${!!exportSettings.exportReverse})`);
 
 		for (let i = 0; i < framesToRender.length; i++) {
 			const f = framesToRender[i];
@@ -317,7 +338,8 @@ class GifExporter {
 					exportSettings,
 					watermark,
 					needsTransparency,
-					frameMap
+					frameMap,
+					flattenedFrameMap
 				);
 
 				gif.addFrame(frameData, {
@@ -336,18 +358,21 @@ class GifExporter {
 		// 8. Output
 		callbacks.onProgress(75, 'Encoding GIF...', framesToRender.length, framesToRender.length);
 
+		// NOTE: these fire from gif.js's event emitter, outside the caller's
+		// try/catch — throwing here would leave the progress bar stuck and the
+		// export button disabled forever. Route to the error callback instead.
 		gif.on('error', (error) => {
 			if (this.config.debug) console.error('GIF encoding error:', error);
-			throw new Error('GIF encoding failed: ' + error.message);
+			if (callbacks.onError) callbacks.onError(new Error('GIF encoding failed: ' + error.message));
 		});
 
 		gif.on('abort', () => {
-			throw new Error('Export cancelled');
+			if (callbacks.onError) callbacks.onError(new Error('Export cancelled'));
 		});
 
 		gif.on('finished', (blob) => this._handleFileSave(blob, callbacks, framesToRender.length, reductions));
 
-		if (this.config.debug) console.log('Starting GIF render:', {
+		dbg('Starting GIF render:', {
 			totalFrames: totalFrames,
 			renderedFrames: framesToRender.length,
 			frameSkip: frameSkip,
@@ -362,7 +387,7 @@ class GifExporter {
 
 	// --- HELPER METHODS ---
 
-	_findSafeTransparencyKey(layers, library, canvasData, watermark = null) {
+	_findSafeTransparencyKey(layers, library, canvasData, watermark = null, flattenedFrameMap = null) {
 		const candidates = [
 			// Use colors far from black - start with bright magenta
 			{ name: 'Magenta', r: 255, g: 0, b: 255, hex: 0xFF00FF },
@@ -380,17 +405,19 @@ class GifExporter {
 
 		layers.forEach(layer => {
 			if (layer.type === LayerType.GLITTER_FILL) {
-				// BOO
-				const glitter = library.find(g => g.id === layer.selectedGlitterId);
-				if (glitter?.frames?.frames) {
-					allFrames.push(...glitter.frames.frames);
+				const frames = flattenedFrameMap?.get(layer.id);
+				if (frames?.length) {
+					allFrames.push(...frames);
 				}
 			} else if (layer.type === LayerType.STICKER) {
 				const stickerData = layer.stickerData;
-				if (stickerData.isAnimated && stickerData.frames?.frames) {
-					allFrames.push(...stickerData.frames.frames);
+				if (stickerData.isAnimated) {
+					const frames = flattenedFrameMap?.get(layer.id);
+					if (frames?.length) {
+						allFrames.push(...frames);
+					}
 				} else if (!stickerData.isAnimated && stickerData.staticImageData) {
-					allFrames.push({ data: stickerData.staticImageData });
+					allFrames.push(stickerData.staticImageData);
 				}
 			}
 		});
@@ -400,7 +427,7 @@ class GifExporter {
 			if (watermark.isAnimated && watermark.frames) {
 				allFrames.push(...watermark.frames);
 			} else if (!watermark.isAnimated && watermark.imageData) {
-				allFrames.push({ data: watermark.imageData });
+				allFrames.push(watermark.imageData);
 			}
 		}
 
@@ -427,7 +454,13 @@ class GifExporter {
 
 			// Check all frames (glitter and stickers)
 			for (const frame of allFrames) {
-				const data = frame.data.data || frame.data; // Handle both ImageData and raw arrays
+				const imageData = this._getFrameImageData(frame);
+				if (!imageData) {
+					isSafe = false;
+					break;
+				}
+
+				const data = imageData.data;
 				const len = data.length;
 
 				for (let i = 0; i < len; i += 4) {
@@ -443,7 +476,7 @@ class GifExporter {
 			}
 
 			if (isSafe) {
-				if (this.config.debug) console.log(`[GifExporter] Found safe transparency key: ${candidate.name} RGB(${candidate.r}, ${candidate.g}, ${candidate.b})`);
+				dbg(`[GifExporter] Found safe transparency key: ${candidate.name} RGB(${candidate.r}, ${candidate.g}, ${candidate.b})`);
 				return candidate;
 			}
 		}
@@ -452,7 +485,7 @@ class GifExporter {
 		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
 	}
 
-	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings, watermark, needsTransparency, frameMap = null) {
+	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings, watermark, needsTransparency, frameMap = null, flattenedFrameMap = null) {
 		const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
 		const ctx = this.ctx;
 		const hCtx = this.helperCtx;
@@ -516,27 +549,27 @@ class GifExporter {
 			if (layer.type === LayerType.GLITTER_FILL) {
 				// Render glitter layer
 				const maskCanvas = maskCanvases.get(layer.id);
-				if (!maskCanvas) return;
-
-				const glitter = library.find(g => g.id === layer.selectedGlitterId);
-				const frames = glitter.frames.frames;
-
-				// Use frameMap for smart reduction
-				let fIdx = frameIndex % frames.length;
-				if (frameMap && frameMap.has(layer.id)) {
-					const reducedFrameCount = frameMap.get(layer.id);
-					const originalFrameCount = frames.length;
-					fIdx = Math.floor((frameIndex % reducedFrameCount) / reducedFrameCount * originalFrameCount);
+				if (!maskCanvas) {
+					throw new Error(`Missing mask canvas for layer ${layer.id}`);
 				}
 
-				const glitterFrame = frames[fIdx];
+				const frames = flattenedFrameMap?.get(layer.id);
+				if (!frames?.length) {
+					throw new Error(`Missing flattened glitter frames for layer ${layer.id}`);
+				}
+
+				// Use frameMap for smart reduction
+				const reducedFrameCount = frameMap?.get(layer.id);
+				const fIdx = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
+				const frameImageData = frames[fIdx];
+				if (!frameImageData) {
+					throw new Error(`Invalid glitter frame format for layer ${layer.id} frame ${fIdx}`);
+				}
 
 				hCtx.save();
 				hCtx.clearRect(0, 0, width, height);
 
 				const patternSource = document.createElement('canvas');
-				let frameImageData = (glitterFrame instanceof ImageData) ?
-					glitterFrame : glitterFrame.data;
 				patternSource.width = frameImageData.width;
 				patternSource.height = frameImageData.height;
 				patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
@@ -558,7 +591,7 @@ class GifExporter {
 
 			} else if (layer.type === LayerType.STICKER) {
 				// Render sticker layer
-				this._renderLayerToCanvas(layer, ctx, frameIndex);
+				this._renderLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap);
 			}
 		});
 
@@ -576,20 +609,22 @@ class GifExporter {
 					safeKeyInFrame++;
 				}
 			}
-			console.log(`[GifExporter] Frame ${frameIndex} background color pixels: ${safeKeyInFrame}`);
+			dbg(`[GifExporter] Frame ${frameIndex} background color pixels: ${safeKeyInFrame}`);
 		}
 
 		return ctx.getImageData(0, 0, width, height);
 	}
 
-	async _parseGifWithMetadata(url) {
+	async _parseGifWithMetadata(url, providedBytes = null) {
 		try {
-			const response = await fetch(url);
-			if (!response.ok) throw new Error(`HTTP ${response.status}`);
-			const arrayBuffer = await response.arrayBuffer();
-			if (!arrayBuffer || arrayBuffer.byteLength === 0) throw new Error('Empty file');
-
-			const uintArray = new Uint8Array(arrayBuffer);
+			let uintArray = providedBytes;
+			if (!uintArray) {
+				const response = await fetch(url);
+				if (!response.ok) throw new Error(`HTTP ${response.status}`);
+				const arrayBuffer = await response.arrayBuffer();
+				if (!arrayBuffer || arrayBuffer.byteLength === 0) throw new Error('Empty file');
+				uintArray = new Uint8Array(arrayBuffer);
+			}
 			const reader = new GifReader(uintArray);
 			const frameCount = reader.numFrames();
 
@@ -648,19 +683,22 @@ class GifExporter {
 		}
 	}
 
-	_deoptimizeAnimatedFrames(layers, library) {
+	_buildFlattenedFrameMap(layers, library) {
+		const flattenedFrameMap = new Map();
+
 		layers.forEach(layer => {
-			let glitter, name, isSticker;
+			let animation, name, isSticker;
 
 			if (layer.type === LayerType.GLITTER_FILL) {
-				glitter = library.find(g => g.id === layer.selectedGlitterId);
-				if (!glitter.frames || glitter.isFlattened) return;
+				const glitter = library.find(g => g.id === layer.selectedGlitterId);
+				if (!glitter?.frames?.frames?.length) return;
+				animation = glitter.frames;
 				name = glitter.name;
 				isSticker = false;
 			} else if (layer.type === LayerType.STICKER && layer.stickerData.isAnimated) {
 				const stickerData = layer.stickerData;
-				if (!stickerData.frames || stickerData.isFlattened) return;
-				glitter = { frames: stickerData.frames };
+				if (!stickerData.frames?.frames?.length) return;
+				animation = stickerData.frames;
 				name = stickerData.name;
 				isSticker = true;
 			} else {
@@ -668,9 +706,9 @@ class GifExporter {
 			}
 
 			let glitterHasTransparency = false;
-			const rawFrames = glitter.frames.frames;
-			const width = glitter.frames.width;
-			const height = glitter.frames.height;
+			const rawFrames = animation.frames;
+			const width = animation.width;
+			const height = animation.height;
 			const flattenedFrames = [];
 
 			const canvas = document.createElement('canvas');
@@ -689,19 +727,24 @@ class GifExporter {
 			let previousDisposal = null; // Track PREVIOUS frame's disposal
 
 			// CRITICAL: Check for transparency in raw frames BEFORE disposal calculation
-			if (rawFrames.length > 0 && rawFrames[0].imageData) {
-				const firstFrameData = rawFrames[0].imageData.data;
+			if (rawFrames.length > 0) {
+				const firstFrameImage = this._getFrameImageData(rawFrames[0], width, height);
+				if (!firstFrameImage) {
+					throw new Error(`Invalid first frame for "${name}"`);
+				}
+
+				const firstFrameData = firstFrameImage.data;
 				for (let j = 3; j < firstFrameData.length; j += 4) {
 					if (firstFrameData[j] < 255) {
 						glitterHasTransparency = true;
-						if (this.config.debug) console.log(`[GifExporter] "${name}" pre-check: Has transparency detected`);
+						dbg(`[GifExporter] "${name}" pre-check: Has transparency detected`);
 						break;
 					}
 				}
 			}
 
-			// NEW APPROACH: Use original disposal methods for stickers, 
-			// analyze for glitter
+			// Stickers keep their original disposal methods. Glitter still uses
+			// the existing heuristic analysis below.
 			let useOriginalDisposal = isSticker;
 			let calculatedDisposal = null;
 
@@ -712,8 +755,14 @@ class GifExporter {
 				let isAnimation = false;
 
 				if (rawFrames.length > 1) {
-					const frame1Data = rawFrames[0].imageData.data;
-					const frame2Data = rawFrames[1].imageData.data;
+					const frame1Image = this._getFrameImageData(rawFrames[0], width, height);
+					const frame2Image = this._getFrameImageData(rawFrames[1], width, height);
+					if (!frame1Image || !frame2Image) {
+						throw new Error(`Invalid animation frames for "${name}"`);
+					}
+
+					const frame1Data = frame1Image.data;
+					const frame2Data = frame2Image.data;
 					let transparentCount = 0;
 					let opaqueCount = 0;
 					let differentPixels = 0;
@@ -740,7 +789,7 @@ class GifExporter {
 					isAnimation = transparentPercent >= 30 && transparentPercent <= 60 && differentPercent < 25;
 					needsClearing = (differentPixels > 20 && !usesDeltas) || isAnimation;
 
-					if (this.config.debug) console.log(`[DEBUG] "${name}" - Frame 2: ${transparentPercent.toFixed(1)}% transparent, ${differentPercent.toFixed(1)}% different, usesDeltas: ${usesDeltas}, isAnimation: ${isAnimation}, needsClearing: ${needsClearing}`);
+					dbg(`[DEBUG] "${name}" - Frame 2: ${transparentPercent.toFixed(1)}% transparent, ${differentPercent.toFixed(1)}% different, usesDeltas: ${usesDeltas}, isAnimation: ${isAnimation}, needsClearing: ${needsClearing}`);
 				}
 
 
@@ -771,20 +820,24 @@ class GifExporter {
 				} else {
 					calculatedDisposal = 1;
 				}
-				if (this.config.debug) console.log(`[DISPOSAL] "${name}": Calculated strategy = ${calculatedDisposal === 1 ? 'STACK' : 'CLEAR'} (hasTransparency: ${glitterHasTransparency})`);
+				dbg(`[DISPOSAL] "${name}": Calculated strategy = ${calculatedDisposal === 1 ? 'STACK' : 'CLEAR'} (hasTransparency: ${glitterHasTransparency})`);
 			} else {
-				if (this.config.debug) console.log(`[DISPOSAL] "${name}": Using original frame disposal methods (sticker)`);
+				dbg(`[DISPOSAL] "${name}": Using original frame disposal methods (sticker)`);
 			}
 
 			for (let i = 0; i < rawFrames.length; i++) {
 				const frame = rawFrames[i];
+				const frameImageData = this._getFrameImageData(frame, width, height);
+				if (!frameImageData) {
+					throw new Error(`Invalid frame ${i} for "${name}"`);
+				}
 
 				// Get THIS frame's disposal (will be used NEXT iteration)
 				const currentDisposal = useOriginalDisposal
 					? (frame.disposal === 0 || frame.disposal == null ? 1 : frame.disposal)
 					: calculatedDisposal;
 
-				// CRITICAL FIX: Handle disposal of PREVIOUS frame (not current!)
+				// Apply the previous frame's disposal before drawing this frame.
 				if (i > 0 && previousDisposal === 2) {
 					ctx.clearRect(0, 0, width, height);
 				} else if (i > 0 && previousDisposal === 3 && previousFrameData) {
@@ -797,17 +850,12 @@ class GifExporter {
 				}
 
 				// Draw current frame
-				tempCtx.putImageData(frame.imageData, 0, 0);
+				tempCtx.putImageData(frameImageData, 0, 0);
 				ctx.drawImage(tempCanvas, 0, 0);
 
 				// Capture the composited result
 				const flattenedData = ctx.getImageData(0, 0, width, height);
-
-				flattenedFrames.push({
-					data: flattenedData,
-					width,
-					height
-				});
+				flattenedFrames.push(flattenedData);
 
 				// Check FIRST FRAME ONLY for actual transparency
 				if (i === 0) {
@@ -818,22 +866,17 @@ class GifExporter {
 							break;
 						}
 					}
-					if (this.config.debug) console.log(`[GifExporter] "${name}" (${isSticker ? 'sticker' : 'glitter'}) has transparency: ${glitterHasTransparency}, disposal: ${currentDisposal}`);
+					dbg(`[GifExporter] "${name}" (${isSticker ? 'sticker' : 'glitter'}) has transparency: ${glitterHasTransparency}, disposal: ${currentDisposal}`);
 				}
 
 				// Save disposal for NEXT iteration
 				previousDisposal = currentDisposal;
 			}
 
-			glitter.frames.frames = flattenedFrames;
-
-			if (layer.type === LayerType.GLITTER_FILL) {
-				const glitter = library.find(g => g.id === layer.selectedGlitterId);
-				if (glitter) glitter.isFlattened = true;
-			} else if (layer.type === LayerType.STICKER) {
-				layer.stickerData.isFlattened = true;
-			}
+			flattenedFrameMap.set(layer.id, flattenedFrames);
 		});
+
+		return flattenedFrameMap;
 	}
 
 	_deoptimizeWatermarkFrames(watermark) {
@@ -879,9 +922,14 @@ class GifExporter {
 			const frameCount = watermark.frames.length;
 			const watermarkFrameIndex = frameIndex % frameCount;
 			const frame = watermark.frames[watermarkFrameIndex];
-			sourceData = frame.data instanceof ImageData ? frame.data : frame.data.data;
+			sourceData = this._getFrameImageData(frame, watermark.width, watermark.height);
 		} else {
 			sourceData = watermark.imageData;
+		}
+
+		if (!sourceData) {
+			if (this.config.debug) console.error('[GifExporter] Invalid watermark frame', frameIndex);
+			return;
 		}
 
 		const tempCanvas = document.createElement('canvas');
@@ -945,23 +993,6 @@ class GifExporter {
 		return { r, g, b };
 	}
 
-	_analyzeColors(frames) {
-		const colorSet = new Set();
-
-		frames.forEach(frame => {
-			const data = frame.data.data;
-			for (let i = 0; i < data.length; i += 4) {
-				if (data[i + 3] > 0) { // Not fully transparent
-					// Pack RGB into single number for Set
-					const color = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2];
-					colorSet.add(color);
-				}
-			}
-		});
-
-		return colorSet.size;
-	}
-
 	_createMaskCanvas(rawMaskData, width, height) {
 		const c = document.createElement('canvas');
 		c.width = width;
@@ -1015,7 +1046,7 @@ class GifExporter {
 					// Load static image
 					callbacks.onStatus(`Loading ${stickerData.name}...`);
 					try {
-						stickerData.staticImageData = await this._loadStaticImage(stickerData.url, stickerData.width, stickerData.height);
+						stickerData.staticImageData = await this._loadStaticImage(stickerData.url);
 					} catch (e) {
 						throw new Error(`Failed to load static sticker ${stickerData.name}`);
 					}
@@ -1104,16 +1135,16 @@ class GifExporter {
 	}
 
 
-	async _loadStaticImage(url, width, height) {
+	async _loadStaticImage(url) {
 		return new Promise((resolve, reject) => {
 			const img = new Image();
 			img.onload = () => {
 				const canvas = document.createElement('canvas');
-				canvas.width = width;
-				canvas.height = height;
+				canvas.width = img.naturalWidth;
+				canvas.height = img.naturalHeight;
 				const ctx = canvas.getContext('2d');
 				ctx.drawImage(img, 0, 0);
-				const imageData = ctx.getImageData(0, 0, width, height);
+				const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 				resolve(imageData);
 			};
 			img.onerror = () => reject(new Error('Failed to load image'));
@@ -1150,9 +1181,9 @@ class GifExporter {
 			: this._standardLCM(layerFrameCounts, maxFrames);
 
 		if (this.config.debug) {
-			console.log('[GifExporter] Calculated total frames:', result.totalFrames);
+			dbg('[GifExporter] Calculated total frames:', result.totalFrames);
 			if (result.reductions.length > 0) {
-				console.log('[GifExporter] Smart reductions applied:', result.reductions);
+				dbg('[GifExporter] Smart reductions applied:', result.reductions);
 			}
 		}
 
@@ -1268,7 +1299,7 @@ class GifExporter {
 	}
 
 	_handleFileSave(blob, callbacks, frameCount, reductions = []) {
-		if (this.config.debug) console.log('_handleFileSave called with blob size:', blob.size);
+		dbg('_handleFileSave called with blob size:', blob.size);
 		callbacks.onProgress(100, 'Export complete!', 0, 0);
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete({

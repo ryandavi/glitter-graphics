@@ -10,7 +10,6 @@ class ContentManager {
 		this.content = [];
 		this.userContent = [];
 
-		// ADD THIS:
 		this.browser = null;
 		this.useBrowser = false; // Toggle for browser mode
 
@@ -101,6 +100,69 @@ class ContentManager {
 		this.browser.navigateToItem(contentId);
 	}
 
+	normalizeBooleanValue(value, fallback = false) {
+		if (value === undefined || value === null || value === '') {
+			return fallback;
+		}
+
+		if (typeof value === 'string') {
+			const normalized = value.toLowerCase();
+			if (normalized === 'true') return true;
+			if (normalized === 'false') return false;
+		}
+
+		return Boolean(Number(value));
+	}
+
+	normalizeNumberValue(value, fallback = 0) {
+		if (value === undefined || value === null || value === '') {
+			return fallback;
+		}
+
+		const parsed = Number(value);
+		return Number.isFinite(parsed) ? parsed : fallback;
+	}
+
+	normalizeArrayValue(value, fallback = []) {
+		return Array.isArray(value) ? value : fallback;
+	}
+
+	normalizeAsset(raw, defaults = {}) {
+		const colorCodes = Array.isArray(raw.colorCodes)
+			? raw.colorCodes
+			: (defaults.colorCodes || []);
+
+		return {
+			...defaults,
+			id: raw.id ?? defaults.id ?? null,
+			name: raw.name ?? defaults.name ?? 'Unnamed',
+			filename: raw.filename ?? defaults.filename ?? null,
+			url: raw.url ?? defaults.url ?? null,
+			thumbnailUrl: raw.thumbnailUrl ?? raw.url ?? defaults.thumbnailUrl ?? null,
+			category: raw.category ?? defaults.category ?? 'Uncategorized',
+			attribution: raw.attribution ?? defaults.attribution ?? null,
+			stickerText: raw.stickerText ?? defaults.stickerText ?? null,
+			tags: this.normalizeArrayValue(raw.tags, defaults.tags || []),
+			colors: this.normalizeArrayValue(raw.colors, defaults.colors || []),
+			generatedName: raw.generatedName ?? defaults.generatedName ?? null,
+			brightness: raw.brightness ?? defaults.brightness ?? null,
+			sortOrder: this.normalizeNumberValue(raw.sortOrder, defaults.sortOrder ?? 0),
+			hue: raw.hue ?? defaults.hue ?? null,
+			colorCodes,
+			frameCount: this.normalizeNumberValue(raw.frameCount, defaults.frameCount ?? 0),
+			frameRate: this.normalizeNumberValue(raw.frameRate, defaults.frameRate ?? 10),
+			isVariableFramerate: this.normalizeBooleanValue(raw.isVariableFramerate, defaults.isVariableFramerate ?? false),
+			isAnimated: this.normalizeBooleanValue(raw.isAnimated, defaults.isAnimated ?? false),
+			hasTransparency: this.normalizeBooleanValue(raw.hasTransparency, defaults.hasTransparency ?? false),
+			width: this.normalizeNumberValue(raw.width, defaults.width ?? 0),
+			height: this.normalizeNumberValue(raw.height, defaults.height ?? 0),
+			fileSize: this.normalizeNumberValue(raw.fileSize, defaults.fileSize ?? 0),
+			isPixelated: this.normalizeBooleanValue(raw.isPixelated, defaults.isPixelated ?? false),
+			isActive: this.normalizeBooleanValue(raw.isActive, defaults.isActive ?? true),
+			featured: this.normalizeBooleanValue(raw.featured, defaults.featured ?? false),
+			source: raw.source ?? defaults.source ?? null,
+		};
+	}
 
 	populateCategoryChips() {
 		if (!this.ui.categoryChips || this.ui.categoryChips.children.length > 0) return;
@@ -263,7 +325,7 @@ class ContentManager {
 
 		// Add image
 		const img = document.createElement('img');
-		img.src = item.url;
+		img.src = item.thumbnailUrl || item.url;
 		option.appendChild(img);
 
 		// Wire up click handler (delegate to child)
@@ -300,12 +362,12 @@ class ContentManager {
 	}
 
 	hasActiveFilters() {
-		// Check if any filters are active
-		if (this.activeFilters.search !== '') return true;
-
 		for (let key in this.activeFilters) {
 			const val = this.activeFilters[key];
-			if (val instanceof Set && val.size > 0) return true;
+			if (val instanceof Set) {
+				if (val.size > 0) return true;
+				continue; // an empty Set is not an active filter
+			}
 			if (val !== null && val !== '' && val !== false) return true;
 		}
 

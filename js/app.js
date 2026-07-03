@@ -1,318 +1,3 @@
-const CONFIG = {
-	// ========================================
-	// APPLICATION
-	// ========================================
-	maxLayers: 25,
-	historyLimit: 30,
-	defaultTool: "select",
-	createDefaultLayerOnLoad: false,
-	createBaseImageLayerOnLoad: true,
-
-	// ========================================
-	// CANVAS & IMAGE
-	// ========================================
-	maxImageWidth: 800,
-	maxImageHeight: 800,
-	maxFileSizeMB: 10,
-	defaultCanvasPreset: { width: 400, height: 400, color: '#ffffff' },
-	baseGridSize: 20, // Transparency grid
-
-	// Artboard
-	showArtboardBorder: false,
-	artboardBorderColor: '#00ffff',
-	artboardBorderWidth: 2,
-	artboardBorderStyle: 'dashed', // 'solid' | 'dashed'
-
-	// ========================================
-	// LAYERS
-	// ========================================
-	exportFrameRateSource: 'first-layer',
-	layerSettingsOpenByDefault: false,
-
-	// Layer List Drag
-	scrollZoneSize: 50,
-	scrollSpeed: 10,
-
-	// ========================================
-	// TOOLS - Selection
-	// ========================================
-	defaultThreshold: 50,
-	defaultFeather: 0,
-	defaultScale: 100,
-	defaultOpacity: 100,
-	alphaThreshold: 254,
-	sliderDebounceMs: 150,
-	allowTransparentSelection: true,
-
-	// ========================================
-	// TOOLS - Glitter
-	// ========================================
-	defaultGlitterId: 111,
-	glitterSettingsOpenByDefault: false,
-	refineGlobalDefault: false,
-	glitterGlobalDefault: false,
-
-	// Preview - Selected Outline
-	selectedGlitterOffset: 2,
-	selectedGlitterWidth: 2,
-
-	// ========================================
-	// TOOLS - Stickers
-	// ========================================
-	maxStickers: 50,
-	maxStickerUploadSize: 5 * 1024 * 1024, // 5MB
-	allowedStickerTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-	defaultStickerOpacity: 100,
-	defaultStickerScale: 100,  // CORRECTED
-	defaultStickerRotation: 0,
-	rotationSnapTolerance: 5, // degrees
-	roundStickerTransforms: true,  // Round position and rotation to integers
-
-	// ========================================
-	// UI - Zoom
-	// ========================================
-	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
-
-	// ========================================
-	// UI - Gallery
-	// ========================================
-	defaultGalleryTab: 'glitter', // 'glitter' | 'stickers'
-
-	// ========================================
-	// MOBILE
-	// ========================================
-	mobileBreakpoint: 800, // Width in pixels where mobile mode activates
-	mobileStickerHitAreaPadding: 20, // Extra pixels for easier touch targets
-	mobileAutoCloseDesignDrawer: true, // Close design drawer after selecting glitter/sticker
-	mobileOpenDrawOnLayerAdd: true,
-
-	// ========================================
-	// EXPORT
-	// ========================================
-	// General
-	defaultExportBaseImage: true,
-	defaultExportGlitter: true,
-	defaultExportStickers: true,
-	defaultExportTransparency: true,
-	defaultExportMatteColor: '#ffffff',
-
-	// Quality & Rendering
-	defaultExportQuality: 10,
-	defaultExportDitherEnabled: true,
-	defaultExportDitherType: 'FloydSteinberg',
-
-	// Frame Control
-	defaultExportFrameDelay: 110,
-	defaultExportMaxFrames: 60,
-	maxFramesHardLimit: 1000, // Very high limit when "no limit" is selected
-	defaultExportFrameSkip: 1,
-	defaultExportReverse: false,
-	defaultExportSmartFrameReduction: true,
-
-	// Watermark
-	defaultExportWatermarkEnabled: false,
-	watermarkUrl: 'images/watermark/2.png',
-	watermarkPosition: 'bottom-right', // 'top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right', 'center'
-	watermarkPaddingX: 5, // pixels from edge
-	watermarkPaddingY: 5, // pixels from edge
-	watermarkOpacity: 100, // 0-100
-	watermarkScale: 100, // percentage
-
-	// UI
-	defaultShowHints: true,
-
-	// ========================================
-	// DEBUG
-	// ========================================
-	forceIOSExportPreview: false, // Set to true to test iOS export modal on desktop
-	autoSelect: true,
-	autoCreateGlitterLayer: true,
-	debug: false,
-
-
-	// ========================================
-	// UI - Sticker Handles
-	// ========================================
-	stickerHandles: {
-		enabled: true,
-		cornerSize: 8,
-		rotationHandleRadius: 5,
-		rotationHandleDistance: 30,
-		handleFill: '#ffffff',
-		handleStroke: 'var(--color-bg-secondary)',
-		handleStrokeWidth: 1.5,
-		boundingBoxColor: 'var(--color-accent)',
-		boundingBoxWidth: 1.5,
-		handleHitboxPadding: 8,
-		minScale: 10,   // ADD THIS - minimum 10%
-		maxScale: 500,  // ADD THIS - maximum 500%
-	},
-
-	// ========================================
-	// SHORTCUTS
-	// ========================================
-	shortcuts: {
-		tools: [
-			{ key: 'V', action: 'Select Tool' },
-			{ key: 'I', action: 'Color Picker Tool' },
-			{ key: 'H', action: 'Hand Tool' },
-			{ key: 'Z', action: 'Zoom Tool' },
-		],
-		view: [
-			{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)' },
-			{ key: 'Scroll Wheel', action: 'Zoom In/Out (Zoom Tool)' },
-			{ key: 'Ctrl + 0', action: 'Fit Screen' },
-			{ key: 'Ctrl + 1', action: 'Reset Zoom (100%)' },
-			{ key: 'Ctrl + +/-', action: 'Zoom In/Out' }
-		],
-		history: [
-			{ key: 'Ctrl + Z', action: 'Undo' },
-			{ key: 'Ctrl + Shift + Z', action: 'Redo' },
-		]
-	},
-};
-
-const LayerType = {
-	GLITTER_FILL: 'glitter-fill',
-	STICKER: 'sticker',
-	BASE_IMAGE: 'base-image',
-};
-
-const ToolType = {
-	SELECT: 'select',
-	HAND: 'hand',
-	COLOR_PICKER: 'colorPicker',
-	ZOOM: 'zoom'
-};
-
-// Layer UI Configuration - Single source of truth for what UI elements each layer type needs
-const LAYER_UI_CONFIG = {
-	// Special states (not layer types)
-	NO_IMAGE: {
-		designPanelSections: ['welcomeSection'],
-		mobileSettingsSections: [],
-		panelMode: 'welcome'
-	},
-	NO_LAYER: {
-		designPanelSections: ['noLayerSettingsSection'],
-		mobileSettingsSections: [],
-		panelMode: 'no-layer'
-	},
-
-	// Layer types
-	[LayerType.BASE_IMAGE]: {
-		designPanelSections: ['baseLayerSettingsSection'],
-		mobileSettingsSections: [],
-		panelMode: 'base-layer',
-		onActivate: (editor, layer) => {
-			editor.showLayerSettingsEmptyState();
-		}
-	},
-
-	[LayerType.GLITTER_FILL]: {
-		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'],
-		mobileSettingsSections: ['tool', 'glitter'],
-		panelMode: 'glitter',
-		onActivate: (editor, layer) => {
-			// Auto-switch to color picker if layer has no selections yet
-			if ((!layer.selections || layer.selections.length === 0) && layer.selectedGlitterId) {
-				editor.setTool(ToolType.COLOR_PICKER);
-			}
-			editor.updateGlitterSelection();
-			editor.hideLayerSettingsEmptyState();
-			editor.hideGlitterSettingsEmptyState();
-			editor.loadActiveLayerSettings();
-		}
-	},
-
-	[LayerType.STICKER]: {
-		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'],
-		mobileSettingsSections: ['sticker'],
-		panelMode: 'sticker',
-		onActivate: (editor, layer) => {
-			editor.setTool(ToolType.SELECT);
-
-			// Check if sticker is actually selected
-			const stickerContent = document.getElementById('stickerSettingsContent');
-			if (layer.stickerSourceId) {
-				// Has sticker - show content and controls
-				// if (stickerContent) stickerContent.classList.add('visible');
-				editor.hideStickerSettingsEmptyState();
-				editor.loadStickerSettings(layer);
-			} else {
-				// No sticker selected - hide content, show empty state
-				if (stickerContent) stickerContent.classList.remove('visible');
-				editor.showStickerSettingsEmptyState();
-			}
-
-			editor.updateStickerSelection();
-		}
-	}
-};
-
-// Configuration for different asset types
-const ASSET_TYPE_CONFIG = {
-	glitter: {
-		prefix: 'glitterAsset',
-		managerKey: 'glitterManager',
-		renderThumbnail: (thumbnail, asset) => {
-			thumbnail.className = 'asset-info-thumbnail glitter-bg';
-			thumbnail.style.backgroundImage = `url(${asset.url})`;
-			thumbnail.innerHTML = '';
-		},
-		getExtraBadges: (asset) => {
-			// Glitter-specific badges if needed
-			return [];
-		}
-	},
-	sticker: {
-		prefix: 'stickerAsset',
-		managerKey: 'stickerManager',
-		renderThumbnail: (thumbnail, asset) => {
-			thumbnail.className = 'asset-info-thumbnail';
-			thumbnail.style.backgroundImage = '';
-			thumbnail.innerHTML = `<img src="${asset.url}" alt="${asset.name}">`;
-		},
-		getExtraBadges: (asset) => {
-			const badges = [];
-
-			// Sticker text badge
-			if (asset.sticker_text) {
-				badges.push({
-					class: 'badge-text',
-					text: `Text: "${asset.sticker_text}"`
-				});
-			}
-
-			return badges;
-		}
-	}
-};
-
-// ============================================
-// DEBUG CONFIGURATION
-// Set enabled: true to auto-load preset stickers for testing
-// ============================================
-const DEBUG_CONFIG = {
-	enabled: false,  // Set to true to enable debug mode
-
-	// Blank canvas settings (loads automatically if enabled)
-	canvas: {
-		width: 800,
-		height: 800,
-		color: '#ffffff'
-	},
-
-	// Preset sticker layers - just specify ID and position
-	// System will fill in all other defaults automatically
-	stickers: [
-		{ id: 1, x: 200, y: 200 },
-		{ id: 2, x: 400, y: 400 },
-		{ id: 3, x: 600, y: 600 }
-	]
-};
-
-
 // ============================================
 // GLITTER EDITOR CLASS
 // Contains all the logic for the glitter editor - UI and functionality
@@ -355,8 +40,6 @@ class GlitterEditor {
 		// TOOL & HISTORY
 		// ============================================================================
 		this.currentTool = null;
-		this.history = [];
-		this.historyIndex = -1;
 
 		// ============================================================================
 		// DISPLAY SETTINGS
@@ -392,6 +75,7 @@ class GlitterEditor {
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this);
 		this.mobileManager = new MobileManager(this);
+		this.historyManager = new HistoryManager(this);
 
 		// ============================================================================
 		// INITIALIZATION
@@ -448,7 +132,7 @@ class GlitterEditor {
 			// Render the sticker
 			this.stickerManager.renderLayer(layer);
 
-			console.log(`[DEBUG] Loaded sticker: ${stickerInfo.name} at (${stickerPreset.x}, ${stickerPreset.y})`);
+			dbg(`[DEBUG] Loaded sticker: ${stickerInfo.name} at (${stickerPreset.x}, ${stickerPreset.y})`);
 		}
 
 		// 3. Update UI
@@ -510,8 +194,6 @@ class GlitterEditor {
 	// ===== INITIALIZATION =====
 
 	async init() {
-		// Initialize sticker manager
-		this.stickerManager = new StickerManager(this);
 		this.exporter = new GifExporter();
 		await this.stickerManager.init();
 		await this.glitterManager.init(); // NEW
@@ -533,6 +215,7 @@ class GlitterEditor {
 			exportFrameSkip: this.exportSettings.exportFrameSkip,
 			exportReverse: this.exportSettings.exportReverse,
 			exportSmartFrameReduction: this.exportSettings.smartFrameReduction,
+			exportBaseImage: this.exportSettings.baseImage,
 			showHelpfulHints: this.showHints
 		};
 
@@ -759,18 +442,6 @@ resetAllSettings() {
 	this.syncExportSettingsToUI();
 	this.saveSettingsToStorage();
 }
-
-getSectionDisplayName(section) {
-	const names = {
-		'interface': 'Interface Settings',
-		'export': 'Export Settings',
-		'encoding': 'Encoding Settings',
-		'framecontrol': 'Frame Control Settings'
-	};
-	return names[section] || 'Settings';
-}
-
-
 
 	getSectionDisplayName(section) {
 		const names = {
@@ -1384,7 +1055,6 @@ getSectionDisplayName(section) {
 	// ===== EVENT LISTENERS =====
 
 	setupEventListeners() {
-		this.setupMobileClickProtection();
 		this.setupToolbarListeners();
 		this.setupZoomListeners();
 		this.setupPanListeners();
@@ -1401,28 +1071,6 @@ getSectionDisplayName(section) {
 		this.setupHelpfulMessageListeners();
 	}
 
-
-
-	setupMobileClickProtection() {
-		if (!this.isMobile) return;
-
-		console.log('🛡️ Setting up mobile click protection');
-
-		// ONLY block clicks on mobile (not pointerdown/mousedown - those are needed)
-		// Add a CAPTURE phase click blocker - runs BEFORE normal click handlers
-		this.previewContainer.addEventListener('click', (e) => {
-			// ONLY allow clicks that are explicitly marked as verified simple taps
-			if (!e.isSimpleTap) {
-				console.log('🚫 CAPTURE PHASE: Blocking non-verified click');
-				e.preventDefault();
-				e.stopPropagation();
-				e.stopImmediatePropagation(); // Stop ALL other listeners
-				return false;
-			}
-
-			console.log('✅ CAPTURE PHASE: Allowing verified simple tap');
-		}, { capture: true });
-	}
 
 
 	// ===== HELPER: Attach slider with live update and reset =====
@@ -1583,7 +1231,7 @@ getSectionDisplayName(section) {
 
 				// Save and debounce preview update
 				this.saveActiveLayerSettings(true, false);
-				this.debouncedSliderUpdate('threshold');
+				this.debouncedSliderUpdate();
 			});
 
 			contextThreshold.addEventListener('change', () => {
@@ -1708,7 +1356,7 @@ getSectionDisplayName(section) {
 			if (slider) {
 				slider.addEventListener('input', () => {
 					this.saveActiveLayerSettings(saveRefine, saveGlitter);
-					this.debouncedSliderUpdate(sliderId);
+					this.debouncedSliderUpdate();
 				});
 				slider.addEventListener('change', () => this.saveState());
 			}
@@ -2600,7 +2248,7 @@ setupWelcomeModalListeners() {
 
 		// Prevent leaving if unsaved
 		window.addEventListener('beforeunload', (e) => {
-			if ((this.originalImage || this.historyIndex > 0) && !this.isSaved) {
+			if ((this.originalImage || this.historyManager.canUndo()) && !this.isSaved) {
 				e.preventDefault();
 				e.returnValue = '';
 			}
@@ -3003,11 +2651,11 @@ setupWelcomeModalListeners() {
 	}
 
 	updateColorPickerControls() {
-		console.log(`Updating color picker controls`);
+		dbg(`Updating color picker controls`);
 		const layer = this.layerManager.getActiveLayer();
 		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
 
-		console.log(`Updating color picker controls for layer ${layer.id}`);
+		dbg(`Updating color picker controls for layer ${layer.id}`);
 
 		const contextThreshold = document.getElementById('contextThreshold');
 		const contextThresholdValue = document.getElementById('contextThresholdValue');
@@ -3133,112 +2781,22 @@ setupWelcomeModalListeners() {
 	// ===== HISTORY =====
 
 	saveState() {
-		const state = {
-			layers: this.layers.map(layer => {
-				// 1. STICKER LAYERS
-				if (layer.type === LayerType.STICKER && this.stickerManager) {
-					return this.stickerManager.serializeSticker(layer);
-				}
-
-				// 2. BASE IMAGE LAYERS (New fix)
-				// Base layers don't have selections or settings to save
-				if (layer.type === LayerType.BASE_IMAGE) {
-					return {
-						id: layer.id,
-						type: LayerType.BASE_IMAGE,
-						visible: layer.visible,
-						locked: layer.locked
-					};
-				}
-
-				// 3. GLITTER FILL LAYERS (Default)
-				return {
-					id: layer.id,
-					type: layer.type || LayerType.GLITTER_FILL,
-					visible: layer.visible,
-					// Safely handle selections: if undefined, save as empty array
-					selections: layer.selections ? JSON.parse(JSON.stringify(layer.selections)) : [],
-					selectedGlitterId: layer.selectedGlitterId, // CHANGED
-					// Safely handle settings
-					settings: layer.settings ? { ...layer.settings } : {}
-				};
-			}),
-			activeLayerId: this.activeLayerId
-		};
-
-		this.history = this.history.slice(0, this.historyIndex + 1);
-
-		if (this.history.length >= CONFIG.historyLimit) {
-			this.history.shift();
-		} else {
-			this.historyIndex++;
-		}
-
-		this.history.push(state);
-		this.updateHistoryButtons();
+		this.historyManager.saveState();
 	}
 
 	async restoreState(state) {
-		// Restore layers with async sticker deserialization
-		this.layers = [];
-
-		for (const layerData of state.layers) {
-			if (layerData.type === LayerType.STICKER && this.stickerManager) {
-				// 1. Sticker Layer
-				const restoredLayer = await this.stickerManager.deserializeSticker(layerData);
-				if (restoredLayer) {
-					this.layers.push(restoredLayer);
-				}
-			} else if (layerData.type === LayerType.BASE_IMAGE) {
-				// 2. Base Image Layer (New fix)
-				this.layers.push({
-					id: layerData.id,
-					type: LayerType.BASE_IMAGE,
-					visible: layerData.visible,
-					locked: layerData.locked,
-					image: null // Image is global (this.originalImage), this layer is just for z-index/visibility
-				});
-			} else {
-				// 3. Glitter-fill layer (existing)
-				this.layers.push({
-					id: layerData.id,
-					type: layerData.type || LayerType.GLITTER_FILL,
-					visible: layerData.visible,
-					// Safe parsing for selections
-					selections: layerData.selections ? JSON.parse(JSON.stringify(layerData.selections)) : [],
-					selectedGlitterId: layerData.selectedGlitterId, // CHANGED
-					settings: layerData.settings ? { ...layerData.settings } : {}
-				});
-			}
-		}
-
-		this.activeLayerId = state.activeLayerId;
-
-		this.layerManager.renderLayersList();
-		this.loadActiveLayerSettings();
-		this.updateGlitterSelection();
-		this.updatePreview();
-		this.updateActionButtons();
+		await this.historyManager.restoreState(state);
 	}
 	async undo() {
-		if (this.historyIndex > 0) {
-			this.historyIndex--;
-			await this.restoreState(this.history[this.historyIndex]);
-			this.updateHistoryButtons();
-		}
+		await this.historyManager.undo();
 	}
 
 	async redo() {
-		if (this.historyIndex < this.history.length - 1) {
-			this.historyIndex++;
-			await this.restoreState(this.history[this.historyIndex]);
-			this.updateHistoryButtons();
-		}
+		await this.historyManager.redo();
 	}
 
 	updateHistoryButtons() {
-		document.getElementById('undoTool').disabled = this.historyIndex <= 0;
-		document.getElementById('redoTool').disabled = this.historyIndex >= this.history.length - 1;
+		this.historyManager.updateButtons();
 	}
 
 	updateActionButtons() {
@@ -3348,12 +2906,25 @@ setupWelcomeModalListeners() {
 		// ======================
 		// Core image + data state
 		// ======================
+		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
+			URL.revokeObjectURL(this.originalImage.src);
+		}
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
+		this.layerManager.clearBaseImageSwatchCache();
+
+		if (this.glitterManager) {
+			this.layerManager.layers.forEach(layer => {
+				this.glitterManager.releaseLayerResources(layer);
+			});
+		}
 
 		this.layerManager.layers = [];
 		this.layerManager.activeLayerId = null;
+
+		// Reset history — old states reference layers of the removed image
+		this.historyManager.reset();
 
 		// ======================
 		// Preview + canvas state
@@ -3430,7 +3001,7 @@ setupWelcomeModalListeners() {
 	}
 
 
-	debouncedSliderUpdate(sliderType) {
+	debouncedSliderUpdate() {
 		clearTimeout(this.sliderTimeout);
 		this.sliderTimeout = setTimeout(() => {
 			this.updatePreview();
@@ -3448,7 +3019,17 @@ setupWelcomeModalListeners() {
 			return;
 		}
 
+		// Release the previous image's blob URL (its src is referenced by the
+		// base-layer swatch CSS, so it can only be revoked once replaced)
+		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
+			URL.revokeObjectURL(this.originalImage.src);
+		}
+
 		const img = new Image();
+		img.onerror = () => {
+			URL.revokeObjectURL(img.src);
+			this.showError('Could not load that image. The file may be corrupt or unsupported.');
+		};
 		img.onload = () => {
 			let width = img.width, height = img.height;
 
@@ -3475,6 +3056,8 @@ setupWelcomeModalListeners() {
 			for (let i = 0; i < width * height; i++) {
 				this.originalAlphaChannel[i] = this.originalImageData.data[i * 4 + 3];
 			}
+
+			this.layerManager.updateBaseImageSwatchCache();
 
 			// Tell viewport about canvas dimensions
 			this.viewport.setCanvasDimensions(this.previewCanvas.width, this.previewCanvas.height);
@@ -3517,24 +3100,7 @@ setupWelcomeModalListeners() {
 			}
 
 			// 4. Reset History
-			this.history = [{
-				layers: this.layers.map(layer => {
-					if (layer.type === LayerType.BASE_IMAGE) {
-						return { id: layer.id, type: LayerType.BASE_IMAGE, visible: layer.visible, locked: layer.locked };
-					}
-					// ... (rest of history mapping logic) ...
-					return {
-						id: layer.id,
-						type: layer.type || LayerType.GLITTER_FILL,
-						visible: layer.visible,
-						selections: [],
-						selectedGlitterId: layer.selectedGlitterId,
-						settings: { ...layer.settings }
-					};
-				}),
-				activeLayerId: this.activeLayerId
-			}];
-			this.historyIndex = 0;
+			this.historyManager.reset(this.historyManager.createStateSnapshot());
 
 			// 5. reset saved
 			this.isSaved = false;
@@ -3573,11 +3139,11 @@ setupWelcomeModalListeners() {
 
 
 	handlePreviewContainerClick(e) {
-		console.log('📍 Click handler fired', e.type, e.isSimpleTap);
+		dbg('📍 Click handler fired', e.type, e.isSimpleTap);
 
 		// 0. IGNORE IF JUST FINISHED HANDLE DRAGGING
 		if (this.ignoreNextClick) {
-			console.log('🚫 Ignoring click - just finished handle drag');
+			dbg('🚫 Ignoring click - just finished handle drag');
 			return;
 		}
 
@@ -3604,12 +3170,7 @@ setupWelcomeModalListeners() {
 		if (this.currentTool === ToolType.HAND) {
 			// Hand tool: ONLY respond to pointerdown (ignore click)
 			if (e.type === 'click') {
-				console.log('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
-				return;
-			}
-			// On mobile, also ignore pointerdown (touch handlers manage it)
-			if (this.isMobile && e.type === 'pointerdown') {
-				console.log('🚫 HAND tool: Ignoring pointerdown on mobile (touch handles it)');
+				dbg('🚫 HAND tool: Ignoring click event (already handled by pointerdown)');
 				return;
 			}
 		} else {
@@ -3619,25 +3180,20 @@ setupWelcomeModalListeners() {
 			if (e.type === 'pointerdown' || e.type === 'mousedown') {
 				// Allow pointerdown for zoom tool with right-click
 				if (this.currentTool === ToolType.ZOOM && e.button === 2) {
-					console.log('✅ ZOOM tool: Allowing right-click pointerdown');
+					dbg('✅ ZOOM tool: Allowing right-click pointerdown');
 					// Continue to handle this event
 				}
 				// CRITICAL FIX: Allow mousedown on stickers to pass through to their drag handlers
 				else if (this.currentTool === ToolType.SELECT && e.target.closest('.sticker-element')) {
-					console.log('✅ SELECT tool: Allowing sticker mousedown to pass through');
+					dbg('✅ SELECT tool: Allowing sticker mousedown to pass through');
 					// Don't return - let it fall through, but don't process it here
 					// The sticker's own mousedown handler will handle it
 					return;
 				}
 				else {
-					console.log('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
+					dbg('🚫 Click-based tool: Ignoring pointerdown (waiting for click)');
 					return;
 				}
-			}
-			// On mobile, verify it's a simple tap
-			if (this.isMobile && !e.isSimpleTap) {
-				console.log('🚫 Mobile: Not a verified simple tap');
-				return;
 			}
 		}
 
@@ -3816,39 +3372,6 @@ setupWelcomeModalListeners() {
 
 
 
-	handleCanvasZoomClick(event) {
-		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
-
-		// On mobile, only zoom if it was a simple tap (not pan/pinch)
-		if (this.isMobile) {
-			// The viewport touch handler will call this via onSimpleTap callback
-			// So if we're here on mobile, it's already verified as a simple tap
-			console.log('📱 Mobile tap-to-zoom allowed (simple tap verified)');
-		}
-
-		// Photoshop Alt-Click OR right-click to zoom out
-		if (event.altKey || event.button === 2) {
-			this.viewport.zoomOut();
-		} else {
-			// Zoom in at the click point
-			const rect = this.previewCanvas.getBoundingClientRect();
-			const clickX = event.clientX - rect.left + this.previewContainer.scrollLeft;
-			const clickY = event.clientY - rect.top + this.previewContainer.scrollTop;
-
-			this.viewport.zoomIn();
-
-			// After zoom, try to center the clicked point
-			requestAnimationFrame(() => {
-				const newRect = this.previewCanvas.getBoundingClientRect();
-				const scrollX = (clickX * this.viewport.currentZoom) - (this.previewContainer.clientWidth / 2);
-				const scrollY = (clickY * this.viewport.currentZoom) - (this.previewContainer.clientHeight / 2);
-				this.previewContainer.scrollTo(scrollX, scrollY);
-			});
-		}
-	}
-
-
-
 	glitterFillSelector(x, y, event) {
 		let layer = this.layerManager.getActiveLayer();
 
@@ -3919,13 +3442,7 @@ setupWelcomeModalListeners() {
 			isTransparent: isTransparent
 		});
 
-		// 6. Auto-Switch to Select Tool (if configured)
-		if (CONFIG.autoSwitchAfterPick && this.currentTool === ToolType.COLOR_PICKER) {
-			this.setTool(ToolType.SELECT);
-		}
-
 		// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)
-		this.layerManager.renderLayersList();
 		this.saveState(); // For Undo/Redo
 		this.updatePreview(); // To show the new glitter fill immediately
 		this.updateActionButtons();
@@ -3986,7 +3503,6 @@ setupWelcomeModalListeners() {
 		}
 
 		layer.selections.splice(index, 1);
-		this.layerManager.renderLayersList();
 		this.saveState();
 
 		if (layer.selections.length > 0) {
@@ -3997,6 +3513,8 @@ setupWelcomeModalListeners() {
 
 		this.updateActionButtons();
 		this.updateSelectedColorsDisplay();
+		this.updateContextToolbars();
+		this.updateHelpfulMessage();
 	}
 
 	clearPreview() {
@@ -4008,6 +3526,9 @@ setupWelcomeModalListeners() {
 
 		// Clear glitter backgrounds
 		this.canvasElementsContainer.innerHTML = '';
+		if (this.glitterManager) {
+			this.glitterManager.layerElements.clear();
+		}
 
 		// Clear sticker elements
 		if (this.stickerManager) {
@@ -4048,9 +3569,6 @@ setupWelcomeModalListeners() {
 		this.glitterManager.renderContent(layersToShow);
 
 		this.stickerManager.renderContent(layersToShow);
-
-		// Use the manager to update scales
-		this.glitterManager.updatePreviewScale();
 	}
 
 	renderPreviewCanvas(layersToShow) {
@@ -4183,7 +3701,7 @@ setupWelcomeModalListeners() {
 		this.showExportProgress();
 
 		// USE this.exportSettings directly - no DOM reading!
-		console.log('Export settings:', this.exportSettings);
+		dbg('Export settings:', this.exportSettings);
 
 		const exportParams = {
 			visibleLayers: visibleLayers,
@@ -4207,14 +3725,16 @@ setupWelcomeModalListeners() {
 					this.isSaved = true;
 					this.hideExportProgress();
 				},
-				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
-				createMask: (layer) => {
-					const mask = this.glitterManager.createMaskForLayer(layer);
-					if (layer.settings.feather > 0) {
-						this.glitterManager.applyFeatherToMask(mask, layer.settings.feather);
+				onError: (error) => {
+					// Fired by gif.js encoder events, outside our try/catch below
+					exportBtn.disabled = false;
+					this.hideExportProgress();
+					if (error.message !== 'Export cancelled') {
+						this.showError('Export failed: ' + error.message);
 					}
-					return mask;
-				}
+				},
+				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
+				createMask: (layer) => this.glitterManager.createMaskForLayer(layer)
 			}
 		};
 
@@ -4259,8 +3779,7 @@ setupWelcomeModalListeners() {
 	const editor = new GlitterEditor();
 	await editor.init();
 
-	// Initialize tooltip manager
-	const tooltips = new TooltipManager();
+	// (Tooltips are handled by the global tooltipManager created in utils.js)
 
 	// Load debug configuration if enabled
 	if (DEBUG_CONFIG.enabled) {

@@ -10,10 +10,13 @@ ini_set('log_errors', 1);
 // ============================================
 
 include_once('config.php');
+include_once('auth.php');
 include_once('database.php');
 include_once('assetAPI.php');
 include_once('glitterAPI.php');
 include_once('stickerAPI.php');
+
+requireAuth('api');
 
 // Determine asset type from request
 $assetType = $_GET['type'] ?? 'glitter'; // Default to glitter for backwards compatibility
@@ -31,13 +34,32 @@ $db = new Database($CONFIG);
 // Create appropriate API instance
 if ($assetType === 'glitter') {
     $api = new GlitterAPI($db, $CONFIG);
-} else if ($assetType === 'sticker') {
+} else {
     $api = new StickerAPI($db, $CONFIG);
 }
 
 // Handle request
 $action = $_GET['action'] ?? '';
 header('Content-Type: application/json');
+
+$mutatingActions = [
+    'update',
+    'delete',
+    'add',
+    'reorder',
+    'analyze_all',
+    'save_export',
+    'save_categories_export',
+    'add_category',
+    'delete_category',
+    'update_category',
+    'add_tag',
+    'delete_tag',
+];
+
+if (in_array($action, $mutatingActions, true)) {
+    requireCsrfToken('api');
+}
 
 try {
     switch ($action) {
@@ -53,59 +75,31 @@ try {
 
         case 'update':
             $data = json_decode(file_get_contents('php://input'), true);
-            if ($assetType === 'glitter') {
-                echo json_encode($api->updateGlitter($data));
-            } else {
-                echo json_encode($api->updateSticker($data));
-            }
+            echo json_encode($api->updateAsset($data));
             break;
 
         case 'delete':
             $id = (int)$_POST['id'];
-            if ($assetType === 'glitter') {
-                echo json_encode($api->deleteGlitter($id));
-            } else {
-                echo json_encode($api->deleteSticker($id));
-            }
+            echo json_encode($api->deleteAsset($id));
             break;
 
         case 'add':
             $data = json_decode(file_get_contents('php://input'), true);
-            if ($assetType === 'glitter') {
-                echo json_encode($api->addGlitter($data));
-            } else {
-                echo json_encode($api->addSticker($data));
-            }
+            echo json_encode($api->addAsset($data));
             break;
 
         case 'reorder':
             $data = json_decode(file_get_contents('php://input'), true);
-            if ($assetType === 'glitter') {
-                echo json_encode($api->reorderGlitter($data));
-            } else {
-                echo json_encode($api->reorderStickers($data));
-            }
+            echo json_encode($api->reorderAssets($data));
             break;
 
         case 'analyze':
             $id = (int)$_GET['id'];
-            if ($assetType === 'glitter') {
-                echo json_encode($api->analyzeGlitter($id));
-            } else if ($assetType === 'sticker') {
-                echo json_encode($api->analyzeSticker($id));
-            } else {
-                throw new Exception('Analyze not available for this asset type');
-            }
+            echo json_encode($api->analyzeAsset($id));
             break;
 
         case 'analyze_all':
-            if ($assetType === 'glitter') {
-                echo json_encode($api->analyzeAllGlitter());
-            } else if ($assetType === 'sticker') {
-                echo json_encode($api->analyzeAllStickers());
-            } else {
-                throw new Exception('Bulk analyze not available for this asset type');
-            }
+            echo json_encode($api->analyzeAllAssets());
             break;
 
         // ===== EXPORT OPERATIONS =====

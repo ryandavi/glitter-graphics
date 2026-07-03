@@ -1,0 +1,14 @@
+# Normalize all text files to LF in the repo and working tree.
+# (Added after a CRLF/LF mixup made a small diff look like a full rewrite.)
+* text=auto eol=lf
+
+# Binary assets — never touch line endings
+*.gif binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary

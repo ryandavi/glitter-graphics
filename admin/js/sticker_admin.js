@@ -2,6 +2,9 @@
 // STICKER EDITOR CLASS
 // Extends AssetEditor for sticker-specific functionality
 // ============================================
+var adminFetch = window.adminFetch || ((...args) => AdminAPI.fetch(...args));
+window.adminFetch = adminFetch;
+
 class StickerEditor extends AssetEditor {
     constructor() {
         // Configure sticker-specific settings
@@ -12,7 +15,8 @@ class StickerEditor extends AssetEditor {
             enableSorting: false,  // Can be enabled in future
             enableAnalyze: true,   // Auto-detect dimensions/animation
             listContainerId: 'stickerList',
-            categoryIdField: 'sticker_category_id'
+            categoryIdField: 'sticker_category_id',
+            tagModalId: 'tagModal'
         };
 
         super(config);
@@ -188,7 +192,7 @@ class StickerEditor extends AssetEditor {
         this.showStatus('Analyzing sticker...');
 
         try {
-            const response = await fetch(`includes/api.php?action=analyze&id=${this.currentAsset.id}&type=sticker`);
+            const response = await adminFetch(`includes/api.php?action=analyze&id=${this.currentAsset.id}&type=sticker`);
             const analysis = await response.json();
 
             if (analysis.error) {
@@ -214,7 +218,7 @@ class StickerEditor extends AssetEditor {
         this.showStatus('Starting bulk analysis...');
 
         try {
-            const response = await fetch('includes/api.php?action=analyze_all&type=sticker', {
+            const response = await adminFetch('includes/api.php?action=analyze_all&type=sticker', {
                 method: 'POST'
             });
 

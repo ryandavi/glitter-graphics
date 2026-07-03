@@ -3,6 +3,12 @@
 // LAYER MANAGER CLASS
 // Handles all layer CRUD operations, selection, reordering, and rendering
 // ============================================
+
+// Insertion-line geometry for layer drag & drop.
+// LAYER_MARGIN_BOTTOM must match the .layer-item margin-bottom in style.css.
+const LAYER_MARGIN_BOTTOM = 6;
+const INSERTION_LINE_HEIGHT = 2;
+
 class LayerManager {
 	constructor(editor) {
 		// Reference to main editor for callbacks
@@ -25,6 +31,7 @@ class LayerManager {
 		// DOM references
 		this.layersListContainer = document.getElementById('layersList');
 		this.canvasElementsContainer = this.editor.canvasElementsContainer;
+		this.baseImageSwatchDataUrl = '';
 
 		this.setupContainerEvents();
 	}
@@ -39,15 +46,10 @@ class LayerManager {
 			}
 		});
 
-		// Handle dragging over empty space at bottom
+		// Allow dropping on empty space in the container (drop handler below)
 		this.layersListContainer.addEventListener('dragover', (e) => {
 			if (this.draggedLayerId && e.target === this.layersListContainer) {
 				e.preventDefault();
-				const layerItems = this.layersListContainer.querySelectorAll('.layer-item');
-				if (layerItems.length === 0) return;
-
-				const lastItem = layerItems[layerItems.length - 1];
-				const lastRect = lastItem.getBoundingClientRect();
 			}
 		});
 
@@ -114,7 +116,7 @@ class LayerManager {
 		} else if (type === LayerType.GLITTER_FILL) {
 			layer = this.editor.glitterManager.createLayer();
 		} else {
-			console.log('Invalid layer type');
+			dbg('Invalid layer type');
 		}
 
 		if (!layer) return;  // Factory returns null if max reached
@@ -156,10 +158,12 @@ class LayerManager {
 			return;
 		}
 
-		// ADD: Clean up sticker if it's a sticker layer
+		// Clean up the live sticker element before removing the layer.
 		const layer = this.layers[index];
 		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
 			this.editor.stickerManager.removeSticker(layerId);
+		} else if (layer.type === LayerType.GLITTER_FILL && this.editor.glitterManager) {
+			this.editor.glitterManager.releaseLayerResources(layer);
 		}
 
 		this.layers.splice(index, 1);
@@ -182,7 +186,7 @@ class LayerManager {
 
 		layer.visible = !layer.visible;
 
-		// ADD: Update sticker element visibility
+		// Keep the live sticker DOM in sync with the layer visibility toggle.
 		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
 			const element = this.editor.stickerManager.layerElements.get(layerId);
 			if (element) {
@@ -228,7 +232,9 @@ class LayerManager {
 		}
 
 		this.activeLayerId = layerId;
-		this.renderLayersList();
+		this.updateActiveLayerListSelection();
+		this.updateMobileLayersSwatch();
+		this.updateBottomBarButtons();
 
 		const layer = this.layers.find(l => l.id === layerId);
 
@@ -338,7 +344,7 @@ class LayerManager {
 	handleLayerPick(x, y) {
 		// Prevent layer picking during touch gestures
 		if (this.editor.touchGestureActive) {
-			console.log('🎯 LAYER PICK: Blocked - touch gesture active');
+			dbg('🎯 LAYER PICK: Blocked - touch gesture active');
 			return;
 		}
 
@@ -524,6 +530,21 @@ class LayerManager {
 
 	}
 
+	updateActiveLayerListSelection() {
+		if (!this.layersListContainer) return;
+
+		this.layersListContainer.querySelectorAll('.layer-item.active').forEach(item => {
+			item.classList.remove('active');
+		});
+
+		if (!this.activeLayerId) return;
+
+		const activeItem = this.layersListContainer.querySelector(`[data-layer-id="${this.activeLayerId}"]`);
+		if (activeItem) {
+			activeItem.classList.add('active');
+		}
+	}
+
 
 	updateBottomBarButtons() {
 		const selectedLayer = this.getActiveLayer();
@@ -582,8 +603,10 @@ class LayerManager {
 					height: sourceLayer.stickerData.height,
 					isEmpty: sourceLayer.stickerData.isEmpty,
 					isAnimated: sourceLayer.stickerData.isAnimated,
-					frames: sourceLayer.stickerData.frames,
-					isFlattened: sourceLayer.stickerData.isFlattened, // ADD THIS LINE
+					// Never share the frames object with the source layer — the exporter
+					// no longer mutates shared frame data, and the clone reloads
+					// animation data on demand so each layer keeps its own frame cache.
+					frames: null,
 					transform: {
 						position: {
 							x: sourceLayer.stickerData.transform.position.x,
@@ -614,7 +637,7 @@ class LayerManager {
 				visible: sourceLayer.visible,
 				locked: false,
 				selections: sourceLayer.selections.map(sel => ({ ...sel })),
-				selectedGlitterId: sourceLayer.selectedGlitterId, // CHANGED
+				selectedGlitterId: sourceLayer.selectedGlitterId,
 				settings: { ...sourceLayer.settings }
 			};
 
@@ -658,40 +681,16 @@ class LayerManager {
 			layerEl.classList.add('active');
 		}
 
-		// 1. Drag Handle
+		// 1. Drag Handle (icon shown active only for unlocked layers)
 		const dragHandle = document.createElement('div');
 		dragHandle.className = 'layer-drag-handle';
-
-		// Only show drag handle icon if not locked
-
 		dragHandle.innerHTML = `
-
-
 				<div class="icon icon-wrapper ${!layer.locked ? 'active' : ''}">
 					<svg class="icon">
 						<use href="#icon-grip-vertical"></use>
 					</svg>
-					<span class="name">About</span>
 				</div>
-
-
-
 		`;
-
-
-
-		/*
-		if (!layer.locked) {
-			dragHandle.innerHTML = `
-				<svg class="icon" viewBox="0 0 24 24">
-					<path d="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z" fill="currentColor"/>
-				</svg>
-			`;
-		} else {
-			// Optional: You can leave it empty, or add a small lock indicator here too
-			dragHandle.style.cursor = 'default';
-		}
-			*/
 
 		// 2. Swatch (Thumbnail)
 		const swatch = document.createElement('div');
@@ -914,6 +913,19 @@ class LayerManager {
 		}
 	}
 
+	updateBaseImageSwatchCache() {
+		if (!this.editor.originalCanvas || !this.editor.originalImage) {
+			this.baseImageSwatchDataUrl = '';
+			return;
+		}
+
+		this.baseImageSwatchDataUrl = this.editor.originalCanvas.toDataURL();
+	}
+
+	clearBaseImageSwatchCache() {
+		this.baseImageSwatchDataUrl = '';
+	}
+
 	updateMobileLayersSwatch() {
 		const mobileLayersSwatch = document.querySelector('.mobile-layers-swatch');
 		if (!mobileLayersSwatch) return;
@@ -975,11 +987,9 @@ class LayerManager {
 				mobileLayersSwatch.style.backgroundImage = '';
 			}
 		} else if (activeLayer.type === LayerType.BASE_IMAGE) {
-			// Show a preview of the canvas
-			if (this.editor.originalCanvas) {
-				const canvas = this.editor.originalCanvas;
+			if (this.baseImageSwatchDataUrl) {
 				mobileLayersSwatch.classList.remove('empty');
-				mobileLayersSwatch.style.backgroundImage = `url(${canvas.toDataURL()})`;
+				mobileLayersSwatch.style.backgroundImage = `url(${this.baseImageSwatchDataUrl})`;
 				mobileLayersSwatch.classList.remove('pixelated');
 			} else {
 				mobileLayersSwatch.classList.add('empty');
@@ -1058,8 +1068,6 @@ class LayerManager {
 		event.dataTransfer.dropEffect = 'move';
 
 		let lineY;
-		const LAYER_MARGIN_BOTTOM = 6;
-		const INSERTION_LINE_HEIGHT = 2;
 		const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
 		const scrollTop = this.layersListContainer.scrollTop;
 
@@ -1234,8 +1242,6 @@ class LayerManager {
 			const containerRect = this.layersListContainer.getBoundingClientRect();
 
 			let lineY;
-			const LAYER_MARGIN_BOTTOM = 6;
-			const INSERTION_LINE_HEIGHT = 2;
 			const offset = (LAYER_MARGIN_BOTTOM - INSERTION_LINE_HEIGHT) / 2;
 			const scrollTop = this.layersListContainer.scrollTop;
 

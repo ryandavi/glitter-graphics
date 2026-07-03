@@ -119,29 +119,9 @@ const initPixelScalerInContainer = (container = document) => {
 
 // ============================================
 // PIXEL SCALER (Global initialization)
+// Delegates to initPixelScalerInContainer and re-runs on resize
 // ============================================
 const initPixelScaler = () => {
-	const images = document.querySelectorAll('img[data-pixel-scale]');
-
-	const scaleImages = () => {
-		images.forEach(img => {
-			// Ensure image is loaded before calculating
-			if (!img.complete || img.naturalWidth === 0) {
-				img.onload = scaleImages;
-				return;
-			}
-
-			const scale = Number(img.dataset.pixelScale) || 1;
-			const targetWidth = img.naturalWidth * scale;
-
-			// Set the "ideal" width. 
-			// The CSS max-width: 100% will automatically shrink it 
-			// if the parent is smaller than this value.
-			img.style.width = `${targetWidth}px`;
-		});
-	};
-
-	// Debounce function: limits how often the scaler runs
 	const debounce = (func, wait) => {
 		let timeout;
 		return (...args) => {
@@ -150,11 +130,8 @@ const initPixelScaler = () => {
 		};
 	};
 
-	// Initial Run
-	scaleImages();
-
-	// Responsive Listeners
-	window.addEventListener('resize', debounce(scaleImages, 150));
+	initPixelScalerInContainer(document);
+	window.addEventListener('resize', debounce(() => initPixelScalerInContainer(document), 150));
 };
 
 // Run on DOM ready
@@ -207,25 +184,31 @@ class TooltipManager {
 		return window;
 	}
 
-	attachTooltipListeners() {
-		document.querySelectorAll('[data-tooltip]').forEach(el => {
-			if (this.isTouchDevice) {
-				el.addEventListener('click', (e) => this.handleMobileClick(e, el));
-			} else {
-				el.addEventListener('mouseenter', (e) => this.show(el, e));
-				el.addEventListener('mouseleave', () => this.hide(el));
-			}
+	attachTooltipListeners(container = document) {
+		container.querySelectorAll('[data-tooltip]').forEach(el => this.attachTo(el));
+	}
 
-			if (this.config.dismissOnScroll) {
-				const scrollParent = this.findScrollableParent(el);
-				if (!this.scrollContainers.has(scrollParent)) {
-					this.scrollContainers.add(scrollParent);
-					scrollParent.addEventListener('scroll', this.handleScroll, {
-						passive: true
-					});
-				}
+	// Idempotent per-element setup — safe to call again for dynamically loaded content
+	attachTo(el) {
+		if (el._tooltipInitialized) return;
+		el._tooltipInitialized = true;
+
+		if (this.isTouchDevice) {
+			el.addEventListener('click', (e) => this.handleMobileClick(e, el));
+		} else {
+			el.addEventListener('mouseenter', (e) => this.show(el, e));
+			el.addEventListener('mouseleave', () => this.hide(el));
+		}
+
+		if (this.config.dismissOnScroll) {
+			const scrollParent = this.findScrollableParent(el);
+			if (!this.scrollContainers.has(scrollParent)) {
+				this.scrollContainers.add(scrollParent);
+				scrollParent.addEventListener('scroll', this.handleScroll, {
+					passive: true
+				});
 			}
-		});
+		}
 	}
 
 	attachGlobalListeners() {
@@ -455,31 +438,5 @@ const tooltipManager = new TooltipManager();
 
 const initTooltipsInContainer = (container = document) => {
 	if (!container) return;
-
-	const elements = container.querySelectorAll('[data-tooltip]');
-	if (elements.length === 0) return;
-
-	elements.forEach(el => {
-		// Skip if already initialized (prevent double-binding)
-		if (el._tooltipInitialized) return;
-		el._tooltipInitialized = true;
-
-		if (tooltipManager.isTouchDevice) {
-			el.addEventListener('click', (e) => tooltipManager.handleMobileClick(e, el));
-		} else {
-			el.addEventListener('mouseenter', (e) => tooltipManager.show(el, e));
-			el.addEventListener('mouseleave', () => tooltipManager.hide(el));
-		}
-
-		// Handle dismiss on scroll
-		if (tooltipManager.config.dismissOnScroll) {
-			const scrollParent = tooltipManager.findScrollableParent(el);
-			if (!tooltipManager.scrollContainers.has(scrollParent)) {
-				tooltipManager.scrollContainers.add(scrollParent);
-				scrollParent.addEventListener('scroll', tooltipManager.handleScroll, {
-					passive: true
-				});
-			}
-		}
-	});
+	tooltipManager.attachTooltipListeners(container);
 };

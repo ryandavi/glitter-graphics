@@ -50,7 +50,7 @@ constructor(contentManager, elementIds, displayName) {
 		try {
 			const response = await fetch(path);
 			this.categories = await response.json();
-			console.log('[Browser] Loaded categories:', this.categories);
+			dbg('[Browser] Loaded categories:', this.categories);
 		} catch (error) {
 			console.error('Failed to load categories:', error);
 			this.categories = [];
@@ -61,7 +61,7 @@ setupIntersectionObserver() {
 	this.observer = new IntersectionObserver(
 		(entries) => {
 			if (entries[0].isIntersecting && this.state !== 'CATEGORY_LIST') {
-				console.log('[Browser] Sentinel intersecting, loading more...');
+				dbg('[Browser] Sentinel intersecting, loading more...');
 				this.loadMoreItems();
 			}
 		},
@@ -465,7 +465,7 @@ checkAndLoadMore() {
 		const bufferZone = 400; // Load until sentinel is well beyond viewport
 		const isSentinelNearViewport = sentinelRect.top < (scrollRect.bottom + bufferZone);
 		
-		console.log('[Browser] Checking viewport fill:', {
+		dbg('[Browser] Checking viewport fill:', {
 			sentinelTop: sentinelRect.top,
 			scrollBottom: scrollRect.bottom,
 			buffer: bufferZone,
@@ -476,7 +476,7 @@ checkAndLoadMore() {
 		
 		// If sentinel is within our buffer zone, keep loading
 		if (isSentinelNearViewport) {
-			console.log('[Browser] Sentinel within buffer zone, loading more...');
+			dbg('[Browser] Sentinel within buffer zone, loading more...');
 			
 			// Check if there are more items to load based on current state
 			if (this.state === 'CATEGORY_DETAIL') {
@@ -486,7 +486,7 @@ checkAndLoadMore() {
 				if (this.currentOffset < categoryItems.length) {
 					this.loadCategoryItems(); // This will recursively call checkAndLoadMore again
 				} else {
-					console.log('[Browser] No more items to load');
+					dbg('[Browser] No more items to load');
 				}
 			} else if (this.state === 'SEARCH_RESULTS') {
 				const allItems = this.getFilteredItems();
@@ -494,11 +494,11 @@ checkAndLoadMore() {
 				if (this.currentOffset < allItems.length) {
 					this.loadSearchItems(); // This will recursively call checkAndLoadMore again
 				} else {
-					console.log('[Browser] No more items to load');
+					dbg('[Browser] No more items to load');
 				}
 			}
 		} else {
-			console.log('[Browser] Viewport filled - sentinel well beyond view');
+			dbg('[Browser] Viewport filled - sentinel well beyond view');
 		}
 	});
 }

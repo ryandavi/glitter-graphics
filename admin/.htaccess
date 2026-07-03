@@ -1,0 +1,26 @@
+# ============================================================
+# INTERIM ADMIN LOCKDOWN — see docs/AUDIT.md (finding C1)
+# The admin API has no application-level auth yet, so restrict
+# the whole /admin directory to local requests.
+#
+# If you use the admin remotely on production, replace this
+# with HTTP Basic Auth before deploying:
+#   AuthType Basic
+#   AuthName "Glitter Admin"
+#   AuthUserFile /path/outside/webroot/.htpasswd
+#   Require valid-user
+# (Generate .htpasswd with: htpasswd -c /path/.htpasswd yourname)
+# The real fix (session login + CSRF) is Codex Goal 1 in the audit.
+# ============================================================
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    Require local
+</IfModule>
+
+# Apache 2.2 fallback
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+    Allow from 127.0.0.1 ::1
+</IfModule>

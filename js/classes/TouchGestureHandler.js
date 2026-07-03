@@ -43,7 +43,7 @@ constructor(element, callbacks = {}) {
     }
 
 handleStart(e) {
-    console.log('🟢 handleStart - changedTouches:', e.changedTouches.length, 'existing touches:', this.touches.size);
+    dbg('🟢 handleStart - changedTouches:', e.changedTouches.length, 'existing touches:', this.touches.size);
 
     // CRITICAL: Check if touch started on UI elements
     const touch = e.changedTouches[0];
@@ -51,7 +51,7 @@ handleStart(e) {
 
     // If touching UI controls, don't interfere at all
     if (target && target.closest('.ui-ignore-gestures')) {
-        console.log('🎯 Touch on UI element - ignoring completely');
+        dbg('🎯 Touch on UI element - ignoring completely');
         // Don't track this touch, don't prevent default, just exit
         return;
     }
@@ -59,28 +59,28 @@ handleStart(e) {
     // Check if this is a fresh start (no existing touches)
     if (this.touches.size === 0) {
         this.hadGestureActivity = false; // Reset gesture tracking
-        console.log('  🔄 Reset gesture activity tracking');
+        dbg('  🔄 Reset gesture activity tracking');
     }
 
     // Check if we should ignore this target for gestures (but still track for tap detection)
     const shouldIgnore = this.callbacks.shouldIgnoreTarget && this.callbacks.shouldIgnoreTarget(target);
     
     if (shouldIgnore) {
-        console.log('🎯 Target ignored by shouldIgnoreTarget callback - tracking for tap only');
+        dbg('🎯 Target ignored by shouldIgnoreTarget callback - tracking for tap only');
         
         // Track touches for tap detection only
         for (let t of e.changedTouches) {
-            console.log('  ➕ Adding touch (tap-only):', t.identifier, 'at', t.clientX, t.clientY);
+            dbg('  ➕ Adding touch (tap-only):', t.identifier, 'at', t.clientX, t.clientY);
             this.touches.set(t.identifier, { x: t.clientX, y: t.clientY, tapOnly: true });
         }
         
         const count = this.touches.size;
-        console.log('  📊 Total touches now:', count);
+        dbg('  📊 Total touches now:', count);
         
         // Set state to pending for tap detection
         if (count === 1) {
             const t = Array.from(this.touches.values())[0];
-            console.log('  🎯 State change: idle → pending (tap-only mode)');
+            dbg('  🎯 State change: idle → pending (tap-only mode)');
             this.state = 'pending';
             this.startPos = { x: t.x, y: t.y };
             this.startTime = Date.now();
@@ -96,23 +96,23 @@ handleStart(e) {
 
     // Track touches normally
     for (let t of e.changedTouches) {
-        console.log('  ➕ Adding touch:', t.identifier, 'at', t.clientX, t.clientY);
+        dbg('  ➕ Adding touch:', t.identifier, 'at', t.clientX, t.clientY);
         this.touches.set(t.identifier, { x: t.clientX, y: t.clientY });
     }
 
     const count = this.touches.size;
-    console.log('  📊 Total touches now:', count);
+    dbg('  📊 Total touches now:', count);
 
     // Determine State
     if (count === 1) {
         const t = Array.from(this.touches.values())[0];
-        console.log('  🎯 State change: idle → pending');
+        dbg('  🎯 State change: idle → pending');
         this.state = 'pending';
         this.startPos = { x: t.x, y: t.y };
         this.startTime = Date.now();
     }
     else if (count >= 2) {
-        console.log('  🎯 State change: → pinching (count >= 2)');
+        dbg('  🎯 State change: → pinching (count >= 2)');
         this.state = 'pinching';
         this.hadGestureActivity = true; // Mark that we've had gesture activity
         this.initPinchData();
@@ -125,14 +125,14 @@ handleMove(e) {
     const touch = e.changedTouches[0];
     const target = document.elementFromPoint(touch.clientX, touch.clientY);
     if (target && target.closest('.ui-ignore-gestures')) {
-        console.log('🚫 handleMove on UI - ignoring');
+        dbg('🚫 handleMove on UI - ignoring');
         return; // Ignore moves on UI
     }
 
     // Check if this is a tap-only touch (from ignored target)
     const firstTouch = this.touches.get(e.changedTouches[0].identifier);
     if (firstTouch && firstTouch.tapOnly) {
-        console.log('🚫 handleMove on tap-only touch - checking for movement');
+        dbg('🚫 handleMove on tap-only touch - checking for movement');
         
         // Update coords to detect if tap threshold exceeded
         for (let t of e.changedTouches) {
@@ -151,7 +151,7 @@ handleMove(e) {
             const dist = Math.hypot(dx, dy);
             
             if (dist > this.tapThreshold) {
-                console.log('🚫 Tap-only touch moved beyond threshold - canceling tap');
+                dbg('🚫 Tap-only touch moved beyond threshold - canceling tap');
                 this.state = 'idle';
                 this.hadGestureActivity = true; // Prevent tap from firing
             }
@@ -162,14 +162,14 @@ handleMove(e) {
 
     // Optional callback to check if we should ignore this target
     if (this.callbacks.shouldIgnoreTarget && this.callbacks.shouldIgnoreTarget(target)) {
-        console.log('🚫 handleMove on ignored target');
+        dbg('🚫 handleMove on ignored target');
         return;
     }
 
     if (e.cancelable) e.preventDefault();
     e.stopPropagation();
 
-    console.log('🔄 handleMove - state:', this.state, 'touches:', this.touches.size, 'changedTouches:', e.changedTouches.length);
+    dbg('🔄 handleMove - state:', this.state, 'touches:', this.touches.size, 'changedTouches:', e.changedTouches.length);
 
     // Update Coords
     for (let t of e.changedTouches) {
@@ -190,7 +190,7 @@ handleMove(e) {
         const dist = Math.hypot(dx, dy);
 
         if (dist > this.tapThreshold) {
-            console.log('  🎯 State change: pending → panning');
+            dbg('  🎯 State change: pending → panning');
             this.state = 'panning';
             this.hadGestureActivity = true; // Mark that we've had gesture activity
             this.startPos = { x: t.x, y: t.y };
@@ -215,16 +215,16 @@ handleMove(e) {
 }
 
 handleEnd(e) {
-    console.log('🔴 handleEnd - changedTouches:', e.changedTouches.length, 'existing touches before cleanup:', this.touches.size);
+    dbg('🔴 handleEnd - changedTouches:', e.changedTouches.length, 'existing touches before cleanup:', this.touches.size);
 
     // CRITICAL: ALWAYS remove touches FIRST, before any other logic
     // This prevents ghost touches from accumulating
     for (let t of e.changedTouches) {
-        console.log('  ➖ Deleting touch:', t.identifier);
+        dbg('  ➖ Deleting touch:', t.identifier);
         this.touches.delete(t.identifier);
     }
 
-    console.log('  📊 Touches remaining:', this.touches.size);
+    dbg('  📊 Touches remaining:', this.touches.size);
 
     // Check if ended on UI element
     const touch = e.changedTouches[0];
@@ -237,7 +237,7 @@ handleEnd(e) {
             if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
         } else if (this.touches.size < 2 && this.state === 'pinching') {
             // Transition from pinch to panning (not pending)
-            console.log('  🎯 State change: pinching → panning (UI element, one finger lifted)');
+            dbg('  🎯 State change: pinching → panning (UI element, one finger lifted)');
             const remainingTouch = Array.from(this.touches.values())[0];
             this.state = 'panning';
             this.startPos = { x: remainingTouch.x, y: remainingTouch.y };
@@ -257,7 +257,7 @@ handleEnd(e) {
             if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
         } else if (this.touches.size < 2 && this.state === 'pinching') {
             // Transition from pinch to panning (not pending)
-            console.log('  🎯 State change: pinching → panning (ignored target, one finger lifted)');
+            dbg('  🎯 State change: pinching → panning (ignored target, one finger lifted)');
             const remainingTouch = Array.from(this.touches.values())[0];
             this.state = 'panning';
             this.startPos = { x: remainingTouch.x, y: remainingTouch.y };
@@ -275,7 +275,7 @@ handleEnd(e) {
     if (this.state === 'pending' && this.touches.size === 0 && !this.hadGestureActivity) {
         const duration = Date.now() - this.startTime;
         if (duration < 300) {
-            console.log('✅ Simple tap detected');
+            dbg('✅ Simple tap detected');
             if (this.callbacks.onSimpleTap) {
                 this.callbacks.onSimpleTap(this.startPos.x, this.startPos.y);
             }
@@ -285,14 +285,14 @@ handleEnd(e) {
     // Reset State
     if (this.touches.size === 0) {
         // All touches gone - return to idle
-        console.log('  🎯 State change: → idle (all touches gone)');
+        dbg('  🎯 State change: → idle (all touches gone)');
         this.state = 'idle';
         this.hadGestureActivity = false; // Reset for next gesture
         if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
     } else if (this.touches.size < 2 && this.state === 'pinching') {
         // CRITICAL FIX: Transitioning from pinch (2+ fingers) to single finger
         // Transition to PANNING state (not pending) so user can continue immediately
-        console.log('  🎯 State change: pinching → panning (one finger lifted, one remains)');
+        dbg('  🎯 State change: pinching → panning (one finger lifted, one remains)');
         
         // End the pinch gesture
         if (this.callbacks.onGestureEnd) this.callbacks.onGestureEnd();
@@ -306,10 +306,10 @@ handleEnd(e) {
         // Start a new single-finger pan gesture
         if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('single_pan');
         
-        console.log('  📍 Reset startPos to remaining touch:', this.startPos);
+        dbg('  📍 Reset startPos to remaining touch:', this.startPos);
     } else if (this.touches.size === 1 && this.state === 'panning') {
         // Single finger pan is still active - don't change state
-        console.log('  ✅ Single-finger pan continuing');
+        dbg('  ✅ Single-finger pan continuing');
     }
 }
 
@@ -323,13 +323,13 @@ handleDocumentEnd(e) {
             
             // Only clean up if touch ended OUTSIDE our element (truly orphaned)
             if (!endedOnElement) {
-                console.log('📄 Document caught orphaned touch:', t.identifier, '@ position', t.clientX, t.clientY);
+                dbg('📄 Document caught orphaned touch:', t.identifier, '@ position', t.clientX, t.clientY);
                 // Clean up this touch
                 this.touches.delete(t.identifier);
 
                 // Update state if needed
                 if (this.touches.size === 0) {
-                    console.log('  🎯 State change: → idle (document cleanup, all touches gone)');
+                    dbg('  🎯 State change: → idle (document cleanup, all touches gone)');
                     this.state = 'idle';
                     this.hadGestureActivity = false;
                     if (this.callbacks.onGestureEnd) {
@@ -337,7 +337,7 @@ handleDocumentEnd(e) {
                     }
                 } else if (this.touches.size < 2 && this.state === 'pinching') {
                     // CRITICAL FIX: Transition from pinch to panning with remaining touch
-                    console.log('  🎯 State change: pinching → panning (document cleanup, one finger remains)');
+                    dbg('  🎯 State change: pinching → panning (document cleanup, one finger remains)');
                     
                     // End the pinch gesture
                     if (this.callbacks.onGestureEnd) {
@@ -353,15 +353,15 @@ handleDocumentEnd(e) {
                     // Start a new single-finger pan gesture
                     if (this.callbacks.onGestureStart) this.callbacks.onGestureStart('single_pan');
                     
-                    console.log('  📍 Reset startPos to remaining touch:', this.startPos);
+                    dbg('  📍 Reset startPos to remaining touch:', this.startPos);
                 }
             } else {
-                console.log('📄 Document end on element - letting handleEnd process it');
+                dbg('📄 Document end on element - letting handleEnd process it');
             }
         }
     }
 
-    console.log('📄 Document end - touches remaining:', this.touches.size);
+    dbg('📄 Document end - touches remaining:', this.touches.size);
 }
 
     // --- Helpers ---

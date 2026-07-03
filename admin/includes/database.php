@@ -22,7 +22,41 @@ class Database
 
     public function query($sql)
     {
-        return $this->conn->query($sql);
+        $result = $this->conn->query($sql);
+        if ($result === false) {
+            throw new Exception('Database query failed: ' . $this->conn->error);
+        }
+
+        return $result;
+    }
+
+    public function prepare($sql, $types = '', $params = [])
+    {
+        $stmt = $this->conn->prepare($sql);
+        if ($stmt === false) {
+            throw new Exception('Database prepare failed: ' . $this->conn->error);
+        }
+
+        if ($types !== '') {
+            $bindArgs = [$types];
+            foreach ($params as $index => $value) {
+                $bindArgs[] = &$params[$index];
+            }
+
+            $bound = call_user_func_array([$stmt, 'bind_param'], $bindArgs);
+            if ($bound === false) {
+                $stmt->close();
+                throw new Exception('Database bind failed: ' . $stmt->error);
+            }
+        }
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error;
+            $stmt->close();
+            throw new Exception('Database execute failed: ' . $error);
+        }
+
+        return $stmt;
     }
 
     public function escape($str)

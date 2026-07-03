@@ -1,13 +1,15 @@
 <?php
+require_once('includes/config.php');
+require_once('includes/auth.php');
+
+requireAuth('page');
+$adminCsrfToken = getCsrfToken();
 
 // Disable all caching
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-
-include_once('includes/config.php');
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,8 +72,8 @@ include_once('includes/config.php');
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="app.exportJSON()">Export JSON</button>
                     <button class="btn btn-secondary" onclick="app.exportCategoriesJSON()">Export Categories</button>
-                    <button class="btn btn-danger" onclick="app.deleteSwatch()">Delete</button>
-                    <button class="btn btn-primary" onclick="app.saveSwatch()">Save</button>
+                    <button class="btn btn-danger" onclick="app.deleteAsset()">Delete</button>
+                    <button class="btn btn-primary" onclick="app.saveAsset()">Save</button>
                 </div>
             </div>
         </div>
@@ -94,12 +96,12 @@ include_once('includes/config.php');
 
                 <div class="form-group">
                     <label>Name</label>
-                    <input type="text" id="newSwatchName" placeholder="e.g., Pink Sparkle">
+                    <input type="text" id="newGlitterName" placeholder="e.g., Pink Sparkle">
                 </div>
 
                 <div class="form-group">
                     <label>URL</label>
-                    <input type="text" id="newSwatchUrl" placeholder="images/glitter/sparkle/pink.gif">
+                    <input type="text" id="newGlitterUrl" placeholder="images/glitter/sparkle/pink.gif">
                 </div>
 
                 <div class="form-group">
@@ -110,7 +112,7 @@ include_once('includes/config.php');
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="app.hideAddModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="app.addSwatch()">Add Glitter</button>
+                <button class="btn btn-primary" onclick="app.addAsset()">Add Glitter</button>
             </div>
         </div>
     </div>
@@ -322,8 +324,11 @@ include_once('includes/config.php');
 
     <script>
         const CONFIG = <?php echo json_encode($CONFIG); ?>;
+        const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
     </script>
-    <script src="js/swatch_admin.js"></script>
+    <script src="js/admin_api.js"></script>
+    <script src="js/asset_admin.js"></script>
+    <script src="js/glitter_admin.js"></script>
 </body>
 
 </html>

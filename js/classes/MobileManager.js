@@ -30,11 +30,11 @@ class MobileManager {
 	}
 
 	init() {
-		console.log('Mobile: Initializing mobile manager');
+		dbg('Mobile: Initializing mobile manager');
 		this.cacheSettingsSections();
 
 		// Debug: Check if sections were cached
-		console.log('Mobile: Cached sections:', {
+		dbg('Mobile: Cached sections:', {
 			tool: !!this.settingsSections.tool,
 			glitter: !!this.settingsSections.glitter,
 			sticker: !!this.settingsSections.sticker
@@ -48,15 +48,15 @@ class MobileManager {
 
 		// THEN prepare settings AFTER switching tabs
 		const activeLayer = this.editor.layerManager.getActiveLayer();
-		console.log('Mobile: Active layer on init:', activeLayer);
+		dbg('Mobile: Active layer on init:', activeLayer);
 
 		if (activeLayer && this.hasLayerSettings(activeLayer)) {
 			// Prepare settings AFTER tab switch
-			console.log('Mobile: Preparing settings for layer:', activeLayer.type);
+			dbg('Mobile: Preparing settings for layer:', activeLayer.type);
 			this.prepareSettings(activeLayer);
 		}
 
-		console.log('Mobile: Initialization complete, on image tab');
+		dbg('Mobile: Initialization complete, on image tab');
 	}
 
 	hasLayerSettings(layer) {
@@ -96,7 +96,7 @@ class MobileManager {
 			previewTab.disabled = !this.editor.originalImage;
 		}
 
-		console.log('Mobile: Controls shown');
+		dbg('Mobile: Controls shown');
 	}
 
 	setupEventListeners() {
@@ -135,7 +135,7 @@ class MobileManager {
 		window.addEventListener('layerChanged', () => {
 			if (!this.isMobile) return; // Only handle this on mobile
 
-			console.log('Mobile: Layer changed to', this.editor.layerManager.getActiveLayer());
+			dbg('Mobile: Layer changed to', this.editor.layerManager.getActiveLayer());
 
 			const activeLayer = this.editor.layerManager.getActiveLayer();
 			const settingsBtn = document.getElementById('mobileSettingsBtn');
@@ -247,7 +247,7 @@ class MobileManager {
 
 if (!this.isMobile && nowMobile) {
     // Switching TO Mobile
-    console.log('Mobile: Switching to mobile mode');
+    dbg('Mobile: Switching to mobile mode');
     this.isMobile = true;
     this.init();
 
@@ -283,7 +283,7 @@ if (!this.isMobile && nowMobile) {
 
 } else if (this.isMobile && !nowMobile) {
     // Switching TO Desktop
-    console.log('Mobile: Switching to desktop mode');
+    dbg('Mobile: Switching to desktop mode');
     this.isMobile = false;
     this.cleanup();
 
@@ -304,7 +304,7 @@ if (!this.isMobile && nowMobile) {
 	}
 
 	switchTab(tab) {
-		console.log('Mobile: Switching to tab:', tab);
+		dbg('Mobile: Switching to tab:', tab);
 		this.activeTab = tab;
 
 		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
@@ -323,7 +323,7 @@ if (!this.isMobile && nowMobile) {
 	}
 
 	toggleDrawer(drawer) {
-		console.log('Mobile: Toggling drawer:', drawer);
+		dbg('Mobile: Toggling drawer:', drawer);
 
 		if (this.activeDrawer === drawer) {
 			// Closing current drawer
@@ -365,7 +365,7 @@ if (!this.isMobile && nowMobile) {
 	prepareSettings(layer) {
 		const mobileContainer = document.querySelector('.mobile-settings-content');
 		if (!mobileContainer) {
-			console.log('Mobile: No mobile settings container found');
+			dbg('Mobile: No mobile settings container found');
 			return;
 		}
 
@@ -378,12 +378,12 @@ if (!this.isMobile && nowMobile) {
 		mobileContainer.innerHTML = '';
 		let hasSettings = false;
 
-		console.log('Mobile: Moving sections to container...');
+		dbg('Mobile: Moving sections to container...');
 
 		// Get the UI config for this layer type
 		const config = LAYER_UI_CONFIG[layer.type];
 		if (!config || !config.mobileSettingsSections) {
-			console.log('Mobile: No settings for this layer type');
+			dbg('Mobile: No settings for this layer type');
 			return;
 		}
 
@@ -391,17 +391,17 @@ if (!this.isMobile && nowMobile) {
 		config.mobileSettingsSections.forEach(sectionKey => {
 			const section = this.settingsSections[sectionKey];
 			if (section) {
-				console.log(`Mobile: Moving ${sectionKey} section`);
+				dbg(`Mobile: Moving ${sectionKey} section`);
 				mobileContainer.appendChild(section);
 				section.classList.add('visible');
 				hasSettings = true;
 			} else {
-				console.log(`Mobile: No ${sectionKey} section found`);
+				dbg(`Mobile: No ${sectionKey} section found`);
 			}
 		});
 
-		console.log('Mobile: hasSettings:', hasSettings);
-		console.log('Mobile: Container children:', mobileContainer.children.length);
+		dbg('Mobile: hasSettings:', hasSettings);
+		dbg('Mobile: Container children:', mobileContainer.children.length);
 
 		// Collapse all sections
 		this.collapseAllSections();
@@ -520,7 +520,7 @@ if (!this.isMobile && nowMobile) {
 	}
 
 	cleanup() {
-		console.log('Mobile: Starting cleanup');
+		dbg('Mobile: Starting cleanup');
 
 		const topNav = document.querySelector('.mobile-top-nav');
 		const bottomNav = document.querySelector('.mobile-bottom-nav');
@@ -555,6 +555,6 @@ if (!this.isMobile && nowMobile) {
 			this.editor.showStickerSettingsEmptyState();
 		}
 
-		console.log('Mobile: Cleanup complete, restored to desktop layout');
+		dbg('Mobile: Cleanup complete, restored to desktop layout');
 	}
 }

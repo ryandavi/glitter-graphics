@@ -355,20 +355,20 @@ setupTouchGestures() {
         // Check if we should ignore this target (skip stickers for viewport handler)
         shouldIgnoreTarget: (target) => {
             if (target && target.closest('.sticker-element')) {
-                console.log('🎯 Viewport: Skipping sticker element');
+                dbg('🎯 Viewport: Skipping sticker element');
                 return true; // Skip it
             }
             return false; // Handle it
         },
         
         onTouchStart: () => {
-            console.log('👆 Touch started (any type)');
+            dbg('👆 Touch started (any type)');
             this.isTouchActive = true;
         },
         
         // Notification when touch ends (with info about whether it was a tap)
         onTouchEnd: (wasSimpleTap) => {
-            console.log('👆 Touch ended, was simple tap:', wasSimpleTap);
+            dbg('👆 Touch ended, was simple tap:', wasSimpleTap);
             // Small delay before clearing touch state to prevent ghost clicks
             setTimeout(() => {
                 this.isTouchActive = false;
@@ -376,18 +376,18 @@ setupTouchGestures() {
         },
         
         onGestureStart: (gestureType) => {
-            console.log('🎯 Gesture started:', gestureType);
+            dbg('🎯 Gesture started:', gestureType);
             this.isGestureActive = true;
         },
         
         onGestureEnd: () => {
-            console.log('🎯 Gesture ended');
+            dbg('🎯 Gesture ended');
             this.isGestureActive = false;
         },
         
         // === 1. SINGLE PAN ===
         onSinglePan: (dx, dy) => {
-            console.log('👆 1-Finger Pan:', dx, dy);
+            dbg('👆 1-Finger Pan:', dx, dy);
             this.panX += dx;
             this.panY += dy;
             this.applyTransform();
@@ -396,7 +396,7 @@ setupTouchGestures() {
 
         // === 2. PINCH ZOOM ===
         onPinchZoom: (scale, cx, cy) => {
-            console.log('🤏 Pinch:', scale);
+            dbg('🤏 Pinch:', scale);
             const rect = this.previewContainer.getBoundingClientRect();
             const anchorX = cx - rect.left;
             const anchorY = cy - rect.top;
@@ -405,7 +405,9 @@ setupTouchGestures() {
             const canvasY = (anchorY - this.panY) / this.currentZoom;
             
             let newZoom = this.currentZoom * scale;
-            newZoom = Math.max(0.1, Math.min(16, newZoom));
+            const minZoom = CONFIG.zoomLevels[0];
+            const maxZoom = CONFIG.zoomLevels[CONFIG.zoomLevels.length - 1];
+            newZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
 
             this.panX = anchorX - (canvasX * newZoom);
             this.panY = anchorY - (canvasY * newZoom);
@@ -425,7 +427,7 @@ setupTouchGestures() {
 
         // === 4. TAP (THE CLICK REPLACEMENT) ===
         onSimpleTap: (x, y) => {
-            console.log('✅ Clean Tap Detected');
+            dbg('✅ Clean Tap Detected');
             if (!window.editor) return;
 
             const target = document.elementFromPoint(x, y);

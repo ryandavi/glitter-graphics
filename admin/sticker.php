@@ -1,5 +1,9 @@
 <?php
 require_once('includes/config.php');
+require_once('includes/auth.php');
+
+requireAuth('page');
+$adminCsrfToken = getCsrfToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -312,7 +316,9 @@ require_once('includes/config.php');
 
     <script>
         const CONFIG = <?php echo json_encode($CONFIG); ?>;
+        const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
     </script>
+    <script src="js/admin_api.js"></script>
     <script src="js/asset_admin.js"></script>
     <script src="js/sticker_admin.js"></script>
 </body>

@@ -137,39 +137,25 @@ class StickerManager extends ContentManager {
 			const response = await fetch('data/stickers.json');
 			const data = await response.json();
 
-			this.content = data.map(item => ({
-				id: item.id,
-				name: item.name,
-				// filename: item.filename,
-				url: item.url,
-				thumbnailUrl: item.thumbnail_url || item.url,
-
-				// Metadata
-				category: item.category,
-				tags: item.tags || [],
-				colors: item.colors || [],
-
-				// Technical properties
-				isAnimated: item.is_animated || false,
-				hasTransparency: item.has_transparency || false,
-				width: item.width || 0,
-				height: item.height || 0,
-				frameCount: item.frame_count || 1,
-				frameRate: item.frame_rate || 10,  // ADD THIS
-				isVariableFramerate: item.is_variable_framerate || false,  // ADD THIS
-				fileSize: item.file_size || 0,
-
-				// Pre-parsed data (optional)
+			this.content = data.map(item => this.normalizeAsset(item, {
+				category: 'Uncategorized',
+				tags: [],
+				colors: [],
+				isAnimated: false,
+				hasTransparency: false,
+				width: 0,
+				height: 0,
+				frameCount: 1,
+				frameRate: 10,
+				isVariableFramerate: false,
+				fileSize: 0,
 				frames: null,
-
-				// Display
-				sortOrder: item.sort_order || 0,
-				featured: item.featured || false,
-
+				sortOrder: 0,
+				featured: false,
 				source: 'preset'
 			}));
 
-			console.log(`Loaded ${this.content.length} preset stickers`);
+			dbg(`Loaded ${this.content.length} preset stickers`);
 
 			// Populate category chips after loading
 			this.populateCategoryChips();
@@ -205,17 +191,14 @@ class StickerManager extends ContentManager {
 	// ===== UPLOAD HANDLING =====
 
 	validateUpload(file) {
-		// Check file type
-		const validTypes = ['image/png', 'image/gif', 'image/jpeg', 'image/jpg'];
-		if (!validTypes.includes(file.type)) {
+		if (!CONFIG.allowedStickerTypes.includes(file.type)) {
 			this.editor.showError('Please upload a valid image file (PNG, GIF, or JPG)');
 			return false;
 		}
 
-		// Check file size (10MB limit)
-		const maxSize = 10 * 1024 * 1024;
-		if (file.size > maxSize) {
-			this.editor.showError('File is too large. Maximum size is 10MB.');
+		if (file.size > CONFIG.maxStickerUploadSize) {
+			const maxMB = Math.round(CONFIG.maxStickerUploadSize / 1024 / 1024);
+			this.editor.showError(`File is too large. Maximum size is ${maxMB}MB.`);
 			return false;
 		}
 
@@ -318,7 +301,7 @@ class StickerManager extends ContentManager {
 		// Refresh to update the item from loading state to loaded
 		this.browser.refresh();
 
-		console.log('Processed uploaded sticker:', userSticker);
+		dbg('Processed uploaded sticker:', userSticker);
 	}
 
 	detectActualTransparency(imageData) {
@@ -434,7 +417,6 @@ class StickerManager extends ContentManager {
 			// Clear cached frame data when changing sticker
 			activeLayer.stickerData.frames = null;
 			activeLayer.stickerData.staticImageData = null;
-			activeLayer.stickerData.isFlattened = false;
 
 			// Render
 			this.renderLayer(activeLayer);

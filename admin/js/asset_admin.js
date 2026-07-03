@@ -2,10 +2,21 @@
 // ASSET EDITOR BASE CLASS
 // Shared functionality for all asset types
 // ============================================
+var adminFetch = window.adminFetch || ((...args) => AdminAPI.fetch(...args));
+window.adminFetch = adminFetch;
+
 class AssetEditor {
     constructor(config) {
         // Config object defines asset-specific behavior
-        this.config = config;
+        this.config = {
+            enableSorting: false,
+            showRecentSection: null,
+            tagModalId: 'tagModal',
+            ...config
+        };
+        if (this.config.showRecentSection === null) {
+            this.config.showRecentSection = !this.config.enableSorting;
+        }
         
         // Data arrays
         this.assets = [];
@@ -36,23 +47,23 @@ class AssetEditor {
     // ===== LOADING METHODS =====
 
     async loadAssets() {
-        const response = await fetch(`includes/api.php?action=list&type=${this.config.assetType}&_=` + Date.now());
+        const response = await adminFetch(`includes/api.php?action=list&type=${this.config.assetType}&_=` + Date.now());
         this.assets = await response.json();
         this.renderAssetList();
     }
 
     async loadCategories() {
-        const response = await fetch(`includes/api.php?action=categories&type=${this.config.assetType}`);
+        const response = await adminFetch(`includes/api.php?action=categories&type=${this.config.assetType}`);
         this.categories = await response.json();
     }
 
     async loadTags() {
-        const response = await fetch(`includes/api.php?action=tags&type=${this.config.assetType}`);
+        const response = await adminFetch(`includes/api.php?action=tags&type=${this.config.assetType}`);
         this.tags = await response.json();
     }
 
     async loadTagCategories() {
-        const response = await fetch(`includes/api.php?action=tag_categories&type=${this.config.assetType}`);
+        const response = await adminFetch(`includes/api.php?action=tag_categories&type=${this.config.assetType}`);
         this.tagCategories = await response.json();
     }
 
@@ -141,7 +152,7 @@ renderAssetList() {
         // Save scroll position
         this.scrollPosition = document.getElementById(this.config.listContainerId).scrollTop;
 
-        const response = await fetch(`includes/api.php?action=get&id=${id}&type=${this.config.assetType}`);
+        const response = await adminFetch(`includes/api.php?action=get&id=${id}&type=${this.config.assetType}`);
         this.currentAsset = await response.json();
         this.renderEditor();
         this.renderAssetList(); // Update active state
@@ -169,7 +180,7 @@ async saveAsset() {
     
     this.showStatus('Saving...');
 
-    const response = await fetch(`includes/api.php?action=update&type=${this.config.assetType}`, {
+    const response = await adminFetch(`includes/api.php?action=update&type=${this.config.assetType}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -206,7 +217,7 @@ async saveAsset() {
         const formData = new FormData();
         formData.append('id', this.currentAsset.id);
 
-        const response = await fetch(`includes/api.php?action=delete&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=delete&type=${this.config.assetType}`, {
             method: 'POST',
             body: formData
         });
@@ -294,7 +305,7 @@ async saveAsset() {
 
         this.showStatus('Adding...');
 
-        const response = await fetch(`includes/api.php?action=add&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=add&type=${this.config.assetType}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -330,7 +341,7 @@ async saveAsset() {
     }
 
     async renderCategoriesList() {
-        const response = await fetch(`includes/api.php?action=categories&type=${this.config.assetType}`);
+        const response = await adminFetch(`includes/api.php?action=categories&type=${this.config.assetType}`);
         const categories = await response.json();
 
         const container = document.getElementById('categoriesList');
@@ -388,7 +399,7 @@ async saveAsset() {
 
         const data = { name, slug, description, icon, color, sort_order: sortOrder };
 
-        const response = await fetch(`includes/api.php?action=add_category&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=add_category&type=${this.config.assetType}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -418,7 +429,7 @@ async saveAsset() {
         const formData = new FormData();
         formData.append('id', id);
 
-        const response = await fetch(`includes/api.php?action=delete_category&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=delete_category&type=${this.config.assetType}`, {
             method: 'POST',
             body: formData
         });
@@ -467,7 +478,7 @@ editCategory(id) {
 
         const data = { id, name, slug, description, icon, color, sort_order: sortOrder };
 
-        const response = await fetch(`includes/api.php?action=update_category&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=update_category&type=${this.config.assetType}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -488,13 +499,15 @@ editCategory(id) {
     // ===== TAG MANAGEMENT =====
 
     showManageTagsModal() {
-        document.getElementById('manageTagsModal').classList.add('active');
+        const modal = document.getElementById(this.config.tagModalId || 'tagModal');
+        modal.classList.add('active');
         this.renderTagList();
         this.renderTagCategorySelect();
     }
 
     hideManageTagsModal() {
-        document.getElementById('manageTagsModal').classList.remove('active');
+        const modal = document.getElementById(this.config.tagModalId || 'tagModal');
+        modal.classList.remove('active');
     }
 
     renderTagCategorySelect() {
@@ -505,7 +518,7 @@ editCategory(id) {
     }
 
     async renderTagList() {
-        const response = await fetch(`includes/api.php?action=tags&type=${this.config.assetType}`);
+        const response = await adminFetch(`includes/api.php?action=tags&type=${this.config.assetType}`);
         const tags = await response.json();
 
         const grouped = {};
@@ -517,7 +530,7 @@ editCategory(id) {
         });
 
         // Target the MODAL's tag list, not the editor's tag list
-        const container = document.querySelector('#manageTagsModal .tag-management-list');
+        const container = document.querySelector(`#${this.config.tagModalId || 'tagModal'} .tag-management-list`);
         if (!container) {
             console.error('Tag management list container not found in modal');
             return;
@@ -554,7 +567,7 @@ editCategory(id) {
         const data = { name, category_id: categoryId };
         if (hexColor) data.hex_color = hexColor;
 
-        const response = await fetch(`includes/api.php?action=add_tag&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=add_tag&type=${this.config.assetType}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -579,7 +592,7 @@ editCategory(id) {
         const formData = new FormData();
         formData.append('id', id);
 
-        const response = await fetch(`includes/api.php?action=delete_tag&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=delete_tag&type=${this.config.assetType}`, {
             method: 'POST',
             body: formData
         });
@@ -662,7 +675,7 @@ editCategory(id) {
     async exportJSON() {
         this.showStatus('Exporting...');
 
-        const response = await fetch(`includes/api.php?action=save_export&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=save_export&type=${this.config.assetType}`, {
             method: 'POST'
         });
 
@@ -679,7 +692,7 @@ editCategory(id) {
     async exportCategoriesJSON() {
         this.showStatus('Exporting categories...');
 
-        const response = await fetch(`includes/api.php?action=save_categories_export&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=save_categories_export&type=${this.config.assetType}`, {
             method: 'POST'
         });
 
@@ -743,7 +756,7 @@ editCategory(id) {
         const items = document.querySelectorAll('.swatch-item');
         const order = Array.from(items).map(item => parseInt(item.dataset.id));
 
-        const response = await fetch(`includes/api.php?action=reorder&type=${this.config.assetType}`, {
+        const response = await adminFetch(`includes/api.php?action=reorder&type=${this.config.assetType}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ order })

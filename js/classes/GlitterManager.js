@@ -149,33 +149,28 @@ async initBrowser() {
 			
 
 			json.forEach(config => {
-
-
-				this.content.push({
-					id: config.id,
-					url: config.url,
-					name: config.name || 'Unnamed',
-					generatedName: config.generatedName || null,
+				this.content.push(this.normalizeAsset(config, {
 					frames: null,
-					brightness: config.brightness || null,
-					sortOrder: config.sortOrder || 0,
-					hue: config.hue || null,
-					colorCodes: config.colorCodes || [],
-					frameCount: config.frameCount || 0,
-					frameRate: config.frameRate || 10,
-					isVariableFramerate: config.isVariableFramerate || false,
-					isAnimated: config.isAnimated || false,
-					hasTransparency: config.hasTransparency || false,
-					width: config.width || 0,
-					height: config.height || 0,
-					fileSize: config.fileSize || 0,
-					category: config.category || 'Uncategorized',
-					isPixelated: config.isPixelated || false,
-					tags: config.tags || []
-				});
+					brightness: null,
+					sortOrder: 0,
+					hue: null,
+					colorCodes: [],
+					frameCount: 0,
+					frameRate: 10,
+					isVariableFramerate: false,
+					isAnimated: false,
+					hasTransparency: false,
+					width: 0,
+					height: 0,
+					fileSize: 0,
+					category: 'Uncategorized',
+					isPixelated: false,
+					tags: [],
+					source: 'preset'
+				}));
 			});
 
-			console.log(`Loaded ${this.content.length} swatches`);
+			dbg(`Loaded ${this.content.length} swatches`);
 
 			// Populate category chips after loading
 			this.populateCategoryChips();
@@ -302,41 +297,6 @@ async initBrowser() {
 
 	}
 
-	randomizeGlitter(category = null) {
-		const layers = this.editor.layers;
-		if (layers.length === 0) return;
-
-		let availableGlitters = this.content;
-		if (category) {
-			availableGlitters = this.content.filter(g =>
-				g.category.toLowerCase() === category.toLowerCase()
-			);
-			if (availableGlitters.length === 0) return;
-		}
-
-		// Apply Replacements
-		layers.forEach(layer => {
-			if (layer.type !== LayerType.GLITTER_FILL) return;
-
-			const oldGlitterId = layer.selectedGlitterId;
-			// Filter out current so we get a change
-			const choices = availableGlitters.filter((g, idx) => {
-				const gIndex = this.content.findIndex(gl => gl.url === g.url);
-				return gIndex !== oldIndex;
-			});
-
-			if (choices.length > 0) {
-				const randomGlitter = choices[Math.floor(Math.random() * choices.length)];
-				layer.selectedGlitterId = randomGlitter.id;
-			}
-		});
-
-		this.editor.layerManager.renderLayersList();
-		this.editor.updateGlitterSelection();
-		this.editor.updatePreview();
-		this.editor.saveState();
-	}
-
 	// ===== RENDERING (CANVAS/DOM) =====
 
 	renderContent(layersToShow) {
@@ -344,12 +304,18 @@ async initBrowser() {
 		const height = this.editor.originalCanvas.height;
 
 		const layerType = this.getLayerType();
-		// Clear existing elements for this content type
-		this.clearElements();
+		const visibleLayerIds = new Set();
 
 		layersToShow.forEach(layer => {
 			if (layer.type === layerType) {
+				visibleLayerIds.add(layer.id);
 				this.renderLayer(layer, width, height);
+			}
+		});
+
+		this.layerElements.forEach((element, layerId) => {
+			if (!visibleLayerIds.has(layerId)) {
+				this.removeLayerElement(layerId);
 			}
 		});
 
@@ -366,16 +332,27 @@ updateSelection() {
 		const glitter = this.getItemById(layer.selectedGlitterId);
 		if (!glitter) return;
 
-		// 1. Create the WRAPPER
-		// This handles the drop-shadow filter and selection
-		const wrapper = document.createElement('div');
-		wrapper.className = 'glitter-element';
-		wrapper.dataset.layerId = layer.id;
+		let wrapper = this.layerElements.get(layer.id);
+		let inner = wrapper?.querySelector('.glitter-background');
+
+		if (!wrapper) {
+			// 1. Create the WRAPPER
+			// This handles the drop-shadow filter and selection
+			wrapper = document.createElement('div');
+			wrapper.className = 'glitter-element';
+			wrapper.dataset.layerId = layer.id;
+		}
+
 		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
 
-		// 2. Create the INNER Background
-		// This handles the glitter texture and the MASK
-		const inner = document.createElement('div');
+		if (!inner) {
+			// 2. Create the INNER Background
+			// This handles the glitter texture and the MASK
+			inner = document.createElement('div');
+			inner.className = 'glitter-background visible';
+			wrapper.replaceChildren(inner);
+		}
+
 		inner.className = 'glitter-background visible';
 		if (glitter.isPixelated) inner.classList.add('pixelated');
 
@@ -387,10 +364,72 @@ updateSelection() {
 		const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
 		inner.style.backgroundSize = `${Math.round(baseSize * glitterScale)}px`;
 
-		// Generate Mask
+		const maskObjectUrl = this.getMaskObjectUrlForLayer(layer, width, height);
+		if (maskObjectUrl) {
+			inner.style.maskImage = `url(${maskObjectUrl})`;
+			inner.style.webkitMaskImage = `url(${maskObjectUrl})`;
+		} else {
+			inner.style.maskImage = 'none';
+			inner.style.webkitMaskImage = 'none';
+		}
+
+		// 3. Assemble
+		if (!wrapper.parentNode) {
+			this.editor.canvasElementsContainer.appendChild(wrapper);
+		}
+
+		// Store reference
+		this.layerElements.set(layer.id, wrapper);
+
+		// Update selection highlight for this layer if it's active
+		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
+
+	}
+
+	// ===== MASKING UTILITIES =====
+
+	releaseLayerResources(layer) {
+		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
+
+		this.removeLayerElement(layer.id);
+		this.revokeMaskImageCache(layer);
+		delete layer._maskCache;
+	}
+
+	removeLayerElement(layerId) {
+		const element = this.layerElements.get(layerId);
+		if (element?.parentNode) {
+			element.parentNode.removeChild(element);
+		}
+
+		this.layerElements.delete(layerId);
+	}
+
+	revokeMaskImageCache(layer) {
+		const currentUrl = layer?._maskImageCache?.url;
+		if (currentUrl) {
+			URL.revokeObjectURL(currentUrl);
+		}
+
+		delete layer._maskImageCache;
+	}
+
+	applyMaskObjectUrl(layerId, url) {
+		const wrapper = this.layerElements.get(layerId);
+		const inner = wrapper?.querySelector('.glitter-background');
+		if (!inner) return;
+
+		inner.style.maskImage = `url(${url})`;
+		inner.style.webkitMaskImage = `url(${url})`;
+	}
+
+	getMaskObjectUrlForLayer(layer, width, height) {
 		const mask = this.createMaskForLayer(layer);
-		if (layer.settings.feather > 0) {
-			this.applyFeatherToMask(mask, layer.settings.feather);
+		const cacheKey = `${layer._maskCache?.key || ''}|${width}x${height}`;
+		const currentCache = layer._maskImageCache;
+
+		if (currentCache?.key === cacheKey) {
+			return currentCache.url || null;
 		}
 
 		const maskCanvas = document.createElement('canvas');
@@ -403,46 +442,60 @@ updateSelection() {
 		}
 		maskCtx.putImageData(maskData, 0, 0);
 
-		const maskDataURL = maskCanvas.toDataURL();
-		inner.style.maskImage = `url(${maskDataURL})`;
-		inner.style.webkitMaskImage = `url(${maskDataURL})`;
+		layer._maskImageCache = {
+			key: cacheKey,
+			url: currentCache?.url || null,
+			pending: true
+		};
 
-		// 3. Assemble
-		wrapper.appendChild(inner);
-		this.editor.canvasElementsContainer.appendChild(wrapper);
-
-		// Store reference
-		this.layerElements.set(layer.id, wrapper);
-
-		// Update selection highlight for this layer if it's active
-		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
-
-	}
-
-	updatePreviewScale() {
-		document.querySelectorAll('.glitter-bg-layer').forEach(bg => {
-			bg.style.width = this.editor.originalCanvas.width + 'px';
-			bg.style.height = this.editor.originalCanvas.height + 'px';
-
-			const layerId = bg.dataset.layerId;
-			const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-
-			if (layer && layer.type === LayerType.GLITTER_FILL) {
-				const glitter = this.getItemById(layer.selectedGlitterId);
-				if (glitter) {
-					const glitterScale = layer.settings.scale / 100;
-					const baseSize = (glitter.frames && glitter.frames.width) ?
-						glitter.frames.width : 50;
-					const scaledGlitterSize = Math.round(baseSize * glitterScale);
-					bg.style.backgroundSize = `${scaledGlitterSize}px`;
+		maskCanvas.toBlob((blob) => {
+			const latestCache = layer._maskImageCache;
+			if (!blob) {
+				if (latestCache?.key === cacheKey) {
+					layer._maskImageCache = {
+						key: cacheKey,
+						url: latestCache.url || null,
+						pending: false
+					};
 				}
+				return;
 			}
-		});
-	}
 
-	// ===== MASKING UTILITIES =====
+			const nextUrl = URL.createObjectURL(blob);
+			if (!latestCache || latestCache.key !== cacheKey) {
+				URL.revokeObjectURL(nextUrl);
+				return;
+			}
+
+			if (latestCache.url && latestCache.url !== nextUrl) {
+				URL.revokeObjectURL(latestCache.url);
+			}
+
+			layer._maskImageCache = {
+				key: cacheKey,
+				url: nextUrl,
+				pending: false
+			};
+
+			this.applyMaskObjectUrl(layer.id, nextUrl);
+		}, 'image/png');
+
+		return currentCache?.url || null;
+	}
 
 	createMaskForLayer(layer) {
+		const cacheKey = JSON.stringify([
+			layer.selections,
+			layer.settings.threshold,
+			layer.settings.feather,
+			layer.settings.contiguous,
+			layer.settings.invert
+		]);
+
+		if (layer._maskCache && layer._maskCache.key === cacheKey) {
+			return new Uint8Array(layer._maskCache.mask);
+		}
+
 		const width = this.editor.originalCanvas.width;
 		const height = this.editor.originalCanvas.height;
 		const len = width * height;
@@ -492,7 +545,16 @@ updateSelection() {
 			}
 		}
 
-		return mask;
+		if (layer.settings.feather > 0) {
+			this.applyFeatherToMask(mask, layer.settings.feather);
+		}
+
+		layer._maskCache = {
+			key: cacheKey,
+			mask: new Uint8Array(mask)
+		};
+
+		return new Uint8Array(mask);
 	}
 
 	floodFill(mask, startX, startY, targetColor, thresholdSq) {
@@ -557,22 +619,41 @@ updateSelection() {
 	}
 
 	applyFeatherToMask(mask, radius) {
+		if (radius <= 0) return;
+
 		const width = this.editor.originalCanvas.width;
 		const height = this.editor.originalCanvas.height;
-		const tempMask = new Uint8Array(mask);
+		const horizontal = new Float32Array(mask.length);
 
 		for (let y = 0; y < height; y++) {
+			const rowOffset = y * width;
+			const prefix = new Uint32Array(width + 1);
+
 			for (let x = 0; x < width; x++) {
-				let sum = 0, count = 0;
-				for (let dy = -radius; dy <= radius; dy++) {
-					for (let dx = -radius; dx <= radius; dx++) {
-						const nx = x + dx, ny = y + dy;
-						if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-							sum += tempMask[ny * width + nx];
-							count++;
-						}
-					}
-				}
+				prefix[x + 1] = prefix[x] + mask[rowOffset + x];
+			}
+
+			for (let x = 0; x < width; x++) {
+				const left = Math.max(0, x - radius);
+				const right = Math.min(width - 1, x + radius);
+				const count = right - left + 1;
+				const sum = prefix[right + 1] - prefix[left];
+				horizontal[rowOffset + x] = sum / count;
+			}
+		}
+
+		for (let x = 0; x < width; x++) {
+			const prefix = new Float32Array(height + 1);
+
+			for (let y = 0; y < height; y++) {
+				prefix[y + 1] = prefix[y] + horizontal[y * width + x];
+			}
+
+			for (let y = 0; y < height; y++) {
+				const top = Math.max(0, y - radius);
+				const bottom = Math.min(height - 1, y + radius);
+				const count = bottom - top + 1;
+				const sum = prefix[bottom + 1] - prefix[top];
 				mask[y * width + x] = Math.round(sum / count);
 			}
 		}

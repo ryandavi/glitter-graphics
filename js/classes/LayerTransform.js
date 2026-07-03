@@ -19,6 +19,26 @@ class LayerTransform {
         // Bind methods for event listeners
         this.handleMouseMove = this.handleMouseMove.bind(this);
         this.handleMouseUp = this.handleMouseUp.bind(this);
+
+        // rAF flag for settings-panel sync during drags
+        this._settingsSyncScheduled = false;
+    }
+
+    /**
+     * Sync the settings panel to this layer, throttled to one update per
+     * animation frame. Drag handlers fire per pointer event — running the
+     * full loadStickerSettings (a dozen+ DOM reads/writes) that often is
+     * wasted work the screen can't show.
+     */
+    scheduleSettingsSync() {
+        if (this._settingsSyncScheduled) return;
+        this._settingsSyncScheduled = true;
+        requestAnimationFrame(() => {
+            this._settingsSyncScheduled = false;
+            if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
+                this.editor.loadStickerSettings(this.layer);
+            }
+        });
     }
 
     // ===== CORE TRANSFORM APPLICATION =====
@@ -38,7 +58,7 @@ applyTransform(element, dimensions) {
         const layerElement = document.querySelector(`.sticker-element[data-layer-id="${this.layer.id}"]`);
         
         if (layerElement) {
-            console.log('✅ Found fresh element reference');
+            dbg('✅ Found fresh element reference');
             this.element = layerElement;
             element = layerElement;
         } else {
@@ -88,7 +108,7 @@ applyTransform(element, dimensions) {
         `touch-action: none`
     ].join('; ') + ';';
     
-    if(CONFIG.debug) console.log('📐 Applying transform:', {
+    dbg('📐 Applying transform:', {
         position: transform.position,
         displayWidth,
         displayHeight,
@@ -250,7 +270,7 @@ const handleMouseDown = (e) => {
     
     // Select this layer if not already selected
     if (this.editor.layerManager.activeLayerId !== this.layer.id) {
-        console.log('🎯 Selecting layer and starting drag immediately');
+        dbg('🎯 Selecting layer and starting drag immediately');
         this.editor.layerManager.setActiveLayer(this.layer.id);
         
         // Set flag to prevent click handler from firing
@@ -306,7 +326,7 @@ const handleMouseMove = (e) => {
     if (!this.element) {
         const layerElement = document.querySelector(`.sticker-element[data-layer-id="${this.layer.id}"]`);
         if (layerElement) {
-            console.log('✅ Refreshed element reference in mousemove');
+            dbg('✅ Refreshed element reference in mousemove');
             this.element = layerElement;
         }
     }
@@ -318,7 +338,7 @@ const handleMouseMove = (e) => {
     // CRITICAL FIX: Ensure handles exist before trying to update them
     // If they don't exist yet (first drag after selection), create them
     if (!this.transformHandles && this.editor.currentTool === ToolType.SELECT && CONFIG.stickerHandles.enabled) {
-        console.log('✅ Creating handles on first mousemove');
+        dbg('✅ Creating handles on first mousemove');
         this.createTransformHandles();
     }
     
@@ -329,7 +349,7 @@ const handleMouseMove = (e) => {
     
     // Update settings UI if available
     if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
-        this.editor.loadStickerSettings(this.layer);
+        this.scheduleSettingsSync();
     }
 };
     
@@ -373,7 +393,7 @@ const handleMouseMove = (e) => {
             // Skip sticker touches entirely when not in SELECT tool
             shouldIgnoreTarget: (target) => {
                 if (this.editor.currentTool !== ToolType.SELECT) {
-                    console.log('🎯 LayerTransform: Ignoring touch - not SELECT tool');
+                    dbg('🎯 LayerTransform: Ignoring touch - not SELECT tool');
                     return true;  // Let the touch pass through to canvas
                 }
                 return false;
@@ -398,7 +418,7 @@ const handleMouseMove = (e) => {
                 // CRITICAL: Select layer immediately when gesture starts
                 // This allows immediate dragging without needing a separate tap
                 if (!isSelected) {
-                    console.log('🎯 Selecting layer on gesture start:', this.layer.id);
+                    dbg('🎯 Selecting layer on gesture start:', this.layer.id);
                     this.editor.layerManager.setActiveLayer(this.layer.id);
                 }
             },
@@ -425,7 +445,7 @@ const handleMouseMove = (e) => {
 
                 // Update settings UI if available
                 if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
-                    this.editor.loadStickerSettings(this.layer);
+                    this.scheduleSettingsSync();
                 }
             },
 
@@ -459,7 +479,7 @@ const handleMouseMove = (e) => {
 
                 // Update settings UI if available
                 if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
-                    this.editor.loadStickerSettings(this.layer);
+                    this.scheduleSettingsSync();
                 }
             },
 
@@ -480,7 +500,7 @@ const handleMouseMove = (e) => {
 
                 // Update settings UI if available
                 if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
-                    this.editor.loadStickerSettings(this.layer);
+                    this.scheduleSettingsSync();
                 }
             },
 
@@ -527,7 +547,7 @@ createTransformHandles() {
     if (!this.element) {
         const layerElement = document.querySelector(`.sticker-element[data-layer-id="${this.layer.id}"]`);
         if (layerElement) {
-            console.log('✅ Refreshed element reference in createTransformHandles');
+            dbg('✅ Refreshed element reference in createTransformHandles');
             this.element = layerElement;
         } else {
             console.warn('⚠️ Cannot create transform handles - element not found');
@@ -803,7 +823,7 @@ removeTransformHandles() {
 
         // Update UI if available
         if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
-            this.editor.loadStickerSettings(this.layer);
+            this.scheduleSettingsSync();
         }
     }
 
