@@ -108,13 +108,13 @@ class LayerManager {
 	}
 
 	// In LayerManager
-	addLayer(type = LayerType.GLITTER_FILL) {
+	addLayer(type = LayerType.GLITTER_FILL, options = {}) {
 		let layer;
 
 		if (type === LayerType.STICKER) {
 			layer = this.editor.stickerManager.createLayer();
 		} else if (type === LayerType.TEXT_GLITTER) {
-			layer = this.editor.textGlitterManager.createLayer();
+			layer = this.editor.textGlitterManager.createLayer(options.textLayer || {});
 		} else if (type === LayerType.GLITTER_FILL) {
 			layer = this.editor.glitterManager.createLayer();
 		} else {
@@ -152,6 +152,7 @@ class LayerManager {
 			msg = 'New text layer added';
 		}
 		this.editor.updateStatus(msg);
+		return layer;
 	}
 
 
@@ -394,66 +395,63 @@ class LayerManager {
 			return; // Don't pick layers when clicking handles
 		}
 
-		// Check layers from top to bottom (visual order)
-		for (let i = this.layers.length - 1; i >= 0; i--) {
-			const layer = this.layers[i];
+		const layer = this.getTopVisibleLayerAtPoint(x, y, { includeBase: true });
+		if (layer) {
+			this.setActiveLayer(layer.id);
 
-			// 1. Skip invisible layers
-			if (!layer.visible) continue;
-
-			let isHit = false;
-
-			// 2. Check Hit based on Layer Type
-			if (layer.type === LayerType.STICKER) {
-				isHit = this.isPointInSticker(layer, x, y);
-			}
-			else if (layer.type === LayerType.TEXT_GLITTER) {
-				isHit = this.isPointInText(layer, x, y);
-			}
+			let name = 'Layer';
+			if (layer.type === LayerType.STICKER) name = layer.name;
+			else if (layer.type === LayerType.TEXT_GLITTER) name = layer.name || 'Text';
+			else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
 			else if (layer.type === LayerType.GLITTER_FILL) {
-				if (hasMaskContent(layer)) {
-					isHit = this.isPixelInLayerSelection(layer, x, y);
-				}
-			}
-			else if (layer.type === LayerType.BASE_IMAGE) {
-				// Base image covers the whole canvas (if loaded)
-				// Since we iterate top-down, we only hit this if nothing above it was clicked
-				if (this.editor.originalImage) {
-					isHit = true;
-				}
+				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+				name = glitter?.name || 'Glitter';
 			}
 
-			// 3. If Hit, Select and Return
-			if (isHit) {
-				this.setActiveLayer(layer.id);
+			this.editor.updateStatus(`Selected: ${name}`);
 
-				// UX Feedback
-				let name = 'Layer';
-				if (layer.type === LayerType.STICKER) name = layer.name;
-				else if (layer.type === LayerType.TEXT_GLITTER) name = layer.name || 'Text';
-				else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
-				else if (layer.type === LayerType.GLITTER_FILL) {
-					const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
-					name = glitter?.name || 'Glitter';
-				}
+			const flash = document.createElement('div');
+			flash.className = 'layer-pick-flash';
+			flash.style.left = (x / this.editor.previewCanvas.width * 100) + '%';
+			flash.style.top = (y / this.editor.previewCanvas.height * 100) + '%';
+			this.editor.previewWrapper.appendChild(flash);
+			setTimeout(() => flash.remove(), 300);
 
-				this.editor.updateStatus(`Selected: ${name}`);
-
-				// Visual feedback (flash)
-				const flash = document.createElement('div');
-				flash.className = 'layer-pick-flash';
-				flash.style.left = (x / this.editor.previewCanvas.width * 100) + '%';
-				flash.style.top = (y / this.editor.previewCanvas.height * 100) + '%';
-				this.editor.previewWrapper.appendChild(flash);
-				setTimeout(() => flash.remove(), 300);
-
-				return; // Stop checking lower layers
-			}
+			return;
 		}
 
 		// If loop finishes with no hits
 		this.setActiveLayer(null);
 		this.editor.updateStatus('No layer at this location');
+	}
+
+	getTopVisibleLayerAtPoint(x, y, options = {}) {
+		const includeBase = options.includeBase !== false;
+
+		for (let i = this.layers.length - 1; i >= 0; i--) {
+			const layer = this.layers[i];
+			if (!layer.visible) continue;
+
+			let isHit = false;
+
+			if (layer.type === LayerType.STICKER) {
+				isHit = this.isPointInSticker(layer, x, y);
+			} else if (layer.type === LayerType.TEXT_GLITTER) {
+				isHit = this.isPointInText(layer, x, y);
+			} else if (layer.type === LayerType.GLITTER_FILL) {
+				if (hasMaskContent(layer)) {
+					isHit = this.isPixelInLayerSelection(layer, x, y);
+				}
+			} else if (includeBase && layer.type === LayerType.BASE_IMAGE && this.editor.originalImage) {
+				isHit = true;
+			}
+
+			if (isHit) {
+				return layer;
+			}
+		}
+
+		return null;
 	}
 
 	isPointInTransformBox(transform, width, height, clickX, clickY) {

@@ -190,6 +190,7 @@ const CONFIG = {
 	shortcuts: {
 		tools: [
 			{ key: 'V', action: 'Select Tool' },
+			{ key: 'T', action: 'Text Tool' },
 			{ key: 'I', action: 'Color Picker Tool' },
 			{ key: 'B', action: 'Mask Brush Tool' },
 			{ key: 'H', action: 'Hand Tool' },
@@ -222,6 +223,7 @@ const LayerType = {
 
 const ToolType = {
 	SELECT: 'select',
+	TEXT: 'text',
 	HAND: 'hand',
 	COLOR_PICKER: 'colorPicker',
 	BRUSH: 'brush',

@@ -1213,6 +1213,7 @@ resetAllSettings() {
 	setupToolbarListeners() {
 		const tools = [
 			{ id: 'selectTool', type: ToolType.SELECT },
+			{ id: 'textTool', type: ToolType.TEXT },
 			{ id: 'colorPickerTool', type: ToolType.COLOR_PICKER },
 			{ id: 'brushTool', type: ToolType.BRUSH },
 			{ id: 'handTool', type: ToolType.HAND },
@@ -2407,6 +2408,9 @@ setupWelcomeModalListeners() {
 
 		// In setupEventListeners() or wherever you set up preview container events
 		this.previewContainer.addEventListener('pointerdown', (e) => {
+			if (this.currentTool === ToolType.TEXT) {
+				return;
+			}
 			this.handlePreviewContainerClick(e);
 		});
 
@@ -2514,7 +2518,7 @@ setupWelcomeModalListeners() {
 
 
 		// Remove all tool classes from body
-		document.body.classList.remove('tool-select', 'tool-hand', 'tool-colorPicker', 'tool-zoom', 'tool-brush');
+		document.body.classList.remove('tool-select', 'tool-text', 'tool-hand', 'tool-colorPicker', 'tool-zoom', 'tool-brush');
 
 		// Add current tool class
 		document.body.classList.add(`tool-${tool}`);
@@ -2527,6 +2531,7 @@ setupWelcomeModalListeners() {
 		// Fix: The tool name needs to match the button ID exactly
 		const toolButtonIds = {
 			'select': 'selectTool',
+			'text': 'textTool',
 			'hand': 'handTool',
 			'colorPicker': 'colorPickerTool',
 			'brush': 'brushTool',
@@ -2573,7 +2578,7 @@ setupWelcomeModalListeners() {
 		// NEW: Manage sticker pointer-events based on tool
 		// When in Hand or Zoom tool, stickers should not capture touch events
 		const interactiveElements = this.canvasElementsContainer.querySelectorAll('.sticker-element, .text-glitter-element');
-		if (tool === ToolType.HAND || tool === ToolType.ZOOM) {
+		if (tool === ToolType.HAND || tool === ToolType.ZOOM || tool === ToolType.TEXT) {
 			// Disable sticker interaction - viewport gestures only
 			interactiveElements.forEach(element => {
 				element.style.pointerEvents = 'none';
@@ -2674,6 +2679,7 @@ setupWelcomeModalListeners() {
 		const getToolInfo = (tool) => {
 			const toolMap = {
 				[ToolType.SELECT]: { icon: 'icon-hand-pointer', name: 'Select Tool' },
+				[ToolType.TEXT]: { icon: 'icon-hand-pointer', name: 'Text Tool' },
 				[ToolType.COLOR_PICKER]: { icon: 'icon-magic-wand', name: 'Color Picker' },
 				[ToolType.BRUSH]: { icon: 'icon-brush', name: 'Mask Brush' },
 				[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
@@ -2744,6 +2750,12 @@ setupWelcomeModalListeners() {
 			} else {
 				hint = 'Click and drag to move around the canvas';
 			}
+		}
+
+		else if (currentTool === ToolType.TEXT) {
+			showTool = true;
+			hint = 'Click empty canvas space to create a point-text layer';
+			context = 'The click becomes the text anchor. Existing layers stay put until you switch back to Select.';
 		}
 
 		else if (currentTool === ToolType.COLOR_PICKER) {
@@ -2973,6 +2985,9 @@ setupWelcomeModalListeners() {
 
 
 		if (e.key === 'v' || e.key === 'V') this.setTool(ToolType.SELECT);
+		if (e.key === 't' || e.key === 'T') {
+			if (this.originalImage) this.setTool(ToolType.TEXT);
+		}
 		if (e.key === 'i' || e.key === 'I') {
 			if (this.originalImage) this.setTool(ToolType.COLOR_PICKER);
 		}
@@ -3081,6 +3096,7 @@ setupWelcomeModalListeners() {
 		const clearAllTool = document.getElementById('clearAllTool');
 		const exportGif = document.getElementById('exportGif');
 		const imageClearBtn = document.getElementById('imageClearBtn');
+		const textTool = document.getElementById('textTool');
 		const colorPickerTool = document.getElementById('colorPickerTool');
 		const handTool = document.getElementById('handTool');
 		const zoomTool = document.getElementById('zoomTool');
@@ -3116,6 +3132,7 @@ setupWelcomeModalListeners() {
 			}
 		}
 
+		if (textTool) textTool.disabled = !hasImage;
 		if (colorPickerTool) colorPickerTool.disabled = !hasImage;
 		if (handTool) handTool.disabled = !hasImage;
 		if (zoomTool) zoomTool.disabled = !hasImage;
@@ -3501,6 +3518,46 @@ setupWelcomeModalListeners() {
 					this.handleLayerSelectAction(x, y);
 				} else if (!hitImageArea) {
 					this.layerManager.setActiveLayer(null);
+				}
+				break;
+
+			case ToolType.TEXT:
+				if (!hitCanvas) {
+					return;
+				}
+				{
+					const rect = this.previewCanvas.getBoundingClientRect();
+					const clickX = e.clientX - rect.left;
+					const clickY = e.clientY - rect.top;
+					const scaleX = this.previewCanvas.width / rect.width;
+					const scaleY = this.previewCanvas.height / rect.height;
+					const x = Math.floor(clickX * scaleX);
+					const y = Math.floor(clickY * scaleY);
+
+					const hitLayer = this.layerManager.getTopVisibleLayerAtPoint?.(x, y, { includeBase: false });
+					if (hitLayer) {
+						return;
+					}
+
+					const layer = this.layerManager.addLayer(LayerType.TEXT_GLITTER, {
+						textLayer: {
+							position: { x, y },
+							align: 'left',
+							anchorPosition: { x, y },
+							boxMode: 'auto'
+						}
+					});
+
+					if (layer) {
+						this.setTool(ToolType.SELECT);
+						if (!this.mobileManager?.isMobile) {
+							setTimeout(() => {
+								this.updateSidePanelUI(layer);
+								this.loadActiveLayerSettings();
+								this.textGlitterManager?.focusTextInput(true);
+							}, 0);
+						}
+					}
 				}
 				break;
 

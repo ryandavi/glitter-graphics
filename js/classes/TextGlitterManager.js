@@ -38,6 +38,12 @@ class TextGlitterManager {
 			fontSizeValue: document.getElementById('textFontSizeValue'),
 			letterSpacing: document.getElementById('textLetterSpacing'),
 			letterSpacingValue: document.getElementById('textLetterSpacingValue'),
+			lineHeight: document.getElementById('textLineHeight'),
+			lineHeightValue: document.getElementById('textLineHeightValue'),
+			fillGlitterChip: document.getElementById('textFillGlitterChip'),
+			fillGlitterChange: document.getElementById('textFillGlitterChange'),
+			fillGlitterLabel: document.getElementById('textFillGlitterLabel'),
+			fillGlitterSwatch: document.getElementById('textFillGlitterSwatch'),
 			textureScale: document.getElementById('textTextureScale'),
 			textureScaleValue: document.getElementById('textTextureScaleValue'),
 			textureOpacity: document.getElementById('textTextureOpacity'),
@@ -51,11 +57,14 @@ class TextGlitterManager {
 			borderWidth: document.getElementById('textBorderWidth'),
 			borderWidthValue: document.getElementById('textBorderWidthValue'),
 			borderColor: document.getElementById('textBorderColor'),
+			borderColorRow: document.getElementById('textBorderColorRow'),
 			borderSourceValue: document.getElementById('textBorderSourceValue'),
 			borderGlitterChip: document.getElementById('textBorderGlitterChip'),
+			borderGlitterChange: document.getElementById('textBorderGlitterChange'),
 			borderGlitterLabel: document.getElementById('textBorderGlitterLabel'),
 			borderGlitterSwatch: document.getElementById('textBorderGlitterSwatch'),
 			borderUseColor: document.getElementById('textBorderUseColor'),
+			borderUseGlitter: document.getElementById('textBorderUseGlitter'),
 			shadowEnabled: document.getElementById('textShadowEnabled'),
 			shadowControls: document.getElementById('textShadowControls'),
 			shadowOffsetX: document.getElementById('textShadowOffsetX'),
@@ -63,11 +72,14 @@ class TextGlitterManager {
 			shadowOffsetY: document.getElementById('textShadowOffsetY'),
 			shadowOffsetYValue: document.getElementById('textShadowOffsetYValue'),
 			shadowColor: document.getElementById('textShadowColor'),
+			shadowColorRow: document.getElementById('textShadowColorRow'),
 			shadowSourceValue: document.getElementById('textShadowSourceValue'),
 			shadowGlitterChip: document.getElementById('textShadowGlitterChip'),
+			shadowGlitterChange: document.getElementById('textShadowGlitterChange'),
 			shadowGlitterLabel: document.getElementById('textShadowGlitterLabel'),
 			shadowGlitterSwatch: document.getElementById('textShadowGlitterSwatch'),
-			shadowUseColor: document.getElementById('textShadowUseColor')
+			shadowUseColor: document.getElementById('textShadowUseColor'),
+			shadowUseGlitter: document.getElementById('textShadowUseGlitter')
 		};
 	}
 
@@ -82,6 +94,7 @@ class TextGlitterManager {
 					this.ui.textInput.value = value;
 				}
 
+				this.preparePendingAnchorPreservation(layer);
 				layer.textData.text = value;
 				layer.name = this.getLayerName(value);
 				this.updateLiveTextContent(layer.id, value);
@@ -103,11 +116,11 @@ class TextGlitterManager {
 				const fontId = button.dataset.fontId;
 				if (!fontId || fontId === layer.textData.fontId) return;
 
-				layer.textData.fontId = fontId;
-
 				try {
-					await this.ensureFontLoaded(fontId);
-					await this.refreshLayer(layer, { saveHistory: true });
+					await this.runLayoutRefreshWithAnchor(layer, async () => {
+						layer.textData.fontId = fontId;
+						await this.ensureFontLoaded(fontId);
+					}, { saveHistory: true });
 				} catch (error) {
 					this.reportFontLoadError(error);
 				}
@@ -121,6 +134,29 @@ class TextGlitterManager {
 		this.attachSlider(this.ui.letterSpacing, this.ui.letterSpacingValue, 'px', (value, layer) => {
 			layer.textData.letterSpacing = value;
 		}, CONFIG.textLayers.defaultLetterSpacing);
+
+		this.attachSlider(this.ui.lineHeight, this.ui.lineHeightValue, '%', (value, layer) => {
+			layer.textData.lineHeight = value / 100;
+		}, Math.round(CONFIG.textLayers.lineHeight * 100));
+
+		if (this.ui.fillGlitterChip || this.ui.fillGlitterChange) {
+			[this.ui.fillGlitterChip, this.ui.fillGlitterChange].filter(Boolean).forEach((button) => {
+				button.addEventListener('click', () => {
+					const layer = this.getActiveTextLayer();
+					if (!layer) return;
+
+					this.setGlitterSelectionTarget('fill', layer);
+
+					const selectedGlitterId = this.resolveSelectedGlitterId(layer);
+					if (selectedGlitterId) {
+						this.editor.glitterManager?.scrollToContent(selectedGlitterId);
+					}
+
+					this.revealGlitterBrowser();
+					this.editor.updateStatus('Pick a glitter for the text fill.');
+				});
+			});
+		}
 
 		this.attachSlider(this.ui.textureScale, this.ui.textureScaleValue, '%', (value, layer) => {
 			layer.settings.scale = value;
@@ -138,9 +174,10 @@ class TextGlitterManager {
 				const align = button.dataset.textAlign;
 				if (!align || align === layer.textData.align) return;
 
-				layer.textData.align = align;
 				try {
-					await this.refreshLayer(layer, { saveHistory: true });
+					await this.runLayoutRefreshWithAnchor(layer, () => {
+						layer.textData.align = align;
+					}, { saveHistory: true });
 				} catch (error) {
 					this.reportFontLoadError(error);
 				}
@@ -155,9 +192,10 @@ class TextGlitterManager {
 				const verticalAlign = button.dataset.textValign;
 				if (!verticalAlign || verticalAlign === layer.textData.verticalAlign) return;
 
-				layer.textData.verticalAlign = verticalAlign;
 				try {
-					await this.refreshLayer(layer, { saveHistory: true });
+					await this.runLayoutRefreshWithAnchor(layer, () => {
+						layer.textData.verticalAlign = verticalAlign;
+					}, { saveHistory: true });
 				} catch (error) {
 					this.reportFontLoadError(error);
 				}
@@ -173,16 +211,16 @@ class TextGlitterManager {
 				const currentMode = layer.textData.boxMode || 'auto';
 				if (!nextMode || nextMode === currentMode) return;
 
-				if (nextMode === 'fixed') {
-					this.ensureFixedBox(layer);
-				} else {
-					layer.textData.boxMode = 'auto';
-					delete layer.textData.boxWidth;
-					delete layer.textData.boxHeight;
-				}
-
 				try {
-					await this.refreshLayer(layer, { saveHistory: true });
+					await this.runLayoutRefreshWithAnchor(layer, () => {
+						if (nextMode === 'fixed') {
+							this.ensureFixedBox(layer);
+						} else {
+							layer.textData.boxMode = 'auto';
+							delete layer.textData.boxWidth;
+							delete layer.textData.boxHeight;
+						}
+					}, { saveHistory: true });
 				} catch (error) {
 					this.reportFontLoadError(error);
 				}
@@ -204,12 +242,100 @@ class TextGlitterManager {
 			this.ensureEffectData(layer, 'shadow').offsetY = value;
 		}, this.getDefaultShadow().offsetY);
 
-		this.bindEffectGlitterPicker(this.ui.borderGlitterChip, 'border');
-		this.bindEffectGlitterPicker(this.ui.shadowGlitterChip, 'shadow');
+		this.bindEffectGlitterPicker([this.ui.borderGlitterChip, this.ui.borderGlitterChange], 'border');
+		this.bindEffectGlitterPicker([this.ui.shadowGlitterChip, this.ui.shadowGlitterChange], 'shadow');
 		this.bindEffectUseColor(this.ui.borderUseColor, 'border');
 		this.bindEffectUseColor(this.ui.shadowUseColor, 'shadow');
+		this.bindEffectUseGlitter(this.ui.borderUseGlitter, 'border');
+		this.bindEffectUseGlitter(this.ui.shadowUseGlitter, 'shadow');
 		this.bindEffectColorInput(this.ui.borderColor, 'border');
 		this.bindEffectColorInput(this.ui.shadowColor, 'shadow');
+	}
+
+	getPointAnchorSnapshot(layer) {
+		this.normalizeLayer(layer);
+		if (!layer?.textData || (layer.textData.boxMode || 'auto') !== 'auto') {
+			return null;
+		}
+
+		const frame = this.getTextFrame(layer);
+		if (!frame) return null;
+
+		return {
+			world: this.getPointAnchorWorldPosition(layer, frame)
+		};
+	}
+
+	preparePendingAnchorPreservation(layer) {
+		if (!layer || layer._pendingPointAnchorSnapshot) return;
+		layer._pendingPointAnchorSnapshot = this.getPointAnchorSnapshot(layer);
+	}
+
+	async runLayoutRefreshWithAnchor(layer, mutateFn, options = {}) {
+		const snapshot = this.getPointAnchorSnapshot(layer);
+		await mutateFn();
+		return this.refreshLayer(layer, {
+			...options,
+			preservePointAnchorFrom: snapshot
+		});
+	}
+
+	getFrameAnchorLocalPoint(frame, align = 'left') {
+		const left = frame.offsetX - frame.width / 2;
+		const right = frame.offsetX + frame.width / 2;
+		const top = frame.offsetY - frame.height / 2;
+		if (align === 'center') {
+			return { x: frame.offsetX, y: top };
+		}
+		if (align === 'right') {
+			return { x: right, y: top };
+		}
+		return { x: left, y: top };
+	}
+
+	getWorldPointFromLocal(transform, localPoint) {
+		const scaleX = (transform.scale.x || 100) / 100;
+		const scaleY = (transform.scale.y || 100) / 100;
+		const rotationRad = (transform.rotation * Math.PI) / 180;
+		const cos = Math.cos(rotationRad);
+		const sin = Math.sin(rotationRad);
+		return {
+			x: transform.position.x + localPoint.x * scaleX * cos - localPoint.y * scaleY * sin,
+			y: transform.position.y + localPoint.x * scaleX * sin + localPoint.y * scaleY * cos
+		};
+	}
+
+	getPointAnchorWorldPosition(layer, frame = this.getTextFrame(layer)) {
+		if (!frame) {
+			return { ...layer.textData.transform.position };
+		}
+		const localPoint = this.getFrameAnchorLocalPoint(frame, layer.textData.align || 'left');
+		return this.getWorldPointFromLocal(layer.textData.transform, localPoint);
+	}
+
+	setPointAnchorWorldPosition(layer, worldPoint, frame = this.getTextFrame(layer)) {
+		if (!worldPoint || !frame) return;
+
+		const localPoint = this.getFrameAnchorLocalPoint(frame, layer.textData.align || 'left');
+		const transform = layer.textData.transform;
+		const scaleX = (transform.scale.x || 100) / 100;
+		const scaleY = (transform.scale.y || 100) / 100;
+		const rotationRad = (transform.rotation * Math.PI) / 180;
+		const cos = Math.cos(rotationRad);
+		const sin = Math.sin(rotationRad);
+
+		transform.position.x = worldPoint.x - (localPoint.x * scaleX * cos - localPoint.y * scaleY * sin);
+		transform.position.y = worldPoint.y - (localPoint.x * scaleX * sin + localPoint.y * scaleY * cos);
+	}
+
+	applyPointAnchorSnapshot(layer, snapshot, measurement = null) {
+		if (!snapshot || !layer?.textData || (layer.textData.boxMode || 'auto') !== 'auto') {
+			return;
+		}
+
+		const nextFrame = this.getTextFrame(layer, measurement);
+		if (!nextFrame) return;
+		this.setPointAnchorWorldPosition(layer, snapshot.world, nextFrame);
 	}
 
 	getDefaultBorder() {
@@ -246,6 +372,9 @@ class TextGlitterManager {
 		}
 		if (!layer.textData.verticalAlign) {
 			layer.textData.verticalAlign = CONFIG.textLayers.defaultVerticalAlign || 'top';
+		}
+		if (!layer.textData.lineHeight) {
+			layer.textData.lineHeight = CONFIG.textLayers.lineHeight;
 		}
 	}
 
@@ -337,40 +466,41 @@ class TextGlitterManager {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 
-			if (toggle.checked) {
-				this.ensureEffectData(layer, effectName);
-			} else {
-				layer.textData[effectName] = null;
-				if (this.getGlitterSelectionTarget(layer) === effectName) {
-					this.setGlitterSelectionTarget('fill', layer);
-				}
-			}
-
 			try {
-				await this.refreshLayer(layer, { saveHistory: true, refreshPreview: false });
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					if (toggle.checked) {
+						this.ensureEffectData(layer, effectName);
+					} else {
+						layer.textData[effectName] = null;
+						if (this.getGlitterSelectionTarget(layer) === effectName) {
+							this.setGlitterSelectionTarget('fill', layer);
+						}
+					}
+				}, { saveHistory: true, refreshPreview: false });
 			} catch (error) {
 				this.reportFontLoadError(error);
 			}
 		});
 	}
 
-	bindEffectGlitterPicker(button, effectName) {
-		if (!button) return;
+	bindEffectGlitterPicker(buttons, effectName) {
+		const buttonList = Array.isArray(buttons) ? buttons : [buttons];
+		buttonList.filter(Boolean).forEach((button) => {
+			button.addEventListener('click', () => {
+				const layer = this.getActiveTextLayer();
+				if (!layer) return;
 
-		button.addEventListener('click', () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
+				this.ensureEffectData(layer, effectName);
+				this.setGlitterSelectionTarget(effectName, layer);
 
-			this.ensureEffectData(layer, effectName);
-			this.setGlitterSelectionTarget(effectName, layer);
+				const selectedGlitterId = this.resolveSelectedGlitterId(layer);
+				if (selectedGlitterId) {
+					this.editor.glitterManager?.scrollToContent(selectedGlitterId);
+				}
 
-			const selectedGlitterId = this.resolveSelectedGlitterId(layer);
-			if (selectedGlitterId) {
-				this.editor.glitterManager?.scrollToContent(selectedGlitterId);
-			}
-
-			this.revealGlitterBrowser();
-			this.editor.updateStatus(`Border and shadow choose their own source. Pick a glitter for the ${effectName}.`);
+				this.revealGlitterBrowser();
+				this.editor.updateStatus(`Border and shadow choose their own source. Pick a glitter for the ${effectName}.`);
+			});
 		});
 	}
 
@@ -381,15 +511,29 @@ class TextGlitterManager {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 
-			const effectData = this.ensureEffectData(layer, effectName);
-			effectData.glitterId = null;
-			this.setGlitterSelectionTarget(effectName, layer);
-
 			try {
-				await this.refreshLayer(layer, { saveHistory: true, refreshPreview: false });
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					const effectData = this.ensureEffectData(layer, effectName);
+					effectData.glitterId = null;
+					this.setGlitterSelectionTarget(effectName, layer);
+				}, { saveHistory: true, refreshPreview: false });
 			} catch (error) {
 				this.reportFontLoadError(error);
 			}
+		});
+	}
+
+	bindEffectUseGlitter(button, effectName) {
+		if (!button) return;
+
+		button.addEventListener('click', () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+
+			this.ensureEffectData(layer, effectName);
+			this.setGlitterSelectionTarget(effectName, layer);
+			this.revealGlitterBrowser();
+			this.editor.updateStatus(`Pick a glitter for the ${effectName}.`);
 		});
 	}
 
@@ -400,13 +544,13 @@ class TextGlitterManager {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 
-			const effectData = this.ensureEffectData(layer, effectName);
-			effectData.color = input.value;
-			effectData.glitterId = null;
-			this.setGlitterSelectionTarget(effectName, layer);
-
 			try {
-				await this.refreshLayer(layer, {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					const effectData = this.ensureEffectData(layer, effectName);
+					effectData.color = input.value;
+					effectData.glitterId = null;
+					this.setGlitterSelectionTarget(effectName, layer);
+				}, {
 					saveHistory: false,
 					refreshLayerList: false,
 					refreshPreview: false
@@ -439,11 +583,12 @@ class TextGlitterManager {
 			if (!layer) return;
 
 			const value = parseInt(slider.value, 10);
-			applyValue(value, layer);
 			updateDisplay(value);
 
 			try {
-				await this.refreshLayer(layer, {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					applyValue(value, layer);
+				}, {
 					saveHistory: false,
 					refreshLayerList: false,
 					refreshPreview: refreshTextLayout
@@ -551,6 +696,9 @@ class TextGlitterManager {
 	}
 
 	getFontDeclaration(font, fontSize) {
+		if (!font?.name) {
+			return `400 ${fontSize}px sans-serif`;
+		}
 		return `${font.weight || 400} ${fontSize}px "${font.name}"`;
 	}
 
@@ -619,13 +767,18 @@ class TextGlitterManager {
 		return null;
 	}
 
-	createLayer() {
+	createLayer(options = {}) {
 		if (this.editor.layerManager.layers.length >= CONFIG.maxLayers) {
 			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
 			return null;
 		}
 
-		const defaultText = CONFIG.textLayers.defaultText;
+		const defaultText = options.text ?? CONFIG.textLayers.defaultText;
+		const initialPosition = options.position || {
+			x: this.editor.originalCanvas.width / 2,
+			y: this.editor.originalCanvas.height / 2
+		};
+		const initialAlign = options.align || 'center';
 		const layer = {
 			id: this.editor.layerManager.generateLayerId(),
 			type: LayerType.TEXT_GLITTER,
@@ -643,17 +796,17 @@ class TextGlitterManager {
 				fontSize: CONFIG.textLayers.defaultFontSize,
 				letterSpacing: CONFIG.textLayers.defaultLetterSpacing,
 				lineHeight: CONFIG.textLayers.lineHeight,
-				align: 'center',
+				align: initialAlign,
 				verticalAlign: CONFIG.textLayers.defaultVerticalAlign || 'top',
-				boxMode: CONFIG.textLayers.defaultBoxMode || 'auto',
+				boxMode: options.boxMode || CONFIG.textLayers.defaultBoxMode || 'auto',
 				width: 0,
 				height: 0,
 				border: null,
 				shadow: null,
 				transform: {
 					position: {
-						x: this.editor.originalCanvas.width / 2,
-						y: this.editor.originalCanvas.height / 2
+						x: initialPosition.x,
+						y: initialPosition.y
 					},
 					rotation: 0,
 					scale: {
@@ -671,6 +824,12 @@ class TextGlitterManager {
 		this.ensureFontLoaded(layer.textData.fontId).catch((error) => {
 			this.reportFontLoadError(error);
 		});
+		if (options.anchorPosition) {
+			layer._pendingPointAnchorTarget = {
+				x: options.anchorPosition.x,
+				y: options.anchorPosition.y
+			};
+		}
 
 		return layer;
 	}
@@ -695,6 +854,12 @@ class TextGlitterManager {
 		if (this.ui.letterSpacing && this.ui.letterSpacingValue) {
 			this.ui.letterSpacing.value = layer.textData.letterSpacing;
 			this.ui.letterSpacingValue.textContent = `${layer.textData.letterSpacing}px`;
+		}
+
+		if (this.ui.lineHeight && this.ui.lineHeightValue) {
+			const lineHeightPercent = Math.round((layer.textData.lineHeight || CONFIG.textLayers.lineHeight) * 100);
+			this.ui.lineHeight.value = lineHeightPercent;
+			this.ui.lineHeightValue.textContent = `${lineHeightPercent}%`;
 		}
 
 		if (this.ui.textureScale && this.ui.textureScaleValue) {
@@ -765,7 +930,7 @@ class TextGlitterManager {
 			button.classList.toggle('active', button.dataset.textBoxMode === mode);
 		});
 
-		// CSS hides the vertical/paragraph alignment controls in point mode.
+		// CSS hides only the vertical alignment controls in point mode.
 		if (this.ui.section) {
 			this.ui.section.dataset.boxMode = mode;
 		}
@@ -819,9 +984,35 @@ class TextGlitterManager {
 			this.ui.shadowColor.value = defaults.color;
 		}
 
+		this.updateFillSourceUI(layer);
 		this.updateEffectSourceUI(layer, 'border');
 		this.updateEffectSourceUI(layer, 'shadow');
 		this.updateEffectTargetButtons(layer);
+	}
+
+	updateFillSourceUI(layer) {
+		if (!this.ui.fillGlitterChip || !this.ui.fillGlitterLabel || !this.ui.fillGlitterSwatch) return;
+
+		const glitter = this.editor.glitterManager?.getItemById(layer?.selectedGlitterId);
+		if (glitter) {
+			this.ui.fillGlitterLabel.textContent = glitter.name;
+			this.ui.fillGlitterLabel.title = glitter.name;
+			this.ui.fillGlitterChip.title = `Current fill glitter: ${glitter.name}. Click to choose another glitter.`;
+			if (this.ui.fillGlitterChange) {
+				this.ui.fillGlitterChange.title = this.ui.fillGlitterChip.title;
+			}
+			this.ui.fillGlitterSwatch.style.backgroundImage = `url(${glitter.url})`;
+			this.ui.fillGlitterSwatch.classList.toggle('pixelated', Boolean(glitter.isPixelated));
+		} else {
+			this.ui.fillGlitterLabel.textContent = 'No glitter selected';
+			this.ui.fillGlitterLabel.title = '';
+			this.ui.fillGlitterChip.title = 'Pick a glitter for the text fill';
+			if (this.ui.fillGlitterChange) {
+				this.ui.fillGlitterChange.title = this.ui.fillGlitterChip.title;
+			}
+			this.ui.fillGlitterSwatch.style.backgroundImage = 'none';
+			this.ui.fillGlitterSwatch.classList.remove('pixelated');
+		}
 	}
 
 	toggleEffectControls(element, isVisible) {
@@ -831,8 +1022,12 @@ class TextGlitterManager {
 
 	updateEffectTargetButtons(layer) {
 		const activeTarget = this.getGlitterSelectionTarget(layer);
+		this.ui.fillGlitterChip?.classList.toggle('target-active', activeTarget === 'fill');
+		this.ui.fillGlitterChange?.classList.toggle('target-active', activeTarget === 'fill');
 		this.ui.borderGlitterChip?.classList.toggle('target-active', activeTarget === 'border');
+		this.ui.borderGlitterChange?.classList.toggle('target-active', activeTarget === 'border');
 		this.ui.shadowGlitterChip?.classList.toggle('target-active', activeTarget === 'shadow');
+		this.ui.shadowGlitterChange?.classList.toggle('target-active', activeTarget === 'shadow');
 	}
 
 	updateEffectSourceUI(layer, effectName) {
@@ -840,20 +1035,26 @@ class TextGlitterManager {
 		const config = effectName === 'border'
 			? {
 				button: this.ui.borderGlitterChip,
+				changeButton: this.ui.borderGlitterChange,
 				sourceValue: this.ui.borderSourceValue,
 				label: this.ui.borderGlitterLabel,
 				swatch: this.ui.borderGlitterSwatch,
-				useColor: this.ui.borderUseColor
+				useColor: this.ui.borderUseColor,
+				useGlitter: this.ui.borderUseGlitter,
+				colorRow: this.ui.borderColorRow
 			}
 			: {
 				button: this.ui.shadowGlitterChip,
+				changeButton: this.ui.shadowGlitterChange,
 				sourceValue: this.ui.shadowSourceValue,
 				label: this.ui.shadowGlitterLabel,
 				swatch: this.ui.shadowGlitterSwatch,
-				useColor: this.ui.shadowUseColor
+				useColor: this.ui.shadowUseColor,
+				useGlitter: this.ui.shadowUseGlitter,
+				colorRow: this.ui.shadowColorRow
 			};
 
-		if (!config.button || !config.sourceValue || !config.label || !config.swatch || !config.useColor) {
+		if (!config.button || !config.sourceValue || !config.label || !config.swatch || !config.useColor || !config.useGlitter || !config.colorRow) {
 			return;
 		}
 
@@ -862,22 +1063,30 @@ class TextGlitterManager {
 		config.label.textContent = summary.label;
 		config.label.title = summary.label;
 		config.button.title = summary.buttonTitle;
+		if (config.changeButton) {
+			config.changeButton.title = summary.buttonTitle;
+		}
 		config.swatch.style.backgroundImage = summary.backgroundImage;
 		config.swatch.style.backgroundColor = summary.backgroundColor;
 		config.swatch.classList.toggle('pixelated', summary.pixelated);
-		config.useColor.disabled = !effectData?.glitterId;
+		config.useColor.hidden = !summary.usesGlitter;
+		config.useGlitter.hidden = summary.usesGlitter;
+		config.colorRow.hidden = summary.usesGlitter;
 	}
 
 	getEffectSourceSummary(effectData, effectName) {
-		const chooseLabel = effectName === 'shadow' ? 'Choose Shadow Glitter' : 'Choose Border Glitter';
+		const defaultColor = effectName === 'shadow'
+			? this.getDefaultShadow().color
+			: this.getDefaultBorder().color;
 		const effectTitle = effectName === 'shadow' ? 'shadow' : 'border';
 		if (!effectData) {
 			return {
-				modeLabel: 'Solid',
-				label: chooseLabel,
+				modeLabel: 'Solid Color',
+				label: defaultColor.toUpperCase(),
 				buttonTitle: `Pick a glitter for the text ${effectTitle}`,
-				backgroundImage: '',
-				backgroundColor: '#000000',
+				backgroundImage: 'none',
+				backgroundColor: defaultColor,
+				usesGlitter: false,
 				pixelated: false
 			};
 		}
@@ -890,18 +1099,20 @@ class TextGlitterManager {
 					label: glitter.name,
 					buttonTitle: `Current ${effectTitle} glitter: ${glitter.name}. Click to choose another glitter.`,
 					backgroundImage: `url(${glitter.url})`,
-					backgroundColor: '',
+					backgroundColor: 'transparent',
+					usesGlitter: true,
 					pixelated: Boolean(glitter.isPixelated)
 				};
 			}
 		}
 
 		return {
-			modeLabel: 'Solid',
-			label: chooseLabel,
+			modeLabel: 'Solid Color',
+			label: (effectData.color || defaultColor).toUpperCase(),
 			buttonTitle: `The text ${effectTitle} is using a solid color. Click to choose a glitter instead.`,
-			backgroundImage: '',
+			backgroundImage: 'none',
 			backgroundColor: effectData.color || '#000000',
+			usesGlitter: false,
 			pixelated: false
 		};
 	}
@@ -910,7 +1121,10 @@ class TextGlitterManager {
 		clearTimeout(this.textInputTimer);
 		this.textInputTimer = setTimeout(async () => {
 			try {
-				await this.refreshLayer(layer, { saveHistory: true });
+				await this.refreshLayer(layer, {
+					saveHistory: true,
+					preservePointAnchorFrom: layer._pendingPointAnchorSnapshot || null
+				});
 			} catch (error) {
 				this.reportFontLoadError(error);
 			}
@@ -933,7 +1147,8 @@ class TextGlitterManager {
 			textData.boxHeight ?? null,
 			textData.border ? textData.border.widthPx : null,
 			textData.shadow ? textData.shadow.offsetX : null,
-			textData.shadow ? textData.shadow.offsetY : null
+			textData.shadow ? textData.shadow.offsetY : null,
+			CONFIG.textLayers.crispEdges !== false
 		]);
 	}
 
@@ -996,12 +1211,17 @@ class TextGlitterManager {
 		}
 
 		const visibleLines = measuredLines.slice(0, visibleLineCount);
-		let contentLeft = 0;
-		let contentTop = 0;
-		let contentRight = layoutWidth;
-		let contentBottom = layoutHeight;
+		let contentLeft = Infinity;
+		let contentTop = Infinity;
+		let contentRight = -Infinity;
+		let contentBottom = -Infinity;
+		let hasInk = false;
 
 		if (boxMode === 'fixed') {
+			contentLeft = 0;
+			contentTop = 0;
+			contentRight = layoutWidth;
+			contentBottom = layoutHeight;
 			// The box rect IS the content — glyph ink is clipped to it, so ink never
 			// widens the canvas. Vertical align slides the ink block inside the box,
 			// measured from the visible lines' actual ink (not the box-height union,
@@ -1022,13 +1242,22 @@ class TextGlitterManager {
 			}
 		} else {
 			visibleLines.forEach((line, index) => {
+				if (!line.text) return;
 				const offsetX = this.getAlignOffset(layer.textData.align, layoutWidth, line.width);
 				const baselineY = ascent + index * lineHeightPx;
+				hasInk = true;
 				contentLeft = Math.min(contentLeft, offsetX - line.inkLeft);
 				contentRight = Math.max(contentRight, offsetX + line.inkRight);
 				contentTop = Math.min(contentTop, baselineY - line.ascent);
 				contentBottom = Math.max(contentBottom, baselineY + line.descent);
 			});
+
+			if (!hasInk) {
+				contentLeft = 0;
+				contentTop = 0;
+				contentRight = 0;
+				contentBottom = 0;
+			}
 		}
 
 		const inkLeft = contentLeft - (borderWidth + Math.max(0, -shadowOffsetX));
@@ -1346,6 +1575,7 @@ class TextGlitterManager {
 			wrapper = document.createElement('div');
 			wrapper.className = 'text-glitter-element';
 			wrapper.dataset.layerId = layer.id;
+			wrapper.setAttribute('role', 'img');
 		}
 
 		if (!stack) {
@@ -1379,8 +1609,11 @@ class TextGlitterManager {
 				if (!this.layerElements.has(layer.id)) return;
 
 				const measurement = this.getMeasurementEntry(layer);
-				const font = this.getFontById(layer.textData.fontId);
-				this.reconcileTextSpans(stack, layer, font, measurement);
+				if (layer._pendingPointAnchorTarget && measurement.boxMode === 'auto') {
+					this.setPointAnchorWorldPosition(layer, layer._pendingPointAnchorTarget, this.getTextFrame(layer, measurement));
+					delete layer._pendingPointAnchorTarget;
+				}
+				this.reconcileTextSpans(stack, layer, measurement);
 				wrapper.classList.toggle('text-overflowing', Boolean(measurement.hasOverflow));
 
 				const transform = this.layerTransforms.get(layer.id);
@@ -1392,12 +1625,15 @@ class TextGlitterManager {
 					});
 
 					if (layer.id === this.editor.layerManager.activeLayerId && this.editor.currentTool === ToolType.SELECT) {
-						transform.createTransformHandles();
+						if (!transform.isDraggingHandle) {
+							transform.createTransformHandles();
+						}
 					} else {
 						transform.removeTransformHandles();
 					}
 				}
 
+				wrapper.setAttribute('aria-label', layer.textData.text);
 				wrapper.style.visibility = '';
 				this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
 			})
@@ -1407,10 +1643,10 @@ class TextGlitterManager {
 			});
 	}
 
-	reconcileTextSpans(stack, layer, font, measurement) {
+	reconcileTextSpans(stack, layer, measurement) {
 		this.syncStackGeometry(stack, layer, measurement);
 
-		const descriptors = this.getSpanDescriptors(layer);
+		const descriptors = this.getSpanDescriptors(layer, measurement);
 		const existing = new Map();
 		Array.from(stack.children).forEach((child) => {
 			if (child.dataset.spanKey) {
@@ -1426,8 +1662,15 @@ class TextGlitterManager {
 				span.dataset.spanKey = descriptor.key;
 			}
 
-			span.textContent = layer.textData.text;
-			this.applyTextStyles(span, layer, font, measurement);
+			span.textContent = '';
+			span.dataset.maskType = descriptor.maskType;
+			const maskUrl = this.getPreviewMaskObjectUrl(
+				layer,
+				descriptor.maskType,
+				descriptor.maskCanvas,
+				descriptor.maskCacheKey
+			);
+			this.applyTextStyles(span, measurement, maskUrl);
 			this.applySpanOffset(span, descriptor.offsetX, descriptor.offsetY);
 			this.applyPaintSource(span, descriptor.source, layer);
 			stack.appendChild(span);
@@ -1470,7 +1713,7 @@ class TextGlitterManager {
 		this.syncStackGeometry(stack, layer);
 	}
 
-	getSpanDescriptors(layer) {
+	getSpanDescriptors(layer, measurement) {
 		const descriptors = [];
 		const shadow = this.getEffectData(layer, 'shadow');
 		const border = this.getEffectData(layer, 'border');
@@ -1480,18 +1723,23 @@ class TextGlitterManager {
 				key: 'shadow',
 				offsetX: shadow.offsetX || 0,
 				offsetY: shadow.offsetY || 0,
-				source: this.getEffectPaintSource(layer, 'shadow')
+				source: this.getEffectPaintSource(layer, 'shadow'),
+				maskType: 'fill',
+				maskCanvas: measurement.canvas,
+				maskCacheKey: measurement.key
 			});
 		}
 
 		if (border?.widthPx > 0) {
-			this.getBorderOffsets(border.widthPx).forEach((offset, index) => {
-				descriptors.push({
-					key: `border-${index}`,
-					offsetX: offset.x,
-					offsetY: offset.y,
-					source: this.getEffectPaintSource(layer, 'border')
-				});
+			const { canvas: borderCanvas, cacheKey: borderCacheKey } = this.getBorderMaskCanvas(layer, measurement, border.widthPx);
+			descriptors.push({
+				key: 'border',
+				offsetX: 0,
+				offsetY: 0,
+				source: this.getEffectPaintSource(layer, 'border'),
+				maskType: 'border',
+				maskCanvas: borderCanvas,
+				maskCacheKey: borderCacheKey
 			});
 		}
 
@@ -1503,10 +1751,44 @@ class TextGlitterManager {
 				mode: 'glitter',
 				glitterId: layer.selectedGlitterId,
 				opacity: layer.settings.opacity / 100
-			}
+			},
+			maskType: 'fill',
+			maskCanvas: measurement.canvas,
+			maskCacheKey: measurement.key
 		});
 
 		return descriptors;
+	}
+
+	// One continuous stroke, like a Photoshop stroke: stamp the glyph mask at
+	// N angles around a ring onto a single canvas (union, not N separate
+	// layers), then texture that one shape once. Mirrors
+	// GifExporter._createBorderMaskCanvas so the live preview matches export.
+	getBorderMaskCanvas(layer, measurement, widthPx) {
+		const cutOutFill = layer.settings.opacity < 100;
+		const cacheKey = `border:${widthPx}:${cutOutFill ? 1 : 0}`;
+
+		if (measurement._borderMaskCache?.key === cacheKey) {
+			return { canvas: measurement._borderMaskCache.canvas, cacheKey: `${measurement.key}|${cacheKey}` };
+		}
+
+		const canvas = document.createElement('canvas');
+		canvas.width = measurement.canvas.width;
+		canvas.height = measurement.canvas.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+		this.getBorderOffsets(widthPx).forEach((offset) => {
+			ctx.drawImage(measurement.canvas, offset.x, offset.y);
+		});
+
+		if (cutOutFill) {
+			ctx.globalCompositeOperation = 'destination-out';
+			ctx.drawImage(measurement.canvas, 0, 0);
+			ctx.globalCompositeOperation = 'source-over';
+		}
+
+		measurement._borderMaskCache = { key: cacheKey, canvas };
+		return { canvas, cacheKey: `${measurement.key}|${cacheKey}` };
 	}
 
 	getEffectPaintSource(layer, effectName) {
@@ -1549,30 +1831,31 @@ class TextGlitterManager {
 		return offsets;
 	}
 
-	applyTextStyles(span, layer, font, measurement) {
-		const pad = measurement.paddingBox;
+	applyTextStyles(span, measurement, maskObjectUrl) {
 		// Vertical align is baked into padding-top (not the translate) so the
 		// box clip below stays fixed while the text slides inside it — same as
 		// the canvas path, which shifts baselines inside a fixed clip rect.
-		const contentOffsetY = measurement.contentOffsetY || 0;
 		span.style.display = 'block';
-		span.style.padding = `${pad.top + contentOffsetY}px ${pad.right}px ${Math.max(0, pad.bottom - contentOffsetY)}px ${pad.left}px`;
-		span.style.fontFamily = this.getFontFamily(font);
-		span.style.fontWeight = String(font?.weight || 400);
-		span.style.fontSize = `${layer.textData.fontSize}px`;
-		span.style.letterSpacing = `${layer.textData.letterSpacing}px`;
-		span.style.lineHeight = String(layer.textData.lineHeight);
-		span.style.textAlign = layer.textData.align;
+		span.style.width = `${measurement.width}px`;
+		span.style.height = `${measurement.height}px`;
+		span.style.padding = '0';
+		span.style.maskSize = `${measurement.width}px ${measurement.height}px`;
+		span.style.maskRepeat = 'no-repeat';
+		span.style.maskPosition = '0 0';
+		span.style.webkitMaskSize = `${measurement.width}px ${measurement.height}px`;
+		span.style.webkitMaskRepeat = 'no-repeat';
+		span.style.webkitMaskPosition = '0 0';
 
 		// Clip at the box rect exactly like the export mask. clip-path is applied
 		// before the span's translate, so effect spans (shadow/border offsets)
 		// carry their clip with them — identical to the export's offset copies
 		// of the box-clipped mask.
-		const rect = measurement.frameRect;
-		if (measurement.boxMode === 'fixed' && rect) {
-			span.style.clipPath = `inset(${rect.y}px ${measurement.width - rect.x - rect.width}px ${measurement.height - rect.y - rect.height}px ${rect.x}px)`;
+		if (maskObjectUrl) {
+			span.style.maskImage = `url(${maskObjectUrl})`;
+			span.style.webkitMaskImage = `url(${maskObjectUrl})`;
+			span.style.visibility = '';
 		} else {
-			span.style.clipPath = '';
+			span.style.visibility = 'hidden';
 		}
 	}
 
@@ -1590,19 +1873,15 @@ class TextGlitterManager {
 			span.style.backgroundColor = 'transparent';
 			span.style.backgroundSize = '';
 			span.style.opacity = '1';
-			span.style.color = 'transparent';
-			span.style.webkitTextFillColor = 'transparent';
 			span.classList.remove('pixelated');
 			return;
 		}
 
 		if (source.mode === 'solid') {
 			span.style.backgroundImage = 'none';
-			span.style.backgroundColor = 'transparent';
+			span.style.backgroundColor = source.color;
 			span.style.backgroundSize = '';
 			span.style.opacity = String(source.opacity ?? 1);
-			span.style.color = source.color;
-			span.style.webkitTextFillColor = source.color;
 			span.classList.remove('pixelated');
 			return;
 		}
@@ -1616,8 +1895,6 @@ class TextGlitterManager {
 		span.style.backgroundImage = `url(${glitter.url})`;
 		span.style.backgroundColor = 'transparent';
 		span.style.opacity = String(source.opacity ?? 1);
-		span.style.color = 'transparent';
-		span.style.webkitTextFillColor = 'transparent';
 
 		const glitterScale = layer.settings.scale / 100;
 		const baseSize = glitter.frames?.width || glitter.width || 50;
@@ -1633,21 +1910,24 @@ class TextGlitterManager {
 		const wrapper = this.layerElements.get(layerId);
 		if (!wrapper) return;
 
-		wrapper.querySelectorAll('.text-glitter-content').forEach((span) => {
-			span.textContent = text;
-		});
+		wrapper.setAttribute('aria-label', text);
 	}
 
 	async refreshLayer(layer, options = {}) {
 		const {
 			saveHistory = false,
 			refreshLayerList = true,
-			refreshPreview = true
+			refreshPreview = true,
+			preservePointAnchorFrom = null
 		} = options;
 
 		this.normalizeLayer(layer);
 		await this.ensureFontLoaded(layer.textData.fontId);
-		this.getMeasurementEntry(layer);
+		const measurement = this.getMeasurementEntry(layer);
+		if (preservePointAnchorFrom) {
+			this.applyPointAnchorSnapshot(layer, preservePointAnchorFrom, measurement);
+		}
+		layer._pendingPointAnchorSnapshot = null;
 
 		if (refreshPreview) {
 			this.editor.updatePreview();
@@ -1796,6 +2076,11 @@ class TextGlitterManager {
 	}
 
 	removeLayerElement(layerId) {
+		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		if (layer) {
+			this.revokePreviewMaskCache(layer);
+		}
+
 		const element = this.layerElements.get(layerId);
 		if (element?.parentNode) {
 			element.parentNode.removeChild(element);
@@ -1814,5 +2099,95 @@ class TextGlitterManager {
 		Array.from(this.layerElements.keys()).forEach((layerId) => {
 			this.removeLayerElement(layerId);
 		});
+	}
+
+	revokePreviewMaskCache(layer) {
+		const bucket = layer?._previewMaskCache;
+		if (!bucket) return;
+
+		Object.values(bucket).forEach((entry) => {
+			if (entry?.url) {
+				URL.revokeObjectURL(entry.url);
+			}
+		});
+
+		delete layer._previewMaskCache;
+	}
+
+	applyPreviewMaskObjectUrl(layerId, maskType, url) {
+		const wrapper = this.layerElements.get(layerId);
+		if (!wrapper) return;
+
+		wrapper.querySelectorAll(`.text-glitter-content[data-mask-type="${maskType}"]`).forEach((span) => {
+			span.style.maskImage = `url(${url})`;
+			span.style.webkitMaskImage = `url(${url})`;
+			span.style.visibility = '';
+		});
+	}
+
+	// Each mask "slot" (fill, border, ...) gets its own cached object URL —
+	// border needs a different rasterized shape than fill, so they can't share one.
+	getPreviewMaskObjectUrl(layer, maskType, canvas, cacheKey) {
+		if (!layer._previewMaskCache) {
+			layer._previewMaskCache = {};
+		}
+		const bucket = layer._previewMaskCache;
+		const currentCache = bucket[maskType];
+
+		if (currentCache?.key === cacheKey) {
+			return currentCache.url || null;
+		}
+
+		bucket[maskType] = {
+			key: cacheKey,
+			url: currentCache?.url || null,
+			pending: true
+		};
+
+		canvas.toBlob((blob) => {
+			const latestCache = bucket[maskType];
+			if (!blob) {
+				if (latestCache?.key === cacheKey) {
+					bucket[maskType] = {
+						key: cacheKey,
+						url: latestCache.url || null,
+						pending: false
+					};
+				}
+				return;
+			}
+
+			const nextUrl = URL.createObjectURL(blob);
+			if (!latestCache || latestCache.key !== cacheKey) {
+				URL.revokeObjectURL(nextUrl);
+				return;
+			}
+
+			const img = new Image();
+			img.onload = () => {
+				const cacheNow = bucket[maskType];
+				if (!cacheNow || cacheNow.key !== cacheKey) {
+					URL.revokeObjectURL(nextUrl);
+					return;
+				}
+
+				const previousUrl = cacheNow.url;
+				bucket[maskType] = {
+					key: cacheKey,
+					url: nextUrl,
+					pending: false
+				};
+
+				this.applyPreviewMaskObjectUrl(layer.id, maskType, nextUrl);
+
+				if (previousUrl && previousUrl !== nextUrl) {
+					URL.revokeObjectURL(previousUrl);
+				}
+			};
+			img.onerror = () => URL.revokeObjectURL(nextUrl);
+			img.src = nextUrl;
+		}, 'image/png');
+
+		return currentCache?.url || null;
 	}
 }
