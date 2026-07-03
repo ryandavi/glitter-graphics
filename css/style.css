@@ -4828,6 +4828,11 @@ body.mask-editing .sticker-element {
 #textSettingsSection[data-box-mode=auto] .text-valign-label {
   display: none;
 }
+/* Point text is always a single line (no wrapping), so line height has
+   nothing to space out — only relevant once text can wrap inside a box. */
+#textSettingsSection[data-box-mode=auto] .text-line-height-row {
+  display: none;
+}
 .text-effect-controls {
   display: none;
   flex-direction: column;

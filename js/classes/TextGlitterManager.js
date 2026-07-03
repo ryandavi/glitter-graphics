@@ -1664,7 +1664,7 @@ class TextGlitterManager {
 
 			span.textContent = '';
 			span.dataset.maskType = descriptor.maskType;
-			const maskUrl = this.getPreviewMaskObjectUrl(
+			const maskUrl = this.getPreviewMaskDataUrl(
 				layer,
 				descriptor.maskType,
 				descriptor.maskCanvas,
@@ -2102,92 +2102,27 @@ class TextGlitterManager {
 	}
 
 	revokePreviewMaskCache(layer) {
-		const bucket = layer?._previewMaskCache;
-		if (!bucket) return;
-
-		Object.values(bucket).forEach((entry) => {
-			if (entry?.url) {
-				URL.revokeObjectURL(entry.url);
-			}
-		});
-
+		// Data URLs aren't allocated objects — nothing to revoke, just drop the cache.
 		delete layer._previewMaskCache;
 	}
 
-	applyPreviewMaskObjectUrl(layerId, maskType, url) {
-		const wrapper = this.layerElements.get(layerId);
-		if (!wrapper) return;
-
-		wrapper.querySelectorAll(`.text-glitter-content[data-mask-type="${maskType}"]`).forEach((span) => {
-			span.style.maskImage = `url(${url})`;
-			span.style.webkitMaskImage = `url(${url})`;
-			span.style.visibility = '';
-		});
-	}
-
-	// Each mask "slot" (fill, border, ...) gets its own cached object URL —
-	// border needs a different rasterized shape than fill, so they can't share one.
-	getPreviewMaskObjectUrl(layer, maskType, canvas, cacheKey) {
+	// Each mask "slot" (fill, border, ...) gets its own cached data URL — border
+	// needs a different rasterized shape than fill, so they can't share one.
+	// Synchronous (toDataURL, not toBlob+Image) so a live box-resize drag never
+	// shows a stale mask stretched to the new box size while a blob decodes.
+	getPreviewMaskDataUrl(layer, maskType, canvas, cacheKey) {
 		if (!layer._previewMaskCache) {
 			layer._previewMaskCache = {};
 		}
 		const bucket = layer._previewMaskCache;
-		const currentCache = bucket[maskType];
+		const cached = bucket[maskType];
 
-		if (currentCache?.key === cacheKey) {
-			return currentCache.url || null;
+		if (cached?.key === cacheKey) {
+			return cached.url;
 		}
 
-		bucket[maskType] = {
-			key: cacheKey,
-			url: currentCache?.url || null,
-			pending: true
-		};
-
-		canvas.toBlob((blob) => {
-			const latestCache = bucket[maskType];
-			if (!blob) {
-				if (latestCache?.key === cacheKey) {
-					bucket[maskType] = {
-						key: cacheKey,
-						url: latestCache.url || null,
-						pending: false
-					};
-				}
-				return;
-			}
-
-			const nextUrl = URL.createObjectURL(blob);
-			if (!latestCache || latestCache.key !== cacheKey) {
-				URL.revokeObjectURL(nextUrl);
-				return;
-			}
-
-			const img = new Image();
-			img.onload = () => {
-				const cacheNow = bucket[maskType];
-				if (!cacheNow || cacheNow.key !== cacheKey) {
-					URL.revokeObjectURL(nextUrl);
-					return;
-				}
-
-				const previousUrl = cacheNow.url;
-				bucket[maskType] = {
-					key: cacheKey,
-					url: nextUrl,
-					pending: false
-				};
-
-				this.applyPreviewMaskObjectUrl(layer.id, maskType, nextUrl);
-
-				if (previousUrl && previousUrl !== nextUrl) {
-					URL.revokeObjectURL(previousUrl);
-				}
-			};
-			img.onerror = () => URL.revokeObjectURL(nextUrl);
-			img.src = nextUrl;
-		}, 'image/png');
-
-		return currentCache?.url || null;
+		const url = canvas.toDataURL('image/png');
+		bucket[maskType] = { key: cacheKey, url };
+		return url;
 	}
 }
