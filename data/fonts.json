@@ -1,0 +1,12 @@
+[
+	{ "id": "luckiest-guy", "name": "Luckiest Guy", "file": "fonts/luckiest-guy.woff2", "weight": 400, "fallback": "sans-serif", "featured": true },
+	{ "id": "bungee", "name": "Bungee", "file": "fonts/bungee.woff2", "weight": 400, "fallback": "sans-serif", "featured": false },
+	{ "id": "titan-one", "name": "Titan One", "file": "fonts/titan-one.woff2", "weight": 400, "fallback": "sans-serif", "featured": false },
+	{ "id": "lilita-one", "name": "Lilita One", "file": "fonts/lilita-one.woff2", "weight": 400, "fallback": "sans-serif", "featured": false },
+	{ "id": "bangers", "name": "Bangers", "file": "fonts/bangers.woff2", "weight": 400, "fallback": "sans-serif", "featured": false },
+	{ "id": "chewy", "name": "Chewy", "file": "fonts/chewy.woff2", "weight": 400, "fallback": "sans-serif", "featured": false },
+	{ "id": "shrikhand", "name": "Shrikhand", "file": "fonts/shrikhand.woff2", "weight": 400, "fallback": "serif", "featured": false },
+	{ "id": "pacifico", "name": "Pacifico", "file": "fonts/pacifico.woff2", "weight": 400, "fallback": "cursive", "featured": false },
+	{ "id": "lobster", "name": "Lobster", "file": "fonts/lobster.woff2", "weight": 400, "fallback": "cursive", "featured": false },
+	{ "id": "baloo-2", "name": "Baloo 2", "file": "fonts/baloo-2.woff2", "weight": 700, "fallback": "sans-serif", "featured": false }
+]
