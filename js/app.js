@@ -1987,7 +1987,7 @@ resetAllSettings() {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html',
+				externalContentUrl: 'modals/about.html?v=3',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -2012,7 +2012,7 @@ resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html',
+				externalContentUrl: 'modals/guide.html?v=2',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {

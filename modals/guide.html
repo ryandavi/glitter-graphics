@@ -30,12 +30,21 @@
                 <li><a href="#create-glitter">Create a Glitter Layer</a></li>
                 <li><a href="#select-colors">Select Colors</a></li>
                 <li><a href="#glitter-settings">Adjust Glitter Settings</a></li>
+                <li><a href="#mask-brush">Mask Brush</a></li>
             </ol>
         </li>
         <li>
             <a href="#stickers">Stickers</a>
             <ol>
                 <li><a href="#add-stickers">Add Stickers</a></li>
+            </ol>
+        </li>
+        <li>
+            <a href="#text">Text</a>
+            <ol>
+                <li><a href="#create-text">Create a Text Layer</a></li>
+                <li><a href="#text-typography">Typography &amp; Layout</a></li>
+                <li><a href="#text-effects">Fill, Border &amp; Shadow</a></li>
             </ol>
         </li>
         <li>
@@ -159,6 +168,35 @@
                 </div>
             </div>
 
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-brush"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Mask Brush (B)</strong> – With a glitter or text layer selected, paint or erase glitter directly on the canvas.</p>
+                    <ul>
+                        <li>See <a href="#mask-brush">Mask Brush</a> under Glitter for painting modes and brush settings.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <span class="text-button-glyph">T</span>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Text (T)</strong> – Click the canvas to place Point text, or drag to define a Box that wraps text inside a resizable frame.</p>
+                    <ul>
+                        <li>See <a href="#text">Text</a> for typography, layout, and fill/border/shadow options.</li>
+                    </ul>
+                </div>
+            </div>
 
 
             <div class="guide-item">
@@ -503,6 +541,89 @@
                 </div>
             </div>
         </div>
+
+        <div class="guide-subsection">
+            <h4 id="mask-brush">Mask Brush</h4>
+            <p>Beyond color selections, use the <strong>Mask Brush</strong> to manually paint or erase exactly where glitter appears — available for glitter fill and text layers.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-brush"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Click <strong>Mask Brush</strong> in the Glitter Settings panel, or press <strong>B</strong>, to start painting.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Paint</strong> / <strong>Erase</strong> – Switch modes to add glitter with each stroke, or remove it — including areas added by color selection.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Size</strong>, <strong>Softness</strong>, and <strong>Flow</strong> – Control the brush's diameter, edge feathering, and how much glitter builds up per stroke.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Invert</strong> – Flip the mask so glitter covers everything except what's been selected and painted.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Clear Paint</strong> – Remove all painted strokes while keeping color selections intact.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-brush"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Toggle <strong>Mask Overlay</strong> in the preview controls to see painted areas highlighted while you work.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- STICKERS -->
@@ -625,6 +746,188 @@
                 </div>
                 <div class="guide-item-content">
                     <p><strong>Flip Horizontally/Vertically</strong> – Mirror the sticker.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEXT -->
+    <div class="guide-section">
+        <h3 id="text">
+            <span class="icon-wrapper">
+                <span class="text-button-glyph">T</span>
+            </span>
+            Text
+        </h3>
+
+        <div class="guide-subsection">
+            <h4 id="create-text">Create a Text Layer</h4>
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-plus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    Click <strong>+</strong> in the Layer Panel and choose <strong>Text</strong>, or press <strong>T</strong> and click (or drag) on the canvas.
+                    <ul>
+                        <li>Clicking places <strong>Point</strong> text that hugs the glyphs; dragging defines a <strong>Box</strong> that wraps text inside a resizable frame.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-glitter"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    Browse the glitter gallery and click any glitter to fill the text with it, just like a glitter layer.
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="text-typography">Typography &amp; Layout</h4>
+            <p>In the <strong>Text Properties</strong> panel, edit the copy and how it's laid out.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Text</strong> – Type your copy directly into the text field.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Font</strong> – Choose from the built-in font picker.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Font Size</strong> and <strong>Letter Spacing</strong> – Adjust glyph size and the gap between characters.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Point / Box</strong> – Point text hugs the copy and scales with the corner handles. Box text wraps inside a frame you can resize with the edge handles.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Line Height</strong> – Adjust the spacing between lines when text wraps inside a Box. Not shown for Point text, which is always a single line.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Vertical</strong> and <strong>Paragraph</strong> alignment – Position text within a Box frame (top/middle/bottom) and align lines (left/center/right).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="text-effects">Fill, Border &amp; Shadow</h4>
+            <p>Each part of the text keeps its own source — glitter or solid color.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-sliders"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Fill</strong> – Texture Scale and Opacity control the glitter pattern applied to the letters themselves. Click the fill swatch to pick a different glitter.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-sliders"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Border</strong> – Enable an outline around the text and set its width. Click the border swatch to choose a glitter for it, or use <strong>Use Solid Color</strong> for a flat color instead.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-sliders"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Shadow</strong> – Enable a drop shadow and set its X/Y offset. Like the border, it can use its own glitter or a solid color.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Only one swatch is "active" for glitter picking at a time — click a swatch (Fill, Border, or Shadow) to send the next glitter you pick in the gallery to that part of the text.</p>
                 </div>
             </div>
         </div>
