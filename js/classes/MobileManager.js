@@ -14,7 +14,8 @@ class MobileManager {
 		this.settingsSections = {
 			tool: null,
 			glitter: null,
-			sticker: null
+			sticker: null,
+			text: null
 		};
 		this.originalParents = new Map();
 
@@ -37,7 +38,8 @@ class MobileManager {
 		dbg('Mobile: Cached sections:', {
 			tool: !!this.settingsSections.tool,
 			glitter: !!this.settingsSections.glitter,
-			sticker: !!this.settingsSections.sticker
+			sticker: !!this.settingsSections.sticker,
+			text: !!this.settingsSections.text
 		});
 
 		this.showMobileControls();
@@ -70,6 +72,7 @@ class MobileManager {
 		this.settingsSections.tool = document.querySelector('.layer-settings-section');
 		this.settingsSections.glitter = document.querySelector('.glitter-settings-section');
 		this.settingsSections.sticker = document.querySelector('.sticker-settings-section');
+		this.settingsSections.text = document.querySelector('.text-settings-section');
 
 		// Store original parents
 		if (this.settingsSections.tool) {
@@ -80,6 +83,9 @@ class MobileManager {
 		}
 		if (this.settingsSections.sticker) {
 			this.originalParents.set('sticker', this.settingsSections.sticker.parentElement);
+		}
+		if (this.settingsSections.text) {
+			this.originalParents.set('text', this.settingsSections.text.parentElement);
 		}
 	}
 
@@ -445,6 +451,10 @@ if (!this.isMobile && nowMobile) {
 			const stickerHeader = this.settingsSections.sticker.querySelector('.section-header.collapsible');
 			if (stickerHeader) stickerHeader.classList.add('collapsed');
 		}
+		if (this.settingsSections.text) {
+			const textHeader = this.settingsSections.text.querySelector('.section-header.collapsible');
+			if (textHeader) textHeader.classList.add('collapsed');
+		}
 	}
 
 
@@ -512,6 +522,13 @@ if (!this.isMobile && nowMobile) {
 				originalParent.appendChild(this.settingsSections.sticker);
 			}
 			// Don't remove visible - desktop needs it
+		}
+
+		if (this.settingsSections.text && this.originalParents.has('text')) {
+			const originalParent = this.originalParents.get('text');
+			if (originalParent && !originalParent.contains(this.settingsSections.text)) {
+				originalParent.appendChild(this.settingsSections.text);
+			}
 		}
 
 		// Clear container

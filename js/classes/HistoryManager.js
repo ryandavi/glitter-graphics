@@ -13,6 +13,19 @@ class HistoryManager {
 					return this.editor.stickerManager.serializeSticker(layer);
 				}
 
+				if (layer.type === LayerType.TEXT_GLITTER) {
+					return {
+						id: layer.id,
+						type: LayerType.TEXT_GLITTER,
+						name: layer.name,
+						visible: layer.visible,
+						locked: layer.locked,
+						selectedGlitterId: layer.selectedGlitterId,
+						settings: layer.settings ? { ...layer.settings } : {},
+						textData: layer.textData ? JSON.parse(JSON.stringify(layer.textData)) : null
+					};
+				}
+
 				if (layer.type === LayerType.BASE_IMAGE) {
 					return {
 						id: layer.id,
@@ -63,6 +76,28 @@ class HistoryManager {
 				if (restoredLayer) {
 					this.editor.layers.push(restoredLayer);
 				}
+			} else if (layerData.type === LayerType.TEXT_GLITTER) {
+				const restoredLayer = {
+					id: layerData.id,
+					type: LayerType.TEXT_GLITTER,
+					name: layerData.name || this.editor.textGlitterManager?.getLayerName(layerData.textData?.text || ''),
+					visible: layerData.visible,
+					locked: layerData.locked,
+					selectedGlitterId: layerData.selectedGlitterId,
+					settings: layerData.settings ? { ...layerData.settings } : {},
+					textData: layerData.textData ? JSON.parse(JSON.stringify(layerData.textData)) : null
+				};
+
+				if (restoredLayer.textData?.fontId && this.editor.textGlitterManager) {
+					try {
+						await this.editor.textGlitterManager.ensureFontLoaded(restoredLayer.textData.fontId);
+					} catch (error) {
+						this.editor.textGlitterManager.reportFontLoadError(error);
+						throw error;
+					}
+				}
+
+				this.editor.layers.push(restoredLayer);
 			} else if (layerData.type === LayerType.BASE_IMAGE) {
 				this.editor.layers.push({
 					id: layerData.id,

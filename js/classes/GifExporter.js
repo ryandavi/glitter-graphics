@@ -111,6 +111,38 @@ class GifExporter {
 
 
 
+	_drawTransformedCanvas(ctx, sourceCanvas, transform, width, height) {
+		const centerX = transform.position.x;
+		const centerY = transform.position.y;
+		const scaleX = transform.scale.x / 100;
+		const scaleY = transform.scale.y / 100;
+		const rotation = transform.rotation * Math.PI / 180;
+
+		ctx.save();
+		ctx.imageSmoothingEnabled = false;
+		ctx.globalAlpha = transform.opacity / 100;
+		ctx.translate(centerX, centerY);
+
+		if (rotation !== 0) {
+			ctx.rotate(rotation);
+		}
+
+		ctx.scale(
+			scaleX * (transform.flipX ? -1 : 1),
+			scaleY * (transform.flipY ? -1 : 1)
+		);
+
+		ctx.drawImage(
+			sourceCanvas,
+			-width / 2,
+			-height / 2,
+			width,
+			height
+		);
+
+		ctx.restore();
+	}
+
 	_renderLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null) {
 		const { transform, isAnimated, width, height } = layer.stickerData;
 
@@ -144,45 +176,57 @@ class GifExporter {
 		});
 		tempCtx.putImageData(imageData, 0, 0);
 
-		// Calculate transform values
-		const centerX = transform.position.x;
-		const centerY = transform.position.y;
-		const scaleX = transform.scale.x / 100;
-		const scaleY = transform.scale.y / 100;
-		const rotation = transform.rotation * Math.PI / 180;
+		this._drawTransformedCanvas(ctx, tempCanvas, transform, width, height);
+	}
 
-		// Apply transforms to main canvas
-		ctx.save();
-
-		// CRITICAL: Disable image smoothing to prevent antialiasing artifacts
-		ctx.imageSmoothingEnabled = false;
-
-		ctx.globalAlpha = transform.opacity / 100;
-
-		// Translate to center point
-		ctx.translate(centerX, centerY);
-
-		// Rotate
-		if (rotation !== 0) {
-			ctx.rotate(rotation);
+	_renderTextLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null, textMaskCanvases = null) {
+		const textMaskCanvas = textMaskCanvases?.get(layer.id);
+		if (!textMaskCanvas) {
+			throw new Error(`Missing text mask for layer ${layer.id}`);
 		}
 
-		// Scale (including flips)
-		ctx.scale(
-			scaleX * (transform.flipX ? -1 : 1),
-			scaleY * (transform.flipY ? -1 : 1)
-		);
+		const frames = flattenedFrameMap?.get(layer.id);
+		if (!frames?.length) {
+			throw new Error(`Missing flattened glitter frames for text layer ${layer.id}`);
+		}
 
-		// Draw sticker (centered on origin)
-		ctx.drawImage(
-			tempCanvas,
-			-width / 2,
-			-height / 2,
-			width,
-			height
-		);
+		const reducedFrameCount = frameMap?.get(layer.id);
+		const frameIndexForLayer = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
+		const frameImageData = frames[frameIndexForLayer];
+		if (!frameImageData) {
+			throw new Error(`Invalid glitter frame for text layer ${layer.id} frame ${frameIndexForLayer}`);
+		}
 
-		ctx.restore();
+		const fillCanvas = document.createElement('canvas');
+		fillCanvas.width = textMaskCanvas.width;
+		fillCanvas.height = textMaskCanvas.height;
+		const fillCtx = fillCanvas.getContext('2d', { willReadFrequently: true, alpha: true });
+
+		const patternSource = document.createElement('canvas');
+		patternSource.width = frameImageData.width;
+		patternSource.height = frameImageData.height;
+		patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
+
+		const pattern = fillCtx.createPattern(patternSource, 'repeat');
+		const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+		const matrix = new DOMMatrix().scaleSelf(scale, scale);
+		pattern.setTransform(matrix);
+
+		fillCtx.clearRect(0, 0, fillCanvas.width, fillCanvas.height);
+		fillCtx.globalAlpha = layer.settings.opacity / 100;
+		fillCtx.fillStyle = pattern;
+		fillCtx.fillRect(0, 0, fillCanvas.width, fillCanvas.height);
+		fillCtx.globalCompositeOperation = 'destination-in';
+		fillCtx.drawImage(textMaskCanvas, 0, 0);
+		fillCtx.globalCompositeOperation = 'source-over';
+
+		this._drawTransformedCanvas(
+			ctx,
+			fillCanvas,
+			layer.textData.transform,
+			layer.textData.width,
+			layer.textData.height
+		);
 	}
 
 	_isTransparencyFilled(layers, maskDataMap, canvasData) {
@@ -225,6 +269,7 @@ class GifExporter {
 		callbacks.onProgress(3, 'Preparing masks...', 0, 0);
 		const maskDataMap = new Map();
 		const maskCanvases = new Map();
+		const textMaskCanvases = new Map();
 		visibleLayers.forEach((layer) => {
 			if (layer.type !== LayerType.GLITTER_FILL) return;
 
@@ -232,6 +277,11 @@ class GifExporter {
 			maskDataMap.set(layer.id, rawMask);
 			maskCanvases.set(layer.id, this._createMaskCanvas(rawMask, canvasData.width, canvasData.height));
 		});
+
+		for (const layer of visibleLayers) {
+			if (layer.type !== LayerType.TEXT_GLITTER) continue;
+			textMaskCanvases.set(layer.id, await callbacks.renderTextMask(layer));
+		}
 
 		// 1.75. Load Watermark (if enabled)
 		let watermark = null;
@@ -352,6 +402,7 @@ class GifExporter {
 					visibleLayers,
 					glitterGifs,
 					maskCanvases,
+					textMaskCanvases,
 					safeKey,
 					exportSettings,
 					watermark,
@@ -422,7 +473,7 @@ class GifExporter {
 		const allFrames = [];
 
 		layers.forEach(layer => {
-			if (layer.type === LayerType.GLITTER_FILL) {
+			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) {
 				const frames = flattenedFrameMap?.get(layer.id);
 				if (frames?.length) {
 					allFrames.push(...frames);
@@ -503,7 +554,7 @@ class GifExporter {
 		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
 	}
 
-	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, safeKey, exportSettings, watermark, needsTransparency, frameMap = null, flattenedFrameMap = null) {
+	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, textMaskCanvases, safeKey, exportSettings, watermark, needsTransparency, frameMap = null, flattenedFrameMap = null) {
 		const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
 		const ctx = this.ctx;
 		const hCtx = this.helperCtx;
@@ -610,6 +661,8 @@ class GifExporter {
 			} else if (layer.type === LayerType.STICKER) {
 				// Render sticker layer
 				this._renderLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap);
+			} else if (layer.type === LayerType.TEXT_GLITTER) {
+				this._renderTextLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap, textMaskCanvases);
 			}
 		});
 
@@ -707,7 +760,7 @@ class GifExporter {
 		layers.forEach(layer => {
 			let animation, name, isSticker;
 
-			if (layer.type === LayerType.GLITTER_FILL) {
+			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) {
 				const glitter = library.find(g => g.id === layer.selectedGlitterId);
 				if (!glitter?.frames?.frames?.length) return;
 				animation = glitter.frames;
@@ -1037,7 +1090,7 @@ class GifExporter {
 
 	async _loadMissingFrames(layers, library, callbacks) {
 		for (const layer of layers) {
-			if (layer.type === LayerType.GLITTER_FILL) {
+			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) {
 				// Handle glitter layers
 				const glitter = library.find(g => g.id === layer.selectedGlitterId);
 				if (!glitter.frames) {
@@ -1046,6 +1099,14 @@ class GifExporter {
 						glitter.frames = await callbacks.parseGif(glitter.url);
 					} catch (e) {
 						throw new Error(`Failed to load ${glitter.name}`);
+					}
+				}
+
+				if (layer.type === LayerType.TEXT_GLITTER) {
+					try {
+						await callbacks.ensureTextFont(layer.textData.fontId);
+					} catch (e) {
+						throw new Error(e.message);
 					}
 				}
 			} else if (layer.type === LayerType.STICKER) {
@@ -1175,7 +1236,7 @@ class GifExporter {
 
 		layers.forEach(l => {
 			let count = 1;
-			if (l.type === LayerType.GLITTER_FILL) {
+			if (l.type === LayerType.GLITTER_FILL || l.type === LayerType.TEXT_GLITTER) {
 				const glitter = library.find(g => g.id === l.selectedGlitterId);
 				if (glitter?.frames?.frames) {
 					count = glitter.frames.frames.length;
@@ -1231,7 +1292,8 @@ class GifExporter {
 
 		// Check if we have glitter layers with multiple frames
 		const hasMultiFrameGlitter = layers.some(layer =>
-			layer.type === LayerType.GLITTER_FILL && layerFrameCounts.get(layer.id) > 1
+			(layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) &&
+			layerFrameCounts.get(layer.id) > 1
 		);
 
 		// Step 1: Round to multiples of 3 ONLY if there are multi-frame glitter layers AND it helps

@@ -269,6 +269,11 @@
 									<use href="#icon-sticker"></use>
 								</svg></button>
 
+							<!-- add text layer -->
+							<button class="btn-icon-simple icon-wrapper add sm text-layer-add" title="Add new text layer" id="layersBarAddText" disabled>
+								<span class="text-button-glyph">T</span>
+							</button>
+
 							<!-- duplicate selected -->
 							<button class="btn-icon-simple icon-wrapper clone sm" title="Clone selected layer" id="layersBarCloneSelected" disabled><svg class="icon">
 									<use href="#icon-clone"></use>
@@ -683,6 +688,12 @@
 													<span class="layer-type-name">Sticker</span>
 													<span class="layer-type-description">Add images and graphics</span>
 												</button>
+
+												<button class="layer-type-option" data-layer-type="text-glitter" id="quickActionAddText">
+													<span class="layer-type-icon icon-wrapper layer-type-text-icon">T</span>
+													<span class="layer-type-name">Text</span>
+													<span class="layer-type-description">Mask glitter inside editable text</span>
+												</button>
 											</div>
 
 
@@ -1035,6 +1046,92 @@
 						</div>
 					</div>
 
+					<div class="text-settings-section section collapsible-section" id="textSettingsSection">
+						<div class="section-header section-header-with-action" id="textSettingsHeader">
+							<h3 class="section-header-title">
+								<span class="section-header-title-icon icon-wrapper sm">
+									<svg class="icon">
+										<use href="#icon-sliders"></use>
+									</svg>
+									<span class="name">Sliders</span>
+								</span>
+								<span class="section-header-title-text">Text Properties</span>
+							</h3>
+							<div class="section-header-action btn-icon visible collapsed" id="textSettingsToggle">
+								<span class="icon-wrapper">
+									<svg class="icon">
+										<use href="#icon-chevron-down"></use>
+									</svg>
+								</span>
+							</div>
+						</div>
+						<div class="section-content" id="textSettingsContent">
+							<div class="settings-subsection">
+								<div class="subsection-content-group">
+									<div class="subsection-title">Text</div>
+									<div class="subsection-content">
+										<div class="text-input-group">
+											<textarea id="textLayerInput" rows="4" maxlength="200" placeholder="Type your glitter text"></textarea>
+										</div>
+									</div>
+								</div>
+								<div class="subsection-content-group">
+									<div class="subsection-title">Font</div>
+									<div class="subsection-content">
+										<div class="text-font-picker" id="textFontPicker"></div>
+									</div>
+								</div>
+								<div class="subsection-content-group">
+									<div class="subsection-title">Layout</div>
+									<div class="settings-group-two-column">
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label">Font Size</span>
+												<span class="setting-value" id="textFontSizeValue">64px</span>
+											</div>
+											<input type="range" id="textFontSize" min="12" max="256" value="64">
+											<button class="btn-text" id="resetTextFontSize" type="button">Reset</button>
+										</div>
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label">Letter Spacing</span>
+												<span class="setting-value" id="textLetterSpacingValue">0px</span>
+											</div>
+											<input type="range" id="textLetterSpacing" min="-5" max="40" value="0">
+											<button class="btn-text" id="resetTextLetterSpacing" type="button">Reset</button>
+										</div>
+									</div>
+									<div class="tool-options-group text-align-group">
+										<button class="btn-simple active" type="button" data-text-align="left">Left</button>
+										<button class="btn-simple" type="button" data-text-align="center">Center</button>
+										<button class="btn-simple" type="button" data-text-align="right">Right</button>
+									</div>
+								</div>
+								<div class="subsection-content-group">
+									<div class="subsection-title">Fill</div>
+									<div class="settings-group-two-column">
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label">Texture Scale</span>
+												<span class="setting-value" id="textTextureScaleValue">100%</span>
+											</div>
+											<input type="range" id="textTextureScale" min="25" max="300" value="100">
+											<button class="btn-text" id="resetTextTextureScale" type="button">Reset</button>
+										</div>
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label">Texture Opacity</span>
+												<span class="setting-value" id="textTextureOpacityValue">100%</span>
+											</div>
+											<input type="range" id="textTextureOpacity" min="0" max="100" value="100">
+											<button class="btn-text" id="resetTextTextureOpacity" type="button">Reset</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
 					<!-- Layer Settings Section -->
 					<div class="layer-settings-section section collapsible-section" id="layerSettingsSection">
 						<div class="section-header section-header-with-action" id="layerSettingsHeader">
@@ -1058,7 +1155,8 @@
 						<div class="section-content" id="layerSettingsContent">
 							<div class="empty-state visible" id="layerSettingsEmpty">
 								<div class="empty-state-icon">📋</div>
-								<div class="empty-state-text">No layer selected</div>
+								<div class="empty-state-text" id="layerSettingsEmptyText">No layer selected</div>
+								<div class="empty-state-subtext" id="layerSettingsEmptySubtext"></div>
 							</div>
 							<div id="layerSettingsControls">
 								<div class="settings-subsection">
@@ -1651,6 +1749,13 @@
 
 						<span class="layer-type-name">Sticker</span>
 						<span class="layer-type-description">Add images and graphics</span>
+					</button>
+					<button class="layer-type-option" data-layer-type="text-glitter">
+
+						<span class="layer-type-icon icon-wrapper xl layer-type-text-icon">T</span>
+
+						<span class="layer-type-name">Text</span>
+						<span class="layer-type-description">Mask glitter inside editable text</span>
 					</button>
 				</div>
 			</div>
@@ -2461,6 +2566,7 @@
 	<script src="js/classes/ContentManager.js"></script>
 	<script src="js/classes/LayerTransform.js"></script>
 	<script src="js/classes/GlitterManager.js"></script>
+	<script src="js/classes/TextGlitterManager.js"></script>
 	<script src="js/classes/StickerManager.js"></script>
 
 	<script src="js/classes/MobileManager.js"></script>

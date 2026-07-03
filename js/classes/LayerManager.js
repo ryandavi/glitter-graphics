@@ -113,6 +113,8 @@ class LayerManager {
 
 		if (type === LayerType.STICKER) {
 			layer = this.editor.stickerManager.createLayer();
+		} else if (type === LayerType.TEXT_GLITTER) {
+			layer = this.editor.textGlitterManager.createLayer();
 		} else if (type === LayerType.GLITTER_FILL) {
 			layer = this.editor.glitterManager.createLayer();
 		} else {
@@ -126,7 +128,7 @@ class LayerManager {
 
 		// On mobile, open design panel when glitter or sticker layer is added
 		if (this.editor.mobileManager && this.editor.mobileManager.isMobile && CONFIG.mobileOpenDrawOnLayerAdd) {
-			if (type === LayerType.GLITTER_FILL || type === LayerType.STICKER) {
+			if (type === LayerType.GLITTER_FILL || type === LayerType.STICKER || type === LayerType.TEXT_GLITTER) {
 				this.editor.mobileManager.toggleDrawer('design');
 			}
 		}
@@ -135,9 +137,20 @@ class LayerManager {
 		this.editor.saveState();
 		this.editor.updateActionButtons();
 
-		const msg = type === LayerType.STICKER ?
-			'New sticker layer added' :
-			'New glitter fill layer added';
+		if (type === LayerType.TEXT_GLITTER) {
+			if (!this.editor.mobileManager?.isMobile) {
+				requestAnimationFrame(() => {
+					this.editor.textGlitterManager?.focusTextInput(true);
+				});
+			}
+		}
+
+		let msg = 'New glitter fill layer added';
+		if (type === LayerType.STICKER) {
+			msg = 'New sticker layer added';
+		} else if (type === LayerType.TEXT_GLITTER) {
+			msg = 'New text layer added';
+		}
 		this.editor.updateStatus(msg);
 	}
 
@@ -166,6 +179,8 @@ class LayerManager {
 
 		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
 			this.editor.stickerManager.removeSticker(layerId);
+		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
+			this.editor.textGlitterManager.removeLayerElement(layerId);
 		} else if (layer.type === LayerType.GLITTER_FILL && this.editor.glitterManager) {
 			this.editor.glitterManager.releaseLayerResources(layer);
 		}
@@ -196,6 +211,11 @@ class LayerManager {
 			if (element) {
 				element.style.display = layer.visible ? 'block' : 'none';
 			}
+		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
+			const element = this.editor.textGlitterManager.layerElements.get(layerId);
+			if (element) {
+				element.style.display = layer.visible ? 'block' : 'none';
+			}
 		}
 
 		this.renderLayersList();
@@ -222,6 +242,9 @@ class LayerManager {
 			this.editor.previewCanvas.classList.add('selected');
 		} else if (layer.type === LayerType.STICKER) {
 			const element = this.editor.stickerManager.layerElements.get(layer.id);
+			if (element) element.classList.add('selected');
+		} else if (layer.type === LayerType.TEXT_GLITTER) {
+			const element = this.editor.textGlitterManager.layerElements.get(layer.id);
 			if (element) element.classList.add('selected');
 		} else if (layer.type === LayerType.GLITTER_FILL) {
 			const element = this.editor.glitterManager.layerElements.get(layer.id);
@@ -250,12 +273,17 @@ class LayerManager {
 		this.updateSelectionHighlight(layerId);
 
 		// NEW: Update transform handles
-		if (this.editor.stickerManager) {
+		if (this.editor.stickerManager && this.editor.textGlitterManager) {
 			const layer = this.layers.find(l => l.id === layerId);
 			if (layer && layer.type === LayerType.STICKER && this.editor.currentTool === ToolType.SELECT) {
 				this.editor.stickerManager.createTransformHandles(layerId);
+				this.editor.textGlitterManager.removeTransformHandles();
+			} else if (layer && layer.type === LayerType.TEXT_GLITTER && this.editor.currentTool === ToolType.SELECT) {
+				this.editor.textGlitterManager.createTransformHandles(layerId);
+				this.editor.stickerManager.removeTransformHandles();
 			} else {
 				this.editor.stickerManager.removeTransformHandles();
+				this.editor.textGlitterManager.removeTransformHandles();
 			}
 		}
 
@@ -289,6 +317,8 @@ class LayerManager {
 
 		if (layer && layer.type === LayerType.STICKER) {
 			this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
+		} else if (layer && layer.type === LayerType.TEXT_GLITTER) {
+			this.editor.updateStatus(`Selected text: ${layer.name || 'Text'}`);
 		}
 
 		// Update helpful message
@@ -306,7 +336,7 @@ class LayerManager {
 
 	goToGlitter(layerId) {
 		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
+		if (!layer || (layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER)) return;
 
 		// Select this layer
 		this.setActiveLayer(layerId);
@@ -377,6 +407,9 @@ class LayerManager {
 			if (layer.type === LayerType.STICKER) {
 				isHit = this.isPointInSticker(layer, x, y);
 			}
+			else if (layer.type === LayerType.TEXT_GLITTER) {
+				isHit = this.isPointInText(layer, x, y);
+			}
 			else if (layer.type === LayerType.GLITTER_FILL) {
 				if (hasMaskContent(layer)) {
 					isHit = this.isPixelInLayerSelection(layer, x, y);
@@ -397,6 +430,7 @@ class LayerManager {
 				// UX Feedback
 				let name = 'Layer';
 				if (layer.type === LayerType.STICKER) name = layer.name;
+				else if (layer.type === LayerType.TEXT_GLITTER) name = layer.name || 'Text';
 				else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
 				else if (layer.type === LayerType.GLITTER_FILL) {
 					const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
@@ -448,6 +482,16 @@ class LayerManager {
 		const t = layer.stickerData.transform;
 		const w = layer.stickerData.width;
 		const h = layer.stickerData.height;
+
+		return this.isPointInTransformBox(t, w, h, clickX, clickY);
+	}
+
+	isPointInText(layer, clickX, clickY) {
+		if (!layer.textData?.text?.trim()) return false;
+
+		const t = layer.textData.transform;
+		const w = layer.textData.width;
+		const h = layer.textData.height;
 
 		return this.isPointInTransformBox(t, w, h, clickX, clickY);
 	}
@@ -535,8 +579,10 @@ class LayerManager {
 		// Add buttons - only check max layers
 		const addGlitterBtn = document.getElementById('layersBarAddGlitter');
 		const addStickerBtn = document.getElementById('layersBarAddSticker');
+		const addTextBtn = document.getElementById('layersBarAddText');
 		if (addGlitterBtn) addGlitterBtn.disabled = !canAddLayers;
 		if (addStickerBtn) addStickerBtn.disabled = !canAddLayers;
+		if (addTextBtn) addTextBtn.disabled = !canAddLayers;
 
 		// Buttons requiring selection (but not base)
 		const goToBtn = document.getElementById('layersBarGoToSelected');
@@ -610,6 +656,17 @@ class LayerManager {
 			// Clone the DOM element via stickerManager
 			this.editor.stickerManager.cloneStickerElement(sourceLayer, clonedLayer);
 
+		} else if (sourceLayer.type === LayerType.TEXT_GLITTER) {
+			clonedLayer = {
+				id: this.generateLayerId(),
+				type: LayerType.TEXT_GLITTER,
+				name: sourceLayer.name,
+				visible: sourceLayer.visible,
+				locked: false,
+				selectedGlitterId: sourceLayer.selectedGlitterId,
+				settings: { ...sourceLayer.settings },
+				textData: JSON.parse(JSON.stringify(sourceLayer.textData))
+			};
 		} else {
 			// Clone glitter layer
 			clonedLayer = {
@@ -690,6 +747,14 @@ class LayerManager {
 			} else {
 				swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
 			}
+		} else if (layer.type === LayerType.TEXT_GLITTER) {
+			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+			if (glitter) {
+				swatch.style.backgroundImage = `url(${glitter.url})`;
+				swatch.classList.add('glitter', 'text-layer');
+				if (glitter.isPixelated) swatch.classList.add('pixelated');
+				swatch.innerHTML = '<span class="layer-swatch-text-overlay">T</span>';
+			}
 		} else if (layer.type === LayerType.BASE_IMAGE) {
 			// --- FIX: Base Image Thumbnail ---
 			if (this.editor.originalImage) {
@@ -711,7 +776,7 @@ class LayerManager {
 		// Double-click swatch behavior
 		swatch.addEventListener('click', (e) => {
 			e.stopPropagation();
-			if (layer.type === LayerType.GLITTER_FILL) {
+			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) {
 				this.goToGlitter(layer.id);
 			} else if (layer.type === LayerType.STICKER) {
 				this.goToSticker(layer.id);
@@ -744,6 +809,12 @@ class LayerManager {
 				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
 				nameText.textContent = glitter ? glitter.name : 'No glitter';
 				typeText.textContent = glitter?.category ? `Glitter / ${glitter.category}` : 'Glitter';
+				break;
+			}
+			case LayerType.TEXT_GLITTER: {
+				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+				nameText.textContent = layer.name || 'Text';
+				typeText.textContent = `Text / ${glitter?.name || 'No glitter'}`;
 				break;
 			}
 			case LayerType.BASE_IMAGE:
@@ -932,7 +1003,7 @@ class LayerManager {
 
 		if (!activeLayer) {
 			mobileLayersSwatch.classList.add('empty');
-			mobileLayersSwatch.classList.remove('pixelated');
+			mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
 			mobileLayersSwatch.style.backgroundImage = '';
 			return;
 		}
@@ -942,7 +1013,7 @@ class LayerManager {
 			// Check if glitter has been selected
 			if (activeLayer.selectedGlitterId === undefined || activeLayer.selectedGlitterId === null) {
 				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated');
+				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
 				mobileLayersSwatch.style.backgroundImage = '';
 				return;
 			}
@@ -951,6 +1022,7 @@ class LayerManager {
 			if (glitter) {
 				mobileLayersSwatch.classList.remove('empty');
 				mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
+				mobileLayersSwatch.classList.remove('text-layer');
 				if (glitter.isPixelated) {
 					mobileLayersSwatch.classList.add('pixelated');
 				} else {
@@ -958,14 +1030,14 @@ class LayerManager {
 				}
 			} else {
 				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated');
+				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
 				mobileLayersSwatch.style.backgroundImage = '';
 			}
 		} else if (activeLayer.type === LayerType.STICKER) {
 			// Check if sticker has been selected
 			if (!activeLayer.stickerSourceId) {
 				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated');
+				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
 				mobileLayersSwatch.style.backgroundImage = '';
 				return;
 			}
@@ -974,6 +1046,7 @@ class LayerManager {
 			if (sticker) {
 				mobileLayersSwatch.classList.remove('empty');
 				mobileLayersSwatch.style.backgroundImage = `url(${sticker.url})`;
+				mobileLayersSwatch.classList.remove('text-layer');
 				if (sticker.isPixelated) {
 					mobileLayersSwatch.classList.add('pixelated');
 				} else {
@@ -981,17 +1054,33 @@ class LayerManager {
 				}
 			} else {
 				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated');
+				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
+				mobileLayersSwatch.style.backgroundImage = '';
+			}
+		} else if (activeLayer.type === LayerType.TEXT_GLITTER) {
+			const glitter = this.editor.glitterManager.getItemById(activeLayer.selectedGlitterId);
+			if (glitter) {
+				mobileLayersSwatch.classList.remove('empty');
+				mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
+				mobileLayersSwatch.classList.add('text-layer');
+				if (glitter.isPixelated) {
+					mobileLayersSwatch.classList.add('pixelated');
+				} else {
+					mobileLayersSwatch.classList.remove('pixelated');
+				}
+			} else {
+				mobileLayersSwatch.classList.add('empty');
+				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
 				mobileLayersSwatch.style.backgroundImage = '';
 			}
 		} else if (activeLayer.type === LayerType.BASE_IMAGE) {
 			if (this.baseImageSwatchDataUrl) {
 				mobileLayersSwatch.classList.remove('empty');
 				mobileLayersSwatch.style.backgroundImage = `url(${this.baseImageSwatchDataUrl})`;
-				mobileLayersSwatch.classList.remove('pixelated');
+				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
 			} else {
 				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated');
+				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
 				mobileLayersSwatch.style.backgroundImage = '';
 			}
 		}
@@ -1336,9 +1425,9 @@ class LayerManager {
 	reorderLayers() {
 		const container = this.canvasElementsContainer;
 
-		// Get existing background AND sticker elements
+		// Keep every transformable preview element in sync with layer order.
 		const existingElements = new Map();
-		container.querySelectorAll('.glitter-element, .sticker-element').forEach(el => {
+		container.querySelectorAll('.glitter-element, .sticker-element, .text-glitter-element').forEach(el => {
 			existingElements.set(el.dataset.layerId, el);
 		});
 

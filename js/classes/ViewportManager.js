@@ -352,15 +352,15 @@ setupTouchGestures() {
     
     this.touchHandler = new TouchGestureHandler(this.previewContainer, {
         
-        // Check if we should ignore this target (skip stickers for viewport handler)
+        // Check if we should ignore this target (skip transformable overlays for viewport handler)
         shouldIgnoreTarget: (target) => {
             const editor = window.editor;
             if (editor?.currentTool === ToolType.BRUSH) {
                 return false;
             }
 
-            if (target && target.closest('.sticker-element')) {
-                dbg('🎯 Viewport: Skipping sticker element');
+            if (target && target.closest('.sticker-element, .text-glitter-element')) {
+                dbg('🎯 Viewport: Skipping transformable overlay element');
                 return true; // Skip it
             }
             return false; // Handle it

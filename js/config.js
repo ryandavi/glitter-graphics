@@ -83,6 +83,24 @@ const CONFIG = {
 	roundStickerTransforms: true,
 
 	// ========================================
+	// TOOLS - Text Layers
+	// ========================================
+	textLayers: {
+		fontsManifest: 'data/fonts.json',
+		defaultFontId: 'luckiest-guy',
+		defaultText: 'sparkle',
+		defaultFontSize: 64,
+		minFontSize: 12,
+		maxFontSize: 256,
+		defaultLetterSpacing: 0,
+		minLetterSpacing: -5,
+		maxLetterSpacing: 40,
+		lineHeight: 1.1,
+		maskPadding: 8,
+		maxTextLength: 200
+	},
+
+	// ========================================
 	// UI - Zoom
 	// ========================================
 	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
@@ -193,6 +211,7 @@ const CONFIG = {
 const LayerType = {
 	GLITTER_FILL: 'glitter-fill',
 	STICKER: 'sticker',
+	TEXT_GLITTER: 'text-glitter',
 	BASE_IMAGE: 'base-image',
 };
 
@@ -219,6 +238,8 @@ function layerHasVisibleContent(layer) {
 	switch (layer?.type) {
 		case LayerType.STICKER:
 			return !layer.stickerData || !layer.stickerData.isEmpty;
+		case LayerType.TEXT_GLITTER:
+			return Boolean(layer.textData?.text?.trim());
 		case LayerType.GLITTER_FILL:
 			return hasMaskContent(layer);
 		case LayerType.BASE_IMAGE:
@@ -281,6 +302,25 @@ const LAYER_UI_CONFIG = {
 			}
 
 			editor.updateStickerSelection();
+		}
+	},
+
+	[LayerType.TEXT_GLITTER]: {
+		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'textSettingsSection', 'layerSettingsSection'],
+		mobileSettingsSections: ['tool', 'glitter', 'text'],
+		panelMode: 'text',
+		onActivate: (editor, layer) => {
+			const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.BRUSH]);
+			if (!validTools.has(editor.currentTool)) {
+				editor.setTool(ToolType.SELECT);
+			}
+
+			editor.updateGlitterSelection();
+			editor.showLayerSettingsEmptyState(
+				'Text layers do not use color selections',
+				'Use the Text section to edit the copy, font, alignment, and glitter texture.'
+			);
+			editor.textGlitterManager?.loadLayerSettings(layer);
 		}
 	}
 };

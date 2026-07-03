@@ -249,12 +249,12 @@ async initBrowser() {
 
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (!layer) {
-			this.editor.showError('Please select a glitter fill layer');
+			this.editor.showError('Please select a glitter or text layer');
 			return;
 		}
 
-		if (layer.type !== LayerType.GLITTER_FILL) {
-			this.editor.showError('You can only add a glitter to a glitter-fill layer');
+		if (layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER) {
+			this.editor.showError('You can only add a glitter to a glitter-fill or text layer');
 			return;
 		}
 
@@ -287,7 +287,10 @@ async initBrowser() {
 		this.editor.updateGlitterSelection();
 		this.editor.layerManager.renderLayersList();
 
-		if (hasMaskContent(layer)) {
+		if (layer.type === LayerType.TEXT_GLITTER) {
+			this.editor.textGlitterManager?.updateExistingBackground(layer);
+			this.editor.updatePreview();
+		} else if (hasMaskContent(layer)) {
 			this.editor.updatePreview();
 		}
 

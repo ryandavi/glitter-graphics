@@ -1120,6 +1120,29 @@ input[type=range]::-moz-range-thumb {
 .layers-section > .layers-list > .layer-item > .layer-swatch.pixelated {
   image-rendering: pixelated;
 }
+.layers-section > .layers-list > .layer-item > .layer-swatch.text-layer {
+  position: relative;
+  background-size: cover;
+}
+.layers-section > .layers-list > .layer-item > .layer-swatch.text-layer > .layer-swatch-text-overlay {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  min-height: 14px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  pointer-events: none;
+}
 .layers-section > .layers-list > .layer-item > .layer-info {
   flex: 1;
   white-space: nowrap;
@@ -1618,11 +1641,50 @@ input[type=range]::-moz-range-thumb {
 .sticker-element.pixelated img {
   image-rendering: pixelated;
 }
+.text-glitter-element {
+  position: absolute;
+  transform-origin: center;
+  pointer-events: auto !important;
+  will-change: transform;
+  touch-action: none;
+}
+.text-glitter-element.selected {
+  outline-width: max(1px, 2px / var(--zoom, 1));
+  outline-style: dashed;
+  outline-color: var(--selected-outline-color);
+  outline-offset: min(-1px, -2px / var(--zoom, 1));
+  box-shadow: 0 0 0 max(1px, 1px / var(--zoom, 1)) rgba(0, 0, 0, 0.5), 0 0 max(4px, 8px / var(--zoom, 1)) rgba(0, 0, 0, 0.5);
+}
+.text-glitter-content {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: var(--text-mask-padding, 8px);
+  background-repeat: repeat;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: visible;
+}
+.text-glitter-content.pixelated {
+  image-rendering: pixelated;
+}
 
 body.tool-select .sticker-element {
   cursor: move;
 }
 body.tool-select .sticker-element:not(.selected):hover {
+  outline: 1px dashed rgba(0, 0, 0, 0.25);
+  outline-offset: -1px;
+}
+body.tool-select .text-glitter-element {
+  cursor: move;
+}
+body.tool-select .text-glitter-element:not(.selected):hover {
   outline: 1px dashed rgba(0, 0, 0, 0.25);
   outline-offset: -1px;
 }
@@ -2878,6 +2940,7 @@ body.mask-editing .sticker-element {
 .layer-type-options {
   display: flex;
   gap: var(--spacing-base);
+  align-items: stretch;
 }
 .layer-type-options > .layer-type-option {
   display: flex;
@@ -2913,6 +2976,24 @@ body.mask-editing .sticker-element {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   color: var(--color-text-secondary);
+}
+.layer-type-text-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+.text-button-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .layer-pick-flash {
@@ -3670,6 +3751,24 @@ body.mask-editing .sticker-element {
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] .mobile-layers-swatch.pixelated {
     image-rendering: pixelated;
+  }
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] .mobile-layers-swatch.text-layer {
+    position: relative;
+  }
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] .mobile-layers-swatch.text-layer::after {
+    content: "T";
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #ffffff;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 12px;
+    text-align: center;
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn[data-drawer=layers] .mobile-layers-count {
     margin-left: auto;
@@ -4503,6 +4602,31 @@ body.mask-editing .sticker-element {
 }
 #stickerSettingsControls.visible {
   display: block;
+}
+#textSettingsSection textarea {
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+}
+.text-input-group {
+  width: 100%;
+}
+.text-font-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+.text-font-option {
+  min-width: calc(50% - var(--spacing-sm));
+  text-transform: none;
+  justify-content: flex-start;
+}
+.text-align-group {
+  margin-top: var(--spacing-md);
+}
+.text-align-group > .btn-simple {
+  flex: 1;
 }
 
 /* Setting Headers (label + value pairs) */

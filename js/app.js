@@ -76,6 +76,7 @@ class GlitterEditor {
 		this.layerManager = new LayerManager(this);
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this);
+		this.textGlitterManager = new TextGlitterManager(this);
 		this.mobileManager = new MobileManager(this);
 		this.maskCompositor = new MaskCompositor(this);
 		this.maskEditor = new MaskEditor(this);
@@ -178,6 +179,10 @@ class GlitterEditor {
 		return layer && layer.type === LayerType.STICKER;
 	}
 
+	isTextLayer(layer) {
+		return layer && layer.type === LayerType.TEXT_GLITTER;
+	}
+
 	// ===== GETTERS & SETTERS =====
 	get layers() {
 		return this.layerManager.layers;
@@ -201,6 +206,7 @@ class GlitterEditor {
 		this.exporter = new GifExporter();
 		await this.stickerManager.init();
 		await this.glitterManager.init(); // NEW
+		await this.textGlitterManager.init();
 		this.updateSidePanelUI(null);
 	}
 
@@ -476,6 +482,7 @@ resetAllSettings() {
 			'glitterOptions',
 			'glitterSearchSection',
 			'stickerSettingsSection',
+			'textSettingsSection',
 			'stickersOptions',
 			'stickersSearchSection'
 		];
@@ -546,11 +553,15 @@ resetAllSettings() {
 
 	// ===== UX: EMPTY STATE MANAGEMENT =====
 
-	showLayerSettingsEmptyState() {
+	showLayerSettingsEmptyState(title = 'No layer selected', subtext = '') {
 		const empty = document.getElementById('layerSettingsEmpty');
 		const controls = document.getElementById('layerSettingsControls');
+		const emptyText = document.getElementById('layerSettingsEmptyText');
+		const emptySubtext = document.getElementById('layerSettingsEmptySubtext');
 		if (empty) empty.classList.add('visible');
 		if (controls) controls.classList.remove('visible');
+		if (emptyText) emptyText.textContent = title;
+		if (emptySubtext) emptySubtext.textContent = subtext;
 	}
 
 	hideLayerSettingsEmptyState() {
@@ -769,6 +780,15 @@ resetAllSettings() {
 			return;
 		}
 
+		if (layer.type === LayerType.TEXT_GLITTER) {
+			this.textGlitterManager.loadLayerSettings(layer);
+			this.showLayerSettingsEmptyState(
+				'Text layers do not use color selections',
+				'Use the Text section to edit the copy, font, alignment, and glitter texture.'
+			);
+			return;
+		}
+
 		// Load glitter layer settings (existing code)
 		const s = layer.settings;
 
@@ -943,8 +963,7 @@ resetAllSettings() {
 		);
 
 		glitterOptions.forEach(opt => {
-			// Compare IDs instead of indices
-			const isSelected = layer && layer.type === LayerType.GLITTER_FILL &&
+			const isSelected = layer && (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) &&
 				parseInt(opt.dataset.id) === layer.selectedGlitterId;
 			opt.classList.toggle('selected', isSelected);
 		});
@@ -1019,6 +1038,19 @@ resetAllSettings() {
 			const isOpen = stickerSettingsContent.classList.toggle('visible');
 			stickerSettingsToggle.classList.toggle('collapsed', !isOpen);
 		});
+
+		// ===== TEXT SETTINGS =====
+		const textSettingsHeader = document.getElementById('textSettingsHeader');
+		const textSettingsContent = document.getElementById('textSettingsContent');
+		const textSettingsToggle = document.getElementById('textSettingsToggle');
+
+		if (textSettingsHeader && textSettingsContent && textSettingsToggle) {
+			textSettingsToggle.classList.add('collapsed');
+			textSettingsHeader.addEventListener('click', () => {
+				const isOpen = textSettingsContent.classList.toggle('visible');
+				textSettingsToggle.classList.toggle('collapsed', !isOpen);
+			});
+		}
 	}
 
 	initializeShortcutsModal() {
@@ -2137,6 +2169,9 @@ setupWelcomeModalListeners() {
 					case 'sticker':
 						layerType = LayerType.STICKER;
 						break;
+					case 'text-glitter':
+						layerType = LayerType.TEXT_GLITTER;
+						break;
 					case 'glitter-fill':
 						layerType = LayerType.GLITTER_FILL;
 						break;
@@ -2230,6 +2265,7 @@ setupWelcomeModalListeners() {
 		// Bottom bar quick-add buttons - create layers directly
 		const layersBarAddGlitter = document.getElementById('layersBarAddGlitter');
 		const layersBarAddSticker = document.getElementById('layersBarAddSticker');
+		const layersBarAddText = document.getElementById('layersBarAddText');
 
 		if (layersBarAddGlitter) {
 			layersBarAddGlitter.addEventListener('click', () => {
@@ -2241,6 +2277,12 @@ setupWelcomeModalListeners() {
 			layersBarAddSticker.addEventListener('click', () => {
 				// Create new sticker layer (NOT upload modal)
 				this.layerManager.addLayer(LayerType.STICKER);
+			});
+		}
+
+		if (layersBarAddText) {
+			layersBarAddText.addEventListener('click', () => {
+				this.layerManager.addLayer(LayerType.TEXT_GLITTER);
 			});
 		}
 
@@ -2258,6 +2300,8 @@ setupWelcomeModalListeners() {
 					this.layerManager.goToGlitter(selectedLayer.id);
 				} else if (selectedLayer.type === LayerType.STICKER) {
 					this.layerManager.goToSticker(selectedLayer.id);
+				} else if (selectedLayer.type === LayerType.TEXT_GLITTER) {
+					this.layerManager.goToGlitter(selectedLayer.id);
 				}
 			});
 		}
@@ -2476,27 +2520,32 @@ setupWelcomeModalListeners() {
 		}
 
 		// NEW: Handle transform handles visibility
-		if (this.stickerManager) {
+		if (this.stickerManager && this.textGlitterManager) {
 			const activeLayer = this.layerManager.getActiveLayer();
 			if (tool === ToolType.SELECT && activeLayer && activeLayer.type === LayerType.STICKER) {
 				this.stickerManager.createTransformHandles(activeLayer.id);
+				this.textGlitterManager.removeTransformHandles();
+			} else if (tool === ToolType.SELECT && activeLayer && activeLayer.type === LayerType.TEXT_GLITTER) {
+				this.textGlitterManager.createTransformHandles(activeLayer.id);
+				this.stickerManager.removeTransformHandles();
 			} else {
 				this.stickerManager.removeTransformHandles();
+				this.textGlitterManager.removeTransformHandles();
 			}
 		}
 
 		// NEW: Manage sticker pointer-events based on tool
 		// When in Hand or Zoom tool, stickers should not capture touch events
-		const allStickers = this.canvasElementsContainer.querySelectorAll('.sticker-element');
+		const interactiveElements = this.canvasElementsContainer.querySelectorAll('.sticker-element, .text-glitter-element');
 		if (tool === ToolType.HAND || tool === ToolType.ZOOM) {
 			// Disable sticker interaction - viewport gestures only
-			allStickers.forEach(sticker => {
-				sticker.style.pointerEvents = 'none';
+			interactiveElements.forEach(element => {
+				element.style.pointerEvents = 'none';
 			});
 		} else {
 			// Enable sticker interaction
-			allStickers.forEach(sticker => {
-				sticker.style.pointerEvents = 'auto';
+			interactiveElements.forEach(element => {
+				element.style.pointerEvents = 'auto';
 			});
 		}
 
@@ -2621,6 +2670,10 @@ setupWelcomeModalListeners() {
 		else if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
 			hint = 'No sticker chosen—select a sticker from the gallery to place on your canvas';
 		}
+		else if (activeLayer && activeLayer.type === LayerType.TEXT_GLITTER && !activeLayer.textData.text.trim()) {
+			hint = 'This text layer is empty - type something in the Text section to reveal the glitter fill';
+			context = 'Choose a font, adjust spacing and alignment, and pick a glitter in the browser for the fill.';
+		}
 		else if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL &&
 			hasMaskContent(activeLayer) &&
 			!activeLayer.selectedGlitterId) {
@@ -2678,6 +2731,8 @@ setupWelcomeModalListeners() {
 				}
 			} else if (activeLayer.type === LayerType.STICKER) {
 				hint = 'Switch to select tool to move stickers, or add a glitter layer';
+			} else if (activeLayer.type === LayerType.TEXT_GLITTER) {
+				hint = 'Switch to the Select tool to move glitter text, or choose a glitter in the browser for the fill';
 			}
 		}
 
@@ -2692,6 +2747,14 @@ setupWelcomeModalListeners() {
 				} else {
 					hint = 'Drag to move your sticker';
 					context = 'Use the settings panel to rotate, scale, flip, or adjust opacity.';
+				}
+			} else if (activeLayer.type === LayerType.TEXT_GLITTER) {
+				if (isMobile) {
+					hint = 'Drag to move, pinch to scale and rotate your glitter text';
+					context = 'Use the Text section for copy, font, alignment, texture scale, and opacity.';
+				} else {
+					hint = 'Drag to move your glitter text';
+					context = 'Use the Text section to change the copy, font, size, spacing, alignment, and fill texture.';
 				}
 			} else if (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.BASE_IMAGE) {
 				hint = 'Switch to the color picker or Mask Brush to add or modify glitter, or add a sticker layer';
@@ -2710,6 +2773,9 @@ setupWelcomeModalListeners() {
 				hint = 'Use the settings panel to adjust scale, opacity, threshold, or feather — or paint with the Mask Brush';
 				context = 'Threshold controls color tolerance. Feather softens edges. The Mask Brush adds painted detail.';
 			}
+		} else if (activeLayer && activeLayer.type === LayerType.TEXT_GLITTER && activeLayer.textData.text.trim()) {
+			hint = 'Use the Text section to edit the copy, font, spacing, and alignment';
+			context = 'The glitter browser controls the fill, and texture scale and opacity change the motion inside the letters.';
 		}
 
 		// Update tool label
@@ -3356,9 +3422,9 @@ setupWelcomeModalListeners() {
 					dbg('✅ ZOOM tool: Allowing right-click pointerdown');
 					// Continue to handle this event
 				}
-				// CRITICAL FIX: Allow mousedown on stickers to pass through to their drag handlers
-				else if (this.currentTool === ToolType.SELECT && e.target.closest('.sticker-element')) {
-					dbg('✅ SELECT tool: Allowing sticker mousedown to pass through');
+				// CRITICAL FIX: Allow mousedown on transformable overlays to pass through
+				else if (this.currentTool === ToolType.SELECT && e.target.closest('.sticker-element, .text-glitter-element')) {
+					dbg('✅ SELECT tool: Allowing transformable overlay mousedown to pass through');
 					// Don't return - let it fall through, but don't process it here
 					// The sticker's own mousedown handler will handle it
 					return;
@@ -3371,13 +3437,14 @@ setupWelcomeModalListeners() {
 		}
 
 		const hitSticker = e.target.closest('.sticker-element');
+		const hitText = e.target.closest('.text-glitter-element');
 
 		// Check if click is within the canvas area using viewport coordinates
 		const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
 		const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
 
-		// We treat stickers and the canvas as the "Image Area"
-		const hitImageArea = hitCanvas || hitSticker;
+		// We treat transformable overlays and the canvas as the "Image Area"
+		const hitImageArea = hitCanvas || hitSticker || hitText;
 
 		// Gatekeeper: If they clicked a button/sidebar, stop here
 		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
@@ -3385,7 +3452,7 @@ setupWelcomeModalListeners() {
 
 		switch (this.currentTool) {
 			case ToolType.SELECT:
-				if (hitSticker) return; // Sticker's own handler will handle it
+				if (hitSticker || hitText) return; // LayerTransform's own handler will handle it
 				if (hitImageArea && hitCanvas) {
 					const rect = this.previewCanvas.getBoundingClientRect();
 					const clickX = e.clientX - rect.left;
@@ -3712,6 +3779,10 @@ setupWelcomeModalListeners() {
 			});
 			this.stickerManager.layerElements.clear();
 		}
+
+		if (this.textGlitterManager) {
+			this.textGlitterManager.clearElements();
+		}
 	}
 
 	// ===== PREVIEW & RENDERING =====
@@ -3736,6 +3807,7 @@ setupWelcomeModalListeners() {
 		this.glitterManager.renderContent(layersToShow);
 
 		this.stickerManager.renderContent(layersToShow);
+		this.textGlitterManager.renderContent(layersToShow);
 	}
 
 	renderPreviewCanvas(layersToShow) {
@@ -3894,7 +3966,9 @@ setupWelcomeModalListeners() {
 					}
 				},
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
-				createMask: (layer) => this.maskCompositor.getMaskData(layer)
+				createMask: (layer) => this.maskCompositor.getMaskData(layer),
+				renderTextMask: (layer) => this.textGlitterManager.renderTextMask(layer),
+				ensureTextFont: (fontId) => this.textGlitterManager.ensureFontLoaded(fontId)
 			}
 		};
 
