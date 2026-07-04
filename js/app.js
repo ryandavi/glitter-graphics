@@ -73,6 +73,7 @@ class GlitterEditor {
 		// MANAGERS
 		// ============================================================================
 		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
+		this.viewport.editor = this;
 		this.layerManager = new LayerManager(this);
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this);
@@ -2421,6 +2422,9 @@ setupWelcomeModalListeners() {
 
 		// In setupEventListeners() or wherever you set up preview container events
 		this.previewContainer.addEventListener('pointerdown', (e) => {
+			if (e.pointerType === 'touch') {
+				return;
+			}
 			if (this.currentTool === ToolType.TEXT) {
 				return;
 			}
@@ -2471,14 +2475,27 @@ setupWelcomeModalListeners() {
 
 		// Scroll zoom
 		this.previewContainer.addEventListener('wheel', (e) => {
-			if (this.currentTool === ToolType.ZOOM && this.originalImage) {
-				e.preventDefault();
-				if (e.deltaY < 0) {
-					this.viewport.zoomIn();
-				} else {
-					this.viewport.zoomOut();
-				}
+			if (!this.originalImage) {
+				return;
 			}
+
+			e.preventDefault();
+
+			if (e.ctrlKey || e.metaKey) {
+				if (e.deltaY < 0) {
+					this.viewport.zoomIn(e.clientX, e.clientY);
+				} else {
+					this.viewport.zoomOut(e.clientX, e.clientY);
+				}
+				return;
+			}
+
+			if (e.shiftKey) {
+				this.viewport.panBy(-e.deltaY, 0);
+				return;
+			}
+
+			this.viewport.panBy(0, -e.deltaY);
 		}, { passive: false });
 	}
 
@@ -2586,21 +2603,6 @@ setupWelcomeModalListeners() {
 				this.stickerManager.removeTransformHandles();
 				this.textGlitterManager.removeTransformHandles();
 			}
-		}
-
-		// NEW: Manage sticker pointer-events based on tool
-		// When in Hand or Zoom tool, stickers should not capture touch events
-		const interactiveElements = this.canvasElementsContainer.querySelectorAll('.sticker-element, .text-glitter-element');
-		if (tool === ToolType.HAND || tool === ToolType.ZOOM || tool === ToolType.TEXT) {
-			// Disable sticker interaction - viewport gestures only
-			interactiveElements.forEach(element => {
-				element.style.pointerEvents = 'none';
-			});
-		} else {
-			// Enable sticker interaction
-			interactiveElements.forEach(element => {
-				element.style.pointerEvents = 'auto';
-			});
 		}
 
 		// Sync mask editing with the active tool (enter/exit brush painting)
@@ -3442,9 +3444,80 @@ setupWelcomeModalListeners() {
 
 	// ===== CLICK HANDLERS =====
 
+	handleWorkspaceAction(clientX, clientY, options = {}) {
+		const tool = options.tool || this.currentTool;
+		const event = options.event || null;
+		const canvasPoint = this.viewport.screenToCanvas(clientX, clientY);
+		const hitCanvas = this.viewport.isWithinCanvas(canvasPoint.x, canvasPoint.y);
+		const x = Math.round(canvasPoint.x);
+		const y = Math.round(canvasPoint.y);
+
+		switch (tool) {
+			case ToolType.SELECT:
+				if (hitCanvas) {
+					this.handleLayerSelectAction(x, y);
+				} else {
+					this.layerManager.setActiveLayer(null);
+				}
+				break;
+
+			case ToolType.TEXT:
+				if (!hitCanvas) {
+					return;
+				}
+				{
+					const hitLayer = this.layerManager.getTopVisibleLayerAtPoint?.(x, y, { includeBase: false });
+					if (hitLayer) {
+						return;
+					}
+
+					const layer = this.layerManager.addLayer(LayerType.TEXT_GLITTER, {
+						textLayer: {
+							position: { x, y },
+							align: 'left',
+							anchorPosition: { x, y },
+							boxMode: 'auto'
+						}
+					});
+
+					if (layer) {
+						this.setTool(ToolType.SELECT);
+						if (!this.mobileManager?.isMobile) {
+							setTimeout(() => {
+								this.updateSidePanelUI(layer);
+								this.loadActiveLayerSettings();
+								this.textGlitterManager?.focusTextInput(true);
+							}, 0);
+						}
+					}
+				}
+				break;
+
+			case ToolType.COLOR_PICKER:
+				if (hitCanvas) {
+					this.handleColorPickAction(x, y, event);
+				} else {
+					this.setTool(ToolType.SELECT);
+				}
+				break;
+
+			case ToolType.HAND:
+				this.viewport.startPan(clientX, clientY);
+				break;
+
+			case ToolType.ZOOM:
+				if (this.originalImage) {
+					this.handleZoomAction(clientX, clientY, {
+						zoomOut: options.zoomOut || false
+					});
+				}
+				break;
+		}
+	}
+
 
 	handlePreviewContainerClick(e) {
-		dbg('📍 Click handler fired', e.type, e.isSimpleTap);
+		dbg('📍 Click handler fired', e.type);
 
 		// 0. IGNORE IF JUST FINISHED HANDLE DRAGGING
 		if (this.ignoreNextClick) {
@@ -3516,93 +3589,13 @@ setupWelcomeModalListeners() {
 		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
 		if (!isWorkspace) return;
 
-		switch (this.currentTool) {
-			case ToolType.SELECT:
-				if (hitSticker || hitText) return; // LayerTransform's own handler will handle it
-				if (hitImageArea && hitCanvas) {
-					const rect = this.previewCanvas.getBoundingClientRect();
-					const clickX = e.clientX - rect.left;
-					const clickY = e.clientY - rect.top;
-					const scaleX = this.previewCanvas.width / rect.width;
-					const scaleY = this.previewCanvas.height / rect.height;
-					const x = Math.floor(clickX * scaleX);
-					const y = Math.floor(clickY * scaleY);
+		if (this.currentTool === ToolType.SELECT && (hitSticker || hitText)) return;
 
-					this.handleLayerSelectAction(x, y);
-				} else if (!hitImageArea) {
-					this.layerManager.setActiveLayer(null);
-				}
-				break;
-
-			case ToolType.TEXT:
-				if (!hitCanvas) {
-					return;
-				}
-				{
-					const rect = this.previewCanvas.getBoundingClientRect();
-					const clickX = e.clientX - rect.left;
-					const clickY = e.clientY - rect.top;
-					const scaleX = this.previewCanvas.width / rect.width;
-					const scaleY = this.previewCanvas.height / rect.height;
-					const x = Math.floor(clickX * scaleX);
-					const y = Math.floor(clickY * scaleY);
-
-					const hitLayer = this.layerManager.getTopVisibleLayerAtPoint?.(x, y, { includeBase: false });
-					if (hitLayer) {
-						return;
-					}
-
-					const layer = this.layerManager.addLayer(LayerType.TEXT_GLITTER, {
-						textLayer: {
-							position: { x, y },
-							align: 'left',
-							anchorPosition: { x, y },
-							boxMode: 'auto'
-						}
-					});
-
-					if (layer) {
-						this.setTool(ToolType.SELECT);
-						if (!this.mobileManager?.isMobile) {
-							setTimeout(() => {
-								this.updateSidePanelUI(layer);
-								this.loadActiveLayerSettings();
-								this.textGlitterManager?.focusTextInput(true);
-							}, 0);
-						}
-					}
-				}
-				break;
-
-			case ToolType.COLOR_PICKER:
-				if (hitImageArea && hitCanvas) {
-					const rect = this.previewCanvas.getBoundingClientRect();
-					const clickX = e.clientX - rect.left;
-					const clickY = e.clientY - rect.top;
-					const scaleX = this.previewCanvas.width / rect.width;
-					const scaleY = this.previewCanvas.height / rect.height;
-					const x = Math.floor(clickX * scaleX);
-					const y = Math.floor(clickY * scaleY);
-
-					this.handleColorPickAction(x, y, e);
-				} else {
-					this.setTool(ToolType.SELECT);
-				}
-				break;
-
-			case ToolType.HAND:
-				// At this point we know it's pointerdown on desktop (click was filtered out above)
-				this.viewport.startPan(e.clientX, e.clientY);
-				break;
-
-			case ToolType.ZOOM:
-				if (this.originalImage) {
-					this.handleZoomAction(e.clientX, e.clientY, {
-						zoomOut: e.altKey || e.button === 2
-					});
-				}
-				break;
-		}
+		this.handleWorkspaceAction(e.clientX, e.clientY, {
+			tool: this.currentTool,
+			event: e,
+			zoomOut: e.altKey || e.button === 2
+		});
 	}
 	handleColorPickAction(x, y, event = null) {
 		if (this.currentTool !== ToolType.COLOR_PICKER) return;

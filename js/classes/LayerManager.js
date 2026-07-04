@@ -27,6 +27,8 @@ class LayerManager {
 		// Touch drag state (mobile)
 		this.touchDragStartY = 0;
 		this.touchDragLastY = 0;
+		this.touchDragPointerId = null;
+		this.touchDragPointerElement = null;
 
 		// DOM references
 		this.layersListContainer = document.getElementById('layersList');
@@ -387,12 +389,6 @@ class LayerManager {
 		// NEW: Prevent layer picking when transform handles are being interacted with
 		if (this.editor.stickerManager && this.editor.stickerManager.isDraggingHandle) {
 			return;
-		}
-
-		// NEW: Check if click is on transform handles (they have very high z-index)
-		const clickedElement = document.elementFromPoint(x, y);
-		if (clickedElement && clickedElement.closest('.transform-handles')) {
-			return; // Don't pick layers when clicking handles
 		}
 
 		const layer = this.getTopVisibleLayerAtPoint(x, y, { includeBase: true });
@@ -947,14 +943,14 @@ class LayerManager {
 		layerEl.addEventListener('drop', (e) => this.handleLayerDrop(e, layer.id));
 		layerEl.addEventListener('dragend', (e) => this.handleLayerDragEnd(e));
 
-		// Only attach drag START and touch events if not locked
+		// Only attach drag START and touch/pointer reorder events if not locked
 		if (!layer.locked) {
 			layerEl.addEventListener('dragstart', (e) => this.handleLayerDragStart(e, layer.id));
 
-			// Touch
-			layerEl.addEventListener('touchstart', (e) => this.handleLayerTouchStart(e, layer.id), { passive: false });
-			layerEl.addEventListener('touchmove', (e) => this.handleLayerTouchMove(e), { passive: false });
-			layerEl.addEventListener('touchend', (e) => this.handleLayerTouchEnd(e));
+			layerEl.addEventListener('pointerdown', (e) => this.handleLayerTouchStart(e, layer.id));
+			layerEl.addEventListener('pointermove', (e) => this.handleLayerTouchMove(e));
+			layerEl.addEventListener('pointerup', (e) => this.handleLayerTouchEnd(e));
+			layerEl.addEventListener('pointercancel', (e) => this.handleLayerTouchCancel(e));
 		}
 
 		return layerEl;
@@ -1286,6 +1282,10 @@ class LayerManager {
 	// ===== TOUCH DRAG (MOBILE) =====
 
 	handleLayerTouchStart(event, layerId) {
+		if (event.pointerType !== 'touch') {
+			return;
+		}
+
 		// ONLY start drag if touching the drag handle specifically
 		if (!event.target.closest('.layer-drag-handle')) {
 			return;
@@ -1298,23 +1298,27 @@ class LayerManager {
 		}
 
 		this.draggedLayerId = layerId;
+		this.touchDragPointerId = event.pointerId;
+		this.touchDragPointerElement = event.currentTarget;
 		event.currentTarget.classList.add('dragging');
+		event.currentTarget.setPointerCapture?.(event.pointerId);
 
-		const touch = event.touches[0];
-		this.touchDragStartY = touch.clientY;
-		this.touchDragLastY = touch.clientY;
+		this.touchDragStartY = event.clientY;
+		this.touchDragLastY = event.clientY;
 
 		event.preventDefault();
+		event.stopPropagation();
 	}
 
 	handleLayerTouchMove(event) {
-		if (!this.draggedLayerId) return;
+		if (event.pointerType !== 'touch' || !this.draggedLayerId || event.pointerId !== this.touchDragPointerId) {
+			return;
+		}
 
-		const touch = event.touches[0];
-		this.touchDragLastY = touch.clientY;
+		this.touchDragLastY = event.clientY;
 
 		// Find which layer element we're over
-		const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+		const elements = document.elementsFromPoint(event.clientX, event.clientY);
 
 		// Don't target the layer we're currently dragging
 		const targetLayer = elements.find(el =>
@@ -1330,7 +1334,7 @@ class LayerManager {
 
 			const rect = targetLayer.getBoundingClientRect();
 			const midpoint = rect.top + rect.height / 2;
-			const insertAbove = touch.clientY < midpoint;
+			const insertAbove = event.clientY < midpoint;
 
 			// ============================================================
 			// Lock Constraint Logic (Mobile)
@@ -1371,7 +1375,12 @@ class LayerManager {
 	}
 
 	handleLayerTouchEnd(event) {
-		if (!this.draggedLayerId) return;
+		if (event.pointerType !== 'touch' || event.pointerId !== this.touchDragPointerId) {
+			return;
+		}
+
+		event.preventDefault();
+		this.touchDragPointerElement?.releasePointerCapture?.(event.pointerId);
 
 		// Find the dragged element and remove dragging class
 		const draggedElement = document.querySelector(`[data-layer-id="${this.draggedLayerId}"]`);
@@ -1406,6 +1415,31 @@ class LayerManager {
 		this.draggedLayerId = null;
 		this.dropTargetId = null;
 		this.dropInsertAbove = false;
+		this.touchDragPointerId = null;
+		this.touchDragPointerElement = null;
+	}
+
+	handleLayerTouchCancel(event) {
+		if (event.pointerType !== 'touch' || event.pointerId !== this.touchDragPointerId) {
+			return;
+		}
+
+		event.preventDefault();
+		this.touchDragPointerElement?.releasePointerCapture?.(event.pointerId);
+
+		const draggedElement = document.querySelector(`[data-layer-id="${this.draggedLayerId}"]`);
+		if (draggedElement) {
+			draggedElement.classList.remove('dragging');
+		}
+
+		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
+		insertionLine.classList.remove('visible');
+
+		this.draggedLayerId = null;
+		this.dropTargetId = null;
+		this.dropInsertAbove = false;
+		this.touchDragPointerId = null;
+		this.touchDragPointerElement = null;
 	}
 
 	// ===== OPTIMIZED REORDERING =====

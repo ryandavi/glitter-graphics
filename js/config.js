@@ -110,6 +110,18 @@ const CONFIG = {
 	// ========================================
 	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
 
+	gestures: {
+		tapMaxMs: 300,
+		tapSlopPx: 10,
+		secondFingerGraceMs: 150,
+		doubleTapMs: 300,
+		doubleTapSlopPx: 30,
+		inertia: {
+			enabled: true,
+			decay: 0.92
+		}
+	},
+
 	// ========================================
 	// UI - Gallery
 	// ========================================

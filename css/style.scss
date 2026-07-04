@@ -1277,6 +1277,7 @@ input[type="range"] {
 				justify-content: center;
 				flex-shrink: 0;
 				cursor: grab;
+				touch-action: none;
 				color: var(--color-text-secondary);
 
 				transition: opacity var(--transition-fast);
@@ -5145,23 +5146,44 @@ body.tool-select {
 .transform-handle-wrapper {
 	pointer-events: auto;
 	position: absolute;
-
-	// Large hitbox for corners
-	&[data-handle-type^="corner-"] {
-		width: 32px;
-		height: 32px;
-	}
-
-	// Large hitbox for rotation
-	&[data-handle-type="rotation"] {
-		width: 40px;
-		height: 40px;
-	}
-
-	// Center the visual handle inside wrapper
+	touch-action: none;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+
+	&[data-handle-type^="corner-"] {
+		width: calc(32px / var(--zoom, 1));
+		height: calc(32px / var(--zoom, 1));
+	}
+
+	&[data-handle-type^="edge-"] {
+		width: calc(36px / var(--zoom, 1));
+		height: calc(36px / var(--zoom, 1));
+	}
+
+	&[data-handle-type="rotation"] {
+		width: calc(40px / var(--zoom, 1));
+		height: calc(40px / var(--zoom, 1));
+	}
+}
+
+@media (pointer: coarse) {
+	.transform-handle-wrapper {
+		&[data-handle-type^="corner-"] {
+			width: calc(44px / var(--zoom, 1));
+			height: calc(44px / var(--zoom, 1));
+		}
+
+		&[data-handle-type^="edge-"] {
+			width: calc(44px / var(--zoom, 1));
+			height: calc(44px / var(--zoom, 1));
+		}
+
+		&[data-handle-type="rotation"] {
+			width: calc(48px / var(--zoom, 1));
+			height: calc(48px / var(--zoom, 1));
+		}
+	}
 }
 
 .transform-handle {

@@ -7,6 +7,7 @@ class ViewportManager {
 		// DOM references
 		this.previewContainer = previewContainer;
 		this.previewWrapper = previewWrapper;
+		this.editor = null;
 
 		// Zoom state
 		this.currentZoom = 1;
@@ -21,6 +22,9 @@ class ViewportManager {
 		this.panStartY = 0;
 		this.lastPanX = 0;
 		this.lastPanY = 0;
+		this.inertiaFrame = null;
+		this.inertiaVelocityX = 0;
+		this.inertiaVelocityY = 0;
 
 		// Resize tracking
 		this.lastViewportWidth = 0;
@@ -47,6 +51,7 @@ class ViewportManager {
 	setupEventListeners() {
 		// Window resize
 		window.addEventListener('resize', () => this.handleWindowResize());
+		window.visualViewport?.addEventListener('resize', () => this.handleWindowResize());
 
 		// Mouse pan
 		this.previewContainer.addEventListener('mousedown', (e) => {
@@ -68,7 +73,7 @@ class ViewportManager {
 		});
 
 		// Touch gestures
-		this.setupTouchGestures();
+		this.gestureManager = new GestureManager(this.previewContainer, this);
 	}
 
 	// ===== PUBLIC API =====
@@ -117,6 +122,7 @@ class ViewportManager {
 
 	setZoom(newZoom, clickX = null, clickY = null) {
 		if (!this.canvasWidth) return;
+		this.cancelInertia();
 
 		const oldZoom = this.currentZoom;
 		const containerRect = this.previewContainer.getBoundingClientRect();
@@ -191,6 +197,7 @@ class ViewportManager {
 
 	zoomToFit() {
 		if (!this.canvasWidth) return;
+		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const padding = 40;
@@ -215,6 +222,7 @@ class ViewportManager {
 
 	zoomToFill() {
 		if (!this.canvasWidth) return;
+		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const padding = 40;
@@ -239,6 +247,7 @@ class ViewportManager {
 
 	resetZoom() {
 		if (!this.canvasWidth) return;
+		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 
@@ -256,6 +265,7 @@ class ViewportManager {
 
 	resetZoomSmart() {
 		if (!this.canvasWidth) return;
+		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 
@@ -277,6 +287,7 @@ class ViewportManager {
 
 	resetViewport() {
 		if (!this.canvasWidth) return;
+		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 
@@ -299,6 +310,7 @@ class ViewportManager {
 
 	centerHorizontal() {
 		if (!this.canvasWidth) return;
+		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const scaledWidth = this.canvasWidth * this.currentZoom;
@@ -312,6 +324,7 @@ class ViewportManager {
 
 	centerVertical() {
 		if (!this.canvasWidth) return;
+		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const scaledHeight = this.canvasHeight * this.currentZoom;
@@ -327,6 +340,7 @@ class ViewportManager {
 
 	startPan(x, y) {
 		if (!this.canvasWidth) return;
+		this.cancelInertia();
 
 		this.isPanning = true;
 		this.panStartX = x;
@@ -337,6 +351,13 @@ class ViewportManager {
 		this.previewContainer.classList.add('panning');
 	}
 
+	panBy(deltaX, deltaY) {
+		this.panX += deltaX;
+		this.panY += deltaY;
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
+
 	endPan() {
 		if (!this.isPanning) return;
 
@@ -344,134 +365,68 @@ class ViewportManager {
 		this.previewContainer.classList.remove('panning');
 	}
 
-	// ===== TOUCH GESTURES =====
+	pinchZoomAt(scale, clientX, clientY) {
+		this.cancelInertia();
+		const rect = this.previewContainer.getBoundingClientRect();
+		const anchorX = clientX - rect.left;
+		const anchorY = clientY - rect.top;
 
-setupTouchGestures() {
-    this.isTouchActive = false;
-    this.isGestureActive = false;
-    
-    this.touchHandler = new TouchGestureHandler(this.previewContainer, {
-        
-        // Check if we should ignore this target (skip transformable overlays for viewport handler)
-        shouldIgnoreTarget: (target) => {
-            const editor = window.editor;
-            if (editor?.currentTool === ToolType.BRUSH) {
-                return false;
-            }
+		const canvasX = (anchorX - this.panX) / this.currentZoom;
+		const canvasY = (anchorY - this.panY) / this.currentZoom;
 
-            if (target && target.closest('.sticker-element, .text-glitter-element')) {
-                dbg('🎯 Viewport: Skipping transformable overlay element');
-                return true; // Skip it
-            }
-            return false; // Handle it
-        },
-        
-        onTouchStart: () => {
-            dbg('👆 Touch started (any type)');
-            this.isTouchActive = true;
-        },
-        
-        // Notification when touch ends (with info about whether it was a tap)
-        onTouchEnd: (wasSimpleTap) => {
-            dbg('👆 Touch ended, was simple tap:', wasSimpleTap);
-            // Small delay before clearing touch state to prevent ghost clicks
-            setTimeout(() => {
-                this.isTouchActive = false;
-            }, 50);
-        },
-        
-        onGestureStart: (gestureType) => {
-            dbg('🎯 Gesture started:', gestureType);
-            this.isGestureActive = true;
-            if (window.editor) {
-                window.editor.touchGestureActive = true;
-                window.editor.maskEditor?.handleTouchGestureStart(gestureType);
-            }
-        },
-        
-        onGestureEnd: () => {
-            dbg('🎯 Gesture ended');
-            this.isGestureActive = false;
-            if (window.editor) {
-                window.editor.touchGestureActive = false;
-                window.editor.maskEditor?.handleTouchGestureEnd();
-            }
-        },
-        
-        // === 1. SINGLE PAN ===
-        onSinglePan: (dx, dy, touchX, touchY) => {
-            dbg('👆 1-Finger Pan:', dx, dy);
-            const editor = window.editor;
-            if (editor?.currentTool === ToolType.BRUSH && editor.maskEditor?.isEditing) {
-                editor.maskEditor.handleTouchPan(touchX, touchY);
-                return;
-            }
+		let newZoom = this.currentZoom * scale;
+		const minZoom = CONFIG.zoomLevels[0];
+		const maxZoom = CONFIG.zoomLevels[CONFIG.zoomLevels.length - 1];
+		newZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
 
-            this.panX += dx;
-            this.panY += dy;
-            this.applyTransform();
-            this._notifyViewportChanged();
-        },
+		this.panX = anchorX - (canvasX * newZoom);
+		this.panY = anchorY - (canvasY * newZoom);
+		this.currentZoom = newZoom;
 
-        // === 2. PINCH ZOOM ===
-        onPinchZoom: (scale, cx, cy) => {
-            dbg('🤏 Pinch:', scale);
-            const rect = this.previewContainer.getBoundingClientRect();
-            const anchorX = cx - rect.left;
-            const anchorY = cy - rect.top;
-            
-            const canvasX = (anchorX - this.panX) / this.currentZoom;
-            const canvasY = (anchorY - this.panY) / this.currentZoom;
-            
-            let newZoom = this.currentZoom * scale;
-            const minZoom = CONFIG.zoomLevels[0];
-            const maxZoom = CONFIG.zoomLevels[CONFIG.zoomLevels.length - 1];
-            newZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
 
-            this.panX = anchorX - (canvasX * newZoom);
-            this.panY = anchorY - (canvasY * newZoom);
-            this.currentZoom = newZoom;
-            
-            this.applyTransform();
-            this._notifyViewportChanged();
-        },
+	cancelInertia() {
+		if (this.inertiaFrame) {
+			cancelAnimationFrame(this.inertiaFrame);
+			this.inertiaFrame = null;
+		}
 
-        // === 3. TWO FINGER PAN ===
-        onTwoPan: (dx, dy) => {
-            this.panX += dx;
-            this.panY += dy;
-            this.applyTransform();
-            this._notifyViewportChanged();
-        },
+		this.inertiaVelocityX = 0;
+		this.inertiaVelocityY = 0;
+	}
 
-        // === 4. TAP (THE CLICK REPLACEMENT) ===
-        onSimpleTap: (x, y) => {
-            dbg('✅ Clean Tap Detected');
-            if (!window.editor) return;
+	startInertia(velocityX, velocityY) {
+		if (!CONFIG.gestures.inertia?.enabled) {
+			return;
+		}
 
-            if (window.editor.currentTool === ToolType.BRUSH && window.editor.maskEditor?.isEditing) {
-                window.editor.maskEditor.handleTouchTap(x, y);
-                return;
-            }
+		const decay = CONFIG.gestures.inertia.decay ?? 0.92;
+		this.cancelInertia();
 
-            const target = document.elementFromPoint(x, y);
-            
-            // Create Fake Event
-            const mockEvent = {
-                target: target,
-                clientX: x,
-                clientY: y,
-                button: 0,
-                type: 'click',
-                isSimpleTap: true, // PASSKEY
-                preventDefault: () => {},
-                stopPropagation: () => {}
-            };
+		this.inertiaVelocityX = velocityX;
+		this.inertiaVelocityY = velocityY;
 
-            window.editor.handlePreviewContainerClick(mockEvent);
-        }
-    });
-}
+		const tick = () => {
+			this.panX += this.inertiaVelocityX;
+			this.panY += this.inertiaVelocityY;
+			this.applyTransform();
+			this._notifyViewportChanged();
+
+			this.inertiaVelocityX *= decay;
+			this.inertiaVelocityY *= decay;
+
+			if (Math.hypot(this.inertiaVelocityX, this.inertiaVelocityY) < 0.5) {
+				this.cancelInertia();
+				return;
+			}
+
+			this.inertiaFrame = requestAnimationFrame(tick);
+		};
+
+		this.inertiaFrame = requestAnimationFrame(tick);
+	}
 
 	// ===== RESIZE HANDLING =====
 

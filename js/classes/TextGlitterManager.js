@@ -880,12 +880,18 @@ class TextGlitterManager {
 	}
 
 	focusTextInput(selectAll = false) {
-		if (!this.ui.textInput || this.editor.mobileManager?.isMobile) return;
+		if (!this.ui.textInput) return;
 
-		this.ui.textInput.focus();
-		if (selectAll) {
-			this.ui.textInput.select();
+		if (!this.editor.mobileManager?.isMobile) {
+			this.editor.setCollapsibleSectionOpen?.('textSettings', true);
 		}
+
+		requestAnimationFrame(() => {
+			this.ui.textInput.focus();
+			if (selectAll) {
+				this.ui.textInput.select();
+			}
+		});
 	}
 
 	updateFontSelection(fontId) {
@@ -1600,7 +1606,6 @@ class TextGlitterManager {
 			const transform = new LayerTransform(layer, this.editor);
 			transform.element = wrapper;
 			transform.setupMouseDrag(wrapper);
-			transform.setupTouchGestures(wrapper);
 			this.layerTransforms.set(layer.id, transform);
 		}
 

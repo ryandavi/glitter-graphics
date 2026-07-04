@@ -1240,6 +1240,7 @@ input[type=range]::-moz-range-thumb {
   justify-content: center;
   flex-shrink: 0;
   cursor: grab;
+  touch-action: none;
   color: var(--color-text-secondary);
   transition: opacity var(--transition-fast);
 }
@@ -4423,21 +4424,36 @@ body.mask-editing .sticker-element {
 .transform-handle-wrapper {
   pointer-events: auto;
   position: absolute;
+  touch-action: none;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .transform-handle-wrapper[data-handle-type^=corner-] {
-  width: 32px;
-  height: 32px;
+  width: calc(32px / var(--zoom, 1));
+  height: calc(32px / var(--zoom, 1));
 }
 .transform-handle-wrapper[data-handle-type^=edge-] {
-  width: 36px;
-  height: 36px;
+  width: calc(36px / var(--zoom, 1));
+  height: calc(36px / var(--zoom, 1));
 }
 .transform-handle-wrapper[data-handle-type=rotation] {
-  width: 40px;
-  height: 40px;
+  width: calc(40px / var(--zoom, 1));
+  height: calc(40px / var(--zoom, 1));
+}
+@media (pointer: coarse) {
+  .transform-handle-wrapper[data-handle-type^=corner-] {
+    width: calc(44px / var(--zoom, 1));
+    height: calc(44px / var(--zoom, 1));
+  }
+  .transform-handle-wrapper[data-handle-type^=edge-] {
+    width: calc(44px / var(--zoom, 1));
+    height: calc(44px / var(--zoom, 1));
+  }
+  .transform-handle-wrapper[data-handle-type=rotation] {
+    width: calc(48px / var(--zoom, 1));
+    height: calc(48px / var(--zoom, 1));
+  }
 }
 
 .transform-handle {

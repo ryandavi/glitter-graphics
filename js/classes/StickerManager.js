@@ -481,7 +481,6 @@ class StickerManager extends ContentManager {
 
 		// Setup interaction
 		transform.setupMouseDrag(element);
-		transform.setupTouchGestures(element);
 
 		// Add to Container
 		this.editor.canvasElementsContainer.appendChild(element);
@@ -596,7 +595,7 @@ updateTransform(layerId, updates) {
 		// Clean up transform instance
 		const transform = this.layerTransforms.get(layerId);
 		if (transform) {
-			transform.destroy();  // This handles _touchHandler cleanup
+			transform.destroy();
 			this.layerTransforms.delete(layerId);
 		}
 	}

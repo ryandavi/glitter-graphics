@@ -1,0 +1,10 @@
+{
+	"name": "glitter-touch-tests",
+	"private": true,
+	"scripts": {
+		"test:touch": "node tests/touch-smoke.js"
+	},
+	"devDependencies": {
+		"playwright": "^1.61.1"
+	}
+}

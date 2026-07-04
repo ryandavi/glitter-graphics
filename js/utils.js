@@ -2,6 +2,28 @@
 // MODAL UTILITIES
 // ============================================
 
+const Input = (() => {
+	const coarseQuery = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
+	const state = {
+		isCoarse: Boolean(coarseQuery?.matches),
+		hasTouch: navigator.maxTouchPoints > 0
+	};
+
+	if (coarseQuery) {
+		const handleChange = (event) => {
+			state.isCoarse = Boolean(event.matches);
+		};
+
+		if (typeof coarseQuery.addEventListener === 'function') {
+			coarseQuery.addEventListener('change', handleChange);
+		} else if (typeof coarseQuery.addListener === 'function') {
+			coarseQuery.addListener(handleChange);
+		}
+	}
+
+	return state;
+})();
+
 const initModalReferences = (modalBody, options = {}) => {
 	if (!modalBody) return;
 
@@ -156,7 +178,7 @@ class TooltipManager {
 		this.activeTooltip = null;
 		this.activeElement = null;
 		this.activeCoords = null; // Store cursor/touch position
-		this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+		this.isTouchDevice = Input.hasTouch || Input.isCoarse;
 		this.scrollContainers = new Set();
 
 		this.handleScroll = this.handleScroll.bind(this);

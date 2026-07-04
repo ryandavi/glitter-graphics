@@ -731,8 +731,8 @@ class MaskEditor {
 	}
 
 	_shouldHandleEvent(event) {
-		// Real touch input is handled entirely by TouchGestureHandler
-		// (handleTouchPan/handleTouchTap) — this pointer pipeline is mouse-only.
+		// Real touch input is handled by GestureManager — this pointer pipeline is
+		// intentionally mouse/pen-only.
 		// Gate on pointerType, not viewport width: a narrow desktop browser
 		// window is still mouse input and must be able to draw.
 		if (!this.isEditing || event.pointerType === 'touch') {
@@ -770,7 +770,7 @@ class MaskEditor {
 	}
 
 	_shouldShowTouchRingForPointer(event) {
-		if (!this.isEditing || !this.editor.mobileManager?.isMobile) {
+		if (!this.isEditing || !Input.isCoarse) {
 			return false;
 		}
 

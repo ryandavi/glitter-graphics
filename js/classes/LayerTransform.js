@@ -13,12 +13,16 @@ class LayerTransform {
         // Transform handles state (desktop only)
         this.transformHandles = null;
         this.activeHandleType = null;
+        this.activeHandleElement = null;
+        this.activeHandlePointerId = null;
         this.dragStartState = null;
         this.isDraggingHandle = false;
+        this.gestureInteractionActive = false;
+        this.gestureInteractionChanged = false;
 
         // Bind methods for event listeners
-        this.handleMouseMove = this.handleMouseMove.bind(this);
-        this.handleMouseUp = this.handleMouseUp.bind(this);
+        this.handleHandlePointerMove = this.handleHandlePointerMove.bind(this);
+        this.handleHandlePointerUp = this.handleHandlePointerUp.bind(this);
 
         // rAF flag for settings-panel sync during drags
         this._settingsSyncScheduled = false;
@@ -319,12 +323,6 @@ const handleMouseDown = (e) => {
     if (this.editor.layerManager.activeLayerId !== this.layer.id) {
         dbg('🎯 Selecting layer and starting drag immediately');
         this.editor.layerManager.setActiveLayer(this.layer.id);
-        
-        // Set flag to prevent click handler from firing
-        this.editor.ignoreNextClick = true;
-        setTimeout(() => {
-            this.editor.ignoreNextClick = false;
-        }, 100);
     }
     
     // ALWAYS start dragging (whether we just selected or it was already selected)
@@ -402,13 +400,7 @@ const handleMouseMove = (e) => {
     
     const handleMouseUp = (e) => {
         if (!isDragging) return;
-        
-        // CRITICAL: Set flag to prevent click handler from firing after drag
-        this.editor.ignoreNextClick = true;
-        setTimeout(() => {
-            this.editor.ignoreNextClick = false;
-        }, 100);
-        
+
         isDragging = false;
         this.editor.saveState();
         document.removeEventListener('mousemove', handleMouseMove);
@@ -417,158 +409,95 @@ const handleMouseMove = (e) => {
     
     element.addEventListener('mousedown', handleMouseDown);
 }
-    // ===== TOUCH GESTURE HANDLING =====
-
-    /**
-     * Setup touch gestures for an element (pan, pinch, rotate)
-     * @param {HTMLElement} element - Element to make touch-interactive
-     */
-    setupTouchGestures(element) {
-        // Remove any existing gesture handler
-        if (element._touchHandler) {
-            element._touchHandler.destroy();
+    beginGestureInteraction() {
+        if (this.gestureInteractionActive) {
+            return;
         }
 
-        const viewport = this.editor.viewport;
-        let startTransform = null;
+        this.gestureInteractionActive = true;
+        this.gestureInteractionChanged = false;
+    }
 
-        const handler = new TouchGestureHandler(element, {
-            // CRITICAL: Don't prevent default when using non-SELECT tools
-            // This allows simple taps to pass through to the canvas
-            preventPropagation: false,  // Let events bubble up
+    dragByScreenDelta(deltaX, deltaY) {
+        this.beginGestureInteraction();
 
-            // Skip sticker touches entirely when not in SELECT tool
-            shouldIgnoreTarget: (target) => {
-                if (this.editor.currentTool !== ToolType.SELECT) {
-                    dbg('🎯 LayerTransform: Ignoring touch - not SELECT tool');
-                    return true;  // Let the touch pass through to canvas
-                }
-                return false;
-            },
+        const canvasDeltaX = deltaX / this.editor.viewport.currentZoom;
+        const canvasDeltaY = deltaY / this.editor.viewport.currentZoom;
+        const transform = this.getTransform();
 
-            onGestureStart: (gestureType) => {
-                // Double-check tool mode (already filtered by shouldIgnoreTarget)
-                if (this.editor.currentTool !== ToolType.SELECT) {
-                    return;
-                }
-
-                const isSelected = this.editor.layerManager.activeLayerId === this.layer.id;
-
-                // Store transform state on gesture start
-                const transform = this.getTransform();
-                startTransform = {
-                    scale: { ...transform.scale },
-                    rotation: transform.rotation,
-                    position: { ...transform.position }
-                };
-
-                // CRITICAL: Select layer immediately when gesture starts
-                // This allows immediate dragging without needing a separate tap
-                if (!isSelected) {
-                    dbg('🎯 Selecting layer on gesture start:', this.layer.id);
-                    this.editor.layerManager.setActiveLayer(this.layer.id);
-                }
-            },
-
-            onSinglePan: (deltaX, deltaY, touchX, touchY) => {
-                const isSelected = this.editor.layerManager.activeLayerId === this.layer.id;
-                if (!isSelected || !startTransform) return;
-
-                // Convert screen delta to canvas coordinates
-                const canvasDeltaX = deltaX / viewport.currentZoom;
-                const canvasDeltaY = deltaY / viewport.currentZoom;
-
-                const transform = this.getTransform();
-                this.updateTransform({
-                    position: {
-                        x: transform.position.x + canvasDeltaX,
-                        y: transform.position.y + canvasDeltaY
-                    }
-                });
-
-                // Re-apply transform to element
-                const dimensions = this.getDimensions();
-                this.applyTransform(element, dimensions);
-
-                // Update settings UI if available
-                if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
-                    this.scheduleSettingsSync();
-                }
-            },
-
-            onPinchZoom: (scale, centerX, centerY) => {
-                const isSelected = this.editor.layerManager.activeLayerId === this.layer.id;
-                if (!isSelected || !startTransform) return;
-
-                const transform = this.getTransform();
-                const currentScaleX = transform.scale.x;
-                const currentScaleY = transform.scale.y;
-
-                const newScaleX = currentScaleX * scale;
-                const newScaleY = transform.proportionalScale
-                    ? newScaleX
-                    : currentScaleY * scale;
-
-                // Clamp scale values
-                const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
-                const clampedScaleY = Math.max(10, Math.min(500, newScaleY));
-
-                this.updateTransform({
-                    scale: {
-                        x: clampedScaleX,
-                        y: clampedScaleY
-                    }
-                });
-
-                // Re-apply transform to element
-                const dimensions = this.getDimensions();
-                this.applyTransform(element, dimensions);
-
-                // Update settings UI if available
-                if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
-                    this.scheduleSettingsSync();
-                }
-            },
-
-            onRotate: (angleDelta, centerX, centerY) => {
-                const isSelected = this.editor.layerManager.activeLayerId === this.layer.id;
-                if (!isSelected || !startTransform) return;
-
-                const transform = this.getTransform();
-                const newRotation = (transform.rotation + angleDelta) % 360;
-
-                this.updateTransform({
-                    rotation: newRotation
-                });
-
-                // Re-apply transform to element
-                const dimensions = this.getDimensions();
-                this.applyTransform(element, dimensions);
-
-                // Update settings UI if available
-                if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
-                    this.scheduleSettingsSync();
-                }
-            },
-
-            onGestureEnd: () => {
-                if (startTransform) {
-                    this.editor.saveState();
-                }
-                startTransform = null;
+        this.updateTransform({
+            position: {
+                x: transform.position.x + canvasDeltaX,
+                y: transform.position.y + canvasDeltaY
             }
         });
 
-        // Store handler on element for cleanup
-        element._touchHandler = handler;
-        element.style.touchAction = 'none';
+        this.gestureInteractionChanged = true;
+        this.syncGestureTransform();
+    }
 
-        // Save state when all touches are released
-        element.addEventListener('touchend', (e) => {
-            if (e.touches.length === 0) {
-                this.editor.saveState();
-            }
+    applyGestureDelta(gestureDelta) {
+        this.beginGestureInteraction();
+
+        const transform = this.getTransform();
+        const centroidCanvas = this.editor.viewport.screenToCanvas(gestureDelta.centroidX, gestureDelta.centroidY);
+        const currentScaleX = transform.scale.x || 100;
+        const currentScaleY = transform.scale.y || 100;
+        const nextScaleX = Math.max(10, Math.min(500, currentScaleX * gestureDelta.scale));
+        const nextScaleY = transform.proportionalScale
+            ? nextScaleX
+            : Math.max(10, Math.min(500, currentScaleY * gestureDelta.scale));
+        const scaleFactor = currentScaleX !== 0 ? nextScaleX / currentScaleX : 1;
+        const rotationDeltaRad = (gestureDelta.rotateDeg * Math.PI) / 180;
+        const translateCanvasX = gestureDelta.translateX / this.editor.viewport.currentZoom;
+        const translateCanvasY = gestureDelta.translateY / this.editor.viewport.currentZoom;
+        const relativeX = transform.position.x - centroidCanvas.x;
+        const relativeY = transform.position.y - centroidCanvas.y;
+        const scaledX = relativeX * scaleFactor;
+        const scaledY = relativeY * scaleFactor;
+        const rotatedX = (scaledX * Math.cos(rotationDeltaRad)) - (scaledY * Math.sin(rotationDeltaRad));
+        const rotatedY = (scaledX * Math.sin(rotationDeltaRad)) + (scaledY * Math.cos(rotationDeltaRad));
+
+        this.updateTransform({
+            position: {
+                x: centroidCanvas.x + rotatedX + translateCanvasX,
+                y: centroidCanvas.y + rotatedY + translateCanvasY
+            },
+            scale: {
+                x: nextScaleX,
+                y: nextScaleY
+            },
+            rotation: transform.rotation + gestureDelta.rotateDeg
         });
+
+        this.gestureInteractionChanged = true;
+        this.syncGestureTransform();
+    }
+
+    syncGestureTransform() {
+        const dimensions = this.getDimensions();
+        this.applyTransform(this.element, dimensions);
+
+        if (this.transformHandles) {
+            this.updateHandlePositions();
+        }
+
+        if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
+            this.scheduleSettingsSync();
+        }
+    }
+
+    endGestureInteraction() {
+        if (!this.gestureInteractionActive) {
+            return;
+        }
+
+        if (this.gestureInteractionChanged) {
+            this.editor.saveState();
+        }
+
+        this.gestureInteractionActive = false;
+        this.gestureInteractionChanged = false;
     }
 
     // ===== TRANSFORM HANDLES (DESKTOP ONLY) =====
@@ -580,11 +509,6 @@ const handleMouseMove = (e) => {
 createTransformHandles() {
     // Check if handles are enabled
     if (!CONFIG.stickerHandles.enabled) return;
-    
-    // Don't show handles on mobile
-    if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
-        return;
-    }
     
     // Only create handles in SELECT tool mode
     if (this.editor.currentTool !== ToolType.SELECT) return;
@@ -610,8 +534,9 @@ createTransformHandles() {
     // Remove existing handles first
     this.removeTransformHandles();
     
-    // Disable pointer events on the element itself when handles are active
-    if (this.element) {
+    // Keep text wrappers interactive while selected so touch gestures can
+    // still begin on the layer itself; stickers can rely on the child <img>.
+    if (this.element && this.layer.type === LayerType.STICKER) {
         this.element.classList.add('has-transform-handles');
     }
     
@@ -839,6 +764,12 @@ removeTransformHandles() {
             this.transformHandles.parentNode.removeChild(this.transformHandles);
         }
     }
+
+    this.activeHandleType = null;
+    this.activeHandleElement = null;
+    this.activeHandlePointerId = null;
+    this.dragStartState = null;
+    this.isDraggingHandle = false;
     
     // CRITICAL FIX: Also remove any orphaned handles for this layer in the DOM
     // This prevents duplicate handles from accumulating
@@ -855,7 +786,7 @@ removeTransformHandles() {
 }
 
     /**
-     * Attach mouse event listeners to transform handles
+     * Attach pointer event listeners to transform handles
      */
     attachHandleListeners() {
         if (!this.transformHandles) return;
@@ -865,18 +796,24 @@ removeTransformHandles() {
         handles.forEach(handle => {
             const handleType = handle.dataset.handleType;
 
-            handle.addEventListener('mousedown', (e) => {
+            handle.addEventListener('pointerdown', (e) => {
+                if (e.pointerType === 'mouse' && e.button !== 0) {
+                    return;
+                }
+
                 e.preventDefault();
                 e.stopPropagation();
                 e.stopImmediatePropagation();
 
                 this.activeHandleType = handleType;
+                this.activeHandleElement = handle;
+                this.activeHandlePointerId = e.pointerId;
                 this.isDraggingHandle = true;
+                handle.setPointerCapture?.(e.pointerId);
 
                 const transform = this.getTransform();
                 const dimensions = this.getDimensions();
 
-                // Store initial state
                 this.dragStartState = {
                     mouseX: e.clientX,
                     mouseY: e.clientY,
@@ -894,19 +831,28 @@ removeTransformHandles() {
                     handleFrame: this.getHandleFrame(),
                     textBoxFrame: this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) ?? null
                 };
-
-                // Attach global listeners
-                document.addEventListener('mousemove', this.handleMouseMove);
-                document.addEventListener('mouseup', this.handleMouseUp);
             });
+
+            handle.addEventListener('pointermove', this.handleHandlePointerMove);
+            handle.addEventListener('pointerup', this.handleHandlePointerUp);
+            handle.addEventListener('pointercancel', this.handleHandlePointerUp);
         });
     }
 
     /**
-     * Handle mouse move during handle drag
+     * Handle pointer move during handle drag
      */
-    handleMouseMove(e) {
-        if (!this.activeHandleType || !this.dragStartState) return;
+    handleHandlePointerMove(e) {
+        if (
+            !this.activeHandleType ||
+            !this.dragStartState ||
+            e.pointerId !== this.activeHandlePointerId
+        ) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
 
         if (this.activeHandleType.startsWith('corner-')) {
             this.handleCornerDrag(e);
@@ -918,34 +864,38 @@ removeTransformHandles() {
             this.handleMoveDrag(e);
         }
 
-        // Update UI if available
         if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
             this.scheduleSettingsSync();
         }
     }
 
     /**
-     * Handle mouse up to end handle drag
+     * Handle pointer end to finish handle drag
      */
-    handleMouseUp(e) {
+    handleHandlePointerUp(e) {
+        if (e.pointerId !== this.activeHandlePointerId) {
+            return;
+        }
+
         if (this.isDraggingHandle) {
             e.preventDefault();
             e.stopPropagation();
             this.editor.saveState();
 
-            // Set flag to prevent click handling
-            this.editor.ignoreNextClick = true;
-            setTimeout(() => {
-                this.editor.ignoreNextClick = false;
-            }, 150);
+            if (e.pointerType === 'mouse') {
+                this.editor.ignoreNextClick = true;
+                setTimeout(() => {
+                    this.editor.ignoreNextClick = false;
+                }, 150);
+            }
         }
 
+        this.activeHandleElement?.releasePointerCapture?.(e.pointerId);
         this.activeHandleType = null;
+        this.activeHandleElement = null;
+        this.activeHandlePointerId = null;
         this.dragStartState = null;
         this.isDraggingHandle = false;
-
-        document.removeEventListener('mousemove', this.handleMouseMove);
-        document.removeEventListener('mouseup', this.handleMouseUp);
     }
 
     /**
@@ -1128,11 +1078,6 @@ removeTransformHandles() {
      * Cleanup - remove all event listeners and DOM elements
      */
     destroy() {
-        // Remove touch handler if it exists
-        if (this.element && this.element._touchHandler) {
-            this.element._touchHandler.destroy();
-        }
-
         // Remove transform handles
         this.removeTransformHandles();
 
