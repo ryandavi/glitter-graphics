@@ -181,7 +181,7 @@ class MobileManager {
 				const inSettingsDrawer = header.closest('.mobile-settings-drawer');
 
 				// If in settings drawer AND it's a collapsible section, let it handle its own toggle
-				if (inSettingsDrawer && header.classList.contains('collapsible')) {
+				if (inSettingsDrawer && header.closest('.collapsible-section')) {
 					// Don't close drawer - let the collapsible behavior work normally
 					return;
 				}
@@ -429,32 +429,26 @@ if (!this.isMobile && nowMobile) {
 			if (settingsBtn) settingsBtn.disabled = true;
 		}
 	}
+	// Delegates to the same setCollapsibleSectionOpen used by the desktop
+	// accordion (app.js initializeCollapsibleSections) so .is-open stays in
+	// sync. Previously this toggled classes directly — including a
+	// '.section-header.collapsible' selector that doesn't exist in the
+	// current markup — which left stale .is-open state behind (that class
+	// drives flex: 1 1 auto even outside the design panel) and desynced from
+	// the desktop accordion state.
 	collapseAllSections() {
-		const panel = document.querySelector('.mobile-settings-content');
-		if (!panel) return;
+		const sectionNameByKey = {
+			tool: 'layerSettings',
+			glitter: 'glitterSettings',
+			sticker: 'stickerSettings',
+			text: 'textSettings'
+		};
 
-		panel.querySelectorAll('.collapsible-section').forEach(section => {
-			section.querySelector('.section-header-action')?.classList.add('collapsed');
-			section.querySelector('.section-content')?.classList.remove('visible');
+		Object.entries(sectionNameByKey).forEach(([key, sectionName]) => {
+			if (this.settingsSections[key]) {
+				this.editor.setCollapsibleSectionOpen?.(sectionName, false);
+			}
 		});
-
-		// Also collapse if sections are in their original locations
-		if (this.settingsSections.tool) {
-			const toolHeader = this.settingsSections.tool.querySelector('.section-header.collapsible');
-			if (toolHeader) toolHeader.classList.add('collapsed');
-		}
-		if (this.settingsSections.glitter) {
-			const glitterHeader = this.settingsSections.glitter.querySelector('.section-header.collapsible');
-			if (glitterHeader) glitterHeader.classList.add('collapsed');
-		}
-		if (this.settingsSections.sticker) {
-			const stickerHeader = this.settingsSections.sticker.querySelector('.section-header.collapsible');
-			if (stickerHeader) stickerHeader.classList.add('collapsed');
-		}
-		if (this.settingsSections.text) {
-			const textHeader = this.settingsSections.text.querySelector('.section-header.collapsible');
-			if (textHeader) textHeader.classList.add('collapsed');
-		}
 	}
 
 
@@ -466,8 +460,16 @@ if (!this.isMobile && nowMobile) {
 		if (this.settingsOpen) {
 			this.closeSettings({ releaseBrush: true });
 		} else {
-			// Opening drawer - ensure all sections are collapsed
-			this.collapseAllSections();
+			// closeSettings() moves the settings sections back out of the
+			// mobile container (returnSettingsSections), so re-opening must
+			// re-populate it from the active layer — otherwise the drawer
+			// shows empty on every reopen after the first close.
+			const activeLayer = this.editor.layerManager.getActiveLayer();
+			if (activeLayer && this.hasLayerSettings(activeLayer)) {
+				this.prepareSettings(activeLayer);
+			} else {
+				this.collapseAllSections();
+			}
 			this.settingsOpen = true;
 			document.body.classList.add('mobileSettingsOpen');
 			if (settingsBtn) settingsBtn.classList.add('active');

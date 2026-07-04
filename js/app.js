@@ -1030,8 +1030,14 @@ resetAllSettings() {
 			if (toggle) toggle.classList.toggle('collapsed', !isOpen);
 
 			if (isOpen && accordion && CONFIG.designPanelAccordion) {
+				const isMobile = this.mobileManager?.isMobile;
 				sections.forEach((other) => {
-					if (other !== name) setOpen(other, false, false);
+					if (other === name) return;
+					// On mobile, the Design Gallery lives in its own tab/drawer,
+					// separate from the settings sections' drawer — opening one
+					// shouldn't collapse the other.
+					if (isMobile && (other === 'designGallery' || name === 'designGallery')) return;
+					setOpen(other, false, false);
 				});
 			}
 		};
@@ -1057,7 +1063,14 @@ resetAllSettings() {
 				? preferredName
 				: (openSections[0] || visibleSections[0]);
 
+			const isMobile = this.mobileManager?.isMobile;
 			sections.forEach((name) => {
+				// Same mobile scoping as the accordion sweep above: Design Gallery
+				// and the settings sections live in separate drawers on mobile, so
+				// syncing toward one shouldn't touch the other's open state.
+				if (isMobile && (name === 'designGallery') !== (targetName === 'designGallery')) {
+					return;
+				}
 				const shouldOpen = name === targetName;
 				setOpen(name, shouldOpen, false);
 			});

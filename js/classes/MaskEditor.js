@@ -731,7 +731,11 @@ class MaskEditor {
 	}
 
 	_shouldHandleEvent(event) {
-		if (!this.isEditing || this.editor.mobileManager?.isMobile) {
+		// Real touch input is handled entirely by TouchGestureHandler
+		// (handleTouchPan/handleTouchTap) — this pointer pipeline is mouse-only.
+		// Gate on pointerType, not viewport width: a narrow desktop browser
+		// window is still mouse input and must be able to draw.
+		if (!this.isEditing || event.pointerType === 'touch') {
 			return false;
 		}
 
@@ -739,15 +743,11 @@ class MaskEditor {
 			return false;
 		}
 
-		if (event.pointerType === 'touch') {
-			return false;
-		}
-
 		return Boolean(this.editor.originalImage);
 	}
 
 	_updateCursorPosition(event) {
-		if (!this.ui.cursor || !this.isEditing || this.editor.mobileManager?.isMobile) {
+		if (!this.ui.cursor || !this.isEditing || event.pointerType === 'touch') {
 			return;
 		}
 
