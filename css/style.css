@@ -120,8 +120,8 @@ html {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 }
 
 p,
@@ -129,8 +129,8 @@ span,
 input,
 textarea {
   -webkit-user-select: text;
-     -moz-user-select: text;
-          user-select: text;
+  -moz-user-select: text;
+  user-select: text;
 }
 
 /* ===== LINKS ===== */
@@ -370,6 +370,11 @@ input[type=range]::-moz-range-thumb {
 
 .btn {
   background: var(--color-accent);
+}
+.btn:hover {
+  background: var(--color-accent-hover);
+}
+.btn {
   background: none;
   overflow: hidden;
   color: var(--gray-100);
@@ -384,9 +389,6 @@ input[type=range]::-moz-range-thumb {
   --win7-btn-gradient-mid: #6986be;
   --win7-btn-gradient-dark: #032768;
   --win7-btn-gradient-end: #89e8fc;
-}
-.btn:hover {
-  background: var(--color-accent-hover);
 }
 .btn:before {
   display: block;
@@ -443,20 +445,6 @@ input[type=range]::-moz-range-thumb {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border);
   aspect-ratio: unset;
-  background: none;
-  overflow: hidden;
-  color: var(--gray-100);
-  position: relative;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  font-size: var(--font-size-base);
-  border-radius: var(--radius-sm);
-  transform: translateZ(0);
-  --win7-btn-gradient-start: #bfdbf7;
-  --win7-btn-gradient-mid: #6986be;
-  --win7-btn-gradient-dark: #032768;
-  --win7-btn-gradient-end: #89e8fc;
 }
 .btn-text-with-icon.icon-wrapper {
   aspect-ratio: unset;
@@ -478,6 +466,22 @@ input[type=range]::-moz-range-thumb {
   color: var(--color-text-primary);
   background: var(--color-accent);
   border-color: var(--color-accent-hover);
+}
+.btn-text-with-icon {
+  background: none;
+  overflow: hidden;
+  color: var(--gray-100);
+  position: relative;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  border-radius: var(--radius-sm);
+  transform: translateZ(0);
+  --win7-btn-gradient-start: #bfdbf7;
+  --win7-btn-gradient-mid: #6986be;
+  --win7-btn-gradient-dark: #032768;
+  --win7-btn-gradient-end: #89e8fc;
 }
 .btn-text-with-icon:before {
   display: block;
@@ -540,6 +544,17 @@ input[type=range]::-moz-range-thumb {
   color: var(--color-text-secondary);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+.btn-icon:not(:disabled):hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-hover);
+}
+.btn-icon.active {
+  color: var(--color-text-primary);
+  background: var(--color-accent);
+  border-color: var(--color-accent-hover);
+}
+.btn-icon {
   background: none;
   overflow: hidden;
   color: var(--gray-100);
@@ -554,15 +569,6 @@ input[type=range]::-moz-range-thumb {
   --win7-btn-gradient-mid: #6986be;
   --win7-btn-gradient-dark: #032768;
   --win7-btn-gradient-end: #89e8fc;
-}
-.btn-icon:not(:disabled):hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-border-hover);
-}
-.btn-icon.active {
-  color: var(--color-text-primary);
-  background: var(--color-accent);
-  border-color: var(--color-accent-hover);
 }
 .btn-icon:before {
   display: block;
@@ -731,8 +737,8 @@ input[type=range]::-moz-range-thumb {
   cursor: pointer;
   transition: all var(--transition-fast);
   -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 }
 .filter-chip:hover {
   background: var(--color-bg-tertiary);
@@ -765,7 +771,6 @@ input[type=range]::-moz-range-thumb {
   justify-content: space-between;
   padding: var(--spacing-md);
   flex-shrink: 0;
-  box-shadow: 0 2px 2px var(--color-shadow);
 }
 .app-header.app-header {
   background-image: linear-gradient(to top, var(--gray-700) 50%, var(--gray-300) 100%);
@@ -787,6 +792,9 @@ input[type=range]::-moz-range-thumb {
 }
 .app-header.collapsible-section > .section-header > .section-header-title {
   color: #fff;
+}
+.app-header {
+  box-shadow: 0 2px 2px var(--color-shadow);
 }
 .app-header > .app-header-left {
   display: flex;
@@ -1033,7 +1041,7 @@ input[type=range]::-moz-range-thumb {
   width: 100%;
   height: 100%;
   -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: crisp-edges;
   image-rendering: pixelated;
   display: none;
@@ -1161,14 +1169,7 @@ input[type=range]::-moz-range-thumb {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.layers-section > .layers-list > .layer-item > .layer-info > .layer-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  min-width: 0;
-}
-.layers-section > .layers-list > .layer-item > .layer-info > .layer-type,
-.layers-section > .layers-list > .layer-item > .layer-info > .layer-meta > .layer-type {
+.layers-section > .layers-list > .layer-item > .layer-info > .layer-type {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   color: var(--color-text-secondary);
@@ -1177,7 +1178,28 @@ input[type=range]::-moz-range-thumb {
   text-overflow: ellipsis;
   text-transform: uppercase;
 }
+.layers-section > .layers-list > .layer-item > .layer-info > .layer-color {
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.layers-section > .layers-list > .layer-item > .layer-info > .layer-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
 .layers-section > .layers-list > .layer-item > .layer-info > .layer-meta > .layer-type {
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
   min-width: 0;
   flex: 1;
 }
@@ -1199,14 +1221,6 @@ input[type=range]::-moz-range-thumb {
   background: var(--color-accent-light);
   color: var(--color-accent);
   border: 1px solid var(--color-accent-border);
-}
-.layers-section > .layers-list > .layer-item > .layer-info > .layer-color {
-  font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .layers-section > .layers-list > .layer-item > .layer-actions {
   display: flex;
@@ -1297,7 +1311,6 @@ input[type=range]::-moz-range-thumb {
 
 .section {
   /* Section Headers */
-  /* Collapsible Section */
 }
 .section > .section-header {
   position: relative;
@@ -1341,14 +1354,14 @@ input[type=range]::-moz-range-thumb {
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
+.section > .section-header > .section-header-title > .section-header-title-icon {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
 .section > .section-header > .section-header-title > .section-header-title-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.section > .section-header > .section-header-title > .section-header-title-icon {
-  color: var(--color-text-tertiary);
-  flex-shrink: 0;
 }
 .section > .section-header > .section-header-title > .section-header-title-count {
   font-size: var(--font-size-sm);
@@ -1357,6 +1370,12 @@ input[type=range]::-moz-range-thumb {
 }
 .section > .section-header > .section-header-title > .section-header-title-count::before {
   content: attr(data-count);
+}
+.section > .section-header > .section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
 }
 .section > .section-header.section-header-with-action > .section-header-action,
 .section > .section-header.section-header-with-action > .section-header-actions > .section-header-action {
@@ -1373,18 +1392,15 @@ input[type=range]::-moz-range-thumb {
   visibility: visible;
   pointer-events: auto;
 }
-.section > .section-header > .section-header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  flex-shrink: 0;
-}
 .section > .section-header.section-header-with-action > .section-header-action#addLayerBtn:not(.visible) {
   visibility: visible;
   opacity: var(--disabled-opacity);
 }
 .section > .section-content {
   padding: var(--spacing-base);
+}
+.section {
+  /* Collapsible Section */
 }
 .section.collapsible-section {
   border-top: 1px solid var(--color-border);
@@ -1398,15 +1414,21 @@ input[type=range]::-moz-range-thumb {
 .section.collapsible-section > .section-header:hover {
   background: var(--color-bg-tertiary);
 }
-.section.collapsible-section > .section-header > h3.section-header-title + .section-header-action,
+.section.collapsible-section > .section-header > h3.section-header-title + .section-header-action {
+  background-color: unset;
+}
+.section.collapsible-section > .section-header > h3.section-header-title + .section-header-action:hover {
+  background-color: unset;
+}
+.section.collapsible-section > .section-header > h3.section-header-title + .section-header-action.collapsed .icon {
+  transform: rotate(-90deg);
+}
 .section.collapsible-section > .section-header > .section-header-actions > .section-header-action {
   background-color: unset;
 }
-.section.collapsible-section > .section-header > h3.section-header-title + .section-header-action:hover,
 .section.collapsible-section > .section-header > .section-header-actions > .section-header-action:hover {
   background-color: unset;
 }
-.section.collapsible-section > .section-header > h3.section-header-title + .section-header-action.collapsed .icon,
 .section.collapsible-section > .section-header > .section-header-actions > .section-header-action.collapsed .icon {
   transform: rotate(-90deg);
 }
@@ -1594,23 +1616,47 @@ input[type=range]::-moz-range-thumb {
   gap: var(--spacing-md);
 }
 .mask-settings-content > .setting-column.right {
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: var(--spacing-sm);
 }
+.mask-settings-content > #editMaskToggle {
+  width: 100%;
+}
+.mask-settings-content .mask-mode-buttons,
+.mask-settings-content > .settings-group-two-column {
+  display: none;
+}
+.mask-settings-content .mask-brush-hint {
+  display: block;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+.mask-settings-content.brush-active > .setting-column.right {
+  display: flex;
+}
+.mask-settings-content.brush-active .mask-mode-buttons {
+  display: flex;
+}
+.mask-settings-content.brush-active > .settings-group-two-column {
+  display: grid;
+}
+.mask-settings-content.brush-active .mask-brush-hint {
+  display: none;
+}
+
 .mask-mode-buttons {
   display: flex;
   gap: var(--spacing-sm);
 }
+
 .mask-mode-buttons > .btn-simple,
 .mask-settings-actions > .btn-simple {
   flex: 1;
 }
+
 .mask-settings-actions {
   align-items: center;
-}
-.mask-settings-content > #editMaskToggle {
-  width: 100%;
 }
 
 .glitter-element {
@@ -1667,6 +1713,7 @@ input[type=range]::-moz-range-thumb {
 .sticker-element.pixelated img {
   image-rendering: pixelated;
 }
+
 .text-glitter-element {
   position: absolute;
   transform-origin: center;
@@ -1675,6 +1722,7 @@ input[type=range]::-moz-range-thumb {
   touch-action: none;
   overflow: visible;
 }
+
 /* Local-space surface: sized to the mask canvas in text-local px and scaled by
    a CSS transform (set from JS), so glyphs/padding/clip scale with the layer
    exactly like the export path scales the rendered canvas. */
@@ -1685,17 +1733,7 @@ input[type=range]::-moz-range-thumb {
   transform-origin: 0 0;
   pointer-events: none;
 }
-.text-glitter-content {
-  position: absolute;
-  inset: 0;
-  box-sizing: border-box;
-  background-repeat: repeat;
-  overflow: visible;
-  pointer-events: none;
-}
-.text-glitter-content.pixelated {
-  image-rendering: pixelated;
-}
+
 /* Selection/hover outline drawn at the text frame (--tf-* vars set from JS:
    the box rect in Box mode, the visible ink bounds in Point mode) — not at the
    padded wrapper, which is larger than the art. */
@@ -1709,23 +1747,36 @@ input[type=range]::-moz-range-thumb {
   display: none;
   pointer-events: none;
 }
+
+.text-glitter-content {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  background-repeat: repeat;
+  overflow: visible;
+  pointer-events: none;
+}
+.text-glitter-content.pixelated {
+  image-rendering: pixelated;
+}
+
 .text-glitter-element.selected > .text-glitter-stack::after {
   display: block;
-  outline-width: max(1px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1)));
+  outline-width: max(1px, 2px / var(--zoom, 1) / var(--layer-scale, 1));
   outline-style: dashed;
   outline-color: var(--selected-outline-color);
-  outline-offset: min(-1px, calc(-2px / var(--zoom, 1) / var(--layer-scale, 1)));
-  box-shadow: 0 0 0 max(1px, calc(1px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5), 0 0 max(4px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5);
+  outline-offset: min(-1px, -2px / var(--zoom, 1) / var(--layer-scale, 1));
+  box-shadow: 0 0 0 max(1px, 1px / var(--zoom, 1) / var(--layer-scale, 1)) rgba(0, 0, 0, 0.5), 0 0 max(4px, 8px / var(--zoom, 1) / var(--layer-scale, 1)) rgba(0, 0, 0, 0.5);
 }
 .text-glitter-element.text-overflowing.selected > .text-glitter-stack::before {
   content: "";
   position: absolute;
-  right: calc(var(--tf-right, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
-  bottom: calc(var(--tf-bottom, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
+  right: calc(var(--tf-right, 0px) + max(2px, 2px / var(--zoom, 1) / var(--layer-scale, 1)));
+  bottom: calc(var(--tf-bottom, 0px) + max(2px, 2px / var(--zoom, 1) / var(--layer-scale, 1)));
   width: 0;
   height: 0;
-  border-left: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid transparent;
-  border-top: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid rgba(245, 158, 11, 0.95);
+  border-left: max(8px, 8px / var(--zoom, 1) / var(--layer-scale, 1)) solid transparent;
+  border-top: max(8px, 8px / var(--zoom, 1) / var(--layer-scale, 1)) solid rgba(245, 158, 11, 0.95);
   pointer-events: none;
   z-index: 1;
 }
@@ -1740,10 +1791,6 @@ body.tool-select .sticker-element:not(.selected):hover {
 body.tool-select .text-glitter-element {
   cursor: move;
 }
-body.tool-text .preview-canvas,
-body.tool-text .preview-wrapper {
-  cursor: crosshair;
-}
 body.tool-select .text-glitter-element:not(.selected):hover > .text-glitter-stack::after {
   display: block;
   outline: 1px dashed rgba(0, 0, 0, 0.25);
@@ -1751,6 +1798,11 @@ body.tool-select .text-glitter-element:not(.selected):hover > .text-glitter-stac
 }
 body.tool-select .preview-canvas {
   cursor: pointer;
+}
+
+body.tool-text .preview-canvas,
+body.tool-text .preview-wrapper {
+  cursor: crosshair;
 }
 
 .layer-swatch[style*=contain] {
@@ -1770,54 +1822,12 @@ body.tool-select .preview-canvas {
   position: relative;
   z-index: 210;
 }
-.design-panel > .section.main-section {
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 auto;
-  min-height: 0;
-}
-.design-panel > .section.main-section.is-open {
-  flex: 1 1 auto;
-}
-.design-panel > .section.main-section > .section-header {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}
-.design-panel > .section.main-section > .section-content {
-  padding: 0;
-  min-height: 0;
-  background-color: var(--color-bg-primary);
-}
-.design-panel > .section.main-section > .section-content.visible {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-}
 .design-panel > .section > .section-content {
   padding: 0;
 }
 .design-panel > .collapsible-section {
   position: relative;
   z-index: 100;
-}
-/* An open settings section takes the remaining panel height and scrolls its
-   own content, so long sections (Text Properties) can't push the other
-   collapsed headers off screen. */
-.design-panel > .section.collapsible-section.is-open:not(.main-section) {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-.design-panel > .section.collapsible-section.is-open:not(.main-section) > .section-header {
-  flex-shrink: 0;
-}
-.design-panel > .section.collapsible-section.is-open:not(.main-section) > .section-content.visible {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 .design-panel[data-panel-mode=sticker] > .section > .section-header.glitter-header #uploadStickerBtn {
   visibility: visible;
@@ -1882,7 +1892,7 @@ body.tool-select .preview-canvas {
   -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z"/></svg>') no-repeat center;
   -webkit-mask-size: cover;
   -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z"/></svg>') no-repeat center;
-          mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z"/></svg>') no-repeat center;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z"/></svg>') no-repeat center;
   mask-size: cover;
   pointer-events: none;
 }
@@ -2051,8 +2061,8 @@ body.tool-select .preview-canvas {
   position: relative;
   overflow: visible;
   -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  -moz-user-select: none;
+  user-select: none;
   cursor: default;
   touch-action: none;
 }
@@ -2140,13 +2150,6 @@ body.tool-select .preview-canvas {
   width: 100%;
   height: 100%;
 }
-.preview-wrapper .preview-canvas {
-  position: relative;
-  z-index: 2;
-  display: block;
-  max-width: none;
-  max-height: none;
-}
 .preview-wrapper .mask-overlay-canvas {
   position: absolute;
   inset: 0;
@@ -2154,6 +2157,13 @@ body.tool-select .preview-canvas {
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+.preview-wrapper .preview-canvas {
+  position: relative;
+  z-index: 2;
+  display: block;
+  max-width: none;
+  max-height: none;
 }
 .preview-wrapper .preview-canvas.selected {
   outline-width: max(1px, 2px / var(--zoom, 1));
@@ -2190,13 +2200,11 @@ body.tool-select .preview-canvas {
 .mask-brush-cursor.visible {
   display: block;
 }
-.mask-brush-cursor.touch-preview::before,
-.mask-brush-cursor.touch-preview::after,
+.mask-brush-cursor.touch-preview::before, .mask-brush-cursor.touch-preview::after,
 .mask-brush-cursor.touch-preview > .mask-brush-cursor-dot {
   display: none;
 }
-.mask-brush-cursor::before,
-.mask-brush-cursor::after {
+.mask-brush-cursor::before, .mask-brush-cursor::after {
   content: "";
   position: absolute;
   background: var(--color-accent);
@@ -2359,8 +2367,7 @@ body.mask-editing .sticker-element {
   z-index: 10000;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
   transition: all var(--transition-base);
-  -webkit-backdrop-filter: blur(4px);
-          backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 .export-progress.visible {
   opacity: 1;
@@ -2479,8 +2486,7 @@ body.mask-editing .sticker-element {
   justify-content: center;
   opacity: 0;
   transition: opacity var(--transition-base);
-  -webkit-backdrop-filter: blur(4px);
-          backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 .modal-overlay.visible {
   display: flex;
@@ -2590,11 +2596,9 @@ body.mask-editing .sticker-element {
   display: grid;
   grid-template-columns: auto 1fr;
   -moz-column-gap: 0.5em;
-       column-gap: 0.5em;
+  column-gap: 0.5em;
   align-items: start;
   padding: 1px;
-  /* main content (link) */
-  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li a {
   color: var(--color-text-secondary);
@@ -2609,8 +2613,14 @@ body.mask-editing .sticker-element {
   grid-column: 1;
   align-self: start;
 }
+.modal-overlay > .modal-content > .modal-body .toc > ol > li {
+  /* main content (link) */
+}
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > :not(ol) {
   grid-column: 2;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li {
+  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol {
   grid-column: 2;
@@ -2623,7 +2633,7 @@ body.mask-editing .sticker-element {
   display: grid;
   grid-template-columns: auto 1fr;
   -moz-column-gap: 0.5em;
-       column-gap: 0.5em;
+  column-gap: 0.5em;
   align-items: start;
   padding: 1px;
 }
@@ -2669,15 +2679,15 @@ body.mask-editing .sticker-element {
   font-size: var(--font-size-lg);
 }
 
+.modal-error {
+  color: var(--color-danger);
+}
+
 #confirmationModal .modal-body {
   font-size: var(--font-size-md);
 }
 #confirmationModal .modal-body > p {
   margin: 0;
-}
-
-.modal-error {
-  color: var(--color-danger);
 }
 
 @keyframes highlight {
@@ -2773,13 +2783,13 @@ body.mask-editing .sticker-element {
   max-width: 100%;
   max-height: 100%;
   -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;
-       user-select: none;
+  user-select: none;
   pointer-events: none;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -3006,7 +3016,7 @@ body.mask-editing .sticker-element {
   width: 100%;
   height: 100%;
   -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   display: block;
   user-drag: none;
   -webkit-user-drag: none;
@@ -3024,7 +3034,7 @@ body.mask-editing .sticker-element {
 }
 .asset-options.stickers-options .asset-grid > .asset-option img {
   -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   padding: var(--spacing-xs);
 }
 .asset-options.stickers-options .asset-grid > .asset-option.animated::after {
@@ -3092,6 +3102,7 @@ body.mask-editing .sticker-element {
   letter-spacing: 0.5px;
   color: var(--color-text-secondary);
 }
+
 .layer-type-text-icon {
   display: inline-flex;
   align-items: center;
@@ -3100,6 +3111,7 @@ body.mask-editing .sticker-element {
   font-weight: 800;
   line-height: 1;
 }
+
 .text-button-glyph {
   display: inline-flex;
   align-items: center;
@@ -3108,9 +3120,6 @@ body.mask-editing .sticker-element {
   font-weight: 800;
   line-height: 1;
   z-index: 1;
-}
-.icon-wrapper.sm > .text-button-glyph {
-  font-size: 16px;
 }
 
 .layer-pick-flash {
@@ -3145,9 +3154,6 @@ body.mask-editing .sticker-element {
   }
 }
 /* ===== ABOUT MODAL ===== */
-#aboutModal {
-  /* Highlight animation for references */
-}
 #aboutModal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
 }
@@ -3208,11 +3214,11 @@ body.mask-editing .sticker-element {
   color: inherit;
   display: inline;
   -webkit-text-decoration: underline dotted;
-          text-decoration: underline dotted;
+  text-decoration: underline dotted;
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
   -webkit-text-decoration-skip: ink;
-          text-decoration-skip-ink: auto;
+  text-decoration-skip-ink: auto;
 }
 #aboutModal .context:hover {
   color: var(--color-text-primary);
@@ -3256,6 +3262,9 @@ body.mask-editing .sticker-element {
 #aboutModal h5 + ul,
 #aboutModal h5 + ol {
   margin-top: var(--spacing-xs);
+}
+#aboutModal {
+  /* Highlight animation for references */
 }
 #aboutModal .highlight {
   background: url(../images/glitter/sparkle/glitter_white.gif) repeat;
@@ -3559,6 +3568,9 @@ body.mask-editing .sticker-element {
   z-index: 1;
 }
 .icon-wrapper.sm > svg.icon {
+  font-size: 16px;
+}
+.icon-wrapper.sm > .text-button-glyph {
   font-size: 16px;
 }
 .icon-wrapper.xl > svg.icon {
@@ -4190,7 +4202,7 @@ body.mask-editing .sticker-element {
   width: 100%;
   height: 100%;
   -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-image.category-card-glitter-bg {
@@ -4278,8 +4290,7 @@ body.mask-editing .sticker-element {
   z-index: 10000;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
   transition: all var(--transition-base);
-  -webkit-backdrop-filter: blur(4px);
-          backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 .helpful-message:hover {
   border-color: var(--color-border-hover);
@@ -4441,6 +4452,7 @@ body.mask-editing .sticker-element {
   width: calc(40px / var(--zoom, 1));
   height: calc(40px / var(--zoom, 1));
 }
+
 @media (pointer: coarse) {
   .transform-handle-wrapper[data-handle-type^=corner-] {
     width: calc(44px / var(--zoom, 1));
@@ -4455,7 +4467,6 @@ body.mask-editing .sticker-element {
     height: calc(48px / var(--zoom, 1));
   }
 }
-
 .transform-handle {
   pointer-events: none;
   box-sizing: border-box;
@@ -4494,6 +4505,7 @@ body.mask-editing .sticker-element {
 .sticker-element.has-transform-handles {
   pointer-events: none !important;
 }
+
 .text-glitter-element.has-transform-handles {
   pointer-events: none !important;
 }
@@ -4570,6 +4582,52 @@ body.mask-editing .sticker-element {
 }
 
 /* FIX */
+.design-panel > .section.main-section {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+.design-panel > .section.main-section.is-open {
+  flex: 1 1 auto;
+}
+.design-panel > .section.main-section.is-open > .section-content.visible {
+  overflow: hidden;
+}
+.design-panel > .section.main-section > .section-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.design-panel > .section.main-section > .section-content {
+  padding: 0;
+  min-height: 0;
+  background-color: var(--color-bg-primary);
+}
+.design-panel > .section.main-section > .section-content.visible {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+.design-panel > .section.main-section > .section-content > .section-content {
+  flex-shrink: 0;
+}
+.design-panel > .section.main-section > .section-content > .asset-options {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.design-panel > .section.main-section > .section-content > .asset-options .asset-browser-content {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.design-panel > .section.main-section.collapsible-section > .section-content {
+  padding: 0;
+}
+.design-panel > .section > .section-content {
+  padding: 0;
+}
 .design-panel > .section.collapsible-section {
   flex-shrink: 0;
 }
@@ -4585,8 +4643,20 @@ body.mask-editing .sticker-element {
   flex: 1 1 auto;
   min-height: 0;
 }
-.design-panel > .section.main-section.collapsible-section > .section-content {
-  padding: 0;
+.design-panel > .section.collapsible-section.is-open:not(.main-section) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.design-panel > .section.collapsible-section.is-open:not(.main-section) > .section-header {
+  flex-shrink: 0;
+}
+.design-panel > .section.collapsible-section.is-open:not(.main-section) > .section-content.visible {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .design-panel > .section:not(.collapsible-section) {
   display: flex;
@@ -4607,22 +4677,6 @@ body.mask-editing .sticker-element {
   flex: 1 1 auto;
   min-height: 0;
   min-width: 0;
-  overflow: hidden;
-}
-.design-panel > .section.main-section > .section-content > .section-content {
-  flex-shrink: 0;
-}
-.design-panel > .section.main-section > .section-content > .asset-options {
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  overflow: hidden;
-}
-.design-panel > .section.main-section > .section-content > .asset-options .asset-browser-content {
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-}
-.design-panel > .section.main-section.is-open > .section-content.visible {
   overflow: hidden;
 }
 .design-panel > .section:not(.collapsible-section) > .section-content > .asset-options .asset-browser-content {
@@ -4702,7 +4756,7 @@ body.mask-editing .sticker-element {
   width: 100%;
   height: 100%;
   -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-info-header .asset-info-thumbnail.glitter-bg {
@@ -4785,22 +4839,40 @@ body.mask-editing .sticker-element {
 #stickerSettingsControls.visible {
   display: block;
 }
+
 #textSettingsSection textarea {
   width: 100%;
   min-height: 96px;
   resize: vertical;
 }
+
+/* Point text has no frame to align within — hide alignment controls
+   (dataset set by TextGlitterManager.updateBoxModeSelection) */
+#textSettingsSection[data-box-mode=auto] .text-valign-group,
+#textSettingsSection[data-box-mode=auto] .text-valign-label {
+  display: none;
+}
+
+/* "Fit to Text" only makes sense once there's a box to fit */
+#textSettingsSection[data-box-mode=auto] .text-fit-box-group,
+#textSettingsSection[data-box-mode=auto] .text-fit-box-label {
+  display: none;
+}
+
 .text-settings-section > .section-content.visible {
   gap: var(--spacing-md);
 }
+
 .text-input-group {
   width: 100%;
 }
+
 .subsection-note {
   font-size: var(--font-size-sm);
   line-height: 1.4;
   color: var(--color-text-tertiary);
 }
+
 .text-font-picker {
   position: relative;
   display: flex;
@@ -4811,15 +4883,18 @@ body.mask-editing .sticker-element {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+
 .text-font-option {
   flex-shrink: 0;
   width: 100%;
   text-transform: none;
   justify-content: flex-start;
 }
-.text-align-group {
-  margin-top: var(--spacing-md);
+
+.text-align-group > .btn-simple {
+  flex: 1;
 }
+
 .control-group-label {
   font-size: var(--font-size-sm);
   font-weight: 600;
@@ -4827,30 +4902,20 @@ body.mask-editing .sticker-element {
   text-transform: uppercase;
   color: var(--color-text-tertiary);
 }
-.text-align-group > .btn-simple {
-  flex: 1;
-}
+
 .text-box-mode-group > .btn-simple {
   flex: 1;
 }
+
 .text-valign-group > .btn-simple {
   flex: 1;
 }
+
 .text-box-hint {
   font-size: var(--font-size-sm);
   color: var(--color-text-tertiary);
 }
-/* Point text has no frame to align within — hide alignment controls
-   (dataset set by TextGlitterManager.updateBoxModeSelection) */
-#textSettingsSection[data-box-mode=auto] .text-valign-group,
-#textSettingsSection[data-box-mode=auto] .text-valign-label {
-  display: none;
-}
-/* Point text is always a single line (no wrapping), so line height has
-   nothing to space out — only relevant once text can wrap inside a box. */
-#textSettingsSection[data-box-mode=auto] .text-line-height-row {
-  display: none;
-}
+
 .text-effect-controls {
   display: none;
   flex-direction: column;
@@ -4861,6 +4926,7 @@ body.mask-editing .sticker-element {
 .text-effect-controls.visible {
   display: flex;
 }
+
 .text-effect-subsection {
   display: flex;
   flex-direction: column;
@@ -4880,16 +4946,19 @@ body.mask-editing .sticker-element {
   justify-content: space-between;
   align-items: center;
 }
+
 .subsection-note {
   font-size: var(--font-size-xs);
   line-height: 1.4;
   color: var(--color-text-tertiary);
 }
+
 .text-effect-source-row {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
 }
+
 .text-effect-source-chip {
   width: 44px;
   height: 44px;
@@ -4901,11 +4970,13 @@ body.mask-editing .sticker-element {
   align-items: center;
   justify-content: center;
 }
+
 .text-effect-source-chip.target-active,
 .text-effect-source-change.target-active {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 1px var(--color-accent-border);
 }
+
 .text-effect-source-swatch {
   width: 28px;
   height: 28px;
@@ -4928,6 +4999,7 @@ body.mask-editing .sticker-element {
 .text-effect-source-swatch-fill.pixelated {
   image-rendering: pixelated;
 }
+
 .text-effect-source-copy {
   min-width: 0;
   flex: 1;
@@ -4935,6 +5007,7 @@ body.mask-editing .sticker-element {
   flex-direction: column;
   gap: 2px;
 }
+
 .text-effect-source-label {
   min-width: 0;
   font-size: var(--font-size-sm);
@@ -4944,21 +5017,25 @@ body.mask-editing .sticker-element {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .text-effect-source-actions {
   display: flex;
   gap: var(--spacing-sm);
   flex-wrap: wrap;
 }
+
 .text-effect-source-change {
   min-height: 36px;
   padding: 0 var(--spacing-md);
 }
+
 .text-effect-source-value {
   font-size: var(--font-size-xs);
   letter-spacing: 0.4px;
   color: var(--color-text-secondary);
   text-transform: uppercase;
 }
+
 .text-effect-color-row {
   display: flex;
   justify-content: space-between;
@@ -5049,6 +5126,7 @@ body.mask-editing .sticker-element {
   grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-lg);
 }
+
 .setting-column {
   display: flex;
   flex-direction: column;
@@ -5071,8 +5149,8 @@ body.mask-editing .sticker-element {
   gap: var(--spacing-sm);
   cursor: pointer;
   -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  -moz-user-select: none;
+  user-select: none;
   position: relative;
   color: #ccc;
   font-weight: initial;
@@ -5150,17 +5228,6 @@ body.mask-editing .sticker-element {
   justify-content: center;
 }
 @media (max-width: 800px) {
-  #confirmationModal .modal-content {
-    width: min(420px, calc(100vw - 24px));
-  }
-  #confirmationModal .modal-footer {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-  #confirmationModal .modal-footer > button {
-    width: 100%;
-    min-height: 48px;
-  }
   #welcomeModal .welcome-actions {
     flex-direction: column;
   }
@@ -5179,9 +5246,23 @@ body.mask-editing .sticker-element {
   color: var(--color-text-secondary);
   cursor: pointer;
   -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 }
 #welcomeModal .welcome-checkbox input[type=checkbox] {
   cursor: pointer;
+}
+
+@media (max-width: 800px) {
+  #confirmationModal .modal-content {
+    width: min(420px, 100vw - 24px);
+  }
+  #confirmationModal .modal-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  #confirmationModal .modal-footer > button {
+    width: 100%;
+    min-height: 48px;
+  }
 }/*# sourceMappingURL=style.css.map */

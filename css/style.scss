@@ -1,3 +1,5 @@
+// style.css is compiled output — run npm run build:css; never edit it by hand.
+
 /* ===== CSS VARIABLES ===== */
 :root {
 	/* Base color scales */
@@ -130,6 +132,7 @@
 	box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
 	transition: all var(--transition-base);
 	// blur background
+	-webkit-backdrop-filter: blur(4px);
 	backdrop-filter: blur(4px);
 
 	//if hvoer
@@ -418,6 +421,8 @@ html {
 * {
 	-webkit-tap-highlight-color: transparent;
 	touch-action: manipulation;
+	-webkit-user-select: none;
+	-moz-user-select: none;
 	user-select: none;
 }
 
@@ -425,6 +430,8 @@ p,
 span,
 input,
 textarea {
+	-webkit-user-select: text;
+	-moz-user-select: text;
 	user-select: text;
 }
 
@@ -567,6 +574,7 @@ img[data-pixel-scale] {
 
 
 	max-width: 240px;
+	width: -moz-max-content;
 	width: max-content;
 
 	@include windows7-tooltip;
@@ -819,6 +827,8 @@ input[type="range"] {
 	@include text-sm;
 	cursor: pointer;
 	transition: all var(--transition-fast);
+	-webkit-user-select: none;
+	-moz-user-select: none;
 	user-select: none;
 
 	&:hover {
@@ -920,6 +930,8 @@ input[type="range"] {
 	padding: var(--spacing-sm);
 	gap: 5px;
 	flex-shrink: 0;
+	position: relative;
+	z-index: 210;
 
 	>.toolbar-spacer {
 		flex: 1;
@@ -951,7 +963,7 @@ input[type="range"] {
 .main-content {
 	display: flex;
 	flex: 1;
-	overflow: hidden;
+	overflow: visible;
 
 }
 
@@ -964,6 +976,8 @@ input[type="range"] {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
+	position: relative;
+	z-index: 210;
 }
 
 /* Image Container */
@@ -1076,8 +1090,10 @@ input[type="range"] {
 			>#originalCanvas {
 				width: 100%;
 				height: 100%;
+				-o-object-fit: contain;
 				object-fit: contain;
 				image-rendering: crisp-edges;
+				image-rendering: pixelated;
 				display: none;
 				pointer-events: none;
 
@@ -1197,6 +1213,31 @@ input[type="range"] {
 				&.pixelated {
 					image-rendering: pixelated;
 				}
+
+				&.text-layer {
+					position: relative;
+					background-size: cover;
+
+					>.layer-swatch-text-overlay {
+						position: absolute;
+						right: 3px;
+						bottom: 2px;
+						display: inline-flex;
+						align-items: center;
+						justify-content: center;
+						min-width: 14px;
+						min-height: 14px;
+						padding: 0 3px;
+						border-radius: 999px;
+						background: rgba(0, 0, 0, 0.65);
+						color: #ffffff;
+						font-size: 10px;
+						font-weight: 700;
+						line-height: 1;
+						letter-spacing: 0;
+						pointer-events: none;
+					}
+				}
 			}
 
 			>.layer-info {
@@ -1228,6 +1269,46 @@ input[type="range"] {
 					white-space: nowrap;
 					overflow: hidden;
 					text-overflow: ellipsis;
+				}
+
+				>.layer-meta {
+					display: flex;
+					align-items: center;
+					gap: var(--spacing-xs);
+					min-width: 0;
+
+					>.layer-type {
+						font-size: var(--font-size-sm);
+						letter-spacing: 0.5px;
+						color: var(--color-text-secondary);
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						text-transform: uppercase;
+						min-width: 0;
+						flex: 1;
+					}
+				}
+
+				.layer-badge {
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+					height: 12px;
+					padding: 0 4px;
+					border-radius: 999px;
+					font-size: 9px;
+					font-weight: 700;
+					line-height: 1;
+					letter-spacing: 0.08em;
+					text-transform: uppercase;
+					flex-shrink: 0;
+
+					&.layer-badge-paint {
+						background: var(--color-accent-light);
+						color: var(--color-accent);
+						border: 1px solid var(--color-accent-border);
+					}
 				}
 			}
 
@@ -1381,7 +1462,9 @@ input[type="range"] {
 
 			display: flex;
 			align-items: center;
-			justify-content: center;
+			justify-content: flex-start;
+			flex: 1 1 auto;
+			min-width: 0;
 			gap: var(--spacing-base);
 
 
@@ -1394,9 +1477,14 @@ input[type="range"] {
 
 			>.section-header-title-icon {
 				color: var(--color-text-tertiary);
+				flex-shrink: 0;
 			}
 
-			>.section-header-title-text {}
+			>.section-header-title-text {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
 
 			>.section-header-title-count {
 				@include text-sm;
@@ -1410,10 +1498,18 @@ input[type="range"] {
 
 		}
 
+		>.section-header-actions {
+			display: flex;
+			align-items: center;
+			gap: var(--spacing-sm);
+			flex-shrink: 0;
+		}
+
 
 		&.section-header-with-action {
 
-			>.section-header-action {
+			>.section-header-action,
+			>.section-header-actions>.section-header-action {
 
 				cursor: pointer;
 				text-transform: none;
@@ -1422,6 +1518,7 @@ input[type="range"] {
 
 				width: var(--icon-size-sm);
 				height: var(--icon-size-sm);
+				flex-shrink: 0;
 
 
 
@@ -1429,13 +1526,11 @@ input[type="range"] {
 					visibility: visible;
 					pointer-events: auto;
 				}
+			}
 
-				&#addLayerBtn:not(.visible) {
-					visibility: visible;
-					opacity: var(--disabled-opacity);
-				}
-
-
+			>.section-header-action#addLayerBtn:not(.visible) {
+				visibility: visible;
+				opacity: var(--disabled-opacity);
 			}
 		}
 	}
@@ -1474,6 +1569,18 @@ input[type="range"] {
 					&.collapsed .icon {
 						transform: rotate(-90deg);
 					}
+				}
+			}
+
+			>.section-header-actions>.section-header-action {
+				background-color: unset;
+
+				&:hover {
+					background-color: unset;
+				}
+
+				&.collapsed .icon {
+					transform: rotate(-90deg);
 				}
 			}
 		}
@@ -1660,6 +1767,68 @@ input[type="range"] {
 	}
 }
 
+.mask-settings-content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+
+	>.setting-column.right {
+		display: none;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
+	>#editMaskToggle {
+		width: 100%;
+	}
+
+	// Brush-only controls (Paint/Erase mode + Size/Softness/Flow) stay hidden
+	// until the Mask Brush tool is active (MaskEditor enter/exitEditMode toggle
+	// this class) — the hint line takes their place otherwise.
+	.mask-mode-buttons,
+	>.settings-group-two-column {
+		display: none;
+	}
+
+	.mask-brush-hint {
+		display: block;
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-sm);
+	}
+
+	&.brush-active {
+		>.setting-column.right {
+			display: flex;
+		}
+
+		.mask-mode-buttons {
+			display: flex;
+		}
+
+		>.settings-group-two-column {
+			display: grid;
+		}
+
+		.mask-brush-hint {
+			display: none;
+		}
+	}
+}
+
+.mask-mode-buttons {
+	display: flex;
+	gap: var(--spacing-sm);
+}
+
+.mask-mode-buttons>.btn-simple,
+.mask-settings-actions>.btn-simple {
+	flex: 1;
+}
+
+.mask-settings-actions {
+	align-items: center;
+}
+
 
 
 .glitter-element {
@@ -1730,7 +1899,76 @@ input[type="range"] {
 	}
 }
 
+.text-glitter-element {
+	position: absolute;
+	transform-origin: center;
+	pointer-events: auto !important;
+	will-change: transform;
+	touch-action: none;
+	overflow: visible;
+}
 
+/* Local-space surface: sized to the mask canvas in text-local px and scaled by
+   a CSS transform (set from JS), so glyphs/padding/clip scale with the layer
+   exactly like the export path scales the rendered canvas. */
+.text-glitter-stack {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: 0 0;
+	pointer-events: none;
+}
+
+/* Selection/hover outline drawn at the text frame (--tf-* vars set from JS:
+   the box rect in Box mode, the visible ink bounds in Point mode) — not at the
+   padded wrapper, which is larger than the art. */
+.text-glitter-stack::after {
+	content: "";
+	position: absolute;
+	top: var(--tf-top, 0);
+	right: var(--tf-right, 0);
+	bottom: var(--tf-bottom, 0);
+	left: var(--tf-left, 0);
+	display: none;
+	pointer-events: none;
+}
+
+.text-glitter-content {
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	background-repeat: repeat;
+	overflow: visible;
+	pointer-events: none;
+
+	&.pixelated {
+		image-rendering: pixelated;
+	}
+}
+
+.text-glitter-element {
+	&.selected > .text-glitter-stack::after {
+		display: block;
+		outline-width: max(1px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1)));
+		outline-style: dashed;
+		outline-color: var(--selected-outline-color);
+		outline-offset: min(-1px, calc(-2px / var(--zoom, 1) / var(--layer-scale, 1)));
+		box-shadow: 0 0 0 max(1px, calc(1px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5), 0 0 max(4px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5);
+	}
+
+	&.text-overflowing.selected > .text-glitter-stack::before {
+		content: "";
+		position: absolute;
+		right: calc(var(--tf-right, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
+		bottom: calc(var(--tf-bottom, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
+		width: 0;
+		height: 0;
+		border-left: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid transparent;
+		border-top: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid rgba(245, 158, 11, 0.95);
+		pointer-events: none;
+		z-index: 1;
+	}
+}
 
 body.tool-select {
 	.sticker-element {
@@ -1743,9 +1981,26 @@ body.tool-select {
 		}
 	}
 
+	.text-glitter-element {
+		cursor: move;
+
+		&:not(.selected):hover > .text-glitter-stack::after {
+			display: block;
+			outline: 1px dashed rgba(0, 0, 0, 0.25);
+			outline-offset: -1px;
+		}
+	}
+
 	// base image should have move cursor
 	.preview-canvas {
 		cursor: pointer;
+	}
+}
+
+body.tool-text {
+	.preview-canvas,
+	.preview-wrapper {
+		cursor: crosshair;
 	}
 }
 
@@ -1770,7 +2025,11 @@ body.tool-select {
 	border-left: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
 	order: 1;
+	position: relative;
+	z-index: 210;
 
 	>.section>.section-content {
 		padding: 0;
@@ -1784,7 +2043,7 @@ body.tool-select {
 
 	&[data-panel-mode="sticker"] {
 
-		>.section>.section-header.glitter-header>.section-header-action {
+		>.section>.section-header.glitter-header #uploadStickerBtn {
 			visibility: visible;
 			pointer-events: auto;
 		}
@@ -1840,6 +2099,10 @@ body.tool-select {
 					border-color: var(--color-accent);
 				}
 
+				&::-moz-placeholder {
+					color: var(--color-text-tertiary);
+				}
+
 				&::placeholder {
 					color: var(--color-text-tertiary);
 				}
@@ -1859,6 +2122,7 @@ body.tool-select {
 				/* your CSS variable */
 				-webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z"/></svg>') no-repeat center;
 				-webkit-mask-size: cover;
+				-webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z"/></svg>') no-repeat center;
 				mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z"/></svg>') no-repeat center;
 				mask-size: cover;
 				pointer-events: none;
@@ -2063,8 +2327,9 @@ body.tool-select {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	overflow: hidden;
-
+	overflow: visible;
+	position: relative;
+	z-index: 200;
 
 }
 
@@ -2072,8 +2337,10 @@ body.tool-select {
 	flex: 1;
 	display: block;
 	position: relative;
-	overflow: hidden;
+	overflow: visible;
 	// background: var(--color-bg-tertiary);
+	-webkit-user-select: none;
+	-moz-user-select: none;
 	user-select: none;
 	cursor: default;
 	touch-action: none;
@@ -2093,7 +2360,6 @@ body.tool-select {
 	&.bounds {
 		.preview-wrapper {
 			outline: solid dashed var(--gray-400);
-			overflow: hidden;
 			outline-offset: -2px;
 			/* Draws inside the canvas edge */
 			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5);
@@ -2162,22 +2428,36 @@ body.tool-select {
 	transform-origin: 0 0;
 	will-change: transform;
 	pointer-events: auto;
+	/* image-rendering inherits: one declaration keeps every canvas, img, and
+	   background-image inside the zoomed wrapper hard-pixeled instead of
+	   bilinear-smoothed when the zoom transform upscales them. pixelated must
+	   come LAST — the later declaration wins, crisp-edges is only the fallback. */
+	image-rendering: crisp-edges;
+	image-rendering: pixelated;
 
 	&.color-picker-mode {
 		cursor: crosshair;
 	}
 
 	>.preview-canvas,
+	>.mask-overlay-canvas,
 	.canvas-elements-container>.glitter-background {
-		image-rendering: -moz-crisp-edges;
-		image-rendering: -webkit-optimize-contrast;
-		image-rendering: pixelated;
+		/* crisp-edges first: it's the FALLBACK — the later pixelated must win */
 		image-rendering: crisp-edges;
+		image-rendering: pixelated;
 		-ms-interpolation-mode: nearest-neighbor;
-
 
 		width: 100%;
 		height: 100%;
+	}
+
+	.mask-overlay-canvas {
+		position: absolute;
+		inset: 0;
+		z-index: 20;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
 	}
 
 	.preview-canvas {
@@ -2208,6 +2488,80 @@ body.tool-select {
 	}
 }
 
+.mask-brush-cursor {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	border: 1px solid var(--color-accent);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	z-index: 30;
+	display: none;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+
+	&.visible {
+		display: block;
+	}
+
+	&.touch-preview {
+		&::before,
+		&::after,
+		>.mask-brush-cursor-dot {
+			display: none;
+		}
+	}
+
+	&::before,
+	&::after {
+		content: "";
+		position: absolute;
+		background: var(--color-accent);
+		opacity: 0.75;
+	}
+
+	&::before {
+		top: 50%;
+		left: 50%;
+		width: 12px;
+		height: 1px;
+		transform: translate(-50%, -50%);
+	}
+
+	&::after {
+		top: 50%;
+		left: 50%;
+		width: 1px;
+		height: 12px;
+		transform: translate(-50%, -50%);
+	}
+
+	>.mask-brush-cursor-dot {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 4px;
+		height: 4px;
+		border-radius: 50%;
+		background: var(--color-bg-primary);
+		border: 1px solid var(--color-accent);
+		transform: translate(-50%, -50%);
+	}
+}
+
+body.mask-editing {
+	.preview-wrapper,
+	.preview-wrapper .preview-canvas,
+	.preview-wrapper .mask-overlay-canvas {
+		cursor: none !important;
+	}
+
+	.sticker-element {
+		pointer-events: none !important;
+	}
+}
 
 
 
@@ -2481,6 +2835,7 @@ body.tool-select {
 	justify-content: center;
 	opacity: 0;
 	transition: opacity var(--transition-base);
+	-webkit-backdrop-filter: blur(4px);
 	backdrop-filter: blur(4px);
 
 	&.visible {
@@ -2621,6 +2976,7 @@ body.tool-select {
 						counter-increment: item;
 						display: grid;
 						grid-template-columns: auto 1fr;
+						-moz-column-gap: 0.5em;
 						column-gap: 0.5em;
 						align-items: start;
 						padding: 1px;
@@ -2657,6 +3013,7 @@ body.tool-select {
 								counter-increment: subitem;
 								display: grid;
 								grid-template-columns: auto 1fr;
+								-moz-column-gap: 0.5em;
 								column-gap: 0.5em;
 								align-items: start;
 								padding: 1px;
@@ -2737,6 +3094,16 @@ body.tool-select {
 
 .modal-error {
 	color: var(--color-danger);
+}
+
+#confirmationModal {
+	.modal-body {
+		font-size: var(--font-size-md);
+
+		>p {
+			margin: 0;
+		}
+	}
 }
 
 // Highlight animation (for reference scrolling)
@@ -2870,12 +3237,14 @@ body.tool-select {
 		img {
 			max-width: 100%;
 			max-height: 100%;
+			-o-object-fit: contain;
 			object-fit: contain;
 			border-radius: var(--radius-sm);
 			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
 			-webkit-touch-callout: none;
 			-webkit-user-select: none;
+			-moz-user-select: none;
 			user-select: none;
 			pointer-events: none; // Completely disable interaction on iOS
 
@@ -3125,6 +3494,11 @@ body.tool-select {
 				border-color: var(--color-accent);
 			}
 
+			&:-moz-read-only {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+
 			&:read-only {
 				opacity: 0.6;
 				cursor: not-allowed;
@@ -3204,6 +3578,7 @@ body.tool-select {
 			>img {
 				width: 100%;
 				height: 100%;
+				-o-object-fit: cover;
 				object-fit: cover;
 				display: block;
 
@@ -3238,6 +3613,7 @@ body.tool-select {
 				background: var(--color-bg-tertiary);
 
 				img {
+					-o-object-fit: contain;
 					object-fit: contain;
 					padding: var(--spacing-xs);
 				}
@@ -3349,6 +3725,7 @@ body.tool-select {
 .layer-type-options {
 	display: flex;
 	gap: var(--spacing-base);
+	align-items: stretch;
 
 	>.layer-type-option {
 		display: flex;
@@ -3389,6 +3766,25 @@ body.tool-select {
 			color: var(--color-text-secondary);
 		}
 	}
+}
+
+.layer-type-text-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 30px;
+	font-weight: 800;
+	line-height: 1;
+}
+
+.text-button-glyph {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24px;
+	font-weight: 800;
+	line-height: 1;
+	z-index: 1;
 }
 
 // Layer pick visual feedback (shown for all users)
@@ -3544,9 +3940,11 @@ body.tool-select {
 		color: inherit;
 		display: inline;
 
+		-webkit-text-decoration: underline dotted;
 		text-decoration: underline dotted;
 		text-decoration-thickness: 2px;
 		text-underline-offset: 2px;
+		-webkit-text-decoration-skip: ink;
 		text-decoration-skip-ink: auto;
 
 		&:hover {
@@ -3994,15 +4392,19 @@ body.tool-select {
 		display: inline-block;
 		vertical-align: middle;
 		z-index: 1;
+	}
 
-		+span.name {
-			display: none;
-			z-index: 1;
-		}
+	>.name {
+		display: none;
+		z-index: 1;
 	}
 
 	&.sm {
 		>svg.icon {
+			font-size: 16px;
+		}
+
+		>.text-button-glyph {
 			font-size: 16px;
 		}
 	}
@@ -4036,19 +4438,23 @@ body.tool-select {
 /* Collapsible Section Management */
 .sticker-settings-section,
 .glitter-settings-section,
+.text-settings-section,
 .layer-settings-section {
 	display: none; // Hide by default
 
 	&.visible {
-		flex-shrink: 1;
-		overflow: hidden;
 		display: flex;
 		flex-direction: column;
+		flex: 0 0 auto;
+		min-height: 0;
 
-		>.section-content {
-			flex-shrink: 1;
-			overflow-y: auto;
-			max-height: 33dvh;
+		&.is-open {
+			flex: 1 1 auto;
+
+			>.section-content.visible {
+				overflow-y: auto;
+				overscroll-behavior: contain;
+			}
 		}
 	}
 }
@@ -4407,6 +4813,26 @@ body.tool-select {
 						&.pixelated {
 							image-rendering: pixelated;
 						}
+
+						&.text-layer {
+							position: relative;
+
+							&::after {
+								content: "T";
+								position: absolute;
+								right: -4px;
+								bottom: -4px;
+								width: 12px;
+								height: 12px;
+								border-radius: 999px;
+								background: rgba(0, 0, 0, 0.7);
+								color: #ffffff;
+								font-size: 8px;
+								font-weight: 700;
+								line-height: 12px;
+								text-align: center;
+							}
+						}
 					}
 
 					.mobile-layers-count {
@@ -4511,6 +4937,7 @@ body.tool-select {
 
 			.layer-settings-section,
 			.glitter-settings-section,
+			.text-settings-section,
 			.sticker-settings-section {
 				&.visible {
 					display: flex;
@@ -4847,6 +5274,7 @@ body.tool-select {
 					>img {
 						width: 100%;
 						height: 100%;
+						-o-object-fit: contain;
 						object-fit: contain;
 						image-rendering: pixelated;
 					}
@@ -5205,6 +5633,14 @@ body.tool-select {
 		border: 1.5px solid var(--color-bg-secondary);
 		border-radius: 50%;
 	}
+
+	&.transform-handle-edge {
+		width: 12px;
+		height: 12px;
+		background: rgba(255, 255, 255, 0.9);
+		border: 1.5px solid var(--color-bg-secondary);
+		border-radius: 50%;
+	}
 }
 
 // Hover states on wrappers
@@ -5218,6 +5654,10 @@ body.tool-select {
 }
 
 .sticker-element.has-transform-handles {
+	pointer-events: none !important;
+}
+
+.text-glitter-element.has-transform-handles {
 	pointer-events: none !important;
 }
 
@@ -5336,15 +5776,100 @@ body.tool-select {
 .design-panel {
 
 	>.section.main-section {
-		flex: 1;
+		display: flex;
+		flex-direction: column;
+		flex: 0 0 auto;
+		min-height: 0;
+
+		&.is-open {
+			flex: 1 1 auto;
+
+			>.section-content.visible {
+				overflow: hidden;
+			}
+		}
+
+		>.section-header {
+			position: sticky;
+			top: 0;
+			z-index: 5;
+		}
+
+		>.section-content {
+			padding: 0;
+			min-height: 0;
+			background-color: var(--color-bg-primary);
+
+			&.visible {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+			}
+
+			>.section-content {
+				flex-shrink: 0;
+			}
+
+			>.asset-options {
+				flex: 1 1 auto;
+				min-height: 0;
+				min-width: 0;
+				overflow: hidden;
+
+				.asset-browser-content {
+					overflow-y: auto;
+					scrollbar-gutter: stable;
+				}
+			}
+		}
+
+		&.collapsible-section>.section-content {
+			padding: 0;
+		}
 	}
 
 	>.section {
+		>.section-content {
+			padding: 0;
+		}
+
 		&.collapsible-section {
 			flex-shrink: 0;
 
 			>.section-content {
 				padding: var(--spacing-md);
+
+				&:not(.visible) {
+					display: none;
+				}
+			}
+
+			&.is-open>.section-content.visible {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
+			}
+
+			// An open settings section takes the remaining panel height and scrolls its
+			// own content, so long sections (Text Properties) can't push the other
+			// collapsed headers off screen.
+			&.is-open:not(.main-section) {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
+
+				>.section-header {
+					flex-shrink: 0;
+				}
+
+				>.section-content.visible {
+					flex: 1 1 auto;
+					min-height: 0;
+					overflow-y: auto;
+					overscroll-behavior: contain;
+				}
 			}
 		}
 
@@ -5475,6 +6000,7 @@ body.tool-select {
 			img {
 				width: 100%;
 				height: 100%;
+				-o-object-fit: contain;
 				object-fit: contain;
 				image-rendering: pixelated;
 			}
@@ -5584,6 +6110,242 @@ body.tool-select {
 	}
 }
 
+#textSettingsSection textarea {
+	width: 100%;
+	min-height: 96px;
+	resize: vertical;
+}
+
+/* Point text has no frame to align within — hide alignment controls
+   (dataset set by TextGlitterManager.updateBoxModeSelection) */
+#textSettingsSection[data-box-mode="auto"] .text-valign-group,
+#textSettingsSection[data-box-mode="auto"] .text-valign-label {
+	display: none;
+}
+
+/* "Fit to Text" only makes sense once there's a box to fit */
+#textSettingsSection[data-box-mode="auto"] .text-fit-box-group,
+#textSettingsSection[data-box-mode="auto"] .text-fit-box-label {
+	display: none;
+}
+
+.text-settings-section > .section-content.visible {
+	gap: var(--spacing-md);
+}
+
+.text-input-group {
+	width: 100%;
+}
+
+.subsection-note {
+	font-size: var(--font-size-sm);
+	line-height: 1.4;
+	color: var(--color-text-tertiary);
+}
+
+.text-font-picker {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+	width: 100%;
+	max-height: 220px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+.text-font-option {
+	flex-shrink: 0;
+	width: 100%;
+	text-transform: none;
+	justify-content: flex-start;
+}
+
+.text-align-group {
+	// margin-top: var(--spacing-md);
+
+	>.btn-simple {
+		flex: 1;
+	}
+}
+
+.control-group-label {
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+}
+
+.text-box-mode-group > .btn-simple {
+	flex: 1;
+}
+
+.text-valign-group > .btn-simple {
+	flex: 1;
+}
+
+.text-box-hint {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-tertiary);
+}
+
+.text-effect-controls {
+	display: none;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding-top: var(--spacing-md);
+	border-top: 1px solid var(--color-border);
+
+	&.visible {
+		display: flex;
+	}
+}
+
+.text-effect-subsection {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding: var(--spacing-md);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: rgba(0, 0, 0, 0.12);
+
+	>.subsection-title {
+		font-size: var(--font-size-sm);
+		letter-spacing: 0.5px;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: var(--color-text-tertiary);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+}
+
+// Redeclares .subsection-note (bare, not scoped) with a smaller font-size —
+// later in the cascade than the first .subsection-note rule above, so it
+// wins for every .subsection-note on the page, not just ones inside
+// .text-effect-subsection.
+.subsection-note {
+	font-size: var(--font-size-xs);
+	line-height: 1.4;
+	color: var(--color-text-tertiary);
+}
+
+.text-effect-source-row {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-md);
+}
+
+.text-effect-source-chip {
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-bg-secondary);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.text-effect-source-chip.target-active,
+.text-effect-source-change.target-active {
+	border-color: var(--color-accent);
+	box-shadow: 0 0 0 1px var(--color-accent-border);
+}
+
+.text-effect-source-swatch {
+	width: 28px;
+	height: 28px;
+	flex-shrink: 0;
+	border-radius: 4px;
+	border: 1px solid var(--color-border);
+	background-color: var(--color-bg-tertiary);
+	background-image:
+		linear-gradient(45deg, rgba(255, 255, 255, 0.16) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.16) 75%, rgba(255, 255, 255, 0.16)),
+		linear-gradient(45deg, rgba(255, 255, 255, 0.16) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.16) 75%, rgba(255, 255, 255, 0.16));
+	background-position: 0 0, 6px 6px;
+	background-size: 12px 12px;
+	overflow: hidden;
+
+	&-fill {
+		display: block;
+		width: 100%;
+		height: 100%;
+		background-size: cover;
+		background-position: center;
+
+		&.pixelated {
+			image-rendering: pixelated;
+		}
+	}
+}
+
+.text-effect-source-copy {
+	min-width: 0;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.text-effect-source-label {
+	min-width: 0;
+	font-size: var(--font-size-sm);
+	color: var(--color-text-primary);
+	text-transform: none;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.text-effect-source-actions {
+	display: flex;
+	gap: var(--spacing-sm);
+	flex-wrap: wrap;
+}
+
+.text-effect-source-change {
+	min-height: 36px;
+	padding: 0 var(--spacing-md);
+}
+
+.text-effect-source-value {
+	font-size: var(--font-size-xs);
+	letter-spacing: 0.4px;
+	color: var(--color-text-secondary);
+	text-transform: uppercase;
+}
+
+.text-effect-color-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--spacing-md);
+
+	input[type="color"] {
+		width: 56px;
+		height: 32px;
+		padding: 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: transparent;
+		cursor: pointer;
+
+		&::-webkit-color-swatch-wrapper {
+			padding: 2px;
+		}
+
+		&::-webkit-color-swatch {
+			border: none;
+			border-radius: 3px;
+		}
+	}
+}
+
 
 
 /* Setting Headers (label + value pairs) */
@@ -5664,23 +6426,23 @@ body.tool-select {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
 	gap: var(--spacing-lg);
+}
 
-	> .setting-column {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
+.setting-column {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
 
-		.right {
-			align-items: flex-end;
-		}
-
-		button.btn-text {
-			text-align: right;
-			padding: var(--spacing-xs);
-			width: fit-content;
-		}
+	&.right {
+		align-items: flex-end;
 	}
 
+	button.btn-text {
+		text-align: right;
+		padding: var(--spacing-xs);
+		width: -moz-fit-content;
+		width: fit-content;
+	}
 }
 
 /* Checkbox Groups */
@@ -5689,6 +6451,8 @@ body.tool-select {
 	align-items: center;
 	gap: var(--spacing-sm);
 	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
 	user-select: none;
 	position: relative;
 	color: #ccc;
@@ -5812,10 +6576,30 @@ align-items: center;
 		font-size: var(--font-size-md);
 		color: var(--color-text-secondary);
 		cursor: pointer;
+		-webkit-user-select: none;
+		-moz-user-select: none;
 		user-select: none;
 
 		input[type="checkbox"] {
 			cursor: pointer;
+		}
+	}
+}
+
+@media (max-width: 800px) {
+	#confirmationModal {
+		.modal-content {
+			width: min(420px, calc(100vw - 24px));
+		}
+
+		.modal-footer {
+			flex-direction: column-reverse;
+			align-items: stretch;
+
+			>button {
+				width: 100%;
+				min-height: 48px;
+			}
 		}
 	}
 }

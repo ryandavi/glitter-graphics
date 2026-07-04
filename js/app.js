@@ -803,10 +803,6 @@ resetAllSettings() {
 
 		if (layer.type === LayerType.TEXT_GLITTER) {
 			this.textGlitterManager.loadLayerSettings(layer);
-			this.showLayerSettingsEmptyState(
-				'Text layers do not use color selections',
-				'Use the Text section to edit the copy, font, alignment, and glitter texture.'
-			);
 			return;
 		}
 
@@ -867,60 +863,7 @@ resetAllSettings() {
 	loadStickerSettings(layer) {
 		if (!layer || layer.type !== LayerType.STICKER) return;
 
-		const transform = layer.stickerData.transform;
-
-		// Position
-		const posX = document.getElementById('stickerPosX');
-		const posY = document.getElementById('stickerPosY');
-		if (posX) posX.value = Math.round(transform.position.x);
-		if (posY) posY.value = Math.round(transform.position.y);
-
-		// Snap to Integer
-		const snapToInteger = document.getElementById('stickerSnapToInteger');
-		if (snapToInteger) {
-			snapToInteger.checked = transform.snapToInteger ?? false;
-		}
-
-		// Rotation
-		const rotation = document.getElementById('stickerRotation');
-		const rotationValue = document.getElementById('stickerRotationValue');
-		if (rotation && rotationValue) {
-			rotation.value = transform.rotation;
-			rotationValue.textContent = Math.round(transform.rotation) + '°';
-		}
-
-		// Scale
-		const scaleX = document.getElementById('stickerScaleX');
-		const scaleXValue = document.getElementById('stickerScaleXValue');
-		const scaleY = document.getElementById('stickerScaleY');
-		const scaleYValue = document.getElementById('stickerScaleYValue');
-		const proportionalScale = document.getElementById('stickerProportionalScale');
-
-		if (scaleX && scaleXValue) {
-			scaleX.value = transform.scale.x;
-			scaleXValue.textContent = Math.round(transform.scale.x) + '%';
-		}
-		if (scaleY && scaleYValue) {
-			scaleY.value = transform.scale.y;
-			scaleYValue.textContent = Math.round(transform.scale.y) + '%';
-		}
-		if (proportionalScale) {
-			proportionalScale.checked = transform.proportionalScale;
-		}
-
-		// Opacity
-		const stickerOpacity = document.getElementById('stickerOpacity');
-		const stickerOpacityValue = document.getElementById('stickerOpacityValue');
-		if (stickerOpacity && stickerOpacityValue) {
-			stickerOpacity.value = transform.opacity;
-			stickerOpacityValue.textContent = Math.round(transform.opacity) + '%';
-		}
-
-		// Flip
-		const flipX = document.getElementById('stickerFlipX');
-		const flipY = document.getElementById('stickerFlipY');
-		if (flipX) flipX.checked = transform.flipX;
-		if (flipY) flipY.checked = transform.flipY;
+		this.loadTransformSettings(layer, 'sticker');
 
 		// Update sticker asset info
 		if (layer.stickerSourceId) {
@@ -929,7 +872,6 @@ resetAllSettings() {
 				this.updateStickerAssetInfo(sticker);
 			}
 		}
-
 	}
 
 	saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
@@ -1153,7 +1095,8 @@ resetAllSettings() {
 		this.setupLayerSettingsListeners();
 		this.setupSliderListeners();
 		this.setupMaskEditorListeners();
-		this.setupStickerSettingsListeners();
+		this.setupTransformListeners('sticker', LayerType.STICKER, () => this.stickerManager);
+		this.setupTransformListeners('text', LayerType.TEXT_GLITTER, () => this.textGlitterManager);
 		this.setupExportListeners();
 		this.setupImageListeners();
 		this.setupModalListeners();
@@ -1286,8 +1229,11 @@ resetAllSettings() {
 		if (centerStickerHorizontal) {
 			centerStickerHorizontal.addEventListener('click', () => {
 				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+				if (!layer) return;
+				if (layer.type === LayerType.STICKER && this.stickerManager) {
 					this.stickerManager.centerHorizontal(layer.id);
+				} else if (layer.type === LayerType.TEXT_GLITTER && this.textGlitterManager) {
+					this.textGlitterManager.centerHorizontal(layer.id);
 				}
 			});
 		}
@@ -1295,8 +1241,11 @@ resetAllSettings() {
 		if (centerStickerVertical) {
 			centerStickerVertical.addEventListener('click', () => {
 				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
+				if (!layer) return;
+				if (layer.type === LayerType.STICKER && this.stickerManager) {
 					this.stickerManager.centerVertical(layer.id);
+				} else if (layer.type === LayerType.TEXT_GLITTER && this.textGlitterManager) {
+					this.textGlitterManager.centerVertical(layer.id);
 				}
 			});
 		}
@@ -1505,250 +1454,273 @@ resetAllSettings() {
 		this.maskEditor?.setupUIListeners();
 	}
 
-	setupStickerSettingsListeners() {
-		this.setupStickerPositionListeners();
-		this.setupStickerRotationListeners();
-		this.setupStickerScaleListeners();
-		this.setupStickerOpacityListeners();
-		this.setupStickerFlipListeners();
-	}
-
-	setupStickerPositionListeners() {
-		const posX = document.getElementById('stickerPosX');
-		const posY = document.getElementById('stickerPosY');
-		const snapToInteger = document.getElementById('stickerSnapToInteger');
-
-		// Snap to Integer checkbox
-		if (snapToInteger) {
-			snapToInteger.addEventListener('change', (e) => {
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER) {
-					// Update the layer's snap setting
-					layer.stickerData.transform.snapToInteger = e.target.checked;
-
-					// If enabling, immediately round current values
-					if (e.target.checked && this.stickerManager) {
-						this.stickerManager.updateTransform(layer.id, {
-							position: {
-								x: Math.round(layer.stickerData.transform.position.x),
-								y: Math.round(layer.stickerData.transform.position.y)
-							},
-							rotation: Math.round(layer.stickerData.transform.rotation)
-						});
-						this.loadStickerSettings(layer);
-					}
-					this.saveState();
-				}
-			});
+	// Shared by sticker and text layers — both carry a transform object of the
+	// exact same shape (position/rotation/scale/proportionalScale/opacity/
+	// flipX/flipY, see LayerTransform.getTransform()). Position inputs are
+	// readonly display-only (see loadTransformSettings) — dragging is how you
+	// move a layer, so no listeners are needed for them here.
+	getTransformIds(prefix) {
+		if (prefix === 'sticker') {
+			return {
+				posX: 'stickerPosX', posY: 'stickerPosY',
+				rotation: 'stickerRotation', rotationValue: 'stickerRotationValue', resetRotation: 'resetStickerRotation',
+				opacity: 'stickerOpacity', opacityValue: 'stickerOpacityValue', resetOpacity: 'resetStickerOpacity',
+				scaleX: 'stickerScaleX', scaleXValue: 'stickerScaleXValue', resetScaleX: 'resetStickerScaleX',
+				scaleY: 'stickerScaleY', scaleYValue: 'stickerScaleYValue', resetScaleY: 'resetStickerScaleY',
+				proportional: 'stickerProportionalScale',
+				flipX: 'stickerFlipX', flipY: 'stickerFlipY'
+			};
 		}
 
-		// Position inputs are readonly but we can update them
-		// No listeners needed since they're readonly
+		return {
+			posX: 'textPosX', posY: 'textPosY',
+			rotation: 'textRotation', rotationValue: 'textRotationValue', resetRotation: 'resetTextRotation',
+			opacity: 'textLayerOpacity', opacityValue: 'textLayerOpacityValue', resetOpacity: 'resetTextLayerOpacity',
+			scaleX: 'textLayerScaleX', scaleXValue: 'textLayerScaleXValue', resetScaleX: 'resetTextLayerScaleX',
+			scaleY: 'textLayerScaleY', scaleYValue: 'textLayerScaleYValue', resetScaleY: 'resetTextLayerScaleY',
+			proportional: 'textLayerProportionalScale',
+			flipX: 'textFlipX', flipY: 'textFlipY'
+		};
 	}
 
-	setupStickerRotationListeners() {
-		const rotation = document.getElementById('stickerRotation');
-		const rotationValue = document.getElementById('stickerRotationValue');
-		const resetBtn = document.getElementById('resetStickerRotation');
+	getLayerTransformData(layer) {
+		return layer?.stickerData?.transform || layer?.textData?.transform || null;
+	}
+
+	loadTransformSettings(layer, prefix) {
+		const transform = this.getLayerTransformData(layer);
+		if (!transform) return;
+
+		const ids = this.getTransformIds(prefix);
+
+		const posX = document.getElementById(ids.posX);
+		const posY = document.getElementById(ids.posY);
+		if (posX) posX.value = Math.round(transform.position.x);
+		if (posY) posY.value = Math.round(transform.position.y);
+
+		const rotation = document.getElementById(ids.rotation);
+		const rotationValue = document.getElementById(ids.rotationValue);
+		if (rotation && rotationValue) {
+			rotation.value = transform.rotation;
+			rotationValue.textContent = Math.round(transform.rotation) + '°';
+		}
+
+		const scaleX = document.getElementById(ids.scaleX);
+		const scaleXValue = document.getElementById(ids.scaleXValue);
+		const scaleY = document.getElementById(ids.scaleY);
+		const scaleYValue = document.getElementById(ids.scaleYValue);
+		const proportional = document.getElementById(ids.proportional);
+
+		if (scaleX && scaleXValue) {
+			scaleX.value = transform.scale.x;
+			scaleXValue.textContent = Math.round(transform.scale.x) + '%';
+		}
+		if (scaleY && scaleYValue) {
+			scaleY.value = transform.scale.y;
+			scaleYValue.textContent = Math.round(transform.scale.y) + '%';
+		}
+		if (proportional) {
+			proportional.checked = transform.proportionalScale;
+		}
+
+		const opacity = document.getElementById(ids.opacity);
+		const opacityValue = document.getElementById(ids.opacityValue);
+		if (opacity && opacityValue) {
+			opacity.value = transform.opacity;
+			opacityValue.textContent = Math.round(transform.opacity) + '%';
+		}
+
+		const flipX = document.getElementById(ids.flipX);
+		const flipY = document.getElementById(ids.flipY);
+		if (flipX) flipX.checked = transform.flipX;
+		if (flipY) flipY.checked = transform.flipY;
+	}
+
+	setupTransformListeners(prefix, layerType, getManager) {
+		const ids = this.getTransformIds(prefix);
+		const activeManager = () => {
+			const layer = this.layerManager.getActiveLayer();
+			const manager = getManager();
+			return (layer && layer.type === layerType && manager) ? { layer, manager } : null;
+		};
+
+		// Rotation
+		const rotation = document.getElementById(ids.rotation);
+		const rotationValue = document.getElementById(ids.rotationValue);
+		const resetRotation = document.getElementById(ids.resetRotation);
 
 		if (rotation && rotationValue) {
 			rotation.addEventListener('input', (e) => {
 				const value = parseFloat(e.target.value);
 				rotationValue.textContent = Math.round(value) + '°';
 
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					this.stickerManager.updateTransform(layer.id, { rotation: value });
-				}
+				const active = activeManager();
+				if (active) active.manager.updateTransform(active.layer.id, { rotation: value });
 			});
 
 			rotation.addEventListener('change', () => this.saveState());
 		}
 
-		if (resetBtn) {
-			resetBtn.addEventListener('click', () => {
+		if (resetRotation) {
+			resetRotation.addEventListener('click', () => {
 				if (rotation) rotation.value = CONFIG.defaultStickerRotation;
 				if (rotationValue) rotationValue.textContent = CONFIG.defaultStickerRotation + '°';
 
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					this.stickerManager.updateTransform(layer.id, { rotation: CONFIG.defaultStickerRotation });
-					this.saveState();
-				}
-			});
-		}
-	}
-	setupStickerScaleListeners() {
-		const scaleX = document.getElementById('stickerScaleX');
-		const scaleXValue = document.getElementById('stickerScaleXValue');
-		const scaleY = document.getElementById('stickerScaleY');
-		const scaleYValue = document.getElementById('stickerScaleYValue');
-		const proportionalScale = document.getElementById('stickerProportionalScale');
-		const resetScaleX = document.getElementById('resetStickerScaleX');
-		const resetScaleY = document.getElementById('resetStickerScaleY');
-
-		// Scale X
-		if (scaleX && scaleXValue) {
-			scaleX.addEventListener('input', (e) => {
-				const value = parseFloat(e.target.value);
-				scaleXValue.textContent = Math.round(value) + '%';
-
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					if (proportionalScale && proportionalScale.checked) {
-						if (scaleY && scaleYValue) {
-							scaleY.value = value;
-							scaleYValue.textContent = Math.round(value) + '%';
-						}
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: value, y: value }
-						});
-					} else {
-						// Only pass x - let updateTransform preserve y
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: value }
-						});
-					}
-				}
-			});
-
-			scaleX.addEventListener('change', () => this.saveState());
-		}
-
-		// Scale Y
-		if (scaleY && scaleYValue) {
-			scaleY.addEventListener('input', (e) => {
-				const value = parseFloat(e.target.value);
-				scaleYValue.textContent = Math.round(value) + '%';
-
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					if (proportionalScale && proportionalScale.checked) {
-						if (scaleX && scaleXValue) {
-							scaleX.value = value;
-							scaleXValue.textContent = Math.round(value) + '%';
-						}
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: value, y: value }
-						});
-					} else {
-						// Only pass y - let updateTransform preserve x
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { y: value }
-						});
-					}
-				}
-			});
-
-			scaleY.addEventListener('change', () => this.saveState());
-		}
-
-		// Reset Scale X
-		if (resetScaleX) {
-			resetScaleX.addEventListener('click', () => {
-				if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
-				if (scaleXValue) scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
-
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					if (proportionalScale && proportionalScale.checked) {
-						if (scaleY && scaleYValue) {
-							scaleY.value = CONFIG.defaultStickerScale;
-							scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
-						}
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-						});
-					} else {
-						// FIXED: Only pass x property
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: CONFIG.defaultStickerScale }
-						});
-					}
+				const active = activeManager();
+				if (active) {
+					active.manager.updateTransform(active.layer.id, { rotation: CONFIG.defaultStickerRotation });
 					this.saveState();
 				}
 			});
 		}
 
-		// Reset Scale Y
-		if (resetScaleY) {
-			resetScaleY.addEventListener('click', () => {
-				if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
-				if (scaleYValue) scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
-
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					if (proportionalScale && proportionalScale.checked) {
-						if (scaleX && scaleXValue) {
-							scaleX.value = CONFIG.defaultStickerScale;
-							scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
-						}
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-						});
-					} else {
-						// FIXED: Only pass y property
-						this.stickerManager.updateTransform(layer.id, {
-							scale: { y: CONFIG.defaultStickerScale }
-						});
-					}
-					this.saveState();
-				}
-			});
-		}
-
-
-	}
-
-	setupStickerOpacityListeners() {
-		const opacity = document.getElementById('stickerOpacity');
-		const opacityValue = document.getElementById('stickerOpacityValue');
-		const resetBtn = document.getElementById('resetStickerOpacity');
+		// Opacity
+		const opacity = document.getElementById(ids.opacity);
+		const opacityValue = document.getElementById(ids.opacityValue);
+		const resetOpacity = document.getElementById(ids.resetOpacity);
 
 		if (opacity && opacityValue) {
 			opacity.addEventListener('input', (e) => {
 				const value = parseFloat(e.target.value);
 				opacityValue.textContent = Math.round(value) + '%';
 
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					this.stickerManager.updateTransform(layer.id, { opacity: value });
-				}
+				const active = activeManager();
+				if (active) active.manager.updateTransform(active.layer.id, { opacity: value });
 			});
 
 			opacity.addEventListener('change', () => this.saveState());
 		}
 
-		if (resetBtn) {
-			resetBtn.addEventListener('click', () => {
+		if (resetOpacity) {
+			resetOpacity.addEventListener('click', () => {
 				if (opacity) opacity.value = CONFIG.defaultStickerOpacity;
 				if (opacityValue) opacityValue.textContent = CONFIG.defaultStickerOpacity + '%';
 
-				const layer = this.layerManager.getActiveLayer();
-				if (layer && layer.type === LayerType.STICKER && this.stickerManager) {
-					this.stickerManager.updateTransform(layer.id, { opacity: CONFIG.defaultStickerOpacity });
+				const active = activeManager();
+				if (active) {
+					active.manager.updateTransform(active.layer.id, { opacity: CONFIG.defaultStickerOpacity });
 					this.saveState();
 				}
 			});
 		}
-	}
 
-	setupStickerFlipListeners() {
+		// Scale X / Y (+ proportional lock)
+		const scaleX = document.getElementById(ids.scaleX);
+		const scaleXValue = document.getElementById(ids.scaleXValue);
+		const scaleY = document.getElementById(ids.scaleY);
+		const scaleYValue = document.getElementById(ids.scaleYValue);
+		const proportionalScale = document.getElementById(ids.proportional);
+		const resetScaleX = document.getElementById(ids.resetScaleX);
+		const resetScaleY = document.getElementById(ids.resetScaleY);
+
+		if (scaleX && scaleXValue) {
+			scaleX.addEventListener('input', (e) => {
+				const value = parseFloat(e.target.value);
+				scaleXValue.textContent = Math.round(value) + '%';
+
+				const active = activeManager();
+				if (!active) return;
+
+				if (proportionalScale && proportionalScale.checked) {
+					if (scaleY && scaleYValue) {
+						scaleY.value = value;
+						scaleYValue.textContent = Math.round(value) + '%';
+					}
+					active.manager.updateTransform(active.layer.id, { scale: { x: value, y: value } });
+				} else {
+					// Only pass x - let updateTransform preserve y
+					active.manager.updateTransform(active.layer.id, { scale: { x: value } });
+				}
+			});
+
+			scaleX.addEventListener('change', () => this.saveState());
+		}
+
+		if (scaleY && scaleYValue) {
+			scaleY.addEventListener('input', (e) => {
+				const value = parseFloat(e.target.value);
+				scaleYValue.textContent = Math.round(value) + '%';
+
+				const active = activeManager();
+				if (!active) return;
+
+				if (proportionalScale && proportionalScale.checked) {
+					if (scaleX && scaleXValue) {
+						scaleX.value = value;
+						scaleXValue.textContent = Math.round(value) + '%';
+					}
+					active.manager.updateTransform(active.layer.id, { scale: { x: value, y: value } });
+				} else {
+					// Only pass y - let updateTransform preserve x
+					active.manager.updateTransform(active.layer.id, { scale: { y: value } });
+				}
+			});
+
+			scaleY.addEventListener('change', () => this.saveState());
+		}
+
+		if (resetScaleX) {
+			resetScaleX.addEventListener('click', () => {
+				if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
+				if (scaleXValue) scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+
+				const active = activeManager();
+				if (!active) return;
+
+				if (proportionalScale && proportionalScale.checked) {
+					if (scaleY && scaleYValue) {
+						scaleY.value = CONFIG.defaultStickerScale;
+						scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+					}
+					active.manager.updateTransform(active.layer.id, {
+						scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
+					});
+				} else {
+					active.manager.updateTransform(active.layer.id, { scale: { x: CONFIG.defaultStickerScale } });
+				}
+				this.saveState();
+			});
+		}
+
+		if (resetScaleY) {
+			resetScaleY.addEventListener('click', () => {
+				if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
+				if (scaleYValue) scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+
+				const active = activeManager();
+				if (!active) return;
+
+				if (proportionalScale && proportionalScale.checked) {
+					if (scaleX && scaleXValue) {
+						scaleX.value = CONFIG.defaultStickerScale;
+						scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+					}
+					active.manager.updateTransform(active.layer.id, {
+						scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
+					});
+				} else {
+					active.manager.updateTransform(active.layer.id, { scale: { y: CONFIG.defaultStickerScale } });
+				}
+				this.saveState();
+			});
+		}
+
+		// Flip
 		const attachFlip = (checkboxId, property) => {
 			const checkbox = document.getElementById(checkboxId);
-			if (checkbox) {
-				checkbox.addEventListener('change', (e) => {
-					const layer = this.layerManager.getActiveLayer();
-					if (this.isStickerLayer(layer) && this.stickerManager) {
-						this.stickerManager.updateTransform(layer.id, { [property]: e.target.checked });
-						this.saveState();
-					}
-				});
-			}
+			if (!checkbox) return;
+
+			checkbox.addEventListener('change', (e) => {
+				const active = activeManager();
+				if (active) {
+					active.manager.updateTransform(active.layer.id, { [property]: e.target.checked });
+					this.saveState();
+				}
+			});
 		};
 
-		attachFlip('stickerFlipX', 'flipX');
-		attachFlip('stickerFlipY', 'flipY');
+		attachFlip(ids.flipX, 'flipX');
+		attachFlip(ids.flipY, 'flipY');
 	}
 
 	setupImageListeners() {
@@ -2646,10 +2618,14 @@ setupWelcomeModalListeners() {
 					// Has a sticker selected - show controls
 					this.hideStickerSettingsEmptyState();
 					this.loadStickerSettings(layer); // This will populate asset info
+					stickerCenterControls.classList.add('visible');
 				} else {
 					// No sticker selected yet - show empty state, hide controls
 					this.showStickerSettingsEmptyState();
 				}
+			} else if (layer && layer.type === LayerType.TEXT_GLITTER) {
+				// Text layers reuse the same center-H/center-V bar
+				stickerCenterControls.classList.add('visible');
 			}
 		} else if (this.currentTool === ToolType.COLOR_PICKER && colorPickerControls) {
 			if (layer && layer.type === LayerType.GLITTER_FILL && layer.selections && layer.selections.length > 0) {
@@ -3051,6 +3027,46 @@ setupWelcomeModalListeners() {
 			return;
 		}
 
+		// Ctrl/Cmd+D: duplicate the selected layer
+		if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {
+			const selectedLayer = this.layerManager.getActiveLayer();
+			if (selectedLayer && selectedLayer.type !== LayerType.BASE_IMAGE) {
+				e.preventDefault(); // Prevent the browser's "bookmark this page" dialog
+				this.layerManager.cloneLayer(selectedLayer.id);
+			}
+			return;
+		}
+
+		// Arrow keys: nudge the selected sticker/text layer by 1px (10px with Shift).
+		// Rapid/held presses collapse into a single history entry (see scheduleNudgeSave).
+		if (this.currentTool === ToolType.SELECT &&
+			(e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+			const layer = this.layerManager.getActiveLayer();
+			const prefix = layer?.type === LayerType.STICKER ? 'sticker'
+				: layer?.type === LayerType.TEXT_GLITTER ? 'text' : null;
+			const manager = prefix === 'sticker' ? this.stickerManager
+				: prefix === 'text' ? this.textGlitterManager : null;
+			const transform = this.getLayerTransformData(layer);
+
+			if (manager && transform) {
+				e.preventDefault();
+				const step = e.shiftKey ? 10 : 1;
+				const deltaX = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+				const deltaY = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+
+				manager.updateTransform(layer.id, {
+					position: {
+						x: transform.position.x + deltaX,
+						y: transform.position.y + deltaY
+					}
+				});
+
+				this.loadTransformSettings(layer, prefix);
+				this.scheduleNudgeSave();
+				return;
+			}
+		}
+
 
 		if (this.originalImage) {
 			if ((e.ctrlKey || e.metaKey) && e.key === '0') {
@@ -3080,6 +3096,13 @@ setupWelcomeModalListeners() {
 			e.preventDefault();
 			this.redo();
 		}
+	}
+
+	// Collapses a burst of arrow-key nudges (held key / rapid presses) into a
+	// single history entry, the same debounce pattern sliders use.
+	scheduleNudgeSave() {
+		clearTimeout(this._nudgeSaveTimer);
+		this._nudgeSaveTimer = setTimeout(() => this.saveState(), CONFIG.sliderDebounceMs);
 	}
 
 	// ===== HISTORY =====
@@ -3421,6 +3444,11 @@ setupWelcomeModalListeners() {
 
 			// 6. Update Preview
 			this.previewCtx.putImageData(this.originalImageData, 0, 0);
+
+			// P-1: warm the default font as soon as an image is available, so the
+			// first Text tool click almost never races the FontFace load (see
+			// TextGlitterManager's font-readiness cache-key fix, docs/UX-PLAN-2.md §4).
+			this.textGlitterManager?.ensureFontLoaded(CONFIG.textLayers.defaultFontId).catch(() => {});
 
 			window.dispatchEvent(new Event('imageLoaded'));
 
@@ -3783,16 +3811,40 @@ setupWelcomeModalListeners() {
 
 		// 5. UI & Preview Updates (Crucial: These must happen after pushing the data)
 		this.saveState(); // For Undo/Redo
-		this.updatePreview(); // To show the new glitter fill immediately
+
+		// G-1b: paint the chip/status/toolbar feedback on this frame, *before*
+		// kicking off the (potentially slow) mask pipeline, so the click never
+		// looks like dead air. updatePreview is deferred a frame so the browser
+		// actually gets to paint the above first.
 		this.updateActionButtons();
 		this.updateSelectedColorsDisplay(); // To show "Transparent" or the RGB values in the sidebar
-
-		// Update context toolbars (show color picker controls if we now have selections)
 		this.updateContextToolbars();
-
-		// Update helpful message
 		this.updateHelpfulMessage();
+		this.updateStatus('Applying glitter…');
 
+		this.glitterManager.markMaskRequestStart(layer.id);
+		requestAnimationFrame(() => this.updatePreview()); // To show the new glitter fill
+
+	}
+
+	// G-1b: fires whenever a mask encode starts/settles for any glitter layer.
+	// Recomputed from ground truth (isMaskPending for the CURRENTLY active layer)
+	// rather than trusting this event's own layerId/isPending, so switching the
+	// active layer mid-encode can't leave the busy cursor stuck.
+	onMaskPendingChange(layerId, isPending) {
+		if (this.currentTool === ToolType.BRUSH) return; // brush has its own cursor UI
+
+		const previewContainer = document.getElementById('previewContainer');
+		const activeLayer = this.layerManager.getActiveLayer();
+		const activeIsPending = Boolean(activeLayer && this.glitterManager.isMaskPending(activeLayer.id));
+
+		if (previewContainer) {
+			previewContainer.style.cursor = activeIsPending ? 'progress' : '';
+		}
+
+		if (!isPending && activeLayer && activeLayer.id === layerId) {
+			this.updateStatus('Glitter applied');
+		}
 	}
 
 	updateSelectedColorsDisplay() {

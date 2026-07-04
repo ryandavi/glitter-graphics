@@ -325,8 +325,11 @@ const LAYER_UI_CONFIG = {
 	},
 
 	[LayerType.TEXT_GLITTER]: {
-		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'textSettingsSection', 'layerSettingsSection'],
-		mobileSettingsSections: ['tool', 'glitter', 'text'],
+		// No layerSettingsSection / 'tool': Selection Settings only applies to
+		// color-picked glitter fills — text layers hide it instead of showing an
+		// explanatory empty state.
+		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'textSettingsSection'],
+		mobileSettingsSections: ['glitter', 'text'],
 		panelMode: 'text',
 		onActivate: (editor, layer) => {
 			const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.BRUSH]);
@@ -335,10 +338,6 @@ const LAYER_UI_CONFIG = {
 			}
 
 			editor.updateGlitterSelection();
-			editor.showLayerSettingsEmptyState(
-				'Text layers do not use color selections',
-				'Use the Text section to edit the copy, font, alignment, and glitter texture.'
-			);
 			editor.textGlitterManager?.loadLayerSettings(layer);
 		}
 	}

@@ -23,7 +23,7 @@ class MaskEditor {
 			modeButtons: Array.from(document.querySelectorAll('[data-mask-mode]')),
 			overlayToggle: document.getElementById('maskOverlayToggle'),
 			clearButton: document.getElementById('clearMaskPaint'),
-			invertToggle: document.getElementById('maskInvertToggle'),
+			settingsContent: document.querySelector('.mask-settings-content'),
 			overlayCanvas: document.getElementById('maskOverlayCanvas'),
 			cursor: document.getElementById('maskBrushCursor')
 		};
@@ -84,18 +84,6 @@ class MaskEditor {
 			this.renderOverlay();
 		});
 
-		// Mirror of the Selection Options invert checkbox — one state, two views.
-		// Forward through #invert's change event so the commit/history path runs once.
-		this.ui.invertToggle?.addEventListener('change', () => {
-			const invert = document.getElementById('invert');
-			if (!invert) {
-				return;
-			}
-
-			invert.checked = this.ui.invertToggle.checked;
-			invert.dispatchEvent(new Event('change'));
-		});
-
 		this.loadLayer(this.editor.layerManager.getActiveLayer());
 	}
 
@@ -123,6 +111,7 @@ class MaskEditor {
 		this.currentLayerId = (layer && layer.type === LayerType.GLITTER_FILL) ? layer.id : null;
 		document.body.classList.add('mask-editing');
 		this.ui.toggle?.classList.add('active');
+		this.ui.settingsContent?.classList.add('brush-active');
 		if (this.ui.overlayToggle) {
 			this.ui.overlayToggle.disabled = false;
 			this.ui.overlayToggle.classList.toggle('active', this.showOverlay);
@@ -151,6 +140,7 @@ class MaskEditor {
 		this.currentLayerId = null;
 		document.body.classList.remove('mask-editing');
 		this.ui.toggle?.classList.remove('active');
+		this.ui.settingsContent?.classList.remove('brush-active');
 		if (this.ui.overlayToggle) {
 			this.ui.overlayToggle.disabled = true;
 		}
@@ -225,16 +215,10 @@ class MaskEditor {
 	}
 
 	loadLayer(layer) {
-		const isGlitterLayer = layer && layer.type === LayerType.GLITTER_FILL;
 		this.updateToolButtonState();
 
 		if (this.ui.clearButton) {
 			this.ui.clearButton.disabled = !layer?.maskHasContent;
-		}
-
-		if (this.ui.invertToggle) {
-			this.ui.invertToggle.checked = Boolean(layer?.settings?.invert);
-			this.ui.invertToggle.disabled = !isGlitterLayer;
 		}
 
 		this._syncModeButtons();

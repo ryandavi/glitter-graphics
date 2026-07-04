@@ -230,11 +230,25 @@ class GifExporter {
 	}
 
 	_getTextEffectSource(layer, effectName) {
+		// Mirrors TextGlitterManager.getEffectPaintSource — must stay in lockstep
+		// so preview and export render identically (fill slot's scale/opacity
+		// are the layer-level settings.scale/settings.opacity; border/shadow
+		// carry their own per-slot scale/opacity).
 		if (effectName === 'fill') {
+			const fillData = layer.textData?.fill;
+			if (fillData?.mode === 'solid') {
+				return {
+					mode: 'solid',
+					color: fillData.color || '#000000',
+					opacity: (layer.settings.opacity ?? 100) / 100
+				};
+			}
+
 			return {
 				mode: 'glitter',
 				glitterId: layer.selectedGlitterId,
-				opacity: layer.settings.opacity / 100
+				scale: layer.settings.scale ?? 100,
+				opacity: (layer.settings.opacity ?? 100) / 100
 			};
 		}
 
@@ -247,14 +261,15 @@ class GifExporter {
 			return {
 				mode: 'glitter',
 				glitterId: effectData.glitterId,
-				opacity: 1
+				scale: effectData.scale ?? 100,
+				opacity: (effectData.opacity ?? 100) / 100
 			};
 		}
 
 		return {
 			mode: 'solid',
 			color: effectData.color || '#000000',
-			opacity: 1
+			opacity: (effectData.opacity ?? 100) / 100
 		};
 	}
 
@@ -327,7 +342,8 @@ class GifExporter {
 			patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
 
 			const pattern = fillCtx.createPattern(patternSource, 'repeat');
-			const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+			const sourceScale = source.scale ?? layer.settings.scale;
+			const scale = (sourceScale <= 0 ? 1 : sourceScale) / 100;
 			const matrix = new DOMMatrix().scaleSelf(scale, scale);
 			pattern.setTransform(matrix);
 			fillCtx.fillStyle = pattern;

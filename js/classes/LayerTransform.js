@@ -39,8 +39,11 @@ class LayerTransform {
         this._settingsSyncScheduled = true;
         requestAnimationFrame(() => {
             this._settingsSyncScheduled = false;
-            if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
-                this.editor.loadStickerSettings(this.layer);
+            const prefix = this.layer.type === LayerType.STICKER
+                ? 'sticker'
+                : this.layer.type === LayerType.TEXT_GLITTER ? 'text' : null;
+            if (prefix) {
+                this.editor.loadTransformSettings?.(this.layer, prefix);
             }
         });
     }
@@ -270,6 +273,11 @@ updateTransform(updates) {
             this.applyTransform(this.element, dimensions);
         }
 
+        // Keep the selection/transform-handle overlay in sync with the moved element
+        if (this.transformHandles) {
+            this.updateHandlePositions();
+        }
+
         this.editor.saveState();
     }
 
@@ -285,6 +293,11 @@ updateTransform(updates) {
         if (this.element) {
             const dimensions = this.getDimensions();
             this.applyTransform(this.element, dimensions);
+        }
+
+        // Keep the selection/transform-handle overlay in sync with the moved element
+        if (this.transformHandles) {
+            this.updateHandlePositions();
         }
 
         this.editor.saveState();
@@ -393,7 +406,7 @@ const handleMouseMove = (e) => {
     }
     
     // Update settings UI if available
-    if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
+    if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER) {
         this.scheduleSettingsSync();
     }
 };
@@ -482,7 +495,7 @@ const handleMouseMove = (e) => {
             this.updateHandlePositions();
         }
 
-        if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
+        if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER) {
             this.scheduleSettingsSync();
         }
     }
@@ -864,7 +877,7 @@ removeTransformHandles() {
             this.handleMoveDrag(e);
         }
 
-        if (this.editor.loadStickerSettings && this.layer.type === LayerType.STICKER) {
+        if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER) {
             this.scheduleSettingsSync();
         }
     }

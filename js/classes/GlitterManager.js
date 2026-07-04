@@ -22,6 +22,38 @@ class GlitterManager extends ContentManager {
 		);
 		this.nextPaintVersion = 1;
 
+		// G-1: tracks in-flight mask encodes per layer (for the busy cursor / status)
+		// and the timestamp of the click that kicked off the current mask request
+		// (for click->applied latency instrumentation).
+		this.maskPendingCounts = new Map();
+		this.maskRequestStarts = new Map();
+
+	}
+
+	// ===== G-1: mask pipeline instrumentation & busy-state helpers =====
+
+	markMaskRequestStart(layerId) {
+		this.maskRequestStarts.set(layerId, performance.now());
+	}
+
+	isMaskPending(layerId) {
+		return (this.maskPendingCounts.get(layerId) || 0) > 0;
+	}
+
+	_incrementMaskPending(layerId) {
+		const next = (this.maskPendingCounts.get(layerId) || 0) + 1;
+		this.maskPendingCounts.set(layerId, next);
+		this.editor.onMaskPendingChange?.(layerId, true);
+	}
+
+	_decrementMaskPending(layerId) {
+		const next = (this.maskPendingCounts.get(layerId) || 0) - 1;
+		if (next <= 0) {
+			this.maskPendingCounts.delete(layerId);
+			this.editor.onMaskPendingChange?.(layerId, false);
+		} else {
+			this.maskPendingCounts.set(layerId, next);
+		}
 	}
 
 async initBrowser() {
@@ -336,32 +368,10 @@ async initBrowser() {
 
 	// ===== RENDERING (CANVAS/DOM) =====
 
-	renderContent(layersToShow) {
-		const width = this.editor.originalCanvas.width;
-		const height = this.editor.originalCanvas.height;
-
-		const layerType = this.getLayerType();
-		const visibleLayerIds = new Set();
-
-		layersToShow.forEach(layer => {
-			if (layer.type === layerType) {
-				visibleLayerIds.add(layer.id);
-				this.renderLayer(layer, width, height);
-			}
-		});
-
-		this.layerElements.forEach((element, layerId) => {
-			if (!visibleLayerIds.has(layerId)) {
-				this.removeLayerElement(layerId);
-			}
-		});
-
+	updateSelection() {
+		// Delegate to main editor's update method
+		this.editor.updateGlitterSelection();
 	}
-
-updateSelection() {
-	// Delegate to main editor's update method
-	this.editor.updateGlitterSelection();
-}
 
 	renderContent(layersToShow) {
 		// Reconcile instead of ContentManager's clear-and-rebuild: recreating a
@@ -427,6 +437,10 @@ updateSelection() {
 		if (maskObjectUrl) {
 			inner.style.maskImage = `url(${maskObjectUrl})`;
 			inner.style.webkitMaskImage = `url(${maskObjectUrl})`;
+			// Unconditional: a no-op for full-res masks, but required when the
+			// currently-applied mask is a downscaled G-1c draft.
+			inner.style.maskSize = '100% 100%';
+			inner.style.webkitMaskSize = '100% 100%';
 			inner.style.visibility = '';
 		} else {
 			// No decoded mask yet (first render of this layer): keep the element
@@ -488,6 +502,10 @@ updateSelection() {
 
 		inner.style.maskImage = `url(${url})`;
 		inner.style.webkitMaskImage = `url(${url})`;
+		// Unconditional: a no-op for full-res masks, but required when this is
+		// a downscaled G-1c draft (canvas is smaller than the element).
+		inner.style.maskSize = '100% 100%';
+		inner.style.webkitMaskSize = '100% 100%';
 		inner.style.visibility = '';
 	}
 
@@ -500,62 +518,123 @@ updateSelection() {
 			return currentCache.url || null;
 		}
 
+		const requestStart = this.maskRequestStarts.get(layer.id);
+		this.maskRequestStarts.delete(layer.id);
+
+		const canvasStart = performance.now();
 		const maskCanvas = this.editor.maskCompositor.getMaskCanvas(layer, { draft: draftMask });
+		dbg(`[G-1] getMaskCanvas (${draftMask ? 'brush-draft' : 'full'}): ${(performance.now() - canvasStart).toFixed(1)}ms`);
 
 		layer._maskImageCache = {
 			key: cacheKey,
 			url: currentCache?.url || null,
-			pending: true
+			pending: true,
+			fullApplied: false
 		};
 
-		maskCanvas.toBlob((blob) => {
-			const latestCache = layer._maskImageCache;
-			if (!blob) {
-				if (latestCache?.key === cacheKey) {
-					layer._maskImageCache = {
-						key: cacheKey,
-						url: latestCache.url || null,
-						pending: false
-					};
-				}
-				return;
-			}
+		// G-1c: for a full-accuracy request (color-picker clicks — NOT brush
+		// live-painting, which already gets its speed from MaskCompositor's own
+		// draft mode skipping feather/caching), encode a downscaled draft PNG
+		// first so glitter appears almost immediately, then silently replace it
+		// with the full-resolution encode when that lands. Skipped when the
+		// mask is already small enough that downscaling wouldn't help.
+		const longestSide = Math.max(maskCanvas.width, maskCanvas.height);
+		if (!draftMask && longestSide > 512) {
+			this._encodeDraftMask(layer, maskCanvas, cacheKey);
+		}
 
-			const nextUrl = URL.createObjectURL(blob);
-			if (!latestCache || latestCache.key !== cacheKey) {
-				URL.revokeObjectURL(nextUrl);
-				return;
-			}
-
-			// Decode the blob before touching the style and keep the old URL
-			// alive until the swap lands — otherwise the element renders a
-			// frame with a missing mask (visible flash while painting/picking).
-			const img = new Image();
-			img.onload = () => {
-				const cacheNow = layer._maskImageCache;
-				if (!cacheNow || cacheNow.key !== cacheKey) {
-					URL.revokeObjectURL(nextUrl);
-					return;
-				}
-
-				const previousUrl = cacheNow.url;
-				layer._maskImageCache = {
-					key: cacheKey,
-					url: nextUrl,
-					pending: false
-				};
-
-				this.applyMaskObjectUrl(layer.id, nextUrl);
-
-				if (previousUrl && previousUrl !== nextUrl) {
-					URL.revokeObjectURL(previousUrl);
-				}
-			};
-			img.onerror = () => URL.revokeObjectURL(nextUrl);
-			img.src = nextUrl;
-		}, 'image/png');
+		this._encodeFullMask(layer, maskCanvas, cacheKey, requestStart);
 
 		return currentCache?.url || null;
+	}
+
+	_encodeDraftMask(layer, sourceCanvas, cacheKey) {
+		this._incrementMaskPending(layer.id);
+
+		const maxSide = 512;
+		const longest = Math.max(sourceCanvas.width, sourceCanvas.height);
+		const scale = maxSide / longest;
+		const draftCanvas = document.createElement('canvas');
+		draftCanvas.width = Math.max(1, Math.round(sourceCanvas.width * scale));
+		draftCanvas.height = Math.max(1, Math.round(sourceCanvas.height * scale));
+		draftCanvas.getContext('2d').drawImage(sourceCanvas, 0, 0, draftCanvas.width, draftCanvas.height);
+
+		const blobStart = performance.now();
+		draftCanvas.toBlob((blob) => {
+			dbg(`[G-1] draft toBlob: ${(performance.now() - blobStart).toFixed(1)}ms`);
+			this._applyEncodedMaskBlob(layer, blob, cacheKey, { isDraft: true });
+		}, 'image/png');
+	}
+
+	_encodeFullMask(layer, sourceCanvas, cacheKey, requestStart) {
+		this._incrementMaskPending(layer.id);
+
+		const blobStart = performance.now();
+		sourceCanvas.toBlob((blob) => {
+			dbg(`[G-1] full toBlob: ${(performance.now() - blobStart).toFixed(1)}ms`);
+			this._applyEncodedMaskBlob(layer, blob, cacheKey, { isDraft: false, requestStart });
+		}, 'image/png');
+	}
+
+	_applyEncodedMaskBlob(layer, blob, cacheKey, meta = {}) {
+		const { isDraft = false, requestStart } = meta;
+
+		if (!blob) {
+			this._decrementMaskPending(layer.id);
+			return;
+		}
+
+		const latestCache = layer._maskImageCache;
+		if (!latestCache || latestCache.key !== cacheKey || (isDraft && latestCache.fullApplied)) {
+			// Superseded by a newer click/generation, or the full-res encode for
+			// this generation already won — never let a stale/lower-quality
+			// draft regress an already-applied full-res mask.
+			this._decrementMaskPending(layer.id);
+			return;
+		}
+
+		const nextUrl = URL.createObjectURL(blob);
+
+		// Decode the blob before touching the style and keep the old URL
+		// alive until the swap lands — otherwise the element renders a
+		// frame with a missing mask (visible flash while painting/picking).
+		const decodeStart = performance.now();
+		const img = new Image();
+		img.onload = () => {
+			dbg(`[G-1] ${isDraft ? 'draft' : 'full'} decode: ${(performance.now() - decodeStart).toFixed(1)}ms`);
+
+			const cacheNow = layer._maskImageCache;
+			if (!cacheNow || cacheNow.key !== cacheKey || (isDraft && cacheNow.fullApplied)) {
+				URL.revokeObjectURL(nextUrl);
+				this._decrementMaskPending(layer.id);
+				return;
+			}
+
+			const previousUrl = cacheNow.url;
+			layer._maskImageCache = {
+				key: cacheKey,
+				url: nextUrl,
+				pending: cacheNow.pending,
+				fullApplied: isDraft ? Boolean(cacheNow.fullApplied) : true
+			};
+
+			this.applyMaskObjectUrl(layer.id, nextUrl);
+
+			if (previousUrl && previousUrl !== nextUrl) {
+				URL.revokeObjectURL(previousUrl);
+			}
+
+			if (requestStart != null) {
+				dbg(`[G-1] click -> applied (${isDraft ? 'draft' : 'full'}): ${(performance.now() - requestStart).toFixed(1)}ms`);
+			}
+
+			this._decrementMaskPending(layer.id);
+		};
+		img.onerror = () => {
+			URL.revokeObjectURL(nextUrl);
+			this._decrementMaskPending(layer.id);
+		};
+		img.src = nextUrl;
 	}
 
 	getSelectionCacheKey(layer) {
@@ -572,6 +651,7 @@ updateSelection() {
 			return new Uint8Array(layer._selectionMaskCache.mask);
 		}
 
+		const buildStart = performance.now();
 		const width = this.editor.originalCanvas.width;
 		const height = this.editor.originalCanvas.height;
 		const len = width * height;
@@ -582,10 +662,13 @@ updateSelection() {
 
 		layer.selections.forEach(sel => {
 			if (layer.settings.contiguous) {
+				const floodStart = performance.now();
 				this.floodFill(mask, sel.x, sel.y, sel, thresholdSq);
+				dbg(`[G-1] floodFill: ${(performance.now() - floodStart).toFixed(1)}ms`);
 				return;
 			}
 
+			const scanStart = performance.now();
 			for (let i = 0; i < len; i++) {
 				if (mask[i] === 255) continue;
 
@@ -607,6 +690,7 @@ updateSelection() {
 					mask[i] = 255;
 				}
 			}
+			dbg(`[G-1] non-contiguous scan: ${(performance.now() - scanStart).toFixed(1)}ms`);
 		});
 
 		layer._selectionMaskCache = {
@@ -614,6 +698,7 @@ updateSelection() {
 			mask: new Uint8Array(mask)
 		};
 
+		dbg(`[G-1] createSelectionMaskForLayer total: ${(performance.now() - buildStart).toFixed(1)}ms`);
 		return new Uint8Array(mask);
 	}
 

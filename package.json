@@ -2,9 +2,11 @@
 	"name": "glitter-touch-tests",
 	"private": true,
 	"scripts": {
-		"test:touch": "node tests/touch-smoke.js"
+		"test:touch": "node tests/touch-smoke.js",
+		"build:css": "sass css/style.scss css/style.css"
 	},
 	"devDependencies": {
-		"playwright": "^1.61.1"
+		"playwright": "^1.61.1",
+		"sass": "^1.77.8"
 	}
 }

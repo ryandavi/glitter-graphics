@@ -44,6 +44,12 @@ class TextGlitterManager {
 			fillGlitterChange: document.getElementById('textFillGlitterChange'),
 			fillGlitterLabel: document.getElementById('textFillGlitterLabel'),
 			fillGlitterSwatch: document.getElementById('textFillGlitterSwatch'),
+			fillSourceValue: document.getElementById('textFillSourceValue'),
+			fillUseColor: document.getElementById('textFillUseColor'),
+			fillUseGlitter: document.getElementById('textFillUseGlitter'),
+			fillColor: document.getElementById('textFillColor'),
+			fillColorRow: document.getElementById('textFillColorRow'),
+			textureScaleRow: document.getElementById('textTextureScaleRow'),
 			textureScale: document.getElementById('textTextureScale'),
 			textureScaleValue: document.getElementById('textTextureScaleValue'),
 			textureOpacity: document.getElementById('textTextureOpacity'),
@@ -52,6 +58,7 @@ class TextGlitterManager {
 			verticalAlignButtons: Array.from(document.querySelectorAll('[data-text-valign]')),
 			boxModeButtons: Array.from(document.querySelectorAll('[data-text-box-mode]')),
 			boxModeHint: document.getElementById('textBoxModeHint'),
+			fitBoxToContent: document.getElementById('textFitBoxToContent'),
 			borderEnabled: document.getElementById('textBorderEnabled'),
 			borderControls: document.getElementById('textBorderControls'),
 			borderWidth: document.getElementById('textBorderWidth'),
@@ -65,6 +72,11 @@ class TextGlitterManager {
 			borderGlitterSwatch: document.getElementById('textBorderGlitterSwatch'),
 			borderUseColor: document.getElementById('textBorderUseColor'),
 			borderUseGlitter: document.getElementById('textBorderUseGlitter'),
+			borderScaleRow: document.getElementById('textBorderScaleRow'),
+			borderScale: document.getElementById('textBorderScale'),
+			borderScaleValue: document.getElementById('textBorderScaleValue'),
+			borderOpacity: document.getElementById('textBorderOpacity'),
+			borderOpacityValue: document.getElementById('textBorderOpacityValue'),
 			shadowEnabled: document.getElementById('textShadowEnabled'),
 			shadowControls: document.getElementById('textShadowControls'),
 			shadowOffsetX: document.getElementById('textShadowOffsetX'),
@@ -79,7 +91,12 @@ class TextGlitterManager {
 			shadowGlitterLabel: document.getElementById('textShadowGlitterLabel'),
 			shadowGlitterSwatch: document.getElementById('textShadowGlitterSwatch'),
 			shadowUseColor: document.getElementById('textShadowUseColor'),
-			shadowUseGlitter: document.getElementById('textShadowUseGlitter')
+			shadowUseGlitter: document.getElementById('textShadowUseGlitter'),
+			shadowScaleRow: document.getElementById('textShadowScaleRow'),
+			shadowScale: document.getElementById('textShadowScale'),
+			shadowScaleValue: document.getElementById('textShadowScaleValue'),
+			shadowOpacity: document.getElementById('textShadowOpacity'),
+			shadowOpacityValue: document.getElementById('textShadowOpacityValue')
 		};
 	}
 
@@ -227,6 +244,19 @@ class TextGlitterManager {
 			});
 		});
 
+		this.ui.fitBoxToContent?.addEventListener('click', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.fitBoxToText(layer);
+				}, { saveHistory: true });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		});
+
 		this.bindEffectToggle(this.ui.borderEnabled, 'border');
 		this.bindEffectToggle(this.ui.shadowEnabled, 'shadow');
 
@@ -250,6 +280,26 @@ class TextGlitterManager {
 		this.bindEffectUseGlitter(this.ui.shadowUseGlitter, 'shadow');
 		this.bindEffectColorInput(this.ui.borderColor, 'border');
 		this.bindEffectColorInput(this.ui.shadowColor, 'shadow');
+
+		this.bindFillUseColor();
+		this.bindFillUseGlitter();
+		this.bindFillColorInput();
+
+		this.attachSlider(this.ui.borderScale, this.ui.borderScaleValue, '%', (value, layer) => {
+			this.ensureEffectData(layer, 'border').scale = value;
+		}, this.getDefaultBorder().scale, false);
+
+		this.attachSlider(this.ui.borderOpacity, this.ui.borderOpacityValue, '%', (value, layer) => {
+			this.ensureEffectData(layer, 'border').opacity = value;
+		}, this.getDefaultBorder().opacity, false);
+
+		this.attachSlider(this.ui.shadowScale, this.ui.shadowScaleValue, '%', (value, layer) => {
+			this.ensureEffectData(layer, 'shadow').scale = value;
+		}, this.getDefaultShadow().scale, false);
+
+		this.attachSlider(this.ui.shadowOpacity, this.ui.shadowOpacityValue, '%', (value, layer) => {
+			this.ensureEffectData(layer, 'shadow').opacity = value;
+		}, this.getDefaultShadow().opacity, false);
 	}
 
 	getPointAnchorSnapshot(layer) {
@@ -342,7 +392,9 @@ class TextGlitterManager {
 		return {
 			widthPx: 4,
 			glitterId: null,
-			color: '#000000'
+			color: '#000000',
+			scale: 100,
+			opacity: 100
 		};
 	}
 
@@ -351,6 +403,18 @@ class TextGlitterManager {
 			offsetX: 6,
 			offsetY: 6,
 			glitterId: null,
+			color: '#000000',
+			scale: 100,
+			opacity: 100
+		};
+	}
+
+	// The fill slot's texture scale/opacity are (deliberately) the existing
+	// layer-level settings.scale/settings.opacity — not duplicated here — so
+	// this only tracks the glitter-vs-solid choice and the solid color.
+	getDefaultFill() {
+		return {
+			mode: 'glitter',
 			color: '#000000'
 		};
 	}
@@ -366,6 +430,9 @@ class TextGlitterManager {
 		}
 		if (layer.textData.shadow === undefined) {
 			layer.textData.shadow = null;
+		}
+		if (!layer.textData.fill) {
+			layer.textData.fill = this.getDefaultFill();
 		}
 		if (!layer.textData.boxMode) {
 			layer.textData.boxMode = CONFIG.textLayers.defaultBoxMode || 'auto';
@@ -396,14 +463,45 @@ class TextGlitterManager {
 		layer.textData.boxHeight = Math.max(minBoxSize, Math.ceil(entry.layoutHeight || entry.textHeight || 1) + 1);
 	}
 
+	// "Fit to Text" for an already-fixed box: shrink-wraps the box to the
+	// CURRENTLY WRAPPED lines — width becomes the widest wrapped line, height
+	// becomes enough for all of them — the manual, mobile-friendly equivalent
+	// of Illustrator's double-click-edge-to-fit gesture. This preserves
+	// existing line breaks (both explicit ones and wraps from the old box
+	// width) rather than re-flowing into one unwrapped line; it just corrects
+	// a box that's now too small (or wastefully large) for its content, e.g.
+	// after a font change makes glyphs wider/narrower. entry.lines is the
+	// FULL wrapped line list (unlike entry.layoutWidth/Height, which in fixed
+	// mode just echo the current boxWidth/boxHeight and don't grow to fit
+	// overflowing content).
+	fitBoxToText(layer) {
+		this.normalizeLayer(layer);
+		if ((layer.textData.boxMode || 'auto') !== 'fixed') return;
+
+		const entry = this.getMeasurementEntry(layer);
+		if (!entry.lines.length) return;
+
+		const minBoxSize = this.getMinBoxSize();
+		const lastLine = entry.lines[entry.lines.length - 1];
+		const fullHeight = entry.ascent + (entry.lines.length - 1) * entry.lineHeightPx + lastLine.descent;
+		const maxLineWidth = entry.lines.reduce((max, line) => Math.max(max, line.width), 0);
+
+		layer.textData.boxWidth = Math.max(minBoxSize, Math.ceil(maxLineWidth) + 1);
+		layer.textData.boxHeight = Math.max(minBoxSize, Math.ceil(fullHeight) + 1);
+	}
+
 	ensureEffectData(layer, effectName) {
 		this.normalizeLayer(layer);
 		if (!layer?.textData) return null;
 
 		if (!layer.textData[effectName]) {
-			layer.textData[effectName] = effectName === 'border'
-				? this.getDefaultBorder()
-				: this.getDefaultShadow();
+			if (effectName === 'border') {
+				layer.textData[effectName] = this.getDefaultBorder();
+			} else if (effectName === 'fill') {
+				layer.textData[effectName] = this.getDefaultFill();
+			} else {
+				layer.textData[effectName] = this.getDefaultShadow();
+			}
 		}
 
 		return layer.textData[effectName];
@@ -550,6 +648,78 @@ class TextGlitterManager {
 					effectData.color = input.value;
 					effectData.glitterId = null;
 					this.setGlitterSelectionTarget(effectName, layer);
+				}, {
+					saveHistory: false,
+					refreshLayerList: false,
+					refreshPreview: false
+				});
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		});
+
+		input.addEventListener('change', () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+
+			this.editor.saveState();
+			this.loadLayerSettings(layer);
+		});
+	}
+
+	// The fill slot's glitter-vs-solid choice lives in layer.textData.fill.mode
+	// (glitterId itself stays on layer.selectedGlitterId — the pre-existing
+	// convention the gallery/picker-target code already relies on), unlike
+	// border/shadow which keep glitterId on the effect object itself. Hence
+	// these three bespoke handlers instead of the generic bindEffect* helpers.
+	bindFillUseColor() {
+		const button = this.ui.fillUseColor;
+		if (!button) return;
+
+		button.addEventListener('click', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.ensureEffectData(layer, 'fill').mode = 'solid';
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		});
+	}
+
+	bindFillUseGlitter() {
+		const button = this.ui.fillUseGlitter;
+		if (!button) return;
+
+		button.addEventListener('click', () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+
+			this.ensureEffectData(layer, 'fill').mode = 'glitter';
+			this.setGlitterSelectionTarget('fill', layer);
+			this.revealGlitterBrowser();
+			this.editor.updateStatus('Pick a glitter for the text fill.');
+			this.updateFillSourceUI(layer);
+			this.updateExistingBackground(layer);
+		});
+	}
+
+	bindFillColorInput() {
+		const input = this.ui.fillColor;
+		if (!input) return;
+
+		input.addEventListener('input', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					const fillData = this.ensureEffectData(layer, 'fill');
+					fillData.color = input.value;
+					fillData.mode = 'solid';
 				}, {
 					saveHistory: false,
 					refreshLayerList: false,
@@ -877,6 +1047,7 @@ class TextGlitterManager {
 		this.updateVerticalAlignmentSelection(layer.textData.verticalAlign);
 		this.updateBoxModeSelection(layer);
 		this.updateEffectControls(layer);
+		this.editor.loadTransformSettings?.(layer, 'text');
 	}
 
 	focusTextInput(selectAll = false) {
@@ -968,11 +1139,27 @@ class TextGlitterManager {
 			this.ui.borderWidth.value = border.widthPx;
 			this.ui.borderWidthValue.textContent = `${border.widthPx}px`;
 			this.ui.borderColor.value = border.color;
+			if (this.ui.borderScale) {
+				this.ui.borderScale.value = border.scale ?? 100;
+				this.ui.borderScaleValue.textContent = `${border.scale ?? 100}%`;
+			}
+			if (this.ui.borderOpacity) {
+				this.ui.borderOpacity.value = border.opacity ?? 100;
+				this.ui.borderOpacityValue.textContent = `${border.opacity ?? 100}%`;
+			}
 		} else {
 			const defaults = this.getDefaultBorder();
 			this.ui.borderWidth.value = defaults.widthPx;
 			this.ui.borderWidthValue.textContent = `${defaults.widthPx}px`;
 			this.ui.borderColor.value = defaults.color;
+			if (this.ui.borderScale) {
+				this.ui.borderScale.value = defaults.scale;
+				this.ui.borderScaleValue.textContent = `${defaults.scale}%`;
+			}
+			if (this.ui.borderOpacity) {
+				this.ui.borderOpacity.value = defaults.opacity;
+				this.ui.borderOpacityValue.textContent = `${defaults.opacity}%`;
+			}
 		}
 
 		if (shadow) {
@@ -981,6 +1168,14 @@ class TextGlitterManager {
 			this.ui.shadowOffsetY.value = shadow.offsetY;
 			this.ui.shadowOffsetYValue.textContent = `${shadow.offsetY}px`;
 			this.ui.shadowColor.value = shadow.color;
+			if (this.ui.shadowScale) {
+				this.ui.shadowScale.value = shadow.scale ?? 100;
+				this.ui.shadowScaleValue.textContent = `${shadow.scale ?? 100}%`;
+			}
+			if (this.ui.shadowOpacity) {
+				this.ui.shadowOpacity.value = shadow.opacity ?? 100;
+				this.ui.shadowOpacityValue.textContent = `${shadow.opacity ?? 100}%`;
+			}
 		} else {
 			const defaults = this.getDefaultShadow();
 			this.ui.shadowOffsetX.value = defaults.offsetX;
@@ -988,6 +1183,14 @@ class TextGlitterManager {
 			this.ui.shadowOffsetY.value = defaults.offsetY;
 			this.ui.shadowOffsetYValue.textContent = `${defaults.offsetY}px`;
 			this.ui.shadowColor.value = defaults.color;
+			if (this.ui.shadowScale) {
+				this.ui.shadowScale.value = defaults.scale;
+				this.ui.shadowScaleValue.textContent = `${defaults.scale}%`;
+			}
+			if (this.ui.shadowOpacity) {
+				this.ui.shadowOpacity.value = defaults.opacity;
+				this.ui.shadowOpacityValue.textContent = `${defaults.opacity}%`;
+			}
 		}
 
 		this.updateFillSourceUI(layer);
@@ -996,10 +1199,18 @@ class TextGlitterManager {
 		this.updateEffectTargetButtons(layer);
 	}
 
+	// Fill's shape ({mode, color} + glitterId on layer.selectedGlitterId) differs
+	// from border/shadow's ({glitterId, color} directly), so it gets its own
+	// summary/update logic rather than sharing getEffectSourceSummary/
+	// updateEffectSourceUI — but mirrors their visible behavior exactly.
 	updateFillSourceUI(layer) {
 		if (!this.ui.fillGlitterChip || !this.ui.fillGlitterLabel || !this.ui.fillGlitterSwatch) return;
 
-		const glitter = this.editor.glitterManager?.getItemById(layer?.selectedGlitterId);
+		const fillData = this.ensureEffectData(layer, 'fill');
+		const glitter = fillData.mode !== 'solid'
+			? this.editor.glitterManager?.getItemById(layer?.selectedGlitterId)
+			: null;
+
 		if (glitter) {
 			this.ui.fillGlitterLabel.textContent = glitter.name;
 			this.ui.fillGlitterLabel.title = glitter.name;
@@ -1008,17 +1219,33 @@ class TextGlitterManager {
 				this.ui.fillGlitterChange.title = this.ui.fillGlitterChip.title;
 			}
 			this.ui.fillGlitterSwatch.style.backgroundImage = `url(${glitter.url})`;
+			this.ui.fillGlitterSwatch.style.backgroundColor = 'transparent';
 			this.ui.fillGlitterSwatch.classList.toggle('pixelated', Boolean(glitter.isPixelated));
+			if (this.ui.fillSourceValue) this.ui.fillSourceValue.textContent = 'Glitter';
 		} else {
-			this.ui.fillGlitterLabel.textContent = 'No glitter selected';
-			this.ui.fillGlitterLabel.title = '';
-			this.ui.fillGlitterChip.title = 'Pick a glitter for the text fill';
+			const label = fillData.mode === 'solid'
+				? (fillData.color || '#000000').toUpperCase()
+				: 'No glitter selected';
+			this.ui.fillGlitterLabel.textContent = label;
+			this.ui.fillGlitterLabel.title = fillData.mode === 'solid' ? label : '';
+			this.ui.fillGlitterChip.title = fillData.mode === 'solid'
+				? 'The text fill is using a solid color. Click to choose a glitter instead.'
+				: 'Pick a glitter for the text fill';
 			if (this.ui.fillGlitterChange) {
 				this.ui.fillGlitterChange.title = this.ui.fillGlitterChip.title;
 			}
 			this.ui.fillGlitterSwatch.style.backgroundImage = 'none';
+			this.ui.fillGlitterSwatch.style.backgroundColor = fillData.mode === 'solid' ? (fillData.color || '#000000') : 'transparent';
 			this.ui.fillGlitterSwatch.classList.remove('pixelated');
+			if (this.ui.fillSourceValue) this.ui.fillSourceValue.textContent = 'Solid Color';
 		}
+
+		const usesGlitter = fillData.mode !== 'solid';
+		if (this.ui.fillUseColor) this.ui.fillUseColor.hidden = !usesGlitter;
+		if (this.ui.fillUseGlitter) this.ui.fillUseGlitter.hidden = usesGlitter;
+		if (this.ui.fillColorRow) this.ui.fillColorRow.hidden = usesGlitter;
+		if (this.ui.fillColor) this.ui.fillColor.value = fillData.color || '#000000';
+		if (this.ui.textureScaleRow) this.ui.textureScaleRow.hidden = !usesGlitter;
 	}
 
 	toggleEffectControls(element, isVisible) {
@@ -1047,7 +1274,8 @@ class TextGlitterManager {
 				swatch: this.ui.borderGlitterSwatch,
 				useColor: this.ui.borderUseColor,
 				useGlitter: this.ui.borderUseGlitter,
-				colorRow: this.ui.borderColorRow
+				colorRow: this.ui.borderColorRow,
+				scaleRow: this.ui.borderScaleRow
 			}
 			: {
 				button: this.ui.shadowGlitterChip,
@@ -1057,7 +1285,8 @@ class TextGlitterManager {
 				swatch: this.ui.shadowGlitterSwatch,
 				useColor: this.ui.shadowUseColor,
 				useGlitter: this.ui.shadowUseGlitter,
-				colorRow: this.ui.shadowColorRow
+				colorRow: this.ui.shadowColorRow,
+				scaleRow: this.ui.shadowScaleRow
 			};
 
 		if (!config.button || !config.sourceValue || !config.label || !config.swatch || !config.useColor || !config.useGlitter || !config.colorRow) {
@@ -1078,6 +1307,7 @@ class TextGlitterManager {
 		config.useColor.hidden = !summary.usesGlitter;
 		config.useGlitter.hidden = summary.usesGlitter;
 		config.colorRow.hidden = summary.usesGlitter;
+		if (config.scaleRow) config.scaleRow.hidden = !summary.usesGlitter;
 	}
 
 	getEffectSourceSummary(effectData, effectName) {
@@ -1143,6 +1373,12 @@ class TextGlitterManager {
 		return JSON.stringify([
 			textData.text,
 			textData.fontId,
+			// Font-readiness is part of the key: selection highlights and transform
+			// handles measure synchronously right after layer creation, before the
+			// FontFace resolves. Without this flag that fallback-font measurement
+			// (and its rasterized canvas) is cached under the same key the real
+			// font would use, so the fallback sticks for the whole session.
+			this.fontFaces.has(textData.fontId),
 			textData.fontSize,
 			textData.letterSpacing,
 			textData.lineHeight,
@@ -1752,11 +1988,7 @@ class TextGlitterManager {
 			key: 'fill',
 			offsetX: 0,
 			offsetY: 0,
-			source: {
-				mode: 'glitter',
-				glitterId: layer.selectedGlitterId,
-				opacity: layer.settings.opacity / 100
-			},
+			source: this.getEffectPaintSource(layer, 'fill'),
 			maskType: 'fill',
 			maskCanvas: measurement.canvas,
 			maskCacheKey: measurement.key
@@ -1797,6 +2029,27 @@ class TextGlitterManager {
 	}
 
 	getEffectPaintSource(layer, effectName) {
+		// The fill slot's texture scale/opacity are the layer-level
+		// settings.scale/settings.opacity (relabeled, not duplicated) — see
+		// getDefaultFill(). Border/shadow carry their own per-slot scale/opacity.
+		if (effectName === 'fill') {
+			const fillData = this.ensureEffectData(layer, 'fill');
+			if (fillData.mode === 'solid') {
+				return {
+					mode: 'solid',
+					color: fillData.color || '#000000',
+					opacity: (layer.settings.opacity ?? 100) / 100
+				};
+			}
+
+			return {
+				mode: 'glitter',
+				glitterId: layer.selectedGlitterId,
+				scale: layer.settings.scale ?? 100,
+				opacity: (layer.settings.opacity ?? 100) / 100
+			};
+		}
+
 		const effectData = this.getEffectData(layer, effectName);
 		if (!effectData) return null;
 
@@ -1804,14 +2057,15 @@ class TextGlitterManager {
 			return {
 				mode: 'glitter',
 				glitterId: effectData.glitterId,
-				opacity: 1
+				scale: effectData.scale ?? 100,
+				opacity: (effectData.opacity ?? 100) / 100
 			};
 		}
 
 		return {
 			mode: 'solid',
 			color: effectData.color || '#000000',
-			opacity: 1
+			opacity: (effectData.opacity ?? 100) / 100
 		};
 	}
 
@@ -1901,7 +2155,7 @@ class TextGlitterManager {
 		span.style.backgroundColor = 'transparent';
 		span.style.opacity = String(source.opacity ?? 1);
 
-		const glitterScale = layer.settings.scale / 100;
+		const glitterScale = (source.scale ?? 100) / 100;
 		const baseSize = glitter.frames?.width || glitter.width || 50;
 		span.style.backgroundSize = `${Math.round(baseSize * glitterScale)}px`;
 		span.classList.toggle('pixelated', Boolean(glitter.isPixelated));
@@ -2071,6 +2325,50 @@ class TextGlitterManager {
 		const transform = this.layerTransforms.get(layerId);
 		if (transform) {
 			transform.createTransformHandles();
+		}
+	}
+
+	// ===== TRANSFORM UPDATES (Delegation to LayerTransform, mirrors StickerManager) =====
+
+	updateTransform(layerId, updates) {
+		const transform = this.layerTransforms.get(layerId);
+		if (!transform) return;
+
+		transform.updateTransform(updates);
+
+		const element = this.layerElements.get(layerId);
+		if (element) {
+			transform.applyTransform(element, transform.getDimensions());
+
+			if (transform.transformHandles) {
+				transform.updateHandlePositions();
+			}
+		}
+	}
+
+	// ===== CENTERING METHODS (Delegation to LayerTransform, mirrors StickerManager) =====
+
+	centerHorizontal(layerId) {
+		const transform = this.layerTransforms.get(layerId);
+		if (!transform) return;
+
+		transform.centerHorizontal();
+
+		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		if (layer) {
+			this.loadLayerSettings(layer);
+		}
+	}
+
+	centerVertical(layerId) {
+		const transform = this.layerTransforms.get(layerId);
+		if (!transform) return;
+
+		transform.centerVertical();
+
+		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		if (layer) {
+			this.loadLayerSettings(layer);
 		}
 	}
 

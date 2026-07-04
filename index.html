@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=5">
+	<link rel="stylesheet" href="css/style.css?v=8">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -824,9 +824,14 @@
 									</div>
 
 									<div class="subsection-content-group mask-settings-group">
-										<div class="subsection-title">Mask</div>
+										<div class="subsection-title">
+											<span>Mask</span>
+											<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
+										</div>
 										<div class="subsection-content mask-settings-content">
 											<button class="btn-simple" id="editMaskToggle" type="button" title="Toggle the Mask Brush tool (B)">Mask Brush</button>
+
+											<div class="mask-brush-hint">Press B or click Mask Brush to paint or erase glitter by hand.</div>
 
 											<div class="mask-mode-buttons">
 												<button class="btn-simple active" id="maskModeAdd" type="button" data-mask-mode="add" title="Paint glitter onto this layer">Paint</button>
@@ -859,17 +864,6 @@
 												</div>
 												<input type="range" id="maskBrushFlow" min="1" max="100" value="100">
 												<button class="btn-text" id="resetMaskBrushFlow" type="button">Reset</button>
-											</div>
-
-											<div class="tool-options-group">
-												<label class="checkbox-group">
-													<input type="checkbox" id="maskInvertToggle">
-													<span title="Invert the mask — glitter covers everything except the selected and painted areas">Invert</span>
-												</label>
-											</div>
-
-											<div class="tool-options-group mask-settings-actions">
-												<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
 											</div>
 										</div>
 									</div>
@@ -1099,6 +1093,10 @@
 										<button class="btn-simple active" type="button" data-text-box-mode="auto">Point</button>
 										<button class="btn-simple" type="button" data-text-box-mode="fixed">Box</button>
 									</div>
+									<div class="control-group-label text-fit-box-label">Box Size</div>
+									<div class="tool-options-group text-fit-box-group">
+										<button class="btn-simple" id="textFitBoxToContent" type="button" title="Resize the box to exactly fit the current text (keeps existing line breaks/wraps)">Fit to Text</button>
+									</div>
 									<div class="settings-group-two-column">
 										<div class="setting-column right">
 											<div class="setting-header">
@@ -1113,7 +1111,7 @@
 												<span class="setting-label">Letter Spacing</span>
 												<span class="setting-value" id="textLetterSpacingValue">0px</span>
 											</div>
-											<input type="range" id="textLetterSpacing" min="-5" max="40" value="0">
+											<input type="range" id="textLetterSpacing" min="-20" max="40" value="0">
 											<button class="btn-text" id="resetTextLetterSpacing" type="button">Reset</button>
 										</div>
 									</div>
@@ -1122,7 +1120,7 @@
 											<span class="setting-label">Line Height</span>
 											<span class="setting-value" id="textLineHeightValue">110%</span>
 										</div>
-										<input type="range" id="textLineHeight" min="80" max="250" value="110">
+										<input type="range" id="textLineHeight" min="50" max="250" value="110">
 										<button class="btn-text" id="resetTextLineHeight" type="button">Reset</button>
 									</div>
 									<div class="control-group-label text-valign-label">Vertical</div>
@@ -1131,7 +1129,7 @@
 										<button class="btn-simple" type="button" data-text-valign="middle">Middle</button>
 										<button class="btn-simple" type="button" data-text-valign="bottom">Bottom</button>
 									</div>
-									<div class="control-group-label text-align-label">Paragraph</div>
+									<div class="control-group-label text-align-label">Horizontal</div>
 									<div class="tool-options-group text-align-group">
 										<button class="btn-simple active" type="button" data-text-align="left">Left</button>
 										<button class="btn-simple" type="button" data-text-align="center">Center</button>
@@ -1139,6 +1137,99 @@
 									</div>
 									<div class="text-box-hint" id="textBoxModeHint">Point text hugs the copy. Switch to Box for wrapping and edge resizing.</div>
 								</div>
+
+								<!-- Position -->
+								<div class="subsection-content-group">
+									<div class="subsection-title">Position</div>
+									<div class="subsection-content">
+										<div class="sticker-position-group">
+											<div class="input-group horizontal">
+												<label for="textPosX">X</label>
+												<input type="number" id="textPosX" readonly>
+											</div>
+											<div class="input-group horizontal">
+												<label for="textPosY">Y</label>
+												<input type="number" id="textPosY" readonly>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Transform -->
+								<div class="subsection-content-group">
+									<div class="subsection-title">Transform</div>
+									<div class="settings-group-two-column">
+										<!-- Rotation -->
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label">Rotation</span>
+												<span class="setting-value" id="textRotationValue">0°</span>
+											</div>
+											<input type="range" id="textRotation" min="0" max="360" value="0" step="1">
+											<button class="btn-text" id="resetTextRotation">Reset</button>
+										</div>
+
+										<!-- Opacity -->
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label">Opacity</span>
+												<span class="setting-value" id="textLayerOpacityValue">100%</span>
+											</div>
+											<input type="range" id="textLayerOpacity" min="0" max="100" value="100">
+											<button class="btn-text" id="resetTextLayerOpacity">Reset</button>
+										</div>
+									</div>
+								</div>
+
+								<!-- Scale -->
+								<div class="subsection-content-group">
+									<div class="subsection-title">
+										<span>Scale</span>
+										<label class="checkbox-group">
+											<input type="checkbox" id="textLayerProportionalScale" checked>
+											<span title="Keep aspect ratio when scaling">Proportional</span>
+										</label>
+									</div>
+									<div class="settings-group-two-column">
+										<!-- Scale X -->
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label">Scale X</span>
+												<span class="setting-value" id="textLayerScaleXValue">100%</span>
+											</div>
+											<input type="range" id="textLayerScaleX" min="10" max="300" value="100">
+											<button class="btn-text" id="resetTextLayerScaleX">Reset</button>
+										</div>
+
+										<!-- Scale Y -->
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label">Scale Y</span>
+												<span class="setting-value" id="textLayerScaleYValue">100%</span>
+											</div>
+											<input type="range" id="textLayerScaleY" min="10" max="300" value="100">
+											<button class="btn-text" id="resetTextLayerScaleY">Reset</button>
+										</div>
+									</div>
+								</div>
+
+								<!-- Flip -->
+								<div class="subsection-content-group">
+									<div class="subsection-title">Flip</div>
+									<div class="subsection-content">
+										<div class="tool-options-group">
+											<label class="checkbox-group">
+												<input type="checkbox" id="textFlipX">
+												<span title="Flip horizontally">Flip Horizontal</span>
+											</label>
+											<label class="checkbox-group">
+												<input type="checkbox" id="textFlipY">
+												<span title="Flip vertically">Flip Vertical</span>
+											</label>
+										</div>
+									</div>
+								</div>
+
 								<div class="subsection-content-group">
 									<div class="subsection-title">Fill</div>
 									<div class="text-effect-source-row">
@@ -1149,12 +1240,22 @@
 										</button>
 										<div class="text-effect-source-copy">
 											<div class="text-effect-source-label" id="textFillGlitterLabel">Glitter</div>
-											<div class="text-effect-source-value">Glitter</div>
+											<div class="text-effect-source-value" id="textFillSourceValue">Glitter</div>
 										</div>
 										<button class="btn-simple text-effect-source-change" id="textFillGlitterChange" type="button">Change</button>
 									</div>
+									<div class="text-effect-source-actions">
+										<button class="btn-text" id="textFillUseGlitter" type="button">Use Glitter</button>
+										<button class="btn-text" id="textFillUseColor" type="button">Use Solid Color</button>
+									</div>
+									<div class="text-effect-color-row" id="textFillColorRow">
+										<div class="setting-header">
+											<span class="setting-label">Solid Color</span>
+										</div>
+										<input type="color" id="textFillColor" value="#000000">
+									</div>
 									<div class="settings-group-two-column">
-										<div class="setting-column right">
+										<div class="setting-column right" id="textTextureScaleRow">
 											<div class="setting-header">
 												<span class="setting-label">Texture Scale</span>
 												<span class="setting-value" id="textTextureScaleValue">100%</span>
@@ -1214,6 +1315,24 @@
 												</div>
 												<input type="color" id="textBorderColor" value="#000000">
 											</div>
+											<div class="settings-group-two-column">
+												<div class="setting-column right" id="textBorderScaleRow">
+													<div class="setting-header">
+														<span class="setting-label">Scale</span>
+														<span class="setting-value" id="textBorderScaleValue">100%</span>
+													</div>
+													<input type="range" id="textBorderScale" min="25" max="300" value="100">
+													<button class="btn-text" id="resetTextBorderScale" type="button">Reset</button>
+												</div>
+												<div class="setting-column right">
+													<div class="setting-header">
+														<span class="setting-label">Opacity</span>
+														<span class="setting-value" id="textBorderOpacityValue">100%</span>
+													</div>
+													<input type="range" id="textBorderOpacity" min="0" max="100" value="100">
+													<button class="btn-text" id="resetTextBorderOpacity" type="button">Reset</button>
+												</div>
+											</div>
 										</div>
 									</div>
 									<div class="subsection-content-group text-effect-subsection">
@@ -1265,6 +1384,24 @@
 												</div>
 												<input type="color" id="textShadowColor" value="#000000">
 											</div>
+											<div class="settings-group-two-column">
+												<div class="setting-column right" id="textShadowScaleRow">
+													<div class="setting-header">
+														<span class="setting-label">Scale</span>
+														<span class="setting-value" id="textShadowScaleValue">100%</span>
+													</div>
+													<input type="range" id="textShadowScale" min="25" max="300" value="100">
+													<button class="btn-text" id="resetTextShadowScale" type="button">Reset</button>
+												</div>
+												<div class="setting-column right">
+													<div class="setting-header">
+														<span class="setting-label">Opacity</span>
+														<span class="setting-value" id="textShadowOpacityValue">100%</span>
+													</div>
+													<input type="range" id="textShadowOpacity" min="0" max="100" value="100">
+													<button class="btn-text" id="resetTextShadowOpacity" type="button">Reset</button>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -1310,7 +1447,7 @@
 												</label>
 												<label class="checkbox-group">
 													<input type="checkbox" id="invert">
-													<span title="Invert the selection (select everything except the chosen color)">Invert</span>
+													<span title="Invert this layer's mask — glitter covers everything except the selected and painted areas">Invert</span>
 												</label>
 												<label class="checkbox-group">
 													<input type="checkbox" id="multiSelect">
@@ -1514,18 +1651,18 @@
 							</button>
 						</div>
 
-						<!-- Sticker Center Controls -->
+						<!-- Layer Center Controls (stickers + text layers) -->
 						<div class="sticker-center-controls ui-ignore-gestures" id="stickerCenterControls">
-							<!-- Center Sticker Horizontally -->
-							<button class="icon-wrapper btn-icon" id="centerStickerHorizontal" title="Center Sticker Horizontally">
+							<!-- Center Layer Horizontally -->
+							<button class="icon-wrapper btn-icon" id="centerStickerHorizontal" title="Center Horizontally">
 								<svg class="icon">
 									<use href="#icon-arrows-left-right"></use>
 								</svg>
 								<span class="name">Center H</span>
 							</button>
 
-							<!-- Center Sticker Vertically -->
-							<button class="icon-wrapper btn-icon" id="centerStickerVertical" title="Center Sticker Vertically">
+							<!-- Center Layer Vertically -->
+							<button class="icon-wrapper btn-icon" id="centerStickerVertical" title="Center Vertically">
 								<svg class="icon">
 									<use href="#icon-arrows-up-down"></use>
 								</svg>
@@ -2684,7 +2821,7 @@
 	<script src="js/vendor/gif.js"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js"></script>
+	<script src="js/config.js?v=2"></script>
 
 	<!-- Utils -->
 	<script src="js/utils.js"></script>
@@ -2700,20 +2837,20 @@
 	<script src="js/classes/MaskEditor.js?v=2"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js"></script>
+	<script src="js/classes/LayerManager.js?v=2"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
-	<script src="js/classes/LayerTransform.js"></script>
-	<script src="js/classes/GlitterManager.js"></script>
-	<script src="js/classes/TextGlitterManager.js"></script>
+	<script src="js/classes/LayerTransform.js?v=3"></script>
+	<script src="js/classes/GlitterManager.js?v=3"></script>
+	<script src="js/classes/TextGlitterManager.js?v=6"></script>
 	<script src="js/classes/StickerManager.js"></script>
 
 	<script src="js/classes/MobileManager.js?v=2"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=4"></script>
+	<script src="js/app.js?v=9"></script>
 
 </body>
 
