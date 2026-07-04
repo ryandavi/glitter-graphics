@@ -203,7 +203,7 @@ const CONFIG = {
 		tools: [
 			{ key: 'V', action: 'Select Tool' },
 			{ key: 'T', action: 'Text Tool' },
-			{ key: 'I', action: 'Color Picker Tool' },
+			{ key: 'I', action: 'Color Fill Tool' },
 			{ key: 'B', action: 'Mask Brush Tool' },
 			{ key: 'H', action: 'Hand Tool' },
 			{ key: 'Z', action: 'Zoom Tool' },

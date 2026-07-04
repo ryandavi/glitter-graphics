@@ -2719,7 +2719,7 @@ setupWelcomeModalListeners() {
 			const toolMap = {
 				[ToolType.SELECT]: { icon: 'icon-hand-pointer', name: 'Select Tool' },
 				[ToolType.TEXT]: { icon: 'icon-hand-pointer', name: 'Text Tool' },
-				[ToolType.COLOR_PICKER]: { icon: 'icon-paint-bucket', name: 'Color Picker' },
+				[ToolType.COLOR_PICKER]: { icon: 'icon-paint-bucket', name: 'Color Fill' },
 				[ToolType.BRUSH]: { icon: 'icon-brush', name: 'Mask Brush' },
 				[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
 				[ToolType.ZOOM]: { icon: 'icon-magnifying-glass', name: 'Zoom Tool' }
@@ -2769,8 +2769,8 @@ setupWelcomeModalListeners() {
 			!hasMaskContent(activeLayer) &&
 			currentTool !== ToolType.COLOR_PICKER) {
 			hint = isMobile
-				? 'This glitter layer is empty—use the color picker or Mask Brush to add glitter'
-				: 'This glitter layer is empty—use the Color Picker or Mask Brush to add glitter';
+				? 'This glitter layer is empty—use the color fill or Mask Brush to add glitter'
+				: 'This glitter layer is empty—use the Color Fill or Mask Brush to add glitter';
 			context = isMobile
 				? 'Tap colors to build a selection, or paint directly in the editor.'
 				: 'Click colors to build a selection, or paint directly with the Mask Brush.';
@@ -2831,7 +2831,7 @@ setupWelcomeModalListeners() {
 		else if (currentTool === ToolType.SELECT) {
 			showTool = true;
 			if (!activeLayer) {
-				hint = 'Add a sticker layer to move items around, or use color picker for glitter';
+				hint = 'Add a sticker layer to move items around, or use color fill for glitter';
 			} else if (activeLayer.type === LayerType.STICKER && activeLayer.stickerSourceId) {
 				if (isMobile) {
 					hint = 'Drag to move, pinch to scale and rotate';
@@ -2849,7 +2849,7 @@ setupWelcomeModalListeners() {
 					context = 'Use the Text section to change the copy, font, size, spacing, alignment, and fill texture.';
 				}
 			} else if (activeLayer.type === LayerType.GLITTER_FILL || activeLayer.type === LayerType.BASE_IMAGE) {
-				hint = 'Switch to the color picker or Mask Brush to add or modify glitter, or add a sticker layer';
+				hint = 'Switch to the color fill or Mask Brush to add or modify glitter, or add a sticker layer';
 			}
 		}
 
@@ -3751,7 +3751,7 @@ setupWelcomeModalListeners() {
 					this.layerManager.insertLayer(newLayer);
 					this.glitterFillSelector(x, y, event);
 				} else {
-					this.updateStatus('Color Picker disabled on Sticker layers.');
+					this.updateStatus('Color Fill disabled on Sticker layers.');
 				}
 				return;
 			}
@@ -3824,7 +3824,7 @@ setupWelcomeModalListeners() {
 		}
 		// Case 3: Sticker (or other) -> Block
 		else {
-			this.updateStatus('Color Picker disabled on Sticker layers.');
+			this.updateStatus('Color Fill disabled on Sticker layers.');
 			return;
 		}
 

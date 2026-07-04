@@ -2303,7 +2303,7 @@ body.mask-editing .sticker-element {
   align-self: stretch;
 }
 
-/* Color Picker Controls Specific */
+/* Color Fill Controls Specific */
 .color-picker-controls .context-slider-group {
   display: flex;
   align-items: center;
