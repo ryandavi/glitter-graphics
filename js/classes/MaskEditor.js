@@ -66,8 +66,8 @@ class MaskEditor {
 			}
 
 			const confirmed = await this.editor.confirmAction({
-				title: 'Clear Paint?',
-				message: 'Remove all painted strokes from this layer? Color selections will stay in place.',
+				title: 'Clear Paint',
+				message: 'All painted strokes on this layer will be removed. Color selections will stay in place.',
 				confirmLabel: 'Clear Paint'
 			});
 			if (!confirmed) {
@@ -211,6 +211,11 @@ class MaskEditor {
 		const brushTool = document.getElementById('brushTool');
 		if (brushTool) {
 			brushTool.disabled = !enabled;
+		}
+
+		const eraserTool = document.getElementById('eraserTool');
+		if (eraserTool) {
+			eraserTool.disabled = !enabled;
 		}
 	}
 
@@ -563,6 +568,13 @@ class MaskEditor {
 			return layer;
 		}
 
+		// Erasing has nothing to do on a layer that can't hold glitter —
+		// don't create a fresh glitter layer just to immediately mark it dirty.
+		if (this.mode === 'sub') {
+			this.editor.updateStatus('Nothing to erase here — select a glitter layer first');
+			return null;
+		}
+
 		// Same convention as the color picker on a non-glitter layer:
 		// auto-create a glitter layer and work in it.
 		if (!CONFIG.autoCreateGlitterLayer) {
@@ -832,6 +844,14 @@ class MaskEditor {
 		this.ui.modeButtons.forEach((button) => {
 			button.classList.toggle('active', button.dataset.maskMode === this.mode);
 		});
+
+		// Brush and Eraser share ToolType.BRUSH, so their toolbar highlight
+		// follows the paint mode rather than the generic tool-switch logic.
+		const isBrushActive = this.editor.currentTool === ToolType.BRUSH;
+		const brushTool = document.getElementById('brushTool');
+		const eraserTool = document.getElementById('eraserTool');
+		if (brushTool) brushTool.classList.toggle('active', isBrushActive && this.mode === 'add');
+		if (eraserTool) eraserTool.classList.toggle('active', isBrushActive && this.mode === 'sub');
 	}
 
 	_getOverlayPalette(layer) {

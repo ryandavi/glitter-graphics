@@ -3065,6 +3065,7 @@ body.mask-editing .sticker-element {
 .layer-type-options {
   display: flex;
   gap: var(--spacing-base);
+  flex-wrap: wrap;
   align-items: stretch;
 }
 .layer-type-options > .layer-type-option {
@@ -3101,25 +3102,6 @@ body.mask-editing .sticker-element {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
   color: var(--color-text-secondary);
-}
-
-.layer-type-text-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.text-button-glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1;
-  z-index: 1;
 }
 
 .layer-pick-flash {
@@ -3568,9 +3550,6 @@ body.mask-editing .sticker-element {
   z-index: 1;
 }
 .icon-wrapper.sm > svg.icon {
-  font-size: 16px;
-}
-.icon-wrapper.sm > .text-button-glyph {
   font-size: 16px;
 }
 .icon-wrapper.xl > svg.icon {

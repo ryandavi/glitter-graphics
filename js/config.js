@@ -53,7 +53,7 @@ const CONFIG = {
 		defaultFlow: 100,
 		stampSpacing: 0.25,
 		overlayColor: '#ff2d8a',
-		overlayOpacity: 0.65,
+		overlayOpacity: 0.75,
 		overlayStripeOpacityBoost: 0.15,
 		cursorStroke: '#ffffff',
 		livePreviewThrottle: 'raf'

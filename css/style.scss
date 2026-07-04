@@ -3725,6 +3725,7 @@ body.mask-editing {
 .layer-type-options {
 	display: flex;
 	gap: var(--spacing-base);
+	flex-wrap: wrap;
 	align-items: stretch;
 
 	>.layer-type-option {
@@ -3766,25 +3767,6 @@ body.mask-editing {
 			color: var(--color-text-secondary);
 		}
 	}
-}
-
-.layer-type-text-icon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 30px;
-	font-weight: 800;
-	line-height: 1;
-}
-
-.text-button-glyph {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 24px;
-	font-weight: 800;
-	line-height: 1;
-	z-index: 1;
 }
 
 // Layer pick visual feedback (shown for all users)
@@ -4404,9 +4386,6 @@ body.mask-editing {
 			font-size: 16px;
 		}
 
-		>.text-button-glyph {
-			font-size: 16px;
-		}
 	}
 
 	&.xl {

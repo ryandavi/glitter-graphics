@@ -1780,7 +1780,12 @@ class GifExporter {
 		openBtn.onclick = () => {
 			if (openBtn.disabled) return;
 			const win = window.open(blobUrl, '_blank');
-			if (!win) alert('Please allow popups to view the full image.');
+			if (!win) {
+				window.editor?.alertAction({
+					title: 'Popup Blocked',
+					message: 'Please allow popups to view the full image.'
+				});
+			}
 		};
 
 		// Handler: Save / Download (Desktop)

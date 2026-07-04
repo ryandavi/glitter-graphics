@@ -925,9 +925,14 @@ class LayerManager {
 				className: 'layer-action-btn delete',
 				title: 'Delete layer',
 				iconType: 'x-mark',
-				onClick: (e) => {
+				onClick: async (e) => {
 					e.stopPropagation();
-					if (confirm('Delete this layer?')) {
+					const confirmed = await this.editor.confirmAction({
+						title: 'Delete Layer',
+						message: 'This layer and everything on it will be permanently removed.',
+						confirmLabel: 'Delete'
+					});
+					if (confirmed) {
 						this.deleteLayer(layer.id);
 					}
 				}

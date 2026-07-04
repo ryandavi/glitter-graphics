@@ -388,10 +388,15 @@ setupSettingsResetListeners() {
 	}
 }
 
-resetSettingsSection(section) {
+async resetSettingsSection(section) {
 	const sectionName = this.getSectionDisplayName(section);
-	
-	if (!confirm(`Reset all ${sectionName} to defaults?`)) {
+
+	const confirmed = await this.confirmAction({
+		title: `Reset ${sectionName}`,
+		message: 'These settings will be restored to their defaults.',
+		confirmLabel: 'Reset'
+	});
+	if (!confirmed) {
 		return;
 	}
 
@@ -426,8 +431,13 @@ resetSettingsSection(section) {
 	this.saveSettingsToStorage();
 }
 
-resetAllSettings() {
-	if (!confirm('Reset ALL settings to defaults? This will reset export settings, interface preferences, and all other settings.')) {
+async resetAllSettings() {
+	const confirmed = await this.confirmAction({
+		title: 'Reset All Settings',
+		message: 'Export settings, interface preferences, and everything else will be restored to their defaults.',
+		confirmLabel: 'Reset'
+	});
+	if (!confirmed) {
 		return;
 	}
 
@@ -1172,7 +1182,6 @@ resetAllSettings() {
 			{ id: 'selectTool', type: ToolType.SELECT },
 			{ id: 'textTool', type: ToolType.TEXT },
 			{ id: 'colorPickerTool', type: ToolType.COLOR_PICKER },
-			{ id: 'brushTool', type: ToolType.BRUSH },
 			{ id: 'handTool', type: ToolType.HAND },
 			{ id: 'zoomTool', type: ToolType.ZOOM }
 		];
@@ -1180,6 +1189,17 @@ resetAllSettings() {
 		tools.forEach(({ id, type }) => {
 			const btn = document.getElementById(id);
 			if (btn) btn.addEventListener('click', () => this.setTool(type));
+		});
+
+		// Brush and Eraser are both the Mask Brush tool with a different paint mode,
+		// so each button sets the tool then forces its own mode.
+		document.getElementById('brushTool')?.addEventListener('click', () => {
+			this.setTool(ToolType.BRUSH);
+			this.maskEditor?.setMode('add');
+		});
+		document.getElementById('eraserTool')?.addEventListener('click', () => {
+			this.setTool(ToolType.BRUSH);
+			this.maskEditor?.setMode('sub');
 		});
 
 		const actions = [
@@ -1771,8 +1791,13 @@ resetAllSettings() {
 		}
 
 		if (imageClearBtn) {
-			imageClearBtn.addEventListener('click', () => {
-				if (confirm('Are you sure you want to remove the image? This will clear the image and all layers.')) {
+			imageClearBtn.addEventListener('click', async () => {
+				const confirmed = await this.confirmAction({
+					title: 'Remove Image',
+					message: 'The image and all layers will be cleared.',
+					confirmLabel: 'Remove'
+				});
+				if (confirmed) {
 					this.clearImage();
 				}
 			});
@@ -2178,6 +2203,25 @@ setupWelcomeModalListeners() {
 		});
 	}
 
+	alertAction(options = {}) {
+		const {
+			title = 'Notice',
+			message = ''
+		} = options;
+
+		if (!this.modalManager || !document.getElementById('confirmationModal')) {
+			alert(message);
+			return Promise.resolve();
+		}
+
+		const cancelBtn = document.getElementById('confirmationCancelBtn');
+		if (cancelBtn) cancelBtn.style.display = 'none';
+
+		return this.confirmAction({ title, message, confirmLabel: 'OK' }).then(() => {
+			if (cancelBtn) cancelBtn.style.display = '';
+		});
+	}
+
 
 	setupLayerTypePickerListeners() {
 		const layerTypeButtons = document.querySelectorAll('.layer-type-option');
@@ -2338,12 +2382,16 @@ setupWelcomeModalListeners() {
 		}
 
 		if (layersBarDeleteSelected) {
-			layersBarDeleteSelected.addEventListener('click', () => {
+			layersBarDeleteSelected.addEventListener('click', async () => {
 				const selectedLayer = this.layerManager.getActiveLayer();
 				if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
 
-				// Add delete confirmation
-				if (confirm('Delete this layer?')) {
+				const confirmed = await this.confirmAction({
+					title: 'Delete Layer',
+					message: 'This layer and everything on it will be permanently removed.',
+					confirmLabel: 'Delete'
+				});
+				if (confirmed) {
 					this.layerManager.deleteLayer(selectedLayer.id);
 				}
 			});
@@ -2671,7 +2719,7 @@ setupWelcomeModalListeners() {
 			const toolMap = {
 				[ToolType.SELECT]: { icon: 'icon-hand-pointer', name: 'Select Tool' },
 				[ToolType.TEXT]: { icon: 'icon-hand-pointer', name: 'Text Tool' },
-				[ToolType.COLOR_PICKER]: { icon: 'icon-magic-wand', name: 'Color Picker' },
+				[ToolType.COLOR_PICKER]: { icon: 'icon-paint-bucket', name: 'Color Picker' },
 				[ToolType.BRUSH]: { icon: 'icon-brush', name: 'Mask Brush' },
 				[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
 				[ToolType.ZOOM]: { icon: 'icon-magnifying-glass', name: 'Zoom Tool' }
@@ -2694,10 +2742,15 @@ setupWelcomeModalListeners() {
 			}
 		}
 		else if (this.maskEditor?.isEditing) {
-			hint = isMobile
-				? 'Drag here to create a new glitter layer and start painting'
-				: 'Paint here to create a new glitter layer automatically';
-			context = 'The Mask Brush targets glitter layers. Starting a stroke on another layer creates a new glitter layer for you.';
+			if (this.maskEditor.mode === 'sub') {
+				hint = 'Select a glitter layer to erase from';
+				context = 'There\'s nothing here for the Eraser to remove.';
+			} else {
+				hint = isMobile
+					? 'Drag here to create a new glitter layer and start painting'
+					: 'Paint here to create a new glitter layer automatically';
+				context = 'The Mask Brush targets glitter layers. Starting a stroke on another layer creates a new glitter layer for you.';
+			}
 		}
 
 		else if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
@@ -3020,9 +3073,15 @@ setupWelcomeModalListeners() {
 			if (selectedLayer && selectedLayer.type !== LayerType.BASE_IMAGE) {
 				e.preventDefault(); // Prevent browser back navigation on Backspace
 
-				if (confirm('Delete this layer?')) {
-					this.layerManager.deleteLayer(selectedLayer.id);
-				}
+				this.confirmAction({
+					title: 'Delete Layer',
+					message: 'This layer and everything on it will be permanently removed.',
+					confirmLabel: 'Delete'
+				}).then((confirmed) => {
+					if (confirmed) {
+						this.layerManager.deleteLayer(selectedLayer.id);
+					}
+				});
 			}
 			return;
 		}
@@ -3216,10 +3275,15 @@ setupWelcomeModalListeners() {
 		}
 	}
 
-	resetAll() {
+	async resetAll() {
 		if (!this.originalImage) return;
 
-		if (confirm('Reset everything? This will clear the image and all layers.')) {
+		const confirmed = await this.confirmAction({
+			title: 'Clear All',
+			message: 'The image and all layers will be cleared.',
+			confirmLabel: 'Clear All'
+		});
+		if (confirmed) {
 			this.clearImage();
 		}
 	}
