@@ -5189,6 +5189,7 @@ body.mask-editing .sticker-element {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-lg);
+  width: 100%;
 }
 
 .setting-column {

@@ -89,7 +89,7 @@ const CONFIG = {
 	textLayers: {
 		fontsManifest: 'data/fonts.json',
 		defaultFontId: 'luckiest-guy',
-		defaultText: 'sparkle',
+		defaultText: 'glitter',
 		defaultBoxMode: 'auto',
 		defaultVerticalAlign: 'top',
 		minBoxSize: 4,
