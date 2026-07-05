@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=17">
+	<link rel="stylesheet" href="css/style.css?v=18">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -362,6 +362,17 @@
 						</div>
 
 						<div class="section-content" id="designGalleryContent">
+
+							<!-- Picker-mode strip (D-1c): names the armed destination.
+							     Hidden in browse mode unless the active text layer's
+							     fill is solid (then shows a passive hint). -->
+							<div class="gallery-picker-strip" id="galleryPickerStrip" role="status" aria-live="polite" hidden>
+								<div class="gallery-picker-strip-text">
+									<span class="gallery-picker-strip-title" id="galleryPickerStripTitle"></span>
+									<span class="gallery-picker-strip-detail" id="galleryPickerStripDetail"></span>
+								</div>
+								<button type="button" class="btn-simple gallery-picker-strip-done" id="galleryPickerStripDone">Done</button>
+							</div>
 
 							<!-- Glitter Search (visible by default) -->
 							<div class="section-content gallery-search-section" id="glitterSearchSection">
@@ -2906,27 +2917,27 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js"></script>
 	<script src="js/classes/ModalManager.js"></script>
-	<script src="js/classes/GifExporter.js?v=2"></script>
+	<script src="js/classes/GifExporter.js?v=3"></script>
 	<script src="js/classes/ViewportManager.js"></script>
-	<script src="js/classes/HistoryManager.js?v=2"></script>
+	<script src="js/classes/HistoryManager.js?v=3"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
 	<script src="js/classes/MaskEditor.js?v=7"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=3"></script>
+	<script src="js/classes/LayerManager.js?v=4"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
 	<script src="js/classes/LayerTransform.js?v=3"></script>
-	<script src="js/classes/GlitterManager.js?v=3"></script>
-	<script src="js/classes/TextGlitterManager.js?v=12"></script>
+	<script src="js/classes/GlitterManager.js?v=4"></script>
+	<script src="js/classes/TextGlitterManager.js?v=13"></script>
 	<script src="js/classes/StickerManager.js"></script>
 
 	<script src="js/classes/MobileManager.js?v=2"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=18"></script>
+	<script src="js/app.js?v=19"></script>
 
 </body>
 

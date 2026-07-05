@@ -271,6 +271,10 @@ class LayerManager {
 		}
 
 		this.activeLayerId = layerId;
+		// D-1c: any layer change ends an armed gallery picker session. The
+		// session is layer-bound, so leaving its layer must return the gallery
+		// to browse mode (a click applies to the new active layer's own fill).
+		this.editor.textGlitterManager?.closePickerSession();
 		this.editor.maskEditor?.handleLayerChange(layerId);
 		this.updateActiveLayerListSelection();
 		this.updateMobileLayersSwatch();

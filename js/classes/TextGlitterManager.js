@@ -21,12 +21,26 @@ class TextGlitterManager {
 		this.measureCtx = this.measureCanvas.getContext('2d');
 
 		this.textInputTimer = null;
-		this.glitterSelectionTarget = 'fill';
+
+		// Picker session (D-1c): the gallery's armed destination, nullable and
+		// layer-bound. `null` = BROWSE MODE — a gallery click applies to the
+		// active layer's own fill (the only implicit destination anyone expects).
+		// `{ layerId, slot }` = PICKER MODE — entered only by an explicit arming
+		// gesture (chip / Change / Use Glitter), cleared on layer switch, effect
+		// disable, history restore, Done, or Esc. Because the session names its
+		// layer, a mismatch with the active layer is structurally treated as
+		// browse mode — the old sticky-target layer-switch trap is impossible.
+		//
+		// This is pure UI state. The exporter never reads it: per-slot paint
+		// resolution (getEffectPaintSource ↔ GifExporter._getTextEffectSource)
+		// depends only on layer.textData, so preview↔export parity is unaffected.
+		this.pickerSession = null;
 	}
 
 	async init() {
 		this.setupUI();
 		this.setupEventListeners();
+		this.setupPickerStripListeners();
 	}
 
 	setupUI() {
@@ -102,7 +116,13 @@ class TextGlitterManager {
 			shadowScale: document.getElementById('textShadowScale'),
 			shadowScaleValue: document.getElementById('textShadowScaleValue'),
 			shadowOpacity: document.getElementById('textShadowOpacity'),
-			shadowOpacityValue: document.getElementById('textShadowOpacityValue')
+			shadowOpacityValue: document.getElementById('textShadowOpacityValue'),
+			// D-1c gallery picker strip
+			gallerySection: document.getElementById('designGallerySection'),
+			pickerStrip: document.getElementById('galleryPickerStrip'),
+			pickerStripTitle: document.getElementById('galleryPickerStripTitle'),
+			pickerStripDetail: document.getElementById('galleryPickerStripDetail'),
+			pickerStripDone: document.getElementById('galleryPickerStripDone')
 		};
 	}
 
@@ -176,7 +196,7 @@ class TextGlitterManager {
 					}
 
 					this.revealGlitterBrowser();
-					this.editor.updateStatus('Pick a glitter for the text fill.');
+					this.editor.updateStatus('Choosing glitter for the text fill — press Esc or Done to finish.');
 				});
 			});
 		}
@@ -519,25 +539,57 @@ class TextGlitterManager {
 	}
 
 	getGlitterSelectionTarget(layer = this.getActiveTextLayer()) {
-		const target = this.glitterSelectionTarget || 'fill';
-		if (target === 'border' && !this.getEffectData(layer, 'border')) {
+		// Browse mode (no session, or the session belongs to a different layer)
+		// always resolves to 'fill' — the active layer's own fill.
+		const session = this.pickerSession;
+		if (!session || !layer || session.layerId !== layer.id) {
 			return 'fill';
 		}
-		if (target === 'shadow' && !this.getEffectData(layer, 'shadow')) {
+		// Picker mode: honour the armed slot, but degrade to 'fill' if that
+		// slot's effect no longer exists on the layer (e.g. border was disabled
+		// out from under the session before it was cleared).
+		if (session.slot === 'border' && !this.getEffectData(layer, 'border')) {
 			return 'fill';
 		}
-		return target;
+		if (session.slot === 'shadow' && !this.getEffectData(layer, 'shadow')) {
+			return 'fill';
+		}
+		return session.slot;
 	}
 
+	// Thin back-compat wrapper: arming a slot opens a picker session on the
+	// active layer. Callers that used to reset to 'fill' now open a fill
+	// session, which browse mode / getGlitterSelectionTarget treats identically.
 	setGlitterSelectionTarget(target = 'fill', layer = this.getActiveTextLayer()) {
-		this.glitterSelectionTarget = target;
-		const resolvedTarget = this.getGlitterSelectionTarget(layer);
-		this.glitterSelectionTarget = resolvedTarget;
+		this.openPickerSession(layer, target);
+	}
+
+	openPickerSession(layer = this.getActiveTextLayer(), slot = 'fill') {
+		if (!layer) return;
+		this.pickerSession = { layerId: layer.id, slot };
+		this.updateEffectTargetButtons(layer);
+		this.editor.updateGlitterSelection();
+	}
+
+	closePickerSession() {
+		if (!this.pickerSession) return;
+		this.pickerSession = null;
+		const layer = this.getActiveTextLayer();
 		this.updateEffectTargetButtons(layer);
 		this.editor.updateGlitterSelection();
 	}
 
 	revealGlitterBrowser() {
+		// On mobile the gallery lives in the separate `design` drawer, so arming
+		// a target from the settings drawer must surface it (mirrors app.js
+		// thumbnail-click handler). The desktop accordion opens in-place.
+		if (this.editor.mobileManager?.isMobile) {
+			if (this.editor.mobileManager.activeDrawer !== 'design') {
+				this.editor.mobileManager.toggleDrawer('design');
+			}
+			return;
+		}
+
 		this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
 		const browser = document.getElementById('glitterOptions');
 		browser?.scrollIntoView({
@@ -576,8 +628,11 @@ class TextGlitterManager {
 						this.ensureEffectData(layer, effectName);
 					} else {
 						layer.textData[effectName] = null;
-						if (this.getGlitterSelectionTarget(layer) === effectName) {
-							this.setGlitterSelectionTarget('fill', layer);
+						// If the gallery was armed for the slot we just disabled,
+						// exit picker mode — its destination no longer exists.
+						if (this.pickerSession?.layerId === layer.id
+							&& this.pickerSession?.slot === effectName) {
+							this.closePickerSession();
 						}
 					}
 				}, { saveHistory: true, refreshPreview: false });
@@ -603,7 +658,7 @@ class TextGlitterManager {
 				}
 
 				this.revealGlitterBrowser();
-				this.editor.updateStatus(`Border and shadow choose their own source. Pick a glitter for the ${effectName}.`);
+				this.editor.updateStatus(`Choosing glitter for the text ${effectName} — press Esc or Done to finish.`);
 			});
 		});
 	}
@@ -638,7 +693,7 @@ class TextGlitterManager {
 			this.ensureEffectData(layer, effectName);
 			this.setGlitterSelectionTarget(effectName, layer);
 			this.revealGlitterBrowser();
-			this.editor.updateStatus(`Pick a glitter for the ${effectName}.`);
+			this.editor.updateStatus(`Choosing glitter for the text ${effectName} — press Esc or Done to finish.`);
 		});
 	}
 
@@ -702,11 +757,18 @@ class TextGlitterManager {
 		const button = this.ui.fillUseGlitter;
 		if (!button) return;
 
-		button.addEventListener('click', () => {
+		button.addEventListener('click', async () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 
-			this.ensureEffectData(layer, 'fill').mode = 'glitter';
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.ensureEffectData(layer, 'fill').mode = 'glitter';
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+
 			this.setGlitterSelectionTarget('fill', layer);
 			this.revealGlitterBrowser();
 			this.editor.updateStatus('Pick a glitter for the text fill.');
@@ -1297,6 +1359,99 @@ class TextGlitterManager {
 		this.ui.borderGlitterChange?.classList.toggle('target-active', activeTarget === 'border');
 		this.ui.shadowGlitterChip?.classList.toggle('target-active', activeTarget === 'shadow');
 		this.ui.shadowGlitterChange?.classList.toggle('target-active', activeTarget === 'shadow');
+		this.updatePickerStrip();
+	}
+
+	getSlotLabel(slot) {
+		if (slot === 'border') return 'Text Border';
+		if (slot === 'shadow') return 'Text Shadow';
+		return 'Fill';
+	}
+
+	setupPickerStripListeners() {
+		this.ui.pickerStripDone?.addEventListener('click', () => {
+			this.closePickerSession();
+		});
+
+		// Single global Esc listener: exits picker mode, but stays out of the way
+		// when the user is typing or a modal owns the interaction.
+		document.addEventListener('keydown', (event) => {
+			if (event.key !== 'Escape' || !this.pickerSession) return;
+			const active = document.activeElement;
+			const isTyping = active && (active.tagName === 'INPUT'
+				|| active.tagName === 'TEXTAREA' || active.isContentEditable);
+			if (isTyping) return;
+			if (this.editor.modalManager?.isAnyOpen?.()) return;
+			event.preventDefault();
+			this.closePickerSession();
+			this.editor.updateStatus('Exited glitter picker. Gallery clicks now change the text fill.');
+		});
+	}
+
+	// D-1c: the gallery status strip. Picker mode (armed slot on the active
+	// layer) shows an accent strip naming the destination + a Done button;
+	// browse mode shows a passive one-line hint only when the active text
+	// layer's fill is solid; otherwise the strip is hidden. Driven from
+	// updateEffectTargetButtons (arm/disarm, fill-mode flips, layer activate)
+	// and app.updateSidePanelUI (switching to any layer type).
+	updatePickerStrip() {
+		const strip = this.ui?.pickerStrip;
+		if (!strip) return;
+		const section = this.ui.gallerySection;
+		const { pickerStripTitle: title, pickerStripDetail: detail, pickerStripDone: done } = this.ui;
+
+		const hide = () => {
+			strip.hidden = true;
+			strip.classList.remove('is-armed', 'is-hint');
+			section?.classList.remove('picker-mode');
+		};
+
+		const layer = this.getActiveTextLayer();
+		if (!layer) { hide(); return; }
+
+		const session = this.pickerSession;
+		const slotExists = (slot) => slot === 'fill' || Boolean(this.getEffectData(layer, slot));
+		const armedSlot = (session && session.layerId === layer.id && slotExists(session.slot))
+			? session.slot
+			: null;
+
+		const fillData = this.getEffectData(layer, 'fill');
+		const fillIsSolid = fillData?.mode === 'solid';
+
+		if (armedSlot) {
+			strip.hidden = false;
+			strip.classList.add('is-armed');
+			strip.classList.remove('is-hint');
+			section?.classList.add('picker-mode');
+			if (done) done.hidden = false;
+
+			if (armedSlot === 'fill' && fillIsSolid) {
+				const color = (fillData.color || '#000000').toUpperCase();
+				if (title) title.textContent = 'Choosing source for: Fill';
+				if (detail) detail.textContent = `Fill is a solid color (${color}) — pick a glitter to switch.`;
+			} else {
+				const layerName = layer.name || 'this layer';
+				if (title) title.textContent = `Choosing glitter for: ${this.getSlotLabel(armedSlot)}`;
+				if (detail) detail.textContent = `of "${layerName}"`;
+			}
+			return;
+		}
+
+		// Browse mode: the only passive hint is for a solid-fill text layer,
+		// answering "what happens if I click a glitter now?" for someone who
+		// never armed anything.
+		if (fillIsSolid) {
+			strip.hidden = false;
+			strip.classList.add('is-hint');
+			strip.classList.remove('is-armed');
+			section?.classList.remove('picker-mode');
+			if (done) done.hidden = true;
+			if (title) title.textContent = 'Text fill is a solid color — picking a glitter will switch it.';
+			if (detail) detail.textContent = '';
+			return;
+		}
+
+		hide();
 	}
 
 	updateEffectSourceUI(layer, effectName) {
@@ -2436,6 +2591,9 @@ class TextGlitterManager {
 	}
 
 	clearElements() {
+		// New document / image reset: no layer survives, so any armed picker
+		// session is stale.
+		this.pickerSession = null;
 		Array.from(this.layerElements.keys()).forEach((layerId) => {
 			this.removeLayerElement(layerId);
 		});

@@ -534,6 +534,10 @@ async resetAllSettings() {
 		if (this.syncCollapsibleSections) {
 			this.syncCollapsibleSections(this.getPreferredDesignSection(layer));
 		}
+
+		// D-1c: keep the gallery picker strip in sync when the active layer
+		// changes to any type (a non-text layer must hide the strip).
+		this.textGlitterManager?.updatePickerStrip();
 	}
 
 	getPreferredDesignSection(layer) {

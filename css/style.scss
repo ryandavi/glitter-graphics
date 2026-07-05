@@ -6257,6 +6257,76 @@ body.mask-editing {
 	box-shadow: 0 0 0 1px var(--color-accent-border);
 }
 
+// D-1c gallery picker strip: names the gallery's armed destination in picker
+// mode, or shows a passive hint for a solid-fill text layer in browse mode.
+// Sticky within the gallery content (not the viewport) so it stays visible as
+// the grid scrolls and works identically inside the mobile design drawer.
+.gallery-picker-strip {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-md);
+	padding: var(--spacing-sm) var(--spacing-md);
+	margin-bottom: var(--spacing-sm);
+	background: var(--color-bg-tertiary);
+	border-left: 3px solid transparent;
+	border-radius: var(--radius-sm);
+
+	&[hidden] {
+		display: none;
+	}
+
+	// Picker mode: the armed destination earns the accent edge.
+	&.is-armed {
+		border-left-color: var(--color-accent);
+		box-shadow: inset 0 0 0 1px var(--color-accent-border);
+	}
+
+	// Browse-mode passive hint: quieter, no accent, no Done.
+	&.is-hint {
+		background: var(--color-bg-primary);
+
+		.gallery-picker-strip-title {
+			color: var(--color-text-tertiary);
+			font-weight: 400;
+		}
+	}
+}
+
+.gallery-picker-strip-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	flex: 1;
+}
+
+.gallery-picker-strip-title {
+	@include text-sm;
+	color: var(--color-text-primary);
+	font-weight: 600;
+}
+
+.gallery-picker-strip-detail {
+	@include text-sm;
+	color: var(--color-text-tertiary);
+
+	&:empty {
+		display: none;
+	}
+}
+
+.gallery-picker-strip-done {
+	flex-shrink: 0;
+	align-self: center;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
 .text-effect-source-change {
 	flex-shrink: 0;
 	align-self: center;

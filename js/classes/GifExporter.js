@@ -274,11 +274,20 @@ class GifExporter {
 	}
 
 	_getTextEffectGlitterSources(layer) {
-		const sources = [{
-			key: this._getTextFrameKey(layer, 'fill'),
-			slot: 'fill',
-			glitterId: layer.selectedGlitterId
-		}];
+		// Single chokepoint for every export-side text-glitter enumeration
+		// (frame flatten/load, total-frame count, transparency scan). A
+		// solid-mode fill renders no glitter — including its stale
+		// selectedGlitterId here would frame-count and flatten a source that
+		// never appears, breaking preview↔export parity and static-GIF output.
+		const sources = [];
+
+		if (layer.textData?.fill?.mode !== 'solid') {
+			sources.push({
+				key: this._getTextFrameKey(layer, 'fill'),
+				slot: 'fill',
+				glitterId: layer.selectedGlitterId
+			});
+		}
 
 		if (layer.textData?.border?.glitterId) {
 			sources.push({

@@ -68,6 +68,13 @@ class HistoryManager {
 
 	async restoreState(state) {
 		this.editor.maskEditor?.handleStateRestore();
+		// D-1c: the picker session is transient UI state that isn't snapshotted;
+		// the armed slot may not even exist in the restored layer set. Drop it
+		// here — the full UI refresh at the end of this method repaints the
+		// gallery in browse mode.
+		if (this.editor.textGlitterManager) {
+			this.editor.textGlitterManager.pickerSession = null;
+		}
 		this.editor.layers = [];
 
 		for (const layerData of state.layers) {

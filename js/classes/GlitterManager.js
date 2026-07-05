@@ -324,6 +324,11 @@ async initBrowser() {
 				shadow.glitterId = id;
 			} else {
 				layer.selectedGlitterId = id;
+				// Intent capture: picking a glitter for a solid-mode fill IS the
+				// statement "I want glitter here", so flip the slot to glitter.
+				// Otherwise the gallery click writes selectedGlitterId, highlights
+				// the swatch, and saves history with zero visible change.
+				this.editor.textGlitterManager.ensureEffectData(layer, 'fill').mode = 'glitter';
 			}
 		} else {
 			layer.selectedGlitterId = id;
