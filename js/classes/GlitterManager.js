@@ -319,9 +319,11 @@ async initBrowser() {
 			if (target === 'border') {
 				const border = this.editor.textGlitterManager.ensureEffectData(layer, 'border');
 				border.glitterId = id;
+				border.mode = 'glitter';
 			} else if (target === 'shadow') {
 				const shadow = this.editor.textGlitterManager.ensureEffectData(layer, 'shadow');
 				shadow.glitterId = id;
+				shadow.mode = 'glitter';
 			} else {
 				layer.selectedGlitterId = id;
 				// Intent capture: picking a glitter for a solid-mode fill IS the

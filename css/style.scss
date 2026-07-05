@@ -6187,8 +6187,75 @@ body.mask-editing {
 	flex: 1;
 }
 
-.text-effect-mode-group > .btn-simple {
+// Segmented control: a connected two-state toggle (Glitter | Solid Color) that
+// reads as one control with two modes, not two loose buttons. Used for every
+// text source (fill/border/shadow) via .text-effect-mode-group.
+.segmented-control {
+	display: flex;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	// Clip the active segment's fill to the rounded outer corners.
+	overflow: hidden;
+}
+
+.segmented-option {
 	flex: 1;
+	padding: var(--spacing-sm) var(--spacing-md);
+	border: none;
+	background: var(--color-bg-secondary);
+	color: var(--color-text-tertiary);
+	// Match the design system's label vocabulary (uppercase, like subsection
+	// titles) so the toggle reads as part of the panel, not a pair of buttons.
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	letter-spacing: 0.75px;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background var(--transition-fast), color var(--transition-fast);
+
+	& + .segmented-option {
+		border-left: 1px solid var(--color-border);
+	}
+
+	&:hover:not(.active) {
+		color: var(--color-text-secondary);
+		background: var(--color-bg-tertiary);
+	}
+
+	&.active {
+		background: var(--color-accent);
+		color: #fff;
+	}
+}
+
+// One source (fill/border/shadow): mode toggle on top, then exactly one of the
+// glitter asset-info display or the solid-color row. Roomier than the default
+// section spacing so the toggle, source, and sliders read as distinct steps.
+.glitter-source {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
+}
+
+// The glitter display reuses the shared .asset-info-* classes so it matches
+// Glitter Properties' Asset section exactly (thumbnail + name + badges + meta).
+.glitter-source .asset-info,
+.asset-info {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+}
+
+.asset-info-meta {
+	// Size / Frames sit below the header, mirroring Glitter Properties.
+	gap: var(--spacing-md);
+}
+
+// Both source displays are toggled via the [hidden] attribute; .asset-info and
+// .text-effect-color-row set display, so they need an explicit override.
+.glitter-source-glitter[hidden],
+.glitter-source-solid[hidden] {
+	display: none;
 }
 
 .text-box-hint {
@@ -6211,7 +6278,7 @@ body.mask-editing {
 .text-effect-subsection {
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-md);
+	gap: var(--spacing-lg);
 	padding: var(--spacing-md);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-md);

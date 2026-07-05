@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=18">
+	<link rel="stylesheet" href="css/style.css?v=20">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1295,32 +1295,44 @@
 									</div>
 								</div>
 
-								<div class="subsection-content-group">
-									<div class="subsection-title">Fill</div>
-									<div class="text-effect-source-row">
-										<div class="asset-info-header">
-											<div class="asset-info-thumbnail" id="textFillGlitterChip" title="Choose fill glitter"></div>
-											<div class="asset-info-details">
-												<div class="asset-info-name" id="textFillGlitterLabel">Glitter</div>
-												<div class="asset-info-badges" id="textFillGlitterBadges"></div>
+								<div class="subsection-content-group text-effect-subsection">
+									<div class="subsection-title"><span>Fill</span></div>
+									<div class="glitter-source">
+										<div class="segmented-control text-effect-mode-group">
+											<button class="segmented-option active" id="textFillUseGlitter" type="button">Glitter</button>
+											<button class="segmented-option" id="textFillUseColor" type="button">Solid Color</button>
+										</div>
+										<div class="asset-info glitter-source-glitter" id="textFillGlitterInfo">
+											<div class="asset-info-header">
+												<div class="asset-info-thumbnail" id="textFillGlitterChip" title="Choose fill glitter"></div>
+												<div class="asset-info-details">
+													<div class="asset-info-name" id="textFillGlitterLabel">Glitter</div>
+													<div class="asset-info-badges" id="textFillGlitterBadges"></div>
+												</div>
+												<button class="btn-simple text-effect-source-change" id="textFillGlitterChange" type="button">Change</button>
+											</div>
+											<div class="settings-group-two-column asset-info-meta">
+												<div class="setting-column">
+													<div class="setting-header"><span class="setting-label">Size</span></div>
+													<span class="setting-value" id="textFillGlitterSize"></span>
+												</div>
+												<div class="setting-column">
+													<div class="setting-header"><span class="setting-label">Frames</span></div>
+													<span class="setting-value" id="textFillGlitterFrames"></span>
+												</div>
 											</div>
 										</div>
-										<button class="btn-simple text-effect-source-change" id="textFillGlitterChange" type="button">Change</button>
-									</div>
-									<div class="tool-options-group text-effect-mode-group">
-										<button class="btn-simple active" id="textFillUseGlitter" type="button">Glitter</button>
-										<button class="btn-simple" id="textFillUseColor" type="button">Solid Color</button>
-									</div>
-									<div class="text-effect-color-row" id="textFillColorRow">
-										<div class="setting-header">
-											<span class="setting-label">Solid Color</span>
+										<div class="text-effect-color-row glitter-source-solid" id="textFillColorRow">
+											<div class="setting-header">
+												<span class="setting-label">Solid Color</span>
+											</div>
+											<input type="color" id="textFillColor" value="#000000">
 										</div>
-										<input type="color" id="textFillColor" value="#000000">
 									</div>
 									<div class="settings-group-two-column">
 										<div class="setting-column right" id="textTextureScaleRow">
 											<div class="setting-header">
-												<span class="setting-label">Texture Scale</span>
+												<span class="setting-label">Scale</span>
 												<span class="setting-value" id="textTextureScaleValue">100%</span>
 											</div>
 											<input type="range" id="textTextureScale" min="25" max="300" value="100">
@@ -1328,7 +1340,7 @@
 										</div>
 										<div class="setting-column right">
 											<div class="setting-header">
-												<span class="setting-label">Texture Opacity</span>
+												<span class="setting-label">Opacity</span>
 												<span class="setting-value" id="textTextureOpacityValue">100%</span>
 											</div>
 											<input type="range" id="textTextureOpacity" min="0" max="100" value="100">
@@ -1356,25 +1368,37 @@
 												<input type="range" id="textBorderWidth" min="1" max="24" value="4">
 												<button class="btn-text" id="resetTextBorderWidth" type="button">Reset</button>
 											</div>
-											<div class="text-effect-source-row">
-												<div class="asset-info-header">
-													<div class="asset-info-thumbnail" id="textBorderGlitterChip" title="Choose border source"></div>
-													<div class="asset-info-details">
-														<div class="asset-info-name" id="textBorderGlitterLabel">#000000</div>
-														<div class="asset-info-badges" id="textBorderGlitterBadges"></div>
+											<div class="glitter-source">
+												<div class="segmented-control text-effect-mode-group">
+													<button class="segmented-option" id="textBorderUseGlitter" type="button">Glitter</button>
+													<button class="segmented-option active" id="textBorderUseColor" type="button">Solid Color</button>
+												</div>
+												<div class="asset-info glitter-source-glitter" id="textBorderGlitterInfo">
+													<div class="asset-info-header">
+														<div class="asset-info-thumbnail" id="textBorderGlitterChip" title="Choose border source"></div>
+														<div class="asset-info-details">
+															<div class="asset-info-name" id="textBorderGlitterLabel">#000000</div>
+															<div class="asset-info-badges" id="textBorderGlitterBadges"></div>
+														</div>
+														<button class="btn-simple text-effect-source-change" id="textBorderGlitterChange" type="button">Change</button>
+													</div>
+													<div class="settings-group-two-column asset-info-meta">
+														<div class="setting-column">
+															<div class="setting-header"><span class="setting-label">Size</span></div>
+															<span class="setting-value" id="textBorderGlitterSize"></span>
+														</div>
+														<div class="setting-column">
+															<div class="setting-header"><span class="setting-label">Frames</span></div>
+															<span class="setting-value" id="textBorderGlitterFrames"></span>
+														</div>
 													</div>
 												</div>
-												<button class="btn-simple text-effect-source-change" id="textBorderGlitterChange" type="button">Change</button>
-											</div>
-											<div class="tool-options-group text-effect-mode-group">
-												<button class="btn-simple" id="textBorderUseGlitter" type="button">Glitter</button>
-												<button class="btn-simple active" id="textBorderUseColor" type="button">Solid Color</button>
-											</div>
-											<div class="text-effect-color-row" id="textBorderColorRow">
-												<div class="setting-header">
-													<span class="setting-label">Solid Color</span>
+												<div class="text-effect-color-row glitter-source-solid" id="textBorderColorRow">
+													<div class="setting-header">
+														<span class="setting-label">Solid Color</span>
+													</div>
+													<input type="color" id="textBorderColor" value="#000000">
 												</div>
-												<input type="color" id="textBorderColor" value="#000000">
 											</div>
 											<div class="settings-group-two-column">
 												<div class="setting-column right" id="textBorderScaleRow">
@@ -1423,25 +1447,37 @@
 													<button class="btn-text" id="resetTextShadowOffsetY" type="button">Reset</button>
 												</div>
 											</div>
-											<div class="text-effect-source-row">
-												<div class="asset-info-header">
-													<div class="asset-info-thumbnail" id="textShadowGlitterChip" title="Choose shadow source"></div>
-													<div class="asset-info-details">
-														<div class="asset-info-name" id="textShadowGlitterLabel">#000000</div>
-														<div class="asset-info-badges" id="textShadowGlitterBadges"></div>
+											<div class="glitter-source">
+												<div class="segmented-control text-effect-mode-group">
+													<button class="segmented-option" id="textShadowUseGlitter" type="button">Glitter</button>
+													<button class="segmented-option active" id="textShadowUseColor" type="button">Solid Color</button>
+												</div>
+												<div class="asset-info glitter-source-glitter" id="textShadowGlitterInfo">
+													<div class="asset-info-header">
+														<div class="asset-info-thumbnail" id="textShadowGlitterChip" title="Choose shadow source"></div>
+														<div class="asset-info-details">
+															<div class="asset-info-name" id="textShadowGlitterLabel">#000000</div>
+															<div class="asset-info-badges" id="textShadowGlitterBadges"></div>
+														</div>
+														<button class="btn-simple text-effect-source-change" id="textShadowGlitterChange" type="button">Change</button>
+													</div>
+													<div class="settings-group-two-column asset-info-meta">
+														<div class="setting-column">
+															<div class="setting-header"><span class="setting-label">Size</span></div>
+															<span class="setting-value" id="textShadowGlitterSize"></span>
+														</div>
+														<div class="setting-column">
+															<div class="setting-header"><span class="setting-label">Frames</span></div>
+															<span class="setting-value" id="textShadowGlitterFrames"></span>
+														</div>
 													</div>
 												</div>
-												<button class="btn-simple text-effect-source-change" id="textShadowGlitterChange" type="button">Change</button>
-											</div>
-											<div class="tool-options-group text-effect-mode-group">
-												<button class="btn-simple" id="textShadowUseGlitter" type="button">Glitter</button>
-												<button class="btn-simple active" id="textShadowUseColor" type="button">Solid Color</button>
-											</div>
-											<div class="text-effect-color-row" id="textShadowColorRow">
-												<div class="setting-header">
-													<span class="setting-label">Solid Color</span>
+												<div class="text-effect-color-row glitter-source-solid" id="textShadowColorRow">
+													<div class="setting-header">
+														<span class="setting-label">Solid Color</span>
+													</div>
+													<input type="color" id="textShadowColor" value="#000000">
 												</div>
-												<input type="color" id="textShadowColor" value="#000000">
 											</div>
 											<div class="settings-group-two-column">
 												<div class="setting-column right" id="textShadowScaleRow">
@@ -2930,14 +2966,14 @@
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
 	<script src="js/classes/LayerTransform.js?v=3"></script>
-	<script src="js/classes/GlitterManager.js?v=4"></script>
-	<script src="js/classes/TextGlitterManager.js?v=13"></script>
+	<script src="js/classes/GlitterManager.js?v=5"></script>
+	<script src="js/classes/TextGlitterManager.js?v=15"></script>
 	<script src="js/classes/StickerManager.js"></script>
 
 	<script src="js/classes/MobileManager.js?v=2"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=19"></script>
+	<script src="js/app.js?v=20"></script>
 
 </body>
 

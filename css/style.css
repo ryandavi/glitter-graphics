@@ -4919,8 +4919,58 @@ body.mask-editing .sticker-element {
   flex: 1;
 }
 
-.text-effect-mode-group > .btn-simple {
+.segmented-control {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.segmented-option {
   flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.segmented-option + .segmented-option {
+  border-left: 1px solid var(--color-border);
+}
+.segmented-option:hover:not(.active) {
+  color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+}
+.segmented-option.active {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.glitter-source {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.glitter-source .asset-info,
+.asset-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.asset-info-meta {
+  gap: var(--spacing-md);
+}
+
+.glitter-source-glitter[hidden],
+.glitter-source-solid[hidden] {
+  display: none;
 }
 
 .text-box-hint {
@@ -4942,7 +4992,7 @@ body.mask-editing .sticker-element {
 .text-effect-subsection {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
   padding: var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);

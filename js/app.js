@@ -722,42 +722,52 @@ async resetAllSettings() {
 
 		this.renderAssetBadges(badges, asset, manager, getExtraBadges);
 
-		// Size - handle undefined
-		if (size) {
-			if (asset.width && asset.height) {
-				size.textContent = `${asset.width} × ${asset.height} px`;
-			} else {
-				size.textContent = 'Undefined';
-			}
+		// Size + frames use the shared formatters so Glitter Properties, Sticker
+		// Properties, and the text Fill/Border/Shadow pickers all read identically.
+		if (size) size.textContent = this.formatAssetSize(asset);
+		if (frames) frames.textContent = this.formatAssetFrames(asset);
+	}
+
+	// ===== Shared asset-info formatting (one place to change size/frames text) =====
+
+	formatAssetSize(asset) {
+		if (asset?.width && asset?.height) {
+			return `${asset.width} × ${asset.height} px`;
 		}
+		return 'Undefined';
+	}
 
-		// Frames and frame rate - handle undefined
-
-
-
-
-		let frameText = '';
-
-		if (asset.frameCount !== undefined && asset.frameCount !== null) {
-			// Add frame rate if available and animated
-			if (asset.isAnimated && asset.frameRate) {
-				frameText = `${asset.frameCount}`;
-
-				if (asset.isVariableFramerate) {
-					frameText += ` @ Variable fps`;
-				} else {
-					frameText += ` @ ${asset.frameRate} fps`;
-				}
-
-			}else{
-				frameText = 'Static';
-			}
-		} else {
-			frameText = 'Undefined';
+	formatAssetFrames(asset) {
+		if (asset?.frameCount === undefined || asset?.frameCount === null) {
+			return 'Undefined';
 		}
+		if (!asset.isAnimated || !asset.frameRate) {
+			return 'Static';
+		}
+		const rate = asset.isVariableFramerate ? 'Variable fps' : `${asset.frameRate} fps`;
+		return `${asset.frameCount} @ ${rate}`;
+	}
 
-		frames.textContent = frameText;
-
+	// Populate a glitter asset-info block (thumbnail + name + badges + size +
+	// frames) from a glitter library item. Reused by the text Fill/Border/Shadow
+	// source cards so their glitter display matches Glitter Properties' Asset
+	// section exactly. `els` holds the target elements (any may be omitted).
+	renderGlitterAssetDisplay(els, glitter) {
+		if (!glitter) return;
+		if (els.thumbnail) {
+			els.thumbnail.classList.add('glitter-bg');
+			els.thumbnail.style.backgroundImage = `url(${glitter.url})`;
+			els.thumbnail.style.backgroundColor = 'transparent';
+		}
+		if (els.name) {
+			els.name.textContent = glitter.name;
+			els.name.title = glitter.name;
+		}
+		if (els.badges) {
+			this.renderAssetBadges(els.badges, glitter, this.glitterManager, () => []);
+		}
+		if (els.size) els.size.textContent = this.formatAssetSize(glitter);
+		if (els.frames) els.frames.textContent = this.formatAssetFrames(glitter);
 	}
 
 	// Shared by Glitter/Sticker asset info (updateAssetInfo) and the Text

@@ -58,9 +58,9 @@ class TextGlitterManager {
 			fillGlitterChange: document.getElementById('textFillGlitterChange'),
 			fillGlitterLabel: document.getElementById('textFillGlitterLabel'),
 			fillGlitterBadges: document.getElementById('textFillGlitterBadges'),
-			// Same element as fillGlitterChip — the thumbnail IS the chip now,
-			// styled like Glitter Properties' asset-info-thumbnail.
-			fillGlitterSwatch: document.getElementById('textFillGlitterChip'),
+			fillGlitterInfo: document.getElementById('textFillGlitterInfo'),
+			fillGlitterSize: document.getElementById('textFillGlitterSize'),
+			fillGlitterFrames: document.getElementById('textFillGlitterFrames'),
 			fillUseColor: document.getElementById('textFillUseColor'),
 			fillUseGlitter: document.getElementById('textFillUseGlitter'),
 			fillColor: document.getElementById('textFillColor'),
@@ -85,9 +85,9 @@ class TextGlitterManager {
 			borderGlitterChange: document.getElementById('textBorderGlitterChange'),
 			borderGlitterLabel: document.getElementById('textBorderGlitterLabel'),
 			borderGlitterBadges: document.getElementById('textBorderGlitterBadges'),
-			// Same element as borderGlitterChip — the thumbnail IS the chip,
-			// styled like Glitter Properties' asset-info-thumbnail.
-			borderGlitterSwatch: document.getElementById('textBorderGlitterChip'),
+			borderGlitterInfo: document.getElementById('textBorderGlitterInfo'),
+			borderGlitterSize: document.getElementById('textBorderGlitterSize'),
+			borderGlitterFrames: document.getElementById('textBorderGlitterFrames'),
 			borderUseColor: document.getElementById('textBorderUseColor'),
 			borderUseGlitter: document.getElementById('textBorderUseGlitter'),
 			borderScaleRow: document.getElementById('textBorderScaleRow'),
@@ -107,9 +107,9 @@ class TextGlitterManager {
 			shadowGlitterChange: document.getElementById('textShadowGlitterChange'),
 			shadowGlitterLabel: document.getElementById('textShadowGlitterLabel'),
 			shadowGlitterBadges: document.getElementById('textShadowGlitterBadges'),
-			// Same element as shadowGlitterChip — the thumbnail IS the chip,
-			// styled like Glitter Properties' asset-info-thumbnail.
-			shadowGlitterSwatch: document.getElementById('textShadowGlitterChip'),
+			shadowGlitterInfo: document.getElementById('textShadowGlitterInfo'),
+			shadowGlitterSize: document.getElementById('textShadowGlitterSize'),
+			shadowGlitterFrames: document.getElementById('textShadowGlitterFrames'),
 			shadowUseColor: document.getElementById('textShadowUseColor'),
 			shadowUseGlitter: document.getElementById('textShadowUseGlitter'),
 			shadowScaleRow: document.getElementById('textShadowScaleRow'),
@@ -417,6 +417,11 @@ class TextGlitterManager {
 	getDefaultBorder() {
 		return {
 			widthPx: 4,
+			// `mode` is UI intent (which display + segmented state); the actual
+			// paint/export still derive from glitterId truthiness, so this is
+			// additive and parity-safe. Legacy data without `mode` falls back to
+			// glitterId (see effectUsesGlitter).
+			mode: 'solid',
 			glitterId: null,
 			color: '#000000',
 			scale: 100,
@@ -428,6 +433,7 @@ class TextGlitterManager {
 		return {
 			offsetX: 6,
 			offsetY: 6,
+			mode: 'solid',
 			glitterId: null,
 			color: '#000000',
 			scale: 100,
@@ -669,13 +675,14 @@ class TextGlitterManager {
 		button.addEventListener('click', async () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
-			if (!this.getEffectData(layer, effectName)?.glitterId) return;
+			// Already solid (mode solid, or legacy data with no glitterId)? No-op.
+			if (!this.effectUsesGlitter(this.getEffectData(layer, effectName))) return;
 
 			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
 					const effectData = this.ensureEffectData(layer, effectName);
 					effectData.glitterId = null;
-					this.setGlitterSelectionTarget(effectName, layer);
+					effectData.mode = 'solid';
 				}, { saveHistory: true, refreshPreview: false });
 			} catch (error) {
 				this.reportFontLoadError(error);
@@ -689,11 +696,15 @@ class TextGlitterManager {
 		button.addEventListener('click', () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
+			if (this.effectUsesGlitter(this.getEffectData(layer, effectName))) return;
 
-			this.ensureEffectData(layer, effectName);
-			this.setGlitterSelectionTarget(effectName, layer);
-			this.revealGlitterBrowser();
-			this.editor.updateStatus(`Choosing glitter for the text ${effectName} — press Esc or Done to finish.`);
+			// Switch the slot to glitter mode in place. Like fill, this does NOT
+			// open the gallery — if no glitter is picked yet the source shows an
+			// empty "choose a glitter" state; the gallery opens only when the
+			// user clicks the swatch or Change (bindEffectGlitterPicker).
+			this.ensureEffectData(layer, effectName).mode = 'glitter';
+			this.updateEffectSourceUI(layer, effectName);
+			this.editor.updateStatus(`Text ${effectName} is using glitter — click the swatch or Change to pick one.`);
 		});
 	}
 
@@ -709,7 +720,7 @@ class TextGlitterManager {
 					const effectData = this.ensureEffectData(layer, effectName);
 					effectData.color = input.value;
 					effectData.glitterId = null;
-					this.setGlitterSelectionTarget(effectName, layer);
+					effectData.mode = 'solid';
 				}, {
 					saveHistory: false,
 					refreshLayerList: false,
@@ -760,7 +771,11 @@ class TextGlitterManager {
 		button.addEventListener('click', async () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
+			if (this.getEffectData(layer, 'fill')?.mode !== 'solid') return;
 
+			// Switching mode only flips the mode in place — it shows the fill's
+			// existing glitter. It deliberately does NOT open the gallery; that
+			// only happens when the user clicks the swatch or Change.
 			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
 					this.ensureEffectData(layer, 'fill').mode = 'glitter';
@@ -769,11 +784,7 @@ class TextGlitterManager {
 				this.reportFontLoadError(error);
 			}
 
-			this.setGlitterSelectionTarget('fill', layer);
-			this.revealGlitterBrowser();
-			this.editor.updateStatus('Pick a glitter for the text fill.');
-			this.updateFillSourceUI(layer);
-			this.updateExistingBackground(layer);
+			this.editor.updateStatus('Text fill is using glitter — click the swatch or Change to pick a different one.');
 		});
 	}
 
@@ -1302,48 +1313,66 @@ class TextGlitterManager {
 	// summary/update logic rather than sharing getEffectSourceSummary/
 	// updateEffectSourceUI — but mirrors their visible behavior exactly.
 	updateFillSourceUI(layer) {
-		if (!this.ui.fillGlitterChip || !this.ui.fillGlitterLabel || !this.ui.fillGlitterSwatch) return;
+		if (!this.ui.fillGlitterChip || !this.ui.fillGlitterLabel) return;
 
 		const fillData = this.ensureEffectData(layer, 'fill');
-		const glitter = fillData.mode !== 'solid'
+		const usesGlitter = fillData.mode !== 'solid';
+		const glitter = usesGlitter
 			? this.editor.glitterManager?.getItemById(layer?.selectedGlitterId)
 			: null;
 
-		if (glitter) {
-			this.ui.fillGlitterLabel.textContent = glitter.name;
-			this.ui.fillGlitterLabel.title = glitter.name;
-			this.ui.fillGlitterChip.title = `Current fill glitter: ${glitter.name}. Click to choose another glitter.`;
-			if (this.ui.fillGlitterChange) {
-				this.ui.fillGlitterChange.title = this.ui.fillGlitterChip.title;
-			}
-			this.ui.fillGlitterSwatch.style.backgroundImage = `url(${glitter.url})`;
-			this.ui.fillGlitterSwatch.style.backgroundColor = 'transparent';
-			this.ui.fillGlitterSwatch.classList.add('glitter-bg');
-			this.editor.renderAssetBadges(this.ui.fillGlitterBadges, glitter, this.editor.glitterManager, () => []);
-		} else {
-			const label = fillData.mode === 'solid'
-				? (fillData.color || '#000000').toUpperCase()
-				: 'No glitter selected';
-			this.ui.fillGlitterLabel.textContent = label;
-			this.ui.fillGlitterLabel.title = fillData.mode === 'solid' ? label : '';
-			this.ui.fillGlitterChip.title = fillData.mode === 'solid'
-				? 'The text fill is using a solid color. Click to choose a glitter instead.'
-				: 'Pick a glitter for the text fill';
-			if (this.ui.fillGlitterChange) {
-				this.ui.fillGlitterChange.title = this.ui.fillGlitterChip.title;
-			}
-			this.ui.fillGlitterSwatch.style.backgroundImage = 'none';
-			this.ui.fillGlitterSwatch.style.backgroundColor = fillData.mode === 'solid' ? (fillData.color || '#000000') : 'transparent';
-			this.ui.fillGlitterSwatch.classList.remove('glitter-bg');
-			if (this.ui.fillGlitterBadges) this.ui.fillGlitterBadges.innerHTML = '';
-		}
-
-		const usesGlitter = fillData.mode !== 'solid';
+		// Segmented control reflects the mode; exactly one source display shows.
 		if (this.ui.fillUseGlitter) this.ui.fillUseGlitter.classList.toggle('active', usesGlitter);
 		if (this.ui.fillUseColor) this.ui.fillUseColor.classList.toggle('active', !usesGlitter);
+		if (this.ui.fillGlitterInfo) this.ui.fillGlitterInfo.hidden = !usesGlitter;
 		if (this.ui.fillColorRow) this.ui.fillColorRow.hidden = usesGlitter;
-		if (this.ui.fillColor) this.ui.fillColor.value = fillData.color || '#000000';
+		// Texture scale/opacity are only meaningful for a glitter fill.
 		if (this.ui.textureScaleRow) this.ui.textureScaleRow.hidden = !usesGlitter;
+
+		if (usesGlitter && glitter) {
+			// Reuse the exact Glitter-Properties asset display (thumbnail, name,
+			// badges, size, frames) so the two stay visually identical.
+			this.editor.renderGlitterAssetDisplay({
+				thumbnail: this.ui.fillGlitterChip,
+				name: this.ui.fillGlitterLabel,
+				badges: this.ui.fillGlitterBadges,
+				size: this.ui.fillGlitterSize,
+				frames: this.ui.fillGlitterFrames
+			}, glitter);
+			const title = `Current fill glitter: ${glitter.name}. Click to choose another glitter.`;
+			this.ui.fillGlitterChip.title = title;
+			if (this.ui.fillGlitterChange) this.ui.fillGlitterChange.title = title;
+		} else if (usesGlitter) {
+			this.clearGlitterAssetDisplay({
+				thumbnail: this.ui.fillGlitterChip,
+				name: this.ui.fillGlitterLabel,
+				badges: this.ui.fillGlitterBadges,
+				size: this.ui.fillGlitterSize,
+				frames: this.ui.fillGlitterFrames
+			});
+			const title = 'Pick a glitter for the text fill';
+			this.ui.fillGlitterChip.title = title;
+			if (this.ui.fillGlitterChange) this.ui.fillGlitterChange.title = title;
+		}
+
+		if (this.ui.fillColor) this.ui.fillColor.value = fillData.color || '#000000';
+	}
+
+	// Glitter mode but the asset couldn't be resolved (missing/unloaded) — reset
+	// the display to a neutral placeholder. Shared by fill and border/shadow.
+	clearGlitterAssetDisplay(els, placeholder = 'No glitter selected') {
+		if (els.thumbnail) {
+			els.thumbnail.classList.remove('glitter-bg');
+			els.thumbnail.style.backgroundImage = 'none';
+			els.thumbnail.style.backgroundColor = 'transparent';
+		}
+		if (els.name) {
+			els.name.textContent = placeholder;
+			els.name.title = '';
+		}
+		if (els.badges) els.badges.innerHTML = '';
+		if (els.size) els.size.textContent = '';
+		if (els.frames) els.frames.textContent = '';
 	}
 
 	toggleEffectControls(element, isVisible) {
@@ -1370,7 +1399,9 @@ class TextGlitterManager {
 
 	setupPickerStripListeners() {
 		this.ui.pickerStripDone?.addEventListener('click', () => {
+			const slot = this.pickerSession?.slot || 'fill';
 			this.closePickerSession();
+			this.returnToTextProperties(slot);
 		});
 
 		// Single global Esc listener: exits picker mode, but stays out of the way
@@ -1383,8 +1414,37 @@ class TextGlitterManager {
 			if (isTyping) return;
 			if (this.editor.modalManager?.isAnyOpen?.()) return;
 			event.preventDefault();
+			const slot = this.pickerSession?.slot || 'fill';
 			this.closePickerSession();
+			this.returnToTextProperties(slot);
 			this.editor.updateStatus('Exited glitter picker. Gallery clicks now change the text fill.');
+		});
+	}
+
+	// Explicit exit from picker mode (Done / Esc) returns focus to where the
+	// user armed from. This is deliberately NOT part of closePickerSession —
+	// the automatic clears (layer switch, effect disable, history restore)
+	// already move the user elsewhere and must not yank the view back.
+	returnToTextProperties(slot = 'fill') {
+		if (this.editor.mobileManager?.isMobile) {
+			// The gallery is its own drawer on mobile; close it to reveal the
+			// active layer's settings (Text Properties) underneath.
+			if (this.editor.mobileManager.activeDrawer === 'design') {
+				this.editor.mobileManager.closeAllDrawers();
+			}
+			return;
+		}
+
+		// Desktop accordion: reopen Text Properties (collapsing the gallery) and
+		// scroll the source row we were choosing for back into view.
+		this.editor.setCollapsibleSectionOpen?.('textSettings', true, true);
+		const chipId = slot === 'border'
+			? 'textBorderGlitterChip'
+			: slot === 'shadow'
+				? 'textShadowGlitterChip'
+				: 'textFillGlitterChip';
+		requestAnimationFrame(() => {
+			document.getElementById(chipId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 		});
 	}
 
@@ -1461,8 +1521,10 @@ class TextGlitterManager {
 				button: this.ui.borderGlitterChip,
 				changeButton: this.ui.borderGlitterChange,
 				label: this.ui.borderGlitterLabel,
-				swatch: this.ui.borderGlitterSwatch,
 				badges: this.ui.borderGlitterBadges,
+				info: this.ui.borderGlitterInfo,
+				size: this.ui.borderGlitterSize,
+				frames: this.ui.borderGlitterFrames,
 				useColor: this.ui.borderUseColor,
 				useGlitter: this.ui.borderUseGlitter,
 				colorRow: this.ui.borderColorRow,
@@ -1472,39 +1534,64 @@ class TextGlitterManager {
 				button: this.ui.shadowGlitterChip,
 				changeButton: this.ui.shadowGlitterChange,
 				label: this.ui.shadowGlitterLabel,
-				swatch: this.ui.shadowGlitterSwatch,
 				badges: this.ui.shadowGlitterBadges,
+				info: this.ui.shadowGlitterInfo,
+				size: this.ui.shadowGlitterSize,
+				frames: this.ui.shadowGlitterFrames,
 				useColor: this.ui.shadowUseColor,
 				useGlitter: this.ui.shadowUseGlitter,
 				colorRow: this.ui.shadowColorRow,
 				scaleRow: this.ui.shadowScaleRow
 			};
 
-		if (!config.button || !config.label || !config.swatch || !config.useColor || !config.useGlitter || !config.colorRow) {
+		if (!config.button || !config.label || !config.useColor || !config.useGlitter || !config.colorRow) {
 			return;
 		}
 
 		const summary = this.getEffectSourceSummary(effectData, effectName);
-		config.label.textContent = summary.label;
-		config.label.title = summary.label;
+		const usesGlitter = summary.usesGlitter;
+
+		// Segmented control reflects the mode; exactly one source display shows.
+		config.useGlitter.classList.toggle('active', usesGlitter);
+		config.useColor.classList.toggle('active', !usesGlitter);
+		if (config.info) config.info.hidden = !usesGlitter;
+		config.colorRow.hidden = usesGlitter;
+		if (config.scaleRow) config.scaleRow.hidden = !usesGlitter;
+
 		config.button.title = summary.buttonTitle;
-		if (config.changeButton) {
-			config.changeButton.title = summary.buttonTitle;
+		if (config.changeButton) config.changeButton.title = summary.buttonTitle;
+
+		if (usesGlitter && summary.glitter) {
+			this.editor.renderGlitterAssetDisplay({
+				thumbnail: config.button,
+				name: config.label,
+				badges: config.badges,
+				size: config.size,
+				frames: config.frames
+			}, summary.glitter);
+		} else if (usesGlitter) {
+			// Glitter mode selected but nothing picked yet — show the empty
+			// "choose a glitter" state (the chip/Change tooltip prompts to pick).
+			this.clearGlitterAssetDisplay({
+				thumbnail: config.button,
+				name: config.label,
+				badges: config.badges,
+				size: config.size,
+				frames: config.frames
+			});
 		}
-		config.swatch.style.backgroundImage = summary.backgroundImage;
-		config.swatch.style.backgroundColor = summary.backgroundColor;
-		config.swatch.classList.toggle('glitter-bg', summary.usesGlitter);
-		config.useGlitter.classList.toggle('active', summary.usesGlitter);
-		config.useColor.classList.toggle('active', !summary.usesGlitter);
-		config.colorRow.hidden = summary.usesGlitter;
-		if (config.badges) {
-			if (summary.usesGlitter && summary.glitter) {
-				this.editor.renderAssetBadges(config.badges, summary.glitter, this.editor.glitterManager, () => []);
-			} else {
-				config.badges.innerHTML = '';
-			}
-		}
-		if (config.scaleRow) config.scaleRow.hidden = !summary.usesGlitter;
+		// Solid mode: the color display is shown instead of the glitter info,
+		// so the thumbnail/label (now hidden) need no painting.
+	}
+
+	// Whether a border/shadow slot is in glitter mode for UI purposes. Explicit
+	// `mode` wins (so "Glitter" can be selected before a glitter is picked);
+	// legacy data without `mode` falls back to glitterId truthiness.
+	effectUsesGlitter(effectData) {
+		if (!effectData) return false;
+		if (effectData.mode === 'glitter') return true;
+		if (effectData.mode === 'solid') return false;
+		return Boolean(effectData.glitterId);
 	}
 
 	getEffectSourceSummary(effectData, effectName) {
@@ -1522,18 +1609,20 @@ class TextGlitterManager {
 			};
 		}
 
-		if (effectData.glitterId) {
-			const glitter = this.editor.glitterManager.getItemById(effectData.glitterId);
-			if (glitter) {
-				return {
-					label: glitter.name,
-					buttonTitle: `Current ${effectTitle} glitter: ${glitter.name}. Click to choose another glitter.`,
-					backgroundImage: `url(${glitter.url})`,
-					backgroundColor: 'transparent',
-					usesGlitter: true,
-					glitter
-				};
-			}
+		if (this.effectUsesGlitter(effectData)) {
+			const glitter = effectData.glitterId
+				? this.editor.glitterManager.getItemById(effectData.glitterId)
+				: null;
+			return {
+				label: glitter ? glitter.name : 'No glitter selected',
+				buttonTitle: glitter
+					? `Current ${effectTitle} glitter: ${glitter.name}. Click to choose another glitter.`
+					: `Pick a glitter for the text ${effectTitle}`,
+				backgroundImage: glitter ? `url(${glitter.url})` : 'none',
+				backgroundColor: 'transparent',
+				usesGlitter: true,
+				glitter
+			};
 		}
 
 		return {
