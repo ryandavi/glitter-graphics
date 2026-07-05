@@ -8,9 +8,16 @@ class MaskEditor {
 		this.currentLayerId = null;
 		this.strokeActive = false;
 		this.strokeChanged = false;
+		this.strokeModeOverride = null;
 		this.lastPoint = null;
 		this.stampCarry = 0;
 		this.smoothedPoint = null;
+		// WP2 straight lines: strokeOrigin anchors axis-lock; axisLockDir is the
+		// unit direction once the shift-drag has moved far enough to pick one;
+		// lastStrokeEndPoint (with its layerId) is where a shift-click connects from.
+		this.strokeOrigin = null;
+		this.axisLockDir = null;
+		this.lastStrokeEndPoint = null;
 		this.scratchAddCanvas = null;
 		this.scratchSubCanvas = null;
 		this.livePreviewQueued = false;
@@ -19,7 +26,12 @@ class MaskEditor {
 		this.touchRingTimeout = null;
 		this.stampCacheKey = '';
 		this.stampCanvas = null;
-		this.brushShape = CONFIG.maskBrush.defaultShape || 'round';
+		// WP1: Brush and Eraser keep independent setting sets. This store is the
+		// source of truth (the DOM panel is a view that setMode writes into); all
+		// getBrush*() getters read the ACTIVE mode's entry (getActiveMode(), so a
+		// pen-eraser override uses eraser settings). Seeded from CONFIG, then
+		// merged with any localStorage-persisted values.
+		this.toolSettings = this._loadToolSettings();
 		this.overlayPatternCache = new Map();
 		this.ui = {
 			overlayToggle: document.getElementById('maskOverlayToggle'),
@@ -77,25 +89,163 @@ class MaskEditor {
 			if (card) this.setBrushShape(card.dataset.shape);
 		});
 
+		this._bindSettingInputs();
+		// Seed the one DOM panel from the active mode's stored settings.
+		this._applySettingsToDOM(this.mode);
+		this._updatePanelTitle();
+
 		this.loadLayer(this.editor.layerManager.getActiveLayer());
 	}
 
-	getBrushShape() {
-		return this.brushShape || 'round';
+	// ===== PER-MODE SETTINGS STORE (WP1) =====
+
+	_defaultToolSettings() {
+		const mb = CONFIG.maskBrush;
+		const base = {
+			size: mb.defaultSize,
+			softness: mb.defaultSoftness,
+			flow: mb.defaultFlow,
+			spacing: Math.round(mb.stampSpacing * 100),
+			smoothing: mb.defaultSmoothing ?? 0,
+			shape: mb.defaultShape || 'round',
+			pressure: true
+		};
+		// Eraser inherits the shared defaults, overriding only the listed keys.
+		const sub = Object.assign({}, base, mb.eraserDefaults || {});
+		return { add: Object.assign({}, base), sub };
 	}
 
-	setBrushShape(shape) {
-		if (!MaskEditor.BRUSH_SHAPES.some((entry) => entry.id === shape)) return;
-		if (this.brushShape === shape) return;
-		this.brushShape = shape;
-		// The stamp cache key includes the shape, so the next stamp regenerates;
-		// clear it eagerly so nothing reuses the previous shape mid-session.
+	// Only accept known keys with the right primitive types, so a corrupted or
+	// stale localStorage payload can never inject junk into the store.
+	_sanitizeSettings(raw, fallback) {
+		const out = Object.assign({}, fallback);
+		if (raw && typeof raw === 'object') {
+			['size', 'softness', 'flow', 'spacing', 'smoothing'].forEach((key) => {
+				if (Number.isFinite(raw[key])) out[key] = raw[key];
+			});
+			if (typeof raw.shape === 'string' && MaskEditor.BRUSH_SHAPES.some((e) => e.id === raw.shape)) {
+				out.shape = raw.shape;
+			}
+			if (typeof raw.pressure === 'boolean') out.pressure = raw.pressure;
+		}
+		return out;
+	}
+
+	_loadToolSettings() {
+		const defaults = this._defaultToolSettings();
+		try {
+			const raw = localStorage.getItem(MaskEditor.SETTINGS_STORAGE_KEY);
+			if (raw) {
+				const parsed = JSON.parse(raw);
+				return {
+					add: this._sanitizeSettings(parsed?.add, defaults.add),
+					sub: this._sanitizeSettings(parsed?.sub, defaults.sub)
+				};
+			}
+		} catch (error) {
+			// Ignore quota/JSON errors — defaults are a fine fallback.
+		}
+		return defaults;
+	}
+
+	_saveToolSettings() {
+		try {
+			localStorage.setItem(MaskEditor.SETTINGS_STORAGE_KEY, JSON.stringify(this.toolSettings));
+		} catch (error) {
+			// Non-fatal: settings just won't persist this session.
+		}
+	}
+
+	// Attach store-writing listeners on top of app.js's display listeners. Slider
+	// input writes into the CURRENTLY-SELECTED mode (this.mode, not
+	// getActiveMode) — the panel edits the toolbar tool, never a transient
+	// pen-eraser override. Persist on `change` (drag end), not every input frame.
+	_bindSettingInputs() {
+		const sliders = [
+			['maskBrushSize', 'size'],
+			['maskBrushSoftness', 'softness'],
+			['maskBrushFlow', 'flow'],
+			['maskBrushSpacing', 'spacing'],
+			['maskBrushSmoothing', 'smoothing']
+		];
+
+		sliders.forEach(([id, key]) => {
+			const el = document.getElementById(id);
+			if (!el) return;
+			el.addEventListener('input', () => {
+				const value = parseInt(el.value, 10);
+				if (Number.isFinite(value)) this.toolSettings[this.mode][key] = value;
+			});
+			el.addEventListener('change', () => this._saveToolSettings());
+		});
+
+		const pressure = document.getElementById('maskBrushPressure');
+		pressure?.addEventListener('change', () => {
+			this.toolSettings[this.mode].pressure = pressure.checked;
+			this._saveToolSettings();
+		});
+	}
+
+	// Push a mode's stored values out to the shared DOM panel. Dispatching 'input'
+	// reuses app.js's value-display / reset-button / quick-slider sync for free
+	// (and re-writes the same value into the store — idempotent).
+	_applySettingsToDOM(mode) {
+		const s = this.toolSettings[mode];
+		const setSlider = (id, value) => {
+			const el = document.getElementById(id);
+			if (!el) return;
+			el.value = String(value);
+			el.dispatchEvent(new Event('input'));
+		};
+
+		setSlider('maskBrushSize', s.size);
+		setSlider('maskBrushSoftness', s.softness);
+		setSlider('maskBrushFlow', s.flow);
+		setSlider('maskBrushSpacing', s.spacing);
+		setSlider('maskBrushSmoothing', s.smoothing);
+
+		const pressure = document.getElementById('maskBrushPressure');
+		if (pressure) pressure.checked = s.pressure;
+
+		this._applyShapeToPicker(s.shape);
+		// The stamp cache key embeds the shape/size/softness, so switching modes
+		// must invalidate the cached stamp.
 		this.stampCacheKey = '';
+	}
+
+	_applyShapeToPicker(shape) {
 		document.querySelectorAll('#brushShapePicker .brush-shape-option').forEach((el) => {
 			const selected = el.dataset.shape === shape;
 			el.classList.toggle('active', selected);
 			el.setAttribute('aria-selected', selected ? 'true' : 'false');
 		});
+	}
+
+	// Retitle the one shared settings section to match the active mode, and swap
+	// its header icon (Brush ↔ Eraser). Mobile relocates this same section, so
+	// the drawer picks the retitle up automatically.
+	_updatePanelTitle() {
+		const isEraser = this.mode === 'sub';
+		const titleText = document.getElementById('brushSettingsTitleText');
+		if (titleText) titleText.textContent = isEraser ? 'Eraser Settings' : 'Brush Settings';
+		const titleIcon = document.getElementById('brushSettingsTitleIcon');
+		if (titleIcon) titleIcon.setAttribute('href', isEraser ? '#icon-eraser' : '#icon-brush');
+	}
+
+	getBrushShape() {
+		return this.toolSettings[this.getActiveMode()].shape || 'round';
+	}
+
+	setBrushShape(shape) {
+		if (!MaskEditor.BRUSH_SHAPES.some((entry) => entry.id === shape)) return;
+		const settings = this.toolSettings[this.mode];
+		if (settings.shape === shape) return;
+		settings.shape = shape;
+		// The stamp cache key includes the shape, so the next stamp regenerates;
+		// clear it eagerly so nothing reuses the previous shape mid-session.
+		this.stampCacheKey = '';
+		this._applyShapeToPicker(shape);
+		this._saveToolSettings();
 	}
 
 	// Builds the brush-shape gallery, reusing the same gallery-card conventions
@@ -196,6 +346,10 @@ class MaskEditor {
 				this._finishStroke();
 			}
 
+			// Switching layers ends the current line context — a Shift-click on the
+			// new layer should start fresh, not connect to the old layer's stroke.
+			this.lastStrokeEndPoint = null;
+
 			// The brush persists across any layer switch (color-picker parity);
 			// it targets glitter layers and auto-creates one when painting elsewhere.
 			const layer = this.editor.layerManager.getActiveLayer();
@@ -210,6 +364,9 @@ class MaskEditor {
 		// Undo/redo shouldn't kick the user out of the Brush/Eraser tool —
 		// exit the live stroke state only, and leave currentTool alone.
 		this.exitEditMode({ commitStroke: false, switchTool: false });
+		// The mask underneath changed — drop the Shift-click connect anchor so it
+		// can't draw from a point that no longer reflects what's on the canvas.
+		this.lastStrokeEndPoint = null;
 		this.loadLayer(this.editor.layerManager.getActiveLayer());
 	}
 
@@ -270,13 +427,38 @@ class MaskEditor {
 			return;
 		}
 
+		const changed = this.mode !== mode;
 		this.mode = mode;
+		if (changed) {
+			// Swap the shared DOM panel to the newly-active mode's stored values
+			// and retitle it (Brush ↔ Eraser).
+			this._applySettingsToDOM(mode);
+			this._updatePanelTitle();
+			this._updateBrushCursorSize();
+			this._saveToolSettings();
+		}
 		this._syncModeButtons();
 		this.editor.updateHelpfulMessage();
 	}
 
 	toggleMode() {
 		this.setMode(this.mode === 'add' ? 'sub' : 'add');
+	}
+
+	// The mode actually painting right now: the per-stroke pen-eraser override
+	// when one is active, otherwise the toolbar-selected mode.
+	getActiveMode() {
+		return this.strokeModeOverride || this.mode;
+	}
+
+	// A pen's eraser end reports pointerdown with button 5 (and bit 32 set in
+	// `buttons`) per the Pointer Events spec — NOT button 0, which is why a
+	// plain button check ignores it entirely (Wacom Cintiq report). Legacy
+	// IE/Edge exposed it as its own pointerType instead.
+	_isEraserPointer(event) {
+		if (event.pointerType === 'eraser') return true;
+		if (event.pointerType !== 'pen') return false;
+		return event.button === 5 || (event.buttons & 32) !== 0;
 	}
 
 	adjustBrushSize(delta) {
@@ -296,7 +478,10 @@ class MaskEditor {
 		}
 
 		slider.value = String(nextValue);
+		// 'input' updates the display + store (via _bindSettingInputs); 'change'
+		// persists it to localStorage.
 		slider.dispatchEvent(new Event('input'));
+		slider.dispatchEvent(new Event('change'));
 		return true;
 	}
 
@@ -358,16 +543,23 @@ class MaskEditor {
 			return;
 		}
 
-		if (!this._shouldHandleEvent(event) || event.button !== 0) {
+		const eraserInput = this._isEraserPointer(event);
+		if (!this._shouldHandleEvent(event) || (event.button !== 0 && !eraserInput)) {
 			return;
 		}
 
 		event.preventDefault();
 		event.stopPropagation();
 
+		// A pen's eraser end always erases, whatever paint mode the toolbar has
+		// selected (Photoshop behavior). The override lasts for this stroke only —
+		// _resetStrokeState restores the toolbar-selected mode.
+		this.strokeModeOverride = eraserInput ? 'sub' : null;
+
 		this._startStrokeFromScreenPoint(event.clientX, event.clientY, {
 			pointerId: event.pointerId,
-			pressure: event.pressure
+			pressure: event.pressure,
+			shiftKey: event.shiftKey
 		});
 		this._updateCursorPosition(event);
 	}
@@ -399,9 +591,51 @@ class MaskEditor {
 			return;
 		}
 
-		const smoothed = this._applySmoothing(point);
-		this._stampAlongPath(layer, paint, this.lastPoint, smoothed);
-		this.lastPoint = smoothed;
+		const nextPoint = this._resolveStrokePoint(point, event.shiftKey);
+		this._stampAlongPath(layer, paint, this.lastPoint, nextPoint);
+		this.lastPoint = nextPoint;
+	}
+
+	// Turns a raw pointer sample into the point actually painted this move.
+	// With Shift held we axis-lock (project onto the nearest 0/45/90° ray from
+	// the stroke origin) and bypass EMA smoothing — the projection already
+	// stabilizes the line, and smoothing would bow it. Without Shift we smooth
+	// as usual, and clear any lock so releasing Shift mid-stroke resumes freehand
+	// from the current position with no jump.
+	_resolveStrokePoint(point, shiftHeld) {
+		if (shiftHeld && this.strokeOrigin) {
+			const locked = this._projectAxisLock(point);
+			locked.pressure = point.pressure;
+			// Keep the smoothing anchor on the locked point so a later Shift release
+			// eases from here rather than snapping back to the raw pointer.
+			this.smoothedPoint = { x: locked.x, y: locked.y };
+			return locked;
+		}
+
+		this.axisLockDir = null;
+		return this._applySmoothing(point);
+	}
+
+	// Project `point` onto a straight ray from strokeOrigin. The ray direction is
+	// chosen once, on the first move past a small threshold, by snapping the drag
+	// angle to the nearest 45°, then reused for the rest of the stroke.
+	_projectAxisLock(point) {
+		const origin = this.strokeOrigin;
+		const dx = point.x - origin.x;
+		const dy = point.y - origin.y;
+
+		if (!this.axisLockDir) {
+			if (Math.hypot(dx, dy) < MaskEditor.AXIS_LOCK_MIN_DISTANCE) {
+				// Not enough travel to commit to a direction yet — hold at origin.
+				return { x: origin.x, y: origin.y };
+			}
+			const snapped = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+			this.axisLockDir = { x: Math.cos(snapped), y: Math.sin(snapped) };
+		}
+
+		const dir = this.axisLockDir;
+		const projected = dx * dir.x + dy * dir.y;
+		return { x: origin.x + dir.x * projected, y: origin.y + dir.y * projected };
 	}
 
 	_handlePointerUp(event) {
@@ -501,6 +735,18 @@ class MaskEditor {
 			return;
 		}
 
+		// Remember where this stroke ended so a following Shift-click can draw a
+		// straight line from here (Photoshop line-connect). Tagged with the layer
+		// id so it never connects across layers.
+		if (this.lastPoint) {
+			this.lastStrokeEndPoint = {
+				x: this.lastPoint.x,
+				y: this.lastPoint.y,
+				pressure: this.lastPoint.pressure,
+				layerId: layer.id
+			};
+		}
+
 		if (this.strokeChanged) {
 			this.editor.glitterManager.commitPaintState(layer);
 			this.editor.updatePreview();
@@ -549,8 +795,13 @@ class MaskEditor {
 
 		this.strokeActive = false;
 		this.strokeChanged = false;
+		this.strokeModeOverride = null;
 		this.activePointerId = null;
 		this.lastPoint = null;
+		// Axis-lock is per-stroke; lastStrokeEndPoint is NOT (it survives to the
+		// next Shift-click), so it is cleared elsewhere (layer switch / undo).
+		this.strokeOrigin = null;
+		this.axisLockDir = null;
 		this.scratchAddCanvas = null;
 		this.scratchSubCanvas = null;
 		this.livePreviewQueued = false;
@@ -604,7 +855,20 @@ class MaskEditor {
 		// stamp).
 		this.stampCarry = 0;
 		this.smoothedPoint = { x: point.x, y: point.y };
+		// WP2: this point anchors axis-lock for any Shift-drag that follows, and
+		// is also where a Shift-click line ends.
+		this.strokeOrigin = { x: point.x, y: point.y };
+		this.axisLockDir = null;
 		this._stampAtPoint(layer, paint, point.x, point.y, point.pressure);
+
+		// Shift-click: connect a straight line from the end of the previous stroke
+		// (on this same layer) to this point. The previous end was already stamped,
+		// so lay stamps from there up to the new point to fill the gap.
+		if (options.shiftKey && this.lastStrokeEndPoint && this.lastStrokeEndPoint.layerId === layer.id) {
+			this.stampCarry = 0;
+			this._stampAlongPath(layer, paint, this.lastStrokeEndPoint, point);
+			this.stampCarry = 0;
+		}
 		return true;
 	}
 
@@ -616,7 +880,7 @@ class MaskEditor {
 
 		// Erasing has nothing to do on a layer that can't hold glitter —
 		// don't create a fresh glitter layer just to immediately mark it dirty.
-		if (this.mode === 'sub') {
+		if (this.getActiveMode() === 'sub') {
 			this.editor.updateStatus('Nothing to erase here — select a glitter layer first');
 			return null;
 		}
@@ -689,7 +953,7 @@ class MaskEditor {
 	}
 
 	isPressureEnabled() {
-		return this.ui.pressureToggle ? this.ui.pressureToggle.checked : true;
+		return this.toolSettings[this.getActiveMode()].pressure;
 	}
 
 	_getStampAlpha(pressure) {
@@ -711,8 +975,9 @@ class MaskEditor {
 		const destinationX = x - halfSize;
 		const destinationY = y - halfSize;
 		const alpha = this._getStampAlpha(pressure);
-		const targetCtx = (this.mode === 'add' ? paint.add : paint.sub).getContext('2d', { willReadFrequently: true });
-		const oppositeCtx = (this.mode === 'add' ? paint.sub : paint.add).getContext('2d', { willReadFrequently: true });
+		const activeMode = this.getActiveMode();
+		const targetCtx = (activeMode === 'add' ? paint.add : paint.sub).getContext('2d', { willReadFrequently: true });
+		const oppositeCtx = (activeMode === 'add' ? paint.sub : paint.add).getContext('2d', { willReadFrequently: true });
 
 		targetCtx.save();
 		targetCtx.globalCompositeOperation = 'source-over';
@@ -830,76 +1095,11 @@ class MaskEditor {
 		}
 		ctx.fillStyle = 'rgba(255, 255, 255, 1)';
 		ctx.beginPath();
-		this._traceBrushShape(ctx, shape, shapeRadius);
+		// Geometry lives in ShapeLibrary (shared with the Shape tool). Brush stamps
+		// are uniform, so pass the same half-extent for width and height.
+		ShapeLibrary.trace(shape, ctx, shapeRadius, shapeRadius);
 		ctx.fill();
 		ctx.restore();
-	}
-
-	// Traces a shape centered on the current origin, fitted into a box of
-	// half-extent `r`. Square/calligraphy are drawn directly; star/heart are
-	// point lists normalized to fit (so they stay centered whatever their
-	// intrinsic bounds).
-	_traceBrushShape(ctx, shape, r) {
-		if (shape === 'square') {
-			ctx.rect(-r, -r, 2 * r, 2 * r);
-			return;
-		}
-		if (shape === 'calligraphy') {
-			// A flat nib at a fixed 45°: a thin ellipse rotated up-left → down-right.
-			ctx.ellipse(0, 0, r, r * 0.32, -Math.PI / 4, 0, Math.PI * 2);
-			return;
-		}
-
-		let points;
-		if (shape === 'star') {
-			points = [];
-			const spikes = 5;
-			const innerRatio = 0.42;
-			for (let i = 0; i < spikes * 2; i++) {
-				const mag = (i % 2 === 0) ? 1 : innerRatio;
-				const angle = (Math.PI / spikes) * i - Math.PI / 2;
-				points.push([Math.cos(angle) * mag, Math.sin(angle) * mag]);
-			}
-		} else if (shape === 'heart') {
-			points = [];
-			const steps = 48;
-			for (let i = 0; i < steps; i++) {
-				const t = (i / steps) * Math.PI * 2;
-				const x = 16 * Math.pow(Math.sin(t), 3);
-				const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-				points.push([x, y]);
-			}
-		} else {
-			ctx.arc(0, 0, r, 0, Math.PI * 2);
-			return;
-		}
-
-		this._traceFittedPoints(ctx, points, r);
-	}
-
-	_traceFittedPoints(ctx, points, r) {
-		let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-		for (const [x, y] of points) {
-			if (x < minX) minX = x;
-			if (x > maxX) maxX = x;
-			if (y < minY) minY = y;
-			if (y > maxY) maxY = y;
-		}
-		const centerX = (minX + maxX) / 2;
-		const centerY = (minY + maxY) / 2;
-		const halfExtent = Math.max((maxX - minX) / 2, (maxY - minY) / 2) || 1;
-		const scale = r / halfExtent;
-
-		points.forEach(([x, y], index) => {
-			const px = (x - centerX) * scale;
-			const py = (y - centerY) * scale;
-			if (index === 0) {
-				ctx.moveTo(px, py);
-			} else {
-				ctx.lineTo(px, py);
-			}
-		});
-		ctx.closePath();
 	}
 
 	_getCanvasPoint(event) {
@@ -1134,30 +1334,31 @@ class MaskEditor {
 		return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 	}
 
+	// All brush getters read the ACTIVE mode's stored settings (getActiveMode, so
+	// a pen-eraser override paints with the Eraser's values). The DOM panel is a
+	// view synced by _applySettingsToDOM — never read from it here.
 	getBrushSize() {
-		return parseInt(document.getElementById('maskBrushSize')?.value || CONFIG.maskBrush.defaultSize, 10);
+		return this.toolSettings[this.getActiveMode()].size;
 	}
 
 	getBrushSoftness() {
-		return parseInt(document.getElementById('maskBrushSoftness')?.value || CONFIG.maskBrush.defaultSoftness, 10);
+		return this.toolSettings[this.getActiveMode()].softness;
 	}
 
 	getBrushFlow() {
-		return parseInt(document.getElementById('maskBrushFlow')?.value || CONFIG.maskBrush.defaultFlow, 10);
+		return this.toolSettings[this.getActiveMode()].flow;
 	}
 
 	// Distance between stamps along a stroke, as a fraction of brush size (the
-	// slider is a percentage; stampSpacing in config is the default fraction).
+	// stored value is a percentage; return the fraction).
 	getBrushSpacing() {
-		const percent = parseInt(document.getElementById('maskBrushSpacing')?.value, 10);
-		return (Number.isFinite(percent) ? percent : CONFIG.maskBrush.stampSpacing * 100) / 100;
+		return this.toolSettings[this.getActiveMode()].spacing / 100;
 	}
 
 	// Stroke smoothing strength, 0 (off) .. ~0.9 (heavy). Capped below 1 so the
-	// brush never fully freezes. The slider is a 0–100% value.
+	// brush never fully freezes. The stored value is a 0–100% percentage.
 	getBrushSmoothing() {
-		const percent = parseInt(document.getElementById('maskBrushSmoothing')?.value, 10);
-		const value = Number.isFinite(percent) ? percent : (CONFIG.maskBrush.defaultSmoothing ?? 0);
+		const value = this.toolSettings[this.getActiveMode()].smoothing;
 		return Math.max(0, Math.min(100, value)) / 100 * 0.9;
 	}
 
@@ -1181,25 +1382,14 @@ class MaskEditor {
 	}
 }
 
-// Brush tip shapes for the gallery picker. `icon` is inline SVG markup drawn
-// with fill: currentColor (theme-aware) inside a 0 0 24 24 viewBox. Order here
-// is the gallery order; ids match the shapes _traceBrushShape knows how to draw.
-MaskEditor.BRUSH_SHAPES = [
-	{ id: 'round', label: 'Round', icon: '<circle cx="12" cy="12" r="9"/>' },
-	{ id: 'square', label: 'Square', icon: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/>' },
-	{
-		id: 'calligraphy',
-		label: 'Calligraphy',
-		icon: '<ellipse cx="12" cy="12" rx="10" ry="3.4" transform="rotate(-45 12 12)"/>'
-	},
-	{
-		id: 'star',
-		label: 'Star',
-		icon: '<path d="M12 2 L14.7 8.6 L21.8 9.2 L16.4 13.8 L18.1 20.8 L12 17 L5.9 20.8 L7.6 13.8 L2.2 9.2 L9.3 8.6 Z"/>'
-	},
-	{
-		id: 'heart',
-		label: 'Heart',
-		icon: '<path d="M12 21 C12 21 3 14.6 3 8.8 C3 5.6 5.4 3.5 8 3.5 C10 3.5 11.4 4.8 12 6 C12.6 4.8 14 3.5 16 3.5 C18.6 3.5 21 5.6 21 8.8 C21 14.6 12 21 12 21 Z"/>'
-	}
-];
+// localStorage key for the per-mode brush/eraser settings store (WP1). Bump the
+// version suffix if the stored shape ever changes incompatibly.
+MaskEditor.SETTINGS_STORAGE_KEY = 'glitter.toolSettings.v1';
+
+// Minimum canvas-space travel (WP2) before a Shift-drag commits to an axis-lock
+// direction — avoids a jittery direction pick on the first pixel of movement.
+MaskEditor.AXIS_LOCK_MIN_DISTANCE = 4;
+
+// Brush tip catalog now lives in ShapeLibrary (shared with the Shape tool, WP5a).
+// Kept as a static alias so existing MaskEditor.BRUSH_SHAPES references still work.
+MaskEditor.BRUSH_SHAPES = ShapeLibrary.BRUSH_SHAPES;

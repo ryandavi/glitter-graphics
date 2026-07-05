@@ -248,7 +248,8 @@ class GifExporter {
 				mode: 'glitter',
 				glitterId: layer.selectedGlitterId,
 				scale: layer.settings.scale ?? 100,
-				opacity: (layer.settings.opacity ?? 100) / 100
+				opacity: (layer.settings.opacity ?? 100) / 100,
+				colorAdjust: layer.settings.colorAdjust
 			};
 		}
 
@@ -262,7 +263,8 @@ class GifExporter {
 				mode: 'glitter',
 				glitterId: effectData.glitterId,
 				scale: effectData.scale ?? 100,
-				opacity: (effectData.opacity ?? 100) / 100
+				opacity: (effectData.opacity ?? 100) / 100,
+				colorAdjust: effectData.colorAdjust
 			};
 		}
 
@@ -345,10 +347,7 @@ class GifExporter {
 			fillCtx.fillStyle = source.color;
 		} else {
 			const frameImageData = this._getFrameImageForKey(sourceKey, frameIndex, frameMap, flattenedFrameMap);
-			const patternSource = document.createElement('canvas');
-			patternSource.width = frameImageData.width;
-			patternSource.height = frameImageData.height;
-			patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
+			const patternSource = this._patternSourceFromFrame(frameImageData, source.colorAdjust);
 
 			const pattern = fillCtx.createPattern(patternSource, 'repeat');
 			const sourceScale = source.scale ?? layer.settings.scale;
@@ -364,6 +363,32 @@ class GifExporter {
 		fillCtx.globalCompositeOperation = 'source-over';
 
 		return fillCanvas;
+	}
+
+	// Build the repeating-pattern source canvas for a glitter frame, applying the
+	// WP4 color-adjust matrix when the layer/slot has a non-identity adjustment.
+	// The flattened frame is a shared cached ImageData, so a non-identity adjust
+	// works on a COPY — never mutate the cache. Identity adjust puts the original
+	// bytes straight through, keeping export byte-identical to pre-WP4 content.
+	_patternSourceFromFrame(frameImageData, colorAdjust) {
+		const patternSource = document.createElement('canvas');
+		patternSource.width = frameImageData.width;
+		patternSource.height = frameImageData.height;
+		const pctx = patternSource.getContext('2d');
+
+		if (colorAdjust && !isIdentityColorAdjust(colorAdjust)) {
+			const copy = new ImageData(
+				new Uint8ClampedArray(frameImageData.data),
+				frameImageData.width,
+				frameImageData.height
+			);
+			applyColorAdjustToImageData(copy, colorAdjust);
+			pctx.putImageData(copy, 0, 0);
+		} else {
+			pctx.putImageData(frameImageData, 0, 0);
+		}
+
+		return patternSource;
 	}
 
 	_getFrameImageForKey(sourceKey, frameIndex, frameMap, flattenedFrameMap) {
@@ -865,10 +890,7 @@ class GifExporter {
 				hCtx.save();
 				hCtx.clearRect(0, 0, width, height);
 
-				const patternSource = document.createElement('canvas');
-				patternSource.width = frameImageData.width;
-				patternSource.height = frameImageData.height;
-				patternSource.getContext('2d').putImageData(frameImageData, 0, 0);
+				const patternSource = this._patternSourceFromFrame(frameImageData, layer.settings.colorAdjust);
 
 				const pattern = hCtx.createPattern(patternSource, 'repeat');
 				const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;

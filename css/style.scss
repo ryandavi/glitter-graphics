@@ -1294,7 +1294,7 @@ input[type="range"] {
 						text-overflow: ellipsis;
 						text-transform: uppercase;
 						min-width: 0;
-						flex: 1;
+						// flex: 1;
 					}
 				}
 
@@ -1303,8 +1303,8 @@ input[type="range"] {
 					align-items: center;
 					justify-content: center;
 					height: 12px;
-					padding: 0 4px;
-					border-radius: 999px;
+					border-radius: 3px;
+					padding: 0 2px;
 					font-size: 9px;
 					font-weight: 700;
 					line-height: 1;
@@ -6236,6 +6236,72 @@ body.mask-editing {
 	line-height: 1.1;
 	text-align: center;
 	color: inherit;
+}
+
+// ===== Advanced disclosure (WP4) =====
+// Auto-collapsed section nested inside a settings group (Glitter Properties,
+// text/shape effect cards). Holds decluttered controls (Scale) plus per-swatch
+// color adjust. Toggled by app.initializeAdvancedDisclosures via .is-open.
+.advanced-disclosure {
+	display: flex;
+	flex-direction: column;
+	margin-top: var(--spacing-sm);
+	border-top: 1px solid var(--color-border);
+}
+
+.advanced-disclosure-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-sm);
+	width: 100%;
+	padding: var(--spacing-sm) 0 0;
+	background: none;
+	border: none;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	cursor: pointer;
+
+	&:hover {
+		color: var(--color-text-primary);
+	}
+}
+
+.advanced-disclosure-label {
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.advanced-disclosure-chevron {
+	display: flex;
+	align-items: center;
+	transition: transform var(--transition-fast);
+
+	svg {
+		width: 14px;
+		height: 14px;
+		fill: currentColor;
+	}
+}
+
+.advanced-disclosure-content {
+	display: none;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding-top: var(--spacing-sm);
+}
+
+.advanced-disclosure.is-open {
+	.advanced-disclosure-content {
+		display: flex;
+	}
+
+	.advanced-disclosure-chevron {
+		transform: rotate(180deg);
+	}
 }
 
 // ===== Canvas Size (Photoshop-style resize) =====

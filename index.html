@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=20">
+	<link rel="stylesheet" href="css/style.css?v=21">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -113,7 +113,7 @@
 						</svg>
 						<span class="name">Mask Brush</span>
 					</button>
-					<button class="btn-icon icon-wrapper" id="eraserTool" title="Mask Eraser" disabled>
+					<button class="btn-icon icon-wrapper" id="eraserTool" title="Mask Eraser (E)" disabled>
 						<svg class="icon">
 							<use href="#icon-eraser"></use>
 						</svg>
@@ -856,25 +856,62 @@
 											<span>Appearance</span>
 											<label class="checkbox-group">
 												<input type="checkbox" id="glitterGlobal">
-												<span title="Apply settings to all glitter layers">Global</span>
+												<span title="Apply Scale/Opacity to all glitter layers">Global</span>
 											</label>
 										</div>
-										<div class="settings-group-two-column">
-											<div class="setting-column right">
-												<div class="setting-header">
-													<span class="setting-label" title="Scale glitter pattern size">Scale</span>
-													<span class="setting-value" id="scaleValue">100%</span>
-												</div>
-												<input type="range" id="scale" min="25" max="300" value="100">
-												<button class="btn-text" id="resetScale">Reset</button>
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label" title="Glitter effect intensity">Opacity</span>
+												<span class="setting-value" id="opacityValue">100%</span>
 											</div>
-											<div class="setting-column right">
-												<div class="setting-header">
-													<span class="setting-label" title="Glitter effect intensity">Opacity</span>
-													<span class="setting-value" id="opacityValue">100%</span>
+											<input type="range" id="opacity" min="0" max="100" value="100">
+											<button class="btn-text" id="resetOpacity">Reset</button>
+										</div>
+
+										<!-- Advanced disclosure (WP4): auto-collapsed. Scale lives here now
+										     (declutter), alongside per-swatch color adjust. -->
+										<div class="advanced-disclosure" data-advanced>
+											<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
+												<span class="advanced-disclosure-label">Advanced</span>
+												<span class="advanced-disclosure-chevron icon-wrapper">
+													<svg class="icon"><use href="#icon-chevron-down"></use></svg>
+												</span>
+											</button>
+											<div class="advanced-disclosure-content" data-advanced-content>
+												<div class="setting-column right">
+													<div class="setting-header">
+														<span class="setting-label" title="Scale glitter pattern size">Scale</span>
+														<span class="setting-value" id="scaleValue">100%</span>
+													</div>
+													<input type="range" id="scale" min="25" max="300" value="100">
+													<button class="btn-text" id="resetScale">Reset</button>
 												</div>
-												<input type="range" id="opacity" min="0" max="100" value="100">
-												<button class="btn-text" id="resetOpacity">Reset</button>
+												<div class="setting-column right">
+													<div class="setting-header">
+														<span class="setting-label" title="Rotate the glitter's hue">Hue</span>
+														<span class="setting-value" id="glitterHueValue">0°</span>
+													</div>
+													<input type="range" id="glitterHue" min="-180" max="180" value="0">
+													<button class="btn-text" id="resetGlitterHue">Reset</button>
+												</div>
+												<div class="settings-group-two-column">
+													<div class="setting-column right">
+														<div class="setting-header">
+															<span class="setting-label" title="Color intensity">Saturation</span>
+															<span class="setting-value" id="glitterSaturationValue">100%</span>
+														</div>
+														<input type="range" id="glitterSaturation" min="0" max="200" value="100">
+														<button class="btn-text" id="resetGlitterSaturation">Reset</button>
+													</div>
+													<div class="setting-column right">
+														<div class="setting-header">
+															<span class="setting-label" title="Lightness">Brightness</span>
+															<span class="setting-value" id="glitterBrightnessValue">100%</span>
+														</div>
+														<input type="range" id="glitterBrightness" min="25" max="200" value="100">
+														<button class="btn-text" id="resetGlitterBrightness">Reset</button>
+													</div>
+												</div>
 											</div>
 										</div>
 									</div>
@@ -890,11 +927,11 @@
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
 									<svg class="icon">
-										<use href="#icon-brush"></use>
+										<use href="#icon-brush" id="brushSettingsTitleIcon"></use>
 									</svg>
 									<span class="name">Brush</span>
 								</span>
-								<span class="section-header-title-text">Brush Settings</span>
+								<span class="section-header-title-text" id="brushSettingsTitleText">Brush Settings</span>
 							</h3>
 							<div class="section-header-action btn-icon visible collapsed" id="brushSettingsToggle">
 								<span class="icon-wrapper">
@@ -1415,6 +1452,40 @@
 											<button class="btn-text" id="resetTextTextureOpacity" type="button">Reset</button>
 										</div>
 									</div>
+										<div class="advanced-disclosure glitter-source-glitter" data-advanced>
+											<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
+												<span class="advanced-disclosure-label">Advanced</span>
+												<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+											</button>
+											<div class="advanced-disclosure-content" data-advanced-content>
+												<div class="setting-column right">
+													<div class="setting-header">
+														<span class="setting-label" title="Rotate the hue">Hue</span>
+														<span class="setting-value" id="textFillHueValue">0°</span>
+													</div>
+													<input type="range" id="textFillHue" min="-180" max="180" value="0">
+													<button class="btn-text" id="resetTextFillHue" type="button">Reset</button>
+												</div>
+												<div class="settings-group-two-column">
+													<div class="setting-column right">
+														<div class="setting-header">
+															<span class="setting-label">Saturation</span>
+															<span class="setting-value" id="textFillSaturationValue">100%</span>
+														</div>
+														<input type="range" id="textFillSaturation" min="0" max="200" value="100">
+														<button class="btn-text" id="resetTextFillSaturation" type="button">Reset</button>
+													</div>
+													<div class="setting-column right">
+														<div class="setting-header">
+															<span class="setting-label">Brightness</span>
+															<span class="setting-value" id="textFillBrightnessValue">100%</span>
+														</div>
+														<input type="range" id="textFillBrightness" min="25" max="200" value="100">
+														<button class="btn-text" id="resetTextFillBrightness" type="button">Reset</button>
+													</div>
+												</div>
+											</div>
+										</div>
 								</div>
 								<div class="subsection-content-group">
 									<div class="subsection-title">Effects</div>
@@ -1486,6 +1557,40 @@
 													<button class="btn-text" id="resetTextBorderOpacity" type="button">Reset</button>
 												</div>
 											</div>
+										<div class="advanced-disclosure glitter-source-glitter" data-advanced>
+											<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
+												<span class="advanced-disclosure-label">Advanced</span>
+												<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+											</button>
+											<div class="advanced-disclosure-content" data-advanced-content>
+												<div class="setting-column right">
+													<div class="setting-header">
+														<span class="setting-label" title="Rotate the hue">Hue</span>
+														<span class="setting-value" id="textBorderHueValue">0°</span>
+													</div>
+													<input type="range" id="textBorderHue" min="-180" max="180" value="0">
+													<button class="btn-text" id="resetTextBorderHue" type="button">Reset</button>
+												</div>
+												<div class="settings-group-two-column">
+													<div class="setting-column right">
+														<div class="setting-header">
+															<span class="setting-label">Saturation</span>
+															<span class="setting-value" id="textBorderSaturationValue">100%</span>
+														</div>
+														<input type="range" id="textBorderSaturation" min="0" max="200" value="100">
+														<button class="btn-text" id="resetTextBorderSaturation" type="button">Reset</button>
+													</div>
+													<div class="setting-column right">
+														<div class="setting-header">
+															<span class="setting-label">Brightness</span>
+															<span class="setting-value" id="textBorderBrightnessValue">100%</span>
+														</div>
+														<input type="range" id="textBorderBrightness" min="25" max="200" value="100">
+														<button class="btn-text" id="resetTextBorderBrightness" type="button">Reset</button>
+													</div>
+												</div>
+											</div>
+										</div>
 										</div>
 									</div>
 									<div class="subsection-content-group text-effect-subsection">
@@ -1565,6 +1670,40 @@
 													<button class="btn-text" id="resetTextShadowOpacity" type="button">Reset</button>
 												</div>
 											</div>
+										<div class="advanced-disclosure glitter-source-glitter" data-advanced>
+											<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
+												<span class="advanced-disclosure-label">Advanced</span>
+												<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+											</button>
+											<div class="advanced-disclosure-content" data-advanced-content>
+												<div class="setting-column right">
+													<div class="setting-header">
+														<span class="setting-label" title="Rotate the hue">Hue</span>
+														<span class="setting-value" id="textShadowHueValue">0°</span>
+													</div>
+													<input type="range" id="textShadowHue" min="-180" max="180" value="0">
+													<button class="btn-text" id="resetTextShadowHue" type="button">Reset</button>
+												</div>
+												<div class="settings-group-two-column">
+													<div class="setting-column right">
+														<div class="setting-header">
+															<span class="setting-label">Saturation</span>
+															<span class="setting-value" id="textShadowSaturationValue">100%</span>
+														</div>
+														<input type="range" id="textShadowSaturation" min="0" max="200" value="100">
+														<button class="btn-text" id="resetTextShadowSaturation" type="button">Reset</button>
+													</div>
+													<div class="setting-column right">
+														<div class="setting-header">
+															<span class="setting-label">Brightness</span>
+															<span class="setting-value" id="textShadowBrightnessValue">100%</span>
+														</div>
+														<input type="range" id="textShadowBrightness" min="25" max="200" value="100">
+														<button class="btn-text" id="resetTextShadowBrightness" type="button">Reset</button>
+													</div>
+												</div>
+											</div>
+										</div>
 										</div>
 									</div>
 								</div>
@@ -3009,20 +3148,22 @@
 	<script src="js/vendor/gif.js"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=3"></script>
+	<script src="js/config.js?v=4"></script>
 
 	<!-- Utils -->
 	<script src="js/utils.js"></script>
+	<script src="js/color-adjust.js?v=1"></script>
 	<script src="js/debug.js"></script>
 
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js"></script>
 	<script src="js/classes/ModalManager.js"></script>
-	<script src="js/classes/GifExporter.js?v=3"></script>
+	<script src="js/classes/GifExporter.js?v=4"></script>
 	<script src="js/classes/ViewportManager.js"></script>
 	<script src="js/classes/HistoryManager.js?v=3"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
-	<script src="js/classes/MaskEditor.js?v=7"></script>
+	<script src="js/classes/ShapeLibrary.js?v=1"></script>
+	<script src="js/classes/MaskEditor.js?v=9"></script>
 
 	<!-- Layers-->
 	<script src="js/classes/LayerManager.js?v=4"></script>
@@ -3031,14 +3172,14 @@
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
 	<script src="js/classes/LayerTransform.js?v=3"></script>
-	<script src="js/classes/GlitterManager.js?v=5"></script>
-	<script src="js/classes/TextGlitterManager.js?v=15"></script>
+	<script src="js/classes/GlitterManager.js?v=6"></script>
+	<script src="js/classes/TextGlitterManager.js?v=16"></script>
 	<script src="js/classes/StickerManager.js"></script>
 
 	<script src="js/classes/MobileManager.js?v=2"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=20"></script>
+	<script src="js/app.js?v=21"></script>
 
 </body>
 

@@ -124,6 +124,27 @@ class TextGlitterManager {
 			pickerStripDetail: document.getElementById('galleryPickerStripDetail'),
 			pickerStripDone: document.getElementById('galleryPickerStripDone')
 		};
+
+		// Color adjust (WP4) HSB sliders, one set per slot. Registered as a compact
+		// 3×3 loop instead of nine literal entries above. IDs follow
+		// text{Fill,Border,Shadow}{Hue,Saturation,Brightness}[Value].
+		['fill', 'border', 'shadow'].forEach((slot) => {
+			const slotCap = slot.charAt(0).toUpperCase() + slot.slice(1);
+			['Hue', 'Saturation', 'Brightness'].forEach((axis) => {
+				this.ui[`${slot}${axis}`] = document.getElementById(`text${slotCap}${axis}`);
+				this.ui[`${slot}${axis}Value`] = document.getElementById(`text${slotCap}${axis}Value`);
+			});
+		});
+	}
+
+	// colorAdjust lives on the effect data (border/shadow) or on layer.settings
+	// (fill, which aliases the layer like its scale/opacity). Lazily created as
+	// identity so untouched slots stay export-byte-identical.
+	ensureColorAdjust(target) {
+		if (!target.colorAdjust) {
+			target.colorAdjust = { ...COLOR_ADJUST_IDENTITY };
+		}
+		return target.colorAdjust;
 	}
 
 	setupEventListeners() {
@@ -326,6 +347,45 @@ class TextGlitterManager {
 		this.attachSlider(this.ui.shadowOpacity, this.ui.shadowOpacityValue, '%', (value, layer) => {
 			this.ensureEffectData(layer, 'shadow').opacity = value;
 		}, this.getDefaultShadow().opacity, false);
+
+		this._bindEffectColorAdjust('fill');
+		this._bindEffectColorAdjust('border');
+		this._bindEffectColorAdjust('shadow');
+	}
+
+	// Wire a slot's three HSB sliders (WP4). Fill writes to layer.settings
+	// (aliased); border/shadow write to their own effect data. attachSlider
+	// handles the live preview refresh and one history entry on release.
+	_bindEffectColorAdjust(slot) {
+		const axes = [
+			['Hue', 'hue', '°'],
+			['Saturation', 'saturation', '%'],
+			['Brightness', 'brightness', '%']
+		];
+		axes.forEach(([suffixName, key, unit]) => {
+			const slider = this.ui[`${slot}${suffixName}`];
+			const display = this.ui[`${slot}${suffixName}Value`];
+			if (!slider) return;
+			const fallback = COLOR_ADJUST_IDENTITY[key];
+			this.attachSlider(slider, display, unit, (value, layer) => {
+				const target = slot === 'fill' ? layer.settings : this.ensureEffectData(layer, slot);
+				this.ensureColorAdjust(target)[key] = value;
+			}, fallback, false);
+		});
+	}
+
+	// Push a slot's stored colorAdjust out to its three HSB sliders.
+	_loadEffectColorAdjust(slot, adjust) {
+		const a = normalizeColorAdjust(adjust);
+		const set = (suffixName, value, unit) => {
+			const slider = this.ui[`${slot}${suffixName}`];
+			const display = this.ui[`${slot}${suffixName}Value`];
+			if (slider) slider.value = String(value);
+			if (display) display.textContent = value + unit;
+		};
+		set('Hue', a.hue, '°');
+		set('Saturation', a.saturation, '%');
+		set('Brightness', a.brightness, '%');
 	}
 
 	getPointAnchorSnapshot(layer) {
@@ -1303,6 +1363,12 @@ class TextGlitterManager {
 				this.ui.shadowOpacityValue.textContent = `${defaults.opacity}%`;
 			}
 		}
+
+		// Color adjust (WP4): fill aliases layer.settings; border/shadow read their
+		// own effect data (identity when the effect is absent).
+		this._loadEffectColorAdjust('fill', layer.settings?.colorAdjust);
+		this._loadEffectColorAdjust('border', border?.colorAdjust);
+		this._loadEffectColorAdjust('shadow', shadow?.colorAdjust);
 
 		this.updateFillSourceUI(layer);
 		this.updateEffectSourceUI(layer, 'border');
@@ -2325,11 +2391,13 @@ class TextGlitterManager {
 				};
 			}
 
+			// Fill's colorAdjust aliases the layer settings (like scale/opacity).
 			return {
 				mode: 'glitter',
 				glitterId: layer.selectedGlitterId,
 				scale: layer.settings.scale ?? 100,
-				opacity: (layer.settings.opacity ?? 100) / 100
+				opacity: (layer.settings.opacity ?? 100) / 100,
+				colorAdjust: layer.settings.colorAdjust
 			};
 		}
 
@@ -2341,7 +2409,8 @@ class TextGlitterManager {
 				mode: 'glitter',
 				glitterId: effectData.glitterId,
 				scale: effectData.scale ?? 100,
-				opacity: (effectData.opacity ?? 100) / 100
+				opacity: (effectData.opacity ?? 100) / 100,
+				colorAdjust: effectData.colorAdjust
 			};
 		}
 
@@ -2424,6 +2493,7 @@ class TextGlitterManager {
 			span.style.backgroundColor = source.color;
 			span.style.backgroundSize = '';
 			span.style.opacity = String(source.opacity ?? 1);
+			span.style.filter = '';
 			span.classList.remove('pixelated');
 			return;
 		}
@@ -2437,6 +2507,8 @@ class TextGlitterManager {
 		span.style.backgroundImage = `url(${glitter.url})`;
 		span.style.backgroundColor = 'transparent';
 		span.style.opacity = String(source.opacity ?? 1);
+		// Color adjust (WP4): CSS filter mirrors the export matrix pass per slot.
+		span.style.filter = buildCssColorFilter(source.colorAdjust);
 
 		const glitterScale = (source.scale ?? 100) / 100;
 		const baseSize = glitter.frames?.width || glitter.width || 50;

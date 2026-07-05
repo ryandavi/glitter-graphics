@@ -59,6 +59,15 @@ const CONFIG = {
 		// Stroke smoothing/stabilization, 0 = off (default). Surfaced as a 0–100%
 		// slider; MaskEditor maps it to an EMA follow factor.
 		defaultSmoothing: 0,
+		// Per-mode overrides (WP1): Brush and Eraser keep independent setting
+		// sets (MaskEditor.toolSettings). Only the keys listed here differ from
+		// the shared defaults above; everything else is inherited. Eraser starts
+		// a bit larger since erasing is usually a coarser correction pass.
+		eraserDefaults: {
+			size: 60,
+			softness: 0,
+			flow: 100
+		},
 		overlayColor: '#ff2d8a',
 		overlayOpacity: 0.75,
 		overlayStripeOpacityBoost: 0.15,
@@ -78,6 +87,13 @@ const CONFIG = {
 	glitterSettingsOpenByDefault: false,
 	refineGlobalDefault: false,
 	glitterGlobalDefault: false,
+
+	// Color adjust (WP4) identity defaults, shared by every glitter swatch
+	// (fill layers + text/shape effect slots). Also the reset-button targets
+	// (updateResetButton reads CONFIG['default'+SliderId]).
+	defaultGlitterHue: 0,
+	defaultGlitterSaturation: 100,
+	defaultGlitterBrightness: 100,
 
 	// Preview - Selected Outline
 	selectedGlitterOffset: 2,
@@ -217,12 +233,15 @@ const CONFIG = {
 			{ key: 'T', action: 'Text Tool' },
 			{ key: 'I', action: 'Color Fill Tool' },
 			{ key: 'B', action: 'Mask Brush Tool' },
+			{ key: 'E', action: 'Mask Eraser Tool' },
 			{ key: 'H', action: 'Hand Tool' },
 			{ key: 'Z', action: 'Zoom Tool' },
 		],
 		brush: [
 			{ key: 'X', action: 'Swap Paint/Erase (Mask Brush)' },
 			{ key: '[ / ]', action: 'Decrease/Increase Brush Size' },
+			{ key: 'Shift + Drag', action: 'Constrain to a straight line (0/45/90°)' },
+			{ key: 'Shift + Click', action: 'Line from the previous stroke to the click' },
 		],
 		view: [
 			{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)' },

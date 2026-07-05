@@ -435,6 +435,9 @@ async initBrowser() {
 		// Apply glitter texture
 		inner.style.backgroundImage = `url(${glitter.url})`;
 		inner.style.opacity = layer.settings.opacity / 100;
+		// Color adjust (WP4): CSS filter mirrors the export matrix pass. Empty
+		// string for an identity/absent adjust clears any previous filter.
+		inner.style.filter = buildCssColorFilter(layer.settings.colorAdjust);
 
 		const glitterScale = layer.settings.scale / 100;
 		const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;

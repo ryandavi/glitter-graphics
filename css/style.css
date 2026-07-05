@@ -1205,15 +1205,14 @@ input[type=range]::-moz-range-thumb {
   text-overflow: ellipsis;
   text-transform: uppercase;
   min-width: 0;
-  flex: 1;
 }
 .layers-section > .layers-list > .layer-item > .layer-info .layer-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: 12px;
-  padding: 0 4px;
-  border-radius: 999px;
+  border-radius: 3px;
+  padding: 0 2px;
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
@@ -4959,6 +4958,63 @@ body.mask-editing .sticker-element {
   line-height: 1.1;
   text-align: center;
   color: inherit;
+}
+
+.advanced-disclosure {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.advanced-disclosure-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) 0 0;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+.advanced-disclosure-toggle:hover {
+  color: var(--color-text-primary);
+}
+
+.advanced-disclosure-label {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.advanced-disclosure-chevron {
+  display: flex;
+  align-items: center;
+  transition: transform var(--transition-fast);
+}
+.advanced-disclosure-chevron svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.advanced-disclosure-content {
+  display: none;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+}
+
+.advanced-disclosure.is-open .advanced-disclosure-content {
+  display: flex;
+}
+.advanced-disclosure.is-open .advanced-disclosure-chevron {
+  transform: rotate(180deg);
 }
 
 .canvas-size-controls {

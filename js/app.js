@@ -89,6 +89,7 @@ class GlitterEditor {
 		this.setTool(CONFIG.defaultTool);
 		this.setupEventListeners();
 		this.initializeCollapsibleSections();
+		this.initializeAdvancedDisclosures();
 		this.initializeShortcutsModal();
 		this.initializeExportSettings();
 	}
@@ -896,6 +897,9 @@ async resetAllSettings() {
 			this.updateResetButton('opacity');
 		}
 
+		// Color adjust (WP4): populate the Advanced HSB sliders from this layer.
+		this.applyColorAdjustToSliders('glitter', s.colorAdjust);
+
 		if (layer.selectedGlitterId) {
 			const glitter = this.glitterManager.getItemById(layer.selectedGlitterId);
 			if (glitter) {
@@ -929,7 +933,10 @@ async resetAllSettings() {
 			opacity: parseInt(document.getElementById('opacity').value),
 			contiguous: document.getElementById('contiguous').checked,
 			invert: document.getElementById('invert').checked,
-			multiSelect: document.getElementById('multiSelect').checked
+			multiSelect: document.getElementById('multiSelect').checked,
+			// Color adjust (WP4). Always an identity object for untouched layers, so
+			// export stays byte-identical (isIdentityColorAdjust short-circuits it).
+			colorAdjust: this.readColorAdjust('glitter')
 		};
 
 		const activeLayer = this.layerManager.getActiveLayer();
@@ -1092,6 +1099,91 @@ async resetAllSettings() {
 		this.showStickerSettingsEmptyState();
 	}
 
+	// Reusable "Advanced" disclosure (WP4). One delegated click handler drives
+	// every `[data-advanced]` block (Glitter Properties, text/shape effect cards),
+	// so all instances behave identically. Collapsed by default; open state is
+	// intentionally NOT persisted — it resets each session/relayout.
+	initializeAdvancedDisclosures() {
+		document.addEventListener('click', (event) => {
+			const toggle = event.target.closest('[data-advanced-toggle]');
+			if (!toggle) return;
+			const disclosure = toggle.closest('[data-advanced]');
+			if (!disclosure) return;
+			const isOpen = disclosure.classList.toggle('is-open');
+			toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+		});
+	}
+
+	// Reads the three HSB sliders for a given prefix ('glitter', or a text slot)
+	// into a colorAdjust object. Missing sliders fall back to identity.
+	readColorAdjust(prefix) {
+		const num = (id, fallback) => {
+			const el = document.getElementById(id);
+			const value = el ? parseInt(el.value, 10) : NaN;
+			return Number.isFinite(value) ? value : fallback;
+		};
+		const cap = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+		return {
+			hue: num(prefix + 'Hue', 0),
+			saturation: num(prefix + 'Saturation', 100),
+			brightness: num(prefix + 'Brightness', 100)
+		};
+	}
+
+	// Push a colorAdjust object out to the three HSB sliders + value displays for
+	// a prefix. Absent adjust reads as identity.
+	applyColorAdjustToSliders(prefix, adjust) {
+		const a = normalizeColorAdjust(adjust);
+		const set = (id, value, suffix) => {
+			const slider = document.getElementById(id);
+			const display = document.getElementById(id + 'Value');
+			if (slider) slider.value = String(value);
+			if (display) display.textContent = value + suffix;
+		};
+		set(prefix + 'Hue', a.hue, '°');
+		set(prefix + 'Saturation', a.saturation, '%');
+		set(prefix + 'Brightness', a.brightness, '%');
+		this.updateResetButton(prefix + 'Hue');
+		this.updateResetButton(prefix + 'Saturation');
+		this.updateResetButton(prefix + 'Brightness');
+	}
+
+	// Wire the Glitter Properties HSB sliders (fill layers). Each live-updates its
+	// display, saves the layer settings (which now carry colorAdjust), refreshes
+	// the preview, and records one history entry on release.
+	setupColorAdjustListeners() {
+		const specs = [
+			['glitterHue', '°'],
+			['glitterSaturation', '%'],
+			['glitterBrightness', '%']
+		];
+
+		specs.forEach(([id, suffix]) => {
+			const slider = document.getElementById(id);
+			const display = document.getElementById(id + 'Value');
+			if (!slider) return;
+
+			slider.addEventListener('input', () => {
+				if (display) display.textContent = slider.value + suffix;
+				this.updateResetButton(id);
+				this.saveActiveLayerSettings(false, false);
+				this.debouncedSliderUpdate();
+			});
+			slider.addEventListener('change', () => this.saveState());
+
+			const resetBtn = document.getElementById('reset' + id.charAt(0).toUpperCase() + id.slice(1));
+			const defaultValue = CONFIG['default' + id.charAt(0).toUpperCase() + id.slice(1)];
+			if (resetBtn) {
+				resetBtn.addEventListener('click', () => {
+					slider.value = String(defaultValue);
+					if (display) display.textContent = defaultValue + suffix;
+					slider.dispatchEvent(new Event('input'));
+					slider.dispatchEvent(new Event('change'));
+				});
+			}
+		});
+	}
+
 	initializeShortcutsModal() {
 		const list = document.getElementById('shortcutList');
 
@@ -1141,6 +1233,7 @@ async resetAllSettings() {
 		this.setupColorPickerContextListeners();
 		this.setupLayerSettingsListeners();
 		this.setupSliderListeners();
+		this.setupColorAdjustListeners();
 		this.setupMaskEditorListeners();
 		this.setupTransformListeners('sticker', LayerType.STICKER, () => this.stickerManager);
 		this.setupTransformListeners('text', LayerType.TEXT_GLITTER, () => this.textGlitterManager);
@@ -3133,6 +3226,12 @@ setupWelcomeModalListeners() {
 		}
 		if (e.key === 'b' || e.key === 'B') {
 			this.setTool(ToolType.BRUSH); // setTool no-ops if brush can't activate
+			this.maskEditor?.setMode('add');
+		}
+		if (e.key === 'e' || e.key === 'E') {
+			// Eraser is the Brush tool in 'sub' mode (shares ToolType.BRUSH).
+			this.setTool(ToolType.BRUSH);
+			this.maskEditor?.setMode('sub');
 		}
 		if (e.key === 'h' || e.key === 'H') {
 			if (this.originalImage) this.setTool(ToolType.HAND);
