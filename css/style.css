@@ -4965,6 +4965,7 @@ body.mask-editing .sticker-element {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  width: 100%;
 }
 
 .canvas-size-fields {

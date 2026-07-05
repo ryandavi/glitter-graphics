@@ -1509,6 +1509,15 @@ async resetAllSettings() {
 			this.maskEditor?.renderOverlay();
 		}, CONFIG.maskBrush.defaultFlow);
 
+		// Spacing is a percentage of brush size; it only affects future stamps
+		// (the resulting stroke is baked into the mask), so no live re-render.
+		this.setupSlider('maskBrushSpacing', 'maskBrushSpacingValue', '%', null,
+			Math.round(CONFIG.maskBrush.stampSpacing * 100));
+
+		// Smoothing (EMA stabilizer); affects the live stroke only, no re-render.
+		this.setupSlider('maskBrushSmoothing', 'maskBrushSmoothingValue', '%', null,
+			CONFIG.maskBrush.defaultSmoothing ?? 0);
+
 		this.syncQuickSlider('maskBrushSize', 'maskBrushSizeQuick', 'maskBrushSizeQuickValue', 'px');
 
 		this.maskEditor?.setupUIListeners();

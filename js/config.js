@@ -12,8 +12,8 @@ const CONFIG = {
 	// ========================================
 	// CANVAS & IMAGE
 	// ========================================
-	maxImageWidth: 800,
-	maxImageHeight: 800,
+	maxImageWidth: 1024,
+	maxImageHeight: 1024,
 	maxFileSizeMB: 10,
 	defaultCanvasPreset: { width: 400, height: 400, color: '#ffffff' },
 	baseGridSize: 20,
@@ -56,6 +56,9 @@ const CONFIG = {
 		// stamped result is baked into the mask, so export needs no shape info.
 		defaultShape: 'round',
 		stampSpacing: 0.25,
+		// Stroke smoothing/stabilization, 0 = off (default). Surfaced as a 0–100%
+		// slider; MaskEditor maps it to an EMA follow factor.
+		defaultSmoothing: 0,
 		overlayColor: '#ff2d8a',
 		overlayOpacity: 0.75,
 		overlayStripeOpacityBoost: 0.15,
@@ -277,6 +280,14 @@ function layerHasVisibleContent(layer) {
 	}
 }
 
+// Sidebar panel naming convention (keep new panels consistent with this):
+//   "<Thing> Properties" — attributes of the SELECTED LAYER/object
+//                          (Glitter Properties, Sticker Properties, Text Properties).
+//   "<Tool> Settings"     — configuration of a TOOL/action, not a specific layer
+//                          (Brush Settings, Color Fill Settings).
+// The visible titles live in index.html (.section-header-title-text); the guide
+// (modals/guide.html) must mirror them. Section *ids* are historically all
+// `*SettingsSection` regardless of title — that's internal only, don't rename.
 const LAYER_UI_CONFIG = {
 	NO_IMAGE: {
 		designPanelSections: ['welcomeSection'],

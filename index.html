@@ -36,16 +36,10 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-	<!-- Google Fonts -->
-	<!-- <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet"> -->
-
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico" type="image/x-icon">
 	<link rel="shortcut icon" href="images/etc/favicon.ico" type="image/x-icon">
 </head>
-
-
-
 
 
 <body>
@@ -950,13 +944,34 @@
 									</div>
 
 									<div class="subsection-content">
+										<div class="settings-group-two-column">
+											<div class="setting-column right">
+												<div class="setting-header">
+													<span class="setting-label">Flow</span>
+													<span class="setting-value" id="maskBrushFlowValue">100%</span>
+												</div>
+												<input type="range" id="maskBrushFlow" min="1" max="100" value="100">
+												<button class="btn-text" id="resetMaskBrushFlow" type="button">Reset</button>
+											</div>
+											<div class="setting-column right">
+												<div class="setting-header">
+													<span class="setting-label" title="Distance between stamps along a stroke, as a percentage of brush size. Higher = more spaced out (great for the star and heart tips).">Spacing</span>
+													<span class="setting-value" id="maskBrushSpacingValue">25%</span>
+												</div>
+												<input type="range" id="maskBrushSpacing" min="1" max="200" value="25">
+												<button class="btn-text" id="resetMaskBrushSpacing" type="button">Reset</button>
+											</div>
+										</div>
+									</div>
+
+									<div class="subsection-content">
 										<div class="setting-column right">
 											<div class="setting-header">
-												<span class="setting-label">Flow</span>
-												<span class="setting-value" id="maskBrushFlowValue">100%</span>
+												<span class="setting-label" title="Stabilizes shaky strokes by easing the brush toward the cursor. Higher = smoother but more lag.">Smoothing</span>
+												<span class="setting-value" id="maskBrushSmoothingValue">0%</span>
 											</div>
-											<input type="range" id="maskBrushFlow" min="1" max="100" value="100">
-											<button class="btn-text" id="resetMaskBrushFlow" type="button">Reset</button>
+											<input type="range" id="maskBrushSmoothing" min="0" max="100" value="0">
+											<button class="btn-text" id="resetMaskBrushSmoothing" type="button">Reset</button>
 										</div>
 									</div>
 								</div>
@@ -1567,7 +1582,7 @@
 									</svg>
 									<span class="name">Sliders</span>
 								</span>
-								<span class="section-header-title-text">Selection Settings</span>
+								<span class="section-header-title-text">Color Fill Settings</span>
 							</h3>
 							<div class="section-header-action btn-icon visible collapsed" id="layerSettingsToggle">
 								<span class="icon-wrapper">
@@ -2615,9 +2630,6 @@
 			</div>
 		</div>
 	</div>
-
-
-
 
 
 <!-- Welcome Modal -->

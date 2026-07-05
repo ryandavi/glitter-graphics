@@ -9,6 +9,8 @@ class MaskEditor {
 		this.strokeActive = false;
 		this.strokeChanged = false;
 		this.lastPoint = null;
+		this.stampCarry = 0;
+		this.smoothedPoint = null;
 		this.scratchAddCanvas = null;
 		this.scratchSubCanvas = null;
 		this.livePreviewQueued = false;
@@ -397,8 +399,9 @@ class MaskEditor {
 			return;
 		}
 
-		this._stampAlongPath(layer, paint, this.lastPoint, point);
-		this.lastPoint = point;
+		const smoothed = this._applySmoothing(point);
+		this._stampAlongPath(layer, paint, this.lastPoint, smoothed);
+		this.lastPoint = smoothed;
 	}
 
 	_handlePointerUp(event) {
@@ -457,8 +460,9 @@ class MaskEditor {
 			return false;
 		}
 
-		this._stampAlongPath(layer, paint, this.lastPoint, point);
-		this.lastPoint = point;
+		const smoothed = this._applySmoothing(point);
+		this._stampAlongPath(layer, paint, this.lastPoint, smoothed);
+		this.lastPoint = smoothed;
 		return true;
 	}
 
@@ -594,6 +598,12 @@ class MaskEditor {
 			this._showTouchRing(screenX, screenY);
 		}
 
+		// The first point of the stroke is a stamp; reset the spacing accumulator
+		// so the next stamp lands exactly `spacing` further along the path, and
+		// seed the smoothing anchor at the raw start point (no lag on the first
+		// stamp).
+		this.stampCarry = 0;
+		this.smoothedPoint = { x: point.x, y: point.y };
 		this._stampAtPoint(layer, paint, point.x, point.y, point.pressure);
 		return true;
 	}
@@ -629,8 +639,14 @@ class MaskEditor {
 		return layer;
 	}
 
+	// Lays stamps at a fixed spacing along the whole stroke. `stampCarry` is the
+	// distance already travelled toward the next stamp before this segment, so
+	// spacing is honoured continuously across pointer-move segments instead of
+	// being reset each move (and we do NOT force a stamp at the segment end —
+	// that's what previously made the Spacing control look like a no-op, since a
+	// stamp landed at every move point regardless of spacing).
 	_stampAlongPath(layer, paint, fromPoint, toPoint) {
-		const spacing = Math.max(1, this.getBrushSize() * CONFIG.maskBrush.stampSpacing);
+		const spacing = Math.max(1, this.getBrushSize() * this.getBrushSpacing());
 		const dx = toPoint.x - fromPoint.x;
 		const dy = toPoint.y - fromPoint.y;
 		const distance = Math.hypot(dx, dy);
@@ -641,16 +657,29 @@ class MaskEditor {
 
 		const fromPressure = fromPoint.pressure;
 		const toPressure = toPoint.pressure;
-		const steps = Math.floor(distance / spacing);
-		for (let step = 1; step <= steps; step++) {
-			const progress = (step * spacing) / distance;
+		const carry = this.stampCarry || 0;
+
+		// Offset (along this segment) of the first stamp; if it's past the segment
+		// end, no stamp lands here — just accumulate the travelled distance.
+		let along = spacing - carry;
+		if (along > distance) {
+			this.stampCarry = carry + distance;
+			return;
+		}
+
+		let lastAlong = 0;
+		while (along <= distance) {
+			const progress = along / distance;
 			const x = fromPoint.x + dx * progress;
 			const y = fromPoint.y + dy * progress;
 			const pressure = this._interpolatePressure(fromPressure, toPressure, progress);
 			this._stampAtPoint(layer, paint, x, y, pressure);
+			lastAlong = along;
+			along += spacing;
 		}
 
-		this._stampAtPoint(layer, paint, toPoint.x, toPoint.y, toPressure);
+		// Leftover distance from the last stamp to the segment end carries forward.
+		this.stampCarry = distance - lastAlong;
 	}
 
 	_interpolatePressure(fromPressure, toPressure, progress) {
@@ -1115,6 +1144,40 @@ class MaskEditor {
 
 	getBrushFlow() {
 		return parseInt(document.getElementById('maskBrushFlow')?.value || CONFIG.maskBrush.defaultFlow, 10);
+	}
+
+	// Distance between stamps along a stroke, as a fraction of brush size (the
+	// slider is a percentage; stampSpacing in config is the default fraction).
+	getBrushSpacing() {
+		const percent = parseInt(document.getElementById('maskBrushSpacing')?.value, 10);
+		return (Number.isFinite(percent) ? percent : CONFIG.maskBrush.stampSpacing * 100) / 100;
+	}
+
+	// Stroke smoothing strength, 0 (off) .. ~0.9 (heavy). Capped below 1 so the
+	// brush never fully freezes. The slider is a 0–100% value.
+	getBrushSmoothing() {
+		const percent = parseInt(document.getElementById('maskBrushSmoothing')?.value, 10);
+		const value = Number.isFinite(percent) ? percent : (CONFIG.maskBrush.defaultSmoothing ?? 0);
+		return Math.max(0, Math.min(100, value)) / 100 * 0.9;
+	}
+
+	// Exponential-moving-average stabilizer: ease the brush position toward the
+	// raw pointer instead of following it exactly, damping jitter. Returns the
+	// smoothed point (carrying the raw pressure) and advances the anchor. At
+	// strength 0 it tracks the pointer exactly (and keeps the anchor synced so
+	// turning smoothing on mid-stroke doesn't jump).
+	_applySmoothing(point) {
+		const strength = this.getBrushSmoothing();
+		if (strength <= 0 || !this.smoothedPoint) {
+			this.smoothedPoint = { x: point.x, y: point.y };
+			return point;
+		}
+
+		const follow = 1 - strength;
+		const x = this.smoothedPoint.x + (point.x - this.smoothedPoint.x) * follow;
+		const y = this.smoothedPoint.y + (point.y - this.smoothedPoint.y) * follow;
+		this.smoothedPoint = { x, y };
+		return { x, y, pressure: point.pressure };
 	}
 }
 

@@ -29,7 +29,7 @@
             <ol>
                 <li><a href="#create-glitter">Create a Glitter Layer</a></li>
                 <li><a href="#select-colors">Select Colors</a></li>
-                <li><a href="#glitter-settings">Adjust Glitter Settings</a></li>
+                <li><a href="#glitter-settings">Adjust Glitter Properties</a></li>
                 <li><a href="#mask-brush">Mask Brush</a></li>
             </ol>
         </li>
@@ -87,12 +87,38 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    Click <strong>Choose File</strong> to load an image (PNG, JPG, or GIF).
+                    Drag an image onto the dropzone — or click it to browse — to load one (PNG, JPG, or GIF).
                     <ul>
                         <li>This becomes your <strong>Base Image</strong> – the foundation of your canvas for glitter effects and stickers.</li>
-                        <li>If your image is larger than 800x800, it will be resized to fit the constraints.</li>
+                        <li>If your image is larger than 1024×1024, it will be resized to fit the constraints.</li>
                         <li>Maximum file size: 10MB.</li>
                     </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-image"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    No image? Click <strong>New Blank Canvas</strong> to start from an empty canvas instead — choose its width, height, and background color.
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-image"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <strong>Resize the canvas</strong> anytime: with no layer selected, open the <strong>Design</strong> panel and use <strong>Canvas Size</strong> to enter new dimensions and pick an anchor. Your content keeps its size and position while the canvas is cropped or extended around it (extended areas stay transparent). A live outline previews the new bounds, and you can undo the change.
                 </div>
             </div>
         </div>
@@ -501,8 +527,8 @@
 
 
         <div class="guide-subsection">
-            <h4 id="glitter-settings">Adjust Glitter Settings</h4>
-            <p>In the <strong>Glitter Settings</strong> panel, customize your glitter layer:</p>
+            <h4 id="glitter-settings">Adjust Glitter Properties</h4>
+            <p>In the <strong>Glitter Properties</strong> panel, customize your glitter layer:</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -557,7 +583,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Click <strong>Mask Brush</strong> in the Glitter Settings panel, or press <strong>B</strong>, to start painting.</p>
+                    <p>Click the <strong>Mask Brush</strong> in the toolbar, or press <strong>B</strong>, to start painting.</p>
                 </div>
             </div>
 
@@ -583,7 +609,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Size</strong>, <strong>Softness</strong>, and <strong>Flow</strong> – Control the brush's diameter, edge feathering, and how much glitter builds up per stroke.</p>
+                    <p><strong>Shape</strong>, <strong>Size</strong>, <strong>Softness</strong>, <strong>Flow</strong>, <strong>Spacing</strong>, and <strong>Smoothing</strong> – Pick the brush tip (round, square, calligraphy, star, or heart), then set its diameter, edge feathering, how much glitter builds up per stroke, how far apart the stamps sit along the stroke, and how much shaky strokes are stabilized.</p>
                 </div>
             </div>
 
@@ -685,7 +711,7 @@
                 </div>
             </div>
 
-            <h4>Sticker Settings</h4>
+            <h4>Sticker Properties</h4>
             <div class="guide-item">
                 <div class="guide-item-icon">
                     <span class="icon-wrapper sm">
@@ -905,7 +931,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Border</strong> – Enable an outline around the text and set its width. Click the border swatch to choose a glitter for it, or use <strong>Use Solid Color</strong> for a flat color instead.</p>
+                    <p><strong>Border</strong> – Enable an outline around the text and set its width. It defaults to glitter — click the border swatch to choose which one, or switch it to <strong>Solid Color</strong> for a flat color instead.</p>
                 </div>
             </div>
 
