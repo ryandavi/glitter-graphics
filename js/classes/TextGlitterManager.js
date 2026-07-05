@@ -43,8 +43,10 @@ class TextGlitterManager {
 			fillGlitterChip: document.getElementById('textFillGlitterChip'),
 			fillGlitterChange: document.getElementById('textFillGlitterChange'),
 			fillGlitterLabel: document.getElementById('textFillGlitterLabel'),
-			fillGlitterSwatch: document.getElementById('textFillGlitterSwatch'),
-			fillSourceValue: document.getElementById('textFillSourceValue'),
+			fillGlitterBadges: document.getElementById('textFillGlitterBadges'),
+			// Same element as fillGlitterChip — the thumbnail IS the chip now,
+			// styled like Glitter Properties' asset-info-thumbnail.
+			fillGlitterSwatch: document.getElementById('textFillGlitterChip'),
 			fillUseColor: document.getElementById('textFillUseColor'),
 			fillUseGlitter: document.getElementById('textFillUseGlitter'),
 			fillColor: document.getElementById('textFillColor'),
@@ -65,11 +67,13 @@ class TextGlitterManager {
 			borderWidthValue: document.getElementById('textBorderWidthValue'),
 			borderColor: document.getElementById('textBorderColor'),
 			borderColorRow: document.getElementById('textBorderColorRow'),
-			borderSourceValue: document.getElementById('textBorderSourceValue'),
 			borderGlitterChip: document.getElementById('textBorderGlitterChip'),
 			borderGlitterChange: document.getElementById('textBorderGlitterChange'),
 			borderGlitterLabel: document.getElementById('textBorderGlitterLabel'),
-			borderGlitterSwatch: document.getElementById('textBorderGlitterSwatch'),
+			borderGlitterBadges: document.getElementById('textBorderGlitterBadges'),
+			// Same element as borderGlitterChip — the thumbnail IS the chip,
+			// styled like Glitter Properties' asset-info-thumbnail.
+			borderGlitterSwatch: document.getElementById('textBorderGlitterChip'),
 			borderUseColor: document.getElementById('textBorderUseColor'),
 			borderUseGlitter: document.getElementById('textBorderUseGlitter'),
 			borderScaleRow: document.getElementById('textBorderScaleRow'),
@@ -85,11 +89,13 @@ class TextGlitterManager {
 			shadowOffsetYValue: document.getElementById('textShadowOffsetYValue'),
 			shadowColor: document.getElementById('textShadowColor'),
 			shadowColorRow: document.getElementById('textShadowColorRow'),
-			shadowSourceValue: document.getElementById('textShadowSourceValue'),
 			shadowGlitterChip: document.getElementById('textShadowGlitterChip'),
 			shadowGlitterChange: document.getElementById('textShadowGlitterChange'),
 			shadowGlitterLabel: document.getElementById('textShadowGlitterLabel'),
-			shadowGlitterSwatch: document.getElementById('textShadowGlitterSwatch'),
+			shadowGlitterBadges: document.getElementById('textShadowGlitterBadges'),
+			// Same element as shadowGlitterChip — the thumbnail IS the chip,
+			// styled like Glitter Properties' asset-info-thumbnail.
+			shadowGlitterSwatch: document.getElementById('textShadowGlitterChip'),
 			shadowUseColor: document.getElementById('textShadowUseColor'),
 			shadowUseGlitter: document.getElementById('textShadowUseGlitter'),
 			shadowScaleRow: document.getElementById('textShadowScaleRow'),
@@ -608,6 +614,7 @@ class TextGlitterManager {
 		button.addEventListener('click', async () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
+			if (!this.getEffectData(layer, effectName)?.glitterId) return;
 
 			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
@@ -679,6 +686,7 @@ class TextGlitterManager {
 		button.addEventListener('click', async () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
+			if (this.getEffectData(layer, 'fill')?.mode === 'solid') return;
 
 			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
@@ -826,15 +834,43 @@ class TextGlitterManager {
 			(a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured))
 		);
 
+		// Every font gets the same card: a same sample phrase rendered in the
+		// font itself (never the font's own name — that's shown separately
+		// below, in the UI font, like a gallery card's name caption), plus a
+		// corner badge for any script beyond plain Latin.
+		const sampleTextByScript = { latin: 'Glitter', ja: 'グリッター', ko: '글리터', zh: '闪粉' };
+		const langLabels = { ja: 'JP', ko: 'KR', zh: 'ZH' };
+
 		this.ui.fontPicker.innerHTML = '';
 		fonts.forEach((font) => {
-			const button = document.createElement('button');
-			button.className = 'btn-simple text-font-option';
-			button.type = 'button';
-			button.dataset.fontId = font.id;
-			button.textContent = font.name;
-			button.style.fontFamily = this.getFontFamily(font);
-			this.ui.fontPicker.appendChild(button);
+			const scripts = font.scripts || ['latin'];
+			const sampleScript = scripts.find((script) => script !== 'latin' && sampleTextByScript[script]) || 'latin';
+			const extraScripts = scripts.filter((script) => script !== 'latin');
+
+			const card = document.createElement('button');
+			card.className = 'text-font-option';
+			card.type = 'button';
+			card.dataset.fontId = font.id;
+
+			const sample = document.createElement('span');
+			sample.className = 'text-font-option-sample';
+			sample.style.fontFamily = this.getFontFamily(font);
+			sample.textContent = sampleTextByScript[sampleScript];
+			card.appendChild(sample);
+
+			const name = document.createElement('span');
+			name.className = 'text-font-option-name';
+			name.textContent = font.name;
+			card.appendChild(name);
+
+			if (extraScripts.length > 0) {
+				const badge = document.createElement('span');
+				badge.className = 'text-font-option-badge';
+				badge.textContent = extraScripts.map((script) => langLabels[script] || script.toUpperCase()).join(' · ');
+				card.appendChild(badge);
+			}
+
+			this.ui.fontPicker.appendChild(card);
 		});
 	}
 
@@ -1220,8 +1256,8 @@ class TextGlitterManager {
 			}
 			this.ui.fillGlitterSwatch.style.backgroundImage = `url(${glitter.url})`;
 			this.ui.fillGlitterSwatch.style.backgroundColor = 'transparent';
-			this.ui.fillGlitterSwatch.classList.toggle('pixelated', Boolean(glitter.isPixelated));
-			if (this.ui.fillSourceValue) this.ui.fillSourceValue.textContent = 'Glitter';
+			this.ui.fillGlitterSwatch.classList.add('glitter-bg');
+			this.editor.renderAssetBadges(this.ui.fillGlitterBadges, glitter, this.editor.glitterManager, () => []);
 		} else {
 			const label = fillData.mode === 'solid'
 				? (fillData.color || '#000000').toUpperCase()
@@ -1236,13 +1272,13 @@ class TextGlitterManager {
 			}
 			this.ui.fillGlitterSwatch.style.backgroundImage = 'none';
 			this.ui.fillGlitterSwatch.style.backgroundColor = fillData.mode === 'solid' ? (fillData.color || '#000000') : 'transparent';
-			this.ui.fillGlitterSwatch.classList.remove('pixelated');
-			if (this.ui.fillSourceValue) this.ui.fillSourceValue.textContent = 'Solid Color';
+			this.ui.fillGlitterSwatch.classList.remove('glitter-bg');
+			if (this.ui.fillGlitterBadges) this.ui.fillGlitterBadges.innerHTML = '';
 		}
 
 		const usesGlitter = fillData.mode !== 'solid';
-		if (this.ui.fillUseColor) this.ui.fillUseColor.hidden = !usesGlitter;
-		if (this.ui.fillUseGlitter) this.ui.fillUseGlitter.hidden = usesGlitter;
+		if (this.ui.fillUseGlitter) this.ui.fillUseGlitter.classList.toggle('active', usesGlitter);
+		if (this.ui.fillUseColor) this.ui.fillUseColor.classList.toggle('active', !usesGlitter);
 		if (this.ui.fillColorRow) this.ui.fillColorRow.hidden = usesGlitter;
 		if (this.ui.fillColor) this.ui.fillColor.value = fillData.color || '#000000';
 		if (this.ui.textureScaleRow) this.ui.textureScaleRow.hidden = !usesGlitter;
@@ -1269,9 +1305,9 @@ class TextGlitterManager {
 			? {
 				button: this.ui.borderGlitterChip,
 				changeButton: this.ui.borderGlitterChange,
-				sourceValue: this.ui.borderSourceValue,
 				label: this.ui.borderGlitterLabel,
 				swatch: this.ui.borderGlitterSwatch,
+				badges: this.ui.borderGlitterBadges,
 				useColor: this.ui.borderUseColor,
 				useGlitter: this.ui.borderUseGlitter,
 				colorRow: this.ui.borderColorRow,
@@ -1280,21 +1316,20 @@ class TextGlitterManager {
 			: {
 				button: this.ui.shadowGlitterChip,
 				changeButton: this.ui.shadowGlitterChange,
-				sourceValue: this.ui.shadowSourceValue,
 				label: this.ui.shadowGlitterLabel,
 				swatch: this.ui.shadowGlitterSwatch,
+				badges: this.ui.shadowGlitterBadges,
 				useColor: this.ui.shadowUseColor,
 				useGlitter: this.ui.shadowUseGlitter,
 				colorRow: this.ui.shadowColorRow,
 				scaleRow: this.ui.shadowScaleRow
 			};
 
-		if (!config.button || !config.sourceValue || !config.label || !config.swatch || !config.useColor || !config.useGlitter || !config.colorRow) {
+		if (!config.button || !config.label || !config.swatch || !config.useColor || !config.useGlitter || !config.colorRow) {
 			return;
 		}
 
 		const summary = this.getEffectSourceSummary(effectData, effectName);
-		config.sourceValue.textContent = summary.modeLabel;
 		config.label.textContent = summary.label;
 		config.label.title = summary.label;
 		config.button.title = summary.buttonTitle;
@@ -1303,10 +1338,17 @@ class TextGlitterManager {
 		}
 		config.swatch.style.backgroundImage = summary.backgroundImage;
 		config.swatch.style.backgroundColor = summary.backgroundColor;
-		config.swatch.classList.toggle('pixelated', summary.pixelated);
-		config.useColor.hidden = !summary.usesGlitter;
-		config.useGlitter.hidden = summary.usesGlitter;
+		config.swatch.classList.toggle('glitter-bg', summary.usesGlitter);
+		config.useGlitter.classList.toggle('active', summary.usesGlitter);
+		config.useColor.classList.toggle('active', !summary.usesGlitter);
 		config.colorRow.hidden = summary.usesGlitter;
+		if (config.badges) {
+			if (summary.usesGlitter && summary.glitter) {
+				this.editor.renderAssetBadges(config.badges, summary.glitter, this.editor.glitterManager, () => []);
+			} else {
+				config.badges.innerHTML = '';
+			}
+		}
 		if (config.scaleRow) config.scaleRow.hidden = !summary.usesGlitter;
 	}
 
@@ -1317,13 +1359,11 @@ class TextGlitterManager {
 		const effectTitle = effectName === 'shadow' ? 'shadow' : 'border';
 		if (!effectData) {
 			return {
-				modeLabel: 'Solid Color',
 				label: defaultColor.toUpperCase(),
 				buttonTitle: `Pick a glitter for the text ${effectTitle}`,
 				backgroundImage: 'none',
 				backgroundColor: defaultColor,
-				usesGlitter: false,
-				pixelated: false
+				usesGlitter: false
 			};
 		}
 
@@ -1331,25 +1371,22 @@ class TextGlitterManager {
 			const glitter = this.editor.glitterManager.getItemById(effectData.glitterId);
 			if (glitter) {
 				return {
-					modeLabel: 'Glitter',
 					label: glitter.name,
 					buttonTitle: `Current ${effectTitle} glitter: ${glitter.name}. Click to choose another glitter.`,
 					backgroundImage: `url(${glitter.url})`,
 					backgroundColor: 'transparent',
 					usesGlitter: true,
-					pixelated: Boolean(glitter.isPixelated)
+					glitter
 				};
 			}
 		}
 
 		return {
-			modeLabel: 'Solid Color',
 			label: (effectData.color || defaultColor).toUpperCase(),
 			buttonTitle: `The text ${effectTitle} is using a solid color. Click to choose a glitter instead.`,
 			backgroundImage: 'none',
 			backgroundColor: effectData.color || '#000000',
-			usesGlitter: false,
-			pixelated: false
+			usesGlitter: false
 		};
 	}
 

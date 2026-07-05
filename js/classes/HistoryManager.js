@@ -129,6 +129,14 @@ class HistoryManager {
 		this.editor.updateGlitterSelection();
 		this.editor.updatePreview();
 		this.editor.updateActionButtons();
+
+		// Re-enter mask editing against the restored layer if Brush/Eraser is
+		// still the active tool; otherwise just resync its button state.
+		if (this.editor.currentTool === ToolType.BRUSH) {
+			this.editor.maskEditor?.onToolChanged(ToolType.BRUSH);
+		} else {
+			this.editor.maskEditor?.updateToolButtonState();
+		}
 	}
 
 	async undo() {

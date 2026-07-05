@@ -124,6 +124,10 @@ html {
   user-select: none;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 p,
 span,
 input,
@@ -1610,55 +1614,6 @@ input[type=range]::-moz-range-thumb {
   display: block;
 }
 
-.mask-settings-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-.mask-settings-content > .setting-column.right {
-  display: none;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-.mask-settings-content > #editMaskToggle {
-  width: 100%;
-}
-.mask-settings-content .mask-mode-buttons,
-.mask-settings-content > .settings-group-two-column {
-  display: none;
-}
-.mask-settings-content .mask-brush-hint {
-  display: block;
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-sm);
-}
-.mask-settings-content.brush-active > .setting-column.right {
-  display: flex;
-}
-.mask-settings-content.brush-active .mask-mode-buttons {
-  display: flex;
-}
-.mask-settings-content.brush-active > .settings-group-two-column {
-  display: grid;
-}
-.mask-settings-content.brush-active .mask-brush-hint {
-  display: none;
-}
-
-.mask-mode-buttons {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.mask-mode-buttons > .btn-simple,
-.mask-settings-actions > .btn-simple {
-  flex: 1;
-}
-
-.mask-settings-actions {
-  align-items: center;
-}
-
 .glitter-element {
   position: absolute;
   top: 0;
@@ -2249,7 +2204,8 @@ body.mask-editing .sticker-element {
 .zoom-controls,
 .sticker-center-controls,
 .pan-controls,
-.color-picker-controls {
+.color-picker-controls,
+.mask-brush-controls {
   position: absolute;
   bottom: var(--spacing-from-edge);
   left: 50%;
@@ -2267,13 +2223,15 @@ body.mask-editing .sticker-element {
 .zoom-controls.visible,
 .sticker-center-controls.visible,
 .pan-controls.visible,
-.color-picker-controls.visible {
+.color-picker-controls.visible,
+.mask-brush-controls.visible {
   display: flex;
 }
 .zoom-controls > .btn-icon,
 .sticker-center-controls > .btn-icon,
 .pan-controls > .btn-icon,
-.color-picker-controls > .btn-icon {
+.color-picker-controls > .btn-icon,
+.mask-brush-controls > .btn-icon {
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
   touch-action: manipulation;
@@ -2303,50 +2261,61 @@ body.mask-editing .sticker-element {
   align-self: stretch;
 }
 
-/* Color Fill Controls Specific */
-.color-picker-controls .context-slider-group {
+/* Shared context-toolbar controls (Color Fill, Mask Brush) */
+.context-slider-group {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
 }
-.color-picker-controls .context-slider-group .context-label {
+.context-slider-group .context-label {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
-.color-picker-controls .context-slider-group .context-slider {
+.context-slider-group .context-slider {
   width: 100px;
   background: var(--color-bg-primary);
 }
-.color-picker-controls .context-slider-group .context-value {
+.context-slider-group .context-value {
   font-size: var(--font-size-sm);
   color: var(--color-text);
   min-width: 3ch;
   text-align: right;
   display: none;
 }
-.color-picker-controls .context-checkbox-group {
+
+.context-checkbox-group {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
   cursor: pointer;
   font-size: var(--font-size-sm);
 }
-.color-picker-controls .context-checkbox-group input[type=checkbox] {
+.context-checkbox-group input[type=checkbox] {
   margin: 0;
 }
-.color-picker-controls .context-checkbox-group .context-count {
+.context-checkbox-group .context-count {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
 }
-.color-picker-controls .context-checkbox-group .context-count:empty {
+.context-checkbox-group .context-count:empty {
   display: none;
 }
-.color-picker-controls .context-checkbox-group .context-count:not(:empty)::before {
+.context-checkbox-group .context-count:not(:empty)::before {
   content: "(";
 }
-.color-picker-controls .context-checkbox-group .context-count:not(:empty)::after {
+.context-checkbox-group .context-count:not(:empty)::after {
   content: ")";
+}
+
+/* Mask Brush Controls Specific */
+.mask-brush-controls {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: min(90vw, 560px);
+}
+.mask-brush-controls .context-value {
+  display: inline-block;
 }
 
 /* ===== EXPORT PROGRESS ===== */
@@ -3577,13 +3546,15 @@ body.mask-editing .sticker-element {
 .sticker-settings-section,
 .glitter-settings-section,
 .text-settings-section,
-.layer-settings-section {
+.layer-settings-section,
+.brush-settings-section {
   display: none;
 }
 .sticker-settings-section.visible,
 .glitter-settings-section.visible,
 .text-settings-section.visible,
-.layer-settings-section.visible {
+.layer-settings-section.visible,
+.brush-settings-section.visible {
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
@@ -3592,13 +3563,15 @@ body.mask-editing .sticker-element {
 .sticker-settings-section.visible.is-open,
 .glitter-settings-section.visible.is-open,
 .text-settings-section.visible.is-open,
-.layer-settings-section.visible.is-open {
+.layer-settings-section.visible.is-open,
+.brush-settings-section.visible.is-open {
   flex: 1 1 auto;
 }
 .sticker-settings-section.visible.is-open > .section-content.visible,
 .glitter-settings-section.visible.is-open > .section-content.visible,
 .text-settings-section.visible.is-open > .section-content.visible,
-.layer-settings-section.visible.is-open > .section-content.visible {
+.layer-settings-section.visible.is-open > .section-content.visible,
+.brush-settings-section.visible.is-open > .section-content.visible {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -3658,6 +3631,8 @@ body.mask-editing .sticker-element {
   }
   .app-container > .app-header {
     height: var(--mobile-header-height);
+    position: relative;
+    z-index: 15000;
   }
   .header {
     flex-shrink: 0;
@@ -3956,7 +3931,8 @@ body.mask-editing .sticker-element {
   .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible,
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible,
   .mobile-settings-drawer .mobile-settings-content .text-settings-section.visible,
-  .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible {
+  .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible,
+  .mobile-settings-drawer .mobile-settings-content .brush-settings-section.visible {
     display: flex;
     flex-direction: column;
     border: none;
@@ -3966,7 +3942,8 @@ body.mask-editing .sticker-element {
   .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible .section-header,
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible .section-header,
   .mobile-settings-drawer .mobile-settings-content .text-settings-section.visible .section-header,
-  .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header {
+  .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header,
+  .mobile-settings-drawer .mobile-settings-content .brush-settings-section.visible .section-header {
     position: sticky;
     top: 0;
     background: var(--color-bg-primary);
@@ -3975,7 +3952,8 @@ body.mask-editing .sticker-element {
   .mobile-settings-drawer .mobile-settings-content .layer-settings-section.visible .section-header .section-header-action,
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible .section-header .section-header-action,
   .mobile-settings-drawer .mobile-settings-content .text-settings-section.visible .section-header .section-header-action,
-  .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header .section-header-action {
+  .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header .section-header-action,
+  .mobile-settings-drawer .mobile-settings-content .brush-settings-section.visible .section-header .section-header-action {
     display: flex;
   }
   body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
@@ -4861,13 +4839,64 @@ body.mask-editing .sticker-element {
   max-height: 220px;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 3px 6px 3px 3px;
 }
 
 .text-font-option {
+  position: relative;
   flex-shrink: 0;
   width: 100%;
+  background: var(--color-bg-tertiary);
+  border: none;
+  color: var(--color-text-primary);
+  font: inherit;
+  cursor: pointer;
+  padding: var(--spacing-sm) var(--spacing-md);
   text-transform: none;
-  justify-content: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  outline: 1px solid var(--color-border);
+  outline-offset: 0px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+.text-font-option:hover {
+  outline-color: var(--color-border-hover);
+}
+.text-font-option.active {
+  outline-color: var(--color-accent);
+  outline-width: 2px;
+  outline-offset: 2px;
+}
+
+.text-font-option-sample {
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.text-font-option-name {
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+}
+
+.text-font-option-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
+  pointer-events: none;
 }
 
 .text-align-group > .btn-simple {
@@ -4887,6 +4916,10 @@ body.mask-editing .sticker-element {
 }
 
 .text-valign-group > .btn-simple {
+  flex: 1;
+}
+
+.text-effect-mode-group > .btn-simple {
   flex: 1;
 }
 
@@ -4937,82 +4970,24 @@ body.mask-editing .sticker-element {
   align-items: center;
   gap: var(--spacing-md);
 }
-
-.text-effect-source-chip {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-secondary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.text-effect-source-row > .asset-info-header {
+  min-width: 0;
+  flex: 1;
 }
 
-.text-effect-source-chip.target-active,
-.text-effect-source-change.target-active {
+.text-effect-source-change.target-active,
+.asset-info-thumbnail.target-active {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 1px var(--color-accent-border);
 }
 
-.text-effect-source-swatch {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border-radius: 4px;
-  border: 1px solid var(--color-border);
-  background-color: var(--color-bg-tertiary);
-  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.16) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.16) 75%, rgba(255, 255, 255, 0.16)), linear-gradient(45deg, rgba(255, 255, 255, 0.16) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.16) 75%, rgba(255, 255, 255, 0.16));
-  background-position: 0 0, 6px 6px;
-  background-size: 12px 12px;
-  overflow: hidden;
-}
-.text-effect-source-swatch-fill {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-}
-.text-effect-source-swatch-fill.pixelated {
-  image-rendering: pixelated;
-}
-
-.text-effect-source-copy {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.text-effect-source-label {
-  min-width: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
-  text-transform: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.text-effect-source-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-}
-
 .text-effect-source-change {
-  min-height: 36px;
-  padding: 0 var(--spacing-md);
-}
-
-.text-effect-source-value {
-  font-size: var(--font-size-xs);
-  letter-spacing: 0.4px;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
+  flex-shrink: 0;
+  align-self: center;
+  min-height: 28px;
+  padding: 0 var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
 }
 
 .text-effect-color-row {

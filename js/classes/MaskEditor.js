@@ -19,11 +19,9 @@ class MaskEditor {
 		this.stampCanvas = null;
 		this.overlayPatternCache = new Map();
 		this.ui = {
-			toggle: document.getElementById('editMaskToggle'),
-			modeButtons: Array.from(document.querySelectorAll('[data-mask-mode]')),
 			overlayToggle: document.getElementById('maskOverlayToggle'),
 			clearButton: document.getElementById('clearMaskPaint'),
-			settingsContent: document.querySelector('.mask-settings-content'),
+			pressureToggle: document.getElementById('maskBrushPressure'),
 			overlayCanvas: document.getElementById('maskOverlayCanvas'),
 			cursor: document.getElementById('maskBrushCursor')
 		};
@@ -34,21 +32,6 @@ class MaskEditor {
 	}
 
 	setupUIListeners() {
-		// The panel button is a shortcut for the Brush tool — one source of truth.
-		this.ui.toggle?.addEventListener('click', () => {
-			if (this.editor.currentTool === ToolType.BRUSH) {
-				this.editor.setTool(ToolType.SELECT);
-			} else {
-				this.editor.setTool(ToolType.BRUSH);
-			}
-		});
-
-		this.ui.modeButtons.forEach((button) => {
-			button.addEventListener('click', () => {
-				this.setMode(button.dataset.maskMode);
-			});
-		});
-
 		// Preview-control toggle button, same pattern as transparency/bounds
 		this.ui.overlayToggle?.addEventListener('click', () => {
 			this.showOverlay = this.ui.overlayToggle.classList.toggle('active');
@@ -110,8 +93,6 @@ class MaskEditor {
 		this.isEditing = true;
 		this.currentLayerId = (layer && layer.type === LayerType.GLITTER_FILL) ? layer.id : null;
 		document.body.classList.add('mask-editing');
-		this.ui.toggle?.classList.add('active');
-		this.ui.settingsContent?.classList.add('brush-active');
 		if (this.ui.overlayToggle) {
 			this.ui.overlayToggle.disabled = false;
 			this.ui.overlayToggle.classList.toggle('active', this.showOverlay);
@@ -139,8 +120,6 @@ class MaskEditor {
 		this.isEditing = false;
 		this.currentLayerId = null;
 		document.body.classList.remove('mask-editing');
-		this.ui.toggle?.classList.remove('active');
-		this.ui.settingsContent?.classList.remove('brush-active');
 		if (this.ui.overlayToggle) {
 			this.ui.overlayToggle.disabled = true;
 		}
@@ -172,7 +151,9 @@ class MaskEditor {
 	}
 
 	handleStateRestore() {
-		this.exitEditMode({ commitStroke: false });
+		// Undo/redo shouldn't kick the user out of the Brush/Eraser tool —
+		// exit the live stroke state only, and leave currentTool alone.
+		this.exitEditMode({ commitStroke: false, switchTool: false });
 		this.loadLayer(this.editor.layerManager.getActiveLayer());
 	}
 
@@ -204,9 +185,6 @@ class MaskEditor {
 
 	updateToolButtonState() {
 		const enabled = this.canActivate();
-		if (this.ui.toggle) {
-			this.ui.toggle.disabled = !enabled;
-		}
 
 		const brushTool = document.getElementById('brushTool');
 		if (brushTool) {
@@ -332,7 +310,8 @@ class MaskEditor {
 		event.stopPropagation();
 
 		this._startStrokeFromScreenPoint(event.clientX, event.clientY, {
-			pointerId: event.pointerId
+			pointerId: event.pointerId,
+			pressure: event.pressure
 		});
 		this._updateCursorPosition(event);
 	}
@@ -352,6 +331,8 @@ class MaskEditor {
 		if (!point) {
 			return;
 		}
+
+		point.pressure = event.pressure;
 
 		event.preventDefault();
 		event.stopPropagation();
@@ -546,6 +527,7 @@ class MaskEditor {
 		this.strokeActive = true;
 		this.strokeChanged = false;
 		this.activePointerId = options.pointerId ?? null;
+		point.pressure = options.pressure;
 		this.lastPoint = point;
 		this.currentLayerId = layer.id;
 		this._captureScratchCanvases(paint);
@@ -558,7 +540,7 @@ class MaskEditor {
 			this._showTouchRing(screenX, screenY);
 		}
 
-		this._stampAtPoint(layer, paint, point.x, point.y);
+		this._stampAtPoint(layer, paint, point.x, point.y, point.pressure);
 		return true;
 	}
 
@@ -603,33 +585,61 @@ class MaskEditor {
 			return;
 		}
 
+		const fromPressure = fromPoint.pressure;
+		const toPressure = toPoint.pressure;
 		const steps = Math.floor(distance / spacing);
 		for (let step = 1; step <= steps; step++) {
 			const progress = (step * spacing) / distance;
 			const x = fromPoint.x + dx * progress;
 			const y = fromPoint.y + dy * progress;
-			this._stampAtPoint(layer, paint, x, y);
+			const pressure = this._interpolatePressure(fromPressure, toPressure, progress);
+			this._stampAtPoint(layer, paint, x, y, pressure);
 		}
 
-		this._stampAtPoint(layer, paint, toPoint.x, toPoint.y);
+		this._stampAtPoint(layer, paint, toPoint.x, toPoint.y, toPressure);
 	}
 
-	_stampAtPoint(layer, paint, x, y) {
+	_interpolatePressure(fromPressure, toPressure, progress) {
+		const from = fromPressure ?? toPressure ?? 0.5;
+		const to = toPressure ?? from;
+		return from + (to - from) * progress;
+	}
+
+	isPressureEnabled() {
+		return this.ui.pressureToggle ? this.ui.pressureToggle.checked : true;
+	}
+
+	_getStampAlpha(pressure) {
+		const flow = this.getBrushFlow() / 100;
+		if (!this.isPressureEnabled() || pressure == null) {
+			return flow;
+		}
+
+		// Mouse/non-pressure input reports a constant 0.5, so this multiplier
+		// is 1 (unchanged) for anyone without a pressure-sensitive pen.
+		const pressureMultiplier = Math.max(0, pressure * 2);
+		return Math.min(1, flow * pressureMultiplier);
+	}
+
+	_stampAtPoint(layer, paint, x, y, pressure) {
 		const stamp = this._getStampCanvas();
 		const size = this.getBrushSize();
 		const halfSize = size / 2;
 		const destinationX = x - halfSize;
 		const destinationY = y - halfSize;
+		const alpha = this._getStampAlpha(pressure);
 		const targetCtx = (this.mode === 'add' ? paint.add : paint.sub).getContext('2d', { willReadFrequently: true });
 		const oppositeCtx = (this.mode === 'add' ? paint.sub : paint.add).getContext('2d', { willReadFrequently: true });
 
 		targetCtx.save();
 		targetCtx.globalCompositeOperation = 'source-over';
+		targetCtx.globalAlpha = alpha;
 		targetCtx.drawImage(stamp, destinationX, destinationY, size, size);
 		targetCtx.restore();
 
 		oppositeCtx.save();
 		oppositeCtx.globalCompositeOperation = 'destination-out';
+		oppositeCtx.globalAlpha = alpha;
 		oppositeCtx.drawImage(stamp, destinationX, destinationY, size, size);
 		oppositeCtx.restore();
 
@@ -674,14 +684,15 @@ class MaskEditor {
 	}
 
 	_getStampCanvas() {
-		const key = [this.getBrushSize(), this.getBrushSoftness(), this.getBrushFlow()].join('|');
+		// Flow (and pressure) are applied as globalAlpha at draw time instead of
+		// being baked in here, since pressure varies per-stamp along a stroke.
+		const key = [this.getBrushSize(), this.getBrushSoftness()].join('|');
 		if (this.stampCacheKey === key && this.stampCanvas) {
 			return this.stampCanvas;
 		}
 
 		const size = this.getBrushSize();
 		const softness = this.getBrushSoftness() / 100;
-		const flow = this.getBrushFlow() / 100;
 		const canvas = document.createElement('canvas');
 		canvas.width = size;
 		canvas.height = size;
@@ -692,14 +703,14 @@ class MaskEditor {
 		if (innerRadius >= radius) {
 			// Softness 0: hard-edged circle. A radial gradient with equal inner
 			// and outer radius is degenerate and paints nothing per spec.
-			ctx.fillStyle = `rgba(255, 255, 255, ${flow})`;
+			ctx.fillStyle = 'rgba(255, 255, 255, 1)';
 			ctx.beginPath();
 			ctx.arc(radius, radius, radius, 0, Math.PI * 2);
 			ctx.fill();
 		} else {
 			const gradient = ctx.createRadialGradient(radius, radius, innerRadius, radius, radius, radius);
-			gradient.addColorStop(0, `rgba(255, 255, 255, ${flow})`);
-			gradient.addColorStop(Math.max(0.001, innerRadius / radius), `rgba(255, 255, 255, ${flow})`);
+			gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+			gradient.addColorStop(Math.max(0.001, innerRadius / radius), 'rgba(255, 255, 255, 1)');
 			gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 			ctx.fillStyle = gradient;
 			ctx.fillRect(0, 0, size, size);
@@ -841,10 +852,6 @@ class MaskEditor {
 	}
 
 	_syncModeButtons() {
-		this.ui.modeButtons.forEach((button) => {
-			button.classList.toggle('active', button.dataset.maskMode === this.mode);
-		});
-
 		// Brush and Eraser share ToolType.BRUSH, so their toolbar highlight
 		// follows the paint mode rather than the generic tool-switch logic.
 		const isBrushActive = this.editor.currentTool === ToolType.BRUSH;

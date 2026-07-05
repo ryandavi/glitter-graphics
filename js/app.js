@@ -695,62 +695,28 @@ async resetAllSettings() {
 			renderThumbnail(newThumbnail, asset);
 
 			newThumbnail.addEventListener('click', () => {
-				if (manager && manager.browser) {
-					manager.browser.navigateToItem(asset.id);
+				if (!manager || !manager.browser) return;
+
+				// Bring the Gallery into view first — navigateToItem only
+				// scrolls within the browser's own grid, which is invisible
+				// if the design panel/section isn't open (desktop accordion)
+				// or the mobile design drawer isn't the active one.
+				if (this.mobileManager?.isMobile) {
+					if (this.mobileManager.activeDrawer !== 'design') {
+						this.mobileManager.toggleDrawer('design');
+					}
+				} else {
+					this.setCollapsibleSectionOpen?.('designGallery', true, true);
 				}
+
+				manager.browser.navigateToItem(asset.id);
 			});
 		}
 
 		// Name
 		if (name) name.textContent = asset.name || 'Undefined';
 
-		// Badges
-		if (badges) {
-			const badgeHTML = [];
-
-			// Category badge (clickable)
-			if (asset.category) {
-				const categoryName = asset.category.charAt(0).toUpperCase() + asset.category.slice(1);
-				badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${asset.category}">${categoryName}</div>`);
-			}
-
-			// Animated badge
-			if (asset.isAnimated) {
-				badgeHTML.push('<div class="asset-info-badge badge-animated">Animated</div>');
-			}
-
-
-			// Transparency badge
-			if (asset.hasTransparency) {
-				badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparent</div>');
-			}
-
-			// Variable frame rate badge
-			if (asset.isVariableFramerate) {
-				badgeHTML.push('<div class="asset-info-badge badge-variable-fps">Variable FPS</div>');
-			}
-
-
-			// Type-specific badges
-			if (getExtraBadges) {
-				const extraBadges = getExtraBadges(asset);
-				extraBadges.forEach(badge => {
-					badgeHTML.push(`<div class="asset-info-badge ${badge.class}">${badge.text}</div>`);
-				});
-			}
-
-			badges.innerHTML = badgeHTML.join('');
-
-			// Add click listener to category badge
-			const categoryBadge = badges.querySelector('.badge-category');
-			if (categoryBadge) {
-				categoryBadge.addEventListener('click', () => {
-					if (manager && manager.browser) {
-						manager.browser.navigateToItem(asset.id);
-					}
-				});
-			}
-		}
+		this.renderAssetBadges(badges, asset, manager, getExtraBadges);
 
 		// Size - handle undefined
 		if (size) {
@@ -787,7 +753,58 @@ async resetAllSettings() {
 		}
 
 		frames.textContent = frameText;
-		
+
+	}
+
+	// Shared by Glitter/Sticker asset info (updateAssetInfo) and the Text
+	// layer's Fill/Border/Shadow glitter pickers — same badge vocabulary
+	// (category/animated/transparency/variable-fps) wherever a glitter or
+	// sticker asset is shown.
+	renderAssetBadges(badgesEl, asset, manager, getExtraBadges) {
+		if (!badgesEl) return;
+
+		const badgeHTML = [];
+
+		// Category badge (clickable)
+		if (asset.category) {
+			const categoryName = asset.category.charAt(0).toUpperCase() + asset.category.slice(1);
+			badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${asset.category}">${categoryName}</div>`);
+		}
+
+		// Animated badge
+		if (asset.isAnimated) {
+			badgeHTML.push('<div class="asset-info-badge badge-animated">Animated</div>');
+		}
+
+		// Transparency badge
+		if (asset.hasTransparency) {
+			badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparent</div>');
+		}
+
+		// Variable frame rate badge
+		if (asset.isVariableFramerate) {
+			badgeHTML.push('<div class="asset-info-badge badge-variable-fps">Variable FPS</div>');
+		}
+
+		// Type-specific badges
+		if (getExtraBadges) {
+			const extraBadges = getExtraBadges(asset);
+			extraBadges.forEach(badge => {
+				badgeHTML.push(`<div class="asset-info-badge ${badge.class}">${badge.text}</div>`);
+			});
+		}
+
+		badgesEl.innerHTML = badgeHTML.join('');
+
+		// Add click listener to category badge
+		const categoryBadge = badgesEl.querySelector('.badge-category');
+		if (categoryBadge) {
+			categoryBadge.addEventListener('click', () => {
+				if (manager && manager.browser) {
+					manager.browser.navigateToItem(asset.id);
+				}
+			});
+		}
 	}
 
 	// Convenience wrappers
@@ -972,7 +989,7 @@ async resetAllSettings() {
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
-		const sections = ['designGallery', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings'];
+		const sections = ['designGallery', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings', 'brushSettings'];
 
 		const setOpen = (name, isOpen, accordion = false) => {
 			const section = document.getElementById(`${name}Section`);
@@ -1471,7 +1488,41 @@ async resetAllSettings() {
 			this.maskEditor?.renderOverlay();
 		}, CONFIG.maskBrush.defaultFlow);
 
+		this.syncQuickSlider('maskBrushSize', 'maskBrushSizeQuick', 'maskBrushSizeQuickValue', 'px');
+
 		this.maskEditor?.setupUIListeners();
+	}
+
+	// Mirrors a canonical slider's value onto a compact duplicate (the floating
+	// quick-access brush size, mirroring the sidebar's canonical Size slider).
+	syncQuickSlider(canonicalId, quickId, quickValueId, suffix) {
+		const canonical = document.getElementById(canonicalId);
+		const quick = document.getElementById(quickId);
+		const quickValue = document.getElementById(quickValueId);
+		if (!canonical || !quick) return;
+
+		quick.min = canonical.min;
+		quick.max = canonical.max;
+		quick.value = canonical.value;
+		if (quickValue) quickValue.textContent = canonical.value + suffix;
+
+		let syncing = false;
+		canonical.addEventListener('input', () => {
+			if (syncing) return;
+			syncing = true;
+			quick.value = canonical.value;
+			if (quickValue) quickValue.textContent = canonical.value + suffix;
+			syncing = false;
+		});
+
+		quick.addEventListener('input', () => {
+			if (syncing) return;
+			syncing = true;
+			canonical.value = quick.value;
+			if (quickValue) quickValue.textContent = quick.value + suffix;
+			canonical.dispatchEvent(new Event('input'));
+			syncing = false;
+		});
 	}
 
 	// Shared by sticker and text layers — both carry a transform object of the
@@ -2645,12 +2696,16 @@ setupWelcomeModalListeners() {
 		const panControls = document.getElementById('panControls');
 		const stickerCenterControls = document.getElementById('stickerCenterControls');
 		const colorPickerControls = document.getElementById('colorPickerControls');
+		const maskBrushControls = document.getElementById('maskBrushControls');
+		const brushSettingsSection = document.getElementById('brushSettingsSection');
 
 		// Hide all first
 		if (zoomControls) zoomControls.classList.remove('visible');
 		if (panControls) panControls.classList.remove('visible');
 		if (stickerCenterControls) stickerCenterControls.classList.remove('visible');
 		if (colorPickerControls) colorPickerControls.classList.remove('visible');
+		if (maskBrushControls) maskBrushControls.classList.remove('visible');
+		if (brushSettingsSection) brushSettingsSection.classList.remove('visible');
 
 		const layer = this.layerManager.getActiveLayer();
 
@@ -2679,6 +2734,12 @@ setupWelcomeModalListeners() {
 			if (layer && layer.type === LayerType.GLITTER_FILL && layer.selections && layer.selections.length > 0) {
 				this.updateColorPickerControls();
 				colorPickerControls.classList.add('visible');
+			}
+		} else if (this.currentTool === ToolType.BRUSH) {
+			if (maskBrushControls) maskBrushControls.classList.add('visible');
+			if (brushSettingsSection) {
+				brushSettingsSection.classList.add('visible');
+				this.syncCollapsibleSections?.('brushSettings');
 			}
 		}
 	}

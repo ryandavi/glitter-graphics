@@ -17,7 +17,7 @@
 	<meta name="author" content="RYANDAVI">
 
 	<!-- Open Graph for social sharing -->
-	<meta property="og:title" content="Glitter Image Editor - Layers">
+	<meta property="og:title" content="Glitter Image Editor">
 	<meta property="og:description" content="Glitter Graphics and GIF editor">
 	<meta property="og:type" content="website">
 	<meta property="og:url" content="https://ryandavi.github.io/glitter-graphics/">
@@ -25,12 +25,12 @@
 
 	<!-- Twitter card -->
 	<meta name="twitter:card" content="summary_large_image">
-	<meta name="twitter:title" content="Glitter Image Editor - Layers">
+	<meta name="twitter:title" content="Glitter Image Editor">
 	<meta name="twitter:description" content="Glitter Graphics and GIF editor">
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=11">
+	<link rel="stylesheet" href="css/style.css?v=17">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -838,49 +838,80 @@
 										</div>
 									</div>
 
-									<div class="subsection-content-group mask-settings-group">
-										<div class="subsection-title">
-											<span>Mask</span>
-											<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
-										</div>
-										<div class="subsection-content mask-settings-content">
-											<button class="btn-simple" id="editMaskToggle" type="button" title="Toggle the Mask Brush tool (B)">Mask Brush</button>
+								</div>
+							</div>
+						</div>
+					</div>
 
-											<div class="mask-brush-hint">Press B or click Mask Brush to paint or erase glitter by hand.</div>
-
-											<div class="mask-mode-buttons">
-												<button class="btn-simple active" id="maskModeAdd" type="button" data-mask-mode="add" title="Paint glitter onto this layer">Paint</button>
-												<button class="btn-simple" id="maskModeSubtract" type="button" data-mask-mode="sub" title="Erase glitter — painted and color-picked areas alike">Erase</button>
-											</div>
-
-											<div class="settings-group-two-column">
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label">Size</span>
-														<span class="setting-value" id="maskBrushSizeValue">40px</span>
-													</div>
-													<input type="range" id="maskBrushSize" min="1" max="300" value="40">
-													<button class="btn-text" id="resetMaskBrushSize" type="button">Reset</button>
-												</div>
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label">Softness</span>
-														<span class="setting-value" id="maskBrushSoftnessValue">0%</span>
-													</div>
-													<input type="range" id="maskBrushSoftness" min="0" max="100" value="0">
-													<button class="btn-text" id="resetMaskBrushSoftness" type="button">Reset</button>
-												</div>
-											</div>
-
+					<!-- Brush Settings Section (shown for the Brush/Eraser tool, independent of layer type) -->
+					<div class="brush-settings-section section collapsible-section" id="brushSettingsSection">
+						<div class="section-header section-header-with-action" id="brushSettingsHeader">
+							<h3 class="section-header-title">
+								<span class="section-header-title-icon icon-wrapper sm">
+									<svg class="icon">
+										<use href="#icon-brush"></use>
+									</svg>
+									<span class="name">Brush</span>
+								</span>
+								<span class="section-header-title-text">Brush Settings</span>
+							</h3>
+							<div class="section-header-action btn-icon visible collapsed" id="brushSettingsToggle">
+								<span class="icon-wrapper">
+									<svg class="icon">
+										<use href="#icon-chevron-down"></use>
+									</svg>
+								</span>
+							</div>
+						</div>
+						<div class="section-content" id="brushSettingsContent">
+							<div class="settings-subsection">
+								<div class="subsection-content-group">
+									<div class="subsection-title">
+										<span>Brush</span>
+										<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
+									</div>
+									<div class="subsection-content">
+										<div class="settings-group-two-column">
 											<div class="setting-column right">
 												<div class="setting-header">
-													<span class="setting-label">Flow</span>
-													<span class="setting-value" id="maskBrushFlowValue">100%</span>
+													<span class="setting-label">Size</span>
+													<span class="setting-value" id="maskBrushSizeValue">40px</span>
 												</div>
-												<input type="range" id="maskBrushFlow" min="1" max="100" value="100">
-												<button class="btn-text" id="resetMaskBrushFlow" type="button">Reset</button>
+												<input type="range" id="maskBrushSize" min="1" max="300" value="40">
+												<button class="btn-text" id="resetMaskBrushSize" type="button">Reset</button>
+											</div>
+											<div class="setting-column right">
+												<div class="setting-header">
+													<span class="setting-label">Softness</span>
+													<span class="setting-value" id="maskBrushSoftnessValue">0%</span>
+												</div>
+												<input type="range" id="maskBrushSoftness" min="0" max="100" value="0">
+												<button class="btn-text" id="resetMaskBrushSoftness" type="button">Reset</button>
 											</div>
 										</div>
+									</div>
+
+									<div class="subsection-content">
+										<div class="setting-column right">
+											<div class="setting-header">
+												<span class="setting-label">Flow</span>
+												<span class="setting-value" id="maskBrushFlowValue">100%</span>
+											</div>
+											<input type="range" id="maskBrushFlow" min="1" max="100" value="100">
+											<button class="btn-text" id="resetMaskBrushFlow" type="button">Reset</button>
+										</div>
+									</div>
+								</div>
+
+								<div class="subsection-content-group">
+									<div class="subsection-title">
+										<span>Options</span>
+									</div>
+									<div class="subsection-content">
+										<label class="checkbox-group">
+											<input type="checkbox" id="maskBrushPressure" checked>
+											<span title="Vary flow with pen pressure (no effect on mouse/touch)">Pressure Sensitivity</span>
+										</label>
 									</div>
 								</div>
 							</div>
@@ -1102,7 +1133,7 @@
 									</div>
 								</div>
 								<div class="subsection-content-group">
-								<div class="subsection-title">Layout</div>
+									<div class="subsection-title">Box Mode</div>
 									<div class="control-group-label">Type</div>
 									<div class="tool-options-group text-box-mode-group">
 										<button class="btn-simple active" type="button" data-text-box-mode="auto">Point</button>
@@ -1112,6 +1143,11 @@
 									<div class="tool-options-group text-fit-box-group">
 										<button class="btn-simple" id="textFitBoxToContent" type="button" title="Resize the box to exactly fit the current text (keeps existing line breaks/wraps)">Fit to Text</button>
 									</div>
+									<div class="text-box-hint" id="textBoxModeHint">Point text hugs the copy. Switch to Box for wrapping and edge resizing.</div>
+								</div>
+
+								<div class="subsection-content-group">
+									<div class="subsection-title">Type</div>
 									<div class="settings-group-two-column">
 										<div class="setting-column right">
 											<div class="setting-header">
@@ -1138,6 +1174,10 @@
 										<input type="range" id="textLineHeight" min="50" max="250" value="110">
 										<button class="btn-text" id="resetTextLineHeight" type="button">Reset</button>
 									</div>
+								</div>
+
+								<div class="subsection-content-group">
+									<div class="subsection-title">Alignment</div>
 									<div class="control-group-label text-valign-label">Vertical</div>
 									<div class="tool-options-group text-valign-group">
 										<button class="btn-simple active" type="button" data-text-valign="top">Top</button>
@@ -1150,7 +1190,6 @@
 										<button class="btn-simple" type="button" data-text-align="center">Center</button>
 										<button class="btn-simple" type="button" data-text-align="right">Right</button>
 									</div>
-									<div class="text-box-hint" id="textBoxModeHint">Point text hugs the copy. Switch to Box for wrapping and edge resizing.</div>
 								</div>
 
 								<!-- Position -->
@@ -1248,20 +1287,18 @@
 								<div class="subsection-content-group">
 									<div class="subsection-title">Fill</div>
 									<div class="text-effect-source-row">
-										<button class="text-effect-source-chip" id="textFillGlitterChip" type="button" title="Choose fill glitter">
-											<span class="text-effect-source-swatch">
-												<span class="text-effect-source-swatch-fill" id="textFillGlitterSwatch"></span>
-											</span>
-										</button>
-										<div class="text-effect-source-copy">
-											<div class="text-effect-source-label" id="textFillGlitterLabel">Glitter</div>
-											<div class="text-effect-source-value" id="textFillSourceValue">Glitter</div>
+										<div class="asset-info-header">
+											<div class="asset-info-thumbnail" id="textFillGlitterChip" title="Choose fill glitter"></div>
+											<div class="asset-info-details">
+												<div class="asset-info-name" id="textFillGlitterLabel">Glitter</div>
+												<div class="asset-info-badges" id="textFillGlitterBadges"></div>
+											</div>
 										</div>
 										<button class="btn-simple text-effect-source-change" id="textFillGlitterChange" type="button">Change</button>
 									</div>
-									<div class="text-effect-source-actions">
-										<button class="btn-text" id="textFillUseGlitter" type="button">Use Glitter</button>
-										<button class="btn-text" id="textFillUseColor" type="button">Use Solid Color</button>
+									<div class="tool-options-group text-effect-mode-group">
+										<button class="btn-simple active" id="textFillUseGlitter" type="button">Glitter</button>
+										<button class="btn-simple" id="textFillUseColor" type="button">Solid Color</button>
 									</div>
 									<div class="text-effect-color-row" id="textFillColorRow">
 										<div class="setting-header">
@@ -1309,20 +1346,18 @@
 												<button class="btn-text" id="resetTextBorderWidth" type="button">Reset</button>
 											</div>
 											<div class="text-effect-source-row">
-												<button class="text-effect-source-chip" id="textBorderGlitterChip" type="button" title="Choose border source">
-													<span class="text-effect-source-swatch">
-														<span class="text-effect-source-swatch-fill" id="textBorderGlitterSwatch"></span>
-													</span>
-												</button>
-												<div class="text-effect-source-copy">
-													<div class="text-effect-source-label" id="textBorderGlitterLabel">#000000</div>
-													<div class="text-effect-source-value" id="textBorderSourceValue">Solid Color</div>
+												<div class="asset-info-header">
+													<div class="asset-info-thumbnail" id="textBorderGlitterChip" title="Choose border source"></div>
+													<div class="asset-info-details">
+														<div class="asset-info-name" id="textBorderGlitterLabel">#000000</div>
+														<div class="asset-info-badges" id="textBorderGlitterBadges"></div>
+													</div>
 												</div>
 												<button class="btn-simple text-effect-source-change" id="textBorderGlitterChange" type="button">Change</button>
 											</div>
-											<div class="text-effect-source-actions">
-												<button class="btn-text" id="textBorderUseGlitter" type="button">Use Glitter</button>
-												<button class="btn-text" id="textBorderUseColor" type="button">Use Solid Color</button>
+											<div class="tool-options-group text-effect-mode-group">
+												<button class="btn-simple" id="textBorderUseGlitter" type="button">Glitter</button>
+												<button class="btn-simple active" id="textBorderUseColor" type="button">Solid Color</button>
 											</div>
 											<div class="text-effect-color-row" id="textBorderColorRow">
 												<div class="setting-header">
@@ -1378,20 +1413,18 @@
 												</div>
 											</div>
 											<div class="text-effect-source-row">
-												<button class="text-effect-source-chip" id="textShadowGlitterChip" type="button" title="Choose shadow source">
-													<span class="text-effect-source-swatch">
-														<span class="text-effect-source-swatch-fill" id="textShadowGlitterSwatch"></span>
-													</span>
-												</button>
-												<div class="text-effect-source-copy">
-													<div class="text-effect-source-label" id="textShadowGlitterLabel">#000000</div>
-													<div class="text-effect-source-value" id="textShadowSourceValue">Solid Color</div>
+												<div class="asset-info-header">
+													<div class="asset-info-thumbnail" id="textShadowGlitterChip" title="Choose shadow source"></div>
+													<div class="asset-info-details">
+														<div class="asset-info-name" id="textShadowGlitterLabel">#000000</div>
+														<div class="asset-info-badges" id="textShadowGlitterBadges"></div>
+													</div>
 												</div>
 												<button class="btn-simple text-effect-source-change" id="textShadowGlitterChange" type="button">Change</button>
 											</div>
-											<div class="text-effect-source-actions">
-												<button class="btn-text" id="textShadowUseGlitter" type="button">Use Glitter</button>
-												<button class="btn-text" id="textShadowUseColor" type="button">Use Solid Color</button>
+											<div class="tool-options-group text-effect-mode-group">
+												<button class="btn-simple" id="textShadowUseGlitter" type="button">Glitter</button>
+												<button class="btn-simple active" id="textShadowUseColor" type="button">Solid Color</button>
 											</div>
 											<div class="text-effect-color-row" id="textShadowColorRow">
 												<div class="setting-header">
@@ -1643,6 +1676,17 @@
 									<input type="checkbox" id="contextContiguous">
 									<span>Contiguous</span>
 								</label>
+							</div>
+						</div>
+
+						<!-- Mask Brush Controls: quick brush-size access while painting.
+						     Mirrors the canonical #maskBrushSize slider in the Brush Settings
+						     sidebar section — see setupMaskEditorListeners' syncQuickSlider. -->
+						<div class="mask-brush-controls ui-ignore-gestures" id="maskBrushControls">
+							<div class="context-slider-group">
+								<span class="context-label">Size</span>
+								<input type="range" id="maskBrushSizeQuick" min="1" max="300" value="40" class="context-slider">
+								<span class="context-value" id="maskBrushSizeQuickValue">40px</span>
 							</div>
 						</div>
 
@@ -2864,9 +2908,9 @@
 	<script src="js/classes/ModalManager.js"></script>
 	<script src="js/classes/GifExporter.js?v=2"></script>
 	<script src="js/classes/ViewportManager.js"></script>
-	<script src="js/classes/HistoryManager.js"></script>
+	<script src="js/classes/HistoryManager.js?v=2"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
-	<script src="js/classes/MaskEditor.js?v=5"></script>
+	<script src="js/classes/MaskEditor.js?v=7"></script>
 
 	<!-- Layers-->
 	<script src="js/classes/LayerManager.js?v=3"></script>
@@ -2876,13 +2920,13 @@
 	<script src="js/classes/ContentManager.js"></script>
 	<script src="js/classes/LayerTransform.js?v=3"></script>
 	<script src="js/classes/GlitterManager.js?v=3"></script>
-	<script src="js/classes/TextGlitterManager.js?v=6"></script>
+	<script src="js/classes/TextGlitterManager.js?v=12"></script>
 	<script src="js/classes/StickerManager.js"></script>
 
 	<script src="js/classes/MobileManager.js?v=2"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=14"></script>
+	<script src="js/app.js?v=18"></script>
 
 </body>
 
