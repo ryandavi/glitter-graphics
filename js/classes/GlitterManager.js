@@ -780,6 +780,56 @@ async initBrowser() {
 		this.paintMasks.delete(layerId);
 	}
 
+	// Drop all live paint buffers so restorePaintState recreates them at the
+	// current canvas size. Used when an undo/redo changes the canvas dimensions:
+	// the existing buffers are the wrong size and blitAlphaToCanvas assumes the
+	// destination matches the (per-entry, correctly-sized) snapshot.
+	discardLivePaintBuffers() {
+		this.paintMasks.clear();
+		this.editor.maskCompositor?.reset();
+	}
+
+	// Structural canvas resize support (see GlitterEditor.resizeCanvas): re-anchor
+	// every live paint buffer onto a new canvas-sized buffer, shift color-selection
+	// seeds, drop stale caches, and re-snapshot paint at the new dimensions so the
+	// history baseline references valid (new-size) snapshots.
+	reanchorForCanvasResize(newWidth, newHeight, offsetX, offsetY, layers) {
+		this.paintMasks.forEach((paint) => {
+			paint.add = this._reanchorCanvas(paint.add, newWidth, newHeight, offsetX, offsetY);
+			paint.sub = this._reanchorCanvas(paint.sub, newWidth, newHeight, offsetX, offsetY);
+			paint.liveRevision++;
+		});
+
+		(layers || []).forEach((layer) => {
+			if (layer.type !== LayerType.GLITTER_FILL) return;
+
+			// Color-selection seed coords live in canvas space; shift them so the
+			// same pixel stays selected. The sampled color (r/g/b) is unchanged.
+			(layer.selections || []).forEach((sel) => {
+				if (typeof sel.x === 'number') sel.x += offsetX;
+				if (typeof sel.y === 'number') sel.y += offsetY;
+			});
+			layer._selectionMaskCache = null;
+			this.editor.maskCompositor?.invalidate(layer.id);
+		});
+
+		// Re-capture paint at the new size (old snapshots were captured at the old
+		// dimensions and would blit inconsistently after the history reset).
+		(layers || []).forEach((layer) => {
+			if (layer.type === LayerType.GLITTER_FILL && this.paintMasks.has(layer.id)) {
+				this.commitPaintState(layer);
+			}
+		});
+	}
+
+	_reanchorCanvas(source, newWidth, newHeight, offsetX, offsetY) {
+		const canvas = document.createElement('canvas');
+		canvas.width = newWidth;
+		canvas.height = newHeight;
+		canvas.getContext('2d', { willReadFrequently: true }).drawImage(source, offsetX, offsetY);
+		return canvas;
+	}
+
 	clearAllPaintData() {
 		this.paintMasks.clear();
 		this.paintHistory.clear();

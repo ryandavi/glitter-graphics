@@ -46,7 +46,20 @@ class HistoryManager {
 					settings: layer.settings ? { ...layer.settings } : {}
 				};
 			}),
-			activeLayerId: this.editor.activeLayerId
+			activeLayerId: this.editor.activeLayerId,
+			// Canvas dimensions + base-image pixels, so a Canvas Size / crop resize
+			// is undoable. originalImageData/originalAlphaChannel are REPLACE-ONLY
+			// (never mutated in place — see GlitterEditor.resizeCanvas / loadImage),
+			// so storing the reference is safe and shares one buffer across every
+			// snapshot between two resizes (no per-save copy).
+			canvas: this.editor.originalImageData
+				? {
+					width: this.editor.originalCanvas.width,
+					height: this.editor.originalCanvas.height,
+					imageData: this.editor.originalImageData,
+					alphaChannel: this.editor.originalAlphaChannel
+				}
+				: null
 		};
 	}
 
@@ -68,6 +81,14 @@ class HistoryManager {
 
 	async restoreState(state) {
 		this.editor.maskEditor?.handleStateRestore();
+
+		// Restore canvas dimensions + base image FIRST, before paint/layers: the
+		// paint snapshots referenced below were captured at their own canvas size,
+		// and ensurePaintMask sizes new buffers to the current canvas — so the
+		// canvas must already be at the snapshot's size when restorePaintState runs.
+		if (state.canvas) {
+			this.editor.applyCanvasStateFromHistory(state.canvas);
+		}
 		// D-1c: the picker session is transient UI state that isn't snapshotted;
 		// the armed slot may not even exist in the restored layer set. Drop it
 		// here — the full UI refresh at the end of this method repaints the

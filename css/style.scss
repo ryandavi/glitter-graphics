@@ -3435,6 +3435,17 @@ body.mask-editing {
 			font-weight: 500;
 		}
 
+		// The .input-unit wrapper (adds the "px" suffix) fills the row beside the
+		// X/Y label, and its input reserves room for the suffix. This selector
+		// outranks the generic `.input-unit input` padding rule, so re-assert it.
+		.input-unit {
+			flex: 1;
+
+			input[type="number"] {
+				padding-right: 26px;
+			}
+		}
+
 		input[type="number"] {
 			padding: var(--spacing-sm);
 			background: var(--color-bg-secondary);
@@ -6163,6 +6174,186 @@ body.mask-editing {
 	pointer-events: none;
 }
 
+// Brush-shape gallery — same gallery-card conventions as .text-font-option
+// (outline selection state, accent-on-active), but laid out as a responsive
+// grid of small icon tiles since each option is a shape glyph, not a text
+// sample. auto-fill lets it pack 5-across in the wide desktop panel and wrap on
+// the narrower mobile settings drawer.
+.brush-shape-picker {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+	gap: var(--spacing-sm);
+	width: 100%;
+}
+
+.brush-shape-option {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	min-height: 62px;
+	padding: var(--spacing-sm) 2px;
+	background: var(--color-bg-tertiary);
+	border: none;
+	color: var(--color-text-secondary);
+	font: inherit;
+	cursor: pointer;
+	outline: 1px solid var(--color-border);
+	outline-offset: 0;
+	border-radius: var(--radius-sm);
+	transition: all var(--transition-fast);
+
+	&:hover {
+		outline-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
+
+	&.active {
+		outline-color: var(--color-accent);
+		outline-width: 2px;
+		outline-offset: 2px;
+		color: var(--color-text-primary);
+	}
+}
+
+.brush-shape-option-icon {
+	display: block;
+	width: 26px;
+	height: 26px;
+	color: inherit;
+
+	svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+		fill: currentColor;
+	}
+}
+
+.brush-shape-option-name {
+	font-size: 9px;
+	line-height: 1.1;
+	text-align: center;
+	color: inherit;
+}
+
+// ===== Canvas Size (Photoshop-style resize) =====
+.canvas-size-controls {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+}
+
+.canvas-size-fields {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--spacing-sm);
+}
+
+.canvas-size-field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+// Generic "number input with a unit suffix" atom. Reused anywhere a numeric
+// field needs a trailing unit (px, %, °): Canvas Size, the new-canvas dialog,
+// and the sticker/text Position fields. The suffix is absolutely positioned so
+// it overlays the input's right padding without affecting the input's own box.
+// `.input-unit input` reserves that padding; contexts with a higher-specificity
+// input rule (e.g. .sticker-position-group) must re-assert the padding-right.
+.input-unit {
+	position: relative;
+	display: flex;
+	align-items: center;
+
+	input {
+		width: 100%;
+		padding-right: 26px;
+	}
+}
+
+.input-unit-suffix {
+	position: absolute;
+	right: 8px;
+	font-size: 10px;
+	color: var(--color-text-secondary);
+	pointer-events: none;
+}
+
+.canvas-size-anchor-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-md);
+}
+
+// 3×3 anchor grid. The chosen cell is where existing content stays pinned as
+// the canvas grows/shrinks (Photoshop's Canvas Size anchor). Each cell shows a
+// directional arrow; the selected cell is a filled dot.
+.anchor-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+	gap: 2px;
+	width: 66px;
+	height: 66px;
+	flex-shrink: 0;
+}
+
+.anchor-cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	background: var(--color-bg-tertiary);
+	border: none;
+	outline: 1px solid var(--color-border);
+	border-radius: var(--radius-xs);
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	font-size: 11px;
+	line-height: 1;
+	transition: all var(--transition-fast);
+
+	&:hover {
+		outline-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
+
+	&.active {
+		background: var(--color-accent);
+		outline-color: var(--color-accent);
+		color: var(--color-bg-primary);
+	}
+}
+
+.canvas-size-actions {
+	display: flex;
+	gap: var(--spacing-sm);
+
+	button {
+		flex: 1;
+	}
+}
+
+// Live preview of the prospective canvas bounds, drawn inside previewWrapper so
+// it inherits the viewport zoom/pan transform. Border/shadow are divided by
+// --zoom so they keep a consistent on-screen thickness at any zoom level (same
+// technique as the selection outline).
+.canvas-resize-preview {
+	position: absolute;
+	pointer-events: none;
+	z-index: 6;
+	box-sizing: border-box;
+	border: max(1px, calc(2px / var(--zoom, 1))) dashed var(--color-accent);
+	box-shadow:
+		inset 0 0 0 max(1px, calc(1px / var(--zoom, 1))) rgba(0, 0, 0, 0.55),
+		0 0 0 max(1px, calc(1px / var(--zoom, 1))) rgba(0, 0, 0, 0.55);
+	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
 .text-align-group {
 	// margin-top: var(--spacing-md);
 
@@ -6515,6 +6706,7 @@ body.mask-editing {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-sm);
+	width: 100%;
 
 	&.right {
 		align-items: flex-end;

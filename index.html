@@ -736,6 +736,42 @@
 
 
 										</div>
+
+										<!-- Canvas Size (Photoshop-style): resize the canvas bounds
+										     without resampling. Only shown when an image is loaded and
+										     no layer is selected. Anchor grid is populated by
+										     GlitterEditor.setupCanvasSizeControls(). -->
+										<div class="subsection-content-group" id="canvasSizeGroup">
+											<div class="subsection-title">Canvas Size</div>
+											<div class="subsection-content">
+												<div class="canvas-size-controls">
+													<div class="canvas-size-fields">
+														<label class="canvas-size-field">
+															<span class="setting-label">Width</span>
+															<span class="input-unit">
+																<input type="number" id="canvasSizeWidth" min="1" step="1" inputmode="numeric">
+																<span class="input-unit-suffix">px</span>
+															</span>
+														</label>
+														<label class="canvas-size-field">
+															<span class="setting-label">Height</span>
+															<span class="input-unit">
+																<input type="number" id="canvasSizeHeight" min="1" step="1" inputmode="numeric">
+																<span class="input-unit-suffix">px</span>
+															</span>
+														</label>
+													</div>
+													<div class="canvas-size-anchor-row">
+														<span class="setting-label">Anchor</span>
+														<div class="anchor-grid" id="canvasSizeAnchor" role="radiogroup" aria-label="Canvas resize anchor"></div>
+													</div>
+													<div class="canvas-size-actions">
+														<button class="btn-simple" id="canvasSizeReset" type="button">Reset</button>
+														<button class="btn-simple primary" id="canvasSizeApply" type="button">Resize Canvas</button>
+													</div>
+												</div>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -878,6 +914,17 @@
 							<div class="settings-subsection">
 								<div class="subsection-content-group">
 									<div class="subsection-title">
+										<span>Shape</span>
+									</div>
+									<div class="subsection-content">
+										<!-- Populated by MaskEditor.renderBrushShapePicker() with
+										     .brush-shape-option cards (same gallery-card conventions
+										     as the font/sticker pickers). -->
+										<div class="brush-shape-picker" id="brushShapePicker" role="listbox" aria-label="Brush shape"></div>
+									</div>
+								</div>
+								<div class="subsection-content-group">
+									<div class="subsection-title">
 										<span>Brush</span>
 										<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
 									</div>
@@ -1015,11 +1062,17 @@
 											<div class="sticker-position-group">
 												<div class="input-group horizontal">
 													<label for="stickerPosX">X</label>
-													<input type="number" id="stickerPosX" readonly>
+													<span class="input-unit">
+														<input type="number" id="stickerPosX" readonly>
+														<span class="input-unit-suffix">px</span>
+													</span>
 												</div>
 												<div class="input-group horizontal">
 													<label for="stickerPosY">Y</label>
-													<input type="number" id="stickerPosY" readonly>
+													<span class="input-unit">
+														<input type="number" id="stickerPosY" readonly>
+														<span class="input-unit-suffix">px</span>
+													</span>
 												</div>
 											</div>
 										</div>
@@ -1210,11 +1263,11 @@
 										<div class="sticker-position-group">
 											<div class="input-group horizontal">
 												<label for="textPosX">X</label>
-												<input type="number" id="textPosX" readonly>
+												<span class="input-unit"><input type="number" id="textPosX" readonly><span class="input-unit-suffix">px</span></span>
 											</div>
 											<div class="input-group horizontal">
 												<label for="textPosY">Y</label>
-												<input type="number" id="textPosY" readonly>
+												<span class="input-unit"><input type="number" id="textPosY" readonly><span class="input-unit-suffix">px</span></span>
 											</div>
 										</div>
 									</div>
@@ -1905,7 +1958,7 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Width</div>
 							<div class="settings-row-control">
-								<input type="number" id="newCanvasWidth" min="100" max="800" value="400" class="input-number">
+								<span class="input-unit"><input type="number" id="newCanvasWidth" min="100" max="800" value="400" class="input-number"><span class="input-unit-suffix">px</span></span>
 							</div>
 						</div>
 
@@ -1917,7 +1970,7 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Height</div>
 							<div class="settings-row-control">
-								<input type="number" id="newCanvasHeight" min="100" max="800" value="400" class="input-number">
+								<span class="input-unit"><input type="number" id="newCanvasHeight" min="100" max="800" value="400" class="input-number"><span class="input-unit-suffix">px</span></span>
 							</div>
 						</div>
 

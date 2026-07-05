@@ -15,7 +15,12 @@ class MobileManager {
 			tool: null,
 			glitter: null,
 			sticker: null,
-			text: null
+			text: null,
+			// Tool-scoped, not layer-scoped: the mask-brush settings live in the
+			// design panel and are toggled by the active tool, so on mobile they
+			// must be relocated into the settings drawer while brushing (see
+			// syncBrushSettingsPlacement) rather than leaking into the Design drawer.
+			brush: null
 		};
 		this.originalParents = new Map();
 
@@ -73,6 +78,7 @@ class MobileManager {
 		this.settingsSections.glitter = document.querySelector('.glitter-settings-section');
 		this.settingsSections.sticker = document.querySelector('.sticker-settings-section');
 		this.settingsSections.text = document.querySelector('.text-settings-section');
+		this.settingsSections.brush = document.querySelector('.brush-settings-section');
 
 		// Store original parents
 		if (this.settingsSections.tool) {
@@ -86,6 +92,9 @@ class MobileManager {
 		}
 		if (this.settingsSections.text) {
 			this.originalParents.set('text', this.settingsSections.text.parentElement);
+		}
+		if (this.settingsSections.brush) {
+			this.originalParents.set('brush', this.settingsSections.brush.parentElement);
 		}
 	}
 
@@ -428,6 +437,10 @@ if (!this.isMobile && nowMobile) {
 			document.body.classList.remove('has-layer-settings');
 			if (settingsBtn) settingsBtn.disabled = true;
 		}
+
+		// innerHTML='' above detached the tool-scoped brush section if it was
+		// here; re-append it (and re-enable the button) when brushing.
+		this.syncBrushSettingsPlacement();
 	}
 	// Delegates to the same setCollapsibleSectionOpen used by the desktop
 	// accordion (app.js initializeCollapsibleSections) so .is-open stays in
@@ -469,6 +482,9 @@ if (!this.isMobile && nowMobile) {
 				this.prepareSettings(activeLayer);
 			} else {
 				this.collapseAllSections();
+				// No layer sections to show, but the brush tool may still need its
+				// (tool-scoped) settings relocated into the drawer.
+				this.syncBrushSettingsPlacement();
 			}
 			this.settingsOpen = true;
 			document.body.classList.add('mobileSettingsOpen');
@@ -533,8 +549,59 @@ if (!this.isMobile && nowMobile) {
 			}
 		}
 
+		// Return the brush section to the design panel too, so clearing the
+		// container below doesn't orphan it while the brush tool is still active.
+		this.returnBrushSection();
+
 		// Clear container
 		mobileContainer.innerHTML = '';
+	}
+
+	returnBrushSection() {
+		const section = this.settingsSections.brush;
+		if (!section || !this.originalParents.has('brush')) return;
+		const originalParent = this.originalParents.get('brush');
+		if (originalParent && !originalParent.contains(section)) {
+			originalParent.appendChild(section);
+		}
+	}
+
+	// The brush settings section is tool-scoped (shown whenever the mask brush is
+	// active, independent of layer type), so it normally lives in the design
+	// panel and is toggled visible by app.updateContextToolbars. On mobile the
+	// design panel IS the "Design" drawer, so a visible brush section would leak
+	// into that drawer. While the brush tool is active, relocate it into the
+	// settings drawer (reached via the settings button) and keep that button
+	// enabled; otherwise return it to the design panel and restore the button
+	// state from the active layer. Called at the end of updateContextToolbars so
+	// it re-runs on every tool change and layer/toolbar update.
+	syncBrushSettingsPlacement() {
+		if (!this.isMobile) return;
+		const section = this.settingsSections.brush;
+		if (!section) return;
+
+		const brushActive = this.editor.currentTool === ToolType.BRUSH;
+		const settingsBtn = document.getElementById('mobileSettingsBtn');
+		const mobileContainer = document.getElementById('mobileSettingsContainer');
+
+		if (brushActive && mobileContainer) {
+			if (!mobileContainer.contains(section)) {
+				mobileContainer.appendChild(section);
+			}
+			section.classList.add('visible');
+			document.body.classList.add('has-layer-settings');
+			if (settingsBtn) settingsBtn.disabled = false;
+		} else {
+			this.returnBrushSection();
+			// Restore the settings button from the active layer's own settings.
+			const activeLayer = this.editor.layerManager.getActiveLayer();
+			const hasSettings = !!(activeLayer && this.hasLayerSettings(activeLayer));
+			// Only disable if the settings drawer isn't holding other sections.
+			if (!this.settingsOpen) {
+				document.body.classList.toggle('has-layer-settings', hasSettings);
+				if (settingsBtn) settingsBtn.disabled = !hasSettings;
+			}
+		}
 	}
 
 	closeAllDrawers() {

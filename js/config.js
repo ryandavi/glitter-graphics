@@ -51,6 +51,10 @@ const CONFIG = {
 		maxSize: 300,
 		defaultSoftness: 0,
 		defaultFlow: 100,
+		// Brush tip shape. One of the ids in MaskEditor.BRUSH_SHAPES
+		// (round, square, calligraphy, star, heart). Only affects painting; the
+		// stamped result is baked into the mask, so export needs no shape info.
+		defaultShape: 'round',
 		stampSpacing: 0.25,
 		overlayColor: '#ff2d8a',
 		overlayOpacity: 0.75,
@@ -63,6 +67,11 @@ const CONFIG = {
 	// TOOLS - Glitter
 	// ========================================
 	defaultGlitterId: 111,
+	// Text effect slots default to glitter mode (not solid). Border and shadow
+	// each carry their own default glitter id so they can be tuned independently
+	// of the fill's default (e.g. a darker glitter for shadows later).
+	defaultBorderGlitterId: 111,
+	defaultShadowGlitterId: 111,
 	glitterSettingsOpenByDefault: false,
 	refineGlobalDefault: false,
 	glitterGlobalDefault: false,

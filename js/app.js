@@ -538,6 +538,12 @@ async resetAllSettings() {
 		// D-1c: keep the gallery picker strip in sync when the active layer
 		// changes to any type (a non-text layer must hide the strip).
 		this.textGlitterManager?.updatePickerStrip();
+
+		// The Canvas Size preview only makes sense in the no-layer state; drop it
+		// whenever a layer is selected or there's no image.
+		if (layer || !this.originalImage) {
+			this.hideCanvasResizePreview();
+		}
 	}
 
 	getPreferredDesignSection(layer) {
@@ -1144,6 +1150,7 @@ async resetAllSettings() {
 		this.setupPreviewListeners();
 		this.setupGlobalListeners();
 		this.setupHelpfulMessageListeners();
+		this.setupCanvasSizeControls();
 	}
 
 
@@ -2756,6 +2763,11 @@ setupWelcomeModalListeners() {
 				this.syncCollapsibleSections?.('brushSettings');
 			}
 		}
+
+		// On mobile the brush settings section is tool-scoped, so relocate it into
+		// the settings drawer while brushing instead of letting it show in the
+		// Design drawer (it keeps the .visible class set/cleared just above).
+		this.mobileManager?.syncBrushSettingsPlacement?.();
 	}
 
 	// ===== HELPFUL MESSAGES =====
@@ -3594,6 +3606,286 @@ setupWelcomeModalListeners() {
 
 		};
 		img.src = URL.createObjectURL(file);
+	}
+
+	// ===== CANVAS SIZE (Photoshop-style) =====
+
+	// The 9 anchor cells, row-major. `fx`/`fy` are the fraction of the size
+	// delta applied as the content offset (0 = pin to that edge, 1 = pin to the
+	// opposite edge). `arrow` is the glyph shown in the cell; the active cell is
+	// rendered as a filled dot instead.
+	static get CANVAS_ANCHORS() {
+		return [
+			{ fx: 0,   fy: 0,   arrow: '↖' }, { fx: 0.5, fy: 0,   arrow: '↑' }, { fx: 1, fy: 0,   arrow: '↗' },
+			{ fx: 0,   fy: 0.5, arrow: '←' }, { fx: 0.5, fy: 0.5, arrow: '•' }, { fx: 1, fy: 0.5, arrow: '→' },
+			{ fx: 0,   fy: 1,   arrow: '↙' }, { fx: 0.5, fy: 1,   arrow: '↓' }, { fx: 1, fy: 1,   arrow: '↘' }
+		];
+	}
+
+	setupCanvasSizeControls() {
+		const anchorGrid = document.getElementById('canvasSizeAnchor');
+		const widthInput = document.getElementById('canvasSizeWidth');
+		const heightInput = document.getElementById('canvasSizeHeight');
+		const applyBtn = document.getElementById('canvasSizeApply');
+		const resetBtn = document.getElementById('canvasSizeReset');
+		if (!anchorGrid || !widthInput || !heightInput || !applyBtn) return;
+
+		// Center anchor by default.
+		this.canvasSizeAnchorIndex = 4;
+
+		anchorGrid.innerHTML = '';
+		GlitterEditor.CANVAS_ANCHORS.forEach((anchor, index) => {
+			const cell = document.createElement('button');
+			cell.type = 'button';
+			cell.className = 'anchor-cell';
+			cell.dataset.anchorIndex = String(index);
+			cell.setAttribute('role', 'radio');
+			cell.textContent = index === this.canvasSizeAnchorIndex ? '•' : anchor.arrow;
+			cell.classList.toggle('active', index === this.canvasSizeAnchorIndex);
+			cell.setAttribute('aria-checked', index === this.canvasSizeAnchorIndex ? 'true' : 'false');
+			anchorGrid.appendChild(cell);
+		});
+
+		anchorGrid.addEventListener('click', (event) => {
+			const cell = event.target.closest('.anchor-cell');
+			if (!cell) return;
+			this.canvasSizeAnchorIndex = parseInt(cell.dataset.anchorIndex, 10);
+			anchorGrid.querySelectorAll('.anchor-cell').forEach((el) => {
+				const idx = parseInt(el.dataset.anchorIndex, 10);
+				const selected = idx === this.canvasSizeAnchorIndex;
+				el.classList.toggle('active', selected);
+				el.setAttribute('aria-checked', selected ? 'true' : 'false');
+				el.textContent = selected ? '•' : GlitterEditor.CANVAS_ANCHORS[idx].arrow;
+			});
+			this.updateCanvasResizePreview();
+		});
+
+		// Live on-canvas preview of the prospective bounds as the user edits.
+		widthInput.addEventListener('input', () => this.updateCanvasResizePreview());
+		heightInput.addEventListener('input', () => this.updateCanvasResizePreview());
+
+		resetBtn?.addEventListener('click', () => {
+			this.syncCanvasSizeInputs();
+			this.hideCanvasResizePreview();
+		});
+		applyBtn.addEventListener('click', () => this.applyCanvasSize());
+
+		// Keep the inputs showing the live canvas size whenever an image loads or
+		// the panel could become visible.
+		window.addEventListener('imageLoaded', () => this.syncCanvasSizeInputs());
+		this.syncCanvasSizeInputs();
+	}
+
+	syncCanvasSizeInputs() {
+		const widthInput = document.getElementById('canvasSizeWidth');
+		const heightInput = document.getElementById('canvasSizeHeight');
+		if (!widthInput || !heightInput || !this.originalImage) return;
+		widthInput.value = this.originalCanvas.width;
+		heightInput.value = this.originalCanvas.height;
+	}
+
+	applyCanvasSize() {
+		if (!this.originalImage) return;
+		const widthInput = document.getElementById('canvasSizeWidth');
+		const heightInput = document.getElementById('canvasSizeHeight');
+
+		let newWidth = Math.round(parseFloat(widthInput.value));
+		let newHeight = Math.round(parseFloat(heightInput.value));
+		if (!Number.isFinite(newWidth) || !Number.isFinite(newHeight)) {
+			this.syncCanvasSizeInputs();
+			return;
+		}
+
+		newWidth = Math.max(1, Math.min(CONFIG.maxImageWidth, newWidth));
+		newHeight = Math.max(1, Math.min(CONFIG.maxImageHeight, newHeight));
+
+		const anchor = GlitterEditor.CANVAS_ANCHORS[this.canvasSizeAnchorIndex] || GlitterEditor.CANVAS_ANCHORS[4];
+		const offsetX = Math.round((newWidth - this.originalCanvas.width) * anchor.fx);
+		const offsetY = Math.round((newHeight - this.originalCanvas.height) * anchor.fy);
+
+		this.resizeCanvas(newWidth, newHeight, offsetX, offsetY);
+		this.syncCanvasSizeInputs();
+	}
+
+	// Structural canvas resize (Photoshop "Canvas Size"): change the canvas
+	// bounds WITHOUT resampling. Content keeps its pixel size; it's translated by
+	// (offsetX, offsetY) — where the old top-left lands in the new canvas — then
+	// cropped or extended with transparent margins. Crop will reuse this exact
+	// primitive by passing the crop rect's origin as a negative offset plus the
+	// smaller size. Re-anchors every buffer and records an undoable history entry
+	// (the snapshot carries the new canvas dims + base pixels; see
+	// applyCanvasStateFromHistory), so Ctrl+Z restores the previous size.
+	resizeCanvas(newWidth, newHeight, offsetX, offsetY) {
+		if (!this.originalImage) return;
+		newWidth = Math.max(1, Math.round(newWidth));
+		newHeight = Math.max(1, Math.round(newHeight));
+		offsetX = Math.round(offsetX);
+		offsetY = Math.round(offsetY);
+
+		const oldWidth = this.originalCanvas.width;
+		const oldHeight = this.originalCanvas.height;
+		if (newWidth === oldWidth && newHeight === oldHeight && offsetX === 0 && offsetY === 0) {
+			return;
+		}
+
+		// 1. Re-anchor the base image pixels onto a new canvas-sized buffer.
+		const rebased = document.createElement('canvas');
+		rebased.width = newWidth;
+		rebased.height = newHeight;
+		rebased.getContext('2d', { willReadFrequently: true }).drawImage(this.originalCanvas, offsetX, offsetY);
+
+		this.originalCanvas.width = newWidth;
+		this.originalCanvas.height = newHeight;
+		this.originalCtx.clearRect(0, 0, newWidth, newHeight);
+		this.originalCtx.drawImage(rebased, 0, 0);
+		this.originalImageData = this.originalCtx.getImageData(0, 0, newWidth, newHeight);
+
+		this.originalAlphaChannel = new Uint8Array(newWidth * newHeight);
+		for (let i = 0; i < newWidth * newHeight; i++) {
+			this.originalAlphaChannel[i] = this.originalImageData.data[i * 4 + 3];
+		}
+
+		// 2. Preview surface + wrapper.
+		this.previewCanvas.width = newWidth;
+		this.previewCanvas.height = newHeight;
+		this.previewWrapper.style.width = newWidth + 'px';
+		this.previewWrapper.style.height = newHeight + 'px';
+
+		// 3. Glitter paint buffers, selection seeds, and mask caches.
+		this.glitterManager?.reanchorForCanvasResize(newWidth, newHeight, offsetX, offsetY, this.layers);
+
+		// 4. Sticker / text positions shift with the content (canvas coords).
+		this.layers.forEach((layer) => {
+			if (layer.type === LayerType.STICKER && layer.stickerData?.transform?.position) {
+				const position = layer.stickerData.transform.position;
+				this.stickerManager?.updateTransform(layer.id, {
+					position: { x: position.x + offsetX, y: position.y + offsetY }
+				});
+			} else if (layer.type === LayerType.TEXT_GLITTER && layer.textData?.transform?.position) {
+				layer.textData.transform.position.x += offsetX;
+				layer.textData.transform.position.y += offsetY;
+				this.textGlitterManager?.renderLayer(layer);
+			}
+		});
+
+		// 5. Base swatch, viewport, zoom.
+		this.layerManager.updateBaseImageSwatchCache();
+		this.viewport.setCanvasDimensions(newWidth, newHeight);
+		this.viewport.resetZoomSmart();
+		this.updateZoomUI();
+
+		// 6. Undoable checkpoint. reanchorForCanvasResize re-captured paint at the
+		// new size, and the snapshot records the new canvas dims + base pixels, so
+		// undo restores the previous size/content and redo re-applies this resize.
+		this.historyManager.saveState();
+		this.isSaved = false;
+
+		// 7. Repaint composite + list + status; drop any live resize preview.
+		this.hideCanvasResizePreview();
+		this.updatePreview();
+		this.layerManager.renderLayersList();
+		this.updateStatusBar();
+		this.updateHistoryButtons();
+	}
+
+	// Restore canvas dimensions + base-image pixels from a history snapshot's
+	// `canvas` field (see HistoryManager.createStateSnapshot). Called at the top
+	// of restoreState, before paint/layers, so buffers rebuild at the right size.
+	applyCanvasStateFromHistory(canvasState) {
+		if (!canvasState || !canvasState.imageData) return;
+
+		const sameSize = this.originalCanvas.width === canvasState.width
+			&& this.originalCanvas.height === canvasState.height;
+		const sameData = this.originalImageData === canvasState.imageData;
+		if (sameSize && sameData) return; // typical non-resize undo — nothing to do
+
+		const { width, height, imageData, alphaChannel } = canvasState;
+
+		this.originalCanvas.width = width;
+		this.originalCanvas.height = height;
+		this.originalCtx.clearRect(0, 0, width, height);
+		this.originalCtx.putImageData(imageData, 0, 0);
+		this.originalImageData = imageData;
+		this.originalAlphaChannel = alphaChannel;
+
+		this.previewCanvas.width = width;
+		this.previewCanvas.height = height;
+		this.previewWrapper.style.width = width + 'px';
+		this.previewWrapper.style.height = height + 'px';
+
+		if (!sameSize) {
+			// Live paint buffers are now the wrong size; restorePaintState (runs
+			// next) rebuilds them at this size from each layer's snapshot.
+			this.glitterManager?.discardLivePaintBuffers();
+			this.viewport.setCanvasDimensions(width, height);
+			this.viewport.resetZoomSmart();
+			this.updateZoomUI();
+		}
+
+		this.layerManager.updateBaseImageSwatchCache();
+		this.syncCanvasSizeInputs();
+	}
+
+	// Live preview overlay: a dashed rectangle inside previewWrapper (so it
+	// inherits the viewport's zoom/pan transform for free) showing where the new
+	// canvas bounds will fall relative to the current content. New bounds in
+	// current-canvas coords = a rect at (-offsetX, -offsetY) sized newW×newH.
+	_ensureCanvasResizePreviewEl() {
+		if (this._canvasResizePreviewEl) return this._canvasResizePreviewEl;
+		if (!this.previewWrapper) return null;
+		const el = document.createElement('div');
+		el.className = 'canvas-resize-preview';
+		el.style.display = 'none';
+		this.previewWrapper.appendChild(el);
+		this._canvasResizePreviewEl = el;
+		return el;
+	}
+
+	updateCanvasResizePreview() {
+		const el = this._ensureCanvasResizePreviewEl();
+		if (!el || !this.originalImage) {
+			this.hideCanvasResizePreview();
+			return;
+		}
+
+		const widthInput = document.getElementById('canvasSizeWidth');
+		const heightInput = document.getElementById('canvasSizeHeight');
+		if (!widthInput || !heightInput) {
+			this.hideCanvasResizePreview();
+			return;
+		}
+
+		let newWidth = Math.round(parseFloat(widthInput.value));
+		let newHeight = Math.round(parseFloat(heightInput.value));
+		if (!Number.isFinite(newWidth) || !Number.isFinite(newHeight) || newWidth < 1 || newHeight < 1) {
+			this.hideCanvasResizePreview();
+			return;
+		}
+		newWidth = Math.min(CONFIG.maxImageWidth, newWidth);
+		newHeight = Math.min(CONFIG.maxImageHeight, newHeight);
+
+		const oldWidth = this.originalCanvas.width;
+		const oldHeight = this.originalCanvas.height;
+		if (newWidth === oldWidth && newHeight === oldHeight) {
+			this.hideCanvasResizePreview();
+			return;
+		}
+
+		const anchor = GlitterEditor.CANVAS_ANCHORS[this.canvasSizeAnchorIndex] || GlitterEditor.CANVAS_ANCHORS[4];
+		const offsetX = Math.round((newWidth - oldWidth) * anchor.fx);
+		const offsetY = Math.round((newHeight - oldHeight) * anchor.fy);
+
+		el.style.left = `${-offsetX}px`;
+		el.style.top = `${-offsetY}px`;
+		el.style.width = `${newWidth}px`;
+		el.style.height = `${newHeight}px`;
+		el.style.display = 'block';
+	}
+
+	hideCanvasResizePreview() {
+		if (this._canvasResizePreviewEl) {
+			this._canvasResizePreviewEl.style.display = 'none';
+		}
 	}
 
 	updateStatusBar() {

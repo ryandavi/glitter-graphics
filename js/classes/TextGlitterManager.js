@@ -420,9 +420,11 @@ class TextGlitterManager {
 			// `mode` is UI intent (which display + segmented state); the actual
 			// paint/export still derive from glitterId truthiness, so this is
 			// additive and parity-safe. Legacy data without `mode` falls back to
-			// glitterId (see effectUsesGlitter).
-			mode: 'solid',
-			glitterId: null,
+			// glitterId (see effectUsesGlitter). Effects default to GLITTER using
+			// the per-effect default id so the slot shows a real glitter (not the
+			// "No glitter selected" solid placeholder) the moment it's enabled.
+			mode: 'glitter',
+			glitterId: CONFIG.defaultBorderGlitterId ?? CONFIG.defaultGlitterId,
 			color: '#000000',
 			scale: 100,
 			opacity: 100
@@ -433,8 +435,8 @@ class TextGlitterManager {
 		return {
 			offsetX: 6,
 			offsetY: 6,
-			mode: 'solid',
-			glitterId: null,
+			mode: 'glitter',
+			glitterId: CONFIG.defaultShadowGlitterId ?? CONFIG.defaultGlitterId,
 			color: '#000000',
 			scale: 100,
 			opacity: 100
