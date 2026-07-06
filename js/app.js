@@ -588,7 +588,8 @@ async resetAllSettings() {
 
 	updateZoomUI() {
 		const percentage = this.viewport.getZoomPercentage();
-		document.getElementById('zoomPercentage').textContent = `${percentage}%`;
+		// Zoom context toolbar reads with the muted-unit treatment like the panels.
+		document.getElementById('zoomPercentage').innerHTML = formatUnit(percentage, '%');
 		document.getElementById('statusZoom').textContent = `${percentage}%`;
 
 
@@ -910,13 +911,13 @@ async resetAllSettings() {
 
 		if (scale && scaleValue) {
 			scale.value = s.scale;
-			scaleValue.textContent = s.scale + '%';
+			scaleValue.innerHTML = formatUnit(s.scale, '%');
 			this.updateResetButton('scale');
 		}
 
 		if (opacity && opacityValue) {
 			opacity.value = s.opacity;
-			opacityValue.textContent = s.opacity + '%';
+			opacityValue.innerHTML = formatUnit(s.opacity, '%');
 			this.updateResetButton('opacity');
 		}
 
@@ -929,6 +930,9 @@ async resetAllSettings() {
 				this.updateGlitterAssetInfo(glitter);
 			}
 		}
+
+		// Tint the asset-info thumbnail (and list/mobile swatches) to match the hue.
+		this.refreshGlitterSwatchVisuals(layer);
 
 		this.updateSelectedColorsDisplay();
 		this.maskEditor?.loadLayer(layer);
@@ -1163,7 +1167,7 @@ async resetAllSettings() {
 			const slider = document.getElementById(id);
 			const display = document.getElementById(id + 'Value');
 			if (slider) slider.value = String(value);
-			if (display) display.textContent = value + suffix;
+			if (display) display.innerHTML = formatUnit(value, suffix);
 		};
 		set(prefix + 'Hue', a.hue, '°');
 		set(prefix + 'Saturation', a.saturation, '%');
@@ -1171,6 +1175,29 @@ async resetAllSettings() {
 		this.updateResetButton(prefix + 'Hue');
 		this.updateResetButton(prefix + 'Saturation');
 		this.updateResetButton(prefix + 'Brightness');
+	}
+
+	// Reflect a glitter-fill layer's colorAdjust everywhere its swatch is shown
+	// off-canvas: the Glitter Properties asset-info thumbnail, the layers-list
+	// swatch, and the mobile layers swatch. The canvas itself is handled in
+	// GlitterManager.renderLayer; all four derive from the same buildCssColorFilter
+	// so preview, panel, and list agree. Render paths already bake the filter in —
+	// this is the live-drag path that updates without a full re-render.
+	refreshGlitterSwatchVisuals(layer) {
+		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
+		const filter = buildCssColorFilter(layer.settings?.colorAdjust);
+
+		const thumb = document.getElementById('glitterAssetThumbnail');
+		if (thumb) thumb.style.filter = filter;
+
+		const listSwatch = this.layerManager.layersListContainer
+			?.querySelector(`[data-layer-id="${layer.id}"] .layer-swatch`);
+		if (listSwatch) listSwatch.style.filter = filter;
+
+		if (this.layerManager.activeLayerId === layer.id) {
+			const mobileSwatch = document.querySelector('.mobile-layers-swatch');
+			if (mobileSwatch) mobileSwatch.style.filter = filter;
+		}
 	}
 
 	// Wire the Glitter Properties HSB sliders (fill layers). Each live-updates its
@@ -1189,9 +1216,10 @@ async resetAllSettings() {
 			if (!slider) return;
 
 			slider.addEventListener('input', () => {
-				if (display) display.textContent = slider.value + suffix;
+				if (display) display.innerHTML = formatUnit(slider.value, suffix);
 				this.updateResetButton(id);
 				this.saveActiveLayerSettings(false, false);
+				this.refreshGlitterSwatchVisuals(this.layerManager.getActiveLayer());
 				this.debouncedSliderUpdate();
 			});
 			slider.addEventListener('change', () => this.saveState());
@@ -1201,7 +1229,7 @@ async resetAllSettings() {
 			if (resetBtn) {
 				resetBtn.addEventListener('click', () => {
 					slider.value = String(defaultValue);
-					if (display) display.textContent = defaultValue + suffix;
+					if (display) display.innerHTML = formatUnit(defaultValue, suffix);
 					slider.dispatchEvent(new Event('input'));
 					slider.dispatchEvent(new Event('change'));
 				});
@@ -1254,7 +1282,7 @@ async resetAllSettings() {
 		this.setupToolbarListeners();
 		this.setupZoomListeners();
 		this.setupPanListeners();
-		this.setupStickerCenterListeners();
+		this.setupLayerCenterListeners();
 		this.setupColorPickerContextListeners();
 		this.setupLayerSettingsListeners();
 		this.setupSliderListeners();
@@ -1400,32 +1428,21 @@ async resetAllSettings() {
 		});
 	}
 
-	setupStickerCenterListeners() {
-		const centerStickerHorizontal = document.getElementById('centerStickerHorizontal');
-		const centerStickerVertical = document.getElementById('centerStickerVertical');
+	setupLayerCenterListeners() {
+		const centerLayerHorizontal = document.getElementById('centerLayerHorizontal');
+		const centerLayerVertical = document.getElementById('centerLayerVertical');
 
-		if (centerStickerHorizontal) {
-			centerStickerHorizontal.addEventListener('click', () => {
-				const layer = this.layerManager.getActiveLayer();
-				if (!layer) return;
-				if (layer.type === LayerType.STICKER && this.stickerManager) {
-					this.stickerManager.centerHorizontal(layer.id);
-				} else if (layer.type === LayerType.TEXT_GLITTER && this.textGlitterManager) {
-					this.textGlitterManager.centerHorizontal(layer.id);
-				}
-			});
+		const center = (axis) => {
+			const layer = this.layerManager.getActiveLayer();
+			const ctx = this.getMovableLayerContext(layer);
+			if (ctx?.manager?.[axis]) ctx.manager[axis](layer.id);
+		};
+
+		if (centerLayerHorizontal) {
+			centerLayerHorizontal.addEventListener('click', () => center('centerHorizontal'));
 		}
-
-		if (centerStickerVertical) {
-			centerStickerVertical.addEventListener('click', () => {
-				const layer = this.layerManager.getActiveLayer();
-				if (!layer) return;
-				if (layer.type === LayerType.STICKER && this.stickerManager) {
-					this.stickerManager.centerVertical(layer.id);
-				} else if (layer.type === LayerType.TEXT_GLITTER && this.textGlitterManager) {
-					this.textGlitterManager.centerVertical(layer.id);
-				}
-			});
+		if (centerLayerVertical) {
+			centerLayerVertical.addEventListener('click', () => center('centerVertical'));
 		}
 	}
 
@@ -1720,6 +1737,23 @@ async resetAllSettings() {
 		return layer?.stickerData?.transform || layer?.textData?.transform || layer?.shapeData?.transform || null;
 	}
 
+	// Single source of truth for the three movable/transformable layer types.
+	// Anything keyed to "which manager + panel prefix owns this layer's transform"
+	// (arrow nudge, centering, panel load/save, context toolbars) resolves through
+	// here so sticker/text/shape stay in lockstep — register a new type once.
+	getMovableLayerContext(layer) {
+		switch (layer?.type) {
+			case LayerType.STICKER:
+				return { prefix: 'sticker', manager: this.stickerManager };
+			case LayerType.TEXT_GLITTER:
+				return { prefix: 'text', manager: this.textGlitterManager };
+			case LayerType.SHAPE:
+				return { prefix: 'shape', manager: this.shapeGlitterManager };
+			default:
+				return null;
+		}
+	}
+
 	loadTransformSettings(layer, prefix) {
 		const transform = this.getLayerTransformData(layer);
 		if (!transform) return;
@@ -1735,7 +1769,7 @@ async resetAllSettings() {
 		const rotationValue = document.getElementById(ids.rotationValue);
 		if (rotation && rotationValue) {
 			rotation.value = transform.rotation;
-			rotationValue.textContent = Math.round(transform.rotation) + '°';
+			rotationValue.innerHTML = formatUnit(Math.round(transform.rotation), '°');
 		}
 
 		const scaleX = document.getElementById(ids.scaleX);
@@ -1746,11 +1780,11 @@ async resetAllSettings() {
 
 		if (scaleX && scaleXValue) {
 			scaleX.value = transform.scale.x;
-			scaleXValue.textContent = Math.round(transform.scale.x) + '%';
+			scaleXValue.innerHTML = formatUnit(Math.round(transform.scale.x), '%');
 		}
 		if (scaleY && scaleYValue) {
 			scaleY.value = transform.scale.y;
-			scaleYValue.textContent = Math.round(transform.scale.y) + '%';
+			scaleYValue.innerHTML = formatUnit(Math.round(transform.scale.y), '%');
 		}
 		if (proportional) {
 			proportional.checked = transform.proportionalScale;
@@ -1760,7 +1794,7 @@ async resetAllSettings() {
 		const opacityValue = document.getElementById(ids.opacityValue);
 		if (opacity && opacityValue) {
 			opacity.value = transform.opacity;
-			opacityValue.textContent = Math.round(transform.opacity) + '%';
+			opacityValue.innerHTML = formatUnit(Math.round(transform.opacity), '%');
 		}
 
 		const flipX = document.getElementById(ids.flipX);
@@ -1776,6 +1810,9 @@ async resetAllSettings() {
 			const manager = getManager();
 			return (layer && layer.type === layerType && manager) ? { layer, manager } : null;
 		};
+		// One place for the muted-unit value displays (formatUnit wraps the unit in
+		// a .setting-unit span), shared by every transform readout below.
+		const showUnit = (el, num, unit) => { if (el) el.innerHTML = formatUnit(Math.round(num), unit); };
 
 		// Rotation
 		const rotation = document.getElementById(ids.rotation);
@@ -1784,8 +1821,13 @@ async resetAllSettings() {
 
 		if (rotation && rotationValue) {
 			rotation.addEventListener('input', (e) => {
-				const value = parseFloat(e.target.value);
-				rotationValue.textContent = Math.round(value) + '°';
+				// Shift-drag snaps to 15° increments, mirroring the rotation handle.
+				let value = parseFloat(e.target.value);
+				if (this.shiftHeld) {
+					value = Math.round(value / 15) * 15;
+					e.target.value = value;
+				}
+				showUnit(rotationValue, value, '°');
 
 				const active = activeManager();
 				if (active) active.manager.updateTransform(active.layer.id, { rotation: value });
@@ -1797,7 +1839,7 @@ async resetAllSettings() {
 		if (resetRotation) {
 			resetRotation.addEventListener('click', () => {
 				if (rotation) rotation.value = CONFIG.defaultStickerRotation;
-				if (rotationValue) rotationValue.textContent = CONFIG.defaultStickerRotation + '°';
+				showUnit(rotationValue, CONFIG.defaultStickerRotation, '°');
 
 				const active = activeManager();
 				if (active) {
@@ -1815,7 +1857,7 @@ async resetAllSettings() {
 		if (opacity && opacityValue) {
 			opacity.addEventListener('input', (e) => {
 				const value = parseFloat(e.target.value);
-				opacityValue.textContent = Math.round(value) + '%';
+				showUnit(opacityValue, value, '%');
 
 				const active = activeManager();
 				if (active) active.manager.updateTransform(active.layer.id, { opacity: value });
@@ -1827,7 +1869,7 @@ async resetAllSettings() {
 		if (resetOpacity) {
 			resetOpacity.addEventListener('click', () => {
 				if (opacity) opacity.value = CONFIG.defaultStickerOpacity;
-				if (opacityValue) opacityValue.textContent = CONFIG.defaultStickerOpacity + '%';
+				showUnit(opacityValue, CONFIG.defaultStickerOpacity, '%');
 
 				const active = activeManager();
 				if (active) {
@@ -1849,7 +1891,7 @@ async resetAllSettings() {
 		if (scaleX && scaleXValue) {
 			scaleX.addEventListener('input', (e) => {
 				const value = parseFloat(e.target.value);
-				scaleXValue.textContent = Math.round(value) + '%';
+				showUnit(scaleXValue, value, '%');
 
 				const active = activeManager();
 				if (!active) return;
@@ -1857,7 +1899,7 @@ async resetAllSettings() {
 				if (proportionalScale && proportionalScale.checked) {
 					if (scaleY && scaleYValue) {
 						scaleY.value = value;
-						scaleYValue.textContent = Math.round(value) + '%';
+						showUnit(scaleYValue, value, '%');
 					}
 					active.manager.updateTransform(active.layer.id, { scale: { x: value, y: value } });
 				} else {
@@ -1872,7 +1914,7 @@ async resetAllSettings() {
 		if (scaleY && scaleYValue) {
 			scaleY.addEventListener('input', (e) => {
 				const value = parseFloat(e.target.value);
-				scaleYValue.textContent = Math.round(value) + '%';
+				showUnit(scaleYValue, value, '%');
 
 				const active = activeManager();
 				if (!active) return;
@@ -1880,7 +1922,7 @@ async resetAllSettings() {
 				if (proportionalScale && proportionalScale.checked) {
 					if (scaleX && scaleXValue) {
 						scaleX.value = value;
-						scaleXValue.textContent = Math.round(value) + '%';
+						showUnit(scaleXValue, value, '%');
 					}
 					active.manager.updateTransform(active.layer.id, { scale: { x: value, y: value } });
 				} else {
@@ -1895,7 +1937,7 @@ async resetAllSettings() {
 		if (resetScaleX) {
 			resetScaleX.addEventListener('click', () => {
 				if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
-				if (scaleXValue) scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+				showUnit(scaleXValue, CONFIG.defaultStickerScale, '%');
 
 				const active = activeManager();
 				if (!active) return;
@@ -1903,7 +1945,7 @@ async resetAllSettings() {
 				if (proportionalScale && proportionalScale.checked) {
 					if (scaleY && scaleYValue) {
 						scaleY.value = CONFIG.defaultStickerScale;
-						scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+						showUnit(scaleYValue, CONFIG.defaultStickerScale, '%');
 					}
 					active.manager.updateTransform(active.layer.id, {
 						scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
@@ -1918,7 +1960,7 @@ async resetAllSettings() {
 		if (resetScaleY) {
 			resetScaleY.addEventListener('click', () => {
 				if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
-				if (scaleYValue) scaleYValue.textContent = CONFIG.defaultStickerScale + '%';
+				showUnit(scaleYValue, CONFIG.defaultStickerScale, '%');
 
 				const active = activeManager();
 				if (!active) return;
@@ -1926,7 +1968,7 @@ async resetAllSettings() {
 				if (proportionalScale && proportionalScale.checked) {
 					if (scaleX && scaleXValue) {
 						scaleX.value = CONFIG.defaultStickerScale;
-						scaleXValue.textContent = CONFIG.defaultStickerScale + '%';
+						showUnit(scaleXValue, CONFIG.defaultStickerScale, '%');
 					}
 					active.manager.updateTransform(active.layer.id, {
 						scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
@@ -2763,6 +2805,8 @@ setupWelcomeModalListeners() {
 		// Keyboard
 		document.addEventListener('keydown', (e) => this.handleKeyboard(e));
 		document.addEventListener('keyup', (e) => this.handleKeyUp(e));
+		// A keyup can be missed if focus leaves the window mid-drag; clear Shift.
+		window.addEventListener('blur', () => { this.shiftHeld = false; });
 
 		// Viewport changes
 		window.addEventListener('viewportChanged', () => {
@@ -2944,7 +2988,7 @@ setupWelcomeModalListeners() {
 	updateContextToolbars() {
 		const zoomControls = document.getElementById('zoomControls');
 		const panControls = document.getElementById('panControls');
-		const stickerCenterControls = document.getElementById('stickerCenterControls');
+		const layerCenterControls = document.getElementById('layerCenterControls');
 		const colorPickerControls = document.getElementById('colorPickerControls');
 		const maskBrushControls = document.getElementById('maskBrushControls');
 		const brushSettingsSection = document.getElementById('brushSettingsSection');
@@ -2952,7 +2996,7 @@ setupWelcomeModalListeners() {
 		// Hide all first
 		if (zoomControls) zoomControls.classList.remove('visible');
 		if (panControls) panControls.classList.remove('visible');
-		if (stickerCenterControls) stickerCenterControls.classList.remove('visible');
+		if (layerCenterControls) layerCenterControls.classList.remove('visible');
 		if (colorPickerControls) colorPickerControls.classList.remove('visible');
 		if (maskBrushControls) maskBrushControls.classList.remove('visible');
 		if (brushSettingsSection) brushSettingsSection.classList.remove('visible');
@@ -2964,21 +3008,21 @@ setupWelcomeModalListeners() {
 			zoomControls.classList.add('visible');
 		} else if (this.currentTool === ToolType.HAND && panControls) {
 			panControls.classList.add('visible');
-		} else if (this.currentTool === ToolType.SELECT && stickerCenterControls) {
-			// When a sticker layer is selected
+		} else if (this.currentTool === ToolType.SELECT && layerCenterControls) {
+			// Center H/V bar is shared by every movable layer type.
 			if (layer && layer.type === LayerType.STICKER) {
 				if (layer.stickerSourceId) {
 					// Has a sticker selected - show controls
 					this.hideStickerSettingsEmptyState();
 					this.loadStickerSettings(layer); // This will populate asset info
-					stickerCenterControls.classList.add('visible');
+					layerCenterControls.classList.add('visible');
 				} else {
 					// No sticker selected yet - show empty state, hide controls
 					this.showStickerSettingsEmptyState();
 				}
-			} else if (layer && layer.type === LayerType.TEXT_GLITTER) {
-				// Text layers reuse the same center-H/center-V bar
-				stickerCenterControls.classList.add('visible');
+			} else if (layer && (layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE)) {
+				// Text + shape layers reuse the same center-H/center-V bar
+				layerCenterControls.classList.add('visible');
 			}
 		} else if (this.currentTool === ToolType.COLOR_PICKER && colorPickerControls) {
 			if (layer && layer.type === LayerType.GLITTER_FILL && layer.selections && layer.selections.length > 0) {
@@ -3313,6 +3357,7 @@ setupWelcomeModalListeners() {
 	}
 
 	handleKeyUp(e) {
+		this.shiftHeld = e.shiftKey;
 		if (e.key === 'Alt') {
 			if (this.currentTool === ToolType.ZOOM) {
 				this.previewContainer.classList.remove('zoom-out-mode');
@@ -3321,6 +3366,10 @@ setupWelcomeModalListeners() {
 	}
 
 	handleKeyboard(e) {
+		// Track Shift so slider drags (which fire modifier-less 'input' events) can
+		// snap — mirrors the rotation handle's Shift-to-snap.
+		this.shiftHeld = e.shiftKey;
+
 		// Don't trigger shortcuts when typing in input fields
 		const activeElement = document.activeElement;
 		const isTyping = activeElement && (
@@ -3328,6 +3377,14 @@ setupWelcomeModalListeners() {
 			activeElement.tagName === 'TEXTAREA' ||
 			activeElement.isContentEditable
 		);
+
+		// Arrow keys nudge the selected movable layer (sticker/text/shape) before
+		// the typing guard runs: a selected layer treats arrows as "move me", the
+		// sticker behavior. If focus is parked in the text layer's own content field
+		// (post-create / post-edit), blur it so moving takes over — the same as
+		// clicking off the field. Arrows in any OTHER input still fall through to the
+		// guard for normal caret navigation.
+		if (this.tryArrowNudge(e)) return;
 
 		// Allow Escape to work in inputs (to blur/close things)
 		// Allow Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z for undo/redo
@@ -3428,37 +3485,6 @@ setupWelcomeModalListeners() {
 			return;
 		}
 
-		// Arrow keys: nudge the selected sticker/text layer by 1px (10px with Shift).
-		// Rapid/held presses collapse into a single history entry (see scheduleNudgeSave).
-		if (this.currentTool === ToolType.SELECT &&
-			(e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-			const layer = this.layerManager.getActiveLayer();
-			const prefix = layer?.type === LayerType.STICKER ? 'sticker'
-				: layer?.type === LayerType.TEXT_GLITTER ? 'text' : null;
-			const manager = prefix === 'sticker' ? this.stickerManager
-				: prefix === 'text' ? this.textGlitterManager : null;
-			const transform = this.getLayerTransformData(layer);
-
-			if (manager && transform) {
-				e.preventDefault();
-				const step = e.shiftKey ? 10 : 1;
-				const deltaX = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
-				const deltaY = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
-
-				manager.updateTransform(layer.id, {
-					position: {
-						x: transform.position.x + deltaX,
-						y: transform.position.y + deltaY
-					}
-				});
-
-				this.loadTransformSettings(layer, prefix);
-				this.scheduleNudgeSave();
-				return;
-			}
-		}
-
-
 		if (this.originalImage) {
 			if ((e.ctrlKey || e.metaKey) && e.key === '0') {
 				e.preventDefault();
@@ -3487,6 +3513,48 @@ setupWelcomeModalListeners() {
 			e.preventDefault();
 			this.redo();
 		}
+	}
+
+	// Arrow-key nudge for the selected movable layer (1px, 10px with Shift).
+	// Returns true when it handled the key. Runs ahead of the typing guard so a
+	// selected text/shape layer moves like a sticker; the text content field is
+	// blurred on the first nudge so continued typing needs a deliberate refocus.
+	// Any other focused input keeps its arrows (returns false, falls through).
+	tryArrowNudge(e) {
+		if (this.currentTool !== ToolType.SELECT) return false;
+		if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' &&
+			e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return false;
+
+		const layer = this.layerManager.getActiveLayer();
+		const ctx = this.getMovableLayerContext(layer);
+		const transform = this.getLayerTransformData(layer);
+		if (!ctx || !ctx.manager || !transform) return false;
+
+		// Only override input focus for the text layer's own content field —
+		// leave unrelated inputs (search boxes, numeric fields) to their carets.
+		const active = document.activeElement;
+		const isField = active && (active.tagName === 'INPUT' ||
+			active.tagName === 'TEXTAREA' || active.isContentEditable);
+		if (isField) {
+			if (active !== this.textGlitterManager?.ui?.textInput) return false;
+			active.blur();
+		}
+
+		e.preventDefault();
+		const step = e.shiftKey ? 10 : 1;
+		const deltaX = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+		const deltaY = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+
+		ctx.manager.updateTransform(layer.id, {
+			position: {
+				x: transform.position.x + deltaX,
+				y: transform.position.y + deltaY
+			}
+		});
+
+		this.loadTransformSettings(layer, ctx.prefix);
+		this.scheduleNudgeSave();
+		return true;
 	}
 
 	// Collapses a burst of arrow-key nudges (held key / rapid presses) into a

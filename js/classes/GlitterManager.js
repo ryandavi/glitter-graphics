@@ -347,6 +347,12 @@ async initBrowser() {
 			}
 		} else {
 			layer.selectedGlitterId = id;
+			// Picking a new swatch is a clean slate: drop any hue/sat/bright shift so
+			// the new glitter shows its true colors, and sync the HSB sliders to match.
+			if (layer.settings) {
+				layer.settings.colorAdjust = normalizeColorAdjust(null);
+				this.editor.applyColorAdjustToSliders('glitter', layer.settings.colorAdjust);
+			}
 		}
 
 		this.editor.updateGlitterSelection();
@@ -384,6 +390,10 @@ async initBrowser() {
 		if (glitter) {
 			this.editor.updateGlitterAssetInfo(glitter);
 		}
+
+		// Keep the asset-info thumbnail + swatches in sync with the layer's hue
+		// (identity after a fresh pick above, so this clears any prior tint).
+		this.editor.refreshGlitterSwatchVisuals(layer);
 
 		// Update helpful message
 		this.editor.updateHelpfulMessage();

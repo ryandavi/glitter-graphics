@@ -843,6 +843,9 @@ class LayerManager {
 			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
 			if (glitter) {
 				swatch.style.backgroundImage = `url(${glitter.url})`;
+				// Mirror the layer's hue/sat/bright shift so the list swatch matches
+				// the canvas and asset-info thumbnail (same CSS filter the canvas uses).
+				swatch.style.filter = buildCssColorFilter(layer.settings?.colorAdjust);
 
 				swatch.classList.add('glitter');
 				if (glitter.isPixelated) swatch.classList.add('pixelated');
@@ -1088,6 +1091,8 @@ class LayerManager {
 		if (!mobileLayersSwatch) return;
 
 		const activeLayer = this.getActiveLayer();
+		// Only glitter-fill layers carry a colorAdjust; clear any stale filter first.
+		mobileLayersSwatch.style.filter = '';
 
 		if (!activeLayer) {
 			mobileLayersSwatch.classList.add('empty');
@@ -1110,6 +1115,7 @@ class LayerManager {
 			if (glitter) {
 				mobileLayersSwatch.classList.remove('empty');
 				mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
+				mobileLayersSwatch.style.filter = buildCssColorFilter(activeLayer.settings?.colorAdjust);
 				mobileLayersSwatch.classList.remove('text-layer');
 				if (glitter.isPixelated) {
 					mobileLayersSwatch.classList.add('pixelated');

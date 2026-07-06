@@ -383,7 +383,7 @@ class TextGlitterManager {
 			const slider = this.ui[`${slot}${suffixName}`];
 			const display = this.ui[`${slot}${suffixName}Value`];
 			if (slider) slider.value = String(value);
-			if (display) display.textContent = value + unit;
+			if (display) display.innerHTML = formatUnit(value, unit);
 		};
 		set('Hue', a.hue, '°');
 		set('Saturation', a.saturation, '%');
@@ -908,7 +908,7 @@ class TextGlitterManager {
 		if (!slider || !valueDisplay) return;
 
 		const updateDisplay = (value) => {
-			valueDisplay.textContent = `${value}${suffix}`;
+			valueDisplay.innerHTML = formatUnit(value, suffix);
 		};
 
 		updateDisplay(slider.value);
@@ -1211,28 +1211,28 @@ class TextGlitterManager {
 
 		if (this.ui.fontSize && this.ui.fontSizeValue) {
 			this.ui.fontSize.value = layer.textData.fontSize;
-			this.ui.fontSizeValue.textContent = `${layer.textData.fontSize}px`;
+			this.ui.fontSizeValue.innerHTML = formatUnit(layer.textData.fontSize, 'px');
 		}
 
 		if (this.ui.letterSpacing && this.ui.letterSpacingValue) {
 			this.ui.letterSpacing.value = layer.textData.letterSpacing;
-			this.ui.letterSpacingValue.textContent = `${layer.textData.letterSpacing}px`;
+			this.ui.letterSpacingValue.innerHTML = formatUnit(layer.textData.letterSpacing, 'px');
 		}
 
 		if (this.ui.lineHeight && this.ui.lineHeightValue) {
 			const lineHeightPercent = Math.round((layer.textData.lineHeight || CONFIG.textLayers.lineHeight) * 100);
 			this.ui.lineHeight.value = lineHeightPercent;
-			this.ui.lineHeightValue.textContent = `${lineHeightPercent}%`;
+			this.ui.lineHeightValue.innerHTML = formatUnit(lineHeightPercent, '%');
 		}
 
 		if (this.ui.textureScale && this.ui.textureScaleValue) {
 			this.ui.textureScale.value = layer.settings.scale;
-			this.ui.textureScaleValue.textContent = `${layer.settings.scale}%`;
+			this.ui.textureScaleValue.innerHTML = formatUnit(layer.settings.scale, '%');
 		}
 
 		if (this.ui.textureOpacity && this.ui.textureOpacityValue) {
 			this.ui.textureOpacity.value = layer.settings.opacity;
-			this.ui.textureOpacityValue.textContent = `${layer.settings.opacity}%`;
+			this.ui.textureOpacityValue.innerHTML = formatUnit(layer.settings.opacity, '%');
 		}
 
 		this.updateFontSelection(layer.textData.fontId);
@@ -1330,59 +1330,59 @@ class TextGlitterManager {
 
 		if (border) {
 			this.ui.borderWidth.value = border.widthPx;
-			this.ui.borderWidthValue.textContent = `${border.widthPx}px`;
+			this.ui.borderWidthValue.innerHTML = formatUnit(border.widthPx, 'px');
 			this.ui.borderColor.value = border.color;
 			if (this.ui.borderScale) {
 				this.ui.borderScale.value = border.scale ?? 100;
-				this.ui.borderScaleValue.textContent = `${border.scale ?? 100}%`;
+				this.ui.borderScaleValue.innerHTML = formatUnit(border.scale ?? 100, '%');
 			}
 			if (this.ui.borderOpacity) {
 				this.ui.borderOpacity.value = border.opacity ?? 100;
-				this.ui.borderOpacityValue.textContent = `${border.opacity ?? 100}%`;
+				this.ui.borderOpacityValue.innerHTML = formatUnit(border.opacity ?? 100, '%');
 			}
 		} else {
 			const defaults = this.getDefaultBorder();
 			this.ui.borderWidth.value = defaults.widthPx;
-			this.ui.borderWidthValue.textContent = `${defaults.widthPx}px`;
+			this.ui.borderWidthValue.innerHTML = formatUnit(defaults.widthPx, 'px');
 			this.ui.borderColor.value = defaults.color;
 			if (this.ui.borderScale) {
 				this.ui.borderScale.value = defaults.scale;
-				this.ui.borderScaleValue.textContent = `${defaults.scale}%`;
+				this.ui.borderScaleValue.innerHTML = formatUnit(defaults.scale, '%');
 			}
 			if (this.ui.borderOpacity) {
 				this.ui.borderOpacity.value = defaults.opacity;
-				this.ui.borderOpacityValue.textContent = `${defaults.opacity}%`;
+				this.ui.borderOpacityValue.innerHTML = formatUnit(defaults.opacity, '%');
 			}
 		}
 
 		if (shadow) {
 			this.ui.shadowOffsetX.value = shadow.offsetX;
-			this.ui.shadowOffsetXValue.textContent = `${shadow.offsetX}px`;
+			this.ui.shadowOffsetXValue.innerHTML = formatUnit(shadow.offsetX, 'px');
 			this.ui.shadowOffsetY.value = shadow.offsetY;
-			this.ui.shadowOffsetYValue.textContent = `${shadow.offsetY}px`;
+			this.ui.shadowOffsetYValue.innerHTML = formatUnit(shadow.offsetY, 'px');
 			this.ui.shadowColor.value = shadow.color;
 			if (this.ui.shadowScale) {
 				this.ui.shadowScale.value = shadow.scale ?? 100;
-				this.ui.shadowScaleValue.textContent = `${shadow.scale ?? 100}%`;
+				this.ui.shadowScaleValue.innerHTML = formatUnit(shadow.scale ?? 100, '%');
 			}
 			if (this.ui.shadowOpacity) {
 				this.ui.shadowOpacity.value = shadow.opacity ?? 100;
-				this.ui.shadowOpacityValue.textContent = `${shadow.opacity ?? 100}%`;
+				this.ui.shadowOpacityValue.innerHTML = formatUnit(shadow.opacity ?? 100, '%');
 			}
 		} else {
 			const defaults = this.getDefaultShadow();
 			this.ui.shadowOffsetX.value = defaults.offsetX;
-			this.ui.shadowOffsetXValue.textContent = `${defaults.offsetX}px`;
+			this.ui.shadowOffsetXValue.innerHTML = formatUnit(defaults.offsetX, 'px');
 			this.ui.shadowOffsetY.value = defaults.offsetY;
-			this.ui.shadowOffsetYValue.textContent = `${defaults.offsetY}px`;
+			this.ui.shadowOffsetYValue.innerHTML = formatUnit(defaults.offsetY, 'px');
 			this.ui.shadowColor.value = defaults.color;
 			if (this.ui.shadowScale) {
 				this.ui.shadowScale.value = defaults.scale;
-				this.ui.shadowScaleValue.textContent = `${defaults.scale}%`;
+				this.ui.shadowScaleValue.innerHTML = formatUnit(defaults.scale, '%');
 			}
 			if (this.ui.shadowOpacity) {
 				this.ui.shadowOpacity.value = defaults.opacity;
-				this.ui.shadowOpacityValue.textContent = `${defaults.opacity}%`;
+				this.ui.shadowOpacityValue.innerHTML = formatUnit(defaults.opacity, '%');
 			}
 		}
 

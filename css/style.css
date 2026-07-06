@@ -2277,7 +2277,7 @@ body.mask-editing .sticker-element {
 
 /* ===== BOTTOM TOOL UI ===== */
 .zoom-controls,
-.sticker-center-controls,
+.layer-center-controls,
 .pan-controls,
 .color-picker-controls,
 .mask-brush-controls {
@@ -2296,14 +2296,14 @@ body.mask-editing .sticker-element {
   pointer-events: auto;
 }
 .zoom-controls.visible,
-.sticker-center-controls.visible,
+.layer-center-controls.visible,
 .pan-controls.visible,
 .color-picker-controls.visible,
 .mask-brush-controls.visible {
   display: flex;
 }
 .zoom-controls > .btn-icon,
-.sticker-center-controls > .btn-icon,
+.layer-center-controls > .btn-icon,
 .pan-controls > .btn-icon,
 .color-picker-controls > .btn-icon,
 .mask-brush-controls > .btn-icon {

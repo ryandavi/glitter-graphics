@@ -268,7 +268,7 @@ class ShapeGlitterManager {
 			const layer = this.getActiveShapeLayer();
 			if (!layer) return;
 			const v = parseInt(slider.value, 10);
-			if (valueEl) valueEl.textContent = v + suffix;
+			if (valueEl) valueEl.innerHTML = formatUnit(v, suffix);
 			apply(v, layer);
 			if (geometry) this.invalidateMeasurement(layer);
 			this.renderLayer(layer);
@@ -452,7 +452,7 @@ class ShapeGlitterManager {
 			const slider = document.getElementById(prefix + suffix);
 			const display = document.getElementById(prefix + suffix + 'Value');
 			if (slider) slider.value = String(value);
-			if (display) display.textContent = value + unit;
+			if (display) display.innerHTML = formatUnit(value, unit);
 		};
 		set('Scale', scale ?? 100, '%');
 		set('Hue', a.hue, '°');
@@ -477,8 +477,8 @@ class ShapeGlitterManager {
 		// (NOT the hidden attribute) — reuse the same mechanism as text.
 		if (this.ui.borderControls) this.ui.borderControls.classList.toggle('visible', Boolean(border));
 		const bd = border || this.getDefaultBorder();
-		if (this.ui.borderWidth) { this.ui.borderWidth.value = bd.widthPx; this.ui.borderWidthValue.textContent = `${bd.widthPx}px`; }
-		if (this.ui.borderOpacity) { this.ui.borderOpacity.value = bd.opacity ?? 100; this.ui.borderOpacityValue.textContent = `${bd.opacity ?? 100}%`; }
+		if (this.ui.borderWidth) { this.ui.borderWidth.value = bd.widthPx; this.ui.borderWidthValue.innerHTML = formatUnit(bd.widthPx, 'px'); }
+		if (this.ui.borderOpacity) { this.ui.borderOpacity.value = bd.opacity ?? 100; this.ui.borderOpacityValue.innerHTML = formatUnit(bd.opacity ?? 100, '%'); }
 		if (this.ui.shapeBorderColor) this.ui.shapeBorderColor.value = bd.color || '#000000';
 		this._loadColorAdjust('shapeBorder', bd.colorAdjust, bd.scale);
 
@@ -487,9 +487,9 @@ class ShapeGlitterManager {
 		if (this.ui.shadowEnabled) this.ui.shadowEnabled.checked = Boolean(shadow);
 		if (this.ui.shadowControls) this.ui.shadowControls.classList.toggle('visible', Boolean(shadow));
 		const sd = shadow || this.getDefaultShadow();
-		if (this.ui.shadowOffsetX) { this.ui.shadowOffsetX.value = sd.offsetX; this.ui.shadowOffsetXValue.textContent = `${sd.offsetX}px`; }
-		if (this.ui.shadowOffsetY) { this.ui.shadowOffsetY.value = sd.offsetY; this.ui.shadowOffsetYValue.textContent = `${sd.offsetY}px`; }
-		if (this.ui.shadowOpacity) { this.ui.shadowOpacity.value = sd.opacity ?? 100; this.ui.shadowOpacityValue.textContent = `${sd.opacity ?? 100}%`; }
+		if (this.ui.shadowOffsetX) { this.ui.shadowOffsetX.value = sd.offsetX; this.ui.shadowOffsetXValue.innerHTML = formatUnit(sd.offsetX, 'px'); }
+		if (this.ui.shadowOffsetY) { this.ui.shadowOffsetY.value = sd.offsetY; this.ui.shadowOffsetYValue.innerHTML = formatUnit(sd.offsetY, 'px'); }
+		if (this.ui.shadowOpacity) { this.ui.shadowOpacity.value = sd.opacity ?? 100; this.ui.shadowOpacityValue.innerHTML = formatUnit(sd.opacity ?? 100, '%'); }
 		if (this.ui.shapeShadowColor) this.ui.shapeShadowColor.value = sd.color || '#000000';
 		this._loadColorAdjust('shapeShadow', sd.colorAdjust, sd.scale);
 
