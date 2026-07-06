@@ -372,8 +372,23 @@ class TextGlitterManager {
 			this.attachSlider(slider, display, unit, (value, layer) => {
 				const target = slot === 'fill' ? layer.settings : this.ensureEffectData(layer, slot);
 				this.ensureColorAdjust(target)[key] = value;
+				this.refreshSlotSwatch(layer, slot);
 			}, fallback, false);
 		});
+	}
+
+	// Live-tint this slot's glitter chip (and, for fill, the layers-list swatch) to
+	// match a colorAdjust drag without a full panel reload. Render paths bake the
+	// same filter in on load via renderGlitterAssetDisplay.
+	refreshSlotSwatch(layer, slot) {
+		const chip = this.ui[`${slot}GlitterChip`];
+		if (chip) {
+			const adjust = slot === 'fill'
+				? layer.settings?.colorAdjust
+				: this.getEffectData(layer, slot)?.colorAdjust;
+			chip.style.filter = buildCssColorFilter(adjust);
+		}
+		if (slot === 'fill') this.editor.refreshLayerSwatchFilter(layer);
 	}
 
 	// Push a slot's stored colorAdjust out to its three HSB sliders.
@@ -757,18 +772,29 @@ class TextGlitterManager {
 	bindEffectUseGlitter(button, effectName) {
 		if (!button) return;
 
-		button.addEventListener('click', () => {
+		button.addEventListener('click', async () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 			if (this.effectUsesGlitter(this.getEffectData(layer, effectName))) return;
 
-			// Switch the slot to glitter mode in place. Like fill, this does NOT
-			// open the gallery — if no glitter is picked yet the source shows an
-			// empty "choose a glitter" state; the gallery opens only when the
-			// user clicks the swatch or Change (bindEffectGlitterPicker).
-			this.ensureEffectData(layer, effectName).mode = 'glitter';
-			this.updateEffectSourceUI(layer, effectName);
-			this.editor.updateStatus(`Text ${effectName} is using glitter — click the swatch or Change to pick one.`);
+			// Switch the slot to glitter mode in place. This does NOT open the
+			// gallery — if no glitter was ever picked it falls back to the slot's
+			// default glitter (never an empty "no glitter" state); the gallery opens
+			// only when the user clicks the swatch or Change (bindEffectGlitterPicker).
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					const data = this.ensureEffectData(layer, effectName);
+					data.mode = 'glitter';
+					if (!data.glitterId) {
+						const def = effectName === 'shadow' ? this.getDefaultShadow() : this.getDefaultBorder();
+						data.glitterId = def.glitterId;
+					}
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+
+			this.editor.updateStatus(`Text ${effectName} is using glitter — click the swatch or Change to pick a different one.`);
 		});
 	}
 
@@ -1409,6 +1435,10 @@ class TextGlitterManager {
 		const isNone = fillData.mode === 'none';
 		const usesGlitter = fillData.mode === 'glitter';
 		const usesSolid = fillData.mode === 'solid';
+		// Glitter mode is never empty — fall back to the default glitter.
+		if (usesGlitter && !layer.selectedGlitterId) {
+			layer.selectedGlitterId = CONFIG.defaultGlitterId;
+		}
 		const glitter = usesGlitter
 			? this.editor.glitterManager?.getItemById(layer?.selectedGlitterId)
 			: null;
@@ -1432,7 +1462,7 @@ class TextGlitterManager {
 				badges: this.ui.fillGlitterBadges,
 				size: this.ui.fillGlitterSize,
 				frames: this.ui.fillGlitterFrames
-			}, glitter);
+			}, glitter, layer.settings?.colorAdjust);
 			const title = `Current fill glitter: ${glitter.name}. Click to choose another glitter.`;
 			this.ui.fillGlitterChip.title = title;
 			if (this.ui.fillGlitterChange) this.ui.fillGlitterChange.title = title;
@@ -1459,6 +1489,7 @@ class TextGlitterManager {
 			els.thumbnail.classList.remove('glitter-bg');
 			els.thumbnail.style.backgroundImage = 'none';
 			els.thumbnail.style.backgroundColor = 'transparent';
+			els.thumbnail.style.filter = '';
 		}
 		if (els.name) {
 			els.name.textContent = placeholder;
@@ -1612,6 +1643,11 @@ class TextGlitterManager {
 
 	updateEffectSourceUI(layer, effectName) {
 		const effectData = this.getEffectData(layer, effectName);
+		// Glitter mode is never empty — fall back to the slot's default glitter.
+		if (effectData && this.effectUsesGlitter(effectData) && !effectData.glitterId) {
+			const def = effectName === 'shadow' ? this.getDefaultShadow() : this.getDefaultBorder();
+			effectData.glitterId = def.glitterId;
+		}
 		const config = effectName === 'border'
 			? {
 				button: this.ui.borderGlitterChip,
@@ -1664,7 +1700,7 @@ class TextGlitterManager {
 				badges: config.badges,
 				size: config.size,
 				frames: config.frames
-			}, summary.glitter);
+			}, summary.glitter, effectData?.colorAdjust);
 		} else if (usesGlitter) {
 			// Glitter mode selected but nothing picked yet — show the empty
 			// "choose a glitter" state (the chip/Change tooltip prompts to pick).

@@ -213,8 +213,15 @@ class ShapeGlitterManager {
 			btn?.addEventListener('click', () => {
 				const layer = this.getActiveShapeLayer();
 				if (!layer) return;
-				this.ensureEffectData(layer, slot).mode = mode;
-				if (mode === 'glitter') this.armPicker(slot);
+				const data = this.ensureEffectData(layer, slot);
+				data.mode = mode;
+				// Switching to glitter never opens the gallery and is never empty —
+				// fall back to the default glitter. The gallery opens only via the
+				// swatch/Change buttons (armPicker).
+				if (mode === 'glitter' && !this.getSlotGlitterId(layer, slot)) {
+					if (slot === 'fill') layer.selectedGlitterId = CONFIG.defaultGlitterId;
+					else data.glitterId = CONFIG.defaultGlitterId;
+				}
 				this._refreshSourceUI(layer, slot);
 				this.invalidateMeasurement(layer);
 				this.renderLayer(layer);
@@ -252,6 +259,7 @@ class ShapeGlitterManager {
 					data.scale = v;
 				} else {
 					this.ensureColorAdjust(data)[key] = v;
+					this.refreshSlotSwatch(layer, slot);
 				}
 			}, key === 'scale' ? 100 : COLOR_ADJUST_IDENTITY[key], false);
 		});
@@ -430,6 +438,11 @@ class ShapeGlitterManager {
 		if (advanced) advanced.hidden = mode !== 'glitter';
 
 		if (mode === 'glitter') {
+			// Glitter mode is never empty — fall back to the default glitter.
+			if (!this.getSlotGlitterId(layer, slot)) {
+				if (slot === 'fill') layer.selectedGlitterId = CONFIG.defaultGlitterId;
+				else data.glitterId = CONFIG.defaultGlitterId;
+			}
 			const glitter = this.editor.glitterManager.getItemById(this.getSlotGlitterId(layer, slot));
 			const els = {
 				thumbnail: this.ui[prefix + 'GlitterChip'],
@@ -439,7 +452,7 @@ class ShapeGlitterManager {
 				frames: this.ui[prefix + 'GlitterFrames']
 			};
 			if (glitter) {
-				this.editor.renderGlitterAssetDisplay(els, glitter);
+				this.editor.renderGlitterAssetDisplay(els, glitter, this.getSlotColorAdjust(layer, slot));
 			} else if (this.editor.clearGlitterAssetDisplay) {
 				this.editor.clearGlitterAssetDisplay(els);
 			}
@@ -658,6 +671,20 @@ class ShapeGlitterManager {
 	// shadow carry their own so each can be an independent glitter.
 	getSlotGlitterId(layer, slot) {
 		return slot === 'fill' ? layer.selectedGlitterId : this.getEffectData(layer, slot)?.glitterId;
+	}
+
+	// Each slot's colorAdjust lives on its own effect object (fill = shapeData.fill).
+	getSlotColorAdjust(layer, slot) {
+		return this.getEffectData(layer, slot)?.colorAdjust;
+	}
+
+	// Live-tint this slot's glitter chip (and, for fill, the layers-list swatch) to
+	// match a colorAdjust drag without a full panel reload.
+	refreshSlotSwatch(layer, slot) {
+		const prefix = slot === 'fill' ? 'shapeFill' : slot === 'border' ? 'shapeBorder' : 'shapeShadow';
+		const chip = this.ui[prefix + 'GlitterChip'];
+		if (chip) chip.style.filter = buildCssColorFilter(this.getSlotColorAdjust(layer, slot));
+		if (slot === 'fill') this.editor.refreshLayerSwatchFilter(layer);
 	}
 
 	// Paint source per slot — kept in lockstep with GifExporter._getShapeEffectSource.

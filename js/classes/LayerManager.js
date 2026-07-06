@@ -817,6 +817,7 @@ class LayerManager {
 			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
 			if (glitter) {
 				swatch.style.backgroundImage = `url(${glitter.url})`;
+				swatch.style.filter = buildCssColorFilter(layer.settings?.colorAdjust);
 				swatch.classList.add('glitter', 'text-layer');
 				if (glitter.isPixelated) swatch.classList.add('pixelated');
 				swatch.innerHTML = '<span class="layer-swatch-text-overlay">T</span>';
@@ -825,6 +826,7 @@ class LayerManager {
 			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
 			if (glitter && layer.shapeData?.fill?.mode !== 'solid') {
 				swatch.style.backgroundImage = `url(${glitter.url})`;
+				swatch.style.filter = buildCssColorFilter(layer.shapeData?.fill?.colorAdjust);
 				swatch.classList.add('glitter', 'text-layer');
 				if (glitter.isPixelated) swatch.classList.add('pixelated');
 			} else {
@@ -1156,6 +1158,7 @@ class LayerManager {
 			if (glitter) {
 				mobileLayersSwatch.classList.remove('empty');
 				mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
+				mobileLayersSwatch.style.filter = buildCssColorFilter(this.editor.getLayerFillColorAdjust(activeLayer));
 				mobileLayersSwatch.classList.add('text-layer');
 				if (glitter.isPixelated) {
 					mobileLayersSwatch.classList.add('pixelated');

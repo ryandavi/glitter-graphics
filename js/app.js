@@ -783,12 +783,14 @@ async resetAllSettings() {
 	// frames) from a glitter library item. Reused by the text Fill/Border/Shadow
 	// source cards so their glitter display matches Glitter Properties' Asset
 	// section exactly. `els` holds the target elements (any may be omitted).
-	renderGlitterAssetDisplay(els, glitter) {
+	renderGlitterAssetDisplay(els, glitter, colorAdjust = null) {
 		if (!glitter) return;
 		if (els.thumbnail) {
 			els.thumbnail.classList.add('glitter-bg');
 			els.thumbnail.style.backgroundImage = `url(${glitter.url})`;
 			els.thumbnail.style.backgroundColor = 'transparent';
+			// Mirror the slot's hue/sat/bright so the chip matches the canvas.
+			els.thumbnail.style.filter = buildCssColorFilter(colorAdjust);
 		}
 		if (els.name) {
 			els.name.textContent = glitter.name;
@@ -1177,18 +1179,21 @@ async resetAllSettings() {
 		this.updateResetButton(prefix + 'Brightness');
 	}
 
-	// Reflect a glitter-fill layer's colorAdjust everywhere its swatch is shown
-	// off-canvas: the Glitter Properties asset-info thumbnail, the layers-list
-	// swatch, and the mobile layers swatch. The canvas itself is handled in
-	// GlitterManager.renderLayer; all four derive from the same buildCssColorFilter
-	// so preview, panel, and list agree. Render paths already bake the filter in —
-	// this is the live-drag path that updates without a full re-render.
-	refreshGlitterSwatchVisuals(layer) {
-		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
-		const filter = buildCssColorFilter(layer.settings?.colorAdjust);
+	// The colorAdjust that tints a layer's layers-list swatch — the FILL slot's,
+	// since that's the glitter the swatch shows. Fill aliases layer.settings for
+	// glitter-fill + text; shapes keep it on shapeData.fill.
+	getLayerFillColorAdjust(layer) {
+		if (!layer) return null;
+		if (layer.type === LayerType.SHAPE) return layer.shapeData?.fill?.colorAdjust;
+		return layer.settings?.colorAdjust;
+	}
 
-		const thumb = document.getElementById('glitterAssetThumbnail');
-		if (thumb) thumb.style.filter = filter;
+	// Tint the layers-list swatch + mobile swatch for any glitter-bearing layer to
+	// match its fill hue. Render paths bake this in too; this is the live-drag path
+	// that updates without a full list re-render. Shared by all three layer types.
+	refreshLayerSwatchFilter(layer) {
+		if (!layer) return;
+		const filter = buildCssColorFilter(this.getLayerFillColorAdjust(layer));
 
 		const listSwatch = this.layerManager.layersListContainer
 			?.querySelector(`[data-layer-id="${layer.id}"] .layer-swatch`);
@@ -1198,6 +1203,15 @@ async resetAllSettings() {
 			const mobileSwatch = document.querySelector('.mobile-layers-swatch');
 			if (mobileSwatch) mobileSwatch.style.filter = filter;
 		}
+	}
+
+	// Glitter-fill: also tint the Glitter Properties asset-info thumbnail. Text and
+	// shape tint their own per-slot chips in their managers (refreshSlotSwatch).
+	refreshGlitterSwatchVisuals(layer) {
+		if (!layer || layer.type !== LayerType.GLITTER_FILL) return;
+		const thumb = document.getElementById('glitterAssetThumbnail');
+		if (thumb) thumb.style.filter = buildCssColorFilter(layer.settings?.colorAdjust);
+		this.refreshLayerSwatchFilter(layer);
 	}
 
 	// Wire the Glitter Properties HSB sliders (fill layers). Each live-updates its
