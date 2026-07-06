@@ -1,121 +1,155 @@
 // ============================================
 // SHAPE LIBRARY
 // ============================================
-// Single source of truth for all vector shape geometry and their gallery icons
-// (WP5a, docs/TOOL-EXPANSION-PLAN.md). Both the Mask Brush tip picker and the
-// Shape tool consume this — adding a new shape or brush tip is one entry here.
+// Single source of truth for all shape geometry AND the gallery thumbnails
+// (WP5a/WP5b, docs/TOOL-EXPANSION-PLAN.md). Each shape is defined ONCE — as an
+// SVG path `d` string (or a trivial primitive) in its own square viewBox — and
+// that same definition drives:
+//   - the on-canvas mask (trace() fills a Path2D built from the definition), and
+//   - the picker thumbnail (getIconSvg() emits an <svg> using the same path).
+// So the thumbnail always matches what lands on the canvas.
 //
-// - trace(id, ctx, halfW, halfH, options): traces a shape centered on the
-//   current path origin into a box of half-width halfW and half-height halfH.
-//   The brush calls it with halfW === halfH (a uniform stamp radius); the Shape
-//   tool passes independent half-extents for a rectangular bounding box.
-// - BRUSH_SHAPES / FILL_SHAPES: catalogs (id, label, icon) for the two pickers,
-//   using the same gallery-card conventions as the font/sticker pickers. `icon`
-//   is inline SVG markup drawn with fill: currentColor (theme-aware) in a
-//   0 0 24 24 viewBox.
+// Adding a brush tip or fill shape = adding one entry to DEFS with an `svg` path
+// (in a `viewBox`-sized box). It is rasterized through the same crisp-threshold
+// step as everything else, so custom shapes stay pixel-crisp/aliased like the
+// built-ins.
 //
-// Note: brush tip id 'round' and fill shape id 'circle' are the same geometry
-// (an ellipse) — kept as distinct ids so the brush's existing stored settings
-// and CONFIG.maskBrush.defaultShape ('round') stay valid.
-
-const SHAPE_ICONS = {
-	circle: '<circle cx="12" cy="12" r="9"/>',
-	square: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/>',
-	calligraphy: '<ellipse cx="12" cy="12" rx="10" ry="3.4" transform="rotate(-45 12 12)"/>',
-	star: '<path d="M12 2 L14.7 8.6 L21.8 9.2 L16.4 13.8 L18.1 20.8 L12 17 L5.9 20.8 L7.6 13.8 L2.2 9.2 L9.3 8.6 Z"/>',
-	heart: '<path d="M12 21 C12 21 3 14.6 3 8.8 C3 5.6 5.4 3.5 8 3.5 C10 3.5 11.4 4.8 12 6 C12.6 4.8 14 3.5 16 3.5 C18.6 3.5 21 5.6 21 8.8 C21 14.6 12 21 12 21 Z"/>'
-};
+// trace(id, ctx, halfW, halfH, {fit}) FILLS the shape centered on the current
+// origin, scaled so its content bounds fit a box of half-width halfW / half-
+// height halfH. `fit`: 'contain' (uniform, aspect-preserving — the brush) or
+// 'fill' (stretch to the box — the Shape tool). Callers set fillStyle and any
+// filter beforehand; trace does the fill.
 
 const ShapeLibrary = {
-	// Trace a shape's outline path centered on the current origin. Call
-	// ctx.beginPath() before and ctx.fill()/clip() after — this only adds to the
-	// path. `options.fit` controls how point-list shapes (star, heart) map into a
-	// non-square box: 'contain' (default) preserves aspect ratio and fits inside;
-	// 'fill' stretches to fill the box independently on each axis.
-	trace(id, ctx, halfW, halfH, options = {}) {
-		switch (id) {
-			case 'round':
-			case 'circle':
-				ctx.ellipse(0, 0, halfW, halfH, 0, 0, Math.PI * 2);
-				return;
-			case 'square':
-				ctx.rect(-halfW, -halfH, halfW * 2, halfH * 2);
-				return;
-			case 'calligraphy':
-				// A flat nib at a fixed 45°: a thin ellipse rotated up-left → down-right.
-				ctx.ellipse(0, 0, halfW, halfH * 0.32, -Math.PI / 4, 0, Math.PI * 2);
-				return;
-			case 'star':
-				this._traceFitted(ctx, this._starPoints(), halfW, halfH, options.fit);
-				return;
-			case 'heart':
-				this._traceFitted(ctx, this._heartPoints(), halfW, halfH, options.fit);
-				return;
-			default:
-				ctx.ellipse(0, 0, halfW, halfH, 0, 0, Math.PI * 2);
-		}
+	// id -> definition. `svg` is an SVG path `d` in a `viewBox`×`viewBox` box.
+	// Primitives (circle/square/calligraphy) are built directly as Path2D so the
+	// trivial cases need no hand-authored path. brushOnly hides a tip from the
+	// Shape tool's fill picker.
+	DEFS: {
+		circle: { primitive: 'circle', viewBox: 24 },
+		square: { primitive: 'square', viewBox: 24 },
+		calligraphy: { primitive: 'calligraphy', viewBox: 24, brushOnly: true },
+		star: {
+			viewBox: 24,
+			svg: 'M12 2 L14.7 8.6 L21.8 9.2 L16.4 13.8 L18.1 20.8 L12 17 L5.9 20.8 L7.6 13.8 L2.2 9.2 L9.3 8.6 Z'
+		},
+		heart: {
+			viewBox: 24,
+			svg: 'M12 21 C12 21 3 14.6 3 8.8 C3 5.6 5.4 3.5 8 3.5 C10 3.5 11.4 4.8 12 6 C12.6 4.8 14 3.5 16 3.5 C18.6 3.5 21 5.6 21 8.8 C21 14.6 12 21 12 21 Z'
+		},
+		triangle: { viewBox: 24, svg: 'M12 2 L22 21 L2 21 Z' },
+		diamond: { viewBox: 24, svg: 'M12 1 L22 12 L12 23 L2 12 Z' },
+		pentagon: { viewBox: 24, svg: 'M12 2 L22 9.3 L18.2 21 L5.8 21 L2 9.3 Z' },
+		hexagon: { viewBox: 24, svg: 'M6.5 2.5 L17.5 2.5 L23 12 L17.5 21.5 L6.5 21.5 L1 12 Z' }
 	},
 
-	_starPoints() {
-		const points = [];
-		const spikes = 5;
-		const innerRatio = 0.42;
-		for (let i = 0; i < spikes * 2; i++) {
-			const mag = (i % 2 === 0) ? 1 : innerRatio;
-			const angle = (Math.PI / spikes) * i - Math.PI / 2;
-			points.push([Math.cos(angle) * mag, Math.sin(angle) * mag]);
-		}
-		return points;
+	// Build (once) the Path2D and its rasterized content bounds for a shape.
+	// Bounds are found by scanning alpha, so fitting is accurate for ANY path —
+	// including user-supplied SVGs — with no hand-measured numbers.
+	_geometry(id) {
+		const def = this.DEFS[id] || this.DEFS.circle;
+		if (def._geom) return def._geom;
+		const path = this._buildPath(def);
+		const bounds = this._computeBounds(path, def.viewBox || 24);
+		def._geom = { path, bounds };
+		return def._geom;
 	},
 
-	_heartPoints() {
-		const points = [];
-		const steps = 48;
-		for (let i = 0; i < steps; i++) {
-			const t = (i / steps) * Math.PI * 2;
-			const x = 16 * Math.pow(Math.sin(t), 3);
-			const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-			points.push([x, y]);
-		}
-		return points;
-	},
-
-	// Normalize a point list to be centered, then scale it into the half-extent
-	// box. 'contain' uses a single uniform scale (min of the two axes) so the
-	// shape keeps its aspect ratio — this reproduces the brush's original
-	// aspect-preserving fit exactly when halfW === halfH.
-	_traceFitted(ctx, points, halfW, halfH, fit = 'contain') {
-		let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-		for (const [x, y] of points) {
-			if (x < minX) minX = x;
-			if (x > maxX) maxX = x;
-			if (y < minY) minY = y;
-			if (y > maxY) maxY = y;
-		}
-		const centerX = (minX + maxX) / 2;
-		const centerY = (minY + maxY) / 2;
-		const halfPx = (maxX - minX) / 2 || 1;
-		const halfPy = (maxY - minY) / 2 || 1;
-
-		let scaleX;
-		let scaleY;
-		if (fit === 'fill') {
-			scaleX = halfW / halfPx;
-			scaleY = halfH / halfPy;
+	_buildPath(def) {
+		if (def.svg) return new Path2D(def.svg);
+		const vb = def.viewBox || 24;
+		const p = new Path2D();
+		if (def.primitive === 'square') {
+			p.rect(0, 0, vb, vb);
+		} else if (def.primitive === 'calligraphy') {
+			// Flat 45° nib.
+			p.ellipse(vb / 2, vb / 2, vb / 2, vb * 0.16, -Math.PI / 4, 0, Math.PI * 2);
 		} else {
-			scaleX = scaleY = Math.min(halfW / halfPx, halfH / halfPy);
+			p.arc(vb / 2, vb / 2, vb / 2, 0, Math.PI * 2);
+		}
+		return p;
+	},
+
+	_computeBounds(path, viewBox) {
+		const S = 4; // supersample for a tighter bbox
+		const size = Math.max(1, Math.round(viewBox * S));
+		const canvas = document.createElement('canvas');
+		canvas.width = size;
+		canvas.height = size;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.scale(S, S);
+		ctx.fillStyle = '#000';
+		ctx.fill(path);
+		const data = ctx.getImageData(0, 0, size, size).data;
+		let minX = size, minY = size, maxX = 0, maxY = 0, found = false;
+		for (let y = 0; y < size; y++) {
+			for (let x = 0; x < size; x++) {
+				if (data[(y * size + x) * 4 + 3] > 10) {
+					found = true;
+					if (x < minX) minX = x;
+					if (x > maxX) maxX = x;
+					if (y < minY) minY = y;
+					if (y > maxY) maxY = y;
+				}
+			}
+		}
+		if (!found) return { minX: 0, minY: 0, maxX: viewBox, maxY: viewBox };
+		return { minX: minX / S, minY: minY / S, maxX: (maxX + 1) / S, maxY: (maxY + 1) / S };
+	},
+
+	// A Path2D of the shape mapped into a box of half-width halfW / half-height
+	// halfH, centered on (0,0) in OUTPUT units. Used to fill the shape (trace)
+	// and, crucially, to STROKE a smooth vector border (uniform lineWidth in
+	// output space, no scalloping) — far cleaner than raster ring-union.
+	buildTransformedPath(id, halfW, halfH, options = {}) {
+		const geom = this._geometry(id);
+		const bw = (geom.bounds.maxX - geom.bounds.minX) || 1;
+		const bh = (geom.bounds.maxY - geom.bounds.minY) || 1;
+		const cx = (geom.bounds.minX + geom.bounds.maxX) / 2;
+		const cy = (geom.bounds.minY + geom.bounds.maxY) / 2;
+
+		let sx = (2 * halfW) / bw;
+		let sy = (2 * halfH) / bh;
+		if ((options.fit || 'contain') === 'contain') {
+			sx = sy = Math.min(sx, sy);
 		}
 
-		points.forEach(([x, y], index) => {
-			const px = (x - centerX) * scaleX;
-			const py = (y - centerY) * scaleY;
-			if (index === 0) {
-				ctx.moveTo(px, py);
-			} else {
-				ctx.lineTo(px, py);
-			}
-		});
-		ctx.closePath();
+		// CTM = Scale · Translate(-center) → point p maps to (p - center) * scale.
+		const matrix = new DOMMatrix().scaleSelf(sx, sy).translateSelf(-cx, -cy);
+		const out = new Path2D();
+		out.addPath(geom.path, matrix);
+		return out;
+	},
+
+	trace(id, ctx, halfW, halfH, options = {}) {
+		ctx.fill(this.buildTransformedPath(id, halfW, halfH, options));
+	},
+
+	// Full <svg> markup for a picker thumbnail — same geometry as trace(), so the
+	// thumbnail matches the stamped/filled result. fill:currentColor is theme-aware.
+	getIconSvg(id) {
+		const def = this.DEFS[id] || this.DEFS.circle;
+		const vb = def.viewBox || 24;
+		let inner;
+		if (def.svg) {
+			inner = `<path d="${def.svg}"/>`;
+		} else if (def.primitive === 'square') {
+			inner = `<rect x="0" y="0" width="${vb}" height="${vb}"/>`;
+		} else if (def.primitive === 'calligraphy') {
+			inner = `<ellipse cx="${vb / 2}" cy="${vb / 2}" rx="${vb / 2}" ry="${vb * 0.16}" transform="rotate(-45 ${vb / 2} ${vb / 2})"/>`;
+		} else {
+			inner = `<circle cx="${vb / 2}" cy="${vb / 2}" r="${vb / 2}"/>`;
+		}
+		return `<svg viewBox="0 0 ${vb} ${vb}">${inner}</svg>`;
+	},
+
+	// Natural aspect ratio (width / height) of a shape's content bounds, so a
+	// shape can be created undistorted (e.g. a regular hexagon isn't square).
+	getAspect(id) {
+		const g = this._geometry(id);
+		const w = (g.bounds.maxX - g.bounds.minX) || 1;
+		const h = (g.bounds.maxY - g.bounds.minY) || 1;
+		return w / h;
 	},
 
 	isFillShape(id) {
@@ -127,20 +161,23 @@ const ShapeLibrary = {
 	}
 };
 
-// Brush tip catalog (gallery order). 'round' uses the circle icon/geometry.
-// calligraphy is brushOnly — a directional nib that isn't a meaningful fill shape.
+// Catalogs (id + label + brushOnly) derived from DEFS. Gallery order is the
+// insertion order below.
 ShapeLibrary.BRUSH_SHAPES = [
-	{ id: 'round', label: 'Round', icon: SHAPE_ICONS.circle },
-	{ id: 'square', label: 'Square', icon: SHAPE_ICONS.square },
-	{ id: 'calligraphy', label: 'Calligraphy', icon: SHAPE_ICONS.calligraphy, brushOnly: true },
-	{ id: 'star', label: 'Star', icon: SHAPE_ICONS.star },
-	{ id: 'heart', label: 'Heart', icon: SHAPE_ICONS.heart }
+	{ id: 'round', label: 'Round' }, // round tip is a soft radial gradient, not a traced path (see MaskEditor._drawRoundStamp)
+	{ id: 'square', label: 'Square' },
+	{ id: 'calligraphy', label: 'Calligraphy', brushOnly: true },
+	{ id: 'star', label: 'Star' },
+	{ id: 'heart', label: 'Heart' }
 ];
 
-// Fill shape catalog for the Shape tool. Same icons, no calligraphy.
 ShapeLibrary.FILL_SHAPES = [
-	{ id: 'circle', label: 'Circle', icon: SHAPE_ICONS.circle },
-	{ id: 'square', label: 'Square', icon: SHAPE_ICONS.square },
-	{ id: 'star', label: 'Star', icon: SHAPE_ICONS.star },
-	{ id: 'heart', label: 'Heart', icon: SHAPE_ICONS.heart }
+	{ id: 'circle', label: 'Circle' },
+	{ id: 'square', label: 'Square' },
+	{ id: 'triangle', label: 'Triangle' },
+	{ id: 'diamond', label: 'Diamond' },
+	{ id: 'pentagon', label: 'Pentagon' },
+	{ id: 'hexagon', label: 'Hexagon' },
+	{ id: 'star', label: 'Star' },
+	{ id: 'heart', label: 'Heart' }
 ];

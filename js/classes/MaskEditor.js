@@ -257,7 +257,7 @@ class MaskEditor {
 		if (!picker) return;
 
 		picker.innerHTML = '';
-		MaskEditor.BRUSH_SHAPES.forEach(({ id, label, icon }) => {
+		MaskEditor.BRUSH_SHAPES.forEach(({ id, label }) => {
 			const card = document.createElement('button');
 			card.type = 'button';
 			card.className = 'brush-shape-option';
@@ -268,9 +268,11 @@ class MaskEditor {
 			card.classList.toggle('active', isActive);
 			card.setAttribute('aria-selected', isActive ? 'true' : 'false');
 			card.setAttribute('aria-label', `${label} brush`);
+			// Thumbnail comes from the SAME geometry as the stamp (ShapeLibrary),
+			// so the icon always matches what the brush paints.
 			card.innerHTML =
 				'<span class="brush-shape-option-icon" aria-hidden="true">' +
-				`<svg viewBox="0 0 24 24">${icon}</svg></span>` +
+				`${ShapeLibrary.getIconSvg(id)}</span>` +
 				`<span class="brush-shape-option-name">${label}</span>`;
 			picker.appendChild(card);
 		});
@@ -855,20 +857,12 @@ class MaskEditor {
 		// stamp).
 		this.stampCarry = 0;
 		this.smoothedPoint = { x: point.x, y: point.y };
-		// WP2: this point anchors axis-lock for any Shift-drag that follows, and
-		// is also where a Shift-click line ends.
+		// WP2: this point anchors axis-lock for a Shift-drag that follows. Shift
+		// constrains ONLY the current stroke (from this point) — it deliberately
+		// does NOT connect a line from a previous stroke, which surprised users.
 		this.strokeOrigin = { x: point.x, y: point.y };
 		this.axisLockDir = null;
 		this._stampAtPoint(layer, paint, point.x, point.y, point.pressure);
-
-		// Shift-click: connect a straight line from the end of the previous stroke
-		// (on this same layer) to this point. The previous end was already stamped,
-		// so lay stamps from there up to the new point to fill the gap.
-		if (options.shiftKey && this.lastStrokeEndPoint && this.lastStrokeEndPoint.layerId === layer.id) {
-			this.stampCarry = 0;
-			this._stampAlongPath(layer, paint, this.lastStrokeEndPoint, point);
-			this.stampCarry = 0;
-		}
 		return true;
 	}
 
@@ -1094,11 +1088,9 @@ class MaskEditor {
 			ctx.filter = `blur(${blurPx}px)`;
 		}
 		ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-		ctx.beginPath();
-		// Geometry lives in ShapeLibrary (shared with the Shape tool). Brush stamps
-		// are uniform, so pass the same half-extent for width and height.
+		// Geometry lives in ShapeLibrary (shared with the Shape tool). trace() fills
+		// the shape itself. Brush stamps are uniform → same half-extent for W and H.
 		ShapeLibrary.trace(shape, ctx, shapeRadius, shapeRadius);
-		ctx.fill();
 		ctx.restore();
 	}
 

@@ -1,4 +1,16 @@
 // ============================================
+// VALUE + UNIT FORMATTING
+// ============================================
+// Render a numeric setting value with its unit in a muted, smaller span (same
+// look as .input-unit-suffix). Reusable for any value display — assign the
+// result to element.innerHTML. Units: 'px', '%', '°' etc. An empty unit (e.g.
+// Threshold, which is a unitless tolerance) renders just the number.
+function formatUnit(value, unit) {
+	if (!unit) return String(value);
+	return `${value}<span class="setting-unit">${unit}</span>`;
+}
+
+// ============================================
 // MODAL UTILITIES
 // ============================================
 

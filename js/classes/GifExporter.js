@@ -225,6 +225,80 @@ class GifExporter {
 		);
 	}
 
+	_shapeUsesGlitter(layer) {
+		const d = layer.shapeData;
+		if (!d) return false;
+		if (d.fill?.mode === 'glitter') return true;
+		if (d.border && d.border.mode === 'glitter') return true;
+		if (d.shadow && d.shadow.mode === 'glitter') return true;
+		return false;
+	}
+
+	// Mirror of ShapeGlitterManager.getEffectPaintSource — keep in lockstep. Each
+	// slot has its own glitter: fill uses layer.selectedGlitterId, border/shadow
+	// use their own effectData.glitterId.
+	_getShapeEffectSource(layer, slot) {
+		const d = layer.shapeData;
+		const data = slot === 'fill' ? d.fill : d[slot];
+		if (!data) return null;
+		if (slot === 'fill' && data.mode === 'none') return null;
+		const glitterId = slot === 'fill' ? layer.selectedGlitterId : data.glitterId;
+		if (data.mode === 'glitter' && glitterId) {
+			return {
+				mode: 'glitter',
+				glitterId,
+				scale: data.scale ?? 100,
+				opacity: (data.opacity ?? 100) / 100,
+				colorAdjust: data.colorAdjust
+			};
+		}
+		return { mode: 'solid', color: data.color || '#000000', opacity: (data.opacity ?? 100) / 100 };
+	}
+
+	_getShapeFrameKey(layer, slot) {
+		return `${layer.id}:${slot}`;
+	}
+
+	// Per-slot glitter sources (like text) — each slot in glitter mode with a
+	// glitter contributes its own flattened frame set keyed by layer.id:slot.
+	_getShapeGlitterSources(layer) {
+		const d = layer.shapeData;
+		const sources = [];
+		if (d.fill?.mode === 'glitter' && layer.selectedGlitterId) {
+			sources.push({ key: this._getShapeFrameKey(layer, 'fill'), slot: 'fill', glitterId: layer.selectedGlitterId });
+		}
+		if (d.border && d.border.widthPx > 0 && d.border.mode === 'glitter' && d.border.glitterId) {
+			sources.push({ key: this._getShapeFrameKey(layer, 'border'), slot: 'border', glitterId: d.border.glitterId });
+		}
+		if (d.shadow && d.shadow.mode === 'glitter' && d.shadow.glitterId) {
+			sources.push({ key: this._getShapeFrameKey(layer, 'shadow'), slot: 'shadow', glitterId: d.shadow.glitterId });
+		}
+		return sources;
+	}
+
+	// Mirror of _renderTextLayerToCanvas for shape layers (shadow, border, fill),
+	// reusing the generic _createFilledMaskCanvas + _drawTransformedCanvas.
+	_renderShapeLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap, shapeMaskCanvases) {
+		const masks = shapeMaskCanvases?.get(layer.id);
+		if (!masks?.fill) {
+			throw new Error(`Missing shape mask for layer ${layer.id}`);
+		}
+		const d = layer.shapeData;
+		const t = d.transform;
+		const w = masks.renderWidth;
+		const h = masks.renderHeight;
+		const draw = (maskCanvas, slot) => {
+			if (!maskCanvas) return;
+			const source = this._getShapeEffectSource(layer, slot);
+			if (!source) return;
+			const fillCanvas = this._createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, this._getShapeFrameKey(layer, slot), frameMap, flattenedFrameMap);
+			this._drawTransformedCanvas(ctx, fillCanvas, t, w, h);
+		};
+		if (d.shadow && masks.shadow) draw(masks.shadow, 'shadow');
+		if (d.border?.widthPx > 0 && masks.border) draw(masks.border, 'border');
+		draw(masks.fill, 'fill');
+	}
+
 	_getTextFrameKey(layer, slot) {
 		return `${layer.id}:${slot}`;
 	}
@@ -236,6 +310,7 @@ class GifExporter {
 		// carry their own per-slot scale/opacity).
 		if (effectName === 'fill') {
 			const fillData = layer.textData?.fill;
+			if (fillData?.mode === 'none') return null;
 			if (fillData?.mode === 'solid') {
 				return {
 					mode: 'solid',
@@ -426,7 +501,7 @@ class GifExporter {
 			entry.border = this._createBorderMaskCanvas(
 				fillMaskCanvas,
 				layer.textData.border.widthPx,
-				layer.settings.opacity < 100
+				layer.settings.opacity < 100 || layer.textData?.fill?.mode === 'none'
 			);
 		}
 
@@ -449,7 +524,9 @@ class GifExporter {
 		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 
 		const radius = Math.max(1, widthPx);
-		const steps = widthPx > 6 ? 16 : 8;
+		// Lockstep with TextGlitterManager.getBorderOffsets — sample count scales
+		// with radius so wide borders don't scallop.
+		const steps = Math.max(16, Math.min(64, Math.ceil(radius * 4)));
 		const seen = new Set();
 
 		for (let index = 0; index < steps; index++) {
@@ -527,6 +604,14 @@ class GifExporter {
 			const fillMaskCanvas = await callbacks.renderTextMask(layer);
 			textMaskCanvases.set(layer.id, this._buildTextMaskEntry(layer, fillMaskCanvas));
 		}
+
+			const shapeMaskCanvases = new Map();
+			for (const layer of visibleLayers) {
+				if (layer.type !== LayerType.SHAPE) continue;
+				// The manager builds fill/border/shadow masks (vector-stroked border)
+				// so export matches the live preview exactly — one source of truth.
+				shapeMaskCanvases.set(layer.id, callbacks.renderShapeMask(layer));
+			}
 
 		// 1.75. Load Watermark (if enabled)
 		let watermark = null;
@@ -648,6 +733,7 @@ class GifExporter {
 					glitterGifs,
 					maskCanvases,
 					textMaskCanvases,
+					shapeMaskCanvases,
 					safeKey,
 					exportSettings,
 					watermark,
@@ -806,7 +892,7 @@ class GifExporter {
 		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
 	}
 
-	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, textMaskCanvases, safeKey, exportSettings, watermark, needsTransparency, frameMap = null, flattenedFrameMap = null) {
+	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, textMaskCanvases, shapeMaskCanvases, safeKey, exportSettings, watermark, needsTransparency, frameMap = null, flattenedFrameMap = null) {
 		const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
 		const ctx = this.ctx;
 		const hCtx = this.helperCtx;
@@ -912,7 +998,9 @@ class GifExporter {
 				this._renderLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap);
 			} else if (layer.type === LayerType.TEXT_GLITTER) {
 				this._renderTextLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap, textMaskCanvases);
-			}
+			} else if (layer.type === LayerType.SHAPE) {
+					this._renderShapeLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap, shapeMaskCanvases);
+				}
 		});
 
 		// 6. Render Watermark
@@ -1164,6 +1252,15 @@ class GifExporter {
 				return;
 			}
 
+			if (layer.type === LayerType.SHAPE) {
+				this._getShapeGlitterSources(layer).forEach((source) => {
+					const glitter = library.find(g => g.id === source.glitterId);
+					if (!glitter?.frames?.frames?.length) return;
+					flattenSource(source.key, glitter.frames, `${glitter.name} (${source.slot})`, false);
+				});
+				return;
+			}
+
 			if (layer.type === LayerType.STICKER && layer.stickerData.isAnimated) {
 				const stickerData = layer.stickerData;
 				if (!stickerData.frames?.frames?.length) return;
@@ -1349,6 +1446,21 @@ class GifExporter {
 				} catch (e) {
 					throw new Error(e.message);
 				}
+			} else if (layer.type === LayerType.SHAPE) {
+				for (const source of this._getShapeGlitterSources(layer)) {
+					const glitter = library.find(g => g.id === source.glitterId);
+					if (!glitter) {
+						throw new Error(`Missing glitter ${source.glitterId}`);
+					}
+					if (!glitter.frames) {
+						callbacks.onStatus(`Loading ${glitter.name}...`);
+						try {
+							glitter.frames = await callbacks.parseGif(glitter.url);
+						} catch (e) {
+							throw new Error(`Failed to load ${glitter.name}`);
+						}
+					}
+				}
 			} else if (layer.type === LayerType.STICKER) {
 				// Handle sticker layers
 				const stickerData = layer.stickerData;
@@ -1488,6 +1600,16 @@ class GifExporter {
 					const count = glitter?.frames?.frames?.length || 1;
 					layerFrameCounts.set(source.key, count);
 				});
+			} else if (l.type === LayerType.SHAPE) {
+				const shapeSources = this._getShapeGlitterSources(l);
+				if (shapeSources.length === 0) {
+					layerFrameCounts.set(l.id, 1);
+				} else {
+					shapeSources.forEach((source) => {
+						const glitter = library.find(g => g.id === source.glitterId);
+						layerFrameCounts.set(source.key, glitter?.frames?.frames?.length || 1);
+					});
+				}
 			} else if (l.type === LayerType.STICKER) {
 				if (l.stickerData.isAnimated && l.stickerData.frames?.frames) {
 					layerFrameCounts.set(l.id, l.stickerData.frames.frames.length);
@@ -1549,6 +1671,10 @@ class GifExporter {
 					(layerFrameCounts.get(source.key) || 0) > 1
 				);
 			}
+
+				if (layer.type === LayerType.SHAPE) {
+					return this._getShapeGlitterSources(layer).some((source) => (layerFrameCounts.get(source.key) || 0) > 1);
+				}
 
 			return false;
 		});

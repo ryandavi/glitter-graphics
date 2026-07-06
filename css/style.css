@@ -1735,6 +1735,74 @@ input[type=range]::-moz-range-thumb {
   z-index: 1;
 }
 
+.shape-glitter-element {
+  position: absolute;
+  transform-origin: center;
+  pointer-events: auto !important;
+  will-change: transform;
+  touch-action: none;
+  overflow: visible;
+}
+
+.shape-glitter-stack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.shape-glitter-stack::after {
+  content: "";
+  position: absolute;
+  top: var(--tf-top, 0);
+  right: var(--tf-right, 0);
+  bottom: var(--tf-bottom, 0);
+  left: var(--tf-left, 0);
+  display: none;
+  pointer-events: none;
+}
+
+.shape-glitter-content {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  background-repeat: repeat;
+  overflow: visible;
+  pointer-events: none;
+}
+.shape-glitter-content.pixelated {
+  image-rendering: pixelated;
+}
+
+.shape-glitter-element.selected > .shape-glitter-stack::after {
+  display: block;
+  outline-width: max(1px, 2px / var(--zoom, 1) / var(--layer-scale, 1));
+  outline-style: dashed;
+  outline-color: var(--selected-outline-color);
+  outline-offset: min(-1px, -2px / var(--zoom, 1) / var(--layer-scale, 1));
+  box-shadow: 0 0 0 max(1px, 1px / var(--zoom, 1) / var(--layer-scale, 1)) rgba(0, 0, 0, 0.5), 0 0 max(4px, 8px / var(--zoom, 1) / var(--layer-scale, 1)) rgba(0, 0, 0, 0.5);
+}
+
+.shape-glitter-element.has-transform-handles {
+  pointer-events: none !important;
+}
+
+body.tool-shape .preview-container,
+body.tool-shape .preview-canvas,
+body.tool-shape #canvasElementsContainer {
+  cursor: crosshair;
+}
+
+.shape-drag-preview {
+  position: absolute;
+  border: 2px dashed var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  z-index: 200;
+}
+
 body.tool-select .sticker-element {
   cursor: move;
 }
@@ -1746,6 +1814,14 @@ body.tool-select .text-glitter-element {
   cursor: move;
 }
 body.tool-select .text-glitter-element:not(.selected):hover > .text-glitter-stack::after {
+  display: block;
+  outline: 1px dashed rgba(0, 0, 0, 0.25);
+  outline-offset: -1px;
+}
+body.tool-select .shape-glitter-element {
+  cursor: move;
+}
+body.tool-select .shape-glitter-element:not(.selected):hover > .shape-glitter-stack::after {
   display: block;
   outline: 1px dashed rgba(0, 0, 0, 0.25);
   outline-offset: -1px;
@@ -2025,7 +2101,7 @@ body.tool-text .preview-wrapper {
   background-color: var(--color-bg-tertiary);
 }
 .preview-container.bounds .preview-wrapper {
-  outline: solid dashed var(--gray-400);
+  outline: 2px dashed var(--gray-400);
   outline-offset: -2px;
   /* Draws inside the canvas edge */
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5);
@@ -2278,9 +2354,15 @@ body.mask-editing .sticker-element {
 .context-slider-group .context-value {
   font-size: var(--font-size-sm);
   color: var(--color-text);
-  min-width: 3ch;
+  min-width: 5ch;
   text-align: right;
   display: none;
+}
+
+.setting-unit {
+  color: var(--color-text-secondary);
+  font-size: 0.82em;
+  margin-left: 1px;
 }
 
 .context-checkbox-group {
@@ -3551,6 +3633,7 @@ body.mask-editing .sticker-element {
 .sticker-settings-section,
 .glitter-settings-section,
 .text-settings-section,
+.shape-settings-section,
 .layer-settings-section,
 .brush-settings-section {
   display: none;
@@ -3558,6 +3641,7 @@ body.mask-editing .sticker-element {
 .sticker-settings-section.visible,
 .glitter-settings-section.visible,
 .text-settings-section.visible,
+.shape-settings-section.visible,
 .layer-settings-section.visible,
 .brush-settings-section.visible {
   display: flex;
@@ -3568,6 +3652,7 @@ body.mask-editing .sticker-element {
 .sticker-settings-section.visible.is-open,
 .glitter-settings-section.visible.is-open,
 .text-settings-section.visible.is-open,
+.shape-settings-section.visible.is-open,
 .layer-settings-section.visible.is-open,
 .brush-settings-section.visible.is-open {
   flex: 1 1 auto;
@@ -3575,6 +3660,7 @@ body.mask-editing .sticker-element {
 .sticker-settings-section.visible.is-open > .section-content.visible,
 .glitter-settings-section.visible.is-open > .section-content.visible,
 .text-settings-section.visible.is-open > .section-content.visible,
+.shape-settings-section.visible.is-open > .section-content.visible,
 .layer-settings-section.visible.is-open > .section-content.visible,
 .brush-settings-section.visible.is-open > .section-content.visible {
   overflow-y: auto;
@@ -3937,6 +4023,7 @@ body.mask-editing .sticker-element {
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible,
   .mobile-settings-drawer .mobile-settings-content .text-settings-section.visible,
   .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible,
+  .mobile-settings-drawer .mobile-settings-content .shape-settings-section.visible,
   .mobile-settings-drawer .mobile-settings-content .brush-settings-section.visible {
     display: flex;
     flex-direction: column;
@@ -3948,6 +4035,7 @@ body.mask-editing .sticker-element {
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible .section-header,
   .mobile-settings-drawer .mobile-settings-content .text-settings-section.visible .section-header,
   .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header,
+  .mobile-settings-drawer .mobile-settings-content .shape-settings-section.visible .section-header,
   .mobile-settings-drawer .mobile-settings-content .brush-settings-section.visible .section-header {
     position: sticky;
     top: 0;
@@ -3958,6 +4046,7 @@ body.mask-editing .sticker-element {
   .mobile-settings-drawer .mobile-settings-content .glitter-settings-section.visible .section-header .section-header-action,
   .mobile-settings-drawer .mobile-settings-content .text-settings-section.visible .section-header .section-header-action,
   .mobile-settings-drawer .mobile-settings-content .sticker-settings-section.visible .section-header .section-header-action,
+  .mobile-settings-drawer .mobile-settings-content .shape-settings-section.visible .section-header .section-header-action,
   .mobile-settings-drawer .mobile-settings-content .brush-settings-section.visible .section-header .section-header-action {
     display: flex;
   }

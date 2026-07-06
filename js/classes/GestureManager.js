@@ -479,7 +479,7 @@ class GestureManager {
 			}
 
 			this.editor.layerManager.setActiveLayer(layer.id);
-			if (layer.type === LayerType.TEXT_GLITTER) {
+			if (layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) {
 				if (this.editor.mobileManager?.isMobile) {
 					this.editor.mobileManager.prepareSettings?.(layer);
 					if (!this.editor.mobileManager.settingsOpen) {
@@ -600,7 +600,7 @@ class GestureManager {
 	}
 
 	isTransformableLayer(layer) {
-		return Boolean(layer && (layer.type === LayerType.STICKER || layer.type === LayerType.TEXT_GLITTER));
+		return Boolean(layer && (layer.type === LayerType.STICKER || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE));
 	}
 
 	isPointInLayer(layer, screenX, screenY) {
@@ -610,6 +610,9 @@ class GestureManager {
 		}
 		if (layer.type === LayerType.TEXT_GLITTER) {
 			return this.editor.layerManager.isPointInText(layer, point.x, point.y);
+		}
+		if (layer.type === LayerType.SHAPE) {
+			return this.editor.layerManager.isPointInShape(layer, point.x, point.y);
 		}
 		return false;
 	}
@@ -629,6 +632,9 @@ class GestureManager {
 		}
 		if (layer.type === LayerType.TEXT_GLITTER) {
 			return this.editor.textGlitterManager?.layerTransforms?.get(layerId) || null;
+		}
+		if (layer.type === LayerType.SHAPE) {
+			return this.editor.shapeGlitterManager?.layerTransforms?.get(layerId) || null;
 		}
 		return null;
 	}

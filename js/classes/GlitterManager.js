@@ -285,8 +285,8 @@ async initBrowser() {
 			return;
 		}
 
-		if (layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER) {
-			this.editor.showError('You can only add a glitter to a glitter-fill or text layer');
+		if (layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER && layer.type !== LayerType.SHAPE) {
+			this.editor.showError('You can only add a glitter to a glitter-fill, text, or shape layer');
 			return;
 		}
 		const glitter = this.getItemById(id);
@@ -332,6 +332,19 @@ async initBrowser() {
 				// the swatch, and saves history with zero visible change.
 				this.editor.textGlitterManager.ensureEffectData(layer, 'fill').mode = 'glitter';
 			}
+		} else if (layer.type === LayerType.SHAPE) {
+			// Each slot has its own glitter: fill uses the layer swatch; border and
+			// shadow store their own glitterId so they're independent.
+			const sgm = this.editor.shapeGlitterManager;
+			const target = sgm?.getGlitterSelectionTarget?.() || 'fill';
+			if (target === 'fill') {
+				layer.selectedGlitterId = id;
+			}
+			if (sgm) {
+				const slotData = sgm.ensureEffectData(layer, target);
+				slotData.mode = 'glitter';
+				if (target !== 'fill') slotData.glitterId = id;
+			}
 		} else {
 			layer.selectedGlitterId = id;
 		}
@@ -345,6 +358,10 @@ async initBrowser() {
 				refreshLayerList: false,
 				refreshPreview: false
 			});
+		} else if (layer.type === LayerType.SHAPE) {
+			this.editor.shapeGlitterManager?.renderLayer(layer);
+			this.editor.shapeGlitterManager?.loadLayerSettings(layer);
+			this.editor.shapeGlitterManager?.updatePickerStrip();
 		} else if (hasMaskContent(layer)) {
 			this.editor.updatePreview();
 		}

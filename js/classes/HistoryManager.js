@@ -26,6 +26,19 @@ class HistoryManager {
 					};
 				}
 
+				if (layer.type === LayerType.SHAPE) {
+					return {
+						id: layer.id,
+						type: LayerType.SHAPE,
+						name: layer.name,
+						visible: layer.visible,
+						locked: layer.locked,
+						selectedGlitterId: layer.selectedGlitterId,
+						settings: layer.settings ? { ...layer.settings } : {},
+						shapeData: layer.shapeData ? JSON.parse(JSON.stringify(layer.shapeData)) : null
+					};
+				}
+
 				if (layer.type === LayerType.BASE_IMAGE) {
 					return {
 						id: layer.id,
@@ -95,6 +108,7 @@ class HistoryManager {
 		// gallery in browse mode.
 		if (this.editor.textGlitterManager) {
 			this.editor.textGlitterManager.pickerSession = null;
+			if (this.editor.shapeGlitterManager) this.editor.shapeGlitterManager.pickerSession = null;
 		}
 		this.editor.layers = [];
 
@@ -126,6 +140,17 @@ class HistoryManager {
 				}
 
 				this.editor.layers.push(restoredLayer);
+			} else if (layerData.type === LayerType.SHAPE) {
+				this.editor.layers.push({
+					id: layerData.id,
+					type: LayerType.SHAPE,
+					name: layerData.name || 'Shape',
+					visible: layerData.visible,
+					locked: layerData.locked,
+					selectedGlitterId: layerData.selectedGlitterId,
+					settings: layerData.settings ? { ...layerData.settings } : {},
+					shapeData: layerData.shapeData ? JSON.parse(JSON.stringify(layerData.shapeData)) : null
+				});
 			} else if (layerData.type === LayerType.BASE_IMAGE) {
 				this.editor.layers.push({
 					id: layerData.id,

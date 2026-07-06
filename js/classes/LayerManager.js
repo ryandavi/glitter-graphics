@@ -126,6 +126,8 @@ class LayerManager {
 			layer = this.editor.stickerManager.createLayer();
 		} else if (type === LayerType.TEXT_GLITTER) {
 			layer = this.editor.textGlitterManager.createLayer(options.textLayer || {});
+		} else if (type === LayerType.SHAPE) {
+			layer = this.editor.shapeGlitterManager.createLayer(options.shapeLayer || {});
 		} else if (type === LayerType.GLITTER_FILL) {
 			layer = this.editor.glitterManager.createLayer();
 		} else {
@@ -195,6 +197,8 @@ class LayerManager {
 			this.editor.textGlitterManager.removeLayerElement(layerId);
 		} else if (layer.type === LayerType.GLITTER_FILL && this.editor.glitterManager) {
 			this.editor.glitterManager.releaseLayerResources(layer);
+		} else if (layer.type === LayerType.SHAPE && this.editor.shapeGlitterManager) {
+			this.editor.shapeGlitterManager.releaseLayerResources(layer);
 		}
 
 		this.layers.splice(index, 1);
@@ -225,6 +229,11 @@ class LayerManager {
 			}
 		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
 			const element = this.editor.textGlitterManager.layerElements.get(layerId);
+			if (element) {
+				element.style.display = layer.visible ? 'block' : 'none';
+			}
+		} else if (layer.type === LayerType.SHAPE && this.editor.shapeGlitterManager) {
+			const element = this.editor.shapeGlitterManager.layerElements.get(layerId);
 			if (element) {
 				element.style.display = layer.visible ? 'block' : 'none';
 			}
@@ -261,6 +270,9 @@ class LayerManager {
 		} else if (layer.type === LayerType.GLITTER_FILL) {
 			const element = this.editor.glitterManager.layerElements.get(layer.id);
 			if (element) element.classList.add('selected');
+		} else if (layer.type === LayerType.SHAPE) {
+			const element = this.editor.shapeGlitterManager.layerElements.get(layer.id);
+			if (element) element.classList.add('selected');
 		}
 	}
 
@@ -275,6 +287,7 @@ class LayerManager {
 		// session is layer-bound, so leaving its layer must return the gallery
 		// to browse mode (a click applies to the new active layer's own fill).
 		this.editor.textGlitterManager?.closePickerSession();
+		this.editor.shapeGlitterManager?.closePickerSession();
 		this.editor.maskEditor?.handleLayerChange(layerId);
 		this.updateActiveLayerListSelection();
 		this.updateMobileLayersSwatch();
@@ -412,6 +425,7 @@ class LayerManager {
 			if (layer.type === LayerType.STICKER) name = layer.name;
 			else if (layer.type === LayerType.TEXT_GLITTER) name = layer.name || 'Text';
 			else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
+			else if (layer.type === LayerType.SHAPE) name = layer.name || 'Shape';
 			else if (layer.type === LayerType.GLITTER_FILL) {
 				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
 				name = glitter?.name || 'Glitter';
@@ -447,6 +461,8 @@ class LayerManager {
 				isHit = this.isPointInSticker(layer, x, y);
 			} else if (layer.type === LayerType.TEXT_GLITTER) {
 				isHit = this.isPointInText(layer, x, y);
+			} else if (layer.type === LayerType.SHAPE) {
+				isHit = this.isPointInShape(layer, x, y);
 			} else if (layer.type === LayerType.GLITTER_FILL) {
 				if (hasMaskContent(layer)) {
 					isHit = this.isPixelInLayerSelection(layer, x, y);
@@ -521,6 +537,15 @@ class LayerManager {
 			clickX,
 			clickY
 		);
+	}
+
+	isPointInShape(layer, clickX, clickY) {
+		if (layer.type !== LayerType.SHAPE) return false;
+		const t = layer.shapeData.transform;
+		const measurement = this.editor.shapeGlitterManager?.getMeasurementEntry(layer);
+		const w = measurement?.width || layer.shapeData.renderWidth || layer.shapeData.width;
+		const h = measurement?.height || layer.shapeData.renderHeight || layer.shapeData.height;
+		return this.isPointInTransformBox(t, w, h, clickX, clickY);
 	}
 
 	isPixelInLayerSelection(layer, x, y) {
@@ -694,6 +719,20 @@ class LayerManager {
 				settings: { ...sourceLayer.settings },
 				textData: JSON.parse(JSON.stringify(sourceLayer.textData))
 			};
+		} else if (sourceLayer.type === LayerType.SHAPE) {
+			clonedLayer = {
+				id: this.generateLayerId(),
+				type: LayerType.SHAPE,
+				name: sourceLayer.name,
+				visible: sourceLayer.visible,
+				locked: false,
+				selectedGlitterId: sourceLayer.selectedGlitterId,
+				settings: { ...sourceLayer.settings },
+				shapeData: JSON.parse(JSON.stringify(sourceLayer.shapeData))
+			};
+			// Nudge so the copy is visible, mirroring the other clone paths' intent.
+			clonedLayer.shapeData.transform.position.x += 20;
+			clonedLayer.shapeData.transform.position.y += 20;
 		} else {
 			// Clone glitter layer
 			clonedLayer = {
@@ -782,6 +821,17 @@ class LayerManager {
 				if (glitter.isPixelated) swatch.classList.add('pixelated');
 				swatch.innerHTML = '<span class="layer-swatch-text-overlay">T</span>';
 			}
+		} else if (layer.type === LayerType.SHAPE) {
+			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+			if (glitter && layer.shapeData?.fill?.mode !== 'solid') {
+				swatch.style.backgroundImage = `url(${glitter.url})`;
+				swatch.classList.add('glitter', 'text-layer');
+				if (glitter.isPixelated) swatch.classList.add('pixelated');
+			} else {
+				swatch.classList.add('glitter', 'text-layer');
+				swatch.style.background = layer.shapeData?.fill?.color || '#ff66cc';
+			}
+			swatch.innerHTML = '<span class="layer-swatch-text-overlay">S</span>';
 		} else if (layer.type === LayerType.BASE_IMAGE) {
 			// --- FIX: Base Image Thumbnail ---
 			if (this.editor.originalImage) {
@@ -803,7 +853,7 @@ class LayerManager {
 		// Double-click swatch behavior
 		swatch.addEventListener('click', (e) => {
 			e.stopPropagation();
-			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) {
+			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) {
 				this.goToGlitter(layer.id);
 			} else if (layer.type === LayerType.STICKER) {
 				this.goToSticker(layer.id);
@@ -842,6 +892,12 @@ class LayerManager {
 				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
 				nameText.textContent = layer.name || 'Text';
 				typeText.textContent = `Text / ${glitter?.name || 'No glitter'}`;
+				break;
+			}
+			case LayerType.SHAPE: {
+				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+				nameText.textContent = layer.name || 'Shape';
+				typeText.textContent = layer.shapeData?.fill?.mode === 'solid' ? 'Shape / Solid' : ('Shape / ' + (glitter?.name || 'No glitter'));
 				break;
 			}
 			case LayerType.BASE_IMAGE:
@@ -1089,7 +1145,7 @@ class LayerManager {
 				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
 				mobileLayersSwatch.style.backgroundImage = '';
 			}
-		} else if (activeLayer.type === LayerType.TEXT_GLITTER) {
+		} else if (activeLayer.type === LayerType.TEXT_GLITTER || activeLayer.type === LayerType.SHAPE) {
 			const glitter = this.editor.glitterManager.getItemById(activeLayer.selectedGlitterId);
 			if (glitter) {
 				mobileLayersSwatch.classList.remove('empty');

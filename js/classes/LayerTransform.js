@@ -41,7 +41,8 @@ class LayerTransform {
             this._settingsSyncScheduled = false;
             const prefix = this.layer.type === LayerType.STICKER
                 ? 'sticker'
-                : this.layer.type === LayerType.TEXT_GLITTER ? 'text' : null;
+                : this.layer.type === LayerType.TEXT_GLITTER ? 'text'
+                : this.layer.type === LayerType.SHAPE ? 'shape' : null;
             if (prefix) {
                 this.editor.loadTransformSettings?.(this.layer, prefix);
             }
@@ -51,7 +52,8 @@ class LayerTransform {
     getLayerElementSelector() {
         return [
             `.sticker-element[data-layer-id="${this.layer.id}"]`,
-            `.text-glitter-element[data-layer-id="${this.layer.id}"]`
+            `.text-glitter-element[data-layer-id="${this.layer.id}"]`,
+        `.shape-glitter-element[data-layer-id="${this.layer.id}"]`
         ].join(', ');
     }
 
@@ -65,6 +67,9 @@ class LayerTransform {
     }
 
     supportsEdgeResize() {
+        // Text: resize the box (box mode). Shape: non-uniform one-axis scale
+        // (left/right → width, top/bottom → height).
+        if (this.layer.type === LayerType.SHAPE) return true;
         return Boolean(
             this.layer.type === LayerType.TEXT_GLITTER &&
             this.editor.textGlitterManager?.canResizeBoxEdges?.(this.layer)
@@ -151,6 +156,8 @@ applyTransform(element, dimensions) {
     // inner stack — keep it in sync (drags call applyTransform without renderLayer).
     if (this.layer.type === LayerType.TEXT_GLITTER) {
         this.editor.textGlitterManager?.syncElementScale?.(this.layer, element);
+    } else if (this.layer.type === LayerType.SHAPE) {
+        this.editor.shapeGlitterManager?.syncElementScale?.(this.layer, element);
     }
 }
 
@@ -215,6 +222,9 @@ updateTransform(updates) {
         if (this.layer.textData?.transform) {
             return this.layer.textData.transform;
         }
+        if (this.layer.shapeData?.transform) {
+            return this.layer.shapeData.transform;
+        }
         throw new Error('Layer does not have a transform object');
     }
 
@@ -234,6 +244,12 @@ updateTransform(updates) {
             return {
                 width: this.layer.textData.width,
                 height: this.layer.textData.height
+            };
+        }
+        if (this.layer.shapeData) {
+            return {
+                width: this.layer.shapeData.renderWidth || this.layer.shapeData.width,
+                height: this.layer.shapeData.renderHeight || this.layer.shapeData.height
             };
         }
         throw new Error('Layer does not have dimensions');
@@ -495,7 +511,7 @@ const handleMouseMove = (e) => {
             this.updateHandlePositions();
         }
 
-        if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER) {
+        if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER || this.layer.type === LayerType.SHAPE) {
             this.scheduleSettingsSync();
         }
     }
@@ -877,7 +893,7 @@ removeTransformHandles() {
             this.handleMoveDrag(e);
         }
 
-        if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER) {
+        if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER || this.layer.type === LayerType.SHAPE) {
             this.scheduleSettingsSync();
         }
     }
@@ -893,6 +909,12 @@ removeTransformHandles() {
         if (this.isDraggingHandle) {
             e.preventDefault();
             e.stopPropagation();
+            // Shapes are parametric: bake a committed scale into pixel size and
+            // re-rasterize so large shapes stay crisp (no upscaled-raster mixels).
+            const ht = this.activeHandleType || '';
+            if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
+                this.editor.shapeGlitterManager?.commitScale(this.layer);
+            }
             this.editor.saveState();
 
             if (e.pointerType === 'mouse') {
@@ -990,6 +1012,15 @@ removeTransformHandles() {
 
     handleEdgeResizeDrag(e) {
         const edge = this.activeHandleType.replace('edge-', '');
+
+        // Shapes: an edge handle scales ONE axis (non-uniform), mirroring the
+        // corner-scale math but for a single dimension. Baked to a crisp pixel
+        // size on release (see handleHandlePointerUp → commitScale).
+        if (this.layer.type === LayerType.SHAPE) {
+            this.handleShapeEdgeResize(e, edge);
+            return;
+        }
+
         const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
 
         if (!this.editor.textGlitterManager?.resizeBoxFromHandle) {
@@ -1013,6 +1044,40 @@ removeTransformHandles() {
         this.updateHandlePositions();
     }
 
+    // One-axis scale for a shape edge handle (left/right → scaleX, top/bottom →
+    // scaleY). Same local-space projection as handleCornerDrag.
+    handleShapeEdgeResize(e, edge) {
+        const transform = this.getTransform();
+        const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+        const start = this.dragStartState;
+        const frame = { width: start.width, height: start.height };
+
+        const worldRotationRad = (transform.rotation * Math.PI) / 180;
+        const centerX = start.transform.position.x;
+        const centerY = start.transform.position.y;
+        const vectorX = canvasPos.x - centerX;
+        const vectorY = canvasPos.y - centerY;
+        const cos = Math.cos(-worldRotationRad);
+        const sin = Math.sin(-worldRotationRad);
+        const localX = vectorX * cos - vectorY * sin;
+        const localY = vectorX * sin + vectorY * cos;
+
+        const isHorizontal = edge === 'left' || edge === 'right';
+        const scale = {
+            x: transform.scale.x,
+            y: transform.scale.y
+        };
+        if (isHorizontal) {
+            scale.x = Math.max(10, Math.min(500, (Math.abs(localX) * 2 / frame.width) * 100));
+        } else {
+            scale.y = Math.max(10, Math.min(500, (Math.abs(localY) * 2 / frame.height) * 100));
+        }
+
+        this.updateTransform({ scale });
+        this.applyTransform(this.element, this.getDimensions());
+        this.updateHandlePositions();
+    }
+
     /**
      * Handle dragging of rotation handle
      */
@@ -1027,6 +1092,11 @@ removeTransformHandles() {
 
         // Adjust for initial offset (rotation handle is at top = -90 degrees)
         let newRotation = angle + 90;
+
+        // Photoshop parity: hold Shift to snap rotation to 15° increments.
+        if (e.shiftKey) {
+            newRotation = Math.round(newRotation / 15) * 15;
+        }
 
         // Normalize to 0-360
         if (newRotation < 0) newRotation += 360;

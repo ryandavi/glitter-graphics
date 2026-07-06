@@ -78,6 +78,7 @@ class GlitterEditor {
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this);
 		this.textGlitterManager = new TextGlitterManager(this);
+		this.shapeGlitterManager = new ShapeGlitterManager(this);
 		this.mobileManager = new MobileManager(this);
 		this.maskCompositor = new MaskCompositor(this);
 		this.maskEditor = new MaskEditor(this);
@@ -495,6 +496,7 @@ async resetAllSettings() {
 			'glitterSearchSection',
 			'stickerSettingsSection',
 			'textSettingsSection',
+			'shapeSettingsSection',
 			'stickersOptions',
 			'stickersSearchSection'
 		];
@@ -537,8 +539,11 @@ async resetAllSettings() {
 		}
 
 		// D-1c: keep the gallery picker strip in sync when the active layer
-		// changes to any type (a non-text layer must hide the strip).
+		// changes to any type (a non-text layer must hide the strip). The shape
+		// manager drives it for shape layers, the text manager for text layers;
+		// each no-ops when its own type isn't active.
 		this.textGlitterManager?.updatePickerStrip();
+		this.shapeGlitterManager?.updatePickerStrip();
 
 		// The Canvas Size preview only makes sense in the no-layer state; drop it
 		// whenever a layer is selected or there's no image.
@@ -547,7 +552,21 @@ async resetAllSettings() {
 		}
 	}
 
+	// The single source of truth for "which accordion section should be open".
+	// Model: tool-scoped settings win while a settings tool (Brush/Eraser) is
+	// active (Photoshop Options-bar behavior); otherwise the SELECTED layer's
+	// Properties; otherwise the Design Gallery (nothing to edit / browse mode).
 	getPreferredDesignSection(layer) {
+		// Brush/Eraser Settings follow the tool, independent of the layer.
+		if (this.currentTool === ToolType.BRUSH) {
+			return 'brushSettings';
+		}
+
+		// An armed glitter pick-session keeps the gallery focused (Done returns you).
+		if (this.textGlitterManager?.pickerSession || this.shapeGlitterManager?.pickerSession) {
+			return 'designGallery';
+		}
+
 		if (!this.originalImage || !layer || layer.type === LayerType.BASE_IMAGE) {
 			return 'designGallery';
 		}
@@ -558,6 +577,10 @@ async resetAllSettings() {
 
 		if (layer.type === LayerType.STICKER) {
 			return 'stickerSettings';
+		}
+
+		if (layer.type === LayerType.SHAPE) {
+			return 'shapeSettings';
 		}
 
 		return 'glitterSettings';
@@ -975,7 +998,9 @@ async resetAllSettings() {
 		const layer = this.layerManager.getActiveLayer();
 		const selectedGlitterId = layer?.type === LayerType.TEXT_GLITTER
 			? this.textGlitterManager?.resolveSelectedGlitterId(layer)
-			: layer?.selectedGlitterId;
+			: layer?.type === LayerType.SHAPE
+				? this.shapeGlitterManager?.resolveSelectedGlitterId(layer)
+				: layer?.selectedGlitterId;
 
 		// Query all glitter options in BOTH traditional grid AND asset browser
 		const glitterOptions = document.querySelectorAll(
@@ -983,7 +1008,7 @@ async resetAllSettings() {
 		);
 
 		glitterOptions.forEach(opt => {
-			const isSelected = layer && (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER) &&
+			const isSelected = layer && (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) &&
 				parseInt(opt.dataset.id, 10) === selectedGlitterId;
 			opt.classList.toggle('selected', isSelected);
 		});
@@ -1016,7 +1041,7 @@ async resetAllSettings() {
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
-		const sections = ['designGallery', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings', 'brushSettings'];
+		const sections = ['designGallery', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings', 'shapeSettings', 'brushSettings'];
 
 		const setOpen = (name, isOpen, accordion = false) => {
 			const section = document.getElementById(`${name}Section`);
@@ -1237,6 +1262,7 @@ async resetAllSettings() {
 		this.setupMaskEditorListeners();
 		this.setupTransformListeners('sticker', LayerType.STICKER, () => this.stickerManager);
 		this.setupTransformListeners('text', LayerType.TEXT_GLITTER, () => this.textGlitterManager);
+		this.setupTransformListeners('shape', LayerType.SHAPE, () => this.shapeGlitterManager);
 		this.setupExportListeners();
 		this.setupImageListeners();
 		this.setupModalListeners();
@@ -1256,9 +1282,9 @@ async resetAllSettings() {
 
 		if (!slider || !valueDisplay) return;
 
-		// Live value display
+		// Live value display (unit rendered as a muted .setting-unit span)
 		slider.addEventListener('input', (e) => {
-			valueDisplay.textContent = e.target.value + suffix;
+			valueDisplay.innerHTML = formatUnit(e.target.value, suffix);
 			if (resetBtn) {
 				resetBtn.disabled = parseInt(slider.value) === resetValue;
 			}
@@ -1269,7 +1295,7 @@ async resetAllSettings() {
 		if (resetBtn) {
 			resetBtn.addEventListener('click', () => {
 				slider.value = resetValue;
-				valueDisplay.textContent = resetValue + suffix;
+				valueDisplay.innerHTML = formatUnit(resetValue, suffix);
 				slider.dispatchEvent(new Event('input'));
 				slider.dispatchEvent(new Event('change'));
 				resetBtn.disabled = true;
@@ -1312,6 +1338,7 @@ async resetAllSettings() {
 		const tools = [
 			{ id: 'selectTool', type: ToolType.SELECT },
 			{ id: 'textTool', type: ToolType.TEXT },
+			{ id: 'shapeTool', type: ToolType.SHAPE },
 			{ id: 'colorPickerTool', type: ToolType.COLOR_PICKER },
 			{ id: 'handTool', type: ToolType.HAND },
 			{ id: 'zoomTool', type: ToolType.ZOOM }
@@ -1627,14 +1654,14 @@ async resetAllSettings() {
 		quick.min = canonical.min;
 		quick.max = canonical.max;
 		quick.value = canonical.value;
-		if (quickValue) quickValue.textContent = canonical.value + suffix;
+		if (quickValue) quickValue.innerHTML = formatUnit(canonical.value, suffix);
 
 		let syncing = false;
 		canonical.addEventListener('input', () => {
 			if (syncing) return;
 			syncing = true;
 			quick.value = canonical.value;
-			if (quickValue) quickValue.textContent = canonical.value + suffix;
+			if (quickValue) quickValue.innerHTML = formatUnit(canonical.value, suffix);
 			syncing = false;
 		});
 
@@ -1642,7 +1669,7 @@ async resetAllSettings() {
 			if (syncing) return;
 			syncing = true;
 			canonical.value = quick.value;
-			if (quickValue) quickValue.textContent = quick.value + suffix;
+			if (quickValue) quickValue.innerHTML = formatUnit(quick.value, suffix);
 			canonical.dispatchEvent(new Event('input'));
 			syncing = false;
 		});
@@ -1666,6 +1693,18 @@ async resetAllSettings() {
 			};
 		}
 
+		if (prefix === 'shape') {
+			return {
+				posX: 'shapePosX', posY: 'shapePosY',
+				rotation: 'shapeRotation', rotationValue: 'shapeRotationValue', resetRotation: 'resetShapeRotation',
+				opacity: 'shapeOpacity', opacityValue: 'shapeOpacityValue', resetOpacity: 'resetShapeOpacity',
+				scaleX: 'shapeScaleX', scaleXValue: 'shapeScaleXValue', resetScaleX: 'resetShapeScaleX',
+				scaleY: 'shapeScaleY', scaleYValue: 'shapeScaleYValue', resetScaleY: 'resetShapeScaleY',
+				proportional: 'shapeProportionalScale',
+				flipX: 'shapeFlipX', flipY: 'shapeFlipY'
+			};
+		}
+
 		return {
 			posX: 'textPosX', posY: 'textPosY',
 			rotation: 'textRotation', rotationValue: 'textRotationValue', resetRotation: 'resetTextRotation',
@@ -1678,7 +1717,7 @@ async resetAllSettings() {
 	}
 
 	getLayerTransformData(layer) {
-		return layer?.stickerData?.transform || layer?.textData?.transform || null;
+		return layer?.stickerData?.transform || layer?.textData?.transform || layer?.shapeData?.transform || null;
 	}
 
 	loadTransformSettings(layer, prefix) {
@@ -2622,6 +2661,12 @@ setupWelcomeModalListeners() {
 			if (this.currentTool === ToolType.TEXT) {
 				return;
 			}
+			// Shape tool: drag out the initial size (Photoshop-style); a plain click
+			// with no drag falls back to a default-size shape at the click point.
+			if (this.currentTool === ToolType.SHAPE && this.originalImage) {
+				this.startShapeDrag(e);
+				return;
+			}
 			this.handlePreviewContainerClick(e);
 		});
 
@@ -2642,6 +2687,75 @@ setupWelcomeModalListeners() {
 				e.preventDefault();
 			}
 		});
+	}
+
+	// Rubber-band shape creation: drag out the box, release to create a shape of
+	// that size (Shift constrains to a square). A negligible drag = a plain click,
+	// which makes a default-size shape at the click point.
+	startShapeDrag(e) {
+		const container = this.previewContainer;
+		const rect = container.getBoundingClientRect();
+		const startCanvas = this.viewport.screenToCanvas(e.clientX, e.clientY);
+		const startScreen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+
+		const preview = document.createElement('div');
+		preview.className = 'shape-drag-preview';
+		container.appendChild(preview);
+
+		let lastShift = false;
+
+		const boxFromEvent = (ev, useCanvas) => {
+			const a = useCanvas ? startCanvas : startScreen;
+			const b = useCanvas
+				? this.viewport.screenToCanvas(ev.clientX, ev.clientY)
+				: { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+			let w = Math.abs(b.x - a.x);
+			let h = Math.abs(b.y - a.y);
+			if (ev.shiftKey) { w = h = Math.max(w, h); }
+			const left = b.x < a.x ? a.x - w : a.x;
+			const top = b.y < a.y ? a.y - h : a.y;
+			return { left, top, w, h, cx: left + w / 2, cy: top + h / 2 };
+		};
+
+		const onMove = (ev) => {
+			lastShift = ev.shiftKey;
+			const box = boxFromEvent(ev, false);
+			preview.style.left = `${box.left}px`;
+			preview.style.top = `${box.top}px`;
+			preview.style.width = `${box.w}px`;
+			preview.style.height = `${box.h}px`;
+		};
+
+		const onUp = (ev) => {
+			window.removeEventListener('pointermove', onMove);
+			window.removeEventListener('pointerup', onUp);
+			preview.remove();
+
+			const box = boxFromEvent(ev, true);
+			const isClick = Math.max(box.w, box.h) < 6;
+			// A click: no explicit box → createLayer derives an aspect-correct default
+			// size. A drag: pass the drawn box (may stretch, Photoshop-style).
+			const shapeLayer = isClick
+				? { shapeId: this.shapeGlitterManager.getActiveShapeId(), position: { x: startCanvas.x, y: startCanvas.y } }
+				: { shapeId: this.shapeGlitterManager.getActiveShapeId(), position: { x: box.cx, y: box.cy }, width: box.w, height: box.h };
+
+			const layer = this.layerManager.addLayer(LayerType.SHAPE, { shapeLayer });
+
+			// Swallow the click that follows this pointerup so it can't double-create.
+			this.ignoreNextClick = true;
+			setTimeout(() => { this.ignoreNextClick = false; }, 0);
+
+			if (layer) {
+				this.setTool(ToolType.SELECT);
+				setTimeout(() => {
+					this.updateSidePanelUI(layer);
+					this.loadActiveLayerSettings();
+				}, 0);
+			}
+		};
+
+		window.addEventListener('pointermove', onMove);
+		window.addEventListener('pointerup', onUp);
 	}
 
 	// ===== GLOBAL LISTENERS =====
@@ -2742,7 +2856,7 @@ setupWelcomeModalListeners() {
 
 
 		// Remove all tool classes from body
-		document.body.classList.remove('tool-select', 'tool-text', 'tool-hand', 'tool-colorPicker', 'tool-zoom', 'tool-brush');
+		document.body.classList.remove('tool-select', 'tool-text', 'tool-shape', 'tool-hand', 'tool-colorPicker', 'tool-zoom', 'tool-brush');
 
 		// Add current tool class
 		document.body.classList.add(`tool-${tool}`);
@@ -2756,6 +2870,7 @@ setupWelcomeModalListeners() {
 		const toolButtonIds = {
 			'select': 'selectTool',
 			'text': 'textTool',
+			'shape': 'shapeTool',
 			'hand': 'handTool',
 			'colorPicker': 'colorPickerTool',
 			'brush': 'brushTool',
@@ -2790,12 +2905,19 @@ setupWelcomeModalListeners() {
 			if (tool === ToolType.SELECT && activeLayer && activeLayer.type === LayerType.STICKER) {
 				this.stickerManager.createTransformHandles(activeLayer.id);
 				this.textGlitterManager.removeTransformHandles();
+				this.shapeGlitterManager?.removeTransformHandles();
 			} else if (tool === ToolType.SELECT && activeLayer && activeLayer.type === LayerType.TEXT_GLITTER) {
 				this.textGlitterManager.createTransformHandles(activeLayer.id);
 				this.stickerManager.removeTransformHandles();
+				this.shapeGlitterManager?.removeTransformHandles();
+			} else if (tool === ToolType.SELECT && activeLayer && activeLayer.type === LayerType.SHAPE) {
+				this.shapeGlitterManager?.createTransformHandles(activeLayer.id);
+				this.stickerManager.removeTransformHandles();
+				this.textGlitterManager.removeTransformHandles();
 			} else {
 				this.stickerManager.removeTransformHandles();
 				this.textGlitterManager.removeTransformHandles();
+				this.shapeGlitterManager?.removeTransformHandles();
 			}
 		}
 
@@ -2805,6 +2927,11 @@ setupWelcomeModalListeners() {
 		// 3. Update Context Toolbars
 		this.updateContextToolbars();
 
+		// Reconcile the sidebar accordion with the new tool: entering Brush/Eraser
+		// opens its Settings; leaving a settings tool returns focus to the selected
+		// layer's Properties (or the Gallery). Only on an actual tool change (setTool
+		// early-returns when unchanged), so it never fights a manual accordion toggle.
+		this.syncCollapsibleSections?.(this.getPreferredDesignSection(this.layerManager.getActiveLayer()));
 
 		// Update helpful message
 		this.updateHelpfulMessage();
@@ -2908,6 +3035,7 @@ setupWelcomeModalListeners() {
 			const toolMap = {
 				[ToolType.SELECT]: { icon: 'icon-hand-pointer', name: 'Select Tool' },
 				[ToolType.TEXT]: { icon: 'icon-hand-pointer', name: 'Text Tool' },
+				[ToolType.SHAPE]: { icon: 'icon-square', name: 'Shape Tool' },
 				[ToolType.COLOR_PICKER]: { icon: 'icon-paint-bucket', name: 'Color Fill' },
 				[ToolType.BRUSH]: { icon: 'icon-brush', name: 'Mask Brush' },
 				[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
@@ -2989,6 +3117,12 @@ setupWelcomeModalListeners() {
 			showTool = true;
 			hint = 'Click empty canvas space to create a point-text layer';
 			context = 'The click becomes the text anchor. Existing layers stay put until you switch back to Select.';
+		}
+
+		else if (currentTool === ToolType.SHAPE) {
+			showTool = true;
+			hint = 'Drag on the canvas to draw a shape at that size';
+			context = 'Hold Shift to keep it square. A single click makes a default-size shape. Pick the shape and its fill/border/shadow in Shape Properties.';
 		}
 
 		else if (currentTool === ToolType.COLOR_PICKER) {
@@ -3233,6 +3367,9 @@ setupWelcomeModalListeners() {
 			this.setTool(ToolType.BRUSH);
 			this.maskEditor?.setMode('sub');
 		}
+		if (e.key === 'u' || e.key === 'U') {
+			if (this.originalImage) this.setTool(ToolType.SHAPE);
+		}
 		if (e.key === 'h' || e.key === 'H') {
 			if (this.originalImage) this.setTool(ToolType.HAND);
 		}
@@ -3389,6 +3526,7 @@ setupWelcomeModalListeners() {
 		const exportGif = document.getElementById('exportGif');
 		const imageClearBtn = document.getElementById('imageClearBtn');
 		const textTool = document.getElementById('textTool');
+		const shapeTool = document.getElementById('shapeTool');
 		const colorPickerTool = document.getElementById('colorPickerTool');
 		const handTool = document.getElementById('handTool');
 		const zoomTool = document.getElementById('zoomTool');
@@ -3425,6 +3563,7 @@ setupWelcomeModalListeners() {
 		}
 
 		if (textTool) textTool.disabled = !hasImage;
+		if (shapeTool) shapeTool.disabled = !hasImage;
 		if (colorPickerTool) colorPickerTool.disabled = !hasImage;
 		if (handTool) handTool.disabled = !hasImage;
 		if (zoomTool) zoomTool.disabled = !hasImage;
@@ -4498,6 +4637,7 @@ setupWelcomeModalListeners() {
 
 		this.stickerManager.renderContent(layersToShow);
 		this.textGlitterManager.renderContent(layersToShow);
+		this.shapeGlitterManager.renderContent(layersToShow);
 	}
 
 	renderPreviewCanvas(layersToShow) {
@@ -4658,6 +4798,7 @@ setupWelcomeModalListeners() {
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
 				createMask: (layer) => this.maskCompositor.getMaskData(layer),
 				renderTextMask: (layer) => this.textGlitterManager.renderTextMask(layer),
+				renderShapeMask: (layer) => this.shapeGlitterManager.buildMaskEntry(layer),
 				ensureTextFont: (fontId) => this.textGlitterManager.ensureFontLoaded(fontId)
 			}
 		};

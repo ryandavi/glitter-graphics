@@ -16,6 +16,7 @@ class MobileManager {
 			glitter: null,
 			sticker: null,
 			text: null,
+			shape: null,
 			// Tool-scoped, not layer-scoped: the mask-brush settings live in the
 			// design panel and are toggled by the active tool, so on mobile they
 			// must be relocated into the settings drawer while brushing (see
@@ -78,6 +79,7 @@ class MobileManager {
 		this.settingsSections.glitter = document.querySelector('.glitter-settings-section');
 		this.settingsSections.sticker = document.querySelector('.sticker-settings-section');
 		this.settingsSections.text = document.querySelector('.text-settings-section');
+		this.settingsSections.shape = document.querySelector('.shape-settings-section');
 		this.settingsSections.brush = document.querySelector('.brush-settings-section');
 
 		// Store original parents
@@ -92,6 +94,9 @@ class MobileManager {
 		}
 		if (this.settingsSections.text) {
 			this.originalParents.set('text', this.settingsSections.text.parentElement);
+		}
+		if (this.settingsSections.shape) {
+			this.originalParents.set('shape', this.settingsSections.shape.parentElement);
 		}
 		if (this.settingsSections.brush) {
 			this.originalParents.set('brush', this.settingsSections.brush.parentElement);
@@ -454,7 +459,8 @@ if (!this.isMobile && nowMobile) {
 			tool: 'layerSettings',
 			glitter: 'glitterSettings',
 			sticker: 'stickerSettings',
-			text: 'textSettings'
+			text: 'textSettings',
+			shape: 'shapeSettings'
 		};
 
 		Object.entries(sectionNameByKey).forEach(([key, sectionName]) => {
@@ -546,6 +552,13 @@ if (!this.isMobile && nowMobile) {
 			const originalParent = this.originalParents.get('text');
 			if (originalParent && !originalParent.contains(this.settingsSections.text)) {
 				originalParent.appendChild(this.settingsSections.text);
+			}
+		}
+
+		if (this.settingsSections.shape && this.originalParents.has('shape')) {
+			const originalParent = this.originalParents.get('shape');
+			if (originalParent && !originalParent.contains(this.settingsSections.shape)) {
+				originalParent.appendChild(this.settingsSections.shape);
 			}
 		}
 

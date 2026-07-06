@@ -63,6 +63,7 @@ class TextGlitterManager {
 			fillGlitterFrames: document.getElementById('textFillGlitterFrames'),
 			fillUseColor: document.getElementById('textFillUseColor'),
 			fillUseGlitter: document.getElementById('textFillUseGlitter'),
+			fillUseNone: document.getElementById('textFillUseNone'),
 			fillColor: document.getElementById('textFillColor'),
 			fillColorRow: document.getElementById('textFillColorRow'),
 			textureScaleRow: document.getElementById('textTextureScaleRow'),
@@ -330,6 +331,7 @@ class TextGlitterManager {
 
 		this.bindFillUseColor();
 		this.bindFillUseGlitter();
+		this.bindFillUseNone();
 		this.bindFillColorInput();
 
 		this.attachSlider(this.ui.borderScale, this.ui.borderScaleValue, '%', (value, layer) => {
@@ -847,6 +849,26 @@ class TextGlitterManager {
 			}
 
 			this.editor.updateStatus('Text fill is using glitter — click the swatch or Change to pick a different one.');
+		});
+	}
+
+	bindFillUseNone() {
+		const button = this.ui.fillUseNone;
+		if (!button) return;
+
+		button.addEventListener('click', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+			if (this.getEffectData(layer, 'fill')?.mode === 'none') return;
+
+			// No fill → the text reads as an outline (its border becomes hollow).
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.ensureEffectData(layer, 'fill').mode = 'none';
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
 		});
 	}
 
@@ -1384,16 +1406,20 @@ class TextGlitterManager {
 		if (!this.ui.fillGlitterChip || !this.ui.fillGlitterLabel) return;
 
 		const fillData = this.ensureEffectData(layer, 'fill');
-		const usesGlitter = fillData.mode !== 'solid';
+		const isNone = fillData.mode === 'none';
+		const usesGlitter = fillData.mode === 'glitter';
+		const usesSolid = fillData.mode === 'solid';
 		const glitter = usesGlitter
 			? this.editor.glitterManager?.getItemById(layer?.selectedGlitterId)
 			: null;
 
-		// Segmented control reflects the mode; exactly one source display shows.
+		// Segmented control reflects the mode; at most one source display shows
+		// (None shows neither — the text becomes an outline via its border).
+		if (this.ui.fillUseNone) this.ui.fillUseNone.classList.toggle('active', isNone);
 		if (this.ui.fillUseGlitter) this.ui.fillUseGlitter.classList.toggle('active', usesGlitter);
-		if (this.ui.fillUseColor) this.ui.fillUseColor.classList.toggle('active', !usesGlitter);
+		if (this.ui.fillUseColor) this.ui.fillUseColor.classList.toggle('active', usesSolid);
 		if (this.ui.fillGlitterInfo) this.ui.fillGlitterInfo.hidden = !usesGlitter;
-		if (this.ui.fillColorRow) this.ui.fillColorRow.hidden = usesGlitter;
+		if (this.ui.fillColorRow) this.ui.fillColorRow.hidden = !usesSolid;
 		// Texture scale/opacity are only meaningful for a glitter fill.
 		if (this.ui.textureScaleRow) this.ui.textureScaleRow.hidden = !usesGlitter;
 
@@ -1467,6 +1493,8 @@ class TextGlitterManager {
 
 	setupPickerStripListeners() {
 		this.ui.pickerStripDone?.addEventListener('click', () => {
+			// When a shape layer is active, the shape manager owns Done.
+			if (this.editor.layerManager.getActiveLayer()?.type === LayerType.SHAPE) return;
 			const slot = this.pickerSession?.slot || 'fill';
 			this.closePickerSession();
 			this.returnToTextProperties(slot);
@@ -2333,15 +2361,18 @@ class TextGlitterManager {
 			});
 		}
 
-		descriptors.push({
-			key: 'fill',
-			offsetX: 0,
-			offsetY: 0,
-			source: this.getEffectPaintSource(layer, 'fill'),
-			maskType: 'fill',
-			maskCanvas: measurement.canvas,
-			maskCacheKey: measurement.key
-		});
+		const fillSource = this.getEffectPaintSource(layer, 'fill');
+		if (fillSource) {
+			descriptors.push({
+				key: 'fill',
+				offsetX: 0,
+				offsetY: 0,
+				source: fillSource,
+				maskType: 'fill',
+				maskCanvas: measurement.canvas,
+				maskCacheKey: measurement.key
+			});
+		}
 
 		return descriptors;
 	}
@@ -2351,7 +2382,10 @@ class TextGlitterManager {
 	// layers), then texture that one shape once. Mirrors
 	// GifExporter._createBorderMaskCanvas so the live preview matches export.
 	getBorderMaskCanvas(layer, measurement, widthPx) {
-		const cutOutFill = layer.settings.opacity < 100;
+		// Punch the glyph silhouette out of the border for an outline when the
+		// fill won't cover it (no fill, or a see-through fill) — same rule as shapes.
+		const fillIsNone = this.ensureEffectData(layer, 'fill').mode === 'none';
+		const cutOutFill = fillIsNone || layer.settings.opacity < 100;
 		const cacheKey = `border:${widthPx}:${cutOutFill ? 1 : 0}`;
 
 		if (measurement._borderMaskCache?.key === cacheKey) {
@@ -2383,6 +2417,8 @@ class TextGlitterManager {
 		// getDefaultFill(). Border/shadow carry their own per-slot scale/opacity.
 		if (effectName === 'fill') {
 			const fillData = this.ensureEffectData(layer, 'fill');
+			// Fill 'none' renders nothing — with a border this makes outlined text.
+			if (fillData.mode === 'none') return null;
 			if (fillData.mode === 'solid') {
 				return {
 					mode: 'solid',
@@ -2423,7 +2459,10 @@ class TextGlitterManager {
 
 	getBorderOffsets(widthPx) {
 		const radius = Math.max(1, widthPx);
-		const steps = widthPx > 6 ? 16 : 8;
+		// Sample count scales with the border radius so the outer envelope of the
+		// unioned copies stays smooth (few steps = visible scalloping on wide
+		// borders). Kept in lockstep with GifExporter._createBorderMaskCanvas.
+		const steps = Math.max(16, Math.min(64, Math.ceil(radius * 4)));
 		const seen = new Set();
 		const offsets = [];
 

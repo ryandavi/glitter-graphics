@@ -134,6 +134,15 @@ const CONFIG = {
 	},
 
 	// ========================================
+	// TOOLS - Shapes (WP5b)
+	// ========================================
+	shapes: {
+		defaultShapeId: 'circle',   // one of ShapeLibrary.FILL_SHAPES ids
+		defaultSize: 160,           // intrinsic px for a click (no-drag) create
+		minSize: 8
+	},
+
+	// ========================================
 	// UI - Zoom
 	// ========================================
 	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
@@ -231,6 +240,7 @@ const CONFIG = {
 		tools: [
 			{ key: 'V', action: 'Select Tool' },
 			{ key: 'T', action: 'Text Tool' },
+			{ key: 'U', action: 'Shape Tool' },
 			{ key: 'I', action: 'Color Fill Tool' },
 			{ key: 'B', action: 'Mask Brush Tool' },
 			{ key: 'E', action: 'Mask Eraser Tool' },
@@ -240,8 +250,7 @@ const CONFIG = {
 		brush: [
 			{ key: 'X', action: 'Swap Paint/Erase (Mask Brush)' },
 			{ key: '[ / ]', action: 'Decrease/Increase Brush Size' },
-			{ key: 'Shift + Drag', action: 'Constrain to a straight line (0/45/90°)' },
-			{ key: 'Shift + Click', action: 'Line from the previous stroke to the click' },
+			{ key: 'Shift + Drag', action: 'Constrain the stroke to a straight line (0/45/90°)' },
 		],
 		view: [
 			{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)' },
@@ -261,12 +270,14 @@ const LayerType = {
 	GLITTER_FILL: 'glitter-fill',
 	STICKER: 'sticker',
 	TEXT_GLITTER: 'text-glitter',
+	SHAPE: 'shape',
 	BASE_IMAGE: 'base-image',
 };
 
 const ToolType = {
 	SELECT: 'select',
 	TEXT: 'text',
+	SHAPE: 'shape',
 	HAND: 'hand',
 	COLOR_PICKER: 'colorPicker',
 	BRUSH: 'brush',
@@ -290,6 +301,8 @@ function layerHasVisibleContent(layer) {
 			return !layer.stickerData || !layer.stickerData.isEmpty;
 		case LayerType.TEXT_GLITTER:
 			return Boolean(layer.textData?.text?.trim());
+		case LayerType.SHAPE:
+			return Boolean(layer.shapeData);
 		case LayerType.GLITTER_FILL:
 			return hasMaskContent(layer);
 		case LayerType.BASE_IMAGE:
@@ -378,6 +391,23 @@ const LAYER_UI_CONFIG = {
 
 			editor.updateGlitterSelection();
 			editor.textGlitterManager?.loadLayerSettings(layer);
+		}
+	},
+
+	[LayerType.SHAPE]: {
+		// Like text: the glitter gallery picks the shared swatch, plus a dedicated
+		// Shape Properties panel. Selection Settings doesn't apply.
+		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'shapeSettingsSection'],
+		mobileSettingsSections: ['glitter', 'shape'],
+		panelMode: 'shape',
+		onActivate: (editor, layer) => {
+			const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.SHAPE]);
+			if (!validTools.has(editor.currentTool)) {
+				editor.setTool(ToolType.SELECT);
+			}
+
+			editor.updateGlitterSelection();
+			editor.shapeGlitterManager?.loadLayerSettings(layer);
 		}
 	}
 };

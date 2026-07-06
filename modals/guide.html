@@ -48,6 +48,13 @@
             </ol>
         </li>
         <li>
+            <a href="#shapes">Shapes</a>
+            <ol>
+                <li><a href="#create-shape">Draw a Shape</a></li>
+                <li><a href="#shape-fill">Fill, Border &amp; Shadow</a></li>
+            </ol>
+        </li>
+        <li>
             <a href="#export">Export</a>
             <ol>
                 <li><a href="#exporting-process">Exporting</a></li>
@@ -226,6 +233,22 @@
                 </div>
             </div>
 
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-square"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Shape (U)</strong> – Drag on the canvas to draw a shape at that size (Shift = square), or click for a default size.</p>
+                    <ul>
+                        <li>See <a href="#shapes">Shapes</a> for shape choices and fill/border/shadow options.</li>
+                    </ul>
+                </div>
+            </div>
+
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -281,6 +304,23 @@
                     <p>Drag layers up/down to reorder them (top layers appear in front).</p>
                     <ul>
                         <li>On touch devices, use the handles to drag layers.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-move"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Sticker, text, and shape layers have transform handles: drag to move, corner handles to scale, side handles for non-proportional scaling, and the top handle to rotate.</p>
+                    <ul>
+                        <li>Hold <strong>Shift</strong> while rotating to snap to 15° increments.</li>
+                        <li>Or set Position, Rotation, Scale, and Flip precisely in the layer's Properties panel.</li>
                     </ul>
                 </div>
             </div>
@@ -622,7 +662,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Straight lines</strong> – Hold <strong>Shift</strong> while dragging to constrain the stroke to a straight line (0°, 45°, or 90°). <strong>Shift</strong>-click to draw a straight line from the end of your previous stroke to the point you click.</p>
+                    <p><strong>Straight lines</strong> – Hold <strong>Shift</strong> while dragging to constrain the current stroke to a straight line (0°, 45°, or 90°).</p>
                 </div>
             </div>
 
@@ -971,6 +1011,80 @@
                 </div>
                 <div class="guide-item-content">
                     <p>Only one swatch is "active" for glitter picking at a time — click a swatch (Fill, Border, or Shadow) to send the next glitter you pick in the gallery to that part of the text.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHAPES -->
+    <div class="guide-section">
+        <h3 id="shapes">
+            <span class="icon-wrapper">
+                <svg class="icon">
+                    <use href="#icon-square"></use>
+                </svg>
+            </span>
+            Shapes
+        </h3>
+
+        <div class="guide-subsection">
+            <h4 id="create-shape">Draw a Shape</h4>
+            <p>Add clean vector shapes — circle, square, triangle, diamond, pentagon, hexagon, star, or heart — filled with glitter or solid color.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-square"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Click the <strong>Shape</strong> tool in the toolbar, or press <strong>U</strong>. <strong>Drag</strong> on the canvas to draw the shape at that size (hold <strong>Shift</strong> to keep it square), or just <strong>click</strong> for a default-size shape.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Pick the shape from the gallery in <strong>Shape Properties</strong>. Resize, rotate, and move it with the transform handles like any other layer — shapes re-render crisply at their new size, so they never look pixelated.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="shape-fill">Fill, Border &amp; Shadow</h4>
+            <p>Each shape has a Fill plus optional Border and Shadow, and every one can be glitter or a solid color.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-sliders"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Fill</strong> – Choose <strong>None</strong>, <strong>Glitter</strong>, or <strong>Solid</strong>. Set the fill to <strong>None</strong> with a Border on to get an <strong>outline</strong> shape. (The same None option on text makes outlined text.)</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Border</strong> &amp; <strong>Shadow</strong> – Enable each and pick its own glitter or solid color, width/offset, and opacity. Borders follow the shape's true outline, so even sharp shapes like the star stay smooth. Open <strong>Advanced</strong> on any slot to recolor its glitter (Hue / Saturation / Brightness).</p>
                 </div>
             </div>
         </div>
