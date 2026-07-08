@@ -200,6 +200,13 @@ class MobileManager {
 					return;
 				}
 
+				// Same carve-out for the design panel (its own gallery header is a
+				// collapsible-section header too) - let the accordion toggle itself
+				// instead of the drawer swallowing the click as a close.
+				if (inDesignPanel && header.closest('.collapsible-section')) {
+					return;
+				}
+
 				// Close design drawer if clicking design panel header
 				if (inDesignPanel && this.activeDrawer === 'design') {
 					this.closeAllDrawers();

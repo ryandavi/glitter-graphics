@@ -1312,7 +1312,10 @@ input[type="range"] {
 					text-transform: uppercase;
 					flex-shrink: 0;
 
-					&.layer-badge-paint {
+					&.layer-badge-paint,
+					&.layer-badge-color,
+					&.layer-badge-border,
+					&.layer-badge-shadow {
 						background: var(--color-accent-light);
 						color: var(--color-accent);
 						border: 1px solid var(--color-accent-border);
@@ -2396,7 +2399,9 @@ body.tool-text {
 			/* Draws inside the canvas edge */
 			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5);
 			/* Drop shadow for contrast */
-
+			/* Clip any layer content that extends past the canvas edge - the
+			   toggle's whole point is previewing what's actually inside bounds. */
+			overflow: hidden;
 		}
 	}
 
@@ -5123,7 +5128,9 @@ body.mask-editing {
 
 
 			.glitter-settings-section,
-			.sticker-settings-section {
+			.sticker-settings-section,
+			.text-settings-section,
+			.shape-settings-section {
 				display: none;
 			}
 		}

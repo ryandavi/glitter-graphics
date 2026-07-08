@@ -219,8 +219,9 @@ class ShapeGlitterManager {
 				// fall back to the default glitter. The gallery opens only via the
 				// swatch/Change buttons (armPicker).
 				if (mode === 'glitter' && !this.getSlotGlitterId(layer, slot)) {
-					if (slot === 'fill') layer.selectedGlitterId = CONFIG.defaultGlitterId;
-					else data.glitterId = CONFIG.defaultGlitterId;
+					if (slot === 'fill') layer.selectedGlitterId = CONFIG.defaultFillGlitterId;
+					else if (slot === 'border') data.glitterId = CONFIG.defaultBorderGlitterId;
+					else if (slot === 'shadow') data.glitterId = CONFIG.defaultShadowGlitterId;
 				}
 				this._refreshSourceUI(layer, slot);
 				this.invalidateMeasurement(layer);
@@ -440,8 +441,9 @@ class ShapeGlitterManager {
 		if (mode === 'glitter') {
 			// Glitter mode is never empty — fall back to the default glitter.
 			if (!this.getSlotGlitterId(layer, slot)) {
-				if (slot === 'fill') layer.selectedGlitterId = CONFIG.defaultGlitterId;
-				else data.glitterId = CONFIG.defaultGlitterId;
+				if (slot === 'fill') layer.selectedGlitterId = CONFIG.defaultFillGlitterId;
+				else if (slot === 'border') data.glitterId = CONFIG.defaultBorderGlitterId;
+				else if (slot === 'shadow') data.glitterId = CONFIG.defaultShadowGlitterId;
 			}
 			const glitter = this.editor.glitterManager.getItemById(this.getSlotGlitterId(layer, slot));
 			const els = {
@@ -520,7 +522,7 @@ class ShapeGlitterManager {
 	getDefaultFill() {
 		return {
 			mode: 'glitter',
-			color: '#ff66cc',
+			color: CONFIG.defaultFillColor,
 			scale: 100,
 			opacity: 100,
 			colorAdjust: null
@@ -531,7 +533,7 @@ class ShapeGlitterManager {
 		return {
 			widthPx: 6,
 			mode: 'solid',
-			color: '#000000',
+			color: CONFIG.defaultBorderColor,
 			glitterId: null,
 			scale: 100,
 			opacity: 100,
@@ -544,7 +546,7 @@ class ShapeGlitterManager {
 			offsetX: 6,
 			offsetY: 6,
 			mode: 'solid',
-			color: '#000000',
+			color: CONFIG.defaultShadowColor,
 			glitterId: null,
 			scale: 100,
 			opacity: 100,
@@ -607,7 +609,7 @@ class ShapeGlitterManager {
 			name: this.getShapeLabel(shapeId),
 			visible: true,
 			locked: false,
-			selectedGlitterId: CONFIG.defaultGlitterId,
+			selectedGlitterId: CONFIG.defaultFillGlitterId,
 			settings: { scale: CONFIG.defaultScale, opacity: CONFIG.defaultOpacity },
 			shapeData: {
 				shapeId,
@@ -798,6 +800,28 @@ class ShapeGlitterManager {
 		d.renderWidth = canvasWidth;
 		d.renderHeight = canvasHeight;
 		return entry;
+	}
+
+	// The user-facing frame in shape-local units, centered relative to the padded
+	// mask canvas (mirrors TextGlitterManager.getTextFrame) — used by LayerTransform
+	// so the selection box hugs the shape, not its border/shadow padding.
+	// NOT named getShapeFrame(layer): that name is already a class method below
+	// (hit-test frame, returns raw {x,y,width,height} in a different shape) and a
+	// second same-named method here would silently shadow one of them.
+	getShapeHandleFrame(layer, measurement = null) {
+		this.normalizeLayer(layer);
+		if (!layer?.shapeData) return null;
+
+		const entry = measurement || this.getMeasurementEntry(layer);
+		const rect = entry.frameRect;
+		if (!rect) return null;
+
+		return {
+			width: rect.width,
+			height: rect.height,
+			offsetX: rect.x + rect.width / 2 - entry.width / 2,
+			offsetY: rect.y + rect.height / 2 - entry.height / 2
+		};
 	}
 
 	// A smooth OUTER border, calculated by stroking the shape's actual vector path
@@ -1133,6 +1157,9 @@ class ShapeGlitterManager {
 		t.scale.y = 100;
 		this.invalidateMeasurement(layer);
 		this.renderLayer(layer);
+		// Border/fill/shadow sliders show pre-commit values otherwise (e.g. border
+		// width baked larger by the scale) until the layer is reselected.
+		this.loadLayerSettings(layer);
 	}
 
 	// ===== SETTINGS / UI =====

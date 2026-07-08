@@ -78,12 +78,16 @@ const CONFIG = {
 	// ========================================
 	// TOOLS - Glitter
 	// ========================================
-	defaultGlitterId: 111,
-	// Text effect slots default to glitter mode (not solid). Border and shadow
-	// each carry their own default glitter id so they can be tuned independently
-	// of the fill's default (e.g. a darker glitter for shadows later).
+	// Fill/border/shadow each carry their own default glitter id AND solid
+	// color. Shared across every layer type that has that slot (glitter-fill,
+	// text, shape) so retuning one slot's default doesn't touch the others,
+	// and doesn't need to be set separately per layer type.
+	defaultFillGlitterId: 111,
 	defaultBorderGlitterId: 111,
 	defaultShadowGlitterId: 111,
+	defaultFillColor: '#ff66cc',
+	defaultBorderColor: '#000000',
+	defaultShadowColor: '#000000',
 	glitterSettingsOpenByDefault: false,
 	refineGlobalDefault: false,
 	glitterGlobalDefault: false,
@@ -345,6 +349,9 @@ const LAYER_UI_CONFIG = {
 		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'],
 		mobileSettingsSections: ['tool', 'glitter'],
 		panelMode: 'glitter',
+		elementClass: 'glitter-element',
+		managerKey: 'glitterManager',
+		autoOpenDesignDrawerOnCreate: true,
 		onActivate: (editor, layer) => {
 			if (!hasMaskContent(layer) && layer.selectedGlitterId && editor.currentTool !== ToolType.BRUSH) {
 				editor.setTool(ToolType.COLOR_PICKER);
@@ -360,6 +367,12 @@ const LAYER_UI_CONFIG = {
 		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'],
 		mobileSettingsSections: ['sticker'],
 		panelMode: 'sticker',
+		elementClass: 'sticker-element',
+		transformable: true,
+		managerKey: 'stickerManager',
+		hitTestMethod: 'isPointInSticker',
+		transformPrefix: 'sticker',
+		autoOpenDesignDrawerOnCreate: true,
 		onActivate: (editor, layer) => {
 			editor.setTool(ToolType.SELECT);
 
@@ -383,6 +396,16 @@ const LAYER_UI_CONFIG = {
 		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'textSettingsSection'],
 		mobileSettingsSections: ['glitter', 'text'],
 		panelMode: 'text',
+		elementClass: 'text-glitter-element',
+		transformable: true,
+		managerKey: 'textGlitterManager',
+		hitTestMethod: 'isPointInText',
+		transformPrefix: 'text',
+		createOptionsKey: 'textLayer',
+		autoOpenDesignDrawerOnCreate: true,
+		// Reopening the side panel after every tap-created layer is desktop
+		// convenience, not a mobile ask - Editor.finishLayerCreation() reads this.
+		mobileCreateBehavior: { skipReload: true },
 		onActivate: (editor, layer) => {
 			const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.BRUSH]);
 			if (!validTools.has(editor.currentTool)) {
@@ -400,6 +423,16 @@ const LAYER_UI_CONFIG = {
 		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'shapeSettingsSection'],
 		mobileSettingsSections: ['glitter', 'shape'],
 		panelMode: 'shape',
+		elementClass: 'shape-glitter-element',
+		transformable: true,
+		managerKey: 'shapeGlitterManager',
+		hitTestMethod: 'isPointInShape',
+		transformPrefix: 'shape',
+		createOptionsKey: 'shapeLayer',
+		// Unlike text/glitter/sticker, tapping the Shape tool repeatedly to place
+		// several shapes shouldn't keep yanking the Design drawer open on mobile.
+		autoOpenDesignDrawerOnCreate: false,
+		mobileCreateBehavior: { skipReload: true },
 		onActivate: (editor, layer) => {
 			const validTools = new Set([ToolType.SELECT, ToolType.HAND, ToolType.ZOOM, ToolType.SHAPE]);
 			if (!validTools.has(editor.currentTool)) {
@@ -411,6 +444,37 @@ const LAYER_UI_CONFIG = {
 		}
 	}
 };
+
+// Derived, single-source-of-truth lookups over LAYER_UI_CONFIG. Adding a new
+// LayerType that needs a DOM overlay element, transform handles, or a creation
+// factory means filling in the relevant fields above ONCE - these replace what
+// would otherwise be hand-maintained, easy-to-forget-one-type selector/dispatch
+// lists duplicated across LayerManager/LayerTransform/GestureManager/app.js.
+function isTransformableLayerType(type) {
+	return Boolean(LAYER_UI_CONFIG[type]?.transformable);
+}
+
+// CSS selector matching layer overlay elements. Pass a layerId to scope to one
+// layer's element (any type); omit it to match every layer element of the
+// matching kind (e.g. rebuilding DOM order). transformableOnly excludes types
+// that don't participate in the pointer-transform system (e.g. glitter fill).
+function getLayerElementSelector(layerId = null, { transformableOnly = false } = {}) {
+	return Object.values(LayerType)
+		.map((type) => LAYER_UI_CONFIG[type])
+		.filter((cfg) => cfg?.elementClass && (!transformableOnly || cfg.transformable))
+		.map((cfg) => `.${cfg.elementClass}${layerId != null ? `[data-layer-id="${layerId}"]` : ''}`)
+		.join(', ');
+}
+
+function getLayerManagerForType(editor, type) {
+	const key = LAYER_UI_CONFIG[type]?.managerKey;
+	return key ? editor[key] : null;
+}
+
+// Precomputed once at load (LAYER_UI_CONFIG is static): the common "every
+// layer element" and "every transformable layer element" selectors.
+const ALL_LAYER_ELEMENT_SELECTOR = getLayerElementSelector();
+const TRANSFORMABLE_LAYER_ELEMENT_SELECTOR = getLayerElementSelector(null, { transformableOnly: true });
 
 const ASSET_TYPE_CONFIG = {
 	glitter: {

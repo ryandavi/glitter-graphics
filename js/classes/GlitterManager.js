@@ -124,7 +124,7 @@ async initBrowser() {
 			maskVersion: 0,
 			maskHasContent: false,
 			selections: [],
-			selectedGlitterId: CONFIG.defaultGlitterId,
+			selectedGlitterId: CONFIG.defaultFillGlitterId,
 			settings: {
 				threshold: CONFIG.defaultThreshold,
 				feather: CONFIG.defaultFeather,

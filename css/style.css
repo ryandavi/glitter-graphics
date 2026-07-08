@@ -1220,7 +1220,7 @@ input[type=range]::-moz-range-thumb {
   text-transform: uppercase;
   flex-shrink: 0;
 }
-.layers-section > .layers-list > .layer-item > .layer-info .layer-badge.layer-badge-paint {
+.layers-section > .layers-list > .layer-item > .layer-info .layer-badge.layer-badge-paint, .layers-section > .layers-list > .layer-item > .layer-info .layer-badge.layer-badge-color, .layers-section > .layers-list > .layer-item > .layer-info .layer-badge.layer-badge-border, .layers-section > .layers-list > .layer-item > .layer-info .layer-badge.layer-badge-shadow {
   background: var(--color-accent-light);
   color: var(--color-accent);
   border: 1px solid var(--color-accent-border);
@@ -2106,6 +2106,9 @@ body.tool-text .preview-wrapper {
   /* Draws inside the canvas edge */
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5);
   /* Drop shadow for contrast */
+  /* Clip any layer content that extends past the canvas edge - the
+     toggle's whole point is previewing what's actually inside bounds. */
+  overflow: hidden;
 }
 .preview-container.zoom-cursor {
   cursor: zoom-in;
@@ -4116,7 +4119,9 @@ body.mask-editing .sticker-element {
     height: 100%;
   }
   body.designOpen .main-content > .design-panel .glitter-settings-section,
-  body.designOpen .main-content > .design-panel .sticker-settings-section {
+  body.designOpen .main-content > .design-panel .sticker-settings-section,
+  body.designOpen .main-content > .design-panel .text-settings-section,
+  body.designOpen .main-content > .design-panel .shape-settings-section {
     display: none;
   }
   body.layersOpen .main-content > .left-panel {

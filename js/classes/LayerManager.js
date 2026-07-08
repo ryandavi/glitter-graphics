@@ -120,28 +120,25 @@ class LayerManager {
 
 	// In LayerManager
 	addLayer(type = LayerType.GLITTER_FILL, options = {}) {
-		let layer;
-
-		if (type === LayerType.STICKER) {
-			layer = this.editor.stickerManager.createLayer();
-		} else if (type === LayerType.TEXT_GLITTER) {
-			layer = this.editor.textGlitterManager.createLayer(options.textLayer || {});
-		} else if (type === LayerType.SHAPE) {
-			layer = this.editor.shapeGlitterManager.createLayer(options.shapeLayer || {});
-		} else if (type === LayerType.GLITTER_FILL) {
-			layer = this.editor.glitterManager.createLayer();
-		} else {
+		const cfg = LAYER_UI_CONFIG[type];
+		const manager = getLayerManagerForType(this.editor, type);
+		if (!manager) {
 			dbg('Invalid layer type');
+			return;
 		}
+
+		const createOptions = cfg.createOptionsKey ? (options[cfg.createOptionsKey] || {}) : undefined;
+		const layer = manager.createLayer(createOptions);
 
 		if (!layer) return;  // Factory returns null if max reached
 
 		this.insertLayer(layer);
 		this.setActiveLayer(layer.id);
 
-		// On mobile, open design panel when glitter or sticker layer is added
+		// On mobile, open design panel for gallery-driven layer types (not Shape -
+		// see LAYER_UI_CONFIG[type].autoOpenDesignDrawerOnCreate).
 		if (this.editor.mobileManager && this.editor.mobileManager.isMobile && CONFIG.mobileOpenDrawOnLayerAdd) {
-			if (type === LayerType.GLITTER_FILL || type === LayerType.STICKER || type === LayerType.TEXT_GLITTER) {
+			if (cfg.autoOpenDesignDrawerOnCreate) {
 				this.editor.mobileManager.toggleDrawer('design');
 			}
 		}
@@ -163,6 +160,8 @@ class LayerManager {
 			msg = 'New sticker layer added';
 		} else if (type === LayerType.TEXT_GLITTER) {
 			msg = 'New text layer added';
+		} else if (type === LayerType.SHAPE) {
+			msg = 'New shape layer added';
 		}
 		this.editor.updateStatus(msg);
 		return layer;
@@ -456,13 +455,10 @@ class LayerManager {
 			if (!layer.visible) continue;
 
 			let isHit = false;
+			const hitTestMethod = LAYER_UI_CONFIG[layer.type]?.hitTestMethod;
 
-			if (layer.type === LayerType.STICKER) {
-				isHit = this.isPointInSticker(layer, x, y);
-			} else if (layer.type === LayerType.TEXT_GLITTER) {
-				isHit = this.isPointInText(layer, x, y);
-			} else if (layer.type === LayerType.SHAPE) {
-				isHit = this.isPointInShape(layer, x, y);
+			if (hitTestMethod) {
+				isHit = this[hitTestMethod](layer, x, y);
 			} else if (layer.type === LayerType.GLITTER_FILL) {
 				if (hasMaskContent(layer)) {
 					isHit = this.isPixelInLayerSelection(layer, x, y);
@@ -922,6 +918,40 @@ class LayerManager {
 			paintBadge.textContent = 'Paint';
 			paintBadge.title = 'This glitter layer has painted mask strokes';
 			metaRow.appendChild(paintBadge);
+		}
+
+		const addBadge = (modifier, text, title) => {
+			const badge = document.createElement('span');
+			badge.className = `layer-badge layer-badge-${modifier}`;
+			badge.textContent = text;
+			badge.title = title;
+			metaRow.appendChild(badge);
+		};
+
+		// Color: any non-identity hue/saturation/brightness adjustment on the
+		// layer's glitter source(s) - fill always, plus text/shape border/shadow.
+		const colorAdjusts = [layer.settings?.colorAdjust];
+		if (layer.type === LayerType.TEXT_GLITTER) {
+			colorAdjusts.push(layer.textData?.border?.colorAdjust, layer.textData?.shadow?.colorAdjust);
+		} else if (layer.type === LayerType.SHAPE) {
+			colorAdjusts.push(layer.shapeData?.fill?.colorAdjust, layer.shapeData?.border?.colorAdjust, layer.shapeData?.shadow?.colorAdjust);
+		}
+		if (colorAdjusts.some(adjust => adjust && !isIdentityColorAdjust(adjust))) {
+			addBadge('color', 'Color', 'This layer has a hue/saturation/brightness adjustment');
+		}
+
+		const hasBorder = layer.type === LayerType.TEXT_GLITTER ? Boolean(layer.textData?.border)
+			: layer.type === LayerType.SHAPE ? Boolean(layer.shapeData?.border)
+			: false;
+		if (hasBorder) {
+			addBadge('border', 'Border', 'This layer has a border');
+		}
+
+		const hasShadow = layer.type === LayerType.TEXT_GLITTER ? Boolean(layer.textData?.shadow)
+			: layer.type === LayerType.SHAPE ? Boolean(layer.shapeData?.shadow)
+			: false;
+		if (hasShadow) {
+			addBadge('shadow', 'Shadow', 'This layer has a shadow');
 		}
 
 		info.append(nameText, metaRow);
@@ -1562,7 +1592,7 @@ class LayerManager {
 
 		// Keep every transformable preview element in sync with layer order.
 		const existingElements = new Map();
-		container.querySelectorAll('.glitter-element, .sticker-element, .text-glitter-element').forEach(el => {
+		container.querySelectorAll(ALL_LAYER_ELEMENT_SELECTOR).forEach(el => {
 			existingElements.set(el.dataset.layerId, el);
 		});
 

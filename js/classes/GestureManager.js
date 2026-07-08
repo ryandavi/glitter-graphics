@@ -600,21 +600,15 @@ class GestureManager {
 	}
 
 	isTransformableLayer(layer) {
-		return Boolean(layer && (layer.type === LayerType.STICKER || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE));
+		return Boolean(layer && isTransformableLayerType(layer.type));
 	}
 
 	isPointInLayer(layer, screenX, screenY) {
+		const hitTestMethod = LAYER_UI_CONFIG[layer.type]?.hitTestMethod;
+		if (!hitTestMethod) return false;
+
 		const point = this.viewport.screenToCanvas(screenX, screenY);
-		if (layer.type === LayerType.STICKER) {
-			return this.editor.layerManager.isPointInSticker(layer, point.x, point.y);
-		}
-		if (layer.type === LayerType.TEXT_GLITTER) {
-			return this.editor.layerManager.isPointInText(layer, point.x, point.y);
-		}
-		if (layer.type === LayerType.SHAPE) {
-			return this.editor.layerManager.isPointInShape(layer, point.x, point.y);
-		}
-		return false;
+		return this.editor.layerManager[hitTestMethod](layer, point.x, point.y);
 	}
 
 	getLayerById(layerId) {
@@ -627,16 +621,7 @@ class GestureManager {
 			return null;
 		}
 
-		if (layer.type === LayerType.STICKER) {
-			return this.editor.stickerManager?.layerTransforms?.get(layerId) || null;
-		}
-		if (layer.type === LayerType.TEXT_GLITTER) {
-			return this.editor.textGlitterManager?.layerTransforms?.get(layerId) || null;
-		}
-		if (layer.type === LayerType.SHAPE) {
-			return this.editor.shapeGlitterManager?.layerTransforms?.get(layerId) || null;
-		}
-		return null;
+		return getLayerManagerForType(this.editor, layer.type)?.layerTransforms?.get(layerId) || null;
 	}
 
 	destroy() {

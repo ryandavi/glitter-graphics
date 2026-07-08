@@ -552,6 +552,25 @@ async resetAllSettings() {
 		}
 	}
 
+	// Shared tail end of "create a layer via a tool" (Text/Shape click-to-create):
+	// select it, and reload the side panel to show its Properties - except on
+	// mobile, where LAYER_UI_CONFIG[type].mobileCreateBehavior.skipReload opts out
+	// (reopening the panel on every tap is Design-drawer noise, not a Settings ask).
+	finishLayerCreation(layer, { onDesktopReload } = {}) {
+		if (!layer) return;
+		this.setTool(ToolType.SELECT);
+
+		const skipReload = this.mobileManager?.isMobile
+			&& LAYER_UI_CONFIG[layer.type]?.mobileCreateBehavior?.skipReload;
+		if (skipReload) return;
+
+		setTimeout(() => {
+			this.updateSidePanelUI(layer);
+			this.loadActiveLayerSettings();
+			onDesktopReload?.();
+		}, 0);
+	}
+
 	// The single source of truth for "which accordion section should be open".
 	// Model: tool-scoped settings win while a settings tool (Brush/Eraser) is
 	// active (Photoshop Options-bar behavior); otherwise the SELECTED layer's
@@ -2511,6 +2530,9 @@ setupWelcomeModalListeners() {
 					case 'glitter-fill':
 						layerType = LayerType.GLITTER_FILL;
 						break;
+					case 'shape':
+						layerType = LayerType.SHAPE;
+						break;
 					default:
 						console.error('Unknown layer type:', type);
 						return;
@@ -2632,11 +2654,9 @@ setupWelcomeModalListeners() {
 				const selectedLayer = this.layerManager.getActiveLayer();
 				if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
 
-				if (selectedLayer.type === LayerType.GLITTER_FILL) {
-					this.layerManager.goToGlitter(selectedLayer.id);
-				} else if (selectedLayer.type === LayerType.STICKER) {
+				if (selectedLayer.type === LayerType.STICKER) {
 					this.layerManager.goToSticker(selectedLayer.id);
-				} else if (selectedLayer.type === LayerType.TEXT_GLITTER) {
+				} else {
 					this.layerManager.goToGlitter(selectedLayer.id);
 				}
 			});
@@ -2712,6 +2732,9 @@ setupWelcomeModalListeners() {
 		// In setupEventListeners() or wherever you set up preview container events
 		this.previewContainer.addEventListener('pointerdown', (e) => {
 			if (e.pointerType === 'touch') {
+				return;
+			}
+			if (e.target.closest('.ui-ignore-gestures')) {
 				return;
 			}
 			if (this.currentTool === ToolType.TEXT) {
@@ -2801,13 +2824,7 @@ setupWelcomeModalListeners() {
 			this.ignoreNextClick = true;
 			setTimeout(() => { this.ignoreNextClick = false; }, 0);
 
-			if (layer) {
-				this.setTool(ToolType.SELECT);
-				setTimeout(() => {
-					this.updateSidePanelUI(layer);
-					this.loadActiveLayerSettings();
-				}, 0);
-			}
+			this.finishLayerCreation(layer);
 		};
 
 		window.addEventListener('pointermove', onMove);
@@ -4268,16 +4285,27 @@ setupWelcomeModalListeners() {
 						}
 					});
 
-					if (layer) {
-						this.setTool(ToolType.SELECT);
-						if (!this.mobileManager?.isMobile) {
-							setTimeout(() => {
-								this.updateSidePanelUI(layer);
-								this.loadActiveLayerSettings();
-								this.textGlitterManager?.focusTextInput(true);
-							}, 0);
+					this.finishLayerCreation(layer, {
+						onDesktopReload: () => this.textGlitterManager?.focusTextInput(true)
+					});
+				}
+				break;
+
+			case ToolType.SHAPE:
+				// Tap-to-create parity with desktop's plain click (startShapeDrag's
+				// isClick path); drag-to-size stays desktop-only (mouse pointerdown).
+				if (!hitCanvas || !this.originalImage) {
+					return;
+				}
+				{
+					const layer = this.layerManager.addLayer(LayerType.SHAPE, {
+						shapeLayer: {
+							shapeId: this.shapeGlitterManager.getActiveShapeId(),
+							position: { x, y }
 						}
-					}
+					});
+
+					this.finishLayerCreation(layer);
 				}
 				break;
 
@@ -4350,7 +4378,7 @@ setupWelcomeModalListeners() {
 					// Continue to handle this event
 				}
 				// CRITICAL FIX: Allow mousedown on transformable overlays to pass through
-				else if (this.currentTool === ToolType.SELECT && e.target.closest('.sticker-element, .text-glitter-element')) {
+				else if (this.currentTool === ToolType.SELECT && e.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR)) {
 					dbg('✅ SELECT tool: Allowing transformable overlay mousedown to pass through');
 					// Don't return - let it fall through, but don't process it here
 					// The sticker's own mousedown handler will handle it
@@ -4363,21 +4391,20 @@ setupWelcomeModalListeners() {
 			}
 		}
 
-		const hitSticker = e.target.closest('.sticker-element');
-		const hitText = e.target.closest('.text-glitter-element');
+		const hitTransformableOverlay = e.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR);
 
 		// Check if click is within the canvas area using viewport coordinates
 		const canvasCoords = this.viewport.screenToCanvas(e.clientX, e.clientY);
 		const hitCanvas = this.viewport.isWithinCanvas(canvasCoords.x, canvasCoords.y);
 
 		// We treat transformable overlays and the canvas as the "Image Area"
-		const hitImageArea = hitCanvas || hitSticker || hitText;
+		const hitImageArea = hitCanvas || hitTransformableOverlay;
 
 		// Gatekeeper: If they clicked a button/sidebar, stop here
 		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
 		if (!isWorkspace) return;
 
-		if (this.currentTool === ToolType.SELECT && (hitSticker || hitText)) return;
+		if (this.currentTool === ToolType.SELECT && hitTransformableOverlay) return;
 
 		this.handleWorkspaceAction(e.clientX, e.clientY, {
 			tool: this.currentTool,

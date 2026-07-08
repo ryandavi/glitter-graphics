@@ -39,10 +39,7 @@ class LayerTransform {
         this._settingsSyncScheduled = true;
         requestAnimationFrame(() => {
             this._settingsSyncScheduled = false;
-            const prefix = this.layer.type === LayerType.STICKER
-                ? 'sticker'
-                : this.layer.type === LayerType.TEXT_GLITTER ? 'text'
-                : this.layer.type === LayerType.SHAPE ? 'shape' : null;
+            const prefix = LAYER_UI_CONFIG[this.layer.type]?.transformPrefix || null;
             if (prefix) {
                 this.editor.loadTransformSettings?.(this.layer, prefix);
             }
@@ -50,11 +47,7 @@ class LayerTransform {
     }
 
     getLayerElementSelector() {
-        return [
-            `.sticker-element[data-layer-id="${this.layer.id}"]`,
-            `.text-glitter-element[data-layer-id="${this.layer.id}"]`,
-        `.shape-glitter-element[data-layer-id="${this.layer.id}"]`
-        ].join(', ');
+        return getLayerElementSelector(this.layer.id, { transformableOnly: true });
     }
 
     refreshElementReference() {
@@ -263,6 +256,14 @@ updateTransform(updates) {
 
         if (textFrame) {
             return textFrame;
+        }
+
+        const shapeFrame = this.layer.type === LayerType.SHAPE
+            ? this.editor.shapeGlitterManager?.getShapeHandleFrame?.(this.layer)
+            : null;
+
+        if (shapeFrame) {
+            return shapeFrame;
         }
 
         return {
@@ -912,6 +913,9 @@ removeTransformHandles() {
             // Shapes are parametric: bake a committed scale into pixel size and
             // re-rasterize so large shapes stay crisp (no upscaled-raster mixels).
             const ht = this.activeHandleType || '';
+            // Clear the drag flag before committing so ShapeGlitterManager.renderLayer()'s
+            // handle-refresh guard doesn't skip rebuilding the (now differently-sized) box.
+            this.isDraggingHandle = false;
             if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
                 this.editor.shapeGlitterManager?.commitScale(this.layer);
             }
@@ -930,7 +934,6 @@ removeTransformHandles() {
         this.activeHandleElement = null;
         this.activeHandlePointerId = null;
         this.dragStartState = null;
-        this.isDraggingHandle = false;
     }
 
     /**

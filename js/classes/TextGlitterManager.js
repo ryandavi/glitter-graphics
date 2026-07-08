@@ -501,8 +501,8 @@ class TextGlitterManager {
 			// the per-effect default id so the slot shows a real glitter (not the
 			// "No glitter selected" solid placeholder) the moment it's enabled.
 			mode: 'glitter',
-			glitterId: CONFIG.defaultBorderGlitterId ?? CONFIG.defaultGlitterId,
-			color: '#000000',
+			glitterId: CONFIG.defaultBorderGlitterId,
+			color: CONFIG.defaultBorderColor,
 			scale: 100,
 			opacity: 100
 		};
@@ -513,8 +513,8 @@ class TextGlitterManager {
 			offsetX: 6,
 			offsetY: 6,
 			mode: 'glitter',
-			glitterId: CONFIG.defaultShadowGlitterId ?? CONFIG.defaultGlitterId,
-			color: '#000000',
+			glitterId: CONFIG.defaultShadowGlitterId,
+			color: CONFIG.defaultShadowColor,
 			scale: 100,
 			opacity: 100
 		};
@@ -526,7 +526,7 @@ class TextGlitterManager {
 	getDefaultFill() {
 		return {
 			mode: 'glitter',
-			color: '#000000'
+			color: CONFIG.defaultFillColor
 		};
 	}
 
@@ -1174,7 +1174,7 @@ class TextGlitterManager {
 			name: this.getLayerName(defaultText),
 			visible: true,
 			locked: false,
-			selectedGlitterId: CONFIG.defaultGlitterId,
+			selectedGlitterId: CONFIG.defaultFillGlitterId,
 			settings: {
 				scale: CONFIG.defaultScale,
 				opacity: CONFIG.defaultOpacity
@@ -1437,7 +1437,7 @@ class TextGlitterManager {
 		const usesSolid = fillData.mode === 'solid';
 		// Glitter mode is never empty — fall back to the default glitter.
 		if (usesGlitter && !layer.selectedGlitterId) {
-			layer.selectedGlitterId = CONFIG.defaultGlitterId;
+			layer.selectedGlitterId = CONFIG.defaultFillGlitterId;
 		}
 		const glitter = usesGlitter
 			? this.editor.glitterManager?.getItemById(layer?.selectedGlitterId)
