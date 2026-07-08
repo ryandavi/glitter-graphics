@@ -89,7 +89,9 @@ class LayerManager {
 
 
 
-	insertLayer(layer) {
+	insertLayer(layer, options = {}) {
+		const { suppressDesignGalleryFocus = false } = options;
+
 		// Insert above the currently selected layer, or at the top if none selected
 		if (this.activeLayerId) {
 			const activeIndex = this.layers.findIndex(l => l.id === this.activeLayerId);
@@ -113,7 +115,7 @@ class LayerManager {
 		// section) so adding one doesn't cost an extra click to browse for the
 		// next. Text layers have no gallery step, so they keep the default
 		// (jump straight to Text Settings, see getPreferredDesignSection).
-		if (layer.type === LayerType.STICKER || layer.type === LayerType.GLITTER_FILL) {
+		if (!suppressDesignGalleryFocus && (layer.type === LayerType.STICKER || layer.type === LayerType.GLITTER_FILL)) {
 			this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
 		}
 	}
@@ -155,15 +157,7 @@ class LayerManager {
 			}
 		}
 
-		let msg = 'New glitter fill layer added';
-		if (type === LayerType.STICKER) {
-			msg = 'New sticker layer added';
-		} else if (type === LayerType.TEXT_GLITTER) {
-			msg = 'New text layer added';
-		} else if (type === LayerType.SHAPE) {
-			msg = 'New shape layer added';
-		}
-		this.editor.updateStatus(msg);
+		this.editor.updateStatus(cfg.addedStatusMessage || 'New layer added');
 		return layer;
 	}
 
@@ -190,14 +184,11 @@ class LayerManager {
 			this.editor.maskEditor?.handleLayerDeleted(layerId);
 		}
 
-		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
-			this.editor.stickerManager.removeSticker(layerId);
-		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
-			this.editor.textGlitterManager.removeLayerElement(layerId);
-		} else if (layer.type === LayerType.GLITTER_FILL && this.editor.glitterManager) {
-			this.editor.glitterManager.releaseLayerResources(layer);
-		} else if (layer.type === LayerType.SHAPE && this.editor.shapeGlitterManager) {
-			this.editor.shapeGlitterManager.releaseLayerResources(layer);
+		const manager = getLayerManagerForType(this.editor, layer.type);
+		if (manager?.releaseLayerResources) {
+			manager.releaseLayerResources(layer);
+		} else if (manager?.removeLayerElement) {
+			manager.removeLayerElement(layerId);
 		}
 
 		this.layers.splice(index, 1);
@@ -221,21 +212,10 @@ class LayerManager {
 		layer.visible = !layer.visible;
 
 		// Keep the live sticker DOM in sync with the layer visibility toggle.
-		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
-			const element = this.editor.stickerManager.layerElements.get(layerId);
-			if (element) {
-				element.style.display = layer.visible ? 'block' : 'none';
-			}
-		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
-			const element = this.editor.textGlitterManager.layerElements.get(layerId);
-			if (element) {
-				element.style.display = layer.visible ? 'block' : 'none';
-			}
-		} else if (layer.type === LayerType.SHAPE && this.editor.shapeGlitterManager) {
-			const element = this.editor.shapeGlitterManager.layerElements.get(layerId);
-			if (element) {
-				element.style.display = layer.visible ? 'block' : 'none';
-			}
+		const manager = getLayerManagerForType(this.editor, layer.type);
+		const element = manager?.layerElements?.get(layerId);
+		if (element) {
+			element.style.display = layer.visible ? 'block' : 'none';
 		}
 
 		this.renderLayersList();
@@ -260,17 +240,9 @@ class LayerManager {
 
 		if (layer.type === LayerType.BASE_IMAGE && this.editor.previewCanvas) {
 			this.editor.previewCanvas.classList.add('selected');
-		} else if (layer.type === LayerType.STICKER) {
-			const element = this.editor.stickerManager.layerElements.get(layer.id);
-			if (element) element.classList.add('selected');
-		} else if (layer.type === LayerType.TEXT_GLITTER) {
-			const element = this.editor.textGlitterManager.layerElements.get(layer.id);
-			if (element) element.classList.add('selected');
-		} else if (layer.type === LayerType.GLITTER_FILL) {
-			const element = this.editor.glitterManager.layerElements.get(layer.id);
-			if (element) element.classList.add('selected');
-		} else if (layer.type === LayerType.SHAPE) {
-			const element = this.editor.shapeGlitterManager.layerElements.get(layer.id);
+		} else {
+			const manager = getLayerManagerForType(this.editor, layer.type);
+			const element = manager?.layerElements?.get(layer.id);
 			if (element) element.classList.add('selected');
 		}
 	}
@@ -364,7 +336,7 @@ class LayerManager {
 
 	goToGlitter(layerId) {
 		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer || (layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER)) return;
+		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'glitter') return;
 
 		// Select this layer
 		this.setActiveLayer(layerId);
@@ -382,7 +354,7 @@ class LayerManager {
 
 	goToSticker(layerId) {
 		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer || layer.type !== LayerType.STICKER) return;
+		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'sticker') return;
 
 		// Select this layer
 		this.setActiveLayer(layerId);
@@ -395,6 +367,18 @@ class LayerManager {
 		// Scroll to the sticker in the picker
 		if (layer.stickerSourceId) {
 			this.editor.stickerManager.scrollToContent(layer.stickerSourceId);
+		}
+	}
+
+	goToLayerSource(layerId) {
+		const layer = this.layers.find(l => l.id === layerId);
+		if (!layer) return;
+
+		const goToTarget = LAYER_UI_CONFIG[layer.type]?.goTo;
+		if (goToTarget === 'sticker') {
+			this.goToSticker(layerId);
+		} else if (goToTarget === 'glitter') {
+			this.goToGlitter(layerId);
 		}
 	}
 
@@ -854,11 +838,7 @@ class LayerManager {
 		// Double-click swatch behavior
 		swatch.addEventListener('click', (e) => {
 			e.stopPropagation();
-			if (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) {
-				this.goToGlitter(layer.id);
-			} else if (layer.type === LayerType.STICKER) {
-				this.goToSticker(layer.id);
-			}
+			this.goToLayerSource(layer.id);
 		});
 
 
@@ -912,47 +892,25 @@ class LayerManager {
 
 		metaRow.appendChild(typeText);
 
-		if (layer.type === LayerType.GLITTER_FILL && layer.maskHasContent) {
-			const paintBadge = document.createElement('span');
-			paintBadge.className = 'layer-badge layer-badge-paint';
-			paintBadge.textContent = 'Paint';
-			paintBadge.title = 'This glitter layer has painted mask strokes';
-			metaRow.appendChild(paintBadge);
-		}
+		LAYER_BADGES.forEach((badgeConfig) => {
+			const state = badgeConfig.getState?.(layer);
+			if (!state) {
+				return;
+			}
 
-		const addBadge = (modifier, text, title) => {
 			const badge = document.createElement('span');
-			badge.className = `layer-badge layer-badge-${modifier}`;
-			badge.textContent = text;
-			badge.title = title;
+			badge.className = 'layer-badge';
+			badge.title = state.title;
+			badge.setAttribute('aria-label', state.title);
+
+			const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+			svg.classList.add('icon');
+			const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+			use.setAttribute('href', `#icon-${badgeConfig.icon}`);
+			svg.appendChild(use);
+			badge.appendChild(svg);
 			metaRow.appendChild(badge);
-		};
-
-		// Color: any non-identity hue/saturation/brightness adjustment on the
-		// layer's glitter source(s) - fill always, plus text/shape border/shadow.
-		const colorAdjusts = [layer.settings?.colorAdjust];
-		if (layer.type === LayerType.TEXT_GLITTER) {
-			colorAdjusts.push(layer.textData?.border?.colorAdjust, layer.textData?.shadow?.colorAdjust);
-		} else if (layer.type === LayerType.SHAPE) {
-			colorAdjusts.push(layer.shapeData?.fill?.colorAdjust, layer.shapeData?.border?.colorAdjust, layer.shapeData?.shadow?.colorAdjust);
-		}
-		if (colorAdjusts.some(adjust => adjust && !isIdentityColorAdjust(adjust))) {
-			addBadge('color', 'Color', 'This layer has a hue/saturation/brightness adjustment');
-		}
-
-		const hasBorder = layer.type === LayerType.TEXT_GLITTER ? Boolean(layer.textData?.border)
-			: layer.type === LayerType.SHAPE ? Boolean(layer.shapeData?.border)
-			: false;
-		if (hasBorder) {
-			addBadge('border', 'Border', 'This layer has a border');
-		}
-
-		const hasShadow = layer.type === LayerType.TEXT_GLITTER ? Boolean(layer.textData?.shadow)
-			: layer.type === LayerType.SHAPE ? Boolean(layer.shapeData?.shadow)
-			: false;
-		if (hasShadow) {
-			addBadge('shadow', 'Shadow', 'This layer has a shadow');
-		}
+		});
 
 		info.append(nameText, metaRow);
 
@@ -964,18 +922,14 @@ class LayerManager {
 		actions.className = 'layer-actions';
 
 		// A. Go To Arrow (Only for Glitter/Stickers)
-		if (layer.type !== LayerType.BASE_IMAGE) {
+		if (LAYER_UI_CONFIG[layer.type]?.goTo) {
 			const arrowBtn = this.createIconButton({
 				className: 'layer-action-btn goto-glitter',
-				title: layer.type === LayerType.STICKER ? 'Go to sticker' : 'Go to glitter',
+				title: LAYER_UI_CONFIG[layer.type]?.goTo === 'sticker' ? 'Go to sticker' : 'Go to glitter',
 				iconType: 'chevron-right',
 				onClick: (e) => {
 					e.stopPropagation();
-					if (layer.type === LayerType.STICKER) {
-						this.goToSticker(layer.id);
-					} else {
-						this.goToGlitter(layer.id);
-					}
+					this.goToLayerSource(layer.id);
 				}
 			});
 			actions.appendChild(arrowBtn);

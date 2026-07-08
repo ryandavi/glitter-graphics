@@ -24,6 +24,7 @@ class ShapeGlitterManager {
 		this.layerElements = new Map();
 		this.layerTransforms = new Map();
 		this.measurementCache = new Map();
+		this.maxMeasurementCacheEntries = 4;
 		this.maskUrlCache = new Map();
 		this.ui = {};
 		// Shape id used for the NEXT shape created by the tool (set by the picker).
@@ -61,6 +62,11 @@ class ShapeGlitterManager {
 		this.ui.borderControls = id('shapeBorderControls');
 		this.ui.borderWidth = id('shapeBorderWidth');
 		this.ui.borderWidthValue = id('shapeBorderWidthValue');
+		this.ui.borderStyleSolid = id('shapeBorderStyleSolid');
+		this.ui.borderStyleDotted = id('shapeBorderStyleDotted');
+		this.ui.borderDotSpacing = id('shapeBorderDotSpacing');
+		this.ui.borderDotSpacingValue = id('shapeBorderDotSpacingValue');
+		this.ui.borderDotSpacingRow = id('shapeBorderDotSpacingRow');
 		this.ui.borderOpacity = id('shapeBorderOpacity');
 		this.ui.borderOpacityValue = id('shapeBorderOpacityValue');
 		this.ui.shadowEnabled = id('shapeShadowEnabled');
@@ -189,6 +195,7 @@ class ShapeGlitterManager {
 
 		// Geometry sliders (change the mask → invalidate).
 		this._attachSlider(this.ui.borderWidth, this.ui.borderWidthValue, 'px', (v, l) => { this.ensureEffectData(l, 'border').widthPx = v; }, this.getDefaultBorder().widthPx, true);
+		this._attachSlider(this.ui.borderDotSpacing, this.ui.borderDotSpacingValue, 'px', (v, l) => { this.ensureEffectData(l, 'border').dotSpacingPx = v; }, this.getDefaultBorder().dotSpacingPx, true);
 		this._attachSlider(this.ui.shadowOffsetX, this.ui.shadowOffsetXValue, 'px', (v, l) => { this.ensureEffectData(l, 'shadow').offsetX = v; }, this.getDefaultShadow().offsetX, true);
 		this._attachSlider(this.ui.shadowOffsetY, this.ui.shadowOffsetYValue, 'px', (v, l) => { this.ensureEffectData(l, 'shadow').offsetY = v; }, this.getDefaultShadow().offsetY, true);
 
@@ -203,6 +210,9 @@ class ShapeGlitterManager {
 		this._bindSlotAdvanced('shapeFill', 'fill');
 		this._bindSlotAdvanced('shapeBorder', 'border');
 		this._bindSlotAdvanced('shapeShadow', 'shadow');
+
+		this.ui.borderStyleSolid?.addEventListener('click', () => this.setBorderStyle('solid'));
+		this.ui.borderStyleDotted?.addEventListener('click', () => this.setBorderStyle('dotted'));
 	}
 
 	_cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -493,8 +503,10 @@ class ShapeGlitterManager {
 		if (this.ui.borderControls) this.ui.borderControls.classList.toggle('visible', Boolean(border));
 		const bd = border || this.getDefaultBorder();
 		if (this.ui.borderWidth) { this.ui.borderWidth.value = bd.widthPx; this.ui.borderWidthValue.innerHTML = formatUnit(bd.widthPx, 'px'); }
+		if (this.ui.borderDotSpacing) { this.ui.borderDotSpacing.value = bd.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx; this.ui.borderDotSpacingValue.innerHTML = formatUnit(bd.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, 'px'); }
 		if (this.ui.borderOpacity) { this.ui.borderOpacity.value = bd.opacity ?? 100; this.ui.borderOpacityValue.innerHTML = formatUnit(bd.opacity ?? 100, '%'); }
 		if (this.ui.shapeBorderColor) this.ui.shapeBorderColor.value = bd.color || '#000000';
+		this._syncBorderStyleUI(bd);
 		this._loadColorAdjust('shapeBorder', bd.colorAdjust, bd.scale);
 
 		// Shadow
@@ -532,6 +544,8 @@ class ShapeGlitterManager {
 	getDefaultBorder() {
 		return {
 			widthPx: 6,
+			style: 'solid',
+			dotSpacingPx: 10,
 			mode: 'solid',
 			color: CONFIG.defaultBorderColor,
 			glitterId: null,
@@ -559,6 +573,7 @@ class ShapeGlitterManager {
 		const data = layer.shapeData;
 		if (!data.fill) data.fill = this.getDefaultFill();
 		if (data.border === undefined) data.border = null;
+		if (data.border) data.border = { ...this.getDefaultBorder(), ...data.border };
 		if (data.shadow === undefined) data.shadow = null;
 		if (!data.transform) {
 			data.transform = {
@@ -665,8 +680,37 @@ class ShapeGlitterManager {
 		}
 		if (!layer.shapeData[slot]) {
 			layer.shapeData[slot] = slot === 'border' ? this.getDefaultBorder() : this.getDefaultShadow();
+		} else if (slot === 'border') {
+			layer.shapeData.border = { ...this.getDefaultBorder(), ...layer.shapeData.border };
 		}
 		return layer.shapeData[slot];
+	}
+
+	setBorderStyle(style) {
+		const layer = this.getActiveShapeLayer();
+		if (!layer) return;
+
+		const border = this.ensureEffectData(layer, 'border');
+		if (border.style === style) return;
+
+		border.style = style === 'dotted' ? 'dotted' : 'solid';
+		this._syncBorderStyleUI(border);
+		this.invalidateMeasurement(layer);
+		this.renderLayer(layer);
+		this.editor.saveState();
+		this.editor.layerManager.renderLayersList();
+	}
+
+	_syncBorderStyleUI(borderData) {
+		const style = borderData?.style === 'dotted' ? 'dotted' : 'solid';
+		this.ui.borderStyleSolid?.classList.toggle('active', style === 'solid');
+		this.ui.borderStyleDotted?.classList.toggle('active', style === 'dotted');
+		if (this.ui.borderDotSpacingRow) {
+			this.ui.borderDotSpacingRow.hidden = style !== 'dotted';
+		}
+		if (this.ui.borderDotSpacing) {
+			this.ui.borderDotSpacing.disabled = style !== 'dotted';
+		}
 	}
 
 	// Glitter id for a slot: fill shares the layer swatch (like text); border and
@@ -689,30 +733,13 @@ class ShapeGlitterManager {
 		if (slot === 'fill') this.editor.refreshLayerSwatchFilter(layer);
 	}
 
-	// Paint source per slot — kept in lockstep with GifExporter._getShapeEffectSource.
+	// Shared with GifExporter via resolveEffectPaintSource so preview/export stay aligned.
 	getEffectPaintSource(layer, slot) {
-		const data = this.getEffectData(layer, slot);
-		if (!data) return null;
-
-		// Fill 'none' renders nothing — the shape becomes an outline (border only).
-		if (slot === 'fill' && data.mode === 'none') return null;
-
-		const glitterId = this.getSlotGlitterId(layer, slot);
-		if (data.mode === 'glitter' && this.editor.glitterManager.getItemById(glitterId)) {
-			return {
-				mode: 'glitter',
-				glitterId,
-				scale: data.scale ?? 100,
-				opacity: (data.opacity ?? 100) / 100,
-				colorAdjust: data.colorAdjust
-			};
-		}
-
-		return {
-			mode: 'solid',
-			color: data.color || '#000000',
-			opacity: (data.opacity ?? 100) / 100
-		};
+		return resolveEffectPaintSource(this.getEffectData(layer, slot), {
+			allowNone: slot === 'fill',
+			glitterId: this.getSlotGlitterId(layer, slot),
+			glitterAvailable: (glitterId) => Boolean(this.editor.glitterManager.getItemById(glitterId))
+		});
 	}
 
 	// ===== MASK / MEASUREMENT =====
@@ -723,7 +750,7 @@ class ShapeGlitterManager {
 			d.shapeId,
 			d.width,
 			d.height,
-			d.border ? d.border.widthPx : null,
+			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx] : null,
 			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null
 		]);
 	}
@@ -736,6 +763,8 @@ class ShapeGlitterManager {
 		const key = this.getMeasurementCacheKey(layer);
 		const cached = this.measurementCache.get(key);
 		if (cached) {
+			this.measurementCache.delete(key);
+			this.measurementCache.set(key, cached);
 			layer.shapeData.renderWidth = cached.width;
 			layer.shapeData.renderHeight = cached.height;
 			return cached;
@@ -797,14 +826,19 @@ class ShapeGlitterManager {
 		};
 
 		this.measurementCache.set(key, entry);
+		while (this.measurementCache.size > this.maxMeasurementCacheEntries) {
+			const oldestKey = this.measurementCache.keys().next().value;
+			this.measurementCache.delete(oldestKey);
+		}
 		d.renderWidth = canvasWidth;
 		d.renderHeight = canvasHeight;
 		return entry;
 	}
 
 	// The user-facing frame in shape-local units, centered relative to the padded
-	// mask canvas (mirrors TextGlitterManager.getTextFrame) — used by LayerTransform
-	// so the selection box hugs the shape, not its border/shadow padding.
+	// mask canvas (mirrors TextGlitterManager.getTextFrame). Border width is part
+	// of the selectable shape silhouette, so the frame expands to include it;
+	// shadow padding stays excluded so a shadow never drags the box around.
 	// NOT named getShapeFrame(layer): that name is already a class method below
 	// (hit-test frame, returns raw {x,y,width,height} in a different shape) and a
 	// second same-named method here would silently shadow one of them.
@@ -816,9 +850,10 @@ class ShapeGlitterManager {
 		const rect = entry.frameRect;
 		if (!rect) return null;
 
+		const borderWidth = Math.max(0, layer.shapeData.border?.widthPx || 0);
 		return {
-			width: rect.width,
-			height: rect.height,
+			width: rect.width + borderWidth * 2,
+			height: rect.height + borderWidth * 2,
 			offsetX: rect.x + rect.width / 2 - entry.width / 2,
 			offsetY: rect.y + rect.height / 2 - entry.height / 2
 		};
@@ -830,7 +865,14 @@ class ShapeGlitterManager {
 	// The stroke is 2×widthPx (centered on the edge), then the shape silhouette is
 	// punched out so only the outer widthPx ring remains: this reads as an outline
 	// on a no-fill shape and sits cleanly around the fill otherwise.
-	getBorderMaskCanvas(measurement, widthPx) {
+	getBorderMaskCanvas(measurement, borderData) {
+		const widthPx = Math.max(0, borderData?.widthPx || 0);
+		if (widthPx <= 0) {
+			return null;
+		}
+
+		const borderStyle = borderData?.style === 'dotted' ? 'dotted' : 'solid';
+		const dotSpacingPx = Math.max(1, borderData?.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx);
 		const canvas = document.createElement('canvas');
 		canvas.width = measurement.canvas.width;
 		canvas.height = measurement.canvas.height;
@@ -842,14 +884,22 @@ class ShapeGlitterManager {
 		ctx.strokeStyle = '#ffffff';
 		ctx.lineJoin = 'round';
 		ctx.lineCap = 'round';
-		ctx.lineWidth = widthPx * 2;
+		if (borderStyle === 'dotted') {
+			ctx.lineWidth = widthPx;
+			ctx.setLineDash([0, widthPx + dotSpacingPx]);
+		} else {
+			ctx.lineWidth = widthPx * 2;
+		}
 		ctx.stroke(path);
 		ctx.restore();
 
-		// Keep only the ring OUTSIDE the shape (outer stroke).
-		ctx.globalCompositeOperation = 'destination-out';
-		ctx.drawImage(measurement.canvas, 0, 0);
-		ctx.globalCompositeOperation = 'source-over';
+		// Solid borders render as an outer ring; dotted borders stay centered on
+		// the path so each round cap reads as a dot instead of a clipped crescent.
+		if (borderStyle !== 'dotted') {
+			ctx.globalCompositeOperation = 'destination-out';
+			ctx.drawImage(measurement.canvas, 0, 0);
+			ctx.globalCompositeOperation = 'source-over';
+		}
 
 		if (CONFIG.textLayers.crispEdges !== false) {
 			const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -878,7 +928,7 @@ class ShapeGlitterManager {
 			entry.shadow = this._offsetCanvas(measurement.canvas, d.shadow.offsetX || 0, d.shadow.offsetY || 0);
 		}
 		if (d.border?.widthPx > 0) {
-			entry.border = this.getBorderMaskCanvas(measurement, d.border.widthPx);
+			entry.border = this.getBorderMaskCanvas(measurement, d.border);
 		}
 		return entry;
 	}
@@ -1009,8 +1059,8 @@ class ShapeGlitterManager {
 				offsetX: 0,
 				offsetY: 0,
 				source: this.getEffectPaintSource(layer, 'border'),
-				maskCanvas: this.getBorderMaskCanvas(measurement, border.widthPx),
-				maskCacheKey: `${measurement.key}|border:${border.widthPx}`
+				maskCanvas: this.getBorderMaskCanvas(measurement, border),
+				maskCacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}`
 			});
 		}
 
@@ -1118,12 +1168,14 @@ class ShapeGlitterManager {
 		stack.style.transform = `scale(${scaleX}, ${scaleY})`;
 		stack.style.setProperty('--layer-scale', String(Math.max(scaleX, scaleY) || 1));
 
-		const rect = entry.frameRect;
-		if (rect) {
-			stack.style.setProperty('--tf-top', `${rect.y}px`);
-			stack.style.setProperty('--tf-left', `${rect.x}px`);
-			stack.style.setProperty('--tf-right', `${entry.width - rect.x - rect.width}px`);
-			stack.style.setProperty('--tf-bottom', `${entry.height - rect.y - rect.height}px`);
+		const frame = this.getShapeHandleFrame(layer, entry);
+		if (frame) {
+			const left = (entry.width / 2) + frame.offsetX - (frame.width / 2);
+			const top = (entry.height / 2) + frame.offsetY - (frame.height / 2);
+			stack.style.setProperty('--tf-top', `${top}px`);
+			stack.style.setProperty('--tf-left', `${left}px`);
+			stack.style.setProperty('--tf-right', `${entry.width - left - frame.width}px`);
+			stack.style.setProperty('--tf-bottom', `${entry.height - top - frame.height}px`);
 		}
 	}
 

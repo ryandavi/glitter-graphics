@@ -160,7 +160,7 @@ class GestureManager {
 		this.pointers.delete(event.pointerId);
 
 		if (wasPending && this.pointers.size === 0) {
-			if (this.isTap(pointer)) {
+			if (this.isTap(pointer, routeBeforeRemoval)) {
 				this.handleTap(pointer, routeBeforeRemoval);
 			}
 			this.resetGestureState();
@@ -174,7 +174,7 @@ class GestureManager {
 		}
 
 		if ((wasDragging || wasTwoFinger) && this.pointers.size === 0) {
-			this.finishActiveRoute(routeBeforeRemoval);
+			this.finishActiveRoute(routeBeforeRemoval, pointer);
 			if (wasDragging) {
 				this.maybeStartViewportInertia(routeBeforeRemoval);
 			}
@@ -218,6 +218,11 @@ class GestureManager {
 			}
 		}
 
+		const configuredRoute = TOOL_TOUCH_ROUTES[editor.currentTool];
+		if (configuredRoute) {
+			return { type: configuredRoute };
+		}
+
 		return { type: 'viewport' };
 	}
 
@@ -258,19 +263,23 @@ class GestureManager {
 		const dy = pointer.y - pointer.startY;
 		const distance = Math.hypot(dx, dy);
 
+		if (this.route?.type === 'tapCreate') {
+			return;
+		}
+
 		if (distance <= CONFIG.gestures.tapSlopPx) {
 			return;
 		}
 
 		this.state = 'dragging';
 		this.lastCenter = { x: pointer.x, y: pointer.y };
-		this.beginRouteInteraction(this.route);
+		this.beginRouteInteraction(this.route, pointer);
 		this.notifyGestureStart('single_pan');
 		this.lastTap = null;
 		this.resetSinglePanVelocity();
 	}
 
-	beginRouteInteraction(route) {
+	beginRouteInteraction(route, pointer = null) {
 		if (!route) {
 			return;
 		}
@@ -282,6 +291,20 @@ class GestureManager {
 			}
 			const transform = this.getLayerTransform(route.layerId);
 			transform?.beginGestureInteraction?.();
+		} else if (route.type === 'creationDrag' && pointer) {
+			this.editor.beginShapeCreationGesture?.(pointer.startX, pointer.startY, {
+				suppressNextClick: false
+			});
+		}
+	}
+
+	cancelRouteInteraction(route) {
+		if (!route) {
+			return;
+		}
+
+		if (route.type === 'creationDrag') {
+			this.editor.cancelShapeCreationGesture?.();
 		}
 	}
 
@@ -297,6 +320,8 @@ class GestureManager {
 		} else if (this.route?.type === 'layerDrag') {
 			const transform = this.getLayerTransform(this.route.layerId);
 			transform?.dragByScreenDelta?.(dx, dy);
+		} else if (this.route?.type === 'creationDrag') {
+			this.editor.updateShapeCreationGesture?.(pointer.x, pointer.y, false);
 		} else {
 			this.viewport.panBy(dx, dy);
 			this.recordSinglePanVelocity(dx, dy);
@@ -307,6 +332,7 @@ class GestureManager {
 
 	upgradeToTwoFinger() {
 		const previousRoute = this.route;
+		this.cancelRouteInteraction(previousRoute);
 		this.route = this.resolveTwoFingerRoute();
 		this.state = 'twoFinger';
 		this.lastTap = null;
@@ -389,6 +415,8 @@ class GestureManager {
 		if (this.route?.type === 'layerDrag') {
 			const transform = this.getLayerTransform(this.route.layerId);
 			transform?.beginGestureInteraction?.();
+		} else if (this.route?.type === 'creationDrag') {
+			this.beginRouteInteraction(this.route, remainingPointer);
 		}
 
 		this.notifyGestureStart('single_pan');
@@ -438,10 +466,18 @@ class GestureManager {
 		this.recordTap(pointer, isDoubleTap);
 	}
 
-	isTap(pointer) {
-		const duration = Date.now() - pointer.downTime;
+	isTap(pointer, route = null) {
 		const distance = Math.hypot(pointer.x - pointer.startX, pointer.y - pointer.startY);
-		return duration <= CONFIG.gestures.tapMaxMs && distance <= CONFIG.gestures.tapSlopPx;
+		if (distance > CONFIG.gestures.tapSlopPx) {
+			return false;
+		}
+
+		if (route?.type === 'creationDrag' || route?.type === 'tapCreate') {
+			return true;
+		}
+
+		const duration = Date.now() - pointer.downTime;
+		return duration <= CONFIG.gestures.tapMaxMs;
 	}
 
 	isDoubleTap(pointer) {
@@ -535,7 +571,7 @@ class GestureManager {
 		}
 	}
 
-	finishActiveRoute(route) {
+	finishActiveRoute(route, pointer = null) {
 		if (!route) {
 			return;
 		}
@@ -543,6 +579,12 @@ class GestureManager {
 		if (route.type === 'layerDrag' || route.type === 'layerGesture') {
 			const transform = this.getLayerTransform(route.layerId);
 			transform?.endGestureInteraction?.();
+		} else if (route.type === 'creationDrag') {
+			if (pointer) {
+				this.editor.finishShapeCreationGesture?.(pointer.x, pointer.y, {
+					suppressNextClick: false
+				});
+			}
 		}
 	}
 

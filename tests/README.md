@@ -93,3 +93,26 @@ It drives each handle once via touch and once via mouse (six checks total), conf
 3. Touch/mouse drag on a fixed-text box's edge handle resizes it.
 
 While building this, touch dragging on these three handle types turned out not to work at all — `GestureManager`'s capture-phase `pointerdown` listener on `previewContainer` claimed every touch (including ones landing on a handle) before `LayerTransform`'s own handle listeners ever saw them, the same class of conflict `MaskEditor.js` already guards against for `.transform-handles`. `GestureManager.handlePointerDown` (`js/classes/GestureManager.js`) now also lets touches on `.transform-handle-wrapper` (corner/edge/rotation handles) fall through untouched, matching how `.ui-ignore-gestures` is already excluded. The move handle's bounding box (`.transform-bounding-box`) is deliberately *not* excluded — two-finger pinch/rotate/translate on a selected layer is routed through GestureManager's own composite-gesture math, and a broader exclusion there breaks that path (see checks 14-15 in the main suite, which sit on top of it).
+
+## Shape-border verification (`tests/shape-border-verify.js`)
+
+Run it the same way: `node tests/shape-border-verify.js`.
+
+It covers the non-touch shape-border regressions that are easy to miss visually:
+
+1. A solid shape border expands the selection/transform frame and stays aligned through select → deselect → reselect.
+2. The same alignment holds for a rotated shape with a shadow, proving shadow padding is excluded from the frame while border width is included.
+3. Dotted shape borders toggle the spacing UI correctly and still produce a border mask through the shared shape mask pipeline.
+
+## Export parity verification (`tests/export-parity.js`)
+
+Run it the same way: `node tests/export-parity.js`.
+
+It builds one real mixed composition and then checks the exporter’s byte stability:
+
+1. Two back-to-back matte exports of the same composition are byte-identical.
+2. Two back-to-back transparent exports of the same composition are byte-identical.
+3. Editing the text layer, undoing it, and exporting again produces the exact same matte GIF bytes as the original export.
+4. The same edit -> undo round-trip also preserves the transparent export bytes exactly.
+
+The composition intentionally includes a painted glitter-fill layer, an animated sticker layer, a text layer with glitter fill + solid border + glitter shadow + non-identity color adjust, and a shape layer with the same slot spread, then runs that scene through both matte and transparent export modes.

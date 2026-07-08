@@ -1336,6 +1336,14 @@ class TextGlitterManager {
 				? 'Box text wraps inside the frame. Drag the side handles to resize the box; corner handles scale the text.'
 				: 'Point text hugs the glyphs. Corner handles scale it. Switch to Box for wrapping inside a resizable frame.';
 		}
+
+		if (this.ui.fitBoxToContent) {
+			const enabled = mode === 'fixed';
+			this.ui.fitBoxToContent.disabled = !enabled;
+			this.ui.fitBoxToContent.title = enabled
+				? 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)'
+				: 'Fit to Text is available only in Box mode';
+		}
 	}
 
 	updateEffectControls(layer) {
@@ -2447,50 +2455,21 @@ class TextGlitterManager {
 		return { canvas, cacheKey: `${measurement.key}|${cacheKey}` };
 	}
 
+	// Shared with GifExporter via resolveEffectPaintSource so preview/export stay aligned.
 	getEffectPaintSource(layer, effectName) {
-		// The fill slot's texture scale/opacity are the layer-level
-		// settings.scale/settings.opacity (relabeled, not duplicated) — see
-		// getDefaultFill(). Border/shadow carry their own per-slot scale/opacity.
 		if (effectName === 'fill') {
-			const fillData = this.ensureEffectData(layer, 'fill');
-			// Fill 'none' renders nothing — with a border this makes outlined text.
-			if (fillData.mode === 'none') return null;
-			if (fillData.mode === 'solid') {
-				return {
-					mode: 'solid',
-					color: fillData.color || '#000000',
-					opacity: (layer.settings.opacity ?? 100) / 100
-				};
-			}
-
-			// Fill's colorAdjust aliases the layer settings (like scale/opacity).
-			return {
-				mode: 'glitter',
+			return resolveEffectPaintSource(this.ensureEffectData(layer, 'fill'), {
+				allowNone: true,
 				glitterId: layer.selectedGlitterId,
 				scale: layer.settings.scale ?? 100,
-				opacity: (layer.settings.opacity ?? 100) / 100,
+				opacity: layer.settings.opacity ?? 100,
 				colorAdjust: layer.settings.colorAdjust
-			};
+			});
 		}
 
-		const effectData = this.getEffectData(layer, effectName);
-		if (!effectData) return null;
-
-		if (effectData.glitterId && this.editor.glitterManager.getItemById(effectData.glitterId)) {
-			return {
-				mode: 'glitter',
-				glitterId: effectData.glitterId,
-				scale: effectData.scale ?? 100,
-				opacity: (effectData.opacity ?? 100) / 100,
-				colorAdjust: effectData.colorAdjust
-			};
-		}
-
-		return {
-			mode: 'solid',
-			color: effectData.color || '#000000',
-			opacity: (effectData.opacity ?? 100) / 100
-		};
+		return resolveEffectPaintSource(this.getEffectData(layer, effectName), {
+			glitterAvailable: (glitterId) => Boolean(this.editor.glitterManager.getItemById(glitterId))
+		});
 	}
 
 	getBorderOffsets(widthPx) {

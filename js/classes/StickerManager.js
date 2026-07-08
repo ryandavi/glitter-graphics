@@ -586,6 +586,11 @@ updateTransform(layerId, updates) {
 		this.layerElements.delete(layerId);
 	}
 
+	releaseLayerResources(layer) {
+		if (!layer?.id) return;
+		this.removeSticker(layer.id);
+	}
+
 	removeStickerElement(layerId) {
 		const element = this.layerElements.get(layerId);
 		if (element && element.parentNode) {

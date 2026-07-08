@@ -36,6 +36,7 @@ class MaskEditor {
 		this.ui = {
 			overlayToggle: document.getElementById('maskOverlayToggle'),
 			clearButton: document.getElementById('clearMaskPaint'),
+			copySettingsButton: document.getElementById('maskCopyOppositeSettings'),
 			pressureToggle: document.getElementById('maskBrushPressure'),
 			overlayCanvas: document.getElementById('maskOverlayCanvas'),
 			cursor: document.getElementById('maskBrushCursor')
@@ -80,6 +81,14 @@ class MaskEditor {
 			this.editor.saveState();
 			this.loadLayer(layer);
 			this.renderOverlay();
+		});
+
+		this.ui.copySettingsButton?.addEventListener('click', () => {
+			const targetMode = this.mode;
+			const sourceMode = targetMode === 'add' ? 'sub' : 'add';
+			const sourceLabel = sourceMode === 'sub' ? 'eraser' : 'brush';
+			this.copySettingsBetweenModes(sourceMode, targetMode);
+			this.editor.updateStatus(`Copied ${sourceLabel} settings into this ${targetMode === 'sub' ? 'eraser' : 'brush'}`);
 		});
 
 		this.renderBrushShapePicker();
@@ -230,6 +239,25 @@ class MaskEditor {
 		if (titleText) titleText.textContent = isEraser ? 'Eraser Settings' : 'Brush Settings';
 		const titleIcon = document.getElementById('brushSettingsTitleIcon');
 		if (titleIcon) titleIcon.setAttribute('href', isEraser ? '#icon-eraser' : '#icon-brush');
+		if (this.ui.copySettingsButton) {
+			this.ui.copySettingsButton.textContent = isEraser ? 'Copy Brush Settings' : 'Copy Eraser Settings';
+			this.ui.copySettingsButton.title = isEraser
+				? 'Copy the current brush settings into the eraser'
+				: 'Copy the current eraser settings into the brush';
+		}
+	}
+
+	copySettingsBetweenModes(sourceMode, targetMode) {
+		if (!this.toolSettings[sourceMode] || !this.toolSettings[targetMode]) {
+			return;
+		}
+
+		this.toolSettings[targetMode] = {
+			...this.toolSettings[sourceMode]
+		};
+		this._applySettingsToDOM(targetMode);
+		this._saveToolSettings();
+		this._updateBrushCursorSize();
 	}
 
 	getBrushShape() {
@@ -891,7 +919,7 @@ class MaskEditor {
 			return null; // maxLayers reached — createLayer already showed the error
 		}
 
-		this.editor.layerManager.insertLayer(layer);
+		this.editor.layerManager.insertLayer(layer, { suppressDesignGalleryFocus: true });
 		this.editor.layerManager.setActiveLayer(layer.id);
 		this.editor.layerManager.renderLayersList();
 		return layer;

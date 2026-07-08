@@ -351,9 +351,29 @@ class ViewportManager {
 		this.previewContainer.classList.add('panning');
 	}
 
+	clampPanToVisibleBounds() {
+		if (!this.canvasWidth || !this.canvasHeight || !this.previewContainer) {
+			return;
+		}
+
+		const containerRect = this.previewContainer.getBoundingClientRect();
+		const scaledWidth = this.canvasWidth * this.currentZoom;
+		const scaledHeight = this.canvasHeight * this.currentZoom;
+		const minVisibleWidth = Math.min(containerRect.width, scaledWidth * 0.15);
+		const minVisibleHeight = Math.min(containerRect.height, scaledHeight * 0.15);
+		const minPanX = minVisibleWidth - scaledWidth;
+		const maxPanX = containerRect.width - minVisibleWidth;
+		const minPanY = minVisibleHeight - scaledHeight;
+		const maxPanY = containerRect.height - minVisibleHeight;
+
+		this.panX = Math.min(maxPanX, Math.max(minPanX, this.panX));
+		this.panY = Math.min(maxPanY, Math.max(minPanY, this.panY));
+	}
+
 	panBy(deltaX, deltaY) {
 		this.panX += deltaX;
 		this.panY += deltaY;
+		this.clampPanToVisibleBounds();
 		this.applyTransform();
 		this._notifyViewportChanged();
 	}
@@ -382,6 +402,7 @@ class ViewportManager {
 		this.panX = anchorX - (canvasX * newZoom);
 		this.panY = anchorY - (canvasY * newZoom);
 		this.currentZoom = newZoom;
+		this.clampPanToVisibleBounds();
 
 		this.applyTransform();
 		this._notifyViewportChanged();
@@ -411,6 +432,7 @@ class ViewportManager {
 		const tick = () => {
 			this.panX += this.inertiaVelocityX;
 			this.panY += this.inertiaVelocityY;
+			this.clampPanToVisibleBounds();
 			this.applyTransform();
 			this._notifyViewportChanged();
 

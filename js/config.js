@@ -288,6 +288,11 @@ const ToolType = {
 	ZOOM: 'zoom'
 };
 
+const TOOL_TOUCH_ROUTES = {
+	[ToolType.SHAPE]: 'creationDrag',
+	[ToolType.TEXT]: 'tapCreate'
+};
+
 function hasMaskContent(layer) {
 	return Boolean(
 		layer &&
@@ -297,6 +302,41 @@ function hasMaskContent(layer) {
 			layer.maskHasContent
 		)
 	);
+}
+
+function layerHasActiveColorAdjust(layer) {
+	const colorAdjusts = [layer?.settings?.colorAdjust];
+	if (layer?.type === LayerType.TEXT_GLITTER) {
+		colorAdjusts.push(layer.textData?.border?.colorAdjust, layer.textData?.shadow?.colorAdjust);
+	} else if (layer?.type === LayerType.SHAPE) {
+		colorAdjusts.push(layer.shapeData?.fill?.colorAdjust, layer.shapeData?.border?.colorAdjust, layer.shapeData?.shadow?.colorAdjust);
+	}
+
+	return colorAdjusts.some((adjust) => adjust && !isIdentityColorAdjust(adjust));
+}
+
+function layerHasBorderEffect(layer) {
+	if (layer?.type === LayerType.TEXT_GLITTER) {
+		return Boolean(layer.textData?.border);
+	}
+
+	if (layer?.type === LayerType.SHAPE) {
+		return Boolean(layer.shapeData?.border);
+	}
+
+	return false;
+}
+
+function layerHasShadowEffect(layer) {
+	if (layer?.type === LayerType.TEXT_GLITTER) {
+		return Boolean(layer.textData?.shadow);
+	}
+
+	if (layer?.type === LayerType.SHAPE) {
+		return Boolean(layer.shapeData?.shadow);
+	}
+
+	return false;
 }
 
 function layerHasVisibleContent(layer) {
@@ -337,6 +377,8 @@ const LAYER_UI_CONFIG = {
 	},
 
 	[LayerType.BASE_IMAGE]: {
+		displayName: 'Base Image',
+		goTo: null,
 		designPanelSections: ['baseLayerSettingsSection'],
 		mobileSettingsSections: [],
 		panelMode: 'base-layer',
@@ -346,6 +388,14 @@ const LAYER_UI_CONFIG = {
 	},
 
 	[LayerType.GLITTER_FILL]: {
+		displayName: 'Glitter Fill',
+		addedStatusMessage: 'New glitter fill layer added',
+		goTo: 'glitter',
+		addableViaModal: {
+			label: 'Glitter Fill',
+			icon: 'glitter',
+			description: 'Apply glitter fill to base image'
+		},
 		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'],
 		mobileSettingsSections: ['tool', 'glitter'],
 		panelMode: 'glitter',
@@ -364,6 +414,14 @@ const LAYER_UI_CONFIG = {
 	},
 
 	[LayerType.STICKER]: {
+		displayName: 'Sticker',
+		addedStatusMessage: 'New sticker layer added',
+		goTo: 'sticker',
+		addableViaModal: {
+			label: 'Sticker',
+			icon: 'sticker',
+			description: 'Add images and graphics'
+		},
 		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'],
 		mobileSettingsSections: ['sticker'],
 		panelMode: 'sticker',
@@ -390,6 +448,14 @@ const LAYER_UI_CONFIG = {
 	},
 
 	[LayerType.TEXT_GLITTER]: {
+		displayName: 'Text',
+		addedStatusMessage: 'New text layer added',
+		goTo: 'glitter',
+		addableViaModal: {
+			label: 'Text',
+			icon: 'text',
+			description: 'Mask glitter inside editable text'
+		},
 		// No layerSettingsSection / 'tool': Selection Settings only applies to
 		// color-picked glitter fills — text layers hide it instead of showing an
 		// explanatory empty state.
@@ -418,6 +484,14 @@ const LAYER_UI_CONFIG = {
 	},
 
 	[LayerType.SHAPE]: {
+		displayName: 'Shape',
+		addedStatusMessage: 'New shape layer added',
+		goTo: 'glitter',
+		addableViaModal: {
+			label: 'Shape',
+			icon: 'square',
+			description: 'Fill a shape with glitter or color'
+		},
 		// Like text: the glitter gallery picks the shared swatch, plus a dedicated
 		// Shape Properties panel. Selection Settings doesn't apply.
 		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'shapeSettingsSection'],
@@ -470,6 +544,33 @@ function getLayerManagerForType(editor, type) {
 	const key = LAYER_UI_CONFIG[type]?.managerKey;
 	return key ? editor[key] : null;
 }
+
+function getAddableLayerTypes() {
+	return Object.values(LayerType).filter((type) => Boolean(LAYER_UI_CONFIG[type]?.addableViaModal));
+}
+
+const LAYER_BADGES = [
+	{
+		id: 'paint',
+		icon: 'brush',
+		getState(layer) {
+			return layer?.type === LayerType.GLITTER_FILL && layer.maskHasContent
+				? { title: 'Painted mask strokes' }
+				: null;
+		}
+	},
+	{
+		id: 'effects',
+		icon: 'filter',
+		getState(layer) {
+			const active = [];
+			if (layerHasBorderEffect(layer)) active.push('border');
+			if (layerHasShadowEffect(layer)) active.push('shadow');
+			if (layerHasActiveColorAdjust(layer)) active.push('color adjust');
+			return active.length ? { title: `Effects: ${active.join(', ')}` } : null;
+		}
+	}
+];
 
 // Precomputed once at load (LAYER_UI_CONFIG is static): the common "every
 // layer element" and "every transformable layer element" selectors.

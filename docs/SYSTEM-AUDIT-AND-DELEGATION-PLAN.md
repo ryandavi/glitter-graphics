@@ -21,6 +21,16 @@ When i add a border to a shape, it doesnt change the transform box, but it offse
 
 Would it be possible to add dotted borders and choose the spacing?
 
+**Status (2026-07-08):**
+- Completed: brush auto-created glitter layers no longer force-open the design gallery, so the brush panel stays in focus while painting.
+- Completed: Brush/Eraser now have an Actions section with cross-copy settings, and Clear Paint moved there.
+- Completed: Text Properties now has an Actions section for Fit to Text, with the action disabled outside Box mode.
+- Completed: confirmation and new-canvas modals now support keyboard-first flow with focused primary input/action and Enter-to-accept.
+- Completed: the stale mobile "Slider Settings" label now reads "Settings."
+- Completed: shape selection now expands to include border width instead of hugging only the fill frame, and `tests/shape-border-verify.js` now locks that behavior for plain and rotated/shadowed shapes across select/deselect/reselect.
+- Completed: shape borders now support a dotted mode with adjustable spacing, wired through the shared shape mask path so preview/export stay aligned.
+- Completed: `tests/shape-touch-verify.js` now treats shape drag-create as required coverage instead of a temporary WP-C skip, and `tests/export-parity.js` now locks byte-identical exports in both matte and transparent modes, including edit -> undo round-trips.
+
 ## 1. Highest-risk architectural problems
 
 ### R1. The preview↔export mirror became a 4-way mirror
@@ -172,23 +182,28 @@ Everything larger is deliberately deferred to the prompts below — they're stag
 
 ---
 
-## 10. Delegated implementation prompts — Opus
+## 10. Implementation work packages
 
 Run in order; WP-A and WP-D are independent of each other; WP-C depends on nothing but should land before any new creation tool. Every WP inherits the repo hard rules: **no JS build step (plain scripts + `<script>` tag with `?v=1`, bump `?v=` on every edited file), never edit css/style.css directly (SCSS only), LF endings, tabs, no `ctx.filter`, comments state constraints, `dbg()` not console.log, don't run full Playwright — run `node tests/touch-smoke.js` and `node tests/touch-handle-verify.js`.**
 
 ### WP-A — Finish the LAYER_UI_CONFIG consolidation
+**Status (2026-07-08): completed in the current tree.** `LAYER_UI_CONFIG` now carries `displayName`, `addedStatusMessage`, `goTo`, and `addableViaModal`; `LayerManager` delete/visibility/selection/goto paths now route through config+manager data instead of per-type chains; the Add Layer modal is generated from config; and `docs/LAYER-TYPE-CONTRACT.md` documents the contract.
 > Read docs/SYSTEM-AUDIT-AND-DELEGATION-PLAN.md §1-R6, §2.2, §8, then CLAUDE.md. In js/config.js, extend each LAYER_UI_CONFIG entry with: `displayName`, `addedStatusMessage`, `goTo` ('glitter'|'sticker'|null), and `addableViaModal: {label, icon, description}` (glitter-fill, sticker, text-glitter, shape; base-image excluded). Then, behavior-preserving, replace the per-type chains that this data obsoletes: LayerManager.deleteLayer resource cleanup (route through managerKey's releaseLayerResources/removeLayerElement — StickerManager needs a releaseLayerResources alias for removeSticker), toggleLayerVisibility element lookup, updateSelectionHighlight, addLayer status message, app.js layersBarGoToSelected, and generate the layerTypePickerModal option cards + click handler from `addableViaModal` (delete the hand-written switch at app.js:2523-2536 and the static buttons in index.html — keep the modal's markup/classes identical so SCSS is untouched). Write docs/LAYER-TYPE-CONTRACT.md documenting the manager interface + config fields per §8. Do NOT rename any section ids or change any visible strings except the shape status message. Acceptance: create/delete/hide/clone/goto each of the four layer types on desktop; layer list renders identically; node tests/touch-smoke.js passes; modal shows four cards including Shape.
 
 ### WP-B — Collapse the 4-way effect-source mirror (highest value, highest care)
+**Status (2026-07-08): completed in the current tree.** Stage 1's shared `js/effect-source.js` helper now feeds the four preview/export effect-source chokepoints without the old dead fallback bodies, and GifExporter stage 2 now routes mask prep, source loading, frame flattening/counting, safe-key collection, and per-frame rendering through one per-layer export-plan builder instead of re-switching on type at each site.
 > Read docs/SYSTEM-AUDIT-AND-DELEGATION-PLAN.md §1-R1/R2 and docs/TOOL-EXPANSION-PLAN.md D4/D5 first — preview and export MUST stay pixel-identical. Create js/effect-source.js (plain script, add script tag with ?v=1 before the managers): export a global `resolveEffectPaintSource(effectData, opts)` capturing the shared logic of TextGlitterManager.getEffectPaintSource (TextGlitterManager.js:2450), ShapeGlitterManager.getEffectPaintSource (:693), GifExporter._getTextEffectSource (:306), GifExporter._getShapeEffectSource (:237). Text's fill-slot aliasing of layer.settings (scale/opacity/colorAdjust) and 'none'-mode handling become options/branches, not copies. Replace all four bodies with calls; keep the four method names as thin wrappers so call sites don't churn. Glitter-id validation (getItemById) stays at the call site — pass a resolved boolean or lookup fn. Stage 2 (same PR, separate commit): in GifExporter, consolidate the eight layer-type dispatch chains (lines ~557-610, 807-819, 956-1001, 1239-1264, 1414-1464, 1590-1613, 1665-1675) behind one `buildLayerExportPlan(layer)` that returns the per-type data each site needs; the eight sites read the plan instead of re-switching. No behavior change. Acceptance — run the export fragility test from CLAUDE.md: add animated sticker → export → edit → undo → export again; export twice in a row must be byte-identical; then export one composition containing all four layer types with text+shape each having glitter fill, solid border, glitter shadow, and a non-identity colorAdjust, on both transparent and matte backgrounds, and visually diff preview vs exported frames.
 
 ### WP-C — Touch creation route (fixes the shape-on-mobile bug properly)
+**Status (2026-07-08): completed in the current tree.** `TOOL_TOUCH_ROUTES` now routes shape touch input to drag-create and text touch input to tap-create; the shape rubber-band flow is shared between desktop and touch; long-press create no longer dies in the old tap timeout gap; viewport panning is softly clamped; and the acceptance coverage now includes `tests/shape-touch-verify.js` plus the existing touch smoke/handle suites.
 > Read docs/SYSTEM-AUDIT-AND-DELEGATION-PLAN.md §5-§6 and docs/TOUCH-PLAN.md first. (1) Add `TOOL_TOUCH_ROUTES` to js/config.js next to ToolType: SHAPE→'creationDrag', TEXT→'tapCreate'; GestureManager.resolveSinglePointerRoute consults it after the existing BRUSH/SELECT checks, defaulting to viewport. (2) Extract the rubber-band box logic from Editor.startShapeDrag (app.js:2773-2831) into a pointer-agnostic helper on Editor (feed it x/y/shiftKey; it owns the .shape-drag-preview element and the create-on-release including the isClick fallback and ignoreNextClick swallow). Desktop pointerdown keeps its current entry; GestureManager drives the same helper from the creationDrag route (move beyond tapSlopPx starts the box; second finger cancels the box and upgrades to two-finger navigate; pointerup creates). (3) Dead-zone fix: for creationDrag and tapCreate routes, a pointerup within tapSlopPx creates regardless of press duration — do not touch isTap semantics for SELECT/viewport (double-tap zoom must not regress). (4) Clamp viewport panning softly: ViewportManager.panBy keeps ≥15% of the canvas visible (apply to inertia too). Acceptance: node tests/touch-smoke.js and node tests/touch-handle-verify.js pass; headless touch probe — select shape tool, synthesize touch pointerdown/move/up drawing a 100×80 box → one shape layer of ~that size exists; slow 600ms still press → default shape created; two-finger during shape drag → no shape, viewport zoomed; SELECT-tool double-tap zoom still works; text tool touch tap creates a text layer. Mind the testing gotchas in CLAUDE.md (welcome modal, editor.originalImage wait).
 
 ### WP-D — Icon badge system
+**Status (2026-07-08): completed in the current tree.** `LAYER_BADGES` now drives icon-chip badges from config, LayerManager renders the brush/filter chips, and the SCSS badge styles were updated and recompiled from `css/style.scss`.
 > Read docs/SYSTEM-AUDIT-AND-DELEGATION-PLAN.md §7. Add a LAYER_BADGES table to js/config.js: paint → #icon-brush, title 'Painted mask strokes', test = glitter-fill && maskHasContent; effects → #icon-filter, dynamic title 'Effects: …' enumerating active of border/shadow/color-adjust, test = any of those active (move the colorAdjusts/hasBorder/hasShadow probing from LayerManager.js:929-953 into it, covering text and shape slot layouts). Rewrite the badge block in createLayerElement (LayerManager.js:913-953) to iterate the table and render 14×14 icon chips (svg use href, title + aria-label, no click handler). SCSS (css/style.scss:1301-1323 only): .layer-badge becomes the square icon chip, delete the four identical modifier selectors and the text-chip typography; keep the accent-light/accent/accent-border palette. Compile with npx sass (not npm run). Bump style.css?v= and LayerManager.js?v= and config.js?v= in index.html. Acceptance: a text layer with border+shadow+colorAdjust shows exactly two chips (none for plain layers); tooltips enumerate correctly; layer list row height unchanged; long glitter names still ellipsize without pushing chips out.
 
 ### WP-E — Memory guards (small, do after WP-C)
+**Status (2026-07-08): completed in the current tree.** Shape measurement entries now use a 4-entry LRU instead of unbounded growth, and export preview blob URLs are revoked when replaced or when the editor clears/loads a new image.
 > Read docs/SYSTEM-AUDIT-AND-DELEGATION-PLAN.md §3. (1) Make ShapeGlitterManager.measurementCache an LRU capped at 4 entries (Map insertion order: delete+re-set on hit, evict oldest on overflow); invalidateMeasurement keeps clearing all. (2) Audit GifExporter result-blob URLs: ensure the URL created at GifExporter.js:1778 is revoked when replaced by a newer export or on editor reset; keep the existing 500ms download-revoke. Acceptance: drag shape border-width slider end-to-end and back — cache size stays ≤4 (assert via console probe); export three times in a row — no accumulating blob: URLs (performance.memory sanity check on Chrome); export fragility test from CLAUDE.md still passes.
 
 ---
@@ -196,12 +211,15 @@ Run in order; WP-A and WP-D are independent of each other; WP-C depends on nothi
 ## 11. QA / regression prompts — Codex + Sonnet
 
 ### Codex — automated regression suite (paste-ready /goal)
+**Status (2026-07-08): completed in the current tree as `tests/shape-touch-verify.js`.** The script now covers tap-create, drag-create, slow-press create, Add Layer modal shape creation, and the two-finger cancel-to-zoom path.
 > /goal Add tests/shape-touch-verify.js to the glitter editor (c:\xampp\htdocs\glitter), following the structure and conventions of tests/touch-smoke.js (plain node script, no npm run). It must: load the app headless, dismiss .modal-overlay.visible, load a blank image via editor.loadBlankImage() and wait for editor.originalImage, then verify (1) tapping the canvas with the shape tool active via synthesized touch pointer events creates exactly one SHAPE layer at the tap point; (2) a touch drag with the shape tool creates a shape whose shapeData.width/height match the dragged box within ±2px [skip with a TODO marker until WP-C lands — detect by checking TOOL_TOUCH_ROUTES exists]; (3) the Add Layer modal contains a shape option and clicking it creates a centered default shape; (4) two-finger pinch still zooms the viewport with the shape tool active. Use best practices, keep it runnable via `node tests/shape-touch-verify.js`, exit nonzero on failure. Note the testing gotchas in CLAUDE.md (previewCanvas is the visible canvas; panels auto-open).
 
 ### Codex — export parity probe (after WP-B)
+**Status (2026-07-08): completed in the current tree as `tests/export-parity.js`.** The harness now builds a mixed real composition and asserts byte-identical output for back-to-back exports and for edit → undo → export.
 > /goal In c:\xampp\htdocs\glitter add tests/export-parity.js (node, conventions of tests/touch-smoke.js): build a composition with one glitter-fill (painted mask), one sticker (animated), one text layer (glitter fill + solid border + glitter shadow + hue 90 colorAdjust), one shape layer (same slot spread); export twice in a row and assert byte-identical output; then edit the text, undo, export again and assert byte-identical to the first export. This automates the "export fragility test" in CLAUDE.md. Exit nonzero on any mismatch with a diff summary of first differing frame index.
 
 ### Sonnet — manual test checklist + docs mirror (cheap model, verification only)
+**Status (2026-07-08): completed by Codex in the current tree.** `docs/QA-MOBILE-CHECKLIST.md` now exists, the mobile settings label is confirmed as “Settings,” and `modals/guide.html` now reflects the four Add Layer options plus the newer Brush/Text/Shape behaviors.
 > In c:\xampp\htdocs\glitter, verify without changing app code: (1) modals/guide.html mentions every panel title, tool, and keyboard shortcut present in index.html and CONFIG.shortcuts — list any missing (Shape tool 'U', Shape Properties, and the new Add Layer shape card are the likely gaps); (2) the mobile settings button label (index.html ~3193) reads "Settings" not "Slider Settings" — flag if not; (3) produce docs/QA-MOBILE-CHECKLIST.md: a 15-step manual phone test script covering — add each layer type via Add Layer modal; shape tool tap-create, drag-create, slow-press create; two-finger zoom during each tool; layer drag/pinch transform; settings drawer open/close per layer type; brush paint + two-finger pan mid-stroke; export with transparency on iOS Safari. Keep each step one line with the expected result.
 
 ---
@@ -211,12 +229,12 @@ Run in order; WP-A and WP-D are independent of each other; WP-C depends on nothi
 | Order | Item | Who | Risk |
 |---|---|---|---|
 | ✅ | Modal shape card, status msg, goto fix | Fable (done) | none |
-| 1 | WP-A config consolidation + contract doc | Opus | low |
-| 2 | WP-C touch creation route | Opus | medium (touch paths) |
-| 3 | Codex shape-touch-verify | Codex | none |
-| 4 | WP-B effect-source collapse | Opus | high care, staged |
-| 5 | Codex export-parity | Codex | none |
-| 6 | WP-D badges, WP-E memory | Opus | low |
-| 7 | Sonnet checklist + guide mirror | Sonnet | none |
+| ✅ | WP-A config consolidation + contract doc | Codex | low |
+| ✅ | WP-C touch creation route | Codex | medium (touch paths) |
+| ✅ | Codex shape-touch-verify | Codex | none |
+| ✅ | WP-B effect-source collapse | Codex | high care, staged |
+| ✅ | Codex export-parity | Codex | none |
+| ✅ | WP-D badges, WP-E memory | Codex | low |
+| ✅ | Checklist + guide mirror | Codex | none |
 
 Ryan manually tests after WP-C and WP-B before anything stacks on top.

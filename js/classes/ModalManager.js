@@ -26,7 +26,7 @@ class ModalManager {
  * @param {Function} options.onContentLoaded - Callback after external content loads
  * @returns {ModalManager} - For chaining
  */
-register(id, options = {}) {
+	register(id, options = {}) {
 	const modal = document.getElementById(id);
 	if (!modal) {
 		console.warn(`Modal not found: ${id}`);
@@ -63,7 +63,12 @@ register(id, options = {}) {
 		resetScrollOnClose: options.resetScrollOnClose || false,
 		
 		// Content loaded callback
-		onContentLoaded: options.onContentLoaded || null
+		onContentLoaded: options.onContentLoaded || null,
+
+		// Keyboard/focus behavior
+		initialFocusSelector: options.initialFocusSelector || null,
+		confirmOnEnter: options.confirmOnEnter || false,
+		enterActionSelector: options.enterActionSelector || null
 	};
 
 	this.modals.set(id, config);
@@ -97,6 +102,11 @@ setupModalListeners(config) {
 		document.addEventListener('keydown', (e) => {
 			if (e.key === 'Escape') {
 				this.closeTopModal();
+				return;
+			}
+
+			if (e.key === 'Enter') {
+				this.handleEnterKey(e);
 			}
 		});
 	}
@@ -125,6 +135,8 @@ setupModalListeners(config) {
 		if (config.onOpen) {
 			config.onOpen();
 		}
+
+		this.focusInitialElement(config);
 	}
 
 	close(id) {
@@ -231,6 +243,62 @@ setupModalListeners(config) {
 				}
 			}
 		}
+	}
+
+	handleEnterKey(event) {
+		const config = this.getTopOpenModalConfig();
+		if (!config?.confirmOnEnter) {
+			return;
+		}
+
+		const target = event.target;
+		if (target instanceof HTMLElement) {
+			const tagName = target.tagName;
+			if (tagName === 'TEXTAREA' || target.isContentEditable) {
+				return;
+			}
+		}
+
+		const actionSelector = config.enterActionSelector || config.initialFocusSelector;
+		if (!actionSelector) {
+			return;
+		}
+
+		const actionElement = config.modal.querySelector(actionSelector);
+		if (!(actionElement instanceof HTMLElement) || actionElement.hasAttribute('disabled')) {
+			return;
+		}
+
+		event.preventDefault();
+		actionElement.click();
+	}
+
+	focusInitialElement(config) {
+		if (!config?.initialFocusSelector) {
+			return;
+		}
+
+		requestAnimationFrame(() => {
+			const focusTarget = config.modal.querySelector(config.initialFocusSelector);
+			if (!(focusTarget instanceof HTMLElement) || focusTarget.hasAttribute('disabled')) {
+				return;
+			}
+
+			focusTarget.focus({ preventScroll: true });
+			if (typeof focusTarget.select === 'function' && focusTarget.matches('input, textarea')) {
+				focusTarget.select();
+			}
+		});
+	}
+
+	getTopOpenModalConfig() {
+		let openConfig = null;
+		for (const config of this.modals.values()) {
+			if (config.modal.classList.contains('visible')) {
+				openConfig = config;
+			}
+		}
+		return openConfig;
 	}
 
 	isAnyOpen() {

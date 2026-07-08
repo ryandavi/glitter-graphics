@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=28">
+	<link rel="stylesheet" href="css/style.css?v=29">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -963,7 +963,6 @@
 								<div class="subsection-content-group">
 									<div class="subsection-title">
 										<span>Brush</span>
-										<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
 									</div>
 									<div class="subsection-content">
 										<div class="settings-group-two-column">
@@ -1028,6 +1027,17 @@
 											<input type="checkbox" id="maskBrushPressure" checked>
 											<span title="Vary flow with pen pressure (no effect on mouse/touch)">Pressure Sensitivity</span>
 										</label>
+									</div>
+								</div>
+								<div class="subsection-content-group">
+									<div class="subsection-title">
+										<span>Actions</span>
+									</div>
+									<div class="subsection-content">
+										<div class="tool-options-group">
+											<button class="btn-simple" id="maskCopyOppositeSettings" type="button" title="Copy the other tool's settings into this one">Copy Eraser Settings</button>
+											<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -1261,11 +1271,15 @@
 										<button class="btn-simple active" type="button" data-text-box-mode="auto">Point</button>
 										<button class="btn-simple" type="button" data-text-box-mode="fixed">Box</button>
 									</div>
-									<div class="control-group-label text-fit-box-label">Box Size</div>
-									<div class="tool-options-group text-fit-box-group">
-										<button class="btn-simple" id="textFitBoxToContent" type="button" title="Resize the box to exactly fit the current text (keeps existing line breaks/wraps)">Fit to Text</button>
-									</div>
 									<div class="text-box-hint" id="textBoxModeHint">Point text hugs the copy. Switch to Box for wrapping and edge resizing.</div>
+								</div>
+								<div class="subsection-content-group">
+									<div class="subsection-title">Actions</div>
+									<div class="subsection-content">
+										<div class="tool-options-group text-fit-box-group">
+											<button class="btn-simple" id="textFitBoxToContent" type="button" title="Resize the box to exactly fit the current text (keeps existing line breaks/wraps)">Fit to Text</button>
+										</div>
+									</div>
 								</div>
 
 								<div class="subsection-content-group">
@@ -1871,6 +1885,17 @@
 												<div class="setting-header"><span class="setting-label">Width</span><span class="setting-value" id="shapeBorderWidthValue">6px</span></div>
 												<input type="range" id="shapeBorderWidth" min="1" max="60" value="6">
 												<button class="btn-text" id="resetShapeBorderWidth" type="button">Reset</button>
+											</div>
+											<div class="glitter-source">
+												<div class="segmented-control text-effect-mode-group">
+													<button class="segmented-option active" id="shapeBorderStyleSolid" type="button">Solid Border</button>
+													<button class="segmented-option" id="shapeBorderStyleDotted" type="button">Dotted Border</button>
+												</div>
+											</div>
+											<div class="setting-column right" id="shapeBorderDotSpacingRow" hidden>
+												<div class="setting-header"><span class="setting-label">Dot Spacing</span><span class="setting-value" id="shapeBorderDotSpacingValue">10px</span></div>
+												<input type="range" id="shapeBorderDotSpacing" min="1" max="60" value="10">
+												<button class="btn-text" id="resetShapeBorderDotSpacing" type="button">Reset</button>
 											</div>
 											<div class="glitter-source">
 								<div class="segmented-control text-effect-mode-group">
@@ -2620,57 +2645,7 @@
 
 			<!-- Add Layer Type -->
 			<div class="modal-body">
-				<div class="layer-type-options">
-					<button class="layer-type-option" data-layer-type="glitter-fill">
-
-
-						<span class="layer-type-icon icon-wrapper xl">
-							<svg class="icon">
-								<use href="#icon-glitter"></use>
-							</svg>
-						</span>
-
-
-
-						<span class="layer-type-name">Glitter Fill</span>
-						<span class="layer-type-description">Apply glitter fill to base image</span>
-					</button>
-					<button class="layer-type-option" data-layer-type="sticker">
-
-						<span class="layer-type-icon icon-wrapper xl">
-							<svg class="icon">
-								<use href="#icon-sticker"></use>
-							</svg>
-						</span>
-
-
-
-						<span class="layer-type-name">Sticker</span>
-						<span class="layer-type-description">Add images and graphics</span>
-					</button>
-					<button class="layer-type-option" data-layer-type="text-glitter">
-
-						<span class="layer-type-icon icon-wrapper xl">
-							<svg class="icon">
-								<use href="#icon-text"></use>
-							</svg>
-						</span>
-
-						<span class="layer-type-name">Text</span>
-						<span class="layer-type-description">Mask glitter inside editable text</span>
-					</button>
-					<button class="layer-type-option" data-layer-type="shape">
-
-						<span class="layer-type-icon icon-wrapper xl">
-							<svg class="icon">
-								<use href="#icon-square"></use>
-							</svg>
-						</span>
-
-						<span class="layer-type-name">Shape</span>
-						<span class="layer-type-description">Fill a shape with glitter or color</span>
-					</button>
-				</div>
+				<div class="layer-type-options"></div>
 			</div>
 		</div>
 	</div>
@@ -3201,7 +3176,7 @@
 			<svg class="icon">
 				<use href="#icon-sliders"></use>
 			</svg>
-			<span class="name">Slider Settings</span>
+			<span class="name">Settings</span>
 		</button>
 
 		<div class="mobile-settings-content" id="mobileSettingsContainer">
@@ -3475,39 +3450,40 @@
 	<script src="js/vendor/gif.js"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=9"></script>
+	<script src="js/config.js?v=12"></script>
 
 	<!-- Utils -->
 	<script src="js/utils.js"></script>
 	<script src="js/color-adjust.js?v=1"></script>
+	<script src="js/effect-source.js?v=1"></script>
 	<script src="js/debug.js"></script>
 
 	<!-- Classes -->
-	<script src="js/classes/GestureManager.js?v=2"></script>
-	<script src="js/classes/ModalManager.js"></script>
-	<script src="js/classes/GifExporter.js?v=7"></script>
-	<script src="js/classes/ViewportManager.js"></script>
+	<script src="js/classes/GestureManager.js?v=3"></script>
+	<script src="js/classes/ModalManager.js?v=1"></script>
+	<script src="js/classes/GifExporter.js?v=10"></script>
+	<script src="js/classes/ViewportManager.js?v=1"></script>
 	<script src="js/classes/HistoryManager.js?v=5"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
 	<script src="js/classes/ShapeLibrary.js?v=4"></script>
-	<script src="js/classes/MaskEditor.js?v=11"></script>
+	<script src="js/classes/MaskEditor.js?v=12"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=11"></script>
+	<script src="js/classes/LayerManager.js?v=14"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
 	<script src="js/classes/LayerTransform.js?v=9"></script>
 	<script src="js/classes/GlitterManager.js?v=12"></script>
-	<script src="js/classes/TextGlitterManager.js?v=21"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=9"></script>
-	<script src="js/classes/StickerManager.js"></script>
+	<script src="js/classes/TextGlitterManager.js?v=24"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=14"></script>
+	<script src="js/classes/StickerManager.js?v=1"></script>
 
 	<script src="js/classes/MobileManager.js?v=4"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=31"></script>
+	<script src="js/app.js?v=35"></script>
 
 </body>
 

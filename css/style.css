@@ -1210,20 +1210,18 @@ input[type=range]::-moz-range-thumb {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 3px;
-  padding: 0 2px;
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  padding: 0;
   flex-shrink: 0;
-}
-.layers-section > .layers-list > .layer-item > .layer-info .layer-badge.layer-badge-paint, .layers-section > .layers-list > .layer-item > .layer-info .layer-badge.layer-badge-color, .layers-section > .layers-list > .layer-item > .layer-info .layer-badge.layer-badge-border, .layers-section > .layers-list > .layer-item > .layer-info .layer-badge.layer-badge-shadow {
   background: var(--color-accent-light);
   color: var(--color-accent);
   border: 1px solid var(--color-accent-border);
+}
+.layers-section > .layers-list > .layer-item > .layer-info .layer-badge > .icon {
+  width: 10px;
+  height: 10px;
 }
 .layers-section > .layers-list > .layer-item > .layer-actions {
   display: flex;

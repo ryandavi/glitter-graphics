@@ -2278,6 +2278,9 @@ async resetAllSettings() {
 			.register('confirmationModal', {
 				closeBtnId: ['confirmationModalClose', 'confirmationCancelBtn'],
 				resetScrollOnOpen: false,
+				initialFocusSelector: '#confirmationConfirmBtn',
+				confirmOnEnter: true,
+				enterActionSelector: '#confirmationConfirmBtn',
 				onClose: () => this.resolvePendingConfirmation(this.pendingConfirmationValue)
 			});
 
@@ -2344,6 +2347,9 @@ async resetAllSettings() {
 		this.modalManager.register('newCanvasModal', {
 			closeBtnId: ['closeNewCanvasModal', 'createCanvasCloseBtn'],
 			resetScrollOnOpen: true,
+			initialFocusSelector: '#newCanvasWidth',
+			confirmOnEnter: true,
+			enterActionSelector: '#createCanvasBtn',
 			onOpen: () => this.initializeNewCanvasModal()
 		});
 
@@ -2512,40 +2518,48 @@ setupWelcomeModalListeners() {
 
 
 	setupLayerTypePickerListeners() {
-		const layerTypeButtons = document.querySelectorAll('.layer-type-option');
+		const optionsContainer = document.querySelector('#layerTypePickerModal .layer-type-options');
+		if (!optionsContainer) return;
 
-		layerTypeButtons.forEach(btn => {
-			btn.addEventListener('click', () => {
-				const type = btn.dataset.layerType;
+		this.renderLayerTypePickerOptions(optionsContainer);
 
-				// Map dataset value to LayerType enum
-				let layerType;
-				switch (type) {
-					case 'sticker':
-						layerType = LayerType.STICKER;
-						break;
-					case 'text-glitter':
-						layerType = LayerType.TEXT_GLITTER;
-						break;
-					case 'glitter-fill':
-						layerType = LayerType.GLITTER_FILL;
-						break;
-					case 'shape':
-						layerType = LayerType.SHAPE;
-						break;
-					default:
-						console.error('Unknown layer type:', type);
-						return;
-				}
+		optionsContainer.addEventListener('click', (event) => {
+			const button = event.target.closest('.layer-type-option');
+			if (!button) return;
 
-				// Close modal FIRST, then add layer
-				this.modalManager.close('layerTypePickerModal');
+			const layerType = button.dataset.layerType;
+			if (!LAYER_UI_CONFIG[layerType]?.addableViaModal) {
+				dbg(`Unknown add-layer type: ${layerType}`);
+				return;
+			}
 
-				// Small delay to ensure modal close completes
-				requestAnimationFrame(() => {
-					this.layerManager.addLayer(layerType);
-				});
+			this.modalManager.close('layerTypePickerModal');
+			requestAnimationFrame(() => {
+				this.layerManager.addLayer(layerType);
 			});
+		});
+	}
+
+	renderLayerTypePickerOptions(container) {
+		container.innerHTML = '';
+
+		getAddableLayerTypes().forEach((type) => {
+			const modalConfig = LAYER_UI_CONFIG[type]?.addableViaModal;
+			if (!modalConfig) return;
+
+			const button = document.createElement('button');
+			button.className = 'layer-type-option';
+			button.dataset.layerType = type;
+			button.innerHTML = `
+				<span class="layer-type-icon icon-wrapper xl">
+					<svg class="icon">
+						<use href="#icon-${modalConfig.icon}"></use>
+					</svg>
+				</span>
+				<span class="layer-type-name">${modalConfig.label}</span>
+				<span class="layer-type-description">${modalConfig.description}</span>
+			`;
+			container.appendChild(button);
 		});
 	}
 
@@ -2653,12 +2667,7 @@ setupWelcomeModalListeners() {
 			layersBarGoToSelected.addEventListener('click', () => {
 				const selectedLayer = this.layerManager.getActiveLayer();
 				if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
-
-				if (selectedLayer.type === LayerType.STICKER) {
-					this.layerManager.goToSticker(selectedLayer.id);
-				} else {
-					this.layerManager.goToGlitter(selectedLayer.id);
-				}
+				this.layerManager.goToLayerSource(selectedLayer.id);
 			});
 		}
 
@@ -2771,7 +2780,157 @@ setupWelcomeModalListeners() {
 	// Rubber-band shape creation: drag out the box, release to create a shape of
 	// that size (Shift constrains to a square). A negligible drag = a plain click,
 	// which makes a default-size shape at the click point.
+	beginShapeCreationGesture(clientX, clientY, options = {}) {
+		if (!this.originalImage || !this.previewContainer) {
+			return false;
+		}
+
+		this.cancelShapeCreationGesture();
+
+		const rect = this.previewContainer.getBoundingClientRect();
+		const preview = document.createElement('div');
+		preview.className = 'shape-drag-preview';
+		this.previewContainer.appendChild(preview);
+
+		this.shapeCreationGesture = {
+			startCanvas: this.viewport.screenToCanvas(clientX, clientY),
+			startScreen: { x: clientX - rect.left, y: clientY - rect.top },
+			containerRect: rect,
+			preview,
+			suppressNextClick: options.suppressNextClick !== false
+		};
+
+		return true;
+	}
+
+	getShapeCreationBox(clientX, clientY, useCanvas = false, shiftKey = false) {
+		const session = this.shapeCreationGesture;
+		if (!session) {
+			return null;
+		}
+
+		const pointA = useCanvas ? session.startCanvas : session.startScreen;
+		const pointB = useCanvas
+			? this.viewport.screenToCanvas(clientX, clientY)
+			: {
+				x: clientX - session.containerRect.left,
+				y: clientY - session.containerRect.top
+			};
+
+		let width = Math.abs(pointB.x - pointA.x);
+		let height = Math.abs(pointB.y - pointA.y);
+		if (shiftKey) {
+			width = Math.max(width, height);
+			height = width;
+		}
+
+		const left = pointB.x < pointA.x ? pointA.x - width : pointA.x;
+		const top = pointB.y < pointA.y ? pointA.y - height : pointA.y;
+		return {
+			left,
+			top,
+			width,
+			height,
+			centerX: left + width / 2,
+			centerY: top + height / 2
+		};
+	}
+
+	updateShapeCreationGesture(clientX, clientY, shiftKey = false) {
+		const session = this.shapeCreationGesture;
+		if (!session) {
+			return;
+		}
+
+		const box = this.getShapeCreationBox(clientX, clientY, false, shiftKey);
+		if (!box) {
+			return;
+		}
+
+		session.preview.style.left = `${box.left}px`;
+		session.preview.style.top = `${box.top}px`;
+		session.preview.style.width = `${box.width}px`;
+		session.preview.style.height = `${box.height}px`;
+	}
+
+	cancelShapeCreationGesture() {
+		const session = this.shapeCreationGesture;
+		if (!session) {
+			return;
+		}
+
+		session.preview?.remove();
+		this.shapeCreationGesture = null;
+	}
+
+	finishShapeCreationGesture(clientX, clientY, options = {}) {
+		const session = this.shapeCreationGesture;
+		if (!session) {
+			return null;
+		}
+
+		const box = this.getShapeCreationBox(clientX, clientY, true, Boolean(options.shiftKey));
+		const suppressNextClick = options.suppressNextClick ?? session.suppressNextClick;
+
+		this.cancelShapeCreationGesture();
+
+		if (!box) {
+			return null;
+		}
+
+		const isClick = Math.max(box.width, box.height) < 6;
+		const shapeLayer = isClick
+			? {
+				shapeId: this.shapeGlitterManager.getActiveShapeId(),
+				position: { x: session.startCanvas.x, y: session.startCanvas.y }
+			}
+			: {
+				shapeId: this.shapeGlitterManager.getActiveShapeId(),
+				position: { x: box.centerX, y: box.centerY },
+				width: box.width,
+				height: box.height
+			};
+
+		const layer = this.layerManager.addLayer(LayerType.SHAPE, { shapeLayer });
+
+		if (suppressNextClick) {
+			this.ignoreNextClick = true;
+			setTimeout(() => { this.ignoreNextClick = false; }, 0);
+		}
+
+		this.finishLayerCreation(layer);
+		return layer;
+	}
+
 	startShapeDrag(e) {
+		if (this.beginShapeCreationGesture(e.clientX, e.clientY, { shiftKey: e.shiftKey, suppressNextClick: true })) {
+			const onMove = (ev) => {
+				this.updateShapeCreationGesture(ev.clientX, ev.clientY, ev.shiftKey);
+			};
+
+			const onUp = (ev) => {
+				window.removeEventListener('pointermove', onMove);
+				window.removeEventListener('pointerup', onUp);
+				window.removeEventListener('pointercancel', onCancel);
+				this.finishShapeCreationGesture(ev.clientX, ev.clientY, {
+					shiftKey: ev.shiftKey,
+					suppressNextClick: true
+				});
+			};
+
+			const onCancel = () => {
+				window.removeEventListener('pointermove', onMove);
+				window.removeEventListener('pointerup', onUp);
+				window.removeEventListener('pointercancel', onCancel);
+				this.cancelShapeCreationGesture();
+			};
+
+			window.addEventListener('pointermove', onMove);
+			window.addEventListener('pointerup', onUp);
+			window.addEventListener('pointercancel', onCancel);
+			return;
+		}
+
 		const container = this.previewContainer;
 		const rect = container.getBoundingClientRect();
 		const startCanvas = this.viewport.screenToCanvas(e.clientX, e.clientY);
@@ -3725,6 +3884,7 @@ setupWelcomeModalListeners() {
 		// ======================
 		// Core image + data state
 		// ======================
+		this.exporter?.clearPreviewBlobUrl?.();
 		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
 			URL.revokeObjectURL(this.originalImage.src);
 		}
@@ -3842,6 +4002,7 @@ setupWelcomeModalListeners() {
 
 		// Release the previous image's blob URL (its src is referenced by the
 		// base-layer swatch CSS, so it can only be revoked once replaced)
+		this.exporter?.clearPreviewBlobUrl?.();
 		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
 			URL.revokeObjectURL(this.originalImage.src);
 		}
