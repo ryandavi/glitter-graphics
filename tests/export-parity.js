@@ -67,6 +67,10 @@ async function buildComposition(page) {
 		const stickerLayer = editor.stickerManager.createLayer(animatedSticker.id);
 		editor.layerManager.insertLayer(stickerLayer);
 		stickerLayer.stickerData.transform.position = { x: 250, y: 72 };
+		stickerLayer.stickerData.transform.rotation = 28;
+		stickerLayer.stickerData.transform.scale.x = 145;
+		stickerLayer.stickerData.transform.scale.y = 120;
+		stickerLayer.stickerData.transform.flipX = true;
 
 		const textLayer = editor.textGlitterManager.createLayer({
 			text: 'Parity',
@@ -75,6 +79,7 @@ async function buildComposition(page) {
 		});
 		editor.layerManager.insertLayer(textLayer);
 		textLayer.selectedGlitterId = glitterA;
+		textLayer.textData.fill = editor.textGlitterManager.getDefaultFill();
 		textLayer.textData.fill.mode = 'glitter';
 		textLayer.settings.colorAdjust = { hue: 90, saturation: 140, brightness: 110 };
 		textLayer.textData.border = editor.textGlitterManager.getDefaultBorder();
@@ -86,6 +91,10 @@ async function buildComposition(page) {
 		textLayer.textData.shadow.glitterId = glitterB;
 		textLayer.textData.shadow.offsetX = 8;
 		textLayer.textData.shadow.offsetY = 6;
+		textLayer.textData.transform.rotation = 344;
+		textLayer.textData.transform.scale.x = 125;
+		textLayer.textData.transform.scale.y = 125;
+		textLayer.textData.transform.flipY = true;
 		await editor.textGlitterManager.refreshLayer(textLayer, { saveHistory: false });
 
 		const shapeLayer = editor.shapeGlitterManager.createLayer({
@@ -107,6 +116,10 @@ async function buildComposition(page) {
 		shapeLayer.shapeData.shadow.glitterId = glitterA;
 		shapeLayer.shapeData.shadow.offsetX = -6;
 		shapeLayer.shapeData.shadow.offsetY = 8;
+		shapeLayer.shapeData.transform.rotation = 22;
+		shapeLayer.shapeData.transform.scale.x = 135;
+		shapeLayer.shapeData.transform.scale.y = 90;
+		shapeLayer.shapeData.transform.flipX = true;
 		editor.shapeGlitterManager.renderLayer(shapeLayer);
 
 		editor.layerManager.renderLayersList();

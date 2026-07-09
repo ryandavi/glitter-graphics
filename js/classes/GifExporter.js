@@ -113,25 +113,18 @@ class GifExporter {
 
 
 	_drawTransformedCanvas(ctx, sourceCanvas, transform, width, height) {
-		const centerX = transform.position.x;
-		const centerY = transform.position.y;
-		const scaleX = transform.scale.x / 100;
-		const scaleY = transform.scale.y / 100;
-		const rotation = transform.rotation * Math.PI / 180;
+		const metrics = computeLayerTransform(transform, { width, height });
 
 		ctx.save();
 		ctx.imageSmoothingEnabled = false;
-		ctx.globalAlpha = transform.opacity / 100;
-		ctx.translate(centerX, centerY);
+		ctx.globalAlpha = metrics.opacity;
+		ctx.translate(metrics.centerX, metrics.centerY);
 
-		if (rotation !== 0) {
-			ctx.rotate(rotation);
+		if (metrics.rotationRad !== 0) {
+			ctx.rotate(metrics.rotationRad);
 		}
 
-		ctx.scale(
-			scaleX * (transform.flipX ? -1 : 1),
-			scaleY * (transform.flipY ? -1 : 1)
-		);
+		ctx.scale(metrics.signedScaleX, metrics.signedScaleY);
 
 		ctx.drawImage(
 			sourceCanvas,
@@ -145,7 +138,8 @@ class GifExporter {
 	}
 
 	_renderLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null) {
-		const { transform, isAnimated, width, height } = layer.stickerData;
+		const transform = getLayerTransform(layer);
+		const { isAnimated, width, height } = layer.stickerData;
 
 		// Determine which frame/image to use
 		let imageData;
@@ -274,7 +268,7 @@ class GifExporter {
 			throw new Error(`Missing shape mask for layer ${layer.id}`);
 		}
 		const d = layer.shapeData;
-		const t = d.transform;
+		const t = getLayerTransform(layer);
 		const w = masks.renderWidth;
 		const h = masks.renderHeight;
 		const draw = (maskCanvas, slot) => {
@@ -613,7 +607,7 @@ class GifExporter {
 		this._drawTransformedCanvas(
 			ctx,
 			fillCanvas,
-			layer.textData.transform,
+			getLayerTransform(layer),
 			layer.textData.width,
 			layer.textData.height
 		);

@@ -101,16 +101,13 @@ applyTransform(element, dimensions) {
     }
     
     const transform = this.getTransform();
-    
-    // Calculate actual display size by applying scale to natural dimensions
-    const displayWidth = dimensions.width * (transform.scale.x / 100);
-    const displayHeight = dimensions.height * (transform.scale.y / 100);
+    const metrics = computeLayerTransform(transform, dimensions);
     
     // Build transform array - MUST include translate(-50%, -50%) for centering
     const transforms = [
         `translate(-50%, -50%)`,
-        `translate(${transform.position.x}px, ${transform.position.y}px)`,
-        `rotate(${transform.rotation}deg)`,
+        `translate(${metrics.centerX}px, ${metrics.centerY}px)`,
+        `rotate(${metrics.rotationDeg}deg)`,
         `scaleX(${transform.flipX ? -1 : 1})`,
         `scaleY(${transform.flipY ? -1 : 1})`
     ];
@@ -126,10 +123,10 @@ applyTransform(element, dimensions) {
     // CRITICAL: Build style string manually to ensure nothing gets overwritten
     const styleString = [
         `position: absolute`,
-        `width: ${displayWidth}px`,
-        `height: ${displayHeight}px`,
+        `width: ${metrics.displayWidth}px`,
+        `height: ${metrics.displayHeight}px`,
         `transform: ${transforms.join(' ')}`,
-        `opacity: ${transform.opacity / 100}`,
+        `opacity: ${metrics.opacity}`,
         `pointer-events: ${pointerEvents}`,
         `display: ${this.layer.visible ? 'block' : 'none'}`,
         `z-index: ${zIndex}`,
@@ -138,8 +135,8 @@ applyTransform(element, dimensions) {
     
     dbg('📐 Applying transform:', {
         position: transform.position,
-        displayWidth,
-        displayHeight,
+        displayWidth: metrics.displayWidth,
+        displayHeight: metrics.displayHeight,
         transformString: transforms.join(' ')
     });
 
@@ -177,6 +174,10 @@ updateTransform(updates) {
         transform.scale.y = updates.scale.y ?? transform.scale.y;
     }
 
+    if (updates.proportionalScale !== undefined) {
+        transform.proportionalScale = updates.proportionalScale;
+    }
+
     if (updates.rotation !== undefined) {
         // Normalize rotation to 0-360 range
         let newRotation = CONFIG.roundStickerTransforms ? Math.round(updates.rotation) : updates.rotation;
@@ -207,18 +208,11 @@ updateTransform(updates) {
      * Child classes can override this if transform is stored differently
      */
     getTransform() {
-        // Default: assumes layer has stickerData.transform or textData.transform etc.
-        // This works for stickers - override for other layer types if needed
-        if (this.layer.stickerData?.transform) {
-            return this.layer.stickerData.transform;
+        const transform = getLayerTransform(this.layer);
+        if (!transform) {
+            throw new Error('Layer does not have a transform object');
         }
-        if (this.layer.textData?.transform) {
-            return this.layer.textData.transform;
-        }
-        if (this.layer.shapeData?.transform) {
-            return this.layer.shapeData.transform;
-        }
-        throw new Error('Layer does not have a transform object');
+        return transform;
     }
 
     /**
@@ -274,23 +268,99 @@ updateTransform(updates) {
         };
     }
 
+    getFrameMetrics(transform = this.getTransform(), frame = this.getHandleFrame()) {
+        const scaleX = (transform.scale.x || 100) / 100;
+        const scaleY = (transform.scale.y || 100) / 100;
+        const displayWidth = frame.width * scaleX;
+        const displayHeight = frame.height * scaleY;
+        const rotationRad = (transform.rotation * Math.PI) / 180;
+        const cos = Math.cos(rotationRad);
+        const sin = Math.sin(rotationRad);
+        const frameOffsetX = frame.offsetX * scaleX;
+        const frameOffsetY = frame.offsetY * scaleY;
+        const centerX = transform.position.x + frameOffsetX * cos - frameOffsetY * sin;
+        const centerY = transform.position.y + frameOffsetX * sin + frameOffsetY * cos;
+        const hw = displayWidth / 2;
+        const hh = displayHeight / 2;
+        const corners = [
+            { x: -hw, y: -hh },
+            { x: hw, y: -hh },
+            { x: hw, y: hh },
+            { x: -hw, y: hh }
+        ].map((point) => ({
+            x: centerX + (point.x * cos - point.y * sin),
+            y: centerY + (point.x * sin + point.y * cos)
+        }));
+
+        return {
+            scaleX,
+            scaleY,
+            rotationRad,
+            cos,
+            sin,
+            centerX,
+            centerY,
+            displayWidth,
+            displayHeight,
+            corners,
+            minX: Math.min(...corners.map((point) => point.x)),
+            maxX: Math.max(...corners.map((point) => point.x)),
+            minY: Math.min(...corners.map((point) => point.y)),
+            maxY: Math.max(...corners.map((point) => point.y))
+        };
+    }
+
     // ===== CENTERING METHODS =====
 
     centerHorizontal() {
-        const canvasWidth = this.editor.originalCanvas.width;
-        const centerX = canvasWidth / 2;
+        this.alignToCanvas('centerX');
+    }
 
-        this.updateTransform({
-            position: { x: centerX }
-        });
+    centerVertical() {
+        this.alignToCanvas('centerY');
+    }
 
-        // Re-apply transform to element
-        if (this.element) {
-            const dimensions = this.getDimensions();
-            this.applyTransform(this.element, dimensions);
+    alignToCanvas(mode) {
+        if (!this.editor.originalCanvas) return;
+
+        const transform = this.getTransform();
+        const metrics = this.getFrameMetrics(transform);
+        let deltaX = 0;
+        let deltaY = 0;
+
+        switch (mode) {
+            case 'left':
+                deltaX = -metrics.minX;
+                break;
+            case 'centerX':
+                deltaX = (this.editor.originalCanvas.width / 2) - ((metrics.minX + metrics.maxX) / 2);
+                break;
+            case 'right':
+                deltaX = this.editor.originalCanvas.width - metrics.maxX;
+                break;
+            case 'top':
+                deltaY = -metrics.minY;
+                break;
+            case 'centerY':
+                deltaY = (this.editor.originalCanvas.height / 2) - ((metrics.minY + metrics.maxY) / 2);
+                break;
+            case 'bottom':
+                deltaY = this.editor.originalCanvas.height - metrics.maxY;
+                break;
+            default:
+                return;
         }
 
-        // Keep the selection/transform-handle overlay in sync with the moved element
+        this.updateTransform({
+            position: {
+                x: transform.position.x + deltaX,
+                y: transform.position.y + deltaY
+            }
+        });
+
+        if (this.element) {
+            this.applyTransform(this.element, this.getDimensions());
+        }
         if (this.transformHandles) {
             this.updateHandlePositions();
         }
@@ -298,21 +368,25 @@ updateTransform(updates) {
         this.editor.saveState();
     }
 
-    centerVertical() {
-        const canvasHeight = this.editor.originalCanvas.height;
-        const centerY = canvasHeight / 2;
-
-        this.updateTransform({
-            position: { y: centerY }
+    resetTransform() {
+        const transform = this.getTransform();
+        const next = createDefaultTransform({
+            position: {
+                x: transform.position.x,
+                y: transform.position.y
+            }
         });
 
-        // Re-apply transform to element
-        if (this.element) {
-            const dimensions = this.getDimensions();
-            this.applyTransform(this.element, dimensions);
-        }
+        transform.rotation = next.rotation;
+        transform.scale.x = next.scale.x;
+        transform.scale.y = next.scale.y;
+        transform.proportionalScale = next.proportionalScale;
+        transform.flipX = next.flipX;
+        transform.flipY = next.flipY;
 
-        // Keep the selection/transform-handle overlay in sync with the moved element
+        if (this.element) {
+            this.applyTransform(this.element, this.getDimensions());
+        }
         if (this.transformHandles) {
             this.updateHandlePositions();
         }
@@ -328,10 +402,10 @@ updateTransform(updates) {
      */
 setupMouseDrag(element) {
     let isDragging = false;
-    let startX = 0;
-    let startY = 0;
     let startCanvasX = 0;
     let startCanvasY = 0;
+    let startPosition = null;
+    let lockedAxis = null;
     
 const handleMouseDown = (e) => {
     if (e.button !== 0) return; // Left click only
@@ -357,12 +431,12 @@ const handleMouseDown = (e) => {
     
     // ALWAYS start dragging (whether we just selected or it was already selected)
     isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
     
-    const canvasPos = this.editor.viewport.screenToCanvas(startX, startY);
+    const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
     startCanvasX = canvasPos.x;
     startCanvasY = canvasPos.y;
+    startPosition = { ...this.getTransform().position };
+    lockedAxis = null;
     
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
@@ -376,25 +450,31 @@ const handleMouseMove = (e) => {
     // Convert current mouse position to canvas coordinates
     const currentCanvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
     
-    // Calculate delta from last position
+    // Calculate delta from drag origin
     const deltaX = currentCanvasPos.x - startCanvasX;
     const deltaY = currentCanvasPos.y - startCanvasY;
-    
-    // Get current transform
-    const transform = this.getTransform();
+
+    let constrainedDeltaX = deltaX;
+    let constrainedDeltaY = deltaY;
+
+    if (e.shiftKey) {
+        lockedAxis = lockedAxis || (Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y');
+        if (lockedAxis === 'x') {
+            constrainedDeltaY = 0;
+        } else {
+            constrainedDeltaX = 0;
+        }
+    } else {
+        lockedAxis = null;
+    }
     
     // Apply delta to current position
     this.updateTransform({
         position: {
-            x: transform.position.x + deltaX,
-            y: transform.position.y + deltaY
+            x: startPosition.x + constrainedDeltaX,
+            y: startPosition.y + constrainedDeltaY
         }
     });
-    
-    // ✅ CRITICAL: Update start position for next frame
-    // Without this, delta accumulates and sticker flies away!
-    startCanvasX = currentCanvasPos.x;
-    startCanvasY = currentCanvasPos.y;
     
     // CRITICAL FIX: Ensure we have a valid element reference
     // If this.element is null (e.g., after selection re-render), get fresh reference
@@ -432,6 +512,8 @@ const handleMouseMove = (e) => {
         if (!isDragging) return;
 
         isDragging = false;
+        lockedAxis = null;
+        startPosition = null;
         this.editor.saveState();
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -902,7 +984,7 @@ removeTransformHandles() {
     /**
      * Handle pointer end to finish handle drag
      */
-    handleHandlePointerUp(e) {
+    async handleHandlePointerUp(e) {
         if (e.pointerId !== this.activeHandlePointerId) {
             return;
         }
@@ -916,7 +998,9 @@ removeTransformHandles() {
             // Clear the drag flag before committing so ShapeGlitterManager.renderLayer()'s
             // handle-refresh guard doesn't skip rebuilding the (now differently-sized) box.
             this.isDraggingHandle = false;
-            if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
+            if (this.layer.type === LayerType.TEXT_GLITTER && ht.startsWith('corner-')) {
+                await this.editor.textGlitterManager?.commitScaleToFontSize?.(this.layer);
+            } else if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
                 this.editor.shapeGlitterManager?.commitScale(this.layer);
             }
             this.editor.saveState();
@@ -944,9 +1028,15 @@ removeTransformHandles() {
 
         const deltaX = canvasPos.x - this.dragStartState.canvasX;
         const deltaY = canvasPos.y - this.dragStartState.canvasY;
+        const axis = e.shiftKey
+            ? (this.dragStartState.lockedAxis || (Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y'))
+            : null;
+        this.dragStartState.lockedAxis = axis;
+        const nextDeltaX = axis === 'y' ? 0 : deltaX;
+        const nextDeltaY = axis === 'x' ? 0 : deltaY;
 
-        const newX = this.dragStartState.transform.position.x + deltaX;
-        const newY = this.dragStartState.transform.position.y + deltaY;
+        const newX = this.dragStartState.transform.position.x + nextDeltaX;
+        const newY = this.dragStartState.transform.position.y + nextDeltaY;
 
         this.updateTransform({
             position: { x: newX, y: newY }
@@ -991,7 +1081,7 @@ removeTransformHandles() {
 
         // Convert to scale percentage against the frame's local size
         const newScaleX = (Math.abs(localX) * 2 / frame.width) * 100;
-        const newScaleY = transform.proportionalScale
+        const newScaleY = (this.layer.type === LayerType.TEXT_GLITTER || transform.proportionalScale)
             ? newScaleX
             : (Math.abs(localY) * 2 / frame.height) * 100;
 
@@ -1053,11 +1143,15 @@ removeTransformHandles() {
         const transform = this.getTransform();
         const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
         const start = this.dragStartState;
-        const frame = { width: start.width, height: start.height };
+        const frame = start.handleFrame || { width: start.width, height: start.height, offsetX: 0, offsetY: 0 };
 
         const worldRotationRad = (transform.rotation * Math.PI) / 180;
-        const centerX = start.transform.position.x;
-        const centerY = start.transform.position.y;
+        const worldCos = Math.cos(worldRotationRad);
+        const worldSin = Math.sin(worldRotationRad);
+        const startOffsetX = (frame.offsetX || 0) * (start.transform.scale.x / 100);
+        const startOffsetY = (frame.offsetY || 0) * (start.transform.scale.y / 100);
+        const centerX = start.transform.position.x + startOffsetX * worldCos - startOffsetY * worldSin;
+        const centerY = start.transform.position.y + startOffsetX * worldSin + startOffsetY * worldCos;
         const vectorX = canvasPos.x - centerX;
         const vectorY = canvasPos.y - centerY;
         const cos = Math.cos(-worldRotationRad);
@@ -1087,10 +1181,11 @@ removeTransformHandles() {
     handleRotationDrag(e) {
         const transform = this.getTransform();
         const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+        const metrics = this.getFrameMetrics(transform);
 
         // Calculate angle from center to mouse
-        const centerX = transform.position.x;
-        const centerY = transform.position.y;
+        const centerX = metrics.centerX;
+        const centerY = metrics.centerY;
         const angle = Math.atan2(canvasPos.y - centerY, canvasPos.x - centerX) * (180 / Math.PI);
 
         // Adjust for initial offset (rotation handle is at top = -90 degrees)

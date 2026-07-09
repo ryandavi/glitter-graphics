@@ -458,19 +458,7 @@ class TextGlitterManager {
 		};
 	}
 
-	getPointAnchorWorldPosition(layer, frame = this.getTextFrame(layer)) {
-		if (!frame) {
-			return { ...layer.textData.transform.position };
-		}
-		const localPoint = this.getFrameAnchorLocalPoint(frame, layer.textData.align || 'left');
-		return this.getWorldPointFromLocal(layer.textData.transform, localPoint);
-	}
-
-	setPointAnchorWorldPosition(layer, worldPoint, frame = this.getTextFrame(layer)) {
-		if (!worldPoint || !frame) return;
-
-		const localPoint = this.getFrameAnchorLocalPoint(frame, layer.textData.align || 'left');
-		const transform = layer.textData.transform;
+	setWorldPointFromLocal(transform, localPoint, worldPoint) {
 		const scaleX = (transform.scale.x || 100) / 100;
 		const scaleY = (transform.scale.y || 100) / 100;
 		const rotationRad = (transform.rotation * Math.PI) / 180;
@@ -479,6 +467,41 @@ class TextGlitterManager {
 
 		transform.position.x = worldPoint.x - (localPoint.x * scaleX * cos - localPoint.y * scaleY * sin);
 		transform.position.y = worldPoint.y - (localPoint.x * scaleX * sin + localPoint.y * scaleY * cos);
+	}
+
+	getPointAnchorWorldPosition(layer, frame = this.getTextFrame(layer)) {
+		if (!frame) {
+			return { ...getLayerTransform(layer).position };
+		}
+		const localPoint = this.getFrameAnchorLocalPoint(frame, layer.textData.align || 'left');
+		return this.getWorldPointFromLocal(getLayerTransform(layer), localPoint);
+	}
+
+	setPointAnchorWorldPosition(layer, worldPoint, frame = this.getTextFrame(layer)) {
+		if (!worldPoint || !frame) return;
+
+		const localPoint = this.getFrameAnchorLocalPoint(frame, layer.textData.align || 'left');
+		this.setWorldPointFromLocal(getLayerTransform(layer), localPoint, worldPoint);
+	}
+
+	getFrameCenterWorldPosition(layer, frame = this.getTextFrame(layer)) {
+		if (!frame) {
+			return { ...getLayerTransform(layer).position };
+		}
+
+		return this.getWorldPointFromLocal(getLayerTransform(layer), {
+			x: frame.offsetX,
+			y: frame.offsetY
+		});
+	}
+
+	setFrameCenterWorldPosition(layer, worldPoint, frame = this.getTextFrame(layer)) {
+		if (!worldPoint || !frame) return;
+
+		this.setWorldPointFromLocal(getLayerTransform(layer), {
+			x: frame.offsetX,
+			y: frame.offsetY
+		}, worldPoint);
 	}
 
 	applyPointAnchorSnapshot(layer, snapshot, measurement = null) {
@@ -536,6 +559,10 @@ class TextGlitterManager {
 
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.TEXT_GLITTER || !layer.textData) return;
+		if (!layer.textData.transform) {
+			layer.textData.transform = createDefaultTransform();
+		}
+		syncLayerTransformReference(layer, layer.textData.transform);
 		if (layer.textData.border === undefined) {
 			layer.textData.border = null;
 		}
@@ -1168,6 +1195,12 @@ class TextGlitterManager {
 			y: this.editor.originalCanvas.height / 2
 		};
 		const initialAlign = options.align || 'center';
+		const transform = createDefaultTransform({
+			position: {
+				x: initialPosition.x,
+				y: initialPosition.y
+			}
+		});
 		const layer = {
 			id: this.editor.layerManager.generateLayerId(),
 			type: LayerType.TEXT_GLITTER,
@@ -1192,21 +1225,7 @@ class TextGlitterManager {
 				height: 0,
 				border: null,
 				shadow: null,
-				transform: {
-					position: {
-						x: initialPosition.x,
-						y: initialPosition.y
-					},
-					rotation: 0,
-					scale: {
-						x: CONFIG.defaultStickerScale,
-						y: CONFIG.defaultStickerScale
-					},
-					proportionalScale: true,
-					opacity: CONFIG.defaultStickerOpacity,
-					flipX: false,
-					flipY: false
-				}
+				transform
 			}
 		};
 
@@ -1220,6 +1239,8 @@ class TextGlitterManager {
 			};
 		}
 
+		layer.transform = transform;
+		syncLayerTransformReference(layer, transform);
 		return layer;
 	}
 
@@ -2730,6 +2751,67 @@ class TextGlitterManager {
 		return this.applyResizedBoxRect(layer, dragState, rect, metrics);
 	}
 
+	setBoxSize(layer, width, height) {
+		if (!this.canResizeBoxEdges(layer)) {
+			return false;
+		}
+
+		const worldCenter = this.getFrameCenterWorldPosition(layer);
+		const minBoxSize = this.getMinBoxSize();
+		layer.textData.boxWidth = Math.max(minBoxSize, Math.round(width));
+		layer.textData.boxHeight = Math.max(minBoxSize, Math.round(height));
+		const measurement = this.getMeasurementEntry(layer);
+		const nextFrame = this.getFixedBoxFrame(layer, measurement);
+		if (nextFrame) {
+			this.setFrameCenterWorldPosition(layer, worldCenter, nextFrame);
+		}
+
+		this.renderLayer(layer);
+		this.loadLayerSettings(layer);
+		this.editor.layerManager.renderLayersList();
+		this.editor.updateHelpfulMessage();
+		return true;
+	}
+
+	async commitScaleToFontSize(layer) {
+		if (!layer || layer.type !== LayerType.TEXT_GLITTER) return;
+
+		this.normalizeLayer(layer);
+		const transform = getLayerTransform(layer);
+		const scaleFactor = Math.max(0.01, (transform.scale.x || 100) / 100);
+		const scaleY = Math.max(0.01, (transform.scale.y || 100) / 100);
+		if (Math.abs(scaleFactor - 1) < 1e-3 && Math.abs(scaleY - 1) < 1e-3) {
+			transform.scale.x = 100;
+			transform.scale.y = 100;
+			transform.proportionalScale = true;
+			return;
+		}
+
+		const worldCenter = this.getFrameCenterWorldPosition(layer);
+		layer.textData.fontSize = Math.max(
+			CONFIG.textLayers.minFontSize,
+			Math.min(CONFIG.textLayers.maxFontSize, Math.round(layer.textData.fontSize * scaleFactor))
+		);
+		transform.scale.x = 100;
+		transform.scale.y = 100;
+		transform.proportionalScale = true;
+
+		const measurement = this.getMeasurementEntry(layer);
+		const nextFrame = this.getTextFrame(layer, measurement);
+		if (nextFrame) {
+			this.setFrameCenterWorldPosition(layer, worldCenter, nextFrame);
+		}
+
+		try {
+			await this.refreshLayer(layer, {
+				saveHistory: false,
+				refreshLayerList: false
+			});
+		} catch (error) {
+			this.reportFontLoadError(error);
+		}
+	}
+
 	createTransformHandles(layerId) {
 		const transform = this.layerTransforms.get(layerId);
 		if (transform) {
@@ -2775,6 +2857,26 @@ class TextGlitterManager {
 
 		transform.centerVertical();
 
+		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		if (layer) {
+			this.loadLayerSettings(layer);
+		}
+	}
+
+	alignToCanvas(layerId, mode) {
+		const transform = this.layerTransforms.get(layerId);
+		if (!transform) return;
+		transform.alignToCanvas(mode);
+		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		if (layer) {
+			this.loadLayerSettings(layer);
+		}
+	}
+
+	resetTransform(layerId) {
+		const transform = this.layerTransforms.get(layerId);
+		if (!transform) return;
+		transform.resetTransform();
 		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
 		if (layer) {
 			this.loadLayerSettings(layer);

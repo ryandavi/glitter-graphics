@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=29">
+	<link rel="stylesheet" href="css/style.css?v=34">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -698,40 +698,7 @@
 
 
 											<!-- Quick Add -->
-											<div class="layer-type-options quick-add">
-												<button class="layer-type-option" data-layer-type="glitter-fill" id="quickActionAddGlitter">
-
-
-													<span class="layer-type-icon icon-wrapper">
-														<svg class="icon">
-															<use href="#icon-glitter"></use>
-														</svg>
-													</span>
-
-													<span class="layer-type-name">Glitter Fill</span>
-													<span class="layer-type-description">Apply glitter fill to base image</span>
-												</button>
-
-												<button class="layer-type-option" data-layer-type="sticker" id="quickActionAddSticker">
-													<span class="layer-type-icon icon-wrapper">
-														<svg class="icon">
-															<use href="#icon-sticker"></use>
-														</svg>
-													</span>
-													<span class="layer-type-name">Sticker</span>
-													<span class="layer-type-description">Add images and graphics</span>
-												</button>
-
-												<button class="layer-type-option" data-layer-type="text-glitter" id="quickActionAddText">
-													<span class="layer-type-icon icon-wrapper">
-														<svg class="icon">
-															<use href="#icon-text"></use>
-														</svg>
-													</span>
-													<span class="layer-type-name">Text</span>
-													<span class="layer-type-description">Mask glitter inside editable text</span>
-												</button>
-											</div>
+											<div class="layer-type-options quick-add" id="quickAddOptions"></div>
 
 
 
@@ -1123,28 +1090,7 @@
 									</div>
 
 
-									<!-- Position -->
-									<div class="subsection-content-group">
-										<div class="subsection-title">Position</div>
-										<div class="subsection-content">
-											<div class="sticker-position-group">
-												<div class="input-group horizontal">
-													<label for="stickerPosX">X</label>
-													<span class="input-unit">
-														<input type="number" id="stickerPosX" readonly>
-														<span class="input-unit-suffix">px</span>
-													</span>
-												</div>
-												<div class="input-group horizontal">
-													<label for="stickerPosY">Y</label>
-													<span class="input-unit">
-														<input type="number" id="stickerPosY" readonly>
-														<span class="input-unit-suffix">px</span>
-													</span>
-												</div>
-											</div>
-										</div>
-									</div>
+									<div class="transform-panel-host" id="stickerTransformPanelHost"></div>
 
 									<!-- Transform -->
 									<div class="subsection-content-group">
@@ -1273,7 +1219,7 @@
 									</div>
 									<div class="text-box-hint" id="textBoxModeHint">Point text hugs the copy. Switch to Box for wrapping and edge resizing.</div>
 								</div>
-								<div class="subsection-content-group">
+								<div class="subsection-content-group text-fit-box-section">
 									<div class="subsection-title">Actions</div>
 									<div class="subsection-content">
 										<div class="tool-options-group text-fit-box-group">
@@ -1315,35 +1261,20 @@
 								<div class="subsection-content-group">
 									<div class="subsection-title">Alignment</div>
 									<div class="control-group-label text-valign-label">Vertical</div>
-									<div class="tool-options-group text-valign-group">
-										<button class="btn-simple active" type="button" data-text-valign="top">Top</button>
-										<button class="btn-simple" type="button" data-text-valign="middle">Middle</button>
-										<button class="btn-simple" type="button" data-text-valign="bottom">Bottom</button>
+									<div class="segmented-control text-valign-group">
+										<button class="segmented-option active" type="button" data-text-valign="top">Top</button>
+										<button class="segmented-option" type="button" data-text-valign="middle">Middle</button>
+										<button class="segmented-option" type="button" data-text-valign="bottom">Bottom</button>
 									</div>
 									<div class="control-group-label text-align-label">Horizontal</div>
-									<div class="tool-options-group text-align-group">
-										<button class="btn-simple active" type="button" data-text-align="left">Left</button>
-										<button class="btn-simple" type="button" data-text-align="center">Center</button>
-										<button class="btn-simple" type="button" data-text-align="right">Right</button>
+									<div class="segmented-control text-align-group">
+										<button class="segmented-option active" type="button" data-text-align="left">Left</button>
+										<button class="segmented-option" type="button" data-text-align="center">Center</button>
+										<button class="segmented-option" type="button" data-text-align="right">Right</button>
 									</div>
 								</div>
 
-								<!-- Position -->
-								<div class="subsection-content-group">
-									<div class="subsection-title">Position</div>
-									<div class="subsection-content">
-										<div class="sticker-position-group">
-											<div class="input-group horizontal">
-												<label for="textPosX">X</label>
-												<span class="input-unit"><input type="number" id="textPosX" readonly><span class="input-unit-suffix">px</span></span>
-											</div>
-											<div class="input-group horizontal">
-												<label for="textPosY">Y</label>
-												<span class="input-unit"><input type="number" id="textPosY" readonly><span class="input-unit-suffix">px</span></span>
-											</div>
-										</div>
-									</div>
-								</div>
+								<div class="transform-panel-host" id="textTransformPanelHost"></div>
 
 								<!-- Transform -->
 								<div class="subsection-content-group">
@@ -1458,7 +1389,7 @@
 									<div class="settings-group-two-column">
 										<div class="setting-column right" id="textTextureScaleRow">
 											<div class="setting-header">
-												<span class="setting-label">Scale</span>
+												<span class="setting-label">Texture Scale</span>
 												<span class="setting-value" id="textTextureScaleValue">100%</span>
 											</div>
 											<input type="range" id="textTextureScale" min="25" max="300" value="100">
@@ -1563,7 +1494,7 @@
 											<div class="settings-group-two-column">
 												<div class="setting-column right" id="textBorderScaleRow">
 													<div class="setting-header">
-														<span class="setting-label">Scale</span>
+														<span class="setting-label">Texture Scale</span>
 														<span class="setting-value" id="textBorderScaleValue">100%</span>
 													</div>
 													<input type="range" id="textBorderScale" min="25" max="300" value="100">
@@ -1676,7 +1607,7 @@
 											<div class="settings-group-two-column">
 												<div class="setting-column right" id="textShadowScaleRow">
 													<div class="setting-header">
-														<span class="setting-label">Scale</span>
+														<span class="setting-label">Texture Scale</span>
 														<span class="setting-value" id="textShadowScaleValue">100%</span>
 													</div>
 													<input type="range" id="textShadowScale" min="25" max="300" value="100">
@@ -1785,7 +1716,7 @@
 								</button>
 								<div class="advanced-disclosure-content" data-advanced-content>
 									<div class="setting-column right">
-										<div class="setting-header"><span class="setting-label">Scale</span><span class="setting-value" id="shapeFillScaleValue">100%</span></div>
+										<div class="setting-header"><span class="setting-label">Texture Scale</span><span class="setting-value" id="shapeFillScaleValue">100%</span></div>
 										<input type="range" id="shapeFillScale" min="25" max="300" value="100">
 										<button class="btn-text" id="resetShapeFillScale" type="button">Reset</button>
 									</div>
@@ -1812,22 +1743,7 @@
 
 	
 
-																<!-- Position -->
-								<div class="subsection-content-group">
-									<div class="subsection-title">Position</div>
-									<div class="subsection-content">
-										<div class="sticker-position-group">
-											<div class="input-group horizontal">
-												<label for="shapePosX">X</label>
-												<span class="input-unit"><input type="number" id="shapePosX" readonly><span class="input-unit-suffix">px</span></span>
-											</div>
-											<div class="input-group horizontal">
-												<label for="shapePosY">Y</label>
-												<span class="input-unit"><input type="number" id="shapePosY" readonly><span class="input-unit-suffix">px</span></span>
-											</div>
-										</div>
-									</div>
-								</div>
+								<div class="transform-panel-host" id="shapeTransformPanelHost"></div>
 
 								<!-- Transform -->
 								<div class="subsection-content-group">
@@ -1934,7 +1850,7 @@
 								</button>
 								<div class="advanced-disclosure-content" data-advanced-content>
 									<div class="setting-column right">
-										<div class="setting-header"><span class="setting-label">Scale</span><span class="setting-value" id="shapeBorderScaleValue">100%</span></div>
+										<div class="setting-header"><span class="setting-label">Texture Scale</span><span class="setting-value" id="shapeBorderScaleValue">100%</span></div>
 										<input type="range" id="shapeBorderScale" min="25" max="300" value="100">
 										<button class="btn-text" id="resetShapeBorderScale" type="button">Reset</button>
 									</div>
@@ -2012,7 +1928,7 @@
 								</button>
 								<div class="advanced-disclosure-content" data-advanced-content>
 									<div class="setting-column right">
-										<div class="setting-header"><span class="setting-label">Scale</span><span class="setting-value" id="shapeShadowScaleValue">100%</span></div>
+										<div class="setting-header"><span class="setting-label">Texture Scale</span><span class="setting-value" id="shapeShadowScaleValue">100%</span></div>
 										<input type="range" id="shapeShadowScale" min="25" max="300" value="100">
 										<button class="btn-text" id="resetShapeShadowScale" type="button">Reset</button>
 									</div>
@@ -3450,7 +3366,8 @@
 	<script src="js/vendor/gif.js"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=12"></script>
+	<script src="js/config.js?v=16"></script>
+	<script src="js/transform-math.js?v=1"></script>
 
 	<!-- Utils -->
 	<script src="js/utils.js"></script>
@@ -3461,9 +3378,9 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=3"></script>
 	<script src="js/classes/ModalManager.js?v=1"></script>
-	<script src="js/classes/GifExporter.js?v=10"></script>
+	<script src="js/classes/GifExporter.js?v=11"></script>
 	<script src="js/classes/ViewportManager.js?v=1"></script>
-	<script src="js/classes/HistoryManager.js?v=5"></script>
+	<script src="js/classes/HistoryManager.js?v=6"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
 	<script src="js/classes/ShapeLibrary.js?v=4"></script>
 	<script src="js/classes/MaskEditor.js?v=12"></script>
@@ -3474,16 +3391,16 @@
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
-	<script src="js/classes/LayerTransform.js?v=9"></script>
+	<script src="js/classes/LayerTransform.js?v=10"></script>
 	<script src="js/classes/GlitterManager.js?v=12"></script>
-	<script src="js/classes/TextGlitterManager.js?v=24"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=14"></script>
+	<script src="js/classes/TextGlitterManager.js?v=25"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=15"></script>
 	<script src="js/classes/StickerManager.js?v=1"></script>
 
 	<script src="js/classes/MobileManager.js?v=4"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=35"></script>
+	<script src="js/app.js?v=41"></script>
 
 </body>
 

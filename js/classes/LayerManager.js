@@ -482,7 +482,7 @@ class LayerManager {
 	isPointInSticker(layer, clickX, clickY) {
 		if (layer.stickerData.isEmpty || !layer.stickerData.url) return false;
 
-		const t = layer.stickerData.transform;
+		const t = getLayerTransform(layer);
 		const w = layer.stickerData.width;
 		const h = layer.stickerData.height;
 
@@ -492,7 +492,7 @@ class LayerManager {
 	isPointInText(layer, clickX, clickY) {
 		if (!layer.textData?.text?.trim()) return false;
 
-		const t = layer.textData.transform;
+		const t = getLayerTransform(layer);
 
 		// Hit-test the visible frame (box rect / ink bounds), not the padded mask canvas
 		const frame = this.editor.textGlitterManager?.getTextFrame?.(layer);
@@ -521,7 +521,7 @@ class LayerManager {
 
 	isPointInShape(layer, clickX, clickY) {
 		if (layer.type !== LayerType.SHAPE) return false;
-		const t = layer.shapeData.transform;
+		const t = getLayerTransform(layer);
 		const measurement = this.editor.shapeGlitterManager?.getMeasurementEntry(layer);
 		const w = measurement?.width || layer.shapeData.renderWidth || layer.shapeData.width;
 		const h = measurement?.height || layer.shapeData.renderHeight || layer.shapeData.height;
@@ -646,6 +646,13 @@ class LayerManager {
 		let clonedLayer;
 
 		if (sourceLayer.type === LayerType.STICKER) {
+			const sourceTransform = getLayerTransform(sourceLayer);
+			const clonedTransform = cloneTransform(sourceTransform, {
+				position: {
+					x: sourceTransform.position.x + 20,
+					y: sourceTransform.position.y + 20
+				}
+			});
 			// Clone sticker layer - deep copy the stickerData structure
 			clonedLayer = {
 				id: this.generateLayerId(),
@@ -654,6 +661,7 @@ class LayerManager {
 				visible: sourceLayer.visible,
 				locked: false,
 				stickerSourceId: sourceLayer.stickerSourceId, // Make sure this is copied!
+				transform: clonedTransform,
 				stickerData: {
 					url: sourceLayer.stickerData.url,
 					name: sourceLayer.stickerData.name,
@@ -666,21 +674,7 @@ class LayerManager {
 					// no longer mutates shared frame data, and the clone reloads
 					// animation data on demand so each layer keeps its own frame cache.
 					frames: null,
-					transform: {
-						position: {
-							x: sourceLayer.stickerData.transform.position.x,
-							y: sourceLayer.stickerData.transform.position.y
-						},
-						scale: {
-							x: sourceLayer.stickerData.transform.scale.x,
-							y: sourceLayer.stickerData.transform.scale.y
-						},
-						proportionalScale: sourceLayer.stickerData.transform.proportionalScale,
-						rotation: sourceLayer.stickerData.transform.rotation,
-						opacity: sourceLayer.stickerData.transform.opacity,
-						flipX: sourceLayer.stickerData.transform.flipX,
-						flipY: sourceLayer.stickerData.transform.flipY
-					}
+					transform: clonedTransform
 					// Don't copy element - it will be created fresh
 				}
 			};
@@ -699,6 +693,9 @@ class LayerManager {
 				settings: { ...sourceLayer.settings },
 				textData: JSON.parse(JSON.stringify(sourceLayer.textData))
 			};
+			const transform = getLayerTransform(clonedLayer);
+			transform.position.x += 20;
+			transform.position.y += 20;
 		} else if (sourceLayer.type === LayerType.SHAPE) {
 			clonedLayer = {
 				id: this.generateLayerId(),
@@ -711,8 +708,9 @@ class LayerManager {
 				shapeData: JSON.parse(JSON.stringify(sourceLayer.shapeData))
 			};
 			// Nudge so the copy is visible, mirroring the other clone paths' intent.
-			clonedLayer.shapeData.transform.position.x += 20;
-			clonedLayer.shapeData.transform.position.y += 20;
+			const transform = getLayerTransform(clonedLayer);
+			transform.position.x += 20;
+			transform.position.y += 20;
 		} else {
 			// Clone glitter layer
 			clonedLayer = {

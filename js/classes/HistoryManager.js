@@ -178,10 +178,21 @@ class HistoryManager {
 		this.editor.activeLayerId = state.activeLayerId;
 
 		this.editor.layerManager.renderLayersList();
-		this.editor.loadActiveLayerSettings();
-		this.editor.updateGlitterSelection();
 		this.editor.updatePreview();
+		this.editor.loadActiveLayerSettings();
+		this.editor.syncTransformHandlesForActiveLayer?.();
 		this.editor.updateActionButtons();
+		this.editor.updateGlitterSelection();
+
+		requestAnimationFrame(() => {
+			const activeLayer = this.editor.layerManager.getActiveLayer();
+			if (!activeLayer) return;
+			this.editor.syncTransformHandlesForActiveLayer?.();
+			const ctx = this.editor.getMovableLayerContext?.(activeLayer);
+			if (ctx?.prefix) {
+				this.editor.loadTransformSettings?.(activeLayer, ctx.prefix);
+			}
+		});
 
 		// Re-enter mask editing against the restored layer if Brush/Eraser is
 		// still the active tool; otherwise just resync its button state.

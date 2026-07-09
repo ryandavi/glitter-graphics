@@ -109,6 +109,15 @@ const CONFIG = {
 	maxStickers: 50,
 	maxStickerUploadSize: 10 * 1024 * 1024,
 	allowedStickerTypes: ['image/png', 'image/jpeg', 'image/gif'],
+	defaultTransform: {
+		position: { x: 0, y: 0 },
+		rotation: 0,
+		scale: { x: 100, y: 100 },
+		proportionalScale: true,
+		opacity: 100,
+		flipX: false,
+		flipY: false
+	},
 	defaultStickerOpacity: 100,
 	defaultStickerScale: 100,
 	defaultStickerRotation: 0,
@@ -250,15 +259,21 @@ const CONFIG = {
 			{ key: 'E', action: 'Mask Eraser Tool' },
 			{ key: 'H', action: 'Hand Tool' },
 			{ key: 'Z', action: 'Zoom Tool' },
+			{ key: 'Arrow Keys', action: 'Nudge Selected Layer' },
+			{ key: 'Shift + Arrow Keys', action: 'Nudge Selected Layer 10px' },
+			{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move' },
+			{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg' }
 		],
 		brush: [
 			{ key: 'X', action: 'Swap Paint/Erase (Mask Brush)' },
 			{ key: '[ / ]', action: 'Decrease/Increase Brush Size' },
+			{ key: 'Shift + [ / ]', action: 'Adjust Brush Size Faster' },
 			{ key: 'Shift + Drag', action: 'Constrain the stroke to a straight line (0/45/90°)' },
 		],
 		view: [
 			{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)' },
 			{ key: 'Scroll Wheel', action: 'Zoom In/Out (Zoom Tool)' },
+			{ key: 'Ctrl + Wheel', action: 'Trackpad Zoom' },
 			{ key: 'Ctrl + 0', action: 'Fit Screen' },
 			{ key: 'Ctrl + 1', action: 'Reset Zoom (100%)' },
 			{ key: 'Ctrl + +/-', action: 'Zoom In/Out' }
@@ -430,6 +445,18 @@ const LAYER_UI_CONFIG = {
 		managerKey: 'stickerManager',
 		hitTestMethod: 'isPointInSticker',
 		transformPrefix: 'sticker',
+		transformCapabilities: {
+			position: true,
+			size: true,
+			scaleReadout: true,
+			scaleReset: true,
+			lockAspect: true,
+			rotation: true,
+			opacity: true,
+			flip: true,
+			align: true,
+			reset: true
+		},
 		autoOpenDesignDrawerOnCreate: true,
 		onActivate: (editor, layer) => {
 			editor.setTool(ToolType.SELECT);
@@ -467,6 +494,17 @@ const LAYER_UI_CONFIG = {
 		managerKey: 'textGlitterManager',
 		hitTestMethod: 'isPointInText',
 		transformPrefix: 'text',
+		transformCapabilities: {
+			position: true,
+			size: true,
+			scaleReadout: true,
+			lockAspect: false,
+			rotation: true,
+			opacity: true,
+			flip: true,
+			align: true,
+			reset: true
+		},
 		createOptionsKey: 'textLayer',
 		autoOpenDesignDrawerOnCreate: true,
 		// Reopening the side panel after every tap-created layer is desktop
@@ -502,6 +540,17 @@ const LAYER_UI_CONFIG = {
 		managerKey: 'shapeGlitterManager',
 		hitTestMethod: 'isPointInShape',
 		transformPrefix: 'shape',
+		transformCapabilities: {
+			position: true,
+			size: true,
+			scaleReadout: true,
+			lockAspect: true,
+			rotation: true,
+			opacity: true,
+			flip: true,
+			align: true,
+			reset: true
+		},
 		createOptionsKey: 'shapeLayer',
 		// Unlike text/glitter/sticker, tapping the Shape tool repeatedly to place
 		// several shapes shouldn't keep yanking the Design drawer open on mobile.

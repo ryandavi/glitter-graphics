@@ -69,6 +69,10 @@ class GlitterEditor {
 		this.exportStartTime = 0;
 		this.exportCancelled = false;
 
+		// Render shared transform panels before manager setup so every manager
+		// binds against one generated DOM structure instead of triplicated HTML.
+		this.renderTransformPanels();
+
 		// ============================================================================
 		// MANAGERS
 		// ============================================================================
@@ -1725,49 +1729,200 @@ async resetAllSettings() {
 		});
 	}
 
-	// Shared by sticker and text layers — both carry a transform object of the
-	// exact same shape (position/rotation/scale/proportionalScale/opacity/
-	// flipX/flipY, see LayerTransform.getTransform()). Position inputs are
-	// readonly display-only (see loadTransformSettings) — dragging is how you
-	// move a layer, so no listeners are needed for them here.
+	renderTransformPanels() {
+		[
+			{ hostId: 'stickerTransformPanelHost', prefix: 'sticker', type: LayerType.STICKER },
+			{ hostId: 'textTransformPanelHost', prefix: 'text', type: LayerType.TEXT_GLITTER },
+			{ hostId: 'shapeTransformPanelHost', prefix: 'shape', type: LayerType.SHAPE }
+		].forEach(({ hostId, prefix, type }) => {
+			const host = document.getElementById(hostId);
+			if (!host) return;
+
+			const ids = this.getTransformIds(prefix);
+			(ids.legacyIds || [])
+				.map((id) => document.getElementById(id)?.closest('.subsection-content-group'))
+				.filter(Boolean)
+				.filter((node, index, list) => list.indexOf(node) === index)
+				.forEach((node) => node.remove());
+
+			this.renderTransformPanel(host, prefix, LAYER_UI_CONFIG[type]?.transformCapabilities || {});
+		});
+	}
+
+	renderTransformPanel(container, prefix, capabilities) {
+		const ids = this.getTransformIds(prefix);
+		const lockMarkup = capabilities.lockAspect
+			? `
+				<label class="checkbox-group transform-chip">
+					<input type="checkbox" id="${ids.proportional}" checked>
+					<span title="Keep aspect ratio when editing size">Lock Aspect</span>
+				</label>
+			`
+			: '';
+		const scaleSummaryMarkup = capabilities.scaleReadout
+			? `
+				<div class="setting-column right transform-scale-control" id="${ids.scaleControl}">
+					<div class="setting-header">
+						<span class="setting-label">Scale</span>
+						<span class="setting-value" id="${ids.scaleSummary}">100%</span>
+					</div>
+					<input type="range" id="${ids.scaleSlider}" min="10" max="500" value="100">
+					<button class="btn-text" id="${ids.resetScale}" type="button">Reset</button>
+				</div>
+			`
+			: '';
+
+		container.innerHTML = `
+			<div class="subsection-content-group transform-panel" data-transform-prefix="${prefix}">
+				<div class="subsection-title transform-panel-title">
+					<span>Transform</span>
+					<div class="transform-panel-title-actions">
+						${lockMarkup}
+					</div>
+				</div>
+				<div class="transform-grid">
+					<div class="sticker-position-group">
+						<div class="input-group horizontal">
+							<label for="${ids.posX}">X</label>
+							<span class="input-unit">
+								<input type="number" id="${ids.posX}">
+								<span class="input-unit-suffix">px</span>
+							</span>
+						</div>
+						<div class="input-group horizontal">
+							<label for="${ids.posY}">Y</label>
+							<span class="input-unit">
+								<input type="number" id="${ids.posY}">
+								<span class="input-unit-suffix">px</span>
+							</span>
+						</div>
+					</div>
+					<div class="sticker-position-group" id="${ids.sizeGroup}">
+						<div class="input-group horizontal">
+							<label for="${ids.sizeWidth}">W</label>
+							<span class="input-unit">
+								<input type="number" id="${ids.sizeWidth}" min="1">
+								<span class="input-unit-suffix">px</span>
+							</span>
+						</div>
+						<div class="input-group horizontal">
+							<label for="${ids.sizeHeight}">H</label>
+							<span class="input-unit">
+								<input type="number" id="${ids.sizeHeight}" min="1">
+								<span class="input-unit-suffix">px</span>
+							</span>
+						</div>
+					</div>
+					${scaleSummaryMarkup}
+					<div class="setting-column right">
+						<div class="setting-header">
+							<span class="setting-label">Rotation</span>
+							<span class="setting-value" id="${ids.rotationValue}">0°</span>
+						</div>
+						<input type="range" id="${ids.rotation}" min="0" max="360" value="0" step="1">
+						<button class="btn-text" id="${ids.resetRotation}" type="button">Reset</button>
+					</div>
+					<div class="transform-panel-footer">
+						<button class="btn-simple transform-reset-all" id="${ids.resetTransform}" type="button">Reset Transform</button>
+					</div>
+				</div>
+			</div>
+			<div class="subsection-content-group transform-panel">
+				<div class="subsection-title">Alignment</div>
+				<div class="transform-control-group">
+					<div class="control-group-label">Horizontal</div>
+					<div class="segmented-control transform-segmented-control">
+						<button class="segmented-option" id="${ids.alignLeft}" type="button" title="Align left to canvas">Left</button>
+						<button class="segmented-option" id="${ids.alignCenterX}" type="button" title="Center horizontally on canvas">Center</button>
+						<button class="segmented-option" id="${ids.alignRight}" type="button" title="Align right to canvas">Right</button>
+					</div>
+				</div>
+				<div class="transform-control-group">
+					<div class="control-group-label">Vertical</div>
+					<div class="segmented-control transform-segmented-control">
+						<button class="segmented-option" id="${ids.alignTop}" type="button" title="Align top to canvas">Top</button>
+						<button class="segmented-option" id="${ids.alignCenterY}" type="button" title="Center vertically on canvas">Middle</button>
+						<button class="segmented-option" id="${ids.alignBottom}" type="button" title="Align bottom to canvas">Bottom</button>
+					</div>
+				</div>
+			</div>
+			<div class="subsection-content-group transform-panel">
+				<div class="subsection-title">Flip</div>
+				<div class="transform-button-row">
+					<label class="checkbox-group">
+						<input type="checkbox" id="${ids.flipX}">
+						<span title="Flip horizontally">Flip H</span>
+					</label>
+					<label class="checkbox-group">
+						<input type="checkbox" id="${ids.flipY}">
+						<span title="Flip vertically">Flip V</span>
+					</label>
+				</div>
+			</div>
+			<div class="subsection-content-group transform-panel">
+				<div class="subsection-title">Appearance</div>
+				<div class="setting-column right">
+					<div class="setting-header">
+						<span class="setting-label">Opacity</span>
+						<span class="setting-value" id="${ids.opacityValue}">100%</span>
+					</div>
+					<input type="range" id="${ids.opacity}" min="0" max="100" value="100">
+					<button class="btn-text" id="${ids.resetOpacity}" type="button">Reset</button>
+				</div>
+			</div>
+		`;
+	}
+
 	getTransformIds(prefix) {
 		if (prefix === 'sticker') {
 			return {
 				posX: 'stickerPosX', posY: 'stickerPosY',
+				sizeWidth: 'stickerWidth', sizeHeight: 'stickerHeight', sizeGroup: 'stickerSizeGroup',
 				rotation: 'stickerRotation', rotationValue: 'stickerRotationValue', resetRotation: 'resetStickerRotation',
 				opacity: 'stickerOpacity', opacityValue: 'stickerOpacityValue', resetOpacity: 'resetStickerOpacity',
-				scaleX: 'stickerScaleX', scaleXValue: 'stickerScaleXValue', resetScaleX: 'resetStickerScaleX',
-				scaleY: 'stickerScaleY', scaleYValue: 'stickerScaleYValue', resetScaleY: 'resetStickerScaleY',
 				proportional: 'stickerProportionalScale',
-				flipX: 'stickerFlipX', flipY: 'stickerFlipY'
+				scaleControl: 'stickerScaleControl', scaleSummary: 'stickerScaleSummary', scaleSlider: 'stickerScale', resetScale: 'resetStickerScale',
+				flipX: 'stickerFlipX', flipY: 'stickerFlipY',
+				alignLeft: 'stickerAlignLeft', alignCenterX: 'stickerAlignCenterX', alignRight: 'stickerAlignRight',
+				alignTop: 'stickerAlignTop', alignCenterY: 'stickerAlignCenterY', alignBottom: 'stickerAlignBottom',
+				resetTransform: 'resetStickerTransform',
+				legacyIds: ['stickerRotation', 'stickerOpacity', 'stickerScaleX', 'stickerScaleY', 'stickerFlipX', 'stickerFlipY']
 			};
 		}
 
 		if (prefix === 'shape') {
 			return {
 				posX: 'shapePosX', posY: 'shapePosY',
+				sizeWidth: 'shapeWidth', sizeHeight: 'shapeHeight', sizeGroup: 'shapeSizeGroup',
 				rotation: 'shapeRotation', rotationValue: 'shapeRotationValue', resetRotation: 'resetShapeRotation',
 				opacity: 'shapeOpacity', opacityValue: 'shapeOpacityValue', resetOpacity: 'resetShapeOpacity',
-				scaleX: 'shapeScaleX', scaleXValue: 'shapeScaleXValue', resetScaleX: 'resetShapeScaleX',
-				scaleY: 'shapeScaleY', scaleYValue: 'shapeScaleYValue', resetScaleY: 'resetShapeScaleY',
 				proportional: 'shapeProportionalScale',
-				flipX: 'shapeFlipX', flipY: 'shapeFlipY'
+				scaleControl: 'shapeScaleControl', scaleSummary: 'shapeScaleSummary', scaleSlider: 'shapeScale', resetScale: 'resetShapeScale',
+				flipX: 'shapeFlipX', flipY: 'shapeFlipY',
+				alignLeft: 'shapeAlignLeft', alignCenterX: 'shapeAlignCenterX', alignRight: 'shapeAlignRight',
+				alignTop: 'shapeAlignTop', alignCenterY: 'shapeAlignCenterY', alignBottom: 'shapeAlignBottom',
+				resetTransform: 'resetShapeTransform',
+				legacyIds: ['shapeRotation', 'shapeOpacity', 'shapeScaleX', 'shapeScaleY', 'shapeFlipX', 'shapeFlipY']
 			};
 		}
 
 		return {
 			posX: 'textPosX', posY: 'textPosY',
+			sizeWidth: 'textWidth', sizeHeight: 'textHeight', sizeGroup: 'textSizeGroup',
 			rotation: 'textRotation', rotationValue: 'textRotationValue', resetRotation: 'resetTextRotation',
 			opacity: 'textLayerOpacity', opacityValue: 'textLayerOpacityValue', resetOpacity: 'resetTextLayerOpacity',
-			scaleX: 'textLayerScaleX', scaleXValue: 'textLayerScaleXValue', resetScaleX: 'resetTextLayerScaleX',
-			scaleY: 'textLayerScaleY', scaleYValue: 'textLayerScaleYValue', resetScaleY: 'resetTextLayerScaleY',
-			proportional: 'textLayerProportionalScale',
-			flipX: 'textFlipX', flipY: 'textFlipY'
+			proportional: null,
+			scaleControl: 'textScaleControl', scaleSummary: 'textScaleSummary', scaleSlider: 'textScale', resetScale: 'resetTextScale',
+			flipX: 'textFlipX', flipY: 'textFlipY',
+			alignLeft: 'textAlignLeft', alignCenterX: 'textAlignCenterX', alignRight: 'textAlignRight',
+			alignTop: 'textAlignTop', alignCenterY: 'textAlignCenterY', alignBottom: 'textAlignBottom',
+			resetTransform: 'resetTextTransform',
+			legacyIds: ['textRotation', 'textLayerOpacity', 'textLayerScaleX', 'textLayerScaleY', 'textFlipX', 'textFlipY']
 		};
 	}
 
 	getLayerTransformData(layer) {
-		return layer?.stickerData?.transform || layer?.textData?.transform || layer?.shapeData?.transform || null;
+		return getLayerTransform(layer);
 	}
 
 	// Single source of truth for the three movable/transformable layer types.
@@ -1787,6 +1942,123 @@ async resetAllSettings() {
 		}
 	}
 
+	formatScaleSummary(transform) {
+		const x = Math.round(transform.scale.x);
+		const y = Math.round(transform.scale.y);
+		return x === y
+			? formatUnit(x, '%')
+			: `${formatUnit(x, '%')} × ${formatUnit(y, '%')}`;
+	}
+
+	getScaleSliderValue(transform) {
+		const x = Math.round(transform.scale.x || 100);
+		const y = Math.round(transform.scale.y || 100);
+		return x === y ? x : Math.round((x + y) / 2);
+	}
+
+	hasScaleAdjustment(transform) {
+		if (!transform?.scale) return false;
+		return Math.abs((transform.scale.x || 100) - 100) > 0.5
+			|| Math.abs((transform.scale.y || 100) - 100) > 0.5;
+	}
+
+	hasResettableTransformAdjustments(transform) {
+		if (!transform) return false;
+		return this.hasScaleAdjustment(transform)
+			|| Math.abs(transform.rotation || 0) > 0.5
+			|| Boolean(transform.flipX)
+			|| Boolean(transform.flipY);
+	}
+
+	getTransformSizeState(layer, prefix) {
+		const transform = this.getLayerTransformData(layer);
+		if (!layer || !transform) return null;
+
+		if (prefix === 'sticker') {
+			return {
+				visible: true,
+				width: Math.max(1, Math.round(layer.stickerData.width * ((transform.scale.x || 100) / 100))),
+				height: Math.max(1, Math.round(layer.stickerData.height * ((transform.scale.y || 100) / 100)))
+			};
+		}
+
+		if (prefix === 'shape') {
+			return {
+				visible: true,
+				width: Math.max(1, Math.round(layer.shapeData.width)),
+				height: Math.max(1, Math.round(layer.shapeData.height))
+			};
+		}
+
+		if ((layer.textData.boxMode || 'auto') !== 'fixed') {
+			return { visible: false, width: 0, height: 0 };
+		}
+
+		return {
+			visible: true,
+			width: Math.max(1, Math.round(layer.textData.boxWidth || 0)),
+			height: Math.max(1, Math.round(layer.textData.boxHeight || 0))
+		};
+	}
+
+	getTransformAlignmentState(layer) {
+		if (!layer || !this.originalCanvas) return null;
+
+		let metrics = null;
+		try {
+			metrics = new LayerTransform(layer, this).getFrameMetrics();
+		} catch (error) {
+			return null;
+		}
+
+		if (!metrics) return null;
+
+		const pickAxisAlignment = (candidates, tolerance = 1) => {
+			const best = candidates.reduce((winner, candidate) => {
+				if (!winner || candidate.delta < winner.delta) return candidate;
+				return winner;
+			}, null);
+			return best && best.delta <= tolerance ? best.mode : null;
+		};
+
+		const canvasWidth = this.originalCanvas.width;
+		const canvasHeight = this.originalCanvas.height;
+		const midX = (metrics.minX + metrics.maxX) / 2;
+		const midY = (metrics.minY + metrics.maxY) / 2;
+
+		return {
+			x: pickAxisAlignment([
+				{ mode: 'left', delta: Math.abs(metrics.minX) },
+				{ mode: 'centerX', delta: Math.abs(midX - (canvasWidth / 2)) },
+				{ mode: 'right', delta: Math.abs(metrics.maxX - canvasWidth) }
+			]),
+			y: pickAxisAlignment([
+				{ mode: 'top', delta: Math.abs(metrics.minY) },
+				{ mode: 'centerY', delta: Math.abs(midY - (canvasHeight / 2)) },
+				{ mode: 'bottom', delta: Math.abs(metrics.maxY - canvasHeight) }
+			])
+		};
+	}
+
+	syncTransformAlignmentButtons(prefix, alignmentState) {
+		const ids = this.getTransformIds(prefix);
+		[
+			['left', ids.alignLeft],
+			['centerX', ids.alignCenterX],
+			['right', ids.alignRight],
+			['top', ids.alignTop],
+			['centerY', ids.alignCenterY],
+			['bottom', ids.alignBottom]
+		].forEach(([mode, id]) => {
+			const button = document.getElementById(id);
+			if (!button) return;
+			const active = mode === 'left' || mode === 'centerX' || mode === 'right'
+				? alignmentState?.x === mode
+				: alignmentState?.y === mode;
+			button.classList.toggle('active', Boolean(active));
+		});
+	}
+
 	loadTransformSettings(layer, prefix) {
 		const transform = this.getLayerTransformData(layer);
 		if (!transform) return;
@@ -1798,6 +2070,16 @@ async resetAllSettings() {
 		if (posX) posX.value = Math.round(transform.position.x);
 		if (posY) posY.value = Math.round(transform.position.y);
 
+		const sizeState = this.getTransformSizeState(layer, prefix);
+		const sizeGroup = document.getElementById(ids.sizeGroup);
+		const sizeWidth = document.getElementById(ids.sizeWidth);
+		const sizeHeight = document.getElementById(ids.sizeHeight);
+		if (sizeGroup && sizeState) {
+			sizeGroup.hidden = !sizeState.visible;
+		}
+		if (sizeWidth && sizeState?.visible) sizeWidth.value = sizeState.width;
+		if (sizeHeight && sizeState?.visible) sizeHeight.value = sizeState.height;
+
 		const rotation = document.getElementById(ids.rotation);
 		const rotationValue = document.getElementById(ids.rotationValue);
 		if (rotation && rotationValue) {
@@ -1805,22 +2087,28 @@ async resetAllSettings() {
 			rotationValue.innerHTML = formatUnit(Math.round(transform.rotation), '°');
 		}
 
-		const scaleX = document.getElementById(ids.scaleX);
-		const scaleXValue = document.getElementById(ids.scaleXValue);
-		const scaleY = document.getElementById(ids.scaleY);
-		const scaleYValue = document.getElementById(ids.scaleYValue);
 		const proportional = document.getElementById(ids.proportional);
-
-		if (scaleX && scaleXValue) {
-			scaleX.value = transform.scale.x;
-			scaleXValue.innerHTML = formatUnit(Math.round(transform.scale.x), '%');
-		}
-		if (scaleY && scaleYValue) {
-			scaleY.value = transform.scale.y;
-			scaleYValue.innerHTML = formatUnit(Math.round(transform.scale.y), '%');
-		}
 		if (proportional) {
 			proportional.checked = transform.proportionalScale;
+		}
+		const scaleSummary = document.getElementById(ids.scaleSummary);
+		if (scaleSummary) {
+			scaleSummary.innerHTML = this.formatScaleSummary(transform);
+		}
+		const scaleControl = document.getElementById(ids.scaleControl);
+		if (scaleControl) {
+			const hideTextScale = prefix === 'text'
+				&& (layer.textData.boxMode || 'auto') === 'fixed'
+				&& !this.hasScaleAdjustment(transform);
+			scaleControl.hidden = hideTextScale;
+		}
+		const scaleSlider = document.getElementById(ids.scaleSlider);
+		if (scaleSlider) {
+			scaleSlider.value = this.getScaleSliderValue(transform);
+		}
+		const resetScale = document.getElementById(ids.resetScale);
+		if (resetScale) {
+			resetScale.disabled = !this.hasScaleAdjustment(transform);
 		}
 
 		const opacity = document.getElementById(ids.opacity);
@@ -1834,6 +2122,98 @@ async resetAllSettings() {
 		const flipY = document.getElementById(ids.flipY);
 		if (flipX) flipX.checked = transform.flipX;
 		if (flipY) flipY.checked = transform.flipY;
+
+		this.syncTransformAlignmentButtons(prefix, this.getTransformAlignmentState(layer));
+
+		const resetTransform = document.getElementById(ids.resetTransform);
+		if (resetTransform) {
+			resetTransform.disabled = !this.hasResettableTransformAdjustments(transform);
+		}
+	}
+
+	syncTransformHandlesForActiveLayer() {
+		if (!this.stickerManager || !this.textGlitterManager) return;
+
+		const activeLayer = this.layerManager.getActiveLayer();
+		if (this.currentTool !== ToolType.SELECT || !activeLayer) {
+			this.stickerManager.removeTransformHandles();
+			this.textGlitterManager.removeTransformHandles();
+			this.shapeGlitterManager?.removeTransformHandles();
+			return;
+		}
+
+		if (activeLayer.type === LayerType.STICKER) {
+			this.stickerManager.createTransformHandles(activeLayer.id);
+			this.textGlitterManager.removeTransformHandles();
+			this.shapeGlitterManager?.removeTransformHandles();
+			return;
+		}
+
+		if (activeLayer.type === LayerType.TEXT_GLITTER) {
+			this.textGlitterManager.createTransformHandles(activeLayer.id);
+			this.stickerManager.removeTransformHandles();
+			this.shapeGlitterManager?.removeTransformHandles();
+			return;
+		}
+
+		if (activeLayer.type === LayerType.SHAPE) {
+			this.shapeGlitterManager?.createTransformHandles(activeLayer.id);
+			this.stickerManager.removeTransformHandles();
+			this.textGlitterManager.removeTransformHandles();
+			return;
+		}
+
+		this.stickerManager.removeTransformHandles();
+		this.textGlitterManager.removeTransformHandles();
+		this.shapeGlitterManager?.removeTransformHandles();
+	}
+
+	applyTransformSizeFromPanel(prefix, layer, manager, axis, rawValue) {
+		const value = Math.max(1, Math.round(rawValue));
+		const ids = this.getTransformIds(prefix);
+		const lockAspect = Boolean(document.getElementById(ids.proportional)?.checked);
+
+		if (prefix === 'sticker') {
+			const nativeWidth = Math.max(1, layer.stickerData.width);
+			const nativeHeight = Math.max(1, layer.stickerData.height);
+			let nextScaleX = axis === 'width'
+				? (value / nativeWidth) * 100
+				: getLayerTransform(layer).scale.x;
+			let nextScaleY = axis === 'height'
+				? (value / nativeHeight) * 100
+				: getLayerTransform(layer).scale.y;
+
+			if (lockAspect) {
+				const uniform = axis === 'width' ? nextScaleX : nextScaleY;
+				nextScaleX = uniform;
+				nextScaleY = uniform;
+			}
+
+			manager.updateTransform(layer.id, {
+				scale: { x: nextScaleX, y: nextScaleY }
+			});
+			return true;
+		}
+
+		if (prefix === 'shape') {
+			const aspect = Math.max(0.01, layer.shapeData.width / Math.max(1, layer.shapeData.height));
+			let nextWidth = axis === 'width' ? value : layer.shapeData.width;
+			let nextHeight = axis === 'height' ? value : layer.shapeData.height;
+			if (lockAspect) {
+				if (axis === 'width') {
+					nextHeight = Math.max(CONFIG.shapes.minSize, Math.round(nextWidth / aspect));
+				} else {
+					nextWidth = Math.max(CONFIG.shapes.minSize, Math.round(nextHeight * aspect));
+				}
+			}
+			return Boolean(manager.setShapeSize?.(layer, nextWidth, nextHeight));
+		}
+
+		const current = this.getTransformSizeState(layer, prefix);
+		if (!current?.visible) return false;
+		const nextWidth = axis === 'width' ? value : current.width;
+		const nextHeight = axis === 'height' ? value : current.height;
+		return Boolean(manager.setBoxSize?.(layer, nextWidth, nextHeight));
 	}
 
 	setupTransformListeners(prefix, layerType, getManager) {
@@ -1843,9 +2223,51 @@ async resetAllSettings() {
 			const manager = getManager();
 			return (layer && layer.type === layerType && manager) ? { layer, manager } : null;
 		};
-		// One place for the muted-unit value displays (formatUnit wraps the unit in
-		// a .setting-unit span), shared by every transform readout below.
 		const showUnit = (el, num, unit) => { if (el) el.innerHTML = formatUnit(Math.round(num), unit); };
+		const bindNumberInput = (id, applyValue) => {
+			const input = document.getElementById(id);
+			if (!input) return;
+
+			input.addEventListener('input', () => {
+				const active = activeManager();
+				const value = parseFloat(input.value);
+				if (!active || Number.isNaN(value)) return;
+				applyValue(value, active);
+				this.loadTransformSettings(active.layer, prefix);
+			});
+
+			input.addEventListener('change', () => {
+				const active = activeManager();
+				if (!active) return;
+				this.loadTransformSettings(active.layer, prefix);
+				this.saveState();
+			});
+
+			input.addEventListener('keydown', (event) => {
+				if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+				event.preventDefault();
+				const step = event.shiftKey ? 10 : 1;
+				const current = parseFloat(input.value || '0');
+				const delta = event.key === 'ArrowUp' ? step : -step;
+				const min = input.min !== '' ? parseFloat(input.min) : Number.NEGATIVE_INFINITY;
+				input.value = String(Math.max(min, Math.round(current + delta)));
+				input.dispatchEvent(new Event('input'));
+				input.dispatchEvent(new Event('change'));
+			});
+		};
+
+		bindNumberInput(ids.posX, (value, active) => {
+			active.manager.updateTransform(active.layer.id, { position: { x: value } });
+		});
+		bindNumberInput(ids.posY, (value, active) => {
+			active.manager.updateTransform(active.layer.id, { position: { y: value } });
+		});
+		bindNumberInput(ids.sizeWidth, (value, active) => {
+			this.applyTransformSizeFromPanel(prefix, active.layer, active.manager, 'width', value);
+		});
+		bindNumberInput(ids.sizeHeight, (value, active) => {
+			this.applyTransformSizeFromPanel(prefix, active.layer, active.manager, 'height', value);
+		});
 
 		// Rotation
 		const rotation = document.getElementById(ids.rotation);
@@ -1912,103 +2334,62 @@ async resetAllSettings() {
 			});
 		}
 
-		// Scale X / Y (+ proportional lock)
-		const scaleX = document.getElementById(ids.scaleX);
-		const scaleXValue = document.getElementById(ids.scaleXValue);
-		const scaleY = document.getElementById(ids.scaleY);
-		const scaleYValue = document.getElementById(ids.scaleYValue);
 		const proportionalScale = document.getElementById(ids.proportional);
-		const resetScaleX = document.getElementById(ids.resetScaleX);
-		const resetScaleY = document.getElementById(ids.resetScaleY);
-
-		if (scaleX && scaleXValue) {
-			scaleX.addEventListener('input', (e) => {
-				const value = parseFloat(e.target.value);
-				showUnit(scaleXValue, value, '%');
-
+		if (proportionalScale) {
+			proportionalScale.addEventListener('change', (event) => {
 				const active = activeManager();
 				if (!active) return;
-
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleY && scaleYValue) {
-						scaleY.value = value;
-						showUnit(scaleYValue, value, '%');
-					}
-					active.manager.updateTransform(active.layer.id, { scale: { x: value, y: value } });
-				} else {
-					// Only pass x - let updateTransform preserve y
-					active.manager.updateTransform(active.layer.id, { scale: { x: value } });
-				}
+				active.manager.updateTransform(active.layer.id, {
+					proportionalScale: event.target.checked
+				});
+				this.loadTransformSettings(active.layer, prefix);
+				this.saveState();
 			});
-
-			scaleX.addEventListener('change', () => this.saveState());
 		}
 
-		if (scaleY && scaleYValue) {
-			scaleY.addEventListener('input', (e) => {
-				const value = parseFloat(e.target.value);
-				showUnit(scaleYValue, value, '%');
-
+		const scaleSlider = document.getElementById(ids.scaleSlider);
+		const scaleSummary = document.getElementById(ids.scaleSummary);
+		if (scaleSlider) {
+			scaleSlider.addEventListener('input', (event) => {
 				const active = activeManager();
 				if (!active) return;
-
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleX && scaleXValue) {
-						scaleX.value = value;
-						showUnit(scaleXValue, value, '%');
-					}
-					active.manager.updateTransform(active.layer.id, { scale: { x: value, y: value } });
-				} else {
-					// Only pass y - let updateTransform preserve x
-					active.manager.updateTransform(active.layer.id, { scale: { y: value } });
+				const value = Math.max(10, Math.min(500, parseFloat(event.target.value) || 100));
+				active.manager.updateTransform(active.layer.id, {
+					scale: { x: value, y: value }
+				});
+				if (scaleSummary) {
+					scaleSummary.innerHTML = this.formatScaleSummary(this.getLayerTransformData(active.layer));
 				}
+				this.loadTransformSettings(active.layer, prefix);
 			});
 
-			scaleY.addEventListener('change', () => this.saveState());
-		}
-
-		if (resetScaleX) {
-			resetScaleX.addEventListener('click', () => {
-				if (scaleX) scaleX.value = CONFIG.defaultStickerScale;
-				showUnit(scaleXValue, CONFIG.defaultStickerScale, '%');
-
+			scaleSlider.addEventListener('change', async () => {
 				const active = activeManager();
 				if (!active) return;
-
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleY && scaleYValue) {
-						scaleY.value = CONFIG.defaultStickerScale;
-						showUnit(scaleYValue, CONFIG.defaultStickerScale, '%');
-					}
-					active.manager.updateTransform(active.layer.id, {
-						scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-					});
-				} else {
-					active.manager.updateTransform(active.layer.id, { scale: { x: CONFIG.defaultStickerScale } });
+				if (
+					prefix === 'text'
+					&& (active.layer.textData?.boxMode || 'auto') === 'auto'
+					&& active.manager.commitScaleToFontSize
+				) {
+					await active.manager.commitScaleToFontSize(active.layer);
+					this.loadTransformSettings(active.layer, prefix);
 				}
 				this.saveState();
 			});
 		}
 
-		if (resetScaleY) {
-			resetScaleY.addEventListener('click', () => {
-				if (scaleY) scaleY.value = CONFIG.defaultStickerScale;
-				showUnit(scaleYValue, CONFIG.defaultStickerScale, '%');
-
+		const resetScale = document.getElementById(ids.resetScale);
+		if (resetScale) {
+			resetScale.addEventListener('click', () => {
 				const active = activeManager();
 				if (!active) return;
-
-				if (proportionalScale && proportionalScale.checked) {
-					if (scaleX && scaleXValue) {
-						scaleX.value = CONFIG.defaultStickerScale;
-						showUnit(scaleXValue, CONFIG.defaultStickerScale, '%');
+				active.manager.updateTransform(active.layer.id, {
+					scale: {
+						x: CONFIG.defaultTransform.scale.x,
+						y: CONFIG.defaultTransform.scale.y
 					}
-					active.manager.updateTransform(active.layer.id, {
-						scale: { x: CONFIG.defaultStickerScale, y: CONFIG.defaultStickerScale }
-					});
-				} else {
-					active.manager.updateTransform(active.layer.id, { scale: { y: CONFIG.defaultStickerScale } });
-				}
+				});
+				this.loadTransformSettings(active.layer, prefix);
 				this.saveState();
 			});
 		}
@@ -2029,6 +2410,34 @@ async resetAllSettings() {
 
 		attachFlip(ids.flipX, 'flipX');
 		attachFlip(ids.flipY, 'flipY');
+
+		[
+			['left', ids.alignLeft],
+			['centerX', ids.alignCenterX],
+			['right', ids.alignRight],
+			['top', ids.alignTop],
+			['centerY', ids.alignCenterY],
+			['bottom', ids.alignBottom]
+		].forEach(([mode, id]) => {
+			const button = document.getElementById(id);
+			if (!button) return;
+			button.addEventListener('click', () => {
+				const active = activeManager();
+				if (!active?.manager?.alignToCanvas) return;
+				active.manager.alignToCanvas(active.layer.id, mode);
+				this.loadTransformSettings(active.layer, prefix);
+			});
+		});
+
+		const resetTransform = document.getElementById(ids.resetTransform);
+		if (resetTransform) {
+			resetTransform.addEventListener('click', () => {
+				const active = activeManager();
+				if (!active?.manager?.resetTransform) return;
+				active.manager.resetTransform(active.layer.id);
+				this.loadTransformSettings(active.layer, prefix);
+			});
+		}
 	}
 
 	setupImageListeners() {
@@ -2314,7 +2723,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=2',
+				externalContentUrl: 'modals/guide.html?v=4',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -2527,39 +2936,56 @@ setupWelcomeModalListeners() {
 			const button = event.target.closest('.layer-type-option');
 			if (!button) return;
 
-			const layerType = button.dataset.layerType;
-			if (!LAYER_UI_CONFIG[layerType]?.addableViaModal) {
-				dbg(`Unknown add-layer type: ${layerType}`);
-				return;
-			}
-
 			this.modalManager.close('layerTypePickerModal');
 			requestAnimationFrame(() => {
-				this.layerManager.addLayer(layerType);
+				this.createLayerByType(button.dataset.layerType);
 			});
 		});
 	}
 
-	renderLayerTypePickerOptions(container) {
+	createLayerByType(layerType) {
+		if (!LAYER_UI_CONFIG[layerType]?.addableViaModal) {
+			dbg(`Unknown add-layer type: ${layerType}`);
+			return;
+		}
+
+		this.layerManager.addLayer(layerType);
+	}
+
+	createLayerTypeOptionButton(type, { iconSizeClass = 'xl', id = null } = {}) {
+		const modalConfig = LAYER_UI_CONFIG[type]?.addableViaModal;
+		if (!modalConfig) return null;
+
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'layer-type-option';
+		button.dataset.layerType = type;
+		if (id) {
+			button.id = id;
+		}
+		button.innerHTML = `
+			<span class="layer-type-icon icon-wrapper ${iconSizeClass}">
+				<svg class="icon">
+					<use href="#icon-${modalConfig.icon}"></use>
+				</svg>
+			</span>
+			<span class="layer-type-name">${modalConfig.label}</span>
+			<span class="layer-type-description">${modalConfig.description}</span>
+		`;
+		return button;
+	}
+
+	renderLayerTypePickerOptions(container, options = {}) {
 		container.innerHTML = '';
+		const iconSizeClass = options.iconSizeClass || 'xl';
+		const idMap = options.idMap || {};
 
 		getAddableLayerTypes().forEach((type) => {
-			const modalConfig = LAYER_UI_CONFIG[type]?.addableViaModal;
-			if (!modalConfig) return;
-
-			const button = document.createElement('button');
-			button.className = 'layer-type-option';
-			button.dataset.layerType = type;
-			button.innerHTML = `
-				<span class="layer-type-icon icon-wrapper xl">
-					<svg class="icon">
-						<use href="#icon-${modalConfig.icon}"></use>
-					</svg>
-				</span>
-				<span class="layer-type-name">${modalConfig.label}</span>
-				<span class="layer-type-description">${modalConfig.description}</span>
-			`;
-			container.appendChild(button);
+			const id = idMap[type] || null;
+			const button = this.createLayerTypeOptionButton(type, { iconSizeClass, id });
+			if (button) {
+				container.appendChild(button);
+			}
 		});
 	}
 
@@ -2634,6 +3060,25 @@ setupWelcomeModalListeners() {
 			});
 		}
 
+		const quickAddOptions = document.getElementById('quickAddOptions');
+		if (quickAddOptions) {
+			this.renderLayerTypePickerOptions(quickAddOptions, {
+				iconSizeClass: '',
+				idMap: {
+					[LayerType.GLITTER_FILL]: 'quickActionAddGlitter',
+					[LayerType.STICKER]: 'quickActionAddSticker',
+					[LayerType.TEXT_GLITTER]: 'quickActionAddText',
+					[LayerType.SHAPE]: 'quickActionAddShape'
+				}
+			});
+
+			quickAddOptions.addEventListener('click', (event) => {
+				const button = event.target.closest('.layer-type-option');
+				if (!button) return;
+				this.createLayerByType(button.dataset.layerType);
+			});
+		}
+
 		// Bottom bar quick-add buttons - create layers directly
 		const layersBarAddGlitter = document.getElementById('layersBarAddGlitter');
 		const layersBarAddSticker = document.getElementById('layersBarAddSticker');
@@ -2641,20 +3086,19 @@ setupWelcomeModalListeners() {
 
 		if (layersBarAddGlitter) {
 			layersBarAddGlitter.addEventListener('click', () => {
-				this.layerManager.addLayer(LayerType.GLITTER_FILL);
+				this.createLayerByType(LayerType.GLITTER_FILL);
 			});
 		}
 
 		if (layersBarAddSticker) {
 			layersBarAddSticker.addEventListener('click', () => {
-				// Create new sticker layer (NOT upload modal)
-				this.layerManager.addLayer(LayerType.STICKER);
+				this.createLayerByType(LayerType.STICKER);
 			});
 		}
 
 		if (layersBarAddText) {
 			layersBarAddText.addEventListener('click', () => {
-				this.layerManager.addLayer(LayerType.TEXT_GLITTER);
+				this.createLayerByType(LayerType.TEXT_GLITTER);
 			});
 		}
 
@@ -3134,26 +3578,7 @@ setupWelcomeModalListeners() {
 		}
 
 		// NEW: Handle transform handles visibility
-		if (this.stickerManager && this.textGlitterManager) {
-			const activeLayer = this.layerManager.getActiveLayer();
-			if (tool === ToolType.SELECT && activeLayer && activeLayer.type === LayerType.STICKER) {
-				this.stickerManager.createTransformHandles(activeLayer.id);
-				this.textGlitterManager.removeTransformHandles();
-				this.shapeGlitterManager?.removeTransformHandles();
-			} else if (tool === ToolType.SELECT && activeLayer && activeLayer.type === LayerType.TEXT_GLITTER) {
-				this.textGlitterManager.createTransformHandles(activeLayer.id);
-				this.stickerManager.removeTransformHandles();
-				this.shapeGlitterManager?.removeTransformHandles();
-			} else if (tool === ToolType.SELECT && activeLayer && activeLayer.type === LayerType.SHAPE) {
-				this.shapeGlitterManager?.createTransformHandles(activeLayer.id);
-				this.stickerManager.removeTransformHandles();
-				this.textGlitterManager.removeTransformHandles();
-			} else {
-				this.stickerManager.removeTransformHandles();
-				this.textGlitterManager.removeTransformHandles();
-				this.shapeGlitterManager?.removeTransformHandles();
-			}
-		}
+		this.syncTransformHandlesForActiveLayer();
 
 		// Sync mask editing with the active tool (enter/exit brush painting)
 		this.maskEditor?.onToolChanged(tool);

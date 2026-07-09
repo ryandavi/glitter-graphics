@@ -576,16 +576,9 @@ class ShapeGlitterManager {
 		if (data.border) data.border = { ...this.getDefaultBorder(), ...data.border };
 		if (data.shadow === undefined) data.shadow = null;
 		if (!data.transform) {
-			data.transform = {
-				position: { x: 0, y: 0 },
-				rotation: 0,
-				scale: { x: 100, y: 100 },
-				proportionalScale: true,
-				opacity: 100,
-				flipX: false,
-				flipY: false
-			};
+			data.transform = createDefaultTransform();
 		}
+		syncLayerTransformReference(layer, data.transform);
 	}
 
 	getShapeLabel(shapeId) {
@@ -617,6 +610,9 @@ class ShapeGlitterManager {
 			x: this.editor.originalCanvas.width / 2,
 			y: this.editor.originalCanvas.height / 2
 		};
+		const transform = createDefaultTransform({
+			position: { x: position.x, y: position.y }
+		});
 
 		const layer = {
 			id: this.editor.layerManager.generateLayerId(),
@@ -630,21 +626,15 @@ class ShapeGlitterManager {
 				shapeId,
 				width,
 				height,
-				transform: {
-					position: { x: position.x, y: position.y },
-					rotation: 0,
-					scale: { x: 100, y: 100 },
-					proportionalScale: true,
-					opacity: 100,
-					flipX: false,
-					flipY: false
-				},
+				transform,
 				fill: this.getDefaultFill(),
 				border: null,
 				shadow: null
 			}
 		};
 
+		layer.transform = transform;
+		syncLayerTransformReference(layer, transform);
 		return layer;
 	}
 
@@ -1214,6 +1204,18 @@ class ShapeGlitterManager {
 		this.loadLayerSettings(layer);
 	}
 
+	setShapeSize(layer, width, height) {
+		if (!layer || layer.type !== LayerType.SHAPE) return false;
+		this.normalizeLayer(layer);
+		layer.shapeData.width = Math.max(CONFIG.shapes.minSize, Math.round(width));
+		layer.shapeData.height = Math.max(CONFIG.shapes.minSize, Math.round(height));
+		this.invalidateMeasurement(layer);
+		this.renderLayer(layer);
+		this.loadLayerSettings(layer);
+		this.editor.layerManager.renderLayersList();
+		return true;
+	}
+
 	// ===== SETTINGS / UI =====
 
 	centerHorizontal(layerId) {
@@ -1228,6 +1230,22 @@ class ShapeGlitterManager {
 		const transform = this.layerTransforms.get(layerId);
 		if (!transform) return;
 		transform.centerVertical();
+		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		if (layer) this.loadLayerSettings(layer);
+	}
+
+	alignToCanvas(layerId, mode) {
+		const transform = this.layerTransforms.get(layerId);
+		if (!transform) return;
+		transform.alignToCanvas(mode);
+		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		if (layer) this.loadLayerSettings(layer);
+	}
+
+	resetTransform(layerId) {
+		const transform = this.layerTransforms.get(layerId);
+		if (!transform) return;
+		transform.resetTransform();
 		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
 		if (layer) this.loadLayerSettings(layer);
 	}

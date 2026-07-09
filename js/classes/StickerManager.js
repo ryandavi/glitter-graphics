@@ -345,14 +345,21 @@ class StickerManager extends ContentManager {
 
 	createLayer(stickerSourceId = null) {
 		const sticker = stickerSourceId ? this.getItemById(stickerSourceId) : null;
+		const transform = createDefaultTransform({
+			position: {
+				x: this.editor.originalCanvas.width / 2,
+				y: this.editor.originalCanvas.height / 2
+			}
+		});
 
-		return {
+		const layer = {
 			id: this.editor.layerManager.generateLayerId(),
 			type: this.getLayerType(),
 			name: sticker?.name || 'New Sticker',
 			visible: true,
 			locked: false,
 			stickerSourceId: stickerSourceId,
+			transform,
 
 			stickerData: {
 				isEmpty: !sticker,
@@ -364,27 +371,16 @@ class StickerManager extends ContentManager {
 				height: sticker?.height || 100,
 				frames: null,
 
-				transform: {
-					position: {
-						x: this.editor.originalCanvas.width / 2,
-						y: this.editor.originalCanvas.height / 2
-					},
-					rotation: CONFIG.defaultStickerRotation,
-					scale: {
-						x: CONFIG.defaultStickerScale,
-						y: CONFIG.defaultStickerScale
-					},
-					proportionalScale: true,
-					opacity: CONFIG.defaultStickerOpacity,
-					flipX: false,
-					flipY: false
-				},
+				transform,
 
 				element: null,
 				blendMode: 'normal',
 				maskEnabled: false
 			}
 		};
+
+		syncLayerTransformReference(layer, transform);
+		return layer;
 	}
 
 	async addStickerToCanvas(stickerId) {
@@ -551,6 +547,26 @@ updateTransform(layerId, updates) {
 		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
 		if (layer) {
 			this.editor.loadStickerSettings(layer);
+		}
+	}
+
+	alignToCanvas(layerId, mode) {
+		const transform = this.layerTransforms.get(layerId);
+		if (!transform) return;
+		transform.alignToCanvas(mode);
+		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		if (layer) {
+			this.editor.loadTransformSettings?.(layer, 'sticker');
+		}
+	}
+
+	resetTransform(layerId) {
+		const transform = this.layerTransforms.get(layerId);
+		if (!transform) return;
+		transform.resetTransform();
+		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		if (layer) {
+			this.editor.loadTransformSettings?.(layer, 'sticker');
 		}
 	}
 
