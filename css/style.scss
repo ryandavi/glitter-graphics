@@ -1178,6 +1178,11 @@ input[type="range"] {
 
 			}
 
+			&.selected:not(.active) {
+				border-color: rgba(255, 255, 255, 0.18);
+				background: #30363d;
+			}
+
 			&.dragging {
 				opacity: 0.5;
 			}
@@ -4492,6 +4497,22 @@ body.mask-editing {
 	}
 }
 
+.multi-selection-actions {
+	>.btn-simple {
+		min-width: 0;
+	}
+}
+
+.empty-state.compact {
+	padding: var(--spacing-md);
+	align-items: flex-start !important;
+
+	>.empty-state-text,
+	>.empty-state-subtext {
+		text-align: left;
+	}
+}
+
 /* ===== STICKER UPLOAD MODAL ===== */
 #stickerUploadModal {
 	.upload-dropzone {
@@ -4686,7 +4707,7 @@ body.mask-editing {
 
 
 			>.empty-state {
-				min-height: 280px;
+				// min-height: 280px;
 			}
 		}
 	}
@@ -6700,6 +6721,22 @@ body.mask-editing {
 	gap: var(--spacing-lg);
 }
 
+.effect-option-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	min-width: 0;
+	width: 100%;
+}
+
+.effect-option-label {
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+}
+
 // The glitter display reuses the shared .asset-info-* classes so it matches
 // Glitter Properties' Asset section exactly (thumbnail + name + badges + meta).
 .glitter-source .asset-info,
@@ -6745,7 +6782,7 @@ body.mask-editing {
 	padding: var(--spacing-md);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-md);
-	background: rgba(0, 0, 0, 0.12);
+	background-color: #2f2f2f;
 
 	>.subsection-title {
 		font-size: var(--font-size-sm);
@@ -6757,6 +6794,30 @@ body.mask-editing {
 		justify-content: space-between;
 		align-items: center;
 	}
+}
+
+.effects-stack {
+	padding: 0 !important;
+	border: 0 !important;
+	background: transparent !important;
+
+	>.subsection-title,
+	>.subsection-note {
+		padding: 0 var(--spacing-xs);
+	}
+
+	>.text-effect-subsection {
+		margin-top: 0;
+	}
+}
+
+.effect-stack-row {
+	grid-template-columns: 1fr !important;
+}
+
+.effect-stack-row > .effect-option-group > .segmented-control,
+.effect-option-group > .segmented-control {
+	width: 100%;
 }
 
 // Redeclares .subsection-note (bare, not scoped) with a smaller font-size —

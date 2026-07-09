@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=38">
+	<link rel="stylesheet" href="css/style.css?v=42">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -692,14 +692,25 @@
 												<use href="#icon-layers"></use>
 											</svg>
 										</div>
-										<div class="empty-state-text">Canvas</div>
-										<div class="empty-state-subtext">
+										<div class="empty-state-text" id="noLayerEmptyText">Canvas</div>
+										<div class="empty-state-subtext" id="noLayerEmptySubtext">
 											Select a layer to edit it, or add new content below.
 										</div>
 									</div>
 
 									<!-- Project Meta Info -->
-									<div class="settings-subsection">
+									<div class="settings-subsection" id="noLayerDefaultGroups">
+
+
+
+										<!-- Specific Quick Actions -->
+										<div class="subsection-content-group">
+											<div class="subsection-title">Quick Add</div>
+
+											<!-- Quick Add -->
+											<div class="layer-type-options quick-add" id="quickAddOptions"></div>
+
+										</div>
 
 										<!-- Project -->
 										<div class="subsection-content-group" id="projectMetaGroup">
@@ -716,18 +727,6 @@
 												<button class="btn-simple" id="openProjectSidebarBtn" type="button">Open Project</button>
 												<button class="btn-simple primary" id="saveProject" type="button" disabled>Save Project</button>
 											</div>
-										</div>
-
-										<!-- Specific Quick Actions -->
-										<div class="subsection-content-group">
-											<div class="subsection-title">Quick Add</div>
-
-
-											<!-- Quick Add -->
-											<div class="layer-type-options quick-add" id="quickAddOptions"></div>
-
-
-
 										</div>
 
 										<!-- Canvas Size (Photoshop-style): resize the canvas bounds
@@ -773,6 +772,27 @@
 														<button class="btn-simple primary" id="canvasSizeApply" type="button">Resize Canvas</button>
 													</div>
 												</div>
+											</div>
+										</div>
+									</div>
+
+											<div class="settings-subsection" id="multiLayerSelectionGroup" hidden>
+												<div class="subsection-content-group">
+													<div class="subsection-title">Multi-Layer Selection</div>
+													<div class="empty-state visible compact">
+														<div class="empty-state-text" id="multiLayerSelectionCount">2 movable layers</div>
+														<div class="empty-state-subtext">Shift+click adds or removes layers. Alt+click cycles overlapping layers. On touch, edit the selection from the layer list.</div>
+													</div>
+												</div>
+										<div class="subsection-content-group">
+											<div class="subsection-title">Quick Actions</div>
+											<div class="settings-action-row multi-selection-actions">
+												<button class="btn-simple" id="multiSelectionDuplicateBtn" type="button">Duplicate</button>
+												<button class="btn-simple" id="multiSelectionDeleteBtn" type="button">Delete</button>
+											</div>
+											<div class="settings-action-row multi-selection-actions">
+												<button class="btn-simple" id="multiSelectionCenterHorizontalBtn" type="button">Center H</button>
+												<button class="btn-simple" id="multiSelectionCenterVerticalBtn" type="button">Center V</button>
 											</div>
 										</div>
 									</div>
@@ -1481,7 +1501,7 @@
 										</div>
 									</div>
 								</div>
-								<div class="subsection-content-group">
+								<div class="subsection-content-group effects-stack">
 									<div class="subsection-title">Effects</div>
 									<div class="subsection-note">Border and shadow each keep their own source. Pick glitter or solid separately for each one.</div>
 									<div class="subsection-content-group text-effect-subsection">
@@ -1501,10 +1521,12 @@
 												<input type="range" id="textBorderWidth" min="1" max="24" value="4">
 												<button class="btn-text" id="resetTextBorderWidth" type="button">Reset</button>
 											</div>
-											<div class="glitter-source">
+											<div class="effect-option-group">
+												<div class="effect-option-label">Source</div>
+												<div class="glitter-source">
 												<div class="segmented-control text-effect-mode-group">
 													<button class="segmented-option" id="textBorderUseGlitter" type="button">Glitter</button>
-													<button class="segmented-option active" id="textBorderUseColor" type="button">Solid Color</button>
+													<button class="segmented-option active" id="textBorderUseColor" type="button">Solid</button>
 												</div>
 												<div class="asset-info glitter-source-glitter" id="textBorderGlitterInfo">
 													<div class="asset-info-header">
@@ -1533,6 +1555,7 @@
 													<input type="color" id="textBorderColor" value="#000000">
 												</div>
 											</div>
+											</div>
 											<div class="settings-group-two-column">
 												<div class="setting-column right" id="textBorderScaleRow">
 													<div class="setting-header">
@@ -1549,6 +1572,23 @@
 													</div>
 													<input type="range" id="textBorderOpacity" min="0" max="100" value="100">
 													<button class="btn-text" id="resetTextBorderOpacity" type="button">Reset</button>
+												</div>
+											</div>
+											<div class="settings-group-two-column effect-stack-row">
+												<div class="effect-option-group">
+													<div class="effect-option-label">Placement</div>
+													<div class="segmented-control text-effect-mode-group">
+														<button class="segmented-option active" id="textBorderPositionOutside" type="button">Outside</button>
+														<button class="segmented-option" id="textBorderPositionCenter" type="button">On Edge</button>
+														<button class="segmented-option" id="textBorderPositionInside" type="button">Inside</button>
+													</div>
+												</div>
+												<div class="effect-option-group">
+													<div class="effect-option-label">Layering</div>
+													<div class="segmented-control text-effect-mode-group">
+														<button class="segmented-option active" id="textBorderOrderBehind" type="button">Behind</button>
+														<button class="segmented-option" id="textBorderOrderFront" type="button">On Top</button>
+													</div>
 												</div>
 											</div>
 											<div class="advanced-disclosure glitter-source-glitter" data-advanced>
@@ -1616,10 +1656,12 @@
 													<button class="btn-text" id="resetTextShadowOffsetY" type="button">Reset</button>
 												</div>
 											</div>
-											<div class="glitter-source">
+											<div class="effect-option-group">
+												<div class="effect-option-label">Source</div>
+												<div class="glitter-source">
 												<div class="segmented-control text-effect-mode-group">
 													<button class="segmented-option" id="textShadowUseGlitter" type="button">Glitter</button>
-													<button class="segmented-option active" id="textShadowUseColor" type="button">Solid Color</button>
+													<button class="segmented-option active" id="textShadowUseColor" type="button">Solid</button>
 												</div>
 												<div class="asset-info glitter-source-glitter" id="textShadowGlitterInfo">
 													<div class="asset-info-header">
@@ -1647,6 +1689,7 @@
 													</div>
 													<input type="color" id="textShadowColor" value="#000000">
 												</div>
+											</div>
 											</div>
 											<div class="settings-group-two-column">
 												<div class="setting-column right" id="textShadowScaleRow">
@@ -1846,7 +1889,7 @@
 									</div>
 								</div>
 
-								<div class="subsection-content-group">
+								<div class="subsection-content-group effects-stack">
 									<div class="subsection-title">Effects</div>
 									<div class="subsection-note">Set fill to None to make the border a hollow outline.</div>
 
@@ -1858,18 +1901,23 @@
 												<input type="range" id="shapeBorderWidth" min="1" max="60" value="6">
 												<button class="btn-text" id="resetShapeBorderWidth" type="button">Reset</button>
 											</div>
-											<div class="glitter-source">
+											<div class="effect-option-group">
+												<div class="effect-option-label">Style</div>
+												<div class="glitter-source">
 												<div class="segmented-control text-effect-mode-group">
 													<button class="segmented-option active" id="shapeBorderStyleSolid" type="button">Solid Border</button>
 													<button class="segmented-option" id="shapeBorderStyleDotted" type="button">Dotted Border</button>
 												</div>
+											</div>
 											</div>
 											<div class="setting-column right" id="shapeBorderDotSpacingRow" hidden>
 												<div class="setting-header"><span class="setting-label">Dot Spacing</span><span class="setting-value" id="shapeBorderDotSpacingValue">10px</span></div>
 												<input type="range" id="shapeBorderDotSpacing" min="1" max="60" value="10">
 												<button class="btn-text" id="resetShapeBorderDotSpacing" type="button">Reset</button>
 											</div>
-											<div class="glitter-source">
+											<div class="effect-option-group">
+												<div class="effect-option-label">Source</div>
+												<div class="glitter-source">
 												<div class="segmented-control text-effect-mode-group">
 													<button class="segmented-option" id="shapeBorderGlitter" type="button">Glitter</button>
 													<button class="segmented-option active" id="shapeBorderSolid" type="button">Solid</button>
@@ -1897,10 +1945,28 @@
 													<input type="color" id="shapeBorderColor" value="#000000">
 												</div>
 											</div>
+											</div>
 											<div class="setting-column right">
 												<div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" id="shapeBorderOpacityValue">100%</span></div>
 												<input type="range" id="shapeBorderOpacity" min="0" max="100" value="100">
 												<button class="btn-text" id="resetShapeBorderOpacity" type="button">Reset</button>
+											</div>
+											<div class="settings-group-two-column effect-stack-row">
+												<div class="effect-option-group">
+													<div class="effect-option-label">Placement</div>
+													<div class="segmented-control text-effect-mode-group">
+														<button class="segmented-option active" id="shapeBorderPositionOutside" type="button">Outside</button>
+														<button class="segmented-option" id="shapeBorderPositionCenter" type="button">On Edge</button>
+														<button class="segmented-option" id="shapeBorderPositionInside" type="button">Inside</button>
+													</div>
+												</div>
+												<div class="effect-option-group">
+													<div class="effect-option-label">Layering</div>
+													<div class="segmented-control text-effect-mode-group">
+														<button class="segmented-option active" id="shapeBorderOrderBehind" type="button">Behind</button>
+														<button class="segmented-option" id="shapeBorderOrderFront" type="button">On Top</button>
+													</div>
+												</div>
 											</div>
 
 											<div class="advanced-disclosure glitter-source-glitter" data-advanced>
@@ -1953,7 +2019,9 @@
 													<button class="btn-text" id="resetShapeShadowOffsetY" type="button">Reset</button>
 												</div>
 											</div>
-											<div class="glitter-source">
+											<div class="effect-option-group">
+												<div class="effect-option-label">Source</div>
+												<div class="glitter-source">
 												<div class="segmented-control text-effect-mode-group">
 													<button class="segmented-option" id="shapeShadowGlitter" type="button">Glitter</button>
 													<button class="segmented-option active" id="shapeShadowSolid" type="button">Solid</button>
@@ -1980,6 +2048,7 @@
 													<div class="setting-header"><span class="setting-label">Solid Color</span></div>
 													<input type="color" id="shapeShadowColor" value="#000000">
 												</div>
+											</div>
 											</div>
 											<div class="setting-column right">
 												<div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" id="shapeShadowOpacityValue">100%</span></div>
@@ -3433,7 +3502,7 @@
 	<script src="js/vendor/gif.js"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=17"></script>
+	<script src="js/config.js?v=18"></script>
 	<script src="js/transform-math.js?v=1"></script>
 
 	<!-- Utils -->
@@ -3443,32 +3512,33 @@
 	<script src="js/debug.js"></script>
 
 	<!-- Classes -->
-	<script src="js/classes/GestureManager.js?v=3"></script>
+	<script src="js/classes/GestureManager.js?v=4"></script>
 	<script src="js/classes/ModalManager.js?v=1"></script>
-	<script src="js/classes/GifExporter.js?v=12"></script>
+	<script src="js/classes/GifExporter.js?v=13"></script>
 	<script src="js/classes/ViewportManager.js?v=1"></script>
-	<script src="js/classes/HistoryManager.js?v=7"></script>
-	<script src="js/classes/ProjectSerializer.js?v=1"></script>
+	<script src="js/classes/HistoryManager.js?v=8"></script>
+	<script src="js/classes/ProjectSerializer.js?v=2"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
 	<script src="js/classes/ShapeLibrary.js?v=4"></script>
 	<script src="js/classes/MaskEditor.js?v=12"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=16"></script>
+	<script src="js/classes/LayerManager.js?v=17"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
-	<script src="js/classes/LayerTransform.js?v=10"></script>
+	<script src="js/classes/LayerTransform.js?v=14"></script>
 	<script src="js/classes/GlitterManager.js?v=12"></script>
-	<script src="js/classes/TextGlitterManager.js?v=25"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=15"></script>
-	<script src="js/classes/StickerManager.js?v=2"></script>
+	<script src="js/classes/TextGlitterManager.js?v=27"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=18"></script>
+	<script src="js/classes/StickerManager.js?v=3"></script>
+	<script src="js/classes/GroupTransformManager.js?v=5"></script>
 
 	<script src="js/classes/MobileManager.js?v=4"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=43"></script>
+	<script src="js/app.js?v=47"></script>
 
 </body>
 

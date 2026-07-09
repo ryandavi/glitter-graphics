@@ -534,9 +534,12 @@ class StickerManager extends ContentManager {
 		// Update selection highlight
 		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);
 
-		// Create transform handles if active and in SELECT tool
-		if (layer.id === this.editor.layerManager.activeLayerId && 
-			this.editor.currentTool === ToolType.SELECT) {
+		// Create transform handles only for true single-layer selection.
+		if (
+			layer.id === this.editor.layerManager.activeLayerId &&
+			this.editor.currentTool === ToolType.SELECT &&
+			!this.editor.layerManager.hasMultiSelection()
+		) {
 			transform.createTransformHandles();
 		}
 	}

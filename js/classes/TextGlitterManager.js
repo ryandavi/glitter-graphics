@@ -96,6 +96,11 @@ class TextGlitterManager {
 			borderScaleValue: document.getElementById('textBorderScaleValue'),
 			borderOpacity: document.getElementById('textBorderOpacity'),
 			borderOpacityValue: document.getElementById('textBorderOpacityValue'),
+			borderPositionOutside: document.getElementById('textBorderPositionOutside'),
+			borderPositionCenter: document.getElementById('textBorderPositionCenter'),
+			borderPositionInside: document.getElementById('textBorderPositionInside'),
+			borderOrderBehind: document.getElementById('textBorderOrderBehind'),
+			borderOrderFront: document.getElementById('textBorderOrderFront'),
 			shadowEnabled: document.getElementById('textShadowEnabled'),
 			shadowControls: document.getElementById('textShadowControls'),
 			shadowOffsetX: document.getElementById('textShadowOffsetX'),
@@ -342,6 +347,12 @@ class TextGlitterManager {
 			this.ensureEffectData(layer, 'border').opacity = value;
 		}, this.getDefaultBorder().opacity, false);
 
+		this.bindBorderPlacement(this.ui.borderPositionOutside, 'outside');
+		this.bindBorderPlacement(this.ui.borderPositionCenter, 'center');
+		this.bindBorderPlacement(this.ui.borderPositionInside, 'inside');
+		this.bindBorderOrder(this.ui.borderOrderBehind, 'behind');
+		this.bindBorderOrder(this.ui.borderOrderFront, 'front');
+
 		this.attachSlider(this.ui.shadowScale, this.ui.shadowScaleValue, '%', (value, layer) => {
 			this.ensureEffectData(layer, 'shadow').scale = value;
 		}, this.getDefaultShadow().scale, false);
@@ -526,6 +537,8 @@ class TextGlitterManager {
 			mode: 'glitter',
 			glitterId: CONFIG.defaultBorderGlitterId,
 			color: CONFIG.defaultBorderColor,
+			placement: 'outside',
+			drawOrder: 'behind',
 			scale: 100,
 			opacity: 100
 		};
@@ -566,8 +579,14 @@ class TextGlitterManager {
 		if (layer.textData.border === undefined) {
 			layer.textData.border = null;
 		}
+		if (layer.textData.border) {
+			layer.textData.border = { ...this.getDefaultBorder(), ...layer.textData.border };
+		}
 		if (layer.textData.shadow === undefined) {
 			layer.textData.shadow = null;
+		}
+		if (layer.textData.shadow) {
+			layer.textData.shadow = { ...this.getDefaultShadow(), ...layer.textData.shadow };
 		}
 		if (!layer.textData.fill) {
 			layer.textData.fill = this.getDefaultFill();
@@ -854,6 +873,44 @@ class TextGlitterManager {
 
 			this.editor.saveState();
 			this.loadLayerSettings(layer);
+		});
+	}
+
+	bindBorderPlacement(button, placement) {
+		if (!button) return;
+
+		button.addEventListener('click', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+			const border = this.ensureEffectData(layer, 'border');
+			if (this.getBorderPlacement(border) === placement) return;
+
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.ensureEffectData(layer, 'border').placement = placement;
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		});
+	}
+
+	bindBorderOrder(button, drawOrder) {
+		if (!button) return;
+
+		button.addEventListener('click', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+			const border = this.ensureEffectData(layer, 'border');
+			if (this.getBorderDrawOrder(border) === drawOrder) return;
+
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.ensureEffectData(layer, 'border').drawOrder = drawOrder;
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
 		});
 	}
 
@@ -1395,6 +1452,7 @@ class TextGlitterManager {
 				this.ui.borderOpacity.value = border.opacity ?? 100;
 				this.ui.borderOpacityValue.innerHTML = formatUnit(border.opacity ?? 100, '%');
 			}
+			this.syncBorderOptionUI(border);
 		} else {
 			const defaults = this.getDefaultBorder();
 			this.ui.borderWidth.value = defaults.widthPx;
@@ -1408,6 +1466,7 @@ class TextGlitterManager {
 				this.ui.borderOpacity.value = defaults.opacity;
 				this.ui.borderOpacityValue.innerHTML = formatUnit(defaults.opacity, '%');
 			}
+			this.syncBorderOptionUI(defaults);
 		}
 
 		if (shadow) {
@@ -1532,6 +1591,41 @@ class TextGlitterManager {
 	toggleEffectControls(element, isVisible) {
 		if (!element) return;
 		element.classList.toggle('visible', isVisible);
+	}
+
+	getBorderPlacement(borderData) {
+		return borderData?.placement === 'inside'
+			? 'inside'
+			: borderData?.placement === 'center'
+				? 'center'
+				: 'outside';
+	}
+
+	getBorderDrawOrder(borderData) {
+		return borderData?.drawOrder === 'front' ? 'front' : 'behind';
+	}
+
+	getBorderOutsidePadding(borderData) {
+		const widthPx = Math.max(0, borderData?.widthPx || 0);
+		switch (this.getBorderPlacement(borderData)) {
+			case 'inside':
+				return 0;
+			case 'center':
+				return Math.ceil(widthPx / 2);
+			default:
+				return widthPx;
+		}
+	}
+
+	syncBorderOptionUI(borderData) {
+		const placement = this.getBorderPlacement(borderData);
+		const drawOrder = this.getBorderDrawOrder(borderData);
+
+		this.ui.borderPositionOutside?.classList.toggle('active', placement === 'outside');
+		this.ui.borderPositionCenter?.classList.toggle('active', placement === 'center');
+		this.ui.borderPositionInside?.classList.toggle('active', placement === 'inside');
+		this.ui.borderOrderBehind?.classList.toggle('active', drawOrder === 'behind');
+		this.ui.borderOrderFront?.classList.toggle('active', drawOrder === 'front');
 	}
 
 	updateEffectTargetButtons(layer) {
@@ -1829,7 +1923,7 @@ class TextGlitterManager {
 			textData.boxMode || 'auto',
 			textData.boxWidth ?? null,
 			textData.boxHeight ?? null,
-			textData.border ? textData.border.widthPx : null,
+			textData.border ? [textData.border.widthPx, this.getBorderPlacement(textData.border)] : null,
 			textData.shadow ? textData.shadow.offsetX : null,
 			textData.shadow ? textData.shadow.offsetY : null,
 			CONFIG.textLayers.crispEdges !== false
@@ -1854,7 +1948,7 @@ class TextGlitterManager {
 		const fontSize = layer.textData.fontSize;
 		const letterSpacing = layer.textData.letterSpacing;
 		const lineHeightPx = fontSize * layer.textData.lineHeight;
-		const borderWidth = Math.max(0, layer.textData.border?.widthPx || 0);
+		const borderWidth = this.getBorderOutsidePadding(layer.textData.border);
 		const shadowOffsetX = layer.textData.shadow?.offsetX || 0;
 		const shadowOffsetY = layer.textData.shadow?.offsetY || 0;
 		const boxMode = layer.textData.boxMode || 'auto';
@@ -2307,7 +2401,11 @@ class TextGlitterManager {
 						height: layer.textData.height
 					});
 
-					if (layer.id === this.editor.layerManager.activeLayerId && this.editor.currentTool === ToolType.SELECT) {
+					if (
+						layer.id === this.editor.layerManager.activeLayerId &&
+						this.editor.currentTool === ToolType.SELECT &&
+						!this.editor.layerManager.hasMultiSelection()
+					) {
 						if (!transform.isDraggingHandle) {
 							transform.createTransformHandles();
 						}
@@ -2400,6 +2498,7 @@ class TextGlitterManager {
 		const descriptors = [];
 		const shadow = this.getEffectData(layer, 'shadow');
 		const border = this.getEffectData(layer, 'border');
+		const drawBorderAfterFill = this.getBorderDrawOrder(border) === 'front';
 
 		if (shadow) {
 			descriptors.push({
@@ -2413,17 +2512,23 @@ class TextGlitterManager {
 			});
 		}
 
-		if (border?.widthPx > 0) {
-			const { canvas: borderCanvas, cacheKey: borderCacheKey } = this.getBorderMaskCanvas(layer, measurement, border.widthPx);
-			descriptors.push({
-				key: 'border',
-				offsetX: 0,
-				offsetY: 0,
-				source: this.getEffectPaintSource(layer, 'border'),
-				maskType: 'border',
-				maskCanvas: borderCanvas,
-				maskCacheKey: borderCacheKey
-			});
+		const borderDescriptor = border?.widthPx > 0
+			? (() => {
+				const { canvas: borderCanvas, cacheKey: borderCacheKey } = this.getBorderMaskCanvas(layer, measurement, border);
+				return {
+					key: 'border',
+					offsetX: 0,
+					offsetY: 0,
+					source: this.getEffectPaintSource(layer, 'border'),
+					maskType: 'border',
+					maskCanvas: borderCanvas,
+					maskCacheKey: borderCacheKey
+				};
+			})()
+			: null;
+
+		if (borderDescriptor && !drawBorderAfterFill) {
+			descriptors.push(borderDescriptor);
 		}
 
 		const fillSource = this.getEffectPaintSource(layer, 'fill');
@@ -2439,6 +2544,10 @@ class TextGlitterManager {
 			});
 		}
 
+		if (borderDescriptor && drawBorderAfterFill) {
+			descriptors.push(borderDescriptor);
+		}
+
 		return descriptors;
 	}
 
@@ -2446,30 +2555,35 @@ class TextGlitterManager {
 	// N angles around a ring onto a single canvas (union, not N separate
 	// layers), then texture that one shape once. Mirrors
 	// GifExporter._createBorderMaskCanvas so the live preview matches export.
-	getBorderMaskCanvas(layer, measurement, widthPx) {
-		// Punch the glyph silhouette out of the border for an outline when the
-		// fill won't cover it (no fill, or a see-through fill) — same rule as shapes.
-		const fillIsNone = this.ensureEffectData(layer, 'fill').mode === 'none';
-		const cutOutFill = fillIsNone || layer.settings.opacity < 100;
-		const cacheKey = `border:${widthPx}:${cutOutFill ? 1 : 0}`;
+	getBorderMaskCanvas(layer, measurement, borderData = this.getEffectData(layer, 'border')) {
+		const widthPx = Math.max(0, borderData?.widthPx || 0);
+		const placement = this.getBorderPlacement(borderData);
+		const cacheKey = `border:${widthPx}:${placement}`;
 
 		if (measurement._borderMaskCache?.key === cacheKey) {
 			return { canvas: measurement._borderMaskCache.canvas, cacheKey: `${measurement.key}|${cacheKey}` };
 		}
 
-		const canvas = document.createElement('canvas');
-		canvas.width = measurement.canvas.width;
-		canvas.height = measurement.canvas.height;
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		const fillMask = measurement.canvas;
+		let canvas = null;
 
-		this.getBorderOffsets(widthPx).forEach((offset) => {
-			ctx.drawImage(measurement.canvas, offset.x, offset.y);
-		});
-
-		if (cutOutFill) {
-			ctx.globalCompositeOperation = 'destination-out';
-			ctx.drawImage(measurement.canvas, 0, 0);
-			ctx.globalCompositeOperation = 'source-over';
+		if (widthPx > 0) {
+			if (placement === 'inside') {
+				canvas = this.createMaskDifferenceCanvas(
+					fillMask,
+					this.createErodedMaskCanvas(fillMask, widthPx)
+				);
+			} else if (placement === 'center') {
+				canvas = this.createMaskDifferenceCanvas(
+					this.createDilatedMaskCanvas(fillMask, Math.ceil(widthPx / 2)),
+					this.createErodedMaskCanvas(fillMask, Math.floor(widthPx / 2))
+				);
+			} else {
+				canvas = this.createMaskDifferenceCanvas(
+					this.createDilatedMaskCanvas(fillMask, widthPx),
+					fillMask
+				);
+			}
 		}
 
 		measurement._borderMaskCache = { key: cacheKey, canvas };
@@ -2493,7 +2607,57 @@ class TextGlitterManager {
 		});
 	}
 
-	getBorderOffsets(widthPx) {
+	createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
+		const canvas = document.createElement('canvas');
+		canvas.width = baseCanvas.width;
+		canvas.height = baseCanvas.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.drawImage(baseCanvas, 0, 0);
+		if (subtractCanvas) {
+			ctx.globalCompositeOperation = 'destination-out';
+			ctx.drawImage(subtractCanvas, 0, 0);
+			ctx.globalCompositeOperation = 'source-over';
+		}
+		return canvas;
+	}
+
+	createDilatedMaskCanvas(sourceCanvas, radius) {
+		const nextRadius = Math.max(0, Math.round(radius));
+		if (nextRadius <= 0) {
+			return sourceCanvas;
+		}
+
+		const canvas = document.createElement('canvas');
+		canvas.width = sourceCanvas.width;
+		canvas.height = sourceCanvas.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.drawImage(sourceCanvas, 0, 0);
+		this.getMorphOffsets(nextRadius).forEach((offset) => {
+			ctx.drawImage(sourceCanvas, offset.x, offset.y);
+		});
+		return canvas;
+	}
+
+	createErodedMaskCanvas(sourceCanvas, radius) {
+		const nextRadius = Math.max(0, Math.round(radius));
+		if (nextRadius <= 0) {
+			return sourceCanvas;
+		}
+
+		const canvas = document.createElement('canvas');
+		canvas.width = sourceCanvas.width;
+		canvas.height = sourceCanvas.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.drawImage(sourceCanvas, 0, 0);
+		ctx.globalCompositeOperation = 'destination-in';
+		this.getMorphOffsets(nextRadius).forEach((offset) => {
+			ctx.drawImage(sourceCanvas, -offset.x, -offset.y);
+		});
+		ctx.globalCompositeOperation = 'source-over';
+		return canvas;
+	}
+
+	getMorphOffsets(widthPx) {
 		const radius = Math.max(1, widthPx);
 		// Sample count scales with the border radius so the outer envelope of the
 		// unioned copies stays smooth (few steps = visible scalloping on wide

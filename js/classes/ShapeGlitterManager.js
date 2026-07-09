@@ -69,6 +69,11 @@ class ShapeGlitterManager {
 		this.ui.borderDotSpacingRow = id('shapeBorderDotSpacingRow');
 		this.ui.borderOpacity = id('shapeBorderOpacity');
 		this.ui.borderOpacityValue = id('shapeBorderOpacityValue');
+		this.ui.borderPositionOutside = id('shapeBorderPositionOutside');
+		this.ui.borderPositionCenter = id('shapeBorderPositionCenter');
+		this.ui.borderPositionInside = id('shapeBorderPositionInside');
+		this.ui.borderOrderBehind = id('shapeBorderOrderBehind');
+		this.ui.borderOrderFront = id('shapeBorderOrderFront');
 		this.ui.shadowEnabled = id('shapeShadowEnabled');
 		this.ui.shadowControls = id('shapeShadowControls');
 		this.ui.shadowOffsetX = id('shapeShadowOffsetX');
@@ -213,6 +218,11 @@ class ShapeGlitterManager {
 
 		this.ui.borderStyleSolid?.addEventListener('click', () => this.setBorderStyle('solid'));
 		this.ui.borderStyleDotted?.addEventListener('click', () => this.setBorderStyle('dotted'));
+		this.ui.borderPositionOutside?.addEventListener('click', () => this.setBorderPlacement('outside'));
+		this.ui.borderPositionCenter?.addEventListener('click', () => this.setBorderPlacement('center'));
+		this.ui.borderPositionInside?.addEventListener('click', () => this.setBorderPlacement('inside'));
+		this.ui.borderOrderBehind?.addEventListener('click', () => this.setBorderDrawOrder('behind'));
+		this.ui.borderOrderFront?.addEventListener('click', () => this.setBorderDrawOrder('front'));
 	}
 
 	_cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -507,6 +517,8 @@ class ShapeGlitterManager {
 		if (this.ui.borderOpacity) { this.ui.borderOpacity.value = bd.opacity ?? 100; this.ui.borderOpacityValue.innerHTML = formatUnit(bd.opacity ?? 100, '%'); }
 		if (this.ui.shapeBorderColor) this.ui.shapeBorderColor.value = bd.color || '#000000';
 		this._syncBorderStyleUI(bd);
+		this._syncBorderPlacementUI(bd);
+		this._syncBorderDrawOrderUI(bd);
 		this._loadColorAdjust('shapeBorder', bd.colorAdjust, bd.scale);
 
 		// Shadow
@@ -546,6 +558,8 @@ class ShapeGlitterManager {
 			widthPx: 6,
 			style: 'solid',
 			dotSpacingPx: 10,
+			placement: 'outside',
+			drawOrder: 'behind',
 			mode: 'solid',
 			color: CONFIG.defaultBorderColor,
 			glitterId: null,
@@ -691,6 +705,35 @@ class ShapeGlitterManager {
 		this.editor.layerManager.renderLayersList();
 	}
 
+	setBorderPlacement(placement) {
+		const layer = this.getActiveShapeLayer();
+		if (!layer) return;
+
+		const border = this.ensureEffectData(layer, 'border');
+		if (this.getBorderPlacement(border) === placement) return;
+
+		border.placement = placement;
+		this._syncBorderPlacementUI(border);
+		this.invalidateMeasurement(layer);
+		this.renderLayer(layer);
+		this.editor.saveState();
+		this.editor.layerManager.renderLayersList();
+	}
+
+	setBorderDrawOrder(drawOrder) {
+		const layer = this.getActiveShapeLayer();
+		if (!layer) return;
+
+		const border = this.ensureEffectData(layer, 'border');
+		if (this.getBorderDrawOrder(border) === drawOrder) return;
+
+		border.drawOrder = drawOrder;
+		this._syncBorderDrawOrderUI(border);
+		this.renderLayer(layer);
+		this.editor.saveState();
+		this.editor.layerManager.renderLayersList();
+	}
+
 	_syncBorderStyleUI(borderData) {
 		const style = borderData?.style === 'dotted' ? 'dotted' : 'solid';
 		this.ui.borderStyleSolid?.classList.toggle('active', style === 'solid');
@@ -701,6 +744,43 @@ class ShapeGlitterManager {
 		if (this.ui.borderDotSpacing) {
 			this.ui.borderDotSpacing.disabled = style !== 'dotted';
 		}
+	}
+
+	getBorderPlacement(borderData) {
+		return borderData?.placement === 'inside'
+			? 'inside'
+			: borderData?.placement === 'center'
+				? 'center'
+				: 'outside';
+	}
+
+	getBorderDrawOrder(borderData) {
+		return borderData?.drawOrder === 'front' ? 'front' : 'behind';
+	}
+
+	getBorderOutsidePadding(borderData) {
+		const widthPx = Math.max(0, borderData?.widthPx || 0);
+		switch (this.getBorderPlacement(borderData)) {
+			case 'inside':
+				return 0;
+			case 'center':
+				return Math.ceil(widthPx / 2);
+			default:
+				return widthPx;
+		}
+	}
+
+	_syncBorderPlacementUI(borderData) {
+		const placement = this.getBorderPlacement(borderData);
+		this.ui.borderPositionOutside?.classList.toggle('active', placement === 'outside');
+		this.ui.borderPositionCenter?.classList.toggle('active', placement === 'center');
+		this.ui.borderPositionInside?.classList.toggle('active', placement === 'inside');
+	}
+
+	_syncBorderDrawOrderUI(borderData) {
+		const drawOrder = this.getBorderDrawOrder(borderData);
+		this.ui.borderOrderBehind?.classList.toggle('active', drawOrder === 'behind');
+		this.ui.borderOrderFront?.classList.toggle('active', drawOrder === 'front');
 	}
 
 	// Glitter id for a slot: fill shares the layer swatch (like text); border and
@@ -740,7 +820,7 @@ class ShapeGlitterManager {
 			d.shapeId,
 			d.width,
 			d.height,
-			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx] : null,
+			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, this.getBorderPlacement(d.border)] : null,
 			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null
 		]);
 	}
@@ -764,7 +844,7 @@ class ShapeGlitterManager {
 		const w = d.width;
 		const h = d.height;
 		const padding = CONFIG.textLayers.maskPadding;
-		const borderWidth = Math.max(0, d.border?.widthPx || 0);
+		const borderWidth = this.getBorderOutsidePadding(d.border);
 		const shX = d.shadow?.offsetX || 0;
 		const shY = d.shadow?.offsetY || 0;
 
@@ -840,7 +920,7 @@ class ShapeGlitterManager {
 		const rect = entry.frameRect;
 		if (!rect) return null;
 
-		const borderWidth = Math.max(0, layer.shapeData.border?.widthPx || 0);
+		const borderWidth = this.getBorderOutsidePadding(layer.shapeData.border);
 		return {
 			width: rect.width + borderWidth * 2,
 			height: rect.height + borderWidth * 2,
@@ -862,6 +942,11 @@ class ShapeGlitterManager {
 		}
 
 		const borderStyle = borderData?.style === 'dotted' ? 'dotted' : 'solid';
+		const drawOrder = this.getBorderDrawOrder(borderData);
+		const placement = this.getBorderPlacement(borderData);
+		const effectivePlacement = borderStyle === 'dotted' && placement === 'outside' && drawOrder === 'front'
+			? 'center'
+			: placement;
 		const dotSpacingPx = Math.max(1, borderData?.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx);
 		const canvas = document.createElement('canvas');
 		canvas.width = measurement.canvas.width;
@@ -874,18 +959,23 @@ class ShapeGlitterManager {
 		ctx.strokeStyle = '#ffffff';
 		ctx.lineJoin = 'round';
 		ctx.lineCap = 'round';
+		if (effectivePlacement === 'inside') {
+			ctx.save();
+			ctx.clip(path);
+		}
 		if (borderStyle === 'dotted') {
-			ctx.lineWidth = widthPx;
+			ctx.lineWidth = effectivePlacement === 'center' ? widthPx : widthPx * 2;
 			ctx.setLineDash([0, widthPx + dotSpacingPx]);
 		} else {
-			ctx.lineWidth = widthPx * 2;
+			ctx.lineWidth = effectivePlacement === 'center' ? widthPx : widthPx * 2;
 		}
 		ctx.stroke(path);
+		if (effectivePlacement === 'inside') {
+			ctx.restore();
+		}
 		ctx.restore();
 
-		// Solid borders render as an outer ring; dotted borders stay centered on
-		// the path so each round cap reads as a dot instead of a clipped crescent.
-		if (borderStyle !== 'dotted') {
+		if (effectivePlacement === 'outside') {
 			ctx.globalCompositeOperation = 'destination-out';
 			ctx.drawImage(measurement.canvas, 0, 0);
 			ctx.globalCompositeOperation = 'source-over';
@@ -987,7 +1077,11 @@ class ShapeGlitterManager {
 		if (transform) {
 			transform.element = wrapper;
 			transform.applyTransform(wrapper, { width: measurement.width, height: measurement.height });
-			if (layer.id === this.editor.layerManager.activeLayerId && this.editor.currentTool === ToolType.SELECT) {
+			if (
+				layer.id === this.editor.layerManager.activeLayerId &&
+				this.editor.currentTool === ToolType.SELECT &&
+				!this.editor.layerManager.hasMultiSelection()
+			) {
 				if (!transform.isDraggingHandle) transform.createTransformHandles();
 			} else {
 				transform.removeTransformHandles();
@@ -1028,6 +1122,7 @@ class ShapeGlitterManager {
 		const descriptors = [];
 		const shadow = this.getEffectData(layer, 'shadow');
 		const border = this.getEffectData(layer, 'border');
+		const drawBorderAfterFill = this.getBorderDrawOrder(border) === 'front';
 
 		// Preview shadow uses the un-offset silhouette + a live CSS translate (so
 		// dragging the offset is cheap); export bakes the same offset into the mask.
@@ -1043,15 +1138,19 @@ class ShapeGlitterManager {
 		}
 
 		// Vector-stroked outer border (same getBorderMaskCanvas the exporter uses).
-		if (border?.widthPx > 0) {
-			descriptors.push({
+		const borderDescriptor = border?.widthPx > 0
+			? {
 				key: 'border',
 				offsetX: 0,
 				offsetY: 0,
 				source: this.getEffectPaintSource(layer, 'border'),
 				maskCanvas: this.getBorderMaskCanvas(measurement, border),
-				maskCacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}`
-			});
+				maskCacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${this.getBorderPlacement(border)}:${this.getBorderDrawOrder(border)}`
+			}
+			: null;
+
+		if (borderDescriptor && !drawBorderAfterFill) {
+			descriptors.push(borderDescriptor);
 		}
 
 		const fillSource = this.getEffectPaintSource(layer, 'fill');
@@ -1064,6 +1163,10 @@ class ShapeGlitterManager {
 				maskCanvas: measurement.canvas,
 				maskCacheKey: `${measurement.key}|fill`
 			});
+		}
+
+		if (borderDescriptor && drawBorderAfterFill) {
+			descriptors.push(borderDescriptor);
 		}
 
 		return descriptors;

@@ -310,6 +310,33 @@ updateTransform(updates) {
         };
     }
 
+    getCanvasPointFromClient(clientX, clientY) {
+        return this.editor.viewport.screenToCanvas(clientX, clientY);
+    }
+
+    delegateSelectionFromCanvasPoint(canvasPoint, options = {}) {
+        const x = Math.round(canvasPoint.x);
+        const y = Math.round(canvasPoint.y);
+
+        if (options.toggleSelection || options.cycleDeep) {
+            this.editor.layerManager.handleLayerPick(x, y, {
+                toggleSelection: Boolean(options.toggleSelection),
+                cycleDeep: Boolean(options.cycleDeep)
+            });
+            return true;
+        }
+
+        const topLayer = this.editor.layerManager.getTopVisibleLayerAtPoint(x, y, {
+            includeBase: false
+        });
+        if (topLayer && topLayer.id !== this.layer.id) {
+            this.editor.layerManager.setActiveLayer(topLayer.id);
+            return true;
+        }
+
+        return false;
+    }
+
     // ===== CENTERING METHODS =====
 
     centerHorizontal() {
@@ -402,10 +429,18 @@ updateTransform(updates) {
      */
 setupMouseDrag(element) {
     let isDragging = false;
+    let didMove = false;
     let startCanvasX = 0;
     let startCanvasY = 0;
     let startPosition = null;
     let lockedAxis = null;
+
+const swallowFollowupClick = () => {
+    this.editor.ignoreNextClick = true;
+    setTimeout(() => {
+        this.editor.ignoreNextClick = false;
+    }, 150);
+};
     
 const handleMouseDown = (e) => {
     if (e.button !== 0) return; // Left click only
@@ -417,6 +452,39 @@ const handleMouseDown = (e) => {
     if (this.editor.currentTool === ToolType.HAND || 
         this.editor.currentTool === ToolType.ZOOM ||
         this.editor.currentTool === ToolType.COLOR_PICKER) {
+        return;
+    }
+
+    if (this.editor.layerManager.hasMultiSelection() && this.editor.layerManager.isLayerSelected(this.layer.id)) {
+        const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+
+        if (e.shiftKey || e.altKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            swallowFollowupClick();
+            this.delegateSelectionFromCanvasPoint(canvasPos, {
+                toggleSelection: e.shiftKey,
+                cycleDeep: e.altKey
+            });
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        this.editor.layerManager.setActiveLayer(this.layer.id);
+        return;
+    }
+
+    const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+    if (this.delegateSelectionFromCanvasPoint(canvasPos, {
+        toggleSelection: e.shiftKey,
+        cycleDeep: e.altKey
+    })) {
+        if (e.shiftKey || e.altKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            swallowFollowupClick();
+        }
         return;
     }
     
@@ -431,8 +499,8 @@ const handleMouseDown = (e) => {
     
     // ALWAYS start dragging (whether we just selected or it was already selected)
     isDragging = true;
-    
-    const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+    didMove = false;
+
     startCanvasX = canvasPos.x;
     startCanvasY = canvasPos.y;
     startPosition = { ...this.getTransform().position };
@@ -453,6 +521,12 @@ const handleMouseMove = (e) => {
     // Calculate delta from drag origin
     const deltaX = currentCanvasPos.x - startCanvasX;
     const deltaY = currentCanvasPos.y - startCanvasY;
+
+    if (!didMove && Math.hypot(deltaX, deltaY) < 3) {
+        return;
+    }
+
+    didMove = true;
 
     let constrainedDeltaX = deltaX;
     let constrainedDeltaY = deltaY;
@@ -514,7 +588,11 @@ const handleMouseMove = (e) => {
         isDragging = false;
         lockedAxis = null;
         startPosition = null;
-        this.editor.saveState();
+        if (didMove) {
+            swallowFollowupClick();
+            this.editor.saveState();
+        }
+        didMove = false;
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
     };
@@ -910,6 +988,14 @@ removeTransformHandles() {
 
             handle.addEventListener('pointerdown', (e) => {
                 if (e.pointerType === 'mouse' && e.button !== 0) {
+                    return;
+                }
+
+                const canvasPoint = this.getCanvasPointFromClient(e.clientX, e.clientY);
+                if (handleType === 'move' && this.delegateSelectionFromCanvasPoint(canvasPoint, {
+                    toggleSelection: e.shiftKey,
+                    cycleDeep: e.altKey
+                })) {
                     return;
                 }
 

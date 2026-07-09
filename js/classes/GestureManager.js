@@ -206,6 +206,13 @@ class GestureManager {
 		}
 
 		if (editor.currentTool === ToolType.SELECT) {
+			if (editor.layerManager.hasMultiSelection() &&
+				editor.groupTransformManager?.containsScreenPoint(pointer.x, pointer.y)) {
+				return {
+					type: 'groupDrag'
+				};
+			}
+
 			const canvasPoint = this.viewport.screenToCanvas(pointer.x, pointer.y);
 			const topLayer = editor.layerManager.getTopVisibleLayerAtPoint(canvasPoint.x, canvasPoint.y, {
 				includeBase: false
@@ -238,6 +245,16 @@ class GestureManager {
 
 		const activeLayer = editor.layerManager.getActiveLayer();
 		const pointers = Array.from(this.pointers.values());
+		if (
+			editor.currentTool === ToolType.SELECT &&
+			editor.layerManager.hasMultiSelection() &&
+			pointers.length >= 2 &&
+			editor.groupTransformManager?.containsScreenPoint(pointers[0].x, pointers[0].y) &&
+			editor.groupTransformManager?.containsScreenPoint(pointers[1].x, pointers[1].y)
+		) {
+			return { type: 'groupGesture' };
+		}
+
 		if (
 			editor.currentTool === ToolType.SELECT &&
 			this.isTransformableLayer(activeLayer) &&
@@ -284,7 +301,9 @@ class GestureManager {
 			return;
 		}
 
-		if (route.type === 'layerDrag' || route.type === 'layerGesture') {
+		if (route.type === 'groupDrag' || route.type === 'groupGesture') {
+			this.editor.groupTransformManager?.beginGestureInteraction?.();
+		} else if (route.type === 'layerDrag' || route.type === 'layerGesture') {
 			const layer = this.getLayerById(route.layerId);
 			if (layer && this.editor.layerManager.activeLayerId !== layer.id) {
 				this.editor.layerManager.setActiveLayer(layer.id);
@@ -317,6 +336,8 @@ class GestureManager {
 
 		if (this.route?.type === 'brush') {
 			this.editor.maskEditor?.handleTouchPan(pointer.x, pointer.y);
+		} else if (this.route?.type === 'groupDrag') {
+			this.editor.groupTransformManager?.dragByScreenDelta?.(dx, dy);
 		} else if (this.route?.type === 'layerDrag') {
 			const transform = this.getLayerTransform(this.route.layerId);
 			transform?.dragByScreenDelta?.(dx, dy);
@@ -389,7 +410,9 @@ class GestureManager {
 			centroidY: center.y
 		};
 
-		if (this.route?.type === 'layerGesture') {
+		if (this.route?.type === 'groupGesture') {
+			this.editor.groupTransformManager?.applyGestureDelta?.(composite);
+		} else if (this.route?.type === 'layerGesture') {
 			const transform = this.getLayerTransform(this.route.layerId);
 			transform?.applyGestureDelta?.(composite);
 		} else {
@@ -412,7 +435,9 @@ class GestureManager {
 		this.route = this.routeAfterTwoFinger(previousRoute);
 		this.resetSinglePanVelocity();
 
-		if (this.route?.type === 'layerDrag') {
+		if (this.route?.type === 'groupDrag') {
+			this.editor.groupTransformManager?.beginGestureInteraction?.();
+		} else if (this.route?.type === 'layerDrag') {
 			const transform = this.getLayerTransform(this.route.layerId);
 			transform?.beginGestureInteraction?.();
 		} else if (this.route?.type === 'creationDrag') {
@@ -434,6 +459,10 @@ class GestureManager {
 			};
 		}
 
+		if (previousRoute.type === 'groupGesture') {
+			return { type: 'groupDrag' };
+		}
+
 		return { type: 'viewport' };
 	}
 
@@ -447,7 +476,12 @@ class GestureManager {
 			return;
 		}
 
-		if (route?.type === 'layerDrag') {
+		if (route?.type === 'groupDrag') {
+			this.editor.handleWorkspaceAction(pointer.x, pointer.y, {
+				tool: this.editor.currentTool,
+				source: 'touch'
+			});
+		} else if (route?.type === 'layerDrag') {
 			const layer = this.getLayerById(route.layerId);
 			if (layer && this.editor.layerManager.activeLayerId !== layer.id) {
 				this.editor.layerManager.setActiveLayer(layer.id);
@@ -576,7 +610,9 @@ class GestureManager {
 			return;
 		}
 
-		if (route.type === 'layerDrag' || route.type === 'layerGesture') {
+		if (route.type === 'groupDrag' || route.type === 'groupGesture') {
+			this.editor.groupTransformManager?.endGestureInteraction?.();
+		} else if (route.type === 'layerDrag' || route.type === 'layerGesture') {
 			const transform = this.getLayerTransform(route.layerId);
 			transform?.endGestureInteraction?.();
 		} else if (route.type === 'creationDrag') {

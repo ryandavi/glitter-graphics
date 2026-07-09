@@ -191,7 +191,8 @@ class GifExporter {
 		}
 
 		const border = layer.textData.border;
-		if (border?.widthPx > 0 && textMasks.border) {
+		const renderBorder = () => {
+			if (!(border?.widthPx > 0) || !textMasks.border) return;
 			this._renderFilledTextMaskToCanvas(
 				layer,
 				ctx,
@@ -202,6 +203,11 @@ class GifExporter {
 				frameMap,
 				flattenedFrameMap
 			);
+		};
+		const drawBorderAfterFill = this._getBorderDrawOrder(border) === 'front';
+
+		if (!drawBorderAfterFill) {
+			renderBorder();
 		}
 
 		this._renderFilledTextMaskToCanvas(
@@ -214,6 +220,10 @@ class GifExporter {
 			frameMap,
 			flattenedFrameMap
 		);
+
+		if (drawBorderAfterFill) {
+			renderBorder();
+		}
 	}
 
 	_shapeUsesGlitter(layer) {
@@ -274,9 +284,17 @@ class GifExporter {
 			const fillCanvas = this._createFilledMaskCanvas(maskCanvas, source, layer, frameIndex, this._getShapeFrameKey(layer, slot), frameMap, flattenedFrameMap);
 			this._drawTransformedCanvas(ctx, fillCanvas, t, w, h);
 		};
+		const drawBorder = () => {
+			if (d.border?.widthPx > 0 && masks.border) draw(masks.border, 'border');
+		};
 		if (d.shadow && masks.shadow) draw(masks.shadow, 'shadow');
-		if (d.border?.widthPx > 0 && masks.border) draw(masks.border, 'border');
+		if (this._getBorderDrawOrder(d.border) !== 'front') {
+			drawBorder();
+		}
 		draw(masks.fill, 'fill');
+		if (this._getBorderDrawOrder(d.border) === 'front') {
+			drawBorder();
+		}
 	}
 
 	_getTextFrameKey(layer, slot) {
@@ -698,14 +716,118 @@ class GifExporter {
 		}
 
 		if (layer.textData?.border?.widthPx > 0) {
-			entry.border = this._createBorderMaskCanvas(
-				fillMaskCanvas,
-				layer.textData.border.widthPx,
-				layer.settings.opacity < 100 || layer.textData?.fill?.mode === 'none'
-			);
+			entry.border = this._createPlacedBorderMaskCanvas(fillMaskCanvas, layer.textData.border);
 		}
 
 		return entry;
+	}
+
+	_getBorderPlacement(borderData) {
+		return borderData?.placement === 'inside'
+			? 'inside'
+			: borderData?.placement === 'center'
+				? 'center'
+				: 'outside';
+	}
+
+	_getBorderDrawOrder(borderData) {
+		return borderData?.drawOrder === 'front' ? 'front' : 'behind';
+	}
+
+	_createPlacedBorderMaskCanvas(fillMaskCanvas, borderData) {
+		const widthPx = Math.max(0, borderData?.widthPx || 0);
+		if (widthPx <= 0) {
+			return null;
+		}
+
+		const placement = this._getBorderPlacement(borderData);
+		if (placement === 'inside') {
+			return this._createMaskDifferenceCanvas(
+				fillMaskCanvas,
+				this._createErodedMaskCanvas(fillMaskCanvas, widthPx)
+			);
+		}
+		if (placement === 'center') {
+			return this._createMaskDifferenceCanvas(
+				this._createDilatedMaskCanvas(fillMaskCanvas, Math.ceil(widthPx / 2)),
+				this._createErodedMaskCanvas(fillMaskCanvas, Math.floor(widthPx / 2))
+			);
+		}
+		return this._createMaskDifferenceCanvas(
+			this._createDilatedMaskCanvas(fillMaskCanvas, widthPx),
+			fillMaskCanvas
+		);
+	}
+
+	_createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
+		const canvas = document.createElement('canvas');
+		canvas.width = baseCanvas.width;
+		canvas.height = baseCanvas.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		ctx.drawImage(baseCanvas, 0, 0);
+		if (subtractCanvas) {
+			ctx.globalCompositeOperation = 'destination-out';
+			ctx.drawImage(subtractCanvas, 0, 0);
+			ctx.globalCompositeOperation = 'source-over';
+		}
+		return canvas;
+	}
+
+	_createDilatedMaskCanvas(sourceCanvas, radius) {
+		const nextRadius = Math.max(0, Math.round(radius));
+		if (nextRadius <= 0) {
+			return sourceCanvas;
+		}
+
+		const canvas = document.createElement('canvas');
+		canvas.width = sourceCanvas.width;
+		canvas.height = sourceCanvas.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		ctx.drawImage(sourceCanvas, 0, 0);
+		this._getMorphOffsets(nextRadius).forEach((offset) => {
+			ctx.drawImage(sourceCanvas, offset.x, offset.y);
+		});
+		return canvas;
+	}
+
+	_createErodedMaskCanvas(sourceCanvas, radius) {
+		const nextRadius = Math.max(0, Math.round(radius));
+		if (nextRadius <= 0) {
+			return sourceCanvas;
+		}
+
+		const canvas = document.createElement('canvas');
+		canvas.width = sourceCanvas.width;
+		canvas.height = sourceCanvas.height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		ctx.drawImage(sourceCanvas, 0, 0);
+		ctx.globalCompositeOperation = 'destination-in';
+		this._getMorphOffsets(nextRadius).forEach((offset) => {
+			ctx.drawImage(sourceCanvas, -offset.x, -offset.y);
+		});
+		ctx.globalCompositeOperation = 'source-over';
+		return canvas;
+	}
+
+	_getMorphOffsets(widthPx) {
+		const radius = Math.max(1, widthPx);
+		const steps = Math.max(16, Math.min(64, Math.ceil(radius * 4)));
+		const seen = new Set();
+		const offsets = [];
+
+		for (let index = 0; index < steps; index++) {
+			const angle = (Math.PI * 2 * index) / steps;
+			const x = Math.round(Math.cos(angle) * radius);
+			const y = Math.round(Math.sin(angle) * radius);
+			const key = `${x},${y}`;
+			if (seen.has(key) || (x === 0 && y === 0)) {
+				continue;
+			}
+			seen.add(key);
+			offsets.push({ x, y });
+		}
+
+		return offsets;
 	}
 
 	_createOffsetMaskCanvas(sourceCanvas, offsetX, offsetY) {

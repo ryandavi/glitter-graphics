@@ -278,6 +278,8 @@ const CONFIG = {
 			{ key: 'Z', action: 'Zoom Tool' },
 			{ key: 'Arrow Keys', action: 'Nudge Selected Layer' },
 			{ key: 'Shift + Arrow Keys', action: 'Nudge Selected Layer 10px' },
+			{ key: 'Shift + Click', action: 'Add/Remove Movable Layer from Selection' },
+			{ key: 'Alt + Click', action: 'Cycle Through Overlapping Layers' },
 			{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move' },
 			{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg' }
 		],

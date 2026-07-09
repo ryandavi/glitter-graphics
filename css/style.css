@@ -1105,6 +1105,10 @@ input[type=range]::-moz-range-thumb {
   border-color: var(--color-accent);
   background: #2a3a4a;
 }
+.layers-section > .layers-list > .layer-item.selected:not(.active) {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: #30363d;
+}
 .layers-section > .layers-list > .layer-item.dragging {
   opacity: 0.5;
 }
@@ -3654,6 +3658,19 @@ body.mask-editing .sticker-element {
   flex: 1;
 }
 
+.multi-selection-actions > .btn-simple {
+  min-width: 0;
+}
+
+.empty-state.compact {
+  padding: var(--spacing-md);
+  align-items: flex-start !important;
+}
+.empty-state.compact > .empty-state-text,
+.empty-state.compact > .empty-state-subtext {
+  text-align: left;
+}
+
 /* ===== STICKER UPLOAD MODAL ===== */
 #stickerUploadModal .upload-dropzone {
   border: 2px dashed var(--color-border-hover);
@@ -3800,10 +3817,6 @@ body.mask-editing .sticker-element {
   flex-direction: column;
   gap: var(--spacing-base);
 }
-.section.welcome-section > .section-content > .empty-state, .section.base-layer-settings-section > .section-content > .empty-state, .section.no-layer-settings-section > .section-content > .empty-state {
-  min-height: 280px;
-}
-
 .mobile-bottom-nav,
 .mobile-top-nav,
 .mobile-settings-drawer {
@@ -5361,6 +5374,22 @@ body.mask-editing .sticker-element {
   gap: var(--spacing-lg);
 }
 
+.effect-option-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-width: 0;
+  width: 100%;
+}
+
+.effect-option-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
 .glitter-source .asset-info,
 .asset-info {
   display: flex;
@@ -5400,7 +5429,7 @@ body.mask-editing .sticker-element {
   padding: var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(0, 0, 0, 0.12);
+  background-color: #2f2f2f;
 }
 .text-effect-subsection > .subsection-title {
   font-size: var(--font-size-sm);
@@ -5411,6 +5440,28 @@ body.mask-editing .sticker-element {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.effects-stack {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+.effects-stack > .subsection-title,
+.effects-stack > .subsection-note {
+  padding: 0 var(--spacing-xs);
+}
+.effects-stack > .text-effect-subsection {
+  margin-top: 0;
+}
+
+.effect-stack-row {
+  grid-template-columns: 1fr !important;
+}
+
+.effect-stack-row > .effect-option-group > .segmented-control,
+.effect-option-group > .segmented-control {
+  width: 100%;
 }
 
 .subsection-note {

@@ -557,6 +557,10 @@ async function getActiveLayerId(page) {
 	return page.evaluate(() => window.editor.layerManager.activeLayerId);
 }
 
+async function getSelectedLayerIds(page) {
+	return page.evaluate(() => [...window.editor.selectedLayerIds]);
+}
+
 async function getLayerOrder(page) {
 	return page.evaluate(() => window.editor.layerManager.layers.map((layer) => layer.id));
 }
@@ -1211,6 +1215,50 @@ async function check22(page) {
 	assert(afterIndexB < afterIndexA, 'Touch reorder did not move the dragged layer below the target layer');
 }
 
+async function check24(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+
+	const stickerA = await createTestSticker(page, {
+		label: 'Group Sticker A',
+		position: { x: 85, y: 90 }
+	});
+	const stickerB = await createTestSticker(page, {
+		label: 'Group Sticker B',
+		position: { x: 165, y: 110 }
+	});
+
+	await page.evaluate(({ firstId, secondId }) => {
+		window.editor.layerManager.setSelection([firstId, secondId], { activeLayerId: secondId });
+	}, {
+		firstId: stickerA.layerId,
+		secondId: stickerB.layerId
+	});
+	await page.waitForTimeout(120);
+	await closeMobileChrome(page);
+
+	const beforeA = await getStickerState(page, stickerA.layerId);
+	const beforeB = await getStickerState(page, stickerB.layerId);
+	const viewportBefore = await getViewportMetrics(page);
+	const groupBoxCenter = await getElementCenter(page, '.group-transform-handles .transform-bounding-box');
+
+	await twoFingerGesture(
+		page,
+		{ x: groupBoxCenter.x - 18, y: groupBoxCenter.y - 10 },
+		{ x: groupBoxCenter.x - 70, y: groupBoxCenter.y - 28 },
+		{ x: groupBoxCenter.x + 18, y: groupBoxCenter.y + 10 },
+		{ x: groupBoxCenter.x + 70, y: groupBoxCenter.y + 28 }
+	);
+
+	const afterA = await getStickerState(page, stickerA.layerId);
+	const afterB = await getStickerState(page, stickerB.layerId);
+	const viewportAfter = await getViewportMetrics(page);
+
+	assert(afterA.scale.x > beforeA.scale.x * 1.1, 'Group pinch did not scale sticker A');
+	assert(afterB.scale.x > beforeB.scale.x * 1.1, 'Group pinch did not scale sticker B');
+	approxEqual(viewportAfter.zoom, viewportBefore.zoom, 0.001, 'Group pinch unexpectedly zoomed the viewport');
+}
+
 async function runSuite(browser, runNumber) {
 	console.log(`\nRun ${runNumber}: ${APP_URL}`);
 
@@ -1236,7 +1284,8 @@ async function runSuite(browser, runNumber) {
 		['Ctrl+wheel zooms at the cursor even with SELECT active', check19],
 		['Viewport inertia glides after release, settles, and halts on pointerdown', check20],
 		['Double-tap on text opens mobile settings and focuses the text input', check21],
-		['Mobile layer reorder uses touch pointer events to move a layer in the list', check22]
+		['Mobile layer reorder uses touch pointer events to move a layer in the list', check22],
+		['Two-finger pinch inside the shared group box scales the group without zooming the viewport', check24]
 	];
 
 	let failed = 0;

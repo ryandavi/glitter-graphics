@@ -17,6 +17,7 @@ class LayerManager {
 		// Layer state
 		this.layers = [];
 		this.activeLayerId = null;
+		this.selectionCycleState = null;
 
 		// Drag and drop state (desktop)
 		this.draggedLayerId = null;
@@ -44,7 +45,7 @@ class LayerManager {
 		// Layer deselection when clicking empty space
 		this.layersListContainer.addEventListener('click', (e) => {
 			if (e.target === this.layersListContainer) {
-				this.setActiveLayer(null);
+				this.clearSelection();
 			}
 		});
 
@@ -61,6 +62,14 @@ class LayerManager {
 				this.handleLayerDrop(e, null);
 			}
 		});
+	}
+
+	get selectedLayerIds() {
+		return this.editor.selectedLayerIds;
+	}
+
+	set selectedLayerIds(value) {
+		this.editor.selectedLayerIds = value;
 	}
 
 
@@ -294,46 +303,7 @@ class LayerManager {
 
 
 	deleteLayer(layerId) {
-
-		if (this.layers.length <= 1) {
-			this.editor.showError('Cannot delete the last layer');
-			return;
-		}
-
-		const index = this.layers.findIndex(l => l.id === layerId);
-		if (index === -1) return;
-
-		// if layer is locked
-		if (this.layers[index].locked) {
-			this.editor.showError('Cannot delete locked layer');
-			return;
-		}
-
-		// Clean up the live sticker element before removing the layer.
-		const layer = this.layers[index];
-		if (this.editor.currentTool === ToolType.BRUSH) {
-			this.editor.maskEditor?.handleLayerDeleted(layerId);
-		}
-
-		const manager = getLayerManagerForType(this.editor, layer.type);
-		if (manager?.releaseLayerResources) {
-			manager.releaseLayerResources(layer);
-		} else if (manager?.removeLayerElement) {
-			manager.removeLayerElement(layerId);
-		}
-
-		this.layers.splice(index, 1);
-
-		if (this.activeLayerId === layerId) {
-			const newActiveIndex = Math.max(0, index - 1);
-			this.setActiveLayer(this.layers[newActiveIndex].id);
-		}
-
-		this.renderLayersList();
-		this.editor.saveState();
-		this.editor.updatePreview();
-		this.editor.updateActionButtons();
-		this.editor.updateStatus('Layer deleted');
+		this.deleteLayers([layerId]);
 	}
 
 	toggleLayerVisibility(layerId) {
@@ -356,7 +326,160 @@ class LayerManager {
 
 	// ===== LAYER SELECTION =====
 
-	updateSelectionHighlight(layerId) {
+	isLayerMultiSelectable(layer) {
+		return Boolean(layer && isTransformableLayerType(layer.type) && !layer.locked);
+	}
+
+	isLayerSelected(layerId) {
+		return this.selectedLayerIds.has(layerId);
+	}
+
+	getSelectedLayers(options = {}) {
+		const movableOnly = options.movableOnly === true;
+		return this.layers.filter((layer) => {
+			if (!this.selectedLayerIds.has(layer.id)) return false;
+			return !movableOnly || this.isLayerMultiSelectable(layer);
+		});
+	}
+
+	getMultiSelectedMovableLayers() {
+		return this.getSelectedLayers({ movableOnly: true });
+	}
+
+	hasMultiSelection() {
+		return this.getMultiSelectedMovableLayers().length > 1;
+	}
+
+	clearSelection() {
+		this.setSelection([]);
+	}
+
+	focusLayerInSelection(layerId) {
+		if (!this.selectedLayerIds.has(layerId)) {
+			this.setActiveLayer(layerId);
+			return;
+		}
+
+		this.setSelection([...this.selectedLayerIds], {
+			activeLayerId: layerId
+		});
+	}
+
+	toggleLayerSelection(layerId) {
+		const layer = this.layers.find((entry) => entry.id === layerId);
+		if (!this.isLayerMultiSelectable(layer)) {
+			this.setActiveLayer(layerId);
+			return;
+		}
+
+		const nextIds = new Set(this.selectedLayerIds);
+		if (nextIds.has(layerId)) {
+			nextIds.delete(layerId);
+			const remaining = [...nextIds];
+			const nextActiveId = remaining.includes(this.activeLayerId)
+				? this.activeLayerId
+				: (remaining[remaining.length - 1] || null);
+			this.setSelection(remaining, { activeLayerId: nextActiveId });
+			return;
+		}
+
+		nextIds.add(layerId);
+		this.setSelection([...nextIds], { activeLayerId: layerId });
+	}
+
+	restoreSelectionState(activeLayerId, selectedLayerIds = null) {
+		const fallbackIds = activeLayerId ? [activeLayerId] : [];
+		this.setSelection(selectedLayerIds ?? fallbackIds, { activeLayerId });
+	}
+
+	setSelection(layerIds, options = {}) {
+		const requestedIds = Array.isArray(layerIds) ? layerIds : [];
+		let normalized = requestedIds.filter((layerId, index) => {
+			if (!this.layers.some((layer) => layer.id === layerId)) return false;
+			return requestedIds.indexOf(layerId) === index;
+		});
+
+		if (normalized.length > 1) {
+			normalized = normalized.filter((layerId) => this.isLayerMultiSelectable(this.layers.find((layer) => layer.id === layerId)));
+		}
+
+		let nextActiveId = options.activeLayerId ?? this.activeLayerId;
+		if (normalized.length === 0) {
+			nextActiveId = null;
+		} else if (!normalized.includes(nextActiveId)) {
+			nextActiveId = normalized[normalized.length - 1];
+		}
+
+		const sameActive = this.activeLayerId === nextActiveId;
+		const currentIds = [...this.selectedLayerIds];
+		const sameSelection = currentIds.length === normalized.length
+			&& currentIds.every((layerId) => normalized.includes(layerId));
+		if (sameActive && sameSelection) {
+			return;
+		}
+
+		this.activeLayerId = nextActiveId;
+		this.selectedLayerIds = new Set(normalized);
+		this.selectionCycleState = null;
+
+		// D-1c: any layer change ends an armed gallery picker session. The
+		// session is layer-bound, so leaving its layer must return the gallery
+		// to browse mode (a click applies to the new active layer's own fill).
+		this.editor.textGlitterManager?.closePickerSession();
+		this.editor.shapeGlitterManager?.closePickerSession();
+		this.editor.maskEditor?.handleLayerChange(this.activeLayerId);
+		this.updateActiveLayerListSelection();
+		this.updateMobileLayersSwatch();
+		this.updateBottomBarButtons();
+
+		const activeLayer = this.getActiveLayer();
+		const selectedCount = this.selectedLayerIds.size;
+
+		this.editor.updateContextToolbars();
+		this.updateSelectionHighlight();
+		this.editor.updatePreview();
+		this.editor.syncTransformHandlesForActiveLayer?.();
+		this.editor.updateSidePanelUI(activeLayer);
+
+		if (selectedCount === 1 && activeLayer) {
+			const config = LAYER_UI_CONFIG[activeLayer.type];
+			if (config?.onActivate) {
+				config.onActivate(this.editor, activeLayer);
+			}
+		} else if (selectedCount === 0) {
+			this.editor.showLayerSettingsEmptyState();
+			this.editor.showGlitterSettingsEmptyState();
+			this.editor.showStickerSettingsEmptyState();
+		}
+
+		if (this.activeLayerId) {
+			document.body.classList.add('has-active-layer');
+		} else {
+			document.body.classList.remove('has-active-layer');
+		}
+
+		window.dispatchEvent(new CustomEvent('layerChanged', {
+			detail: {
+				activeLayerId: this.activeLayerId,
+				selectedLayerIds: [...this.selectedLayerIds]
+			}
+		}));
+
+		if (selectedCount > 1) {
+			this.editor.updateStatus(`${selectedCount} layers selected`);
+		} else if (activeLayer?.type === LayerType.STICKER) {
+			this.editor.updateStatus(`Selected sticker: ${activeLayer.name || 'Sticker'}`);
+		} else if (activeLayer?.type === LayerType.TEXT_GLITTER) {
+			this.editor.updateStatus(`Selected text: ${activeLayer.name || 'Text'}`);
+		} else if (activeLayer?.type === LayerType.SHAPE) {
+			this.editor.updateStatus(`Selected shape: ${activeLayer.name || 'Shape'}`);
+		}
+
+		this.editor.currentHintDismissed = false;
+		this.editor.updateHelpfulMessage();
+	}
+
+	updateSelectionHighlight() {
 		// Clear ALL previous selection highlights
 		const previewContainer = this.editor.previewCanvas?.parentElement;
 		if (previewContainer) {
@@ -365,97 +488,28 @@ class LayerManager {
 			});
 		}
 
-		// Apply selection highlight to the specified layer
-		const layer = this.layers.find(l => l.id === layerId);
-		if (!layer) return;
+		this.getSelectedLayers().forEach((layer) => {
+			if (layer.type === LayerType.BASE_IMAGE && this.editor.previewCanvas) {
+				this.editor.previewCanvas.classList.add('selected');
+				return;
+			}
 
-		if (layer.type === LayerType.BASE_IMAGE && this.editor.previewCanvas) {
-			this.editor.previewCanvas.classList.add('selected');
-		} else {
 			const manager = getLayerManagerForType(this.editor, layer.type);
 			const element = manager?.layerElements?.get(layer.id);
-			if (element) element.classList.add('selected');
-		}
+			if (element) {
+				element.classList.add('selected');
+			}
+		});
 	}
 
 
 	setActiveLayer(layerId) {
-		if (this.activeLayerId === layerId) {
+		if (!layerId) {
+			this.clearSelection();
 			return;
 		}
 
-		this.activeLayerId = layerId;
-		// D-1c: any layer change ends an armed gallery picker session. The
-		// session is layer-bound, so leaving its layer must return the gallery
-		// to browse mode (a click applies to the new active layer's own fill).
-		this.editor.textGlitterManager?.closePickerSession();
-		this.editor.shapeGlitterManager?.closePickerSession();
-		this.editor.maskEditor?.handleLayerChange(layerId);
-		this.updateActiveLayerListSelection();
-		this.updateMobileLayersSwatch();
-		this.updateBottomBarButtons();
-
-		const layer = this.layers.find(l => l.id === layerId);
-
-		// Update context toolbars
-		this.editor.updateContextToolbars();
-
-		// Update selection highlight
-		this.updateSelectionHighlight(layerId);
-
-		// NEW: Update transform handles
-		if (this.editor.stickerManager && this.editor.textGlitterManager) {
-			const layer = this.layers.find(l => l.id === layerId);
-			if (layer && layer.type === LayerType.STICKER && this.editor.currentTool === ToolType.SELECT) {
-				this.editor.stickerManager.createTransformHandles(layerId);
-				this.editor.textGlitterManager.removeTransformHandles();
-			} else if (layer && layer.type === LayerType.TEXT_GLITTER && this.editor.currentTool === ToolType.SELECT) {
-				this.editor.textGlitterManager.createTransformHandles(layerId);
-				this.editor.stickerManager.removeTransformHandles();
-			} else {
-				this.editor.stickerManager.removeTransformHandles();
-				this.editor.textGlitterManager.removeTransformHandles();
-			}
-		}
-
-		// Update preview (important for solo mode)
-		this.editor.updatePreview();
-
-		// Update Side Panel UI
-		this.editor.updateSidePanelUI(layer);
-
-		// Execute layer-specific activation logic
-		if (layer) {
-			const config = LAYER_UI_CONFIG[layer.type];
-			if (config && config.onActivate) {
-				config.onActivate(this.editor, layer);
-			}
-		} else {
-			// No layer selected: Ensure empty states are shown
-			this.editor.showLayerSettingsEmptyState();
-			this.editor.showGlitterSettingsEmptyState();
-			this.editor.showStickerSettingsEmptyState();
-		}
-
-		// Add/remove body class for mobile settings drawer visibility
-		if (layerId) {
-			document.body.classList.add('has-active-layer');
-		} else {
-			document.body.classList.remove('has-active-layer');
-		}
-
-		window.dispatchEvent(new CustomEvent('layerChanged'));
-
-		if (layer && layer.type === LayerType.STICKER) {
-			this.editor.updateStatus(`Selected sticker: ${layer.name || 'Sticker'}`);
-		} else if (layer && layer.type === LayerType.TEXT_GLITTER) {
-			this.editor.updateStatus(`Selected text: ${layer.name || 'Text'}`);
-		}
-
-		// Update helpful message
-		this.editor.currentHintDismissed = false;
-		this.editor.updateHelpfulMessage();
-
+		this.setSelection([layerId], { activeLayerId: layerId });
 	}
 
 
@@ -519,7 +573,7 @@ class LayerManager {
 
 	// In LayerManager class
 
-	handleLayerPick(x, y) {
+	handleLayerPick(x, y, options = {}) {
 		// Prevent layer picking during touch gestures
 		if (this.editor.touchGestureActive) {
 			dbg('🎯 LAYER PICK: Blocked - touch gesture active');
@@ -531,8 +585,16 @@ class LayerManager {
 			return;
 		}
 
-		const layer = this.getTopVisibleLayerAtPoint(x, y, { includeBase: true });
+		const hitStack = this.getLayersAtPoint(x, y, { includeBase: true });
+		const layer = options.cycleDeep
+			? this.getNextLayerFromHitStack(hitStack, { currentLayerId: this.activeLayerId })
+			: (hitStack[0] || null);
 		if (layer) {
+			if (options.toggleSelection && this.isLayerMultiSelectable(layer)) {
+				this.toggleLayerSelection(layer.id);
+				return;
+			}
+
 			this.setActiveLayer(layer.id);
 
 			let name = 'Layer';
@@ -558,16 +620,19 @@ class LayerManager {
 		}
 
 		// If loop finishes with no hits
-		this.setActiveLayer(null);
+		this.clearSelection();
 		this.editor.updateStatus('No layer at this location');
 	}
 
-	getTopVisibleLayerAtPoint(x, y, options = {}) {
+	getLayersAtPoint(x, y, options = {}) {
 		const includeBase = options.includeBase !== false;
+		const movableOnly = options.movableOnly === true;
+		const hits = [];
 
 		for (let i = this.layers.length - 1; i >= 0; i--) {
 			const layer = this.layers[i];
 			if (!layer.visible) continue;
+			if (movableOnly && !this.isLayerMultiSelectable(layer)) continue;
 
 			let isHit = false;
 			const hitTestMethod = LAYER_UI_CONFIG[layer.type]?.hitTestMethod;
@@ -583,11 +648,29 @@ class LayerManager {
 			}
 
 			if (isHit) {
-				return layer;
+				hits.push(layer);
 			}
 		}
 
-		return null;
+		return hits;
+	}
+
+	getTopVisibleLayerAtPoint(x, y, options = {}) {
+		return this.getLayersAtPoint(x, y, options)[0] || null;
+	}
+
+	getNextLayerFromHitStack(hitStack, options = {}) {
+		if (!Array.isArray(hitStack) || hitStack.length === 0) {
+			return null;
+		}
+
+		const currentLayerId = options.currentLayerId ?? null;
+		const currentIndex = hitStack.findIndex((layer) => layer.id === currentLayerId);
+		if (currentIndex === -1) {
+			return hitStack[0];
+		}
+
+		return hitStack[(currentIndex + 1) % hitStack.length];
 	}
 
 	isPointInTransformBox(transform, width, height, clickX, clickY) {
@@ -721,23 +804,33 @@ class LayerManager {
 	updateActiveLayerListSelection() {
 		if (!this.layersListContainer) return;
 
-		this.layersListContainer.querySelectorAll('.layer-item.active').forEach(item => {
-			item.classList.remove('active');
+		this.layersListContainer.querySelectorAll('.layer-item').forEach(item => {
+			item.classList.remove('active', 'selected');
 		});
 
-		if (!this.activeLayerId) return;
+		this.selectedLayerIds.forEach((layerId) => {
+			const item = this.layersListContainer.querySelector(`[data-layer-id="${layerId}"]`);
+			if (item) {
+				item.classList.add('selected');
+			}
+		});
 
-		const activeItem = this.layersListContainer.querySelector(`[data-layer-id="${this.activeLayerId}"]`);
-		if (activeItem) {
-			activeItem.classList.add('active');
+		if (this.activeLayerId) {
+			const activeItem = this.layersListContainer.querySelector(`[data-layer-id="${this.activeLayerId}"]`);
+			if (activeItem) {
+				activeItem.classList.add('active');
+			}
 		}
 	}
 
 
 	updateBottomBarButtons() {
-		const selectedLayer = this.getActiveLayer();
+		const selectedLayers = this.getSelectedLayers();
 		const canAddLayers = this.layers.length < CONFIG.maxLayers;
-		const canInteractWithSelected = selectedLayer && selectedLayer.type !== LayerType.BASE_IMAGE;
+		const canInteractWithSelected = selectedLayers.length > 0
+			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE);
+		const hasSingleSelection = selectedLayers.length === 1;
+		const movableSelectionCount = this.getMultiSelectedMovableLayers().length;
 
 		// Add buttons - only check max layers
 		const addGlitterBtn = document.getElementById('layersBarAddGlitter');
@@ -752,9 +845,16 @@ class LayerManager {
 		const cloneBtn = document.getElementById('layersBarCloneSelected');
 		const deleteBtn = document.getElementById('layersBarDeleteSelected');
 
-		if (goToBtn) goToBtn.disabled = !canInteractWithSelected;
+		if (goToBtn) goToBtn.disabled = !hasSingleSelection || !canInteractWithSelected;
 		if (cloneBtn) cloneBtn.disabled = !canInteractWithSelected || !canAddLayers;
 		if (deleteBtn) deleteBtn.disabled = !canInteractWithSelected;
+
+		if (cloneBtn) {
+			cloneBtn.title = movableSelectionCount > 1 ? 'Clone selected layers' : 'Clone selected layer';
+		}
+		if (deleteBtn) {
+			deleteBtn.title = movableSelectionCount > 1 ? 'Delete selected layers' : 'Delete selected layer';
+		}
 	}
 
 	cloneLayer(layerId) {
@@ -884,6 +984,207 @@ class LayerManager {
 
 		return clonedLayer;
 	}
+
+	buildClonedLayer(sourceLayer) {
+		if (!sourceLayer) return null;
+		if (sourceLayer.locked) {
+			this.editor.showError('Cannot clone locked layer');
+			return null;
+		}
+
+		if (sourceLayer.type === LayerType.STICKER) {
+			const sourceTransform = getLayerTransform(sourceLayer);
+			const clonedTransform = cloneTransform(sourceTransform, {
+				position: {
+					x: sourceTransform.position.x + 20,
+					y: sourceTransform.position.y + 20
+				}
+			});
+
+			return {
+				id: this.generateLayerId(),
+				type: LayerType.STICKER,
+				name: sourceLayer.name,
+				visible: sourceLayer.visible,
+				locked: false,
+				stickerSourceId: sourceLayer.stickerSourceId,
+				transform: clonedTransform,
+				stickerData: {
+					url: sourceLayer.stickerData.url,
+					name: sourceLayer.stickerData.name,
+					source: sourceLayer.stickerData.source,
+					width: sourceLayer.stickerData.width,
+					height: sourceLayer.stickerData.height,
+					isEmpty: sourceLayer.stickerData.isEmpty,
+					isAnimated: sourceLayer.stickerData.isAnimated,
+					frames: null,
+					transform: clonedTransform
+				}
+			};
+		}
+
+		if (sourceLayer.type === LayerType.TEXT_GLITTER) {
+			const clonedLayer = {
+				id: this.generateLayerId(),
+				type: LayerType.TEXT_GLITTER,
+				name: sourceLayer.name,
+				visible: sourceLayer.visible,
+				locked: false,
+				selectedGlitterId: sourceLayer.selectedGlitterId,
+				settings: { ...sourceLayer.settings },
+				textData: JSON.parse(JSON.stringify(sourceLayer.textData))
+			};
+			const transform = getLayerTransform(clonedLayer);
+			transform.position.x += 20;
+			transform.position.y += 20;
+			return clonedLayer;
+		}
+
+		if (sourceLayer.type === LayerType.SHAPE) {
+			const clonedLayer = {
+				id: this.generateLayerId(),
+				type: LayerType.SHAPE,
+				name: sourceLayer.name,
+				visible: sourceLayer.visible,
+				locked: false,
+				selectedGlitterId: sourceLayer.selectedGlitterId,
+				settings: { ...sourceLayer.settings },
+				shapeData: JSON.parse(JSON.stringify(sourceLayer.shapeData))
+			};
+			const transform = getLayerTransform(clonedLayer);
+			transform.position.x += 20;
+			transform.position.y += 20;
+			return clonedLayer;
+		}
+
+		const clonedLayer = {
+			id: this.generateLayerId(),
+			type: LayerType.GLITTER_FILL,
+			visible: sourceLayer.visible,
+			locked: false,
+			maskVersion: 0,
+			maskHasContent: false,
+			selections: sourceLayer.selections.map((sel) => ({ ...sel })),
+			selectedGlitterId: sourceLayer.selectedGlitterId,
+			settings: { ...sourceLayer.settings }
+		};
+
+		this.editor.glitterManager.clonePaintData(sourceLayer, clonedLayer);
+		return clonedLayer;
+	}
+
+	renderClonedLayerPreview(layer) {
+		if (!layer) return;
+
+		if (layer.type === LayerType.STICKER) {
+			this.editor.stickerManager?.renderLayer(layer);
+			return;
+		}
+
+		if (layer.type === LayerType.TEXT_GLITTER) {
+			this.editor.textGlitterManager?.renderLayer(layer);
+			return;
+		}
+
+		if (layer.type === LayerType.SHAPE) {
+			this.editor.shapeGlitterManager?.renderLayer(layer);
+			return;
+		}
+
+		if (layer.type === LayerType.GLITTER_FILL) {
+			this.editor.glitterManager?.renderLayer(
+				layer,
+				this.editor.previewCanvas?.width,
+				this.editor.previewCanvas?.height
+			);
+		}
+	}
+
+	cloneLayers(layerIds) {
+		const uniqueIds = [...new Set(layerIds)].filter((layerId) => this.layers.some((layer) => layer.id === layerId));
+		if (!uniqueIds.length) return null;
+		if (this.layers.length + uniqueIds.length > CONFIG.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+			return null;
+		}
+
+		const clones = [];
+		this.layers
+			.filter((layer) => uniqueIds.includes(layer.id))
+			.forEach((sourceLayer) => {
+				const clonedLayer = this.buildClonedLayer(sourceLayer);
+				if (!clonedLayer) return;
+				const sourceIndex = this.layers.findIndex((layer) => layer.id === sourceLayer.id);
+				this.layers.splice(sourceIndex + 1, 0, clonedLayer);
+				clones.push(clonedLayer);
+			});
+
+		if (!clones.length) return null;
+
+		clones.forEach((layer) => {
+			this.renderClonedLayerPreview(layer);
+		});
+
+		this.setSelection(clones.map((layer) => layer.id), {
+			activeLayerId: clones[clones.length - 1].id
+		});
+		this.renderLayersList();
+		this.reorderLayers();
+		this.editor.updatePreview();
+		this.editor.saveState();
+		this.editor.updateActionButtons();
+
+		return clones.length === 1 ? clones[0] : clones;
+	}
+
+	deleteLayers(layerIds) {
+		const uniqueIds = [...new Set(layerIds)].filter((layerId) => this.layers.some((layer) => layer.id === layerId));
+		if (!uniqueIds.length) return false;
+		if (this.layers.length - uniqueIds.length < 1) {
+			this.editor.showError('Cannot delete the last layer');
+			return false;
+		}
+
+		const removableLayers = uniqueIds
+			.map((layerId) => this.layers.find((layer) => layer.id === layerId))
+			.filter(Boolean);
+
+		if (removableLayers.some((layer) => layer.locked)) {
+			this.editor.showError('Cannot delete locked layer');
+			return false;
+		}
+
+		const fallbackIndex = Math.max(0, Math.min(
+			...removableLayers.map((layer) => this.layers.findIndex((entry) => entry.id === layer.id))
+		));
+
+		if (this.editor.currentTool === ToolType.BRUSH) {
+			removableLayers.forEach((layer) => {
+				this.editor.maskEditor?.handleLayerDeleted(layer.id);
+			});
+		}
+
+		removableLayers.forEach((layer) => {
+			const manager = getLayerManagerForType(this.editor, layer.type);
+			if (manager?.releaseLayerResources) {
+				manager.releaseLayerResources(layer);
+			} else if (manager?.removeLayerElement) {
+				manager.removeLayerElement(layer.id);
+			}
+		});
+
+		this.layers = this.layers.filter((layer) => !uniqueIds.includes(layer.id));
+		const nextLayer = this.layers[Math.min(fallbackIndex, this.layers.length - 1)] || null;
+		this.setSelection(nextLayer ? [nextLayer.id] : [], {
+			activeLayerId: nextLayer?.id || null
+		});
+		this.renderLayersList();
+		this.editor.saveState();
+		this.editor.updatePreview();
+		this.editor.updateActionButtons();
+		this.editor.updateStatus(uniqueIds.length > 1 ? 'Layers deleted' : 'Layer deleted');
+		return true;
+	}
 	createLayerElement(layer) {
 		const layerEl = document.createElement('div');
 		layerEl.className = 'layer-item';
@@ -894,6 +1195,9 @@ class LayerManager {
 			layerEl.draggable = true;
 		}
 
+		if (this.isLayerSelected(layer.id)) {
+			layerEl.classList.add('selected');
+		}
 		if (layer.id === this.activeLayerId) {
 			layerEl.classList.add('active');
 		}
@@ -1119,11 +1423,16 @@ class LayerManager {
 		}
 
 		layerEl.append(dragHandle, swatch, info, actions);
-		layerEl.onclick = () => {
+		layerEl.onclick = (event) => {
 			// Dispatch custom event for mobile manager
 			window.dispatchEvent(new CustomEvent('layerItemClick', {
 				detail: { layerId: layer.id }
 			}));
+
+			if (event.shiftKey && this.isLayerMultiSelectable(layer)) {
+				this.toggleLayerSelection(layer.id);
+				return;
+			}
 
 			this.setActiveLayer(layer.id);
 		};
@@ -1657,7 +1966,7 @@ class LayerManager {
 		[...this.layers].reverse().forEach(layer => {
 			const element = existingElements.get(layer.id);
 			if (element) {
-				// Update active state
+				element.classList.toggle('selected', this.isLayerSelected(layer.id));
 				element.classList.toggle('active', layer.id === this.activeLayerId);
 				fragment.appendChild(element);
 			}

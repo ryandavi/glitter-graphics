@@ -1,0 +1,685 @@
+class GroupTransformManager {
+	constructor(editor) {
+		this.editor = editor;
+		this.transformHandles = null;
+		this.activeHandleType = null;
+		this.activeHandleElement = null;
+		this.activeHandlePointerId = null;
+		this.dragStartState = null;
+		this.gestureInteractionActive = false;
+		this.gestureInteractionChanged = false;
+		this.isDraggingHandle = false;
+
+		this.handlePointerMove = this.handlePointerMove.bind(this);
+		this.handlePointerUp = this.handlePointerUp.bind(this);
+	}
+
+	normalizeRotation(angle) {
+		let next = angle % 360;
+		if (next < 0) next += 360;
+		return next;
+	}
+
+	getPointerAngle(bounds, event) {
+		const canvasPos = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+		return Math.atan2(canvasPos.y - bounds.centerY, canvasPos.x - bounds.centerX) * (180 / Math.PI);
+	}
+
+	applyLayerStateDelta(layerStates, bounds, options = {}) {
+		if (!Array.isArray(layerStates) || !bounds) return;
+
+		const translateX = options.translateX || 0;
+		const translateY = options.translateY || 0;
+		const scaleFactor = Math.max(0.1, Math.min(5, options.scaleFactor || 1));
+		const rotateDeg = options.rotateDeg || 0;
+		const rotateRad = (rotateDeg * Math.PI) / 180;
+		const cos = Math.cos(rotateRad);
+		const sin = Math.sin(rotateRad);
+
+		layerStates.forEach(({ transform, position, scale, rotation }) => {
+			const relativeX = position.x - bounds.centerX;
+			const relativeY = position.y - bounds.centerY;
+			const scaledX = relativeX * scaleFactor;
+			const scaledY = relativeY * scaleFactor;
+			const rotatedX = (scaledX * cos) - (scaledY * sin);
+			const rotatedY = (scaledX * sin) + (scaledY * cos);
+
+			transform.updateTransform({
+				position: {
+					x: bounds.centerX + rotatedX + translateX,
+					y: bounds.centerY + rotatedY + translateY
+				},
+				scale: {
+					x: Math.max(10, Math.min(500, scale.x * scaleFactor)),
+					y: Math.max(10, Math.min(500, scale.y * scaleFactor))
+				},
+				rotation: this.normalizeRotation(rotation + rotateDeg)
+			});
+		});
+	}
+
+	getSelectedLayers() {
+		return this.editor.layerManager.getSelectedLayers({ movableOnly: true });
+	}
+
+	isActive() {
+		return this.getSelectedLayers().length > 1;
+	}
+
+	getSelectedLayerIds() {
+		return this.getSelectedLayers().map((layer) => layer.id);
+	}
+
+	getLayerTransform(layer) {
+		const ctx = this.editor.getMovableLayerContext(layer);
+		return ctx?.manager?.layerTransforms?.get(layer.id) || null;
+	}
+
+	getLayerEntries() {
+		return this.getSelectedLayers()
+			.map((layer) => {
+				const transform = this.getLayerTransform(layer);
+				if (!transform) return null;
+				return { layer, transform };
+			})
+			.filter(Boolean);
+	}
+
+	getBounds() {
+		const entries = this.getLayerEntries();
+		if (entries.length < 2) {
+			return null;
+		}
+
+		let minX = Number.POSITIVE_INFINITY;
+		let minY = Number.POSITIVE_INFINITY;
+		let maxX = Number.NEGATIVE_INFINITY;
+		let maxY = Number.NEGATIVE_INFINITY;
+
+		entries.forEach(({ transform }) => {
+			const metrics = transform.getFrameMetrics();
+			minX = Math.min(minX, metrics.minX);
+			minY = Math.min(minY, metrics.minY);
+			maxX = Math.max(maxX, metrics.maxX);
+			maxY = Math.max(maxY, metrics.maxY);
+		});
+
+		return {
+			left: minX,
+			top: minY,
+			right: maxX,
+			bottom: maxY,
+			width: Math.max(1, maxX - minX),
+			height: Math.max(1, maxY - minY),
+			centerX: (minX + maxX) / 2,
+			centerY: (minY + maxY) / 2
+		};
+	}
+
+	containsCanvasPoint(x, y) {
+		const bounds = this.getBounds();
+		if (!bounds) return false;
+		return x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom;
+	}
+
+	containsScreenPoint(screenX, screenY) {
+		const point = this.editor.viewport.screenToCanvas(screenX, screenY);
+		return this.containsCanvasPoint(point.x, point.y);
+	}
+
+	handleMoveSelectionIntent(event) {
+		const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+		const x = Math.round(point.x);
+		const y = Math.round(point.y);
+
+		if (event.shiftKey || event.altKey) {
+			this.editor.layerManager.handleLayerPick(x, y, {
+				toggleSelection: Boolean(event.shiftKey),
+				cycleDeep: Boolean(event.altKey)
+			});
+			return true;
+		}
+
+		const topLayer = this.editor.layerManager.getTopVisibleLayerAtPoint(x, y, {
+			includeBase: false
+		});
+		if (topLayer && !this.editor.layerManager.isLayerSelected(topLayer.id)) {
+			this.editor.layerManager.setActiveLayer(topLayer.id);
+			return true;
+		}
+
+		return false;
+	}
+
+	getTopSelectedLayerAtCanvasPoint(x, y) {
+		return this.editor.layerManager.getLayersAtPoint(x, y, {
+			includeBase: false,
+			movableOnly: true
+		}).find((layer) => this.editor.layerManager.isLayerSelected(layer.id)) || null;
+	}
+
+	applyEntries(entries) {
+		entries.forEach(({ transform }) => {
+			transform.applyTransform(transform.element, transform.getDimensions());
+		});
+
+		this.updateHandlePositions();
+	}
+
+	ensureHistoryBaseline() {
+		const historyManager = this.editor.historyManager;
+		const snapshot = historyManager?.history?.[historyManager.historyIndex] || null;
+		if (!snapshot) {
+			this.editor.saveState();
+			return;
+		}
+
+		const currentSelectedIds = this.getSelectedLayerIds();
+		const snapshotSelectedIds = Array.isArray(snapshot.selectedLayerIds)
+			? snapshot.selectedLayerIds
+			: (snapshot.activeLayerId ? [snapshot.activeLayerId] : []);
+		const sameActive = snapshot.activeLayerId === this.editor.activeLayerId;
+		const sameSelection = snapshotSelectedIds.length === currentSelectedIds.length
+			&& snapshotSelectedIds.every((layerId) => currentSelectedIds.includes(layerId));
+
+		if (!sameActive || !sameSelection) {
+			this.editor.saveState();
+		}
+	}
+
+	beginGestureInteraction() {
+		if (!this.isActive() || this.gestureInteractionActive) {
+			return;
+		}
+
+		this.ensureHistoryBaseline();
+		this.gestureInteractionActive = true;
+		this.gestureInteractionChanged = false;
+	}
+
+	dragByScreenDelta(deltaX, deltaY) {
+		this.beginGestureInteraction();
+
+		const canvasDeltaX = deltaX / this.editor.viewport.currentZoom;
+		const canvasDeltaY = deltaY / this.editor.viewport.currentZoom;
+		const entries = this.getLayerEntries();
+		if (!entries.length) return;
+
+		entries.forEach(({ transform }) => {
+			const current = transform.getTransform();
+			transform.updateTransform({
+				position: {
+					x: current.position.x + canvasDeltaX,
+					y: current.position.y + canvasDeltaY
+				}
+			});
+		});
+
+		this.gestureInteractionChanged = true;
+		this.applyEntries(entries);
+	}
+
+	applyGestureDelta(gestureDelta) {
+		this.beginGestureInteraction();
+
+		const entries = this.getLayerEntries();
+		const bounds = this.getBounds();
+		if (!entries.length || !bounds) return;
+
+		const translateCanvasX = gestureDelta.translateX / this.editor.viewport.currentZoom;
+		const translateCanvasY = gestureDelta.translateY / this.editor.viewport.currentZoom;
+		const scaleFactor = Math.max(0.1, Math.min(5, gestureDelta.scale || 1));
+		const rotateDeg = gestureDelta.rotateDeg || 0;
+		const layerStates = entries.map(({ transform }) => {
+			const current = transform.getTransform();
+			return {
+				transform,
+				position: { ...current.position },
+				scale: { ...current.scale },
+				rotation: current.rotation || 0
+			};
+		});
+
+		this.applyLayerStateDelta(layerStates, bounds, {
+			translateX: translateCanvasX,
+			translateY: translateCanvasY,
+			scaleFactor,
+			rotateDeg
+		});
+
+		this.gestureInteractionChanged = true;
+		this.applyEntries(layerStates);
+	}
+
+	async commitScaledLayers() {
+		for (const layer of this.getSelectedLayers()) {
+			if (layer.type === LayerType.TEXT_GLITTER) {
+				await this.editor.textGlitterManager?.commitScaleToFontSize?.(layer);
+				continue;
+			}
+
+			if (layer.type === LayerType.SHAPE) {
+				this.editor.shapeGlitterManager?.commitScale(layer);
+			}
+		}
+	}
+
+	async endGestureInteraction() {
+		if (!this.gestureInteractionActive) {
+			return;
+		}
+
+		if (this.gestureInteractionChanged) {
+			await this.commitScaledLayers();
+			this.editor.saveState();
+			this.editor.syncTransformHandlesForActiveLayer?.();
+		}
+
+		this.gestureInteractionActive = false;
+		this.gestureInteractionChanged = false;
+	}
+
+	alignToCanvas(mode) {
+		const bounds = this.getBounds();
+		if (!bounds || !this.editor.originalCanvas) return;
+
+		let deltaX = 0;
+		let deltaY = 0;
+
+		switch (mode) {
+			case 'centerX':
+				deltaX = (this.editor.originalCanvas.width / 2) - bounds.centerX;
+				break;
+			case 'centerY':
+				deltaY = (this.editor.originalCanvas.height / 2) - bounds.centerY;
+				break;
+			default:
+				return;
+		}
+
+		this.translateByCanvasDelta(deltaX, deltaY, { saveState: true });
+	}
+
+	translateByCanvasDelta(deltaX, deltaY, options = {}) {
+		const entries = this.getLayerEntries();
+		if (!entries.length) return;
+		this.ensureHistoryBaseline();
+
+		entries.forEach(({ transform }) => {
+			const current = transform.getTransform();
+			transform.updateTransform({
+				position: {
+					x: current.position.x + deltaX,
+					y: current.position.y + deltaY
+				}
+			});
+		});
+
+		this.applyEntries(entries);
+
+		if (options.saveState) {
+			this.editor.saveState();
+		}
+	}
+
+	nudge(deltaX, deltaY) {
+		this.translateByCanvasDelta(deltaX, deltaY);
+	}
+
+	createTransformHandles() {
+		if (!CONFIG.stickerHandles.enabled || this.editor.currentTool !== ToolType.SELECT || !this.isActive()) {
+			return;
+		}
+
+		this.removeTransformHandles();
+
+		const container = document.createElement('div');
+		container.className = 'transform-handles group-transform-handles';
+		container.dataset.layerId = 'group-selection';
+
+		const boundingBox = document.createElement('div');
+		boundingBox.className = 'transform-bounding-box';
+		boundingBox.dataset.handleType = 'move';
+		container.appendChild(boundingBox);
+
+		['tl', 'tr', 'br', 'bl'].forEach((corner) => {
+			const wrapper = document.createElement('div');
+			wrapper.className = 'transform-handle-wrapper';
+			wrapper.dataset.handleType = `corner-${corner}`;
+
+			const handle = document.createElement('div');
+			handle.className = `transform-handle transform-handle-corner corner-${corner}`;
+
+			wrapper.appendChild(handle);
+			container.appendChild(wrapper);
+		});
+
+		const rotationLine = document.createElement('div');
+		rotationLine.className = 'transform-rotation-line';
+		container.appendChild(rotationLine);
+
+		const rotationWrapper = document.createElement('div');
+		rotationWrapper.className = 'transform-handle-wrapper';
+		rotationWrapper.dataset.handleType = 'rotation';
+
+		const rotationHandle = document.createElement('div');
+		rotationHandle.className = 'transform-handle transform-handle-rotation';
+
+		rotationWrapper.appendChild(rotationHandle);
+		container.appendChild(rotationWrapper);
+
+		this.editor.canvasElementsContainer.appendChild(container);
+		this.transformHandles = container;
+		this.updateHandlePositions();
+		this.attachHandleListeners();
+	}
+
+	updateHandlePositions() {
+		if (!this.transformHandles) return;
+
+		const bounds = this.getBounds();
+		if (!bounds) {
+			this.removeTransformHandles();
+			return;
+		}
+
+		const boundingBox = this.transformHandles.querySelector('.transform-bounding-box');
+		if (boundingBox) {
+			boundingBox.style.cssText = `
+				position: absolute;
+				left: ${bounds.left}px;
+				top: ${bounds.top}px;
+				width: ${bounds.width}px;
+				height: ${bounds.height}px;
+				pointer-events: auto;
+				cursor: move;
+			`;
+		}
+
+		const corners = {
+			tl: { x: bounds.left, y: bounds.top },
+			tr: { x: bounds.right, y: bounds.top },
+			br: { x: bounds.right, y: bounds.bottom },
+			bl: { x: bounds.left, y: bounds.bottom }
+		};
+
+		Object.entries(corners).forEach(([corner, point]) => {
+			const wrapper = this.transformHandles.querySelector(`[data-handle-type="corner-${corner}"]`);
+			if (!wrapper) return;
+
+			wrapper.style.cssText = `
+				position: absolute;
+				left: ${point.x}px;
+				top: ${point.y}px;
+				transform: translate(-50%, -50%);
+			`;
+			wrapper.style.cursor = corner === 'tl' || corner === 'br' ? 'nwse-resize' : 'nesw-resize';
+		});
+
+		const rotationDistance = CONFIG.stickerHandles.rotationHandleDistance;
+		const topCenterX = bounds.centerX;
+		const topCenterY = bounds.top - rotationDistance;
+		const rotationWrapper = this.transformHandles.querySelector('[data-handle-type="rotation"]');
+		if (rotationWrapper) {
+			rotationWrapper.style.cssText = `
+				position: absolute;
+				left: ${topCenterX}px;
+				top: ${topCenterY}px;
+				transform: translate(-50%, -50%);
+				cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='white' stroke='black' stroke-width='1' d='M12 3v4m0 10v4M3 12h4m10 0h4M6.34 6.34l2.83 2.83m5.66 5.66l2.83 2.83M6.34 17.66l2.83-2.83m5.66-5.66l2.83-2.83'/%3E%3C/svg%3E") 12 12, auto;
+			`;
+		}
+
+		const rotationLine = this.transformHandles.querySelector('.transform-rotation-line');
+		if (rotationLine) {
+			rotationLine.style.cssText = `
+				position: absolute;
+				left: ${bounds.centerX}px;
+				top: ${bounds.top}px;
+				width: ${CONFIG.stickerHandles.boundingBoxWidth}px;
+				height: ${rotationDistance}px;
+				transform: translate(-50%, 0);
+				transform-origin: top center;
+				pointer-events: none;
+			`;
+		}
+	}
+
+	removeTransformHandles() {
+		if (this.transformHandles?.parentNode) {
+			this.transformHandles.parentNode.removeChild(this.transformHandles);
+		}
+
+		document.querySelectorAll('.group-transform-handles').forEach((element) => {
+			if (element.parentNode) {
+				element.parentNode.removeChild(element);
+			}
+		});
+
+		this.transformHandles = null;
+		this.activeHandleType = null;
+		this.activeHandleElement = null;
+		this.activeHandlePointerId = null;
+		this.dragStartState = null;
+		this.isDraggingHandle = false;
+	}
+
+	attachHandleListeners() {
+		if (!this.transformHandles) return;
+
+		this.transformHandles.querySelectorAll('[data-handle-type]').forEach((handle) => {
+			const handleType = handle.dataset.handleType;
+
+			handle.addEventListener('pointerdown', (event) => {
+				if (event.pointerType === 'mouse' && event.button !== 0) {
+					return;
+				}
+
+				if (handleType === 'move' && this.handleMoveSelectionIntent(event)) {
+					return;
+				}
+
+				event.preventDefault();
+				event.stopPropagation();
+				event.stopImmediatePropagation();
+
+				const bounds = this.getBounds();
+				const layerStates = this.getLayerEntries().map(({ layer, transform }) => ({
+					layer,
+					transform,
+					position: { ...transform.getTransform().position },
+					scale: { ...transform.getTransform().scale },
+					rotation: transform.getTransform().rotation || 0
+				}));
+				this.ensureHistoryBaseline();
+
+				this.activeHandleType = handleType;
+				this.activeHandleElement = handle;
+				this.activeHandlePointerId = event.pointerId;
+				this.isDraggingHandle = true;
+				handle.setPointerCapture?.(event.pointerId);
+
+				this.dragStartState = {
+					canvasX: this.editor.viewport.screenToCanvas(event.clientX, event.clientY).x,
+					canvasY: this.editor.viewport.screenToCanvas(event.clientX, event.clientY).y,
+					bounds,
+					layerStates,
+					startAngle: handleType === 'rotation'
+						? this.getPointerAngle(bounds, event)
+						: null,
+					lockedAxis: null,
+					didMove: false,
+					selectionCandidateId: handleType === 'move'
+						? this.getTopSelectedLayerAtCanvasPoint(
+							Math.round(this.editor.viewport.screenToCanvas(event.clientX, event.clientY).x),
+							Math.round(this.editor.viewport.screenToCanvas(event.clientX, event.clientY).y)
+						)?.id || null
+						: null
+				};
+			});
+
+			handle.addEventListener('pointermove', this.handlePointerMove);
+			handle.addEventListener('pointerup', this.handlePointerUp);
+			handle.addEventListener('pointercancel', this.handlePointerUp);
+
+			if (handleType === 'move') {
+				handle.addEventListener('click', (event) => {
+					if (event.shiftKey || event.altKey) {
+						return;
+					}
+
+					const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+					const selectedLayer = this.getTopSelectedLayerAtCanvasPoint(
+						Math.round(point.x),
+						Math.round(point.y)
+					);
+					if (!selectedLayer) {
+						return;
+					}
+
+					event.preventDefault();
+					event.stopPropagation();
+					this.editor.layerManager.setActiveLayer(selectedLayer.id);
+				});
+			}
+		});
+	}
+
+	handlePointerMove(event) {
+		if (
+			!this.activeHandleType ||
+			!this.dragStartState ||
+			event.pointerId !== this.activeHandlePointerId
+		) {
+			return;
+		}
+
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (this.activeHandleType === 'move') {
+			this.handleMoveDrag(event);
+			return;
+		}
+
+		if (this.activeHandleType.startsWith('corner-')) {
+			this.handleCornerDrag(event);
+			return;
+		}
+
+		if (this.activeHandleType === 'rotation') {
+			this.handleRotationDrag(event);
+		}
+	}
+
+	async handlePointerUp(event) {
+		if (event.pointerId !== this.activeHandlePointerId) {
+			return;
+		}
+
+		const shouldSingleSelect = this.activeHandleType === 'move'
+			&& this.dragStartState?.selectionCandidateId
+			&& !this.dragStartState?.didMove;
+
+		if (shouldSingleSelect) {
+			event.preventDefault();
+			event.stopPropagation();
+			this.editor.layerManager.setActiveLayer(this.dragStartState.selectionCandidateId);
+		}
+
+		if (this.isDraggingHandle) {
+			event.preventDefault();
+			event.stopPropagation();
+			this.isDraggingHandle = false;
+			if (!shouldSingleSelect && this.dragStartState?.didMove) {
+				await this.commitScaledLayers();
+				this.editor.saveState();
+				this.editor.syncTransformHandlesForActiveLayer?.();
+			}
+
+			if (event.pointerType === 'mouse') {
+				this.editor.ignoreNextClick = true;
+				setTimeout(() => {
+					this.editor.ignoreNextClick = false;
+				}, 150);
+			}
+		}
+
+		this.activeHandleElement?.releasePointerCapture?.(event.pointerId);
+		this.activeHandleType = null;
+		this.activeHandleElement = null;
+		this.activeHandlePointerId = null;
+		this.dragStartState = null;
+	}
+
+	handleMoveDrag(event) {
+		const canvasPos = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+		const deltaX = canvasPos.x - this.dragStartState.canvasX;
+		const deltaY = canvasPos.y - this.dragStartState.canvasY;
+		if (!this.dragStartState.didMove && Math.hypot(deltaX, deltaY) < 3) {
+			return;
+		}
+
+		this.dragStartState.didMove = true;
+		this.dragStartState.selectionCandidateId = null;
+		const axis = event.shiftKey
+			? (this.dragStartState.lockedAxis || (Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y'))
+			: null;
+
+		this.dragStartState.lockedAxis = axis;
+
+		const nextDeltaX = axis === 'y' ? 0 : deltaX;
+		const nextDeltaY = axis === 'x' ? 0 : deltaY;
+
+		this.dragStartState.layerStates.forEach(({ transform, position }) => {
+			transform.updateTransform({
+				position: {
+					x: position.x + nextDeltaX,
+					y: position.y + nextDeltaY
+				}
+			});
+		});
+
+		this.applyEntries(this.dragStartState.layerStates);
+	}
+
+	handleCornerDrag(event) {
+		const canvasPos = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+		const bounds = this.dragStartState.bounds;
+		if (!bounds) return;
+
+		const halfWidth = Math.max(1, bounds.width / 2);
+		const halfHeight = Math.max(1, bounds.height / 2);
+		const scaleX = Math.abs(canvasPos.x - bounds.centerX) / halfWidth;
+		const scaleY = Math.abs(canvasPos.y - bounds.centerY) / halfHeight;
+		const scaleFactor = Math.max(0.1, Math.min(5, Math.max(scaleX, scaleY)));
+		if (!this.dragStartState.didMove && Math.abs(scaleFactor - 1) < 0.01) {
+			return;
+		}
+
+		this.dragStartState.didMove = true;
+		this.applyLayerStateDelta(this.dragStartState.layerStates, bounds, { scaleFactor });
+
+		this.applyEntries(this.dragStartState.layerStates);
+	}
+
+	handleRotationDrag(event) {
+		const bounds = this.dragStartState?.bounds;
+		if (!bounds) return;
+
+		const currentAngle = this.getPointerAngle(bounds, event);
+		let rotateDeg = currentAngle - (this.dragStartState.startAngle || 0);
+		if (rotateDeg > 180) rotateDeg -= 360;
+		if (rotateDeg < -180) rotateDeg += 360;
+		if (event.shiftKey) {
+			rotateDeg = Math.round(rotateDeg / 15) * 15;
+		}
+		if (!this.dragStartState.didMove && Math.abs(rotateDeg) < 0.5) {
+			return;
+		}
+
+		this.dragStartState.didMove = true;
+		this.applyLayerStateDelta(this.dragStartState.layerStates, bounds, { rotateDeg });
+		this.applyEntries(this.dragStartState.layerStates);
+	}
+}

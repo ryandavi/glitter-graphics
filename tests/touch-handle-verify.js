@@ -274,6 +274,17 @@ async function selectLayer(page, layerId) {
 	await closeMobileChrome(page);
 }
 
+async function selectLayers(page, layerIds, activeLayerId = layerIds[layerIds.length - 1]) {
+	await page.evaluate(({ ids, activeId }) => {
+		window.editor.layerManager.setSelection(ids, { activeLayerId: activeId });
+	}, {
+		ids: layerIds,
+		activeId: activeLayerId
+	});
+	await page.waitForTimeout(120);
+	await closeMobileChrome(page);
+}
+
 async function getStickerState(page, layerId) {
 	return page.evaluate((activeLayerId) => {
 		const layer = window.editor.layerManager.layers.find((entry) => entry.id === activeLayerId);
@@ -437,6 +448,34 @@ async function checkFixedTextEdgeResizeHandle(page, drag, label) {
 	);
 }
 
+async function checkGroupMoveHandle(page, drag, label) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+
+	const firstSticker = await createTestSticker(page, { position: { x: 90, y: 90 }, label: 'Group Handle A' });
+	const secondSticker = await createTestSticker(page, { position: { x: 165, y: 110 }, label: 'Group Handle B' });
+	await selectLayers(page, [firstSticker.layerId, secondSticker.layerId], secondSticker.layerId);
+
+	const beforeFirst = await getStickerState(page, firstSticker.layerId);
+	const beforeSecond = await getStickerState(page, secondSticker.layerId);
+	const handleCenter = await getElementCenter(page, '.group-transform-handles .transform-bounding-box');
+
+	await drag(page, handleCenter, { x: handleCenter.x + 42, y: handleCenter.y + 24 });
+
+	const afterFirst = await getStickerState(page, firstSticker.layerId);
+	const afterSecond = await getStickerState(page, secondSticker.layerId);
+	assert(
+		Math.abs(afterFirst.position.x - beforeFirst.position.x) > 10 &&
+		Math.abs(afterFirst.position.y - beforeFirst.position.y) > 5,
+		`${label}: group move handle drag did not move sticker A enough`
+	);
+	assert(
+		Math.abs(afterSecond.position.x - beforeSecond.position.x) > 10 &&
+		Math.abs(afterSecond.position.y - beforeSecond.position.y) > 5,
+		`${label}: group move handle drag did not move sticker B enough`
+	);
+}
+
 async function runCheck(browser, name, fn) {
 	const tracker = await createHarnessPage(browser);
 
@@ -463,6 +502,7 @@ async function main() {
 			['Touch drag on rotation handle rotates the selected sticker', (page) => checkRotationHandle(page, oneFingerDrag, 'touch')],
 			['Touch drag on corner handle scales the selected sticker', (page) => checkCornerScaleHandle(page, oneFingerDrag, 'touch')],
 			['Touch drag on fixed-text edge handle resizes the box', (page) => checkFixedTextEdgeResizeHandle(page, oneFingerDrag, 'touch')],
+			['Touch drag on the shared group box moves every selected sticker', (page) => checkGroupMoveHandle(page, oneFingerDrag, 'touch')],
 			['Mouse drag on rotation handle still rotates the selected sticker', (page) => checkRotationHandle(page, mouseDrag, 'mouse')],
 			['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
 			['Mouse drag on fixed-text edge handle still resizes the box', (page) => checkFixedTextEdgeResizeHandle(page, mouseDrag, 'mouse')]

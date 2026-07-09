@@ -10,6 +10,7 @@ class HistoryManager {
 		return {
 			layers: this.editor.layers.map((layer) => this.editor.layerManager.serializeLayer(layer)),
 			activeLayerId: this.editor.activeLayerId,
+			selectedLayerIds: [...(this.editor.selectedLayerIds || [])],
 			// Canvas dimensions + base-image pixels, so a Canvas Size / crop resize
 			// is undoable. originalImageData/originalAlphaChannel are REPLACE-ONLY
 			// (never mutated in place — see GlitterEditor.resizeCanvas / loadImage),
@@ -70,7 +71,7 @@ class HistoryManager {
 		}
 
 		this.editor.glitterManager?.restorePaintState(this.editor.layers);
-		this.editor.activeLayerId = state.activeLayerId;
+		this.editor.layerManager.restoreSelectionState(state.activeLayerId, state.selectedLayerIds);
 
 		this.editor.layerManager.renderLayersList();
 		this.editor.updatePreview();

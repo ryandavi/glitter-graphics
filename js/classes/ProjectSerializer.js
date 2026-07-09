@@ -83,7 +83,7 @@ class ProjectSerializer {
 		await this.restoreMasks(migrated.masks || {});
 
 		const activeLayer = this.editor.layers.find((layer) => layer.id === migrated.activeLayerId);
-		this.editor.activeLayerId = activeLayer ? activeLayer.id : null;
+		this.editor.layerManager.restoreSelectionState(activeLayer ? activeLayer.id : null);
 		this.editor.setProjectName(migrated.name || '', { markDirty: false });
 		this.editor.historyManager.reset(this.editor.historyManager.createStateSnapshot());
 		this.editor.isSaved = true;

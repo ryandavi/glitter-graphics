@@ -35,6 +35,7 @@ class GlitterEditor {
 		// CONTENT & LAYERS
 		// ============================================================================
 		this.content = [];
+		this.selectedLayerIds = new Set();
 
 		// ============================================================================
 		// TOOL & HISTORY
@@ -85,6 +86,7 @@ class GlitterEditor {
 		this.glitterManager = new GlitterManager(this);
 		this.textGlitterManager = new TextGlitterManager(this);
 		this.shapeGlitterManager = new ShapeGlitterManager(this);
+		this.groupTransformManager = new GroupTransformManager(this);
 		this.mobileManager = new MobileManager(this);
 		this.maskCompositor = new MaskCompositor(this);
 		this.maskEditor = new MaskEditor(this);
@@ -532,6 +534,8 @@ async resetAllSettings() {
 	}
 
 	updateSidePanelUI(layer) {
+		const hasMultiSelection = this.layerManager?.hasMultiSelection?.() ?? false;
+
 		// 1. Define ALL possible sections to hide them first
 		const allSections = [
 			'welcomeSection',
@@ -561,7 +565,7 @@ async resetAllSettings() {
 		let config;
 		if (!this.originalImage) {
 			config = LAYER_UI_CONFIG.NO_IMAGE;
-		} else if (!layer) {
+		} else if (hasMultiSelection || !layer) {
 			config = LAYER_UI_CONFIG.NO_LAYER;
 		} else {
 			config = LAYER_UI_CONFIG[layer.type];
@@ -585,6 +589,8 @@ async resetAllSettings() {
 			this.syncCollapsibleSections(this.getPreferredDesignSection(layer));
 		}
 
+		this.syncNoLayerPanelState();
+
 		// D-1c: keep the gallery picker strip in sync when the active layer
 		// changes to any type (a non-text layer must hide the strip). The shape
 		// manager drives it for shape layers, the text manager for text layers;
@@ -594,7 +600,7 @@ async resetAllSettings() {
 
 		// The Canvas Size preview only makes sense in the no-layer state; drop it
 		// whenever a layer is selected or there's no image.
-		if (layer || !this.originalImage) {
+		if (layer || hasMultiSelection || !this.originalImage) {
 			this.hideCanvasResizePreview();
 		}
 	}
@@ -633,7 +639,7 @@ async resetAllSettings() {
 			return 'designGallery';
 		}
 
-		if (!this.originalImage || !layer || layer.type === LayerType.BASE_IMAGE) {
+		if (!this.originalImage || this.layerManager?.hasMultiSelection?.() || !layer || layer.type === LayerType.BASE_IMAGE) {
 			return 'designGallery';
 		}
 
@@ -754,6 +760,31 @@ async resetAllSettings() {
 		const controls = document.getElementById('stickerSettingsControls');
 		if (empty) empty.classList.remove('visible');
 		if (controls) controls.classList.add('visible');
+	}
+
+	syncNoLayerPanelState() {
+		const selectedMovableLayers = this.layerManager?.getMultiSelectedMovableLayers?.() || [];
+		const multiCount = selectedMovableLayers.length;
+		const defaultGroups = document.getElementById('noLayerDefaultGroups');
+		const multiGroup = document.getElementById('multiLayerSelectionGroup');
+		const emptyText = document.getElementById('noLayerEmptyText');
+		const emptySubtext = document.getElementById('noLayerEmptySubtext');
+		const countLabel = document.getElementById('multiLayerSelectionCount');
+
+		if (multiCount > 1) {
+			if (defaultGroups) defaultGroups.hidden = true;
+			if (multiGroup) multiGroup.hidden = false;
+			if (emptyText) emptyText.textContent = `${multiCount} layers selected`;
+			if (emptySubtext) emptySubtext.textContent = 'Drag the shared box on the canvas to move them, or use the quick actions below.';
+			if (countLabel) countLabel.textContent = `${multiCount} movable layers`;
+			return;
+		}
+
+		if (defaultGroups) defaultGroups.hidden = false;
+		if (multiGroup) multiGroup.hidden = true;
+		if (emptyText) emptyText.textContent = 'Canvas';
+		if (emptySubtext) emptySubtext.textContent = 'Select a layer to edit it, or add new content below.';
+		if (countLabel) countLabel.textContent = '';
 	}
 
 	collapseStickerSettings() {
@@ -931,6 +962,8 @@ async resetAllSettings() {
 
 
 	loadActiveLayerSettings() {
+		if (this.layerManager.hasMultiSelection()) return;
+
 		const layer = this.layerManager.getActiveLayer();
 		if (!layer) return;
 
@@ -1513,6 +1546,11 @@ async resetAllSettings() {
 		const centerLayerVertical = document.getElementById('centerLayerVertical');
 
 		const center = (axis) => {
+			if (this.layerManager.hasMultiSelection()) {
+				this.groupTransformManager?.alignToCanvas(axis === 'centerHorizontal' ? 'centerX' : 'centerY');
+				return;
+			}
+
 			const layer = this.layerManager.getActiveLayer();
 			const ctx = this.getMovableLayerContext(layer);
 			if (ctx?.manager?.[axis]) ctx.manager[axis](layer.id);
@@ -1524,6 +1562,44 @@ async resetAllSettings() {
 		if (centerLayerVertical) {
 			centerLayerVertical.addEventListener('click', () => center('centerVertical'));
 		}
+	}
+
+	getSelectedActionableLayers() {
+		return this.layerManager.getSelectedLayers().filter((layer) => layer.type !== LayerType.BASE_IMAGE);
+	}
+
+	cloneSelectedLayers() {
+		const selectedLayers = this.getSelectedActionableLayers();
+		if (!selectedLayers.length) return null;
+
+		if (selectedLayers.length > 1) {
+			return this.layerManager.cloneLayers(selectedLayers.map((layer) => layer.id));
+		}
+
+		return this.layerManager.cloneLayer(selectedLayers[0].id);
+	}
+
+	async deleteSelectedLayers() {
+		const selectedLayers = this.getSelectedActionableLayers();
+		if (!selectedLayers.length) return false;
+
+		const isPlural = selectedLayers.length > 1;
+		const confirmed = await this.confirmAction({
+			title: isPlural ? 'Delete Layers' : 'Delete Layer',
+			message: isPlural
+				? 'These layers and everything on them will be permanently removed.'
+				: 'This layer and everything on it will be permanently removed.',
+			confirmLabel: 'Delete'
+		});
+		if (!confirmed) {
+			return false;
+		}
+
+		if (isPlural) {
+			return this.layerManager.deleteLayers(selectedLayers.map((layer) => layer.id));
+		}
+
+		return this.layerManager.deleteLayer(selectedLayers[0].id);
 	}
 
 	setupColorPickerContextListeners() {
@@ -2182,8 +2258,19 @@ async resetAllSettings() {
 			this.stickerManager.removeTransformHandles();
 			this.textGlitterManager.removeTransformHandles();
 			this.shapeGlitterManager?.removeTransformHandles();
+			this.groupTransformManager?.removeTransformHandles();
 			return;
 		}
+
+		if (this.layerManager.hasMultiSelection()) {
+			this.stickerManager.removeTransformHandles();
+			this.textGlitterManager.removeTransformHandles();
+			this.shapeGlitterManager?.removeTransformHandles();
+			this.groupTransformManager?.createTransformHandles();
+			return;
+		}
+
+		this.groupTransformManager?.removeTransformHandles();
 
 		if (activeLayer.type === LayerType.STICKER) {
 			this.stickerManager.createTransformHandles(activeLayer.id);
@@ -3189,25 +3276,42 @@ setupWelcomeModalListeners() {
 
 		if (layersBarCloneSelected) {
 			layersBarCloneSelected.addEventListener('click', () => {
-				const selectedLayer = this.layerManager.getActiveLayer();
-				if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
-				this.layerManager.cloneLayer(selectedLayer.id);
+				this.cloneSelectedLayers();
 			});
 		}
 
 		if (layersBarDeleteSelected) {
 			layersBarDeleteSelected.addEventListener('click', async () => {
-				const selectedLayer = this.layerManager.getActiveLayer();
-				if (!selectedLayer || selectedLayer.type === LayerType.BASE_IMAGE) return;
+				await this.deleteSelectedLayers();
+			});
+		}
 
-				const confirmed = await this.confirmAction({
-					title: 'Delete Layer',
-					message: 'This layer and everything on it will be permanently removed.',
-					confirmLabel: 'Delete'
-				});
-				if (confirmed) {
-					this.layerManager.deleteLayer(selectedLayer.id);
-				}
+		const multiDuplicateBtn = document.getElementById('multiSelectionDuplicateBtn');
+		const multiDeleteBtn = document.getElementById('multiSelectionDeleteBtn');
+		const multiCenterHorizontalBtn = document.getElementById('multiSelectionCenterHorizontalBtn');
+		const multiCenterVerticalBtn = document.getElementById('multiSelectionCenterVerticalBtn');
+
+		if (multiDuplicateBtn) {
+			multiDuplicateBtn.addEventListener('click', () => {
+				this.cloneSelectedLayers();
+			});
+		}
+
+		if (multiDeleteBtn) {
+			multiDeleteBtn.addEventListener('click', async () => {
+				await this.deleteSelectedLayers();
+			});
+		}
+
+		if (multiCenterHorizontalBtn) {
+			multiCenterHorizontalBtn.addEventListener('click', () => {
+				this.groupTransformManager?.alignToCanvas('centerX');
+			});
+		}
+
+		if (multiCenterVerticalBtn) {
+			multiCenterVerticalBtn.addEventListener('click', () => {
+				this.groupTransformManager?.alignToCanvas('centerY');
 			});
 		}
 	}
@@ -3698,7 +3802,9 @@ setupWelcomeModalListeners() {
 			panControls.classList.add('visible');
 		} else if (this.currentTool === ToolType.SELECT && layerCenterControls) {
 			// Center H/V bar is shared by every movable layer type.
-			if (layer && layer.type === LayerType.STICKER) {
+			if (this.layerManager.hasMultiSelection()) {
+				layerCenterControls.classList.add('visible');
+			} else if (layer && layer.type === LayerType.STICKER) {
 				if (layer.stickerSourceId) {
 					// Has a sticker selected - show controls
 					this.hideStickerSettingsEmptyState();
@@ -4146,31 +4252,23 @@ setupWelcomeModalListeners() {
 
 		// Delete or Backspace: Delete selected layer
 		if (e.key === 'Delete' || e.key === 'Backspace') {
-			const selectedLayer = this.layerManager.getActiveLayer();
+			const selectedLayers = this.getSelectedActionableLayers();
 
 			// Only delete if a layer is selected and it's not the base image
-			if (selectedLayer && selectedLayer.type !== LayerType.BASE_IMAGE) {
+			if (selectedLayers.length) {
 				e.preventDefault(); // Prevent browser back navigation on Backspace
 
-				this.confirmAction({
-					title: 'Delete Layer',
-					message: 'This layer and everything on it will be permanently removed.',
-					confirmLabel: 'Delete'
-				}).then((confirmed) => {
-					if (confirmed) {
-						this.layerManager.deleteLayer(selectedLayer.id);
-					}
-				});
+				this.deleteSelectedLayers();
 			}
 			return;
 		}
 
 		// Ctrl/Cmd+D: duplicate the selected layer
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {
-			const selectedLayer = this.layerManager.getActiveLayer();
-			if (selectedLayer && selectedLayer.type !== LayerType.BASE_IMAGE) {
+			const selectedLayers = this.getSelectedActionableLayers();
+			if (selectedLayers.length) {
 				e.preventDefault(); // Prevent the browser's "bookmark this page" dialog
-				this.layerManager.cloneLayer(selectedLayer.id);
+				this.cloneSelectedLayers();
 			}
 			return;
 		}
@@ -4221,10 +4319,11 @@ setupWelcomeModalListeners() {
 		if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown' &&
 			e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return false;
 
+		const hasMultiSelection = this.layerManager.hasMultiSelection();
 		const layer = this.layerManager.getActiveLayer();
 		const ctx = this.getMovableLayerContext(layer);
 		const transform = this.getLayerTransformData(layer);
-		if (!ctx || !ctx.manager || !transform) return false;
+		if (!hasMultiSelection && (!ctx || !ctx.manager || !transform)) return false;
 
 		// Only override input focus for the text layer's own content field —
 		// leave unrelated inputs (search boxes, numeric fields) to their carets.
@@ -4241,14 +4340,18 @@ setupWelcomeModalListeners() {
 		const deltaX = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
 		const deltaY = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
 
-		ctx.manager.updateTransform(layer.id, {
-			position: {
-				x: transform.position.x + deltaX,
-				y: transform.position.y + deltaY
-			}
-		});
+		if (hasMultiSelection) {
+			this.groupTransformManager?.nudge(deltaX, deltaY);
+		} else {
+			ctx.manager.updateTransform(layer.id, {
+				position: {
+					x: transform.position.x + deltaX,
+					y: transform.position.y + deltaY
+				}
+			});
 
-		this.loadTransformSettings(layer, ctx.prefix);
+			this.loadTransformSettings(layer, ctx.prefix);
+		}
 		this.scheduleNudgeSave();
 		return true;
 	}
@@ -5103,9 +5206,12 @@ setupWelcomeModalListeners() {
 		switch (tool) {
 			case ToolType.SELECT:
 				if (hitCanvas) {
-					this.handleLayerSelectAction(x, y);
+					this.handleLayerSelectAction(x, y, {
+						toggleSelection: Boolean(event?.shiftKey),
+						cycleDeep: Boolean(event?.altKey)
+					});
 				} else {
-					this.layerManager.setActiveLayer(null);
+					this.layerManager.clearSelection();
 				}
 				break;
 
@@ -5185,8 +5291,9 @@ setupWelcomeModalListeners() {
 		}
 
 		// 1. IGNORE TRANSFORM HANDLES
-		if (e.target.closest('.transform-handles') ||
-			e.target.classList.contains('transform-bounding-box')) return;
+		const clickedGroupBoundingBox = e.target.closest('.group-transform-handles .transform-bounding-box');
+		if ((e.target.closest('.transform-handles') ||
+			e.target.classList.contains('transform-bounding-box')) && !clickedGroupBoundingBox) return;
 
 		// 2. IGNORE UI ELEMENTS
 		if (e.target.closest('.ui-ignore-gestures')) {
@@ -5247,7 +5354,13 @@ setupWelcomeModalListeners() {
 		const isWorkspace = e.target === this.previewContainer || e.target === this.previewWrapper || hitImageArea;
 		if (!isWorkspace) return;
 
-		if (this.currentTool === ToolType.SELECT && hitTransformableOverlay) return;
+		if (
+			this.currentTool === ToolType.SELECT &&
+			hitTransformableOverlay &&
+			!this.layerManager.hasMultiSelection() &&
+			!e.shiftKey &&
+			!e.altKey
+		) return;
 
 		this.handleWorkspaceAction(e.clientX, e.clientY, {
 			tool: this.currentTool,
@@ -5348,11 +5461,11 @@ setupWelcomeModalListeners() {
 		}
 	}
 
-	handleLayerSelectAction(x, y) {
+	handleLayerSelectAction(x, y, options = {}) {
 		if (this.currentTool !== ToolType.SELECT) return;
 		if (!CONFIG.autoSelect || this.justCompletedDrag) return;
 
-		this.layerManager.handleLayerPick(x, y);
+		this.layerManager.handleLayerPick(x, y, options);
 	}
 
 	handleZoomAction(clientX, clientY, options = {}) {
