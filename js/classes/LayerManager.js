@@ -1548,24 +1548,26 @@ class LayerManager {
 			existingElements.set(el.dataset.layerId, el);
 		});
 
-		// Reorder them to match layers array
-		const fragment = document.createDocumentFragment();
+		const transformHandleNodes = Array.from(container.children).filter(el => el.classList.contains('transform-handles'));
+		const layerElements = Array.from(container.children).filter(el => el.matches(ALL_LAYER_ELEMENT_SELECTOR));
 
+		layerElements.forEach(el => el.remove());
+
+		// Reorder them to match layers array.
+		const fragment = document.createDocumentFragment();
 		this.layers.forEach(layer => {
 			const el = existingElements.get(layer.id);
 			if (el) {
-				// =======================================================
-				// THE FIX:
-				// Remove the conditional check. Update the z-index for 
-				// every element (glitter or sticker) found.
-				// =======================================================
 				el.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
-
 				fragment.appendChild(el);
 			}
 		});
 
-		container.innerHTML = '';
 		container.appendChild(fragment);
+		transformHandleNodes.forEach(el => {
+			if (el.parentNode) {
+				container.appendChild(el);
+			}
+		});
 	}
 }
