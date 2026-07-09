@@ -17,7 +17,7 @@ class GlitterManager extends ContentManager {
 		this.paintHistory = new Map();
 		this.paintHistoryBytes = 0;
 		this.paintHistoryByteLimit = Math.max(
-			CONFIG.maxImageWidth * CONFIG.maxImageHeight * 2 * CONFIG.historyLimit * 2,
+			CONFIG.canvas.limits.maxWidth * CONFIG.canvas.limits.maxHeight * 2 * CONFIG.app.limits.historyLimit * 2,
 			64 * 1024 * 1024
 		);
 		this.nextPaintVersion = 1;
@@ -111,8 +111,8 @@ async initBrowser() {
 
 
 	createLayer() {
-		if (this.editor.layerManager.layers.length >= CONFIG.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+		if (this.editor.layerManager.layers.length >= CONFIG.app.limits.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
 			return null;
 		}
 
@@ -124,12 +124,12 @@ async initBrowser() {
 			maskVersion: 0,
 			maskHasContent: false,
 			selections: [],
-			selectedGlitterId: CONFIG.defaultFillGlitterId,
+			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
 			settings: {
-				threshold: CONFIG.defaultThreshold,
-				feather: CONFIG.defaultFeather,
-				scale: CONFIG.defaultScale,
-				opacity: CONFIG.defaultOpacity,
+				threshold: CONFIG.tools.selection.defaults.threshold,
+				feather: CONFIG.tools.selection.defaults.feather,
+				scale: CONFIG.tools.effects.defaults.scale,
+				opacity: CONFIG.tools.effects.defaults.opacity,
 				contiguous: false,
 				invert: false,
 				multiSelect: false
@@ -716,13 +716,13 @@ async initBrowser() {
 				if (mask[i] === 255) continue;
 
 				if (sel.isTransparent) {
-					if (alphaChannel[i] < CONFIG.alphaThreshold) {
+					if (alphaChannel[i] < CONFIG.tools.selection.transparency.alphaThreshold) {
 						mask[i] = 255;
 					}
 					continue;
 				}
 
-				if (alphaChannel[i] < CONFIG.alphaThreshold) continue;
+				if (alphaChannel[i] < CONFIG.tools.selection.transparency.alphaThreshold) continue;
 
 				const idx = i * 4;
 				const r = data[idx];
@@ -766,7 +766,7 @@ async initBrowser() {
 
 		if (layer.settings.invert) {
 			for (let i = 0; i < len; i++) {
-				if (alphaChannel[i] >= CONFIG.alphaThreshold) {
+				if (alphaChannel[i] >= CONFIG.tools.selection.transparency.alphaThreshold) {
 					mask[i] = 255 - mask[i];
 				}
 			}
@@ -1171,10 +1171,10 @@ async initBrowser() {
 			// If we are looking for transparency vs looking for a specific color
 			if (targetColor.isTransparent) {
 				// Match only if the current pixel is also transparent
-				isMatch = (alpha < CONFIG.alphaThreshold);
+				isMatch = (alpha < CONFIG.tools.selection.transparency.alphaThreshold);
 			} else {
 				// Match only if the current pixel is OPAQUE and the color is within the threshold
-				isMatch = (alpha >= CONFIG.alphaThreshold &&
+				isMatch = (alpha >= CONFIG.tools.selection.transparency.alphaThreshold &&
 					this.colorDistanceSq(r, g, b, targetColor.r, targetColor.g, targetColor.b) <= thresholdSq);
 			}
 
@@ -1250,3 +1250,4 @@ async initBrowser() {
 		return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
 	}
 }
+

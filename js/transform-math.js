@@ -1,5 +1,5 @@
 function cloneTransform(transform = null, overrides = {}) {
-	const source = transform || CONFIG.defaultTransform || {};
+	const source = transform || CONFIG.tools.stickers.defaults.transform || {};
 	return {
 		position: {
 			x: overrides.position?.x ?? source.position?.x ?? 0,
@@ -18,7 +18,7 @@ function cloneTransform(transform = null, overrides = {}) {
 }
 
 function createDefaultTransform(overrides = {}) {
-	return cloneTransform(CONFIG.defaultTransform, overrides);
+	return cloneTransform(CONFIG.tools.stickers.defaults.transform, overrides);
 }
 
 function getLegacyTransformHost(layer) {
@@ -77,3 +77,4 @@ function computeLayerTransform(transform, dimensions = {}) {
 		flipY: Boolean(resolved.flipY)
 	};
 }
+

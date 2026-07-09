@@ -319,3 +319,4 @@ setupModalListeners(config) {
 		return null;
 	}
 }
+

@@ -165,8 +165,8 @@ updateTransform(updates) {
         const newX = updates.position.x ?? transform.position.x;
         const newY = updates.position.y ?? transform.position.y;
 
-        transform.position.x = CONFIG.roundStickerTransforms ? Math.round(newX) : newX;
-        transform.position.y = CONFIG.roundStickerTransforms ? Math.round(newY) : newY;
+        transform.position.x = CONFIG.tools.stickers.transform.roundValues ? Math.round(newX) : newX;
+        transform.position.y = CONFIG.tools.stickers.transform.roundValues ? Math.round(newY) : newY;
     }
 
     if (updates.scale) {
@@ -180,7 +180,7 @@ updateTransform(updates) {
 
     if (updates.rotation !== undefined) {
         // Normalize rotation to 0-360 range
-        let newRotation = CONFIG.roundStickerTransforms ? Math.round(updates.rotation) : updates.rotation;
+        let newRotation = CONFIG.tools.stickers.transform.roundValues ? Math.round(updates.rotation) : updates.rotation;
         newRotation = newRotation % 360;
         if (newRotation < 0) newRotation += 360;
         transform.rotation = newRotation;
@@ -566,7 +566,7 @@ const handleMouseMove = (e) => {
     
     // CRITICAL FIX: Ensure handles exist before trying to update them
     // If they don't exist yet (first drag after selection), create them
-    if (!this.transformHandles && this.editor.currentTool === ToolType.SELECT && CONFIG.stickerHandles.enabled) {
+    if (!this.transformHandles && this.editor.currentTool === ToolType.SELECT && CONFIG.ui.stickerHandles.enabled) {
         dbg('✅ Creating handles on first mousemove');
         this.createTransformHandles();
     }
@@ -694,11 +694,11 @@ const handleMouseMove = (e) => {
 
     /**
      * Create visual transform handles for desktop interaction
-     * Only works when CONFIG.stickerHandles.enabled is true
+     * Only works when CONFIG.ui.stickerHandles.enabled is true
      */
 createTransformHandles() {
     // Check if handles are enabled
-    if (!CONFIG.stickerHandles.enabled) return;
+    if (!CONFIG.ui.stickerHandles.enabled) return;
     
     // Only create handles in SELECT tool mode
     if (this.editor.currentTool !== ToolType.SELECT) return;
@@ -804,7 +804,7 @@ createTransformHandles() {
 
         const transform = this.getTransform();
         const frame = this.getHandleFrame();
-        const config = CONFIG.stickerHandles;
+        const config = CONFIG.ui.stickerHandles;
 
         // Calculate display dimensions
         const displayWidth = frame.width * (transform.scale.x / 100);
@@ -1352,3 +1352,4 @@ removeTransformHandles() {
         this.element = null;
     }
 }
+

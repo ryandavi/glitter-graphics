@@ -11,7 +11,7 @@ class ViewportManager {
 
 		// Zoom state
 		this.currentZoom = 1;
-		this.currentZoomIndex = CONFIG.zoomLevels.indexOf(1);
+		this.currentZoomIndex = CONFIG.ui.zoom.levels.indexOf(1);
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3; // Fallback
 
 		// Pan state
@@ -153,13 +153,13 @@ class ViewportManager {
 
 		// 5. Update the Zoom Level
 		this.currentZoom = Math.max(
-			CONFIG.zoomLevels[0],
-			Math.min(CONFIG.zoomLevels[CONFIG.zoomLevels.length - 1], newZoom)
+			CONFIG.ui.zoom.levels[0],
+			Math.min(CONFIG.ui.zoom.levels[CONFIG.ui.zoom.levels.length - 1], newZoom)
 		);
 
 		// Update index for UI
 		let closestDiff = Number.MAX_VALUE;
-		CONFIG.zoomLevels.forEach((z, i) => {
+		CONFIG.ui.zoom.levels.forEach((z, i) => {
 			const diff = Math.abs(this.currentZoom - z);
 			if (diff < closestDiff) {
 				closestDiff = diff;
@@ -178,8 +178,8 @@ class ViewportManager {
 	}
 
 	zoomIn(clickX = null, clickY = null) {
-		if (this.currentZoomIndex < CONFIG.zoomLevels.length - 1) {
-			this.setZoom(CONFIG.zoomLevels[this.currentZoomIndex + 1], clickX, clickY);
+		if (this.currentZoomIndex < CONFIG.ui.zoom.levels.length - 1) {
+			this.setZoom(CONFIG.ui.zoom.levels[this.currentZoomIndex + 1], clickX, clickY);
 		} else {
 			const nextZoom = this.currentZoom * 1.5;
 			this.setZoom(nextZoom, clickX, clickY);
@@ -188,7 +188,7 @@ class ViewportManager {
 
 	zoomOut(clickX = null, clickY = null) {
 		if (this.currentZoomIndex > 0) {
-			this.setZoom(CONFIG.zoomLevels[this.currentZoomIndex - 1], clickX, clickY);
+			this.setZoom(CONFIG.ui.zoom.levels[this.currentZoomIndex - 1], clickX, clickY);
 		} else {
 			const nextZoom = this.currentZoom / 1.5;
 			this.setZoom(nextZoom, clickX, clickY);
@@ -209,7 +209,7 @@ class ViewportManager {
 		this.currentZoom = fitZoom;
 
 		// Update zoom index
-		this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= fitZoom);
+		this.currentZoomIndex = CONFIG.ui.zoom.levels.findIndex(z => z >= fitZoom);
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = 0;
 
 		// Center the canvas
@@ -234,8 +234,8 @@ class ViewportManager {
 		this.currentZoom = fillZoom;
 
 		// Update zoom index
-		this.currentZoomIndex = CONFIG.zoomLevels.findIndex(z => z >= fillZoom);
-		if (this.currentZoomIndex === -1) this.currentZoomIndex = CONFIG.zoomLevels.length - 1;
+		this.currentZoomIndex = CONFIG.ui.zoom.levels.findIndex(z => z >= fillZoom);
+		if (this.currentZoomIndex === -1) this.currentZoomIndex = CONFIG.ui.zoom.levels.length - 1;
 
 		// Center the canvas
 		this.panX = (containerRect.width - (this.canvasWidth * fillZoom)) / 2;
@@ -252,7 +252,7 @@ class ViewportManager {
 		const containerRect = this.previewContainer.getBoundingClientRect();
 
 		this.currentZoom = 1;
-		this.currentZoomIndex = CONFIG.zoomLevels.indexOf(1);
+		this.currentZoomIndex = CONFIG.ui.zoom.levels.indexOf(1);
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3;
 
 		// Center the canvas
@@ -296,7 +296,7 @@ class ViewportManager {
 		this.lastViewportHeight = containerRect.height;
 
 		this.currentZoom = 1;
-		this.currentZoomIndex = CONFIG.zoomLevels.indexOf(1);
+		this.currentZoomIndex = CONFIG.ui.zoom.levels.indexOf(1);
 		if (this.currentZoomIndex === -1) this.currentZoomIndex = 3;
 
 		// Center the canvas
@@ -395,8 +395,8 @@ class ViewportManager {
 		const canvasY = (anchorY - this.panY) / this.currentZoom;
 
 		let newZoom = this.currentZoom * scale;
-		const minZoom = CONFIG.zoomLevels[0];
-		const maxZoom = CONFIG.zoomLevels[CONFIG.zoomLevels.length - 1];
+		const minZoom = CONFIG.ui.zoom.levels[0];
+		const maxZoom = CONFIG.ui.zoom.levels[CONFIG.ui.zoom.levels.length - 1];
 		newZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
 
 		this.panX = anchorX - (canvasX * newZoom);
@@ -419,11 +419,11 @@ class ViewportManager {
 	}
 
 	startInertia(velocityX, velocityY) {
-		if (!CONFIG.gestures.inertia?.enabled) {
+		if (!CONFIG.ui.gestures.inertia?.enabled) {
 			return;
 		}
 
-		const decay = CONFIG.gestures.inertia.decay ?? 0.92;
+		const decay = CONFIG.ui.gestures.inertia.decay ?? 0.92;
 		this.cancelInertia();
 
 		this.inertiaVelocityX = velocityX;
@@ -504,8 +504,8 @@ class ViewportManager {
 
 			// CALCULATIONS
 			// Divide by zoom to keep them visually consistent on screen
-			const scaledOffset = CONFIG.selectedGlitterOffset; //  / this.currentZoom;
-			const scaledTotal = Math.max(scaledOffset + 1, (CONFIG.selectedGlitterOffset + CONFIG.selectedGlitterWidth) / this.currentZoom);
+			const scaledOffset = CONFIG.tools.glitter.preview.selectedOutlineOffset; //  / this.currentZoom;
+			const scaledTotal = Math.max(scaledOffset + 1, (CONFIG.tools.glitter.preview.selectedOutlineOffset + CONFIG.tools.glitter.preview.selectedOutlineWidth) / this.currentZoom);
 
 			if (inner) inner.setAttribute('radius', scaledOffset);
 			if (outer) outer.setAttribute('radius', scaledTotal);
@@ -546,3 +546,4 @@ class ViewportManager {
 		}));
 	}
 }
+

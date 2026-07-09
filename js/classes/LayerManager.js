@@ -279,7 +279,7 @@ class LayerManager {
 
 		// On mobile, open design panel for gallery-driven layer types (not Shape -
 		// see LAYER_UI_CONFIG[type].autoOpenDesignDrawerOnCreate).
-		if (this.editor.mobileManager && this.editor.mobileManager.isMobile && CONFIG.mobileOpenDrawOnLayerAdd) {
+		if (this.editor.mobileManager && this.editor.mobileManager.isMobile && CONFIG.ui.mobile.openDrawOnLayerAdd) {
 			if (cfg.autoOpenDesignDrawerOnCreate) {
 				this.editor.mobileManager.toggleDrawer('design');
 			}
@@ -785,12 +785,12 @@ class LayerManager {
 		// Update add button states
 		const addLayerBtn = document.getElementById('addLayerBtn');
 		if (addLayerBtn) {
-			addLayerBtn.disabled = this.layers.length >= CONFIG.maxLayers;
+			addLayerBtn.disabled = this.layers.length >= CONFIG.app.limits.maxLayers;
 		}
 
 		const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
 		if (mobileAddBtn) {
-			mobileAddBtn.disabled = this.layers.length >= CONFIG.maxLayers;
+			mobileAddBtn.disabled = this.layers.length >= CONFIG.app.limits.maxLayers;
 		}
 
 		// Update mobile swatch
@@ -826,7 +826,7 @@ class LayerManager {
 
 	updateBottomBarButtons() {
 		const selectedLayers = this.getSelectedLayers();
-		const canAddLayers = this.layers.length < CONFIG.maxLayers;
+		const canAddLayers = this.layers.length < CONFIG.app.limits.maxLayers;
 		const canInteractWithSelected = selectedLayers.length > 0
 			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE);
 		const hasSingleSelection = selectedLayers.length === 1;
@@ -868,8 +868,8 @@ class LayerManager {
 		}
 
 		// Check max layers
-		if (this.layers.length >= CONFIG.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+		if (this.layers.length >= CONFIG.app.limits.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
 			return null;
 		}
 
@@ -1103,8 +1103,8 @@ class LayerManager {
 	cloneLayers(layerIds) {
 		const uniqueIds = [...new Set(layerIds)].filter((layerId) => this.layers.some((layer) => layer.id === layerId));
 		if (!uniqueIds.length) return null;
-		if (this.layers.length + uniqueIds.length > CONFIG.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+		if (this.layers.length + uniqueIds.length > CONFIG.app.limits.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
 			return null;
 		}
 
@@ -1757,8 +1757,8 @@ class LayerManager {
 		if (!this.draggedLayerId) return;
 
 		const rect = this.layersListContainer.getBoundingClientRect();
-		const scrollZone = CONFIG.scrollZoneSize;
-		const scrollSpeed = CONFIG.scrollSpeed;
+		const scrollZone = CONFIG.layers.reorder.autoScroll.zoneSize;
+		const scrollSpeed = CONFIG.layers.reorder.autoScroll.speed;
 
 		const mouseY = event.clientY - rect.top;
 		const listHeight = rect.height;
@@ -2011,3 +2011,4 @@ class LayerManager {
 		});
 	}
 }
+

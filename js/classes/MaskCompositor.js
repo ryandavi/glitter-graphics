@@ -186,7 +186,7 @@ class MaskCompositor {
 		const alphaChannel = this.editor.originalAlphaChannel;
 
 		for (let i = 0; i < width * height; i++) {
-			if (alphaChannel[i] >= CONFIG.alphaThreshold) {
+			if (alphaChannel[i] >= CONFIG.tools.selection.transparency.alphaThreshold) {
 				imageData.data[i * 4 + 3] = 255 - imageData.data[i * 4 + 3];
 			} else {
 				imageData.data[i * 4 + 3] = 0;
@@ -223,3 +223,4 @@ class MaskCompositor {
 		return canvas;
 	}
 }
+

@@ -35,3 +35,4 @@ function resolveEffectPaintSource(effectData, options = {}) {
 		opacity: opacity / 100
 	};
 }
+

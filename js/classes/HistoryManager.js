@@ -1,5 +1,5 @@
 class HistoryManager {
-	constructor(editor, limit = CONFIG.historyLimit) {
+	constructor(editor, limit = CONFIG.app.limits.historyLimit) {
 		this.editor = editor;
 		this.limit = limit;
 		this.history = [];
@@ -153,3 +153,4 @@ class HistoryManager {
 		}
 	}
 }
+

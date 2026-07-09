@@ -96,6 +96,8 @@ class TextGlitterManager {
 			borderScaleValue: document.getElementById('textBorderScaleValue'),
 			borderOpacity: document.getElementById('textBorderOpacity'),
 			borderOpacityValue: document.getElementById('textBorderOpacityValue'),
+			borderEdgeRounded: document.getElementById('textBorderEdgeRounded'),
+			borderEdgeHard: document.getElementById('textBorderEdgeHard'),
 			borderPositionOutside: document.getElementById('textBorderPositionOutside'),
 			borderPositionCenter: document.getElementById('textBorderPositionCenter'),
 			borderPositionInside: document.getElementById('textBorderPositionInside'),
@@ -141,6 +143,12 @@ class TextGlitterManager {
 				this.ui[`${slot}${axis}Value`] = document.getElementById(`text${slotCap}${axis}Value`);
 			});
 		});
+
+		const borderConfig = CONFIG.tools.text.border || {};
+		if (this.ui.borderWidth) {
+			this.ui.borderWidth.min = String(borderConfig.minWidthPx ?? 1);
+			this.ui.borderWidth.max = String(borderConfig.maxWidthPx ?? 24);
+		}
 	}
 
 	// colorAdjust lives on the effect data (border/shadow) or on layer.settings
@@ -159,7 +167,7 @@ class TextGlitterManager {
 				const layer = this.getActiveTextLayer();
 				if (!layer) return;
 
-				const value = this.ui.textInput.value.slice(0, CONFIG.textLayers.maxTextLength);
+				const value = this.ui.textInput.value.slice(0, CONFIG.tools.text.maxTextLength);
 				if (value !== this.ui.textInput.value) {
 					this.ui.textInput.value = value;
 				}
@@ -199,15 +207,15 @@ class TextGlitterManager {
 
 		this.attachSlider(this.ui.fontSize, this.ui.fontSizeValue, 'px', (value, layer) => {
 			layer.textData.fontSize = value;
-		}, CONFIG.textLayers.defaultFontSize);
+		}, CONFIG.tools.text.defaultFontSize);
 
 		this.attachSlider(this.ui.letterSpacing, this.ui.letterSpacingValue, 'px', (value, layer) => {
 			layer.textData.letterSpacing = value;
-		}, CONFIG.textLayers.defaultLetterSpacing);
+		}, CONFIG.tools.text.defaultLetterSpacing);
 
 		this.attachSlider(this.ui.lineHeight, this.ui.lineHeightValue, '%', (value, layer) => {
 			layer.textData.lineHeight = value / 100;
-		}, Math.round(CONFIG.textLayers.lineHeight * 100));
+		}, Math.round(CONFIG.tools.text.lineHeight * 100));
 
 		if (this.ui.fillGlitterChip || this.ui.fillGlitterChange) {
 			[this.ui.fillGlitterChip, this.ui.fillGlitterChange].filter(Boolean).forEach((button) => {
@@ -230,11 +238,11 @@ class TextGlitterManager {
 
 		this.attachSlider(this.ui.textureScale, this.ui.textureScaleValue, '%', (value, layer) => {
 			layer.settings.scale = value;
-		}, CONFIG.defaultScale, false);
+		}, CONFIG.tools.effects.defaults.scale, false);
 
 		this.attachSlider(this.ui.textureOpacity, this.ui.textureOpacityValue, '%', (value, layer) => {
 			layer.settings.opacity = value;
-		}, CONFIG.defaultOpacity, false);
+		}, CONFIG.tools.effects.defaults.opacity, false);
 
 		this.ui.alignButtons.forEach((button) => {
 			button.addEventListener('click', async () => {
@@ -350,6 +358,8 @@ class TextGlitterManager {
 		this.bindBorderPlacement(this.ui.borderPositionOutside, 'outside');
 		this.bindBorderPlacement(this.ui.borderPositionCenter, 'center');
 		this.bindBorderPlacement(this.ui.borderPositionInside, 'inside');
+		this.bindBorderEdgeStyle(this.ui.borderEdgeRounded, 'round');
+		this.bindBorderEdgeStyle(this.ui.borderEdgeHard, 'hard');
 		this.bindBorderOrder(this.ui.borderOrderBehind, 'behind');
 		this.bindBorderOrder(this.ui.borderOrderFront, 'front');
 
@@ -526,31 +536,34 @@ class TextGlitterManager {
 	}
 
 	getDefaultBorder() {
+		const borderConfig = CONFIG.tools.text.border || {};
 		return {
-			widthPx: 4,
+			widthPx: borderConfig.defaultWidthPx ?? 4,
 			// `mode` is UI intent (which display + segmented state); the actual
 			// paint/export still derive from glitterId truthiness, so this is
 			// additive and parity-safe. Legacy data without `mode` falls back to
 			// glitterId (see effectUsesGlitter). Effects default to GLITTER using
 			// the per-effect default id so the slot shows a real glitter (not the
 			// "No glitter selected" solid placeholder) the moment it's enabled.
-			mode: 'glitter',
-			glitterId: CONFIG.defaultBorderGlitterId,
-			color: CONFIG.defaultBorderColor,
-			placement: 'outside',
-			drawOrder: 'behind',
+			mode: borderConfig.defaultSource ?? 'glitter',
+			glitterId: CONFIG.tools.glitter.defaults.borderGlitterId,
+			color: CONFIG.tools.glitter.defaults.borderColor,
+			placement: borderConfig.defaultPlacement ?? 'outside',
+			edgeStyle: borderConfig.defaultEdgeStyle ?? 'round',
+			drawOrder: borderConfig.defaultDrawOrder ?? 'behind',
 			scale: 100,
 			opacity: 100
 		};
 	}
 
 	getDefaultShadow() {
+		const shadowConfig = CONFIG.tools.text.shadow || {};
 		return {
-			offsetX: 6,
-			offsetY: 6,
+			offsetX: shadowConfig.defaultOffsetX ?? 6,
+			offsetY: shadowConfig.defaultOffsetY ?? 6,
 			mode: 'glitter',
-			glitterId: CONFIG.defaultShadowGlitterId,
-			color: CONFIG.defaultShadowColor,
+			glitterId: CONFIG.tools.glitter.defaults.shadowGlitterId,
+			color: CONFIG.tools.glitter.defaults.shadowColor,
 			scale: 100,
 			opacity: 100
 		};
@@ -562,12 +575,12 @@ class TextGlitterManager {
 	getDefaultFill() {
 		return {
 			mode: 'glitter',
-			color: CONFIG.defaultFillColor
+			color: CONFIG.tools.glitter.defaults.fillColor
 		};
 	}
 
 	getMinBoxSize() {
-		return Math.max(1, Math.round(CONFIG.textLayers.minBoxSize || 40));
+		return Math.max(1, Math.round(CONFIG.tools.text.minBoxSize || 40));
 	}
 
 	normalizeLayer(layer) {
@@ -592,13 +605,13 @@ class TextGlitterManager {
 			layer.textData.fill = this.getDefaultFill();
 		}
 		if (!layer.textData.boxMode) {
-			layer.textData.boxMode = CONFIG.textLayers.defaultBoxMode || 'auto';
+			layer.textData.boxMode = CONFIG.tools.text.defaultBoxMode || 'auto';
 		}
 		if (!layer.textData.verticalAlign) {
-			layer.textData.verticalAlign = CONFIG.textLayers.defaultVerticalAlign || 'top';
+			layer.textData.verticalAlign = CONFIG.tools.text.defaultVerticalAlign || 'top';
 		}
 		if (!layer.textData.lineHeight) {
-			layer.textData.lineHeight = CONFIG.textLayers.lineHeight;
+			layer.textData.lineHeight = CONFIG.tools.text.lineHeight;
 		}
 	}
 
@@ -895,6 +908,25 @@ class TextGlitterManager {
 		});
 	}
 
+	bindBorderEdgeStyle(button, edgeStyle) {
+		if (!button) return;
+
+		button.addEventListener('click', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+			const border = this.ensureEffectData(layer, 'border');
+			if (this.getBorderEdgeStyle(border) === edgeStyle) return;
+
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					this.ensureEffectData(layer, 'border').edgeStyle = edgeStyle;
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		});
+	}
+
 	bindBorderOrder(button, drawOrder) {
 		if (!button) return;
 
@@ -1071,7 +1103,7 @@ class TextGlitterManager {
 		}
 
 		this.fontManifestPromise = (async () => {
-			const response = await fetch(CONFIG.textLayers.fontsManifest);
+			const response = await fetch(CONFIG.tools.text.fontsManifest);
 			if (!response.ok) {
 				throw new Error(`Failed to load fonts manifest (${response.status})`);
 			}
@@ -1160,7 +1192,7 @@ class TextGlitterManager {
 	}
 
 	getFontById(fontId) {
-		return this.fontsById.get(fontId) || this.fontsById.get(CONFIG.textLayers.defaultFontId) || null;
+		return this.fontsById.get(fontId) || this.fontsById.get(CONFIG.tools.text.defaultFontId) || null;
 	}
 
 	getFontFamily(font) {
@@ -1201,7 +1233,7 @@ class TextGlitterManager {
 
 				await face.load();
 				document.fonts.add(face);
-				await document.fonts.load(this.getFontDeclaration(font, CONFIG.textLayers.defaultFontSize), 'Hg');
+				await document.fonts.load(this.getFontDeclaration(font, CONFIG.tools.text.defaultFontSize), 'Hg');
 				this.fontFaces.set(font.id, face);
 				return face;
 			} catch (error) {
@@ -1241,12 +1273,12 @@ class TextGlitterManager {
 	}
 
 	createLayer(options = {}) {
-		if (this.editor.layerManager.layers.length >= CONFIG.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+		if (this.editor.layerManager.layers.length >= CONFIG.app.limits.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
 			return null;
 		}
 
-		const defaultText = options.text ?? CONFIG.textLayers.defaultText;
+		const defaultText = options.text ?? CONFIG.tools.text.defaultText;
 		const initialPosition = options.position || {
 			x: this.editor.originalCanvas.width / 2,
 			y: this.editor.originalCanvas.height / 2
@@ -1264,20 +1296,20 @@ class TextGlitterManager {
 			name: this.getLayerName(defaultText),
 			visible: true,
 			locked: false,
-			selectedGlitterId: CONFIG.defaultFillGlitterId,
+			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
 			settings: {
-				scale: CONFIG.defaultScale,
-				opacity: CONFIG.defaultOpacity
+				scale: CONFIG.tools.effects.defaults.scale,
+				opacity: CONFIG.tools.effects.defaults.opacity
 			},
 			textData: {
 				text: defaultText,
-				fontId: CONFIG.textLayers.defaultFontId,
-				fontSize: CONFIG.textLayers.defaultFontSize,
-				letterSpacing: CONFIG.textLayers.defaultLetterSpacing,
-				lineHeight: CONFIG.textLayers.lineHeight,
+				fontId: CONFIG.tools.text.defaultFontId,
+				fontSize: CONFIG.tools.text.defaultFontSize,
+				letterSpacing: CONFIG.tools.text.defaultLetterSpacing,
+				lineHeight: CONFIG.tools.text.lineHeight,
 				align: initialAlign,
-				verticalAlign: CONFIG.textLayers.defaultVerticalAlign || 'top',
-				boxMode: options.boxMode || CONFIG.textLayers.defaultBoxMode || 'auto',
+				verticalAlign: CONFIG.tools.text.defaultVerticalAlign || 'top',
+				boxMode: options.boxMode || CONFIG.tools.text.defaultBoxMode || 'auto',
 				width: 0,
 				height: 0,
 				border: null,
@@ -1324,7 +1356,7 @@ class TextGlitterManager {
 		}
 
 		if (this.ui.lineHeight && this.ui.lineHeightValue) {
-			const lineHeightPercent = Math.round((layer.textData.lineHeight || CONFIG.textLayers.lineHeight) * 100);
+			const lineHeightPercent = Math.round((layer.textData.lineHeight || CONFIG.tools.text.lineHeight) * 100);
 			this.ui.lineHeight.value = lineHeightPercent;
 			this.ui.lineHeightValue.innerHTML = formatUnit(lineHeightPercent, '%');
 		}
@@ -1525,7 +1557,7 @@ class TextGlitterManager {
 		const usesSolid = fillData.mode === 'solid';
 		// Glitter mode is never empty — fall back to the default glitter.
 		if (usesGlitter && !layer.selectedGlitterId) {
-			layer.selectedGlitterId = CONFIG.defaultFillGlitterId;
+			layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId;
 		}
 		const glitter = usesGlitter
 			? this.editor.glitterManager?.getItemById(layer?.selectedGlitterId)
@@ -1601,6 +1633,10 @@ class TextGlitterManager {
 				: 'outside';
 	}
 
+	getBorderEdgeStyle(borderData) {
+		return borderData?.edgeStyle === 'hard' ? 'hard' : 'round';
+	}
+
 	getBorderDrawOrder(borderData) {
 		return borderData?.drawOrder === 'front' ? 'front' : 'behind';
 	}
@@ -1619,8 +1655,11 @@ class TextGlitterManager {
 
 	syncBorderOptionUI(borderData) {
 		const placement = this.getBorderPlacement(borderData);
+		const edgeStyle = this.getBorderEdgeStyle(borderData);
 		const drawOrder = this.getBorderDrawOrder(borderData);
 
+		this.ui.borderEdgeRounded?.classList.toggle('active', edgeStyle === 'round');
+		this.ui.borderEdgeHard?.classList.toggle('active', edgeStyle === 'hard');
 		this.ui.borderPositionOutside?.classList.toggle('active', placement === 'outside');
 		this.ui.borderPositionCenter?.classList.toggle('active', placement === 'center');
 		this.ui.borderPositionInside?.classList.toggle('active', placement === 'inside');
@@ -1900,7 +1939,7 @@ class TextGlitterManager {
 			} catch (error) {
 				this.reportFontLoadError(error);
 			}
-		}, CONFIG.sliderDebounceMs);
+		}, CONFIG.tools.selection.timing.sliderDebounceMs);
 	}
 
 	getCacheKeyForLayer(layer) {
@@ -1926,7 +1965,7 @@ class TextGlitterManager {
 			textData.border ? [textData.border.widthPx, this.getBorderPlacement(textData.border)] : null,
 			textData.shadow ? textData.shadow.offsetX : null,
 			textData.shadow ? textData.shadow.offsetY : null,
-			CONFIG.textLayers.crispEdges !== false
+			CONFIG.rendering?.crispMaskEdges !== false
 		]);
 	}
 
@@ -1944,7 +1983,7 @@ class TextGlitterManager {
 		const font = this.getFontById(layer.textData.fontId);
 		const ctx = this.measureCtx;
 		const lines = String(layer.textData.text || '').split('\n');
-		const padding = CONFIG.textLayers.maskPadding;
+		const padding = CONFIG.rendering?.maskPaddingPx ?? 8;
 		const fontSize = layer.textData.fontSize;
 		const letterSpacing = layer.textData.letterSpacing;
 		const lineHeightPx = fontSize * layer.textData.lineHeight;
@@ -2077,7 +2116,7 @@ class TextGlitterManager {
 			maskCtx.restore();
 		}
 
-		if (CONFIG.textLayers.crispEdges !== false) {
+		if (CONFIG.rendering?.crispMaskEdges !== false) {
 			// Hard pixel edges (editor aesthetic, MASK-FEATURE-PLAN decision 5).
 			// Also load-bearing for export: fillText antialiasing leaves partial-alpha
 			// edge pixels that composite over the GIF transparency key (magenta) and
@@ -2395,6 +2434,7 @@ class TextGlitterManager {
 
 				const transform = this.layerTransforms.get(layer.id);
 				if (transform) {
+					transform.layer = layer;
 					transform.element = wrapper;
 					transform.applyTransform(wrapper, {
 						width: layer.textData.width,
@@ -2558,7 +2598,8 @@ class TextGlitterManager {
 	getBorderMaskCanvas(layer, measurement, borderData = this.getEffectData(layer, 'border')) {
 		const widthPx = Math.max(0, borderData?.widthPx || 0);
 		const placement = this.getBorderPlacement(borderData);
-		const cacheKey = `border:${widthPx}:${placement}`;
+		const edgeStyle = this.getBorderEdgeStyle(borderData);
+		const cacheKey = `border:${widthPx}:${placement}:${edgeStyle}`;
 
 		if (measurement._borderMaskCache?.key === cacheKey) {
 			return { canvas: measurement._borderMaskCache.canvas, cacheKey: `${measurement.key}|${cacheKey}` };
@@ -2571,16 +2612,16 @@ class TextGlitterManager {
 			if (placement === 'inside') {
 				canvas = this.createMaskDifferenceCanvas(
 					fillMask,
-					this.createErodedMaskCanvas(fillMask, widthPx)
+					this.createErodedMaskCanvas(fillMask, widthPx, edgeStyle)
 				);
 			} else if (placement === 'center') {
 				canvas = this.createMaskDifferenceCanvas(
-					this.createDilatedMaskCanvas(fillMask, Math.ceil(widthPx / 2)),
-					this.createErodedMaskCanvas(fillMask, Math.floor(widthPx / 2))
+					this.createDilatedMaskCanvas(fillMask, Math.ceil(widthPx / 2), edgeStyle),
+					this.createErodedMaskCanvas(fillMask, Math.floor(widthPx / 2), edgeStyle)
 				);
 			} else {
 				canvas = this.createMaskDifferenceCanvas(
-					this.createDilatedMaskCanvas(fillMask, widthPx),
+					this.createDilatedMaskCanvas(fillMask, widthPx, edgeStyle),
 					fillMask
 				);
 			}
@@ -2621,10 +2662,29 @@ class TextGlitterManager {
 		return canvas;
 	}
 
-	createDilatedMaskCanvas(sourceCanvas, radius) {
+	createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 		const nextRadius = Math.max(0, Math.round(radius));
 		if (nextRadius <= 0) {
 			return sourceCanvas;
+		}
+
+		if (edgeStyle === 'hard') {
+			const horizontal = document.createElement('canvas');
+			horizontal.width = sourceCanvas.width;
+			horizontal.height = sourceCanvas.height;
+			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true });
+			for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
+				horizontalCtx.drawImage(sourceCanvas, offsetX, 0);
+			}
+
+			const canvas = document.createElement('canvas');
+			canvas.width = sourceCanvas.width;
+			canvas.height = sourceCanvas.height;
+			const ctx = canvas.getContext('2d', { willReadFrequently: true });
+			for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
+				ctx.drawImage(horizontal, 0, offsetY);
+			}
+			return canvas;
 		}
 
 		const canvas = document.createElement('canvas');
@@ -2638,10 +2698,37 @@ class TextGlitterManager {
 		return canvas;
 	}
 
-	createErodedMaskCanvas(sourceCanvas, radius) {
+	createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 		const nextRadius = Math.max(0, Math.round(radius));
 		if (nextRadius <= 0) {
 			return sourceCanvas;
+		}
+
+		if (edgeStyle === 'hard') {
+			const horizontal = document.createElement('canvas');
+			horizontal.width = sourceCanvas.width;
+			horizontal.height = sourceCanvas.height;
+			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true });
+			horizontalCtx.drawImage(sourceCanvas, 0, 0);
+			horizontalCtx.globalCompositeOperation = 'destination-in';
+			for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
+				if (offsetX === 0) continue;
+				horizontalCtx.drawImage(sourceCanvas, -offsetX, 0);
+			}
+			horizontalCtx.globalCompositeOperation = 'source-over';
+
+			const canvas = document.createElement('canvas');
+			canvas.width = sourceCanvas.width;
+			canvas.height = sourceCanvas.height;
+			const ctx = canvas.getContext('2d', { willReadFrequently: true });
+			ctx.drawImage(horizontal, 0, 0);
+			ctx.globalCompositeOperation = 'destination-in';
+			for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
+				if (offsetY === 0) continue;
+				ctx.drawImage(horizontal, 0, -offsetY);
+			}
+			ctx.globalCompositeOperation = 'source-over';
+			return canvas;
 		}
 
 		const canvas = document.createElement('canvas');
@@ -2662,7 +2749,14 @@ class TextGlitterManager {
 		// Sample count scales with the border radius so the outer envelope of the
 		// unioned copies stays smooth (few steps = visible scalloping on wide
 		// borders). Kept in lockstep with GifExporter._createBorderMaskCanvas.
-		const steps = Math.max(16, Math.min(64, Math.ceil(radius * 4)));
+		const borderSampling = CONFIG.rendering?.borderSampling || {};
+		const steps = Math.max(
+			borderSampling.minSteps ?? 16,
+			Math.min(
+				borderSampling.maxSteps ?? 64,
+				Math.ceil(radius * (borderSampling.stepsPerPixel ?? 4))
+			)
+		);
 		const seen = new Set();
 		const offsets = [];
 
@@ -2953,8 +3047,8 @@ class TextGlitterManager {
 
 		const worldCenter = this.getFrameCenterWorldPosition(layer);
 		layer.textData.fontSize = Math.max(
-			CONFIG.textLayers.minFontSize,
-			Math.min(CONFIG.textLayers.maxFontSize, Math.round(layer.textData.fontSize * scaleFactor))
+			CONFIG.tools.text.minFontSize,
+			Math.min(CONFIG.tools.text.maxFontSize, Math.round(layer.textData.fontSize * scaleFactor))
 		);
 		transform.scale.x = 100;
 		transform.scale.y = 100;
@@ -3107,3 +3201,4 @@ class TextGlitterManager {
 		return url;
 	}
 }
+

@@ -5,18 +5,18 @@ class GifExporter {
 	constructor() {
 		const exportConfig = CONFIG.export || {};
 		this.config = {
-			workers: exportConfig.workers ?? 4,
-			quality: exportConfig.quality ?? 1,
+			workers: exportConfig.core?.workers ?? 4,
+			quality: exportConfig.core?.quality ?? 1,
 			workerScript: 'js/gif.worker.js',
 			timing: {
-				forceDelay: exportConfig.timing?.forceDelay ?? 100,
-				maxFrames: exportConfig.timing?.maxFrames ?? 60
+				forceDelay: exportConfig.core?.timing?.forceDelay ?? 100,
+				maxFrames: exportConfig.core?.timing?.maxFrames ?? 60
 			},
-			debug: typeof CONFIG !== 'undefined' ? CONFIG.debug : false,
-			watermarkAlphaThreshold: exportConfig.watermarkAlphaThreshold ?? 128,
+			debug: typeof CONFIG !== 'undefined' ? CONFIG.debug?.enabled : false,
+			watermarkAlphaThreshold: exportConfig.watermark?.alphaThreshold ?? 128,
 			useAdaptiveQuality: false // Add this flag
 		};
-		this.fileName = `${exportConfig.defaultBaseName || 'ryandavi-com_glitter'}.gif`;
+		this.fileName = `${exportConfig.core?.defaultBaseName || 'ryandavi-com_glitter'}.gif`;
 
 		// Reusable canvas elements
 		this.canvas = document.createElement('canvas');
@@ -48,7 +48,7 @@ class GifExporter {
 
 
 	_getSizeWarningsHTML(bytes) {
-		const warningsConfig = (CONFIG.export?.sizeWarnings || []).map((warning) => ({
+		const warningsConfig = (CONFIG.export?.limits?.sizeWarnings || []).map((warning) => ({
 			message: warning.message,
 			limit: warning.limitMB * 1024 * 1024
 		}));
@@ -734,6 +734,10 @@ class GifExporter {
 		return borderData?.drawOrder === 'front' ? 'front' : 'behind';
 	}
 
+	_getBorderEdgeStyle(borderData) {
+		return borderData?.edgeStyle === 'hard' ? 'hard' : 'round';
+	}
+
 	_createPlacedBorderMaskCanvas(fillMaskCanvas, borderData) {
 		const widthPx = Math.max(0, borderData?.widthPx || 0);
 		if (widthPx <= 0) {
@@ -741,20 +745,21 @@ class GifExporter {
 		}
 
 		const placement = this._getBorderPlacement(borderData);
+		const edgeStyle = this._getBorderEdgeStyle(borderData);
 		if (placement === 'inside') {
 			return this._createMaskDifferenceCanvas(
 				fillMaskCanvas,
-				this._createErodedMaskCanvas(fillMaskCanvas, widthPx)
+				this._createErodedMaskCanvas(fillMaskCanvas, widthPx, edgeStyle)
 			);
 		}
 		if (placement === 'center') {
 			return this._createMaskDifferenceCanvas(
-				this._createDilatedMaskCanvas(fillMaskCanvas, Math.ceil(widthPx / 2)),
-				this._createErodedMaskCanvas(fillMaskCanvas, Math.floor(widthPx / 2))
+				this._createDilatedMaskCanvas(fillMaskCanvas, Math.ceil(widthPx / 2), edgeStyle),
+				this._createErodedMaskCanvas(fillMaskCanvas, Math.floor(widthPx / 2), edgeStyle)
 			);
 		}
 		return this._createMaskDifferenceCanvas(
-			this._createDilatedMaskCanvas(fillMaskCanvas, widthPx),
+			this._createDilatedMaskCanvas(fillMaskCanvas, widthPx, edgeStyle),
 			fillMaskCanvas
 		);
 	}
@@ -773,10 +778,29 @@ class GifExporter {
 		return canvas;
 	}
 
-	_createDilatedMaskCanvas(sourceCanvas, radius) {
+	_createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 		const nextRadius = Math.max(0, Math.round(radius));
 		if (nextRadius <= 0) {
 			return sourceCanvas;
+		}
+
+		if (edgeStyle === 'hard') {
+			const horizontal = document.createElement('canvas');
+			horizontal.width = sourceCanvas.width;
+			horizontal.height = sourceCanvas.height;
+			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true, alpha: true });
+			for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
+				horizontalCtx.drawImage(sourceCanvas, offsetX, 0);
+			}
+
+			const canvas = document.createElement('canvas');
+			canvas.width = sourceCanvas.width;
+			canvas.height = sourceCanvas.height;
+			const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+			for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
+				ctx.drawImage(horizontal, 0, offsetY);
+			}
+			return canvas;
 		}
 
 		const canvas = document.createElement('canvas');
@@ -790,10 +814,37 @@ class GifExporter {
 		return canvas;
 	}
 
-	_createErodedMaskCanvas(sourceCanvas, radius) {
+	_createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 		const nextRadius = Math.max(0, Math.round(radius));
 		if (nextRadius <= 0) {
 			return sourceCanvas;
+		}
+
+		if (edgeStyle === 'hard') {
+			const horizontal = document.createElement('canvas');
+			horizontal.width = sourceCanvas.width;
+			horizontal.height = sourceCanvas.height;
+			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true, alpha: true });
+			horizontalCtx.drawImage(sourceCanvas, 0, 0);
+			horizontalCtx.globalCompositeOperation = 'destination-in';
+			for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
+				if (offsetX === 0) continue;
+				horizontalCtx.drawImage(sourceCanvas, -offsetX, 0);
+			}
+			horizontalCtx.globalCompositeOperation = 'source-over';
+
+			const canvas = document.createElement('canvas');
+			canvas.width = sourceCanvas.width;
+			canvas.height = sourceCanvas.height;
+			const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+			ctx.drawImage(horizontal, 0, 0);
+			ctx.globalCompositeOperation = 'destination-in';
+			for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
+				if (offsetY === 0) continue;
+				ctx.drawImage(horizontal, 0, -offsetY);
+			}
+			ctx.globalCompositeOperation = 'source-over';
+			return canvas;
 		}
 
 		const canvas = document.createElement('canvas');
@@ -811,7 +862,14 @@ class GifExporter {
 
 	_getMorphOffsets(widthPx) {
 		const radius = Math.max(1, widthPx);
-		const steps = Math.max(16, Math.min(64, Math.ceil(radius * 4)));
+		const borderSampling = CONFIG.rendering?.borderSampling || {};
+		const steps = Math.max(
+			borderSampling.minSteps ?? 16,
+			Math.min(
+				borderSampling.maxSteps ?? 64,
+				Math.ceil(radius * (borderSampling.stepsPerPixel ?? 4))
+			)
+		);
 		const seen = new Set();
 		const offsets = [];
 
@@ -1576,25 +1634,25 @@ class GifExporter {
 		}
 
 		// Calculate scaled dimensions
-		const scaledWidth = Math.round(watermark.width * (CONFIG.watermarkScale / 100));
-		const scaledHeight = Math.round(watermark.height * (CONFIG.watermarkScale / 100));
+		const scaledWidth = Math.round(watermark.width * (CONFIG.export.watermark.scale / 100));
+		const scaledHeight = Math.round(watermark.height * (CONFIG.export.watermark.scale / 100));
 
 		// Calculate position
 		let x, y;
-		switch (CONFIG.watermarkPosition) {
-			case 'top-left': x = CONFIG.watermarkPaddingX; y = CONFIG.watermarkPaddingY; break;
-			case 'top-center': x = (canvasWidth - scaledWidth) / 2; y = CONFIG.watermarkPaddingY; break;
-			case 'top-right': x = canvasWidth - scaledWidth - CONFIG.watermarkPaddingX; y = CONFIG.watermarkPaddingY; break;
-			case 'bottom-left': x = CONFIG.watermarkPaddingX; y = canvasHeight - scaledHeight - CONFIG.watermarkPaddingY; break;
-			case 'bottom-center': x = (canvasWidth - scaledWidth) / 2; y = canvasHeight - scaledHeight - CONFIG.watermarkPaddingY; break;
-			case 'bottom-right': x = canvasWidth - scaledWidth - CONFIG.watermarkPaddingX; y = canvasHeight - scaledHeight - CONFIG.watermarkPaddingY; break;
+		switch (CONFIG.export.watermark.position) {
+			case 'top-left': x = CONFIG.export.watermark.paddingX; y = CONFIG.export.watermark.paddingY; break;
+			case 'top-center': x = (canvasWidth - scaledWidth) / 2; y = CONFIG.export.watermark.paddingY; break;
+			case 'top-right': x = canvasWidth - scaledWidth - CONFIG.export.watermark.paddingX; y = CONFIG.export.watermark.paddingY; break;
+			case 'bottom-left': x = CONFIG.export.watermark.paddingX; y = canvasHeight - scaledHeight - CONFIG.export.watermark.paddingY; break;
+			case 'bottom-center': x = (canvasWidth - scaledWidth) / 2; y = canvasHeight - scaledHeight - CONFIG.export.watermark.paddingY; break;
+			case 'bottom-right': x = canvasWidth - scaledWidth - CONFIG.export.watermark.paddingX; y = canvasHeight - scaledHeight - CONFIG.export.watermark.paddingY; break;
 			case 'center': x = (canvasWidth - scaledWidth) / 2; y = (canvasHeight - scaledHeight) / 2; break;
-			default: x = CONFIG.watermarkPaddingX; y = CONFIG.watermarkPaddingY;
+			default: x = CONFIG.export.watermark.paddingX; y = CONFIG.export.watermark.paddingY;
 		}
 
 		// Draw watermark
 		ctx.save();
-		ctx.globalAlpha = CONFIG.watermarkOpacity / 100;
+		ctx.globalAlpha = CONFIG.export.watermark.opacity / 100;
 		ctx.imageSmoothingEnabled = false;
 		ctx.drawImage(tempCanvas, 0, 0, watermark.width, watermark.height, x, y, scaledWidth, scaledHeight);
 		ctx.restore();
@@ -1640,14 +1698,14 @@ class GifExporter {
 	}
 
 	async _loadWatermark(callbacks) {
-		if (!CONFIG.watermarkUrl) {
+		if (!CONFIG.export.watermark.url) {
 			return null;
 		}
 
 		callbacks.onStatus('Loading watermark...');
 
 		try {
-			const response = await fetch(CONFIG.watermarkUrl);
+			const response = await fetch(CONFIG.export.watermark.url);
 			const blob = await response.blob();
 			const arrayBuffer = await blob.arrayBuffer();
 			const uint8Array = new Uint8Array(arrayBuffer);
@@ -1656,7 +1714,7 @@ class GifExporter {
 			const isGif = uint8Array[0] === 0x47 && uint8Array[1] === 0x49 && uint8Array[2] === 0x46;
 
 			if (isGif) {
-				const frames = await this._parseGifWithMetadata(CONFIG.watermarkUrl, uint8Array);
+				const frames = await this._parseGifWithMetadata(CONFIG.export.watermark.url, uint8Array);
 
 				// Process alpha threshold ONCE during load if threshold is active
 				if (this.config.watermarkAlphaThreshold > 0) {
@@ -1709,7 +1767,7 @@ class GifExporter {
 					};
 
 					img.onerror = () => reject(new Error('Failed to load watermark image'));
-					img.src = CONFIG.watermarkUrl;
+					img.src = CONFIG.export.watermark.url;
 				});
 			}
 		} catch (error) {
@@ -2051,7 +2109,7 @@ class GifExporter {
 				await navigator.share({
 					files: [file],
 					title: 'Glitter GIF',
-					text: 'Created with ' + CONFIG.siteName
+					text: 'Created with ' + CONFIG.app.siteName
 				});
 			} catch (error) {
 				if (error.name !== 'AbortError') if (this.config.debug) console.error('Share failed:', error);
@@ -2077,3 +2135,4 @@ class GifExporter {
 		};
 	}
 }
+

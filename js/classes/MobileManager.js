@@ -4,7 +4,7 @@
 class MobileManager {
 	constructor(editor) {
 		this.editor = editor;
-		this.isMobile = window.innerWidth <= CONFIG.mobileBreakpoint;
+		this.isMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
 		this.activeTab = 'image'; // image or preview
 		this.activeDrawer = null; // design, layers, or null
 		this.settingsOpen = false;
@@ -270,7 +270,7 @@ class MobileManager {
 			clearTimeout(resizeTimer);
 			resizeTimer = setTimeout(() => {
 				const newWidth = window.innerWidth;
-				const nowMobile = newWidth <= CONFIG.mobileBreakpoint;
+				const nowMobile = newWidth <= CONFIG.ui.mobile.breakpoint;
 
 if (!this.isMobile && nowMobile) {
     // Switching TO Mobile
@@ -404,7 +404,7 @@ if (!this.isMobile && nowMobile) {
 		}
 
 		// Conditionally close drawers based on config
-		if (CONFIG.mobileAutoCloseDesignDrawer) {
+		if (CONFIG.ui.mobile.autoCloseDesignDrawer) {
 			this.closeAllDrawers();
 		}
 
@@ -673,3 +673,4 @@ if (!this.isMobile && nowMobile) {
 		dbg('Mobile: Cleanup complete, restored to desktop layout');
 	}
 }
+

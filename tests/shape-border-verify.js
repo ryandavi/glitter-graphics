@@ -185,6 +185,36 @@ async function check3(page) {
 	assert(solid.spacingRowHidden === true, 'Dot spacing control stayed visible in solid mode');
 }
 
+async function check4(page) {
+	const layerId = await createBorderedShape(page, {
+		shapeId: 'square',
+		width: 120,
+		height: 80,
+		borderWidth: 20
+	});
+
+	await page.evaluate(() => window.editor.saveState());
+	const selected = await captureShapeSnapshot(page, layerId, 'selected-before-border-remove');
+
+	await page.evaluate(() => {
+		const input = document.getElementById('shapeBorderEnabled');
+		input.checked = false;
+		input.dispatchEvent(new Event('change', { bubbles: true }));
+	});
+	await page.evaluate(async () => {
+		await window.editor.undo();
+		await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+	});
+
+	const restored = await captureShapeSnapshot(page, layerId, 'restored-after-undo');
+
+	assert(restored.frame, 'Missing restored shape handle frame after undo');
+	compareRects(restored.wrapperRect, selected.wrapperRect, 'Shape wrapper moved after border remove undo');
+	compareRects(restored.boxRect, selected.boxRect, 'Transform box moved after border remove undo');
+	approxEqual(restored.frame.width, selected.frame.width, POSITION_TOLERANCE_PX, 'Border frame width changed after undo');
+	approxEqual(restored.frame.height, selected.frame.height, POSITION_TOLERANCE_PX, 'Border frame height changed after undo');
+}
+
 async function runCheck(browser, label, checkFn) {
 	const page = await browser.newPage({ viewport: VIEWPORT });
 	try {
@@ -202,6 +232,7 @@ async function main() {
 		await runCheck(browser, '1. Solid shape border stays aligned through select/deselect/reselect', check1);
 		await runCheck(browser, '2. Rotated shadowed shape border stays aligned through reselect', check2);
 		await runCheck(browser, '3. Dotted shape border toggles spacing UI and produces a mask', check3);
+		await runCheck(browser, '4. Undo restoring a removed shape border keeps the transform box aligned', check4);
 		console.log('\nShape border verification finished with all checks passing.');
 	} finally {
 		await browser.close();
@@ -212,3 +243,4 @@ main().catch((error) => {
 	console.error(error?.stack || String(error));
 	process.exit(1);
 });
+

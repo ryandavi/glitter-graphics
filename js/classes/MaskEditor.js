@@ -109,14 +109,14 @@ class MaskEditor {
 	// ===== PER-MODE SETTINGS STORE (WP1) =====
 
 	_defaultToolSettings() {
-		const mb = CONFIG.maskBrush;
+		const mb = CONFIG.tools.maskBrush;
 		const base = {
-			size: mb.defaultSize,
-			softness: mb.defaultSoftness,
-			flow: mb.defaultFlow,
-			spacing: Math.round(mb.stampSpacing * 100),
-			smoothing: mb.defaultSmoothing ?? 0,
-			shape: mb.defaultShape || 'round',
+			size: mb.defaults.size,
+			softness: mb.defaults.softness,
+			flow: mb.defaults.flow,
+			spacing: Math.round(mb.stroke.stampSpacing * 100),
+			smoothing: mb.defaults.smoothing ?? 0,
+			shape: mb.defaults.shape || 'round',
 			pressure: true
 		};
 		// Eraser inherits the shared defaults, overriding only the listed keys.
@@ -497,10 +497,10 @@ class MaskEditor {
 			return false;
 		}
 
-		const currentValue = parseInt(slider.value || CONFIG.maskBrush.defaultSize, 10);
+		const currentValue = parseInt(slider.value || CONFIG.tools.maskBrush.defaults.size, 10);
 		const nextValue = Math.max(
-			CONFIG.maskBrush.minSize,
-			Math.min(CONFIG.maskBrush.maxSize, currentValue + delta)
+			CONFIG.tools.maskBrush.limits.minSize,
+			Math.min(CONFIG.tools.maskBrush.limits.maxSize, currentValue + delta)
 		);
 
 		if (nextValue === currentValue) {
@@ -537,7 +537,7 @@ class MaskEditor {
 		const { fillColor, stripeColor } = this._getOverlayPalette(layer);
 
 		this.overlayCtx.clearRect(0, 0, width, height);
-		this.overlayCtx.globalAlpha = CONFIG.maskBrush.overlayOpacity;
+		this.overlayCtx.globalAlpha = CONFIG.tools.maskBrush.overlay.opacity;
 		this.overlayCtx.drawImage(maskCanvas, 0, 0);
 		this.overlayCtx.globalCompositeOperation = 'source-in';
 		this.overlayCtx.fillStyle = fillColor;
@@ -547,7 +547,7 @@ class MaskEditor {
 			this.overlayCtx.globalCompositeOperation = 'source-atop';
 			this.overlayCtx.globalAlpha = Math.min(
 				1,
-				CONFIG.maskBrush.overlayOpacity + (CONFIG.maskBrush.overlayStripeOpacityBoost || 0)
+				CONFIG.tools.maskBrush.overlay.opacity + (CONFIG.tools.maskBrush.overlay.stripeOpacityBoost || 0)
 			);
 			this.overlayCtx.fillStyle = stripePattern;
 			this.overlayCtx.fillRect(0, 0, width, height);
@@ -909,7 +909,7 @@ class MaskEditor {
 
 		// Same convention as the color picker on a non-glitter layer:
 		// auto-create a glitter layer and work in it.
-		if (!CONFIG.autoCreateGlitterLayer) {
+		if (!CONFIG.app.behavior.autoCreateGlitterLayer) {
 			this.editor.updateStatus('Select a glitter layer to paint on');
 			return null;
 		}
@@ -1033,7 +1033,7 @@ class MaskEditor {
 	}
 
 	_queueLivePreviewRefresh(layer) {
-		if (CONFIG.maskBrush.livePreviewThrottle !== 'raf' || this.livePreviewQueued) {
+		if (CONFIG.tools.maskBrush.livePreview.throttle !== 'raf' || this.livePreviewQueued) {
 			return;
 		}
 
@@ -1266,7 +1266,7 @@ class MaskEditor {
 		const glitter = layer?.selectedGlitterId
 			? this.editor.glitterManager?.getItemById(layer.selectedGlitterId)
 			: null;
-		const fillColor = this._normalizeOverlayColor(glitter?.colorCodes?.[0]) || CONFIG.maskBrush.overlayColor;
+		const fillColor = this._normalizeOverlayColor(glitter?.colorCodes?.[0]) || CONFIG.tools.maskBrush.overlay.color;
 		return {
 			fillColor,
 			stripeColor: this._getContrastColor(fillColor)
@@ -1413,3 +1413,4 @@ MaskEditor.AXIS_LOCK_MIN_DISTANCE = 4;
 // Brush tip catalog now lives in ShapeLibrary (shared with the Shape tool, WP5a).
 // Kept as a static alias so existing MaskEditor.BRUSH_SHAPES references still work.
 MaskEditor.BRUSH_SHAPES = ShapeLibrary.BRUSH_SHAPES;
+

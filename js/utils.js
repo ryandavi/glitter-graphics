@@ -504,3 +504,4 @@ const initTooltipsInContainer = (container = document) => {
 	if (!container) return;
 	tooltipManager.attachTooltipListeners(container);
 };
+

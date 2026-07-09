@@ -100,3 +100,4 @@ function applyColorAdjustToImageData(imageData, adjust) {
 	}
 	return imageData;
 }
+

@@ -221,3 +221,4 @@ ShapeLibrary.FILL_SHAPES = [
 	{ id: 'eightPetalFlower', label: '8-Petal Flower' },
 	{ id: 'spiral', label: 'Spiral' }
 ];
+

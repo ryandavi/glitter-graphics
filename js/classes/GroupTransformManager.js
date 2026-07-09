@@ -327,7 +327,7 @@ class GroupTransformManager {
 	}
 
 	createTransformHandles() {
-		if (!CONFIG.stickerHandles.enabled || this.editor.currentTool !== ToolType.SELECT || !this.isActive()) {
+		if (!CONFIG.ui.stickerHandles.enabled || this.editor.currentTool !== ToolType.SELECT || !this.isActive()) {
 			return;
 		}
 
@@ -416,7 +416,7 @@ class GroupTransformManager {
 			wrapper.style.cursor = corner === 'tl' || corner === 'br' ? 'nwse-resize' : 'nesw-resize';
 		});
 
-		const rotationDistance = CONFIG.stickerHandles.rotationHandleDistance;
+		const rotationDistance = CONFIG.ui.stickerHandles.rotationHandleDistance;
 		const topCenterX = bounds.centerX;
 		const topCenterY = bounds.top - rotationDistance;
 		const rotationWrapper = this.transformHandles.querySelector('[data-handle-type="rotation"]');
@@ -436,7 +436,7 @@ class GroupTransformManager {
 				position: absolute;
 				left: ${bounds.centerX}px;
 				top: ${bounds.top}px;
-				width: ${CONFIG.stickerHandles.boundingBoxWidth}px;
+				width: ${CONFIG.ui.stickerHandles.boundingBoxWidth}px;
 				height: ${rotationDistance}px;
 				transform: translate(-50%, 0);
 				transform-origin: top center;
@@ -683,3 +683,4 @@ class GroupTransformManager {
 		this.applyEntries(this.dragStartState.layerStates);
 	}
 }
+

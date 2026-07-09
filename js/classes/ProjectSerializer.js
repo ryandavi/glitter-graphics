@@ -122,7 +122,7 @@ class ProjectSerializer {
 		const height = data.canvas?.height;
 		if (!Number.isInteger(width) || !Number.isInteger(height) ||
 			width < 1 || height < 1 ||
-			width > CONFIG.maxImageWidth || height > CONFIG.maxImageHeight) {
+			width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
 			throw new Error('That project file has invalid canvas dimensions.');
 		}
 
@@ -342,3 +342,4 @@ class ProjectSerializer {
 		return new Blob([array], { type: mimeType });
 	}
 }
+

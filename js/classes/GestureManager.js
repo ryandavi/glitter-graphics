@@ -284,7 +284,7 @@ class GestureManager {
 			return;
 		}
 
-		if (distance <= CONFIG.gestures.tapSlopPx) {
+		if (distance <= CONFIG.ui.gestures.tapSlopPx) {
 			return;
 		}
 
@@ -502,7 +502,7 @@ class GestureManager {
 
 	isTap(pointer, route = null) {
 		const distance = Math.hypot(pointer.x - pointer.startX, pointer.y - pointer.startY);
-		if (distance > CONFIG.gestures.tapSlopPx) {
+		if (distance > CONFIG.ui.gestures.tapSlopPx) {
 			return false;
 		}
 
@@ -511,7 +511,7 @@ class GestureManager {
 		}
 
 		const duration = Date.now() - pointer.downTime;
-		return duration <= CONFIG.gestures.tapMaxMs;
+		return duration <= CONFIG.ui.gestures.tapMaxMs;
 	}
 
 	isDoubleTap(pointer) {
@@ -521,7 +521,7 @@ class GestureManager {
 
 		const duration = Date.now() - this.lastTap.time;
 		const distance = Math.hypot(pointer.x - this.lastTap.x, pointer.y - this.lastTap.y);
-		return duration <= CONFIG.gestures.doubleTapMs && distance <= CONFIG.gestures.doubleTapSlopPx;
+		return duration <= CONFIG.ui.gestures.doubleTapMs && distance <= CONFIG.ui.gestures.doubleTapSlopPx;
 	}
 
 	recordTap(pointer, wasDoubleTap) {
@@ -713,3 +713,4 @@ class GestureManager {
 }
 
 GestureManager.iOSGuardsInstalled = false;
+

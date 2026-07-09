@@ -46,14 +46,14 @@ class GlitterEditor {
 		// DISPLAY SETTINGS
 		// ============================================================================
 		this.showAllLayers = true;
-		this.showHints = CONFIG.defaultShowHints;
+		this.showHints = CONFIG.ui.hints.enabledByDefault;
 		this.currentHintDismissed = false;
 
 		// ============================================================================
 		// GLOBAL SETTINGS
 		// ============================================================================
-		this.refineGlobal = CONFIG.refineGlobalDefault;
-		this.glitterGlobal = CONFIG.glitterGlobalDefault;
+		this.refineGlobal = CONFIG.tools.glitter.behavior.refineAffectsAllLayers;
+		this.glitterGlobal = CONFIG.tools.glitter.behavior.glitterSelectionAffectsAllLayers;
 
 		// ============================================================================
 		// STATE FLAGS
@@ -97,7 +97,7 @@ class GlitterEditor {
 		// INITIALIZATION
 		// ============================================================================
 		this.initializeProjectNameInput();
-		this.setTool(CONFIG.defaultTool);
+		this.setTool(CONFIG.app.startup.tool);
 		this.setupEventListeners();
 		this.initializeCollapsibleSections();
 		this.initializeAdvancedDisclosures();
@@ -205,7 +205,7 @@ class GlitterEditor {
 	}
 
 	getProjectFileName(ext) {
-		const baseName = sanitizeFileName(this.projectName) || CONFIG.export.defaultBaseName;
+		const baseName = sanitizeFileName(this.projectName) || CONFIG.export.core.defaultBaseName;
 		return `${baseName}.${ext}`;
 	}
 
@@ -304,22 +304,22 @@ initializeExportSettings() {
 
 	// Initialize export settings with saved values or defaults
 	this.exportSettings = {
-		quality: savedSettings?.exportQuality ?? CONFIG.defaultExportQuality,
-		ditherEnabled: savedSettings?.exportDitherEnabled ?? CONFIG.defaultExportDitherEnabled,
-		ditherType: savedSettings?.exportDitherType ?? CONFIG.defaultExportDitherType,
-		baseImage: savedSettings?.exportBaseImage ?? CONFIG.defaultExportBaseImage,
-		frameDelay: savedSettings?.exportFrameDelay ?? CONFIG.defaultExportFrameDelay,
-		maxFrames: savedSettings?.exportMaxFrames ?? CONFIG.defaultExportMaxFrames,
-		transparency: savedSettings?.exportTransparency ?? CONFIG.defaultExportTransparency,
-		matteColor: savedSettings?.exportMatteColor ?? CONFIG.defaultExportMatteColor,
-		watermarkEnabled: savedSettings?.exportWatermarkEnabled ?? CONFIG.defaultExportWatermarkEnabled,
-		exportFrameSkip: savedSettings?.exportFrameSkip ?? CONFIG.defaultExportFrameSkip,
-		exportReverse: savedSettings?.exportReverse ?? CONFIG.defaultExportReverse,
-		smartFrameReduction: savedSettings?.exportSmartFrameReduction ?? CONFIG.defaultExportSmartFrameReduction
+		quality: savedSettings?.exportQuality ?? CONFIG.export.defaults.quality,
+		ditherEnabled: savedSettings?.exportDitherEnabled ?? CONFIG.export.defaults.ditherEnabled,
+		ditherType: savedSettings?.exportDitherType ?? CONFIG.export.defaults.ditherType,
+		baseImage: savedSettings?.exportBaseImage ?? CONFIG.export.defaults.baseImage,
+		frameDelay: savedSettings?.exportFrameDelay ?? CONFIG.export.defaults.frameDelay,
+		maxFrames: savedSettings?.exportMaxFrames ?? CONFIG.export.defaults.maxFrames,
+		transparency: savedSettings?.exportTransparency ?? CONFIG.export.defaults.transparency,
+		matteColor: savedSettings?.exportMatteColor ?? CONFIG.export.defaults.matteColor,
+		watermarkEnabled: savedSettings?.exportWatermarkEnabled ?? CONFIG.export.defaults.watermarkEnabled,
+		exportFrameSkip: savedSettings?.exportFrameSkip ?? CONFIG.export.defaults.frameSkip,
+		exportReverse: savedSettings?.exportReverse ?? CONFIG.export.defaults.reverse,
+		smartFrameReduction: savedSettings?.exportSmartFrameReduction ?? CONFIG.export.defaults.smartFrameReduction
 	};
 
 	// Update this.showHints
-	this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.defaultShowHints;
+	this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.ui.hints.enabledByDefault;
 
 	// Sync UI to match exportSettings
 	this.syncExportSettingsToUI();
@@ -377,7 +377,7 @@ initializeExportSettings() {
 			{ id: 'exportTransparency', prop: 'transparency', parse: (v) => v },
 			{ id: 'exportMatteColor', prop: 'matteColor', parse: (v) => v },
 			{ id: 'exportFrameDelay', prop: 'frameDelay', parse: (v) => parseInt(v) },
-			{ id: 'exportMaxFrames', prop: 'maxFrames', parse: (v) => v === 'unlimited' ? CONFIG.maxFramesHardLimit : parseInt(v) },
+			{ id: 'exportMaxFrames', prop: 'maxFrames', parse: (v) => v === 'unlimited' ? CONFIG.export.limits.maxFramesHardLimit : parseInt(v) },
 			{ id: 'exportWatermarkEnabled', prop: 'watermarkEnabled', parse: (v) => v },
 			{ id: 'exportFrameSkip', prop: 'exportFrameSkip', parse: (v) => parseInt(v) },
 			{ id: 'exportReverse', prop: 'exportReverse', parse: (v) => v },
@@ -448,28 +448,28 @@ async resetSettingsSection(section) {
 
 	switch(section) {
 		case 'interface':
-			this.showHints = CONFIG.defaultShowHints;
+			this.showHints = CONFIG.ui.hints.enabledByDefault;
 			break;
 
 		case 'export':
-			this.exportSettings.baseImage = CONFIG.defaultExportBaseImage;
-			this.exportSettings.transparency = CONFIG.defaultExportTransparency;
-			this.exportSettings.matteColor = CONFIG.defaultExportMatteColor;
-			this.exportSettings.watermarkEnabled = CONFIG.defaultExportWatermarkEnabled;
+			this.exportSettings.baseImage = CONFIG.export.defaults.baseImage;
+			this.exportSettings.transparency = CONFIG.export.defaults.transparency;
+			this.exportSettings.matteColor = CONFIG.export.defaults.matteColor;
+			this.exportSettings.watermarkEnabled = CONFIG.export.defaults.watermarkEnabled;
 			break;
 
 		case 'encoding':
-			this.exportSettings.ditherEnabled = CONFIG.defaultExportDitherEnabled;
-			this.exportSettings.ditherType = CONFIG.defaultExportDitherType;
-			this.exportSettings.quality = CONFIG.defaultExportQuality;
+			this.exportSettings.ditherEnabled = CONFIG.export.defaults.ditherEnabled;
+			this.exportSettings.ditherType = CONFIG.export.defaults.ditherType;
+			this.exportSettings.quality = CONFIG.export.defaults.quality;
 			break;
 
 		case 'framecontrol':
-			this.exportSettings.frameDelay = CONFIG.defaultExportFrameDelay;
-			this.exportSettings.maxFrames = CONFIG.defaultExportMaxFrames;
-			this.exportSettings.smartFrameReduction = CONFIG.defaultExportSmartFrameReduction;
-			this.exportSettings.exportFrameSkip = CONFIG.defaultExportFrameSkip;
-			this.exportSettings.exportReverse = CONFIG.defaultExportReverse;
+			this.exportSettings.frameDelay = CONFIG.export.defaults.frameDelay;
+			this.exportSettings.maxFrames = CONFIG.export.defaults.maxFrames;
+			this.exportSettings.smartFrameReduction = CONFIG.export.defaults.smartFrameReduction;
+			this.exportSettings.exportFrameSkip = CONFIG.export.defaults.frameSkip;
+			this.exportSettings.exportReverse = CONFIG.export.defaults.reverse;
 			break;
 	}
 
@@ -489,22 +489,22 @@ async resetAllSettings() {
 
 	// Reset all export settings
 	this.exportSettings = {
-		quality: CONFIG.defaultExportQuality,
-		ditherEnabled: CONFIG.defaultExportDitherEnabled,
-		ditherType: CONFIG.defaultExportDitherType,
-		baseImage: CONFIG.defaultExportBaseImage,
-		transparency: CONFIG.defaultExportTransparency,
-		matteColor: CONFIG.defaultExportMatteColor,
-		frameDelay: CONFIG.defaultExportFrameDelay,
-		maxFrames: CONFIG.defaultExportMaxFrames,
-		watermarkEnabled: CONFIG.defaultExportWatermarkEnabled,
-		exportFrameSkip: CONFIG.defaultExportFrameSkip,
-		exportReverse: CONFIG.defaultExportReverse,
-		smartFrameReduction: CONFIG.defaultExportSmartFrameReduction
+		quality: CONFIG.export.defaults.quality,
+		ditherEnabled: CONFIG.export.defaults.ditherEnabled,
+		ditherType: CONFIG.export.defaults.ditherType,
+		baseImage: CONFIG.export.defaults.baseImage,
+		transparency: CONFIG.export.defaults.transparency,
+		matteColor: CONFIG.export.defaults.matteColor,
+		frameDelay: CONFIG.export.defaults.frameDelay,
+		maxFrames: CONFIG.export.defaults.maxFrames,
+		watermarkEnabled: CONFIG.export.defaults.watermarkEnabled,
+		exportFrameSkip: CONFIG.export.defaults.frameSkip,
+		exportReverse: CONFIG.export.defaults.reverse,
+		smartFrameReduction: CONFIG.export.defaults.smartFrameReduction
 	};
 
 	// Reset UI preferences
-	this.showHints = CONFIG.defaultShowHints;
+	this.showHints = CONFIG.ui.hints.enabledByDefault;
 
 	this.syncExportSettingsToUI();
 	this.saveSettingsToStorage();
@@ -666,7 +666,7 @@ async resetAllSettings() {
 
 
 		document.getElementById('zoomOut').disabled = this.viewport.currentZoomIndex <= 0;
-		document.getElementById('zoomIn').disabled = this.viewport.currentZoomIndex >= CONFIG.zoomLevels.length - 1;
+		document.getElementById('zoomIn').disabled = this.viewport.currentZoomIndex >= CONFIG.ui.zoom.levels.length - 1;
 
 		// Update cursor
 		this.previewContainer.classList.remove('zoom-cursor', 'hand-cursor');
@@ -680,7 +680,7 @@ async resetAllSettings() {
 	updateTransparencyGrid() {
 		if (!this.previewContainer.classList.contains('transparent-bg')) return;
 
-		const baseSize = CONFIG.baseGridSize;
+		const baseSize = CONFIG.canvas.grid.baseSize;
 		const size = baseSize * this.viewport.currentZoom;
 		const half = size / 2;
 
@@ -1156,7 +1156,7 @@ async resetAllSettings() {
 			if (content) content.classList.toggle('visible', isOpen);
 			if (toggle) toggle.classList.toggle('collapsed', !isOpen);
 
-			if (isOpen && accordion && CONFIG.designPanelAccordion) {
+			if (isOpen && accordion && CONFIG.layers.ui.designPanelAccordion) {
 				const isMobile = this.mobileManager?.isMobile;
 				sections.forEach((other) => {
 					if (other === name) return;
@@ -1353,7 +1353,7 @@ async resetAllSettings() {
 	initializeShortcutsModal() {
 		const list = document.getElementById('shortcutList');
 
-		Object.entries(CONFIG.shortcuts).forEach(([category, shortcutArray]) => {
+		Object.entries(CONFIG.ui.shortcuts).forEach(([category, shortcutArray]) => {
 			const group = document.createElement('div');
 			group.className = 'shortcut-group';
 
@@ -1769,7 +1769,7 @@ async resetAllSettings() {
 			const contextThresholdValue = document.getElementById('contextThresholdValue');
 			if (contextThreshold) contextThreshold.value = e.target.value;
 			if (contextThresholdValue) contextThresholdValue.textContent = e.target.value;
-		}, CONFIG.defaultThreshold);
+		}, CONFIG.tools.selection.defaults.threshold);
 
 		// Helper to attach debounced slider updates
 		const attachSliderDebounce = (sliderId, saveRefine, saveGlitter) => {
@@ -1792,24 +1792,24 @@ async resetAllSettings() {
 	setupMaskEditorListeners() {
 		this.setupSlider('maskBrushSize', 'maskBrushSizeValue', 'px', () => {
 			this.maskEditor?._updateBrushCursorSize();
-		}, CONFIG.maskBrush.defaultSize);
+		}, CONFIG.tools.maskBrush.defaults.size);
 
 		this.setupSlider('maskBrushSoftness', 'maskBrushSoftnessValue', '%', () => {
 			this.maskEditor?.renderOverlay();
-		}, CONFIG.maskBrush.defaultSoftness);
+		}, CONFIG.tools.maskBrush.defaults.softness);
 
 		this.setupSlider('maskBrushFlow', 'maskBrushFlowValue', '%', () => {
 			this.maskEditor?.renderOverlay();
-		}, CONFIG.maskBrush.defaultFlow);
+		}, CONFIG.tools.maskBrush.defaults.flow);
 
 		// Spacing is a percentage of brush size; it only affects future stamps
 		// (the resulting stroke is baked into the mask), so no live re-render.
 		this.setupSlider('maskBrushSpacing', 'maskBrushSpacingValue', '%', null,
-			Math.round(CONFIG.maskBrush.stampSpacing * 100));
+			Math.round(CONFIG.tools.maskBrush.stroke.stampSpacing * 100));
 
 		// Smoothing (EMA stabilizer); affects the live stroke only, no re-render.
 		this.setupSlider('maskBrushSmoothing', 'maskBrushSmoothingValue', '%', null,
-			CONFIG.maskBrush.defaultSmoothing ?? 0);
+			CONFIG.tools.maskBrush.defaults.smoothing ?? 0);
 
 		this.syncQuickSlider('maskBrushSize', 'maskBrushSizeQuick', 'maskBrushSizeQuickValue', 'px');
 
@@ -2331,9 +2331,9 @@ async resetAllSettings() {
 			let nextHeight = axis === 'height' ? value : layer.shapeData.height;
 			if (lockAspect) {
 				if (axis === 'width') {
-					nextHeight = Math.max(CONFIG.shapes.minSize, Math.round(nextWidth / aspect));
+					nextHeight = Math.max(CONFIG.tools.shapes.minSize, Math.round(nextWidth / aspect));
 				} else {
-					nextWidth = Math.max(CONFIG.shapes.minSize, Math.round(nextHeight * aspect));
+					nextWidth = Math.max(CONFIG.tools.shapes.minSize, Math.round(nextHeight * aspect));
 				}
 			}
 			return Boolean(manager.setShapeSize?.(layer, nextWidth, nextHeight));
@@ -2423,12 +2423,12 @@ async resetAllSettings() {
 
 		if (resetRotation) {
 			resetRotation.addEventListener('click', () => {
-				if (rotation) rotation.value = CONFIG.defaultStickerRotation;
-				showUnit(rotationValue, CONFIG.defaultStickerRotation, '°');
+				if (rotation) rotation.value = CONFIG.tools.stickers.defaults.transform.rotation;
+				showUnit(rotationValue, CONFIG.tools.stickers.defaults.transform.rotation, '°');
 
 				const active = activeManager();
 				if (active) {
-					active.manager.updateTransform(active.layer.id, { rotation: CONFIG.defaultStickerRotation });
+					active.manager.updateTransform(active.layer.id, { rotation: CONFIG.tools.stickers.defaults.transform.rotation });
 					this.saveState();
 				}
 			});
@@ -2453,12 +2453,12 @@ async resetAllSettings() {
 
 		if (resetOpacity) {
 			resetOpacity.addEventListener('click', () => {
-				if (opacity) opacity.value = CONFIG.defaultStickerOpacity;
-				showUnit(opacityValue, CONFIG.defaultStickerOpacity, '%');
+				if (opacity) opacity.value = CONFIG.tools.stickers.defaults.transform.opacity;
+				showUnit(opacityValue, CONFIG.tools.stickers.defaults.transform.opacity, '%');
 
 				const active = activeManager();
 				if (active) {
-					active.manager.updateTransform(active.layer.id, { opacity: CONFIG.defaultStickerOpacity });
+					active.manager.updateTransform(active.layer.id, { opacity: CONFIG.tools.stickers.defaults.transform.opacity });
 					this.saveState();
 				}
 			});
@@ -2515,8 +2515,8 @@ async resetAllSettings() {
 				if (!active) return;
 				active.manager.updateTransform(active.layer.id, {
 					scale: {
-						x: CONFIG.defaultTransform.scale.x,
-						y: CONFIG.defaultTransform.scale.y
+						x: CONFIG.tools.stickers.defaults.transform.scale.x,
+						y: CONFIG.tools.stickers.defaults.transform.scale.y
 					}
 				});
 				this.loadTransformSettings(active.layer, prefix);
@@ -2670,9 +2670,9 @@ async resetAllSettings() {
 		const colorRow = document.getElementById('canvasColorRow');
 
 		// Reset to defaults
-		if (widthInput) widthInput.value = CONFIG.defaultCanvasPreset.width;
-		if (heightInput) heightInput.value = CONFIG.defaultCanvasPreset.height;
-		if (colorInput) colorInput.value = CONFIG.defaultCanvasPreset.color;
+		if (widthInput) widthInput.value = CONFIG.canvas.defaults.blankDocument.width;
+		if (heightInput) heightInput.value = CONFIG.canvas.defaults.blankDocument.height;
+		if (colorInput) colorInput.value = CONFIG.canvas.defaults.blankDocument.color;
 
 		// Reset background to "Color" option
 		const colorRadio = document.querySelector('input[name="canvasBackground"][value="color"]');
@@ -2687,7 +2687,7 @@ async resetAllSettings() {
 			btn.classList.remove('active');
 			const width = parseInt(btn.dataset.width);
 			const height = parseInt(btn.dataset.height);
-			if (width === CONFIG.defaultCanvasPreset.width && height === CONFIG.defaultCanvasPreset.height) {
+			if (width === CONFIG.canvas.defaults.blankDocument.width && height === CONFIG.canvas.defaults.blankDocument.height) {
 				matchingPreset = btn;
 			}
 		});
@@ -2697,7 +2697,7 @@ async resetAllSettings() {
 		}
 
 		// Update orientation buttons based on default dimensions
-		this.updateOrientationButtons(CONFIG.defaultCanvasPreset.width, CONFIG.defaultCanvasPreset.height);
+		this.updateOrientationButtons(CONFIG.canvas.defaults.blankDocument.width, CONFIG.canvas.defaults.blankDocument.height);
 	}
 
 	setupNewCanvasModalListeners() {
@@ -3670,7 +3670,7 @@ setupWelcomeModalListeners() {
 		}
 	}
 
-	async loadBlankImage(width, height, color = CONFIG.defaultCanvasPreset.color, options = {}) {
+	async loadBlankImage(width, height, color = CONFIG.canvas.defaults.blankDocument.color, options = {}) {
 		const canvas = document.createElement('canvas');
 		canvas.width = width;
 		canvas.height = height;
@@ -4360,7 +4360,7 @@ setupWelcomeModalListeners() {
 	// single history entry, the same debounce pattern sliders use.
 	scheduleNudgeSave() {
 		clearTimeout(this._nudgeSaveTimer);
-		this._nudgeSaveTimer = setTimeout(() => this.saveState(), CONFIG.sliderDebounceMs);
+		this._nudgeSaveTimer = setTimeout(() => this.saveState(), CONFIG.tools.selection.timing.sliderDebounceMs);
 	}
 
 	// ===== HISTORY =====
@@ -4440,11 +4440,11 @@ setupWelcomeModalListeners() {
 
 		// UX: Can't add layers until image is loaded
 		if (addBtn) {
-			addBtn.disabled = !hasImage || this.layers.length >= CONFIG.maxLayers;
+			addBtn.disabled = !hasImage || this.layers.length >= CONFIG.app.limits.maxLayers;
 			if (!hasImage) {
 				addBtn.title = 'Load an image first';
-			} else if (this.layers.length >= CONFIG.maxLayers) {
-				addBtn.title = `Maximum ${CONFIG.maxLayers} layers`;
+			} else if (this.layers.length >= CONFIG.app.limits.maxLayers) {
+				addBtn.title = `Maximum ${CONFIG.app.limits.maxLayers} layers`;
 			} else {
 				addBtn.title = 'Add new layer';
 			}
@@ -4599,7 +4599,7 @@ setupWelcomeModalListeners() {
 		clearTimeout(this.sliderTimeout);
 		this.sliderTimeout = setTimeout(() => {
 			this.updatePreview();
-		}, CONFIG.sliderDebounceMs);
+		}, CONFIG.tools.selection.timing.sliderDebounceMs);
 	}
 
 
@@ -4610,8 +4610,8 @@ setupWelcomeModalListeners() {
 		return this.loadImageFile(file);
 		return;
 
-		if (file.size > CONFIG.maxFileSizeMB * 1024 * 1024) {
-			this.showError(`Image too large. Maximum size is ${CONFIG.maxFileSizeMB}MB`);
+		if (file.size > CONFIG.canvas.limits.maxFileSizeMB * 1024 * 1024) {
+			this.showError(`Image too large. Maximum size is ${CONFIG.canvas.limits.maxFileSizeMB}MB`);
 			return;
 		}
 
@@ -4630,8 +4630,8 @@ setupWelcomeModalListeners() {
 		img.onload = () => {
 			let width = img.width, height = img.height;
 
-			if (width > CONFIG.maxImageWidth || height > CONFIG.maxImageHeight) {
-				const scale = Math.min(CONFIG.maxImageWidth / width, CONFIG.maxImageHeight / height);
+			if (width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
+				const scale = Math.min(CONFIG.canvas.limits.maxWidth / width, CONFIG.canvas.limits.maxHeight / height);
 				width = Math.floor(width * scale);
 				height = Math.floor(height * scale);
 			}
@@ -4677,7 +4677,7 @@ setupWelcomeModalListeners() {
 			this.canvasElementsContainer.innerHTML = '';
 
 			// 1. Create Base Image Layer
-			if (CONFIG.createBaseImageLayerOnLoad) {
+			if (CONFIG.app.startup.layers.createBaseImage) {
 				const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
 				this.layers.push(layer);
 				// Set it active immediately
@@ -4685,7 +4685,7 @@ setupWelcomeModalListeners() {
 			}
 
 			// 2. Create Default Glitter Layer (Optional)
-			if (CONFIG.createDefaultLayerOnLoad) {
+			if (CONFIG.app.startup.layers.createDefaultGlitterFill) {
 				const layer = this.createLayer();
 				this.layers.push(layer);
 				// If created, this becomes the new active layer
@@ -4721,7 +4721,7 @@ setupWelcomeModalListeners() {
 			// P-1: warm the default font as soon as an image is available, so the
 			// first Text tool click almost never races the FontFace load (see
 			// TextGlitterManager's font-readiness cache-key fix, docs/UX-PLAN-2.md §4).
-			this.textGlitterManager?.ensureFontLoaded(CONFIG.textLayers.defaultFontId).catch(() => {});
+			this.textGlitterManager?.ensureFontLoaded(CONFIG.tools.text.defaultFontId).catch(() => {});
 
 			window.dispatchEvent(new Event('imageLoaded'));
 
@@ -4733,8 +4733,8 @@ setupWelcomeModalListeners() {
 	async loadImageFile(file, options = {}) {
 		if (!file) return false;
 
-		if (file.size > CONFIG.maxFileSizeMB * 1024 * 1024) {
-			this.showError(`Image too large. Maximum size is ${CONFIG.maxFileSizeMB}MB`);
+		if (file.size > CONFIG.canvas.limits.maxFileSizeMB * 1024 * 1024) {
+			this.showError(`Image too large. Maximum size is ${CONFIG.canvas.limits.maxFileSizeMB}MB`);
 			return false;
 		}
 
@@ -4783,8 +4783,8 @@ setupWelcomeModalListeners() {
 		let width = img.width;
 		let height = img.height;
 
-		if (width > CONFIG.maxImageWidth || height > CONFIG.maxImageHeight) {
-			const scale = Math.min(CONFIG.maxImageWidth / width, CONFIG.maxImageHeight / height);
+		if (width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
+			const scale = Math.min(CONFIG.canvas.limits.maxWidth / width, CONFIG.canvas.limits.maxHeight / height);
 			width = Math.floor(width * scale);
 			height = Math.floor(height * scale);
 		}
@@ -4839,12 +4839,12 @@ setupWelcomeModalListeners() {
 		this.layers = [];
 		this.canvasElementsContainer.innerHTML = '';
 
-		if (CONFIG.createBaseImageLayerOnLoad) {
+			if (CONFIG.app.startup.layers.createBaseImage) {
 			const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
 			this.layers.push(layer);
 		}
 
-		if (CONFIG.createDefaultLayerOnLoad) {
+		if (CONFIG.app.startup.layers.createDefaultGlitterFill) {
 			const layer = this.createLayer();
 			this.layers.push(layer);
 			this.layerManager.setActiveLayer(layer.id);
@@ -4867,7 +4867,7 @@ setupWelcomeModalListeners() {
 		this.updateHelpfulMessage();
 
 		this.previewCtx.putImageData(this.originalImageData, 0, 0);
-		this.textGlitterManager?.ensureFontLoaded(CONFIG.textLayers.defaultFontId).catch(() => {});
+		this.textGlitterManager?.ensureFontLoaded(CONFIG.tools.text.defaultFontId).catch(() => {});
 		window.dispatchEvent(new Event('imageLoaded'));
 		return true;
 	}
@@ -4988,8 +4988,8 @@ setupWelcomeModalListeners() {
 			return;
 		}
 
-		newWidth = Math.max(1, Math.min(CONFIG.maxImageWidth, newWidth));
-		newHeight = Math.max(1, Math.min(CONFIG.maxImageHeight, newHeight));
+		newWidth = Math.max(1, Math.min(CONFIG.canvas.limits.maxWidth, newWidth));
+		newHeight = Math.max(1, Math.min(CONFIG.canvas.limits.maxHeight, newHeight));
 
 		const anchor = GlitterEditor.CANVAS_ANCHORS[this.canvasSizeAnchorIndex] || GlitterEditor.CANVAS_ANCHORS[4];
 		const offsetX = Math.round((newWidth - this.originalCanvas.width) * anchor.fx);
@@ -5153,8 +5153,8 @@ setupWelcomeModalListeners() {
 			this.hideCanvasResizePreview();
 			return;
 		}
-		newWidth = Math.min(CONFIG.maxImageWidth, newWidth);
-		newHeight = Math.min(CONFIG.maxImageHeight, newHeight);
+		newWidth = Math.min(CONFIG.canvas.limits.maxWidth, newWidth);
+		newHeight = Math.min(CONFIG.canvas.limits.maxHeight, newHeight);
 
 		const oldWidth = this.originalCanvas.width;
 		const oldHeight = this.originalCanvas.height;
@@ -5412,7 +5412,7 @@ setupWelcomeModalListeners() {
 
 		} else if (layer.type === LayerType.BASE_IMAGE) {
 
-			if (CONFIG.autoCreateGlitterLayer) {
+			if (CONFIG.app.behavior.autoCreateGlitterLayer) {
 				const newLayer = this.glitterManager.createLayer();
 				this.layerManager.insertLayer(newLayer);
 				this.glitterFillSelector(x, y, event);
@@ -5425,7 +5425,7 @@ setupWelcomeModalListeners() {
 
 			if (hitSticker) {
 
-				if (CONFIG.autoCreateGlitterLayer) {
+				if (CONFIG.app.behavior.autoCreateGlitterLayer) {
 					const newLayer = this.glitterManager.createLayer();
 					this.layerManager.insertLayer(newLayer);
 					this.glitterFillSelector(x, y, event);
@@ -5463,7 +5463,7 @@ setupWelcomeModalListeners() {
 
 	handleLayerSelectAction(x, y, options = {}) {
 		if (this.currentTool !== ToolType.SELECT) return;
-		if (!CONFIG.autoSelect || this.justCompletedDrag) return;
+		if (!CONFIG.app.behavior.autoSelect || this.justCompletedDrag) return;
 
 		this.layerManager.handleLayerPick(x, y, options);
 	}
@@ -5509,10 +5509,10 @@ setupWelcomeModalListeners() {
 
 		const pixelIndex = y * this.originalCanvas.width + x;
 		const alpha = this.originalAlphaChannel[pixelIndex];
-		const isTransparent = alpha < CONFIG.alphaThreshold;
+		const isTransparent = alpha < CONFIG.tools.selection.transparency.alphaThreshold;
 
 		// 1. Config Check: Block if transparent and selection isn't allowed
-		if (isTransparent && !CONFIG.allowTransparentSelection) {
+		if (isTransparent && !CONFIG.tools.selection.transparency.allowTransparentSelection) {
 			this.updateStatus('Cannot select transparent pixels');
 			return;
 		}
@@ -5770,10 +5770,10 @@ setupWelcomeModalListeners() {
 		}
 
 		// Validate and clamp max frames (1 to hard limit)
-		const hardLimit = CONFIG.maxFramesHardLimit || 1000;
+		const hardLimit = CONFIG.export.limits.maxFramesHardLimit || 1000;
 		if (typeof settings.maxFrames !== 'number' || settings.maxFrames < 1) {
 			console.warn('Invalid maxFrames, setting to default');
-			settings.maxFrames = CONFIG.defaultExportMaxFrames;
+			settings.maxFrames = CONFIG.export.defaults.maxFrames;
 		} else if (settings.maxFrames > hardLimit) {
 			console.warn(`maxFrames exceeds hard limit, capping at ${hardLimit}`);
 			settings.maxFrames = hardLimit;
@@ -5782,7 +5782,7 @@ setupWelcomeModalListeners() {
 		// Validate quality (1-30)
 		if (typeof settings.quality !== 'number' || settings.quality < 1 || settings.quality > 30) {
 			console.warn('Invalid quality, setting to default');
-			settings.quality = CONFIG.defaultExportQuality;
+			settings.quality = CONFIG.export.defaults.quality;
 		}
 
 		// Validate frame skip (must be positive integer)
@@ -5801,10 +5801,10 @@ setupWelcomeModalListeners() {
 
 		// Validate string settings
 		if (typeof settings.ditherType !== 'string' || !settings.ditherType) {
-			settings.ditherType = CONFIG.defaultExportDitherType;
+			settings.ditherType = CONFIG.export.defaults.ditherType;
 		}
 		if (typeof settings.matteColor !== 'string' || !settings.matteColor.match(/^#[0-9A-Fa-f]{6}$/)) {
-			settings.matteColor = CONFIG.defaultExportMatteColor;
+			settings.matteColor = CONFIG.export.defaults.matteColor;
 		}
 	}
 
@@ -5839,7 +5839,7 @@ setupWelcomeModalListeners() {
 				height: this.originalCanvas.height,
 				originalData: new Uint8ClampedArray(this.originalImageData.data),
 				originalAlpha: this.originalAlphaChannel,
-				alphaThreshold: CONFIG.alphaThreshold
+				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold
 			},
 			exportSettings: this.exportSettings,
 			callbacks: {
@@ -5920,3 +5920,4 @@ setupWelcomeModalListeners() {
 	// Make editor globally accessible (optional, useful for debugging)
 	window.editor = editor;
 })();
+

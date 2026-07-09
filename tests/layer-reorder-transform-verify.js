@@ -108,3 +108,4 @@ async function createStickerLayer(page, label) {
 	await browser.close();
 	console.log('layer-reorder-transform-verify: passed');
 })();
+

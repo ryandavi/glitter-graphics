@@ -1,309 +1,371 @@
 const CONFIG = {
-	// ========================================
-	// APPLICATION
-	// ========================================
-	siteName: 'ryandavi.com glitter editor',
-	maxLayers: 25,
-	historyLimit: 30,
-	defaultTool: "select",
-	createDefaultLayerOnLoad: false,
-	createBaseImageLayerOnLoad: true,
-
-	// ========================================
-	// CANVAS & IMAGE
-	// ========================================
-	maxImageWidth: 1024,
-	maxImageHeight: 1024,
-	maxFileSizeMB: 10,
-	defaultCanvasPreset: { width: 400, height: 400, color: '#ffffff' },
-	baseGridSize: 20,
-
-	// Artboard
-	showArtboardBorder: false,
-	artboardBorderColor: '#00ffff',
-	artboardBorderWidth: 2,
-	artboardBorderStyle: 'dashed',
-
-	// ========================================
-	// LAYERS
-	// ========================================
-	exportFrameRateSource: 'first-layer',
-	layerSettingsOpenByDefault: false,
-	designPanelAccordion: true,
-
-	// Layer List Drag
-	scrollZoneSize: 50,
-	scrollSpeed: 10,
-
-	// ========================================
-	// TOOLS - Selection
-	// ========================================
-	defaultThreshold: 50,
-	defaultFeather: 0,
-	defaultScale: 100,
-	defaultOpacity: 100,
-	alphaThreshold: 254,
-	sliderDebounceMs: 150,
-	allowTransparentSelection: true,
-	maskBrush: {
-		defaultSize: 40,
-		minSize: 1,
-		maxSize: 300,
-		defaultSoftness: 0,
-		defaultFlow: 100,
-		// Brush tip shape. One of the ids in MaskEditor.BRUSH_SHAPES
-		// (round, square, calligraphy, star, heart). Only affects painting; the
-		// stamped result is baked into the mask, so export needs no shape info.
-		defaultShape: 'round',
-		stampSpacing: 0.25,
-		// Stroke smoothing/stabilization, 0 = off (default). Surfaced as a 0–100%
-		// slider; MaskEditor maps it to an EMA follow factor.
-		defaultSmoothing: 0,
-		// Per-mode overrides (WP1): Brush and Eraser keep independent setting
-		// sets (MaskEditor.toolSettings). Only the keys listed here differ from
-		// the shared defaults above; everything else is inherited. Eraser starts
-		// a bit larger since erasing is usually a coarser correction pass.
-		eraserDefaults: {
-			size: 60,
-			softness: 0,
-			flow: 100
+	app: {
+		siteName: 'ryandavi.com glitter editor',
+		limits: {
+			maxLayers: 25,
+			historyLimit: 30
 		},
-		overlayColor: '#ff2d8a',
-		overlayOpacity: 0.75,
-		overlayStripeOpacityBoost: 0.15,
-		cursorStroke: '#ffffff',
-		livePreviewThrottle: 'raf'
-	},
-
-	// ========================================
-	// TOOLS - Glitter
-	// ========================================
-	// Fill/border/shadow each carry their own default glitter id AND solid
-	// color. Shared across every layer type that has that slot (glitter-fill,
-	// text, shape) so retuning one slot's default doesn't touch the others,
-	// and doesn't need to be set separately per layer type.
-	defaultFillGlitterId: 111,
-	defaultBorderGlitterId: 111,
-	defaultShadowGlitterId: 111,
-	defaultFillColor: '#ff66cc',
-	defaultBorderColor: '#000000',
-	defaultShadowColor: '#000000',
-	glitterSettingsOpenByDefault: false,
-	refineGlobalDefault: false,
-	glitterGlobalDefault: false,
-
-	// Color adjust (WP4) identity defaults, shared by every glitter swatch
-	// (fill layers + text/shape effect slots). Also the reset-button targets
-	// (updateResetButton reads CONFIG['default'+SliderId]).
-	defaultGlitterHue: 0,
-	defaultGlitterSaturation: 100,
-	defaultGlitterBrightness: 100,
-
-	// Preview - Selected Outline
-	selectedGlitterOffset: 2,
-	selectedGlitterWidth: 2,
-
-	// ========================================
-	// TOOLS - Stickers
-	// ========================================
-	maxStickers: 50,
-	maxStickerUploadSize: 10 * 1024 * 1024,
-	allowedStickerTypes: ['image/png', 'image/jpeg', 'image/gif'],
-	defaultTransform: {
-		position: { x: 0, y: 0 },
-		rotation: 0,
-		scale: { x: 100, y: 100 },
-		proportionalScale: true,
-		opacity: 100,
-		flipX: false,
-		flipY: false
-	},
-	defaultStickerOpacity: 100,
-	defaultStickerScale: 100,
-	defaultStickerRotation: 0,
-	rotationSnapTolerance: 5,
-	roundStickerTransforms: true,
-
-	// ========================================
-	// TOOLS - Text Layers
-	// ========================================
-	textLayers: {
-		fontsManifest: 'data/fonts.json',
-		defaultFontId: 'luckiest-guy',
-		defaultText: 'glitter',
-		defaultBoxMode: 'auto',
-		defaultVerticalAlign: 'top',
-		minBoxSize: 4,
-		defaultFontSize: 64,
-		minFontSize: 12,
-		maxFontSize: 256,
-		defaultLetterSpacing: 0,
-		minLetterSpacing: -5,
-		maxLetterSpacing: 40,
-		lineHeight: 1.1,
-		maskPadding: 8,
-		maxTextLength: 200,
-		crispEdges: true
-	},
-
-	// ========================================
-	// TOOLS - Shapes (WP5b)
-	// ========================================
-	shapes: {
-		defaultShapeId: 'circle',   // one of ShapeLibrary.FILL_SHAPES ids
-		defaultSize: 160,           // intrinsic px for a click (no-drag) create
-		minSize: 8
-	},
-
-	// ========================================
-	// UI - Zoom
-	// ========================================
-	zoomLevels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16],
-
-	gestures: {
-		tapMaxMs: 300,
-		tapSlopPx: 10,
-		secondFingerGraceMs: 150,
-		doubleTapMs: 300,
-		doubleTapSlopPx: 30,
-		inertia: {
-			enabled: true,
-			decay: 0.92
+		startup: {
+			tool: 'select',
+			layers: {
+				createDefaultGlitterFill: false,
+				createBaseImage: true
+			}
+		},
+		behavior: {
+			autoSelect: true,
+			autoCreateGlitterLayer: true
 		}
 	},
 
-	// ========================================
-	// UI - Gallery
-	// ========================================
-	defaultGalleryTab: 'glitter',
-
-	// ========================================
-	// MOBILE
-	// ========================================
-	mobileBreakpoint: 800,
-	mobileStickerHitAreaPadding: 20,
-	mobileAutoCloseDesignDrawer: true,
-	mobileOpenDrawOnLayerAdd: true,
-
-	// ========================================
-	// EXPORT
-	// ========================================
-	export: {
-		// Base name for user-facing downloads; the project title overrides this.
-		defaultBaseName: 'ryandavi-com_glitter',
-		workers: 4,
-		quality: 1,
-		timing: {
-			forceDelay: 100,
-			maxFrames: 60
+	canvas: {
+		limits: {
+			maxWidth: 1024,
+			maxHeight: 1024,
+			maxFileSizeMB: 10
 		},
-		watermarkAlphaThreshold: 128,
-		sizeWarnings: [
-			{ message: 'Too big for Discord', limitMB: 10 },
-			{ message: 'Too big for Twitter', limitMB: 15 },
-			{ message: 'Kind of huge for a typical GIF...', limitMB: 50 },
-			{ message: 'Too big for Discord Nitro', limitMB: 500 }
-		]
-	},
-	defaultExportBaseImage: true,
-	defaultExportGlitter: true,
-	defaultExportStickers: true,
-	defaultExportTransparency: true,
-	defaultExportMatteColor: '#ffffff',
-
-	// Quality & Rendering
-	defaultExportQuality: 10,
-	defaultExportDitherEnabled: true,
-	defaultExportDitherType: 'FloydSteinberg',
-
-	// Frame Control
-	defaultExportFrameDelay: 110,
-	defaultExportMaxFrames: 60,
-	maxFramesHardLimit: 1000,
-	defaultExportFrameSkip: 1,
-	defaultExportReverse: false,
-	defaultExportSmartFrameReduction: true,
-
-	// Watermark
-	defaultExportWatermarkEnabled: false,
-	watermarkUrl: 'images/watermark/2.png',
-	watermarkPosition: 'bottom-right',
-	watermarkPaddingX: 5,
-	watermarkPaddingY: 5,
-	watermarkOpacity: 100,
-	watermarkScale: 100,
-
-	// UI
-	defaultShowHints: true,
-
-	// ========================================
-	// DEBUG
-	// ========================================
-	forceIOSExportPreview: false,
-	autoSelect: true,
-	autoCreateGlitterLayer: true,
-	debug: false,
-
-
-	// ========================================
-	// UI - Sticker Handles
-	// ========================================
-	stickerHandles: {
-		enabled: true,
-		cornerSize: 8,
-		rotationHandleRadius: 5,
-		rotationHandleDistance: 30,
-		handleFill: '#ffffff',
-		handleStroke: 'var(--color-bg-secondary)',
-		handleStrokeWidth: 1.5,
-		boundingBoxColor: 'var(--color-accent)',
-		boundingBoxWidth: 1.5,
-		handleHitboxPadding: 8,
-		minScale: 10,
-		maxScale: 500,
+		defaults: {
+			blankDocument: { width: 400, height: 400, color: '#ffffff' }
+		},
+		grid: {
+			baseSize: 20
+		},
+		artboard: {
+			showBorder: false,
+			borderColor: '#00ffff',
+			borderWidth: 2,
+			borderStyle: 'dashed'
+		}
 	},
 
-	// ========================================
-	// SHORTCUTS
-	// ========================================
-	shortcuts: {
-		tools: [
-			{ key: 'V', action: 'Select Tool' },
-			{ key: 'T', action: 'Text Tool' },
-			{ key: 'U', action: 'Shape Tool' },
-			{ key: 'I', action: 'Color Fill Tool' },
-			{ key: 'B', action: 'Mask Brush Tool' },
-			{ key: 'E', action: 'Mask Eraser Tool' },
-			{ key: 'H', action: 'Hand Tool' },
-			{ key: 'Z', action: 'Zoom Tool' },
-			{ key: 'Arrow Keys', action: 'Nudge Selected Layer' },
-			{ key: 'Shift + Arrow Keys', action: 'Nudge Selected Layer 10px' },
-			{ key: 'Shift + Click', action: 'Add/Remove Movable Layer from Selection' },
-			{ key: 'Alt + Click', action: 'Cycle Through Overlapping Layers' },
-			{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move' },
-			{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg' }
-		],
-		brush: [
-			{ key: 'X', action: 'Swap Paint/Erase (Mask Brush)' },
-			{ key: '[ / ]', action: 'Decrease/Increase Brush Size' },
-			{ key: 'Shift + [ / ]', action: 'Adjust Brush Size Faster' },
-			{ key: 'Shift + Drag', action: 'Constrain the stroke to a straight line (0/45/90°)' },
-		],
-		view: [
-			{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)' },
-			{ key: 'Scroll Wheel', action: 'Zoom In/Out (Zoom Tool)' },
-			{ key: 'Ctrl + Wheel', action: 'Trackpad Zoom' },
-			{ key: 'Ctrl + 0', action: 'Fit Screen' },
-			{ key: 'Ctrl + 1', action: 'Reset Zoom (100%)' },
-			{ key: 'Ctrl + +/-', action: 'Zoom In/Out' }
-		],
-		history: [
-			{ key: 'Ctrl + Z', action: 'Undo' },
-			{ key: 'Ctrl + Shift + Z', action: 'Redo' },
-		],
-		file: [
-			{ key: 'Ctrl + S', action: 'Save Project' }
-		]
+	layers: {
+		export: {
+			frameRateSource: 'first-layer'
+		},
+		ui: {
+			settingsOpenByDefault: false,
+			designPanelAccordion: true
+		},
+		reorder: {
+			autoScroll: {
+				zoneSize: 50,
+				speed: 10
+			}
+		}
+	},
+
+	tools: {
+		selection: {
+			defaults: {
+				threshold: 50,
+				feather: 0
+			},
+			transparency: {
+				alphaThreshold: 254,
+				allowTransparentSelection: true
+			},
+			timing: {
+				sliderDebounceMs: 150
+			}
+		},
+		effects: {
+			defaults: {
+				scale: 100,
+				opacity: 100
+			}
+		},
+		maskBrush: {
+			limits: {
+				minSize: 1,
+				maxSize: 300
+			},
+			defaults: {
+				size: 40,
+				softness: 0,
+				flow: 100,
+				// Brush tip shape. One of the ids in MaskEditor.BRUSH_SHAPES
+				// (round, square, calligraphy, star, heart). Only affects painting; the
+				// stamped result is baked into the mask, so export needs no shape info.
+				shape: 'round',
+				// Stroke smoothing/stabilization, 0 = off (default). Surfaced as a
+				// 0-100% slider; MaskEditor maps it to an EMA follow factor.
+				smoothing: 0
+			},
+			stroke: {
+				stampSpacing: 0.25
+			},
+			// Per-mode overrides (WP1): Brush and Eraser keep independent setting
+			// sets (MaskEditor.toolSettings). Only the keys listed here differ from
+			// the shared defaults above; everything else is inherited. Eraser starts
+			// a bit larger since erasing is usually a coarser correction pass.
+			eraserDefaults: {
+				size: 60,
+				softness: 0,
+				flow: 100
+			},
+			overlay: {
+				color: '#ff2d8a',
+				opacity: 0.75,
+				stripeOpacityBoost: 0.15
+			},
+			cursor: {
+				stroke: '#ffffff'
+			},
+			livePreview: {
+				throttle: 'raf'
+			}
+		},
+		glitter: {
+			defaults: {
+				// Fill/border/shadow each carry their own default glitter id AND solid
+				// color. Shared across every layer type that has that slot
+				// (glitter-fill, text, shape) so retuning one slot's default doesn't
+				// touch the others, and doesn't need to be set separately per layer type.
+				fillGlitterId: 111,
+				borderGlitterId: 111,
+				shadowGlitterId: 111,
+				fillColor: '#ff66cc',
+				borderColor: '#000000',
+				shadowColor: '#000000',
+				// Color adjust (WP4) identity defaults, shared by every glitter swatch
+				// (fill layers + text/shape effect slots). Also the reset-button targets
+				// (updateResetButton reads CONFIG['default'+SliderId]).
+				colorAdjust: {
+					hue: 0,
+					saturation: 100,
+					brightness: 100
+				}
+			},
+			behavior: {
+				refineAffectsAllLayers: false,
+				glitterSelectionAffectsAllLayers: false
+			},
+			ui: {
+				settingsOpenByDefault: false
+			},
+			preview: {
+				selectedOutlineOffset: 2,
+				selectedOutlineWidth: 2
+			}
+		},
+		stickers: {
+			maxCount: 50,
+			maxUploadSize: 10 * 1024 * 1024,
+			allowedTypes: ['image/png', 'image/jpeg', 'image/gif'],
+			defaults: {
+				transform: {
+					position: { x: 0, y: 0 },
+					rotation: 0,
+					scale: { x: 100, y: 100 },
+					proportionalScale: true,
+					opacity: 100,
+					flipX: false,
+					flipY: false
+				}
+			},
+			rotationSnapTolerance: 5,
+			transform: {
+				roundValues: true
+			}
+		},
+		text: {
+			fontsManifest: 'data/fonts.json',
+			defaultFontId: 'luckiest-guy',
+			defaultText: 'glitter',
+			defaultBoxMode: 'auto',
+			defaultVerticalAlign: 'top',
+			minBoxSize: 4,
+			defaultFontSize: 64,
+			minFontSize: 12,
+			maxFontSize: 256,
+			defaultLetterSpacing: 0,
+			minLetterSpacing: -5,
+			maxLetterSpacing: 40,
+			lineHeight: 1.1,
+			maxTextLength: 200,
+			border: {
+				minWidthPx: 1,
+				maxWidthPx: 24,
+				defaultWidthPx: 4,
+				defaultPlacement: 'outside',
+				defaultDrawOrder: 'behind',
+				defaultSource: 'glitter',
+				defaultEdgeStyle: 'round'
+			},
+			shadow: {
+				defaultOffsetX: 6,
+				defaultOffsetY: 6
+			}
+		},
+		shapes: {
+			defaultShapeId: 'circle',   // one of ShapeLibrary.FILL_SHAPES ids
+			defaultSize: 160,           // intrinsic px for a click (no-drag) create
+			minSize: 8,
+			border: {
+				minWidthPx: 1,
+				maxWidthPx: 100,
+				defaultWidthPx: 6,
+				defaultStyle: 'solid',
+				minDotSpacingPx: 1,
+				maxDotSpacingPx: 60,
+				defaultDotSpacingPx: 10,
+				defaultPlacement: 'outside',
+				defaultDrawOrder: 'behind',
+				defaultSource: 'solid',
+				defaultEdgeStyle: 'round',
+				hardEdgeMiterLimit: 2
+			},
+			shadow: {
+				defaultOffsetX: 6,
+				defaultOffsetY: 6
+			}
+		}
+	},
+
+	// Shared effect rendering defaults. Text and shape effects both read these,
+	// so they live outside either feature-specific block.
+	rendering: {
+		maskPaddingPx: 8,
+		crispMaskEdges: true,
+		borderSampling: {
+			minSteps: 16,
+			maxSteps: 64,
+			stepsPerPixel: 4
+		}
+	},
+
+	ui: {
+		zoom: {
+			levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16]
+		},
+		gestures: {
+			tapMaxMs: 300,
+			tapSlopPx: 10,
+			secondFingerGraceMs: 150,
+			doubleTapMs: 300,
+			doubleTapSlopPx: 30,
+			inertia: {
+				enabled: true,
+				decay: 0.92
+			}
+		},
+		gallery: {
+			defaultTab: 'glitter'
+		},
+		mobile: {
+			breakpoint: 800,
+			stickerHitAreaPadding: 20,
+			autoCloseDesignDrawer: true,
+			openDrawOnLayerAdd: true
+		},
+		hints: {
+			enabledByDefault: true
+		},
+		stickerHandles: {
+			enabled: true,
+			cornerSize: 8,
+			rotationHandleRadius: 5,
+			rotationHandleDistance: 30,
+			handleFill: '#ffffff',
+			handleStroke: 'var(--color-bg-secondary)',
+			handleStrokeWidth: 1.5,
+			boundingBoxColor: 'var(--color-accent)',
+			boundingBoxWidth: 1.5,
+			handleHitboxPadding: 8,
+			minScale: 10,
+			maxScale: 500,
+		},
+		shortcuts: {
+			tools: [
+				{ key: 'V', action: 'Select Tool' },
+				{ key: 'T', action: 'Text Tool' },
+				{ key: 'U', action: 'Shape Tool' },
+				{ key: 'I', action: 'Color Fill Tool' },
+				{ key: 'B', action: 'Mask Brush Tool' },
+				{ key: 'E', action: 'Mask Eraser Tool' },
+				{ key: 'H', action: 'Hand Tool' },
+				{ key: 'Z', action: 'Zoom Tool' },
+				{ key: 'Arrow Keys', action: 'Nudge Selected Layer' },
+				{ key: 'Shift + Arrow Keys', action: 'Nudge Selected Layer 10px' },
+				{ key: 'Shift + Click', action: 'Add/Remove Movable Layer from Selection' },
+				{ key: 'Alt + Click', action: 'Cycle Through Overlapping Layers' },
+				{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move' },
+				{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg' }
+			],
+			brush: [
+				{ key: 'X', action: 'Swap Paint/Erase (Mask Brush)' },
+				{ key: '[ / ]', action: 'Decrease/Increase Brush Size' },
+				{ key: 'Shift + [ / ]', action: 'Adjust Brush Size Faster' },
+				{ key: 'Shift + Drag', action: 'Constrain the stroke to a straight line (0/45/90 deg)' },
+			],
+			view: [
+				{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)' },
+				{ key: 'Scroll Wheel', action: 'Zoom In/Out (Zoom Tool)' },
+				{ key: 'Ctrl + Wheel', action: 'Trackpad Zoom' },
+				{ key: 'Ctrl + 0', action: 'Fit Screen' },
+				{ key: 'Ctrl + 1', action: 'Reset Zoom (100%)' },
+				{ key: 'Ctrl + +/-', action: 'Zoom In/Out' }
+			],
+			history: [
+				{ key: 'Ctrl + Z', action: 'Undo' },
+				{ key: 'Ctrl + Shift + Z', action: 'Redo' },
+			],
+			file: [
+				{ key: 'Ctrl + S', action: 'Save Project' }
+			]
+		}
+	},
+
+	export: {
+		core: {
+			// Base name for user-facing downloads; the project title overrides this.
+			defaultBaseName: 'ryandavi-com_glitter',
+			workers: 4,
+			quality: 1,
+			timing: {
+				forceDelay: 100,
+				maxFrames: 60
+			}
+		},
+		defaults: {
+			baseImage: true,
+			glitter: true,
+			stickers: true,
+			transparency: true,
+			matteColor: '#ffffff',
+			quality: 10,
+			ditherEnabled: true,
+			ditherType: 'FloydSteinberg',
+			frameDelay: 110,
+			maxFrames: 60,
+			frameSkip: 1,
+			reverse: false,
+			smartFrameReduction: true,
+			watermarkEnabled: false
+		},
+		limits: {
+			maxFramesHardLimit: 1000,
+			sizeWarnings: [
+				{ message: 'Too big for Discord', limitMB: 10 },
+				{ message: 'Too big for Twitter', limitMB: 15 },
+				{ message: 'Kind of huge for a typical GIF...', limitMB: 50 },
+				{ message: 'Too big for Discord Nitro', limitMB: 500 }
+			]
+		},
+		watermark: {
+			alphaThreshold: 128,
+			url: 'images/watermark/2.png',
+			position: 'bottom-right',
+			paddingX: 5,
+			paddingY: 5,
+			opacity: 100,
+			scale: 100
+		}
+	},
+
+	debug: {
+		forceIOSExportPreview: false,
+		enabled: false
 	},
 };
 
@@ -699,3 +761,6 @@ const DEBUG_CONFIG = {
 		{ id: 3, x: 600, y: 600 }
 	]
 };
+
+
+

@@ -191,13 +191,13 @@ class StickerManager extends ContentManager {
 	// ===== UPLOAD HANDLING =====
 
 	validateUpload(file) {
-		if (!CONFIG.allowedStickerTypes.includes(file.type)) {
+		if (!CONFIG.tools.stickers.allowedTypes.includes(file.type)) {
 			this.editor.showError('Please upload a valid image file (PNG, GIF, or JPG)');
 			return false;
 		}
 
-		if (file.size > CONFIG.maxStickerUploadSize) {
-			const maxMB = Math.round(CONFIG.maxStickerUploadSize / 1024 / 1024);
+		if (file.size > CONFIG.tools.stickers.maxUploadSize) {
+			const maxMB = Math.round(CONFIG.tools.stickers.maxUploadSize / 1024 / 1024);
 			this.editor.showError(`File is too large. Maximum size is ${maxMB}MB.`);
 			return false;
 		}
@@ -751,3 +751,4 @@ updateTransform(layerId, updates) {
 		this.layerTransforms.clear();
 	}
 }
+

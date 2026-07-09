@@ -28,7 +28,7 @@ class ShapeGlitterManager {
 		this.maskUrlCache = new Map();
 		this.ui = {};
 		// Shape id used for the NEXT shape created by the tool (set by the picker).
-		this.activeShapeId = CONFIG.shapes.defaultShapeId;
+		this.activeShapeId = CONFIG.tools.shapes.defaultShapeId;
 		// Gallery picker session (reuses the shared strip + Done UX from text):
 		// { layerId, slot } while the user is choosing a glitter for a slot.
 		this.pickerSession = null;
@@ -37,7 +37,7 @@ class ShapeGlitterManager {
 	}
 
 	getActiveShapeId() {
-		return this.activeShapeId || CONFIG.shapes.defaultShapeId;
+		return this.activeShapeId || CONFIG.tools.shapes.defaultShapeId;
 	}
 
 	setupUI() {
@@ -69,6 +69,8 @@ class ShapeGlitterManager {
 		this.ui.borderDotSpacingRow = id('shapeBorderDotSpacingRow');
 		this.ui.borderOpacity = id('shapeBorderOpacity');
 		this.ui.borderOpacityValue = id('shapeBorderOpacityValue');
+		this.ui.borderEdgeRounded = id('shapeBorderEdgeRounded');
+		this.ui.borderEdgeHard = id('shapeBorderEdgeHard');
 		this.ui.borderPositionOutside = id('shapeBorderPositionOutside');
 		this.ui.borderPositionCenter = id('shapeBorderPositionCenter');
 		this.ui.borderPositionInside = id('shapeBorderPositionInside');
@@ -99,6 +101,16 @@ class ShapeGlitterManager {
 			const info = this.ui[prefix + 'GlitterInfo'];
 			this.ui[prefix + 'Advanced'] = info?.closest('.text-effect-subsection')?.querySelector('.advanced-disclosure') || null;
 		});
+
+		const borderConfig = CONFIG.tools.shapes.border || {};
+		if (this.ui.borderWidth) {
+			this.ui.borderWidth.min = String(borderConfig.minWidthPx ?? 1);
+			this.ui.borderWidth.max = String(borderConfig.maxWidthPx ?? 60);
+		}
+		if (this.ui.borderDotSpacing) {
+			this.ui.borderDotSpacing.min = String(borderConfig.minDotSpacingPx ?? 1);
+			this.ui.borderDotSpacing.max = String(borderConfig.maxDotSpacingPx ?? 60);
+		}
 
 		this.renderShapePicker();
 	}
@@ -218,6 +230,8 @@ class ShapeGlitterManager {
 
 		this.ui.borderStyleSolid?.addEventListener('click', () => this.setBorderStyle('solid'));
 		this.ui.borderStyleDotted?.addEventListener('click', () => this.setBorderStyle('dotted'));
+		this.ui.borderEdgeRounded?.addEventListener('click', () => this.setBorderEdgeStyle('round'));
+		this.ui.borderEdgeHard?.addEventListener('click', () => this.setBorderEdgeStyle('hard'));
 		this.ui.borderPositionOutside?.addEventListener('click', () => this.setBorderPlacement('outside'));
 		this.ui.borderPositionCenter?.addEventListener('click', () => this.setBorderPlacement('center'));
 		this.ui.borderPositionInside?.addEventListener('click', () => this.setBorderPlacement('inside'));
@@ -239,9 +253,9 @@ class ShapeGlitterManager {
 				// fall back to the default glitter. The gallery opens only via the
 				// swatch/Change buttons (armPicker).
 				if (mode === 'glitter' && !this.getSlotGlitterId(layer, slot)) {
-					if (slot === 'fill') layer.selectedGlitterId = CONFIG.defaultFillGlitterId;
-					else if (slot === 'border') data.glitterId = CONFIG.defaultBorderGlitterId;
-					else if (slot === 'shadow') data.glitterId = CONFIG.defaultShadowGlitterId;
+					if (slot === 'fill') layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId;
+					else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId;
+					else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId;
 				}
 				this._refreshSourceUI(layer, slot);
 				this.invalidateMeasurement(layer);
@@ -461,9 +475,9 @@ class ShapeGlitterManager {
 		if (mode === 'glitter') {
 			// Glitter mode is never empty — fall back to the default glitter.
 			if (!this.getSlotGlitterId(layer, slot)) {
-				if (slot === 'fill') layer.selectedGlitterId = CONFIG.defaultFillGlitterId;
-				else if (slot === 'border') data.glitterId = CONFIG.defaultBorderGlitterId;
-				else if (slot === 'shadow') data.glitterId = CONFIG.defaultShadowGlitterId;
+				if (slot === 'fill') layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId;
+				else if (slot === 'border') data.glitterId = CONFIG.tools.glitter.defaults.borderGlitterId;
+				else if (slot === 'shadow') data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId;
 			}
 			const glitter = this.editor.glitterManager.getItemById(this.getSlotGlitterId(layer, slot));
 			const els = {
@@ -517,6 +531,7 @@ class ShapeGlitterManager {
 		if (this.ui.borderOpacity) { this.ui.borderOpacity.value = bd.opacity ?? 100; this.ui.borderOpacityValue.innerHTML = formatUnit(bd.opacity ?? 100, '%'); }
 		if (this.ui.shapeBorderColor) this.ui.shapeBorderColor.value = bd.color || '#000000';
 		this._syncBorderStyleUI(bd);
+		this._syncBorderEdgeUI(bd);
 		this._syncBorderPlacementUI(bd);
 		this._syncBorderDrawOrderUI(bd);
 		this._loadColorAdjust('shapeBorder', bd.colorAdjust, bd.scale);
@@ -546,7 +561,7 @@ class ShapeGlitterManager {
 	getDefaultFill() {
 		return {
 			mode: 'glitter',
-			color: CONFIG.defaultFillColor,
+			color: CONFIG.tools.glitter.defaults.fillColor,
 			scale: 100,
 			opacity: 100,
 			colorAdjust: null
@@ -554,14 +569,16 @@ class ShapeGlitterManager {
 	}
 
 	getDefaultBorder() {
+		const borderConfig = CONFIG.tools.shapes.border || {};
 		return {
-			widthPx: 6,
-			style: 'solid',
-			dotSpacingPx: 10,
-			placement: 'outside',
-			drawOrder: 'behind',
-			mode: 'solid',
-			color: CONFIG.defaultBorderColor,
+			widthPx: borderConfig.defaultWidthPx ?? 6,
+			style: borderConfig.defaultStyle ?? 'solid',
+			dotSpacingPx: borderConfig.defaultDotSpacingPx ?? 10,
+			placement: borderConfig.defaultPlacement ?? 'outside',
+			drawOrder: borderConfig.defaultDrawOrder ?? 'behind',
+			edgeStyle: borderConfig.defaultEdgeStyle ?? 'round',
+			mode: borderConfig.defaultSource ?? 'solid',
+			color: CONFIG.tools.glitter.defaults.borderColor,
 			glitterId: null,
 			scale: 100,
 			opacity: 100,
@@ -570,11 +587,12 @@ class ShapeGlitterManager {
 	}
 
 	getDefaultShadow() {
+		const shadowConfig = CONFIG.tools.shapes.shadow || {};
 		return {
-			offsetX: 6,
-			offsetY: 6,
+			offsetX: shadowConfig.defaultOffsetX ?? 6,
+			offsetY: shadowConfig.defaultOffsetY ?? 6,
 			mode: 'solid',
-			color: CONFIG.defaultShadowColor,
+			color: CONFIG.tools.glitter.defaults.shadowColor,
 			glitterId: null,
 			scale: 100,
 			opacity: 100,
@@ -601,22 +619,22 @@ class ShapeGlitterManager {
 	}
 
 	createLayer(options = {}) {
-		if (this.editor.layerManager.layers.length >= CONFIG.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.maxLayers} layers reached`);
+		if (this.editor.layerManager.layers.length >= CONFIG.app.limits.maxLayers) {
+			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
 			return null;
 		}
 
-		const shapeId = options.shapeId || CONFIG.shapes.defaultShapeId;
+		const shapeId = options.shapeId || CONFIG.tools.shapes.defaultShapeId;
 		// A drag supplies an explicit box (stretch allowed); a click supplies no
 		// size, so derive width/height from the shape's natural aspect so it isn't
 		// distorted (a regular hexagon/triangle isn't square).
 		let width;
 		let height;
 		if (options.width && options.height) {
-			width = Math.max(CONFIG.shapes.minSize, Math.round(options.width));
-			height = Math.max(CONFIG.shapes.minSize, Math.round(options.height));
+			width = Math.max(CONFIG.tools.shapes.minSize, Math.round(options.width));
+			height = Math.max(CONFIG.tools.shapes.minSize, Math.round(options.height));
 		} else {
-			const sized = this.sizeForShape(shapeId, CONFIG.shapes.defaultSize);
+			const sized = this.sizeForShape(shapeId, CONFIG.tools.shapes.defaultSize);
 			width = sized.width;
 			height = sized.height;
 		}
@@ -634,8 +652,8 @@ class ShapeGlitterManager {
 			name: this.getShapeLabel(shapeId),
 			visible: true,
 			locked: false,
-			selectedGlitterId: CONFIG.defaultFillGlitterId,
-			settings: { scale: CONFIG.defaultScale, opacity: CONFIG.defaultOpacity },
+			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
+			settings: { scale: CONFIG.tools.effects.defaults.scale, opacity: CONFIG.tools.effects.defaults.opacity },
 			shapeData: {
 				shapeId,
 				width,
@@ -656,7 +674,7 @@ class ShapeGlitterManager {
 	// aspect (larger dimension = size).
 	sizeForShape(shapeId, size) {
 		const aspect = ShapeLibrary.getAspect(shapeId);
-		const min = CONFIG.shapes.minSize;
+		const min = CONFIG.tools.shapes.minSize;
 		if (aspect >= 1) {
 			return { width: Math.max(min, Math.round(size)), height: Math.max(min, Math.round(size / aspect)) };
 		}
@@ -699,6 +717,21 @@ class ShapeGlitterManager {
 
 		border.style = style === 'dotted' ? 'dotted' : 'solid';
 		this._syncBorderStyleUI(border);
+		this.invalidateMeasurement(layer);
+		this.renderLayer(layer);
+		this.editor.saveState();
+		this.editor.layerManager.renderLayersList();
+	}
+
+	setBorderEdgeStyle(edgeStyle) {
+		const layer = this.getActiveShapeLayer();
+		if (!layer) return;
+
+		const border = this.ensureEffectData(layer, 'border');
+		if (this.getBorderEdgeStyle(border) === edgeStyle) return;
+
+		border.edgeStyle = edgeStyle === 'hard' ? 'hard' : 'round';
+		this._syncBorderEdgeUI(border);
 		this.invalidateMeasurement(layer);
 		this.renderLayer(layer);
 		this.editor.saveState();
@@ -754,20 +787,33 @@ class ShapeGlitterManager {
 				: 'outside';
 	}
 
+	getBorderEdgeStyle(borderData) {
+		return borderData?.edgeStyle === 'hard' ? 'hard' : 'round';
+	}
+
 	getBorderDrawOrder(borderData) {
 		return borderData?.drawOrder === 'front' ? 'front' : 'behind';
 	}
 
 	getBorderOutsidePadding(borderData) {
 		const widthPx = Math.max(0, borderData?.widthPx || 0);
+		const hardEdgeMultiplier = this.getBorderEdgeStyle(borderData) === 'hard'
+			? Math.max(1, CONFIG.tools.shapes.border?.hardEdgeMiterLimit ?? 2)
+			: 1;
 		switch (this.getBorderPlacement(borderData)) {
 			case 'inside':
 				return 0;
 			case 'center':
-				return Math.ceil(widthPx / 2);
+				return Math.ceil((widthPx / 2) * hardEdgeMultiplier);
 			default:
-				return widthPx;
+				return Math.ceil(widthPx * hardEdgeMultiplier);
 		}
+	}
+
+	_syncBorderEdgeUI(borderData) {
+		const edgeStyle = this.getBorderEdgeStyle(borderData);
+		this.ui.borderEdgeRounded?.classList.toggle('active', edgeStyle === 'round');
+		this.ui.borderEdgeHard?.classList.toggle('active', edgeStyle === 'hard');
 	}
 
 	_syncBorderPlacementUI(borderData) {
@@ -820,13 +866,13 @@ class ShapeGlitterManager {
 			d.shapeId,
 			d.width,
 			d.height,
-			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, this.getBorderPlacement(d.border)] : null,
+			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, this.getBorderPlacement(d.border), this.getBorderEdgeStyle(d.border)] : null,
 			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null
 		]);
 	}
 
 	// Rasterize the shape into a padded mask canvas (crisp-thresholded like text,
-	// per CONFIG.textLayers.crispEdges — same GIF-fringe reasoning). Returns the
+	// per CONFIG.rendering.crispMaskEdges — same GIF-fringe reasoning). Returns the
 	// canvas plus the shape's frame rect within it (for handles/selection).
 	getMeasurementEntry(layer) {
 		this.normalizeLayer(layer);
@@ -843,7 +889,7 @@ class ShapeGlitterManager {
 		const d = layer.shapeData;
 		const w = d.width;
 		const h = d.height;
-		const padding = CONFIG.textLayers.maskPadding;
+		const padding = CONFIG.rendering?.maskPaddingPx ?? 8;
 		const borderWidth = this.getBorderOutsidePadding(d.border);
 		const shX = d.shadow?.offsetX || 0;
 		const shY = d.shadow?.offsetY || 0;
@@ -871,7 +917,7 @@ class ShapeGlitterManager {
 		ShapeLibrary.trace(d.shapeId, ctx, w / 2, h / 2, { fit: 'fill' });
 		ctx.restore();
 
-		if (CONFIG.textLayers.crispEdges !== false) {
+		if (CONFIG.rendering?.crispMaskEdges !== false) {
 			const image = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
 			const px = image.data;
 			for (let i = 3; i < px.length; i += 4) {
@@ -944,6 +990,7 @@ class ShapeGlitterManager {
 		const borderStyle = borderData?.style === 'dotted' ? 'dotted' : 'solid';
 		const drawOrder = this.getBorderDrawOrder(borderData);
 		const placement = this.getBorderPlacement(borderData);
+		const edgeStyle = this.getBorderEdgeStyle(borderData);
 		const effectivePlacement = borderStyle === 'dotted' && placement === 'outside' && drawOrder === 'front'
 			? 'center'
 			: placement;
@@ -957,8 +1004,14 @@ class ShapeGlitterManager {
 		ctx.save();
 		ctx.translate(measurement.layoutX + measurement.shapeW / 2, measurement.layoutY + measurement.shapeH / 2);
 		ctx.strokeStyle = '#ffffff';
-		ctx.lineJoin = 'round';
-		ctx.lineCap = 'round';
+		if (edgeStyle === 'hard') {
+			ctx.lineJoin = 'miter';
+			ctx.miterLimit = Math.max(1, CONFIG.tools.shapes.border?.hardEdgeMiterLimit ?? 2);
+			ctx.lineCap = borderStyle === 'dotted' ? 'square' : 'butt';
+		} else {
+			ctx.lineJoin = 'round';
+			ctx.lineCap = 'round';
+		}
 		if (effectivePlacement === 'inside') {
 			ctx.save();
 			ctx.clip(path);
@@ -981,7 +1034,7 @@ class ShapeGlitterManager {
 			ctx.globalCompositeOperation = 'source-over';
 		}
 
-		if (CONFIG.textLayers.crispEdges !== false) {
+		if (CONFIG.rendering?.crispMaskEdges !== false) {
 			const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
 			const px = image.data;
 			for (let i = 3; i < px.length; i += 4) px[i] = px[i] >= 128 ? 255 : 0;
@@ -1075,6 +1128,7 @@ class ShapeGlitterManager {
 
 		const transform = this.layerTransforms.get(layer.id);
 		if (transform) {
+			transform.layer = layer;
 			transform.element = wrapper;
 			transform.applyTransform(wrapper, { width: measurement.width, height: measurement.height });
 			if (
@@ -1145,7 +1199,7 @@ class ShapeGlitterManager {
 				offsetY: 0,
 				source: this.getEffectPaintSource(layer, 'border'),
 				maskCanvas: this.getBorderMaskCanvas(measurement, border),
-				maskCacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${this.getBorderPlacement(border)}:${this.getBorderDrawOrder(border)}`
+				maskCacheKey: `${measurement.key}|border:${border.widthPx}:${border.style || 'solid'}:${border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx}:${this.getBorderPlacement(border)}:${this.getBorderDrawOrder(border)}:${this.getBorderEdgeStyle(border)}`
 			}
 			: null;
 
@@ -1293,8 +1347,8 @@ class ShapeGlitterManager {
 		const sy = (t.scale.y || 100) / 100;
 		if (Math.abs(sx - 1) < 1e-3 && Math.abs(sy - 1) < 1e-3) return;
 
-		layer.shapeData.width = Math.max(CONFIG.shapes.minSize, Math.round(layer.shapeData.width * sx));
-		layer.shapeData.height = Math.max(CONFIG.shapes.minSize, Math.round(layer.shapeData.height * sy));
+		layer.shapeData.width = Math.max(CONFIG.tools.shapes.minSize, Math.round(layer.shapeData.width * sx));
+		layer.shapeData.height = Math.max(CONFIG.tools.shapes.minSize, Math.round(layer.shapeData.height * sy));
 		if (layer.shapeData.border) {
 			layer.shapeData.border.widthPx = Math.max(1, Math.round(layer.shapeData.border.widthPx * Math.max(sx, sy)));
 		}
@@ -1310,8 +1364,8 @@ class ShapeGlitterManager {
 	setShapeSize(layer, width, height) {
 		if (!layer || layer.type !== LayerType.SHAPE) return false;
 		this.normalizeLayer(layer);
-		layer.shapeData.width = Math.max(CONFIG.shapes.minSize, Math.round(width));
-		layer.shapeData.height = Math.max(CONFIG.shapes.minSize, Math.round(height));
+		layer.shapeData.width = Math.max(CONFIG.tools.shapes.minSize, Math.round(width));
+		layer.shapeData.height = Math.max(CONFIG.tools.shapes.minSize, Math.round(height));
 		this.invalidateMeasurement(layer);
 		this.renderLayer(layer);
 		this.loadLayerSettings(layer);
@@ -1392,3 +1446,4 @@ class ShapeGlitterManager {
 		return measurement.frameRect;
 	}
 }
+

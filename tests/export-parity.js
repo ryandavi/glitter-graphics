@@ -178,7 +178,7 @@ async function exportBytes(page, exportOverrides = {}) {
 					height: editor.originalCanvas.height,
 					originalData: new Uint8ClampedArray(editor.originalImageData.data),
 					originalAlpha: editor.originalAlphaChannel,
-					alphaThreshold: CONFIG.alphaThreshold
+					alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold
 				},
 				exportSettings: editor.exportSettings,
 				callbacks: {
@@ -287,3 +287,4 @@ main().catch((error) => {
 	console.error(error?.stack || String(error));
 	process.exit(1);
 });
+
