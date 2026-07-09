@@ -86,6 +86,137 @@ class LayerManager {
 		return layer;
 	}
 
+	serializeLayer(layer, options = {}) {
+		const { includeMaskVersion = true } = options;
+		if (!layer) return null;
+
+		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
+			return this.editor.stickerManager.serializeSticker(layer);
+		}
+
+		if (layer.type === LayerType.TEXT_GLITTER) {
+			return {
+				id: layer.id,
+				type: LayerType.TEXT_GLITTER,
+				name: layer.name,
+				visible: layer.visible,
+				locked: layer.locked,
+				selectedGlitterId: layer.selectedGlitterId,
+				settings: layer.settings ? { ...layer.settings } : {},
+				textData: layer.textData ? JSON.parse(JSON.stringify(layer.textData)) : null
+			};
+		}
+
+		if (layer.type === LayerType.SHAPE) {
+			return {
+				id: layer.id,
+				type: LayerType.SHAPE,
+				name: layer.name,
+				visible: layer.visible,
+				locked: layer.locked,
+				selectedGlitterId: layer.selectedGlitterId,
+				settings: layer.settings ? { ...layer.settings } : {},
+				shapeData: layer.shapeData ? JSON.parse(JSON.stringify(layer.shapeData)) : null
+			};
+		}
+
+		if (layer.type === LayerType.BASE_IMAGE) {
+			return {
+				id: layer.id,
+				type: LayerType.BASE_IMAGE,
+				visible: layer.visible,
+				locked: layer.locked
+			};
+		}
+
+		const serialized = {
+			id: layer.id,
+			type: layer.type || LayerType.GLITTER_FILL,
+			visible: layer.visible,
+			locked: layer.locked,
+			selections: layer.selections ? JSON.parse(JSON.stringify(layer.selections)) : [],
+			selectedGlitterId: layer.selectedGlitterId,
+			settings: layer.settings ? { ...layer.settings } : {}
+		};
+
+		if (includeMaskVersion) {
+			serialized.maskVersion = layer.maskVersion || 0;
+		}
+
+		return serialized;
+	}
+
+	async deserializeLayer(layerData) {
+		if (!layerData) return null;
+
+		if (layerData.type === LayerType.STICKER && this.editor.stickerManager) {
+			return this.editor.stickerManager.deserializeSticker(layerData);
+		}
+
+		if (layerData.type === LayerType.TEXT_GLITTER) {
+			const restoredLayer = {
+				id: layerData.id,
+				type: LayerType.TEXT_GLITTER,
+				name: layerData.name || this.editor.textGlitterManager?.getLayerName(layerData.textData?.text || ''),
+				visible: layerData.visible,
+				locked: layerData.locked,
+				selectedGlitterId: layerData.selectedGlitterId,
+				settings: layerData.settings ? { ...layerData.settings } : {},
+				textData: layerData.textData ? JSON.parse(JSON.stringify(layerData.textData)) : null
+			};
+
+			this.editor.textGlitterManager?.normalizeLayer(restoredLayer);
+
+			if (restoredLayer.textData?.fontId && this.editor.textGlitterManager) {
+				try {
+					await this.editor.textGlitterManager.ensureFontLoaded(restoredLayer.textData.fontId);
+				} catch (error) {
+					this.editor.textGlitterManager.reportFontLoadError(error);
+					throw error;
+				}
+			}
+
+			return restoredLayer;
+		}
+
+		if (layerData.type === LayerType.SHAPE) {
+			const restoredLayer = {
+				id: layerData.id,
+				type: LayerType.SHAPE,
+				name: layerData.name || 'Shape',
+				visible: layerData.visible,
+				locked: layerData.locked,
+				selectedGlitterId: layerData.selectedGlitterId,
+				settings: layerData.settings ? { ...layerData.settings } : {},
+				shapeData: layerData.shapeData ? JSON.parse(JSON.stringify(layerData.shapeData)) : null
+			};
+			this.editor.shapeGlitterManager?.normalizeLayer(restoredLayer);
+			return restoredLayer;
+		}
+
+		if (layerData.type === LayerType.BASE_IMAGE) {
+			return {
+				id: layerData.id,
+				type: LayerType.BASE_IMAGE,
+				visible: layerData.visible,
+				locked: layerData.locked,
+				image: null
+			};
+		}
+
+		return {
+			id: layerData.id,
+			type: layerData.type || LayerType.GLITTER_FILL,
+			visible: layerData.visible,
+			locked: layerData.locked,
+			maskVersion: layerData.maskVersion || 0,
+			maskHasContent: false,
+			selections: layerData.selections ? JSON.parse(JSON.stringify(layerData.selections)) : [],
+			selectedGlitterId: layerData.selectedGlitterId,
+			settings: layerData.settings ? { ...layerData.settings } : {}
+		};
+	}
+
 
 
 

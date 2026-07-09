@@ -8,57 +8,7 @@ class HistoryManager {
 
 	createStateSnapshot() {
 		return {
-			layers: this.editor.layers.map((layer) => {
-				if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
-					return this.editor.stickerManager.serializeSticker(layer);
-				}
-
-				if (layer.type === LayerType.TEXT_GLITTER) {
-					return {
-						id: layer.id,
-						type: LayerType.TEXT_GLITTER,
-						name: layer.name,
-						visible: layer.visible,
-						locked: layer.locked,
-						selectedGlitterId: layer.selectedGlitterId,
-						settings: layer.settings ? { ...layer.settings } : {},
-						textData: layer.textData ? JSON.parse(JSON.stringify(layer.textData)) : null
-					};
-				}
-
-				if (layer.type === LayerType.SHAPE) {
-					return {
-						id: layer.id,
-						type: LayerType.SHAPE,
-						name: layer.name,
-						visible: layer.visible,
-						locked: layer.locked,
-						selectedGlitterId: layer.selectedGlitterId,
-						settings: layer.settings ? { ...layer.settings } : {},
-						shapeData: layer.shapeData ? JSON.parse(JSON.stringify(layer.shapeData)) : null
-					};
-				}
-
-				if (layer.type === LayerType.BASE_IMAGE) {
-					return {
-						id: layer.id,
-						type: LayerType.BASE_IMAGE,
-						visible: layer.visible,
-						locked: layer.locked
-					};
-				}
-
-				return {
-					id: layer.id,
-					type: layer.type || LayerType.GLITTER_FILL,
-					visible: layer.visible,
-					locked: layer.locked,
-					maskVersion: layer.maskVersion || 0,
-					selections: layer.selections ? JSON.parse(JSON.stringify(layer.selections)) : [],
-					selectedGlitterId: layer.selectedGlitterId,
-					settings: layer.settings ? { ...layer.settings } : {}
-				};
-			}),
+			layers: this.editor.layers.map((layer) => this.editor.layerManager.serializeLayer(layer)),
 			activeLayerId: this.editor.activeLayerId,
 			// Canvas dimensions + base-image pixels, so a Canvas Size / crop resize
 			// is undoable. originalImageData/originalAlphaChannel are REPLACE-ONLY
@@ -113,64 +63,9 @@ class HistoryManager {
 		this.editor.layers = [];
 
 		for (const layerData of state.layers) {
-			if (layerData.type === LayerType.STICKER && this.editor.stickerManager) {
-				const restoredLayer = await this.editor.stickerManager.deserializeSticker(layerData);
-				if (restoredLayer) {
-					this.editor.layers.push(restoredLayer);
-				}
-			} else if (layerData.type === LayerType.TEXT_GLITTER) {
-				const restoredLayer = {
-					id: layerData.id,
-					type: LayerType.TEXT_GLITTER,
-					name: layerData.name || this.editor.textGlitterManager?.getLayerName(layerData.textData?.text || ''),
-					visible: layerData.visible,
-					locked: layerData.locked,
-					selectedGlitterId: layerData.selectedGlitterId,
-					settings: layerData.settings ? { ...layerData.settings } : {},
-					textData: layerData.textData ? JSON.parse(JSON.stringify(layerData.textData)) : null
-				};
-
-				if (restoredLayer.textData?.fontId && this.editor.textGlitterManager) {
-					try {
-						await this.editor.textGlitterManager.ensureFontLoaded(restoredLayer.textData.fontId);
-					} catch (error) {
-						this.editor.textGlitterManager.reportFontLoadError(error);
-						throw error;
-					}
-				}
-
+			const restoredLayer = await this.editor.layerManager.deserializeLayer(layerData);
+			if (restoredLayer) {
 				this.editor.layers.push(restoredLayer);
-			} else if (layerData.type === LayerType.SHAPE) {
-				this.editor.layers.push({
-					id: layerData.id,
-					type: LayerType.SHAPE,
-					name: layerData.name || 'Shape',
-					visible: layerData.visible,
-					locked: layerData.locked,
-					selectedGlitterId: layerData.selectedGlitterId,
-					settings: layerData.settings ? { ...layerData.settings } : {},
-					shapeData: layerData.shapeData ? JSON.parse(JSON.stringify(layerData.shapeData)) : null
-				});
-			} else if (layerData.type === LayerType.BASE_IMAGE) {
-				this.editor.layers.push({
-					id: layerData.id,
-					type: LayerType.BASE_IMAGE,
-					visible: layerData.visible,
-					locked: layerData.locked,
-					image: null
-				});
-			} else {
-				this.editor.layers.push({
-					id: layerData.id,
-					type: layerData.type || LayerType.GLITTER_FILL,
-					visible: layerData.visible,
-					locked: layerData.locked,
-					maskVersion: layerData.maskVersion || 0,
-					maskHasContent: false,
-					selections: layerData.selections ? JSON.parse(JSON.stringify(layerData.selections)) : [],
-					selectedGlitterId: layerData.selectedGlitterId,
-					settings: layerData.settings ? { ...layerData.settings } : {}
-				});
 			}
 		}
 

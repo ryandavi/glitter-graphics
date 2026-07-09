@@ -1,6 +1,6 @@
 # PROJECT-SAVE-PLAN — save/load project files, config cleanup, no-layer panel polish
 
-**Written:** 2026-07-08. **Status:** planned, not implemented.
+**Written:** 2026-07-08. **Status:** implemented in code on 2026-07-09; Sass compiled, manual visual verification still pending.
 **Scope:** (1) save/load the working project as JSON (not the exported GIF), (2) move the default
 file name (and friends) out of GifExporter into CONFIG, (3) shared file/format helpers in utils.js,
 (4) no-layer panel: Canvas Size rows restyled to the standard settings-row pattern + a new Project
@@ -13,6 +13,9 @@ to a serializer — this plan deliberately reuses it rather than inventing a sec
 ---
 
 ### Fable's expansion (2026-07-08)
+
+Split-out note 2026-07-09: the overlap / group-select work now also has its own companion doc,
+`docs/GROUP-SELECT-PLAN.md`.
 
 **0.1 is a small standalone fix; 0.2/0.3 is a plan-sized feature of its own** — write it up as
 its own doc (GROUP-SELECT-PLAN) when dispatching, don't ride it on the save/load WPs. Neither
@@ -302,6 +305,11 @@ no-layer panel (`NO_LAYER.mobileSettingsSections` is `[]`).
 
 ### 4.2b Doctrine: what "no layer selected" means (resolved 2026-07-08)
 
+**Implementation update 2026-07-09:** Ryan preferred the project controls back in the sidebar.
+The shipped UI now uses a **Project** card in the no-layer / Canvas panel, with a generic
+`"Name..."` placeholder, Open Project there plus in the welcome state, and Save Project there
+instead of beside Export GIF.
+
 The no-layer state is the **canvas level**, not a junk drawer for everything project-ish.
 Figma's deselect→page-properties pattern is the model, with three sorting rules:
 - **Canvas properties** (size, background color, trim-to-content): live HERE. Background color
@@ -365,23 +373,32 @@ Whatever else lands here, verify that fix arrives, since Quick Add is the panel'
 Order matters: WP-A unblocks nothing but is trivial; WP-B is standalone UI; WP-C/WP-D are the
 feature and depend on WP-A's helpers.
 
-- **WP-A — config + utils plumbing** (small): `CONFIG.export` block; GifExporter reads it;
+- **WP-A — config + utils plumbing** (small, completed 2026-07-09): `CONFIG.export` block; GifExporter reads it;
   `formatBytes` / `downloadBlob` / `sanitizeFileName` in utils.js; `getProjectFileName` on the
   editor wired into the three GifExporter fileName uses. Bump `?v=` on config.js, utils.js,
   GifExporter.js, app.js.
-- **WP-B — no-layer panel** (small): §4.1 settings-row conversion + §4.2 Project Name field +
+- **WP-B — no-layer panel** (small, completed 2026-07-09): §4.1 settings-row conversion + §4.2 Project Name field +
   SCSS retirement + guide.html. Depends on WP-A only for the placeholder constant.
-- **WP-C — save** (medium): shared `serializeLayer`/`deserializeLayer` extraction (HistoryManager
+- **WP-C — save** (medium, completed 2026-07-09): shared `serializeLayer`/`deserializeLayer` extraction (HistoryManager
   refactored onto them — behavior-identical, verify undo/redo still passes the export fragility
   test), ProjectSerializer with `serialize()` → blob, mask PNG encoding, custom-sticker embedding,
   Save Project button, `Ctrl+S` in CONFIG.shortcuts + guide.html.
-- **WP-D — load** (medium-large): `loadImageFromBlob` refactor, validation + migration loop,
+- **WP-D — load** (medium-large, completed 2026-07-09): `loadImageFromBlob` refactor, validation + migration loop,
   unsaved-changes confirm, sticker re-registration, mask decode → `commitPaintState` baseline,
   history reset, welcome-section Open Project button + dropzone `.json` handling.
 
 Verification per WP: `node tests/touch-smoke.js` and `node tests/touch-handle-verify.js` still
 pass; WP-C/D additionally run the §1.6 parity check manually (Ryan) — no new Playwright suite
 unless asked.
+
+### 5.1 Implementation note (2026-07-09)
+
+- Landed in code: project JSON save/load, shared layer serialization, sidebar Project controls, Save/Open Project entry points, `Ctrl+S`, and the Canvas panel row polish.
+- `node -c` syntax checks passed for `js/app.js`, `js/classes/ProjectSerializer.js`, and `js/classes/GifExporter.js`.
+- `node tests/touch-handle-verify.js` passed after the change set.
+- `node tests/touch-smoke.js` hit a Windows sandbox ACL error in this Codex session and still needs a normal local rerun.
+- `css/style.scss` changed; `css/style.css` still needs Ryan's normal Sass compile step before the UI changes are visible in-browser.
+- Remaining non-save/load work from this doc is the 0.1-0.3 overlap / group-select feature set, now tracked in `docs/GROUP-SELECT-PLAN.md`.
 
 ## 6. Dispatch prompts (Codex)
 

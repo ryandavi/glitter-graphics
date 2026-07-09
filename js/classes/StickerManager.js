@@ -260,6 +260,51 @@ class StickerManager extends ContentManager {
 		return userSticker;
 	}
 
+	async registerEmbeddedSticker(stickerData) {
+		if (!stickerData?.id || !stickerData?.data) {
+			return null;
+		}
+
+		const existingIndex = this.userContent.findIndex((item) => item.id === stickerData.id);
+		if (existingIndex >= 0) {
+			const existing = this.userContent[existingIndex];
+			if (existing?.url?.startsWith('blob:')) {
+				URL.revokeObjectURL(existing.url);
+			}
+			this.userContent.splice(existingIndex, 1);
+		}
+
+		const blob = await fetch(stickerData.data).then((response) => response.blob());
+		const file = new File(
+			[blob],
+			stickerData.fileName || stickerData.name || `${stickerData.id}.png`,
+			{ type: stickerData.mimeType || blob.type || 'image/png' }
+		);
+
+		const userSticker = {
+			id: stickerData.id,
+			name: stickerData.name || file.name.replace(/\.[^/.]+$/, ''),
+			url: URL.createObjectURL(file),
+			source: 'user-upload',
+			category: 'user-uploads',
+			fileSize: file.size,
+			mimeType: file.type,
+			uploadedAt: Date.now(),
+			isAnimated: false,
+			hasTransparency: false,
+			width: 0,
+			height: 0,
+			frameCount: null,
+			frames: null,
+			isLoading: true,
+			error: null
+		};
+
+		this.userContent.push(userSticker);
+		await this.processUploadedSticker(userSticker, file);
+		return userSticker;
+	}
+
 	async processUploadedSticker(userSticker, file) {
 		const img = new Image();
 

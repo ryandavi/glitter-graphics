@@ -188,6 +188,23 @@ const CONFIG = {
 	// ========================================
 	// EXPORT
 	// ========================================
+	export: {
+		// Base name for user-facing downloads; the project title overrides this.
+		defaultBaseName: 'ryandavi-com_glitter',
+		workers: 4,
+		quality: 1,
+		timing: {
+			forceDelay: 100,
+			maxFrames: 60
+		},
+		watermarkAlphaThreshold: 128,
+		sizeWarnings: [
+			{ message: 'Too big for Discord', limitMB: 10 },
+			{ message: 'Too big for Twitter', limitMB: 15 },
+			{ message: 'Kind of huge for a typical GIF...', limitMB: 50 },
+			{ message: 'Too big for Discord Nitro', limitMB: 500 }
+		]
+	},
 	defaultExportBaseImage: true,
 	defaultExportGlitter: true,
 	defaultExportStickers: true,
@@ -281,6 +298,9 @@ const CONFIG = {
 		history: [
 			{ key: 'Ctrl + Z', action: 'Undo' },
 			{ key: 'Ctrl + Shift + Z', action: 'Redo' },
+		],
+		file: [
+			{ key: 'Ctrl + S', action: 'Save Project' }
 		]
 	},
 };

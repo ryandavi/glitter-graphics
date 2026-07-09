@@ -3,16 +3,20 @@
 // ============================================
 class GifExporter {
 	constructor() {
+		const exportConfig = CONFIG.export || {};
 		this.config = {
-			workers: 4,
-			quality: 1,
+			workers: exportConfig.workers ?? 4,
+			quality: exportConfig.quality ?? 1,
 			workerScript: 'js/gif.worker.js',
-			fileName: 'ryandavi-com_glitter.gif',
-			timing: { forceDelay: 100, maxFrames: 60 },
+			timing: {
+				forceDelay: exportConfig.timing?.forceDelay ?? 100,
+				maxFrames: exportConfig.timing?.maxFrames ?? 60
+			},
 			debug: typeof CONFIG !== 'undefined' ? CONFIG.debug : false,
-			watermarkAlphaThreshold: 128,
+			watermarkAlphaThreshold: exportConfig.watermarkAlphaThreshold ?? 128,
 			useAdaptiveQuality: false // Add this flag
 		};
+		this.fileName = `${exportConfig.defaultBaseName || 'ryandavi-com_glitter'}.gif`;
 
 		// Reusable canvas elements
 		this.canvas = document.createElement('canvas');
@@ -36,31 +40,23 @@ class GifExporter {
 		return false; // No transparency in image
 	}
 
-	// Add this inside the GifExporter class
-	_formatBytes(bytes, decimals = 2) {
-		if (bytes === 0) return '0 Bytes';
-		const k = 1024;
-		const dm = decimals < 0 ? 0 : decimals;
-		const sizes = ['Bytes', 'KB', 'MB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+	setFileName(fileName) {
+		if (fileName) {
+			this.fileName = fileName;
+		}
 	}
 
 
 	_getSizeWarningsHTML(bytes) {
-		const MB = 1024 * 1024;
-
-		const warningsConfig = [
-			{ message: "Too big for Discord", limit: 10 * MB },
-			{ message: "Too big for Discord Nitro", limit: 500 * MB },
-			{ message: "Too big for Twitter", limit: 15 * MB },
-			{ message: "Kind of huge for a typical GIF...", limit: 50 * MB } // maximum size warning
-		];
+		const warningsConfig = (CONFIG.export?.sizeWarnings || []).map((warning) => ({
+			message: warning.message,
+			limit: warning.limitMB * 1024 * 1024
+		}));
 
 		const warnings = warningsConfig
 			.filter(w => bytes > w.limit)
 			.map(w => {
-				const title = `${this._formatBytes(w.limit)} limit`;
+				const title = `${formatBytes(w.limit)} limit`;
 				const text = `${w.message}`;
 				return `<div class="size-warning" data-tooltip="${title}">${text}</div>`;
 			});
@@ -1771,7 +1767,7 @@ class GifExporter {
 			frameReductions: reductions
 		});
 
-		const file = new File([blob], this.config.fileName, {
+		const file = new File([blob], this.fileName, {
 			type: 'image/gif',
 			lastModified: Date.now()
 		});
@@ -1813,7 +1809,7 @@ class GifExporter {
 
 			// Set stats text
 			if (statSize) {
-				statSize.textContent = `Size: ${fileSize != null ? this._formatBytes(fileSize) : 'Unknown'}`;
+				statSize.textContent = `Size: ${fileSize != null ? formatBytes(fileSize) : 'Unknown'}`;
 
 				if (fileSize != null) {
 					const warnings = this._getSizeWarningsHTML(fileSize);
@@ -1955,12 +1951,7 @@ class GifExporter {
 		// Handler: Save / Download (Desktop)
 		saveBtn.onclick = () => {
 			if (saveBtn.disabled) return;
-			const a = document.createElement('a');
-			a.href = blobUrl;
-			a.download = this.config.fileName;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
+			downloadBlob(file, this.fileName);
 		};
 	}
 }

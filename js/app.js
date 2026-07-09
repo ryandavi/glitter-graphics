@@ -58,6 +58,8 @@ class GlitterEditor {
 		// STATE FLAGS
 		// ============================================================================
 		this.isSaved = false;
+		this.projectName = '';
+		this.baseImageSource = null;
 		this.touchGestureActive = false;
 		this.justCompletedDrag = false; // Flag to prevent layer picking immediately after drag
 		this.pendingConfirmationResolve = null;
@@ -87,10 +89,12 @@ class GlitterEditor {
 		this.maskCompositor = new MaskCompositor(this);
 		this.maskEditor = new MaskEditor(this);
 		this.historyManager = new HistoryManager(this);
+		this.projectSerializer = new ProjectSerializer(this);
 
 		// ============================================================================
 		// INITIALIZATION
 		// ============================================================================
+		this.initializeProjectNameInput();
 		this.setTool(CONFIG.defaultTool);
 		this.setupEventListeners();
 		this.initializeCollapsibleSections();
@@ -166,6 +170,41 @@ class GlitterEditor {
 		} finally {
 			element.disabled = false;
 		}
+	}
+
+	initializeProjectNameInput() {
+		const input = document.getElementById('projectNameInput');
+		if (!input) return;
+
+		input.placeholder = 'Name...';
+		input.value = this.projectName;
+		input.addEventListener('input', () => {
+			this.setProjectName(input.value, { markDirty: true, syncInput: false });
+		});
+	}
+
+	setProjectName(name, options = {}) {
+		const {
+			markDirty = true,
+			syncInput = true
+		} = options;
+		this.projectName = typeof name === 'string' ? name : '';
+
+		if (syncInput) {
+			const input = document.getElementById('projectNameInput');
+			if (input && input.value !== this.projectName) {
+				input.value = this.projectName;
+			}
+		}
+
+		if (markDirty && (this.originalImage || this.historyManager.canUndo())) {
+			this.isSaved = false;
+		}
+	}
+
+	getProjectFileName(ext) {
+		const baseName = sanitizeFileName(this.projectName) || CONFIG.export.defaultBaseName;
+		return `${baseName}.${ext}`;
 	}
 
 	// Common layer update pattern
@@ -403,7 +442,6 @@ async resetSettingsSection(section) {
 		confirmLabel: 'Reset'
 	});
 	if (!confirmed) {
-		return;
 	}
 
 	switch(section) {
@@ -485,6 +523,11 @@ async resetAllSettings() {
 		const exportGif = document.getElementById('exportGif');
 		if (exportGif) {
 			exportGif.addEventListener('click', () => this.exportAnimatedGif());
+		}
+
+		const saveProject = document.getElementById('saveProject');
+		if (saveProject) {
+			saveProject.addEventListener('click', () => this.saveProjectFile());
 		}
 	}
 
@@ -2442,8 +2485,11 @@ async resetAllSettings() {
 
 	setupImageListeners() {
 		const imageUpload = document.getElementById('imageUpload');
+		const projectUpload = document.getElementById('projectUpload');
 		const imageDropzone = document.getElementById('imageDropzone');
 		const imageClearBtn = document.getElementById('imageClearBtn');
+		const openProjectBtn = document.getElementById('openProjectBtn');
+		const openProjectSidebarBtn = document.getElementById('openProjectSidebarBtn');
 
 		// New Canvas button
 		const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
@@ -2460,6 +2506,23 @@ async resetAllSettings() {
 		if (imageUpload) {
 			imageUpload.addEventListener('change', (e) => this.loadImage(e));
 		}
+
+		if (projectUpload) {
+			projectUpload.addEventListener('change', async (e) => {
+				const file = e.target.files?.[0];
+				if (!file) return;
+				await this.openProjectFile(file);
+				e.target.value = '';
+			});
+		}
+
+		[openProjectBtn, openProjectSidebarBtn].forEach((button) => {
+			if (button && projectUpload) {
+				button.addEventListener('click', () => {
+					projectUpload.click();
+				});
+			}
+		});
 
 		if (imageDropzone) {
 			imageDropzone.addEventListener('click', () => {
@@ -2480,7 +2543,16 @@ async resetAllSettings() {
 				imageDropzone.classList.remove('drag-over');
 
 				const file = e.dataTransfer.files[0];
-				if (file && file.type.startsWith('image/')) {
+				if (!file) return;
+
+				const isProjectFile = file.type === 'application/json' ||
+					file.name.toLowerCase().endsWith('.json');
+				if (isProjectFile) {
+					await this.openProjectFile(file);
+					return;
+				}
+
+				if (file.type.startsWith('image/')) {
 					const fakeEvent = { target: { files: [file] } };
 					await this.loadImage(fakeEvent);
 				}
@@ -2723,7 +2795,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=4',
+				externalContentUrl: 'modals/guide.html?v=5',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -3494,7 +3566,7 @@ setupWelcomeModalListeners() {
 		}
 	}
 
-	async loadBlankImage(width, height, color = CONFIG.defaultCanvasPreset.color) {
+	async loadBlankImage(width, height, color = CONFIG.defaultCanvasPreset.color, options = {}) {
 		const canvas = document.createElement('canvas');
 		canvas.width = width;
 		canvas.height = height;
@@ -3514,14 +3586,15 @@ setupWelcomeModalListeners() {
 			: `blank_${width}x${height}.png`;
 		const file = new File([blob], fileName, { type: 'image/png' });
 
-		const fakeEvent = {
-			target: {
-				files: [file]
+		await this.loadImageFile(file, {
+			...options,
+			source: {
+				kind: 'preset',
+				preset: { width, height, color }
 			}
-		};
-
-		await this.loadImage(fakeEvent);
+		});
 		this.updateStatus(`Created ${width}×${height} canvas`);
+		return true;
 	}
 
 	setTool(tool) {
@@ -4002,9 +4075,11 @@ setupWelcomeModalListeners() {
 		if (this.tryArrowNudge(e)) return;
 
 		// Allow Escape to work in inputs (to blur/close things)
-		// Allow Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z for undo/redo
+		// Allow Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, and Ctrl/Cmd+S while typing.
+		const isDocumentShortcut = (e.ctrlKey || e.metaKey) &&
+			(e.key === 'z' || e.key === 'Z' || e.key === 's' || e.key === 'S');
 		if (isTyping && e.key !== 'Escape' &&
-			!((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z'))) {
+			!isDocumentShortcut) {
 			return;
 		}
 
@@ -4119,6 +4194,12 @@ setupWelcomeModalListeners() {
 			}
 		}
 
+		if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+			e.preventDefault();
+			this.saveProjectFile();
+			return;
+		}
+
 		if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
 			e.preventDefault();
 			this.undo();
@@ -4207,6 +4288,7 @@ setupWelcomeModalListeners() {
 
 		const clearAllTool = document.getElementById('clearAllTool');
 		const exportGif = document.getElementById('exportGif');
+		const saveProject = document.getElementById('saveProject');
 		const imageClearBtn = document.getElementById('imageClearBtn');
 		const textTool = document.getElementById('textTool');
 		const shapeTool = document.getElementById('shapeTool');
@@ -4224,6 +4306,7 @@ setupWelcomeModalListeners() {
 
 		if (clearAllTool) clearAllTool.disabled = !hasImage;
 		if (exportGif) exportGif.disabled = !hasAnySelection;
+		if (saveProject) saveProject.disabled = !hasImage;
 
 		if (transparencyToggle) transparencyToggle.disabled = !hasImage;
 		if (boundsToggle) boundsToggle.disabled = !hasImage;
@@ -4316,6 +4399,7 @@ setupWelcomeModalListeners() {
 		this.originalImage = null;
 		this.originalImageData = null;
 		this.originalAlphaChannel = null;
+		this.baseImageSource = null;
 		this.maskEditor?.exitEditMode({ commitStroke: false });
 		this.layerManager.clearBaseImageSwatchCache();
 
@@ -4387,6 +4471,7 @@ setupWelcomeModalListeners() {
 		this.glitterManager.clearFilters();
 		this.viewport.resetViewport();
 		this.updateZoomUI();
+		this.setProjectName('', { markDirty: false });
 
 		// ======================
 		// UI refresh + tool state
@@ -4419,6 +4504,8 @@ setupWelcomeModalListeners() {
 	async loadImage(event) {
 		const file = event.target.files[0];
 		if (!file) return;
+		return this.loadImageFile(file);
+		return;
 
 		if (file.size > CONFIG.maxFileSizeMB * 1024 * 1024) {
 			this.showError(`Image too large. Maximum size is ${CONFIG.maxFileSizeMB}MB`);
@@ -4538,6 +4625,176 @@ setupWelcomeModalListeners() {
 
 		};
 		img.src = URL.createObjectURL(file);
+	}
+
+	async loadImageFile(file, options = {}) {
+		if (!file) return false;
+
+		if (file.size > CONFIG.maxFileSizeMB * 1024 * 1024) {
+			this.showError(`Image too large. Maximum size is ${CONFIG.maxFileSizeMB}MB`);
+			return false;
+		}
+
+		return this.loadImageFromBlob(file, {
+			...options,
+			fileName: options.fileName || file.name,
+			source: options.source || {
+				kind: 'file',
+				file
+			}
+		});
+	}
+
+	async loadImageFromBlob(blob, options = {}) {
+		if (!blob) return false;
+
+		const {
+			fileName = 'image.png',
+			source = null,
+			preserveProjectName = false
+		} = options;
+
+		this.exporter?.clearPreviewBlobUrl?.();
+		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
+			URL.revokeObjectURL(this.originalImage.src);
+		}
+
+		const objectUrl = URL.createObjectURL(blob);
+		const img = await new Promise((resolve, reject) => {
+			const image = new Image();
+			image.onerror = () => {
+				URL.revokeObjectURL(objectUrl);
+				reject(new Error('Could not load that image. The file may be corrupt or unsupported.'));
+			};
+			image.onload = () => resolve(image);
+			image.src = objectUrl;
+		}).catch((error) => {
+			this.showError(error.message);
+			return null;
+		});
+
+		if (!img) {
+			return false;
+		}
+
+		let width = img.width;
+		let height = img.height;
+
+		if (width > CONFIG.maxImageWidth || height > CONFIG.maxImageHeight) {
+			const scale = Math.min(CONFIG.maxImageWidth / width, CONFIG.maxImageHeight / height);
+			width = Math.floor(width * scale);
+			height = Math.floor(height * scale);
+		}
+
+		this.originalImage = img;
+		this.originalCanvas.width = width;
+		this.originalCanvas.height = height;
+		this.previewCanvas.width = width;
+		this.previewCanvas.height = height;
+
+		this.previewWrapper.style.width = width + 'px';
+		this.previewWrapper.style.height = height + 'px';
+		this.previewWrapper.classList.add('hasImage');
+
+		this.originalCtx.drawImage(img, 0, 0, width, height);
+		this.originalImageData = this.originalCtx.getImageData(0, 0, width, height);
+		this.baseImageSource = source?.kind === 'preset'
+			? {
+				kind: 'preset',
+				preset: { ...source.preset },
+				renderedWidth: width,
+				renderedHeight: height
+			}
+			: {
+				kind: source?.kind || 'file',
+				file: blob instanceof File ? blob : new File([blob], fileName, { type: blob.type || 'image/png' }),
+				renderedWidth: width,
+				renderedHeight: height
+			};
+
+		this.originalAlphaChannel = new Uint8Array(width * height);
+		for (let i = 0; i < width * height; i++) {
+			this.originalAlphaChannel[i] = this.originalImageData.data[i * 4 + 3];
+		}
+
+		this.layerManager.updateBaseImageSwatchCache();
+		this.viewport.setCanvasDimensions(this.previewCanvas.width, this.previewCanvas.height);
+		this.viewport.resetZoomSmart();
+		this.updateZoomUI();
+
+		const dropzone = document.getElementById('imageDropzone');
+		dropzone.classList.add('has-image');
+		document.getElementById('dropzoneContent').classList.remove('visible');
+		this.originalCanvas.classList.add('visible');
+
+		if (this.glitterManager) {
+			this.layerManager.layers.forEach((layer) => {
+				this.glitterManager.releaseLayerResources(layer);
+			});
+			this.glitterManager.clearAllPaintData();
+		}
+		this.layers = [];
+		this.canvasElementsContainer.innerHTML = '';
+
+		if (CONFIG.createBaseImageLayerOnLoad) {
+			const layer = this.layerManager.createBaseImageLayer(LayerType.BASE_IMAGE);
+			this.layers.push(layer);
+		}
+
+		if (CONFIG.createDefaultLayerOnLoad) {
+			const layer = this.createLayer();
+			this.layers.push(layer);
+			this.layerManager.setActiveLayer(layer.id);
+		} else if (this.layers.length === 0) {
+			this.activeLayerId = null;
+			this.updateSidePanelUI(null);
+		}
+
+		this.historyManager.reset(this.historyManager.createStateSnapshot());
+		this.isSaved = false;
+		if (!preserveProjectName) {
+			this.setProjectName('', { markDirty: false });
+		}
+
+		this.updateSidePanelUI();
+		this.layerManager.renderLayersList();
+		this.updateHistoryButtons();
+		this.updateActionButtons();
+		this.updateStatusBar();
+		this.updateHelpfulMessage();
+
+		this.previewCtx.putImageData(this.originalImageData, 0, 0);
+		this.textGlitterManager?.ensureFontLoaded(CONFIG.textLayers.defaultFontId).catch(() => {});
+		window.dispatchEvent(new Event('imageLoaded'));
+		return true;
+	}
+
+	async saveProjectFile() {
+		if (!this.originalImage) {
+			this.showError('Load an image before saving a project.');
+			return;
+		}
+
+		try {
+			const blob = await this.projectSerializer.serializeToBlob();
+			downloadBlob(blob, this.getProjectFileName('glitter.json'));
+			this.isSaved = true;
+			this.updateStatus('Project saved');
+		} catch (error) {
+			console.error('Project save failed:', error);
+			this.showError(error.message || 'Failed to save project.');
+		}
+	}
+
+	async openProjectFile(file) {
+		if (!file) return false;
+		try {
+			return await this.projectSerializer.loadFile(file);
+		} catch (error) {
+			console.error('Project load failed:', error);
+			this.showError(error.message || 'Failed to open project.');
+			return false;
+		}
 	}
 
 	// ===== CANVAS SIZE (Photoshop-style) =====
@@ -5452,6 +5709,7 @@ setupWelcomeModalListeners() {
 
 		// Validate export settings before proceeding
 		this.validateExportSettings();
+		this.exporter.setFileName(this.getProjectFileName('gif'));
 
 		const exportBtn = document.getElementById('exportGif');
 		exportBtn.disabled = true;

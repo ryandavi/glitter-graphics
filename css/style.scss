@@ -882,6 +882,7 @@ input[type="range"] {
 		display: flex;
 		align-items: center;
 		gap: var(--spacing-lg);
+		flex: 0 0 auto;
 
 		>.app-header-logo {
 			display: flex;
@@ -916,6 +917,14 @@ input[type="range"] {
 				}
 			}
 		}
+	}
+
+	>.app-header-right {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		flex: 0 0 auto;
+		margin-left: auto;
 	}
 
 }
@@ -979,6 +988,8 @@ input[type="range"] {
 .left-panel {
 	// width: var(--panel-width);
 	width: var(--layer-panel-width);
+	flex: 0 0 var(--layer-panel-width);
+	order: 0;
 	background: var(--color-bg-primary);
 	border-right: 1px solid var(--color-border);
 	display: flex;
@@ -2052,13 +2063,14 @@ body.tool-text {
 /* ===== GLITTER COLUMN ===== */
 .design-panel {
 	width: var(--glitter-panel-width);
+	flex: 0 0 var(--glitter-panel-width);
 	background: var(--color-bg-primary);
 	border-left: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
 	overflow: hidden;
-	order: 1;
+	order: 2;
 	position: relative;
 	z-index: 210;
 
@@ -2356,6 +2368,8 @@ body.tool-text {
 /* ===== RIGHT PANEL ===== */
 .right-panel {
 	flex: 1;
+	order: 1;
+	min-width: 0;
 	display: flex;
 	flex-direction: column;
 	overflow: visible;
@@ -2439,8 +2453,8 @@ body.tool-text {
 
 	>.preview-controls-right {
 		margin-left: auto;
-
-
+		display: flex;
+		gap: var(--spacing-sm);
 	}
 
 	>.preview-controls-center {
@@ -2452,6 +2466,13 @@ body.tool-text {
 
 		@include floating-ui();
 	}
+}
+
+.welcome-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--spacing-sm);
 }
 
 .preview-wrapper {
@@ -4379,84 +4400,95 @@ body.mask-editing {
 		margin-top: var(--spacing-xl);
 	}
 
-	>.settings-row {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
+}
 
+.settings-row {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 
-		+.settings-row {
-			margin-top: var(--spacing-lg);
+	+.settings-row {
+		margin-top: var(--spacing-lg);
+	}
+
+	&.disabled {
+		opacity: var(--disabled-opacity);
+		pointer-events: none;
+		cursor: not-allowed;
+	}
+}
+
+.settings-row-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--spacing-md);
+}
+
+.settings-row-label-main {
+	font-size: var(--font-size-md);
+	color: var(--color-text-secondary);
+	font-weight: 500;
+}
+
+.settings-row-control {
+	min-width: 120px;
+	display: flex;
+	justify-content: flex-end;
+	text-align: right;
+
+	>select {
+		width: 100%;
+		padding: var(--spacing-sm) var(--spacing-md);
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-primary);
+		@include text-sm;
+		cursor: pointer;
+
+		&:focus {
+			outline: none;
+			border-color: var(--color-accent);
+		}
+	}
+
+	>input[type="color"] {
+		width: 50px;
+		height: 28px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		background: transparent;
+
+		&::-webkit-color-swatch-wrapper {
+			padding: 2px;
 		}
 
-		&.disabled {
-			opacity: var(--disabled-opacity);
-			pointer-events: none;
-			cursor: not-allowed;
+		&::-webkit-color-swatch {
+			border: none;
+			border-radius: 3px;
 		}
+	}
+}
 
+.settings-row-label-desc {
+	font-size: var(--font-size-base);
+	color: var(--color-text-tertiary);
+	width: 50%;
+	min-width: 300px;
+	max-width: 50%;
+	padding-left: 0;
+}
 
+.settings-action-row,
+.canvas-project-actions,
+.canvas-size-actions {
+	display: flex;
+	gap: var(--spacing-sm);
 
-		>.settings-row-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			gap: var(--spacing-md);
-
-			>.settings-row-label-main {
-				font-size: var(--font-size-md);
-				color: var(--color-text-secondary);
-				font-weight: 500;
-			}
-
-			>.settings-row-control {
-				min-width: 120px;
-				text-align: right;
-
-				>select {
-					width: 100%;
-					padding: var(--spacing-sm) var(--spacing-md);
-					background: var(--color-bg-secondary);
-					border: 1px solid var(--color-border);
-					border-radius: var(--radius-sm);
-					color: var(--color-text-primary);
-					@include text-sm;
-					cursor: pointer;
-
-					&:focus {
-						outline: none;
-						border-color: var(--color-accent);
-					}
-				}
-
-				>input[type="color"] {
-					width: 50px;
-					height: 28px;
-					border: 1px solid var(--color-border);
-					border-radius: var(--radius-sm);
-					cursor: pointer;
-					background: transparent;
-
-					&::-webkit-color-swatch-wrapper {
-						padding: 2px;
-					}
-
-					&::-webkit-color-swatch {
-						border: none;
-						border-radius: 3px;
-					}
-				}
-			}
-		}
-
-		>.settings-row-label-desc {
-			font-size: var(--font-size-base);
-			color: var(--color-text-tertiary);
-			width: 50%;
-			min-width: 300px;
-			max-width: 50%;
-			padding-left: 0;
-		}
+	>* {
+		flex: 1;
 	}
 }
 
@@ -4738,6 +4770,7 @@ body.mask-editing {
 
 		>.app-header {
 			height: var(--mobile-header-height);
+			padding: var(--spacing-sm) var(--spacing-md);
 			// The zoomed canvas lives in a heavily-scaled, will-change:transform
 			// layer that some mobile browsers composite above normal in-flow
 			// siblings regardless of DOM order. Give the header its own
@@ -4745,6 +4778,10 @@ body.mask-editing {
 			// z-index (10000) and below modals (20000), so it always wins.
 			position: relative;
 			z-index: 15000;
+
+			>.app-header-left > .app-header-logo > .app-header-title {
+				display: none;
+			}
 		}
 
 
@@ -6494,18 +6531,10 @@ body.mask-editing {
 	flex-direction: column;
 	gap: var(--spacing-md);
 	width: 100%;
-}
 
-.canvas-size-fields {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: var(--spacing-sm);
-}
-
-.canvas-size-field {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
+	.settings-row {
+		margin-bottom: 0;
+	}
 }
 
 // Generic "number input with a unit suffix" atom. Reused anywhere a numeric
@@ -6533,12 +6562,6 @@ body.mask-editing {
 	pointer-events: none;
 }
 
-.canvas-size-anchor-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--spacing-md);
-}
 
 // 3×3 anchor grid. The chosen cell is where existing content stays pinned as
 // the canvas grows/shrinks (Photoshop's Canvas Size anchor). Each cell shows a

@@ -10,6 +10,36 @@ function formatUnit(value, unit) {
 	return `${value}<span class="setting-unit">${unit}</span>`;
 }
 
+function formatBytes(bytes, decimals = 2) {
+	if (!Number.isFinite(bytes) || bytes <= 0) return '0 Bytes';
+	const k = 1024;
+	const dm = decimals < 0 ? 0 : decimals;
+	const sizes = ['Bytes', 'KB', 'MB'];
+	const index = Math.min(sizes.length - 1, Math.floor(Math.log(bytes) / Math.log(k)));
+	return `${parseFloat((bytes / Math.pow(k, index)).toFixed(dm))} ${sizes[index]}`;
+}
+
+function downloadBlob(blob, fileName) {
+	const objectUrl = URL.createObjectURL(blob);
+	const anchor = document.createElement('a');
+	anchor.href = objectUrl;
+	anchor.download = fileName;
+	document.body.appendChild(anchor);
+	anchor.click();
+	document.body.removeChild(anchor);
+	setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+}
+
+function sanitizeFileName(name) {
+	if (typeof name !== 'string') return null;
+	const sanitized = name
+		.replace(/[\\/:*?"<>|]/g, '')
+		.trim()
+		.replace(/[.\s]+$/g, '')
+		.replace(/\s+/g, '-');
+	return sanitized || null;
+}
+
 // ============================================
 // MODAL UTILITIES
 // ============================================
