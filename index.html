@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=42">
+	<link rel="stylesheet" href="css/style.css?v=47">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,8 +76,8 @@
 				</button>
 			</div>
 		</div>
+		
 		<div class="main-area">
-
 			<!-- Toolbar -->
 			<div class="toolbar">
 				<!-- Tools Group -->
@@ -182,9 +182,8 @@
 
 			<div class="main-content">
 
-
-				<!-- Left Panel -->
-				<div class="left-panel" id="leftPanel">
+				<!-- Layers Panel -->
+				<div class="layers-panel" id="layersPanel">
 					<!-- Image Section -->
 					<div class="image-container section">
 						<div class="section-header section-header-with-action">
@@ -776,14 +775,14 @@
 										</div>
 									</div>
 
-											<div class="settings-subsection" id="multiLayerSelectionGroup" hidden>
-												<div class="subsection-content-group">
-													<div class="subsection-title">Multi-Layer Selection</div>
-													<div class="empty-state visible compact">
-														<div class="empty-state-text" id="multiLayerSelectionCount">2 movable layers</div>
-														<div class="empty-state-subtext">Shift+click adds or removes layers. Alt+click cycles overlapping layers. On touch, edit the selection from the layer list.</div>
-													</div>
-												</div>
+									<div class="settings-subsection" id="multiLayerSelectionGroup" hidden>
+										<div class="subsection-content-group">
+											<div class="subsection-title">Multi-Layer Selection</div>
+											<div class="empty-state visible compact">
+												<div class="empty-state-text" id="multiLayerSelectionCount">2 movable layers</div>
+												<div class="empty-state-subtext">Shift+click adds or removes layers. Alt+click cycles overlapping layers. On touch, edit the selection from the layer list.</div>
+											</div>
+										</div>
 										<div class="subsection-content-group">
 											<div class="subsection-title">Quick Actions</div>
 											<div class="settings-action-row multi-selection-actions">
@@ -1524,37 +1523,37 @@
 											<div class="effect-option-group">
 												<div class="effect-option-label">Source</div>
 												<div class="glitter-source">
-												<div class="segmented-control text-effect-mode-group">
-													<button class="segmented-option" id="textBorderUseGlitter" type="button">Glitter</button>
-													<button class="segmented-option active" id="textBorderUseColor" type="button">Solid</button>
-												</div>
-												<div class="asset-info glitter-source-glitter" id="textBorderGlitterInfo">
-													<div class="asset-info-header">
-														<div class="asset-info-thumbnail" id="textBorderGlitterChip" title="Choose border source"></div>
-														<div class="asset-info-details">
-															<div class="asset-info-name" id="textBorderGlitterLabel">#000000</div>
-															<div class="asset-info-badges" id="textBorderGlitterBadges"></div>
-														</div>
-														<button class="btn-simple text-effect-source-change" id="textBorderGlitterChange" type="button">Change</button>
+													<div class="segmented-control text-effect-mode-group">
+														<button class="segmented-option" id="textBorderUseGlitter" type="button">Glitter</button>
+														<button class="segmented-option active" id="textBorderUseColor" type="button">Solid</button>
 													</div>
-													<div class="settings-group-two-column asset-info-meta">
-														<div class="setting-column">
-															<div class="setting-header"><span class="setting-label">Size</span></div>
-															<span class="setting-value" id="textBorderGlitterSize"></span>
+													<div class="asset-info glitter-source-glitter" id="textBorderGlitterInfo">
+														<div class="asset-info-header">
+															<div class="asset-info-thumbnail" id="textBorderGlitterChip" title="Choose border source"></div>
+															<div class="asset-info-details">
+																<div class="asset-info-name" id="textBorderGlitterLabel">#000000</div>
+																<div class="asset-info-badges" id="textBorderGlitterBadges"></div>
+															</div>
+															<button class="btn-simple text-effect-source-change" id="textBorderGlitterChange" type="button">Change</button>
 														</div>
-														<div class="setting-column">
-															<div class="setting-header"><span class="setting-label">Frames</span></div>
-															<span class="setting-value" id="textBorderGlitterFrames"></span>
+														<div class="settings-group-two-column asset-info-meta">
+															<div class="setting-column">
+																<div class="setting-header"><span class="setting-label">Size</span></div>
+																<span class="setting-value" id="textBorderGlitterSize"></span>
+															</div>
+															<div class="setting-column">
+																<div class="setting-header"><span class="setting-label">Frames</span></div>
+																<span class="setting-value" id="textBorderGlitterFrames"></span>
+															</div>
 														</div>
 													</div>
-												</div>
-												<div class="text-effect-color-row glitter-source-solid" id="textBorderColorRow">
-													<div class="setting-header">
-														<span class="setting-label">Solid Color</span>
+													<div class="text-effect-color-row glitter-source-solid" id="textBorderColorRow">
+														<div class="setting-header">
+															<span class="setting-label">Solid Color</span>
+														</div>
+														<input type="color" id="textBorderColor" value="#000000">
 													</div>
-													<input type="color" id="textBorderColor" value="#000000">
 												</div>
-											</div>
 											</div>
 											<div class="settings-group-two-column">
 												<div class="setting-column right" id="textBorderScaleRow">
@@ -1666,37 +1665,37 @@
 											<div class="effect-option-group">
 												<div class="effect-option-label">Source</div>
 												<div class="glitter-source">
-												<div class="segmented-control text-effect-mode-group">
-													<button class="segmented-option" id="textShadowUseGlitter" type="button">Glitter</button>
-													<button class="segmented-option active" id="textShadowUseColor" type="button">Solid</button>
-												</div>
-												<div class="asset-info glitter-source-glitter" id="textShadowGlitterInfo">
-													<div class="asset-info-header">
-														<div class="asset-info-thumbnail" id="textShadowGlitterChip" title="Choose shadow source"></div>
-														<div class="asset-info-details">
-															<div class="asset-info-name" id="textShadowGlitterLabel">#000000</div>
-															<div class="asset-info-badges" id="textShadowGlitterBadges"></div>
-														</div>
-														<button class="btn-simple text-effect-source-change" id="textShadowGlitterChange" type="button">Change</button>
+													<div class="segmented-control text-effect-mode-group">
+														<button class="segmented-option" id="textShadowUseGlitter" type="button">Glitter</button>
+														<button class="segmented-option active" id="textShadowUseColor" type="button">Solid</button>
 													</div>
-													<div class="settings-group-two-column asset-info-meta">
-														<div class="setting-column">
-															<div class="setting-header"><span class="setting-label">Size</span></div>
-															<span class="setting-value" id="textShadowGlitterSize"></span>
+													<div class="asset-info glitter-source-glitter" id="textShadowGlitterInfo">
+														<div class="asset-info-header">
+															<div class="asset-info-thumbnail" id="textShadowGlitterChip" title="Choose shadow source"></div>
+															<div class="asset-info-details">
+																<div class="asset-info-name" id="textShadowGlitterLabel">#000000</div>
+																<div class="asset-info-badges" id="textShadowGlitterBadges"></div>
+															</div>
+															<button class="btn-simple text-effect-source-change" id="textShadowGlitterChange" type="button">Change</button>
 														</div>
-														<div class="setting-column">
-															<div class="setting-header"><span class="setting-label">Frames</span></div>
-															<span class="setting-value" id="textShadowGlitterFrames"></span>
+														<div class="settings-group-two-column asset-info-meta">
+															<div class="setting-column">
+																<div class="setting-header"><span class="setting-label">Size</span></div>
+																<span class="setting-value" id="textShadowGlitterSize"></span>
+															</div>
+															<div class="setting-column">
+																<div class="setting-header"><span class="setting-label">Frames</span></div>
+																<span class="setting-value" id="textShadowGlitterFrames"></span>
+															</div>
 														</div>
 													</div>
-												</div>
-												<div class="text-effect-color-row glitter-source-solid" id="textShadowColorRow">
-													<div class="setting-header">
-														<span class="setting-label">Solid Color</span>
+													<div class="text-effect-color-row glitter-source-solid" id="textShadowColorRow">
+														<div class="setting-header">
+															<span class="setting-label">Solid Color</span>
+														</div>
+														<input type="color" id="textShadowColor" value="#000000">
 													</div>
-													<input type="color" id="textShadowColor" value="#000000">
 												</div>
-											</div>
 											</div>
 											<div class="settings-group-two-column">
 												<div class="setting-column right" id="textShadowScaleRow">
@@ -1911,11 +1910,11 @@
 											<div class="effect-option-group">
 												<div class="effect-option-label">Style</div>
 												<div class="glitter-source">
-												<div class="segmented-control text-effect-mode-group">
-													<button class="segmented-option active" id="shapeBorderStyleSolid" type="button">Solid Border</button>
-													<button class="segmented-option" id="shapeBorderStyleDotted" type="button">Dotted Border</button>
+													<div class="segmented-control text-effect-mode-group">
+														<button class="segmented-option active" id="shapeBorderStyleSolid" type="button">Solid Border</button>
+														<button class="segmented-option" id="shapeBorderStyleDotted" type="button">Dotted Border</button>
+													</div>
 												</div>
-											</div>
 											</div>
 											<div class="setting-column right" id="shapeBorderDotSpacingRow" hidden>
 												<div class="setting-header"><span class="setting-label">Dot Spacing</span><span class="setting-value" id="shapeBorderDotSpacingValue">10px</span></div>
@@ -1925,33 +1924,33 @@
 											<div class="effect-option-group">
 												<div class="effect-option-label">Source</div>
 												<div class="glitter-source">
-												<div class="segmented-control text-effect-mode-group">
-													<button class="segmented-option" id="shapeBorderGlitter" type="button">Glitter</button>
-													<button class="segmented-option active" id="shapeBorderSolid" type="button">Solid</button>
-												</div>
-												<div class="asset-info glitter-source-glitter" id="shapeBorderGlitterInfo" hidden>
-													<div class="asset-info-header">
-														<div class="asset-info-thumbnail" id="shapeBorderGlitterChip" title="Choose glitter"></div>
-														<div class="asset-info-details">
-															<div class="asset-info-name" id="shapeBorderGlitterLabel">Glitter</div>
-															<div class="asset-info-badges" id="shapeBorderGlitterBadges"></div>
-														</div>
-														<button class="btn-simple text-effect-source-change" id="shapeBorderGlitterChange" type="button">Change</button>
+													<div class="segmented-control text-effect-mode-group">
+														<button class="segmented-option" id="shapeBorderGlitter" type="button">Glitter</button>
+														<button class="segmented-option active" id="shapeBorderSolid" type="button">Solid</button>
 													</div>
-													<div class="settings-group-two-column asset-info-meta">
-														<div class="setting-column">
-															<div class="setting-header"><span class="setting-label">Size</span></div><span class="setting-value" id="shapeBorderGlitterSize"></span>
+													<div class="asset-info glitter-source-glitter" id="shapeBorderGlitterInfo" hidden>
+														<div class="asset-info-header">
+															<div class="asset-info-thumbnail" id="shapeBorderGlitterChip" title="Choose glitter"></div>
+															<div class="asset-info-details">
+																<div class="asset-info-name" id="shapeBorderGlitterLabel">Glitter</div>
+																<div class="asset-info-badges" id="shapeBorderGlitterBadges"></div>
+															</div>
+															<button class="btn-simple text-effect-source-change" id="shapeBorderGlitterChange" type="button">Change</button>
 														</div>
-														<div class="setting-column">
-															<div class="setting-header"><span class="setting-label">Frames</span></div><span class="setting-value" id="shapeBorderGlitterFrames"></span>
+														<div class="settings-group-two-column asset-info-meta">
+															<div class="setting-column">
+																<div class="setting-header"><span class="setting-label">Size</span></div><span class="setting-value" id="shapeBorderGlitterSize"></span>
+															</div>
+															<div class="setting-column">
+																<div class="setting-header"><span class="setting-label">Frames</span></div><span class="setting-value" id="shapeBorderGlitterFrames"></span>
+															</div>
 														</div>
 													</div>
+													<div class="text-effect-color-row glitter-source-solid" id="shapeBorderColorRow">
+														<div class="setting-header"><span class="setting-label">Solid Color</span></div>
+														<input type="color" id="shapeBorderColor" value="#000000">
+													</div>
 												</div>
-												<div class="text-effect-color-row glitter-source-solid" id="shapeBorderColorRow">
-													<div class="setting-header"><span class="setting-label">Solid Color</span></div>
-													<input type="color" id="shapeBorderColor" value="#000000">
-												</div>
-											</div>
 											</div>
 											<div class="setting-column right">
 												<div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" id="shapeBorderOpacityValue">100%</span></div>
@@ -2036,33 +2035,33 @@
 											<div class="effect-option-group">
 												<div class="effect-option-label">Source</div>
 												<div class="glitter-source">
-												<div class="segmented-control text-effect-mode-group">
-													<button class="segmented-option" id="shapeShadowGlitter" type="button">Glitter</button>
-													<button class="segmented-option active" id="shapeShadowSolid" type="button">Solid</button>
-												</div>
-												<div class="asset-info glitter-source-glitter" id="shapeShadowGlitterInfo" hidden>
-													<div class="asset-info-header">
-														<div class="asset-info-thumbnail" id="shapeShadowGlitterChip" title="Choose glitter"></div>
-														<div class="asset-info-details">
-															<div class="asset-info-name" id="shapeShadowGlitterLabel">Glitter</div>
-															<div class="asset-info-badges" id="shapeShadowGlitterBadges"></div>
-														</div>
-														<button class="btn-simple text-effect-source-change" id="shapeShadowGlitterChange" type="button">Change</button>
+													<div class="segmented-control text-effect-mode-group">
+														<button class="segmented-option" id="shapeShadowGlitter" type="button">Glitter</button>
+														<button class="segmented-option active" id="shapeShadowSolid" type="button">Solid</button>
 													</div>
-													<div class="settings-group-two-column asset-info-meta">
-														<div class="setting-column">
-															<div class="setting-header"><span class="setting-label">Size</span></div><span class="setting-value" id="shapeShadowGlitterSize"></span>
+													<div class="asset-info glitter-source-glitter" id="shapeShadowGlitterInfo" hidden>
+														<div class="asset-info-header">
+															<div class="asset-info-thumbnail" id="shapeShadowGlitterChip" title="Choose glitter"></div>
+															<div class="asset-info-details">
+																<div class="asset-info-name" id="shapeShadowGlitterLabel">Glitter</div>
+																<div class="asset-info-badges" id="shapeShadowGlitterBadges"></div>
+															</div>
+															<button class="btn-simple text-effect-source-change" id="shapeShadowGlitterChange" type="button">Change</button>
 														</div>
-														<div class="setting-column">
-															<div class="setting-header"><span class="setting-label">Frames</span></div><span class="setting-value" id="shapeShadowGlitterFrames"></span>
+														<div class="settings-group-two-column asset-info-meta">
+															<div class="setting-column">
+																<div class="setting-header"><span class="setting-label">Size</span></div><span class="setting-value" id="shapeShadowGlitterSize"></span>
+															</div>
+															<div class="setting-column">
+																<div class="setting-header"><span class="setting-label">Frames</span></div><span class="setting-value" id="shapeShadowGlitterFrames"></span>
+															</div>
 														</div>
 													</div>
+													<div class="text-effect-color-row glitter-source-solid" id="shapeShadowColorRow">
+														<div class="setting-header"><span class="setting-label">Solid Color</span></div>
+														<input type="color" id="shapeShadowColor" value="#000000">
+													</div>
 												</div>
-												<div class="text-effect-color-row glitter-source-solid" id="shapeShadowColorRow">
-													<div class="setting-header"><span class="setting-label">Solid Color</span></div>
-													<input type="color" id="shapeShadowColor" value="#000000">
-												</div>
-											</div>
 											</div>
 											<div class="setting-column right">
 												<div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" id="shapeShadowOpacityValue">100%</span></div>
@@ -2204,7 +2203,7 @@
 				</div>
 
 				<!-- Preview Panel -->
-				<div class="right-panel">
+				<div class="preview-panel">
 					<div class="preview-container" id="previewContainer">
 
 						<!-- Preview Wrapper -->
@@ -3089,7 +3088,6 @@
 		</div>
 	</div>
 
-
 	<!-- Sticker Upload Modal -->
 	<div class="modal-overlay" id="stickerUploadModal">
 		<div class="modal-content modal-sm">
@@ -3129,7 +3127,6 @@
 			</div>
 		</div>
 	</div>
-
 
 	<!-- Welcome Modal -->
 	<div class="modal-overlay" id="welcomeModal">
@@ -3200,12 +3197,6 @@
 		</div>
 	</div>
 
-
-
-
-
-
-
 	<!-- Mobile Bottom Navigation -->
 	<div class="mobile-bottom-nav">
 		<div class="mobile-drawer-btn-group">
@@ -3230,10 +3221,6 @@
 		</div>
 	</div>
 
-
-
-
-
 	<!-- Mobile Settings Drawer -->
 	<div class="mobile-settings-drawer">
 
@@ -3249,10 +3236,6 @@
 			<!-- Desktop settings sections will be moved here temporarily on mobile -->
 		</div>
 	</div>
-
-
-
-
 
 	<!-- SVG Sprite Definition (Place at the bottom of your body tag) -->
 	<svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
@@ -3510,19 +3493,19 @@
 		</filter>
 	</svg>
 
-
 	<!-- External Libs (self-hosted; gif.js pairs with js/gif.worker.js) -->
 	<script src="js/vendor/omggif.js"></script>
 	<script src="js/vendor/gif.js"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=18"></script>
+	<script src="js/config.js?v=19"></script>
 	<script src="js/transform-math.js?v=1"></script>
 
 	<!-- Utils -->
-	<script src="js/utils.js?v=1"></script>
+	<script src="js/utils.js?v=2"></script>
 	<script src="js/color-adjust.js?v=1"></script>
 	<script src="js/effect-source.js?v=1"></script>
+	<script src="js/slot-effects.js?v=1"></script>
 	<script src="js/debug.js"></script>
 
 	<!-- Classes -->
@@ -3537,22 +3520,22 @@
 	<script src="js/classes/MaskEditor.js?v=12"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=17"></script>
+	<script src="js/classes/LayerManager.js?v=18"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
 	<script src="js/classes/LayerTransform.js?v=14"></script>
 	<script src="js/classes/GlitterManager.js?v=12"></script>
-	<script src="js/classes/TextGlitterManager.js?v=27"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=18"></script>
+	<script src="js/classes/TextGlitterManager.js?v=32"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=21"></script>
 	<script src="js/classes/StickerManager.js?v=3"></script>
 	<script src="js/classes/GroupTransformManager.js?v=5"></script>
 
-	<script src="js/classes/MobileManager.js?v=4"></script>
+	<script src="js/classes/MobileManager.js?v=6"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=47"></script>
+	<script src="js/app.js?v=50"></script>
 
 </body>
 

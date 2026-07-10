@@ -281,7 +281,7 @@ class LayerManager {
 		// see LAYER_UI_CONFIG[type].autoOpenDesignDrawerOnCreate).
 		if (this.editor.mobileManager && this.editor.mobileManager.isMobile && CONFIG.ui.mobile.openDrawOnLayerAdd) {
 			if (cfg.autoOpenDesignDrawerOnCreate) {
-				this.editor.mobileManager.toggleDrawer('design');
+				this.editor.mobileManager.openDrawer('design');
 			}
 		}
 
@@ -528,7 +528,7 @@ class LayerManager {
 
 		// On mobile, open the design drawer
 		if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
-			this.editor.mobileManager.toggleDrawer('design');
+			this.editor.mobileManager.openDrawer('design');
 		}
 
 		// Scroll to the glitter in the picker
@@ -546,7 +546,7 @@ class LayerManager {
 
 		// On mobile, open the design drawer
 		if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
-			this.editor.mobileManager.toggleDrawer('design');
+			this.editor.mobileManager.openDrawer('design');
 		}
 
 		// Scroll to the sticker in the picker

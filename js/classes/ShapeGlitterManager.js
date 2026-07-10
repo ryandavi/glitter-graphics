@@ -301,33 +301,29 @@ class ShapeGlitterManager {
 	}
 
 	ensureColorAdjust(target) {
-		if (!target.colorAdjust) target.colorAdjust = { ...COLOR_ADJUST_IDENTITY };
-		return target.colorAdjust;
+		return ensureSlotColorAdjust(target);
 	}
 
 	_attachSlider(slider, valueEl, suffix, apply, resetValue, geometry) {
 		if (!slider) return;
-		slider.addEventListener('input', () => {
-			const layer = this.getActiveShapeLayer();
-			if (!layer) return;
-			const v = parseInt(slider.value, 10);
-			if (valueEl) valueEl.innerHTML = formatUnit(v, suffix);
-			apply(v, layer);
-			if (geometry) this.invalidateMeasurement(layer);
-			this.renderLayer(layer);
-		});
-		slider.addEventListener('change', () => {
-			this.editor.saveState();
-			this.editor.layerManager.renderLayersList();
-		});
 		const resetBtn = document.getElementById('reset' + this._cap(slider.id));
-		if (resetBtn && resetValue !== undefined) {
-			resetBtn.addEventListener('click', () => {
-				slider.value = String(resetValue);
-				slider.dispatchEvent(new Event('input'));
-				slider.dispatchEvent(new Event('change'));
-			});
-		}
+
+		bindSlider(slider, valueEl, {
+			suffix,
+			resetValue,
+			resetButton: resetBtn,
+			apply: (value) => {
+				const layer = this.getActiveShapeLayer();
+				if (!layer) return;
+				apply(value, layer);
+				if (geometry) this.invalidateMeasurement(layer);
+				this.renderLayer(layer);
+			},
+			onCommit: () => {
+				this.editor.saveState();
+				this.editor.layerManager.renderLayersList();
+			}
+		});
 	}
 
 	// Shared transform interface (same contract as StickerManager.updateTransform)
@@ -365,9 +361,7 @@ class ShapeGlitterManager {
 
 	revealGlitterBrowser() {
 		if (this.editor.mobileManager?.isMobile) {
-			if (this.editor.mobileManager.activeDrawer !== 'design') {
-				this.editor.mobileManager.toggleDrawer('design');
-			}
+			this.editor.mobileManager.openDrawer('design');
 			return;
 		}
 		this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
@@ -559,45 +553,27 @@ class ShapeGlitterManager {
 	// ===== DEFAULTS / DATA MODEL =====
 
 	getDefaultFill() {
-		return {
-			mode: 'glitter',
-			color: CONFIG.tools.glitter.defaults.fillColor,
-			scale: 100,
-			opacity: 100,
-			colorAdjust: null
-		};
+		return buildDefaultFill({ includeTexture: true });
 	}
 
 	getDefaultBorder() {
-		const borderConfig = CONFIG.tools.shapes.border || {};
-		return {
-			widthPx: borderConfig.defaultWidthPx ?? 6,
-			style: borderConfig.defaultStyle ?? 'solid',
-			dotSpacingPx: borderConfig.defaultDotSpacingPx ?? 10,
-			placement: borderConfig.defaultPlacement ?? 'outside',
-			drawOrder: borderConfig.defaultDrawOrder ?? 'behind',
-			edgeStyle: borderConfig.defaultEdgeStyle ?? 'round',
-			mode: borderConfig.defaultSource ?? 'solid',
-			color: CONFIG.tools.glitter.defaults.borderColor,
-			glitterId: null,
-			scale: 100,
-			opacity: 100,
-			colorAdjust: null
-		};
+		return buildDefaultBorder({
+			config: CONFIG.tools.shapes.border || {},
+			fallbackWidthPx: 6,
+			fallbackMode: 'solid',
+			includeShapeStyle: true,
+			includeColorAdjust: true,
+			defaultGlitterId: null
+		});
 	}
 
 	getDefaultShadow() {
-		const shadowConfig = CONFIG.tools.shapes.shadow || {};
-		return {
-			offsetX: shadowConfig.defaultOffsetX ?? 6,
-			offsetY: shadowConfig.defaultOffsetY ?? 6,
-			mode: 'solid',
-			color: CONFIG.tools.glitter.defaults.shadowColor,
-			glitterId: null,
-			scale: 100,
-			opacity: 100,
-			colorAdjust: null
-		};
+		return buildDefaultShadow({
+			config: CONFIG.tools.shapes.shadow || {},
+			defaultMode: 'solid',
+			defaultGlitterId: null,
+			includeColorAdjust: true
+		});
 	}
 
 	normalizeLayer(layer) {
@@ -691,21 +667,16 @@ class ShapeGlitterManager {
 	}
 
 	getEffectData(layer, slot) {
-		if (slot === 'fill') return layer.shapeData.fill;
-		return layer.shapeData[slot] || null;
+		return getSlotEffectData(layer.shapeData, slot);
 	}
 
+	// mergeBorderDefaults is true: backfill newer border keys onto legacy data.
 	ensureEffectData(layer, slot) {
-		if (slot === 'fill') {
-			if (!layer.shapeData.fill) layer.shapeData.fill = this.getDefaultFill();
-			return layer.shapeData.fill;
-		}
-		if (!layer.shapeData[slot]) {
-			layer.shapeData[slot] = slot === 'border' ? this.getDefaultBorder() : this.getDefaultShadow();
-		} else if (slot === 'border') {
-			layer.shapeData.border = { ...this.getDefaultBorder(), ...layer.shapeData.border };
-		}
-		return layer.shapeData[slot];
+		return ensureSlotEffectData(layer.shapeData, slot, {
+			fill: () => this.getDefaultFill(),
+			border: () => this.getDefaultBorder(),
+			shadow: () => this.getDefaultShadow()
+		}, true);
 	}
 
 	setBorderStyle(style) {
@@ -1446,4 +1417,3 @@ class ShapeGlitterManager {
 		return measurement.frameRect;
 	}
 }
-

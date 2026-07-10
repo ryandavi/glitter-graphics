@@ -134,6 +134,42 @@
 		]
 	},
 	{
+		"id": "cherry-bomb-one",
+		"name": "Cherry Bomb One",
+		"file": "fonts/cherry-bomb-one.ttf",
+		"weight": 400,
+		"fallback": "sans-serif",
+		"featured": false,
+		"scripts": [
+			"latin",
+			"ja"
+		]
+	},
+	{
+		"id": "hachi-maru-pop",
+		"name": "Hachi Maru Pop",
+		"file": "fonts/hachi-maru-pop.ttf",
+		"weight": 400,
+		"fallback": "sans-serif",
+		"featured": false,
+		"scripts": [
+			"latin",
+			"ja"
+		]
+	},
+	{
+		"id": "darumadrop-one",
+		"name": "Darumadrop One",
+		"file": "fonts/darumadrop-one.ttf",
+		"weight": 400,
+		"fallback": "sans-serif",
+		"featured": false,
+		"scripts": [
+			"latin",
+			"ja"
+		]
+	},
+	{
 		"id": "black-han-sans",
 		"name": "Black Han Sans",
 		"file": "fonts/black-han-sans.woff2",
@@ -149,6 +185,18 @@
 		"id": "jua",
 		"name": "Jua",
 		"file": "fonts/jua.woff2",
+		"weight": 400,
+		"fallback": "sans-serif",
+		"featured": false,
+		"scripts": [
+			"latin",
+			"ko"
+		]
+	},
+	{
+		"id": "bagel-fat-one",
+		"name": "Bagel Fat One",
+		"file": "fonts/bagel-fat-one.ttf",
 		"weight": 400,
 		"fallback": "sans-serif",
 		"featured": false,

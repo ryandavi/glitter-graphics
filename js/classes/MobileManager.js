@@ -1,6 +1,33 @@
 // ============================================
 // MOBILE MANAGER CLASS
 // ============================================
+const MOBILE_SETTINGS_SECTION_CONFIG = {
+	tool: {
+		selector: '.layer-settings-section',
+		collapsibleName: 'layerSettings'
+	},
+	glitter: {
+		selector: '.glitter-settings-section',
+		collapsibleName: 'glitterSettings'
+	},
+	sticker: {
+		selector: '.sticker-settings-section',
+		collapsibleName: 'stickerSettings'
+	},
+	text: {
+		selector: '.text-settings-section',
+		collapsibleName: 'textSettings'
+	},
+	shape: {
+		selector: '.shape-settings-section',
+		collapsibleName: 'shapeSettings'
+	},
+	brush: {
+		selector: '.brush-settings-section'
+	}
+};
+const MOBILE_SETTINGS_SECTION_KEYS = Object.keys(MOBILE_SETTINGS_SECTION_CONFIG);
+
 class MobileManager {
 	constructor(editor) {
 		this.editor = editor;
@@ -11,18 +38,7 @@ class MobileManager {
 		this.resizeObserver = null;
 
 		// Track original locations of settings sections
-		this.settingsSections = {
-			tool: null,
-			glitter: null,
-			sticker: null,
-			text: null,
-			shape: null,
-			// Tool-scoped, not layer-scoped: the mask-brush settings live in the
-			// design panel and are toggled by the active tool, so on mobile they
-			// must be relocated into the settings drawer while brushing (see
-			// syncBrushSettingsPlacement) rather than leaking into the Design drawer.
-			brush: null
-		};
+		this.settingsSections = Object.fromEntries(MOBILE_SETTINGS_SECTION_KEYS.map((key) => [key, null]));
 		this.originalParents = new Map();
 
 		// Initialize the flag
@@ -41,12 +57,9 @@ class MobileManager {
 		this.cacheSettingsSections();
 
 		// Debug: Check if sections were cached
-		dbg('Mobile: Cached sections:', {
-			tool: !!this.settingsSections.tool,
-			glitter: !!this.settingsSections.glitter,
-			sticker: !!this.settingsSections.sticker,
-			text: !!this.settingsSections.text
-		});
+		dbg('Mobile: Cached sections:', Object.fromEntries(
+			MOBILE_SETTINGS_SECTION_KEYS.map((key) => [key, !!this.settingsSections[key]])
+		));
 
 		this.showMobileControls();
 		this.setupEventListeners();
@@ -74,33 +87,13 @@ class MobileManager {
 	}
 
 	cacheSettingsSections() {
-		// Cache references to settings sections
-		this.settingsSections.tool = document.querySelector('.layer-settings-section');
-		this.settingsSections.glitter = document.querySelector('.glitter-settings-section');
-		this.settingsSections.sticker = document.querySelector('.sticker-settings-section');
-		this.settingsSections.text = document.querySelector('.text-settings-section');
-		this.settingsSections.shape = document.querySelector('.shape-settings-section');
-		this.settingsSections.brush = document.querySelector('.brush-settings-section');
-
-		// Store original parents
-		if (this.settingsSections.tool) {
-			this.originalParents.set('tool', this.settingsSections.tool.parentElement);
-		}
-		if (this.settingsSections.glitter) {
-			this.originalParents.set('glitter', this.settingsSections.glitter.parentElement);
-		}
-		if (this.settingsSections.sticker) {
-			this.originalParents.set('sticker', this.settingsSections.sticker.parentElement);
-		}
-		if (this.settingsSections.text) {
-			this.originalParents.set('text', this.settingsSections.text.parentElement);
-		}
-		if (this.settingsSections.shape) {
-			this.originalParents.set('shape', this.settingsSections.shape.parentElement);
-		}
-		if (this.settingsSections.brush) {
-			this.originalParents.set('brush', this.settingsSections.brush.parentElement);
-		}
+		MOBILE_SETTINGS_SECTION_KEYS.forEach((key) => {
+			const section = document.querySelector(MOBILE_SETTINGS_SECTION_CONFIG[key].selector);
+			this.settingsSections[key] = section;
+			if (section) {
+				this.originalParents.set(key, section.parentElement);
+			}
+		});
 	}
 
 	showMobileControls() {
@@ -186,12 +179,15 @@ class MobileManager {
 			header.addEventListener('click', (e) => {
 				if (!this.isMobile) return;
 
-				// Don't interfere with action buttons (collapse chevrons, add layer button)
-				if (e.target.closest('.section-header-action')) return;
+				// Action buttons keep their own behavior (add layer, add custom
+				// sticker, settings-section chevrons) — except the design gallery's
+				// collapse chevron, which on mobile means "close the drawer" like
+				// the rest of its header.
+				if (e.target.closest('.section-header-action') && !e.target.closest('#designGalleryToggle')) return;
 
 				// Check which panel this header belongs to
 				const inDesignPanel = header.closest('.design-panel');
-				const inLeftPanel = header.closest('.left-panel');
+				const inLayersPanel = header.closest('.layers-panel');
 				const inSettingsDrawer = header.closest('.mobile-settings-drawer');
 
 				// If in settings drawer AND it's a collapsible section, let it handle its own toggle
@@ -200,21 +196,18 @@ class MobileManager {
 					return;
 				}
 
-				// Same carve-out for the design panel (its own gallery header is a
-				// collapsible-section header too) - let the accordion toggle itself
-				// instead of the drawer swallowing the click as a close.
-				if (inDesignPanel && header.closest('.collapsible-section')) {
-					return;
-				}
-
-				// Close design drawer if clicking design panel header
+				// The design drawer's gallery header closes the drawer. Accordion-
+				// collapsing the gallery is desktop-only: inside the drawer it
+				// strands a bare header bar that reopens collapsed (the app.js
+				// accordion handler skips designGallery on mobile for the same
+				// reason).
 				if (inDesignPanel && this.activeDrawer === 'design') {
 					this.closeAllDrawers();
 					return;
 				}
 
 				// Close layers drawer if clicking layers panel header
-				if (inLeftPanel && this.activeDrawer === 'layers') {
+				if (inLayersPanel && this.activeDrawer === 'layers') {
 					this.closeAllDrawers();
 					return;
 				}
@@ -356,6 +349,15 @@ if (!this.isMobile && nowMobile) {
 		document.body.classList.add(`mobile-${tab}-tab`);
 	}
 
+	// Idempotent "open" intent — every non-nav-button call site wants the drawer
+	// open, never toggled closed (a toggle here silently closes an already-open
+	// drawer, which is how the LayerManager goto/auto-open paths drifted).
+	openDrawer(drawer) {
+		if (this.activeDrawer !== drawer) {
+			this.toggleDrawer(drawer);
+		}
+	}
+
 	toggleDrawer(drawer) {
 		dbg('Mobile: Toggling drawer:', drawer);
 
@@ -388,6 +390,13 @@ if (!this.isMobile && nowMobile) {
 			const camelCase = drawer.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 			const className = camelCase + 'Open';
 			document.body.classList.add(className);
+
+			// The design drawer must never open with its gallery collapsed —
+			// is-open can persist from the desktop accordion (breakpoint resize)
+			// and would strand the drawer as a bare header bar.
+			if (drawer === 'design') {
+				this.editor.setCollapsibleSectionOpen?.('designGallery', true);
+			}
 
 			// Update button states
 			document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
@@ -462,16 +471,9 @@ if (!this.isMobile && nowMobile) {
 	// drives flex: 1 1 auto even outside the design panel) and desynced from
 	// the desktop accordion state.
 	collapseAllSections() {
-		const sectionNameByKey = {
-			tool: 'layerSettings',
-			glitter: 'glitterSettings',
-			sticker: 'stickerSettings',
-			text: 'textSettings',
-			shape: 'shapeSettings'
-		};
-
-		Object.entries(sectionNameByKey).forEach(([key, sectionName]) => {
-			if (this.settingsSections[key]) {
+		MOBILE_SETTINGS_SECTION_KEYS.forEach((key) => {
+			const sectionName = MOBILE_SETTINGS_SECTION_CONFIG[key].collapsibleName;
+			if (sectionName && this.settingsSections[key]) {
 				this.editor.setCollapsibleSectionOpen?.(sectionName, false);
 			}
 		});
@@ -528,46 +530,9 @@ if (!this.isMobile && nowMobile) {
 		const mobileContainer = document.getElementById('mobileSettingsContainer');
 		if (!mobileContainer) return;
 
-		// Return tool settings
-		if (this.settingsSections.tool && this.originalParents.has('tool')) {
-			const originalParent = this.originalParents.get('tool');
-			if (originalParent && !originalParent.contains(this.settingsSections.tool)) {
-				originalParent.appendChild(this.settingsSections.tool);
-			}
-			// Don't remove visible - desktop needs it
-		}
-
-		// Return glitter settings
-		if (this.settingsSections.glitter && this.originalParents.has('glitter')) {
-			const originalParent = this.originalParents.get('glitter');
-			if (originalParent && !originalParent.contains(this.settingsSections.glitter)) {
-				originalParent.appendChild(this.settingsSections.glitter);
-			}
-			// Don't remove visible - desktop needs it
-		}
-
-		// Return sticker settings
-		if (this.settingsSections.sticker && this.originalParents.has('sticker')) {
-			const originalParent = this.originalParents.get('sticker');
-			if (originalParent && !originalParent.contains(this.settingsSections.sticker)) {
-				originalParent.appendChild(this.settingsSections.sticker);
-			}
-			// Don't remove visible - desktop needs it
-		}
-
-		if (this.settingsSections.text && this.originalParents.has('text')) {
-			const originalParent = this.originalParents.get('text');
-			if (originalParent && !originalParent.contains(this.settingsSections.text)) {
-				originalParent.appendChild(this.settingsSections.text);
-			}
-		}
-
-		if (this.settingsSections.shape && this.originalParents.has('shape')) {
-			const originalParent = this.originalParents.get('shape');
-			if (originalParent && !originalParent.contains(this.settingsSections.shape)) {
-				originalParent.appendChild(this.settingsSections.shape);
-			}
-		}
+		MOBILE_SETTINGS_SECTION_KEYS
+			.filter((key) => key !== 'brush')
+			.forEach((key) => this.returnSettingsSection(key));
 
 		// Return the brush section to the design panel too, so clearing the
 		// container below doesn't orphan it while the brush tool is still active.
@@ -577,13 +542,17 @@ if (!this.isMobile && nowMobile) {
 		mobileContainer.innerHTML = '';
 	}
 
-	returnBrushSection() {
-		const section = this.settingsSections.brush;
-		if (!section || !this.originalParents.has('brush')) return;
-		const originalParent = this.originalParents.get('brush');
+	returnSettingsSection(key) {
+		const section = this.settingsSections[key];
+		if (!section || !this.originalParents.has(key)) return;
+		const originalParent = this.originalParents.get(key);
 		if (originalParent && !originalParent.contains(section)) {
 			originalParent.appendChild(section);
 		}
+	}
+
+	returnBrushSection() {
+		this.returnSettingsSection('brush');
 	}
 
 	// The brush settings section is tool-scoped (shown whenever the mask brush is
@@ -673,4 +642,3 @@ if (!this.isMobile && nowMobile) {
 		dbg('Mobile: Cleanup complete, restored to desktop layout');
 	}
 }
-

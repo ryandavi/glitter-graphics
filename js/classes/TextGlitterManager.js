@@ -144,21 +144,17 @@ class TextGlitterManager {
 			});
 		});
 
-		const borderConfig = CONFIG.tools.text.border || {};
+		const borderConfig = CONFIG.tools.text.border;
 		if (this.ui.borderWidth) {
-			this.ui.borderWidth.min = String(borderConfig.minWidthPx ?? 1);
-			this.ui.borderWidth.max = String(borderConfig.maxWidthPx ?? 24);
+			this.ui.borderWidth.min = String(borderConfig.minWidthPx);
+			this.ui.borderWidth.max = String(borderConfig.maxWidthPx);
 		}
 	}
 
 	// colorAdjust lives on the effect data (border/shadow) or on layer.settings
-	// (fill, which aliases the layer like its scale/opacity). Lazily created as
-	// identity so untouched slots stay export-byte-identical.
+	// (fill, which aliases the layer like its scale/opacity). See slot-effects.js.
 	ensureColorAdjust(target) {
-		if (!target.colorAdjust) {
-			target.colorAdjust = { ...COLOR_ADJUST_IDENTITY };
-		}
-		return target.colorAdjust;
+		return ensureSlotColorAdjust(target);
 	}
 
 	setupEventListeners() {
@@ -535,48 +531,30 @@ class TextGlitterManager {
 		this.setPointAnchorWorldPosition(layer, snapshot.world, nextFrame);
 	}
 
+	// Effects default to GLITTER using the per-effect default id so the slot
+	// shows a real glitter (not the "No glitter selected" solid placeholder) the
+	// moment it's enabled. See buildDefaultBorder in slot-effects.js.
 	getDefaultBorder() {
-		const borderConfig = CONFIG.tools.text.border || {};
-		return {
-			widthPx: borderConfig.defaultWidthPx ?? 4,
-			// `mode` is UI intent (which display + segmented state); the actual
-			// paint/export still derive from glitterId truthiness, so this is
-			// additive and parity-safe. Legacy data without `mode` falls back to
-			// glitterId (see effectUsesGlitter). Effects default to GLITTER using
-			// the per-effect default id so the slot shows a real glitter (not the
-			// "No glitter selected" solid placeholder) the moment it's enabled.
-			mode: borderConfig.defaultSource ?? 'glitter',
-			glitterId: CONFIG.tools.glitter.defaults.borderGlitterId,
-			color: CONFIG.tools.glitter.defaults.borderColor,
-			placement: borderConfig.defaultPlacement ?? 'outside',
-			edgeStyle: borderConfig.defaultEdgeStyle ?? 'round',
-			drawOrder: borderConfig.defaultDrawOrder ?? 'behind',
-			scale: 100,
-			opacity: 100
-		};
+		return buildDefaultBorder({
+			config: CONFIG.tools.text.border || {},
+			fallbackWidthPx: 4,
+			fallbackMode: 'glitter',
+			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId
+		});
 	}
 
 	getDefaultShadow() {
-		const shadowConfig = CONFIG.tools.text.shadow || {};
-		return {
-			offsetX: shadowConfig.defaultOffsetX ?? 6,
-			offsetY: shadowConfig.defaultOffsetY ?? 6,
-			mode: 'glitter',
-			glitterId: CONFIG.tools.glitter.defaults.shadowGlitterId,
-			color: CONFIG.tools.glitter.defaults.shadowColor,
-			scale: 100,
-			opacity: 100
-		};
+		return buildDefaultShadow({
+			config: CONFIG.tools.text.shadow || {},
+			defaultMode: 'glitter',
+			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId
+		});
 	}
 
 	// The fill slot's texture scale/opacity are (deliberately) the existing
-	// layer-level settings.scale/settings.opacity — not duplicated here — so
-	// this only tracks the glitter-vs-solid choice and the solid color.
+	// layer-level settings.scale/settings.opacity — not duplicated here.
 	getDefaultFill() {
-		return {
-			mode: 'glitter',
-			color: CONFIG.tools.glitter.defaults.fillColor
-		};
+		return buildDefaultFill();
 	}
 
 	getMinBoxSize() {
@@ -660,26 +638,20 @@ class TextGlitterManager {
 		layer.textData.boxHeight = Math.max(minBoxSize, Math.ceil(fullHeight) + 1);
 	}
 
+	// mergeBorderDefaults is false: normalizeLayer already backfills border keys.
 	ensureEffectData(layer, effectName) {
 		this.normalizeLayer(layer);
 		if (!layer?.textData) return null;
-
-		if (!layer.textData[effectName]) {
-			if (effectName === 'border') {
-				layer.textData[effectName] = this.getDefaultBorder();
-			} else if (effectName === 'fill') {
-				layer.textData[effectName] = this.getDefaultFill();
-			} else {
-				layer.textData[effectName] = this.getDefaultShadow();
-			}
-		}
-
-		return layer.textData[effectName];
+		return ensureSlotEffectData(layer.textData, effectName, {
+			fill: () => this.getDefaultFill(),
+			border: () => this.getDefaultBorder(),
+			shadow: () => this.getDefaultShadow()
+		}, false);
 	}
 
 	getEffectData(layer, effectName) {
 		this.normalizeLayer(layer);
-		return layer?.textData?.[effectName] || null;
+		return getSlotEffectData(layer?.textData, effectName);
 	}
 
 	getGlitterSelectionTarget(layer = this.getActiveTextLayer()) {
@@ -728,9 +700,7 @@ class TextGlitterManager {
 		// a target from the settings drawer must surface it (mirrors app.js
 		// thumbnail-click handler). The desktop accordion opens in-place.
 		if (this.editor.mobileManager?.isMobile) {
-			if (this.editor.mobileManager.activeDrawer !== 'design') {
-				this.editor.mobileManager.toggleDrawer('design');
-			}
+			this.editor.mobileManager.openDrawer('design');
 			return;
 		}
 
@@ -1048,21 +1018,17 @@ class TextGlitterManager {
 
 	attachSlider(slider, valueDisplay, suffix, applyValue, resetValue, refreshTextLayout = true) {
 		if (!slider || !valueDisplay) return;
+		const resetId = 'reset' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1);
+		const resetButton = document.getElementById(resetId);
 
-		const updateDisplay = (value) => {
-			valueDisplay.innerHTML = formatUnit(value, suffix);
-		};
+		bindSlider(slider, valueDisplay, {
+			suffix,
+			resetValue,
+			resetButton,
+			apply: async (value) => {
+				const layer = this.getActiveTextLayer();
+				if (!layer) return;
 
-		updateDisplay(slider.value);
-
-		slider.addEventListener('input', async () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-
-			const value = parseInt(slider.value, 10);
-			updateDisplay(value);
-
-			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
 					applyValue(value, layer);
 				}, {
@@ -1070,31 +1036,17 @@ class TextGlitterManager {
 					refreshLayerList: false,
 					refreshPreview: refreshTextLayout
 				});
-			} catch (error) {
+			},
+			onCommit: () => {
+				const layer = this.getActiveTextLayer();
+				if (!layer) return;
+				this.editor.saveState();
+				this.editor.layerManager.renderLayersList();
+			},
+			onError: (error) => {
 				this.reportFontLoadError(error);
 			}
 		});
-
-		slider.addEventListener('change', () => {
-			const layer = this.getActiveTextLayer();
-			if (!layer) return;
-
-			const value = parseInt(slider.value, 10);
-			applyValue(value, layer);
-			updateDisplay(value);
-			this.editor.saveState();
-			this.editor.layerManager.renderLayersList();
-		});
-
-		const resetId = 'reset' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1);
-		const resetButton = document.getElementById(resetId);
-		if (resetButton) {
-			resetButton.addEventListener('click', () => {
-				slider.value = resetValue;
-				slider.dispatchEvent(new Event('input'));
-				slider.dispatchEvent(new Event('change'));
-			});
-		}
 	}
 
 	async loadFontsManifest() {
@@ -1138,7 +1090,7 @@ class TextGlitterManager {
 		// below, in the UI font, like a gallery card's name caption), plus a
 		// corner badge for any script beyond plain Latin.
 		const sampleTextByScript = { latin: 'Glitter', ja: 'グリッター', ko: '글리터', zh: '闪粉' };
-		const langLabels = { ja: 'JP', ko: 'KR', zh: 'ZH' };
+		const langLabels = { ja: 'JA', ko: 'KO', zh: 'ZH' };
 
 		this.ui.fontPicker.innerHTML = '';
 		fonts.forEach((font) => {
@@ -1165,6 +1117,7 @@ class TextGlitterManager {
 			if (extraScripts.length > 0) {
 				const badge = document.createElement('span');
 				badge.className = 'text-font-option-badge';
+				extraScripts.forEach((script) => badge.classList.add(`is-${script}`));
 				badge.textContent = extraScripts.map((script) => langLabels[script] || script.toUpperCase()).join(' · ');
 				card.appendChild(badge);
 			}
@@ -3201,4 +3154,3 @@ class TextGlitterManager {
 		return url;
 	}
 }
-

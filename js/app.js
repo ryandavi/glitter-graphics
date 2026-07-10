@@ -834,9 +834,7 @@ async resetAllSettings() {
 				// if the design panel/section isn't open (desktop accordion)
 				// or the mobile design drawer isn't the active one.
 				if (this.mobileManager?.isMobile) {
-					if (this.mobileManager.activeDrawer !== 'design') {
-						this.mobileManager.toggleDrawer('design');
-					}
+					this.mobileManager.openDrawer('design');
 				} else {
 					this.setCollapsibleSectionOpen?.('designGallery', true, true);
 				}
@@ -1217,6 +1215,13 @@ async resetAllSettings() {
 					return;
 				}
 
+				// On mobile the design drawer's header closes the drawer
+				// (MobileManager) — accordion-collapsing the gallery there would
+				// make the next drawer open show a bare header bar.
+				if (name === 'designGallery' && this.mobileManager?.isMobile) {
+					return;
+				}
+
 				const isOpen = !content.classList.contains('visible');
 				setOpen(name, isOpen, true);
 			});
@@ -1328,25 +1333,19 @@ async resetAllSettings() {
 			const display = document.getElementById(id + 'Value');
 			if (!slider) return;
 
-			slider.addEventListener('input', () => {
-				if (display) display.innerHTML = formatUnit(slider.value, suffix);
-				this.updateResetButton(id);
-				this.saveActiveLayerSettings(false, false);
-				this.refreshGlitterSwatchVisuals(this.layerManager.getActiveLayer());
-				this.debouncedSliderUpdate();
-			});
-			slider.addEventListener('change', () => this.saveState());
-
 			const resetBtn = document.getElementById('reset' + id.charAt(0).toUpperCase() + id.slice(1));
-			const defaultValue = CONFIG['default' + id.charAt(0).toUpperCase() + id.slice(1)];
-			if (resetBtn) {
-				resetBtn.addEventListener('click', () => {
-					slider.value = String(defaultValue);
-					if (display) display.innerHTML = formatUnit(defaultValue, suffix);
-					slider.dispatchEvent(new Event('input'));
-					slider.dispatchEvent(new Event('change'));
-				});
-			}
+
+			bindSlider(slider, display, {
+				suffix,
+				resetValue: this.getResetValueForSlider(id),
+				resetButton: resetBtn,
+				apply: () => {
+					this.saveActiveLayerSettings(false, false);
+					this.refreshGlitterSwatchVisuals(this.layerManager.getActiveLayer());
+					this.debouncedSliderUpdate();
+				},
+				onCommit: () => this.saveState()
+			});
 		});
 	}
 
@@ -1423,26 +1422,50 @@ async resetAllSettings() {
 
 		if (!slider || !valueDisplay) return;
 
-		// Live value display (unit rendered as a muted .setting-unit span)
-		slider.addEventListener('input', (e) => {
-			valueDisplay.innerHTML = formatUnit(e.target.value, suffix);
-			if (resetBtn) {
-				resetBtn.disabled = parseInt(slider.value) === resetValue;
+		const appBindingConfig = {
+			threshold: {
+				onApply: () => {
+					this.saveActiveLayerSettings(true, false);
+					this.debouncedSliderUpdate();
+				},
+				onCommit: () => this.saveState()
+			},
+			feather: {
+				onApply: () => {
+					this.saveActiveLayerSettings(true, false);
+					this.debouncedSliderUpdate();
+				},
+				onCommit: () => this.saveState()
+			},
+			scale: {
+				onApply: () => {
+					this.saveActiveLayerSettings(false, true);
+					this.debouncedSliderUpdate();
+				},
+				onCommit: () => this.saveState()
+			},
+			opacity: {
+				onApply: () => {
+					this.saveActiveLayerSettings(false, true);
+					this.debouncedSliderUpdate();
+				},
+				onCommit: () => this.saveState()
 			}
-			if (updateCallback) updateCallback(e);
-		});
+		};
+		const binding = appBindingConfig[sliderId] || null;
 
-		// Reset button
-		if (resetBtn) {
-			resetBtn.addEventListener('click', () => {
-				slider.value = resetValue;
-				valueDisplay.innerHTML = formatUnit(resetValue, suffix);
-				slider.dispatchEvent(new Event('input'));
-				slider.dispatchEvent(new Event('change'));
-				resetBtn.disabled = true;
-			});
-			resetBtn.disabled = parseInt(slider.value) === resetValue;
-		}
+		bindSlider(slider, valueDisplay, {
+			suffix,
+			resetValue,
+			resetButton: resetBtn,
+			apply: (value, sliderEl, event) => {
+				if (typeof updateCallback === 'function') {
+					updateCallback(event || { target: sliderEl });
+				}
+				binding?.onApply?.(value, sliderEl);
+			},
+			onCommit: binding?.onCommit ? (value, sliderEl, event) => binding.onCommit(value, sliderEl, event) : null
+		});
 	}
 
 	// ===== HELPER: Attach checkbox that syncs with another checkbox =====
@@ -1771,22 +1794,9 @@ async resetAllSettings() {
 			if (contextThresholdValue) contextThresholdValue.textContent = e.target.value;
 		}, CONFIG.tools.selection.defaults.threshold);
 
-		// Helper to attach debounced slider updates
-		const attachSliderDebounce = (sliderId, saveRefine, saveGlitter) => {
-			const slider = document.getElementById(sliderId);
-			if (slider) {
-				slider.addEventListener('input', () => {
-					this.saveActiveLayerSettings(saveRefine, saveGlitter);
-					this.debouncedSliderUpdate();
-				});
-				slider.addEventListener('change', () => this.saveState());
-			}
-		};
-
-		attachSliderDebounce('threshold', true, false);
-		attachSliderDebounce('feather', true, false);
-		attachSliderDebounce('scale', false, true);
-		attachSliderDebounce('opacity', false, true);
+		this.setupSlider('feather', 'featherValue', '', null, CONFIG.tools.selection.defaults.feather);
+		this.setupSlider('scale', 'scaleValue', '%', null, CONFIG.tools.effects.defaults.scale);
+		this.setupSlider('opacity', 'opacityValue', '%', null, CONFIG.tools.effects.defaults.opacity);
 	}
 
 	setupMaskEditorListeners() {
@@ -2178,16 +2188,17 @@ async resetAllSettings() {
 		});
 	}
 
-	loadTransformSettings(layer, prefix) {
+	loadTransformSettings(layer, prefix, options = {}) {
 		const transform = this.getLayerTransformData(layer);
 		if (!transform) return;
 
 		const ids = this.getTransformIds(prefix);
+		const preserveInputId = options.preserveInputId || null;
 
 		const posX = document.getElementById(ids.posX);
 		const posY = document.getElementById(ids.posY);
-		if (posX) posX.value = Math.round(transform.position.x);
-		if (posY) posY.value = Math.round(transform.position.y);
+		if (posX && posX.id !== preserveInputId) posX.value = Math.round(transform.position.x);
+		if (posY && posY.id !== preserveInputId) posY.value = Math.round(transform.position.y);
 
 		const sizeState = this.getTransformSizeState(layer, prefix);
 		const sizeGroup = document.getElementById(ids.sizeGroup);
@@ -2196,8 +2207,8 @@ async resetAllSettings() {
 		if (sizeGroup && sizeState) {
 			sizeGroup.hidden = !sizeState.visible;
 		}
-		if (sizeWidth && sizeState?.visible) sizeWidth.value = sizeState.width;
-		if (sizeHeight && sizeState?.visible) sizeHeight.value = sizeState.height;
+		if (sizeWidth && sizeState?.visible && sizeWidth.id !== preserveInputId) sizeWidth.value = sizeState.width;
+		if (sizeHeight && sizeState?.visible && sizeHeight.id !== preserveInputId) sizeHeight.value = sizeState.height;
 
 		const rotation = document.getElementById(ids.rotation);
 		const rotationValue = document.getElementById(ids.rotationValue);
@@ -2363,7 +2374,7 @@ async resetAllSettings() {
 				const value = parseFloat(input.value);
 				if (!active || Number.isNaN(value)) return;
 				applyValue(value, active);
-				this.loadTransformSettings(active.layer, prefix);
+				this.loadTransformSettings(active.layer, prefix, { preserveInputId: id });
 			});
 
 			input.addEventListener('change', () => {
@@ -3661,11 +3672,24 @@ setupWelcomeModalListeners() {
 		}, { passive: false });
 	}
 
+	getResetValueForSlider(sliderId) {
+		const resetValues = {
+			threshold: CONFIG.tools.selection.defaults.threshold,
+			feather: CONFIG.tools.selection.defaults.feather,
+			scale: CONFIG.tools.effects.defaults.scale,
+			opacity: CONFIG.tools.effects.defaults.opacity,
+			glitterHue: CONFIG.tools.glitter.defaults.colorAdjust.hue,
+			glitterSaturation: CONFIG.tools.glitter.defaults.colorAdjust.saturation,
+			glitterBrightness: CONFIG.tools.glitter.defaults.colorAdjust.brightness
+		};
+		return resetValues[sliderId];
+	}
+
 	updateResetButton(sliderId) {
 		const resetBtn = document.getElementById('reset' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1));
 		const slider = document.getElementById(sliderId);
-		const defaultValue = CONFIG['default' + sliderId.charAt(0).toUpperCase() + sliderId.slice(1)];
-		if (resetBtn) {
+		const defaultValue = this.getResetValueForSlider(sliderId);
+		if (resetBtn && slider && defaultValue !== undefined) {
 			resetBtn.disabled = parseInt(slider.value) === defaultValue;
 		}
 	}
@@ -5920,4 +5944,3 @@ setupWelcomeModalListeners() {
 	// Make editor globally accessible (optional, useful for debugging)
 	window.editor = editor;
 })();
-

@@ -169,7 +169,7 @@ const CONFIG = {
 			}
 		},
 		text: {
-			fontsManifest: 'data/fonts.json',
+			fontsManifest: 'data/fonts.json?v=2',
 			defaultFontId: 'luckiest-guy',
 			defaultText: 'glitter',
 			defaultBoxMode: 'auto',
@@ -761,6 +761,5 @@ const DEBUG_CONFIG = {
 		{ id: 3, x: 600, y: 600 }
 	]
 };
-
 
 
