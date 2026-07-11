@@ -110,6 +110,17 @@
 		]
 	},
 	{
+		"id": "silkscreen",
+		"name": "Silkscreen",
+		"file": "fonts/silkscreen-regular.ttf",
+		"weight": 400,
+		"fallback": "sans-serif",
+		"featured": false,
+		"scripts": [
+			"latin"
+		]
+	},
+	{
 		"id": "dela-gothic-one",
 		"name": "Dela Gothic One",
 		"file": "fonts/dela-gothic-one.woff2",
@@ -170,6 +181,18 @@
 		]
 	},
 	{
+		"id": "noto-sans-jp",
+		"name": "Noto Sans JP",
+		"file": "fonts/noto-sans-jp.woff2",
+		"weight": 400,
+		"fallback": "sans-serif",
+		"featured": false,
+		"scripts": [
+			"ja"
+		]
+	},
+
+	{
 		"id": "black-han-sans",
 		"name": "Black Han Sans",
 		"file": "fonts/black-han-sans.woff2",
@@ -205,17 +228,7 @@
 			"ko"
 		]
 	},
-	{
-		"id": "noto-sans-jp",
-		"name": "Noto Sans JP",
-		"file": "fonts/noto-sans-jp.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"ja"
-		]
-	},
+
 	{
 		"id": "noto-sans-kr",
 		"name": "Noto Sans KR",

@@ -132,7 +132,7 @@ class GroupTransformManager {
 		const x = Math.round(point.x);
 		const y = Math.round(point.y);
 
-		if (event.shiftKey || event.altKey) {
+		if (event.shiftKey) {
 			this.editor.layerManager.handleLayerPick(x, y, {
 				toggleSelection: Boolean(event.shiftKey),
 				cycleDeep: Boolean(event.altKey)
@@ -287,17 +287,64 @@ class GroupTransformManager {
 		let deltaY = 0;
 
 		switch (mode) {
+			case 'left': deltaX = -bounds.left; break;
 			case 'centerX':
 				deltaX = (this.editor.originalCanvas.width / 2) - bounds.centerX;
 				break;
+			case 'right': deltaX = this.editor.originalCanvas.width - bounds.right; break;
+			case 'top': deltaY = -bounds.top; break;
 			case 'centerY':
 				deltaY = (this.editor.originalCanvas.height / 2) - bounds.centerY;
 				break;
+			case 'bottom': deltaY = this.editor.originalCanvas.height - bounds.bottom; break;
 			default:
 				return;
 		}
 
 		this.translateByCanvasDelta(deltaX, deltaY, { saveState: true });
+	}
+
+	alignToSelection(mode) {
+		const bounds = this.getBounds();
+		const entries = this.getLayerEntries();
+		if (!bounds || entries.length < 2) return;
+		this.ensureHistoryBaseline();
+		entries.forEach(({ transform }) => {
+			const metrics = transform.getFrameMetrics();
+			let deltaX = 0;
+			let deltaY = 0;
+			switch (mode) {
+				case 'left': deltaX = bounds.left - metrics.minX; break;
+				case 'centerX': deltaX = bounds.centerX - ((metrics.minX + metrics.maxX) / 2); break;
+				case 'right': deltaX = bounds.right - metrics.maxX; break;
+				case 'top': deltaY = bounds.top - metrics.minY; break;
+				case 'centerY': deltaY = bounds.centerY - ((metrics.minY + metrics.maxY) / 2); break;
+				case 'bottom': deltaY = bounds.bottom - metrics.maxY; break;
+				default: return;
+			}
+			const current = transform.getTransform();
+			transform.updateTransform({ position: { x: current.position.x + deltaX, y: current.position.y + deltaY } });
+		});
+		this.applyEntries(entries);
+		this.editor.saveState();
+	}
+
+	distribute(axis) {
+		const entries = this.getLayerEntries();
+		if (entries.length < 3) return;
+		const keyed = entries.map((entry) => {
+			const metrics = entry.transform.getFrameMetrics();
+			return { ...entry, center: axis === 'horizontal' ? (metrics.minX + metrics.maxX) / 2 : (metrics.minY + metrics.maxY) / 2 };
+		}).sort((a, b) => a.center - b.center);
+		this.ensureHistoryBaseline();
+		const step = (keyed[keyed.length - 1].center - keyed[0].center) / (keyed.length - 1);
+		keyed.slice(1, -1).forEach((entry, index) => {
+			const delta = keyed[0].center + (step * (index + 1)) - entry.center;
+			const current = entry.transform.getTransform();
+			entry.transform.updateTransform({ position: { x: current.position.x + (axis === 'horizontal' ? delta : 0), y: current.position.y + (axis === 'vertical' ? delta : 0) } });
+		});
+		this.applyEntries(keyed);
+		this.editor.saveState();
 	}
 
 	translateByCanvasDelta(deltaX, deltaY, options = {}) {
@@ -514,7 +561,9 @@ class GroupTransformManager {
 							Math.round(this.editor.viewport.screenToCanvas(event.clientX, event.clientY).x),
 							Math.round(this.editor.viewport.screenToCanvas(event.clientX, event.clientY).y)
 						)?.id || null
-						: null
+						: null,
+					altDuplicatePending: handleType === 'move' && event.altKey,
+					originalSelectionIds: handleType === 'move' && event.altKey ? this.getSelectedLayerIds() : null
 				};
 			});
 
@@ -579,7 +628,12 @@ class GroupTransformManager {
 
 		const shouldSingleSelect = this.activeHandleType === 'move'
 			&& this.dragStartState?.selectionCandidateId
-			&& !this.dragStartState?.didMove;
+			&& !this.dragStartState?.didMove
+			&& !this.dragStartState?.altDuplicatePending;
+		if (this.activeHandleType === 'move' && this.dragStartState?.altDuplicatePending && !this.dragStartState?.didMove) {
+			const point = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+			this.editor.layerManager.handleLayerPick(Math.round(point.x), Math.round(point.y), { cycleDeep: true });
+		}
 
 		if (shouldSingleSelect) {
 			event.preventDefault();
@@ -618,6 +672,16 @@ class GroupTransformManager {
 		const deltaY = canvasPos.y - this.dragStartState.canvasY;
 		if (!this.dragStartState.didMove && Math.hypot(deltaX, deltaY) < 3) {
 			return;
+		}
+		if (!this.dragStartState.didMove && this.dragStartState.altDuplicatePending) {
+			const clones = this.editor.layerManager.cloneLayers(this.dragStartState.originalSelectionIds, { positionOffset: { x: 0, y: 0 }, skipHistory: true });
+			if (!clones) return;
+			const bounds = this.getBounds();
+			this.dragStartState.bounds = bounds;
+			this.dragStartState.layerStates = this.getLayerEntries().map(({ layer, transform }) => ({
+				layer, transform, position: { ...transform.getTransform().position }, scale: { ...transform.getTransform().scale }, rotation: transform.getTransform().rotation || 0
+			}));
+			this.dragStartState.altDuplicatePending = false;
 		}
 
 		this.dragStartState.didMove = true;
@@ -683,4 +747,3 @@ class GroupTransformManager {
 		this.applyEntries(this.dragStartState.layerStates);
 	}
 }
-

@@ -857,7 +857,8 @@ class LayerManager {
 		}
 	}
 
-	cloneLayer(layerId) {
+	cloneLayer(layerId, options = {}) {
+		const positionOffset = options.positionOffset || { x: 20, y: 20 };
 		const sourceLayer = this.layers.find(l => l.id === layerId);
 		if (!sourceLayer) return null;
 
@@ -880,8 +881,8 @@ class LayerManager {
 			const sourceTransform = getLayerTransform(sourceLayer);
 			const clonedTransform = cloneTransform(sourceTransform, {
 				position: {
-					x: sourceTransform.position.x + 20,
-					y: sourceTransform.position.y + 20
+					x: sourceTransform.position.x + positionOffset.x,
+					y: sourceTransform.position.y + positionOffset.y
 				}
 			});
 			// Clone sticker layer - deep copy the stickerData structure
@@ -925,8 +926,8 @@ class LayerManager {
 				textData: JSON.parse(JSON.stringify(sourceLayer.textData))
 			};
 			const transform = getLayerTransform(clonedLayer);
-			transform.position.x += 20;
-			transform.position.y += 20;
+			transform.position.x += positionOffset.x;
+			transform.position.y += positionOffset.y;
 		} else if (sourceLayer.type === LayerType.SHAPE) {
 			clonedLayer = {
 				id: this.generateLayerId(),
@@ -940,8 +941,8 @@ class LayerManager {
 			};
 			// Nudge so the copy is visible, mirroring the other clone paths' intent.
 			const transform = getLayerTransform(clonedLayer);
-			transform.position.x += 20;
-			transform.position.y += 20;
+			transform.position.x += positionOffset.x;
+			transform.position.y += positionOffset.y;
 		} else {
 			// Clone glitter layer
 			clonedLayer = {
@@ -973,19 +974,23 @@ class LayerManager {
 		// (Higher index = visually above in the stack)
 		const sourceIndex = this.layers.findIndex(l => l.id === layerId);
 		this.layers.splice(sourceIndex + 1, 0, clonedLayer);
+		if (sourceLayer.type === LayerType.TEXT_GLITTER || sourceLayer.type === LayerType.SHAPE) {
+			this.renderClonedLayerPreview(clonedLayer);
+		}
 
 		// Make the clone active and re-render
-		this.setActiveLayer(clonedLayer.id);
+		if (!options.skipSelection) this.setActiveLayer(clonedLayer.id);
 		this.renderLayersList();
 		this.reorderLayers();
 
-		this.editor.saveState();
+		if (!options.skipHistory) this.editor.saveState();
 		this.editor.updateActionButtons();
 
 		return clonedLayer;
 	}
 
-	buildClonedLayer(sourceLayer) {
+	buildClonedLayer(sourceLayer, options = {}) {
+		const positionOffset = options.positionOffset || { x: 20, y: 20 };
 		if (!sourceLayer) return null;
 		if (sourceLayer.locked) {
 			this.editor.showError('Cannot clone locked layer');
@@ -996,8 +1001,8 @@ class LayerManager {
 			const sourceTransform = getLayerTransform(sourceLayer);
 			const clonedTransform = cloneTransform(sourceTransform, {
 				position: {
-					x: sourceTransform.position.x + 20,
-					y: sourceTransform.position.y + 20
+					x: sourceTransform.position.x + positionOffset.x,
+					y: sourceTransform.position.y + positionOffset.y
 				}
 			});
 
@@ -1035,8 +1040,8 @@ class LayerManager {
 				textData: JSON.parse(JSON.stringify(sourceLayer.textData))
 			};
 			const transform = getLayerTransform(clonedLayer);
-			transform.position.x += 20;
-			transform.position.y += 20;
+			transform.position.x += positionOffset.x;
+			transform.position.y += positionOffset.y;
 			return clonedLayer;
 		}
 
@@ -1052,8 +1057,8 @@ class LayerManager {
 				shapeData: JSON.parse(JSON.stringify(sourceLayer.shapeData))
 			};
 			const transform = getLayerTransform(clonedLayer);
-			transform.position.x += 20;
-			transform.position.y += 20;
+			transform.position.x += positionOffset.x;
+			transform.position.y += positionOffset.y;
 			return clonedLayer;
 		}
 
@@ -1100,7 +1105,7 @@ class LayerManager {
 		}
 	}
 
-	cloneLayers(layerIds) {
+	cloneLayers(layerIds, options = {}) {
 		const uniqueIds = [...new Set(layerIds)].filter((layerId) => this.layers.some((layer) => layer.id === layerId));
 		if (!uniqueIds.length) return null;
 		if (this.layers.length + uniqueIds.length > CONFIG.app.limits.maxLayers) {
@@ -1112,7 +1117,7 @@ class LayerManager {
 		this.layers
 			.filter((layer) => uniqueIds.includes(layer.id))
 			.forEach((sourceLayer) => {
-				const clonedLayer = this.buildClonedLayer(sourceLayer);
+				const clonedLayer = this.buildClonedLayer(sourceLayer, options);
 				if (!clonedLayer) return;
 				const sourceIndex = this.layers.findIndex((layer) => layer.id === sourceLayer.id);
 				this.layers.splice(sourceIndex + 1, 0, clonedLayer);
@@ -1131,7 +1136,7 @@ class LayerManager {
 		this.renderLayersList();
 		this.reorderLayers();
 		this.editor.updatePreview();
-		this.editor.saveState();
+		if (!options.skipHistory) this.editor.saveState();
 		this.editor.updateActionButtons();
 
 		return clones.length === 1 ? clones[0] : clones;
@@ -2011,4 +2016,3 @@ class LayerManager {
 		});
 	}
 }
-

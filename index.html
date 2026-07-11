@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=47">
+	<link rel="stylesheet" href="css/style.css?v=52">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -164,7 +164,7 @@
 						<svg class="icon">
 							<use href="#icon-gear"></use>
 						</svg>
-						<span class="name">Settings</span>
+						<span class="name">Export Settings</span>
 					</button>
 				</div>
 
@@ -776,23 +776,23 @@
 									</div>
 
 									<div class="settings-subsection" id="multiLayerSelectionGroup" hidden>
-										<div class="subsection-content-group">
-											<div class="subsection-title">Multi-Layer Selection</div>
+										<div class="subsection-content-group" data-collapsible-subsection>
+											<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Multi-Layer Selection</div>
 											<div class="empty-state visible compact">
 												<div class="empty-state-text" id="multiLayerSelectionCount">2 movable layers</div>
 												<div class="empty-state-subtext">Shift+click adds or removes layers. Alt+click cycles overlapping layers. On touch, edit the selection from the layer list.</div>
 											</div>
 										</div>
-										<div class="subsection-content-group">
-											<div class="subsection-title">Quick Actions</div>
-											<div class="settings-action-row multi-selection-actions">
-												<button class="btn-simple" id="multiSelectionDuplicateBtn" type="button">Duplicate</button>
-												<button class="btn-simple" id="multiSelectionDeleteBtn" type="button">Delete</button>
-											</div>
-											<div class="settings-action-row multi-selection-actions">
-												<button class="btn-simple" id="multiSelectionCenterHorizontalBtn" type="button">Center H</button>
-												<button class="btn-simple" id="multiSelectionCenterVerticalBtn" type="button">Center V</button>
-											</div>
+										<div class="subsection-content-group" data-collapsible-subsection>
+											<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Align</div>
+											<div class="transform-control-group"><div class="control-group-label">Align to</div><div class="segmented-control transform-segmented-control" id="multiSelectionAlignScope"><button class="segmented-option" type="button" data-scope="selection">Selection</button><button class="segmented-option active" type="button" data-scope="canvas">Canvas</button></div></div>
+											<div class="transform-control-group"><div class="control-group-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="left" title="Align left">Left</button><button class="segmented-option" type="button" data-multi-align="centerX" title="Align horizontal centers">Center</button><button class="segmented-option" type="button" data-multi-align="right" title="Align right">Right</button></div></div>
+											<div class="transform-control-group"><div class="control-group-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="top" title="Align top">Top</button><button class="segmented-option" type="button" data-multi-align="centerY" title="Align vertical centers">Middle</button><button class="segmented-option" type="button" data-multi-align="bottom" title="Align bottom">Bottom</button></div></div>
+											<div class="settings-action-row multi-selection-actions"><button class="btn-simple" data-multi-distribute="horizontal" type="button">Distribute H</button><button class="btn-simple" data-multi-distribute="vertical" type="button">Distribute V</button></div>
+										</div>
+										<div class="subsection-content-group" data-collapsible-subsection>
+											<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Actions</div>
+											<div class="settings-action-row multi-selection-actions"><button class="btn-simple" id="multiSelectionDuplicateBtn" type="button">Duplicate</button><button class="btn-simple" id="multiSelectionDeleteBtn" type="button">Delete</button></div>
 										</div>
 									</div>
 								</div>
@@ -1318,7 +1318,7 @@
 								</div>
 
 								<div class="subsection-content-group">
-									<div class="subsection-title">Alignment</div>
+									<div class="subsection-title">Text Alignment</div>
 									<div class="control-group-label text-valign-label">Vertical</div>
 									<div class="segmented-control text-valign-group">
 										<button class="segmented-option active" type="button" data-text-valign="top">Top</button>
@@ -2253,6 +2253,7 @@
 
 							</div>
 							<div class="preview-controls-right">
+								<button class="btn-icon export-action-btn icon-wrapper" id="exportSettingsBtn" title="Export Settings"><svg class="icon"><use href="#icon-gear"></use></svg><span class="name">Export Settings</span></button>
 								<!-- EXPORT ICON BUTTON -->
 								<button class="btn-icon export-action-btn icon-wrapper primary" id="exportGif" disabled title="Export glitter as GIF">
 									<svg class="icon">
@@ -2743,8 +2744,15 @@
 		</div>
 	</div>
 
-	<!-- Settings Modal -->
+	<!-- App Settings Modal -->
 	<div class="modal-overlay" id="settingsModal">
+		<div class="modal-content"><div class="modal-header"><div class="modal-title"><span class="modal-icon icon-wrapper"><svg class="icon"><use href="#icon-gear"></use></svg><span class="name">Settings</span></span><span class="modal-title-text">Settings</span></div><button class="btn-icon icon-wrapper modal-close" id="closeSettingsModal"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button></div>
+			<div class="modal-body"><div class="settings-group"><div class="settings-group-title">Interface <button class="btn-text small reset-section-btn" data-section="interface">Reset</button></div><div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Helpful Hints</div><div class="settings-row-control"><label class="switch" for="showHelpfulHints"><input type="checkbox" id="showHelpfulHints" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div></div></div></div>
+			<div class="modal-footer left-right"><button class="btn-text secondary reset-all-settings-btn">Reset All Settings</button><button class="btn-simple modal-close" id="closeSettingsModalFooter">Close</button></div></div>
+	</div>
+
+	<!-- Export Settings Modal -->
+	<div class="modal-overlay" id="exportSettingsModal">
 		<div class="modal-content">
 			<div class="modal-header">
 
@@ -2756,10 +2764,10 @@
 						<span class="name">Settings</span>
 					</span>
 
-					<span class="modal-title-text">Settings</span>
+					<span class="modal-title-text">Export Settings</span>
 				</div>
 
-				<button class="btn-icon icon-wrapper modal-close" id="closeSettingsModal">
+				<button class="btn-icon icon-wrapper modal-close" id="closeExportSettingsModal">
 					<svg class="icon">
 						<use href="#icon-x-mark"></use>
 					</svg>
@@ -2772,42 +2780,10 @@
 			<div class="modal-body">
 				<div class="settings-group">
 
-					<!-- Interface Group -->
-					<div class="settings-group-title">
-						Interface
-						<button class="btn-text small reset-section-btn" data-section="interface">Reset</button>
-					</div>
-					<div class="settings-row">
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Helpful Hints</div>
-							<div class="settings-row-control">
-								<label class="switch" for="showHelpfulHints">
-									<input type="checkbox" id="showHelpfulHints" />
-									<div class="slider round"></div>
-								</label>
-							</div>
-						</div>
-						<div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div>
-					</div>
-
-
 					<!-- Export Group -->
 					<div class="settings-group-title">
 						Export
 						<button class="btn-text small reset-section-btn" data-section="export">Reset</button>
-					</div>
-					<div class="settings-row" style="display: none">
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Base Image</div>
-							<div class="settings-row-control">
-								<label class="switch" for="exportBaseImage">
-									<input type="checkbox" id="exportBaseImage" />
-									<div class="slider round"></div>
-								</label>
-							</div>
-						</div>
-						<div class="settings-row-label-desc">Include the base image in the export. When disabled, only
-							glitter layers are exported.</div>
 					</div>
 					<div class="settings-row" id="transparencySettingsRow">
 						<div class="settings-row-header">
@@ -2986,10 +2962,10 @@
 
 			<!-- Footer with Reset All button -->
 			<div class="modal-footer left-right">
-				<button class="btn-text secondary reset-all-settings-btn">
-					Reset All Settings
+				<button class="btn-text secondary reset-export-settings-btn">
+					Reset Export Settings
 				</button>
-				<button class="btn-simple modal-close" id="closeSettingsModalFooter">Close</button>
+				<button class="btn-simple modal-close" id="closeExportSettingsModalFooter">Close</button>
 			</div>
 
 
@@ -3498,7 +3474,7 @@
 	<script src="js/vendor/gif.js"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=19"></script>
+	<script src="js/config.js?v=20"></script>
 	<script src="js/transform-math.js?v=1"></script>
 
 	<!-- Utils -->
@@ -3520,22 +3496,22 @@
 	<script src="js/classes/MaskEditor.js?v=12"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=18"></script>
+	<script src="js/classes/LayerManager.js?v=21"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
-	<script src="js/classes/LayerTransform.js?v=14"></script>
+	<script src="js/classes/LayerTransform.js?v=17"></script>
 	<script src="js/classes/GlitterManager.js?v=12"></script>
 	<script src="js/classes/TextGlitterManager.js?v=32"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=21"></script>
 	<script src="js/classes/StickerManager.js?v=3"></script>
-	<script src="js/classes/GroupTransformManager.js?v=5"></script>
+	<script src="js/classes/GroupTransformManager.js?v=7"></script>
 
 	<script src="js/classes/MobileManager.js?v=6"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=50"></script>
+	<script src="js/app.js?v=55"></script>
 
 </body>
 

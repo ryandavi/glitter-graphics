@@ -3677,27 +3677,27 @@ body.mask-editing {
 		}
 	}
 
-	.transform-control-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
-	}
-
-	.transform-segmented-control {
-		width: 100%;
-
-		>.segmented-option {
-			padding-left: var(--spacing-base);
-			padding-right: var(--spacing-base);
-		}
-	}
-
 	.transform-panel-footer {
 		display: flex;
 	}
 
 	.transform-reset-all {
 		width: 100%;
+	}
+}
+
+.transform-control-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+}
+
+.transform-segmented-control {
+	width: 100%;
+
+	>.segmented-option {
+		padding-left: var(--spacing-base);
+		padding-right: var(--spacing-base);
 	}
 }
 
@@ -4399,7 +4399,16 @@ body.mask-editing {
 }
 
 /* ===== SETTINGS MODAL ===== */
-#settingsModal {}
+#settingsModal,
+#exportSettingsModal {}
+
+.selection-marquee {
+	position: absolute;
+	z-index: 12;
+	pointer-events: none;
+	border: 1px solid var(--color-accent);
+	background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
 
 /* SETTINGS MODAL SPECIFIC */
 .settings-group {
@@ -6357,7 +6366,7 @@ body.mask-editing {
 }
 
 .subsection-note {
-	font-size: var(--font-size-sm);
+	font-size: var(--font-size-xs);
 	line-height: 1.4;
 	color: var(--color-text-tertiary);
 }
@@ -6819,30 +6828,13 @@ body.mask-editing {
 }
 
 .text-effect-subsection {
-	display: flex;
-	flex-direction: column;
 	gap: var(--spacing-lg);
-	padding: var(--spacing-md);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
-	background-color: var(--color-bg-card);
-
-	>.subsection-title {
-		font-size: var(--font-size-sm);
-		letter-spacing: 0.5px;
-		font-weight: 600;
-		text-transform: uppercase;
-		color: var(--color-text-tertiary);
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
 }
 
-.effects-stack {
-	padding: 0 !important;
-	border: 0 !important;
-	background: transparent !important;
+.subsection-content-group.effects-stack {
+	padding: 0;
+	border: 0;
+	background: transparent;
 
 	>.subsection-title,
 	>.subsection-note {
@@ -7023,6 +7015,48 @@ body.mask-editing {
 
 }
 
+/* Shared settings card: works at any nesting depth. */
+.subsection-content-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding: var(--spacing-md);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background-color: var(--color-bg-card);
+
+	>.subsection-title {
+		@include text-sm;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: var(--color-text-tertiary);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	&[data-collapsible-subsection]>.subsection-title {
+		cursor: pointer;
+
+		>.subsection-chevron {
+			width: 1rem;
+			height: 1rem;
+			transition: transform var(--transition-fast);
+		}
+	}
+
+	&[data-collapsible-subsection].is-collapsed {
+		>.subsection-title>.subsection-chevron { transform: rotate(-90deg); }
+		>:not(.subsection-title) { display: none; }
+	}
+
+	>.subsection-content {
+		display: flex;
+		gap: var(--spacing-md);
+		+.subsection-title { margin-top: var(--spacing-sm); }
+	}
+}
+
 /* Settings Subsections */
 .settings-subsection {
 	display: flex;
@@ -7039,41 +7073,22 @@ body.mask-editing {
 		gap: var(--spacing-md);
 	}
 
-	>.subsection-content-group,
-	>.transform-panel-host>.subsection-content-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-md);
-
-		padding: var(--spacing-md);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background-color: var(--color-bg-card);
-
-		>.subsection-title {
-			@include text-sm;
-			font-weight: 600;
-			text-transform: uppercase;
-			color: var(--color-text-tertiary);
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-
-		>.subsection-content {
-			display: flex;
-			gap: var(--spacing-md);
-
-			+.subsection-title {
-				margin-top: var(--spacing-sm);
-			}
-		}
-	}
-
 	+.settings-subsection {
 		margin-top: var(--spacing-md);
 	}
 
+}
+
+// Header controls (Enabled/Global/Proportional) cluster against the right
+// edge next to the collapse chevron instead of floating mid-title. Bare rule
+// on purpose: the effect cards (.text-effect-subsection) are nested, not
+// direct children of .settings-subsection, so the scoped rule above misses them.
+.subsection-title {
+	gap: var(--spacing-sm);
+
+	>.checkbox-group {
+		margin-left: auto;
+	}
 }
 
 /* Two-column settings layout */

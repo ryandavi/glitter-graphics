@@ -427,6 +427,13 @@ setupSettingsResetListeners() {
 	});
 
 	// Reset all button
+	const resetExportBtn = document.querySelector('.reset-export-settings-btn');
+	if (resetExportBtn) {
+		resetExportBtn.addEventListener('click', () => {
+			this.resetExportSettings();
+		});
+	}
+
 	const resetAllBtn = document.querySelector('.reset-all-settings-btn');
 	if (resetAllBtn) {
 		resetAllBtn.addEventListener('click', () => {
@@ -444,6 +451,7 @@ async resetSettingsSection(section) {
 		confirmLabel: 'Reset'
 	});
 	if (!confirmed) {
+		return;
 	}
 
 	switch(section) {
@@ -509,6 +517,32 @@ async resetAllSettings() {
 	this.syncExportSettingsToUI();
 	this.saveSettingsToStorage();
 }
+
+	async resetExportSettings() {
+		const confirmed = await this.confirmAction({
+			title: 'Reset Export Settings',
+			message: 'Export, encoding, and frame-control settings will be restored to their defaults.',
+			confirmLabel: 'Reset'
+		});
+		if (!confirmed) return;
+
+		this.exportSettings = {
+			quality: CONFIG.export.defaults.quality,
+			ditherEnabled: CONFIG.export.defaults.ditherEnabled,
+			ditherType: CONFIG.export.defaults.ditherType,
+			baseImage: CONFIG.export.defaults.baseImage,
+			transparency: CONFIG.export.defaults.transparency,
+			matteColor: CONFIG.export.defaults.matteColor,
+			frameDelay: CONFIG.export.defaults.frameDelay,
+			maxFrames: CONFIG.export.defaults.maxFrames,
+			watermarkEnabled: CONFIG.export.defaults.watermarkEnabled,
+			exportFrameSkip: CONFIG.export.defaults.frameSkip,
+			exportReverse: CONFIG.export.defaults.reverse,
+			smartFrameReduction: CONFIG.export.defaults.smartFrameReduction
+		};
+		this.syncExportSettingsToUI();
+		this.saveSettingsToStorage();
+	}
 
 	getSectionDisplayName(section) {
 		const names = {
@@ -775,8 +809,9 @@ async resetAllSettings() {
 			if (defaultGroups) defaultGroups.hidden = true;
 			if (multiGroup) multiGroup.hidden = false;
 			if (emptyText) emptyText.textContent = `${multiCount} layers selected`;
-			if (emptySubtext) emptySubtext.textContent = 'Drag the shared box on the canvas to move them, or use the quick actions below.';
+			if (emptySubtext) emptySubtext.textContent = 'Drag the shared box on the canvas to move them, or use Align and Actions below.';
 			if (countLabel) countLabel.textContent = `${multiCount} movable layers`;
+			document.querySelectorAll('[data-multi-distribute]').forEach((button) => { button.disabled = multiCount < 3; });
 			return;
 		}
 
@@ -1239,13 +1274,55 @@ async resetAllSettings() {
 	// so all instances behave identically. Collapsed by default; open state is
 	// intentionally NOT persisted — it resets each session/relayout.
 	initializeAdvancedDisclosures() {
+		const initializeSubsections = (root = document) => {
+			root.querySelectorAll?.('.subsection-content-group > .subsection-title').forEach((title) => {
+				const subsection = title.parentElement;
+				if (!subsection) return;
+				subsection.dataset.collapsibleSubsection = '';
+				title.dataset.subsectionToggle = '';
+				title.setAttribute('role', 'button');
+				title.setAttribute('tabindex', '0');
+				title.setAttribute('aria-expanded', 'true');
+				if (!title.querySelector('.subsection-chevron')) {
+					title.insertAdjacentHTML('beforeend', '<span class="subsection-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>');
+				}
+			});
+		};
+		initializeSubsections();
+		new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
+				if (node.nodeType === Node.ELEMENT_NODE) initializeSubsections(node);
+			}));
+		}).observe(document.body, { childList: true, subtree: true });
+		const toggleSubsection = (toggle) => {
+			const subsection = toggle.closest('[data-collapsible-subsection]');
+			if (!subsection) return;
+			const isCollapsed = subsection.classList.toggle('is-collapsed');
+			toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+		};
+		// Interactive controls living in the title (Enabled/Global checkboxes,
+		// reset chips) must not also collapse the subsection when clicked.
+		const isTitleControl = (target) => Boolean(target.closest?.('.checkbox-group, button, input, select'));
 		document.addEventListener('click', (event) => {
+			const subsectionToggle = event.target.closest('[data-subsection-toggle]');
+			if (subsectionToggle) {
+				if (isTitleControl(event.target)) return;
+				toggleSubsection(subsectionToggle);
+				return;
+			}
 			const toggle = event.target.closest('[data-advanced-toggle]');
 			if (!toggle) return;
 			const disclosure = toggle.closest('[data-advanced]');
 			if (!disclosure) return;
 			const isOpen = disclosure.classList.toggle('is-open');
 			toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+		});
+		document.addEventListener('keydown', (event) => {
+			const toggle = event.target.closest?.('[data-subsection-toggle]');
+			if (!toggle || (event.key !== 'Enter' && event.key !== ' ')) return;
+			if (isTitleControl(event.target)) return;
+			event.preventDefault();
+			toggleSubsection(toggle);
 		});
 	}
 
@@ -1957,7 +2034,7 @@ async resetAllSettings() {
 				</div>
 			</div>
 			<div class="subsection-content-group transform-panel">
-				<div class="subsection-title">Alignment</div>
+				<div class="subsection-title">Align</div>
 				<div class="transform-control-group">
 					<div class="control-group-label">Horizontal</div>
 					<div class="segmented-control transform-segmented-control">
@@ -2724,6 +2801,18 @@ async resetAllSettings() {
 		const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
 		const colorRow = document.getElementById('canvasColorRow');
 
+		// Presets are a shortcut, not a mode: highlight tracks whether the current
+		// dimensions exactly match a preset, so editing width/height/orientation
+		// deselects and swapping back re-selects.
+		const syncPresetHighlight = () => {
+			const width = parseInt(widthInput?.value);
+			const height = parseInt(heightInput?.value);
+			presetButtons.forEach(btn => {
+				btn.classList.toggle('active',
+					parseInt(btn.dataset.width) === width && parseInt(btn.dataset.height) === height);
+			});
+		};
+
 		// Preset buttons
 		presetButtons.forEach(btn => {
 			btn.addEventListener('click', () => {
@@ -2733,9 +2822,7 @@ async resetAllSettings() {
 				if (widthInput) widthInput.value = width;
 				if (heightInput) heightInput.value = height;
 
-				presetButtons.forEach(b => b.classList.remove('active'));
-				btn.classList.add('active');
-
+				syncPresetHighlight();
 				this.updateOrientationButtons(width, height);
 			});
 		});
@@ -2753,6 +2840,7 @@ async resetAllSettings() {
 					heightInput.value = width;
 				}
 
+				syncPresetHighlight();
 				this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
 			});
 		}
@@ -2770,6 +2858,7 @@ async resetAllSettings() {
 					heightInput.value = width;
 				}
 
+				syncPresetHighlight();
 				this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
 			});
 		}
@@ -2777,6 +2866,7 @@ async resetAllSettings() {
 		// Dimension inputs
 		if (widthInput && heightInput) {
 			const updateOrientation = () => {
+				syncPresetHighlight();
 				this.updateOrientationButtons(parseInt(widthInput.value), parseInt(heightInput.value));
 			};
 
@@ -2843,6 +2933,11 @@ async resetAllSettings() {
 			.register('shortcutsModal', {
 				openBtnId: 'shortcutsBtn',
 				closeBtnId: 'closeShortcutsModal',
+				resetScrollOnOpen: true
+			})
+			.register('exportSettingsModal', {
+				openBtnId: 'exportSettingsBtn',
+				closeBtnId: ['closeExportSettingsModal', 'closeExportSettingsModalFooter'],
 				resetScrollOnOpen: true
 			})
 			.register('settingsModal', {
@@ -3299,8 +3394,7 @@ setupWelcomeModalListeners() {
 
 		const multiDuplicateBtn = document.getElementById('multiSelectionDuplicateBtn');
 		const multiDeleteBtn = document.getElementById('multiSelectionDeleteBtn');
-		const multiCenterHorizontalBtn = document.getElementById('multiSelectionCenterHorizontalBtn');
-		const multiCenterVerticalBtn = document.getElementById('multiSelectionCenterVerticalBtn');
+		this.multiSelectionAlignScope = 'canvas';
 
 		if (multiDuplicateBtn) {
 			multiDuplicateBtn.addEventListener('click', () => {
@@ -3314,17 +3408,17 @@ setupWelcomeModalListeners() {
 			});
 		}
 
-		if (multiCenterHorizontalBtn) {
-			multiCenterHorizontalBtn.addEventListener('click', () => {
-				this.groupTransformManager?.alignToCanvas('centerX');
-			});
-		}
-
-		if (multiCenterVerticalBtn) {
-			multiCenterVerticalBtn.addEventListener('click', () => {
-				this.groupTransformManager?.alignToCanvas('centerY');
-			});
-		}
+		document.querySelectorAll('#multiSelectionAlignScope [data-scope]').forEach((button) => button.addEventListener('click', () => {
+			this.multiSelectionAlignScope = button.dataset.scope;
+			document.querySelectorAll('#multiSelectionAlignScope [data-scope]').forEach((item) => item.classList.toggle('active', item === button));
+		}));
+		document.querySelectorAll('[data-multi-align]').forEach((button) => button.addEventListener('click', () => {
+			const method = this.multiSelectionAlignScope === 'selection' ? 'alignToSelection' : 'alignToCanvas';
+			this.groupTransformManager?.[method]?.(button.dataset.multiAlign);
+		}));
+		document.querySelectorAll('[data-multi-distribute]').forEach((button) => button.addEventListener('click', () => {
+			this.groupTransformManager?.distribute(button.dataset.multiDistribute);
+		}));
 	}
 
 	togglePreview() {
@@ -3380,6 +3474,13 @@ setupWelcomeModalListeners() {
 			if (this.currentTool === ToolType.TEXT) {
 				return;
 			}
+			if (this.currentTool === ToolType.SELECT && this.originalImage && e.button === 0 &&
+				!e.altKey &&
+				!e.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR) &&
+				!e.target.closest('.group-transform-handles')) {
+				this.startSelectionMarquee(e);
+				return;
+			}
 			// Shape tool: drag out the initial size (Photoshop-style); a plain click
 			// with no drag falls back to a default-size shape at the click point.
 			if (this.currentTool === ToolType.SHAPE && this.originalImage) {
@@ -3406,6 +3507,58 @@ setupWelcomeModalListeners() {
 				e.preventDefault();
 			}
 		});
+	}
+
+	startSelectionMarquee(e) {
+		const start = { x: e.clientX, y: e.clientY };
+		const additive = e.shiftKey;
+		const existingIds = additive ? this.layerManager.getSelectedLayers({ movableOnly: true }).map((layer) => layer.id) : [];
+		const marquee = document.createElement('div');
+		marquee.className = 'selection-marquee ui-ignore-gestures';
+		this.previewContainer.appendChild(marquee);
+		let didMove = false;
+		const update = (ev) => {
+			const rect = this.previewContainer.getBoundingClientRect();
+			const left = Math.min(start.x, ev.clientX) - rect.left;
+			const top = Math.min(start.y, ev.clientY) - rect.top;
+			const width = Math.abs(ev.clientX - start.x);
+			const height = Math.abs(ev.clientY - start.y);
+			didMove = didMove || Math.max(width, height) >= 3;
+			marquee.style.cssText = `left:${left}px;top:${top}px;width:${width}px;height:${height}px`;
+		};
+		const cleanup = () => {
+			window.removeEventListener('pointermove', onMove);
+			window.removeEventListener('pointerup', onUp);
+			window.removeEventListener('pointercancel', onCancel);
+			marquee.remove();
+		};
+		const onMove = (ev) => update(ev);
+		const onCancel = () => cleanup();
+		const onUp = (ev) => {
+			cleanup();
+			if (!didMove) {
+				this.handlePreviewContainerClick(e);
+				return;
+			}
+			const a = this.viewport.screenToCanvas(start.x, start.y);
+			const b = this.viewport.screenToCanvas(ev.clientX, ev.clientY);
+			const box = { left: Math.min(a.x, b.x), right: Math.max(a.x, b.x), top: Math.min(a.y, b.y), bottom: Math.max(a.y, b.y) };
+			const hits = this.layerManager.layers.filter((layer) => {
+				const ctx = this.getMovableLayerContext(layer);
+				const transform = ctx?.manager?.layerTransforms?.get(layer.id);
+				if (!transform || !layer.visible || layer.locked) return false;
+				const metrics = transform.getFrameMetrics();
+				return metrics.maxX >= box.left && metrics.minX <= box.right && metrics.maxY >= box.top && metrics.minY <= box.bottom;
+			}).map((layer) => layer.id);
+			const ids = [...new Set([...existingIds, ...hits])];
+			if (ids.length) this.layerManager.setSelection(ids, { activeLayerId: ids[ids.length - 1] });
+			else if (!additive) this.layerManager.clearSelection();
+			this.ignoreNextClick = true;
+			setTimeout(() => { this.ignoreNextClick = false; }, 0);
+		};
+		window.addEventListener('pointermove', onMove);
+		window.addEventListener('pointerup', onUp);
+		window.addEventListener('pointercancel', onCancel);
 	}
 
 	// Rubber-band shape creation: drag out the box, release to create a shape of
@@ -4224,7 +4377,15 @@ setupWelcomeModalListeners() {
 			}
 
 			// No modal was open, switch to select tool
+			if (this.layerManager.hasMultiSelection()) this.layerManager.clearSelection();
 			this.setTool(ToolType.SELECT);
+		}
+
+		if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+			e.preventDefault();
+			const ids = this.layerManager.layers.filter((layer) => !layer.locked && layer.type !== LayerType.BASE_IMAGE).map((layer) => layer.id);
+			if (ids.length) this.layerManager.setSelection(ids, { activeLayerId: ids[ids.length - 1] });
+			return;
 		}
 
 
@@ -5210,7 +5371,8 @@ setupWelcomeModalListeners() {
 			document.getElementById('statusDimensions').textContent = dims;
 
 			const zoomPct = Math.round(this.viewport.currentZoom * 100);
-			document.getElementById('statusZoom').textContent = `${zoomPct}%`;
+			const count = this.layerManager?.getSelectedLayers({ movableOnly: true }).length || 0;
+			document.getElementById('statusZoom').textContent = count > 1 ? `${zoomPct}% · ${count} layers selected` : `${zoomPct}%`;
 		} else {
 			document.getElementById('statusDimensions').textContent = '';
 			document.getElementById('statusZoom').textContent = '';

@@ -289,6 +289,10 @@ const CONFIG = {
 				{ key: 'Shift + Arrow Keys', action: 'Nudge Selected Layer 10px' },
 				{ key: 'Shift + Click', action: 'Add/Remove Movable Layer from Selection' },
 				{ key: 'Alt + Click', action: 'Cycle Through Overlapping Layers' },
+				{ key: 'Alt + Drag', action: 'Duplicate Layer(s) While Dragging' },
+				{ key: 'Drag on Empty Canvas', action: 'Select Multiple Layers' },
+				{ key: 'Ctrl + A', action: 'Select All Movable Layers' },
+				{ key: 'Escape', action: 'Clear Multi-Selection' },
 				{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move' },
 				{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg' }
 			],
@@ -761,5 +765,4 @@ const DEBUG_CONFIG = {
 		{ id: 3, x: 600, y: 600 }
 	]
 };
-
 

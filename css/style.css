@@ -3117,23 +3117,25 @@ body.mask-editing .sticker-element {
   display: block;
   width: 100%;
 }
-.transform-panel .transform-control-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-.transform-panel .transform-segmented-control {
-  width: 100%;
-}
-.transform-panel .transform-segmented-control > .segmented-option {
-  padding-left: var(--spacing-base);
-  padding-right: var(--spacing-base);
-}
 .transform-panel .transform-panel-footer {
   display: flex;
 }
 .transform-panel .transform-reset-all {
   width: 100%;
+}
+
+.transform-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.transform-segmented-control {
+  width: 100%;
+}
+.transform-segmented-control > .segmented-option {
+  padding-left: var(--spacing-base);
+  padding-right: var(--spacing-base);
 }
 
 .asset-options {
@@ -3570,6 +3572,14 @@ body.mask-editing .sticker-element {
 }
 
 /* ===== SETTINGS MODAL ===== */
+.selection-marquee {
+  position: absolute;
+  z-index: 12;
+  pointer-events: none;
+  border: 1px solid var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
 /* SETTINGS MODAL SPECIFIC */
 .settings-group {
   margin-bottom: var(--spacing-xl);
@@ -5671,6 +5681,24 @@ body.mask-editing .sticker-element {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.settings-subsection > .subsection-content-group[data-collapsible-subsection] > .subsection-title,
+.settings-subsection > .transform-panel-host > .subsection-content-group[data-collapsible-subsection] > .subsection-title {
+  cursor: pointer;
+}
+.settings-subsection > .subsection-content-group[data-collapsible-subsection] > .subsection-title > .subsection-chevron,
+.settings-subsection > .transform-panel-host > .subsection-content-group[data-collapsible-subsection] > .subsection-title > .subsection-chevron {
+  width: 1rem;
+  height: 1rem;
+  transition: transform var(--transition-fast);
+}
+.settings-subsection > .subsection-content-group[data-collapsible-subsection].is-collapsed > .subsection-title > .subsection-chevron,
+.settings-subsection > .transform-panel-host > .subsection-content-group[data-collapsible-subsection].is-collapsed > .subsection-title > .subsection-chevron {
+  transform: rotate(-90deg);
+}
+.settings-subsection > .subsection-content-group[data-collapsible-subsection].is-collapsed > :not(.subsection-title),
+.settings-subsection > .transform-panel-host > .subsection-content-group[data-collapsible-subsection].is-collapsed > :not(.subsection-title) {
+  display: none;
 }
 .settings-subsection > .subsection-content-group > .subsection-content,
 .settings-subsection > .transform-panel-host > .subsection-content-group > .subsection-content {

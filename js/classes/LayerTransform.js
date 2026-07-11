@@ -434,6 +434,8 @@ setupMouseDrag(element) {
     let startCanvasY = 0;
     let startPosition = null;
     let lockedAxis = null;
+	let altPending = false;
+	let dragTransform = this;
 
 const swallowFollowupClick = () => {
     this.editor.ignoreNextClick = true;
@@ -458,7 +460,7 @@ const handleMouseDown = (e) => {
     if (this.editor.layerManager.hasMultiSelection() && this.editor.layerManager.isLayerSelected(this.layer.id)) {
         const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
 
-        if (e.shiftKey || e.altKey) {
+        if (e.shiftKey) {
             e.preventDefault();
             e.stopPropagation();
             swallowFollowupClick();
@@ -476,7 +478,7 @@ const handleMouseDown = (e) => {
     }
 
     const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
-    if (this.delegateSelectionFromCanvasPoint(canvasPos, {
+    if (!e.altKey && this.delegateSelectionFromCanvasPoint(canvasPos, {
         toggleSelection: e.shiftKey,
         cycleDeep: e.altKey
     })) {
@@ -500,6 +502,8 @@ const handleMouseDown = (e) => {
     // ALWAYS start dragging (whether we just selected or it was already selected)
     isDragging = true;
     didMove = false;
+	altPending = e.altKey;
+	dragTransform = this;
 
     startCanvasX = canvasPos.x;
     startCanvasY = canvasPos.y;
@@ -525,6 +529,14 @@ const handleMouseMove = (e) => {
     if (!didMove && Math.hypot(deltaX, deltaY) < 3) {
         return;
     }
+	if (!didMove && altPending) {
+		this.editor.groupTransformManager?.ensureHistoryBaseline?.();
+		const clone = this.editor.layerManager.cloneLayer(this.layer.id, { positionOffset: { x: 0, y: 0 }, skipHistory: true });
+		const ctx = this.editor.getMovableLayerContext(clone);
+		dragTransform = ctx?.manager?.layerTransforms?.get(clone?.id) || this;
+		startPosition = { ...dragTransform.getTransform().position };
+		altPending = false;
+	}
 
     didMove = true;
 
@@ -543,7 +555,8 @@ const handleMouseMove = (e) => {
     }
     
     // Apply delta to current position
-    this.updateTransform({
+	const activeTransform = dragTransform;
+    activeTransform.updateTransform({
         position: {
             x: startPosition.x + constrainedDeltaX,
             y: startPosition.y + constrainedDeltaY
@@ -552,28 +565,28 @@ const handleMouseMove = (e) => {
     
     // CRITICAL FIX: Ensure we have a valid element reference
     // If this.element is null (e.g., after selection re-render), get fresh reference
-    if (!this.element) {
-        const layerElement = this.refreshElementReference();
+	if (!activeTransform.element) {
+		const layerElement = activeTransform.refreshElementReference();
         if (layerElement) {
             dbg('✅ Refreshed element reference in mousemove');
-            this.element = layerElement;
+			activeTransform.element = layerElement;
         }
     }
     
     // Re-apply transform to the CURRENT element
-    const dimensions = this.getDimensions();
-    this.applyTransform(this.element, dimensions);
+	const dimensions = activeTransform.getDimensions();
+	activeTransform.applyTransform(activeTransform.element, dimensions);
     
     // CRITICAL FIX: Ensure handles exist before trying to update them
     // If they don't exist yet (first drag after selection), create them
-    if (!this.transformHandles && this.editor.currentTool === ToolType.SELECT && CONFIG.ui.stickerHandles.enabled) {
+	if (!activeTransform.transformHandles && this.editor.currentTool === ToolType.SELECT && CONFIG.ui.stickerHandles.enabled) {
         dbg('✅ Creating handles on first mousemove');
-        this.createTransformHandles();
+		activeTransform.createTransformHandles();
     }
     
     // Update handle positions during drag
-    if (this.transformHandles) {
-        this.updateHandlePositions();
+	if (activeTransform.transformHandles) {
+		activeTransform.updateHandlePositions();
     }
     
     // Update settings UI if available
@@ -588,10 +601,16 @@ const handleMouseMove = (e) => {
         isDragging = false;
         lockedAxis = null;
         startPosition = null;
-        if (didMove) {
+		if (didMove) {
             swallowFollowupClick();
             this.editor.saveState();
-        }
+		}
+		if (!didMove && altPending) {
+			const point = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+			this.delegateSelectionFromCanvasPoint(point, { cycleDeep: true });
+			swallowFollowupClick();
+		}
+		altPending = false;
         didMove = false;
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -992,7 +1011,11 @@ removeTransformHandles() {
                 }
 
                 const canvasPoint = this.getCanvasPointFromClient(e.clientX, e.clientY);
-                if (handleType === 'move' && this.delegateSelectionFromCanvasPoint(canvasPoint, {
+				if (handleType === 'move' && e.pointerType === 'mouse' && e.altKey) {
+					this.startAltDuplicateHandleDrag(e);
+					return;
+				}
+                if (handleType === 'move' && !e.altKey && this.delegateSelectionFromCanvasPoint(canvasPoint, {
                     toggleSelection: e.shiftKey,
                     cycleDeep: e.altKey
                 })) {
@@ -1027,7 +1050,10 @@ removeTransformHandles() {
                     boxWidth: this.layer.textData?.boxWidth ?? null,
                     boxHeight: this.layer.textData?.boxHeight ?? null,
                     handleFrame: this.getHandleFrame(),
-                    textBoxFrame: this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) ?? null
+                    textBoxFrame: this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) ?? null,
+					didMove: false,
+					altDuplicatePending: handleType === 'move' && e.altKey,
+					targetTransform: this
                 };
             });
 
@@ -1036,6 +1062,61 @@ removeTransformHandles() {
             handle.addEventListener('pointercancel', this.handleHandlePointerUp);
         });
     }
+
+	startAltDuplicateHandleDrag(event) {
+		event.preventDefault();
+		event.stopPropagation();
+		event.stopImmediatePropagation();
+		const start = this.editor.viewport.screenToCanvas(event.clientX, event.clientY);
+		const sourcePosition = { ...this.getTransform().position };
+		let clone = null;
+		let targetTransform = null;
+		let didMove = false;
+		let lockedAxis = null;
+
+		const cleanup = () => {
+			document.removeEventListener('mousemove', onMove);
+			document.removeEventListener('mouseup', onUp);
+		};
+		const onMove = (moveEvent) => {
+			moveEvent.preventDefault();
+			const point = this.editor.viewport.screenToCanvas(moveEvent.clientX, moveEvent.clientY);
+			const deltaX = point.x - start.x;
+			const deltaY = point.y - start.y;
+			if (!didMove && Math.hypot(deltaX, deltaY) < 3) return;
+			if (!clone) {
+				this.editor.groupTransformManager?.ensureHistoryBaseline?.();
+				clone = this.editor.layerManager.cloneLayer(this.layer.id, { positionOffset: { x: 0, y: 0 }, skipHistory: true, skipSelection: true });
+				if (!clone) return;
+				const ctx = this.editor.getMovableLayerContext(clone);
+				targetTransform = ctx?.manager?.layerTransforms?.get(clone.id) || null;
+			}
+			didMove = true;
+			lockedAxis = moveEvent.shiftKey ? (lockedAxis || (Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y')) : null;
+			const nextX = sourcePosition.x + (lockedAxis === 'y' ? 0 : deltaX);
+			const nextY = sourcePosition.y + (lockedAxis === 'x' ? 0 : deltaY);
+			if (targetTransform) {
+				targetTransform.updateTransform({ position: { x: nextX, y: nextY } });
+				targetTransform.applyTransform(targetTransform.element, targetTransform.getDimensions());
+			} else {
+				getLayerTransform(clone).position = { x: nextX, y: nextY };
+			}
+		};
+		const onUp = (upEvent) => {
+			cleanup();
+			if (didMove && clone) {
+				this.editor.layerManager.setActiveLayer(clone.id);
+				this.editor.saveState();
+			} else {
+				const point = this.getCanvasPointFromClient(upEvent.clientX, upEvent.clientY);
+				this.delegateSelectionFromCanvasPoint(point, { cycleDeep: true });
+			}
+			this.editor.ignoreNextClick = true;
+			setTimeout(() => { this.editor.ignoreNextClick = false; }, 150);
+		};
+		document.addEventListener('mousemove', onMove);
+		document.addEventListener('mouseup', onUp);
+	}
 
     /**
      * Handle pointer move during handle drag
@@ -1053,10 +1134,13 @@ removeTransformHandles() {
         e.stopPropagation();
 
         if (this.activeHandleType.startsWith('corner-')) {
+			this.dragStartState.didMove = true;
             this.handleCornerDrag(e);
         } else if (this.activeHandleType.startsWith('edge-')) {
+			this.dragStartState.didMove = true;
             this.handleEdgeResizeDrag(e);
         } else if (this.activeHandleType === 'rotation') {
+			this.dragStartState.didMove = true;
             this.handleRotationDrag(e);
         } else if (this.activeHandleType === 'move') {
             this.handleMoveDrag(e);
@@ -1089,7 +1173,15 @@ removeTransformHandles() {
             } else if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
                 this.editor.shapeGlitterManager?.commitScale(this.layer);
             }
-            this.editor.saveState();
+			if (this.dragStartState?.didMove) {
+				if (this.dragStartState.targetLayerId) {
+					this.editor.layerManager.setActiveLayer(this.dragStartState.targetLayerId);
+				}
+				this.editor.saveState();
+			} else if (this.dragStartState?.altDuplicatePending) {
+				const point = this.getCanvasPointFromClient(e.clientX, e.clientY);
+				this.delegateSelectionFromCanvasPoint(point, { cycleDeep: true });
+			}
 
             if (e.pointerType === 'mouse') {
                 this.editor.ignoreNextClick = true;
@@ -1114,6 +1206,19 @@ removeTransformHandles() {
 
         const deltaX = canvasPos.x - this.dragStartState.canvasX;
         const deltaY = canvasPos.y - this.dragStartState.canvasY;
+		if (!this.dragStartState.didMove && Math.hypot(deltaX, deltaY) < 3) return;
+		if (!this.dragStartState.didMove && this.dragStartState.altDuplicatePending) {
+			this.editor.groupTransformManager?.ensureHistoryBaseline?.();
+			const clone = this.editor.layerManager.cloneLayer(this.layer.id, { positionOffset: { x: 0, y: 0 }, skipHistory: true, skipSelection: true });
+			const ctx = this.editor.getMovableLayerContext(clone);
+			const target = ctx?.manager?.layerTransforms?.get(clone?.id);
+			if (!target) return;
+			this.dragStartState.targetTransform = target;
+			this.dragStartState.targetLayerId = clone.id;
+			this.dragStartState.transform.position = { ...target.getTransform().position };
+			this.dragStartState.altDuplicatePending = false;
+		}
+		this.dragStartState.didMove = true;
         const axis = e.shiftKey
             ? (this.dragStartState.lockedAxis || (Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y'))
             : null;
@@ -1124,15 +1229,16 @@ removeTransformHandles() {
         const newX = this.dragStartState.transform.position.x + nextDeltaX;
         const newY = this.dragStartState.transform.position.y + nextDeltaY;
 
-        this.updateTransform({
+		const targetTransform = this.dragStartState.targetTransform || this;
+		targetTransform.updateTransform({
             position: { x: newX, y: newY }
         });
 
         // Re-apply transform to element
-        const dimensions = this.getDimensions();
-        this.applyTransform(this.element, dimensions);
+		const dimensions = targetTransform.getDimensions();
+		targetTransform.applyTransform(targetTransform.element, dimensions);
 
-        this.updateHandlePositions();
+		targetTransform.updateHandlePositions();
     }
 
     /**
@@ -1352,4 +1458,3 @@ removeTransformHandles() {
         this.element = null;
     }
 }
-
