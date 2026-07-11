@@ -1,0 +1,2531 @@
+@use 'mixins' as *;
+
+// ============================================
+// MOBILE STYLES
+// ============================================
+
+// Mobile controls visibility
+.mobile-bottom-nav,
+.mobile-top-nav,
+.mobile-settings-drawer {
+	display: none; // Hidden by default on desktop
+}
+
+@media (max-width: 800px) {
+
+	// ============================================
+	// MOBILE VARIABLES
+	// ============================================
+	:root {
+		--glitter-swatch-columns: 5;
+	}
+
+	// ============================================
+	// REMOVE SVG OUTLINE ON GLITTER ELEMENTS (SLOW ON MOBILE)
+	// ============================================
+	.glitter-element {
+		&.selected {
+			filter: unset;
+		}
+	}
+
+
+
+	// ============================================
+	// LAYOUT ADJUSTMENTS
+	// ============================================
+
+	body {
+		overflow: hidden;
+	}
+
+	.app-container {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		height: 100dvh;
+		overflow: hidden;
+
+		>.app-header {
+			height: var(--mobile-header-height);
+			padding: var(--spacing-sm) var(--spacing-md);
+			// The zoomed canvas lives in a heavily-scaled, will-change:transform
+			// layer that some mobile browsers composite above normal in-flow
+			// siblings regardless of DOM order. Give the header its own
+			// explicit stacking context, comfortably above the open-drawer
+			// z-index (10000) and below modals (20000), so it always wins.
+			position: relative;
+			z-index: var(--z-app-header-elevated);
+
+			>.app-header-left > .app-header-logo > .app-header-title {
+				display: none;
+			}
+		}
+
+
+	}
+
+	.header {
+		flex-shrink: 0;
+	}
+
+	.main-content {
+		position: relative;
+		flex: 1;
+		overflow: hidden;
+		padding-top: var(--mobile-top-nav-height);
+
+
+		>.layers-panel,
+		>.design-panel,
+		>.preview-panel {
+			position: fixed;
+			width: 100%;
+			top: calc(var(--mobile-top-nav-height) + var(--mobile-header-height));
+			left: 0;
+			z-index: var(--z-drawer);
+			display: none;
+		}
+	}
+
+
+	// ============================================
+	// PANELS
+	// ============================================
+
+	.layers-panel,
+	.design-panel,
+	.preview-panel {
+		position: static;
+		width: 100%;
+		height: auto;
+		flex: 1;
+	}
+
+	.section.collapsible-section {
+		border: 0;
+	}
+
+
+	// ============================================
+	// LAYERS
+	// ============================================
+
+	.layers-section {
+		>.layers-list {
+			>.layer-item {
+				>.layer-drag-handle {
+					display: flex;
+				}
+
+				>.layer-actions {
+					>.layer-action-btn.goto-glitter {
+						display: flex;
+					}
+				}
+			}
+		}
+	}
+
+
+	// ============================================
+	// TOOLBAR (Preview tab only)
+	// ============================================
+
+	.toolbar {
+		position: fixed;
+		top: 50%;
+		left: var(--spacing-md);
+		transform: translateY(-50%);
+		width: var(--mobile-toolbar-width);
+		height: auto;
+		z-index: var(--z-header-menu);
+		display: none; // Hidden by default, shown in preview tab
+		padding: var(--spacing-sm);
+		@include floating-ui;
+
+		>.toolbar-spacer {
+			display: none;
+		}
+
+		>.toolbar-group+.toolbar-group {
+			margin: 0;
+			padding: 0;
+			border: unset;
+		}
+
+		#shortcutsBtn {
+			display: none;
+		}
+
+		#settingsBtn,
+		#clearAllTool {
+			display: none;
+		}
+	}
+
+	.mobile-only-action {
+		display: inline-flex;
+	}
+
+
+	// ============================================
+	// MOBILE NAVIGATION
+	// ============================================
+
+	// Top Navigation (Image/Preview tabs)
+	.mobile-top-nav {
+		position: fixed;
+		top: var(--mobile-header-height);
+		left: 0;
+		right: 0;
+		height: var(--mobile-top-nav-height);
+		background: var(--color-bg-secondary);
+		border-bottom: 1px solid var(--color-border);
+		z-index: var(--z-header-menu-top);
+
+		&.visible {
+			display: flex;
+		}
+
+		.mobile-tab-btn {
+			flex: 1;
+			padding: var(--spacing-md);
+			background: transparent;
+			border: none;
+			border-bottom: 3px solid transparent;
+			color: var(--color-text-secondary);
+			@include text-sm;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all var(--transition-fast);
+
+			&:hover:not(:disabled) {
+				color: var(--color-text-primary);
+			}
+
+			&.active {
+				color: var(--color-accent);
+				border-bottom-color: var(--color-accent);
+			}
+
+			&:disabled {
+				opacity: var(--disabled-opacity);
+				cursor: not-allowed;
+				color: var(--color-text-tertiary);
+			}
+		}
+	}
+
+	// Bottom Navigation (Layers/Design drawers)
+	.mobile-bottom-nav {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: var(--mobile-bottom-nav-height);
+		background: var(--color-bg-secondary);
+		border-top: 1px solid var(--color-border);
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm);
+		z-index: var(--z-header-menu-top);
+
+		.mobile-drawer-btn-group {
+			display: flex;
+			gap: var(--spacing-xs);
+			flex: 1;
+
+			&.small {
+				flex: 0 0 auto;
+			}
+
+			>.mobile-drawer-btn {
+				flex: 1;
+				padding: var(--spacing-md);
+				@include text-sm;
+				@include gloss-button(true);
+
+				&[data-drawer="layers"] {
+					display: flex;
+					align-items: center;
+					gap: var(--spacing-base);
+
+					.mobile-layers-swatch {
+						width: 18px;
+						height: 18px;
+						border-radius: var(--radius-sm);
+						background-size: cover;
+						background-position: center;
+						flex-shrink: 0;
+
+						&.empty {
+							background-image:
+								linear-gradient(45deg, white 25%, transparent 25%),
+								linear-gradient(-45deg, white 25%, transparent 25%),
+								linear-gradient(45deg, transparent 75%, white 75%),
+								linear-gradient(-45deg, transparent 75%, white 75%);
+							background-size: 8px 8px;
+							background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+						}
+
+						&.pixelated {
+							image-rendering: pixelated;
+						}
+
+						&.text-layer {
+							position: relative;
+
+							&::after {
+								content: "T";
+								position: absolute;
+								right: -4px;
+								bottom: -4px;
+								width: 12px;
+								height: 12px;
+								border-radius: 999px;
+								background: rgba(0, 0, 0, 0.7);
+								color: #ffffff;
+								font-size: 8px;
+								font-weight: 700;
+								line-height: 12px;
+								text-align: center;
+							}
+						}
+					}
+
+					.mobile-layers-count {
+						margin-left: auto;
+						font-size: var(--font-size-xs);
+						opacity: 0.7;
+
+						&::before {
+							content: attr(data-count);
+						}
+					}
+				}
+
+				&.small {
+					flex: 0 0 auto;
+					aspect-ratio: 1/1;
+				}
+			}
+
+			>.mobile-add-layer-btn {
+				width: 50px;
+				height: unset;
+				flex-shrink: 0;
+				padding: var(--spacing-md);
+				flex: 0 0 auto;
+				aspect-ratio: 1/1;
+
+				&:disabled {
+					opacity: var(--disabled-opacity);
+					cursor: not-allowed;
+					transform: none;
+				}
+			}
+		}
+	}
+
+
+	.section {
+		>.section-header {
+			cursor: pointer;
+		}
+	}
+
+	.layers-section-bottom-bar {
+		display: none;
+	}
+
+	// ============================================
+	// MOBILE SETTINGS DRAWER
+	// ============================================
+
+	.mobile-settings-drawer {
+		position: fixed;
+		bottom: var(--mobile-bottom-nav-height);
+		left: 0;
+		right: 0;
+		background: var(--color-bg-tertiary);
+		border-top: 1px solid var(--color-border);
+		box-shadow: 0 -4px 12px var(--color-shadow-soft);
+		z-index: var(--z-header-menu);
+		transform: translateY(100%);
+		// transition: transform var(--transition-base);
+		max-height: 60vh;
+
+		padding: var(--spacing-md);
+
+
+
+		.mobile-settings-btn {
+			position: absolute;
+			top: calc(0px - var(--icon-size) - var(--spacing-from-edge)); // Button height + spacing below content
+			right: var(--spacing-from-edge);
+
+
+
+			box-shadow: 0 2px 8px var(--color-shadow-soft);
+
+
+
+			&:active:not(:disabled) {
+				transform: scale(0.95);
+			}
+
+			&:disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+
+			}
+		}
+
+		.mobile-settings-content {
+			overflow-y: auto;
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-md);
+
+
+			.collapsible-section {
+				border-radius: var(--radius-sm);
+			}
+
+			.layer-settings-section,
+			.glitter-settings-section,
+			.text-settings-section,
+			.sticker-settings-section,
+			.shape-settings-section,
+			.brush-settings-section {
+				&.visible {
+					display: flex;
+					flex-direction: column;
+					border: none;
+					margin: 0;
+					padding: 0;
+
+					.section-header {
+						position: sticky;
+						top: 0;
+						background: var(--color-bg-primary);
+						z-index: 1;
+
+						.section-header-action {
+							display: flex;
+						}
+					}
+
+					.section-content {
+						// padding: 0 var(--spacing-md) var(--spacing-md);
+					}
+				}
+			}
+
+
+		}
+	}
+
+	body.mobile-preview-tab .mobile-settings-drawer .mobile-settings-btn {
+		display: flex;
+	}
+
+	// ============================================
+	// TAB STATES
+	// ============================================
+
+	// Image Tab (Upload/Canvas)
+	body.mobile-image-tab {
+		.main-content>.layers-panel {
+			display: flex;
+			height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
+			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
+
+			.layers-section,
+			.layer-settings-section {
+				display: none;
+			}
+
+			.image-container {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
+
+				.section-header {
+					display: none;
+				}
+
+				>.image-dropzone-wrapper {
+					height: 100%;
+					display: flex;
+
+					>.image-dropzone {
+						flex: 1;
+
+						&.has-image {
+							border-color: var(--color-accent);
+							background: transparent;
+
+							>.image-upload-overlay {
+								opacity: 1;
+							}
+						}
+
+
+					}
+
+
+
+				}
+			}
+		}
+
+		.mobile-settings-drawer,
+		.mobile-bottom-nav {
+			display: none;
+		}
+	}
+
+	// Preview Tab (Editor)
+	body.mobile-preview-tab {
+		.toolbar {
+			display: flex;
+		}
+
+		.mobile-bottom-nav {
+			display: flex;
+		}
+
+		.mobile-settings-drawer {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.main-content>.preview-panel {
+			display: flex;
+			height: calc(100vh - var(--mobile-top-nav-height) - var(--mobile-header-height));
+			height: calc(100dvh - var(--mobile-top-nav-height) - var(--mobile-header-height));
+			padding-bottom: var(--mobile-bottom-nav-height);
+		}
+	}
+
+
+	// ============================================
+	// DRAWER STATES
+	// ============================================
+
+	body.designOpen {
+		.main-content>.design-panel {
+			display: flex;
+			height: auto;
+			top: auto;
+			bottom: var(--mobile-bottom-nav-height);
+			z-index: var(--z-header-menu-elevated);
+			border-top: 1px solid var(--color-border);
+			box-shadow: 0 -4px 12px var(--color-shadow-soft);
+			max-height: var(--mobile-drawer-height);
+			// min-height: 20dvh;
+			height: 100%;
+
+
+			.glitter-settings-section,
+			.sticker-settings-section,
+			.text-settings-section,
+			.shape-settings-section {
+				display: none;
+			}
+		}
+	}
+
+	body.layersOpen {
+		.main-content>.layers-panel {
+			display: flex;
+			height: auto;
+			top: auto;
+			bottom: var(--mobile-bottom-nav-height);
+			z-index: var(--z-header-menu-elevated);
+			border-top: 1px solid var(--color-border);
+			box-shadow: 0 -4px 12px var(--color-shadow-soft);
+			max-height: var(--mobile-drawer-height);
+			height: 100%;
+			//min-height: 20dvh;
+
+			.image-container,
+			.layer-settings-section {
+				display: none;
+			}
+		}
+	}
+
+	// When settings are open, transform to show full drawer
+	body.mobileSettingsOpen {
+		.mobile-settings-drawer {
+			transform: translateY(0);
+		}
+	}
+
+	// Hide handle completely when no active layer or on image tab
+	body.mobile-image-tab .mobile-settings-drawer,
+	body.mobile-preview-tab:not(.has-layer-settings) .mobile-settings-drawer {
+		transform: translateY(100%);
+	}
+
+	// ============================================
+	// MODAL ADJUSTMENTS
+	// ============================================
+
+	.export-progress {
+		/* Fallback for older browsers */
+		max-width: 90vw;
+		/* Modern browsers with dynamic viewport */
+		max-width: 90dvw;
+	}
+
+
+	// ============================================
+	// UTILITY CLASSES
+	// ============================================
+
+	.desktop-only {
+		display: none !important;
+	}
+
+	.mobile-only {
+		display: block !important;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+.asset-options {
+	&[data-browser-state="category-list"] {
+		.asset-browser-header {
+			display: none;
+		}
+	}
+}
+
+
+
+
+/* ===== ASSET BROWSER ===== */
+.asset-browser {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+
+	&:not(.visible) {
+		display: none;
+	}
+
+	>.asset-browser-header {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm) var(--spacing-md);
+		border-bottom: 1px solid var(--color-border);
+		background: var(--color-bg-secondary);
+
+		>button {
+
+
+			width: var(--icon-size-sm);
+			height: var(--icon-size-sm);
+			flex-shrink: 0;
+
+
+
+			&:disabled {
+				cursor: not-allowed;
+				opacity: 0.5;
+			}
+		}
+
+		>.asset-browser-title {
+			font-weight: 600;
+			font-size: var(--font-size-md);
+			color: var(--color-text-primary);
+			text-transform: uppercase;
+
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+
+		}
+	}
+
+
+
+	>.asset-browser-content {
+		flex: 1;
+		padding: var(--spacing-md);
+
+		// overflow-y: auto;
+
+
+		>.empty-state {
+			padding: var(--spacing-md);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+			background-color: var(--color-bg-card);
+
+			.empty-state-text {
+				font-size: var(--font-size-sm);
+				color: var(--color-text-secondary);
+				text-align: center;
+			}
+		}
+
+
+
+		>.empty-state,
+		>.category-grid,
+		>.asset-grid {
+			display: none;
+
+			&.visible {
+				display: grid;
+			}
+		}
+
+		>.category-grid {
+			grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+			gap: var(--spacing-sm);
+
+
+
+			>.category-card {
+				background: var(--color-bg-secondary);
+				border: 1px solid var(--color-border);
+				border-radius: var(--radius-md);
+				padding: var(--spacing-md);
+				cursor: pointer;
+				transition: all 0.2s ease;
+				display: flex;
+				flex-direction: column;
+				gap: var(--spacing-xs);
+
+				&:hover {
+					border-color: var(--category-color, var(--color-accent));
+					transform: translateY(-2px);
+					box-shadow: 0 4px 8px var(--color-shadow-soft);
+				}
+
+				>.category-card-image {
+					width: 100%;
+					aspect-ratio: 1;
+					border-radius: var(--radius-sm);
+					overflow: hidden;
+					background: var(--color-bg-tertiary);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+
+					>img {
+						width: 100%;
+						height: 100%;
+						-o-object-fit: contain;
+						object-fit: contain;
+						image-rendering: pixelated;
+					}
+
+					&.category-card-glitter-bg {
+						background-repeat: repeat;
+						background-size: auto;
+						image-rendering: pixelated;
+					}
+
+
+				}
+
+				>.category-card-name {
+					font-weight: 600;
+					color: var(--color-text-primary);
+					text-align: center;
+					font-size: var(--font-size-sm);
+
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+
+				}
+
+				>.category-card-count {
+					font-size: var(--font-size-xs);
+					color: var(--color-text-secondary);
+					text-align: center;
+				}
+			}
+		}
+
+		>.search-results-container {
+			display: none;
+			flex-direction: column;
+			gap: var(--spacing-md);
+
+
+			&.visible {
+				display: flex;
+			}
+
+			>.category-section {
+				display: flex;
+				flex-direction: column;
+				gap: var(--spacing-sm);
+
+				>.category-section-header {
+
+					/*
+					font-weight: 600;
+					font-size: var(--font-size-base);
+					color: var(--color-text-primary);
+					padding: var(--spacing-md) 0 var(--spacing-sm) 0;
+					border-bottom: 1px solid var(--color-border);
+					margin-bottom: var(--spacing-md);
+					*/
+
+					@include text-sm;
+					font-weight: 600;
+					color: var(--color-text-tertiary);
+					text-transform: uppercase;
+
+
+					&:not(:first-child) {
+						margin-top: var(--spacing-lg);
+					}
+				}
+			}
+		}
+	}
+
+	>.asset-browser-sentinel {
+		height: 1px;
+		visibility: hidden;
+	}
+}
+
+
+
+
+
+@media (max-width: 800px) {
+	.asset-browser {
+		>.asset-browser-content {
+			>.category-grid {
+				grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+@keyframes blinker {
+	50% {
+		opacity: 0;
+	}
+}
+
+
+
+.helpful-message {
+	display: none;
+	position: absolute;
+	top: calc(44px + var(--spacing-md));
+	left: 50%;
+	transform: translateX(-50%);
+	max-width: 400px;
+	width: calc(100% - var(--spacing-xl));
+	z-index: 100;
+
+	align-items: flex-start;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-md);
+
+
+
+
+	pointer-events: auto;
+	cursor: pointer; // Make it clear the entire thing is clickable
+
+	@include mini-modal(true);
+
+
+
+	&.visible {
+		display: flex;
+	}
+
+	.helpful-message-icon {
+		flex-shrink: 0;
+		color: var(--color-text-tertiary);
+
+		.icon {
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
+		}
+	}
+
+	.helpful-message-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		min-width: 0;
+	}
+
+	.helpful-message-tool {
+		display: none;
+		align-items: center;
+		gap: var(--spacing-sm);
+		padding-bottom: var(--spacing-xs);
+		border-bottom: 1px solid var(--color-border);
+		margin-bottom: var(--spacing-xs);
+
+		&:not(:empty) {
+			display: flex;
+		}
+
+		.helpful-message-tool-icon {
+			flex-shrink: 0;
+			opacity: 0.8;
+
+			.icon {
+				width: var(--icon-size-xs);
+				height: var(--icon-size-xs);
+			}
+		}
+
+		.helpful-message-tool-name {
+			font-size: var(--font-size-xs);
+			font-weight: 600;
+			color: var(--color-text-primary);
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
+	}
+
+	.helpful-message-text {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+		line-height: 1.4;
+	}
+
+	.helpful-message-description {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		line-height: 1.4;
+		display: none;
+
+		&:not(:empty) {
+			display: block;
+		}
+	}
+
+	.helpful-message-actions {
+		display: flex;
+		gap: var(--spacing-xs);
+		align-items: center;
+		align-self: flex-end;
+		margin-top: var(--spacing-xs);
+	}
+
+	.helpful-message-disable {
+		padding: var(--spacing-xs) var(--spacing-sm);
+		border: none;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-xs);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		white-space: nowrap;
+		pointer-events: auto; // Ensure button clicks work
+
+		outline: 1px solid transparent;
+
+		&:hover {
+			// background: var(--color-bg-secondary);
+			color: var(--color-text-primary);
+			outline: 1px solid var(--color-border-hover);
+		}
+	}
+
+	.helpful-message-close {
+		flex-shrink: 0;
+		width: 20px;
+		height: 20px;
+		padding: 0;
+		border: none;
+		background: transparent;
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xl);
+		line-height: 1;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: var(--radius-sm);
+		transition: all var(--transition-fast);
+
+
+
+		&:hover {
+			background: var(--color-bg-secondary);
+			color: var(--color-text-primary);
+		}
+	}
+}
+
+// Mobile adjustments
+@media (max-width: 800px) {
+	.helpful-message {
+		top: calc(44px + var(--spacing-from-edge));
+		max-width: calc(70% - var(--spacing-lg) * 2);
+		min-width: 200px;
+
+		.helpful-message-actions {
+			align-self: stretch;
+			justify-content: space-between;
+		}
+
+		.helpful-message-disable {
+			flex: 1;
+		}
+	}
+}
+
+
+// Transform Handles (Figma-style)
+.transform-handles {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	z-index: var(--z-header-menu-elevated);
+}
+
+.transform-bounding-box {
+	border: var(--color-accent) solid;
+	border-width: 1.5px;
+	box-sizing: border-box;
+	pointer-events: auto; // Now draggable
+	cursor: move;
+}
+
+// Real hitbox wrappers (not pseudo-elements)
+.transform-handle-wrapper {
+	pointer-events: auto;
+	position: absolute;
+	touch-action: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	&[data-handle-type^="corner-"] {
+		width: calc(32px / var(--zoom, 1));
+		height: calc(32px / var(--zoom, 1));
+	}
+
+	&[data-handle-type^="edge-"] {
+		width: calc(36px / var(--zoom, 1));
+		height: calc(36px / var(--zoom, 1));
+	}
+
+	&[data-handle-type="rotation"] {
+		width: calc(40px / var(--zoom, 1));
+		height: calc(40px / var(--zoom, 1));
+	}
+}
+
+@media (pointer: coarse) {
+	.transform-handle-wrapper {
+		&[data-handle-type^="corner-"] {
+			width: calc(44px / var(--zoom, 1));
+			height: calc(44px / var(--zoom, 1));
+		}
+
+		&[data-handle-type^="edge-"] {
+			width: calc(44px / var(--zoom, 1));
+			height: calc(44px / var(--zoom, 1));
+		}
+
+		&[data-handle-type="rotation"] {
+			width: calc(48px / var(--zoom, 1));
+			height: calc(48px / var(--zoom, 1));
+		}
+	}
+}
+
+.transform-handle {
+	pointer-events: none; // Wrapper handles clicks
+	box-sizing: border-box;
+
+	&.transform-handle-corner {
+		width: 8px;
+		height: 8px;
+		background: var(--color-text-primary);
+		border: 1.5px solid var(--color-bg-secondary);
+		border-radius: 2px;
+	}
+
+	&.transform-handle-rotation {
+		width: 10px;
+		height: 10px;
+		background: var(--color-text-primary);
+		border: 1.5px solid var(--color-bg-secondary);
+		border-radius: 50%;
+	}
+
+	&.transform-handle-edge {
+		width: 12px;
+		height: 12px;
+		background: rgba(255, 255, 255, 0.9);
+		border: 1.5px solid var(--color-bg-secondary);
+		border-radius: 50%;
+	}
+}
+
+// Hover states on wrappers
+.transform-handle-wrapper:hover .transform-handle {
+	background: var(--color-accent);
+}
+
+.transform-rotation-line {
+	background: var(--color-accent);
+	pointer-events: none;
+}
+
+.sticker-element.has-transform-handles {
+	pointer-events: none !important;
+}
+
+.text-glitter-element.has-transform-handles {
+	pointer-events: none !important;
+}
+
+
+
+
+
+
+
+
+.switch {
+	--switch-width: calc(1.75 * var(--icon-size));
+	--switch-height: var(--icon-size);
+	--switch-padding: 4px;
+	--slider-bg: var(--color-slider-track);
+	--slider-checked-bg: var(--color-accent);
+	--knob-size: calc(var(--switch-height) - 2 * var(--switch-padding));
+	--slider-speed: 0.2s;
+
+	display: inline-block;
+	height: var(--switch-height);
+	width: var(--switch-width);
+	position: relative;
+
+	>input[type="checkbox"] {
+		display: none;
+
+		&:checked+.slider {
+			background-color: var(--slider-checked-bg);
+
+			&:before {
+				transform: translateX(calc(var(--switch-width) - var(--switch-height)));
+			}
+		}
+	}
+
+	>.slider {
+		background-color: var(--slider-bg);
+		// Recessed track under a raised knob — reads as a physical control on
+		// both themes (percentages, not colors, so it tints with the track).
+		box-shadow: inset 0 1px 2px rgb(0 0 0 / 15%);
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		cursor: pointer;
+		transition: var(--slider-speed);
+
+		&.round {
+			border-radius: var(--switch-height);
+
+			&:before {
+				border-radius: 50%;
+			}
+		}
+
+		&:before {
+			content: "";
+			position: absolute;
+			left: var(--switch-padding);
+			bottom: var(--switch-padding);
+			width: var(--knob-size);
+			height: var(--knob-size);
+			background-color: var(--switch-knob-color);
+			box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+			transition: var(--slider-speed);
+		}
+	}
+}
+
+
+
+
+
+// ============================================
+// SIDEBAR / PANEL / TOOLBAR STYLES
+// ============================================
+
+
+
+.design-panel,
+.layers-panel {
+	background: unset;
+	padding: var(--spacing-base);
+	gap: var(--spacing-base);
+	border: unset;
+}
+
+.toolbar {
+	margin: var(--spacing-base);
+	margin-right: 0;
+}
+
+.toolbar,
+.layers-panel>.section,
+.design-panel>.section {
+	border: 1px solid var(--color-border);
+	border-radius: 5px;
+	overflow: hidden;
+	box-shadow: 0 2px 5px var(--color-shadow-strong);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* FIX */
+
+
+
+.design-panel {
+
+	>.section.main-section {
+		display: flex;
+		flex-direction: column;
+		flex: 0 0 auto;
+		min-height: 0;
+
+		&.is-open {
+			flex: 1 1 auto;
+
+			>.section-content.visible {
+				overflow: hidden;
+			}
+		}
+
+		>.section-header {
+			position: sticky;
+			top: 0;
+			z-index: 5;
+		}
+
+		>.section-content {
+			padding: 0;
+			min-height: 0;
+			background-color: var(--color-bg-primary);
+
+			&.visible {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+			}
+
+			>.section-content {
+				flex-shrink: 0;
+			}
+
+			>.asset-options {
+				flex: 1 1 auto;
+				min-height: 0;
+				min-width: 0;
+				overflow: hidden;
+
+				.asset-browser-content {
+					overflow-y: auto;
+					scrollbar-gutter: stable;
+				}
+			}
+		}
+
+		&.collapsible-section>.section-content {
+			padding: 0;
+		}
+	}
+
+	>.section {
+		>.section-content {
+			padding: 0;
+		}
+
+		&.collapsible-section {
+			flex-shrink: 0;
+
+			>.section-content {
+				padding: var(--spacing-md);
+
+				&:not(.visible) {
+					display: none;
+				}
+			}
+
+			&.is-open>.section-content.visible {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
+			}
+
+			// An open settings section takes the remaining panel height and scrolls its
+			// own content, so long sections (Text Properties) can't push the other
+			// collapsed headers off screen.
+			&.is-open:not(.main-section) {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
+
+				>.section-header {
+					flex-shrink: 0;
+				}
+
+				>.section-content.visible {
+					flex: 1 1 auto;
+					min-height: 0;
+					overflow-y: auto;
+					overscroll-behavior: contain;
+				}
+			}
+		}
+
+		&:not(.collapsible-section) {
+			display: flex;
+			flex-direction: column;
+
+			>.section-content {
+				flex: 1 1 auto;
+				min-height: 0;
+				min-width: 0;
+				display: flex;
+				flex-direction: column;
+				background-color: var(--color-bg-primary);
+
+				// gallery-search-section
+				>.section-content {
+					flex-shrink: 0;
+				}
+
+				>.asset-options {
+					flex: 1 1 auto;
+					min-height: 0;
+					min-width: 0;
+					overflow: hidden;
+
+					.asset-browser-content {
+						overflow-y: auto;
+						    scrollbar-gutter: stable;
+					}
+				}
+
+
+			}
+		}
+	}
+}
+
+
+.sticker-search,
+.glitter-search {
+	overflow: hidden;
+	height: 100%;
+	border-bottom: 1px solid var(--color-border);
+
+	>.search-toggle-row {
+		flex-shrink: 0;
+	}
+
+	>.filters-container {
+		flex: 1;
+		min-height: 0;
+		flex-direction: column;
+		gap: 0;
+
+
+		>.filters-container-inner {
+			flex: 1;
+			min-height: 0;
+			overflow-y: auto;
+		}
+
+		button.btn-text {
+			flex-shrink: 0;
+			margin: var(--spacing-md);
+		}
+	}
+}
+
+
+@media (max-width: 800px) {
+
+
+
+	.status-bar {
+		display: none;
+	}
+
+	.section.welcome-section>.section-content>.empty-state,
+	.section.base-layer-settings-section>.section-content>.empty-state,
+	.section.no-layer-settings-section>.section-content>.empty-state {
+		min-height: unset;
+	}
+
+
+	body.layersOpen .main-content>.layers-panel,
+	body.designOpen .main-content>.design-panel {
+		border: 0;
+		box-shadow: none;
+	}
+}
+
+
+
+
+
+
+
+/* ===== ASSET INFO SECTION ===== */
+
+
+
+	.asset-info-header {
+		display: flex;
+		gap: var(--spacing-sm);
+		align-items: flex-start;
+
+
+		.asset-info-thumbnail {
+			width: 48px;
+			height: 48px;
+			border-radius: var(--radius-sm);
+			background: var(--color-bg-tertiary);
+			border: 1px solid var(--color-border);
+			flex-shrink: 0;
+			overflow: hidden;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			transition: all 0.15s ease;
+
+			&:hover {
+				border-color: var(--color-accent);
+				transform: scale(1.05);
+			}
+
+			img {
+				width: 100%;
+				height: 100%;
+				-o-object-fit: contain;
+				object-fit: contain;
+				image-rendering: pixelated;
+			}
+
+			&.glitter-bg {
+				background-repeat: repeat;
+				background-size: auto;
+				image-rendering: pixelated;
+			}
+		}
+
+		.asset-info-details {
+			flex: 1;
+			min-width: 0;
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-xs);
+
+			.asset-info-name {
+				font-size: var(--font-size-sm);
+				font-weight: 600;
+				color: var(--color-text-primary);
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.asset-info-badges {
+				display: flex;
+				gap: var(--spacing-xs);
+				flex-wrap: wrap;
+
+				.asset-info-badge {
+					display: inline-flex;
+					align-items: center;
+					gap: 4px;
+					padding: 2px 6px;
+					border-radius: var(--radius-xs);
+					font-size: 11px;
+					font-weight: 500;
+					line-height: 1.2;
+
+					max-width: 200px;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+
+					&.badge-variable-fps {
+						background: rgba(245, 158, 11, 0.15);
+						color: rgb(251, 191, 36);
+						border: 1px solid rgba(245, 158, 11, 0.3);
+					}
+
+
+
+
+
+					&.badge-category {
+						background: var(--color-bg-tertiary);
+						color: var(--color-text-secondary);
+						cursor: pointer;
+						transition: all 0.15s ease;
+						border: 1px solid var(--color-border);
+
+						&:hover {
+							background: var(--color-bg-hover);
+							color: var(--color-text-primary);
+							border-color: var(--color-accent);
+						}
+					}
+
+					&.badge-animated {
+						background: rgba(147, 51, 234, 0.15);
+						color: rgb(196, 132, 255);
+						border: 1px solid rgba(147, 51, 234, 0.3);
+					}
+
+					&.badge-transparency {
+						background: rgba(59, 130, 246, 0.15);
+						color: rgb(147, 197, 253);
+						border: 1px solid rgba(59, 130, 246, 0.3);
+					}
+				}
+
+			}
+
+
+		}
+	}
+
+
+	.setting-value {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-primary);
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+	}
+
+
+
+
+#stickerSettingsControls {
+	display: none;
+
+	&.visible {
+		display: block;
+	}
+}
+
+#textSettingsSection textarea {
+	width: 100%;
+	min-height: 96px;
+	resize: vertical;
+}
+
+/* Point text has no frame to align within — hide alignment controls
+   (dataset set by TextGlitterManager.updateBoxModeSelection) */
+#textSettingsSection[data-box-mode="auto"] .text-valign-group,
+#textSettingsSection[data-box-mode="auto"] .text-valign-label {
+	display: none;
+}
+
+/* "Fit to Text" only makes sense once there's a box to fit */
+#textSettingsSection[data-box-mode="auto"] .text-fit-box-group,
+#textSettingsSection[data-box-mode="auto"] .text-fit-box-label,
+#textSettingsSection[data-box-mode="auto"] .text-fit-box-section {
+	display: none;
+}
+
+.text-settings-section > .section-content.visible {
+	gap: var(--spacing-md);
+}
+
+.text-input-group {
+	width: 100%;
+}
+
+.subsection-note {
+	font-size: var(--font-size-xs);
+	line-height: 1.4;
+	color: var(--color-text-tertiary);
+}
+
+.text-font-picker {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+	width: 100%;
+	max-height: 220px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	// Reserve room for the scrollbar (stable gutter, no overlay-scrollbar
+	// overlap) and a couple px on every side so the active card's
+	// outline-offset isn't clipped by the scroll container's own edge.
+	scrollbar-gutter: stable;
+	padding: 3px 6px 3px 3px;
+}
+
+// Gallery-card styling, reusing the .asset-option card conventions (outline
+// selection state, corner badge) instead of inventing a new visual language.
+.text-font-option {
+	position: relative;
+	flex-shrink: 0;
+	width: 100%;
+	background: var(--color-bg-tertiary);
+	border: none;
+	color: var(--color-text-primary);
+	font: inherit;
+	cursor: pointer;
+	padding: var(--spacing-sm) var(--spacing-md);
+	text-transform: none;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	text-align: left;
+	outline: 1px solid var(--color-border);
+	outline-offset: 0px;
+	border-radius: var(--radius-sm);
+	transition: all var(--transition-fast);
+
+	&:hover {
+		outline-color: var(--color-border-hover);
+	}
+
+	&.active {
+		outline-color: var(--color-accent);
+		outline-width: 2px;
+		outline-offset: 2px;
+	}
+}
+
+.text-font-option-sample {
+	font-size: 28px;
+	line-height: 1.2;
+}
+
+.text-font-option-name {
+	@include text-sm;
+	color: var(--color-text-secondary);
+}
+
+// Corner badge, same treatment as the Sticker gallery's "Animated" badge.
+.text-font-option-badge {
+	position: absolute;
+	top: 7px;
+	right: 7px;
+	min-width: 26px;
+	background: var(--color-bg-card);
+	color: var(--color-text-primary);
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	padding: 2px 6px;
+	border-radius: var(--radius-xs);
+	border: 1px solid var(--color-border);
+	box-shadow: 0 2px 4px var(--color-shadow-soft);
+	pointer-events: none;
+
+	&.is-ja {
+		background: color-mix(in srgb, var(--color-danger-bright) 16%, var(--color-bg-card));
+		color: var(--color-off-white);
+		border-color: color-mix(in srgb, var(--color-danger-bright) 40%, var(--color-border));
+	}
+
+	&.is-ko {
+		background: color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-card));
+		color: var(--color-off-white);
+		border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border));
+	}
+
+	&.is-zh {
+		background: color-mix(in srgb, var(--color-off-white) 14%, var(--color-bg-card));
+		color: var(--color-off-white);
+		border-color: color-mix(in srgb, var(--color-off-white) 32%, var(--color-border));
+	}
+}
+
+// Brush-shape gallery — same gallery-card conventions as .text-font-option
+// (outline selection state, accent-on-active), but laid out as a responsive
+// grid of small icon tiles since each option is a shape glyph, not a text
+// sample. auto-fill lets it pack 5-across in the wide desktop panel and wrap on
+// the narrower mobile settings drawer.
+.brush-shape-picker {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+	gap: var(--spacing-sm);
+	width: 100%;
+}
+
+.brush-shape-option {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	min-height: 62px;
+	padding: var(--spacing-sm) 2px;
+	background: var(--color-bg-tertiary);
+	border: none;
+	color: var(--color-text-secondary);
+	font: inherit;
+	cursor: pointer;
+	outline: 1px solid var(--color-border);
+	outline-offset: 0;
+	border-radius: var(--radius-sm);
+	transition: all var(--transition-fast);
+
+	&:hover {
+		outline-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
+
+	&.active {
+		outline-color: var(--color-accent);
+		outline-width: 2px;
+		outline-offset: 2px;
+		color: var(--color-text-primary);
+	}
+}
+
+.brush-shape-option-icon {
+	display: block;
+	width: 26px;
+	height: 26px;
+	color: inherit;
+
+	svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+		fill: currentColor;
+	}
+}
+
+.brush-shape-option-name {
+	font-size: 9px;
+	line-height: 1.1;
+	text-align: center;
+	color: inherit;
+}
+
+// ===== Advanced disclosure (WP4) =====
+// Auto-collapsed section nested inside a settings group (Glitter Properties,
+// text/shape effect cards). Holds decluttered controls (Scale) plus per-swatch
+// color adjust. Toggled by app.initializeAdvancedDisclosures via .is-open.
+.advanced-disclosure {
+	display: flex;
+	flex-direction: column;
+	margin-top: var(--spacing-sm);
+	border-top: 1px solid var(--color-border);
+}
+
+.advanced-disclosure-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-sm);
+	width: 100%;
+	padding: var(--spacing-sm) 0 0;
+	background: none;
+	border: none;
+	color: var(--color-text-secondary);
+	font: inherit;
+	font-size: var(--font-size-sm);
+	cursor: pointer;
+
+	&:hover {
+		color: var(--color-text-primary);
+	}
+}
+
+.advanced-disclosure-label {
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.advanced-disclosure-chevron {
+	display: flex;
+	align-items: center;
+	transition: transform var(--transition-fast);
+
+	svg {
+		width: 14px;
+		height: 14px;
+		fill: currentColor;
+	}
+}
+
+.advanced-disclosure-content {
+	display: none;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding-top: var(--spacing-sm);
+}
+
+.advanced-disclosure.is-open {
+	.advanced-disclosure-content {
+		display: flex;
+	}
+
+	.advanced-disclosure-chevron {
+		transform: rotate(180deg);
+	}
+}
+
+// ===== Canvas Size (Photoshop-style resize) =====
+.canvas-size-controls {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	width: 100%;
+
+	.settings-row {
+		margin-bottom: 0;
+	}
+}
+
+// Generic "number input with a unit suffix" atom. Reused anywhere a numeric
+// field needs a trailing unit (px, %, °): Canvas Size, the new-canvas dialog,
+// and the sticker/text Position fields. The suffix is absolutely positioned so
+// it overlays the input's right padding without affecting the input's own box.
+// `.input-unit input` reserves that padding; contexts with a higher-specificity
+// input rule (e.g. .sticker-position-group) must re-assert the padding-right.
+.input-unit {
+	position: relative;
+	display: flex;
+	align-items: center;
+
+	input {
+		width: 100%;
+		padding-right: 26px;
+	}
+}
+
+.input-unit-suffix {
+	position: absolute;
+	right: 8px;
+	font-size: 10px;
+	color: var(--color-text-secondary);
+	pointer-events: none;
+}
+
+
+// 3×3 anchor grid. The chosen cell is where existing content stays pinned as
+// the canvas grows/shrinks (Photoshop's Canvas Size anchor). Each cell shows a
+// directional arrow; the selected cell is a filled dot.
+.anchor-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+	gap: 2px;
+	width: 66px;
+	height: 66px;
+	flex-shrink: 0;
+}
+
+.anchor-cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	background: var(--color-bg-tertiary);
+	border: none;
+	outline: 1px solid var(--color-border);
+	border-radius: var(--radius-xs);
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	font-size: 11px;
+	line-height: 1;
+	transition: all var(--transition-fast);
+
+	&:hover {
+		outline-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
+
+	&.active {
+		background: var(--color-accent);
+		outline-color: var(--color-accent);
+		color: var(--color-bg-primary);
+	}
+}
+
+.canvas-size-actions {
+	display: flex;
+	gap: var(--spacing-sm);
+
+	button {
+		flex: 1;
+	}
+}
+
+// Live preview of the prospective canvas bounds, drawn inside previewWrapper so
+// it inherits the viewport zoom/pan transform. Border/shadow are divided by
+// --zoom so they keep a consistent on-screen thickness at any zoom level (same
+// technique as the selection outline).
+.canvas-resize-preview {
+	position: absolute;
+	pointer-events: none;
+	z-index: 6;
+	box-sizing: border-box;
+	border: max(1px, calc(2px / var(--zoom, 1))) dashed var(--color-accent);
+	box-shadow:
+		inset 0 0 0 max(1px, calc(1px / var(--zoom, 1))) rgba(0, 0, 0, 0.55),
+		0 0 0 max(1px, calc(1px / var(--zoom, 1))) rgba(0, 0, 0, 0.55);
+	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.text-align-group,
+.text-valign-group {
+	width: 100%;
+}
+
+.control-group-label {
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+}
+
+.text-box-mode-group > .btn-simple {
+	flex: 1;
+}
+
+.text-valign-group > .segmented-option,
+.text-align-group > .segmented-option {
+	flex: 1;
+}
+
+// Segmented control: a connected two-state toggle (Glitter | Solid Color) that
+// reads as one control with two modes, not two loose buttons. Used for every
+// text source (fill/border/shadow) via .text-effect-mode-group.
+.segmented-control {
+	display: flex;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	// Clip the active segment's fill to the rounded outer corners.
+	overflow: hidden;
+}
+
+.segmented-option {
+	flex: 1;
+	padding: var(--spacing-sm) var(--spacing-md);
+	border: none;
+	background: var(--color-bg-secondary);
+	color: var(--color-text-tertiary);
+	// Match the design system's label vocabulary (uppercase, like subsection
+	// titles) so the toggle reads as part of the panel, not a pair of buttons.
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	letter-spacing: 0.75px;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background var(--transition-fast), color var(--transition-fast);
+
+	& + .segmented-option {
+		border-left: 1px solid var(--color-border);
+	}
+
+	&:hover:not(.active) {
+		color: var(--color-text-secondary);
+		background: var(--color-bg-tertiary);
+	}
+
+	&.active {
+		background: var(--color-accent);
+		color: #fff;
+	}
+}
+
+// One source (fill/border/shadow): mode toggle on top, then exactly one of the
+// glitter asset-info display or the solid-color row. Roomier than the default
+// section spacing so the toggle, source, and sliders read as distinct steps.
+.glitter-source {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
+}
+
+.effect-option-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	min-width: 0;
+	width: 100%;
+}
+
+.effect-option-label {
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+}
+
+// The glitter display reuses the shared .asset-info-* classes so it matches
+// Glitter Properties' Asset section exactly (thumbnail + name + badges + meta).
+.glitter-source .asset-info,
+.asset-info {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+}
+
+.asset-info-meta {
+	// Size / Frames sit below the header, mirroring Glitter Properties.
+	gap: var(--spacing-md);
+}
+
+// Both source displays are toggled via the [hidden] attribute; .asset-info and
+// .text-effect-color-row set display, so they need an explicit override.
+.glitter-source-glitter[hidden],
+.glitter-source-solid[hidden] {
+	display: none;
+}
+
+.text-box-hint {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-tertiary);
+}
+
+.text-effect-controls {
+	display: none;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding-top: var(--spacing-md);
+	border-top: 1px solid var(--color-border);
+
+	&.visible {
+		display: flex;
+	}
+}
+
+.text-effect-subsection {
+	gap: var(--spacing-lg);
+}
+
+.subsection-content-group.effects-stack {
+	padding: 0;
+	border: 0;
+	background: transparent;
+
+	>.subsection-title,
+	>.subsection-note {
+		padding: 0 var(--spacing-xs);
+	}
+
+	>.text-effect-subsection {
+		margin-top: 0;
+	}
+}
+
+.effect-stack-row {
+	grid-template-columns: 1fr !important;
+}
+
+.effect-stack-row > .effect-option-group > .segmented-control,
+.effect-option-group > .segmented-control {
+	width: 100%;
+}
+
+// Redeclares .subsection-note (bare, not scoped) with a smaller font-size —
+// later in the cascade than the first .subsection-note rule above, so it
+// wins for every .subsection-note on the page, not just ones inside
+// .text-effect-subsection.
+.text-effect-source-row {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-md);
+
+	// Header grows to fill the row, pushing Change to the far right edge.
+	>.asset-info-header {
+		min-width: 0;
+		flex: 1;
+	}
+}
+
+.text-effect-source-change.target-active,
+.asset-info-thumbnail.target-active {
+	border-color: var(--color-accent);
+	box-shadow: 0 0 0 1px var(--color-accent-border);
+}
+
+// D-1c gallery picker strip: names the gallery's armed destination in picker
+// mode, or shows a passive hint for a solid-fill text layer in browse mode.
+// Sticky within the gallery content (not the viewport) so it stays visible as
+// the grid scrolls and works identically inside the mobile design drawer.
+.gallery-picker-strip {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-md);
+	padding: var(--spacing-sm) var(--spacing-md);
+	margin-bottom: var(--spacing-sm);
+	background: var(--color-bg-tertiary);
+	border-left: 3px solid transparent;
+	border-radius: var(--radius-sm);
+
+	&[hidden] {
+		display: none;
+	}
+
+	// Picker mode: the armed destination earns the accent edge.
+	&.is-armed {
+		border-left-color: var(--color-accent);
+		box-shadow: inset 0 0 0 1px var(--color-accent-border);
+	}
+
+	// Browse-mode passive hint: quieter, no accent, no Done.
+	&.is-hint {
+		background: var(--color-bg-primary);
+
+		.gallery-picker-strip-title {
+			color: var(--color-text-tertiary);
+			font-weight: 400;
+		}
+	}
+}
+
+.gallery-picker-strip-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	flex: 1;
+}
+
+.gallery-picker-strip-title {
+	@include text-sm;
+	color: var(--color-text-primary);
+	font-weight: 600;
+}
+
+.gallery-picker-strip-detail {
+	@include text-sm;
+	color: var(--color-text-tertiary);
+
+	&:empty {
+		display: none;
+	}
+}
+
+.gallery-picker-strip-done {
+	flex-shrink: 0;
+	align-self: center;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.text-effect-source-change {
+	flex-shrink: 0;
+	align-self: center;
+	min-height: 28px;
+	padding: 0 var(--spacing-sm);
+	@include text-sm;
+}
+
+.text-effect-color-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--spacing-md);
+
+	input[type="color"] {
+		width: 56px;
+		height: 32px;
+		padding: 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: transparent;
+		cursor: pointer;
+
+		&::-webkit-color-swatch-wrapper {
+			padding: 2px;
+		}
+
+		&::-webkit-color-swatch {
+			border: none;
+			border-radius: 3px;
+		}
+	}
+}
+
+
+
+/* Setting Headers (label + value pairs) */
+.setting-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+
+	>.setting-label {
+		@include text-sm;
+		color: var(--color-text-secondary);
+		
+		position: relative;
+
+		&[data-tooltip] {
+			cursor: help;
+		}
+
+		+.setting-value {
+			@include text-sm;
+			color: var(--color-text-primary);
+		}
+	}
+
+
+}
+
+/* Shared settings card: works at any nesting depth. */
+.subsection-content-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding: var(--spacing-md);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background-color: var(--color-bg-card);
+
+	>.subsection-title {
+		@include text-sm;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: var(--color-text-tertiary);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	&[data-collapsible-subsection]>.subsection-title {
+		cursor: pointer;
+
+		>.subsection-chevron {
+			width: 1rem;
+			height: 1rem;
+			transition: transform var(--transition-fast);
+		}
+	}
+
+	&[data-collapsible-subsection].is-collapsed {
+		>.subsection-title>.subsection-chevron { transform: rotate(-90deg); }
+		>:not(.subsection-title) { display: none; }
+	}
+
+	>.subsection-content {
+		display: flex;
+		gap: var(--spacing-md);
+		+.subsection-title { margin-top: var(--spacing-sm); }
+	}
+}
+
+/* Settings Subsections */
+.settings-subsection {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+
+	.layer-type-options>.layer-type-option {
+		background-color: var(--color-bg-primary);
+	}
+
+	>.transform-panel-host {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+	}
+
+	+.settings-subsection {
+		margin-top: var(--spacing-md);
+	}
+
+}
+
+// Header controls (Enabled/Global/Proportional) cluster against the right
+// edge next to the collapse chevron instead of floating mid-title. Bare rule
+// on purpose: the effect cards (.text-effect-subsection) are nested, not
+// direct children of .settings-subsection, so the scoped rule above misses them.
+.subsection-title {
+	gap: var(--spacing-sm);
+
+	>.checkbox-group {
+		margin-left: auto;
+	}
+}
+
+// Effect cards (Border/Shadow): the card body is the .text-effect-controls
+// sibling, which only shows while the header's Enabled toggle is on — a
+// disabled card has nothing to expand, so the chevron hides and the header
+// stops advertising a click (the JS toggle guard mirrors this). Cards whose
+// title checkbox is an option, not an enable switch (Global, Lock Aspect),
+// have no .text-effect-controls child and are unaffected.
+.subsection-content-group:has(> .text-effect-controls):has(> .subsection-title input[type="checkbox"]:not(:checked)) {
+	>.subsection-title {
+		cursor: default;
+
+		>.subsection-chevron {
+			display: none;
+		}
+	}
+}
+
+/* Two-column settings layout */
+.settings-group-two-column {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: var(--spacing-lg);
+	width: 100%;
+}
+
+.setting-column {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+	width: 100%;
+
+	&.right {
+		align-items: flex-end;
+	}
+
+	button.btn-text {
+		text-align: right;
+		padding: var(--spacing-xs);
+		width: -moz-fit-content;
+		width: fit-content;
+	}
+}
+
+/* Checkbox Groups */
+.checkbox-group {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+	position: relative;
+	color: var(--color-text-primary);
+	font-weight: initial;
+
+	>input[type="checkbox"] {
+		position: absolute;
+		opacity: 0;
+		width: 0;
+		height: 0;
+		margin: 0;
+		cursor: pointer;
+
+		&:checked+span {
+			background-color: var(--color-accent);
+			color: white;
+			border-color: var(--color-accent-border);
+		}
+	}
+
+	>span {
+		display: inline-block;
+		padding: 3px 6px;
+		border: 1px solid var(--color-border-hover);
+		border-radius: 4px;
+		@include text-sm;
+		cursor: pointer;
+		text-transform: uppercase;
+		position: relative;
+		text-align: center;
+
+		&:hover {
+			background-color: var(--color-bg-tertiary);
+			border-color: var(--color-border-hover);
+		}
+	}
+}
+
+.transform-panel .checkbox-group>span {
+	white-space: nowrap;
+}
+
+
+
+
+
+
+
+/* ===== WELCOME MODAL ===== */
+#welcomeModal {
+	.modal-hero-image {
+		background: url("../images/glitter/sparkle/glitter_rainbow.gif") repeat;
+
+		> h2 {
+			color: var(--color-text-primary);
+			text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+		}
+	}
+
+	.welcome-quickstart {
+		> h3 {
+			font-size: var(--font-size-lg);
+			font-weight: 600;
+			color: var(--color-text-primary);
+			margin-bottom: var(--spacing-md);
+		}
+
+		> ul {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-sm);
+
+			> li {
+				padding: var(--spacing-md);
+				background: var(--color-bg-secondary);
+				border-radius: var(--radius-md);
+				color: var(--color-text-secondary);
+				line-height: 1.5;
+			}
+		}
+	}
+
+	p + p {
+		margin-top: var(--spacing-sm);
+	}
+
+	p + .welcome-quickstart {
+		margin-top: var(--spacing-lg);
+	}
+
+	.welcome-actions {
+		display: flex;
+		flex-direction: row;
+		gap: var(--spacing-md);
+		margin-top: var(--spacing-xl);
+align-items: center;
+    justify-content: center;
+
+
+
+		// mobile
+		@media (max-width: 800px) {
+			flex-direction:column;
+
+			button {
+				width: 100%;
+			}
+		}
+
+
+
+	}
+
+	.modal-footer {
+		text-align: center;
+
+	}
+
+	.welcome-checkbox {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		font-size: var(--font-size-md);
+		color: var(--color-text-secondary);
+		cursor: pointer;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		user-select: none;
+
+		input[type="checkbox"] {
+			cursor: pointer;
+		}
+	}
+}
+
+@media (max-width: 800px) {
+	#confirmationModal {
+		.modal-content {
+			width: min(420px, calc(100vw - 24px));
+		}
+
+		.modal-footer {
+			flex-direction: column-reverse;
+			align-items: stretch;
+
+			>button {
+				width: 100%;
+				min-height: 48px;
+			}
+		}
+	}
+}

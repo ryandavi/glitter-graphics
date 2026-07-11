@@ -302,8 +302,8 @@ class LayerManager {
 	}
 
 
-	deleteLayer(layerId) {
-		this.deleteLayers([layerId]);
+	deleteLayer(layerId, options = {}) {
+		this.deleteLayers([layerId], options);
 	}
 
 	toggleLayerVisibility(layerId) {
@@ -1142,7 +1142,7 @@ class LayerManager {
 		return clones.length === 1 ? clones[0] : clones;
 	}
 
-	deleteLayers(layerIds) {
+	deleteLayers(layerIds, options = {}) {
 		const uniqueIds = [...new Set(layerIds)].filter((layerId) => this.layers.some((layer) => layer.id === layerId));
 		if (!uniqueIds.length) return false;
 		if (this.layers.length - uniqueIds.length < 1) {
@@ -1184,10 +1184,10 @@ class LayerManager {
 			activeLayerId: nextLayer?.id || null
 		});
 		this.renderLayersList();
-		this.editor.saveState();
+		if (!options.skipHistory) this.editor.saveState();
 		this.editor.updatePreview();
 		this.editor.updateActionButtons();
-		this.editor.updateStatus(uniqueIds.length > 1 ? 'Layers deleted' : 'Layer deleted');
+		if (!options.silent) this.editor.updateStatus(uniqueIds.length > 1 ? 'Layers deleted' : 'Layer deleted');
 		return true;
 	}
 	createLayerElement(layer) {

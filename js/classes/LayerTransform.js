@@ -436,6 +436,7 @@ setupMouseDrag(element) {
     let lockedAxis = null;
 	let altPending = false;
 	let dragTransform = this;
+	let altCloneId = null;
 
 const swallowFollowupClick = () => {
     this.editor.ignoreNextClick = true;
@@ -444,7 +445,7 @@ const swallowFollowupClick = () => {
     }, 150);
 };
     
-const handleMouseDown = (e) => {
+	const handleMouseDown = (e) => {
     if (e.button !== 0) return; // Left click only
     
     // Don't start drag if clicking on transform handles
@@ -510,9 +511,10 @@ const handleMouseDown = (e) => {
     startPosition = { ...this.getTransform().position };
     lockedAxis = null;
     
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-};
+	    document.addEventListener('mousemove', handleMouseMove);
+	    document.addEventListener('mouseup', handleMouseUp);
+		this.activeMouseDragCancel = cancelMouseDrag;
+	};
     
 const handleMouseMove = (e) => {
     if (!isDragging) return;
@@ -534,6 +536,9 @@ const handleMouseMove = (e) => {
 		const clone = this.editor.layerManager.cloneLayer(this.layer.id, { positionOffset: { x: 0, y: 0 }, skipHistory: true });
 		const ctx = this.editor.getMovableLayerContext(clone);
 		dragTransform = ctx?.manager?.layerTransforms?.get(clone?.id) || this;
+		altCloneId = clone?.id || null;
+		this.editor.setDuplicateDragFeedback?.(true, 1);
+		this.editor.addDuplicateGhost?.(this, dragTransform);
 		startPosition = { ...dragTransform.getTransform().position };
 		altPending = false;
 	}
@@ -576,6 +581,7 @@ const handleMouseMove = (e) => {
     // Re-apply transform to the CURRENT element
 	const dimensions = activeTransform.getDimensions();
 	activeTransform.applyTransform(activeTransform.element, dimensions);
+	this.editor.syncDuplicateGhost?.(activeTransform);
     
     // CRITICAL FIX: Ensure handles exist before trying to update them
     // If they don't exist yet (first drag after selection), create them
@@ -595,7 +601,7 @@ const handleMouseMove = (e) => {
     }
 };
     
-    const handleMouseUp = (e) => {
+	const handleMouseUp = (e) => {
         if (!isDragging) return;
 
         isDragging = false;
@@ -611,10 +617,34 @@ const handleMouseMove = (e) => {
 			swallowFollowupClick();
 		}
 		altPending = false;
-        didMove = false;
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-    };
+		altCloneId = null;
+	    didMove = false;
+		this.activeMouseDragCancel = null;
+		this.editor.setDuplicateDragFeedback?.(false);
+	    document.removeEventListener('mousemove', handleMouseMove);
+	    document.removeEventListener('mouseup', handleMouseUp);
+	};
+
+	const cancelMouseDrag = () => {
+		if (!isDragging) return false;
+		if (altCloneId) {
+			this.editor.layerManager.deleteLayers([altCloneId], { skipHistory: true, silent: true });
+			this.editor.layerManager.setActiveLayer(this.layer.id);
+		} else if (startPosition) {
+			this.updateTransform({ position: { ...startPosition } });
+			this.applyTransform(this.element, this.getDimensions());
+			this.updateHandlePositions();
+		}
+		isDragging = false;
+		didMove = false;
+		altPending = false;
+		altCloneId = null;
+		this.activeMouseDragCancel = null;
+		this.editor.setDuplicateDragFeedback?.(false);
+		document.removeEventListener('mousemove', handleMouseMove);
+		document.removeEventListener('mouseup', handleMouseUp);
+		return true;
+	};
     
     element.addEventListener('mousedown', handleMouseDown);
 }
@@ -1075,10 +1105,22 @@ removeTransformHandles() {
 		let lockedAxis = null;
 
 		const cleanup = () => {
-			document.removeEventListener('mousemove', onMove);
-			document.removeEventListener('mouseup', onUp);
+			document.removeEventListener('pointermove', onMove);
+			document.removeEventListener('pointerup', onUp);
+			document.removeEventListener('pointercancel', onUp);
+			this.editor.setDuplicateDragFeedback?.(false);
+			this.activeDocumentDragCancel = null;
+		};
+		this.activeDocumentDragCancel = () => {
+			if (clone) {
+				this.editor.layerManager.deleteLayers([clone.id], { skipHistory: true, silent: true });
+				this.editor.layerManager.setActiveLayer(this.layer.id);
+			}
+			cleanup();
+			return true;
 		};
 		const onMove = (moveEvent) => {
+			if (moveEvent.pointerId !== event.pointerId) return;
 			moveEvent.preventDefault();
 			const point = this.editor.viewport.screenToCanvas(moveEvent.clientX, moveEvent.clientY);
 			const deltaX = point.x - start.x;
@@ -1088,8 +1130,10 @@ removeTransformHandles() {
 				this.editor.groupTransformManager?.ensureHistoryBaseline?.();
 				clone = this.editor.layerManager.cloneLayer(this.layer.id, { positionOffset: { x: 0, y: 0 }, skipHistory: true, skipSelection: true });
 				if (!clone) return;
+				this.editor.setDuplicateDragFeedback?.(true, 1);
 				const ctx = this.editor.getMovableLayerContext(clone);
 				targetTransform = ctx?.manager?.layerTransforms?.get(clone.id) || null;
+				this.editor.addDuplicateGhost?.(this, targetTransform);
 			}
 			didMove = true;
 			lockedAxis = moveEvent.shiftKey ? (lockedAxis || (Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y')) : null;
@@ -1098,11 +1142,13 @@ removeTransformHandles() {
 			if (targetTransform) {
 				targetTransform.updateTransform({ position: { x: nextX, y: nextY } });
 				targetTransform.applyTransform(targetTransform.element, targetTransform.getDimensions());
+				this.editor.syncDuplicateGhost?.(targetTransform);
 			} else {
 				getLayerTransform(clone).position = { x: nextX, y: nextY };
 			}
 		};
 		const onUp = (upEvent) => {
+			if (upEvent.pointerId !== event.pointerId) return;
 			cleanup();
 			if (didMove && clone) {
 				this.editor.layerManager.setActiveLayer(clone.id);
@@ -1114,8 +1160,9 @@ removeTransformHandles() {
 			this.editor.ignoreNextClick = true;
 			setTimeout(() => { this.editor.ignoreNextClick = false; }, 150);
 		};
-		document.addEventListener('mousemove', onMove);
-		document.addEventListener('mouseup', onUp);
+		document.addEventListener('pointermove', onMove);
+		document.addEventListener('pointerup', onUp);
+		document.addEventListener('pointercancel', onUp);
 	}
 
     /**
@@ -1191,7 +1238,8 @@ removeTransformHandles() {
             }
         }
 
-        this.activeHandleElement?.releasePointerCapture?.(e.pointerId);
+		this.editor.setDuplicateDragFeedback?.(false);
+		this.activeHandleElement?.releasePointerCapture?.(e.pointerId);
         this.activeHandleType = null;
         this.activeHandleElement = null;
         this.activeHandlePointerId = null;
@@ -1213,6 +1261,8 @@ removeTransformHandles() {
 			const ctx = this.editor.getMovableLayerContext(clone);
 			const target = ctx?.manager?.layerTransforms?.get(clone?.id);
 			if (!target) return;
+			this.editor.setDuplicateDragFeedback?.(true, 1);
+			this.editor.addDuplicateGhost?.(this, target);
 			this.dragStartState.targetTransform = target;
 			this.dragStartState.targetLayerId = clone.id;
 			this.dragStartState.transform.position = { ...target.getTransform().position };
@@ -1237,9 +1287,38 @@ removeTransformHandles() {
         // Re-apply transform to element
 		const dimensions = targetTransform.getDimensions();
 		targetTransform.applyTransform(targetTransform.element, dimensions);
+		this.editor.syncDuplicateGhost?.(targetTransform);
 
 		targetTransform.updateHandlePositions();
     }
+
+	cancelActiveDrag() {
+		if (this.activeDocumentDragCancel?.()) return true;
+		if (this.activeMouseDragCancel?.()) return true;
+		const start = this.dragStartState;
+		if (!this.isDraggingHandle || !start) return false;
+		if (start.targetLayerId) {
+			this.editor.layerManager.deleteLayers([start.targetLayerId], { skipHistory: true, silent: true });
+			this.editor.layerManager.setActiveLayer(this.layer.id);
+		} else {
+			const transform = this.getTransform();
+			transform.position = { ...start.transform.position };
+			transform.scale = { ...start.transform.scale };
+			transform.rotation = start.transform.rotation;
+			if (start.boxWidth != null && this.layer.textData) this.layer.textData.boxWidth = start.boxWidth;
+			if (start.boxHeight != null && this.layer.textData) this.layer.textData.boxHeight = start.boxHeight;
+			this.applyTransform(this.element, this.getDimensions());
+			this.updateHandlePositions();
+		}
+		this.editor.setDuplicateDragFeedback?.(false);
+		this.activeHandleElement?.releasePointerCapture?.(this.activeHandlePointerId);
+		this.activeHandleType = null;
+		this.activeHandleElement = null;
+		this.activeHandlePointerId = null;
+		this.dragStartState = null;
+		this.isDraggingHandle = false;
+		return true;
+	}
 
     /**
      * Handle dragging of corner handles (scale)
@@ -1271,17 +1350,50 @@ removeTransformHandles() {
         const localX = vectorX * cos - vectorY * sin;
         const localY = vectorX * sin + vectorY * cos;
 
-        // Convert to scale percentage against the frame's local size
-        const newScaleX = (Math.abs(localX) * 2 / frame.width) * 100;
-        const newScaleY = (this.layer.type === LayerType.TEXT_GLITTER || transform.proportionalScale)
-            ? newScaleX
-            : (Math.abs(localY) * 2 / frame.height) * 100;
+        const proportional = this.layer.type === LayerType.TEXT_GLITTER || transform.proportionalScale;
+		let newScaleX;
+		let newScaleY;
+		let nextPosition = null;
+		if (e.altKey) {
+			// Alt keeps the visible frame center fixed (Figma/Photoshop center resize).
+			newScaleX = (Math.abs(localX) * 2 / frame.width) * 100;
+			newScaleY = proportional ? newScaleX : (Math.abs(localY) * 2 / frame.height) * 100;
+		} else {
+			// Default corner resize keeps the opposite corner fixed.
+			const corner = this.activeHandleType.replace('corner-', '');
+			const signX = corner.includes('l') ? -1 : 1;
+			const signY = corner.includes('t') ? -1 : 1;
+			const oppositeLocalX = -signX * (frame.width / 2) * (start.transform.scale.x / 100);
+			const oppositeLocalY = -signY * (frame.height / 2) * (start.transform.scale.y / 100);
+			const oppositeWorldX = centerX + oppositeLocalX * worldCos - oppositeLocalY * worldSin;
+			const oppositeWorldY = centerY + oppositeLocalX * worldSin + oppositeLocalY * worldCos;
+			const fromOppositeX = canvasPos.x - oppositeWorldX;
+			const fromOppositeY = canvasPos.y - oppositeWorldY;
+			const localFromOppositeX = fromOppositeX * cos - fromOppositeY * sin;
+			const localFromOppositeY = fromOppositeX * sin + fromOppositeY * cos;
+			newScaleX = (Math.abs(localFromOppositeX) / frame.width) * 100;
+			newScaleY = proportional ? newScaleX : (Math.abs(localFromOppositeY) / frame.height) * 100;
+
+			const draggedLocalX = oppositeLocalX + signX * frame.width * (newScaleX / 100);
+			const draggedLocalY = oppositeLocalY + signY * frame.height * (newScaleY / 100);
+			const visibleCenterLocalX = (oppositeLocalX + draggedLocalX) / 2;
+			const visibleCenterLocalY = (oppositeLocalY + draggedLocalY) / 2;
+			const visibleCenterWorldX = centerX + visibleCenterLocalX * worldCos - visibleCenterLocalY * worldSin;
+			const visibleCenterWorldY = centerY + visibleCenterLocalX * worldSin + visibleCenterLocalY * worldCos;
+			const scaledOffsetX = frame.offsetX * (newScaleX / 100);
+			const scaledOffsetY = frame.offsetY * (newScaleY / 100);
+			nextPosition = {
+				x: visibleCenterWorldX - (scaledOffsetX * worldCos - scaledOffsetY * worldSin),
+				y: visibleCenterWorldY - (scaledOffsetX * worldSin + scaledOffsetY * worldCos)
+			};
+		}
 
         // Clamp values
         const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
         const clampedScaleY = Math.max(10, Math.min(500, newScaleY));
 
         this.updateTransform({
+            position: nextPosition || undefined,
             scale: {
                 x: clampedScaleX,
                 y: clampedScaleY

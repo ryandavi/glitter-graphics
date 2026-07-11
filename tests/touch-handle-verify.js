@@ -99,6 +99,15 @@ async function mouseDrag(page, from, to, steps = GESTURE_STEPS) {
 	await page.waitForTimeout(80);
 }
 
+async function mouseAltDrag(page, from, to) {
+	await page.keyboard.down('Alt');
+	try {
+		await mouseDrag(page, from, to);
+	} finally {
+		await page.keyboard.up('Alt');
+	}
+}
+
 async function dismissVisibleModals(page) {
 	await page.evaluate(() => {
 		document.querySelectorAll('.modal-overlay.visible').forEach((element) => {
@@ -428,6 +437,43 @@ async function checkCornerScaleHandle(page, drag, label) {
 	);
 }
 
+async function checkAltCornerScaleFromCenter(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const sticker = await createTestSticker(page, { position: { x: 130, y: 100 } });
+	await selectLayer(page, sticker.layerId);
+	const before = await getStickerState(page, sticker.layerId);
+	const handleCenter = await getTransformHandleCenter(page, sticker.layerId, 'corner-br');
+	await mouseAltDrag(page, handleCenter, { x: handleCenter.x + 45, y: handleCenter.y + 45 });
+	const after = await getStickerState(page, sticker.layerId);
+	assert(after.scale.x - before.scale.x > SCALE_DELTA_MIN_PCT, 'Alt corner drag did not scale the sticker');
+	assert(Math.abs(after.position.x - before.position.x) < 2 && Math.abs(after.position.y - before.position.y) < 2,
+		`Alt corner drag moved the center (before ${JSON.stringify(before.position)}, after ${JSON.stringify(after.position)})`);
+}
+
+async function checkEscapeCancelsCornerScale(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const sticker = await createTestSticker(page, { position: { x: 130, y: 100 } });
+	await selectLayer(page, sticker.layerId);
+	const before = await getStickerState(page, sticker.layerId);
+	const historyBefore = await page.evaluate(() => window.editor.historyManager.historyIndex);
+	const handleCenter = await getTransformHandleCenter(page, sticker.layerId, 'corner-br');
+	await page.mouse.move(handleCenter.x, handleCenter.y);
+	await page.mouse.down();
+	await page.mouse.move(handleCenter.x + 45, handleCenter.y + 45, { steps: GESTURE_STEPS });
+	await page.keyboard.press('Escape');
+	await page.mouse.up();
+	await page.waitForTimeout(100);
+	const after = await getStickerState(page, sticker.layerId);
+	const historyAfter = await page.evaluate(() => window.editor.historyManager.historyIndex);
+	assert(Math.abs(after.scale.x - before.scale.x) < 0.01 && Math.abs(after.scale.y - before.scale.y) < 0.01,
+		`Escape did not restore scale (before ${JSON.stringify(before.scale)}, after ${JSON.stringify(after.scale)})`);
+	assert(Math.abs(after.position.x - before.position.x) < 0.01 && Math.abs(after.position.y - before.position.y) < 0.01,
+		'Escape did not restore position');
+	assert(historyAfter === historyBefore, `Escape created history (before ${historyBefore}, after ${historyAfter})`);
+}
+
 async function checkFixedTextEdgeResizeHandle(page, drag, label) {
 	await loadBlankCanvas(page);
 	await setTool(page, 'select');
@@ -505,6 +551,8 @@ async function main() {
 			['Touch drag on the shared group box moves every selected sticker', (page) => checkGroupMoveHandle(page, oneFingerDrag, 'touch')],
 			['Mouse drag on rotation handle still rotates the selected sticker', (page) => checkRotationHandle(page, mouseDrag, 'mouse')],
 			['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
+			['Alt + mouse corner drag scales from the layer center', checkAltCornerScaleFromCenter],
+			['Escape cancels a mouse corner transform without history', checkEscapeCancelsCornerScale],
 			['Mouse drag on fixed-text edge handle still resizes the box', (page) => checkFixedTextEdgeResizeHandle(page, mouseDrag, 'mouse')]
 		];
 
@@ -531,4 +579,3 @@ main().catch((error) => {
 	console.error(describeError(error));
 	process.exit(1);
 });
-

@@ -659,6 +659,7 @@ class GroupTransformManager {
 			}
 		}
 
+		this.editor.setDuplicateDragFeedback?.(false);
 		this.activeHandleElement?.releasePointerCapture?.(event.pointerId);
 		this.activeHandleType = null;
 		this.activeHandleElement = null;
@@ -674,13 +675,19 @@ class GroupTransformManager {
 			return;
 		}
 		if (!this.dragStartState.didMove && this.dragStartState.altDuplicatePending) {
+			const sourceTransforms = this.dragStartState.originalSelectionIds.map((id) => {
+				const layer = this.editor.layerManager.layers.find((entry) => entry.id === id);
+				return layer ? this.getLayerTransform(layer) : null;
+			});
 			const clones = this.editor.layerManager.cloneLayers(this.dragStartState.originalSelectionIds, { positionOffset: { x: 0, y: 0 }, skipHistory: true });
 			if (!clones) return;
+			this.editor.setDuplicateDragFeedback?.(true, clones.length);
 			const bounds = this.getBounds();
 			this.dragStartState.bounds = bounds;
 			this.dragStartState.layerStates = this.getLayerEntries().map(({ layer, transform }) => ({
 				layer, transform, position: { ...transform.getTransform().position }, scale: { ...transform.getTransform().scale }, rotation: transform.getTransform().rotation || 0
 			}));
+			this.dragStartState.layerStates.forEach(({ transform }, index) => this.editor.addDuplicateGhost?.(sourceTransforms[index], transform));
 			this.dragStartState.altDuplicatePending = false;
 		}
 
@@ -705,6 +712,7 @@ class GroupTransformManager {
 		});
 
 		this.applyEntries(this.dragStartState.layerStates);
+		this.editor.syncDuplicateGhosts?.();
 	}
 
 	handleCornerDrag(event) {
@@ -722,9 +730,38 @@ class GroupTransformManager {
 		}
 
 		this.dragStartState.didMove = true;
-		this.applyLayerStateDelta(this.dragStartState.layerStates, bounds, { scaleFactor });
+		const corner = this.activeHandleType.replace('corner-', '');
+		const signX = corner.includes('l') ? -1 : 1;
+		const signY = corner.includes('t') ? -1 : 1;
+		const translateX = event.altKey ? 0 : signX * halfWidth * (scaleFactor - 1);
+		const translateY = event.altKey ? 0 : signY * halfHeight * (scaleFactor - 1);
+		this.applyLayerStateDelta(this.dragStartState.layerStates, bounds, { scaleFactor, translateX, translateY });
 
 		this.applyEntries(this.dragStartState.layerStates);
+	}
+
+	cancelActiveDrag() {
+		const start = this.dragStartState;
+		if (!this.isDraggingHandle || !start) return false;
+		if (start.originalSelectionIds && !start.altDuplicatePending) {
+			const cloneIds = this.getSelectedLayerIds();
+			this.editor.layerManager.deleteLayers(cloneIds, { skipHistory: true, silent: true });
+			this.editor.layerManager.setSelection(start.originalSelectionIds, { activeLayerId: start.originalSelectionIds.at(-1) });
+		} else {
+			start.layerStates?.forEach(({ transform, position, scale, rotation }) => {
+				transform.updateTransform({ position: { ...position }, scale: { ...scale }, rotation });
+			});
+			this.applyEntries(start.layerStates || []);
+		}
+		this.editor.setDuplicateDragFeedback?.(false);
+		this.activeHandleElement?.releasePointerCapture?.(this.activeHandlePointerId);
+		this.activeHandleType = null;
+		this.activeHandleElement = null;
+		this.activeHandlePointerId = null;
+		this.dragStartState = null;
+		this.isDraggingHandle = false;
+		this.editor.syncTransformHandlesForActiveLayer?.();
+		return true;
 	}
 
 	handleRotationDrag(event) {

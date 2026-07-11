@@ -1,0 +1,194 @@
+/* ===== CSS VARIABLES ===== */
+:root {
+	/* Base color scales */
+	--gray-100: #e0e0e0;
+	/* lightest */
+	--gray-200: #888;
+	--gray-300: #666;
+	--gray-400: #4a4a4a;
+	--gray-500: #3a3a3a;
+	--gray-600: #2a2a2a;
+	--gray-700: #222;
+	--gray-800: #1a1a1a;
+	/* darkest */
+
+	--blue-100: #449eff;
+	/* lightest */
+	--blue-200: #007bff;
+	--blue-300: #0070e7;
+	/* darkest */
+
+	--red-100: #d32f2f;
+	--green-100: #4caf50;
+	--orange-100: #ff9800;
+	--orange-500: #ff6f00;
+	--orange-800: #a52e08;
+
+	/* Colors */
+	--color-bg-primary: var(--gray-600);
+	--color-bg-secondary: var(--gray-800);
+	--color-bg-tertiary: var(--gray-700);
+	--color-bg-card: #2f2f2f;
+	/* card/subsection/empty-state chrome (filters, guide, empty states, effect subsections) */
+	--color-border: var(--gray-500);
+	--color-border-hover: var(--gray-400);
+	--color-text-primary: var(--gray-100);
+	--color-text-secondary: var(--gray-200);
+	--color-text-tertiary: var(--gray-300);
+	--color-off-white: #f5f5f5;
+	/* near-white swatch bg/text (text color filter chips) */
+	--color-bg-accent-tint: #2a3a4a;
+	/* blue-tinted active/drag-over background */
+	--color-checkerboard: #333;
+	/* transparent-bg checkerboard pattern */
+
+	--color-bg-translucent: rgb(22 22 22 / 95%);
+
+	/* Shadow tiers — every UI-chrome shadow (panels, modals, drawers, popovers)
+	   uses one of these so themes can soften them in one place. Shadows painted
+	   OVER artwork (selection outlines, canvas overlays) stay literal — they
+	   need contrast against arbitrary content, not the theme. */
+	--color-shadow: rgba(0, 0, 0, 0.25);
+	--color-shadow-soft: rgba(0, 0, 0, 0.3);
+	--color-shadow-strong: rgba(0, 0, 0, 0.5);
+	--color-shadow-modal: rgba(0, 0, 0, 0.7);
+
+	/* Bars: app header + section headers (gradient chrome) */
+	--bar-gradient-top: var(--gray-300);
+	--bar-gradient-bottom: var(--gray-700);
+	--bar-title-color: #fff;
+	--bar-text-shadow: 0 1px 1px #000;
+	--bar-hover-filter: brightness(1.15);
+	--bar-active-filter: brightness(0.85);
+
+	/* Gloss buttons (gloss-button mixin) — gradient stops + state filters.
+	   Filters are tokens because brightness() flips meaning between themes:
+	   brightening a dark navy button highlights it, brightening a pale aqua
+	   one blows it out to white. */
+	--btn-gradient-start: #bfdbf7;
+	--btn-gradient-mid: #6986be;
+	--btn-gradient-dark: #032768;
+	--btn-gradient-end: #89e8fc;
+	--btn-hover-filter: brightness(1.2) saturate(1.1);
+	--btn-active-filter: brightness(1) contrast(1.2) saturate(1.1);
+	--btn-secondary-filter: saturate(0.3) contrast(0.7) brightness(0.8);
+	--btn-secondary-filter-hover: saturate(0.5) contrast(0.9) brightness(1);
+	--btn-secondary-filter-active: saturate(0.7) contrast(1.1) brightness(1.15);
+	--btn-text-color: var(--color-text-primary);
+
+	/* Range/switch track — must read against card AND panel backgrounds */
+	--color-slider-track: var(--gray-800);
+	--switch-knob-color: var(--color-text-primary);
+
+	/* Canvas workspace floor — must contrast with both dark and white canvases */
+	--color-bg-workspace: var(--color-bg-secondary);
+
+	/* Modal overlay scrim behind .modal-content */
+	--color-overlay: rgba(0, 0, 0, 0.85);
+
+	/* Icons inside buttons: opacity, not color, so state colors (active,
+	   danger) still inherit through currentColor untouched. */
+	--btn-icon-opacity: 1;
+
+	--color-accent: var(--blue-200);
+	--color-accent-hover: var(--blue-300);
+	--color-accent-light: var(--blue-100);
+	--color-accent-border: var(--blue-200);
+	/* (was var(--blue-400), which doesn't exist — links' :active silently lost color) */
+	--color-accent-active: var(--blue-300);
+	--color-accent-visited: var(--blue-100);
+
+
+	--color-danger: var(--red-100);
+	--color-danger-bright: #ff4444;
+	--color-success: var(--green-100);
+	--color-warning: var(--orange-100);
+	--color-warning-text: var(--orange-800);
+
+	--selected-outline-color: var(--color-accent-border);
+
+	--disabled-opacity: .25;
+
+	/* Spacing */
+	--spacing-xs: 4px;
+	--spacing-sm: 6px;
+	--spacing-base: 8px;
+	--spacing-md: 10px;
+	--spacing-lg: 15px;
+	--spacing-xl: 20px;
+
+	--spacing-from-edge: var(--spacing-md);
+
+	/* Border Radius */
+	--radius-sm: 4px;
+	--radius-md: 6px;
+	--radius-lg: 8px;
+	--radius-full: 50%;
+
+	/* Typography */
+	--font-size-xs: 11px;
+	--font-size-sm: 12px;
+	--font-size-base: 14px;
+	--font-size-md: 16px;
+	--font-size-lg: 18px;
+	--font-size-xl: 20px;
+	--font-size-2xl: 24px;
+
+	/* Transitions */
+	--transition-fast: 0.2s;
+	--transition-base: 0.3s;
+
+	/* Sizes */
+	--header-height: 60px;
+	--toolbar-width: 50px;
+
+
+
+	--icon-size: 30px;
+	--icon-size-sm: 30px;
+	--icon-size-xs: 20px;
+	--icon-size-md: 35px;
+
+
+	/* PANELS */
+	--layer-panel-width: 400px;
+	--glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
+	--glitter-swatch-columns: 4;
+	--color-filter-chip-size: var(--icon-size-sm);
+
+	/* MOBILE */
+	--mobile-menu-height: 60px;
+	--mobile-header-height: 50px;
+	--mobile-top-nav-height: 50px;
+	--mobile-bottom-nav-height: 60px;
+	--mobile-drawer-height: 50vh;
+	/* Fallback for older browsers */
+	--mobile-drawer-height: 50dvh;
+	/* Modern browsers override */
+	--mobile-breakpoint: 800px;
+	--mobile-toolbar-width: 50px;
+	--mobile-settings-handle-height: 18px;
+
+	/* z indexes — app-wide surface layer scale. Each token gates one visual
+	   layer in the global stack; local intra-component stacking (-1, 0, 1, 2,
+	   10, 20, 30, 100...) inside a single element's own children is NOT part
+	   of this scale and stays literal at its use site. */
+	--z-panel: 200;
+	/* preview/canvas column */
+	--z-panel-elevated: 210;
+	/* toolbar, left panel, design panel — sit above the preview column */
+	--z-drawer: 1000;
+	/* toasts, transient overlays, mobile panels in their closed/base state */
+	--mobile-menu-z-index: 2000;
+	--z-header-menu: 9999;
+	/* floating chrome above drawers: mobile toolbar, mobile settings drawer */
+	--z-header-menu-elevated: 10000;
+	/* mini-modal popovers, open mobile drawers, transform handles */
+	--z-header-menu-top: 10001;
+	/* topmost of the header-menu cluster: mobile top/bottom nav bars */
+	--z-app-header-elevated: 15000;
+	/* mobile app-header's own stacking context — above open drawers (10000), below modals (20000) */
+	--modal-z-index: 20000;
+	--z-tooltip: 100000;
+}
+

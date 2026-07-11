@@ -1,0 +1,268 @@
+//mini modal mixin
+
+
+@mixin mini-modal($hover: false) {
+	background: var(--color-bg-translucent);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	z-index: var(--z-header-menu-elevated);
+	box-shadow: 0 2px 5px var(--color-shadow-strong);
+	transition: all var(--transition-base);
+	// blur background
+	-webkit-backdrop-filter: blur(4px);
+	backdrop-filter: blur(4px);
+
+	//if hvoer
+	@if $hover {
+		&:hover {
+			border-color: var(--color-border-hover);
+			box-shadow: 0 2px 2px var(--color-shadow);
+		}
+	}
+}
+
+
+@mixin selected {
+	// 1. Calculate the dynamic thickness (minimum 1px)
+	$thickness: max(1px, calc(2px / var(--zoom, 1)));
+
+	// 2. Apply to outline
+	outline-width: $thickness;
+	outline-style: dashed;
+	outline-color: var(--selected-outline-color);
+
+	// 3. Scale the offset so it stays "tight" to the edge
+	// We use min() here because it's a negative number
+	outline-offset: min(-1px, calc(-2px / var(--zoom, 1)));
+
+	// 4. Scale the shadow so the glow and contrast line stay consistent
+	box-shadow:
+		0 0 0 max(1px, calc(1px / var(--zoom, 1))) rgba(0, 0, 0, 0.5),
+		0 0 max(4px, calc(8px / var(--zoom, 1))) rgba(0, 0, 0, 0.5);
+}
+
+@mixin text-xs {
+	font-size: var(--font-size-xs);
+	letter-spacing: 0.75px;
+	text-transform: uppercase;
+}
+
+@mixin text-sm {
+	font-size: var(--font-size-sm);
+	letter-spacing: 0.5px;
+}
+
+@mixin bar-base {
+	background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+	text-shadow: var(--bar-text-shadow);
+	color: var(--bar-title-color);
+}
+
+@mixin hover-states($hover: false) {
+	@if $hover {
+		&:not(:disabled):hover {
+			filter: var(--bar-hover-filter);
+		}
+
+		&:not(:disabled):active {
+			filter: var(--bar-active-filter);
+		}
+	}
+}
+
+@mixin windows7-bar($hover: false) {
+	&.app-header {
+		@include bar-base;
+	}
+
+	&.section-header {
+		@include bar-base;
+
+		>.section-header-title {
+			color: var(--bar-title-color);
+		}
+
+		@include hover-states($hover);
+
+	}
+
+	&.collapsible-section {
+		>.section-header {
+			@include bar-base;
+
+			>.section-header-title {
+				color: var(--bar-title-color);
+			}
+
+			@include hover-states($hover);
+
+		}
+	}
+}
+
+@mixin windows7-window {
+	border-radius: var(--window-border-radius);
+	border: 1px solid var(--window-border);
+	box-shadow: 2px 2px 10px 1px var(--window-border), inset 0 0 0 1px #fffa;
+	font: var(--font);
+	position: relative;
+	z-index: 0;
+
+	&:before {
+		background: linear-gradient(transparent 20%, #ffffffb3 40%, transparent 41%), var(--window-gradient);
+		background-color: var(--window-bg);
+		box-shadow: inset 0 0 0 1px #fffd;
+		content: "";
+		height: 100%;
+		left: 0;
+		position: absolute;
+		top: 0;
+		width: 100%;
+		z-index: 1;
+		border-radius: var(--window-border-radius);
+	}
+}
+
+@mixin floating-ui {
+	border-radius: var(--radius-sm);
+	background: var(--color-bg-translucent);
+	border: 1px solid var(--color-border);
+	padding: var(--spacing-sm);
+	pointer-events: auto; // block clicks from passing through
+}
+
+@mixin windows7-tooltip {
+
+	/* Windows 7 CSS Variables */
+	--font: 9pt "Segoe UI", "SegoeUI", "Noto Sans", sans-serif;
+	/* --w7-font */
+	--surface: #f0f0f0;
+	/* --w7-surface */
+	--element-bg: #f2f2f2;
+	/* --w7-el-bg */
+	--element-bg-dark: #f4f4f4;
+	/* --w7-el-bg-d */
+	--element-bg-shade-1: #ebebeb;
+	/* --w7-el-bg-s-1 */
+	--element-bg-shade-2: #cfcfcf;
+	/* --w7-el-bg-s-2 */
+	--element-shadow: inset 0 0 0 1px #fffc;
+	/* --w7-el-sd */
+	--element-shadow-active: inset 1px 1px 0 #0003, inset -1px 1px 0 #0001;
+	/* --w7-el-sd-a */
+	--element-border: #8e8f8f;
+	/* --w7-el-bd */
+	--element-border-hover: #3c7fb1;
+	/* --w7-el-bd-h */
+	--element-border-active: #6d91ab;
+	/* --w7-el-bd-a */
+	--element-border-disabled: #adb2b5;
+	/* --w7-el-bd-d */
+	--element-border-radius: 3px;
+	/* --w7-el-bdr */
+	--element-color: #000;
+	/* --w7-el-c */
+	--element-color-disabled: #838383;
+	/* --w7-el-c-d */
+	--element-gradient: linear-gradient(var(--element-bg) 45%, var(--element-bg-shade-1) 45%, var(--element-bg-shade-2));
+	/* --w7-el-grad */
+	--element-gradient-hover: linear-gradient(#eaf6fd 45%, #bee6fd 0, #a7d9f5);
+	/* --w7-el-grad-h */
+	--element-gradient-active: linear-gradient(#e5f4fc, #c4e5f6 30% 50%, #98d1ef 50%, #68b3db);
+	/* --w7-el-grad-a */
+
+
+	background: linear-gradient(to bottom, #fff, var(--element-bg-shade-1));
+	border: 1px solid var(--element-border);
+	border-radius: var(--element-border-radius);
+	box-shadow: 2px 2px 4px var(--block-border);
+	padding: 4px 8px;
+	font: var(--font);
+	color: var(--element-color);
+
+	white-space: normal;
+	overflow-wrap: break-word;
+	word-break: break-word;
+	@include text-xs;
+	pointer-events: none;
+}
+
+@mixin secondary-button-filters {
+	&:before {
+		filter: var(--btn-secondary-filter);
+		transition: filter 0.2s;
+	}
+
+	&:not(:disabled):hover:before {
+		filter: var(--btn-secondary-filter-hover);
+	}
+
+	&:not(:disabled):active:before {
+		filter: var(--btn-secondary-filter-active);
+	}
+}
+
+// The app's default button chrome: a gloss gradient painted by :before, with
+// every color and state effect routed through :root tokens (--btn-gradient-*,
+// --btn-*-filter, --btn-text-color, --btn-icon-opacity) so themes restyle
+// buttons without touching this mixin. States are filters on the gradient,
+// never background swaps — the :before covers the element's background box.
+@mixin gloss-button($inactiveIsSecondary: false) {
+	background: none;
+	overflow: hidden;
+	color: var(--btn-text-color);
+	position: relative;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	font-size: var(--font-size-base);
+	border-radius: var(--radius-sm);
+
+	// Also creates the stacking context that keeps the z-index:-1 gradient
+	// inside the button instead of dropping behind ancestors.
+	transform: translateZ(0); // ios fix for radius + hidden
+
+	&:before {
+		display: block;
+		content: "";
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		left: 0;
+		top: 0;
+		z-index: -1;
+		transition: filter var(--transition-base);
+		background-image: linear-gradient(to bottom,
+				var(--btn-gradient-start) 0%,
+				var(--btn-gradient-mid) 40%,
+				var(--btn-gradient-dark) 50%,
+				var(--btn-gradient-dark) 70%,
+				var(--btn-gradient-end) 100%);
+	}
+
+	&:hover:not(:disabled):before {
+		filter: var(--btn-hover-filter);
+	}
+
+	&:active:not(:disabled):before {
+		filter: var(--btn-active-filter);
+	}
+
+	&:disabled {
+		opacity: var(--disabled-opacity);
+		cursor: not-allowed;
+	}
+
+	// Buttons that are quiet until .active/.primary (toolbar tools, toggles)
+	@if $inactiveIsSecondary {
+		&:not(.active):not(.primary) {
+			@include secondary-button-filters;
+		}
+	}
+
+	// Explicitly quiet buttons (Cancel, footer actions)
+	&.secondary {
+		@include secondary-button-filters;
+	}
+}
+

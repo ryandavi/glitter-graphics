@@ -1,0 +1,156 @@
+@use 'mixins' as *;
+
+/* ===== BASE ===== */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html {
+	box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+	box-sizing: inherit;
+}
+
+/* MAKE WEB APP FEEL NATIVE */
+* {
+	-webkit-tap-highlight-color: transparent;
+	touch-action: manipulation;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+// Many components (.setting-column, .text-effect-color-row, etc.) declare an
+// unconditional `display`, which — at equal specificity — beats the browser's
+// default `[hidden] { display: none }` UA rule. That silently broke every
+// `element.hidden = true` toggle on those components. Force it to actually work.
+[hidden] {
+	display: none !important;
+}
+
+p,
+span,
+input,
+textarea {
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	user-select: text;
+}
+
+/* ===== LINKS ===== */
+
+
+
+a {
+	color: var(--color-accent);
+	text-decoration: underline;
+	text-decoration-thickness: 0.08em;
+	text-underline-offset: 0.15em;
+	transition: color 0.15s ease, text-decoration-color 0.15s ease;
+
+	&:hover {
+		color: var(--color-accent-hover);
+		text-decoration-color: currentColor;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 0.15em;
+		border-radius: 0.15em;
+	}
+
+	&:active {
+		color: var(--color-accent-active);
+	}
+
+	&:visited {
+		color: var(--color-accent-visited);
+	}
+
+	&:visited:hover {
+		color: var(--color-accent-hover);
+	}
+
+	// External links (auto-detected)
+	&[target="_blank"] {
+		padding-right: 1.25em;
+		position: relative;
+
+		&::after {
+			content: '';
+			position: absolute;
+			width: 0.85em;
+			height: 0.85em;
+			margin-left: 0.25em;
+			background: url(https://en.wikipedia.org/w/skins/Vector/resources/skins.vector.styles/images/link-external-small-ltr-progressive.svg) no-repeat center / contain;
+			transform: translateY(0.15em);
+		}
+	}
+
+	// Current / active navigation
+	&[aria-current='page'] {
+		font-weight: 600;
+		text-decoration-thickness: 0.12em;
+	}
+}
+
+
+
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--color-border-hover);
+	border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--color-text-tertiary);
+}
+
+
+
+
+
+body {
+
+	background: var(--color-bg-primary);
+	color: var(--color-text-primary);
+	overflow: hidden;
+
+	/* Fallback for older browsers */
+	height: 100vh;
+	/* Modern browsers with dynamic viewport */
+	height: 100dvh;
+
+}
+
+body,
+input,
+textarea,
+button,
+select {
+	font-family:
+		"Segoe UI",
+		"Tahoma",
+		"Verdana",
+		"Consolas",
+		"Google Sans Code",
+		monospace;
+	font-optical-sizing: auto;
+}
+

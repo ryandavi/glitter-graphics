@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=52">
+	<link rel="stylesheet" href="css/style.css?v=58">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -303,6 +303,10 @@
 							<button class="btn-icon-simple icon-wrapper delete sm" title="Delete selected layer" id="layersBarDeleteSelected" disabled><svg class="icon">
 									<use href="#icon-trash"></use>
 								</svg></button>
+
+							<button class="btn-icon-simple icon-wrapper delete sm mobile-only-action" title="Clear image and all layers" id="layersBarClearAll" disabled><svg class="icon">
+									<use href="#icon-trash"></use>
+								</svg><span class="name">Clear All</span></button>
 
 
 						</div>
@@ -2415,7 +2419,7 @@
 		<div class="status-bar">
 			<span class="status-bar-field status-text" id="statusText">Load an image to begin</span>
 			<span class="status-bar-field status-dimensions" id="statusDimensions"></span>
-			<span class="status-bar-field status-zoom" id="statusZoom"></span>
+			<span class="status-bar-field status-zoom" id="statusZoom" title="Double-click to reset zoom to 100%"></span>
 		</div>
 	</div>
 
@@ -2747,7 +2751,15 @@
 	<!-- App Settings Modal -->
 	<div class="modal-overlay" id="settingsModal">
 		<div class="modal-content"><div class="modal-header"><div class="modal-title"><span class="modal-icon icon-wrapper"><svg class="icon"><use href="#icon-gear"></use></svg><span class="name">Settings</span></span><span class="modal-title-text">Settings</span></div><button class="btn-icon icon-wrapper modal-close" id="closeSettingsModal"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button></div>
-			<div class="modal-body"><div class="settings-group"><div class="settings-group-title">Interface <button class="btn-text small reset-section-btn" data-section="interface">Reset</button></div><div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Helpful Hints</div><div class="settings-row-control"><label class="switch" for="showHelpfulHints"><input type="checkbox" id="showHelpfulHints" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div></div></div></div>
+			<div class="modal-body">
+				<div class="settings-group">
+					<div class="settings-group-title">Interface <button class="btn-text small reset-section-btn" data-section="interface">Reset</button></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Theme</div><div class="settings-row-control"><select id="interfaceTheme"><option value="dark">Dark</option><option value="light">Light</option></select></div></div><div class="settings-row-label-desc">Choose the editor interface appearance.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Helpful Hints</div><div class="settings-row-control"><label class="switch" for="showHelpfulHints"><input type="checkbox" id="showHelpfulHints" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Show Welcome Screen on Startup</div><div class="settings-row-control"><label class="switch" for="showWelcomeOnStartup"><input type="checkbox" id="showWelcomeOnStartup" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show the welcome screen when Glitter Editor starts.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Confirm Destructive Actions</div><div class="settings-row-control"><label class="switch" for="confirmDestructiveActions"><input type="checkbox" id="confirmDestructiveActions" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Ask before deleting layers or clearing the entire project.</div></div>
+				</div>
+			</div>
 			<div class="modal-footer left-right"><button class="btn-text secondary reset-all-settings-btn">Reset All Settings</button><button class="btn-simple modal-close" id="closeSettingsModalFooter">Close</button></div></div>
 	</div>
 
@@ -2781,10 +2793,7 @@
 				<div class="settings-group">
 
 					<!-- Export Group -->
-					<div class="settings-group-title">
-						Export
-						<button class="btn-text small reset-section-btn" data-section="export">Reset</button>
-					</div>
+					<div class="settings-group-title">Export</div>
 					<div class="settings-row" id="transparencySettingsRow">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Transparency</div>
@@ -2824,11 +2833,17 @@
 					</div>
 
 
-					<!-- Encoding Group -->
-					<div class="settings-group-title">
-						Encoding
-						<button class="btn-text small reset-section-btn" data-section="encoding">Reset</button>
+					<div class="settings-row">
+						<div class="settings-row-header"><div class="settings-row-label-main">Animation Speed</div><div class="settings-row-control">
+							<select id="exportFrameDelay"><option value="50">50ms (20 FPS)</option><option value="67">67ms (15 FPS)</option><option value="83">83ms (12 FPS)</option><option value="100">100ms (10 FPS)</option><option value="110">110ms (9 FPS)</option><option value="125">125ms (8 FPS)</option><option value="167">167ms (6 FPS)</option></select>
+						</div></div><div class="settings-row-label-desc">Time between frames. Lower values produce faster animation.</div>
 					</div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Reverse Animation</div><div class="settings-row-control"><label class="switch" for="exportReverse"><input type="checkbox" id="exportReverse" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Play animation backwards.</div></div>
+
+					<div class="advanced-disclosure export-advanced-settings" data-advanced>
+						<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false"><span class="advanced-disclosure-label">Advanced</span><span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span></button>
+						<div class="advanced-disclosure-content" data-advanced-content>
+							<div class="control-group-label">Encoding</div>
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Dithering</div>
@@ -2871,28 +2886,7 @@
 					</div>
 
 
-					<!-- Frame Control Group -->
-					<div class="settings-group-title">
-						Frame Control
-						<button class="btn-text small reset-section-btn" data-section="framecontrol">Reset</button>
-					</div>
-					<div class="settings-row">
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Frame Delay</div>
-							<div class="settings-row-control">
-								<select id="exportFrameDelay">
-									<option value="50">50ms (20 FPS)</option>
-									<option value="67">67ms (15 FPS)</option>
-									<option value="83">83ms (12 FPS)</option>
-									<option value="100">100ms (10 FPS)</option>
-									<option value="110">110ms (9 FPS)</option>
-									<option value="125">125ms (8 FPS)</option>
-									<option value="167">167ms (6 FPS)</option>
-								</select>
-							</div>
-						</div>
-						<div class="settings-row-label-desc">Time between frames. Lower = faster animation.</div>
-					</div>
+							<div class="control-group-label">Frame Control</div>
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Max Frames</div>
@@ -2939,22 +2933,8 @@
 						<div class="settings-row-label-desc">Skip frames to reduce file size and speed up rendering.
 							Higher values = smaller file but choppier animation.</div>
 					</div>
-
-
-					<div class="settings-row">
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Reverse Animation</div>
-							<div class="settings-row-control">
-								<label class="switch" for="exportReverse">
-									<input type="checkbox" id="exportReverse" />
-									<div class="slider round"></div>
-								</label>
-							</div>
 						</div>
-						<div class="settings-row-label-desc">Play animation backwards.</div>
 					</div>
-
-
 				</div>
 
 
@@ -3189,6 +3169,10 @@
 					<use href="#icon-plus"></use>
 				</svg>
 				<span class="name">Add Layer</span>
+			</button>
+			<button class="btn-icon icon-wrapper" id="mobileAppSettingsBtn" title="App Settings">
+				<svg class="icon"><use href="#icon-gear"></use></svg>
+				<span class="name">App Settings</span>
 			</button>
 		</div>
 
@@ -3474,7 +3458,7 @@
 	<script src="js/vendor/gif.js"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=20"></script>
+	<script src="js/config.js?v=22"></script>
 	<script src="js/transform-math.js?v=1"></script>
 
 	<!-- Utils -->
@@ -3496,22 +3480,22 @@
 	<script src="js/classes/MaskEditor.js?v=12"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=21"></script>
+	<script src="js/classes/LayerManager.js?v=22"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
-	<script src="js/classes/LayerTransform.js?v=17"></script>
+	<script src="js/classes/LayerTransform.js?v=20"></script>
 	<script src="js/classes/GlitterManager.js?v=12"></script>
 	<script src="js/classes/TextGlitterManager.js?v=32"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=21"></script>
 	<script src="js/classes/StickerManager.js?v=3"></script>
-	<script src="js/classes/GroupTransformManager.js?v=7"></script>
+	<script src="js/classes/GroupTransformManager.js?v=10"></script>
 
 	<script src="js/classes/MobileManager.js?v=6"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=55"></script>
+	<script src="js/app.js?v=61"></script>
 
 </body>
 

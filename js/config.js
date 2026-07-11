@@ -284,6 +284,7 @@ const CONFIG = {
 				{ key: 'B', action: 'Mask Brush Tool' },
 				{ key: 'E', action: 'Mask Eraser Tool' },
 				{ key: 'H', action: 'Hand Tool' },
+				{ key: 'Hold Space', action: 'Temporarily Use Hand Tool' },
 				{ key: 'Z', action: 'Zoom Tool' },
 				{ key: 'Arrow Keys', action: 'Nudge Selected Layer' },
 				{ key: 'Shift + Arrow Keys', action: 'Nudge Selected Layer 10px' },
@@ -292,9 +293,10 @@ const CONFIG = {
 				{ key: 'Alt + Drag', action: 'Duplicate Layer(s) While Dragging' },
 				{ key: 'Drag on Empty Canvas', action: 'Select Multiple Layers' },
 				{ key: 'Ctrl + A', action: 'Select All Movable Layers' },
-				{ key: 'Escape', action: 'Clear Multi-Selection' },
+				{ key: 'Escape', action: 'Cancel Active Transform / Clear Multi-Selection' },
 				{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move' },
-				{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg' }
+				{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg' },
+				{ key: 'Alt + Resize', action: 'Resize Layer(s) from Center' }
 			],
 			brush: [
 				{ key: 'X', action: 'Swap Paint/Erase (Mask Brush)' },
@@ -308,11 +310,13 @@ const CONFIG = {
 				{ key: 'Ctrl + Wheel', action: 'Trackpad Zoom' },
 				{ key: 'Ctrl + 0', action: 'Fit Screen' },
 				{ key: 'Ctrl + 1', action: 'Reset Zoom (100%)' },
+				{ key: 'Double-click Zoom %', action: 'Reset Zoom (100%)' },
 				{ key: 'Ctrl + +/-', action: 'Zoom In/Out' }
 			],
 			history: [
 				{ key: 'Ctrl + Z', action: 'Undo' },
 				{ key: 'Ctrl + Shift + Z', action: 'Redo' },
+				{ key: 'Ctrl + Y', action: 'Redo' },
 			],
 			file: [
 				{ key: 'Ctrl + S', action: 'Save Project' }
@@ -765,4 +769,3 @@ const DEBUG_CONFIG = {
 		{ id: 3, x: 600, y: 600 }
 	]
 };
-

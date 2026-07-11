@@ -1,0 +1,285 @@
+@use 'mixins' as *;
+
+/* ===== REUSABLE COMPONENTS ===== */
+
+img[data-pixel-scale] {
+	display: block;
+	max-width: 100%;
+	/* Never wider than parent */
+	height: auto;
+	/* Maintain aspect ratio */
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
+	/* Fallback for older browsers */
+}
+
+.tooltip {
+	position: fixed;
+	background: rgba(0, 0, 0, 0.95);
+	color: var(--color-text-primary);
+	padding: var(--spacing-sm) var(--spacing-md);
+	border-radius: var(--radius-sm);
+	z-index: var(--z-tooltip);
+	border: 1px solid var(--color-border-hover);
+	text-transform: uppercase;
+	pointer-events: none;
+
+
+
+	max-width: 240px;
+	width: -moz-max-content;
+	width: max-content;
+
+	@include windows7-tooltip;
+
+
+}
+
+
+textarea,
+input[type="text"],
+input[type="number"] {
+	min-width: 100px;
+	padding: var(--spacing-sm) var(--spacing-md);
+	background: var(--color-bg-secondary);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	color: var(--color-text-primary);
+	font-size: var(--font-size-sm);
+
+	&:focus {
+		outline: none;
+		border-color: var(--color-accent);
+	}
+}
+
+input[type="range"] {
+	width: 100%;
+	height: 4px;
+	background: var(--color-slider-track);
+	border-radius: 2px;
+	outline: none;
+	-webkit-appearance: none;
+
+	touch-action: none;
+	padding: 15px 5px;
+	border-radius: 100px;
+
+	&::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		width: 20px; // Increased from 14px
+		height: 20px; // Increased from 14px
+		background: var(--color-accent);
+		border-radius: var(--radius-full);
+		cursor: pointer;
+
+		// ADD: Better mobile touch
+		touch-action: none;
+	}
+
+	&::-moz-range-thumb {
+		width: 20px; // Increased from 14px
+		height: 20px; // Increased from 14px
+		background: var(--color-accent);
+		border-radius: var(--radius-full);
+		cursor: pointer;
+		border: none;
+	}
+}
+
+// Shared properties for all buttons
+.btn,
+.btn-icon,
+.btn-simple,
+.btn-text-with-icon,
+.btn-text {
+	cursor: pointer;
+	// transition: all var(--transition-fast);
+	border-radius: var(--radius-sm);
+	color: var(--color-text-primary);
+	border: none;
+	@include text-sm;
+	font-weight: 600;
+	padding: var(--spacing-sm) var(--spacing-base);
+
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	// remove outline on focus
+	outline: none;
+
+	transform: translateZ(0); // ios fix for radius + hidden
+
+	svg.icon {
+		opacity: var(--btn-icon-opacity);
+	}
+
+	&:disabled {
+		opacity: var(--disabled-opacity);
+		cursor: not-allowed;
+	}
+}
+
+// NOTE for all gloss buttons: the mixin's :before gradient covers the
+// element's background box, so `background:` swaps on these are invisible —
+// state changes go through the --btn-*-filter tokens (and border-color,
+// which paints outside the gradient). Don't add background states here.
+.btn {
+	@include gloss-button(true);
+}
+
+.btn-text-with-icon {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	border: 1px solid var(--color-border);
+	aspect-ratio: unset;
+
+	@include gloss-button(true);
+
+	&.icon-wrapper {
+		aspect-ratio: unset;
+		gap: var(--spacing-sm);
+
+		>svg.icon {
+			width: var(--icon-size-sm);
+			height: var(--icon-size-sm);
+
+
+			+span.name {
+				display: block;
+				padding-right: var(--spacing-sm);
+			}
+		}
+	}
+
+	&:hover {
+		border-color: var(--color-border-hover);
+	}
+
+	&.active {
+		border-color: var(--color-accent-hover);
+	}
+}
+
+.btn-icon {
+	width: var(--icon-size);
+	height: var(--icon-size);
+	border: 1px solid var(--color-border);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: var(--font-size-xl);
+	padding: 0;
+
+	// Improve touch responsiveness
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+
+	@include gloss-button(true);
+
+	&:not(:disabled):hover {
+		border-color: var(--color-border-hover);
+	}
+
+	&.active {
+		border-color: var(--color-accent-hover);
+	}
+}
+
+.btn-icon-simple {
+	background-color: transparent;
+	border: 0;
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	padding: var(--spacing-xs);
+	aspect-ratio: 1/1;
+
+	&.icon-wrapper {
+		>svg.icon {
+			width: var(--icon-size-sm);
+			height: var(--icon-size-sm);
+		}
+	}
+
+
+
+	&:disabled {
+		opacity: var(--disabled-opacity);
+		cursor: not-allowed;
+	}
+
+	&:not(:disabled):hover {
+		background: var(--color-bg-tertiary);
+		border-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
+
+	&:active {
+		background: var(--color-bg-tertiary);
+		border-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
+
+	&.active {
+		color: var(--color-text-primary);
+		background: var(--color-accent);
+		border-color: var(--color-accent-hover);
+	}
+
+
+}
+
+.btn-simple {
+	padding: var(--spacing-sm) var(--spacing-lg);
+	@include gloss-button(true);
+}
+
+.btn-text {
+	background: none;
+	border: none;
+	color: var(--color-accent);
+
+	&:hover {
+		color: var(--color-accent-light);
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+/* Filter Chips */
+.filter-chip {
+	padding: var(--spacing-xs) var(--spacing-md);
+	background: var(--color-bg-secondary);
+	outline: 2px solid transparent;
+	outline-offset: 2px;
+	border-radius: 12px;
+	@include text-sm;
+	cursor: pointer;
+	transition: all var(--transition-fast);
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+
+	&:hover {
+		background: var(--color-bg-tertiary);
+		outline-color: var(--color-border-hover);
+	}
+
+	&.active {
+		background: var(--color-accent);
+		outline-color: var(--color-accent-hover);
+		color: white;
+	}
+}
+

@@ -99,10 +99,88 @@ class GlitterEditor {
 		this.initializeProjectNameInput();
 		this.setTool(CONFIG.app.startup.tool);
 		this.setupEventListeners();
+		this.initializeAltDuplicateFeedback();
 		this.initializeCollapsibleSections();
 		this.initializeAdvancedDisclosures();
 		this.initializeShortcutsModal();
 		this.initializeExportSettings();
+	}
+
+	initializeAltDuplicateFeedback() {
+		const sync = (armed) => this.previewContainer?.classList.toggle(
+			'alt-duplicate-armed', Boolean(armed) && this.currentTool === ToolType.SELECT
+		);
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Alt' && !event.repeat) sync(true);
+		});
+		document.addEventListener('keyup', (event) => {
+			if (event.key === 'Alt') sync(false);
+		});
+		window.addEventListener('blur', () => {
+			sync(false);
+			this.endTemporaryHandTool();
+		});
+		document.getElementById('statusZoom')?.addEventListener('dblclick', () => {
+			if (this.originalImage) this.viewport.resetZoom();
+		});
+		this.previewContainer?.addEventListener('dblclick', (event) => {
+			if (this.currentTool !== ToolType.SELECT || !event.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR)) return;
+			const layer = this.layerManager.getActiveLayer();
+			if (layer?.type !== LayerType.TEXT_GLITTER) return;
+			this.textGlitterManager?.loadLayerSettings(layer);
+			requestAnimationFrame(() => {
+				this.textGlitterManager?.ui?.textInput?.focus();
+				this.textGlitterManager?.ui?.textInput?.select();
+			});
+		});
+	}
+
+	setDuplicateDragFeedback(active, count = 1) {
+		this.previewContainer?.classList.toggle('duplicate-drag-active', Boolean(active));
+		this.duplicateDragStatus = active ? (count > 1 ? `Duplicating ${count} layers` : 'Duplicating layer') : '';
+		const status = document.getElementById('statusText');
+		if (status) status.textContent = this.duplicateDragStatus;
+	}
+
+	addDuplicateGhost(sourceTransform, targetTransform) {
+		if (!sourceTransform?.element || !targetTransform || targetTransform.refreshElementReference?.()) return null;
+		const ghost = sourceTransform.element.cloneNode(true);
+		ghost.removeAttribute('id');
+		ghost.removeAttribute('data-layer-id');
+		ghost.querySelectorAll?.('[id], [data-layer-id]').forEach((node) => {
+			node.removeAttribute('id');
+			node.removeAttribute('data-layer-id');
+		});
+		ghost.dataset.duplicateGhost = '';
+		ghost.style.pointerEvents = 'none';
+		sourceTransform.element.parentElement?.appendChild(ghost);
+		this._duplicateGhosts ||= new Map();
+		this._duplicateGhosts.set(targetTransform, ghost);
+		this.syncDuplicateGhost(targetTransform);
+
+		let frames = 0;
+		const retireWhenReady = () => {
+			if (!ghost.isConnected) return;
+			if (targetTransform.refreshElementReference?.() || frames++ > 300) {
+				ghost.remove();
+				this._duplicateGhosts?.delete(targetTransform);
+				return;
+			}
+			requestAnimationFrame(retireWhenReady);
+		};
+		requestAnimationFrame(retireWhenReady);
+		return ghost;
+	}
+
+	syncDuplicateGhost(targetTransform) {
+		const ghost = this._duplicateGhosts?.get(targetTransform);
+		if (!ghost?.isConnected) return;
+		targetTransform.applyTransform(ghost, targetTransform.getDimensions());
+		ghost.style.pointerEvents = 'none';
+	}
+
+	syncDuplicateGhosts() {
+		this._duplicateGhosts?.forEach((_ghost, transform) => this.syncDuplicateGhost(transform));
 	}
 
 	// ===== DEBUG CONFIGURATION LOADER =====
@@ -274,7 +352,10 @@ class GlitterEditor {
 			exportReverse: this.exportSettings.exportReverse,
 			exportSmartFrameReduction: this.exportSettings.smartFrameReduction,
 			exportBaseImage: this.exportSettings.baseImage,
-			showHelpfulHints: this.showHints
+			showHelpfulHints: this.showHints,
+			showWelcomeOnStartup: this.showWelcomeOnStartup,
+			confirmDestructiveActions: this.confirmDestructiveActions,
+			interfaceTheme: this.interfaceTheme
 		};
 
 		try {
@@ -301,6 +382,12 @@ class GlitterEditor {
 
 initializeExportSettings() {
 	const savedSettings = this.loadSettingsFromStorage();
+	let welcomeWasSuppressed = false;
+	try {
+		welcomeWasSuppressed = localStorage.getItem('glitterEditor_welcomeModalSeen') === 'true';
+	} catch (error) {
+		console.warn('Failed to read welcome-screen preference:', error);
+	}
 
 	// Initialize export settings with saved values or defaults
 	this.exportSettings = {
@@ -320,6 +407,10 @@ initializeExportSettings() {
 
 	// Update this.showHints
 	this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.ui.hints.enabledByDefault;
+	this.showWelcomeOnStartup = savedSettings?.showWelcomeOnStartup ?? !welcomeWasSuppressed;
+	this.confirmDestructiveActions = savedSettings?.confirmDestructiveActions ?? true;
+	this.interfaceTheme = savedSettings?.interfaceTheme === 'light' ? 'light' : 'dark';
+	this.applyInterfaceTheme();
 
 	// Sync UI to match exportSettings
 	this.syncExportSettingsToUI();
@@ -343,7 +434,10 @@ initializeExportSettings() {
 			exportFrameSkip: { value: this.exportSettings.exportFrameSkip },
 			exportReverse: { checked: this.exportSettings.exportReverse },
 			exportSmartFrameReduction: { checked: this.exportSettings.smartFrameReduction },
-			showHelpfulHints: { checked: this.showHints }
+			showHelpfulHints: { checked: this.showHints },
+			showWelcomeOnStartup: { checked: this.showWelcomeOnStartup },
+			confirmDestructiveActions: { checked: this.confirmDestructiveActions },
+			interfaceTheme: { value: this.interfaceTheme }
 		};
 
 		Object.entries(uiElements).forEach(([id, props]) => {
@@ -414,6 +508,31 @@ initializeExportSettings() {
 				this.saveSettingsToStorage();
 			});
 		}
+
+		const welcomeInput = document.getElementById('showWelcomeOnStartup');
+		welcomeInput?.addEventListener('change', (e) => {
+			this.showWelcomeOnStartup = e.target.checked;
+			if (this.showWelcomeOnStartup) localStorage.removeItem('glitterEditor_welcomeModalSeen');
+			else localStorage.setItem('glitterEditor_welcomeModalSeen', 'true');
+			this.saveSettingsToStorage();
+		});
+
+		const confirmInput = document.getElementById('confirmDestructiveActions');
+		confirmInput?.addEventListener('change', (e) => {
+			this.confirmDestructiveActions = e.target.checked;
+			this.saveSettingsToStorage();
+		});
+
+		const themeInput = document.getElementById('interfaceTheme');
+		themeInput?.addEventListener('change', (e) => {
+			this.interfaceTheme = e.target.value === 'light' ? 'light' : 'dark';
+			this.applyInterfaceTheme();
+			this.saveSettingsToStorage();
+		});
+	}
+
+	applyInterfaceTheme() {
+		document.documentElement.dataset.theme = this.interfaceTheme || 'dark';
 	}
 
 setupSettingsResetListeners() {
@@ -457,6 +576,11 @@ async resetSettingsSection(section) {
 	switch(section) {
 		case 'interface':
 			this.showHints = CONFIG.ui.hints.enabledByDefault;
+			this.showWelcomeOnStartup = true;
+			this.confirmDestructiveActions = true;
+			this.interfaceTheme = 'dark';
+			this.applyInterfaceTheme();
+			localStorage.removeItem('glitterEditor_welcomeModalSeen');
 			break;
 
 		case 'export':
@@ -513,6 +637,11 @@ async resetAllSettings() {
 
 	// Reset UI preferences
 	this.showHints = CONFIG.ui.hints.enabledByDefault;
+	this.showWelcomeOnStartup = true;
+	this.confirmDestructiveActions = true;
+	this.interfaceTheme = 'dark';
+	this.applyInterfaceTheme();
+	localStorage.removeItem('glitterEditor_welcomeModalSeen');
 
 	this.syncExportSettingsToUI();
 	this.saveSettingsToStorage();
@@ -1294,12 +1423,31 @@ async resetAllSettings() {
 				if (node.nodeType === Node.ELEMENT_NODE) initializeSubsections(node);
 			}));
 		}).observe(document.body, { childList: true, subtree: true });
+		// Effect cards (Border/Shadow) hide their body while the header's Enabled
+		// toggle is off — nothing to expand, so collapse is blocked and the
+		// chevron is CSS-hidden. Option checkboxes (Global, Lock Aspect) have no
+		// .text-effect-controls sibling and don't gate anything.
+		const isDisabledEffectCard = (subsection) => {
+			if (!subsection.querySelector(':scope > .text-effect-controls')) return false;
+			const enableToggle = subsection.querySelector(':scope > .subsection-title input[type="checkbox"]');
+			return Boolean(enableToggle) && !enableToggle.checked;
+		};
 		const toggleSubsection = (toggle) => {
 			const subsection = toggle.closest('[data-collapsible-subsection]');
-			if (!subsection) return;
+			if (!subsection || isDisabledEffectCard(subsection)) return;
 			const isCollapsed = subsection.classList.toggle('is-collapsed');
 			toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
 		};
+		// Enabling an effect must always reveal its controls, even if the card
+		// was collapsed before being disabled.
+		document.addEventListener('change', (event) => {
+			const checkbox = event.target;
+			if (!checkbox.matches?.('.subsection-title input[type="checkbox"]') || !checkbox.checked) return;
+			const subsection = checkbox.closest('[data-collapsible-subsection]');
+			if (!subsection?.querySelector(':scope > .text-effect-controls')) return;
+			subsection.classList.remove('is-collapsed');
+			subsection.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', 'true');
+		});
 		// Interactive controls living in the title (Enabled/Global checkboxes,
 		// reset chips) must not also collapse the subsection when clicked.
 		const isTitleControl = (target) => Boolean(target.closest?.('.checkbox-group, button, input, select'));
@@ -1689,7 +1837,8 @@ async resetAllSettings() {
 			message: isPlural
 				? 'These layers and everything on them will be permanently removed.'
 				: 'This layer and everything on it will be permanently removed.',
-			confirmLabel: 'Delete'
+			confirmLabel: 'Delete',
+			destructive: true
 		});
 		if (!confirmed) {
 			return false;
@@ -2988,7 +3137,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=5',
+				externalContentUrl: 'modals/guide.html?v=8',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -3037,6 +3186,8 @@ async resetAllSettings() {
 				if (checkbox && checkbox.checked) {
 					try {
 						localStorage.setItem('glitterEditor_welcomeModalSeen', 'true');
+						this.showWelcomeOnStartup = false;
+						this.saveSettingsToStorage();
 					} catch (e) {
 						console.warn('Failed to save welcome modal preference:', e);
 					}
@@ -3064,8 +3215,9 @@ async checkWelcomeModal() {
 	
 	try {
 		const hasBeenSeen = localStorage.getItem(storageKey) === 'true';
+		const shouldShow = this.showWelcomeOnStartup ?? !hasBeenSeen;
 		
-		if (!hasBeenSeen) {
+		if (shouldShow && !hasBeenSeen) {
 			// Pre-load guide modal content silently before showing welcome modal
 			const guideConfig = this.modalManager.modals.get('guideModal');
 			if (guideConfig && guideConfig.externalContentUrl) {
@@ -3093,6 +3245,8 @@ setupWelcomeModalListeners() {
 		if (dontShowCheckbox && dontShowCheckbox.checked) {
 			try {
 				localStorage.setItem(storageKey, 'true');
+				this.showWelcomeOnStartup = false;
+				this.saveSettingsToStorage();
 			} catch (e) {
 				console.warn('Failed to save welcome modal preference:', e);
 			}
@@ -3142,8 +3296,13 @@ setupWelcomeModalListeners() {
 			title = 'Confirm',
 			message = 'Are you sure?',
 			confirmLabel = 'Confirm',
-			cancelLabel = 'Cancel'
+			cancelLabel = 'Cancel',
+			destructive = false
 		} = options;
+
+		if (destructive && this.confirmDestructiveActions === false) {
+			return Promise.resolve(true);
+		}
 
 		if (!this.modalManager || !document.getElementById('confirmationModal')) {
 			return Promise.resolve(confirm(message));
@@ -3325,6 +3484,11 @@ setupWelcomeModalListeners() {
 			});
 		}
 
+		document.getElementById('mobileAppSettingsBtn')?.addEventListener('click', () => {
+			this.mobileManager?.closeAllDrawers?.();
+			this.modalManager?.open('settingsModal');
+		});
+
 		const quickAddOptions = document.getElementById('quickAddOptions');
 		if (quickAddOptions) {
 			this.renderLayerTypePickerOptions(quickAddOptions, {
@@ -3371,6 +3535,7 @@ setupWelcomeModalListeners() {
 		const layersBarGoToSelected = document.getElementById('layersBarGoToSelected');
 		const layersBarCloneSelected = document.getElementById('layersBarCloneSelected');
 		const layersBarDeleteSelected = document.getElementById('layersBarDeleteSelected');
+		const layersBarClearAll = document.getElementById('layersBarClearAll');
 
 		if (layersBarGoToSelected) {
 			layersBarGoToSelected.addEventListener('click', () => {
@@ -3391,6 +3556,7 @@ setupWelcomeModalListeners() {
 				await this.deleteSelectedLayers();
 			});
 		}
+		layersBarClearAll?.addEventListener('click', () => this.resetAll());
 
 		const multiDuplicateBtn = document.getElementById('multiSelectionDuplicateBtn');
 		const multiDeleteBtn = document.getElementById('multiSelectionDeleteBtn');
@@ -4329,11 +4495,23 @@ setupWelcomeModalListeners() {
 
 	handleKeyUp(e) {
 		this.shiftHeld = e.shiftKey;
+		if (e.code === 'Space' && this.temporaryHandToolActive) {
+			this.endTemporaryHandTool();
+		}
 		if (e.key === 'Alt') {
 			if (this.currentTool === ToolType.ZOOM) {
 				this.previewContainer.classList.remove('zoom-out-mode');
 			}
 		}
+	}
+
+	endTemporaryHandTool() {
+		if (!this.temporaryHandToolActive) return;
+		this.temporaryHandToolActive = false;
+		if (this.currentTool === ToolType.HAND) {
+			this.setTool(this.toolBeforeTemporaryHand || ToolType.SELECT);
+		}
+		this.toolBeforeTemporaryHand = null;
 	}
 
 	handleKeyboard(e) {
@@ -4349,6 +4527,14 @@ setupWelcomeModalListeners() {
 			activeElement.isContentEditable
 		);
 
+		if (e.code === 'Space' && !isTyping && !e.repeat && this.originalImage && !this.temporaryHandToolActive) {
+			e.preventDefault();
+			this.toolBeforeTemporaryHand = this.currentTool;
+			this.temporaryHandToolActive = true;
+			this.setTool(ToolType.HAND);
+			return;
+		}
+
 		// Arrow keys nudge the selected movable layer (sticker/text/shape) before
 		// the typing guard runs: a selected layer treats arrows as "move me", the
 		// sticker behavior. If focus is parked in the text layer's own content field
@@ -4360,7 +4546,7 @@ setupWelcomeModalListeners() {
 		// Allow Escape to work in inputs (to blur/close things)
 		// Allow Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, and Ctrl/Cmd+S while typing.
 		const isDocumentShortcut = (e.ctrlKey || e.metaKey) &&
-			(e.key === 'z' || e.key === 'Z' || e.key === 's' || e.key === 'S');
+			(e.key === 'z' || e.key === 'Z' || e.key === 'y' || e.key === 'Y' || e.key === 's' || e.key === 'S');
 		if (isTyping && e.key !== 'Escape' &&
 			!isDocumentShortcut) {
 			return;
@@ -4374,6 +4560,13 @@ setupWelcomeModalListeners() {
 			// Let ModalManager handle modal closing
 			if (this.modalManager.closeTopModal()) {
 				return; // A modal was closed, we're done
+			}
+
+			const activeLayer = this.layerManager.getActiveLayer();
+			const activeTransform = this.getMovableLayerContext(activeLayer)?.manager?.layerTransforms?.get(activeLayer?.id);
+			if (this.groupTransformManager?.cancelActiveDrag?.() || activeTransform?.cancelActiveDrag?.()) {
+				e.preventDefault();
+				return;
 			}
 
 			// No modal was open, switch to select tool
@@ -4461,19 +4654,19 @@ setupWelcomeModalListeners() {
 		if (this.originalImage) {
 			if ((e.ctrlKey || e.metaKey) && e.key === '0') {
 				e.preventDefault();
-				this.zoomToFit();
+				this.viewport.zoomToFit();
 			}
 			if ((e.ctrlKey || e.metaKey) && e.key === '1') {
 				e.preventDefault();
-				this.resetZoom();
+				this.viewport.resetZoom();
 			}
 			if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
 				e.preventDefault();
-				this.zoomIn();
+				this.viewport.zoomIn();
 			}
 			if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
 				e.preventDefault();
-				this.zoomOut();
+				this.viewport.zoomOut();
 			}
 		}
 
@@ -4489,6 +4682,11 @@ setupWelcomeModalListeners() {
 		}
 
 		if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'Z' || e.key === 'z')) {
+			e.preventDefault();
+			this.redo();
+		}
+
+		if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
 			e.preventDefault();
 			this.redo();
 		}
@@ -4575,6 +4773,7 @@ setupWelcomeModalListeners() {
 		const hasAnySelection = this.layers.some((layer) => layerHasVisibleContent(layer));
 
 		const clearAllTool = document.getElementById('clearAllTool');
+		const layersBarClearAll = document.getElementById('layersBarClearAll');
 		const exportGif = document.getElementById('exportGif');
 		const saveProject = document.getElementById('saveProject');
 		const imageClearBtn = document.getElementById('imageClearBtn');
@@ -4593,6 +4792,7 @@ setupWelcomeModalListeners() {
 		const previewControls = document.getElementById('previewControls');
 
 		if (clearAllTool) clearAllTool.disabled = !hasImage;
+		if (layersBarClearAll) layersBarClearAll.disabled = !hasImage;
 		if (exportGif) exportGif.disabled = !hasAnySelection;
 		if (saveProject) saveProject.disabled = !hasImage;
 
@@ -4669,7 +4869,8 @@ setupWelcomeModalListeners() {
 		const confirmed = await this.confirmAction({
 			title: 'Clear All',
 			message: 'The image and all layers will be cleared.',
-			confirmLabel: 'Clear All'
+			confirmLabel: 'Clear All',
+			destructive: true
 		});
 		if (confirmed) {
 			this.clearImage();
