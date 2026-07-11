@@ -29,12 +29,13 @@
 	--color-bg-translucent: rgb(252 254 255 / 95%);
 	--color-warning-text: #7d3a00;
 
-	/* Aqua accent — Mac selection blue, softer than the dark theme's #007bff */
-	--color-accent: #3e86dd;
-	--color-accent-hover: #2e76cd;
-	--color-accent-light: #6fa9ea;
-	--color-accent-border: #3e86dd;
-	--color-accent-active: #2e76cd;
+	/* Aqua accent — Mac selection blue, deeper and calmer than the dark
+	   theme's neon #007bff */
+	--color-accent: #3577cf;
+	--color-accent-hover: #2b68bd;
+	--color-accent-light: #6fa1e0;
+	--color-accent-border: #3577cf;
+	--color-accent-active: #2b68bd;
 
 	/* Canvas floor: clearly darker than a white canvas (Figma-style grey,
 	   tinted into the family) */
@@ -75,6 +76,11 @@
 	--btn-text-color: #33475c;
 	--btn-icon-opacity: 0.7;
 
+	/* Flat icons on light panel surfaces: the text ramp reads too heavy as
+	   solid icon fills, so both tiers drop a step. */
+	--color-icon-muted: #7f92a6;
+	--color-icon-strong: #5d7186;
+
 	/* Range/switch track: light but never white-on-white */
 	--color-slider-track: #dae5f0;
 	--switch-knob-color: #ffffff;
@@ -82,4 +88,86 @@
 	/* Overlay: slate-blue scrim, translucent enough to keep the workspace
 	   visible behind the blur instead of dropping to near-black. */
 	--color-overlay: rgb(44 62 82 / 45%);
+}
+
+// Bubblegum — the light theme's structure verbatim, re-familied to pastel
+// pink: plum text ramp, candy-gel buttons, bubblegum accent. Same rules as
+// light: no pure-white gradient stops, shadows tinted to the ramp (plum, not
+// black), icons a step lighter than text.
+:root[data-theme="bubblegum"] {
+	color-scheme: light;
+
+	/* Plum-pink ramp */
+	--gray-100: #3a2233;
+	--gray-200: #7a4a66;
+	--gray-300: #986281;
+	--gray-400: #d0a4bd;
+	--gray-500: #e7c8d9;
+	--gray-600: #fceff6;
+	--gray-700: #f6dfeb;
+	--gray-800: #ffffff;
+
+	--color-bg-primary: var(--gray-600);
+	--color-bg-secondary: #ffffff;
+	--color-bg-tertiary: var(--gray-700);
+	--color-bg-card: #ffffff;
+	--color-border: var(--gray-500);
+	--color-border-hover: var(--gray-400);
+	--color-text-primary: var(--gray-100);
+	--color-text-secondary: var(--gray-200);
+	--color-text-tertiary: var(--gray-300);
+	--color-off-white: var(--gray-100);
+	--color-bg-accent-tint: #fbdff0;
+	--color-checkerboard: #eed4e2;
+	--color-bg-translucent: rgb(255 250 253 / 95%);
+	--color-warning-text: #7d3a00;
+
+	/* Bubblegum accent */
+	--color-accent: #e0559f;
+	--color-accent-hover: #cd4590;
+	--color-accent-light: #ef86bf;
+	--color-accent-border: #e0559f;
+	--color-accent-active: #cd4590;
+
+	/* Canvas floor: dusty rose so a white canvas pops */
+	--color-bg-workspace: #f0d9e6;
+
+	/* Shadows: plum-tinted, soft */
+	--color-shadow: rgb(74 32 56 / 10%);
+	--color-shadow-soft: rgb(74 32 56 / 14%);
+	--color-shadow-strong: rgb(74 32 56 / 20%);
+	--color-shadow-modal: rgb(74 32 56 / 30%);
+
+	/* Bars: cotton-candy pinstripe, dark plum title */
+	--bar-gradient-top: #fef1f9;
+	--bar-gradient-bottom: #f2cee3;
+	--bar-title-color: var(--color-text-primary);
+	--bar-text-shadow: 0 1px 0 rgb(255 255 255 / 65%);
+	--bar-hover-filter: brightness(0.97) saturate(1.2);
+	--bar-active-filter: brightness(0.94) saturate(1.3);
+
+	/* Gloss buttons: candy-gel pink */
+	--btn-gradient-start: #ffeef9;
+	--btn-gradient-mid: #f8cfe8;
+	--btn-gradient-dark: #efadd6;
+	--btn-gradient-end: #ffe8f7;
+	--btn-hover-filter: brightness(1.01) saturate(1.15);
+	--btn-active-filter: brightness(0.96) saturate(1.05);
+	--btn-secondary-filter: saturate(0.5) brightness(1.02);
+	--btn-secondary-filter-hover: saturate(0.75) brightness(1);
+	--btn-secondary-filter-active: saturate(0.9) brightness(0.97);
+
+	--btn-text-color: #5c3349;
+	--btn-icon-opacity: 0.7;
+
+	/* Flat surface icons: a step lighter than the text ramp */
+	--color-icon-muted: #b489a1;
+	--color-icon-strong: #966380;
+
+	/* Range/switch track + white knob */
+	--color-slider-track: #f0d5e4;
+	--switch-knob-color: #ffffff;
+
+	/* Overlay: plum scrim, workspace stays visible behind the blur */
+	--color-overlay: rgb(88 44 70 / 45%);
 }

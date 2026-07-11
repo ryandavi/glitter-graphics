@@ -261,6 +261,9 @@ const CONFIG = {
 		hints: {
 			enabledByDefault: true
 		},
+		// Valid values for the Settings > Theme select; each needs a matching
+		// :root[data-theme="…"] token block in css/_themes.scss.
+		themes: ['dark', 'light', 'bubblegum'],
 		stickerHandles: {
 			enabled: true,
 			cornerSize: 8,

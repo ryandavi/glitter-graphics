@@ -1,15 +1,17 @@
 /* ===== CSS VARIABLES ===== */
 :root {
-	/* Base color scales */
-	--gray-100: #e0e0e0;
+	/* Base color scales — one slate-blue family (same lightness as the old
+	   neutral greys, tinted a few degrees blue so panels sit in the same
+	   family as the navy gloss buttons; mirrors the light ramp's principle) */
+	--gray-100: #dfe2e6;
 	/* lightest */
-	--gray-200: #888;
-	--gray-300: #666;
-	--gray-400: #4a4a4a;
-	--gray-500: #3a3a3a;
-	--gray-600: #2a2a2a;
-	--gray-700: #222;
-	--gray-800: #1a1a1a;
+	--gray-200: #858c95;
+	--gray-300: #646a73;
+	--gray-400: #474d55;
+	--gray-500: #383d44;
+	--gray-600: #292d33;
+	--gray-700: #212429;
+	--gray-800: #191c20;
 	/* darkest */
 
 	--blue-100: #449eff;
@@ -28,7 +30,7 @@
 	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: var(--gray-800);
 	--color-bg-tertiary: var(--gray-700);
-	--color-bg-card: #2f2f2f;
+	--color-bg-card: #2e3339;
 	/* card/subsection/empty-state chrome (filters, guide, empty states, effect subsections) */
 	--color-border: var(--gray-500);
 	--color-border-hover: var(--gray-400);
@@ -39,10 +41,10 @@
 	/* near-white swatch bg/text (text color filter chips) */
 	--color-bg-accent-tint: #2a3a4a;
 	/* blue-tinted active/drag-over background */
-	--color-checkerboard: #333;
+	--color-checkerboard: #33373d;
 	/* transparent-bg checkerboard pattern */
 
-	--color-bg-translucent: rgb(22 22 22 / 95%);
+	--color-bg-translucent: rgb(24 27 31 / 95%);
 
 	/* Shadow tiers — every UI-chrome shadow (panels, modals, drawers, popovers)
 	   uses one of these so themes can soften them in one place. Shadows painted
@@ -76,8 +78,9 @@
 	--btn-secondary-filter-active: saturate(0.7) contrast(1.1) brightness(1.15);
 	--btn-text-color: var(--color-text-primary);
 
-	/* Range/switch track — must read against card AND panel backgrounds */
-	--color-slider-track: var(--gray-800);
+	/* Range/switch track — must read against card AND panel backgrounds
+	   (recessed a step below --gray-800 so it never vanishes on cards) */
+	--color-slider-track: #14161a;
 	--switch-knob-color: var(--color-text-primary);
 
 	/* Canvas workspace floor — must contrast with both dark and white canvases */
@@ -87,8 +90,16 @@
 	--color-overlay: rgba(0, 0, 0, 0.85);
 
 	/* Icons inside buttons: opacity, not color, so state colors (active,
-	   danger) still inherit through currentColor untouched. */
-	--btn-icon-opacity: 1;
+	   danger) still inherit through currentColor untouched. Slightly under 1
+	   so icons sit a step below button text in every theme. */
+	--btn-icon-opacity: 0.85;
+
+	/* Flat icons sitting directly on panel surfaces (no button chrome):
+	   muted = quiet action rows (layers bottom bar); strong = primary glyphs
+	   (layer visibility eye). Text tokens read heavier as icon fills than as
+	   glyphs, so both tiers sit a step below their text counterparts. */
+	--color-icon-muted: var(--color-text-secondary);
+	--color-icon-strong: #b3bac4;
 
 	--color-accent: var(--blue-200);
 	--color-accent-hover: var(--blue-300);

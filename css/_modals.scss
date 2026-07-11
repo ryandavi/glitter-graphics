@@ -1520,6 +1520,37 @@
 
 }
 
+// In settings modals the Advanced disclosure reads as a settings group, not
+// the panels' compact inline disclosure: same title size as
+// .settings-group-title with the rule line BELOW the title (headers underline,
+// they don't overline). The panel effect cards keep the compact base styling.
+.modal-body .advanced-disclosure {
+	border-top: none;
+	margin-top: var(--spacing-xl);
+
+	>.advanced-disclosure-toggle {
+		padding: 0 0 var(--spacing-sm);
+		border-bottom: 1px solid var(--color-border);
+		color: var(--color-text-primary);
+
+		>.advanced-disclosure-label {
+			text-transform: none;
+			letter-spacing: normal;
+			font-size: var(--font-size-md);
+			font-weight: 600;
+		}
+
+		>.advanced-disclosure-chevron svg {
+			width: 16px;
+			height: 16px;
+		}
+	}
+
+	>.advanced-disclosure-content {
+		padding-top: var(--spacing-md);
+	}
+}
+
 .settings-row {
 	display: flex;
 	flex-direction: column;

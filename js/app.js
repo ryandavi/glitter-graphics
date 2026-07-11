@@ -409,7 +409,7 @@ initializeExportSettings() {
 	this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.ui.hints.enabledByDefault;
 	this.showWelcomeOnStartup = savedSettings?.showWelcomeOnStartup ?? !welcomeWasSuppressed;
 	this.confirmDestructiveActions = savedSettings?.confirmDestructiveActions ?? true;
-	this.interfaceTheme = savedSettings?.interfaceTheme === 'light' ? 'light' : 'dark';
+	this.interfaceTheme = CONFIG.ui.themes.includes(savedSettings?.interfaceTheme) ? savedSettings.interfaceTheme : 'dark';
 	this.applyInterfaceTheme();
 
 	// Sync UI to match exportSettings
@@ -525,7 +525,7 @@ initializeExportSettings() {
 
 		const themeInput = document.getElementById('interfaceTheme');
 		themeInput?.addEventListener('change', (e) => {
-			this.interfaceTheme = e.target.value === 'light' ? 'light' : 'dark';
+			this.interfaceTheme = CONFIG.ui.themes.includes(e.target.value) ? e.target.value : 'dark';
 			this.applyInterfaceTheme();
 			this.saveSettingsToStorage();
 		});
