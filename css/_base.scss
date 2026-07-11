@@ -144,13 +144,7 @@ input,
 textarea,
 button,
 select {
-	font-family:
-		"Segoe UI",
-		"Tahoma",
-		"Verdana",
-		"Consolas",
-		"Google Sans Code",
-		monospace;
+	font-family: var(--font-ui);
 	font-optical-sizing: auto;
 }
 

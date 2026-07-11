@@ -144,6 +144,145 @@
   --color-overlay: rgb(88 44 70 / 45%);
 }
 
+:root[data-theme=bliss] {
+  color-scheme: light;
+  --font-ui: Tahoma, "Segoe UI", Verdana, sans-serif;
+  /* Warm dialog-beige ramp */
+  --gray-100: #1c1c1a;
+  --gray-200: #575046;
+  --gray-300: #716a5e;
+  --gray-400: #aca899;
+  --gray-500: #cdc9b8;
+  --gray-600: #ece9d8;
+  --gray-700: #e3dfcc;
+  --gray-800: #fdfdf6;
+  --color-bg-primary: var(--gray-600);
+  --color-bg-secondary: #fdfdf6;
+  --color-bg-tertiary: var(--gray-700);
+  --color-bg-card: #f8f7ef;
+  --color-border: var(--gray-500);
+  --color-border-hover: var(--gray-400);
+  --color-text-primary: var(--gray-100);
+  --color-text-secondary: var(--gray-200);
+  --color-text-tertiary: var(--gray-300);
+  --color-off-white: var(--gray-100);
+  --color-bg-accent-tint: #d6e5fa;
+  --color-checkerboard: #d9d5c4;
+  --color-bg-translucent: rgb(236 233 216 / 96%);
+  --color-warning-text: #7d3a00;
+  /* Selection blue of the era */
+  --color-accent: #316ac5;
+  --color-accent-hover: #2a5bb0;
+  --color-accent-light: #5b8dd6;
+  --color-accent-border: #316ac5;
+  --color-accent-active: #2a5bb0;
+  /* Desktop-blue workspace, flat */
+  --color-bg-workspace: #82abdd;
+  /* Warm shadows */
+  --color-shadow: rgb(43 38 24 / 12%);
+  --color-shadow-soft: rgb(43 38 24 / 16%);
+  --color-shadow-strong: rgb(43 38 24 / 24%);
+  --color-shadow-modal: rgb(43 38 24 / 35%);
+  /* Title bars: royal-blue gloss, white caption with the deep-blue shadow;
+     glyphs on the bars go translucent white, and every window frames in
+     Luna blue (XP never hairlines windows in grey). */
+  --bar-gradient: linear-gradient(to bottom, #4a90f4 0%, #2a71e0 8%, #1a5ed4 45%, #1655c4 88%, #0f3d9c 100%);
+  --bar-title-color: #ffffff;
+  --bar-icon-color: rgb(255 255 255 / 78%);
+  --bar-text-shadow: 0 1px 1px rgb(9 27 87 / 75%);
+  --bar-hover-filter: brightness(1.08);
+  --bar-active-filter: brightness(0.92);
+  --color-window-border: #2a63cf;
+  /* Buttons the XP way: clean near-white face, cool #7f9db9 control border,
+     amber warmth for hover AND toggled (porcelain has no hue to desaturate,
+     so the toggled state tints instead of the inactive state shading down). */
+  --btn-gradient: linear-gradient(to bottom, #ffffff 0%, #f5f5f1 45%, #efeee7 90%, #dfddd1 100%);
+  --btn-border-color: #7f9db9;
+  --btn-text-color: #1c1c1a;
+  --btn-hover-filter: sepia(0.3) saturate(1.5) brightness(1.03);
+  --btn-active-filter: brightness(0.94);
+  --btn-toggled-filter: sepia(0.45) saturate(1.9) brightness(1.03);
+  --btn-secondary-filter: brightness(0.97);
+  --btn-secondary-filter-hover: sepia(0.25) saturate(1.4) brightness(1.01);
+  --btn-secondary-filter-active: brightness(0.93);
+  --btn-icon-opacity: 0.8;
+  --color-icon-muted: #8a8474;
+  --color-icon-strong: #6a6455;
+  --color-slider-track: #d9d5c2;
+  --switch-knob-color: #ffffff;
+  --color-overlay: rgb(38 54 92 / 45%);
+  /* Boxy dialog corners */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 5px;
+}
+
+:root[data-theme=dew] {
+  color-scheme: light;
+  /* Cool water-cyan ramp */
+  --gray-100: #12313e;
+  --gray-200: #3f6577;
+  --gray-300: #5f8496;
+  --gray-400: #9cc3d4;
+  --gray-500: #c2e0ec;
+  --gray-600: #e9f7fd;
+  --gray-700: #d9eef8;
+  --gray-800: #ffffff;
+  --color-bg-primary: var(--gray-600);
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: var(--gray-700);
+  --color-bg-card: #f4fcff;
+  --color-border: var(--gray-500);
+  --color-border-hover: var(--gray-400);
+  --color-text-primary: var(--gray-100);
+  --color-text-secondary: var(--gray-200);
+  --color-text-tertiary: var(--gray-300);
+  --color-off-white: var(--gray-100);
+  --color-bg-accent-tint: #d3f2fb;
+  --color-checkerboard: #cfe7f1;
+  --color-bg-translucent: rgb(240 251 255 / 88%);
+  --color-warning-text: #7d3a00;
+  /* Water cyan */
+  --color-accent: #0d9fd8;
+  --color-accent-hover: #0b8dc0;
+  --color-accent-light: #4fc1e8;
+  --color-accent-border: #0d9fd8;
+  --color-accent-active: #0b8dc0;
+  /* Sky-into-grass workspace */
+  --color-bg-workspace: linear-gradient(to bottom, #bfe9fc 0%, #e3f7fb 55%, #cdedc2 100%);
+  /* Deep-water shadows */
+  --color-shadow: rgb(9 58 82 / 10%);
+  --color-shadow-soft: rgb(9 58 82 / 14%);
+  --color-shadow-strong: rgb(9 58 82 / 20%);
+  --color-shadow-modal: rgb(9 58 82 / 30%);
+  /* Bars: glass with a hard sheen step at the midline */
+  --bar-gradient: linear-gradient(to bottom, #f6feff 0%, #d0f0fc 45%, #aee2f8 50%, #d8f4ff 100%);
+  --bar-title-color: var(--color-text-primary);
+  --bar-text-shadow: 0 1px 0 rgb(255 255 255 / 75%);
+  --bar-hover-filter: brightness(0.98) saturate(1.25);
+  --bar-active-filter: brightness(0.95) saturate(1.35);
+  /* Gel buttons: bright cyan glass shimmering green at the bottom. The
+     secondary filter lightens rather than just desaturating — greying a
+     saturated gel reads as murk against these airy surfaces. */
+  --btn-gradient: linear-gradient(to bottom, #f6feff 0%, #cff2fc 40%, #a5e5f8 50%, #c8f5e3 100%);
+  --btn-text-color: #1d5568;
+  --btn-hover-filter: brightness(1.02) saturate(1.3);
+  --btn-active-filter: brightness(0.95) saturate(1.15);
+  --btn-secondary-filter: saturate(0.6) brightness(1.05);
+  --btn-secondary-filter-hover: saturate(0.9) brightness(1.02);
+  --btn-secondary-filter-active: saturate(1) brightness(0.98);
+  --btn-icon-opacity: 0.75;
+  --color-icon-muted: #7fa9bb;
+  --color-icon-strong: #5c8ba0;
+  --color-slider-track: #d3e9f3;
+  --switch-knob-color: #ffffff;
+  --color-overlay: rgb(23 76 100 / 40%);
+  /* Droplet-round corners */
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 12px;
+}
+
 /* ===== CSS VARIABLES ===== */
 :root {
   /* Base color scales — one slate-blue family (same lightness as the old
@@ -195,13 +334,20 @@
   --color-shadow-soft: rgba(0, 0, 0, 0.3);
   --color-shadow-strong: rgba(0, 0, 0, 0.5);
   --color-shadow-modal: rgba(0, 0, 0, 0.7);
-  /* Bars: app header + section headers (gradient chrome) */
+  /* Bars: app header + section headers (gradient chrome). --bar-icon-color
+     covers the title glyphs sitting ON the bar (section icons, modal icons)
+     — they can't follow text-tertiary once a theme paints the bar a color. */
   --bar-gradient-top: var(--gray-300);
   --bar-gradient-bottom: var(--gray-700);
   --bar-title-color: #fff;
+  --bar-icon-color: var(--color-text-tertiary);
   --bar-text-shadow: 0 1px 1px #000;
   --bar-hover-filter: brightness(1.15);
   --bar-active-filter: brightness(0.85);
+  /* Window chrome: the frame around top-level surfaces (panels, sections,
+     modals, the header's bottom edge). Separate from --color-border so era
+     themes can frame windows in their chrome color (Luna blue). */
+  --color-window-border: var(--color-border);
   /* Gloss buttons (gloss-button mixin) — gradient stops + state filters.
      Filters are tokens because brightness() flips meaning between themes:
      brightening a dark navy button highlights it, brightening a pale aqua
@@ -216,6 +362,10 @@
   --btn-secondary-filter-hover: saturate(0.5) contrast(0.9) brightness(1);
   --btn-secondary-filter-active: saturate(0.7) contrast(1.1) brightness(1.15);
   --btn-text-color: var(--color-text-primary);
+  --btn-border-color: var(--color-border);
+  /* Toggled (.active) buttons keep the full gradient by default; themes
+     whose gradient is colorless (Bliss porcelain) tint it instead. */
+  --btn-toggled-filter: none;
   /* Range/switch track — must read against card AND panel backgrounds
      (recessed a step below --gray-800 so it never vanishes on cards) */
   --color-slider-track: #14161a;
@@ -262,6 +412,13 @@
   --radius-lg: 8px;
   --radius-full: 50%;
   /* Typography */
+  --font-ui:
+  	"Segoe UI",
+  	"Tahoma",
+  	"Verdana",
+  	"Consolas",
+  	"Google Sans Code",
+  	monospace;
   --font-size-xs: 11px;
   --font-size-sm: 12px;
   --font-size-base: 14px;
@@ -436,7 +593,7 @@ input,
 textarea,
 button,
 select {
-  font-family: "Segoe UI", "Tahoma", "Verdana", "Consolas", "Google Sans Code", monospace;
+  font-family: var(--font-ui);
   font-optical-sizing: auto;
 }
 
@@ -622,7 +779,10 @@ input[type=range]::-moz-range-thumb {
   top: 0;
   z-index: -1;
   transition: filter var(--transition-base);
-  background-image: linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%);
+  background-image: var(--btn-gradient, linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%));
+}
+.btn.active:not(:disabled):before {
+  filter: var(--btn-toggled-filter);
 }
 .btn:hover:not(:disabled):before {
   filter: var(--btn-hover-filter);
@@ -659,7 +819,7 @@ input[type=range]::-moz-range-thumb {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--btn-border-color);
   aspect-ratio: unset;
   background: none;
   overflow: hidden;
@@ -682,7 +842,10 @@ input[type=range]::-moz-range-thumb {
   top: 0;
   z-index: -1;
   transition: filter var(--transition-base);
-  background-image: linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%);
+  background-image: var(--btn-gradient, linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%));
+}
+.btn-text-with-icon.active:not(:disabled):before {
+  filter: var(--btn-toggled-filter);
 }
 .btn-text-with-icon:hover:not(:disabled):before {
   filter: var(--btn-hover-filter);
@@ -736,7 +899,7 @@ input[type=range]::-moz-range-thumb {
 .btn-icon {
   width: var(--icon-size);
   height: var(--icon-size);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--btn-border-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -765,7 +928,10 @@ input[type=range]::-moz-range-thumb {
   top: 0;
   z-index: -1;
   transition: filter var(--transition-base);
-  background-image: linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%);
+  background-image: var(--btn-gradient, linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%));
+}
+.btn-icon.active:not(:disabled):before {
+  filter: var(--btn-toggled-filter);
 }
 .btn-icon:hover:not(:disabled):before {
   filter: var(--btn-hover-filter);
@@ -860,7 +1026,10 @@ input[type=range]::-moz-range-thumb {
   top: 0;
   z-index: -1;
   transition: filter var(--transition-base);
-  background-image: linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%);
+  background-image: var(--btn-gradient, linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%));
+}
+.btn-simple.active:not(:disabled):before {
+  filter: var(--btn-toggled-filter);
 }
 .btn-simple:hover:not(:disabled):before {
   filter: var(--btn-hover-filter);
@@ -946,7 +1115,7 @@ input[type=range]::-moz-range-thumb {
 .app-header {
   height: var(--header-height);
   background: var(--color-bg-secondary);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-window-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -955,12 +1124,12 @@ input[type=range]::-moz-range-thumb {
   box-shadow: 0 2px 2px var(--color-shadow);
 }
 .app-header.app-header {
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
 }
 .app-header.section-header {
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
 }
@@ -968,7 +1137,7 @@ input[type=range]::-moz-range-thumb {
   color: var(--bar-title-color);
 }
 .app-header.collapsible-section > .section-header {
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
 }
@@ -986,7 +1155,7 @@ input[type=range]::-moz-range-thumb {
   align-items: center;
   gap: var(--spacing-md);
   text-decoration: none;
-  color: var(--color-text-primary);
+  color: var(--bar-title-color);
 }
 .app-header > .app-header-left > .app-header-logo > span.app-header-title {
   font-size: 18px;
@@ -1075,7 +1244,10 @@ input[type=range]::-moz-range-thumb {
   top: 0;
   z-index: -1;
   transition: filter var(--transition-base);
-  background-image: linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%);
+  background-image: var(--btn-gradient, linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%));
+}
+.toolbar > .toolbar-group > .btn-icon.active:not(:disabled):before {
+  filter: var(--btn-toggled-filter);
 }
 .toolbar > .toolbar-group > .btn-icon:hover:not(:disabled):before {
   filter: var(--btn-hover-filter);
@@ -1494,7 +1666,6 @@ input[type=range]::-moz-range-thumb {
 
 .section {
   /* Section Headers */
-  /* Collapsible Section */
 }
 .section > .section-header {
   position: relative;
@@ -1506,12 +1677,12 @@ input[type=range]::-moz-range-thumb {
   align-items: center;
 }
 .section > .section-header.app-header {
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
 }
 .section > .section-header.section-header {
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
 }
@@ -1519,7 +1690,7 @@ input[type=range]::-moz-range-thumb {
   color: var(--bar-title-color);
 }
 .section > .section-header.collapsible-section > .section-header {
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
 }
@@ -1539,7 +1710,7 @@ input[type=range]::-moz-range-thumb {
   color: var(--color-text-secondary);
 }
 .section > .section-header > .section-header-title > .section-header-title-icon {
-  color: var(--color-text-tertiary);
+  color: var(--bar-icon-color);
   flex-shrink: 0;
 }
 .section > .section-header > .section-header-title > .section-header-title-text {
@@ -1583,6 +1754,9 @@ input[type=range]::-moz-range-thumb {
 .section > .section-content {
   padding: var(--spacing-base);
 }
+.section {
+  /* Collapsible Section */
+}
 .section.collapsible-section {
   border-top: 1px solid var(--color-border);
   background: var(--color-bg-primary);
@@ -1622,12 +1796,12 @@ input[type=range]::-moz-range-thumb {
   display: block;
 }
 .section.collapsible-section.app-header {
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
 }
 .section.collapsible-section.section-header {
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
 }
@@ -1641,7 +1815,7 @@ input[type=range]::-moz-range-thumb {
   filter: var(--bar-active-filter);
 }
 .section.collapsible-section.collapsible-section > .section-header {
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
 }
@@ -2610,7 +2784,6 @@ body.mask-editing .sticker-element {
   z-index: var(--z-header-menu-elevated);
   box-shadow: 0 2px 5px var(--color-shadow-strong);
   transition: all var(--transition-base);
-  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 .export-progress.visible {
@@ -2742,7 +2915,6 @@ body.mask-editing .sticker-element {
   justify-content: center;
   opacity: 0;
   transition: opacity var(--transition-base);
-  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 .modal-overlay.visible {
@@ -2751,7 +2923,7 @@ body.mask-editing .sticker-element {
 }
 .modal-overlay > .modal-content {
   background: var(--color-bg-primary);
-  border: 1px solid var(--color-border-hover);
+  border: 1px solid var(--color-window-border);
   border-radius: var(--radius-lg);
   width: 700px;
   /* Fallback for older browsers */
@@ -2772,7 +2944,7 @@ body.mask-editing .sticker-element {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+  background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
   text-shadow: var(--bar-text-shadow);
   color: var(--bar-title-color);
   border-top-left-radius: var(--radius-lg);
@@ -2792,7 +2964,7 @@ body.mask-editing .sticker-element {
   top: -0.05em;
 }
 .modal-overlay > .modal-content > .modal-header > .modal-title > .modal-icon {
-  color: var(--color-text-tertiary);
+  color: var(--bar-icon-color);
 }
 .modal-overlay > .modal-content > .modal-header > .modal-close {
   width: var(--icon-size-sm);
@@ -2858,8 +3030,6 @@ body.mask-editing .sticker-element {
   column-gap: 0.5em;
   align-items: start;
   padding: 1px;
-  /* main content (link) */
-  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li a {
   color: var(--color-text-secondary);
@@ -2874,8 +3044,14 @@ body.mask-editing .sticker-element {
   grid-column: 1;
   align-self: start;
 }
+.modal-overlay > .modal-content > .modal-body .toc > ol > li {
+  /* main content (link) */
+}
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > :not(ol) {
   grid-column: 2;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li {
+  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol {
   grid-column: 2;
@@ -3465,9 +3641,6 @@ body.mask-editing .sticker-element {
   }
 }
 /* ===== ABOUT MODAL ===== */
-#aboutModal {
-  /* Highlight animation for references */
-}
 #aboutModal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
 }
@@ -3576,6 +3749,9 @@ body.mask-editing .sticker-element {
 #aboutModal h5 + ul,
 #aboutModal h5 + ol {
   margin-top: var(--spacing-xs);
+}
+#aboutModal {
+  /* Highlight animation for references */
 }
 #aboutModal .highlight {
   background: url(../images/glitter/sparkle/glitter_white.gif) repeat;
@@ -4215,7 +4391,10 @@ body.mask-editing .sticker-element {
     top: 0;
     z-index: -1;
     transition: filter var(--transition-base);
-    background-image: linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%);
+    background-image: var(--btn-gradient, linear-gradient(to bottom, var(--btn-gradient-start) 0%, var(--btn-gradient-mid) 40%, var(--btn-gradient-dark) 50%, var(--btn-gradient-dark) 70%, var(--btn-gradient-end) 100%));
+  }
+  .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn.active:not(:disabled):before {
+    filter: var(--btn-toggled-filter);
   }
   .mobile-bottom-nav .mobile-drawer-btn-group > .mobile-drawer-btn:hover:not(:disabled):before {
     filter: var(--btn-hover-filter);
@@ -4677,7 +4856,6 @@ body.mask-editing .sticker-element {
   z-index: var(--z-header-menu-elevated);
   box-shadow: 0 2px 5px var(--color-shadow-strong);
   transition: all var(--transition-base);
-  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 .helpful-message:hover {
@@ -4965,7 +5143,7 @@ body.mask-editing .sticker-element {
 .toolbar,
 .layers-panel > .section,
 .design-panel > .section {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-window-border);
   border-radius: 5px;
   overflow: hidden;
   box-shadow: 0 2px 5px var(--color-shadow-strong);
@@ -6035,6 +6213,4 @@ body.mask-editing .sticker-element {
     width: 100%;
     min-height: 48px;
   }
-}
-
-/*# sourceMappingURL=style.css.map */
+}/*# sourceMappingURL=style.css.map */

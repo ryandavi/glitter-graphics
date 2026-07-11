@@ -24,7 +24,7 @@
 
 	>.modal-content {
 		background: var(--color-bg-primary);
-		border: 1px solid var(--color-border-hover);
+		border: 1px solid var(--color-window-border);
 		border-radius: var(--radius-lg);
 		width: 700px;
 
@@ -70,7 +70,7 @@
 				}
 
 				>.modal-icon {
-					color: var(--color-text-tertiary);
+					color: var(--bar-icon-color);
 				}
 
 			}

@@ -19,7 +19,7 @@
 .app-header {
 	height: var(--header-height);
 	background: var(--color-bg-secondary);
-	border-bottom: 1px solid var(--color-border);
+	border-bottom: 1px solid var(--color-window-border);
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -41,7 +41,8 @@
 			align-items: center;
 			gap: var(--spacing-md);
 			text-decoration: none;
-			color: var(--color-text-primary);
+			// Sits on the bar chrome, so it follows the bar's caption color.
+			color: var(--bar-title-color);
 
 			>span.app-header-title {
 				font-size: 18px;
@@ -654,7 +655,7 @@
 
 
 			>.section-header-title-icon {
-				color: var(--color-text-tertiary);
+				color: var(--bar-icon-color);
 				flex-shrink: 0;
 			}
 

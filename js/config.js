@@ -263,7 +263,7 @@ const CONFIG = {
 		},
 		// Valid values for the Settings > Theme select; each needs a matching
 		// :root[data-theme="…"] token block in css/_themes.scss.
-		themes: ['dark', 'light', 'bubblegum'],
+		themes: ['dark', 'light', 'bubblegum', 'bliss', 'dew'],
 		stickerHandles: {
 			enabled: true,
 			cornerSize: 8,

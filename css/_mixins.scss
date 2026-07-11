@@ -53,7 +53,9 @@
 }
 
 @mixin bar-base {
-	background-image: linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%);
+	// Themes with era-specific chrome (title-bar gloss, glass sheen bands)
+	// override --bar-gradient whole; simpler themes just set the two stops.
+	background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
 	text-shadow: var(--bar-text-shadow);
 	color: var(--bar-title-color);
 }
@@ -232,12 +234,19 @@
 		top: 0;
 		z-index: -1;
 		transition: filter var(--transition-base);
-		background-image: linear-gradient(to bottom,
+		// --btn-gradient overrides the whole image (era themes with their own
+		// gloss geometry); the four stop tokens drive the default shape.
+		background-image: var(--btn-gradient, linear-gradient(to bottom,
 				var(--btn-gradient-start) 0%,
 				var(--btn-gradient-mid) 40%,
 				var(--btn-gradient-dark) 50%,
 				var(--btn-gradient-dark) 70%,
-				var(--btn-gradient-end) 100%);
+				var(--btn-gradient-end) 100%));
+	}
+
+	// Before :hover so hovering a toggled button still gives hover feedback.
+	&.active:not(:disabled):before {
+		filter: var(--btn-toggled-filter);
 	}
 
 	&:hover:not(:disabled):before {

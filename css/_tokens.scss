@@ -55,13 +55,21 @@
 	--color-shadow-strong: rgba(0, 0, 0, 0.5);
 	--color-shadow-modal: rgba(0, 0, 0, 0.7);
 
-	/* Bars: app header + section headers (gradient chrome) */
+	/* Bars: app header + section headers (gradient chrome). --bar-icon-color
+	   covers the title glyphs sitting ON the bar (section icons, modal icons)
+	   — they can't follow text-tertiary once a theme paints the bar a color. */
 	--bar-gradient-top: var(--gray-300);
 	--bar-gradient-bottom: var(--gray-700);
 	--bar-title-color: #fff;
+	--bar-icon-color: var(--color-text-tertiary);
 	--bar-text-shadow: 0 1px 1px #000;
 	--bar-hover-filter: brightness(1.15);
 	--bar-active-filter: brightness(0.85);
+
+	/* Window chrome: the frame around top-level surfaces (panels, sections,
+	   modals, the header's bottom edge). Separate from --color-border so era
+	   themes can frame windows in their chrome color (Luna blue). */
+	--color-window-border: var(--color-border);
 
 	/* Gloss buttons (gloss-button mixin) — gradient stops + state filters.
 	   Filters are tokens because brightness() flips meaning between themes:
@@ -77,6 +85,10 @@
 	--btn-secondary-filter-hover: saturate(0.5) contrast(0.9) brightness(1);
 	--btn-secondary-filter-active: saturate(0.7) contrast(1.1) brightness(1.15);
 	--btn-text-color: var(--color-text-primary);
+	--btn-border-color: var(--color-border);
+	/* Toggled (.active) buttons keep the full gradient by default; themes
+	   whose gradient is colorless (Bliss porcelain) tint it instead. */
+	--btn-toggled-filter: none;
 
 	/* Range/switch track — must read against card AND panel backgrounds
 	   (recessed a step below --gray-800 so it never vanishes on cards) */
@@ -137,6 +149,13 @@
 	--radius-full: 50%;
 
 	/* Typography */
+	--font-ui:
+		"Segoe UI",
+		"Tahoma",
+		"Verdana",
+		"Consolas",
+		"Google Sans Code",
+		monospace;
 	--font-size-xs: 11px;
 	--font-size-sm: 12px;
 	--font-size-base: 14px;
