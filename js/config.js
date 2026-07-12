@@ -267,6 +267,7 @@ const CONFIG = {
 		stickerHandles: {
 			enabled: true,
 			cornerSize: 8,
+			outwardOffset: 4,
 			rotationHandleRadius: 5,
 			rotationHandleDistance: 30,
 			handleFill: '#ffffff',
@@ -339,6 +340,7 @@ const CONFIG = {
 			}
 		},
 		defaults: {
+			format: 'gif',
 			baseImage: true,
 			glitter: true,
 			stickers: true,
@@ -353,6 +355,23 @@ const CONFIG = {
 			reverse: false,
 			smartFrameReduction: true,
 			watermarkEnabled: false
+		},
+		mp4: {
+			loopCount: 3,
+			minLoopCount: 1,
+			maxLoopCount: 100,
+			defaultQuality: 'standard',
+			qualityPresets: {
+				compact: { label: 'Compact', bitrate: 1000000 },
+				standard: { label: 'Standard', bitrate: 2000000 },
+				high: { label: 'High', bitrate: 4000000 }
+			},
+			codecs: ['avc1.42001f', 'avc1.4d001f', 'avc1.64001f'],
+			supportProbeWidth: 16,
+			supportProbeHeight: 16,
+			supportProbeFrameRate: 30,
+			keyFrameInterval: 30,
+			maxEncodeQueueSize: 8
 		},
 		limits: {
 			maxFramesHardLimit: 1000,

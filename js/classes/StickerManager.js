@@ -412,6 +412,7 @@ class StickerManager extends ContentManager {
 				name: sticker?.name || 'Select a Sticker',
 				source: sticker?.source || null,
 				isAnimated: sticker?.isAnimated || false,
+				frameCount: sticker?.frameCount || 1,
 				width: sticker?.width || 100,
 				height: sticker?.height || 100,
 				frames: null,
@@ -454,6 +455,7 @@ class StickerManager extends ContentManager {
 			activeLayer.stickerData.width = stickerInfo.width;
 			activeLayer.stickerData.height = stickerInfo.height;
 			activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+			activeLayer.stickerData.frameCount = stickerInfo.frameCount || 1;
 
 			// Clear cached frame data when changing sticker
 			activeLayer.stickerData.frames = null;
@@ -720,6 +722,7 @@ updateTransform(layerId, updates) {
 		if (!layerData.stickerData.url) {
 			layerData.stickerData.url = sticker.url;
 		}
+		layerData.stickerData.frameCount = sticker.frameCount || layerData.stickerData.frameCount || 1;
 
 		return layerData;
 	}
@@ -751,4 +754,3 @@ updateTransform(layerId, updates) {
 		this.layerTransforms.clear();
 	}
 }
-

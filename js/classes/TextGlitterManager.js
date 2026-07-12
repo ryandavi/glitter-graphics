@@ -1187,6 +1187,9 @@ class TextGlitterManager {
 			// fallback covers devices without it (Android ships neither Comic
 			// Sans nor Impact). document.fonts.load still warms measurement.
 			if (font.system) {
+				if (font.fallbackFontId) {
+					await this.ensureFontLoaded(font.fallbackFontId);
+				}
 				await document.fonts.load(this.getFontDeclaration(font, CONFIG.tools.text.defaultFontSize), 'Hg');
 				return null;
 			}
@@ -2500,7 +2503,9 @@ class TextGlitterManager {
 	// during handle drags (which bypass renderLayer for performance).
 	syncElementScale(layer, wrapper = this.layerElements.get(layer?.id)) {
 		const stack = wrapper?.querySelector('.text-glitter-stack');
-		if (!stack || !this.fontFaces.has(layer.textData.fontId)) return;
+		// System fonts are resolved by the browser and deliberately have no
+		// FontFace cache entry. Their existing stack can still scale live.
+		if (!stack) return;
 		this.syncStackGeometry(stack, layer);
 	}
 

@@ -351,7 +351,7 @@ class GifExporter {
 					},
 					collectFrameCounts: (library, layerFrameCounts) => {
 						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
-						layerFrameCounts.set(layer.id, glitter?.frames?.frames?.length || 1);
+						layerFrameCounts.set(layer.id, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
 					},
 					hasMultiFrameGlitter: (layerFrameCounts) => (layerFrameCounts.get(layer.id) || 0) > 1,
 					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap, maskCanvases, helperCtx, width, height }) => {
@@ -439,7 +439,7 @@ class GifExporter {
 					collectFrameCounts: (library, layerFrameCounts) => {
 						glitterSources.forEach((source) => {
 							const glitter = library.find((item) => item.id === source.glitterId);
-							layerFrameCounts.set(source.key, glitter?.frames?.frames?.length || 1);
+							layerFrameCounts.set(source.key, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
 						});
 					},
 					hasMultiFrameGlitter: (layerFrameCounts) => glitterSources.some((source) =>
@@ -494,7 +494,7 @@ class GifExporter {
 
 						glitterSources.forEach((source) => {
 							const glitter = library.find((item) => item.id === source.glitterId);
-							layerFrameCounts.set(source.key, glitter?.frames?.frames?.length || 1);
+							layerFrameCounts.set(source.key, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
 						});
 					},
 					hasMultiFrameGlitter: (layerFrameCounts) => glitterSources.some((source) =>
@@ -544,8 +544,8 @@ class GifExporter {
 						}
 					},
 					collectFrameCounts: (library, layerFrameCounts) => {
-						const frameCount = layer.stickerData.isAnimated && layer.stickerData.frames?.frames
-							? layer.stickerData.frames.frames.length
+						const frameCount = layer.stickerData.isAnimated
+							? (layer.stickerData.frames?.frames?.length || layer.stickerData.frameCount || 1)
 							: 1;
 						layerFrameCounts.set(layer.id, frameCount);
 					},
@@ -957,7 +957,7 @@ class GifExporter {
 
 
 	async process(params) {
-		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks } = params;
+		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks, frameSink = null } = params;
 
 		// Validate frame delay at the start
 		exportSettings.frameDelay = Math.max(20, exportSettings.frameDelay || 100);
@@ -1069,7 +1069,8 @@ class GifExporter {
 			dbg('[GifExporter] Transparency enabled with key:', safeKey.hex);
 		}
 
-		const gif = new GIF(gifOptions);
+		const gif = frameSink ? null : new GIF(gifOptions);
+		const composedFrames = frameSink ? [] : null;
 
 		// 7. Render Loop
 		this.canvas.width = canvasData.width;
@@ -1112,10 +1113,14 @@ class GifExporter {
 					flattenedFrameMap
 				);
 
-				gif.addFrame(frameData, {
-					delay: exportSettings.frameDelay, // Keep using exportSettings.frameDelay
-					copy: true
-				});
+				if (frameSink) {
+					composedFrames.push(frameData);
+				} else {
+					gif.addFrame(frameData, {
+						delay: exportSettings.frameDelay, // Keep using exportSettings.frameDelay
+						copy: true
+					});
+				}
 
 				const progressPercent = 10 + Math.floor((i / framesToRender.length) * 65);
 				callbacks.onProgress(progressPercent, `Rendering frame ${i + 1}/${framesToRender.length}...`, i + 1, framesToRender.length);
@@ -1123,6 +1128,16 @@ class GifExporter {
 				if (this.config.debug) console.error(`[GifExporter] Error rendering frame ${f}:`, error);
 				throw new Error(`Frame ${f} render failed: ${error.message}`);
 			}
+		}
+
+		if (frameSink) {
+			return frameSink({
+				frames: composedFrames,
+				frameDelay: exportSettings.frameDelay,
+				width: canvasData.width,
+				height: canvasData.height,
+				reductions
+			});
 		}
 
 		// 8. Output
@@ -1957,17 +1972,24 @@ class GifExporter {
 		this.previewBlobUrl = url;
 
 		// Pass frameCount, blob.size, and reductions to the preview modal
-		this._showExportPreviewModal(url, file, frameCount, blob.size, reductions);
+		this._showExportPreviewModal(url, file, frameCount, blob.size, reductions, {
+			format: 'gif',
+			width: this.canvas.width,
+			height: this.canvas.height
+		});
 	}
 
 
 
 
-	_showExportPreviewModal(blobUrl, file, frameCount, fileSize, reductions = []) {
+	_showExportPreviewModal(blobUrl, file, frameCount, fileSize, reductions = [], options = {}) {
 		const modal = document.getElementById('exportPreviewModal');
 		const img = document.getElementById('exportPreviewImage');
+		const video = document.getElementById('exportPreviewVideo');
 		const instructions = modal.querySelector('.export-preview-instructions');
 		const closeBtn = document.getElementById('closeExportPreviewModal');
+		const format = options.format === 'mp4' ? 'mp4' : 'gif';
+		const isVideo = format === 'mp4';
 
 		// Stats Elements
 		const exportStats = document.getElementById('exportStats');
@@ -1975,6 +1997,8 @@ class GifExporter {
 		if (exportStats) {
 			const statSize = document.getElementById('exportStatSize');
 			const statFrames = document.getElementById('exportStatFrames');
+			const statDuration = document.getElementById('exportStatDuration');
+			const statDimensions = document.getElementById('exportStatDimensions');
 
 			// remove .size-warning and .smart-reduction-badge elements from exportStats
 			const previousBadges = exportStats.querySelectorAll('.size-warning, .smart-reduction-badge');
@@ -1985,6 +2009,14 @@ class GifExporter {
 
 			if (statFrames) {
 				statFrames.textContent = `Frames: ${frameCount != null ? frameCount : 'Unknown'}`;
+			}
+			if (statDuration) {
+				statDuration.hidden = !isVideo || !Number.isFinite(options.duration);
+				if (!statDuration.hidden) statDuration.textContent = `Duration: ${options.duration.toFixed(1)}s`;
+			}
+			if (statDimensions) {
+				statDimensions.hidden = !options.width || !options.height;
+				if (!statDimensions.hidden) statDimensions.textContent = `Dimensions: ${options.width} × ${options.height}`;
 			}
 
 			// Set stats text
@@ -2030,37 +2062,45 @@ class GifExporter {
 			}
 		};
 
-		// 3. Set Image
-		img.src = blobUrl;
+		// 3. Set format-specific preview
+		img.hidden = isVideo;
+		video.hidden = !isVideo;
+		if (isVideo) {
+			img.removeAttribute('src');
+			video.src = blobUrl;
+			video.play().catch(() => {});
+		} else {
+			video.pause();
+			video.removeAttribute('src');
+			img.src = blobUrl;
+		}
 
 		// 4. Configure UI Logic
 		if (isIOS) {
 			// --- iOS Logic ---
 
-			// disable right click on image
 			img.oncontextmenu = () => false;
 
 			// DISABLE "Open GIF" & "Save" (Direct download fails/breaks on iOS)
-			configureBtn(openBtn, false);
-			configureBtn(saveBtn, false);
+			configureBtn(openBtn, false, `Open ${format.toUpperCase()}`);
+			configureBtn(saveBtn, false, `Save ${format.toUpperCase()}`);
 
 			if (canShare) {
 				// ENABLE "Share" (mapped to Save Image)
-				configureBtn(shareBtn, true, "Save Image");
+				configureBtn(shareBtn, true, isVideo ? 'Save Video' : 'Save Image');
 
 
 				instructions.innerHTML = `
-		<p>Tap <strong>"Save Image"</strong> below to save to Files or share.</p>
+		<p>Tap <strong>"${isVideo ? 'Save Video' : 'Save Image'}"</strong> below to save to Files or share.</p>
 		<p class="text-muted"><strong>Why can't I just tap and hold?</strong>
 		<p class="text-muted">
-			iOS doesn't support saving animated GIFs created dynamically in the browser. 
-			Using the Share button preserves the animation properly. I know it's annoying.
+			iOS handles browser-created animation files most reliably through the Share sheet.
 		</p>`;
 			} else {
 				// Fallback (Rare old iOS)
 				configureBtn(shareBtn, false);
 				instructions.innerHTML = `
-		<p>Long-press the image to save.</p>
+					<p>${isVideo ? 'Use the browser controls to open the video.' : 'Long-press the image to save.'}</p>
 		<p class="text-muted">
 			Note: This may save as a still image. Update iOS to use the Share feature for full animation support.
 		</p>`;
@@ -2073,16 +2113,16 @@ class GifExporter {
 			img.oncontextmenu = () => true;
 
 			// ENABLE "Open GIF" & "Save" (Standard browser features)
-			configureBtn(openBtn, true);
-			configureBtn(saveBtn, true);
+			configureBtn(openBtn, true, `Open ${format.toUpperCase()}`);
+			configureBtn(saveBtn, true, `Save ${format.toUpperCase()}`);
 
 			// Handle Share button (Some desktops like Safari/Edge support it)
 			if (canShare) {
 				configureBtn(shareBtn, true, "Share");
-				instructions.innerHTML = `<p>Save using the buttons below or right-click the image.</p>`;
+				instructions.innerHTML = `<p>Save using the buttons below${isVideo ? '.' : ' or right-click the image.'}</p>`;
 			} else {
 				configureBtn(shareBtn, false);
-				instructions.innerHTML = `<p>Use the <strong>Save</strong> button or right-click the image.</p>`;
+				instructions.innerHTML = `<p>Use the <strong>Save</strong> button${isVideo ? '.' : ' or right-click the image.'}</p>`;
 			}
 		}
 
@@ -2092,6 +2132,7 @@ class GifExporter {
 		// 6. Handlers
 		const cleanup = () => {
 			modal.classList.remove('visible');
+			video.pause();
 			setTimeout(() => {
 				if (this.previewBlobUrl === blobUrl) {
 					this.clearPreviewBlobUrl();
@@ -2108,7 +2149,7 @@ class GifExporter {
 			try {
 				await navigator.share({
 					files: [file],
-					title: 'Glitter GIF',
+					title: `Glitter ${format.toUpperCase()}`,
 					text: 'Created with ' + CONFIG.app.siteName
 				});
 			} catch (error) {
@@ -2131,8 +2172,7 @@ class GifExporter {
 		// Handler: Save / Download (Desktop)
 		saveBtn.onclick = () => {
 			if (saveBtn.disabled) return;
-			downloadBlob(file, this.fileName);
+			downloadBlob(file, file.name);
 		};
 	}
 }
-

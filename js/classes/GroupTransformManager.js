@@ -443,11 +443,12 @@ class GroupTransformManager {
 			`;
 		}
 
+		const outset = CONFIG.ui.stickerHandles.outwardOffset;
 		const corners = {
-			tl: { x: bounds.left, y: bounds.top },
-			tr: { x: bounds.right, y: bounds.top },
-			br: { x: bounds.right, y: bounds.bottom },
-			bl: { x: bounds.left, y: bounds.bottom }
+			tl: { x: bounds.left - outset, y: bounds.top - outset },
+			tr: { x: bounds.right + outset, y: bounds.top - outset },
+			br: { x: bounds.right + outset, y: bounds.bottom + outset },
+			bl: { x: bounds.left - outset, y: bounds.bottom + outset }
 		};
 
 		Object.entries(corners).forEach(([corner, point]) => {

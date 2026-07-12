@@ -12,6 +12,7 @@ copyright of its respective author(s):
   Pacifico      — Copyright (c) 2016 The Pacifico Project Authors (Vernon Adams)
   Lobster       — Copyright (c) 2010, Pablo Impallari
   Baloo 2       — Copyright (c) 2019, Ek Type
+  Comic Neue    — Copyright 2014 The Comic Neue Project Authors (https://github.com/crozynski/comicneue)
   Dela Gothic One — Copyright 2020 The Dela Gothic Project Authors (https://github.com/syakuzen/DelaGothic)
   Reggae One      — Copyright 2020 The Reggae Project Authors (https://github.com/fontworks-fonts/Reggae/)
   Black Han Sans  — Copyright 2015 The Black Han Sans Project Authors (https://github.com/zesstype/Black-Han-Sans)
@@ -20,8 +21,9 @@ copyright of its respective author(s):
   Noto Sans KR    — Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
   Noto Sans SC    — Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
 
-Font files were obtained as woff2 builds via Fontsource (fontsource.org)
-and the google/fonts GitHub repository, both of which distribute builds
+Font files were obtained as woff2 builds via Fontsource (fontsource.org),
+the google/fonts GitHub repository, and the Comic Neue project's official
+GitHub repository. These sources distribute builds
 of the original Google Fonts releases. See each font's page on
 fonts.google.com for its authoritative upstream source and full copyright
 notice.

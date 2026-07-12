@@ -21,6 +21,7 @@
             <ol>
                 <li><a href="#tools">Tools</a></li>
                 <li><a href="#working-with-layers">Working with Layers</a></li>
+                <li><a href="#selection-alignment">Selection &amp; Alignment</a></li>
                 <li><a href="#canvas-view-options">Canvas View Options</a></li>
             </ol>
         </li>
@@ -64,7 +65,7 @@
             <a href="#etcetera">Etcetera</a>
             <ol>
                 <li><a href="#tips">Tips</a></li>
-                <li><a href="#instagram-story">How to Use a GIF in an Instagram Story</a></li>
+				<li><a href="#instagram-story">Use an Export in an Instagram Story</a></li>
             </ol>
         </li>
     </ol>
@@ -399,6 +400,13 @@
                     <p>Click the <strong>trash icon</strong> to delete a layer.</p>
                 </div>
             </div>
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="selection-alignment">Selection &amp; Alignment</h4>
+            <p><strong>Selection:</strong> Drag on empty canvas to marquee-select layers; Shift+drag adds to the selection. Use Ctrl/Cmd+A to select every movable layer, Escape to clear a multi-selection, and Alt+drag to duplicate layers while moving them. Alt+click continues to cycle overlapping layers.</p>
+			<p><strong>Editing shortcuts:</strong> Double-click a text layer to focus its text field. Hold Space to pan temporarily. Hold Alt while resizing to scale from the center. Escape cancels an active transform before clearing selection. Use Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z to redo.</p>
+            <p><strong>Multi-layer Align:</strong> Choose Selection or Canvas, then align left/center/right or top/middle/bottom. With three or more layers, distribute them horizontally or vertically. Duplicate and Delete are under Actions.</p>
         </div>
 
         <div class="guide-subsection">
@@ -1166,7 +1174,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Use the <strong>Project</strong> section in the Canvas panel to name your project. That name is reused for both <strong>Export GIF</strong> and <strong>Save Project</strong>; leave it blank to use the default file name.</p>
+					<p>Use the <strong>Project</strong> section in the Canvas panel to name your project. That name is reused for <strong>Export GIF</strong>, <strong>Export MP4</strong>, and <strong>Save Project</strong>; leave it blank to use the default file name.</p>
                 </div>
             </div>
 
@@ -1192,7 +1200,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Click <strong>Export</strong> to generate your animated GIF.</p>
+                    <p>Click <strong>Export</strong> to generate your animated GIF or MP4 video.</p>
                 </div>
             </div>
 
@@ -1210,10 +1218,18 @@
             </div>
 
             <h4>Export Settings:</h4>
-            <p><strong>Selection:</strong> Drag on empty canvas to marquee-select layers; Shift+drag adds to the selection. Use Ctrl/Cmd+A to select every movable layer, Escape to clear a multi-selection, and Alt+drag to duplicate layers while moving them. Alt+click continues to cycle overlapping layers.</p>
-			<p><strong>Editing shortcuts:</strong> Double-click a text layer to focus its text field. Hold Space to pan temporarily. Hold Alt while resizing to scale from the center. Escape cancels an active transform before clearing selection. Use Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z to redo.</p>
-			<p><strong>Mobile:</strong> App Settings is beside Add Layer in the bottom navigation. Clear All is in the Layers drawer action bar.</p>
-            <p><strong>Multi-layer Align:</strong> Choose Selection or Canvas, then align left/center/right or top/middle/bottom. With three or more layers, distribute them horizontally or vertically. Duplicate and Delete are under Actions.</p>
+			<div class="guide-item">
+				<div class="guide-item-icon empty"><span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span></div>
+				<div class="guide-item-content"><p><strong>Format</strong> – Choose GIF or MP4. MP4 uses the matte color because video does not support transparency.</p></div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon empty"><span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span></div>
+				<div class="guide-item-content"><p><strong>Repeat Animation (MP4)</strong> – Repeat the complete frame sequence in the video. The live frame count and Video Duration account for frame-control settings.</p></div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon empty"><span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span></div>
+				<div class="guide-item-content"><p><strong>MP4 Quality</strong> – Choose Compact, Standard, or High video bitrate.</p></div>
+			</div>
             <div class="guide-item">
                 <div class="guide-item-icon empty">
                     <span class="icon-wrapper sm">
@@ -1223,7 +1239,15 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Base Image</strong> – Include/exclude the original image.</p>
+					<p><strong>MP4 result:</strong> The result screen previews the video and shows its file size, frame count, duration, and dimensions before you save, open, or share it.</p>
+				</div>
+			</div>
+			<div class="guide-item">
+				<div class="guide-item-icon empty">
+					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+				</div>
+				<div class="guide-item-content">
+					<p><strong>Base Image</strong> – Include/exclude the original image.</p>
                 </div>
             </div>
             <div class="guide-item">
@@ -1329,6 +1353,18 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
+                    <p><strong>Mobile:</strong> App Settings is beside Add Layer in the bottom navigation. Clear All is in the Layers drawer action bar.</p>
+                </div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
                     <p>Try different threshold values to fine-tune your glitter fill selections.</p>
                 </div>
             </div>
@@ -1378,7 +1414,18 @@
         </div>
 
         <div class="guide-subsection">
-            <h4 id="instagram-story">How to Use a GIF in an Instagram Story</h4>
+			<h4 id="instagram-story">Use an Export in an Instagram Story</h4>
+
+			<div class="guide-item">
+				<div class="guide-item-icon empty">
+					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+				</div>
+				<div class="guide-item-content">
+					<p><strong>Video option:</strong> In Export Settings, choose <strong>MP4</strong>, set Repeat Animation long enough for your Story, then export and save or share the video. This is usually simpler than pasting a GIF. Instagram may recompress uploaded video, which can soften fine glitter texture or small details; use the <strong>High</strong> quality preset if the result needs more detail.</p>
+				</div>
+			</div>
+
+			<p><strong>To use the GIF clipboard method instead:</strong></p>
 
             <div class="guide-item">
                 <div class="guide-item-icon empty">

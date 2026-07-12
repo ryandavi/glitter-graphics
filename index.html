@@ -173,7 +173,7 @@
 					<button class="btn-icon icon-wrapper" id="clearAllTool" title="Reset (Clear Image & All Layers)"
 						disabled>
 						<svg class="icon">
-							<use href="#icon-trash"></use>
+							<use href="#icon-broom"></use>
 						</svg>
 						<span class="name">Clear All</span>
 					</button>
@@ -305,7 +305,7 @@
 								</svg></button>
 
 							<button class="btn-icon-simple icon-wrapper delete sm mobile-only-action" title="Clear image and all layers" id="layersBarClearAll" disabled><svg class="icon">
-									<use href="#icon-trash"></use>
+									<use href="#icon-broom"></use>
 								</svg><span class="name">Clear All</span></button>
 
 
@@ -2646,6 +2646,7 @@
 				<!-- PREVIEW -->
 				<div class="export-preview-image-container">
 					<img id="exportPreviewImage" alt="Exported GIF">
+					<video id="exportPreviewVideo" controls loop playsinline hidden></video>
 				</div>
 
 				<!-- STATS -->
@@ -2653,6 +2654,8 @@
 				<div class="export-stats" id="exportStats">
 					<span id="exportStatFrames">Frames: 0</span>
 					<span id="exportStatSize">Size: 0 KB</span>
+					<span id="exportStatDuration" hidden>Duration: 0s</span>
+					<span id="exportStatDimensions" hidden>Dimensions: 0 × 0</span>
 				</div>
 
 				<!-- INSTRUCTIONS -->
@@ -2794,7 +2797,19 @@
 
 					<!-- Export Group -->
 					<div class="settings-group-title">Export</div>
-					<div class="settings-row" id="transparencySettingsRow">
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Format</div>
+							<div class="settings-row-control">
+								<div class="segmented-control" id="exportFormatControl" role="group" aria-label="Export format">
+									<button type="button" class="segmented-option active" data-export-format="gif" aria-pressed="true">GIF</button>
+									<button type="button" class="segmented-option" data-export-format="mp4" aria-pressed="false">MP4</button>
+								</div>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Choose an animated GIF or broadly compatible H.264 MP4 video.</div>
+					</div>
+					<div class="settings-row" id="transparencySettingsRow" data-export-format-section="gif">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Transparency</div>
 							<div class="settings-row-control">
@@ -2817,7 +2832,20 @@
 						<div class="settings-row-label-desc">Background color for transparent areas when transparency is
 							disabled.</div>
 					</div>
-
+					<div class="settings-row" data-export-format-section="mp4" hidden>
+						<div class="settings-row-header"><div class="settings-row-label-main">Repeat Animation</div><div class="settings-row-control">
+							<input type="number" id="exportMp4LoopCount" min="1" max="100" step="1" value="3">
+						</div></div><div class="settings-row-label-desc">Number of times the complete animation appears in the video. MP4 files do not contain a loop flag.</div>
+					</div>
+					<div class="settings-row" data-export-format-section="mp4" hidden>
+						<div class="settings-row-label-main">Video Duration</div>
+						<div class="settings-row-label-desc" id="exportMp4Duration">Calculating...</div>
+					</div>
+					<div class="settings-row" data-export-format-section="mp4" hidden>
+						<div class="settings-row-header"><div class="settings-row-label-main">MP4 Quality</div><div class="settings-row-control">
+							<select id="exportMp4Quality"><option value="compact">Compact</option><option value="standard">Standard</option><option value="high">High</option></select>
+						</div></div><div class="settings-row-label-desc">Higher quality uses a higher video bitrate and creates a larger file.</div>
+					</div>
 					<!-- Watermark -->
 					<div class="settings-row">
 						<div class="settings-row-header">
@@ -2833,7 +2861,7 @@
 					</div>
 
 
-					<div class="settings-row">
+					<div class="settings-row" data-export-format-section="gif">
 						<div class="settings-row-header"><div class="settings-row-label-main">Animation Speed</div><div class="settings-row-control">
 							<select id="exportFrameDelay"><option value="50">50ms (20 FPS)</option><option value="67">67ms (15 FPS)</option><option value="83">83ms (12 FPS)</option><option value="100">100ms (10 FPS)</option><option value="110">110ms (9 FPS)</option><option value="125">125ms (8 FPS)</option><option value="167">167ms (6 FPS)</option></select>
 						</div></div><div class="settings-row-label-desc">Time between frames. Lower values produce faster animation.</div>
@@ -2844,7 +2872,7 @@
 						<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false"><span class="advanced-disclosure-label">Advanced</span><span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span></button>
 						<div class="advanced-disclosure-content" data-advanced-content>
 							<div class="control-group-label">Encoding</div>
-					<div class="settings-row">
+					<div class="settings-row" data-export-format-section="gif">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Dithering</div>
 							<div class="settings-row-control">
@@ -2857,7 +2885,7 @@
 						<div class="settings-row-label-desc">Reduces color banding in gradients. Disable for sharper
 							edges.</div>
 					</div>
-					<div class="settings-row" id="ditherTypeRow">
+					<div class="settings-row" id="ditherTypeRow" data-export-format-section="gif">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Dithering Type</div>
 							<div class="settings-row-control">
@@ -2871,7 +2899,7 @@
 						</div>
 						<div class="settings-row-label-desc">Different algorithms for dithering patterns.</div>
 					</div>
-					<div class="settings-row">
+					<div class="settings-row" data-export-format-section="gif">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Quality</div>
 							<div class="settings-row-control">
@@ -3238,6 +3266,9 @@
 					<path
 						d="M232.7 69.9C237.1 56.8 249.3 48 263.1 48L377 48C390.8 48 403 56.8 407.4 69.9L416 96L512 96C529.7 96 544 110.3 544 128C544 145.7 529.7 160 512 160L128 160C110.3 160 96 145.7 96 128C96 110.3 110.3 96 128 96L224 96L232.7 69.9zM128 208L512 208L512 512C512 547.3 483.3 576 448 576L192 576C156.7 576 128 547.3 128 512L128 208zM216 272C202.7 272 192 282.7 192 296L192 488C192 501.3 202.7 512 216 512C229.3 512 240 501.3 240 488L240 296C240 282.7 229.3 272 216 272zM320 272C306.7 272 296 282.7 296 296L296 488C296 501.3 306.7 512 320 512C333.3 512 344 501.3 344 488L344 296C344 282.7 333.3 272 320 272zM424 272C410.7 272 400 282.7 400 296L400 488C400 501.3 410.7 512 424 512C437.3 512 448 501.3 448 488L448 296C448 282.7 437.3 272 424 272z" />
 				</symbol>
+				<symbol id="icon-broom" viewBox="0 0 576 512">
+					<path d="M566.6 54.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192-34.7-34.7c-4.2-4.2-10-6.6-16-6.6c-12.5 0-22.6 10.1-22.6 22.6l0 29.1L364.3 320l29.1 0c12.5 0 22.6-10.1 22.6-22.6c0-6-2.4-11.8-6.6-16l-34.7-34.7 192-192zM341.1 353.4L222.6 234.9c-42.7-3.7-85.2 11.7-115.8 42.3l-8 8C76.5 307.5 64 337.7 64 369.2c0 6.8 7.1 11.2 13.2 8.2l51.1-25.5c5-2.5 9.5 4.1 5.4 7.9L7.3 473.4C2.7 477.6 0 483.6 0 489.9C0 502.1 9.9 512 22.1 512l173.3 0c38.8 0 75.9-15.4 103.4-42.8c30.6-30.6 45.9-73.1 42.3-115.8z" />
+				</symbol>
 				<symbol id="icon-gear" viewBox="0 0 640 640">
 					<path
 						d="M259.1 73.5C262.1 58.7 275.2 48 290.4 48L350.2 48C365.4 48 378.5 58.7 381.5 73.5L396 143.5C410.1 149.5 423.3 157.2 435.3 166.3L503.1 143.8C517.5 139 533.3 145 540.9 158.2L570.8 210C578.4 223.2 575.7 239.8 564.3 249.9L511 297.3C511.9 304.7 512.3 312.3 512.3 320C512.3 327.7 511.8 335.3 511 342.7L564.4 390.2C575.8 400.3 578.4 417 570.9 430.1L541 481.9C533.4 495 517.6 501.1 503.2 496.3L435.4 473.8C423.3 482.9 410.1 490.5 396.1 496.6L381.7 566.5C378.6 581.4 365.5 592 350.4 592L290.6 592C275.4 592 262.3 581.3 259.3 566.5L244.9 496.6C230.8 490.6 217.7 482.9 205.6 473.8L137.5 496.3C123.1 501.1 107.3 495.1 99.7 481.9L69.8 430.1C62.2 416.9 64.9 400.3 76.3 390.2L129.7 342.7C128.8 335.3 128.4 327.7 128.4 320C128.4 312.3 128.9 304.7 129.7 297.3L76.3 249.8C64.9 239.7 62.3 223 69.8 209.9L99.7 158.1C107.3 144.9 123.1 138.9 137.5 143.7L205.3 166.2C217.4 157.1 230.6 149.5 244.6 143.4L259.1 73.5zM320.3 400C364.5 399.8 400.2 363.9 400 319.7C399.8 275.5 363.9 239.8 319.7 240C275.5 240.2 239.8 276.1 240 320.3C240.2 364.5 276.1 400.2 320.3 400z" />
@@ -3456,9 +3487,10 @@
 	<!-- External Libs (self-hosted; gif.js pairs with js/gif.worker.js) -->
 	<script src="js/vendor/omggif.js"></script>
 	<script src="js/vendor/gif.js"></script>
+	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=25"></script>
+	<script src="js/config.js?v=27"></script>
 	<script src="js/transform-math.js?v=1"></script>
 
 	<!-- Utils -->
@@ -3471,7 +3503,8 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=4"></script>
 	<script src="js/classes/ModalManager.js?v=1"></script>
-	<script src="js/classes/GifExporter.js?v=13"></script>
+	<script src="js/classes/GifExporter.js?v=16"></script>
+	<script src="js/classes/Mp4Exporter.js?v=3"></script>
 	<script src="js/classes/ViewportManager.js?v=1"></script>
 	<script src="js/classes/HistoryManager.js?v=8"></script>
 	<script src="js/classes/ProjectSerializer.js?v=2"></script>
@@ -3485,17 +3518,17 @@
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
-	<script src="js/classes/LayerTransform.js?v=20"></script>
+	<script src="js/classes/LayerTransform.js?v=21"></script>
 	<script src="js/classes/GlitterManager.js?v=12"></script>
-	<script src="js/classes/TextGlitterManager.js?v=33"></script>
+	<script src="js/classes/TextGlitterManager.js?v=35"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=21"></script>
-	<script src="js/classes/StickerManager.js?v=3"></script>
-	<script src="js/classes/GroupTransformManager.js?v=10"></script>
+	<script src="js/classes/StickerManager.js?v=4"></script>
+	<script src="js/classes/GroupTransformManager.js?v=11"></script>
 
 	<script src="js/classes/MobileManager.js?v=6"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=62"></script>
+	<script src="js/app.js?v=68"></script>
 
 </body>
 

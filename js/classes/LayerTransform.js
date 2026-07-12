@@ -872,20 +872,22 @@ createTransformHandles() {
         // Half dimensions
         const hw = displayWidth / 2;
         const hh = displayHeight / 2;
+		const outset = config.outwardOffset;
 
-        // Corner positions in local space (before rotation)
+		// Handles sit just outside the selection border. The bounding box remains
+		// exact, so the visual outset cannot change transform geometry.
         const corners = {
-            tl: { x: -hw, y: -hh },
-            tr: { x: hw, y: -hh },
-            br: { x: hw, y: hh },
-            bl: { x: -hw, y: hh }
+			tl: { x: -hw - outset, y: -hh - outset },
+			tr: { x: hw + outset, y: -hh - outset },
+			br: { x: hw + outset, y: hh + outset },
+			bl: { x: -hw - outset, y: hh + outset }
         };
 
         const edges = {
-            top: { x: 0, y: -hh },
-            right: { x: hw, y: 0 },
-            bottom: { x: 0, y: hh },
-            left: { x: -hw, y: 0 }
+			top: { x: 0, y: -hh - outset },
+			right: { x: hw + outset, y: 0 },
+			bottom: { x: 0, y: hh + outset },
+			left: { x: -hw - outset, y: 0 }
         };
 
         // Rotate corners and translate to position

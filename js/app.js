@@ -330,6 +330,7 @@ class GlitterEditor {
 
 	async init() {
 		this.exporter = new GifExporter();
+		this.mp4Exporter = new Mp4Exporter(this.exporter);
 		await this.stickerManager.init();
 		await this.glitterManager.init(); // NEW
 		await this.textGlitterManager.init();
@@ -340,6 +341,9 @@ class GlitterEditor {
 
 	saveSettingsToStorage() {
 		const settings = {
+			exportFormat: this.exportSettings.format,
+			exportMp4LoopCount: this.exportSettings.mp4LoopCount,
+			exportMp4Quality: this.exportSettings.mp4Quality,
 			exportQuality: this.exportSettings.quality,
 			exportDitherEnabled: this.exportSettings.ditherEnabled,
 			exportDitherType: this.exportSettings.ditherType,
@@ -391,6 +395,9 @@ initializeExportSettings() {
 
 	// Initialize export settings with saved values or defaults
 	this.exportSettings = {
+		format: savedSettings?.exportFormat ?? CONFIG.export.defaults.format,
+		mp4LoopCount: savedSettings?.exportMp4LoopCount ?? CONFIG.export.mp4.loopCount,
+		mp4Quality: savedSettings?.exportMp4Quality ?? CONFIG.export.mp4.defaultQuality,
 		quality: savedSettings?.exportQuality ?? CONFIG.export.defaults.quality,
 		ditherEnabled: savedSettings?.exportDitherEnabled ?? CONFIG.export.defaults.ditherEnabled,
 		ditherType: savedSettings?.exportDitherType ?? CONFIG.export.defaults.ditherType,
@@ -422,6 +429,8 @@ initializeExportSettings() {
 
 	syncExportSettingsToUI() {
 		const uiElements = {
+			exportMp4LoopCount: { value: this.exportSettings.mp4LoopCount },
+			exportMp4Quality: { value: this.exportSettings.mp4Quality },
 			exportQuality: { value: this.exportSettings.quality },
 			exportDitherEnabled: { checked: this.exportSettings.ditherEnabled },
 			exportDitherType: { value: this.exportSettings.ditherType },
@@ -456,14 +465,17 @@ initializeExportSettings() {
 
 		const matteColorRow = document.getElementById('matteColorRow');
 		if (matteColorRow) {
-			matteColorRow.classList.toggle('disabled', this.exportSettings.transparency);
+			matteColorRow.classList.toggle('disabled', this.exportSettings.format !== 'mp4' && this.exportSettings.transparency);
 		}
+		this.updateExportFormatUI();
 	}
 
 
 	setupExportSettingsListeners() {
 		// Map UI elements to exportSettings properties
 		const settingsMap = [
+			{ id: 'exportMp4LoopCount', prop: 'mp4LoopCount', parse: (v) => parseInt(v) },
+			{ id: 'exportMp4Quality', prop: 'mp4Quality', parse: (v) => v },
 			{ id: 'exportQuality', prop: 'quality', parse: (v) => parseInt(v) },
 			{ id: 'exportDitherEnabled', prop: 'ditherEnabled', parse: (v) => v },
 			{ id: 'exportDitherType', prop: 'ditherType', parse: (v) => v },
@@ -486,6 +498,7 @@ initializeExportSettings() {
 				const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 				this.exportSettings[prop] = parse(value);
 				this.saveSettingsToStorage();
+				this.updateExportDuration();
 
 				// Update dependent UI states
 				if (id === 'exportDitherEnabled') {
@@ -493,10 +506,37 @@ initializeExportSettings() {
 					if (ditherTypeRow) ditherTypeRow.classList.toggle('disabled', !value);
 				}
 				if (id === 'exportTransparency') {
-					const matteColorRow = document.getElementById('matteColorRow');
-					if (matteColorRow) matteColorRow.classList.toggle('disabled', value);
+					this.updateExportFormatUI();
 				}
 			});
+		});
+
+		// Delegate live repeat changes so the duration remains bound even if modal
+		// controls are reinitialized or replaced in a responsive UI rebuild.
+		document.addEventListener('input', (event) => {
+			if (event.target?.id !== 'exportMp4LoopCount') return;
+			const value = event.target.valueAsNumber;
+			if (Number.isFinite(value)) this.exportSettings.mp4LoopCount = value;
+			this.updateExportDuration(value);
+		});
+
+		document.querySelectorAll('#exportFormatControl [data-export-format]').forEach((button) => {
+			button.addEventListener('click', () => {
+				if (button.disabled) return;
+				this.exportSettings.format = button.dataset.exportFormat;
+				this.updateExportFormatUI();
+				this.saveSettingsToStorage();
+			});
+		});
+
+		Mp4Exporter.isSupported().then((supported) => {
+			this.mp4ExportSupported = supported;
+			if (!supported && this.exportSettings.format === 'mp4') this.exportSettings.format = CONFIG.export.defaults.format;
+			this.updateExportFormatUI();
+		}).catch(() => {
+			this.mp4ExportSupported = false;
+			if (this.exportSettings.format === 'mp4') this.exportSettings.format = CONFIG.export.defaults.format;
+			this.updateExportFormatUI();
 		});
 
 		// Helpful hints setting
@@ -529,6 +569,52 @@ initializeExportSettings() {
 			this.applyInterfaceTheme();
 			this.saveSettingsToStorage();
 		});
+	}
+
+	updateExportFormatUI() {
+		const isMp4 = this.exportSettings.format === 'mp4';
+		document.querySelectorAll('#exportFormatControl [data-export-format]').forEach((button) => {
+			const format = button.dataset.exportFormat;
+			button.classList.toggle('active', format === this.exportSettings.format);
+			button.setAttribute('aria-pressed', String(format === this.exportSettings.format));
+			if (format === 'mp4') {
+				button.disabled = this.mp4ExportSupported === false;
+				button.title = button.disabled ? 'MP4 export requires WebCodecs H.264 support in this browser.' : '';
+			}
+		});
+		document.querySelectorAll('[data-export-format-section="gif"]').forEach((row) => row.hidden = isMp4);
+		document.querySelectorAll('[data-export-format-section="mp4"]').forEach((row) => row.hidden = !isMp4);
+		const transparency = document.getElementById('exportTransparency');
+		if (transparency) transparency.disabled = isMp4;
+		const matteColorRow = document.getElementById('matteColorRow');
+		const matteColor = document.getElementById('exportMatteColor');
+		const matteDisabled = !isMp4 && this.exportSettings.transparency;
+		matteColorRow?.classList.toggle('disabled', matteDisabled);
+		if (matteColor) matteColor.disabled = matteDisabled;
+		const buttonName = document.querySelector('#exportGif .name');
+		if (buttonName) buttonName.textContent = isMp4 ? 'Export MP4' : 'Export GIF';
+		this.updateExportDuration();
+	}
+
+	updateExportDuration(loopOverride = null) {
+		const output = document.getElementById('exportMp4Duration');
+		if (!output || !this.exporter || !this.layers) return;
+		const visibleLayers = this.layers.filter((layer) => layer.visible && layerHasVisibleContent(layer));
+		const calculation = this.exporter._calculateTotalFrames(
+			visibleLayers,
+			this.glitterManager.content,
+			this.exportSettings.maxFrames,
+			this.exportSettings.smartFrameReduction
+		);
+		const renderedFrames = Math.ceil(calculation.totalFrames / this.exportSettings.exportFrameSkip);
+		const input = document.getElementById('exportMp4LoopCount');
+		const enteredLoops = Number.isFinite(loopOverride) ? loopOverride : input?.valueAsNumber;
+		const loopCount = Math.min(
+			CONFIG.export.mp4.maxLoopCount,
+			Math.max(CONFIG.export.mp4.minLoopCount, Number.isFinite(enteredLoops) ? enteredLoops : this.exportSettings.mp4LoopCount)
+		);
+		const duration = renderedFrames * this.exportSettings.frameDelay * loopCount / 1000;
+		output.textContent = `${duration.toFixed(2)} seconds (${renderedFrames} frames × ${loopCount} repeats)`;
 	}
 
 	applyInterfaceTheme() {
@@ -584,6 +670,9 @@ async resetSettingsSection(section) {
 			break;
 
 		case 'export':
+			this.exportSettings.format = CONFIG.export.defaults.format;
+			this.exportSettings.mp4LoopCount = CONFIG.export.mp4.loopCount;
+			this.exportSettings.mp4Quality = CONFIG.export.mp4.defaultQuality;
 			this.exportSettings.baseImage = CONFIG.export.defaults.baseImage;
 			this.exportSettings.transparency = CONFIG.export.defaults.transparency;
 			this.exportSettings.matteColor = CONFIG.export.defaults.matteColor;
@@ -621,6 +710,9 @@ async resetAllSettings() {
 
 	// Reset all export settings
 	this.exportSettings = {
+		format: CONFIG.export.defaults.format,
+		mp4LoopCount: CONFIG.export.mp4.loopCount,
+		mp4Quality: CONFIG.export.mp4.defaultQuality,
 		quality: CONFIG.export.defaults.quality,
 		ditherEnabled: CONFIG.export.defaults.ditherEnabled,
 		ditherType: CONFIG.export.defaults.ditherType,
@@ -656,6 +748,9 @@ async resetAllSettings() {
 		if (!confirmed) return;
 
 		this.exportSettings = {
+			format: CONFIG.export.defaults.format,
+			mp4LoopCount: CONFIG.export.mp4.loopCount,
+			mp4Quality: CONFIG.export.mp4.defaultQuality,
 			quality: CONFIG.export.defaults.quality,
 			ditherEnabled: CONFIG.export.defaults.ditherEnabled,
 			ditherType: CONFIG.export.defaults.ditherType,
@@ -3087,7 +3182,8 @@ async resetAllSettings() {
 			.register('exportSettingsModal', {
 				openBtnId: 'exportSettingsBtn',
 				closeBtnId: ['closeExportSettingsModal', 'closeExportSettingsModalFooter'],
-				resetScrollOnOpen: true
+				resetScrollOnOpen: true,
+				onOpen: () => this.updateExportDuration()
 			})
 			.register('settingsModal', {
 				openBtnId: 'settingsBtn',
@@ -3137,7 +3233,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=8',
+				externalContentUrl: 'modals/guide.html?v=11',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -6149,6 +6245,13 @@ setupWelcomeModalListeners() {
 
 	validateExportSettings() {
 		const settings = this.exportSettings;
+		if (!['gif', 'mp4'].includes(settings.format)) settings.format = CONFIG.export.defaults.format;
+		if (!Number.isFinite(settings.mp4LoopCount)) settings.mp4LoopCount = CONFIG.export.mp4.loopCount;
+		settings.mp4LoopCount = Math.min(
+			CONFIG.export.mp4.maxLoopCount,
+			Math.max(CONFIG.export.mp4.minLoopCount, Math.round(settings.mp4LoopCount))
+		);
+		if (!CONFIG.export.mp4.qualityPresets[settings.mp4Quality]) settings.mp4Quality = CONFIG.export.mp4.defaultQuality;
 
 		// Validate and clamp frame delay (minimum 20ms)
 		if (typeof settings.frameDelay !== 'number' || settings.frameDelay < 20) {
@@ -6209,7 +6312,9 @@ setupWelcomeModalListeners() {
 
 		// Validate export settings before proceeding
 		this.validateExportSettings();
-		this.exporter.setFileName(this.getProjectFileName('gif'));
+		const format = this.exportSettings.format;
+		const activeExporter = format === 'mp4' ? this.mp4Exporter : this.exporter;
+		activeExporter.setFileName(this.getProjectFileName(format));
 
 		const exportBtn = document.getElementById('exportGif');
 		exportBtn.disabled = true;
@@ -6258,7 +6363,7 @@ setupWelcomeModalListeners() {
 
 		setTimeout(async () => {
 			try {
-				await this.exporter.process(exportParams);
+				await activeExporter.process(exportParams);
 			} catch (error) {
 				console.error('Export error:', error);
 				exportBtn.disabled = false;

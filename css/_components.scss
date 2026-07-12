@@ -292,3 +292,182 @@ input[type="range"] {
 	}
 }
 
+
+// Transform Handles (Figma-style)
+.transform-handles {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	z-index: var(--z-header-menu-elevated);
+}
+
+.transform-bounding-box {
+	border: var(--color-accent) solid;
+	border-width: 1.5px;
+	box-sizing: border-box;
+	pointer-events: auto; // Now draggable
+	cursor: move;
+}
+
+// Real hitbox wrappers (not pseudo-elements)
+.transform-handle-wrapper {
+	pointer-events: auto;
+	position: absolute;
+	touch-action: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	&[data-handle-type^="corner-"] {
+		width: calc(32px / var(--zoom, 1));
+		height: calc(32px / var(--zoom, 1));
+	}
+
+	&[data-handle-type^="edge-"] {
+		width: calc(36px / var(--zoom, 1));
+		height: calc(36px / var(--zoom, 1));
+	}
+
+	&[data-handle-type="rotation"] {
+		width: calc(40px / var(--zoom, 1));
+		height: calc(40px / var(--zoom, 1));
+	}
+}
+
+@media (pointer: coarse) {
+	.transform-handle-wrapper {
+		&[data-handle-type^="corner-"] {
+			width: calc(44px / var(--zoom, 1));
+			height: calc(44px / var(--zoom, 1));
+		}
+
+		&[data-handle-type^="edge-"] {
+			width: calc(44px / var(--zoom, 1));
+			height: calc(44px / var(--zoom, 1));
+		}
+
+		&[data-handle-type="rotation"] {
+			width: calc(48px / var(--zoom, 1));
+			height: calc(48px / var(--zoom, 1));
+		}
+	}
+}
+
+.transform-handle {
+	pointer-events: none; // Wrapper handles clicks
+	box-sizing: border-box;
+	// White fill + theme-accent ring (Figma convention) — the old
+	// text-primary fill went near-black on light themes and muddied against
+	// the accent bounding box. Shadow separates the handle from light artwork.
+	background: var(--handle-fill);
+	border: 1.5px solid var(--handle-border-color);
+	box-shadow: var(--handle-shadow);
+
+	&.transform-handle-corner {
+		width: 8px;
+		height: 8px;
+		border-radius: 2px;
+	}
+
+	&.transform-handle-rotation {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+	}
+
+	&.transform-handle-edge {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+	}
+}
+
+// Hover states on wrappers
+.transform-handle-wrapper:hover .transform-handle {
+	background: var(--color-accent);
+	border-color: var(--handle-fill);
+}
+
+.transform-rotation-line {
+	background: var(--color-accent);
+	pointer-events: none;
+}
+
+.sticker-element.has-transform-handles {
+	pointer-events: none !important;
+}
+
+.text-glitter-element.has-transform-handles {
+	pointer-events: none !important;
+}
+
+
+
+
+
+
+
+
+.switch {
+	--switch-width: calc(1.75 * var(--icon-size));
+	--switch-height: var(--icon-size);
+	--switch-padding: 4px;
+	--slider-bg: var(--color-slider-track);
+	--slider-checked-bg: var(--color-accent);
+	--knob-size: calc(var(--switch-height) - 2 * var(--switch-padding));
+	--slider-speed: 0.2s;
+
+	display: inline-block;
+	height: var(--switch-height);
+	width: var(--switch-width);
+	position: relative;
+
+	>input[type="checkbox"] {
+		display: none;
+
+		&:checked+.slider {
+			background-color: var(--slider-checked-bg);
+
+			&:before {
+				transform: translateX(calc(var(--switch-width) - var(--switch-height)));
+			}
+		}
+	}
+
+	>.slider {
+		background-color: var(--slider-bg);
+		// Recessed track under a raised knob — reads as a physical control on
+		// both themes (percentages, not colors, so it tints with the track).
+		box-shadow: inset 0 1px 2px rgb(0 0 0 / 15%);
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		cursor: pointer;
+		transition: var(--slider-speed);
+
+		&.round {
+			border-radius: var(--switch-height);
+
+			&:before {
+				border-radius: 50%;
+			}
+		}
+
+		&:before {
+			content: "";
+			position: absolute;
+			left: var(--switch-padding);
+			bottom: var(--switch-padding);
+			width: var(--knob-size);
+			height: var(--knob-size);
+			background-color: var(--switch-knob-color);
+			box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+			transition: var(--slider-speed);
+		}
+	}
+}
