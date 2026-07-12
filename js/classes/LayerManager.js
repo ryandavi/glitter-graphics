@@ -329,6 +329,7 @@ class LayerManager {
 		this.renderLayersList();
 		this.editor.saveState();
 		this.editor.updatePreview();
+		this.editor.updateStatus(`${layer.visible ? 'Shown' : 'Hidden'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
 	}
 
 	// ===== LAYER SELECTION =====

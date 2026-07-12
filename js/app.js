@@ -935,7 +935,7 @@ async resetAllSettings() {
 		const percentage = this.viewport.getZoomPercentage();
 		// Zoom context toolbar reads with the muted-unit treatment like the panels.
 		this.contextToolbarRenderer?.setValue('zoomPercentage', `${percentage}%`);
-		document.getElementById('statusZoom').textContent = `${percentage}%`;
+		document.getElementById('statusZoom').innerHTML = formatUnit(percentage, '%');
 
 
 		this.contextToolbarRenderer?.setEnabled('zoomOut', this.viewport.currentZoomIndex > 0);
@@ -1120,15 +1120,15 @@ async resetAllSettings() {
 
 		// Size + frames use the shared formatters so Glitter Properties, Sticker
 		// Properties, and the text Fill/Border/Shadow pickers all read identically.
-		if (size) size.textContent = this.formatAssetSize(asset);
-		if (frames) frames.textContent = this.formatAssetFrames(asset);
+		if (size) size.innerHTML = this.formatAssetSize(asset);
+		if (frames) frames.innerHTML = this.formatAssetFrames(asset);
 	}
 
 	// ===== Shared asset-info formatting (one place to change size/frames text) =====
 
 	formatAssetSize(asset) {
 		if (asset?.width && asset?.height) {
-			return `${asset.width} × ${asset.height} px`;
+			return formatDimensions(asset.width, asset.height);
 		}
 		return 'Undefined';
 	}
@@ -1137,11 +1137,13 @@ async resetAllSettings() {
 		if (asset?.frameCount === undefined || asset?.frameCount === null) {
 			return 'Undefined';
 		}
-		if (!asset.isAnimated || !asset.frameRate) {
+		if (asset.frameCount <= 1 && !asset.isAnimated) {
 			return 'Static';
 		}
-		const rate = asset.isVariableFramerate ? 'Variable fps' : `${asset.frameRate} fps`;
-		return `${asset.frameCount} @ ${rate}`;
+		const rate = asset.isVariableFramerate
+			? 'Variable'
+			: asset.frameRate || 'Unknown';
+		return `${asset.frameCount}<span class="setting-separator"> @ </span>${rate}<span class="setting-unit">FPS</span>`;
 	}
 
 	// Populate a glitter asset-info block (thumbnail + name + badges + size +
@@ -1164,8 +1166,8 @@ async resetAllSettings() {
 		if (els.badges) {
 			this.renderAssetBadges(els.badges, glitter, this.glitterManager, () => []);
 		}
-		if (els.size) els.size.textContent = this.formatAssetSize(glitter);
-		if (els.frames) els.frames.textContent = this.formatAssetFrames(glitter);
+		if (els.size) els.size.innerHTML = this.formatAssetSize(glitter);
+		if (els.frames) els.frames.innerHTML = this.formatAssetFrames(glitter);
 	}
 
 	// Shared by Glitter/Sticker asset info (updateAssetInfo) and the Text
@@ -4298,7 +4300,9 @@ setupWelcomeModalListeners() {
 				[ToolType.TEXT]: { icon: 'icon-hand-pointer', name: 'Text Tool' },
 				[ToolType.SHAPE]: { icon: 'icon-square', name: 'Shape Tool' },
 				[ToolType.COLOR_PICKER]: { icon: 'icon-paint-bucket', name: 'Color Fill' },
-				[ToolType.BRUSH]: { icon: 'icon-brush', name: 'Mask Brush' },
+				[ToolType.BRUSH]: this.maskEditor?.mode === 'sub'
+					? { icon: 'icon-eraser', name: 'Eraser Tool' }
+					: { icon: 'icon-brush', name: 'Mask Brush' },
 				[ToolType.HAND]: { icon: 'icon-hand', name: 'Hand Tool' },
 				[ToolType.ZOOM]: { icon: 'icon-magnifying-glass', name: 'Zoom Tool' }
 			};
@@ -4307,6 +4311,7 @@ setupWelcomeModalListeners() {
 
 		// PRIORITY 1: Critical layer states (don't show tool label for these)
 		if (this.maskEditor?.isEditing && activeLayer?.type === LayerType.GLITTER_FILL) {
+			showTool = true;
 			if (isMobile) {
 				hint = this.maskEditor.mode === 'sub'
 					? 'Drag to erase glitter from this layer'
@@ -4320,6 +4325,7 @@ setupWelcomeModalListeners() {
 			}
 		}
 		else if (this.maskEditor?.isEditing) {
+			showTool = true;
 			if (this.maskEditor.mode === 'sub') {
 				hint = 'Select a glitter layer to erase from';
 				context = 'There\'s nothing here for the Eraser to remove.';
@@ -4384,6 +4390,14 @@ setupWelcomeModalListeners() {
 			showTool = true;
 			hint = 'Drag on the canvas to draw a shape at that size';
 			context = 'Hold Shift to keep it square. A single click makes a default-size shape. Pick the shape and its fill/border/shadow in Shape Properties.';
+		}
+
+		else if (currentTool === ToolType.BRUSH) {
+			showTool = true;
+			hint = this.maskEditor?.mode === 'sub'
+				? 'Select a glitter layer, then drag to erase glitter'
+				: 'Select a glitter layer, then drag to paint glitter';
+			context = 'Press X to swap Paint and Erase. Use [ or ] to resize the brush.';
 		}
 
 		else if (currentTool === ToolType.COLOR_PICKER) {
@@ -5503,7 +5517,12 @@ setupWelcomeModalListeners() {
 		const rebased = document.createElement('canvas');
 		rebased.width = newWidth;
 		rebased.height = newHeight;
-		rebased.getContext('2d', { willReadFrequently: true }).drawImage(this.originalCanvas, offsetX, offsetY);
+		const rebasedCtx = rebased.getContext('2d', { willReadFrequently: true });
+		if (this.baseImageSource?.kind === 'preset') {
+			rebasedCtx.fillStyle = this.baseImageSource.preset.color;
+			rebasedCtx.fillRect(0, 0, newWidth, newHeight);
+		}
+		rebasedCtx.drawImage(this.originalCanvas, offsetX, offsetY);
 
 		this.originalCanvas.width = newWidth;
 		this.originalCanvas.height = newHeight;
@@ -5550,6 +5569,7 @@ setupWelcomeModalListeners() {
 		// undo restores the previous size/content and redo re-applies this resize.
 		this.historyManager.saveState();
 		this.isSaved = false;
+		this.updateStatus(`Canvas resized to ${newWidth} × ${newHeight} px`);
 
 		// 7. Repaint composite + list + status; drop any live resize preview.
 		this.hideCanvasResizePreview();
@@ -5661,12 +5681,13 @@ setupWelcomeModalListeners() {
 
 	updateStatusBar() {
 		if (this.originalImage) {
-			const dims = `${this.originalCanvas.width} × ${this.originalCanvas.height}px`;
-			document.getElementById('statusDimensions').textContent = dims;
+			document.getElementById('statusDimensions').innerHTML = formatDimensions(this.originalCanvas.width, this.originalCanvas.height);
 
 			const zoomPct = Math.round(this.viewport.currentZoom * 100);
 			const count = this.layerManager?.getSelectedLayers({ movableOnly: true }).length || 0;
-			document.getElementById('statusZoom').textContent = count > 1 ? `${zoomPct}% · ${count} layers selected` : `${zoomPct}%`;
+			document.getElementById('statusZoom').innerHTML = count > 1
+				? `${formatUnit(zoomPct, '%')}<span class="setting-separator"> · </span>${count} layers selected`
+				: formatUnit(zoomPct, '%');
 		} else {
 			document.getElementById('statusDimensions').textContent = '';
 			document.getElementById('statusZoom').textContent = '';
@@ -6175,7 +6196,11 @@ setupWelcomeModalListeners() {
 			: [this.layerManager.getActiveLayer()].filter(l => l && l.visible && layerHasVisibleContent(l));
 
 		if (layersToShow.length === 0) {
-			this.clearPreview();
+			this.renderPreviewCanvas(layersToShow);
+			this.glitterManager.renderContent(layersToShow);
+			this.stickerManager.renderContent(layersToShow);
+			this.textGlitterManager.renderContent(layersToShow);
+			this.shapeGlitterManager.renderContent(layersToShow);
 			return;
 		}
 

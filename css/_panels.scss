@@ -1974,6 +1974,12 @@ body.mask-editing {
 	margin-left: 1px;
 }
 
+.setting-separator {
+	color: var(--color-text-secondary);
+	font-size: 1em;
+	font-weight: 400;
+}
+
 .context-checkbox-group {
 	display: flex;
 	align-items: center;

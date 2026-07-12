@@ -260,13 +260,14 @@ async initBrowser() {
 
 			if (frameCount === 0) throw new Error('GIF has 0 frames');
 
-			const frameInfo = reader.frameInfo(0);
 			const width = reader.width;
 			const height = reader.height;
 			const frames = [];
+			const frameDelays = [];
 
 			for (let i = 0; i < frameCount; i++) {
 				const info = reader.frameInfo(i);
+				frameDelays.push(info.delay * 10 || 100);
 				const pixels = new Uint8ClampedArray(width * height * 4);
 				reader.decodeAndBlitFrameRGBA(i, pixels);
 
@@ -281,12 +282,18 @@ async initBrowser() {
 				});
 			}
 
+			const isVariableFramerate = new Set(frameDelays).size > 1;
+			const averageDelay = frameDelays.reduce((sum, delay) => sum + delay, 0) / frameDelays.length;
+			const frameRate = Math.round((1000 / averageDelay) * 10) / 10;
 			return {
 				width,
 				height,
 				frames,
 				frameCount,
-				frameDelay: frameInfo.delay * 10 || 100
+				frameDelay: frameDelays[0],
+				frameDelays,
+				frameRate,
+				isVariableFramerate
 			};
 		} catch (error) {
 			console.error(`[parseGifFromUrl] Error loading ${url}:`, error);

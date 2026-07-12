@@ -2084,7 +2084,7 @@ class GifExporter {
 			}
 			if (statDimensions) {
 				statDimensions.hidden = !options.width || !options.height;
-				if (!statDimensions.hidden) statDimensions.textContent = `Dimensions: ${options.width} × ${options.height}`;
+				if (!statDimensions.hidden) statDimensions.innerHTML = `Dimensions: ${formatDimensions(options.width, options.height)}`;
 			}
 
 			// Set stats text

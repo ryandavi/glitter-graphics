@@ -29,6 +29,10 @@ function formatUnit(value, unit) {
 	return `${value}<span class="setting-unit">${unit}</span>`;
 }
 
+function formatDimensions(width, height, unit = 'px') {
+	return `${width}<span class="setting-separator"> × </span>${height}<span class="setting-unit">${unit}</span>`;
+}
+
 // ============================================
 // GALLERY PICKER STRIP COPY
 // ============================================

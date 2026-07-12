@@ -582,6 +582,8 @@ class StickerManager extends ContentManager {
 				userSticker.isAnimated = frames.frames.length > 1;
 				userSticker.frameCount = frames.frames.length;
 				userSticker.frames = frames;
+				userSticker.frameRate = frames.frameRate;
+				userSticker.isVariableFramerate = frames.isVariableFramerate;
 			} catch (error) {
 				console.warn('Failed to parse GIF frames:', error);
 			}
