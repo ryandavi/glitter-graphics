@@ -243,7 +243,7 @@ async function createTestSticker(page, options = {}) {
 
 		const layer = editor.stickerManager.createLayer();
 		layer.name = label;
-		layer.stickerSourceId = 'touch-handle-verify-generated';
+		layer.stickerSourceId = editor.stickerManager.content[0]?.id || 'touch-handle-verify-generated';
 		layer.stickerData.isEmpty = false;
 		layer.stickerData.url = canvas.toDataURL('image/png');
 		layer.stickerData.name = label;
@@ -520,6 +520,62 @@ async function checkGroupMoveHandle(page, drag, label) {
 		Math.abs(afterSecond.position.y - beforeSecond.position.y) > 5,
 		`${label}: group move handle drag did not move sticker B enough`
 	);
+
+	await page.evaluate(() => window.editor.undo());
+	await page.waitForTimeout(150);
+	const undoneFirst = await getStickerState(page, firstSticker.layerId);
+	const undoneSecond = await getStickerState(page, secondSticker.layerId);
+	assert(
+		Math.abs(undoneFirst.position.x - beforeFirst.position.x) < 0.01 &&
+		Math.abs(undoneFirst.position.y - beforeFirst.position.y) < 0.01,
+		`${label}: undo did not restore sticker A after group move`
+	);
+	assert(
+		Math.abs(undoneSecond.position.x - beforeSecond.position.x) < 0.01 &&
+		Math.abs(undoneSecond.position.y - beforeSecond.position.y) < 0.01,
+		`${label}: undo did not restore sticker B after group move`
+	);
+}
+
+async function checkGroupScaleUndo(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const first = await createTestSticker(page, { position: { x: 90, y: 90 }, label: 'Group Scale A' });
+	const second = await createTestSticker(page, { position: { x: 165, y: 110 }, label: 'Group Scale B' });
+	await selectLayers(page, [first.layerId, second.layerId], second.layerId);
+	const beforeFirst = await getStickerState(page, first.layerId);
+	const beforeSecond = await getStickerState(page, second.layerId);
+	const handle = await getElementCenter(page, '.group-transform-handles [data-handle-type="corner-br"]');
+	await mouseDrag(page, handle, { x: handle.x + 55, y: handle.y + 45 });
+	const scaledFirst = await getStickerState(page, first.layerId);
+	assert(scaledFirst.scale.x > beforeFirst.scale.x + 5, 'Group corner drag did not scale the selection');
+	await page.evaluate(() => window.editor.undo());
+	await page.waitForTimeout(150);
+	const undoneFirst = await getStickerState(page, first.layerId);
+	const undoneSecond = await getStickerState(page, second.layerId);
+	assert(Math.abs(undoneFirst.scale.x - beforeFirst.scale.x) < 0.01 && Math.abs(undoneFirst.position.x - beforeFirst.position.x) < 0.01, 'Undo did not restore sticker A after group scale');
+	assert(Math.abs(undoneSecond.scale.x - beforeSecond.scale.x) < 0.01 && Math.abs(undoneSecond.position.x - beforeSecond.position.x) < 0.01, 'Undo did not restore sticker B after group scale');
+}
+
+async function checkGroupRotationUndo(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const first = await createTestSticker(page, { position: { x: 90, y: 90 }, label: 'Group Rotate A' });
+	const second = await createTestSticker(page, { position: { x: 165, y: 110 }, label: 'Group Rotate B' });
+	await selectLayers(page, [first.layerId, second.layerId], second.layerId);
+	const beforeFirst = await getStickerState(page, first.layerId);
+	const beforeSecond = await getStickerState(page, second.layerId);
+	const rotationHandle = await getElementCenter(page, '.group-transform-handles [data-handle-type="rotation"]');
+	const box = await getElementCenter(page, '.group-transform-handles .transform-bounding-box');
+	await mouseDrag(page, rotationHandle, { x: box.x + 90, y: box.y });
+	const rotatedFirst = await getStickerState(page, first.layerId);
+	assert(Math.abs(rotatedFirst.rotation - beforeFirst.rotation) > 5, 'Group rotation handle did not rotate the selection');
+	await page.evaluate(() => window.editor.undo());
+	await page.waitForTimeout(150);
+	const undoneFirst = await getStickerState(page, first.layerId);
+	const undoneSecond = await getStickerState(page, second.layerId);
+	assert(Math.abs(undoneFirst.rotation - beforeFirst.rotation) < 0.01 && Math.abs(undoneFirst.position.x - beforeFirst.position.x) < 0.01, 'Undo did not restore sticker A after group rotation');
+	assert(Math.abs(undoneSecond.rotation - beforeSecond.rotation) < 0.01 && Math.abs(undoneSecond.position.x - beforeSecond.position.x) < 0.01, 'Undo did not restore sticker B after group rotation');
 }
 
 async function runCheck(browser, name, fn) {
@@ -549,6 +605,9 @@ async function main() {
 			['Touch drag on corner handle scales the selected sticker', (page) => checkCornerScaleHandle(page, oneFingerDrag, 'touch')],
 			['Touch drag on fixed-text edge handle resizes the box', (page) => checkFixedTextEdgeResizeHandle(page, oneFingerDrag, 'touch')],
 			['Touch drag on the shared group box moves every selected sticker', (page) => checkGroupMoveHandle(page, oneFingerDrag, 'touch')],
+			['Mouse drag on the shared group box moves every selected sticker and undoes', (page) => checkGroupMoveHandle(page, mouseDrag, 'mouse')],
+			['Mouse group scale undoes every selected sticker', checkGroupScaleUndo],
+			['Mouse group rotation undoes every selected sticker', checkGroupRotationUndo],
 			['Mouse drag on rotation handle still rotates the selected sticker', (page) => checkRotationHandle(page, mouseDrag, 'mouse')],
 			['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
 			['Alt + mouse corner drag scales from the layer center', checkAltCornerScaleFromCenter],

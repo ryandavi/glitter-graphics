@@ -683,8 +683,19 @@ updateTransform(layerId, updates) {
 
 	serializeSticker(layer) {
 		// For undo/redo - exclude non-serializable data
+		const sourceTransform = getLayerTransform(layer);
+		const transform = {
+			position: { ...sourceTransform.position },
+			rotation: sourceTransform.rotation,
+			scale: { ...sourceTransform.scale },
+			proportionalScale: sourceTransform.proportionalScale,
+			opacity: sourceTransform.opacity,
+			flipX: sourceTransform.flipX,
+			flipY: sourceTransform.flipY
+		};
 		return {
 			...layer,
+			transform,
 			stickerSourceId: layer.stickerSourceId,
 			stickerData: {
 				...layer.stickerData,
@@ -692,15 +703,7 @@ updateTransform(layerId, updates) {
 				frames: null,      // Don't need frames for undo/redo - reload from URL on restore
 
 				// Deep copy transform object for undo/redo
-				transform: {
-					position: { ...layer.stickerData.transform.position },
-					rotation: layer.stickerData.transform.rotation,
-					scale: { ...layer.stickerData.transform.scale },
-					proportionalScale: layer.stickerData.transform.proportionalScale,
-					opacity: layer.stickerData.transform.opacity,
-					flipX: layer.stickerData.transform.flipX,
-					flipY: layer.stickerData.transform.flipY
-				}
+				transform
 			}
 		};
 	}
@@ -708,6 +711,7 @@ updateTransform(layerId, updates) {
 	async deserializeSticker(layerData) {
 		// Handle empty sticker layers (no sticker selected yet)
 		if (!layerData.stickerSourceId) {
+			syncLayerTransformReference(layerData, layerData.stickerData?.transform || layerData.transform);
 			return layerData;
 		}
 
@@ -723,6 +727,7 @@ updateTransform(layerId, updates) {
 			layerData.stickerData.url = sticker.url;
 		}
 		layerData.stickerData.frameCount = sticker.frameCount || layerData.stickerData.frameCount || 1;
+		syncLayerTransformReference(layerData, layerData.stickerData.transform || layerData.transform);
 
 		return layerData;
 	}
