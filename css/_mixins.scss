@@ -9,8 +9,8 @@
 	box-shadow: 0 2px 5px var(--color-shadow-strong);
 	transition: all var(--transition-base);
 	// blur background
-	-webkit-backdrop-filter: blur(4px);
-	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	backdrop-filter: blur(var(--glass-blur));
 
 	//if hvoer
 	@if $hover {
@@ -131,6 +131,10 @@
 	border: 1px solid var(--color-border);
 	padding: var(--spacing-sm);
 	pointer-events: auto; // block clicks from passing through
+	// Same glass as mini-modal — keeps low-alpha themes (Dew) legible over
+	// the workspace.
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	backdrop-filter: blur(var(--glass-blur));
 }
 
 @mixin windows7-tooltip {
@@ -214,7 +218,9 @@
 	overflow: hidden;
 	color: var(--btn-text-color);
 	position: relative;
-	border: none;
+	// Transparent by default (--btn-border-color); rimmed-control themes set a
+	// color. 1px lives inside the border-box, so sizes don't shift per theme.
+	border: 1px solid var(--btn-border-color);
 	outline: none;
 	cursor: pointer;
 	font-size: var(--font-size-base);

@@ -94,7 +94,9 @@
 /* ===== TOOLBAR ===== */
 .toolbar {
 	width: var(--toolbar-width);
-	background: var(--color-bg-primary);
+	background: var(--panel-bg);
+	-webkit-backdrop-filter: var(--panel-backdrop);
+	backdrop-filter: var(--panel-backdrop);
 	border-right: 1px solid var(--color-border);
 	display: flex;
 	flex-direction: column;
@@ -161,7 +163,9 @@
 	display: flex;
 	flex-direction: column;
 
-	background: var(--color-bg-primary);
+	background: var(--panel-bg);
+	-webkit-backdrop-filter: var(--panel-backdrop);
+	backdrop-filter: var(--panel-backdrop);
 
 	>.image-dropzone-wrapper {
 		>#imageUpload {
@@ -289,7 +293,9 @@
 	flex-direction: column;
 	overflow-y: auto;
 
-	background: var(--color-bg-primary);
+	background: var(--panel-bg);
+	-webkit-backdrop-filter: var(--panel-backdrop);
+	backdrop-filter: var(--panel-backdrop);
 
 	>.section-header {
 		flex-shrink: 0;
@@ -368,9 +374,9 @@
 				}
 
 				&.empty {
-					outline: 2px solid var(--gray-100);
+					outline: 2px solid var(--swatch-empty-outline);
 					outline-offset: 2px;
-					background-color: var(--gray-300);
+					background-color: var(--swatch-empty-bg);
 				}
 
 
@@ -667,7 +673,9 @@
 
 			>.section-header-title-count {
 				@include text-sm;
-				color: var(--color-text-tertiary);
+				// Sits on the bar chrome, not the panel — tertiary text goes
+				// invisible once a theme paints the bar a color.
+				color: var(--bar-icon-color);
 
 				&::before {
 					content: attr(data-count);
@@ -723,7 +731,9 @@
 	&.collapsible-section {
 		border-top: 1px solid var(--color-border);
 
-		background: var(--color-bg-primary);
+		background: var(--panel-bg);
+		-webkit-backdrop-filter: var(--panel-backdrop);
+		backdrop-filter: var(--panel-backdrop);
 		flex-shrink: 0;
 
 
@@ -1564,11 +1574,11 @@ body.tool-text {
 
 	&.bounds {
 		.preview-wrapper {
-			outline: 2px dashed var(--gray-400);
+			outline: 2px dashed var(--bounds-outline-color);
 			outline-offset: -2px;
 			/* Draws inside the canvas edge */
-			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5);
-			/* Drop shadow for contrast */
+			box-shadow: 0 0 0 1px var(--color-shadow-strong), 0 0 8px var(--color-shadow-strong);
+			/* Contrast ring follows the theme's shadow tier (black reads as dirt on light UIs) */
 			/* Clip any layer content that extends past the canvas edge - the
 			   toggle's whole point is previewing what's actually inside bounds. */
 			overflow: hidden;

@@ -1079,28 +1079,28 @@
 .transform-handle {
 	pointer-events: none; // Wrapper handles clicks
 	box-sizing: border-box;
+	// White fill + theme-accent ring (Figma convention) — the old
+	// text-primary fill went near-black on light themes and muddied against
+	// the accent bounding box. Shadow separates the handle from light artwork.
+	background: var(--handle-fill);
+	border: 1.5px solid var(--handle-border-color);
+	box-shadow: var(--handle-shadow);
 
 	&.transform-handle-corner {
 		width: 8px;
 		height: 8px;
-		background: var(--color-text-primary);
-		border: 1.5px solid var(--color-bg-secondary);
 		border-radius: 2px;
 	}
 
 	&.transform-handle-rotation {
 		width: 10px;
 		height: 10px;
-		background: var(--color-text-primary);
-		border: 1.5px solid var(--color-bg-secondary);
 		border-radius: 50%;
 	}
 
 	&.transform-handle-edge {
 		width: 12px;
 		height: 12px;
-		background: rgba(255, 255, 255, 0.9);
-		border: 1.5px solid var(--color-bg-secondary);
 		border-radius: 50%;
 	}
 }
@@ -1108,6 +1108,7 @@
 // Hover states on wrappers
 .transform-handle-wrapper:hover .transform-handle {
 	background: var(--color-accent);
+	border-color: var(--handle-fill);
 }
 
 .transform-rotation-line {
@@ -1264,7 +1265,6 @@
 		>.section-content {
 			padding: 0;
 			min-height: 0;
-			background-color: var(--color-bg-primary);
 
 			&.visible {
 				display: flex;
@@ -1944,6 +1944,8 @@
 .text-valign-group {
 	width: 100%;
 }
+
+
 
 .control-group-label {
 	font-size: var(--font-size-sm);

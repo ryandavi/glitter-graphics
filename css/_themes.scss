@@ -65,6 +65,9 @@
 	--btn-gradient-mid: #c8e2f7;
 	--btn-gradient-dark: #a3ceef;
 	--btn-gradient-end: #e3f4ff;
+	/* Aqua capsules rim in a slate-blue hairline — grounds pale gels that
+	   otherwise float on white panels. */
+	--btn-border-color: #a9c4dd;
 	--btn-hover-filter: brightness(1.01) saturate(1.15);
 	--btn-active-filter: brightness(0.96) saturate(1.05);
 	--btn-secondary-filter: saturate(0.5) brightness(1.02);
@@ -151,6 +154,8 @@
 	--btn-gradient-mid: #f8cfe8;
 	--btn-gradient-dark: #efadd6;
 	--btn-gradient-end: #ffe8f7;
+	/* Candy-gel rim, one step deeper than the gradient's dark stop */
+	--btn-border-color: #e2aecd;
 	--btn-hover-filter: brightness(1.01) saturate(1.15);
 	--btn-active-filter: brightness(0.96) saturate(1.05);
 	--btn-secondary-filter: saturate(0.5) brightness(1.02);
@@ -232,6 +237,12 @@
 	--bar-active-filter: brightness(0.92);
 	--color-window-border: #2a63cf;
 
+	/* Chromeless bar buttons: translucent white glyphs on the royal blue,
+	   hover lifts with a white wash instead of the beige panel tint. */
+	--bar-btn-color: rgb(255 255 255 / 78%);
+	--bar-btn-hover-color: #ffffff;
+	--bar-btn-hover-bg: rgb(255 255 255 / 22%);
+
 	/* Buttons the XP way: clean near-white face, cool #7f9db9 control border,
 	   amber warmth for hover AND toggled (porcelain has no hue to desaturate,
 	   so the toggled state tints instead of the inactive state shading down). */
@@ -286,7 +297,15 @@
 	--color-off-white: var(--gray-100);
 	--color-bg-accent-tint: #d3f2fb;
 	--color-checkerboard: #cfe7f1;
-	--color-bg-translucent: rgb(240 251 255 / 88%);
+	/* Aero glass: more transparent than the other light themes and a heavier
+	   backdrop blur — Vista's frosted chrome. */
+	--color-bg-translucent: rgb(240 251 255 / 72%);
+	--glass-blur: 14px;
+
+	/* Glass panels: the toolbar and panel sections go translucent over a
+	   backdrop blur so the sky/grass workspace glows through the chrome. */
+	--panel-bg: rgb(233 247 253 / 68%);
+	--panel-backdrop: blur(var(--glass-blur));
 	--color-warning-text: #7d3a00;
 
 	/* Water cyan */
@@ -317,6 +336,8 @@
 	   saturated gel reads as murk against these airy surfaces. */
 	--btn-gradient: linear-gradient(to bottom, #f6feff 0%, #cff2fc 40%, #a5e5f8 50%, #c8f5e3 100%);
 	--btn-text-color: #1d5568;
+	/* Gel droplets rim in water-cyan */
+	--btn-border-color: #93cfe6;
 	--btn-hover-filter: brightness(1.02) saturate(1.3);
 	--btn-active-filter: brightness(0.95) saturate(1.15);
 	--btn-secondary-filter: saturate(0.6) brightness(1.05);
@@ -331,7 +352,20 @@
 	--color-overlay: rgb(23 76 100 / 40%);
 
 	/* Droplet-round corners */
-	--radius-sm: 6px;
-	--radius-md: 9px;
-	--radius-lg: 12px;
+	--radius-sm: 8px;
+	--radius-md: 11px;
+	--radius-lg: 14px;
+}
+
+// Shared light-theme lifts — tokens whose dark-ramp endpoints invert meaning
+// on light ramps (gray-100 is near-black there). Each theme's own --gray-*
+// values resolve at use, so one block covers all four.
+:root[data-theme="light"],
+:root[data-theme="bubblegum"],
+:root[data-theme="bliss"],
+:root[data-theme="dew"] {
+	/* Empty layer swatch: pale chip with a mid-tone ring instead of
+	   dark-on-dark */
+	--swatch-empty-outline: var(--gray-400);
+	--swatch-empty-bg: var(--gray-500);
 }

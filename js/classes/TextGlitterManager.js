@@ -1114,11 +1114,16 @@ class TextGlitterManager {
 			name.textContent = font.name;
 			card.appendChild(name);
 
-			if (extraScripts.length > 0) {
+			// One corner badge: extra scripts and/or the device-font marker
+			// (system faces render with a fallback on devices without them).
+			const badgeLabels = extraScripts.map((script) => langLabels[script] || script.toUpperCase());
+			if (font.system) badgeLabels.push('System');
+			if (badgeLabels.length > 0) {
 				const badge = document.createElement('span');
 				badge.className = 'text-font-option-badge';
 				extraScripts.forEach((script) => badge.classList.add(`is-${script}`));
-				badge.textContent = extraScripts.map((script) => langLabels[script] || script.toUpperCase()).join(' · ');
+				if (font.system) badge.classList.add('is-system');
+				badge.textContent = badgeLabels.join(' · ');
 				card.appendChild(badge);
 			}
 
@@ -1150,6 +1155,8 @@ class TextGlitterManager {
 
 	getFontFamily(font) {
 		if (!font) return 'sans-serif';
+		// System fonts carry their own full stack (device coverage varies).
+		if (font.family) return font.family;
 		return `"${font.name}", ${font.fallback || 'sans-serif'}`;
 	}
 
@@ -1157,7 +1164,10 @@ class TextGlitterManager {
 		if (!font?.name) {
 			return `400 ${fontSize}px sans-serif`;
 		}
-		return `${font.weight || 400} ${fontSize}px "${font.name}"`;
+		// System fonts need the whole stack in canvas font strings too, so a
+		// device without the face falls back the same way preview DOM does.
+		const family = font.family || `"${font.name}"`;
+		return `${font.weight || 400} ${fontSize}px ${family}`;
 	}
 
 	async ensureFontLoaded(fontId) {
@@ -1173,6 +1183,13 @@ class TextGlitterManager {
 		}
 
 		const fontPromise = (async () => {
+			// Installed-on-device face: nothing to fetch — the family stack's
+			// fallback covers devices without it (Android ships neither Comic
+			// Sans nor Impact). document.fonts.load still warms measurement.
+			if (font.system) {
+				await document.fonts.load(this.getFontDeclaration(font, CONFIG.tools.text.defaultFontSize), 'Hg');
+				return null;
+			}
 			try {
 				const response = await fetch(font.file);
 				if (!response.ok) {

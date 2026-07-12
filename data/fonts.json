@@ -110,6 +110,30 @@
 		]
 	},
 	{
+		"id": "comic-sans",
+		"name": "Comic Sans MS",
+		"system": true,
+		"family": "\"Comic Sans MS\", \"Comic Sans\", \"Chalkboard SE\", \"Comic Neue\", cursive",
+		"weight": 400,
+		"fallback": "cursive",
+		"featured": false,
+		"scripts": [
+			"latin"
+		]
+	},
+	{
+		"id": "impact",
+		"name": "Impact",
+		"system": true,
+		"family": "Impact, Haettenschweiler, \"Arial Narrow Bold\", sans-serif",
+		"weight": 400,
+		"fallback": "sans-serif",
+		"featured": false,
+		"scripts": [
+			"latin"
+		]
+	},
+	{
 		"id": "silkscreen",
 		"name": "Silkscreen",
 		"file": "fonts/silkscreen-regular.ttf",

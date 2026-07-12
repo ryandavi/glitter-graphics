@@ -14,8 +14,8 @@
 	justify-content: center;
 	opacity: 0;
 	transition: opacity var(--transition-base);
-	-webkit-backdrop-filter: blur(4px);
-	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	backdrop-filter: blur(var(--glass-blur));
 
 	&.visible {
 		display: flex;
@@ -1557,8 +1557,13 @@
 	gap: 6px;
 
 	+.settings-row {
+		margin-top: var(--spacing-md);
+	}
+
+	+ .control-group-label {
 		margin-top: var(--spacing-lg);
 	}
+
 
 	&.disabled {
 		opacity: var(--disabled-opacity);
@@ -1575,7 +1580,7 @@
 }
 
 .settings-row-label-main {
-	font-size: var(--font-size-md);
+	font-size: var(--font-size-base);
 	color: var(--color-text-secondary);
 	font-weight: 500;
 }
@@ -1622,7 +1627,7 @@
 }
 
 .settings-row-label-desc {
-	font-size: var(--font-size-base);
+	font-size: var(--font-size-sm);
 	color: var(--color-text-tertiary);
 	width: 50%;
 	min-width: 300px;

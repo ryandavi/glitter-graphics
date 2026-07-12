@@ -56,6 +56,9 @@
   --btn-gradient-mid: #c8e2f7;
   --btn-gradient-dark: #a3ceef;
   --btn-gradient-end: #e3f4ff;
+  /* Aqua capsules rim in a slate-blue hairline — grounds pale gels that
+     otherwise float on white panels. */
+  --btn-border-color: #a9c4dd;
   --btn-hover-filter: brightness(1.01) saturate(1.15);
   --btn-active-filter: brightness(0.96) saturate(1.05);
   --btn-secondary-filter: saturate(0.5) brightness(1.02);
@@ -127,6 +130,8 @@
   --btn-gradient-mid: #f8cfe8;
   --btn-gradient-dark: #efadd6;
   --btn-gradient-end: #ffe8f7;
+  /* Candy-gel rim, one step deeper than the gradient's dark stop */
+  --btn-border-color: #e2aecd;
   --btn-hover-filter: brightness(1.01) saturate(1.15);
   --btn-active-filter: brightness(0.96) saturate(1.05);
   --btn-secondary-filter: saturate(0.5) brightness(1.02);
@@ -193,6 +198,11 @@
   --bar-hover-filter: brightness(1.08);
   --bar-active-filter: brightness(0.92);
   --color-window-border: #2a63cf;
+  /* Chromeless bar buttons: translucent white glyphs on the royal blue,
+     hover lifts with a white wash instead of the beige panel tint. */
+  --bar-btn-color: rgb(255 255 255 / 78%);
+  --bar-btn-hover-color: #ffffff;
+  --bar-btn-hover-bg: rgb(255 255 255 / 22%);
   /* Buttons the XP way: clean near-white face, cool #7f9db9 control border,
      amber warmth for hover AND toggled (porcelain has no hue to desaturate,
      so the toggled state tints instead of the inactive state shading down). */
@@ -240,7 +250,14 @@
   --color-off-white: var(--gray-100);
   --color-bg-accent-tint: #d3f2fb;
   --color-checkerboard: #cfe7f1;
-  --color-bg-translucent: rgb(240 251 255 / 88%);
+  /* Aero glass: more transparent than the other light themes and a heavier
+     backdrop blur — Vista's frosted chrome. */
+  --color-bg-translucent: rgb(240 251 255 / 72%);
+  --glass-blur: 14px;
+  /* Glass panels: the toolbar and panel sections go translucent over a
+     backdrop blur so the sky/grass workspace glows through the chrome. */
+  --panel-bg: rgb(233 247 253 / 68%);
+  --panel-backdrop: blur(var(--glass-blur));
   --color-warning-text: #7d3a00;
   /* Water cyan */
   --color-accent: #0d9fd8;
@@ -266,6 +283,8 @@
      saturated gel reads as murk against these airy surfaces. */
   --btn-gradient: linear-gradient(to bottom, #f6feff 0%, #cff2fc 40%, #a5e5f8 50%, #c8f5e3 100%);
   --btn-text-color: #1d5568;
+  /* Gel droplets rim in water-cyan */
+  --btn-border-color: #93cfe6;
   --btn-hover-filter: brightness(1.02) saturate(1.3);
   --btn-active-filter: brightness(0.95) saturate(1.15);
   --btn-secondary-filter: saturate(0.6) brightness(1.05);
@@ -278,9 +297,19 @@
   --switch-knob-color: #ffffff;
   --color-overlay: rgb(23 76 100 / 40%);
   /* Droplet-round corners */
-  --radius-sm: 6px;
-  --radius-md: 9px;
-  --radius-lg: 12px;
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 14px;
+}
+
+:root[data-theme=light],
+:root[data-theme=bubblegum],
+:root[data-theme=bliss],
+:root[data-theme=dew] {
+  /* Empty layer swatch: pale chip with a mid-tone ring instead of
+     dark-on-dark */
+  --swatch-empty-outline: var(--gray-400);
+  --swatch-empty-bg: var(--gray-500);
 }
 
 /* ===== CSS VARIABLES ===== */
@@ -344,6 +373,12 @@
   --bar-text-shadow: 0 1px 1px #000;
   --bar-hover-filter: brightness(1.15);
   --bar-active-filter: brightness(0.85);
+  /* Chromeless buttons (.btn-icon-simple) sitting ON bar gradients: their
+     panel-surface colors vanish once a theme paints the bar (Luna blue), so
+     they follow these instead of --color-icon-muted/--color-bg-tertiary. */
+  --bar-btn-color: var(--color-icon-muted);
+  --bar-btn-hover-color: var(--color-text-primary);
+  --bar-btn-hover-bg: var(--color-bg-tertiary);
   /* Window chrome: the frame around top-level surfaces (panels, sections,
      modals, the header's bottom edge). Separate from --color-border so era
      themes can frame windows in their chrome color (Luna blue). */
@@ -362,7 +397,9 @@
   --btn-secondary-filter-hover: saturate(0.5) contrast(0.9) brightness(1);
   --btn-secondary-filter-active: saturate(0.7) contrast(1.1) brightness(1.15);
   --btn-text-color: var(--color-text-primary);
-  --btn-border-color: var(--color-border);
+  /* Gloss buttons are rimless by default; themes whose source UI rims its
+     controls (XP's #7f9db9, Aqua/gel edges) set a color to ground them. */
+  --btn-border-color: var(--gray-800);
   /* Toggled (.active) buttons keep the full gradient by default; themes
      whose gradient is colorless (Bliss porcelain) tint it instead. */
   --btn-toggled-filter: none;
@@ -370,6 +407,28 @@
      (recessed a step below --gray-800 so it never vanishes on cards) */
   --color-slider-track: #14161a;
   --switch-knob-color: var(--color-text-primary);
+  /* Layers-list empty-swatch placeholder — ramp endpoints flip meaning on
+     light ramps (gray-100 becomes near-black), so the pair is tokenized and
+     light themes lift both steps. */
+  --swatch-empty-outline: var(--gray-100);
+  --swatch-empty-bg: var(--gray-300);
+  /* Canvas-bounds toggle dashes — a mid ramp step; its contrast ring routes
+     through the shadow tiers so light themes soften it with everything else. */
+  --bounds-outline-color: var(--gray-400);
+  /* Transform handles — painted over artwork, so the fill stays literal
+     white for contrast against arbitrary content; the ring follows the
+     theme accent and the drop shadow separates it from light artwork. */
+  --handle-fill: #ffffff;
+  --handle-border-color: var(--color-accent);
+  --handle-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+  /* Backdrop blur behind translucent chrome (mini-modals, overlay scrim) —
+     glass-era themes (Dew) turn it up. */
+  --glass-blur: 4px;
+  /* Panel surfaces (toolbar, image/layers sections, design-panel collapsible
+     sections) — opaque by default; glass themes go translucent and set a
+     backdrop so the workspace shows through the chrome. */
+  --panel-bg: var(--color-bg-primary);
+  --panel-backdrop: none;
   /* Canvas workspace floor — must contrast with both dark and white canvases */
   --color-bg-workspace: var(--color-bg-secondary);
   /* Modal overlay scrim behind .modal-content */
@@ -762,7 +821,7 @@ input[type=range]::-moz-range-thumb {
   overflow: hidden;
   color: var(--btn-text-color);
   position: relative;
-  border: none;
+  border: 1px solid var(--btn-border-color);
   outline: none;
   cursor: pointer;
   font-size: var(--font-size-base);
@@ -819,13 +878,12 @@ input[type=range]::-moz-range-thumb {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  border: 1px solid var(--btn-border-color);
   aspect-ratio: unset;
   background: none;
   overflow: hidden;
   color: var(--btn-text-color);
   position: relative;
-  border: none;
+  border: 1px solid var(--btn-border-color);
   outline: none;
   cursor: pointer;
   font-size: var(--font-size-base);
@@ -899,7 +957,6 @@ input[type=range]::-moz-range-thumb {
 .btn-icon {
   width: var(--icon-size);
   height: var(--icon-size);
-  border: 1px solid var(--btn-border-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -911,7 +968,7 @@ input[type=range]::-moz-range-thumb {
   overflow: hidden;
   color: var(--btn-text-color);
   position: relative;
-  border: none;
+  border: 1px solid var(--btn-border-color);
   outline: none;
   cursor: pointer;
   font-size: var(--font-size-base);
@@ -1002,6 +1059,13 @@ input[type=range]::-moz-range-thumb {
   background: var(--color-accent);
   border-color: var(--color-accent-hover);
 }
+.app-header .btn-icon-simple, .section-header .btn-icon-simple {
+  color: var(--bar-btn-color);
+}
+.app-header .btn-icon-simple:not(:disabled):hover, .app-header .btn-icon-simple:not(:disabled):active, .section-header .btn-icon-simple:not(:disabled):hover, .section-header .btn-icon-simple:not(:disabled):active {
+  background: var(--bar-btn-hover-bg);
+  color: var(--bar-btn-hover-color);
+}
 
 .btn-simple {
   padding: var(--spacing-sm) var(--spacing-lg);
@@ -1009,7 +1073,7 @@ input[type=range]::-moz-range-thumb {
   overflow: hidden;
   color: var(--btn-text-color);
   position: relative;
-  border: none;
+  border: 1px solid var(--btn-border-color);
   outline: none;
   cursor: pointer;
   font-size: var(--font-size-base);
@@ -1196,7 +1260,8 @@ input[type=range]::-moz-range-thumb {
 /* ===== TOOLBAR ===== */
 .toolbar {
   width: var(--toolbar-width);
-  background: var(--color-bg-primary);
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-backdrop);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
@@ -1227,7 +1292,7 @@ input[type=range]::-moz-range-thumb {
   overflow: hidden;
   color: var(--btn-text-color);
   position: relative;
-  border: none;
+  border: 1px solid var(--btn-border-color);
   outline: none;
   cursor: pointer;
   font-size: var(--font-size-base);
@@ -1307,7 +1372,8 @@ input[type=range]::-moz-range-thumb {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-primary);
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-backdrop);
 }
 .image-container > .image-dropzone-wrapper > #imageUpload {
   display: none;
@@ -1410,7 +1476,8 @@ input[type=range]::-moz-range-thumb {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  background: var(--color-bg-primary);
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-backdrop);
 }
 .layers-section > .section-header {
   flex-shrink: 0;
@@ -1471,9 +1538,9 @@ input[type=range]::-moz-range-thumb {
   background-repeat: no-repeat;
 }
 .layers-section > .layers-list > .layer-item > .layer-swatch.empty {
-  outline: 2px solid var(--gray-100);
+  outline: 2px solid var(--swatch-empty-outline);
   outline-offset: 2px;
-  background-color: var(--gray-300);
+  background-color: var(--swatch-empty-bg);
 }
 .layers-section > .layers-list > .layer-item > .layer-swatch.baseImage {
   background-size: cover;
@@ -1721,7 +1788,7 @@ input[type=range]::-moz-range-thumb {
 .section > .section-header > .section-header-title > .section-header-title-count {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
-  color: var(--color-text-tertiary);
+  color: var(--bar-icon-color);
 }
 .section > .section-header > .section-header-title > .section-header-title-count::before {
   content: attr(data-count);
@@ -1759,7 +1826,8 @@ input[type=range]::-moz-range-thumb {
 }
 .section.collapsible-section {
   border-top: 1px solid var(--color-border);
-  background: var(--color-bg-primary);
+  background: var(--panel-bg);
+  backdrop-filter: var(--panel-backdrop);
   flex-shrink: 0;
 }
 .section.collapsible-section > .section-header {
@@ -2456,11 +2524,11 @@ body.tool-text .preview-wrapper {
   background-color: var(--color-bg-tertiary);
 }
 .preview-container.bounds .preview-wrapper {
-  outline: 2px dashed var(--gray-400);
+  outline: 2px dashed var(--bounds-outline-color);
   outline-offset: -2px;
   /* Draws inside the canvas edge */
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 8px rgba(0, 0, 0, 0.5);
-  /* Drop shadow for contrast */
+  box-shadow: 0 0 0 1px var(--color-shadow-strong), 0 0 8px var(--color-shadow-strong);
+  /* Contrast ring follows the theme's shadow tier (black reads as dirt on light UIs) */
   /* Clip any layer content that extends past the canvas edge - the
      toggle's whole point is previewing what's actually inside bounds. */
   overflow: hidden;
@@ -2511,6 +2579,7 @@ body.tool-text .preview-wrapper {
   border: 1px solid var(--color-border);
   padding: var(--spacing-sm);
   pointer-events: auto;
+  backdrop-filter: blur(var(--glass-blur));
 }
 
 .welcome-actions {
@@ -2661,6 +2730,7 @@ body.mask-editing .sticker-element {
   border: 1px solid var(--color-border);
   padding: var(--spacing-sm);
   pointer-events: auto;
+  backdrop-filter: blur(var(--glass-blur));
 }
 .zoom-controls.visible,
 .layer-center-controls.visible,
@@ -2784,7 +2854,7 @@ body.mask-editing .sticker-element {
   z-index: var(--z-header-menu-elevated);
   box-shadow: 0 2px 5px var(--color-shadow-strong);
   transition: all var(--transition-base);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(var(--glass-blur));
 }
 .export-progress.visible {
   opacity: 1;
@@ -2915,7 +2985,7 @@ body.mask-editing .sticker-element {
   justify-content: center;
   opacity: 0;
   transition: opacity var(--transition-base);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(var(--glass-blur));
 }
 .modal-overlay.visible {
   display: flex;
@@ -3967,6 +4037,9 @@ body.mask-editing .sticker-element {
   gap: 6px;
 }
 .settings-row + .settings-row {
+  margin-top: var(--spacing-md);
+}
+.settings-row + .control-group-label {
   margin-top: var(--spacing-lg);
 }
 .settings-row.disabled {
@@ -3983,7 +4056,7 @@ body.mask-editing .sticker-element {
 }
 
 .settings-row-label-main {
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-base);
   color: var(--color-text-secondary);
   font-weight: 500;
 }
@@ -4026,7 +4099,7 @@ body.mask-editing .sticker-element {
 }
 
 .settings-row-label-desc {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   color: var(--color-text-tertiary);
   width: 50%;
   min-width: 300px;
@@ -4288,6 +4361,7 @@ body.mask-editing .sticker-element {
     border: 1px solid var(--color-border);
     padding: var(--spacing-sm);
     pointer-events: auto;
+    backdrop-filter: blur(var(--glass-blur));
   }
   .toolbar > .toolbar-spacer {
     display: none;
@@ -4374,7 +4448,7 @@ body.mask-editing .sticker-element {
     overflow: hidden;
     color: var(--btn-text-color);
     position: relative;
-    border: none;
+    border: 1px solid var(--btn-border-color);
     outline: none;
     cursor: pointer;
     font-size: var(--font-size-base);
@@ -4856,7 +4930,7 @@ body.mask-editing .sticker-element {
   z-index: var(--z-header-menu-elevated);
   box-shadow: 0 2px 5px var(--color-shadow-strong);
   transition: all var(--transition-base);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(var(--glass-blur));
 }
 .helpful-message:hover {
   border-color: var(--color-border-hover);
@@ -5036,31 +5110,29 @@ body.mask-editing .sticker-element {
 .transform-handle {
   pointer-events: none;
   box-sizing: border-box;
+  background: var(--handle-fill);
+  border: 1.5px solid var(--handle-border-color);
+  box-shadow: var(--handle-shadow);
 }
 .transform-handle.transform-handle-corner {
   width: 8px;
   height: 8px;
-  background: var(--color-text-primary);
-  border: 1.5px solid var(--color-bg-secondary);
   border-radius: 2px;
 }
 .transform-handle.transform-handle-rotation {
   width: 10px;
   height: 10px;
-  background: var(--color-text-primary);
-  border: 1.5px solid var(--color-bg-secondary);
   border-radius: 50%;
 }
 .transform-handle.transform-handle-edge {
   width: 12px;
   height: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1.5px solid var(--color-bg-secondary);
   border-radius: 50%;
 }
 
 .transform-handle-wrapper:hover .transform-handle {
   background: var(--color-accent);
+  border-color: var(--handle-fill);
 }
 
 .transform-rotation-line {
@@ -5170,7 +5242,6 @@ body.mask-editing .sticker-element {
 .design-panel > .section.main-section > .section-content {
   padding: 0;
   min-height: 0;
-  background-color: var(--color-bg-primary);
 }
 .design-panel > .section.main-section > .section-content.visible {
   display: flex;

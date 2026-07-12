@@ -66,6 +66,13 @@
 	--bar-hover-filter: brightness(1.15);
 	--bar-active-filter: brightness(0.85);
 
+	/* Chromeless buttons (.btn-icon-simple) sitting ON bar gradients: their
+	   panel-surface colors vanish once a theme paints the bar (Luna blue), so
+	   they follow these instead of --color-icon-muted/--color-bg-tertiary. */
+	--bar-btn-color: var(--color-icon-muted);
+	--bar-btn-hover-color: var(--color-text-primary);
+	--bar-btn-hover-bg: var(--color-bg-tertiary);
+
 	/* Window chrome: the frame around top-level surfaces (panels, sections,
 	   modals, the header's bottom edge). Separate from --color-border so era
 	   themes can frame windows in their chrome color (Luna blue). */
@@ -85,7 +92,9 @@
 	--btn-secondary-filter-hover: saturate(0.5) contrast(0.9) brightness(1);
 	--btn-secondary-filter-active: saturate(0.7) contrast(1.1) brightness(1.15);
 	--btn-text-color: var(--color-text-primary);
-	--btn-border-color: var(--color-border);
+	/* Gloss buttons are rimless by default; themes whose source UI rims its
+	   controls (XP's #7f9db9, Aqua/gel edges) set a color to ground them. */
+	--btn-border-color: var(--gray-800);
 	/* Toggled (.active) buttons keep the full gradient by default; themes
 	   whose gradient is colorless (Bliss porcelain) tint it instead. */
 	--btn-toggled-filter: none;
@@ -94,6 +103,33 @@
 	   (recessed a step below --gray-800 so it never vanishes on cards) */
 	--color-slider-track: #14161a;
 	--switch-knob-color: var(--color-text-primary);
+
+	/* Layers-list empty-swatch placeholder — ramp endpoints flip meaning on
+	   light ramps (gray-100 becomes near-black), so the pair is tokenized and
+	   light themes lift both steps. */
+	--swatch-empty-outline: var(--gray-100);
+	--swatch-empty-bg: var(--gray-300);
+
+	/* Canvas-bounds toggle dashes — a mid ramp step; its contrast ring routes
+	   through the shadow tiers so light themes soften it with everything else. */
+	--bounds-outline-color: var(--gray-400);
+
+	/* Transform handles — painted over artwork, so the fill stays literal
+	   white for contrast against arbitrary content; the ring follows the
+	   theme accent and the drop shadow separates it from light artwork. */
+	--handle-fill: #ffffff;
+	--handle-border-color: var(--color-accent);
+	--handle-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+
+	/* Backdrop blur behind translucent chrome (mini-modals, overlay scrim) —
+	   glass-era themes (Dew) turn it up. */
+	--glass-blur: 4px;
+
+	/* Panel surfaces (toolbar, image/layers sections, design-panel collapsible
+	   sections) — opaque by default; glass themes go translucent and set a
+	   backdrop so the workspace shows through the chrome. */
+	--panel-bg: var(--color-bg-primary);
+	--panel-backdrop: none;
 
 	/* Canvas workspace floor — must contrast with both dark and white canvases */
 	--color-bg-workspace: var(--color-bg-secondary);

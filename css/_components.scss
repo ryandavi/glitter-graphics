@@ -132,7 +132,6 @@ input[type="range"] {
 	display: flex;
 	align-items: center;
 	gap: var(--spacing-sm);
-	border: 1px solid var(--btn-border-color);
 	aspect-ratio: unset;
 
 	@include gloss-button(true);
@@ -165,7 +164,6 @@ input[type="range"] {
 .btn-icon {
 	width: var(--icon-size);
 	height: var(--icon-size);
-	border: 1px solid var(--btn-border-color);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -228,7 +226,18 @@ input[type="range"] {
 		border-color: var(--color-accent-hover);
 	}
 
+	// On bar chrome (app header, section headers) the panel-surface colors
+	// disappear against a painted bar — follow the --bar-btn-* tokens instead.
+	.app-header &,
+	.section-header & {
+		color: var(--bar-btn-color);
 
+		&:not(:disabled):hover,
+		&:not(:disabled):active {
+			background: var(--bar-btn-hover-bg);
+			color: var(--bar-btn-hover-color);
+		}
+	}
 }
 
 .btn-simple {
