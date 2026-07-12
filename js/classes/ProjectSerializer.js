@@ -48,7 +48,7 @@ class ProjectSerializer {
 		try {
 			data = JSON.parse(rawText);
 		} catch (error) {
-			throw new Error('That project file is not valid JSON.');
+			throw new Error(`That project file is not valid JSON. ${error.message}`);
 		}
 
 		await this.load(data);
@@ -59,11 +59,16 @@ class ProjectSerializer {
 		const migrated = this.runMigrations(data);
 		const report = await this.preflight(migrated);
 		if (report.issues.length) {
+			const newerVersion = migrated.version > ProjectSerializer.FORMAT_VERSION;
 			const confirmed = await this.editor.confirmAction({
-				title: 'Project Asset Preflight',
-				message: `${migrated.name || 'Untitled project'} has unavailable content.`,
+				title: newerVersion ? 'Newer Project Version' : 'Project Asset Preflight',
+				message: newerVersion
+					? `${migrated.name || 'Untitled project'} was created by a newer version of Glitter.`
+					: `${migrated.name || 'Untitled project'} has unavailable content.`,
 				details: report.issues.map((issue) => issue.message),
-				outro: 'Open with the listed substitutions?',
+				outro: newerVersion
+					? 'Open anyway? Avoid overwriting the original file because newer-only data may be lost when you save.'
+					: 'Open with the listed substitutions?',
 				confirmLabel: 'Open Anyway'
 			});
 			if (!confirmed) return false;
@@ -104,6 +109,7 @@ class ProjectSerializer {
 		this.editor.setProjectName(migrated.name || '', { markDirty: false });
 		this.editor.historyManager.reset(this.editor.historyManager.createStateSnapshot());
 		this.editor.isSaved = true;
+		this.editor.openedFromNewerProjectVersion = migrated.version > ProjectSerializer.FORMAT_VERSION;
 		this.editor.updateSidePanelUI();
 		this.editor.layerManager.renderLayersList();
 		this.editor.updatePreview();
@@ -121,6 +127,12 @@ class ProjectSerializer {
 	async preflight(data) {
 		await this.editor.textGlitterManager.loadFontsManifest();
 		const issues = [];
+		if (data.version > ProjectSerializer.FORMAT_VERSION) {
+			issues.push({
+				kind: 'version',
+				message: `Project version ${data.version} is newer than this editor's version ${ProjectSerializer.FORMAT_VERSION}. Unknown fields will be ignored and unknown layer types will be skipped.`
+			});
+		}
 		const embedded = data.customStickers || {};
 		const knownTypes = new Set(Object.values(LayerType));
 		(data.layers || []).forEach((layer, index) => {
@@ -186,10 +198,6 @@ class ProjectSerializer {
 
 		if (!Number.isInteger(data.version) || data.version < 1) {
 			throw new Error('That project file has an invalid version.');
-		}
-
-		if (data.version > ProjectSerializer.FORMAT_VERSION) {
-			throw new Error('That project was made with a newer version of the editor.');
 		}
 
 		const width = data.canvas?.width;
