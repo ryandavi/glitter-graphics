@@ -506,7 +506,7 @@ function normalizeTransformPanelHost(editor, prefix, externalActions = null) {
 		if (labelNode) labelNode.textContent = label;
 		else title.textContent = label;
 	};
-	setTitle(geometry, 'Position, Size & Rotation');
+	setTitle(geometry, 'Transform');
 	setTitle(opacity, 'Opacity');
 
 	if (actions && reset) {
