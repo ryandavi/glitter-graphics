@@ -8,3 +8,13 @@
 @use 'panels';
 @use 'modals';
 @use 'mobile';
+
+.smart-guide {
+	position: absolute;
+	z-index: 1002;
+	background: #ff2d8d;
+	pointer-events: none;
+
+	&-x { top: 0; bottom: 0; width: 1px; }
+	&-y { left: 0; right: 0; height: 1px; }
+}

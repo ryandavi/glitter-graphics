@@ -679,6 +679,7 @@ class GroupTransformManager {
 
 		this.removeDocumentHandleListeners();
 		this.editor.setDuplicateDragFeedback?.(false);
+		this.editor.clearSmartGuides?.();
 		this.activeHandleElement?.releasePointerCapture?.(event.pointerId);
 		this.activeHandleType = null;
 		this.activeHandleElement = null;
@@ -725,8 +726,10 @@ class GroupTransformManager {
 
 		this.dragStartState.lockedAxis = axis;
 
-		const nextDeltaX = axis === 'y' ? 0 : deltaX;
-		const nextDeltaY = axis === 'x' ? 0 : deltaY;
+		const rawDelta = { x: axis === 'y' ? 0 : deltaX, y: axis === 'x' ? 0 : deltaY };
+		const snappedDelta = this.editor.snapGroupDelta(this.dragStartState.bounds, rawDelta, this.dragStartState.layerStates.map(({ layer }) => layer.id), { ctrlKey: event.ctrlKey });
+		const nextDeltaX = snappedDelta.x;
+		const nextDeltaY = snappedDelta.y;
 
 		this.dragStartState.layerStates.forEach(({ transform, position }) => {
 			transform.updateTransform({

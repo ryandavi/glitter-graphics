@@ -84,6 +84,8 @@ class ShapeGlitterManager {
 		this.ui.shadowOffsetYValue = id('shapeShadowOffsetYValue');
 		this.ui.shadowOpacity = id('shapeShadowOpacity');
 		this.ui.shadowOpacityValue = id('shapeShadowOpacityValue');
+		this.ui.fillOpacity = id('shapeFillOpacity');
+		this.ui.fillOpacityValue = id('shapeFillOpacityValue');
 
 		// Per-slot source-control refs (segmented buttons, glitter display, color).
 		['shapeFill', 'shapeBorder', 'shapeShadow'].forEach((prefix) => {
@@ -100,6 +102,22 @@ class ShapeGlitterManager {
 			// The slot's Advanced (color-adjust) block — glitter-only.
 			const info = this.ui[prefix + 'GlitterInfo'];
 			this.ui[prefix + 'Advanced'] = info?.closest('.text-effect-subsection')?.querySelector('.advanced-disclosure') || null;
+		});
+		['shapeFill', 'shapeBorder', 'shapeShadow'].forEach((prefix) => {
+			const slot = prefix === 'shapeFill' ? 'fill' : prefix === 'shapeBorder' ? 'border' : 'shadow';
+			installEffectGradientEditor({
+				prefix,
+				getData: () => {
+					const layer = this.getActiveShapeLayer();
+					return layer ? this.ensureEffectData(layer, slot) : null;
+				},
+				onUpdate: (commit) => {
+					const layer = this.getActiveShapeLayer();
+					if (!layer) return;
+					this.renderLayer(layer);
+					if (commit) this.editor.saveState();
+				}
+			});
 		});
 
 		const borderConfig = CONFIG.tools.shapes.border || {};
@@ -219,6 +237,7 @@ class ShapeGlitterManager {
 		// Non-geometry sliders (opacity, hsb) — re-render only.
 		this._attachSlider(this.ui.borderOpacity, this.ui.borderOpacityValue, '%', (v, l) => { this.ensureEffectData(l, 'border').opacity = v; }, 100, false);
 		this._attachSlider(this.ui.shadowOpacity, this.ui.shadowOpacityValue, '%', (v, l) => { this.ensureEffectData(l, 'shadow').opacity = v; }, 100, false);
+		this._attachSlider(this.ui.fillOpacity, this.ui.fillOpacityValue, '%', (v, l) => { this.ensureEffectData(l, 'fill').opacity = v; }, 100, false);
 		// Position / Transform / Scale / Flip are wired by the shared
 		// app.setupTransformListeners('shape', …) — same code as sticker + text.
 
@@ -425,9 +444,9 @@ class ShapeGlitterManager {
 		strip.classList.remove('is-hint');
 		this.ui.gallerySection?.classList.add('picker-mode');
 		if (this.ui.pickerStripDone) this.ui.pickerStripDone.hidden = false;
-		const slotLabel = s.slot === 'border' ? 'Shape Border' : s.slot === 'shadow' ? 'Shape Shadow' : 'Shape Fill';
-		if (this.ui.pickerStripTitle) this.ui.pickerStripTitle.textContent = `Choosing glitter for: ${slotLabel}`;
-		if (this.ui.pickerStripDetail) this.ui.pickerStripDetail.textContent = `of "${layer.name || 'this shape'}"`;
+		const stripText = formatPickerStripText(s.slot, layer.name, 'shape');
+		if (this.ui.pickerStripTitle) this.ui.pickerStripTitle.textContent = stripText.title;
+		if (this.ui.pickerStripDetail) this.ui.pickerStripDetail.textContent = stripText.detail;
 	}
 
 	// Done/Esc from the shared strip when a shape is active.
@@ -454,17 +473,8 @@ class ShapeGlitterManager {
 		const data = this.getEffectData(layer, slot);
 		const mode = data?.mode || 'solid';
 
-		['None', 'Glitter', 'Solid'].forEach((m) => {
-			const btn = this.ui[prefix + m];
-			if (btn) btn.classList.toggle('active', m.toLowerCase() === mode);
-		});
-
 		const glitterInfo = this.ui[prefix + 'GlitterInfo'];
-		const colorRow = this.ui[prefix + 'ColorRow'];
-		const advanced = this.ui[prefix + 'Advanced'];
-		if (glitterInfo) glitterInfo.hidden = mode !== 'glitter';
-		if (colorRow) colorRow.hidden = mode !== 'solid';
-		if (advanced) advanced.hidden = mode !== 'glitter';
+		syncPaintSlotSourceUI(this.ui[prefix + 'Glitter'], mode);
 
 		if (mode === 'glitter') {
 			// Glitter mode is never empty — fall back to the default glitter.
@@ -543,6 +553,7 @@ class ShapeGlitterManager {
 
 		// Fill
 		if (this.ui.shapeFillColor) this.ui.shapeFillColor.value = d.fill.color || '#ff66cc';
+		if (this.ui.fillOpacity) { this.ui.fillOpacity.value = d.fill.opacity ?? 100; this.ui.fillOpacityValue.innerHTML = formatUnit(d.fill.opacity ?? 100, '%'); }
 		this._loadColorAdjust('shapeFill', d.fill.colorAdjust, d.fill.scale);
 
 		this._refreshSourceUI(layer, 'fill');
@@ -1257,9 +1268,9 @@ class ShapeGlitterManager {
 			return;
 		}
 
-		if (source.mode === 'solid') {
-			span.style.backgroundImage = 'none';
-			span.style.backgroundColor = source.color;
+		if (source.mode === 'solid' || source.mode === 'gradient') {
+			span.style.backgroundImage = source.mode === 'gradient' ? effectGradientToCss(source.gradient) : 'none';
+			span.style.backgroundColor = source.mode === 'solid' ? source.color : 'transparent';
 			span.style.backgroundSize = '';
 			span.style.opacity = String(source.opacity ?? 1);
 			span.style.filter = '';

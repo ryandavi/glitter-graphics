@@ -149,6 +149,22 @@ class TextGlitterManager {
 			this.ui.borderWidth.min = String(borderConfig.minWidthPx);
 			this.ui.borderWidth.max = String(borderConfig.maxWidthPx);
 		}
+		['textFill', 'textBorder', 'textShadow'].forEach((prefix) => {
+			const effectName = prefix === 'textFill' ? 'fill' : prefix === 'textBorder' ? 'border' : 'shadow';
+			installEffectGradientEditor({
+				prefix,
+				getData: () => {
+					const layer = this.getActiveTextLayer();
+					return layer ? this.ensureEffectData(layer, effectName) : null;
+				},
+				onUpdate: (commit) => {
+					const layer = this.getActiveTextLayer();
+					if (!layer) return;
+					this.renderLayer(layer);
+					if (commit) this.editor.saveState();
+				}
+			});
+		});
 	}
 
 	// colorAdjust lives on the effect data (border/shadow) or on layer.settings
@@ -947,7 +963,7 @@ class TextGlitterManager {
 		button.addEventListener('click', async () => {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
-			if (this.getEffectData(layer, 'fill')?.mode !== 'solid') return;
+			if (this.getEffectData(layer, 'fill')?.mode === 'glitter') return;
 
 			// Switching mode only flips the mode in place — it shows the fill's
 			// existing glitter. It deliberately does NOT open the gallery; that
@@ -1525,9 +1541,7 @@ class TextGlitterManager {
 		if (!this.ui.fillGlitterChip || !this.ui.fillGlitterLabel) return;
 
 		const fillData = this.ensureEffectData(layer, 'fill');
-		const isNone = fillData.mode === 'none';
 		const usesGlitter = fillData.mode === 'glitter';
-		const usesSolid = fillData.mode === 'solid';
 		// Glitter mode is never empty — fall back to the default glitter.
 		if (usesGlitter && !layer.selectedGlitterId) {
 			layer.selectedGlitterId = CONFIG.tools.glitter.defaults.fillGlitterId;
@@ -1538,13 +1552,7 @@ class TextGlitterManager {
 
 		// Segmented control reflects the mode; at most one source display shows
 		// (None shows neither — the text becomes an outline via its border).
-		if (this.ui.fillUseNone) this.ui.fillUseNone.classList.toggle('active', isNone);
-		if (this.ui.fillUseGlitter) this.ui.fillUseGlitter.classList.toggle('active', usesGlitter);
-		if (this.ui.fillUseColor) this.ui.fillUseColor.classList.toggle('active', usesSolid);
-		if (this.ui.fillGlitterInfo) this.ui.fillGlitterInfo.hidden = !usesGlitter;
-		if (this.ui.fillColorRow) this.ui.fillColorRow.hidden = !usesSolid;
-		// Texture scale/opacity are only meaningful for a glitter fill.
-		if (this.ui.textureScaleRow) this.ui.textureScaleRow.hidden = !usesGlitter;
+		syncPaintSlotSourceUI(this.ui.fillUseGlitter, fillData.mode);
 
 		if (usesGlitter && glitter) {
 			// Reuse the exact Glitter-Properties asset display (thumbnail, name,
@@ -1651,16 +1659,10 @@ class TextGlitterManager {
 		this.updatePickerStrip();
 	}
 
-	getSlotLabel(slot) {
-		if (slot === 'border') return 'Text Border';
-		if (slot === 'shadow') return 'Text Shadow';
-		return 'Fill';
-	}
-
 	setupPickerStripListeners() {
 		this.ui.pickerStripDone?.addEventListener('click', () => {
 			// When a shape layer is active, the shape manager owns Done.
-			if (this.editor.layerManager.getActiveLayer()?.type === LayerType.SHAPE) return;
+			if ([LayerType.SHAPE, LayerType.STICKER].includes(this.editor.layerManager.getActiveLayer()?.type)) return;
 			const slot = this.pickerSession?.slot || 'fill';
 			this.closePickerSession();
 			this.returnToTextProperties(slot);
@@ -1749,12 +1751,12 @@ class TextGlitterManager {
 
 			if (armedSlot === 'fill' && fillIsSolid) {
 				const color = (fillData.color || '#000000').toUpperCase();
-				if (title) title.textContent = 'Choosing source for: Fill';
+				if (title) title.textContent = 'Choosing source for fill';
 				if (detail) detail.textContent = `Fill is a solid color (${color}) — pick a glitter to switch.`;
 			} else {
-				const layerName = layer.name || 'this layer';
-				if (title) title.textContent = `Choosing glitter for: ${this.getSlotLabel(armedSlot)}`;
-				if (detail) detail.textContent = `of "${layerName}"`;
+				const stripText = formatPickerStripText(armedSlot, layer.name, 'text');
+				if (title) title.textContent = stripText.title;
+				if (detail) detail.textContent = stripText.detail;
 			}
 			return;
 		}
@@ -1818,12 +1820,7 @@ class TextGlitterManager {
 		const summary = this.getEffectSourceSummary(effectData, effectName);
 		const usesGlitter = summary.usesGlitter;
 
-		// Segmented control reflects the mode; exactly one source display shows.
-		config.useGlitter.classList.toggle('active', usesGlitter);
-		config.useColor.classList.toggle('active', !usesGlitter);
-		if (config.info) config.info.hidden = !usesGlitter;
-		config.colorRow.hidden = usesGlitter;
-		if (config.scaleRow) config.scaleRow.hidden = !usesGlitter;
+		syncPaintSlotSourceUI(config.useGlitter, effectData?.mode || (usesGlitter ? 'glitter' : 'solid'));
 
 		config.button.title = summary.buttonTitle;
 		if (config.changeButton) config.changeButton.title = summary.buttonTitle;
@@ -2796,9 +2793,9 @@ class TextGlitterManager {
 			return;
 		}
 
-		if (source.mode === 'solid') {
-			span.style.backgroundImage = 'none';
-			span.style.backgroundColor = source.color;
+		if (source.mode === 'solid' || source.mode === 'gradient') {
+			span.style.backgroundImage = source.mode === 'gradient' ? effectGradientToCss(source.gradient) : 'none';
+			span.style.backgroundColor = source.mode === 'solid' ? source.color : 'transparent';
 			span.style.backgroundSize = '';
 			span.style.opacity = String(source.opacity ?? 1);
 			span.style.filter = '';
@@ -3011,8 +3008,9 @@ class TextGlitterManager {
 
 		this.normalizeLayer(layer);
 		const transform = getLayerTransform(layer);
-		const scaleFactor = Math.max(0.01, (transform.scale.x || 100) / 100);
+		const scaleX = Math.max(0.01, (transform.scale.x || 100) / 100);
 		const scaleY = Math.max(0.01, (transform.scale.y || 100) / 100);
+		const scaleFactor = Math.min(scaleX, scaleY);
 		if (Math.abs(scaleFactor - 1) < 1e-3 && Math.abs(scaleY - 1) < 1e-3) {
 			transform.scale.x = 100;
 			transform.scale.y = 100;
@@ -3025,8 +3023,8 @@ class TextGlitterManager {
 			CONFIG.tools.text.minFontSize,
 			Math.min(CONFIG.tools.text.maxFontSize, Math.round(layer.textData.fontSize * scaleFactor))
 		);
-		transform.scale.x = 100;
-		transform.scale.y = 100;
+		transform.scale.x = (scaleX / scaleFactor) * 100;
+		transform.scale.y = (scaleY / scaleFactor) * 100;
 		transform.proportionalScale = true;
 
 		const measurement = this.getMeasurementEntry(layer);

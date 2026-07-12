@@ -10,6 +10,20 @@ function formatUnit(value, unit) {
 	return `${value}<span class="setting-unit">${unit}</span>`;
 }
 
+// ============================================
+// GALLERY PICKER STRIP COPY
+// ============================================
+// One wording for the armed picker strip across text, shape, and sticker
+// pickers: "Choosing glitter for <slot>" over `"<layer name>" <type>`.
+// slot is the lowercase slot word ('fill', 'border', 'shadow'); typeWord is
+// the lowercase layer word ('text', 'shape', 'sticker').
+function formatPickerStripText(slot, layerName, typeWord) {
+	return {
+		title: `Choosing glitter for ${slot}`,
+		detail: `"${layerName || `this ${typeWord}`}" ${typeWord}`
+	};
+}
+
 function bindSlider(slider, valueEl, options = {}) {
 	if (!slider) return null;
 

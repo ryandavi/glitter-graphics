@@ -97,7 +97,9 @@ class GlitterEditor {
 		// INITIALIZATION
 		// ============================================================================
 		this.initializeProjectNameInput();
-		this.setTool(CONFIG.app.startup.tool);
+		const rememberedTool = sessionStorage.getItem('glitter:lastTool');
+		const initialTool = Object.values(ToolType).includes(rememberedTool) ? rememberedTool : CONFIG.app.startup.tool;
+		this.setTool(initialTool);
 		this.setupEventListeners();
 		this.initializeAltDuplicateFeedback();
 		this.initializeCollapsibleSections();
@@ -851,10 +853,12 @@ async resetAllSettings() {
 
 		// D-1c: keep the gallery picker strip in sync when the active layer
 		// changes to any type (a non-text layer must hide the strip). The shape
-		// manager drives it for shape layers, the text manager for text layers;
-		// each no-ops when its own type isn't active.
+		// manager drives it for shape layers, the text manager for text layers,
+		// the sticker manager for sticker layers; each no-ops when its own type
+		// isn't active.
 		this.textGlitterManager?.updatePickerStrip();
 		this.shapeGlitterManager?.updatePickerStrip();
+		this.stickerManager?.updatePickerStrip();
 
 		// The Canvas Size preview only makes sense in the no-layer state; drop it
 		// whenever a layer is selected or there's no image.
@@ -893,7 +897,7 @@ async resetAllSettings() {
 		}
 
 		// An armed glitter pick-session keeps the gallery focused (Done returns you).
-		if (this.textGlitterManager?.pickerSession || this.shapeGlitterManager?.pickerSession) {
+		if (this.textGlitterManager?.pickerSession || this.shapeGlitterManager?.pickerSession || this.stickerManager?.pickerSession) {
 			return 'designGallery';
 		}
 
@@ -1027,14 +1031,12 @@ async resetAllSettings() {
 		const multiGroup = document.getElementById('multiLayerSelectionGroup');
 		const emptyText = document.getElementById('noLayerEmptyText');
 		const emptySubtext = document.getElementById('noLayerEmptySubtext');
-		const countLabel = document.getElementById('multiLayerSelectionCount');
 
 		if (multiCount > 1) {
 			if (defaultGroups) defaultGroups.hidden = true;
 			if (multiGroup) multiGroup.hidden = false;
 			if (emptyText) emptyText.textContent = `${multiCount} layers selected`;
-			if (emptySubtext) emptySubtext.textContent = 'Drag the shared box on the canvas to move them, or use Align and Actions below.';
-			if (countLabel) countLabel.textContent = `${multiCount} movable layers`;
+			if (emptySubtext) emptySubtext.textContent = 'Drag the shared box to move them. Shift+click changes the selection; use Align and Actions below.';
 			document.querySelectorAll('[data-multi-distribute]').forEach((button) => { button.disabled = multiCount < 3; });
 			return;
 		}
@@ -1043,7 +1045,6 @@ async resetAllSettings() {
 		if (multiGroup) multiGroup.hidden = true;
 		if (emptyText) emptyText.textContent = 'Canvas';
 		if (emptySubtext) emptySubtext.textContent = 'Select a layer to edit it, or add new content below.';
-		if (countLabel) countLabel.textContent = '';
 	}
 
 	collapseStickerSettings() {
@@ -1288,6 +1289,8 @@ async resetAllSettings() {
 				this.updateGlitterAssetInfo(glitter);
 			}
 		}
+		const fillMode = layer.fill?.mode || 'glitter';
+		syncPaintSlotSourceUI(document.getElementById('glitterFillGlitter'), fillMode);
 
 		// Tint the asset-info thumbnail (and list/mobile swatches) to match the hue.
 		this.refreshGlitterSwatchVisuals(layer);
@@ -1300,6 +1303,7 @@ async resetAllSettings() {
 		if (!layer || layer.type !== LayerType.STICKER) return;
 
 		this.loadTransformSettings(layer, 'sticker');
+		this.stickerManager.loadLayerSettings(layer);
 
 		// Update sticker asset info
 		if (layer.stickerSourceId) {
@@ -1362,6 +1366,8 @@ async resetAllSettings() {
 			? this.textGlitterManager?.resolveSelectedGlitterId(layer)
 			: layer?.type === LayerType.SHAPE
 				? this.shapeGlitterManager?.resolveSelectedGlitterId(layer)
+				: layer?.type === LayerType.STICKER
+					? layer.stickerData?.[this.stickerManager.getGlitterSelectionTarget(layer)]?.glitterId
 				: layer?.selectedGlitterId;
 
 		// Query all glitter options in BOTH traditional grid AND asset browser
@@ -1370,7 +1376,7 @@ async resetAllSettings() {
 		);
 
 		glitterOptions.forEach(opt => {
-			const isSelected = layer && (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) &&
+			const isSelected = layer && (layer.type === LayerType.GLITTER_FILL || layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE || layer.type === LayerType.STICKER) &&
 				parseInt(opt.dataset.id, 10) === selectedGlitterId;
 			opt.classList.toggle('selected', isSelected);
 		});
@@ -1527,7 +1533,7 @@ async resetAllSettings() {
 		const initializeSubsections = (root = document) => {
 			root.querySelectorAll?.('.subsection-content-group > .subsection-title').forEach((title) => {
 				const subsection = title.parentElement;
-				if (!subsection) return;
+				if (!subsection || subsection.classList.contains('subsection-section-group')) return;
 				subsection.dataset.collapsibleSubsection = '';
 				title.dataset.subsectionToggle = '';
 				title.setAttribute('role', 'button');
@@ -1535,6 +1541,11 @@ async resetAllSettings() {
 				title.setAttribute('aria-expanded', 'true');
 				if (!title.querySelector('.subsection-chevron')) {
 					title.insertAdjacentHTML('beforeend', '<span class="subsection-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>');
+				}
+				const enabled = title.querySelector('input[type="checkbox"]');
+				if (subsection.querySelector(':scope > .text-effect-controls') && enabled && !enabled.checked) {
+					subsection.classList.add('is-collapsed');
+					title.setAttribute('aria-expanded', 'false');
 				}
 			});
 		};
@@ -1544,18 +1555,12 @@ async resetAllSettings() {
 				if (node.nodeType === Node.ELEMENT_NODE) initializeSubsections(node);
 			}));
 		}).observe(document.body, { childList: true, subtree: true });
-		// Effect cards (Border/Shadow) hide their body while the header's Enabled
-		// toggle is off — nothing to expand, so collapse is blocked and the
-		// chevron is CSS-hidden. Option checkboxes (Global, Lock Aspect) have no
-		// .text-effect-controls sibling and don't gate anything.
-		const isDisabledEffectCard = (subsection) => {
-			if (!subsection.querySelector(':scope > .text-effect-controls')) return false;
-			const enableToggle = subsection.querySelector(':scope > .subsection-title input[type="checkbox"]');
-			return Boolean(enableToggle) && !enableToggle.checked;
-		};
+		// Effect cards (Border/Shadow) stay collapsible even while the header's
+		// Enabled toggle is off — expanding a disabled card shows its controls
+		// as an inert preview (see the disabled-card rules in _panels.scss).
 		const toggleSubsection = (toggle) => {
 			const subsection = toggle.closest('[data-collapsible-subsection]');
-			if (!subsection || isDisabledEffectCard(subsection)) return;
+			if (!subsection) return;
 			const isCollapsed = subsection.classList.toggle('is-collapsed');
 			toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
 		};
@@ -1563,11 +1568,11 @@ async resetAllSettings() {
 		// was collapsed before being disabled.
 		document.addEventListener('change', (event) => {
 			const checkbox = event.target;
-			if (!checkbox.matches?.('.subsection-title input[type="checkbox"]') || !checkbox.checked) return;
+			if (!checkbox.matches?.('.subsection-title input[type="checkbox"]')) return;
 			const subsection = checkbox.closest('[data-collapsible-subsection]');
 			if (!subsection?.querySelector(':scope > .text-effect-controls')) return;
-			subsection.classList.remove('is-collapsed');
-			subsection.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', 'true');
+			subsection.classList.toggle('is-collapsed', !checkbox.checked);
+			subsection.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', checkbox.checked ? 'true' : 'false');
 		});
 		// Interactive controls living in the title (Enabled/Global checkboxes,
 		// reset chips) must not also collapse the subsection when clicked.
@@ -1913,6 +1918,7 @@ async resetAllSettings() {
 	setupLayerCenterListeners() {
 		const centerLayerHorizontal = document.getElementById('centerLayerHorizontal');
 		const centerLayerVertical = document.getElementById('centerLayerVertical');
+		const duplicateLayerSelection = document.getElementById('duplicateLayerSelection');
 
 		const center = (axis) => {
 			if (this.layerManager.hasMultiSelection()) {
@@ -1931,6 +1937,7 @@ async resetAllSettings() {
 		if (centerLayerVertical) {
 			centerLayerVertical.addEventListener('click', () => center('centerVertical'));
 		}
+		duplicateLayerSelection?.addEventListener('click', () => this.cloneSelectedLayers());
 	}
 
 	getSelectedActionableLayers() {
@@ -2223,6 +2230,171 @@ async resetAllSettings() {
 
 			this.renderTransformPanel(host, prefix, LAYER_UI_CONFIG[type]?.transformCapabilities || {});
 		});
+		this.organizeLayerPropertyGroups();
+	}
+
+	organizeLayerPropertyGroups() {
+		const card = (id) => document.getElementById(id)?.closest('.subsection-content-group');
+		const selectedCard = (selector) => document.querySelector(selector)?.closest('.subsection-content-group');
+		const unique = (nodes) => nodes.filter(Boolean).filter((node, index, list) => list.indexOf(node) === index);
+		const normalizeTransformHost = (prefix, externalActions = null) => {
+			const host = document.getElementById(`${prefix}TransformPanelHost`);
+			if (!host) return null;
+			const ids = this.getTransformIds(prefix);
+			const geometry = host.querySelector(':scope > [data-transform-prefix]');
+			const opacity = card(ids.opacity);
+			const align = card(ids.alignLeft);
+			const flip = card(ids.flipX);
+			const actions = externalActions || card(`${prefix}FitCanvas`);
+			const reset = document.getElementById(ids.resetTransform);
+
+			const setTitle = (section, label) => {
+				const title = section?.querySelector(':scope > .subsection-title');
+				if (!title) return;
+				const labelNode = title.querySelector(':scope > span');
+				if (labelNode) labelNode.textContent = label;
+				else title.textContent = label;
+			};
+			setTitle(geometry, 'Position, Size & Rotation');
+			setTitle(opacity, 'Opacity');
+
+			if (actions && reset) {
+				const footer = reset.closest('.transform-panel-footer');
+				const row = actions.querySelector('.settings-action-row, .tool-options-group');
+				if (row) row.appendChild(reset);
+				footer?.remove();
+			}
+
+			[geometry, opacity, align, flip].filter(Boolean).forEach((section) => host.appendChild(section));
+			if (actions && actions.parentElement === host) host.appendChild(actions);
+			return host;
+		};
+		const group = (root, title, nodes) => {
+			const members = unique(nodes);
+			if (!root || !members.length) return null;
+			const wrapper = document.createElement('div');
+			wrapper.className = 'subsection-content-group subsection-section-group';
+			wrapper.innerHTML = `<div class="subsection-title">${title}</div>`;
+			members.forEach((node) => wrapper.appendChild(node));
+			return wrapper;
+		};
+		const finish = (root, groups, effects) => {
+			groups.filter(Boolean).forEach((entry) => root.appendChild(entry));
+			if (effects) {
+				effects.classList.add('subsection-section-group');
+				root.appendChild(effects);
+			}
+		};
+
+		const stickerRoot = document.getElementById('stickerSettingsControls')?.querySelector('.settings-subsection');
+		if (stickerRoot) {
+			const effects = stickerRoot.querySelector(':scope > .effects-stack');
+			const stickerActions = card('stickerFitCanvas');
+			if (stickerActions) document.getElementById('stickerTransformPanelHost')?.appendChild(stickerActions);
+			const stickerTransform = normalizeTransformHost('sticker');
+			const stickerOpacity = card(this.getTransformIds('sticker').opacity);
+			finish(stickerRoot, [
+				group(stickerRoot, 'Content', [card('stickerAssetThumbnail')]),
+				group(stickerRoot, 'Appearance', [stickerOpacity]),
+				group(stickerRoot, 'Transform', [stickerTransform])
+			], effects);
+		}
+
+		const textRoot = document.getElementById('textSettingsContent')?.querySelector('.settings-subsection');
+		if (textRoot) {
+			const effects = textRoot.querySelector(':scope > .effects-stack');
+			const textTransform = normalizeTransformHost('text');
+			const textOpacity = card(this.getTransformIds('text').opacity);
+			finish(textRoot, [
+				group(textRoot, 'Content', [card('textLayerInput'), card('textFontPicker'), card('textFontSize'), selectedCard('.text-align-group'), card('textBoxModeHint'), card('textFitBoxToContent')]),
+				group(textRoot, 'Appearance', [card('textFillUseNone'), textOpacity]),
+				group(textRoot, 'Transform', [textTransform])
+			], effects);
+		}
+
+		const shapeRoot = document.getElementById('shapeSettingsContent')?.querySelector('.settings-subsection');
+		if (shapeRoot) {
+			const effects = shapeRoot.querySelector(':scope > .effects-stack');
+			const shapeTransform = normalizeTransformHost('shape');
+			const shapeOpacity = card(this.getTransformIds('shape').opacity);
+			finish(shapeRoot, [
+				group(shapeRoot, 'Content', [card('shapeShapePicker')]),
+				group(shapeRoot, 'Appearance', [card('shapeFillNone'), shapeOpacity]),
+				group(shapeRoot, 'Transform', [shapeTransform])
+			], effects);
+		}
+	}
+
+	organizeGlitterPropertyGroups() {
+		const root = document.getElementById('glitterSettingsControls')?.querySelector('.settings-subsection');
+		if (!root || root.querySelector(':scope > .subsection-section-group')) return;
+		const asset = document.getElementById('glitterAssetThumbnail')?.closest('.subsection-content-group');
+		const source = document.getElementById('glitterFillGlitter')?.closest('.subsection-content-group');
+		const appearance = document.getElementById('opacity')?.closest('.subsection-content-group');
+		const sourceTitle = source?.querySelector(':scope > .subsection-title');
+		const appearanceTitle = appearance?.querySelector(':scope > .subsection-title');
+		if (sourceTitle) sourceTitle.textContent = 'Fill';
+		const globalControl = appearanceTitle?.querySelector('.checkbox-group');
+		if (asset && source) {
+			const assetInfo = document.createElement('div');
+			assetInfo.className = 'asset-info glitter-source-glitter';
+			Array.from(asset.children).forEach((child) => {
+				if (!child.classList.contains('subsection-title')) assetInfo.appendChild(child);
+			});
+			const sourceControl = source.querySelector(':scope > .segmented-control');
+			if (sourceControl) sourceControl.after(assetInfo);
+			else source.appendChild(assetInfo);
+			asset.remove();
+		}
+		if (source && !source.querySelector(':scope > .glitter-source')) {
+			const paintSource = document.createElement('div');
+			paintSource.className = 'glitter-source';
+			[
+				source.querySelector(':scope > .segmented-control'),
+				source.querySelector(':scope > .asset-info'),
+				source.querySelector(':scope > .glitter-source-solid')
+			].filter(Boolean).forEach((element) => paintSource.appendChild(element));
+			sourceTitle?.after(paintSource);
+		}
+		if (source && appearance) {
+			const opacity = document.getElementById('opacity')?.closest('.setting-column');
+			const scale = document.getElementById('scale')?.closest('.setting-column');
+			const advanced = appearance.querySelector(':scope > .advanced-disclosure');
+			const primary = document.createElement('div');
+			primary.className = 'settings-group-two-column paint-slot-primary-row';
+			if (scale) {
+				scale.classList.add('paint-slot-scale');
+				primary.appendChild(scale);
+			}
+			if (primary.children.length) source.appendChild(primary);
+			if (advanced) {
+				advanced.classList.add('glitter-source-glitter');
+				source.appendChild(advanced);
+			}
+			if (opacity) {
+				const opacityCard = document.createElement('div');
+				opacityCard.className = 'subsection-content-group';
+				opacityCard.innerHTML = '<div class="subsection-title">Opacity</div>';
+				opacityCard.appendChild(opacity);
+				source.after(opacityCard);
+			}
+			appearance.remove();
+		}
+		const createGroup = (title, members) => {
+			const valid = members.filter(Boolean);
+			if (!valid.length) return;
+			const wrapper = document.createElement('div');
+			wrapper.className = 'subsection-content-group subsection-section-group';
+			wrapper.innerHTML = `<div class="subsection-title">${title}</div>`;
+			valid.forEach((member) => wrapper.appendChild(member));
+			root.appendChild(wrapper);
+			return wrapper;
+		};
+		const opacityCard = document.getElementById('opacity')?.closest('.subsection-content-group');
+		const appearanceGroup = createGroup('Appearance', [source, opacityCard]);
+		if (appearanceGroup && globalControl) {
+			appearanceGroup.querySelector(':scope > .subsection-title')?.appendChild(globalControl);
+		}
 	}
 
 	renderTransformPanel(container, prefix, capabilities) {
@@ -2237,18 +2409,34 @@ async resetAllSettings() {
 			: '';
 		const scaleSummaryMarkup = capabilities.scaleReadout
 			? `
-				<div class="setting-column right transform-scale-control" id="${ids.scaleControl}">
+				<div class="setting-column right transform-scale-control transform-scale-x">
 					<div class="setting-header">
-						<span class="setting-label">Scale</span>
-						<span class="setting-value" id="${ids.scaleSummary}">100%</span>
+						<span class="setting-label">Scale X</span>
+						<span class="setting-value" id="${ids.scaleXValue}">100%</span>
 					</div>
-					<input type="range" id="${ids.scaleSlider}" min="10" max="500" value="100">
-					<button class="btn-text" id="${ids.resetScale}" type="button">Reset</button>
+					<input type="range" id="${ids.scaleX}" min="10" max="500" value="100">
+					<button class="btn-text" id="${ids.resetScaleX}" type="button">Reset</button>
+				</div>
+				<div class="setting-column right transform-scale-control transform-scale-y">
+					<div class="setting-header">
+						<span class="setting-label">Scale Y</span>
+						<span class="setting-value" id="${ids.scaleYValue}">100%</span>
+					</div>
+					<input type="range" id="${ids.scaleY}" min="10" max="500" value="100">
+					<button class="btn-text" id="${ids.resetScaleY}" type="button">Reset</button>
 				</div>
 			`
 			: '';
 
 		container.innerHTML = `
+			${prefix === 'sticker' ? '' : `
+			<div class="subsection-content-group transform-panel">
+				<div class="subsection-title">Actions</div>
+				<div class="settings-action-row">
+					<button class="btn-simple" id="${prefix}FitCanvas" type="button">Fit canvas</button>
+					<button class="btn-simple" id="${prefix}FillCanvas" type="button">Fill canvas</button>
+				</div>
+			</div>`}
 			<div class="subsection-content-group transform-panel" data-transform-prefix="${prefix}">
 				<div class="subsection-title transform-panel-title">
 					<span>Transform</span>
@@ -2358,6 +2546,8 @@ async resetAllSettings() {
 				opacity: 'stickerOpacity', opacityValue: 'stickerOpacityValue', resetOpacity: 'resetStickerOpacity',
 				proportional: 'stickerProportionalScale',
 				scaleControl: 'stickerScaleControl', scaleSummary: 'stickerScaleSummary', scaleSlider: 'stickerScale', resetScale: 'resetStickerScale',
+				scaleX: 'stickerTransformScaleX', scaleXValue: 'stickerTransformScaleXValue', resetScaleX: 'resetStickerTransformScaleX',
+				scaleY: 'stickerTransformScaleY', scaleYValue: 'stickerTransformScaleYValue', resetScaleY: 'resetStickerTransformScaleY',
 				flipX: 'stickerFlipX', flipY: 'stickerFlipY',
 				alignLeft: 'stickerAlignLeft', alignCenterX: 'stickerAlignCenterX', alignRight: 'stickerAlignRight',
 				alignTop: 'stickerAlignTop', alignCenterY: 'stickerAlignCenterY', alignBottom: 'stickerAlignBottom',
@@ -2374,6 +2564,8 @@ async resetAllSettings() {
 				opacity: 'shapeOpacity', opacityValue: 'shapeOpacityValue', resetOpacity: 'resetShapeOpacity',
 				proportional: 'shapeProportionalScale',
 				scaleControl: 'shapeScaleControl', scaleSummary: 'shapeScaleSummary', scaleSlider: 'shapeScale', resetScale: 'resetShapeScale',
+				scaleX: 'shapeTransformScaleX', scaleXValue: 'shapeTransformScaleXValue', resetScaleX: 'resetShapeTransformScaleX',
+				scaleY: 'shapeTransformScaleY', scaleYValue: 'shapeTransformScaleYValue', resetScaleY: 'resetShapeTransformScaleY',
 				flipX: 'shapeFlipX', flipY: 'shapeFlipY',
 				alignLeft: 'shapeAlignLeft', alignCenterX: 'shapeAlignCenterX', alignRight: 'shapeAlignRight',
 				alignTop: 'shapeAlignTop', alignCenterY: 'shapeAlignCenterY', alignBottom: 'shapeAlignBottom',
@@ -2389,6 +2581,8 @@ async resetAllSettings() {
 			opacity: 'textLayerOpacity', opacityValue: 'textLayerOpacityValue', resetOpacity: 'resetTextLayerOpacity',
 			proportional: null,
 			scaleControl: 'textScaleControl', scaleSummary: 'textScaleSummary', scaleSlider: 'textScale', resetScale: 'resetTextScale',
+			scaleX: 'textTransformScaleX', scaleXValue: 'textTransformScaleXValue', resetScaleX: 'resetTextTransformScaleX',
+			scaleY: 'textTransformScaleY', scaleYValue: 'textTransformScaleYValue', resetScaleY: 'resetTextTransformScaleY',
 			flipX: 'textFlipX', flipY: 'textFlipY',
 			alignLeft: 'textAlignLeft', alignCenterX: 'textAlignCenterX', alignRight: 'textAlignRight',
 			alignTop: 'textAlignTop', alignCenterY: 'textAlignCenterY', alignBottom: 'textAlignBottom',
@@ -2438,9 +2632,9 @@ async resetAllSettings() {
 			|| Math.abs((transform.scale.y || 100) - 100) > 0.5;
 	}
 
-	hasResettableTransformAdjustments(transform) {
+	hasResettableTransformAdjustments(transform, options = {}) {
 		if (!transform) return false;
-		return this.hasScaleAdjustment(transform)
+		return (!options.ignoreScale && this.hasScaleAdjustment(transform))
 			|| Math.abs(transform.rotation || 0) > 0.5
 			|| Boolean(transform.flipX)
 			|| Boolean(transform.flipY);
@@ -2452,7 +2646,10 @@ async resetAllSettings() {
 		const ids = this.getTransformIds(prefix);
 		const resetTransform = document.getElementById(ids.resetTransform);
 		if (resetTransform) {
-			resetTransform.disabled = !this.hasResettableTransformAdjustments(this.getLayerTransformData(layer));
+			resetTransform.disabled = !this.hasResettableTransformAdjustments(
+				this.getLayerTransformData(layer),
+				{ ignoreScale: prefix === 'text' }
+			);
 		}
 	}
 
@@ -2476,14 +2673,11 @@ async resetAllSettings() {
 			};
 		}
 
-		if ((layer.textData.boxMode || 'auto') !== 'fixed') {
-			return { visible: false, width: 0, height: 0 };
-		}
-
+		const frame = this.textGlitterManager?.layerTransforms?.get(layer.id)?.getHandleFrame?.();
 		return {
-			visible: true,
-			width: Math.max(1, Math.round(layer.textData.boxWidth || 0)),
-			height: Math.max(1, Math.round(layer.textData.boxHeight || 0))
+			visible: Boolean(frame),
+			width: Math.max(1, Math.round((frame?.width || 1) * ((transform.scale.x || 100) / 100))),
+			height: Math.max(1, Math.round((frame?.height || 1) * ((transform.scale.y || 100) / 100)))
 		};
 	}
 
@@ -2578,16 +2772,13 @@ async resetAllSettings() {
 		if (proportional) {
 			proportional.checked = transform.proportionalScale;
 		}
+		const transformPanel = document.querySelector(`[data-transform-prefix="${prefix}"]`);
+		transformPanel?.classList.toggle('is-aspect-locked', Boolean(proportional?.checked));
+		const scaleXLabel = transformPanel?.querySelector('.transform-scale-x .setting-label');
+		if (scaleXLabel) scaleXLabel.textContent = proportional?.checked ? 'Scale' : 'Scale X';
 		const scaleSummary = document.getElementById(ids.scaleSummary);
 		if (scaleSummary) {
 			scaleSummary.innerHTML = this.formatScaleSummary(transform);
-		}
-		const scaleControl = document.getElementById(ids.scaleControl);
-		if (scaleControl) {
-			const hideTextScale = prefix === 'text'
-				&& (layer.textData.boxMode || 'auto') === 'fixed'
-				&& !this.hasScaleAdjustment(transform);
-			scaleControl.hidden = hideTextScale;
 		}
 		const scaleSlider = document.getElementById(ids.scaleSlider);
 		if (scaleSlider) {
@@ -2597,6 +2788,17 @@ async resetAllSettings() {
 		if (resetScale) {
 			resetScale.disabled = !this.hasScaleAdjustment(transform);
 		}
+		[
+			[ids.scaleX, ids.scaleXValue, ids.resetScaleX, transform.scale.x],
+			[ids.scaleY, ids.scaleYValue, ids.resetScaleY, transform.scale.y]
+		].forEach(([inputId, valueId, resetId, value]) => {
+			const input = document.getElementById(inputId);
+			const display = document.getElementById(valueId);
+			const reset = document.getElementById(resetId);
+			if (input) input.value = value;
+			if (display) display.innerHTML = formatUnit(Math.round(value), '%');
+			if (reset) reset.disabled = Math.abs(value - 100) < 0.01;
+		});
 
 		const opacity = document.getElementById(ids.opacity);
 		const opacityValue = document.getElementById(ids.opacityValue);
@@ -2663,6 +2865,90 @@ async resetAllSettings() {
 		this.shapeGlitterManager?.removeTransformHandles();
 	}
 
+	snapTransformPosition(transform, position, options = {}) {
+		const config = CONFIG.snapping;
+		if (!config.enabled || options.ctrlKey) {
+			this.clearSmartGuides();
+			return position;
+		}
+		const metrics = transform.getFrameMetrics?.();
+		if (!metrics) return position;
+		const current = transform.getTransform().position;
+		const dx = position.x - current.x;
+		const dy = position.y - current.y;
+		const movingX = [metrics.minX + dx, (metrics.minX + metrics.maxX) / 2 + dx, metrics.maxX + dx];
+		const movingY = [metrics.minY + dy, (metrics.minY + metrics.maxY) / 2 + dy, metrics.maxY + dy];
+		const targetsX = [];
+		const targetsY = [];
+		if (config.snapToCanvas) {
+			targetsX.push(0, this.originalCanvas.width / 2, this.originalCanvas.width);
+			targetsY.push(0, this.originalCanvas.height / 2, this.originalCanvas.height);
+		}
+		if (config.snapToLayers) {
+			this.layerManager.layers.forEach((layer) => {
+				if (layer.id === transform.layer.id || layer.visible === false || layer.locked) return;
+				const other = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
+				if (!other) return;
+				targetsX.push(other.minX, (other.minX + other.maxX) / 2, other.maxX);
+				targetsY.push(other.minY, (other.minY + other.maxY) / 2, other.maxY);
+			});
+		}
+		const threshold = config.threshold / Math.max(0.01, this.viewport.currentZoom);
+		const best = (moving, targets) => {
+			let result = null;
+			moving.forEach((value) => targets.forEach((target) => {
+				const delta = target - value;
+				if (Math.abs(delta) <= threshold && (!result || Math.abs(delta) < Math.abs(result.delta))) result = { delta, target };
+			}));
+			return result;
+		};
+		const x = best(movingX, targetsX);
+		const y = best(movingY, targetsY);
+		this.renderSmartGuides(x?.target, y?.target);
+		return { x: position.x + (x?.delta || 0), y: position.y + (y?.delta || 0) };
+	}
+
+	renderSmartGuides(x, y) {
+		this.clearSmartGuides();
+		if (x == null && y == null) return;
+		const add = (axis, value) => {
+			const guide = document.createElement('div');
+			guide.className = `smart-guide smart-guide-${axis} ui-ignore-gestures`;
+			guide.style[axis === 'x' ? 'left' : 'top'] = `${value}px`;
+			this.canvasElementsContainer.appendChild(guide);
+		};
+		if (x != null) add('x', x);
+		if (y != null) add('y', y);
+	}
+
+	snapGroupDelta(bounds, delta, excludedIds, options = {}) {
+		const config = CONFIG.snapping;
+		if (!config.enabled || options.ctrlKey || !bounds) { this.clearSmartGuides(); return delta; }
+		const targetsX = config.snapToCanvas ? [0, this.originalCanvas.width / 2, this.originalCanvas.width] : [];
+		const targetsY = config.snapToCanvas ? [0, this.originalCanvas.height / 2, this.originalCanvas.height] : [];
+		if (config.snapToLayers) this.layerManager.layers.forEach((layer) => {
+			if (excludedIds.includes(layer.id) || layer.visible === false || layer.locked) return;
+			const metrics = this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.();
+			if (!metrics) return;
+			targetsX.push(metrics.minX, (metrics.minX + metrics.maxX) / 2, metrics.maxX);
+			targetsY.push(metrics.minY, (metrics.minY + metrics.maxY) / 2, metrics.maxY);
+		});
+		const threshold = config.threshold / Math.max(0.01, this.viewport.currentZoom);
+		const nearest = (moving, targets) => {
+			let result = null;
+			moving.forEach((value) => targets.forEach((target) => { const adjustment = target - value; if (Math.abs(adjustment) <= threshold && (!result || Math.abs(adjustment) < Math.abs(result.adjustment))) result = { adjustment, target }; }));
+			return result;
+		};
+		const x = nearest([bounds.left + delta.x, bounds.centerX + delta.x, bounds.right + delta.x], targetsX);
+		const y = nearest([bounds.top + delta.y, bounds.centerY + delta.y, bounds.bottom + delta.y], targetsY);
+		this.renderSmartGuides(x?.target, y?.target);
+		return { x: delta.x + (x?.adjustment || 0), y: delta.y + (y?.adjustment || 0) };
+	}
+
+	clearSmartGuides() {
+		this.canvasElementsContainer?.querySelectorAll('.smart-guide').forEach((guide) => guide.remove());
+	}
+
 	applyTransformSizeFromPanel(prefix, layer, manager, axis, rawValue) {
 		const value = Math.max(1, Math.round(rawValue));
 		const ids = this.getTransformIds(prefix);
@@ -2706,9 +2992,12 @@ async resetAllSettings() {
 
 		const current = this.getTransformSizeState(layer, prefix);
 		if (!current?.visible) return false;
-		const nextWidth = axis === 'width' ? value : current.width;
-		const nextHeight = axis === 'height' ? value : current.height;
-		return Boolean(manager.setBoxSize?.(layer, nextWidth, nextHeight));
+		const transform = getLayerTransform(layer);
+		const scale = { ...transform.scale };
+		if (axis === 'width') scale.x = clampLayerScale(scale.x * value / current.width);
+		else scale.y = clampLayerScale(scale.y * value / current.height);
+		manager.updateTransform(layer.id, { scale });
+		return true;
 	}
 
 	setupTransformListeners(prefix, layerType, getManager) {
@@ -2719,6 +3008,27 @@ async resetAllSettings() {
 			return (layer && layer.type === layerType && manager) ? { layer, manager } : null;
 		};
 		const showUnit = (el, num, unit) => { if (el) el.innerHTML = formatUnit(Math.round(num), unit); };
+		['Fit', 'Fill'].forEach((mode) => {
+			document.getElementById(`${prefix}${mode}Canvas`)?.addEventListener('click', async () => {
+				const active = activeManager();
+				const transform = active?.manager?.layerTransforms?.get(active.layer.id);
+				const metrics = transform?.getFrameMetrics?.();
+				if (!active || !metrics) return;
+				const factor = (mode === 'Fill' ? Math.max : Math.min)(
+					this.originalCanvas.width / Math.max(1, metrics.displayWidth),
+					this.originalCanvas.height / Math.max(1, metrics.displayHeight)
+				);
+				const current = getLayerTransform(active.layer);
+				active.manager.updateTransform(active.layer.id, {
+					position: { x: this.originalCanvas.width / 2, y: this.originalCanvas.height / 2 },
+					scale: { x: clampLayerScale(current.scale.x * factor), y: clampLayerScale(current.scale.y * factor) }
+				});
+				if (prefix === 'text') await active.manager.commitScaleToFontSize?.(active.layer);
+				if (prefix === 'shape') active.manager.commitScale?.(active.layer);
+				this.loadTransformSettings(active.layer, prefix);
+				this.saveState();
+			});
+		});
 		const bindNumberInput = (id, applyValue) => {
 			const input = document.getElementById(id);
 			if (!input) return;
@@ -2838,13 +3148,50 @@ async resetAllSettings() {
 			proportionalScale.addEventListener('change', (event) => {
 				const active = activeManager();
 				if (!active) return;
+				const current = getLayerTransform(active.layer);
 				active.manager.updateTransform(active.layer.id, {
-					proportionalScale: event.target.checked
+					proportionalScale: event.target.checked,
+					...(event.target.checked ? { scale: { x: current.scale.x, y: current.scale.x } } : {})
 				});
 				this.loadTransformSettings(active.layer, prefix);
 				this.saveState();
 			});
 		}
+
+		const bindAxisScale = (axis, inputId, valueId, resetId) => {
+			const input = document.getElementById(inputId);
+			const display = document.getElementById(valueId);
+			const reset = document.getElementById(resetId);
+			if (!input) return;
+
+			input.addEventListener('input', (event) => {
+				const active = activeManager();
+				if (!active) return;
+				const value = clampLayerScale(parseFloat(event.target.value) || 100);
+				const current = getLayerTransform(active.layer);
+				const scale = { ...current.scale, [axis]: value };
+				if (document.getElementById(ids.proportional)?.checked) {
+					const otherAxis = axis === 'x' ? 'y' : 'x';
+					const previous = Math.max(0.01, current.scale[axis]);
+					scale[otherAxis] = clampLayerScale(current.scale[otherAxis] * value / previous);
+				}
+				active.manager.updateTransform(active.layer.id, { scale });
+				this.loadTransformSettings(active.layer, prefix);
+			});
+			input.addEventListener('change', () => this.saveState());
+			reset?.addEventListener('click', () => {
+				const active = activeManager();
+				if (!active) return;
+				const current = getLayerTransform(active.layer);
+				const scale = { ...current.scale, [axis]: 100 };
+				if (document.getElementById(ids.proportional)?.checked) scale[axis === 'x' ? 'y' : 'x'] = 100;
+				active.manager.updateTransform(active.layer.id, { scale });
+				this.loadTransformSettings(active.layer, prefix);
+				this.saveState();
+			});
+		};
+		bindAxisScale('x', ids.scaleX, ids.scaleXValue, ids.resetScaleX);
+		bindAxisScale('y', ids.scaleY, ids.scaleYValue, ids.resetScaleY);
 
 		const scaleSlider = document.getElementById(ids.scaleSlider);
 		const scaleSummary = document.getElementById(ids.scaleSummary);
@@ -3722,6 +4069,7 @@ setupWelcomeModalListeners() {
 		const previewToggle = document.getElementById('previewModeToggle');
 		const transparencyToggle = document.getElementById('transparencyToggle');
 		const boundsToggle = document.getElementById('boundsToggle');
+		const snappingToggle = document.getElementById('snappingToggle');
 
 		if (previewToggle) {
 			previewToggle.addEventListener('click', () => this.togglePreview());
@@ -3745,6 +4093,14 @@ setupWelcomeModalListeners() {
 			boundsToggle.addEventListener('click', () => {
 				const isActive = boundsToggle.classList.toggle('active');
 				this.previewContainer.classList.toggle('bounds', isActive);
+			});
+		}
+		if (snappingToggle) {
+			snappingToggle.classList.toggle('active', CONFIG.snapping.enabled);
+			snappingToggle.addEventListener('click', () => {
+				CONFIG.snapping.enabled = !CONFIG.snapping.enabled;
+				snappingToggle.classList.toggle('active', CONFIG.snapping.enabled);
+				this.clearSmartGuides();
 			});
 		}
 
@@ -4169,6 +4525,7 @@ setupWelcomeModalListeners() {
 		if (this.currentTool === tool) return;
 
 		this.currentTool = tool;
+		if (!this.temporaryHandToolActive) sessionStorage.setItem('glitter:lastTool', tool);
 		this.currentHintDismissed = false; // Reset dismissed flag when tool changes
 
 
@@ -4676,6 +5033,28 @@ setupWelcomeModalListeners() {
 		}
 
 		if (e.key === 'Escape') {
+			const activeGradientEditor = document.activeElement?.closest?.('.effect-gradient-editor');
+			if (activeGradientEditor) {
+				document.activeElement.blur();
+				e.preventDefault();
+				return;
+			}
+			const textPickerOpen = Boolean(this.textGlitterManager?.pickerSession);
+			const shapePickerOpen = Boolean(this.shapeGlitterManager?.pickerSession);
+			const stickerPickerOpen = Boolean(this.stickerManager?.pickerSession);
+			if (textPickerOpen || shapePickerOpen || stickerPickerOpen) {
+				if (textPickerOpen) {
+					const slot = this.textGlitterManager.pickerSession.slot;
+					this.textGlitterManager.closePickerSession();
+					this.textGlitterManager.returnToTextProperties(slot);
+				}
+				if (shapePickerOpen) this.shapeGlitterManager.handlePickerDone();
+				if (stickerPickerOpen) {
+					this.stickerManager.closePicker();
+				}
+				e.preventDefault();
+				return;
+			}
 			// Let ModalManager handle modal closing
 			if (this.modalManager.closeTopModal()) {
 				return; // A modal was closed, we're done

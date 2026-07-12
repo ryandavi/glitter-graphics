@@ -147,6 +147,7 @@ class LayerManager {
 			selectedGlitterId: layer.selectedGlitterId,
 			settings: layer.settings ? { ...layer.settings } : {}
 		};
+		serialized.fill = layer.fill ? JSON.parse(JSON.stringify(layer.fill)) : null;
 
 		if (includeMaskVersion) {
 			serialized.maskVersion = layer.maskVersion || 0;
@@ -213,7 +214,7 @@ class LayerManager {
 			};
 		}
 
-		return {
+		const restored = {
 			id: layerData.id,
 			type: layerData.type || LayerType.GLITTER_FILL,
 			visible: layerData.visible,
@@ -224,6 +225,8 @@ class LayerManager {
 			selectedGlitterId: layerData.selectedGlitterId,
 			settings: layerData.settings ? { ...layerData.settings } : {}
 		};
+		restored.fill = layerData.fill ? JSON.parse(JSON.stringify(layerData.fill)) : null;
+		return restored;
 	}
 
 
@@ -1289,6 +1292,35 @@ class LayerManager {
 
 		const nameText = document.createElement('div');
 		nameText.className = 'layer-name';
+		nameText.title = 'Double-click to rename';
+		nameText.addEventListener('dblclick', (event) => {
+			event.stopPropagation();
+			if (layer.type === LayerType.BASE_IMAGE || layer.locked) return;
+			const input = document.createElement('input');
+			input.className = 'layer-name-input';
+			input.type = 'text';
+			input.maxLength = 80;
+			input.value = layer.name || nameText.textContent;
+			nameText.replaceWith(input);
+			input.focus();
+			input.select();
+			let finished = false;
+			const finish = (commit) => {
+				if (finished) return;
+				finished = true;
+				const nextName = input.value.trim();
+				if (commit && nextName && nextName !== layer.name) {
+					layer.name = nextName;
+					this.editor.saveState();
+				}
+				this.renderLayersList();
+			};
+			input.addEventListener('blur', () => finish(true));
+			input.addEventListener('keydown', (keyEvent) => {
+				if (keyEvent.key === 'Enter') { keyEvent.preventDefault(); input.blur(); }
+				if (keyEvent.key === 'Escape') { keyEvent.preventDefault(); finish(false); }
+			});
+		});
 
 		const metaRow = document.createElement('div');
 		metaRow.className = 'layer-meta';

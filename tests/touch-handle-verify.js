@@ -609,6 +609,23 @@ async function checkGroupAltDuplicateDrag(page) {
 	assert(afterUndoCount === 3, `Undo did not remove the duplicated group (${afterUndoCount} layers remain)`);
 }
 
+async function checkSidebarScaleAndResetHandles(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	await createTestSticker(page, { position: { x: 120, y: 100 }, label: 'Sidebar Transform' });
+	const before = await page.locator('.transform-bounding-box').boundingBox();
+	await page.locator('#stickerScale').evaluate((input) => {
+		input.value = '180';
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		input.dispatchEvent(new Event('change', { bubbles: true }));
+	});
+	const scaled = await page.locator('.transform-bounding-box').boundingBox();
+	assert(scaled.width > before.width * 1.5, 'Sidebar scale did not resize the transform box');
+	await page.locator('#resetStickerTransform').evaluate((button) => button.click());
+	const reset = await page.locator('.transform-bounding-box').boundingBox();
+	assert(Math.abs(reset.width - before.width) < 2, 'Reset Transform did not restore the transform box size');
+}
+
 async function runCheck(browser, name, fn) {
 	const tracker = await createHarnessPage(browser);
 
@@ -642,6 +659,7 @@ async function main() {
 			['Alt + mouse group drag duplicates and moves every selected sticker', checkGroupAltDuplicateDrag],
 			['Mouse drag on rotation handle still rotates the selected sticker', (page) => checkRotationHandle(page, mouseDrag, 'mouse')],
 			['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
+			['Sidebar scale and Reset Transform resize the sticker transform box', checkSidebarScaleAndResetHandles],
 			['Alt + mouse corner drag scales from the layer center', checkAltCornerScaleFromCenter],
 			['Escape cancels a mouse corner transform without history', checkEscapeCancelsCornerScale],
 			['Mouse drag on fixed-text edge handle still resizes the box', (page) => checkFixedTextEdgeResizeHandle(page, mouseDrag, 'mouse')]

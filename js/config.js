@@ -122,8 +122,8 @@ const CONFIG = {
 				// (glitter-fill, text, shape) so retuning one slot's default doesn't
 				// touch the others, and doesn't need to be set separately per layer type.
 				fillGlitterId: 111,
-				borderGlitterId: 111,
-				shadowGlitterId: 111,
+				borderGlitterId: 9,
+				shadowGlitterId: 109,
 				fillColor: '#ff66cc',
 				borderColor: '#000000',
 				shadowColor: '#000000',
@@ -166,6 +166,10 @@ const CONFIG = {
 			rotationSnapTolerance: 5,
 			transform: {
 				roundValues: true
+			},
+			shadow: {
+				defaultOffsetX: 6,
+				defaultOffsetY: 6
 			}
 		},
 		text: {
@@ -238,11 +242,31 @@ const CONFIG = {
 	rendering: {
 		maskPaddingPx: 8,
 		crispMaskEdges: true,
+		gradient: {
+			type: 'linear',
+			angle: 180,
+			// Stop blending: 'linear' (native), 'smooth' (smoothstep-eased), or
+			// 'steps' (hard bands). Implemented as stop-list expansion in
+			// effect-source.js so CSS preview and canvas export share literal stops.
+			interpolation: 'linear',
+			smoothSubdivisions: 8,
+			stops: [
+				{ offset: 0, color: '#ff4fa3', alpha: 1 },
+				{ offset: 1, color: '#6554ff', alpha: 1 }
+			]
+		},
 		borderSampling: {
 			minSteps: 16,
 			maxSteps: 64,
 			stepsPerPixel: 4
 		}
+	},
+
+	snapping: {
+			enabled: true,
+			threshold: 6,
+			snapToCanvas: true,
+			snapToLayers: true
 	},
 
 	ui: {
@@ -314,10 +338,12 @@ const CONFIG = {
 				{ key: 'Shift + Click', action: 'Add/Remove Movable Layer from Selection' },
 				{ key: 'Alt + Click', action: 'Cycle Through Overlapping Layers' },
 				{ key: 'Alt + Drag', action: 'Duplicate Layer(s) While Dragging' },
+				{ key: 'Ctrl + D', action: 'Duplicate Selected Layer(s)' },
 				{ key: 'Drag on Empty Canvas', action: 'Select Multiple Layers' },
 				{ key: 'Ctrl + A', action: 'Select All Movable Layers' },
 				{ key: 'Escape', action: 'Cancel Active Transform / Clear Multi-Selection' },
 				{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move' },
+				{ key: 'Hold Ctrl', action: 'Temporarily Disable Snapping While Dragging' },
 				{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg' },
 				{ key: 'Alt + Resize', action: 'Resize Layer(s) from Center' }
 			],
@@ -570,8 +596,8 @@ const LAYER_UI_CONFIG = {
 			icon: 'sticker',
 			description: 'Add images and graphics'
 		},
-		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'stickerSettingsSection'],
-		mobileSettingsSections: ['sticker'],
+		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'glitterSearchSection', 'glitterOptions', 'stickerSettingsSection'],
+		mobileSettingsSections: ['glitter', 'sticker'],
 		panelMode: 'sticker',
 		elementClass: 'sticker-element',
 		transformable: true,

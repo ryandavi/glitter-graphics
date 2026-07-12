@@ -96,8 +96,38 @@ async initBrowser() {
 
 		// Setup filter chips
 		this.setupFilterChips();
+		this.setupFillSourceControls();
+	}
 
-
+	setupFillSourceControls() {
+		const appearance = document.getElementById('opacity')?.closest('.subsection-content-group');
+		if (!appearance || document.getElementById('glitterFillSolid')) return;
+		const source = document.createElement('div');
+		source.className = 'subsection-content-group';
+		source.innerHTML = '<div class="subsection-title">Source</div><div class="segmented-control"><button type="button" class="segmented-option active" id="glitterFillGlitter">Glitter</button><button type="button" class="segmented-option" id="glitterFillSolid">Solid</button></div><div class="text-effect-color-row glitter-source-solid" id="glitterFillColorRow" hidden><div class="setting-header"><span class="setting-label">Solid Color</span></div><input type="color" id="glitterFillColor" value="#ff4fa3"></div>';
+		appearance.parentElement.insertBefore(source, appearance);
+		this.editor.organizeGlitterPropertyGroups?.();
+		const active = () => {
+			const layer = this.editor.layerManager.getActiveLayer();
+			return layer?.type === LayerType.GLITTER_FILL ? layer : null;
+		};
+		['glitter', 'solid'].forEach((mode) => document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`).addEventListener('click', () => {
+			const layer = active();
+			if (!layer) return;
+			layer.fill ||= { color: '#ff4fa3' };
+			layer.fill.mode = mode;
+			syncPaintSlotSourceUI(document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`), mode);
+			this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+			this.editor.saveState();
+		}));
+		const color = document.getElementById('glitterFillColor');
+		color.addEventListener('input', () => { const layer = active(); if (!layer) return; layer.fill ||= {}; layer.fill.mode = 'solid'; layer.fill.color = color.value; this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height); });
+		color.addEventListener('change', () => this.editor.saveState());
+		installEffectGradientEditor({
+			prefix: 'glitterFill',
+			getData: () => { const layer = active(); if (!layer) return null; layer.fill ||= { mode: 'glitter', color: '#ff4fa3' }; return layer.fill; },
+			onUpdate: (commit) => { const layer = active(); if (!layer) return; this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height); if (commit) this.editor.saveState(); }
+		});
 	}
 
 	setupFilterChips() {
@@ -125,6 +155,7 @@ async initBrowser() {
 			maskHasContent: false,
 			selections: [],
 			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
+			fill: { mode: 'glitter', color: '#ff4fa3', gradient: normalizeEffectGradient(CONFIG.rendering.gradient) },
 			settings: {
 				threshold: CONFIG.tools.selection.defaults.threshold,
 				feather: CONFIG.tools.selection.defaults.feather,
@@ -285,8 +316,8 @@ async initBrowser() {
 			return;
 		}
 
-		if (layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER && layer.type !== LayerType.SHAPE) {
-			this.editor.showError('You can only add a glitter to a glitter-fill, text, or shape layer');
+		if (layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER && layer.type !== LayerType.SHAPE && layer.type !== LayerType.STICKER) {
+			this.editor.showError('You can only add a glitter to a glitter-fill, text, shape, or sticker effect');
 			return;
 		}
 		const glitter = this.getItemById(id);
@@ -351,6 +382,13 @@ async initBrowser() {
 				// Fresh swatch → reset that slot's hue/sat/bright.
 				slotData.colorAdjust = null;
 			}
+		} else if (layer.type === LayerType.STICKER) {
+			const target = this.editor.stickerManager?.getGlitterSelectionTarget(layer);
+			const effect = target ? layer.stickerData?.[target] : null;
+			if (!effect) return;
+			effect.glitterId = id;
+			effect.mode = 'glitter';
+			effect.colorAdjust = null;
 		} else {
 			layer.selectedGlitterId = id;
 			// Picking a new swatch is a clean slate: drop any hue/sat/bright shift so
@@ -374,6 +412,9 @@ async initBrowser() {
 			this.editor.shapeGlitterManager?.renderLayer(layer);
 			this.editor.shapeGlitterManager?.loadLayerSettings(layer);
 			this.editor.shapeGlitterManager?.updatePickerStrip();
+		} else if (layer.type === LayerType.STICKER) {
+			this.editor.stickerManager?.renderLayer(layer);
+			this.editor.stickerManager?.loadLayerSettings(layer);
 		} else if (hasMaskContent(layer)) {
 			this.editor.updatePreview();
 		}
@@ -439,7 +480,8 @@ async initBrowser() {
 		if (layer.type !== LayerType.GLITTER_FILL) return;
 
 		const glitter = this.getItemById(layer.selectedGlitterId);
-		if (!glitter) return;
+		const fillMode = layer.fill?.mode || 'glitter';
+		if (fillMode === 'glitter' && !glitter) return;
 
 		let wrapper = this.layerElements.get(layer.id);
 		let inner = wrapper?.querySelector('.glitter-background');
@@ -463,18 +505,19 @@ async initBrowser() {
 		}
 
 		inner.className = 'glitter-background visible';
-		if (glitter.isPixelated) inner.classList.add('pixelated');
+		if (fillMode === 'glitter' && glitter.isPixelated) inner.classList.add('pixelated');
 
 		// Apply glitter texture
-		inner.style.backgroundImage = `url(${glitter.url})`;
+		inner.style.backgroundImage = fillMode === 'gradient' ? effectGradientToCss(layer.fill.gradient) : fillMode === 'glitter' ? `url(${glitter.url})` : 'none';
+		inner.style.backgroundColor = fillMode === 'solid' ? layer.fill.color : 'transparent';
 		inner.style.opacity = layer.settings.opacity / 100;
 		// Color adjust (WP4): CSS filter mirrors the export matrix pass. Empty
 		// string for an identity/absent adjust clears any previous filter.
-		inner.style.filter = buildCssColorFilter(layer.settings.colorAdjust);
+		inner.style.filter = fillMode === 'glitter' ? buildCssColorFilter(layer.settings.colorAdjust) : '';
 
 		const glitterScale = layer.settings.scale / 100;
-		const baseSize = (glitter.frames && glitter.frames.width) ? glitter.frames.width : 50;
-		inner.style.backgroundSize = `${Math.round(baseSize * glitterScale)}px`;
+		const baseSize = (glitter?.frames && glitter.frames.width) ? glitter.frames.width : 50;
+		inner.style.backgroundSize = fillMode === 'glitter' ? `${Math.round(baseSize * glitterScale)}px` : 'cover';
 
 		const maskObjectUrl = this.getMaskObjectUrlForLayer(layer, width, height, options);
 		if (maskObjectUrl) {
@@ -1250,4 +1293,3 @@ async initBrowser() {
 		return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
 	}
 }
-

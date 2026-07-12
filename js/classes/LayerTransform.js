@@ -60,13 +60,7 @@ class LayerTransform {
     }
 
     supportsEdgeResize() {
-        // Text: resize the box (box mode). Shape: non-uniform one-axis scale
-        // (left/right → width, top/bottom → height).
-        if (this.layer.type === LayerType.SHAPE) return true;
-        return Boolean(
-            this.layer.type === LayerType.TEXT_GLITTER &&
-            this.editor.textGlitterManager?.canResizeBoxEdges?.(this.layer)
-        );
+		return [LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(this.layer.type);
     }
 
     // ===== CORE TRANSFORM APPLICATION =====
@@ -395,7 +389,7 @@ updateTransform(updates) {
         this.editor.saveState();
     }
 
-    resetTransform() {
+    resetTransform(options = {}) {
         const transform = this.getTransform();
         const next = createDefaultTransform({
             position: {
@@ -405,9 +399,11 @@ updateTransform(updates) {
         });
 
         transform.rotation = next.rotation;
-        transform.scale.x = next.scale.x;
-        transform.scale.y = next.scale.y;
-        transform.proportionalScale = next.proportionalScale;
+        if (!options.preserveScale) {
+            transform.scale.x = next.scale.x;
+            transform.scale.y = next.scale.y;
+            transform.proportionalScale = next.proportionalScale;
+        }
         transform.flipX = next.flipX;
         transform.flipY = next.flipY;
 
@@ -561,11 +557,12 @@ const handleMouseMove = (e) => {
     
     // Apply delta to current position
 	const activeTransform = dragTransform;
+	const snappedPosition = this.editor.snapTransformPosition(activeTransform, {
+		x: startPosition.x + constrainedDeltaX,
+		y: startPosition.y + constrainedDeltaY
+	}, { ctrlKey: e.ctrlKey });
     activeTransform.updateTransform({
-        position: {
-            x: startPosition.x + constrainedDeltaX,
-            y: startPosition.y + constrainedDeltaY
-        }
+		position: snappedPosition
     });
     
     // CRITICAL FIX: Ensure we have a valid element reference
@@ -621,6 +618,7 @@ const handleMouseMove = (e) => {
 	    didMove = false;
 		this.activeMouseDragCancel = null;
 		this.editor.setDuplicateDragFeedback?.(false);
+		this.editor.clearSmartGuides?.();
 	    document.removeEventListener('mousemove', handleMouseMove);
 	    document.removeEventListener('mouseup', handleMouseUp);
 	};
@@ -641,6 +639,7 @@ const handleMouseMove = (e) => {
 		altCloneId = null;
 		this.activeMouseDragCancel = null;
 		this.editor.setDuplicateDragFeedback?.(false);
+		this.editor.clearSmartGuides?.();
 		document.removeEventListener('mousemove', handleMouseMove);
 		document.removeEventListener('mouseup', handleMouseUp);
 		return true;
@@ -1241,6 +1240,7 @@ removeTransformHandles() {
         }
 
 		this.editor.setDuplicateDragFeedback?.(false);
+		this.editor.clearSmartGuides?.();
 		this.activeHandleElement?.releasePointerCapture?.(e.pointerId);
         this.activeHandleType = null;
         this.activeHandleElement = null;
@@ -1282,8 +1282,9 @@ removeTransformHandles() {
         const newY = this.dragStartState.transform.position.y + nextDeltaY;
 
 		const targetTransform = this.dragStartState.targetTransform || this;
+		const snappedPosition = this.editor.snapTransformPosition(targetTransform, { x: newX, y: newY }, { ctrlKey: e.ctrlKey });
 		targetTransform.updateTransform({
-            position: { x: newX, y: newY }
+			position: snappedPosition
         });
 
         // Re-apply transform to element
@@ -1313,6 +1314,7 @@ removeTransformHandles() {
 			this.updateHandlePositions();
 		}
 		this.editor.setDuplicateDragFeedback?.(false);
+		this.editor.clearSmartGuides?.();
 		this.activeHandleElement?.releasePointerCapture?.(this.activeHandlePointerId);
 		this.activeHandleType = null;
 		this.activeHandleElement = null;
@@ -1358,8 +1360,11 @@ removeTransformHandles() {
 		let nextPosition = null;
 		if (e.altKey) {
 			// Alt keeps the visible frame center fixed (Figma/Photoshop center resize).
-			newScaleX = clampLayerScale((Math.abs(localX) * 2 / frame.width) * 100);
-			newScaleY = proportional ? newScaleX : clampLayerScale((Math.abs(localY) * 2 / frame.height) * 100);
+			const candidateX = clampLayerScale((Math.abs(localX) * 2 / frame.width) * 100);
+			const candidateY = clampLayerScale((Math.abs(localY) * 2 / frame.height) * 100);
+			const factor = Math.max(candidateX / start.transform.scale.x, candidateY / start.transform.scale.y);
+			newScaleX = proportional ? clampLayerScale(start.transform.scale.x * factor) : candidateX;
+			newScaleY = proportional ? clampLayerScale(start.transform.scale.y * factor) : candidateY;
 		} else {
 			// Default corner resize keeps the opposite corner fixed.
 			const corner = this.activeHandleType.replace('corner-', '');
@@ -1375,8 +1380,11 @@ removeTransformHandles() {
 			const localFromOppositeY = fromOppositeX * sin + fromOppositeY * cos;
 			// Clamp before the anchor math below — deriving nextPosition from an
 			// unclamped scale makes the layer drift diagonally once the limit hits.
-			newScaleX = clampLayerScale((Math.abs(localFromOppositeX) / frame.width) * 100);
-			newScaleY = proportional ? newScaleX : clampLayerScale((Math.abs(localFromOppositeY) / frame.height) * 100);
+			const candidateX = clampLayerScale((Math.abs(localFromOppositeX) / frame.width) * 100);
+			const candidateY = clampLayerScale((Math.abs(localFromOppositeY) / frame.height) * 100);
+			const factor = Math.max(candidateX / start.transform.scale.x, candidateY / start.transform.scale.y);
+			newScaleX = proportional ? clampLayerScale(start.transform.scale.x * factor) : candidateX;
+			newScaleY = proportional ? clampLayerScale(start.transform.scale.y * factor) : candidateY;
 
 			const draggedLocalX = oppositeLocalX + signX * frame.width * (newScaleX / 100);
 			const draggedLocalY = oppositeLocalY + signY * frame.height * (newScaleY / 100);
@@ -1410,40 +1418,12 @@ removeTransformHandles() {
     handleEdgeResizeDrag(e) {
         const edge = this.activeHandleType.replace('edge-', '');
 
-        // Shapes: an edge handle scales ONE axis (non-uniform), mirroring the
-        // corner-scale math but for a single dimension. Baked to a crisp pixel
-        // size on release (see handleHandlePointerUp → commitScale).
-        if (this.layer.type === LayerType.SHAPE) {
-            this.handleShapeEdgeResize(e, edge);
-            return;
-        }
-
-        const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
-
-        if (!this.editor.textGlitterManager?.resizeBoxFromHandle) {
-            return;
-        }
-
-        const didResize = this.editor.textGlitterManager.resizeBoxFromHandle(
-            this.layer,
-            edge,
-            this.dragStartState,
-            canvasPos
-        );
-
-        if (!didResize) {
-            return;
-        }
-
-        this.element = this.editor.textGlitterManager.layerElements.get(this.layer.id) || this.element;
-        const dimensions = this.getDimensions();
-        this.applyTransform(this.element, dimensions);
-        this.updateHandlePositions();
+		this.handleOneAxisScale(e, edge);
     }
 
     // One-axis scale for a shape edge handle (left/right → scaleX, top/bottom →
     // scaleY). Same local-space projection as handleCornerDrag.
-    handleShapeEdgeResize(e, edge) {
+    handleOneAxisScale(e, edge) {
         const transform = this.getTransform();
         const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
         const start = this.dragStartState;

@@ -166,8 +166,43 @@ class GifExporter {
 			alpha: true
 		});
 		tempCtx.putImageData(imageData, 0, 0);
+		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, frameMap, flattenedFrameMap);
 
 		this._drawTransformedCanvas(ctx, tempCanvas, transform, width, height);
+	}
+
+	_getStickerEffectSource(layer, slot) {
+		const data = layer.stickerData?.[slot];
+		return data ? resolveEffectPaintSource(data, { glitterId: data.glitterId }) : null;
+	}
+
+	_getStickerFrameKey(layer, slot) {
+		return `${layer.id}:${slot}`;
+	}
+
+	_getStickerGlitterSources(layer) {
+		const data = layer.stickerData?.shadow;
+		return data?.mode === 'glitter' && data.glitterId
+			? [{ key: this._getStickerFrameKey(layer, 'shadow'), slot: 'shadow', glitterId: data.glitterId }]
+			: [];
+	}
+
+	_renderStickerEffects(layer, ctx, stickerCanvas, frameIndex, frameMap, flattenedFrameMap) {
+		const shadow = layer.stickerData?.shadow;
+		if (!shadow) return;
+		const pad = Math.ceil(Math.max(
+			Math.abs(shadow.offsetX || 0),
+			Math.abs(shadow.offsetY || 0)
+		)) + 2;
+		const mask = document.createElement('canvas');
+		mask.width = stickerCanvas.width + pad * 2;
+		mask.height = stickerCanvas.height + pad * 2;
+		mask.getContext('2d').drawImage(stickerCanvas, pad, pad);
+		const source = this._getStickerEffectSource(layer, 'shadow');
+		const effectMask = this._createOffsetMaskCanvas(mask, shadow.offsetX || 0, shadow.offsetY || 0);
+		if (!source || !effectMask) return;
+		const filled = this._createFilledMaskCanvas(effectMask, source, layer, frameIndex, this._getStickerFrameKey(layer, 'shadow'), frameMap, flattenedFrameMap);
+		this._drawTransformedCanvas(ctx, filled, getLayerTransform(layer), filled.width, filled.height);
 	}
 
 	_renderTextLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null, textMaskCanvases = null) {
@@ -318,6 +353,7 @@ class GifExporter {
 	_buildLayerExportPlan(layer) {
 		switch (layer?.type) {
 			case LayerType.GLITTER_FILL:
+				const fillMode = layer.fill?.mode || 'glitter';
 				return {
 					prepareMasks: async ({ maskDataMap, maskCanvases, canvasData, callbacks }) => {
 						const rawMask = callbacks.createMask(layer);
@@ -325,6 +361,7 @@ class GifExporter {
 						maskCanvases.set(layer.id, this._createMaskCanvas(rawMask, canvasData.width, canvasData.height));
 					},
 					loadSources: async (library, callbacks) => {
+						if (fillMode !== 'glitter') return;
 						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
 						if (!glitter) {
 							throw new Error(`Missing glitter ${layer.selectedGlitterId}`);
@@ -339,21 +376,24 @@ class GifExporter {
 						}
 					},
 					flattenFrames: (library, flattenSource) => {
+						if (fillMode !== 'glitter') return;
 						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
 						if (!glitter?.frames?.frames?.length) return;
 						flattenSource(layer.id, glitter.frames, glitter.name, false);
 					},
 					collectTransparencyFrames: (flattenedFrameMap, allFrames) => {
+						if (fillMode !== 'glitter') return;
 						const frames = flattenedFrameMap?.get(layer.id);
 						if (frames?.length) {
 							allFrames.push(...frames);
 						}
 					},
 					collectFrameCounts: (library, layerFrameCounts) => {
+						if (fillMode !== 'glitter') { layerFrameCounts.set(layer.id, 1); return; }
 						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
 						layerFrameCounts.set(layer.id, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
 					},
-					hasMultiFrameGlitter: (layerFrameCounts) => (layerFrameCounts.get(layer.id) || 0) > 1,
+					hasMultiFrameGlitter: (layerFrameCounts) => fillMode === 'glitter' && (layerFrameCounts.get(layer.id) || 0) > 1,
 					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap, maskCanvases, helperCtx, width, height }) => {
 						const maskCanvas = maskCanvases.get(layer.id);
 						if (!maskCanvas) {
@@ -361,28 +401,32 @@ class GifExporter {
 						}
 
 						const frames = flattenedFrameMap?.get(layer.id);
-						if (!frames?.length) {
+						if (fillMode === 'glitter' && !frames?.length) {
 							throw new Error(`Missing flattened glitter frames for layer ${layer.id}`);
 						}
 
 						const reducedFrameCount = frameMap?.get(layer.id);
-						const fIdx = this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount);
-						const frameImageData = frames[fIdx];
-						if (!frameImageData) {
+						const fIdx = fillMode === 'glitter' ? this._getReducedFrameIndex(frameIndex, frames.length, reducedFrameCount) : 0;
+						const frameImageData = fillMode === 'glitter' ? frames[fIdx] : null;
+						if (fillMode === 'glitter' && !frameImageData) {
 							throw new Error(`Invalid glitter frame format for layer ${layer.id} frame ${fIdx}`);
 						}
 
 						helperCtx.save();
 						helperCtx.clearRect(0, 0, width, height);
 
-						const patternSource = this._patternSourceFromFrame(frameImageData, layer.settings.colorAdjust);
-						const pattern = helperCtx.createPattern(patternSource, 'repeat');
-						const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-						const matrix = new DOMMatrix().scaleSelf(scale, scale);
-						pattern.setTransform(matrix);
-
 						helperCtx.globalAlpha = layer.settings.opacity / 100;
-						helperCtx.fillStyle = pattern;
+						if (fillMode === 'solid') {
+							helperCtx.fillStyle = layer.fill.color;
+						} else if (fillMode === 'gradient') {
+							helperCtx.fillStyle = createEffectCanvasGradient(helperCtx, layer.fill.gradient, { x: 0, y: 0, width, height });
+						} else {
+							const patternSource = this._patternSourceFromFrame(frameImageData, layer.settings.colorAdjust);
+							const pattern = helperCtx.createPattern(patternSource, 'repeat');
+							const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
+							pattern.setTransform(new DOMMatrix().scaleSelf(scale, scale));
+							helperCtx.fillStyle = pattern;
+						}
 						helperCtx.fillRect(0, 0, width, height);
 						helperCtx.globalCompositeOperation = 'destination-in';
 						helperCtx.drawImage(maskCanvas, 0, 0);
@@ -506,7 +550,8 @@ class GifExporter {
 				};
 			}
 
-			case LayerType.STICKER:
+			case LayerType.STICKER: {
+				const glitterSources = this._getStickerGlitterSources(layer);
 				return {
 					prepareMasks: async () => {},
 					loadSources: async (library, callbacks) => {
@@ -526,11 +571,21 @@ class GifExporter {
 								throw new Error(`Failed to load static sticker ${stickerData.name}`);
 							}
 						}
+						for (const source of glitterSources) {
+							const glitter = library.find((item) => item.id === source.glitterId);
+							if (!glitter) throw new Error(`Missing glitter ${source.glitterId}`);
+							if (!glitter.frames) glitter.frames = await callbacks.parseGif(glitter.url);
+						}
 					},
 					flattenFrames: (library, flattenSource) => {
 						const stickerData = layer.stickerData;
-						if (!stickerData.isAnimated || !stickerData.frames?.frames?.length) return;
-						flattenSource(layer.id, stickerData.frames, stickerData.name, true);
+						if (stickerData.isAnimated && stickerData.frames?.frames?.length) {
+							flattenSource(layer.id, stickerData.frames, stickerData.name, true);
+						}
+						glitterSources.forEach((source) => {
+							const glitter = library.find((item) => item.id === source.glitterId);
+							if (glitter?.frames?.frames?.length) flattenSource(source.key, glitter.frames, `${glitter.name} (${source.slot})`, false);
+						});
 					},
 					collectTransparencyFrames: (flattenedFrameMap, allFrames) => {
 						const stickerData = layer.stickerData;
@@ -542,18 +597,27 @@ class GifExporter {
 						} else if (stickerData.staticImageData) {
 							allFrames.push(stickerData.staticImageData);
 						}
+						glitterSources.forEach((source) => {
+							const frames = flattenedFrameMap?.get(source.key);
+							if (frames?.length) allFrames.push(...frames);
+						});
 					},
 					collectFrameCounts: (library, layerFrameCounts) => {
 						const frameCount = layer.stickerData.isAnimated
 							? (layer.stickerData.frames?.frames?.length || layer.stickerData.frameCount || 1)
 							: 1;
 						layerFrameCounts.set(layer.id, frameCount);
+						glitterSources.forEach((source) => {
+							const glitter = library.find((item) => item.id === source.glitterId);
+							layerFrameCounts.set(source.key, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
+						});
 					},
-					hasMultiFrameGlitter: () => false,
+					hasMultiFrameGlitter: (layerFrameCounts) => glitterSources.some((source) => (layerFrameCounts.get(source.key) || 0) > 1),
 					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap }) => {
 						this._renderLayerToCanvas(layer, ctx, frameIndex, frameMap, flattenedFrameMap);
 					}
 				};
+			}
 
 			default:
 				return {
@@ -638,6 +702,10 @@ class GifExporter {
 
 		if (source.mode === 'solid') {
 			fillCtx.fillStyle = source.color;
+		} else if (source.mode === 'gradient') {
+			fillCtx.fillStyle = createEffectCanvasGradient(fillCtx, source.gradient, {
+				x: 0, y: 0, width: fillCanvas.width, height: fillCanvas.height
+			});
 		} else {
 			const frameImageData = this._getFrameImageForKey(sourceKey, frameIndex, frameMap, flattenedFrameMap);
 			const patternSource = this._patternSourceFromFrame(frameImageData, source.colorAdjust);

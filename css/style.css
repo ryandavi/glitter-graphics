@@ -1675,14 +1675,13 @@ input[type=range]::-moz-range-thumb {
   display: block;
 }
 
-/* Collapsible Image/Layers sections — the design panel's header/chevron
-   conventions (is-open on the section, .collapsed on the toggle), but
-   independent (no accordion) and without its flex/scroll model. */
-.layers-panel > .section.panel-collapsible > .section-header {
-  cursor: pointer;
+/* Standalone Image/Layers sections use the shared collapsible header chrome,
+   but remain independent instead of joining the design-panel accordion. */
+.layers-panel > .section.panel-collapsible > .section-header:not(:disabled):hover {
+  filter: var(--bar-hover-filter);
 }
-.layers-panel > .section.panel-collapsible > .section-header:hover {
-  background: var(--color-bg-tertiary);
+.layers-panel > .section.panel-collapsible > .section-header:not(:disabled):active {
+  filter: var(--bar-active-filter);
 }
 .layers-panel > .section.panel-collapsible > .section-header .section-header-action.collapsed .icon {
   transform: rotate(-90deg);
@@ -1695,7 +1694,6 @@ input[type=range]::-moz-range-thumb {
   display: none;
 }
 
-/* Layers Section */
 .layers-section {
   flex: 1 1 auto;
   display: flex;
@@ -1967,6 +1965,7 @@ input[type=range]::-moz-range-thumb {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  cursor: pointer;
 }
 .section > .section-header.app-header {
   background-image: var(--bar-gradient, linear-gradient(to top, var(--bar-gradient-bottom) 50%, var(--bar-gradient-top) 100%));
@@ -2057,11 +2056,7 @@ input[type=range]::-moz-range-thumb {
   flex-shrink: 0;
 }
 .section.collapsible-section > .section-header {
-  cursor: pointer;
   border-bottom: unset;
-}
-.section.collapsible-section > .section-header:hover {
-  background: var(--color-bg-tertiary);
 }
 .section.collapsible-section > .section-header > h3.section-header-title + .section-header-action {
   background-color: unset;
@@ -2509,6 +2504,14 @@ body.tool-text .preview-wrapper {
 .design-panel[data-panel-mode=sticker] > .section > .section-header.glitter-header #uploadStickerBtn {
   visibility: visible;
   pointer-events: auto;
+}
+.design-panel[data-panel-mode=sticker] #designGallerySection:not(.picker-mode) #glitterSearchSection,
+.design-panel[data-panel-mode=sticker] #designGallerySection:not(.picker-mode) #glitterOptions {
+  display: none;
+}
+.design-panel[data-panel-mode=sticker] #designGallerySection.picker-mode #stickersSearchSection,
+.design-panel[data-panel-mode=sticker] #designGallerySection.picker-mode #stickersOptions {
+  display: none;
 }
 
 .glitter-search {
@@ -3171,6 +3174,20 @@ body.mask-editing .sticker-element {
 .preview-container.duplicate-drag-active,
 .preview-container.duplicate-drag-active [data-layer-id] {
   cursor: copy !important;
+}
+
+.sticker-element .sticker-effect-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+}
+.sticker-element > img {
+  position: relative;
+  z-index: 2;
+}
+.sticker-element .sticker-effect-shadow {
+  z-index: 0;
 }
 
 .status-bar {
@@ -4179,6 +4196,13 @@ body.mask-editing .sticker-element {
   color: var(--color-text-tertiary);
 }
 
+.transform-panel.is-aspect-locked .transform-scale-x {
+  grid-column: 1/-1;
+}
+.transform-panel.is-aspect-locked .transform-scale-y {
+  display: none;
+}
+
 .glitter-source .asset-info,
 .asset-info {
   display: flex;
@@ -4193,6 +4217,134 @@ body.mask-editing .sticker-element {
 .glitter-source-glitter[hidden],
 .glitter-source-solid[hidden] {
   display: none;
+}
+
+.paint-slot-primary-row[hidden] {
+  display: none;
+}
+.paint-slot-primary-row > .setting-column[hidden] {
+  display: none;
+}
+.paint-slot-primary-row > .setting-column:only-child,
+.paint-slot-primary-row > .setting-column[hidden] + .setting-column {
+  grid-column: 1/-1;
+}
+
+.effect-gradient-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+.effect-gradient-editor[hidden],
+.effect-gradient-editor .gradient-angle[hidden],
+.effect-gradient-editor .gradient-stops-heading[hidden] {
+  display: none;
+}
+.effect-gradient-editor .gradient-option-rows {
+  gap: var(--spacing-md);
+}
+.effect-gradient-editor .gradient-stops-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.effect-gradient-editor .gradient-preview {
+  position: relative;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  cursor: copy;
+  touch-action: none;
+}
+.effect-gradient-editor .gradient-preview::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-conic-gradient(rgba(0, 0, 0, 0.2) 0% 25%, rgba(255, 255, 255, 0.6) 0% 50%) 0 0/12px 12px;
+}
+.effect-gradient-editor .gradient-preview-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.effect-gradient-editor .gradient-preview-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.effect-gradient-editor .gradient-preview-stop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 22px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  cursor: ew-resize;
+}
+.effect-gradient-editor .gradient-preview-stop::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--stop-color, #fff);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+.effect-gradient-editor .gradient-stops-heading,
+.effect-gradient-editor .effect-gradient-stop {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr) 26px;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+.effect-gradient-editor .gradient-stops-heading {
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
+}
+.effect-gradient-editor .gradient-stops {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.effect-gradient-editor .effect-gradient-stop input[type=color] {
+  width: 36px;
+  height: 28px;
+  padding: 2px;
+}
+.effect-gradient-editor .gradient-stop-control {
+  display: grid;
+  grid-template-columns: minmax(38px, 1fr) 30px;
+  gap: 2px;
+  align-items: center;
+  min-width: 0;
+}
+.effect-gradient-editor .gradient-stop-control input {
+  width: 100%;
+}
+.effect-gradient-editor .gradient-stop-value {
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  text-align: right;
+  white-space: nowrap;
+}
+.effect-gradient-editor .gradient-stop-remove {
+  width: 26px;
+  height: 26px;
+  padding: var(--spacing-xs);
+}
+.effect-gradient-editor .gradient-add {
+  align-self: flex-end;
 }
 
 .text-box-hint {
@@ -4215,17 +4367,34 @@ body.mask-editing .sticker-element {
   gap: var(--spacing-lg);
 }
 
-.subsection-content-group.effects-stack {
+.subsection-content-group.effects-stack,
+.subsection-content-group.subsection-section-group {
   padding: 0;
   border: 0;
   background: transparent;
 }
 .subsection-content-group.effects-stack > .subsection-title,
-.subsection-content-group.effects-stack > .subsection-note {
+.subsection-content-group.effects-stack > .subsection-note,
+.subsection-content-group.subsection-section-group > .subsection-title,
+.subsection-content-group.subsection-section-group > .subsection-note {
   padding: 0 var(--spacing-xs);
 }
-.subsection-content-group.effects-stack > .text-effect-subsection {
+.subsection-content-group.effects-stack > .text-effect-subsection,
+.subsection-content-group.effects-stack > .subsection-content-group,
+.subsection-content-group.effects-stack > .transform-panel-host,
+.subsection-content-group.subsection-section-group > .text-effect-subsection,
+.subsection-content-group.subsection-section-group > .subsection-content-group,
+.subsection-content-group.subsection-section-group > .transform-panel-host {
   margin-top: 0;
+}
+
+.subsection-content-group.subsection-section-group {
+  gap: var(--spacing-md);
+}
+.subsection-content-group.subsection-section-group > .transform-panel-host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
 .effect-stack-row {
@@ -4434,14 +4603,22 @@ body.mask-editing .sticker-element {
   margin-left: auto;
 }
 
-.subsection-content-group:has(> .text-effect-controls):has(> .subsection-title input[type=checkbox]:not(:checked)) > .subsection-title {
-  cursor: default;
-}
-.subsection-content-group:has(> .text-effect-controls):has(> .subsection-title input[type=checkbox]:not(:checked)) > .subsection-title > .subsection-chevron {
-  display: none;
+.subsection-content-group:has(> .text-effect-controls):has(> .subsection-title input[type=checkbox]:not(:checked)):not(.is-collapsed) > .text-effect-controls {
+  display: flex;
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* Two-column settings layout */
+.setting-header > .setting-label,
+.effect-option-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
 .settings-group-two-column {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -6385,4 +6562,20 @@ body.mask-editing .sticker-element {
   .mobile-only {
     display: block !important;
   }
+}
+.smart-guide {
+  position: absolute;
+  z-index: 1002;
+  background: #ff2d8d;
+  pointer-events: none;
+}
+.smart-guide-x {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+.smart-guide-y {
+  left: 0;
+  right: 0;
+  height: 1px;
 }/*# sourceMappingURL=style.css.map */

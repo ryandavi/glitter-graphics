@@ -302,15 +302,16 @@
 }
 
 
-/* Collapsible Image/Layers sections — the design panel's header/chevron
-   conventions (is-open on the section, .collapsed on the toggle), but
-   independent (no accordion) and without its flex/scroll model. */
+/* Standalone Image/Layers sections use the shared collapsible header chrome,
+   but remain independent instead of joining the design-panel accordion. */
 .layers-panel>.section.panel-collapsible {
 	>.section-header {
-		cursor: pointer;
+		&:not(:disabled):hover {
+			filter: var(--bar-hover-filter);
+		}
 
-		&:hover {
-			background: var(--color-bg-tertiary);
+		&:not(:disabled):active {
+			filter: var(--bar-active-filter);
 		}
 
 		.section-header-action.collapsed .icon {
@@ -328,7 +329,7 @@
 	}
 }
 
-/* Layers Section */
+
 .layers-section {
 	flex: 1 1 auto;
 	display: flex;
@@ -683,6 +684,8 @@
 		justify-content: space-between;
 		align-items: center;
 
+		cursor: pointer;
+
 		@include windows7-bar();
 
 		>.section-header-title {
@@ -782,12 +785,8 @@
 
 
 		>.section-header {
-			cursor: pointer;
-			border-bottom: unset;
 
-			&:hover {
-				background: var(--color-bg-tertiary);
-			}
+			border-bottom: unset;
 
 			>h3.section-header-title {
 				+.section-header-action {
@@ -1303,6 +1302,26 @@ body.tool-text {
 		>.section>.section-header.glitter-header #uploadStickerBtn {
 			visibility: visible;
 			pointer-events: auto;
+		}
+
+		// The sticker gallery shows ONE browser at a time: the sticker browser
+		// while browsing, the glitter browser only while a glitter picker
+		// session is armed (StickerManager toggles picker-mode on the section).
+		// Both pairs stay .visible via LAYER_UI_CONFIG; this picks between them.
+		#designGallerySection:not(.picker-mode) {
+
+			#glitterSearchSection,
+			#glitterOptions {
+				display: none;
+			}
+		}
+
+		#designGallerySection.picker-mode {
+
+			#stickersSearchSection,
+			#stickersOptions {
+				display: none;
+			}
 		}
 	}
 
@@ -2089,6 +2108,18 @@ body.mask-editing {
 .preview-container.duplicate-drag-active,
 .preview-container.duplicate-drag-active [data-layer-id] {
 	cursor: copy !important;
+}
+
+.sticker-element {
+	.sticker-effect-layer {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background-repeat: repeat;
+	}
+
+	>img { position: relative; z-index: 2; }
+	.sticker-effect-shadow { z-index: 0; }
 }
 
 .status-bar {
@@ -3357,6 +3388,11 @@ body.mask-editing {
 	color: var(--color-text-tertiary);
 }
 
+.transform-panel.is-aspect-locked {
+	.transform-scale-x { grid-column: 1 / -1; }
+	.transform-scale-y { display: none; }
+}
+
 // The glitter display reuses the shared .asset-info-* classes so it matches
 // Glitter Properties' Asset section exactly (thumbnail + name + badges + meta).
 .glitter-source .asset-info,
@@ -3376,6 +3412,148 @@ body.mask-editing {
 .glitter-source-glitter[hidden],
 .glitter-source-solid[hidden] {
 	display: none;
+}
+
+.paint-slot-primary-row {
+	&[hidden] { display: none; }
+
+	>.setting-column[hidden] { display: none; }
+
+	>.setting-column:only-child,
+	>.setting-column[hidden]+.setting-column {
+		grid-column: 1 / -1;
+	}
+}
+
+.effect-gradient-editor {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+
+	&[hidden],
+	.gradient-angle[hidden],
+	.gradient-stops-heading[hidden] { display: none; }
+
+	// Type + Blend segmented controls stack like the other effect option rows.
+	.gradient-option-rows {
+		gap: var(--spacing-md);
+	}
+
+	// The stops editor is one card: preview strip w/ draggable handles on top,
+	// then the per-stop rows and Add stop.
+	.gradient-stops-box {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		padding: var(--spacing-md);
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+	}
+
+	.gradient-preview {
+		position: relative;
+		height: 28px;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--color-border);
+		cursor: copy;
+		touch-action: none;
+
+		// Checkerboard under the strip so stop opacity reads visually.
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			border-radius: inherit;
+			background: repeating-conic-gradient(rgba(0, 0, 0, 0.2) 0% 25%, rgba(255, 255, 255, 0.6) 0% 50%) 0 0 / 12px 12px;
+		}
+	}
+
+	.gradient-preview-bar {
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+
+	.gradient-preview-markers {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.gradient-preview-stop {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 22px;
+		transform: translateX(-50%);
+		pointer-events: auto;
+		cursor: ew-resize;
+
+		&::after {
+			content: '';
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 14px;
+			height: 14px;
+			transform: translate(-50%, -50%);
+			border-radius: 50%;
+			background: var(--stop-color, #fff);
+			border: 2px solid #fff;
+			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+		}
+	}
+
+	.gradient-stops-heading,
+	.effect-gradient-stop {
+		display: grid;
+		grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr) 26px;
+		gap: var(--spacing-sm);
+		align-items: center;
+	}
+
+	.gradient-stops-heading {
+		@include text-sm;
+		color: var(--color-text-tertiary);
+	}
+
+	.gradient-stops {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
+	.effect-gradient-stop input[type="color"] {
+		width: 36px;
+		height: 28px;
+		padding: 2px;
+	}
+
+	.gradient-stop-control {
+		display: grid;
+		grid-template-columns: minmax(38px, 1fr) 30px;
+		gap: 2px;
+		align-items: center;
+		min-width: 0;
+
+		input { width: 100%; }
+	}
+
+	.gradient-stop-value {
+		@include text-sm;
+		color: var(--color-text-secondary);
+		text-align: right;
+		white-space: nowrap;
+	}
+
+	.gradient-stop-remove {
+		width: 26px;
+		height: 26px;
+		padding: var(--spacing-xs);
+	}
+
+	.gradient-add { align-self: flex-end; }
 }
 
 .text-box-hint {
@@ -3399,7 +3577,8 @@ body.mask-editing {
 	gap: var(--spacing-lg);
 }
 
-.subsection-content-group.effects-stack {
+.subsection-content-group.effects-stack,
+.subsection-content-group.subsection-section-group {
 	padding: 0;
 	border: 0;
 	background: transparent;
@@ -3409,8 +3588,20 @@ body.mask-editing {
 		padding: 0 var(--spacing-xs);
 	}
 
-	>.text-effect-subsection {
+	>.text-effect-subsection,
+	>.subsection-content-group,
+	>.transform-panel-host {
 		margin-top: 0;
+	}
+}
+
+.subsection-content-group.subsection-section-group {
+	gap: var(--spacing-md);
+
+	>.transform-panel-host {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
 	}
 }
 
@@ -3659,17 +3850,28 @@ body.mask-editing {
 // stops advertising a click (the JS toggle guard mirrors this). Cards whose
 // title checkbox is an option, not an enable switch (Global, Lock Aspect),
 // have no .text-effect-controls child and are unaffected.
+// Disabled effect cards (Border/Shadow with Enabled unchecked) stay
+// collapsible: expanding one shows its controls as an inert preview so the
+// options inside are always discoverable. Checking Enabled (which the
+// managers pair with .visible on .text-effect-controls) makes them live.
 .subsection-content-group:has(> .text-effect-controls):has(> .subsection-title input[type="checkbox"]:not(:checked)) {
-	>.subsection-title {
-		cursor: default;
-
-		>.subsection-chevron {
-			display: none;
-		}
+	&:not(.is-collapsed)>.text-effect-controls {
+		display: flex;
+		opacity: 0.5;
+		pointer-events: none;
 	}
 }
 
 /* Two-column settings layout */
+.setting-header>.setting-label,
+.effect-option-label {
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+}
+
 .settings-group-two-column {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);

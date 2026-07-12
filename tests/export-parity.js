@@ -55,6 +55,7 @@ async function buildComposition(page) {
 		const glitterLayer = editor.glitterManager.createLayer();
 		editor.layerManager.insertLayer(glitterLayer);
 		glitterLayer.selectedGlitterId = glitterA;
+		glitterLayer.fill = { mode: 'gradient', gradient: { type: 'linear', angle: 35, interpolation: 'steps', stops: [{ offset: 0, color: '#ff0066', alpha: 1 }, { offset: 1, color: '#3344ff', alpha: 0.75 }] } };
 		const paint = editor.glitterManager.ensurePaintMask(glitterLayer.id);
 		const paintCtx = paint.add.getContext('2d', { willReadFrequently: true });
 		paintCtx.fillStyle = '#ffffff';
@@ -71,6 +72,9 @@ async function buildComposition(page) {
 		stickerLayer.stickerData.transform.scale.x = 145;
 		stickerLayer.stickerData.transform.scale.y = 120;
 		stickerLayer.stickerData.transform.flipX = true;
+		stickerLayer.stickerData.shadow = editor.stickerManager.getDefaultShadow();
+		stickerLayer.stickerData.shadow.mode = 'glitter';
+		stickerLayer.stickerData.shadow.glitterId = glitterB;
 
 		const textLayer = editor.textGlitterManager.createLayer({
 			text: 'Parity',
@@ -80,7 +84,8 @@ async function buildComposition(page) {
 		editor.layerManager.insertLayer(textLayer);
 		textLayer.selectedGlitterId = glitterA;
 		textLayer.textData.fill = editor.textGlitterManager.getDefaultFill();
-		textLayer.textData.fill.mode = 'glitter';
+		textLayer.textData.fill.mode = 'gradient';
+		textLayer.textData.fill.gradient = { type: 'linear', angle: 70, interpolation: 'smooth', stops: [{ offset: 0, color: '#ff3300', alpha: 1 }, { offset: 0.45, color: '#ffee00', alpha: 0.8 }, { offset: 1, color: '#6633ff', alpha: 1 }] };
 		textLayer.settings.colorAdjust = { hue: 90, saturation: 140, brightness: 110 };
 		textLayer.textData.border = editor.textGlitterManager.getDefaultBorder();
 		textLayer.textData.border.mode = 'solid';
@@ -105,7 +110,8 @@ async function buildComposition(page) {
 		});
 		editor.layerManager.insertLayer(shapeLayer);
 		shapeLayer.selectedGlitterId = glitterB;
-		shapeLayer.shapeData.fill.mode = 'glitter';
+		shapeLayer.shapeData.fill.mode = 'gradient';
+		shapeLayer.shapeData.fill.gradient = { type: 'radial', angle: 0, stops: [{ offset: 0, color: '#ffffff', alpha: 1 }, { offset: 1, color: '#00aacc', alpha: 0.65 }] };
 		shapeLayer.shapeData.fill.colorAdjust = { hue: -45, saturation: 130, brightness: 120 };
 		shapeLayer.shapeData.border = editor.shapeGlitterManager.getDefaultBorder();
 		shapeLayer.shapeData.border.mode = 'solid';
@@ -205,6 +211,42 @@ async function exportBytes(page, exportOverrides = {}) {
 	}, { exportTimeoutMs: EXPORT_TIMEOUT_MS, exportOverrides });
 }
 
+async function verifyGradientStopLiveEditing(page) {
+	const result = await page.evaluate(() => {
+		const editor = window.editor;
+		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.TEXT_GLITTER);
+		editor.layerManager.setActiveLayer(layer.id);
+		editor.textGlitterManager.loadLayerSettings(layer);
+		const panel = document.querySelector('#textFillGradient')?.closest('.glitter-source')?.querySelector('.effect-gradient-editor')
+			|| document.querySelector('#textFillGradient')?.parentElement?.parentElement?.querySelector('.effect-gradient-editor');
+		const position = panel?.querySelector('input[aria-label="Stop position"]');
+		const color = panel?.querySelector('input[aria-label="Stop color"]');
+		if (!position || !color) return { error: 'Missing text gradient stop controls' };
+		position.value = '25';
+		position.dispatchEvent(new Event('input', { bubbles: true }));
+		const connectedAfterFirst = position.isConnected;
+		position.value = '70';
+		position.dispatchEvent(new Event('input', { bubbles: true }));
+		color.value = '#123456';
+		color.dispatchEvent(new Event('input', { bubbles: true }));
+		color.value = '#654321';
+		color.dispatchEvent(new Event('input', { bubbles: true }));
+		const result = {
+			connectedAfterFirst,
+			connectedAfterSecond: position.isConnected && color.isConnected,
+			offset: layer.textData.fill.gradient.stops[0].offset,
+			color: layer.textData.fill.gradient.stops[0].color,
+			stickerShadowLayers: document.querySelectorAll('.sticker-effect-shadow').length
+		};
+		editor.saveState();
+		return result;
+	});
+	if (result.error) throw new Error(result.error);
+	if (!result.connectedAfterFirst || !result.connectedAfterSecond || Math.abs(result.offset - 0.7) > 0.001 || result.color !== '#654321' || !result.stickerShadowLayers) {
+		throw new Error(`Gradient stop live editing lost its control or state: ${JSON.stringify(result)}`);
+	}
+}
+
 async function mutateTextAndUndo(page) {
 	await page.evaluate(async () => {
 		const editor = window.editor;
@@ -236,6 +278,8 @@ async function main() {
 		try {
 			await openEditor(page);
 			await buildComposition(page);
+			await verifyGradientStopLiveEditing(page);
+			console.log('PASS Gradient stop controls survive repeated live edits');
 
 			const matteSettings = {
 				transparency: false,
@@ -287,4 +331,3 @@ main().catch((error) => {
 	console.error(error?.stack || String(error));
 	process.exit(1);
 });
-
