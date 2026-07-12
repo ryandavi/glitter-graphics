@@ -451,6 +451,26 @@ async function checkAltCornerScaleFromCenter(page) {
 		`Alt corner drag moved the center (before ${JSON.stringify(before.position)}, after ${JSON.stringify(after.position)})`);
 }
 
+async function checkLockedStickerEdgeScale(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const sticker = await createTestSticker(page, { position: { x: 130, y: 100 }, label: 'Locked Edge Scale' });
+	await selectLayer(page, sticker.layerId);
+	await page.evaluate((layerId) => {
+		const layer = window.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		layer.transform.proportionalScale = true;
+		window.editor.loadTransformSettings(layer, 'sticker');
+	}, sticker.layerId);
+	const before = await getStickerState(page, sticker.layerId);
+	const handle = await getTransformHandleCenter(page, sticker.layerId, 'edge-right');
+	await mouseDrag(page, handle, { x: handle.x + 60, y: handle.y });
+	const after = await getStickerState(page, sticker.layerId);
+	const factorX = after.scale.x / before.scale.x;
+	const factorY = after.scale.y / before.scale.y;
+	assert(factorX > 1.05, `Locked edge handle did not increase scale X (${before.scale.x} -> ${after.scale.x})`);
+	assert(Math.abs(factorX - factorY) < 0.02, `Locked edge handle changed aspect ratio (X factor ${factorX}, Y factor ${factorY})`);
+}
+
 async function checkEscapeCancelsCornerScale(page) {
 	await loadBlankCanvas(page);
 	await setTool(page, 'select');
@@ -658,7 +678,8 @@ async function main() {
 			['Mouse group rotation undoes every selected sticker', checkGroupRotationUndo],
 			['Alt + mouse group drag duplicates and moves every selected sticker', checkGroupAltDuplicateDrag],
 			['Mouse drag on rotation handle still rotates the selected sticker', (page) => checkRotationHandle(page, mouseDrag, 'mouse')],
-			['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
+				['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
+				['Locked sticker edge handle preserves aspect ratio', checkLockedStickerEdgeScale],
 			['Sidebar scale and Reset Transform resize the sticker transform box', checkSidebarScaleAndResetHandles],
 			['Alt + mouse corner drag scales from the layer center', checkAltCornerScaleFromCenter],
 			['Escape cancels a mouse corner transform without history', checkEscapeCancelsCornerScale],

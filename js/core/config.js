@@ -247,7 +247,7 @@ const CONFIG = {
 			angle: 180,
 			// Stop blending: 'linear' (native), 'smooth' (smoothstep-eased), or
 			// 'steps' (hard bands). Implemented as stop-list expansion in
-			// effect-source.js so CSS preview and canvas export share literal stops.
+			// effects/effect-source.js so CSS preview and canvas export share literal stops.
 			interpolation: 'linear',
 			smoothSubdivisions: 8,
 			stops: [
@@ -270,6 +270,7 @@ const CONFIG = {
 	},
 
 	ui: {
+		independentCollapsibleSections: ['imagePanel', 'layersPanel'],
 		zoom: {
 			levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16]
 		},
@@ -295,6 +296,33 @@ const CONFIG = {
 		},
 		hints: {
 			enabledByDefault: true
+		},
+		// Ranges/defaults for renderer-stamped panel sliders (js/ui/panel-renderer.js
+		// + PANEL_SCHEMAS). Values are preserved byte-for-byte from the
+		// pre-template static markup. Known, deliberate-for-now inconsistencies
+		// (reconciling them is a product decision, never a refactor side effect):
+		// textureScale max 300 vs the transform panel's 500 scale max;
+		// borderWidth/borderDotSpacing maxes are boot defaults that
+		// ShapeGlitterManager raises from CONFIG.tools.shapes.border at bind time.
+		sliders: {
+			textureScale: { label: 'Texture Scale', unit: '%', min: 25, max: 300, value: 100 },
+			slotOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },
+			hue: { label: 'Hue', unit: '°', min: -180, max: 180, value: 0 },
+			saturation: { label: 'Saturation', unit: '%', min: 0, max: 200, value: 100 },
+			brightness: { label: 'Brightness', unit: '%', min: 25, max: 200, value: 100 },
+			borderWidth: { label: 'Width', unit: 'px', min: 1, max: 60, value: 6 },
+			textBorderWidth: { label: 'Width', unit: 'px', min: 1, max: 24, value: 4 },
+			borderDotSpacing: { label: 'Dot Spacing', unit: 'px', min: 1, max: 60, value: 10 },
+			shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
+			shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
+			threshold: { label: 'Threshold', unit: '', min: 0, max: 255, value: 50 },
+			feather: { label: 'Feather', unit: '', min: 0, max: 50, value: 0 },
+			textFontSize: { label: 'Font Size', unit: 'px', min: 12, max: 256, value: 64 },
+			textLetterSpacing: { label: 'Letter Spacing', unit: 'px', min: -20, max: 40, value: 0 },
+			textLineHeight: { label: 'Line Height', unit: '%', min: 50, max: 250, value: 110 },
+			transformScale: { label: 'Scale', unit: '%', min: 10, max: 500, value: 100 },
+			transformRotation: { label: 'Rotation', unit: '°', min: 0, max: 360, step: 1, value: 0 },
+			transformOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 }
 		},
 		// Valid values for the Settings > Theme select; each needs a matching
 		// :root[data-theme="…"] token block in css/_themes.scss.
@@ -657,7 +685,7 @@ const LAYER_UI_CONFIG = {
 			position: true,
 			size: true,
 			scaleReadout: true,
-			lockAspect: false,
+			lockAspect: true,
 			rotation: true,
 			opacity: true,
 			flip: true,
@@ -724,6 +752,219 @@ const LAYER_UI_CONFIG = {
 			editor.updateGlitterSelection();
 			editor.shapeGlitterManager?.loadLayerSettings(layer);
 		}
+	}
+};
+
+// Declarative sidebar panel structure consumed by js/ui/panel-renderer.js
+// (docs/SIDEBAR-TEMPLATE-PLAN.md). Structure, ordering, and capabilities
+// only — markup lives in the index.html tpl-* <template>s, slider ranges in
+// CONFIG.ui.sliders. Stamped element ids preserve the legacy names exactly
+// (managers keep binding by id); paintSlot ids derive as idPrefix +
+// capitalized role. Panels not listed here are still static index.html
+// markup awaiting migration (see the plan's WP order).
+const PANEL_SCHEMAS = {
+	[LayerType.GLITTER_FILL]: {
+		prefix: 'glitter',
+		section: { id: 'glitterSettingsSection', icon: 'glitter', iconName: 'Glitter', title: 'Glitter Properties' },
+		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', emptyText: 'Select a glitter fill from the gallery to get started.' },
+		groups: [
+			{ title: 'Appearance', toggle: { id: 'glitterGlobal', label: 'Apply to All Glitter Layers' }, items: [
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
+					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
+					chipTitle: 'Choose fill glitter', assetIdPrefix: 'glitterAsset',
+					assetIds: {
+						thumbnail: 'glitterAssetThumbnail', name: 'glitterAssetName',
+						badges: 'glitterAssetBadges', change: 'glitterAssetChange',
+						size: 'glitterAssetSize', frames: 'glitterAssetFrames'
+					},
+					primaryIds: { scale: 'scale', opacity: 'opacity' },
+					advancedIds: { hue: 'glitterHue', saturation: 'glitterSaturation', brightness: 'glitterBrightness' }
+				}
+			] }
+		],
+		auxiliarySections: [{
+			prefix: 'layer',
+			replaceStatic: true,
+			section: { id: 'layerSettingsSection', icon: 'paint-bucket', iconName: 'Sliders', title: 'Color Fill Settings' },
+			controls: {
+				id: 'layerSettingsControls', emptyId: 'layerSettingsEmpty',
+				emptyItems: [
+					{ className: 'empty-state-icon', text: '📋' },
+					{ className: 'empty-state-text', id: 'layerSettingsEmptyText', text: 'No layer selected' },
+					{ className: 'empty-state-subtext', id: 'layerSettingsEmptySubtext' }
+				]
+			},
+			groups: [
+				{ title: 'Selection', items: [
+					{ kind: 'card', title: 'Selection Options', items: [
+						{ kind: 'checkboxList', items: [
+							{ id: 'contiguous', label: 'Contiguous', title: 'Select only connected pixels of the same color' },
+							{ id: 'invert', label: 'Invert', title: "Invert this layer's mask — glitter covers everything except the selected and painted areas" },
+							{ id: 'multiSelect', label: 'Multi-Select', title: 'Select multiple colors on the same layer' }
+						] }
+					] },
+					{ kind: 'card', title: 'Color Selections', items: [
+						{ kind: 'content', items: [
+							{ kind: 'host', id: 'selectedColorsEmpty', tag: 'span', classes: 'empty-state visible', text: 'None' },
+							{ kind: 'host', id: 'selectedColorsDisplay', classes: 'selected-colors-display' }
+						] }
+					] },
+					{ kind: 'card', title: 'Refine Selection', toggle: { id: 'refineGlobal', label: 'Global', title: 'Apply refinement settings to every layer' }, items: [
+						{ kind: 'twoColumn', items: [
+							{ kind: 'slider', id: 'threshold', slider: 'threshold' },
+							{ kind: 'slider', id: 'feather', slider: 'feather' }
+						] }
+					] }
+				] }
+			]
+		}]
+	},
+	[LayerType.STICKER]: {
+		prefix: 'sticker',
+		section: { id: 'stickerSettingsSection', icon: 'sliders', iconName: 'Sliders', title: 'Sticker Properties' },
+		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', emptyText: 'Select a sticker to edit its properties.' },
+			groups: [
+				{ title: 'Content', items: [
+					{ kind: 'card', title: 'Asset', items: [
+						{ kind: 'assetInfo', info: 'stickerAssetInfo', thumbnail: 'stickerAssetThumbnail',
+							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
+							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' }
+					] }
+				] },
+			{ title: 'Appearance', adoptTransformOpacity: true, items: [] },
+			{ title: 'Transform', items: [
+				{ kind: 'transformHost' }
+			] }
+		],
+		effects: [
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'stickerShadow', title: 'Shadow',
+				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'solid',
+				color: '#000000', chipTitle: 'Choose glitter',
+				pre: [{ kind: 'twoColumn', items: [
+					{ kind: 'slider', id: 'stickerShadowOffsetX', slider: 'shadowOffsetX' },
+					{ kind: 'slider', id: 'stickerShadowOffsetY', slider: 'shadowOffsetY' }
+				] }]
+			}
+		]
+	},
+	[LayerType.TEXT_GLITTER]: {
+		prefix: 'text',
+		sourceTemplate: 'tpl-text-content',
+		section: { id: 'textSettingsSection', icon: 'text', iconName: 'Text', title: 'Text Properties' },
+		groups: [
+			{ title: 'Content', items: [
+				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textLayerInput' },
+				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFontPicker' },
+				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFontSize' },
+				{ kind: 'templateCard', template: 'tpl-text-content', selector: '.text-align-group' },
+				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textBoxModeHint' },
+				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFitBoxToContent' }
+			] },
+			{ title: 'Appearance', adoptTransformOpacity: true, items: [
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill',
+					modes: ['none', 'glitter', 'solid'], activeMode: 'glitter', color: '#000000',
+					chipTitle: 'Choose fill glitter',
+					primaryIds: { scale: 'textTextureScale', scaleRow: 'textTextureScaleRow', opacity: 'textTextureOpacity' }
+				}
+			] },
+			{ title: 'Transform', items: [{ kind: 'transformHost' }] }
+		],
+		effects: [
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Border',
+				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'solid',
+				color: '#000000', chipTitle: 'Choose border source',
+				primaryIds: { scale: 'textBorderScale', scaleRow: 'textBorderScaleRow', opacity: 'textBorderOpacity' },
+				pre: [{ kind: 'slider', id: 'textBorderWidth', slider: 'textBorderWidth' }],
+				post: [{ kind: 'stackRow', groups: [
+					{ label: 'Edges', options: [
+						{ id: 'textBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
+						{ id: 'textBorderEdgeHard', label: 'Hard', value: 'hard' }
+					] },
+					{ label: 'Placement', options: [
+						{ id: 'textBorderPositionOutside', label: 'Outside', active: true, value: 'outside' },
+						{ id: 'textBorderPositionCenter', label: 'On Edge', value: 'center' },
+						{ id: 'textBorderPositionInside', label: 'Inside', value: 'inside' }
+					] },
+					{ label: 'Layering', options: [
+						{ id: 'textBorderOrderBehind', label: 'Behind', active: true, value: 'behind' },
+						{ id: 'textBorderOrderFront', label: 'On Top', value: 'front' }
+					] }
+				] }]
+			},
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'textShadow', title: 'Shadow',
+				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'solid',
+				color: '#000000', chipTitle: 'Choose shadow source',
+				primaryIds: { scale: 'textShadowScale', scaleRow: 'textShadowScaleRow', opacity: 'textShadowOpacity' },
+				pre: [{ kind: 'twoColumn', items: [
+					{ kind: 'slider', id: 'textShadowOffsetX', slider: 'shadowOffsetX' },
+					{ kind: 'slider', id: 'textShadowOffsetY', slider: 'shadowOffsetY' }
+				] }]
+			}
+		]
+	},
+	[LayerType.SHAPE]: {
+		prefix: 'shape',
+		section: { id: 'shapeSettingsSection', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
+		groups: [
+			{ title: 'Content', items: [
+				{ kind: 'card', title: 'Shape', items: [
+					{ kind: 'host', id: 'shapeShapePicker', classes: 'brush-shape-picker', attrs: { role: 'listbox', 'aria-label': 'Shape' }, wrapInContent: true }
+				] }
+			] },
+			// The shared transform panel emits its own Opacity card into the host;
+			// this group adopts it after renderTransformPanels runs
+			// (finalizePanelSchemaSections), mirroring the old shape branch of
+			// the pre-schema panel order.
+			{ title: 'Appearance', adoptTransformOpacity: true, items: [
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill',
+					modes: ['none', 'glitter', 'solid'], activeMode: 'solid',
+					color: '#ff66cc', chipTitle: 'Choose fill glitter' }
+			] },
+			{ title: 'Transform', items: [{ kind: 'transformHost' }] }
+		],
+		effects: [
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Border',
+				toggle: true, sourceLabel: 'Source',
+				modes: ['glitter', 'solid'], activeMode: 'solid',
+				color: '#000000', chipTitle: 'Choose glitter',
+				pre: [
+					{ kind: 'slider', id: 'shapeBorderWidth', slider: 'borderWidth' },
+					{ kind: 'optionGroup', label: 'Style', glitterSource: true, options: [
+						{ id: 'shapeBorderStyleSolid', label: 'Solid Border', active: true, value: 'solid' },
+						{ id: 'shapeBorderStyleDotted', label: 'Dotted Border', value: 'dotted' }
+					] },
+					{ kind: 'slider', id: 'shapeBorderDotSpacing', slider: 'borderDotSpacing', rowId: 'shapeBorderDotSpacingRow', hidden: true }
+				],
+				post: [
+					{ kind: 'stackRow', groups: [
+						{ label: 'Edges', options: [
+							{ id: 'shapeBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
+							{ id: 'shapeBorderEdgeHard', label: 'Hard', value: 'hard' }
+						] },
+						{ label: 'Placement', options: [
+							{ id: 'shapeBorderPositionOutside', label: 'Outside', active: true, value: 'outside' },
+							{ id: 'shapeBorderPositionCenter', label: 'On Edge', value: 'center' },
+							{ id: 'shapeBorderPositionInside', label: 'Inside', value: 'inside' }
+						] },
+						{ label: 'Layering', options: [
+							{ id: 'shapeBorderOrderBehind', label: 'Behind', active: true, value: 'behind' },
+							{ id: 'shapeBorderOrderFront', label: 'On Top', value: 'front' }
+						] }
+					] }
+				]
+			},
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'shapeShadow', title: 'Shadow',
+				toggle: true, sourceLabel: 'Source',
+				modes: ['glitter', 'solid'], activeMode: 'solid',
+				color: '#000000', chipTitle: 'Choose glitter',
+				pre: [
+					{ kind: 'twoColumn', items: [
+						{ kind: 'slider', id: 'shapeShadowOffsetX', slider: 'shadowOffsetX' },
+						{ kind: 'slider', id: 'shapeShadowOffsetY', slider: 'shadowOffsetY' }
+					] }
+				]
+			}
+		]
 	}
 };
 

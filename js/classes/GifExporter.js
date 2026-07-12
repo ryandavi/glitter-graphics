@@ -7,7 +7,7 @@ class GifExporter {
 		this.config = {
 			workers: exportConfig.core?.workers ?? 4,
 			quality: exportConfig.core?.quality ?? 1,
-			workerScript: 'js/gif.worker.js',
+			workerScript: 'js/workers/gif.worker.js',
 			timing: {
 				forceDelay: exportConfig.core?.timing?.forceDelay ?? 100,
 				maxFrames: exportConfig.core?.timing?.maxFrames ?? 60

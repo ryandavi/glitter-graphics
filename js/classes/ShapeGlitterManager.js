@@ -378,15 +378,6 @@ class ShapeGlitterManager {
 		this.editor.layerManager.renderLayersList();
 	}
 
-	revealGlitterBrowser() {
-		if (this.editor.mobileManager?.isMobile) {
-			this.editor.mobileManager.openDrawer('design');
-			return;
-		}
-		this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
-		document.getElementById('glitterOptions')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-	}
-
 	// ===== GALLERY PICKER SESSION (reuses the text strip + Done UX) =====
 
 	// Arm a slot for glitter picking: open the gallery, show the strip naming the
@@ -396,7 +387,7 @@ class ShapeGlitterManager {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
 		this.pickerSession = { layerId: layer.id, slot };
-		this.revealGlitterBrowser();
+		revealAssetBrowser(this.editor, this.editor.glitterManager);
 		this.updatePickerStrip();
 	}
 

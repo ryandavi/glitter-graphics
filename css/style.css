@@ -1675,25 +1675,6 @@ input[type=range]::-moz-range-thumb {
   display: block;
 }
 
-/* Standalone Image/Layers sections use the shared collapsible header chrome,
-   but remain independent instead of joining the design-panel accordion. */
-.layers-panel > .section.panel-collapsible > .section-header:not(:disabled):hover {
-  filter: var(--bar-hover-filter);
-}
-.layers-panel > .section.panel-collapsible > .section-header:not(:disabled):active {
-  filter: var(--bar-active-filter);
-}
-.layers-panel > .section.panel-collapsible > .section-header .section-header-action.collapsed .icon {
-  transform: rotate(-90deg);
-}
-.layers-panel > .section.panel-collapsible:not(.is-open) {
-  flex: 0 0 auto;
-}
-.layers-panel > .section.panel-collapsible:not(.is-open) > .section-content,
-.layers-panel > .section.panel-collapsible:not(.is-open) > .layers-section-bottom-bar {
-  display: none;
-}
-
 .layers-section {
   flex: 1 1 auto;
   display: flex;
@@ -5924,13 +5905,9 @@ body.mask-editing .sticker-element {
 .settings-action-row,
 .canvas-project-actions,
 .canvas-size-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-sm);
-}
-.settings-action-row > *,
-.canvas-project-actions > *,
-.canvas-size-actions > * {
-  flex: 1;
 }
 
 .multi-selection-actions > .btn-simple {
@@ -6578,4 +6555,11 @@ body.mask-editing .sticker-element {
   left: 0;
   right: 0;
   height: 1px;
+}
+
+.layers-panel > .section.collapsible-section:not(.is-open) {
+  flex: 0 0 auto;
+}
+.layers-panel > .section.collapsible-section:not(.is-open) > .layers-section-bottom-bar {
+  display: none;
 }/*# sourceMappingURL=style.css.map */

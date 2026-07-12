@@ -204,8 +204,7 @@ class StickerManager extends ContentManager {
 		if (layer?.type !== LayerType.STICKER || !layer.stickerData[slot]) return;
 		this.pickerSession = { layerId: layer.id, slot };
 		this.updatePickerStrip();
-		if (this.editor.mobileManager?.isMobile) this.editor.mobileManager.openDrawer('design');
-		else this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
+		revealAssetBrowser(this.editor, this.editor.glitterManager);
 	}
 
 	closePicker() {

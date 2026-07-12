@@ -1,3 +1,22 @@
+// Shared gallery reveal path for primary asset Change buttons and armed
+// paint-slot pickers. Mobile uses the Design drawer; desktop uses the same
+// accordion section and scroll target for every asset manager.
+function revealAssetBrowser(editor, manager = null, assetId = null) {
+	if (editor.mobileManager?.isMobile) {
+		editor.mobileManager.openDrawer('design');
+	} else {
+		editor.setCollapsibleSectionOpen?.('designGallery', true, true);
+		manager?.ui?.panel?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+	}
+	if (assetId != null) manager?.browser?.navigateToItem(assetId);
+}
+
+function setCollapsibleSectionState(section, content, toggle, isOpen) {
+	section?.classList.toggle('is-open', isOpen);
+	content?.classList.toggle('visible', isOpen);
+	toggle?.classList.toggle('collapsed', !isOpen);
+}
+
 // ============================================
 // VALUE + UNIT FORMATTING
 // ============================================

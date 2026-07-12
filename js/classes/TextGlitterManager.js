@@ -168,7 +168,7 @@ class TextGlitterManager {
 	}
 
 	// colorAdjust lives on the effect data (border/shadow) or on layer.settings
-	// (fill, which aliases the layer like its scale/opacity). See slot-effects.js.
+	// (fill, which aliases the layer like its scale/opacity). See effects/slot-effects.js.
 	ensureColorAdjust(target) {
 		return ensureSlotColorAdjust(target);
 	}
@@ -242,7 +242,7 @@ class TextGlitterManager {
 						this.editor.glitterManager?.scrollToContent(selectedGlitterId);
 					}
 
-					this.revealGlitterBrowser();
+					revealAssetBrowser(this.editor, this.editor.glitterManager);
 					this.editor.updateStatus('Choosing glitter for the text fill — press Esc or Done to finish.');
 				});
 			});
@@ -549,7 +549,7 @@ class TextGlitterManager {
 
 	// Effects default to GLITTER using the per-effect default id so the slot
 	// shows a real glitter (not the "No glitter selected" solid placeholder) the
-	// moment it's enabled. See buildDefaultBorder in slot-effects.js.
+	// moment it's enabled. See buildDefaultBorder in effects/slot-effects.js.
 	getDefaultBorder() {
 		return buildDefaultBorder({
 			config: CONFIG.tools.text.border || {},
@@ -711,24 +711,6 @@ class TextGlitterManager {
 		this.editor.updateGlitterSelection();
 	}
 
-	revealGlitterBrowser() {
-		// On mobile the gallery lives in the separate `design` drawer, so arming
-		// a target from the settings drawer must surface it (mirrors app.js
-		// thumbnail-click handler). The desktop accordion opens in-place.
-		if (this.editor.mobileManager?.isMobile) {
-			this.editor.mobileManager.openDrawer('design');
-			return;
-		}
-
-		this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
-		const browser = document.getElementById('glitterOptions');
-		browser?.scrollIntoView({
-			block: 'nearest',
-			inline: 'nearest',
-			behavior: 'smooth'
-		});
-	}
-
 	resolveSelectedGlitterId(layer) {
 		if (!layer || layer.type !== LayerType.TEXT_GLITTER) {
 			return null;
@@ -787,7 +769,7 @@ class TextGlitterManager {
 					this.editor.glitterManager?.scrollToContent(selectedGlitterId);
 				}
 
-				this.revealGlitterBrowser();
+				revealAssetBrowser(this.editor, this.editor.glitterManager);
 				this.editor.updateStatus(`Choosing glitter for the text ${effectName} — press Esc or Done to finish.`);
 			});
 		});

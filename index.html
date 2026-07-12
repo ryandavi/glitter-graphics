@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=80">
+	<link rel="stylesheet" href="css/style.css?v=82">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -185,7 +185,7 @@
 				<!-- Layers Panel -->
 				<div class="layers-panel" id="layersPanel">
 					<!-- Image Section -->
-					<div class="image-container section panel-collapsible is-open" id="imagePanelSection">
+					<div class="image-container section collapsible-section is-open" id="imagePanelSection">
 						<div class="section-header section-header-with-action" id="imagePanelHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
@@ -256,7 +256,7 @@
 					</div>
 
 					<!-- Layers Section (list only) -->
-					<div class="layers-section section panel-collapsible is-open" id="layersPanelSection">
+					<div class="layers-section section collapsible-section is-open" id="layersPanelSection">
 						<div class="section-header section-header-with-action" id="layersPanelHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
@@ -821,150 +821,11 @@
 
 
 
-					<!-- Glitter Properties Section -->
-					<div class="glitter-settings-section section collapsible-section" id="glitterSettingsSection">
-						<div class="section-header section-header-with-action" id="glitterSettingsHeader">
-							<h3 class="section-header-title">
-								<span class="section-header-title-icon icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-glitter"></use>
-									</svg>
-									<span class="name">Sliders</span>
-								</span>
-								<span class="section-header-title-text">Glitter Properties</span>
-							</h3>
-							<div class="section-header-action btn-icon visible collapsed" id="glitterSettingsToggle">
-								<span class="icon-wrapper">
-									<svg class="icon">
-										<use href="#icon-chevron-down"></use>
-									</svg>
-								</span>
-							</div>
+						<!-- Glitter Properties Section -->
+						<div class="glitter-settings-section section collapsible-section" id="glitterSettingsSection">
 						</div>
-						<div class="section-content" id="glitterSettingsContent">
-							<div class="empty-state visible" id="glitterSettingsEmpty">
-								<div class="empty-state-icon">✨</div>
-								<div class="empty-state-text">Glitter layer empty</div>
-								<div class="empty-state-subtext">
-									Select a glitter fill from the gallery to get started.
-								</div>
 
-							</div>
-
-							<div id="glitterSettingsControls">
-								<div class="settings-subsection">
-
-									<!-- Asset Info -->
-									<div class="subsection-content-group">
-
-										<div class="subsection-title">Asset</div>
-
-										<!-- Asset Info Header -->
-										<div class="asset-info-header">
-											<div class="asset-info-thumbnail" id="glitterAssetThumbnail"></div>
-											<div class="asset-info-details">
-												<div class="asset-info-name" id="glitterAssetName"></div>
-												<div class="asset-info-badges" id="glitterAssetBadges"></div>
-											</div>
-										</div>
-
-
-										<div class="settings-group-two-column">
-											<!-- Size -->
-											<div class="setting-column">
-												<div class="setting-header">
-													<span class="setting-label">Size</span>
-												</div>
-												<span class="setting-value" id="glitterAssetSize"></span>
-											</div>
-
-
-											<!-- Frames -->
-											<div class="setting-column">
-												<div class="setting-header">
-													<span class="setting-label">Frames</span>
-												</div>
-												<span class="setting-value" id="glitterAssetFrames"></span>
-											</div>
-										</div>
-
-									</div>
-
-
-
-									<div class="subsection-content-group">
-										<div class="subsection-title">
-											<span>Appearance</span>
-											<label class="checkbox-group">
-												<input type="checkbox" id="glitterGlobal">
-												<span title="Apply Scale/Opacity to all glitter layers">Global</span>
-											</label>
-										</div>
-										<div class="setting-column right">
-											<div class="setting-header">
-												<span class="setting-label" title="Glitter effect intensity">Opacity</span>
-												<span class="setting-value" id="opacityValue">100%</span>
-											</div>
-											<input type="range" id="opacity" min="0" max="100" value="100">
-											<button class="btn-text" id="resetOpacity">Reset</button>
-										</div>
-
-										<!-- Advanced disclosure (WP4): auto-collapsed. Scale lives here now
-												(declutter), alongside per-swatch color adjust. -->
-										<div class="advanced-disclosure" data-advanced>
-											<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
-												<span class="advanced-disclosure-label">Advanced</span>
-												<span class="advanced-disclosure-chevron icon-wrapper">
-													<svg class="icon">
-														<use href="#icon-chevron-down"></use>
-													</svg>
-												</span>
-											</button>
-											<div class="advanced-disclosure-content" data-advanced-content>
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label" title="Scale glitter pattern size">Scale</span>
-														<span class="setting-value" id="scaleValue">100%</span>
-													</div>
-													<input type="range" id="scale" min="25" max="300" value="100">
-													<button class="btn-text" id="resetScale">Reset</button>
-												</div>
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label" title="Rotate the glitter's hue">Hue</span>
-														<span class="setting-value" id="glitterHueValue">0°</span>
-													</div>
-													<input type="range" id="glitterHue" min="-180" max="180" value="0">
-													<button class="btn-text" id="resetGlitterHue">Reset</button>
-												</div>
-												<div class="settings-group-two-column">
-													<div class="setting-column right">
-														<div class="setting-header">
-															<span class="setting-label" title="Color intensity">Saturation</span>
-															<span class="setting-value" id="glitterSaturationValue">100%</span>
-														</div>
-														<input type="range" id="glitterSaturation" min="0" max="200" value="100">
-														<button class="btn-text" id="resetGlitterSaturation">Reset</button>
-													</div>
-													<div class="setting-column right">
-														<div class="setting-header">
-															<span class="setting-label" title="Lightness">Brightness</span>
-															<span class="setting-value" id="glitterBrightnessValue">100%</span>
-														</div>
-														<input type="range" id="glitterBrightness" min="25" max="200" value="100">
-														<button class="btn-text" id="resetGlitterBrightness">Reset</button>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Brush Settings Section (shown for the Brush/Eraser tool, independent of layer type) -->
+						<!-- Brush Settings Section (shown for the Brush/Eraser tool, independent of layer type) -->
 					<div class="brush-settings-section section collapsible-section" id="brushSettingsSection">
 						<div class="section-header section-header-with-action" id="brushSettingsHeader">
 							<h3 class="section-header-title">
@@ -1081,297 +942,12 @@
 						</div>
 					</div>
 
-					<!-- Sticker Properties Section -->
-					<div class="sticker-settings-section section collapsible-section" id="stickerSettingsSection">
-						<div class="section-header section-header-with-action" id="stickerSettingsHeader">
-							<h3 class="section-header-title">
-								<span class="section-header-title-icon icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-sliders"></use>
-									</svg>
-									<span class="name">Sliders</span>
-								</span>
-								<span class="section-header-title-text">Sticker Properties</span>
-							</h3>
-							<div class="section-header-action btn-icon visible collapsed" id="stickerSettingsToggle">
-								<span class="icon-wrapper">
-									<svg class="icon">
-										<use href="#icon-chevron-down"></use>
-									</svg>
-								</span>
-							</div>
-						</div>
-						<div class="section-content" id="stickerSettingsContent">
-							<div class="empty-state visible" id="stickerSettingsEmpty">
-								<div class="empty-state-icon">🖼️</div>
-								<div class="empty-state-text">Sticker layer empty</div>
-								<div class="empty-state-subtext">
-									Select a sticker from the gallery to get started.
-								</div>
-							</div>
+						<!-- Sticker Properties Section -->
+							<div class="sticker-settings-section section collapsible-section" id="stickerSettingsSection"></div>
 
-
-							<div id="stickerSettingsControls">
-
-
-
-
-
-
-
-								<div class="settings-subsection">
-
-									<!-- Asset Info -->
-									<div class="subsection-content-group">
-
-										<div class="subsection-title">Asset</div>
-
-										<!-- Asset Info Header -->
-										<div class="asset-info-header">
-											<div class="asset-info-thumbnail" id="stickerAssetThumbnail"></div>
-											<div class="asset-info-details">
-												<div class="asset-info-name" id="stickerAssetName"></div>
-												<div class="asset-info-badges" id="stickerAssetBadges"></div>
-											</div>
-										</div>
-
-
-										<div class="settings-group-two-column">
-
-											<!-- Size -->
-											<div class="setting-column">
-												<div class="setting-header">
-													<span class="setting-label">Size</span>
-												</div>
-												<span class="setting-value" id="stickerAssetSize"></span>
-											</div>
-
-
-											<!-- Frames -->
-											<div class="setting-column">
-												<div class="setting-header">
-													<span class="setting-label">Frames</span>
-												</div>
-											<span class="setting-value" id="stickerAssetFrames"></span>
-										</div>
-
-									</div>
-
-								</div>
-
-									<!-- Actions -->
-									<div class="subsection-content-group">
-										<div class="subsection-title">Actions</div>
-										<div class="settings-action-row">
-											<button class="btn-simple" id="stickerFitCanvas" type="button" title="Scale the sticker so it fits fully inside the canvas, centered">Fit canvas</button>
-											<button class="btn-simple" id="stickerFillCanvas" type="button" title="Scale the sticker so it covers the whole canvas, centered">Fill canvas</button>
-										</div>
-									</div>
-
-									<div class="transform-panel-host" id="stickerTransformPanelHost"></div>
-
-									<!-- Transform -->
-									<div class="subsection-content-group">
-										<div class="subsection-title">Transform</div>
-										<div class="settings-group-two-column">
-											<!-- Rotation -->
-											<div class="setting-column right">
-												<div class="setting-header">
-													<span class="setting-label">Rotation</span>
-													<span class="setting-value" id="stickerRotationValue">0°</span>
-												</div>
-												<input type="range" id="stickerRotation" min="0" max="360" value="0" step="1">
-												<button class="btn-text" id="resetStickerRotation">Reset</button>
-											</div>
-
-											<!-- Opacity -->
-											<div class="setting-column right">
-												<div class="setting-header">
-													<span class="setting-label">Opacity</span>
-													<span class="setting-value" id="stickerOpacityValue">100%</span>
-												</div>
-												<input type="range" id="stickerOpacity" min="0" max="100" value="100">
-												<button class="btn-text" id="resetStickerOpacity">Reset</button>
-											</div>
-										</div>
-									</div>
-
-									<!-- Scale -->
-									<div class="subsection-content-group">
-										<div class="subsection-title">
-											<span>Scale</span>
-											<label class="checkbox-group">
-												<input type="checkbox" id="stickerProportionalScale" checked>
-												<span title="Keep aspect ratio when scaling">Proportional</span>
-											</label>
-
-										</div>
-										<div class="settings-group-two-column">
-											<!-- Scale X -->
-											<div class="setting-column right">
-												<div class="setting-header">
-													<span class="setting-label">Scale X</span>
-													<span class="setting-value" id="stickerScaleXValue">100%</span>
-												</div>
-												<input type="range" id="stickerScaleX" min="10" max="300" value="100">
-												<button class="btn-text" id="resetStickerScaleX">Reset</button>
-											</div>
-
-											<!-- Scale Y -->
-											<div class="setting-column right">
-												<div class="setting-header">
-													<span class="setting-label">Scale Y</span>
-													<span class="setting-value" id="stickerScaleYValue">100%</span>
-												</div>
-												<input type="range" id="stickerScaleY" min="10" max="300" value="100">
-												<button class="btn-text" id="resetStickerScaleY">Reset</button>
-											</div>
-
-
-										</div>
-									</div>
-
-
-									<!-- Flip -->
-									<div class="subsection-content-group">
-										<div class="subsection-title">Flip</div>
-										<div class="subsection-content">
-											<div class="tool-options-group">
-												<label class="checkbox-group">
-													<input type="checkbox" id="stickerFlipX">
-													<span title="Flip horizontally">Flip Horizontal</span>
-												</label>
-												<label class="checkbox-group">
-													<input type="checkbox" id="stickerFlipY">
-													<span title="Flip vertically">Flip Vertical</span>
-												</label>
-											</div>
-										</div>
-									</div>
-
-									<!-- Shadow (same slot structure as the text/shape effect cards) -->
-
-									<div class="subsection-content-group effects-stack">
-									<div class="subsection-title">Effects</div>
-
-									<div class="subsection-content-group text-effect-subsection">
-										<div class="subsection-title"><span>Shadow</span><label class="checkbox-group"><input type="checkbox" id="stickerShadowEnabled"><span>Enabled</span></label></div>
-										<div class="text-effect-controls" id="stickerShadowControls">
-											<div class="settings-group-two-column">
-												<div class="setting-column right">
-													<div class="setting-header"><span class="setting-label">Offset X</span><span class="setting-value" id="stickerShadowOffsetXValue">6px</span></div>
-													<input type="range" id="stickerShadowOffsetX" min="-60" max="60" value="6">
-													<button class="btn-text" id="resetStickerShadowOffsetX" type="button">Reset</button>
-												</div>
-												<div class="setting-column right">
-													<div class="setting-header"><span class="setting-label">Offset Y</span><span class="setting-value" id="stickerShadowOffsetYValue">6px</span></div>
-													<input type="range" id="stickerShadowOffsetY" min="-60" max="60" value="6">
-													<button class="btn-text" id="resetStickerShadowOffsetY" type="button">Reset</button>
-												</div>
-											</div>
-											<div class="effect-option-group">
-												<div class="effect-option-label">Source</div>
-												<div class="glitter-source">
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option" id="stickerShadowGlitter" type="button">Glitter</button>
-														<button class="segmented-option active" id="stickerShadowSolid" type="button">Solid</button>
-													</div>
-													<div class="asset-info glitter-source-glitter" id="stickerShadowGlitterInfo" hidden>
-														<div class="asset-info-header">
-															<div class="asset-info-thumbnail" id="stickerShadowGlitterChip" title="Choose glitter"></div>
-															<div class="asset-info-details">
-																<div class="asset-info-name" id="stickerShadowGlitterLabel">Glitter</div>
-																<div class="asset-info-badges" id="stickerShadowGlitterBadges"></div>
-															</div>
-															<button class="btn-simple text-effect-source-change" id="stickerShadowGlitterChange" type="button">Change</button>
-														</div>
-														<div class="settings-group-two-column asset-info-meta">
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Size</span></div><span class="setting-value" id="stickerShadowGlitterSize"></span>
-															</div>
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Frames</span></div><span class="setting-value" id="stickerShadowGlitterFrames"></span>
-															</div>
-														</div>
-													</div>
-													<div class="text-effect-color-row glitter-source-solid" id="stickerShadowColorRow">
-														<div class="setting-header"><span class="setting-label">Solid Color</span></div>
-														<input type="color" id="stickerShadowColor" value="#000000">
-													</div>
-												</div>
-											</div>
-											<div class="settings-group-two-column paint-slot-primary-row">
-												<div class="setting-column right paint-slot-scale">
-													<div class="setting-header"><span class="setting-label">Texture Scale</span><span class="setting-value" id="stickerShadowScaleValue">100%</span></div>
-													<input type="range" id="stickerShadowScale" min="25" max="300" value="100">
-													<button class="btn-text" id="resetStickerShadowScale" type="button">Reset</button>
-												</div>
-												<div class="setting-column right paint-slot-opacity">
-													<div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" id="stickerShadowOpacityValue">100%</span></div>
-													<input type="range" id="stickerShadowOpacity" min="0" max="100" value="100">
-													<button class="btn-text" id="resetStickerShadowOpacity" type="button">Reset</button>
-												</div>
-											</div>
-											<div class="advanced-disclosure glitter-source-glitter" data-advanced>
-												<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
-													<span class="advanced-disclosure-label">Advanced</span>
-													<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon">
-															<use href="#icon-chevron-down"></use>
-														</svg></span>
-												</button>
-												<div class="advanced-disclosure-content" data-advanced-content>
-													<div class="setting-column right">
-														<div class="setting-header"><span class="setting-label">Hue</span><span class="setting-value" id="stickerShadowHueValue">0°</span></div>
-														<input type="range" id="stickerShadowHue" min="-180" max="180" value="0">
-														<button class="btn-text" id="resetStickerShadowHue" type="button">Reset</button>
-													</div>
-													<div class="settings-group-two-column">
-														<div class="setting-column right">
-															<div class="setting-header"><span class="setting-label">Saturation</span><span class="setting-value" id="stickerShadowSaturationValue">100%</span></div>
-															<input type="range" id="stickerShadowSaturation" min="0" max="200" value="100">
-															<button class="btn-text" id="resetStickerShadowSaturation" type="button">Reset</button>
-														</div>
-														<div class="setting-column right">
-															<div class="setting-header"><span class="setting-label">Brightness</span><span class="setting-value" id="stickerShadowBrightnessValue">100%</span></div>
-															<input type="range" id="stickerShadowBrightness" min="25" max="200" value="100">
-															<button class="btn-text" id="resetStickerShadowBrightness" type="button">Reset</button>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-
-									</div>
-
-
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Text Settings -->
-					<div class="text-settings-section section collapsible-section" id="textSettingsSection">
-						<div class="section-header section-header-with-action" id="textSettingsHeader">
-							<h3 class="section-header-title">
-								<span class="section-header-title-icon icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-text"></use>
-									</svg>
-									<span class="name">Sliders</span>
-								</span>
-								<span class="section-header-title-text">Text Properties</span>
-							</h3>
-							<div class="section-header-action btn-icon visible collapsed" id="textSettingsToggle">
-								<span class="icon-wrapper">
-									<svg class="icon">
-										<use href="#icon-chevron-down"></use>
-									</svg>
-								</span>
-							</div>
-						</div>
-						<div class="section-content" id="textSettingsContent">
-							<div class="settings-subsection">
+							<!-- Text Settings -->
+							<div class="text-settings-section section collapsible-section" id="textSettingsSection"></div>
+								<template id="tpl-text-content">
 								<div class="subsection-content-group">
 									<div class="subsection-title">Text</div>
 									<div class="subsection-content">
@@ -1403,7 +979,6 @@
 										</div>
 									</div>
 								</div>
-
 								<div class="subsection-content-group">
 									<div class="subsection-title">Type</div>
 									<div class="settings-group-two-column">
@@ -1412,7 +987,7 @@
 												<span class="setting-label">Font Size</span>
 												<span class="setting-value" id="textFontSizeValue">64px</span>
 											</div>
-											<input type="range" id="textFontSize" min="12" max="256" value="64">
+									<input type="range" id="textFontSize">
 											<button class="btn-text" id="resetTextFontSize" type="button">Reset</button>
 										</div>
 										<div class="setting-column right">
@@ -1420,7 +995,7 @@
 												<span class="setting-label">Letter Spacing</span>
 												<span class="setting-value" id="textLetterSpacingValue">0px</span>
 											</div>
-											<input type="range" id="textLetterSpacing" min="-20" max="40" value="0">
+										<input type="range" id="textLetterSpacing">
 											<button class="btn-text" id="resetTextLetterSpacing" type="button">Reset</button>
 										</div>
 									</div>
@@ -1429,11 +1004,10 @@
 											<span class="setting-label">Line Height</span>
 											<span class="setting-value" id="textLineHeightValue">110%</span>
 										</div>
-										<input type="range" id="textLineHeight" min="50" max="250" value="110">
+										<input type="range" id="textLineHeight">
 										<button class="btn-text" id="resetTextLineHeight" type="button">Reset</button>
 									</div>
 								</div>
-
 								<div class="subsection-content-group">
 									<div class="subsection-title">Text Alignment</div>
 									<div class="control-group-label text-valign-label">Vertical</div>
@@ -1449,876 +1023,12 @@
 										<button class="segmented-option" type="button" data-text-align="right">Right</button>
 									</div>
 								</div>
+							</template>
 
-								<div class="transform-panel-host" id="textTransformPanelHost"></div>
-
-								<!-- Transform -->
-								<div class="subsection-content-group">
-									<div class="subsection-title">Transform</div>
-									<div class="settings-group-two-column">
-										<!-- Rotation -->
-										<div class="setting-column right">
-											<div class="setting-header">
-												<span class="setting-label">Rotation</span>
-												<span class="setting-value" id="textRotationValue">0°</span>
-											</div>
-											<input type="range" id="textRotation" min="0" max="360" value="0" step="1">
-											<button class="btn-text" id="resetTextRotation">Reset</button>
-										</div>
-
-										<!-- Opacity -->
-										<div class="setting-column right">
-											<div class="setting-header">
-												<span class="setting-label">Opacity</span>
-												<span class="setting-value" id="textLayerOpacityValue">100%</span>
-											</div>
-											<input type="range" id="textLayerOpacity" min="0" max="100" value="100">
-											<button class="btn-text" id="resetTextLayerOpacity">Reset</button>
-										</div>
-									</div>
-								</div>
-
-								<!-- Scale -->
-								<div class="subsection-content-group">
-									<div class="subsection-title">
-										<span>Scale</span>
-										<label class="checkbox-group">
-											<input type="checkbox" id="textLayerProportionalScale" checked>
-											<span title="Keep aspect ratio when scaling">Proportional</span>
-										</label>
-									</div>
-									<div class="settings-group-two-column">
-										<!-- Scale X -->
-										<div class="setting-column right">
-											<div class="setting-header">
-												<span class="setting-label">Scale X</span>
-												<span class="setting-value" id="textLayerScaleXValue">100%</span>
-											</div>
-											<input type="range" id="textLayerScaleX" min="10" max="300" value="100">
-											<button class="btn-text" id="resetTextLayerScaleX">Reset</button>
-										</div>
-
-										<!-- Scale Y -->
-										<div class="setting-column right">
-											<div class="setting-header">
-												<span class="setting-label">Scale Y</span>
-												<span class="setting-value" id="textLayerScaleYValue">100%</span>
-											</div>
-											<input type="range" id="textLayerScaleY" min="10" max="300" value="100">
-											<button class="btn-text" id="resetTextLayerScaleY">Reset</button>
-										</div>
-									</div>
-								</div>
-
-								<!-- Flip -->
-								<div class="subsection-content-group">
-									<div class="subsection-title">Flip</div>
-									<div class="subsection-content">
-										<div class="tool-options-group">
-											<label class="checkbox-group">
-												<input type="checkbox" id="textFlipX">
-												<span title="Flip horizontally">Flip Horizontal</span>
-											</label>
-											<label class="checkbox-group">
-												<input type="checkbox" id="textFlipY">
-												<span title="Flip vertically">Flip Vertical</span>
-											</label>
-										</div>
-									</div>
-								</div>
-
-								<div class="subsection-content-group text-effect-subsection">
-									<div class="subsection-title"><span>Fill</span></div>
-									<div class="glitter-source">
-										<div class="segmented-control text-effect-mode-group">
-											<button class="segmented-option" id="textFillUseNone" type="button">None</button>
-											<button class="segmented-option active" id="textFillUseGlitter" type="button">Glitter</button>
-											<button class="segmented-option" id="textFillUseColor" type="button">Solid</button>
-										</div>
-										<div class="asset-info glitter-source-glitter" id="textFillGlitterInfo">
-											<div class="asset-info-header">
-												<div class="asset-info-thumbnail" id="textFillGlitterChip" title="Choose fill glitter"></div>
-												<div class="asset-info-details">
-													<div class="asset-info-name" id="textFillGlitterLabel">Glitter</div>
-													<div class="asset-info-badges" id="textFillGlitterBadges"></div>
-												</div>
-												<button class="btn-simple text-effect-source-change" id="textFillGlitterChange" type="button">Change</button>
-											</div>
-											<div class="settings-group-two-column asset-info-meta">
-												<div class="setting-column">
-													<div class="setting-header"><span class="setting-label">Size</span></div>
-													<span class="setting-value" id="textFillGlitterSize"></span>
-												</div>
-												<div class="setting-column">
-													<div class="setting-header"><span class="setting-label">Frames</span></div>
-													<span class="setting-value" id="textFillGlitterFrames"></span>
-												</div>
-											</div>
-										</div>
-										<div class="text-effect-color-row glitter-source-solid" id="textFillColorRow">
-											<div class="setting-header">
-												<span class="setting-label">Solid Color</span>
-											</div>
-											<input type="color" id="textFillColor" value="#000000">
-										</div>
-									</div>
-									<div class="settings-group-two-column paint-slot-primary-row">
-										<div class="setting-column right paint-slot-scale" id="textTextureScaleRow">
-											<div class="setting-header">
-												<span class="setting-label">Texture Scale</span>
-												<span class="setting-value" id="textTextureScaleValue">100%</span>
-											</div>
-											<input type="range" id="textTextureScale" min="25" max="300" value="100">
-											<button class="btn-text" id="resetTextTextureScale" type="button">Reset</button>
-										</div>
-										<div class="setting-column right paint-slot-opacity">
-											<div class="setting-header">
-												<span class="setting-label">Opacity</span>
-												<span class="setting-value" id="textTextureOpacityValue">100%</span>
-											</div>
-											<input type="range" id="textTextureOpacity" min="0" max="100" value="100">
-											<button class="btn-text" id="resetTextTextureOpacity" type="button">Reset</button>
-										</div>
-									</div>
-									<div class="advanced-disclosure glitter-source-glitter" data-advanced>
-										<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
-											<span class="advanced-disclosure-label">Advanced</span>
-											<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon">
-													<use href="#icon-chevron-down"></use>
-												</svg></span>
-										</button>
-										<div class="advanced-disclosure-content" data-advanced-content>
-											<div class="setting-column right">
-												<div class="setting-header">
-													<span class="setting-label" title="Rotate the hue">Hue</span>
-													<span class="setting-value" id="textFillHueValue">0°</span>
-												</div>
-												<input type="range" id="textFillHue" min="-180" max="180" value="0">
-												<button class="btn-text" id="resetTextFillHue" type="button">Reset</button>
-											</div>
-											<div class="settings-group-two-column">
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label">Saturation</span>
-														<span class="setting-value" id="textFillSaturationValue">100%</span>
-													</div>
-													<input type="range" id="textFillSaturation" min="0" max="200" value="100">
-													<button class="btn-text" id="resetTextFillSaturation" type="button">Reset</button>
-												</div>
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label">Brightness</span>
-														<span class="setting-value" id="textFillBrightnessValue">100%</span>
-													</div>
-													<input type="range" id="textFillBrightness" min="25" max="200" value="100">
-													<button class="btn-text" id="resetTextFillBrightness" type="button">Reset</button>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="subsection-content-group effects-stack">
-									<div class="subsection-title">Effects</div>
-									<div class="subsection-content-group text-effect-subsection">
-										<div class="subsection-title">
-											<span>Border</span>
-											<label class="checkbox-group">
-												<input type="checkbox" id="textBorderEnabled">
-												<span>Enabled</span>
-											</label>
-										</div>
-										<div class="text-effect-controls" id="textBorderControls">
-											<div class="setting-column right">
-												<div class="setting-header">
-													<span class="setting-label">Border Width</span>
-													<span class="setting-value" id="textBorderWidthValue">4px</span>
-												</div>
-												<input type="range" id="textBorderWidth" min="1" max="24" value="4">
-												<button class="btn-text" id="resetTextBorderWidth" type="button">Reset</button>
-											</div>
-											<div class="effect-option-group">
-												<div class="effect-option-label">Source</div>
-												<div class="glitter-source">
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option" id="textBorderUseGlitter" type="button">Glitter</button>
-														<button class="segmented-option active" id="textBorderUseColor" type="button">Solid</button>
-													</div>
-													<div class="asset-info glitter-source-glitter" id="textBorderGlitterInfo">
-														<div class="asset-info-header">
-															<div class="asset-info-thumbnail" id="textBorderGlitterChip" title="Choose border source"></div>
-															<div class="asset-info-details">
-																<div class="asset-info-name" id="textBorderGlitterLabel">#000000</div>
-																<div class="asset-info-badges" id="textBorderGlitterBadges"></div>
-															</div>
-															<button class="btn-simple text-effect-source-change" id="textBorderGlitterChange" type="button">Change</button>
-														</div>
-														<div class="settings-group-two-column asset-info-meta">
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Size</span></div>
-																<span class="setting-value" id="textBorderGlitterSize"></span>
-															</div>
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Frames</span></div>
-																<span class="setting-value" id="textBorderGlitterFrames"></span>
-															</div>
-														</div>
-													</div>
-													<div class="text-effect-color-row glitter-source-solid" id="textBorderColorRow">
-														<div class="setting-header">
-															<span class="setting-label">Solid Color</span>
-														</div>
-														<input type="color" id="textBorderColor" value="#000000">
-													</div>
-												</div>
-											</div>
-											<div class="settings-group-two-column paint-slot-primary-row">
-												<div class="setting-column right paint-slot-scale" id="textBorderScaleRow">
-													<div class="setting-header">
-														<span class="setting-label">Texture Scale</span>
-														<span class="setting-value" id="textBorderScaleValue">100%</span>
-													</div>
-													<input type="range" id="textBorderScale" min="25" max="300" value="100">
-													<button class="btn-text" id="resetTextBorderScale" type="button">Reset</button>
-												</div>
-												<div class="setting-column right paint-slot-opacity">
-													<div class="setting-header">
-														<span class="setting-label">Opacity</span>
-														<span class="setting-value" id="textBorderOpacityValue">100%</span>
-													</div>
-													<input type="range" id="textBorderOpacity" min="0" max="100" value="100">
-													<button class="btn-text" id="resetTextBorderOpacity" type="button">Reset</button>
-												</div>
-											</div>
-											<div class="settings-group-two-column effect-stack-row">
-												<div class="effect-option-group">
-													<div class="effect-option-label">Edges</div>
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option active" id="textBorderEdgeRounded" type="button">Rounded</button>
-														<button class="segmented-option" id="textBorderEdgeHard" type="button">Hard</button>
-													</div>
-												</div>
-												<div class="effect-option-group">
-													<div class="effect-option-label">Placement</div>
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option active" id="textBorderPositionOutside" type="button">Outside</button>
-														<button class="segmented-option" id="textBorderPositionCenter" type="button">On Edge</button>
-														<button class="segmented-option" id="textBorderPositionInside" type="button">Inside</button>
-													</div>
-												</div>
-												<div class="effect-option-group">
-													<div class="effect-option-label">Layering</div>
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option active" id="textBorderOrderBehind" type="button">Behind</button>
-														<button class="segmented-option" id="textBorderOrderFront" type="button">On Top</button>
-													</div>
-												</div>
-											</div>
-											<div class="advanced-disclosure glitter-source-glitter" data-advanced>
-												<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
-													<span class="advanced-disclosure-label">Advanced</span>
-													<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon">
-															<use href="#icon-chevron-down"></use>
-														</svg></span>
-												</button>
-												<div class="advanced-disclosure-content" data-advanced-content>
-													<div class="setting-column right">
-														<div class="setting-header">
-															<span class="setting-label" title="Rotate the hue">Hue</span>
-															<span class="setting-value" id="textBorderHueValue">0°</span>
-														</div>
-														<input type="range" id="textBorderHue" min="-180" max="180" value="0">
-														<button class="btn-text" id="resetTextBorderHue" type="button">Reset</button>
-													</div>
-													<div class="settings-group-two-column">
-														<div class="setting-column right">
-															<div class="setting-header">
-																<span class="setting-label">Saturation</span>
-																<span class="setting-value" id="textBorderSaturationValue">100%</span>
-															</div>
-															<input type="range" id="textBorderSaturation" min="0" max="200" value="100">
-															<button class="btn-text" id="resetTextBorderSaturation" type="button">Reset</button>
-														</div>
-														<div class="setting-column right">
-															<div class="setting-header">
-																<span class="setting-label">Brightness</span>
-																<span class="setting-value" id="textBorderBrightnessValue">100%</span>
-															</div>
-															<input type="range" id="textBorderBrightness" min="25" max="200" value="100">
-															<button class="btn-text" id="resetTextBorderBrightness" type="button">Reset</button>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="subsection-content-group text-effect-subsection">
-										<div class="subsection-title">
-											<span>Shadow</span>
-											<label class="checkbox-group">
-												<input type="checkbox" id="textShadowEnabled">
-												<span>Enabled</span>
-											</label>
-										</div>
-										<div class="text-effect-controls" id="textShadowControls">
-											<div class="settings-group-two-column">
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label">Offset X</span>
-														<span class="setting-value" id="textShadowOffsetXValue">6px</span>
-													</div>
-													<input type="range" id="textShadowOffsetX" min="-60" max="60" value="6">
-													<button class="btn-text" id="resetTextShadowOffsetX" type="button">Reset</button>
-												</div>
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label">Offset Y</span>
-														<span class="setting-value" id="textShadowOffsetYValue">6px</span>
-													</div>
-													<input type="range" id="textShadowOffsetY" min="-60" max="60" value="6">
-													<button class="btn-text" id="resetTextShadowOffsetY" type="button">Reset</button>
-												</div>
-											</div>
-											<div class="effect-option-group">
-												<div class="effect-option-label">Source</div>
-												<div class="glitter-source">
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option" id="textShadowUseGlitter" type="button">Glitter</button>
-														<button class="segmented-option active" id="textShadowUseColor" type="button">Solid</button>
-													</div>
-													<div class="asset-info glitter-source-glitter" id="textShadowGlitterInfo">
-														<div class="asset-info-header">
-															<div class="asset-info-thumbnail" id="textShadowGlitterChip" title="Choose shadow source"></div>
-															<div class="asset-info-details">
-																<div class="asset-info-name" id="textShadowGlitterLabel">#000000</div>
-																<div class="asset-info-badges" id="textShadowGlitterBadges"></div>
-															</div>
-															<button class="btn-simple text-effect-source-change" id="textShadowGlitterChange" type="button">Change</button>
-														</div>
-														<div class="settings-group-two-column asset-info-meta">
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Size</span></div>
-																<span class="setting-value" id="textShadowGlitterSize"></span>
-															</div>
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Frames</span></div>
-																<span class="setting-value" id="textShadowGlitterFrames"></span>
-															</div>
-														</div>
-													</div>
-													<div class="text-effect-color-row glitter-source-solid" id="textShadowColorRow">
-														<div class="setting-header">
-															<span class="setting-label">Solid Color</span>
-														</div>
-														<input type="color" id="textShadowColor" value="#000000">
-													</div>
-												</div>
-											</div>
-											<div class="settings-group-two-column paint-slot-primary-row">
-												<div class="setting-column right paint-slot-scale" id="textShadowScaleRow">
-													<div class="setting-header">
-														<span class="setting-label">Texture Scale</span>
-														<span class="setting-value" id="textShadowScaleValue">100%</span>
-													</div>
-													<input type="range" id="textShadowScale" min="25" max="300" value="100">
-													<button class="btn-text" id="resetTextShadowScale" type="button">Reset</button>
-												</div>
-												<div class="setting-column right paint-slot-opacity">
-													<div class="setting-header">
-														<span class="setting-label">Opacity</span>
-														<span class="setting-value" id="textShadowOpacityValue">100%</span>
-													</div>
-													<input type="range" id="textShadowOpacity" min="0" max="100" value="100">
-													<button class="btn-text" id="resetTextShadowOpacity" type="button">Reset</button>
-												</div>
-											</div>
-											<div class="advanced-disclosure glitter-source-glitter" data-advanced>
-												<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
-													<span class="advanced-disclosure-label">Advanced</span>
-													<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon">
-															<use href="#icon-chevron-down"></use>
-														</svg></span>
-												</button>
-												<div class="advanced-disclosure-content" data-advanced-content>
-													<div class="setting-column right">
-														<div class="setting-header">
-															<span class="setting-label" title="Rotate the hue">Hue</span>
-															<span class="setting-value" id="textShadowHueValue">0°</span>
-														</div>
-														<input type="range" id="textShadowHue" min="-180" max="180" value="0">
-														<button class="btn-text" id="resetTextShadowHue" type="button">Reset</button>
-													</div>
-													<div class="settings-group-two-column">
-														<div class="setting-column right">
-															<div class="setting-header">
-																<span class="setting-label">Saturation</span>
-																<span class="setting-value" id="textShadowSaturationValue">100%</span>
-															</div>
-															<input type="range" id="textShadowSaturation" min="0" max="200" value="100">
-															<button class="btn-text" id="resetTextShadowSaturation" type="button">Reset</button>
-														</div>
-														<div class="setting-column right">
-															<div class="setting-header">
-																<span class="setting-label">Brightness</span>
-																<span class="setting-value" id="textShadowBrightnessValue">100%</span>
-															</div>
-															<input type="range" id="textShadowBrightness" min="25" max="200" value="100">
-															<button class="btn-text" id="resetTextShadowBrightness" type="button">Reset</button>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Shape Properties Section (WP5b) -->
+							<!-- Shape Properties Section (WP5b) -->
 					<div class="shape-settings-section section collapsible-section" id="shapeSettingsSection">
-						<div class="section-header section-header-with-action" id="shapeSettingsHeader">
-							<h3 class="section-header-title">
-								<span class="section-header-title-icon icon-wrapper sm"><svg class="icon">
-										<use href="#icon-square"></use>
-									</svg><span class="name">Shape</span></span>
-								<span class="section-header-title-text">Shape Properties</span>
-							</h3>
-							<div class="section-header-action btn-icon visible collapsed" id="shapeSettingsToggle"><span class="icon-wrapper"><svg class="icon">
-										<use href="#icon-chevron-down"></use>
-									</svg></span></div>
-						</div>
-						<div class="section-content" id="shapeSettingsContent">
-							<div class="settings-subsection">
-								<div class="subsection-content-group">
-									<div class="subsection-title"><span>Shape</span></div>
-									<div class="subsection-content">
-										<div class="brush-shape-picker" id="shapeShapePicker" role="listbox" aria-label="Shape"></div>
-									</div>
-								</div>
-
-								<div class="subsection-content-group text-effect-subsection">
-									<div class="subsection-title"><span>Fill</span></div>
-									<div class="glitter-source">
-										<div class="segmented-control text-effect-mode-group">
-											<button class="segmented-option" id="shapeFillNone" type="button">None</button>
-											<button class="segmented-option" id="shapeFillGlitter" type="button">Glitter</button>
-											<button class="segmented-option active" id="shapeFillSolid" type="button">Solid</button>
-										</div>
-										<div class="asset-info glitter-source-glitter" id="shapeFillGlitterInfo" hidden>
-											<div class="asset-info-header">
-												<div class="asset-info-thumbnail" id="shapeFillGlitterChip" title="Choose fill glitter"></div>
-												<div class="asset-info-details">
-													<div class="asset-info-name" id="shapeFillGlitterLabel">Glitter</div>
-													<div class="asset-info-badges" id="shapeFillGlitterBadges"></div>
-												</div>
-												<button class="btn-simple text-effect-source-change" id="shapeFillGlitterChange" type="button">Change</button>
-											</div>
-											<div class="settings-group-two-column asset-info-meta">
-												<div class="setting-column">
-													<div class="setting-header"><span class="setting-label">Size</span></div><span class="setting-value" id="shapeFillGlitterSize"></span>
-												</div>
-												<div class="setting-column">
-													<div class="setting-header"><span class="setting-label">Frames</span></div><span class="setting-value" id="shapeFillGlitterFrames"></span>
-												</div>
-											</div>
-										</div>
-										<div class="text-effect-color-row glitter-source-solid" id="shapeFillColorRow">
-											<div class="setting-header"><span class="setting-label">Solid Color</span></div>
-											<input type="color" id="shapeFillColor" value="#ff66cc">
-										</div>
-									</div>
-
-									<div class="settings-group-two-column paint-slot-primary-row">
-										<div class="setting-column right paint-slot-scale">
-											<div class="setting-header"><span class="setting-label">Texture Scale</span><span class="setting-value" id="shapeFillScaleValue">100%</span></div>
-											<input type="range" id="shapeFillScale" min="25" max="300" value="100">
-											<button class="btn-text" id="resetShapeFillScale" type="button">Reset</button>
-										</div>
-										<div class="setting-column right paint-slot-opacity">
-											<div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" id="shapeFillOpacityValue">100%</span></div>
-											<input type="range" id="shapeFillOpacity" min="0" max="100" value="100">
-											<button class="btn-text" id="resetShapeFillOpacity" type="button">Reset</button>
-										</div>
-									</div>
-									<div class="advanced-disclosure glitter-source-glitter" data-advanced>
-										<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
-											<span class="advanced-disclosure-label">Advanced</span>
-											<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon">
-													<use href="#icon-chevron-down"></use>
-												</svg></span>
-										</button>
-										<div class="advanced-disclosure-content" data-advanced-content>
-											<div class="setting-column right">
-												<div class="setting-header"><span class="setting-label">Hue</span><span class="setting-value" id="shapeFillHueValue">0°</span></div>
-												<input type="range" id="shapeFillHue" min="-180" max="180" value="0">
-												<button class="btn-text" id="resetShapeFillHue" type="button">Reset</button>
-											</div>
-											<div class="settings-group-two-column">
-												<div class="setting-column right">
-													<div class="setting-header"><span class="setting-label">Saturation</span><span class="setting-value" id="shapeFillSaturationValue">100%</span></div>
-													<input type="range" id="shapeFillSaturation" min="0" max="200" value="100">
-													<button class="btn-text" id="resetShapeFillSaturation" type="button">Reset</button>
-												</div>
-												<div class="setting-column right">
-													<div class="setting-header"><span class="setting-label">Brightness</span><span class="setting-value" id="shapeFillBrightnessValue">100%</span></div>
-													<input type="range" id="shapeFillBrightness" min="25" max="200" value="100">
-													<button class="btn-text" id="resetShapeFillBrightness" type="button">Reset</button>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-
-
-
-								<div class="transform-panel-host" id="shapeTransformPanelHost"></div>
-
-								<!-- Transform -->
-								<div class="subsection-content-group">
-									<div class="subsection-title">Transform</div>
-									<div class="settings-group-two-column">
-										<div class="setting-column right">
-											<div class="setting-header"><span class="setting-label">Rotation</span><span class="setting-value" id="shapeRotationValue">0°</span></div>
-											<input type="range" id="shapeRotation" min="0" max="360" value="0" step="1">
-											<button class="btn-text" id="resetShapeRotation">Reset</button>
-										</div>
-										<div class="setting-column right">
-											<div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" id="shapeOpacityValue">100%</span></div>
-											<input type="range" id="shapeOpacity" min="0" max="100" value="100">
-											<button class="btn-text" id="resetShapeOpacity">Reset</button>
-										</div>
-									</div>
-								</div>
-
-								<!-- Scale -->
-								<div class="subsection-content-group">
-									<div class="subsection-title"><span>Scale</span><label class="checkbox-group"><input type="checkbox" id="shapeProportionalScale" checked><span title="Keep aspect ratio when scaling">Proportional</span></label></div>
-									<div class="settings-group-two-column">
-										<div class="setting-column right">
-											<div class="setting-header"><span class="setting-label">Scale X</span><span class="setting-value" id="shapeScaleXValue">100%</span></div>
-											<input type="range" id="shapeScaleX" min="10" max="300" value="100">
-											<button class="btn-text" id="resetShapeScaleX">Reset</button>
-										</div>
-										<div class="setting-column right">
-											<div class="setting-header"><span class="setting-label">Scale Y</span><span class="setting-value" id="shapeScaleYValue">100%</span></div>
-											<input type="range" id="shapeScaleY" min="10" max="300" value="100">
-											<button class="btn-text" id="resetShapeScaleY">Reset</button>
-										</div>
-									</div>
-								</div>
-
-								<!-- Flip -->
-								<div class="subsection-content-group">
-									<div class="subsection-title">Flip</div>
-									<div class="subsection-content">
-										<div class="tool-options-group">
-											<label class="checkbox-group"><input type="checkbox" id="shapeFlipX"><span title="Flip horizontally">Flip Horizontal</span></label>
-											<label class="checkbox-group"><input type="checkbox" id="shapeFlipY"><span title="Flip vertically">Flip Vertical</span></label>
-										</div>
-									</div>
-								</div>
-
-								<div class="subsection-content-group effects-stack">
-									<div class="subsection-title">Effects</div>
-
-									<div class="subsection-content-group text-effect-subsection">
-										<div class="subsection-title"><span>Border</span><label class="checkbox-group"><input type="checkbox" id="shapeBorderEnabled"><span>Enabled</span></label></div>
-										<div class="text-effect-controls" id="shapeBorderControls">
-											<div class="setting-column right">
-												<div class="setting-header"><span class="setting-label">Width</span><span class="setting-value" id="shapeBorderWidthValue">6px</span></div>
-												<input type="range" id="shapeBorderWidth" min="1" max="60" value="6">
-												<button class="btn-text" id="resetShapeBorderWidth" type="button">Reset</button>
-											</div>
-											<div class="effect-option-group">
-												<div class="effect-option-label">Style</div>
-												<div class="glitter-source">
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option active" id="shapeBorderStyleSolid" type="button">Solid Border</button>
-														<button class="segmented-option" id="shapeBorderStyleDotted" type="button">Dotted Border</button>
-													</div>
-												</div>
-											</div>
-											<div class="setting-column right" id="shapeBorderDotSpacingRow" hidden>
-												<div class="setting-header"><span class="setting-label">Dot Spacing</span><span class="setting-value" id="shapeBorderDotSpacingValue">10px</span></div>
-												<input type="range" id="shapeBorderDotSpacing" min="1" max="60" value="10">
-												<button class="btn-text" id="resetShapeBorderDotSpacing" type="button">Reset</button>
-											</div>
-											<div class="effect-option-group">
-												<div class="effect-option-label">Source</div>
-												<div class="glitter-source">
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option" id="shapeBorderGlitter" type="button">Glitter</button>
-														<button class="segmented-option active" id="shapeBorderSolid" type="button">Solid</button>
-													</div>
-													<div class="asset-info glitter-source-glitter" id="shapeBorderGlitterInfo" hidden>
-														<div class="asset-info-header">
-															<div class="asset-info-thumbnail" id="shapeBorderGlitterChip" title="Choose glitter"></div>
-															<div class="asset-info-details">
-																<div class="asset-info-name" id="shapeBorderGlitterLabel">Glitter</div>
-																<div class="asset-info-badges" id="shapeBorderGlitterBadges"></div>
-															</div>
-															<button class="btn-simple text-effect-source-change" id="shapeBorderGlitterChange" type="button">Change</button>
-														</div>
-														<div class="settings-group-two-column asset-info-meta">
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Size</span></div><span class="setting-value" id="shapeBorderGlitterSize"></span>
-															</div>
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Frames</span></div><span class="setting-value" id="shapeBorderGlitterFrames"></span>
-															</div>
-														</div>
-													</div>
-													<div class="text-effect-color-row glitter-source-solid" id="shapeBorderColorRow">
-														<div class="setting-header"><span class="setting-label">Solid Color</span></div>
-														<input type="color" id="shapeBorderColor" value="#000000">
-													</div>
-												</div>
-											</div>
-											<div class="settings-group-two-column paint-slot-primary-row">
-												<div class="setting-column right paint-slot-scale">
-													<div class="setting-header"><span class="setting-label">Texture Scale</span><span class="setting-value" id="shapeBorderScaleValue">100%</span></div>
-													<input type="range" id="shapeBorderScale" min="25" max="300" value="100">
-													<button class="btn-text" id="resetShapeBorderScale" type="button">Reset</button>
-												</div>
-												<div class="setting-column right paint-slot-opacity">
-													<div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" id="shapeBorderOpacityValue">100%</span></div>
-													<input type="range" id="shapeBorderOpacity" min="0" max="100" value="100">
-													<button class="btn-text" id="resetShapeBorderOpacity" type="button">Reset</button>
-												</div>
-											</div>
-											<div class="settings-group-two-column effect-stack-row">
-												<div class="effect-option-group">
-													<div class="effect-option-label">Edges</div>
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option active" id="shapeBorderEdgeRounded" type="button">Rounded</button>
-														<button class="segmented-option" id="shapeBorderEdgeHard" type="button">Hard</button>
-													</div>
-												</div>
-												<div class="effect-option-group">
-													<div class="effect-option-label">Placement</div>
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option active" id="shapeBorderPositionOutside" type="button">Outside</button>
-														<button class="segmented-option" id="shapeBorderPositionCenter" type="button">On Edge</button>
-														<button class="segmented-option" id="shapeBorderPositionInside" type="button">Inside</button>
-													</div>
-												</div>
-												<div class="effect-option-group">
-													<div class="effect-option-label">Layering</div>
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option active" id="shapeBorderOrderBehind" type="button">Behind</button>
-														<button class="segmented-option" id="shapeBorderOrderFront" type="button">On Top</button>
-													</div>
-												</div>
-											</div>
-
-											<div class="advanced-disclosure glitter-source-glitter" data-advanced>
-												<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
-													<span class="advanced-disclosure-label">Advanced</span>
-													<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon">
-															<use href="#icon-chevron-down"></use>
-														</svg></span>
-												</button>
-												<div class="advanced-disclosure-content" data-advanced-content>
-													<div class="setting-column right">
-														<div class="setting-header"><span class="setting-label">Hue</span><span class="setting-value" id="shapeBorderHueValue">0°</span></div>
-														<input type="range" id="shapeBorderHue" min="-180" max="180" value="0">
-														<button class="btn-text" id="resetShapeBorderHue" type="button">Reset</button>
-													</div>
-													<div class="settings-group-two-column">
-														<div class="setting-column right">
-															<div class="setting-header"><span class="setting-label">Saturation</span><span class="setting-value" id="shapeBorderSaturationValue">100%</span></div>
-															<input type="range" id="shapeBorderSaturation" min="0" max="200" value="100">
-															<button class="btn-text" id="resetShapeBorderSaturation" type="button">Reset</button>
-														</div>
-														<div class="setting-column right">
-															<div class="setting-header"><span class="setting-label">Brightness</span><span class="setting-value" id="shapeBorderBrightnessValue">100%</span></div>
-															<input type="range" id="shapeBorderBrightness" min="25" max="200" value="100">
-															<button class="btn-text" id="resetShapeBorderBrightness" type="button">Reset</button>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-
-									<div class="subsection-content-group text-effect-subsection">
-										<div class="subsection-title"><span>Shadow</span><label class="checkbox-group"><input type="checkbox" id="shapeShadowEnabled"><span>Enabled</span></label></div>
-										<div class="text-effect-controls" id="shapeShadowControls">
-											<div class="settings-group-two-column">
-												<div class="setting-column right">
-													<div class="setting-header"><span class="setting-label">Offset X</span><span class="setting-value" id="shapeShadowOffsetXValue">6px</span></div>
-													<input type="range" id="shapeShadowOffsetX" min="-60" max="60" value="6">
-													<button class="btn-text" id="resetShapeShadowOffsetX" type="button">Reset</button>
-												</div>
-												<div class="setting-column right">
-													<div class="setting-header"><span class="setting-label">Offset Y</span><span class="setting-value" id="shapeShadowOffsetYValue">6px</span></div>
-													<input type="range" id="shapeShadowOffsetY" min="-60" max="60" value="6">
-													<button class="btn-text" id="resetShapeShadowOffsetY" type="button">Reset</button>
-												</div>
-											</div>
-											<div class="effect-option-group">
-												<div class="effect-option-label">Source</div>
-												<div class="glitter-source">
-													<div class="segmented-control text-effect-mode-group">
-														<button class="segmented-option" id="shapeShadowGlitter" type="button">Glitter</button>
-														<button class="segmented-option active" id="shapeShadowSolid" type="button">Solid</button>
-													</div>
-													<div class="asset-info glitter-source-glitter" id="shapeShadowGlitterInfo" hidden>
-														<div class="asset-info-header">
-															<div class="asset-info-thumbnail" id="shapeShadowGlitterChip" title="Choose glitter"></div>
-															<div class="asset-info-details">
-																<div class="asset-info-name" id="shapeShadowGlitterLabel">Glitter</div>
-																<div class="asset-info-badges" id="shapeShadowGlitterBadges"></div>
-															</div>
-															<button class="btn-simple text-effect-source-change" id="shapeShadowGlitterChange" type="button">Change</button>
-														</div>
-														<div class="settings-group-two-column asset-info-meta">
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Size</span></div><span class="setting-value" id="shapeShadowGlitterSize"></span>
-															</div>
-															<div class="setting-column">
-																<div class="setting-header"><span class="setting-label">Frames</span></div><span class="setting-value" id="shapeShadowGlitterFrames"></span>
-															</div>
-														</div>
-													</div>
-													<div class="text-effect-color-row glitter-source-solid" id="shapeShadowColorRow">
-														<div class="setting-header"><span class="setting-label">Solid Color</span></div>
-														<input type="color" id="shapeShadowColor" value="#000000">
-													</div>
-												</div>
-											</div>
-											<div class="settings-group-two-column paint-slot-primary-row">
-												<div class="setting-column right paint-slot-scale">
-													<div class="setting-header"><span class="setting-label">Texture Scale</span><span class="setting-value" id="shapeShadowScaleValue">100%</span></div>
-													<input type="range" id="shapeShadowScale" min="25" max="300" value="100">
-													<button class="btn-text" id="resetShapeShadowScale" type="button">Reset</button>
-												</div>
-												<div class="setting-column right paint-slot-opacity">
-													<div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" id="shapeShadowOpacityValue">100%</span></div>
-													<input type="range" id="shapeShadowOpacity" min="0" max="100" value="100">
-													<button class="btn-text" id="resetShapeShadowOpacity" type="button">Reset</button>
-												</div>
-											</div>
-
-											<div class="advanced-disclosure glitter-source-glitter" data-advanced>
-												<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
-													<span class="advanced-disclosure-label">Advanced</span>
-													<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon">
-															<use href="#icon-chevron-down"></use>
-														</svg></span>
-												</button>
-												<div class="advanced-disclosure-content" data-advanced-content>
-													<div class="setting-column right">
-														<div class="setting-header"><span class="setting-label">Hue</span><span class="setting-value" id="shapeShadowHueValue">0°</span></div>
-														<input type="range" id="shapeShadowHue" min="-180" max="180" value="0">
-														<button class="btn-text" id="resetShapeShadowHue" type="button">Reset</button>
-													</div>
-													<div class="settings-group-two-column">
-														<div class="setting-column right">
-															<div class="setting-header"><span class="setting-label">Saturation</span><span class="setting-value" id="shapeShadowSaturationValue">100%</span></div>
-															<input type="range" id="shapeShadowSaturation" min="0" max="200" value="100">
-															<button class="btn-text" id="resetShapeShadowSaturation" type="button">Reset</button>
-														</div>
-														<div class="setting-column right">
-															<div class="setting-header"><span class="setting-label">Brightness</span><span class="setting-value" id="shapeShadowBrightnessValue">100%</span></div>
-															<input type="range" id="shapeShadowBrightness" min="25" max="200" value="100">
-															<button class="btn-text" id="resetShapeShadowBrightness" type="button">Reset</button>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-
-
-							</div>
-						</div>
 						<!-- Layer Settings Section -->
 						<div class="layer-settings-section section collapsible-section" id="layerSettingsSection">
-							<div class="section-header section-header-with-action" id="layerSettingsHeader">
-								<h3 class="section-header-title">
-									<span class="section-header-title-icon icon-wrapper sm">
-										<svg class="icon">
-											<use href="#icon-paint-bucket"></use>
-										</svg>
-										<span class="name">Sliders</span>
-									</span>
-									<span class="section-header-title-text">Color Fill Settings</span>
-								</h3>
-								<div class="section-header-action btn-icon visible collapsed" id="layerSettingsToggle">
-									<span class="icon-wrapper">
-										<svg class="icon">
-											<use href="#icon-chevron-down"></use>
-										</svg>
-									</span>
-								</div>
-							</div>
-							<div class="section-content" id="layerSettingsContent">
-								<div class="empty-state visible" id="layerSettingsEmpty">
-									<div class="empty-state-icon">📋</div>
-									<div class="empty-state-text" id="layerSettingsEmptyText">No layer selected</div>
-									<div class="empty-state-subtext" id="layerSettingsEmptySubtext"></div>
-								</div>
-								<div id="layerSettingsControls">
-									<div class="settings-subsection">
-										<div class="subsection-content-group">
-											<div class="subsection-title">Selection Options</div>
-											<div class="subsection-content">
-												<div class="tool-options-group">
-													<label class="checkbox-group">
-														<input type="checkbox" id="contiguous">
-														<span title="Select only connected pixels of the same color">Contiguous</span>
-													</label>
-													<label class="checkbox-group">
-														<input type="checkbox" id="invert">
-														<span title="Invert this layer's mask — glitter covers everything except the selected and painted areas">Invert</span>
-													</label>
-													<label class="checkbox-group">
-														<input type="checkbox" id="multiSelect">
-														<span title="Select multiple colors on the same layer">Multi-Select</span>
-													</label>
-												</div>
-											</div>
-										</div>
-										<div class="subsection-content-group color-selection">
-											<div class="subsection-title">Color Selections</div>
-											<div class="subsection-content">
-												<span class="empty-state visible" id="selectedColorsEmpty">None</span>
-												<div class="selected-colors-display" id="selectedColorsDisplay">
-												</div>
-											</div>
-										</div>
-										<div class="subsection-content-group refine-selection">
-											<div class="subsection-title">
-												<span>Refine Selection</span>
-												<label class="checkbox-group">
-													<input type="checkbox" id="refineGlobal">
-													<span title="Apply refinement settings to every layer">Global</span>
-												</label>
-											</div>
-											<div class="settings-group-two-column">
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label" title="Color similarity range (0-255)">Threshold</span>
-														<span class="setting-value" id="thresholdValue">50</span>
-													</div>
-													<input type="range" id="threshold" min="0" max="255" value="50">
-													<button class="btn-text" id="resetThreshold">Reset</button>
-												</div>
-												<div class="setting-column right">
-													<div class="setting-header">
-														<span class="setting-label" title="Smooth selection edges">Feather</span>
-														<span class="setting-value" id="featherValue">0</span>
-													</div>
-													<input type="range" id="feather" min="0" max="50" value="0">
-													<button class="btn-text" id="resetFeather">Reset</button>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
 
 
@@ -3609,26 +2319,165 @@
 		</filter>
 	</svg>
 
-	<!-- External Libs (self-hosted; gif.js pairs with js/gif.worker.js) -->
+	<!-- ============ SIDEBAR PANEL TEMPLATES ============
+	     Shared markup primitives for renderer-built settings panels
+	     (docs/SIDEBAR-TEMPLATE-PLAN.md). Structure only: ids, labels, ranges,
+	     and defaults are stamped by js/ui/panel-renderer.js from PANEL_SCHEMAS +
+	     CONFIG.ui.sliders. Markup is copied verbatim from the pre-template
+	     static panels - class names and nesting must not drift. -->
+	<template id="tpl-section">
+		<div class="section-header section-header-with-action">
+			<h3 class="section-header-title">
+				<span class="section-header-title-icon icon-wrapper sm"><svg class="icon">
+						<use></use>
+					</svg><span class="name"></span></span>
+				<span class="section-header-title-text"></span>
+			</h3>
+			<div class="section-header-action btn-icon visible collapsed"><span class="icon-wrapper"><svg class="icon">
+						<use href="#icon-chevron-down"></use>
+					</svg></span></div>
+		</div>
+		<div class="section-content">
+			<div class="settings-subsection"></div>
+		</div>
+	</template>
+	<template id="tpl-card">
+		<div class="subsection-content-group">
+			<div class="subsection-title"><span></span></div>
+		</div>
+	</template>
+	<template id="tpl-group">
+		<div class="subsection-content-group subsection-section-group">
+			<div class="subsection-title"></div>
+		</div>
+	</template>
+	<template id="tpl-slider-row">
+		<div class="setting-column right">
+			<div class="setting-header"><span class="setting-label"></span><span class="setting-value"></span></div>
+			<input type="range">
+			<button class="btn-text" type="button">Reset</button>
+		</div>
+	</template>
+	<template id="tpl-two-column">
+		<div class="settings-group-two-column"></div>
+	</template>
+	<template id="tpl-segmented">
+		<div class="segmented-control text-effect-mode-group"></div>
+	</template>
+	<template id="tpl-segmented-option">
+		<button class="segmented-option" type="button"></button>
+	</template>
+	<template id="tpl-option-group">
+		<div class="effect-option-group">
+			<div class="effect-option-label"></div>
+		</div>
+	</template>
+	<template id="tpl-paint-source">
+		<div class="glitter-source">
+			<div class="text-effect-color-row glitter-source-solid">
+				<div class="setting-header"><span class="setting-label">Solid Color</span></div>
+				<input type="color">
+			</div>
+		</div>
+	</template>
+	<template id="tpl-asset-info">
+		<div class="asset-info glitter-source-glitter" hidden>
+			<div class="asset-info-header"><div class="asset-info-thumbnail"></div><div class="asset-info-details"><div class="asset-info-name">Glitter</div><div class="asset-info-badges"></div></div><button class="btn-simple text-effect-source-change" type="button">Change</button></div>
+			<div class="settings-group-two-column asset-info-meta"><div class="setting-column"><div class="setting-header"><span class="setting-label">Size</span></div><span class="setting-value"></span></div><div class="setting-column"><div class="setting-header"><span class="setting-label">Frames</span></div><span class="setting-value"></span></div></div>
+		</div>
+	</template>
+	<template id="tpl-paint-slot">
+		<div class="subsection-content-group text-effect-subsection"><div class="subsection-title"><span></span></div></div>
+	</template>
+	<template id="tpl-number-pair">
+		<div class="sticker-position-group"><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div></div>
+	</template>
+	<template id="tpl-action-row">
+		<div class="settings-action-row"><button class="btn-simple" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-simple" data-prefix-id="FillCanvas" type="button">Fill canvas</button></div>
+	</template>
+	<template id="tpl-advanced">
+		<div class="advanced-disclosure glitter-source-glitter" data-advanced>
+			<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
+				<span class="advanced-disclosure-label">Advanced</span>
+				<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon">
+						<use href="#icon-chevron-down"></use>
+					</svg></span>
+			</button>
+			<div class="advanced-disclosure-content" data-advanced-content></div>
+		</div>
+	</template>
+	<template id="tpl-checkbox">
+		<label class="checkbox-group"><input type="checkbox"><span></span></label>
+	</template>
+	<template id="tpl-gradient-editor">
+		<div class="effect-gradient-editor carded-subsection" hidden>
+			<div class="settings-group-two-column effect-stack-row gradient-option-rows">
+				<div class="effect-option-group"><div class="effect-option-label setting-label">Type</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-type="linear">Linear</button><button type="button" class="segmented-option" data-type="radial">Radial</button></div></div>
+				<div class="effect-option-group"><div class="effect-option-label setting-label">Blend</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-interpolation="linear">Linear</button><button type="button" class="segmented-option" data-interpolation="smooth">Smooth</button><button type="button" class="segmented-option" data-interpolation="steps">Constant</button></div></div>
+			</div>
+			<div class="effect-option-label setting-label">Stops</div>
+			<div class="gradient-stops-box">
+				<div class="gradient-preview" title="Drag a handle to move a stop. Click the bar to add one."><div class="gradient-preview-bar"></div><div class="gradient-preview-markers" aria-hidden="true"></div></div>
+				<div class="gradient-stops-heading" aria-hidden="true"><span>Color</span><span>Position</span><span>Opacity</span><span></span></div>
+				<div class="gradient-stops"></div>
+				<button type="button" class="btn-simple gradient-add">Add stop</button>
+			</div>
+			<div class="setting-column right gradient-angle"><div class="setting-header"><span class="setting-label">Angle</span><span class="setting-value gradient-angle-value">180&deg;</span></div><input type="range" min="0" max="360"><button type="button" class="btn-text gradient-angle-reset">Reset</button></div>
+		</div>
+	</template>
+	<template id="tpl-gradient-stop">
+		<div class="effect-gradient-stop">
+			<input type="color" aria-label="Stop color">
+			<span class="gradient-stop-control"><input type="range" min="0" max="100" aria-label="Stop position"><span class="gradient-stop-value"></span></span>
+			<span class="gradient-stop-control"><input type="range" min="0" max="100" aria-label="Stop opacity"><span class="gradient-stop-value"></span></span>
+			<button type="button" class="btn-icon icon-wrapper gradient-stop-remove" title="Remove gradient stop" aria-label="Remove gradient stop"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Remove</span></button>
+		</div>
+	</template>
+	<template id="tpl-transform-panel">
+		<div class="subsection-content-group transform-panel" data-transform-actions>
+			<div class="subsection-title">Actions</div>
+			<div data-transform-action-row></div>
+		</div>
+		<div class="subsection-content-group transform-panel" data-transform-card>
+			<div class="subsection-title transform-panel-title"><span>Transform</span><div class="transform-panel-title-actions"><label class="checkbox-group transform-chip" data-transform-lock><input type="checkbox" data-transform-role="proportional" checked><span title="Keep aspect ratio when editing size">Lock Aspect</span></label></div></div>
+			<div class="transform-grid">
+				<div data-transform-number-pair="position"></div>
+				<div data-transform-number-pair="size"></div>
+				<div class="setting-column right transform-scale-control transform-scale-x" data-transform-scale-readout><div class="setting-header"><span class="setting-label">Scale X</span><span class="setting-value" data-transform-role="scaleXValue">100%</span></div><input type="range" data-transform-role="scaleX"><button class="btn-text" type="button" data-transform-role="resetScaleX">Reset</button></div>
+				<div class="setting-column right transform-scale-control transform-scale-y" data-transform-scale-readout><div class="setting-header"><span class="setting-label">Scale Y</span><span class="setting-value" data-transform-role="scaleYValue">100%</span></div><input type="range" data-transform-role="scaleY"><button class="btn-text" type="button" data-transform-role="resetScaleY">Reset</button></div>
+				<div class="setting-column right"><div class="setting-header"><span class="setting-label">Rotation</span><span class="setting-value" data-transform-role="rotationValue">0&deg;</span></div><input type="range" data-transform-role="rotation"><button class="btn-text" type="button" data-transform-role="resetRotation">Reset</button></div>
+				<div class="transform-panel-footer"><button class="btn-simple transform-reset-all" type="button" data-transform-role="resetTransform">Reset Transform</button></div>
+			</div>
+		</div>
+		<div class="subsection-content-group transform-panel" data-transform-align>
+			<div class="subsection-title">Align</div>
+			<div class="transform-control-group"><div class="control-group-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align left to canvas" data-transform-role="alignLeft">Left</button><button class="segmented-option" type="button" title="Center horizontally on canvas" data-transform-role="alignCenterX">Center</button><button class="segmented-option" type="button" title="Align right to canvas" data-transform-role="alignRight">Right</button></div></div>
+			<div class="transform-control-group"><div class="control-group-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align top to canvas" data-transform-role="alignTop">Top</button><button class="segmented-option" type="button" title="Center vertically on canvas" data-transform-role="alignCenterY">Middle</button><button class="segmented-option" type="button" title="Align bottom to canvas" data-transform-role="alignBottom">Bottom</button></div></div>
+		</div>
+		<div class="subsection-content-group transform-panel" data-transform-flip><div class="subsection-title">Flip</div><div class="transform-button-row"><label class="checkbox-group"><input type="checkbox" data-transform-role="flipX"><span title="Flip horizontally">Flip H</span></label><label class="checkbox-group"><input type="checkbox" data-transform-role="flipY"><span title="Flip vertically">Flip V</span></label></div></div>
+		<div class="subsection-content-group transform-panel" data-transform-opacity><div class="subsection-title">Appearance</div><div class="setting-column right"><div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" data-transform-role="opacityValue">100%</span></div><input type="range" data-transform-role="opacity"><button class="btn-text" type="button" data-transform-role="resetOpacity">Reset</button></div></div>
+	</template>
+	<!-- External Libs (self-hosted; gif.js pairs with js/workers/gif.worker.js) -->
 	<script src="js/vendor/omggif.js"></script>
 	<script src="js/vendor/gif.js"></script>
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=36"></script>
-	<script src="js/transform-math.js?v=2"></script>
+	<script src="js/core/config.js?v=46"></script>
+	<script src="js/transforms/transform-math.js?v=3"></script>
 
 	<!-- Utils -->
-	<script src="js/utils.js?v=3"></script>
-	<script src="js/color-adjust.js?v=1"></script>
-	<script src="js/effect-source.js?v=8"></script>
-	<script src="js/slot-effects.js?v=1"></script>
-	<script src="js/debug.js"></script>
+	<script src="js/core/utils.js?v=5"></script>
+	<script src="js/effects/color-adjust.js?v=2"></script>
+	<script src="js/effects/effect-source.js?v=11"></script>
+	<script src="js/effects/slot-effects.js?v=2"></script>
+	<script src="js/ui/panel-renderer.js?v=13"></script>
+	<script src="js/core/debug.js?v=1"></script>
 
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=4"></script>
 	<script src="js/classes/ModalManager.js?v=1"></script>
-	<script src="js/classes/GifExporter.js?v=20"></script>
+	<script src="js/classes/GifExporter.js?v=21"></script>
 	<script src="js/classes/Mp4Exporter.js?v=3"></script>
 	<script src="js/classes/ViewportManager.js?v=1"></script>
 	<script src="js/classes/HistoryManager.js?v=8"></script>
@@ -3643,17 +2492,17 @@
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
-	<script src="js/classes/LayerTransform.js?v=26"></script>
-	<script src="js/classes/GlitterManager.js?v=16"></script>
-	<script src="js/classes/TextGlitterManager.js?v=41"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=25"></script>
-	<script src="js/classes/StickerManager.js?v=8"></script>
+	<script src="js/classes/LayerTransform.js?v=28"></script>
+	<script src="js/classes/GlitterManager.js?v=20"></script>
+	<script src="js/classes/TextGlitterManager.js?v=42"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=26"></script>
+	<script src="js/classes/StickerManager.js?v=9"></script>
 	<script src="js/classes/GroupTransformManager.js?v=16"></script>
 
 	<script src="js/classes/MobileManager.js?v=6"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=86"></script>
+	<script src="js/app.js?v=92"></script>
 
 </body>
 

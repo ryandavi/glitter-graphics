@@ -13,24 +13,24 @@ Vanilla-JS glitter GIF editor (index.html + js/) with a PHP admin (admin/), deve
 ## Architecture invariants (violating these causes real, shipped bugs)
 
 - **Preview is DOM, export is canvas — every visual feature is implemented twice and must match.** Preview: animated GIF as `background-image` + CSS `mask-image` blob (GlitterManager), or per-slot masked spans (TextGlitterManager span stack). Export: GifExporter flattens GIF frames to ImageData and composites on canvas. When you change one side, find and change its twin (several functions are deliberate mirrors, e.g. `getEffectPaintSource` ↔ `_getTextEffectSource`, border ring stamping).
-- **Never use `ctx.filter`** — unsupported on Safari/iOS and iOS export is a supported path. Pixel-level math instead (see js/color-adjust.js for the pattern).
+- **Never use `ctx.filter`** — unsupported on Safari/iOS and iOS export is a supported path. Pixel-level math instead (see js/effects/color-adjust.js for the pattern).
 - **No-flicker rules:** never clear-and-rebuild glitter DOM elements in render paths (reconcile instead — recreating an element restarts its GIF and drops its mask for a frame); always decode a new mask image (`Image` preload) *before* swapping `mask-image`, and revoke the old object URL after.
 - **Masks are binarized** (`CONFIG.rendering.crispMaskEdges`, default true): partial-alpha mask edges fringe against the GIF transparency key (magenta) on transparent exports. Any new mask source (text, shapes) must go through the same threshold step.
 - **History is not self-contained JSON:** layer snapshots deep-clone via JSON, but painted masks live as versioned binaries in `GlitterManager.paintHistory` (snapshots hold `maskVersion` pointers). Anything that serializes state must account for this.
 - **Export fragility test** after touching GifExporter or frame handling: add animated sticker → export → edit → undo → export again; also export twice in a row — outputs must be stable (byte-identical when nothing changed).
-- Config/state lives in `js/config.js` (`CONFIG`, `LayerType`, `ToolType`, `LAYER_UI_CONFIG`). New layer types register in `LAYER_UI_CONFIG` (desktop sections + `mobileSettingsSections`) — that is what makes mobile drawers work.
+- Config/state lives in `js/core/config.js` (`CONFIG`, `LayerType`, `ToolType`, `LAYER_UI_CONFIG`). New layer types register in `LAYER_UI_CONFIG` (desktop sections + `mobileSettingsSections`) — that is what makes mobile drawers work.
 - Canvas-overlay UI needs `.ui-ignore-gestures`; touch input routes through GestureManager (pointer events), and capture-phase handlers must exclude `.transform-handle-wrapper` / `.transform-handles`.
 
 ## Conventions
 
 - Sidebar panels: "\<Thing\> Properties" = attributes of the selected layer; "\<Tool\> Settings" = tool configuration. Section *ids* are historically `*SettingsSection` regardless — don't rename ids.
 - `modals/guide.html` must mirror every new panel title, tool, and keyboard shortcut (shortcuts also listed in `CONFIG.shortcuts`).
-- Debug output goes through `dbg()` (js/debug.js), never bare `console.log`.
+- Debug output goes through `dbg()` (`js/core/debug.js`), never bare `console.log`.
 - Reuse the existing UI patterns: gallery cards (font/sticker/brush-shape pickers), segmented controls, carded effect subsections, shared `renderGlitterAssetDisplay` asset chips.
 - **Layout chrome names purpose, not position:** `.preview-panel` is the canvas workspace column (formerly `.right-panel`); `.design-panel` is the right-side control panel; `.layers-panel` is the layers column. Don't reintroduce positional names.
-- **Adding a layer type or tool:** follow `docs/!old/LAYER-TYPE-CONTRACT.md` — one manager class implementing the shared interface, one `LAYER_UI_CONFIG` entry, one GifExporter export-plan entry, panel markup + guide mirror. If it needs more than that, fix the dispatch site, don't add a branch.
-- **Cross-manager logic goes in plain root scripts** (`utils.js`, `color-adjust.js`, `effect-source.js`, `slot-effects.js`) with thin delegating methods kept on the classes — never inheritance between layer managers.
-- **Config:** any user-tunable or twice-used value belongs in `js/config.js` under the existing tree. Inline `??` fallbacks that restate CONFIG defaults are forbidden.
+- **Adding a layer type or tool:** follow `docs/!old/LAYER-TYPE-CONTRACT.md` — one manager class implementing the shared interface, one `LAYER_UI_CONFIG` entry, one GifExporter export-plan entry, and a `PANEL_SCHEMAS` entry composed from the `tpl-*` primitives through `js/ui/panel-renderer.js` (never copy live sidebar markup). Mirror its title in the guide. If it needs more than that, fix the dispatch site, don't add a branch.
+- **Cross-manager logic goes in responsibility folders** (`js/core`, `js/effects`, `js/transforms`, `js/ui`) with thin delegating methods kept on the classes — never inheritance between layer managers. Keep only the application entrypoint at `js/app.js`; workers belong in `js/workers`.
+- **Config:** any user-tunable or twice-used value belongs in `js/core/config.js` under the existing tree. Inline `??` fallbacks that restate CONFIG defaults are forbidden.
 - **SCSS:** nested SCSS + mixins + CSS-variable tokens (`:root` ramps → semantic vars). Tokenize a value when it repeats ≥3× or is an app-layer z-index; intra-component stacking stays literal. The Windows-7 theme mixin block is deliberately literal — leave it self-contained.
 
 ## Current work

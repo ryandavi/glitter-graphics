@@ -1362,7 +1362,10 @@ removeTransformHandles() {
 			// Alt keeps the visible frame center fixed (Figma/Photoshop center resize).
 			const candidateX = clampLayerScale((Math.abs(localX) * 2 / frame.width) * 100);
 			const candidateY = clampLayerScale((Math.abs(localY) * 2 / frame.height) * 100);
-			const factor = Math.max(candidateX / start.transform.scale.x, candidateY / start.transform.scale.y);
+			const initialX = (frame.width / 2) * (start.transform.scale.x / 100);
+			const initialY = (frame.height / 2) * (start.transform.scale.y / 100);
+			const factor = Math.max(0.01, (Math.abs(localX) * initialX + Math.abs(localY) * initialY)
+				/ Math.max(0.01, initialX * initialX + initialY * initialY));
 			newScaleX = proportional ? clampLayerScale(start.transform.scale.x * factor) : candidateX;
 			newScaleY = proportional ? clampLayerScale(start.transform.scale.y * factor) : candidateY;
 		} else {
@@ -1382,7 +1385,10 @@ removeTransformHandles() {
 			// unclamped scale makes the layer drift diagonally once the limit hits.
 			const candidateX = clampLayerScale((Math.abs(localFromOppositeX) / frame.width) * 100);
 			const candidateY = clampLayerScale((Math.abs(localFromOppositeY) / frame.height) * 100);
-			const factor = Math.max(candidateX / start.transform.scale.x, candidateY / start.transform.scale.y);
+			const initialX = signX * frame.width * (start.transform.scale.x / 100);
+			const initialY = signY * frame.height * (start.transform.scale.y / 100);
+			const factor = Math.max(0.01, (localFromOppositeX * initialX + localFromOppositeY * initialY)
+				/ Math.max(0.01, initialX * initialX + initialY * initialY));
 			newScaleX = proportional ? clampLayerScale(start.transform.scale.x * factor) : candidateX;
 			newScaleY = proportional ? clampLayerScale(start.transform.scale.y * factor) : candidateY;
 
@@ -1443,18 +1449,66 @@ removeTransformHandles() {
         const localX = vectorX * cos - vectorY * sin;
         const localY = vectorX * sin + vectorY * cos;
 
-        const isHorizontal = edge === 'left' || edge === 'right';
-        const scale = {
-            x: transform.scale.x,
-            y: transform.scale.y
-        };
-        if (isHorizontal) {
-            scale.x = clampLayerScale((Math.abs(localX) * 2 / frame.width) * 100);
-        } else {
-            scale.y = clampLayerScale((Math.abs(localY) * 2 / frame.height) * 100);
-        }
+		const isHorizontal = edge === 'left' || edge === 'right';
+		const scale = {
+			x: start.transform.scale.x,
+			y: start.transform.scale.y
+		};
+		const lockAspect = this.layer.type !== LayerType.TEXT_GLITTER && Boolean(transform.proportionalScale);
+		const axisSign = edge === 'left' || edge === 'top' ? -1 : 1;
+		let nextPosition = null;
+		if (e.altKey) {
+			if (isHorizontal) {
+				scale.x = clampLayerScale((Math.abs(localX) * 2 / frame.width) * 100);
+			} else {
+				scale.y = clampLayerScale((Math.abs(localY) * 2 / frame.height) * 100);
+			}
+		} else if (isHorizontal) {
+			const oppositeLocalX = -axisSign * (frame.width / 2) * (start.transform.scale.x / 100);
+			const oppositeWorldX = centerX + oppositeLocalX * worldCos;
+			const oppositeWorldY = centerY + oppositeLocalX * worldSin;
+			const fromOppositeX = canvasPos.x - oppositeWorldX;
+			const fromOppositeY = canvasPos.y - oppositeWorldY;
+			const localDistance = axisSign * (fromOppositeX * cos - fromOppositeY * sin);
+			scale.x = clampLayerScale((Math.max(0, localDistance) / frame.width) * 100);
+		} else {
+			const oppositeLocalY = -axisSign * (frame.height / 2) * (start.transform.scale.y / 100);
+			const oppositeWorldX = centerX - oppositeLocalY * worldSin;
+			const oppositeWorldY = centerY + oppositeLocalY * worldCos;
+			const fromOppositeX = canvasPos.x - oppositeWorldX;
+			const fromOppositeY = canvasPos.y - oppositeWorldY;
+			const localDistance = axisSign * (fromOppositeX * sin + fromOppositeY * cos);
+			scale.y = clampLayerScale((Math.max(0, localDistance) / frame.height) * 100);
+		}
 
-        this.updateTransform({ scale });
+		if (isHorizontal) {
+			if (lockAspect) {
+				scale.y = clampLayerScale(start.transform.scale.y * scale.x / Math.max(0.01, start.transform.scale.x));
+			}
+		} else {
+			if (lockAspect) {
+				scale.x = clampLayerScale(start.transform.scale.x * scale.y / Math.max(0.01, start.transform.scale.y));
+			}
+		}
+
+		if (!e.altKey) {
+			const visibleCenterLocalX = isHorizontal
+				? -axisSign * (frame.width / 2) * (start.transform.scale.x / 100) + axisSign * (frame.width / 2) * (scale.x / 100)
+				: 0;
+			const visibleCenterLocalY = isHorizontal
+				? 0
+				: -axisSign * (frame.height / 2) * (start.transform.scale.y / 100) + axisSign * (frame.height / 2) * (scale.y / 100);
+			const visibleCenterWorldX = centerX + visibleCenterLocalX * worldCos - visibleCenterLocalY * worldSin;
+			const visibleCenterWorldY = centerY + visibleCenterLocalX * worldSin + visibleCenterLocalY * worldCos;
+			const scaledOffsetX = (frame.offsetX || 0) * (scale.x / 100);
+			const scaledOffsetY = (frame.offsetY || 0) * (scale.y / 100);
+			nextPosition = {
+				x: visibleCenterWorldX - (scaledOffsetX * worldCos - scaledOffsetY * worldSin),
+				y: visibleCenterWorldY - (scaledOffsetX * worldSin + scaledOffsetY * worldCos)
+			};
+		}
+
+        this.updateTransform({ position: nextPosition || undefined, scale });
         this.applyTransform(this.element, this.getDimensions());
         this.updateHandlePositions();
     }

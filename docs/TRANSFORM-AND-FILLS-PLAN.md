@@ -12,7 +12,7 @@ the WP sections are paste-ready Codex prompts.
 1. **Scale limits are now a config toggle, off by default (Figma/Photoshop parity).**
    `CONFIG.ui.stickerHandles.scaleLimits = { enabled: false, min: 10, max: 500, hardMin: 1, hardMax: 10000 }`
    replaced `minScale`/`maxScale`. New single source of truth: `clampLayerScale()` in
-   `js/transform-math.js`. Every scale write funnels through
+   `js/transforms/transform-math.js`. Every scale write funnels through
    `LayerTransform.updateTransform`, which clamps; the drag paths that derive a
    *position* from a scale (corner drag, gesture pinch, group scale) clamp locally
    with the same helper so anchor math and stored scale agree.
@@ -161,8 +161,8 @@ binarized; bump ?v= on every JS file you edit; SCSS only.
 
 Feature: gradient fills, done the way Figma does fills. Today every paintable slot
 (text fill/border/shadow, shape fill/border/shadow) resolves through one source model:
-effectData.mode ∈ 'none' | 'solid' | 'glitter' (see js/effect-source.js
-resolveEffectPaintSource, js/slot-effects.js, and the segmented source controls in
+effectData.mode ∈ 'none' | 'solid' | 'glitter' (see `js/effects/effect-source.js`
+resolveEffectPaintSource, `js/effects/slot-effects.js`, and the segmented source controls in
 TextGlitterManager/ShapeGlitterManager). Add a fourth mode: 'gradient'.
 
 Data model (single shape, used everywhere):
@@ -171,7 +171,7 @@ Data model (single shape, used everywhere):
     angle: 0-360 (linear only),
     stops: [{ offset: 0-1, color: '#rrggbb', alpha: 0-1 }, ...]  // >= 2 stops
   }
-Defaults live in js/config.js under the existing tree (no inline ?? fallbacks).
+Defaults live in `js/core/config.js` under the existing tree (no inline ?? fallbacks).
 
 Where it applies:
 1. Text slots (fill/border/shadow) and shape slots (fill/border/shadow): extend the
@@ -292,7 +292,7 @@ Scope:
    canvasElementsContainer, z-order above layers, pointer-events none,
    .ui-ignore-gestures) only while a snap is engaged; remove on release/cancel.
 3. Optional per Photoshop: CONFIG.snapping = { enabled: true, threshold: 6,
-   snapToCanvas: true, snapToLayers: true } in js/config.js (no inline fallbacks).
+   snapToCanvas: true, snapToLayers: true } in `js/core/config.js` (no inline fallbacks).
    UI toggle: a btn-icon view toggle in the preview-controls cluster (same pattern
    as transparency/bounds toggles), plus holding Ctrl during a drag temporarily
    disables snapping (Figma parity). Add the shortcut to CONFIG.shortcuts and

@@ -100,13 +100,7 @@ async initBrowser() {
 	}
 
 	setupFillSourceControls() {
-		const appearance = document.getElementById('opacity')?.closest('.subsection-content-group');
-		if (!appearance || document.getElementById('glitterFillSolid')) return;
-		const source = document.createElement('div');
-		source.className = 'subsection-content-group';
-		source.innerHTML = '<div class="subsection-title">Source</div><div class="segmented-control"><button type="button" class="segmented-option active" id="glitterFillGlitter">Glitter</button><button type="button" class="segmented-option" id="glitterFillSolid">Solid</button></div><div class="text-effect-color-row glitter-source-solid" id="glitterFillColorRow" hidden><div class="setting-header"><span class="setting-label">Solid Color</span></div><input type="color" id="glitterFillColor" value="#ff4fa3"></div>';
-		appearance.parentElement.insertBefore(source, appearance);
-		this.editor.organizeGlitterPropertyGroups?.();
+		if (!document.getElementById('glitterFillSolid')) return;
 		const active = () => {
 			const layer = this.editor.layerManager.getActiveLayer();
 			return layer?.type === LayerType.GLITTER_FILL ? layer : null;

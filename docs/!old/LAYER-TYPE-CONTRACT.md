@@ -5,7 +5,7 @@ Adding a new layer type should require four things, and only four things:
 1. A manager class that exposes the same practical interface the current layer managers share.
 2. One `LAYER_UI_CONFIG` entry in `js/config.js`.
 3. One export delegate/plan entry in `GifExporter` for canvas export.
-4. Matching UI markup/docs for any new panel or tool surface.
+4. Matching `PANEL_SCHEMAS` + `tpl-*` renderer structure/docs for any new panel or tool surface.
 
 If a new layer type requires touching unrelated type-switch chains outside those places, treat that as an architecture bug and fix the dispatch site instead of baking in one more branch.
 
@@ -60,6 +60,6 @@ When we add a layer type, the expected implementation path is:
 1. Create the manager and wire it onto `Editor`.
 2. Add the `LayerType` constant and one `LAYER_UI_CONFIG` entry.
 3. Add the preview/export implementation pair.
-4. Add any panel markup and mirror it in `modals/guide.html`.
+4. Add the panel through `PANEL_SCHEMAS`, the `tpl-*` primitives, and `js/panel-renderer.js`; mirror it in `modals/guide.html`. This supersedes the old copy-static-panel-markup workflow.
 
 That should be enough for create, delete, visibility, selection, layer-list goto, mobile settings routing, and the Add Layer modal to work without any extra per-type branching.

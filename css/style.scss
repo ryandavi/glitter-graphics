@@ -18,3 +18,13 @@
 	&-x { top: 0; bottom: 0; width: 1px; }
 	&-y { left: 0; right: 0; height: 1px; }
 }
+
+// Image and Layers use the canonical collapsible chrome/state contract but
+// remain independently toggleable instead of joining the design accordion.
+.layers-panel > .section.collapsible-section:not(.is-open) {
+	flex: 0 0 auto;
+
+	> .layers-section-bottom-bar {
+		display: none;
+	}
+}

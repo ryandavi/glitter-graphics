@@ -302,34 +302,6 @@
 }
 
 
-/* Standalone Image/Layers sections use the shared collapsible header chrome,
-   but remain independent instead of joining the design-panel accordion. */
-.layers-panel>.section.panel-collapsible {
-	>.section-header {
-		&:not(:disabled):hover {
-			filter: var(--bar-hover-filter);
-		}
-
-		&:not(:disabled):active {
-			filter: var(--bar-active-filter);
-		}
-
-		.section-header-action.collapsed .icon {
-			transform: rotate(-90deg);
-		}
-	}
-
-	&:not(.is-open) {
-		flex: 0 0 auto;
-
-		>.section-content,
-		>.layers-section-bottom-bar {
-			display: none;
-		}
-	}
-}
-
-
 .layers-section {
 	flex: 1 1 auto;
 	display: flex;

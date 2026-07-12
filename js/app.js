@@ -72,8 +72,13 @@ class GlitterEditor {
 		this.exportStartTime = 0;
 		this.exportCancelled = false;
 
-		// Render shared transform panels before manager setup so every manager
-		// binds against one generated DOM structure instead of triplicated HTML.
+		// Render schema-driven panel sections (js/ui/panel-renderer.js +
+		// PANEL_SCHEMAS), then the shared transform panels into the hosts the
+		// schemas created, BEFORE manager setup — every manager binds against
+		// one generated DOM structure, built once (never re-rendered after
+		// boot; rebuilding would orphan listeners). MobileManager later moves
+		// these same nodes into drawers, so bindings survive re-parenting.
+		renderPanelSections(this);
 		this.renderTransformPanels();
 
 		// ============================================================================
@@ -1071,8 +1076,10 @@ async resetAllSettings() {
 		const thumbnail = document.getElementById(`${prefix}Thumbnail`);
 		const name = document.getElementById(`${prefix}Name`);
 		const badges = document.getElementById(`${prefix}Badges`);
-		const size = document.getElementById(`${prefix}Size`);
-		const frames = document.getElementById(`${prefix}Frames`);
+			const size = document.getElementById(`${prefix}Size`);
+			const frames = document.getElementById(`${prefix}Frames`);
+			const change = document.getElementById(`${prefix}Change`);
+			const revealAsset = () => revealAssetBrowser(this, manager, asset.id);
 
 		// Thumbnail with click handler
 		if (thumbnail) {
@@ -1086,22 +1093,13 @@ async resetAllSettings() {
 			// Re-render after cloning
 			renderThumbnail(newThumbnail, asset);
 
-			newThumbnail.addEventListener('click', () => {
-				if (!manager || !manager.browser) return;
+				newThumbnail.addEventListener('click', revealAsset);
+			}
 
-				// Bring the Gallery into view first — navigateToItem only
-				// scrolls within the browser's own grid, which is invisible
-				// if the design panel/section isn't open (desktop accordion)
-				// or the mobile design drawer isn't the active one.
-				if (this.mobileManager?.isMobile) {
-					this.mobileManager.openDrawer('design');
-				} else {
-					this.setCollapsibleSectionOpen?.('designGallery', true, true);
-				}
-
-				manager.browser.navigateToItem(asset.id);
-			});
-		}
+			if (change) {
+				change.replaceWith(change.cloneNode(true));
+				document.getElementById(`${prefix}Change`)?.addEventListener('click', revealAsset);
+			}
 
 		// Name
 		if (name) name.textContent = asset.name || 'Undefined';
@@ -1411,13 +1409,11 @@ async resetAllSettings() {
 	initializeCollapsibleSections() {
 		const sections = ['designGallery', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings', 'shapeSettings', 'brushSettings'];
 
-		const setOpen = (name, isOpen, accordion = false) => {
-			const section = document.getElementById(`${name}Section`);
-			const content = document.getElementById(`${name}Content`);
-			const toggle = document.getElementById(`${name}Toggle`);
-			if (section) section.classList.toggle('is-open', isOpen);
-			if (content) content.classList.toggle('visible', isOpen);
-			if (toggle) toggle.classList.toggle('collapsed', !isOpen);
+			const setOpen = (name, isOpen, accordion = false) => {
+				const section = document.getElementById(`${name}Section`);
+				const content = document.getElementById(`${name}Content`);
+				const toggle = document.getElementById(`${name}Toggle`);
+				setCollapsibleSectionState(section, content, toggle, isOpen);
 
 			if (isOpen && accordion && CONFIG.layers.ui.designPanelAccordion) {
 				const isMobile = this.mobileManager?.isMobile;
@@ -1493,7 +1489,7 @@ async resetAllSettings() {
 		});
 
 		this.syncCollapsibleSections('designGallery');
-		this.initializeStandaloneCollapsibles();
+		this.initializeIndependentCollapsibles();
 
 		this.showLayerSettingsEmptyState();
 		this.showGlitterSettingsEmptyState();
@@ -1502,17 +1498,17 @@ async resetAllSettings() {
 
 	// Image and Layers sections collapse independently (both can stay open) —
 	// same header/chevron conventions as the design panel, minus the accordion.
-	initializeStandaloneCollapsibles() {
-		['imagePanel', 'layersPanel'].forEach((name) => {
+	initializeIndependentCollapsibles() {
+		CONFIG.ui.independentCollapsibleSections.forEach((name) => {
 			const section = document.getElementById(`${name}Section`);
-			const header = document.getElementById(`${name}Header`);
-			const toggle = document.getElementById(`${name}Toggle`);
-			if (!section || !header || !toggle) return;
+				const header = document.getElementById(`${name}Header`);
+				const toggle = document.getElementById(`${name}Toggle`);
+				const content = section?.querySelector(':scope > .section-content');
+				if (!section || !header || !toggle || !content) return;
 
-			const setOpen = (isOpen) => {
-				section.classList.toggle('is-open', isOpen);
-				toggle.classList.toggle('collapsed', !isOpen);
-			};
+				const setOpen = (isOpen) => {
+					setCollapsibleSectionState(section, content, toggle, isOpen);
+				};
 			setOpen(true);
 
 			header.addEventListener('click', (event) => {
@@ -2221,374 +2217,13 @@ async resetAllSettings() {
 			const host = document.getElementById(hostId);
 			if (!host) return;
 
-			const ids = this.getTransformIds(prefix);
-			(ids.legacyIds || [])
-				.map((id) => document.getElementById(id)?.closest('.subsection-content-group'))
-				.filter(Boolean)
-				.filter((node, index, list) => list.indexOf(node) === index)
-				.forEach((node) => node.remove());
-
-			this.renderTransformPanel(host, prefix, LAYER_UI_CONFIG[type]?.transformCapabilities || {});
+			buildTransformPanel(this, host, prefix, LAYER_UI_CONFIG[type]?.transformCapabilities || {});
 		});
-		this.organizeLayerPropertyGroups();
-	}
-
-	organizeLayerPropertyGroups() {
-		const card = (id) => document.getElementById(id)?.closest('.subsection-content-group');
-		const selectedCard = (selector) => document.querySelector(selector)?.closest('.subsection-content-group');
-		const unique = (nodes) => nodes.filter(Boolean).filter((node, index, list) => list.indexOf(node) === index);
-		const normalizeTransformHost = (prefix, externalActions = null) => {
-			const host = document.getElementById(`${prefix}TransformPanelHost`);
-			if (!host) return null;
-			const ids = this.getTransformIds(prefix);
-			const geometry = host.querySelector(':scope > [data-transform-prefix]');
-			const opacity = card(ids.opacity);
-			const align = card(ids.alignLeft);
-			const flip = card(ids.flipX);
-			const actions = externalActions || card(`${prefix}FitCanvas`);
-			const reset = document.getElementById(ids.resetTransform);
-
-			const setTitle = (section, label) => {
-				const title = section?.querySelector(':scope > .subsection-title');
-				if (!title) return;
-				const labelNode = title.querySelector(':scope > span');
-				if (labelNode) labelNode.textContent = label;
-				else title.textContent = label;
-			};
-			setTitle(geometry, 'Position, Size & Rotation');
-			setTitle(opacity, 'Opacity');
-
-			if (actions && reset) {
-				const footer = reset.closest('.transform-panel-footer');
-				const row = actions.querySelector('.settings-action-row, .tool-options-group');
-				if (row) row.appendChild(reset);
-				footer?.remove();
-			}
-
-			[geometry, opacity, align, flip].filter(Boolean).forEach((section) => host.appendChild(section));
-			if (actions && actions.parentElement === host) host.appendChild(actions);
-			return host;
-		};
-		const group = (root, title, nodes) => {
-			const members = unique(nodes);
-			if (!root || !members.length) return null;
-			const wrapper = document.createElement('div');
-			wrapper.className = 'subsection-content-group subsection-section-group';
-			wrapper.innerHTML = `<div class="subsection-title">${title}</div>`;
-			members.forEach((node) => wrapper.appendChild(node));
-			return wrapper;
-		};
-		const finish = (root, groups, effects) => {
-			groups.filter(Boolean).forEach((entry) => root.appendChild(entry));
-			if (effects) {
-				effects.classList.add('subsection-section-group');
-				root.appendChild(effects);
-			}
-		};
-
-		const stickerRoot = document.getElementById('stickerSettingsControls')?.querySelector('.settings-subsection');
-		if (stickerRoot) {
-			const effects = stickerRoot.querySelector(':scope > .effects-stack');
-			const stickerActions = card('stickerFitCanvas');
-			if (stickerActions) document.getElementById('stickerTransformPanelHost')?.appendChild(stickerActions);
-			const stickerTransform = normalizeTransformHost('sticker');
-			const stickerOpacity = card(this.getTransformIds('sticker').opacity);
-			finish(stickerRoot, [
-				group(stickerRoot, 'Content', [card('stickerAssetThumbnail')]),
-				group(stickerRoot, 'Appearance', [stickerOpacity]),
-				group(stickerRoot, 'Transform', [stickerTransform])
-			], effects);
-		}
-
-		const textRoot = document.getElementById('textSettingsContent')?.querySelector('.settings-subsection');
-		if (textRoot) {
-			const effects = textRoot.querySelector(':scope > .effects-stack');
-			const textTransform = normalizeTransformHost('text');
-			const textOpacity = card(this.getTransformIds('text').opacity);
-			finish(textRoot, [
-				group(textRoot, 'Content', [card('textLayerInput'), card('textFontPicker'), card('textFontSize'), selectedCard('.text-align-group'), card('textBoxModeHint'), card('textFitBoxToContent')]),
-				group(textRoot, 'Appearance', [card('textFillUseNone'), textOpacity]),
-				group(textRoot, 'Transform', [textTransform])
-			], effects);
-		}
-
-		const shapeRoot = document.getElementById('shapeSettingsContent')?.querySelector('.settings-subsection');
-		if (shapeRoot) {
-			const effects = shapeRoot.querySelector(':scope > .effects-stack');
-			const shapeTransform = normalizeTransformHost('shape');
-			const shapeOpacity = card(this.getTransformIds('shape').opacity);
-			finish(shapeRoot, [
-				group(shapeRoot, 'Content', [card('shapeShapePicker')]),
-				group(shapeRoot, 'Appearance', [card('shapeFillNone'), shapeOpacity]),
-				group(shapeRoot, 'Transform', [shapeTransform])
-			], effects);
-		}
-	}
-
-	organizeGlitterPropertyGroups() {
-		const root = document.getElementById('glitterSettingsControls')?.querySelector('.settings-subsection');
-		if (!root || root.querySelector(':scope > .subsection-section-group')) return;
-		const asset = document.getElementById('glitterAssetThumbnail')?.closest('.subsection-content-group');
-		const source = document.getElementById('glitterFillGlitter')?.closest('.subsection-content-group');
-		const appearance = document.getElementById('opacity')?.closest('.subsection-content-group');
-		const sourceTitle = source?.querySelector(':scope > .subsection-title');
-		const appearanceTitle = appearance?.querySelector(':scope > .subsection-title');
-		if (sourceTitle) sourceTitle.textContent = 'Fill';
-		const globalControl = appearanceTitle?.querySelector('.checkbox-group');
-		if (asset && source) {
-			const assetInfo = document.createElement('div');
-			assetInfo.className = 'asset-info glitter-source-glitter';
-			Array.from(asset.children).forEach((child) => {
-				if (!child.classList.contains('subsection-title')) assetInfo.appendChild(child);
-			});
-			const sourceControl = source.querySelector(':scope > .segmented-control');
-			if (sourceControl) sourceControl.after(assetInfo);
-			else source.appendChild(assetInfo);
-			asset.remove();
-		}
-		if (source && !source.querySelector(':scope > .glitter-source')) {
-			const paintSource = document.createElement('div');
-			paintSource.className = 'glitter-source';
-			[
-				source.querySelector(':scope > .segmented-control'),
-				source.querySelector(':scope > .asset-info'),
-				source.querySelector(':scope > .glitter-source-solid')
-			].filter(Boolean).forEach((element) => paintSource.appendChild(element));
-			sourceTitle?.after(paintSource);
-		}
-		if (source && appearance) {
-			const opacity = document.getElementById('opacity')?.closest('.setting-column');
-			const scale = document.getElementById('scale')?.closest('.setting-column');
-			const advanced = appearance.querySelector(':scope > .advanced-disclosure');
-			const primary = document.createElement('div');
-			primary.className = 'settings-group-two-column paint-slot-primary-row';
-			if (scale) {
-				scale.classList.add('paint-slot-scale');
-				primary.appendChild(scale);
-			}
-			if (primary.children.length) source.appendChild(primary);
-			if (advanced) {
-				advanced.classList.add('glitter-source-glitter');
-				source.appendChild(advanced);
-			}
-			if (opacity) {
-				const opacityCard = document.createElement('div');
-				opacityCard.className = 'subsection-content-group';
-				opacityCard.innerHTML = '<div class="subsection-title">Opacity</div>';
-				opacityCard.appendChild(opacity);
-				source.after(opacityCard);
-			}
-			appearance.remove();
-		}
-		const createGroup = (title, members) => {
-			const valid = members.filter(Boolean);
-			if (!valid.length) return;
-			const wrapper = document.createElement('div');
-			wrapper.className = 'subsection-content-group subsection-section-group';
-			wrapper.innerHTML = `<div class="subsection-title">${title}</div>`;
-			valid.forEach((member) => wrapper.appendChild(member));
-			root.appendChild(wrapper);
-			return wrapper;
-		};
-		const opacityCard = document.getElementById('opacity')?.closest('.subsection-content-group');
-		const appearanceGroup = createGroup('Appearance', [source, opacityCard]);
-		if (appearanceGroup && globalControl) {
-			appearanceGroup.querySelector(':scope > .subsection-title')?.appendChild(globalControl);
-		}
-	}
-
-	renderTransformPanel(container, prefix, capabilities) {
-		const ids = this.getTransformIds(prefix);
-		const lockMarkup = capabilities.lockAspect
-			? `
-				<label class="checkbox-group transform-chip">
-					<input type="checkbox" id="${ids.proportional}" checked>
-					<span title="Keep aspect ratio when editing size">Lock Aspect</span>
-				</label>
-			`
-			: '';
-		const scaleSummaryMarkup = capabilities.scaleReadout
-			? `
-				<div class="setting-column right transform-scale-control transform-scale-x">
-					<div class="setting-header">
-						<span class="setting-label">Scale X</span>
-						<span class="setting-value" id="${ids.scaleXValue}">100%</span>
-					</div>
-					<input type="range" id="${ids.scaleX}" min="10" max="500" value="100">
-					<button class="btn-text" id="${ids.resetScaleX}" type="button">Reset</button>
-				</div>
-				<div class="setting-column right transform-scale-control transform-scale-y">
-					<div class="setting-header">
-						<span class="setting-label">Scale Y</span>
-						<span class="setting-value" id="${ids.scaleYValue}">100%</span>
-					</div>
-					<input type="range" id="${ids.scaleY}" min="10" max="500" value="100">
-					<button class="btn-text" id="${ids.resetScaleY}" type="button">Reset</button>
-				</div>
-			`
-			: '';
-
-		container.innerHTML = `
-			${prefix === 'sticker' ? '' : `
-			<div class="subsection-content-group transform-panel">
-				<div class="subsection-title">Actions</div>
-				<div class="settings-action-row">
-					<button class="btn-simple" id="${prefix}FitCanvas" type="button">Fit canvas</button>
-					<button class="btn-simple" id="${prefix}FillCanvas" type="button">Fill canvas</button>
-				</div>
-			</div>`}
-			<div class="subsection-content-group transform-panel" data-transform-prefix="${prefix}">
-				<div class="subsection-title transform-panel-title">
-					<span>Transform</span>
-					<div class="transform-panel-title-actions">
-						${lockMarkup}
-					</div>
-				</div>
-				<div class="transform-grid">
-					<div class="sticker-position-group">
-						<div class="input-group horizontal">
-							<label for="${ids.posX}">X</label>
-							<span class="input-unit">
-								<input type="number" id="${ids.posX}">
-								<span class="input-unit-suffix">px</span>
-							</span>
-						</div>
-						<div class="input-group horizontal">
-							<label for="${ids.posY}">Y</label>
-							<span class="input-unit">
-								<input type="number" id="${ids.posY}">
-								<span class="input-unit-suffix">px</span>
-							</span>
-						</div>
-					</div>
-					<div class="sticker-position-group" id="${ids.sizeGroup}">
-						<div class="input-group horizontal">
-							<label for="${ids.sizeWidth}">W</label>
-							<span class="input-unit">
-								<input type="number" id="${ids.sizeWidth}" min="1">
-								<span class="input-unit-suffix">px</span>
-							</span>
-						</div>
-						<div class="input-group horizontal">
-							<label for="${ids.sizeHeight}">H</label>
-							<span class="input-unit">
-								<input type="number" id="${ids.sizeHeight}" min="1">
-								<span class="input-unit-suffix">px</span>
-							</span>
-						</div>
-					</div>
-					${scaleSummaryMarkup}
-					<div class="setting-column right">
-						<div class="setting-header">
-							<span class="setting-label">Rotation</span>
-							<span class="setting-value" id="${ids.rotationValue}">0°</span>
-						</div>
-						<input type="range" id="${ids.rotation}" min="0" max="360" value="0" step="1">
-						<button class="btn-text" id="${ids.resetRotation}" type="button">Reset</button>
-					</div>
-					<div class="transform-panel-footer">
-						<button class="btn-simple transform-reset-all" id="${ids.resetTransform}" type="button">Reset Transform</button>
-					</div>
-				</div>
-			</div>
-			<div class="subsection-content-group transform-panel">
-				<div class="subsection-title">Align</div>
-				<div class="transform-control-group">
-					<div class="control-group-label">Horizontal</div>
-					<div class="segmented-control transform-segmented-control">
-						<button class="segmented-option" id="${ids.alignLeft}" type="button" title="Align left to canvas">Left</button>
-						<button class="segmented-option" id="${ids.alignCenterX}" type="button" title="Center horizontally on canvas">Center</button>
-						<button class="segmented-option" id="${ids.alignRight}" type="button" title="Align right to canvas">Right</button>
-					</div>
-				</div>
-				<div class="transform-control-group">
-					<div class="control-group-label">Vertical</div>
-					<div class="segmented-control transform-segmented-control">
-						<button class="segmented-option" id="${ids.alignTop}" type="button" title="Align top to canvas">Top</button>
-						<button class="segmented-option" id="${ids.alignCenterY}" type="button" title="Center vertically on canvas">Middle</button>
-						<button class="segmented-option" id="${ids.alignBottom}" type="button" title="Align bottom to canvas">Bottom</button>
-					</div>
-				</div>
-			</div>
-			<div class="subsection-content-group transform-panel">
-				<div class="subsection-title">Flip</div>
-				<div class="transform-button-row">
-					<label class="checkbox-group">
-						<input type="checkbox" id="${ids.flipX}">
-						<span title="Flip horizontally">Flip H</span>
-					</label>
-					<label class="checkbox-group">
-						<input type="checkbox" id="${ids.flipY}">
-						<span title="Flip vertically">Flip V</span>
-					</label>
-				</div>
-			</div>
-			<div class="subsection-content-group transform-panel">
-				<div class="subsection-title">Appearance</div>
-				<div class="setting-column right">
-					<div class="setting-header">
-						<span class="setting-label">Opacity</span>
-						<span class="setting-value" id="${ids.opacityValue}">100%</span>
-					</div>
-					<input type="range" id="${ids.opacity}" min="0" max="100" value="100">
-					<button class="btn-text" id="${ids.resetOpacity}" type="button">Reset</button>
-				</div>
-			</div>
-		`;
+		finalizePanelSchemaSections(this);
 	}
 
 	getTransformIds(prefix) {
-		if (prefix === 'sticker') {
-			return {
-				posX: 'stickerPosX', posY: 'stickerPosY',
-				sizeWidth: 'stickerWidth', sizeHeight: 'stickerHeight', sizeGroup: 'stickerSizeGroup',
-				rotation: 'stickerRotation', rotationValue: 'stickerRotationValue', resetRotation: 'resetStickerRotation',
-				opacity: 'stickerOpacity', opacityValue: 'stickerOpacityValue', resetOpacity: 'resetStickerOpacity',
-				proportional: 'stickerProportionalScale',
-				scaleControl: 'stickerScaleControl', scaleSummary: 'stickerScaleSummary', scaleSlider: 'stickerScale', resetScale: 'resetStickerScale',
-				scaleX: 'stickerTransformScaleX', scaleXValue: 'stickerTransformScaleXValue', resetScaleX: 'resetStickerTransformScaleX',
-				scaleY: 'stickerTransformScaleY', scaleYValue: 'stickerTransformScaleYValue', resetScaleY: 'resetStickerTransformScaleY',
-				flipX: 'stickerFlipX', flipY: 'stickerFlipY',
-				alignLeft: 'stickerAlignLeft', alignCenterX: 'stickerAlignCenterX', alignRight: 'stickerAlignRight',
-				alignTop: 'stickerAlignTop', alignCenterY: 'stickerAlignCenterY', alignBottom: 'stickerAlignBottom',
-				resetTransform: 'resetStickerTransform',
-				legacyIds: ['stickerRotation', 'stickerOpacity', 'stickerScaleX', 'stickerScaleY', 'stickerFlipX', 'stickerFlipY']
-			};
-		}
-
-		if (prefix === 'shape') {
-			return {
-				posX: 'shapePosX', posY: 'shapePosY',
-				sizeWidth: 'shapeWidth', sizeHeight: 'shapeHeight', sizeGroup: 'shapeSizeGroup',
-				rotation: 'shapeRotation', rotationValue: 'shapeRotationValue', resetRotation: 'resetShapeRotation',
-				opacity: 'shapeOpacity', opacityValue: 'shapeOpacityValue', resetOpacity: 'resetShapeOpacity',
-				proportional: 'shapeProportionalScale',
-				scaleControl: 'shapeScaleControl', scaleSummary: 'shapeScaleSummary', scaleSlider: 'shapeScale', resetScale: 'resetShapeScale',
-				scaleX: 'shapeTransformScaleX', scaleXValue: 'shapeTransformScaleXValue', resetScaleX: 'resetShapeTransformScaleX',
-				scaleY: 'shapeTransformScaleY', scaleYValue: 'shapeTransformScaleYValue', resetScaleY: 'resetShapeTransformScaleY',
-				flipX: 'shapeFlipX', flipY: 'shapeFlipY',
-				alignLeft: 'shapeAlignLeft', alignCenterX: 'shapeAlignCenterX', alignRight: 'shapeAlignRight',
-				alignTop: 'shapeAlignTop', alignCenterY: 'shapeAlignCenterY', alignBottom: 'shapeAlignBottom',
-				resetTransform: 'resetShapeTransform',
-				legacyIds: ['shapeRotation', 'shapeOpacity', 'shapeScaleX', 'shapeScaleY', 'shapeFlipX', 'shapeFlipY']
-			};
-		}
-
-		return {
-			posX: 'textPosX', posY: 'textPosY',
-			sizeWidth: 'textWidth', sizeHeight: 'textHeight', sizeGroup: 'textSizeGroup',
-			rotation: 'textRotation', rotationValue: 'textRotationValue', resetRotation: 'resetTextRotation',
-			opacity: 'textLayerOpacity', opacityValue: 'textLayerOpacityValue', resetOpacity: 'resetTextLayerOpacity',
-			proportional: null,
-			scaleControl: 'textScaleControl', scaleSummary: 'textScaleSummary', scaleSlider: 'textScale', resetScale: 'resetTextScale',
-			scaleX: 'textTransformScaleX', scaleXValue: 'textTransformScaleXValue', resetScaleX: 'resetTextTransformScaleX',
-			scaleY: 'textTransformScaleY', scaleYValue: 'textTransformScaleYValue', resetScaleY: 'resetTextTransformScaleY',
-			flipX: 'textFlipX', flipY: 'textFlipY',
-			alignLeft: 'textAlignLeft', alignCenterX: 'textAlignCenterX', alignRight: 'textAlignRight',
-			alignTop: 'textAlignTop', alignCenterY: 'textAlignCenterY', alignBottom: 'textAlignBottom',
-			resetTransform: 'resetTextTransform',
-			legacyIds: ['textRotation', 'textLayerOpacity', 'textLayerScaleX', 'textLayerScaleY', 'textFlipX', 'textFlipY']
-		};
+		return getPanelTransformIds(prefix);
 	}
 
 	getLayerTransformData(layer) {
@@ -2634,10 +2269,11 @@ async resetAllSettings() {
 
 	hasResettableTransformAdjustments(transform, options = {}) {
 		if (!transform) return false;
-		return (!options.ignoreScale && this.hasScaleAdjustment(transform))
+		return this.hasScaleAdjustment(transform)
 			|| Math.abs(transform.rotation || 0) > 0.5
 			|| Boolean(transform.flipX)
-			|| Boolean(transform.flipY);
+			|| Boolean(transform.flipY)
+			|| transform.proportionalScale === false;
 	}
 
 	// Handlers that bypass loadTransformSettings (rotation slider, flips) still
@@ -2647,8 +2283,7 @@ async resetAllSettings() {
 		const resetTransform = document.getElementById(ids.resetTransform);
 		if (resetTransform) {
 			resetTransform.disabled = !this.hasResettableTransformAdjustments(
-				this.getLayerTransformData(layer),
-				{ ignoreScale: prefix === 'text' }
+				this.getLayerTransformData(layer)
 			);
 		}
 	}
@@ -3578,7 +3213,7 @@ async resetAllSettings() {
 				onClose: () => this.resolvePendingConfirmation(this.pendingConfirmationValue)
 			});
 
-		// External content modals with utils.js initialization
+		// External content modals with core/utils.js initialization
 		this.modalManager
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
@@ -6799,7 +6434,7 @@ setupWelcomeModalListeners() {
 	const editor = new GlitterEditor();
 	await editor.init();
 
-	// (Tooltips are handled by the global tooltipManager created in utils.js)
+	// (Tooltips are handled by the global tooltipManager created in core/utils.js)
 
 	// Load debug configuration if enabled
 	if (DEBUG_CONFIG.enabled) {

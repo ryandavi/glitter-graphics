@@ -188,13 +188,7 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 	const normalizedMode = ['none', 'glitter', 'solid', 'gradient'].includes(mode) ? mode : 'solid';
 	slot.dataset.paintMode = normalizedMode;
 	sourceButton.closest('.segmented-control')?.querySelectorAll('.segmented-option').forEach((button) => {
-		const buttonMode = button.id.endsWith('UseNone') || button.id.endsWith('None')
-			? 'none'
-			: button.id.endsWith('UseGlitter') || button.id.endsWith('Glitter')
-				? 'glitter'
-				: button.id.endsWith('UseColor') || button.id.endsWith('Solid')
-					? 'solid'
-					: button.id.endsWith('Gradient') ? 'gradient' : null;
+		const buttonMode = button.dataset.mode;
 		if (buttonMode) button.classList.toggle('active', buttonMode === normalizedMode);
 	});
 	slot.querySelectorAll('.glitter-source-glitter').forEach((element) => { element.hidden = normalizedMode !== 'glitter'; });
@@ -223,12 +217,10 @@ function installEffectGradientEditor(options) {
 	button.type = 'button';
 	button.id = `${options.prefix}Gradient`;
 	button.className = 'segmented-option';
+	button.dataset.mode = 'gradient';
 	button.textContent = 'Gradient';
 	group.appendChild(button);
-	const panel = document.createElement('div');
-	panel.className = 'effect-gradient-editor carded-subsection';
-	panel.hidden = true;
-	panel.innerHTML = `<div class="settings-group-two-column effect-stack-row gradient-option-rows"><div class="effect-option-group"><div class="effect-option-label setting-label">Type</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-type="linear">Linear</button><button type="button" class="segmented-option" data-type="radial">Radial</button></div></div><div class="effect-option-group"><div class="effect-option-label setting-label">Blend</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-interpolation="linear">Linear</button><button type="button" class="segmented-option" data-interpolation="smooth">Smooth</button><button type="button" class="segmented-option" data-interpolation="steps">Constant</button></div></div></div><div class="effect-option-label setting-label">Stops</div><div class="gradient-stops-box"><div class="gradient-preview" title="Drag a handle to move a stop. Click the bar to add one."><div class="gradient-preview-bar"></div><div class="gradient-preview-markers" aria-hidden="true"></div></div><div class="gradient-stops-heading" aria-hidden="true"><span>Color</span><span>Position</span><span>Opacity</span><span></span></div><div class="gradient-stops"></div><button type="button" class="btn-simple gradient-add">Add stop</button></div><div class="setting-column right gradient-angle"><div class="setting-header"><span class="setting-label">Angle</span><span class="setting-value gradient-angle-value">180&deg;</span></div><input type="range" min="0" max="360"><button type="button" class="btn-text gradient-angle-reset">Reset</button></div>`;
+	const panel = document.getElementById('tpl-gradient-editor').content.firstElementChild.cloneNode(true);
 	group.parentElement.appendChild(panel);
 	const update = (commit) => {
 		const data = options.getData();
@@ -277,10 +269,15 @@ function installEffectGradientEditor(options) {
 		syncPreview(data.gradient);
 		const list = panel.querySelector('.gradient-stops');
 		list.replaceChildren(...data.gradient.stops.map((stop, index) => {
-			const row = document.createElement('div');
-			row.className = 'effect-gradient-stop';
-			row.innerHTML = `<input type="color" value="${stop.color}" aria-label="Stop color"><span class="gradient-stop-control"><input type="range" min="0" max="100" value="${Math.round(stop.offset * 100)}" aria-label="Stop position"><span class="gradient-stop-value">${Math.round(stop.offset * 100)}%</span></span><span class="gradient-stop-control"><input type="range" min="0" max="100" value="${Math.round(stop.alpha * 100)}" aria-label="Stop opacity"><span class="gradient-stop-value">${Math.round(stop.alpha * 100)}%</span></span><button type="button" class="btn-icon icon-wrapper gradient-stop-remove" title="Remove gradient stop" aria-label="Remove gradient stop" ${data.gradient.stops.length <= 2 ? 'disabled' : ''}><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Remove</span></button>`;
+			const row = document.getElementById('tpl-gradient-stop').content.firstElementChild.cloneNode(true);
 			const inputs = row.querySelectorAll('input');
+			inputs[0].value = stop.color;
+			inputs[1].value = Math.round(stop.offset * 100);
+			inputs[2].value = Math.round(stop.alpha * 100);
+			const values = row.querySelectorAll('.gradient-stop-value');
+			values[0].textContent = `${inputs[1].value}%`;
+			values[1].textContent = `${inputs[2].value}%`;
+			row.querySelector('button').disabled = data.gradient.stops.length <= 2;
 			inputs[0].addEventListener('input', () => { stop.color = inputs[0].value; syncPreview(data.gradient); update(false); });
 			inputs[1].addEventListener('input', () => { stop.offset = Number(inputs[1].value) / 100; inputs[1].nextElementSibling.textContent = `${inputs[1].value}%`; syncPreview(data.gradient); update(false); });
 			inputs[2].addEventListener('input', () => { stop.alpha = Number(inputs[2].value) / 100; inputs[2].nextElementSibling.textContent = `${inputs[2].value}%`; syncPreview(data.gradient); update(false); });

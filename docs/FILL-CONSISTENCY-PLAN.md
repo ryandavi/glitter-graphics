@@ -1,5 +1,17 @@
 # Fill UI Consistency Plan — 2026-07-12
 
+**STATUS (2026-07-12, verified by Fable): WP-F is fully implemented** — it
+landed with the gradient round (commit af181ac) rather than as a separate
+dispatch. Verified against this doc: bug 1's guard is `mode === 'glitter'`
+(TextGlitterManager.js:966); all slots use `.paint-slot-primary-row` with
+Texture Scale | Opacity outside Advanced; per-mode visibility (incl. the
+Gradient row) is the shared `syncPaintSlotSourceUI` (`js/effects/effect-source.js`);
+the two-column collapse rule is `_panels.scss` (`.paint-slot-primary-row`
+`[hidden]+.setting-column { grid-column: 1/-1 }`); shape fill has an Opacity
+slider writing `fillData.opacity`. Storage asymmetry kept per decision 5.
+Nothing left to dispatch. Kept for the canonical-layout spec, which
+docs/SIDEBAR-TEMPLATE-PLAN.md's tpl-paint-slot template encodes.
+
 Scope: the text/shape fill systems drifted apart (text slots were built first in
 D-1c/D-1d, shape slots came later via the generic `_bindSource`/`_bindSlotAdvanced`
 helpers). One dead button, several layout gaps, and three placement inconsistencies.
@@ -26,7 +38,7 @@ WP-C (gradients, TRANSFORM-AND-FILLS-PLAN.md) extends one pattern instead of two
    (TextGlitterManager.js:1563); the Opacity column (index.html:1476) is never
    touched, so None shows a pointless Opacity and Solid shows Opacity next to an
    empty first column. Note Opacity is NOT glitter-only in the data path —
-   `resolveEffectPaintSource` applies it to every mode (js/effect-source.js:12) —
+   `resolveEffectPaintSource` applies it to every mode (`js/effects/effect-source.js`) —
    so the fix is layout (per-mode visibility below), not hiding it everywhere.
 
 ---
@@ -126,7 +138,7 @@ Task:
      [Texture Scale | Opacity] two-column row above Advanced (Advanced keeps
      Hue/Saturation/Brightness only).
    - Add a shape fill Opacity slider writing ensureEffectData(layer,'fill').opacity
-     (resolveEffectPaintSource in js/effect-source.js already consumes it — verify
+     (`resolveEffectPaintSource` in `js/effects/effect-source.js` already consumes it — verify
      preview AND export honor it; the export mirror getEffectPaintSource ↔
      _getTextEffectSource must stay in lockstep).
    - Per-mode visibility: None hides the scale/opacity row and Advanced; Solid
