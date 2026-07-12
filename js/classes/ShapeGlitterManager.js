@@ -168,10 +168,11 @@ class ShapeGlitterManager {
 		ShapeLibrary.FILL_SHAPES.forEach(({ id, label }) => {
 			const card = this.buildShapeCard(id, label, 'asset-option shape-gallery-option');
 			card.addEventListener('click', () => {
-				const changeLayer = this.editor.layerManager.layers.find((layer) => layer.id === this.shapeChangeLayerId);
-				if (changeLayer?.type === LayerType.SHAPE) {
-					this.applyShapeToLayer(changeLayer, id);
-					this.updatePickerStrip();
+				const armedLayer = this.editor.layerManager.layers.find((layer) => layer.id === this.shapeChangeLayerId);
+				const targetLayer = armedLayer?.type === LayerType.SHAPE ? armedLayer : this.getActiveShapeLayer();
+				if (targetLayer) {
+					this.applyShapeToLayer(targetLayer, id);
+					if (this.shapeChangeLayerId) this.updatePickerStrip();
 					return;
 				}
 				const layer = this.editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: id } });

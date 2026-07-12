@@ -3727,8 +3727,8 @@ body.mask-editing {
 	padding: var(--spacing-sm) var(--spacing-md);
 	margin-bottom: var(--spacing-sm);
 	background: var(--color-bg-tertiary);
-	border-left: 3px solid transparent;
-	border-radius: var(--radius-sm);
+	// border-left: 3px solid transparent;
+	// border-radius: var(--radius-sm);
 
 	&[hidden] {
 		display: none;
@@ -3736,8 +3736,8 @@ body.mask-editing {
 
 	// Picker mode: the armed destination earns the accent edge.
 	&.is-armed {
-		border-left-color: var(--color-accent);
-		box-shadow: inset 0 0 0 1px var(--color-accent-border);
+		// border-left-color: var(--color-accent);
+		// box-shadow: inset 0 0 0 1px var(--color-accent-border);
 	}
 
 	// Browse-mode passive hint: quieter, no accent, no Done.
@@ -3904,7 +3904,7 @@ body.mask-editing {
 	}
 
 	+.settings-subsection {
-		margin-top: var(--spacing-md);
+		// margin-top: var(--spacing-md);
 	}
 
 }
