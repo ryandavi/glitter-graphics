@@ -4232,53 +4232,41 @@ setupWelcomeModalListeners() {
 
 
 	updateContextToolbars() {
-		const zoomControls = document.getElementById('zoomControls');
-		const panControls = document.getElementById('panControls');
-		const layerCenterControls = document.getElementById('layerCenterControls');
-		const colorPickerControls = document.getElementById('colorPickerControls');
-		const maskBrushControls = document.getElementById('maskBrushControls');
 		const brushSettingsSection = document.getElementById('brushSettingsSection');
+		const toolbarConfigs = CONFIG.ui.contextToolbars || [];
+		const toolbars = toolbarConfigs.map((config) => ({
+			config,
+			element: document.getElementById(config.id)
+		}));
 
 		// Hide all first
-		if (zoomControls) zoomControls.classList.remove('visible');
-		if (panControls) panControls.classList.remove('visible');
-		if (layerCenterControls) layerCenterControls.classList.remove('visible');
-		if (colorPickerControls) colorPickerControls.classList.remove('visible');
-		if (maskBrushControls) maskBrushControls.classList.remove('visible');
+		toolbars.forEach(({ element }) => element?.classList.remove('visible'));
 		if (brushSettingsSection) brushSettingsSection.classList.remove('visible');
 
 		const layer = this.layerManager.getActiveLayer();
+		const hasMultiSelection = this.layerManager.hasMultiSelection();
+		const activeToolbar = toolbars.find(({ config, element }) => {
+			if (!element || config.tool !== this.currentTool) return false;
+			if (hasMultiSelection && config.allowMultiSelection) return true;
+			if (config.layerTypes && (!layer || !config.layerTypes.includes(layer.type))) return false;
+			if (config.requiresStickerSource && layer?.type === LayerType.STICKER && !layer.stickerSourceId) return false;
+			if (config.requiresSelections && !layer?.selections?.length) return false;
+			return true;
+		});
 
-		// Show appropriate toolbar based on current tool and layer state
-		if (this.currentTool === ToolType.ZOOM && zoomControls) {
-			zoomControls.classList.add('visible');
-		} else if (this.currentTool === ToolType.HAND && panControls) {
-			panControls.classList.add('visible');
-		} else if (this.currentTool === ToolType.SELECT && layerCenterControls) {
-			// Center H/V bar is shared by every movable layer type.
-			if (this.layerManager.hasMultiSelection()) {
-				layerCenterControls.classList.add('visible');
-			} else if (layer && layer.type === LayerType.STICKER) {
-				if (layer.stickerSourceId) {
-					// Has a sticker selected - show controls
-					this.hideStickerSettingsEmptyState();
-					this.loadStickerSettings(layer); // This will populate asset info
-					layerCenterControls.classList.add('visible');
-				} else {
-					// No sticker selected yet - show empty state, hide controls
-					this.showStickerSettingsEmptyState();
-				}
-			} else if (layer && (layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE)) {
-				// Text + shape layers reuse the same center-H/center-V bar
-				layerCenterControls.classList.add('visible');
+		activeToolbar?.element.classList.add('visible');
+
+		if (this.currentTool === ToolType.SELECT && layer?.type === LayerType.STICKER && !hasMultiSelection) {
+			if (layer.stickerSourceId) {
+				this.hideStickerSettingsEmptyState();
+				this.loadStickerSettings(layer);
+			} else {
+				this.showStickerSettingsEmptyState();
 			}
-		} else if (this.currentTool === ToolType.COLOR_PICKER && colorPickerControls) {
-			if (layer && layer.type === LayerType.GLITTER_FILL && layer.selections && layer.selections.length > 0) {
-				this.updateColorPickerControls();
-				colorPickerControls.classList.add('visible');
-			}
-		} else if (this.currentTool === ToolType.BRUSH) {
-			if (maskBrushControls) maskBrushControls.classList.add('visible');
+		}
+		if (activeToolbar?.config.id === 'colorPickerControls') this.updateColorPickerControls();
+
+		if (this.currentTool === ToolType.BRUSH) {
 			if (brushSettingsSection) {
 				brushSettingsSection.classList.add('visible');
 				this.syncCollapsibleSections?.('brushSettings');

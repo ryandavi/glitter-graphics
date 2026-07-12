@@ -48,6 +48,8 @@ class TextGlitterManager {
 			section: document.getElementById('textSettingsSection'),
 			textInput: document.getElementById('textLayerInput'),
 			fontPicker: document.getElementById('textFontPicker'),
+			fontBold: document.getElementById('textFontBold'),
+			fontItalic: document.getElementById('textFontItalic'),
 			fontSize: document.getElementById('textFontSize'),
 			fontSizeValue: document.getElementById('textFontSizeValue'),
 			letterSpacing: document.getElementById('textLetterSpacing'),
@@ -216,6 +218,18 @@ class TextGlitterManager {
 				}
 			});
 		}
+
+		const bindFontStyleToggle = (button, property, activeValue, inactiveValue) => {
+			button?.addEventListener('click', async () => {
+				const layer = this.getActiveTextLayer();
+				if (!layer) return;
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					layer.textData[property] = layer.textData[property] === activeValue ? inactiveValue : activeValue;
+				}, { saveHistory: true });
+			});
+		};
+		bindFontStyleToggle(this.ui.fontBold, 'fontWeight', 700, 400);
+		bindFontStyleToggle(this.ui.fontItalic, 'fontStyle', 'italic', 'normal');
 
 		this.attachSlider(this.ui.fontSize, this.ui.fontSizeValue, 'px', (value, layer) => {
 			layer.textData.fontSize = value;
@@ -606,6 +620,12 @@ class TextGlitterManager {
 		}
 		if (!layer.textData.lineHeight) {
 			layer.textData.lineHeight = CONFIG.tools.text.lineHeight;
+		}
+		if (!layer.textData.fontWeight) {
+			layer.textData.fontWeight = CONFIG.tools.text.defaultFontWeight || 400;
+		}
+		if (!layer.textData.fontStyle) {
+			layer.textData.fontStyle = CONFIG.tools.text.defaultFontStyle || 'normal';
 		}
 	}
 
@@ -1158,14 +1178,15 @@ class TextGlitterManager {
 		return `"${font.name}", ${font.fallback || 'sans-serif'}`;
 	}
 
-	getFontDeclaration(font, fontSize) {
+	getFontDeclaration(font, fontSize, fontWeight = null, fontStyle = 'normal') {
+		const weight = fontWeight || font?.weight || 400;
 		if (!font?.name) {
-			return `400 ${fontSize}px sans-serif`;
+			return `${fontStyle} ${weight} ${fontSize}px sans-serif`;
 		}
 		// System fonts need the whole stack in canvas font strings too, so a
 		// device without the face falls back the same way preview DOM does.
 		const family = font.family || `"${font.name}"`;
-		return `${font.weight || 400} ${fontSize}px ${family}`;
+		return `${fontStyle} ${weight} ${fontSize}px ${family}`;
 	}
 
 	async ensureFontLoaded(fontId) {
@@ -1275,6 +1296,8 @@ class TextGlitterManager {
 			textData: {
 				text: defaultText,
 				fontId: CONFIG.tools.text.defaultFontId,
+				fontWeight: CONFIG.tools.text.defaultFontWeight || 400,
+				fontStyle: CONFIG.tools.text.defaultFontStyle || 'normal',
 				fontSize: CONFIG.tools.text.defaultFontSize,
 				letterSpacing: CONFIG.tools.text.defaultLetterSpacing,
 				lineHeight: CONFIG.tools.text.lineHeight,
@@ -1343,6 +1366,7 @@ class TextGlitterManager {
 		}
 
 		this.updateFontSelection(layer.textData.fontId);
+		this.updateFontStyleSelection(layer.textData);
 		this.updateAlignmentSelection(layer.textData.align);
 		this.updateVerticalAlignmentSelection(layer.textData.verticalAlign);
 		this.updateBoxModeSelection(layer);
@@ -1373,6 +1397,17 @@ class TextGlitterManager {
 		});
 
 		this.scrollActiveFontIntoView();
+	}
+
+	updateFontStyleSelection(textData) {
+		const states = [
+			[this.ui.fontBold, textData.fontWeight === 700],
+			[this.ui.fontItalic, textData.fontStyle === 'italic']
+		];
+		states.forEach(([button, active]) => {
+			button?.classList.toggle('active', active);
+			button?.setAttribute('aria-pressed', String(active));
+		});
 	}
 
 	scrollActiveFontIntoView() {
@@ -1900,6 +1935,8 @@ class TextGlitterManager {
 		return JSON.stringify([
 			textData.text,
 			textData.fontId,
+			textData.fontWeight,
+			textData.fontStyle,
 			// Font-readiness is part of the key: selection highlights and transform
 			// handles measure synchronously right after layer creation, before the
 			// FontFace resolves. Without this flag that fallback-font measurement
@@ -1944,7 +1981,7 @@ class TextGlitterManager {
 		const shadowOffsetY = layer.textData.shadow?.offsetY || 0;
 		const boxMode = layer.textData.boxMode || 'auto';
 
-		ctx.font = this.getFontDeclaration(font, fontSize);
+		ctx.font = this.getFontDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
 		ctx.textBaseline = 'alphabetic';
 
 		const sampleMetrics = ctx.measureText('Hg');
@@ -2045,7 +2082,7 @@ class TextGlitterManager {
 		const maskCtx = canvas.getContext('2d', { willReadFrequently: true });
 		maskCtx.clearRect(0, 0, canvasWidth, canvasHeight);
 		maskCtx.fillStyle = '#ffffff';
-		maskCtx.font = this.getFontDeclaration(font, fontSize);
+		maskCtx.font = this.getFontDeclaration(font, fontSize, layer.textData.fontWeight, layer.textData.fontStyle);
 		maskCtx.textBaseline = 'alphabetic';
 		maskCtx.textAlign = 'left';
 

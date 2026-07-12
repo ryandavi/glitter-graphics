@@ -132,6 +132,7 @@
 .main-content {
 	display: flex;
 	flex: 1;
+	min-height: 0;
 	overflow: visible;
 
 
@@ -148,6 +149,7 @@
 	display: flex;
 	flex-direction: column;
 	height: 100%;
+	min-height: 0;
 	position: relative;
 	z-index: var(--z-panel-elevated);
 }
@@ -303,10 +305,12 @@
 
 
 .layers-section {
-	flex: 1 1 auto;
+	// flex: 1 1 auto;
+	flex: 1;
+	min-height: 0;
 	display: flex;
 	flex-direction: column;
-	overflow-y: auto;
+	overflow: hidden;
 
 	background: var(--panel-bg);
 	-webkit-backdrop-filter: var(--panel-backdrop);
@@ -320,6 +324,7 @@
 
 	>.layers-list {
 		flex: 1 1 auto;
+		min-height: 0;
 		overflow-y: auto;
 
 		position: relative;

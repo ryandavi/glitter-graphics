@@ -175,6 +175,8 @@ const CONFIG = {
 		text: {
 			fontsManifest: 'data/fonts.json?v=3',
 			defaultFontId: 'luckiest-guy',
+			defaultFontWeight: 400,
+			defaultFontStyle: 'normal',
 			defaultText: 'glitter',
 			defaultBoxMode: 'auto',
 			defaultVerticalAlign: 'top',
@@ -297,6 +299,21 @@ const CONFIG = {
 		hints: {
 			enabledByDefault: true
 		},
+		// Bottom context bars. Keep eligibility here so adding a bar or extending
+		// one to another movable layer does not require another app.js branch.
+		contextToolbars: [
+			{ id: 'zoomControls', tool: 'zoom' },
+			{ id: 'panControls', tool: 'hand' },
+			{
+				id: 'layerCenterControls',
+				tool: 'select',
+				layerTypes: ['sticker', 'text-glitter', 'shape'],
+				allowMultiSelection: true,
+				requiresStickerSource: true
+			},
+			{ id: 'colorPickerControls', tool: 'colorPicker', layerTypes: ['glitter-fill'], requiresSelections: true },
+			{ id: 'maskBrushControls', tool: 'brush' }
+		],
 		// Ranges/defaults for renderer-stamped panel sliders (js/ui/panel-renderer.js
 		// + PANEL_SCHEMAS). Values are preserved byte-for-byte from the
 		// pre-template static markup. Known, deliberate-for-now inconsistencies
@@ -855,6 +872,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Content', items: [
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textLayerInput' },
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFontPicker' },
+				{ kind: 'templateCard', template: 'tpl-text-content', selector: '.text-style-group' },
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFontSize' },
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '.text-align-group' },
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textBoxModeHint' },
