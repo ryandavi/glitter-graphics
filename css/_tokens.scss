@@ -102,6 +102,10 @@
 	/* Range/switch track — must read against card AND panel backgrounds
 	   (recessed a step below --gray-800 so it never vanishes on cards) */
 	--color-slider-track: #14161a;
+	/* Context-bar sliders (Color Fill threshold, quick brush size) sit on
+	   floating translucent glass, not panel chrome — light themes deepen this
+	   a ramp step so the track never melts into the bar. */
+	--context-slider-track: var(--color-slider-track);
 	--switch-knob-color: var(--color-text-primary);
 
 	/* Layers-list empty-swatch placeholder — ramp endpoints flip meaning on

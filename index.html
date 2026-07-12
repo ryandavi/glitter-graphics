@@ -173,7 +173,7 @@
 					<button class="btn-icon icon-wrapper" id="clearAllTool" title="Reset (Clear Image & All Layers)"
 						disabled>
 						<svg class="icon">
-							<use href="#icon-broom"></use>
+							<use href="#icon-x-mark"></use>
 						</svg>
 						<span class="name">Clear All</span>
 					</button>
@@ -185,8 +185,8 @@
 				<!-- Layers Panel -->
 				<div class="layers-panel" id="layersPanel">
 					<!-- Image Section -->
-					<div class="image-container section">
-						<div class="section-header section-header-with-action">
+					<div class="image-container section panel-collapsible is-open" id="imagePanelSection">
+						<div class="section-header section-header-with-action" id="imagePanelHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
 									<svg class="icon">
@@ -196,11 +196,11 @@
 								</span>
 								<span class="section-header-title-text">Image</span>
 							</h3>
-							<button class="section-header-action btn-icon icon-wrapper" id="imageClearBtn" title="Remove Image">
+							<button class="section-header-action btn-icon icon-wrapper visible" id="imagePanelToggle" title="Collapse section">
 								<svg class="icon">
-									<use href="#icon-x-mark"></use>
+									<use href="#icon-chevron-down"></use>
 								</svg>
-								<span class="name">Remove Image</span>
+								<span class="name">Collapse</span>
 							</button>
 						</div>
 						<div class="section-content image-dropzone-wrapper">
@@ -256,8 +256,8 @@
 					</div>
 
 					<!-- Layers Section (list only) -->
-					<div class="layers-section section">
-						<div class="section-header section-header-with-action">
+					<div class="layers-section section panel-collapsible is-open" id="layersPanelSection">
+						<div class="section-header section-header-with-action" id="layersPanelHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
 									<svg class="icon">
@@ -269,12 +269,20 @@
 								<span class="section-header-title-text">Layers</span>
 								<span class="section-header-title-count" data-count="0"></span>
 							</h3>
-							<button class="section-header-action btn-icon icon-wrapper" id="addLayerBtn" disabled title="Add new layer">
-								<svg class="icon">
-									<use href="#icon-plus"></use>
-								</svg>
-								<span class="name">New Layer</span>
-							</button>
+							<div class="section-header-actions">
+								<button class="section-header-action btn-icon icon-wrapper" id="addLayerBtn" disabled title="Add new layer" data-no-accordion-toggle="true">
+									<svg class="icon">
+										<use href="#icon-plus"></use>
+									</svg>
+									<span class="name">New Layer</span>
+								</button>
+								<button class="section-header-action btn-icon icon-wrapper visible" id="layersPanelToggle" title="Collapse section">
+									<svg class="icon">
+										<use href="#icon-chevron-down"></use>
+									</svg>
+									<span class="name">Collapse</span>
+								</button>
+							</div>
 						</div>
 						<div class="section-content layers-list" id="layersList"></div>
 						<div class="layers-section-bottom-bar" id="layersSectionBottomBar">
@@ -2764,7 +2772,7 @@
 			<div class="modal-body">
 				<div class="settings-group">
 					<div class="settings-group-title">Interface <button class="btn-text small reset-section-btn" data-section="interface">Reset</button></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Theme</div><div class="settings-row-control"><select id="interfaceTheme"><option value="dark">Dark</option><option value="light">Light</option><option value="bubblegum">Bubblegum</option><option value="bliss">Bliss</option><option value="dew">Dew</option></select></div></div><div class="settings-row-label-desc">Choose the editor interface appearance.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Theme</div><div class="settings-row-control"><select id="interfaceTheme"><option value="dark">Dark</option><option value="llama">Llama</option><option value="light">Light</option><option value="bubblegum">Bubblegum</option><option value="bliss">Bliss</option><option value="dew">Dew</option></select></div></div><div class="settings-row-label-desc">Choose the editor interface appearance.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Helpful Hints</div><div class="settings-row-control"><label class="switch" for="showHelpfulHints"><input type="checkbox" id="showHelpfulHints" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Show Welcome Screen on Startup</div><div class="settings-row-control"><label class="switch" for="showWelcomeOnStartup"><input type="checkbox" id="showWelcomeOnStartup" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show the welcome screen when Glitter Editor starts.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Confirm Destructive Actions</div><div class="settings-row-control"><label class="switch" for="confirmDestructiveActions"><input type="checkbox" id="confirmDestructiveActions" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Ask before deleting layers or clearing the entire project.</div></div>
@@ -3493,8 +3501,8 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=29"></script>
-	<script src="js/transform-math.js?v=1"></script>
+	<script src="js/config.js?v=31"></script>
+	<script src="js/transform-math.js?v=2"></script>
 
 	<!-- Utils -->
 	<script src="js/utils.js?v=2"></script>
@@ -3521,17 +3529,17 @@
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
-	<script src="js/classes/LayerTransform.js?v=21"></script>
+	<script src="js/classes/LayerTransform.js?v=22"></script>
 	<script src="js/classes/GlitterManager.js?v=12"></script>
 	<script src="js/classes/TextGlitterManager.js?v=35"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=22"></script>
 	<script src="js/classes/StickerManager.js?v=5"></script>
-	<script src="js/classes/GroupTransformManager.js?v=14"></script>
+	<script src="js/classes/GroupTransformManager.js?v=15"></script>
 
 	<script src="js/classes/MobileManager.js?v=6"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=71"></script>
+	<script src="js/app.js?v=73"></script>
 
 </body>
 

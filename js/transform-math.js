@@ -48,6 +48,17 @@ function getLayerTransform(layer) {
 	return syncLayerTransformReference(layer);
 }
 
+// Single source of truth for layer scale limits (percent units). Every scale
+// write funnels through LayerTransform.updateTransform, which clamps with this;
+// drag paths that derive *position* from a scale must also clamp locally first
+// so the anchor math and the stored scale agree.
+function clampLayerScale(value) {
+	const limits = CONFIG.ui.stickerHandles.scaleLimits;
+	const min = limits.enabled ? limits.min : limits.hardMin;
+	const max = limits.enabled ? limits.max : limits.hardMax;
+	return Math.max(min, Math.min(max, value));
+}
+
 function computeLayerTransform(transform, dimensions = {}) {
 	const resolved = cloneTransform(transform);
 	const width = Number(dimensions.width) || 0;

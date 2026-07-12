@@ -225,9 +225,9 @@
   --color-overlay: rgb(38 54 92 / 45%);
   --color-overlay-strong: rgb(38 54 92 / 78%);
   /* Boxy dialog corners */
-  --radius-sm: 2px;
-  --radius-md: 3px;
-  --radius-lg: 5px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
 }
 
 :root[data-theme=dew] {
@@ -306,6 +306,47 @@
   --radius-lg: 14px;
 }
 
+:root[data-theme=llama] {
+  color-scheme: dark;
+  /* Charcoal-steel ramp, one hair green (LED backlight leaking into the
+     chassis) — same lightness steps as the default dark ramp. */
+  --gray-100: #dde4dd;
+  --gray-200: #879287;
+  --gray-300: #667066;
+  --gray-400: #485348;
+  --gray-500: #39423a;
+  --gray-600: #262c27;
+  --gray-700: #1e241f;
+  --gray-800: #161b17;
+  --color-bg-card: #2b332c;
+  --color-bg-accent-tint: #1e3a26;
+  --color-checkerboard: #2e362f;
+  --color-bg-translucent: rgb(20 25 21 / 95%);
+  /* LED green — the visualizer/playlist green, dimmed a notch so it works
+     as UI chrome instead of a lightshow. */
+  --color-accent: #2fd049;
+  --color-accent-hover: #27b83f;
+  --color-accent-light: #6ee784;
+  --color-accent-border: #2fd049;
+  --color-accent-active: #27b83f;
+  /* Titlebar: brushed-steel gradient with gold WINAMP lettering. */
+  --bar-gradient-top: #4d564f;
+  --bar-gradient-bottom: #232823;
+  --bar-title-color: #e8c96a;
+  --bar-text-shadow: 0 1px 1px #000;
+  /* Buttons: dark steel bevels with a green glow at the base (the default
+     dark theme's navy gloss, re-familied to chassis + LED). */
+  --btn-gradient-start: #8a968d;
+  --btn-gradient-mid: #4a544c;
+  --btn-gradient-dark: #131a15;
+  --btn-gradient-end: #4fdd6e;
+  --btn-text-color: #e4efe4;
+  /* Recessed LCD track under the sliders */
+  --color-slider-track: #0d120e;
+  --color-icon-strong: #aebfae;
+  --color-bg-workspace: #121613;
+}
+
 :root[data-theme=light],
 :root[data-theme=bubblegum],
 :root[data-theme=bliss],
@@ -314,6 +355,10 @@
      dark-on-dark */
   --swatch-empty-outline: var(--gray-400);
   --swatch-empty-bg: var(--gray-500);
+  /* Context-bar slider tracks: the panel track token is a near-surface tint
+     on these ramps and vanishes against the floating glass bars — drop to
+     the mid ramp step for real contrast. */
+  --context-slider-track: var(--gray-400);
 }
 
 /* ===== CSS VARIABLES ===== */
@@ -410,6 +455,10 @@
   /* Range/switch track — must read against card AND panel backgrounds
      (recessed a step below --gray-800 so it never vanishes on cards) */
   --color-slider-track: #14161a;
+  /* Context-bar sliders (Color Fill threshold, quick brush size) sit on
+     floating translucent glass, not panel chrome — light themes deepen this
+     a ramp step so the track never melts into the bar. */
+  --context-slider-track: var(--color-slider-track);
   --switch-knob-color: var(--color-text-primary);
   /* Layers-list empty-swatch placeholder — ramp endpoints flip meaning on
      light ramps (gray-100 becomes near-black), so the pair is tokenized and
@@ -1626,6 +1675,26 @@ input[type=range]::-moz-range-thumb {
   display: block;
 }
 
+/* Collapsible Image/Layers sections — the design panel's header/chevron
+   conventions (is-open on the section, .collapsed on the toggle), but
+   independent (no accordion) and without its flex/scroll model. */
+.layers-panel > .section.panel-collapsible > .section-header {
+  cursor: pointer;
+}
+.layers-panel > .section.panel-collapsible > .section-header:hover {
+  background: var(--color-bg-tertiary);
+}
+.layers-panel > .section.panel-collapsible > .section-header .section-header-action.collapsed .icon {
+  transform: rotate(-90deg);
+}
+.layers-panel > .section.panel-collapsible:not(.is-open) {
+  flex: 0 0 auto;
+}
+.layers-panel > .section.panel-collapsible:not(.is-open) > .section-content,
+.layers-panel > .section.panel-collapsible:not(.is-open) > .layers-section-bottom-bar {
+  display: none;
+}
+
 /* Layers Section */
 .layers-section {
   flex: 1 1 auto;
@@ -1970,7 +2039,8 @@ input[type=range]::-moz-range-thumb {
   visibility: visible;
   pointer-events: auto;
 }
-.section > .section-header.section-header-with-action > .section-header-action#addLayerBtn:not(.visible) {
+.section > .section-header.section-header-with-action > .section-header-action#addLayerBtn:not(.visible),
+.section > .section-header.section-header-with-action > .section-header-actions > .section-header-action#addLayerBtn:not(.visible) {
   visibility: visible;
   opacity: var(--disabled-opacity);
 }
@@ -2942,7 +3012,7 @@ body.mask-editing .sticker-element {
 }
 .context-slider-group .context-slider {
   width: 100px;
-  background: var(--color-bg-primary);
+  background: var(--context-slider-track);
 }
 .context-slider-group .context-value {
   font-size: var(--font-size-sm);

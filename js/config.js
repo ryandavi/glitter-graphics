@@ -274,7 +274,7 @@ const CONFIG = {
 		},
 		// Valid values for the Settings > Theme select; each needs a matching
 		// :root[data-theme="…"] token block in css/_themes.scss.
-		themes: ['dark', 'light', 'bubblegum', 'bliss', 'dew'],
+		themes: ['dark', 'llama', 'light', 'bubblegum', 'bliss', 'dew'],
 		stickerHandles: {
 			enabled: true,
 			cornerSize: 8,
@@ -287,8 +287,16 @@ const CONFIG = {
 			boundingBoxColor: 'var(--color-accent)',
 			boundingBoxWidth: 1.5,
 			handleHitboxPadding: 8,
-			minScale: 10,
-			maxScale: 500,
+			// Layer scale limits. enabled:false = Figma/Photoshop parity (no max);
+			// hardMin/hardMax stay as safety rails so scale can never hit 0 or
+			// blow up the DOM. All scale writes clamp via clampLayerScale().
+			scaleLimits: {
+				enabled: false,
+				min: 10,
+				max: 500,
+				hardMin: 1,
+				hardMax: 10000
+			},
 		},
 		shortcuts: {
 			tools: [

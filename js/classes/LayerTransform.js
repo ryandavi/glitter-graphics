@@ -170,8 +170,8 @@ updateTransform(updates) {
     }
 
     if (updates.scale) {
-        transform.scale.x = updates.scale.x ?? transform.scale.x;
-        transform.scale.y = updates.scale.y ?? transform.scale.y;
+        transform.scale.x = clampLayerScale(updates.scale.x ?? transform.scale.x);
+        transform.scale.y = clampLayerScale(updates.scale.y ?? transform.scale.y);
     }
 
     if (updates.proportionalScale !== undefined) {
@@ -682,10 +682,10 @@ const handleMouseMove = (e) => {
         const centroidCanvas = this.editor.viewport.screenToCanvas(gestureDelta.centroidX, gestureDelta.centroidY);
         const currentScaleX = transform.scale.x || 100;
         const currentScaleY = transform.scale.y || 100;
-        const nextScaleX = Math.max(10, Math.min(500, currentScaleX * gestureDelta.scale));
+        const nextScaleX = clampLayerScale(currentScaleX * gestureDelta.scale);
         const nextScaleY = transform.proportionalScale
             ? nextScaleX
-            : Math.max(10, Math.min(500, currentScaleY * gestureDelta.scale));
+            : clampLayerScale(currentScaleY * gestureDelta.scale);
         const scaleFactor = currentScaleX !== 0 ? nextScaleX / currentScaleX : 1;
         const rotationDeltaRad = (gestureDelta.rotateDeg * Math.PI) / 180;
         const translateCanvasX = gestureDelta.translateX / this.editor.viewport.currentZoom;
@@ -1358,8 +1358,8 @@ removeTransformHandles() {
 		let nextPosition = null;
 		if (e.altKey) {
 			// Alt keeps the visible frame center fixed (Figma/Photoshop center resize).
-			newScaleX = (Math.abs(localX) * 2 / frame.width) * 100;
-			newScaleY = proportional ? newScaleX : (Math.abs(localY) * 2 / frame.height) * 100;
+			newScaleX = clampLayerScale((Math.abs(localX) * 2 / frame.width) * 100);
+			newScaleY = proportional ? newScaleX : clampLayerScale((Math.abs(localY) * 2 / frame.height) * 100);
 		} else {
 			// Default corner resize keeps the opposite corner fixed.
 			const corner = this.activeHandleType.replace('corner-', '');
@@ -1373,8 +1373,10 @@ removeTransformHandles() {
 			const fromOppositeY = canvasPos.y - oppositeWorldY;
 			const localFromOppositeX = fromOppositeX * cos - fromOppositeY * sin;
 			const localFromOppositeY = fromOppositeX * sin + fromOppositeY * cos;
-			newScaleX = (Math.abs(localFromOppositeX) / frame.width) * 100;
-			newScaleY = proportional ? newScaleX : (Math.abs(localFromOppositeY) / frame.height) * 100;
+			// Clamp before the anchor math below — deriving nextPosition from an
+			// unclamped scale makes the layer drift diagonally once the limit hits.
+			newScaleX = clampLayerScale((Math.abs(localFromOppositeX) / frame.width) * 100);
+			newScaleY = proportional ? newScaleX : clampLayerScale((Math.abs(localFromOppositeY) / frame.height) * 100);
 
 			const draggedLocalX = oppositeLocalX + signX * frame.width * (newScaleX / 100);
 			const draggedLocalY = oppositeLocalY + signY * frame.height * (newScaleY / 100);
@@ -1390,15 +1392,11 @@ removeTransformHandles() {
 			};
 		}
 
-        // Clamp values
-        const clampedScaleX = Math.max(10, Math.min(500, newScaleX));
-        const clampedScaleY = Math.max(10, Math.min(500, newScaleY));
-
         this.updateTransform({
             position: nextPosition || undefined,
             scale: {
-                x: clampedScaleX,
-                y: clampedScaleY
+                x: newScaleX,
+                y: newScaleY
             }
         });
 
@@ -1471,9 +1469,9 @@ removeTransformHandles() {
             y: transform.scale.y
         };
         if (isHorizontal) {
-            scale.x = Math.max(10, Math.min(500, (Math.abs(localX) * 2 / frame.width) * 100));
+            scale.x = clampLayerScale((Math.abs(localX) * 2 / frame.width) * 100);
         } else {
-            scale.y = Math.max(10, Math.min(500, (Math.abs(localY) * 2 / frame.height) * 100));
+            scale.y = clampLayerScale((Math.abs(localY) * 2 / frame.height) * 100);
         }
 
         this.updateTransform({ scale });

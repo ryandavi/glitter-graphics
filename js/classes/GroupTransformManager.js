@@ -50,8 +50,8 @@ class GroupTransformManager {
 					y: bounds.centerY + rotatedY + translateY
 				},
 				scale: {
-					x: Math.max(10, Math.min(500, scale.x * scaleFactor)),
-					y: Math.max(10, Math.min(500, scale.y * scaleFactor))
+					x: clampLayerScale(scale.x * scaleFactor),
+					y: clampLayerScale(scale.y * scaleFactor)
 				},
 				rotation: this.normalizeRotation(rotation + rotateDeg)
 			});

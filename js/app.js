@@ -1487,10 +1487,36 @@ async resetAllSettings() {
 		});
 
 		this.syncCollapsibleSections('designGallery');
+		this.initializeStandaloneCollapsibles();
 
 		this.showLayerSettingsEmptyState();
 		this.showGlitterSettingsEmptyState();
 		this.showStickerSettingsEmptyState();
+	}
+
+	// Image and Layers sections collapse independently (both can stay open) —
+	// same header/chevron conventions as the design panel, minus the accordion.
+	initializeStandaloneCollapsibles() {
+		['imagePanel', 'layersPanel'].forEach((name) => {
+			const section = document.getElementById(`${name}Section`);
+			const header = document.getElementById(`${name}Header`);
+			const toggle = document.getElementById(`${name}Toggle`);
+			if (!section || !header || !toggle) return;
+
+			const setOpen = (isOpen) => {
+				section.classList.toggle('is-open', isOpen);
+				toggle.classList.toggle('collapsed', !isOpen);
+			};
+			setOpen(true);
+
+			header.addEventListener('click', (event) => {
+				if (event.target.closest('[data-no-accordion-toggle]')) return;
+				// On mobile these sections live in drawers with their own header
+				// behavior — mirror the design gallery's guard.
+				if (this.mobileManager?.isMobile) return;
+				setOpen(!section.classList.contains('is-open'));
+			});
+		});
 	}
 
 	// Reusable "Advanced" disclosure (WP4). One delegated click handler drives
@@ -2420,6 +2446,16 @@ async resetAllSettings() {
 			|| Boolean(transform.flipY);
 	}
 
+	// Handlers that bypass loadTransformSettings (rotation slider, flips) still
+	// need the Reset Transform enabled state to track the layer.
+	syncResetTransformState(prefix, layer) {
+		const ids = this.getTransformIds(prefix);
+		const resetTransform = document.getElementById(ids.resetTransform);
+		if (resetTransform) {
+			resetTransform.disabled = !this.hasResettableTransformAdjustments(this.getLayerTransformData(layer));
+		}
+	}
+
 	getTransformSizeState(layer, prefix) {
 		const transform = this.getLayerTransformData(layer);
 		if (!layer || !transform) return null;
@@ -2576,10 +2612,7 @@ async resetAllSettings() {
 
 		this.syncTransformAlignmentButtons(prefix, this.getTransformAlignmentState(layer));
 
-		const resetTransform = document.getElementById(ids.resetTransform);
-		if (resetTransform) {
-			resetTransform.disabled = !this.hasResettableTransformAdjustments(transform);
-		}
+		this.syncResetTransformState(prefix, layer);
 	}
 
 	syncTransformHandlesForActiveLayer() {
@@ -2747,7 +2780,10 @@ async resetAllSettings() {
 				showUnit(rotationValue, value, '°');
 
 				const active = activeManager();
-				if (active) active.manager.updateTransform(active.layer.id, { rotation: value });
+				if (active) {
+					active.manager.updateTransform(active.layer.id, { rotation: value });
+					this.syncResetTransformState(prefix, active.layer);
+				}
 			});
 
 			rotation.addEventListener('change', () => this.saveState());
@@ -2761,6 +2797,7 @@ async resetAllSettings() {
 				const active = activeManager();
 				if (active) {
 					active.manager.updateTransform(active.layer.id, { rotation: CONFIG.tools.stickers.defaults.transform.rotation });
+					this.syncResetTransformState(prefix, active.layer);
 					this.saveState();
 				}
 			});
@@ -2815,7 +2852,7 @@ async resetAllSettings() {
 			scaleSlider.addEventListener('input', (event) => {
 				const active = activeManager();
 				if (!active) return;
-				const value = Math.max(10, Math.min(500, parseFloat(event.target.value) || 100));
+				const value = clampLayerScale(parseFloat(event.target.value) || 100);
 				active.manager.updateTransform(active.layer.id, {
 					scale: { x: value, y: value }
 				});
@@ -2865,6 +2902,7 @@ async resetAllSettings() {
 				const active = activeManager();
 				if (active) {
 					active.manager.updateTransform(active.layer.id, { [property]: e.target.checked });
+					this.syncResetTransformState(prefix, active.layer);
 					this.saveState();
 				}
 			});
@@ -2906,7 +2944,6 @@ async resetAllSettings() {
 		const imageUpload = document.getElementById('imageUpload');
 		const projectUpload = document.getElementById('projectUpload');
 		const imageDropzone = document.getElementById('imageDropzone');
-		const imageClearBtn = document.getElementById('imageClearBtn');
 		const openProjectBtn = document.getElementById('openProjectBtn');
 		const openProjectSidebarBtn = document.getElementById('openProjectSidebarBtn');
 
@@ -2981,18 +3018,6 @@ async resetAllSettings() {
 			});
 		}
 
-		if (imageClearBtn) {
-			imageClearBtn.addEventListener('click', async () => {
-				const confirmed = await this.confirmAction({
-					title: 'Remove Image',
-					message: 'The image and all layers will be cleared.',
-					confirmLabel: 'Remove'
-				});
-				if (confirmed) {
-					this.clearImage();
-				}
-			});
-		}
 	}
 
 
@@ -4870,7 +4895,6 @@ setupWelcomeModalListeners() {
 		const layersBarClearAll = document.getElementById('layersBarClearAll');
 		const exportGif = document.getElementById('exportGif');
 		const saveProject = document.getElementById('saveProject');
-		const imageClearBtn = document.getElementById('imageClearBtn');
 		const textTool = document.getElementById('textTool');
 		const shapeTool = document.getElementById('shapeTool');
 		const colorPickerTool = document.getElementById('colorPickerTool');
@@ -4899,14 +4923,6 @@ setupWelcomeModalListeners() {
 				previewControls.classList.add('visible');
 			} else {
 				previewControls.classList.remove('visible');
-			}
-		}
-
-		if (imageClearBtn) {
-			if (hasImage) {
-				imageClearBtn.classList.add('visible');
-			} else {
-				imageClearBtn.classList.remove('visible');
 			}
 		}
 
@@ -5701,8 +5717,12 @@ setupWelcomeModalListeners() {
 					return;
 				}
 				{
+					// Figma parity: clicking existing text with the text tool edits it;
+					// any other layer under the click is no obstacle — text goes on top.
 					const hitLayer = this.layerManager.getTopVisibleLayerAtPoint?.(x, y, { includeBase: false });
-					if (hitLayer) {
+					if (hitLayer?.type === LayerType.TEXT_GLITTER) {
+						this.layerManager.setActiveLayer(hitLayer.id);
+						this.textGlitterManager?.focusTextInput(true);
 						return;
 					}
 

@@ -302,6 +302,32 @@
 }
 
 
+/* Collapsible Image/Layers sections — the design panel's header/chevron
+   conventions (is-open on the section, .collapsed on the toggle), but
+   independent (no accordion) and without its flex/scroll model. */
+.layers-panel>.section.panel-collapsible {
+	>.section-header {
+		cursor: pointer;
+
+		&:hover {
+			background: var(--color-bg-tertiary);
+		}
+
+		.section-header-action.collapsed .icon {
+			transform: rotate(-90deg);
+		}
+	}
+
+	&:not(.is-open) {
+		flex: 0 0 auto;
+
+		>.section-content,
+		>.layers-section-bottom-bar {
+			display: none;
+		}
+	}
+}
+
 /* Layers Section */
 .layers-section {
 	flex: 1 1 auto;
@@ -731,7 +757,8 @@
 				}
 			}
 
-			>.section-header-action#addLayerBtn:not(.visible) {
+			>.section-header-action#addLayerBtn:not(.visible),
+			>.section-header-actions>.section-header-action#addLayerBtn:not(.visible) {
 				visibility: visible;
 				opacity: var(--disabled-opacity);
 			}
@@ -1882,7 +1909,9 @@ body.mask-editing {
 
 	.context-slider {
 		width: 100px;
-		background: var(--color-bg-primary);
+		// Context bars float on translucent glass, so the panel-track token can
+		// vanish against it — this track has its own per-theme token.
+		background: var(--context-slider-track);
 	}
 
 	.context-value {
