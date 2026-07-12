@@ -11,6 +11,13 @@
 	display: none; // Hidden by default on desktop
 }
 
+// Must load after _modals.scss's .icon-wrapper (also unconditional display,
+// same specificity) so this wins the desktop default for buttons that carry
+// both classes (e.g. #layersBarClearAll, #dropzoneNewCanvasBtn).
+.mobile-only-action {
+	display: none;
+}
+
 @media (max-width: 800px) {
 
 	// ============================================
@@ -158,14 +165,17 @@
 			display: none;
 		}
 
-		#settingsBtn,
-		#clearAllTool {
+		#toolbarClearGroup {
 			display: none;
 		}
 	}
 
 	.mobile-only-action {
 		display: inline-flex;
+	}
+
+	#dropzoneNewCanvasBtn {
+		margin-top: var(--spacing-md);
 	}
 
 

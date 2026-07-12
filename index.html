@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=64">
+	<link rel="stylesheet" href="css/style.css?v=71">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -219,6 +219,13 @@
 									</div>
 									<div class="dropzone-text">Drop image here or click to browse</div>
 									<div class="dropzone-subtext">Max 10MB, 800 × 800px</div>
+
+									<button class="btn-text-with-icon icon-wrapper btn-secondary mobile-only-action" id="dropzoneNewCanvasBtn" type="button">
+										<svg class="icon">
+											<use href="#icon-plus"></use>
+										</svg>
+										<span class="name">New Blank Canvas</span>
+									</button>
 
 								</div>
 
@@ -3198,10 +3205,6 @@
 				</svg>
 				<span class="name">Add Layer</span>
 			</button>
-			<button class="btn-icon icon-wrapper" id="mobileAppSettingsBtn" title="App Settings">
-				<svg class="icon"><use href="#icon-gear"></use></svg>
-				<span class="name">App Settings</span>
-			</button>
 		</div>
 
 		<div class="mobile-drawer-btn-group">
@@ -3490,7 +3493,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/config.js?v=27"></script>
+	<script src="js/config.js?v=29"></script>
 	<script src="js/transform-math.js?v=1"></script>
 
 	<!-- Utils -->
@@ -3521,14 +3524,14 @@
 	<script src="js/classes/LayerTransform.js?v=21"></script>
 	<script src="js/classes/GlitterManager.js?v=12"></script>
 	<script src="js/classes/TextGlitterManager.js?v=35"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=21"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=22"></script>
 	<script src="js/classes/StickerManager.js?v=5"></script>
 	<script src="js/classes/GroupTransformManager.js?v=14"></script>
 
 	<script src="js/classes/MobileManager.js?v=6"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=68"></script>
+	<script src="js/app.js?v=71"></script>
 
 </body>
 

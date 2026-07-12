@@ -2910,17 +2910,20 @@ async resetAllSettings() {
 		const openProjectBtn = document.getElementById('openProjectBtn');
 		const openProjectSidebarBtn = document.getElementById('openProjectSidebarBtn');
 
-		// New Canvas button
+		// New Canvas button (desktop welcome state + mobile dropzone)
 		const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
-		if (openNewCanvasBtn) {
-			openNewCanvasBtn.addEventListener('click', () => {
+		const dropzoneNewCanvasBtn = document.getElementById('dropzoneNewCanvasBtn');
+		[openNewCanvasBtn, dropzoneNewCanvasBtn].forEach((button) => {
+			if (!button) return;
+			button.addEventListener('click', (e) => {
+				e.stopPropagation();
 				const modal = document.getElementById('newCanvasModal');
 				if (modal) {
 					modal.classList.add('visible');
 					this.initializeNewCanvasModal();
 				}
 			});
-		}
+		});
 
 		if (imageUpload) {
 			imageUpload.addEventListener('change', (e) => this.loadImage(e));
@@ -3233,7 +3236,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=11',
+				externalContentUrl: 'modals/guide.html?v=13',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -3579,11 +3582,6 @@ setupWelcomeModalListeners() {
 				this.modalManager.open('layerTypePickerModal');
 			});
 		}
-
-		document.getElementById('mobileAppSettingsBtn')?.addEventListener('click', () => {
-			this.mobileManager?.closeAllDrawers?.();
-			this.modalManager?.open('settingsModal');
-		});
 
 		const quickAddOptions = document.getElementById('quickAddOptions');
 		if (quickAddOptions) {

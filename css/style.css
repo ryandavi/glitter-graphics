@@ -78,6 +78,7 @@
   /* Overlay: slate-blue scrim, translucent enough to keep the workspace
      visible behind the blur instead of dropping to near-black. */
   --color-overlay: rgb(44 62 82 / 45%);
+  --color-overlay-strong: rgb(44 62 82 / 78%);
 }
 
 :root[data-theme=bubblegum] {
@@ -147,6 +148,7 @@
   --switch-knob-color: #ffffff;
   /* Overlay: plum scrim, workspace stays visible behind the blur */
   --color-overlay: rgb(88 44 70 / 45%);
+  --color-overlay-strong: rgb(88 44 70 / 78%);
 }
 
 :root[data-theme=bliss] {
@@ -221,6 +223,7 @@
   --color-slider-track: #d9d5c2;
   --switch-knob-color: #ffffff;
   --color-overlay: rgb(38 54 92 / 45%);
+  --color-overlay-strong: rgb(38 54 92 / 78%);
   /* Boxy dialog corners */
   --radius-sm: 2px;
   --radius-md: 3px;
@@ -296,6 +299,7 @@
   --color-slider-track: #d3e9f3;
   --switch-knob-color: #ffffff;
   --color-overlay: rgb(23 76 100 / 40%);
+  --color-overlay-strong: rgb(23 76 100 / 75%);
   /* Droplet-round corners */
   --radius-sm: 8px;
   --radius-md: 11px;
@@ -433,6 +437,10 @@
   --color-bg-workspace: var(--color-bg-secondary);
   /* Modal overlay scrim behind .modal-content */
   --color-overlay: rgba(0, 0, 0, 0.85);
+  /* Stronger scrim for text painted directly over arbitrary photo content
+     (image dropzone hover). --color-overlay's 45% (light themes) is tuned
+     for a scrim behind modal chrome and reads too faint over a photo. */
+  --color-overlay-strong: rgba(0, 0, 0, 0.8);
   /* Icons inside buttons: opacity, not color, so state colors (active,
      danger) still inherit through currentColor untouched. Slightly under 1
      so icons sit a step below button text in every theme. */
@@ -1305,10 +1313,6 @@ input[type=range]::-moz-range-thumb {
   transition: var(--slider-speed);
 }
 
-.mobile-only-action {
-  display: none;
-}
-
 /* ===== APP STRUCTURE ===== */
 .app-container {
   display: flex;
@@ -1563,7 +1567,8 @@ input[type=range]::-moz-range-thumb {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--color-overlay-strong);
+  color: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1600,6 +1605,12 @@ input[type=range]::-moz-range-thumb {
   letter-spacing: 0.5px;
   color: var(--color-text-tertiary);
   margin-top: 5px;
+}
+.image-container > .image-dropzone-wrapper > .image-dropzone > .image-upload-overlay > .dropzone-text {
+  color: #ffffff;
+}
+.image-container > .image-dropzone-wrapper > .image-dropzone > .image-upload-overlay > .dropzone-subtext {
+  color: rgba(255, 255, 255, 0.75);
 }
 .image-container > .image-dropzone-wrapper > .image-dropzone > #originalCanvas {
   width: 100%;
@@ -5840,6 +5851,10 @@ body.mask-editing .sticker-element {
   display: none;
 }
 
+.mobile-only-action {
+  display: none;
+}
+
 @media (max-width: 800px) {
   :root {
     --glitter-swatch-columns: 5;
@@ -5930,12 +5945,14 @@ body.mask-editing .sticker-element {
   .toolbar #shortcutsBtn {
     display: none;
   }
-  .toolbar #settingsBtn,
-  .toolbar #clearAllTool {
+  .toolbar #toolbarClearGroup {
     display: none;
   }
   .mobile-only-action {
     display: inline-flex;
+  }
+  #dropzoneNewCanvasBtn {
+    margin-top: var(--spacing-md);
   }
   .mobile-top-nav {
     position: fixed;

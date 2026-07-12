@@ -91,6 +91,7 @@
 	/* Overlay: slate-blue scrim, translucent enough to keep the workspace
 	   visible behind the blur instead of dropping to near-black. */
 	--color-overlay: rgb(44 62 82 / 45%);
+	--color-overlay-strong: rgb(44 62 82 / 78%);
 }
 
 // Bubblegum — the light theme's structure verbatim, re-familied to pastel
@@ -175,6 +176,7 @@
 
 	/* Overlay: plum scrim, workspace stays visible behind the blur */
 	--color-overlay: rgb(88 44 70 / 45%);
+	--color-overlay-strong: rgb(88 44 70 / 78%);
 }
 
 // Bliss — 2001: royal-blue title-bar chrome, warm beige dialog faces,
@@ -262,6 +264,7 @@
 	--color-slider-track: #d9d5c2;
 	--switch-knob-color: #ffffff;
 	--color-overlay: rgb(38 54 92 / 45%);
+	--color-overlay-strong: rgb(38 54 92 / 78%);
 
 	/* Boxy dialog corners */
 	--radius-sm: 2px;
@@ -350,6 +353,7 @@
 	--color-slider-track: #d3e9f3;
 	--switch-knob-color: #ffffff;
 	--color-overlay: rgb(23 76 100 / 40%);
+	--color-overlay-strong: rgb(23 76 100 / 75%);
 
 	/* Droplet-round corners */
 	--radius-sm: 8px;

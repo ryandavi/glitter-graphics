@@ -977,7 +977,15 @@ class ShapeGlitterManager {
 		ctx.strokeStyle = '#ffffff';
 		if (edgeStyle === 'hard') {
 			ctx.lineJoin = 'miter';
-			ctx.miterLimit = Math.max(1, CONFIG.tools.shapes.border?.hardEdgeMiterLimit ?? 2);
+			// 'inside' clips a double-width centered stroke to the shape path rather
+			// than offsetting it, so at a reflex/concave vertex (a heart's inner
+			// notch, a star's inner corners) a long miter spike self-intersects the
+			// clip and splits the fill into disconnected slivers. outside/center
+			// don't clip, so they're free to use the full configured limit to keep
+			// convex points (star, sparkle) from bevelling off.
+			ctx.miterLimit = effectivePlacement === 'inside'
+				? CONFIG.tools.shapes.border?.hardEdgeInsideMiterLimit ?? 2
+				: Math.max(1, CONFIG.tools.shapes.border?.hardEdgeMiterLimit ?? 2);
 			ctx.lineCap = borderStyle === 'dotted' ? 'square' : 'butt';
 		} else {
 			ctx.lineJoin = 'round';

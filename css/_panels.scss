@@ -1,9 +1,5 @@
 @use 'mixins' as *;
 
-.mobile-only-action {
-	display: none;
-}
-
 /* ===== APP STRUCTURE ===== */
 .app-container {
 	display: flex;
@@ -220,7 +216,12 @@
 				left: 0;
 				right: 0;
 				bottom: 0;
-				background: rgba(0, 0, 0, 0.8);
+				background: var(--color-overlay-strong);
+				// Literal light text/icon (inherited below), not the theme-flipping
+				// text-secondary/tertiary tokens .dropzone-content uses: this scrim
+				// is dark in every theme (by design, to stay legible over an
+				// arbitrary photo), so light-family themes need fixed contrast here.
+				color: #ffffff;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
@@ -261,6 +262,21 @@
 					@include text-sm;
 					color: var(--color-text-tertiary);
 					margin-top: 5px;
+				}
+			}
+
+			// .dropzone-icon has no color of its own, so it inherits the literal
+			// white from .image-upload-overlay above -- but .dropzone-text and
+			// .dropzone-subtext both set an explicit color in the shared rule
+			// above (for .dropzone-content's benefit), and an explicit color
+			// always beats an inherited one. Override both back to literal white.
+			>.image-upload-overlay {
+				>.dropzone-text {
+					color: #ffffff;
+				}
+
+				>.dropzone-subtext {
+					color: rgb(255 255 255 / 75%);
 				}
 			}
 

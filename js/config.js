@@ -213,7 +213,18 @@ const CONFIG = {
 				defaultDrawOrder: 'behind',
 				defaultSource: 'solid',
 				defaultEdgeStyle: 'round',
-				hardEdgeMiterLimit: 2
+				// Canvas bevels a miter join once its point would exceed this many
+				// line-widths -- also doubles as the outside/center canvas padding
+				// multiplier (getBorderOutsidePadding), so raising it grows the
+				// allocated canvas size too. 8 covers star/sparkle points without
+				// ballooning padding at max border width. Only applies to
+				// outside/center -- see hardEdgeInsideMiterLimit for inside.
+				hardEdgeMiterLimit: 8,
+				// 'inside' placement clips a double-width centered stroke to the
+				// shape path instead of offsetting it, so above ~2 a reflex/concave
+				// vertex (heart notch, star inner corners) self-intersects the clip
+				// and the fill splits into disconnected slivers. Keep this low.
+				hardEdgeInsideMiterLimit: 2
 			},
 			shadow: {
 				defaultOffsetX: 6,

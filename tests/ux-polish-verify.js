@@ -151,18 +151,15 @@ async function main() {
 		await page.waitForTimeout(100);
 		const mobileActions = await page.evaluate(() => ({
 			toolbarSettings: getComputedStyle(document.getElementById('settingsBtn')).display,
-			toolbarClear: getComputedStyle(document.getElementById('clearAllTool')).display,
-			navSettings: getComputedStyle(document.getElementById('mobileAppSettingsBtn')).display,
-			layersClear: getComputedStyle(document.getElementById('layersBarClearAll')).display
+			toolbarClearGroup: getComputedStyle(document.getElementById('toolbarClearGroup')).display,
+			layersClear: getComputedStyle(document.getElementById('layersBarClearAll')).display,
+			bottomNavButtons: document.querySelectorAll('.mobile-bottom-nav button').length
 		}));
-		assert(mobileActions.toolbarSettings === 'none' && mobileActions.toolbarClear === 'none',
-			'Mobile toolbar still shows App Settings or Clear All');
-		assert(mobileActions.navSettings !== 'none' && mobileActions.layersClear !== 'none',
-			'Mobile replacement actions are not available');
-		await page.click('#mobileAppSettingsBtn');
-		assert(await page.$eval('#settingsModal', (node) => node.classList.contains('visible')),
-			'Mobile App Settings action did not open Settings');
-		console.log('PASS Mobile Settings and Clear All relocation');
+		assert(mobileActions.toolbarSettings !== 'none', 'Mobile toolbar is missing App Settings');
+		assert(mobileActions.toolbarClearGroup === 'none', 'Mobile toolbar still shows Clear All');
+		assert(mobileActions.layersClear !== 'none' && mobileActions.bottomNavButtons === 3,
+			'Mobile three-button navigation or relocated Clear All is unavailable');
+		console.log('PASS Mobile Settings visibility and Clear All relocation');
 
 		assert(runtimeErrors.length === 0, `Runtime errors:\n${runtimeErrors.join('\n')}`);
 		console.log('\nUX polish verification finished with all checks passing.');

@@ -137,6 +137,11 @@
 	/* Modal overlay scrim behind .modal-content */
 	--color-overlay: rgba(0, 0, 0, 0.85);
 
+	/* Stronger scrim for text painted directly over arbitrary photo content
+	   (image dropzone hover). --color-overlay's 45% (light themes) is tuned
+	   for a scrim behind modal chrome and reads too faint over a photo. */
+	--color-overlay-strong: rgba(0, 0, 0, 0.8);
+
 	/* Icons inside buttons: opacity, not color, so state colors (active,
 	   danger) still inherit through currentColor untouched. Slightly under 1
 	   so icons sit a step below button text in every theme. */
