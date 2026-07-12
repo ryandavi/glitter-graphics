@@ -99,10 +99,10 @@ async function mouseDrag(page, from, to, steps = GESTURE_STEPS) {
 	await page.waitForTimeout(80);
 }
 
-async function mouseAltDrag(page, from, to) {
+async function mouseAltDrag(page, from, to, steps = GESTURE_STEPS) {
 	await page.keyboard.down('Alt');
 	try {
-		await mouseDrag(page, from, to);
+		await mouseDrag(page, from, to, steps);
 	} finally {
 		await page.keyboard.up('Alt');
 	}
@@ -546,9 +546,12 @@ async function checkGroupScaleUndo(page) {
 	const beforeFirst = await getStickerState(page, first.layerId);
 	const beforeSecond = await getStickerState(page, second.layerId);
 	const handle = await getElementCenter(page, '.group-transform-handles [data-handle-type="corner-br"]');
-	await mouseDrag(page, handle, { x: handle.x + 55, y: handle.y + 45 });
+	const target = { x: handle.x + 55, y: handle.y + 45 };
+	await mouseDrag(page, handle, target);
 	const scaledFirst = await getStickerState(page, first.layerId);
 	assert(scaledFirst.scale.x > beforeFirst.scale.x + 5, 'Group corner drag did not scale the selection');
+	const trackedHandle = await getElementCenter(page, '.group-transform-handles [data-handle-type="corner-br"]');
+	assert(Math.hypot(trackedHandle.x - target.x, trackedHandle.y - target.y) < 25, `Group scale handle escaped the cursor (target ${JSON.stringify(target)}, handle ${JSON.stringify(trackedHandle)})`);
 	await page.evaluate(() => window.editor.undo());
 	await page.waitForTimeout(150);
 	const undoneFirst = await getStickerState(page, first.layerId);
@@ -576,6 +579,34 @@ async function checkGroupRotationUndo(page) {
 	const undoneSecond = await getStickerState(page, second.layerId);
 	assert(Math.abs(undoneFirst.rotation - beforeFirst.rotation) < 0.01 && Math.abs(undoneFirst.position.x - beforeFirst.position.x) < 0.01, 'Undo did not restore sticker A after group rotation');
 	assert(Math.abs(undoneSecond.rotation - beforeSecond.rotation) < 0.01 && Math.abs(undoneSecond.position.x - beforeSecond.position.x) < 0.01, 'Undo did not restore sticker B after group rotation');
+}
+
+async function checkGroupAltDuplicateDrag(page) {
+	await loadBlankCanvas(page);
+	await setTool(page, 'select');
+	const first = await createTestSticker(page, { position: { x: 90, y: 90 }, label: 'Group Duplicate A' });
+	const second = await createTestSticker(page, { position: { x: 165, y: 110 }, label: 'Group Duplicate B' });
+	const sourceIds = [first.layerId, second.layerId];
+	await selectLayers(page, sourceIds, second.layerId);
+	const sourceBefore = await Promise.all(sourceIds.map((id) => getStickerState(page, id)));
+	const handle = await getElementCenter(page, '.group-transform-handles .transform-bounding-box');
+	await mouseAltDrag(page, handle, { x: handle.x + 120, y: handle.y + 70 }, 1);
+	const result = await page.evaluate((originalIds) => ({
+		layerCount: editor.layers.length,
+		selectedIds: [...editor.selectedLayerIds],
+		originalIds,
+		positions: [...editor.selectedLayerIds].map((id) => {
+			const layer = editor.layers.find((entry) => entry.id === id);
+			return { x: getLayerTransform(layer).position.x, y: getLayerTransform(layer).position.y };
+		})
+	}), sourceIds);
+	assert(result.layerCount === 5, `Group Alt-drag created the wrong layer count (${result.layerCount})`);
+	assert(result.selectedIds.length === 2 && result.selectedIds.every((id) => !sourceIds.includes(id)), 'Group Alt-drag did not select both clones');
+	assert(result.positions.every((position, index) => Math.abs(position.x - sourceBefore[index].position.x) > 20), 'Group Alt-drag clones did not follow the cursor');
+	await page.evaluate(() => window.editor.undo());
+	await page.waitForTimeout(150);
+	const afterUndoCount = await page.evaluate(() => editor.layers.length);
+	assert(afterUndoCount === 3, `Undo did not remove the duplicated group (${afterUndoCount} layers remain)`);
 }
 
 async function runCheck(browser, name, fn) {
@@ -608,6 +639,7 @@ async function main() {
 			['Mouse drag on the shared group box moves every selected sticker and undoes', (page) => checkGroupMoveHandle(page, mouseDrag, 'mouse')],
 			['Mouse group scale undoes every selected sticker', checkGroupScaleUndo],
 			['Mouse group rotation undoes every selected sticker', checkGroupRotationUndo],
+			['Alt + mouse group drag duplicates and moves every selected sticker', checkGroupAltDuplicateDrag],
 			['Mouse drag on rotation handle still rotates the selected sticker', (page) => checkRotationHandle(page, mouseDrag, 'mouse')],
 			['Mouse drag on corner handle still scales the selected sticker', (page) => checkCornerScaleHandle(page, mouseDrag, 'mouse')],
 			['Alt + mouse corner drag scales from the layer center', checkAltCornerScaleFromCenter],

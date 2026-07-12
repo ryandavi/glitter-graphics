@@ -494,6 +494,7 @@ class GroupTransformManager {
 	}
 
 	removeTransformHandles() {
+		this.removeDocumentHandleListeners();
 		if (this.transformHandles?.parentNode) {
 			this.transformHandles.parentNode.removeChild(this.transformHandles);
 		}
@@ -510,6 +511,12 @@ class GroupTransformManager {
 		this.activeHandlePointerId = null;
 		this.dragStartState = null;
 		this.isDraggingHandle = false;
+	}
+
+	removeDocumentHandleListeners() {
+		document.removeEventListener('pointermove', this.handlePointerMove);
+		document.removeEventListener('pointerup', this.handlePointerUp);
+		document.removeEventListener('pointercancel', this.handlePointerUp);
 	}
 
 	attachHandleListeners() {
@@ -566,11 +573,13 @@ class GroupTransformManager {
 					altDuplicatePending: handleType === 'move' && event.altKey,
 					originalSelectionIds: handleType === 'move' && event.altKey ? this.getSelectedLayerIds() : null
 				};
-			});
 
-			handle.addEventListener('pointermove', this.handlePointerMove);
-			handle.addEventListener('pointerup', this.handlePointerUp);
-			handle.addEventListener('pointercancel', this.handlePointerUp);
+				// Keep the drag alive even if cloning/reordering moves the original
+				// handle node and the browser releases its pointer capture.
+				document.addEventListener('pointermove', this.handlePointerMove);
+				document.addEventListener('pointerup', this.handlePointerUp);
+				document.addEventListener('pointercancel', this.handlePointerUp);
+			});
 
 			if (handleType === 'move') {
 				handle.addEventListener('click', (event) => {
@@ -643,11 +652,19 @@ class GroupTransformManager {
 		}
 
 		if (this.isDraggingHandle) {
+			const completedDrag = this.dragStartState;
 			event.preventDefault();
 			event.stopPropagation();
 			this.isDraggingHandle = false;
 			if (!shouldSingleSelect && this.dragStartState?.didMove) {
-				await this.commitScaledLayers();
+				if (this.activeHandleType?.startsWith('corner-')) {
+					await this.commitScaledLayers();
+				}
+				if (completedDrag.cloneIds?.length) {
+					this.editor.layerManager.setSelection(completedDrag.cloneIds, {
+						activeLayerId: completedDrag.cloneIds.at(-1)
+					});
+				}
 				this.editor.saveState();
 				this.editor.syncTransformHandlesForActiveLayer?.();
 			}
@@ -660,6 +677,7 @@ class GroupTransformManager {
 			}
 		}
 
+		this.removeDocumentHandleListeners();
 		this.editor.setDuplicateDragFeedback?.(false);
 		this.activeHandleElement?.releasePointerCapture?.(event.pointerId);
 		this.activeHandleType = null;
@@ -680,14 +698,21 @@ class GroupTransformManager {
 				const layer = this.editor.layerManager.layers.find((entry) => entry.id === id);
 				return layer ? this.getLayerTransform(layer) : null;
 			});
-			const clones = this.editor.layerManager.cloneLayers(this.dragStartState.originalSelectionIds, { positionOffset: { x: 0, y: 0 }, skipHistory: true });
+			const clones = this.editor.layerManager.cloneLayers(this.dragStartState.originalSelectionIds, {
+				positionOffset: { x: 0, y: 0 },
+				skipHistory: true,
+				skipSelection: true
+			});
 			if (!clones) return;
-			this.editor.setDuplicateDragFeedback?.(true, clones.length);
+			const cloneList = Array.isArray(clones) ? clones : [clones];
+			this.editor.setDuplicateDragFeedback?.(true, cloneList.length);
 			const bounds = this.getBounds();
 			this.dragStartState.bounds = bounds;
-			this.dragStartState.layerStates = this.getLayerEntries().map(({ layer, transform }) => ({
-				layer, transform, position: { ...transform.getTransform().position }, scale: { ...transform.getTransform().scale }, rotation: transform.getTransform().rotation || 0
-			}));
+			this.dragStartState.layerStates = cloneList.map((layer) => {
+				const transform = this.getLayerTransform(layer);
+				return { layer, transform, position: { ...transform.getTransform().position }, scale: { ...transform.getTransform().scale }, rotation: transform.getTransform().rotation || 0 };
+			});
+			this.dragStartState.cloneIds = cloneList.map((layer) => layer.id);
 			this.dragStartState.layerStates.forEach(({ transform }, index) => this.editor.addDuplicateGhost?.(sourceTransforms[index], transform));
 			this.dragStartState.altDuplicatePending = false;
 		}
@@ -723,17 +748,25 @@ class GroupTransformManager {
 
 		const halfWidth = Math.max(1, bounds.width / 2);
 		const halfHeight = Math.max(1, bounds.height / 2);
-		const scaleX = Math.abs(canvasPos.x - bounds.centerX) / halfWidth;
-		const scaleY = Math.abs(canvasPos.y - bounds.centerY) / halfHeight;
+		const corner = this.activeHandleType.replace('corner-', '');
+		const signX = corner.includes('l') ? -1 : 1;
+		const signY = corner.includes('t') ? -1 : 1;
+		const oppositeX = bounds.centerX - (signX * halfWidth);
+		const oppositeY = bounds.centerY - (signY * halfHeight);
+		const outset = CONFIG.ui.stickerHandles.outwardOffset;
+		// The handle is drawn just outside the true corner. Convert its pointer
+		// position back to the artwork corner, then measure from the fixed opposite
+		// corner. Measuring from center made group scale run about 2× ahead.
+		const draggedCornerX = canvasPos.x - (signX * outset);
+		const draggedCornerY = canvasPos.y - (signY * outset);
+		const scaleX = Math.abs(draggedCornerX - oppositeX) / Math.max(1, bounds.width);
+		const scaleY = Math.abs(draggedCornerY - oppositeY) / Math.max(1, bounds.height);
 		const scaleFactor = Math.max(0.1, Math.min(5, Math.max(scaleX, scaleY)));
 		if (!this.dragStartState.didMove && Math.abs(scaleFactor - 1) < 0.01) {
 			return;
 		}
 
 		this.dragStartState.didMove = true;
-		const corner = this.activeHandleType.replace('corner-', '');
-		const signX = corner.includes('l') ? -1 : 1;
-		const signY = corner.includes('t') ? -1 : 1;
 		const translateX = event.altKey ? 0 : signX * halfWidth * (scaleFactor - 1);
 		const translateY = event.altKey ? 0 : signY * halfHeight * (scaleFactor - 1);
 		this.applyLayerStateDelta(this.dragStartState.layerStates, bounds, { scaleFactor, translateX, translateY });
@@ -744,9 +777,8 @@ class GroupTransformManager {
 	cancelActiveDrag() {
 		const start = this.dragStartState;
 		if (!this.isDraggingHandle || !start) return false;
-		if (start.originalSelectionIds && !start.altDuplicatePending) {
-			const cloneIds = this.getSelectedLayerIds();
-			this.editor.layerManager.deleteLayers(cloneIds, { skipHistory: true, silent: true });
+		if (start.cloneIds?.length) {
+			this.editor.layerManager.deleteLayers(start.cloneIds, { skipHistory: true, silent: true });
 			this.editor.layerManager.setSelection(start.originalSelectionIds, { activeLayerId: start.originalSelectionIds.at(-1) });
 		} else {
 			start.layerStates?.forEach(({ transform, position, scale, rotation }) => {
@@ -754,6 +786,7 @@ class GroupTransformManager {
 			});
 			this.applyEntries(start.layerStates || []);
 		}
+		this.removeDocumentHandleListeners();
 		this.editor.setDuplicateDragFeedback?.(false);
 		this.activeHandleElement?.releasePointerCapture?.(this.activeHandlePointerId);
 		this.activeHandleType = null;

@@ -1130,9 +1130,11 @@ class LayerManager {
 			this.renderClonedLayerPreview(layer);
 		});
 
-		this.setSelection(clones.map((layer) => layer.id), {
-			activeLayerId: clones[clones.length - 1].id
-		});
+		if (!options.skipSelection) {
+			this.setSelection(clones.map((layer) => layer.id), {
+				activeLayerId: clones[clones.length - 1].id
+			});
+		}
 		this.renderLayersList();
 		this.reorderLayers();
 		this.editor.updatePreview();
