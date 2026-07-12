@@ -44,6 +44,10 @@ class ShapeGlitterManager {
 		const id = (x) => document.getElementById(x);
 		this.ui.section = id('shapeSettingsSection');
 		this.ui.picker = id('shapeShapePicker');
+		this.ui.gallery = id('shapesOptions');
+		this.ui.assetThumbnail = id('shapeAssetThumbnail');
+		this.ui.assetName = id('shapeAssetName');
+		this.ui.assetChange = id('shapeAssetChange');
 		// Shared gallery picker strip (same DOM the text picker uses).
 		this.ui.gallerySection = id('designGallerySection');
 		this.ui.pickerStrip = id('galleryPickerStrip');
@@ -131,6 +135,18 @@ class ShapeGlitterManager {
 		}
 
 		this.renderShapePicker();
+		this.renderShapeGallery();
+	}
+
+	buildShapeCard(id, label, className = 'brush-shape-option') {
+		const card = document.createElement('button');
+		card.type = 'button';
+		card.className = className;
+		card.dataset.shape = id;
+		card.title = label;
+		card.setAttribute('aria-label', label);
+		card.innerHTML = `<span class="brush-shape-option-icon" aria-hidden="true">${ShapeLibrary.getIconSvg(id)}</span><span class="brush-shape-option-name">${label}</span>`;
+		return card;
 	}
 
 	renderShapePicker() {
@@ -138,21 +154,32 @@ class ShapeGlitterManager {
 		if (!picker) return;
 		picker.innerHTML = '';
 		ShapeLibrary.FILL_SHAPES.forEach(({ id, label }) => {
-			const card = document.createElement('button');
-			card.type = 'button';
-			card.className = 'brush-shape-option';
-			card.dataset.shape = id;
-			card.title = label;
+			const card = this.buildShapeCard(id, label);
 			card.setAttribute('role', 'option');
-			card.setAttribute('aria-label', label);
-			// Same geometry source as the mask, so the thumbnail matches the shape.
-			card.innerHTML =
-				'<span class="brush-shape-option-icon" aria-hidden="true">' +
-				`${ShapeLibrary.getIconSvg(id)}</span>` +
-				`<span class="brush-shape-option-name">${label}</span>`;
 			picker.appendChild(card);
 		});
 		this._syncPickerActive();
+	}
+
+	renderShapeGallery() {
+		if (!this.ui.gallery) return;
+		const grid = document.createElement('div');
+		grid.className = 'asset-grid shape-gallery-grid';
+		ShapeLibrary.FILL_SHAPES.forEach(({ id, label }) => {
+			const card = this.buildShapeCard(id, label, 'asset-option shape-gallery-option');
+			card.addEventListener('click', () => {
+				const changeLayer = this.editor.layerManager.layers.find((layer) => layer.id === this.shapeChangeLayerId);
+				if (changeLayer?.type === LayerType.SHAPE) {
+					this.applyShapeToLayer(changeLayer, id);
+					this.updatePickerStrip();
+					return;
+				}
+				const layer = this.editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: id } });
+				if (layer) this.editor.finishLayerCreation(layer);
+			});
+			grid.appendChild(card);
+		});
+		this.ui.gallery.replaceChildren(grid);
 	}
 
 	_syncPickerActive() {
@@ -166,6 +193,10 @@ class ShapeGlitterManager {
 	}
 
 	setupEventListeners() {
+		[this.ui.assetThumbnail, this.ui.assetChange].filter(Boolean).forEach((control) => {
+			control.addEventListener('click', () => this.armShapeAssetPicker());
+		});
+
 		// Shape picker: sets the active shape for new shapes, and reshapes the
 		// selected layer if one is active.
 		this.ui.picker?.addEventListener('click', (event) => {
@@ -173,22 +204,7 @@ class ShapeGlitterManager {
 			if (!card) return;
 			this.activeShapeId = card.dataset.shape;
 			const layer = this.getActiveShapeLayer();
-			if (layer) {
-				const newId = card.dataset.shape;
-				layer.shapeData.shapeId = newId;
-				layer.name = this.getShapeLabel(newId);
-				// Re-fit the box to the new shape's natural aspect (preserving the
-				// larger dimension) so the transform box updates and it isn't
-				// left stretched into the old shape's proportions.
-				const size = Math.max(layer.shapeData.width, layer.shapeData.height);
-				const sized = this.sizeForShape(newId, size);
-				layer.shapeData.width = sized.width;
-				layer.shapeData.height = sized.height;
-				this.invalidateMeasurement(layer);
-				this.renderLayer(layer);
-				this.editor.saveState();
-				this.editor.layerManager.renderLayersList();
-			}
+			if (layer) this.applyShapeToLayer(layer, card.dataset.shape);
 			this._syncPickerActive();
 		});
 
@@ -213,10 +229,10 @@ class ShapeGlitterManager {
 
 		// Shared picker strip: Done (only acts while a shape is armed) + global Esc.
 		this.ui.pickerStripDone?.addEventListener('click', () => {
-			if (this.getActiveShapeLayer() && this.pickerSession) this.handlePickerDone();
+			if (this.getActiveShapeLayer() && (this.pickerSession || this.shapeChangeLayerId)) this.handlePickerDone();
 		});
 		document.addEventListener('keydown', (event) => {
-			if (event.key !== 'Escape' || !this.pickerSession || !this.getActiveShapeLayer()) return;
+			if (event.key !== 'Escape' || (!this.pickerSession && !this.shapeChangeLayerId) || !this.getActiveShapeLayer()) return;
 			const a = document.activeElement;
 			if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return;
 			if (this.editor.modalManager?.isAnyOpen?.()) return;
@@ -256,6 +272,20 @@ class ShapeGlitterManager {
 		this.ui.borderPositionInside?.addEventListener('click', () => this.setBorderPlacement('inside'));
 		this.ui.borderOrderBehind?.addEventListener('click', () => this.setBorderDrawOrder('behind'));
 		this.ui.borderOrderFront?.addEventListener('click', () => this.setBorderDrawOrder('front'));
+	}
+
+	applyShapeToLayer(layer, shapeId) {
+		layer.shapeData.shapeId = shapeId;
+		layer.name = this.getShapeLabel(shapeId);
+		const size = Math.max(layer.shapeData.width, layer.shapeData.height);
+		const sized = this.sizeForShape(shapeId, size);
+		layer.shapeData.width = sized.width;
+		layer.shapeData.height = sized.height;
+		this.invalidateMeasurement(layer);
+		this.renderLayer(layer);
+		this.loadLayerSettings(layer);
+		this.editor.saveState();
+		this.editor.layerManager.renderLayersList();
 	}
 
 	_cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -391,6 +421,16 @@ class ShapeGlitterManager {
 		this.updatePickerStrip();
 	}
 
+	armShapeAssetPicker() {
+		const layer = this.getActiveShapeLayer();
+		if (!layer) return;
+		this.shapeChangeLayerId = layer.id;
+		this.pickerSession = null;
+		this.updatePickerStrip();
+		this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
+		this.ui.gallery?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+	}
+
 	closePickerSession() {
 		this.pickerSession = null;
 		this.updatePickerStrip();
@@ -415,6 +455,7 @@ class ShapeGlitterManager {
 		const strip = this.ui.pickerStrip;
 		if (!strip) return;
 		const layer = this.getActiveShapeLayer();
+		const assetArmed = Boolean(layer && this.shapeChangeLayerId === layer.id);
 		const s = this.pickerSession;
 		const slotExists = s && (s.slot === 'fill' || Boolean(this.getEffectData(layer, s.slot)));
 		const armed = Boolean(layer && s && s.layerId === layer.id && slotExists);
@@ -423,7 +464,7 @@ class ShapeGlitterManager {
 		// text manager (both are called from app.updateSidePanelUI).
 		if (!layer) return;
 
-		if (!armed) {
+		if (!armed && !assetArmed) {
 			strip.hidden = true;
 			strip.classList.remove('is-armed', 'is-hint');
 			this.ui.gallerySection?.classList.remove('picker-mode');
@@ -433,15 +474,23 @@ class ShapeGlitterManager {
 		strip.hidden = false;
 		strip.classList.add('is-armed');
 		strip.classList.remove('is-hint');
-		this.ui.gallerySection?.classList.add('picker-mode');
+		this.ui.gallerySection?.classList.toggle('picker-mode', armed);
 		if (this.ui.pickerStripDone) this.ui.pickerStripDone.hidden = false;
-		const stripText = formatPickerStripText(s.slot, layer.name, 'shape');
+		const stripText = assetArmed
+			? { title: 'Choosing shape', detail: `Replacing “${layer.name || 'this shape'}”` }
+			: formatPickerStripText(s.slot, layer.name, 'shape');
 		if (this.ui.pickerStripTitle) this.ui.pickerStripTitle.textContent = stripText.title;
 		if (this.ui.pickerStripDetail) this.ui.pickerStripDetail.textContent = stripText.detail;
 	}
 
 	// Done/Esc from the shared strip when a shape is active.
 	handlePickerDone() {
+		if (this.shapeChangeLayerId) {
+			this.shapeChangeLayerId = null;
+			this.updatePickerStrip();
+			this.returnToShapeProperties('fill');
+			return;
+		}
 		const slot = this.pickerSession?.slot || 'fill';
 		this.closePickerSession();
 		this.returnToShapeProperties(slot);
@@ -508,6 +557,8 @@ class ShapeGlitterManager {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		this.normalizeLayer(layer);
 		const d = layer.shapeData;
+		if (this.ui.assetThumbnail) this.ui.assetThumbnail.innerHTML = ShapeLibrary.getIconSvg(d.shapeId);
+		if (this.ui.assetName) this.ui.assetName.textContent = this.getShapeLabel(d.shapeId);
 
 		this._syncPickerActive();
 

@@ -279,11 +279,39 @@
 #confirmationModal {
 	.modal-body {
 		font-size: var(--font-size-md);
-
-		>p {
-			margin: 0;
-		}
 	}
+
+	.confirmation-message {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		max-height: min(50vh, 420px);
+		overflow-y: auto;
+		color: var(--color-text-secondary);
+		line-height: 1.5;
+	}
+
+	.confirmation-message-copy,
+	.confirmation-message-outro { margin: 0; }
+
+	.confirmation-message-copy {
+		color: var(--color-text-primary);
+		font-weight: 600;
+	}
+
+	.confirmation-message-list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		margin: 0;
+		padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) calc(var(--spacing-xl) + var(--spacing-xs));
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-bg-card);
+	}
+
+	.confirmation-message-list > li::marker { color: var(--color-warning); }
+	.confirmation-message-outro { color: var(--color-text-primary); }
 }
 
 // Highlight animation (for reference scrolling)
@@ -1012,9 +1040,9 @@
 
 // layer type options
 .layer-type-options {
-	display: flex;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
 	gap: var(--spacing-base);
-	flex-wrap: wrap;
 	align-items: stretch;
 
 	>.layer-type-option {
@@ -1029,7 +1057,8 @@
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		text-align: center;
-		flex: 1;
+		width: 100%;
+		max-width: 100%;
 
 		&:hover {
 			background: var(--color-bg-tertiary);

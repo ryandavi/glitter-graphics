@@ -202,9 +202,17 @@ class StickerManager extends ContentManager {
 	armPicker(slot) {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.STICKER || !layer.stickerData[slot]) return;
-		this.pickerSession = { layerId: layer.id, slot };
+		this.pickerSession = { kind: 'glitter', layerId: layer.id, slot };
 		this.updatePickerStrip();
 		revealAssetBrowser(this.editor, this.editor.glitterManager);
+	}
+
+	armAssetPicker() {
+		const layer = this.editor.layerManager.getActiveLayer();
+		if (layer?.type !== LayerType.STICKER) return;
+		this.pickerSession = { kind: 'asset', layerId: layer.id };
+		this.updatePickerStrip();
+		revealAssetBrowser(this.editor, this);
 	}
 
 	closePicker() {
@@ -220,20 +228,24 @@ class StickerManager extends ContentManager {
 	updatePickerStrip() {
 		if (!this.ui.pickerStrip || this.editor.layerManager.getActiveLayer()?.type !== LayerType.STICKER) return;
 		const layer = this.editor.layerManager.getActiveLayer();
-		const armed = Boolean(this.pickerSession?.layerId === layer.id && layer.stickerData?.[this.pickerSession.slot]);
+		const assetArmed = this.pickerSession?.kind === 'asset' && this.pickerSession.layerId === layer.id;
+		const glitterArmed = this.pickerSession?.kind !== 'asset' && this.pickerSession?.layerId === layer.id && layer.stickerData?.[this.pickerSession.slot];
+		const armed = Boolean(assetArmed || glitterArmed);
 		this.ui.pickerStrip.hidden = !armed;
 		this.ui.pickerStrip.classList.toggle('is-armed', armed);
 		this.ui.pickerStrip.classList.remove('is-hint');
-		this.ui.gallerySection?.classList.toggle('picker-mode', armed);
+		this.ui.gallerySection?.classList.toggle('picker-mode', Boolean(glitterArmed));
 		if (!armed) return;
-		const stripText = formatPickerStripText(this.pickerSession.slot, layer.name, 'sticker');
+		const stripText = assetArmed
+			? { title: 'Choosing sticker', detail: `Replacing “${layer.name || 'this sticker'}”` }
+			: formatPickerStripText(this.pickerSession.slot, layer.name, 'sticker');
 		if (this.ui.pickerStripTitle) this.ui.pickerStripTitle.textContent = stripText.title;
 		if (this.ui.pickerStripDetail) this.ui.pickerStripDetail.textContent = stripText.detail;
 		if (this.ui.pickerStripDone) this.ui.pickerStripDone.hidden = false;
 	}
 
 	getGlitterSelectionTarget(layer = this.editor.layerManager.getActiveLayer()) {
-		return layer?.type === LayerType.STICKER && this.pickerSession?.layerId === layer.id ? this.pickerSession.slot : null;
+		return layer?.type === LayerType.STICKER && this.pickerSession?.kind !== 'asset' && this.pickerSession?.layerId === layer.id ? this.pickerSession.slot : null;
 	}
 
 	loadLayerSettings(layer) {
@@ -368,8 +380,8 @@ class StickerManager extends ContentManager {
 		if (item.hasTransparency) element.classList.add('has-transparency');
 	}
 
-	handleItemClick(item) {
-		this.addStickerToCanvas(item.id);
+	async handleItemClick(item) {
+		await this.addStickerToCanvas(item.id);
 
 		// Update helpful message
 		this.editor.updateHelpfulMessage();
@@ -970,14 +982,27 @@ updateTransform(layerId, updates) {
 		// Restore sticker layer from serialized data
 		const sticker = this.getItemById(layerData.stickerSourceId);
 		if (!sticker) {
-			console.warn('Sticker not found during deserialization:', layerData.stickerSourceId);
-			return null;
+			const missingId = layerData.stickerSourceId;
+			layerData._missingAssets = [...(layerData._missingAssets || []), `sticker ${missingId}`];
+			layerData.stickerSourceId = null;
+			layerData.stickerData = {
+				...(layerData.stickerData || {}),
+				isEmpty: true,
+				url: null,
+				name: 'Missing Sticker',
+				transform: layerData.stickerData?.transform || layerData.transform
+			};
+			syncLayerTransformReference(layerData, layerData.stickerData.transform);
+			return layerData;
 		}
 
-		// Restore URL if needed
-		if (!layerData.stickerData.url) {
-			layerData.stickerData.url = sticker.url;
-		}
+		// Serialized blob URLs belong to the session that saved the project. Always
+		// bind the layer to the freshly resolved library/embedded asset URL.
+		layerData.stickerData.url = sticker.url;
+		layerData.stickerData.name = sticker.name;
+		layerData.stickerData.source = sticker.source;
+		layerData.stickerData.width = sticker.width || layerData.stickerData.width;
+		layerData.stickerData.height = sticker.height || layerData.stickerData.height;
 		layerData.stickerData.frameCount = sticker.frameCount || layerData.stickerData.frameCount || 1;
 		// Sticker borders were removed; drop them from older snapshots/projects.
 		layerData.stickerData.border = null;

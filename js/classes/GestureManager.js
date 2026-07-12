@@ -713,4 +713,3 @@ class GestureManager {
 }
 
 GestureManager.iOSGuardsInstalled = false;
-

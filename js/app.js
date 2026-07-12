@@ -80,6 +80,8 @@ class GlitterEditor {
 		// these same nodes into drawers, so bindings survive re-parenting.
 		renderPanelSections(this);
 		this.renderTransformPanels();
+		this.contextToolbarRenderer = new ContextToolbarRenderer(this);
+		this.contextToolbarRenderer.render();
 
 		// ============================================================================
 		// MANAGERS
@@ -134,11 +136,7 @@ class GlitterEditor {
 			if (this.currentTool !== ToolType.SELECT || !event.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR)) return;
 			const layer = this.layerManager.getActiveLayer();
 			if (layer?.type !== LayerType.TEXT_GLITTER) return;
-			this.textGlitterManager?.loadLayerSettings(layer);
-			requestAnimationFrame(() => {
-				this.textGlitterManager?.ui?.textInput?.focus();
-				this.textGlitterManager?.ui?.textInput?.select();
-			});
+			this.textGlitterManager?.focusTextInput?.(true);
 		});
 	}
 
@@ -292,6 +290,13 @@ class GlitterEditor {
 	getProjectFileName(ext) {
 		const baseName = sanitizeFileName(this.projectName) || CONFIG.export.core.defaultBaseName;
 		return `${baseName}.${ext}`;
+	}
+
+	getProjectDownloadName() {
+		const baseName = sanitizeFileName(this.projectName);
+		if (!baseName) return `${CONFIG.export.core.defaultBaseName}.${CONFIG.project.extension}`;
+		const suffix = sanitizeFileName(CONFIG.project.fileNameSuffix) || '';
+		return `${baseName}${suffix}.${CONFIG.project.extension}`;
 	}
 
 	// Common layer update pattern
@@ -814,7 +819,8 @@ async resetAllSettings() {
 			'textSettingsSection',
 			'shapeSettingsSection',
 			'stickersOptions',
-			'stickersSearchSection'
+			'stickersSearchSection',
+			'shapesOptions'
 		];
 
 		// 2. Hide everything
@@ -928,11 +934,11 @@ async resetAllSettings() {
 	updateZoomUI() {
 		const percentage = this.viewport.getZoomPercentage();
 		// Zoom context toolbar reads with the muted-unit treatment like the panels.
-		document.getElementById('zoomPercentage').innerHTML = formatUnit(percentage, '%');
+		this.contextToolbarRenderer?.setValue('zoomPercentage', `${percentage}%`);
 		document.getElementById('statusZoom').textContent = `${percentage}%`;
 
 
-		document.getElementById('zoomOut').disabled = this.viewport.currentZoomIndex <= 0;
+		this.contextToolbarRenderer?.setEnabled('zoomOut', this.viewport.currentZoomIndex > 0);
 		document.getElementById('zoomIn').disabled = this.viewport.currentZoomIndex >= CONFIG.ui.zoom.levels.length - 1;
 
 		// Update cursor
@@ -1079,7 +1085,13 @@ async resetAllSettings() {
 			const size = document.getElementById(`${prefix}Size`);
 			const frames = document.getElementById(`${prefix}Frames`);
 			const change = document.getElementById(`${prefix}Change`);
-			const revealAsset = () => revealAssetBrowser(this, manager, asset.id);
+			const revealAsset = () => {
+				if (type === 'sticker' && manager?.armAssetPicker) {
+					manager.armAssetPicker();
+					return;
+				}
+				revealAssetBrowser(this, manager, asset.id);
+			};
 
 		// Thumbnail with click handler
 		if (thumbnail) {
@@ -1739,9 +1751,6 @@ async resetAllSettings() {
 
 	setupEventListeners() {
 		this.setupToolbarListeners();
-		this.setupZoomListeners();
-		this.setupPanListeners();
-		this.setupLayerCenterListeners();
 		this.setupColorPickerContextListeners();
 		this.setupLayerSettingsListeners();
 		this.setupSliderListeners();
@@ -1883,58 +1892,6 @@ async resetAllSettings() {
 		});
 	}
 
-	// ===== ZOOM CONTROL LISTENERS =====
-	setupZoomListeners() {
-		const controls = [
-			{ id: 'zoomIn', handler: () => this.viewport.zoomIn() },
-			{ id: 'zoomOut', handler: () => this.viewport.zoomOut() },
-			{ id: 'zoomPercentage', handler: () => this.viewport.resetZoom() },
-			{ id: 'fitScreen', handler: () => this.viewport.zoomToFit() },
-			{ id: 'fillScreen', handler: () => this.viewport.zoomToFill() }
-		];
-
-		controls.forEach(({ id, handler }) => {
-			const btn = document.getElementById(id);
-			if (btn) btn.addEventListener('click', handler);
-		});
-	}
-
-	setupPanListeners() {
-		const controls = [
-			{ id: 'centerCanvasHorizontal', handler: () => this.viewport.centerHorizontal() },
-			{ id: 'centerCanvasVertical', handler: () => this.viewport.centerVertical() }
-		];
-
-		controls.forEach(({ id, handler }) => {
-			const btn = document.getElementById(id);
-			if (btn) btn.addEventListener('click', handler);
-		});
-	}
-
-	setupLayerCenterListeners() {
-		const centerLayerHorizontal = document.getElementById('centerLayerHorizontal');
-		const centerLayerVertical = document.getElementById('centerLayerVertical');
-		const duplicateLayerSelection = document.getElementById('duplicateLayerSelection');
-
-		const center = (axis) => {
-			if (this.layerManager.hasMultiSelection()) {
-				this.groupTransformManager?.alignToCanvas(axis === 'centerHorizontal' ? 'centerX' : 'centerY');
-				return;
-			}
-
-			const layer = this.layerManager.getActiveLayer();
-			const ctx = this.getMovableLayerContext(layer);
-			if (ctx?.manager?.[axis]) ctx.manager[axis](layer.id);
-		};
-
-		if (centerLayerHorizontal) {
-			centerLayerHorizontal.addEventListener('click', () => center('centerHorizontal'));
-		}
-		if (centerLayerVertical) {
-			centerLayerVertical.addEventListener('click', () => center('centerVertical'));
-		}
-		duplicateLayerSelection?.addEventListener('click', () => this.cloneSelectedLayers());
-	}
 
 	getSelectedActionableLayers() {
 		return this.layerManager.getSelectedLayers().filter((layer) => layer.type !== LayerType.BASE_IMAGE);
@@ -3403,7 +3360,9 @@ setupWelcomeModalListeners() {
 			message = 'Are you sure?',
 			confirmLabel = 'Confirm',
 			cancelLabel = 'Cancel',
-			destructive = false
+			destructive = false,
+			details = [],
+			outro = ''
 		} = options;
 
 		if (destructive && this.confirmDestructiveActions === false) {
@@ -3424,7 +3383,29 @@ setupWelcomeModalListeners() {
 		const cancelBtn = document.getElementById('confirmationCancelBtn');
 
 		if (titleNode) titleNode.textContent = title;
-		if (messageNode) messageNode.textContent = message;
+		if (messageNode) {
+			messageNode.replaceChildren();
+			const copy = document.createElement('p');
+			copy.className = 'confirmation-message-copy';
+			copy.textContent = message;
+			messageNode.appendChild(copy);
+			if (details.length) {
+				const list = document.createElement('ul');
+				list.className = 'confirmation-message-list';
+				details.forEach((detail) => {
+					const item = document.createElement('li');
+					item.textContent = detail;
+					list.appendChild(item);
+				});
+				messageNode.appendChild(list);
+			}
+			if (outro) {
+				const footerCopy = document.createElement('p');
+				footerCopy.className = 'confirmation-message-outro';
+				footerCopy.textContent = outro;
+				messageNode.appendChild(footerCopy);
+			}
+		}
 		if (confirmBtn) confirmBtn.textContent = confirmLabel;
 		if (cancelBtn) cancelBtn.textContent = cancelLabel;
 
@@ -5378,7 +5359,7 @@ setupWelcomeModalListeners() {
 
 		try {
 			const blob = await this.projectSerializer.serializeToBlob();
-			downloadBlob(blob, this.getProjectFileName('glitter.json'));
+			downloadBlob(blob, this.getProjectDownloadName());
 			this.isSaved = true;
 			this.updateStatus('Project saved');
 		} catch (error) {

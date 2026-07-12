@@ -1,5 +1,38 @@
 @use 'mixins' as *;
 
+.smart-guide {
+	position: absolute;
+	z-index: 1002;
+	background: var(--smart-guide-color);
+	pointer-events: none;
+
+	&-x { top: 0; bottom: 0; width: 1px; }
+	&-y { left: 0; right: 0; height: 1px; }
+}
+
+// Image and Layers use the canonical collapsible chrome/state contract but
+// remain independently toggleable instead of joining the design accordion.
+.layers-panel > .section.collapsible-section:not(.is-open) {
+	flex: 0 0 auto;
+
+	> .layers-section-bottom-bar { display: none; }
+}
+
+.subsection-section-group {
+	> .subsection-title { cursor: pointer; }
+	.panel-group-label { min-width: 0; }
+	.panel-group-chevron {
+		margin-left: auto;
+		flex: 0 0 auto;
+		transition: transform var(--transition-fast);
+	}
+	> .subsection-title:has(> .checkbox-group) .panel-group-chevron { margin-left: 0; }
+	&.collapsed {
+		> .subsection-title .panel-group-chevron { transform: rotate(-90deg); }
+		> :not(.subsection-title) { display: none; }
+	}
+}
+
 /* ===== APP STRUCTURE ===== */
 .app-container {
 	display: flex;
@@ -922,7 +955,7 @@
 	}
 
 	.empty-state-inner-wrapper {
-		max-width: 320px;
+		// max-width: 320px;
 		gap: var(--spacing-md);
 		display: flex;
 		flex-direction: column;
@@ -1300,6 +1333,15 @@ body.tool-text {
 				display: none;
 			}
 		}
+	}
+
+	&[data-panel-mode="shape"] {
+		#designGallerySection:not(.picker-mode) {
+			#glitterSearchSection,
+			#glitterOptions { display: none; }
+		}
+
+		#designGallerySection.picker-mode #shapesOptions { display: none; }
 	}
 
 
@@ -1681,7 +1723,10 @@ body.tool-text {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
+	align-items: center;
 	gap: var(--spacing-sm);
+
+	>button { flex: 0 1 auto; }
 }
 
 .preview-wrapper {
@@ -3290,8 +3335,46 @@ body.mask-editing {
 	color: var(--color-text-tertiary);
 }
 
-.text-box-mode-group > .btn-simple {
-	flex: 1;
+.text-box-mode-group { width: 100%; }
+
+.shape-gallery-grid {
+	padding: var(--spacing-md);
+
+	>.shape-gallery-option {
+		display: grid;
+		place-items: center;
+		padding: var(--spacing-sm);
+		border: 0;
+		background: var(--color-bg-secondary);
+		color: var(--color-text-primary);
+
+		>.brush-shape-option-icon {
+			display: grid;
+			place-items: center;
+			width: 100%;
+			height: 100%;
+
+			>svg { width: 75%; height: 75%; fill: currentColor; }
+		}
+
+		>.brush-shape-option-name { display: none; }
+	}
+}
+
+#shapeAssetThumbnail {
+	display: grid;
+	place-items: center;
+	box-sizing: border-box;
+	padding: var(--spacing-sm);
+	color: var(--shape-asset-icon-color);
+	cursor: pointer;
+
+	>svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+		fill: currentColor;
+	}
 }
 
 .text-valign-group > .segmented-option,
@@ -3570,6 +3653,12 @@ body.mask-editing {
 	>.transform-panel-host {
 		margin-top: 0;
 	}
+}
+
+// Must follow the transform-host display declarations above so a collapsed
+// schema group also hides its generated transform host.
+.subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
+	display: none;
 }
 
 .subsection-content-group.subsection-section-group {
@@ -3978,23 +4067,11 @@ body.mask-editing {
 	.welcome-actions {
 		display: flex;
 		flex-direction: row;
+		flex-wrap: wrap;
 		gap: var(--spacing-md);
 		margin-top: var(--spacing-xl);
-align-items: center;
-    justify-content: center;
-
-
-
-		// mobile
-		@media (max-width: 800px) {
-			flex-direction:column;
-
-			button {
-				width: 100%;
-			}
-		}
-
-
+		align-items: center;
+		justify-content: center;
 
 	}
 
@@ -4036,4 +4113,10 @@ align-items: center;
 			}
 		}
 	}
+}
+
+// Collapsed panel groups are a state boundary. Keep this after every generated
+// transform-host layout rule so themes and host normalization cannot reopen it.
+.design-panel .settings-subsection > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
+	display: none !important;
 }

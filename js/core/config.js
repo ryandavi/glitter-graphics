@@ -1,4 +1,8 @@
 const CONFIG = {
+	project: {
+		extension: 'glitter.json',
+		fileNameSuffix: '_ryandavi-com'
+	},
 	app: {
 		siteName: 'ryandavi.com glitter editor',
 		limits: {
@@ -149,6 +153,8 @@ const CONFIG = {
 			}
 		},
 		stickers: {
+			// null preserves an empty new sticker layer.
+			defaultStickerId: 1,
 			maxCount: 50,
 			maxUploadSize: 10 * 1024 * 1024,
 			allowedTypes: ['image/png', 'image/jpeg', 'image/gif'],
@@ -173,6 +179,9 @@ const CONFIG = {
 			}
 		},
 		text: {
+			defaultTextCase: 'none',
+			// Stage Two in-canvas typing is intentionally paused; this is its future gate.
+			canvasEditing: false,
 			fontsManifest: 'data/fonts.json?v=3',
 			defaultFontId: 'luckiest-guy',
 			defaultFontWeight: 400,
@@ -302,17 +311,39 @@ const CONFIG = {
 		// Bottom context bars. Keep eligibility here so adding a bar or extending
 		// one to another movable layer does not require another app.js branch.
 		contextToolbars: [
-			{ id: 'zoomControls', tool: 'zoom' },
-			{ id: 'panControls', tool: 'hand' },
+			{ id: 'zoomControls', tool: 'zoom', controls: [
+				{ kind: 'button', id: 'zoomOut', icon: 'minus', name: 'Zoom Out', title: 'Zoom Out (-)', action: 'zoomOut' },
+				{ kind: 'readout', id: 'zoomPercentage', title: 'Click to reset to 100%', value: '100%', action: 'zoomReset' },
+				{ kind: 'button', id: 'zoomIn', icon: 'plus', name: 'Zoom In', title: 'Zoom In (+)', action: 'zoomIn' },
+				{ kind: 'button', id: 'fitScreen', icon: 'arrows-up-down', name: 'Fit Screen', title: 'Fit Screen (Ctrl+0)', action: 'zoomFit' },
+				{ kind: 'button', id: 'fillScreen', icon: 'maximize', name: 'Fill Screen', title: 'Fill Screen', action: 'zoomFill' }
+			] },
+			{ id: 'panControls', tool: 'hand', controls: [
+				{ kind: 'button', id: 'centerCanvasHorizontal', icon: 'arrows-left-right', name: 'Center H', title: 'Center Horizontally', action: 'centerCanvasH' },
+				{ kind: 'button', id: 'centerCanvasVertical', icon: 'arrows-up-down', name: 'Center V', title: 'Center Vertically', action: 'centerCanvasV' }
+			] },
 			{
 				id: 'layerCenterControls',
 				tool: 'select',
 				layerTypes: ['sticker', 'text-glitter', 'shape'],
 				allowMultiSelection: true,
-				requiresStickerSource: true
+				requiresStickerSource: true,
+				controls: [
+					{ kind: 'button', id: 'centerLayerHorizontal', icon: 'arrows-left-right', name: 'Center H', title: 'Center Horizontally', action: 'centerSelectionH' },
+					{ kind: 'button', id: 'centerLayerVertical', icon: 'arrows-up-down', name: 'Center V', title: 'Center Vertically', action: 'centerSelectionV' },
+					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' }
+				]
 			},
-			{ id: 'colorPickerControls', tool: 'colorPicker', layerTypes: ['glitter-fill'], requiresSelections: true },
-			{ id: 'maskBrushControls', tool: 'brush' }
+			{ id: 'colorPickerControls', tool: 'colorPicker', layerTypes: ['glitter-fill'], requiresSelections: true, controls: [
+				{ kind: 'slider', id: 'contextThreshold', valueId: 'contextThresholdValue', slider: 'threshold' },
+				{ kind: 'group', controls: [
+					{ kind: 'toggle', id: 'contextMultiSelect', label: 'Multi', countId: 'contextSelectionCount' },
+					{ kind: 'toggle', id: 'contextContiguous', label: 'Contiguous' }
+				] }
+			] },
+			{ id: 'maskBrushControls', tool: 'brush', controls: [
+				{ kind: 'slider', id: 'maskBrushSizeQuick', valueId: 'maskBrushSizeQuickValue', label: 'Size', min: 1, max: 300, value: 40, unit: 'px' }
+			] }
 		],
 		// Ranges/defaults for renderer-stamped panel sliders (js/ui/panel-renderer.js
 		// + PANEL_SCHEMAS). Values are preserved byte-for-byte from the
@@ -736,7 +767,7 @@ const LAYER_UI_CONFIG = {
 		},
 		// Like text: the glitter gallery picks the shared swatch, plus a dedicated
 		// Shape Properties panel. Selection Settings doesn't apply.
-		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'shapeSettingsSection'],
+		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'shapesOptions', 'shapeSettingsSection'],
 		mobileSettingsSections: ['glitter', 'shape'],
 		panelMode: 'shape',
 		elementClass: 'shape-glitter-element',
@@ -871,11 +902,12 @@ const PANEL_SCHEMAS = {
 		groups: [
 			{ title: 'Content', items: [
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textLayerInput' },
+				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textBoxModeHint' },
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFontPicker' },
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '.text-style-group' },
+				{ kind: 'templateCard', template: 'tpl-text-content', selector: '.text-case-group-wrap' },
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFontSize' },
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '.text-align-group' },
-				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textBoxModeHint' },
 				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFitBoxToContent' }
 			] },
 			{ title: 'Appearance', adoptTransformOpacity: true, items: [
@@ -925,8 +957,10 @@ const PANEL_SCHEMAS = {
 		section: { id: 'shapeSettingsSection', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
 		groups: [
 			{ title: 'Content', items: [
-				{ kind: 'card', title: 'Shape', items: [
-					{ kind: 'host', id: 'shapeShapePicker', classes: 'brush-shape-picker', attrs: { role: 'listbox', 'aria-label': 'Shape' }, wrapInContent: true }
+				{ kind: 'card', title: 'Asset', items: [
+					{ kind: 'assetInfo', info: 'shapeAssetInfo', thumbnail: 'shapeAssetThumbnail',
+						name: 'shapeAssetName', badges: 'shapeAssetBadges', change: 'shapeAssetChange',
+						title: 'Choose another shape', compact: true }
 				] }
 			] },
 			// The shared transform panel emits its own Opacity card into the host;
@@ -1024,6 +1058,14 @@ const LAYER_BADGES = [
 			return layer?.type === LayerType.GLITTER_FILL && layer.maskHasContent
 				? { title: 'Painted mask strokes' }
 				: null;
+		}
+	},
+	{
+		id: 'missing-asset',
+		icon: 'circle-info',
+		getState(layer) {
+			const missing = layer?._missingAssets;
+			return missing?.length ? { title: `Missing asset: ${missing.join(', ')}` } : null;
 		}
 	},
 	{

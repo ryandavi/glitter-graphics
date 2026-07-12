@@ -173,7 +173,7 @@ DEFS: {
 		} else {
 			inner = `<circle cx="${vb / 2}" cy="${vb / 2}" r="${vb / 2}"/>`;
 		}
-		return `<svg viewBox="0 0 ${vb} ${vb}">${inner}</svg>`;
+		return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vb} ${vb}">${inner}</svg>`;
 	},
 
 	// Natural aspect ratio (width / height) of a shape's content bounds, so a
@@ -221,4 +221,3 @@ ShapeLibrary.FILL_SHAPES = [
 	{ id: 'eightPetalFlower', label: '8-Petal Flower' },
 	{ id: 'spiral', label: 'Spiral' }
 ];
-

@@ -57,6 +57,18 @@ class ProjectSerializer {
 	async load(data) {
 		this.validateProjectData(data);
 		const migrated = this.runMigrations(data);
+		const report = await this.preflight(migrated);
+		if (report.issues.length) {
+			const confirmed = await this.editor.confirmAction({
+				title: 'Project Asset Preflight',
+				message: `${migrated.name || 'Untitled project'} has unavailable content.`,
+				details: report.issues.map((issue) => issue.message),
+				outro: 'Open with the listed substitutions?',
+				confirmLabel: 'Open Anyway'
+			});
+			if (!confirmed) return false;
+			this.applyPreflightSubstitutions(migrated, report);
+		}
 
 		if ((this.editor.originalImage || this.editor.historyManager.canUndo()) && !this.editor.isSaved) {
 			const confirmed = await this.editor.confirmAction({
@@ -68,9 +80,14 @@ class ProjectSerializer {
 				return false;
 			}
 		}
+		this.editor.textGlitterManager.pickerSession = null;
+		this.editor.shapeGlitterManager.pickerSession = null;
+		this.editor.stickerManager.pickerSession = null;
+		document.getElementById('designGallerySection')?.classList.remove('picker-mode');
 
-		await this.registerCustomStickers(migrated.customStickers || {});
 		await this.loadBaseImage(migrated);
+		// Base-image loading resets manager state, so embedded assets must bind after it.
+		await this.registerCustomStickers(migrated.customStickers || {});
 
 		this.editor.layers = [];
 		for (const layerData of migrated.layers) {
@@ -99,6 +116,63 @@ class ProjectSerializer {
 		this.editor.updateHelpfulMessage();
 		this.editor.updateStatus('Project loaded');
 		return true;
+	}
+
+	async preflight(data) {
+		await this.editor.textGlitterManager.loadFontsManifest();
+		const issues = [];
+		const embedded = data.customStickers || {};
+		const knownTypes = new Set(Object.values(LayerType));
+		(data.layers || []).forEach((layer, index) => {
+			const label = layer.name || `Layer ${index + 1}`;
+			if (!knownTypes.has(layer.type)) {
+				issues.push({ kind: 'layer', index, message: `${label}: unknown layer type “${layer.type}” — the layer will be skipped` });
+				return;
+			}
+			if (layer.type === LayerType.STICKER && layer.stickerSourceId && !embedded[layer.stickerSourceId] && !this.editor.stickerManager.getItemById(layer.stickerSourceId)) {
+				issues.push({ kind: 'sticker', index, id: layer.stickerSourceId, message: `${label}: sticker “${layer.stickerSourceId}” is missing — the layer will load empty` });
+			}
+			if (layer.type === LayerType.TEXT_GLITTER && layer.textData?.fontId && !this.editor.textGlitterManager.fontsById.has(layer.textData.fontId)) {
+				issues.push({ kind: 'font', index, id: layer.textData.fontId, message: `${label}: font “${layer.textData.fontId}” is unavailable — the default font will be used` });
+			}
+			if (layer.type === LayerType.SHAPE && !ShapeLibrary.FILL_SHAPES.some((shape) => shape.id === layer.shapeData?.shapeId)) {
+				issues.push({ kind: 'shape', index, id: layer.shapeData?.shapeId, message: `${label}: shape “${layer.shapeData?.shapeId}” is unavailable — the default shape will be used` });
+			}
+			const visit = (value) => {
+				if (!value || typeof value !== 'object') return;
+				Object.entries(value).forEach(([key, child]) => {
+					if ((key === 'glitterId' || key === 'selectedGlitterId') && child && !this.editor.glitterManager.getItemById(child)) {
+						issues.push({ kind: 'glitter', index, id: child, key, message: `${label}: glitter “${child}” is unavailable — default glitter will be substituted` });
+					} else if (typeof child === 'object') visit(child);
+				});
+			};
+			visit(layer);
+		});
+		return { issues };
+	}
+
+	applyPreflightSubstitutions(data, report) {
+		report.issues.forEach((issue) => {
+			const layer = data.layers[issue.index];
+			if (!layer) return;
+			layer._missingAssets = [...(layer._missingAssets || []), `${issue.kind} ${issue.id || ''}`.trim()];
+			if (issue.kind === 'font') layer.textData.fontId = CONFIG.tools.text.defaultFontId;
+			if (issue.kind === 'shape') layer.shapeData.shapeId = ShapeLibrary.FILL_SHAPES[0].id;
+			if (issue.kind === 'glitter') {
+				const replace = (value, path = '') => {
+					if (!value || typeof value !== 'object') return;
+					Object.entries(value).forEach(([key, child]) => {
+						if ((key === 'glitterId' || key === 'selectedGlitterId') && child === issue.id) {
+							value[key] = path.includes('border') ? CONFIG.tools.glitter.defaults.borderGlitterId
+								: path.includes('shadow') ? CONFIG.tools.glitter.defaults.shadowGlitterId
+									: CONFIG.tools.glitter.defaults.fillGlitterId;
+						} else if (typeof child === 'object') replace(child, `${path}.${key}`);
+					});
+				};
+				replace(layer);
+			}
+		});
+		data.layers = data.layers.filter((layer) => Object.values(LayerType).includes(layer.type));
 	}
 
 	validateProjectData(data) {
@@ -342,4 +416,3 @@ class ProjectSerializer {
 		return new Blob([array], { type: mimeType });
 	}
 }
-

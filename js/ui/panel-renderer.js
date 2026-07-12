@@ -159,10 +159,14 @@ function buildAssetInfo(options) {
 	change.id = options.change;
 	change.dataset.role = 'asset-change';
 	const meta = info.querySelectorAll('.asset-info-meta .setting-value');
-	meta[0].id = options.size;
-	meta[1].id = options.frames;
-	meta[0].dataset.role = 'asset-size';
-	meta[1].dataset.role = 'asset-frames';
+	if (options.compact) {
+		info.querySelector('.asset-info-meta')?.remove();
+	} else {
+		meta[0].id = options.size;
+		meta[1].id = options.frames;
+		meta[0].dataset.role = 'asset-size';
+		meta[1].dataset.role = 'asset-frames';
+	}
 	return info;
 }
 
@@ -342,15 +346,33 @@ function buildPanelItem(item, schema) {
 
 function buildPanelGroup(group, schema) {
 	const node = tplClone('tpl-group');
-	node.querySelector('.subsection-title').textContent = group.title;
+	const header = node.querySelector('.subsection-title');
+	const label = document.createElement('span');
+	label.className = 'panel-group-label';
+	label.textContent = group.title;
+	header.appendChild(label);
+	const chevron = document.createElement('span');
+	chevron.className = 'panel-group-chevron icon-wrapper sm';
+	chevron.innerHTML = '<svg class="icon"><use href="#icon-chevron-down"></use></svg>';
 	if (group.toggle) {
 			const toggle = tplClone('tpl-checkbox');
 		toggle.querySelector('input').id = group.toggle.id;
 		toggle.querySelector('span').textContent = group.toggle.label;
-		node.querySelector('.subsection-title').appendChild(toggle);
+		header.appendChild(toggle);
 	}
+	header.appendChild(chevron);
 	node.dataset.panelGroup = group.title;
 	group.items.forEach((item) => node.appendChild(buildPanelItem(item, schema)));
+	const key = `${schema.prefix}:${group.title}`;
+	let state = {};
+	try { state = JSON.parse(localStorage.getItem('glitter.panelGroups') || '{}'); } catch (error) { state = {}; }
+	node.classList.toggle('collapsed', state[key] === false);
+	header.addEventListener('click', (event) => {
+		if (event.target.closest('input, label, button, [data-no-accordion-toggle]')) return;
+		node.classList.toggle('collapsed');
+		state[key] = !node.classList.contains('collapsed');
+		localStorage.setItem('glitter.panelGroups', JSON.stringify(state));
+	});
 	return node;
 }
 
@@ -369,10 +391,8 @@ function renderPanelSection(schema) {
 	const subsection = fragment.querySelector('.settings-subsection');
 	schema.groups.forEach((group) => subsection.appendChild(buildPanelGroup(group, schema)));
 	if (schema.effects) {
-		const stack = tplClone('tpl-group');
+		const stack = buildPanelGroup({ title: 'Effects', items: schema.effects }, schema);
 		stack.classList.add('effects-stack');
-		stack.querySelector('.subsection-title').textContent = 'Effects';
-		schema.effects.forEach((slot) => stack.appendChild(buildPanelItem(slot, schema)));
 		subsection.appendChild(stack);
 	}
 	if (schema.controls) {

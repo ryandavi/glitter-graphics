@@ -50,6 +50,7 @@ class TextGlitterManager {
 			fontPicker: document.getElementById('textFontPicker'),
 			fontBold: document.getElementById('textFontBold'),
 			fontItalic: document.getElementById('textFontItalic'),
+			textCaseButtons: Array.from(document.querySelectorAll('[id^="textCase"]')),
 			fontSize: document.getElementById('textFontSize'),
 			fontSizeValue: document.getElementById('textFontSizeValue'),
 			letterSpacing: document.getElementById('textLetterSpacing'),
@@ -230,6 +231,14 @@ class TextGlitterManager {
 		};
 		bindFontStyleToggle(this.ui.fontBold, 'fontWeight', 700, 400);
 		bindFontStyleToggle(this.ui.fontItalic, 'fontStyle', 'italic', 'normal');
+		this.ui.textCaseButtons.forEach((button) => {
+			button.addEventListener('click', async () => {
+				const layer = this.getActiveTextLayer();
+				if (!layer) return;
+				const mode = button.id.replace('textCase', '').toLowerCase();
+				await this.runLayoutRefreshWithAnchor(layer, () => { layer.textData.textCase = mode; }, { saveHistory: true });
+			});
+		});
 
 		this.attachSlider(this.ui.fontSize, this.ui.fontSizeValue, 'px', (value, layer) => {
 			layer.textData.fontSize = value;
@@ -626,6 +635,9 @@ class TextGlitterManager {
 		}
 		if (!layer.textData.fontStyle) {
 			layer.textData.fontStyle = CONFIG.tools.text.defaultFontStyle || 'normal';
+		}
+		if (!['none', 'upper', 'lower', 'title'].includes(layer.textData.textCase)) {
+			layer.textData.textCase = CONFIG.tools.text.defaultTextCase;
 		}
 	}
 
@@ -1298,6 +1310,7 @@ class TextGlitterManager {
 				fontId: CONFIG.tools.text.defaultFontId,
 				fontWeight: CONFIG.tools.text.defaultFontWeight || 400,
 				fontStyle: CONFIG.tools.text.defaultFontStyle || 'normal',
+				textCase: CONFIG.tools.text.defaultTextCase,
 				fontSize: CONFIG.tools.text.defaultFontSize,
 				letterSpacing: CONFIG.tools.text.defaultLetterSpacing,
 				lineHeight: CONFIG.tools.text.lineHeight,
@@ -1376,6 +1389,7 @@ class TextGlitterManager {
 
 	focusTextInput(selectAll = false) {
 		if (!this.ui.textInput) return;
+		this.ui.textInput.closest('[data-panel-group]')?.classList.remove('collapsed');
 
 		if (!this.editor.mobileManager?.isMobile) {
 			this.editor.setCollapsibleSectionOpen?.('textSettings', true);
@@ -1408,6 +1422,19 @@ class TextGlitterManager {
 			button?.classList.toggle('active', active);
 			button?.setAttribute('aria-pressed', String(active));
 		});
+		this.ui.textCaseButtons.forEach((button) => {
+			const active = button.id === `textCase${textData.textCase.charAt(0).toUpperCase()}${textData.textCase.slice(1)}`;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
+	}
+
+	applyTextCase(text, mode) {
+		const value = String(text || '');
+		if (mode === 'upper') return value.toLocaleUpperCase();
+		if (mode === 'lower') return value.toLocaleLowerCase();
+		if (mode === 'title') return value.replace(/(^|\s)(\S)/gu, (match, space, letter) => space + letter.toLocaleUpperCase());
+		return value;
 	}
 
 	scrollActiveFontIntoView() {
@@ -1934,6 +1961,7 @@ class TextGlitterManager {
 		const textData = layer.textData;
 		return JSON.stringify([
 			textData.text,
+			textData.textCase,
 			textData.fontId,
 			textData.fontWeight,
 			textData.fontStyle,
@@ -1971,7 +1999,7 @@ class TextGlitterManager {
 
 		const font = this.getFontById(layer.textData.fontId);
 		const ctx = this.measureCtx;
-		const lines = String(layer.textData.text || '').split('\n');
+		const lines = this.applyTextCase(layer.textData.text, layer.textData.textCase).split('\n');
 		const padding = CONFIG.rendering?.maskPaddingPx ?? 8;
 		const fontSize = layer.textData.fontSize;
 		const letterSpacing = layer.textData.letterSpacing;

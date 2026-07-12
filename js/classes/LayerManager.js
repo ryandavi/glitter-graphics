@@ -272,7 +272,11 @@ class LayerManager {
 			return;
 		}
 
-		const createOptions = cfg.createOptionsKey ? (options[cfg.createOptionsKey] || {}) : undefined;
+		let createOptions = cfg.createOptionsKey ? (options[cfg.createOptionsKey] || {}) : undefined;
+		if (type === LayerType.STICKER && createOptions == null) {
+			const configured = CONFIG.tools.stickers.defaultStickerId;
+			createOptions = configured != null && manager.getItemById(configured) ? configured : null;
+		}
 		const layer = manager.createLayer(createOptions);
 
 		if (!layer) return;  // Factory returns null if max reached
@@ -1256,7 +1260,16 @@ class LayerManager {
 				swatch.classList.add('glitter', 'text-layer');
 				swatch.style.background = layer.shapeData?.fill?.color || '#ff66cc';
 			}
-			swatch.innerHTML = '<span class="layer-swatch-text-overlay">S</span>';
+			const shapeSvg = ShapeLibrary.getIconSvg(layer.shapeData?.shapeId);
+			const shapeMask = `url("data:image/svg+xml;base64,${btoa(shapeSvg)}")`;
+			swatch.style.maskImage = shapeMask;
+			swatch.style.webkitMaskImage = shapeMask;
+			swatch.style.maskRepeat = 'no-repeat';
+			swatch.style.webkitMaskRepeat = 'no-repeat';
+			swatch.style.maskPosition = 'center';
+			swatch.style.webkitMaskPosition = 'center';
+			swatch.style.maskSize = '80% 80%';
+			swatch.style.webkitMaskSize = '80% 80%';
 		} else if (layer.type === LayerType.BASE_IMAGE) {
 			// --- FIX: Base Image Thumbnail ---
 			if (this.editor.originalImage) {

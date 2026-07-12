@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=83">
+	<link rel="stylesheet" href="css/style.css?v=90">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -394,6 +394,7 @@
 							</div>
 
 							<!-- Glitter Search (visible by default) -->
+							<div class="asset-options gallery-content" id="shapesOptions" data-gallery-content="shapes" aria-label="Shapes"></div>
 							<div class="section-content gallery-search-section" id="glitterSearchSection">
 								<div class="glitter-search">
 									<div class="search-toggle-row">
@@ -969,12 +970,20 @@
 										<button class="segmented-option" id="textFontItalic" type="button" aria-pressed="false"><em>Italic</em></button>
 									</div>
 								</div>
+								<div class="subsection-content-group text-case-group-wrap">
+									<div class="subsection-title">Case</div>
+									<div class="segmented-control text-case-group">
+										<button class="segmented-option" id="textCaseNone" type="button">As Typed</button>
+										<button class="segmented-option" id="textCaseUpper" type="button">UPPER</button>
+										<button class="segmented-option" id="textCaseLower" type="button">lower</button>
+										<button class="segmented-option" id="textCaseTitle" type="button">Title</button>
+									</div>
+								</div>
 								<div class="subsection-content-group">
 									<div class="subsection-title">Box Mode</div>
-									<div class="control-group-label">Type</div>
-									<div class="tool-options-group text-box-mode-group">
-										<button class="btn-simple active" type="button" data-text-box-mode="auto">Point</button>
-										<button class="btn-simple" type="button" data-text-box-mode="fixed">Box</button>
+									<div class="segmented-control text-box-mode-group">
+										<button class="segmented-option active" type="button" data-text-box-mode="auto">Point</button>
+										<button class="segmented-option" type="button" data-text-box-mode="fixed">Box</button>
 									</div>
 									<div class="text-box-hint" id="textBoxModeHint">Point text hugs the copy. Switch to Box for wrapping and edge resizing.</div>
 								</div>
@@ -1588,7 +1597,7 @@
 				</button>
 			</div>
 			<div class="modal-body">
-				<p id="confirmationModalMessage">Are you sure?</p>
+				<div class="confirmation-message" id="confirmationModalMessage">Are you sure?</div>
 			</div>
 			<div class="modal-footer right">
 				<button class="btn-simple secondary" id="confirmationCancelBtn">Cancel</button>
@@ -2358,6 +2367,9 @@
 			<div class="subsection-title"></div>
 		</div>
 	</template>
+	<template id="tpl-context-button"><button class="icon-wrapper btn-icon" type="button"><svg class="icon"><use></use></svg><span class="name"></span></button></template>
+	<template id="tpl-context-slider"><div class="context-slider-group"><span class="context-label"></span><input type="range" class="context-slider"><span class="context-value"></span></div></template>
+	<template id="tpl-context-toggle"><label class="context-checkbox-group"><input type="checkbox"><span class="context-toggle-label"></span><span class="context-count"></span></label></template>
 	<template id="tpl-slider-row">
 		<div class="setting-column right">
 			<div class="setting-header"><span class="setting-label"></span><span class="setting-value"></span></div>
@@ -2470,7 +2482,8 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=48"></script>
+	<script src="js/core/config.js?v=50"></script>
+	<script src="js/core/commands.js?v=1"></script>
 	<script src="js/transforms/transform-math.js?v=3"></script>
 
 	<!-- Utils -->
@@ -2478,7 +2491,8 @@
 	<script src="js/effects/color-adjust.js?v=2"></script>
 	<script src="js/effects/effect-source.js?v=11"></script>
 	<script src="js/effects/slot-effects.js?v=2"></script>
-	<script src="js/ui/panel-renderer.js?v=13"></script>
+	<script src="js/ui/panel-renderer.js?v=18"></script>
+	<script src="js/ui/context-toolbar-renderer.js?v=1"></script>
 	<script src="js/core/debug.js?v=1"></script>
 
 	<!-- Classes -->
@@ -2488,28 +2502,28 @@
 	<script src="js/classes/Mp4Exporter.js?v=3"></script>
 	<script src="js/classes/ViewportManager.js?v=1"></script>
 	<script src="js/classes/HistoryManager.js?v=8"></script>
-	<script src="js/classes/ProjectSerializer.js?v=2"></script>
+	<script src="js/classes/ProjectSerializer.js?v=6"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
-	<script src="js/classes/ShapeLibrary.js?v=4"></script>
+	<script src="js/classes/ShapeLibrary.js?v=5"></script>
 	<script src="js/classes/MaskEditor.js?v=12"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=25"></script>
+	<script src="js/classes/LayerManager.js?v=29"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js"></script>
 	<script src="js/classes/ContentManager.js"></script>
 	<script src="js/classes/LayerTransform.js?v=28"></script>
 	<script src="js/classes/GlitterManager.js?v=20"></script>
-	<script src="js/classes/TextGlitterManager.js?v=43"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=26"></script>
-	<script src="js/classes/StickerManager.js?v=9"></script>
+	<script src="js/classes/TextGlitterManager.js?v=45"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=35"></script>
+	<script src="js/classes/StickerManager.js?v=14"></script>
 	<script src="js/classes/GroupTransformManager.js?v=16"></script>
 
 	<script src="js/classes/MobileManager.js?v=6"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=93"></script>
+	<script src="js/app.js?v=96"></script>
 
 </body>
 
