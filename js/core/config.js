@@ -865,7 +865,6 @@ const PANEL_SCHEMAS = {
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
 					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
 					chipTitle: 'Choose fill glitter', assetIdPrefix: 'glitterAsset',
-					primaryToggle: { id: 'glitterGlobal', label: 'Apply Scale & Opacity to All Glitter Layers', title: 'Keep texture scale and opacity matched across every glitter fill layer' },
 					assetIds: {
 						thumbnail: 'glitterAssetThumbnail', name: 'glitterAssetName',
 						badges: 'glitterAssetBadges', change: 'glitterAssetChange',

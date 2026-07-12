@@ -60,6 +60,7 @@ class HistoryManager {
 		if (this.editor.textGlitterManager) {
 			this.editor.textGlitterManager.pickerSession = null;
 			if (this.editor.shapeGlitterManager) this.editor.shapeGlitterManager.pickerSession = null;
+			if (this.editor.glitterManager) this.editor.glitterManager.pickerSession = null;
 		}
 		this.editor.layers = [];
 
@@ -153,4 +154,3 @@ class HistoryManager {
 		}
 	}
 }
-

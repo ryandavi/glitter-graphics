@@ -21,6 +21,7 @@ class GlitterManager extends ContentManager {
 			64 * 1024 * 1024
 		);
 		this.nextPaintVersion = 1;
+		this.pickerSession = null;
 
 		// G-1: tracks in-flight mask encodes per layer (for the busy cursor / status)
 		// and the timestamp of the click that kicked off the current mask request
@@ -85,7 +86,12 @@ async initBrowser() {
 			filtersContainer: document.getElementById('filtersContainer'),
 			clearFiltersBtn: document.getElementById('clearFiltersBtn'),
 			categoryChips: document.getElementById('glitterCategoryChips'),
-			searchNameOnly: document.getElementById('searchGlitterNameOnly')
+			searchNameOnly: document.getElementById('searchGlitterNameOnly'),
+			gallerySection: document.getElementById('designGallerySection'),
+			pickerStrip: document.getElementById('galleryPickerStrip'),
+			pickerStripTitle: document.getElementById('galleryPickerStripTitle'),
+			pickerStripDetail: document.getElementById('galleryPickerStripDetail'),
+			pickerStripDone: document.getElementById('galleryPickerStripDone')
 
 		};
 	}
@@ -97,6 +103,49 @@ async initBrowser() {
 		// Setup filter chips
 		this.setupFilterChips();
 		this.setupFillSourceControls();
+		this.ui.pickerStripDone?.addEventListener('click', () => {
+			if (this.hasActivePickerSession()) this.handlePickerDone();
+		});
+	}
+
+	armAssetPicker() {
+		const layer = this.editor.layerManager.getActiveLayer();
+		if (layer?.type !== LayerType.GLITTER_FILL) return;
+		this.pickerSession = { layerId: layer.id };
+		this.updatePickerStrip();
+		revealAssetBrowser(this.editor, this, layer.selectedGlitterId);
+	}
+
+	hasActivePickerSession() {
+		const layer = this.editor.layerManager.getActiveLayer();
+		return Boolean(layer?.type === LayerType.GLITTER_FILL && this.pickerSession?.layerId === layer.id);
+	}
+
+	updatePickerStrip() {
+		const layer = this.editor.layerManager.getActiveLayer();
+		if (layer?.type !== LayerType.GLITTER_FILL) return;
+		if (this.pickerSession && this.pickerSession.layerId !== layer.id) this.pickerSession = null;
+		const armed = this.hasActivePickerSession();
+		this.ui.pickerStrip.hidden = !armed;
+		this.ui.pickerStrip.classList.toggle('is-armed', armed);
+		this.ui.pickerStrip.classList.remove('is-hint');
+		this.ui.gallerySection?.classList.toggle('picker-mode', armed);
+		if (!armed) return;
+		const copy = formatPickerStripText('fill', layer.name, 'glitter layer');
+		this.ui.pickerStripTitle.textContent = copy.title;
+		this.ui.pickerStripDetail.textContent = copy.detail;
+		this.ui.pickerStripDone.hidden = false;
+	}
+
+	handlePickerDone() {
+		this.pickerSession = null;
+		this.updatePickerStrip();
+		if (this.editor.mobileManager?.isMobile) {
+			if (this.editor.mobileManager.activeDrawer === 'design') this.editor.mobileManager.closeAllDrawers();
+			return;
+		}
+		this.editor.setCollapsibleSectionOpen?.('glitterSettings', true, true);
+		requestAnimationFrame(() => document.getElementById('glitterAssetThumbnail')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
 	}
 
 	setupFillSourceControls() {

@@ -266,7 +266,7 @@ class TextGlitterManager {
 					}
 
 					revealAssetBrowser(this.editor, this.editor.glitterManager);
-					this.editor.updateStatus('Choosing glitter for the text fill — press Esc or Done to finish.');
+					this.editor.updateStatus('Choose fill glitter, then press Esc or Done.');
 				});
 			});
 		}
@@ -802,7 +802,7 @@ class TextGlitterManager {
 				}
 
 				revealAssetBrowser(this.editor, this.editor.glitterManager);
-				this.editor.updateStatus(`Choosing glitter for the text ${effectName} — press Esc or Done to finish.`);
+				this.editor.updateStatus(`Choose ${effectName} glitter, then press Esc or Done.`);
 			});
 		});
 	}
@@ -1706,7 +1706,7 @@ class TextGlitterManager {
 	setupPickerStripListeners() {
 		this.ui.pickerStripDone?.addEventListener('click', () => {
 			// When a shape layer is active, the shape manager owns Done.
-			if ([LayerType.SHAPE, LayerType.STICKER].includes(this.editor.layerManager.getActiveLayer()?.type)) return;
+			if ([LayerType.GLITTER_FILL, LayerType.SHAPE, LayerType.STICKER].includes(this.editor.layerManager.getActiveLayer()?.type)) return;
 			const slot = this.pickerSession?.slot || 'fill';
 			this.closePickerSession();
 			this.returnToTextProperties(slot);
@@ -1795,8 +1795,11 @@ class TextGlitterManager {
 
 			if (armedSlot === 'fill' && fillIsSolid) {
 				const color = (fillData.color || '#000000').toUpperCase();
-				if (title) title.textContent = 'Choosing source for fill';
-				if (detail) detail.textContent = `Fill is a solid color (${color}) — pick a glitter to switch.`;
+				if (title) title.textContent = 'Choosing fill glitter';
+				if (detail) {
+					const target = formatPickerTarget(layer.name, 'text');
+					detail.textContent = `${target}; current fill is solid (${color}).`;
+				}
 			} else {
 				const stripText = formatPickerStripText(armedSlot, layer.name, 'text');
 				if (title) title.textContent = stripText.title;

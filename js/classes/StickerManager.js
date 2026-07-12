@@ -237,7 +237,7 @@ class StickerManager extends ContentManager {
 		this.ui.gallerySection?.classList.toggle('picker-mode', Boolean(glitterArmed));
 		if (!armed) return;
 		const stripText = assetArmed
-			? { title: 'Choosing sticker', detail: `Replacing “${layer.name || 'this sticker'}”` }
+			? formatAssetPickerStripText('sticker', layer.name)
 			: formatPickerStripText(this.pickerSession.slot, layer.name, 'sticker');
 		if (this.ui.pickerStripTitle) this.ui.pickerStripTitle.textContent = stripText.title;
 		if (this.ui.pickerStripDetail) this.ui.pickerStripDetail.textContent = stripText.detail;

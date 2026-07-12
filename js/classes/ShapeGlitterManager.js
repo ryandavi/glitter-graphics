@@ -478,7 +478,7 @@ class ShapeGlitterManager {
 		this.ui.gallerySection?.classList.toggle('picker-mode', armed);
 		if (this.ui.pickerStripDone) this.ui.pickerStripDone.hidden = false;
 		const stripText = assetArmed
-			? { title: 'Choosing shape', detail: `Replacing “${layer.name || 'this shape'}”` }
+			? formatAssetPickerStripText('shape', layer.name)
 			: formatPickerStripText(s.slot, layer.name, 'shape');
 		if (this.ui.pickerStripTitle) this.ui.pickerStripTitle.textContent = stripText.title;
 		if (this.ui.pickerStripDetail) this.ui.pickerStripDetail.textContent = stripText.detail;

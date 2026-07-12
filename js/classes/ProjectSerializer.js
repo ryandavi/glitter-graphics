@@ -88,6 +88,7 @@ class ProjectSerializer {
 		this.editor.textGlitterManager.pickerSession = null;
 		this.editor.shapeGlitterManager.pickerSession = null;
 		this.editor.stickerManager.pickerSession = null;
+		this.editor.glitterManager.pickerSession = null;
 		document.getElementById('designGallerySection')?.classList.remove('picker-mode');
 
 		await this.loadBaseImage(migrated);

@@ -901,13 +901,13 @@ async resetAllSettings() {
 		this.syncNoLayerPanelState();
 
 		// D-1c: keep the gallery picker strip in sync when the active layer
-		// changes to any type (a non-text layer must hide the strip). The shape
-		// manager drives it for shape layers, the text manager for text layers,
-		// the sticker manager for sticker layers; each no-ops when its own type
-		// isn't active.
+		// changes to any type. The glitter, shape, text, and sticker managers each
+		// drive it for their own layer type and otherwise leave the active owner
+		// alone (the text manager performs the initial hide for non-text layers).
 		this.textGlitterManager?.updatePickerStrip();
 		this.shapeGlitterManager?.updatePickerStrip();
 		this.stickerManager?.updatePickerStrip();
+		this.glitterManager?.updatePickerStrip();
 
 		// The Canvas Size preview only makes sense in the no-layer state; drop it
 		// whenever a layer is selected or there's no image.
@@ -946,7 +946,7 @@ async resetAllSettings() {
 		}
 
 		// An armed glitter pick-session keeps the gallery focused (Done returns you).
-		if (this.textGlitterManager?.pickerSession || this.shapeGlitterManager?.pickerSession || this.stickerManager?.pickerSession) {
+		if (this.glitterManager?.hasActivePickerSession?.() || this.textGlitterManager?.pickerSession || this.shapeGlitterManager?.pickerSession || this.stickerManager?.pickerSession) {
 			return 'designGallery';
 		}
 
@@ -1124,6 +1124,10 @@ async resetAllSettings() {
 			const frames = document.getElementById(`${prefix}Frames`);
 			const change = document.getElementById(`${prefix}Change`);
 			const revealAsset = () => {
+				if (type === 'glitter' && manager?.armAssetPicker) {
+					manager.armAssetPicker();
+					return;
+				}
 				if (type === 'sticker' && manager?.armAssetPicker) {
 					manager.armAssetPicker();
 					return;
@@ -3253,7 +3257,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=17',
+				externalContentUrl: 'modals/guide.html?v=19',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -4708,10 +4712,12 @@ setupWelcomeModalListeners() {
 				e.preventDefault();
 				return;
 			}
+			const glitterPickerOpen = Boolean(this.glitterManager?.hasActivePickerSession?.());
 			const textPickerOpen = Boolean(this.textGlitterManager?.pickerSession);
 			const shapePickerOpen = Boolean(this.shapeGlitterManager?.pickerSession);
 			const stickerPickerOpen = Boolean(this.stickerManager?.pickerSession);
-			if (textPickerOpen || shapePickerOpen || stickerPickerOpen) {
+			if (glitterPickerOpen || textPickerOpen || shapePickerOpen || stickerPickerOpen) {
+				if (glitterPickerOpen) this.glitterManager.handlePickerDone();
 				if (textPickerOpen) {
 					const slot = this.textGlitterManager.pickerSession.slot;
 					this.textGlitterManager.closePickerSession();

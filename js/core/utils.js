@@ -36,14 +36,27 @@ function formatDimensions(width, height, unit = 'px') {
 // ============================================
 // GALLERY PICKER STRIP COPY
 // ============================================
-// One wording for the armed picker strip across text, shape, and sticker
-// pickers: "Choosing glitter for <slot>" over `"<layer name>" <type>`.
-// slot is the lowercase slot word ('fill', 'border', 'shadow'); typeWord is
-// the lowercase layer word ('text', 'shape', 'sticker').
+// One wording for every armed glitter picker: what is being chosen, then the
+// destination. Named layers use their name; unnamed layers get a clean
+// "Current Text Layer"-style fallback without fabricated quoted names.
+function formatPickerTarget(layerName, typeWord) {
+	if (layerName) return `Applying to “${layerName}”`;
+	const label = typeWord.replace(/\b\w/g, (letter) => letter.toUpperCase());
+	return `Current ${label}${/\blayer\b/i.test(typeWord) ? '' : ' Layer'}`;
+}
+
 function formatPickerStripText(slot, layerName, typeWord) {
 	return {
-		title: `Choosing glitter for ${slot}`,
-		detail: `"${layerName || `this ${typeWord}`}" ${typeWord}`
+		title: `Choosing ${slot} glitter`,
+		detail: formatPickerTarget(layerName, typeWord)
+	};
+}
+
+function formatAssetPickerStripText(assetType, layerName) {
+	const label = assetType.charAt(0).toUpperCase() + assetType.slice(1);
+	return {
+		title: `Choosing ${assetType}`,
+		detail: layerName ? `Replacing “${layerName}”` : `Current ${label} Layer`
 	};
 }
 
