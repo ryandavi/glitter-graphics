@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=91">
+	<link rel="stylesheet" href="css/style.css?v=97">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -850,7 +850,7 @@
 							<div class="settings-subsection">
 								<div class="subsection-content-group">
 									<div class="subsection-title">
-										<span>Shape</span>
+										<span>Brush Tip</span>
 									</div>
 									<div class="subsection-content">
 										<!-- Populated by MaskEditor.renderBrushShapePicker() with
@@ -861,7 +861,7 @@
 								</div>
 								<div class="subsection-content-group">
 									<div class="subsection-title">
-										<span>Brush</span>
+										<span>Stroke</span>
 									</div>
 									<div class="subsection-content">
 										<div class="settings-group-two-column">
@@ -919,7 +919,7 @@
 
 								<div class="subsection-content-group">
 									<div class="subsection-title">
-										<span>Options</span>
+										<span>Input</span>
 									</div>
 									<div class="subsection-content">
 										<label class="checkbox-group">
@@ -935,6 +935,7 @@
 									<div class="subsection-content">
 										<div class="tool-options-group">
 											<button class="btn-simple" id="maskCopyOppositeSettings" type="button" title="Copy the other tool's settings into this one">Copy Eraser Settings</button>
+											<button class="btn-simple" id="maskResetCurrentSettings" type="button" title="Restore brush settings to their defaults">Reset Brush</button>
 											<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
 										</div>
 									</div>
@@ -1616,6 +1617,11 @@
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Helpful Hints</div><div class="settings-row-control"><label class="switch" for="showHelpfulHints"><input type="checkbox" id="showHelpfulHints" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Show Welcome Screen on Startup</div><div class="settings-row-control"><label class="switch" for="showWelcomeOnStartup"><input type="checkbox" id="showWelcomeOnStartup" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show the welcome screen when Glitter Editor starts.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Confirm Destructive Actions</div><div class="settings-row-control"><label class="switch" for="confirmDestructiveActions"><input type="checkbox" id="confirmDestructiveActions" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Ask before deleting layers or clearing the entire project.</div></div>
+				</div>
+				<div class="settings-group">
+					<div class="settings-group-title">Tools &amp; Workspace</div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Brush &amp; Eraser Defaults</div><div class="settings-row-control"><button class="btn-simple" id="resetToolSettings" type="button">Reset Tools</button></div></div><div class="settings-row-label-desc">Restore saved Brush and Eraser tip, stroke, and pressure settings.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Panel Layout</div><div class="settings-row-control"><button class="btn-simple" id="resetPanelLayout" type="button">Reset Panels</button></div></div><div class="settings-row-label-desc">Expand all collapsible property and tool groups.</div></div>
 				</div>
 			</div>
 			<div class="modal-footer left-right"><button class="btn-text secondary reset-all-settings-btn">Reset All Settings</button><button class="btn-simple modal-close" id="closeSettingsModalFooter">Close</button></div></div>
@@ -2482,7 +2488,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=50"></script>
+	<script src="js/core/config.js?v=57"></script>
 	<script src="js/core/commands.js?v=1"></script>
 	<script src="js/transforms/transform-math.js?v=3"></script>
 
@@ -2491,7 +2497,7 @@
 	<script src="js/effects/color-adjust.js?v=2"></script>
 	<script src="js/effects/effect-source.js?v=11"></script>
 	<script src="js/effects/slot-effects.js?v=2"></script>
-	<script src="js/ui/panel-renderer.js?v=18"></script>
+	<script src="js/ui/panel-renderer.js?v=27"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=1"></script>
 	<script src="js/core/debug.js?v=1"></script>
 
@@ -2505,7 +2511,7 @@
 	<script src="js/classes/ProjectSerializer.js?v=7"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
 	<script src="js/classes/ShapeLibrary.js?v=5"></script>
-	<script src="js/classes/MaskEditor.js?v=12"></script>
+	<script src="js/classes/MaskEditor.js?v=14"></script>
 
 	<!-- Layers-->
 	<script src="js/classes/LayerManager.js?v=30"></script>
@@ -2523,7 +2529,7 @@
 	<script src="js/classes/MobileManager.js?v=6"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=102"></script>
+	<script src="js/app.js?v=111"></script>
 
 </body>
 

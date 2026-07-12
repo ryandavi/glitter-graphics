@@ -657,12 +657,48 @@ setupSettingsResetListeners() {
 			this.resetAllSettings();
 		});
 	}
+
+	document.getElementById('resetToolSettings')?.addEventListener('click', () => this.resetToolSettings());
+	document.getElementById('resetPanelLayout')?.addEventListener('click', () => this.resetPanelLayout());
+}
+
+async resetToolSettings() {
+	const confirmed = await this.confirmSettingsAction({
+		title: 'Reset Brush & Eraser',
+		message: 'Saved Brush and Eraser settings will be restored to their defaults.',
+		confirmLabel: 'Reset Tools'
+	});
+	if (!confirmed) return;
+	this.maskEditor?.resetToolSettingsToDefaults();
+	this.updateStatus('Brush and Eraser settings reset');
+}
+
+async resetPanelLayout() {
+	const confirmed = await this.confirmSettingsAction({
+		title: 'Reset Panel Layout',
+		message: 'All collapsible property and tool groups will be expanded.',
+		confirmLabel: 'Reset Panels'
+	});
+	if (!confirmed) return;
+	this.applyDefaultPanelLayout();
+	this.updateStatus('Panel layout reset');
+}
+
+applyDefaultPanelLayout() {
+	localStorage.removeItem('glitter.panelGroups');
+	document.querySelectorAll('[data-panel-group].collapsed').forEach((group) => group.classList.remove('collapsed'));
+}
+
+async confirmSettingsAction(options) {
+	const confirmed = await this.confirmAction(options);
+	await this.modalManager?.open('settingsModal');
+	return confirmed;
 }
 
 async resetSettingsSection(section) {
 	const sectionName = this.getSectionDisplayName(section);
 
-	const confirmed = await this.confirmAction({
+	const confirmed = await this.confirmSettingsAction({
 		title: `Reset ${sectionName}`,
 		message: 'These settings will be restored to their defaults.',
 		confirmLabel: 'Reset'
@@ -711,7 +747,7 @@ async resetSettingsSection(section) {
 }
 
 async resetAllSettings() {
-	const confirmed = await this.confirmAction({
+	const confirmed = await this.confirmSettingsAction({
 		title: 'Reset All Settings',
 		message: 'Export settings, interface preferences, and everything else will be restored to their defaults.',
 		confirmLabel: 'Reset'
@@ -746,6 +782,8 @@ async resetAllSettings() {
 	this.interfaceTheme = 'dark';
 	this.applyInterfaceTheme();
 	localStorage.removeItem('glitterEditor_welcomeModalSeen');
+	this.maskEditor?.resetToolSettingsToDefaults();
+	this.applyDefaultPanelLayout();
 
 	this.syncExportSettingsToUI();
 	this.saveSettingsToStorage();
@@ -1712,6 +1750,14 @@ async resetAllSettings() {
 
 	initializeShortcutsModal() {
 		const list = document.getElementById('shortcutList');
+		const gesturePattern = /^(click|drag|resize|rotate|wheel|scroll wheel|double-click)/i;
+		const buildShortcutToken = (label) => {
+			const token = document.createElement('span');
+			const isGesture = gesturePattern.test(label);
+			token.className = isGesture ? 'shortcut-gesture' : 'kbd';
+			token.textContent = label;
+			return token;
+		};
 
 		Object.entries(CONFIG.ui.shortcuts).forEach(([category, shortcutArray]) => {
 			const group = document.createElement('div');
@@ -1731,13 +1777,18 @@ async resetAllSettings() {
 				action.textContent = sc.action;
 
 				const keys = document.createElement('div');
-				keys.className = 'shortcut-keys';
+				keys.className = 'shortcut-keys shortcut-sequence';
 
-				sc.key.split(' + ').forEach(k => {
-					const el = document.createElement('span');
-					el.className = 'kbd';
-					el.textContent = k;
-					keys.appendChild(el);
+				sc.key.split(' + ').forEach((part) => {
+					if (part.startsWith('Hold ')) {
+						const instruction = document.createElement('span');
+						instruction.className = 'shortcut-instruction';
+						instruction.textContent = 'Hold';
+						keys.appendChild(instruction);
+						keys.appendChild(buildShortcutToken(part.slice(5)));
+						return;
+					}
+					keys.appendChild(buildShortcutToken(part));
 				});
 
 				item.appendChild(action);
@@ -3202,7 +3253,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=13',
+				externalContentUrl: 'modals/guide.html?v=16',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {

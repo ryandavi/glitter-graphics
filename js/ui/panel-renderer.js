@@ -99,7 +99,9 @@ function buildSliderRow(options) {
 	if (options.hidden) row.hidden = true;
 	if (options.extraClass) row.classList.add(options.extraClass);
 	row.dataset.role = `${options.role || options.slider}-row`;
-	row.querySelector('.setting-label').textContent = options.label || spec.label;
+	const label = row.querySelector('.setting-label');
+	label.textContent = options.label || spec.label;
+	if (options.title) label.title = options.title;
 	const value = row.querySelector('.setting-value');
 	value.id = `${options.id}Value`;
 	value.dataset.role = `${options.role || options.slider}-value`;
@@ -247,7 +249,16 @@ function buildPaintSlotCard(slot) {
 	(slot.pre || []).forEach((item) => container.appendChild(buildPanelItem(item)));
 	const source = buildPaintSource(slot);
 	container.appendChild(slot.sourceLabel ? buildOptionGroup(slot.sourceLabel, [source]) : source);
-	container.appendChild(buildPrimaryRow(slot.idPrefix, slot.primaryIds));
+	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds);
+	if (slot.primaryToggle) {
+		const toggle = tplClone('tpl-checkbox');
+		toggle.querySelector('input').id = slot.primaryToggle.id;
+		toggle.querySelector('span').textContent = slot.primaryToggle.label;
+		if (slot.primaryToggle.title) toggle.querySelector('span').title = slot.primaryToggle.title;
+		container.appendChild(buildOptionGroup('Scale & Opacity', [toggle, primaryRow]));
+	} else {
+		container.appendChild(primaryRow);
+	}
 	(slot.post || []).forEach((item) => container.appendChild(buildPanelItem(item)));
 	container.appendChild(buildAdvancedDisclosure(slot.idPrefix, slot.advancedIds));
 	return card;
@@ -257,7 +268,9 @@ function buildPanelItem(item, schema) {
 	switch (item.kind) {
 		case 'card': {
 			const card = tplClone('tpl-card');
-			card.querySelector('.subsection-title > span').textContent = item.title;
+			const title = card.querySelector('.subsection-title');
+			if (item.title) title.querySelector(':scope > span').textContent = item.title;
+			else title.remove();
 			if (item.toggle) {
 				const toggle = tplClone('tpl-checkbox');
 				toggle.querySelector('input').id = item.toggle.id;
@@ -274,17 +287,36 @@ function buildPanelItem(item, schema) {
 			return content;
 		}
 		case 'checkboxList': {
-			const content = panelDiv('subsection-content');
+			const content = panelDiv('subsection-content checkbox-list-content');
+			if (item.label) {
+				const label = panelDiv('effect-option-label setting-label');
+				label.textContent = item.label;
+				content.appendChild(label);
+			}
 			const list = panelDiv('tool-options-group');
 			item.items.forEach((entry) => {
 				const checkbox = tplClone('tpl-checkbox');
 				checkbox.querySelector('input').id = entry.id;
+				checkbox.querySelector('input').checked = Boolean(entry.checked);
 				checkbox.querySelector('span').textContent = entry.label;
 				if (entry.title) checkbox.querySelector('span').title = entry.title;
 				list.appendChild(checkbox);
 			});
 			content.appendChild(list);
 			return content;
+		}
+		case 'actionRow': {
+			const row = panelDiv('settings-action-row');
+			item.actions.forEach((action) => {
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = `btn-simple${action.primary ? ' primary' : ''}`;
+				button.id = action.id;
+				button.textContent = action.label;
+				if (action.title) button.title = action.title;
+				row.appendChild(button);
+			});
+			return row;
 		}
 		case 'paintSlot':
 			return buildPaintSlotCard(item);
@@ -344,26 +376,16 @@ function buildPanelItem(item, schema) {
 	}
 }
 
-function buildPanelGroup(group, schema) {
-	const node = tplClone('tpl-group');
+function initializePanelGroupNode(node, prefix, title) {
 	const header = node.querySelector('.subsection-title');
 	const label = document.createElement('span');
 	label.className = 'panel-group-label';
-	label.textContent = group.title;
+	label.textContent = title;
 	header.appendChild(label);
 	const chevron = document.createElement('span');
 	chevron.className = 'panel-group-chevron icon-wrapper sm';
 	chevron.innerHTML = '<svg class="icon"><use href="#icon-chevron-down"></use></svg>';
-	if (group.toggle) {
-			const toggle = tplClone('tpl-checkbox');
-		toggle.querySelector('input').id = group.toggle.id;
-		toggle.querySelector('span').textContent = group.toggle.label;
-		header.appendChild(toggle);
-	}
-	header.appendChild(chevron);
-	node.dataset.panelGroup = group.title;
-	group.items.forEach((item) => node.appendChild(buildPanelItem(item, schema)));
-	const key = `${schema.prefix}:${group.title}`;
+	const key = `${prefix}:${title}`;
 	let state = {};
 	try { state = JSON.parse(localStorage.getItem('glitter.panelGroups') || '{}'); } catch (error) { state = {}; }
 	node.classList.toggle('collapsed', state[key] === false);
@@ -373,6 +395,21 @@ function buildPanelGroup(group, schema) {
 		state[key] = !node.classList.contains('collapsed');
 		localStorage.setItem('glitter.panelGroups', JSON.stringify(state));
 	});
+	return { header, chevron };
+}
+
+function buildPanelGroup(group, schema) {
+	const node = tplClone('tpl-group');
+	const { header, chevron } = initializePanelGroupNode(node, schema.prefix, group.title);
+	if (group.toggle) {
+		const toggle = tplClone('tpl-checkbox');
+		toggle.querySelector('input').id = group.toggle.id;
+		toggle.querySelector('span').textContent = group.toggle.label;
+		header.appendChild(toggle);
+	}
+	header.appendChild(chevron);
+	node.dataset.panelGroup = group.title;
+	group.items.forEach((item) => node.appendChild(buildPanelItem(item, schema)));
 	return node;
 }
 
@@ -383,9 +420,13 @@ function renderPanelSection(schema) {
 	else if (host.querySelector(':scope > .section-header')) return;
 	const fragment = document.getElementById('tpl-section').content.cloneNode(true);
 	fragment.querySelector('.section-header').id = `${schema.prefix}SettingsHeader`;
-	fragment.querySelector('use').setAttribute('href', `#icon-${schema.section.icon}`);
+	const titleIcon = fragment.querySelector('use');
+	titleIcon.setAttribute('href', `#icon-${schema.section.icon}`);
+	if (schema.section.titleIconId) titleIcon.id = schema.section.titleIconId;
 	fragment.querySelector('.name').textContent = schema.section.iconName;
-	fragment.querySelector('.section-header-title-text').textContent = schema.section.title;
+	const titleText = fragment.querySelector('.section-header-title-text');
+	titleText.textContent = schema.section.title;
+	if (schema.section.titleTextId) titleText.id = schema.section.titleTextId;
 	fragment.querySelector('.section-header-action').id = `${schema.prefix}SettingsToggle`;
 	fragment.querySelector('.section-content').id = `${schema.prefix}SettingsContent`;
 	const subsection = fragment.querySelector('.settings-subsection');
@@ -430,7 +471,6 @@ function renderPanelSections(editor) {
 		else renderPanelSection(schema);
 		(schema.auxiliarySections || []).forEach((section) => renderPanelSection(section));
 	});
-	stampLegacyPaintModes();
 }
 
 function renderLegacyPanelTemplate(sectionId, templateId) {
@@ -439,23 +479,6 @@ function renderLegacyPanelTemplate(sectionId, templateId) {
 	if (!section || !template || section.querySelector(':scope > .section-header')) return;
 	section.appendChild(template.content.cloneNode(true));
 	template.remove();
-}
-
-// Panels migrate in independent work packages. Stamp the same semantic mode
-// metadata on legacy controls during that window so shared source UI never
-// needs to infer behavior from an id suffix.
-function stampLegacyPaintModes() {
-	const suffixes = [
-		['UseNone', 'none'], ['None', 'none'],
-		['UseGlitter', 'glitter'], ['Glitter', 'glitter'],
-		['UseColor', 'solid'], ['Solid', 'solid'],
-		['Gradient', 'gradient']
-	];
-	document.querySelectorAll('.text-effect-mode-group .segmented-option').forEach((button) => {
-		if (button.dataset.mode) return;
-		const match = suffixes.find(([suffix]) => button.id.endsWith(suffix));
-		if (match) button.dataset.mode = match[1];
-	});
 }
 
 function buildTransformPanel(editor, container, prefix, capabilities) {

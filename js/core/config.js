@@ -352,7 +352,12 @@ const CONFIG = {
 		// textureScale max 300 vs the transform panel's 500 scale max;
 		// borderWidth/borderDotSpacing maxes are boot defaults that
 		// ShapeGlitterManager raises from CONFIG.tools.shapes.border at bind time.
-		sliders: {
+			sliders: {
+			maskBrushSize: { label: 'Size', unit: 'px', min: 1, max: 300, value: 40 },
+			maskBrushSoftness: { label: 'Softness', unit: '%', min: 0, max: 100, value: 0 },
+			maskBrushFlow: { label: 'Flow', unit: '%', min: 1, max: 100, value: 100 },
+			maskBrushSpacing: { label: 'Spacing', unit: '%', min: 1, max: 200, value: 25 },
+			maskBrushSmoothing: { label: 'Smoothing', unit: '%', min: 0, max: 100, value: 0 },
 			textureScale: { label: 'Texture Scale', unit: '%', min: 25, max: 300, value: 100 },
 			slotOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },
 			hue: { label: 'Hue', unit: '°', min: -180, max: 180, value: 0 },
@@ -811,15 +816,56 @@ const LAYER_UI_CONFIG = {
 // capitalized role. Panels not listed here are still static index.html
 // markup awaiting migration (see the plan's WP order).
 const PANEL_SCHEMAS = {
+	brush: {
+		prefix: 'brush',
+		replaceStatic: true,
+		section: {
+			id: 'brushSettingsSection', icon: 'brush', iconName: 'Brush', title: 'Brush Settings',
+			titleIconId: 'brushSettingsTitleIcon', titleTextId: 'brushSettingsTitleText'
+		},
+		groups: [
+			{ title: 'Brush Tip', items: [
+				{ kind: 'card', title: 'Shape', items: [
+					{ kind: 'host', id: 'brushShapePicker', classes: 'brush-shape-picker', attrs: { role: 'listbox', 'aria-label': 'Brush shape' }, wrapInContent: true }
+				] }
+			] },
+			{ title: 'Stroke', items: [
+				{ kind: 'card', title: 'Dynamics', items: [
+					{ kind: 'twoColumn', items: [
+						{ kind: 'slider', id: 'maskBrushSize', slider: 'maskBrushSize' },
+						{ kind: 'slider', id: 'maskBrushSoftness', slider: 'maskBrushSoftness' }
+					] },
+					{ kind: 'twoColumn', items: [
+						{ kind: 'slider', id: 'maskBrushFlow', slider: 'maskBrushFlow' },
+						{ kind: 'slider', id: 'maskBrushSpacing', slider: 'maskBrushSpacing', title: 'Distance between stamps along a stroke, as a percentage of brush size. Higher values create more space.' }
+					] },
+					{ kind: 'slider', id: 'maskBrushSmoothing', slider: 'maskBrushSmoothing', title: 'Stabilizes shaky strokes by easing the brush toward the cursor. Higher values are smoother but add lag.' },
+					{ kind: 'checkboxList', label: 'Pen Input', items: [
+						{ id: 'maskBrushPressure', label: 'Pressure Sensitivity', title: 'Vary flow with pen pressure (no effect on mouse/touch)', checked: true }
+					] }
+				] }
+			] },
+			{ title: 'Actions', items: [
+				{ kind: 'card', items: [
+					{ kind: 'actionRow', actions: [
+						{ id: 'maskCopyOppositeSettings', label: 'Copy Eraser Settings', title: 'Copy the other tool\'s settings into this one' },
+						{ id: 'maskResetCurrentSettings', label: 'Reset Brush', title: 'Restore this tool\'s settings to their defaults' },
+						{ id: 'clearMaskPaint', label: 'Clear Paint', title: 'Remove all painted strokes (color selections stay)' }
+					] }
+				] }
+			] }
+		]
+	},
 	[LayerType.GLITTER_FILL]: {
 		prefix: 'glitter',
 		section: { id: 'glitterSettingsSection', icon: 'glitter', iconName: 'Glitter', title: 'Glitter Properties' },
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', emptyText: 'Select a glitter fill from the gallery to get started.' },
 		groups: [
-			{ title: 'Appearance', toggle: { id: 'glitterGlobal', label: 'Apply to All Glitter Layers' }, items: [
+			{ title: 'Appearance', items: [
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
 					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
 					chipTitle: 'Choose fill glitter', assetIdPrefix: 'glitterAsset',
+					primaryToggle: { id: 'glitterGlobal', label: 'Apply Scale & Opacity to All Glitter Layers', title: 'Keep texture scale and opacity matched across every glitter fill layer' },
 					assetIds: {
 						thumbnail: 'glitterAssetThumbnail', name: 'glitterAssetName',
 						badges: 'glitterAssetBadges', change: 'glitterAssetChange',
@@ -857,7 +903,7 @@ const PANEL_SCHEMAS = {
 							{ kind: 'host', id: 'selectedColorsDisplay', classes: 'selected-colors-display' }
 						] }
 					] },
-					{ kind: 'card', title: 'Refine Selection', toggle: { id: 'refineGlobal', label: 'Global', title: 'Apply refinement settings to every layer' }, items: [
+					{ kind: 'card', title: 'Refine Selection', toggle: { id: 'refineGlobal', label: 'Apply to All Glitter Layers', title: 'Keep threshold and feather matched across every glitter fill layer' }, items: [
 						{ kind: 'twoColumn', items: [
 							{ kind: 'slider', id: 'threshold', slider: 'threshold' },
 							{ kind: 'slider', id: 'feather', slider: 'feather' }

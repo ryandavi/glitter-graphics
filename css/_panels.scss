@@ -1980,6 +1980,11 @@ body.mask-editing {
 	font-weight: 400;
 }
 
+.checkbox-list-content {
+	flex-direction: column;
+	align-items: stretch;
+}
+
 .context-checkbox-group {
 	display: flex;
 	align-items: center;
@@ -3966,6 +3971,7 @@ body.mask-editing {
 		padding: var(--spacing-xs);
 		width: -moz-fit-content;
 		width: fit-content;
+		padding: 0;
 	}
 }
 

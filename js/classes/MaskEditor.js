@@ -37,6 +37,7 @@ class MaskEditor {
 			overlayToggle: document.getElementById('maskOverlayToggle'),
 			clearButton: document.getElementById('clearMaskPaint'),
 			copySettingsButton: document.getElementById('maskCopyOppositeSettings'),
+			resetSettingsButton: document.getElementById('maskResetCurrentSettings'),
 			pressureToggle: document.getElementById('maskBrushPressure'),
 			overlayCanvas: document.getElementById('maskOverlayCanvas'),
 			cursor: document.getElementById('maskBrushCursor')
@@ -89,6 +90,12 @@ class MaskEditor {
 			const sourceLabel = sourceMode === 'sub' ? 'eraser' : 'brush';
 			this.copySettingsBetweenModes(sourceMode, targetMode);
 			this.editor.updateStatus(`Copied ${sourceLabel} settings into this ${targetMode === 'sub' ? 'eraser' : 'brush'}`);
+		});
+
+		this.ui.resetSettingsButton?.addEventListener('click', () => {
+			const label = this.mode === 'sub' ? 'Eraser' : 'Brush';
+			this.resetToolModeToDefaults(this.mode);
+			this.editor.updateStatus(`${label} settings reset`);
 		});
 
 		this.renderBrushShapePicker();
@@ -163,6 +170,23 @@ class MaskEditor {
 		} catch (error) {
 			// Non-fatal: settings just won't persist this session.
 		}
+	}
+
+	resetToolSettingsToDefaults() {
+		this.toolSettings = this._defaultToolSettings();
+		this._saveToolSettings();
+		this._applySettingsToDOM(this.mode);
+		this._updateBrushCursorSize();
+		this.renderOverlay();
+	}
+
+	resetToolModeToDefaults(mode = this.mode) {
+		if (mode !== 'add' && mode !== 'sub') return;
+		this.toolSettings[mode] = { ...this._defaultToolSettings()[mode] };
+		this._saveToolSettings();
+		if (mode === this.mode) this._applySettingsToDOM(mode);
+		this._updateBrushCursorSize();
+		this.renderOverlay();
 	}
 
 	// Attach store-writing listeners on top of app.js's display listeners. Slider
@@ -244,6 +268,10 @@ class MaskEditor {
 			this.ui.copySettingsButton.title = isEraser
 				? 'Copy the current brush settings into the eraser'
 				: 'Copy the current eraser settings into the brush';
+		}
+		if (this.ui.resetSettingsButton) {
+			this.ui.resetSettingsButton.textContent = isEraser ? 'Reset Eraser' : 'Reset Brush';
+			this.ui.resetSettingsButton.title = `Restore ${isEraser ? 'eraser' : 'brush'} settings to their defaults`;
 		}
 	}
 
@@ -1413,4 +1441,3 @@ MaskEditor.AXIS_LOCK_MIN_DISTANCE = 4;
 // Brush tip catalog now lives in ShapeLibrary (shared with the Shape tool, WP5a).
 // Kept as a static alias so existing MaskEditor.BRUSH_SHAPES references still work.
 MaskEditor.BRUSH_SHAPES = ShapeLibrary.BRUSH_SHAPES;
-

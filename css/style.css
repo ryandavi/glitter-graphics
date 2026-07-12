@@ -3079,6 +3079,11 @@ body.mask-editing .sticker-element {
   font-weight: 400;
 }
 
+.checkbox-list-content {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .context-checkbox-group {
   display: flex;
   align-items: center;
@@ -4733,6 +4738,7 @@ body.mask-editing .sticker-element {
   padding: var(--spacing-xs);
   width: -moz-fit-content;
   width: fit-content;
+  padding: 0;
 }
 
 /* Checkbox Groups */
@@ -5817,20 +5823,68 @@ body.mask-editing .sticker-element {
 }
 #shortcutsModal .shortcut-item > .shortcut-keys {
   display: flex;
+  align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
-#shortcutsModal .shortcut-item > .shortcut-keys > .kbd {
+
+#shortcutsModal .shortcut-sequence,
+#shortcutsModal .guide-shortcut,
+#guideModal .shortcut-sequence,
+#guideModal .guide-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+#shortcutsModal .kbd,
+#shortcutsModal .guide-kbd,
+#guideModal .kbd,
+#guideModal .guide-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 1.45em;
+  height: 1.35em;
+  padding: 0 0.35em;
+  vertical-align: 0.08em;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-family: "Courier New", monospace;
-  font-size: var(--font-size-md);
+  border-radius: 3px;
+  box-shadow: 0 1px 0 var(--color-border);
   color: var(--color-text-primary);
-  box-shadow: 0 2px 0 var(--color-border);
+  font-family: "Courier New", monospace;
+  font-size: 0.82em;
   font-weight: 600;
-  min-width: 24px;
+  line-height: 1;
   text-align: center;
+  white-space: nowrap;
+}
+#shortcutsModal .shortcut-sequence > .kbd,
+#shortcutsModal .guide-shortcut > .guide-kbd,
+#guideModal .shortcut-sequence > .kbd,
+#guideModal .guide-shortcut > .guide-kbd {
+  vertical-align: baseline;
+}
+#shortcutsModal .shortcut-gesture,
+#guideModal .shortcut-gesture {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+#shortcutsModal .shortcut-instruction,
+#guideModal .shortcut-instruction {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
 }
 
 /* ===== GUIDE MODAL ===== */

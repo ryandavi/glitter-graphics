@@ -1389,29 +1389,77 @@
 
 		>.shortcut-keys {
 			display: flex;
+			align-items: center;
 			gap: 4px;
-
-			>.kbd {
-				background: var(--color-bg-secondary);
-				border: 1px solid var(--color-border);
-				border-radius: 4px;
-				padding: 2px 8px;
-				font-family: 'Courier New', monospace;
-				font-size: var(--font-size-md);
-				color: var(--color-text-primary);
-				box-shadow: 0 2px 0 var(--color-border);
-				font-weight: 600;
-				min-width: 24px;
-				text-align: center;
-			}
+			flex-wrap: wrap;
+			justify-content: flex-end;
 		}
+	}
+}
+
+// Shared shortcut language for the Keyboard Shortcuts and Guide modals.
+// Keep aliases for the guide's semantic <kbd> markup; both resolve to the
+// same component so size, alignment, and input-type treatment cannot drift.
+#shortcutsModal,
+#guideModal {
+	.shortcut-sequence,
+	.guide-shortcut {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2em;
+		vertical-align: baseline;
+		white-space: nowrap;
+	}
+
+	.kbd,
+	.guide-kbd {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+		min-width: 1.45em;
+		height: 1.35em;
+		padding: 0 0.35em;
+		vertical-align: 0.08em;
+		background: var(--color-bg-secondary);
+		border: 1px solid var(--color-border);
+		border-radius: 3px;
+		box-shadow: 0 1px 0 var(--color-border);
+		color: var(--color-text-primary);
+		font-family: 'Courier New', monospace;
+		font-size: 0.82em;
+		font-weight: 600;
+		line-height: 1;
+		text-align: center;
+		white-space: nowrap;
+	}
+
+	.shortcut-sequence>.kbd,
+	.guide-shortcut>.guide-kbd {
+		vertical-align: baseline;
+	}
+
+	.shortcut-gesture {
+		background: var(--color-bg-tertiary);
+		border: 1px solid var(--color-border);
+		border-radius: 999px;
+		padding: 2px 8px;
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	.shortcut-instruction {
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-sm);
+		font-weight: 500;
 	}
 }
 
 /* ===== GUIDE MODAL ===== */
 
 #guideModal {
-
 	.modal-hero-image {
 		//tiled background
 		background: url("../images/glitter/sparkle/glitter_sapphire.gif") repeat;
