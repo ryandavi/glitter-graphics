@@ -25,6 +25,7 @@ function panelCap(value) {
 
 const PANEL_ROLES = Object.freeze({
 	paintSlot: Object.freeze({
+		sourceImage: 'Image',
 		sourceNone: 'None',
 		sourceGlitter: 'Glitter',
 		sourceSolid: 'Solid',
@@ -145,6 +146,7 @@ function buildAssetInfo(options) {
 	const info = tplClone('tpl-asset-info');
 	info.id = options.info;
 	info.dataset.role = 'asset-info';
+	if (options.sourceMode) info.dataset.paintSourceMode = options.sourceMode;
 	info.hidden = Boolean(options.hidden);
 	if (!options.glitterSource) info.classList.remove('glitter-source-glitter');
 	const chip = info.querySelector('.asset-info-thumbnail');
@@ -176,6 +178,11 @@ function buildPaintSource(slot) {
 	const prefix = slot.idPrefix;
 	const assetPrefix = slot.assetIdPrefix || `${prefix}Glitter`;
 	const source = tplClone('tpl-paint-source');
+	if (slot.imageAsset) {
+		const imageInfo = buildAssetInfo({ ...slot.imageAsset, sourceMode: 'image' });
+		imageInfo.classList.remove('glitter-source-glitter');
+		source.querySelector('.text-effect-color-row').before(imageInfo);
+	}
 	const assetInfo = buildAssetInfo({
 		info: `${assetPrefix}Info`,
 		thumbnail: slot.assetIds?.thumbnail || `${assetPrefix}Chip`,
@@ -189,12 +196,14 @@ function buildPaintSource(slot) {
 		glitterSource: true
 	});
 	source.querySelector('.text-effect-color-row').before(assetInfo);
-	source.prepend(buildSegmented(slot.modes.map((mode) => ({
+	const sourceChoices = buildSegmented(slot.modes.map((mode) => ({
 		id: panelRoleId(prefix, `source${panelCap(mode)}`),
-		label: panelCap(mode),
+		label: slot.modeLabels?.[mode] || panelCap(mode),
 		active: mode === slot.activeMode,
 		mode
-	}))));
+	})));
+	sourceChoices.classList.add('paint-source-choice-grid');
+	source.prepend(sourceChoices);
 	const colorRow = source.querySelector('.text-effect-color-row');
 	colorRow.id = `${prefix}ColorRow`;
 	colorRow.dataset.role = 'solid-color-row';
@@ -235,6 +244,7 @@ function buildPaintSlotCard(slot) {
 	const card = tplClone('tpl-paint-slot');
 	card.dataset.slot = slot.slot;
 	card.dataset.role = 'paint-slot';
+	if (slot.hidePrimaryModes?.length) card.dataset.hidePrimaryModes = slot.hidePrimaryModes.join(' ');
 	card.querySelector('.subsection-title > span').textContent = slot.title;
 	let container = card;
 	if (slot.toggle) {
@@ -419,7 +429,8 @@ function renderPanelSection(schema) {
 	if (schema.replaceStatic) host.replaceChildren();
 	else if (host.querySelector(':scope > .section-header')) return;
 	const fragment = document.getElementById('tpl-section').content.cloneNode(true);
-	fragment.querySelector('.section-header').id = `${schema.prefix}SettingsHeader`;
+	const sectionPrefix = schema.sectionPrefix || `${schema.prefix}Settings`;
+	fragment.querySelector('.section-header').id = `${sectionPrefix}Header`;
 	const titleIcon = fragment.querySelector('use');
 	titleIcon.setAttribute('href', `#icon-${schema.section.icon}`);
 	if (schema.section.titleIconId) titleIcon.id = schema.section.titleIconId;
@@ -427,8 +438,8 @@ function renderPanelSection(schema) {
 	const titleText = fragment.querySelector('.section-header-title-text');
 	titleText.textContent = schema.section.title;
 	if (schema.section.titleTextId) titleText.id = schema.section.titleTextId;
-	fragment.querySelector('.section-header-action').id = `${schema.prefix}SettingsToggle`;
-	fragment.querySelector('.section-content').id = `${schema.prefix}SettingsContent`;
+	fragment.querySelector('.section-header-action').id = `${sectionPrefix}Toggle`;
+	fragment.querySelector('.section-content').id = `${sectionPrefix}Content`;
 	const subsection = fragment.querySelector('.settings-subsection');
 	schema.groups.forEach((group) => subsection.appendChild(buildPanelGroup(group, schema)));
 	if (schema.effects) {

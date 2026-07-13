@@ -32,6 +32,9 @@ class ShapeGlitterManager {
 		// Gallery picker session (reuses the shared strip + Done UX from text):
 		// { layerId, slot } while the user is choosing a glitter for a slot.
 		this.pickerSession = null;
+		// Layer whose underlying shape asset is being replaced. Asset replacement
+		// and glitter-slot picking are mutually exclusive picker modes.
+		this.shapeChangeLayerId = null;
 		this.setupUI();
 		this.setupEventListeners();
 	}
@@ -417,6 +420,7 @@ class ShapeGlitterManager {
 	armPicker(slot) {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
+		this.shapeChangeLayerId = null;
 		this.pickerSession = { layerId: layer.id, slot };
 		revealAssetBrowser(this.editor, this.editor.glitterManager);
 		this.updatePickerStrip();

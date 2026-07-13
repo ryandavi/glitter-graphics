@@ -22,6 +22,10 @@ const MOBILE_SETTINGS_SECTION_CONFIG = {
 		selector: '.shape-settings-section',
 		collapsibleName: 'shapeSettings'
 	},
+	background: {
+		selector: '.base-layer-settings-section',
+		collapsibleName: 'baseLayerSettings'
+	},
 	brush: {
 		selector: '.brush-settings-section'
 	}

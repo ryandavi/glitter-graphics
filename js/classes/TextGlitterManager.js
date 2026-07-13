@@ -1705,8 +1705,9 @@ class TextGlitterManager {
 
 	setupPickerStripListeners() {
 		this.ui.pickerStripDone?.addEventListener('click', () => {
-			// When a shape layer is active, the shape manager owns Done.
-			if ([LayerType.GLITTER_FILL, LayerType.SHAPE, LayerType.STICKER].includes(this.editor.layerManager.getActiveLayer()?.type)) return;
+			// The strip is shared by every asset/effect manager. Text may only own
+			// Done while a text layer has an armed text picker session.
+			if (this.editor.layerManager.getActiveLayer()?.type !== LayerType.TEXT_GLITTER || !this.pickerSession) return;
 			const slot = this.pickerSession?.slot || 'fill';
 			this.closePickerSession();
 			this.returnToTextProperties(slot);

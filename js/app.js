@@ -91,6 +91,7 @@ class GlitterEditor {
 		this.layerManager = new LayerManager(this);
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this);
+		this.baseBackgroundManager = new BaseBackgroundManager(this);
 		this.textGlitterManager = new TextGlitterManager(this);
 		this.shapeGlitterManager = new ShapeGlitterManager(this);
 		this.groupTransformManager = new GroupTransformManager(this);
@@ -910,10 +911,11 @@ async resetAllSettings() {
 		this.shapeGlitterManager?.updatePickerStrip();
 		this.stickerManager?.updatePickerStrip();
 		this.glitterManager?.updatePickerStrip();
+		this.baseBackgroundManager?.updatePickerStrip();
 
-		// The Canvas Size preview only makes sense in the no-layer state; drop it
-		// whenever a layer is selected or there's no image.
-		if (layer || hasMultiSelection || !this.originalImage) {
+		// Canvas Size belongs to Canvas Background; drop its temporary preview
+		// when editing any content layer or when no image is loaded.
+		if ((layer && layer.type !== LayerType.BASE_IMAGE) || hasMultiSelection || !this.originalImage) {
 			this.hideCanvasResizePreview();
 		}
 	}
@@ -948,16 +950,20 @@ async resetAllSettings() {
 		}
 
 		// An armed glitter pick-session keeps the gallery focused (Done returns you).
-		if (this.glitterManager?.hasActivePickerSession?.() || this.textGlitterManager?.pickerSession || this.shapeGlitterManager?.pickerSession || this.stickerManager?.pickerSession) {
+		if (this.glitterManager?.hasActivePickerSession?.() || this.baseBackgroundManager?.hasActivePickerSession?.() || this.textGlitterManager?.pickerSession || this.shapeGlitterManager?.pickerSession || this.stickerManager?.pickerSession) {
 			return 'designGallery';
 		}
 
-		if (!this.originalImage || this.layerManager?.hasMultiSelection?.() || !layer || layer.type === LayerType.BASE_IMAGE) {
+		if (!this.originalImage || this.layerManager?.hasMultiSelection?.() || !layer) {
 			return 'designGallery';
 		}
 
 		if (layer.type === LayerType.TEXT_GLITTER) {
 			return 'textSettings';
+		}
+
+		if (layer.type === LayerType.BASE_IMAGE) {
+			return 'baseLayerSettings';
 		}
 
 		if (layer.type === LayerType.STICKER) {
@@ -1291,6 +1297,11 @@ async resetAllSettings() {
 			return;
 		}
 
+		if (layer.type === LayerType.BASE_IMAGE) {
+			this.baseBackgroundManager?.loadLayerSettings(layer);
+			return;
+		}
+
 		// Load glitter layer settings (existing code)
 		const s = layer.settings;
 
@@ -1463,7 +1474,7 @@ async resetAllSettings() {
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
-		const sections = ['designGallery', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings', 'shapeSettings', 'brushSettings'];
+		const sections = ['designGallery', 'baseLayerSettings', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings', 'shapeSettings', 'brushSettings'];
 
 			const setOpen = (name, isOpen, accordion = false) => {
 				const section = document.getElementById(`${name}Section`);
@@ -1695,6 +1706,7 @@ async resetAllSettings() {
 	getLayerFillColorAdjust(layer) {
 		if (!layer) return null;
 		if (layer.type === LayerType.SHAPE) return layer.shapeData?.fill?.colorAdjust;
+		if (layer.type === LayerType.BASE_IMAGE) return layer.background?.colorAdjust;
 		return layer.settings?.colorAdjust;
 	}
 
@@ -4242,6 +4254,17 @@ setupWelcomeModalListeners() {
 				preset: { width, height, color }
 			}
 		});
+		const baseLayer = this.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const normalizedBase = this.baseBackgroundManager?.normalizeLayer(baseLayer);
+		if (normalizedBase) {
+			normalizedBase.background.mode = color === 'transparent' ? 'none' : 'solid';
+			if (color !== 'transparent') normalizedBase.background.color = color;
+			// loadImageFile establishes the new project's initial history snapshot;
+			// replace it with the authored background mode, not the PNG transport.
+			this.historyManager.reset(this.historyManager.createStateSnapshot());
+			this.updatePreview();
+			this.layerManager.renderLayersList();
+		}
 		this.updateStatus(`Created ${width}×${height} canvas`);
 		return true;
 	}
@@ -5208,10 +5231,68 @@ setupWelcomeModalListeners() {
 
 
 	// ===== IMAGE LOADING =====
+	async replaceBaseImageFile(file) {
+		if (!file || !this.originalImageData) return false;
+		if (file.size > CONFIG.canvas.limits.maxFileSizeMB * 1024 * 1024) {
+			this.showError(`Image too large. Maximum size is ${CONFIG.canvas.limits.maxFileSizeMB}MB`);
+			return false;
+		}
+		const objectUrl = URL.createObjectURL(file);
+		const image = await new Promise((resolve) => {
+			const next = new Image();
+			next.onload = () => resolve(next);
+			next.onerror = () => resolve(null);
+			next.src = objectUrl;
+		});
+		if (!image) {
+			URL.revokeObjectURL(objectUrl);
+			this.showError('Could not load that image. The file may be corrupt or unsupported.');
+			return false;
+		}
+		let width = image.width;
+		let height = image.height;
+		if (width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
+			const scale = Math.min(CONFIG.canvas.limits.maxWidth / width, CONFIG.canvas.limits.maxHeight / height);
+			width = Math.floor(width * scale);
+			height = Math.floor(height * scale);
+		}
+		const offsetX = Math.round((width - this.originalCanvas.width) / 2);
+		const offsetY = Math.round((height - this.originalCanvas.height) / 2);
+		this.resizeCanvas(width, height, offsetX, offsetY, { saveHistory: false, updateStatus: false });
+		this.originalCtx.clearRect(0, 0, width, height);
+		this.originalCtx.drawImage(image, 0, 0, width, height);
+		this.originalImage = image;
+		this.originalImageData = this.originalCtx.getImageData(0, 0, width, height);
+		this.originalAlphaChannel = new Uint8Array(width * height);
+		for (let i = 0; i < this.originalAlphaChannel.length; i++) this.originalAlphaChannel[i] = this.originalImageData.data[i * 4 + 3];
+		this.baseImageSource = { kind: 'file', file, renderedWidth: width, renderedHeight: height, hasBaseImage: true };
+		this.layerManager.updateBaseImageSwatchCache();
+		const layer = this.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
+		if (layer) {
+			const normalized = this.baseBackgroundManager?.normalizeLayer(layer);
+			if (normalized) normalized.background.mode = 'image';
+		}
+		this.updatePreview();
+		this.layerManager.renderLayersList();
+		if (layer) this.baseBackgroundManager?.loadLayerSettings(layer);
+		this.saveState();
+		this.updateStatus('Base image replaced');
+		return true;
+	}
+
 	async loadImage(event) {
 		const file = event.target.files[0];
 		if (!file) return;
-		return this.loadImageFile(file);
+		try {
+			// Once a project exists, every image-upload surface means “replace the
+			// protected background image”; it must never clear the layer stack.
+			if (this.originalImage && this.layers?.some((layer) => layer.type === LayerType.BASE_IMAGE)) {
+				return await this.replaceBaseImageFile(file);
+			}
+			return await this.loadImageFile(file);
+		} finally {
+			if (event.target && 'value' in event.target) event.target.value = '';
+		}
 		return;
 
 		if (file.size > CONFIG.canvas.limits.maxFileSizeMB * 1024 * 1024) {
@@ -5409,11 +5490,13 @@ setupWelcomeModalListeners() {
 			? {
 				kind: 'preset',
 				preset: { ...source.preset },
+				hasBaseImage: false,
 				renderedWidth: width,
 				renderedHeight: height
 			}
 			: {
 				kind: source?.kind || 'file',
+				hasBaseImage: source?.hasBaseImage !== false,
 				file: blob instanceof File ? blob : new File([blob], fileName, { type: blob.type || 'image/png' }),
 				renderedWidth: width,
 				renderedHeight: height
@@ -5611,7 +5694,7 @@ setupWelcomeModalListeners() {
 	// smaller size. Re-anchors every buffer and records an undoable history entry
 	// (the snapshot carries the new canvas dims + base pixels; see
 	// applyCanvasStateFromHistory), so Ctrl+Z restores the previous size.
-	resizeCanvas(newWidth, newHeight, offsetX, offsetY) {
+	resizeCanvas(newWidth, newHeight, offsetX, offsetY, options = {}) {
 		if (!this.originalImage) return;
 		newWidth = Math.max(1, Math.round(newWidth));
 		newHeight = Math.max(1, Math.round(newHeight));
@@ -5666,6 +5749,10 @@ setupWelcomeModalListeners() {
 				layer.textData.transform.position.x += offsetX;
 				layer.textData.transform.position.y += offsetY;
 				this.textGlitterManager?.renderLayer(layer);
+			} else if (layer.type === LayerType.SHAPE && layer.shapeData?.transform?.position) {
+				layer.shapeData.transform.position.x += offsetX;
+				layer.shapeData.transform.position.y += offsetY;
+				this.shapeGlitterManager?.renderLayer(layer);
 			}
 		});
 
@@ -5678,9 +5765,9 @@ setupWelcomeModalListeners() {
 		// 6. Undoable checkpoint. reanchorForCanvasResize re-captured paint at the
 		// new size, and the snapshot records the new canvas dims + base pixels, so
 		// undo restores the previous size/content and redo re-applies this resize.
-		this.historyManager.saveState();
+		if (options.saveHistory !== false) this.historyManager.saveState();
 		this.isSaved = false;
-		this.updateStatus(`Canvas resized to ${newWidth} × ${newHeight} px`);
+		if (options.updateStatus !== false) this.updateStatus(`Canvas resized to ${newWidth} × ${newHeight} px`);
 
 		// 7. Repaint composite + list + status; drop any live resize preview.
 		this.hideCanvasResizePreview();
@@ -5709,6 +5796,8 @@ setupWelcomeModalListeners() {
 		this.originalCtx.putImageData(imageData, 0, 0);
 		this.originalImageData = imageData;
 		this.originalAlphaChannel = alphaChannel;
+		if ('baseImageSource' in canvasState) this.baseImageSource = canvasState.baseImageSource;
+		if (canvasState.originalImage) this.originalImage = canvasState.originalImage;
 
 		this.previewCanvas.width = width;
 		this.previewCanvas.height = height;
@@ -6268,11 +6357,8 @@ setupWelcomeModalListeners() {
 	}
 
 	clearPreview() {
-		if (this.originalImageData) {
-			this.previewCtx.putImageData(this.originalImageData, 0, 0);
-		} else {
-			this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-		}
+		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+		if (this.originalImageData) this.renderPreviewCanvas([]);
 
 		// Clear glitter backgrounds
 		this.canvasElementsContainer.innerHTML = '';
@@ -6341,8 +6427,25 @@ setupWelcomeModalListeners() {
 			return;
 		}
 
-		// Otherwise, draw the original image
-		this.previewCtx.putImageData(this.originalImageData, 0, 0);
+		const background = this.baseBackgroundManager?.normalizeLayer(baseLayer)?.background;
+		const mode = background?.mode || 'image';
+		if (mode === 'image' && this.baseBackgroundManager?.hasBaseImage()) {
+			this.previewCtx.putImageData(this.originalImageData, 0, 0);
+		} else if (mode === 'solid') {
+			this.previewCtx.save();
+			this.previewCtx.globalAlpha = background.opacity / 100;
+			this.previewCtx.fillStyle = background.color;
+			this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+			this.previewCtx.restore();
+		} else if (mode === 'gradient') {
+			this.previewCtx.save();
+			this.previewCtx.globalAlpha = background.opacity / 100;
+			this.previewCtx.fillStyle = createEffectCanvasGradient(this.previewCtx, background.gradient, {
+				x: 0, y: 0, width: this.previewCanvas.width, height: this.previewCanvas.height
+			});
+			this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+			this.previewCtx.restore();
+		}
 	}
 
 	// ===== EXPORT PROGRESS =====
@@ -6468,7 +6571,8 @@ setupWelcomeModalListeners() {
 				height: this.originalCanvas.height,
 				originalData: new Uint8ClampedArray(this.originalImageData.data),
 				originalAlpha: this.originalAlphaChannel,
-				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold
+				alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold,
+				hasBaseImage: this.baseBackgroundManager?.hasBaseImage() ?? true
 			},
 			exportSettings: this.exportSettings,
 			callbacks: {

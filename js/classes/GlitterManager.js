@@ -366,8 +366,8 @@ async initBrowser() {
 			return;
 		}
 
-		if (layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER && layer.type !== LayerType.SHAPE && layer.type !== LayerType.STICKER) {
-			this.editor.showError('You can only add a glitter to a glitter-fill, text, shape, or sticker effect');
+		if (layer.type !== LayerType.BASE_IMAGE && layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER && layer.type !== LayerType.SHAPE && layer.type !== LayerType.STICKER) {
+			this.editor.showError('You can only add glitter to a background or supported layer effect');
 			return;
 		}
 		const glitter = this.getItemById(id);
@@ -395,7 +395,12 @@ async initBrowser() {
 			}
 		}
 
-		if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
+		if (layer.type === LayerType.BASE_IMAGE) {
+			this.editor.baseBackgroundManager?.normalizeLayer(layer);
+			layer.selectedGlitterId = id;
+			layer.background.mode = 'glitter';
+			layer.background.colorAdjust = normalizeColorAdjust(null);
+		} else if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
 			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer);
 			// Picking a new swatch is a clean slate — drop that slot's hue/sat/bright.
 			if (target === 'border') {
@@ -452,7 +457,11 @@ async initBrowser() {
 		this.editor.updateGlitterSelection();
 		this.editor.layerManager.renderLayersList();
 
-		if (layer.type === LayerType.TEXT_GLITTER) {
+		if (layer.type === LayerType.BASE_IMAGE) {
+			this.editor.updatePreview();
+			this.editor.baseBackgroundManager?.loadLayerSettings(layer);
+			this.editor.baseBackgroundManager?.updatePickerStrip();
+		} else if (layer.type === LayerType.TEXT_GLITTER) {
 			await this.editor.textGlitterManager?.refreshLayer(layer, {
 				saveHistory: false,
 				refreshLayerList: false,
@@ -513,6 +522,8 @@ async initBrowser() {
 		const height = this.editor.originalCanvas?.height;
 
 		const keep = new Set();
+		const baseLayer = this.editor.layerManager.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		if (baseLayer?.visible && baseLayer.background?.mode === 'glitter') keep.add(baseLayer.id);
 		layersToShow.forEach((layer) => {
 			if (layer.type === layerType) keep.add(layer.id);
 		});
@@ -524,6 +535,32 @@ async initBrowser() {
 		layersToShow.forEach((layer) => {
 			if (layer.type === layerType) this.renderLayer(layer, width, height);
 		});
+		if (baseLayer?.visible && baseLayer.background?.mode === 'glitter') this.renderBaseBackground(baseLayer);
+	}
+
+	renderBaseBackground(layer) {
+		const glitter = this.getItemById(layer.selectedGlitterId);
+		if (!glitter) return;
+		let wrapper = this.layerElements.get(layer.id);
+		if (!wrapper) {
+			wrapper = document.createElement('div');
+			wrapper.className = 'glitter-element base-background-element';
+			wrapper.dataset.layerId = layer.id;
+			wrapper.appendChild(document.createElement('div'));
+			this.editor.canvasElementsContainer.appendChild(wrapper);
+		}
+		const inner = wrapper.firstElementChild;
+		inner.className = `glitter-background visible${glitter.isPixelated ? ' pixelated' : ''}`;
+		inner.style.backgroundImage = `url(${glitter.url})`;
+		inner.style.backgroundColor = 'transparent';
+		inner.style.backgroundSize = `${Math.round((glitter.frames?.width || 50) * layer.background.scale / 100)}px`;
+		inner.style.opacity = layer.background.opacity / 100;
+		inner.style.filter = buildCssColorFilter(layer.background.colorAdjust);
+		inner.style.maskImage = 'none';
+		inner.style.webkitMaskImage = 'none';
+		inner.style.visibility = '';
+		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+		this.layerElements.set(layer.id, wrapper);
 	}
 
 	renderLayer(layer, width, height, options = {}) {

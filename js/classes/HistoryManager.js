@@ -21,7 +21,9 @@ class HistoryManager {
 					width: this.editor.originalCanvas.width,
 					height: this.editor.originalCanvas.height,
 					imageData: this.editor.originalImageData,
-					alphaChannel: this.editor.originalAlphaChannel
+					alphaChannel: this.editor.originalAlphaChannel,
+					baseImageSource: this.editor.baseImageSource,
+					originalImage: this.editor.originalImage
 				}
 				: null
 		};
@@ -61,6 +63,7 @@ class HistoryManager {
 			this.editor.textGlitterManager.pickerSession = null;
 			if (this.editor.shapeGlitterManager) this.editor.shapeGlitterManager.pickerSession = null;
 			if (this.editor.glitterManager) this.editor.glitterManager.pickerSession = null;
+			if (this.editor.baseBackgroundManager) this.editor.baseBackgroundManager.pickerSession = null;
 		}
 		this.editor.layers = [];
 

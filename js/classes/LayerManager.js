@@ -90,7 +90,16 @@ class LayerManager {
 			type: LayerType.BASE_IMAGE,
 			image: null,
 			visible: true,
-			locked: true
+			locked: true,
+			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
+			background: {
+				mode: 'image',
+				color: '#ffffff',
+				gradient: normalizeEffectGradient(CONFIG.rendering.gradient),
+				scale: CONFIG.tools.effects.defaults.scale,
+				opacity: 100,
+				colorAdjust: null
+			}
 		};
 		return layer;
 	}
@@ -134,7 +143,9 @@ class LayerManager {
 				id: layer.id,
 				type: LayerType.BASE_IMAGE,
 				visible: layer.visible,
-				locked: layer.locked
+				locked: true,
+				selectedGlitterId: layer.selectedGlitterId,
+				background: layer.background ? JSON.parse(JSON.stringify(layer.background)) : null
 			};
 		}
 
@@ -205,13 +216,21 @@ class LayerManager {
 		}
 
 		if (layerData.type === LayerType.BASE_IMAGE) {
-			return {
+			const layer = {
 				id: layerData.id,
 				type: LayerType.BASE_IMAGE,
 				visible: layerData.visible,
-				locked: layerData.locked,
+				locked: true,
+				selectedGlitterId: layerData.selectedGlitterId || CONFIG.tools.glitter.defaults.fillGlitterId,
+				background: layerData.background ? JSON.parse(JSON.stringify(layerData.background)) : null,
 				image: null
 			};
+			layer.background ||= {
+				mode: 'image', color: '#ffffff', gradient: normalizeEffectGradient(CONFIG.rendering.gradient),
+				scale: CONFIG.tools.effects.defaults.scale, opacity: 100, colorAdjust: null
+			};
+			layer.background.gradient = normalizeEffectGradient(layer.background.gradient);
+			return layer;
 		}
 
 		const restored = {
@@ -1272,10 +1291,21 @@ class LayerManager {
 			swatch.style.maskSize = '80% 80%';
 			swatch.style.webkitMaskSize = '80% 80%';
 		} else if (layer.type === LayerType.BASE_IMAGE) {
-			// --- FIX: Base Image Thumbnail ---
-			if (this.editor.originalImage) {
-				swatch.style.backgroundImage = `url(${this.editor.originalImage.src})`;
+			const background = layer.background || { mode: 'image' };
+			if (background.mode === 'glitter') {
+				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+				if (glitter) swatch.style.backgroundImage = `url(${glitter.url})`;
+				swatch.style.filter = buildCssColorFilter(background.colorAdjust);
+				swatch.classList.add('glitter');
+			} else if (background.mode === 'solid') {
+				swatch.style.background = background.color || '#ffffff';
+			} else if (background.mode === 'gradient') {
+				swatch.style.backgroundImage = effectGradientToCss(background.gradient);
+			} else if (background.mode === 'image' && this.editor.baseBackgroundManager?.hasBaseImage() && this.editor.originalImage) {
+				swatch.style.backgroundImage = `url(${this.baseImageSwatchDataUrl || this.editor.originalImage.src})`;
 				swatch.classList.add('baseImage');
+			} else {
+				swatch.classList.add('empty');
 			}
 		} else {
 			// Glitter Logic
@@ -1369,7 +1399,7 @@ class LayerManager {
 			}
 			case LayerType.BASE_IMAGE:
 				nameText.textContent = 'Base Image';
-				typeText.textContent = 'Image';
+				typeText.textContent = `Background / ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}`;
 				break;
 			default:
 				nameText.textContent = 'Unknown Layer';

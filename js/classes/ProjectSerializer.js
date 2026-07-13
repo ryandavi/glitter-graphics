@@ -89,6 +89,7 @@ class ProjectSerializer {
 		this.editor.shapeGlitterManager.pickerSession = null;
 		this.editor.stickerManager.pickerSession = null;
 		this.editor.glitterManager.pickerSession = null;
+		this.editor.baseBackgroundManager.pickerSession = null;
 		document.getElementById('designGallerySection')?.classList.remove('picker-mode');
 
 		await this.loadBaseImage(migrated);
@@ -235,7 +236,8 @@ class ProjectSerializer {
 		const baseImage = {
 			mimeType: null,
 			data: null,
-			preset: null
+			preset: null,
+			hasBaseImage: this.editor.baseBackgroundManager?.hasBaseImage() ?? true
 		};
 
 		if (source?.kind === 'preset') {
@@ -325,7 +327,8 @@ class ProjectSerializer {
 			const loaded = await this.editor.loadImageFromBlob(blob, {
 				fileName: `${projectData.name || 'project'}-canvas.png`,
 				source: {
-					kind: 'serialized-canvas'
+					kind: 'serialized-canvas',
+					hasBaseImage: baseImage.hasBaseImage ?? !baseImage.preset
 				}
 			});
 			if (!loaded) throw new Error('Could not load the project base image.');
@@ -349,7 +352,8 @@ class ProjectSerializer {
 			const loaded = await this.editor.loadImageFromBlob(blob, {
 				fileName: `${projectData.name || 'project-base'}.${extension}`,
 				source: {
-					kind: 'project-file'
+					kind: 'project-file',
+					hasBaseImage: true
 				}
 			});
 			if (!loaded) throw new Error('Could not load the project base image.');

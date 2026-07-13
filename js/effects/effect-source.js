@@ -185,7 +185,7 @@ function createEffectCanvasGradient(ctx, gradient, rect) {
 function syncPaintSlotSourceUI(sourceButton, mode) {
 	const slot = sourceButton?.closest('.text-effect-subsection') || sourceButton?.closest('.subsection-content-group');
 	if (!slot) return;
-	const normalizedMode = ['none', 'glitter', 'solid', 'gradient'].includes(mode) ? mode : 'solid';
+	const normalizedMode = ['image', 'none', 'glitter', 'solid', 'gradient'].includes(mode) ? mode : 'solid';
 	slot.dataset.paintMode = normalizedMode;
 	sourceButton.closest('.segmented-control')?.querySelectorAll('.segmented-option').forEach((button) => {
 		const buttonMode = button.dataset.mode;
@@ -193,11 +193,15 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 	});
 	slot.querySelectorAll('.glitter-source-glitter').forEach((element) => { element.hidden = normalizedMode !== 'glitter'; });
 	slot.querySelectorAll('.glitter-source-solid').forEach((element) => { element.hidden = normalizedMode !== 'solid'; });
+	slot.querySelectorAll('[data-paint-source-mode]').forEach((element) => {
+		element.hidden = element.dataset.paintSourceMode !== normalizedMode;
+	});
 	const primaryRow = slot.querySelector('.paint-slot-primary-row');
 	const scale = primaryRow?.querySelector('.paint-slot-scale');
 	if (scale) scale.hidden = normalizedMode !== 'glitter';
 	const opacity = primaryRow?.querySelector('.paint-slot-opacity');
-	if (primaryRow) primaryRow.hidden = normalizedMode === 'none' || (normalizedMode !== 'glitter' && !opacity);
+	const hidePrimaryModes = new Set((slot.dataset.hidePrimaryModes || '').split(/\s+/).filter(Boolean));
+	if (primaryRow) primaryRow.hidden = normalizedMode === 'none' || hidePrimaryModes.has(normalizedMode) || (normalizedMode !== 'glitter' && !opacity);
 	const advanced = slot.querySelector('.advanced-disclosure');
 	if (advanced) advanced.hidden = normalizedMode !== 'glitter';
 	const gradient = slot.querySelector('.effect-gradient-editor');

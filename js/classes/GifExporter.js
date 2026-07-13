@@ -352,6 +352,51 @@ class GifExporter {
 
 	_buildLayerExportPlan(layer) {
 		switch (layer?.type) {
+			case LayerType.BASE_IMAGE: {
+				const background = layer.background || { mode: 'image' };
+				const mode = background.mode || 'image';
+				return {
+					prepareMasks: async () => {},
+					loadSources: async (library, callbacks) => {
+						if (mode !== 'glitter') return;
+						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
+						if (!glitter) throw new Error(`Missing glitter ${layer.selectedGlitterId}`);
+						if (!glitter.frames) glitter.frames = await callbacks.parseGif(glitter.url);
+					},
+					flattenFrames: (library, flattenSource) => {
+						if (mode !== 'glitter') return;
+						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
+						if (glitter?.frames?.frames?.length) flattenSource(layer.id, glitter.frames, `${glitter.name} (background)`, false);
+					},
+					collectTransparencyFrames: (flattenedFrameMap, allFrames) => {
+						if (mode === 'glitter') allFrames.push(...(flattenedFrameMap?.get(layer.id) || []));
+					},
+					collectFrameCounts: (library, counts) => {
+						if (mode !== 'glitter') { counts.set(layer.id, 1); return; }
+						const glitter = library.find((item) => item.id === layer.selectedGlitterId);
+						counts.set(layer.id, glitter?.frames?.frames?.length || glitter?.frameCount || 1);
+					},
+					hasMultiFrameGlitter: (counts) => mode === 'glitter' && (counts.get(layer.id) || 0) > 1,
+					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap, width, height }) => {
+						if (mode === 'image' || mode === 'none') return;
+						ctx.save();
+						ctx.globalAlpha = (background.opacity ?? 100) / 100;
+						if (mode === 'solid') ctx.fillStyle = background.color || '#ffffff';
+						else if (mode === 'gradient') ctx.fillStyle = createEffectCanvasGradient(ctx, background.gradient, { x: 0, y: 0, width, height });
+						else {
+							const frames = flattenedFrameMap?.get(layer.id) || [];
+							const reduced = frameMap?.get(layer.id);
+							const frame = frames[this._getReducedFrameIndex(frameIndex, frames.length, reduced)];
+							if (!frame) throw new Error(`Missing background glitter frame for ${layer.id}`);
+							const pattern = ctx.createPattern(this._patternSourceFromFrame(frame, background.colorAdjust), 'repeat');
+							pattern.setTransform(new DOMMatrix().scaleSelf((background.scale || 100) / 100));
+							ctx.fillStyle = pattern;
+						}
+						ctx.fillRect(0, 0, width, height);
+						ctx.restore();
+					}
+				};
+			}
 			case LayerType.GLITTER_FILL:
 				const fillMode = layer.fill?.mode || 'glitter';
 				return {
@@ -1076,10 +1121,17 @@ class GifExporter {
 
 		// Check if the base layer is actually being rendered
 		const baseLayer = visibleLayers.find(l => l.type === LayerType.BASE_IMAGE);
-		const baseIsEffectivelyVisible = baseLayer && (baseLayer.visible !== false) && exportSettings.baseImage;
+		const baseMode = baseLayer?.background?.mode || 'image';
+		const baseHasImageSource = baseMode !== 'image' || canvasData.hasBaseImage !== false;
+		const baseIsEffectivelyVisible = baseLayer && (baseLayer.visible !== false) && exportSettings.baseImage && baseMode !== 'none' && baseHasImageSource;
+		const baseOpacity = baseLayer?.background?.opacity ?? 100;
+		const baseHasTransparency = !baseIsEffectivelyVisible
+			|| baseOpacity < 100
+			|| (baseMode === 'image' && originalHasTransparency)
+			|| (baseMode === 'gradient' && normalizeEffectGradient(baseLayer.background.gradient).stops.some((stop) => stop.alpha < 1));
 
 		// If the base layer is hidden, the background is effectively transparent
-		const effectiveHasTransparency = !baseIsEffectivelyVisible || originalHasTransparency;
+		const effectiveHasTransparency = baseHasTransparency;
 
 		// When base is off, honor transparency setting regardless of fill.
 		// When base is ON, only enable transparency if it's not being consumed by opaque fill
@@ -1337,6 +1389,7 @@ class GifExporter {
 		const baseLayer = layers.find(l => l.type === LayerType.BASE_IMAGE);
 		const isBaseLayerVisible = baseLayer ? (baseLayer.visible !== false) : false;
 		const shouldRenderBase = exportSettings.baseImage && isBaseLayerVisible;
+		const baseMode = baseLayer?.background?.mode || 'image';
 
 		// 3. Determine Background Fill Color
 		let bgR, bgG, bgB;
@@ -1355,7 +1408,7 @@ class GifExporter {
 		ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
 		ctx.fillRect(0, 0, width, height);
 
-		if (shouldRenderBase) {
+		if (shouldRenderBase && baseMode === 'image' && canvasData.hasBaseImage !== false) {
 			if (needsTransparency) {
 				// SCENARIO A: GIF Transparency is ACTIVE.
 				const bgImage = new ImageData(new Uint8ClampedArray(originalData), width, height);
@@ -1383,6 +1436,7 @@ class GifExporter {
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
 		layers.forEach((layer) => {
 			if (layer.visible === false) return;
+			if (layer.type === LayerType.BASE_IMAGE && !exportSettings.baseImage) return;
 			this._buildLayerExportPlan(layer).render({
 				ctx,
 				frameIndex,

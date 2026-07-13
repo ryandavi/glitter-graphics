@@ -663,11 +663,11 @@ const LAYER_UI_CONFIG = {
 	[LayerType.BASE_IMAGE]: {
 		displayName: 'Base Image',
 		goTo: null,
-		designPanelSections: ['baseLayerSettingsSection'],
-		mobileSettingsSections: [],
+		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'baseLayerSettingsSection'],
+		mobileSettingsSections: ['background'],
 		panelMode: 'base-layer',
 		onActivate: (editor, layer) => {
-			editor.showLayerSettingsEmptyState();
+			editor.baseBackgroundManager?.loadLayerSettings(layer);
 		}
 	},
 
@@ -845,6 +845,31 @@ const LAYER_UI_CONFIG = {
 // capitalized role. Panels not listed here are still static index.html
 // markup awaiting migration (see the plan's WP order).
 const PANEL_SCHEMAS = {
+	[LayerType.BASE_IMAGE]: {
+		prefix: 'baseBackground',
+		sectionPrefix: 'baseLayerSettings',
+		replaceStatic: true,
+		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties' },
+		groups: [
+			{ title: 'Appearance', items: [
+				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background',
+					modes: ['image', 'none', 'glitter', 'solid'], activeMode: 'image', color: '#ffffff',
+					modeLabels: { none: 'Transparent' },
+					hidePrimaryModes: ['image'],
+					chipTitle: 'Choose background glitter',
+					imageAsset: {
+						info: 'baseBackgroundImageInfo', thumbnail: 'baseBackgroundImageThumbnail',
+						name: 'baseBackgroundImageName', badges: 'baseBackgroundImageBadges',
+						change: 'baseBackgroundImageChange', title: 'Replace base image', compact: true
+					},
+					primaryIds: { scale: 'baseBackgroundScale', opacity: 'baseBackgroundOpacity' }
+				}
+			] },
+			{ title: 'Canvas', items: [
+				{ kind: 'host', id: 'baseCanvasSizeHost' }
+			] }
+		]
+	},
 	brush: {
 		prefix: 'brush',
 		replaceStatic: true,
