@@ -4062,46 +4062,64 @@ body.mask-editing {
 #welcomeModal {
 	.modal-hero-image {
 		background: url("../images/glitter/sparkle/glitter_rainbow.gif") repeat;
-
-		> h2 {
-			color: var(--color-text-primary);
-			text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-		}
 	}
 
-	.welcome-quickstart {
-		> h3 {
-			font-size: var(--font-size-lg);
-			font-weight: 600;
-			color: var(--color-text-primary);
-			margin-bottom: var(--spacing-md);
-		}
+	.center {
+		display: block;
+		margin: 0 auto;
+		text-align: center;
+	}
 
-		> ul {
-			list-style: none;
-			margin: 0;
-			padding: 0;
+	.welcome-example-wrapper {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: var(--spacing-md);
+		margin: var(--spacing-lg) 0;
+
+		>figure {
 			display: flex;
 			flex-direction: column;
-			gap: var(--spacing-sm);
+			min-width: 0;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+			background: var(--color-bg-tertiary);
+			padding: var(--spacing-md);
 
-			> li {
-				padding: var(--spacing-md);
-				background: var(--color-bg-secondary);
-				border-radius: var(--radius-md);
-				color: var(--color-text-secondary);
-				line-height: 1.5;
+			>img {
+				width: 100%;
+				height: 120px;
+				object-fit: contain;
+				image-rendering: pixelated;
+				display: block;
+			}
+
+			>figcaption {
+				margin-top: var(--spacing-md);
+				font-size: var(--font-size-sm);
+				line-height: 1.4;
+
+				>cite {
+					font-style: normal;
+					font-weight: 600;
+				}
 			}
 		}
 	}
 
-	p + p {
-		margin-top: var(--spacing-sm);
-	}
+	.figure-wrapper+h3,
+	p+h3,
+	ol+h3,
+	ul+h3 { margin-top: var(--spacing-xl); }
 
-	p + .welcome-quickstart {
-		margin-top: var(--spacing-lg);
-	}
+	p+p { margin-top: var(--spacing-md); }
+
+	h3+p,
+	h3+ol,
+	h3+ul,
+	ol+p,
+	ul+p,
+	p+ol,
+	p+ul { margin-top: var(--spacing-md); }
 
 	.welcome-actions {
 		display: flex;
@@ -4164,6 +4182,16 @@ body.mask-editing {
 
 @media (max-width: 800px) {
 	#welcomeModal {
+		.welcome-example-wrapper {
+			gap: var(--spacing-sm);
+
+			>figure {
+				padding: var(--spacing-sm);
+
+				>img { height: 86px; }
+			}
+		}
+
 		.modal-footer {
 			flex-direction: column;
 			align-items: center;

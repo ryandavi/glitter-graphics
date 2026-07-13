@@ -715,6 +715,7 @@ async resetSettingsSection(section) {
 			this.interfaceTheme = 'dark';
 			this.applyInterfaceTheme();
 			localStorage.removeItem('glitterEditor_welcomeModalSeen');
+			localStorage.removeItem('glitterEditor_welcomeLastSeenRelease');
 			break;
 
 		case 'export':
@@ -782,6 +783,7 @@ async resetAllSettings() {
 	this.interfaceTheme = 'dark';
 	this.applyInterfaceTheme();
 	localStorage.removeItem('glitterEditor_welcomeModalSeen');
+	localStorage.removeItem('glitterEditor_welcomeLastSeenRelease');
 	this.maskEditor?.resetToolSettingsToDefaults();
 	this.applyDefaultPanelLayout();
 
@@ -3233,10 +3235,11 @@ async resetAllSettings() {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=3',
+				externalContentUrl: 'modals/about.html?v=5',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
+					this.renderVersionHistory(modalBody);
 					// Initialize pixel-scaled images
 					initPixelScalerInContainer(modalBody);
 
@@ -3300,18 +3303,31 @@ async resetAllSettings() {
 		// Welcome modal (no open button - shown automatically on first visit)
 		this.modalManager.register('welcomeModal', {
 			closeBtnId: 'closeWelcomeModal',
+			externalContentUrl: 'modals/welcome.html?v=3',
+			cacheContent: true,
 			resetScrollOnOpen: false,
-			onClose: () => {
-				// Mark as seen when close button is clicked
+			onContentLoaded: (modalBody) => {
+				initPixelScalerInContainer(modalBody);
+				this.renderVersionHistory(modalBody, 2);
+			},
+			onOpen: () => {
 				const checkbox = document.getElementById('welcomeDontShowAgain');
-				if (checkbox && checkbox.checked) {
-					try {
+				if (checkbox) checkbox.checked = !this.showWelcomeOnStartup;
+			},
+			onClose: () => {
+				const checkbox = document.getElementById('welcomeDontShowAgain');
+				try {
+					localStorage.setItem('glitterEditor_welcomeLastSeenRelease', CONFIG.app.currentRelease);
+					if (checkbox?.checked) {
 						localStorage.setItem('glitterEditor_welcomeModalSeen', 'true');
 						this.showWelcomeOnStartup = false;
-						this.saveSettingsToStorage();
-					} catch (e) {
-						console.warn('Failed to save welcome modal preference:', e);
+					} else {
+						localStorage.removeItem('glitterEditor_welcomeModalSeen');
+						this.showWelcomeOnStartup = true;
 					}
+					this.saveSettingsToStorage();
+				} catch (e) {
+					console.warn('Failed to save welcome modal preference:', e);
 				}
 			}
 		});
@@ -3331,14 +3347,51 @@ async resetAllSettings() {
 		this.setupNewCanvasModalListeners();
 	}
 
+renderVersionHistory(root, limit = null) {
+	const releases = limit == null ? CONFIG.app.releases : CONFIG.app.releases.slice(0, limit);
+	root.querySelectorAll('[data-version-history]').forEach((history) => {
+		history.replaceChildren(...releases.map((release) => {
+			const entry = document.createElement('section');
+			entry.className = 'version-history-entry';
+
+			const header = document.createElement('div');
+			header.className = 'version-history-header';
+			const title = document.createElement('h4');
+			title.textContent = `v${release.version} — ${release.name}`;
+			const date = document.createElement('time');
+			date.dateTime = release.date;
+			date.textContent = release.dateLabel;
+			header.append(title, date);
+
+			const summary = document.createElement('p');
+			summary.textContent = release.summary;
+			const features = document.createElement('ul');
+			features.append(...release.features.map((feature) => {
+				const item = document.createElement('li');
+				item.textContent = feature;
+				return item;
+			}));
+
+			entry.append(header, summary, features);
+			return entry;
+		}));
+	});
+}
+
 async checkWelcomeModal() {
 	const storageKey = 'glitterEditor_welcomeModalSeen';
 	
 	try {
-		const hasBeenSeen = localStorage.getItem(storageKey) === 'true';
-		const shouldShow = this.showWelcomeOnStartup ?? !hasBeenSeen;
+		const isSuppressed = localStorage.getItem(storageKey) === 'true';
+		const lastSeenRelease = localStorage.getItem('glitterEditor_welcomeLastSeenRelease');
+		const showOnStartup = this.showWelcomeOnStartup ?? !isSuppressed;
+		const hasUnseenRelease = lastSeenRelease !== CONFIG.app.currentRelease;
 		
-		if (shouldShow && !hasBeenSeen) {
+		if (showOnStartup || hasUnseenRelease) {
+			const welcomeConfig = this.modalManager.modals.get('welcomeModal');
+			if (welcomeConfig?.externalContentUrl) {
+				await this.modalManager.loadExternalContent(welcomeConfig);
+			}
 			// Pre-load guide modal content silently before showing welcome modal
 			const guideConfig = this.modalManager.modals.get('guideModal');
 			if (guideConfig && guideConfig.externalContentUrl) {

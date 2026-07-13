@@ -1148,6 +1148,45 @@
 
 
 
+// Release notes use the same document hierarchy in Welcome and About. Entries
+// are separated like sections of prose rather than presented as dashboard cards.
+#welcomeModal,
+#aboutModal {
+	.version-history {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.version-history-entry {
+		padding: var(--spacing-md) 0;
+
+		+.version-history-entry {
+			border-top: 1px solid var(--color-border);
+		}
+
+		>p,
+		>ul {
+			margin-top: var(--spacing-sm);
+		}
+	}
+
+	.version-history-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--spacing-md);
+		flex-wrap: wrap;
+
+		>h4 { color: var(--color-text-primary); }
+
+		>time {
+			font-size: var(--font-size-xs);
+			color: var(--color-text-tertiary);
+			white-space: nowrap;
+		}
+	}
+}
+
 /* ===== ABOUT MODAL ===== */
 #aboutModal {
 

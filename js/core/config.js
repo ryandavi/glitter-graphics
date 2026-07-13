@@ -5,6 +5,35 @@ const CONFIG = {
 	},
 	app: {
 		siteName: 'ryandavi.com glitter editor',
+		currentRelease: '2026-07-01',
+		releases: [
+			{
+				id: '2026-07-01',
+				version: '0.2.0',
+				name: 'Creative Tools Update',
+				date: '2026-07-01',
+				dateLabel: 'July 1, 2026',
+				summary: 'Expanded the editor beyond color-selected glitter fills with painted masks and editable generated layers.',
+				features: [
+					'Added the Mask Brush for painting and erasing glitter masks.',
+					'Added editable Text layers with typography, layout, fill, border, and shadow controls.',
+					'Added editable Shape layers with glitter, solid, and gradient effects.'
+				]
+			},
+			{
+				id: '2026-01-01',
+				version: '0.1.0',
+				name: 'Alpha Release',
+				date: '2026-01-01',
+				dateLabel: 'January 1, 2026',
+				summary: 'The first public release of the layer-based glitter graphics editor.',
+				features: [
+					'Added Glitter Fill layers for applying animated fills to selected image colors.',
+					'Added Sticker layers and the archived sticker browser.',
+					'Added image loading, layer transforms, animation preview, and animated GIF export.'
+				]
+			}
+		],
 		limits: {
 			maxLayers: 25,
 			historyLimit: 30
