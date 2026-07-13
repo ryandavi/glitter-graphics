@@ -26,10 +26,16 @@ class BaseBackgroundManager {
 		layer.locked = true;
 		layer.selectedGlitterId ||= CONFIG.tools.glitter.defaults.fillGlitterId;
 		layer.background ||= {};
+		// Keep an already-normalized gradient intact. The gradient editor holds
+		// references to its stops while a range or preview handle is being dragged;
+		// replacing this object from getData() makes those references stale after
+		// the first input event.
+		if (!layer.background.gradient || !Array.isArray(layer.background.gradient.stops) || layer.background.gradient.stops.length < 2) {
+			layer.background.gradient = normalizeEffectGradient(layer.background.gradient);
+		}
 		Object.assign(layer.background, {
 			mode: ['image', 'none', 'glitter', 'solid', 'gradient'].includes(layer.background.mode) ? layer.background.mode : 'image',
 			color: layer.background.color || '#ffffff',
-			gradient: normalizeEffectGradient(layer.background.gradient),
 			scale: Number(layer.background.scale ?? CONFIG.tools.effects.defaults.scale),
 			opacity: Number(layer.background.opacity ?? 100),
 			colorAdjust: normalizeColorAdjust(layer.background.colorAdjust)
