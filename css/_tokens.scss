@@ -191,6 +191,7 @@
 
 	/* Border Radius */
 	--radius-sm: 4px;
+	--radius-xs: 3px;
 	--radius-md: 6px;
 	--radius-lg: 8px;
 	--radius-full: 50%;
@@ -216,6 +217,11 @@
 	--transition-base: 0.3s;
 
 	/* Sizes */
+	--control-height: 32px;
+	--control-height-compact: 24px;
+	--control-padding-inline: var(--spacing-md);
+	--control-radius: var(--radius-sm);
+	--control-focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);
 	--header-height: 60px;
 	--toolbar-width: 50px;
 

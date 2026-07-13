@@ -1221,10 +1221,10 @@ async resetAllSettings() {
 
 		const badgeHTML = [];
 
-		// Category badge (clickable)
+		// Category badge reveals the asset in its gallery/category.
 		if (asset.category) {
 			const categoryName = asset.category.charAt(0).toUpperCase() + asset.category.slice(1);
-			badgeHTML.push(`<div class="asset-info-badge badge-category" data-category="${asset.category}">${categoryName}</div>`);
+			badgeHTML.push(`<button type="button" class="asset-info-badge badge-category" data-category="${asset.category}" title="Show ${categoryName} in Design">${categoryName}</button>`);
 		}
 
 		// Animated badge
@@ -1256,9 +1256,7 @@ async resetAllSettings() {
 		const categoryBadge = badgesEl.querySelector('.badge-category');
 		if (categoryBadge) {
 			categoryBadge.addEventListener('click', () => {
-				if (manager && manager.browser) {
-					manager.browser.navigateToItem(asset.id);
-				}
+				if (manager?.browser) revealAssetBrowser(this, manager, asset.id);
 			});
 		}
 	}
@@ -1541,6 +1539,7 @@ async resetAllSettings() {
 
 				const isOpen = !content.classList.contains('visible');
 				setOpen(name, isOpen, true);
+				if (isOpen) requestAnimationFrame(() => header.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
 			});
 		});
 
@@ -1572,7 +1571,9 @@ async resetAllSettings() {
 				// On mobile these sections live in drawers with their own header
 				// behavior — mirror the design gallery's guard.
 				if (this.mobileManager?.isMobile) return;
-				setOpen(!section.classList.contains('is-open'));
+				const isOpen = !section.classList.contains('is-open');
+				setOpen(isOpen);
+				if (isOpen) requestAnimationFrame(() => header.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
 			});
 		});
 	}

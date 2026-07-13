@@ -1207,9 +1207,14 @@ removeTransformHandles() {
             return;
         }
 
+		const completedHandle = this.activeHandleElement;
         if (this.isDraggingHandle) {
             e.preventDefault();
             e.stopPropagation();
+			// Shape/text scale commits rerender the layer to keep it crisp. That
+			// rebuild removes the old handles and clears this instance's live drag
+			// fields, so retain the completed gesture before committing.
+			const completedDrag = this.dragStartState;
             // Shapes are parametric: bake a committed scale into pixel size and
             // re-rasterize so large shapes stay crisp (no upscaled-raster mixels).
             const ht = this.activeHandleType || '';
@@ -1221,12 +1226,12 @@ removeTransformHandles() {
             } else if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
                 this.editor.shapeGlitterManager?.commitScale(this.layer);
             }
-			if (this.dragStartState?.didMove) {
-				if (this.dragStartState.targetLayerId) {
-					this.editor.layerManager.setActiveLayer(this.dragStartState.targetLayerId);
+			if (completedDrag?.didMove) {
+				if (completedDrag.targetLayerId) {
+					this.editor.layerManager.setActiveLayer(completedDrag.targetLayerId);
 				}
 				this.editor.saveState();
-			} else if (this.dragStartState?.altDuplicatePending) {
+			} else if (completedDrag?.altDuplicatePending) {
 				const point = this.getCanvasPointFromClient(e.clientX, e.clientY);
 				this.delegateSelectionFromCanvasPoint(point, { cycleDeep: true });
 			}
@@ -1241,7 +1246,7 @@ removeTransformHandles() {
 
 		this.editor.setDuplicateDragFeedback?.(false);
 		this.editor.clearSmartGuides?.();
-		this.activeHandleElement?.releasePointerCapture?.(e.pointerId);
+		(this.activeHandleElement || completedHandle)?.releasePointerCapture?.(e.pointerId);
         this.activeHandleType = null;
         this.activeHandleElement = null;
         this.activeHandlePointerId = null;
@@ -1454,7 +1459,7 @@ removeTransformHandles() {
 			x: start.transform.scale.x,
 			y: start.transform.scale.y
 		};
-		const lockAspect = this.layer.type !== LayerType.TEXT_GLITTER && Boolean(transform.proportionalScale);
+		const lockAspect = Boolean(transform.proportionalScale);
 		const axisSign = edge === 'left' || edge === 'top' ? -1 : 1;
 		let nextPosition = null;
 		if (e.altKey) {

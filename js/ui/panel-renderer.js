@@ -64,7 +64,7 @@ const PANEL_TRANSFORM_IDS = Object.freeze({
 	text: Object.freeze({
 		posX: 'textPosX', posY: 'textPosY', sizeWidth: 'textWidth', sizeHeight: 'textHeight', sizeGroup: 'textSizeGroup',
 		rotation: 'textRotation', rotationValue: 'textRotationValue', resetRotation: 'resetTextRotation',
-		opacity: 'textLayerOpacity', opacityValue: 'textLayerOpacityValue', resetOpacity: 'resetTextLayerOpacity', proportional: null,
+		opacity: 'textLayerOpacity', opacityValue: 'textLayerOpacityValue', resetOpacity: 'resetTextLayerOpacity', proportional: 'textProportionalScale',
 		scaleControl: 'textScaleControl', scaleSummary: 'textScaleSummary', scaleSlider: 'textScale', resetScale: 'resetTextScale',
 		scaleX: 'textTransformScaleX', scaleXValue: 'textTransformScaleXValue', resetScaleX: 'resetTextTransformScaleX',
 		scaleY: 'textTransformScaleY', scaleYValue: 'textTransformScaleYValue', resetScaleY: 'resetTextTransformScaleY',

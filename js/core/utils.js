@@ -2,13 +2,24 @@
 // paint-slot pickers. Mobile uses the Design drawer; desktop uses the same
 // accordion section and scroll target for every asset manager.
 function revealAssetBrowser(editor, manager = null, assetId = null) {
+	const revealRequestedGallery = () => {
+		manager?.ui?.panel?.scrollIntoView?.({ block: 'start', inline: 'nearest', behavior: 'smooth' });
+	};
 	if (editor.mobileManager?.isMobile) {
 		editor.mobileManager.openDrawer('design');
 	} else {
 		editor.setCollapsibleSectionOpen?.('designGallery', true, true);
-		manager?.ui?.panel?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
 	}
-	if (assetId != null) manager?.browser?.navigateToItem(assetId);
+	// The Design section can contain more than one gallery (Shape layers show
+	// Shapes before Glitter). Align the requested gallery after the accordion or
+	// drawer has completed its layout instead of accepting a partially-visible
+	// `nearest` result that leaves the preceding gallery at the top.
+	requestAnimationFrame(() => requestAnimationFrame(revealRequestedGallery));
+	if (assetId != null) {
+		Promise.resolve(manager?.browser?.navigateToItem(assetId)).then(() => {
+			requestAnimationFrame(revealRequestedGallery);
+		});
+	}
 }
 
 function setCollapsibleSectionState(section, content, toggle, isOpen) {
