@@ -529,6 +529,10 @@ const CONFIG = {
 			watermarkEnabled: false
 		},
 		mp4: {
+			lengthMode: 'duration',
+			targetDurationSeconds: 15,
+			minDurationSeconds: 1,
+			maxDurationSeconds: 600,
 			loopCount: 3,
 			minLoopCount: 1,
 			maxLoopCount: 100,
@@ -548,10 +552,12 @@ const CONFIG = {
 		limits: {
 			maxFramesHardLimit: 1000,
 			sizeWarnings: [
-				{ message: 'Too big for Discord', limitMB: 10 },
-				{ message: 'Too big for Twitter', limitMB: 15 },
-				{ message: 'Kind of huge for a typical GIF...', limitMB: 50 },
-				{ message: 'Too big for Discord Nitro', limitMB: 500 }
+				{ label: 'Too large for X mobile', detail: '5 MB max', limitMB: 5 },
+				{ label: 'Tumblr may compress or flatten it', detail: 'Keep under 5 MB', limitMB: 5 },
+				{ label: 'Too large for Discord without Nitro', detail: '10 MB max', limitMB: 10 },
+				{ label: 'Too large for X on the web', detail: '15 MB max', limitMB: 15 },
+				{ label: 'Too large for Discord Nitro Basic', detail: '50 MB max', limitMB: 50 },
+				{ label: 'Too large for Discord Nitro', detail: '500 MB max', limitMB: 500 }
 			]
 		},
 		watermark: {

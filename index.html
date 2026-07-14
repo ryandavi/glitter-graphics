@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=132">
+	<link rel="stylesheet" href="css/style.css?v=134">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1522,14 +1522,28 @@
 					<div class="export-stat" id="exportStatDurationRow"><span class="export-stat-label">Duration</span><strong id="exportStatDuration">0s</strong></div>
 					<div class="export-stat" id="exportStatDimensionsRow"><span class="export-stat-label">Dimensions</span><strong id="exportStatDimensions">0 × 0 px</strong></div>
 				</div>
-				<div class="export-size-warnings" id="exportSizeWarnings" hidden></div>
+				<div class="export-size-warnings" id="exportSizeWarnings" role="status" aria-label="File size warnings" hidden></div>
 
-				<div class="export-reduction-summary" id="exportReductionSummary" role="status" hidden>
+				<div class="export-reduction-summary" id="exportReductionSummary" hidden>
 					<div class="export-summary-icon icon-wrapper"><svg class="icon"><use href="#icon-circle-info"></use></svg></div>
 					<div class="export-summary-copy">
 						<strong id="exportReductionTitle">About this animation</strong>
 						<span id="exportReductionText"></span>
 						<p id="exportSeamStatus" hidden></p>
+						<details class="export-optimization-details" id="exportOptimizationDetails" hidden>
+							<summary>
+								<span>Optimization details</span>
+								<span class="export-details-chevron icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+							</summary>
+							<dl>
+								<div><dt>Frames</dt><dd id="exportDetailFrames"></dd></div>
+								<div id="exportDetailExactRow"><dt>Repeated frames removed</dt><dd id="exportDetailExact"></dd></div>
+								<div id="exportDetailNearRow"><dt>Similar frames removed</dt><dd id="exportDetailNear"></dd></div>
+								<div><dt>Playback speed</dt><dd id="exportDetailTiming"></dd></div>
+								<div><dt>Loop ending</dt><dd id="exportDetailLoop"></dd></div>
+								<div id="exportDetailErrorRow"><dt>Maximum visual difference</dt><dd id="exportDetailError"></dd></div>
+							</dl>
+						</details>
 					</div>
 				</div>
 
@@ -1563,7 +1577,7 @@
 	</div>
 
 	<template id="tpl-export-size-warning">
-		<div class="size-warning"><svg class="icon"><use href="#icon-circle-info"></use></svg><span></span></div>
+		<div class="size-warning"><strong></strong><span></span></div>
 	</template>
 	<template id="tpl-export-instructions-ios-gif">
 		<div class="export-instruction-heading">
@@ -1744,13 +1758,23 @@
 							disabled.</div>
 					</div>
 					<div class="settings-row" data-export-format-section="mp4" hidden>
-						<div class="settings-row-header"><div class="settings-row-label-main">Repeat Animation</div><div class="settings-row-control">
-							<input type="number" id="exportMp4LoopCount" min="1" max="100" step="1" value="3">
-						</div></div><div class="settings-row-label-desc">Number of times the complete animation appears in the video. MP4 files do not contain a loop flag.</div>
+						<div class="settings-row-header"><div class="settings-row-label-main">Video Length</div><div class="settings-row-control">
+							<select id="exportMp4LengthMode"><option value="duration">Exact duration</option><option value="loops">Complete loops</option></select>
+						</div></div><div class="settings-row-label-desc">Choose a specific video length or preserve a whole number of animation loops.</div>
+					</div>
+					<div class="settings-row" id="exportMp4TargetDurationRow" data-export-format-section="mp4" hidden>
+						<div class="settings-row-header"><div class="settings-row-label-main">Duration</div><div class="settings-row-control">
+							<span class="input-unit"><input type="number" id="exportMp4TargetDuration" min="1" max="600" step="0.5" value="15" inputmode="decimal" aria-label="Video duration in seconds"><span class="input-unit-suffix">sec</span></span>
+						</div></div><div class="settings-row-label-desc">The MP4 ends exactly at this time, even if that falls partway through an animation loop.</div>
+					</div>
+					<div class="settings-row" id="exportMp4LoopCountRow" data-export-format-section="mp4" hidden>
+						<div class="settings-row-header"><div class="settings-row-label-main">Complete Loops</div><div class="settings-row-control">
+							<span class="input-unit"><input type="number" id="exportMp4LoopCount" min="1" max="100" step="1" value="3" inputmode="numeric" aria-label="Number of complete animation loops"><span class="input-unit-suffix">×</span></span>
+						</div></div><div class="settings-row-label-desc">The video ends after this many complete animation loops.</div>
 					</div>
 					<div class="settings-row" data-export-format-section="mp4" hidden>
-						<div class="settings-row-label-main">Video Duration</div>
-						<div class="settings-row-label-desc" id="exportMp4Duration">Calculating...</div>
+						<div class="settings-row-label-main">Estimated Video Length</div>
+						<div class="settings-row-label-desc" id="exportMp4Duration" aria-live="polite">Calculating...</div>
 					</div>
 					<div class="settings-row" data-export-format-section="mp4" hidden>
 						<div class="settings-row-header"><div class="settings-row-label-main">MP4 Quality</div><div class="settings-row-control">
@@ -2553,7 +2577,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=69"></script>
+	<script src="js/core/config.js?v=72"></script>
 	<script src="js/core/commands.js?v=2"></script>
 	<script src="js/transforms/transform-math.js?v=3"></script>
 	<script src="js/transforms/movable-layer.js?v=1"></script>
@@ -2571,9 +2595,9 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=7"></script>
 	<script src="js/classes/ModalManager.js?v=2"></script>
-	<script src="js/classes/ExportTimeline.js?v=2"></script>
-	<script src="js/classes/GifExporter.js?v=31"></script>
-	<script src="js/classes/Mp4Exporter.js?v=4"></script>
+	<script src="js/classes/ExportTimeline.js?v=3"></script>
+	<script src="js/classes/GifExporter.js?v=35"></script>
+	<script src="js/classes/Mp4Exporter.js?v=5"></script>
 	<script src="js/classes/ViewportManager.js?v=3"></script>
 	<script src="js/classes/HistoryManager.js?v=11"></script>
 	<script src="js/classes/ProjectSerializer.js?v=11"></script>
@@ -2598,7 +2622,7 @@
 	<script src="js/classes/MobileManager.js?v=14"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=129"></script>
+	<script src="js/app.js?v=130"></script>
 
 </body>
 

@@ -47,7 +47,8 @@ class GifExporter {
 	_getSizeWarnings(bytes) {
 		return (CONFIG.export?.limits?.sizeWarnings || [])
 			.map((warning) => ({
-				message: warning.message,
+				label: warning.label,
+				detail: warning.detail,
 				limit: warning.limitMB * 1024 * 1024
 			}))
 			.filter((warning) => bytes > warning.limit);
@@ -80,8 +81,9 @@ class GifExporter {
 		warnings.forEach((warning) => {
 			const node = template.content.cloneNode(true);
 			const warningElement = node.querySelector('.size-warning');
-			warningElement.dataset.tooltip = `${formatBytes(warning.limit)} limit`;
-			warningElement.querySelector('span').textContent = warning.message;
+			warningElement.querySelector('strong').textContent = warning.label;
+			warningElement.querySelector('span').textContent = warning.detail;
+			warningElement.setAttribute('aria-label', `${warning.label}. ${warning.detail}.`);
 			host.appendChild(node);
 		});
 		host.hidden = warnings.length === 0;
@@ -1723,6 +1725,32 @@ class GifExporter {
 		return flattenedFrameMap;
 	}
 
+	async estimateLoopDuration({ layers, library, fallbackDuration, parseGif }) {
+		await this._loadMissingFrames(layers, library, {
+			parseGif,
+			onStatus: () => {}
+		});
+		const timelines = [];
+		const collectTimeline = (key, animation) => {
+			if (!animation?.frames?.length) return;
+			timelines.push(new AnimationSourceTimeline({
+				key,
+				frames: animation.frames,
+				frameDurations: animation.frameDelays || [],
+				fallbackDuration: animation.frameDelay || fallbackDuration
+			}));
+		};
+		layers.forEach((layer) => {
+			this._buildLayerExportPlan(layer).flattenFrames(library, collectTimeline);
+		});
+		const timelineConfig = CONFIG.export.timeline;
+		return new CompositeTimelinePlanner(timelineConfig).estimateLoop(
+			timelines,
+			fallbackDuration,
+			timelineConfig.maxLoopDurationMs
+		);
+	}
+
 	_deoptimizeWatermarkFrames(watermark) {
 		if (!watermark || !watermark.isAnimated) return;
 
@@ -2054,11 +2082,14 @@ class GifExporter {
 			const hasReduction = Boolean(reduction?.smartReductionEnabled && removedFrames > 0);
 			const hasPlanWarning = Boolean(timelinePlan && (
 				!timelinePlan.loopSeam.exact
-				|| !reduction.preferredBudgetMet
-				|| reduction.budgetCompromiseRequired
-				|| !reduction.durationPreserved
+					|| !reduction.preferredBudgetMet
+					|| reduction.budgetCompromiseRequired
+					|| !reduction.durationPreserved
 			));
+			const optimizationDetails = document.getElementById('exportOptimizationDetails');
 			reductionSummary.hidden = !hasReduction && !hasPlanWarning;
+			optimizationDetails.hidden = !hasReduction;
+			optimizationDetails.open = false;
 			if (!reductionSummary.hidden) {
 				const title = document.getElementById('exportReductionTitle');
 				const summary = document.getElementById('exportReductionText');
@@ -2066,8 +2097,20 @@ class GifExporter {
 				title.textContent = hasPlanWarning ? 'About this animation' : 'File size optimized';
 				if (hasReduction) {
 					const frameLabel = removedFrames === 1 ? 'frame' : 'frames';
-					const kind = reduction.nearDuplicatesMerged > 0 ? 'very similar' : 'repeated';
+					const kind = reduction.nearDuplicatesMerged > 0
+						? (reduction.exactDuplicatesMerged > 0 ? 'repeated or nearly identical' : 'nearly identical')
+						: 'repeated';
 					summary.textContent = `Removed ${removedFrames} ${kind} ${frameLabel} without changing the speed.`;
+
+					document.getElementById('exportDetailFrames').textContent = `${reduction.originalFrameCount} → ${reduction.outputFrameCount}`;
+					document.getElementById('exportDetailExact').textContent = String(reduction.exactDuplicatesMerged);
+					document.getElementById('exportDetailExactRow').hidden = reduction.exactDuplicatesMerged === 0;
+					document.getElementById('exportDetailNear').textContent = String(reduction.nearDuplicatesMerged);
+					document.getElementById('exportDetailNearRow').hidden = reduction.nearDuplicatesMerged === 0;
+					document.getElementById('exportDetailTiming').textContent = reduction.durationPreserved ? 'Unchanged' : 'May differ';
+					document.getElementById('exportDetailLoop').textContent = timelinePlan.loopSeam.exact ? 'Exact match' : 'Best available match';
+					document.getElementById('exportDetailError').textContent = `${(reduction.maximumVisualError * 100).toFixed(2)}%`;
+					document.getElementById('exportDetailErrorRow').hidden = reduction.nearDuplicatesMerged === 0;
 				} else {
 					summary.textContent = '';
 				}

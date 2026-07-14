@@ -52,15 +52,37 @@ class Mp4Exporter {
 		});
 	}
 
+	_buildOutputSchedule(frameDurations, planDuration, exportSettings) {
+		if (exportSettings.mp4LengthMode !== 'duration') {
+			return Array.from({ length: exportSettings.mp4LoopCount }, () => frameDurations)
+				.flatMap((durations) => durations.map((duration, frameIndex) => ({ frameIndex, duration })));
+		}
+
+		const targetDuration = Math.round(exportSettings.mp4TargetDuration * 1000);
+		const schedule = [];
+		let elapsed = 0;
+		while (elapsed < targetDuration) {
+			for (let frameIndex = 0; frameIndex < frameDurations.length && elapsed < targetDuration; frameIndex++) {
+				const duration = Math.min(frameDurations[frameIndex], targetDuration - elapsed);
+				schedule.push({ frameIndex, duration });
+				elapsed += duration;
+			}
+			if (planDuration <= 0) break;
+		}
+		return schedule;
+	}
+
 	async _encode(plan, exportSettings, callbacks) {
 		const frameDurations = plan.frameDurations || plan.frames.map(() => plan.frameDelay);
 		const planDuration = plan.totalDuration || frameDurations.reduce((sum, duration) => sum + duration, 0);
+		const outputSchedule = this._buildOutputSchedule(frameDurations, planDuration, exportSettings);
+		const outputDuration = outputSchedule.reduce((sum, entry) => sum + entry.duration, 0);
 		const width = plan.width + (plan.width % 2);
 		const height = plan.height + (plan.height % 2);
 		// mp4-muxer requires integer frame-rate metadata. Frame timing remains exact
 		// because every VideoFrame below carries its millisecond-derived timestamp
 		// and duration (for example, 110 ms stays 110 ms rather than becoming 1/9 s).
-		const averageFrameDuration = planDuration / plan.frames.length;
+		const averageFrameDuration = outputDuration / outputSchedule.length;
 		const muxerFrameRate = Math.max(1, Math.round(1000 / averageFrameDuration));
 		const preset = CONFIG.export.mp4.qualityPresets[exportSettings.mp4Quality];
 		const encoderConfig = await Mp4Exporter.getSupportedConfig(width, height, preset.bitrate);
@@ -88,33 +110,30 @@ class Mp4Exporter {
 		canvas.width = width;
 		canvas.height = height;
 		const ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: true });
-		const totalFrames = plan.frames.length * exportSettings.mp4LoopCount;
+		const totalFrames = outputSchedule.length;
 		let outputIndex = 0;
 		let timestampMs = 0;
 
-		for (let loop = 0; loop < exportSettings.mp4LoopCount; loop++) {
-			for (let frameIndex = 0; frameIndex < plan.frames.length; frameIndex++) {
-				const imageData = plan.frames[frameIndex];
-				const frameDuration = frameDurations[frameIndex];
-				ctx.fillStyle = exportSettings.matteColor;
-				ctx.fillRect(0, 0, width, height);
-				ctx.putImageData(imageData, 0, 0);
-				const frame = new VideoFrame(canvas, {
-					timestamp: timestampMs * 1000,
-					duration: frameDuration * 1000
-				});
-				encoder.encode(frame, { keyFrame: outputIndex % CONFIG.export.mp4.keyFrameInterval === 0 });
-				frame.close();
-				outputIndex++;
-				timestampMs += frameDuration;
-				if (encoder.encodeQueueSize > CONFIG.export.mp4.maxEncodeQueueSize) await encoder.flush();
-				callbacks.onProgress(
-					75 + Math.floor((outputIndex / totalFrames) * 24),
-					`Encoding MP4 frame ${outputIndex}/${totalFrames}...`,
-					outputIndex,
-					totalFrames
-				);
-			}
+		for (const outputFrame of outputSchedule) {
+			const imageData = plan.frames[outputFrame.frameIndex];
+			ctx.fillStyle = exportSettings.matteColor;
+			ctx.fillRect(0, 0, width, height);
+			ctx.putImageData(imageData, 0, 0);
+			const frame = new VideoFrame(canvas, {
+				timestamp: timestampMs * 1000,
+				duration: outputFrame.duration * 1000
+			});
+			encoder.encode(frame, { keyFrame: outputIndex % CONFIG.export.mp4.keyFrameInterval === 0 });
+			frame.close();
+			outputIndex++;
+			timestampMs += outputFrame.duration;
+			if (encoder.encodeQueueSize > CONFIG.export.mp4.maxEncodeQueueSize) await encoder.flush();
+			callbacks.onProgress(
+				75 + Math.floor((outputIndex / totalFrames) * 24),
+				`Encoding MP4 frame ${outputIndex}/${totalFrames}...`,
+				outputIndex,
+				totalFrames
+			);
 		}
 
 		await encoder.flush();

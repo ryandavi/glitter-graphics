@@ -355,6 +355,8 @@ class GlitterEditor {
 	saveSettingsToStorage() {
 		const settings = {
 			exportFormat: this.exportSettings.format,
+			exportMp4LengthMode: this.exportSettings.mp4LengthMode,
+			exportMp4TargetDuration: this.exportSettings.mp4TargetDuration,
 			exportMp4LoopCount: this.exportSettings.mp4LoopCount,
 			exportMp4Quality: this.exportSettings.mp4Quality,
 			exportQuality: this.exportSettings.quality,
@@ -411,6 +413,8 @@ initializeExportSettings() {
 	// Initialize export settings with saved values or defaults
 	this.exportSettings = {
 		format: savedSettings?.exportFormat ?? CONFIG.export.defaults.format,
+		mp4LengthMode: savedSettings?.exportMp4LengthMode ?? CONFIG.export.mp4.lengthMode,
+		mp4TargetDuration: savedSettings?.exportMp4TargetDuration ?? CONFIG.export.mp4.targetDurationSeconds,
 		mp4LoopCount: savedSettings?.exportMp4LoopCount ?? CONFIG.export.mp4.loopCount,
 		mp4Quality: savedSettings?.exportMp4Quality ?? CONFIG.export.mp4.defaultQuality,
 		quality: savedSettings?.exportQuality ?? CONFIG.export.defaults.quality,
@@ -446,6 +450,8 @@ initializeExportSettings() {
 
 	syncExportSettingsToUI() {
 		const uiElements = {
+			exportMp4LengthMode: { value: this.exportSettings.mp4LengthMode },
+			exportMp4TargetDuration: { value: this.exportSettings.mp4TargetDuration },
 			exportMp4LoopCount: { value: this.exportSettings.mp4LoopCount },
 			exportMp4Quality: { value: this.exportSettings.mp4Quality },
 			exportQuality: { value: this.exportSettings.quality },
@@ -493,6 +499,8 @@ initializeExportSettings() {
 	setupExportSettingsListeners() {
 		// Map UI elements to exportSettings properties
 		const settingsMap = [
+			{ id: 'exportMp4LengthMode', prop: 'mp4LengthMode', parse: (v) => v },
+			{ id: 'exportMp4TargetDuration', prop: 'mp4TargetDuration', parse: (v) => parseFloat(v) },
 			{ id: 'exportMp4LoopCount', prop: 'mp4LoopCount', parse: (v) => parseInt(v) },
 			{ id: 'exportMp4Quality', prop: 'mp4Quality', parse: (v) => v },
 			{ id: 'exportQuality', prop: 'quality', parse: (v) => parseInt(v) },
@@ -529,16 +537,22 @@ initializeExportSettings() {
 				if (id === 'exportTransparency') {
 					this.updateExportFormatUI();
 				}
+				if (id === 'exportMp4LengthMode') {
+					this.updateExportFormatUI();
+				}
 			});
 		});
 
 		// Delegate live repeat changes so the duration remains bound even if modal
 		// controls are reinitialized or replaced in a responsive UI rebuild.
 		document.addEventListener('input', (event) => {
-			if (event.target?.id !== 'exportMp4LoopCount') return;
+			if (!['exportMp4LoopCount', 'exportMp4TargetDuration'].includes(event.target?.id)) return;
 			const value = event.target.valueAsNumber;
-			if (Number.isFinite(value)) this.exportSettings.mp4LoopCount = value;
-			this.updateExportDuration(value);
+			if (Number.isFinite(value)) {
+				if (event.target.id === 'exportMp4LoopCount') this.exportSettings.mp4LoopCount = value;
+				else this.exportSettings.mp4TargetDuration = value;
+			}
+			this.updateExportDuration();
 		});
 
 		document.querySelectorAll('#exportFormatControl [data-export-format]').forEach((button) => {
@@ -608,6 +622,11 @@ initializeExportSettings() {
 		});
 		document.querySelectorAll('[data-export-format-section="gif"]').forEach((row) => row.hidden = isMp4);
 		document.querySelectorAll('[data-export-format-section="mp4"]').forEach((row) => row.hidden = !isMp4);
+		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
+		const targetDurationRow = document.getElementById('exportMp4TargetDurationRow');
+		const loopCountRow = document.getElementById('exportMp4LoopCountRow');
+		if (targetDurationRow) targetDurationRow.hidden = !isMp4 || !usesTargetDuration;
+		if (loopCountRow) loopCountRow.hidden = !isMp4 || usesTargetDuration;
 		const transparency = document.getElementById('exportTransparency');
 		if (transparency) transparency.disabled = isMp4;
 		const matteColorRow = document.getElementById('matteColorRow');
@@ -620,16 +639,68 @@ initializeExportSettings() {
 		this.updateExportDuration();
 	}
 
-	updateExportDuration(loopOverride = null) {
+	async updateExportDuration() {
 		const output = document.getElementById('exportMp4Duration');
 		if (!output) return;
-		const input = document.getElementById('exportMp4LoopCount');
-		const enteredLoops = Number.isFinite(loopOverride) ? loopOverride : input?.valueAsNumber;
+		const requestId = (this.exportDurationRequestId || 0) + 1;
+		this.exportDurationRequestId = requestId;
+		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
+		const enteredDuration = document.getElementById('exportMp4TargetDuration')?.valueAsNumber;
+		const targetDuration = Math.min(
+			CONFIG.export.mp4.maxDurationSeconds,
+			Math.max(
+				CONFIG.export.mp4.minDurationSeconds,
+				Number.isFinite(enteredDuration) ? enteredDuration : this.exportSettings.mp4TargetDuration
+			)
+		);
+		const enteredLoops = document.getElementById('exportMp4LoopCount')?.valueAsNumber;
 		const loopCount = Math.min(
 			CONFIG.export.mp4.maxLoopCount,
 			Math.max(CONFIG.export.mp4.minLoopCount, Number.isFinite(enteredLoops) ? enteredLoops : this.exportSettings.mp4LoopCount)
 		);
-		output.textContent = `Source-timed animation × ${loopCount} repeats. Exact duration is shown after export.`;
+		const formatSeconds = (seconds) => {
+			if (seconds >= 60) {
+				const minutes = Math.floor(seconds / 60);
+				const remainder = Math.round((seconds % 60) * 10) / 10;
+				return remainder > 0 ? `${minutes} min ${remainder} sec` : `${minutes} min`;
+			}
+			const rounded = Math.round(seconds * 10) / 10;
+			return `${rounded} ${rounded === 1 ? 'second' : 'seconds'}`;
+		};
+
+		if (usesTargetDuration) {
+			output.textContent = `${formatSeconds(targetDuration)}. The animation repeats as needed and ends at that time.`;
+		} else {
+			output.textContent = 'Calculating from the source animation timing…';
+		}
+
+		if (!this.exporter || !this.glitterManager?.content) return;
+		const visibleLayers = this.layers.filter((layer) => layer.visible && layerHasVisibleContent(layer));
+		if (!visibleLayers.length) return;
+
+		try {
+			const estimate = await this.exporter.estimateLoopDuration({
+				layers: visibleLayers,
+				library: this.glitterManager.content,
+				fallbackDuration: this.exportSettings.frameDelay,
+				parseGif: (url) => this.glitterManager.parseGifFromUrl(url)
+			});
+			if (requestId !== this.exportDurationRequestId) return;
+			const loopDurationSeconds = estimate.duration / 1000;
+			if (usesTargetDuration) {
+				const repeats = targetDuration / loopDurationSeconds;
+				const completeRepeats = Math.round(repeats);
+				const isCompleteLoop = Math.abs(repeats - completeRepeats) < 0.001;
+				output.textContent = isCompleteLoop
+					? `${formatSeconds(targetDuration)}. ${completeRepeats} complete ${completeRepeats === 1 ? 'loop' : 'loops'}.`
+					: `${formatSeconds(targetDuration)}. About ${repeats.toFixed(repeats >= 10 ? 1 : 2)} loops; the video ends at the requested time.`;
+			} else {
+				output.textContent = `${formatSeconds(loopDurationSeconds * loopCount)}. ${loopCount} complete ${loopCount === 1 ? 'loop' : 'loops'}.`;
+			}
+		} catch (error) {
+			if (requestId !== this.exportDurationRequestId) return;
+			if (!usesTargetDuration) output.textContent = 'Unable to estimate until the animation sources are loaded.';
+		}
 	}
 
 	applyInterfaceTheme() {
@@ -723,6 +794,8 @@ async resetSettingsSection(section) {
 
 		case 'export':
 			this.exportSettings.format = CONFIG.export.defaults.format;
+			this.exportSettings.mp4LengthMode = CONFIG.export.mp4.lengthMode;
+			this.exportSettings.mp4TargetDuration = CONFIG.export.mp4.targetDurationSeconds;
 			this.exportSettings.mp4LoopCount = CONFIG.export.mp4.loopCount;
 			this.exportSettings.mp4Quality = CONFIG.export.mp4.defaultQuality;
 			this.exportSettings.baseImage = CONFIG.export.defaults.baseImage;
@@ -765,6 +838,8 @@ async resetAllSettings() {
 	// Reset all export settings
 	this.exportSettings = {
 		format: CONFIG.export.defaults.format,
+		mp4LengthMode: CONFIG.export.mp4.lengthMode,
+		mp4TargetDuration: CONFIG.export.mp4.targetDurationSeconds,
 		mp4LoopCount: CONFIG.export.mp4.loopCount,
 		mp4Quality: CONFIG.export.mp4.defaultQuality,
 		quality: CONFIG.export.defaults.quality,
@@ -808,6 +883,8 @@ async resetAllSettings() {
 
 		this.exportSettings = {
 			format: CONFIG.export.defaults.format,
+			mp4LengthMode: CONFIG.export.mp4.lengthMode,
+			mp4TargetDuration: CONFIG.export.mp4.targetDurationSeconds,
 			mp4LoopCount: CONFIG.export.mp4.loopCount,
 			mp4Quality: CONFIG.export.mp4.defaultQuality,
 			quality: CONFIG.export.defaults.quality,
@@ -6471,6 +6548,12 @@ setupWelcomeModalListeners() {
 	validateExportSettings() {
 		const settings = this.exportSettings;
 		if (!['gif', 'mp4'].includes(settings.format)) settings.format = CONFIG.export.defaults.format;
+		if (!['duration', 'loops'].includes(settings.mp4LengthMode)) settings.mp4LengthMode = CONFIG.export.mp4.lengthMode;
+		if (!Number.isFinite(settings.mp4TargetDuration)) settings.mp4TargetDuration = CONFIG.export.mp4.targetDurationSeconds;
+		settings.mp4TargetDuration = Math.min(
+			CONFIG.export.mp4.maxDurationSeconds,
+			Math.max(CONFIG.export.mp4.minDurationSeconds, settings.mp4TargetDuration)
+		);
 		if (!Number.isFinite(settings.mp4LoopCount)) settings.mp4LoopCount = CONFIG.export.mp4.loopCount;
 		settings.mp4LoopCount = Math.min(
 			CONFIG.export.mp4.maxLoopCount,

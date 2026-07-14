@@ -210,6 +210,11 @@ class CompositeTimelinePlanner {
 		return selected;
 	}
 
+	estimateLoop(timelines, fallbackDuration, maximumDuration) {
+		const normalizedFallback = AnimationSourceTimeline.normalizeDuration(fallbackDuration, 100);
+		return this._chooseLoopDuration(timelines, normalizedFallback, maximumDuration);
+	}
+
 	_applyManualSampling(entries, every) {
 		if (every <= 1 || entries.length <= 1) return entries;
 		const sampled = [];

@@ -5667,19 +5667,26 @@ body.mask-editing .sticker-element {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: var(--spacing-sm) var(--spacing-lg);
+  gap: var(--spacing-xs);
+}
+#exportPreviewModal .export-size-warnings[hidden] {
+  display: none;
 }
 #exportPreviewModal .export-size-warnings .size-warning {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-warning);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
   color: var(--color-warning-text);
-  font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
+  font-size: var(--font-size-xs);
+  line-height: 1.2;
+  white-space: nowrap;
 }
-#exportPreviewModal .export-size-warnings .size-warning .icon {
-  width: var(--icon-size-xs);
-  height: var(--icon-size-xs);
+#exportPreviewModal .export-size-warnings .size-warning strong {
+  font-weight: 600;
 }
 #exportPreviewModal .export-reduction-summary {
   display: grid;
@@ -5720,6 +5727,65 @@ body.mask-editing .sticker-element {
   font-size: var(--font-size-base);
   line-height: var(--icon-size-xs);
 }
+#exportPreviewModal .export-reduction-summary .export-optimization-details {
+  margin-top: var(--spacing-xs);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details[hidden] {
+  display: none;
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details summary::-webkit-details-marker {
+  display: none;
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details summary:hover {
+  color: var(--color-text-primary);
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details .export-details-chevron {
+  display: inline-flex;
+  align-items: center;
+  transition: transform var(--transition-fast);
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details .export-details-chevron .icon {
+  width: 14px;
+  height: 14px;
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details[open] .export-details-chevron {
+  transform: rotate(180deg);
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm) var(--spacing-xl);
+  margin: var(--spacing-md) 0 0;
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details dl div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  min-width: 0;
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details dl dt {
+  color: var(--color-text-tertiary);
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details dl dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
 #exportPreviewModal .export-reduction-summary p {
   margin: 0;
   color: var(--color-text-secondary);
@@ -5742,6 +5808,9 @@ body.mask-editing .sticker-element {
   #exportPreviewModal .export-preview-instructions .export-save-steps.export-save-steps-short {
     grid-template-columns: 1fr;
     gap: var(--spacing-sm);
+  }
+  #exportPreviewModal .export-reduction-summary .export-optimization-details dl {
+    grid-template-columns: 1fr;
   }
 }
 
