@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=127">
+	<link rel="stylesheet" href="css/style.css?v=132">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1498,7 +1498,7 @@
 						</svg>
 						<span class="name">Export</span>
 					</span>
-					<span class="modal-title-text">Export</span>
+					<span class="modal-title-text">Export Ready</span>
 				</div>
 				<button class="btn-icon icon-wrapper modal-close" id="closeExportPreviewModal">
 					<svg class="icon">
@@ -1516,18 +1516,25 @@
 
 				<!-- STATS -->
 
-				<div class="export-stats" id="exportStats">
-					<span id="exportStatFrames">Frames: 0</span>
-					<span id="exportStatSize">Size: 0 KB</span>
-					<span id="exportStatDuration" hidden>Duration: 0s</span>
-					<span id="exportStatDimensions" hidden>Dimensions: 0<span class="setting-separator"> × </span>0<span class="setting-unit">px</span></span>
+				<div class="export-stats" id="exportStats" aria-label="Export details">
+					<div class="export-stat"><span class="export-stat-label">File size</span><strong id="exportStatSize">0 KB</strong></div>
+					<div class="export-stat"><span class="export-stat-label">Frames</span><strong id="exportStatFrames">0</strong></div>
+					<div class="export-stat" id="exportStatDurationRow"><span class="export-stat-label">Duration</span><strong id="exportStatDuration">0s</strong></div>
+					<div class="export-stat" id="exportStatDimensionsRow"><span class="export-stat-label">Dimensions</span><strong id="exportStatDimensions">0 × 0 px</strong></div>
+				</div>
+				<div class="export-size-warnings" id="exportSizeWarnings" hidden></div>
+
+				<div class="export-reduction-summary" id="exportReductionSummary" role="status" hidden>
+					<div class="export-summary-icon icon-wrapper"><svg class="icon"><use href="#icon-circle-info"></use></svg></div>
+					<div class="export-summary-copy">
+						<strong id="exportReductionTitle">About this animation</strong>
+						<span id="exportReductionText"></span>
+						<p id="exportSeamStatus" hidden></p>
+					</div>
 				</div>
 
 				<!-- INSTRUCTIONS -->
-				<div class="export-preview-instructions">
-					<p><strong>To save with animation:</strong> Use the Share button below and select "Save to Files" or another app.</p>
-					<p class="text-muted">Note: Long-press save from this preview may save as a still image.</p>
-				</div>
+				<div class="export-preview-instructions" role="note" aria-live="polite"></div>
 			</div>
 			<div class="modal-footer">
 				<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewShare">
@@ -1554,6 +1561,40 @@
 			</div>
 		</div>
 	</div>
+
+	<template id="tpl-export-size-warning">
+		<div class="size-warning"><svg class="icon"><use href="#icon-circle-info"></use></svg><span></span></div>
+	</template>
+	<template id="tpl-export-instructions-ios-gif">
+		<div class="export-instruction-heading">
+			<div class="export-instruction-icon icon-wrapper"><svg class="icon"><use href="#icon-circle-info"></use></svg></div>
+			<strong class="export-instruction-title">Save the animated GIF on iPhone or iPad</strong>
+		</div>
+		<ol class="export-save-steps">
+			<li><span class="export-step-number">1</span><span>Tap <strong>Share GIF</strong> and choose <strong>Save to Files</strong>.</span></li>
+			<li><span class="export-step-number">2</span><span>Open the GIF in Files, tap Share, then choose <strong>Save Image</strong> if shown.</span></li>
+			<li><span class="export-step-number">3</span><span>No Save Image? Send it to yourself in Messages, then save it from there.</span></li>
+		</ol>
+		<p class="export-instruction-tip"><strong>Don’t hold down on this preview.</strong> That may save only a still image.</p>
+	</template>
+	<template id="tpl-export-instructions-ios-video">
+		<div class="export-instruction-heading">
+			<div class="export-instruction-icon icon-wrapper"><svg class="icon"><use href="#icon-circle-info"></use></svg></div>
+			<strong class="export-instruction-title">Save the video on iPhone or iPad</strong>
+		</div>
+		<ol class="export-save-steps export-save-steps-short">
+			<li><span class="export-step-number">1</span><span>Tap <strong>Share Video</strong>.</span></li>
+			<li><span class="export-step-number">2</span><span>Choose Save Video, Save to Files, AirDrop, Messages, or Mail.</span></li>
+		</ol>
+	</template>
+	<template id="tpl-export-instructions-ios-unsupported">
+		<div class="export-instruction-heading">
+			<div class="export-instruction-icon icon-wrapper"><svg class="icon"><use href="#icon-circle-info"></use></svg></div>
+			<strong class="export-instruction-title">Sharing isn’t available here</strong>
+		</div>
+		<p>Open Glitter in an up-to-date version of Safari and export again.</p>
+		<p class="export-instruction-tip">Holding down on the preview stays disabled because it may save only a still image.</p>
+	</template>
 
 	<!-- Layer Type Picker Modal -->
 	<div class="modal-overlay" id="layerTypePickerModal">
@@ -1732,9 +1773,9 @@
 
 
 					<div class="settings-row" data-export-format-section="gif">
-						<div class="settings-row-header"><div class="settings-row-label-main">Animation Speed</div><div class="settings-row-control">
+						<div class="settings-row-header"><div class="settings-row-label-main">Fallback Frame Time</div><div class="settings-row-control">
 							<select id="exportFrameDelay"><option value="50">50ms (20 FPS)</option><option value="67">67ms (15 FPS)</option><option value="83">83ms (12 FPS)</option><option value="100">100ms (10 FPS)</option><option value="110">110ms (9 FPS)</option><option value="125">125ms (8 FPS)</option><option value="167">167ms (6 FPS)</option></select>
-						</div></div><div class="settings-row-label-desc">Time between frames. Lower values produce faster animation.</div>
+						</div></div><div class="settings-row-label-desc">Used only when a source has no usable timing metadata. GIF source timing is preserved.</div>
 					</div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Reverse Animation</div><div class="settings-row-control"><label class="switch" for="exportReverse"><input type="checkbox" id="exportReverse" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Play animation backwards.</div></div>
 
@@ -1798,7 +1839,21 @@
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Maximum number of frames to render. Higher = larger file size.</div>
+						<div class="settings-row-label-desc">Preferred output-frame budget. Optimization stops early instead of removing visibly important frames.</div>
+					</div>
+
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Optimization Goal</div>
+							<div class="settings-row-control">
+								<select id="exportOptimizationPreset">
+									<option value="highFidelity">High Fidelity</option>
+									<option value="balanced">Balanced</option>
+									<option value="smallFile">Small File</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Controls how much composed-frame change can be removed. Original playback duration is always preserved.</div>
 					</div>
 
 					<div class="settings-row">
@@ -1811,14 +1866,13 @@
 								</label>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Automatically detect and remove duplicate frames to reduce file
-							size.</div>
+						<div class="settings-row-label-desc">Merge identical final frames and, when the selected goal allows it, visually similar final frames.</div>
 					</div>
 
 
 					<div class="settings-row">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Frame Skip</div>
+							<div class="settings-row-label-main">Manual Frame Sampling</div>
 							<div class="settings-row-control">
 								<select id="exportFrameSkip">
 									<option value="1">Every frame</option>
@@ -1828,8 +1882,21 @@
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Skip frames to reduce file size and speed up rendering.
-							Higher values = smaller file but choppier animation.</div>
+						<div class="settings-row-label-desc">Keep every nth frame as an explicit override. Removed time is added to retained frames, so speed and duration stay unchanged.</div>
+					</div>
+
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Maximum Sampling FPS</div>
+							<div class="settings-row-control">
+								<select id="exportMaxSamplingFps">
+									<option value="15">15 FPS</option>
+									<option value="24">24 FPS</option>
+									<option value="30">30 FPS</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Limits candidate sampling without overriding slower or variable source-frame timing.</div>
 					</div>
 						</div>
 					</div>
@@ -2486,7 +2553,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=67"></script>
+	<script src="js/core/config.js?v=69"></script>
 	<script src="js/core/commands.js?v=2"></script>
 	<script src="js/transforms/transform-math.js?v=3"></script>
 	<script src="js/transforms/movable-layer.js?v=1"></script>
@@ -2504,8 +2571,9 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=7"></script>
 	<script src="js/classes/ModalManager.js?v=2"></script>
-	<script src="js/classes/GifExporter.js?v=25"></script>
-	<script src="js/classes/Mp4Exporter.js?v=3"></script>
+	<script src="js/classes/ExportTimeline.js?v=2"></script>
+	<script src="js/classes/GifExporter.js?v=31"></script>
+	<script src="js/classes/Mp4Exporter.js?v=4"></script>
 	<script src="js/classes/ViewportManager.js?v=3"></script>
 	<script src="js/classes/HistoryManager.js?v=11"></script>
 	<script src="js/classes/ProjectSerializer.js?v=11"></script>

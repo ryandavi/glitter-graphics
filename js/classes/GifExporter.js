@@ -27,9 +27,6 @@ class GifExporter {
 		this.previewBlobUrl = null;
 	}
 
-	gcd(a, b) { return !b ? a : this.gcd(b, a % b); }
-	lcm(a, b) { return (a * b) / this.gcd(a, b); }
-
 	_hasTransparency(canvasData) {
 		const { originalAlpha, alphaThreshold } = canvasData;
 		for (let i = 0; i < originalAlpha.length; i++) {
@@ -47,21 +44,47 @@ class GifExporter {
 	}
 
 
-	_getSizeWarningsHTML(bytes) {
-		const warningsConfig = (CONFIG.export?.limits?.sizeWarnings || []).map((warning) => ({
-			message: warning.message,
-			limit: warning.limitMB * 1024 * 1024
-		}));
+	_getSizeWarnings(bytes) {
+		return (CONFIG.export?.limits?.sizeWarnings || [])
+			.map((warning) => ({
+				message: warning.message,
+				limit: warning.limitMB * 1024 * 1024
+			}))
+			.filter((warning) => bytes > warning.limit);
+	}
 
-		const warnings = warningsConfig
-			.filter(w => bytes > w.limit)
-			.map(w => {
-				const title = `${formatBytes(w.limit)} limit`;
-				const text = `${w.message}`;
-				return `<div class="size-warning" data-tooltip="${title}">${text}</div>`;
-			});
+	_renderPreviewTemplate(host, templateId, { format, isVideo }) {
+		const template = document.getElementById(templateId);
+		if (!host || !template) return;
+		const fragment = template.content.cloneNode(true);
+		fragment.querySelectorAll('[data-export-format]').forEach((element) => {
+			element.textContent = format.toUpperCase();
+		});
+		fragment.querySelectorAll('[data-export-gif-only]').forEach((element) => {
+			 element.hidden = isVideo;
+		});
+		host.replaceChildren(fragment);
+		host.hidden = false;
+	}
 
-		return warnings.join('');
+	_renderSizeWarnings(host, bytes) {
+		if (!host) return;
+		host.replaceChildren();
+		if (!Number.isFinite(bytes)) {
+			host.hidden = true;
+			return;
+		}
+
+		const template = document.getElementById('tpl-export-size-warning');
+		const warnings = this._getSizeWarnings(bytes);
+		warnings.forEach((warning) => {
+			const node = template.content.cloneNode(true);
+			const warningElement = node.querySelector('.size-warning');
+			warningElement.dataset.tooltip = `${formatBytes(warning.limit)} limit`;
+			warningElement.querySelector('span').textContent = warning.message;
+			host.appendChild(node);
+		});
+		host.hidden = warnings.length === 0;
 	}
 
 	_getFrameImageData(frame, fallbackWidth = null, fallbackHeight = null) {
@@ -91,6 +114,10 @@ class GifExporter {
 	_getReducedFrameIndex(frameIndex, originalFrameCount, reducedFrameCount = null) {
 		if (!originalFrameCount) {
 			return 0;
+		}
+
+		if (reducedFrameCount && typeof reducedFrameCount === 'object' && Number.isInteger(reducedFrameCount.frameIndex)) {
+			return Math.max(0, Math.min(originalFrameCount - 1, reducedFrameCount.frameIndex));
 		}
 
 		if (!reducedFrameCount || reducedFrameCount <= 0) {
@@ -1148,20 +1175,71 @@ class GifExporter {
 			dbg(`[GifExporter] Selected Safe Transparency Key: RGB(${safeKey.r}, ${safeKey.g}, ${safeKey.b})`);
 		}
 
-		// 4. Synchronization
-		const frameCalc = this._calculateTotalFrames(visibleLayers, glitterGifs, exportSettings.maxFrames, exportSettings.smartFrameReduction);
-		const totalFrames = frameCalc.totalFrames;
-		const frameMap = frameCalc.frameMap;
-		const reductions = frameCalc.reductions;
+		// 4. Build a time-based plan from the timing of every visible source.
+		const timelineConfig = CONFIG.export.timeline;
+		const presetName = exportSettings.optimizationPreset || timelineConfig.defaultPreset;
+		const preset = timelineConfig.presets[presetName] || timelineConfig.presets[timelineConfig.defaultPreset];
+		const sourceTimelines = [...(flattenedFrameMap.sourceTimelines || [])];
+		if (watermark?.isAnimated) {
+			sourceTimelines.push(new AnimationSourceTimeline({
+				key: '__watermark',
+				frames: watermark.frames,
+				frameDurations: watermark.frameDelays || [],
+				fallbackDuration: watermark.frameDelay || exportSettings.frameDelay
+			}));
+		}
 
-		callbacks.onStatus(`Rendering ${totalFrames} frames...`);
-
-		// 5. Prepare Masks
-		callbacks.onProgress(10, 'Preparing masks...', 0, totalFrames);
+		callbacks.onStatus('Planning animation timing...');
+		callbacks.onProgress(10, 'Preparing timeline...', 0, 0);
 		this.helperCanvas.width = canvasData.width;
 		this.helperCanvas.height = canvasData.height;
+		this.canvas.width = canvasData.width;
+		this.canvas.height = canvasData.height;
+		let renderedCandidateCount = 0;
+		const planner = new CompositeTimelinePlanner(timelineConfig);
+		const plan = await planner.plan({
+			timelines: sourceTimelines,
+			fallbackDuration: exportSettings.frameDelay,
+			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
+			maxSamplingFps: exportSettings.maxSamplingFps || preset.maxSamplingFps,
+			manualFrameSkip: exportSettings.exportFrameSkip,
+			reverse: exportSettings.exportReverse,
+			smartReduction: exportSettings.smartFrameReduction,
+			visualErrorThreshold: Number.isFinite(exportSettings.visualErrorThreshold)
+				? exportSettings.visualErrorThreshold
+				: preset.visualError,
+			preferredFrameBudget: exportSettings.maxFrames || timelineConfig.preferredFrameBudget,
+			hardFrameLimit: timelineConfig.hardFrameLimit,
+			renderFrame: (timestamp, frameSelection) => {
+				renderedCandidateCount++;
+				callbacks.onProgress(10, `Composing frame ${renderedCandidateCount}...`, renderedCandidateCount, 0);
+				return this._renderFrame(
+					0,
+					canvasData,
+					visibleLayers,
+					glitterGifs,
+					maskCanvases,
+					textMaskCanvases,
+					shapeMaskCanvases,
+					safeKey,
+					exportSettings,
+					watermark,
+					needsTransparency,
+					frameSelection,
+					flattenedFrameMap
+				);
+			}
+		});
+		plan.width = canvasData.width;
+		plan.height = canvasData.height;
+		plan.frameDelay = plan.totalDuration / plan.frames.length;
+		plan.reductions = [];
+		if (plan.reduction.exactDuplicatesMerged) plan.reductions.push({ reason: 'exact-duplicates', count: plan.reduction.exactDuplicatesMerged });
+		if (plan.reduction.nearDuplicatesMerged) plan.reductions.push({ reason: 'near-duplicates', count: plan.reduction.nearDuplicatesMerged });
+		if (!plan.loopSeam.exact) callbacks.onStatus('Loop optimized with a best-fit seam; the exact common loop was too long.');
+		if (plan.reduction.budgetCompromiseRequired) callbacks.onStatus('The hard frame limit requires a quality compromise; no frames were silently truncated.');
 
-		// 6. Setup Encoder with Adaptive Quality
+		// 5. Setup Encoder with Adaptive Quality
 		let finalQuality = exportSettings.quality;
 
 		if (this.config.useAdaptiveQuality && !exportSettings.quality) {
@@ -1189,79 +1267,18 @@ class GifExporter {
 			dbg('[GifExporter] Transparency enabled with key:', safeKey.hex);
 		}
 
-		const gif = frameSink ? null : new GIF(gifOptions);
-		const composedFrames = frameSink ? [] : null;
-
-		// 7. Render Loop
-		this.canvas.width = canvasData.width;
-		this.canvas.height = canvasData.height;
-
-		const frameSkip = exportSettings.exportFrameSkip || 1;
-		const framesToRender = [];
-
-		// Build list of frames to actually render
-		for (let f = 0; f < totalFrames; f++) {
-			if (f % frameSkip === 0) {
-				framesToRender.push(f);
-			}
-		}
-
-		// Apply reverse if enabled
-		if (exportSettings.exportReverse) {
-			framesToRender.reverse();
-		}
-
-		dbg(`[GifExporter] Rendering ${framesToRender.length} of ${totalFrames} frames (skip: ${frameSkip}, reverse: ${!!exportSettings.exportReverse})`);
-
-		for (let i = 0; i < framesToRender.length; i++) {
-			const f = framesToRender[i];
-
-			try {
-				const frameData = this._renderFrame(
-					f,
-					canvasData,
-					visibleLayers,
-					glitterGifs,
-					maskCanvases,
-					textMaskCanvases,
-					shapeMaskCanvases,
-					safeKey,
-					exportSettings,
-					watermark,
-					needsTransparency,
-					frameMap,
-					flattenedFrameMap
-				);
-
-				if (frameSink) {
-					composedFrames.push(frameData);
-				} else {
-					gif.addFrame(frameData, {
-						delay: exportSettings.frameDelay, // Keep using exportSettings.frameDelay
-						copy: true
-					});
-				}
-
-				const progressPercent = 10 + Math.floor((i / framesToRender.length) * 65);
-				callbacks.onProgress(progressPercent, `Rendering frame ${i + 1}/${framesToRender.length}...`, i + 1, framesToRender.length);
-			} catch (error) {
-				if (this.config.debug) console.error(`[GifExporter] Error rendering frame ${f}:`, error);
-				throw new Error(`Frame ${f} render failed: ${error.message}`);
-			}
-		}
-
 		if (frameSink) {
-			return frameSink({
-				frames: composedFrames,
-				frameDelay: exportSettings.frameDelay,
-				width: canvasData.width,
-				height: canvasData.height,
-				reductions
-			});
+			return frameSink(plan);
 		}
 
-		// 8. Output
-		callbacks.onProgress(75, 'Encoding GIF...', framesToRender.length, framesToRender.length);
+		const gif = new GIF(gifOptions);
+		plan.frames.forEach((frame, index) => gif.addFrame(frame, {
+			delay: plan.frameDurations[index],
+			copy: true
+		}));
+
+		// 6. Output
+		callbacks.onProgress(75, 'Encoding GIF...', plan.frames.length, plan.frames.length);
 
 		// NOTE: these fire from gif.js's event emitter, outside the caller's
 		// try/catch — throwing here would leave the progress bar stuck and the
@@ -1275,12 +1292,12 @@ class GifExporter {
 			if (callbacks.onError) callbacks.onError(new Error('Export cancelled'));
 		});
 
-		gif.on('finished', (blob) => this._handleFileSave(blob, callbacks, framesToRender.length, reductions));
+		gif.on('finished', (blob) => this._handleFileSave(blob, callbacks, plan));
 
 		dbg('Starting GIF render:', {
-			totalFrames: totalFrames,
-			renderedFrames: framesToRender.length,
-			frameSkip: frameSkip,
+			originalFrames: plan.reduction.originalFrameCount,
+			renderedFrames: plan.frames.length,
+			totalDuration: plan.totalDuration,
 			workers: this.config.workers,
 			quality: exportSettings.quality,
 			key: safeKey,
@@ -1453,7 +1470,8 @@ class GifExporter {
 
 		// 6. Render Watermark
 		if (exportSettings.watermarkEnabled && watermark) {
-			this._renderWatermarkToCanvas(watermark, ctx, width, height, frameIndex);
+			const watermarkFrame = frameMap?.get('__watermark')?.frameIndex ?? frameIndex;
+			this._renderWatermarkToCanvas(watermark, ctx, width, height, watermarkFrame);
 		}
 
 		// 8. Debug logic for problem frames
@@ -1489,9 +1507,11 @@ class GifExporter {
 			const width = reader.width;
 			const height = reader.height;
 			const frames = [];
+			const frameDelays = [];
 
 			for (let i = 0; i < frameCount; i++) {
 				const frameInfo = reader.frameInfo(i);
+				frameDelays.push(AnimationSourceTimeline.normalizeDuration(frameInfo.delay * 10, 100));
 
 				// Get full canvas data
 				const fullPixels = new Uint8ClampedArray(width * height * 4);
@@ -1531,7 +1551,10 @@ class GifExporter {
 				width,
 				height,
 				frames,
-				frameCount
+				frameCount,
+				frameDelay: frameDelays[0],
+				frameDelays,
+				isVariableFramerate: new Set(frameDelays).size > 1
 			};
 		} catch (error) {
 			if (this.config.debug) console.error(`[_parseGifWithMetadata] Error loading ${url}:`, error);
@@ -1541,6 +1564,7 @@ class GifExporter {
 
 	_buildFlattenedFrameMap(layers, library) {
 		const flattenedFrameMap = new Map();
+		const sourceTimelines = [];
 		const flattenSource = (mapKey, animation, name, isSticker) => {
 			let glitterHasTransparency = false;
 			const rawFrames = animation.frames;
@@ -1681,11 +1705,20 @@ class GifExporter {
 			}
 
 			flattenedFrameMap.set(mapKey, flattenedFrames);
+			sourceTimelines.push(new AnimationSourceTimeline({
+				key: mapKey,
+				ownerLayerId: String(mapKey).split(':')[0],
+				effectSlot: String(mapKey).includes(':') ? String(mapKey).split(':').at(-1) : null,
+				frames: flattenedFrames,
+				frameDurations: animation.frameDelays || [],
+				fallbackDuration: animation.frameDelay || CONFIG.export.defaults.frameDelay
+			}));
 		};
 
 		layers.forEach((layer) => {
 			this._buildLayerExportPlan(layer).flattenFrames(library, flattenSource);
 		});
+		flattenedFrameMap.sourceTimelines = sourceTimelines;
 
 		return flattenedFrameMap;
 	}
@@ -1931,141 +1964,6 @@ class GifExporter {
 		});
 	}
 
-	_calculateTotalFrames(layers, library, maxFrames, smartFrameReduction = false) {
-		const layerFrameCounts = new Map();
-
-		layers.forEach((layer) => {
-			this._buildLayerExportPlan(layer).collectFrameCounts(library, layerFrameCounts);
-		});
-
-		if (layerFrameCounts.size === 0) {
-			if (this.config.debug) console.warn('[GifExporter] No valid layers, defaulting to 1 frame');
-			return { totalFrames: 1, frameMap: new Map(), reductions: [] };
-		}
-
-		// Apply smart reduction or standard LCM
-		const result = smartFrameReduction
-			? this._smartReduceFrames(layerFrameCounts, maxFrames, layers) // PASS LAYERS
-			: this._standardLCM(layerFrameCounts, maxFrames);
-
-		if (this.config.debug) {
-			dbg('[GifExporter] Calculated total frames:', result.totalFrames);
-			if (result.reductions.length > 0) {
-				dbg('[GifExporter] Smart reductions applied:', result.reductions);
-			}
-		}
-
-		return result;
-	}
-
-	_standardLCM(layerFrameCounts, maxFrames) {
-		const counts = Array.from(layerFrameCounts.values()).filter(c => c > 0);
-
-		let total = counts[0];
-		if (counts.length > 1) {
-			total = counts.reduce((acc, val) => this.lcm(acc, val), total);
-		}
-
-		const totalFrames = Math.min(total, maxFrames);
-
-		return {
-			totalFrames,
-			frameMap: layerFrameCounts,
-			reductions: []
-		};
-	}
-
-	_smartReduceFrames(layerFrameCounts, maxFrames, layers) {
-		const reductions = [];
-		let reducedCounts = new Map(layerFrameCounts);
-
-		// Check if we have glitter layers with multiple frames
-		const hasMultiFrameGlitter = layers.some((layer) => {
-			return this._buildLayerExportPlan(layer).hasMultiFrameGlitter(layerFrameCounts);
-		});
-
-		// Step 1: Round to multiples of 3 ONLY if there are multi-frame glitter layers AND it helps
-		if (hasMultiFrameGlitter) {
-			// Calculate original LCM first
-			const originalCounts = Array.from(reducedCounts.values()).filter(c => c > 0);
-			const originalLCM = originalCounts.reduce((acc, val) => this.lcm(acc, val), originalCounts[0]);
-
-			layerFrameCounts.forEach((originalCount, layerId) => {
-				const nearestMultipleOf3 = Math.round(originalCount / 3) * 3;
-				const difference = Math.abs(originalCount - nearestMultipleOf3);
-				const percentDiff = difference / originalCount;
-
-				// Only round if within 20% AND nearestMultipleOf3 is valid
-				if (nearestMultipleOf3 > 0 && percentDiff <= 0.20 && nearestMultipleOf3 !== originalCount) {
-					// Test if this reduction would help the final LCM
-					const testMap = new Map(reducedCounts);
-					testMap.set(layerId, nearestMultipleOf3);
-					const testCounts = Array.from(testMap.values()).filter(c => c > 0);
-					const testLCM = testCounts.reduce((acc, val) => this.lcm(acc, val), testCounts[0]);
-
-					// Only apply if it reduces LCM by at least 10%
-					if (testLCM < originalLCM * 0.9) {
-						reducedCounts.set(layerId, nearestMultipleOf3);
-						reductions.push({
-							layerId,
-							original: originalCount,
-							reduced: nearestMultipleOf3,
-							reason: 'rounded-to-multiple-of-3'
-						});
-					}
-				}
-			});
-		}
-
-		// Step 2: Calculate initial LCM
-		let counts = Array.from(reducedCounts.values()).filter(c => c > 0);
-		let totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
-
-		// Step 3: Cap individual animations based on their size
-		reducedCounts.forEach((count, layerId) => {
-			let targetCap = null;
-
-			if (count > 60) {
-				// Very long animations: cap at 30
-				targetCap = 30;
-			} else if (count > 36) {
-				// Long animations: cap at 24
-				targetCap = 24;
-			} else if (count > 24) {
-				// Medium-long: cap at 18
-				targetCap = 18;
-			}
-
-			if (targetCap && count > targetCap) {
-				const newCount = targetCap;
-				reducedCounts.set(layerId, newCount);
-
-				const existingIdx = reductions.findIndex(r => r.layerId === layerId);
-				if (existingIdx >= 0) {
-					reductions[existingIdx].reduced = newCount;
-					reductions[existingIdx].reason = 'capped-at-' + targetCap;
-				} else {
-					reductions.push({
-						layerId,
-						original: layerFrameCounts.get(layerId),
-						reduced: newCount,
-						reason: 'capped-at-' + targetCap
-					});
-				}
-			}
-		});
-
-		// Recalculate final LCM
-		counts = Array.from(reducedCounts.values()).filter(c => c > 0);
-		totalFrames = counts.length > 0 ? counts.reduce((acc, val) => this.lcm(acc, val), counts[0]) : 1;
-
-		return {
-			totalFrames: Math.min(totalFrames, maxFrames),
-			frameMap: reducedCounts,
-			reductions
-		};
-	}
-
 	clearPreviewBlobUrl() {
 		if (!this.previewBlobUrl) {
 			return;
@@ -2075,13 +1973,13 @@ class GifExporter {
 		this.previewBlobUrl = null;
 	}
 
-	_handleFileSave(blob, callbacks, frameCount, reductions = []) {
+	_handleFileSave(blob, callbacks, plan) {
 		dbg('_handleFileSave called with blob size:', blob.size);
 		callbacks.onProgress(100, 'Export complete!', 0, 0);
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete({
-			smartReduced: reductions.length > 0,
-			frameReductions: reductions
+			smartReduced: plan.reduction.exactDuplicatesMerged + plan.reduction.nearDuplicatesMerged > 0,
+			timelinePlan: plan
 		});
 
 		const file = new File([blob], this.fileName, {
@@ -2093,11 +1991,12 @@ class GifExporter {
 		const url = URL.createObjectURL(blob);
 		this.previewBlobUrl = url;
 
-		// Pass frameCount, blob.size, and reductions to the preview modal
-		this._showExportPreviewModal(url, file, frameCount, blob.size, reductions, {
+		this._showExportPreviewModal(url, file, plan.frames.length, blob.size, plan.reductions, {
 			format: 'gif',
 			width: this.canvas.width,
-			height: this.canvas.height
+			height: this.canvas.height,
+			duration: plan.totalDuration / 1000,
+			timelinePlan: plan
 		});
 	}
 
@@ -2121,42 +2020,73 @@ class GifExporter {
 			const statFrames = document.getElementById('exportStatFrames');
 			const statDuration = document.getElementById('exportStatDuration');
 			const statDimensions = document.getElementById('exportStatDimensions');
-
-			// remove .size-warning and .smart-reduction-badge elements from exportStats
-			const previousBadges = exportStats.querySelectorAll('.size-warning, .smart-reduction-badge');
-			previousBadges.forEach(badge => {
-				badge.remove();
-			});
-
+			const durationRow = document.getElementById('exportStatDurationRow');
+			const dimensionsRow = document.getElementById('exportStatDimensionsRow');
 
 			if (statFrames) {
-				statFrames.textContent = `Frames: ${frameCount != null ? frameCount : 'Unknown'}`;
+				statFrames.textContent = frameCount != null ? String(frameCount) : 'Unknown';
 			}
 			if (statDuration) {
-				statDuration.hidden = !isVideo || !Number.isFinite(options.duration);
-				if (!statDuration.hidden) statDuration.textContent = `Duration: ${options.duration.toFixed(1)}s`;
+				durationRow.hidden = !Number.isFinite(options.duration);
+				if (!durationRow.hidden) statDuration.textContent = `${options.duration.toFixed(2)}s`;
 			}
 			if (statDimensions) {
-				statDimensions.hidden = !options.width || !options.height;
-				if (!statDimensions.hidden) statDimensions.innerHTML = `Dimensions: ${formatDimensions(options.width, options.height)}`;
+				dimensionsRow.hidden = !options.width || !options.height;
+				if (!dimensionsRow.hidden) statDimensions.textContent = `${options.width} × ${options.height}px`;
 			}
 
 			// Set stats text
 			if (statSize) {
-				statSize.textContent = `Size: ${fileSize != null ? formatBytes(fileSize) : 'Unknown'}`;
+				statSize.textContent = fileSize != null ? formatBytes(fileSize) : 'Unknown';
 
-				if (fileSize != null) {
-					const warnings = this._getSizeWarningsHTML(fileSize);
-					if (warnings) {
-						exportStats.insertAdjacentHTML('beforeend', warnings);
-					}
-				}
 			}
 
-			// Add smart reduction badge if applied
-			if (reductions.length > 0) {
-				const badge = `<span class="smart-reduction-badge" title="Optimized ${reductions.length} layer${reductions.length > 1 ? 's' : ''} for smaller file size">Smart Reduced</span>`;
-				exportStats.insertAdjacentHTML('beforeend', badge);
+		}
+		this._renderSizeWarnings(document.getElementById('exportSizeWarnings'), fileSize);
+
+		const timelinePlan = options.timelinePlan?.reduction ? options.timelinePlan : null;
+		const reductionSummary = document.getElementById('exportReductionSummary');
+		if (reductionSummary) {
+			const reduction = timelinePlan?.reduction;
+			const removedFrames = reduction
+				? reduction.exactDuplicatesMerged + reduction.nearDuplicatesMerged
+				: 0;
+			const hasReduction = Boolean(reduction?.smartReductionEnabled && removedFrames > 0);
+			const hasPlanWarning = Boolean(timelinePlan && (
+				!timelinePlan.loopSeam.exact
+				|| !reduction.preferredBudgetMet
+				|| reduction.budgetCompromiseRequired
+				|| !reduction.durationPreserved
+			));
+			reductionSummary.hidden = !hasReduction && !hasPlanWarning;
+			if (!reductionSummary.hidden) {
+				const title = document.getElementById('exportReductionTitle');
+				const summary = document.getElementById('exportReductionText');
+				const seam = document.getElementById('exportSeamStatus');
+				title.textContent = hasPlanWarning ? 'About this animation' : 'File size optimized';
+				if (hasReduction) {
+					const frameLabel = removedFrames === 1 ? 'frame' : 'frames';
+					const kind = reduction.nearDuplicatesMerged > 0 ? 'very similar' : 'repeated';
+					summary.textContent = `Removed ${removedFrames} ${kind} ${frameLabel} without changing the speed.`;
+				} else {
+					summary.textContent = '';
+				}
+
+				const planMessages = [];
+				if (!timelinePlan.loopSeam.exact) {
+					planMessages.push('The animations repeat at different times, so the beginning and ending may not match perfectly.');
+				}
+				if (!reduction.preferredBudgetMet) {
+					planMessages.push(`Kept ${reduction.outputFrameCount} frames to keep the motion smooth.`);
+				}
+				if (reduction.budgetCompromiseRequired) {
+					planMessages.push('This animation is longer than the export limit allows, so some motion detail may be reduced.');
+				}
+				if (!reduction.durationPreserved) {
+					planMessages.push('The exported animation may play at a different speed than the preview.');
+				}
+				seam.hidden = planMessages.length === 0;
+				seam.textContent = planMessages.join(' ');
 			}
 		}
 
@@ -2170,8 +2100,16 @@ class GifExporter {
 
 		// 1. Environment Detection
 		// Force iOS logic if iPhone/iPad detected
-		const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-		const canShare = navigator.canShare && navigator.canShare({ files: [file] });
+		const isIOS = CONFIG.debug.forceIOSExportPreview
+			|| /iPhone|iPad|iPod/i.test(navigator.userAgent)
+			|| (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+		modal.classList.toggle('is-ios', isIOS);
+		let canShare = false;
+		try {
+			canShare = Boolean(navigator.canShare?.({ files: [file] }));
+		} catch (error) {
+			canShare = false;
+		}
 
 		// 2. Helper to manage Button State (Text + Disabled)
 		const configureBtn = (btn, isEnabled, text = null) => {
@@ -2208,24 +2146,15 @@ class GifExporter {
 			configureBtn(saveBtn, false, `Save ${format.toUpperCase()}`);
 
 			if (canShare) {
-				// ENABLE "Share" (mapped to Save Image)
-				configureBtn(shareBtn, true, isVideo ? 'Save Video' : 'Save Image');
-
-
-				instructions.innerHTML = `
-		<p>Tap <strong>"${isVideo ? 'Save Video' : 'Save Image'}"</strong> below to save to Files or share.</p>
-		<p class="text-muted"><strong>Why can't I just tap and hold?</strong>
-		<p class="text-muted">
-			iOS handles browser-created animation files most reliably through the Share sheet.
-		</p>`;
+				configureBtn(shareBtn, true, isVideo ? 'Share Video' : 'Share GIF');
+				this._renderPreviewTemplate(
+					instructions,
+					isVideo ? 'tpl-export-instructions-ios-video' : 'tpl-export-instructions-ios-gif',
+					{ format, isVideo }
+				);
 			} else {
-				// Fallback (Rare old iOS)
 				configureBtn(shareBtn, false);
-				instructions.innerHTML = `
-					<p>${isVideo ? 'Use the browser controls to open the video.' : 'Long-press the image to save.'}</p>
-		<p class="text-muted">
-			Note: This may save as a still image. Update iOS to use the Share feature for full animation support.
-		</p>`;
+				this._renderPreviewTemplate(instructions, 'tpl-export-instructions-ios-unsupported', { format, isVideo });
 			}
 		}
 		else {
@@ -2241,11 +2170,11 @@ class GifExporter {
 			// Handle Share button (Some desktops like Safari/Edge support it)
 			if (canShare) {
 				configureBtn(shareBtn, true, "Share");
-				instructions.innerHTML = `<p>Save using the buttons below${isVideo ? '.' : ' or right-click the image.'}</p>`;
 			} else {
 				configureBtn(shareBtn, false);
-				instructions.innerHTML = `<p>Use the <strong>Save</strong> button${isVideo ? '.' : ' or right-click the image.'}</p>`;
 			}
+			instructions.replaceChildren();
+			instructions.hidden = true;
 		}
 
 		// 5. Show Modal

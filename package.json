@@ -3,6 +3,7 @@
 	"private": true,
 	"scripts": {
 		"test:touch": "node tests/touch-smoke.js",
+		"test:export-timeline": "node tests/export-timeline-unit.js",
 		"build:css": "sass css/style.scss css/style.css"
 	},
 	"devDependencies": {

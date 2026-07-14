@@ -812,6 +812,10 @@ input[type=number] {
   font-size: var(--font-size-sm);
   transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
+textarea::-moz-placeholder, input[type=text]::-moz-placeholder, input[type=number]::-moz-placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 1;
+}
 textarea::placeholder,
 input[type=text]::placeholder,
 input[type=number]::placeholder {
@@ -882,7 +886,8 @@ input[type=range] {
   display: block;
   width: 100%;
   height: var(--control-height);
-  appearance: none;
+  -moz-appearance: none;
+       appearance: none;
   -webkit-appearance: none;
   background: transparent !important;
   border: 0;
@@ -1593,7 +1598,6 @@ input[type=range]:disabled {
 .toolbar {
   width: var(--toolbar-width);
   background: var(--panel-bg);
-  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   border-right: 1px solid var(--color-border);
   display: flex;
@@ -1708,7 +1712,6 @@ input[type=range]:disabled {
   display: flex;
   flex-direction: column;
   background: var(--panel-bg);
-  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
 }
 .image-container > .image-dropzone-wrapper > #imageUpload {
@@ -1820,7 +1823,6 @@ input[type=range]:disabled {
   flex-direction: column;
   overflow: hidden;
   background: var(--panel-bg);
-  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
 }
 .layers-section > .section-header {
@@ -2104,7 +2106,6 @@ input[type=range]:disabled {
 
 .section {
   /* Section Headers */
-  /* Collapsible Section */
 }
 .section > .section-header {
   position: relative;
@@ -2195,10 +2196,12 @@ input[type=range]:disabled {
 .section > .section-content {
   padding: var(--spacing-base);
 }
+.section {
+  /* Collapsible Section */
+}
 .section.collapsible-section {
   border-top: 1px solid var(--color-border);
   background: var(--panel-bg);
-  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   flex-shrink: 0;
 }
@@ -3005,7 +3008,6 @@ body.tool-text .preview-wrapper {
   border: 1px solid var(--color-border);
   padding: var(--spacing-sm);
   pointer-events: auto;
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
 }
 .preview-controls > .preview-controls-right {
@@ -3172,7 +3174,6 @@ body.mask-editing .sticker-element {
   border: 1px solid var(--color-border);
   padding: var(--spacing-sm);
   pointer-events: auto;
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
 }
 .zoom-controls.visible,
@@ -3308,7 +3309,6 @@ body.mask-editing .sticker-element {
   z-index: var(--z-header-menu-elevated);
   box-shadow: 0 2px 5px var(--color-shadow-strong);
   transition: all var(--transition-base);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
 }
 .export-progress.visible {
@@ -3642,7 +3642,6 @@ body.mask-editing .sticker-element {
   z-index: var(--z-header-menu-elevated);
   box-shadow: 0 2px 5px var(--color-shadow-strong);
   transition: all var(--transition-base);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
 }
 .helpful-message:hover {
@@ -3996,7 +3995,9 @@ body.mask-editing .sticker-element {
   flex-wrap: wrap;
 }
 .asset-info-header .asset-info-details .asset-info-badges .asset-info-badge {
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -5042,7 +5043,8 @@ body.mask-editing .sticker-element {
 #welcomeModal .welcome-example-wrapper > figure > img {
   width: 100%;
   height: 120px;
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
   image-rendering: pixelated;
   display: block;
 }
@@ -5195,7 +5197,6 @@ body.mask-editing .sticker-element {
   justify-content: center;
   opacity: 0;
   transition: opacity var(--transition-base);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
 }
 .modal-overlay.visible {
@@ -5314,8 +5315,6 @@ body.mask-editing .sticker-element {
   column-gap: 0.5em;
   align-items: start;
   padding: 1px;
-  /* main content (link) */
-  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li a {
   color: var(--color-text-secondary);
@@ -5330,8 +5329,14 @@ body.mask-editing .sticker-element {
   grid-column: 1;
   align-self: start;
 }
+.modal-overlay > .modal-content > .modal-body .toc > ol > li {
+  /* main content (link) */
+}
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > :not(ol) {
   grid-column: 2;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li {
+  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol {
   grid-column: 2;
@@ -5507,58 +5512,111 @@ body.mask-editing .sticker-element {
   height: calc(var(--font-size-xs) * 1.2);
 }
 
+#exportPreviewModal .export-preview-modal {
+  width: 900px;
+  max-width: min(94vw, 900px);
+  max-height: 94dvh;
+}
 #exportPreviewModal .modal-body {
-  padding: 0;
+  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
+  max-height: calc(94dvh - 120px);
   scrollbar-gutter: stable;
 }
 #exportPreviewModal .export-preview-image-container {
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: var(--spacing-lg);
+  height: min(60dvh, 680px);
+  min-height: 360px;
+  padding: var(--spacing-md);
   background: var(--color-bg-tertiary);
   border-radius: var(--radius-md);
   min-width: 0;
-  min-height: 0;
   overflow: hidden;
 }
 #exportPreviewModal .export-preview-image-container img,
 #exportPreviewModal .export-preview-image-container video {
-  max-width: 100%;
-  max-height: 100%;
   -o-object-fit: contain;
   object-fit: contain;
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 12px var(--color-shadow-soft);
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
 }
 #exportPreviewModal .export-preview-image-container img {
-  pointer-events: none;
-}
-@media (hover: hover) and (pointer: fine) {
-  #exportPreviewModal .export-preview-image-container img {
-    pointer-events: auto;
-  }
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  pointer-events: auto;
 }
 #exportPreviewModal .export-preview-image-container video {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: min(60vh, 640px);
+  height: 100%;
   overflow: clip;
 }
+#exportPreviewModal.is-ios .export-preview-image-container img {
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+       user-select: none;
+}
 #exportPreviewModal .export-preview-instructions {
+  display: block;
+  padding-top: var(--spacing-md);
+  text-align: left;
+  border-top: 1px solid var(--color-border);
+}
+#exportPreviewModal .export-preview-instructions[hidden] {
+  display: none;
+}
+#exportPreviewModal .export-preview-instructions .export-instruction-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+#exportPreviewModal .export-preview-instructions .export-instruction-heading .export-instruction-icon {
+  flex: 0 0 auto;
+  color: var(--color-text-tertiary);
+}
+#exportPreviewModal .export-preview-instructions .export-instruction-title {
+  color: var(--color-text-primary);
+}
+#exportPreviewModal .export-preview-instructions .export-save-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-lg);
+  margin: var(--spacing-md) 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+}
+#exportPreviewModal .export-preview-instructions .export-save-steps.export-save-steps-short {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+#exportPreviewModal .export-preview-instructions .export-save-steps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--spacing-sm);
+}
+#exportPreviewModal .export-preview-instructions .export-save-steps li .export-step-number {
+  min-width: var(--icon-size-xs);
+  color: var(--color-text-tertiary);
+  font-weight: 600;
   text-align: center;
-  margin-bottom: var(--spacing-lg);
-  padding: 0 var(--spacing-lg);
+}
+#exportPreviewModal .export-preview-instructions .export-save-steps li strong {
+  color: var(--color-text-primary);
 }
 #exportPreviewModal .export-preview-instructions p {
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
   color: var(--color-text-secondary);
   margin: 0;
   margin-bottom: var(--spacing-sm);
@@ -5567,9 +5625,11 @@ body.mask-editing .sticker-element {
   margin-bottom: 0;
 }
 #exportPreviewModal .export-preview-instructions p.text-muted {
-  font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
-  margin-top: 8px;
+  margin-top: var(--spacing-sm);
+  color: var(--color-text-tertiary);
+}
+#exportPreviewModal .export-preview-instructions p.export-instruction-tip {
+  margin-top: var(--spacing-sm);
   color: var(--color-text-tertiary);
 }
 #exportPreviewModal .export-preview-instructions p strong {
@@ -5577,40 +5637,112 @@ body.mask-editing .sticker-element {
 }
 #exportPreviewModal .export-stats {
   display: flex;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
 }
-#exportPreviewModal .export-stats > .size-warning,
-#exportPreviewModal .export-stats > .smart-reduction-badge,
-#exportPreviewModal .export-stats > span {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: 1000px;
-  white-space: nowrap;
-  font-size: var(--font-size-sm);
-}
-#exportPreviewModal .export-stats > span {
+#exportPreviewModal .export-stats .export-stat {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-xs);
+  line-height: 1.2;
+  white-space: nowrap;
 }
-#exportPreviewModal .export-stats > .size-warning {
-  background: var(--color-warning);
+#exportPreviewModal .export-stats .export-stat .export-stat-label {
+  color: var(--color-text-tertiary);
+}
+#exportPreviewModal .export-stats .export-stat strong {
+  overflow: hidden;
+  color: var(--color-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#exportPreviewModal .export-size-warnings {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-lg);
+}
+#exportPreviewModal .export-size-warnings .size-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   color: var(--color-warning-text);
-  font-weight: bold;
   font-size: var(--font-size-sm);
-  letter-spacing: 0.25px;
-  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
-#exportPreviewModal .export-stats > .smart-reduction-badge {
-  background: var(--color-accent);
-  color: white;
-  font-weight: bold;
+#exportPreviewModal .export-size-warnings .size-warning .icon {
+  width: var(--icon-size-xs);
+  height: var(--icon-size-xs);
+}
+#exportPreviewModal .export-reduction-summary {
+  display: grid;
+  grid-template-columns: var(--icon-size-xs) minmax(0, 1fr);
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
-  letter-spacing: 0.25px;
-  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+}
+#exportPreviewModal .export-reduction-summary[hidden] {
+  display: none;
+}
+#exportPreviewModal .export-reduction-summary .export-summary-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-xs);
+  height: var(--icon-size-xs);
+  color: var(--color-text-tertiary);
+}
+#exportPreviewModal .export-reduction-summary .export-summary-icon .icon {
+  width: var(--icon-size-xs);
+  height: var(--icon-size-xs);
+}
+#exportPreviewModal .export-reduction-summary .export-summary-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+#exportPreviewModal .export-reduction-summary .export-summary-copy strong {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  line-height: var(--icon-size-xs);
+}
+#exportPreviewModal .export-reduction-summary p {
+  margin: 0;
+  color: var(--color-text-secondary);
 }
 #exportPreviewModal .modal-footer button:disabled {
   display: none;
+}
+@media (max-width: 650px) {
+  #exportPreviewModal .modal-body {
+    padding: var(--spacing-md);
+  }
+  #exportPreviewModal .export-preview-image-container {
+    height: 44dvh;
+    min-height: 260px;
+  }
+  #exportPreviewModal .export-stat {
+    padding: 0 var(--spacing-sm);
+  }
+  #exportPreviewModal .export-preview-instructions .export-save-steps,
+  #exportPreviewModal .export-preview-instructions .export-save-steps.export-save-steps-short {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
 }
 
 .gallery-tabs {
@@ -6004,9 +6136,6 @@ body.mask-editing .sticker-element {
 }
 
 /* ===== ABOUT MODAL ===== */
-#aboutModal {
-  /* Highlight animation for references */
-}
 #aboutModal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
 }
@@ -6115,6 +6244,9 @@ body.mask-editing .sticker-element {
 #aboutModal h5 + ul,
 #aboutModal h5 + ol {
   margin-top: var(--spacing-xs);
+}
+#aboutModal {
+  /* Highlight animation for references */
 }
 #aboutModal .highlight {
   background: url(../images/glitter/sparkle/glitter_white.gif) repeat;
@@ -6705,7 +6837,6 @@ body.mask-editing .sticker-element {
     border: 1px solid var(--color-border);
     padding: var(--spacing-sm);
     pointer-events: auto;
-    -webkit-backdrop-filter: blur(var(--glass-blur));
     backdrop-filter: blur(var(--glass-blur));
     transition: opacity var(--transition-fast), visibility var(--transition-fast);
   }
@@ -7139,4 +7270,4 @@ body.mask-editing .sticker-element {
   .mobile-only {
     display: block !important;
   }
-}
+}/*# sourceMappingURL=style.css.map */

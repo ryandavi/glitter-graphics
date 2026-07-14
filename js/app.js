@@ -368,6 +368,8 @@ class GlitterEditor {
 			exportFrameSkip: this.exportSettings.exportFrameSkip,
 			exportReverse: this.exportSettings.exportReverse,
 			exportSmartFrameReduction: this.exportSettings.smartFrameReduction,
+			exportOptimizationPreset: this.exportSettings.optimizationPreset,
+			exportMaxSamplingFps: this.exportSettings.maxSamplingFps,
 			exportBaseImage: this.exportSettings.baseImage,
 			showHelpfulHints: this.showHints,
 			showWelcomeOnStartup: this.showWelcomeOnStartup,
@@ -422,7 +424,9 @@ initializeExportSettings() {
 		watermarkEnabled: savedSettings?.exportWatermarkEnabled ?? CONFIG.export.defaults.watermarkEnabled,
 		exportFrameSkip: savedSettings?.exportFrameSkip ?? CONFIG.export.defaults.frameSkip,
 		exportReverse: savedSettings?.exportReverse ?? CONFIG.export.defaults.reverse,
-		smartFrameReduction: savedSettings?.exportSmartFrameReduction ?? CONFIG.export.defaults.smartFrameReduction
+		smartFrameReduction: savedSettings?.exportSmartFrameReduction ?? CONFIG.export.defaults.smartFrameReduction,
+		optimizationPreset: savedSettings?.exportOptimizationPreset ?? CONFIG.export.defaults.optimizationPreset,
+		maxSamplingFps: savedSettings?.exportMaxSamplingFps ?? CONFIG.export.defaults.maxSamplingFps
 	};
 
 	// Update this.showHints
@@ -456,6 +460,8 @@ initializeExportSettings() {
 			exportFrameSkip: { value: this.exportSettings.exportFrameSkip },
 			exportReverse: { checked: this.exportSettings.exportReverse },
 			exportSmartFrameReduction: { checked: this.exportSettings.smartFrameReduction },
+			exportOptimizationPreset: { value: this.exportSettings.optimizationPreset },
+			exportMaxSamplingFps: { value: this.exportSettings.maxSamplingFps },
 			showHelpfulHints: { checked: this.showHints },
 			showWelcomeOnStartup: { checked: this.showWelcomeOnStartup },
 			confirmDestructiveActions: { checked: this.confirmDestructiveActions },
@@ -500,7 +506,9 @@ initializeExportSettings() {
 			{ id: 'exportWatermarkEnabled', prop: 'watermarkEnabled', parse: (v) => v },
 			{ id: 'exportFrameSkip', prop: 'exportFrameSkip', parse: (v) => parseInt(v) },
 			{ id: 'exportReverse', prop: 'exportReverse', parse: (v) => v },
-			{ id: 'exportSmartFrameReduction', prop: 'smartFrameReduction', parse: (v) => v }
+			{ id: 'exportSmartFrameReduction', prop: 'smartFrameReduction', parse: (v) => v },
+			{ id: 'exportOptimizationPreset', prop: 'optimizationPreset', parse: (v) => v },
+			{ id: 'exportMaxSamplingFps', prop: 'maxSamplingFps', parse: (v) => parseInt(v) }
 		];
 
 		settingsMap.forEach(({ id, prop, parse }) => {
@@ -614,23 +622,14 @@ initializeExportSettings() {
 
 	updateExportDuration(loopOverride = null) {
 		const output = document.getElementById('exportMp4Duration');
-		if (!output || !this.exporter || !this.layers) return;
-		const visibleLayers = this.layers.filter((layer) => layer.visible && layerHasVisibleContent(layer));
-		const calculation = this.exporter._calculateTotalFrames(
-			visibleLayers,
-			this.glitterManager.content,
-			this.exportSettings.maxFrames,
-			this.exportSettings.smartFrameReduction
-		);
-		const renderedFrames = Math.ceil(calculation.totalFrames / this.exportSettings.exportFrameSkip);
+		if (!output) return;
 		const input = document.getElementById('exportMp4LoopCount');
 		const enteredLoops = Number.isFinite(loopOverride) ? loopOverride : input?.valueAsNumber;
 		const loopCount = Math.min(
 			CONFIG.export.mp4.maxLoopCount,
 			Math.max(CONFIG.export.mp4.minLoopCount, Number.isFinite(enteredLoops) ? enteredLoops : this.exportSettings.mp4LoopCount)
 		);
-		const duration = renderedFrames * this.exportSettings.frameDelay * loopCount / 1000;
-		output.textContent = `${duration.toFixed(2)} seconds (${renderedFrames} frames × ${loopCount} repeats)`;
+		output.textContent = `Source-timed animation × ${loopCount} repeats. Exact duration is shown after export.`;
 	}
 
 	applyInterfaceTheme() {
@@ -742,6 +741,8 @@ async resetSettingsSection(section) {
 			this.exportSettings.frameDelay = CONFIG.export.defaults.frameDelay;
 			this.exportSettings.maxFrames = CONFIG.export.defaults.maxFrames;
 			this.exportSettings.smartFrameReduction = CONFIG.export.defaults.smartFrameReduction;
+			this.exportSettings.optimizationPreset = CONFIG.export.defaults.optimizationPreset;
+			this.exportSettings.maxSamplingFps = CONFIG.export.defaults.maxSamplingFps;
 			this.exportSettings.exportFrameSkip = CONFIG.export.defaults.frameSkip;
 			this.exportSettings.exportReverse = CONFIG.export.defaults.reverse;
 			break;
@@ -777,7 +778,9 @@ async resetAllSettings() {
 		watermarkEnabled: CONFIG.export.defaults.watermarkEnabled,
 		exportFrameSkip: CONFIG.export.defaults.frameSkip,
 		exportReverse: CONFIG.export.defaults.reverse,
-		smartFrameReduction: CONFIG.export.defaults.smartFrameReduction
+		smartFrameReduction: CONFIG.export.defaults.smartFrameReduction,
+		optimizationPreset: CONFIG.export.defaults.optimizationPreset,
+		maxSamplingFps: CONFIG.export.defaults.maxSamplingFps
 	};
 
 	// Reset UI preferences
@@ -818,7 +821,9 @@ async resetAllSettings() {
 			watermarkEnabled: CONFIG.export.defaults.watermarkEnabled,
 			exportFrameSkip: CONFIG.export.defaults.frameSkip,
 			exportReverse: CONFIG.export.defaults.reverse,
-			smartFrameReduction: CONFIG.export.defaults.smartFrameReduction
+			smartFrameReduction: CONFIG.export.defaults.smartFrameReduction,
+			optimizationPreset: CONFIG.export.defaults.optimizationPreset,
+			maxSamplingFps: CONFIG.export.defaults.maxSamplingFps
 		};
 		this.syncExportSettingsToUI();
 		this.saveSettingsToStorage();
@@ -6508,6 +6513,11 @@ setupWelcomeModalListeners() {
 		settings.watermarkEnabled = Boolean(settings.watermarkEnabled);
 		settings.exportReverse = Boolean(settings.exportReverse);
 		settings.smartFrameReduction = Boolean(settings.smartFrameReduction);
+		if (!CONFIG.export.timeline.presets[settings.optimizationPreset]) {
+			settings.optimizationPreset = CONFIG.export.timeline.defaultPreset;
+		}
+		if (!Number.isFinite(settings.maxSamplingFps)) settings.maxSamplingFps = CONFIG.export.defaults.maxSamplingFps;
+		settings.maxSamplingFps = Math.max(1, Math.min(CONFIG.export.timeline.maxSamplingFps, Math.round(settings.maxSamplingFps)));
 
 		// Validate string settings
 		if (typeof settings.ditherType !== 'string' || !settings.ditherType) {

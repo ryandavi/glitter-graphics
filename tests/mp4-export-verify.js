@@ -83,7 +83,7 @@ async function main() {
 		if (result.width !== 64 || result.height !== 48 || !(result.duration >= 0.65 && result.duration <= 0.67)) throw new Error('MP4 did not decode with the expected 110 ms frame timing.');
 		if (!result.resultModal.visible || !result.resultModal.videoVisible || !result.resultModal.imageHidden) throw new Error('MP4 result modal did not show its video preview.');
 		if (result.resultModal.saveLabel !== 'Save MP4' || result.resultModal.openLabel !== 'Open MP4') throw new Error('MP4 result actions were not format-aware.');
-		if (!result.resultModal.duration.includes('0.7s') || !result.resultModal.size.includes('Size:')) throw new Error('MP4 result stats were incomplete.');
+		if (!result.resultModal.duration.includes('0.66s') || !result.resultModal.size.match(/\d/)) throw new Error('MP4 result stats were incomplete.');
 		if (!result.settingsUi.duration.includes('15 repeats')) throw new Error('MP4 duration did not update beyond the former 10-repeat limit.');
 		if (result.settingsUi.matteDisabled || result.settingsUi.matteRowDisabled) throw new Error('MP4 matte color remained disabled.');
 		console.log(`PASS MP4 Blob (${result.size} bytes) decoded at ${result.width}x${result.height}, ${result.duration.toFixed(2)}s.`);

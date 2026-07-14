@@ -494,6 +494,21 @@ const CONFIG = {
 				maxFrames: 60
 			}
 		},
+		timeline: {
+			maxSamplingFps: 30,
+			preferredFrameBudget: 60,
+			hardFrameLimit: 1000,
+			exactDuplicateThreshold: 0,
+			balancedVisualError: 0.008,
+			smallFileVisualError: 0.02,
+			maxLoopDurationMs: 12000,
+			defaultPreset: 'balanced',
+			presets: {
+				highFidelity: { label: 'High Fidelity', visualError: 0, maxSamplingFps: 30 },
+				balanced: { label: 'Balanced', visualError: 0.008, maxSamplingFps: 24 },
+				smallFile: { label: 'Small File', visualError: 0.02, maxSamplingFps: 15 }
+			}
+		},
 		defaults: {
 			format: 'gif',
 			baseImage: true,
@@ -509,6 +524,8 @@ const CONFIG = {
 			frameSkip: 1,
 			reverse: false,
 			smartFrameReduction: true,
+			optimizationPreset: 'balanced',
+			maxSamplingFps: 24,
 			watermarkEnabled: false
 		},
 		mp4: {

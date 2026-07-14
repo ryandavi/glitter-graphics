@@ -198,3 +198,18 @@ For each fixture assert total duration, source frame at sampled timestamps, clea
 - GIF and MP4 use the same selected frames and timing plan.
 - Export preview reports truthful reduction statistics.
 - Existing transparency, masks, transforms, gradients, watermarking, reverse, and effect-slot rendering remain pixel-equivalent when reduction is disabled.
+
+## Implementation status
+
+Implemented in July 2026.
+
+- `AnimationSourceTimeline`, `CompositeTimelinePlanner`, and `CompositeFrameReducer` live in `js/classes/ExportTimeline.js`.
+- Source GIF delays are normalized and used for timestamp-based frame selection, including variable-frame-rate sources and animated watermark timing.
+- GIF and MP4 share one `ExportTimelinePlan`; both consume its individual frame durations.
+- Manual Frame Sampling and reverse preserve the plan's total duration.
+- Exact and bounded near-duplicate reduction runs on final composed RGBA frames and includes alpha in its error score.
+- Long common loops use a bounded, reported best-fit seam instead of an arbitrary partial LCM cycle.
+- Export settings provide High Fidelity, Balanced, and Small File outcomes plus preferred frame budget and maximum sampling FPS controls.
+- The result modal reports compact file details by default. It shows optimization details only when frames were actually removed, and shows loop, quality-budget, and configured file-size warnings only when relevant.
+- iOS result guidance disables long-press GIF saving and documents the Files → Save Image route, with Messages → Save as the built-in fallback.
+- Deterministic timeline fixtures are in `tests/export-timeline-unit.js`; export render parity remains covered by `tests/export-parity.js`, and MP4 timing by `tests/mp4-export-verify.js`.
