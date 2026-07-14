@@ -1467,7 +1467,7 @@ class TextGlitterManager {
 
 		if (this.ui.boxModeHint) {
 			this.ui.boxModeHint.textContent = mode === 'fixed'
-				? 'Box text wraps inside the frame. Drag the side handles to resize the box; corner handles scale the text.'
+				? 'Box text wraps inside the frame. Drag any resize handle to change the box without scaling the text.'
 				: 'Point text hugs the glyphs. Corner handles scale it. Switch to Box for wrapping inside a resizable frame.';
 		}
 
@@ -2971,6 +2971,18 @@ class TextGlitterManager {
 			rect.bottom = Math.max(localY, rect.top + metrics.minDisplayHeight);
 		} else if (edge === 'top') {
 			rect.top = Math.min(localY, rect.bottom - metrics.minDisplayHeight);
+		} else if (edge === 'tl') {
+			rect.left = Math.min(localX, rect.right - metrics.minDisplayWidth);
+			rect.top = Math.min(localY, rect.bottom - metrics.minDisplayHeight);
+		} else if (edge === 'tr') {
+			rect.right = Math.max(localX, rect.left + metrics.minDisplayWidth);
+			rect.top = Math.min(localY, rect.bottom - metrics.minDisplayHeight);
+		} else if (edge === 'br') {
+			rect.right = Math.max(localX, rect.left + metrics.minDisplayWidth);
+			rect.bottom = Math.max(localY, rect.top + metrics.minDisplayHeight);
+		} else if (edge === 'bl') {
+			rect.left = Math.min(localX, rect.right - metrics.minDisplayWidth);
+			rect.bottom = Math.max(localY, rect.top + metrics.minDisplayHeight);
 		} else {
 			return false;
 		}

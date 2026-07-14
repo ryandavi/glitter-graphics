@@ -376,7 +376,8 @@ class GlitterEditor {
 			showHelpfulHints: this.showHints,
 			showWelcomeOnStartup: this.showWelcomeOnStartup,
 			confirmDestructiveActions: this.confirmDestructiveActions,
-			interfaceTheme: this.interfaceTheme
+			interfaceTheme: this.interfaceTheme,
+			autoSelect: CONFIG.app.behavior.autoSelect
 		};
 
 		try {
@@ -437,6 +438,7 @@ initializeExportSettings() {
 	this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.ui.hints.enabledByDefault;
 	this.showWelcomeOnStartup = savedSettings?.showWelcomeOnStartup ?? !welcomeWasSuppressed;
 	this.confirmDestructiveActions = savedSettings?.confirmDestructiveActions ?? true;
+	CONFIG.app.behavior.autoSelect = savedSettings?.autoSelect ?? CONFIG.app.behavior.autoSelect;
 	this.interfaceTheme = CONFIG.ui.themes.includes(savedSettings?.interfaceTheme) ? savedSettings.interfaceTheme : 'dark';
 	this.applyInterfaceTheme();
 
@@ -699,7 +701,8 @@ initializeExportSettings() {
 			}
 		} catch (error) {
 			if (requestId !== this.exportDurationRequestId) return;
-			if (!usesTargetDuration) output.textContent = 'Unable to estimate until the animation sources are loaded.';
+			console.warn('Export duration estimate failed:', error);
+			if (!usesTargetDuration) output.textContent = 'Could not load an animation source to estimate the duration. Export will try again.';
 		}
 	}
 
@@ -1895,6 +1898,7 @@ async resetAllSettings() {
 
 	setupEventListeners() {
 		this.setupToolbarListeners();
+		this.setupAutoSelectListener();
 		this.setupColorPickerContextListeners();
 		this.setupLayerSettingsListeners();
 		this.setupSliderListeners();
@@ -1910,6 +1914,19 @@ async resetAllSettings() {
 		this.setupGlobalListeners();
 		this.setupHelpfulMessageListeners();
 		this.setupCanvasSizeControls();
+	}
+
+	setupAutoSelectListener() {
+		const toggle = document.getElementById('contextAutoSelect');
+		if (!toggle) return;
+		toggle.checked = CONFIG.app.behavior.autoSelect;
+		toggle.addEventListener('change', () => {
+			CONFIG.app.behavior.autoSelect = toggle.checked;
+			this.saveSettingsToStorage();
+			this.updateStatus(toggle.checked
+				? 'Auto-Select on: click an object to select it'
+				: 'Auto-Select off: canvas drags keep the selected layer');
+		});
 	}
 
 
@@ -2724,6 +2741,22 @@ async resetAllSettings() {
 				}
 			}
 			return Boolean(manager.setShapeSize?.(layer, nextWidth, nextHeight));
+		}
+
+		if (prefix === 'text' && (layer.textData?.boxMode || 'auto') === 'fixed') {
+			const transform = getLayerTransform(layer);
+			const scaleX = Math.max(0.01, (transform.scale.x || 100) / 100);
+			const scaleY = Math.max(0.01, (transform.scale.y || 100) / 100);
+			const currentWidth = Math.max(1, layer.textData.boxWidth || 1);
+			const currentHeight = Math.max(1, layer.textData.boxHeight || 1);
+			const displayAspect = (currentWidth * scaleX) / Math.max(1, currentHeight * scaleY);
+			let nextWidth = axis === 'width' ? value / scaleX : currentWidth;
+			let nextHeight = axis === 'height' ? value / scaleY : currentHeight;
+			if (lockAspect) {
+				if (axis === 'width') nextHeight = (value / displayAspect) / scaleY;
+				else nextWidth = (value * displayAspect) / scaleX;
+			}
+			return Boolean(manager.setBoxSize?.(layer, nextWidth, nextHeight));
 		}
 
 		const current = this.getTransformSizeState(layer, prefix);

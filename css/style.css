@@ -2322,7 +2322,7 @@ input[type=range]:disabled {
   padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) var(--spacing-sm);
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
 }
 .color-selection .selected-colors-display > .selected-color-chip > .selected-color-swatch {
   width: 16px;

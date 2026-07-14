@@ -151,22 +151,26 @@ async initBrowser() {
 			const layer = this.editor.layerManager.getActiveLayer();
 			return layer?.type === LayerType.GLITTER_FILL ? layer : null;
 		};
+		const refreshLayerPresentation = (layer) => {
+			this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+			this.editor.layerManager.renderLayersList();
+		};
 		['glitter', 'solid'].forEach((mode) => document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`).addEventListener('click', () => {
 			const layer = active();
 			if (!layer) return;
 			layer.fill ||= { color: '#ff4fa3' };
 			layer.fill.mode = mode;
 			syncPaintSlotSourceUI(document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`), mode);
-			this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
+			refreshLayerPresentation(layer);
 			this.editor.saveState();
 		}));
 		const color = document.getElementById('glitterFillColor');
-		color.addEventListener('input', () => { const layer = active(); if (!layer) return; layer.fill ||= {}; layer.fill.mode = 'solid'; layer.fill.color = color.value; this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height); });
+		color.addEventListener('input', () => { const layer = active(); if (!layer) return; layer.fill ||= {}; layer.fill.mode = 'solid'; layer.fill.color = color.value; refreshLayerPresentation(layer); });
 		color.addEventListener('change', () => this.editor.saveState());
 		installEffectGradientEditor({
 			prefix: 'glitterFill',
 			getData: () => { const layer = active(); if (!layer) return null; layer.fill ||= { mode: 'glitter', color: '#ff4fa3' }; return layer.fill; },
-			onUpdate: (commit) => { const layer = active(); if (!layer) return; this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height); if (commit) this.editor.saveState(); }
+			onUpdate: (commit) => { const layer = active(); if (!layer) return; refreshLayerPresentation(layer); if (commit) this.editor.saveState(); }
 		});
 	}
 
@@ -441,8 +445,14 @@ async initBrowser() {
 			effect.glitterId = id;
 			effect.mode = 'glitter';
 			effect.colorAdjust = null;
-		} else {
+		} else if (layer.type === LayerType.GLITTER_FILL) {
 			layer.selectedGlitterId = id;
+			layer.fill ||= {
+				mode: 'glitter',
+				color: '#ff4fa3',
+				gradient: normalizeEffectGradient(CONFIG.rendering.gradient)
+			};
+			layer.fill.mode = 'glitter';
 			// Picking a new swatch is a clean slate: drop any hue/sat/bright shift so
 			// the new glitter shows its true colors, and sync the HSB sliders to match.
 			if (layer.settings) {

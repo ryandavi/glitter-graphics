@@ -358,6 +358,7 @@ const CONFIG = {
 				allowMultiSelection: true,
 				requiresStickerSource: true,
 				controls: [
+					{ kind: 'toggle', id: 'contextAutoSelect', label: 'Auto-Select' },
 					{ kind: 'button', id: 'centerLayerHorizontal', icon: 'arrows-left-right', name: 'Center H', title: 'Center Horizontally', action: 'centerSelectionH' },
 					{ kind: 'button', id: 'centerLayerVertical', icon: 'arrows-up-down', name: 'Center V', title: 'Center Vertically', action: 'centerSelectionV' },
 					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' }

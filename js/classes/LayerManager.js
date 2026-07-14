@@ -152,6 +152,7 @@ class LayerManager {
 		const serialized = {
 			id: layer.id,
 			type: layer.type || LayerType.GLITTER_FILL,
+			name: layer.name,
 			visible: layer.visible,
 			locked: layer.locked,
 			selections: layer.selections ? JSON.parse(JSON.stringify(layer.selections)) : [],
@@ -236,6 +237,7 @@ class LayerManager {
 		const restored = {
 			id: layerData.id,
 			type: layerData.type || LayerType.GLITTER_FILL,
+			name: layerData.name,
 			visible: layerData.visible,
 			locked: layerData.locked,
 			maskVersion: layerData.maskVersion || 0,
@@ -424,6 +426,26 @@ class LayerManager {
 
 		nextIds.add(layerId);
 		this.setSelection([...nextIds], { activeLayerId: layerId });
+	}
+
+	selectLayerRange(layerId, options = {}) {
+		const targetIndex = this.layers.findIndex((layer) => layer.id === layerId);
+		const anchorIndex = this.layers.findIndex((layer) => layer.id === this.activeLayerId);
+		if (targetIndex < 0 || anchorIndex < 0) {
+			this.setActiveLayer(layerId);
+			return;
+		}
+
+		const start = Math.min(anchorIndex, targetIndex);
+		const end = Math.max(anchorIndex, targetIndex);
+		const rangeIds = this.layers
+			.slice(start, end + 1)
+			.filter((layer) => this.isLayerMultiSelectable(layer))
+			.map((layer) => layer.id);
+		const nextIds = options.additive
+			? [...new Set([...this.selectedLayerIds, ...rangeIds])]
+			: rangeIds;
+		this.setSelection(nextIds, { activeLayerId: layerId });
 	}
 
 	restoreSelectionState(activeLayerId, selectedLayerIds = null) {
@@ -655,8 +677,11 @@ class LayerManager {
 			else if (layer.type === LayerType.BASE_IMAGE) name = "Base Image";
 			else if (layer.type === LayerType.SHAPE) name = layer.name || 'Shape';
 			else if (layer.type === LayerType.GLITTER_FILL) {
-				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
-				name = glitter?.name || 'Glitter';
+				const fillMode = layer.fill?.mode || 'glitter';
+				const glitter = fillMode === 'glitter'
+					? this.editor.glitterManager.getItemById(layer.selectedGlitterId)
+					: null;
+				name = layer.name || glitter?.name || `${panelCap(fillMode)} Fill`;
 			}
 
 			this.editor.updateStatus(`Selected: ${name}`);
@@ -992,10 +1017,11 @@ class LayerManager {
 			transform.position.x += positionOffset.x;
 			transform.position.y += positionOffset.y;
 		} else {
-			// Clone glitter layer
+			// Clone fill layer
 			clonedLayer = {
 				id: this.generateLayerId(),
 				type: LayerType.GLITTER_FILL,
+				name: sourceLayer.name,
 				visible: sourceLayer.visible,
 				locked: false,
 				maskVersion: 0,
@@ -1113,6 +1139,7 @@ class LayerManager {
 		const clonedLayer = {
 			id: this.generateLayerId(),
 			type: LayerType.GLITTER_FILL,
+			name: sourceLayer.name,
 			visible: sourceLayer.visible,
 			locked: false,
 			maskVersion: 0,
@@ -1324,6 +1351,26 @@ class LayerManager {
 
 		const typeText = document.createElement('div');
 		typeText.className = 'layer-type';
+		const getFillDisplay = (paint, glitterId) => {
+			const mode = paint?.mode || 'glitter';
+			const modeLabel = mode === 'none' ? 'No' : panelCap(mode);
+			const glitter = mode === 'glitter'
+				? this.editor.glitterManager.getItemById(glitterId)
+				: null;
+			const formatColor = (color) => /^#[0-9a-f]{6}$/i.test(color || '') ? color.toUpperCase() : null;
+			let name = null;
+			if (mode === 'solid') {
+				name = formatColor(paint?.color) || 'Solid Fill';
+			} else if (mode === 'gradient') {
+				const stops = normalizeEffectGradient(paint?.gradient).stops;
+				const first = formatColor(stops[0]?.color);
+				const last = formatColor(stops.at(-1)?.color);
+				name = first && last ? `${first} → ${last}` : 'Gradient Fill';
+			} else if (mode === 'none') {
+				name = 'Transparent';
+			}
+			return { mode, modeLabel, glitter, name };
+		};
 
 		switch (layer.type) {
 			case LayerType.STICKER: {
@@ -1333,21 +1380,24 @@ class LayerManager {
 				break;
 			}
 			case LayerType.GLITTER_FILL: {
-				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
-				nameText.textContent = glitter ? glitter.name : 'No glitter';
-				typeText.textContent = glitter?.category ? `Glitter / ${glitter.category}` : 'Glitter';
+				const fill = getFillDisplay(layer.fill, layer.selectedGlitterId);
+				nameText.textContent = layer.name
+					|| fill.glitter?.name
+					|| fill.name
+					|| `${fill.modeLabel} Fill`;
+				typeText.textContent = `Fill / ${fill.mode === 'none' ? 'None' : fill.modeLabel}`;
 				break;
 			}
 			case LayerType.TEXT_GLITTER: {
-				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+				const fill = getFillDisplay(layer.textData?.fill, layer.selectedGlitterId);
 				nameText.textContent = layer.name || 'Text';
-				typeText.textContent = `Text / ${glitter?.name || 'No glitter'}`;
+				typeText.textContent = `Text / ${fill.modeLabel} Fill`;
 				break;
 			}
 			case LayerType.SHAPE: {
-				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
+				const fill = getFillDisplay(layer.shapeData?.fill, layer.selectedGlitterId);
 				nameText.textContent = layer.name || 'Shape';
-				typeText.textContent = layer.shapeData?.fill?.mode === 'solid' ? 'Shape / Solid' : ('Shape / ' + (glitter?.name || 'No glitter'));
+				typeText.textContent = `Shape / ${fill.modeLabel} Fill`;
 				break;
 			}
 			case LayerType.BASE_IMAGE:
@@ -1457,6 +1507,11 @@ class LayerManager {
 			}));
 
 			if (event.shiftKey && this.isLayerMultiSelectable(layer)) {
+				this.selectLayerRange(layer.id, { additive: event.ctrlKey || event.metaKey });
+				return;
+			}
+
+			if ((event.ctrlKey || event.metaKey) && this.isLayerMultiSelectable(layer)) {
 				this.toggleLayerSelection(layer.id);
 				return;
 			}

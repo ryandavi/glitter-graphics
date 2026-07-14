@@ -311,6 +311,9 @@ updateTransform(updates) {
     delegateSelectionFromCanvasPoint(canvasPoint, options = {}) {
         const x = Math.round(canvasPoint.x);
         const y = Math.round(canvasPoint.y);
+		if (!CONFIG.app.behavior.autoSelect && !options.toggleSelection && !options.cycleDeep) {
+			return false;
+		}
 
         if (options.toggleSelection || options.cycleDeep) {
             this.editor.layerManager.handleLayerPick(x, y, {
@@ -432,6 +435,7 @@ setupMouseDrag(element) {
     let lockedAxis = null;
 	let altPending = false;
 	let dragTransform = this;
+	let dragSourceTransform = this;
 	let altCloneId = null;
 
 const swallowFollowupClick = () => {
@@ -443,7 +447,17 @@ const swallowFollowupClick = () => {
     
 	const handleMouseDown = (e) => {
     if (e.button !== 0) return; // Left click only
-	if (this.layer.locked) {
+	const pinnedTransform = this.editor.currentTool === ToolType.SELECT
+		&& !CONFIG.app.behavior.autoSelect
+		&& !this.editor.layerManager.hasMultiSelection()
+		? (() => {
+			const activeLayer = this.editor.layerManager.getActiveLayer();
+			if (!activeLayer || activeLayer.locked || !isTransformableLayerType(activeLayer.type)) return null;
+			const context = this.editor.getMovableLayerContext(activeLayer);
+			return context?.manager?.layerTransforms?.get(activeLayer.id) || null;
+		})()
+		: null;
+	if (this.layer.locked && !pinnedTransform) {
 		if (this.editor.currentTool === ToolType.SELECT) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -483,7 +497,7 @@ const swallowFollowupClick = () => {
     }
 
     const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
-    if (!e.altKey && this.delegateSelectionFromCanvasPoint(canvasPos, {
+	if (!pinnedTransform && !e.altKey && this.delegateSelectionFromCanvasPoint(canvasPos, {
         toggleSelection: e.shiftKey,
         cycleDeep: e.altKey
     })) {
@@ -499,7 +513,7 @@ const swallowFollowupClick = () => {
     e.stopPropagation();
     
     // Select this layer if not already selected
-    if (this.editor.layerManager.activeLayerId !== this.layer.id) {
+	if (!pinnedTransform && this.editor.layerManager.activeLayerId !== this.layer.id) {
         dbg('🎯 Selecting layer and starting drag immediately');
         this.editor.layerManager.setActiveLayer(this.layer.id);
     }
@@ -508,11 +522,12 @@ const swallowFollowupClick = () => {
     isDragging = true;
     didMove = false;
 	altPending = e.altKey;
-	dragTransform = this;
+	dragTransform = pinnedTransform || this;
+	dragSourceTransform = dragTransform;
 
     startCanvasX = canvasPos.x;
     startCanvasY = canvasPos.y;
-    startPosition = { ...this.getTransform().position };
+	startPosition = { ...dragTransform.getTransform().position };
     lockedAxis = null;
     
 	    document.addEventListener('mousemove', handleMouseMove);
@@ -537,12 +552,12 @@ const handleMouseMove = (e) => {
     }
 	if (!didMove && altPending) {
 		this.editor.groupTransformManager?.ensureHistoryBaseline?.();
-		const clone = this.editor.layerManager.cloneLayer(this.layer.id, { positionOffset: { x: 0, y: 0 }, skipHistory: true });
+		const clone = this.editor.layerManager.cloneLayer(dragTransform.layer.id, { positionOffset: { x: 0, y: 0 }, skipHistory: true });
 		const ctx = this.editor.getMovableLayerContext(clone);
 		dragTransform = ctx?.manager?.layerTransforms?.get(clone?.id) || this;
 		altCloneId = clone?.id || null;
 		this.editor.setDuplicateDragFeedback?.(true, 1);
-		this.editor.addDuplicateGhost?.(this, dragTransform);
+		this.editor.addDuplicateGhost?.(dragSourceTransform, dragTransform);
 		startPosition = { ...dragTransform.getTransform().position };
 		altPending = false;
 	}
@@ -601,8 +616,8 @@ const handleMouseMove = (e) => {
     }
     
     // Update settings UI if available
-    if (this.layer.type === LayerType.STICKER || this.layer.type === LayerType.TEXT_GLITTER) {
-        this.scheduleSettingsSync();
+	if (activeTransform.layer.type === LayerType.STICKER || activeTransform.layer.type === LayerType.TEXT_GLITTER || activeTransform.layer.type === LayerType.SHAPE) {
+		activeTransform.scheduleSettingsSync();
     }
 };
     
@@ -635,11 +650,11 @@ const handleMouseMove = (e) => {
 		if (!isDragging) return false;
 		if (altCloneId) {
 			this.editor.layerManager.deleteLayers([altCloneId], { skipHistory: true, silent: true });
-			this.editor.layerManager.setActiveLayer(this.layer.id);
+			this.editor.layerManager.setActiveLayer(dragSourceTransform.layer.id);
 		} else if (startPosition) {
-			this.updateTransform({ position: { ...startPosition } });
-			this.applyTransform(this.element, this.getDimensions());
-			this.updateHandlePositions();
+			dragTransform.updateTransform({ position: { ...startPosition } });
+			dragTransform.applyTransform(dragTransform.element, dragTransform.getDimensions());
+			dragTransform.updateHandlePositions();
 		}
 		isDragging = false;
 		didMove = false;
@@ -1230,7 +1245,11 @@ removeTransformHandles() {
             // Clear the drag flag before committing so ShapeGlitterManager.renderLayer()'s
             // handle-refresh guard doesn't skip rebuilding the (now differently-sized) box.
             this.isDraggingHandle = false;
-            if (this.layer.type === LayerType.TEXT_GLITTER && ht.startsWith('corner-')) {
+            if (
+				this.layer.type === LayerType.TEXT_GLITTER
+				&& ht.startsWith('corner-')
+				&& !this.editor.textGlitterManager?.canResizeBoxEdges?.(this.layer)
+			) {
                 await this.editor.textGlitterManager?.commitScaleToFontSize?.(this.layer);
             } else if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
                 this.editor.shapeGlitterManager?.commitScale(this.layer);
@@ -1342,11 +1361,16 @@ removeTransformHandles() {
      * Handle dragging of corner handles (scale)
      */
     handleCornerDrag(e) {
-        // Corners always SCALE — point and box text alike (box resizing is the
-        // edge handles' job). Measured against the handle frame, which for text
-        // is the visible frame (ink or box), not the padded mask canvas.
+		const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+		const textManager = this.editor.textGlitterManager;
+		if (textManager?.canResizeBoxEdges?.(this.layer)) {
+			const corner = this.activeHandleType.replace('corner-', '');
+			textManager.resizeBoxFromHandle(this.layer, corner, this.dragStartState, canvasPos);
+			return;
+		}
+        // Point text and other transformable layers scale from their visible
+        // frame. Box text is handled above by changing its frame dimensions.
         const transform = this.getTransform();
-        const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
         const start = this.dragStartState;
         const frame = start.handleFrame || { width: start.width, height: start.height, offsetX: 0, offsetY: 0 };
 
@@ -1437,6 +1461,12 @@ removeTransformHandles() {
 
     handleEdgeResizeDrag(e) {
         const edge = this.activeHandleType.replace('edge-', '');
+		const textManager = this.editor.textGlitterManager;
+		if (textManager?.canResizeBoxEdges?.(this.layer)) {
+			const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
+			textManager.resizeBoxFromHandle(this.layer, edge, this.dragStartState, canvasPos);
+			return;
+		}
 
 		this.handleOneAxisScale(e, edge);
     }

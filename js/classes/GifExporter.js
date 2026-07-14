@@ -714,7 +714,7 @@ class GifExporter {
 		// never appears, breaking preview↔export parity and static-GIF output.
 		const sources = [];
 
-		if (layer.textData?.fill?.mode !== 'solid') {
+		if (layer.textData?.fill?.mode === 'glitter') {
 			sources.push({
 				key: this._getTextFrameKey(layer, 'fill'),
 				slot: 'fill',
@@ -722,7 +722,7 @@ class GifExporter {
 			});
 		}
 
-		if (layer.textData?.border?.glitterId) {
+		if (layer.textData?.border?.mode === 'glitter' && layer.textData.border.widthPx > 0 && layer.textData.border.glitterId) {
 			sources.push({
 				key: this._getTextFrameKey(layer, 'border'),
 				slot: 'border',
@@ -730,7 +730,7 @@ class GifExporter {
 			});
 		}
 
-		if (layer.textData?.shadow?.glitterId) {
+		if (layer.textData?.shadow?.mode === 'glitter' && layer.textData.shadow.glitterId) {
 			sources.push({
 				key: this._getTextFrameKey(layer, 'shadow'),
 				slot: 'shadow',
@@ -1728,7 +1728,10 @@ class GifExporter {
 	async estimateLoopDuration({ layers, library, fallbackDuration, parseGif }) {
 		await this._loadMissingFrames(layers, library, {
 			parseGif,
-			onStatus: () => {}
+			onStatus: () => {},
+			// Estimation only reads animation timing; fonts are needed later when
+			// the full export path renders text masks.
+			ensureTextFont: async () => {}
 		});
 		const timelines = [];
 		const collectTimeline = (key, animation) => {
