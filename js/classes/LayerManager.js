@@ -357,9 +357,21 @@ class LayerManager {
 		const layer = this.getLayerById(layerId);
 		if (!layer || layer.type === LayerType.BASE_IMAGE) return;
 		layer.locked = !layer.locked;
-		if (layer.locked) this.selectedLayerIds.delete(layer.id);
+		if (layer.locked && this.selectedLayerIds.size > 1) {
+			const remaining = [...this.selectedLayerIds].filter((id) => id !== layer.id);
+			this.setSelection(remaining, { activeLayerId: remaining.at(-1) || null });
+		}
+		if (layer.locked && this.activeLayerId === layer.id) {
+			this.editor.textGlitterManager?.closePickerSession();
+			this.editor.shapeGlitterManager?.closePickerSession();
+			this.editor.glitterManager?.closePickerSession?.();
+			this.editor.stickerManager?.closePickerSession?.();
+			this.editor.maskEditor?.releaseBrushTool?.({ commitStroke: true });
+			if (this.editor.currentTool === ToolType.COLOR_PICKER) this.editor.setTool(ToolType.SELECT);
+		}
 		this.renderLayersList();
 		this.editor.syncTransformHandlesForActiveLayer?.();
+		this.editor.updateSidePanelUI(this.getActiveLayer());
 		this.editor.updateActionButtons();
 		this.editor.saveState();
 		this.editor.updateStatus(`${layer.locked ? 'Locked' : 'Unlocked'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
@@ -659,7 +671,7 @@ class LayerManager {
 			return;
 		}
 
-		const hitStack = this.getLayersAtPoint(x, y, { includeBase: true });
+		const hitStack = this.getLayersAtPoint(x, y, { includeBase: true, excludeLocked: true });
 		const layer = options.cycleDeep
 			? this.getNextLayerFromHitStack(hitStack, { currentLayerId: this.activeLayerId })
 			: (hitStack[0] || null);
@@ -704,11 +716,13 @@ class LayerManager {
 	getLayersAtPoint(x, y, options = {}) {
 		const includeBase = options.includeBase !== false;
 		const movableOnly = options.movableOnly === true;
+		const excludeLocked = options.excludeLocked === true;
 		const hits = [];
 
 		for (let i = this.layers.length - 1; i >= 0; i--) {
 			const layer = this.layers[i];
 			if (!layer.visible) continue;
+			if (excludeLocked && layer.locked && layer.type !== LayerType.BASE_IMAGE) continue;
 			if (movableOnly && !this.isLayerMultiSelectable(layer)) continue;
 
 			let isHit = false;
@@ -717,9 +731,7 @@ class LayerManager {
 			if (hitTestMethod) {
 				isHit = this[hitTestMethod](layer, x, y);
 			} else if (layer.type === LayerType.GLITTER_FILL) {
-				if (hasMaskContent(layer)) {
-					isHit = this.isPixelInLayerSelection(layer, x, y);
-				}
+				isHit = this.isPixelInLayerSelection(layer, x, y);
 			} else if (includeBase && layer.type === LayerType.BASE_IMAGE && this.editor.originalImage) {
 				isHit = true;
 			}
@@ -820,7 +832,12 @@ class LayerManager {
 	}
 
 	isPixelInLayerSelection(layer, x, y) {
-		if (!this.editor.originalCanvas) {
+		if (
+			!this.editor.originalCanvas
+			|| layer?.type !== LayerType.GLITTER_FILL
+			|| layer.fill?.mode === 'none'
+			|| (layer.settings?.opacity ?? 100) <= 0
+		) {
 			return false;
 		}
 
@@ -1402,7 +1419,7 @@ class LayerManager {
 			}
 			case LayerType.BASE_IMAGE:
 				nameText.textContent = 'Base Image';
-				typeText.textContent = `Background / ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}`;
+				typeText.textContent = `Fixed Background / ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}`;
 				break;
 			default:
 				nameText.textContent = 'Unknown Layer';
@@ -1455,11 +1472,11 @@ class LayerManager {
 		const isBaseLayer = layer.type === LayerType.BASE_IMAGE;
 		const lockBtn = this.createIconButton({
 			className: `layer-action-btn lock${layer.locked ? ' active' : ''}${isBaseLayer ? ' permanent' : ''}`,
-			title: isBaseLayer ? 'Base layer is always locked' : (layer.locked ? 'Unlock layer' : 'Lock layer'),
+			title: isBaseLayer ? 'Fixed background — editable, but cannot be moved, reordered, or deleted' : (layer.locked ? 'Unlock layer' : 'Lock layer'),
 			iconType: layer.locked ? 'lock' : 'unlock',
 			onClick: (e) => {
 				e.stopPropagation();
-				if (isBaseLayer) this.editor.updateStatus('Base layer is always locked');
+				if (isBaseLayer) this.editor.updateStatus('The fixed background can be edited, but not moved or deleted');
 				else this.toggleLayerLock(layer.id);
 			}
 		});

@@ -50,12 +50,6 @@ class GlitterEditor {
 		this.currentHintDismissed = false;
 
 		// ============================================================================
-		// GLOBAL SETTINGS
-		// ============================================================================
-		this.refineGlobal = CONFIG.tools.glitter.behavior.refineAffectsAllLayers;
-		this.glitterGlobal = CONFIG.tools.glitter.behavior.glitterSelectionAffectsAllLayers;
-
-		// ============================================================================
 		// STATE FLAGS
 		// ============================================================================
 		this.isSaved = false;
@@ -611,6 +605,12 @@ initializeExportSettings() {
 	updateExportFormatUI() {
 		const isMp4 = this.exportSettings.format === 'mp4' && this.mp4ExportSupported === true;
 		const activeFormat = isMp4 ? 'mp4' : 'gif';
+		const formatDescription = document.getElementById('exportFormatDescription');
+		if (formatDescription) {
+			formatDescription.textContent = this.mp4ExportSupported === true
+				? 'Choose an animated GIF or a broadly compatible MP4 video.'
+				: 'Export an animated GIF.';
+		}
 		document.querySelectorAll('#exportFormatControl [data-export-format]').forEach((button) => {
 			const format = button.dataset.exportFormat;
 			button.classList.toggle('active', format === activeFormat);
@@ -932,6 +932,56 @@ async resetAllSettings() {
 		}
 	}
 
+	isLayerContentLocked(layer) {
+		return Boolean(layer?.locked && layer.type !== LayerType.BASE_IMAGE);
+	}
+
+	canEditLayer(layer, options = {}) {
+		const editable = Boolean(layer) && !this.isLayerContentLocked(layer);
+		if (!editable && options.notify) {
+			this.updateStatus('Unlock this layer to edit it');
+		}
+		return editable;
+	}
+
+	syncLockedLayerUI(layer) {
+		const locked = this.isLayerContentLocked(layer) && !this.layerManager.hasMultiSelection();
+		const propertySectionIds = [
+			'glitterSettingsSection',
+			'layerSettingsSection',
+			'stickerSettingsSection',
+			'textSettingsSection',
+			'shapeSettingsSection'
+		];
+		propertySectionIds.forEach((id) => {
+			const section = document.getElementById(id);
+			if (!section) return;
+			const sectionLocked = locked && section.classList.contains('visible');
+			section.classList.toggle('is-layer-edit-locked', sectionLocked);
+			const content = section.querySelector(':scope > .section-content');
+			if (content) {
+				content.inert = sectionLocked;
+				content.setAttribute('aria-disabled', String(sectionLocked));
+				content.title = sectionLocked ? 'Unlock this layer to edit its properties' : '';
+			}
+			const title = section.querySelector(':scope > .section-header .section-header-title');
+			let badge = title?.querySelector('.locked-layer-badge');
+			if (sectionLocked && title && !badge) {
+				badge = document.createElement('span');
+				badge.className = 'locked-layer-badge';
+				badge.textContent = 'Locked';
+				title.appendChild(badge);
+			} else if (!sectionLocked) {
+				badge?.remove();
+			}
+		});
+
+		['centerLayerHorizontal', 'centerLayerVertical', 'duplicateLayerSelection'].forEach((id) => {
+			const button = document.getElementById(id);
+			if (button) button.disabled = locked;
+		});
+	}
+
 	updateSidePanelUI(layer) {
 		const hasMultiSelection = this.layerManager?.hasMultiSelection?.() ?? false;
 
@@ -990,6 +1040,7 @@ async resetAllSettings() {
 		}
 
 		this.syncNoLayerPanelState();
+		this.syncLockedLayerUI(layer);
 
 		// D-1c: keep the gallery picker strip in sync when the active layer
 		// changes to any type. The glitter, shape, text, and sticker managers each
@@ -1454,7 +1505,7 @@ async resetAllSettings() {
 		}
 	}
 
-	saveActiveLayerSettings(refineOnly = false, glitterOnly = false) {
+	saveActiveLayerSettings() {
 		const settings = {
 			threshold: parseInt(document.getElementById('threshold').value),
 			feather: parseInt(document.getElementById('feather').value),
@@ -1475,29 +1526,6 @@ async resetAllSettings() {
 			this.maskCompositor.invalidate(activeLayer.id);
 		}
 
-		// Handle Global Refine (Threshold/Feather)
-		if (this.refineGlobal && refineOnly) {
-			this.layers.forEach(layer => {
-				// FIX: Only apply to Glitter Fill layers
-				if (layer.type === LayerType.GLITTER_FILL && layer.settings) {
-					layer.settings.threshold = settings.threshold;
-					layer.settings.feather = settings.feather;
-					this.maskCompositor.invalidate(layer.id);
-				}
-			});
-		}
-
-		// Handle Global Glitter (Scale/Opacity)
-		if (this.glitterGlobal && glitterOnly) {
-			this.layers.forEach(layer => {
-				// FIX: Only apply to Glitter Fill layers
-				if (layer.type === LayerType.GLITTER_FILL && layer.settings) {
-					layer.settings.scale = settings.scale;
-					layer.settings.opacity = settings.opacity;
-					this.maskCompositor.invalidate(layer.id);
-				}
-			});
-		}
 	}
 
 	updateGlitterSelection() {
@@ -1833,7 +1861,7 @@ async resetAllSettings() {
 				resetValue: this.getResetValueForSlider(id),
 				resetButton: resetBtn,
 				apply: () => {
-					this.saveActiveLayerSettings(false, false);
+					this.saveActiveLayerSettings();
 					this.refreshGlitterSwatchVisuals(this.layerManager.getActiveLayer());
 					this.debouncedSliderUpdate();
 				},
@@ -1942,28 +1970,28 @@ async resetAllSettings() {
 		const appBindingConfig = {
 			threshold: {
 				onApply: () => {
-					this.saveActiveLayerSettings(true, false);
+					this.saveActiveLayerSettings();
 					this.debouncedSliderUpdate();
 				},
 				onCommit: () => this.saveState()
 			},
 			feather: {
 				onApply: () => {
-					this.saveActiveLayerSettings(true, false);
+					this.saveActiveLayerSettings();
 					this.debouncedSliderUpdate();
 				},
 				onCommit: () => this.saveState()
 			},
 			scale: {
 				onApply: () => {
-					this.saveActiveLayerSettings(false, true);
+					this.saveActiveLayerSettings();
 					this.debouncedSliderUpdate();
 				},
 				onCommit: () => this.saveState()
 			},
 			opacity: {
 				onApply: () => {
-					this.saveActiveLayerSettings(false, true);
+					this.saveActiveLayerSettings();
 					this.debouncedSliderUpdate();
 				},
 				onCommit: () => this.saveState()
@@ -2114,7 +2142,7 @@ async resetAllSettings() {
 				this.updateResetButton('threshold');
 
 				// Save and debounce preview update
-				this.saveActiveLayerSettings(true, false);
+				this.saveActiveLayerSettings();
 				this.debouncedSliderUpdate();
 			});
 
@@ -2167,8 +2195,6 @@ async resetAllSettings() {
 		const contiguous = document.getElementById('contiguous');
 		const invert = document.getElementById('invert');
 		const multiSelect = document.getElementById('multiSelect');
-		const refineGlobal = document.getElementById('refineGlobal');
-		const glitterGlobal = document.getElementById('glitterGlobal');
 
 		// Sync contiguous checkboxes bidirectionally
 		this.syncCheckboxes('contiguous', 'contextContiguous');
@@ -2219,30 +2245,6 @@ async resetAllSettings() {
 		if (multiSelect) {
 			multiSelect.addEventListener('change', (e) => {
 				this.handleMultiSelectChange(e.target.checked);
-			});
-		}
-
-		if (refineGlobal) {
-			refineGlobal.addEventListener('change', (e) => {
-				this.refineGlobal = e.target.checked;
-				if (this.refineGlobal) {
-					this.saveActiveLayerSettings(true, false);
-					this.updatePreview();
-					this.saveState();
-					this.updateStatus('Global threshold/feather applied');
-				}
-			});
-		}
-
-		if (glitterGlobal) {
-			glitterGlobal.addEventListener('change', (e) => {
-				this.glitterGlobal = e.target.checked;
-				if (this.glitterGlobal) {
-					this.saveActiveLayerSettings(false, true);
-					this.updatePreview();
-					this.saveState();
-					this.updateStatus('Global scale/opacity applied');
-				}
 			});
 		}
 
@@ -3378,7 +3380,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=19',
+				externalContentUrl: 'modals/guide.html?v=20',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -3891,6 +3893,9 @@ setupWelcomeModalListeners() {
 		const previewToggle = document.getElementById('previewModeToggle');
 		if (previewToggle) {
 			previewToggle.classList.toggle('active', !this.showAllLayers);
+			previewToggle.setAttribute('aria-pressed', String(!this.showAllLayers));
+			const name = previewToggle.querySelector('.name');
+			if (name) name.textContent = this.showAllLayers ? 'Show Only Selected Layer' : 'Show All Layers';
 		}
 
 		this.updatePreview();
@@ -4463,6 +4468,18 @@ setupWelcomeModalListeners() {
 		});
 
 		activeToolbar?.element.classList.add('visible');
+		if (activeToolbar?.config.id === 'layerCenterControls') {
+			const canTransformSelection = hasMultiSelection || Boolean(
+				layer
+				&& isTransformableLayerType(layer.type)
+				&& !layer.locked
+				&& (layer.type !== LayerType.STICKER || layer.stickerSourceId)
+			);
+			['centerLayerHorizontal', 'centerLayerVertical', 'duplicateLayerSelection'].forEach((id) => {
+				const button = document.getElementById(id);
+				if (button) button.hidden = !canTransformSelection;
+			});
+		}
 
 		if (this.currentTool === ToolType.SELECT && layer?.type === LayerType.STICKER && !hasMultiSelection) {
 			if (layer.stickerSourceId) {
@@ -4562,6 +4579,10 @@ setupWelcomeModalListeners() {
 			}
 		}
 
+		else if (this.isLayerContentLocked(activeLayer)) {
+			hint = 'This layer is locked';
+			context = 'Its settings are available to inspect. Unlock it in the Layers panel to make changes.';
+		}
 		else if (activeLayer && activeLayer.type === LayerType.STICKER && !activeLayer.stickerSourceId) {
 			hint = 'No sticker chosen—select a sticker from the gallery to place on your canvas';
 		}
@@ -5049,7 +5070,7 @@ setupWelcomeModalListeners() {
 		const layer = this.layerManager.getActiveLayer();
 		const ctx = this.getMovableLayerContext(layer);
 		const transform = this.getLayerTransformData(layer);
-		if (!hasMultiSelection && (!ctx || !ctx.manager || !transform)) return false;
+		if (!hasMultiSelection && (!ctx || !ctx.manager || !transform || this.isLayerContentLocked(layer))) return false;
 
 		// Only override input focus for the text layer's own content field —
 		// leave unrelated inputs (search boxes, numeric fields) to their carets.
@@ -5114,6 +5135,8 @@ setupWelcomeModalListeners() {
 		const hasImage = this.originalImage !== null;
 
 		const hasAnySelection = this.layers.some((layer) => layerHasVisibleContent(layer));
+		const selectedLayer = this.layerManager.getActiveLayer();
+		const canSoloSelectedLayer = Boolean(selectedLayer?.visible && layerHasVisibleContent(selectedLayer));
 
 		const clearAllTool = document.getElementById('clearAllTool');
 		const layersBarClearAll = document.getElementById('layersBarClearAll');
@@ -5177,11 +5200,11 @@ setupWelcomeModalListeners() {
 
 		// UX: Disable preview toggle when no selections
 		if (previewToggle) {
-			previewToggle.disabled = !hasAnySelection;
-			if (!hasAnySelection) {
-				previewToggle.title = 'Add glitter or stickers first';
+			previewToggle.disabled = this.showAllLayers && !canSoloSelectedLayer;
+			if (this.showAllLayers && !canSoloSelectedLayer) {
+				previewToggle.title = 'Select a visible layer first';
 			} else if (this.showAllLayers) {
-				previewToggle.title = 'Show only active layer';
+				previewToggle.title = 'Show only selected layer';
 			} else {
 				previewToggle.title = 'Show all layers';
 			}
@@ -6204,6 +6227,7 @@ setupWelcomeModalListeners() {
 
 		// Handle based on selected layer type
 		if (layer.type === LayerType.GLITTER_FILL) {
+			if (!this.canEditLayer(layer, { notify: true })) return;
 
 			// fill normally
 			this.glitterFillSelector(x, y, event);

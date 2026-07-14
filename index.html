@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=134">
+	<link rel="stylesheet" href="css/style.css?v=138">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1083,11 +1083,11 @@
 						<div class="preview-controls ui-ignore-gestures" id="previewControls">
 							<div class="preview-controls-center">
 								<button class="preview-mode-toggle btn-icon icon-wrapper" id="previewModeToggle"
-									title="View only selected layer's glitter" style="display: none!important;" disabled>
+									title="Show only selected layer" aria-pressed="false" disabled>
 									<svg class="icon">
 										<use href="#icon-eye"></use>
 									</svg>
-									<span class="name">Solo Mode</span>
+									<span class="name">Show Only Selected Layer</span>
 								</button>
 								<button class="transparency-toggle btn-icon icon-wrapper" id="transparencyToggle"
 									title="Toggle Transparency" disabled>
@@ -1523,6 +1523,15 @@
 					<div class="export-stat" id="exportStatDimensionsRow"><span class="export-stat-label">Dimensions</span><strong id="exportStatDimensions">0 × 0 px</strong></div>
 				</div>
 				<div class="export-size-warnings" id="exportSizeWarnings" role="status" aria-label="File size warnings" hidden></div>
+				<div class="export-format-notices" id="exportFormatNotices" role="note" hidden>
+					<div class="export-format-notice">
+						<div class="export-format-notice-icon icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-palette"></use></svg></div>
+						<div class="export-format-notice-copy">
+							<strong>GIF color limit</strong>
+							<span id="exportColorNoticeText"></span>
+						</div>
+					</div>
+				</div>
 
 				<div class="export-reduction-summary" id="exportReductionSummary" hidden>
 					<div class="export-summary-icon icon-wrapper"><svg class="icon"><use href="#icon-circle-info"></use></svg></div>
@@ -1732,7 +1741,7 @@
 								</div>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Choose an animated GIF or broadly compatible H.264 MP4 video.</div>
+						<div class="settings-row-label-desc" id="exportFormatDescription">Export an animated GIF.</div>
 					</div>
 					<div class="settings-row" id="transparencySettingsRow" data-export-format-section="gif">
 						<div class="settings-row-header">
@@ -1836,7 +1845,7 @@
 					</div>
 					<div class="settings-row" data-export-format-section="gif">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Quality</div>
+							<div class="settings-row-label-main">Color Quality</div>
 							<div class="settings-row-control">
 								<select id="exportQuality">
 									<option value="1">Best (slowest)</option>
@@ -1845,14 +1854,14 @@
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Lower numbers = better quality but slower export.</div>
+						<div class="settings-row-label-desc">Preserves subtle color differences more accurately. Higher quality takes longer to export but does not change the image dimensions.</div>
 					</div>
 
 
 							<div class="control-group-label">Frame Control</div>
 					<div class="settings-row">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Max Frames</div>
+							<div class="settings-row-label-main">Frame Limit</div>
 							<div class="settings-row-control">
 								<select id="exportMaxFrames">
 									<option value="30">30 frames</option>
@@ -1863,7 +1872,7 @@
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Preferred output-frame budget. Optimization stops early instead of removing visibly important frames.</div>
+						<div class="settings-row-label-desc">A target for how many pictures make up the animation. More frames can make motion smoother, but may increase export time and file size. Important motion is kept even when it exceeds this target.</div>
 					</div>
 
 					<div class="settings-row">
@@ -1877,7 +1886,7 @@
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Controls how much composed-frame change can be removed. Original playback duration is always preserved.</div>
+						<div class="settings-row-label-desc">Choose whether to favor fine motion detail or a smaller file. The animation keeps the same playback length.</div>
 					</div>
 
 					<div class="settings-row">
@@ -1890,37 +1899,37 @@
 								</label>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Merge identical final frames and, when the selected goal allows it, visually similar final frames.</div>
+						<div class="settings-row-label-desc">Combines frames that look the same while keeping the animation at its original speed.</div>
 					</div>
 
 
 					<div class="settings-row">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Manual Frame Sampling</div>
+							<div class="settings-row-label-main">Keep Fewer Frames</div>
 							<div class="settings-row-control">
 								<select id="exportFrameSkip">
-									<option value="1">Every frame</option>
+									<option value="1">Off</option>
 									<option value="2">Every 2nd frame</option>
 									<option value="3">Every 3rd frame</option>
 									<option value="4">Every 4th frame</option>
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Keep every nth frame as an explicit override. Removed time is added to retained frames, so speed and duration stay unchanged.</div>
+						<div class="settings-row-label-desc">An optional manual shortcut for smaller files. Skipped frame time is added to the frames that remain, so the speed and length stay the same.</div>
 					</div>
 
 					<div class="settings-row">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Maximum Sampling FPS</div>
+							<div class="settings-row-label-main">Motion Detail</div>
 							<div class="settings-row-control">
 								<select id="exportMaxSamplingFps">
-									<option value="15">15 FPS</option>
-									<option value="24">24 FPS</option>
-									<option value="30">30 FPS</option>
+									<option value="15">Standard (15 samples/sec)</option>
+									<option value="24">Smooth (24 samples/sec)</option>
+									<option value="30">Finest (30 samples/sec)</option>
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Limits candidate sampling without overriding slower or variable source-frame timing.</div>
+						<div class="settings-row-label-desc">How often the animation is checked for visual changes. Higher settings preserve faster motion, but can take longer and create a larger file. Slower source animations keep their original timing.</div>
 					</div>
 						</div>
 					</div>
@@ -2577,8 +2586,8 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=73"></script>
-	<script src="js/core/commands.js?v=2"></script>
+	<script src="js/core/config.js?v=77"></script>
+	<script src="js/core/commands.js?v=3"></script>
 	<script src="js/transforms/transform-math.js?v=3"></script>
 	<script src="js/transforms/movable-layer.js?v=1"></script>
 
@@ -2596,33 +2605,33 @@
 	<script src="js/classes/GestureManager.js?v=7"></script>
 	<script src="js/classes/ModalManager.js?v=2"></script>
 	<script src="js/classes/ExportTimeline.js?v=3"></script>
-	<script src="js/classes/GifExporter.js?v=36"></script>
+	<script src="js/classes/GifExporter.js?v=37"></script>
 	<script src="js/classes/Mp4Exporter.js?v=5"></script>
 	<script src="js/classes/ViewportManager.js?v=3"></script>
 	<script src="js/classes/HistoryManager.js?v=11"></script>
 	<script src="js/classes/ProjectSerializer.js?v=11"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
 	<script src="js/classes/ShapeLibrary.js?v=5"></script>
-	<script src="js/classes/MaskEditor.js?v=14"></script>
+	<script src="js/classes/MaskEditor.js?v=15"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=40"></script>
+	<script src="js/classes/LayerManager.js?v=42"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=2"></script>
 	<script src="js/classes/ContentManager.js?v=3"></script>
-	<script src="js/classes/LayerTransform.js?v=34"></script>
-	<script src="js/classes/GlitterManager.js?v=29"></script>
+	<script src="js/classes/LayerTransform.js?v=37"></script>
+	<script src="js/classes/GlitterManager.js?v=30"></script>
 	<script src="js/classes/BaseBackgroundManager.js?v=8"></script>
 	<script src="js/classes/TextGlitterManager.js?v=51"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=41"></script>
-	<script src="js/classes/StickerManager.js?v=20"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=42"></script>
+	<script src="js/classes/StickerManager.js?v=22"></script>
 	<script src="js/classes/GroupTransformManager.js?v=17"></script>
 
 	<script src="js/classes/MobileManager.js?v=14"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=133"></script>
+	<script src="js/app.js?v=138"></script>
 
 </body>
 

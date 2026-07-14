@@ -17,6 +17,7 @@ function centerSelection(editor, method, groupAxis) {
 		return;
 	}
 	const layer = editor.layerManager.getActiveLayer();
+	if (!editor.canEditLayer(layer, { notify: true })) return;
 	const context = editor.getMovableLayerContext(layer);
 	context?.manager?.[method]?.(layer.id);
 }

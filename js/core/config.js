@@ -169,10 +169,6 @@ const CONFIG = {
 					brightness: 100
 				}
 			},
-			behavior: {
-				refineAffectsAllLayers: false,
-				glitterSelectionAffectsAllLayers: false
-			},
 			ui: {
 				settingsOpenByDefault: false
 			},
@@ -354,9 +350,7 @@ const CONFIG = {
 			{
 				id: 'layerCenterControls',
 				tool: 'select',
-				layerTypes: ['sticker', 'text-glitter', 'shape'],
 				allowMultiSelection: true,
-				requiresStickerSource: true,
 				controls: [
 					{ kind: 'toggle', id: 'contextAutoSelect', label: 'Auto-Select' },
 					{ kind: 'button', id: 'centerLayerHorizontal', icon: 'arrows-left-right', name: 'Center H', title: 'Center Horizontally', action: 'centerSelectionH' },
@@ -446,7 +440,9 @@ const CONFIG = {
 				{ key: 'Z', action: 'Zoom Tool' },
 				{ key: 'Arrow Keys', action: 'Nudge Selected Layer' },
 				{ key: 'Shift + Arrow Keys', action: 'Nudge Selected Layer 10px' },
-				{ key: 'Shift + Click', action: 'Add/Remove Movable Layer from Selection' },
+				{ key: 'Shift + Click Canvas', action: 'Add/Remove Movable Layer from Selection' },
+				{ key: 'Shift + Click Layer', action: 'Select Layer Range in Layers Panel' },
+				{ key: 'Ctrl/Cmd + Click Layer', action: 'Add/Remove One Layer in Layers Panel' },
 				{ key: 'Alt + Click', action: 'Cycle Through Overlapping Layers' },
 				{ key: 'Alt + Drag', action: 'Duplicate Layer(s) While Dragging' },
 				{ key: 'Ctrl + D', action: 'Duplicate Selected Layer(s)' },
@@ -552,6 +548,12 @@ const CONFIG = {
 		},
 		limits: {
 			maxFramesHardLimit: 1000,
+			colorAnalysis: {
+				paletteSize: 256,
+				significantColorCount: 1024,
+				maxFrames: 12,
+				maxPixelsPerFrame: 65536
+			},
 			sizeWarnings: [
 				{ label: 'Too large for X mobile', detail: '5 MB max', limitMB: 5 },
 				{ label: 'Tumblr may compress or flatten it', detail: 'Keep under 5 MB', limitMB: 5 },
@@ -711,7 +713,7 @@ const LAYER_UI_CONFIG = {
 		managerKey: 'glitterManager',
 		autoOpenDesignDrawerOnCreate: true,
 		onActivate: (editor, layer) => {
-			if (!hasMaskContent(layer) && layer.selectedGlitterId && editor.currentTool !== ToolType.BRUSH) {
+			if (!layer.locked && !hasMaskContent(layer) && layer.selectedGlitterId && editor.currentTool !== ToolType.BRUSH) {
 				editor.setTool(ToolType.COLOR_PICKER);
 			}
 			editor.updateGlitterSelection();

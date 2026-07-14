@@ -925,6 +925,7 @@ class MaskEditor {
 	_ensurePaintableLayer() {
 		let layer = this.editor.layerManager.getActiveLayer();
 		if (layer && layer.type === LayerType.GLITTER_FILL) {
+			if (!this.editor.canEditLayer(layer, { notify: true })) return null;
 			return layer;
 		}
 

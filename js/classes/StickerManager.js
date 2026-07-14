@@ -713,6 +713,7 @@ class StickerManager extends ContentManager {
 		// LOGIC: If active layer is a STICKER layer, replace it.
 		// Otherwise, create a NEW layer.
 		if (activeLayer && activeLayer.type === LayerType.STICKER) {
+			if (!this.editor.canEditLayer(activeLayer, { notify: true })) return;
 			// Replace the sticker in the current layer
 			activeLayer.name = stickerInfo.name;
 			activeLayer.stickerSourceId = stickerInfo.id;
@@ -767,6 +768,7 @@ class StickerManager extends ContentManager {
 
 		const existingElement = this.layerElements.get(layer.id);
 		const transform = this.layerTransforms.get(layer.id) || new LayerTransform(layer, this.editor);
+		transform.removeHoverOutline();
 		if (existingElement?.parentNode) {
 			existingElement.parentNode.removeChild(existingElement);
 		}

@@ -9,6 +9,7 @@ class LayerTransform {
         this.layer = layer;
         this.editor = editor;
         this.element = null;
+		this.hoverOutline = null;
 
         // Transform handles state (desktop only)
         this.transformHandles = null;
@@ -143,6 +144,7 @@ applyTransform(element, dimensions) {
     } else if (this.layer.type === LayerType.SHAPE) {
         this.editor.shapeGlitterManager?.syncElementScale?.(this.layer, element);
     }
+	this.updateHoverOutlinePosition();
 }
 
     // ===== TRANSFORM UPDATES =====
@@ -304,6 +306,40 @@ updateTransform(updates) {
         };
     }
 
+	showHoverOutline() {
+		if (
+			this.layer.type !== LayerType.STICKER
+			|| this.editor.currentTool !== ToolType.SELECT
+			|| this.editor.layerManager.isLayerSelected(this.layer.id)
+		) return;
+
+		this.removeHoverOutline();
+		const outline = document.createElement('div');
+		outline.className = 'transform-hover-outline';
+		outline.dataset.layerId = this.layer.id;
+		this.editor.canvasElementsContainer.appendChild(outline);
+		this.hoverOutline = outline;
+		this.updateHoverOutlinePosition();
+	}
+
+	updateHoverOutlinePosition() {
+		if (!this.hoverOutline) return;
+		const transform = this.getTransform();
+		const metrics = this.getFrameMetrics(transform);
+		this.hoverOutline.style.cssText = `
+			left: ${metrics.centerX}px;
+			top: ${metrics.centerY}px;
+			width: ${metrics.displayWidth}px;
+			height: ${metrics.displayHeight}px;
+			transform: translate(-50%, -50%) rotate(${transform.rotation}deg);
+		`;
+	}
+
+	removeHoverOutline() {
+		this.hoverOutline?.remove();
+		this.hoverOutline = null;
+	}
+
     getCanvasPointFromClient(clientX, clientY) {
         return this.editor.viewport.screenToCanvas(clientX, clientY);
     }
@@ -324,7 +360,8 @@ updateTransform(updates) {
         }
 
         const topLayer = this.editor.layerManager.getTopVisibleLayerAtPoint(x, y, {
-            includeBase: false
+			includeBase: false,
+			excludeLocked: true
         });
         if (topLayer && topLayer.id !== this.layer.id) {
             this.editor.layerManager.setActiveLayer(topLayer.id);
@@ -437,6 +474,10 @@ setupMouseDrag(element) {
 	let dragTransform = this;
 	let dragSourceTransform = this;
 	let altCloneId = null;
+	if (this.layer.type === LayerType.STICKER) {
+		element.addEventListener('mouseenter', () => this.showHoverOutline());
+		element.addEventListener('mouseleave', () => this.removeHoverOutline());
+	}
 
 const swallowFollowupClick = () => {
     this.editor.ignoreNextClick = true;
@@ -447,6 +488,7 @@ const swallowFollowupClick = () => {
     
 	const handleMouseDown = (e) => {
     if (e.button !== 0) return; // Left click only
+	this.removeHoverOutline();
 	const pinnedTransform = this.editor.currentTool === ToolType.SELECT
 		&& !CONFIG.app.behavior.autoSelect
 		&& !this.editor.layerManager.hasMultiSelection()
@@ -768,6 +810,7 @@ const handleMouseMove = (e) => {
      * Only works when CONFIG.ui.stickerHandles.enabled is true
      */
 createTransformHandles() {
+	this.removeHoverOutline();
     // Check if handles are enabled
     if (!CONFIG.ui.stickerHandles.enabled) return;
     
@@ -810,6 +853,7 @@ createTransformHandles() {
     const boundingBox = document.createElement('div');
     boundingBox.className = 'transform-bounding-box';
     boundingBox.dataset.handleType = 'move';
+	boundingBox.title = 'Move. Shift constrains movement; Alt-drag duplicates; Ctrl bypasses snapping.';
     container.appendChild(boundingBox);
     
     // Create corner handles
@@ -818,6 +862,7 @@ createTransformHandles() {
         const handleWrapper = document.createElement('div');
         handleWrapper.className = 'transform-handle-wrapper';
         handleWrapper.dataset.handleType = `corner-${corner}`;
+		handleWrapper.title = 'Resize. Alt resizes from the center.';
         
         const handle = document.createElement('div');
         handle.className = `transform-handle transform-handle-corner corner-${corner}`;
@@ -832,6 +877,7 @@ createTransformHandles() {
             const handleWrapper = document.createElement('div');
             handleWrapper.className = 'transform-handle-wrapper';
             handleWrapper.dataset.handleType = `edge-${edge}`;
+			handleWrapper.title = 'Resize one side. Alt resizes from the center.';
 
             const handle = document.createElement('div');
             handle.className = `transform-handle transform-handle-edge edge-${edge}`;
@@ -849,6 +895,7 @@ createTransformHandles() {
     const rotationWrapper = document.createElement('div');
     rotationWrapper.className = 'transform-handle-wrapper';
     rotationWrapper.dataset.handleType = 'rotation';
+	rotationWrapper.title = 'Rotate. Hold Shift to snap to 15 degree increments.';
     
     const rotationHandle = document.createElement('div');
     rotationHandle.className = 'transform-handle transform-handle-rotation';
@@ -1643,6 +1690,7 @@ removeTransformHandles() {
     destroy() {
         // Remove transform handles
         this.removeTransformHandles();
+		this.removeHoverOutline();
 
         // Clear element reference
         this.element = null;

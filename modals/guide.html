@@ -170,7 +170,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Select Tool (<kbd class="guide-kbd">V</kbd>)</strong> – Pick layers and move stickers, text, and shapes. Nudge the selected layer with the arrow keys (hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span> steps).</p>
+                    <p><strong>Select Tool (<kbd class="guide-kbd">V</kbd>)</strong> – Pick layers and move stickers, text, and shapes. Turn off <strong>Auto-Select</strong> in the Select options when canvas drags should keep moving the layer already selected in the Layers panel. Nudge the selected layer with the arrow keys (hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span> steps).</p>
 
                     <p>When a sticker, text, or shape layer is selected, alignment buttons appear:</p>
                     <ul>
@@ -178,7 +178,8 @@
                         <li>Center layer vertically</li>
                     </ul>
                     <ul>
-                        <li>Hold <kbd class="guide-kbd">Shift</kbd> and click layers on the canvas or in the layer list to add or remove movable layers from the selection.</li>
+                        <li>On the canvas, hold <kbd class="guide-kbd">Shift</kbd> and click to add or remove a movable layer.</li>
+                        <li>In the Layers panel, <kbd class="guide-kbd">Shift</kbd>-click selects the range between two layers; <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Click</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Click</kbd></span> toggles one layer.</li>
                         <li>Hold <kbd class="guide-kbd">Alt</kbd> and click to cycle through overlapping layers under the pointer.</li>
                     </ul>
                 </div>
@@ -337,7 +338,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Sticker, text, and shape layers have transform handles: drag to move, corner handles to resize or scale, side handles resize box text and shapes, and the top handle rotates.</p>
+                    <p>Sticker, text, and shape layers have transform handles: drag inside the box to move, use corner handles to resize or scale, and use the top handle to rotate. Side handles scale stickers and shapes along one axis. For text, Point mode handles scale the text while Box mode handles resize the text box without changing the type size.</p>
                     <ul>
 						<li>Hold <kbd class="guide-kbd">Shift</kbd> while rotating — with the handle or the Rotation slider — to snap to 15<span class="setting-unit">°</span> increments.</li>
 						<li>Hold <kbd class="guide-kbd">Shift</kbd> while dragging to axis-lock movement. The Transform card also gives exact X/Y, W/H, rotation, opacity, alignment, flip, and reset controls. Arrow keys nudge the selected layer (<kbd class="guide-kbd">Shift</kbd> = 10<span class="setting-unit">px</span>).</li>
@@ -373,7 +374,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Click the <strong>lock icon</strong> to prevent changes.</p>
+                    <p>Click the <strong>lock icon</strong> to prevent canvas transforms and property changes while keeping the layer available for selection and inspection. The Base layer remains editable because its lock means fixed to the canvas rather than read-only.</p>
                 </div>
             </div>
 
@@ -406,7 +407,7 @@
 
         <div class="guide-subsection">
             <h4 id="selection-alignment">Selection &amp; Alignment</h4>
-            <p><strong>Selection:</strong> Drag on empty canvas to marquee-select layers; hold <kbd class="guide-kbd">Shift</kbd> while dragging to add to the selection. Use <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">A</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">A</kbd></span> to select every movable layer, <kbd class="guide-kbd">Escape</kbd> to clear a multi-selection, and hold <kbd class="guide-kbd">Alt</kbd> while dragging to duplicate layers. Hold <kbd class="guide-kbd">Alt</kbd> while clicking to cycle overlapping layers.</p>
+            <p><strong>Selection:</strong> Drag on empty canvas to marquee-select layers; hold <kbd class="guide-kbd">Shift</kbd> while dragging to add to the selection. On the canvas, <kbd class="guide-kbd">Shift</kbd>-click toggles a movable layer. In the Layers panel, <kbd class="guide-kbd">Shift</kbd>-click selects a range and <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Click</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Click</kbd></span> toggles one layer. Use <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">A</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">A</kbd></span> to select every movable layer, <kbd class="guide-kbd">Escape</kbd> to clear a multi-selection, and hold <kbd class="guide-kbd">Alt</kbd> while dragging to duplicate layers. Hold <kbd class="guide-kbd">Alt</kbd> while clicking to cycle overlapping layers.</p>
 			<p><strong>Editing shortcuts:</strong> Double-click a text layer to focus its text field, or double-click a layer name to rename it. Use <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">D</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">D</kbd></span> to duplicate the selection. Hold <kbd class="guide-kbd">Space</kbd> to pan temporarily. Hold <kbd class="guide-kbd">Alt</kbd> while resizing to scale from the center. <kbd class="guide-kbd">Escape</kbd> closes active pickers or cancels an active transform before clearing selection. Use <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Y</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Y</kbd></span> or <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span> to redo.</p>
 			<div class="guide-item">
 				<div class="guide-item-icon">
@@ -468,7 +469,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Show Only Active Layer</strong> – Isolate the currently selected layer.</p>
+                    <p><strong>Show Only Selected Layer</strong> – Temporarily isolate the selected layer on the canvas. Click again to show every visible layer. This changes only the canvas view, not the export or layer visibility settings.</p>
                 </div>
             </div>
         </div>
@@ -657,7 +658,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Texture Scale and Opacity are adjusted independently for each glitter layer. The separate <strong>Apply to All Glitter Layers</strong> toggle in Refine Selection applies only to Threshold and Feather.</p>
+                    <p>Texture Scale, Opacity, Threshold, and Feather are adjusted independently for each glitter fill layer.</p>
                 </div>
             </div>
         </div>
@@ -1195,7 +1196,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-					<p>Use the <strong>Project</strong> section in the Canvas panel to name your project. That name is reused for <strong>Export GIF</strong>, <strong>Export MP4</strong>, and <strong>Save Project</strong>; leave it blank to use the default file name.</p>
+					<p>Use the <strong>Project</strong> section in the Canvas panel to name your project. That name is reused for exports and <strong>Save Project</strong>; leave it blank to use the default file name.</p>
                 </div>
             </div>
 
@@ -1221,7 +1222,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Click <strong>Export</strong> to generate your animated GIF or MP4 video.</p>
+                    <p>Click <strong>Export</strong> to generate an animated GIF. MP4 is also available when the browser supports video encoding.</p>
                 </div>
             </div>
 
@@ -1241,11 +1242,11 @@
             <h4>Export Settings:</h4>
 			<div class="guide-item">
 				<div class="guide-item-icon empty"><span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span></div>
-				<div class="guide-item-content"><p><strong>Format</strong> – Choose GIF or MP4. MP4 uses the matte color because video does not support transparency.</p></div>
+				<div class="guide-item-content"><p><strong>Format</strong> – GIF is available on every supported browser. MP4 appears only when the device supports video encoding and uses the matte color because video does not support transparency.</p></div>
 			</div>
 			<div class="guide-item">
 				<div class="guide-item-icon empty"><span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span></div>
-				<div class="guide-item-content"><p><strong>Repeat Animation (MP4)</strong> – Repeat the complete frame sequence in the video. The live frame count and Video Duration account for frame-control settings.</p></div>
+				<div class="guide-item-content"><p><strong>Video Length (MP4)</strong> – Choose <strong>Exact duration</strong> to end at the entered time, even partway through a loop, or <strong>Complete loops</strong> to end after a whole number of animation loops. The estimated video length updates before export.</p></div>
 			</div>
 			<div class="guide-item">
 				<div class="guide-item-icon empty"><span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span></div>
@@ -1268,7 +1269,7 @@
 					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
 				</div>
 				<div class="guide-item-content">
-					<p><strong>Base Image</strong> – Include/exclude the original image.</p>
+					<p><strong>Watermark</strong> – Add the optional watermark to the exported result.</p>
                 </div>
             </div>
             <div class="guide-item">
@@ -1305,7 +1306,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Quality</strong> – Lower values = better quality but slower (1 is best).</p>
+                    <p><strong>Color Quality</strong> – Preserve subtle color differences more accurately. Higher quality takes longer to export but does not change the image dimensions.</p>
                 </div>
             </div>
             <div class="guide-item">
@@ -1317,7 +1318,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Frame Delay</strong> – Animation speed (110<span class="setting-unit">ms</span> is classic).</p>
+                    <p><strong>Fallback Frame Time</strong> – Used only when an animation source has no usable timing information. Source GIF timing is otherwise preserved.</p>
                 </div>
             </div>
             <div class="guide-item">
@@ -1329,7 +1330,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Max Frames</strong> – Limit animation length.</p>
+                    <p><strong>Frame Control</strong> – <strong>Frame Limit</strong> is a target for animation complexity, not its length. <strong>Optimization Goal</strong> chooses between fine motion and a smaller file; <strong>Smart Frame Reduction</strong> combines frames that look the same without changing playback length. <strong>Keep Fewer Frames</strong> is a manual override, and <strong>Motion Detail</strong> controls how often faster visual changes are checked.</p>
                 </div>
             </div>
             <div class="guide-item">
@@ -1341,11 +1342,11 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Dithering</strong> – Algorithm for color reduction.</p>
+                    <p><strong>Dithering</strong> – Helps gradients look smoother when GIF's limited color palette blends similar colors together.</p>
                     <ul>
                         <li>GIFs can contain up to 256 colors from the 24-bit RGB color space.</li>
                         <li>Dithering adds controlled noise or patterns to simulate more colors.</li>
-                        <li>Dithering is not available when exporting base images with transparency.</li>
+						<li>Dithering is disabled when GIF transparency is active so transparent pixels remain reliable.</li>
                     </ul>
                 </div>
             </div>
@@ -1399,7 +1400,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Enable <strong>Show Only Active Layer</strong> to focus on one layer at a time.</p>
+                    <p>Enable <strong>Show Only Selected Layer</strong> below the preview to focus on one layer at a time without changing the export.</p>
                 </div>
             </div>
             <div class="guide-item">
@@ -1411,7 +1412,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Use <strong>Apply to All Glitter Layers</strong> in Refine Selection when Threshold and Feather should stay consistent across glitter layers.</p>
+                    <p>Turn off <strong>Auto-Select</strong> when you want to choose a layer in the Layers panel and keep moving that layer even when the pointer passes over other artwork.</p>
                 </div>
             </div>
 
@@ -1443,7 +1444,7 @@
 					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
 				</div>
 				<div class="guide-item-content">
-					<p><strong>Video option:</strong> In Export Settings, choose <strong>MP4</strong>, set Repeat Animation long enough for your Story, then export and save or share the video. This is usually simpler than pasting a GIF. Instagram may recompress uploaded video, which can soften fine glitter texture or small details; use the <strong>High</strong> quality preset if the result needs more detail.</p>
+					<p><strong>Video option:</strong> If MP4 is available on the device, choose <strong>Exact duration</strong> and enter the Story length you need, such as 15 seconds, then export and save or share the video. Instagram may recompress uploaded video, which can soften fine glitter texture or small details; use the <strong>High</strong> quality preset if the result needs more detail.</p>
 				</div>
 			</div>
 

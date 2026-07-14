@@ -89,6 +89,50 @@ class GifExporter {
 		host.hidden = warnings.length === 0;
 	}
 
+	_analyzeGifColors(frames) {
+		const settings = CONFIG.export?.limits?.colorAnalysis;
+		if (!settings || !frames?.length) return null;
+
+		const frameSampleCount = Math.min(frames.length, settings.maxFrames);
+		const frameIndexes = new Set();
+		for (let index = 0; index < frameSampleCount; index++) {
+			const position = frameSampleCount === 1
+				? 0
+				: Math.round((index * (frames.length - 1)) / (frameSampleCount - 1));
+			frameIndexes.add(position);
+		}
+
+		let observedColorCount = 0;
+		for (const frameIndex of frameIndexes) {
+			const imageData = this._getFrameImageData(frames[frameIndex]);
+			if (!imageData) continue;
+			const pixelCount = imageData.width * imageData.height;
+			const pixelStep = Math.max(1, Math.ceil(pixelCount / settings.maxPixelsPerFrame));
+			const colors = new Set();
+			for (let pixel = 0; pixel < pixelCount; pixel += pixelStep) {
+				const offset = pixel * 4;
+				const color = (imageData.data[offset] << 16)
+					| (imageData.data[offset + 1] << 8)
+					| imageData.data[offset + 2];
+				colors.add(color);
+				if (colors.size > settings.significantColorCount) {
+					return {
+						significant: true,
+						observedColorCount: colors.size,
+						paletteSize: settings.paletteSize
+					};
+				}
+			}
+			observedColorCount = Math.max(observedColorCount, colors.size);
+		}
+
+		return {
+			significant: false,
+			observedColorCount,
+			paletteSize: settings.paletteSize
+		};
+	}
+
 	_getFrameImageData(frame, fallbackWidth = null, fallbackHeight = null) {
 		if (frame instanceof ImageData) {
 			return frame;
@@ -1235,6 +1279,8 @@ class GifExporter {
 		plan.width = canvasData.width;
 		plan.height = canvasData.height;
 		plan.frameDelay = plan.totalDuration / plan.frames.length;
+		plan.colorAnalysis = this._analyzeGifColors(plan.frames);
+		if (plan.colorAnalysis) plan.colorAnalysis.ditherEnabled = Boolean(exportSettings.ditherEnabled);
 		plan.reductions = [];
 		if (plan.reduction.exactDuplicatesMerged) plan.reductions.push({ reason: 'exact-duplicates', count: plan.reduction.exactDuplicatesMerged });
 		if (plan.reduction.nearDuplicatesMerged) plan.reductions.push({ reason: 'near-duplicates', count: plan.reduction.nearDuplicatesMerged });
@@ -2074,6 +2120,16 @@ class GifExporter {
 
 		}
 		this._renderSizeWarnings(document.getElementById('exportSizeWarnings'), fileSize);
+		const formatNotices = document.getElementById('exportFormatNotices');
+		const colorNoticeText = document.getElementById('exportColorNoticeText');
+		const colorAnalysis = options.timelinePlan?.colorAnalysis;
+		const showColorNotice = !isVideo && Boolean(colorAnalysis?.significant);
+		if (formatNotices) formatNotices.hidden = !showColorNotice;
+		if (showColorNotice && colorNoticeText) {
+			colorNoticeText.textContent = colorAnalysis.ditherEnabled
+				? 'GIFs can display up to 256 colors in each frame. This artwork uses many more, so similar colors were blended together. Dithering helps gradients look smoother, but may add a fine texture.'
+				: 'GIFs can display up to 256 colors in each frame. This artwork uses many more, so similar colors were blended together. Gradients and photos may show bands of color; turn on Dithering in Export Settings to smooth them.';
+		}
 
 		const timelinePlan = options.timelinePlan?.reduction ? options.timelinePlan : null;
 		const reductionSummary = document.getElementById('exportReductionSummary');

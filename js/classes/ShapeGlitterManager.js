@@ -279,6 +279,7 @@ class ShapeGlitterManager {
 	}
 
 	applyShapeToLayer(layer, shapeId) {
+		if (!this.editor.canEditLayer(layer, { notify: true })) return false;
 		layer.shapeData.shapeId = shapeId;
 		layer.name = this.getShapeLabel(shapeId);
 		const size = Math.max(layer.shapeData.width, layer.shapeData.height);
@@ -290,6 +291,7 @@ class ShapeGlitterManager {
 		this.loadLayerSettings(layer);
 		this.editor.saveState();
 		this.editor.layerManager.renderLayersList();
+		return true;
 	}
 
 	_cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }

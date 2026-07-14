@@ -366,6 +366,7 @@ async initBrowser() {
 			this.editor.showError('Please select a glitter or text layer');
 			return;
 		}
+		if (!this.editor.canEditLayer(layer, { notify: true })) return;
 
 		if (layer.type !== LayerType.BASE_IMAGE && layer.type !== LayerType.GLITTER_FILL && layer.type !== LayerType.TEXT_GLITTER && layer.type !== LayerType.SHAPE && layer.type !== LayerType.STICKER) {
 			this.editor.showError('You can only add glitter to a background or supported layer effect');
