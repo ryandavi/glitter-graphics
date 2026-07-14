@@ -13,7 +13,7 @@ class ModalManager {
  * 
  * @param {string} id - Modal element ID
  * @param {Object} options - Configuration
- * @param {string} options.openBtnId - ID of button that opens modal
+ * @param {string|string[]} options.openBtnId - ID(s) of buttons that open modal
  * @param {string|string[]} options.closeBtnId - ID(s) of button(s) that close modal
  * @param {Function} options.onOpen - Callback when modal opens
  * @param {Function} options.onClose - Callback when modal closes
@@ -42,10 +42,14 @@ class ModalManager {
 		.map(id => document.getElementById(id))
 		.filter(btn => btn !== null);
 
+	const openBtnIds = Array.isArray(options.openBtnId)
+		? options.openBtnId
+		: (options.openBtnId ? [options.openBtnId] : []);
+
 	const config = {
 		id,
 		modal,
-		openBtn: options.openBtnId ? document.getElementById(options.openBtnId) : null,
+		openButtons: openBtnIds.map(id => document.getElementById(id)).filter(Boolean),
 		closeButtons: closeButtons, // Changed from closeBtn to closeButtons (array)
 		onOpen: options.onOpen || null,
 		onClose: options.onClose || null,
@@ -78,11 +82,9 @@ class ModalManager {
 }
 
 setupModalListeners(config) {
-	const { modal, openBtn, closeButtons, closeOnOutsideClick } = config;
+	const { modal, openButtons, closeButtons, closeOnOutsideClick } = config;
 
-	if (openBtn) {
-		openBtn.addEventListener('click', () => this.open(config.id));
-	}
+	openButtons.forEach(openBtn => openBtn.addEventListener('click', () => this.open(config.id)));
 
 	// Setup all close buttons
 	closeButtons.forEach(closeBtn => {
@@ -319,4 +321,3 @@ setupModalListeners(config) {
 		return null;
 	}
 }
-

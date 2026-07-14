@@ -171,7 +171,7 @@ class ShapeGlitterManager {
 		ShapeLibrary.FILL_SHAPES.forEach(({ id, label }) => {
 			const card = this.buildShapeCard(id, label, 'asset-option shape-gallery-option');
 			card.addEventListener('click', () => {
-				const armedLayer = this.editor.layerManager.layers.find((layer) => layer.id === this.shapeChangeLayerId);
+				const armedLayer = this.editor.layerManager.getLayerById(this.shapeChangeLayerId);
 				const targetLayer = armedLayer?.type === LayerType.SHAPE ? armedLayer : this.getActiveShapeLayer();
 				if (targetLayer) {
 					this.applyShapeToLayer(targetLayer, id);
@@ -388,7 +388,7 @@ class ShapeGlitterManager {
 		const transform = this.layerTransforms.get(layerId);
 		if (!transform) return;
 		transform.updateTransform(updates);
-		const layer = this.editor.layerManager.layers.find((l) => l.id === layerId);
+		const layer = this.editor.layerManager.getLayerById(layerId);
 		const element = this.layerElements.get(layerId);
 		if (layer && element) {
 			const measurement = this.getMeasurementEntry(layer);
@@ -421,32 +421,35 @@ class ShapeGlitterManager {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
 		this.shapeChangeLayerId = null;
-		this.pickerSession = { layerId: layer.id, slot };
-		revealAssetBrowser(this.editor, this.editor.glitterManager);
-		this.updatePickerStrip();
+		pickerOpenSession(this, { layerId: layer.id, slot }, {
+			refresh: () => this.updatePickerStrip(),
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager)
+		});
 	}
 
 	armShapeAssetPicker() {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
 		this.shapeChangeLayerId = layer.id;
-		this.pickerSession = null;
+		pickerCloseSession(this, { refresh: () => this.updatePickerStrip() });
 		this.updatePickerStrip();
-		this.editor.setCollapsibleSectionOpen?.('designGallery', true, true);
-		this.ui.gallery?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+		revealAssetBrowser(this.editor);
+		requestAnimationFrame(() => requestAnimationFrame(() => {
+			this.ui.gallery?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+		}));
 	}
 
 	closePickerSession() {
-		this.pickerSession = null;
-		this.updatePickerStrip();
+		pickerCloseSession(this, {
+			refresh: () => this.updatePickerStrip(),
+			updateSelection: () => this.editor.updateGlitterSelection()
+		});
 	}
 
 	// Which shape slot the next gallery pick targets ('fill' when not armed).
 	getGlitterSelectionTarget() {
 		const layer = this.getActiveShapeLayer();
-		const s = this.pickerSession;
-		if (layer && s && s.layerId === layer.id) return s.slot;
-		return 'fill';
+		return pickerSelectionTarget(this, layer, { fallback: 'fill' });
 	}
 
 	// The glitter id the gallery should highlight for this layer — the armed
@@ -469,23 +472,18 @@ class ShapeGlitterManager {
 		// text manager (both are called from app.updateSidePanelUI).
 		if (!layer) return;
 
-		if (!armed && !assetArmed) {
-			strip.hidden = true;
-			strip.classList.remove('is-armed', 'is-hint');
-			this.ui.gallerySection?.classList.remove('picker-mode');
-			return;
-		}
-
-		strip.hidden = false;
-		strip.classList.add('is-armed');
-		strip.classList.remove('is-hint');
-		this.ui.gallerySection?.classList.toggle('picker-mode', armed);
-		if (this.ui.pickerStripDone) this.ui.pickerStripDone.hidden = false;
-		const stripText = assetArmed
-			? formatAssetPickerStripText('shape', layer.name)
-			: formatPickerStripText(s.slot, layer.name, 'shape');
-		if (this.ui.pickerStripTitle) this.ui.pickerStripTitle.textContent = stripText.title;
-		if (this.ui.pickerStripDetail) this.ui.pickerStripDetail.textContent = stripText.detail;
+		const stripText = !armed && !assetArmed
+			? {}
+			: assetArmed
+				? formatAssetPickerStripText('shape', layer.name)
+				: formatPickerStripText(s.slot, layer.name, 'shape');
+		renderPickerStrip({
+			ownsStrip: true,
+			visible: armed || assetArmed,
+			armed: armed || assetArmed,
+			pickerMode: armed,
+			...stripText
+		});
 	}
 
 	// Done/Esc from the shared strip when a shape is active.
@@ -493,7 +491,7 @@ class ShapeGlitterManager {
 		if (this.shapeChangeLayerId) {
 			this.shapeChangeLayerId = null;
 			this.updatePickerStrip();
-			this.returnToShapeProperties('fill');
+			this.returnToShapeProperties('asset');
 			return;
 		}
 		const slot = this.pickerSession?.slot || 'fill';
@@ -502,15 +500,12 @@ class ShapeGlitterManager {
 	}
 
 	returnToShapeProperties(slot = 'fill') {
-		if (this.editor.mobileManager?.isMobile) {
-			if (this.editor.mobileManager.activeDrawer === 'design') {
-				this.editor.mobileManager.closeAllDrawers();
-			}
-			return;
-		}
-		this.editor.setCollapsibleSectionOpen?.('shapeSettings', true, true);
-		const chipId = slot === 'border' ? 'shapeBorderGlitterChip' : slot === 'shadow' ? 'shapeShadowGlitterChip' : 'shapeFillGlitterChip';
-		requestAnimationFrame(() => document.getElementById(chipId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+		const chipId = slot === 'asset'
+			? 'shapeAssetChange'
+			: slot === 'border'
+				? 'shapeBorderGlitterChip'
+				: slot === 'shadow' ? 'shapeShadowGlitterChip' : 'shapeFillGlitterChip';
+		returnFromPickerToProperties(this.editor, { section: 'shapeSettings', focusId: chipId });
 	}
 
 	_refreshSourceUI(layer, slot) {
@@ -562,6 +557,9 @@ class ShapeGlitterManager {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		this.normalizeLayer(layer);
 		const d = layer.shapeData;
+		const fillDefaults = this.getDefaultFill();
+		const borderDefaults = this.getDefaultBorder();
+		const shadowDefaults = this.getDefaultShadow();
 		if (this.ui.assetThumbnail) this.ui.assetThumbnail.innerHTML = ShapeLibrary.getIconSvg(d.shapeId);
 		if (this.ui.assetName) this.ui.assetName.textContent = this.getShapeLabel(d.shapeId);
 
@@ -576,32 +574,32 @@ class ShapeGlitterManager {
 		// .text-effect-controls is display:none until it has the .visible class
 		// (NOT the hidden attribute) — reuse the same mechanism as text.
 		if (this.ui.borderControls) this.ui.borderControls.classList.toggle('visible', Boolean(border));
-		const bd = border || this.getDefaultBorder();
+		const bd = border || borderDefaults;
 		if (this.ui.borderWidth) { this.ui.borderWidth.value = bd.widthPx; this.ui.borderWidthValue.innerHTML = formatUnit(bd.widthPx, 'px'); }
-		if (this.ui.borderDotSpacing) { this.ui.borderDotSpacing.value = bd.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx; this.ui.borderDotSpacingValue.innerHTML = formatUnit(bd.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, 'px'); }
-		if (this.ui.borderOpacity) { this.ui.borderOpacity.value = bd.opacity ?? 100; this.ui.borderOpacityValue.innerHTML = formatUnit(bd.opacity ?? 100, '%'); }
+		if (this.ui.borderDotSpacing) { this.ui.borderDotSpacing.value = bd.dotSpacingPx ?? borderDefaults.dotSpacingPx; this.ui.borderDotSpacingValue.innerHTML = formatUnit(bd.dotSpacingPx ?? borderDefaults.dotSpacingPx, 'px'); }
+		if (this.ui.borderOpacity) { this.ui.borderOpacity.value = bd.opacity ?? borderDefaults.opacity; this.ui.borderOpacityValue.innerHTML = formatUnit(bd.opacity ?? borderDefaults.opacity, '%'); }
 		if (this.ui.shapeBorderColor) this.ui.shapeBorderColor.value = bd.color || '#000000';
 		this._syncBorderStyleUI(bd);
 		this._syncBorderEdgeUI(bd);
 		this._syncBorderPlacementUI(bd);
 		this._syncBorderDrawOrderUI(bd);
-		this._loadColorAdjust('shapeBorder', bd.colorAdjust, bd.scale);
+		this._loadColorAdjust('shapeBorder', bd.colorAdjust, bd.scale ?? borderDefaults.scale);
 
 		// Shadow
 		const shadow = d.shadow;
 		if (this.ui.shadowEnabled) this.ui.shadowEnabled.checked = Boolean(shadow);
 		if (this.ui.shadowControls) this.ui.shadowControls.classList.toggle('visible', Boolean(shadow));
-		const sd = shadow || this.getDefaultShadow();
+		const sd = shadow || shadowDefaults;
 		if (this.ui.shadowOffsetX) { this.ui.shadowOffsetX.value = sd.offsetX; this.ui.shadowOffsetXValue.innerHTML = formatUnit(sd.offsetX, 'px'); }
 		if (this.ui.shadowOffsetY) { this.ui.shadowOffsetY.value = sd.offsetY; this.ui.shadowOffsetYValue.innerHTML = formatUnit(sd.offsetY, 'px'); }
-		if (this.ui.shadowOpacity) { this.ui.shadowOpacity.value = sd.opacity ?? 100; this.ui.shadowOpacityValue.innerHTML = formatUnit(sd.opacity ?? 100, '%'); }
+		if (this.ui.shadowOpacity) { this.ui.shadowOpacity.value = sd.opacity ?? shadowDefaults.opacity; this.ui.shadowOpacityValue.innerHTML = formatUnit(sd.opacity ?? shadowDefaults.opacity, '%'); }
 		if (this.ui.shapeShadowColor) this.ui.shapeShadowColor.value = sd.color || '#000000';
-		this._loadColorAdjust('shapeShadow', sd.colorAdjust, sd.scale);
+		this._loadColorAdjust('shapeShadow', sd.colorAdjust, sd.scale ?? shadowDefaults.scale);
 
 		// Fill
 		if (this.ui.shapeFillColor) this.ui.shapeFillColor.value = d.fill.color || '#ff66cc';
-		if (this.ui.fillOpacity) { this.ui.fillOpacity.value = d.fill.opacity ?? 100; this.ui.fillOpacityValue.innerHTML = formatUnit(d.fill.opacity ?? 100, '%'); }
-		this._loadColorAdjust('shapeFill', d.fill.colorAdjust, d.fill.scale);
+		if (this.ui.fillOpacity) { this.ui.fillOpacity.value = d.fill.opacity ?? fillDefaults.opacity; this.ui.fillOpacityValue.innerHTML = formatUnit(d.fill.opacity ?? fillDefaults.opacity, '%'); }
+		this._loadColorAdjust('shapeFill', d.fill.colorAdjust, d.fill.scale ?? fillDefaults.scale);
 
 		this._refreshSourceUI(layer, 'fill');
 		this._refreshSourceUI(layer, 'border');
@@ -725,16 +723,22 @@ class ShapeGlitterManager {
 	}
 
 	getEffectData(layer, slot) {
-		return getSlotEffectData(layer.shapeData, slot);
+		this.normalizeLayer(layer);
+		return getSlotEffectData(layer?.shapeData, slot);
 	}
 
 	// mergeBorderDefaults is true: backfill newer border keys onto legacy data.
 	ensureEffectData(layer, slot) {
+		this.normalizeLayer(layer);
+		if (!layer?.shapeData) return null;
 		return ensureSlotEffectData(layer.shapeData, slot, {
-			fill: () => this.getDefaultFill(),
-			border: () => this.getDefaultBorder(),
-			shadow: () => this.getDefaultShadow()
-		}, true);
+			builders: {
+				fill: () => this.getDefaultFill(),
+				border: () => this.getDefaultBorder(),
+				shadow: () => this.getDefaultShadow()
+			},
+			mergeBorderDefaults: true
+		});
 	}
 
 	setBorderStyle(style) {
@@ -1413,35 +1417,19 @@ class ShapeGlitterManager {
 	// ===== SETTINGS / UI =====
 
 	centerHorizontal(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-		transform.centerHorizontal();
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) this.loadLayerSettings(layer);
+		movableCenterHorizontal(this, layerId, (layer) => this.loadLayerSettings(layer));
 	}
 
 	centerVertical(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-		transform.centerVertical();
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) this.loadLayerSettings(layer);
+		movableCenterVertical(this, layerId, (layer) => this.loadLayerSettings(layer));
 	}
 
 	alignToCanvas(layerId, mode) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-		transform.alignToCanvas(mode);
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) this.loadLayerSettings(layer);
+		movableAlignToCanvas(this, layerId, mode, (layer) => this.loadLayerSettings(layer));
 	}
 
 	resetTransform(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-		transform.resetTransform();
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) this.loadLayerSettings(layer);
+		movableResetTransform(this, layerId, (layer) => this.loadLayerSettings(layer));
 	}
 
 	// ===== HOUSEKEEPING =====
@@ -1468,12 +1456,11 @@ class ShapeGlitterManager {
 	}
 
 	removeTransformHandles() {
-		this.layerTransforms.forEach((transform) => transform.removeTransformHandles());
+		movableRemoveTransformHandles(this);
 	}
 
 	createTransformHandles(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (transform) transform.createTransformHandles();
+		movableCreateTransformHandles(this, layerId);
 	}
 
 	// Hit-test frame in canvas space (for the transform system / selection).

@@ -82,11 +82,13 @@ function ensureSlotColorAdjust(target) {
 	return target.colorAdjust;
 }
 
-// root is layer.textData or layer.shapeData. builders maps slot -> default
-// factory. mergeBorderDefaults backfills newer border keys onto legacy data
-// (shape does this here; text does it in normalizeLayer, so it passes false).
-function ensureSlotEffectData(root, slot, builders, mergeBorderDefaults) {
+// root is layer.textData or layer.shapeData. options.builders maps slot ->
+// default factory; options.mergeBorderDefaults backfills newer border keys
+// onto legacy data (shape does this here; text does it in normalizeLayer).
+function ensureSlotEffectData(root, slot, options = {}) {
+	const { builders, mergeBorderDefaults = false } = options;
 	if (!root) return null;
+	if (!builders?.[slot]) return null;
 	if (!root[slot]) {
 		root[slot] = builders[slot]();
 	} else if (slot === 'border' && mergeBorderDefaults) {

@@ -20,6 +20,8 @@ class GestureManager {
 		this.boundPointerUp = this.handlePointerUp.bind(this);
 		this.boundPointerCancel = this.handlePointerCancel.bind(this);
 		this.boundClickCapture = this.handleClickCapture.bind(this);
+		this.boundLostPointerCapture = this.handleLostPointerCapture.bind(this);
+		this.boundCancelActiveGesture = this.cancelActiveGesture.bind(this);
 
 		this.setupEventListeners();
 		this.setupIOSGestureGuards();
@@ -36,7 +38,10 @@ class GestureManager {
 		this.previewContainer.addEventListener('pointermove', this.boundPointerMove, options);
 		this.previewContainer.addEventListener('pointerup', this.boundPointerUp, options);
 		this.previewContainer.addEventListener('pointercancel', this.boundPointerCancel, options);
+		this.previewContainer.addEventListener('lostpointercapture', this.boundLostPointerCapture, options);
 		this.previewContainer.addEventListener('click', this.boundClickCapture, options);
+		window.addEventListener('blur', this.boundCancelActiveGesture);
+		document.addEventListener('visibilitychange', this.boundCancelActiveGesture);
 	}
 
 	setupIOSGestureGuards() {
@@ -135,6 +140,21 @@ class GestureManager {
 
 	handlePointerCancel(event) {
 		this.finishPointer(event);
+	}
+
+	handleLostPointerCapture(event) {
+		if (!this.pointers.has(event.pointerId)) return;
+		queueMicrotask(() => {
+			if (this.pointers.has(event.pointerId)) this.cancelActiveGesture();
+		});
+	}
+
+	cancelActiveGesture() {
+		if (document.visibilityState === 'visible' && document.hasFocus() && this.pointers.size === 0) return;
+		this.cancelRouteInteraction(this.route);
+		this.notifyGestureEnd();
+		this.pointers.clear();
+		this.resetGestureState();
 	}
 
 	finishPointer(event) {
@@ -571,9 +591,9 @@ class GestureManager {
 
 		if (route?.type === 'viewport') {
 			if (this.viewport.currentZoom >= 4) {
-				this.viewport.zoomToFit();
+				this.viewport.zoomToFit({ animate: true });
 			} else {
-				this.viewport.zoomIn(pointer.x, pointer.y);
+				this.viewport.zoomIn(pointer.x, pointer.y, { animate: true });
 			}
 		}
 	}
@@ -678,7 +698,7 @@ class GestureManager {
 	}
 
 	isTransformableLayer(layer) {
-		return Boolean(layer && isTransformableLayerType(layer.type));
+		return Boolean(layer && !layer.locked && isTransformableLayerType(layer.type));
 	}
 
 	isPointInLayer(layer, screenX, screenY) {
@@ -708,7 +728,10 @@ class GestureManager {
 		this.previewContainer.removeEventListener('pointermove', this.boundPointerMove, options);
 		this.previewContainer.removeEventListener('pointerup', this.boundPointerUp, options);
 		this.previewContainer.removeEventListener('pointercancel', this.boundPointerCancel, options);
+		this.previewContainer.removeEventListener('lostpointercapture', this.boundLostPointerCapture, options);
 		this.previewContainer.removeEventListener('click', this.boundClickCapture, options);
+		window.removeEventListener('blur', this.boundCancelActiveGesture);
+		document.removeEventListener('visibilitychange', this.boundCancelActiveGesture);
 	}
 }
 

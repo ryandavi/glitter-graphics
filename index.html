@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=115">
+	<link rel="stylesheet" href="css/style.css?v=127">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,12 +44,6 @@
 
 <body>
 
-	<!-- Mobile Top Navigation -->
-	<div class="mobile-top-nav">
-		<button class="mobile-tab-btn active" data-tab="image">Image</button>
-		<button class="mobile-tab-btn" data-tab="preview" disabled>Editor</button>
-	</div>
-
 	<div class="app-container">
 		<!-- Header -->
 		<div class="app-header">
@@ -60,6 +54,10 @@
 				</a>
 			</div>
 			<div class="app-header-right">
+				<button class="btn-icon-simple icon-wrapper mobile-only-action" id="mobileAppSettingsBtn" title="App Settings" aria-label="App Settings">
+					<svg class="icon"><use href="#icon-gear"></use></svg>
+					<span class="name">App Settings</span>
+				</button>
 
 				<button class="btn-icon-simple icon-wrapper" id="guideBtn" title="Info">
 					<svg class="icon">
@@ -164,7 +162,7 @@
 						<svg class="icon">
 							<use href="#icon-gear"></use>
 						</svg>
-						<span class="name">Export Settings</span>
+						<span class="name">App Settings</span>
 					</button>
 				</div>
 
@@ -184,6 +182,9 @@
 
 				<!-- Layers Panel -->
 				<div class="layers-panel" id="layersPanel">
+					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="layers" role="slider" tabindex="0" aria-label="Resize Layers panel" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="85" aria-valuenow="50">
+						<span></span>
+					</div>
 					<!-- Image Section -->
 					<div class="image-container section collapsible-section is-open" id="imagePanelSection">
 						<div class="section-header section-header-with-action" id="imagePanelHeader">
@@ -338,6 +339,9 @@
 
 				<!-- DesignColumn -->
 				<div class="design-panel" id="designPanel">
+					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="design" role="slider" tabindex="0" aria-label="Resize Design panel" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="85" aria-valuenow="50">
+						<span></span>
+					</div>
 					<!-- Gallery Header with Tabs -->
 					<div class="section main-section collapsible-section visible" id="designGallerySection">
 						<div class="section-header glitter-header section-header-with-action" id="designGalleryHeader">
@@ -407,7 +411,9 @@
 											</svg>
 											<span class="name">Filter</span>
 										</button>
+										<button class="btn-simple clear-active-filters" id="clearActiveGlitterFiltersBtn" type="button" hidden>Clear</button>
 									</div>
+									<div class="active-filter-summary" id="glitterActiveFilterSummary" aria-live="polite" hidden></div>
 									<div class="filters-container" id="filtersContainer">
 										<div class="filters-container-inner">
 
@@ -504,6 +510,7 @@
 										<div class="empty-state" id="glitterBrowserEmpty">
 											<div class="empty-state-icon">🔍</div>
 											<div class="empty-state-text" id="glitterBrowserEmptyText">No items found</div>
+											<button class="btn-simple empty-state-clear-filters" type="button" hidden>Clear search and filters</button>
 										</div>
 
 										<!-- Category Grid (shown by default) -->
@@ -543,7 +550,9 @@
 											</svg>
 											<span class="name">Filter</span>
 										</button>
+										<button class="btn-simple clear-active-filters" id="clearActiveStickerFiltersBtn" type="button" hidden>Clear</button>
 									</div>
+									<div class="active-filter-summary" id="stickerActiveFilterSummary" aria-live="polite" hidden></div>
 									<div class="filters-container" id="stickerFiltersContainer">
 										<div class="filters-container-inner">
 
@@ -632,6 +641,7 @@
 										<div class="empty-state" id="stickerBrowserEmpty">
 											<div class="empty-state-icon">🔍</div>
 											<div class="empty-state-text" id="stickerBrowserEmptyText">No items found</div>
+											<button class="btn-simple empty-state-clear-filters" type="button" hidden>Clear search and filters</button>
 										</div>
 
 										<!-- Category Grid (shown by default) -->
@@ -1663,7 +1673,7 @@
 							<div class="settings-row-control">
 								<div class="segmented-control" id="exportFormatControl" role="group" aria-label="Export format">
 									<button type="button" class="segmented-option active" data-export-format="gif" aria-pressed="true">GIF</button>
-									<button type="button" class="segmented-option" data-export-format="mp4" aria-pressed="false">MP4</button>
+									<button type="button" class="segmented-option" data-export-format="mp4" aria-pressed="false" hidden>MP4</button>
 								</div>
 							</div>
 						</div>
@@ -2020,40 +2030,53 @@
 	<!-- Mobile Bottom Navigation -->
 	<div class="mobile-bottom-nav">
 		<div class="mobile-drawer-btn-group">
-			<button class="mobile-drawer-btn" data-drawer="layers">
+			<button class="mobile-drawer-btn" data-drawer="layers" aria-controls="layersPanel" aria-expanded="false">
 				<div class="mobile-layers-swatch empty"></div>
 				Layers
 				<span class="mobile-layers-count" data-count="0"></span>
 			</button>
 		</div>
 
-		<div class="mobile-drawer-btn-group small">
-			<button class="btn-icon mobile-add-layer-btn active icon-wrapper" id="mobileAddLayerBtn" title="Add new layer">
-				<svg class="icon">
-					<use href="#icon-plus"></use>
-				</svg>
-				<span class="name">Add Layer</span>
+		<div class="mobile-drawer-btn-group mobile-add-layer-group">
+			<button class="mobile-drawer-btn icon-wrapper" id="mobileAddLayerBtn" type="button" title="Add new layer" aria-label="Add new layer">
+				<svg class="icon"><use href="#icon-plus"></use></svg>
 			</button>
 		</div>
 
 		<div class="mobile-drawer-btn-group">
-			<button class="mobile-drawer-btn" data-drawer="design">Design</button>
+			<button class="mobile-drawer-btn" data-drawer="design" aria-controls="designPanel" aria-expanded="false">Design</button>
+		</div>
+
+		<div class="mobile-drawer-btn-group">
+			<button class="mobile-drawer-btn" data-drawer="edit" id="mobileSettingsBtn" aria-controls="mobileSettingsDrawer" aria-expanded="false" disabled>Edit</button>
 		</div>
 	</div>
 
 	<!-- Mobile Settings Drawer -->
-	<div class="mobile-settings-drawer">
+	<div class="mobile-settings-drawer" id="mobileSettingsDrawer">
+		<div class="mobile-sheet-handle ui-ignore-gestures" id="mobileSettingsSheetHandle" data-mobile-drawer-handle="edit" role="slider" tabindex="0" aria-label="Resize Edit panel" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="85" aria-valuenow="50">
+			<span></span>
+		</div>
 
-
-		<button id="mobileSettingsBtn" class="icon-wrapper btn-icon mobile-settings-btn" disabled>
-			<svg class="icon">
-				<use href="#icon-sliders"></use>
-			</svg>
-			<span class="name">Settings</span>
-		</button>
-
-		<div class="mobile-settings-content" id="mobileSettingsContainer">
-			<!-- Desktop settings sections will be moved here temporarily on mobile -->
+		<div class="mobile-edit-section section" id="mobileEditSection">
+			<div class="section-header" id="mobileEditHeader" role="button" tabindex="0" aria-label="Close Edit panel">
+				<h3 class="section-header-title">
+					<span class="section-header-title-icon icon-wrapper sm">
+						<svg class="icon"><use href="#icon-sliders"></use></svg>
+						<span class="name">Edit</span>
+					</span>
+					<span class="section-header-title-text">Edit</span>
+				</h3>
+				<div class="section-header-actions" aria-hidden="true">
+					<button class="section-header-action btn-icon icon-wrapper mobile-edit-header-spacer" type="button" tabindex="-1" disabled>
+						<svg class="icon"><use href="#icon-chevron-down"></use></svg>
+						<span class="name">Close</span>
+					</button>
+				</div>
+			</div>
+			<div class="mobile-settings-content" id="mobileSettingsContainer">
+				<!-- Desktop settings sections will be moved here temporarily on mobile -->
+			</div>
 		</div>
 	</div>
 
@@ -2463,49 +2486,51 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=65"></script>
-	<script src="js/core/commands.js?v=1"></script>
+	<script src="js/core/config.js?v=67"></script>
+	<script src="js/core/commands.js?v=2"></script>
 	<script src="js/transforms/transform-math.js?v=3"></script>
+	<script src="js/transforms/movable-layer.js?v=1"></script>
 
 	<!-- Utils -->
 	<script src="js/core/utils.js?v=8"></script>
 	<script src="js/effects/color-adjust.js?v=2"></script>
 	<script src="js/effects/effect-source.js?v=12"></script>
-	<script src="js/effects/slot-effects.js?v=2"></script>
-	<script src="js/ui/panel-renderer.js?v=31"></script>
+	<script src="js/effects/slot-effects.js?v=3"></script>
+	<script src="js/ui/panel-renderer.js?v=32"></script>
+	<script src="js/ui/picker-session.js?v=3"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=1"></script>
 	<script src="js/core/debug.js?v=1"></script>
 
 	<!-- Classes -->
-	<script src="js/classes/GestureManager.js?v=4"></script>
-	<script src="js/classes/ModalManager.js?v=1"></script>
+	<script src="js/classes/GestureManager.js?v=7"></script>
+	<script src="js/classes/ModalManager.js?v=2"></script>
 	<script src="js/classes/GifExporter.js?v=25"></script>
 	<script src="js/classes/Mp4Exporter.js?v=3"></script>
-	<script src="js/classes/ViewportManager.js?v=1"></script>
-	<script src="js/classes/HistoryManager.js?v=10"></script>
-	<script src="js/classes/ProjectSerializer.js?v=10"></script>
+	<script src="js/classes/ViewportManager.js?v=3"></script>
+	<script src="js/classes/HistoryManager.js?v=11"></script>
+	<script src="js/classes/ProjectSerializer.js?v=11"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
 	<script src="js/classes/ShapeLibrary.js?v=5"></script>
 	<script src="js/classes/MaskEditor.js?v=14"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=32"></script>
+	<script src="js/classes/LayerManager.js?v=38"></script>
 
 	<!-- Content -->
-	<script src="js/classes/AssetBrowser.js"></script>
-	<script src="js/classes/ContentManager.js"></script>
-	<script src="js/classes/LayerTransform.js?v=30"></script>
-	<script src="js/classes/GlitterManager.js?v=24"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=6"></script>
-	<script src="js/classes/TextGlitterManager.js?v=48"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=38"></script>
-	<script src="js/classes/StickerManager.js?v=16"></script>
-	<script src="js/classes/GroupTransformManager.js?v=16"></script>
+	<script src="js/classes/AssetBrowser.js?v=2"></script>
+	<script src="js/classes/ContentManager.js?v=3"></script>
+	<script src="js/classes/LayerTransform.js?v=32"></script>
+	<script src="js/classes/GlitterManager.js?v=27"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=8"></script>
+	<script src="js/classes/TextGlitterManager.js?v=50"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=41"></script>
+	<script src="js/classes/StickerManager.js?v=20"></script>
+	<script src="js/classes/GroupTransformManager.js?v=17"></script>
 
-	<script src="js/classes/MobileManager.js?v=7"></script>
+	<script src="js/classes/MobileManager.js?v=14"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=124"></script>
+	<script src="js/app.js?v=129"></script>
 
 </body>
 

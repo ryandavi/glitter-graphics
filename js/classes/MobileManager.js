@@ -1,648 +1,522 @@
 // ============================================
 // MOBILE MANAGER CLASS
 // ============================================
-const MOBILE_SETTINGS_SECTION_CONFIG = {
-	tool: {
-		selector: '.layer-settings-section',
-		collapsibleName: 'layerSettings'
-	},
-	glitter: {
-		selector: '.glitter-settings-section',
-		collapsibleName: 'glitterSettings'
-	},
-	sticker: {
-		selector: '.sticker-settings-section',
-		collapsibleName: 'stickerSettings'
-	},
-	text: {
-		selector: '.text-settings-section',
-		collapsibleName: 'textSettings'
-	},
-	shape: {
-		selector: '.shape-settings-section',
-		collapsibleName: 'shapeSettings'
-	},
-	background: {
-		selector: '.base-layer-settings-section',
-		collapsibleName: 'baseLayerSettings'
-	},
-	brush: {
-		selector: '.brush-settings-section'
-	}
-};
-const MOBILE_SETTINGS_SECTION_KEYS = Object.keys(MOBILE_SETTINGS_SECTION_CONFIG);
-
 class MobileManager {
 	constructor(editor) {
 		this.editor = editor;
 		this.isMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
-		this.activeTab = 'image'; // image or preview
-		this.activeDrawer = null; // design, layers, or null
-		this.settingsOpen = false;
-		this.resizeObserver = null;
-
-		// Track original locations of settings sections
-		this.settingsSections = Object.fromEntries(MOBILE_SETTINGS_SECTION_KEYS.map((key) => [key, null]));
+		this.activeDrawer = null;
+		this.settingsRegistry = {};
+		this.settingsSections = {};
 		this.originalParents = new Map();
-
-		// Initialize the flag
+		this.resizeObserver = null;
 		this.eventsBound = false;
+		this.sheetDrag = null;
+		this.sheetHeight = 50;
+		this.drawerViewportState = null;
+		this.drawerViewportUserState = null;
+		this.drawerViewportUserZoomed = false;
+		this.drawerViewportLastZoom = null;
+		this.drawerViewportSyncing = false;
+		this.drawerLayoutFrame = null;
+		this.drawerCloseTimer = null;
+		this.drawerCloseElement = null;
+		this.drawerCloseListener = null;
 
-		if (this.isMobile) {
-			this.init();
-		}
-
+		if (this.isMobile) this.init();
 		this.setupResizeObserver();
 		this.setupImageEvents();
 	}
 
+	buildSettingsRegistry() {
+		const registry = {};
+		const register = (schema) => {
+			if (!schema?.mobileKey || !schema.section?.id) return;
+			const element = document.getElementById(schema.section.id);
+			registry[schema.mobileKey] = {
+				element,
+				collapsibleName: schema.sectionPrefix || null
+			};
+		};
+		Object.values(PANEL_SCHEMAS).forEach((schema) => {
+			register(schema);
+			(schema.auxiliarySections || []).forEach(register);
+		});
+		this.settingsRegistry = registry;
+		this.settingsSections = Object.fromEntries(
+			Object.entries(registry).map(([key, value]) => [key, value.element])
+		);
+	}
+
 	init() {
 		dbg('Mobile: Initializing mobile manager');
+		this.buildSettingsRegistry();
 		this.cacheSettingsSections();
-
-		// Debug: Check if sections were cached
-		dbg('Mobile: Cached sections:', Object.fromEntries(
-			MOBILE_SETTINGS_SECTION_KEYS.map((key) => [key, !!this.settingsSections[key]])
-		));
-
+		dbg('Mobile: Schema settings registry:', Object.keys(this.settingsRegistry));
 		this.showMobileControls();
 		this.setupEventListeners();
+		this.setupSheetDrag();
+		this.syncImageState();
 
-		// Switch to image tab FIRST (this calls closeSettings which moves sections back)
-		this.switchTab('image');
-
-		// THEN prepare settings AFTER switching tabs
 		const activeLayer = this.editor.layerManager.getActiveLayer();
-		dbg('Mobile: Active layer on init:', activeLayer);
-
-		if (activeLayer && this.hasLayerSettings(activeLayer)) {
-			// Prepare settings AFTER tab switch
-			dbg('Mobile: Preparing settings for layer:', activeLayer.type);
-			this.prepareSettings(activeLayer);
-		}
-
-		dbg('Mobile: Initialization complete, on image tab');
+		if (activeLayer && this.hasLayerSettings(activeLayer)) this.prepareSettings(activeLayer);
 	}
 
 	hasLayerSettings(layer) {
-		if (!layer) return false;
-		const config = LAYER_UI_CONFIG[layer.type];
-		return config && config.mobileSettingsSections && config.mobileSettingsSections.length > 0;
+		const sections = layer && LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections;
+		return Boolean(sections?.some((key) => this.settingsRegistry[key]?.element));
 	}
 
 	cacheSettingsSections() {
-		MOBILE_SETTINGS_SECTION_KEYS.forEach((key) => {
-			const section = document.querySelector(MOBILE_SETTINGS_SECTION_CONFIG[key].selector);
-			this.settingsSections[key] = section;
-			if (section) {
-				this.originalParents.set(key, section.parentElement);
+		Object.entries(this.settingsRegistry).forEach(([key, entry]) => {
+			if (entry.element && !this.originalParents.has(key)) {
+				this.originalParents.set(key, entry.element.parentElement);
 			}
 		});
 	}
 
 	showMobileControls() {
-		const topNav = document.querySelector('.mobile-top-nav');
-		const bottomNav = document.querySelector('.mobile-bottom-nav');
-
-		if (topNav) topNav.classList.add('visible');
-		if (bottomNav) bottomNav.classList.add('visible');
-
-		// Update initial state based on whether image exists
-		const previewTab = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-		if (previewTab) {
-			previewTab.disabled = !this.editor.originalImage;
-		}
-
-		dbg('Mobile: Controls shown');
+		document.querySelector('.mobile-bottom-nav')?.classList.add('visible');
 	}
 
 	setupEventListeners() {
-		// Stop if events are already set up
 		if (this.eventsBound) return;
 
-		// Tab buttons
-		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-			btn.addEventListener('click', () => {
-				this.switchTab(btn.dataset.tab);
+		document.querySelectorAll('.mobile-drawer-btn[data-drawer]').forEach((button) => {
+			button.addEventListener('click', (event) => {
+				event.stopPropagation();
+				if (!button.disabled) this.toggleDrawer(button.dataset.drawer);
 			});
 		});
 
-		// Drawer buttons
-		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
-			btn.addEventListener('click', (e) => {
-				e.stopPropagation();
-				this.toggleDrawer(btn.dataset.drawer);
-			});
-		});
-
-
-
-
-		// Settings button
-		const settingsBtn = document.getElementById('mobileSettingsBtn');
-		if (settingsBtn) {
-			settingsBtn.addEventListener('click', () => {
-				if (!settingsBtn.disabled) {
-					this.toggleSettings();
-				}
-			});
-		}
-
-		// Layer selection triggers settings preparation (not auto-open)
 		window.addEventListener('layerChanged', () => {
-			if (!this.isMobile) return; // Only handle this on mobile
-
-			dbg('Mobile: Layer changed to', this.editor.layerManager.getActiveLayer());
-
-			const activeLayer = this.editor.layerManager.getActiveLayer();
-			const settingsBtn = document.getElementById('mobileSettingsBtn');
-
-			if (activeLayer) {
-				const hasSettings = this.hasLayerSettings(activeLayer);
-
-				if (hasSettings) {
-					// Prepare settings (moves to mobile container) but don't auto-open
-					this.prepareSettings(activeLayer);
-				} else {
-					// No settings for this layer type
-					document.body.classList.remove('has-layer-settings');
-					if (settingsBtn) settingsBtn.disabled = true;
-					this.closeSettings();
-				}
+			if (!this.isMobile) return;
+			const layer = this.editor.layerManager.getActiveLayer();
+			if (layer && this.hasLayerSettings(layer)) {
+				this.prepareSettings(layer);
 			} else {
-				// No layer selected
-				document.body.classList.remove('has-layer-settings');
-				if (settingsBtn) settingsBtn.disabled = true;
-				this.closeSettings();
+				this.returnSettingsSections();
+				this.syncEditAvailability();
+				if (this.activeDrawer === 'edit') this.closeAllDrawers();
 			}
 		});
 
-		// Close drawer when clicking on panel headers (Design, Layers)
-		// But NOT collapsible section headers inside settings
-		document.querySelectorAll('.section-header').forEach(header => {
-			header.addEventListener('click', (e) => {
-				if (!this.isMobile) return;
+		window.addEventListener('layerItemClick', (event) => {
+			if (!this.isMobile || event.detail.layerId !== this.editor.layerManager.activeLayerId) return;
+			this.openDrawer('edit');
+		});
 
-				// Action buttons keep their own behavior (add layer, add custom
-				// sticker, settings-section chevrons) — except the design gallery's
-				// collapse chevron, which on mobile means "close the drawer" like
-				// the rest of its header.
-				if (e.target.closest('.section-header-action') && !e.target.closest('#designGalleryToggle')) return;
-
-				// Check which panel this header belongs to
-				const inDesignPanel = header.closest('.design-panel');
-				const inLayersPanel = header.closest('.layers-panel');
-				const inSettingsDrawer = header.closest('.mobile-settings-drawer');
-
-				// If in settings drawer AND it's a collapsible section, let it handle its own toggle
-				if (inSettingsDrawer && header.closest('.collapsible-section')) {
-					// Don't close drawer - let the collapsible behavior work normally
-					return;
-				}
-
-				// The design drawer's gallery header closes the drawer. Accordion-
-				// collapsing the gallery is desktop-only: inside the drawer it
-				// strands a bare header bar that reopens collapsed (the app.js
-				// accordion handler skips designGallery on mobile for the same
-				// reason).
-				if (inDesignPanel && this.activeDrawer === 'design') {
-					this.closeAllDrawers();
-					return;
-				}
-
-				// Close layers drawer if clicking layers panel header
-				if (inLayersPanel && this.activeDrawer === 'layers') {
-					this.closeAllDrawers();
-					return;
-				}
+		document.querySelectorAll('.section-header').forEach((header) => {
+			header.addEventListener('click', (event) => {
+				if (!this.isMobile || header.closest('.mobile-settings-drawer .collapsible-section')) return;
+				if (event.target.closest('.section-header-action') && !event.target.closest('#designGalleryToggle')) return;
+				if (header.closest('.design-panel') && this.activeDrawer === 'design') this.closeAllDrawers();
+				if (header.closest('.layers-panel') && this.activeDrawer === 'layers') this.closeAllDrawers();
 			});
 		});
-
-		// Tap selected layer to reopen settings
-		window.addEventListener('layerItemClick', (e) => {
-			const layerId = e.detail.layerId;
-			const currentActive = this.editor.layerManager.activeLayerId;
-
-			// If tapping already selected layer, toggle settings
-			if (this.isMobile && layerId === currentActive && this.activeTab === 'preview') {
-				this.toggleSettings();
-			}
+		const editHeader = document.getElementById('mobileEditHeader');
+		const closeEdit = () => {
+			if (this.isMobile && this.activeDrawer === 'edit') this.closeAllDrawers();
+		};
+		editHeader?.addEventListener('click', closeEdit);
+		editHeader?.addEventListener('keydown', (event) => {
+			if (event.key !== 'Enter' && event.key !== ' ') return;
+			event.preventDefault();
+			closeEdit();
 		});
 
+		window.addEventListener('viewportChanged', () => {
+			if (!this.isMobile || !this.activeDrawer || this.drawerViewportSyncing) return;
+			const state = this.editor.viewport?.captureViewState?.();
+			if (!state) return;
+			if (this.drawerViewportLastZoom !== null && Math.abs(state.zoom - this.drawerViewportLastZoom) > 0.0001) {
+				this.drawerViewportUserZoomed = true;
+			}
+			this.drawerViewportUserState = state;
+			this.drawerViewportLastZoom = state.zoom;
+		});
 
-		// Mark events as bound
+		this.editor.previewContainer?.addEventListener('pointerdown', () => this.finishViewportAnimation(), { capture: true });
+
 		this.eventsBound = true;
 	}
 
 	setupImageEvents() {
 		window.addEventListener('imageLoaded', () => {
-			if (this.isMobile) {
-				this.editor.previewWrapper.style.opacity = '0';
-				this.editor.previewWrapper.style.transition = 'none';
-
-				const previewBtn = document.querySelector('.mobile-tab-btn[data-tab="preview"]');
-				if (previewBtn) {
-					previewBtn.disabled = false;
-				}
-
-				this.switchTab('preview');
-
-				requestAnimationFrame(() => {
-					requestAnimationFrame(() => {
-						this.editor.viewport.performResizeUpdate();
-						this.editor.viewport.resetZoomSmart();
-						this.editor.updateZoomUI();
-						this.editor.previewWrapper.style.transition = '';
-						this.editor.previewWrapper.style.opacity = '1';
-					});
-				});
-			}
+			if (!this.isMobile) return;
+			this.syncImageState();
+			this.editor.previewWrapper.style.opacity = '0';
+			this.editor.previewWrapper.style.transition = 'none';
+			requestAnimationFrame(() => requestAnimationFrame(() => {
+				this.editor.viewport.performResizeUpdate();
+				this.editor.viewport.resetZoomSmart();
+				this.editor.updateZoomUI();
+				this.editor.previewWrapper.style.transition = '';
+				this.editor.previewWrapper.style.opacity = '1';
+			}));
 		});
+		window.addEventListener('imageRemoved', () => {
+			if (!this.isMobile) return;
+			this.syncImageState();
+		});
+	}
+
+	syncImageState() {
+		const noImage = !this.editor.originalImage;
+		const wasNoImage = document.body.classList.contains('mobile-no-image');
+		if (wasNoImage && !noImage) {
+			document.body.classList.add('mobile-document-opening');
+			this.closeAllDrawers({ resize: false });
+		}
+		document.body.classList.toggle('mobile-no-image', noImage);
+		if (noImage) this.closeAllDrawers();
+		if (wasNoImage && !noImage) {
+			requestAnimationFrame(() => requestAnimationFrame(() => {
+				document.body.classList.remove('mobile-document-opening');
+			}));
+		}
 	}
 
 	setupResizeObserver() {
 		let resizeTimer;
-
-		this.resizeObserver = new ResizeObserver(entries => {
+		this.resizeObserver = new ResizeObserver(() => {
 			clearTimeout(resizeTimer);
 			resizeTimer = setTimeout(() => {
-				const newWidth = window.innerWidth;
-				const nowMobile = newWidth <= CONFIG.ui.mobile.breakpoint;
-
-if (!this.isMobile && nowMobile) {
-    // Switching TO Mobile
-    dbg('Mobile: Switching to mobile mode');
-    if (this.editor.currentTool === ToolType.BRUSH) {
-        this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
-    }
-    this.isMobile = true;
-    this.init();
-
-    // ✅ LayerTransform handles touch gestures automatically - no manual rebinding needed
-
-    if (this.editor.originalImage) {
-						this.switchTab('preview');
-
-						// Re-prepare settings after switching to preview
-						const activeLayer = this.editor.layerManager.getActiveLayer();
-						const settingsBtn = document.getElementById('mobileSettingsBtn');
-
-						if (activeLayer && this.hasLayerSettings(activeLayer)) {
-							this.prepareSettings(activeLayer);
-						} else {
-							// Base image or no layer - disable button
-							if (settingsBtn) settingsBtn.disabled = true;
-							document.body.classList.remove('has-layer-settings');
-						}
-
-						requestAnimationFrame(() => {
-							requestAnimationFrame(() => {
-								this.editor.viewport.performResizeUpdate();
-								this.editor.viewport.resetViewport();
-								this.editor.updateZoomUI();
-								this.editor.updateTransparencyGrid();
-							});
-						});
-					}
-
-
-
-
-} else if (this.isMobile && !nowMobile) {
-    // Switching TO Desktop
-    dbg('Mobile: Switching to desktop mode');
-    if (this.editor.currentTool === ToolType.BRUSH) {
-        this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
-    }
-    this.isMobile = false;
-    this.cleanup();
-
-    // ✅ LayerTransform handles touch gestures automatically - no manual rebinding needed
-
-    setTimeout(() => {
-						if (this.editor.originalImage) {
-							this.editor.viewport.performResizeUpdate();
-							this.editor.viewport.resetViewport();
-							this.editor.updateZoomUI();
-						}
+				const nowMobile = window.innerWidth <= CONFIG.ui.mobile.breakpoint;
+				if (!this.isMobile && nowMobile) {
+					if (this.editor.currentTool === ToolType.BRUSH) this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+					this.isMobile = true;
+					this.init();
+					requestAnimationFrame(() => requestAnimationFrame(() => {
+						this.editor.viewport.performResizeUpdate();
+						this.editor.viewport.resetViewport();
+						this.editor.updateZoomUI();
+						this.editor.updateTransparencyGrid();
+					}));
+				} else if (this.isMobile && !nowMobile) {
+					if (this.editor.currentTool === ToolType.BRUSH) this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+					this.isMobile = false;
+					this.cleanup();
+					setTimeout(() => {
+						if (!this.editor.originalImage) return;
+						this.editor.viewport.performResizeUpdate();
+						this.editor.viewport.resetViewport();
+						this.editor.updateZoomUI();
 					}, 50);
 				}
 			}, 250);
 		});
-
 		this.resizeObserver.observe(document.body);
 	}
 
-	switchTab(tab) {
-		dbg('Mobile: Switching to tab:', tab);
-		const isTabChange = this.activeTab !== tab;
-		this.activeTab = tab;
-
-		document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
-			btn.classList.toggle('active', btn.dataset.tab === tab);
-		});
-
-		this.closeAllDrawers();
-
-		// Collapse settings sections when switching tabs
-		this.collapseAllSections();
-
-		this.closeSettings({ releaseBrush: isTabChange });
-
-		document.body.classList.remove('mobile-image-tab', 'mobile-preview-tab');
-		document.body.classList.add(`mobile-${tab}-tab`);
+	normalizeDrawer(drawer) {
+		if (drawer === 'add') return 'design';
+		if (drawer === 'settings') return 'edit';
+		return drawer;
 	}
 
-	// Idempotent "open" intent — every non-nav-button call site wants the drawer
-	// open, never toggled closed (a toggle here silently closes an already-open
-	// drawer, which is how the LayerManager goto/auto-open paths drifted).
+	get settingsOpen() {
+		return this.activeDrawer === 'edit';
+	}
+
 	openDrawer(drawer) {
-		if (this.activeDrawer !== drawer) {
-			this.toggleDrawer(drawer);
-		}
+		drawer = this.normalizeDrawer(drawer);
+		if (this.activeDrawer !== drawer) this.toggleDrawer(drawer);
 	}
 
 	toggleDrawer(drawer) {
-		dbg('Mobile: Toggling drawer:', drawer);
-
+		drawer = this.normalizeDrawer(drawer);
+		this.cancelDrawerCloseFinalization();
+		if (drawer === 'edit' && !this.canOpenEditDrawer()) return;
 		if (this.activeDrawer === drawer) {
-			// Closing current drawer
-			this.closeAllDrawers();
-
-			// Also collapse settings sections if settings drawer is visible
-			if (document.body.classList.contains('has-layer-settings')) {
-				this.collapseAllSections();
-
-				// Also close the settings drawer to collapsed state
-				//document.body.classList.remove('mobileSettingsOpen');
-				//this.settingsOpen = false;
-			}
-		} else {
-			// Opening different drawer (or opening for first time)
-
-			// If switching drawers, do it without closeAllDrawers to prevent flash
-			if (this.activeDrawer) {
-				// Remove previous drawer class
-				const prevCamelCase = this.activeDrawer.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-				const prevClassName = prevCamelCase + 'Open';
-				document.body.classList.remove(prevClassName);
-			}
-			// Don't close settings when opening a drawer - they're independent
-
-			// Add new drawer class immediately (no setTimeout to prevent flash)
-			this.activeDrawer = drawer;
-			const camelCase = drawer.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
-			const className = camelCase + 'Open';
-			document.body.classList.add(className);
-
-			// The design drawer must never open with its gallery collapsed —
-			// is-open can persist from the desktop accordion (breakpoint resize)
-			// and would strand the drawer as a bare header bar.
-			if (drawer === 'design') {
-				this.editor.setCollapsibleSectionOpen?.('designGallery', true);
-			}
-
-			// Update button states
-			document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
-				btn.classList.toggle('active', btn.dataset.drawer === drawer);
-			});
-		}
-	}
-
-	prepareSettings(layer) {
-		const mobileContainer = document.querySelector('.mobile-settings-content');
-		if (!mobileContainer) {
-			dbg('Mobile: No mobile settings container found');
+			this.closeAllDrawers({ releaseBrush: drawer === 'edit' });
 			return;
 		}
 
-		// Conditionally close drawers based on config
-		if (CONFIG.ui.mobile.autoCloseDesignDrawer) {
-			this.closeAllDrawers();
+		if (drawer === 'edit') {
+			const layer = this.editor.layerManager.getActiveLayer();
+			if (layer && this.hasLayerSettings(layer)) this.prepareSettings(layer, { preserveDrawer: true });
+			this.syncBrushSettingsPlacement();
 		}
 
-		// Clear container
-		mobileContainer.innerHTML = '';
-		let hasSettings = false;
-
-		dbg('Mobile: Moving sections to container...');
-
-		// Get the UI config for this layer type
-		const config = LAYER_UI_CONFIG[layer.type];
-		if (!config || !config.mobileSettingsSections) {
-			dbg('Mobile: No settings for this layer type');
-			return;
+		const openingFirstDrawer = !this.activeDrawer;
+		if (openingFirstDrawer) {
+			this.drawerViewportState = this.editor.viewport?.captureViewState?.() || null;
+			this.drawerViewportUserState = null;
+			this.drawerViewportUserZoomed = false;
+			this.drawerViewportLastZoom = this.drawerViewportState?.zoom ?? null;
 		}
 
-		// Move the appropriate sections based on config
-		config.mobileSettingsSections.forEach(sectionKey => {
-			const section = this.settingsSections[sectionKey];
-			if (section) {
-				dbg(`Mobile: Moving ${sectionKey} section`);
-				mobileContainer.appendChild(section);
-				section.classList.add('visible');
-				hasSettings = true;
-			} else {
-				dbg(`Mobile: No ${sectionKey} section found`);
-			}
+		this.activeDrawer = drawer;
+		document.body.classList.toggle('designOpen', drawer === 'design');
+		document.body.classList.toggle('layersOpen', drawer === 'layers');
+		document.body.classList.toggle('editOpen', drawer === 'edit');
+		if (drawer === 'design') this.editor.setCollapsibleSectionOpen?.('designGallery', true);
+		document.querySelectorAll('.mobile-drawer-btn[data-drawer]').forEach((button) => {
+			const active = this.normalizeDrawer(button.dataset.drawer) === drawer;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-expanded', String(active));
 		});
-
-		dbg('Mobile: hasSettings:', hasSettings);
-		dbg('Mobile: Container children:', mobileContainer.children.length);
-
-		// Collapse all sections
-		this.collapseAllSections();
-
-		// Update button state but DON'T auto-open
-		const settingsBtn = document.getElementById('mobileSettingsBtn');
-		if (hasSettings) {
-			document.body.classList.add('has-layer-settings');
-			if (settingsBtn) settingsBtn.disabled = false;
-		} else {
-			document.body.classList.remove('has-layer-settings');
-			if (settingsBtn) settingsBtn.disabled = true;
-		}
-
-		// innerHTML='' above detached the tool-scoped brush section if it was
-		// here; re-append it (and re-enable the button) when brushing.
-		this.syncBrushSettingsPlacement();
-	}
-	// Delegates to the same setCollapsibleSectionOpen used by the desktop
-	// accordion (app.js initializeCollapsibleSections) so .is-open stays in
-	// sync. Previously this toggled classes directly — including a
-	// '.section-header.collapsible' selector that doesn't exist in the
-	// current markup — which left stale .is-open state behind (that class
-	// drives flex: 1 1 auto even outside the design panel) and desynced from
-	// the desktop accordion state.
-	collapseAllSections() {
-		MOBILE_SETTINGS_SECTION_KEYS.forEach((key) => {
-			const sectionName = MOBILE_SETTINGS_SECTION_CONFIG[key].collapsibleName;
-			if (sectionName && this.settingsSections[key]) {
-				this.editor.setCollapsibleSectionOpen?.(sectionName, false);
-			}
-		});
+		this.scheduleDrawerViewportUpdate('fit');
 	}
 
-
-
-
-	toggleSettings() {
-		const settingsBtn = document.getElementById('mobileSettingsBtn');
-
-		if (this.settingsOpen) {
-			this.closeSettings({ releaseBrush: true });
-		} else {
-			// closeSettings() moves the settings sections back out of the
-			// mobile container (returnSettingsSections), so re-opening must
-			// re-populate it from the active layer — otherwise the drawer
-			// shows empty on every reopen after the first close.
-			const activeLayer = this.editor.layerManager.getActiveLayer();
-			if (activeLayer && this.hasLayerSettings(activeLayer)) {
-				this.prepareSettings(activeLayer);
-			} else {
-				this.collapseAllSections();
-				// No layer sections to show, but the brush tool may still need its
-				// (tool-scoped) settings relocated into the drawer.
-				this.syncBrushSettingsPlacement();
-			}
-			this.settingsOpen = true;
-			document.body.classList.add('mobileSettingsOpen');
-			if (settingsBtn) settingsBtn.classList.add('active');
-		}
+	canOpenEditDrawer() {
+		return document.body.classList.contains('has-layer-settings');
 	}
 
-	closeSettings(options = {}) {
-		const { releaseBrush = false } = options;
-
-		if (releaseBrush && this.editor.currentTool === ToolType.BRUSH) {
-			this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
-		}
-
-		this.settingsOpen = false;
-		document.body.classList.remove('mobileSettingsOpen');
-		const settingsBtn = document.getElementById('mobileSettingsBtn');
-		if (settingsBtn) settingsBtn.classList.remove('active');
-
-		// Collapse all sections
-		this.collapseAllSections();
-
-		// Return settings sections to their original parents
+	prepareSettings(layer, options = {}) {
+		const container = document.getElementById('mobileSettingsContainer');
+		if (!container) return;
+		const wasEditOpen = this.activeDrawer === 'edit';
 		this.returnSettingsSections();
+		let hasSettings = false;
+		const keys = LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections || [];
+		keys.forEach((key) => {
+			const section = this.settingsRegistry[key]?.element;
+			if (!section) return;
+			container.appendChild(section);
+			section.classList.add('visible');
+			hasSettings = true;
+		});
+		this.collapseAllSections();
+		document.body.classList.toggle('has-layer-settings', hasSettings);
+		document.getElementById('mobileSettingsBtn')?.toggleAttribute('disabled', !hasSettings);
+		this.syncBrushSettingsPlacement();
+		if (!options.preserveDrawer && CONFIG.ui.mobile.autoCloseDesignDrawer && this.activeDrawer === 'design') {
+			this.closeAllDrawers();
+		}
+		if (wasEditOpen) this.activeDrawer = 'edit';
+	}
+
+	collapseAllSections() {
+		Object.values(this.settingsRegistry).forEach((entry) => {
+			if (entry.collapsibleName && entry.element) {
+				this.editor.setCollapsibleSectionOpen?.(entry.collapsibleName, false);
+			}
+		});
 	}
 
 	returnSettingsSections() {
-		const mobileContainer = document.getElementById('mobileSettingsContainer');
-		if (!mobileContainer) return;
-
-		MOBILE_SETTINGS_SECTION_KEYS
-			.filter((key) => key !== 'brush')
-			.forEach((key) => this.returnSettingsSection(key));
-
-		// Return the brush section to the design panel too, so clearing the
-		// container below doesn't orphan it while the brush tool is still active.
-		this.returnBrushSection();
-
-		// Clear container
-		mobileContainer.innerHTML = '';
+		Object.keys(this.settingsRegistry).forEach((key) => this.returnSettingsSection(key));
+		const container = document.getElementById('mobileSettingsContainer');
+		if (container) container.replaceChildren();
 	}
 
 	returnSettingsSection(key) {
-		const section = this.settingsSections[key];
-		if (!section || !this.originalParents.has(key)) return;
-		const originalParent = this.originalParents.get(key);
-		if (originalParent && !originalParent.contains(section)) {
-			originalParent.appendChild(section);
-		}
+		const section = this.settingsRegistry[key]?.element;
+		const parent = this.originalParents.get(key);
+		if (section && parent && !parent.contains(section)) parent.appendChild(section);
 	}
 
 	returnBrushSection() {
 		this.returnSettingsSection('brush');
 	}
 
-	// The brush settings section is tool-scoped (shown whenever the mask brush is
-	// active, independent of layer type), so it normally lives in the design
-	// panel and is toggled visible by app.updateContextToolbars. On mobile the
-	// design panel IS the "Design" drawer, so a visible brush section would leak
-	// into that drawer. While the brush tool is active, relocate it into the
-	// settings drawer (reached via the settings button) and keep that button
-	// enabled; otherwise return it to the design panel and restore the button
-	// state from the active layer. Called at the end of updateContextToolbars so
-	// it re-runs on every tool change and layer/toolbar update.
 	syncBrushSettingsPlacement() {
 		if (!this.isMobile) return;
-		const section = this.settingsSections.brush;
+		const section = this.settingsRegistry.brush?.element;
+		const container = document.getElementById('mobileSettingsContainer');
 		if (!section) return;
-
-		const brushActive = this.editor.currentTool === ToolType.BRUSH;
-		const settingsBtn = document.getElementById('mobileSettingsBtn');
-		const mobileContainer = document.getElementById('mobileSettingsContainer');
-
-		if (brushActive && mobileContainer) {
-			if (!mobileContainer.contains(section)) {
-				mobileContainer.appendChild(section);
-			}
+		if (this.editor.currentTool === ToolType.BRUSH && container) {
+			if (!container.contains(section)) container.appendChild(section);
 			section.classList.add('visible');
 			document.body.classList.add('has-layer-settings');
-			if (settingsBtn) settingsBtn.disabled = false;
-		} else {
-			this.returnBrushSection();
-			// Restore the settings button from the active layer's own settings.
-			const activeLayer = this.editor.layerManager.getActiveLayer();
-			const hasSettings = !!(activeLayer && this.hasLayerSettings(activeLayer));
-			// Only disable if the settings drawer isn't holding other sections.
-			if (!this.settingsOpen) {
-				document.body.classList.toggle('has-layer-settings', hasSettings);
-				if (settingsBtn) settingsBtn.disabled = !hasSettings;
-			}
+			document.getElementById('mobileSettingsBtn')?.removeAttribute('disabled');
+			return;
 		}
+		this.returnBrushSection();
+		this.syncEditAvailability();
 	}
 
-	closeAllDrawers() {
+	syncEditAvailability() {
+		const layer = this.editor.layerManager.getActiveLayer();
+		const hasSettings = Boolean(layer && this.hasLayerSettings(layer)) || this.editor.currentTool === ToolType.BRUSH;
+		document.body.classList.toggle('has-layer-settings', hasSettings);
+		document.getElementById('mobileSettingsBtn')?.toggleAttribute('disabled', !hasSettings);
+	}
+
+	toggleSettings() {
+		this.toggleDrawer('edit');
+	}
+
+	closeSettings(options = {}) {
+		if (options.releaseBrush && this.editor.currentTool === ToolType.BRUSH) {
+			this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+		}
+		if (this.activeDrawer === 'edit') this.closeAllDrawers();
+	}
+
+	closeAllDrawers(options = {}) {
+		if (options.releaseBrush && this.editor.currentTool === ToolType.BRUSH) {
+			this.editor.maskEditor?.releaseBrushTool({ commitStroke: false });
+		}
+		const hadDrawerViewportSession = Boolean(this.activeDrawer || this.drawerViewportState);
+		const userState = this.drawerViewportUserState;
+		const restoreState = userState && this.drawerViewportState
+			? {
+				zoom: this.drawerViewportUserZoomed ? userState.zoom : this.drawerViewportState.zoom,
+				focusX: userState.focusX,
+				focusY: userState.focusY
+			}
+			: this.drawerViewportState;
+		const closingDrawer = this.activeDrawer;
+		const closingElement = closingDrawer === 'edit'
+			? document.getElementById('mobileSettingsDrawer')
+			: closingDrawer === 'design'
+				? document.getElementById('designPanel')
+				: closingDrawer === 'layers'
+					? document.getElementById('layersPanel')
+					: null;
 		this.activeDrawer = null;
-		document.body.classList.remove('designOpen', 'layersOpen');
-		document.querySelectorAll('.mobile-drawer-btn').forEach(btn => {
-			btn.classList.remove('active');
+		document.body.classList.remove('designOpen', 'layersOpen', 'editOpen', 'mobile-sheet-expanded');
+		document.querySelectorAll('.mobile-drawer-btn[data-drawer]').forEach((button) => {
+			button.classList.remove('active');
+			button.setAttribute('aria-expanded', 'false');
 		});
+		if (options.immediate || !closingElement) {
+			this.setSheetHeight(50, { resize: false });
+		} else {
+			this.deferSheetHeightReset(closingElement);
+		}
+		if (options.resize !== false && hadDrawerViewportSession) this.scheduleDrawerViewportUpdate('restore', restoreState);
+		else this.resetDrawerViewportSession();
+	}
 
+	deferSheetHeightReset(closingElement) {
+		this.cancelDrawerCloseFinalization();
+		document.body.classList.add('mobile-drawer-closing');
+		const finish = () => {
+			if (this.drawerCloseElement !== closingElement) return;
+			this.cancelDrawerCloseFinalization();
+			this.setSheetHeight(50, { resize: false });
+		};
+		this.drawerCloseElement = closingElement;
+		// Keep the dragged height stable for the entire exit animation. Listening
+		// for transitionend is unreliable when an opening transition is reversed;
+		// browsers may deliver that earlier transition's completion to the same node.
+		this.drawerCloseTimer = setTimeout(finish, 350);
+	}
 
+	cancelDrawerCloseFinalization() {
+		if (this.drawerCloseTimer) clearTimeout(this.drawerCloseTimer);
+		if (this.drawerCloseElement && this.drawerCloseListener) {
+			this.drawerCloseElement.removeEventListener('transitionend', this.drawerCloseListener);
+		}
+		this.drawerCloseTimer = null;
+		this.drawerCloseElement = null;
+		this.drawerCloseListener = null;
+		document.body.classList.remove('mobile-drawer-closing');
+	}
+
+	setupSheetDrag() {
+		document.querySelectorAll('[data-mobile-drawer-handle]').forEach((handle) => {
+			if (handle.dataset.bound === 'true') return;
+			handle.dataset.bound = 'true';
+			handle.addEventListener('pointerdown', (event) => {
+				if (!this.isMobile || this.activeDrawer !== handle.dataset.mobileDrawerHandle) return;
+				handle.setPointerCapture(event.pointerId);
+				this.finishViewportAnimation();
+				this.sheetDrag = { pointerId: event.pointerId, startY: event.clientY, startHeight: this.sheetHeight };
+				document.body.classList.add('mobile-sheet-dragging');
+				event.preventDefault();
+			});
+			handle.addEventListener('pointermove', (event) => {
+				if (!this.sheetDrag || event.pointerId !== this.sheetDrag.pointerId) return;
+				const delta = ((this.sheetDrag.startY - event.clientY) / window.innerHeight) * 100;
+				this.setSheetHeight(Math.max(0, Math.min(85, this.sheetDrag.startHeight + delta)));
+				event.preventDefault();
+			});
+			const finish = (event) => {
+				if (!this.sheetDrag || event.pointerId !== this.sheetDrag.pointerId) return;
+				this.sheetDrag = null;
+				document.body.classList.remove('mobile-sheet-dragging');
+				if (this.sheetHeight <= 32) {
+					this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
+				} else {
+					this.setSheetHeight(this.sheetHeight >= 68 ? 85 : 50);
+				}
+			};
+			handle.addEventListener('pointerup', finish);
+			handle.addEventListener('pointercancel', finish);
+			handle.addEventListener('keydown', (event) => {
+				if (event.key === 'Escape') this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
+				if (event.key === 'ArrowDown') this.setSheetHeight(Math.max(30, this.sheetHeight - 10));
+				if (event.key === 'ArrowUp') this.setSheetHeight(Math.min(85, this.sheetHeight + 10));
+			});
+		});
+	}
+
+	setSheetHeight(height, options = {}) {
+		this.sheetHeight = height;
+		document.documentElement.style.setProperty('--mobile-drawer-height', `${height}dvh`);
+		document.body.classList.toggle('mobile-sheet-expanded', height >= 65);
+		document.querySelectorAll('[data-mobile-drawer-handle]').forEach((handle) => {
+			handle.setAttribute('aria-valuenow', String(Math.round(height)));
+		});
+		if (options.resize !== false) this.requestViewportResize();
+	}
+
+	requestViewportResize() {
+		cancelAnimationFrame(this.sheetResizeFrame);
+		this.sheetResizeFrame = requestAnimationFrame(() => {
+			this.drawerViewportSyncing = true;
+			this.editor.viewport?.performResizeUpdate();
+			this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
+			this.drawerViewportSyncing = false;
+		});
+	}
+
+	scheduleDrawerViewportUpdate(mode, restoreState = null) {
+		this.cancelDrawerViewportUpdate();
+		this.editor.viewport?.startViewTransition?.();
+		this.drawerLayoutFrame = requestAnimationFrame(() => {
+			this.drawerLayoutFrame = requestAnimationFrame(() => {
+				this.drawerViewportSyncing = true;
+				if (mode === 'restore' && restoreState) {
+					this.editor.viewport?.restoreViewState?.(restoreState);
+				} else {
+					this.editor.viewport?.performResizeUpdate();
+				}
+				this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
+				this.drawerViewportSyncing = false;
+				if (mode === 'restore') this.resetDrawerViewportSession();
+			});
+		});
+	}
+
+	cancelDrawerViewportUpdate() {
+		if (this.drawerLayoutFrame) cancelAnimationFrame(this.drawerLayoutFrame);
+		this.drawerLayoutFrame = null;
+		this.finishViewportAnimation();
+	}
+
+	finishViewportAnimation() {
+		this.editor.viewport?.cancelViewTransition?.();
+	}
+
+	resetDrawerViewportSession() {
+		this.drawerViewportState = null;
+		this.drawerViewportUserState = null;
+		this.drawerViewportUserZoomed = false;
+		this.drawerViewportLastZoom = null;
 	}
 
 	cleanup() {
-		dbg('Mobile: Starting cleanup');
-
-		const topNav = document.querySelector('.mobile-top-nav');
-		const bottomNav = document.querySelector('.mobile-bottom-nav');
-
-		if (topNav) topNav.classList.remove('visible');
-		if (bottomNav) bottomNav.classList.remove('visible');
-
-		// Return settings sections before cleanup
+		this.cancelDrawerViewportUpdate();
+		this.cancelDrawerCloseFinalization();
+		this.closeAllDrawers({ releaseBrush: true, resize: false, immediate: true });
 		this.returnSettingsSections();
+		document.querySelector('.mobile-bottom-nav')?.classList.remove('visible');
+		document.body.classList.remove('mobile-no-image', 'has-layer-settings', 'mobile-sheet-dragging');
+		document.documentElement.style.removeProperty('--mobile-drawer-height');
 
-		document.body.classList.remove(
-			'mobile-image-tab',
-			'mobile-preview-tab',
-			'designOpen',
-			'layersOpen',
-			'mobileSettingsOpen',
-			'has-layer-settings'
-		);
-
-		this.closeSettings();
-
-		// Restore desktop layer display state
 		const activeLayer = this.editor.layerManager.getActiveLayer();
 		if (activeLayer) {
-			const config = LAYER_UI_CONFIG[activeLayer.type];
-			if (config && config.onActivate) {
-				config.onActivate(this.editor, activeLayer);
-			}
+			LAYER_UI_CONFIG[activeLayer.type]?.onActivate?.(this.editor, activeLayer);
 		} else {
 			this.editor.showLayerSettingsEmptyState();
 			this.editor.showGlitterSettingsEmptyState();
 			this.editor.showStickerSettingsEmptyState();
 		}
-
-		dbg('Mobile: Cleanup complete, restored to desktop layout');
 	}
 }

@@ -188,9 +188,10 @@ class BaseBackgroundManager {
 	armPicker() {
 		const layer = this.getActiveLayer();
 		if (!layer) return;
-		this.pickerSession = { layerId: layer.id };
-		this.updatePickerStrip();
-		revealAssetBrowser(this.editor, this.editor.glitterManager, layer.selectedGlitterId);
+		pickerOpenSession(this, { layerId: layer.id }, {
+			refresh: () => this.updatePickerStrip(),
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager, layer.selectedGlitterId)
+		});
 	}
 
 	hasActivePickerSession() {
@@ -201,23 +202,25 @@ class BaseBackgroundManager {
 		const layer = this.getActiveLayer();
 		if (!layer) return;
 		const armed = this.hasActivePickerSession();
-		this.ui.pickerStrip.hidden = !armed;
-		this.ui.pickerStrip.classList.toggle('is-armed', armed);
-		this.ui.gallerySection?.classList.toggle('picker-mode', armed);
-		if (!armed) return;
-		this.ui.pickerTitle.textContent = 'Choosing background glitter';
-		this.ui.pickerDetail.textContent = 'Applying to Canvas Background';
-		this.ui.pickerDone.hidden = false;
+		renderPickerStrip({
+			ownsStrip: true,
+			visible: armed,
+			armed,
+			title: 'Choosing background glitter',
+			detail: 'Applying to Canvas Background'
+		});
 	}
 
 	closePicker() {
-		this.pickerSession = null;
-		this.updatePickerStrip();
-		if (this.editor.mobileManager?.isMobile) {
-			if (this.editor.mobileManager.activeDrawer === 'design') this.editor.mobileManager.closeAllDrawers();
-			return;
-		}
-		this.editor.setCollapsibleSectionOpen?.('baseLayerSettings', true, true);
+		this.closePickerSession();
+		returnFromPickerToProperties(this.editor, { section: 'baseLayerSettings', focusId: 'baseBackgroundGlitterChip' });
+	}
+
+	closePickerSession() {
+		pickerCloseSession(this, {
+			refresh: () => this.updatePickerStrip(),
+			updateSelection: () => this.editor.updateGlitterSelection()
+		});
 	}
 
 	chooseReplacementImage() {

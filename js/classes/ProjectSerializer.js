@@ -85,11 +85,11 @@ class ProjectSerializer {
 				return false;
 			}
 		}
-		this.editor.textGlitterManager.pickerSession = null;
-		this.editor.shapeGlitterManager.pickerSession = null;
-		this.editor.stickerManager.pickerSession = null;
-		this.editor.glitterManager.pickerSession = null;
-		this.editor.baseBackgroundManager.pickerSession = null;
+		this.editor.textGlitterManager.closePickerSession();
+		this.editor.shapeGlitterManager.closePickerSession();
+		this.editor.stickerManager.closePickerSession();
+		this.editor.glitterManager.closePickerSession();
+		this.editor.baseBackgroundManager.closePickerSession();
 		document.getElementById('designGallerySection')?.classList.remove('picker-mode');
 
 		await this.loadBaseImage(migrated);
@@ -106,7 +106,7 @@ class ProjectSerializer {
 
 		await this.restoreMasks(migrated.masks || {});
 
-		const activeLayer = this.editor.layers.find((layer) => layer.id === migrated.activeLayerId);
+		const activeLayer = this.editor.layerManager.getLayerById(migrated.activeLayerId);
 		this.editor.layerManager.restoreSelectionState(activeLayer ? activeLayer.id : null);
 		this.editor.setProjectName(migrated.name || '', { markDirty: false });
 		this.editor.historyManager.reset(this.editor.historyManager.createStateSnapshot());

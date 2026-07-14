@@ -333,7 +333,7 @@ class LayerManager {
 	}
 
 	toggleLayerVisibility(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
+		const layer = this.getLayerById(layerId);
 		if (!layer) return;
 
 		layer.visible = !layer.visible;
@@ -349,6 +349,18 @@ class LayerManager {
 		this.editor.saveState();
 		this.editor.updatePreview();
 		this.editor.updateStatus(`${layer.visible ? 'Shown' : 'Hidden'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
+	}
+
+	toggleLayerLock(layerId) {
+		const layer = this.getLayerById(layerId);
+		if (!layer || layer.type === LayerType.BASE_IMAGE) return;
+		layer.locked = !layer.locked;
+		if (layer.locked) this.selectedLayerIds.delete(layer.id);
+		this.renderLayersList();
+		this.editor.syncTransformHandlesForActiveLayer?.();
+		this.editor.updateActionButtons();
+		this.editor.saveState();
+		this.editor.updateStatus(`${layer.locked ? 'Locked' : 'Unlocked'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
 	}
 
 	// ===== LAYER SELECTION =====
@@ -393,7 +405,7 @@ class LayerManager {
 	}
 
 	toggleLayerSelection(layerId) {
-		const layer = this.layers.find((entry) => entry.id === layerId);
+		const layer = this.getLayerById(layerId);
 		if (!this.isLayerMultiSelectable(layer)) {
 			this.setActiveLayer(layerId);
 			return;
@@ -427,7 +439,7 @@ class LayerManager {
 		});
 
 		if (normalized.length > 1) {
-			normalized = normalized.filter((layerId) => this.isLayerMultiSelectable(this.layers.find((layer) => layer.id === layerId)));
+			normalized = normalized.filter((layerId) => this.isLayerMultiSelectable(this.getLayerById(layerId)));
 		}
 
 		let nextActiveId = options.activeLayerId ?? this.activeLayerId;
@@ -454,6 +466,9 @@ class LayerManager {
 		// to browse mode (a click applies to the new active layer's own fill).
 		this.editor.textGlitterManager?.closePickerSession();
 		this.editor.shapeGlitterManager?.closePickerSession();
+		this.editor.glitterManager?.closePickerSession?.();
+		this.editor.stickerManager?.closePickerSession?.();
+		this.editor.baseBackgroundManager?.closePickerSession?.();
 		this.editor.maskEditor?.handleLayerChange(this.activeLayerId);
 		this.updateActiveLayerListSelection();
 		this.updateMobileLayersSwatch();
@@ -541,13 +556,18 @@ class LayerManager {
 
 
 	getActiveLayer() {
-		return this.layers.find(l => l.id === this.activeLayerId);
+		return this.getLayerById(this.activeLayerId);
+	}
+
+	getLayerById(layerId) {
+		if (layerId == null) return null;
+		return this.layers.find((layer) => layer.id === layerId) || null;
 	}
 
 	// ===== LAYER NAVIGATION =====
 
 	goToGlitter(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
+		const layer = this.getLayerById(layerId);
 		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'glitter') return;
 
 		// Select this layer
@@ -565,7 +585,7 @@ class LayerManager {
 	}
 
 	goToSticker(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
+		const layer = this.getLayerById(layerId);
 		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'sticker') return;
 
 		// Select this layer
@@ -583,7 +603,7 @@ class LayerManager {
 	}
 
 	goToLayerSource(layerId) {
-		const layer = this.layers.find(l => l.id === layerId);
+		const layer = this.getLayerById(layerId);
 		if (!layer) return;
 
 		const goToTarget = LAYER_UI_CONFIG[layer.type]?.goTo;
@@ -603,8 +623,13 @@ class LayerManager {
 	handleLayerPick(x, y, options = {}) {
 		// Prevent layer picking during touch gestures
 		if (this.editor.touchGestureActive) {
+			const gestureManager = this.editor.viewport?.gestureManager;
+			if (gestureManager && gestureManager.pointers.size === 0) {
+				gestureManager.resetGestureState();
+			} else {
 			dbg('🎯 LAYER PICK: Blocked - touch gesture active');
 			return;
+			}
 		}
 
 		// NEW: Prevent layer picking when transform handles are being interacted with
@@ -811,14 +836,10 @@ class LayerManager {
 
 		// Update add button states
 		const addLayerBtn = document.getElementById('addLayerBtn');
-		if (addLayerBtn) {
-			addLayerBtn.disabled = this.layers.length >= CONFIG.app.limits.maxLayers;
-		}
-
-		const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
-		if (mobileAddBtn) {
-			mobileAddBtn.disabled = this.layers.length >= CONFIG.app.limits.maxLayers;
-		}
+		const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
+		[addLayerBtn, mobileAddLayerBtn].forEach((button) => {
+			if (button) button.disabled = this.layers.length >= CONFIG.app.limits.maxLayers;
+		});
 
 		// Update mobile swatch
 		this.updateMobileLayersSwatch();
@@ -855,7 +876,7 @@ class LayerManager {
 		const selectedLayers = this.getSelectedLayers();
 		const canAddLayers = this.layers.length < CONFIG.app.limits.maxLayers;
 		const canInteractWithSelected = selectedLayers.length > 0
-			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE);
+			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
 		const hasSingleSelection = selectedLayers.length === 1;
 		const movableSelectionCount = this.getMultiSelectedMovableLayers().length;
 
@@ -886,7 +907,7 @@ class LayerManager {
 
 	cloneLayer(layerId, options = {}) {
 		const positionOffset = options.positionOffset || { x: 20, y: 20 };
-		const sourceLayer = this.layers.find(l => l.id === layerId);
+		const sourceLayer = this.getLayerById(layerId);
 		if (!sourceLayer) return null;
 
 		// Can't clone locked layers (base image)
@@ -1180,7 +1201,7 @@ class LayerManager {
 		}
 
 		const removableLayers = uniqueIds
-			.map((layerId) => this.layers.find((layer) => layer.id === layerId))
+			.map((layerId) => this.getLayerById(layerId))
 			.filter(Boolean);
 
 		if (removableLayers.some((layer) => layer.locked)) {
@@ -1223,6 +1244,8 @@ class LayerManager {
 		const layerEl = document.createElement('div');
 		layerEl.className = 'layer-item';
 		layerEl.dataset.layerId = layer.id;
+		layerEl.classList.toggle('is-hidden', !layer.visible);
+		layerEl.classList.toggle('is-locked', Boolean(layer.locked));
 
 		// Only allow dragging if not locked
 		if (!layer.locked) {
@@ -1250,77 +1273,7 @@ class LayerManager {
 		// 2. Swatch (Thumbnail)
 		const swatch = document.createElement('div');
 		swatch.className = 'layer-swatch';
-
-		if (layer.type === LayerType.STICKER) {
-			// Sticker Logic
-			swatch.classList.add('sticker');
-			if (layer.stickerData.isEmpty) {
-				swatch.classList.add('empty');
-				swatch.innerHTML = '<span>?</span>';
-			} else {
-				swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
-			}
-		} else if (layer.type === LayerType.TEXT_GLITTER) {
-			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
-			if (glitter) {
-				swatch.style.backgroundImage = `url(${glitter.url})`;
-				swatch.style.filter = buildCssColorFilter(layer.settings?.colorAdjust);
-				swatch.classList.add('glitter', 'text-layer');
-				if (glitter.isPixelated) swatch.classList.add('pixelated');
-				swatch.innerHTML = '<span class="layer-swatch-text-overlay">T</span>';
-			}
-		} else if (layer.type === LayerType.SHAPE) {
-			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
-			if (glitter && layer.shapeData?.fill?.mode !== 'solid') {
-				swatch.style.backgroundImage = `url(${glitter.url})`;
-				swatch.style.filter = buildCssColorFilter(layer.shapeData?.fill?.colorAdjust);
-				swatch.classList.add('glitter', 'text-layer');
-				if (glitter.isPixelated) swatch.classList.add('pixelated');
-			} else {
-				swatch.classList.add('glitter', 'text-layer');
-				swatch.style.background = layer.shapeData?.fill?.color || '#ff66cc';
-			}
-			const shapeSvg = ShapeLibrary.getIconSvg(layer.shapeData?.shapeId);
-			const shapeMask = `url("data:image/svg+xml;base64,${btoa(shapeSvg)}")`;
-			swatch.style.maskImage = shapeMask;
-			swatch.style.webkitMaskImage = shapeMask;
-			swatch.style.maskRepeat = 'no-repeat';
-			swatch.style.webkitMaskRepeat = 'no-repeat';
-			swatch.style.maskPosition = 'center';
-			swatch.style.webkitMaskPosition = 'center';
-			swatch.style.maskSize = '80% 80%';
-			swatch.style.webkitMaskSize = '80% 80%';
-		} else if (layer.type === LayerType.BASE_IMAGE) {
-			const background = layer.background || { mode: 'image' };
-			if (background.mode === 'glitter') {
-				const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
-				if (glitter) swatch.style.backgroundImage = `url(${glitter.url})`;
-				swatch.style.filter = buildCssColorFilter(background.colorAdjust);
-				swatch.classList.add('glitter');
-			} else if (background.mode === 'solid') {
-				swatch.style.background = background.color || '#ffffff';
-			} else if (background.mode === 'gradient') {
-				swatch.style.backgroundImage = effectGradientToCss(background.gradient);
-			} else if (background.mode === 'image' && this.editor.baseBackgroundManager?.hasBaseImage() && this.editor.originalImage) {
-				swatch.style.backgroundImage = `url(${this.baseImageSwatchDataUrl || this.editor.originalImage.src})`;
-				swatch.classList.add('baseImage');
-			} else {
-				swatch.classList.add('empty');
-			}
-		} else {
-			// Glitter Logic
-			const glitter = this.editor.glitterManager.getItemById(layer.selectedGlitterId);
-			if (glitter) {
-				swatch.style.backgroundImage = `url(${glitter.url})`;
-				// Mirror the layer's hue/sat/bright shift so the list swatch matches
-				// the canvas and asset-info thumbnail (same CSS filter the canvas uses).
-				swatch.style.filter = buildCssColorFilter(layer.settings?.colorAdjust);
-
-				swatch.classList.add('glitter');
-				if (glitter.isPixelated) swatch.classList.add('pixelated');
-
-			}
-		}
+		this.renderLayerSwatch(swatch, layer);
 
 		// Double-click swatch behavior
 		swatch.addEventListener('click', (e) => {
@@ -1437,42 +1390,11 @@ class LayerManager {
 		const actions = document.createElement('div');
 		actions.className = 'layer-actions';
 
-		// A. Go To Arrow (Only for Glitter/Stickers)
-		if (LAYER_UI_CONFIG[layer.type]?.goTo) {
-			const arrowBtn = this.createIconButton({
-				className: 'layer-action-btn goto-glitter',
-				title: LAYER_UI_CONFIG[layer.type]?.goTo === 'sticker' ? 'Go to sticker' : 'Go to glitter',
-				iconType: 'chevron-right',
-				onClick: (e) => {
-					e.stopPropagation();
-					this.goToLayerSource(layer.id);
-				}
-			});
-			actions.appendChild(arrowBtn);
-		}
-
-
-		// Clone Layer
-		if (!layer.locked) {
-			const cloneBtn = this.createIconButton({
-				className: 'layer-action-btn clone',
-				title: 'Clone layer',
-				iconType: 'clone',
-				onClick: (e) => {
-					e.stopPropagation();
-					this.cloneLayer(layer.id);
-				}
-			});
-			actions.appendChild(cloneBtn);
-
-		}
-
-
-		// B. Visibility
+		// Visibility is always first and uses a distinct state icon.
 		const visBtn = this.createIconButton({
 			className: 'layer-action-btn visibility' + (!layer.visible ? ' hidden' : ''),
 			title: layer.visible ? 'Hide layer' : 'Show layer',
-			iconType: 'eye',
+			iconType: layer.visible ? 'eye' : 'eye-slash',
 			onClick: (e) => {
 				e.stopPropagation();
 				this.toggleLayerVisibility(layer.id);
@@ -1480,16 +1402,39 @@ class LayerManager {
 		});
 		actions.appendChild(visBtn);
 
-		// C. Lock vs Delete
-		if (layer.locked) {
-			// --- FIX: Show Lock Icon for Base Layer ---
+		const isBaseLayer = layer.type === LayerType.BASE_IMAGE;
+		const lockBtn = this.createIconButton({
+			className: `layer-action-btn lock${layer.locked ? ' active' : ''}${isBaseLayer ? ' permanent' : ''}`,
+			title: isBaseLayer ? 'Base layer is always locked' : (layer.locked ? 'Unlock layer' : 'Lock layer'),
+			iconType: layer.locked ? 'lock' : 'unlock',
+			onClick: (e) => {
+				e.stopPropagation();
+				if (isBaseLayer) this.editor.updateStatus('Base layer is always locked');
+				else this.toggleLayerLock(layer.id);
+			}
+		});
+		actions.appendChild(lockBtn);
 
-		} else {
-			// Show Delete for other layers
-			const delBtn = this.createIconButton({
-				className: 'layer-action-btn delete',
-				title: 'Delete layer',
+		// Source navigation follows state controls and precedes destructive actions.
+		const sourceType = LAYER_UI_CONFIG[layer.type]?.goTo;
+		const arrowBtn = this.createIconButton({
+			className: `layer-action-btn goto-glitter${sourceType ? '' : ' unavailable'}`,
+			title: sourceType ? (sourceType === 'sticker' ? 'Show sticker in Design' : 'Show glitter in Design') : 'No source asset for this layer',
+			iconType: 'chevron-right',
+			disabled: !sourceType,
+			onClick: (e) => {
+				e.stopPropagation();
+				this.goToLayerSource(layer.id);
+			}
+		});
+		actions.appendChild(arrowBtn);
+
+		const cannotDelete = isBaseLayer || layer.locked;
+		const delBtn = this.createIconButton({
+				className: `layer-action-btn delete${cannotDelete ? ' unavailable' : ''}`,
+				title: isBaseLayer ? 'Base layer cannot be deleted' : (layer.locked ? 'Unlock layer to delete it' : 'Delete layer'),
 				iconType: 'x-mark',
+				disabled: cannotDelete,
 				onClick: async (e) => {
 					e.stopPropagation();
 					const confirmed = await this.editor.confirmAction({
@@ -1502,8 +1447,7 @@ class LayerManager {
 					}
 				}
 			});
-			actions.appendChild(delBtn);
-		}
+		actions.appendChild(delBtn);
 
 		layerEl.append(dragHandle, swatch, info, actions);
 		layerEl.onclick = (event) => {
@@ -1593,106 +1537,93 @@ class LayerManager {
 		this.baseImageSwatchDataUrl = '';
 	}
 
-	updateMobileLayersSwatch() {
-		const mobileLayersSwatch = document.querySelector('.mobile-layers-swatch');
-		if (!mobileLayersSwatch) return;
+	renderLayerSwatch(swatch, layer, options = {}) {
+		const compact = Boolean(options.compact);
+		swatch.classList.remove('empty', 'pixelated', 'text-layer', 'sticker', 'glitter', 'baseImage');
+		swatch.removeAttribute('style');
+		swatch.replaceChildren();
 
-		const activeLayer = this.getActiveLayer();
-		// Only glitter-fill layers carry a colorAdjust; clear any stale filter first.
-		mobileLayersSwatch.style.filter = '';
-
-		if (!activeLayer) {
-			mobileLayersSwatch.classList.add('empty');
-			mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
-			mobileLayersSwatch.style.backgroundImage = '';
+		if (!layer) {
+			swatch.classList.add('empty');
 			return;
 		}
 
-		// Handle different layer types
-		if (activeLayer.type === LayerType.GLITTER_FILL) {
-			// Check if glitter has been selected
-			if (activeLayer.selectedGlitterId === undefined || activeLayer.selectedGlitterId === null) {
-				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
-				mobileLayersSwatch.style.backgroundImage = '';
-				return;
+		const renderPaint = (source, glitterId, colorAdjust) => {
+			const mode = source?.mode || 'glitter';
+			if (mode === 'solid') {
+				swatch.style.backgroundColor = source?.color || '#ff66cc';
+				return true;
 			}
+			if (mode === 'gradient') {
+				swatch.style.backgroundImage = effectGradientToCss(source?.gradient);
+				return true;
+			}
+			if (mode === 'none') return false;
+			if (mode !== 'glitter') return false;
+			const glitter = this.editor.glitterManager.getItemById(glitterId);
+			if (!glitter) return false;
+			swatch.style.backgroundImage = `url(${glitter.url})`;
+			swatch.style.filter = buildCssColorFilter(colorAdjust);
+			swatch.classList.add('glitter');
+			if (glitter.isPixelated) swatch.classList.add('pixelated');
+			return true;
+		};
 
-			const glitter = this.editor.glitterManager.getItemById(activeLayer.selectedGlitterId);
-			if (glitter) {
-				mobileLayersSwatch.classList.remove('empty');
-				mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
-				mobileLayersSwatch.style.filter = buildCssColorFilter(activeLayer.settings?.colorAdjust);
-				mobileLayersSwatch.classList.remove('text-layer');
-				if (glitter.isPixelated) {
-					mobileLayersSwatch.classList.add('pixelated');
-				} else {
-					mobileLayersSwatch.classList.remove('pixelated');
-				}
+		if (layer.type === LayerType.STICKER) {
+			swatch.classList.add('sticker');
+			if (layer.stickerData?.isEmpty || !layer.stickerData?.url) {
+				swatch.classList.add('empty');
+				if (!compact) swatch.innerHTML = '<span>?</span>';
 			} else {
-				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
-				mobileLayersSwatch.style.backgroundImage = '';
+				swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
 			}
-		} else if (activeLayer.type === LayerType.STICKER) {
-			// Check if sticker has been selected
-			if (!activeLayer.stickerSourceId) {
-				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
-				mobileLayersSwatch.style.backgroundImage = '';
-				return;
-			}
-
-			const sticker = this.editor.stickerManager.getItemById(activeLayer.stickerSourceId);
-			if (sticker) {
-				mobileLayersSwatch.classList.remove('empty');
-				mobileLayersSwatch.style.backgroundImage = `url(${sticker.url})`;
-				mobileLayersSwatch.classList.remove('text-layer');
-				if (sticker.isPixelated) {
-					mobileLayersSwatch.classList.add('pixelated');
-				} else {
-					mobileLayersSwatch.classList.remove('pixelated');
-				}
-			} else {
-				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
-				mobileLayersSwatch.style.backgroundImage = '';
-			}
-		} else if (activeLayer.type === LayerType.TEXT_GLITTER || activeLayer.type === LayerType.SHAPE) {
-			const glitter = this.editor.glitterManager.getItemById(activeLayer.selectedGlitterId);
-			if (glitter) {
-				mobileLayersSwatch.classList.remove('empty');
-				mobileLayersSwatch.style.backgroundImage = `url(${glitter.url})`;
-				mobileLayersSwatch.style.filter = buildCssColorFilter(this.editor.getLayerFillColorAdjust(activeLayer));
-				mobileLayersSwatch.classList.add('text-layer');
-				if (glitter.isPixelated) {
-					mobileLayersSwatch.classList.add('pixelated');
-				} else {
-					mobileLayersSwatch.classList.remove('pixelated');
-				}
-			} else {
-				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
-				mobileLayersSwatch.style.backgroundImage = '';
-			}
-		} else if (activeLayer.type === LayerType.BASE_IMAGE) {
-			if (this.baseImageSwatchDataUrl) {
-				mobileLayersSwatch.classList.remove('empty');
-				mobileLayersSwatch.style.backgroundImage = `url(${this.baseImageSwatchDataUrl})`;
-				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
-			} else {
-				mobileLayersSwatch.classList.add('empty');
-				mobileLayersSwatch.classList.remove('pixelated', 'text-layer');
-				mobileLayersSwatch.style.backgroundImage = '';
-			}
+			return;
 		}
+
+		if (layer.type === LayerType.TEXT_GLITTER) {
+			if (!renderPaint(layer.textData?.fill, layer.selectedGlitterId, layer.settings?.colorAdjust)) swatch.classList.add('empty');
+			swatch.classList.add('text-layer');
+			if (!compact) swatch.innerHTML = '<span class="layer-swatch-text-overlay">T</span>';
+			return;
+		}
+
+		if (layer.type === LayerType.SHAPE) {
+			if (!renderPaint(layer.shapeData?.fill, layer.selectedGlitterId, layer.shapeData?.fill?.colorAdjust)) swatch.classList.add('empty');
+			const shapeSvg = ShapeLibrary.getIconSvg(layer.shapeData?.shapeId);
+			const shapeMask = `url("data:image/svg+xml;base64,${btoa(shapeSvg)}")`;
+			swatch.style.maskImage = shapeMask;
+			swatch.style.webkitMaskImage = shapeMask;
+			swatch.style.maskRepeat = swatch.style.webkitMaskRepeat = 'no-repeat';
+			swatch.style.maskPosition = swatch.style.webkitMaskPosition = 'center';
+			swatch.style.maskSize = swatch.style.webkitMaskSize = '80% 80%';
+			return;
+		}
+
+		if (layer.type === LayerType.BASE_IMAGE) {
+			const background = layer.background || { mode: 'image' };
+			if (background.mode === 'image' && this.editor.baseBackgroundManager?.hasBaseImage() && this.editor.originalImage) {
+				swatch.style.backgroundImage = `url(${this.baseImageSwatchDataUrl || this.editor.originalImage.src})`;
+				swatch.classList.add('baseImage');
+			} else if (!renderPaint(background, layer.selectedGlitterId, background.colorAdjust)) {
+				swatch.classList.add('empty');
+			}
+			return;
+		}
+
+		if (!renderPaint(layer.fill, layer.selectedGlitterId, layer.settings?.colorAdjust)) swatch.classList.add('empty');
+	}
+
+	updateMobileLayersSwatch() {
+		const mobileLayersSwatch = document.querySelector('.mobile-layers-swatch');
+		if (!mobileLayersSwatch) return;
+		this.renderLayerSwatch(mobileLayersSwatch, this.getActiveLayer(), { compact: true });
 	}
 
 	// ===== DRAG AND DROP (DESKTOP) =====
 
 	handleLayerDragStart(event, layerId) {
 		// Check if layer is locked
-		const layer = this.layers.find(l => l.id === layerId);
+		const layer = this.getLayerById(layerId);
 		if (layer && layer.locked) {
 			event.preventDefault();
 			return;
@@ -1880,7 +1811,7 @@ class LayerManager {
 		}
 
 		// Check if layer is locked
-		const layer = this.layers.find(l => l.id === layerId);
+		const layer = this.getLayerById(layerId);
 		if (layer && layer.locked) {
 			return;
 		}

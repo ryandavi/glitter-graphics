@@ -567,7 +567,6 @@ async function getLayerOrder(page) {
 
 async function openMobileLayersDrawer(page) {
 	await page.evaluate(() => {
-		window.editor.mobileManager?.switchTab?.('preview');
 		if (window.editor.mobileManager?.activeDrawer !== 'layers') {
 			window.editor.mobileManager?.toggleDrawer?.('layers');
 		}
@@ -1169,15 +1168,15 @@ async function check21(page) {
 	await page.waitForTimeout(160);
 
 	const mobileState = await page.evaluate(() => ({
-		settingsOpen: window.editor.mobileManager?.settingsOpen || false,
+		settingsOpen: window.editor.mobileManager?.activeDrawer === 'edit',
 		activeDrawer: window.editor.mobileManager?.activeDrawer || null,
 		bodyClass: document.body.className,
 		activeElementId: document.activeElement?.id || null
 	}));
 
 	assert(await getActiveLayerId(page) === layerId, 'Double-tap on text did not keep the text layer selected');
-	assert(mobileState.settingsOpen, 'Double-tap on text did not open mobile settings');
-	assert(mobileState.bodyClass.includes('mobileSettingsOpen'), 'Double-tap on text did not set the mobile settings-open state');
+	assert(mobileState.settingsOpen, 'Double-tap on text did not open the mobile Edit drawer');
+	assert(mobileState.bodyClass.includes('editOpen'), 'Double-tap on text did not set the mobile Edit drawer state');
 	assert(mobileState.activeElementId === 'textLayerInput', 'Double-tap on text did not focus the text input');
 }
 
@@ -1283,11 +1282,10 @@ async function runSuite(browser, runNumber) {
 		['Touch drag on a transform handle moves the selected sticker', check18],
 		['Ctrl+wheel zooms at the cursor even with SELECT active', check19],
 		['Viewport inertia glides after release, settles, and halts on pointerdown', check20],
-		['Double-tap on text opens mobile settings and focuses the text input', check21],
+		['Double-tap on text opens the mobile Edit drawer and focuses the text input', check21],
 		['Mobile layer reorder uses touch pointer events to move a layer in the list', check22],
 		['Two-finger pinch inside the shared group box scales the group without zooming the viewport', check24]
 	];
-
 	let failed = 0;
 
 	for (let index = 0; index < checks.length; index += 1) {
@@ -1326,4 +1324,3 @@ main().catch((error) => {
 	console.error(describeError(error));
 	process.exit(1);
 });
-

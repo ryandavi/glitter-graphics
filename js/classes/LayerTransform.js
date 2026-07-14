@@ -443,6 +443,14 @@ const swallowFollowupClick = () => {
     
 	const handleMouseDown = (e) => {
     if (e.button !== 0) return; // Left click only
+	if (this.layer.locked) {
+		if (this.editor.currentTool === ToolType.SELECT) {
+			e.preventDefault();
+			e.stopPropagation();
+			this.editor.layerManager.setActiveLayer(this.layer.id);
+		}
+		return;
+	}
     
     // Don't start drag if clicking on transform handles
     if (e.target.closest('.transform-handles')) return;
@@ -1036,7 +1044,8 @@ removeTransformHandles() {
         handles.forEach(handle => {
             const handleType = handle.dataset.handleType;
 
-            handle.addEventListener('pointerdown', (e) => {
+			handle.addEventListener('pointerdown', (e) => {
+				if (this.layer.locked) return;
                 if (e.pointerType === 'mouse' && e.button !== 0) {
                     return;
                 }

@@ -691,10 +691,13 @@ class TextGlitterManager {
 		this.normalizeLayer(layer);
 		if (!layer?.textData) return null;
 		return ensureSlotEffectData(layer.textData, effectName, {
-			fill: () => this.getDefaultFill(),
-			border: () => this.getDefaultBorder(),
-			shadow: () => this.getDefaultShadow()
-		}, false);
+			builders: {
+				fill: () => this.getDefaultFill(),
+				border: () => this.getDefaultBorder(),
+				shadow: () => this.getDefaultShadow()
+			},
+			mergeBorderDefaults: false
+		});
 	}
 
 	getEffectData(layer, effectName) {
@@ -703,22 +706,10 @@ class TextGlitterManager {
 	}
 
 	getGlitterSelectionTarget(layer = this.getActiveTextLayer()) {
-		// Browse mode (no session, or the session belongs to a different layer)
-		// always resolves to 'fill' — the active layer's own fill.
-		const session = this.pickerSession;
-		if (!session || !layer || session.layerId !== layer.id) {
-			return 'fill';
-		}
-		// Picker mode: honour the armed slot, but degrade to 'fill' if that
-		// slot's effect no longer exists on the layer (e.g. border was disabled
-		// out from under the session before it was cleared).
-		if (session.slot === 'border' && !this.getEffectData(layer, 'border')) {
-			return 'fill';
-		}
-		if (session.slot === 'shadow' && !this.getEffectData(layer, 'shadow')) {
-			return 'fill';
-		}
-		return session.slot;
+		return pickerSelectionTarget(this, layer, {
+			fallback: 'fill',
+			isValid: (session) => session.slot === 'fill' || Boolean(this.getEffectData(layer, session.slot))
+		});
 	}
 
 	// Thin back-compat wrapper: arming a slot opens a picker session on the
@@ -730,17 +721,17 @@ class TextGlitterManager {
 
 	openPickerSession(layer = this.getActiveTextLayer(), slot = 'fill') {
 		if (!layer) return;
-		this.pickerSession = { layerId: layer.id, slot };
-		this.updateEffectTargetButtons(layer);
+		pickerOpenSession(this, { layerId: layer.id, slot }, {
+			refresh: () => this.updateEffectTargetButtons(layer)
+		});
 		this.editor.updateGlitterSelection();
 	}
 
 	closePickerSession() {
-		if (!this.pickerSession) return;
-		this.pickerSession = null;
-		const layer = this.getActiveTextLayer();
-		this.updateEffectTargetButtons(layer);
-		this.editor.updateGlitterSelection();
+		pickerCloseSession(this, {
+			refresh: () => this.updateEffectTargetButtons(this.getActiveTextLayer()),
+			updateSelection: () => this.editor.updateGlitterSelection()
+		});
 	}
 
 	resolveSelectedGlitterId(layer) {
@@ -1494,6 +1485,8 @@ class TextGlitterManager {
 
 		const border = this.getEffectData(layer, 'border');
 		const shadow = this.getEffectData(layer, 'shadow');
+		const borderDefaults = this.getDefaultBorder();
+		const shadowDefaults = this.getDefaultShadow();
 
 		if (this.ui.borderEnabled) {
 			this.ui.borderEnabled.checked = Boolean(border);
@@ -1510,16 +1503,16 @@ class TextGlitterManager {
 			this.ui.borderWidthValue.innerHTML = formatUnit(border.widthPx, 'px');
 			this.ui.borderColor.value = border.color;
 			if (this.ui.borderScale) {
-				this.ui.borderScale.value = border.scale ?? 100;
-				this.ui.borderScaleValue.innerHTML = formatUnit(border.scale ?? 100, '%');
+				this.ui.borderScale.value = border.scale ?? borderDefaults.scale;
+				this.ui.borderScaleValue.innerHTML = formatUnit(border.scale ?? borderDefaults.scale, '%');
 			}
 			if (this.ui.borderOpacity) {
-				this.ui.borderOpacity.value = border.opacity ?? 100;
-				this.ui.borderOpacityValue.innerHTML = formatUnit(border.opacity ?? 100, '%');
+				this.ui.borderOpacity.value = border.opacity ?? borderDefaults.opacity;
+				this.ui.borderOpacityValue.innerHTML = formatUnit(border.opacity ?? borderDefaults.opacity, '%');
 			}
 			this.syncBorderOptionUI(border);
 		} else {
-			const defaults = this.getDefaultBorder();
+			const defaults = borderDefaults;
 			this.ui.borderWidth.value = defaults.widthPx;
 			this.ui.borderWidthValue.innerHTML = formatUnit(defaults.widthPx, 'px');
 			this.ui.borderColor.value = defaults.color;
@@ -1541,15 +1534,15 @@ class TextGlitterManager {
 			this.ui.shadowOffsetYValue.innerHTML = formatUnit(shadow.offsetY, 'px');
 			this.ui.shadowColor.value = shadow.color;
 			if (this.ui.shadowScale) {
-				this.ui.shadowScale.value = shadow.scale ?? 100;
-				this.ui.shadowScaleValue.innerHTML = formatUnit(shadow.scale ?? 100, '%');
+				this.ui.shadowScale.value = shadow.scale ?? shadowDefaults.scale;
+				this.ui.shadowScaleValue.innerHTML = formatUnit(shadow.scale ?? shadowDefaults.scale, '%');
 			}
 			if (this.ui.shadowOpacity) {
-				this.ui.shadowOpacity.value = shadow.opacity ?? 100;
-				this.ui.shadowOpacityValue.innerHTML = formatUnit(shadow.opacity ?? 100, '%');
+				this.ui.shadowOpacity.value = shadow.opacity ?? shadowDefaults.opacity;
+				this.ui.shadowOpacityValue.innerHTML = formatUnit(shadow.opacity ?? shadowDefaults.opacity, '%');
 			}
 		} else {
-			const defaults = this.getDefaultShadow();
+			const defaults = shadowDefaults;
 			this.ui.shadowOffsetX.value = defaults.offsetX;
 			this.ui.shadowOffsetXValue.innerHTML = formatUnit(defaults.offsetX, 'px');
 			this.ui.shadowOffsetY.value = defaults.offsetY;
@@ -1735,26 +1728,12 @@ class TextGlitterManager {
 	// the automatic clears (layer switch, effect disable, history restore)
 	// already move the user elsewhere and must not yank the view back.
 	returnToTextProperties(slot = 'fill') {
-		if (this.editor.mobileManager?.isMobile) {
-			// The gallery is its own drawer on mobile; close it to reveal the
-			// active layer's settings (Text Properties) underneath.
-			if (this.editor.mobileManager.activeDrawer === 'design') {
-				this.editor.mobileManager.closeAllDrawers();
-			}
-			return;
-		}
-
-		// Desktop accordion: reopen Text Properties (collapsing the gallery) and
-		// scroll the source row we were choosing for back into view.
-		this.editor.setCollapsibleSectionOpen?.('textSettings', true, true);
 		const chipId = slot === 'border'
 			? 'textBorderGlitterChip'
 			: slot === 'shadow'
 				? 'textShadowGlitterChip'
 				: 'textFillGlitterChip';
-		requestAnimationFrame(() => {
-			document.getElementById(chipId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-		});
+		returnFromPickerToProperties(this.editor, { section: 'textSettings', focusId: chipId });
 	}
 
 	// D-1c: the gallery status strip. Picker mode (armed slot on the active
@@ -1764,66 +1743,33 @@ class TextGlitterManager {
 	// updateEffectTargetButtons (arm/disarm, fill-mode flips, layer activate)
 	// and app.updateSidePanelUI (switching to any layer type).
 	updatePickerStrip() {
-		const strip = this.ui?.pickerStrip;
-		if (!strip) return;
-		const section = this.ui.gallerySection;
-		const { pickerStripTitle: title, pickerStripDetail: detail, pickerStripDone: done } = this.ui;
-
-		const hide = () => {
-			strip.hidden = true;
-			strip.classList.remove('is-armed', 'is-hint');
-			section?.classList.remove('picker-mode');
-		};
-
 		const layer = this.getActiveTextLayer();
-		if (!layer) { hide(); return; }
-
-		const session = this.pickerSession;
-		const slotExists = (slot) => slot === 'fill' || Boolean(this.getEffectData(layer, slot));
-		const armedSlot = (session && session.layerId === layer.id && slotExists(session.slot))
-			? session.slot
-			: null;
-
+		if (!layer) {
+			renderPickerStrip({ ownsStrip: true, visible: false });
+			return;
+		}
+		const armedSlot = pickerSelectionTarget(this, layer, {
+			isValid: (session) => session.slot === 'fill' || Boolean(this.getEffectData(layer, session.slot))
+		});
 		const fillData = this.getEffectData(layer, 'fill');
 		const fillIsSolid = fillData?.mode === 'solid';
-
 		if (armedSlot) {
-			strip.hidden = false;
-			strip.classList.add('is-armed');
-			strip.classList.remove('is-hint');
-			section?.classList.add('picker-mode');
-			if (done) done.hidden = false;
-
+			let stripText;
 			if (armedSlot === 'fill' && fillIsSolid) {
 				const color = (fillData.color || '#000000').toUpperCase();
-				if (title) title.textContent = 'Choosing fill glitter';
-				if (detail) {
-					const target = formatPickerTarget(layer.name, 'text');
-					detail.textContent = `${target}; current fill is solid (${color}).`;
-				}
+				stripText = { title: 'Choosing fill glitter', detail: `${formatPickerTarget(layer.name, 'text')}; current fill is solid (${color}).` };
 			} else {
-				const stripText = formatPickerStripText(armedSlot, layer.name, 'text');
-				if (title) title.textContent = stripText.title;
-				if (detail) detail.textContent = stripText.detail;
+				stripText = formatPickerStripText(armedSlot, layer.name, 'text');
 			}
+			renderPickerStrip({ ownsStrip: true, visible: true, armed: true, ...stripText });
 			return;
 		}
-
-		// Browse mode: the only passive hint is for a solid-fill text layer,
-		// answering "what happens if I click a glitter now?" for someone who
-		// never armed anything.
-		if (fillIsSolid) {
-			strip.hidden = false;
-			strip.classList.add('is-hint');
-			strip.classList.remove('is-armed');
-			section?.classList.remove('picker-mode');
-			if (done) done.hidden = true;
-			if (title) title.textContent = 'Text fill is a solid color — picking a glitter will switch it.';
-			if (detail) detail.textContent = '';
-			return;
-		}
-
-		hide();
+		renderPickerStrip({
+			ownsStrip: true,
+			visible: fillIsSolid,
+			hint: fillIsSolid,
+			title: 'Text fill is a solid color — picking a glitter will switch it.'
+		});
 	}
 
 	updateEffectSourceUI(layer, effectName) {
@@ -3095,10 +3041,7 @@ class TextGlitterManager {
 	}
 
 	createTransformHandles(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (transform) {
-			transform.createTransformHandles();
-		}
+		movableCreateTransformHandles(this, layerId);
 	}
 
 	// ===== TRANSFORM UPDATES (Delegation to LayerTransform, mirrors StickerManager) =====
@@ -3122,57 +3065,27 @@ class TextGlitterManager {
 	// ===== CENTERING METHODS (Delegation to LayerTransform, mirrors StickerManager) =====
 
 	centerHorizontal(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-
-		transform.centerHorizontal();
-
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) {
-			this.loadLayerSettings(layer);
-		}
+		movableCenterHorizontal(this, layerId, (layer) => this.loadLayerSettings(layer));
 	}
 
 	centerVertical(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-
-		transform.centerVertical();
-
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) {
-			this.loadLayerSettings(layer);
-		}
+		movableCenterVertical(this, layerId, (layer) => this.loadLayerSettings(layer));
 	}
 
 	alignToCanvas(layerId, mode) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-		transform.alignToCanvas(mode);
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) {
-			this.loadLayerSettings(layer);
-		}
+		movableAlignToCanvas(this, layerId, mode, (layer) => this.loadLayerSettings(layer));
 	}
 
 	resetTransform(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-		transform.resetTransform();
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) {
-			this.loadLayerSettings(layer);
-		}
+		movableResetTransform(this, layerId, (layer) => this.loadLayerSettings(layer));
 	}
 
 	removeTransformHandles() {
-		this.layerTransforms.forEach((transform) => {
-			transform.removeTransformHandles();
-		});
+		movableRemoveTransformHandles(this);
 	}
 
 	removeLayerElement(layerId) {
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
+		const layer = this.editor.layerManager.getLayerById(layerId);
 		if (layer) {
 			this.revokePreviewMaskCache(layer);
 		}
@@ -3194,7 +3107,7 @@ class TextGlitterManager {
 	clearElements() {
 		// New document / image reset: no layer survives, so any armed picker
 		// session is stale.
-		this.pickerSession = null;
+		this.closePickerSession();
 		Array.from(this.layerElements.keys()).forEach((layerId) => {
 			this.removeLayerElement(layerId);
 		});

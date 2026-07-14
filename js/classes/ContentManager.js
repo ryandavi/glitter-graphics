@@ -78,6 +78,7 @@ class ContentManager {
 				this.clearFilters();
 			});
 		}
+		this.ui.clearActiveFiltersBtn?.addEventListener('click', () => this.clearFilters());
 
 		// Name Only Checkbox
 		if (this.ui.searchNameOnly) {
@@ -368,6 +369,7 @@ class ContentManager {
 				if (val.size > 0) return true;
 				continue; // an empty Set is not an active filter
 			}
+			if (key === 'animated' && val !== null) return true;
 			if (val !== null && val !== '' && val !== false) return true;
 		}
 
@@ -375,8 +377,49 @@ class ContentManager {
 	}
 
 	updateClearFiltersButton() {
-		if (!this.ui.clearFiltersBtn) return;
-		this.ui.clearFiltersBtn.disabled = !this.hasActiveFilters();
+		const hasActive = this.hasActiveFilters();
+		if (this.ui.clearFiltersBtn) this.ui.clearFiltersBtn.disabled = !hasActive;
+		if (this.ui.clearActiveFiltersBtn) this.ui.clearActiveFiltersBtn.hidden = !hasActive;
+
+		const filterCount = Object.entries(this.activeFilters).reduce((count, [key, value]) => {
+			if (key === 'search') return count;
+			if (value instanceof Set) return count + value.size;
+			if (key === 'animated') return count + (value !== null ? 1 : 0);
+			return count + (value !== null && value !== '' && value !== false ? 1 : 0);
+		}, 0);
+		const searchSection = this.ui.searchInput?.closest('.glitter-search, .sticker-search');
+		searchSection?.classList.toggle('has-active-search', Boolean(this.activeFilters.search));
+		searchSection?.classList.toggle('has-active-filters', filterCount > 0);
+		this.renderActiveFilterSummary();
+
+		if (this.ui.filterToggle) {
+			this.ui.filterToggle.classList.toggle('has-active-filters', filterCount > 0);
+			this.ui.filterToggle.title = filterCount > 0
+				? `${filterCount} active filter${filterCount === 1 ? '' : 's'}`
+				: 'Toggle filters';
+		}
+	}
+
+	renderActiveFilterSummary() {
+		const summary = this.ui.activeFilterSummary;
+		if (!summary) return;
+		const labels = [];
+		const humanize = (value) => String(value).replace(/[-_]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+		if (this.activeFilters.search) labels.push(`Search: “${this.ui.searchInput?.value.trim() || this.activeFilters.search}”`);
+		Object.entries(this.activeFilters).forEach(([key, value]) => {
+			if (key === 'search' || key === 'nameOnly') return;
+			if (value instanceof Set) value.forEach((entry) => labels.push(humanize(entry)));
+			else if (key === 'animated' && value !== null) labels.push(value ? 'Animated' : 'Static');
+			else if (value !== null && value !== '' && value !== false) labels.push(humanize(value));
+		});
+		if (this.activeFilters.nameOnly) labels.push('Name only');
+		summary.replaceChildren(...labels.map((label) => {
+			const chip = document.createElement('span');
+			chip.className = 'active-filter-summary-chip';
+			chip.textContent = label;
+			return chip;
+		}));
+		summary.hidden = labels.length === 0;
 	}
 
 	clearFilters() {
@@ -438,4 +481,3 @@ class ContentManager {
 
 
 }
-

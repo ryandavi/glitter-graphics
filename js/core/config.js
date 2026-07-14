@@ -331,7 +331,7 @@ const CONFIG = {
 		mobile: {
 			breakpoint: 800,
 			stickerHitAreaPadding: 20,
-			autoCloseDesignDrawer: true,
+			autoCloseDesignDrawer: false,
 			openDrawOnLayerAdd: true
 		},
 		hints: {
@@ -707,7 +707,7 @@ const LAYER_UI_CONFIG = {
 			description: 'Add images and graphics'
 		},
 		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'glitterSearchSection', 'glitterOptions', 'stickerSettingsSection'],
-		mobileSettingsSections: ['glitter', 'sticker'],
+		mobileSettingsSections: ['sticker'],
 		panelMode: 'sticker',
 		elementClass: 'sticker-element',
 		transformable: true,
@@ -756,7 +756,7 @@ const LAYER_UI_CONFIG = {
 		// color-picked glitter fills — text layers hide it instead of showing an
 		// explanatory empty state.
 		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'textSettingsSection'],
-		mobileSettingsSections: ['glitter', 'text'],
+		mobileSettingsSections: ['text'],
 		panelMode: 'text',
 		elementClass: 'text-glitter-element',
 		transformable: true,
@@ -802,7 +802,7 @@ const LAYER_UI_CONFIG = {
 		// Like text: the glitter gallery picks the shared swatch, plus a dedicated
 		// Shape Properties panel. Selection Settings doesn't apply.
 		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'shapesOptions', 'shapeSettingsSection'],
-		mobileSettingsSections: ['glitter', 'shape'],
+		mobileSettingsSections: ['shape'],
 		panelMode: 'shape',
 		elementClass: 'shape-glitter-element',
 		transformable: true,
@@ -848,6 +848,7 @@ const PANEL_SCHEMAS = {
 	[LayerType.BASE_IMAGE]: {
 		prefix: 'baseBackground',
 		sectionPrefix: 'baseLayerSettings',
+		mobileKey: 'background',
 		replaceStatic: true,
 		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties' },
 		groups: [
@@ -872,6 +873,8 @@ const PANEL_SCHEMAS = {
 	},
 	brush: {
 		prefix: 'brush',
+		sectionPrefix: 'brushSettings',
+		mobileKey: 'brush',
 		replaceStatic: true,
 		section: {
 			id: 'brushSettingsSection', icon: 'brush', iconName: 'Brush', title: 'Brush Settings',
@@ -912,6 +915,8 @@ const PANEL_SCHEMAS = {
 	},
 	[LayerType.GLITTER_FILL]: {
 		prefix: 'glitter',
+		sectionPrefix: 'glitterSettings',
+		mobileKey: 'glitter',
 		section: { id: 'glitterSettingsSection', icon: 'glitter', iconName: 'Glitter', title: 'Glitter Properties' },
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', emptyText: 'Select a glitter fill from the gallery to get started.' },
 		groups: [
@@ -931,6 +936,8 @@ const PANEL_SCHEMAS = {
 		],
 		auxiliarySections: [{
 			prefix: 'layer',
+			sectionPrefix: 'layerSettings',
+			mobileKey: 'tool',
 			replaceStatic: true,
 			section: { id: 'layerSettingsSection', icon: 'paint-bucket', iconName: 'Sliders', title: 'Color Fill Settings' },
 			controls: {
@@ -950,13 +957,13 @@ const PANEL_SCHEMAS = {
 							{ id: 'multiSelect', label: 'Multi-Select', title: 'Select multiple colors on the same layer' }
 						] }
 					] },
-					{ kind: 'card', title: 'Color Selections', items: [
+					{ kind: 'card', title: 'Color Selections', classes: 'color-selection', items: [
 						{ kind: 'content', items: [
 							{ kind: 'host', id: 'selectedColorsEmpty', tag: 'span', classes: 'empty-state visible', text: 'None' },
 							{ kind: 'host', id: 'selectedColorsDisplay', classes: 'selected-colors-display' }
 						] }
 					] },
-					{ kind: 'card', title: 'Refine Selection', toggle: { id: 'refineGlobal', label: 'Apply to All Glitter Layers', title: 'Keep threshold and feather matched across every glitter fill layer' }, items: [
+					{ kind: 'card', title: 'Refine Selection', items: [
 						{ kind: 'twoColumn', items: [
 							{ kind: 'slider', id: 'threshold', slider: 'threshold' },
 							{ kind: 'slider', id: 'feather', slider: 'feather' }
@@ -968,6 +975,8 @@ const PANEL_SCHEMAS = {
 	},
 	[LayerType.STICKER]: {
 		prefix: 'sticker',
+		sectionPrefix: 'stickerSettings',
+		mobileKey: 'sticker',
 		section: { id: 'stickerSettingsSection', icon: 'sliders', iconName: 'Sliders', title: 'Sticker Properties' },
 		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', emptyText: 'Select a sticker to edit its properties.' },
 			groups: [
@@ -996,6 +1005,8 @@ const PANEL_SCHEMAS = {
 	},
 	[LayerType.TEXT_GLITTER]: {
 		prefix: 'text',
+		sectionPrefix: 'textSettings',
+		mobileKey: 'text',
 		sourceTemplate: 'tpl-text-content',
 		section: { id: 'textSettingsSection', icon: 'text', iconName: 'Text', title: 'Text Properties' },
 		groups: [
@@ -1053,6 +1064,8 @@ const PANEL_SCHEMAS = {
 	},
 	[LayerType.SHAPE]: {
 		prefix: 'shape',
+		sectionPrefix: 'shapeSettings',
+		mobileKey: 'shape',
 		section: { id: 'shapeSettingsSection', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
 		groups: [
 			{ title: 'Content', items: [

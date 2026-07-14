@@ -30,6 +30,7 @@ class ViewportManager {
 		this.lastViewportWidth = 0;
 		this.lastViewportHeight = 0;
 		this.resizeTimeout = null;
+		this.viewTransitionTimer = null;
 
 		// Canvas dimensions (set by editor when image loads)
 		this.canvasWidth = 0;
@@ -118,10 +119,61 @@ class ViewportManager {
 		return Math.round(this.currentZoom * 100);
 	}
 
+	/**
+	 * Capture the canvas point currently under the center of the viewport.
+	 * Canvas-space focus survives layout changes; raw pan offsets do not.
+	 */
+	captureViewState() {
+		const rect = this.previewContainer.getBoundingClientRect();
+		return {
+			zoom: this.currentZoom,
+			focusX: (rect.width / 2 - this.panX) / this.currentZoom,
+			focusY: (rect.height / 2 - this.panY) / this.currentZoom
+		};
+	}
+
+	restoreViewState(state, options = {}) {
+		if (!state || !this.canvasWidth) return;
+		if (options.animate) this.startViewTransition();
+		this.cancelInertia();
+		const rect = this.previewContainer.getBoundingClientRect();
+		this.currentZoom = state.zoom;
+		let closestDiff = Number.MAX_VALUE;
+		CONFIG.ui.zoom.levels.forEach((zoom, index) => {
+			const diff = Math.abs(zoom - this.currentZoom);
+			if (diff < closestDiff) {
+				closestDiff = diff;
+				this.currentZoomIndex = index;
+			}
+		});
+		this.panX = rect.width / 2 - state.focusX * this.currentZoom;
+		this.panY = rect.height / 2 - state.focusY * this.currentZoom;
+		this.lastViewportWidth = rect.width;
+		this.lastViewportHeight = rect.height;
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
+
+	startViewTransition() {
+		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+		if (this.viewTransitionTimer) clearTimeout(this.viewTransitionTimer);
+		this.previewWrapper.classList.add('viewport-transition');
+		// Commit the current transform before the next method writes its target.
+		void this.previewWrapper.offsetWidth;
+		this.viewTransitionTimer = setTimeout(() => this.cancelViewTransition(), 350);
+	}
+
+	cancelViewTransition() {
+		if (this.viewTransitionTimer) clearTimeout(this.viewTransitionTimer);
+		this.viewTransitionTimer = null;
+		this.previewWrapper.classList.remove('viewport-transition');
+	}
+
 	// ===== ZOOM METHODS =====
 
-	setZoom(newZoom, clickX = null, clickY = null) {
+	setZoom(newZoom, clickX = null, clickY = null, options = {}) {
 		if (!this.canvasWidth) return;
+		if (options.animate) this.startViewTransition();
 		this.cancelInertia();
 
 		const oldZoom = this.currentZoom;
@@ -177,26 +229,27 @@ class ViewportManager {
 		this._notifyViewportChanged();
 	}
 
-	zoomIn(clickX = null, clickY = null) {
+	zoomIn(clickX = null, clickY = null, options = {}) {
 		if (this.currentZoomIndex < CONFIG.ui.zoom.levels.length - 1) {
-			this.setZoom(CONFIG.ui.zoom.levels[this.currentZoomIndex + 1], clickX, clickY);
+			this.setZoom(CONFIG.ui.zoom.levels[this.currentZoomIndex + 1], clickX, clickY, options);
 		} else {
 			const nextZoom = this.currentZoom * 1.5;
-			this.setZoom(nextZoom, clickX, clickY);
+			this.setZoom(nextZoom, clickX, clickY, options);
 		}
 	}
 
-	zoomOut(clickX = null, clickY = null) {
+	zoomOut(clickX = null, clickY = null, options = {}) {
 		if (this.currentZoomIndex > 0) {
-			this.setZoom(CONFIG.ui.zoom.levels[this.currentZoomIndex - 1], clickX, clickY);
+			this.setZoom(CONFIG.ui.zoom.levels[this.currentZoomIndex - 1], clickX, clickY, options);
 		} else {
 			const nextZoom = this.currentZoom / 1.5;
-			this.setZoom(nextZoom, clickX, clickY);
+			this.setZoom(nextZoom, clickX, clickY, options);
 		}
 	}
 
-	zoomToFit() {
+	zoomToFit(options = {}) {
 		if (!this.canvasWidth) return;
+		if (options.animate) this.startViewTransition();
 		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
@@ -220,8 +273,9 @@ class ViewportManager {
 		this._notifyViewportChanged();
 	}
 
-	zoomToFill() {
+	zoomToFill(options = {}) {
 		if (!this.canvasWidth) return;
+		if (options.animate) this.startViewTransition();
 		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
@@ -245,8 +299,9 @@ class ViewportManager {
 		this._notifyViewportChanged();
 	}
 
-	resetZoom() {
+	resetZoom(options = {}) {
 		if (!this.canvasWidth) return;
+		if (options.animate) this.startViewTransition();
 		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
@@ -308,8 +363,9 @@ class ViewportManager {
 
 	// ===== CENTERING METHODS =====
 
-	centerHorizontal() {
+	centerHorizontal(options = {}) {
 		if (!this.canvasWidth) return;
+		if (options.animate) this.startViewTransition();
 		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
@@ -322,8 +378,9 @@ class ViewportManager {
 		this._notifyViewportChanged();
 	}
 
-	centerVertical() {
+	centerVertical(options = {}) {
 		if (!this.canvasWidth) return;
+		if (options.animate) this.startViewTransition();
 		this.cancelInertia();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
@@ -340,6 +397,7 @@ class ViewportManager {
 
 	startPan(x, y) {
 		if (!this.canvasWidth) return;
+		this.cancelViewTransition();
 		this.cancelInertia();
 
 		this.isPanning = true;
@@ -371,6 +429,7 @@ class ViewportManager {
 	}
 
 	panBy(deltaX, deltaY) {
+		this.cancelViewTransition();
 		this.panX += deltaX;
 		this.panY += deltaY;
 		this.clampPanToVisibleBounds();
@@ -386,6 +445,7 @@ class ViewportManager {
 	}
 
 	pinchZoomAt(scale, clientX, clientY) {
+		this.cancelViewTransition();
 		this.cancelInertia();
 		const rect = this.previewContainer.getBoundingClientRect();
 		const anchorX = clientX - rect.left;
@@ -546,4 +606,3 @@ class ViewportManager {
 		}));
 	}
 }
-

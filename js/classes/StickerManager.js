@@ -47,6 +47,8 @@ class StickerManager extends ContentManager {
 			filterToggle: document.getElementById('stickerFilterToggleBtn'),
 			filtersContainer: document.getElementById('stickerFiltersContainer'),
 			clearFiltersBtn: document.getElementById('clearStickerFiltersBtn'),
+			clearActiveFiltersBtn: document.getElementById('clearActiveStickerFiltersBtn'),
+			activeFilterSummary: document.getElementById('stickerActiveFilterSummary'),
 			categoryChips: document.getElementById('stickerCategoryChips'),
 			searchNameOnly: document.getElementById('searchStickerNameOnly'),
 			fitCanvas: document.getElementById('stickerFitCanvas'),
@@ -202,23 +204,34 @@ class StickerManager extends ContentManager {
 	armPicker(slot) {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.STICKER || !layer.stickerData[slot]) return;
-		this.pickerSession = { kind: 'glitter', layerId: layer.id, slot };
-		this.updatePickerStrip();
-		revealAssetBrowser(this.editor, this.editor.glitterManager);
+		pickerOpenSession(this, { kind: 'glitter', layerId: layer.id, slot }, {
+			refresh: () => this.updatePickerStrip(),
+			reveal: () => revealAssetBrowser(this.editor, this.editor.glitterManager)
+		});
 	}
 
 	armAssetPicker() {
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (layer?.type !== LayerType.STICKER) return;
-		this.pickerSession = { kind: 'asset', layerId: layer.id };
-		this.updatePickerStrip();
-		revealAssetBrowser(this.editor, this);
+		pickerOpenSession(this, { kind: 'asset', layerId: layer.id }, {
+			refresh: () => this.updatePickerStrip(),
+			reveal: () => revealAssetBrowser(this.editor, this)
+		});
 	}
 
 	closePicker() {
-		this.pickerSession = null;
-		this.updatePickerStrip();
-		if (!this.editor.mobileManager?.isMobile) this.editor.setCollapsibleSectionOpen?.('stickerSettings', true, true);
+		const focusId = this.pickerSession?.kind === 'glitter'
+			? `sticker${this.pickerSession.slot[0].toUpperCase()}${this.pickerSession.slot.slice(1)}GlitterChip`
+			: 'stickerAssetThumbnail';
+		this.closePickerSession();
+		returnFromPickerToProperties(this.editor, { section: 'stickerSettings', focusId });
+	}
+
+	closePickerSession() {
+		pickerCloseSession(this, {
+			refresh: () => this.updatePickerStrip(),
+			updateSelection: () => this.editor.updateGlitterSelection()
+		});
 	}
 
 	// Only drives the strip while a sticker is active; the text manager hides it
@@ -231,21 +244,18 @@ class StickerManager extends ContentManager {
 		const assetArmed = this.pickerSession?.kind === 'asset' && this.pickerSession.layerId === layer.id;
 		const glitterArmed = this.pickerSession?.kind !== 'asset' && this.pickerSession?.layerId === layer.id && layer.stickerData?.[this.pickerSession.slot];
 		const armed = Boolean(assetArmed || glitterArmed);
-		this.ui.pickerStrip.hidden = !armed;
-		this.ui.pickerStrip.classList.toggle('is-armed', armed);
-		this.ui.pickerStrip.classList.remove('is-hint');
-		this.ui.gallerySection?.classList.toggle('picker-mode', Boolean(glitterArmed));
-		if (!armed) return;
-		const stripText = assetArmed
-			? formatAssetPickerStripText('sticker', layer.name)
-			: formatPickerStripText(this.pickerSession.slot, layer.name, 'sticker');
-		if (this.ui.pickerStripTitle) this.ui.pickerStripTitle.textContent = stripText.title;
-		if (this.ui.pickerStripDetail) this.ui.pickerStripDetail.textContent = stripText.detail;
-		if (this.ui.pickerStripDone) this.ui.pickerStripDone.hidden = false;
+		const stripText = !armed
+			? {}
+			: assetArmed
+				? formatAssetPickerStripText('sticker', layer.name)
+				: formatPickerStripText(this.pickerSession.slot, layer.name, 'sticker');
+		renderPickerStrip({ ownsStrip: true, visible: armed, armed, pickerMode: glitterArmed, ...stripText });
 	}
 
 	getGlitterSelectionTarget(layer = this.editor.layerManager.getActiveLayer()) {
-		return layer?.type === LayerType.STICKER && this.pickerSession?.kind !== 'asset' && this.pickerSession?.layerId === layer.id ? this.pickerSession.slot : null;
+		return pickerSelectionTarget(this, layer, {
+			isValid: (session) => layer?.type === LayerType.STICKER && session.kind !== 'asset'
+		});
 	}
 
 	loadLayerSettings(layer) {
@@ -822,7 +832,7 @@ updateTransform(layerId, updates) {
     transform.updateTransform(updates);
 
     // Re-apply transform to element
-    const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
+		const layer = this.editor.layerManager.getLayerById(layerId);
     if (layer) {
         const element = this.layerElements.get(layerId);
         if (element) {
@@ -843,63 +853,29 @@ updateTransform(layerId, updates) {
 	// ===== CENTERING METHODS (Delegation to LayerTransform) =====
 
 	centerHorizontal(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-
-		transform.centerHorizontal();
-
-		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-		if (layer) {
-			this.editor.loadStickerSettings(layer);
-		}
+		movableCenterHorizontal(this, layerId, (layer) => this.editor.loadStickerSettings(layer));
 	}
 
 	centerVertical(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-
-		transform.centerVertical();
-
-		const layer = this.editor.layerManager.layers.find(l => l.id === layerId);
-		if (layer) {
-			this.editor.loadStickerSettings(layer);
-		}
+		movableCenterVertical(this, layerId, (layer) => this.editor.loadStickerSettings(layer));
 	}
 
 	alignToCanvas(layerId, mode) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-		transform.alignToCanvas(mode);
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) {
-			this.editor.loadTransformSettings?.(layer, 'sticker');
-		}
+		movableAlignToCanvas(this, layerId, mode, (layer) => this.editor.loadTransformSettings?.(layer, 'sticker'));
 	}
 
 	resetTransform(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-		transform.resetTransform();
-		const layer = this.editor.layerManager.layers.find((entry) => entry.id === layerId);
-		if (layer) {
-			this.editor.loadTransformSettings?.(layer, 'sticker');
-		}
+		movableResetTransform(this, layerId, (layer) => this.editor.loadTransformSettings?.(layer, 'sticker'));
 	}
 
 	// ===== TRANSFORM HANDLES (Delegation to LayerTransform) =====
 
 	createTransformHandles(layerId) {
-		const transform = this.layerTransforms.get(layerId);
-		if (!transform) return;
-
-		transform.createTransformHandles();
+		movableCreateTransformHandles(this, layerId);
 	}
 
 	removeTransformHandles() {
-		// Remove handles from all transforms
-		this.layerTransforms.forEach(transform => {
-			transform.removeTransformHandles();
-		});
+		movableRemoveTransformHandles(this);
 	}
 
 	// ===== LAYER REMOVAL =====

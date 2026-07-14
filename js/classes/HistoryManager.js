@@ -60,10 +60,11 @@ class HistoryManager {
 		// here — the full UI refresh at the end of this method repaints the
 		// gallery in browse mode.
 		if (this.editor.textGlitterManager) {
-			this.editor.textGlitterManager.pickerSession = null;
-			if (this.editor.shapeGlitterManager) this.editor.shapeGlitterManager.pickerSession = null;
-			if (this.editor.glitterManager) this.editor.glitterManager.pickerSession = null;
-			if (this.editor.baseBackgroundManager) this.editor.baseBackgroundManager.pickerSession = null;
+			this.editor.textGlitterManager.closePickerSession();
+			this.editor.shapeGlitterManager?.closePickerSession();
+			this.editor.stickerManager?.closePickerSession();
+			this.editor.glitterManager?.closePickerSession();
+			this.editor.baseBackgroundManager?.closePickerSession();
 		}
 		this.editor.layers = [];
 

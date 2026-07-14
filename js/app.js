@@ -131,7 +131,7 @@ class GlitterEditor {
 			this.endTemporaryHandTool();
 		});
 		document.getElementById('statusZoom')?.addEventListener('dblclick', () => {
-			if (this.originalImage) this.viewport.resetZoom();
+			if (this.originalImage) this.viewport.resetZoom({ animate: true });
 		});
 		this.previewContainer?.addEventListener('dblclick', (event) => {
 			if (this.currentTool !== ToolType.SELECT || !event.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR)) return;
@@ -585,14 +585,17 @@ initializeExportSettings() {
 	}
 
 	updateExportFormatUI() {
-		const isMp4 = this.exportSettings.format === 'mp4';
+		const isMp4 = this.exportSettings.format === 'mp4' && this.mp4ExportSupported === true;
+		const activeFormat = isMp4 ? 'mp4' : 'gif';
 		document.querySelectorAll('#exportFormatControl [data-export-format]').forEach((button) => {
 			const format = button.dataset.exportFormat;
-			button.classList.toggle('active', format === this.exportSettings.format);
-			button.setAttribute('aria-pressed', String(format === this.exportSettings.format));
+			button.classList.toggle('active', format === activeFormat);
+			button.setAttribute('aria-pressed', String(format === activeFormat));
 			if (format === 'mp4') {
-				button.disabled = this.mp4ExportSupported === false;
-				button.title = button.disabled ? 'MP4 export requires WebCodecs H.264 support in this browser.' : '';
+				const supported = this.mp4ExportSupported === true;
+				button.hidden = !supported;
+				button.disabled = !supported;
+				button.title = supported ? '' : 'MP4 export requires WebCodecs H.264 support in this browser.';
 			}
 		});
 		document.querySelectorAll('[data-export-format-section="gif"]').forEach((row) => row.hidden = isMp4);
@@ -1010,50 +1013,44 @@ async resetAllSettings() {
 
 	// ===== UX: EMPTY STATE MANAGEMENT =====
 
+	setSettingsEmptyState(prefix, visible, { title, subtext } = {}) {
+		const empty = document.getElementById(`${prefix}Empty`);
+		const controls = document.getElementById(`${prefix}Controls`);
+		const emptyText = document.getElementById(`${prefix}EmptyText`);
+		const emptySubtext = document.getElementById(`${prefix}EmptySubtext`);
+		empty?.classList.toggle('visible', visible);
+		controls?.classList.toggle('visible', !visible);
+		if (emptyText && title !== undefined) emptyText.textContent = title;
+		if (emptySubtext && subtext !== undefined) emptySubtext.textContent = subtext;
+	}
+
+	collapseSettingsSection(prefix) {
+		document.getElementById(`${prefix}Content`)?.classList.remove('visible');
+		document.getElementById(`${prefix}Toggle`)?.classList.add('collapsed');
+	}
+
 	showLayerSettingsEmptyState(title = 'No layer selected', subtext = '') {
-		const empty = document.getElementById('layerSettingsEmpty');
-		const controls = document.getElementById('layerSettingsControls');
-		const emptyText = document.getElementById('layerSettingsEmptyText');
-		const emptySubtext = document.getElementById('layerSettingsEmptySubtext');
-		if (empty) empty.classList.add('visible');
-		if (controls) controls.classList.remove('visible');
-		if (emptyText) emptyText.textContent = title;
-		if (emptySubtext) emptySubtext.textContent = subtext;
+		this.setSettingsEmptyState('layerSettings', true, { title, subtext });
 	}
 
 	hideLayerSettingsEmptyState() {
-		const empty = document.getElementById('layerSettingsEmpty');
-		const controls = document.getElementById('layerSettingsControls');
-		if (empty) empty.classList.remove('visible');
-		if (controls) controls.classList.add('visible');
+		this.setSettingsEmptyState('layerSettings', false);
 	}
 
 	showGlitterSettingsEmptyState() {
-		const empty = document.getElementById('glitterSettingsEmpty');
-		const controls = document.getElementById('glitterSettingsControls');
-		if (empty) empty.classList.add('visible');
-		if (controls) controls.classList.remove('visible');
+		this.setSettingsEmptyState('glitterSettings', true);
 	}
 
 	hideGlitterSettingsEmptyState() {
-		const empty = document.getElementById('glitterSettingsEmpty');
-		const controls = document.getElementById('glitterSettingsControls');
-		if (empty) empty.classList.remove('visible');  // ← FIXED
-		if (controls) controls.classList.add('visible');
+		this.setSettingsEmptyState('glitterSettings', false);
 	}
 
 	collapseLayerSettings() {
-		const content = document.getElementById('layerSettingsContent');
-		const toggle = document.getElementById('layerSettingsToggle');
-		if (content) content.classList.remove('visible');
-		if (toggle) toggle.classList.add('collapsed');
+		this.collapseSettingsSection('layerSettings');
 	}
 
 	collapseGlitterSettings() {
-		const content = document.getElementById('glitterSettingsContent');
-		const toggle = document.getElementById('glitterSettingsToggle');
-		if (content) content.classList.remove('visible');
-		if (toggle) toggle.classList.add('collapsed');
+		this.collapseSettingsSection('glitterSettings');
 	}
 
 	updateGlitterOptionsState() {
@@ -1068,17 +1065,11 @@ async resetAllSettings() {
 	}
 
 	showStickerSettingsEmptyState() {
-		const empty = document.getElementById('stickerSettingsEmpty');
-		const controls = document.getElementById('stickerSettingsControls');
-		if (empty) empty.classList.add('visible');
-		if (controls) controls.classList.remove('visible');
+		this.setSettingsEmptyState('stickerSettings', true);
 	}
 
 	hideStickerSettingsEmptyState() {
-		const empty = document.getElementById('stickerSettingsEmpty');
-		const controls = document.getElementById('stickerSettingsControls');
-		if (empty) empty.classList.remove('visible');
-		if (controls) controls.classList.add('visible');
+		this.setSettingsEmptyState('stickerSettings', false);
 	}
 
 	syncNoLayerPanelState() {
@@ -1105,10 +1096,7 @@ async resetAllSettings() {
 	}
 
 	collapseStickerSettings() {
-		const content = document.getElementById('stickerSettingsContent');
-		const toggle = document.getElementById('stickerSettingsToggle');
-		if (content) content.classList.remove('visible');
-		if (toggle) toggle.classList.add('collapsed');
+		this.collapseSettingsSection('stickerSettings');
 	}
 
 
@@ -1237,24 +1225,24 @@ async resetAllSettings() {
 
 		// Animated badge
 		if (asset.isAnimated) {
-			badgeHTML.push('<div class="asset-info-badge badge-animated">Animated</div>');
+			badgeHTML.push('<span class="asset-info-badge badge-animated" title="This asset contains animation frames">Animated</span>');
 		}
 
 		// Transparency badge
 		if (asset.hasTransparency) {
-			badgeHTML.push('<div class="asset-info-badge badge-transparency">Transparent</div>');
+			badgeHTML.push('<span class="asset-info-badge badge-transparency" title="This asset contains transparent pixels">Transparent</span>');
 		}
 
 		// Variable frame rate badge
 		if (asset.isVariableFramerate) {
-			badgeHTML.push('<div class="asset-info-badge badge-variable-fps">Variable FPS</div>');
+			badgeHTML.push('<span class="asset-info-badge badge-variable-fps" title="Animation frames use variable timing">Variable FPS</span>');
 		}
 
 		// Type-specific badges
 		if (getExtraBadges) {
 			const extraBadges = getExtraBadges(asset);
 			extraBadges.forEach(badge => {
-				badgeHTML.push(`<div class="asset-info-badge ${badge.class}">${badge.text}</div>`);
+				badgeHTML.push(`<span class="asset-info-badge ${badge.class}" title="Asset property">${badge.text}</span>`);
 			});
 		}
 
@@ -1264,7 +1252,9 @@ async resetAllSettings() {
 		const categoryBadge = badgesEl.querySelector('.badge-category');
 		if (categoryBadge) {
 			categoryBadge.addEventListener('click', () => {
-				if (manager?.browser) revealAssetBrowser(this, manager, asset.id);
+				if (!manager?.browser) return;
+				revealAssetBrowser(this, manager);
+				manager.browser.navigateToCategory(asset.category);
 			});
 		}
 	}
@@ -2485,7 +2475,7 @@ async resetAllSettings() {
 		if (!this.stickerManager || !this.textGlitterManager) return;
 
 		const activeLayer = this.layerManager.getActiveLayer();
-		if (this.currentTool !== ToolType.SELECT || !activeLayer) {
+		if (this.currentTool !== ToolType.SELECT || !activeLayer || activeLayer.locked) {
 			this.stickerManager.removeTransformHandles();
 			this.textGlitterManager.removeTransformHandles();
 			this.shapeGlitterManager?.removeTransformHandles();
@@ -3225,7 +3215,7 @@ async resetAllSettings() {
 				onOpen: () => this.updateExportDuration()
 			})
 			.register('settingsModal', {
-				openBtnId: 'settingsBtn',
+				openBtnId: ['settingsBtn', 'mobileAppSettingsBtn'],
 				closeBtnId: ['closeSettingsModal', 'closeSettingsModalFooter'],
 				resetScrollOnOpen: true
 			})
@@ -3675,24 +3665,12 @@ setupWelcomeModalListeners() {
 
 	setupLayerPanelListeners() {
 		// Add layer buttons - open layer type picker
-		const addLayerBtn = document.getElementById('addLayerBtn');
-		if (addLayerBtn) {
-			addLayerBtn.addEventListener('click', () => {
+		['addLayerBtn', 'mobileAddLayerBtn'].forEach((id) => {
+			const addLayerBtn = document.getElementById(id);
+			if (addLayerBtn) addLayerBtn.addEventListener('click', () => {
 				this.modalManager.open('layerTypePickerModal');
 			});
-		}
-
-		const mobileAddBtn = document.getElementById('mobileAddLayerBtn');
-		if (mobileAddBtn) {
-			mobileAddBtn.addEventListener('click', () => {
-				// Close all mobile menus first
-				if (this.mobileManager && this.mobileManager.isMobile) {
-					this.mobileManager.closeAllDrawers();
-					this.mobileManager.closeSettings();
-				}
-				this.modalManager.open('layerTypePickerModal');
-			});
-		}
+		});
 
 		const quickAddOptions = document.getElementById('quickAddOptions');
 		if (quickAddOptions) {
@@ -4904,19 +4882,19 @@ setupWelcomeModalListeners() {
 		if (this.originalImage) {
 			if ((e.ctrlKey || e.metaKey) && e.key === '0') {
 				e.preventDefault();
-				this.viewport.zoomToFit();
+				this.viewport.zoomToFit({ animate: true });
 			}
 			if ((e.ctrlKey || e.metaKey) && e.key === '1') {
 				e.preventDefault();
-				this.viewport.resetZoom();
+				this.viewport.resetZoom({ animate: true });
 			}
 			if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
 				e.preventDefault();
-				this.viewport.zoomIn();
+				this.viewport.zoomIn(null, null, { animate: true });
 			}
 			if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
 				e.preventDefault();
-				this.viewport.zoomOut();
+				this.viewport.zoomOut(null, null, { animate: true });
 			}
 		}
 
@@ -6177,9 +6155,9 @@ setupWelcomeModalListeners() {
 		if (this.currentTool !== ToolType.ZOOM || !this.originalImage) return;
 
 		if (options.zoomOut) {
-			this.viewport.zoomOut(clientX, clientY);
+			this.viewport.zoomOut(clientX, clientY, { animate: true });
 		} else {
-			this.viewport.zoomIn(clientX, clientY);
+			this.viewport.zoomIn(clientX, clientY, { animate: true });
 		}
 
 		this.updateStatus(`Zoom: ${this.viewport.getZoomPercentage()}%`);
@@ -6303,12 +6281,12 @@ setupWelcomeModalListeners() {
 
 		// Only show for glitter layers with selections
 		if (!layer || layer.type !== LayerType.GLITTER_FILL || !layer.selections || layer.selections.length === 0) {
-			document.getElementById('selectedColorsEmpty').classList.add('visible');
+			document.getElementById('selectedColorsEmpty')?.classList.add('visible');
 			container.innerHTML = '';
 			return;
 		}
 
-		document.getElementById('selectedColorsEmpty').classList.remove('visible');
+		document.getElementById('selectedColorsEmpty')?.classList.remove('visible');
 		container.innerHTML = '';
 
 		layer.selections.forEach((sel, index) => {
@@ -6324,8 +6302,10 @@ setupWelcomeModalListeners() {
 
 			const removeBtn = document.createElement('button');
 			removeBtn.className = 'selected-color-remove';
+			removeBtn.type = 'button';
 			removeBtn.textContent = '×';
 			removeBtn.title = 'Remove this color selection';
+			removeBtn.setAttribute('aria-label', `Remove color ${sel.r}, ${sel.g}, ${sel.b}`);
 			removeBtn.onclick = () => this.removeColorSelection(index);
 
 			chip.append(swatch, text, removeBtn);

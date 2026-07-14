@@ -401,6 +401,23 @@
 				opacity: 0.5;
 			}
 
+			// Keep the row and its actions fully interactive. Visibility affects the
+			// content preview; locking affects movement/edit affordances.
+			&.is-hidden {
+				>.layer-swatch { opacity: 0.35; }
+
+				>.layer-info {
+					>.layer-name,
+					>.layer-meta > .layer-type { color: var(--color-text-tertiary); }
+				}
+			}
+
+			&.is-locked > .layer-drag-handle {
+				cursor: default;
+
+				>.icon:not(.active) { opacity: 0.35; }
+			}
+
 			>.layer-swatch {
 				width: var(--icon-size-sm);
 				height: var(--icon-size-sm);
@@ -574,7 +591,23 @@
 
 
 					&.visibility.hidden {
+						color: var(--color-text-secondary);
+					}
+
+					&.lock.active {
+						color: var(--color-accent);
+						background: var(--color-bg-accent-tint);
+						border-color: var(--color-accent-border);
+					}
+
+					&.lock.permanent {
+						opacity: 0.65;
+						cursor: help;
+					}
+
+					&:disabled {
 						opacity: var(--disabled-opacity);
+						cursor: not-allowed;
 					}
 
 					&.goto-glitter {
@@ -590,7 +623,7 @@
 			}
 
 			>.layer-drag-handle {
-				display: none; // Hidden on desktop
+				display: flex;
 				height: var(--icon-size-sm);
 				align-items: center;
 				justify-content: center;
@@ -883,15 +916,19 @@
 
 .color-selection {
 	.empty-state {
-		padding: 3px 0;
-		border: 1px solid transparent;
+		min-height: var(--control-height-compact);
+		padding: var(--spacing-sm) var(--spacing-md);
+		border: 1px dashed var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-tertiary);
 		@include text-xs;
 	}
 
 	.selected-colors-display {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--spacing-xs);
+		gap: var(--spacing-sm);
 		@include text-xs;
 
 
@@ -901,15 +938,16 @@
 			display: flex;
 			align-items: center;
 			gap: var(--spacing-sm);
-			padding: 3px var(--spacing-sm) 3px 3px;
+			min-height: var(--control-height-compact);
+			padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) var(--spacing-sm);
 			background: var(--color-bg-secondary);
 			border: 1px solid var(--color-border);
-			border-radius: 12px;
+			border-radius: var(--radius-full);
 
 
 			>.selected-color-swatch {
-				width: 14px;
-				height: 14px;
+				width: 16px;
+				height: 16px;
 				border-radius: var(--radius-full);
 				border: 1px solid var(--color-border);
 				flex-shrink: 0;
@@ -921,14 +959,20 @@
 				color: var(--color-text-tertiary);
 				cursor: pointer;
 				padding: 0;
-				width: 12px;
-				height: 12px;
+				width: 24px;
+				height: 24px;
 				display: flex;
 				align-items: center;
 				justify-content: center;
 				font-size: var(--font-size-base);
 				line-height: 1;
-				margin-left: 4px;
+				margin-left: var(--spacing-xs);
+				border-radius: var(--radius-full);
+
+				&:focus-visible {
+					outline: 2px solid var(--color-accent);
+					outline-offset: 1px;
+				}
 
 				&:hover {
 					color: var(--color-danger-bright);
@@ -1358,6 +1402,7 @@ body.tool-text {
 	// box-shadow: 0px 5px 3px 0px rgba(0, 0, 0, 0.13);
 
 	>.search-toggle-row {
+		--search-control-height: var(--control-height);
 		display: flex;
 		gap: var(--spacing-sm);
 		align-items: center;
@@ -1371,12 +1416,14 @@ body.tool-text {
 		>.search-input-wrapper {
 			position: relative;
 			flex: 1;
+			height: var(--search-control-height);
 
 			display: flex;
 			flex-direction: column;
 
 			>input {
 				width: 100%;
+				height: var(--search-control-height);
 				padding: var(--spacing-sm) var(--spacing-md);
 				padding-left: 2rem;
 				/* space for icon */
@@ -1385,7 +1432,6 @@ body.tool-text {
 				border-radius: var(--radius-sm);
 				color: var(--color-text-primary);
 				font-size: var(--font-size-base);
-				height: 100%;
 				flex: 1;
 				box-sizing: border-box;
 
@@ -1424,6 +1470,51 @@ body.tool-text {
 			}
 
 		}
+
+		>.has-active-filters {
+			color: var(--color-accent);
+			border-color: var(--color-accent-border);
+		}
+
+		>.btn-icon {
+			width: var(--search-control-height);
+			height: var(--search-control-height);
+			min-width: var(--search-control-height);
+			flex: 0 0 var(--search-control-height);
+			aspect-ratio: 1;
+		}
+
+		>.clear-active-filters {
+			flex: 0 0 auto;
+			height: var(--search-control-height);
+			min-height: var(--search-control-height);
+			padding-inline: var(--spacing-md);
+		}
+	}
+
+	&.has-active-search > .search-toggle-row > .search-input-wrapper > input,
+	&.has-active-filters > .search-toggle-row > .search-input-wrapper > input {
+		border-color: var(--color-accent-border);
+		background: var(--color-bg-accent-tint);
+	}
+
+	>.active-filter-summary {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-xs);
+		padding: 0 var(--spacing-md) var(--spacing-md);
+
+		&[hidden] { display: none; }
+	}
+
+	.active-filter-summary-chip {
+		padding: var(--spacing-xs) var(--spacing-sm);
+		border: 1px solid var(--color-accent-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-accent-tint);
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-xs);
+		line-height: 1.2;
 	}
 
 
@@ -1685,12 +1776,12 @@ body.tool-text {
 
 .preview-controls {
 	position: absolute;
-	left: 0;
-	right: 0;
+	top: var(--spacing-from-edge);
+	left: var(--spacing-from-edge);
+	right: var(--spacing-from-edge);
 	display: none;
 	justify-content: space-between;
 	align-items: center;
-	padding: var(--spacing-from-edge);
 	z-index: 10;
 	pointer-events: none;
 
@@ -1702,20 +1793,21 @@ body.tool-text {
 		pointer-events: auto;
 	}
 
-	>.preview-controls-right {
-		margin-left: auto;
-		display: flex;
-		gap: var(--spacing-sm);
-	}
-
+	>.preview-controls-right,
 	>.preview-controls-center {
 		display: flex;
 		gap: var(--spacing-sm);
+		@include floating-ui();
+	}
+
+	>.preview-controls-right {
+		margin-left: auto;
+	}
+
+	>.preview-controls-center {
 		position: absolute;
 		left: 50%;
 		transform: translateX(-50%);
-
-		@include floating-ui();
 	}
 }
 
@@ -1742,6 +1834,10 @@ body.tool-text {
 	   come LAST — the later declaration wins, crisp-edges is only the fallback. */
 	image-rendering: crisp-edges;
 	image-rendering: pixelated;
+
+	&.viewport-transition {
+		transition: transform var(--transition-base);
+	}
 
 	&.color-picker-mode {
 		cursor: crosshair;
@@ -2190,6 +2286,16 @@ body.mask-editing {
 	}
 }
 
+.asset-options[data-browser-state="search-results"] .asset-browser-header {
+	background: var(--color-bg-accent-tint);
+	border-color: var(--color-accent-border);
+
+	>.asset-browser-title {
+		color: var(--color-accent);
+		text-transform: none;
+	}
+}
+
 
 
 
@@ -2206,6 +2312,9 @@ body.mask-editing {
 
 	>.asset-browser-header {
 		display: flex;
+		position: sticky;
+		top: 0;
+		z-index: 2;
 		align-items: center;
 		gap: var(--spacing-sm);
 		padding: var(--spacing-sm) var(--spacing-md);
@@ -2260,6 +2369,8 @@ body.mask-editing {
 				color: var(--color-text-secondary);
 				text-align: center;
 			}
+
+			>.empty-state-clear-filters { margin-top: var(--spacing-md); }
 		}
 
 

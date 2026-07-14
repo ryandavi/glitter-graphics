@@ -696,7 +696,7 @@ class GroupTransformManager {
 		}
 		if (!this.dragStartState.didMove && this.dragStartState.altDuplicatePending) {
 			const sourceTransforms = this.dragStartState.originalSelectionIds.map((id) => {
-				const layer = this.editor.layerManager.layers.find((entry) => entry.id === id);
+				const layer = this.editor.layerManager.getLayerById(id);
 				return layer ? this.getLayerTransform(layer) : null;
 			});
 			const clones = this.editor.layerManager.cloneLayers(this.dragStartState.originalSelectionIds, {

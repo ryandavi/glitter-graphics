@@ -19,6 +19,13 @@ function panelDiv(className) {
 	return node;
 }
 
+function addPanelClasses(node, classes) {
+	if (!classes) return node;
+	const names = Array.isArray(classes) ? classes : String(classes).split(/\s+/);
+	node.classList.add(...names.filter(Boolean));
+	return node;
+}
+
 function panelCap(value) {
 	return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -278,6 +285,7 @@ function buildPanelItem(item, schema) {
 	switch (item.kind) {
 		case 'card': {
 			const card = tplClone('tpl-card');
+			addPanelClasses(card, item.classes);
 			const title = card.querySelector('.subsection-title');
 			if (item.title) title.querySelector(':scope > span').textContent = item.title;
 			else title.remove();
@@ -292,7 +300,7 @@ function buildPanelItem(item, schema) {
 			return card;
 		}
 		case 'content': {
-			const content = panelDiv('subsection-content');
+			const content = addPanelClasses(panelDiv('subsection-content'), item.classes);
 			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
 			return content;
 		}

@@ -26,7 +26,8 @@ constructor(contentManager, elementIds, displayName) {
 		itemGrid: document.getElementById(elementIds.itemGrid),
 		sentinel: document.getElementById(elementIds.sentinel),
 		emptyState: document.getElementById(elementIds.emptyState),
-		emptyText: document.getElementById(elementIds.emptyText)
+		emptyText: document.getElementById(elementIds.emptyText),
+		emptyClearFilters: document.getElementById(elementIds.emptyState)?.querySelector('.empty-state-clear-filters')
 	};
 	
 	// Store parent containers
@@ -76,6 +77,7 @@ setupIntersectionObserver() {
 }
 
 	setupEventListeners() {
+		this.elements.emptyClearFilters?.addEventListener('click', () => this.contentManager.clearFilters());
 		this.elements.backBtn.addEventListener('click', () => {
 			// If in search, clear the search input which will trigger return to category list
 			if (this.state === 'SEARCH_RESULTS') {
@@ -84,6 +86,7 @@ setupIntersectionObserver() {
 					searchInput.value = '';
 					this.contentManager.activeFilters.search = '';
 				}
+				this.contentManager.updateClearFiltersButton();
 			}
 			
 			this.setState('CATEGORY_LIST');
@@ -95,6 +98,16 @@ setupIntersectionObserver() {
 
 
 		});
+	}
+
+	navigateToCategory(categoryId) {
+		if (!categoryId || !this.categories.some((category) => category.id === categoryId)) return false;
+		const searchInput = this.contentManager.ui.searchInput;
+		if (searchInput) searchInput.value = '';
+		this.contentManager.activeFilters.search = '';
+		this.contentManager.updateClearFiltersButton();
+		this.setState('CATEGORY_DETAIL', categoryId);
+		return true;
 	}
 	// ===== STATE MANAGEMENT =====
 
@@ -382,8 +395,11 @@ renderCategoryDetail() {
 
 renderSearchResults() {
 	// Update header
-	this.elements.backBtn.disabled = false; // CHANGED: Enable back button
-	this.elements.title.textContent = `Search: "${this.contentManager.activeFilters.search}"`;
+	this.elements.backBtn.disabled = false;
+	const query = this.contentManager.activeFilters.search;
+	const resultCount = this.getFilteredItems().length;
+	this.elements.title.textContent = `${resultCount} result${resultCount === 1 ? '' : 's'} for “${query}”`;
+	this.elements.title.setAttribute('aria-live', 'polite');
 	
 	// Show search results container
 	this.elements.searchResults.classList.add('visible');
@@ -590,6 +606,9 @@ this.checkAndLoadMore();
 
 	showEmptyState(message) {
 		this.elements.emptyText.textContent = message;
+		if (this.elements.emptyClearFilters) {
+			this.elements.emptyClearFilters.hidden = this.state !== 'SEARCH_RESULTS' || !this.contentManager.hasActiveFilters();
+		}
 		this.elements.emptyState.classList.add('visible');
 	}
 
@@ -603,4 +622,3 @@ this.checkAndLoadMore();
 		return this.contentManager.createItemElement(item);
 	}
 }
-
