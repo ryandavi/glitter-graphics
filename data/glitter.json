@@ -5,7 +5,7 @@
         "name": "Light Pink",
         "generatedName": "Muted Pink",
         "brightness": "1.000",
-        "sortOrder": 10,
+        "sortOrder": 0,
         "hue": 0.185,
         "colorCodes": [
             "#FF78C3"
@@ -33,7 +33,7 @@
         "name": "Dusty Pink",
         "generatedName": "Very Light Desaturated Red",
         "brightness": "0.690",
-        "sortOrder": 11,
+        "sortOrder": 1,
         "hue": 0.047,
         "colorCodes": [
             "#EF9C99",
@@ -68,7 +68,7 @@
         "name": "Hot Pink 2",
         "generatedName": "Vivid Pink",
         "brightness": "1.000",
-        "sortOrder": 12,
+        "sortOrder": 2,
         "hue": 0.201,
         "colorCodes": [
             "#FF3C96"
@@ -96,7 +96,7 @@
         "name": "Muted Hot Pink",
         "generatedName": "Multicolor",
         "brightness": "1.000",
-        "sortOrder": 13,
+        "sortOrder": 3,
         "hue": 0.945,
         "colorCodes": [
             "#D26BA7",
@@ -125,7 +125,7 @@
         "name": "Pink Magenta",
         "generatedName": "Muted Pink",
         "brightness": "1.000",
-        "sortOrder": 14,
+        "sortOrder": 4,
         "hue": 0.135,
         "colorCodes": [
             "#D269C3"
@@ -153,7 +153,7 @@
         "name": "Pink Purple",
         "generatedName": "Muted Pink",
         "brightness": "1.000",
-        "sortOrder": 15,
+        "sortOrder": 5,
         "hue": 0.215,
         "colorCodes": [
             "#E16996"
@@ -182,7 +182,7 @@
         "name": "Magenta",
         "generatedName": "Neon Pink",
         "brightness": "1.000",
-        "sortOrder": 16,
+        "sortOrder": 6,
         "hue": 0.125,
         "colorCodes": [
             "#B400A5"
@@ -211,7 +211,7 @@
         "name": "Rhodolite",
         "generatedName": "Jewel Tone Pink",
         "brightness": "1.000",
-        "sortOrder": 17,
+        "sortOrder": 7,
         "hue": 0.13,
         "colorCodes": [
             "#870078"
@@ -240,7 +240,7 @@
         "name": "Pink Red",
         "generatedName": "Vivid Red",
         "brightness": "1.000",
-        "sortOrder": 18,
+        "sortOrder": 8,
         "hue": 0.042,
         "colorCodes": [
             "#FF0000"
@@ -269,7 +269,7 @@
         "name": "Red",
         "generatedName": "Vivid Red",
         "brightness": "1.000",
-        "sortOrder": 19,
+        "sortOrder": 9,
         "hue": 0.042,
         "colorCodes": [
             "#FF0000"
@@ -297,7 +297,7 @@
         "name": "Crimson",
         "generatedName": "Vivid Red",
         "brightness": "1.000",
-        "sortOrder": 20,
+        "sortOrder": 10,
         "hue": 0.028,
         "colorCodes": [
             "#C3000F"
@@ -326,7 +326,7 @@
         "name": "Ruby",
         "generatedName": "Jewel Tone Pink",
         "brightness": "0.000",
-        "sortOrder": 21,
+        "sortOrder": 11,
         "hue": 0.215,
         "colorCodes": [
             "#78002D"
@@ -357,7 +357,7 @@
         "name": "Bright Orange",
         "generatedName": "Vivid Pink",
         "brightness": "1.000",
-        "sortOrder": 22,
+        "sortOrder": 12,
         "hue": 0.23,
         "colorCodes": [
             "#FF2D69"
@@ -386,7 +386,7 @@
         "name": "Coral",
         "generatedName": "Muted Pink",
         "brightness": "1.000",
-        "sortOrder": 23,
+        "sortOrder": 13,
         "hue": 0.215,
         "colorCodes": [
             "#E16996"
@@ -418,7 +418,7 @@
         "name": "Light Orange",
         "generatedName": "Vivid Orange",
         "brightness": "1.000",
-        "sortOrder": 24,
+        "sortOrder": 14,
         "hue": 0.1,
         "colorCodes": [
             "#FF782D"
@@ -446,7 +446,7 @@
         "name": "Orange",
         "generatedName": "Vivid Orange",
         "brightness": "1.000",
-        "sortOrder": 25,
+        "sortOrder": 15,
         "hue": 0.108,
         "colorCodes": [
             "#FF6900"
@@ -474,7 +474,7 @@
         "name": "Orange Dark",
         "generatedName": "Vivid Orange",
         "brightness": "1.000",
-        "sortOrder": 26,
+        "sortOrder": 16,
         "hue": 0.158,
         "colorCodes": [
             "#D29600"
@@ -502,7 +502,7 @@
         "name": "Dark Gold",
         "generatedName": "Vivid Gold",
         "brightness": "1.000",
-        "sortOrder": 27,
+        "sortOrder": 17,
         "hue": 0.167,
         "colorCodes": [
             "#B48700"
@@ -530,7 +530,7 @@
         "name": "Gold 2",
         "generatedName": "Muted Yellow",
         "brightness": "1.000",
-        "sortOrder": 28,
+        "sortOrder": 18,
         "hue": 0.208,
         "colorCodes": [
             "#FFFF69"
@@ -560,7 +560,7 @@
         "name": "Gold",
         "generatedName": "Muted Orange",
         "brightness": "1.000",
-        "sortOrder": 29,
+        "sortOrder": 19,
         "hue": 0.158,
         "colorCodes": [
             "#FFD269"
@@ -590,7 +590,7 @@
         "name": "Yellow",
         "generatedName": "Vivid Gold",
         "brightness": "1.000",
-        "sortOrder": 30,
+        "sortOrder": 20,
         "hue": 0.197,
         "colorCodes": [
             "#FFF000"
@@ -619,7 +619,7 @@
         "name": "Muted Green",
         "generatedName": "Neon Yellow",
         "brightness": "1.000",
-        "sortOrder": 31,
+        "sortOrder": 21,
         "hue": 0.236,
         "colorCodes": [
             "#96B400"
@@ -649,7 +649,7 @@
         "name": "Light Green",
         "generatedName": "Muted Green",
         "brightness": "1.000",
-        "sortOrder": 32,
+        "sortOrder": 22,
         "hue": 0.256,
         "colorCodes": [
             "#B4D269"
@@ -677,7 +677,7 @@
         "name": "Lime Green",
         "generatedName": "Vivid Green",
         "brightness": "1.000",
-        "sortOrder": 33,
+        "sortOrder": 23,
         "hue": 0.275,
         "colorCodes": [
             "#96FF00"
@@ -707,7 +707,7 @@
         "name": "Grass Green",
         "generatedName": "Jewel Tone Green",
         "brightness": "1.000",
-        "sortOrder": 34,
+        "sortOrder": 24,
         "hue": 0.275,
         "colorCodes": [
             "#5A9600"
@@ -735,7 +735,7 @@
         "name": "Green",
         "generatedName": "Jewel Tone Green",
         "brightness": "1.000",
-        "sortOrder": 35,
+        "sortOrder": 25,
         "hue": 0.356,
         "colorCodes": [
             "#0F8700"
@@ -763,7 +763,7 @@
         "name": "Dark Green",
         "generatedName": "Blue and Yellow",
         "brightness": "0.000",
-        "sortOrder": 36,
+        "sortOrder": 26,
         "hue": 1.2,
         "colorCodes": [
             "#003C4B",
@@ -792,7 +792,7 @@
         "name": "Turquoise 2",
         "generatedName": "Jewel Tone Blue",
         "brightness": "1.000",
-        "sortOrder": 37,
+        "sortOrder": 27,
         "hue": 0.525,
         "colorCodes": [
             "#009687"
@@ -822,7 +822,7 @@
         "name": "Turquoise",
         "generatedName": "Jewel Tone Blue",
         "brightness": "1.000",
-        "sortOrder": 38,
+        "sortOrder": 28,
         "hue": 0.558,
         "colorCodes": [
             "#008796"
@@ -852,7 +852,7 @@
         "name": "Bright Seafoam",
         "generatedName": "Blue and Green",
         "brightness": "1.000",
-        "sortOrder": 39,
+        "sortOrder": 29,
         "hue": 1.2,
         "colorCodes": [
             "#87D2F0",
@@ -884,7 +884,7 @@
         "name": "Seafoam",
         "generatedName": "Blue and Green",
         "brightness": "1.000",
-        "sortOrder": 40,
+        "sortOrder": 30,
         "hue": 1.2,
         "colorCodes": [
             "#87D2F0",
@@ -912,42 +912,12 @@
         ]
     },
     {
-        "id": 91,
-        "url": "images/glitter/sparkle/glitter_light-blue.gif",
-        "name": "Light Blue",
-        "generatedName": "Muted Blue",
-        "brightness": "1.000",
-        "sortOrder": 41,
-        "hue": 0.597,
-        "colorCodes": [
-            "#69C3F0"
-        ],
-        "frameCount": 3,
-        "frameRate": 10,
-        "isVariableFramerate": 0,
-        "isAnimated": 1,
-        "hasTransparency": 0,
-        "width": 60,
-        "height": 30,
-        "fileSize": 6166,
-        "category": "sparkle",
-        "isPixelated": 1,
-        "isActive": 1,
-        "tags": [
-            "Blue",
-            "Cool",
-            "Light",
-            "Muted",
-            "Pastel"
-        ]
-    },
-    {
         "id": 120,
         "url": "images/glitter/sparkle/glitter_sky-blue.gif",
         "name": "Sky Blue",
         "generatedName": "Very Light Desaturated Cyan-Blue",
         "brightness": "0.780",
-        "sortOrder": 42,
+        "sortOrder": 31,
         "hue": 0.607,
         "colorCodes": [
             "#9CD6FB",
@@ -979,7 +949,7 @@
         "name": "Aquamarine",
         "generatedName": "Neon Blue",
         "brightness": "1.000",
-        "sortOrder": 43,
+        "sortOrder": 32,
         "hue": 0.569,
         "colorCodes": [
             "#00D2FF"
@@ -1010,7 +980,7 @@
         "name": "Dusty Dark Blue",
         "generatedName": "Muted Blue",
         "brightness": "1.000",
-        "sortOrder": 44,
+        "sortOrder": 33,
         "hue": 0.636,
         "colorCodes": [
             "#5A87C3"
@@ -1039,7 +1009,7 @@
         "name": "Blue Topaz",
         "generatedName": "Jewel Tone Blue",
         "brightness": "1.000",
-        "sortOrder": 45,
+        "sortOrder": 34,
         "hue": 0.625,
         "colorCodes": [
             "#004B96"
@@ -1068,7 +1038,7 @@
         "name": "Sapphire",
         "generatedName": "Jewel Tone Blue",
         "brightness": "1.000",
-        "sortOrder": 46,
+        "sortOrder": 35,
         "hue": 0.658,
         "colorCodes": [
             "#002D96"
@@ -1098,7 +1068,7 @@
         "name": "Navy",
         "generatedName": "Muted Blue",
         "brightness": "0.000",
-        "sortOrder": 47,
+        "sortOrder": 36,
         "hue": 0.708,
         "colorCodes": [
             "#0F0F1E"
@@ -1127,7 +1097,7 @@
         "name": "Tanzanite",
         "generatedName": "Jewel Tone Purple",
         "brightness": "1.000",
-        "sortOrder": 48,
+        "sortOrder": 37,
         "hue": 0.758,
         "colorCodes": [
             "#2D0096"
@@ -1156,7 +1126,7 @@
         "name": "Dark Vivid Purple",
         "generatedName": "Vivid Purple",
         "brightness": "1.000",
-        "sortOrder": 49,
+        "sortOrder": 38,
         "hue": 0.775,
         "colorCodes": [
             "#6900FF"
@@ -1185,7 +1155,7 @@
         "name": "Lavender",
         "generatedName": "Muted Purple",
         "brightness": "1.000",
-        "sortOrder": 50,
+        "sortOrder": 39,
         "hue": 0.825,
         "colorCodes": [
             "#E196FF"
@@ -1213,7 +1183,7 @@
         "name": "Light Purple",
         "generatedName": "Muted Purple",
         "brightness": "1.000",
-        "sortOrder": 51,
+        "sortOrder": 40,
         "hue": 0.803,
         "colorCodes": [
             "#D296FF"
@@ -1241,7 +1211,7 @@
         "name": "Magenta Blue",
         "generatedName": "Pink and Blue",
         "brightness": "1.000",
-        "sortOrder": 52,
+        "sortOrder": 41,
         "hue": 1.2,
         "colorCodes": [
             "#FF00FF",
@@ -1276,7 +1246,7 @@
         "name": "Pink Dark Purple",
         "generatedName": "Red and Purple",
         "brightness": "1.000",
-        "sortOrder": 53,
+        "sortOrder": 42,
         "hue": 1.2,
         "colorCodes": [
             "#F09696",
@@ -1309,7 +1279,7 @@
         "name": "Ugly Purple",
         "generatedName": "Muted Pink",
         "brightness": "1.000",
-        "sortOrder": 54,
+        "sortOrder": 43,
         "hue": 0.144,
         "colorCodes": [
             "#A55A96"
@@ -1338,7 +1308,7 @@
         "name": "Purple",
         "generatedName": "Muted Purple",
         "brightness": "1.000",
-        "sortOrder": 55,
+        "sortOrder": 44,
         "hue": 0.803,
         "colorCodes": [
             "#A569D2"
@@ -1366,7 +1336,7 @@
         "name": "Amethyst",
         "generatedName": "Vivid Purple",
         "brightness": "1.000",
-        "sortOrder": 56,
+        "sortOrder": 45,
         "hue": 0.819,
         "colorCodes": [
             "#7800B4"
@@ -1394,7 +1364,7 @@
         "name": "Dark Purple",
         "generatedName": "Jewel Tone Purple",
         "brightness": "0.000",
-        "sortOrder": 57,
+        "sortOrder": 46,
         "hue": 1.2,
         "colorCodes": [
             "#3C0078",
@@ -1426,7 +1396,7 @@
         "name": "Deep Purple",
         "generatedName": "Jewel Tone Purple",
         "brightness": "0.000",
-        "sortOrder": 58,
+        "sortOrder": 47,
         "hue": 1.2,
         "colorCodes": [
             "#3C0078",
@@ -1459,7 +1429,7 @@
         "name": "Cream",
         "generatedName": "Pastel Orange",
         "brightness": "1.000",
-        "sortOrder": 59,
+        "sortOrder": 48,
         "hue": 1.1,
         "colorCodes": [
             "#F0D2B4"
@@ -1490,7 +1460,7 @@
         "name": "Camo Pattern",
         "generatedName": "Gray",
         "brightness": "0.000",
-        "sortOrder": 60,
+        "sortOrder": 49,
         "hue": 1.1,
         "colorCodes": [
             "#696969"
@@ -1521,7 +1491,7 @@
         "name": "Burn Sienna",
         "generatedName": "Muted Orange",
         "brightness": "1.000",
-        "sortOrder": 61,
+        "sortOrder": 50,
         "hue": 0.083,
         "colorCodes": [
             "#B48778"
@@ -1550,7 +1520,7 @@
         "name": "Tan",
         "generatedName": "Muted Orange",
         "brightness": "1.000",
-        "sortOrder": 62,
+        "sortOrder": 51,
         "hue": 0.097,
         "colorCodes": [
             "#967869"
@@ -1579,7 +1549,7 @@
         "name": "Brown",
         "generatedName": "Muted Orange",
         "brightness": "0.000",
-        "sortOrder": 63,
+        "sortOrder": 52,
         "hue": 0.122,
         "colorCodes": [
             "#4B3C2D"
@@ -1607,7 +1577,7 @@
         "name": "Brown_3",
         "generatedName": "Muted Orange",
         "brightness": "0.000",
-        "sortOrder": 64,
+        "sortOrder": 53,
         "hue": 0.125,
         "colorCodes": [
             "#3C2D1E"
@@ -1637,7 +1607,7 @@
         "name": "Brown 4",
         "generatedName": "Muted Orange",
         "brightness": "0.000",
-        "sortOrder": 65,
+        "sortOrder": 54,
         "hue": 0.125,
         "colorCodes": [
             "#3C2D1E"
@@ -1665,7 +1635,7 @@
         "name": "Brown 2",
         "generatedName": "Muted Orange",
         "brightness": "0.000",
-        "sortOrder": 66,
+        "sortOrder": 55,
         "hue": 0.125,
         "colorCodes": [
             "#3C2D1E"
@@ -1693,7 +1663,7 @@
         "name": "Dark Brown",
         "generatedName": "Muted Yellow",
         "brightness": "0.000",
-        "sortOrder": 67,
+        "sortOrder": 56,
         "hue": 0.208,
         "colorCodes": [
             "#1E1E0F"
@@ -1722,7 +1692,7 @@
         "name": "White",
         "generatedName": "Light Gray",
         "brightness": "1.000",
-        "sortOrder": 68,
+        "sortOrder": 57,
         "hue": 1.1,
         "colorCodes": [
             "#D2D2D2"
@@ -1752,7 +1722,7 @@
         "name": "Silver 2",
         "generatedName": "Light Gray",
         "brightness": "1.000",
-        "sortOrder": 69,
+        "sortOrder": 58,
         "hue": 1.1,
         "colorCodes": [
             "#D2D2D2"
@@ -1782,7 +1752,7 @@
         "name": "Silver",
         "generatedName": "Gray",
         "brightness": "0.000",
-        "sortOrder": 70,
+        "sortOrder": 59,
         "hue": 1.1,
         "colorCodes": [
             "#787878"
@@ -1811,7 +1781,7 @@
         "name": "Dark Gray",
         "generatedName": "Black",
         "brightness": "0.000",
-        "sortOrder": 71,
+        "sortOrder": 60,
         "hue": 1.1,
         "colorCodes": [
             "#2D2D2D"
@@ -1839,7 +1809,7 @@
         "name": "Black 2",
         "generatedName": "Black",
         "brightness": "0.000",
-        "sortOrder": 72,
+        "sortOrder": 61,
         "hue": 1.1,
         "colorCodes": [
             "#0F0F0F"
@@ -1868,7 +1838,7 @@
         "name": "Black",
         "generatedName": "Black",
         "brightness": "0.000",
-        "sortOrder": 73,
+        "sortOrder": 62,
         "hue": 1.1,
         "colorCodes": [
             "#000000"
@@ -1897,7 +1867,7 @@
         "name": "Opalite",
         "generatedName": "Light Gray",
         "brightness": "1.000",
-        "sortOrder": 74,
+        "sortOrder": 63,
         "hue": 1.1,
         "colorCodes": [
             "#CCCCCC",
@@ -1930,7 +1900,7 @@
         "name": "Rainbow",
         "generatedName": "Neon Blue",
         "brightness": "1.000",
-        "sortOrder": 75,
+        "sortOrder": 64,
         "hue": 0.569,
         "colorCodes": [
             "#00D2FF"
@@ -1938,14 +1908,14 @@
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
-        "isAnimated": 1,
+        "isAnimated": 0,
         "hasTransparency": 0,
         "width": 61,
         "height": 30,
         "fileSize": 6386,
         "category": "sparkle",
-        "isPixelated": 1,
-        "isActive": 1,
+        "isPixelated": 0,
+        "isActive": 0,
         "tags": [
             "Blue",
             "Green",
@@ -1953,7 +1923,8 @@
             "Red",
             "Yellow",
             "Vivid",
-            "Multicolor"
+            "Multicolor",
+            "Pattern"
         ]
     },
     {
@@ -1962,7 +1933,7 @@
         "name": "Rainbow 2",
         "generatedName": "Vivid Orange",
         "brightness": "1.000",
-        "sortOrder": 76,
+        "sortOrder": 65,
         "hue": 0.108,
         "colorCodes": [
             "#FF6900"
@@ -1970,14 +1941,14 @@
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
-        "isAnimated": 1,
+        "isAnimated": 0,
         "hasTransparency": 0,
         "width": 47,
         "height": 58,
         "fileSize": 4161,
         "category": "sparkle",
-        "isPixelated": 1,
-        "isActive": 1,
+        "isPixelated": 0,
+        "isActive": 0,
         "tags": [
             "Green",
             "Orange",
@@ -1985,7 +1956,8 @@
             "Red",
             "Yellow",
             "Vivid",
-            "Multicolor"
+            "Multicolor",
+            "Pattern"
         ]
     },
     {
@@ -1994,7 +1966,7 @@
         "name": "Christmas",
         "generatedName": "Green and Red",
         "brightness": "1.000",
-        "sortOrder": 77,
+        "sortOrder": 66,
         "hue": 1.2,
         "colorCodes": [
             "#00D200",
@@ -2026,7 +1998,7 @@
         "name": "Christmas 2",
         "generatedName": "Green and Red",
         "brightness": "1.000",
-        "sortOrder": 78,
+        "sortOrder": 67,
         "hue": 1.2,
         "colorCodes": [
             "#00D200",
@@ -2059,7 +2031,7 @@
         "name": "Red, White & Blue",
         "generatedName": "White",
         "brightness": "0.570",
-        "sortOrder": 79,
+        "sortOrder": 68,
         "hue": 1.1,
         "colorCodes": [
             "#FFFFFF",
@@ -2073,19 +2045,20 @@
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
-        "isAnimated": 1,
+        "isAnimated": 0,
         "hasTransparency": 0,
         "width": 52,
         "height": 55,
         "fileSize": 2067,
         "category": "sparkle",
-        "isPixelated": 1,
-        "isActive": 1,
+        "isPixelated": 0,
+        "isActive": 0,
         "tags": [
             "Blue",
             "Red",
             "White",
-            "Multicolor"
+            "Multicolor",
+            "Pattern"
         ]
     },
     {
@@ -2094,7 +2067,7 @@
         "name": "Magenta",
         "generatedName": "Very Dark Vivid Red",
         "brightness": "0.240",
-        "sortOrder": 80,
+        "sortOrder": 69,
         "hue": 0.042,
         "colorCodes": [
             "#330000",
@@ -2124,7 +2097,7 @@
         "name": "Red",
         "generatedName": "Very Dark Vivid Magenta",
         "brightness": "0.190",
-        "sortOrder": 81,
+        "sortOrder": 70,
         "hue": 0.875,
         "colorCodes": [
             "#330033",
@@ -2155,7 +2128,7 @@
         "name": "Ruby",
         "generatedName": "Very Dark Vivid Pink",
         "brightness": "0.150",
-        "sortOrder": 82,
+        "sortOrder": 71,
         "hue": 0.96,
         "colorCodes": [
             "#330019",
@@ -2185,7 +2158,7 @@
         "name": "Burnt Orange",
         "generatedName": "Very Dark Vivid Red",
         "brightness": "0.140",
-        "sortOrder": 83,
+        "sortOrder": 72,
         "hue": 0.042,
         "colorCodes": [
             "#330000",
@@ -2217,7 +2190,7 @@
         "name": "Gold",
         "generatedName": "Vivid Deep Red-Orange",
         "brightness": "0.260",
-        "sortOrder": 84,
+        "sortOrder": 73,
         "hue": 0.142,
         "colorCodes": [
             "#513100",
@@ -2248,7 +2221,7 @@
         "name": "Emerald",
         "generatedName": "Very Dark Vivid Green",
         "brightness": "0.150",
-        "sortOrder": 85,
+        "sortOrder": 74,
         "hue": 0.403,
         "colorCodes": [
             "#03320B",
@@ -2278,7 +2251,7 @@
         "name": "Turquoise",
         "generatedName": "Very Dark Vivid Green",
         "brightness": "0.000",
-        "sortOrder": 86,
+        "sortOrder": 75,
         "hue": 0.457,
         "colorCodes": [
             "#003319",
@@ -2309,7 +2282,7 @@
         "name": "Sapphire",
         "generatedName": "Dark Vivid Teal",
         "brightness": "0.190",
-        "sortOrder": 87,
+        "sortOrder": 76,
         "hue": 0.649,
         "colorCodes": [
             "#001843",
@@ -2338,7 +2311,7 @@
         "name": "Purple",
         "generatedName": "Very Dark Vivid Blue",
         "brightness": "0.160",
-        "sortOrder": 88,
+        "sortOrder": 77,
         "hue": 0.734,
         "colorCodes": [
             "#080033",
@@ -2370,7 +2343,7 @@
         "name": "Magenta",
         "generatedName": "Jewel Tone Pink",
         "brightness": "1.000",
-        "sortOrder": 89,
+        "sortOrder": 78,
         "hue": 0.161,
         "colorCodes": [
             "#960069"
@@ -2400,7 +2373,7 @@
         "name": "Red",
         "generatedName": "Vivid Red",
         "brightness": "1.000",
-        "sortOrder": 90,
+        "sortOrder": 79,
         "hue": 0.042,
         "colorCodes": [
             "#D20000"
@@ -2429,7 +2402,7 @@
         "name": "Orange",
         "generatedName": "Jewel Tone Bronze",
         "brightness": "1.000",
-        "sortOrder": 91,
+        "sortOrder": 80,
         "hue": 0.158,
         "colorCodes": [
             "#966900"
@@ -2459,7 +2432,7 @@
         "name": "Yellow",
         "generatedName": "Jewel Tone Yellow",
         "brightness": "1.000",
-        "sortOrder": 92,
+        "sortOrder": 81,
         "hue": 0.208,
         "colorCodes": [
             "#969600"
@@ -2488,7 +2461,7 @@
         "name": "Lime",
         "generatedName": "Jewel Tone Green",
         "brightness": "1.000",
-        "sortOrder": 93,
+        "sortOrder": 82,
         "hue": 0.258,
         "colorCodes": [
             "#699600"
@@ -2518,7 +2491,7 @@
         "name": "White",
         "generatedName": "Light Gray",
         "brightness": "1.000",
-        "sortOrder": 94,
+        "sortOrder": 83,
         "hue": 1.1,
         "colorCodes": [
             "#D2D2D2"
@@ -2548,7 +2521,7 @@
         "name": "Gray",
         "generatedName": "Gray",
         "brightness": "0.000",
-        "sortOrder": 95,
+        "sortOrder": 84,
         "hue": 1.1,
         "colorCodes": [
             "#696969"
@@ -2576,7 +2549,7 @@
         "name": "Black",
         "generatedName": "Black",
         "brightness": "0.000",
-        "sortOrder": 96,
+        "sortOrder": 85,
         "hue": 1.1,
         "colorCodes": [
             "#000000"
@@ -2605,7 +2578,7 @@
         "name": "Pink Hearts",
         "generatedName": "Vivid Pink",
         "brightness": "1.000",
-        "sortOrder": 97,
+        "sortOrder": 86,
         "hue": 0.111,
         "colorCodes": [
             "#F02DF0"
@@ -2633,7 +2606,7 @@
         "name": "Green",
         "generatedName": "Vivid Green",
         "brightness": null,
-        "sortOrder": 98,
+        "sortOrder": 87,
         "hue": 0.375,
         "colorCodes": [
             "#006900"
@@ -2660,7 +2633,7 @@
         "name": "Blue",
         "generatedName": "Vivid Blue",
         "brightness": "1.000",
-        "sortOrder": 99,
+        "sortOrder": 88,
         "hue": 0.669,
         "colorCodes": [
             "#3C69FF"
@@ -2687,7 +2660,7 @@
         "name": "Periwinkle",
         "generatedName": "Muted Blue",
         "brightness": "1.000",
-        "sortOrder": 100,
+        "sortOrder": 89,
         "hue": 0.686,
         "colorCodes": [
             "#8796FF"
@@ -2717,7 +2690,7 @@
         "name": "Black",
         "generatedName": "Black",
         "brightness": "0.000",
-        "sortOrder": 101,
+        "sortOrder": 90,
         "hue": 1.1,
         "colorCodes": [
             "#1E1E1E"
@@ -2746,7 +2719,7 @@
         "name": "Dusty Pink",
         "generatedName": "Muted Pink",
         "brightness": "1.000",
-        "sortOrder": 102,
+        "sortOrder": 91,
         "hue": 0.111,
         "colorCodes": [
             "#FF96FF"
@@ -2774,7 +2747,7 @@
         "name": "Hot Pink",
         "generatedName": "Muted Pink",
         "brightness": "1.000",
-        "sortOrder": 103,
+        "sortOrder": 92,
         "hue": 0.183,
         "colorCodes": [
             "#FE3EAB"
@@ -2800,7 +2773,7 @@
         "name": "Gold",
         "generatedName": "Vivid Orange",
         "brightness": "1.000",
-        "sortOrder": 104,
+        "sortOrder": 93,
         "hue": 0.164,
         "colorCodes": [
             "#FFD24B"
@@ -2829,7 +2802,7 @@
         "name": "Seafoam",
         "generatedName": "Pastel Silver",
         "brightness": "1.000",
-        "sortOrder": 105,
+        "sortOrder": 94,
         "hue": 1.1,
         "colorCodes": [
             "#C3E1B4"
@@ -2857,7 +2830,7 @@
         "name": "Dark Green",
         "generatedName": "Muted Green",
         "brightness": "0.000",
-        "sortOrder": 106,
+        "sortOrder": 95,
         "hue": 0.375,
         "colorCodes": [
             "#2D4B2D"
@@ -2885,7 +2858,7 @@
         "name": "Green",
         "generatedName": "Muted Blue",
         "brightness": "0.000",
-        "sortOrder": 107,
+        "sortOrder": 96,
         "hue": 0.486,
         "colorCodes": [
             "#1E4B3C"
@@ -2913,7 +2886,7 @@
         "name": "Pastel Blue",
         "generatedName": "Pastel Silver",
         "brightness": "1.000",
-        "sortOrder": 108,
+        "sortOrder": 97,
         "hue": 1.1,
         "colorCodes": [
             "#B4D2E1"
@@ -2938,12 +2911,42 @@
         ]
     },
     {
+        "id": 91,
+        "url": "images/glitter/sparkle/glitter_light-blue.gif",
+        "name": "Light Blue",
+        "generatedName": "Muted Blue",
+        "brightness": "1.000",
+        "sortOrder": 98,
+        "hue": 0.597,
+        "colorCodes": [
+            "#69C3F0"
+        ],
+        "frameCount": 3,
+        "frameRate": 10,
+        "isVariableFramerate": 0,
+        "isAnimated": 1,
+        "hasTransparency": 0,
+        "width": 60,
+        "height": 30,
+        "fileSize": 6166,
+        "category": "etc",
+        "isPixelated": 1,
+        "isActive": 1,
+        "tags": [
+            "Blue",
+            "Cool",
+            "Light",
+            "Muted",
+            "Pastel"
+        ]
+    },
+    {
         "id": 50,
         "url": "images/glitter/etc/etc_blue-green.gif",
         "name": "Blue Green",
         "generatedName": "Jewel Tone Blue",
         "brightness": "1.000",
-        "sortOrder": 109,
+        "sortOrder": 99,
         "hue": 0.578,
         "colorCodes": [
             "#006987"
@@ -2972,7 +2975,7 @@
         "name": "Lavender",
         "generatedName": "Pastel Silver",
         "brightness": "1.000",
-        "sortOrder": 110,
+        "sortOrder": 100,
         "hue": 1.1,
         "colorCodes": [
             "#B4B4E1"
@@ -3001,7 +3004,7 @@
         "name": "Snow",
         "generatedName": "Light Gray",
         "brightness": "1.000",
-        "sortOrder": 111,
+        "sortOrder": 101,
         "hue": 1.1,
         "colorCodes": [
             "#C3C3C3"
@@ -3030,7 +3033,7 @@
         "name": "Champagne",
         "generatedName": "Pastel Silver",
         "brightness": "1.000",
-        "sortOrder": 112,
+        "sortOrder": 102,
         "hue": 1.1,
         "colorCodes": [
             "#E1D2B4"
@@ -3059,7 +3062,7 @@
         "name": "Bronze",
         "generatedName": "Muted Orange",
         "brightness": "1.000",
-        "sortOrder": 113,
+        "sortOrder": 103,
         "hue": 0.125,
         "colorCodes": [
             "#B49678"
@@ -3087,7 +3090,7 @@
         "name": "Bronze 2",
         "generatedName": "Muted Orange",
         "brightness": "1.000",
-        "sortOrder": 114,
+        "sortOrder": 104,
         "hue": 0.125,
         "colorCodes": [
             "#B49678"
@@ -3116,7 +3119,7 @@
         "name": "Black 3",
         "generatedName": "Black",
         "brightness": "0.000",
-        "sortOrder": 115,
+        "sortOrder": 105,
         "hue": 1.1,
         "colorCodes": [
             "#2D2D2D"
@@ -3145,7 +3148,7 @@
         "name": "Black 2",
         "generatedName": "Black",
         "brightness": "0.000",
-        "sortOrder": 116,
+        "sortOrder": 106,
         "hue": 1.1,
         "colorCodes": [
             "#1E1E1E"
@@ -3174,7 +3177,7 @@
         "name": "Pink Sparkle",
         "generatedName": "Very Light Magenta",
         "brightness": "0.640",
-        "sortOrder": 117,
+        "sortOrder": 107,
         "hue": 0.875,
         "colorCodes": [
             "#FF49FF",
@@ -3206,7 +3209,7 @@
         "name": "Bubbles",
         "generatedName": "Neon Blue",
         "brightness": "1.000",
-        "sortOrder": 118,
+        "sortOrder": 108,
         "hue": 0.569,
         "colorCodes": [
             "#00D2FF"
@@ -3237,7 +3240,7 @@
         "name": "Pastel Sparkle",
         "generatedName": "Light Gray",
         "brightness": "0.790",
-        "sortOrder": 119,
+        "sortOrder": 109,
         "hue": 0.928,
         "colorCodes": [
             "#F3B1DE",
@@ -3275,7 +3278,7 @@
         "name": "Rainbow Sparkle",
         "generatedName": "White",
         "brightness": "0.710",
-        "sortOrder": 120,
+        "sortOrder": 110,
         "hue": 1.1,
         "colorCodes": [
             "#FFFFFF",

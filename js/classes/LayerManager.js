@@ -871,8 +871,10 @@ class LayerManager {
 		container.innerHTML = '';
 		container.appendChild(insertionLine);
 
-		// Render layers in reverse order (visual stacking)
+		// Render layers in reverse order (visual stacking). Ephemeral Auto
+		// Glitter session layers stay out of the list until committed.
 		[...this.layers].reverse().forEach((layer, index) => {
+			if (layer.isPreview) return;
 			const layerEl = this.createLayerElement(layer);
 			container.appendChild(layerEl);
 		});
@@ -1589,14 +1591,15 @@ class LayerManager {
 	}
 
 	updateLayerCount() {
+		const count = this.layers.filter((layer) => !layer.isPreview).length;
 		const layerCount = document.querySelector('.section-header-title-count');
 		if (layerCount) {
-			layerCount.setAttribute('data-count', this.layers.length);
+			layerCount.setAttribute('data-count', count);
 		}
 
 		const mobileLayersCount = document.querySelector('.mobile-layers-count');
 		if (mobileLayersCount) {
-			mobileLayersCount.setAttribute('data-count', this.layers.length);
+			mobileLayersCount.setAttribute('data-count', count);
 		}
 	}
 

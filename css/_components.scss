@@ -252,6 +252,22 @@ input[type="range"] {
 	}
 }
 
+.layer-action-btn {
+	display: flex;
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 var(--icon-size-sm);
+
+	.icon {
+		width: .8em;
+		height: .8em;
+	}
+
+	&.visibility.hidden { color: var(--color-text-secondary); }
+}
+
 // NOTE for all gloss buttons: the mixin's :before gradient covers the
 // element's background box, so `background:` swaps on these are invisible —
 // state changes go through the --btn-*-filter tokens (and border-color,

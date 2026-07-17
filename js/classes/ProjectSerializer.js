@@ -16,7 +16,7 @@ class ProjectSerializer {
 	}
 
 	async serialize() {
-		const layers = this.editor.layers.map((layer) =>
+		const layers = this.editor.layers.filter((layer) => !layer.isPreview).map((layer) =>
 			this.editor.layerManager.serializeLayer(layer, { includeMaskVersion: false })
 		);
 

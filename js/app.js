@@ -59,6 +59,8 @@ class GlitterEditor {
 		this.justCompletedDrag = false; // Flag to prevent layer picking immediately after drag
 		this.pendingConfirmationResolve = null;
 		this.pendingConfirmationValue = false;
+		this.pendingAutoGlitterTool = null;
+		this.autoGlitterToolPrompt = null;
 
 		// ============================================================================
 		// EXPORT STATE
@@ -102,7 +104,7 @@ class GlitterEditor {
 		this.initializeProjectNameInput();
 		const rememberedTool = sessionStorage.getItem('glitter:lastTool');
 		const initialTool = Object.values(ToolType).includes(rememberedTool) ? rememberedTool : CONFIG.app.startup.tool;
-		this.setTool(initialTool);
+		this.setTool(this.mobileManager.isMobile && initialTool === ToolType.HAND ? ToolType.SELECT : initialTool);
 		this.setupEventListeners();
 		this.initializeAltDuplicateFeedback();
 		this.initializeCollapsibleSections();
@@ -990,6 +992,7 @@ async resetAllSettings() {
 		const allSections = [
 			'welcomeSection',
 			'noLayerSettingsSection',
+			'autoGlitterSettingsSection',
 			'baseLayerSettingsSection',
 			'glitterSettingsSection',
 			'layerSettingsSection',
@@ -1014,7 +1017,9 @@ async resetAllSettings() {
 
 		// 3. Determine which config to use
 		let config;
-		if (!this.originalImage) {
+		if (this.autoGlitterManager?.isSessionActive()) {
+			config = LAYER_UI_CONFIG.AUTO_GLITTER;
+		} else if (!this.originalImage) {
 			config = LAYER_UI_CONFIG.NO_IMAGE;
 		} else if (hasMultiSelection || !layer) {
 			config = LAYER_UI_CONFIG.NO_LAYER;
@@ -1587,7 +1592,7 @@ async resetAllSettings() {
 
 	// ===== INITIALIZATION =====
 	initializeCollapsibleSections() {
-		const sections = ['designGallery', 'baseLayerSettings', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings', 'shapeSettings', 'brushSettings'];
+		const sections = ['designGallery', 'autoGlitterSettings', 'baseLayerSettings', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings', 'shapeSettings', 'brushSettings'];
 
 			const setOpen = (name, isOpen, accordion = false) => {
 				const section = document.getElementById(`${name}Section`);
@@ -3378,13 +3383,6 @@ async resetAllSettings() {
 				onClose: () => this.resolvePendingConfirmation(this.pendingConfirmationValue)
 			});
 
-		this.modalManager.register('autoGlitterModal', {
-			closeBtnId: ['closeAutoGlitterModal', 'cancelAutoGlitterBtn'],
-			resetScrollOnOpen: true,
-			initialFocusSelector: '#autoGlitterColorCount',
-			onClose: () => this.autoGlitterManager.close()
-		});
-
 		// External content modals with core/utils.js initialization
 		this.modalManager
 			.register('aboutModal', {
@@ -3416,7 +3414,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=23',
+				externalContentUrl: 'modals/guide.html?v=25',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -3455,8 +3453,9 @@ async resetAllSettings() {
 			onOpen: () => this.initializeNewCanvasModal()
 		});
 
-		// Welcome modal (no open button - shown automatically on first visit)
+		// Welcome modal is shown automatically and remains available from Settings.
 		this.modalManager.register('welcomeModal', {
+			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
 			externalContentUrl: 'modals/welcome.html?v=3',
 			cacheContent: true,
@@ -3464,6 +3463,7 @@ async resetAllSettings() {
 			onContentLoaded: (modalBody) => {
 				initPixelScalerInContainer(modalBody);
 				this.renderVersionHistory(modalBody, 2);
+				this.setupWelcomeModalListeners();
 			},
 			onOpen: () => {
 				const checkbox = document.getElementById('welcomeDontShowAgain');
@@ -3486,9 +3486,6 @@ async resetAllSettings() {
 				}
 			}
 		});
-
-		// Setup welcome modal button listeners
-		this.setupWelcomeModalListeners();
 
 		// Check if should show welcome modal on page load
 		this.checkWelcomeModal();
@@ -3547,16 +3544,14 @@ async checkWelcomeModal() {
 			if (welcomeConfig?.externalContentUrl) {
 				await this.modalManager.loadExternalContent(welcomeConfig);
 			}
-			// Pre-load guide modal content silently before showing welcome modal
+			this.modalManager.open('welcomeModal');
+
+			// Warm the guide after the welcome screen is visible so startup never
+			// waits on content the user has not requested yet.
 			const guideConfig = this.modalManager.modals.get('guideModal');
 			if (guideConfig && guideConfig.externalContentUrl) {
-				await this.modalManager.loadExternalContent(guideConfig);
+				this.modalManager.loadExternalContent(guideConfig).catch((error) => dbg('Guide preload failed:', error));
 			}
-			
-			// Small delay so page loads first
-			setTimeout(() => {
-				this.modalManager.open('welcomeModal');
-			}, 500);
 		}
 	} catch (e) {
 		console.warn('Failed to check welcome modal status:', e);
@@ -3569,6 +3564,9 @@ setupWelcomeModalListeners() {
 	const takeTourBtn = document.getElementById('welcomeTakeTourBtn');
 	const startCreatingBtn = document.getElementById('welcomeStartCreatingBtn');
 	const dontShowCheckbox = document.getElementById('welcomeDontShowAgain');
+	if (takeTourBtn?.dataset.welcomeBound === 'true') return;
+	if (takeTourBtn) takeTourBtn.dataset.welcomeBound = 'true';
+	if (startCreatingBtn) startCreatingBtn.dataset.welcomeBound = 'true';
 	
 	const markAsSeenIfChecked = () => {
 		if (dontShowCheckbox && dontShowCheckbox.checked) {
@@ -3924,6 +3922,7 @@ setupWelcomeModalListeners() {
 	}
 
 	togglePreview() {
+		if (this.autoGlitterManager?.isSessionActive()) return;
 		this.showAllLayers = !this.showAllLayers;
 
 		const previewToggle = document.getElementById('previewModeToggle');
@@ -4403,13 +4402,28 @@ setupWelcomeModalListeners() {
 		return true;
 	}
 
-	setTool(tool) {
+	setTool(tool, options = {}) {
 		if (tool === ToolType.BRUSH && !this.maskEditor?.canActivate()) return;
 
 		if (this.currentTool === tool) return;
+		if (this.autoGlitterManager?.isSessionActive() && !this.autoGlitterManager.allowsPreviewTool(tool)) {
+			this.pendingAutoGlitterTool = tool;
+			if (!this.autoGlitterToolPrompt) {
+				const temporaryRequest = this.temporaryHandToolActive;
+				this.autoGlitterToolPrompt = this.autoGlitterManager.requestDiscardSession().then((discarded) => {
+					const targetTool = this.pendingAutoGlitterTool;
+					this.pendingAutoGlitterTool = null;
+					this.autoGlitterToolPrompt = null;
+					if (!discarded || !targetTool) return;
+					if (temporaryRequest && targetTool === ToolType.HAND && !this.temporaryHandToolActive) return;
+					this.setTool(targetTool);
+				});
+			}
+			return;
+		}
 
 		this.currentTool = tool;
-		if (!this.temporaryHandToolActive) sessionStorage.setItem('glitter:lastTool', tool);
+		if (!this.temporaryHandToolActive && options.persist !== false) sessionStorage.setItem('glitter:lastTool', tool);
 		this.currentHintDismissed = false; // Reset dismissed flag when tool changes
 
 
@@ -4491,6 +4505,8 @@ setupWelcomeModalListeners() {
 		// Hide all first
 		toolbars.forEach(({ element }) => element?.classList.remove('visible'));
 		if (brushSettingsSection) brushSettingsSection.classList.remove('visible');
+		if (!this.originalImage) return;
+		if (this.autoGlitterManager?.isSessionActive() && !this.autoGlitterManager.allowsPreviewTool(this.currentTool)) return;
 
 		const layer = this.layerManager.getActiveLayer();
 		const hasMultiSelection = this.layerManager.hasMultiSelection();
@@ -4917,7 +4933,7 @@ setupWelcomeModalListeners() {
 		// (post-create / post-edit), blur it so moving takes over — the same as
 		// clicking off the field. Arrows in any OTHER input still fall through to the
 		// guard for normal caret navigation.
-		if (this.tryArrowNudge(e)) return;
+		if (!this.autoGlitterManager?.isSessionActive() && this.tryArrowNudge(e)) return;
 
 		// Allow Escape to work in inputs (to blur/close things)
 		// Allow Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, and Ctrl/Cmd+S while typing.
@@ -4933,6 +4949,11 @@ setupWelcomeModalListeners() {
 		}
 
 		if (e.key === 'Escape') {
+			if (this.autoGlitterManager?.isSessionActive()) {
+				this.autoGlitterManager.requestDiscardSession();
+				e.preventDefault();
+				return;
+			}
 			const activeGradientEditor = document.activeElement?.closest?.('.effect-gradient-editor');
 			if (activeGradientEditor) {
 				document.activeElement.blur();
@@ -4972,6 +4993,19 @@ setupWelcomeModalListeners() {
 			// No modal was open, switch to select tool
 			if (this.layerManager.hasMultiSelection()) this.layerManager.clearSelection();
 			this.setTool(ToolType.SELECT);
+		}
+
+		if (this.autoGlitterManager?.isSessionActive()) {
+			let handled = true;
+			if (e.key === 'h' || e.key === 'H') this.setTool(ToolType.HAND);
+			else if (!e.ctrlKey && !e.metaKey && (e.key === 'z' || e.key === 'Z')) this.setTool(ToolType.ZOOM);
+			else if ((e.ctrlKey || e.metaKey) && e.key === '0') this.viewport.zoomToFit({ animate: true });
+			else if ((e.ctrlKey || e.metaKey) && e.key === '1') this.viewport.resetZoom({ animate: true });
+			else if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) this.viewport.zoomIn(null, null, { animate: true });
+			else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) this.viewport.zoomOut(null, null, { animate: true });
+			else handled = false;
+			if (handled || ((e.ctrlKey || e.metaKey) && /[aszy]/i.test(e.key))) e.preventDefault();
+			return;
 		}
 
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
@@ -5174,6 +5208,7 @@ setupWelcomeModalListeners() {
 
 	updateActionButtons() {
 		const hasImage = this.originalImage !== null;
+		const autoPreviewActive = Boolean(this.autoGlitterManager?.isSessionActive());
 
 		const hasAnySelection = this.layers.some((layer) => layerHasVisibleContent(layer));
 		const selectedLayer = this.layerManager.getActiveLayer();
@@ -5183,11 +5218,14 @@ setupWelcomeModalListeners() {
 		const layersBarClearAll = document.getElementById('layersBarClearAll');
 		const exportGif = document.getElementById('exportGif');
 		const saveProject = document.getElementById('saveProject');
+		const selectTool = document.getElementById('selectTool');
 		const textTool = document.getElementById('textTool');
 		const shapeTool = document.getElementById('shapeTool');
 		const colorPickerTool = document.getElementById('colorPickerTool');
 		const handTool = document.getElementById('handTool');
 		const zoomTool = document.getElementById('zoomTool');
+		const brushTool = document.getElementById('brushTool');
+		const eraserTool = document.getElementById('eraserTool');
 		const zoomControls = document.getElementById('zoomControls');
 		const addBtn = document.getElementById('addLayerBtn');
 		const previewToggle = document.getElementById('previewModeToggle');
@@ -5197,10 +5235,10 @@ setupWelcomeModalListeners() {
 		// --- Reference the container ---
 		const previewControls = document.getElementById('previewControls');
 
-		if (clearAllTool) clearAllTool.disabled = !hasImage;
-		if (layersBarClearAll) layersBarClearAll.disabled = !hasImage;
-		if (exportGif) exportGif.disabled = !hasAnySelection;
-		if (saveProject) saveProject.disabled = !hasImage;
+		if (clearAllTool) clearAllTool.disabled = !hasImage || autoPreviewActive;
+		if (layersBarClearAll) layersBarClearAll.disabled = !hasImage || autoPreviewActive;
+		if (exportGif) exportGif.disabled = !hasAnySelection || autoPreviewActive;
+		if (saveProject) saveProject.disabled = !hasImage || autoPreviewActive;
 
 		if (transparencyToggle) transparencyToggle.disabled = !hasImage;
 		if (boundsToggle) boundsToggle.disabled = !hasImage;
@@ -5214,18 +5252,25 @@ setupWelcomeModalListeners() {
 			}
 		}
 
-		if (textTool) textTool.disabled = !hasImage;
-		if (shapeTool) shapeTool.disabled = !hasImage;
-		if (colorPickerTool) colorPickerTool.disabled = !hasImage;
+		if (selectTool) selectTool.disabled = !hasImage || autoPreviewActive;
+		if (textTool) textTool.disabled = !hasImage || autoPreviewActive;
+		if (shapeTool) shapeTool.disabled = !hasImage || autoPreviewActive;
+		if (colorPickerTool) colorPickerTool.disabled = !hasImage || autoPreviewActive;
 		if (handTool) handTool.disabled = !hasImage;
 		if (zoomTool) zoomTool.disabled = !hasImage;
 		this.maskEditor?.updateToolButtonState();
+		if (brushTool) brushTool.disabled ||= autoPreviewActive;
+		if (eraserTool) eraserTool.disabled ||= autoPreviewActive;
+		const layersPanel = document.getElementById('layersPanel');
+		if (layersPanel) layersPanel.inert = autoPreviewActive;
 
 		// UX: Can't add layers until image is loaded
 		if (addBtn) {
-			addBtn.disabled = !hasImage || this.layers.length >= CONFIG.app.limits.maxLayers;
+			addBtn.disabled = !hasImage || autoPreviewActive || this.layers.length >= CONFIG.app.limits.maxLayers;
 			if (!hasImage) {
 				addBtn.title = 'Load an image first';
+			} else if (autoPreviewActive) {
+				addBtn.title = 'Exit Auto Glitter before adding layers';
 			} else if (this.layers.length >= CONFIG.app.limits.maxLayers) {
 				addBtn.title = `Maximum ${CONFIG.app.limits.maxLayers} layers`;
 			} else {
@@ -5241,8 +5286,10 @@ setupWelcomeModalListeners() {
 
 		// UX: Disable preview toggle when no selections
 		if (previewToggle) {
-			previewToggle.disabled = this.showAllLayers && !canSoloSelectedLayer;
-			if (this.showAllLayers && !canSoloSelectedLayer) {
+			previewToggle.disabled = autoPreviewActive || (this.showAllLayers && !canSoloSelectedLayer);
+			if (autoPreviewActive) {
+				previewToggle.title = 'Layer preview controls are unavailable in Auto Glitter';
+			} else if (this.showAllLayers && !canSoloSelectedLayer) {
 				previewToggle.title = 'Select a visible layer first';
 			} else if (this.showAllLayers) {
 				previewToggle.title = 'Show only selected layer';
@@ -5253,7 +5300,9 @@ setupWelcomeModalListeners() {
 
 		// UX: Update export tooltip
 		if (exportGif) {
-			if (!hasAnySelection) {
+			if (autoPreviewActive) {
+				exportGif.title = 'Create or exit the Auto Glitter preview before exporting';
+			} else if (!hasAnySelection) {
 				exportGif.title = 'Add glitter or stickers first';
 			} else {
 				exportGif.title = 'Export GIF';
@@ -5276,6 +5325,8 @@ setupWelcomeModalListeners() {
 	}
 
 	clearImage() {
+		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
+
 		// ======================
 		// Core image + data state
 		// ======================
@@ -5406,6 +5457,7 @@ setupWelcomeModalListeners() {
 			this.showError('Could not load that image. The file may be corrupt or unsupported.');
 			return false;
 		}
+		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
 		let width = image.width;
 		let height = image.height;
 		if (width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
@@ -5621,6 +5673,7 @@ setupWelcomeModalListeners() {
 		if (!img) {
 			return false;
 		}
+		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
 
 		let width = img.width;
 		let height = img.height;
@@ -6710,9 +6763,9 @@ setupWelcomeModalListeners() {
 	}
 
 	async exportAnimatedGif() {
-		// Filter visible layers
+		// Filter visible layers (ephemeral Auto Glitter previews never export)
 		const visibleLayers = this.layers.filter(l => {
-			if (!l.visible) return false;
+			if (!l.visible || l.isPreview) return false;
 			return layerHasVisibleContent(l);
 		});
 

@@ -1040,6 +1040,22 @@ input[type=range]:disabled {
   white-space: nowrap;
 }
 
+.layer-action-btn {
+  display: flex;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--icon-size-sm);
+}
+.layer-action-btn .icon {
+  width: 0.8em;
+  height: 0.8em;
+}
+.layer-action-btn.visibility.hidden {
+  color: var(--color-text-secondary);
+}
+
 .btn {
   background: none;
   overflow: hidden;
@@ -2459,6 +2475,18 @@ input[type=range]:disabled {
   line-height: 1.4;
 }
 
+.section > .section-content > .empty-state {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-card);
+}
+.section > .section-content > .empty-state.visible {
+  display: flex;
+}
+
 #layerSettingsControls,
 #glitterSettingsControls {
   display: none;
@@ -3216,11 +3244,18 @@ body.mask-editing .sticker-element {
   position: absolute;
   bottom: var(--spacing-from-edge);
   left: 50%;
-  transform: translateX(-50%);
-  display: none;
+  transform: translate(-50%, 6px);
+  display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
   z-index: 10;
+  max-width: calc(100% - var(--spacing-xl));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   border-radius: var(--radius-sm);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
@@ -3233,7 +3268,11 @@ body.mask-editing .sticker-element {
 .pan-controls.visible,
 .color-picker-controls.visible,
 .mask-brush-controls.visible {
-  display: flex;
+  transform: translate(-50%, 0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
 }
 .zoom-controls > .btn-icon,
 .layer-center-controls > .btn-icon,
@@ -3310,14 +3349,36 @@ body.mask-editing .sticker-element {
 }
 
 .context-checkbox-group {
-  display: flex;
+  display: inline-flex;
+  position: relative;
   align-items: center;
   gap: var(--spacing-xs);
+  min-height: var(--icon-size-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: var(--font-size-sm);
+  white-space: nowrap;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 .context-checkbox-group input[type=checkbox] {
-  margin: 0;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.context-checkbox-group:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #fff;
+}
+.context-checkbox-group:has(input:checked) .context-count {
+  color: inherit;
+}
+.context-checkbox-group:has(input:focus-visible) {
+  box-shadow: var(--control-focus-ring);
 }
 .context-checkbox-group .context-count {
   font-size: var(--font-size-xs);
@@ -3331,6 +3392,13 @@ body.mask-editing .sticker-element {
 }
 .context-checkbox-group .context-count:not(:empty)::after {
   content: ")";
+}
+
+.color-picker-controls > div:not(.context-slider-group) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-xs);
 }
 
 /* Mask Brush Controls Specific */
@@ -5239,10 +5307,232 @@ body.mask-editing .sticker-element {
     min-height: 48px;
   }
 }
-.design-panel .settings-subsection > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
+.design-panel .settings-subsection > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title),
+.design-panel .panel-scroll-region > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
   display: none !important;
 }
 
+#autoGlitterSettingsSection > #autoGlitterSettingsContent {
+  padding: 0;
+}
+#autoGlitterSettingsSection.is-open > .section-content.visible {
+  overflow: hidden;
+}
+#autoGlitterSettingsSection .settings-subsection {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+#autoGlitterSettingsSection .panel-scroll-region {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+#autoGlitterSettingsSection .panel-scroll-region > * {
+  min-width: 0;
+  max-width: 100%;
+}
+#autoGlitterSettingsSection .auto-glitter-preview-group,
+#autoGlitterSettingsSection .auto-glitter-footer-group {
+  flex: 0 0 auto;
+  padding: var(--spacing-md);
+}
+#autoGlitterSettingsSection .auto-glitter-preview-group {
+  border-bottom: 1px solid var(--color-border);
+}
+#autoGlitterSettingsSection .auto-glitter-footer-group {
+  border-top: 1px solid var(--color-border);
+}
+#autoGlitterSettingsSection .auto-glitter-preview-card .segmented-control,
+#autoGlitterSettingsSection #autoGlitterPaletteStyle,
+#autoGlitterSettingsSection .auto-glitter-rerun-options {
+  width: 100%;
+}
+#autoGlitterSettingsSection .auto-glitter-existing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+#autoGlitterSettingsSection .auto-glitter-existing[hidden] {
+  display: none;
+}
+#autoGlitterSettingsSection .auto-glitter-existing > p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+#autoGlitterSettingsSection .auto-glitter-existing.has-warning > p {
+  color: var(--color-warning);
+}
+#autoGlitterSettingsSection #autoGlitterRerunMode > label {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+}
+#autoGlitterSettingsSection #autoGlitterRerunMode > label > input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+#autoGlitterSettingsSection #autoGlitterRerunMode > label:has(input:checked) {
+  background: var(--color-accent);
+  color: #fff;
+}
+#autoGlitterSettingsSection #autoGlitterRerunMode > label:has(input:focus-visible) {
+  box-shadow: inset var(--control-focus-ring);
+}
+#autoGlitterSettingsSection .auto-glitter-status {
+  margin: 0;
+  padding: var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+#autoGlitterSettingsSection .auto-glitter-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+#autoGlitterSettingsSection .auto-glitter-results[hidden] {
+  display: none;
+}
+#autoGlitterSettingsSection .auto-glitter-match {
+  flex-wrap: wrap;
+  cursor: grab;
+}
+#autoGlitterSettingsSection .auto-glitter-match.is-dragging {
+  opacity: 0.55;
+  transform: scale(0.99);
+}
+#autoGlitterSettingsSection .auto-glitter-match.is-merge-target {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-light);
+}
+#autoGlitterSettingsSection .auto-glitter-match.is-merged {
+  margin-top: calc(var(--spacing-sm) * -1);
+  margin-left: calc(var(--icon-size-sm) + var(--spacing-sm));
+  border-style: dashed;
+  background: var(--color-bg-secondary);
+}
+#autoGlitterSettingsSection .auto-glitter-match.is-skipped {
+  opacity: var(--disabled-opacity);
+  background: var(--color-bg-secondary);
+}
+#autoGlitterSettingsSection .auto-glitter-drag-handle {
+  display: none;
+}
+#autoGlitterSettingsSection .auto-glitter-drag-handle:disabled {
+  opacity: var(--disabled-opacity);
+  cursor: default;
+}
+#autoGlitterSettingsSection .auto-glitter-source {
+  align-items: flex-start;
+}
+#autoGlitterSettingsSection .auto-glitter-choice {
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  cursor: pointer;
+}
+#autoGlitterSettingsSection .auto-glitter-choice:hover, #autoGlitterSettingsSection .auto-glitter-choice[aria-expanded=true] {
+  border-color: var(--color-accent);
+}
+#autoGlitterSettingsSection .auto-glitter-choice img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+  image-rendering: pixelated;
+}
+#autoGlitterSettingsSection .auto-glitter-footer-group .auto-glitter-actions > button {
+  flex: 1 1 0;
+}
+
+.auto-glitter-preview-banner {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--spacing-from-edge) + var(--control-height) + var(--spacing-lg));
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  max-width: calc(100% - var(--spacing-xl));
+  padding: var(--spacing-sm) var(--spacing-md);
+  white-space: nowrap;
+  cursor: default;
+  transform: translate(-50%, 6px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-translucent);
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-sm);
+  pointer-events: auto;
+  backdrop-filter: blur(var(--glass-blur));
+}
+.auto-glitter-preview-banner[hidden] {
+  display: none;
+}
+.auto-glitter-preview-banner.visible {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+.auto-glitter-preview-banner > .icon-wrapper {
+  color: var(--color-accent);
+}
+.auto-glitter-preview-banner > .icon-wrapper > .icon {
+  width: var(--icon-size-xs);
+  height: var(--icon-size-xs);
+}
+.auto-glitter-preview-banner > strong {
+  font-size: var(--font-size-sm);
+}
+.auto-glitter-preview-banner > span[role=status] {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-overflow: ellipsis;
+}
+.auto-glitter-preview-banner > .btn-text {
+  flex: 0 0 auto;
+}
+
+.auto-glitter-gallery-empty {
+  display: none;
+}
+
+.design-panel[data-panel-mode=auto-glitter] #designGallerySection:not(.picker-mode) #designGalleryContent > :not(.auto-glitter-gallery-empty) {
+  display: none !important;
+}
+.design-panel[data-panel-mode=auto-glitter] #designGallerySection:not(.picker-mode) #designGalleryContent > .auto-glitter-gallery-empty {
+  display: flex;
+  min-height: 180px;
+}
+
+@media (max-width: 800px) {
+  #autoGlitterSettingsSection .auto-glitter-drag-handle {
+    display: flex;
+  }
+}
 /* ===== MODAL ===== */
 .modal-overlay {
   position: fixed;
@@ -5495,218 +5785,6 @@ body.mask-editing .sticker-element {
 }
 #confirmationModal .confirmation-message-outro {
   color: var(--color-text-primary);
-}
-
-#autoGlitterModal .auto-glitter-modal-content {
-  width: 720px;
-}
-#autoGlitterModal .auto-glitter-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-#autoGlitterModal .auto-glitter-intro {
-  color: var(--color-text-primary);
-}
-#autoGlitterModal .auto-glitter-intro p {
-  margin: var(--spacing-xs) 0 0;
-  color: var(--color-text-secondary);
-}
-#autoGlitterModal .auto-glitter-existing {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  color: var(--color-text-primary);
-}
-#autoGlitterModal .auto-glitter-existing[hidden] {
-  display: none;
-}
-#autoGlitterModal .auto-glitter-existing > p {
-  margin: 0;
-  color: var(--color-text-secondary);
-}
-#autoGlitterModal .auto-glitter-existing.has-warning > p {
-  color: var(--color-warning);
-}
-#autoGlitterModal .auto-glitter-rerun-options > label {
-  display: flex;
-  position: relative;
-  align-items: center;
-  justify-content: center;
-}
-#autoGlitterModal .auto-glitter-rerun-options > label > input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-#autoGlitterModal .auto-glitter-rerun-options > label:has(input:checked) {
-  background: var(--color-accent);
-  color: #fff;
-}
-#autoGlitterModal .auto-glitter-rerun-options > label:has(input:focus-visible) {
-  box-shadow: inset var(--control-focus-ring);
-}
-#autoGlitterModal .auto-glitter-status {
-  margin: 0;
-}
-#autoGlitterModal .auto-glitter-results {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-#autoGlitterModal .auto-glitter-results[hidden] {
-  display: none;
-}
-#autoGlitterModal .auto-glitter-intro p,
-#autoGlitterModal .auto-glitter-review-help {
-  margin: 0;
-  color: var(--color-text-secondary);
-  line-height: 1.45;
-}
-#autoGlitterModal .auto-glitter-step {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-#autoGlitterModal .auto-glitter-preview {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-secondary);
-}
-#autoGlitterModal .auto-glitter-preview[hidden] {
-  display: none;
-}
-#autoGlitterModal .auto-glitter-preview canvas {
-  display: block;
-  width: 100%;
-  max-height: 260px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-primary);
-  -o-object-fit: contain;
-     object-fit: contain;
-}
-#autoGlitterModal .auto-glitter-preview canvas.is-posterized {
-  image-rendering: pixelated;
-}
-#autoGlitterModal .auto-glitter-status {
-  padding: var(--spacing-xs) 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-#autoGlitterModal .auto-glitter-match {
-  flex-wrap: wrap;
-  cursor: grab;
-}
-#autoGlitterModal .auto-glitter-match.is-dragging {
-  opacity: 0.55;
-  transform: scale(0.99);
-}
-#autoGlitterModal .auto-glitter-match.is-merge-target {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px var(--color-accent-light);
-}
-#autoGlitterModal .auto-glitter-match.is-merged {
-  margin-top: calc(var(--spacing-sm) * -1);
-  margin-left: calc(var(--icon-size-sm) + var(--spacing-sm));
-  border-style: dashed;
-  background: var(--color-bg-secondary);
-}
-#autoGlitterModal .auto-glitter-drag-handle {
-  display: none;
-}
-#autoGlitterModal .auto-glitter-drag-handle:disabled {
-  opacity: var(--disabled-opacity);
-  cursor: default;
-}
-#autoGlitterModal .auto-glitter-source {
-  align-items: flex-start;
-}
-#autoGlitterModal .auto-glitter-choice {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  width: min(46%, 300px);
-  min-width: 0;
-  margin-left: auto;
-  padding: var(--spacing-xs);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-  text-align: left;
-  cursor: pointer;
-}
-#autoGlitterModal .auto-glitter-choice:hover, #autoGlitterModal .auto-glitter-choice[aria-expanded=true] {
-  border-color: var(--color-accent);
-}
-#autoGlitterModal .auto-glitter-choice > span {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-}
-#autoGlitterModal .auto-glitter-choice small {
-  color: var(--color-text-secondary);
-}
-#autoGlitterModal .auto-glitter-choice strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-#autoGlitterModal .auto-glitter-choice img {
-  width: var(--icon-size-sm);
-  height: var(--icon-size-sm);
-  flex: 0 0 var(--icon-size-sm);
-  border-radius: var(--radius-sm);
-  -o-object-fit: cover;
-     object-fit: cover;
-  image-rendering: pixelated;
-}
-#autoGlitterModal .auto-glitter-picker {
-  display: flex;
-  flex: 0 0 100%;
-  flex-direction: column;
-  padding: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  --glitter-swatch-columns: 6;
-}
-#autoGlitterModal .auto-glitter-picker[hidden] {
-  display: none;
-}
-#autoGlitterModal .auto-glitter-picker-grid {
-  max-height: 220px;
-  overflow-y: auto;
-  padding: var(--spacing-xs);
-}
-@media (max-width: 620px) {
-  #autoGlitterModal .auto-glitter-step .settings-row-label-desc {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-  }
-  #autoGlitterModal .auto-glitter-match .auto-glitter-drag-handle {
-    display: flex;
-  }
-  #autoGlitterModal .auto-glitter-match .auto-glitter-choice {
-    width: calc(100% - (var(--icon-size-sm) * 2 + var(--spacing-sm) * 2));
-    margin-left: calc(var(--icon-size-sm) * 2 + var(--spacing-sm) * 2);
-  }
-  #autoGlitterModal .auto-glitter-match.is-merged {
-    margin-left: calc(var(--icon-size-sm) + var(--spacing-sm));
-  }
-  #autoGlitterModal .auto-glitter-picker {
-    flex-basis: 100%;
-  }
-  #autoGlitterModal .auto-glitter-picker-grid {
-    --glitter-swatch-columns: 4;
-  }
 }
 
 @keyframes highlight {
@@ -7099,17 +7177,6 @@ body.mask-editing .sticker-element {
   flex-direction: column;
 }
 
-.section.welcome-section > .section-content > .empty-state, .section.base-layer-settings-section > .section-content > .empty-state, .section.no-layer-settings-section > .section-content > .empty-state, .section.glitter-settings-section > .section-content > .empty-state, .section.sticker-settings-section > .section-content > .empty-state {
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background-color: var(--color-bg-card);
-}
-.section.welcome-section > .section-content > .empty-state.visible, .section.base-layer-settings-section > .section-content > .empty-state.visible, .section.no-layer-settings-section > .section-content > .empty-state.visible, .section.glitter-settings-section > .section-content > .empty-state.visible, .section.sticker-settings-section > .section-content > .empty-state.visible {
-  display: flex;
-  flex-direction: column;
-}
 .section.welcome-section > .section-content, .section.base-layer-settings-section > .section-content, .section.no-layer-settings-section > .section-content {
   display: flex;
   flex-direction: column;
@@ -7218,7 +7285,7 @@ body.mask-editing .sticker-element {
     padding: var(--spacing-sm);
     pointer-events: auto;
     backdrop-filter: blur(var(--glass-blur));
-    transition: opacity var(--transition-fast), visibility var(--transition-fast);
+    transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s;
   }
   .toolbar > .toolbar-spacer,
   .toolbar #shortcutsBtn,
@@ -7231,6 +7298,9 @@ body.mask-editing .sticker-element {
     border: 0;
   }
   .toolbar #toolbarSettingsGroup {
+    display: none;
+  }
+  .toolbar #handTool {
     display: none;
   }
   .preview-controls {
@@ -7284,6 +7354,12 @@ body.mask-editing .sticker-element {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+  }
+  body.designOpen .toolbar,
+  body.layersOpen .toolbar,
+  body.editOpen .toolbar {
+    transform: translate(calc(-100% - var(--mobile-floating-inset)), -50%);
+    transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   }
   .mobile-only-action {
     display: inline-flex;
@@ -7575,6 +7651,7 @@ body.mask-editing .sticker-element {
     overflow: hidden;
     isolation: isolate;
     padding-top: 0;
+    gap: 0;
     transform: translateY(100%);
     opacity: 1;
     visibility: hidden;

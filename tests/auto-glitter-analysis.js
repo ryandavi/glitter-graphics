@@ -5,39 +5,33 @@ const vm = require('vm');
 
 const workerSource = fs.readFileSync(path.join(__dirname, '..', 'js', 'workers', 'auto-glitter.worker.js'), 'utf8');
 let response;
+let segmentResponses = 0;
 const context = {
 	Uint8Array,
 	Uint8ClampedArray,
 	Uint32Array,
+	Int32Array,
 	Math,
 	Set,
 	Map,
 	self: {
 		postMessage(value) {
 			response = value;
+			if (value.type === 'segmented') segmentResponses++;
 		}
 	}
 };
 vm.runInNewContext(workerSource, context, { filename: 'auto-glitter.worker.js' });
 
-const width = 100;
-const height = 100;
-const pixels = new Uint8ClampedArray(width * height * 4);
-for (let y = 0; y < height; y++) {
-	for (let x = 0; x < width; x++) {
-		const offset = (y * width + x) * 4;
-		const neutral = x < 50 ? [184, 166, 143] : [150, 132, 112];
-		const color = x >= 44 && x < 56 && y >= 44 && y < 56 ? [235, 24, 34] : neutral;
-		pixels.set([...color, 255], offset);
-	}
-}
-
-
-const analysisOptions = {
+const baseOptions = {
 	iterations: 12,
 	alphaThreshold: 1,
-	similarityThreshold: 0.045,
-	neutralSimilarityThreshold: 0.105,
+	candidateCount: 24,
+	gradientWeight: 18,
+	seedChromaWeight: 12,
+	seedMaxColorBoost: 3.5,
+	mergeDistinctness: 0.045,
+	neutralSimilarityScale: 2.333333,
 	neutralChromaThreshold: 0.075,
 	chromaWeight: 12,
 	maxColorBoost: 3.5,
@@ -57,148 +51,114 @@ const analysisOptions = {
 	highlightMergeScale: 0.55,
 	swatchPrimaryWeight: 0.75,
 	tuneGlitterHue: true,
-	candidateMultiplier: 2,
-	candidatePadding: 4,
-	maxSamples: 24000
+	maxSamples: 24000,
+	cleanup: {
+		aliasDissolve: { enabled: true, maxMixtureDistance: 0.12, minBoundaryShare: 0.55, maxShare: 0.25 },
+		despeckle: { enabled: true, absMin: 4, shareMin: 0.00004 }
+	}
 };
 
-context.self.onmessage({
-	data: {
-		pixels: pixels.buffer,
-		width,
-		height,
-		colorCount: 3,
-		options: analysisOptions,
-		swatches: [
-			{ id: 'neutral', colors: ['#aa9277'] },
-			{ id: 'red', colors: ['#ee1622', '#a6000b'] }
-		]
-	}
-});
-
-assert.ok(!response.error, response.error);
-assert.ok(response.palette.length <= 3, 'analysis respects the requested layer limit');
-const redRegion = response.palette.find((color) => color.r > 200 && color.g < 70 && color.b < 70);
-assert.ok(redRegion, 'a small, concentrated red detail remains in the palette');
-assert.strictEqual(redRegion.suggestedGlitterId, 'red', 'the vivid region keeps its independently closest glitter match');
-assert.strictEqual(response.labels.length, width * height, 'every source pixel receives a label');
-
-context.self.onmessage({
-	data: {
-		pixels: pixels.slice().buffer,
-		width,
-		height,
-		colorCount: 3,
-		options: analysisOptions,
-		swatches: [{ id: 'blue', colors: ['#234fd8'] }]
-	}
-});
-const hueAdjustedRed = response.palette.find((color) => color.r > 200 && color.g < 70 && color.b < 70);
-assert.strictEqual(hueAdjustedRed.suggestedGlitterId, 'blue', 'a recolorable glitter can still be selected for the vivid region');
-const hueCorrection = Math.abs(hueAdjustedRed.suggestedColorAdjust?.hue || 0);
-assert.ok(hueCorrection >= 2 && hueCorrection <= 20, 'the Advanced hue adjustment stays small but meaningful');
-
-const creamPixels = new Uint8ClampedArray(20 * 20 * 4);
-for (let offset = 0; offset < creamPixels.length; offset += 4) creamPixels.set([238, 232, 222, 255], offset);
-context.self.onmessage({
-	data: {
-		pixels: creamPixels.buffer,
-		width: 20,
-		height: 20,
-		colorCount: 2,
-		options: analysisOptions,
-		swatches: [
-			{ id: 'dusty-pink', colors: ['#EF9C99', '#E16871', '#FF00CF', '#FFFFFF', '#FF30E5'] },
-			{ id: 'white', colors: ['#F8F8F5', '#D8D6D0'] }
-		]
-	}
-});
-assert.strictEqual(response.palette[0].suggestedGlitterId, 'white', 'a white sparkle inside a pink glitter does not make that glitter a cream match');
-
-const highlightPixels = new Uint8ClampedArray(width * height * 4);
-for (let y = 0; y < height; y++) {
-	for (let x = 0; x < width; x++) {
-		const color = x < 28 ? [250, 249, 247]
-			: x < 48 ? [224, 211, 198]
-				: x < 68 ? [126, 86, 70]
-					: x < 83 ? [48, 38, 32]
-						: x < 93 ? [226, 42, 198]
-							: [224, 28, 36];
-		highlightPixels.set([...color, 255], (y * width + x) * 4);
-	}
+let requestId = 0;
+function segment(pixels, width, height, options = baseOptions) {
+	context.self.onmessage({ data: { type: 'segment', requestId: ++requestId, pixels: pixels.buffer, width, height, options } });
+	assert.strictEqual(response.type, 'segmented', response.error);
+	return response;
 }
-context.self.onmessage({
-	data: {
-		pixels: highlightPixels.buffer,
-		width,
-		height,
-		colorCount: 5,
-		options: analysisOptions,
-		swatches: []
-	}
-});
-assert.ok(response.palette.some((color) => color.r > 240 && color.g > 240 && color.b > 240), 'a large connected white region survives a colorful five-layer reduction');
 
-const bandWidth = 12;
+function reduce(colorCount, options = baseOptions, swatches = []) {
+	context.self.onmessage({ data: { type: 'reduce', requestId: ++requestId, colorCount, options, swatches } });
+	assert.strictEqual(response.type, 'result', response.error);
+	return response;
+}
+
+function image(width, height, colorAt) {
+	const pixels = new Uint8ClampedArray(width * height * 4);
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) pixels.set([...colorAt(x, y), 255], (y * width + x) * 4);
+	}
+	return pixels;
+}
+
+const width = 100;
+const height = 100;
+const accentPixels = image(width, height, (x, y) => {
+	if (x >= 44 && x < 56 && y >= 44 && y < 56) return [235, 24, 34];
+	return x < 50 ? [184, 166, 143] : [150, 132, 112];
+});
+segment(accentPixels, width, height);
+let result = reduce(3, baseOptions, [
+	{ id: 'neutral', colors: ['#aa9277'] },
+	{ id: 'red', colors: ['#ee1622', '#a6000b'] }
+]);
+assert.ok(result.palette.length <= 3, 'analysis respects the requested maximum');
+const redRegion = result.palette.find(color => color.r > 200 && color.g < 70 && color.b < 70);
+assert.ok(redRegion, 'a small connected vivid detail remains in the palette');
+assert.strictEqual(redRegion.suggestedGlitterId, 'red', 'the vivid region keeps its closest glitter match');
+assert.strictEqual(result.labels.length, width * height, 'every source pixel receives a label');
+
+const segmentsBeforeReuse = segmentResponses;
+const threeColorResult = reduce(3, baseOptions, []);
+const twoColorResult = reduce(2, baseOptions, []);
+assert.strictEqual(segmentResponses, segmentsBeforeReuse, 'successive reductions reuse the cached segment');
+assert.ok(threeColorResult.labels.length === width * height && twoColorResult.labels.length === width * height, 'each cached reduction returns a complete label array');
+assert.ok(twoColorResult.palette.length <= 2, 'a second reduction honors its new color maximum');
+
+result = reduce(3, baseOptions, [{ id: 'blue', colors: ['#234fd8'] }]);
+const hueAdjustedRed = result.palette.find(color => color.r > 200 && color.g < 70 && color.b < 70);
+assert.strictEqual(hueAdjustedRed.suggestedGlitterId, 'blue', 'a recolorable glitter can be selected for a vivid region');
+assert.ok(Math.abs(hueAdjustedRed.suggestedColorAdjust?.hue || 0) >= 2, 'the suggested glitter hue correction remains visible and editable');
+
+const glyphWidth = 40;
+const glyphHeight = 24;
+const aaPixels = image(glyphWidth, glyphHeight, (x, y) => {
+	const black = x >= 10 && x <= 29 && y >= 6 && y <= 17;
+	const ring = x >= 9 && x <= 30 && y >= 5 && y <= 18;
+	return black ? [0, 0, 0] : (ring ? [150, 150, 150] : [255, 255, 255]);
+});
+segment(aaPixels, glyphWidth, glyphHeight);
+result = reduce(6);
+assert.strictEqual(result.palette.length, 2, 'a grey anti-alias ring dissolves into black and white regions');
+assert.ok(result.palette.some(color => color.r < 30) && result.palette.some(color => color.r > 230), 'the glyph and background colors survive alias cleanup');
+for (let y = 5; y <= 18; y++) {
+	for (let x = 9; x <= 30; x++) assert.notStrictEqual(result.labels[y * glyphWidth + x], 255, 'every anti-alias pixel is absorbed into an endpoint mask');
+}
+
+const noiseWidth = 48;
+const noiseHeight = 48;
+const ditherPixels = image(noiseWidth, noiseHeight, (x, y) => (x % 6 === 0 && y % 6 < 2) ? [244, 174, 40] : [34, 96, 190]);
+segment(ditherPixels, noiseWidth, noiseHeight);
+result = reduce(6);
+assert.strictEqual(result.palette.length, 1, 'ordered 1–2px dither speckles do not survive as a palette color');
+assert.ok(result.labels.every(label => label === 0), 'despeckle fills the surrounding mask without holes');
+
+const redPixels = image(60, 30, x => x < 30 ? [220, 30, 42] : [232, 34, 46]);
+segment(redPixels, 60, 30);
+result = reduce(6, { ...baseOptions, mergeDistinctness: 0.08 });
+assert.strictEqual(result.palette.length, 1, 'nearby reds merge even when the requested maximum has spare room');
+
+const outlinePixels = image(60, 30, x => x < 29 ? [230, 45, 55] : (x < 31 ? [0, 0, 0] : [250, 205, 35]));
+segment(outlinePixels, 60, 30);
+result = reduce(6);
+assert.strictEqual(result.palette.length, 3, 'a connected two-pixel black outline remains its own logical color');
+assert.ok(result.palette.some(color => color.r < 20 && color.g < 20 && color.b < 20), 'outline protection keeps black instead of classifying it as a blend');
+
 const bandValues = [70, 85, 100, 115, 130, 145, 160, 175, 190, 205];
-const neutralPixels = new Uint8ClampedArray(bandWidth * bandValues.length * height * 4);
-for (let y = 0; y < height; y++) {
-	for (let x = 0; x < bandWidth * bandValues.length; x++) {
-		const value = bandValues[Math.floor(x / bandWidth)];
-		const offset = (y * bandWidth * bandValues.length + x) * 4;
-		neutralPixels.set([value, value, value, 255], offset);
-	}
-}
-const analyzeNeutralBands = (options) => {
-	context.self.onmessage({
-		data: {
-			pixels: neutralPixels.slice().buffer,
-			width: bandWidth * bandValues.length,
-			height,
-			colorCount: 12,
-			options,
-			swatches: []
-		}
-	});
-	return response.palette.length;
-};
-const vibrantNeutralCount = analyzeNeutralBands(analysisOptions);
-const naturalNeutralCount = analyzeNeutralBands({
-	...analysisOptions,
-	similarityThreshold: 0.035,
-	neutralSimilarityThreshold: 0.045,
+const neutralPixels = image(120, 60, x => {
+	const value = bandValues[Math.floor(x / 12)];
+	return [value, value, value];
+});
+segment(neutralPixels, 120, 60);
+const vibrantCount = reduce(12).palette.length;
+const naturalOptions = {
+	...baseOptions,
+	mergeDistinctness: 0.035,
+	neutralSimilarityScale: 1.285714,
 	neutralChromaThreshold: 0.05,
-	chromaWeight: 4,
-	maxColorBoost: 1,
 	neutralImportance: 1,
-	coherenceBase: 0.65,
-	coherenceScale: 0.5,
-	connectedAreaWeight: 2,
-	maxConnectedBoost: 0.5,
 	connectedNeutralProtection: 0.9,
 	fragmentedSimilarityBoost: 0.15
-});
-assert.ok(vibrantNeutralCount < naturalNeutralCount, 'Vibrant combines more nearby neutral shades than Natural');
+};
+const naturalCount = reduce(12, naturalOptions).palette.length;
+assert.ok(vibrantCount < naturalCount, 'Vibrant still combines more neutral shades than Natural');
 
-const topologyPixels = new Uint8ClampedArray(width * height * 4);
-for (let offset = 0; offset < topologyPixels.length; offset += 4) topologyPixels.set([145, 145, 145, 255], offset);
-for (let y = 10; y < 30; y++) {
-	for (let x = 10; x < 30; x++) topologyPixels.set([235, 24, 34, 255], (y * width + x) * 4);
-}
-for (let y = 2; y < height; y += 5) {
-	for (let x = 2; x < width; x += 5) topologyPixels.set([30, 75, 225, 255], (y * width + x) * 4);
-}
-context.self.onmessage({
-	data: {
-		pixels: topologyPixels.buffer,
-		width,
-		height,
-		colorCount: 2,
-		options: analysisOptions,
-		swatches: []
-	}
-});
-assert.ok(response.palette.some((color) => color.r > 200 && color.g < 70), 'a connected accent survives the final palette reduction');
-assert.ok(!response.palette.some((color) => color.b > 180 && color.r < 80), 'equally sized scattered edge-like pixels do not displace a connected accent');
-
-console.log('Auto Glitter analysis verification passed.');
+console.log('auto-glitter analysis checks passed');

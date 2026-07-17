@@ -50,6 +50,7 @@ class MobileManager {
 
 	init() {
 		dbg('Mobile: Initializing mobile manager');
+		if (this.editor.currentTool === ToolType.HAND) this.editor.setTool(ToolType.SELECT);
 		this.buildSettingsRegistry();
 		this.cacheSettingsSections();
 		dbg('Mobile: Schema settings registry:', Object.keys(this.settingsRegistry));
@@ -270,7 +271,7 @@ class MobileManager {
 		const wasEditOpen = this.activeDrawer === 'edit';
 		this.returnSettingsSections();
 		let hasSettings = false;
-		const keys = LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections || [];
+		const keys = options.keys || LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections || [];
 		keys.forEach((key) => {
 			const section = this.settingsRegistry[key]?.element;
 			if (!section) return;

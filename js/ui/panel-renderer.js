@@ -124,16 +124,20 @@ function buildSliderRow(options) {
 	return row;
 }
 
-function buildSegmented(entries) {
+function buildSegmented(entries, options = {}) {
 	const group = tplClone('tpl-segmented');
+	if (options.id) group.id = options.id;
+	if (options.label) group.setAttribute('aria-label', options.label);
+	group.setAttribute('role', 'group');
 	entries.forEach((entry) => {
 		const button = tplClone('tpl-segmented-option');
-		button.id = entry.id;
+		if (entry.id) button.id = entry.id;
 		button.textContent = entry.label;
 		if (entry.active) button.classList.add('active');
 		if (entry.mode) button.dataset.mode = entry.mode;
-		else if (entry.value) button.dataset.value = entry.value;
+		else if (entry.value != null) button.dataset.value = entry.value;
 		button.dataset.role = entry.role || (entry.mode ? `source-${entry.mode}` : 'segmented-option');
+		button.setAttribute('aria-pressed', entry.active ? 'true' : 'false');
 		group.appendChild(button);
 	});
 	return group;
@@ -285,6 +289,9 @@ function buildPanelItem(item, schema) {
 	switch (item.kind) {
 		case 'card': {
 			const card = tplClone('tpl-card');
+			if (item.bare) card.classList.remove('subsection-content-group');
+			if (item.id) card.id = item.id;
+			if (item.hidden) card.hidden = true;
 			addPanelClasses(card, item.classes);
 			const title = card.querySelector('.subsection-title');
 			if (item.title) title.querySelector(':scope > span').textContent = item.title;
@@ -324,11 +331,11 @@ function buildPanelItem(item, schema) {
 			return content;
 		}
 		case 'actionRow': {
-			const row = panelDiv('settings-action-row');
+			const row = addPanelClasses(panelDiv('settings-action-row'), item.classes);
 			item.actions.forEach((action) => {
 				const button = document.createElement('button');
 				button.type = 'button';
-				button.className = `btn-simple${action.primary ? ' primary' : ''}`;
+				button.className = `btn-simple${action.primary ? ' primary' : ''}${action.secondary ? ' secondary' : ''}`;
 				button.id = action.id;
 				button.textContent = action.label;
 				if (action.title) button.title = action.title;
@@ -355,6 +362,36 @@ function buildPanelItem(item, schema) {
 				child.appendChild(segmented);
 			}
 			return buildOptionGroup(item.label, [child]);
+		}
+		case 'segmented':
+			return buildSegmented(item.options, item);
+		case 'radioSegmented': {
+			const group = tplClone('tpl-segmented');
+			group.id = item.id;
+			group.setAttribute('role', 'radiogroup');
+			group.setAttribute('aria-label', item.label);
+			item.options.forEach((entry) => {
+				const label = document.createElement('label');
+				label.className = 'segmented-option';
+				const input = document.createElement('input');
+				input.type = 'radio';
+				input.name = item.id;
+				input.id = entry.id;
+				input.value = entry.value;
+				const text = document.createElement('span');
+				text.textContent = entry.label;
+				label.append(input, text);
+				group.appendChild(label);
+			});
+			return group;
+		}
+		case 'advanced': {
+			const advanced = tplClone('tpl-advanced');
+			advanced.classList.remove('glitter-source-glitter');
+			advanced.querySelector('.advanced-disclosure-label').textContent = item.label || 'Advanced';
+			const content = advanced.querySelector('[data-advanced-content]');
+			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
+			return advanced;
 		}
 		case 'stackRow': {
 			const row = tplClone('tpl-two-column');
@@ -418,6 +455,14 @@ function initializePanelGroupNode(node, prefix, title) {
 
 function buildPanelGroup(group, schema) {
 	const node = tplClone('tpl-group');
+	if (group.bare) node.classList.remove('subsection-content-group');
+	addPanelClasses(node, group.classes);
+	if (group.static) {
+		node.querySelector('.subsection-title')?.remove();
+		node.dataset.panelGroup = group.title;
+		group.items.forEach((item) => node.appendChild(buildPanelItem(item, schema)));
+		return node;
+	}
 	const { header, chevron } = initializePanelGroupNode(node, schema.prefix, group.title);
 	if (group.toggle) {
 		const toggle = tplClone('tpl-checkbox');
@@ -449,7 +494,19 @@ function renderPanelSection(schema) {
 	fragment.querySelector('.section-header-action').id = `${sectionPrefix}Toggle`;
 	fragment.querySelector('.section-content').id = `${sectionPrefix}Content`;
 	const subsection = fragment.querySelector('.settings-subsection');
-	schema.groups.forEach((group) => subsection.appendChild(buildPanelGroup(group, schema)));
+	let scrollRegion = null;
+	schema.groups.forEach((group) => {
+		const node = buildPanelGroup(group, schema);
+		if (group.region === 'scroll') {
+			if (!scrollRegion) {
+				scrollRegion = panelDiv('panel-scroll-region');
+				subsection.appendChild(scrollRegion);
+			}
+			scrollRegion.appendChild(node);
+		} else {
+			subsection.appendChild(node);
+		}
+	});
 	if (schema.effects) {
 		const stack = buildPanelGroup({ title: 'Effects', items: schema.effects }, schema);
 		stack.classList.add('effects-stack');

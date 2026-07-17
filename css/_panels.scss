@@ -1026,6 +1026,19 @@
 	}
 }
 
+// Full-panel empty states share one surface regardless of which section owns
+// them. Nested browser and form empty states keep their local variants.
+.section > .section-content > .empty-state {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background-color: var(--color-bg-card);
+
+	&.visible { display: flex; }
+}
+
 #layerSettingsControls,
 #glitterSettingsControls {
 	display: none;
@@ -1965,16 +1978,27 @@ body.mask-editing {
 	position: absolute;
 	bottom: var(--spacing-from-edge);
 	left: 50%;
-	transform: translateX(-50%);
-	display: none;
+	transform: translate(-50%, 6px);
+	display: flex;
 	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
 	gap: var(--spacing-sm);
 	z-index: 10;
+	max-width: calc(100% - var(--spacing-xl));
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
 
 	@include floating-ui;
 
 	&.visible {
-		display: flex;
+		transform: translate(-50%, 0);
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transition-delay: 0s;
 	}
 
 	>.btn-icon {
@@ -2064,15 +2088,36 @@ body.mask-editing {
 }
 
 .context-checkbox-group {
-	display: flex;
+	display: inline-flex;
+	position: relative;
 	align-items: center;
 	gap: var(--spacing-xs);
+	min-height: var(--icon-size-sm);
+	padding: var(--spacing-xs) var(--spacing-sm);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: var(--color-bg-secondary);
+	color: var(--color-text-secondary);
 	cursor: pointer;
 	font-size: var(--font-size-sm);
+	white-space: nowrap;
+	transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 
 	input[type="checkbox"] {
-		margin: 0;
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
 	}
+
+	&:has(input:checked) {
+		border-color: var(--color-accent);
+		background: var(--color-accent);
+		color: #fff;
+
+		.context-count { color: inherit; }
+	}
+
+	&:has(input:focus-visible) { box-shadow: var(--control-focus-ring); }
 
 	.context-count {
 		font-size: var(--font-size-xs);
@@ -2090,6 +2135,13 @@ body.mask-editing {
 			content: ")";
 		}
 	}
+}
+
+.color-picker-controls > div:not(.context-slider-group) {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--spacing-xs);
 }
 
 /* Mask Brush Controls Specific */
@@ -4382,6 +4434,231 @@ body.mask-editing {
 
 // Collapsed panel groups are a state boundary. Keep this after every generated
 // transform-host layout rule so themes and host normalization cannot reopen it.
-.design-panel .settings-subsection > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
+.design-panel .settings-subsection > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title),
+.design-panel .panel-scroll-region > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
 	display: none !important;
+}
+
+#autoGlitterSettingsSection {
+	> #autoGlitterSettingsContent { padding: 0; }
+
+	&.is-open > .section-content.visible { overflow: hidden; }
+
+	.settings-subsection {
+		display: flex;
+		height: 100%;
+		min-height: 0;
+		flex-direction: column;
+		gap: 0;
+		overflow: hidden;
+	}
+
+	.panel-scroll-region {
+		display: flex;
+		width: 100%;
+		min-height: 0;
+		min-width: 0;
+		max-width: 100%;
+		flex: 1 1 auto;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-md);
+		overflow-x: hidden;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable;
+
+		> * {
+			min-width: 0;
+			max-width: 100%;
+		}
+	}
+
+	.auto-glitter-preview-group,
+	.auto-glitter-footer-group {
+		flex: 0 0 auto;
+		padding: var(--spacing-md);
+	}
+
+	.auto-glitter-preview-group { border-bottom: 1px solid var(--color-border); }
+	.auto-glitter-footer-group { border-top: 1px solid var(--color-border); }
+
+	.auto-glitter-preview-card .segmented-control,
+	#autoGlitterPaletteStyle,
+	.auto-glitter-rerun-options {
+		width: 100%;
+	}
+
+	.auto-glitter-existing {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+
+		&[hidden] { display: none; }
+
+		> p {
+			margin: 0;
+			color: var(--color-text-secondary);
+		}
+
+		&.has-warning > p { color: var(--color-warning); }
+	}
+
+	#autoGlitterRerunMode > label {
+		display: flex;
+		position: relative;
+		align-items: center;
+		justify-content: center;
+
+		> input {
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		&:has(input:checked) {
+			background: var(--color-accent);
+			color: #fff;
+		}
+
+		&:has(input:focus-visible) { box-shadow: inset var(--control-focus-ring); }
+	}
+
+	.auto-glitter-status {
+		margin: 0;
+		padding: var(--spacing-xs) 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.auto-glitter-results {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+
+		&[hidden] { display: none; }
+	}
+
+	.auto-glitter-match {
+		flex-wrap: wrap;
+		cursor: grab;
+
+		&.is-dragging {
+			opacity: .55;
+			transform: scale(.99);
+		}
+
+		&.is-merge-target {
+			border-color: var(--color-accent);
+			box-shadow: 0 0 0 2px var(--color-accent-light);
+		}
+
+		&.is-merged {
+			margin-top: calc(var(--spacing-sm) * -1);
+			margin-left: calc(var(--icon-size-sm) + var(--spacing-sm));
+			border-style: dashed;
+			background: var(--color-bg-secondary);
+		}
+
+		&.is-skipped {
+			opacity: var(--disabled-opacity);
+			background: var(--color-bg-secondary);
+		}
+	}
+
+	.auto-glitter-drag-handle {
+		display: none;
+
+		&:disabled {
+			opacity: var(--disabled-opacity);
+			cursor: default;
+		}
+	}
+
+	.auto-glitter-source { align-items: flex-start; }
+
+	.auto-glitter-choice {
+		margin-left: auto;
+		padding: 0;
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-secondary);
+		cursor: pointer;
+
+		&:hover,
+		&[aria-expanded='true'] { border-color: var(--color-accent); }
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			image-rendering: pixelated;
+		}
+	}
+
+	.auto-glitter-footer-group {
+		.auto-glitter-actions > button { flex: 1 1 0; }
+	}
+}
+
+.auto-glitter-preview-banner {
+	position: absolute;
+	left: 50%;
+	bottom: calc(var(--spacing-from-edge) + var(--control-height) + var(--spacing-lg));
+	z-index: 11;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	max-width: calc(100% - var(--spacing-xl));
+	padding: var(--spacing-sm) var(--spacing-md);
+	white-space: nowrap;
+	cursor: default;
+	transform: translate(-50%, 6px);
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
+	@include floating-ui;
+
+	&[hidden] { display: none; }
+
+	&.visible {
+		transform: translate(-50%, 0);
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transition-delay: 0s;
+	}
+
+	> .icon-wrapper {
+		color: var(--color-accent);
+
+		> .icon {
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
+		}
+	}
+	> strong { font-size: var(--font-size-sm); }
+	> span[role="status"] {
+		min-width: 0;
+		overflow: hidden;
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+		text-overflow: ellipsis;
+	}
+	> .btn-text { flex: 0 0 auto; }
+}
+
+.auto-glitter-gallery-empty { display: none; }
+
+.design-panel[data-panel-mode='auto-glitter'] #designGallerySection:not(.picker-mode) #designGalleryContent {
+	> :not(.auto-glitter-gallery-empty) { display: none !important; }
+
+	> .auto-glitter-gallery-empty {
+		display: flex;
+		min-height: 180px;
+	}
+}
+
+@media (max-width: 800px) {
+	#autoGlitterSettingsSection .auto-glitter-drag-handle { display: flex; }
 }

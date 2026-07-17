@@ -5,7 +5,7 @@
         "icon": "images/glitter/sparkle/glitter_crimson.gif",
         "color": "#ff69b4",
         "description": "Classic sparkle glitter effects",
-        "count": 70
+        "count": 69
     },
     {
         "id": "ember",
@@ -37,7 +37,7 @@
         "icon": "images/glitter/etc/etc_lavender.gif",
         "color": "#ff69b4",
         "description": "Temporary/experimental glitter effects",
-        "count": 15
+        "count": 16
     },
     {
         "id": "transparent",

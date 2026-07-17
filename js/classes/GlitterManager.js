@@ -184,8 +184,10 @@ async initBrowser() {
 	}
 
 
-	createLayer() {
-		if (this.editor.layerManager.layers.length >= CONFIG.app.limits.maxLayers) {
+	createLayer(options = {}) {
+		// skipLimitCheck: Auto Glitter session layers may transiently overlap
+		// the previous batch they replace; the session enforces capacity itself.
+		if (!options.skipLimitCheck && this.editor.layerManager.layers.length >= CONFIG.app.limits.maxLayers) {
 			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
 			return null;
 		}
@@ -360,6 +362,14 @@ async initBrowser() {
 			this.editor.showError('Please load an image first');
 			return;
 		}
+		if (this.editor.autoGlitterManager?.hasActivePickerSession()) {
+			this.editor.autoGlitterManager.selectPickerGlitter(id);
+			return;
+		}
+		if (this.editor.autoGlitterManager?.isSessionActive()) {
+			this.editor.updateStatus('Choose a Color Match swatch before selecting glitter');
+			return;
+		}
 
 		const layer = this.editor.layerManager.getActiveLayer();
 		if (!layer) {
@@ -517,6 +527,13 @@ async initBrowser() {
 	// ===== RENDERING (CANVAS/DOM) =====
 
 	updateSelection() {
+		const autoGlitterId = this.editor.autoGlitterManager?.getPickerGlitterId();
+		if (autoGlitterId != null) {
+			document.querySelectorAll('#glitterItemGrid .asset-option, #glitterSearchResults .asset-option').forEach((option) => {
+				option.classList.toggle('selected', String(option.dataset.id) === String(autoGlitterId));
+			});
+			return;
+		}
 		// Delegate to main editor's update method
 		this.editor.updateGlitterSelection();
 	}
@@ -1021,6 +1038,20 @@ async initBrowser() {
 			}
 		}
 		return false;
+	}
+
+	// Registers uncommitted paint content so the mask pipeline rebuilds (cache
+	// keys include paint.version) WITHOUT snapshotting into paintHistory —
+	// Auto Glitter session reconciles run per live change and would otherwise
+	// spam full-size snapshots. commitPaintState() finalizes with a real one.
+	markPaintTransient(layer) {
+		const paint = this.paintMasks.get(layer.id);
+		if (!paint) return;
+		paint.version = this.nextPaintVersion++;
+		paint.liveRevision = 0;
+		paint.hasContent = true;
+		layer.maskHasContent = true;
+		this.editor.maskCompositor?.invalidate(layer.id);
 	}
 
 	commitPaintState(layer) {

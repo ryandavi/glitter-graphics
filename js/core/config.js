@@ -89,13 +89,19 @@ const CONFIG = {
 
 	tools: {
 		autoGlitter: {
-			defaults: { colorLayers: 5, paletteStyle: 'vibrant', tuneGlitterHue: true },
-			limits: { minColorLayers: 2, maxColorLayers: 12, maxSamples: 24000 },
-			analysis: { iterations: 12, alphaThreshold: 1, candidateMultiplier: 2, candidatePadding: 4, hueMinChroma: 0.04, maxHueShift: 20, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75 },
+			defaults: { colorLayers: 5, paletteStyle: 'vibrant', tuneGlitterHue: true, cleanEdges: true, detail: 4 },
+			previewToolAccess: { groups: ['navigation'], tools: [] },
+			limits: { minColorLayers: 2, maxColorLayers: 20, maxSamples: 24000 },
+			timing: { reduceThrottleMs: 80 },
+			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: 20, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75 },
+			cleanup: {
+				aliasDissolve: { enabled: true, maxMixtureDistance: 0.12, minBoundaryShare: 0.55, maxShare: 0.25 },
+				despeckle: { enabled: true, absMin: 4, shareMin: 0.00004 }
+			},
 			paletteStyles: {
-				vibrant: { similarityThreshold: 0.045, neutralSimilarityThreshold: 0.105, neutralChromaThreshold: 0.075, chromaWeight: 12, maxColorBoost: 3.5, neutralImportance: 0.62, coherenceBase: 0.4, coherenceScale: 0.75, connectedAreaWeight: 4, maxConnectedBoost: 1, connectedNeutralProtection: 0.65, fragmentedSimilarityBoost: 0.6 },
-				balanced: { similarityThreshold: 0.045, neutralSimilarityThreshold: 0.065, neutralChromaThreshold: 0.06, chromaWeight: 8, maxColorBoost: 2, neutralImportance: 0.82, coherenceBase: 0.5, coherenceScale: 0.65, connectedAreaWeight: 3, maxConnectedBoost: 0.75, connectedNeutralProtection: 0.75, fragmentedSimilarityBoost: 0.35 },
-				natural: { similarityThreshold: 0.035, neutralSimilarityThreshold: 0.045, neutralChromaThreshold: 0.05, chromaWeight: 4, maxColorBoost: 1, neutralImportance: 1, coherenceBase: 0.65, coherenceScale: 0.5, connectedAreaWeight: 2, maxConnectedBoost: 0.5, connectedNeutralProtection: 0.9, fragmentedSimilarityBoost: 0.15 }
+				vibrant: { mergeDistinctness: 0.045, neutralSimilarityScale: 2.333333, neutralChromaThreshold: 0.075, chromaWeight: 12, maxColorBoost: 3.5, neutralImportance: 0.62, coherenceBase: 0.4, coherenceScale: 0.75, connectedAreaWeight: 4, maxConnectedBoost: 1, connectedNeutralProtection: 0.65, fragmentedSimilarityBoost: 0.6 },
+				balanced: { mergeDistinctness: 0.045, neutralSimilarityScale: 1.444444, neutralChromaThreshold: 0.06, chromaWeight: 8, maxColorBoost: 2, neutralImportance: 0.82, coherenceBase: 0.5, coherenceScale: 0.65, connectedAreaWeight: 3, maxConnectedBoost: 0.75, connectedNeutralProtection: 0.75, fragmentedSimilarityBoost: 0.35 },
+				natural: { mergeDistinctness: 0.035, neutralSimilarityScale: 1.285714, neutralChromaThreshold: 0.05, chromaWeight: 4, maxColorBoost: 1, neutralImportance: 1, coherenceBase: 0.65, coherenceScale: 0.5, connectedAreaWeight: 2, maxConnectedBoost: 0.5, connectedNeutralProtection: 0.9, fragmentedSimilarityBoost: 0.15 }
 			}
 		},
 		selection: {
@@ -387,6 +393,9 @@ const CONFIG = {
 		// borderWidth/borderDotSpacing maxes are boot defaults that
 		// ShapeGlitterManager raises from CONFIG.tools.shapes.border at bind time.
 			sliders: {
+			autoGlitterColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
+			autoGlitterMergeDistinctness: { label: 'Combine Similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
+			autoGlitterDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
 			maskBrushSize: { label: 'Size', unit: 'px', min: 1, max: 300, value: 40 },
 			maskBrushSoftness: { label: 'Softness', unit: '%', min: 0, max: 100, value: 0 },
 			maskBrushFlow: { label: 'Flow', unit: '%', min: 1, max: 100, value: 100 },
@@ -608,6 +617,29 @@ const ToolType = {
 	ZOOM: 'zoom'
 };
 
+// Reusable capability groups for focused editor modes. A preview session can
+// permit whole groups and add individual tool exceptions through one policy.
+const TOOL_GROUPS = Object.freeze({
+	navigation: Object.freeze([ToolType.HAND, ToolType.ZOOM]),
+	selection: Object.freeze([ToolType.SELECT]),
+	creation: Object.freeze([ToolType.TEXT, ToolType.SHAPE]),
+	paint: Object.freeze([ToolType.COLOR_PICKER, ToolType.BRUSH]),
+	contentEditing: Object.freeze([
+		ToolType.SELECT,
+		ToolType.TEXT,
+		ToolType.SHAPE,
+		ToolType.COLOR_PICKER,
+		ToolType.BRUSH
+	]),
+	all: Object.freeze(Object.values(ToolType))
+});
+
+function toolAllowedByAccess(tool, access = {}) {
+	const tools = Array.isArray(access.tools) ? access.tools : [];
+	const groups = Array.isArray(access.groups) ? access.groups : [];
+	return tools.includes(tool) || groups.some((name) => TOOL_GROUPS[name]?.includes(tool));
+}
+
 const TOOL_TOUCH_ROUTES = {
 	[ToolType.SHAPE]: 'creationDrag',
 	[ToolType.TEXT]: 'tapCreate'
@@ -694,6 +726,11 @@ const LAYER_UI_CONFIG = {
 		designPanelSections: ['noLayerSettingsSection'],
 		mobileSettingsSections: [],
 		panelMode: 'no-layer'
+	},
+	AUTO_GLITTER: {
+		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'autoGlitterSettingsSection'],
+		mobileSettingsSections: ['autoGlitter'],
+		panelMode: 'auto-glitter'
 	},
 
 	[LayerType.BASE_IMAGE]: {
@@ -881,6 +918,62 @@ const LAYER_UI_CONFIG = {
 // capitalized role. Panels not listed here are still static index.html
 // markup awaiting migration (see the plan's WP order).
 const PANEL_SCHEMAS = {
+	autoGlitterSession: {
+		prefix: 'autoGlitter',
+		sectionPrefix: 'autoGlitterSettings',
+		mobileKey: 'autoGlitter',
+		replaceStatic: true,
+		section: { id: 'autoGlitterSettingsSection', icon: 'palette', iconName: 'Palette', title: 'Auto Glitter' },
+		groups: [
+			{ title: 'Preview', classes: 'auto-glitter-preview-group', static: true, bare: true, items: [
+				{ kind: 'card', classes: 'auto-glitter-preview-card', bare: true, items: [
+					{ kind: 'segmented', id: 'autoGlitterPreviewMode', label: 'Preview mode', options: [
+						{ label: 'Original', value: 'original' }, { label: 'Flat', value: 'flat' }, { label: 'Glitter', value: 'glitter', active: true }
+					] }
+				] },
+				{ kind: 'card', id: 'autoGlitterExisting', classes: 'auto-glitter-existing', hidden: true, items: [
+					{ kind: 'host', id: 'autoGlitterExistingSummary', tag: 'p' },
+					{ kind: 'radioSegmented', id: 'autoGlitterRerunMode', label: 'How to handle the previous Auto Glitter layers', options: [
+						{ id: 'autoGlitterReplacePrevious', label: 'Replace previous', value: 'replace' },
+						{ id: 'autoGlitterAddAnother', label: 'Keep and add', value: 'add' }
+					] }
+				] }
+			] },
+			{ title: 'Palette', region: 'scroll', items: [
+				{ kind: 'card', items: [
+					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', label: 'Palette style', options: [
+						{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced' }, { label: 'Natural', value: 'natural' }
+					] },
+					{ kind: 'slider', id: 'autoGlitterColorCount', slider: 'autoGlitterColorCount' },
+					{ kind: 'slider', id: 'autoGlitterMergeDistinctness', slider: 'autoGlitterMergeDistinctness' },
+					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'settings-row-label-desc' }
+				] }
+			] },
+			{ title: 'Color Matches', region: 'scroll', items: [
+				{ kind: 'card', classes: 'auto-glitter-review', items: [
+					{ kind: 'host', id: 'autoGlitterStatus', classes: 'auto-glitter-status', attrs: { role: 'status', 'aria-live': 'polite' }, text: 'Finding the image\'s distinct colors…' },
+					{ kind: 'host', id: 'autoGlitterResults', classes: 'auto-glitter-results', attrs: { 'aria-label': 'Detected color regions and glitter matches' } }
+				] }
+			] },
+			{ title: 'Advanced', region: 'scroll', items: [
+				{ kind: 'card', items: [
+					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'autoGlitterDetail', title: 'Absorb connected regions smaller than this many pixels' },
+					{ kind: 'checkboxList', items: [
+						{ id: 'autoGlitterCleanEdges', label: 'Clean Edges', checked: true, title: 'Absorb anti-aliased blend colors into their neighboring regions' },
+						{ id: 'autoGlitterTuneHue', label: 'Tune Matched Glitter Hue', checked: true, title: 'Apply a small hue correction to improve the closest glitter match' }
+					] }
+				] }
+			] },
+			{ title: 'Finish', classes: 'auto-glitter-footer-group', static: true, bare: true, items: [
+				{ kind: 'card', bare: true, items: [
+					{ kind: 'actionRow', classes: 'auto-glitter-actions', actions: [
+						{ id: 'cancelAutoGlitterBtn', label: 'Cancel', secondary: true },
+						{ id: 'autoGlitterCreateBtn', label: 'Create Layers', primary: true }
+					] }
+				] }
+			] }
+		]
+	},
 	[LayerType.BASE_IMAGE]: {
 		prefix: 'baseBackground',
 		sectionPrefix: 'baseLayerSettings',

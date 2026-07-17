@@ -8,7 +8,10 @@ class HistoryManager {
 
 	createStateSnapshot() {
 		return {
-			layers: this.editor.layers.map((layer) => this.editor.layerManager.serializeLayer(layer)),
+			// Ephemeral Auto Glitter session layers (isPreview) never enter
+			// history — they are removed or committed before any undoable edit.
+			layers: this.editor.layers.filter((layer) => !layer.isPreview)
+				.map((layer) => this.editor.layerManager.serializeLayer(layer)),
 			activeLayerId: this.editor.activeLayerId,
 			selectedLayerIds: [...(this.editor.selectedLayerIds || [])],
 			// Canvas dimensions + base-image pixels, so a Canvas Size / crop resize
@@ -138,10 +141,14 @@ class HistoryManager {
 	}
 
 	canUndo() {
+		// A restore while an Auto Glitter session is open would rebuild the
+		// layer stack under the ephemeral preview batch.
+		if (this.editor.autoGlitterManager?.isSessionActive()) return false;
 		return this.historyIndex > 0;
 	}
 
 	canRedo() {
+		if (this.editor.autoGlitterManager?.isSessionActive()) return false;
 		return this.historyIndex >= 0 && this.historyIndex < this.history.length - 1;
 	}
 
