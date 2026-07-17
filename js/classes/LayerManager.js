@@ -160,6 +160,7 @@ class LayerManager {
 			settings: layer.settings ? { ...layer.settings } : {}
 		};
 		serialized.fill = layer.fill ? JSON.parse(JSON.stringify(layer.fill)) : null;
+		serialized.autoGlitter = layer.autoGlitter ? JSON.parse(JSON.stringify(layer.autoGlitter)) : null;
 
 		if (includeMaskVersion) {
 			serialized.maskVersion = layer.maskVersion || 0;
@@ -247,6 +248,7 @@ class LayerManager {
 			settings: layerData.settings ? { ...layerData.settings } : {}
 		};
 		restored.fill = layerData.fill ? JSON.parse(JSON.stringify(layerData.fill)) : null;
+		restored.autoGlitter = layerData.autoGlitter ? JSON.parse(JSON.stringify(layerData.autoGlitter)) : null;
 		return restored;
 	}
 
@@ -357,10 +359,6 @@ class LayerManager {
 		const layer = this.getLayerById(layerId);
 		if (!layer || layer.type === LayerType.BASE_IMAGE) return;
 		layer.locked = !layer.locked;
-		if (layer.locked && this.selectedLayerIds.size > 1) {
-			const remaining = [...this.selectedLayerIds].filter((id) => id !== layer.id);
-			this.setSelection(remaining, { activeLayerId: remaining.at(-1) || null });
-		}
 		if (layer.locked && this.activeLayerId === layer.id) {
 			this.editor.textGlitterManager?.closePickerSession();
 			this.editor.shapeGlitterManager?.closePickerSession();
@@ -380,6 +378,10 @@ class LayerManager {
 	// ===== LAYER SELECTION =====
 
 	isLayerMultiSelectable(layer) {
+		return Boolean(layer);
+	}
+
+	isLayerMovable(layer) {
 		return Boolean(layer && isTransformableLayerType(layer.type) && !layer.locked);
 	}
 
@@ -391,16 +393,23 @@ class LayerManager {
 		const movableOnly = options.movableOnly === true;
 		return this.layers.filter((layer) => {
 			if (!this.selectedLayerIds.has(layer.id)) return false;
-			return !movableOnly || this.isLayerMultiSelectable(layer);
+			return !movableOnly || this.isLayerMovable(layer);
 		});
 	}
 
 	getMultiSelectedMovableLayers() {
-		return this.getSelectedLayers({ movableOnly: true });
+		const selectedLayers = this.getSelectedLayers();
+		return selectedLayers.length > 0 && selectedLayers.every((layer) => this.isLayerMovable(layer))
+			? selectedLayers
+			: [];
 	}
 
 	hasMultiSelection() {
-		return this.getMultiSelectedMovableLayers().length > 1;
+		return this.getSelectedLayers().length > 1;
+	}
+
+	canTransformMultiSelection() {
+		return this.hasMultiSelection() && this.getMultiSelectedMovableLayers().length > 1;
 	}
 
 	clearSelection() {
@@ -452,7 +461,6 @@ class LayerManager {
 		const end = Math.max(anchorIndex, targetIndex);
 		const rangeIds = this.layers
 			.slice(start, end + 1)
-			.filter((layer) => this.isLayerMultiSelectable(layer))
 			.map((layer) => layer.id);
 		const nextIds = options.additive
 			? [...new Set([...this.selectedLayerIds, ...rangeIds])]
@@ -471,10 +479,6 @@ class LayerManager {
 			if (!this.layers.some((layer) => layer.id === layerId)) return false;
 			return requestedIds.indexOf(layerId) === index;
 		});
-
-		if (normalized.length > 1) {
-			normalized = normalized.filter((layerId) => this.isLayerMultiSelectable(this.getLayerById(layerId)));
-		}
 
 		let nextActiveId = options.activeLayerId ?? this.activeLayerId;
 		if (normalized.length === 0) {
@@ -723,7 +727,7 @@ class LayerManager {
 			const layer = this.layers[i];
 			if (!layer.visible) continue;
 			if (excludeLocked && layer.locked && layer.type !== LayerType.BASE_IMAGE) continue;
-			if (movableOnly && !this.isLayerMultiSelectable(layer)) continue;
+			if (movableOnly && !this.isLayerMovable(layer)) continue;
 
 			let isHit = false;
 			const hitTestMethod = LAYER_UI_CONFIG[layer.type]?.hitTestMethod;
@@ -920,7 +924,7 @@ class LayerManager {
 		const canInteractWithSelected = selectedLayers.length > 0
 			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
 		const hasSingleSelection = selectedLayers.length === 1;
-		const movableSelectionCount = this.getMultiSelectedMovableLayers().length;
+		const selectionCount = selectedLayers.length;
 
 		// Add buttons - only check max layers
 		const addGlitterBtn = document.getElementById('layersBarAddGlitter');
@@ -940,10 +944,10 @@ class LayerManager {
 		if (deleteBtn) deleteBtn.disabled = !canInteractWithSelected;
 
 		if (cloneBtn) {
-			cloneBtn.title = movableSelectionCount > 1 ? 'Clone selected layers' : 'Clone selected layer';
+			cloneBtn.title = selectionCount > 1 ? 'Clone selected layers' : 'Clone selected layer';
 		}
 		if (deleteBtn) {
-			deleteBtn.title = movableSelectionCount > 1 ? 'Delete selected layers' : 'Delete selected layer';
+			deleteBtn.title = selectionCount > 1 ? 'Delete selected layers' : 'Delete selected layer';
 		}
 	}
 
@@ -1286,7 +1290,7 @@ class LayerManager {
 	}
 	createLayerElement(layer) {
 		const layerEl = document.createElement('div');
-		layerEl.className = 'layer-item';
+		layerEl.className = 'layer-item layer-list-row';
 		layerEl.dataset.layerId = layer.id;
 		layerEl.classList.toggle('is-hidden', !layer.visible);
 		layerEl.classList.toggle('is-locked', Boolean(layer.locked));
@@ -1305,7 +1309,7 @@ class LayerManager {
 
 		// 1. Drag Handle (icon shown active only for unlocked layers)
 		const dragHandle = document.createElement('div');
-		dragHandle.className = 'layer-drag-handle';
+		dragHandle.className = 'layer-drag-handle layer-list-drag-handle';
 		dragHandle.innerHTML = `
 				<div class="icon icon-wrapper ${!layer.locked ? 'active' : ''}">
 					<svg class="icon">
@@ -1316,7 +1320,7 @@ class LayerManager {
 
 		// 2. Swatch (Thumbnail)
 		const swatch = document.createElement('div');
-		swatch.className = 'layer-swatch';
+		swatch.className = 'layer-swatch layer-list-swatch';
 		this.renderLayerSwatch(swatch, layer);
 
 		// Double-click swatch behavior
@@ -1329,7 +1333,7 @@ class LayerManager {
 
 		// 3. Info (Name & Type)
 		const info = document.createElement('div');
-		info.className = 'layer-info';
+		info.className = 'layer-info layer-list-info';
 
 		const nameText = document.createElement('div');
 		nameText.className = 'layer-name';

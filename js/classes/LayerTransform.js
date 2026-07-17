@@ -532,10 +532,13 @@ const swallowFollowupClick = () => {
             return;
         }
 
-        e.preventDefault();
-        e.stopPropagation();
-        this.editor.layerManager.setActiveLayer(this.layer.id);
-        return;
+		e.preventDefault();
+		e.stopPropagation();
+		this.editor.layerManager.focusLayerInSelection(this.layer.id);
+		if (!this.editor.layerManager.canTransformMultiSelection()) {
+			this.editor.updateStatus('This selection cannot move because it includes a locked, Base Image, or Glitter Fill layer');
+		}
+		return;
     }
 
     const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);

@@ -86,6 +86,7 @@ class GlitterEditor {
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this);
 		this.baseBackgroundManager = new BaseBackgroundManager(this);
+		this.autoGlitterManager = new AutoGlitterManager(this);
 		this.textGlitterManager = new TextGlitterManager(this);
 		this.shapeGlitterManager = new ShapeGlitterManager(this);
 		this.groupTransformManager = new GroupTransformManager(this);
@@ -1209,8 +1210,9 @@ async resetAllSettings() {
 	}
 
 	syncNoLayerPanelState() {
-		const selectedMovableLayers = this.layerManager?.getMultiSelectedMovableLayers?.() || [];
-		const multiCount = selectedMovableLayers.length;
+		const selectedLayers = this.layerManager?.getSelectedLayers?.() || [];
+		const multiCount = selectedLayers.length;
+		const canTransform = this.layerManager?.canTransformMultiSelection?.() || false;
 		const defaultGroups = document.getElementById('noLayerDefaultGroups');
 		const multiGroup = document.getElementById('multiLayerSelectionGroup');
 		const emptyText = document.getElementById('noLayerEmptyText');
@@ -1220,8 +1222,16 @@ async resetAllSettings() {
 			if (defaultGroups) defaultGroups.hidden = true;
 			if (multiGroup) multiGroup.hidden = false;
 			if (emptyText) emptyText.textContent = `${multiCount} layers selected`;
-			if (emptySubtext) emptySubtext.textContent = 'Drag the shared box to move them. Shift+click changes the selection; use Align and Actions below.';
-			document.querySelectorAll('[data-multi-distribute]').forEach((button) => { button.disabled = multiCount < 3; });
+			if (emptySubtext) emptySubtext.textContent = canTransform
+				? 'Drag the shared box to move them. Shift+click changes the selection; use Align and Actions below.'
+				: 'Selected together for layer actions. Movement and alignment are unavailable while the selection includes a locked, Base Image, or Glitter Fill layer.';
+			document.querySelectorAll('#multiSelectionAlignScope button, [data-multi-align]').forEach((button) => { button.disabled = !canTransform; });
+			document.querySelectorAll('[data-multi-distribute]').forEach((button) => { button.disabled = !canTransform || multiCount < 3; });
+			const canChangeLayers = selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
+			const duplicate = document.getElementById('multiSelectionDuplicateBtn');
+			const remove = document.getElementById('multiSelectionDeleteBtn');
+			if (duplicate) duplicate.disabled = !canChangeLayers || this.layers.length + multiCount > CONFIG.app.limits.maxLayers;
+			if (remove) remove.disabled = !canChangeLayers;
 			return;
 		}
 
@@ -2087,6 +2097,11 @@ async resetAllSettings() {
 	}
 
 	cloneSelectedLayers() {
+		const allSelectedLayers = this.layerManager.getSelectedLayers();
+		if (allSelectedLayers.some((layer) => layer.type === LayerType.BASE_IMAGE || layer.locked)) {
+			this.showError('Unlock protected layers or remove them from the selection before duplicating');
+			return null;
+		}
 		const selectedLayers = this.getSelectedActionableLayers();
 		if (!selectedLayers.length) return null;
 
@@ -2098,6 +2113,11 @@ async resetAllSettings() {
 	}
 
 	async deleteSelectedLayers() {
+		const allSelectedLayers = this.layerManager.getSelectedLayers();
+		if (allSelectedLayers.some((layer) => layer.type === LayerType.BASE_IMAGE || layer.locked)) {
+			this.showError('Unlock protected layers or remove them from the selection before deleting');
+			return false;
+		}
 		const selectedLayers = this.getSelectedActionableLayers();
 		if (!selectedLayers.length) return false;
 
@@ -2576,7 +2596,7 @@ async resetAllSettings() {
 		if (!this.stickerManager || !this.textGlitterManager) return;
 
 		const activeLayer = this.layerManager.getActiveLayer();
-		if (this.currentTool !== ToolType.SELECT || !activeLayer || activeLayer.locked) {
+		if (this.currentTool !== ToolType.SELECT || !activeLayer) {
 			this.stickerManager.removeTransformHandles();
 			this.textGlitterManager.removeTransformHandles();
 			this.shapeGlitterManager?.removeTransformHandles();
@@ -2588,7 +2608,16 @@ async resetAllSettings() {
 			this.stickerManager.removeTransformHandles();
 			this.textGlitterManager.removeTransformHandles();
 			this.shapeGlitterManager?.removeTransformHandles();
-			this.groupTransformManager?.createTransformHandles();
+			if (this.layerManager.canTransformMultiSelection()) this.groupTransformManager?.createTransformHandles();
+			else this.groupTransformManager?.removeTransformHandles();
+			return;
+		}
+
+		if (activeLayer.locked) {
+			this.stickerManager.removeTransformHandles();
+			this.textGlitterManager.removeTransformHandles();
+			this.shapeGlitterManager?.removeTransformHandles();
+			this.groupTransformManager?.removeTransformHandles();
 			return;
 		}
 
@@ -3349,6 +3378,13 @@ async resetAllSettings() {
 				onClose: () => this.resolvePendingConfirmation(this.pendingConfirmationValue)
 			});
 
+		this.modalManager.register('autoGlitterModal', {
+			closeBtnId: ['closeAutoGlitterModal', 'cancelAutoGlitterBtn'],
+			resetScrollOnOpen: true,
+			initialFocusSelector: '#autoGlitterColorCount',
+			onClose: () => this.autoGlitterManager.close()
+		});
+
 		// External content modals with core/utils.js initialization
 		this.modalManager
 			.register('aboutModal', {
@@ -3380,7 +3416,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=20',
+				externalContentUrl: 'modals/guide.html?v=23',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -3990,7 +4026,7 @@ setupWelcomeModalListeners() {
 	startSelectionMarquee(e) {
 		const start = { x: e.clientX, y: e.clientY };
 		const additive = e.shiftKey;
-		const existingIds = additive ? this.layerManager.getSelectedLayers({ movableOnly: true }).map((layer) => layer.id) : [];
+		const existingIds = additive ? this.layerManager.getSelectedLayers().map((layer) => layer.id) : [];
 		const marquee = document.createElement('div');
 		marquee.className = 'selection-marquee ui-ignore-gestures';
 		this.previewContainer.appendChild(marquee);
@@ -4469,7 +4505,7 @@ setupWelcomeModalListeners() {
 
 		activeToolbar?.element.classList.add('visible');
 		if (activeToolbar?.config.id === 'layerCenterControls') {
-			const canTransformSelection = hasMultiSelection || Boolean(
+			const canTransformSelection = (hasMultiSelection && this.layerManager.canTransformMultiSelection()) || Boolean(
 				layer
 				&& isTransformableLayerType(layer.type)
 				&& !layer.locked
@@ -5067,6 +5103,11 @@ setupWelcomeModalListeners() {
 			e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return false;
 
 		const hasMultiSelection = this.layerManager.hasMultiSelection();
+		if (hasMultiSelection && !this.layerManager.canTransformMultiSelection()) {
+			e.preventDefault();
+			this.updateStatus('This selection cannot move because it includes a locked, Base Image, or Glitter Fill layer');
+			return true;
+		}
 		const layer = this.layerManager.getActiveLayer();
 		const ctx = this.getMovableLayerContext(layer);
 		const transform = this.getLayerTransformData(layer);
@@ -6000,7 +6041,7 @@ setupWelcomeModalListeners() {
 			document.getElementById('statusDimensions').innerHTML = formatDimensions(this.originalCanvas.width, this.originalCanvas.height);
 
 			const zoomPct = Math.round(this.viewport.currentZoom * 100);
-			const count = this.layerManager?.getSelectedLayers({ movableOnly: true }).length || 0;
+			const count = this.layerManager?.getSelectedLayers().length || 0;
 			document.getElementById('statusZoom').innerHTML = count > 1
 				? `${formatUnit(zoomPct, '%')}<span class="setting-separator"> · </span>${count} layers selected`
 				: formatUnit(zoomPct, '%');

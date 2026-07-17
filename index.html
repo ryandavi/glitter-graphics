@@ -30,7 +30,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=138">
+	<link rel="stylesheet" href="css/style.css?v=150">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1619,6 +1619,87 @@
 		<p class="export-instruction-tip">Holding down on the preview stays disabled because it may save only a still image.</p>
 	</template>
 
+	<!-- Auto Glitter Modal -->
+	<div class="modal-overlay" id="autoGlitterModal">
+		<div class="modal-content auto-glitter-modal-content">
+			<div class="modal-header">
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper"><svg class="icon"><use href="#icon-palette"></use></svg></span>
+					<span class="modal-title-text">Auto Glitter Image</span>
+				</div>
+				<button class="btn-icon icon-wrapper modal-close" id="closeAutoGlitterModal" aria-label="Close"><svg class="icon"><use href="#icon-x-mark"></use></svg></button>
+			</div>
+			<div class="modal-body auto-glitter-body">
+				<div class="auto-glitter-intro">
+					<p>Turn the image's distinct color regions into editable Glitter Fill layers. Transparent areas stay transparent and the Base Image is not changed.</p>
+				</div>
+				<div class="auto-glitter-existing subsection-content-group" id="autoGlitterExisting" hidden>
+					<strong>Previous Auto Glitter result</strong>
+					<p id="autoGlitterExistingSummary"></p>
+					<div class="segmented-control auto-glitter-rerun-options" role="radiogroup" aria-label="How to handle the previous Auto Glitter layers">
+						<label class="segmented-option"><input type="radio" name="autoGlitterRerunMode" id="autoGlitterReplacePrevious" value="replace"><span>Replace previous</span></label>
+						<label class="segmented-option"><input type="radio" name="autoGlitterRerunMode" id="autoGlitterAddAnother" value="add"><span>Keep and add</span></label>
+					</div>
+				</div>
+				<section class="subsection-content-group auto-glitter-step auto-glitter-setup" aria-labelledby="autoGlitterSetupTitle">
+					<div class="subsection-title"><span id="autoGlitterSetupTitle">Color Analysis</span></div>
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<div class="settings-row-label-main">Palette Style</div>
+							<div class="settings-row-control">
+								<div class="segmented-control" id="autoGlitterPaletteStyle" role="group" aria-label="Palette style">
+									<button class="segmented-option" type="button" data-palette-style="vibrant" aria-pressed="false">Vibrant</button>
+									<button class="segmented-option" type="button" data-palette-style="balanced" aria-pressed="false">Balanced</button>
+									<button class="segmented-option" type="button" data-palette-style="natural" aria-pressed="false">Natural</button>
+								</div>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Vibrant favors strong connected colors over photographic neutrals.</div>
+					</div>
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="autoGlitterColorCount">Maximum Layers</label>
+							<div class="settings-row-control"><span class="input-unit"><input id="autoGlitterColorCount" type="number" inputmode="numeric" step="1"><span class="input-unit-suffix">layers</span></span></div>
+						</div>
+						<div class="settings-row-label-desc" id="autoGlitterCapacity"></div>
+					</div>
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="autoGlitterTuneHue">Tune Matched Glitter Hue</label>
+							<div class="settings-row-control"><label class="switch" for="autoGlitterTuneHue"><input id="autoGlitterTuneHue" type="checkbox"><div class="slider round"></div></label></div>
+						</div>
+						<div class="settings-row-label-desc">Applies a small correction through each generated layer's Advanced hue setting.</div>
+					</div>
+					<div class="settings-action-row"><span aria-hidden="true"></span><button class="btn-simple secondary" id="autoGlitterAnalyzeBtn" type="button">Analyze Again</button></div>
+				</section>
+				<section class="subsection-content-group auto-glitter-step auto-glitter-review" aria-labelledby="autoGlitterReviewTitle">
+					<div class="subsection-title"><span id="autoGlitterReviewTitle">Color Matches</span></div>
+					<p class="auto-glitter-review-help">Choose a glitter for each region. Drag a color row onto another to combine them; on touch screens, use the handle.</p>
+					<div class="auto-glitter-preview" id="autoGlitterPreview" hidden>
+						<div class="settings-row-header"><span class="settings-row-label-main">Image Preview</span><div class="segmented-control" id="autoGlitterPreviewMode" role="group" aria-label="Image preview"><button class="segmented-option" type="button" data-preview-mode="original" aria-pressed="false">Original</button><button class="segmented-option active" type="button" data-preview-mode="posterized" aria-pressed="true">Posterized</button></div></div>
+						<canvas id="autoGlitterPreviewCanvas" aria-label="Auto Glitter posterized image preview"></canvas>
+					</div>
+					<div class="auto-glitter-status" id="autoGlitterStatus" role="status" aria-live="polite">Finding the image's distinct colors&hellip;</div>
+					<div class="auto-glitter-results" id="autoGlitterResults" aria-label="Detected color regions and glitter matches" hidden></div>
+				</section>
+			</div>
+			<div class="modal-footer right">
+				<button class="btn-simple secondary" id="cancelAutoGlitterBtn" type="button">Cancel</button>
+				<button class="btn-simple primary" id="autoGlitterCreateBtn" type="button" disabled>Create Layers</button>
+			</div>
+		</div>
+	</div>
+	<template id="tpl-auto-glitter-match">
+		<div class="auto-glitter-match layer-list-row">
+			<button class="auto-glitter-drag-handle layer-list-drag-handle" type="button"><span class="icon-wrapper active"><svg class="icon"><use href="#icon-grip-vertical"></use></svg></span></button>
+			<span class="auto-glitter-source-color layer-list-swatch" aria-hidden="true"></span>
+			<div class="auto-glitter-source layer-list-info"><span class="auto-glitter-color-name layer-list-name"></span><small class="auto-glitter-coverage layer-list-description"></small></div>
+			<button class="auto-glitter-choice" type="button" aria-expanded="false"><img alt=""><span><small>Glitter</small><strong class="auto-glitter-match-name"></strong></span></button>
+			<button class="btn-text auto-glitter-unmerge" type="button" hidden>Separate</button>
+			<div class="auto-glitter-picker asset-options" hidden></div>
+		</div>
+	</template>
+
 	<!-- Layer Type Picker Modal -->
 	<div class="modal-overlay" id="layerTypePickerModal">
 		<div class="modal-content modal-sm">
@@ -2586,8 +2667,8 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=77"></script>
-	<script src="js/core/commands.js?v=3"></script>
+	<script src="js/core/config.js?v=85"></script>
+	<script src="js/core/commands.js?v=4"></script>
 	<script src="js/transforms/transform-math.js?v=3"></script>
 	<script src="js/transforms/movable-layer.js?v=1"></script>
 
@@ -2615,23 +2696,24 @@
 	<script src="js/classes/MaskEditor.js?v=15"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=42"></script>
+	<script src="js/classes/LayerManager.js?v=44"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=2"></script>
-	<script src="js/classes/ContentManager.js?v=3"></script>
-	<script src="js/classes/LayerTransform.js?v=37"></script>
+	<script src="js/classes/ContentManager.js?v=4"></script>
+	<script src="js/classes/LayerTransform.js?v=38"></script>
 	<script src="js/classes/GlitterManager.js?v=30"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=8"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=9"></script>
+	<script src="js/classes/AutoGlitterManager.js?v=12"></script>
 	<script src="js/classes/TextGlitterManager.js?v=51"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=42"></script>
 	<script src="js/classes/StickerManager.js?v=22"></script>
-	<script src="js/classes/GroupTransformManager.js?v=17"></script>
+	<script src="js/classes/GroupTransformManager.js?v=18"></script>
 
 	<script src="js/classes/MobileManager.js?v=14"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=138"></script>
+	<script src="js/app.js?v=141"></script>
 
 </body>
 

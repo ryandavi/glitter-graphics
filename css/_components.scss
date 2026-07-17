@@ -182,6 +182,76 @@ input[type="range"] {
 	}
 }
 
+.layer-list-row {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-base);
+	border: 2px solid transparent;
+	border-radius: var(--radius-md);
+	background: var(--color-bg-tertiary);
+	overflow: hidden;
+	transition: background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+
+	&:hover {
+		background: var(--color-bg-card);
+	}
+}
+
+.layer-list-drag-handle {
+	display: flex;
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 var(--icon-size-sm);
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-text-secondary);
+	cursor: grab;
+	touch-action: none;
+
+	&:active { cursor: grabbing; }
+	>.icon-wrapper>.icon { width: 16px; height: 16px; }
+}
+
+.layer-list-swatch {
+	display: flex;
+	width: var(--icon-size-sm);
+	height: var(--icon-size-sm);
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 var(--icon-size-sm);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+
+.layer-list-info {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	flex-direction: column;
+	overflow: hidden;
+
+	.layer-list-name,
+	.layer-name {
+		overflow: hidden;
+		color: var(--color-text-primary);
+		font-size: var(--font-size-base);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.layer-list-description {
+		overflow: hidden;
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}
+
 // NOTE for all gloss buttons: the mixin's :before gradient covers the
 // element's background box, so `background:` swaps on these are invisible —
 // state changes go through the --btn-*-filter tokens (and border-color,

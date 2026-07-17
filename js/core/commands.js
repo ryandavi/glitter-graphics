@@ -13,6 +13,10 @@ const COMMANDS = {
 
 function centerSelection(editor, method, groupAxis) {
 	if (editor.layerManager.hasMultiSelection()) {
+		if (!editor.layerManager.canTransformMultiSelection()) {
+			editor.updateStatus('This selection cannot move because it includes a locked, Base Image, or Glitter Fill layer');
+			return;
+		}
 		editor.groupTransformManager?.alignToCanvas(groupAxis);
 		return;
 	}

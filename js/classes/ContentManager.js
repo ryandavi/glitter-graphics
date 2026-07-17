@@ -313,7 +313,7 @@ class ContentManager {
 		// Override in child classes to add custom classes/attributes
 	}
 
-	createItemElement(item) {
+	createItemElement(item, onSelect = null) {
 		const option = document.createElement('div');
 		option.className = 'asset-option';
 		option.title = item.name;
@@ -330,9 +330,7 @@ class ContentManager {
 		option.appendChild(img);
 
 		// Wire up click handler (delegate to child)
-		option.addEventListener('click', () => {
-			this.handleItemClick(item);
-		});
+		option.addEventListener('click', () => onSelect ? onSelect(item) : this.handleItemClick(item));
 
 		return option;
 	}

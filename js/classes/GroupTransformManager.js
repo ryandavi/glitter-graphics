@@ -59,7 +59,7 @@ class GroupTransformManager {
 	}
 
 	getSelectedLayers() {
-		return this.editor.layerManager.getSelectedLayers({ movableOnly: true });
+		return this.editor.layerManager.getMultiSelectedMovableLayers();
 	}
 
 	isActive() {

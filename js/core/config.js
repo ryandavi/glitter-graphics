@@ -88,6 +88,16 @@ const CONFIG = {
 	},
 
 	tools: {
+		autoGlitter: {
+			defaults: { colorLayers: 5, paletteStyle: 'vibrant', tuneGlitterHue: true },
+			limits: { minColorLayers: 2, maxColorLayers: 12, maxSamples: 24000 },
+			analysis: { iterations: 12, alphaThreshold: 1, candidateMultiplier: 2, candidatePadding: 4, hueMinChroma: 0.04, maxHueShift: 20, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75 },
+			paletteStyles: {
+				vibrant: { similarityThreshold: 0.045, neutralSimilarityThreshold: 0.105, neutralChromaThreshold: 0.075, chromaWeight: 12, maxColorBoost: 3.5, neutralImportance: 0.62, coherenceBase: 0.4, coherenceScale: 0.75, connectedAreaWeight: 4, maxConnectedBoost: 1, connectedNeutralProtection: 0.65, fragmentedSimilarityBoost: 0.6 },
+				balanced: { similarityThreshold: 0.045, neutralSimilarityThreshold: 0.065, neutralChromaThreshold: 0.06, chromaWeight: 8, maxColorBoost: 2, neutralImportance: 0.82, coherenceBase: 0.5, coherenceScale: 0.65, connectedAreaWeight: 3, maxConnectedBoost: 0.75, connectedNeutralProtection: 0.75, fragmentedSimilarityBoost: 0.35 },
+				natural: { similarityThreshold: 0.035, neutralSimilarityThreshold: 0.045, neutralChromaThreshold: 0.05, chromaWeight: 4, maxColorBoost: 1, neutralImportance: 1, coherenceBase: 0.65, coherenceScale: 0.5, connectedAreaWeight: 2, maxConnectedBoost: 0.5, connectedNeutralProtection: 0.9, fragmentedSimilarityBoost: 0.15 }
+			}
+		},
 		selection: {
 			defaults: {
 				threshold: 50,
@@ -891,6 +901,13 @@ const PANEL_SCHEMAS = {
 					},
 					primaryIds: { scale: 'baseBackgroundScale', opacity: 'baseBackgroundOpacity' }
 				}
+			] },
+			{ title: 'Actions', items: [
+				{ kind: 'card', items: [
+					{ kind: 'actionRow', actions: [
+						{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', primary: true, title: 'Turn the image colors into editable glitter fill layers' }
+					] }
+				] }
 			] },
 			{ title: 'Canvas', items: [
 				{ kind: 'host', id: 'baseCanvasSizeHost' }

@@ -164,9 +164,14 @@ class BaseBackgroundManager {
 			? (this.editor.baseImageSource?.file?.name || 'Base Image')
 			: 'No base image';
 		if (this.ui.imageThumbnail) {
-			this.ui.imageThumbnail.style.backgroundImage = hasImage
-				? `url(${this.editor.layerManager.baseImageSwatchDataUrl || ''})`
-				: 'none';
+			this.ui.imageThumbnail.replaceChildren();
+			this.ui.imageThumbnail.classList.toggle('base-image-thumbnail', hasImage);
+			if (hasImage) {
+				const image = document.createElement('img');
+				image.src = this.editor.layerManager.baseImageSwatchDataUrl || this.editor.originalImage?.src || '';
+				image.alt = '';
+				this.ui.imageThumbnail.appendChild(image);
+			}
 			this.ui.imageThumbnail.classList.toggle('empty', !hasImage);
 		}
 		if (this.ui.imageChange) this.ui.imageChange.textContent = hasImage ? 'Replace' : 'Choose Image';
