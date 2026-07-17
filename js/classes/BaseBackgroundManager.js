@@ -47,6 +47,7 @@ class BaseBackgroundManager {
 		const id = (value) => document.getElementById(value);
 		this.ui = {
 			section: id('baseLayerSettingsSection'),
+			autoGlitter: id('autoGlitterImageBtn'),
 			imageInfo: id('baseBackgroundImageInfo'), imageThumbnail: id('baseBackgroundImageThumbnail'),
 			imageName: id('baseBackgroundImageName'), imageChange: id('baseBackgroundImageChange'),
 			glitterInfo: id('baseBackgroundGlitterInfo'), glitterChip: id('baseBackgroundGlitterChip'),
@@ -140,14 +141,35 @@ class BaseBackgroundManager {
 	}
 
 	applyChange(commit) {
+		this.updateAutoGlitterAvailability();
 		this.editor.updatePreview();
 		this.editor.layerManager.renderLayersList();
 		if (commit) this.editor.saveState();
 	}
 
+	getAutoGlitterAvailability(layer = this.editor.layers?.find((entry) => entry.type === LayerType.BASE_IMAGE)) {
+		layer = this.normalizeLayer(layer);
+		if (!this.hasBaseImage() || !this.editor.originalImageData) {
+			return { available: false, message: 'Choose a Base Image before using Auto Glitter' };
+		}
+		if (layer?.background.mode !== 'image') {
+			return { available: false, message: 'Switch Canvas Background to Image before using Auto Glitter' };
+		}
+		return { available: true, message: 'Turn the image colors into editable glitter fill layers' };
+	}
+
+	updateAutoGlitterAvailability(layer) {
+		if (!this.ui.autoGlitter) return;
+		const availability = this.getAutoGlitterAvailability(layer);
+		this.ui.autoGlitter.disabled = !availability.available;
+		this.ui.autoGlitter.title = availability.message;
+		this.ui.autoGlitter.setAttribute('aria-disabled', availability.available ? 'false' : 'true');
+	}
+
 	loadLayerSettings(layer) {
 		layer = this.normalizeLayer(layer);
 		if (!layer) return;
+		this.updateAutoGlitterAvailability(layer);
 		const modeButton = document.getElementById(`baseBackground${layer.background.mode[0].toUpperCase()}${layer.background.mode.slice(1)}`);
 		syncPaintSlotSourceUI(modeButton || document.getElementById('baseBackgroundImage'), layer.background.mode);
 		if (this.ui.color) this.ui.color.value = layer.background.color;

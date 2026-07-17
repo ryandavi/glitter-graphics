@@ -3453,7 +3453,7 @@ async resetAllSettings() {
 			onOpen: () => this.initializeNewCanvasModal()
 		});
 
-		// Welcome modal is shown automatically and remains available from Settings.
+		// Welcome modal is shown automatically and remains available from the header.
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',

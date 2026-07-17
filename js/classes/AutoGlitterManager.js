@@ -96,8 +96,13 @@ class AutoGlitterManager {
 	}
 
 	open() {
+		const availability = this.editor.baseBackgroundManager?.getAutoGlitterAvailability();
+		if (availability && !availability.available) {
+			this.editor.showError(availability.message);
+			return;
+		}
 		if (!this.editor.originalImageData) {
-			this.editor.showError('Load an image before using Auto Glitter');
+			this.editor.showError('Choose a Base Image before using Auto Glitter');
 			return;
 		}
 

@@ -36,7 +36,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=160">
+	<link rel="stylesheet" href="css/style.css?v=161">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,6 +63,11 @@
 				<button class="btn-icon-simple icon-wrapper mobile-only-action" id="mobileAppSettingsBtn" title="App Settings" aria-label="App Settings">
 					<svg class="icon"><use href="#icon-gear"></use></svg>
 					<span class="name">App Settings</span>
+				</button>
+
+				<button class="btn-icon-simple icon-wrapper" id="openWelcomeModal" title="Welcome" aria-label="Open Welcome">
+					<svg class="icon"><use href="#icon-glitter" x="3" y="3" width="24" height="24"></use></svg>
+					<span class="name">Welcome</span>
 				</button>
 
 				<button class="btn-icon-simple icon-wrapper" id="guideBtn" title="Info">
@@ -1087,9 +1092,9 @@
 							<canvas class="preview-canvas" id="previewCanvas"></canvas>
 							<canvas class="mask-overlay-canvas" id="maskOverlayCanvas"></canvas>
 						</div>
-						<div class="auto-glitter-preview-banner ui-ignore-gestures" id="autoGlitterPreviewBanner" aria-label="Auto Glitter preview" hidden>
+						<div class="auto-glitter-preview-banner ui-ignore-gestures" id="autoGlitterPreviewBanner" aria-label="Auto Glitter Mode" hidden>
 							<span class="icon-wrapper"><svg class="icon"><use href="#icon-glitter"></use></svg></span>
-							<strong>Auto Glitter Preview</strong>
+							<strong>Auto Glitter Mode</strong>
 							<span id="autoGlitterCanvasStatus" role="status" aria-live="polite" hidden></span>
 							<button class="btn-text" id="autoGlitterPreviewExit" type="button">Exit</button>
 						</div>
@@ -1718,7 +1723,7 @@
 					<div class="settings-group-title">Interface <button class="btn-text small reset-section-btn" data-section="interface">Reset</button></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Theme</div><div class="settings-row-control"><select id="interfaceTheme"><option value="dark">Dark</option><option value="llama">Llama</option><option value="light">Light</option><option value="bubblegum">Bubblegum</option><option value="bliss">Bliss</option><option value="dew">Dew</option></select></div></div><div class="settings-row-label-desc">Choose the editor interface appearance.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Helpful Hints</div><div class="settings-row-control"><label class="switch" for="showHelpfulHints"><input type="checkbox" id="showHelpfulHints" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Welcome Screen</div><div class="settings-row-control"><button class="btn-simple" id="openWelcomeModal" type="button">Open Welcome</button><label class="switch" for="showWelcomeOnStartup"><input type="checkbox" id="showWelcomeOnStartup" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Open it at any time, or choose whether it appears when Glitter Editor starts.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Welcome on Startup</div><div class="settings-row-control"><label class="switch" for="showWelcomeOnStartup"><input type="checkbox" id="showWelcomeOnStartup" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show the Welcome screen when Glitter Editor starts.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Confirm Destructive Actions</div><div class="settings-row-control"><label class="switch" for="confirmDestructiveActions"><input type="checkbox" id="confirmDestructiveActions" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Ask before deleting layers or clearing the entire project.</div></div>
 				</div>
 				<div class="settings-group">
@@ -2652,8 +2657,8 @@
 	<script src="js/classes/ContentManager.js?v=4"></script>
 	<script src="js/classes/LayerTransform.js?v=38"></script>
 	<script src="js/classes/GlitterManager.js?v=33"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=9"></script>
-	<script src="js/classes/AutoGlitterManager.js?v=22"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=10"></script>
+	<script src="js/classes/AutoGlitterManager.js?v=23"></script>
 	<script src="js/classes/TextGlitterManager.js?v=51"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=42"></script>
 	<script src="js/classes/StickerManager.js?v=22"></script>
@@ -2662,7 +2667,7 @@
 	<script src="js/classes/MobileManager.js?v=16"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=148"></script>
+	<script src="js/app.js?v=149"></script>
 
 </body>
 
