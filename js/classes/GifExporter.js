@@ -24,6 +24,8 @@ class GifExporter {
 
 		this.helperCanvas = document.createElement('canvas');
 		this.helperCtx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
+		this.basePixelEffectCache = new Map();
+		this.baseDitherPaletteCache = new Map();
 		this.previewBlobUrl = null;
 	}
 
@@ -451,7 +453,7 @@ class GifExporter {
 					},
 					hasMultiFrameGlitter: (counts) => mode === 'glitter' && (counts.get(layer.id) || 0) > 1,
 					render: ({ ctx, frameIndex, frameMap, flattenedFrameMap, width, height }) => {
-						if (mode === 'image' || mode === 'none') return;
+						if (mode === 'image' || mode === 'gradient' || mode === 'none') return;
 						ctx.save();
 						ctx.globalAlpha = (background.opacity ?? 100) / 100;
 						if (mode === 'solid') ctx.fillStyle = background.color || '#ffffff';
@@ -870,6 +872,68 @@ class GifExporter {
 		return patternSource;
 	}
 
+	_hashBasePixels(pixels) {
+		let hash = 2166136261;
+		for (let index = 0; index < pixels.length; index += 4) {
+			hash = Math.imul(hash ^ pixels[index], 16777619);
+			hash = Math.imul(hash ^ pixels[index + 1], 16777619);
+			hash = Math.imul(hash ^ pixels[index + 2], 16777619);
+			hash = Math.imul(hash ^ pixels[index + 3], 16777619);
+		}
+		return hash >>> 0;
+	}
+
+	_getBasePipelineImageData(layer, canvasData, frameIndex) {
+		const { width, height, originalData } = canvasData;
+		const background = layer.background;
+		let source;
+		if (background.mode === 'gradient') {
+			const canvas = document.createElement('canvas');
+			canvas.width = width;
+			canvas.height = height;
+			const sourceCtx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+			sourceCtx.fillStyle = createEffectCanvasGradient(sourceCtx, background.gradient, { x: 0, y: 0, width, height });
+			sourceCtx.fillRect(0, 0, width, height);
+			source = sourceCtx.getImageData(0, 0, width, height);
+		} else {
+			source = new ImageData(new Uint8ClampedArray(originalData), width, height);
+		}
+		const settings = GlitterPixelEffects.normalizeSettings(background.pixelEffects || background.posterize, CONFIG.tools.pixelEffects);
+		const shimmerFrame = settings.paletteMode === 'dither' && settings.dither.shimmer ? frameIndex : 0;
+		const sourceHash = this._hashBasePixels(source.data);
+		const key = `${width}x${height}:${sourceHash}:${JSON.stringify(settings)}:${JSON.stringify(background.colorAdjust)}:${background.opacity}:${shimmerFrame}`;
+		const cached = this.basePixelEffectCache.get(key);
+		if (cached) return cached;
+		let ditherPalette = null;
+		if (settings.paletteMode === 'dither') {
+			const paletteKey = `${width}x${height}:${sourceHash}:${settings.pixelSize}:${settings.colorCount}:${settings.paletteStyle}:${settings.mergeDistinctness}:${settings.dither.palette}:${settings.dither.duotone.join(',')}`;
+			ditherPalette = this.baseDitherPaletteCache.get(paletteKey);
+			if (!ditherPalette) {
+				const pixelized = GlitterPixelEffects.pixelize(source.data, width, height, settings.pixelSize);
+				ditherPalette = GlitterPixelEffects.getPalette(pixelized, width, height, settings, {
+					pixelEffects: CONFIG.tools.pixelEffects,
+					autoGlitter: CONFIG.tools.autoGlitter
+				});
+				this.baseDitherPaletteCache.set(paletteKey, ditherPalette);
+				while (this.baseDitherPaletteCache.size > 16) this.baseDitherPaletteCache.delete(this.baseDitherPaletteCache.keys().next().value);
+			}
+		}
+		const data = settings.pixelSize === 1 && settings.paletteMode === 'off'
+			? new Uint8ClampedArray(source.data)
+			: GlitterPixelEffects.applyPixelEffects(source.data, width, height, settings, {
+				pixelEffects: CONFIG.tools.pixelEffects,
+				autoGlitter: CONFIG.tools.autoGlitter
+			}, shimmerFrame, ditherPalette);
+		const result = new ImageData(data, width, height);
+		applyColorAdjustToImageData(result, background.colorAdjust);
+		if ((background.opacity ?? 100) < 100) {
+			for (let offset = 3; offset < result.data.length; offset += 4) result.data[offset] = Math.round(result.data[offset] * background.opacity / 100);
+		}
+		this.basePixelEffectCache.set(key, result);
+		while (this.basePixelEffectCache.size > 32) this.basePixelEffectCache.delete(this.basePixelEffectCache.keys().next().value);
+		return result;
+	}
+
 	_getFrameImageForKey(sourceKey, frameIndex, frameMap, flattenedFrameMap) {
 		const frames = flattenedFrameMap?.get(sourceKey);
 		if (!frames?.length) {
@@ -1226,6 +1290,20 @@ class GifExporter {
 		const presetName = exportSettings.optimizationPreset || timelineConfig.defaultPreset;
 		const preset = timelineConfig.presets[presetName] || timelineConfig.presets[timelineConfig.defaultPreset];
 		const sourceTimelines = [...(flattenedFrameMap.sourceTimelines || [])];
+		const shimmerBase = visibleLayers.find((layer) => {
+			if (layer.type !== LayerType.BASE_IMAGE || layer.visible === false || !exportSettings.baseImage) return false;
+			const settings = GlitterPixelEffects.normalizeSettings(layer.background?.pixelEffects || layer.background?.posterize, CONFIG.tools.pixelEffects);
+			return ['image', 'gradient'].includes(layer.background?.mode || 'image') && settings.paletteMode === 'dither' && settings.dither.shimmer;
+		});
+		if (shimmerBase) {
+			const animation = CONFIG.tools.pixelEffects.animation;
+			sourceTimelines.push(new AnimationSourceTimeline({
+				key: '__base_dither',
+				ownerLayerId: shimmerBase.id,
+				frames: Array.from({ length: animation.shimmerFrames }, (_value, index) => index),
+				fallbackDuration: animation.frameDurationMs
+			}));
+		}
 		if (watermark?.isAnimated) {
 			sourceTimelines.push(new AnimationSourceTimeline({
 				key: '__watermark',
@@ -1376,6 +1454,10 @@ class GifExporter {
 		layers.forEach(layer => {
 			this._buildLayerExportPlan(layer).collectTransparencyFrames(flattenedFrameMap, allFrames);
 		});
+		const baseLayer = layers.find((layer) => layer.type === LayerType.BASE_IMAGE && layer.visible !== false);
+		if (baseLayer && ['image', 'gradient'].includes(baseLayer.background?.mode || 'image')) {
+			allFrames.push(this._getBasePipelineImageData(baseLayer, canvasData, 0));
+		}
 
 		// Add watermark frames if present
 		if (watermark) {
@@ -1473,14 +1555,16 @@ class GifExporter {
 		ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
 		ctx.fillRect(0, 0, width, height);
 
-		if (shouldRenderBase && baseMode === 'image' && canvasData.hasBaseImage !== false) {
+		if (shouldRenderBase && ((baseMode === 'image' && canvasData.hasBaseImage !== false) || baseMode === 'gradient')) {
+			const baseEffectFrame = frameMap?.get('__base_dither')?.frameIndex ?? frameIndex;
+			const baseImage = this._getBasePipelineImageData(baseLayer, canvasData, baseEffectFrame);
 			if (needsTransparency) {
 				// SCENARIO A: GIF Transparency is ACTIVE.
-				const bgImage = new ImageData(new Uint8ClampedArray(originalData), width, height);
+				const bgImage = new ImageData(new Uint8ClampedArray(baseImage.data), width, height);
 				const data = bgImage.data;
 
 				for (let i = 0; i < originalAlpha.length; i++) {
-					if (originalAlpha[i] < alphaThreshold) {
+					if (data[i * 4 + 3] < alphaThreshold) {
 						const offset = i * 4;
 						data[offset] = bgR;
 						data[offset + 1] = bgG;
@@ -1493,7 +1577,8 @@ class GifExporter {
 				// SCENARIO B: GIF Transparency is INACTIVE (Matte mode or Consumption mode).
 				hCtx.canvas.width = width;
 				hCtx.canvas.height = height;
-				hCtx.putImageData(new ImageData(new Uint8ClampedArray(originalData), width, height), 0, 0);
+				hCtx.clearRect(0, 0, width, height);
+				hCtx.putImageData(baseImage, 0, 0);
 				ctx.drawImage(this.helperCanvas, 0, 0);
 			}
 		}

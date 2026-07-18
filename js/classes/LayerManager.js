@@ -98,7 +98,8 @@ class LayerManager {
 				gradient: normalizeEffectGradient(CONFIG.rendering.gradient),
 				scale: CONFIG.tools.effects.defaults.scale,
 				opacity: 100,
-				colorAdjust: null
+				colorAdjust: null,
+				pixelEffects: JSON.parse(JSON.stringify(CONFIG.tools.pixelEffects.defaults))
 			}
 		};
 		return layer;
@@ -229,9 +230,11 @@ class LayerManager {
 			};
 			layer.background ||= {
 				mode: 'image', color: '#ffffff', gradient: normalizeEffectGradient(CONFIG.rendering.gradient),
-				scale: CONFIG.tools.effects.defaults.scale, opacity: 100, colorAdjust: null
+				scale: CONFIG.tools.effects.defaults.scale, opacity: 100, colorAdjust: null,
+				pixelEffects: JSON.parse(JSON.stringify(CONFIG.tools.pixelEffects.defaults))
 			};
 			layer.background.gradient = normalizeEffectGradient(layer.background.gradient);
+			this.editor.baseBackgroundManager?.normalizeLayer(layer);
 			return layer;
 		}
 

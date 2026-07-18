@@ -150,6 +150,44 @@ function buildOptionGroup(label, children) {
 	return group;
 }
 
+function initializeInlineProcessingStatus(status) {
+	if (!status) return null;
+	status.classList.add('inline-processing-status');
+	status.setAttribute('role', 'status');
+	status.setAttribute('aria-live', status.getAttribute('aria-live') || 'polite');
+	status.setAttribute('aria-busy', 'false');
+	status.dataset.noAccordionToggle = '';
+	status.removeAttribute('hidden');
+	if (status.querySelector('.inline-processing-spinner') && status.querySelector('.inline-processing-label')) return status;
+	const spinner = document.createElement('span');
+	spinner.className = 'inline-processing-spinner';
+	spinner.setAttribute('aria-hidden', 'true');
+	const label = document.createElement('span');
+	label.className = 'inline-processing-label';
+	status.replaceChildren(spinner, label);
+	return status;
+}
+
+function buildProcessingStatus(item) {
+	const status = document.createElement('span');
+	status.id = item.id;
+	addPanelClasses(status, item.classes);
+	if (item.live) status.setAttribute('aria-live', item.live);
+	return initializeInlineProcessingStatus(status);
+}
+
+function setInlineProcessingStatus(status, options = {}) {
+	if (!status) return;
+	const active = Boolean(options.active);
+	const error = Boolean(options.error);
+	const visible = active || error;
+	const label = status.querySelector('.inline-processing-label');
+	if (label) label.textContent = visible ? (options.label || (error ? 'Could not update' : 'Updating')) : '';
+	status.classList.toggle('is-active', active);
+	status.classList.toggle('is-error', error);
+	status.setAttribute('aria-busy', active ? 'true' : 'false');
+}
+
 // The paint-source core: source segmented control + glitter asset-info +
 // solid color row. The Gradient option and its editor stay runtime-injected
 // by installEffectGradientEditor (it finds this segmented control by id).
@@ -410,6 +448,8 @@ function buildPanelItem(item, schema) {
 			wrap.appendChild(node);
 			return wrap;
 		}
+		case 'processingStatus':
+			return buildProcessingStatus(item);
 		case 'transformHost': {
 			const host = panelDiv('transform-panel-host');
 			host.id = `${schema.prefix}TransformPanelHost`;

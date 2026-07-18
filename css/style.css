@@ -7727,4 +7727,96 @@ body.mask-editing .sticker-element {
   .mobile-only {
     display: block !important;
   }
+}
+@keyframes inline-processing-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.inline-processing-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 0;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: normal;
+  line-height: 1;
+  text-transform: none;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: color var(--transition-fast), opacity var(--transition-fast);
+}
+.inline-processing-status.is-active, .inline-processing-status.is-error {
+  visibility: visible;
+  opacity: 1;
+}
+.inline-processing-status.is-error {
+  color: var(--color-warning);
+}
+.inline-processing-status.is-error .inline-processing-spinner {
+  display: none;
+}
+
+.inline-processing-spinner {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: inline-processing-spin 700ms linear infinite;
+}
+
+.inline-processing-label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.auto-glitter-preview-banner > .inline-processing-status {
+  flex: 0 1 180px;
+  min-width: 0;
+  justify-content: flex-start;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+.auto-glitter-preview-banner > .inline-processing-status.is-error {
+  color: var(--color-warning);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inline-processing-spinner {
+    animation: none;
+  }
+}
+.pixel-effects-card .pixel-effects-controls {
+  margin-top: var(--spacing-sm);
+}
+.pixel-effects-card .pixel-effects-duotone {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+.pixel-effects-card .pixel-effects-duotone .effect-option-group {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+.pixel-effects-card .pixel-effects-status {
+  flex: 0 1 120px;
+  min-width: 0;
+  margin-left: auto;
+  padding: 0;
+  overflow: hidden;
+  justify-content: flex-end;
+  text-align: right;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pixel-effects-card .subsection-title:has(> .pixel-effects-status) > .panel-group-chevron {
+  margin-left: 0;
 }/*# sourceMappingURL=style.css.map */

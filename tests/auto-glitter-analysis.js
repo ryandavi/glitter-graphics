@@ -4,6 +4,7 @@ const path = require('path');
 const vm = require('vm');
 
 const workerSource = fs.readFileSync(path.join(__dirname, '..', 'js', 'workers', 'auto-glitter.worker.js'), 'utf8');
+const sharedAnalysisSource = fs.readFileSync(path.join(__dirname, '..', 'js', 'effects', 'palette-analysis.js'), 'utf8');
 let response;
 let segmentResponses = 0;
 const context = {
@@ -20,6 +21,10 @@ const context = {
 			if (value.type === 'segmented') segmentResponses++;
 		}
 	}
+};
+context.importScripts = () => {
+	vm.runInNewContext(sharedAnalysisSource, context, { filename: 'palette-analysis.js' });
+	context.GlitterPaletteAnalysis = context.self.GlitterPaletteAnalysis;
 };
 vm.runInNewContext(workerSource, context, { filename: 'auto-glitter.worker.js' });
 
@@ -133,8 +138,10 @@ assert.ok(result.labels.every(label => label === 0), 'despeckle fills the surrou
 
 const redPixels = image(60, 30, x => x < 30 ? [220, 30, 42] : [232, 34, 46]);
 segment(redPixels, 60, 30);
+const separatedRedCount = reduce(6, { ...baseOptions, mergeDistinctness: 0.01 }).palette.length;
 result = reduce(6, { ...baseOptions, mergeDistinctness: 0.08 });
 assert.strictEqual(result.palette.length, 1, 'nearby reds merge even when the requested maximum has spare room');
+assert.ok(result.palette.length < separatedRedCount, 'Combine Similar changes the reduced palette without rerunning segmentation');
 
 const outlinePixels = image(60, 30, x => x < 29 ? [230, 45, 55] : (x < 31 ? [0, 0, 0] : [250, 205, 35]));
 segment(outlinePixels, 60, 30);

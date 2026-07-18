@@ -8,3 +8,101 @@
 @use 'panels';
 @use 'modals';
 @use 'mobile';
+
+@keyframes inline-processing-spin {
+	to { transform: rotate(360deg); }
+}
+
+.inline-processing-status {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+	min-width: 0;
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	font-weight: 500;
+	letter-spacing: normal;
+	line-height: 1;
+	text-transform: none;
+	visibility: hidden;
+	opacity: 0;
+	pointer-events: none;
+	transition: color var(--transition-fast), opacity var(--transition-fast);
+
+	&.is-active,
+	&.is-error {
+		visibility: visible;
+		opacity: 1;
+	}
+
+	&.is-error {
+		color: var(--color-warning);
+
+		.inline-processing-spinner { display: none; }
+	}
+}
+
+.inline-processing-spinner {
+	width: 12px;
+	height: 12px;
+	flex: 0 0 auto;
+	border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+	border-top-color: currentColor;
+	border-radius: 50%;
+	animation: inline-processing-spin 700ms linear infinite;
+}
+
+.inline-processing-label {
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.auto-glitter-preview-banner > .inline-processing-status {
+	flex: 0 1 180px;
+	min-width: 0;
+	justify-content: flex-start;
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	font-weight: 500;
+
+	&.is-error { color: var(--color-warning); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.inline-processing-spinner { animation: none; }
+}
+
+.pixel-effects-card {
+	.pixel-effects-controls {
+		margin-top: var(--spacing-sm);
+	}
+
+	.pixel-effects-duotone {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--spacing-sm);
+
+		.effect-option-group {
+			display: grid;
+			gap: var(--spacing-xs);
+		}
+	}
+
+	.pixel-effects-status {
+		flex: 0 1 120px;
+		min-width: 0;
+		margin-left: auto;
+		padding: 0;
+		overflow: hidden;
+		justify-content: flex-end;
+		text-align: right;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.subsection-title:has(> .pixel-effects-status) > .panel-group-chevron {
+		margin-left: 0;
+	}
+}

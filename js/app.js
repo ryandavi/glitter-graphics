@@ -6642,20 +6642,24 @@ setupWelcomeModalListeners() {
 
 		const background = this.baseBackgroundManager?.normalizeLayer(baseLayer)?.background;
 		const mode = background?.mode || 'image';
-		if (mode === 'image' && this.baseBackgroundManager?.hasBaseImage()) {
-			this.previewCtx.putImageData(this.originalImageData, 0, 0);
+		if ((mode === 'image' && this.baseBackgroundManager?.hasBaseImage()) || mode === 'gradient') {
+			const width = this.previewCanvas.width;
+			const height = this.previewCanvas.height;
+			const source = this.baseBackgroundManager.getBackgroundSourceImageData(background, width, height);
+			const settings = background.pixelEffects;
+			const processed = settings.pixelSize === 1 && settings.paletteMode === 'off'
+				? source
+				: this.baseBackgroundManager.getPreviewImageData(source, width, height, settings);
+			const image = new ImageData(new Uint8ClampedArray(processed.data), width, height);
+			applyColorAdjustToImageData(image, background.colorAdjust);
+			if (background.opacity < 100) {
+				for (let offset = 3; offset < image.data.length; offset += 4) image.data[offset] = Math.round(image.data[offset] * background.opacity / 100);
+			}
+			this.previewCtx.putImageData(image, 0, 0);
 		} else if (mode === 'solid') {
 			this.previewCtx.save();
 			this.previewCtx.globalAlpha = background.opacity / 100;
 			this.previewCtx.fillStyle = background.color;
-			this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-			this.previewCtx.restore();
-		} else if (mode === 'gradient') {
-			this.previewCtx.save();
-			this.previewCtx.globalAlpha = background.opacity / 100;
-			this.previewCtx.fillStyle = createEffectCanvasGradient(this.previewCtx, background.gradient, {
-				x: 0, y: 0, width: this.previewCanvas.width, height: this.previewCanvas.height
-			});
 			this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 			this.previewCtx.restore();
 		}

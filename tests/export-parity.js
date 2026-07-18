@@ -261,6 +261,88 @@ async function mutateTextAndUndo(page) {
 	});
 }
 
+async function configureBasePixelEffects(page, paletteMode, { shimmer = false } = {}) {
+	await page.evaluate(({ paletteMode, shimmer }) => {
+		const editor = window.editor;
+		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
+		layer.background.mode = 'gradient';
+		layer.background.gradient = normalizeEffectGradient({
+			type: 'linear', angle: 28, interpolation: 'linear',
+			stops: [{ offset: 0, color: '#18112d', alpha: 1 }, { offset: 0.48, color: '#e74672', alpha: 0.8 }, { offset: 1, color: '#f6d365', alpha: 1 }]
+		});
+		layer.background.colorAdjust = { hue: 18, saturation: 112, brightness: 94 };
+		layer.background.opacity = 73;
+		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings({
+			pixelSize: 3,
+			paletteMode,
+			colorCount: 5,
+			paletteStyle: 'balanced',
+			mergeDistinctness: 0.045,
+			detail: 4,
+			cleanEdges: true,
+			dither: {
+				algorithm: 'halftone', angle: 35, strength: 88,
+				palette: 'duotone', duotone: ['#120b24', '#ffd36a'], shimmer
+			}
+		}, CONFIG.tools.pixelEffects);
+		editor.baseBackgroundManager.invalidatePixelEffects();
+		editor.updatePreview();
+		editor.saveState();
+	}, { paletteMode, shimmer });
+}
+
+async function mutateBaseEffectAndUndo(page) {
+	await page.evaluate(async () => {
+		const editor = window.editor;
+		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
+		layer.background.pixelEffects.dither.angle = 137;
+		editor.saveState();
+		await editor.undo();
+	});
+}
+
+async function verifyBasePreviewExportParity(page, label, frameIndex = 0) {
+	const result = await page.evaluate(({ frameIndex }) => {
+		const editor = window.editor;
+		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
+		const background = editor.baseBackgroundManager.normalizeLayer(layer).background;
+		const width = editor.originalCanvas.width;
+		const height = editor.originalCanvas.height;
+		const source = editor.baseBackgroundManager.getBackgroundSourceImageData(background, width, height);
+		const preview = editor.baseBackgroundManager.getPixelEffectImageData(source, width, height, background.pixelEffects, frameIndex);
+		const previewFinished = new ImageData(new Uint8ClampedArray(preview.data), width, height);
+		applyColorAdjustToImageData(previewFinished, background.colorAdjust);
+		if (background.opacity < 100) {
+			for (let offset = 3; offset < previewFinished.data.length; offset += 4) previewFinished.data[offset] = Math.round(previewFinished.data[offset] * background.opacity / 100);
+		}
+		const exported = editor.exporter._getBasePipelineImageData(layer, {
+			width, height,
+			originalData: new Uint8ClampedArray(editor.originalImageData.data),
+			originalAlpha: editor.originalAlphaChannel,
+			alphaThreshold: CONFIG.tools.selection.transparency.alphaThreshold
+		}, frameIndex);
+		for (let index = 0; index < exported.data.length; index++) {
+			if (exported.data[index] !== previewFinished.data[index]) return { firstDiff: index };
+		}
+		return { firstDiff: -1 };
+	}, { frameIndex });
+	if (result.firstDiff !== -1) throw new Error(`${label} preview/export base pixels first differ at byte ${result.firstDiff}`);
+}
+
+async function verifyBaseStateRoundTrip(page) {
+	const result = await page.evaluate(async () => {
+		const editor = window.editor;
+		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
+		const serialized = editor.layerManager.serializeLayer(layer);
+		const restored = await editor.layerManager.deserializeLayer(serialized);
+		return {
+			expected: JSON.stringify(layer.background.pixelEffects),
+			actual: JSON.stringify(restored.background.pixelEffects)
+		};
+	});
+	if (result.expected !== result.actual) throw new Error('Base Image pixelEffects changed during layer serialization');
+}
+
 function assertByteIdentity(reference, candidate, label) {
 	const firstDiff = findFirstByteDiff(reference.bytes, candidate.bytes);
 	if (firstDiff !== -1) {
@@ -317,6 +399,34 @@ async function main() {
 			const transparentThird = { bytes: transparentThirdBytes, hash: hashBytes(transparentThirdBytes) };
 			assertByteIdentity(transparentFirst, transparentThird, 'Edit -> undo -> transparent export');
 			console.log(`PASS 4. Edit -> undo -> transparent export matched the original (${transparentThird.bytes.length} bytes, sha256 ${transparentThird.hash})`);
+
+			await configureBasePixelEffects(page, 'posterize');
+			await verifyBasePreviewExportParity(page, 'Posterize');
+			console.log('PASS Posterize preview/export base pixels matched exactly');
+			const posterizeFirstBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
+			const posterizeSecondBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
+			const posterizeFirst = { bytes: posterizeFirstBytes, hash: hashBytes(posterizeFirstBytes) };
+			const posterizeSecond = { bytes: posterizeSecondBytes, hash: hashBytes(posterizeSecondBytes) };
+			assertByteIdentity(posterizeFirst, posterizeSecond, 'Back-to-back Posterize export');
+			console.log(`PASS 5. Back-to-back Posterize exports matched exactly (${posterizeFirst.bytes.length} bytes, sha256 ${posterizeFirst.hash})`);
+
+			await configureBasePixelEffects(page, 'dither', { shimmer: true });
+			await verifyBaseStateRoundTrip(page);
+			console.log('PASS Pixel-effect state survived Base Image serialization');
+			await verifyBasePreviewExportParity(page, 'Shimmer', 3);
+			console.log('PASS Shimmer preview/export base pixels matched exactly');
+			const shimmerFirstBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
+			const shimmerSecondBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
+			const shimmerFirst = { bytes: shimmerFirstBytes, hash: hashBytes(shimmerFirstBytes) };
+			const shimmerSecond = { bytes: shimmerSecondBytes, hash: hashBytes(shimmerSecondBytes) };
+			assertByteIdentity(shimmerFirst, shimmerSecond, 'Back-to-back Shimmer export');
+			console.log(`PASS 6. Back-to-back Shimmer exports matched exactly (${shimmerFirst.bytes.length} bytes, sha256 ${shimmerFirst.hash})`);
+
+			await mutateBaseEffectAndUndo(page);
+			const shimmerUndoBytes = await exportBytes(page, { ...matteSettings, baseImage: true });
+			const shimmerUndo = { bytes: shimmerUndoBytes, hash: hashBytes(shimmerUndoBytes) };
+			assertByteIdentity(shimmerFirst, shimmerUndo, 'Edit -> undo -> Shimmer export');
+			console.log(`PASS 7. Edit -> undo -> Shimmer export matched the original (${shimmerUndo.bytes.length} bytes, sha256 ${shimmerUndo.hash})`);
 
 			console.log('\nExport parity verification finished with all checks passing.');
 		} finally {

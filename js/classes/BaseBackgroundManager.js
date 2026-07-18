@@ -5,6 +5,12 @@ class BaseBackgroundManager {
 	constructor(editor) {
 		this.editor = editor;
 		this.pickerSession = null;
+		this.pixelEffectCache = new Map();
+		this.pixelEffectRequest = 0;
+		this.pixelEffectWorker = null;
+		this.pixelEffectPendingKey = null;
+		this.pixelEffectDebounceTimer = null;
+		this.lastPixelEffectPreview = null;
 		this.setupUI();
 		this.setupEventListeners();
 	}
@@ -40,6 +46,12 @@ class BaseBackgroundManager {
 			opacity: Number(layer.background.opacity ?? 100),
 			colorAdjust: normalizeColorAdjust(layer.background.colorAdjust)
 		});
+		const legacyPosterize = layer.background.posterize;
+		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings(
+			layer.background.pixelEffects || legacyPosterize,
+			CONFIG.tools.pixelEffects
+		);
+		delete layer.background.posterize;
 		return layer;
 	}
 
@@ -57,6 +69,37 @@ class BaseBackgroundManager {
 			gallerySection: id('designGallerySection'), pickerStrip: id('galleryPickerStrip'),
 			pickerTitle: id('galleryPickerStripTitle'), pickerDetail: id('galleryPickerStripDetail'), pickerDone: id('galleryPickerStripDone')
 		};
+		Object.assign(this.ui, {
+			pixelCard: id('pixelEffectsPaletteMode')?.closest('.pixel-effects-card'),
+			pixelSize: id('pixelEffectsPixelSize'), paletteMode: id('pixelEffectsPaletteMode'),
+			paletteStyle: id('pixelEffectsPaletteStyle'), colorCount: id('pixelEffectsColorCount'),
+			mergeDistinctness: id('pixelEffectsMergeDistinctness'), detail: id('pixelEffectsDetail'),
+			cleanEdges: id('pixelEffectsCleanEdges'), paletteControls: id('pixelEffectsPaletteControls'),
+			posterizeControls: id('pixelEffectsPosterizeControls'), ditherControls: id('pixelEffectsDitherControls'),
+			algorithm: id('pixelEffectsAlgorithm'), ditherPalette: id('pixelEffectsDitherPalette'),
+			duotone: id('pixelEffectsDuotone'), strength: id('pixelEffectsStrength'), angle: id('pixelEffectsAngle'),
+			shimmer: id('pixelEffectsShimmer'), status: id('pixelEffectsStatus')
+		});
+		this.ui.ditherPalette?.classList.add('paint-source-choice-grid');
+		const pixelEffectsTitle = this.ui.pixelCard?.closest('[data-panel-group="Palette Effects"]')?.querySelector(':scope > .subsection-title');
+		const pixelEffectsChevron = pixelEffectsTitle?.querySelector('.panel-group-chevron');
+		if (this.ui.status && pixelEffectsTitle) {
+			pixelEffectsTitle.insertBefore(this.ui.status, pixelEffectsChevron || null);
+		}
+		if (this.ui.duotone) {
+			['Dark', 'Light'].forEach((label, index) => {
+				const group = document.createElement('label');
+				group.className = 'effect-option-group';
+				const text = document.createElement('span');
+				text.className = 'effect-option-label setting-label';
+				text.textContent = label;
+				const input = document.createElement('input');
+				input.type = 'color';
+				input.id = `pixelEffectsDuotone${index}`;
+				group.append(text, input);
+				this.ui.duotone.appendChild(group);
+			});
+		}
 		// The legacy host lives in Design's source markup. Once schema rendering
 		// has populated it, promote it to a sibling accordion section.
 		const designGallery = id('designGallerySection');
@@ -93,6 +136,158 @@ class BaseBackgroundManager {
 		this.bindRange('Scale', 'scale');
 		this.bindRange('Opacity', 'opacity');
 		['Hue', 'Saturation', 'Brightness'].forEach((name) => this.bindColorAdjust(name));
+		this.bindPixelEffects();
+	}
+
+	bindPixelEffects() {
+		const bindRange = (id, path, slider) => {
+			const input = document.getElementById(id);
+			if (!input) return;
+			const spec = CONFIG.ui.sliders[slider];
+			bindSlider(input, document.getElementById(`${id}Value`), {
+				suffix: spec.unit,
+				parseValue: (rawValue) => Number(rawValue),
+				resetValue: spec.value,
+				resetButton: document.getElementById(`reset${id[0].toUpperCase()}${id.slice(1)}`),
+				apply: (next) => this.updatePixelSetting(path, next, false),
+				onCommit: () => this.editor.saveState()
+			});
+		};
+		bindRange('pixelEffectsPixelSize', 'pixelSize', 'pixelEffectsPixelSize');
+		bindRange('pixelEffectsColorCount', 'colorCount', 'pixelEffectsColorCount');
+		bindRange('pixelEffectsMergeDistinctness', 'mergeDistinctness', 'pixelEffectsMergeDistinctness');
+		bindRange('pixelEffectsDetail', 'detail', 'pixelEffectsDetail');
+		bindRange('pixelEffectsStrength', 'dither.strength', 'pixelEffectsStrength');
+		bindRange('pixelEffectsAngle', 'dither.angle', 'pixelEffectsAngle');
+		this.bindPixelSegment(this.ui.paletteMode, 'paletteMode');
+		this.bindPixelSegment(this.ui.paletteStyle, 'paletteStyle');
+		this.bindPixelSegment(this.ui.algorithm, 'dither.algorithm');
+		this.bindPixelSegment(this.ui.ditherPalette, 'dither.palette');
+		this.ui.cleanEdges?.addEventListener('change', () => this.updatePixelSetting('cleanEdges', this.ui.cleanEdges.checked, true));
+		this.ui.shimmer?.addEventListener('change', () => this.updatePixelSetting('dither.shimmer', this.ui.shimmer.checked, true));
+		[0, 1].forEach((index) => document.getElementById(`pixelEffectsDuotone${index}`)?.addEventListener('change', (event) => {
+			this.updatePixelSetting(`dither.duotone.${index}`, event.target.value, true);
+		}));
+	}
+
+	bindPixelSegment(group, path) {
+		group?.querySelectorAll('.segmented-option').forEach((button) => button.addEventListener('click', () => {
+			this.updatePixelSetting(path, button.dataset.value, true);
+		}));
+	}
+
+	updatePixelSetting(path, value, commit) {
+		const layer = this.normalizeLayer(this.getActiveLayer());
+		if (!layer) return;
+		const keys = path.split('.');
+		let target = layer.background.pixelEffects;
+		for (let index = 0; index < keys.length - 1; index++) target = target[keys[index]];
+		target[keys.at(-1)] = value;
+		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings(target === layer.background.pixelEffects ? target : layer.background.pixelEffects, CONFIG.tools.pixelEffects);
+		this.invalidatePixelEffects();
+		this.loadPixelEffectSettings(layer);
+		this.applyChange(commit);
+	}
+
+	invalidatePixelEffects() {
+		this.pixelEffectRequest++;
+		this.pixelEffectPendingKey = null;
+		clearTimeout(this.pixelEffectDebounceTimer);
+		this.pixelEffectDebounceTimer = null;
+		this.pixelEffectCache.clear();
+		this.ui.pixelCard?.setAttribute('aria-busy', 'false');
+		setInlineProcessingStatus(this.ui.status);
+	}
+
+	_hashPixels(pixels) {
+		let hash = 2166136261;
+		for (let index = 0; index < pixels.length; index += 4) {
+			hash = Math.imul(hash ^ pixels[index], 16777619);
+			hash = Math.imul(hash ^ pixels[index + 1], 16777619);
+			hash = Math.imul(hash ^ pixels[index + 2], 16777619);
+			hash = Math.imul(hash ^ pixels[index + 3], 16777619);
+		}
+		return hash >>> 0;
+	}
+
+	getPixelEffectImageData(source, width, height, settings, frameIndex = 0) {
+		const shimmerFrame = settings.paletteMode === 'dither' && settings.dither.shimmer ? frameIndex : 0;
+		const key = `${width}x${height}:${this._hashPixels(source.data)}:${JSON.stringify(settings)}:${shimmerFrame}`;
+		const cached = this.pixelEffectCache.get(key);
+		if (cached) return cached;
+		const data = GlitterPixelEffects.applyPixelEffects(source.data, width, height, settings, {
+			pixelEffects: CONFIG.tools.pixelEffects,
+			autoGlitter: CONFIG.tools.autoGlitter
+		}, shimmerFrame);
+		const result = new ImageData(data, width, height);
+		this.pixelEffectCache.set(key, result);
+		while (this.pixelEffectCache.size > 16) this.pixelEffectCache.delete(this.pixelEffectCache.keys().next().value);
+		return result;
+	}
+
+	ensurePixelEffectWorker() {
+		if (this.pixelEffectWorker) return this.pixelEffectWorker;
+		this.pixelEffectWorker = new Worker('js/workers/pixel-effects.worker.js?v=1');
+		this.pixelEffectWorker.addEventListener('error', (error) => {
+			dbg('[BaseBackgroundManager] Palette effect worker failed:', error);
+			this.pixelEffectPendingKey = null;
+			this.ui.pixelCard?.setAttribute('aria-busy', 'false');
+			setInlineProcessingStatus(this.ui.status, { error: true, label: 'Could not update' });
+			this.pixelEffectWorker?.terminate();
+			this.pixelEffectWorker = null;
+		});
+		return this.pixelEffectWorker;
+	}
+
+	requestPreviewImageData(source, width, height, settings, key) {
+		if (this.pixelEffectPendingKey === key) return;
+		const token = ++this.pixelEffectRequest;
+		this.pixelEffectPendingKey = key;
+		setInlineProcessingStatus(this.ui.status, { active: true, label: 'Updating' });
+		this.ui.pixelCard?.setAttribute('aria-busy', 'true');
+		clearTimeout(this.pixelEffectDebounceTimer);
+		this.pixelEffectDebounceTimer = setTimeout(() => {
+			this.pixelEffectDebounceTimer = null;
+			if (token !== this.pixelEffectRequest) return;
+			const worker = this.ensurePixelEffectWorker();
+			const pixels = source.data.slice();
+			const finish = ({ data }) => {
+				if (data.requestId !== token) return;
+				worker.removeEventListener('message', finish);
+				if (token !== this.pixelEffectRequest) return;
+				this.pixelEffectPendingKey = null;
+				this.ui.pixelCard?.setAttribute('aria-busy', 'false');
+				if (data.error) {
+					setInlineProcessingStatus(this.ui.status, { error: true, label: data.error });
+					return;
+				}
+				const result = new ImageData(new Uint8ClampedArray(data.pixels), width, height);
+				this.pixelEffectCache.set(key, result);
+				this.lastPixelEffectPreview = result;
+				setInlineProcessingStatus(this.ui.status);
+				this.editor.updatePreview();
+			};
+			worker.addEventListener('message', finish);
+			worker.postMessage({
+				requestId: token,
+				pixels: pixels.buffer,
+				width,
+				height,
+				settings,
+				segmentKey: `${width}x${height}:${this._hashPixels(source.data)}:${settings.pixelSize}:${settings.paletteStyle}`,
+				config: { pixelEffects: CONFIG.tools.pixelEffects, autoGlitter: CONFIG.tools.autoGlitter },
+				frameIndex: 0
+			}, [pixels.buffer]);
+		}, CONFIG.tools.pixelEffects.timing.previewDebounceMs);
+	}
+
+	getPreviewImageData(source, width, height, settings) {
+		const key = `${width}x${height}:${this._hashPixels(source.data)}:${JSON.stringify(settings)}:0`;
+		if (this.pixelEffectCache.has(key)) return this.pixelEffectCache.get(key);
+		this.requestPreviewImageData(source, width, height, settings, key);
+		return this.lastPixelEffectPreview?.width === width && this.lastPixelEffectPreview?.height === height
+			? this.lastPixelEffectPreview
+			: source;
 	}
 
 	bindRange(name, key) {
@@ -142,9 +337,23 @@ class BaseBackgroundManager {
 
 	applyChange(commit) {
 		this.updateAutoGlitterAvailability();
+		const layer = this.normalizeLayer(this.getActiveLayer());
+		if (layer) this.loadPixelEffectSettings(layer);
 		this.editor.updatePreview();
 		this.editor.layerManager.renderLayersList();
 		if (commit) this.editor.saveState();
+	}
+
+	getBackgroundSourceImageData(background, width, height) {
+		if (background.mode === 'image') return this.editor.originalImageData;
+		if (background.mode !== 'gradient') return null;
+		const canvas = document.createElement('canvas');
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		ctx.fillStyle = createEffectCanvasGradient(ctx, background.gradient, { x: 0, y: 0, width, height });
+		ctx.fillRect(0, 0, width, height);
+		return ctx.getImageData(0, 0, width, height);
 	}
 
 	getAutoGlitterAvailability(layer = this.editor.layers?.find((entry) => entry.type === LayerType.BASE_IMAGE)) {
@@ -198,6 +407,42 @@ class BaseBackgroundManager {
 		}
 		if (this.ui.imageChange) this.ui.imageChange.textContent = hasImage ? 'Replace' : 'Choose Image';
 		this.updateGlitterInfo(layer);
+		this.loadPixelEffectSettings(layer);
+	}
+
+	loadPixelEffectSettings(layer) {
+		const settings = layer.background.pixelEffects;
+		const applicable = (layer.background.mode === 'image' && this.hasBaseImage()) || layer.background.mode === 'gradient';
+		if (this.ui.pixelCard) this.ui.pixelCard.hidden = !applicable;
+		const setSegment = (group, value) => group?.querySelectorAll('.segmented-option').forEach((button) => {
+			const active = button.dataset.value === value;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', active ? 'true' : 'false');
+		});
+		setSegment(this.ui.paletteMode, settings.paletteMode);
+		setSegment(this.ui.paletteStyle, settings.paletteStyle);
+		setSegment(this.ui.algorithm, settings.dither.algorithm);
+		setSegment(this.ui.ditherPalette, settings.dither.palette);
+		const setRange = (id, value, suffix) => {
+			const input = document.getElementById(id);
+			if (input) input.value = value;
+			const output = document.getElementById(`${id}Value`);
+			if (output) output.innerHTML = formatUnit(value, suffix);
+		};
+		setRange('pixelEffectsPixelSize', settings.pixelSize, 'px');
+		setRange('pixelEffectsColorCount', settings.colorCount, '');
+		setRange('pixelEffectsMergeDistinctness', settings.mergeDistinctness, '');
+		setRange('pixelEffectsDetail', settings.detail, 'px');
+		setRange('pixelEffectsStrength', settings.dither.strength, '%');
+		setRange('pixelEffectsAngle', settings.dither.angle, '°');
+		if (this.ui.cleanEdges) this.ui.cleanEdges.checked = settings.cleanEdges;
+		if (this.ui.shimmer) this.ui.shimmer.checked = settings.dither.shimmer;
+		[0, 1].forEach((index) => { const input = document.getElementById(`pixelEffectsDuotone${index}`); if (input) input.value = settings.dither.duotone[index]; });
+		if (this.ui.paletteControls) this.ui.paletteControls.hidden = settings.paletteMode === 'off' || (settings.paletteMode === 'dither' && settings.dither.palette !== 'auto');
+		if (this.ui.posterizeControls) this.ui.posterizeControls.hidden = settings.paletteMode !== 'posterize';
+		if (this.ui.ditherControls) this.ui.ditherControls.hidden = settings.paletteMode !== 'dither';
+		if (this.ui.duotone) this.ui.duotone.hidden = settings.dither.palette !== 'duotone';
+		if (this.ui.angle) this.ui.angle.closest('.setting-column').hidden = settings.dither.algorithm !== 'halftone';
 	}
 
 	updateGlitterInfo(layer) {

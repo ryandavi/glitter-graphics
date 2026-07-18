@@ -42,6 +42,7 @@ class AutoGlitterManager {
 			status: document.getElementById('autoGlitterCanvasStatus'),
 			exit: document.getElementById('autoGlitterPreviewExit')
 		};
+		initializeInlineProcessingStatus(this.canvasUI.status);
 
 		this.ui.open?.addEventListener('click', () => this.open());
 		this.ui.cancel?.addEventListener('click', () => this.requestDiscardSession());
@@ -322,8 +323,11 @@ class AutoGlitterManager {
 		if (!this.canvasUI?.banner) return;
 		this.canvasUI.banner.classList.toggle('is-processing', processing);
 		this.canvasUI.banner.setAttribute('aria-busy', processing ? 'true' : 'false');
-		this.canvasUI.status.hidden = !message;
-		if (message) this.canvasUI.status.textContent = message;
+		setInlineProcessingStatus(this.canvasUI.status, {
+			active: processing,
+			error: !processing && Boolean(message),
+			label: message
+		});
 	}
 
 	getWorkerOptions() {
@@ -342,7 +346,7 @@ class AutoGlitterManager {
 
 	ensureWorker() {
 		if (this.worker) return;
-		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=10');
+		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=11');
 		this.worker.onmessage = ({ data }) => {
 			const pending = this.workerRequests.get(data.requestId);
 			if (!pending) return;

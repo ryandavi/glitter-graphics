@@ -104,6 +104,31 @@ const CONFIG = {
 				natural: { mergeDistinctness: 0.035, neutralSimilarityScale: 1.285714, neutralChromaThreshold: 0.05, chromaWeight: 4, maxColorBoost: 1, neutralImportance: 1, coherenceBase: 0.65, coherenceScale: 0.5, connectedAreaWeight: 2, maxConnectedBoost: 0.5, connectedNeutralProtection: 0.9, fragmentedSimilarityBoost: 0.15 }
 			}
 		},
+		pixelEffects: {
+			defaults: {
+				pixelSize: 1,
+				paletteMode: 'off',
+				colorCount: 5,
+				paletteStyle: 'balanced',
+				mergeDistinctness: 0.045,
+				detail: 4,
+				cleanEdges: true,
+				dither: {
+					algorithm: 'bayer', angle: 45, strength: 100,
+					palette: 'auto', duotone: ['#000000', '#ffffff'], shimmer: false
+				}
+			},
+			limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 12 },
+			analysis: { iterations: 10, maxSamples: 24000 },
+			timing: { previewDebounceMs: 80 },
+			animation: { shimmerFrames: 8, frameDurationMs: 100 },
+			presets: {
+				bw: ['#000000', '#ffffff'],
+				gameboy: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f'],
+				cga: ['#000000', '#55ffff', '#ff55ff', '#ffffff'],
+				sepia: ['#2b1b17', '#704f3a', '#b79268', '#f2dfc2']
+			}
+		},
 		selection: {
 			defaults: {
 				threshold: 50,
@@ -396,6 +421,12 @@ const CONFIG = {
 			autoGlitterColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
 			autoGlitterMergeDistinctness: { label: 'Combine Similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
 			autoGlitterDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
+			pixelEffectsPixelSize: { label: 'Pixel Size', unit: 'px', min: 1, max: 8, step: 1, value: 1 },
+			pixelEffectsColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
+			pixelEffectsMergeDistinctness: { label: 'Combine Similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
+			pixelEffectsDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
+			pixelEffectsStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },
+			pixelEffectsAngle: { label: 'Angle', unit: 'Â°', min: 0, max: 360, step: 1, value: 45 },
 			maskBrushSize: { label: 'Size', unit: 'px', min: 1, max: 300, value: 40 },
 			maskBrushSoftness: { label: 'Softness', unit: '%', min: 0, max: 100, value: 0 },
 			maskBrushFlow: { label: 'Flow', unit: '%', min: 1, max: 100, value: 100 },
@@ -994,6 +1025,38 @@ const PANEL_SCHEMAS = {
 					},
 					primaryIds: { scale: 'baseBackgroundScale', opacity: 'baseBackgroundOpacity' }
 				}
+			] },
+			{ title: 'Palette Effects', items: [
+				{ kind: 'card', classes: 'pixel-effects-card', items: [
+					{ kind: 'slider', id: 'pixelEffectsPixelSize', slider: 'pixelEffectsPixelSize', title: '1 is off; larger values create crisp mosaic cells before palette processing' },
+					{ kind: 'segmented', id: 'pixelEffectsPaletteMode', label: 'Palette mode', options: [
+							{ label: 'Off', value: 'off', active: true }, { label: 'Posterize', value: 'posterize' }, { label: 'Dither', value: 'dither' }
+					] },
+					{ kind: 'processingStatus', id: 'pixelEffectsStatus', classes: 'pixel-effects-status' },
+					{ kind: 'card', id: 'pixelEffectsPaletteControls', classes: 'pixel-effects-controls carded-subsection', hidden: true, items: [
+						{ kind: 'segmented', id: 'pixelEffectsPaletteStyle', label: 'Palette style', options: [
+							{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced', active: true }, { label: 'Natural', value: 'natural' }
+						] },
+						{ kind: 'slider', id: 'pixelEffectsColorCount', slider: 'pixelEffectsColorCount' },
+						{ kind: 'slider', id: 'pixelEffectsMergeDistinctness', slider: 'pixelEffectsMergeDistinctness' }
+					] },
+					{ kind: 'card', id: 'pixelEffectsPosterizeControls', classes: 'pixel-effects-controls carded-subsection', hidden: true, items: [
+						{ kind: 'slider', id: 'pixelEffectsDetail', slider: 'pixelEffectsDetail' },
+						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsCleanEdges', label: 'Clean Edges', checked: true, title: 'Absorb tiny connected regions into their neighbors' }] }
+					] },
+					{ kind: 'card', id: 'pixelEffectsDitherControls', classes: 'pixel-effects-controls carded-subsection', hidden: true, items: [
+						{ kind: 'segmented', id: 'pixelEffectsAlgorithm', label: 'Dither algorithm', options: [
+							{ label: 'Bayer', value: 'bayer', active: true }, { label: 'Floyd', value: 'floyd' }, { label: 'Atkinson', value: 'atkinson' }, { label: 'Halftone', value: 'halftone' }
+						] },
+						{ kind: 'segmented', id: 'pixelEffectsDitherPalette', label: 'Dither palette', options: [
+							{ label: 'Auto', value: 'auto', active: true }, { label: 'B&W', value: 'bw' }, { label: 'Game Boy', value: 'gameboy' }, { label: 'CGA', value: 'cga' }, { label: 'Sepia', value: 'sepia' }, { label: 'Duotone', value: 'duotone' }
+						] },
+						{ kind: 'host', id: 'pixelEffectsDuotone', classes: 'text-effect-color-row pixel-effects-duotone' },
+						{ kind: 'slider', id: 'pixelEffectsStrength', slider: 'pixelEffectsStrength' },
+						{ kind: 'slider', id: 'pixelEffectsAngle', slider: 'pixelEffectsAngle' },
+						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsShimmer', label: 'Shimmer', title: 'Animate the dither threshold. This creates living grain and larger GIFs.' }] }
+					] }
+				] }
 			] },
 			{ title: 'Actions', items: [
 				{ kind: 'card', items: [
