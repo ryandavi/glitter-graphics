@@ -430,10 +430,10 @@ class LayerManager {
 		});
 	}
 
-	toggleLayerSelection(layerId) {
+	toggleLayerSelection(layerId, options = {}) {
 		const layer = this.getLayerById(layerId);
 		if (!this.isLayerMultiSelectable(layer)) {
-			this.setActiveLayer(layerId);
+			this.setActiveLayer(layerId, options);
 			return;
 		}
 
@@ -444,12 +444,12 @@ class LayerManager {
 			const nextActiveId = remaining.includes(this.activeLayerId)
 				? this.activeLayerId
 				: (remaining[remaining.length - 1] || null);
-			this.setSelection(remaining, { activeLayerId: nextActiveId });
+			this.setSelection(remaining, { ...options, activeLayerId: nextActiveId });
 			return;
 		}
 
 		nextIds.add(layerId);
-		this.setSelection([...nextIds], { activeLayerId: layerId });
+		this.setSelection([...nextIds], { ...options, activeLayerId: layerId });
 	}
 
 	selectLayerRange(layerId, options = {}) {
@@ -495,6 +495,7 @@ class LayerManager {
 		const sameSelection = currentIds.length === normalized.length
 			&& currentIds.every((layerId) => normalized.includes(layerId));
 		if (sameActive && sameSelection) {
+			if (options.source === 'canvas') this.revealLayerInList(nextActiveId);
 			return;
 		}
 
@@ -512,6 +513,7 @@ class LayerManager {
 		this.editor.baseBackgroundManager?.closePickerSession?.();
 		this.editor.maskEditor?.handleLayerChange(this.activeLayerId);
 		this.updateActiveLayerListSelection();
+		if (options.source === 'canvas') this.revealLayerInList(this.activeLayerId);
 		this.updateMobileLayersSwatch();
 		this.updateBottomBarButtons();
 
@@ -586,13 +588,27 @@ class LayerManager {
 	}
 
 
-	setActiveLayer(layerId) {
+	setActiveLayer(layerId, options = {}) {
 		if (!layerId) {
 			this.clearSelection();
 			return;
 		}
 
-		this.setSelection([layerId], { activeLayerId: layerId });
+		this.setSelection([layerId], { ...options, activeLayerId: layerId });
+	}
+
+	selectLayerFromCanvas(layerId) {
+		this.setActiveLayer(layerId, { source: 'canvas' });
+	}
+
+	revealLayerInList(layerId) {
+		if (!layerId || !this.layersListContainer) return;
+		if (this.editor.mobileManager?.isMobile && this.editor.mobileManager.activeDrawer !== 'layers') return;
+		requestAnimationFrame(() => {
+			const item = this.layersListContainer.querySelector(`[data-layer-id="${layerId}"]`);
+			if (!item || !item.getClientRects().length) return;
+			item.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		});
 	}
 
 
@@ -684,11 +700,11 @@ class LayerManager {
 			: (hitStack[0] || null);
 		if (layer) {
 			if (options.toggleSelection && this.isLayerMultiSelectable(layer)) {
-				this.toggleLayerSelection(layer.id);
+				this.toggleLayerSelection(layer.id, { source: 'canvas' });
 				return;
 			}
 
-			this.setActiveLayer(layer.id);
+			this.selectLayerFromCanvas(layer.id);
 
 			let name = 'Layer';
 			if (layer.type === LayerType.STICKER) name = layer.name;

@@ -199,6 +199,20 @@ class BaseBackgroundManager {
 		this.applyChange(true);
 	}
 
+	disablePixelEffects({ apply = true, commit = true } = {}) {
+		const baseLayer = this.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
+		const layer = this.normalizeLayer(baseLayer);
+		if (!layer) return false;
+		const settings = layer.background.pixelEffects;
+		if (!settings.pixelateEnabled && !settings.paletteEnabled) return false;
+		settings.pixelateEnabled = false;
+		settings.paletteEnabled = false;
+		this.invalidatePixelEffects();
+		this.loadPixelEffectSettings(layer);
+		if (apply) this.applyChange(commit);
+		return true;
+	}
+
 	updatePixelSetting(path, value, commit) {
 		const layer = this.normalizeLayer(this.getActiveLayer());
 		if (!layer) return;

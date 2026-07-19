@@ -51,6 +51,26 @@ async function main() {
 		});
 		assert.deepStrictEqual(availability, { hiddenWithoutEffects: true, resetHiddenWithGroup: true, shownWithEffects: true });
 
+		const autoGlitterEffectDisable = await page.evaluate(() => {
+			const editor = window.editor;
+			const layer = editor.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
+			layer.background.pixelEffects.pixelateEnabled = true;
+			layer.background.pixelEffects.paletteEnabled = true;
+			layer.background.pixelEffects.pixelSize = 6;
+			layer.background.pixelEffects.paletteMode = 'dither';
+			layer.background.pixelEffects.dither.algorithm = 'halftone';
+			const changed = editor.baseBackgroundManager.disablePixelEffects({ apply: false });
+			const unchanged = editor.baseBackgroundManager.disablePixelEffects({ apply: false });
+			return { changed, unchanged, settings: layer.background.pixelEffects };
+		});
+		assert.strictEqual(autoGlitterEffectDisable.changed, true);
+		assert.strictEqual(autoGlitterEffectDisable.unchanged, false);
+		assert.strictEqual(autoGlitterEffectDisable.settings.pixelateEnabled, false);
+		assert.strictEqual(autoGlitterEffectDisable.settings.paletteEnabled, false);
+		assert.strictEqual(autoGlitterEffectDisable.settings.pixelSize, 6);
+		assert.strictEqual(autoGlitterEffectDisable.settings.paletteMode, 'dither');
+		assert.strictEqual(autoGlitterEffectDisable.settings.dither.algorithm, 'halftone');
+
 		const shape = await page.evaluate(() => {
 			const editor = window.editor;
 			const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square', width: 40, height: 40, position: { x: 48, y: 48 } });

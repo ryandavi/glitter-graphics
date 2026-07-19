@@ -364,7 +364,7 @@ updateTransform(updates) {
 			excludeLocked: true
         });
         if (topLayer && topLayer.id !== this.layer.id) {
-            this.editor.layerManager.setActiveLayer(topLayer.id);
+			this.editor.layerManager.selectLayerFromCanvas(topLayer.id);
             return true;
         }
 
@@ -503,7 +503,7 @@ const swallowFollowupClick = () => {
 		if (this.editor.currentTool === ToolType.SELECT) {
 			e.preventDefault();
 			e.stopPropagation();
-			this.editor.layerManager.setActiveLayer(this.layer.id);
+			this.editor.layerManager.selectLayerFromCanvas(this.layer.id);
 		}
 		return;
 	}
@@ -560,7 +560,7 @@ const swallowFollowupClick = () => {
     // Select this layer if not already selected
 	if (!pinnedTransform && this.editor.layerManager.activeLayerId !== this.layer.id) {
         dbg('🎯 Selecting layer and starting drag immediately');
-        this.editor.layerManager.setActiveLayer(this.layer.id);
+		this.editor.layerManager.selectLayerFromCanvas(this.layer.id);
     }
     
     // ALWAYS start dragging (whether we just selected or it was already selected)

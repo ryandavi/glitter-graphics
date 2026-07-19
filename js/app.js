@@ -3406,7 +3406,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=30',
+				externalContentUrl: 'modals/guide.html?v=31',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -4056,7 +4056,7 @@ setupWelcomeModalListeners() {
 				return metrics.maxX >= box.left && metrics.minX <= box.right && metrics.maxY >= box.top && metrics.minY <= box.bottom;
 			}).map((layer) => layer.id);
 			const ids = [...new Set([...existingIds, ...hits])];
-			if (ids.length) this.layerManager.setSelection(ids, { activeLayerId: ids[ids.length - 1] });
+			if (ids.length) this.layerManager.setSelection(ids, { activeLayerId: ids[ids.length - 1], source: 'canvas' });
 			else if (!additive) this.layerManager.clearSelection();
 			this.ignoreNextClick = true;
 			setTimeout(() => { this.ignoreNextClick = false; }, 0);
@@ -6127,7 +6127,7 @@ setupWelcomeModalListeners() {
 					// any other layer under the click is no obstacle — text goes on top.
 					const hitLayer = this.layerManager.getTopVisibleLayerAtPoint?.(x, y, { includeBase: false });
 					if (hitLayer?.type === LayerType.TEXT_GLITTER) {
-						this.layerManager.setActiveLayer(hitLayer.id);
+						this.layerManager.selectLayerFromCanvas(hitLayer.id);
 						this.textGlitterManager?.focusTextInput(true);
 						return;
 					}
@@ -6299,7 +6299,7 @@ setupWelcomeModalListeners() {
 				}
 
 				if (isHit) {
-					this.layerManager.setActiveLayer(testLayer.id);
+					this.layerManager.selectLayerFromCanvas(testLayer.id);
 					layer = testLayer;
 					break;
 				}
@@ -6359,7 +6359,7 @@ setupWelcomeModalListeners() {
 			}
 
 			if (glitterLayer) {
-				this.layerManager.setActiveLayer(glitterLayer.id);
+				this.layerManager.selectLayerFromCanvas(glitterLayer.id);
 			} else {
 				const newLayer = this.glitterManager.createLayer();
 				this.layerManager.insertLayer(newLayer);

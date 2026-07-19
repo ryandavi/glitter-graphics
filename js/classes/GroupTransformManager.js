@@ -144,7 +144,7 @@ class GroupTransformManager {
 			includeBase: false
 		});
 		if (topLayer && !this.editor.layerManager.isLayerSelected(topLayer.id)) {
-			this.editor.layerManager.setActiveLayer(topLayer.id);
+			this.editor.layerManager.selectLayerFromCanvas(topLayer.id);
 			return true;
 		}
 
@@ -598,7 +598,7 @@ class GroupTransformManager {
 
 					event.preventDefault();
 					event.stopPropagation();
-					this.editor.layerManager.setActiveLayer(selectedLayer.id);
+					this.editor.layerManager.selectLayerFromCanvas(selectedLayer.id);
 				});
 			}
 		});
@@ -648,7 +648,7 @@ class GroupTransformManager {
 		if (shouldSingleSelect) {
 			event.preventDefault();
 			event.stopPropagation();
-			this.editor.layerManager.setActiveLayer(this.dragStartState.selectionCandidateId);
+			this.editor.layerManager.selectLayerFromCanvas(this.dragStartState.selectionCandidateId);
 		}
 
 		if (this.isDraggingHandle) {

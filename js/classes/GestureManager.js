@@ -326,7 +326,7 @@ class GestureManager {
 		} else if (route.type === 'layerDrag' || route.type === 'layerGesture') {
 			const layer = this.getLayerById(route.layerId);
 			if (layer && this.editor.layerManager.activeLayerId !== layer.id) {
-				this.editor.layerManager.setActiveLayer(layer.id);
+				this.editor.layerManager.selectLayerFromCanvas(layer.id);
 			}
 			const transform = this.getLayerTransform(route.layerId);
 			transform?.beginGestureInteraction?.();
@@ -504,7 +504,7 @@ class GestureManager {
 		} else if (route?.type === 'layerDrag') {
 			const layer = this.getLayerById(route.layerId);
 			if (layer && this.editor.layerManager.activeLayerId !== layer.id) {
-				this.editor.layerManager.setActiveLayer(layer.id);
+				this.editor.layerManager.selectLayerFromCanvas(layer.id);
 			}
 		} else {
 			this.editor.handleWorkspaceAction(pointer.x, pointer.y, {
@@ -568,7 +568,7 @@ class GestureManager {
 				return;
 			}
 
-			this.editor.layerManager.setActiveLayer(layer.id);
+			this.editor.layerManager.selectLayerFromCanvas(layer.id);
 			if (layer.type === LayerType.TEXT_GLITTER || layer.type === LayerType.SHAPE) {
 				if (this.editor.mobileManager?.isMobile) {
 					this.editor.mobileManager.prepareSettings?.(layer);
