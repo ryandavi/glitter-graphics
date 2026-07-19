@@ -1,15 +1,5 @@
 @use 'mixins' as *;
 
-.smart-guide {
-	position: absolute;
-	z-index: 1002;
-	background: var(--smart-guide-color);
-	pointer-events: none;
-
-	&-x { top: 0; bottom: 0; width: 1px; }
-	&-y { left: 0; right: 0; height: 1px; }
-}
-
 // Image and Layers use the canonical collapsible chrome/state contract but
 // remain independently toggleable instead of joining the design accordion.
 .layers-panel > .section.collapsible-section:not(.is-open) {
@@ -213,7 +203,7 @@
 			align-items: center;
 			justify-content: center;
 			cursor: pointer;
-			transition: all var(--transition-fast);
+			transition: background-color var(--transition-fast), border-color var(--transition-fast);
 			position: relative;
 			overflow: hidden;
 
@@ -476,14 +466,6 @@
 				white-space: nowrap;
 				text-overflow: ellipsis;
 
-				>.layer-name {
-					color: var(--color-text-primary);
-					font-size: var(--font-size-base);
-					white-space: nowrap;
-					overflow: hidden;
-					text-overflow: ellipsis;
-				}
-
 				>.layer-type {
 					@include text-sm;
 					color: var(--color-text-secondary);
@@ -556,7 +538,7 @@
 					align-items: center;
 					justify-content: center;
 
-					transition: all var(--transition-fast);
+					transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 
 					.icon {
 						width: .8em;
@@ -965,67 +947,6 @@
 	}
 }
 
-/* Empty States */
-/* Empty States */
-.empty-state {
-	padding: var(--spacing-xl);
-	text-align: center;
-	display: none;
-	gap: var(--spacing-base);
-
-
-
-
-
-	&.visible {
-		display: block;
-	}
-
-	.empty-state-inner-wrapper {
-		// max-width: 320px;
-		gap: var(--spacing-md);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.empty-state-icon-large {
-		width: 64px;
-		height: 64px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background-color: var(--color-bg-tertiary);
-		border-radius: var(--radius-md);
-		margin-bottom: var(--spacing-sm);
-
-		.icon {
-			width: 32px;
-			height: 32px;
-			color: var(--color-text-tertiary);
-		}
-	}
-
-	.empty-state-icon {
-		font-size: 48px;
-		margin-bottom: var(--spacing-md);
-		opacity: 0.3;
-		display: none;
-	}
-
-	.empty-state-text {
-		font-size: var(--font-size-md);
-		color: var(--color-text-primary);
-		font-weight: 600;
-	}
-
-	.empty-state-subtext {
-		font-size: var(--font-size-sm);
-		color: var(--color-text-tertiary);
-		line-height: 1.4;
-	}
-}
-
 // Full-panel empty states share one surface regardless of which section owns
 // them. Nested browser and form empty states keep their local variants.
 .section > .section-content > .empty-state {
@@ -1059,11 +980,6 @@
 	pointer-events: none;
 	will-change: filter;
 
-	// Drop-shadow on the parent follows the child's mask shape
-	&.selected {
-		// filter: url(#selection-glow) drop-shadow(0 0px 3px rgb(0, 0, 0));
-	}
-
 	// This matches your previous .glitter-background CSS
 	.glitter-background {
 		width: 100%;
@@ -1085,230 +1001,6 @@
 		}
 	}
 }
-
-
-
-.sticker-element {
-	position: absolute;
-	transform-origin: center;
-	pointer-events: auto;
-	will-change: transform;
-	pointer-events: auto !important;
-	touch-action: none;
-
-	&.dragging {
-		cursor: grabbing;
-		z-index: 1000 !important;
-		/* Bring selected sticker to very top */
-
-	}
-
-	img {
-		width: 100%;
-		height: 100%;
-		display: block;
-	}
-
-	&.pixelated img {
-		image-rendering: pixelated;
-	}
-}
-
-.text-glitter-element {
-	position: absolute;
-	transform-origin: center;
-	pointer-events: auto !important;
-	will-change: transform;
-	touch-action: none;
-	overflow: visible;
-}
-
-/* Local-space surface: sized to the mask canvas in text-local px and scaled by
-   a CSS transform (set from JS), so glyphs/padding/clip scale with the layer
-   exactly like the export path scales the rendered canvas. */
-.text-glitter-stack {
-	position: absolute;
-	top: 0;
-	left: 0;
-	transform-origin: 0 0;
-	pointer-events: none;
-}
-
-/* Selection/hover outline drawn at the text frame (--tf-* vars set from JS:
-   the box rect in Box mode, the visible ink bounds in Point mode) — not at the
-   padded wrapper, which is larger than the art. */
-.text-glitter-stack::after {
-	content: "";
-	position: absolute;
-	top: var(--tf-top, 0);
-	right: var(--tf-right, 0);
-	bottom: var(--tf-bottom, 0);
-	left: var(--tf-left, 0);
-	display: none;
-	pointer-events: none;
-}
-
-.text-glitter-content {
-	position: absolute;
-	inset: 0;
-	box-sizing: border-box;
-	background-repeat: repeat;
-	overflow: visible;
-	pointer-events: none;
-
-	&.pixelated {
-		image-rendering: pixelated;
-	}
-}
-
-.text-glitter-element {
-	&.selected > .text-glitter-stack::after {
-		display: block;
-		outline-width: max(1px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1)));
-		outline-style: dashed;
-		outline-color: var(--selected-outline-color);
-		outline-offset: min(-1px, calc(-2px / var(--zoom, 1) / var(--layer-scale, 1)));
-		box-shadow: 0 0 0 max(1px, calc(1px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5), 0 0 max(4px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5);
-	}
-
-	&.text-overflowing.selected > .text-glitter-stack::before {
-		content: "";
-		position: absolute;
-		right: calc(var(--tf-right, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
-		bottom: calc(var(--tf-bottom, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
-		width: 0;
-		height: 0;
-		border-left: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid transparent;
-		border-top: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid rgba(245, 158, 11, 0.95);
-		pointer-events: none;
-		z-index: 1;
-	}
-}
-
-// Shape layers (WP5b): structurally identical to text layers — a positioned
-// wrapper + a local-space stack of masked spans (shadow/border/fill) scaled by a
-// CSS transform. Mirrors .text-glitter-* so selection/scaling behave the same.
-.shape-glitter-element {
-	position: absolute;
-	transform-origin: center;
-	pointer-events: auto !important;
-	will-change: transform;
-	touch-action: none;
-	overflow: visible;
-}
-
-.shape-glitter-stack {
-	position: absolute;
-	top: 0;
-	left: 0;
-	transform-origin: 0 0;
-	pointer-events: none;
-}
-
-.shape-glitter-stack::after {
-	content: "";
-	position: absolute;
-	top: var(--tf-top, 0);
-	right: var(--tf-right, 0);
-	bottom: var(--tf-bottom, 0);
-	left: var(--tf-left, 0);
-	display: none;
-	pointer-events: none;
-}
-
-.shape-glitter-content {
-	position: absolute;
-	inset: 0;
-	box-sizing: border-box;
-	background-repeat: repeat;
-	overflow: visible;
-	pointer-events: none;
-
-	&.pixelated {
-		image-rendering: pixelated;
-	}
-}
-
-.shape-glitter-element.selected > .shape-glitter-stack::after {
-	display: block;
-	outline-width: max(1px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1)));
-	outline-style: dashed;
-	outline-color: var(--selected-outline-color);
-	outline-offset: min(-1px, calc(-2px / var(--zoom, 1) / var(--layer-scale, 1)));
-	box-shadow: 0 0 0 max(1px, calc(1px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5), 0 0 max(4px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) rgba(0, 0, 0, 0.5);
-}
-
-.shape-glitter-element.has-transform-handles {
-	pointer-events: none !important;
-}
-
-// Shape tool: crosshair cursor + the rubber-band size preview drawn during a drag.
-body.tool-shape {
-	.preview-container,
-	.preview-canvas,
-	#canvasElementsContainer {
-		cursor: crosshair;
-	}
-}
-
-.shape-drag-preview {
-	position: absolute;
-	border: 2px dashed var(--color-accent);
-	background: color-mix(in srgb, var(--color-accent) 18%, transparent);
-	// High-contrast outline so it reads on any canvas color.
-	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
-	pointer-events: none;
-	z-index: 200;
-}
-
-body.tool-select {
-	.sticker-element {
-		cursor: move;
-
-	}
-
-	.text-glitter-element {
-		cursor: move;
-
-		&:not(.selected):hover > .text-glitter-stack::after {
-			display: block;
-			outline: 1px dashed rgba(0, 0, 0, 0.25);
-			outline-offset: -1px;
-		}
-	}
-
-	.shape-glitter-element {
-		cursor: move;
-
-		&:not(.selected):hover > .shape-glitter-stack::after {
-			display: block;
-			outline: 1px dashed rgba(0, 0, 0, 0.25);
-			outline-offset: -1px;
-		}
-	}
-
-	// base image should have move cursor
-	.preview-canvas {
-		cursor: pointer;
-	}
-}
-
-.transform-hover-outline {
-	position: absolute;
-	box-sizing: border-box;
-	border: 1px dashed color-mix(in srgb, var(--selected-outline-color) 45%, transparent);
-	pointer-events: none;
-	z-index: var(--z-header-menu-elevated);
-}
-
-body.tool-text {
-	.preview-canvas,
-	.preview-wrapper {
-		cursor: crosshair;
-	}
-}
-
-
 .layer-swatch {
 
 	// ADD: Better sticker thumbnail rendering
@@ -1400,9 +1092,6 @@ body.tool-text {
 		--search-control-height: var(--control-height);
 		display: flex;
 		gap: var(--spacing-sm);
-		align-items: center;
-
-		display: flex;
 		align-items: stretch;
 
 		padding: var(--spacing-md);
@@ -1874,16 +1563,8 @@ body.tool-text {
 
 	}
 
-	&.hasImage {
-		.preview-canvas {
-			outline: 1px solid var(--gray-600);
-
-			&.selected {
-				@include selected();
-
-			}
-
-		}
+	&.hasImage>.preview-canvas:not(.selected) {
+		outline: 1px solid var(--gray-600);
 	}
 }
 
@@ -1994,11 +1675,7 @@ body.mask-editing {
 	@include floating-ui;
 
 	&.visible {
-		transform: translate(-50%, 0);
-		opacity: 1;
-		visibility: visible;
-		pointer-events: auto;
-		transition-delay: 0s;
+		@include floating-visible;
 	}
 
 	>.btn-icon {
@@ -2104,8 +1781,7 @@ body.mask-editing {
 	transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 
 	input[type="checkbox"] {
-		position: absolute;
-		opacity: 0;
+		@include visually-hidden-control;
 		pointer-events: none;
 	}
 
@@ -2240,7 +1916,7 @@ body.mask-editing {
 	box-shadow: 0 4px 12px var(--color-shadow-strong);
 	z-index: var(--z-drawer);
 	opacity: 0;
-	transition: all var(--transition-base);
+	transition: opacity var(--transition-base), transform var(--transition-base);
 
 	&.visible {
 		transform: translateX(-50%) translateY(0);
@@ -2312,250 +1988,6 @@ body.mask-editing {
 }
 
 
-.asset-options {
-	&[data-browser-state="category-list"] {
-		.asset-browser-header {
-			display: none;
-		}
-	}
-}
-
-.asset-options[data-browser-state="search-results"] .asset-browser-header {
-	background: var(--color-bg-accent-tint);
-	border-color: var(--color-accent-border);
-
-	>.asset-browser-title {
-		color: var(--color-accent);
-		text-transform: none;
-	}
-}
-
-
-
-
-/* ===== ASSET BROWSER ===== */
-.asset-browser {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	width: 100%;
-
-	&:not(.visible) {
-		display: none;
-	}
-
-	>.asset-browser-header {
-		display: flex;
-		position: sticky;
-		top: 0;
-		z-index: 2;
-		align-items: center;
-		gap: var(--spacing-sm);
-		padding: var(--spacing-sm) var(--spacing-md);
-		border-bottom: 1px solid var(--color-border);
-		background: var(--color-bg-secondary);
-
-		>button {
-
-
-			width: var(--icon-size-sm);
-			height: var(--icon-size-sm);
-			flex-shrink: 0;
-
-
-
-			&:disabled {
-				cursor: not-allowed;
-				opacity: 0.5;
-			}
-		}
-
-		>.asset-browser-title {
-			font-weight: 600;
-			font-size: var(--font-size-md);
-			color: var(--color-text-primary);
-			text-transform: uppercase;
-
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-
-		}
-	}
-
-
-
-	>.asset-browser-content {
-		flex: 1;
-		padding: var(--spacing-md);
-
-		// overflow-y: auto;
-
-
-		>.empty-state {
-			padding: var(--spacing-md);
-			border: 1px solid var(--color-border);
-			border-radius: var(--radius-md);
-			background-color: var(--color-bg-card);
-
-			.empty-state-text {
-				font-size: var(--font-size-sm);
-				color: var(--color-text-secondary);
-				text-align: center;
-			}
-
-			>.empty-state-clear-filters { margin-top: var(--spacing-md); }
-		}
-
-
-
-		>.empty-state,
-		>.category-grid,
-		>.asset-grid {
-			display: none;
-
-			&.visible {
-				display: grid;
-			}
-		}
-
-		>.category-grid {
-			grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-			gap: var(--spacing-sm);
-
-
-
-			>.category-card {
-				background: var(--color-bg-secondary);
-				border: 1px solid var(--color-border);
-				border-radius: var(--radius-md);
-				padding: var(--spacing-md);
-				cursor: pointer;
-				transition: all 0.2s ease;
-				display: flex;
-				flex-direction: column;
-				gap: var(--spacing-xs);
-
-				&:hover {
-					border-color: var(--category-color, var(--color-accent));
-					transform: translateY(-2px);
-					box-shadow: 0 4px 8px var(--color-shadow-soft);
-				}
-
-				>.category-card-image {
-					width: 100%;
-					aspect-ratio: 1;
-					border-radius: var(--radius-sm);
-					overflow: hidden;
-					background: var(--color-bg-tertiary);
-					display: flex;
-					align-items: center;
-					justify-content: center;
-
-					>img {
-						width: 100%;
-						height: 100%;
-						-o-object-fit: contain;
-						object-fit: contain;
-						image-rendering: pixelated;
-					}
-
-					&.category-card-glitter-bg {
-						background-repeat: repeat;
-						background-size: auto;
-						image-rendering: pixelated;
-					}
-
-
-				}
-
-				>.category-card-name {
-					font-weight: 600;
-					color: var(--color-text-primary);
-					text-align: center;
-					font-size: var(--font-size-sm);
-
-					white-space: nowrap;
-					overflow: hidden;
-					text-overflow: ellipsis;
-
-				}
-
-				>.category-card-count {
-					font-size: var(--font-size-xs);
-					color: var(--color-text-secondary);
-					text-align: center;
-				}
-			}
-		}
-
-		>.search-results-container {
-			display: none;
-			flex-direction: column;
-			gap: var(--spacing-md);
-
-
-			&.visible {
-				display: flex;
-			}
-
-			>.category-section {
-				display: flex;
-				flex-direction: column;
-				gap: var(--spacing-sm);
-
-				>.category-section-header {
-
-					/*
-					font-weight: 600;
-					font-size: var(--font-size-base);
-					color: var(--color-text-primary);
-					padding: var(--spacing-md) 0 var(--spacing-sm) 0;
-					border-bottom: 1px solid var(--color-border);
-					margin-bottom: var(--spacing-md);
-					*/
-
-					@include text-sm;
-					font-weight: 600;
-					color: var(--color-text-tertiary);
-					text-transform: uppercase;
-
-
-					&:not(:first-child) {
-						margin-top: var(--spacing-lg);
-					}
-				}
-			}
-		}
-	}
-
-	>.asset-browser-sentinel {
-		height: 1px;
-		visibility: hidden;
-	}
-}
-
-
-
-
-
-@media (max-width: 800px) {
-	.asset-browser {
-		>.asset-browser-content {
-			>.category-grid {
-				grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-			}
-		}
-	}
-}
-
-
-
-
-
-
-
-
 @keyframes blinker {
 	50% {
 		opacity: 0;
@@ -2567,26 +1999,18 @@ body.mask-editing {
 .helpful-message {
 	display: none;
 	position: absolute;
-	top: calc(44px + var(--spacing-md));
+	top: calc(var(--touch-target-min) + var(--spacing-md));
 	left: 50%;
 	transform: translateX(-50%);
 	max-width: 400px;
 	width: calc(100% - var(--spacing-xl));
-	z-index: 100;
-
 	align-items: flex-start;
 	gap: var(--spacing-sm);
 	padding: var(--spacing-md);
-
-
-
-
 	pointer-events: auto;
-	cursor: pointer; // Make it clear the entire thing is clickable
+	cursor: pointer;
 
 	@include mini-modal(true);
-
-
 
 	&.visible {
 		display: flex;
@@ -2674,14 +2098,13 @@ body.mask-editing {
 		font-size: var(--font-size-xs);
 		border-radius: var(--radius-sm);
 		cursor: pointer;
-		transition: all var(--transition-fast);
+		transition: background-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
 		white-space: nowrap;
-		pointer-events: auto; // Ensure button clicks work
+		pointer-events: auto;
 
 		outline: 1px solid transparent;
 
 		&:hover {
-			// background: var(--color-bg-secondary);
 			color: var(--color-text-primary);
 			outline: 1px solid var(--color-border-hover);
 		}
@@ -2702,21 +2125,15 @@ body.mask-editing {
 		align-items: center;
 		justify-content: center;
 		border-radius: var(--radius-sm);
-		transition: all var(--transition-fast);
-
-
-
+		transition: background-color var(--transition-fast), color var(--transition-fast);
 		&:hover {
 			background: var(--color-bg-secondary);
 			color: var(--color-text-primary);
 		}
 	}
-}
 
-// Mobile adjustments
-@media (max-width: 800px) {
-	.helpful-message {
-		top: calc(44px + var(--spacing-from-edge));
+	@media (max-width: 800px) {
+		top: calc(var(--touch-target-min) + var(--spacing-from-edge));
 		max-width: calc(70% - var(--spacing-lg) * 2);
 		min-width: 200px;
 
@@ -2725,9 +2142,7 @@ body.mask-editing {
 			justify-content: space-between;
 		}
 
-		.helpful-message-disable {
-			flex: 1;
-		}
+		.helpful-message-disable { flex: 1; }
 	}
 }
 
@@ -2976,147 +2391,6 @@ body.mask-editing {
 
 
 
-/* ===== ASSET INFO SECTION ===== */
-
-
-
-	.asset-info-header {
-		display: flex;
-		gap: var(--spacing-sm);
-		align-items: flex-start;
-
-
-		.asset-info-thumbnail {
-			width: 48px;
-			height: 48px;
-			border-radius: var(--radius-sm);
-			background: var(--color-bg-tertiary);
-			border: 1px solid var(--color-border);
-			flex-shrink: 0;
-			overflow: hidden;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			cursor: pointer;
-			transition: all 0.15s ease;
-
-			&:hover {
-				border-color: var(--color-accent);
-				transform: scale(1.05);
-			}
-
-			img {
-				width: 100%;
-				height: 100%;
-				-o-object-fit: contain;
-				object-fit: contain;
-				image-rendering: pixelated;
-			}
-
-			&.glitter-bg {
-				background-repeat: repeat;
-				background-size: auto;
-				image-rendering: pixelated;
-			}
-
-			&.base-image-thumbnail img {
-				object-fit: cover;
-				image-rendering: auto;
-			}
-		}
-
-		.asset-info-details {
-			flex: 1;
-			min-width: 0;
-			display: flex;
-			flex-direction: column;
-			gap: var(--spacing-xs);
-
-			.asset-info-name {
-				font-size: var(--font-size-sm);
-				font-weight: 600;
-				color: var(--color-text-primary);
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-			}
-
-			.asset-info-badges {
-				display: flex;
-				gap: var(--spacing-xs);
-				flex-wrap: wrap;
-
-				.asset-info-badge {
-					appearance: none;
-					display: inline-flex;
-					align-items: center;
-					gap: 4px;
-					padding: 2px 6px;
-					border-radius: var(--radius-xs);
-					font-size: 11px;
-					font-weight: 500;
-					line-height: 1.2;
-					font-family: inherit;
-
-					max-width: 200px;
-					overflow: hidden;
-					text-overflow: ellipsis;
-					white-space: nowrap;
-
-					&.badge-variable-fps {
-						background: rgba(245, 158, 11, 0.15);
-						color: rgb(251, 191, 36);
-						border: 1px solid rgba(245, 158, 11, 0.3);
-					}
-
-
-
-
-
-					&.badge-category {
-						background: var(--color-bg-tertiary);
-						color: var(--color-text-secondary);
-						cursor: pointer;
-						transition: all 0.15s ease;
-						border: 1px solid var(--color-border);
-
-						&:hover {
-							background: var(--color-bg-hover);
-							color: var(--color-text-primary);
-							border-color: var(--color-accent);
-						}
-					}
-
-					&.badge-animated {
-						background: rgba(147, 51, 234, 0.15);
-						color: rgb(196, 132, 255);
-						border: 1px solid rgba(147, 51, 234, 0.3);
-					}
-
-					&.badge-transparency {
-						background: rgba(59, 130, 246, 0.15);
-						color: rgb(147, 197, 253);
-						border: 1px solid rgba(59, 130, 246, 0.3);
-					}
-				}
-
-			}
-
-
-		}
-	}
-
-
-	.setting-value {
-		font-size: var(--font-size-sm);
-		color: var(--color-text-primary);
-		font-weight: 500;
-		font-variant-numeric: tabular-nums;
-	}
-
-
-
-
 #stickerSettingsControls {
 	display: none;
 
@@ -3196,7 +2470,7 @@ body.mask-editing {
 	outline: 1px solid var(--color-border);
 	outline-offset: 0px;
 	border-radius: var(--radius-sm);
-	transition: all var(--transition-fast);
+	transition: outline-color var(--transition-fast), outline-offset var(--transition-fast), outline-width var(--transition-fast);
 
 	&:hover {
 		outline-color: var(--color-border-hover);
@@ -3284,7 +2558,7 @@ body.mask-editing {
 	outline: 1px solid var(--color-border);
 	outline-offset: 0;
 	border-radius: var(--radius-sm);
-	transition: all var(--transition-fast);
+	transition: color var(--transition-fast), outline-color var(--transition-fast), outline-offset var(--transition-fast), outline-width var(--transition-fast);
 
 	&:hover {
 		outline-color: var(--color-border-hover);
@@ -3320,72 +2594,6 @@ body.mask-editing {
 	color: inherit;
 }
 
-// ===== Advanced disclosure (WP4) =====
-// Auto-collapsed section nested inside a settings group (Glitter Properties,
-// text/shape effect cards). Holds decluttered controls (Scale) plus per-swatch
-// color adjust. Toggled by app.initializeAdvancedDisclosures via .is-open.
-.advanced-disclosure {
-	display: flex;
-	flex-direction: column;
-	margin-top: var(--spacing-sm);
-	border-top: 1px solid var(--color-border);
-}
-
-.advanced-disclosure-toggle {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: var(--spacing-sm);
-	width: 100%;
-	padding: var(--spacing-sm) 0 0;
-	background: none;
-	border: none;
-	color: var(--color-text-secondary);
-	font: inherit;
-	font-size: var(--font-size-sm);
-	cursor: pointer;
-
-	&:hover {
-		color: var(--color-text-primary);
-	}
-}
-
-.advanced-disclosure-label {
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	font-size: 11px;
-	font-weight: 600;
-}
-
-.advanced-disclosure-chevron {
-	display: flex;
-	align-items: center;
-	transition: transform var(--transition-fast);
-
-	svg {
-		width: 14px;
-		height: 14px;
-		fill: currentColor;
-	}
-}
-
-.advanced-disclosure-content {
-	display: none;
-	flex-direction: column;
-	gap: var(--spacing-md);
-	padding-top: var(--spacing-sm);
-}
-
-.advanced-disclosure.is-open {
-	.advanced-disclosure-content {
-		display: flex;
-	}
-
-	.advanced-disclosure-chevron {
-		transform: rotate(180deg);
-	}
-}
-
 // ===== Canvas Size (Photoshop-style resize) =====
 .canvas-size-controls {
 	display: flex;
@@ -3397,32 +2605,6 @@ body.mask-editing {
 		margin-bottom: 0;
 	}
 }
-
-// Generic "number input with a unit suffix" atom. Reused anywhere a numeric
-// field needs a trailing unit (px, %, °): Canvas Size, the new-canvas dialog,
-// and the sticker/text Position fields. The suffix is absolutely positioned so
-// it overlays the input's right padding without affecting the input's own box.
-// `.input-unit input` reserves that padding; contexts with a higher-specificity
-// input rule (e.g. .sticker-position-group) must re-assert the padding-right.
-.input-unit {
-	position: relative;
-	display: flex;
-	align-items: center;
-
-	input {
-		width: 100%;
-		padding-right: 26px;
-	}
-}
-
-.input-unit-suffix {
-	position: absolute;
-	right: 8px;
-	font-size: 10px;
-	color: var(--color-text-secondary);
-	pointer-events: none;
-}
-
 
 // 3×3 anchor grid. The chosen cell is where existing content stays pinned as
 // the canvas grows/shrinks (Photoshop's Canvas Size anchor). Each cell shows a
@@ -3450,7 +2632,7 @@ body.mask-editing {
 	cursor: pointer;
 	font-size: 11px;
 	line-height: 1;
-	transition: all var(--transition-fast);
+	transition: background-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
 
 	&:hover {
 		outline-color: var(--color-border-hover);
@@ -3461,15 +2643,6 @@ body.mask-editing {
 		background: var(--color-accent);
 		outline-color: var(--color-accent);
 		color: var(--color-bg-primary);
-	}
-}
-
-.canvas-size-actions {
-	display: flex;
-	gap: var(--spacing-sm);
-
-	button {
-		flex: 1;
 	}
 }
 
@@ -3633,142 +2806,6 @@ body.mask-editing {
 	gap: var(--spacing-lg);
 }
 
-@keyframes inline-processing-spin {
-	to { transform: rotate(360deg); }
-}
-
-.inline-processing-status {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--spacing-xs);
-	min-width: 0;
-	color: var(--color-text-tertiary);
-	font-size: var(--font-size-xs);
-	font-weight: 500;
-	letter-spacing: normal;
-	line-height: 1;
-	text-transform: none;
-	visibility: hidden;
-	opacity: 0;
-	pointer-events: none;
-	transition: color var(--transition-fast), opacity var(--transition-fast);
-
-	&.is-active,
-	&.is-error {
-		visibility: visible;
-		opacity: 1;
-	}
-
-	&.is-error {
-		color: var(--color-warning);
-
-		.inline-processing-spinner { display: none; }
-	}
-}
-
-.inline-processing-spinner {
-	width: 12px;
-	height: 12px;
-	flex: 0 0 auto;
-	border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
-	border-top-color: currentColor;
-	border-radius: 50%;
-	animation: inline-processing-spin 700ms linear infinite;
-}
-
-.inline-processing-label {
-	min-width: 0;
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.inline-processing-spinner { animation: none; }
-}
-
-.effect-option-group {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-md);
-	min-width: 0;
-	width: 100%;
-}
-
-.effect-option-label {
-	font-size: var(--font-size-xs);
-	font-weight: 600;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--color-text-tertiary);
-}
-
-.effect-option-select {
-	width: 100%;
-	min-height: var(--control-height);
-	padding: var(--spacing-sm) var(--control-padding-inline);
-	border: 1px solid var(--color-border);
-	border-radius: var(--control-radius);
-	background: var(--color-bg-secondary);
-	color: var(--color-text-primary);
-	font-size: var(--font-size-sm);
-	transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
-
-	&:hover:not(:disabled) { border-color: var(--color-border-hover); }
-
-	&:focus-visible {
-		outline: none;
-		border-color: var(--color-accent);
-		box-shadow: var(--control-focus-ring);
-	}
-
-	&:disabled {
-		opacity: var(--disabled-opacity);
-		cursor: not-allowed;
-	}
-}
-
-.pixel-effects-card {
-	.pixel-effects-controls { margin-top: var(--spacing-sm); }
-
-	.pixel-effects-dither-controls {
-		flex-direction: column;
-		align-items: stretch;
-	}
-
-	.pixel-effects-duotone {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--spacing-sm);
-
-		.effect-option-group {
-			display: grid;
-			gap: var(--spacing-xs);
-		}
-	}
-}
-
-.pixel-effects-status {
-	flex: 0 1 120px;
-	min-width: 0;
-	margin-left: auto;
-	padding: 0;
-	overflow: hidden;
-	justify-content: flex-end;
-	text-align: right;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-}
-
-[data-panel-group="Effects"] > .subsection-title:has(> .pixel-effects-status) > .panel-group-chevron {
-	margin-left: 0;
-}
-
-.pixel-effects-actions > .btn-simple,
-.layer-effects-actions > .btn-simple {
-	width: 100%;
-}
-
 .transform-panel.is-aspect-locked {
 	.transform-scale-x { grid-column: 1 / -1; }
 	.transform-scale-y { display: none; }
@@ -3776,19 +2813,6 @@ body.mask-editing {
 
 // The glitter display reuses the shared .asset-info-* classes so it matches
 // Glitter Properties' Asset section exactly (thumbnail + name + badges + meta).
-.asset-info {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-md);
-
-		padding: var(--spacing-md);
-		background: var(--color-bg-card);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-
-
-}
-
 .asset-info-meta {
 	// Size / Frames sit below the header, mirroring Glitter Properties.
 	gap: var(--spacing-md);
@@ -3828,16 +2852,6 @@ body.mask-editing {
 
 	// The stops editor is one card: preview strip w/ draggable handles on top,
 	// then the per-stop rows and Add stop.
-	.gradient-stops-box {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-md);
-		padding: var(--spacing-md);
-		background: var(--color-bg-card);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-	}
-
 	.gradient-preview {
 		position: relative;
 		height: 28px;
@@ -4050,12 +3064,6 @@ body.mask-editing {
 		display: none;
 	}
 
-	// Picker mode: the armed destination earns the accent edge.
-	&.is-armed {
-		// border-left-color: var(--color-accent);
-		// box-shadow: inset 0 0 0 1px var(--color-accent-border);
-	}
-
 	// Browse-mode passive hint: quieter, no accent, no Done.
 	&.is-hint {
 		background: var(--color-bg-primary);
@@ -4108,10 +3116,7 @@ body.mask-editing {
 }
 
 .text-effect-color-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: var(--spacing-md);
+	@include spread-row;
 
 	input[type="color"] {
 		width: 56px;
@@ -4120,433 +3125,18 @@ body.mask-editing {
 
 
 
-/* Setting Headers (label + value pairs) */
-.setting-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	width: 100%;
-
-	>.setting-label {
-		@include text-sm;
-		color: var(--color-text-secondary);
-
-		position: relative;
-
-		&[data-tooltip] {
-			cursor: help;
-		}
-
-		+.setting-value {
-			@include text-sm;
-			color: var(--color-text-primary);
-		}
-	}
-
-
-}
-
-/* Shared settings card: works at any nesting depth. */
-.subsection-content-group {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-md);
-	padding: var(--spacing-md);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
-	background-color: var(--color-bg-card);
-
-	>.subsection-title {
-		@include text-sm;
-		font-weight: 600;
-		text-transform: uppercase;
-		color: var(--color-text-tertiary);
-		display: flex;
-		min-height: var(--control-height-compact);
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	&[data-collapsible-subsection]>.subsection-title {
-		cursor: pointer;
-
-		>.subsection-chevron {
-			width: 1rem;
-			height: 1rem;
-			transition: transform var(--transition-fast);
-		}
-	}
-
-	&[data-collapsible-subsection].is-collapsed {
-		>.subsection-title>.subsection-chevron { transform: rotate(-90deg); }
-		>:not(.subsection-title) { display: none; }
-	}
-
-	>.subsection-content {
-		display: flex;
-		gap: var(--spacing-md);
-		+.subsection-title { margin-top: var(--spacing-sm); }
-	}
-}
-
-/* Settings Subsections */
-.settings-subsection {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-md);
-
-	.layer-type-options>.layer-type-option {
-		background-color: var(--color-bg-primary);
-	}
-
-	>.transform-panel-host {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-md);
-	}
-
-	+.settings-subsection {
-		// margin-top: var(--spacing-md);
-	}
-
-}
-
 // Header controls (Enabled/Global/Proportional) cluster against the right
 // edge next to the collapse chevron instead of floating mid-title. Bare rule
 // on purpose: the effect cards (.text-effect-subsection) are nested, not
 // direct children of .settings-subsection, so the scoped rule above misses them.
-.subsection-title {
-	gap: var(--spacing-sm);
-
-	>.checkbox-group {
-		margin-left: auto;
-	}
-}
-
 // Schema effect cards share one enable contract. Disabled cards stay
 // collapsible; manually expanding one reveals its saved controls as an inert
 // preview, while enabling it expands the card and makes the controls live.
-.subsection-content-group[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)) {
-	&:not(.is-collapsed)>.text-effect-controls {
-		display: flex;
-	}
-
-	&:not(.is-collapsed)>:not(.subsection-title) {
-		opacity: var(--disabled-opacity);
-		pointer-events: none;
-	}
-}
-
-/* Two-column settings layout */
-.setting-header>.setting-label,
-.effect-option-label {
-	font-size: var(--font-size-xs);
-	font-weight: 600;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--color-text-tertiary);
-}
-
-.settings-group-two-column {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: var(--spacing-lg);
-	width: 100%;
-}
-
-.setting-column {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-sm);
-	width: 100%;
-
-	&.right {
-		align-items: flex-end;
-	}
-
-	button.btn-text {
-		text-align: right;
-		padding: var(--spacing-xs);
-		width: -moz-fit-content;
-		width: fit-content;
-		padding: 0;
-	}
-}
-
-/* Checkbox Groups */
-.checkbox-group {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--spacing-sm);
-	min-height: var(--control-height);
-	cursor: pointer;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	user-select: none;
-	position: relative;
-	color: var(--color-text-primary);
-	font-weight: initial;
-
-	>input[type="checkbox"] {
-		position: absolute;
-		opacity: 0;
-		width: 0;
-		height: 0;
-		margin: 0;
-		cursor: pointer;
-
-		&:checked+span {
-			background: var(--color-accent);
-			border-color: var(--color-accent-border);
-			color: #fff;
-		}
-
-		&:focus-visible+span {
-			box-shadow: var(--control-focus-ring);
-		}
-	}
-
-	>span {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		min-height: var(--control-height);
-		padding: 0 var(--spacing-base);
-		border: 1px solid var(--color-border);
-		border-radius: var(--control-radius);
-		background: transparent;
-		font-size: var(--font-size-xs);
-		font-weight: 600;
-		letter-spacing: 0.75px;
-		cursor: pointer;
-		text-transform: uppercase;
-		position: relative;
-		text-align: center;
-		color: var(--color-text-secondary);
-		transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
-	}
-
-	&:hover>span {
-		color: var(--color-text-primary);
-		background-color: var(--color-bg-tertiary);
-		border-color: var(--color-border-hover);
-	}
-
-	&:has(>input:disabled) {
-		opacity: var(--disabled-opacity);
-		cursor: not-allowed;
-
-		>span { cursor: not-allowed; }
-	}
-}
-
-.subsection-title .checkbox-group {
-	min-height: var(--control-height-compact);
-
-	>span {
-		min-height: var(--control-height-compact);
-		padding: 0 var(--spacing-sm);
-	}
-}
-
-.transform-panel .checkbox-group>span {
-	white-space: nowrap;
-}
 
 
 
 
 
-
-
-/* ===== WELCOME MODAL ===== */
-#welcomeModal {
-	.modal-hero-image {
-		background: url("../images/glitter/sparkle/glitter_rainbow.gif") repeat;
-	}
-
-	.center {
-		display: block;
-		margin: 0 auto;
-		text-align: center;
-	}
-
-	.welcome-example-wrapper {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: var(--spacing-md);
-		margin: var(--spacing-lg) 0;
-
-		>figure {
-			display: flex;
-			flex-direction: column;
-			min-width: 0;
-			border: 1px solid var(--color-border);
-			border-radius: var(--radius-sm);
-			background: var(--color-bg-tertiary);
-			padding: var(--spacing-md);
-
-			>img {
-				width: 100%;
-				height: 120px;
-				object-fit: contain;
-				image-rendering: pixelated;
-				display: block;
-			}
-
-			>figcaption {
-				margin-top: var(--spacing-md);
-				font-size: var(--font-size-sm);
-				line-height: 1.4;
-
-				>cite {
-					font-style: normal;
-					font-weight: 600;
-				}
-			}
-		}
-	}
-
-	.figure-wrapper+h3,
-	p+h3,
-	ol+h3,
-	ul+h3 { margin-top: var(--spacing-xl); }
-
-	p+p { margin-top: var(--spacing-md); }
-
-	h3+p,
-	h3+ol,
-	h3+ul,
-	ol+p,
-	ul+p,
-	p+ol,
-	p+ul { margin-top: var(--spacing-md); }
-
-	.welcome-actions {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap;
-		gap: var(--spacing-md);
-		margin-left: auto;
-		align-items: center;
-		justify-content: center;
-
-	}
-
-	.modal-footer {
-		justify-content: space-between;
-		flex-wrap: wrap;
-	}
-
-	.welcome-checkbox {
-		display: inline-flex;
-		align-items: center;
-		font-size: var(--font-size-sm);
-		cursor: pointer;
-		-webkit-user-select: none;
-		-moz-user-select: none;
-		user-select: none;
-
-		input[type="checkbox"] {
-			position: absolute;
-			opacity: 0;
-			width: 0;
-			height: 0;
-
-			&:checked+span {
-				color: var(--color-text-primary);
-				outline-color: var(--color-accent);
-				background: var(--color-bg-accent-tint);
-			}
-
-			&:focus-visible+span { box-shadow: var(--control-focus-ring); }
-		}
-
-		>span {
-			display: inline-flex;
-			align-items: center;
-			min-height: var(--control-height);
-			padding: 0 var(--spacing-md);
-			border-radius: var(--radius-sm);
-			background: var(--color-bg-tertiary);
-			color: var(--color-text-secondary);
-			outline: 1px solid transparent;
-			transition: color var(--transition-fast), background-color var(--transition-fast), outline-color var(--transition-fast);
-
-			&:hover {
-				color: var(--color-text-primary);
-				outline-color: var(--color-border-hover);
-			}
-		}
-	}
-}
-
-@media (max-width: 800px) {
-	#welcomeModal {
-		.welcome-example-wrapper {
-			gap: var(--spacing-sm);
-
-			>figure {
-				padding: var(--spacing-sm);
-
-				>img { height: 86px; }
-			}
-		}
-
-		.modal-footer {
-			flex-direction: column;
-			align-items: center;
-		}
-
-		.welcome-actions {
-			order: 1;
-			width: 100%;
-			margin-left: 0;
-
-			>button {
-				flex: 1 1 0;
-				justify-content: center;
-				min-width: 0;
-				min-height: 44px;
-				flex-shrink: 0;
-			}
-		}
-
-		.welcome-checkbox {
-			order: 2;
-			align-self: center;
-		}
-	}
-}
-
-@media (max-width: 420px) {
-	#welcomeModal .welcome-actions {
-		flex-direction: column;
-
-		>button {
-			width: 100%;
-		}
-	}
-}
-
-@media (max-width: 800px) {
-	#confirmationModal {
-		.modal-content {
-			width: min(420px, calc(100vw - 24px));
-		}
-
-		.modal-footer {
-			flex-direction: column-reverse;
-			align-items: stretch;
-
-			>button {
-				width: 100%;
-				min-height: 48px;
-			}
-		}
-	}
-}
 
 // Collapsed panel groups are a state boundary. Keep this after every generated
 // transform-host layout rule so themes and host normalization cannot reopen it.
@@ -4627,8 +3217,7 @@ body.mask-editing {
 		justify-content: center;
 
 		> input {
-			position: absolute;
-			opacity: 0;
+			@include visually-hidden-control;
 			pointer-events: none;
 		}
 
@@ -4740,11 +3329,7 @@ body.mask-editing {
 	&[hidden] { display: none; }
 
 	&.visible {
-		transform: translate(-50%, 0);
-		opacity: 1;
-		visibility: visible;
-		pointer-events: auto;
-		transition-delay: 0s;
+		@include floating-visible;
 	}
 
 	> .icon-wrapper {

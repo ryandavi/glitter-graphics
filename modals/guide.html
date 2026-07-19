@@ -23,6 +23,14 @@
                 <li><a href="#working-with-layers">Working with Layers</a></li>
                 <li><a href="#selection-alignment">Selection &amp; Alignment</a></li>
                 <li><a href="#canvas-view-options">Canvas View Options</a></li>
+                <li><a href="#mobile">Mobile</a></li>
+            </ol>
+        </li>
+        <li>
+            <a href="#effects">Effects</a>
+            <ol>
+                <li><a href="#canvas-effects">Canvas Effects</a></li>
+                <li><a href="#auto-glitter">Auto Glitter</a></li>
             </ol>
         </li>
         <li>
@@ -59,13 +67,13 @@
             <a href="#export">Export</a>
             <ol>
                 <li><a href="#exporting-process">Exporting</a></li>
+                <li><a href="#instagram-story">Use an Export in an Instagram Story</a></li>
             </ol>
         </li>
         <li>
             <a href="#etcetera">Etcetera</a>
             <ol>
                 <li><a href="#tips">Tips</a></li>
-				<li><a href="#instagram-story">Use an Export in an Instagram Story</a></li>
             </ol>
         </li>
     </ol>
@@ -95,7 +103,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    Drag an image onto the dropzone — or click it to browse — to load one (PNG, JPG, or GIF).
+                    <p><strong>Load an image</strong> – Drag an image onto the dropzone, or click it to browse (PNG, JPG, or GIF).</p>
                     <ul>
                         <li>This becomes your <strong>Base Image</strong> – the foundation of your canvas for glitter effects and stickers.</li>
 						<li>If your image is larger than 1024<span class="setting-separator"> × </span>1024<span class="setting-unit">px</span>, it will be resized to fit the constraints.</li>
@@ -113,7 +121,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    No image? Click <strong>New Blank Canvas</strong> to start from an empty canvas instead — choose its width, height, and background color.
+                    <p><strong>Start blank</strong> – Click <strong>New Blank Canvas</strong> to begin with an empty canvas, then choose its width, height, and background color.</p>
                 </div>
             </div>
 
@@ -126,8 +134,13 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Have a saved project? Click <strong>Open Project</strong> in the welcome screen, or drag a <strong>.json</strong> project file onto the main dropzone to restore it.</p>
-					<p><strong>Project preflight</strong> – Before replacing the current project, Glitter reports unavailable stickers or fonts, unknown layer types, and files created by a newer editor version. You can review substitutions or skipped content before choosing <strong>Open Anyway</strong>. When opening a newer file, avoid overwriting the original because unsupported data may be lost when saving.</p>
+                    <p><strong>Open a project</strong> – Click <strong>Open Project</strong> in the welcome screen, or drag a <strong>.json</strong> project file onto the main dropzone to restore it.</p>
+                    <p><strong>Project preflight</strong> – Before replacing the current project, Glitter checks it and reports:</p>
+                    <ul>
+                        <li>Unavailable stickers or fonts, and unknown layer types.</li>
+                        <li>Files created by a newer editor version.</li>
+                    </ul>
+                    <p>Review any substitutions or skipped content before choosing <strong>Open Anyway</strong>. When opening a newer file, avoid overwriting the original — unsupported data may be lost when saving.</p>
                 </div>
             </div>
 
@@ -140,29 +153,13 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <strong>Edit the canvas background</strong> by selecting the protected <strong>Base Image</strong> layer. In <strong>Canvas Properties</strong>, choose Image, Transparent, Glitter, Solid, or Gradient, replace the image without disturbing other layers, or use <strong>Canvas Size</strong> to enter new dimensions and pick an anchor. Your content keeps its size and position while the canvas is cropped or extended around it. A live outline previews new bounds, and the changes can be undone.
+                    <p><strong>Edit the canvas</strong> – Select the protected <strong>Base Image</strong> layer to open <strong>Canvas Properties</strong>.</p>
+                    <ul>
+                        <li><strong>Background</strong> – Choose Image, Transparent, Glitter, Solid, or Gradient, or replace the image without disturbing other layers.</li>
+                        <li><strong>Canvas Size</strong> – Enter new dimensions and pick an anchor. Your content keeps its size and position while the canvas is cropped or extended around it; a live outline previews the new bounds, and the change can be undone.</li>
+                    </ul>
                 </div>
             </div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
-				</div>
-				<div class="guide-item-content">
-					<p><strong>Effects</strong> are non-destructive properties. Each Pixelate, Palette, Border, or Shadow card has its own <strong>Enabled</strong> option, so an effect can be bypassed without losing its settings. <strong>Reset Effects</strong> disables every effect for the selected canvas or layer and clears those saved settings. Canvas effects use the fixed <strong>Pixelate → Palette → Color Adjust → Opacity</strong> pipeline: Pixelate creates crisp mosaic cells, then Palette can flatten connected regions with Posterize or approximate the colors with Dither.</p>
-					<p>Posterize offers generated Colors plus an optional Cleanup disclosure for Detail and Clean Edges. Dither offers deterministic Bayer, Floyd–Steinberg, Atkinson, and angled Halftone looks using an Auto, black-and-white, Game Boy, CGA, sepia, or custom Duotone palette. Strength controls the pattern. For Bayer and Halftone, Shimmer offsets that pattern across frames to create living grain in the live preview and exported GIF; it can increase export size. Unlike Auto Glitter, these effects remain one editable Base Image treatment and never create layers.</p>
-				</div>
-			</div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-palette"></use></svg></span>
-				</div>
-				<div class="guide-item-content">
-					<p>Leaving Auto Glitter before creating its layers asks for confirmation. The Design gallery stays in an instructional empty state until you select a swatch in Color Matches; while that picker is open, the chosen glitter updates only that match.</p>
-					<strong>Auto Glitter</strong> is available when Canvas Background is set to <strong>Image</strong> and opens an <strong>Auto Glitter</strong> panel that previews real animated glitter directly on the canvas. A compact <strong>Auto Glitter Mode</strong> strip above the navigation controls identifies the temporary mode, shows status only while analyzing, updating, or reporting an error, and provides <strong>Exit</strong> to discard it. Auto Glitter temporarily switches to the <strong>Hand</strong> tool; Hand, Zoom, mouse-wheel navigation, Space-drag, and touch pan/pinch remain available, while layer selection, undo/redo, and editing tools stay locked until the preview is created or discarded. Switch <strong>Original / Flat / Glitter</strong> at the fixed top of the panel to compare the source, posterized colors, and final animated fills; the create and cancel actions stay fixed at the bottom while Palette, Color Matches, and <strong>Advanced</strong> scroll between them. The <strong>Colors</strong> and <strong>Combine Similar</strong> controls update the live result without repeating the expensive image scan. <strong>Vibrant</strong> prioritizes colorful accents and combines more neutral shades, <strong>Balanced</strong> keeps more light and shadow structure, and <strong>Natural</strong> stays closer to the photo's color distribution. Use <strong>Advanced</strong> to change minimum region detail, clean anti-aliased edges and dither noise, or disable matched-glitter hue tuning. Select a match swatch to open the Design gallery; gallery choices update the live preview in place, and <strong>Done</strong> returns to Auto Glitter. Use a match's eye button to skip that color, or drag one color row onto another to combine them; on touch devices, drag with the row handle. <strong>Cancel</strong>, <strong>Exit</strong>, Escape, replacing the Base Image, or leaving the panel discards the live batch. <strong>Create N Layers</strong> commits it as normal editable Glitter Fill layers while transparent image areas stay transparent and the Base Image remains unchanged, then restores the previous tool. Active Canvas Effects are turned off after creation to avoid processing the covered Base Image during export; their settings are preserved and the status bar reports the change. A rerun can replace the latest generated set or keep it and add another; edited generated layers default to the safer keep-and-add choice.
-				</div>
-			</div>
         </div>
     </div>
 
@@ -197,12 +194,7 @@
                         <li>Center layer horizontally</li>
                         <li>Center layer vertically</li>
                     </ul>
-                    <ul>
-                        <li>On the canvas, hold <kbd class="guide-kbd">Shift</kbd> and click to add or remove a movable layer.</li>
-						<li>In the Layers panel, <kbd class="guide-kbd">Shift</kbd>-click selects the full range between two layers; <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Click</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Click</kbd></span> toggles any layer, including Glitter Fill, locked, and Base Image layers.</li>
-						<li>Locked layers can be selected and inspected. A multi-selection can only move, align, resize, or rotate when every selected layer is an unlocked Sticker, Text, or Shape. Layer actions remain available when every selected layer permits that action.</li>
-                        <li>Hold <kbd class="guide-kbd">Alt</kbd> and click to cycle through overlapping layers under the pointer.</li>
-                    </ul>
+                    <p>For multi-layer selection, cycling, and range-select, see <a href="#selection-alignment">Selection &amp; Alignment</a>.</p>
                 </div>
             </div>
 
@@ -217,7 +209,7 @@
                 <div class="guide-item-content">
                     <p><strong>Hand Tool (<kbd class="guide-kbd">H</kbd>)</strong> – Click and drag to pan around the canvas. Hold <kbd class="guide-kbd">Space</kbd> to use the Hand tool temporarily, then release it to return to the previous tool.</p>
                     <ul>
-                        <li>On touch devices, use one or two fingers to pan from any tool; the separate Hand tool is hidden because it is redundant.</li>
+                        <li><strong>Touch</strong> – Use one or two fingers to pan from any tool; the separate Hand tool is hidden because it is redundant.</li>
                     </ul>
 
 
@@ -302,14 +294,14 @@
                 <div class="guide-item-content">
                     <p><strong>Zoom Tool (<kbd class="guide-kbd">Z</kbd>)</strong> – To zoom in, click the canvas.</p>
                     <ul>
-                        <li>On touch devices, use two-finger pinch to zoom.</li>
-                        <li>On trackpads, hold <kbd class="guide-kbd">Ctrl</kbd> and use the wheel gesture to zoom smoothly.</li>
+                        <li><strong>Touch</strong> – Two-finger pinch to zoom.</li>
+                        <li><strong>Trackpad</strong> – Hold <kbd class="guide-kbd">Ctrl</kbd> and use the wheel gesture to zoom smoothly.</li>
                     </ul>
 
 
                     <p>Context toolbar zoom options:</p>
                     <ul>
-						<li>Double-click the status-bar zoom percentage to reset zoom to 100<span class="setting-unit">%</span></li>
+						<li><strong>Reset</strong> – Double-click the status-bar zoom percentage to reset zoom to 100<span class="setting-unit">%</span>.</li>
                         <li><strong>Fit</strong> – Zoom to fit the entire image on screen</li>
                         <li><strong>Fill</strong> – Zoom to fill screen with image</li>
                     </ul>
@@ -345,30 +337,46 @@
                 <div class="guide-item-content">
                     <p>Drag layers up/down to reorder them (top layers appear in front).</p>
                     <ul>
-                        <li>On touch devices, use the handles to drag layers.</li>
+                        <li><strong>Touch</strong> – Use the handles to drag layers.</li>
                     </ul>
                 </div>
             </div>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-move"></use>
-                        </svg>
-                    </span>
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-move"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Sticker, text, and shape layers have transform handles: drag inside the box to move, use corner handles to resize or scale, and use the top handle to rotate. Side handles scale stickers and shapes along one axis. For text, Point mode handles scale the text while Box mode handles resize the text box without changing the type size.</p>
+                    <p><strong>Move, resize &amp; rotate.</strong> Drag inside the box to move, use the corner handles to resize or scale, and use the top handle to rotate. Side handles scale stickers and shapes along one axis. For text, Point mode handles scale the text while Box mode handles resize the frame without changing the type size.</p>
                     <ul>
-						<li>Hold <kbd class="guide-kbd">Shift</kbd> while rotating — with the handle or the Rotation slider — to snap to 15<span class="setting-unit">°</span> increments.</li>
-						<li>Hold <kbd class="guide-kbd">Shift</kbd> while dragging to axis-lock movement. The Transform card also gives exact X/Y, W/H, rotation, opacity, alignment, flip, and reset controls. Arrow keys nudge the selected layer (<kbd class="guide-kbd">Shift</kbd> = 10<span class="setting-unit">px</span>).</li>
-						<li>When <strong>Lock Aspect</strong> is enabled, corner handles and the circular middle edge handles preserve the layer's current aspect ratio.</li>
-                        <li>The X/Y/W/H fields support keyboard stepping too: use <kbd class="guide-kbd">↑</kbd> or <kbd class="guide-kbd">↓</kbd> for 1<span class="setting-unit">px</span> changes, or hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span> steps.</li>
+                        <li><strong>Rotation snapping</strong> – Hold <kbd class="guide-kbd">Shift</kbd> while rotating (with the handle or the Rotation slider) to snap to 15<span class="setting-unit">°</span> increments.</li>
+                        <li><strong>Axis-lock</strong> – Hold <kbd class="guide-kbd">Shift</kbd> while dragging to constrain movement to one axis.</li>
+                        <li><strong>Lock Aspect</strong> – When enabled, the corner and circular middle-edge handles preserve the layer's current aspect ratio.</li>
                     </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Transform card.</strong> Enter exact X/Y, W/H, rotation, and opacity, plus alignment, flip, and reset controls.</p>
                     <ul>
-                        <li>When multiple movable layers are selected, a shared bounding box appears. Drag inside it to move the group, or use the corner handles to scale the group uniformly.</li>
-                        <li>On touch, taps still select the topmost layer. To add or remove layers from the selection, use the layer list, then move or pinch the shared group box on the canvas.</li>
+                        <li><strong>Nudge</strong> – Arrow keys move the selected layer by 1<span class="setting-unit">px</span> (hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span>).</li>
+                        <li><strong>Field stepping</strong> – The X/Y/W/H fields step with <kbd class="guide-kbd">↑</kbd>/<kbd class="guide-kbd">↓</kbd> (1<span class="setting-unit">px</span>), or hold <kbd class="guide-kbd">Shift</kbd> for 10<span class="setting-unit">px</span>.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-move"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Multiple layers.</strong> When several movable layers are selected, a shared bounding box appears — drag inside it to move the group, or use the corner handles to scale it uniformly. See <a href="#selection-alignment">Selection &amp; Alignment</a> for building a selection.</p>
+                    <ul>
+                        <li><strong>Touch</strong> – Taps select the topmost layer; add or remove layers from the Layers panel, then move or pinch the shared group box on the canvas.</li>
                     </ul>
                 </div>
             </div>
@@ -428,8 +436,41 @@
 
         <div class="guide-subsection">
             <h4 id="selection-alignment">Selection &amp; Alignment</h4>
-			<p><strong>Selection:</strong> Drag on empty canvas to marquee-select layers; hold <kbd class="guide-kbd">Shift</kbd> while dragging to add to the selection. On the canvas, <kbd class="guide-kbd">Shift</kbd>-click toggles a layer under the pointer. In the Layers panel, <kbd class="guide-kbd">Shift</kbd>-click selects the entire range and <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Click</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Click</kbd></span> toggles any layer, including locked, Base Image, and Glitter Fill layers. A selection containing one of those protected or non-transformable layers stays selectable but cannot move as a group. Use <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">A</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">A</kbd></span> to select every movable layer, <kbd class="guide-kbd">Escape</kbd> to clear a multi-selection, and hold <kbd class="guide-kbd">Alt</kbd> while dragging to duplicate layers. Hold <kbd class="guide-kbd">Alt</kbd> while clicking to cycle overlapping layers.</p>
-			<p><strong>Editing shortcuts:</strong> Double-click a text layer to focus its text field, or double-click a layer name to rename it. Use <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">D</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">D</kbd></span> to duplicate the selection. Hold <kbd class="guide-kbd">Space</kbd> to pan temporarily. Hold <kbd class="guide-kbd">Alt</kbd> while resizing to scale from the center. <kbd class="guide-kbd">Escape</kbd> closes active pickers or cancels an active transform before clearing selection. Use <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Y</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Y</kbd></span> or <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span> to redo.</p>
+			<p>Work with several layers at once, and use shortcuts to speed up common edits.</p>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-hand-pointer"></use></svg></span>
+				</div>
+				<div class="guide-item-content">
+					<p><strong>Making a selection</strong></p>
+					<ul>
+						<li><strong>Marquee</strong> – Drag on empty canvas to select the layers it touches. Hold <kbd class="guide-kbd">Shift</kbd> while dragging to add to the current selection.</li>
+						<li><strong>On the canvas</strong> – <kbd class="guide-kbd">Shift</kbd>-click toggles a layer under the pointer; hold <kbd class="guide-kbd">Alt</kbd> and click to cycle through overlapping layers.</li>
+						<li><strong>In the Layers panel</strong> – <kbd class="guide-kbd">Shift</kbd>-click selects the whole range; <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Click</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Click</kbd></span> toggles any single layer, including locked, Base Image, and Glitter Fill layers.</li>
+						<li><span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">A</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">A</kbd></span> selects every movable layer; <kbd class="guide-kbd">Escape</kbd> clears the selection.</li>
+					</ul>
+					<p>A selection that includes a protected or non-transformable layer — locked, Base Image, or Glitter Fill — stays selectable but cannot move as a group.</p>
+				</div>
+			</div>
+
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+				</div>
+				<div class="guide-item-content">
+					<p><strong>Editing shortcuts</strong></p>
+					<ul>
+						<li><strong>Duplicate</strong> – Hold <kbd class="guide-kbd">Alt</kbd> while dragging, or use <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">D</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">D</kbd></span>.</li>
+						<li><strong>Scale from center</strong> – Hold <kbd class="guide-kbd">Alt</kbd> while resizing.</li>
+						<li><strong>Edit or rename</strong> – Double-click a text layer to edit its copy, or double-click a layer name to rename it.</li>
+						<li><strong>Pan</strong> – Hold <kbd class="guide-kbd">Space</kbd> temporarily.</li>
+						<li><strong>Escape</strong> – Closes an open picker or cancels an in-progress transform before it clears the selection.</li>
+						<li><strong>Undo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Z</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Z</kbd></span>.</li>
+						<li><strong>Redo</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Y</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Y</kbd></span> or <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Shift</kbd><kbd class="guide-kbd">Z</kbd></span>.</li>
+					</ul>
+				</div>
+			</div>
 			<div class="guide-item">
 				<div class="guide-item-icon">
 					<span class="icon-wrapper sm">
@@ -447,8 +488,20 @@
 					</ul>
 				</div>
 			</div>
-			<p><strong>Sticker effects:</strong> Use <strong>Change</strong> in the Asset card to choose another sticker. Sticker Properties includes an optional Shadow paint slot with the same controls as the text and shape slots — glitter (with its own swatch and Advanced Hue/Saturation/Brightness), solid color, or gradient sources. Under <strong>Actions</strong>, use <strong>Fit canvas</strong> to scale and center a sticker so it fits fully inside the canvas, or <strong>Fill canvas</strong> to cover the canvas completely.</p>
-            <p><strong>Multi-layer Align:</strong> Choose Selection or Canvas, then align left/center/right or top/middle/bottom. With three or more layers, distribute them horizontally or vertically. Duplicate and Delete are under Actions.</p>
+			<div class="guide-item">
+				<div class="guide-item-icon">
+					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-move"></use></svg></span>
+				</div>
+				<div class="guide-item-content">
+					<p><strong>Align &amp; distribute</strong></p>
+					<ul>
+						<li>Pick <strong>Selection</strong> or <strong>Canvas</strong> as what to align to.</li>
+						<li>Align left / center / right, or top / middle / bottom.</li>
+						<li>With three or more layers, distribute them horizontally or vertically.</li>
+						<li>Duplicate and Delete are under <strong>Actions</strong>.</li>
+					</ul>
+				</div>
+			</div>
         </div>
 
         <div class="guide-subsection">
@@ -491,6 +544,230 @@
                 </div>
                 <div class="guide-item-content">
                     <p><strong>Show Only Selected Layer</strong> – Temporarily isolate the selected layer on the canvas. Click again to show every visible layer. This changes only the canvas view, not the export or layer visibility settings.</p>
+                </div>
+            </div>
+        </div>
+        <div class="guide-subsection">
+            <h4 id="mobile">Mobile</h4>
+            <p>On phones and tablets, the desktop panels become drawers and a bottom sheet.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Drawers</strong> – Three tabs hold what the desktop panels show:</p>
+                    <ul>
+                        <li><strong>Design</strong> – The gallery of glitter, stickers, and shapes.</li>
+                        <li><strong>Layers</strong> – Stacking order and selection.</li>
+                        <li><strong>Edit</strong> – Properties for the active layer.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Edit sheet</strong> – Drag the sheet's handle to expand it, or swipe down to close.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Gestures</strong> – Pan with one or two fingers from any tool, and pinch to zoom. Drag layers by their handles in the Layers drawer; a tap selects the topmost layer.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>App Settings</strong> – The header gear button. <strong>Clear All</strong> is in the Layers drawer action bar.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- EFFECTS -->
+    <div class="guide-section">
+        <h3 id="effects">
+            <span class="icon-wrapper">
+                <svg class="icon">
+                    <use href="#icon-magic-wand"></use>
+                </svg>
+            </span>
+            Effects
+        </h3>
+
+        <div class="guide-subsection">
+            <h4 id="canvas-effects">Canvas Effects</h4>
+            <p><strong>Effects</strong> are non-destructive — turning one off keeps its settings, and each card has its own <strong>Enabled</strong> toggle. There are two kinds:</p>
+            <ul>
+                <li><strong>Canvas effects</strong> apply to the whole Base Image — the <strong>Pixelate</strong> and <strong>Palette</strong> pipeline described below.</li>
+                <li><strong>Layer effects</strong> apply to a single layer — the <strong>Border</strong> and <strong>Shadow</strong> on Sticker, Text, and Shape layers, covered in each layer's own section.</li>
+            </ul>
+            <p><strong>Reset Effects</strong> disables every effect on the selected canvas or layer and clears those saved settings. Canvas effects run in a fixed pipeline, each stage feeding the next:</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Pixelate → Palette → Color Adjust → Opacity</strong></p>
+                    <ul>
+                        <li><strong>Pixelate</strong> – Groups pixels into crisp mosaic cells.</li>
+                        <li><strong>Palette</strong> – Reduces colors, either by flattening connected regions with <strong>Posterize</strong> or approximating them with <strong>Dither</strong>.</li>
+                        <li><strong>Color Adjust</strong> – Shifts hue, saturation, and brightness.</li>
+                        <li><strong>Opacity</strong> – Fades the whole treated image.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Posterize</strong> – Flattens the image into a set number of solid color regions.</p>
+                    <ul>
+                        <li><strong>Colors</strong> – How many colors the palette is reduced to.</li>
+                        <li><strong>Cleanup</strong> – An optional disclosure with <strong>Detail</strong> and <strong>Clean Edges</strong> to tidy small specks and jagged region boundaries.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Dither</strong> – Approximates colors with a repeating pattern instead of flat regions. Pick a pattern style and a palette, then use <strong>Strength</strong> to control how pronounced the pattern is.</p>
+                    <p><strong>Pattern styles:</strong></p>
+                    <ul>
+                        <li><strong>Bayer</strong> – Ordered, grid-like dot matrix.</li>
+                        <li><strong>Floyd–Steinberg</strong> – Diffused, photographic grain.</li>
+                        <li><strong>Atkinson</strong> – Lighter diffusion with more contrast.</li>
+                        <li><strong>Halftone</strong> – Angled dots, like print screening.</li>
+                    </ul>
+                    <p><strong>Palettes:</strong></p>
+                    <ul>
+                        <li><strong>Auto</strong> – Colors sampled from your own image.</li>
+                        <li><strong>Black &amp; White</strong> – Pure black and white, two-tone.</li>
+                        <li><strong>Game Boy</strong> – The four shades of olive green from the original 1989 Game Boy's screen.</li>
+                        <li><strong>CGA</strong> – A vivid 1980s PC-graphics look, built from that era's high-contrast four-color sets (such as black, cyan, magenta, and white).</li>
+                        <li><strong>Sepia</strong> – Warm brown tones, like an aged photograph.</li>
+                        <li><strong>Duotone</strong> – A custom two-color pair you pick.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Shimmer</strong> – For the <strong>Bayer</strong> and <strong>Halftone</strong> patterns, offsets the pattern across frames to create living grain in both the live preview and the exported GIF. It can increase export size.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Unlike <a href="#auto-glitter">Auto Glitter</a>, these effects stay a single editable Base Image treatment and never create layers.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="auto-glitter">Auto Glitter</h4>
+            <p><strong>Auto Glitter</strong> scans your base image and turns its colors into real animated glitter fills. It is available when <strong>Canvas Background</strong> is set to <strong>Image</strong>, and opens the <strong>Auto Glitter</strong> panel, which previews live animated glitter directly on the canvas.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-hand"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>A temporary mode.</strong> While Auto Glitter is active, a compact <strong>Auto Glitter Mode</strong> strip sits above the navigation controls to mark the temporary mode. It shows status only while analyzing, updating, or reporting an error, and offers <strong>Exit</strong> to discard the session.</p>
+                    <ul>
+                        <li><strong>Navigation stays available</strong> – The tool switches to <strong>Hand</strong>; Hand, Zoom, mouse-wheel, <kbd class="guide-kbd">Space</kbd>-drag, and touch pan/pinch all work.</li>
+                        <li><strong>Editing is locked</strong> – Layer selection, undo/redo, and the editing tools stay locked until you create or discard the preview.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-eye"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Compare the result.</strong> Switch <strong>Original / Flat / Glitter</strong> at the top of the panel to compare the source image, the flattened posterized colors, and the final animated fills. The create and cancel actions stay pinned at the bottom while <strong>Palette</strong>, <strong>Color Matches</strong>, and <strong>Advanced</strong> scroll between them.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-palette"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Palette.</strong> <strong>Colors</strong> and <strong>Combine Similar</strong> update the live result instantly, without repeating the expensive image scan. Choose an overall look:</p>
+                    <ul>
+                        <li><strong>Vibrant</strong> – Prioritizes colorful accents and combines more neutral shades.</li>
+                        <li><strong>Balanced</strong> – Keeps more light and shadow structure.</li>
+                        <li><strong>Natural</strong> – Stays closest to the photo's color distribution.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Color Matches.</strong> Each detected color appears as a match. Select a match swatch to open the Design gallery — gallery choices update the live preview in place, and <strong>Done</strong> returns to Auto Glitter. Until you pick a swatch, the gallery stays in an instructional empty state; while its picker is open, your choice updates only that one match.</p>
+                    <ul>
+                        <li><strong>Skip a color</strong> – Use a match's eye button to leave that color out.</li>
+                        <li><strong>Combine colors</strong> – Drag one color row onto another. On touch devices, drag with the row handle.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Advanced.</strong> Open <strong>Advanced</strong> to change the minimum region detail, clean up anti-aliased edges and dither noise, or turn off matched-glitter hue tuning.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-plus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Create N Layers</strong> commits the preview as normal, editable Glitter Fill layers. Transparent areas of the image stay transparent, the Base Image is left unchanged, and your previous tool is restored.</p>
+                    <ul>
+                        <li><strong>Canvas Effects</strong> – Any active canvas effects are turned off after creation, so the covered Base Image isn't processed during export. Their settings are preserved and the status bar notes the change.</li>
+                        <li><strong>Re-running</strong> – Auto Glitter can replace the latest generated set or keep it and add another. If you have edited the generated layers, it defaults to the safer keep-and-add.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Discarding.</strong> <strong>Cancel</strong>, <strong>Exit</strong>, <kbd class="guide-kbd">Escape</kbd>, replacing the Base Image, or leaving the panel discards the live preview. Leaving before the layers are created asks for confirmation first.</p>
                 </div>
             </div>
         </div>
@@ -725,7 +1002,7 @@
                 <div class="guide-item-content">
                     <p><strong>Shape</strong>, <strong>Size</strong>, <strong>Softness</strong>, <strong>Flow</strong>, <strong>Spacing</strong>, and <strong>Smoothing</strong> – Pick the brush tip (round, square, calligraphy, star, or heart), then set its diameter, edge feathering, how much glitter builds up per stroke, how far apart the stamps sit along the stroke, and how much shaky strokes are stabilized. The Brush and Eraser keep their own independent settings and are remembered between sessions.</p>
                     <ul>
-                        <li>Use <kbd class="guide-kbd">[</kbd> and <kbd class="guide-kbd">]</kbd> to change brush size, or hold <kbd class="guide-kbd">Shift</kbd> for larger jumps.</li>
+                        <li><strong>Resize</strong> – Use <kbd class="guide-kbd">[</kbd> and <kbd class="guide-kbd">]</kbd> to change brush size, or hold <kbd class="guide-kbd">Shift</kbd> for larger jumps.</li>
                     </ul>
                 </div>
             </div>
@@ -821,7 +1098,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    Click <strong>+</strong> in the Layer Panel and choose <strong>Sticker</strong>.
+                    <p><strong>Add the layer</strong> – Click <strong>+</strong> in the Layer Panel and choose <strong>Sticker</strong>.</p>
                     <ul>
                         <li>The sticker layer will be empty until a sticker is chosen.</li>
                     </ul>
@@ -837,7 +1114,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    Browse the sticker gallery and click one to add it.
+                    <p><strong>Pick a sticker</strong> – Browse the gallery and click one to add it.</p>
                 </div>
             </div>
 
@@ -850,7 +1127,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    Use the <strong>Select Tool (<kbd class="guide-kbd">V</kbd>)</strong> to drag and move the sticker.
+                    <p><strong>Position it</strong> – Use the <strong>Select Tool (<kbd class="guide-kbd">V</kbd>)</strong> to drag and move the sticker.</p>
                 </div>
             </div>
 
@@ -917,6 +1194,33 @@
                 </div>
                 <div class="guide-item-content">
                     <p><strong>Flip Horizontally/Vertically</strong> – Mirror the sticker.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sticker"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Change</strong> – Use <strong>Change</strong> in the Asset card to swap in a different sticker without recreating the layer.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Shadow</strong> – An optional Shadow paint slot with the same sources as text and shapes: glitter (with its own swatch plus Advanced Hue / Saturation / Brightness), solid color, or gradient.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Actions</strong> – <strong>Fit canvas</strong> scales and centers the sticker to fit fully inside the canvas; <strong>Fill canvas</strong> scales it to cover the canvas completely.</p>
                 </div>
             </div>
         </div>
@@ -1074,7 +1378,12 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Fill</strong> – Choose None, Glitter, Solid, or Gradient. Texture Scale appears for glitter; Opacity applies to glitter, solid, and gradient sources. Gradients support linear/radial modes, angle with reset, a Blend setting (Linear, Smooth, or Constant hard bands), and color stops with percentage position and opacity. Drag a handle on the gradient preview strip to move a stop, or click the strip to add one.</p>
+                    <p><strong>Fill</strong> – Choose None, Glitter, Solid, or Gradient. Texture Scale appears for glitter; Opacity applies to glitter, solid, and gradient sources.</p>
+                    <ul>
+                        <li><strong>Gradient type</strong> – Linear or radial, with an adjustable angle and a reset.</li>
+                        <li><strong>Blend</strong> – Linear, Smooth, or Constant (hard bands).</li>
+                        <li><strong>Color stops</strong> – Each has a percentage position and opacity. Drag a handle on the preview strip to move a stop, or click the strip to add one.</li>
+                    </ul>
                 </div>
             </div>
 
@@ -1351,7 +1660,14 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Frame Control</strong> – <strong>Frame Limit</strong> is a target for animation complexity, not its length. <strong>Optimization Goal</strong> chooses between fine motion and a smaller file; <strong>Smart Frame Reduction</strong> combines frames that look the same without changing playback length. <strong>Keep Fewer Frames</strong> is a manual override, and <strong>Motion Detail</strong> controls how often faster visual changes are checked.</p>
+                    <p><strong>Frame Control</strong> – Tune how the animation is condensed into GIF frames.</p>
+                    <ul>
+                        <li><strong>Frame Limit</strong> – A target for animation complexity, not its length.</li>
+                        <li><strong>Optimization Goal</strong> – Choose between fine motion and a smaller file.</li>
+                        <li><strong>Smart Frame Reduction</strong> – Combines frames that look the same, without changing playback length.</li>
+                        <li><strong>Keep Fewer Frames</strong> – A manual override to drop more frames.</li>
+                        <li><strong>Motion Detail</strong> – Controls how often faster visual changes are checked.</li>
+                    </ul>
                 </div>
             </div>
             <div class="guide-item">
@@ -1372,105 +1688,22 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- ETC -->
-    <div class="guide-section">
-        <h3 id="etcetera">
-            <span class="icon-wrapper">
-                <svg class="icon">
-                    <use href="#icon-question-circle"></use>
-                </svg>
-            </span>
-            Etcetera
-        </h3>
-
-        <div class="guide-subsection">
-            <h4 id="tips">Tips</h4>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
-                </div>
-				<div class="guide-item-content">
-					<p><strong>Mobile:</strong> Use Design for the gallery, Layers for stacking and selection, and Edit for the active layer's properties. Drag the Edit sheet's handle to expand it or swipe it down to close. App Settings is in the header gear button. Clear All is in the Layers drawer action bar.</p>
-					<p><strong>Welcome screen:</strong> Open it at any time from App Settings. The adjacent switch controls whether it also appears on startup.</p>
-					<p><strong>Resetting settings:</strong> App Settings can restore the saved Brush and Eraser controls or expand all collapsed property and tool groups. <strong>Reset All Settings</strong> includes both, along with export and interface preferences, without changing the current project or user uploads.</p>
-				</div>
-            </div>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p>Try different threshold values to fine-tune your glitter fill selections.</p>
-                </div>
-            </div>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p>Enable <strong>Show Only Selected Layer</strong> below the preview to focus on one layer at a time without changing the export.</p>
-                </div>
-            </div>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p>Turn off <strong>Auto-Select</strong> when you want to choose a layer in the Layers panel and keep moving that layer even when the pointer passes over other artwork.</p>
-                </div>
-            </div>
-
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p>Adding more layers or animations with differing frame counts will increase render times.</p>
-                    <ul>
-                        <li>The system figures out a frame sequence that lets all layers loop together smoothly, even if they have different numbers of frames—this can result in many frames and increase the file size. In certain cases, it will try to reduce the number of frames per element (sticker, glitter) to make the animation loop without having to have hundreds of frames.</li>
-                        <li>On some devices, rendering large or intricate designs may impact performance.</li>
-                    </ul>
-
-
-                </div>
-            </div>
-        </div>
 
         <div class="guide-subsection">
 			<h4 id="instagram-story">Use an Export in an Instagram Story</h4>
+
+            <h4>Video method</h4>
 
 			<div class="guide-item">
 				<div class="guide-item-icon empty">
 					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
 				</div>
 				<div class="guide-item-content">
-					<p><strong>Video option:</strong> If MP4 is available on the device, choose <strong>Exact duration</strong> and enter the Story length you need, such as 15 seconds, then export and save or share the video. Instagram may recompress uploaded video, which can soften fine glitter texture or small details; use the <strong>High</strong> quality preset if the result needs more detail.</p>
+					<p>If MP4 is available on the device, choose <strong>Exact duration</strong> and enter the Story length you need, such as 15 seconds, then export and save or share the video. Instagram may recompress uploaded video, which can soften fine glitter texture or small details; use the <strong>High</strong> quality preset if the result needs more detail.</p>
 				</div>
 			</div>
 
-			<p><strong>To use the GIF clipboard method instead:</strong></p>
+			<h4>GIF clipboard method</h4>
 
             <div class="guide-item">
                 <div class="guide-item-icon empty">
@@ -1584,5 +1817,93 @@
             </div>
 
         </div>
+    </div>
+
+    <!-- ETC -->
+    <div class="guide-section">
+        <h3 id="etcetera">
+            <span class="icon-wrapper">
+                <svg class="icon">
+                    <use href="#icon-question-circle"></use>
+                </svg>
+            </span>
+            Etcetera
+        </h3>
+
+        <div class="guide-subsection">
+            <h4 id="tips">Tips</h4>
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Welcome screen</strong> – Open it any time from App Settings. The adjacent switch controls whether it also appears on startup.</p>
+                </div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Resetting settings</strong> – App Settings can restore the saved Brush and Eraser controls or expand all collapsed property and tool groups. <strong>Reset All Settings</strong> includes both, along with export and interface preferences, without changing the current project or user uploads.</p>
+                </div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Try different threshold values to fine-tune your glitter fill selections.</p>
+                </div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Enable <strong>Show Only Selected Layer</strong> below the preview to focus on one layer at a time without changing the export.</p>
+                </div>
+            </div>
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Turn off <strong>Auto-Select</strong> when you want to choose a layer in the Layers panel and keep moving that layer even when the pointer passes over other artwork.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Adding more layers or animations with differing frame counts will increase render times.</p>
+                    <ul>
+                        <li>The system figures out a frame sequence that lets all layers loop together smoothly, even if they have different numbers of frames—this can result in many frames and increase the file size. In certain cases, it will try to reduce the number of frames per element (sticker, glitter) to make the animation loop without having to have hundreds of frames.</li>
+                        <li>On some devices, rendering large or intricate designs may impact performance.</li>
+                    </ul>
+
+
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>

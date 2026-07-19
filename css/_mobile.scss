@@ -233,7 +233,7 @@
 		}
 
 		.mobile-add-layer-group {
-			flex: 0 0 44px;
+			flex: 0 0 var(--touch-target-min);
 
 			#mobileAddLayerBtn {
 				align-items: center;
@@ -406,7 +406,7 @@
 		}
 
 		>span {
-			width: 44px;
+			width: var(--touch-target-min);
 			height: 4px;
 			border-radius: 999px;
 			background: var(--color-border);

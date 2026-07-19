@@ -1,18 +1,56 @@
-//mini modal mixin
-
-
-@mixin mini-modal($hover: false) {
+@mixin glass-surface {
 	background: var(--color-bg-translucent);
 	border: 1px solid var(--color-border);
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	backdrop-filter: blur(var(--glass-blur));
+}
+
+@mixin visually-hidden-control {
+	position: absolute;
+	width: 0;
+	height: 0;
+	margin: 0;
+	opacity: 0;
+}
+
+@mixin spread-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-md);
+}
+
+@mixin floating-visible {
+	transform: translate(-50%, 0);
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transition-delay: 0s;
+}
+
+@mixin pixelated-contain-image {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	image-rendering: pixelated;
+}
+
+@mixin centered-column {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-md);
+}
+
+@mixin mini-modal($hover: false) {
+	@include glass-surface;
 	border-radius: var(--radius-lg);
 	z-index: var(--z-header-menu-elevated);
 	box-shadow: 0 2px 5px var(--color-shadow-strong);
-	transition: all var(--transition-base);
-	// blur background
-	-webkit-backdrop-filter: blur(var(--glass-blur));
-	backdrop-filter: blur(var(--glass-blur));
+	transition: border-color var(--transition-base), box-shadow var(--transition-base);
 
-	//if hvoer
+	// Optional hover treatment for interactive floating surfaces.
 	@if $hover {
 		&:hover {
 			border-color: var(--color-border-hover);
@@ -23,11 +61,7 @@
 
 
 @mixin selected {
-	// 1. Calculate the dynamic thickness (minimum 1px)
-	$thickness: max(1px, calc(2px / var(--zoom, 1)));
-
-	// 2. Apply to outline
-	outline-width: $thickness;
+	outline-width: max(1px, calc(2px / var(--zoom, 1)));
 	outline-style: dashed;
 	outline-color: var(--selected-outline-color);
 
@@ -126,15 +160,12 @@
 }
 
 @mixin floating-ui {
+	@include glass-surface;
 	border-radius: var(--radius-sm);
-	background: var(--color-bg-translucent);
-	border: 1px solid var(--color-border);
 	padding: var(--spacing-sm);
 	pointer-events: auto; // block clicks from passing through
-	// Same glass as mini-modal — keeps low-alpha themes (Dew) legible over
+	// Same glass as mini-modal keeps low-alpha themes (Dew) legible over
 	// the workspace.
-	-webkit-backdrop-filter: blur(var(--glass-blur));
-	backdrop-filter: blur(var(--glass-blur));
 }
 
 @mixin windows7-tooltip {
@@ -280,4 +311,3 @@
 		@include secondary-button-filters;
 	}
 }
-

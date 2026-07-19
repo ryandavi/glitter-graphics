@@ -602,7 +602,7 @@ class BaseBackgroundManager {
 	}
 
 	hasActivePickerSession() {
-		return Boolean(this.getActiveLayer()?.id === this.pickerSession?.layerId);
+		return Boolean(this.pickerSession && this.getActiveLayer()?.id === this.pickerSession.layerId);
 	}
 
 	updatePickerStrip() {

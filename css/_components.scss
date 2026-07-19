@@ -13,6 +13,31 @@ img[data-pixel-scale] {
 	/* Fallback for older browsers */
 }
 
+.icon-wrapper {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 1;
+
+	>svg.icon {
+		display: inline-block;
+		z-index: 1;
+		width: 1em;
+		height: 1em;
+		font-size: var(--font-size-2xl);
+		fill: currentColor;
+		vertical-align: middle;
+	}
+
+	>.name {
+		display: none;
+		z-index: 1;
+	}
+
+	&.sm>svg.icon { font-size: var(--font-size-md); }
+	&.xl>svg.icon { font-size: 48px; }
+}
+
 .tooltip {
 	position: fixed;
 	background: rgba(0, 0, 0, 0.95);
@@ -38,7 +63,8 @@ img[data-pixel-scale] {
 
 textarea,
 input[type="text"],
-input[type="number"] {
+input[type="number"],
+select {
 	min-width: 100px;
 	min-height: var(--control-height);
 	padding: var(--spacing-sm) var(--control-padding-inline);
@@ -70,9 +96,163 @@ input[type="number"] {
 	}
 }
 
+select { cursor: pointer; }
+
 textarea {
 	min-height: calc(var(--control-height) * 3);
 	line-height: 1.4;
+}
+
+// Shared setting vocabulary. Schema panels and modal settings use the same
+// label, action-row, disclosure, and inset-surface primitives; owners add only
+// layout-specific deltas.
+.setting-label,
+.effect-option-label {
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+}
+
+.settings-action-row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--spacing-sm);
+}
+
+.asset-info,
+.gradient-stops-box {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding: var(--spacing-md);
+	background: var(--color-bg-card);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+}
+
+.advanced-disclosure {
+	display: flex;
+	flex-direction: column;
+	margin-top: var(--spacing-sm);
+	border-top: 1px solid var(--color-border);
+
+	>.advanced-disclosure-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--spacing-sm);
+		width: 100%;
+		padding: var(--spacing-sm) 0 0;
+		background: none;
+		border: none;
+		color: var(--color-text-secondary);
+		font: inherit;
+		font-size: var(--font-size-sm);
+		cursor: pointer;
+
+		&:hover { color: var(--color-text-primary); }
+	}
+
+	.advanced-disclosure-label {
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+	}
+
+	.advanced-disclosure-chevron {
+		display: flex;
+		align-items: center;
+		transition: transform var(--transition-fast);
+
+		svg {
+			width: 14px;
+			height: 14px;
+			fill: currentColor;
+		}
+	}
+
+	>.advanced-disclosure-content {
+		display: none;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		padding-top: var(--spacing-sm);
+	}
+
+	&.is-open {
+		>.advanced-disclosure-content { display: flex; }
+		.advanced-disclosure-chevron { transform: rotate(180deg); }
+	}
+}
+
+.input-unit {
+	position: relative;
+	display: flex;
+	align-items: center;
+
+	>input {
+		width: 100%;
+		padding-right: 26px;
+	}
+
+	>.input-unit-suffix {
+		position: absolute;
+		right: var(--spacing-base);
+		font-size: 10px;
+		color: var(--color-text-secondary);
+		pointer-events: none;
+	}
+}
+
+.empty-state {
+	display: none;
+	gap: var(--spacing-base);
+	padding: var(--spacing-xl);
+	text-align: center;
+
+	&.visible { display: block; }
+
+	>.empty-state-inner-wrapper {
+		@include centered-column;
+	}
+
+	.empty-state-icon-large {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 64px;
+		height: 64px;
+		margin-bottom: var(--spacing-sm);
+		border-radius: var(--radius-md);
+		background-color: var(--color-bg-tertiary);
+
+		>.icon {
+			width: 32px;
+			height: 32px;
+			color: var(--color-text-tertiary);
+		}
+	}
+
+	>.empty-state-icon {
+		display: none;
+		margin-bottom: var(--spacing-md);
+		font-size: 48px;
+		opacity: 0.3;
+	}
+
+	.empty-state-text {
+		color: var(--color-text-primary);
+		font-size: var(--font-size-md);
+		font-weight: 600;
+	}
+
+	.empty-state-subtext {
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-sm);
+		line-height: 1.4;
+	}
 }
 
 input[type="color"] {
@@ -156,7 +336,6 @@ input[type="range"] {
 .btn-text-with-icon,
 .btn-text {
 	cursor: pointer;
-	// transition: all var(--transition-fast);
 	border-radius: var(--radius-sm);
 	color: var(--color-text-primary);
 	border: none;
@@ -234,15 +413,6 @@ input[type="range"] {
 	flex-direction: column;
 	overflow: hidden;
 
-	.layer-list-name,
-	.layer-name {
-		overflow: hidden;
-		color: var(--color-text-primary);
-		font-size: var(--font-size-base);
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
 	.layer-list-description {
 		overflow: hidden;
 		color: var(--color-text-secondary);
@@ -250,6 +420,15 @@ input[type="range"] {
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
+}
+
+.layer-list-info :is(.layer-list-name, .layer-name),
+.layers-section>.layers-list>.layer-item>.layer-info>.layer-name {
+	overflow: hidden;
+	color: var(--color-text-primary);
+	font-size: var(--font-size-base);
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .layer-action-btn {
@@ -423,7 +602,7 @@ input[type="range"] {
 	border-radius: 12px;
 	@include text-sm;
 	cursor: pointer;
-	transition: all var(--transition-fast);
+	transition: background-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	user-select: none;
@@ -488,13 +667,13 @@ input[type="range"] {
 @media (pointer: coarse) {
 	.transform-handle-wrapper {
 		&[data-handle-type^="corner-"] {
-			width: calc(44px / var(--zoom, 1));
-			height: calc(44px / var(--zoom, 1));
+			width: calc(var(--touch-target-min) / var(--zoom, 1));
+			height: calc(var(--touch-target-min) / var(--zoom, 1));
 		}
 
 		&[data-handle-type^="edge-"] {
-			width: calc(44px / var(--zoom, 1));
-			height: calc(44px / var(--zoom, 1));
+			width: calc(var(--touch-target-min) / var(--zoom, 1));
+			height: calc(var(--touch-target-min) / var(--zoom, 1));
 		}
 
 		&[data-handle-type="rotation"] {
@@ -542,14 +721,6 @@ input[type="range"] {
 .transform-rotation-line {
 	background: var(--color-accent);
 	pointer-events: none;
-}
-
-.sticker-element.has-transform-handles {
-	pointer-events: none !important;
-}
-
-.text-glitter-element.has-transform-handles {
-	pointer-events: none !important;
 }
 
 

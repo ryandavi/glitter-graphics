@@ -1,0 +1,166 @@
+/* ===== CANVAS WORKSPACE ===== */
+
+body.tool-text {
+	.preview-canvas,
+	.preview-wrapper { cursor: crosshair; }
+}
+
+.smart-guide {
+	position: absolute;
+	z-index: 1002;
+	background: var(--smart-guide-color);
+	pointer-events: none;
+
+	&-x { top: 0; bottom: 0; width: 1px; }
+	&-y { left: 0; right: 0; height: 1px; }
+}
+
+.sticker-element,
+.text-glitter-element,
+.shape-glitter-element {
+	position: absolute;
+	transform-origin: center;
+	pointer-events: auto !important;
+	will-change: transform;
+	touch-action: none;
+}
+
+.sticker-element {
+	&.dragging {
+		z-index: 1000 !important;
+		cursor: grabbing;
+	}
+
+	>img {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	&.pixelated>img { image-rendering: pixelated; }
+}
+
+.text-glitter-element,
+.shape-glitter-element { overflow: visible; }
+
+.text-glitter-stack,
+.shape-glitter-stack {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: 0 0;
+	pointer-events: none;
+
+	&::after {
+		content: "";
+		position: absolute;
+		top: var(--tf-top, 0);
+		right: var(--tf-right, 0);
+		bottom: var(--tf-bottom, 0);
+		left: var(--tf-left, 0);
+		display: none;
+		pointer-events: none;
+	}
+}
+
+.text-glitter-content,
+.shape-glitter-content {
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	background-repeat: repeat;
+	overflow: visible;
+	pointer-events: none;
+
+	&.pixelated { image-rendering: pixelated; }
+}
+
+.text-glitter-element.text-overflowing.selected>.text-glitter-stack::before {
+	content: "";
+	position: absolute;
+	right: calc(var(--tf-right, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
+	bottom: calc(var(--tf-bottom, 0px) + max(2px, calc(2px / var(--zoom, 1) / var(--layer-scale, 1))));
+	width: 0;
+	height: 0;
+	border-left: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid transparent;
+	border-top: max(8px, calc(8px / var(--zoom, 1) / var(--layer-scale, 1))) solid rgba(245, 158, 11, 0.95);
+	pointer-events: none;
+	z-index: 1;
+}
+
+.sticker-element.has-transform-handles,
+.text-glitter-element.has-transform-handles,
+.shape-glitter-element.has-transform-handles {
+	pointer-events: none !important;
+}
+
+body.tool-shape {
+	.preview-container,
+	.preview-canvas,
+	#canvasElementsContainer { cursor: crosshair; }
+}
+
+.shape-drag-preview {
+	position: absolute;
+	z-index: 200;
+	border: 2px dashed var(--color-accent);
+	background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+	pointer-events: none;
+}
+
+body.tool-select {
+	.sticker-element,
+	.text-glitter-element,
+	.shape-glitter-element { cursor: move; }
+
+	.text-glitter-element:not(.selected):hover>.text-glitter-stack::after,
+	.shape-glitter-element:not(.selected):hover>.shape-glitter-stack::after {
+		display: block;
+		outline: 1px dashed rgba(0, 0, 0, 0.25);
+		outline-offset: -1px;
+	}
+
+	.preview-canvas { cursor: pointer; }
+}
+
+.transform-hover-outline {
+	position: absolute;
+	z-index: var(--z-header-menu-elevated);
+	box-sizing: border-box;
+	border: 1px dashed color-mix(in srgb, var(--selected-outline-color) 45%, transparent);
+	pointer-events: none;
+}
+
+.selection-marquee {
+	position: absolute;
+	z-index: 12;
+	border: 1px solid var(--color-accent);
+	background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+	pointer-events: none;
+}
+
+.layer-pick-flash {
+	position: absolute;
+	z-index: var(--z-drawer);
+	width: var(--icon-size);
+	height: var(--icon-size);
+	margin-top: calc(var(--icon-size-xs) * -1);
+	margin-left: calc(var(--icon-size-xs) * -1);
+	border: 3px solid var(--color-accent);
+	border-radius: 50%;
+	pointer-events: none;
+	animation: pickFlash var(--transition-base) ease-out;
+}
+
+@keyframes pickFlash {
+	0% {
+		transform: scale(0.5);
+		opacity: 1;
+	}
+
+	100% {
+		transform: scale(1.5);
+		opacity: 0;
+	}
+}
