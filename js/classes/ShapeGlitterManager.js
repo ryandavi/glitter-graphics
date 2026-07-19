@@ -91,6 +91,7 @@ class ShapeGlitterManager {
 		this.ui.shadowOffsetYValue = id('shapeShadowOffsetYValue');
 		this.ui.shadowOpacity = id('shapeShadowOpacity');
 		this.ui.shadowOpacityValue = id('shapeShadowOpacityValue');
+		this.ui.resetEffects = id('resetShapeEffects');
 		this.ui.fillOpacity = id('shapeFillOpacity');
 		this.ui.fillOpacityValue = id('shapeFillOpacityValue');
 
@@ -247,6 +248,7 @@ class ShapeGlitterManager {
 		// Effect enable toggles.
 		this.ui.borderEnabled?.addEventListener('change', () => this._toggleEffect('border', this.ui.borderEnabled.checked));
 		this.ui.shadowEnabled?.addEventListener('change', () => this._toggleEffect('shadow', this.ui.shadowEnabled.checked));
+		this.ui.resetEffects?.addEventListener('click', () => this._resetEffects());
 
 		// Geometry sliders (change the mask → invalidate).
 		this._attachSlider(this.ui.borderWidth, this.ui.borderWidthValue, 'px', (v, l) => { this.ensureEffectData(l, 'border').widthPx = v; }, this.getDefaultBorder().widthPx, true);
@@ -402,11 +404,27 @@ class ShapeGlitterManager {
 	_toggleEffect(slot, enabled) {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
+		layer.shapeData.effectDrafts ||= {};
 		if (enabled) {
-			this.ensureEffectData(layer, slot);
+			layer.shapeData[slot] = layer.shapeData.effectDrafts[slot] || this.ensureEffectData(layer, slot);
+			delete layer.shapeData.effectDrafts[slot];
 		} else {
+			if (layer.shapeData[slot]) layer.shapeData.effectDrafts[slot] = layer.shapeData[slot];
 			layer.shapeData[slot] = null;
 		}
+		this.loadLayerSettings(layer);
+		this.invalidateMeasurement(layer);
+		this.renderLayer(layer);
+		this.editor.saveState();
+		this.editor.layerManager.renderLayersList();
+	}
+
+	_resetEffects() {
+		const layer = this.getActiveShapeLayer();
+		if (!layer) return;
+		layer.shapeData.border = null;
+		layer.shapeData.shadow = null;
+		delete layer.shapeData.effectDrafts;
 		this.loadLayerSettings(layer);
 		this.invalidateMeasurement(layer);
 		this.renderLayer(layer);
@@ -572,10 +590,9 @@ class ShapeGlitterManager {
 
 		// Border
 		const border = d.border;
-		if (this.ui.borderEnabled) this.ui.borderEnabled.checked = Boolean(border);
+		syncPanelEffectToggle(this.ui.borderEnabled, Boolean(border));
 		// .text-effect-controls is display:none until it has the .visible class
 		// (NOT the hidden attribute) — reuse the same mechanism as text.
-		if (this.ui.borderControls) this.ui.borderControls.classList.toggle('visible', Boolean(border));
 		const bd = border || borderDefaults;
 		if (this.ui.borderWidth) { this.ui.borderWidth.value = bd.widthPx; this.ui.borderWidthValue.innerHTML = formatUnit(bd.widthPx, 'px'); }
 		if (this.ui.borderDotSpacing) { this.ui.borderDotSpacing.value = bd.dotSpacingPx ?? borderDefaults.dotSpacingPx; this.ui.borderDotSpacingValue.innerHTML = formatUnit(bd.dotSpacingPx ?? borderDefaults.dotSpacingPx, 'px'); }
@@ -589,8 +606,7 @@ class ShapeGlitterManager {
 
 		// Shadow
 		const shadow = d.shadow;
-		if (this.ui.shadowEnabled) this.ui.shadowEnabled.checked = Boolean(shadow);
-		if (this.ui.shadowControls) this.ui.shadowControls.classList.toggle('visible', Boolean(shadow));
+		syncPanelEffectToggle(this.ui.shadowEnabled, Boolean(shadow));
 		const sd = shadow || shadowDefaults;
 		if (this.ui.shadowOffsetX) { this.ui.shadowOffsetX.value = sd.offsetX; this.ui.shadowOffsetXValue.innerHTML = formatUnit(sd.offsetX, 'px'); }
 		if (this.ui.shadowOffsetY) { this.ui.shadowOffsetY.value = sd.offsetY; this.ui.shadowOffsetYValue.innerHTML = formatUnit(sd.offsetY, 'px'); }

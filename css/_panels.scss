@@ -4103,20 +4103,16 @@ body.mask-editing {
 	}
 }
 
-// Effect cards (Border/Shadow): the card body is the .text-effect-controls
-// sibling, which only shows while the header's Enabled toggle is on — a
-// disabled card has nothing to expand, so the chevron hides and the header
-// stops advertising a click (the JS toggle guard mirrors this). Cards whose
-// title checkbox is an option, not an enable switch (Global, Lock Aspect),
-// have no .text-effect-controls child and are unaffected.
-// Disabled effect cards (Border/Shadow with Enabled unchecked) stay
-// collapsible: expanding one shows its controls as an inert preview so the
-// options inside are always discoverable. Checking Enabled (which the
-// managers pair with .visible on .text-effect-controls) makes them live.
-.subsection-content-group:has(> .text-effect-controls):has(> .subsection-title input[type="checkbox"]:not(:checked)) {
+// Schema effect cards share one enable contract. Disabled cards stay
+// collapsible; manually expanding one reveals its saved controls as an inert
+// preview, while enabling it expands the card and makes the controls live.
+.subsection-content-group[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)) {
 	&:not(.is-collapsed)>.text-effect-controls {
 		display: flex;
-		opacity: 0.5;
+	}
+
+	&:not(.is-collapsed)>:not(.subsection-title) {
+		opacity: var(--disabled-opacity);
 		pointer-events: none;
 	}
 }

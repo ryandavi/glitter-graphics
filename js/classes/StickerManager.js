@@ -70,6 +70,7 @@ class StickerManager extends ContentManager {
 		].forEach((suffix) => {
 			this.ui['stickerShadow' + suffix] = document.getElementById('stickerShadow' + suffix);
 		});
+		this.ui.resetEffects = document.getElementById('resetStickerEffects');
 		installEffectGradientEditor({
 			prefix: 'stickerShadow',
 			getData: () => {
@@ -121,7 +122,20 @@ class StickerManager extends ContentManager {
 		};
 		this.ui[prefix + 'Enabled']?.addEventListener('change', () => {
 			const layer = active(); if (!layer) return;
-			layer.stickerData.shadow = this.ui[prefix + 'Enabled'].checked ? this.getDefaultShadow() : null;
+			layer.stickerData.effectDrafts ||= {};
+			if (this.ui[prefix + 'Enabled'].checked) {
+				layer.stickerData.shadow = layer.stickerData.effectDrafts.shadow || this.getDefaultShadow();
+				delete layer.stickerData.effectDrafts.shadow;
+			} else {
+				if (layer.stickerData.shadow) layer.stickerData.effectDrafts.shadow = layer.stickerData.shadow;
+				layer.stickerData.shadow = null;
+			}
+			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState();
+		});
+		this.ui.resetEffects?.addEventListener('click', () => {
+			const layer = active(); if (!layer) return;
+			layer.stickerData.shadow = null;
+			delete layer.stickerData.effectDrafts;
 			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState();
 		});
 		const setMode = (mode) => {
@@ -263,8 +277,7 @@ class StickerManager extends ContentManager {
 		if (this.pickerSession && this.pickerSession.layerId !== layer.id) this.closePicker();
 		const prefix = 'stickerShadow';
 		const data = layer.stickerData.shadow;
-		if (this.ui[prefix + 'Enabled']) this.ui[prefix + 'Enabled'].checked = Boolean(data);
-		this.ui[prefix + 'Controls']?.classList.toggle('visible', Boolean(data));
+		syncPanelEffectToggle(this.ui[prefix + 'Enabled'], Boolean(data));
 		const sd = data || this.getDefaultShadow();
 		const set = (suffix, value, unit) => {
 			const input = this.ui[prefix + suffix];

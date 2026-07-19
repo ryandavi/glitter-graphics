@@ -3,11 +3,12 @@ const PixelEffects = require('../js/effects/pixel-effects.js');
 
 const config = {
 	defaults: {
-		pixelSize: 1, paletteMode: 'off', colorCount: 4, paletteStyle: 'balanced', mergeDistinctness: 0.045, detail: 2, cleanEdges: true,
+		pixelateEnabled: false, paletteEnabled: false, pixelSize: 1, paletteMode: 'posterize', colorCount: 4, paletteStyle: 'balanced', mergeDistinctness: 0.045, detail: 2, cleanEdges: true,
 		dither: { algorithm: 'bayer', angle: 45, strength: 100, palette: 'bw', duotone: ['#000000', '#ffffff'], shimmer: false }
 	},
 	limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 12 },
 	analysis: { iterations: 6, maxSamples: 1000 },
+	animation: { frameDurationMs: 100, algorithms: { bayer: { frames: 8, offsetPerFrame: 13 }, halftone: { frames: 16, offsetPerFrame: 0.5 } } },
 	presets: { bw: ['#000000', '#ffffff'], gameboy: ['#0f380f', '#9bbc0f'] }
 };
 
@@ -22,6 +23,9 @@ for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 
 const normalized = PixelEffects.normalizeSettings({}, config);
 assert.deepStrictEqual(normalized.dither.duotone, ['#000000', '#ffffff'], 'defaults normalize into independent state');
+const normalizedLegacy = PixelEffects.normalizeSettings({ enabled: true, colorCount: 3, mergeDistinctness: 0.08 }, config);
+assert.strictEqual(normalizedLegacy.paletteEnabled, true, 'legacy Posterize enabled migrates to an enabled Palette card');
+assert.strictEqual(normalizedLegacy.paletteMode, 'posterize', 'legacy Posterize enabled migrates to Palette mode');
 const invalid = PixelEffects.normalizeSettings({ pixelSize: 'bad', colorCount: Infinity, mergeDistinctness: NaN, dither: { angle: null, strength: 'nope' } }, config);
 assert.strictEqual(invalid.pixelSize, config.defaults.pixelSize, 'invalid Pixel Size returns to CONFIG');
 assert.strictEqual(invalid.colorCount, config.defaults.colorCount, 'invalid Colors returns to CONFIG');
@@ -37,20 +41,57 @@ assert.deepStrictEqual([...flattened], [10, 20, 30, 14, 40, 50, 60, 99, 0, 0, 0,
 
 const outputs = {};
 for (const algorithm of ['bayer', 'floyd', 'atkinson', 'halftone']) {
-	const settings = PixelEffects.normalizeSettings({ paletteMode: 'dither', dither: { ...config.defaults.dither, algorithm } }, config);
+	const settings = PixelEffects.normalizeSettings({ paletteEnabled: true, paletteMode: 'dither', dither: { ...config.defaults.dither, algorithm } }, config);
 	outputs[algorithm] = PixelEffects.applyPixelEffects(source, width, height, settings, config, 0);
 	assert.deepStrictEqual([...outputs[algorithm]], [...PixelEffects.applyPixelEffects(source, width, height, settings, config, 0)], `${algorithm} is deterministic`);
 	for (let offset = 3; offset < source.length; offset += 4) assert.strictEqual(outputs[algorithm][offset], source[offset], `${algorithm} preserves alpha`);
 }
 assert.notDeepStrictEqual([...outputs.floyd], [...outputs.atkinson], 'diffusion kernels produce distinct looks');
 
-const shimmer = PixelEffects.normalizeSettings({ paletteMode: 'dither', dither: { ...config.defaults.dither, algorithm: 'bayer', shimmer: true } }, config);
+const shimmer = PixelEffects.normalizeSettings({ paletteEnabled: true, paletteMode: 'dither', dither: { ...config.defaults.dither, algorithm: 'bayer', shimmer: true } }, config);
 const shimmerOne = PixelEffects.applyPixelEffects(source, width, height, shimmer, config, 1);
 const shimmerTwo = PixelEffects.applyPixelEffects(source, width, height, shimmer, config, 2);
 assert.notDeepStrictEqual([...shimmerOne], [...shimmerTwo], 'shimmer changes deterministically by frame index');
 assert.deepStrictEqual([...shimmerOne], [...PixelEffects.applyPixelEffects(source, width, height, shimmer, config, 1)], 'the same shimmer frame is byte-stable');
+const halftoneShimmer = PixelEffects.normalizeSettings({ paletteEnabled: true, paletteMode: 'dither', dither: { ...config.defaults.dither, algorithm: 'halftone', shimmer: true } }, config);
+const halftoneStart = PixelEffects.applyPixelEffects(source, width, height, halftoneShimmer, config, 0);
+assert.notDeepStrictEqual(
+	[...PixelEffects.applyPixelEffects(source, width, height, halftoneShimmer, config, 1)],
+	[...PixelEffects.applyPixelEffects(source, width, height, halftoneShimmer, config, 2)],
+	'halftone shimmer changes by frame index'
+);
+assert.deepStrictEqual(
+	[...halftoneStart],
+	[...PixelEffects.applyPixelEffects(source, width, height, halftoneShimmer, config, config.animation.algorithms.halftone.frames)],
+	'halftone shimmer closes exactly after its configured cycle'
+);
+assert.deepStrictEqual(
+	[...PixelEffects.applyPixelEffects(source, width, height, shimmer, config, 0)],
+	[...PixelEffects.applyPixelEffects(source, width, height, shimmer, config, config.animation.algorithms.bayer.frames)],
+	'bayer shimmer closes exactly after its configured cycle'
+);
+const diffusionShimmer = PixelEffects.normalizeSettings({ paletteEnabled: true, paletteMode: 'dither', dither: { ...config.defaults.dither, algorithm: 'floyd', shimmer: true } }, config);
+assert.deepStrictEqual(
+	[...PixelEffects.applyPixelEffects(source, width, height, diffusionShimmer, config, 1)],
+	[...PixelEffects.applyPixelEffects(source, width, height, diffusionShimmer, config, 2)],
+	'diffusion dithering remains stable across frame indexes'
+);
+const disabled = PixelEffects.normalizeSettings({ enabled: false, pixelSize: 4, paletteMode: 'dither', dither: { ...config.defaults.dither, shimmer: true } }, config);
+assert.deepStrictEqual(
+	[...PixelEffects.applyPixelEffects(source, width, height, disabled, config, 3)],
+	[...source],
+	'disabling both effect cards bypasses Pixelate, Palette, and Shimmer without changing their settings'
+);
 
-const cellDither = PixelEffects.normalizeSettings({ pixelSize: 3, paletteMode: 'dither', dither: { ...config.defaults.dither, algorithm: 'bayer' } }, config);
+const paletteOnlyLargeSavedSize = PixelEffects.normalizeSettings({ pixelateEnabled: false, paletteEnabled: true, pixelSize: 4, paletteMode: 'dither' }, config);
+const paletteOnlyUnitSize = PixelEffects.normalizeSettings({ pixelateEnabled: false, paletteEnabled: true, pixelSize: 1, paletteMode: 'dither' }, config);
+assert.deepStrictEqual(
+	[...PixelEffects.applyPixelEffects(source, width, height, paletteOnlyLargeSavedSize, config, 0)],
+	[...PixelEffects.applyPixelEffects(source, width, height, paletteOnlyUnitSize, config, 0)],
+	'disabled Pixelate does not leak its saved cell size into Palette'
+);
+
+const cellDither = PixelEffects.normalizeSettings({ pixelateEnabled: true, paletteEnabled: true, pixelSize: 3, paletteMode: 'dither', dither: { ...config.defaults.dither, algorithm: 'bayer' } }, config);
 const cellOutput = PixelEffects.applyPixelEffects(source, width, height, cellDither, config, 0);
 for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 	const cellX = Math.floor(x / 3) * 3;

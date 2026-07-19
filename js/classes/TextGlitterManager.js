@@ -50,7 +50,7 @@ class TextGlitterManager {
 			fontPicker: document.getElementById('textFontPicker'),
 			fontBold: document.getElementById('textFontBold'),
 			fontItalic: document.getElementById('textFontItalic'),
-			textCaseButtons: Array.from(document.querySelectorAll('[id^="textCase"]')),
+			textCaseSelect: document.getElementById('textCaseSelect'),
 			fontSize: document.getElementById('textFontSize'),
 			fontSizeValue: document.getElementById('textFontSizeValue'),
 			letterSpacing: document.getElementById('textLetterSpacing'),
@@ -128,6 +128,7 @@ class TextGlitterManager {
 			shadowScaleValue: document.getElementById('textShadowScaleValue'),
 			shadowOpacity: document.getElementById('textShadowOpacity'),
 			shadowOpacityValue: document.getElementById('textShadowOpacityValue'),
+			resetEffects: document.getElementById('resetTextEffects'),
 			// D-1c gallery picker strip
 			gallerySection: document.getElementById('designGallerySection'),
 			pickerStrip: document.getElementById('galleryPickerStrip'),
@@ -231,13 +232,10 @@ class TextGlitterManager {
 		};
 		bindFontStyleToggle(this.ui.fontBold, 'fontWeight', 700, 400);
 		bindFontStyleToggle(this.ui.fontItalic, 'fontStyle', 'italic', 'normal');
-		this.ui.textCaseButtons.forEach((button) => {
-			button.addEventListener('click', async () => {
-				const layer = this.getActiveTextLayer();
-				if (!layer) return;
-				const mode = button.id.replace('textCase', '').toLowerCase();
-				await this.runLayoutRefreshWithAnchor(layer, () => { layer.textData.textCase = mode; }, { saveHistory: true });
-			});
+		this.ui.textCaseSelect?.addEventListener('change', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+			await this.runLayoutRefreshWithAnchor(layer, () => { layer.textData.textCase = this.ui.textCaseSelect.value; }, { saveHistory: true });
 		});
 
 		this.attachSlider(this.ui.fontSize, this.ui.fontSizeValue, 'px', (value, layer) => {
@@ -355,6 +353,19 @@ class TextGlitterManager {
 
 		this.bindEffectToggle(this.ui.borderEnabled, 'border');
 		this.bindEffectToggle(this.ui.shadowEnabled, 'shadow');
+		this.ui.resetEffects?.addEventListener('click', async () => {
+			const layer = this.getActiveTextLayer();
+			if (!layer) return;
+			try {
+				await this.runLayoutRefreshWithAnchor(layer, () => {
+					layer.textData.border = null;
+					layer.textData.shadow = null;
+					delete layer.textData.effectDrafts;
+				}, { saveHistory: true, refreshPreview: false });
+			} catch (error) {
+				this.reportFontLoadError(error);
+			}
+		});
 
 		this.attachSlider(this.ui.borderWidth, this.ui.borderWidthValue, 'px', (value, layer) => {
 			this.ensureEffectData(layer, 'border').widthPx = value;
@@ -759,9 +770,13 @@ class TextGlitterManager {
 
 			try {
 				await this.runLayoutRefreshWithAnchor(layer, () => {
+					layer.textData.effectDrafts ||= {};
 					if (toggle.checked) {
-						this.ensureEffectData(layer, effectName);
+						layer.textData[effectName] = layer.textData.effectDrafts[effectName]
+							|| this.ensureEffectData(layer, effectName);
+						delete layer.textData.effectDrafts[effectName];
 					} else {
+						if (layer.textData[effectName]) layer.textData.effectDrafts[effectName] = layer.textData[effectName];
 						layer.textData[effectName] = null;
 						// If the gallery was armed for the slot we just disabled,
 						// exit picker mode — its destination no longer exists.
@@ -1413,11 +1428,7 @@ class TextGlitterManager {
 			button?.classList.toggle('active', active);
 			button?.setAttribute('aria-pressed', String(active));
 		});
-		this.ui.textCaseButtons.forEach((button) => {
-			const active = button.id === `textCase${textData.textCase.charAt(0).toUpperCase()}${textData.textCase.slice(1)}`;
-			button.classList.toggle('active', active);
-			button.setAttribute('aria-pressed', String(active));
-		});
+		if (this.ui.textCaseSelect) this.ui.textCaseSelect.value = textData.textCase;
 	}
 
 	applyTextCase(text, mode) {
@@ -1488,15 +1499,8 @@ class TextGlitterManager {
 		const borderDefaults = this.getDefaultBorder();
 		const shadowDefaults = this.getDefaultShadow();
 
-		if (this.ui.borderEnabled) {
-			this.ui.borderEnabled.checked = Boolean(border);
-		}
-		if (this.ui.shadowEnabled) {
-			this.ui.shadowEnabled.checked = Boolean(shadow);
-		}
-
-		this.toggleEffectControls(this.ui.borderControls, Boolean(border));
-		this.toggleEffectControls(this.ui.shadowControls, Boolean(shadow));
+		syncPanelEffectToggle(this.ui.borderEnabled, Boolean(border));
+		syncPanelEffectToggle(this.ui.shadowEnabled, Boolean(shadow));
 
 		if (border) {
 			this.ui.borderWidth.value = border.widthPx;
@@ -1636,11 +1640,6 @@ class TextGlitterManager {
 		if (els.badges) els.badges.innerHTML = '';
 		if (els.size) els.size.textContent = '';
 		if (els.frames) els.frames.textContent = '';
-	}
-
-	toggleEffectControls(element, isVisible) {
-		if (!element) return;
-		element.classList.toggle('visible', isVisible);
 	}
 
 	getBorderPlacement(borderData) {

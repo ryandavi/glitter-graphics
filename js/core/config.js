@@ -106,8 +106,10 @@ const CONFIG = {
 		},
 		pixelEffects: {
 			defaults: {
+				pixelateEnabled: false,
+				paletteEnabled: false,
 				pixelSize: 1,
-				paletteMode: 'off',
+				paletteMode: 'posterize',
 				colorCount: 5,
 				paletteStyle: 'balanced',
 				mergeDistinctness: 0.045,
@@ -118,10 +120,16 @@ const CONFIG = {
 					palette: 'auto', duotone: ['#000000', '#ffffff'], shimmer: false
 				}
 			},
-			limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 12 },
+			limits: { minPixelSize: 1, maxPixelSize: 8, minColors: 2, maxColors: 24 },
 			analysis: { iterations: 10, maxSamples: 24000 },
 			timing: { previewDebounceMs: 80 },
-			animation: { shimmerFrames: 8, frameDurationMs: 100 },
+			animation: {
+				frameDurationMs: 100,
+				algorithms: {
+					bayer: { frames: 8, offsetPerFrame: 13 },
+					halftone: { frames: 16, offsetPerFrame: 0.5 }
+				}
+			},
 			presets: {
 				bw: ['#000000', '#ffffff'],
 				gameboy: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f'],
@@ -972,7 +980,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Palette', region: 'scroll', items: [
 				{ kind: 'card', items: [
-					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', label: 'Palette style', options: [
+					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', label: 'Palette style', visibleLabel: 'Palette Style', options: [
 						{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced' }, { label: 'Natural', value: 'natural' }
 					] },
 					{ kind: 'slider', id: 'autoGlitterColorCount', slider: 'autoGlitterColorCount' },
@@ -1026,36 +1034,46 @@ const PANEL_SCHEMAS = {
 					primaryIds: { scale: 'baseBackgroundScale', opacity: 'baseBackgroundOpacity' }
 				}
 			] },
-			{ title: 'Palette Effects', items: [
-				{ kind: 'card', classes: 'pixel-effects-card', items: [
+			{ title: 'Effects', items: [
+				{ kind: 'card', classes: 'pixelate-effect-card', title: 'Pixelate', toggle: { id: 'pixelEffectsPixelateEnabled', label: 'Enabled' }, items: [
 					{ kind: 'slider', id: 'pixelEffectsPixelSize', slider: 'pixelEffectsPixelSize', title: '1 is off; larger values create crisp mosaic cells before palette processing' },
-					{ kind: 'segmented', id: 'pixelEffectsPaletteMode', label: 'Palette mode', options: [
-							{ label: 'Off', value: 'off', active: true }, { label: 'Posterize', value: 'posterize' }, { label: 'Dither', value: 'dither' }
+				] },
+				{ kind: 'card', classes: 'pixel-effects-card', title: 'Palette', toggle: { id: 'pixelEffectsPaletteEnabled', label: 'Enabled' }, items: [
+					{ kind: 'segmented', id: 'pixelEffectsPaletteMode', label: 'Palette effect', options: [
+							{ label: 'Posterize', value: 'posterize', active: true }, { label: 'Dither', value: 'dither' }
 					] },
 					{ kind: 'processingStatus', id: 'pixelEffectsStatus', classes: 'pixel-effects-status' },
-					{ kind: 'card', id: 'pixelEffectsPaletteControls', classes: 'pixel-effects-controls carded-subsection', hidden: true, items: [
-						{ kind: 'segmented', id: 'pixelEffectsPaletteStyle', label: 'Palette style', options: [
+					{ kind: 'card', id: 'pixelEffectsPaletteControls', title: 'Colors', classes: 'pixel-effects-controls pixel-effects-control-section', hidden: true, items: [
+						{ kind: 'segmented', id: 'pixelEffectsPaletteStyle', label: 'Palette style', visibleLabel: 'Palette Style', options: [
 							{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced', active: true }, { label: 'Natural', value: 'natural' }
 						] },
 						{ kind: 'slider', id: 'pixelEffectsColorCount', slider: 'pixelEffectsColorCount' },
 						{ kind: 'slider', id: 'pixelEffectsMergeDistinctness', slider: 'pixelEffectsMergeDistinctness' }
 					] },
-					{ kind: 'card', id: 'pixelEffectsPosterizeControls', classes: 'pixel-effects-controls carded-subsection', hidden: true, items: [
+					{ kind: 'advanced', id: 'pixelEffectsPosterizeControls', label: 'Cleanup', classes: 'pixel-effects-controls', hidden: true, items: [
 						{ kind: 'slider', id: 'pixelEffectsDetail', slider: 'pixelEffectsDetail' },
 						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsCleanEdges', label: 'Clean Edges', checked: true, title: 'Absorb tiny connected regions into their neighbors' }] }
 					] },
-					{ kind: 'card', id: 'pixelEffectsDitherControls', classes: 'pixel-effects-controls carded-subsection', hidden: true, items: [
-						{ kind: 'segmented', id: 'pixelEffectsAlgorithm', label: 'Dither algorithm', options: [
-							{ label: 'Bayer', value: 'bayer', active: true }, { label: 'Floyd', value: 'floyd' }, { label: 'Atkinson', value: 'atkinson' }, { label: 'Halftone', value: 'halftone' }
+					{ kind: 'content', id: 'pixelEffectsDitherControls', classes: 'pixel-effects-controls pixel-effects-dither-controls', hidden: true, items: [
+						{ kind: 'select', id: 'pixelEffectsAlgorithm', label: 'Dither algorithm', visibleLabel: 'Algorithm', options: [
+							{ label: 'Bayer', value: 'bayer', active: true }, { label: 'Floyd–Steinberg', value: 'floyd' }, { label: 'Atkinson', value: 'atkinson' }, { label: 'Halftone', value: 'halftone' }
 						] },
-						{ kind: 'segmented', id: 'pixelEffectsDitherPalette', label: 'Dither palette', options: [
-							{ label: 'Auto', value: 'auto', active: true }, { label: 'B&W', value: 'bw' }, { label: 'Game Boy', value: 'gameboy' }, { label: 'CGA', value: 'cga' }, { label: 'Sepia', value: 'sepia' }, { label: 'Duotone', value: 'duotone' }
+						{ kind: 'select', id: 'pixelEffectsDitherPalette', label: 'Dither palette', visibleLabel: 'Color Palette', options: [
+							{ label: 'Auto (Image Colors)', value: 'auto', active: true }, { label: 'Black & White', value: 'bw' }, { label: 'Game Boy', value: 'gameboy' }, { label: 'CGA', value: 'cga' }, { label: 'Sepia', value: 'sepia' }, { label: 'Duotone', value: 'duotone' }
 						] },
 						{ kind: 'host', id: 'pixelEffectsDuotone', classes: 'text-effect-color-row pixel-effects-duotone' },
-						{ kind: 'slider', id: 'pixelEffectsStrength', slider: 'pixelEffectsStrength' },
-						{ kind: 'slider', id: 'pixelEffectsAngle', slider: 'pixelEffectsAngle' },
-						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsShimmer', label: 'Shimmer', title: 'Animate the dither threshold. This creates living grain and larger GIFs.' }] }
+						{ kind: 'card', title: 'Pattern', classes: 'pixel-effects-control-section', items: [
+							{ kind: 'slider', id: 'pixelEffectsStrength', slider: 'pixelEffectsStrength' },
+							{ kind: 'slider', id: 'pixelEffectsAngle', slider: 'pixelEffectsAngle' }
+						] },
+						{ kind: 'card', title: 'Shimmer', classes: 'pixel-effects-control-section', items: [
+							{ kind: 'checkboxList', items: [{ id: 'pixelEffectsShimmer', label: 'Animate Dither', title: 'Animate the Bayer or Halftone pattern in the preview and exported GIF' }] },
+							{ kind: 'host', id: 'pixelEffectsShimmerHint', classes: 'settings-row-label-desc', text: 'Bayer and Halftone only. Animates the preview and exported GIF; may increase file size.' }
+						] }
 					] }
+				] },
+				{ kind: 'actionRow', classes: 'pixel-effects-actions', actions: [
+					{ id: 'resetPixelEffects', label: 'Reset Effects', secondary: true, title: 'Restore all Pixelate and Palette settings to their defaults' }
 				] }
 			] },
 			{ title: 'Actions', items: [
@@ -1199,7 +1217,10 @@ const PANEL_SCHEMAS = {
 					{ kind: 'slider', id: 'stickerShadowOffsetX', slider: 'shadowOffsetX' },
 					{ kind: 'slider', id: 'stickerShadowOffsetY', slider: 'shadowOffsetY' }
 				] }]
-			}
+			},
+			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
+				{ id: 'resetStickerEffects', label: 'Reset Effects', secondary: true, title: 'Disable all sticker effects and clear their saved settings' }
+			] }
 		]
 	},
 	[LayerType.TEXT_GLITTER]: {
@@ -1258,7 +1279,10 @@ const PANEL_SCHEMAS = {
 					{ kind: 'slider', id: 'textShadowOffsetX', slider: 'shadowOffsetX' },
 					{ kind: 'slider', id: 'textShadowOffsetY', slider: 'shadowOffsetY' }
 				] }]
-			}
+			},
+			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
+				{ id: 'resetTextEffects', label: 'Reset Effects', secondary: true, title: 'Disable all text effects and clear their saved settings' }
+			] }
 		]
 	},
 	[LayerType.SHAPE]: {
@@ -1326,7 +1350,10 @@ const PANEL_SCHEMAS = {
 						{ kind: 'slider', id: 'shapeShadowOffsetY', slider: 'shadowOffsetY' }
 					] }
 				]
-			}
+			},
+			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
+				{ id: 'resetShapeEffects', label: 'Reset Effects', secondary: true, title: 'Disable all shape effects and clear their saved settings' }
+			] }
 		]
 	}
 };

@@ -899,17 +899,18 @@ class GifExporter {
 			source = new ImageData(new Uint8ClampedArray(originalData), width, height);
 		}
 		const settings = GlitterPixelEffects.normalizeSettings(background.pixelEffects || background.posterize, CONFIG.tools.pixelEffects);
-		const shimmerFrame = settings.paletteMode === 'dither' && settings.dither.shimmer ? frameIndex : 0;
+		const shimmerFrame = settings.paletteEnabled && settings.paletteMode === 'dither' && settings.dither.shimmer
+			&& GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects) ? frameIndex : 0;
 		const sourceHash = this._hashBasePixels(source.data);
 		const key = `${width}x${height}:${sourceHash}:${JSON.stringify(settings)}:${JSON.stringify(background.colorAdjust)}:${background.opacity}:${shimmerFrame}`;
 		const cached = this.basePixelEffectCache.get(key);
 		if (cached) return cached;
 		let ditherPalette = null;
-		if (settings.paletteMode === 'dither') {
+		if (settings.paletteEnabled && settings.paletteMode === 'dither') {
 			const paletteKey = `${width}x${height}:${sourceHash}:${settings.pixelSize}:${settings.colorCount}:${settings.paletteStyle}:${settings.mergeDistinctness}:${settings.dither.palette}:${settings.dither.duotone.join(',')}`;
 			ditherPalette = this.baseDitherPaletteCache.get(paletteKey);
 			if (!ditherPalette) {
-				const pixelized = GlitterPixelEffects.pixelize(source.data, width, height, settings.pixelSize);
+				const pixelized = GlitterPixelEffects.pixelize(source.data, width, height, settings.pixelateEnabled ? settings.pixelSize : 1);
 				ditherPalette = GlitterPixelEffects.getPalette(pixelized, width, height, settings, {
 					pixelEffects: CONFIG.tools.pixelEffects,
 					autoGlitter: CONFIG.tools.autoGlitter
@@ -918,7 +919,7 @@ class GifExporter {
 				while (this.baseDitherPaletteCache.size > 16) this.baseDitherPaletteCache.delete(this.baseDitherPaletteCache.keys().next().value);
 			}
 		}
-		const data = settings.pixelSize === 1 && settings.paletteMode === 'off'
+		const data = !settings.pixelateEnabled && !settings.paletteEnabled
 			? new Uint8ClampedArray(source.data)
 			: GlitterPixelEffects.applyPixelEffects(source.data, width, height, settings, {
 				pixelEffects: CONFIG.tools.pixelEffects,
@@ -1293,15 +1294,17 @@ class GifExporter {
 		const shimmerBase = visibleLayers.find((layer) => {
 			if (layer.type !== LayerType.BASE_IMAGE || layer.visible === false || !exportSettings.baseImage) return false;
 			const settings = GlitterPixelEffects.normalizeSettings(layer.background?.pixelEffects || layer.background?.posterize, CONFIG.tools.pixelEffects);
-			return ['image', 'gradient'].includes(layer.background?.mode || 'image') && settings.paletteMode === 'dither' && settings.dither.shimmer;
+			return ['image', 'gradient'].includes(layer.background?.mode || 'image') && settings.paletteEnabled && settings.paletteMode === 'dither'
+				&& settings.dither.shimmer && GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
 		});
 		if (shimmerBase) {
-			const animation = CONFIG.tools.pixelEffects.animation;
+			const settings = GlitterPixelEffects.normalizeSettings(shimmerBase.background?.pixelEffects || shimmerBase.background?.posterize, CONFIG.tools.pixelEffects);
+			const animation = GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
 			sourceTimelines.push(new AnimationSourceTimeline({
 				key: '__base_dither',
 				ownerLayerId: shimmerBase.id,
-				frames: Array.from({ length: animation.shimmerFrames }, (_value, index) => index),
-				fallbackDuration: animation.frameDurationMs
+				frames: Array.from({ length: animation.frames }, (_value, index) => index),
+				fallbackDuration: CONFIG.tools.pixelEffects.animation.frameDurationMs
 			}));
 		}
 		if (watermark?.isAnimated) {

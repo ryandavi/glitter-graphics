@@ -5029,9 +5029,11 @@ body.mask-editing .sticker-element {
   margin-left: auto;
 }
 
-.subsection-content-group:has(> .text-effect-controls):has(> .subsection-title input[type=checkbox]:not(:checked)):not(.is-collapsed) > .text-effect-controls {
+.subsection-content-group[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)):not(.is-collapsed) > .text-effect-controls {
   display: flex;
-  opacity: 0.5;
+}
+.subsection-content-group[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)):not(.is-collapsed) > :not(.subsection-title) {
+  opacity: var(--disabled-opacity);
   pointer-events: none;
 }
 
@@ -7794,8 +7796,36 @@ body.mask-editing .sticker-element {
     animation: none;
   }
 }
+.effect-option-select {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: var(--spacing-sm) var(--control-padding-inline);
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.effect-option-select:hover:not(:disabled) {
+  border-color: var(--color-border-hover);
+}
+.effect-option-select:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--control-focus-ring);
+}
+.effect-option-select:disabled {
+  opacity: var(--disabled-opacity);
+  cursor: not-allowed;
+}
+
 .pixel-effects-card .pixel-effects-controls {
   margin-top: var(--spacing-sm);
+}
+.pixel-effects-card .pixel-effects-dither-controls {
+  flex-direction: column;
+  align-items: stretch;
 }
 .pixel-effects-card .pixel-effects-duotone {
   display: grid;
@@ -7806,7 +7836,8 @@ body.mask-editing .sticker-element {
   display: grid;
   gap: var(--spacing-xs);
 }
-.pixel-effects-card .pixel-effects-status {
+
+.pixel-effects-status {
   flex: 0 1 120px;
   min-width: 0;
   margin-left: auto;
@@ -7817,6 +7848,12 @@ body.mask-editing .sticker-element {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.pixel-effects-card .subsection-title:has(> .pixel-effects-status) > .panel-group-chevron {
+
+[data-panel-group=Effects] > .subsection-title:has(> .pixel-effects-status) > .panel-group-chevron {
   margin-left: 0;
+}
+
+.pixel-effects-actions > .btn-simple,
+.layer-effects-actions > .btn-simple {
+  width: 100%;
 }/*# sourceMappingURL=style.css.map */

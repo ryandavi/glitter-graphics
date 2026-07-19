@@ -273,6 +273,8 @@ async function configureBasePixelEffects(page, paletteMode, { shimmer = false } 
 		layer.background.colorAdjust = { hue: 18, saturation: 112, brightness: 94 };
 		layer.background.opacity = 73;
 		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings({
+			pixelateEnabled: true,
+			paletteEnabled: true,
 			pixelSize: 3,
 			paletteMode,
 			colorCount: 5,

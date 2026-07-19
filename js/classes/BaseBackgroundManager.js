@@ -11,8 +11,13 @@ class BaseBackgroundManager {
 		this.pixelEffectPendingKey = null;
 		this.pixelEffectDebounceTimer = null;
 		this.lastPixelEffectPreview = null;
+		this.shimmerPreview = { key: null, frameIndex: 0, timer: null, pending: false, requestId: 0 };
 		this.setupUI();
 		this.setupEventListeners();
+		document.addEventListener('visibilitychange', () => {
+			if (document.hidden) this.pauseShimmerPreview();
+			else this.scheduleShimmerPreview();
+		});
 	}
 
 	getActiveLayer() {
@@ -70,7 +75,10 @@ class BaseBackgroundManager {
 			pickerTitle: id('galleryPickerStripTitle'), pickerDetail: id('galleryPickerStripDetail'), pickerDone: id('galleryPickerStripDone')
 		};
 		Object.assign(this.ui, {
+			pixelateEnabled: id('pixelEffectsPixelateEnabled'), paletteEnabled: id('pixelEffectsPaletteEnabled'),
+			resetEffects: id('resetPixelEffects'),
 			pixelCard: id('pixelEffectsPaletteMode')?.closest('.pixel-effects-card'),
+			pixelateCard: id('pixelEffectsPixelSize')?.closest('.pixelate-effect-card'),
 			pixelSize: id('pixelEffectsPixelSize'), paletteMode: id('pixelEffectsPaletteMode'),
 			paletteStyle: id('pixelEffectsPaletteStyle'), colorCount: id('pixelEffectsColorCount'),
 			mergeDistinctness: id('pixelEffectsMergeDistinctness'), detail: id('pixelEffectsDetail'),
@@ -80,8 +88,7 @@ class BaseBackgroundManager {
 			duotone: id('pixelEffectsDuotone'), strength: id('pixelEffectsStrength'), angle: id('pixelEffectsAngle'),
 			shimmer: id('pixelEffectsShimmer'), status: id('pixelEffectsStatus')
 		});
-		this.ui.ditherPalette?.classList.add('paint-source-choice-grid');
-		const pixelEffectsTitle = this.ui.pixelCard?.closest('[data-panel-group="Palette Effects"]')?.querySelector(':scope > .subsection-title');
+		const pixelEffectsTitle = this.ui.pixelCard?.closest('[data-panel-group="Effects"]')?.querySelector(':scope > .subsection-title');
 		const pixelEffectsChevron = pixelEffectsTitle?.querySelector('.panel-group-chevron');
 		if (this.ui.status && pixelEffectsTitle) {
 			pixelEffectsTitle.insertBefore(this.ui.status, pixelEffectsChevron || null);
@@ -161,8 +168,11 @@ class BaseBackgroundManager {
 		bindRange('pixelEffectsAngle', 'dither.angle', 'pixelEffectsAngle');
 		this.bindPixelSegment(this.ui.paletteMode, 'paletteMode');
 		this.bindPixelSegment(this.ui.paletteStyle, 'paletteStyle');
-		this.bindPixelSegment(this.ui.algorithm, 'dither.algorithm');
-		this.bindPixelSegment(this.ui.ditherPalette, 'dither.palette');
+		this.bindPixelSelect(this.ui.algorithm, 'dither.algorithm');
+		this.bindPixelSelect(this.ui.ditherPalette, 'dither.palette');
+		this.ui.pixelateEnabled?.addEventListener('change', () => this.updatePixelSetting('pixelateEnabled', this.ui.pixelateEnabled.checked, true));
+		this.ui.paletteEnabled?.addEventListener('change', () => this.updatePixelSetting('paletteEnabled', this.ui.paletteEnabled.checked, true));
+		this.ui.resetEffects?.addEventListener('click', () => this.resetPixelEffects());
 		this.ui.cleanEdges?.addEventListener('change', () => this.updatePixelSetting('cleanEdges', this.ui.cleanEdges.checked, true));
 		this.ui.shimmer?.addEventListener('change', () => this.updatePixelSetting('dither.shimmer', this.ui.shimmer.checked, true));
 		[0, 1].forEach((index) => document.getElementById(`pixelEffectsDuotone${index}`)?.addEventListener('change', (event) => {
@@ -174,6 +184,19 @@ class BaseBackgroundManager {
 		group?.querySelectorAll('.segmented-option').forEach((button) => button.addEventListener('click', () => {
 			this.updatePixelSetting(path, button.dataset.value, true);
 		}));
+	}
+
+	bindPixelSelect(select, path) {
+		select?.addEventListener('change', () => this.updatePixelSetting(path, select.value, true));
+	}
+
+	resetPixelEffects() {
+		const layer = this.normalizeLayer(this.getActiveLayer());
+		if (!layer) return;
+		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings(CONFIG.tools.pixelEffects.defaults, CONFIG.tools.pixelEffects);
+		this.invalidatePixelEffects();
+		this.loadPixelEffectSettings(layer);
+		this.applyChange(true);
 	}
 
 	updatePixelSetting(path, value, commit) {
@@ -195,8 +218,83 @@ class BaseBackgroundManager {
 		clearTimeout(this.pixelEffectDebounceTimer);
 		this.pixelEffectDebounceTimer = null;
 		this.pixelEffectCache.clear();
+		this.stopShimmerPreview();
 		this.ui.pixelCard?.setAttribute('aria-busy', 'false');
 		setInlineProcessingStatus(this.ui.status);
+	}
+
+	isShimmerPreviewEnabled(settings) {
+		return settings.paletteEnabled && settings.paletteMode === 'dither' && settings.dither.shimmer
+			&& Boolean(GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects));
+	}
+
+	pauseShimmerPreview() {
+		clearTimeout(this.shimmerPreview.timer);
+		this.shimmerPreview.timer = null;
+	}
+
+	stopShimmerPreview() {
+		this.pauseShimmerPreview();
+		this.shimmerPreview.requestId++;
+		this.shimmerPreview.key = null;
+		this.shimmerPreview.frameIndex = 0;
+		this.shimmerPreview.pending = false;
+		if (this.pixelEffectWorker) this.pixelEffectWorker.postMessage({ clearAnimation: true });
+	}
+
+	startShimmerPreview(key) {
+		this.pauseShimmerPreview();
+		this.shimmerPreview.key = key;
+		this.shimmerPreview.frameIndex = 0;
+		this.shimmerPreview.pending = false;
+		this.scheduleShimmerPreview();
+	}
+
+	scheduleShimmerPreview(delay = CONFIG.tools.pixelEffects.animation.frameDurationMs) {
+		if (!this.shimmerPreview.key || this.shimmerPreview.pending || this.shimmerPreview.timer || document.hidden) return;
+		const layer = this.normalizeLayer(this.editor.layers.find((entry) => entry.type === LayerType.BASE_IMAGE));
+		const applicable = layer?.visible !== false && ((layer?.background.mode === 'image' && this.hasBaseImage()) || layer?.background.mode === 'gradient');
+		if (!applicable || !this.isShimmerPreviewEnabled(layer.background.pixelEffects)) return;
+		this.shimmerPreview.timer = setTimeout(() => {
+			this.shimmerPreview.timer = null;
+			this.requestShimmerPreviewFrame();
+		}, delay);
+	}
+
+	requestShimmerPreviewFrame() {
+		const state = this.shimmerPreview;
+		if (!state.key || state.pending || document.hidden) return;
+		const worker = this.ensurePixelEffectWorker();
+		const layer = this.normalizeLayer(this.editor.layers.find((entry) => entry.type === LayerType.BASE_IMAGE));
+		const animation = layer && GlitterPixelEffects.getShimmerAnimation(layer.background.pixelEffects.dither.algorithm, CONFIG.tools.pixelEffects);
+		if (!animation) return;
+		const requestId = `shimmer-${++state.requestId}`;
+		const key = state.key;
+		const frameIndex = (state.frameIndex + 1) % animation.frames;
+		const startedAt = performance.now();
+		state.pending = true;
+		const finish = ({ data }) => {
+			if (data.requestId !== requestId) return;
+			worker.removeEventListener('message', finish);
+			if (state.key !== key || state.requestId !== Number(requestId.slice(8))) return;
+			state.pending = false;
+			if (data.error) {
+				this.stopShimmerPreview();
+				return;
+			}
+			const result = new ImageData(new Uint8ClampedArray(data.pixels), this.editor.previewCanvas.width, this.editor.previewCanvas.height);
+			state.frameIndex = frameIndex;
+			this.lastPixelEffectPreview = result;
+			const layer = this.normalizeLayer(this.editor.layers.find((entry) => entry.type === LayerType.BASE_IMAGE));
+			const applicable = layer?.visible !== false && ((layer?.background.mode === 'image' && this.hasBaseImage()) || layer?.background.mode === 'gradient');
+			if (applicable && this.isShimmerPreviewEnabled(layer.background.pixelEffects)) {
+				this.editor.renderBasePreviewImageData(layer.background, result);
+			}
+			const elapsed = performance.now() - startedAt;
+			this.scheduleShimmerPreview(Math.max(0, CONFIG.tools.pixelEffects.animation.frameDurationMs - elapsed));
+		};
+		worker.addEventListener('message', finish);
+		worker.postMessage({ requestId, animationKey: key, frameIndex });
 	}
 
 	_hashPixels(pixels) {
@@ -211,7 +309,8 @@ class BaseBackgroundManager {
 	}
 
 	getPixelEffectImageData(source, width, height, settings, frameIndex = 0) {
-		const shimmerFrame = settings.paletteMode === 'dither' && settings.dither.shimmer ? frameIndex : 0;
+		const shimmerFrame = settings.paletteEnabled && settings.paletteMode === 'dither' && settings.dither.shimmer
+			&& GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects) ? frameIndex : 0;
 		const key = `${width}x${height}:${this._hashPixels(source.data)}:${JSON.stringify(settings)}:${shimmerFrame}`;
 		const cached = this.pixelEffectCache.get(key);
 		if (cached) return cached;
@@ -227,7 +326,7 @@ class BaseBackgroundManager {
 
 	ensurePixelEffectWorker() {
 		if (this.pixelEffectWorker) return this.pixelEffectWorker;
-		this.pixelEffectWorker = new Worker('js/workers/pixel-effects.worker.js?v=1');
+		this.pixelEffectWorker = new Worker('js/workers/pixel-effects.worker.js?v=5');
 		this.pixelEffectWorker.addEventListener('error', (error) => {
 			dbg('[BaseBackgroundManager] Palette effect worker failed:', error);
 			this.pixelEffectPendingKey = null;
@@ -235,12 +334,14 @@ class BaseBackgroundManager {
 			setInlineProcessingStatus(this.ui.status, { error: true, label: 'Could not update' });
 			this.pixelEffectWorker?.terminate();
 			this.pixelEffectWorker = null;
+			this.stopShimmerPreview();
 		});
 		return this.pixelEffectWorker;
 	}
 
 	requestPreviewImageData(source, width, height, settings, key) {
 		if (this.pixelEffectPendingKey === key) return;
+		const animationKey = this.isShimmerPreviewEnabled(settings) ? key : null;
 		const token = ++this.pixelEffectRequest;
 		this.pixelEffectPendingKey = key;
 		setInlineProcessingStatus(this.ui.status, { active: true, label: 'Updating' });
@@ -264,6 +365,7 @@ class BaseBackgroundManager {
 				const result = new ImageData(new Uint8ClampedArray(data.pixels), width, height);
 				this.pixelEffectCache.set(key, result);
 				this.lastPixelEffectPreview = result;
+				if (animationKey) this.startShimmerPreview(animationKey);
 				setInlineProcessingStatus(this.ui.status);
 				this.editor.updatePreview();
 			};
@@ -276,14 +378,25 @@ class BaseBackgroundManager {
 				settings,
 				segmentKey: `${width}x${height}:${this._hashPixels(source.data)}:${settings.pixelSize}:${settings.paletteStyle}`,
 				config: { pixelEffects: CONFIG.tools.pixelEffects, autoGlitter: CONFIG.tools.autoGlitter },
-				frameIndex: 0
+				frameIndex: 0,
+				animationKey
 			}, [pixels.buffer]);
 		}, CONFIG.tools.pixelEffects.timing.previewDebounceMs);
 	}
 
 	getPreviewImageData(source, width, height, settings) {
 		const key = `${width}x${height}:${this._hashPixels(source.data)}:${JSON.stringify(settings)}:0`;
-		if (this.pixelEffectCache.has(key)) return this.pixelEffectCache.get(key);
+		const shimmerEnabled = this.isShimmerPreviewEnabled(settings);
+		if (!shimmerEnabled && this.shimmerPreview.key) this.stopShimmerPreview();
+		if (shimmerEnabled && this.shimmerPreview.key && this.shimmerPreview.key !== key) this.stopShimmerPreview();
+		if (shimmerEnabled && this.shimmerPreview.key === key) {
+			this.scheduleShimmerPreview();
+			return this.lastPixelEffectPreview;
+		}
+		if (this.pixelEffectCache.has(key)) {
+			if (shimmerEnabled) this.requestPreviewImageData(source, width, height, settings, key);
+			return this.pixelEffectCache.get(key);
+		}
 		this.requestPreviewImageData(source, width, height, settings, key);
 		return this.lastPixelEffectPreview?.width === width && this.lastPixelEffectPreview?.height === height
 			? this.lastPixelEffectPreview
@@ -330,6 +443,7 @@ class BaseBackgroundManager {
 	setMode(mode) {
 		const layer = this.normalizeLayer(this.getActiveLayer());
 		if (!layer) return;
+		this.invalidatePixelEffects();
 		layer.background.mode = mode;
 		syncPaintSlotSourceUI(document.getElementById(`baseBackground${mode[0].toUpperCase()}${mode.slice(1)}`), mode);
 		this.applyChange(true);
@@ -413,7 +527,10 @@ class BaseBackgroundManager {
 	loadPixelEffectSettings(layer) {
 		const settings = layer.background.pixelEffects;
 		const applicable = (layer.background.mode === 'image' && this.hasBaseImage()) || layer.background.mode === 'gradient';
-		if (this.ui.pixelCard) this.ui.pixelCard.hidden = !applicable;
+		syncPanelEffectAvailability(this.ui.pixelateCard, applicable);
+		syncPanelEffectAvailability(this.ui.pixelCard, applicable);
+		syncPanelEffectToggle(this.ui.pixelateEnabled, settings.pixelateEnabled);
+		syncPanelEffectToggle(this.ui.paletteEnabled, settings.paletteEnabled);
 		const setSegment = (group, value) => group?.querySelectorAll('.segmented-option').forEach((button) => {
 			const active = button.dataset.value === value;
 			button.classList.toggle('active', active);
@@ -421,8 +538,8 @@ class BaseBackgroundManager {
 		});
 		setSegment(this.ui.paletteMode, settings.paletteMode);
 		setSegment(this.ui.paletteStyle, settings.paletteStyle);
-		setSegment(this.ui.algorithm, settings.dither.algorithm);
-		setSegment(this.ui.ditherPalette, settings.dither.palette);
+		if (this.ui.algorithm) this.ui.algorithm.value = settings.dither.algorithm;
+		if (this.ui.ditherPalette) this.ui.ditherPalette.value = settings.dither.palette;
 		const setRange = (id, value, suffix) => {
 			const input = document.getElementById(id);
 			if (input) input.value = value;
@@ -436,9 +553,13 @@ class BaseBackgroundManager {
 		setRange('pixelEffectsStrength', settings.dither.strength, '%');
 		setRange('pixelEffectsAngle', settings.dither.angle, '°');
 		if (this.ui.cleanEdges) this.ui.cleanEdges.checked = settings.cleanEdges;
-		if (this.ui.shimmer) this.ui.shimmer.checked = settings.dither.shimmer;
+		if (this.ui.shimmer) {
+			const shimmerSupported = Boolean(GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects));
+			this.ui.shimmer.checked = settings.dither.shimmer;
+			this.ui.shimmer.disabled = !shimmerSupported;
+		}
 		[0, 1].forEach((index) => { const input = document.getElementById(`pixelEffectsDuotone${index}`); if (input) input.value = settings.dither.duotone[index]; });
-		if (this.ui.paletteControls) this.ui.paletteControls.hidden = settings.paletteMode === 'off' || (settings.paletteMode === 'dither' && settings.dither.palette !== 'auto');
+		if (this.ui.paletteControls) this.ui.paletteControls.hidden = settings.paletteMode === 'dither' && settings.dither.palette !== 'auto';
 		if (this.ui.posterizeControls) this.ui.posterizeControls.hidden = settings.paletteMode !== 'posterize';
 		if (this.ui.ditherControls) this.ui.ditherControls.hidden = settings.paletteMode !== 'dither';
 		if (this.ui.duotone) this.ui.duotone.hidden = settings.dither.palette !== 'duotone';

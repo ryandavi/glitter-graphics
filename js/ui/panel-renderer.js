@@ -297,8 +297,11 @@ function buildPaintSlotCard(slot) {
 	card.querySelector('.subsection-title > span').textContent = slot.title;
 	let container = card;
 	if (slot.toggle) {
+		card.dataset.effectCard = '';
 		const toggle = tplClone('tpl-checkbox');
-		toggle.querySelector('input').id = `${slot.idPrefix}Enabled`;
+		const input = toggle.querySelector('input');
+		input.id = `${slot.idPrefix}Enabled`;
+		input.dataset.effectToggle = '';
 		toggle.querySelector('span').textContent = 'Enabled';
 		card.querySelector('.subsection-title').appendChild(toggle);
 		container = panelDiv('text-effect-controls');
@@ -335,8 +338,11 @@ function buildPanelItem(item, schema) {
 			if (item.title) title.querySelector(':scope > span').textContent = item.title;
 			else title.remove();
 			if (item.toggle) {
+				card.dataset.effectCard = '';
 				const toggle = tplClone('tpl-checkbox');
-				toggle.querySelector('input').id = item.toggle.id;
+				const input = toggle.querySelector('input');
+				input.id = item.toggle.id;
+				input.dataset.effectToggle = '';
 				toggle.querySelector('span').textContent = item.toggle.label;
 				if (item.toggle.title) toggle.querySelector('span').title = item.toggle.title;
 				card.querySelector('.subsection-title').appendChild(toggle);
@@ -346,6 +352,8 @@ function buildPanelItem(item, schema) {
 		}
 		case 'content': {
 			const content = addPanelClasses(panelDiv('subsection-content'), item.classes);
+			if (item.id) content.id = item.id;
+			if (item.hidden) content.hidden = true;
 			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
 			return content;
 		}
@@ -401,8 +409,24 @@ function buildPanelItem(item, schema) {
 			}
 			return buildOptionGroup(item.label, [child]);
 		}
-		case 'segmented':
-			return buildSegmented(item.options, item);
+		case 'segmented': {
+			const group = buildSegmented(item.options, item);
+			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [group]) : group;
+		}
+		case 'select': {
+			const select = document.createElement('select');
+			select.id = item.id;
+			select.className = 'effect-option-select';
+			select.setAttribute('aria-label', item.label || item.visibleLabel);
+			item.options.forEach((entry) => {
+				const option = document.createElement('option');
+				option.value = entry.value;
+				option.textContent = entry.label;
+				option.selected = Boolean(entry.selected || entry.active);
+				select.appendChild(option);
+			});
+			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [select]) : select;
+		}
 		case 'radioSegmented': {
 			const group = tplClone('tpl-segmented');
 			group.id = item.id;
@@ -421,11 +445,14 @@ function buildPanelItem(item, schema) {
 				label.append(input, text);
 				group.appendChild(label);
 			});
-			return group;
+			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [group]) : group;
 		}
 		case 'advanced': {
 			const advanced = tplClone('tpl-advanced');
 			advanced.classList.remove('glitter-source-glitter');
+			if (item.id) advanced.id = item.id;
+			if (item.hidden) advanced.hidden = true;
+			addPanelClasses(advanced, item.classes);
 			advanced.querySelector('.advanced-disclosure-label').textContent = item.label || 'Advanced';
 			const content = advanced.querySelector('[data-advanced-content]');
 			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
@@ -471,6 +498,34 @@ function buildPanelItem(item, schema) {
 	}
 }
 
+// One state contract for every schema-rendered effect card. Managers supply
+// only the enabled value; expansion, accessibility, and paint-slot body
+// visibility stay owned by the shared panel primitive.
+function syncPanelEffectToggle(toggle, enabled) {
+	if (!toggle) return;
+	const card = toggle.closest('[data-effect-card]');
+	const next = Boolean(enabled);
+	const previous = card?.dataset.effectEnabled;
+	toggle.checked = next;
+	if (!card) return;
+	card.dataset.effectEnabled = String(next);
+	if (previous == null || String(next) !== previous) card.classList.toggle('is-collapsed', !next);
+	card.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', card.classList.contains('is-collapsed') ? 'false' : 'true');
+	card.querySelector(':scope > .text-effect-controls')?.classList.toggle('visible', next);
+}
+
+// Availability is separate from enablement: a card can retain enabled state
+// while its source type makes the effect temporarily inapplicable. The group
+// and its shared actions disappear when none of its effect cards are usable.
+function syncPanelEffectAvailability(card, available) {
+	if (!card) return;
+	card.hidden = !available;
+	const group = card.closest('[data-effect-group]');
+	if (!group) return;
+	group.hidden = !Array.from(group.querySelectorAll(':scope > [data-effect-card]'))
+		.some((effectCard) => !effectCard.hidden);
+}
+
 function initializePanelGroupNode(node, prefix, title) {
 	const header = node.querySelector('.subsection-title');
 	const label = document.createElement('span');
@@ -513,6 +568,7 @@ function buildPanelGroup(group, schema) {
 	header.appendChild(chevron);
 	node.dataset.panelGroup = group.title;
 	group.items.forEach((item) => node.appendChild(buildPanelItem(item, schema)));
+	if (node.querySelector(':scope > [data-effect-card]')) node.dataset.effectGroup = '';
 	return node;
 }
 
@@ -547,7 +603,7 @@ function renderPanelSection(schema) {
 			subsection.appendChild(node);
 		}
 	});
-	if (schema.effects) {
+	if (schema.effects?.length) {
 		const stack = buildPanelGroup({ title: 'Effects', items: schema.effects }, schema);
 		stack.classList.add('effects-stack');
 		subsection.appendChild(stack);

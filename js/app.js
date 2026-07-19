@@ -1726,11 +1726,8 @@ async resetAllSettings() {
 				if (!title.querySelector('.subsection-chevron')) {
 					title.insertAdjacentHTML('beforeend', '<span class="subsection-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>');
 				}
-				const enabled = title.querySelector('input[type="checkbox"]');
-				if (subsection.querySelector(':scope > .text-effect-controls') && enabled && !enabled.checked) {
-					subsection.classList.add('is-collapsed');
-					title.setAttribute('aria-expanded', 'false');
-				}
+				const enabled = title.querySelector('input[data-effect-toggle]');
+				if (enabled) syncPanelEffectToggle(enabled, enabled.checked);
 			});
 		};
 		initializeSubsections();
@@ -1739,24 +1736,19 @@ async resetAllSettings() {
 				if (node.nodeType === Node.ELEMENT_NODE) initializeSubsections(node);
 			}));
 		}).observe(document.body, { childList: true, subtree: true });
-		// Effect cards (Border/Shadow) stay collapsible even while the header's
-		// Enabled toggle is off — expanding a disabled card shows its controls
-		// as an inert preview (see the disabled-card rules in _panels.scss).
+		// Disabled effect cards stay collapsible and expose an inert preview when
+		// manually expanded.
 		const toggleSubsection = (toggle) => {
 			const subsection = toggle.closest('[data-collapsible-subsection]');
 			if (!subsection) return;
 			const isCollapsed = subsection.classList.toggle('is-collapsed');
 			toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
 		};
-		// Enabling an effect must always reveal its controls, even if the card
-		// was collapsed before being disabled.
+		// Every schema effect toggle uses the same expansion/state contract.
 		document.addEventListener('change', (event) => {
 			const checkbox = event.target;
-			if (!checkbox.matches?.('.subsection-title input[type="checkbox"]')) return;
-			const subsection = checkbox.closest('[data-collapsible-subsection]');
-			if (!subsection?.querySelector(':scope > .text-effect-controls')) return;
-			subsection.classList.toggle('is-collapsed', !checkbox.checked);
-			subsection.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', checkbox.checked ? 'true' : 'false');
+			if (!checkbox.matches?.('.subsection-title input[data-effect-toggle]')) return;
+			syncPanelEffectToggle(checkbox, checkbox.checked);
 		});
 		// Interactive controls living in the title (Enabled/Global checkboxes,
 		// reset chips) must not also collapse the subsection when clicked.
@@ -3414,7 +3406,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=25',
+				externalContentUrl: 'modals/guide.html?v=30',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -6647,15 +6639,10 @@ setupWelcomeModalListeners() {
 			const height = this.previewCanvas.height;
 			const source = this.baseBackgroundManager.getBackgroundSourceImageData(background, width, height);
 			const settings = background.pixelEffects;
-			const processed = settings.pixelSize === 1 && settings.paletteMode === 'off'
+			const processed = !settings.pixelateEnabled && !settings.paletteEnabled
 				? source
 				: this.baseBackgroundManager.getPreviewImageData(source, width, height, settings);
-			const image = new ImageData(new Uint8ClampedArray(processed.data), width, height);
-			applyColorAdjustToImageData(image, background.colorAdjust);
-			if (background.opacity < 100) {
-				for (let offset = 3; offset < image.data.length; offset += 4) image.data[offset] = Math.round(image.data[offset] * background.opacity / 100);
-			}
-			this.previewCtx.putImageData(image, 0, 0);
+			this.renderBasePreviewImageData(background, processed);
 		} else if (mode === 'solid') {
 			this.previewCtx.save();
 			this.previewCtx.globalAlpha = background.opacity / 100;
@@ -6663,6 +6650,17 @@ setupWelcomeModalListeners() {
 			this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 			this.previewCtx.restore();
 		}
+	}
+
+	renderBasePreviewImageData(background, processed) {
+		if (!processed) return;
+		const image = new ImageData(new Uint8ClampedArray(processed.data), processed.width, processed.height);
+		applyColorAdjustToImageData(image, background.colorAdjust);
+		if (background.opacity < 100) {
+			for (let offset = 3; offset < image.data.length; offset += 4) image.data[offset] = Math.round(image.data[offset] * background.opacity / 100);
+		}
+		this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+		this.previewCtx.putImageData(image, 0, 0);
 	}
 
 	// ===== EXPORT PROGRESS =====

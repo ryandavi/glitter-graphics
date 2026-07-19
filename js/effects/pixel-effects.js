@@ -235,12 +235,21 @@
 	function normalizeSettings(value, config) {
 		const defaults = config.defaults;
 		const source = value || {};
-		const legacy = source.enabled == null ? null : source;
+		const legacy = source.paletteMode == null && source.enabled != null ? source : null;
 		const dither = { ...defaults.dither, ...(source.dither || {}) };
 		const duotone = Array.isArray(dither.duotone) && dither.duotone.length === 2 ? dither.duotone : defaults.dither.duotone;
+		const pixelSize = clamp(Math.round(finiteNumber(source.pixelSize, defaults.pixelSize)), config.limits.minPixelSize, config.limits.maxPixelSize);
+		const globalEnabled = source.enabled !== false;
+		const paletteMode = ['posterize', 'dither'].includes(source.paletteMode)
+			? source.paletteMode
+			: (legacy?.enabled ? 'posterize' : defaults.paletteMode);
 		return {
-			pixelSize: clamp(Math.round(finiteNumber(source.pixelSize, defaults.pixelSize)), config.limits.minPixelSize, config.limits.maxPixelSize),
-			paletteMode: ['off', 'posterize', 'dither'].includes(source.paletteMode) ? source.paletteMode : (legacy?.enabled ? 'posterize' : defaults.paletteMode),
+			pixelateEnabled: source.pixelateEnabled == null ? globalEnabled && pixelSize > 1 : Boolean(source.pixelateEnabled),
+			paletteEnabled: source.paletteEnabled == null
+				? globalEnabled && (Boolean(legacy?.enabled) || ['posterize', 'dither'].includes(source.paletteMode))
+				: Boolean(source.paletteEnabled),
+			pixelSize,
+			paletteMode,
 			colorCount: clamp(Math.round(finiteNumber(source.colorCount, defaults.colorCount)), config.limits.minColors, config.limits.maxColors),
 			paletteStyle: ['vibrant', 'balanced', 'natural'].includes(source.paletteStyle) ? source.paletteStyle : defaults.paletteStyle,
 			mergeDistinctness: clamp(finiteNumber(source.mergeDistinctness, defaults.mergeDistinctness), 0.01, 0.12),
@@ -262,10 +271,14 @@
 			.sort((left, right) => left.distance - right.distance).slice(0, 2);
 	}
 
-	function orderedDither(source, width, height, palette, settings, frameIndex) {
+	function getShimmerAnimation(algorithm, config) {
+		return (config.pixelEffects || config).animation.algorithms[algorithm] || null;
+	}
+
+	function orderedDither(source, width, height, palette, settings, frameIndex, animation) {
 		const output = new Uint8ClampedArray(source.length);
 		const strength = settings.dither.strength / 100;
-		const shimmer = settings.dither.shimmer ? frameIndex * 13 : 0;
+		const shimmer = settings.dither.shimmer && animation ? frameIndex * animation.offsetPerFrame : 0;
 		const angle = settings.dither.angle * Math.PI / 180;
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			const offset = (y * width + x) * 4;
@@ -316,11 +329,11 @@
 		return output;
 	}
 
-	function halftoneDither(source, width, height, palette, settings, frameIndex) {
+	function halftoneDither(source, width, height, palette, settings, frameIndex, animation) {
 		const output = new Uint8ClampedArray(source.length);
 		const strength = settings.dither.strength / 100;
 		const radians = settings.dither.angle * Math.PI / 180;
-		const shimmer = settings.dither.shimmer ? frameIndex * 0.75 : 0;
+		const shimmer = settings.dither.shimmer && animation ? frameIndex * animation.offsetPerFrame : 0;
 		const cell = 8;
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			const offset = (y * width + x) * 4;
@@ -344,29 +357,31 @@
 	}
 
 	function applyPixelEffects(source, width, height, settings, config, frameIndex = 0, paletteOverride = null) {
-		const pixels = pixelize(source, width, height, settings.pixelSize);
-		if (settings.paletteMode === 'off') return pixels;
+		const pixelSize = settings.pixelateEnabled ? settings.pixelSize : 1;
+		const pixels = pixelize(source, width, height, pixelSize);
+		if (!settings.paletteEnabled) return pixels;
 		if (settings.paletteMode === 'posterize' && config.autoGlitter && PaletteAnalysis) {
 			const result = analyzeShared(pixels, width, height, settings, config.autoGlitter, true);
 			return flatten(pixels, result.labels, result.palette);
 		}
 		const palette = paletteOverride || getPalette(pixels, width, height, settings, config);
 		if (settings.paletteMode === 'posterize') return flatten(pixels, buildLabels(pixels, width, height, palette, settings), palette);
-		const reduced = settings.pixelSize > 1 ? downsampleCells(source, width, height, settings.pixelSize) : { pixels, width, height };
+		const reduced = pixelSize > 1 ? downsampleCells(source, width, height, pixelSize) : { pixels, width, height };
+		const shimmerAnimation = getShimmerAnimation(settings.dither.algorithm, config);
 		let dithered;
 		if (settings.dither.algorithm === 'floyd' || settings.dither.algorithm === 'atkinson') {
 			dithered = diffusionDither(reduced.pixels, reduced.width, reduced.height, palette, settings, settings.dither.algorithm);
 		} else if (settings.dither.algorithm === 'halftone') {
-			dithered = halftoneDither(reduced.pixels, reduced.width, reduced.height, palette, settings, frameIndex);
+			dithered = halftoneDither(reduced.pixels, reduced.width, reduced.height, palette, settings, frameIndex, shimmerAnimation);
 		} else {
-			dithered = orderedDither(reduced.pixels, reduced.width, reduced.height, palette, settings, frameIndex);
+			dithered = orderedDither(reduced.pixels, reduced.width, reduced.height, palette, settings, frameIndex, shimmerAnimation);
 		}
-		return settings.pixelSize > 1
-			? upscaleCells(dithered, reduced.width, source, width, height, settings.pixelSize)
+		return pixelSize > 1
+			? upscaleCells(dithered, reduced.width, source, width, height, pixelSize)
 			: dithered;
 	}
 
-	const api = { applyPixelEffects, buildAutoPalette, buildLabels, flatten, getPalette, getSharedAnalysisOptions, hexToRgb, normalizeSettings, pixelize };
+	const api = { applyPixelEffects, buildAutoPalette, buildLabels, flatten, getPalette, getSharedAnalysisOptions, getShimmerAnimation, hexToRgb, normalizeSettings, pixelize };
 	root.GlitterPixelEffects = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

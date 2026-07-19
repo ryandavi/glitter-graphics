@@ -1,23 +1,43 @@
-importScripts('../effects/palette-analysis.js?v=1', '../effects/pixel-effects.js?v=6');
+importScripts('../effects/palette-analysis.js?v=1', '../effects/pixel-effects.js?v=9');
 
 let posterizeSegmentKey = null;
 let posterizeSegment = null;
+let shimmerSession = null;
 
 self.onmessage = ({ data }) => {
 	try {
-		const source = new Uint8ClampedArray(data.pixels);
+		if (data.clearAnimation) {
+			shimmerSession = null;
+			return;
+		}
+		if (!data.animationKey) shimmerSession = null;
+		const session = data.animationKey && !data.pixels && shimmerSession?.key === data.animationKey
+			? shimmerSession
+			: null;
+		if (data.animationKey && !data.pixels && !session) throw new Error('The Shimmer preview expired.');
+		const source = session?.source || new Uint8ClampedArray(data.pixels);
+		const width = session?.width || data.width;
+		const height = session?.height || data.height;
+		const settings = session?.settings || data.settings;
+		const config = session?.config || data.config;
 		let output;
-		if (data.settings.paletteMode === 'posterize') {
-			const pixelized = GlitterPixelEffects.pixelize(source, data.width, data.height, data.settings.pixelSize);
-			const options = GlitterPixelEffects.getSharedAnalysisOptions(data.settings, data.config.autoGlitter, true);
+		if (settings.paletteEnabled && settings.paletteMode === 'posterize') {
+			const pixelized = GlitterPixelEffects.pixelize(source, width, height, settings.pixelateEnabled ? settings.pixelSize : 1);
+			const options = GlitterPixelEffects.getSharedAnalysisOptions(settings, config.autoGlitter, true);
 			if (posterizeSegmentKey !== data.segmentKey) {
-				posterizeSegment = GlitterPaletteAnalysis.segmentImage(pixelized, data.width, data.height, options);
+				posterizeSegment = GlitterPaletteAnalysis.segmentImage(pixelized, width, height, options);
 				posterizeSegmentKey = data.segmentKey;
 			}
-			const result = GlitterPaletteAnalysis.reduceSegment(posterizeSegment, data.settings.colorCount, options);
+			const result = GlitterPaletteAnalysis.reduceSegment(posterizeSegment, settings.colorCount, options);
 			output = GlitterPixelEffects.flatten(pixelized, result.labels, result.palette);
 		} else {
-			output = GlitterPixelEffects.applyPixelEffects(source, data.width, data.height, data.settings, data.config, data.frameIndex || 0);
+			let palette = session?.palette || null;
+			if (data.animationKey && !session) {
+				const pixelized = GlitterPixelEffects.pixelize(source, width, height, settings.pixelateEnabled ? settings.pixelSize : 1);
+				palette = GlitterPixelEffects.getPalette(pixelized, width, height, settings, config);
+				shimmerSession = { key: data.animationKey, source, width, height, settings, config, palette };
+			}
+			output = GlitterPixelEffects.applyPixelEffects(source, width, height, settings, config, data.frameIndex || 0, palette);
 		}
 		self.postMessage({ requestId: data.requestId, pixels: output.buffer }, [output.buffer]);
 	} catch (error) {
