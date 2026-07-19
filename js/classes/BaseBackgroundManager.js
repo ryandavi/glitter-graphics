@@ -113,11 +113,15 @@ class BaseBackgroundManager {
 		if (this.ui.section && designGallery?.parentElement && this.ui.section.parentElement !== designGallery.parentElement) {
 			designGallery.after(this.ui.section);
 		}
-		// Canvas Size is a canvas/background property. Move the existing control
-		// intact so its established listeners, ids, and SCSS remain the authority.
-		const canvasSize = id('canvasSizeGroup');
+		// Document sizing is a canvas/background property. Move both existing
+		// controls intact so their established listeners and ids remain authoritative.
+		const documentSize = id('documentSizeGroup');
+		const scaleDesign = id('scaleDesignPanel');
 		const canvasHost = id('baseCanvasSizeHost');
-		if (canvasSize && canvasHost) canvasHost.replaceWith(canvasSize);
+		if (documentSize && canvasHost) {
+			canvasHost.replaceWith(documentSize);
+			if (scaleDesign) documentSize.appendChild(scaleDesign);
+		}
 		installEffectGradientEditor({
 			prefix: 'baseBackground',
 			getData: () => this.normalizeLayer(this.getActiveLayer())?.background || null,

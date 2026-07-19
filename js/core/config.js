@@ -53,10 +53,12 @@ const CONFIG = {
 
 	canvas: {
 		limits: {
-			maxWidth: 1024,
-			maxHeight: 1024,
+			maxWidth: 2048,
+			maxHeight: 2048,
+			paintHistoryMaxMB: 128,
 			maxFileSizeMB: 10
 		},
+		scalePresets: [50, 100, 200],
 		defaults: {
 			blankDocument: { width: 400, height: 400, color: '#ffffff' }
 		},
@@ -1072,8 +1074,10 @@ const PANEL_SCHEMAS = {
 						] }
 					] }
 				] },
-				{ kind: 'actionRow', classes: 'pixel-effects-actions', actions: [
-					{ id: 'resetPixelEffects', label: 'Reset Effects', secondary: true, title: 'Restore all Pixelate and Palette settings to their defaults' }
+				{ kind: 'card', title: 'Reset', classes: 'pixel-effects-reset-card', items: [
+					{ kind: 'actionRow', classes: 'pixel-effects-actions', actions: [
+						{ id: 'resetPixelEffects', label: 'Reset Effects', secondary: true, title: 'Restore all Pixelate and Palette settings to their defaults' }
+					] }
 				] }
 			] },
 			{ title: 'Actions', items: [

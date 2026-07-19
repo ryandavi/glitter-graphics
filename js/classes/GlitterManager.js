@@ -16,10 +16,7 @@ class GlitterManager extends ContentManager {
 		this.paintMasks = new Map();
 		this.paintHistory = new Map();
 		this.paintHistoryBytes = 0;
-		this.paintHistoryByteLimit = Math.max(
-			CONFIG.canvas.limits.maxWidth * CONFIG.canvas.limits.maxHeight * 2 * CONFIG.app.limits.historyLimit * 2,
-			64 * 1024 * 1024
-		);
+		this.paintHistoryByteLimit = CONFIG.canvas.limits.paintHistoryMaxMB * 1024 * 1024;
 		this.nextPaintVersion = 1;
 		this.pickerSession = null;
 
@@ -1011,6 +1008,42 @@ async initBrowser() {
 				this.commitPaintState(layer);
 			}
 		});
+	}
+
+	// Design scaling resamples canvas-sized paint buffers and selection seeds.
+	// Nearest-neighbor plus the normal mask threshold keeps painted edges binary.
+	scaleForCanvasResize(newWidth, newHeight, scaleX, scaleY, layers) {
+		this.paintMasks.forEach((paint) => {
+			paint.add = this._scaleCanvas(paint.add, newWidth, newHeight);
+			paint.sub = this._scaleCanvas(paint.sub, newWidth, newHeight);
+			paint.liveRevision++;
+		});
+
+		(layers || []).forEach((layer) => {
+			if (layer.type !== LayerType.GLITTER_FILL) return;
+			(layer.selections || []).forEach((selection) => {
+				if (typeof selection.x === 'number') selection.x = Math.max(0, Math.min(newWidth - 1, Math.round(selection.x * scaleX)));
+				if (typeof selection.y === 'number') selection.y = Math.max(0, Math.min(newHeight - 1, Math.round(selection.y * scaleY)));
+			});
+			layer._selectionMaskCache = null;
+			this.editor.maskCompositor?.invalidate(layer.id);
+		});
+
+		(layers || []).forEach((layer) => {
+			if (layer.type === LayerType.GLITTER_FILL && this.paintMasks.has(layer.id)) {
+				this.commitPaintState(layer);
+			}
+		});
+	}
+
+	_scaleCanvas(source, newWidth, newHeight) {
+		const canvas = document.createElement('canvas');
+		canvas.width = newWidth;
+		canvas.height = newHeight;
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.imageSmoothingEnabled = false;
+		ctx.drawImage(source, 0, 0, newWidth, newHeight);
+		return canvas;
 	}
 
 	_reanchorCanvas(source, newWidth, newHeight, offsetX, offsetY) {

@@ -36,7 +36,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=174">
+	<link rel="stylesheet" href="css/style.css?v=178">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -774,13 +774,25 @@
 											</div>
 										</div>
 
-										<!-- Canvas Size is moved intact into Canvas Properties
-										     at boot. Keeping the source markup here preserves the existing
+										<!-- Document sizing is moved intact into Canvas Properties at boot.
+										     Keeping the source markup here preserves the existing
 										     ids/listeners without duplicating controls. -->
-										<div class="subsection-content-group" id="canvasSizeGroup">
-											<div class="subsection-title">Canvas Size</div>
-											<div class="subsection-content">
+										<div class="subsection-content-group" id="documentSizeGroup">
+											<div class="subsection-title">Size</div>
+											<div class="segmented-control document-size-mode" id="documentSizeMode" aria-label="Sizing operation">
+												<button class="segmented-option active" type="button" data-size-mode="image" aria-pressed="true">Image Size</button>
+												<button class="segmented-option" type="button" data-size-mode="canvas" aria-pressed="false">Canvas Size</button>
+											</div>
+											<div class="subsection-content document-size-panel" id="canvasSizePanel" hidden>
 												<div class="canvas-size-controls">
+													<div class="settings-row-label-desc">Crop or extend the canvas without scaling content.</div>
+													<div class="subsection-content-group document-size-card">
+														<div class="control-group-label">Dimensions</div>
+													<div class="canvas-size-limit-message" id="canvasSizeLimitMessage" role="status"></div>
+													<label class="checkbox-group canvas-relative-toggle">
+														<input type="checkbox" id="canvasSizeRelative">
+														<span>Relative</span>
+													</label>
 													<div class="settings-row">
 														<div class="settings-row-header">
 															<div class="settings-row-label-main">Width</div>
@@ -803,6 +815,7 @@
 															</div>
 														</div>
 													</div>
+														<div class="control-group-label">Placement</div>
 													<div class="settings-row">
 														<div class="settings-row-header">
 															<div class="settings-row-label-main">Anchor</div>
@@ -811,9 +824,89 @@
 															</div>
 														</div>
 													</div>
+														<div class="control-group-label">Canvas Extension</div>
+													<div class="settings-row">
+														<div class="settings-row-header">
+															<div class="settings-row-label-main">Extension</div>
+															<div class="settings-row-control">
+																<div class="segmented-control canvas-extension-mode" id="canvasExtensionMode">
+																	<button class="segmented-option active" type="button" data-extension-mode="transparent" aria-pressed="true">Transparent</button>
+																	<button class="segmented-option" type="button" data-extension-mode="color" aria-pressed="false">Color</button>
+																</div>
+															</div>
+														</div>
+													</div>
+													<div class="settings-row" id="canvasExtensionColorRow" hidden>
+														<div class="settings-row-header">
+															<label class="settings-row-label-main" for="canvasExtensionColor">Extension Color</label>
+															<div class="settings-row-control"><input type="color" id="canvasExtensionColor" value="#ffffff"></div>
+														</div>
+													</div>
 													<div class="canvas-size-actions settings-action-row">
 														<button class="btn-simple" id="canvasSizeReset" type="button">Reset</button>
 														<button class="btn-simple primary" id="canvasSizeApply" type="button">Resize Canvas</button>
+													</div>
+													</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="document-size-panel" id="scaleDesignPanel">
+											<div class="subsection-content">
+												<div class="canvas-size-controls scale-design-controls">
+													<div class="settings-row-label-desc">Resize the canvas and everything in the design. Proportions stay linked.</div>
+													<div class="subsection-content-group document-size-card">
+														<div class="control-group-label">Dimensions</div>
+													<div class="settings-row">
+														<div class="settings-row-header">
+															<div class="settings-row-label-main">Width</div>
+															<div class="settings-row-control">
+																<span class="input-unit">
+																	<input type="number" id="scaleDesignWidth" min="1" step="1" inputmode="numeric">
+																	<span class="input-unit-suffix">px</span>
+																</span>
+															</div>
+														</div>
+													</div>
+													<div class="settings-row">
+														<div class="settings-row-header">
+															<div class="settings-row-label-main">Height</div>
+															<div class="settings-row-control">
+																<span class="input-unit">
+																	<input type="number" id="scaleDesignHeight" min="1" step="1" inputmode="numeric">
+																	<span class="input-unit-suffix">px</span>
+																</span>
+															</div>
+														</div>
+													</div>
+													<div class="settings-row">
+														<div class="settings-row-header">
+															<div class="settings-row-label-main">Scale</div>
+															<div class="settings-row-control">
+																<span class="input-unit">
+																	<input type="number" id="scaleDesignPercent" min="0.1" step="1" inputmode="decimal">
+																	<span class="input-unit-suffix">%</span>
+																</span>
+															</div>
+														</div>
+													</div>
+														<div class="control-group-label">Quick Scale</div>
+													<div class="segmented-control scale-design-presets" id="scaleDesignPresets" aria-label="Scale presets"></div>
+														<div class="control-group-label">Options</div>
+													<div class="scale-design-options">
+														<label class="checkbox-group">
+															<input type="checkbox" id="scaleDesignTextures" checked>
+															<span>Scale Textures</span>
+														</label>
+														<label class="checkbox-group">
+															<input type="checkbox" id="scaleDesignEffects" checked>
+															<span>Scale Effects</span>
+														</label>
+													</div>
+													<div class="canvas-size-actions settings-action-row">
+														<button class="btn-simple" id="scaleDesignReset" type="button">Reset</button>
+														<button class="btn-simple primary" id="scaleDesignApply" type="button">Scale Design</button>
+													</div>
 													</div>
 												</div>
 											</div>
@@ -2621,8 +2714,9 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=105"></script>
+	<script src="js/core/config.js?v=108"></script>
 	<script src="js/core/commands.js?v=4"></script>
+	<script src="js/core/document-scaler.js?v=2"></script>
 	<script src="js/transforms/transform-math.js?v=3"></script>
 	<script src="js/transforms/movable-layer.js?v=1"></script>
 
@@ -2658,8 +2752,8 @@
 	<script src="js/classes/AssetBrowser.js?v=2"></script>
 	<script src="js/classes/ContentManager.js?v=4"></script>
 	<script src="js/classes/LayerTransform.js?v=39"></script>
-	<script src="js/classes/GlitterManager.js?v=33"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=27"></script>
+	<script src="js/classes/GlitterManager.js?v=35"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=29"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=26"></script>
 	<script src="js/classes/TextGlitterManager.js?v=54"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=44"></script>
@@ -2669,7 +2763,7 @@
 	<script src="js/classes/MobileManager.js?v=16"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=158"></script>
+	<script src="js/app.js?v=162"></script>
 
 </body>
 

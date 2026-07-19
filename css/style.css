@@ -3973,6 +3973,44 @@ body.mask-editing .sticker-element {
   margin-bottom: 0;
 }
 
+.scale-design-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+}
+
+.scale-design-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+.scale-design-options > .checkbox-group > span {
+  padding-inline: var(--spacing-sm);
+}
+
+.document-size-mode {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin-bottom: var(--spacing-md);
+}
+
+.canvas-relative-toggle {
+  align-self: flex-start;
+}
+
+.canvas-size-limit-message {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  line-height: 1.35;
+}
+.canvas-size-limit-message.is-error {
+  color: var(--color-danger-bright);
+}
+
+.canvas-extension-mode {
+  min-width: 148px;
+}
+
 .anchor-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -4111,9 +4149,13 @@ body.mask-editing .sticker-element {
   outline: none;
   box-shadow: inset var(--control-focus-ring);
 }
-.segmented-option:hover:not(.active) {
+.segmented-option:hover:not(.active):not(:disabled) {
   color: var(--color-text-secondary);
   background: var(--color-bg-tertiary);
+}
+.segmented-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 .segmented-option.active {
   background: var(--color-accent);

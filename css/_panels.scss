@@ -2606,6 +2606,46 @@ body.mask-editing {
 	}
 }
 
+.scale-design-presets {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	width: 100%;
+}
+
+.scale-design-options {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--spacing-sm);
+
+	>.checkbox-group>span {
+		padding-inline: var(--spacing-sm);
+	}
+}
+
+.document-size-mode {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	margin-bottom: var(--spacing-md);
+}
+
+.canvas-relative-toggle {
+	align-self: flex-start;
+}
+
+.canvas-size-limit-message {
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	line-height: 1.35;
+
+	&.is-error {
+		color: var(--color-danger-bright);
+	}
+}
+
+.canvas-extension-mode {
+	min-width: 148px;
+}
+
 // 3×3 anchor grid. The chosen cell is where existing content stays pinned as
 // the canvas grows/shrinks (Photoshop's Canvas Size anchor). Each cell shows a
 // directional arrow; the selected cell is a filled dot.
@@ -2761,9 +2801,14 @@ body.mask-editing {
 		box-shadow: inset var(--control-focus-ring);
 	}
 
-	&:hover:not(.active) {
+	&:hover:not(.active):not(:disabled) {
 		color: var(--color-text-secondary);
 		background: var(--color-bg-tertiary);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.45;
 	}
 
 	&.active {

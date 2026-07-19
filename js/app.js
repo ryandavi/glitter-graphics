@@ -1949,6 +1949,7 @@ async resetAllSettings() {
 		this.setupGlobalListeners();
 		this.setupHelpfulMessageListeners();
 		this.setupCanvasSizeControls();
+		this.setupScaleDesignControls();
 	}
 
 	setupAutoSelectListener() {
@@ -5807,6 +5808,8 @@ setupWelcomeModalListeners() {
 		const anchorGrid = document.getElementById('canvasSizeAnchor');
 		const widthInput = document.getElementById('canvasSizeWidth');
 		const heightInput = document.getElementById('canvasSizeHeight');
+		const relativeInput = document.getElementById('canvasSizeRelative');
+		const extensionMode = document.getElementById('canvasExtensionMode');
 		const applyBtn = document.getElementById('canvasSizeApply');
 		const resetBtn = document.getElementById('canvasSizeReset');
 		if (!anchorGrid || !widthInput || !heightInput || !applyBtn) return;
@@ -5842,8 +5845,22 @@ setupWelcomeModalListeners() {
 		});
 
 		// Live on-canvas preview of the prospective bounds as the user edits.
-		widthInput.addEventListener('input', () => this.updateCanvasResizePreview());
-		heightInput.addEventListener('input', () => this.updateCanvasResizePreview());
+		widthInput.addEventListener('input', () => {
+			this.updateCanvasSizeValidation();
+			this.updateCanvasResizePreview();
+		});
+		heightInput.addEventListener('input', () => {
+			this.updateCanvasSizeValidation();
+			this.updateCanvasResizePreview();
+		});
+		relativeInput?.addEventListener('change', () => {
+			this.syncCanvasSizeInputs();
+			this.updateCanvasResizePreview();
+		});
+		extensionMode?.addEventListener('click', (event) => {
+			const button = event.target.closest('[data-extension-mode]');
+			if (button) this.setCanvasExtensionMode(button.dataset.extensionMode);
+		});
 
 		resetBtn?.addEventListener('click', () => {
 			this.syncCanvasSizeInputs();
@@ -5853,45 +5870,322 @@ setupWelcomeModalListeners() {
 
 		// Keep the inputs showing the live canvas size whenever an image loads or
 		// the panel could become visible.
-		window.addEventListener('imageLoaded', () => this.syncCanvasSizeInputs());
+		window.addEventListener('imageLoaded', () => {
+			this.syncCanvasSizeInputs();
+			this.syncCanvasExtensionControls();
+		});
+		this.setupDocumentSizeModeControls();
 		this.syncCanvasSizeInputs();
+		this.syncCanvasExtensionControls();
+	}
+
+	setupDocumentSizeModeControls() {
+		const control = document.getElementById('documentSizeMode');
+		if (!control) return;
+		control.addEventListener('click', (event) => {
+			const button = event.target.closest('[data-size-mode]');
+			if (button) this.setDocumentSizeMode(button.dataset.sizeMode);
+		});
+		this.setDocumentSizeMode('image');
+	}
+
+	setDocumentSizeMode(mode) {
+		const resolved = mode === 'canvas' ? 'canvas' : 'image';
+		document.getElementById('scaleDesignPanel').hidden = resolved !== 'image';
+		document.getElementById('canvasSizePanel').hidden = resolved !== 'canvas';
+		document.querySelectorAll('#documentSizeMode [data-size-mode]').forEach((button) => {
+			const active = button.dataset.sizeMode === resolved;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
+		if (resolved === 'canvas') this.updateCanvasResizePreview();
+		else this.hideCanvasResizePreview();
+	}
+
+	setCanvasExtensionMode(mode) {
+		this.canvasExtensionMode = mode === 'color' ? 'color' : 'transparent';
+		document.querySelectorAll('#canvasExtensionMode [data-extension-mode]').forEach((button) => {
+			const active = button.dataset.extensionMode === this.canvasExtensionMode;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
+		document.getElementById('canvasExtensionColorRow').hidden = this.canvasExtensionMode !== 'color';
+	}
+
+	syncCanvasExtensionControls() {
+		if (!this.originalImage) return;
+		const presetColor = this.baseImageSource?.preset?.color;
+		const backgroundColor = this.layers.find((layer) => layer.type === LayerType.BASE_IMAGE)?.background?.color;
+		const colorInput = document.getElementById('canvasExtensionColor');
+		if (colorInput) colorInput.value = presetColor || backgroundColor || '#ffffff';
+		this.setCanvasExtensionMode(this.baseImageSource?.kind === 'preset' ? 'color' : 'transparent');
 	}
 
 	syncCanvasSizeInputs() {
 		const widthInput = document.getElementById('canvasSizeWidth');
 		const heightInput = document.getElementById('canvasSizeHeight');
 		if (!widthInput || !heightInput || !this.originalImage) return;
-		widthInput.value = this.originalCanvas.width;
-		heightInput.value = this.originalCanvas.height;
+		const relative = document.getElementById('canvasSizeRelative')?.checked === true;
+		widthInput.value = relative ? 0 : this.originalCanvas.width;
+		heightInput.value = relative ? 0 : this.originalCanvas.height;
+		widthInput.min = relative ? String(1 - this.originalCanvas.width) : '1';
+		heightInput.min = relative ? String(1 - this.originalCanvas.height) : '1';
+		widthInput.max = relative
+			? String(CONFIG.canvas.limits.maxWidth - this.originalCanvas.width)
+			: String(CONFIG.canvas.limits.maxWidth);
+		heightInput.max = relative
+			? String(CONFIG.canvas.limits.maxHeight - this.originalCanvas.height)
+			: String(CONFIG.canvas.limits.maxHeight);
+		this.updateCanvasSizeValidation();
+	}
+
+	getRequestedCanvasSize() {
+		const width = Number(document.getElementById('canvasSizeWidth')?.value);
+		const height = Number(document.getElementById('canvasSizeHeight')?.value);
+		if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
+		const relative = document.getElementById('canvasSizeRelative')?.checked === true;
+		return {
+			width: Math.round(relative ? this.originalCanvas.width + width : width),
+			height: Math.round(relative ? this.originalCanvas.height + height : height)
+		};
+	}
+
+	updateCanvasSizeValidation() {
+		const message = document.getElementById('canvasSizeLimitMessage');
+		const widthInput = document.getElementById('canvasSizeWidth');
+		const heightInput = document.getElementById('canvasSizeHeight');
+		if (!message || !widthInput || !heightInput || !this.originalImage) return false;
+
+		const requested = this.getRequestedCanvasSize();
+		let error = '';
+		if (!requested) {
+			error = 'Enter valid width and height values.';
+		} else if (requested.width < 1 || requested.height < 1) {
+			error = `Canvas dimensions must be at least 1 × 1 px. Requested ${requested.width} × ${requested.height} px.`;
+		} else if (requested.width > CONFIG.canvas.limits.maxWidth || requested.height > CONFIG.canvas.limits.maxHeight) {
+			error = `Maximum canvas size is ${CONFIG.canvas.limits.maxWidth} × ${CONFIG.canvas.limits.maxHeight} px. Requested ${requested.width} × ${requested.height} px.`;
+		}
+
+		message.textContent = error || `Maximum canvas size: ${CONFIG.canvas.limits.maxWidth} × ${CONFIG.canvas.limits.maxHeight} px.`;
+		message.classList.toggle('is-error', Boolean(error));
+		widthInput.setAttribute('aria-invalid', String(Boolean(error)));
+		heightInput.setAttribute('aria-invalid', String(Boolean(error)));
+		return !error;
 	}
 
 	applyCanvasSize() {
 		if (!this.originalImage) return;
-		const widthInput = document.getElementById('canvasSizeWidth');
-		const heightInput = document.getElementById('canvasSizeHeight');
+		const requested = this.getRequestedCanvasSize();
+		if (!requested || !this.updateCanvasSizeValidation()) return;
 
-		let newWidth = Math.round(parseFloat(widthInput.value));
-		let newHeight = Math.round(parseFloat(heightInput.value));
-		if (!Number.isFinite(newWidth) || !Number.isFinite(newHeight)) {
-			this.syncCanvasSizeInputs();
-			return;
-		}
-
-		newWidth = Math.max(1, Math.min(CONFIG.canvas.limits.maxWidth, newWidth));
-		newHeight = Math.max(1, Math.min(CONFIG.canvas.limits.maxHeight, newHeight));
+		const newWidth = requested.width;
+		const newHeight = requested.height;
 
 		const anchor = GlitterEditor.CANVAS_ANCHORS[this.canvasSizeAnchorIndex] || GlitterEditor.CANVAS_ANCHORS[4];
 		const offsetX = Math.round((newWidth - this.originalCanvas.width) * anchor.fx);
 		const offsetY = Math.round((newHeight - this.originalCanvas.height) * anchor.fy);
 
-		this.resizeCanvas(newWidth, newHeight, offsetX, offsetY);
+		const extensionColor = this.canvasExtensionMode === 'color'
+			? document.getElementById('canvasExtensionColor')?.value || '#ffffff'
+			: null;
+		this.resizeCanvas(newWidth, newHeight, offsetX, offsetY, { extensionColor });
 		this.syncCanvasSizeInputs();
+	}
+
+	setupScaleDesignControls() {
+		const widthInput = document.getElementById('scaleDesignWidth');
+		const heightInput = document.getElementById('scaleDesignHeight');
+		const percentInput = document.getElementById('scaleDesignPercent');
+		const presets = document.getElementById('scaleDesignPresets');
+		const applyBtn = document.getElementById('scaleDesignApply');
+		const resetBtn = document.getElementById('scaleDesignReset');
+		if (!widthInput || !heightInput || !percentInput || !presets || !applyBtn) return;
+
+		presets.replaceChildren(...CONFIG.canvas.scalePresets.map((percent) => {
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'segmented-option';
+			button.dataset.scalePercent = String(percent);
+			button.textContent = `${percent}%`;
+			return button;
+		}));
+
+		widthInput.addEventListener('input', () => this.updateScaleDesignFromDimension('width'));
+		heightInput.addEventListener('input', () => this.updateScaleDesignFromDimension('height'));
+		percentInput.addEventListener('input', () => this.updateScaleDesignFromPercent());
+		presets.addEventListener('click', (event) => {
+			const button = event.target.closest('[data-scale-percent]');
+			if (!button) return;
+			percentInput.value = button.dataset.scalePercent;
+			this.updateScaleDesignFromPercent();
+		});
+		resetBtn?.addEventListener('click', () => this.syncScaleDesignInputs());
+		applyBtn.addEventListener('click', () => this.applyScaleDesign());
+		window.addEventListener('imageLoaded', () => this.syncScaleDesignInputs());
+		this.syncScaleDesignInputs();
+	}
+
+	_formatScaleDesignPercent(percent) {
+		return String(Math.round(percent * 100) / 100);
+	}
+
+	syncScaleDesignInputs() {
+		const widthInput = document.getElementById('scaleDesignWidth');
+		const heightInput = document.getElementById('scaleDesignHeight');
+		const percentInput = document.getElementById('scaleDesignPercent');
+		if (!widthInput || !heightInput || !percentInput || !this.originalImage) return;
+		widthInput.value = this.originalCanvas.width;
+		heightInput.value = this.originalCanvas.height;
+		widthInput.max = String(CONFIG.canvas.limits.maxWidth);
+		heightInput.max = String(CONFIG.canvas.limits.maxHeight);
+		percentInput.max = this._formatScaleDesignPercent(Math.min(
+			CONFIG.canvas.limits.maxWidth / this.originalCanvas.width,
+			CONFIG.canvas.limits.maxHeight / this.originalCanvas.height
+		) * 100);
+		percentInput.value = '100';
+		this.updateScaleDesignPresetState(100);
+		this.updateScaleDesignPresetAvailability();
+	}
+
+	updateScaleDesignFromDimension(axis) {
+		if (!this.originalImage) return;
+		const input = document.getElementById(axis === 'width' ? 'scaleDesignWidth' : 'scaleDesignHeight');
+		const value = Number(input?.value);
+		if (!Number.isFinite(value) || value <= 0) return;
+		const original = axis === 'width' ? this.originalCanvas.width : this.originalCanvas.height;
+		this.updateScaleDesignFields(value / original * 100);
+	}
+
+	updateScaleDesignFromPercent() {
+		const percent = Number(document.getElementById('scaleDesignPercent')?.value);
+		if (!Number.isFinite(percent) || percent <= 0) return;
+		this.updateScaleDesignFields(percent);
+	}
+
+	updateScaleDesignFields(percent) {
+		if (!this.originalImage) return;
+		const scale = this.clampDocumentScale(percent / 100);
+		const width = Math.max(1, Math.round(this.originalCanvas.width * scale));
+		const height = Math.max(1, Math.round(this.originalCanvas.height * scale));
+		document.getElementById('scaleDesignWidth').value = width;
+		document.getElementById('scaleDesignHeight').value = height;
+		document.getElementById('scaleDesignPercent').value = this._formatScaleDesignPercent(scale * 100);
+		this.updateScaleDesignPresetState(scale * 100);
+		this.updateScaleDesignPresetAvailability();
+	}
+
+	updateScaleDesignPresetAvailability() {
+		if (!this.originalImage) return;
+		const maximum = Math.min(
+			CONFIG.canvas.limits.maxWidth / this.originalCanvas.width,
+			CONFIG.canvas.limits.maxHeight / this.originalCanvas.height
+		) * 100;
+		document.querySelectorAll('#scaleDesignPresets [data-scale-percent]').forEach((button) => {
+			const unavailable = Number(button.dataset.scalePercent) > maximum + 0.01;
+			button.disabled = unavailable;
+			button.title = unavailable
+				? `Maximum for this design is ${this._formatScaleDesignPercent(maximum)}% (${CONFIG.canvas.limits.maxWidth} × ${CONFIG.canvas.limits.maxHeight} px limit)`
+				: '';
+		});
+	}
+
+	updateScaleDesignPresetState(percent) {
+		document.querySelectorAll('#scaleDesignPresets [data-scale-percent]').forEach((button) => {
+			const active = Math.abs(Number(button.dataset.scalePercent) - percent) < 0.01;
+			button.classList.toggle('active', active);
+			button.setAttribute('aria-pressed', String(active));
+		});
+	}
+
+	clampDocumentScale(scale) {
+		const width = this.originalCanvas.width;
+		const height = this.originalCanvas.height;
+		const minimum = Math.max(1 / width, 1 / height);
+		const maximum = Math.min(CONFIG.canvas.limits.maxWidth / width, CONFIG.canvas.limits.maxHeight / height);
+		return Math.max(minimum, Math.min(maximum, scale));
+	}
+
+	applyScaleDesign() {
+		if (!this.originalImage) return;
+		const enteredPercent = Number(document.getElementById('scaleDesignPercent')?.value);
+		if (!Number.isFinite(enteredPercent) || enteredPercent <= 0) {
+			this.syncScaleDesignInputs();
+			return;
+		}
+		const scale = this.clampDocumentScale(enteredPercent / 100);
+		const newWidth = Math.max(1, Math.round(this.originalCanvas.width * scale));
+		const newHeight = Math.max(1, Math.round(this.originalCanvas.height * scale));
+		this.scaleDocument(newWidth, newHeight, scale, {
+			scaleTextures: document.getElementById('scaleDesignTextures')?.checked !== false,
+			scaleEffects: document.getElementById('scaleDesignEffects')?.checked !== false
+		});
+	}
+
+	// Editable document scaling. Base pixels and painted masks are resampled with
+	// nearest-neighbor; layer geometry stays live and history retains old buffers.
+	scaleDocument(newWidth, newHeight, uniformScale, options = {}) {
+		if (!this.originalImage) return;
+		const oldWidth = this.originalCanvas.width;
+		const oldHeight = this.originalCanvas.height;
+		if (newWidth === oldWidth && newHeight === oldHeight) return;
+
+		const scaleX = newWidth / oldWidth;
+		const scaleY = newHeight / oldHeight;
+		const scaled = document.createElement('canvas');
+		scaled.width = newWidth;
+		scaled.height = newHeight;
+		const scaledCtx = scaled.getContext('2d', { willReadFrequently: true });
+		scaledCtx.imageSmoothingEnabled = false;
+		scaledCtx.drawImage(this.originalCanvas, 0, 0, newWidth, newHeight);
+
+		this.originalCanvas.width = newWidth;
+		this.originalCanvas.height = newHeight;
+		this.originalCtx.imageSmoothingEnabled = false;
+		this.originalCtx.drawImage(scaled, 0, 0);
+		this.originalImageData = this.originalCtx.getImageData(0, 0, newWidth, newHeight);
+		this.originalAlphaChannel = new Uint8Array(newWidth * newHeight);
+		for (let index = 0; index < newWidth * newHeight; index++) {
+			this.originalAlphaChannel[index] = this.originalImageData.data[index * 4 + 3];
+		}
+
+		this.previewCanvas.width = newWidth;
+		this.previewCanvas.height = newHeight;
+		this.previewWrapper.style.width = `${newWidth}px`;
+		this.previewWrapper.style.height = `${newHeight}px`;
+
+		this.glitterManager?.scaleForCanvasResize(newWidth, newHeight, scaleX, scaleY, this.layers);
+		scaleDocumentLayerStates(this.layers, scaleX, scaleY, uniformScale, options);
+		this.baseBackgroundManager?.invalidatePixelEffects();
+
+		this.layers.forEach((layer) => {
+			if (layer.type === LayerType.STICKER) this.stickerManager?.renderLayer(layer);
+			else if (layer.type === LayerType.TEXT_GLITTER) this.textGlitterManager?.renderLayer(layer);
+			else if (layer.type === LayerType.SHAPE) this.shapeGlitterManager?.renderLayer(layer);
+		});
+
+		this.layerManager.updateBaseImageSwatchCache();
+		this.viewport.setCanvasDimensions(newWidth, newHeight);
+		this.viewport.resetZoomSmart();
+		this.updateZoomUI();
+		if (options.saveHistory !== false) this.historyManager.saveState();
+		this.isSaved = false;
+		if (options.updateStatus !== false) this.updateStatus(`Design scaled to ${newWidth} × ${newHeight} px`);
+
+		this.hideCanvasResizePreview();
+		this.updatePreview();
+		this.layerManager.renderLayersList();
+		this.loadActiveLayerSettings();
+		this.syncTransformHandlesForActiveLayer?.();
+		this.syncCanvasSizeInputs();
+		this.syncScaleDesignInputs();
+		this.updateStatusBar();
+		this.updateHistoryButtons();
 	}
 
 	// Structural canvas resize (Photoshop "Canvas Size"): change the canvas
 	// bounds WITHOUT resampling. Content keeps its pixel size; it's translated by
 	// (offsetX, offsetY) — where the old top-left lands in the new canvas — then
-	// cropped or extended with transparent margins. Crop will reuse this exact
+	// cropped or extended with transparent or solid-color margins. Crop reuses this exact
 	// primitive by passing the crop rect's origin as a negative offset plus the
 	// smaller size. Re-anchors every buffer and records an undoable history entry
 	// (the snapshot carries the new canvas dims + base pixels; see
@@ -5914,7 +6208,11 @@ setupWelcomeModalListeners() {
 		rebased.width = newWidth;
 		rebased.height = newHeight;
 		const rebasedCtx = rebased.getContext('2d', { willReadFrequently: true });
-		if (this.baseImageSource?.kind === 'preset') {
+		const extensionSpecified = Object.prototype.hasOwnProperty.call(options, 'extensionColor');
+		if (extensionSpecified && options.extensionColor) {
+			rebasedCtx.fillStyle = options.extensionColor;
+			rebasedCtx.fillRect(0, 0, newWidth, newHeight);
+		} else if (!extensionSpecified && this.baseImageSource?.kind === 'preset') {
 			rebasedCtx.fillStyle = this.baseImageSource.preset.color;
 			rebasedCtx.fillRect(0, 0, newWidth, newHeight);
 		}
@@ -5975,6 +6273,7 @@ setupWelcomeModalListeners() {
 		this.hideCanvasResizePreview();
 		this.updatePreview();
 		this.layerManager.renderLayersList();
+		this.syncScaleDesignInputs();
 		this.updateStatusBar();
 		this.updateHistoryButtons();
 	}
@@ -6017,6 +6316,7 @@ setupWelcomeModalListeners() {
 
 		this.layerManager.updateBaseImageSwatchCache();
 		this.syncCanvasSizeInputs();
+		this.syncScaleDesignInputs();
 	}
 
 	// Live preview overlay: a dashed rectangle inside previewWrapper (so it
@@ -6041,21 +6341,19 @@ setupWelcomeModalListeners() {
 			return;
 		}
 
-		const widthInput = document.getElementById('canvasSizeWidth');
-		const heightInput = document.getElementById('canvasSizeHeight');
-		if (!widthInput || !heightInput) {
+		const requested = this.getRequestedCanvasSize();
+		if (
+			!requested ||
+			requested.width < 1 ||
+			requested.height < 1 ||
+			requested.width > CONFIG.canvas.limits.maxWidth ||
+			requested.height > CONFIG.canvas.limits.maxHeight
+		) {
 			this.hideCanvasResizePreview();
 			return;
 		}
-
-		let newWidth = Math.round(parseFloat(widthInput.value));
-		let newHeight = Math.round(parseFloat(heightInput.value));
-		if (!Number.isFinite(newWidth) || !Number.isFinite(newHeight) || newWidth < 1 || newHeight < 1) {
-			this.hideCanvasResizePreview();
-			return;
-		}
-		newWidth = Math.min(CONFIG.canvas.limits.maxWidth, newWidth);
-		newHeight = Math.min(CONFIG.canvas.limits.maxHeight, newHeight);
+		const newWidth = requested.width;
+		const newHeight = requested.height;
 
 		const oldWidth = this.originalCanvas.width;
 		const oldHeight = this.originalCanvas.height;
