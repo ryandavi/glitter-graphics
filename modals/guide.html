@@ -700,7 +700,8 @@
                     <p><strong>A temporary mode.</strong> While Auto Glitter is active, a compact <strong>Auto Glitter Mode</strong> strip sits above the navigation controls to mark the temporary mode. It shows status only while analyzing, updating, or reporting an error, and offers <strong>Exit</strong> to discard the session.</p>
                     <ul>
                         <li><strong>Navigation stays available</strong> – The tool switches to <strong>Hand</strong>; Hand, Zoom, mouse-wheel, <kbd class="guide-kbd">Space</kbd>-drag, and touch pan/pinch all work.</li>
-                        <li><strong>Editing is locked</strong> – Layer selection, undo/redo, and the editing tools stay locked until you create or discard the preview.</li>
+                        <li><strong>Select a canvas match</strong> – Switch to <strong>Select</strong>, then choose visible glitter on the canvas to open that Color Match in the Design gallery.</li>
+                        <li><strong>Editing is locked</strong> – Regular layer selection, undo/redo, and the editing tools stay locked until you create or discard the preview.</li>
                     </ul>
                 </div>
             </div>
@@ -711,6 +712,7 @@
                 </div>
                 <div class="guide-item-content">
                     <p><strong>Compare the result.</strong> Switch <strong>Original / Flat / Glitter</strong> at the top of the panel to compare the source image, the flattened posterized colors, and the final animated fills. The create and cancel actions stay pinned at the bottom while <strong>Palette</strong>, <strong>Color Matches</strong>, and <strong>Advanced</strong> scroll between them.</p>
+					<p>When an Auto Glitter set already exists, choose <strong>Edit</strong> to reopen its visible regions and swatches, <strong>Replace</strong> to build a fresh replacement, or <strong>Add</strong> to keep it and create an additional set. Changing Palette or Advanced while editing rebuilds the current set from the Base Image.</p>
                 </div>
             </div>
 
@@ -755,7 +757,7 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-plus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Create N Layers</strong> commits the preview as normal, editable Glitter Fill layers. Transparent areas of the image stay transparent, the Base Image is left unchanged, and your previous tool is restored.</p>
+                    <p><strong>Create N Layers</strong> commits a new preview as normal, editable Glitter Fill layers. When reopening a set, <strong>Apply Changes</strong> replaces that set in place. Transparent areas of the image stay transparent, the Base Image is left unchanged, and your previous tool is restored.</p>
                     <ul>
                         <li><strong>Canvas Effects</strong> – Any active canvas effects are turned off after creation, so the covered Base Image isn't processed during export. Their settings are preserved and the status bar notes the change.</li>
                         <li><strong>Re-running</strong> – Auto Glitter can replace the latest generated set or keep it and add another. If you have edited the generated layers, it defaults to the safer keep-and-add.</li>

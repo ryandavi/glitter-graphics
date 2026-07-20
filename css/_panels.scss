@@ -2625,7 +2625,7 @@ body.mask-editing {
 .document-size-mode {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
-	margin-bottom: var(--spacing-md);
+	// margin-bottom: var(--spacing-md);
 }
 
 .canvas-relative-toggle {

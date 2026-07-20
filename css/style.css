@@ -3991,7 +3991,6 @@ body.mask-editing .sticker-element {
 .document-size-mode {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  margin-bottom: var(--spacing-md);
 }
 
 .canvas-relative-toggle {
@@ -7699,4 +7698,15 @@ body.tool-select .preview-canvas {
   .mobile-only {
     display: block !important;
   }
+}
+#autoGlitterSettingsSection .auto-glitter-preview-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+#autoGlitterRerunMode > .segmented-option {
+  min-width: 0;
+  padding-right: var(--spacing-xs);
+  padding-left: var(--spacing-xs);
 }/*# sourceMappingURL=style.css.map */

@@ -92,7 +92,7 @@ const CONFIG = {
 	tools: {
 		autoGlitter: {
 			defaults: { colorLayers: 5, paletteStyle: 'vibrant', tuneGlitterHue: true, cleanEdges: true, detail: 4 },
-			previewToolAccess: { groups: ['navigation'], tools: [] },
+			previewToolAccess: { groups: ['navigation', 'selection'], tools: [] },
 			limits: { minColorLayers: 2, maxColorLayers: 20, maxSamples: 24000 },
 			timing: { reduceThrottleMs: 80 },
 			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: 20, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75 },
@@ -975,8 +975,9 @@ const PANEL_SCHEMAS = {
 				{ kind: 'card', id: 'autoGlitterExisting', classes: 'auto-glitter-existing', hidden: true, items: [
 					{ kind: 'host', id: 'autoGlitterExistingSummary', tag: 'p' },
 					{ kind: 'radioSegmented', id: 'autoGlitterRerunMode', label: 'How to handle the previous Auto Glitter layers', options: [
-						{ id: 'autoGlitterReplacePrevious', label: 'Replace previous', value: 'replace' },
-						{ id: 'autoGlitterAddAnother', label: 'Keep and add', value: 'add' }
+						{ id: 'autoGlitterEditCurrent', label: 'Edit', value: 'edit' },
+						{ id: 'autoGlitterReplacePrevious', label: 'Replace', value: 'replace' },
+						{ id: 'autoGlitterAddAnother', label: 'Add', value: 'add' }
 					] }
 				] }
 			] },

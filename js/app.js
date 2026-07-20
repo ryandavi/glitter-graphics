@@ -6669,6 +6669,10 @@ setupWelcomeModalListeners() {
 
 	handleLayerSelectAction(x, y, options = {}) {
 		if (this.currentTool !== ToolType.SELECT) return;
+		if (this.autoGlitterManager?.isSessionActive()) {
+			this.autoGlitterManager.handleCanvasSelect(x, y);
+			return;
+		}
 		if (!CONFIG.app.behavior.autoSelect || this.justCompletedDrag) return;
 
 		this.layerManager.handleLayerPick(x, y, options);

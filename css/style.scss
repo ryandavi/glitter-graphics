@@ -9,3 +9,15 @@
 @use 'assets';
 @use 'modals';
 @use 'mobile';
+
+#autoGlitterSettingsSection .auto-glitter-preview-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+}
+
+#autoGlitterRerunMode > .segmented-option {
+	min-width: 0;
+	padding-right: var(--spacing-xs);
+	padding-left: var(--spacing-xs);
+}

@@ -5,6 +5,8 @@ class AutoGlitterManager {
 		this.worker = null;
 		this.segmentDirty = true;
 		this.segmentPromise = null;
+		this.analysisInFlight = false;
+		this.analysisQueued = false;
 		this.workerRequests = new Map();
 		this.discardRequest = null;
 		// Ephemeral preview batch shown on the real canvas while the Auto
@@ -31,6 +33,7 @@ class AutoGlitterManager {
 			capacity: document.getElementById('autoGlitterCapacity'),
 			existing: document.getElementById('autoGlitterExisting'),
 			existingSummary: document.getElementById('autoGlitterExistingSummary'),
+			editCurrent: document.getElementById('autoGlitterEditCurrent'),
 			replacePrevious: document.getElementById('autoGlitterReplacePrevious'),
 			addAnother: document.getElementById('autoGlitterAddAnother'),
 			paletteStyles: [...document.querySelectorAll('#autoGlitterPaletteStyle [data-value]')],
@@ -81,11 +84,9 @@ class AutoGlitterManager {
 			});
 			this.setSessionPreviewMode(mode);
 		}));
-		[this.ui.replacePrevious, this.ui.addAnother].forEach((input) => input?.addEventListener('change', () => {
-			this.applyCapacity();
-			this.syncPreviousBatchVisibility();
-			this.editor.updatePreview();
-			this.scheduleReduce();
+		[this.ui.editCurrent, this.ui.replacePrevious, this.ui.addAnother].forEach((input) => input?.addEventListener('change', () => {
+			if (!input.checked) return;
+			this.changePreviousMode();
 		}));
 		window.addEventListener('layerChanged', () => {
 			if (!this.session || this.editor.layerManager.activeLayerId === this.session.baseLayerId) return;
@@ -114,29 +115,50 @@ class AutoGlitterManager {
 		if (this.previousBatch) {
 			const count = this.previousBatch.layers.length;
 			this.ui.existingSummary.textContent = editedCount > 0
-				? `${editedCount === 1 ? 'This set has been changed' : `${editedCount} layers in this set have been changed`}. Replacing it will discard those edits.`
-				: `The previous ${count}-layer set has not been changed.`;
+				? `${editedCount === 1 ? 'This set has been changed' : `${editedCount} layers in this set have been changed`}. Edit preserves its visible regions; Replace discards those edits.`
+				: `Edit the current ${count}-layer set, replace it, or keep it and add another.`;
 			this.ui.existing.classList.toggle('has-warning', editedCount > 0);
-			this.ui.replacePrevious.checked = editedCount === 0;
-			this.ui.addAnother.checked = editedCount > 0;
+			this.ui.editCurrent.checked = true;
 		}
 
 		const limits = CONFIG.tools.autoGlitter.limits;
 		this.ui.count.min = limits.minColorLayers;
 		this.ui.count.max = limits.maxColorLayers;
-		this.ui.count.value = CONFIG.tools.autoGlitter.defaults.colorLayers;
-		this.setPaletteStyle(CONFIG.tools.autoGlitter.defaults.paletteStyle);
-		this.ui.mergeDistinctness.value = CONFIG.tools.autoGlitter.paletteStyles[this.paletteStyle].mergeDistinctness;
-		this.ui.detail.value = CONFIG.tools.autoGlitter.defaults.detail;
-		this.ui.cleanEdges.checked = CONFIG.tools.autoGlitter.defaults.cleanEdges;
-		this.ui.tuneHue.checked = CONFIG.tools.autoGlitter.defaults.tuneGlitterHue;
+		this.applySessionSettings(this.previousBatch?.layers[0]?.autoGlitter?.sessionState);
 		[this.ui.count, this.ui.mergeDistinctness, this.ui.detail].forEach((input) => this.updateControlReadout(input));
-		this.applyCapacity();
 		this.clearResult();
 		this.startSession();
 		this.segmentDirty = true;
 		this.showSessionPanel();
-		this.analyze();
+		if (this.previousBatch) this.loadPreviousBatch();
+		else this.analyze();
+	}
+
+	applySessionSettings(saved) {
+		const defaults = CONFIG.tools.autoGlitter.defaults;
+		const paletteStyle = saved && CONFIG.tools.autoGlitter.paletteStyles[saved.paletteStyle]
+			? saved.paletteStyle
+			: defaults.paletteStyle;
+		this.ui.count.value = saved ? saved.colorCount : defaults.colorLayers;
+		this.setPaletteStyle(paletteStyle);
+		this.ui.mergeDistinctness.value = saved
+			? saved.mergeDistinctness
+			: CONFIG.tools.autoGlitter.paletteStyles[paletteStyle].mergeDistinctness;
+		this.ui.detail.value = saved ? saved.detail : defaults.detail;
+		this.ui.cleanEdges.checked = saved ? saved.cleanEdges : defaults.cleanEdges;
+		this.ui.tuneHue.checked = saved ? saved.tuneHue : defaults.tuneGlitterHue;
+	}
+
+	captureSessionSettings() {
+		return {
+			version: 1,
+			colorCount: Number(this.ui.count.value),
+			paletteStyle: this.paletteStyle,
+			mergeDistinctness: Number(this.ui.mergeDistinctness.value),
+			detail: Number(this.ui.detail.value),
+			cleanEdges: this.ui.cleanEdges.checked,
+			tuneHue: this.ui.tuneHue.checked
+		};
 	}
 
 	setPaletteStyle(style) {
@@ -157,9 +179,17 @@ class AutoGlitterManager {
 
 	scheduleReduce() {
 		if (!this.session) return;
+		if (this.isEditingPrevious()) this.ui.replacePrevious.checked = true;
+		// Invalidate the running result immediately, but debounce the replacement.
+		// analyze() coalesces any timer that catches an in-flight worker request.
+		this.analysisRunId = (this.analysisRunId || 0) + 1;
+		this.ui.create.disabled = true;
 		this.setCanvasPreviewState(true, 'Updating preview…');
 		clearTimeout(this.reduceTimer);
-		this.reduceTimer = setTimeout(() => this.analyze(), CONFIG.tools.autoGlitter.timing.reduceThrottleMs);
+		this.reduceTimer = setTimeout(() => {
+			this.reduceTimer = null;
+			this.analyze();
+		}, CONFIG.tools.autoGlitter.timing.reduceThrottleMs);
 	}
 
 	getLatestBatch() {
@@ -196,7 +226,11 @@ class AutoGlitterManager {
 	}
 
 	shouldReplacePrevious() {
-		return Boolean(this.previousBatch && this.ui.replacePrevious.checked);
+		return Boolean(this.previousBatch && (this.ui.editCurrent.checked || this.ui.replacePrevious.checked));
+	}
+
+	isEditingPrevious() {
+		return Boolean(this.previousBatch && this.ui.editCurrent.checked);
 	}
 
 	getAvailableSlots() {
@@ -214,7 +248,9 @@ class AutoGlitterManager {
 		this.ui.count.max = Math.max(limits.minColorLayers, maximum);
 		if (Number(this.ui.count.value) > maximum && maximum >= limits.minColorLayers) this.ui.count.value = maximum;
 		this.ui.capacity.textContent = available >= limits.minColorLayers
-			? `Up to ${maximum} color layers can be created with this choice.`
+			? (this.isEditingPrevious()
+				? `Up to ${maximum} color layers can remain in the edited set.`
+				: `Up to ${maximum} color layers can be created with this choice.`)
 			: `At least ${limits.minColorLayers} open layer slots are needed. This choice leaves ${available}.`;
 		const creatable = this.result && this.getActivePaletteIndices().some((index) => !this.result.palette[index].skipped);
 		this.ui.create.disabled = available < limits.minColorLayers || !creatable;
@@ -223,16 +259,21 @@ class AutoGlitterManager {
 	cancelAnalysis() {
 		this.analysisRunId = (this.analysisRunId || 0) + 1;
 		clearTimeout(this.reduceTimer);
+		this.reduceTimer = null;
+		this.analysisQueued = false;
 	}
 
 	requestDiscardSession() {
 		if (!this.session) return Promise.resolve(true);
 		if (this.discardRequest) return this.discardRequest;
 		const activeSession = this.session;
+		const editingPrevious = this.isEditingPrevious();
 		this.discardRequest = this.editor.confirmAction({
-			title: 'Discard Auto Glitter Preview?',
-			message: 'The preview layers have not been created yet. Leaving Auto Glitter will discard them.',
-			confirmLabel: 'Discard Preview',
+			title: editingPrevious ? 'Discard Auto Glitter Changes?' : 'Discard Auto Glitter Preview?',
+			message: editingPrevious
+				? 'Leaving Auto Glitter will discard these changes and keep the current set as it was.'
+				: 'The preview layers have not been created yet. Leaving Auto Glitter will discard them.',
+			confirmLabel: editingPrevious ? 'Discard Changes' : 'Discard Preview',
 			cancelLabel: 'Keep Editing'
 		}).then((confirmed) => {
 			if (confirmed && this.session === activeSession) this.endSessionUI();
@@ -279,8 +320,86 @@ class AutoGlitterManager {
 		this.ui.status.textContent = 'Finding the image\'s distinct colors…';
 	}
 
+	changePreviousMode() {
+		if (!this.session || !this.previousBatch) return;
+		this.cancelAnalysis();
+		this.closePickerSession(false);
+		[...this.session.layers].forEach((layer) => this.removeSessionLayer(layer));
+		this.session.layers = [];
+		this.session.maskSignatures.clear();
+		this.clearResult();
+		this.syncPreviousBatchVisibility();
+		this.editor.updatePreview();
+		if (this.isEditingPrevious()) {
+			this.loadPreviousBatch();
+			return;
+		}
+		this.applyCapacity();
+		this.analyze();
+	}
+
+	loadPreviousBatch() {
+		if (!this.session || !this.previousBatch?.layers.length) return;
+		this.cancelAnalysis();
+		this.clearResult();
+		if (!this.previousBatch.layers[0].autoGlitter?.sessionState) {
+			const limits = CONFIG.tools.autoGlitter.limits;
+			this.ui.count.value = Math.max(limits.minColorLayers, Math.min(limits.maxColorLayers, this.previousBatch.layers.length));
+			this.updateControlReadout(this.ui.count);
+		}
+		const { width, height, data } = this.editor.originalImageData;
+		const labels = new Uint8Array(width * height);
+		labels.fill(255);
+		const palette = this.previousBatch.layers.map((layer) => {
+			const [r, g, b] = this.parseLayerColor(layer.fill?.color);
+			return {
+				r, g, b,
+				count: 0,
+				selectedGlitterId: layer.selectedGlitterId,
+				selectedColorAdjust: layer.settings?.colorAdjust ? JSON.parse(JSON.stringify(layer.settings.colorAdjust)) : null,
+				sourceLayer: layer
+			};
+		});
+		this.previousBatch.layers.forEach((layer, paletteIndex) => {
+			const mask = this.editor.maskCompositor.getMaskData(layer);
+			for (let pixelIndex = 0; pixelIndex < labels.length; pixelIndex++) {
+				if (mask[pixelIndex] >= CONFIG.tools.selection.transparency.alphaThreshold) labels[pixelIndex] = paletteIndex;
+			}
+		});
+		let visiblePixelCount = 0;
+		for (let pixelIndex = 0, offset = 3; pixelIndex < labels.length; pixelIndex++, offset += 4) {
+			if (data[offset] >= CONFIG.tools.autoGlitter.analysis.alphaThreshold) visiblePixelCount++;
+			const label = labels[pixelIndex];
+			if (label !== 255) palette[label].count++;
+		}
+		this.result = { labels, palette, visiblePixelCount };
+		this.analysisRunId = (this.analysisRunId || 0) + 1;
+		this.renderReviewResults();
+		this.ui.status.textContent = 'Editing the current Auto Glitter set. Palette or Advanced changes will rebuild it from the Base Image.';
+		this.setCanvasPreviewState(false);
+		this.applyCapacity();
+	}
+
+	parseLayerColor(value) {
+		const color = String(value || '').trim();
+		const rgb = color.match(/^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i);
+		if (rgb) return rgb.slice(1, 4).map((component) => Math.max(0, Math.min(255, Math.round(Number(component)))));
+		const hex = color.match(/^#([\da-f]{3}|[\da-f]{6})$/i)?.[1];
+		if (hex) {
+			const expanded = hex.length === 3 ? hex.split('').map((digit) => digit + digit).join('') : hex;
+			return [0, 2, 4].map((offset) => parseInt(expanded.slice(offset, offset + 2), 16));
+		}
+		return [0, 0, 0];
+	}
+
 	async analyze() {
 		if (!this.editor.originalImageData || !this.session) return;
+		if (this.analysisInFlight) {
+			this.analysisQueued = true;
+			return;
+		}
+		this.analysisInFlight = true;
+		this.analysisQueued = false;
 		const limits = CONFIG.tools.autoGlitter.limits;
 		const available = this.getAvailableSlots();
 		const count = Math.max(limits.minColorLayers, Math.min(
@@ -315,6 +434,11 @@ class AutoGlitterManager {
 			if (analysisId === this.analysisRunId) {
 				this.applyCapacity();
 				if (previewUpdated) this.setCanvasPreviewState(false);
+			}
+			this.analysisInFlight = false;
+			if (this.analysisQueued && !this.reduceTimer && this.session) {
+				this.analysisQueued = false;
+				this.analyze();
 			}
 		}
 	}
@@ -446,13 +570,19 @@ class AutoGlitterManager {
 		this.reconcileSession();
 		const actual = activeIndices.filter((index) => !this.result.palette[index].skipped).length;
 		this.ui.create.disabled = !actual;
-		this.ui.create.textContent = `Create ${actual} ${actual === 1 ? 'Layer' : 'Layers'}`;
+		this.ui.create.textContent = this.isEditingPrevious()
+			? 'Apply Changes'
+			: `Create ${actual} ${actual === 1 ? 'Layer' : 'Layers'}`;
 		const hasManualMerges = this.result.palette.some((color) => color.manualMergeTarget != null);
-		this.ui.status.textContent = hasManualMerges
-			? `${actual} ${actual === 1 ? 'layer' : 'layers'} will be created. Combined regions remain fully covered.`
-			: (actual === Number(this.ui.count.value)
-				? 'Review the glitter matches, then create the layers.'
-				: `Close shades were combined. ${actual} ${actual === 1 ? 'layer' : 'layers'} will be created.`);
+		if (this.isEditingPrevious()) {
+			this.ui.status.textContent = `${actual} ${actual === 1 ? 'layer remains' : 'layers remain'} in the current set. Review the matches, then apply your changes.`;
+		} else {
+			this.ui.status.textContent = hasManualMerges
+				? `${actual} ${actual === 1 ? 'layer' : 'layers'} will be created. Combined regions remain fully covered.`
+				: (actual === Number(this.ui.count.value)
+					? 'Review the glitter matches, then create the layers.'
+					: `Close shades were combined. ${actual} ${actual === 1 ? 'layer' : 'layers'} will be created.`);
+		}
 	}
 
 	formatCoverage(count) {
@@ -679,6 +809,27 @@ class AutoGlitterManager {
 		return toolAllowedByAccess(tool, CONFIG.tools.autoGlitter.previewToolAccess);
 	}
 
+	handleCanvasSelect(x, y) {
+		if (!this.session) return false;
+		if (this.session.previewMode !== 'glitter') {
+			this.editor.updateStatus('Switch the Auto Glitter preview to Glitter to choose a match from the canvas');
+			return true;
+		}
+
+		const layer = [...this.session.layers].reverse().find((candidate) =>
+			candidate.visible && this.editor.layerManager.isPixelInLayerSelection(candidate, x, y)
+		);
+		if (!layer || layer._autoGlitterRoot == null) {
+			this.editor.updateStatus('No Auto Glitter match at this location');
+			return true;
+		}
+
+		const index = layer._autoGlitterRoot;
+		this.openGlitterPicker(index);
+		this.editor.updateStatus(`Choosing glitter for Color ${index + 1}`);
+		return true;
+	}
+
 	// 'glitter' shows the batch as built, 'flat' swaps each fill slot to its
 	// solid palette color (the old posterized view, on the real canvas),
 	// 'original' hides the batch.
@@ -717,6 +868,16 @@ class AutoGlitterManager {
 			let layer = this.session.layers[position];
 			if (!layer) {
 				layer = this.editor.glitterManager.createLayer({ skipLimitCheck: true });
+				const sourceLayer = palette[rootIndex].sourceLayer;
+				if (sourceLayer) {
+					layer.settings = JSON.parse(JSON.stringify(sourceLayer.settings));
+					layer.settings.feather = 0;
+					layer.settings.invert = false;
+					layer.fill = JSON.parse(JSON.stringify(sourceLayer.fill));
+					layer.name = sourceLayer.name;
+					layer._autoGlitterSourceVisible = sourceLayer.visible;
+					layer._autoGlitterSourceLocked = sourceLayer.locked;
+				}
 				layer.isPreview = true;
 				layer.settings.feather = 0;
 				this.editor.layers.splice(baseIndex + 1 + position, 0, layer);
@@ -726,7 +887,7 @@ class AutoGlitterManager {
 			const glitter = glitters.find((item) => String(item.id) === String(color.selectedGlitterId));
 			layer._autoGlitterRoot = rootIndex;
 			layer.selectedGlitterId = glitter?.id ?? color.selectedGlitterId;
-			layer.name = glitter?.name || `Color ${rootIndex + 1}`;
+			layer.name = color.sourceLayer?.name || glitter?.name || `Color ${rootIndex + 1}`;
 			layer.settings.colorAdjust = color.selectedColorAdjust ? normalizeColorAdjust(color.selectedColorAdjust) : null;
 			layer.fill.color = `rgb(${color.r}, ${color.g}, ${color.b})`;
 			layer.fill.mode = this.session.previewMode === 'flat' ? 'solid' : 'glitter';
@@ -766,7 +927,7 @@ class AutoGlitterManager {
 		this.session.maskSignatures.set(layer.id, signature);
 	}
 
-	// "Replace previous" previews the replacement by hiding the old batch;
+	// Editing or replacing previews the result by hiding the old batch;
 	// visibility is restored on cancel or when switching back to "Keep and add".
 	syncPreviousBatchVisibility() {
 		const replace = this.shouldReplacePrevious();
@@ -810,6 +971,7 @@ class AutoGlitterManager {
 	// transient versions to avoid snapshotting on every live change).
 	createLayers() {
 		if (!this.result || !this.session) return;
+		const wasEditingPrevious = this.isEditingPrevious();
 		const previousShowAllLayers = this.session.previousShowAllLayers;
 		const previousTool = this.session.previousTool;
 		this.reconcileSession();
@@ -822,17 +984,23 @@ class AutoGlitterManager {
 		if (!kept.length) return;
 
 		this.ui.create.disabled = true;
-		this.ui.status.textContent = 'Creating editable glitter layers…';
+		this.ui.status.textContent = wasEditingPrevious ? 'Applying Auto Glitter changes…' : 'Creating editable glitter layers…';
 		if (this.shouldReplacePrevious()) this.removePreviousBatch();
 		else this.restoreHiddenPreviousBatch();
 		skipped.forEach((layer) => this.removeSessionLayer(layer));
 
 		const batchId = `auto-glitter-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 		const createdAt = Date.now();
+		const sessionState = this.captureSessionSettings();
 		kept.forEach((layer) => {
+			const sourceVisible = layer._autoGlitterSourceVisible;
+			const sourceLocked = layer._autoGlitterSourceLocked;
 			delete layer.isPreview;
 			delete layer._autoGlitterRoot;
-			layer.visible = true;
+			delete layer._autoGlitterSourceVisible;
+			delete layer._autoGlitterSourceLocked;
+			layer.visible = wasEditingPrevious && sourceVisible != null ? sourceVisible : true;
+			layer.locked = wasEditingPrevious && sourceLocked != null ? sourceLocked : false;
 			layer.fill.mode = 'glitter';
 			this.editor.glitterManager.commitPaintState(layer);
 		});
@@ -841,6 +1009,7 @@ class AutoGlitterManager {
 				batchId,
 				createdAt,
 				batchSize: kept.length,
+				sessionState,
 				generatedState: JSON.stringify(this.captureGeneratedState(layer))
 			};
 		});
@@ -856,7 +1025,8 @@ class AutoGlitterManager {
 		this.editor.saveState();
 		this.endSessionUI({ cancel: false, previousShowAllLayers, previousTool });
 		const effectNotice = canvasEffectsDisabled ? '; Canvas Effects turned off (settings preserved)' : '';
-		this.editor.updateStatus(`Created ${kept.length} editable glitter ${kept.length === 1 ? 'layer' : 'layers'}${effectNotice}`);
+		const action = wasEditingPrevious ? 'Updated' : 'Created';
+		this.editor.updateStatus(`${action} ${kept.length} editable glitter ${kept.length === 1 ? 'layer' : 'layers'}${effectNotice}`);
 	}
 
 	removePreviousBatch() {
