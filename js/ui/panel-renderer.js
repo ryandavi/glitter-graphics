@@ -628,9 +628,7 @@ function renderPanelSection(schema) {
 		controls.appendChild(subsection);
 		content.replaceChildren(empty, controls);
 	}
-	// Prepend, not append: some section hosts carry nested static sections
-	// (layerSettingsSection lives inside shapeSettingsSection) that must stay
-	// after the rendered header/content.
+	// Keep generated section chrome before any retained static host content.
 	(schema.sourceTemplate ? document.getElementById(schema.sourceTemplate) : host.querySelector(':scope > template'))?.remove();
 	host.prepend(fragment);
 }

@@ -1089,9 +1089,12 @@ async resetAllSettings() {
 	// active (Photoshop Options-bar behavior); otherwise the SELECTED layer's
 	// Properties; otherwise the Design Gallery (nothing to edit / browse mode).
 	getPreferredDesignSection(layer) {
-		// Brush/Eraser Settings follow the tool, independent of the layer.
+		// Tool settings take focus when the active layer can use that tool.
 		if (this.currentTool === ToolType.BRUSH) {
 			return 'brushSettings';
+		}
+		if (this.currentTool === ToolType.COLOR_PICKER && layer?.type === LayerType.GLITTER_FILL) {
+			return 'layerSettings';
 		}
 
 		// An armed glitter pick-session keeps the gallery focused (Done returns you).

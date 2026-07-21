@@ -409,7 +409,7 @@ const CONFIG = {
 					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' }
 				]
 			},
-			{ id: 'colorPickerControls', tool: 'colorPicker', layerTypes: ['glitter-fill'], requiresSelections: true, controls: [
+			{ id: 'colorPickerControls', tool: 'colorPicker', layerTypes: ['glitter-fill'], controls: [
 				{ kind: 'slider', id: 'contextThreshold', valueId: 'contextThresholdValue', slider: 'threshold' },
 				{ kind: 'group', controls: [
 					{ kind: 'toggle', id: 'contextMultiSelect', label: 'Multi', countId: 'contextSelectionCount' },
@@ -1037,6 +1037,10 @@ const PANEL_SCHEMAS = {
 					primaryIds: { scale: 'baseBackgroundScale', opacity: 'baseBackgroundOpacity' }
 				}
 			] },
+			{ title: 'Canvas', items: [
+				{ kind: 'host', id: 'baseCanvasSizeHost' }
+			] },
+
 			{ title: 'Effects', items: [
 				{ kind: 'card', classes: 'pixelate-effect-card', title: 'Pixelate', toggle: { id: 'pixelEffectsPixelateEnabled', label: 'Enabled' }, items: [
 					{ kind: 'slider', id: 'pixelEffectsPixelSize', slider: 'pixelEffectsPixelSize', title: '1 is off; larger values create crisp mosaic cells before palette processing' },
@@ -1088,9 +1092,8 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
-			{ title: 'Canvas', items: [
-				{ kind: 'host', id: 'baseCanvasSizeHost' }
-			] }
+
+
 		]
 	},
 	brush: {
