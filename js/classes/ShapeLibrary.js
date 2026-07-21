@@ -2,7 +2,7 @@
 // SHAPE LIBRARY
 // ============================================
 // Single source of truth for all shape geometry AND the gallery thumbnails
-// (WP5a/WP5b, docs/TOOL-EXPANSION-PLAN.md). Each shape is defined ONCE — as an
+// Each shape is defined ONCE — as an
 // SVG path `d` string (or a trivial primitive) in its own square viewBox — and
 // that same definition drives:
 //   - the on-canvas mask (trace() fills a Path2D built from the definition), and

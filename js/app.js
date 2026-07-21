@@ -5609,8 +5609,7 @@ setupWelcomeModalListeners() {
 			this.previewCtx.putImageData(this.originalImageData, 0, 0);
 
 			// P-1: warm the default font as soon as an image is available, so the
-			// first Text tool click almost never races the FontFace load (see
-			// TextGlitterManager's font-readiness cache-key fix, docs/UX-PLAN-2.md §4).
+			// first Text tool click almost never races the FontFace load.
 			this.textGlitterManager?.ensureFontLoaded(CONFIG.tools.text.defaultFontId).catch(() => {});
 
 			window.dispatchEvent(new Event('imageLoaded'));

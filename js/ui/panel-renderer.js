@@ -1,6 +1,6 @@
 'use strict';
 
-// Sidebar panel renderer (docs/SIDEBAR-TEMPLATE-PLAN.md). Clones the tpl-*
+// Sidebar panel renderer. Clones the tpl-*
 // <template> primitives in index.html per PANEL_SCHEMAS (core/config.js) and
 // stamps ids, labels, and slider ranges (CONFIG.ui.sliders). Renders ONCE at
 // boot, before any manager caches or binds panel elements — managers keep

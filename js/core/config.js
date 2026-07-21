@@ -951,13 +951,13 @@ const LAYER_UI_CONFIG = {
 	}
 };
 
-// Declarative sidebar panel structure consumed by js/ui/panel-renderer.js
-// (docs/SIDEBAR-TEMPLATE-PLAN.md). Structure, ordering, and capabilities
+// Declarative sidebar panel structure consumed by js/ui/panel-renderer.js.
+// Structure, ordering, and capabilities
 // only — markup lives in the index.html tpl-* <template>s, slider ranges in
 // CONFIG.ui.sliders. Stamped element ids preserve the legacy names exactly
 // (managers keep binding by id); paintSlot ids derive as idPrefix +
 // capitalized role. Panels not listed here are still static index.html
-// markup awaiting migration (see the plan's WP order).
+// markup awaiting migration.
 const PANEL_SCHEMAS = {
 	autoGlitterSession: {
 		prefix: 'autoGlitter',

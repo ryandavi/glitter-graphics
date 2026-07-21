@@ -1,6 +1,6 @@
 'use strict';
 
-// Sidebar structural-parity harness (docs/SIDEBAR-TEMPLATE-PLAN.md).
+// Sidebar structural-parity harness.
 // Captures every [id] element inside the design-panel settings sections
 // (tag, classes, nearest [id] ancestor, input ranges) plus, per layer type,
 // the hidden/active state of every control through a full paint-slot mode

@@ -1,7 +1,7 @@
 // ============================================
 // GLITTER COLOR ADJUST (hue / saturation / brightness)
 // ============================================
-// Single source of truth for the WP4 color-adjust math (docs/TOOL-EXPANSION-PLAN.md).
+// Single source of truth for the glitter color-adjust math.
 //
 // The DOM preview applies buildCssColorFilter() as a CSS `filter`; the GIF
 // exporter applies applyColorAdjustToImageData() per-pixel to the flattened
@@ -100,4 +100,3 @@ function applyColorAdjustToImageData(imageData, adjust) {
 	}
 	return imageData;
 }
-

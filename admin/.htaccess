@@ -1,5 +1,5 @@
 # ============================================================
-# INTERIM ADMIN LOCKDOWN — see docs/AUDIT.md (finding C1)
+# INTERIM ADMIN LOCKDOWN
 # The admin API has no application-level auth yet, so restrict
 # the whole /admin directory to local requests.
 #
@@ -10,7 +10,7 @@
 #   AuthUserFile /path/outside/webroot/.htpasswd
 #   Require valid-user
 # (Generate .htpasswd with: htpasswd -c /path/.htpasswd yourname)
-# The real fix (session login + CSRF) is Codex Goal 1 in the audit.
+# The permanent fix is application-level session authentication and CSRF protection.
 # ============================================================
 
 # Apache 2.4+

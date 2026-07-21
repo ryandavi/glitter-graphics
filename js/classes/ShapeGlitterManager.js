@@ -1,7 +1,7 @@
 // ============================================
 // SHAPE GLITTER MANAGER
 // ============================================
-// Parametric vector-shape layers (WP5b, docs/TOOL-EXPANSION-PLAN.md): circle,
+// Parametric vector-shape layers: circle,
 // square, star, heart, each with a glitter-or-solid Fill, optional Border, and
 // optional Shadow. Deliberately mirrors TextGlitterManager's span-stack preview
 // and effect-slot model — a shape is "text with a shape mask instead of glyphs"

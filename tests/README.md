@@ -72,7 +72,7 @@ CDP is used for multi-touch because `page.touchscreen` cannot express pinch/rota
 
 - The suite opens a fresh mobile-touch Playwright context for each numbered check and runs the whole suite twice from fresh browser launches to catch state leakage.
 - Assertions are intentionally tolerant: position checks allow a few pixels of drift and scale checks allow about 5 percent variation.
-- The harness removes visible modal overlays and closes mobile drawers before interacting, then waits for `window.editor.originalImage` after `editor.loadBlankImage(...)`, matching the app-specific session gotchas from `docs/TOUCH-PLAN.md`.
+- The harness removes visible modal overlays and closes mobile drawers before interacting, then waits for `window.editor.originalImage` after `editor.loadBlankImage(...)` to match the app's session setup.
 
 ## Current gaps
 
