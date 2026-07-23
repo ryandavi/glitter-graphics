@@ -443,7 +443,8 @@ class GroupTransformManager {
 			`;
 		}
 
-		const outset = CONFIG.ui.stickerHandles.outwardOffset;
+		const zoom = this.editor.viewport.currentZoom;
+		const outset = screenPixelsToCanvasUnits(CONFIG.ui.stickerHandles.outwardOffset, zoom);
 		const corners = {
 			tl: { x: bounds.left - outset, y: bounds.top - outset },
 			tr: { x: bounds.right + outset, y: bounds.top - outset },
@@ -464,7 +465,7 @@ class GroupTransformManager {
 			wrapper.style.cursor = corner === 'tl' || corner === 'br' ? 'nwse-resize' : 'nesw-resize';
 		});
 
-		const rotationDistance = CONFIG.ui.stickerHandles.rotationHandleDistance;
+		const rotationDistance = screenPixelsToCanvasUnits(CONFIG.ui.stickerHandles.rotationHandleDistance, zoom);
 		const topCenterX = bounds.centerX;
 		const topCenterY = bounds.top - rotationDistance;
 		const rotationWrapper = this.transformHandles.querySelector('[data-handle-type="rotation"]');
@@ -480,11 +481,12 @@ class GroupTransformManager {
 
 		const rotationLine = this.transformHandles.querySelector('.transform-rotation-line');
 		if (rotationLine) {
+			const lineWidth = screenPixelsToCanvasUnits(CONFIG.ui.stickerHandles.boundingBoxWidth, zoom);
 			rotationLine.style.cssText = `
 				position: absolute;
 				left: ${bounds.centerX}px;
 				top: ${bounds.top}px;
-				width: ${CONFIG.ui.stickerHandles.boundingBoxWidth}px;
+				width: ${lineWidth}px;
 				height: ${rotationDistance}px;
 				transform: translate(-50%, 0);
 				transform-origin: top center;

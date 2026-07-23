@@ -473,7 +473,7 @@
      theme accent and the drop shadow separates it from light artwork. */
   --handle-fill: #ffffff;
   --handle-border-color: var(--color-accent);
-  --handle-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+  --handle-shadow: 0 calc(1px / var(--zoom, 1)) calc(3px / var(--zoom, 1)) rgb(0 0 0 / 35%);
   /* Backdrop blur behind translucent chrome (mini-modals, overlay scrim) —
      glass-era themes (Dew) turn it up. */
   --glass-blur: 4px;
@@ -1591,7 +1591,8 @@ input[type=range]:disabled {
 
 .transform-bounding-box {
   border: var(--color-accent) solid;
-  border-width: 1.5px;
+  border-width: calc(1.5px / var(--zoom, 1));
+  box-shadow: 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(255, 255, 255, 0.8), inset 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(0, 0, 0, 0.45);
   box-sizing: border-box;
   pointer-events: auto;
   cursor: move;
@@ -1636,22 +1637,22 @@ input[type=range]:disabled {
   pointer-events: none;
   box-sizing: border-box;
   background: var(--handle-fill);
-  border: 1.5px solid var(--handle-border-color);
+  border: calc(1.5px / var(--zoom, 1)) solid var(--handle-border-color);
   box-shadow: var(--handle-shadow);
 }
 .transform-handle.transform-handle-corner {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
+  width: calc(8px / var(--zoom, 1));
+  height: calc(8px / var(--zoom, 1));
+  border-radius: calc(2px / var(--zoom, 1));
 }
 .transform-handle.transform-handle-rotation {
-  width: 10px;
-  height: 10px;
+  width: calc(10px / var(--zoom, 1));
+  height: calc(10px / var(--zoom, 1));
   border-radius: 50%;
 }
 .transform-handle.transform-handle-edge {
-  width: 12px;
-  height: 12px;
+  width: calc(12px / var(--zoom, 1));
+  height: calc(12px / var(--zoom, 1));
   border-radius: 50%;
 }
 
@@ -2943,10 +2944,10 @@ input[type=range]:disabled {
   background-color: var(--color-bg-tertiary);
 }
 .preview-container.bounds .preview-wrapper {
-  outline: 2px dashed var(--bounds-outline-color);
-  outline-offset: -2px;
+  outline: calc(2px / var(--zoom, 1)) dashed var(--bounds-outline-color);
+  outline-offset: calc(-2px / var(--zoom, 1));
   /* Draws inside the canvas edge */
-  box-shadow: 0 0 0 1px var(--color-shadow-strong), 0 0 8px var(--color-shadow-strong);
+  box-shadow: 0 0 0 calc(1px / var(--zoom, 1)) var(--color-shadow-strong), 0 0 calc(8px / var(--zoom, 1)) var(--color-shadow-strong);
   /* Contrast ring follows the theme's shadow tier (black reads as dirt on light UIs) */
   /* Clip any layer content that extends past the canvas edge - the
      toggle's whole point is previewing what's actually inside bounds. */
@@ -3059,14 +3060,14 @@ input[type=range]:disabled {
   max-height: none;
 }
 .preview-wrapper .preview-canvas.selected {
-  outline-width: max(1px, 2px / var(--zoom, 1));
+  outline-width: calc(2px / var(--zoom, 1));
   outline-style: dashed;
   outline-color: var(--selected-outline-color);
-  outline-offset: min(-1px, -2px / var(--zoom, 1));
-  box-shadow: 0 0 0 max(1px, 1px / var(--zoom, 1)) rgba(0, 0, 0, 0.5), 0 0 max(4px, 8px / var(--zoom, 1)) rgba(0, 0, 0, 0.5);
+  outline-offset: calc(-2px / var(--zoom, 1));
+  box-shadow: 0 0 0 calc(1px / var(--zoom, 1)) rgba(0, 0, 0, 0.5), 0 0 calc(8px / var(--zoom, 1)) rgba(0, 0, 0, 0.5);
 }
 .preview-wrapper.hasImage > .preview-canvas:not(.selected) {
-  outline: 1px solid var(--gray-600);
+  outline: calc(1px / var(--zoom, 1)) solid var(--gray-600);
 }
 
 .mask-brush-cursor {
@@ -3075,13 +3076,13 @@ input[type=range]:disabled {
   left: 0;
   width: 0;
   height: 0;
-  border: 1px solid var(--color-accent);
+  border: calc(1px / var(--zoom, 1)) solid var(--color-accent);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 30;
   display: none;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 calc(1px / var(--zoom, 1)) rgba(0, 0, 0, 0.55);
 }
 .mask-brush-cursor.visible {
   display: block;
@@ -3099,26 +3100,26 @@ input[type=range]:disabled {
 .mask-brush-cursor::before {
   top: 50%;
   left: 50%;
-  width: 12px;
-  height: 1px;
+  width: calc(12px / var(--zoom, 1));
+  height: calc(1px / var(--zoom, 1));
   transform: translate(-50%, -50%);
 }
 .mask-brush-cursor::after {
   top: 50%;
   left: 50%;
-  width: 1px;
-  height: 12px;
+  width: calc(1px / var(--zoom, 1));
+  height: calc(12px / var(--zoom, 1));
   transform: translate(-50%, -50%);
 }
 .mask-brush-cursor > .mask-brush-cursor-dot {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 4px;
-  height: 4px;
+  width: calc(4px / var(--zoom, 1));
+  height: calc(4px / var(--zoom, 1));
   border-radius: 50%;
   background: var(--color-bg-primary);
-  border: 1px solid var(--color-accent);
+  border: calc(1px / var(--zoom, 1)) solid var(--color-accent);
   transform: translate(-50%, -50%);
 }
 
@@ -4050,8 +4051,8 @@ body.mask-editing .sticker-element {
   pointer-events: none;
   z-index: 6;
   box-sizing: border-box;
-  border: max(1px, 2px / var(--zoom, 1)) dashed var(--color-accent);
-  box-shadow: inset 0 0 0 max(1px, 1px / var(--zoom, 1)) rgba(0, 0, 0, 0.55), 0 0 0 max(1px, 1px / var(--zoom, 1)) rgba(0, 0, 0, 0.55);
+  border: calc(2px / var(--zoom, 1)) dashed var(--color-accent);
+  box-shadow: inset 0 0 0 calc(1px / var(--zoom, 1)) rgba(0, 0, 0, 0.55), 0 0 0 calc(1px / var(--zoom, 1)) rgba(0, 0, 0, 0.55);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
@@ -4723,17 +4724,20 @@ body.tool-text .preview-wrapper {
   position: absolute;
   z-index: 1002;
   background: var(--smart-guide-color);
+  box-shadow: 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(255, 255, 255, 0.9), 0 0 calc(3px / var(--zoom, 1)) calc(0.5px / var(--zoom, 1)) rgba(0, 0, 0, 0.65);
   pointer-events: none;
 }
 .smart-guide-x {
   top: 0;
   bottom: 0;
-  width: 1px;
+  width: calc(1.5px / var(--zoom, 1));
+  transform: translateX(-50%);
 }
 .smart-guide-y {
   left: 0;
   right: 0;
-  height: 1px;
+  height: calc(1.5px / var(--zoom, 1));
+  transform: translateY(-50%);
 }
 
 .sticker-element,
@@ -4801,12 +4805,12 @@ body.tool-text .preview-wrapper {
 .text-glitter-element.text-overflowing.selected > .text-glitter-stack::before {
   content: "";
   position: absolute;
-  right: calc(var(--tf-right, 0px) + max(2px, 2px / var(--zoom, 1) / var(--layer-scale, 1)));
-  bottom: calc(var(--tf-bottom, 0px) + max(2px, 2px / var(--zoom, 1) / var(--layer-scale, 1)));
+  right: calc(var(--tf-right, 0px) + 2px / var(--zoom, 1) / var(--layer-scale, 1));
+  bottom: calc(var(--tf-bottom, 0px) + 2px / var(--zoom, 1) / var(--layer-scale, 1));
   width: 0;
   height: 0;
-  border-left: max(8px, 8px / var(--zoom, 1) / var(--layer-scale, 1)) solid transparent;
-  border-top: max(8px, 8px / var(--zoom, 1) / var(--layer-scale, 1)) solid rgba(245, 158, 11, 0.95);
+  border-left: calc(8px / var(--zoom, 1) / var(--layer-scale, 1)) solid transparent;
+  border-top: calc(8px / var(--zoom, 1) / var(--layer-scale, 1)) solid rgba(245, 158, 11, 0.95);
   pointer-events: none;
   z-index: 1;
 }
@@ -4828,7 +4832,7 @@ body.tool-shape #canvasElementsContainer {
   z-index: 200;
   border: 2px dashed var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 18%, transparent);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.85), 0 0 6px rgba(0, 0, 0, 0.45);
   pointer-events: none;
 }
 
@@ -4840,8 +4844,8 @@ body.tool-select .shape-glitter-element {
 body.tool-select .text-glitter-element:not(.selected):hover > .text-glitter-stack::after,
 body.tool-select .shape-glitter-element:not(.selected):hover > .shape-glitter-stack::after {
   display: block;
-  outline: 1px dashed rgba(0, 0, 0, 0.25);
-  outline-offset: -1px;
+  outline: calc(1px / var(--zoom, 1) / var(--layer-scale, 1)) dashed rgba(0, 0, 0, 0.55);
+  outline-offset: calc(-1px / var(--zoom, 1) / var(--layer-scale, 1));
 }
 body.tool-select .preview-canvas {
   cursor: pointer;
@@ -4851,7 +4855,8 @@ body.tool-select .preview-canvas {
   position: absolute;
   z-index: var(--z-header-menu-elevated);
   box-sizing: border-box;
-  border: 1px dashed color-mix(in srgb, var(--selected-outline-color) 45%, transparent);
+  border: calc(1.5px / var(--zoom, 1)) dashed var(--selected-outline-color);
+  box-shadow: 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(0, 0, 0, 0.55);
   pointer-events: none;
 }
 
@@ -4866,11 +4871,11 @@ body.tool-select .preview-canvas {
 .layer-pick-flash {
   position: absolute;
   z-index: var(--z-drawer);
-  width: var(--icon-size);
-  height: var(--icon-size);
-  margin-top: calc(var(--icon-size-xs) * -1);
-  margin-left: calc(var(--icon-size-xs) * -1);
-  border: 3px solid var(--color-accent);
+  width: calc(var(--icon-size) / var(--zoom, 1));
+  height: calc(var(--icon-size) / var(--zoom, 1));
+  margin-top: calc(var(--icon-size-xs) * -1 / var(--zoom, 1));
+  margin-left: calc(var(--icon-size-xs) * -1 / var(--zoom, 1));
+  border: calc(3px / var(--zoom, 1)) solid var(--color-accent);
   border-radius: 50%;
   pointer-events: none;
   animation: pickFlash var(--transition-base) ease-out;

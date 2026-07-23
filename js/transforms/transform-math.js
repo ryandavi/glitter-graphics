@@ -59,6 +59,12 @@ function clampLayerScale(value) {
 	return Math.max(min, Math.min(max, value));
 }
 
+// Canvas overlays inherit the viewport transform, so screen-sized UI distances
+// must be expressed in canvas units before they are positioned.
+function screenPixelsToCanvasUnits(value, zoom) {
+	return value / Math.max(0.01, Number(zoom) || 1);
+}
+
 function computeLayerTransform(transform, dimensions = {}) {
 	const resolved = cloneTransform(transform);
 	const width = Number(dimensions.width) || 0;
@@ -88,4 +94,3 @@ function computeLayerTransform(transform, dimensions = {}) {
 		flipY: Boolean(resolved.flipY)
 	};
 }
-

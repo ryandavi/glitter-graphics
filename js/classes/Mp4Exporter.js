@@ -86,7 +86,9 @@ class Mp4Exporter {
 		const muxerFrameRate = Math.max(1, Math.round(1000 / averageFrameDuration));
 		const preset = CONFIG.export.mp4.qualityPresets[exportSettings.mp4Quality];
 		const encoderConfig = await Mp4Exporter.getSupportedConfig(width, height, preset.bitrate);
-		if (!encoderConfig) throw new Error('MP4 export is not supported by this browser.');
+		if (!encoderConfig) {
+			throw new Error(`MP4 export cannot encode a ${width} × ${height} canvas with this browser's available H.264 profiles.`);
+		}
 
 		const target = new Mp4Muxer.ArrayBufferTarget();
 		const muxer = new Mp4Muxer.Muxer({

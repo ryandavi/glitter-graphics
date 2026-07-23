@@ -61,18 +61,13 @@
 
 
 @mixin selected {
-	outline-width: max(1px, calc(2px / var(--zoom, 1)));
+	outline-width: calc(2px / var(--zoom, 1));
 	outline-style: dashed;
 	outline-color: var(--selected-outline-color);
-
-	// 3. Scale the offset so it stays "tight" to the edge
-	// We use min() here because it's a negative number
-	outline-offset: min(-1px, calc(-2px / var(--zoom, 1)));
-
-	// 4. Scale the shadow so the glow and contrast line stay consistent
+	outline-offset: calc(-2px / var(--zoom, 1));
 	box-shadow:
-		0 0 0 max(1px, calc(1px / var(--zoom, 1))) rgba(0, 0, 0, 0.5),
-		0 0 max(4px, calc(8px / var(--zoom, 1))) rgba(0, 0, 0, 0.5);
+		0 0 0 calc(1px / var(--zoom, 1)) rgba(0, 0, 0, 0.5),
+		0 0 calc(8px / var(--zoom, 1)) rgba(0, 0, 0, 0.5);
 }
 
 @mixin text-xs {

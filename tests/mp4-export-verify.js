@@ -11,12 +11,24 @@ async function main() {
 		await page.goto(APP_URL, { waitUntil: 'networkidle' });
 		const result = await page.evaluate(async () => {
 			if (!await Mp4Exporter.isSupported()) return { supported: false };
+			const maxCanvasConfig = await Mp4Exporter.getSupportedConfig(
+				CONFIG.canvas.limits.maxWidth,
+				CONFIG.canvas.limits.maxHeight,
+				CONFIG.export.mp4.qualityPresets.high.bitrate
+			);
+			if (!maxCanvasConfig) {
+				throw new Error(`No H.264 profile supports the ${CONFIG.canvas.limits.maxWidth}x${CONFIG.canvas.limits.maxHeight} canvas limit.`);
+			}
 			document.querySelector('[data-export-format="mp4"]').click();
+			const lengthMode = document.getElementById('exportMp4LengthMode');
+			lengthMode.value = 'loops';
+			lengthMode.dispatchEvent(new Event('change', { bubbles: true }));
 			const repeatInput = document.getElementById('exportMp4LoopCount');
 			repeatInput.value = '15';
 			repeatInput.dispatchEvent(new Event('input', { bubbles: true }));
 			const settingsUi = {
 				duration: document.getElementById('exportMp4Duration').textContent,
+				loopCount: editor.exportSettings.mp4LoopCount,
 				matteDisabled: document.getElementById('exportMatteColor').disabled,
 				matteRowDisabled: document.getElementById('matteColorRow').classList.contains('disabled')
 			};
@@ -84,7 +96,7 @@ async function main() {
 		if (!result.resultModal.visible || !result.resultModal.videoVisible || !result.resultModal.imageHidden) throw new Error('MP4 result modal did not show its video preview.');
 		if (result.resultModal.saveLabel !== 'Save MP4' || result.resultModal.openLabel !== 'Open MP4') throw new Error('MP4 result actions were not format-aware.');
 		if (!result.resultModal.duration.includes('0.66s') || !result.resultModal.size.match(/\d/)) throw new Error('MP4 result stats were incomplete.');
-		if (!result.settingsUi.duration.includes('15 repeats')) throw new Error('MP4 duration did not update beyond the former 10-repeat limit.');
+		if (result.settingsUi.loopCount !== 15) throw new Error('MP4 loop count did not update beyond the former 10-repeat limit.');
 		if (result.settingsUi.matteDisabled || result.settingsUi.matteRowDisabled) throw new Error('MP4 matte color remained disabled.');
 		console.log(`PASS MP4 Blob (${result.size} bytes) decoded at ${result.width}x${result.height}, ${result.duration.toFixed(2)}s.`);
 	} finally {

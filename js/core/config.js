@@ -599,7 +599,15 @@ const CONFIG = {
 				standard: { label: 'Standard', bitrate: 2000000 },
 				high: { label: 'High', bitrate: 4000000 }
 			},
-			codecs: ['avc1.42001f', 'avc1.4d001f', 'avc1.64001f'],
+			// Ascending H.264 levels let the encoder select the lowest level that
+			// can represent the requested canvas, through the 2048px document cap.
+			codecs: [
+				'avc1.42001f', 'avc1.4d001f', 'avc1.64001f',
+				'avc1.420028', 'avc1.4d0028', 'avc1.640028',
+				'avc1.42002a', 'avc1.4d002a', 'avc1.64002a',
+				'avc1.420032', 'avc1.4d0032', 'avc1.640032',
+				'avc1.420033', 'avc1.4d0033', 'avc1.640033'
+			],
 			supportProbeWidth: 16,
 			supportProbeHeight: 16,
 			supportProbeFrameRate: 30,

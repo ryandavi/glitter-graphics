@@ -633,7 +633,10 @@ input[type="range"] {
 
 .transform-bounding-box {
 	border: var(--color-accent) solid;
-	border-width: 1.5px;
+	border-width: calc(1.5px / var(--zoom, 1));
+	box-shadow:
+		0 0 0 calc(0.75px / var(--zoom, 1)) rgba(255, 255, 255, 0.8),
+		inset 0 0 0 calc(0.75px / var(--zoom, 1)) rgba(0, 0, 0, 0.45);
 	box-sizing: border-box;
 	pointer-events: auto; // Now draggable
 	cursor: move;
@@ -690,24 +693,24 @@ input[type="range"] {
 	// text-primary fill went near-black on light themes and muddied against
 	// the accent bounding box. Shadow separates the handle from light artwork.
 	background: var(--handle-fill);
-	border: 1.5px solid var(--handle-border-color);
+	border: calc(1.5px / var(--zoom, 1)) solid var(--handle-border-color);
 	box-shadow: var(--handle-shadow);
 
 	&.transform-handle-corner {
-		width: 8px;
-		height: 8px;
-		border-radius: 2px;
+		width: calc(8px / var(--zoom, 1));
+		height: calc(8px / var(--zoom, 1));
+		border-radius: calc(2px / var(--zoom, 1));
 	}
 
 	&.transform-handle-rotation {
-		width: 10px;
-		height: 10px;
+		width: calc(10px / var(--zoom, 1));
+		height: calc(10px / var(--zoom, 1));
 		border-radius: 50%;
 	}
 
 	&.transform-handle-edge {
-		width: 12px;
-		height: 12px;
+		width: calc(12px / var(--zoom, 1));
+		height: calc(12px / var(--zoom, 1));
 		border-radius: 50%;
 	}
 }

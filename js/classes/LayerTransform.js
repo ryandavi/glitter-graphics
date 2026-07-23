@@ -944,7 +944,8 @@ createTransformHandles() {
         // Half dimensions
         const hw = displayWidth / 2;
         const hh = displayHeight / 2;
-		const outset = config.outwardOffset;
+		const zoom = this.editor.viewport.currentZoom;
+		const outset = screenPixelsToCanvasUnits(config.outwardOffset, zoom);
 
 		// Handles sit just outside the selection border. The bounding box remains
 		// exact, so the visual outset cannot change transform geometry.
@@ -1020,7 +1021,8 @@ createTransformHandles() {
         }
 
         // Position rotation handle (above top center)
-        const topCenterLocal = { x: 0, y: -hh - config.rotationHandleDistance };
+		const rotationHandleDistance = screenPixelsToCanvasUnits(config.rotationHandleDistance, zoom);
+        const topCenterLocal = { x: 0, y: -hh - rotationHandleDistance };
         const topCenter = {
             x: centerX + (topCenterLocal.x * cos - topCenterLocal.y * sin),
             y: centerY + (topCenterLocal.x * sin + topCenterLocal.y * cos)
@@ -1046,14 +1048,15 @@ createTransformHandles() {
                 y: centerY + (topBoxLocal.x * sin + topBoxLocal.y * cos)
             };
 
-            const lineLength = config.rotationHandleDistance;
+            const lineLength = rotationHandleDistance;
             const lineAngle = transform.rotation;
+			const lineWidth = screenPixelsToCanvasUnits(config.boundingBoxWidth, zoom);
 
             rotationLine.style.cssText = `
 				position: absolute;
 				left: ${topBox.x}px;
 				top: ${topBox.y}px;
-				width: ${config.boundingBoxWidth}px;
+				width: ${lineWidth}px;
 				height: ${lineLength}px;
 				transform: translate(-50%, 0) rotate(${lineAngle}deg);
 				transform-origin: top center;
