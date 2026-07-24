@@ -1,6 +1,6 @@
-// Light — early-2000s Mac OS X Aqua. Every grey is blue-tinted from one
-// family so panels, drop zones, cards, and pickers share the headers' vibe;
-// a theme should only ever override tokens, never component rules.
+// Light — the neutral light counterpart to the default dark theme. Every grey
+// is blue-tinted from one family so panels, drop zones, cards, and pickers feel
+// related; a theme should only ever override tokens, never component rules.
 :root[data-theme="light"] {
 	color-scheme: light;
 
@@ -29,8 +29,7 @@
 	--color-bg-translucent: rgb(252 254 255 / 95%);
 	--color-warning-text: #7d3a00;
 
-	/* Aqua accent — Mac selection blue, deeper and calmer than the dark
-	   theme's neon #007bff */
+	/* Calm selection blue, deeper than the dark theme's neon #007bff */
 	--color-accent: #3577cf;
 	--color-accent-hover: #2b68bd;
 	--color-accent-light: #6fa1e0;
@@ -48,8 +47,7 @@
 	--color-shadow-strong: rgb(30 42 54 / 20%);
 	--color-shadow-modal: rgb(30 42 54 / 30%);
 
-	/* Bars: Aqua pinstripe blue, dark title, white lift instead of a black
-	   drop shadow. */
+	/* Cool blue bars, dark title, white lift instead of a black drop shadow. */
 	--bar-gradient-top: #eef7fe;
 	--bar-gradient-bottom: #c9ddf0;
 	--bar-title-color: var(--color-text-primary);
@@ -57,7 +55,7 @@
 	--bar-hover-filter: brightness(0.97) saturate(1.2);
 	--bar-active-filter: brightness(0.94) saturate(1.3);
 
-	/* Gloss buttons: airy Aqua glass one step lighter than the header bars —
+	/* Gloss buttons: airy blue glass one step lighter than the header bars —
 	   blue enough not to melt into white panels, light enough not to read
 	   dirty. Hover tints toward color; press dims gently (the old dark-theme
 	   filters blew pale gradients out to white). */
@@ -65,7 +63,7 @@
 	--btn-gradient-mid: #c8e2f7;
 	--btn-gradient-dark: #a3ceef;
 	--btn-gradient-end: #e3f4ff;
-	/* Aqua capsules rim in a slate-blue hairline — grounds pale gels that
+	/* Capsules rim in a slate-blue hairline — grounds pale gels that
 	   otherwise float on white panels. */
 	--btn-border-color: #a9c4dd;
 	--btn-hover-filter: brightness(1.01) saturate(1.15);
@@ -346,6 +344,7 @@
 	--btn-secondary-filter: saturate(0.6) brightness(1.05);
 	--btn-secondary-filter-hover: saturate(0.9) brightness(1.02);
 	--btn-secondary-filter-active: saturate(1) brightness(0.98);
+	--btn-toggled-filter: saturate(1.7) brightness(0.9) contrast(1.08);
 	--btn-icon-opacity: 0.75;
 	--color-icon-muted: #7fa9bb;
 	--color-icon-strong: #5c8ba0;
@@ -359,6 +358,432 @@
 	--radius-sm: 8px;
 	--radius-md: 11px;
 	--radius-lg: 14px;
+}
+
+// Aqua — early Mac OS X: fine pinstriped window faces, metallic title bars,
+// Lucida typography, saturated candy-blue controls, and generous capsule
+// corners. The default light theme stays quieter; this one commits to the UI.
+:root[data-theme="aqua"] {
+	color-scheme: light;
+
+	--font-ui: "Lucida Grande", "Lucida Sans Unicode", Geneva, Arial, sans-serif;
+
+	/* Graphite-blue ramp */
+	--gray-100: #172433;
+	--gray-200: #43566a;
+	--gray-300: #687b8d;
+	--gray-400: #9fadb9;
+	--gray-500: #c0c9d1;
+	--gray-600: #e9ecef;
+	--gray-700: #dfe3e7;
+	--gray-800: #f9fafb;
+
+	--color-bg-primary: var(--gray-600);
+	--color-bg-secondary: var(--gray-800);
+	--color-bg-tertiary: var(--gray-700);
+	--color-bg-card: #ffffff;
+	--color-border: #aeb9c3;
+	--color-border-hover: #8798a7;
+	--color-text-primary: var(--gray-100);
+	--color-text-secondary: var(--gray-200);
+	--color-text-tertiary: var(--gray-300);
+	--color-off-white: var(--gray-100);
+	--color-bg-accent-tint: #cfe5ff;
+	--color-checkerboard: #cbd3da;
+	--color-bg-translucent: rgb(244 247 249 / 94%);
+	--panel-bg: repeating-linear-gradient(to bottom, #f1f2f3 0, #f1f2f3 2px, #e5e7e9 2px, #e5e7e9 4px);
+	--color-warning-text: #7d3a00;
+
+	/* Candy selection blue */
+	--color-accent: #2d7fdc;
+	--color-accent-hover: #1d67c2;
+	--color-accent-light: #76aff0;
+	--color-accent-border: #2d7fdc;
+	--color-accent-active: #1d67c2;
+
+	--color-bg-workspace: linear-gradient(to bottom, #aebdca 0%, #dce3e9 100%);
+
+	/* Cool graphite shadows */
+	--color-shadow: rgb(30 45 59 / 12%);
+	--color-shadow-soft: rgb(30 45 59 / 17%);
+	--color-shadow-strong: rgb(30 45 59 / 25%);
+	--color-shadow-modal: rgb(30 45 59 / 36%);
+
+	/* Brushed-metal window bars with a crisp center highlight */
+	--bar-gradient: linear-gradient(to bottom, #fbfcfd 0%, #d9dee3 46%, #b8c1c9 50%, #e8ebee 100%);
+	--bar-title-color: #263746;
+	--bar-icon-color: #5f7180;
+	--bar-text-shadow: 0 1px 0 #ffffff;
+	--bar-hover-filter: brightness(1.02) saturate(1.08);
+	--bar-active-filter: brightness(0.94);
+	--color-window-border: #8494a2;
+	--bar-btn-color: #607382;
+	--bar-btn-hover-color: #233645;
+	--bar-btn-hover-bg: rgb(255 255 255 / 58%);
+
+	/* Inactive toolbar controls turn graphite; selected controls retain the
+	   saturated blue capsule. */
+	--btn-gradient: linear-gradient(to bottom, #f8fcff 0%, #a9d3ff 35%, #398be6 50%, #6eb0f2 82%, #d5ecff 100%);
+	--btn-border-color: #6f91b2;
+	--btn-text-color: #183c63;
+	--btn-hover-filter: brightness(1.05) saturate(1.15);
+	--btn-active-filter: brightness(0.9) saturate(1.1);
+	--btn-toggled-filter: saturate(1.15) contrast(1.06);
+	--btn-secondary-filter: grayscale(0.78) brightness(1.15);
+	--btn-secondary-filter-hover: grayscale(0.45) brightness(1.08);
+	--btn-secondary-filter-active: grayscale(0.25) brightness(0.94);
+	--btn-icon-opacity: 0.78;
+	--color-icon-muted: #778896;
+	--color-icon-strong: #566a7a;
+
+	--color-slider-track: #c7d0d8;
+	--switch-knob-color: #ffffff;
+	--color-overlay: rgb(42 56 70 / 46%);
+	--color-overlay-strong: rgb(42 56 70 / 78%);
+
+	--radius-sm: 9px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+}
+
+// P2P — early-2000s file-sharing clients: compact Arial type, silver Java-era
+// window faces, graphite display chrome, lime connection-status accents, and
+// small beveled controls. Selected controls light up like an active transfer.
+:root[data-theme="p2p"] {
+	color-scheme: light;
+
+	--font-ui: Arial, Helvetica, sans-serif;
+
+	/* Platinum chassis ramp, faintly green like old LCD plastic */
+	--gray-100: #182018;
+	--gray-200: #455045;
+	--gray-300: #697569;
+	--gray-400: #9ca69c;
+	--gray-500: #bfc6bf;
+	--gray-600: #d9ddd9;
+	--gray-700: #cbd1cb;
+	--gray-800: #f7f9f7;
+
+	--color-bg-primary: var(--gray-600);
+	--color-bg-secondary: var(--gray-800);
+	--color-bg-tertiary: var(--gray-700);
+	--color-bg-card: #eef1ee;
+	--color-border: #9aa39a;
+	--color-border-hover: #687568;
+	--color-text-primary: var(--gray-100);
+	--color-text-secondary: var(--gray-200);
+	--color-text-tertiary: var(--gray-300);
+	--color-off-white: var(--gray-100);
+	--color-bg-accent-tint: #dcebc3;
+	--color-checkerboard: #c7cec7;
+	--color-bg-translucent: rgb(231 235 231 / 96%);
+	--panel-bg: linear-gradient(to bottom, #eef1ee 0%, #d4d9d4 100%);
+	--color-warning-text: #7d3a00;
+
+	/* LimeWire-style connection green */
+	--color-accent: #72ad22;
+	--color-accent-hover: #598e16;
+	--color-accent-light: #a6d65b;
+	--color-accent-border: #72ad22;
+	--color-accent-active: #598e16;
+
+	/* Flat brushed-plastic floor, not a decorative web-page background. */
+	--color-bg-workspace: linear-gradient(to bottom, #6d786f 0%, #aeb7af 100%);
+
+	--color-shadow: rgb(24 32 24 / 12%);
+	--color-shadow-soft: rgb(24 32 24 / 18%);
+	--color-shadow-strong: rgb(24 32 24 / 28%);
+	--color-shadow-modal: rgb(24 32 24 / 42%);
+
+	/* Graphite status-display bars with a green signal line at the base. */
+	--bar-gradient: linear-gradient(to bottom, #7c887e 0%, #4b594d 44%, #263128 50%, #354137 82%, #83b83a 100%);
+	--bar-title-color: #f0f5f0;
+	--bar-icon-color: #b8c8ba;
+	--bar-text-shadow: 0 1px 1px #111711;
+	--bar-hover-filter: brightness(1.12) saturate(1.08);
+	--bar-active-filter: brightness(0.82);
+	--color-window-border: #536258;
+	--bar-btn-color: #c4d0c5;
+	--bar-btn-hover-color: #ffffff;
+	--bar-btn-hover-bg: rgb(166 214 91 / 22%);
+
+	/* Silver bevels pick up a lime transfer light along the bottom edge. */
+	--btn-gradient: linear-gradient(to bottom, #ffffff 0%, #e8ece8 42%, #aab4aa 50%, #d5e7b8 100%);
+	--btn-border-color: #849084;
+	--btn-text-color: #263126;
+	--btn-hover-filter: brightness(1.04) saturate(1.35);
+	--btn-active-filter: brightness(0.86) saturate(1.15);
+	--btn-toggled-filter: saturate(2.1) brightness(0.9) contrast(1.08);
+	--btn-secondary-filter: grayscale(0.86) brightness(1.05);
+	--btn-secondary-filter-hover: grayscale(0.48) brightness(1.03);
+	--btn-secondary-filter-active: grayscale(0.25) brightness(0.88);
+	--btn-icon-opacity: 0.82;
+	--color-icon-muted: #778277;
+	--color-icon-strong: #4f5e50;
+
+	--color-slider-track: #aeb6ae;
+	--switch-knob-color: #ffffff;
+	--color-overlay: rgb(27 38 29 / 48%);
+	--color-overlay-strong: rgb(27 38 29 / 80%);
+
+	--radius-sm: 3px;
+	--radius-md: 5px;
+	--radius-lg: 7px;
+}
+
+// Homepage — GeoCities and personal-homepage energy rather than an imagined
+// "retro web" pattern: a genuinely tiled starfield, web-safe purple table
+// chrome, yellow headings, default-link blue, and square browser-era bevels.
+:root[data-theme="homepage"] {
+	color-scheme: light;
+
+	--font-ui: "Trebuchet MS", Verdana, Arial, sans-serif;
+
+	/* Pale table-cell chrome around the loud page background */
+	--gray-100: #16002f;
+	--gray-200: #4b286b;
+	--gray-300: #72588b;
+	--gray-400: #a995ba;
+	--gray-500: #c9bdd5;
+	--gray-600: #eee8f4;
+	--gray-700: #ddd2e8;
+	--gray-800: #fffdf2;
+
+	--color-bg-primary: var(--gray-600);
+	--color-bg-secondary: var(--gray-800);
+	--color-bg-tertiary: var(--gray-700);
+	--color-bg-card: #fffdf2;
+	--color-border: #8255a0;
+	--color-border-hover: #330099;
+	--color-text-primary: var(--gray-100);
+	--color-text-secondary: var(--gray-200);
+	--color-text-tertiary: var(--gray-300);
+	--color-off-white: var(--gray-100);
+	--color-bg-accent-tint: #e3d8ff;
+	--color-checkerboard: #d4c8dc;
+	--color-bg-translucent: rgb(248 243 252 / 96%);
+	--panel-bg: #eee8f4;
+	--color-warning-text: #7d3a00;
+
+	/* Default-link blue is the interaction color; purple remains visited. */
+	--color-accent: #0000ee;
+	--color-accent-hover: #0000aa;
+	--color-accent-light: #5555ff;
+	--color-accent-border: #0000ee;
+	--color-accent-active: #000080;
+	--color-accent-visited: #551a8b;
+
+	/* A literal repeating image tile, like the background picker on a
+	   personal homepage: yellow star plus cyan, white, and pink pixels. */
+	--color-bg-workspace: #000033 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cpath fill='%23ffff00' d='M12 5l1.4 4.2h4.4l-3.6 2.6 1.4 4.2-3.6-2.6L8.4 16l1.4-4.2-3.6-2.6h4.4z'/%3E%3Ccircle cx='44' cy='18' r='1.5' fill='%2300ffff'/%3E%3Ccircle cx='31' cy='47' r='1' fill='%23ffffff'/%3E%3Ccircle cx='58' cy='54' r='1.2' fill='%23ff66ff'/%3E%3C/svg%3E") repeat;
+
+	--color-shadow: rgb(35 0 70 / 13%);
+	--color-shadow-soft: rgb(35 0 70 / 19%);
+	--color-shadow-strong: rgb(35 0 70 / 29%);
+	--color-shadow-modal: rgb(15 0 45 / 48%);
+
+	/* Saturated table-header chrome with the yellow copy common to dark
+	   personal-site layouts. */
+	--bar-gradient: linear-gradient(to right, #330099 0%, #6600cc 62%, #cc00cc 100%);
+	--bar-title-color: #ffff00;
+	--bar-icon-color: #ffffff;
+	--bar-text-shadow: 1px 1px 0 #000033;
+	--bar-hover-filter: brightness(1.13) saturate(1.12);
+	--bar-active-filter: brightness(0.82);
+	--color-window-border: #660099;
+	--bar-btn-color: #ffffff;
+	--bar-btn-hover-color: #00ffff;
+	--bar-btn-hover-bg: rgb(255 255 255 / 18%);
+
+	/* Old browser bevels stay silver until selected, then take a purple cast. */
+	--btn-gradient: linear-gradient(to bottom, #ffffff 0%, #eeeeee 44%, #999999 51%, #d0d0d0 100%);
+	--btn-border-color: #666666;
+	--btn-text-color: #16002f;
+	--btn-hover-filter: brightness(1.05) saturate(1.25);
+	--btn-active-filter: brightness(0.82);
+	--btn-toggled-filter: sepia(0.8) saturate(4.5) hue-rotate(235deg) brightness(0.84);
+	--btn-secondary-filter: grayscale(1) brightness(1.03);
+	--btn-secondary-filter-hover: grayscale(0.75) brightness(1.04);
+	--btn-secondary-filter-active: brightness(0.84);
+	--btn-icon-opacity: 0.84;
+	--color-icon-muted: #806b91;
+	--color-icon-strong: #57376f;
+
+	--color-slider-track: #b8abc3;
+	--switch-knob-color: #ffffff;
+	--color-overlay: rgb(25 0 55 / 52%);
+	--color-overlay-strong: rgb(20 0 45 / 82%);
+
+	--radius-sm: 1px;
+	--radius-md: 2px;
+	--radius-lg: 3px;
+}
+
+// Buddy List — MSN/AIM-era social software: Tahoma, friendly sky-blue panes,
+// navy caption bars, lime presence accents, pillier controls, and the soft
+// blue-to-white backgrounds used by contact lists and sign-in windows.
+:root[data-theme="buddy-list"] {
+	color-scheme: light;
+
+	--font-ui: Tahoma, "Segoe UI", Verdana, sans-serif;
+
+	/* Friendly sky ramp */
+	--gray-100: #15324d;
+	--gray-200: #365f7e;
+	--gray-300: #5f83a0;
+	--gray-400: #94b8d2;
+	--gray-500: #bed5e6;
+	--gray-600: #e8f3fa;
+	--gray-700: #d8eaf6;
+	--gray-800: #ffffff;
+
+	--color-bg-primary: var(--gray-600);
+	--color-bg-secondary: #ffffff;
+	--color-bg-tertiary: var(--gray-700);
+	--color-bg-card: #f7fcff;
+	--color-border: var(--gray-500);
+	--color-border-hover: #75a6c8;
+	--color-text-primary: var(--gray-100);
+	--color-text-secondary: var(--gray-200);
+	--color-text-tertiary: var(--gray-300);
+	--color-off-white: var(--gray-100);
+	--color-bg-accent-tint: #e3f4c9;
+	--color-checkerboard: #d0e2ee;
+	--color-bg-translucent: rgb(244 251 255 / 94%);
+	--panel-bg: linear-gradient(to bottom, rgb(255 255 255 / 92%), rgb(222 240 251 / 92%));
+	--color-warning-text: #7d3a00;
+
+	/* Online-presence green */
+	--color-accent: #69a928;
+	--color-accent-hover: #568f1d;
+	--color-accent-light: #9ccc58;
+	--color-accent-border: #69a928;
+	--color-accent-active: #568f1d;
+
+	--color-bg-workspace: linear-gradient(to bottom, #91c7e9 0%, #d8edf8 54%, #ffffff 100%);
+
+	--color-shadow: rgb(17 67 102 / 10%);
+	--color-shadow-soft: rgb(17 67 102 / 15%);
+	--color-shadow-strong: rgb(17 67 102 / 23%);
+	--color-shadow-modal: rgb(17 67 102 / 34%);
+
+	/* Messenger-blue caption chrome */
+	--bar-gradient: linear-gradient(to bottom, #8ed1f5 0%, #2c8dcc 48%, #176fae 52%, #3e9bd2 100%);
+	--bar-title-color: #ffffff;
+	--bar-icon-color: rgb(255 255 255 / 88%);
+	--bar-text-shadow: 0 1px 1px #07527f;
+	--bar-hover-filter: brightness(1.08) saturate(1.1);
+	--bar-active-filter: brightness(0.9);
+	--color-window-border: #4b9bc9;
+	--bar-btn-color: rgb(255 255 255 / 88%);
+	--bar-btn-hover-color: #ffffff;
+	--bar-btn-hover-bg: rgb(255 255 255 / 22%);
+
+	/* Pale blue bubbles become lime when selected, like an online indicator. */
+	--btn-gradient: linear-gradient(to bottom, #ffffff 0%, #d9f0fb 43%, #9fd2ec 50%, #d8f3dd 100%);
+	--btn-border-color: #84b8d4;
+	--btn-text-color: #214e6b;
+	--btn-hover-filter: brightness(1.02) saturate(1.18);
+	--btn-active-filter: brightness(0.92) saturate(1.05);
+	--btn-toggled-filter: sepia(0.45) saturate(2.3) hue-rotate(35deg) brightness(0.91);
+	--btn-secondary-filter: saturate(0.42) brightness(1.06);
+	--btn-secondary-filter-hover: saturate(0.72) brightness(1.03);
+	--btn-secondary-filter-active: saturate(0.9) brightness(0.94);
+	--btn-icon-opacity: 0.78;
+	--color-icon-muted: #7d9eb5;
+	--color-icon-strong: #557d99;
+
+	--color-slider-track: #c7deea;
+	--switch-knob-color: #ffffff;
+	--color-overlay: rgb(20 71 105 / 42%);
+	--color-overlay-strong: rgb(20 71 105 / 76%);
+
+	--radius-sm: 7px;
+	--radius-md: 10px;
+	--radius-lg: 14px;
+}
+
+// Cyber Chrome — dark Y2K media-player and portal chrome: midnight violet
+// surfaces, bright cyan selection light, magenta reflections, compact Tahoma,
+// and hard metallic highlights. A styled dark option, not a default recolor.
+:root[data-theme="cyber-chrome"] {
+	color-scheme: dark;
+
+	--font-ui: Tahoma, "Trebuchet MS", Arial, sans-serif;
+
+	/* Midnight blue-violet chassis */
+	--gray-100: #edf2ff;
+	--gray-200: #aab3cf;
+	--gray-300: #7c86a8;
+	--gray-400: #4b5575;
+	--gray-500: #333c5c;
+	--gray-600: #202742;
+	--gray-700: #151a31;
+	--gray-800: #0b0e1c;
+
+	--color-bg-primary: var(--gray-600);
+	--color-bg-secondary: var(--gray-800);
+	--color-bg-tertiary: var(--gray-700);
+	--color-bg-card: #272e4d;
+	--color-border: #3c486b;
+	--color-border-hover: #66759f;
+	--color-text-primary: var(--gray-100);
+	--color-text-secondary: var(--gray-200);
+	--color-text-tertiary: var(--gray-300);
+	--color-off-white: #f4f7ff;
+	--color-bg-accent-tint: #123d59;
+	--color-checkerboard: #252c48;
+	--color-bg-translucent: rgb(12 15 31 / 95%);
+	--panel-bg: linear-gradient(to bottom, #242b49 0%, #171c33 100%);
+
+	/* Cold cathode cyan */
+	--color-accent: #20d9ff;
+	--color-accent-hover: #00b9e6;
+	--color-accent-light: #73e9ff;
+	--color-accent-border: #20d9ff;
+	--color-accent-active: #00b9e6;
+
+	--color-bg-workspace: radial-gradient(circle at 50% 0%, #32174f 0%, #11152b 46%, #070914 100%);
+
+	--color-shadow: rgb(0 0 0 / 28%);
+	--color-shadow-soft: rgb(0 0 0 / 38%);
+	--color-shadow-strong: rgb(0 0 0 / 58%);
+	--color-shadow-modal: rgb(0 0 0 / 76%);
+
+	/* Chrome reflection with a magenta scan line along the lower edge. */
+	--bar-gradient: linear-gradient(to bottom, #d9e3f0 0%, #77849e 12%, #303a59 45%, #0d1124 52%, #252d4b 83%, #b429d3 100%);
+	--bar-title-color: #ffffff;
+	--bar-icon-color: #b8eefa;
+	--bar-text-shadow: 0 1px 2px #000000;
+	--bar-hover-filter: brightness(1.18) saturate(1.15);
+	--bar-active-filter: brightness(0.78);
+	--color-window-border: #596582;
+	--bar-btn-color: #b8eefa;
+	--bar-btn-hover-color: #ffffff;
+	--bar-btn-hover-bg: rgb(32 217 255 / 18%);
+
+	/* Dark chrome controls: cyan at the crown, violet at the lower edge. */
+	--btn-gradient: linear-gradient(to bottom, #9eeeff 0%, #476a8d 35%, #10162d 50%, #171d39 76%, #b429d3 100%);
+	--btn-border-color: #11172d;
+	--btn-text-color: #eef7ff;
+	--btn-hover-filter: brightness(1.17) saturate(1.18);
+	--btn-active-filter: brightness(0.84) contrast(1.15);
+	--btn-toggled-filter: saturate(1.5) brightness(1.08);
+	--btn-secondary-filter: saturate(0.28) brightness(0.68);
+	--btn-secondary-filter-hover: saturate(0.65) brightness(0.92);
+	--btn-secondary-filter-active: saturate(0.9) brightness(0.78);
+	--btn-icon-opacity: 0.88;
+	--color-icon-muted: #7581a4;
+	--color-icon-strong: #a9b8dc;
+
+	--color-slider-track: #080b18;
+	--switch-knob-color: #f4f7ff;
+	--color-overlay: rgb(4 5 13 / 84%);
+	--color-overlay-strong: rgb(4 5 13 / 88%);
+
+	--radius-sm: 3px;
+	--radius-md: 5px;
+	--radius-lg: 8px;
 }
 
 // Llama — classic Winamp (1997–2002): charcoal-steel chassis with a hint of
@@ -415,11 +840,15 @@
 
 // Shared light-theme lifts — tokens whose dark-ramp endpoints invert meaning
 // on light ramps (gray-100 is near-black there). Each theme's own --gray-*
-// values resolve at use, so one block covers all four.
+// values resolve at use, so one block covers every light theme.
 :root[data-theme="light"],
 :root[data-theme="bubblegum"],
 :root[data-theme="bliss"],
-:root[data-theme="dew"] {
+:root[data-theme="dew"],
+:root[data-theme="aqua"],
+:root[data-theme="p2p"],
+:root[data-theme="homepage"],
+:root[data-theme="buddy-list"] {
 	/* Empty layer swatch: pale chip with a mid-tone ring instead of
 	   dark-on-dark */
 	--swatch-empty-outline: var(--gray-400);

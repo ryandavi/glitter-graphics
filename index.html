@@ -11,10 +11,9 @@
 		try {
 			const savedSettings = JSON.parse(localStorage.getItem('glitterEditorSettings') || '{}');
 			const savedTheme = localStorage.getItem('glitterEditorTheme') || savedSettings.interfaceTheme;
-			const allowedThemes = ['dark', 'light', 'llama', 'bubblegum', 'bliss', 'dew'];
+			const allowedThemes = ['dark', 'light', 'llama', 'cyber-chrome', 'bubblegum', 'bliss', 'dew', 'aqua', 'p2p', 'homepage', 'buddy-list'];
 			if (allowedThemes.includes(savedTheme)) {
 				document.documentElement.dataset.theme = savedTheme;
-				document.documentElement.style.colorScheme = ['light', 'bubblegum', 'bliss', 'dew'].includes(savedTheme) ? 'light' : 'dark';
 			}
 		} catch (_error) {}
 	</script>
@@ -41,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=185">
+	<link rel="stylesheet" href="css/style.css?v=189">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1754,7 +1753,7 @@
 			<div class="modal-body">
 				<div class="settings-group">
 					<div class="settings-group-title">Interface <button class="btn-text small reset-section-btn" data-section="interface">Reset</button></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Theme</div><div class="settings-row-control"><select id="interfaceTheme"><option value="dark">Dark</option><option value="llama">Llama</option><option value="light">Light</option><option value="bubblegum">Bubblegum</option><option value="bliss">Bliss</option><option value="dew">Dew</option></select></div></div><div class="settings-row-label-desc">Choose the editor interface appearance.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Theme</div><div class="settings-row-control"><select id="interfaceTheme"><optgroup label="Dark themes"><option value="dark">Default Dark</option><option value="llama">Llama</option><option value="cyber-chrome">Cyber Chrome</option></optgroup><optgroup label="Light themes"><option value="light">Default Light</option><option value="bubblegum">Bubblegum</option><option value="bliss">Bliss</option><option value="dew">Dew</option><option value="aqua">Aqua</option><option value="p2p">P2P</option><option value="homepage">Homepage</option><option value="buddy-list">Buddy List</option></optgroup></select></div></div><div class="settings-row-label-desc">Choose the editor interface appearance.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Helpful Hints</div><div class="settings-row-control"><label class="switch" for="showHelpfulHints"><input type="checkbox" id="showHelpfulHints" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Welcome on Startup</div><div class="settings-row-control"><label class="switch" for="showWelcomeOnStartup"><input type="checkbox" id="showWelcomeOnStartup" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show the Welcome screen when Glitter Editor starts.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Confirm Destructive Actions</div><div class="settings-row-control"><label class="switch" for="confirmDestructiveActions"><input type="checkbox" id="confirmDestructiveActions" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Ask before deleting layers or clearing the entire project.</div></div>
@@ -2654,7 +2653,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=118"></script>
+	<script src="js/core/config.js?v=121"></script>
 	<script src="js/core/commands.js?v=4"></script>
 	<script src="js/core/document-scaler.js?v=2"></script>
 	<script src="js/transforms/transform-math.js?v=4"></script>
