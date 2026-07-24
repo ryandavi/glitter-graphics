@@ -18,8 +18,8 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Glitter Admin</title>
-
-    <link rel="stylesheet" href="css/swatch_admin.css">
+    <script>(function(){try{var s=JSON.parse(localStorage.getItem('glitterEditorSettings')||'{}');document.documentElement.dataset.theme=s.interfaceTheme||'dark';}catch(e){document.documentElement.dataset.theme='dark';}}());</script>
+    <link rel="stylesheet" href="css/swatch_admin.css?v=2">
 
 </head>
 
@@ -40,12 +40,13 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
             <div class="sidebar-header">
                 <h2>Glitter</h2>
                 <button class="add-swatch-btn" onclick="app.showAddModal()">+ Add New</button>
-                <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button class="btn btn-secondary" style="flex: 1; padding: 6px; font-size: 12px;" onclick="app.showManageCategoriesModal()">Manage Categories</button>
-                    <button class="btn btn-secondary" style="flex: 1; padding: 6px; font-size: 12px;" onclick="app.showManageTagsModal()">Manage Tags</button>
+                <div class="sidebar-action-row">
+                    <button class="btn btn-secondary sidebar-action" onclick="app.showManageCategoriesModal()">Manage Categories</button>
+                    <button class="btn btn-secondary sidebar-action" onclick="app.showManageTagsModal()">Manage Tags</button>
                 </div>
-                <div style="margin-top: 8px;">
-                    <button class="btn btn-primary" style="width: 100%; padding: 8px; font-size: 12px; background: var(--status-warning);" onclick="app.analyzeBulk()">🔍 Bulk Analyze All</button>
+                <div class="sidebar-bulk-action">
+                    <label class="bulk-colors-option"><input type="checkbox" id="bulkIncludeColors" checked> Include colors</label>
+                    <button class="btn btn-primary bulk-analyze-button" onclick="app.analyzeBulk()">🔍 Bulk Analyze All</button>
                 </div>
             </div>
             <div class="swatch-list" id="swatchList">
@@ -106,7 +107,7 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
                 <div class="form-group">
                     <label>Or Upload File</label>
-                    <input type="file" accept="image/*" onchange="app.handleFileSelection(event)">
+                    <input type="file" accept="image/gif,image/png,image/jpeg" multiple onchange="app.handleFileSelection(event)">
                     <small>Select a category first, then choose a file</small>
                 </div>
             </div>
@@ -119,13 +120,13 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
     <!-- Analyze Modal -->
     <div class="modal" id="analyzeModal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content modal-width-md">
             <div class="modal-header">
                 <h3>Analysis Results</h3>
                 <button class="close-btn" onclick="app.hideAnalyzeModal()">×</button>
             </div>
             <div class="modal-body">
-                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                <p class="modal-help">
                     Select which properties to apply to the current glitter:
                 </p>
                 <div id="analyzeResults">
@@ -141,7 +142,7 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
     <!-- Tag Management Modal -->
     <div class="modal" id="tagModal">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-content modal-width-lg">
             <div class="modal-header">
                 <h3>Manage Tags</h3>
                 <button class="close-btn" onclick="app.hideManageTagsModal()">×</button>
@@ -193,7 +194,7 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
     <!-- Category Management Modal -->
     <div class="modal" id="categoryModal">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-content modal-width-lg">
             <div class="modal-header">
                 <h3>Manage Categories</h3>
                 <button class="close-btn" onclick="app.hideCategoryModal()">×</button>
@@ -263,7 +264,7 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
     <!-- Edit Category Modal -->
     <div class="modal" id="editCategoryModal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content modal-width-md">
             <div class="modal-header">
                 <h3>Edit Category</h3>
                 <button class="close-btn" onclick="app.hideEditCategoryModal()">×</button>
@@ -326,9 +327,9 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
         const CONFIG = <?php echo json_encode($CONFIG); ?>;
         const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
     </script>
-    <script src="js/admin_api.js"></script>
-    <script src="js/asset_admin.js"></script>
-    <script src="js/glitter_admin.js"></script>
+    <script src="js/admin_api.js?v=2"></script>
+    <script src="js/asset_admin.js?v=3"></script>
+    <script src="js/glitter_admin.js?v=3"></script>
 </body>
 
 </html>

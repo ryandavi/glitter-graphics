@@ -23,6 +23,7 @@ abstract class AssetAPI
 
     abstract protected function formatAssetForExport($asset, $tags);
     abstract protected function getAssetSpecificFields();
+    abstract protected function getAddFieldMap();
 
     protected function getNullableStringFields()
     {
@@ -37,6 +38,20 @@ abstract class AssetAPI
     protected function getAssetDisplayName()
     {
         return ucfirst($this->assetType);
+    }
+
+    protected function assertUniqueUrl($url)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT id, name FROM {$this->tables['table']} WHERE url = ? LIMIT 1",
+            's',
+            [(string)$url]
+        );
+        $existing = $this->fetchOneAssoc($stmt->get_result());
+        $stmt->close();
+        if ($existing) {
+            throw new Exception('URL is already used by ' . $existing['name'] . ' (ID ' . $existing['id'] . ')');
+        }
     }
 
     protected function getCategoryIdField()
@@ -57,6 +72,14 @@ abstract class AssetAPI
     protected function getTagCategoryIdField()
     {
         return $this->assetType . '_tag_category_id';
+    }
+
+    protected function getAssetOrderBy()
+    {
+        // Sticker ordering intentionally follows category/name until drag sorting is enabled there.
+        return $this->assetType === 'sticker'
+            ? 'c.name, a.id, a.name'
+            : 'c.sort_order, a.sort_order, a.name';
     }
 
     protected function fetchAllAssoc($result)
@@ -175,17 +198,33 @@ abstract class AssetAPI
         $assetIdField = $this->getAssetIdField();
         $tagIdField = $this->getTagIdField();
 
-        $deleteStmt = $this->db->prepare(
-            "DELETE FROM $tagsMapTable WHERE $assetIdField = ?",
-            'i',
-            [$assetId]
-        );
-        $deleteStmt->close();
-
-        $insertSql = "INSERT INTO $tagsMapTable ($assetIdField, $tagIdField) VALUES (?, ?)";
-        foreach ($tagIds as $tagId) {
-            $insertStmt = $this->db->prepare($insertSql, 'ii', [$assetId, (int)$tagId]);
-            $insertStmt->close();
+        $this->db->beginTransaction();
+        try {
+            $deleteStmt = $this->db->prepare(
+                "DELETE FROM $tagsMapTable WHERE $assetIdField = ?",
+                'i',
+                [$assetId]
+            );
+            $deleteStmt->close();
+            $tagIds = array_values(array_unique(array_map('intval', $tagIds)));
+            if ($tagIds) {
+                $values = implode(',', array_fill(0, count($tagIds), '(?, ?)'));
+                $params = [];
+                foreach ($tagIds as $tagId) {
+                    $params[] = $assetId;
+                    $params[] = $tagId;
+                }
+                $insertStmt = $this->db->prepare(
+                    "INSERT INTO $tagsMapTable ($assetIdField, $tagIdField) VALUES $values",
+                    str_repeat('ii', count($tagIds)),
+                    $params
+                );
+                $insertStmt->close();
+            }
+            $this->db->commit();
+        } catch (Throwable $error) {
+            $this->db->rollback();
+            throw $error;
         }
     }
 
@@ -196,19 +235,25 @@ abstract class AssetAPI
         $assetTable = $this->tables['table'];
         $assetIdField = $this->getAssetIdField();
 
-        $tagsStmt = $this->db->prepare(
-            "DELETE FROM $tagsMapTable WHERE $assetIdField = ?",
-            'i',
-            [$assetId]
-        );
-        $tagsStmt->close();
-
-        $assetStmt = $this->db->prepare(
-            "DELETE FROM $assetTable WHERE id = ?",
-            'i',
-            [$assetId]
-        );
-        $assetStmt->close();
+        $this->db->beginTransaction();
+        try {
+            $tagsStmt = $this->db->prepare(
+                "DELETE FROM $tagsMapTable WHERE $assetIdField = ?",
+                'i',
+                [$assetId]
+            );
+            $tagsStmt->close();
+            $assetStmt = $this->db->prepare(
+                "DELETE FROM $assetTable WHERE id = ?",
+                'i',
+                [$assetId]
+            );
+            $assetStmt->close();
+            $this->db->commit();
+        } catch (Throwable $error) {
+            $this->db->rollback();
+            throw $error;
+        }
     }
 
     protected function reorderAssetsByIds($order)
@@ -216,16 +261,23 @@ abstract class AssetAPI
         $table = $this->tables['table'];
         $sql = "UPDATE $table SET sort_order = ? WHERE id = ?";
 
-        foreach ($order as $index => $id) {
-            $stmt = $this->db->prepare($sql, 'ii', [(int)$index, (int)$id]);
-            $stmt->close();
+        $this->db->beginTransaction();
+        try {
+            foreach (array_values(array_unique(array_map('intval', $order))) as $index => $id) {
+                $stmt = $this->db->prepare($sql, 'ii', [(int)$index, $id]);
+                $stmt->close();
+            }
+            $this->db->commit();
+        } catch (Throwable $error) {
+            $this->db->rollback();
+            throw $error;
         }
     }
 
     protected function getAssetUrlById($id)
     {
         $stmt = $this->db->prepare(
-            "SELECT url FROM {$this->tables['table']} WHERE id = ?",
+            "SELECT url, is_active FROM {$this->tables['table']} WHERE id = ?",
             'i',
             [(int)$id]
         );
@@ -250,7 +302,7 @@ abstract class AssetAPI
         return $rows;
     }
 
-    protected function persistAnalysis($id, $analysis)
+    protected function persistAnalysis($id, $analysis, $includeColors = true)
     {
         $table = $this->tables['table'];
         $sql = "
@@ -262,13 +314,14 @@ abstract class AssetAPI
                 frame_rate = ?,
                 is_variable_framerate = ?,
                 is_animated = ?,
-                has_transparency = ?
+                has_transparency = ?,
+                file_hash = ?
             WHERE id = ?
         ";
 
         $stmt = $this->db->prepare(
             $sql,
-            'iiiiiiiii',
+            'iiiiiiiisi',
             [
                 (int)$analysis['width'],
                 (int)$analysis['height'],
@@ -278,6 +331,7 @@ abstract class AssetAPI
                 (int)$analysis['is_variable_framerate'],
                 (int)$analysis['is_animated'],
                 (int)$analysis['has_transparency'],
+                (string)($analysis['file_hash'] ?? ''),
                 (int)$id,
             ]
         );
@@ -288,62 +342,43 @@ abstract class AssetAPI
     {
         require_once('gifAnalyzer.php');
 
-        $analyzer = new GifAnalyzer("../" . $url, $this->config);
+        $filePath = $this->assetFilePath($url);
+        $analyzer = new GifAnalyzer($filePath, $this->config);
         $analysis = $analyzer->analyze();
-
-        $filePath = "../../" . $url;
         $fileSize = file_exists($filePath) ? filesize($filePath) : 0;
         $imageInfo = @getimagesize($filePath);
         $width = $imageInfo ? $imageInfo[0] : 0;
         $height = $imageInfo ? $imageInfo[1] : 0;
-        $hasTransparency = 0;
-
-        if ($imageInfo) {
-            $image = false;
-            switch ($imageInfo[2]) {
-                case IMAGETYPE_GIF:
-                    $image = @imagecreatefromgif($filePath);
-                    break;
-                case IMAGETYPE_PNG:
-                    $image = @imagecreatefrompng($filePath);
-                    break;
-                case IMAGETYPE_JPEG:
-                    $image = @imagecreatefromjpeg($filePath);
-                    break;
-            }
-
-            if ($image) {
-                $width = imagesx($image);
-                $height = imagesy($image);
-                $foundTransparent = false;
-
-                if ($imageInfo[2] === IMAGETYPE_PNG) {
-                    $foundTransparent = true;
-                } else if ($imageInfo[2] === IMAGETYPE_GIF) {
-                    $transparentIndex = imagecolortransparent($image);
-                    if ($transparentIndex >= 0) {
-                        for ($y = 0; $y < $height && !$foundTransparent; $y += max(1, floor($height / 20))) {
-                            for ($x = 0; $x < $width && !$foundTransparent; $x += max(1, floor($width / 20))) {
-                                if (imagecolorat($image, $x, $y) === $transparentIndex) {
-                                    $foundTransparent = true;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                $hasTransparency = $foundTransparent ? 1 : 0;
-                imagedestroy($image);
-            }
-        }
 
         return array_merge($analysis, [
             'width' => $width,
             'height' => $height,
             'file_size' => $fileSize,
-            'has_transparency' => $hasTransparency,
+            'has_transparency' => (int)($analysis['has_transparency'] ?? 0),
             'is_animated' => ($analysis['frame_count'] ?? 1) > 1 ? 1 : 0,
+            'file_hash' => md5_file($filePath),
         ]);
+    }
+
+    protected function assetFilePath($url)
+    {
+        $root = realpath(__DIR__ . '/../..');
+        $relative = str_replace('\\', '/', ltrim((string)$url, '/\\'));
+        $segments = explode('/', $relative);
+        if (!$relative || in_array('..', $segments, true) || in_array('', $segments, true)) {
+            throw new Exception('Invalid asset path');
+        }
+        $candidate = $root . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $segments);
+        $ancestor = dirname($candidate);
+        while (!file_exists($ancestor) && dirname($ancestor) !== $ancestor) {
+            $ancestor = dirname($ancestor);
+        }
+        $directory = realpath($ancestor);
+        if ($directory === false || ($directory !== $root && strpos($directory, $root . DIRECTORY_SEPARATOR) !== 0)) {
+            throw new Exception('Invalid asset path');
+        }
+
+        return $candidate;
     }
 
     public function getCategories()
@@ -452,6 +487,7 @@ abstract class AssetAPI
         $categories = $this->exportCategories();
         $jsonPath = "../../" . $this->tables['categories_json_file'];
         $json = json_encode($categories, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $this->backupExport($jsonPath);
         $result = file_put_contents($jsonPath, $json);
 
         if ($result === false) {
@@ -589,17 +625,23 @@ abstract class AssetAPI
         $assetTable = $this->tables['table'];
         $categoriesTable = $this->tables['categories_table'];
         $categoryIdField = $this->getCategoryIdField();
-        $orderByMap = [
-            'sticker' => 'c.name, a.id, a.name',
-        ];
-        $orderBy = isset($orderByMap[$this->assetType])
-            ? $orderByMap[$this->assetType]
-            : 'c.sort_order, a.sort_order, a.name';
+        $orderBy = $this->getAssetOrderBy();
 
+        $tagsMapTable = $this->tables['tags_map_table'];
+        $tagsTable = $this->tables['tags_table'];
+        $assetIdField = $this->getAssetIdField();
+        $tagIdField = $this->getTagIdField();
         $sql = "
-            SELECT a.*, c.name AS category_name, c.slug AS category_slug
+            SELECT a.*, c.name AS category_name, c.slug AS category_slug,
+                ts.tag_names
             FROM $assetTable a
             JOIN $categoriesTable c ON a.$categoryIdField = c.id
+            LEFT JOIN (
+                SELECT tm.$assetIdField AS asset_id, GROUP_CONCAT(DISTINCT t.name SEPARATOR ' ') AS tag_names
+                FROM $tagsMapTable tm
+                JOIN $tagsTable t ON t.id = tm.$tagIdField
+                GROUP BY tm.$assetIdField
+            ) ts ON ts.asset_id = a.id
             ORDER BY $orderBy
         ";
 
@@ -621,7 +663,6 @@ abstract class AssetAPI
         if (!$asset) {
             throw new Exception('Asset not found');
         }
-
         $asset['tags'] = $this->getAssetTags($id);
         return $asset;
     }
@@ -667,6 +708,38 @@ abstract class AssetAPI
         return ['success' => true];
     }
 
+    public function addAsset($data)
+    {
+        $map = $this->getAddFieldMap();
+        $columns = [];
+        $placeholders = [];
+        $types = '';
+        $params = [];
+        foreach ($map as $column => $definition) {
+            $source = $definition['source'] ?? $column;
+            $value = array_key_exists($source, $data) ? $data[$source] : ($definition['default'] ?? null);
+            $columns[] = $column;
+            $placeholders[] = '?';
+            $types .= $definition['type'];
+            $params[] = $value;
+        }
+        $this->assertUniqueUrl($data['url']);
+        $stmt = $this->db->prepare(
+            "INSERT INTO {$this->tables['table']} (" . implode(', ', $columns) . ') VALUES (' . implode(', ', $placeholders) . ')',
+            $types,
+            $params
+        );
+        $stmt->close();
+        $id = $this->db->lastInsertId();
+        try {
+            $analysis = $this->performAnalysis($data['url']);
+            $this->persistAnalysis($id, $analysis, true);
+        } catch (Throwable $error) {
+            error_log('Auto-analysis failed for ' . $this->assetType . ' ID ' . $id . ': ' . $error->getMessage());
+        }
+        return ['success' => true, 'id' => $id];
+    }
+
     public function deleteAsset($id)
     {
         $this->deleteAssetRecord($id);
@@ -686,18 +759,82 @@ abstract class AssetAPI
             throw new Exception($this->getAssetDisplayName() . ' not found');
         }
 
-        return $this->performAnalysis($asset['url']);
+        return $this->enrichSuggestedTags($this->performAnalysis($asset['url']));
     }
 
-    public function analyzeAllAssets()
+    protected function enrichSuggestedTags($analysis)
+    {
+        require_once(__DIR__ . '/colorUtils.php');
+        $tags = $this->getTags();
+        $suggestions = $analysis['suggested_tags'] ?? [];
+        foreach ($suggestions as &$suggestion) {
+            foreach ($tags as $tag) {
+                if (strcasecmp($tag['name'], $suggestion['name']) === 0) {
+                    $suggestion['tag_id'] = (int)$tag['id'];
+                    break;
+                }
+            }
+        }
+        unset($suggestion);
+
+        if ($this->assetType === 'sticker' && !empty($analysis['color_codes'])) {
+            foreach (explode(',', $analysis['color_codes']) as $index => $hex) {
+                $rgb = hexToRgb($hex);
+                if (!$rgb) continue;
+                $best = null;
+                $bestDistance = INF;
+                foreach ($tags as $tag) {
+                    $tagRgb = hexToRgb($tag['hex_color'] ?? '');
+                    if (!$tagRgb) continue;
+                    $distance = deltaE(rgbToLab($rgb[0], $rgb[1], $rgb[2]), rgbToLab($tagRgb[0], $tagRgb[1], $tagRgb[2]));
+                    if ($distance < $bestDistance) {
+                        $bestDistance = $distance;
+                        $best = $tag;
+                    }
+                }
+                if ($best && $bestDistance < $this->config['tag_match_distance']) {
+                    $weight = explode(',', $analysis['color_weights'] ?? '')[$index] ?? '';
+                    $suggestions[(int)$best['id']] = [
+                        'tag_id' => (int)$best['id'],
+                        'name' => $best['name'],
+                        'reason' => 'color ' . $weight,
+                    ];
+                }
+            }
+            if (($analysis['sparkle_coverage'] ?? 0) >= $this->config['sparkle_tag_min_coverage']) {
+                foreach ($tags as $tag) {
+                    if (preg_match('/glitter|spark/i', $tag['name'])) {
+                        $suggestions[(int)$tag['id']] = [
+                            'tag_id' => (int)$tag['id'],
+                            'name' => $tag['name'],
+                            'reason' => 'sparkle ' . round($analysis['sparkle_coverage'] * 100) . '%',
+                        ];
+                        break;
+                    }
+                }
+            }
+        }
+        $analysis['suggested_tags'] = array_values($suggestions);
+
+        return $analysis;
+    }
+
+    public function analyzeAllAssets($ids = null, $includeColors = true)
     {
         $updated = 0;
         $errors = [];
 
-        foreach ($this->getActiveAssetRows() as $asset) {
+        $assets = $this->getActiveAssetRows();
+        if (is_array($ids)) {
+            $wanted = array_flip(array_map('intval', $ids));
+            $assets = array_values(array_filter($assets, function ($asset) use ($wanted) {
+                return isset($wanted[(int)$asset['id']]);
+            }));
+        }
+        foreach ($assets as $asset) {
             try {
-                $analysis = $this->performAnalysis($asset['url']);
-                $this->persistAnalysis($asset['id'], $analysis);
+                $analysis = $this->enrichSuggestedTags($this->performAnalysis($asset['url']));
+                $this->persistAnalysis($asset['id'], $analysis, $includeColors);
                 $updated++;
             } catch (Exception $e) {
                 $errors[] = 'ID ' . $asset['id'] . ': ' . $e->getMessage();
@@ -713,14 +850,34 @@ abstract class AssetAPI
 
     public function exportAssets()
     {
-        $assets = $this->listAssets();
+        $assetTable = $this->tables['table'];
+        $categoriesTable = $this->tables['categories_table'];
+        $tagsTable = $this->tables['tags_table'];
+        $tagsMapTable = $this->tables['tags_map_table'];
+        $categoryIdField = $this->getCategoryIdField();
+        $assetIdField = $this->getAssetIdField();
+        $tagIdField = $this->getTagIdField();
+        $orderBy = $this->getAssetOrderBy();
+        $result = $this->db->query("
+            SELECT a.*, c.name AS category_name, c.slug AS category_slug,
+                ts.tag_names
+            FROM $assetTable a
+            JOIN $categoriesTable c ON a.$categoryIdField = c.id
+            LEFT JOIN (
+                SELECT tm.$assetIdField AS asset_id,
+                    GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR '||') AS tag_names
+                FROM $tagsMapTable tm
+                JOIN $tagsTable t ON t.id = tm.$tagIdField
+                GROUP BY tm.$assetIdField
+            ) ts ON ts.asset_id = a.id
+            WHERE a.is_active = 1
+            ORDER BY $orderBy
+        ");
+        $assets = $this->fetchAllAssoc($result);
         $formatted = [];
 
         foreach ($assets as $asset) {
-            $tags = $this->getAssetTags($asset['id']);
-            $tagNames = array_map(function ($tag) {
-                return $tag['name'];
-            }, $tags);
+            $tagNames = $asset['tag_names'] ? explode('||', $asset['tag_names']) : [];
             $formatted[] = $this->formatAssetForExport($asset, $tagNames);
         }
 
@@ -732,6 +889,7 @@ abstract class AssetAPI
         $assets = $this->exportAssets();
         $jsonPath = "../../" . $this->tables['json_file'];
         $json = json_encode($assets, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $this->backupExport($jsonPath);
         $result = file_put_contents($jsonPath, $json);
 
         if ($result === false) {
@@ -739,5 +897,177 @@ abstract class AssetAPI
         }
 
         return ['success' => true, 'path' => $jsonPath, 'bytes' => $result];
+    }
+
+    protected function backupExport($jsonPath)
+    {
+        if (!file_exists($jsonPath)) {
+            return;
+        }
+        $backupDirectory = dirname($jsonPath) . '/backup';
+        if (!is_dir($backupDirectory) && !mkdir($backupDirectory, 0775, true)) {
+            throw new Exception('Failed to create export backup directory');
+        }
+        $name = pathinfo($jsonPath, PATHINFO_FILENAME);
+        $backup = $backupDirectory . '/' . $name . '.' . date('Ymd-His') . '.json';
+        if (!copy($jsonPath, $backup)) {
+            throw new Exception('Failed to back up previous export');
+        }
+        $backups = glob($backupDirectory . '/' . $name . '.*.json');
+        rsort($backups);
+        foreach (array_slice($backups, 3) as $oldBackup) {
+            unlink($oldBackup);
+        }
+    }
+
+    public function healthReport()
+    {
+        $rows = $this->listAssets();
+        $urls = [];
+        $missing = [];
+        $inactive = [];
+        foreach ($rows as $row) {
+            $urls[$row['url']][] = $row;
+            if (!file_exists($this->assetFilePath($row['url']))) {
+                $missing[] = ['id' => (int)$row['id'], 'name' => $row['name'], 'url' => $row['url']];
+            }
+            if (!(int)$row['is_active']) {
+                $inactive[] = ['id' => (int)$row['id'], 'name' => $row['name'], 'url' => $row['url']];
+            }
+        }
+        $duplicates = [];
+        foreach ($urls as $url => $assets) {
+            if (count($assets) < 2) continue;
+            $duplicates[] = [
+                'url' => $url,
+                'assets' => array_map(function ($asset) {
+                    return ['id' => (int)$asset['id'], 'name' => $asset['name'], 'url' => $asset['url']];
+                }, $assets),
+            ];
+        }
+        $imageRoot = realpath(__DIR__ . '/../../images/' . $this->assetType);
+        $orphans = [];
+        if ($imageRoot) {
+            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($imageRoot, FilesystemIterator::SKIP_DOTS));
+            foreach ($iterator as $file) {
+                if (
+                    !$file->isFile()
+                    || !in_array(strtolower($file->getExtension()), ['gif', 'png', 'jpg', 'jpeg'], true)
+                    || strpos($file->getPathname(), DIRECTORY_SEPARATOR . '.thumbs' . DIRECTORY_SEPARATOR) !== false
+                ) {
+                    continue;
+                }
+                $url = str_replace('\\', '/', substr($file->getPathname(), strlen(realpath(__DIR__ . '/../..')) + 1));
+                if (!isset($urls[$url])) {
+                    $orphans[] = ['url' => $url];
+                }
+            }
+        }
+
+        return ['missing' => $missing, 'orphans' => $orphans, 'duplicates' => $duplicates, 'inactive' => $inactive];
+    }
+
+    public function uploadAsset($file, $categoryId)
+    {
+        if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+            throw new Exception('No valid upload received');
+        }
+        if ((int)$file['size'] > $this->config['upload_max_bytes']) {
+            throw new Exception('File exceeds the upload size limit');
+        }
+        $header = file_get_contents($file['tmp_name'], false, null, 0, 12);
+        $types = [
+            'gif' => strncmp($header, 'GIF87a', 6) === 0 || strncmp($header, 'GIF89a', 6) === 0,
+            'png' => substr($header, 0, 8) === "\x89PNG\r\n\x1a\n",
+            'jpg' => substr($header, 0, 3) === "\xFF\xD8\xFF",
+        ];
+        $extension = array_search(true, $types, true);
+        if ($extension === false) {
+            throw new Exception('Only GIF, PNG, and JPEG files are accepted');
+        }
+        $hash = md5_file($file['tmp_name']);
+        $stmt = $this->db->prepare(
+            "SELECT id, name FROM {$this->tables['table']} WHERE file_hash = ? LIMIT 1",
+            's',
+            [$hash]
+        );
+        $duplicate = $this->fetchOneAssoc($stmt->get_result());
+        $stmt->close();
+        if ($duplicate) {
+            return ['success' => false, 'duplicate' => true, 'existing' => $duplicate];
+        }
+        $categoryStmt = $this->db->prepare(
+            "SELECT id, slug FROM {$this->tables['categories_table']} WHERE id = ?",
+            'i',
+            [(int)$categoryId]
+        );
+        $category = $this->fetchOneAssoc($categoryStmt->get_result());
+        $categoryStmt->close();
+        if (!$category) {
+            throw new Exception('Invalid category');
+        }
+        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $category['slug'])) {
+            throw new Exception('Category slug is not safe for uploads');
+        }
+        $base = strtolower(pathinfo($file['name'], PATHINFO_FILENAME));
+        $base = trim(preg_replace('/[^a-z0-9]+/', '-', $base), '-');
+        $base = $base ?: $this->assetType;
+        $directory = dirname(__DIR__, 2) . '/images/' . $this->assetType . '/' . $category['slug'];
+        if (!is_dir($directory) && !mkdir($directory, 0775, true)) {
+            throw new Exception('Could not create upload directory');
+        }
+        $filename = $base . '.' . $extension;
+        for ($suffix = 2; file_exists($directory . '/' . $filename); $suffix++) {
+            $filename = $base . '-' . $suffix . '.' . $extension;
+        }
+        $destination = $directory . '/' . $filename;
+        if (!move_uploaded_file($file['tmp_name'], $destination)) {
+            throw new Exception('Could not store uploaded file');
+        }
+        $url = 'images/' . $this->assetType . '/' . $category['slug'] . '/' . $filename;
+        try {
+            $result = $this->addAsset([
+                'name' => ucwords(str_replace('-', ' ', $base)),
+                'filename' => $filename,
+                'url' => $url,
+                'category_id' => (int)$category['id'],
+                'is_active' => 0,
+            ]);
+            $stmt = $this->db->prepare(
+                "UPDATE {$this->tables['table']} SET file_hash = ? WHERE id = ?",
+                'si',
+                [$hash, (int)$result['id']]
+            );
+            $stmt->close();
+            if ($this->assetType === 'glitter') {
+                $stmt = $this->db->prepare(
+                    "UPDATE {$this->tables['table']} SET name = generated_name WHERE id = ? AND generated_name IS NOT NULL",
+                    'i',
+                    [(int)$result['id']]
+                );
+                $stmt->close();
+            }
+            return ['success' => true, 'id' => (int)$result['id'], 'url' => $url, 'pending' => true];
+        } catch (Throwable $error) {
+            unlink($destination);
+            throw $error;
+        }
+    }
+
+    public function rejectAsset($id)
+    {
+        $asset = $this->getAssetUrlById($id);
+        if (!$asset) {
+            throw new Exception('Asset not found');
+        }
+        if ((int)$asset['is_active']) {
+            throw new Exception('Only pending assets can be rejected');
+        }
+        $path = $this->assetFilePath($asset['url']);
+        $this->deleteAssetRecord($id);
+        if (file_exists($path) && !unlink($path)) {
+            throw new Exception('Database record deleted, but the file could not be removed');
+        }
+        return ['success' => true];
     }
 }

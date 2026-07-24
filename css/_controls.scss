@@ -1,0 +1,266 @@
+@use 'mixins' as *;
+
+.tooltip {
+	position: fixed;
+	max-width: 240px;
+	width: -moz-max-content;
+	width: max-content;
+	padding: var(--spacing-sm) var(--spacing-md);
+	border: 1px solid var(--color-border-hover);
+	border-radius: var(--radius-sm);
+	background: rgba(0, 0, 0, 0.95);
+	color: var(--color-text-primary);
+	z-index: var(--z-tooltip);
+	text-transform: uppercase;
+	pointer-events: none;
+	@include windows7-tooltip;
+}
+
+.filter-chip {
+	padding: var(--spacing-xs) var(--spacing-md);
+	border-radius: 12px;
+	outline: 2px solid transparent;
+	outline-offset: 2px;
+	background: var(--color-bg-secondary);
+	cursor: pointer;
+	transition: background-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+	@include text-sm;
+
+	&:hover {
+		outline-color: var(--color-border-hover);
+		background: var(--color-bg-tertiary);
+	}
+
+	&.active {
+		outline-color: var(--color-accent-hover);
+		background: var(--color-accent);
+		color: white;
+	}
+}
+
+// Shared properties for all buttons.
+.btn,
+.btn-icon,
+.btn-simple,
+.btn-text-with-icon,
+.btn-text {
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	color: var(--color-text-primary);
+	border: none;
+	@include text-sm;
+	font-weight: 600;
+	padding: var(--spacing-sm) var(--spacing-base);
+
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	// remove outline on focus
+	outline: none;
+
+	transform: translateZ(0); // ios fix for radius + hidden
+
+	svg.icon {
+		opacity: var(--btn-icon-opacity);
+	}
+
+	&:disabled {
+		opacity: var(--disabled-opacity);
+		cursor: not-allowed;
+	}
+}
+
+// The gloss gradient covers the background box; state changes use filter and border tokens.
+.btn {
+	@include gloss-button(true);
+}
+
+.btn-text-with-icon {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	aspect-ratio: unset;
+
+	@include gloss-button(true);
+
+	&.icon-wrapper {
+		aspect-ratio: unset;
+		gap: var(--spacing-sm);
+
+		>svg.icon {
+			width: var(--icon-size-sm);
+			height: var(--icon-size-sm);
+
+
+			+span.name {
+				display: block;
+				padding-right: var(--spacing-sm);
+			}
+		}
+	}
+
+	&:hover {
+		border-color: var(--color-border-hover);
+	}
+
+	&.active {
+		border-color: var(--color-accent-hover);
+	}
+}
+
+.btn-icon {
+	width: var(--icon-size);
+	height: var(--icon-size);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: var(--font-size-xl);
+	padding: 0;
+
+	// Improve touch responsiveness
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+
+	@include gloss-button(true);
+
+	&:not(:disabled):hover {
+		border-color: var(--color-border-hover);
+	}
+
+	&.active {
+		border-color: var(--color-accent-hover);
+	}
+}
+
+.btn-icon-simple {
+	background-color: transparent;
+	border: 0;
+	color: var(--color-icon-muted);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	padding: var(--spacing-xs);
+	aspect-ratio: 1/1;
+
+	&.icon-wrapper {
+		>svg.icon {
+			width: var(--icon-size-sm);
+			height: var(--icon-size-sm);
+		}
+	}
+
+
+
+	&:disabled {
+		opacity: var(--disabled-opacity);
+		cursor: not-allowed;
+	}
+
+	&:not(:disabled):hover {
+		background: var(--color-bg-tertiary);
+		border-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
+
+	&:active {
+		background: var(--color-bg-tertiary);
+		border-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
+
+	&.active {
+		color: var(--color-text-primary);
+		background: var(--color-accent);
+		border-color: var(--color-accent-hover);
+	}
+
+	// On bar chrome (app header, section headers) the panel-surface colors
+	// disappear against a painted bar — follow the --bar-btn-* tokens instead.
+	.app-header &,
+	.section-header & {
+		color: var(--bar-btn-color);
+
+		&:not(:disabled):hover,
+		&:not(:disabled):active {
+			background: var(--bar-btn-hover-bg);
+			color: var(--bar-btn-hover-color);
+		}
+	}
+}
+
+.btn-simple {
+	padding: var(--spacing-sm) var(--spacing-lg);
+	@include gloss-button(true);
+}
+
+.btn-text {
+	background: none;
+	border: none;
+	color: var(--color-accent);
+
+	&:hover {
+		color: var(--color-accent-light);
+	}
+
+}
+
+.switch {
+	--switch-width: calc(1.75 * var(--icon-size));
+	--switch-height: var(--icon-size);
+	--switch-padding: 4px;
+	--slider-bg: var(--color-slider-track);
+	--slider-checked-bg: var(--color-accent);
+	--knob-size: calc(var(--switch-height) - 2 * var(--switch-padding));
+	--slider-speed: 0.2s;
+
+	display: inline-block;
+	height: var(--switch-height);
+	width: var(--switch-width);
+	position: relative;
+
+	>input[type="checkbox"] {
+		display: none;
+
+		&:checked+.slider {
+			background-color: var(--slider-checked-bg);
+
+			&:before {
+				transform: translateX(calc(var(--switch-width) - var(--switch-height)));
+			}
+		}
+	}
+
+	>.slider {
+		background-color: var(--slider-bg);
+		// Recessed track under a raised knob — reads as a physical control on
+		// both themes (percentages, not colors, so it tints with the track).
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		cursor: pointer;
+		transition: var(--slider-speed);
+
+		&.round {
+			border-radius: var(--switch-height);
+
+			&:before {
+				border-radius: 50%;
+			}
+		}
+
+		&:before {
+			content: "";
+			position: absolute;
+			left: var(--switch-padding);
+			bottom: var(--switch-padding);
+			width: var(--knob-size);
+			height: var(--knob-size);
+			background-color: var(--switch-knob-color);
+			transition: var(--slider-speed);
+		}
+	}
+}

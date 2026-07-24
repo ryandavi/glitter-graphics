@@ -14,8 +14,15 @@ class GlitterAPI extends AssetAPI
     protected function formatAssetForExport($asset, $tags)
     {
         $colorCodes = [];
+        $colorWeights = [];
         if (!empty($asset['color_codes'])) {
             $colorCodes = array_map('trim', explode(',', $asset['color_codes']));
+        }
+        if (!empty($asset['color_weights'])) {
+            $colorWeights = array_map('floatval', explode(',', $asset['color_weights']));
+        }
+        if (count($colorCodes) !== count($colorWeights)) {
+            throw new Exception('Color code/weight mismatch for glitter ID ' . $asset['id']);
         }
 
         return [
@@ -27,6 +34,7 @@ class GlitterAPI extends AssetAPI
             'sortOrder' => (int)($asset['sort_order'] ?? 0),
             'hue' => $asset['hue'] ? (float)$asset['hue'] : null,
             'colorCodes' => $colorCodes,
+            'colorWeights' => $colorWeights,
             'frameCount' => (int)($asset['frame_count'] ?? 0),
             'frameRate' => (int)($asset['frame_rate'] ?? 10),
             'isVariableFramerate' => (int)$asset['is_variable_framerate'],
@@ -37,7 +45,6 @@ class GlitterAPI extends AssetAPI
             'fileSize' => (int)($asset['file_size'] ?? 0),
             'category' => $asset['category_slug'],
             'isPixelated' => (int)$asset['is_pixelated'],
-            'isActive' => (int)$asset['is_active'],
             'tags' => $tags,
         ];
     }
@@ -45,28 +52,44 @@ class GlitterAPI extends AssetAPI
     protected function getAssetSpecificFields()
     {
         return [
-            'string' => ['name', 'url', 'generated_name', 'color_codes'],
+            'string' => ['name', 'url', 'generated_name', 'color_codes', 'color_weights', 'file_hash'],
             'int' => ['glitter_category_id', 'frame_count', 'frame_rate', 'sort_order', 'width', 'height', 'file_size'],
             'float' => ['hue', 'color_value'],
             'bool' => ['is_pixelated', 'is_active', 'is_variable_framerate', 'is_animated', 'has_transparency'],
         ];
     }
 
-    public function addAsset($data)
+    protected function getAddFieldMap()
     {
+        return [
+            'name' => ['type' => 's'],
+            'url' => ['type' => 's'],
+            'glitter_category_id' => ['type' => 'i', 'source' => 'category_id', 'default' => 1],
+            'is_pixelated' => ['type' => 'i', 'default' => 1],
+            'is_active' => ['type' => 'i', 'default' => 1],
+        ];
+    }
+
+    protected function persistAnalysis($id, $analysis, $includeColors = true)
+    {
+        parent::persistAnalysis($id, $analysis, $includeColors);
+        if (!$includeColors) {
+            return;
+        }
         $stmt = $this->db->prepare(
-            "INSERT INTO {$this->tables['table']} (name, url, glitter_category_id, is_pixelated, is_active) VALUES (?, ?, ?, ?, ?)",
-            'ssiii',
+            "UPDATE {$this->tables['table']}
+             SET color_codes = ?, color_weights = ?, color_value = ?, hue = ?, generated_name = ?
+             WHERE id = ?",
+            'ssddsi',
             [
-                (string)$data['name'],
-                (string)$data['url'],
-                (int)($data['category_id'] ?? 1),
-                1,
-                1,
+                (string)$analysis['color_codes'],
+                (string)$analysis['color_weights'],
+                (float)$analysis['color_value'],
+                (float)$analysis['hue'],
+                (string)$analysis['generated_name'],
+                (int)$id,
             ]
         );
         $stmt->close();
-
-        return ['success' => true, 'id' => $this->db->lastInsertId()];
     }
 }

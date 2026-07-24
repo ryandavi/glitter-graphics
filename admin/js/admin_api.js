@@ -12,7 +12,9 @@ window.AdminAPI = {
         'delete_category',
         'update_category',
         'add_tag',
-        'delete_tag'
+        'delete_tag',
+        'upload',
+        'reject'
     ]),
 
     isMutatingRequest(url, options = {}) {

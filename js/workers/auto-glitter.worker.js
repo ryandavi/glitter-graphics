@@ -24,15 +24,31 @@ self.onmessage = ({ data }) => {
 };
 
 function assignSuggestedSwatches(palette, swatches, options) {
-	const preparedSwatches = swatches.map(swatch => ({ ...swatch, colors: swatch.colors.map(hexToLab), primary: hexToLab(swatch.colors[0]) }));
+	const preparedSwatches = swatches.map(swatch => ({
+		...swatch,
+		colors: swatch.colors.map(hexToLab),
+		weights: Array.isArray(swatch.weights) && swatch.weights.length === swatch.colors.length
+			? swatch.weights
+			: swatch.colors.map(() => 1 / swatch.colors.length),
+		primary: hexToLab(swatch.colors[0])
+	}));
 	for (const entry of palette) {
 		let bestIndex = -1;
 		let bestColor = null;
 		let bestDistance = Infinity;
 		for (let index = 0; index < preparedSwatches.length; index++) {
-			const colors = preparedSwatches[index].colors;
-			const closestColor = colors.reduce((closest, color) => GlitterPaletteAnalysis.distanceSquared(entry.lab, color) < GlitterPaletteAnalysis.distanceSquared(entry.lab, closest) ? color : closest, colors[0]);
-			const distance = GlitterPaletteAnalysis.distanceSquared(entry.lab, preparedSwatches[index].primary) * options.swatchPrimaryWeight + GlitterPaletteAnalysis.distanceSquared(entry.lab, closestColor) * (1 - options.swatchPrimaryWeight);
+			const swatch = preparedSwatches[index];
+			const eligible = swatch.colors.map((color, colorIndex) => ({ color, colorIndex }))
+				.filter(item => swatch.colors.length === 1 || swatch.weights[item.colorIndex] >= options.swatchMinCoverage);
+			const candidates = eligible.length ? eligible : [{ color: swatch.colors[0], colorIndex: 0 }];
+			const closest = candidates.reduce((best, item) => {
+				const penalty = 1 + options.swatchCoverageBias * (1 - swatch.weights[item.colorIndex]);
+				const distance = GlitterPaletteAnalysis.distanceSquared(entry.lab, item.color) * penalty;
+				return distance < best.distance ? { ...item, distance, penalty } : best;
+			}, { color: candidates[0].color, colorIndex: candidates[0].colorIndex, distance: Infinity, penalty: 1 });
+			const closestColor = closest.color;
+			const distance = GlitterPaletteAnalysis.distanceSquared(entry.lab, swatch.primary) * options.swatchPrimaryWeight
+				+ GlitterPaletteAnalysis.distanceSquared(entry.lab, closestColor) * closest.penalty * (1 - options.swatchPrimaryWeight);
 			if (distance < bestDistance) {
 				bestDistance = distance;
 				bestIndex = index;

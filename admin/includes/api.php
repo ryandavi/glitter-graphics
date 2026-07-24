@@ -55,6 +55,8 @@ $mutatingActions = [
     'update_category',
     'add_tag',
     'delete_tag',
+    'upload',
+    'reject',
 ];
 
 if (in_array($action, $mutatingActions, true)) {
@@ -99,7 +101,23 @@ try {
             break;
 
         case 'analyze_all':
-            echo json_encode($api->analyzeAllAssets());
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->analyzeAllAssets(
+                $data['ids'] ?? null,
+                !array_key_exists('include_colors', $data) || (bool)$data['include_colors']
+            ));
+            break;
+
+        case 'upload':
+            echo json_encode($api->uploadAsset($_FILES['file'] ?? [], (int)($_POST['category_id'] ?? 0)));
+            break;
+
+        case 'reject':
+            echo json_encode($api->rejectAsset((int)($_POST['id'] ?? 0)));
+            break;
+
+        case 'health':
+            echo json_encode($api->healthReport());
             break;
 
         // ===== EXPORT OPERATIONS =====

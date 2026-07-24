@@ -414,8 +414,16 @@ class AutoGlitterManager {
 		this.setCanvasPreviewState(true, this.segmentDirty ? 'Analyzing image…' : 'Updating preview…');
 		this.ui.status.textContent = this.segmentDirty ? 'Finding distinct colors…' : 'Updating color matches…';
 		const swatches = this.editor.glitterManager.getAllContent()
-			.filter(glitter => glitter.isActive !== false && !glitter.hasTransparency && glitter.colorCodes?.length)
-			.map(glitter => ({ id: glitter.id, colors: glitter.colorCodes }));
+			.filter(glitter => glitter.isActive !== false
+				&& !glitter.hasTransparency
+				&& glitter.colorCodes?.length
+				&& !glitter.tags?.some(tag => String(tag).toLowerCase() === 'pattern'))
+			.map(glitter => {
+				const weights = Array.isArray(glitter.colorWeights) && glitter.colorWeights.length === glitter.colorCodes.length
+					? glitter.colorWeights.map(Number)
+					: glitter.colorCodes.map(() => 1 / glitter.colorCodes.length);
+				return { id: glitter.id, colors: glitter.colorCodes, weights };
+			});
 		let previewUpdated = false;
 
 		try {
@@ -470,7 +478,7 @@ class AutoGlitterManager {
 
 	ensureWorker() {
 		if (this.worker) return;
-		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=11');
+		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=12');
 		this.worker.onmessage = ({ data }) => {
 			const pending = this.workerRequests.get(data.requestId);
 			if (!pending) return;

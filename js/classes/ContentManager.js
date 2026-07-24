@@ -150,6 +150,7 @@ class ContentManager {
 			sortOrder: this.normalizeNumberValue(raw.sortOrder, defaults.sortOrder ?? 0),
 			hue: raw.hue ?? defaults.hue ?? null,
 			colorCodes,
+			colorWeights: Array.isArray(raw.colorWeights) ? raw.colorWeights : (defaults.colorWeights ?? null),
 			frameCount: this.normalizeNumberValue(raw.frameCount, defaults.frameCount ?? 0),
 			frameRate: this.normalizeNumberValue(raw.frameRate, defaults.frameRate ?? 10),
 			isVariableFramerate: this.normalizeBooleanValue(raw.isVariableFramerate, defaults.isVariableFramerate ?? false),
@@ -293,7 +294,8 @@ class ContentManager {
 			return name.includes(query);
 		} else {
 			const tagsString = (item.tags || []).join(' ').toLowerCase();
-			return name.includes(query) || tagsString.includes(query);
+			const stickerText = (item.stickerText || '').toLowerCase();
+			return name.includes(query) || tagsString.includes(query) || stickerText.includes(query);
 		}
 	}
 

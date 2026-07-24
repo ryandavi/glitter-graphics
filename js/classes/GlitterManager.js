@@ -270,6 +270,7 @@ async initBrowser() {
 					sortOrder: 0,
 					hue: null,
 					colorCodes: [],
+					colorWeights: null,
 					frameCount: 0,
 					frameRate: 10,
 					isVariableFramerate: false,
