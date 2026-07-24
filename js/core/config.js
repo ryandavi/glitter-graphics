@@ -53,8 +53,8 @@ const CONFIG = {
 
 	canvas: {
 		limits: {
-			maxWidth: 2048,
-			maxHeight: 2048,
+			maxWidth: 1024,
+			maxHeight: 1024,
 			paintHistoryMaxMB: 128,
 			maxFileSizeMB: 10
 		},
@@ -62,6 +62,18 @@ const CONFIG = {
 		defaults: {
 			blankDocument: { width: 400, height: 400, color: '#ffffff' }
 		},
+		presets: [
+			{ id: 'instagram-square', group: 'social', label: 'Instagram Square', detail: '1:1', width: 1024, height: 1024 },
+			{ id: 'instagram-portrait', group: 'social', label: 'Instagram Portrait', detail: '4:5', width: 800, height: 1000 },
+			{ id: 'instagram-grid', group: 'social', label: 'Instagram Grid', detail: '3:4', width: 768, height: 1024 },
+			{ id: 'story-reel', group: 'social', label: 'Story / Reel', detail: '9:16', width: 576, height: 1024 },
+			{ id: 'landscape-video', group: 'social', label: 'Landscape', detail: '16:9', width: 1024, height: 576 },
+			{ id: 'classic-blingee', group: 'classic', label: 'Classic Blingee', detail: 'Square', width: 400, height: 400 },
+			{ id: 'classic-avatar', group: 'classic', label: 'Profile / Avatar', detail: 'Square', width: 300, height: 300 },
+			{ id: 'classic-signature', group: 'classic', label: 'Forum Signature', detail: '3:1', width: 600, height: 200 },
+			{ id: 'general-square', group: 'general', label: 'Medium Square', detail: '1:1', width: 512, height: 512 },
+			{ id: 'general-landscape', group: 'general', label: 'Landscape Photo', detail: '4:3', width: 1024, height: 768 }
+		],
 		grid: {
 			baseSize: 20
 		},
@@ -357,7 +369,7 @@ const CONFIG = {
 	},
 
 	ui: {
-		independentCollapsibleSections: ['imagePanel', 'layersPanel'],
+		independentCollapsibleSections: ['layersPanel'],
 		zoom: {
 			levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16]
 		},
@@ -767,7 +779,7 @@ function layerHasVisibleContent(layer) {
 // `*SettingsSection` regardless of title — that's internal only, don't rename.
 const LAYER_UI_CONFIG = {
 	NO_IMAGE: {
-		designPanelSections: ['welcomeSection'],
+		designPanelSections: [],
 		mobileSettingsSections: [],
 		panelMode: 'welcome'
 	},
@@ -1217,7 +1229,8 @@ const PANEL_SCHEMAS = {
 					{ kind: 'card', title: 'Asset', items: [
 						{ kind: 'assetInfo', info: 'stickerAssetInfo', thumbnail: 'stickerAssetThumbnail',
 							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
-							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' }
+							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' },
+						{ kind: 'colorAdjust' }
 					] }
 				] },
 			{ title: 'Appearance', adoptTransformOpacity: true, items: [] },

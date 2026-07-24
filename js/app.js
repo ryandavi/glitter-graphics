@@ -379,6 +379,7 @@ class GlitterEditor {
 
 		try {
 			localStorage.setItem('glitterEditorSettings', JSON.stringify(settings));
+			localStorage.setItem('glitterEditorTheme', this.interfaceTheme || 'dark');
 		} catch (e) {
 			console.warn('Failed to save settings to localStorage:', e);
 		}
@@ -990,7 +991,6 @@ async resetAllSettings() {
 
 		// 1. Define ALL possible sections to hide them first
 		const allSections = [
-			'welcomeSection',
 			'noLayerSettingsSection',
 			'autoGlitterSettingsSection',
 			'baseLayerSettingsSection',
@@ -1820,6 +1820,7 @@ async resetAllSettings() {
 		if (!layer) return null;
 		if (layer.type === LayerType.SHAPE) return layer.shapeData?.fill?.colorAdjust;
 		if (layer.type === LayerType.BASE_IMAGE) return layer.background?.colorAdjust;
+		if (layer.type === LayerType.STICKER) return layer.stickerData?.colorAdjust;
 		return layer.settings?.colorAdjust;
 	}
 
@@ -3091,24 +3092,21 @@ async resetAllSettings() {
 	setupImageListeners() {
 		const imageUpload = document.getElementById('imageUpload');
 		const projectUpload = document.getElementById('projectUpload');
-		const imageDropzone = document.getElementById('imageDropzone');
+		const workspaceStart = document.getElementById('workspaceStart');
 		const openProjectBtn = document.getElementById('openProjectBtn');
 		const openProjectSidebarBtn = document.getElementById('openProjectSidebarBtn');
+		const openImageBtn = document.getElementById('openImageBtn');
 
-		// New Canvas button (desktop welcome state + mobile dropzone)
 		const openNewCanvasBtn = document.getElementById('openNewCanvasBtn');
-		const dropzoneNewCanvasBtn = document.getElementById('dropzoneNewCanvasBtn');
-		[openNewCanvasBtn, dropzoneNewCanvasBtn].forEach((button) => {
-			if (!button) return;
-			button.addEventListener('click', (e) => {
-				e.stopPropagation();
-				const modal = document.getElementById('newCanvasModal');
-				if (modal) {
-					modal.classList.add('visible');
-					this.initializeNewCanvasModal();
-				}
-			});
+		openNewCanvasBtn?.addEventListener('click', (event) => {
+			event.stopPropagation();
+			const modal = document.getElementById('newCanvasModal');
+			if (!modal) return;
+			modal.classList.add('visible');
+			this.initializeNewCanvasModal();
 		});
+
+		openImageBtn?.addEventListener('click', () => imageUpload?.click());
 
 		if (imageUpload) {
 			imageUpload.addEventListener('change', (e) => this.loadImage(e));
@@ -3131,45 +3129,143 @@ async resetAllSettings() {
 			}
 		});
 
-		if (imageDropzone) {
-			imageDropzone.addEventListener('click', () => {
-				imageUpload.click();
-			});
-
-			imageDropzone.addEventListener('dragover', (e) => {
-				e.preventDefault();
-				imageDropzone.classList.add('drag-over');
-			});
-
-			imageDropzone.addEventListener('dragleave', () => {
-				imageDropzone.classList.remove('drag-over');
-			});
-
-			imageDropzone.addEventListener('drop', async (e) => {
-				e.preventDefault();
-				imageDropzone.classList.remove('drag-over');
-
-				const file = e.dataTransfer.files[0];
-				if (!file) return;
-
-				const isProjectFile = file.type === 'application/json' ||
-					file.name.toLowerCase().endsWith('.json');
-				if (isProjectFile) {
-					await this.openProjectFile(file);
-					return;
+		let dragDepth = 0;
+		const setDropActive = (active) => {
+			this.previewContainer?.classList.toggle('workspace-drop-active', active);
+			workspaceStart?.classList.toggle('drag-over', active);
+		};
+		this.previewContainer?.addEventListener('dragenter', (event) => {
+			if (!event.dataTransfer?.types?.includes('Files')) return;
+			event.preventDefault();
+			dragDepth += 1;
+			setDropActive(true);
+		});
+		this.previewContainer?.addEventListener('dragover', (event) => {
+			if (!event.dataTransfer?.types?.includes('Files')) return;
+			event.preventDefault();
+			event.dataTransfer.dropEffect = 'copy';
+		});
+		this.previewContainer?.addEventListener('dragleave', () => {
+			dragDepth = Math.max(0, dragDepth - 1);
+			if (dragDepth === 0) setDropActive(false);
+		});
+		this.previewContainer?.addEventListener('drop', async (event) => {
+			event.preventDefault();
+			dragDepth = 0;
+			setDropActive(false);
+			const files = Array.from(event.dataTransfer?.files || []);
+			if (!files.length) return;
+			const project = files.find((file) => file.type === 'application/json' || file.name.toLowerCase().endsWith('.json'));
+			if (project) {
+				await this.openProjectFile(project);
+				return;
+			}
+			const images = files.filter((file) => file.type.startsWith('image/'));
+			if (!images.length) {
+				this.showError('Drop an image or a saved Glitter project.');
+				return;
+			}
+			if (!this.originalImage) {
+				const loaded = await this.loadImage({ target: { files: [images.shift()] } });
+				if (loaded === false || !this.originalImage) return;
+			}
+			for (const file of images) {
+				if (this.layers.length >= CONFIG.app.limits.maxLayers) {
+					this.showError(`Layer limit reached. The first ${CONFIG.app.limits.maxLayers} layers were added.`);
+					break;
 				}
+				const sticker = await this.stickerManager.handleUserUpload(file, { navigate: false });
+				if (sticker && !sticker.error) await this.stickerManager.createStickerLayer(sticker.id);
+			}
+			if (images.length) this.updateStatus(images.length === 1 ? 'Image added as a new layer' : `${images.length} images added as new layers`);
+		});
 
-				if (file.type.startsWith('image/')) {
-					const fakeEvent = { target: { files: [file] } };
-					await this.loadImage(fakeEvent);
-				}
-			});
-		}
-
+		this.syncDocumentStartState();
+		window.addEventListener('imageLoaded', () => {
+			this.syncDocumentStartState();
+			this.fitDocumentToSettledWorkspace();
+		});
+		window.addEventListener('imageRemoved', () => this.syncDocumentStartState());
 	}
 
+	syncDocumentStartState() {
+		const noDocument = !this.originalImage;
+		const workspaceStart = document.getElementById('workspaceStart');
+		if (workspaceStart) {
+			workspaceStart.hidden = !noDocument;
+			workspaceStart.setAttribute('aria-hidden', noDocument ? 'false' : 'true');
+		}
+		document.body.classList.toggle('no-document', noDocument);
+	}
+
+	fitDocumentToSettledWorkspace() {
+		if (!this.originalImage || !this.previewWrapper) return;
+		this.previewWrapper.style.opacity = '0';
+		this.previewWrapper.style.transition = 'none';
+		requestAnimationFrame(() => requestAnimationFrame(() => {
+			this.viewport.performResizeUpdate();
+			this.viewport.resetZoomSmart();
+			this.updateZoomUI();
+			this.previewWrapper.style.transition = '';
+			this.previewWrapper.style.opacity = '1';
+		}));
+	}
+
+	renderNewCanvasPresets() {
+		const host = document.getElementById('newCanvasPresets');
+		if (!host || host.dataset.rendered === 'true') return;
+		host.dataset.rendered = 'true';
+		host.className = 'new-canvas-preset-groups';
+		host.replaceChildren();
+		const groups = [
+			{ id: 'social', label: 'Social Media' },
+			{ id: 'classic', label: 'Web Classics' },
+			{ id: 'general', label: 'General' }
+		];
+		groups.forEach((group) => {
+			const presets = CONFIG.canvas.presets.filter((preset) => preset.group === group.id);
+			if (!presets.length) return;
+			const section = document.createElement('section');
+			section.className = 'new-canvas-preset-group';
+			const title = document.createElement('h3');
+			title.className = 'new-canvas-preset-title';
+			title.textContent = group.label;
+			const grid = document.createElement('div');
+			grid.className = 'blank-image-grid';
+			presets.forEach((preset) => {
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'blank-image-option new-canvas-preset-btn';
+				button.dataset.presetId = preset.id;
+				button.dataset.width = preset.width;
+				button.dataset.height = preset.height;
+				button.setAttribute('aria-label', `${preset.label}, ${preset.width} by ${preset.height} pixels`);
+				const previewWrapper = document.createElement('span');
+				previewWrapper.className = 'blank-preview-wrapper';
+				const preview = document.createElement('span');
+				preview.className = 'blank-preview';
+				preview.style.aspectRatio = `${preset.width} / ${preset.height}`;
+				preview.classList.toggle('wide', preset.width > preset.height);
+				previewWrapper.appendChild(preview);
+				const label = document.createElement('strong');
+				label.className = 'blank-label';
+				label.textContent = preset.label;
+				const dimensions = document.createElement('span');
+				dimensions.className = 'blank-dimensions';
+				dimensions.textContent = `${preset.width} × ${preset.height}`;
+				const detail = document.createElement('span');
+				detail.className = 'blank-detail';
+				detail.textContent = preset.detail;
+				button.append(previewWrapper, label, dimensions, detail);
+				grid.appendChild(button);
+			});
+			section.append(title, grid);
+			host.appendChild(section);
+		});
+	}
 
 	initializeNewCanvasModal() {
+		this.renderNewCanvasPresets();
 		const widthInput = document.getElementById('newCanvasWidth');
 		const heightInput = document.getElementById('newCanvasHeight');
 		const colorInput = document.getElementById('newCanvasColor');
@@ -3193,6 +3289,7 @@ async resetAllSettings() {
 		let matchingPreset = null;
 		presetButtons.forEach(btn => {
 			btn.classList.remove('active');
+			btn.setAttribute('aria-pressed', 'false');
 			const width = parseInt(btn.dataset.width);
 			const height = parseInt(btn.dataset.height);
 			if (width === CONFIG.canvas.defaults.blankDocument.width && height === CONFIG.canvas.defaults.blankDocument.height) {
@@ -3202,6 +3299,7 @@ async resetAllSettings() {
 
 		if (matchingPreset) {
 			matchingPreset.classList.add('active');
+			matchingPreset.setAttribute('aria-pressed', 'true');
 		}
 
 		// Update orientation buttons based on default dimensions
@@ -3209,6 +3307,7 @@ async resetAllSettings() {
 	}
 
 	setupNewCanvasModalListeners() {
+		this.renderNewCanvasPresets();
 		const createBtn = document.getElementById('createCanvasBtn');
 
 
@@ -3220,6 +3319,8 @@ async resetAllSettings() {
 		const presetButtons = document.querySelectorAll('.new-canvas-preset-btn');
 		const backgroundRadios = document.querySelectorAll('input[name="canvasBackground"]');
 		const colorRow = document.getElementById('canvasColorRow');
+		if (widthInput) widthInput.max = CONFIG.canvas.limits.maxWidth;
+		if (heightInput) heightInput.max = CONFIG.canvas.limits.maxHeight;
 
 		// Presets are a shortcut, not a mode: highlight tracks whether the current
 		// dimensions exactly match a preset, so editing width/height/orientation
@@ -3228,8 +3329,9 @@ async resetAllSettings() {
 			const width = parseInt(widthInput?.value);
 			const height = parseInt(heightInput?.value);
 			presetButtons.forEach(btn => {
-				btn.classList.toggle('active',
-					parseInt(btn.dataset.width) === width && parseInt(btn.dataset.height) === height);
+				const active = parseInt(btn.dataset.width) === width && parseInt(btn.dataset.height) === height;
+				btn.classList.toggle('active', active);
+				btn.setAttribute('aria-pressed', active ? 'true' : 'false');
 			});
 		};
 
@@ -3308,6 +3410,12 @@ async resetAllSettings() {
 			createBtn.addEventListener('click', async () => {
 				const width = parseInt(widthInput.value);
 				const height = parseInt(heightInput.value);
+				if (!Number.isInteger(width) || !Number.isInteger(height) ||
+					width < 100 || height < 100 ||
+					width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
+					this.showError(`Canvas dimensions must be between 100 and ${CONFIG.canvas.limits.maxWidth} pixels.`);
+					return;
+				}
 				const backgroundType = document.querySelector('input[name="canvasBackground"]:checked').value;
 				const color = backgroundType === 'color' ? colorInput.value : 'transparent';
 
@@ -3455,6 +3563,8 @@ async resetAllSettings() {
 			closeBtnId: 'closeWelcomeModal',
 			externalContentUrl: 'modals/welcome.html?v=3',
 			cacheContent: true,
+			showWhileLoading: true,
+			loadingLabel: 'Preparing Glitter…',
 			resetScrollOnOpen: false,
 			onContentLoaded: (modalBody) => {
 				initPixelScalerInContainer(modalBody);
@@ -3536,11 +3646,7 @@ async checkWelcomeModal() {
 		const hasUnseenRelease = lastSeenRelease !== CONFIG.app.currentRelease;
 		
 		if (showOnStartup || hasUnseenRelease) {
-			const welcomeConfig = this.modalManager.modals.get('welcomeModal');
-			if (welcomeConfig?.externalContentUrl) {
-				await this.modalManager.loadExternalContent(welcomeConfig);
-			}
-			this.modalManager.open('welcomeModal');
+			await this.modalManager.open('welcomeModal');
 
 			// Warm the guide after the welcome screen is visible so startup never
 			// waits on content the user has not requested yet.
@@ -3618,6 +3724,8 @@ setupWelcomeModalListeners() {
 		const {
 			title = 'Confirm',
 			message = 'Are you sure?',
+			subject = null,
+			facts = [],
 			confirmLabel = 'Confirm',
 			cancelLabel = 'Cancel',
 			destructive = false,
@@ -3649,9 +3757,35 @@ setupWelcomeModalListeners() {
 			copy.className = 'confirmation-message-copy';
 			copy.textContent = message;
 			messageNode.appendChild(copy);
+			if (subject?.value) {
+				const subjectNode = document.createElement('div');
+				subjectNode.className = 'confirmation-subject';
+				const subjectLabel = document.createElement('span');
+				subjectLabel.className = 'confirmation-subject-label';
+				subjectLabel.textContent = subject.label || 'Item';
+				const subjectValue = document.createElement('strong');
+				subjectValue.className = 'confirmation-subject-value';
+				subjectValue.textContent = subject.value;
+				subjectNode.append(subjectLabel, subjectValue);
+				messageNode.appendChild(subjectNode);
+			}
+			if (facts.length) {
+				const factList = document.createElement('dl');
+				factList.className = 'confirmation-facts';
+				facts.forEach((fact) => {
+					const row = document.createElement('div');
+					const label = document.createElement('dt');
+					label.textContent = fact.label;
+					const value = document.createElement('dd');
+					value.textContent = fact.value;
+					row.append(label, value);
+					factList.appendChild(row);
+				});
+				messageNode.appendChild(factList);
+			}
 			if (details.length) {
 				const list = document.createElement('ul');
-				list.className = 'confirmation-message-list';
+				list.className = 'confirmation-detail-list';
 				details.forEach((detail) => {
 					const item = document.createElement('li');
 					item.textContent = detail;
@@ -5364,8 +5498,6 @@ setupWelcomeModalListeners() {
 		// Upload / dropzone UI
 		// ======================
 		document.getElementById('imageUpload').value = '';
-		document.getElementById('imageDropzone').classList.remove('has-image');
-		document.getElementById('dropzoneContent').classList.add('visible');
 
 		// ======================
 		// Preview container toggles
@@ -5435,6 +5567,37 @@ setupWelcomeModalListeners() {
 
 
 	// ===== IMAGE LOADING =====
+	getConstrainedCanvasSize(width, height) {
+		const scale = Math.min(
+			1,
+			CONFIG.canvas.limits.maxWidth / width,
+			CONFIG.canvas.limits.maxHeight / height
+		);
+		return {
+			width: Math.max(1, Math.floor(width * scale)),
+			height: Math.max(1, Math.floor(height * scale)),
+			resized: scale < 1
+		};
+	}
+
+	confirmOversizedImageResize({ fileName, width, height, targetWidth, targetHeight, action = 'Open' }) {
+		return this.confirmAction({
+			title: 'Resize this image?',
+			message: `This image is larger than the ${CONFIG.canvas.limits.maxWidth} × ${CONFIG.canvas.limits.maxHeight}px canvas limit.`,
+			subject: {
+				label: 'File',
+				value: fileName || 'Untitled image'
+			},
+			facts: [
+				{ label: 'Original', value: `${width} × ${height}px` },
+				{ label: 'After resize', value: `${targetWidth} × ${targetHeight}px` }
+			],
+			outro: 'The original file on your device will not be changed.',
+			confirmLabel: `Resize & ${action}`,
+			cancelLabel: 'Cancel'
+		});
+	}
+
 	async replaceBaseImageFile(file) {
 		if (!file || !this.originalImageData) return false;
 		if (file.size > CONFIG.canvas.limits.maxFileSizeMB * 1024 * 1024) {
@@ -5453,16 +5616,26 @@ setupWelcomeModalListeners() {
 			this.showError('Could not load that image. The file may be corrupt or unsupported.');
 			return false;
 		}
-		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
-		let width = image.width;
-		let height = image.height;
-		if (width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
-			const scale = Math.min(CONFIG.canvas.limits.maxWidth / width, CONFIG.canvas.limits.maxHeight / height);
-			width = Math.floor(width * scale);
-			height = Math.floor(height * scale);
+		const fittedSize = this.getConstrainedCanvasSize(image.width, image.height);
+		if (fittedSize.resized) {
+			const confirmed = await this.confirmOversizedImageResize({
+				fileName: file.name,
+				width: image.width,
+				height: image.height,
+				targetWidth: fittedSize.width,
+				targetHeight: fittedSize.height,
+				action: 'Replace'
+			});
+			if (!confirmed) {
+				URL.revokeObjectURL(objectUrl);
+				return false;
+			}
 		}
+		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
+		const { width, height } = fittedSize;
 		const offsetX = Math.round((width - this.originalCanvas.width) / 2);
 		const offsetY = Math.round((height - this.originalCanvas.height) / 2);
+		const previousImageUrl = this.originalImage?.src?.startsWith('blob:') ? this.originalImage.src : null;
 		this.resizeCanvas(width, height, offsetX, offsetY, { saveHistory: false, updateStatus: false });
 		this.originalCtx.clearRect(0, 0, width, height);
 		this.originalCtx.drawImage(image, 0, 0, width, height);
@@ -5471,6 +5644,7 @@ setupWelcomeModalListeners() {
 		this.originalAlphaChannel = new Uint8Array(width * height);
 		for (let i = 0; i < this.originalAlphaChannel.length; i++) this.originalAlphaChannel[i] = this.originalImageData.data[i * 4 + 3];
 		this.baseImageSource = { kind: 'file', file, renderedWidth: width, renderedHeight: height, hasBaseImage: true };
+		if (previousImageUrl && previousImageUrl !== objectUrl) URL.revokeObjectURL(previousImageUrl);
 		this.layerManager.updateBaseImageSwatchCache();
 		const layer = this.layers.find((entry) => entry.type === LayerType.BASE_IMAGE);
 		if (layer) {
@@ -5551,9 +5725,6 @@ setupWelcomeModalListeners() {
 			this.viewport.resetZoomSmart();
 			this.updateZoomUI();
 
-			const dropzone = document.getElementById('imageDropzone');
-			dropzone.classList.add('has-image');
-			document.getElementById('dropzoneContent').classList.remove('visible');
 			this.originalCanvas.classList.add('visible');
 
 			// Clear previous layers and glitter
@@ -5646,11 +5817,6 @@ setupWelcomeModalListeners() {
 			preserveProjectName = false
 		} = options;
 
-		this.exporter?.clearPreviewBlobUrl?.();
-		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
-			URL.revokeObjectURL(this.originalImage.src);
-		}
-
 		const objectUrl = URL.createObjectURL(blob);
 		const img = await new Promise((resolve, reject) => {
 			const image = new Image();
@@ -5668,16 +5834,28 @@ setupWelcomeModalListeners() {
 		if (!img) {
 			return false;
 		}
+		const fittedSize = this.getConstrainedCanvasSize(img.width, img.height);
+		if (fittedSize.resized && source?.kind !== 'preset') {
+			const confirmed = await this.confirmOversizedImageResize({
+				fileName,
+				width: img.width,
+				height: img.height,
+				targetWidth: fittedSize.width,
+				targetHeight: fittedSize.height
+			});
+			if (!confirmed) {
+				URL.revokeObjectURL(objectUrl);
+				return false;
+			}
+		}
+
+		this.exporter?.clearPreviewBlobUrl?.();
+		if (this.originalImage && this.originalImage.src.startsWith('blob:')) {
+			URL.revokeObjectURL(this.originalImage.src);
+		}
 		if (this.autoGlitterManager?.isSessionActive()) this.autoGlitterManager.endSessionUI();
 
-		let width = img.width;
-		let height = img.height;
-
-		if (width > CONFIG.canvas.limits.maxWidth || height > CONFIG.canvas.limits.maxHeight) {
-			const scale = Math.min(CONFIG.canvas.limits.maxWidth / width, CONFIG.canvas.limits.maxHeight / height);
-			width = Math.floor(width * scale);
-			height = Math.floor(height * scale);
-		}
+		const { width, height } = fittedSize;
 
 		this.originalImage = img;
 		this.originalCanvas.width = width;
@@ -5717,9 +5895,6 @@ setupWelcomeModalListeners() {
 		this.viewport.resetZoomSmart();
 		this.updateZoomUI();
 
-		const dropzone = document.getElementById('imageDropzone');
-		dropzone.classList.add('has-image');
-		document.getElementById('dropzoneContent').classList.remove('visible');
 		this.originalCanvas.classList.add('visible');
 
 		if (this.glitterManager) {

@@ -94,6 +94,12 @@ It drives each handle once via touch and once via mouse (six checks total), conf
 
 While building this, touch dragging on these three handle types turned out not to work at all — `GestureManager`'s capture-phase `pointerdown` listener on `previewContainer` claimed every touch (including ones landing on a handle) before `LayerTransform`'s own handle listeners ever saw them, the same class of conflict `MaskEditor.js` already guards against for `.transform-handles`. `GestureManager.handlePointerDown` (`js/classes/GestureManager.js`) now also lets touches on `.transform-handle-wrapper` (corner/edge/rotation handles) fall through untouched, matching how `.ui-ignore-gestures` is already excluded. The move handle's bounding box (`.transform-bounding-box`) is deliberately *not* excluded — two-finger pinch/rotate/translate on a selected layer is routed through GestureManager's own composite-gesture math, and a broader exclusion there breaks that path (see checks 14-15 in the main suite, which sit on top of it).
 
+## Document-start verification (`tests/document-start-verify.js`)
+
+Run it with `node tests/document-start-verify.js`.
+
+It checks the shared desktop/mobile start surface, configured canvas presets and limits, mobile navigation state, image drops becoming new Sticker layers in an existing document, and explicit base-image replacement preserving the layer stack.
+
 ## Shape-border verification (`tests/shape-border-verify.js`)
 
 Run it the same way: `node tests/shape-border-verify.js`.

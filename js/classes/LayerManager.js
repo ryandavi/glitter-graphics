@@ -1674,6 +1674,7 @@ class LayerManager {
 				if (!compact) swatch.innerHTML = '<span>?</span>';
 			} else {
 				swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
+				swatch.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
 			}
 			return;
 		}

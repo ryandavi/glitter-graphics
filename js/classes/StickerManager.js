@@ -52,8 +52,13 @@ class StickerManager extends ContentManager {
 			categoryChips: document.getElementById('stickerCategoryChips'),
 			searchNameOnly: document.getElementById('searchStickerNameOnly'),
 			fitCanvas: document.getElementById('stickerFitCanvas'),
-			fillCanvas: document.getElementById('stickerFillCanvas')
+			fillCanvas: document.getElementById('stickerFillCanvas'),
+			assetThumbnail: document.getElementById('stickerAssetThumbnail')
 		};
+		['Hue', 'Saturation', 'Brightness'].forEach((suffix) => {
+			this.ui['color' + suffix] = document.getElementById('sticker' + suffix);
+			this.ui['color' + suffix + 'Value'] = document.getElementById('sticker' + suffix + 'Value');
+		});
 		// Shared gallery picker strip (same DOM the text and shape pickers use).
 		this.ui.gallerySection = document.getElementById('designGallerySection');
 		this.ui.pickerStrip = document.getElementById('galleryPickerStrip');
@@ -94,6 +99,7 @@ class StickerManager extends ContentManager {
 		this.setupFilterChips();
 		this.ui.fitCanvas?.addEventListener('click', () => this.scaleActiveStickerToCanvas('fit'));
 		this.ui.fillCanvas?.addEventListener('click', () => this.scaleActiveStickerToCanvas('fill'));
+		this.bindColorAdjustControls();
 		this.bindEffectsControls();
 		// Shared picker strip: Done (only acts while a sticker is armed) + global Esc.
 		this.ui.pickerStripDone?.addEventListener('click', () => {
@@ -112,6 +118,39 @@ class StickerManager extends ContentManager {
 
 	getDefaultShadow() {
 		return buildDefaultShadow({ config: CONFIG.tools.stickers.shadow, defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId, includeColorAdjust: true });
+	}
+
+	bindColorAdjustControls() {
+		[
+			['Hue', 'hue', '°'],
+			['Saturation', 'saturation', '%'],
+			['Brightness', 'brightness', '%']
+		].forEach(([suffix, key, unit]) => {
+			const slider = this.ui['color' + suffix];
+			if (!slider) return;
+			bindSlider(slider, this.ui['color' + suffix + 'Value'], {
+				suffix: unit,
+				resetValue: COLOR_ADJUST_IDENTITY[key],
+				resetButton: document.getElementById('reset' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1)),
+				apply: (value) => {
+					const layer = this.editor.layerManager.getActiveLayer();
+					if (layer?.type !== LayerType.STICKER) return;
+					ensureSlotColorAdjust(layer.stickerData)[key] = value;
+					this.refreshColorAdjustVisuals(layer);
+				},
+				onCommit: () => this.editor.saveState()
+			});
+		});
+	}
+
+	refreshColorAdjustVisuals(layer) {
+		const filter = buildCssColorFilter(layer?.stickerData?.colorAdjust);
+		const image = this.layerElements.get(layer?.id)?.querySelector(':scope > img');
+		if (image) image.style.filter = filter;
+		if (this.ui.assetThumbnail && this.editor.layerManager.getActiveLayer()?.id === layer?.id) {
+			this.ui.assetThumbnail.style.filter = filter;
+		}
+		this.editor.refreshLayerSwatchFilter(layer);
 	}
 
 	bindEffectsControls() {
@@ -275,6 +314,19 @@ class StickerManager extends ContentManager {
 	loadLayerSettings(layer) {
 		if (layer?.type !== LayerType.STICKER) return;
 		if (this.pickerSession && this.pickerSession.layerId !== layer.id) this.closePicker();
+		const colorAdjust = normalizeColorAdjust(layer.stickerData.colorAdjust);
+		const setColorAdjust = (suffix, key, value, unit) => {
+			const slider = this.ui['color' + suffix];
+			const display = this.ui['color' + suffix + 'Value'];
+			if (slider) slider.value = String(value);
+			if (display) display.innerHTML = formatUnit(value, unit);
+			const reset = slider && document.getElementById('reset' + slider.id.charAt(0).toUpperCase() + slider.id.slice(1));
+			if (reset) reset.disabled = value === COLOR_ADJUST_IDENTITY[key];
+		};
+		setColorAdjust('Hue', 'hue', colorAdjust.hue, '°');
+		setColorAdjust('Saturation', 'saturation', colorAdjust.saturation, '%');
+		setColorAdjust('Brightness', 'brightness', colorAdjust.brightness, '%');
+		this.refreshColorAdjustVisuals(layer);
 		const prefix = 'stickerShadow';
 		const data = layer.stickerData.shadow;
 		syncPanelEffectToggle(this.ui[prefix + 'Enabled'], Boolean(data));
@@ -485,7 +537,7 @@ class StickerManager extends ContentManager {
 		return true;
 	}
 
-	async handleUserUpload(file) {
+	async handleUserUpload(file, options = {}) {
 		// 1. Validate
 		if (!this.validateUpload(file)) {
 			return null;
@@ -523,10 +575,11 @@ class StickerManager extends ContentManager {
 
 		this.userContent.push(userSticker);
 
-		// Navigate to User Uploads immediately to show loading state
-		setTimeout(() => {
-			this.browser.setState('CATEGORY_DETAIL', 'user-uploads');
-		}, 50);
+		if (options.navigate !== false) {
+			setTimeout(() => {
+				this.browser.setState('CATEGORY_DETAIL', 'user-uploads');
+			}, 50);
+		}
 
 		// 4. Process asynchronously
 		try {
@@ -698,6 +751,7 @@ class StickerManager extends ContentManager {
 				width: sticker?.width || 100,
 				height: sticker?.height || 100,
 				frames: null,
+				colorAdjust: { ...COLOR_ADJUST_IDENTITY },
 
 				transform,
 
@@ -796,6 +850,7 @@ class StickerManager extends ContentManager {
 		img.src = layer.stickerData.url;
 		img.draggable = false;
 		img.style.imageRendering = 'pixelated';
+		img.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
 
 		const shadow = layer.stickerData.shadow;
 		if (shadow) element.appendChild(this.createStickerEffectSpan(layer, shadow, 'sticker-effect-shadow', shadow.offsetX, shadow.offsetY));
@@ -997,6 +1052,7 @@ updateTransform(layerId, updates) {
 		layerData.stickerData.width = sticker.width || layerData.stickerData.width;
 		layerData.stickerData.height = sticker.height || layerData.stickerData.height;
 		layerData.stickerData.frameCount = sticker.frameCount || layerData.stickerData.frameCount || 1;
+		layerData.stickerData.colorAdjust = normalizeColorAdjust(layerData.stickerData.colorAdjust);
 		// Sticker borders were removed; drop them from older snapshots/projects.
 		layerData.stickerData.border = null;
 		if (layerData.stickerData.shadow) layerData.stickerData.shadow = { ...this.getDefaultShadow(), ...layerData.stickerData.shadow };

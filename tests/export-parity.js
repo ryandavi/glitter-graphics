@@ -72,6 +72,7 @@ async function buildComposition(page) {
 		stickerLayer.stickerData.transform.scale.x = 145;
 		stickerLayer.stickerData.transform.scale.y = 120;
 		stickerLayer.stickerData.transform.flipX = true;
+		stickerLayer.stickerData.colorAdjust = { hue: 55, saturation: 135, brightness: 92 };
 		stickerLayer.stickerData.shadow = editor.stickerManager.getDefaultShadow();
 		stickerLayer.stickerData.shadow.mode = 'glitter';
 		stickerLayer.stickerData.shadow.glitterId = glitterB;
@@ -247,6 +248,37 @@ async function verifyGradientStopLiveEditing(page) {
 	}
 }
 
+async function verifyStickerColorAdjustControls(page) {
+	const result = await page.evaluate(() => {
+		const editor = window.editor;
+		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.STICKER);
+		editor.layerManager.setActiveLayer(layer.id);
+		editor.stickerManager.renderLayer(layer);
+		editor.loadStickerSettings(layer);
+		const image = layer.stickerData.element?.querySelector(':scope > img');
+		const hue = document.getElementById('stickerHue');
+		const advanced = hue?.closest('[data-advanced]');
+		const assetCard = document.getElementById('stickerAssetInfo')?.closest('.subsection-content-group');
+		hue.value = '65';
+		hue.dispatchEvent(new Event('input', { bubbles: true }));
+		const live = {
+			hue: layer.stickerData.colorAdjust?.hue,
+			filter: image?.style.filter || '',
+			sameImage: image === layer.stickerData.element?.querySelector(':scope > img'),
+			advanced: Boolean(advanced),
+			advancedInsideAsset: Boolean(assetCard && advanced && assetCard.contains(advanced))
+		};
+		hue.value = '55';
+		hue.dispatchEvent(new Event('input', { bubbles: true }));
+		return live;
+	});
+	assert(result.hue === 65, 'Sticker Hue slider did not update sticker colorAdjust');
+	assert(result.filter.includes('hue-rotate(65deg)'), 'Sticker Hue slider did not update the preview filter');
+	assert(result.sameImage, 'Sticker color adjustment recreated the animated image element');
+	assert(result.advanced, 'Sticker HSB controls are not inside an Advanced disclosure');
+	assert(result.advancedInsideAsset, 'Sticker Advanced controls are not inside the Asset card');
+}
+
 async function mutateTextAndUndo(page) {
 	await page.evaluate(async () => {
 		const editor = window.editor;
@@ -362,6 +394,8 @@ async function main() {
 		try {
 			await openEditor(page);
 			await buildComposition(page);
+			await verifyStickerColorAdjustControls(page);
+			console.log('PASS Sticker HSB controls update in place inside Asset > Advanced');
 			await verifyGradientStopLiveEditing(page);
 			console.log('PASS Gradient stop controls survive repeated live edits');
 

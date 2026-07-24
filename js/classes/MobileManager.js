@@ -146,15 +146,6 @@ class MobileManager {
 		window.addEventListener('imageLoaded', () => {
 			if (!this.isMobile) return;
 			this.syncImageState();
-			this.editor.previewWrapper.style.opacity = '0';
-			this.editor.previewWrapper.style.transition = 'none';
-			requestAnimationFrame(() => requestAnimationFrame(() => {
-				this.editor.viewport.performResizeUpdate();
-				this.editor.viewport.resetZoomSmart();
-				this.editor.updateZoomUI();
-				this.editor.previewWrapper.style.transition = '';
-				this.editor.previewWrapper.style.opacity = '1';
-			}));
 		});
 		window.addEventListener('imageRemoved', () => {
 			if (!this.isMobile) return;

@@ -458,6 +458,8 @@ function buildPanelItem(item, schema) {
 			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
 			return advanced;
 		}
+		case 'colorAdjust':
+			return buildAdvancedDisclosure(item.prefix || schema.prefix, item.ids);
 		case 'stackRow': {
 			const row = tplClone('tpl-two-column');
 			row.classList.add('effect-stack-row');

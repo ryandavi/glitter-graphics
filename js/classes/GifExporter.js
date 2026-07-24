@@ -232,15 +232,9 @@ class GifExporter {
 			throw new Error(`No image data for sticker layer ${layer.id}`);
 		}
 
-		// Create temporary canvas for the sticker frame
-		const tempCanvas = document.createElement('canvas');
-		tempCanvas.width = width;
-		tempCanvas.height = height;
-		const tempCtx = tempCanvas.getContext('2d', {
-			willReadFrequently: true,
-			alpha: true
-		});
-		tempCtx.putImageData(imageData, 0, 0);
+		// The same color-adjust matrix used by glitter/text/shape export also
+		// matches the sticker image's CSS preview filter.
+		const tempCanvas = this._patternSourceFromFrame(imageData, layer.stickerData.colorAdjust);
 		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, frameMap, flattenedFrameMap);
 
 		this._drawTransformedCanvas(ctx, tempCanvas, transform, width, height);

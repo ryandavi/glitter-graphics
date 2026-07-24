@@ -1416,6 +1416,22 @@
 	cursor: default;
 	touch-action: none;
 
+	&.workspace-drop-active::after {
+		content: 'Drop to add as a new layer';
+		position: absolute;
+		inset: var(--spacing-lg);
+		z-index: 30;
+		display: grid;
+		place-items: center;
+		border: 2px dashed var(--color-accent);
+		border-radius: var(--radius-lg);
+		background: color-mix(in srgb, var(--color-bg-primary) 88%, transparent);
+		color: var(--color-text-primary);
+		font-size: var(--font-size-lg);
+		font-weight: 600;
+		pointer-events: none;
+	}
+
 	&.transparent-bg {
 
 		.preview-wrapper {
@@ -1457,6 +1473,88 @@
 
 	&.hand-cursor {
 		cursor: grab;
+	}
+}
+
+body.no-document .preview-container.workspace-drop-active::after {
+	content: 'Drop to start creating';
+}
+
+body.no-document .main-content {
+	>.layers-panel,
+	>.design-panel {
+		display: none;
+	}
+}
+
+.workspace-start {
+	position: absolute;
+	inset: 0;
+	z-index: 20;
+	display: grid;
+	place-items: center;
+	padding: clamp(var(--spacing-md), 4vw, var(--spacing-2xl));
+	overflow: auto;
+	touch-action: pan-y;
+
+	&[hidden] { display: none; }
+
+	&.drag-over .workspace-start-card {
+		border-color: var(--color-accent);
+		background: var(--color-bg-primary);
+		transform: translateY(-2px);
+	}
+}
+
+.workspace-start-card {
+	width: min(560px, 100%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-xl);
+	padding: clamp(24px, 4vw, 40px);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	background: var(--panel-bg);
+	box-shadow: 0 12px 40px var(--color-shadow-soft);
+	text-align: center;
+	transition: transform var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.workspace-start-copy {
+	h2 {
+		margin: 0;
+		color: var(--color-text-primary);
+		font-size: clamp(22px, 4vw, 30px);
+	}
+
+	p {
+		max-width: 420px;
+		margin: var(--spacing-xs) 0 0;
+		color: var(--color-text-secondary);
+		line-height: 1.5;
+	}
+}
+
+.workspace-start-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--spacing-sm);
+
+	>button { min-height: 40px; }
+}
+
+.workspace-start-drop {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xs);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+
+	small {
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
 	}
 }
 

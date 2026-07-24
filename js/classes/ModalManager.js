@@ -59,6 +59,8 @@ class ModalManager {
 		// External content options
 		externalContentUrl: options.externalContentUrl || null,
 		cacheContent: options.cacheContent !== false,
+		showWhileLoading: options.showWhileLoading === true,
+		loadingLabel: options.loadingLabel || 'Loading…',
 		contentLoaded: false,
 		cachedContent: null,
 		
@@ -124,6 +126,9 @@ setupModalListeners(config) {
 
 		// Load external content if needed
 		if (config.externalContentUrl) {
+			if (config.showWhileLoading) {
+				config.modal.classList.add('visible');
+			}
 			await this.loadExternalContent(config);
 		}
 
@@ -174,8 +179,11 @@ setupModalListeners(config) {
 
 		try {
 			// Show loading state
-			const originalContent = modalBody.innerHTML;
-			modalBody.innerHTML = '<div class="modal-loading">Loading...</div>';
+			const loading = document.createElement('div');
+			loading.className = 'modal-loading';
+			loading.setAttribute('role', 'status');
+			loading.textContent = config.loadingLabel;
+			modalBody.replaceChildren(loading);
 
 			// Fetch content
 			const response = await fetch(config.externalContentUrl);

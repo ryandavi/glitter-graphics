@@ -9,8 +9,13 @@
 		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<script>
 		try {
-			const savedTheme = JSON.parse(localStorage.getItem('glitterEditorSettings') || '{}').interfaceTheme;
-			if (typeof savedTheme === 'string') document.documentElement.dataset.theme = savedTheme;
+			const savedSettings = JSON.parse(localStorage.getItem('glitterEditorSettings') || '{}');
+			const savedTheme = localStorage.getItem('glitterEditorTheme') || savedSettings.interfaceTheme;
+			const allowedThemes = ['dark', 'light', 'llama', 'bubblegum', 'bliss', 'dew'];
+			if (allowedThemes.includes(savedTheme)) {
+				document.documentElement.dataset.theme = savedTheme;
+				document.documentElement.style.colorScheme = ['light', 'bubblegum', 'bliss', 'dew'].includes(savedTheme) ? 'light' : 'dark';
+			}
 		} catch (_error) {}
 	</script>
 
@@ -36,7 +41,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=180">
+	<link rel="stylesheet" href="css/style.css?v=185">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,7 +53,7 @@
 </head>
 
 
-<body>
+<body class="no-document">
 
 	<div class="app-container">
 		<!-- Header -->
@@ -196,77 +201,6 @@
 					<div class="mobile-sheet-handle ui-ignore-gestures" data-mobile-drawer-handle="layers" role="slider" tabindex="0" aria-label="Resize Layers panel" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="85" aria-valuenow="50">
 						<span></span>
 					</div>
-					<!-- Image Section -->
-					<div class="image-container section collapsible-section is-open" id="imagePanelSection">
-						<div class="section-header section-header-with-action" id="imagePanelHeader">
-							<h3 class="section-header-title">
-								<span class="section-header-title-icon icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-image"></use>
-									</svg>
-									<span class="name">Image</span>
-								</span>
-								<span class="section-header-title-text">Image</span>
-							</h3>
-							<button class="section-header-action btn-icon icon-wrapper visible" id="imagePanelToggle" title="Collapse section">
-								<svg class="icon">
-									<use href="#icon-chevron-down"></use>
-								</svg>
-								<span class="name">Collapse</span>
-							</button>
-						</div>
-						<div class="section-content image-dropzone-wrapper">
-							<div class="image-dropzone" id="imageDropzone">
-
-								<div class="dropzone-content visible" id="dropzoneContent">
-
-									<!-- Default -->
-									<div class="dropzone-icon">
-										<span class="icon-wrapper xl">
-											<svg class="icon">
-												<use href="#icon-image"></use>
-											</svg>
-											<span class="name">Image</span>
-										</span>
-									</div>
-									<div class="dropzone-text">Drop image here or click to browse</div>
-									<div class="dropzone-subtext">Max 10MB, 800 × 800 px</div>
-
-									<button class="btn-text-with-icon icon-wrapper btn-secondary mobile-only-action" id="dropzoneNewCanvasBtn" type="button">
-										<svg class="icon">
-											<use href="#icon-plus"></use>
-										</svg>
-										<span class="name">New Blank Canvas</span>
-									</button>
-
-								</div>
-
-								<canvas id="originalCanvas"></canvas>
-
-								<div class="image-upload-overlay">
-
-									<!-- Hover -->
-									<div class="dropzone-icon">
-										<span class="icon-wrapper xl">
-											<svg class="icon">
-												<use href="#icon-image"></use>
-											</svg>
-											<span class="name">Change Image</span>
-										</span>
-									</div>
-									<div class="dropzone-text">Drop image here or click to browse</div>
-									<div class="dropzone-subtext">Max 10MB, 800 × 800 px</div>
-
-
-
-								</div>
-
-							</div>
-							<input type="file" id="imageUpload" accept="image/*">
-							<input type="file" id="projectUpload" accept=".json,.glitter.json,application/json" hidden>
-						</div>
-					</div>
-
 					<!-- Layers Section (list only) -->
 					<div class="layers-section section collapsible-section is-open" id="layersPanelSection">
 						<div class="section-header section-header-with-action" id="layersPanelHeader">
@@ -693,33 +627,6 @@
 										<div class="empty-state-text">Canvas Properties</div>
 										<div class="empty-state-subtext">
 											The background is protected from moving or deletion, but its appearance can be edited.
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<!-- 1. WELCOME SECTION (No Image Loaded) -->
-							<div class="welcome-section section visible" id="welcomeSection">
-								<div class="section-content">
-									<div class="empty-state visible">
-										<div class="empty-state-inner-wrapper">
-
-											<div class="empty-state-text">No image loaded</div>
-											<div class="empty-state-subtext">Upload an image to start designing, or create a blank canvas</div>
-											<div class="welcome-actions">
-												<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openNewCanvasBtn">
-													<svg class="icon">
-														<use href="#icon-plus"></use>
-													</svg>
-													<span class="name">New Blank Canvas</span>
-												</button>
-												<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openProjectBtn">
-													<svg class="icon">
-														<use href="#icon-export"></use>
-													</svg>
-													<span class="name">Open Project</span>
-												</button>
-											</div>
 										</div>
 									</div>
 								</div>
@@ -1182,6 +1089,35 @@
 				<!-- Preview Panel -->
 				<div class="preview-panel">
 					<div class="preview-container" id="previewContainer">
+						<input type="file" id="imageUpload" accept="image/*" hidden>
+						<input type="file" id="projectUpload" accept=".json,.glitter.json,application/json" hidden>
+						<canvas id="originalCanvas" hidden></canvas>
+						<div class="workspace-start ui-ignore-gestures" id="workspaceStart">
+							<div class="workspace-start-card">
+								<div class="workspace-start-copy">
+									<h2>Create a glitter graphic</h2>
+									<p>Open an image, choose a canvas size, or continue a saved project.</p>
+								</div>
+								<div class="workspace-start-actions">
+									<button class="btn-text-with-icon icon-wrapper primary" id="openImageBtn" type="button">
+										<svg class="icon"><use href="#icon-image"></use></svg>
+										<span class="name">Open Image</span>
+									</button>
+									<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openNewCanvasBtn" type="button">
+										<svg class="icon"><use href="#icon-plus"></use></svg>
+										<span class="name">New Canvas</span>
+									</button>
+									<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openProjectBtn" type="button">
+										<svg class="icon"><use href="#icon-export"></use></svg>
+										<span class="name">Open Project</span>
+									</button>
+								</div>
+								<div class="workspace-start-drop">
+									<span>or drop an image or Glitter project here</span>
+									<small>Images up to 10 MB · canvas up to 1024 × 1024 px</small>
+								</div>
+							</div>
+						</div>
 
 						<!-- Preview Wrapper -->
 						<div class="preview-wrapper" id="previewWrapper">
@@ -1427,7 +1363,7 @@
 
 	<!-- New Canvas Modal -->
 	<div class="modal-overlay" id="newCanvasModal">
-		<div class="modal-content modal-sm">
+		<div class="modal-content new-canvas-dialog">
 			<div class="modal-header">
 				<div class="modal-title">
 					<span class="modal-icon icon-wrapper">
@@ -1456,7 +1392,7 @@
 
 
 
-						<div class="blank-image-grid">
+						<div class="blank-image-grid" id="newCanvasPresets">
 							<div class="blank-image-option new-canvas-preset-btn" data-width="400" data-height="400" data-color="#ffffff">
 								<div class="blank-preview-wrapper">
 									<div class="blank-preview" style="background: #ffffff;"></div>
@@ -1501,7 +1437,7 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Width</div>
 							<div class="settings-row-control">
-								<span class="input-unit"><input type="number" id="newCanvasWidth" min="100" max="800" value="400" class="input-number"><span class="input-unit-suffix">px</span></span>
+								<span class="input-unit"><input type="number" id="newCanvasWidth" min="100" max="1024" value="400" class="input-number"><span class="input-unit-suffix">px</span></span>
 							</div>
 						</div>
 
@@ -1513,7 +1449,7 @@
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Height</div>
 							<div class="settings-row-control">
-								<span class="input-unit"><input type="number" id="newCanvasHeight" min="100" max="800" value="400" class="input-number"><span class="input-unit-suffix">px</span></span>
+								<span class="input-unit"><input type="number" id="newCanvasHeight" min="100" max="1024" value="400" class="input-number"><span class="input-unit-suffix">px</span></span>
 							</div>
 						</div>
 
@@ -2718,7 +2654,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=114"></script>
+	<script src="js/core/config.js?v=118"></script>
 	<script src="js/core/commands.js?v=4"></script>
 	<script src="js/core/document-scaler.js?v=2"></script>
 	<script src="js/transforms/transform-math.js?v=4"></script>
@@ -2731,16 +2667,16 @@
 	<script src="js/effects/pixel-effects.js?v=9"></script>
 	<script src="js/effects/effect-source.js?v=12"></script>
 	<script src="js/effects/slot-effects.js?v=3"></script>
-	<script src="js/ui/panel-renderer.js?v=43"></script>
+	<script src="js/ui/panel-renderer.js?v=44"></script>
 	<script src="js/ui/picker-session.js?v=3"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=1"></script>
 	<script src="js/core/debug.js?v=1"></script>
 
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=8"></script>
-	<script src="js/classes/ModalManager.js?v=2"></script>
+	<script src="js/classes/ModalManager.js?v=4"></script>
 	<script src="js/classes/ExportTimeline.js?v=3"></script>
-	<script src="js/classes/GifExporter.js?v=43"></script>
+	<script src="js/classes/GifExporter.js?v=44"></script>
 	<script src="js/classes/Mp4Exporter.js?v=6"></script>
 	<script src="js/classes/ViewportManager.js?v=3"></script>
 	<script src="js/classes/HistoryManager.js?v=12"></script>
@@ -2750,7 +2686,7 @@
 	<script src="js/classes/MaskEditor.js?v=15"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=47"></script>
+	<script src="js/classes/LayerManager.js?v=48"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=2"></script>
@@ -2761,13 +2697,13 @@
 	<script src="js/classes/AutoGlitterManager.js?v=30"></script>
 	<script src="js/classes/TextGlitterManager.js?v=54"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=45"></script>
-	<script src="js/classes/StickerManager.js?v=24"></script>
+	<script src="js/classes/StickerManager.js?v=26"></script>
 	<script src="js/classes/GroupTransformManager.js?v=20"></script>
 
-	<script src="js/classes/MobileManager.js?v=16"></script>
+	<script src="js/classes/MobileManager.js?v=17"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=165"></script>
+	<script src="js/app.js?v=171"></script>
 
 </body>
 
