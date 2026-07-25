@@ -373,6 +373,7 @@ class GlitterEditor {
 			showHelpfulHints: this.showHints,
 			showWelcomeOnStartup: this.showWelcomeOnStartup,
 			confirmDestructiveActions: this.confirmDestructiveActions,
+			antialiasEdges: this.antialiasEdges,
 			interfaceTheme: this.interfaceTheme,
 			autoSelect: CONFIG.app.behavior.autoSelect
 		};
@@ -436,6 +437,8 @@ initializeExportSettings() {
 	this.showHints = savedSettings?.showHelpfulHints ?? CONFIG.ui.hints.enabledByDefault;
 	this.showWelcomeOnStartup = savedSettings?.showWelcomeOnStartup ?? !welcomeWasSuppressed;
 	this.confirmDestructiveActions = savedSettings?.confirmDestructiveActions ?? true;
+	this.antialiasEdges = savedSettings?.antialiasEdges ?? !CONFIG.rendering.crispMaskEdges;
+	CONFIG.rendering.crispMaskEdges = !this.antialiasEdges;
 	CONFIG.app.behavior.autoSelect = savedSettings?.autoSelect ?? CONFIG.app.behavior.autoSelect;
 	this.interfaceTheme = CONFIG.ui.themes.includes(savedSettings?.interfaceTheme) ? savedSettings.interfaceTheme : 'dark';
 	this.applyInterfaceTheme();
@@ -471,6 +474,7 @@ initializeExportSettings() {
 			showHelpfulHints: { checked: this.showHints },
 			showWelcomeOnStartup: { checked: this.showWelcomeOnStartup },
 			confirmDestructiveActions: { checked: this.confirmDestructiveActions },
+			antialiasMaskEdges: { checked: this.antialiasEdges },
 			interfaceTheme: { value: this.interfaceTheme }
 		};
 
@@ -598,6 +602,15 @@ initializeExportSettings() {
 			this.saveSettingsToStorage();
 		});
 
+		const antialiasInput = document.getElementById('antialiasMaskEdges');
+		antialiasInput?.addEventListener('change', (e) => {
+			this.antialiasEdges = e.target.checked;
+			CONFIG.rendering.crispMaskEdges = !this.antialiasEdges;
+			this.refreshMaskEdgeRendering();
+			this.saveSettingsToStorage();
+			this.updateStatus(this.antialiasEdges ? 'Antialiasing enabled for mask edges' : 'Crisp mask edges enabled');
+		});
+
 		const themeInput = document.getElementById('interfaceTheme');
 		themeInput?.addEventListener('change', (e) => {
 			this.interfaceTheme = CONFIG.ui.themes.includes(e.target.value) ? e.target.value : 'dark';
@@ -712,6 +725,15 @@ initializeExportSettings() {
 
 	applyInterfaceTheme() {
 		document.documentElement.dataset.theme = this.interfaceTheme || 'dark';
+	}
+
+	refreshMaskEdgeRendering() {
+		this.textGlitterManager?.textMaskCache.clear();
+		this.layers
+			.filter((layer) => layer.type === LayerType.TEXT_GLITTER)
+			.forEach((layer) => this.textGlitterManager?.revokePreviewMaskCache(layer));
+		this.shapeGlitterManager?.invalidateMeasurement();
+		this.updatePreview();
 	}
 
 setupSettingsResetListeners() {
@@ -869,6 +891,9 @@ async resetAllSettings() {
 	this.showHints = CONFIG.ui.hints.enabledByDefault;
 	this.showWelcomeOnStartup = true;
 	this.confirmDestructiveActions = true;
+	this.antialiasEdges = false;
+	CONFIG.rendering.crispMaskEdges = true;
+	this.refreshMaskEdgeRendering();
 	this.interfaceTheme = 'dark';
 	this.applyInterfaceTheme();
 	localStorage.removeItem('glitterEditor_welcomeModalSeen');
@@ -3516,7 +3541,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=35',
+				externalContentUrl: 'modals/guide.html?v=36',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {

@@ -941,7 +941,9 @@ class ShapeGlitterManager {
 			d.width,
 			d.height,
 			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, this.getBorderPlacement(d.border), this.getBorderEdgeStyle(d.border)] : null,
-			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null
+			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null,
+			shouldUseCrispMaskEdges(),
+			CONFIG.rendering.maskAlphaThreshold
 		]);
 	}
 
@@ -991,13 +993,8 @@ class ShapeGlitterManager {
 		ShapeLibrary.trace(d.shapeId, ctx, w / 2, h / 2, { fit: 'fill' });
 		ctx.restore();
 
-		if (CONFIG.rendering?.crispMaskEdges !== false) {
-			const image = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-			const px = image.data;
-			for (let i = 3; i < px.length; i += 4) {
-				px[i] = px[i] >= 128 ? 255 : 0;
-			}
-			ctx.putImageData(image, 0, 0);
+		if (shouldUseCrispMaskEdges()) {
+			binarizeCanvasAlpha(ctx, canvasWidth, canvasHeight);
 		}
 
 		const entry = {
@@ -1116,11 +1113,8 @@ class ShapeGlitterManager {
 			ctx.globalCompositeOperation = 'source-over';
 		}
 
-		if (CONFIG.rendering?.crispMaskEdges !== false) {
-			const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-			const px = image.data;
-			for (let i = 3; i < px.length; i += 4) px[i] = px[i] >= 128 ? 255 : 0;
-			ctx.putImageData(image, 0, 0);
+		if (shouldUseCrispMaskEdges()) {
+			binarizeCanvasAlpha(ctx);
 		}
 		return canvas;
 	}

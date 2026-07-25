@@ -1931,7 +1931,8 @@ class TextGlitterManager {
 			textData.border ? [textData.border.widthPx, this.getBorderPlacement(textData.border)] : null,
 			textData.shadow ? textData.shadow.offsetX : null,
 			textData.shadow ? textData.shadow.offsetY : null,
-			CONFIG.rendering?.crispMaskEdges !== false
+			shouldUseCrispMaskEdges(),
+			CONFIG.rendering.maskAlphaThreshold
 		]);
 	}
 
@@ -2082,17 +2083,12 @@ class TextGlitterManager {
 			maskCtx.restore();
 		}
 
-		if (CONFIG.rendering?.crispMaskEdges !== false) {
+		if (shouldUseCrispMaskEdges()) {
 			// Hard pixel edges (editor aesthetic, MASK-FEATURE-PLAN decision 5).
 			// Also load-bearing for export: fillText antialiasing leaves partial-alpha
 			// edge pixels that composite over the GIF transparency key (magenta) and
 			// fringe on transparent exports. A binary mask has nothing to blend.
-			const maskImage = maskCtx.getImageData(0, 0, canvasWidth, canvasHeight);
-			const maskData = maskImage.data;
-			for (let i = 3; i < maskData.length; i += 4) {
-				maskData[i] = maskData[i] >= 128 ? 255 : 0;
-			}
-			maskCtx.putImageData(maskImage, 0, 0);
+			binarizeCanvasAlpha(maskCtx, canvasWidth, canvasHeight);
 		}
 
 		const entry = {

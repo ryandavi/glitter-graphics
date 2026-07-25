@@ -340,7 +340,10 @@ const CONFIG = {
 	// so they live outside either feature-specific block.
 	rendering: {
 		maskPaddingPx: 8,
+		// App Settings exposes the inverse as Antialias Edges. False restores native
+		// Canvas edge coverage; brush Softness remains an independent feather.
 		crispMaskEdges: true,
+		maskAlphaThreshold: 128,
 		gradient: {
 			type: 'linear',
 			angle: 180,

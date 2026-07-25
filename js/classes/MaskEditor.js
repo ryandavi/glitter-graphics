@@ -1023,8 +1023,9 @@ class MaskEditor {
 		const stamp = this._getStampCanvas();
 		const size = this.getBrushSize();
 		const halfSize = size / 2;
-		const destinationX = x - halfSize;
-		const destinationY = y - halfSize;
+		const crispStamp = this.getBrushSoftness() === 0 && shouldUseCrispMaskEdges();
+		const destinationX = crispStamp ? Math.round(x - halfSize) : x - halfSize;
+		const destinationY = crispStamp ? Math.round(y - halfSize) : y - halfSize;
 		const alpha = this._getStampAlpha(pressure);
 		const activeMode = this.getActiveMode();
 		const targetCtx = (activeMode === 'add' ? paint.add : paint.sub).getContext('2d', { willReadFrequently: true });
@@ -1033,12 +1034,14 @@ class MaskEditor {
 		targetCtx.save();
 		targetCtx.globalCompositeOperation = 'source-over';
 		targetCtx.globalAlpha = alpha;
+		if (crispStamp) targetCtx.imageSmoothingEnabled = false;
 		targetCtx.drawImage(stamp, destinationX, destinationY, size, size);
 		targetCtx.restore();
 
 		oppositeCtx.save();
 		oppositeCtx.globalCompositeOperation = 'destination-out';
 		oppositeCtx.globalAlpha = alpha;
+		if (crispStamp) oppositeCtx.imageSmoothingEnabled = false;
 		oppositeCtx.drawImage(stamp, destinationX, destinationY, size, size);
 		oppositeCtx.restore();
 
@@ -1086,7 +1089,13 @@ class MaskEditor {
 		// Flow (and pressure) are applied as globalAlpha at draw time instead of
 		// being baked in here, since pressure varies per-stamp along a stroke.
 		const shape = this.getBrushShape();
-		const key = [shape, this.getBrushSize(), this.getBrushSoftness()].join('|');
+		const key = [
+			shape,
+			this.getBrushSize(),
+			this.getBrushSoftness(),
+			shouldUseCrispMaskEdges(),
+			CONFIG.rendering.maskAlphaThreshold
+		].join('|');
 		if (this.stampCacheKey === key && this.stampCanvas) {
 			return this.stampCanvas;
 		}
@@ -1102,6 +1111,9 @@ class MaskEditor {
 			this._drawRoundStamp(ctx, size, softness);
 		} else {
 			this._drawShapeStamp(ctx, shape, size, softness);
+		}
+		if (softness === 0 && shouldUseCrispMaskEdges()) {
+			binarizeCanvasAlpha(ctx);
 		}
 
 		this.stampCanvas = canvas;
