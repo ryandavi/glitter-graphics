@@ -1697,6 +1697,97 @@ input[type="checkbox"] {
 	padding: var(--spacing-lg);
 }
 
+.manifest-taxonomy-editor {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	margin-top: var(--spacing-lg);
+}
+
+.manifest-taxonomy-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding: var(--spacing-md);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: var(--color-bg-secondary);
+}
+
+.manifest-taxonomy-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-md);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+}
+
+.manifest-taxonomy-fields,
+.manifest-taxonomy-row {
+	display: grid;
+	grid-template-columns: minmax(110px, 0.8fr) minmax(160px, 1.2fr) auto;
+	align-items: end;
+	gap: var(--spacing-sm);
+
+	label {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+	}
+}
+
+.manifest-taxonomy-fields {
+	grid-template-columns: minmax(110px, 0.8fr) minmax(160px, 1.2fr);
+}
+
+.manifest-taxonomy-tags {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+	padding-left: var(--spacing-md);
+	border-left: 2px solid var(--color-border);
+}
+
+.manifest-taxonomy-add {
+	margin-top: var(--spacing-md);
+}
+
+.font-specimen-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+	margin-bottom: var(--spacing-lg);
+	padding: var(--spacing-md);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: var(--color-bg-secondary);
+}
+
+.font-specimen-row {
+	display: grid;
+	grid-template-columns: var(--property-label-width) minmax(0, 1fr);
+	align-items: baseline;
+	gap: var(--spacing-md);
+}
+
+.font-specimen-label {
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-semibold);
+	text-transform: uppercase;
+}
+
+.font-specimen-text {
+	min-width: 0;
+	overflow-wrap: anywhere;
+	color: var(--color-text-primary);
+	font-size: clamp(24px, 4vw, 42px);
+	line-height: 1.25;
+}
+
 .close-btn {
     background: none;
     border: none;
@@ -2249,6 +2340,20 @@ input[type="checkbox"] {
 
 	.property-row-continued > .property-label {
 		display: none;
+	}
+
+	.manifest-taxonomy-fields,
+	.manifest-taxonomy-row {
+		grid-template-columns: 1fr;
+
+		> button {
+			justify-self: start;
+		}
+	}
+
+	.font-specimen-row {
+		grid-template-columns: 1fr;
+		gap: var(--spacing-xs);
 	}
 
 	.overview-strip {

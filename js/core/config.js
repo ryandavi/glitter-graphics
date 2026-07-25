@@ -270,7 +270,7 @@ const CONFIG = {
 			defaultTextCase: 'none',
 			// Stage Two in-canvas typing is intentionally paused; this is its future gate.
 			canvasEditing: false,
-			fontsManifest: 'data/fonts.json?v=3',
+			fontsManifest: 'data/fonts.json?v=4',
 			defaultFontId: 'luckiest-guy',
 			defaultFontWeight: 400,
 			defaultFontStyle: 'normal',
@@ -301,6 +301,7 @@ const CONFIG = {
 			}
 		},
 		shapes: {
+			manifest: 'data/shapes.json?v=1',
 			defaultShapeId: 'circle',   // one of ShapeLibrary.FILL_SHAPES ids
 			defaultSize: 160,           // intrinsic px for a click (no-drag) create
 			minSize: 8,

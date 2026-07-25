@@ -7375,6 +7375,7 @@ setupWelcomeModalListeners() {
 
 // everything inside IIFE
 (async () => {
+	await ShapeLibrary.loadManifest();
 	const editor = new GlitterEditor();
 	await editor.init();
 

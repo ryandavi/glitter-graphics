@@ -456,7 +456,7 @@ class AssetEditor {
     }
 
     hideAddModal() {
-        this.deactivateModal(document.getElementById('addModal'));
+        this.requestDeactivateModal(document.getElementById('addModal'));
     }
 
     updateFilePath() {
@@ -762,6 +762,14 @@ class AssetEditor {
 			event.preventDefault();
 			event.returnValue = '';
 		});
+		document.addEventListener('input', event => {
+			const modal = event.target.closest('.modal.active[data-confirm-discard]');
+			if (modal) modal._adminDirty = true;
+		});
+		document.addEventListener('change', event => {
+			const modal = event.target.closest('.modal.active[data-confirm-discard]');
+			if (modal) modal._adminDirty = true;
+		});
 		document.addEventListener('keydown', event => {
 			const activeModals = [...document.querySelectorAll('.modal.active')];
 			const modal = activeModals[activeModals.length - 1];
@@ -769,7 +777,7 @@ class AssetEditor {
 			if (modal.querySelector('dialog[open]')) return;
 			if (event.key === 'Escape') {
 				event.preventDefault();
-				this.deactivateModal(modal);
+				this.requestDeactivateModal(modal);
 				return;
 			}
 			if (event.key !== 'Tab') return;
@@ -790,6 +798,7 @@ class AssetEditor {
 
 	activateModal(modal) {
 		if (!modal.classList.contains('active')) modal._adminOpener = document.activeElement;
+		modal._adminDirty = false;
 		modal.classList.add('active');
 		requestAnimationFrame(() => {
 			modal.querySelector('button, input, select, textarea, a[href]')?.focus();
@@ -798,8 +807,15 @@ class AssetEditor {
 
 	deactivateModal(modal) {
 		modal.classList.remove('active');
+		modal._adminDirty = false;
 		if (modal._adminOpener?.isConnected) modal._adminOpener.focus();
 		modal._adminOpener = null;
+	}
+
+	requestDeactivateModal(modal) {
+		if (modal._adminDirty && !confirm('Discard your changes? The information entered in this dialog will be lost.')) return false;
+		this.deactivateModal(modal);
+		return true;
 	}
 
 	bindDirtyTracking() {
@@ -911,7 +927,9 @@ class AssetEditor {
 		}
 		this.analysisResults = analysis;
 		this.updateAnalysisActions();
-		this.activateModal(document.getElementById('analyzeModal'));
+		const modal = document.getElementById('analyzeModal');
+		this.activateModal(modal);
+		modal._adminDirty = Boolean(results.querySelector('input[type="checkbox"]:checked:not(:disabled)'));
 	}
 
 	// Asset editors render an editable Colors list, so repeating the observed
@@ -1075,7 +1093,7 @@ class AssetEditor {
 	}
 
 	hideAnalyzeModal() {
-		this.deactivateModal(document.getElementById('analyzeModal'));
+		this.requestDeactivateModal(document.getElementById('analyzeModal'));
 	}
 
 	applyAnalysis() {
@@ -1094,6 +1112,7 @@ class AssetEditor {
 		this.applySelectedColors();
 		this.updateTagDisplay();
 		this.setDirty(true);
+		document.getElementById('analyzeModal')._adminDirty = false;
 		this.hideAnalyzeModal();
 		// analyzeAsset persisted a fresh observation, so the Color section's
 		// stored-analysis rows are now stale.

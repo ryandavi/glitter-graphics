@@ -80,6 +80,7 @@ class IngestReview {
 	async load() {
 		this.items = await AdminAPI.json(`includes/api.php?action=ingest_list&type=${this.editor.config.assetType}`);
 		this.render();
+		this.modal._adminDirty = false;
 	}
 
 	render() {

@@ -1,290 +1,552 @@
-[
-	{
-		"id": "luckiest-guy",
-		"name": "Luckiest Guy",
-		"file": "fonts/luckiest-guy.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": true,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "bungee",
-		"name": "Bungee",
-		"file": "fonts/bungee.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "titan-one",
-		"name": "Titan One",
-		"file": "fonts/titan-one.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "lilita-one",
-		"name": "Lilita One",
-		"file": "fonts/lilita-one.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "bangers",
-		"name": "Bangers",
-		"file": "fonts/bangers.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "chewy",
-		"name": "Chewy",
-		"file": "fonts/chewy.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "shrikhand",
-		"name": "Shrikhand",
-		"file": "fonts/shrikhand.woff2",
-		"weight": 400,
-		"fallback": "serif",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "pacifico",
-		"name": "Pacifico",
-		"file": "fonts/pacifico.woff2",
-		"weight": 400,
-		"fallback": "cursive",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "lobster",
-		"name": "Lobster",
-		"file": "fonts/lobster.woff2",
-		"weight": 400,
-		"fallback": "cursive",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "baloo-2",
-		"name": "Baloo 2",
-		"file": "fonts/baloo-2.woff2",
-		"weight": 700,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "comic-neue",
-		"name": "Comic Neue",
-		"file": "fonts/comic-neue.woff2",
-		"weight": 400,
-		"fallback": "cursive",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "comic-sans",
-		"name": "Comic Sans MS",
-		"system": true,
-		"family": "\"Comic Sans MS\", \"Comic Sans\", \"Chalkboard SE\", \"Comic Neue\", cursive",
-		"fallbackFontId": "comic-neue",
-		"weight": 400,
-		"fallback": "cursive",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "impact",
-		"name": "Impact",
-		"system": true,
-		"family": "Impact, Haettenschweiler, \"Arial Narrow Bold\", sans-serif",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "silkscreen",
-		"name": "Silkscreen",
-		"file": "fonts/silkscreen-regular.ttf",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin"
-		]
-	},
-	{
-		"id": "dela-gothic-one",
-		"name": "Dela Gothic One",
-		"file": "fonts/dela-gothic-one.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin",
-			"ja"
-		]
-	},
-	{
-		"id": "reggae-one",
-		"name": "Reggae One",
-		"file": "fonts/reggae-one.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin",
-			"ja"
-		]
-	},
-	{
-		"id": "cherry-bomb-one",
-		"name": "Cherry Bomb One",
-		"file": "fonts/cherry-bomb-one.ttf",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin",
-			"ja"
-		]
-	},
-	{
-		"id": "hachi-maru-pop",
-		"name": "Hachi Maru Pop",
-		"file": "fonts/hachi-maru-pop.ttf",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin",
-			"ja"
-		]
-	},
-	{
-		"id": "darumadrop-one",
-		"name": "Darumadrop One",
-		"file": "fonts/darumadrop-one.ttf",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin",
-			"ja"
-		]
-	},
-	{
-		"id": "noto-sans-jp",
-		"name": "Noto Sans JP",
-		"file": "fonts/noto-sans-jp.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"ja"
-		]
-	},
-
-	{
-		"id": "black-han-sans",
-		"name": "Black Han Sans",
-		"file": "fonts/black-han-sans.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin",
-			"ko"
-		]
-	},
-	{
-		"id": "jua",
-		"name": "Jua",
-		"file": "fonts/jua.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin",
-			"ko"
-		]
-	},
-	{
-		"id": "bagel-fat-one",
-		"name": "Bagel Fat One",
-		"file": "fonts/bagel-fat-one.ttf",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"latin",
-			"ko"
-		]
-	},
-
-	{
-		"id": "noto-sans-kr",
-		"name": "Noto Sans KR",
-		"file": "fonts/noto-sans-kr.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"ko"
-		]
-	},
-	{
-		"id": "noto-sans-sc",
-		"name": "Noto Sans SC",
-		"file": "fonts/noto-sans-sc.woff2",
-		"weight": 400,
-		"fallback": "sans-serif",
-		"featured": false,
-		"scripts": [
-			"zh"
-		]
-	}
-]
+{
+	"tagGroups": [
+		{
+			"id": "style",
+			"label": "Style",
+			"tags": [
+				{
+					"id": "display",
+					"label": "Display"
+				},
+				{
+					"id": "handwritten",
+					"label": "Handwritten"
+				},
+				{
+					"id": "script",
+					"label": "Script"
+				},
+				{
+					"id": "pixel",
+					"label": "Pixel"
+				},
+				{
+					"id": "gothic",
+					"label": "Gothic"
+				},
+				{
+					"id": "comic",
+					"label": "Comic"
+				},
+				{
+					"id": "sans-serif",
+					"label": "Sans Serif"
+				}
+			]
+		},
+		{
+			"id": "appearance",
+			"label": "Appearance",
+			"tags": [
+				{
+					"id": "bold",
+					"label": "Bold"
+				},
+				{
+					"id": "rounded",
+					"label": "Rounded"
+				},
+				{
+					"id": "condensed",
+					"label": "Condensed"
+				},
+				{
+					"id": "geometric",
+					"label": "Geometric"
+				},
+				{
+					"id": "decorative",
+					"label": "Decorative"
+				}
+			]
+		},
+		{
+			"id": "mood",
+			"label": "Mood",
+			"tags": [
+				{
+					"id": "playful",
+					"label": "Playful"
+				},
+				{
+					"id": "retro",
+					"label": "Retro"
+				},
+				{
+					"id": "dramatic",
+					"label": "Dramatic"
+				},
+				{
+					"id": "elegant",
+					"label": "Elegant"
+				},
+				{
+					"id": "cute",
+					"label": "Cute"
+				}
+			]
+		},
+		{
+			"id": "use",
+			"label": "Use",
+			"tags": [
+				{
+					"id": "headline",
+					"label": "Headline"
+				},
+				{
+					"id": "logo",
+					"label": "Logo"
+				},
+				{
+					"id": "body",
+					"label": "Body"
+				}
+			]
+		}
+	],
+	"fonts": [
+		{
+			"id": "luckiest-guy",
+			"name": "Luckiest Guy",
+			"file": "fonts/luckiest-guy.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": true,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"display",
+				"bold",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "bungee",
+			"name": "Bungee",
+			"file": "fonts/bungee.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"display",
+				"bold",
+				"geometric",
+				"retro",
+				"headline",
+				"logo"
+			]
+		},
+		{
+			"id": "titan-one",
+			"name": "Titan One",
+			"file": "fonts/titan-one.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"display",
+				"bold",
+				"rounded",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "lilita-one",
+			"name": "Lilita One",
+			"file": "fonts/lilita-one.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"display",
+				"bold",
+				"rounded",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "bangers",
+			"name": "Bangers",
+			"file": "fonts/bangers.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"display",
+				"handwritten",
+				"comic",
+				"bold",
+				"dramatic",
+				"headline"
+			]
+		},
+		{
+			"id": "chewy",
+			"name": "Chewy",
+			"file": "fonts/chewy.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"handwritten",
+				"rounded",
+				"playful",
+				"cute",
+				"headline"
+			]
+		},
+		{
+			"id": "shrikhand",
+			"name": "Shrikhand",
+			"file": "fonts/shrikhand.woff2",
+			"weight": 400,
+			"fallback": "serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"display",
+				"decorative",
+				"elegant",
+				"retro",
+				"headline",
+				"logo"
+			]
+		},
+		{
+			"id": "pacifico",
+			"name": "Pacifico",
+			"file": "fonts/pacifico.woff2",
+			"weight": 400,
+			"fallback": "cursive",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"script",
+				"handwritten",
+				"elegant",
+				"logo"
+			]
+		},
+		{
+			"id": "lobster",
+			"name": "Lobster",
+			"file": "fonts/lobster.woff2",
+			"weight": 400,
+			"fallback": "cursive",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"script",
+				"decorative",
+				"elegant",
+				"logo"
+			]
+		},
+		{
+			"id": "baloo-2",
+			"name": "Baloo 2",
+			"file": "fonts/baloo-2.woff2",
+			"weight": 700,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"sans-serif",
+				"bold",
+				"rounded",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "comic-neue",
+			"name": "Comic Neue",
+			"file": "fonts/comic-neue.woff2",
+			"weight": 400,
+			"fallback": "cursive",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"comic",
+				"handwritten",
+				"rounded",
+				"body"
+			]
+		},
+		{
+			"id": "comic-sans",
+			"name": "Comic Sans MS",
+			"system": true,
+			"family": "\"Comic Sans MS\", \"Comic Sans\", \"Chalkboard SE\", \"Comic Neue\", cursive",
+			"fallbackFontId": "comic-neue",
+			"weight": 400,
+			"fallback": "cursive",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"comic",
+				"handwritten",
+				"rounded",
+				"body"
+			]
+		},
+		{
+			"id": "impact",
+			"name": "Impact",
+			"system": true,
+			"family": "Impact, Haettenschweiler, \"Arial Narrow Bold\", sans-serif",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"display",
+				"bold",
+				"condensed",
+				"headline"
+			]
+		},
+		{
+			"id": "silkscreen",
+			"name": "Silkscreen",
+			"file": "fonts/silkscreen-regular.ttf",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin"
+			],
+			"tags": [
+				"pixel",
+				"retro",
+				"headline"
+			]
+		},
+		{
+			"id": "dela-gothic-one",
+			"name": "Dela Gothic One",
+			"file": "fonts/dela-gothic-one.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin",
+				"ja"
+			],
+			"tags": [
+				"gothic",
+				"sans-serif",
+				"bold",
+				"headline"
+			]
+		},
+		{
+			"id": "reggae-one",
+			"name": "Reggae One",
+			"file": "fonts/reggae-one.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin",
+				"ja"
+			],
+			"tags": [
+				"display",
+				"decorative",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "cherry-bomb-one",
+			"name": "Cherry Bomb One",
+			"file": "fonts/cherry-bomb-one.ttf",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin",
+				"ja"
+			],
+			"tags": [
+				"display",
+				"rounded",
+				"cute",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "hachi-maru-pop",
+			"name": "Hachi Maru Pop",
+			"file": "fonts/hachi-maru-pop.ttf",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin",
+				"ja"
+			],
+			"tags": [
+				"handwritten",
+				"cute",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "darumadrop-one",
+			"name": "Darumadrop One",
+			"file": "fonts/darumadrop-one.ttf",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin",
+				"ja"
+			],
+			"tags": [
+				"display",
+				"handwritten",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "noto-sans-jp",
+			"name": "Noto Sans JP",
+			"file": "fonts/noto-sans-jp.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"ja"
+			],
+			"tags": [
+				"sans-serif",
+				"body"
+			]
+		},
+		{
+			"id": "black-han-sans",
+			"name": "Black Han Sans",
+			"file": "fonts/black-han-sans.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin",
+				"ko"
+			],
+			"tags": [
+				"gothic",
+				"sans-serif",
+				"bold",
+				"headline"
+			]
+		},
+		{
+			"id": "jua",
+			"name": "Jua",
+			"file": "fonts/jua.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin",
+				"ko"
+			],
+			"tags": [
+				"sans-serif",
+				"rounded",
+				"cute",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "bagel-fat-one",
+			"name": "Bagel Fat One",
+			"file": "fonts/bagel-fat-one.ttf",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"latin",
+				"ko"
+			],
+			"tags": [
+				"display",
+				"bold",
+				"rounded",
+				"playful",
+				"headline"
+			]
+		},
+		{
+			"id": "noto-sans-kr",
+			"name": "Noto Sans KR",
+			"file": "fonts/noto-sans-kr.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"ko"
+			],
+			"tags": [
+				"sans-serif",
+				"body"
+			]
+		},
+		{
+			"id": "noto-sans-sc",
+			"name": "Noto Sans SC",
+			"file": "fonts/noto-sans-sc.woff2",
+			"weight": 400,
+			"fallback": "sans-serif",
+			"featured": false,
+			"scripts": [
+				"zh"
+			],
+			"tags": [
+				"sans-serif",
+				"body"
+			]
+		}
+	]
+}

@@ -16,7 +16,7 @@ $browserConfig = [
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Admin — Glitter</title>
 	<script>(function(){try{var s=JSON.parse(localStorage.getItem('glitterEditorSettings')||'{}');document.documentElement.dataset.theme=s.interfaceTheme||'dark';}catch(e){document.documentElement.dataset.theme='dark';}}());</script>
-	<link rel="stylesheet" href="css/swatch_admin.css?v=19">
+	<link rel="stylesheet" href="css/swatch_admin.css?v=21">
 </head>
 <body class="admin-tool">
 	<div class="container admin-shell">
@@ -27,6 +27,8 @@ $browserConfig = [
 					<li class="current">Admin</li>
 					<li><a href="glitter.php">Glitter</a></li>
 					<li><a href="sticker.php">Stickers</a></li>
+					<li><a href="fonts.php">Fonts</a></li>
+					<li><a href="shapes.php">Shapes</a></li>
 				</ul>
 			</nav>
 		</header>

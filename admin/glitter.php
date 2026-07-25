@@ -15,13 +15,13 @@ header('Pragma: no-cache');
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Glitter Admin</title>
 	<script>(function(){try{var s=JSON.parse(localStorage.getItem('glitterEditorSettings')||'{}');document.documentElement.dataset.theme=s.interfaceTheme||'dark';}catch(e){document.documentElement.dataset.theme='dark';}}());</script>
-	<link rel="stylesheet" href="css/swatch_admin.css?v=19">
+	<link rel="stylesheet" href="css/swatch_admin.css?v=21">
 </head>
 <body class="admin-tool">
 	<div class="container">
 		<header class="header">
 			<h1><a href="index.php">Glitter Admin</a> / Glitter</h1>
-			<nav aria-label="Admin"><ul><li><a href="index.php">Admin</a></li><li class="current">Glitter</li><li><a href="sticker.php">Stickers</a></li></ul></nav>
+			<nav aria-label="Admin"><ul><li><a href="index.php">Admin</a></li><li class="current">Glitter</li><li><a href="sticker.php">Stickers</a></li><li><a href="fonts.php">Fonts</a></li><li><a href="shapes.php">Shapes</a></li></ul></nav>
 		</header>
 
 		<aside class="sidebar">
@@ -64,10 +64,10 @@ header('Pragma: no-cache');
 		const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
 	</script>
 	<script src="js/admin_api.js?v=5"></script>
-	<script src="js/asset_admin.js?v=21"></script>
-	<script src="js/category_manager.js?v=8"></script>
-	<script src="js/tag_manager.js?v=7"></script>
-	<script src="js/ingest_review.js?v=13"></script>
+	<script src="js/asset_admin.js?v=22"></script>
+	<script src="js/category_manager.js?v=9"></script>
+	<script src="js/tag_manager.js?v=8"></script>
+	<script src="js/ingest_review.js?v=14"></script>
 	<script src="js/glitter_admin.js?v=11"></script>
 </body>
 </html>

@@ -10,6 +10,7 @@ class TextGlitterManager {
 		this.layerTransforms = new Map();
 
 		this.fontManifest = [];
+		this.fontTagGroups = [];
 		this.fontsById = new Map();
 		this.fontManifestPromise = null;
 		this.fontLoadPromises = new Map();
@@ -1091,12 +1092,15 @@ class TextGlitterManager {
 		}
 
 		this.fontManifestPromise = (async () => {
-			const response = await fetch(CONFIG.tools.text.fontsManifest);
+			const response = await fetch(CONFIG.tools.text.fontsManifest, { cache: 'no-store' });
 			if (!response.ok) {
 				throw new Error(`Failed to load fonts manifest (${response.status})`);
 			}
 
-			this.fontManifest = await response.json();
+			const manifest = await response.json();
+			this.validateFontsManifest(manifest);
+			this.fontManifest = manifest.fonts;
+			this.fontTagGroups = manifest.tagGroups;
 			this.fontsById.clear();
 			this.fontManifest.forEach((font) => {
 				this.fontsById.set(font.id, font);
@@ -1112,6 +1116,54 @@ class TextGlitterManager {
 			this.fontManifestPromise = null;
 			throw error;
 		}
+	}
+
+	validateFontsManifest(manifest) {
+		if (!Array.isArray(manifest?.tagGroups) || !Array.isArray(manifest?.fonts)) {
+			throw new Error('Fonts manifest must contain tagGroups and fonts arrays');
+		}
+		const tagIds = new Set();
+		const groupIds = new Set();
+		manifest.tagGroups.forEach((group) => {
+			if (!/^[a-z][a-z0-9-]*$/.test(group?.id) || !group?.label || groupIds.has(group.id) || !Array.isArray(group.tags)) {
+				throw new Error('Fonts manifest contains an invalid or duplicate tag group');
+			}
+			groupIds.add(group.id);
+			group.tags.forEach((tag) => {
+				if (!/^[a-z][a-z0-9-]*$/.test(tag?.id) || !tag?.label || tagIds.has(tag.id)) {
+					throw new Error('Fonts manifest contains an invalid or duplicate tag');
+				}
+				tagIds.add(tag.id);
+			});
+		});
+
+		const ids = new Set();
+		manifest.fonts.forEach((font) => {
+			if (!/^[a-z][a-z0-9-]*$/.test(font?.id) || !font?.name || ids.has(font.id)) {
+				throw new Error('Fonts manifest contains an invalid or duplicate font');
+			}
+			if (!Number.isInteger(font.weight) || font.weight < 100 || font.weight > 900) {
+				throw new Error(`Font "${font.id}" has an invalid weight`);
+			}
+			if (!Array.isArray(font.scripts) || !font.scripts.length) {
+				throw new Error(`Font "${font.id}" needs at least one script`);
+			}
+			if (font.system ? !font.family : !font.file) {
+				throw new Error(`Font "${font.id}" is missing its source`);
+			}
+			if (!Array.isArray(font.tags) || font.tags.some((tagId) => !tagIds.has(tagId))) {
+				throw new Error(`Font "${font.id}" contains an unknown tag`);
+			}
+			ids.add(font.id);
+		});
+		if (!ids.has(CONFIG.tools.text.defaultFontId)) {
+			throw new Error('Fonts manifest is missing the default font');
+		}
+		manifest.fonts.forEach((font) => {
+			if (font.fallbackFontId && !ids.has(font.fallbackFontId)) {
+				throw new Error(`Font "${font.id}" has an unknown fallback font`);
+			}
+		});
 	}
 
 	renderFontPicker() {

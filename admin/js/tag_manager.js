@@ -7,6 +7,7 @@ class TagManager {
 		this.query = '';
 		this.filter = 'all';
 		this.editing = null;
+		this.formDirty = false;
 		this.mount();
 	}
 
@@ -58,7 +59,17 @@ class TagManager {
 		this.modal.querySelector('[data-duplicates]').addEventListener('change', () => this.render());
 		this.modal.querySelector('[data-add-tag]').addEventListener('click', () => this.openForm());
 		this.modal.querySelector('[data-batch-move]').addEventListener('click', () => this.batchMove());
-		this.modal.querySelectorAll('[data-tag-close]').forEach(button => button.addEventListener('click', () => this.dialog.close()));
+		this.modal.querySelectorAll('[data-tag-close]').forEach(button => button.addEventListener('click', () => this.requestCloseForm()));
+		this.form.addEventListener('input', () => {
+			this.formDirty = true;
+		});
+		this.form.addEventListener('change', () => {
+			this.formDirty = true;
+		});
+		this.dialog.addEventListener('cancel', event => {
+			event.preventDefault();
+			this.requestCloseForm();
+		});
 		this.form.elements.name.addEventListener('input', () => this.updateDuplicateWarning());
 		this.form.addEventListener('submit', event => {
 			event.preventDefault();
@@ -138,6 +149,7 @@ class TagManager {
 		} else {
 			this.form.elements.hex_color.disabled = false;
 		}
+		this.formDirty = false;
 		this.dialog.showModal();
 		this.form.elements.name.focus();
 	}
@@ -156,9 +168,17 @@ class TagManager {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data)
 		});
+		this.formDirty = false;
 		this.dialog.close();
 		await this.editor.loadTags();
 		await this.load();
+	}
+
+	requestCloseForm() {
+		if (this.formDirty && !confirm('Discard your changes? The information entered in this dialog will be lost.')) return false;
+		this.formDirty = false;
+		this.dialog.close();
+		return true;
 	}
 
 	async batchMove() {

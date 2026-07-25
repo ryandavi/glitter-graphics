@@ -5,6 +5,7 @@ class CategoryManager {
 		this.rows = [];
 		this.query = '';
 		this.editing = null;
+		this.formDirty = false;
 		this.mount();
 	}
 
@@ -49,7 +50,17 @@ class CategoryManager {
 			this.render();
 		});
 		this.modal.querySelector('[data-category-new]').addEventListener('click', () => this.openForm());
-		this.modal.querySelectorAll('[data-form-close]').forEach(button => button.addEventListener('click', () => this.dialog.close()));
+		this.modal.querySelectorAll('[data-form-close]').forEach(button => button.addEventListener('click', () => this.requestCloseForm()));
+		this.form.addEventListener('input', () => {
+			this.formDirty = true;
+		});
+		this.form.addEventListener('change', () => {
+			this.formDirty = true;
+		});
+		this.dialog.addEventListener('cancel', event => {
+			event.preventDefault();
+			this.requestCloseForm();
+		});
 		this.form.elements.name.addEventListener('input', () => {
 			if (!this.form.elements.slug.dataset.manual) this.form.elements.slug.value = this.slugify(this.form.elements.name.value);
 			this.updatePath();
@@ -160,6 +171,7 @@ class CategoryManager {
 		this.form.elements.slug.disabled = Boolean(this.editing?.slug_locked);
 		if (this.editing) this.form.elements.slug.dataset.manual = 'true';
 		this.updatePath();
+		this.formDirty = false;
 		this.dialog.showModal();
 		this.form.elements.name.focus();
 	}
@@ -176,6 +188,7 @@ class CategoryManager {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(values)
 			});
+			this.formDirty = false;
 			this.dialog.close();
 			await this.editor.loadCategories();
 			await this.load();
@@ -190,6 +203,13 @@ class CategoryManager {
 			this.form.querySelector('[data-slug-error]').textContent = error.message;
 			this.form.elements.slug.focus();
 		}
+	}
+
+	requestCloseForm() {
+		if (this.formDirty && !confirm('Discard your changes? The information entered in this dialog will be lost.')) return false;
+		this.formDirty = false;
+		this.dialog.close();
+		return true;
 	}
 
 	async remove(id) {

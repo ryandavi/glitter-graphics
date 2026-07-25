@@ -3,7 +3,7 @@
 function renderAdminManagementModals($assetLabel)
 {
 	?>
-	<div class="modal" id="addModal">
+	<div class="modal" id="addModal" data-confirm-discard>
 		<div class="modal-content modal-width-xl">
 			<div class="modal-header">
 				<h3>Add assets</h3>
@@ -18,7 +18,7 @@ function renderAdminManagementModals($assetLabel)
 		</div>
 	</div>
 
-	<div class="modal" id="analyzeModal">
+	<div class="modal" id="analyzeModal" data-confirm-discard>
 		<div class="modal-content modal-width-md">
 			<div class="modal-header">
 				<h3>Analysis results</h3>
