@@ -23,6 +23,7 @@
 	}
 
 	>.modal-content {
+		box-sizing: border-box;
 		background: var(--color-bg-primary);
 		border: 1px solid var(--color-window-border);
 		border-radius: var(--radius-lg);
@@ -88,17 +89,11 @@
 			min-height: 0;
 			padding: var(--spacing-lg);
 			overflow-y: auto;
+			overscroll-behavior: contain;
+			-webkit-overflow-scrolling: touch;
 			color: var(--color-text-secondary);
 			line-height: 1.55;
 			scroll-behavior: smooth;
-
-			/* Fallback for older browsers */
-			max-height: 70vh;
-			/* Modern browsers with dynamic viewport */
-			max-height: 70dvh;
-
-
-
 
 			>.modal-hero-image {
 				margin-bottom: 20px;

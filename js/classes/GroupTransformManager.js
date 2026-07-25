@@ -8,6 +8,7 @@ class GroupTransformManager {
 		this.dragStartState = null;
 		this.gestureInteractionActive = false;
 		this.gestureInteractionChanged = false;
+		this.gestureDragState = null;
 		this.isDraggingHandle = false;
 
 		this.handlePointerMove = this.handlePointerMove.bind(this);
@@ -195,6 +196,20 @@ class GroupTransformManager {
 		this.ensureHistoryBaseline();
 		this.gestureInteractionActive = true;
 		this.gestureInteractionChanged = false;
+		this.resetGestureDragState();
+	}
+
+	resetGestureDragState() {
+		const entries = this.getLayerEntries();
+		this.gestureDragState = {
+			bounds: this.getBounds(),
+			rawDelta: { x: 0, y: 0 },
+			layerStates: entries.map(({ layer, transform }) => ({
+				layer,
+				transform,
+				position: { ...transform.getTransform().position }
+			}))
+		};
 	}
 
 	dragByScreenDelta(deltaX, deltaY) {
@@ -202,21 +217,27 @@ class GroupTransformManager {
 
 		const canvasDeltaX = deltaX / this.editor.viewport.currentZoom;
 		const canvasDeltaY = deltaY / this.editor.viewport.currentZoom;
-		const entries = this.getLayerEntries();
-		if (!entries.length) return;
+		const state = this.gestureDragState;
+		if (!state?.bounds || !state.layerStates.length) return;
+		state.rawDelta.x += canvasDeltaX;
+		state.rawDelta.y += canvasDeltaY;
+		const snappedDelta = this.editor.snapGroupDelta(
+			state.bounds,
+			state.rawDelta,
+			state.layerStates.map(({ layer }) => layer.id)
+		);
 
-		entries.forEach(({ transform }) => {
-			const current = transform.getTransform();
+		state.layerStates.forEach(({ transform, position }) => {
 			transform.updateTransform({
 				position: {
-					x: current.position.x + canvasDeltaX,
-					y: current.position.y + canvasDeltaY
+					x: position.x + snappedDelta.x,
+					y: position.y + snappedDelta.y
 				}
 			});
 		});
 
 		this.gestureInteractionChanged = true;
-		this.applyEntries(entries);
+		this.applyEntries(state.layerStates);
 	}
 
 	applyGestureDelta(gestureDelta) {
@@ -249,6 +270,7 @@ class GroupTransformManager {
 
 		this.gestureInteractionChanged = true;
 		this.applyEntries(layerStates);
+		this.resetGestureDragState();
 	}
 
 	async commitScaledLayers() {
@@ -277,6 +299,8 @@ class GroupTransformManager {
 
 		this.gestureInteractionActive = false;
 		this.gestureInteractionChanged = false;
+		this.gestureDragState = null;
+		this.editor.clearSmartGuides?.();
 	}
 
 	alignToCanvas(mode) {

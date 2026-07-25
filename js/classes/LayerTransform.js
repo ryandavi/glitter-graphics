@@ -20,6 +20,7 @@ class LayerTransform {
         this.isDraggingHandle = false;
         this.gestureInteractionActive = false;
         this.gestureInteractionChanged = false;
+        this.gestureRawPosition = null;
 
         // Bind methods for event listeners
         this.handleHandlePointerMove = this.handleHandlePointerMove.bind(this);
@@ -722,6 +723,7 @@ const handleMouseMove = (e) => {
 
         this.gestureInteractionActive = true;
         this.gestureInteractionChanged = false;
+        this.gestureRawPosition = { ...this.getTransform().position };
     }
 
     dragByScreenDelta(deltaX, deltaY) {
@@ -729,13 +731,14 @@ const handleMouseMove = (e) => {
 
         const canvasDeltaX = deltaX / this.editor.viewport.currentZoom;
         const canvasDeltaY = deltaY / this.editor.viewport.currentZoom;
-        const transform = this.getTransform();
+        const rawPosition = this.gestureRawPosition || { ...this.getTransform().position };
+        rawPosition.x += canvasDeltaX;
+        rawPosition.y += canvasDeltaY;
+        this.gestureRawPosition = rawPosition;
+        const snappedPosition = this.editor.snapTransformPosition(this, rawPosition);
 
         this.updateTransform({
-            position: {
-                x: transform.position.x + canvasDeltaX,
-                y: transform.position.y + canvasDeltaY
-            }
+            position: snappedPosition
         });
 
         this.gestureInteractionChanged = true;
@@ -775,6 +778,7 @@ const handleMouseMove = (e) => {
             },
             rotation: transform.rotation + gestureDelta.rotateDeg
         });
+        this.gestureRawPosition = { ...this.getTransform().position };
 
         this.gestureInteractionChanged = true;
         this.syncGestureTransform();
@@ -804,6 +808,8 @@ const handleMouseMove = (e) => {
 
         this.gestureInteractionActive = false;
         this.gestureInteractionChanged = false;
+        this.gestureRawPosition = null;
+        this.editor.clearSmartGuides?.();
     }
 
     // ===== TRANSFORM HANDLES (DESKTOP ONLY) =====

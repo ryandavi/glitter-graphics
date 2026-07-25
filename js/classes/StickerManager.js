@@ -47,7 +47,7 @@ class StickerManager extends ContentManager {
 			filterToggle: document.getElementById('stickerFilterToggleBtn'),
 			filtersContainer: document.getElementById('stickerFiltersContainer'),
 			clearFiltersBtn: document.getElementById('clearStickerFiltersBtn'),
-			clearActiveFiltersBtn: document.getElementById('clearActiveStickerFiltersBtn'),
+			closeFiltersBtn: document.getElementById('closeStickerFiltersBtn'),
 			activeFilterSummary: document.getElementById('stickerActiveFilterSummary'),
 			categoryChips: document.getElementById('stickerCategoryChips'),
 			searchNameOnly: document.getElementById('searchStickerNameOnly'),
@@ -392,40 +392,8 @@ class StickerManager extends ContentManager {
 	}
 
 	setupFilterChips() {
-		// Wire up color filter chips in sticker container
-		if (this.ui.filtersContainer) {
-			this.ui.filtersContainer.querySelectorAll('.color-filter-chip').forEach(chip => {
-				chip.addEventListener('click', () => this.toggleFilterChip(chip));
-			});
-
-			// Wire up vibe filter chips
-			this.ui.filtersContainer.querySelectorAll('[data-filter="vibe"]').forEach(chip => {
-				chip.addEventListener('click', () => this.toggleFilterChip(chip));
-			});
-		}
-
-		// Animated filter chips (mutually exclusive - these need special handling)
-		document.querySelectorAll('[data-filter="animated"]').forEach(chip => {
-			chip.addEventListener('click', () => {
-				const isAnimated = chip.dataset.animated === 'true';
-
-				if (chip.classList.contains('active')) {
-					// Deactivate
-					chip.classList.remove('active');
-					this.activeFilters.animated = null;
-				} else {
-					// Activate and deactivate siblings
-					document.querySelectorAll('[data-filter="animated"]').forEach(c => {
-						c.classList.remove('active');
-					});
-					chip.classList.add('active');
-					this.activeFilters.animated = isAnimated;
-				}
-
-				this.browser.refresh();
-				this.updateClearFiltersButton();
-			});
-		});
+		// Static facet chips are wired by ContentManager; dynamic category
+		// chips bind when populateCategoryChips creates them.
 	}
 
 	matchesChildFilters(item) {
@@ -679,6 +647,7 @@ class StickerManager extends ContentManager {
 		userSticker.isLoading = false;
 
 		// Refresh to update the item from loading state to loaded
+		this.updateFacetAvailability();
 		this.browser.refresh();
 
 		dbg('Processed uploaded sticker:', userSticker);

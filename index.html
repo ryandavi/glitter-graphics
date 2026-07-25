@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=200">
+	<link rel="stylesheet" href="css/style.css?v=206">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -354,15 +354,14 @@
 										<div class="search-input-wrapper">
 											<input type="text" id="glitterSearch" placeholder="Search by name or tag...">
 										</div>
-										<button class="btn-icon icon-wrapper" id="filterToggleBtn" title="Toggle filters">
+										<button class="btn-icon icon-wrapper" id="filterToggleBtn" title="Open filters" aria-expanded="false" aria-controls="filtersContainer">
 											<svg class="icon">
 												<use href="#icon-filter"></use>
 											</svg>
 											<span class="name">Filter</span>
 										</button>
-										<button class="btn-simple clear-active-filters" id="clearActiveGlitterFiltersBtn" type="button" hidden>Clear</button>
 									</div>
-									<div class="active-filter-summary" id="glitterActiveFilterSummary" aria-live="polite" hidden></div>
+									<div class="active-filter-summary" id="glitterActiveFilterSummary" role="group" aria-label="Active filters" aria-live="polite" hidden></div>
 									<div class="filters-container" id="filtersContainer">
 										<div class="filters-container-inner">
 
@@ -388,9 +387,9 @@
 													<div class="filter-chip color-filter-chip" data-color="blue" data-filter="color" title="Blue"></div>
 													<div class="filter-chip color-filter-chip" data-color="purple" data-filter="color" title="Purple"></div>
 													<div class="filter-chip color-filter-chip" data-color="pink" data-filter="color" title="Pink"></div>
-													<div class="filter-chip color-filter-chip" data-color="neutrals" data-filter="color" title="Neutrals"></div>
-													<div class="filter-chip color-filter-chip" data-color="earth-tone" data-filter="color" title="Earth Tone"></div>
-													<div class="filter-chip color-filter-chip" data-color="metal" data-filter="color" title="Metal"></div>
+													<div class="filter-chip color-filter-chip" data-color="neutral" data-filter="color" title="Neutrals"></div>
+													<div class="filter-chip color-filter-chip" data-color="earth" data-filter="color" title="Earth tones"></div>
+													<div class="filter-chip color-filter-chip" data-color="metallic" data-filter="color" title="Metallics"></div>
 												</div>
 											</div>
 
@@ -399,11 +398,26 @@
 												<div class="filter-label">Tone</div>
 												<div class="filter-chips">
 													<div class="filter-chip text-filter-chip" data-color="light" data-filter="tone" title="Light">Light</div>
-													<div class="filter-chip text-filter-chip" data-color="midtone" data-filter="tone" title="Midtone">Midtone</div>
 													<div class="filter-chip text-filter-chip" data-color="dark" data-filter="tone" title="dark">Dark</div>
 													<div class="filter-chip text-filter-chip" data-color="pastel" data-filter="tone" title="Pastel">Pastel</div>
 													<div class="filter-chip text-filter-chip" data-color="neon" data-filter="tone" title="Neon">Neon</div>
 													<div class="filter-chip text-filter-chip" data-color="jewel" data-filter="tone" title="Jewel Tone">Jewel Tone</div>
+												</div>
+											</div>
+
+											<div class="filter-section">
+												<div class="filter-label">Intensity</div>
+												<div class="filter-chips">
+													<div class="filter-chip text-filter-chip" data-color="vivid" data-filter="intensity" title="Vivid">Vivid</div>
+													<div class="filter-chip text-filter-chip" data-color="muted" data-filter="intensity" title="Muted">Muted</div>
+												</div>
+											</div>
+
+											<div class="filter-section">
+												<div class="filter-label">Temperature</div>
+												<div class="filter-chips">
+													<div class="filter-chip text-filter-chip" data-color="warm" data-filter="temperature" title="Warm">Warm</div>
+													<div class="filter-chip text-filter-chip" data-color="cool" data-filter="temperature" title="Cool">Cool</div>
 												</div>
 											</div>
 
@@ -422,7 +436,10 @@
 												</div>
 											</div>
 										</div>
-										<button class="btn-text" id="clearFiltersBtn" disabled>Clear all filters</button>
+										<div class="filter-actions">
+											<button class="btn-simple secondary" id="clearFiltersBtn" disabled>Clear all</button>
+											<button class="btn-simple primary" id="closeGlitterFiltersBtn" type="button">Show results</button>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -493,15 +510,14 @@
 										<div class="search-input-wrapper">
 											<input type="text" id="stickersSearch" placeholder="Search stickers...">
 										</div>
-										<button class="btn-icon icon-wrapper" id="stickerFilterToggleBtn" title="Toggle filters">
+										<button class="btn-icon icon-wrapper" id="stickerFilterToggleBtn" title="Open filters" aria-expanded="false" aria-controls="stickerFiltersContainer">
 											<svg class="icon">
 												<use href="#icon-filter"></use>
 											</svg>
 											<span class="name">Filter</span>
 										</button>
-										<button class="btn-simple clear-active-filters" id="clearActiveStickerFiltersBtn" type="button" hidden>Clear</button>
 									</div>
-									<div class="active-filter-summary" id="stickerActiveFilterSummary" aria-live="polite" hidden></div>
+									<div class="active-filter-summary" id="stickerActiveFilterSummary" role="group" aria-label="Active filters" aria-live="polite" hidden></div>
 									<div class="filters-container" id="stickerFiltersContainer">
 										<div class="filters-container-inner">
 
@@ -516,9 +532,8 @@
 												</div>
 											</div>
 
-											<!-- Based on Var-->
 											<div class="filter-section">
-												<div class="filter-label">Type</div>
+												<div class="filter-label">Motion</div>
 												<div class="filter-chips">
 													<div class="filter-chip text-filter-chip" data-animated="true" data-filter="animated" title="Animated">Animated</div>
 													<div class="filter-chip text-filter-chip" data-animated="false" data-filter="animated" title="Static">Static</div>
@@ -544,9 +559,9 @@
 												<div class="filter-label">Vibe</div>
 												<div class="filter-chips">
 													<div class="filter-chip text-filter-chip" data-color="glitter" data-filter="vibe" title="Glitter">Glitter</div>
-													<div class="filter-chip text-filter-chip" data-color="pixel" data-filter="vibe" title="Pixel">Pixel</div>
 													<div class="filter-chip text-filter-chip" data-color="emo" data-filter="vibe" title="Emo">Emo</div>
-													<div class="filter-chip text-filter-chip" data-color="holiday" data-filter="vibe" title="Holiday">Holiday</div>
+													<div class="filter-chip text-filter-chip" data-color="love" data-filter="vibe" title="Love">Love</div>
+													<div class="filter-chip text-filter-chip" data-color="cute" data-filter="vibe" title="Cute">Cute</div>
 												</div>
 											</div>
 											<div class="filter-section">
@@ -556,7 +571,10 @@
 												</div>
 											</div>
 										</div>
-										<button class="btn-text" id="clearStickerFiltersBtn" disabled>Clear all filters</button>
+										<div class="filter-actions">
+											<button class="btn-simple secondary" id="clearStickerFiltersBtn" disabled>Clear all</button>
+											<button class="btn-simple primary" id="closeStickerFiltersBtn" type="button">Show results</button>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -2693,15 +2711,15 @@
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=2"></script>
-	<script src="js/classes/ContentManager.js?v=6"></script>
-	<script src="js/classes/LayerTransform.js?v=40"></script>
-	<script src="js/classes/GlitterManager.js?v=36"></script>
+	<script src="js/classes/ContentManager.js?v=12"></script>
+	<script src="js/classes/LayerTransform.js?v=41"></script>
+	<script src="js/classes/GlitterManager.js?v=39"></script>
 	<script src="js/classes/BaseBackgroundManager.js?v=29"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=31"></script>
 	<script src="js/classes/TextGlitterManager.js?v=55"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=47"></script>
-	<script src="js/classes/StickerManager.js?v=26"></script>
-	<script src="js/classes/GroupTransformManager.js?v=20"></script>
+	<script src="js/classes/StickerManager.js?v=30"></script>
+	<script src="js/classes/GroupTransformManager.js?v=21"></script>
 
 	<script src="js/classes/MobileManager.js?v=17"></script>
 

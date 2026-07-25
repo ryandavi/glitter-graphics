@@ -9,6 +9,8 @@ class GlitterManager extends ContentManager {
 		// Add glitter-specific filters to base activeFilters
 		Object.assign(this.activeFilters, {
 			tones: new Set(),
+			intensities: new Set(),
+			temperatures: new Set(),
 			special: new Set()
 		});
 
@@ -82,7 +84,7 @@ async initBrowser() {
 			filterToggle: document.getElementById('filterToggleBtn'),
 			filtersContainer: document.getElementById('filtersContainer'),
 			clearFiltersBtn: document.getElementById('clearFiltersBtn'),
-			clearActiveFiltersBtn: document.getElementById('clearActiveGlitterFiltersBtn'),
+			closeFiltersBtn: document.getElementById('closeGlitterFiltersBtn'),
 			activeFilterSummary: document.getElementById('glitterActiveFilterSummary'),
 			categoryChips: document.getElementById('glitterCategoryChips'),
 			searchNameOnly: document.getElementById('searchGlitterNameOnly'),
@@ -172,12 +174,8 @@ async initBrowser() {
 	}
 
 	setupFilterChips() {
-		// Wire up all filter chips in the filters container
-		if (this.ui.filtersContainer) {
-			this.ui.filtersContainer.querySelectorAll('.filter-chip').forEach(chip => {
-				chip.addEventListener('click', () => this.toggleFilterChip(chip));
-			});
-		}
+		// Static facet chips are wired by ContentManager; dynamic category
+		// chips bind when populateCategoryChips creates them.
 	}
 
 
@@ -233,6 +231,20 @@ async initBrowser() {
 				tags.includes(tone.toLowerCase())
 			);
 			if (!hasTone) return false;
+		}
+
+		if (this.activeFilters.intensities.size > 0) {
+			const hasIntensity = [...this.activeFilters.intensities].some((intensity) =>
+				tags.includes(intensity.toLowerCase())
+			);
+			if (!hasIntensity) return false;
+		}
+
+		if (this.activeFilters.temperatures.size > 0) {
+			const hasTemperature = [...this.activeFilters.temperatures].some((temperature) =>
+				tags.includes(temperature.toLowerCase())
+			);
+			if (!hasTemperature) return false;
 		}
 
 		// Special filter

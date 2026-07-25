@@ -489,6 +489,10 @@
 		>.section:not(#designGallerySection) {
 			display: none !important;
 		}
+
+		.filter-actions > button {
+			min-height: var(--touch-target-min);
+		}
 	}
 
 	body:not(.mobile-no-image) .main-content > .layers-panel {
@@ -519,12 +523,14 @@
 	}
 
 	.workspace-start {
-		padding: var(--spacing-md);
+		padding: var(--spacing-lg);
 	}
 
 	.workspace-start-card {
+		width: 100%;
+		max-width: 500px;
 		gap: var(--spacing-md);
-		padding: 24px 20px;
+		padding: var(--spacing-lg);
 		box-shadow: none;
 	}
 
@@ -543,18 +549,13 @@
 	}
 
 	#newCanvasModal {
-		align-items: flex-end;
-
 		.new-canvas-dialog {
-			width: 100%;
-			max-width: none;
-			max-height: min(92dvh, 760px);
+			width: min(760px, calc(100% - var(--spacing-lg) - var(--spacing-lg)));
+			max-width: 760px;
+			max-height: min(calc(100vh - var(--spacing-lg) - var(--spacing-lg)), 760px);
+			max-height: min(calc(100dvh - var(--spacing-lg) - var(--spacing-lg)), 760px);
 			margin: 0;
-			border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-		}
-
-		.modal-body {
-			padding-bottom: max(var(--spacing-lg), env(safe-area-inset-bottom));
+			border-radius: var(--radius-lg);
 		}
 
 		.blank-image-grid {

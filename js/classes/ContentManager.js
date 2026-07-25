@@ -12,6 +12,7 @@ class ContentManager {
 
 		this.browser = null;
 		this.useBrowser = false; // Toggle for browser mode
+		this.filterSheetHeight = null;
 
 		// Base filter state - children can extend this
 		this.activeFilters = {
@@ -30,6 +31,8 @@ class ContentManager {
 			filterToggle: null,
 			filtersContainer: null,
 			clearFiltersBtn: null,
+			closeFiltersBtn: null,
+			activeFilterSummary: null,
 			searchNameOnly: null
 		};
 
@@ -40,7 +43,9 @@ class ContentManager {
 		this.setupUI();
 		this.setupEventListeners();
 		await this.loadContent();
+		this.updateFacetAvailability();
 		await this.initBrowser();
+		this.updateClearFiltersButton();
 	}
 
 	async initBrowser() {
@@ -57,6 +62,18 @@ class ContentManager {
 
 	setupEventListeners() {
 		// Base listeners that all content managers need
+		this.ui.filtersContainer?.querySelectorAll('.filter-chip').forEach((chip) => {
+			chip.setAttribute('role', 'button');
+			chip.setAttribute('tabindex', '0');
+			chip.setAttribute('aria-pressed', 'false');
+			if (!chip.textContent.trim() && chip.title) chip.setAttribute('aria-label', chip.title);
+			chip.addEventListener('click', () => this.toggleFilterChip(chip));
+			chip.addEventListener('keydown', (event) => {
+				if (event.key !== 'Enter' && event.key !== ' ') return;
+				event.preventDefault();
+				chip.click();
+			});
+		});
 
 		// Search input
 		if (this.ui.searchInput) {
@@ -71,6 +88,7 @@ class ContentManager {
 				this.toggleFiltersUI();
 			});
 		}
+		this.ui.closeFiltersBtn?.addEventListener('click', () => this.toggleFiltersUI(false));
 
 		// Clear filters button
 		if (this.ui.clearFiltersBtn) {
@@ -78,8 +96,6 @@ class ContentManager {
 				this.clearFilters();
 			});
 		}
-		this.ui.clearActiveFiltersBtn?.addEventListener('click', () => this.clearFilters());
-
 		// Name Only Checkbox
 		if (this.ui.searchNameOnly) {
 			this.ui.searchNameOnly.addEventListener('change', (e) => {
@@ -179,12 +195,14 @@ class ContentManager {
 
 		// Create chips
 		Array.from(categories).forEach(category => {
-			const chip = document.createElement('div');
+			const chip = document.createElement('button');
+			chip.type = 'button';
 			chip.className = 'filter-chip text-filter-chip';
 			chip.dataset.value = category;  // Changed from dataset.category
 			chip.dataset.filter = 'category';
 			chip.textContent = category.charAt(0).toUpperCase() + category.slice(1);
 			chip.title = category;
+			chip.setAttribute('aria-pressed', 'false');
 
 			chip.addEventListener('click', () => this.toggleFilterChip(chip));
 
@@ -219,32 +237,24 @@ class ContentManager {
 		const filterType = chip.dataset.filter; // 'color', 'tone', 'special', 'category', 'tags'
 		const value = chip.dataset.value || chip.dataset.color;
 
-		// Map filter types to activeFilters properties
-		const filterMap = {
-			'color': 'colors',
-			'tone': 'tones',
-			'special': 'special',
-			'category': 'categories',
-			'tag': 'tags',
-			'vibe': 'vibes'
-		};
-
-		const filterKey = filterMap[filterType];
-		if (!filterKey || !this.activeFilters[filterKey]) {
-			console.warn(`Unknown filter type: ${filterType}`);
+		const filterKey = this.getFilterKey(filterType);
+		if (!filterKey || !(filterKey in this.activeFilters)) {
+			dbg(`Unknown filter type: ${filterType}`);
 			return;
 		}
 
-		// Toggle chip active state
-		chip.classList.toggle('active');
-
-		// Update the corresponding filter Set
-		const filterSet = this.activeFilters[filterKey];
-		if (filterSet.has(value)) {
-			filterSet.delete(value);
+		if (filterKey === 'animated') {
+			const nextValue = chip.dataset.animated === 'true';
+			this.activeFilters.animated = this.activeFilters.animated === nextValue ? null : nextValue;
 		} else {
-			filterSet.add(value);
+			const filterSet = this.activeFilters[filterKey];
+			if (filterSet.has(value)) {
+				filterSet.delete(value);
+			} else {
+				filterSet.add(value);
+			}
 		}
+		this.syncFilterControls();
 
 		// Re-render and update UI
 		this.browser.refresh();
@@ -255,7 +265,7 @@ class ContentManager {
 	applyFilters() {
 		const allContent = this.getAllContent();
 
-		return allContent.filter(item => {
+		const filtered = allContent.filter(item => {
 			// Search filter - delegates to child for custom logic
 			if (this.activeFilters.search) {
 				if (!this.matchesSearch(item)) return false;
@@ -286,27 +296,74 @@ class ContentManager {
 
 			return true;
 		});
+
+		if (this.activeFilters.search) {
+			filtered.sort((left, right) => this.getSearchScore(right) - this.getSearchScore(left));
+		}
+
+		return filtered;
+	}
+
+	normalizeSearchText(value) {
+		return String(value || '')
+			.normalize('NFKD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, ' ')
+			.trim();
+	}
+
+	getSearchText(item) {
+		const name = this.normalizeSearchText(item.name);
+		if (this.activeFilters.nameOnly) return { name, document: name };
+
+		const document = [
+			item.name,
+			item.generatedName,
+			item.stickerText,
+			...(item.tags || []),
+			...(item.searchTerms || [])
+		].map((value) => this.normalizeSearchText(value)).filter(Boolean).join(' ');
+		return { name, document };
+	}
+
+	searchTermMatches(tokens, term) {
+		return tokens.some((token) => token === term || (term.length >= 2 && token.startsWith(term)));
 	}
 
 	matchesSearch(item) {
-		const query = this.activeFilters.search.toLowerCase();
-		const name = item.name.toLowerCase();
+		const query = this.normalizeSearchText(this.activeFilters.search);
+		if (!query) return true;
+		const { document } = this.getSearchText(item);
+		const tokens = document.split(' ');
+		return query.split(' ').every((term) => this.searchTermMatches(tokens, term));
+	}
 
-		if (this.activeFilters.nameOnly) {
-			return name.includes(query);
-		} else {
-			const tagsString = (item.tags || []).join(' ').toLowerCase();
-			const aliasesString = (item.searchTerms || []).join(' ').toLowerCase();
-			const stickerText = (item.stickerText || '').toLowerCase();
-			return name.includes(query) || tagsString.includes(query) || aliasesString.includes(query) || stickerText.includes(query);
-		}
+	getSearchScore(item) {
+		const query = this.normalizeSearchText(this.activeFilters.search);
+		if (!query) return 0;
+		const terms = query.split(' ');
+		const { name, document } = this.getSearchText(item);
+		const nameTokens = name.split(' ');
+		const documentTokens = document.split(' ');
+		let score = 0;
+		if (name === query) score += 100;
+		else if (name.startsWith(query)) score += 60;
+		score += terms.reduce((total, term) => {
+			if (nameTokens.includes(term)) return total + 12;
+			if (this.searchTermMatches(nameTokens, term)) return total + 8;
+			if (documentTokens.includes(term)) return total + 3;
+			return total + (this.searchTermMatches(documentTokens, term) ? 1 : 0);
+		}, 0);
+		return score;
 	}
 
 	matchesColors(item) {
 		if (!item.tags) return false;
 
+		const tags = item.tags.map((tag) => tag.toLowerCase());
 		return [...this.activeFilters.colors].some(color =>
-			item.tags.some(tag => tag.toLowerCase() === color.toLowerCase())
+			this.getColorAliases(color).some((candidate) => tags.includes(candidate))
 		);
 	}
 
@@ -358,16 +415,41 @@ class ContentManager {
 		this.updateClearFiltersButton();
 	}
 
-	toggleFiltersUI() {
+	toggleFiltersUI(forceVisible = null) {
 		if (!this.ui.filtersContainer || !this.ui.filterToggle) return;
 
-		const isVisible = this.ui.filtersContainer.classList.toggle('visible');
+		const isVisible = forceVisible == null
+			? !this.ui.filtersContainer.classList.contains('visible')
+			: Boolean(forceVisible);
+		this.ui.filtersContainer.classList.toggle('visible', isVisible);
 		this.ui.filterToggle.classList.toggle('active', isVisible);
+		this.ui.filterToggle.setAttribute('aria-expanded', String(isVisible));
+		this.ui.filterToggle.title = isVisible ? 'Close filters' : 'Open filters';
+
+		const searchSection = this.ui.searchInput?.closest('.gallery-search-section');
+		searchSection?.classList.toggle('filters-open', isVisible);
+		searchSection?.classList.toggle('filters-returning', !isVisible);
+		this.updateClearFiltersButton();
+
+		const mobileManager = this.editor.mobileManager;
+		if (!mobileManager?.isMobile || mobileManager.activeDrawer !== 'design') return;
+
+		if (isVisible) {
+			if (this.filterSheetHeight == null) this.filterSheetHeight = mobileManager.sheetHeight;
+			mobileManager.setSheetHeight(85);
+			return;
+		}
+
+		if (this.filterSheetHeight != null) {
+			mobileManager.setSheetHeight(this.filterSheetHeight);
+			this.filterSheetHeight = null;
+		}
 	}
 
 	hasActiveFilters() {
 		for (let key in this.activeFilters) {
 			const val = this.activeFilters[key];
+			if (key === 'nameOnly' && !this.activeFilters.search) continue;
 			if (val instanceof Set) {
 				if (val.size > 0) return true;
 				continue; // an empty Set is not an active filter
@@ -382,10 +464,10 @@ class ContentManager {
 	updateClearFiltersButton() {
 		const hasActive = this.hasActiveFilters();
 		if (this.ui.clearFiltersBtn) this.ui.clearFiltersBtn.disabled = !hasActive;
-		if (this.ui.clearActiveFiltersBtn) this.ui.clearActiveFiltersBtn.hidden = !hasActive;
 
 		const filterCount = Object.entries(this.activeFilters).reduce((count, [key, value]) => {
 			if (key === 'search') return count;
+			if (key === 'nameOnly' && !this.activeFilters.search) return count;
 			if (value instanceof Set) return count + value.size;
 			if (key === 'animated') return count + (value !== null ? 1 : 0);
 			return count + (value !== null && value !== '' && value !== false ? 1 : 0);
@@ -394,35 +476,138 @@ class ContentManager {
 		searchSection?.classList.toggle('has-active-search', Boolean(this.activeFilters.search));
 		searchSection?.classList.toggle('has-active-filters', filterCount > 0);
 		this.renderActiveFilterSummary();
+		this.updateFilterResultsCount();
 
 		if (this.ui.filterToggle) {
+			const isOpen = this.ui.filtersContainer?.classList.contains('visible');
 			this.ui.filterToggle.classList.toggle('has-active-filters', filterCount > 0);
 			this.ui.filterToggle.title = filterCount > 0
-				? `${filterCount} active filter${filterCount === 1 ? '' : 's'}`
-				: 'Toggle filters';
+				? `${isOpen ? 'Close' : 'Open'} filters — ${filterCount} active`
+				: `${isOpen ? 'Close' : 'Open'} filters`;
 		}
+	}
+
+	updateFilterResultsCount() {
+		if (!this.ui.closeFiltersBtn) return;
+		const count = this.applyFilters().length;
+		this.ui.closeFiltersBtn.textContent = `Show ${count} result${count === 1 ? '' : 's'}`;
+		this.ui.closeFiltersBtn.setAttribute('aria-label', `Close filters and show ${count} result${count === 1 ? '' : 's'}`);
+	}
+
+	getFilterKey(filterType) {
+		return {
+			color: 'colors',
+			tone: 'tones',
+			intensity: 'intensities',
+			temperature: 'temperatures',
+			special: 'special',
+			category: 'categories',
+			tag: 'tags',
+			vibe: 'vibes',
+			animated: 'animated'
+		}[filterType] || null;
+	}
+
+	getColorAliases(color) {
+		return {
+			neutral: ['neutral', 'grayscale', 'black', 'white', 'gray'],
+			earth: ['brown', 'beige', 'tan', 'cream'],
+			metallic: ['silver', 'gold', 'bronze']
+		}[color] || [color];
+	}
+
+	itemMatchesFacet(item, key, value) {
+		if (key === 'animated') return item.isAnimated === value;
+		if (key === 'categories') return item.category === value;
+		const tags = (item.tags || []).map((tag) => tag.toLowerCase());
+		if (key === 'colors') return this.getColorAliases(value).some((candidate) => tags.includes(candidate));
+		return tags.includes(String(value).toLowerCase());
+	}
+
+	updateFacetAvailability() {
+		const content = this.getAllContent();
+		this.ui.filtersContainer?.querySelectorAll('.filter-chip').forEach((chip) => {
+			const key = this.getFilterKey(chip.dataset.filter);
+			if (!key) return;
+			const value = key === 'animated'
+				? chip.dataset.animated === 'true'
+				: (chip.dataset.value || chip.dataset.color);
+			const count = content.reduce((total, item) => total + (this.itemMatchesFacet(item, key, value) ? 1 : 0), 0);
+			chip.hidden = count === 0;
+			chip.dataset.count = String(count);
+			const baseLabel = chip.dataset.filterLabel || chip.title || chip.textContent.trim();
+			if (baseLabel) {
+				chip.dataset.filterLabel = baseLabel;
+				chip.title = `${baseLabel} (${count})`;
+				chip.setAttribute('aria-label', `${baseLabel}, ${count} item${count === 1 ? '' : 's'}`);
+			}
+			chip.querySelector('.filter-chip-count')?.remove();
+		});
+	}
+
+	syncFilterControls() {
+		this.ui.filtersContainer?.querySelectorAll('.filter-chip').forEach((chip) => {
+			const key = this.getFilterKey(chip.dataset.filter);
+			const value = chip.dataset.value || chip.dataset.color;
+			const active = key && this.activeFilters[key] instanceof Set
+				? this.activeFilters[key].has(value)
+				: (chip.dataset.filter === 'animated' && this.activeFilters.animated === (chip.dataset.animated === 'true'));
+			chip.classList.toggle('active', Boolean(active));
+			chip.setAttribute('aria-pressed', String(Boolean(active)));
+		});
+		if (this.ui.searchNameOnly) this.ui.searchNameOnly.checked = Boolean(this.activeFilters.nameOnly);
+	}
+
+	removeFilter(key, value = null) {
+		if (!(key in this.activeFilters)) return;
+		const active = this.activeFilters[key];
+		if (active instanceof Set) active.delete(value);
+		else if (key === 'animated') this.activeFilters.animated = null;
+		else if (typeof active === 'boolean') this.activeFilters[key] = false;
+		else this.activeFilters[key] = '';
+
+		if (key === 'search') {
+			if (this.ui.searchInput) this.ui.searchInput.value = '';
+			this.browser.handleSearch('');
+		}
+		this.syncFilterControls();
+		if (!this.activeFilters.search && this.browser.state === 'SEARCH_RESULTS') this.browser.setState('CATEGORY_LIST');
+		else this.browser.refresh();
+		this.updateClearFiltersButton();
 	}
 
 	renderActiveFilterSummary() {
 		const summary = this.ui.activeFilterSummary;
 		if (!summary) return;
-		const labels = [];
-		const humanize = (value) => String(value).replace(/[-_]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
-		if (this.activeFilters.search) labels.push(`Search: “${this.ui.searchInput?.value.trim() || this.activeFilters.search}”`);
+		const filters = [];
+		const labelAliases = { neutral: 'Neutrals', earth: 'Earth tones', metallic: 'Metallics' };
+		const humanize = (value) => labelAliases[value] || String(value).replace(/[-_]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+		if (this.activeFilters.search) filters.push({ key: 'search', label: `Search: “${this.ui.searchInput?.value.trim() || this.activeFilters.search}”` });
 		Object.entries(this.activeFilters).forEach(([key, value]) => {
 			if (key === 'search' || key === 'nameOnly') return;
-			if (value instanceof Set) value.forEach((entry) => labels.push(humanize(entry)));
-			else if (key === 'animated' && value !== null) labels.push(value ? 'Animated' : 'Static');
-			else if (value !== null && value !== '' && value !== false) labels.push(humanize(value));
+			if (value instanceof Set) value.forEach((entry) => filters.push({ key, value: entry, label: humanize(entry) }));
+			else if (key === 'animated' && value !== null) filters.push({ key, label: value ? 'Animated' : 'Static' });
+			else if (value !== null && value !== '' && value !== false) filters.push({ key, label: humanize(value) });
 		});
-		if (this.activeFilters.nameOnly) labels.push('Name only');
-		summary.replaceChildren(...labels.map((label) => {
-			const chip = document.createElement('span');
+		if (this.activeFilters.search && this.activeFilters.nameOnly) filters.push({ key: 'nameOnly', label: 'Name only' });
+		summary.replaceChildren(...filters.map((filter) => {
+			const chip = document.createElement('button');
+			chip.type = 'button';
 			chip.className = 'active-filter-summary-chip';
-			chip.textContent = label;
+			chip.setAttribute('aria-label', `Remove ${filter.label} filter`);
+			const label = document.createElement('span');
+			label.textContent = filter.label;
+			const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+			icon.setAttribute('class', 'icon');
+			icon.setAttribute('aria-hidden', 'true');
+			const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+			use.setAttribute('href', '#icon-x-mark');
+			icon.appendChild(use);
+			chip.append(label, icon);
+			chip.addEventListener('click', () => this.removeFilter(filter.key, filter.value));
 			return chip;
 		}));
-		summary.hidden = labels.length === 0;
+		summary.hidden = filters.length === 0;
 	}
 
 	clearFilters() {
@@ -434,6 +619,8 @@ class ContentManager {
 				val.clear();
 			} else if (typeof val === 'string') {
 				this.activeFilters[key] = '';
+			} else if (typeof val === 'boolean') {
+				this.activeFilters[key] = false;
 			} else {
 				this.activeFilters[key] = null;
 			}
@@ -447,25 +634,13 @@ class ContentManager {
 			this.ui.searchInput.value = '';
 		}
 
-		// Clear all active filter chips in the panel
-		if (this.ui.filtersContainer) {
-			this.ui.filtersContainer.querySelectorAll('.filter-chip').forEach(chip => {
-				chip.classList.remove('active');
-			});
-		}
+		this.syncFilterControls();
 
 		// Re-render and update button state
+		this.browser.handleSearch('');
 		this.browser.setState('CATEGORY_LIST');
 
 		this.updateClearFiltersButton();
-
-		// Close filter drawer
-		if (this.ui.filtersContainer) {
-			this.ui.filtersContainer.classList.remove('visible');
-		}
-		if (this.ui.filterToggle) {
-			this.ui.filterToggle.classList.remove('active');
-		}
 	}
 	// ===== UTILITY METHODS =====
 

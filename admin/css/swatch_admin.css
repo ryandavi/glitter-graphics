@@ -84,6 +84,16 @@
   --btn-secondary-filter-hover: saturate(0.5) contrast(0.9) brightness(1);
   --btn-secondary-filter-active: saturate(0.7) contrast(1.1) brightness(1.15);
   --btn-text-color: var(--color-text-primary);
+  --danger-btn-gradient: linear-gradient(to bottom,
+  	color-mix(in srgb, var(--color-danger-bright) 30%, white) 0%,
+  	color-mix(in srgb, var(--color-danger-bright) 72%, var(--color-danger)) 40%,
+  	color-mix(in srgb, var(--color-danger) 62%, black) 50%,
+  	color-mix(in srgb, var(--color-danger) 62%, black) 70%,
+  	color-mix(in srgb, var(--color-danger-bright) 58%, white) 100%);
+  --danger-btn-border-color: color-mix(in srgb, var(--color-danger) 75%, black);
+  --danger-btn-text-color: #fff;
+  --danger-btn-hover-filter: brightness(1.12) saturate(1.08);
+  --danger-btn-active-filter: brightness(0.88) saturate(1.05);
   /* Gloss buttons are rimless by default; themes whose source UI rims its
      controls (XP's #7f9db9, Aqua/gel edges) set a color to ground them. */
   --btn-border-color: var(--gray-800);
@@ -122,6 +132,9 @@
   --panel-backdrop: none;
   /* Canvas workspace floor — must contrast with both dark and white canvases */
   --color-bg-workspace: var(--color-bg-secondary);
+  /* Miniature page in New Canvas preset cards. It stays a distinct surface
+     from the button so each preset's aspect ratio remains easy to scan. */
+  --new-canvas-preview-bg: var(--color-border);
   /* Modal overlay scrim behind .modal-content */
   --color-overlay: rgba(0, 0, 0, 0.85);
   /* Stronger scrim for text painted directly over arbitrary photo content
@@ -146,7 +159,7 @@
   --color-accent-active: var(--blue-300);
   --color-accent-visited: var(--blue-100);
   /* Animated accent used by modal link hovers, reference highlights, and the
-     Guide hero. Theme overrides choose an asset by sampled dominant color,
+     Guide hero. Theme overrides choose an asset by sampled average color,
      then by the theme's accent/personality rather than filename alone. */
   --theme-glitter-image: url("../images/glitter/sparkle/glitter_sapphire.gif");
   --color-danger: var(--red-100);
@@ -973,6 +986,17 @@
      dark-on-dark */
   --swatch-empty-outline: var(--gray-400);
   --swatch-empty-bg: var(--gray-500);
+  --new-canvas-preview-bg: var(--color-bg-secondary);
+  --danger-btn-gradient: linear-gradient(to bottom,
+  	color-mix(in srgb, var(--color-danger-bright) 12%, white) 0%,
+  	color-mix(in srgb, var(--color-danger-bright) 38%, white) 40%,
+  	color-mix(in srgb, var(--color-danger) 62%, white) 50%,
+  	color-mix(in srgb, var(--color-danger) 62%, white) 70%,
+  	color-mix(in srgb, var(--color-danger-bright) 22%, white) 100%);
+  --danger-btn-border-color: color-mix(in srgb, var(--color-danger) 55%, white);
+  --danger-btn-text-color: color-mix(in srgb, var(--color-danger) 74%, black);
+  --danger-btn-hover-filter: brightness(0.98) saturate(1.12);
+  --danger-btn-active-filter: brightness(0.92) saturate(1.08);
   /* Context-bar slider tracks: the panel track token is a near-surface tint
      on these ramps and vanishes against the floating glass bars — drop to
      the mid ramp step for real contrast. */
