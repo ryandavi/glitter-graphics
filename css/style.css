@@ -730,6 +730,16 @@
   --swatch-empty-outline: var(--gray-400);
   --swatch-empty-bg: var(--gray-500);
   --new-canvas-preview-bg: var(--color-bg-secondary);
+  --danger-btn-gradient: linear-gradient(to bottom,
+  	color-mix(in srgb, var(--color-danger-bright) 12%, white) 0%,
+  	color-mix(in srgb, var(--color-danger-bright) 38%, white) 40%,
+  	color-mix(in srgb, var(--color-danger) 62%, white) 50%,
+  	color-mix(in srgb, var(--color-danger) 62%, white) 70%,
+  	color-mix(in srgb, var(--color-danger-bright) 22%, white) 100%);
+  --danger-btn-border-color: color-mix(in srgb, var(--color-danger) 55%, white);
+  --danger-btn-text-color: color-mix(in srgb, var(--color-danger) 74%, black);
+  --danger-btn-hover-filter: brightness(0.98) saturate(1.12);
+  --danger-btn-active-filter: brightness(0.92) saturate(1.08);
   /* Context-bar slider tracks: the panel track token is a near-surface tint
      on these ramps and vanishes against the floating glass bars — drop to
      the mid ramp step for real contrast. */
@@ -821,6 +831,16 @@
   --btn-secondary-filter-hover: saturate(0.5) contrast(0.9) brightness(1);
   --btn-secondary-filter-active: saturate(0.7) contrast(1.1) brightness(1.15);
   --btn-text-color: var(--color-text-primary);
+  --danger-btn-gradient: linear-gradient(to bottom,
+  	color-mix(in srgb, var(--color-danger-bright) 30%, white) 0%,
+  	color-mix(in srgb, var(--color-danger-bright) 72%, var(--color-danger)) 40%,
+  	color-mix(in srgb, var(--color-danger) 62%, black) 50%,
+  	color-mix(in srgb, var(--color-danger) 62%, black) 70%,
+  	color-mix(in srgb, var(--color-danger-bright) 58%, white) 100%);
+  --danger-btn-border-color: color-mix(in srgb, var(--color-danger) 75%, black);
+  --danger-btn-text-color: #fff;
+  --danger-btn-hover-filter: brightness(1.12) saturate(1.08);
+  --danger-btn-active-filter: brightness(0.88) saturate(1.05);
   /* Gloss buttons are rimless by default; themes whose source UI rims its
      controls (XP's #7f9db9, Aqua/gel edges) set a color to ground them. */
   --btn-border-color: var(--gray-800);
@@ -6534,6 +6554,21 @@ body.tool-select .preview-canvas {
   align-items: center;
   aspect-ratio: unset;
 }
+.modal-overlay > .modal-content .modal-action {
+  min-height: 36px;
+  padding-inline: var(--spacing-lg);
+}
+.modal-overlay > .modal-content .modal-action-hero {
+  min-height: 40px;
+  padding-inline: var(--spacing-xl);
+}
+.modal-overlay > .modal-content .modal-action-danger {
+  --btn-gradient: var(--danger-btn-gradient);
+  --btn-border-color: var(--danger-btn-border-color);
+  --btn-text-color: var(--danger-btn-text-color);
+  --btn-hover-filter: var(--danger-btn-hover-filter);
+  --btn-active-filter: var(--danger-btn-active-filter);
+}
 
 .modal-loading,
 .modal-error {
@@ -7264,6 +7299,11 @@ body.tool-select .preview-canvas {
   }
 }
 
+@media (max-width: 800px) {
+  .modal-overlay > .modal-content .modal-action {
+    min-height: var(--touch-target-min);
+  }
+}
 #welcomeModal .version-history,
 #aboutModal .version-history {
   display: flex;

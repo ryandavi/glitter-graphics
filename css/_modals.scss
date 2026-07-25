@@ -259,6 +259,24 @@
 
 		}
 
+		.modal-action {
+			min-height: 36px;
+			padding-inline: var(--spacing-lg);
+		}
+
+		.modal-action-hero {
+			min-height: 40px;
+			padding-inline: var(--spacing-xl);
+		}
+
+		.modal-action-danger {
+			--btn-gradient: var(--danger-btn-gradient);
+			--btn-border-color: var(--danger-btn-border-color);
+			--btn-text-color: var(--danger-btn-text-color);
+			--btn-hover-filter: var(--danger-btn-hover-filter);
+			--btn-active-filter: var(--danger-btn-active-filter);
+		}
+
 	}
 
 
@@ -1240,6 +1258,12 @@
 				min-height: 48px;
 			}
 		}
+	}
+}
+
+@media (max-width: 800px) {
+	.modal-overlay > .modal-content .modal-action {
+		min-height: var(--touch-target-min);
 	}
 }
 

@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=197">
+	<link rel="stylesheet" href="css/style.css?v=200">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1527,12 +1527,12 @@
 			<div class="modal-footer right">
 
 				<!-- Cancel -->
-				<button class="btn-simple cancel secondary" id="createCanvasCloseBtn">
+				<button class="btn-simple modal-action cancel secondary" id="createCanvasCloseBtn">
 					Cancel
 				</button>
 
 				<!-- Create Canvas -->
-				<button class="btn-text-with-icon icon-wrapper primary" id="createCanvasBtn">
+				<button class="btn-text-with-icon icon-wrapper modal-action primary" id="createCanvasBtn">
 					<svg class="icon">
 						<use href="#icon-plus"></use>
 					</svg>
@@ -1616,21 +1616,21 @@
 				<div class="export-preview-instructions" role="note" aria-live="polite"></div>
 			</div>
 			<div class="modal-footer">
-				<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewShare">
+				<button class="btn-text-with-icon icon-wrapper modal-action btn-secondary" id="exportPreviewShare">
 					<svg class="icon">
 						<use href="#icon-share"></use>
 					</svg>
 					<span class="name">Share</span>
 				</button>
 
-				<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewSave">
+				<button class="btn-text-with-icon icon-wrapper modal-action btn-secondary" id="exportPreviewSave">
 					<svg class="icon">
 						<use href="#icon-export"></use>
 					</svg>
 					<span class="name">Save</span>
 				</button>
 
-				<button class="btn-text-with-icon icon-wrapper btn-secondary" id="exportPreviewOpen">
+				<button class="btn-text-with-icon icon-wrapper modal-action btn-secondary" id="exportPreviewOpen">
 					<svg class="icon">
 						<use href="#icon-new-window"></use>
 					</svg>
@@ -1741,8 +1741,8 @@
 				<div class="confirmation-message" id="confirmationModalMessage">Are you sure?</div>
 			</div>
 			<div class="modal-footer right">
-				<button class="btn-simple secondary" id="confirmationCancelBtn">Cancel</button>
-				<button class="btn-simple primary" id="confirmationConfirmBtn">Confirm</button>
+				<button class="btn-simple modal-action secondary" id="confirmationCancelBtn">Cancel</button>
+				<button class="btn-simple modal-action primary" id="confirmationConfirmBtn">Confirm</button>
 			</div>
 		</div>
 	</div>
@@ -1764,7 +1764,7 @@
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Panel Layout</div><div class="settings-row-control"><button class="btn-simple" id="resetPanelLayout" type="button">Reset Panels</button></div></div><div class="settings-row-label-desc">Expand all collapsible property and tool groups.</div></div>
 				</div>
 			</div>
-			<div class="modal-footer left-right"><button class="btn-text secondary reset-all-settings-btn">Reset All Settings</button><button class="btn-simple modal-close" id="closeSettingsModalFooter">Close</button></div></div>
+			<div class="modal-footer left-right"><button class="btn-text modal-action secondary reset-all-settings-btn">Reset All Settings</button><button class="btn-simple modal-action modal-close" id="closeSettingsModalFooter">Close</button></div></div>
 	</div>
 
 	<!-- Export Settings Modal -->
@@ -2007,10 +2007,10 @@
 
 			<!-- Footer with Reset All button -->
 			<div class="modal-footer left-right">
-				<button class="btn-text secondary reset-export-settings-btn">
+				<button class="btn-text modal-action secondary reset-export-settings-btn">
 					Reset Export Settings
 				</button>
-				<button class="btn-simple modal-close" id="closeExportSettingsModalFooter">Close</button>
+				<button class="btn-simple modal-action modal-close" id="closeExportSettingsModalFooter">Close</button>
 			</div>
 
 
@@ -2181,11 +2181,11 @@
 					<span>Don't show on startup</span>
 				</label>
 				<div class="welcome-actions">
-					<button class="btn-text-with-icon icon-wrapper" id="welcomeTakeTourBtn">
+					<button class="btn-text-with-icon icon-wrapper modal-action modal-action-hero" id="welcomeTakeTourBtn">
 						<svg class="icon"><use href="#icon-question-circle"></use></svg>
 						<span class="name">Open Tutorial</span>
 					</button>
-					<button class="btn-text-with-icon icon-wrapper" id="welcomeStartCreatingBtn">
+					<button class="btn-text-with-icon icon-wrapper modal-action modal-action-hero" id="welcomeStartCreatingBtn">
 						<svg class="icon"><use href="#icon-plus"></use></svg>
 						<span class="name">Start Creating</span>
 					</button>
@@ -2704,7 +2704,7 @@
 	<script src="js/classes/MobileManager.js?v=17"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=173"></script>
+	<script src="js/app.js?v=174"></script>
 
 </body>
 

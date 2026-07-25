@@ -3799,6 +3799,7 @@ setupWelcomeModalListeners() {
 			}
 		}
 		if (confirmBtn) confirmBtn.textContent = confirmLabel;
+		confirmBtn?.classList.toggle('modal-action-danger', destructive);
 		if (cancelBtn) cancelBtn.textContent = cancelLabel;
 
 		this.pendingConfirmationValue = false;

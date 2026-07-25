@@ -864,6 +864,16 @@
 	--swatch-empty-outline: var(--gray-400);
 	--swatch-empty-bg: var(--gray-500);
 	--new-canvas-preview-bg: var(--color-bg-secondary);
+	--danger-btn-gradient: linear-gradient(to bottom,
+		color-mix(in srgb, var(--color-danger-bright) 12%, white) 0%,
+		color-mix(in srgb, var(--color-danger-bright) 38%, white) 40%,
+		color-mix(in srgb, var(--color-danger) 62%, white) 50%,
+		color-mix(in srgb, var(--color-danger) 62%, white) 70%,
+		color-mix(in srgb, var(--color-danger-bright) 22%, white) 100%);
+	--danger-btn-border-color: color-mix(in srgb, var(--color-danger) 55%, white);
+	--danger-btn-text-color: color-mix(in srgb, var(--color-danger) 74%, black);
+	--danger-btn-hover-filter: brightness(0.98) saturate(1.12);
+	--danger-btn-active-filter: brightness(0.92) saturate(1.08);
 
 	/* Context-bar slider tracks: the panel track token is a near-surface tint
 	   on these ramps and vanishes against the floating glass bars — drop to
