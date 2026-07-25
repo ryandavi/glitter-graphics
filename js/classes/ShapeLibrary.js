@@ -73,7 +73,31 @@ DEFS: {
 	triangle: { viewBox: 24, svg: 'M12 2 L22 21 L2 21 Z' },
 	diamond: { viewBox: 24, svg: 'M12 1 L22 12 L12 23 L2 12 Z' },
 	pentagon: { viewBox: 24, svg: 'M12 2 L22 9.3 L18.2 21 L5.8 21 L2 9.3 Z' },
-	hexagon: { viewBox: 24, svg: 'M6.5 2.5 L17.5 2.5 L23 12 L17.5 21.5 L6.5 21.5 L1 12 Z' }
+	hexagon: { viewBox: 24, svg: 'M6.5 2.5 L17.5 2.5 L23 12 L17.5 21.5 L6.5 21.5 L1 12 Z' },
+	octagon: { viewBox: 24, svg: 'M7 1 L17 1 L23 7 L23 17 L17 23 L7 23 L1 17 L1 7 Z' },
+	roundedRectangle: { viewBox: 24, svg: 'M6 2 H18 Q22 2 22 6 V18 Q22 22 18 22 H6 Q2 22 2 18 V6 Q2 2 6 2 Z' },
+	sunburst: {
+		viewBox: 24,
+		svg: 'M12 0 L15.06 4.61 L20.49 3.51 L19.39 8.94 L24 12 L19.39 15.06 L20.49 20.49 L15.06 19.39 L12 24 L8.94 19.39 L3.51 20.49 L4.61 15.06 L0 12 L4.61 8.94 L3.51 3.51 L8.94 4.61 Z'
+	},
+	crescentMoon: {
+		viewBox: 24,
+		svg: 'M19.8 18.4 C17.7 20.7 14.8 22 11.6 22 C5.3 22 .2 16.9 .2 10.6 C.2 5.1 4.1 .4 9.4 0 C7 2.2 5.5 5.4 5.5 8.9 C5.5 15 10.5 20 16.6 20 C17.7 20 18.8 19.8 19.8 18.4 Z'
+	},
+	cloud: {
+		viewBox: 24,
+		svg: 'M5 20 C2.2 20 0 17.8 0 15 C0 12.4 2 10.2 4.6 10 C5.4 6.5 8.4 4 12 4 C16 4 19.2 7 19.5 10.8 C22.1 11.2 24 13.1 24 15.5 C24 18 22 20 19.5 20 Z'
+	},
+	lightningBolt: { viewBox: 24, svg: 'M14 1 L4 13 H10 L8 23 L20 9 H14 Z' },
+	rightArrow: { viewBox: 24, svg: 'M2 8 H13 V3 L22 12 L13 21 V16 H2 Z' },
+	fourLeafClover: {
+		viewBox: 24,
+		svg: 'M12 11 C10 7 7 3 4 4 C1 5 2 10 7 12 C2 14 1 19 4 20 C7 21 10 17 12 13 C14 17 17 21 20 20 C23 19 22 14 17 12 C22 10 23 5 20 4 C17 3 14 7 12 11 Z'
+	},
+	speechBubble: {
+		viewBox: 24,
+		svg: 'M5 3 H19 Q22 3 22 6 V14 Q22 17 19 17 H13 L8 22 L9 17 H5 Q2 17 2 14 V6 Q2 3 5 3 Z'
+	}
 },
 
 	// Build (once) the Path2D and its rasterized content bounds for a shape.
@@ -194,8 +218,8 @@ DEFS: {
 	}
 };
 
-// Catalogs (id + label + brushOnly) derived from DEFS. Gallery order is the
-// insertion order below.
+// Catalogs derived from DEFS. Category metadata controls the Design gallery's
+// section order; the compact Shape Properties picker remains a single grid.
 ShapeLibrary.BRUSH_SHAPES = [
 	{ id: 'round', label: 'Round' }, // round tip is a soft radial gradient, not a traced path (see MaskEditor._drawRoundStamp)
 	{ id: 'square', label: 'Square' },
@@ -204,20 +228,34 @@ ShapeLibrary.BRUSH_SHAPES = [
 	{ id: 'heart', label: 'Heart' }
 ];
 
+ShapeLibrary.FILL_SHAPE_CATEGORIES = [
+	{ id: 'basic', label: 'Basic Shapes' },
+	{ id: 'decorative', label: 'Decorative Shapes' }
+];
+
 ShapeLibrary.FILL_SHAPES = [
-	{ id: 'circle', label: 'Circle' },
-	{ id: 'square', label: 'Square' },
-	{ id: 'triangle', label: 'Triangle' },
-	{ id: 'diamond', label: 'Diamond' },
-	{ id: 'pentagon', label: 'Pentagon' },
-	{ id: 'hexagon', label: 'Hexagon' },
-	{ id: 'star', label: 'Star' },
-	{ id: 'puffyStar', label: 'Puffy Star' },
-	{ id: 'roundedStar', label: 'Rounded Star' },
-	{ id: 'sparkle', label: 'Sparkle' },
-	{ id: 'heart', label: 'Heart' },
-	{ id: 'rounderHeart', label: 'Rounder Heart' },
-	{ id: 'fivePetalFlower', label: '5-Petal Flower' },
-	{ id: 'eightPetalFlower', label: '8-Petal Flower' },
-	{ id: 'spiral', label: 'Spiral' }
+	{ id: 'circle', label: 'Circle', category: 'basic' },
+	{ id: 'square', label: 'Square', category: 'basic' },
+	{ id: 'triangle', label: 'Triangle', category: 'basic' },
+	{ id: 'diamond', label: 'Diamond', category: 'basic' },
+	{ id: 'pentagon', label: 'Pentagon', category: 'basic' },
+	{ id: 'hexagon', label: 'Hexagon', category: 'basic' },
+	{ id: 'octagon', label: 'Octagon', category: 'basic' },
+	{ id: 'roundedRectangle', label: 'Rounded Rectangle', category: 'basic' },
+	{ id: 'star', label: 'Star', category: 'decorative' },
+	{ id: 'puffyStar', label: 'Puffy Star', category: 'decorative' },
+	{ id: 'roundedStar', label: 'Rounded Star', category: 'decorative' },
+	{ id: 'sparkle', label: 'Sparkle', category: 'decorative' },
+	{ id: 'sunburst', label: 'Sunburst', category: 'decorative' },
+	{ id: 'heart', label: 'Heart', category: 'decorative' },
+	{ id: 'rounderHeart', label: 'Rounder Heart', category: 'decorative' },
+	{ id: 'fivePetalFlower', label: '5-Petal Flower', category: 'decorative' },
+	{ id: 'eightPetalFlower', label: '8-Petal Flower', category: 'decorative' },
+	{ id: 'spiral', label: 'Spiral', category: 'decorative' },
+	{ id: 'crescentMoon', label: 'Crescent Moon', category: 'decorative' },
+	{ id: 'cloud', label: 'Cloud', category: 'decorative' },
+	{ id: 'lightningBolt', label: 'Lightning Bolt', category: 'decorative' },
+	{ id: 'rightArrow', label: 'Right Arrow', category: 'decorative' },
+	{ id: 'fourLeafClover', label: '4-Leaf Clover', category: 'decorative' },
+	{ id: 'speechBubble', label: 'Speech Bubble', category: 'decorative' }
 ];

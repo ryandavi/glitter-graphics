@@ -78,6 +78,34 @@
 	@include gloss-button(true);
 }
 
+// Professional tool surfaces opt into a flat control profile without changing editor chrome.
+.admin-tool {
+	.btn,
+	.btn-icon,
+	.btn-simple,
+	.btn-text-with-icon {
+		min-height: 32px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-secondary);
+		box-shadow: none;
+		filter: none;
+		transform: none;
+		transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+
+		&:focus-visible {
+			outline: 2px solid var(--color-accent);
+			outline-offset: 2px;
+		}
+
+		&:hover:not(:disabled) {
+			border-color: var(--color-border-hover);
+			background: var(--color-bg-tertiary);
+			filter: none;
+		}
+	}
+}
+
 .btn-text-with-icon {
 	display: flex;
 	align-items: center;

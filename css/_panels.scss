@@ -2819,8 +2819,35 @@ body.mask-editing {
 
 .text-box-mode-group { width: 100%; }
 
-.shape-gallery-grid {
+.shape-gallery-categories {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
 	padding: var(--spacing-md);
+
+	>.shape-gallery-section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+
+		>.shape-gallery-heading {
+			margin: 0;
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-sm);
+			font-weight: 600;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+		}
+	}
+}
+
+#shapesOptions {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
+}
+
+.shape-gallery-grid {
 
 	>.shape-gallery-option {
 		display: grid;
@@ -3293,6 +3320,12 @@ body.mask-editing {
 #autoGlitterSettingsSection {
 	> #autoGlitterSettingsContent { padding: 0; }
 
+	.auto-glitter-preview-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
 	&.is-open > .section-content.visible { overflow: hidden; }
 
 	.settings-subsection {
@@ -3372,6 +3405,12 @@ body.mask-editing {
 		}
 
 		&:has(input:focus-visible) { box-shadow: inset var(--control-focus-ring); }
+	}
+
+	#autoGlitterRerunMode > .segmented-option {
+		min-width: 0;
+		padding-right: var(--spacing-xs);
+		padding-left: var(--spacing-xs);
 	}
 
 	.auto-glitter-status {

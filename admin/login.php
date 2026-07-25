@@ -44,9 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login</title>
-    <link rel="stylesheet" href="css/swatch_admin.css?v=2">
+    <link rel="stylesheet" href="css/swatch_admin.css?v=13">
 </head>
-<body>
+<body class="admin-tool">
     <div class="container" style="min-height: 100vh; align-items: center; justify-content: center;">
         <div class="modal-content" style="display: block; max-width: 420px; width: 100%;">
             <div class="modal-header">

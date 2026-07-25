@@ -1,4 +1,11 @@
 <?php
+require_once(__DIR__ . '/assetPathService.php');
+require_once(__DIR__ . '/assetAnalysisResult.php');
+require_once(__DIR__ . '/assetHealthService.php');
+require_once(__DIR__ . '/assetIngestService.php');
+require_once(__DIR__ . '/adminEventService.php');
+require_once(__DIR__ . '/exportStateService.php');
+require_once(__DIR__ . '/tagTaxonomyService.php');
 // ============================================
 // GENERIC ASSET API BASE CLASS
 // ============================================
@@ -8,6 +15,10 @@ abstract class AssetAPI
     protected $config;
     protected $assetType;
     protected $tables;
+    protected $paths;
+    protected $events;
+    protected $exportState;
+    protected $taxonomy;
 
     public function __construct($db, $config, $assetType)
     {
@@ -19,9 +30,13 @@ abstract class AssetAPI
         $this->config = $config;
         $this->assetType = $assetType;
         $this->tables = $config['asset_types'][$assetType];
+        $this->paths = new AssetPathService($config);
+        $this->events = new AdminEventService($db);
+        $this->exportState = new ExportStateService($db);
+        $this->taxonomy = new TagTaxonomyService($db, $this->tables, $assetType);
     }
 
-    abstract protected function formatAssetForExport($asset, $tags);
+    abstract protected function formatAssetForExport($asset, $tags, $searchTerms = []);
     abstract protected function getAssetSpecificFields();
     abstract protected function getAddFieldMap();
 
@@ -76,10 +91,8 @@ abstract class AssetAPI
 
     protected function getAssetOrderBy()
     {
-        // Sticker ordering intentionally follows category/name until drag sorting is enabled there.
-        return $this->assetType === 'sticker'
-            ? 'c.name, a.id, a.name'
-            : 'c.sort_order, a.sort_order, a.name';
+        // Both types drag-sort, so both honour category then asset sort_order.
+        return 'c.sort_order, a.sort_order, a.name';
     }
 
     protected function fetchAllAssoc($result)
@@ -191,14 +204,14 @@ abstract class AssetAPI
         $stmt->close();
     }
 
-    protected function saveAssetTags($assetId, $tagIds)
+    protected function saveAssetTags($assetId, $tagIds, $transactional = true)
     {
         $assetId = (int)$assetId;
         $tagsMapTable = $this->tables['tags_map_table'];
         $assetIdField = $this->getAssetIdField();
         $tagIdField = $this->getTagIdField();
 
-        $this->db->beginTransaction();
+        if ($transactional) $this->db->beginTransaction();
         try {
             $deleteStmt = $this->db->prepare(
                 "DELETE FROM $tagsMapTable WHERE $assetIdField = ?",
@@ -221,9 +234,9 @@ abstract class AssetAPI
                 );
                 $insertStmt->close();
             }
-            $this->db->commit();
+            if ($transactional) $this->db->commit();
         } catch (Throwable $error) {
-            $this->db->rollback();
+            if ($transactional) $this->db->rollback();
             throw $error;
         }
     }
@@ -274,6 +287,28 @@ abstract class AssetAPI
         }
     }
 
+    // Drag-sorting the category manager rewrites sort_order in one pass, so
+    // long lists never need per-row sort_order edits.
+    public function reorderCategories($order)
+    {
+        $table = $this->tables['categories_table'];
+        $sql = "UPDATE $table SET sort_order = ? WHERE id = ?";
+
+        $this->db->beginTransaction();
+        try {
+            foreach (array_values(array_unique(array_map('intval', $order))) as $index => $id) {
+                $stmt = $this->db->prepare($sql, 'ii', [(int)$index, $id]);
+                $stmt->close();
+            }
+            $this->db->commit();
+        } catch (Throwable $error) {
+            $this->db->rollback();
+            throw $error;
+        }
+
+        return ['success' => true];
+    }
+
     protected function getAssetUrlById($id)
     {
         $stmt = $this->db->prepare(
@@ -305,6 +340,11 @@ abstract class AssetAPI
     protected function persistAnalysis($id, $analysis, $includeColors = true)
     {
         $table = $this->tables['table'];
+        $normalized = $analysis['normalized'] ?? AssetAnalysisResult::fromAnalyzer(
+            $analysis,
+            $this->assetFilePath($this->getAssetUrlById($id)['url']),
+            $this->config
+        );
         $sql = "
             UPDATE $table
             SET width = ?,
@@ -315,13 +355,17 @@ abstract class AssetAPI
                 is_variable_framerate = ?,
                 is_animated = ?,
                 has_transparency = ?,
-                file_hash = ?
+                file_hash = ?,
+                analysis_json = ?,
+                analysis_version = ?,
+                analyzed_at = NOW(),
+                updated_at = NOW()
             WHERE id = ?
         ";
 
         $stmt = $this->db->prepare(
             $sql,
-            'iiiiiiiisi',
+            'iiiiiiiissii',
             [
                 (int)$analysis['width'],
                 (int)$analysis['height'],
@@ -332,6 +376,8 @@ abstract class AssetAPI
                 (int)$analysis['is_animated'],
                 (int)$analysis['has_transparency'],
                 (string)($analysis['file_hash'] ?? ''),
+                json_encode($normalized, JSON_UNESCAPED_SLASHES),
+                (int)$normalized['version'],
                 (int)$id,
             ]
         );
@@ -340,9 +386,14 @@ abstract class AssetAPI
 
     protected function performAnalysis($url)
     {
-        require_once('gifAnalyzer.php');
-
         $filePath = $this->assetFilePath($url);
+        return $this->performAnalysisPath($filePath);
+    }
+
+    protected function performAnalysisPath($filePath)
+    {
+        require_once(__DIR__ . '/gifAnalyzer.php');
+
         $analyzer = new GifAnalyzer($filePath, $this->config);
         $analysis = $analyzer->analyze();
         $fileSize = file_exists($filePath) ? filesize($filePath) : 0;
@@ -350,7 +401,7 @@ abstract class AssetAPI
         $width = $imageInfo ? $imageInfo[0] : 0;
         $height = $imageInfo ? $imageInfo[1] : 0;
 
-        return array_merge($analysis, [
+        $analysis = array_merge($analysis, [
             'width' => $width,
             'height' => $height,
             'file_size' => $fileSize,
@@ -358,53 +409,100 @@ abstract class AssetAPI
             'is_animated' => ($analysis['frame_count'] ?? 1) > 1 ? 1 : 0,
             'file_hash' => md5_file($filePath),
         ]);
+        $analysis['normalized'] = AssetAnalysisResult::fromAnalyzer($analysis, $filePath, $this->config);
+        return $analysis;
     }
 
     protected function assetFilePath($url)
     {
-        $root = realpath(__DIR__ . '/../..');
-        $relative = str_replace('\\', '/', ltrim((string)$url, '/\\'));
-        $segments = explode('/', $relative);
-        if (!$relative || in_array('..', $segments, true) || in_array('', $segments, true)) {
-            throw new Exception('Invalid asset path');
-        }
-        $candidate = $root . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $segments);
-        $ancestor = dirname($candidate);
-        while (!file_exists($ancestor) && dirname($ancestor) !== $ancestor) {
-            $ancestor = dirname($ancestor);
-        }
-        $directory = realpath($ancestor);
-        if ($directory === false || ($directory !== $root && strpos($directory, $root . DIRECTORY_SEPARATOR) !== 0)) {
-            throw new Exception('Invalid asset path');
-        }
-
-        return $candidate;
+        return $this->paths->urlToFile($url, $this->assetType);
     }
 
     public function getCategories()
     {
-        $result = $this->db->query(
-            "SELECT * FROM {$this->tables['categories_table']} ORDER BY sort_order"
+        $categoryIdField = $this->getCategoryIdField();
+        $result = $this->db->query("
+            SELECT c.*, SUM(CASE WHEN a.is_active = 1 THEN 1 ELSE 0 END) AS active_count
+            FROM {$this->tables['categories_table']} c
+            LEFT JOIN {$this->tables['table']} a ON a.$categoryIdField = c.id
+            GROUP BY c.id
+            ORDER BY c.sort_order, c.name
+        ");
+        $categories = $this->fetchAllAssoc($result);
+        $pending = [];
+        $pendingStmt = $this->db->prepare(
+            "SELECT suggested_category_id, COUNT(*) AS count FROM asset_ingest
+             WHERE asset_type = ? AND status IN ('uploaded', 'analyzing', 'ready', 'failed')
+             GROUP BY suggested_category_id",
+            's',
+            [$this->assetType]
         );
-
-        return $this->fetchAllAssoc($result);
+        $pendingResult = $pendingStmt->get_result();
+        while ($row = $pendingResult->fetch_assoc()) {
+            $pending[(int)$row['suggested_category_id']] = (int)$row['count'];
+        }
+        $pendingStmt->close();
+        foreach ($categories as &$category) {
+            $category['active_count'] = (int)$category['active_count'];
+            $category['pending_count'] = $pending[(int)$category['id']] ?? 0;
+            $category['folder_url'] = $this->paths->categoryUrl($this->assetType, $category['slug']);
+            try {
+                $directory = $this->paths->categoryDirectory($this->assetType, $category['slug']);
+                $category['folder_status'] = is_dir($directory) ? 'present' : 'missing';
+            } catch (InvalidArgumentException $error) {
+                $category['folder_status'] = 'invalid-slug';
+            }
+            $category['slug_locked'] = $category['active_count'] > 0 || $category['pending_count'] > 0;
+        }
+        unset($category);
+        $root = $this->paths->managedRoot($this->assetType);
+        if (is_dir($root)) {
+            $known = array_flip(array_column($categories, 'slug'));
+            foreach (new DirectoryIterator($root) as $directory) {
+                $slug = $directory->getFilename();
+                if (!$directory->isDir() || $directory->isDot() || $slug[0] === '.' || isset($known[$slug])) continue;
+                $categories[] = [
+                    'id' => null,
+                    'name' => ucwords(str_replace('-', ' ', $slug)),
+                    'slug' => $slug,
+                    'folder_url' => $this->paths->categoryUrl($this->assetType, $slug),
+                    'folder_status' => 'unregistered',
+                    'active_count' => 0,
+                    'pending_count' => 0,
+                    'sort_order' => 999,
+                ];
+            }
+        }
+        return $categories;
     }
 
     public function addCategory($data)
     {
+        $name = trim((string)($data['name'] ?? ''));
+        $slug = $this->paths->validateSlug($data['slug'] ?? '');
+        if ($name === '') throw new InvalidArgumentException('Category name is required');
+        $this->assertCategorySlugAvailable($slug);
         $stmt = $this->db->prepare(
-            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, sort_order) VALUES (?, ?, ?, ?)",
-            'sssi',
+            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
+            'sssssi',
             [
-                (string)$data['name'],
-                (string)$data['slug'],
+                $name,
+                $slug,
                 (string)($data['description'] ?? ''),
+                (string)($data['icon'] ?? ''),
+                (string)($data['color'] ?? '#ff69b4'),
                 (int)($data['sort_order'] ?? 999),
             ]
         );
         $stmt->close();
-
-        return ['success' => true, 'id' => $this->db->lastInsertId()];
+        $id = $this->db->lastInsertId();
+        $this->events->record('category', $id, 'category_created', ['asset_type' => $this->assetType, 'name' => $name, 'slug' => $slug]);
+        $this->exportState->markDirty($this->assetType);
+        $record = null;
+        foreach ($this->getCategories() as $category) {
+            if ((int)($category['id'] ?? 0) === (int)$id) $record = $category;
+        }
+        return ['success' => true, 'id' => $id, 'category' => $record];
     }
 
     public function deleteCategory($id)
@@ -433,7 +531,8 @@ abstract class AssetAPI
             [$categoryId]
         );
         $deleteStmt->close();
-
+        $this->events->record('category', $categoryId, 'category_deleted', ['asset_type' => $this->assetType]);
+        $this->exportState->markDirty($this->assetType);
         return ['success' => true];
     }
 
@@ -447,7 +546,7 @@ abstract class AssetAPI
             $sql = "
                 SELECT c.*, COUNT(a.id) AS item_count
                 FROM $table c
-                LEFT JOIN $assetTable a ON c.id = a.$categoryIdField
+                LEFT JOIN $assetTable a ON c.id = a.$categoryIdField AND a.is_active = 1
                 GROUP BY c.id
                 ORDER BY
                     CASE WHEN c.name = 'User Uploads' THEN 0 ELSE 1 END,
@@ -458,7 +557,7 @@ abstract class AssetAPI
             $sql = "
                 SELECT c.*, COUNT(a.id) AS item_count
                 FROM $table c
-                LEFT JOIN $assetTable a ON c.id = a.$categoryIdField
+                LEFT JOIN $assetTable a ON c.id = a.$categoryIdField AND a.is_active = 1
                 GROUP BY c.id
                 ORDER BY c.sort_order
             ";
@@ -500,6 +599,36 @@ abstract class AssetAPI
     public function updateCategory($data)
     {
         $id = (int)$data['id'];
+        $currentStmt = $this->db->prepare(
+            "SELECT c.*, COUNT(a.id) AS asset_count
+             FROM {$this->tables['categories_table']} c
+             LEFT JOIN {$this->tables['table']} a ON a.{$this->getCategoryIdField()} = c.id
+             WHERE c.id = ? GROUP BY c.id",
+            'i',
+            [$id]
+        );
+        $current = $this->fetchOneAssoc($currentStmt->get_result());
+        $currentStmt->close();
+        if (!$current) throw new InvalidArgumentException('Category not found');
+        $pendingStmt = $this->db->prepare(
+            "SELECT COUNT(*) AS pending_count FROM asset_ingest
+             WHERE asset_type = ? AND suggested_category_id = ?
+             AND status IN ('uploaded', 'analyzing', 'ready', 'failed')",
+            'si',
+            [$this->assetType, $id]
+        );
+        $pending = $this->fetchOneAssoc($pendingStmt->get_result());
+        $pendingStmt->close();
+        if (array_key_exists('slug', $data)) {
+            $data['slug'] = $this->paths->validateSlug($data['slug']);
+            if (
+                ((int)$current['asset_count'] > 0 || (int)$pending['pending_count'] > 0)
+                && $data['slug'] !== $current['slug']
+            ) {
+                throw new InvalidArgumentException('Category slug cannot change while assets use this category');
+            }
+            $this->assertCategorySlugAvailable($data['slug'], $id);
+        }
         $fields = [];
         $types = '';
         $params = [];
@@ -529,25 +658,31 @@ abstract class AssetAPI
         $params[] = $id;
         $stmt = $this->db->prepare($sql, $types, $params);
         $stmt->close();
-
+        $this->events->record('category', $id, 'category_updated', ['asset_type' => $this->assetType, 'fields' => array_keys($data)]);
+        $this->exportState->markDirty($this->assetType);
         return ['success' => true];
+    }
+
+    protected function assertCategorySlugAvailable($slug, $excludeId = null)
+    {
+        $sql = "SELECT id FROM {$this->tables['categories_table']} WHERE slug = ?";
+        $types = 's';
+        $params = [$slug];
+        if ($excludeId !== null) {
+            $sql .= ' AND id <> ?';
+            $types .= 'i';
+            $params[] = (int)$excludeId;
+        }
+        $sql .= ' LIMIT 1';
+        $stmt = $this->db->prepare($sql, $types, $params);
+        $row = $this->fetchOneAssoc($stmt->get_result());
+        $stmt->close();
+        if ($row) throw new InvalidArgumentException('That category slug already exists');
     }
 
     public function getTags()
     {
-        $tagsTable = $this->tables['tags_table'];
-        $tagCategoriesTable = $this->tables['tag_categories_table'];
-        $tagCategoryIdField = $this->getTagCategoryIdField();
-
-        $sql = "
-            SELECT t.*, tc.name AS category_name
-            FROM $tagsTable t
-            JOIN $tagCategoriesTable tc ON t.$tagCategoryIdField = tc.id
-            ORDER BY tc.sort_order, t.name
-        ";
-
-        $result = $this->db->query($sql);
-        return $this->fetchAllAssoc($result);
+        return $this->taxonomy->tags();
     }
 
     public function getTagCategories()
@@ -566,6 +701,14 @@ abstract class AssetAPI
             throw new Exception('tag_category_id is required');
         }
 
+        $normalized = TagTaxonomyService::normalize($data['name'] ?? '');
+        if ($normalized === '') throw new InvalidArgumentException('Tag name is required');
+        foreach ($this->getTags() as $existing) {
+            $aliases = array_map(['TagTaxonomyService', 'normalize'], $existing['aliases'] ?? []);
+            if (TagTaxonomyService::normalize($existing['name']) === $normalized || in_array($normalized, $aliases, true)) {
+                throw new InvalidArgumentException('A canonical tag or alias already matches that name');
+            }
+        }
         $hexColor = isset($data['hex_color']) && $data['hex_color'] !== ''
             ? (string)$data['hex_color']
             : null;
@@ -576,13 +719,15 @@ abstract class AssetAPI
             [
                 (int)$tagCategoryId,
                 (string)$data['name'],
-                strtolower(str_replace(' ', '-', (string)$data['name'])),
+                str_replace(' ', '-', $normalized),
                 $hexColor,
             ]
         );
         $stmt->close();
-
-        return ['success' => true, 'id' => $this->db->lastInsertId()];
+        $id = $this->db->lastInsertId();
+        $this->events->record('tag', $id, 'tag_created', ['asset_type' => $this->assetType, 'name' => $data['name']]);
+        $this->exportState->markDirty($this->assetType);
+        return ['success' => true, 'id' => $id];
     }
 
     public function deleteTag($id)
@@ -590,6 +735,7 @@ abstract class AssetAPI
         $tagId = (int)$id;
         $tagsTable = $this->tables['tags_table'];
         $tagsMapTable = $this->tables['tags_map_table'];
+        $tagAliasesTable = $this->tables['tag_aliases_table'];
         $tagIdField = $this->getTagIdField();
 
         $countStmt = $this->db->prepare(
@@ -609,6 +755,12 @@ abstract class AssetAPI
             );
             $mapStmt->close();
         }
+        $aliasStmt = $this->db->prepare(
+            "DELETE FROM $tagAliasesTable WHERE $tagIdField = ?",
+            'i',
+            [$tagId]
+        );
+        $aliasStmt->close();
 
         $tagStmt = $this->db->prepare(
             "DELETE FROM $tagsTable WHERE id = ?",
@@ -616,8 +768,78 @@ abstract class AssetAPI
             [$tagId]
         );
         $tagStmt->close();
-
+        $this->events->record('tag', $tagId, 'tag_deleted', ['asset_type' => $this->assetType, 'removed_from' => (int)$row['count']]);
+        $this->exportState->markDirty($this->assetType);
         return ['success' => true, 'removed_from' => (int)$row['count']];
+    }
+
+    public function updateTag($data)
+    {
+        $ids = isset($data['ids']) ? array_values(array_unique(array_map('intval', $data['ids']))) : [(int)$data['id']];
+        $ids = array_values(array_filter($ids));
+        if (!$ids) throw new InvalidArgumentException('Choose at least one tag');
+        $assignments = [];
+        $types = '';
+        $params = [];
+        if (array_key_exists('name', $data)) {
+            if (count($ids) !== 1) throw new InvalidArgumentException('Batch rename is not supported');
+            $name = trim((string)$data['name']);
+            if ($name === '') throw new InvalidArgumentException('Tag name is required');
+            $normalized = TagTaxonomyService::normalize($name);
+            foreach ($this->getTags() as $existing) {
+                if ((int)$existing['id'] === $ids[0]) continue;
+                $aliases = array_map(['TagTaxonomyService', 'normalize'], $existing['aliases'] ?? []);
+                if (TagTaxonomyService::normalize($existing['name']) === $normalized || in_array($normalized, $aliases, true)) {
+                    throw new InvalidArgumentException('A canonical tag or alias already matches that name');
+                }
+            }
+            $assignments[] = 'name = ?';
+            $types .= 's';
+            $params[] = $name;
+            $assignments[] = 'slug = ?';
+            $types .= 's';
+            $params[] = str_replace(' ', '-', $normalized);
+        }
+        if (array_key_exists('category_id', $data)) {
+            $assignments[] = $this->getTagCategoryIdField() . ' = ?';
+            $types .= 'i';
+            $params[] = (int)$data['category_id'];
+        }
+        if (!$assignments) throw new InvalidArgumentException('No tag fields to update');
+        $idList = implode(',', $ids);
+        $stmt = $this->db->prepare(
+            "UPDATE {$this->tables['tags_table']} SET " . implode(', ', $assignments) . " WHERE id IN ($idList)",
+            $types,
+            $params
+        );
+        $stmt->close();
+        $this->events->record('tag', implode(',', $ids), 'tag_updated', ['asset_type' => $this->assetType, 'fields' => array_keys($data)]);
+        $this->exportState->markDirty($this->assetType);
+        return ['success' => true, 'ids' => $ids];
+    }
+
+    public function addTagAlias($data)
+    {
+        $result = $this->taxonomy->addAlias((int)$data['tag_id'], $data['alias'] ?? '');
+        $this->events->record('tag', (int)$data['tag_id'], 'tag_alias_added', ['asset_type' => $this->assetType, 'alias' => $data['alias'] ?? '']);
+        $this->exportState->markDirty($this->assetType);
+        return $result;
+    }
+
+    public function tagDuplicateCandidates()
+    {
+        return $this->taxonomy->duplicateCandidates();
+    }
+
+    public function mergeTags($data)
+    {
+        $result = $this->taxonomy->merge((int)$data['target_id'], $data['source_ids'] ?? []);
+        $this->events->record('tag', (int)$data['target_id'], 'tags_merged', [
+            'asset_type' => $this->assetType,
+            'source_ids' => $result['merged_ids'],
+        ]);
+        $this->exportState->markDirty($this->assetType);
+        return $result;
     }
 
     public function listAssets()
@@ -629,11 +851,12 @@ abstract class AssetAPI
 
         $tagsMapTable = $this->tables['tags_map_table'];
         $tagsTable = $this->tables['tags_table'];
+        $tagAliasesTable = $this->tables['tag_aliases_table'];
         $assetIdField = $this->getAssetIdField();
         $tagIdField = $this->getTagIdField();
         $sql = "
             SELECT a.*, c.name AS category_name, c.slug AS category_slug,
-                ts.tag_names
+                ts.tag_names, ats.alias_names
             FROM $assetTable a
             JOIN $categoriesTable c ON a.$categoryIdField = c.id
             LEFT JOIN (
@@ -642,6 +865,13 @@ abstract class AssetAPI
                 JOIN $tagsTable t ON t.id = tm.$tagIdField
                 GROUP BY tm.$assetIdField
             ) ts ON ts.asset_id = a.id
+            LEFT JOIN (
+                SELECT tm.$assetIdField AS asset_id,
+                    GROUP_CONCAT(DISTINCT ta.alias ORDER BY ta.alias SEPARATOR '||') AS alias_names
+                FROM $tagsMapTable tm
+                JOIN $tagAliasesTable ta ON ta.$tagIdField = tm.$tagIdField
+                GROUP BY tm.$assetIdField
+            ) ats ON ats.asset_id = a.id
             ORDER BY $orderBy
         ";
 
@@ -664,7 +894,68 @@ abstract class AssetAPI
             throw new Exception('Asset not found');
         }
         $asset['tags'] = $this->getAssetTags($id);
+        // The editor form always edits the effective palette, whichever
+        // storage it came from, so both asset types present the same fields.
+        $palette = $this->effectivePalette($asset);
+        $asset['color_codes'] = implode(',', array_column($palette, 'hex'));
+        $asset['color_weights'] = implode(',', array_map(function ($color) {
+            return number_format((float)$color['weight'], 2, '.', '');
+        }, $palette));
         return $asset;
+    }
+
+    // Single resolution order for "what colors does this asset have":
+    // human override first, then the analyzer's observation, then the
+    // legacy per-type columns. Used by getAsset and both exporters.
+    protected function effectivePalette($asset)
+    {
+        $override = json_decode((string)($asset['palette_override_json'] ?? ''), true);
+        if (is_array($override) && $override) {
+            return array_values(array_map(function ($color) {
+                return [
+                    'hex' => strtoupper(is_array($color) ? $color['hex'] : $color),
+                    'weight' => is_array($color) ? (float)($color['weight'] ?? 0) : 0.0,
+                ];
+            }, $override));
+        }
+        $analysis = AssetAnalysisResult::decode($asset['analysis_json'] ?? null);
+        if (!empty($analysis['palette']['colors'])) {
+            return array_values(array_map(function ($color) {
+                return ['hex' => strtoupper($color['hex']), 'weight' => (float)$color['weight']];
+            }, $analysis['palette']['colors']));
+        }
+        if (empty($asset['color_codes'])) {
+            return [];
+        }
+        $codes = array_values(array_filter(array_map('trim', explode(',', (string)$asset['color_codes'])), 'strlen'));
+        $weights = array_map('floatval', explode(',', (string)($asset['color_weights'] ?? '')));
+        return array_values(array_map(function ($hex, $index) use ($weights, $codes) {
+            return [
+                'hex' => strtoupper($hex),
+                'weight' => (float)($weights[$index] ?? round(1 / max(1, count($codes)), 4)),
+            ];
+        }, $codes, array_keys($codes)));
+    }
+
+    // Color edits land in palette_override_json for every asset type; the
+    // per-type columns stay whatever the subclass chooses to keep in sync.
+    protected function savePaletteOverride($id, $data)
+    {
+        $codes = array_values(array_filter(array_map('trim', explode(',', (string)($data['color_codes'] ?? ''))), 'strlen'));
+        $weights = array_values(array_filter(array_map('trim', explode(',', (string)($data['color_weights'] ?? ''))), 'strlen'));
+        if ($codes && count($codes) !== count($weights)) {
+            throw new InvalidArgumentException('Color codes and weights must have the same length');
+        }
+        $palette = [];
+        foreach ($codes as $index => $code) {
+            $palette[] = ['hex' => strtoupper($code), 'weight' => (float)$weights[$index]];
+        }
+        $stmt = $this->db->prepare(
+            "UPDATE {$this->tables['table']} SET palette_override_json = ? WHERE id = ?",
+            'si',
+            [$palette ? json_encode($palette, JSON_UNESCAPED_SLASHES) : null, (int)$id]
+        );
+        $stmt->close();
     }
 
     protected function getAssetTags($assetId)
@@ -698,13 +989,17 @@ abstract class AssetAPI
         $this->updateAssetRecord(
             (int)$data['id'],
             $data,
-            $this->getUpdateExtraAssignments($data)
+            array_merge($this->getUpdateExtraAssignments($data), ['updated_at = NOW()'])
         );
 
         if (isset($data['tags'])) {
             $this->saveAssetTags($data['id'], $data['tags']);
         }
-
+        if (array_key_exists('color_codes', $data) || array_key_exists('color_weights', $data)) {
+            $this->savePaletteOverride((int)$data['id'], $data);
+        }
+        $this->events->record($this->assetType, (int)$data['id'], 'asset_updated', ['fields' => array_keys($data)]);
+        $this->exportState->markDirty($this->assetType);
         return ['success' => true];
     }
 
@@ -737,18 +1032,23 @@ abstract class AssetAPI
         } catch (Throwable $error) {
             error_log('Auto-analysis failed for ' . $this->assetType . ' ID ' . $id . ': ' . $error->getMessage());
         }
+        $this->events->record($this->assetType, $id, 'asset_created', ['url' => $data['url']]);
+        $this->exportState->markDirty($this->assetType);
         return ['success' => true, 'id' => $id];
     }
 
     public function deleteAsset($id)
     {
         $this->deleteAssetRecord($id);
+        $this->events->record($this->assetType, (int)$id, 'asset_deleted');
+        $this->exportState->markDirty($this->assetType);
         return ['success' => true];
     }
 
     public function reorderAssets($data)
     {
         $this->reorderAssetsByIds($data['order']);
+        $this->exportState->markDirty($this->assetType);
         return ['success' => true];
     }
 
@@ -759,7 +1059,31 @@ abstract class AssetAPI
             throw new Exception($this->getAssetDisplayName() . ' not found');
         }
 
-        return $this->enrichSuggestedTags($this->performAnalysis($asset['url']));
+        $analysis = $this->enrichSuggestedTags($this->performAnalysis($asset['url']));
+        $this->persistObservation($id, $analysis);
+        $this->events->record($this->assetType, (int)$id, 'asset_analyzed', [
+            'analysis_version' => $this->config['analysis_version'],
+        ]);
+        $this->exportState->markDirty($this->assetType);
+        return $analysis;
+    }
+
+    protected function persistObservation($id, $analysis)
+    {
+        $normalized = $analysis['normalized'];
+        $stmt = $this->db->prepare(
+            "UPDATE {$this->tables['table']}
+             SET analysis_json = ?, analysis_version = ?, analyzed_at = NOW(), file_hash = ?, updated_at = NOW()
+             WHERE id = ?",
+            'sisi',
+            [
+                json_encode($normalized, JSON_UNESCAPED_SLASHES),
+                (int)$normalized['version'],
+                (string)($analysis['file_hash'] ?? ''),
+                (int)$id,
+            ]
+        );
+        $stmt->close();
     }
 
     protected function enrichSuggestedTags($analysis)
@@ -778,7 +1102,22 @@ abstract class AssetAPI
         unset($suggestion);
 
         if ($this->assetType === 'sticker' && !empty($analysis['color_codes'])) {
+            $paletteType = $analysis['normalized']['palette']['type'] ?? 'limited';
+            if (in_array($paletteType, ['multicolor', 'rainbow', 'complex-palette'], true)) {
+                foreach ($tags as $tag) {
+                    if (strcasecmp($tag['name'], $paletteType) === 0) {
+                        $suggestions[(int)$tag['id']] = [
+                            'tag_id' => (int)$tag['id'],
+                            'name' => $tag['name'],
+                            'reason' => 'palette classified as ' . $paletteType,
+                        ];
+                        break;
+                    }
+                }
+            }
             foreach (explode(',', $analysis['color_codes']) as $index => $hex) {
+                $weight = (float)(explode(',', $analysis['color_weights'] ?? '')[$index] ?? 0);
+                if ($weight < $this->config['color_tag_min_family_weight']) continue;
                 $rgb = hexToRgb($hex);
                 if (!$rgb) continue;
                 $best = null;
@@ -786,18 +1125,17 @@ abstract class AssetAPI
                 foreach ($tags as $tag) {
                     $tagRgb = hexToRgb($tag['hex_color'] ?? '');
                     if (!$tagRgb) continue;
-                    $distance = deltaE(rgbToLab($rgb[0], $rgb[1], $rgb[2]), rgbToLab($tagRgb[0], $tagRgb[1], $tagRgb[2]));
+                    $distance = deltaE2000(rgbToLab($rgb[0], $rgb[1], $rgb[2]), rgbToLab($tagRgb[0], $tagRgb[1], $tagRgb[2]));
                     if ($distance < $bestDistance) {
                         $bestDistance = $distance;
                         $best = $tag;
                     }
                 }
                 if ($best && $bestDistance < $this->config['tag_match_distance']) {
-                    $weight = explode(',', $analysis['color_weights'] ?? '')[$index] ?? '';
                     $suggestions[(int)$best['id']] = [
                         'tag_id' => (int)$best['id'],
                         'name' => $best['name'],
-                        'reason' => 'color ' . $weight,
+                        'reason' => 'color ' . round($weight * 100) . '%',
                     ];
                 }
             }
@@ -835,6 +1173,9 @@ abstract class AssetAPI
             try {
                 $analysis = $this->enrichSuggestedTags($this->performAnalysis($asset['url']));
                 $this->persistAnalysis($asset['id'], $analysis, $includeColors);
+                $this->events->record($this->assetType, (int)$asset['id'], 'asset_analyzed', [
+                    'analysis_version' => $this->config['analysis_version'],
+                ]);
                 $updated++;
             } catch (Exception $e) {
                 $errors[] = 'ID ' . $asset['id'] . ': ' . $e->getMessage();
@@ -854,13 +1195,16 @@ abstract class AssetAPI
         $categoriesTable = $this->tables['categories_table'];
         $tagsTable = $this->tables['tags_table'];
         $tagsMapTable = $this->tables['tags_map_table'];
+        $tagAliasesTable = $this->tables['tag_aliases_table'];
+        $tagCategoriesTable = $this->tables['tag_categories_table'];
         $categoryIdField = $this->getCategoryIdField();
         $assetIdField = $this->getAssetIdField();
         $tagIdField = $this->getTagIdField();
+        $tagCategoryIdField = $this->getTagCategoryIdField();
         $orderBy = $this->getAssetOrderBy();
         $result = $this->db->query("
             SELECT a.*, c.name AS category_name, c.slug AS category_slug,
-                ts.tag_names
+                ts.tag_names, ats.alias_names
             FROM $assetTable a
             JOIN $categoriesTable c ON a.$categoryIdField = c.id
             LEFT JOIN (
@@ -868,8 +1212,18 @@ abstract class AssetAPI
                     GROUP_CONCAT(DISTINCT t.name ORDER BY t.name SEPARATOR '||') AS tag_names
                 FROM $tagsMapTable tm
                 JOIN $tagsTable t ON t.id = tm.$tagIdField
+                JOIN $tagCategoriesTable tc ON tc.id = t.$tagCategoryIdField AND tc.slug <> 'internal'
                 GROUP BY tm.$assetIdField
             ) ts ON ts.asset_id = a.id
+            LEFT JOIN (
+                SELECT tm.$assetIdField AS asset_id,
+                    GROUP_CONCAT(DISTINCT ta.alias ORDER BY ta.alias SEPARATOR '||') AS alias_names
+                FROM $tagsMapTable tm
+                JOIN $tagsTable t ON t.id = tm.$tagIdField
+                JOIN $tagCategoriesTable tc ON tc.id = t.$tagCategoryIdField AND tc.slug <> 'internal'
+                JOIN $tagAliasesTable ta ON ta.$tagIdField = tm.$tagIdField
+                GROUP BY tm.$assetIdField
+            ) ats ON ats.asset_id = a.id
             WHERE a.is_active = 1
             ORDER BY $orderBy
         ");
@@ -878,7 +1232,8 @@ abstract class AssetAPI
 
         foreach ($assets as $asset) {
             $tagNames = $asset['tag_names'] ? explode('||', $asset['tag_names']) : [];
-            $formatted[] = $this->formatAssetForExport($asset, $tagNames);
+            $searchTerms = !empty($asset['alias_names']) ? explode('||', $asset['alias_names']) : [];
+            $formatted[] = $this->formatAssetForExport($asset, $tagNames, $searchTerms);
         }
 
         return $formatted;
@@ -887,16 +1242,30 @@ abstract class AssetAPI
     public function saveExport()
     {
         $assets = $this->exportAssets();
+        $categories = $this->exportCategories();
         $jsonPath = "../../" . $this->tables['json_file'];
+        $categoriesPath = "../../" . $this->tables['categories_json_file'];
         $json = json_encode($assets, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $categoriesJson = json_encode($categories, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         $this->backupExport($jsonPath);
+        $this->backupExport($categoriesPath);
         $result = file_put_contents($jsonPath, $json);
-
-        if ($result === false) {
-            throw new Exception('Failed to write to ' . $jsonPath);
+        $categoriesResult = file_put_contents($categoriesPath, $categoriesJson);
+        if ($result === false || $categoriesResult === false) {
+            throw new Exception('Failed to write a consistent asset/category export');
         }
-
-        return ['success' => true, 'path' => $jsonPath, 'bytes' => $result];
+        $hash = hash('sha256', $json);
+        $this->exportState->markCurrent($this->assetType, $hash);
+        $this->events->record('export', $this->assetType, 'export_generated', [
+            'bytes' => $result + $categoriesResult,
+            'hash' => $hash,
+        ]);
+        return [
+            'success' => true,
+            'path' => $jsonPath,
+            'categories_path' => $categoriesPath,
+            'bytes' => $result + $categoriesResult,
+        ];
     }
 
     protected function backupExport($jsonPath)
@@ -922,136 +1291,174 @@ abstract class AssetAPI
 
     public function healthReport()
     {
-        $rows = $this->listAssets();
-        $urls = [];
-        $missing = [];
-        $inactive = [];
-        foreach ($rows as $row) {
-            $urls[$row['url']][] = $row;
-            if (!file_exists($this->assetFilePath($row['url']))) {
-                $missing[] = ['id' => (int)$row['id'], 'name' => $row['name'], 'url' => $row['url']];
-            }
-            if (!(int)$row['is_active']) {
-                $inactive[] = ['id' => (int)$row['id'], 'name' => $row['name'], 'url' => $row['url']];
-            }
-        }
-        $duplicates = [];
-        foreach ($urls as $url => $assets) {
-            if (count($assets) < 2) continue;
-            $duplicates[] = [
-                'url' => $url,
-                'assets' => array_map(function ($asset) {
-                    return ['id' => (int)$asset['id'], 'name' => $asset['name'], 'url' => $asset['url']];
-                }, $assets),
-            ];
-        }
-        $imageRoot = realpath(__DIR__ . '/../../images/' . $this->assetType);
-        $orphans = [];
-        if ($imageRoot) {
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($imageRoot, FilesystemIterator::SKIP_DOTS));
-            foreach ($iterator as $file) {
-                if (
-                    !$file->isFile()
-                    || !in_array(strtolower($file->getExtension()), ['gif', 'png', 'jpg', 'jpeg'], true)
-                    || strpos($file->getPathname(), DIRECTORY_SEPARATOR . '.thumbs' . DIRECTORY_SEPARATOR) !== false
-                ) {
-                    continue;
-                }
-                $url = str_replace('\\', '/', substr($file->getPathname(), strlen(realpath(__DIR__ . '/../..')) + 1));
-                if (!isset($urls[$url])) {
-                    $orphans[] = ['url' => $url];
-                }
-            }
-        }
-
-        return ['missing' => $missing, 'orphans' => $orphans, 'duplicates' => $duplicates, 'inactive' => $inactive];
+        return (new AssetHealthService($this->db, $this->config, $this->assetType))->report();
     }
 
-    public function uploadAsset($file, $categoryId)
+    public function ingestUpload($file, $batchId = null)
     {
-        if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
-            throw new Exception('No valid upload received');
+        $service = new AssetIngestService($this->db, $this->config);
+        $result = $service->receive($this->assetType, $file, function ($path) {
+            $analysis = $this->enrichSuggestedTags($this->performAnalysisPath($path));
+            return [
+                'normalized' => $analysis['normalized'],
+                'suggested_tags' => $analysis['suggested_tags'] ?? [],
+            ];
+        }, $batchId);
+        if (!empty($result['success'])) {
+            $this->events->record('ingest', $result['item']['id'], 'asset_uploaded', [
+                'asset_type' => $this->assetType,
+                'batch_id' => $result['batch_id'],
+                'filename' => $result['item']['original_filename'],
+            ]);
         }
-        if ((int)$file['size'] > $this->config['upload_max_bytes']) {
-            throw new Exception('File exceeds the upload size limit');
+        return $result;
+    }
+
+    public function ingestList($status = null)
+    {
+        return (new AssetIngestService($this->db, $this->config))->list($this->assetType, $status);
+    }
+
+    public function ingestUpdate($data)
+    {
+        return (new AssetIngestService($this->db, $this->config))->update((int)$data['id'], $data);
+    }
+
+    public function ingestApprove($data)
+    {
+        $service = new AssetIngestService($this->db, $this->config);
+        $item = $service->get((int)$data['id']);
+        if ($item['asset_type'] !== $this->assetType || $item['status'] !== 'ready') {
+            throw new InvalidArgumentException('Only ready items of this asset type can be approved');
         }
-        $header = file_get_contents($file['tmp_name'], false, null, 0, 12);
-        $types = [
-            'gif' => strncmp($header, 'GIF87a', 6) === 0 || strncmp($header, 'GIF89a', 6) === 0,
-            'png' => substr($header, 0, 8) === "\x89PNG\r\n\x1a\n",
-            'jpg' => substr($header, 0, 3) === "\xFF\xD8\xFF",
-        ];
-        $extension = array_search(true, $types, true);
-        if ($extension === false) {
-            throw new Exception('Only GIF, PNG, and JPEG files are accepted');
-        }
-        $hash = md5_file($file['tmp_name']);
-        $stmt = $this->db->prepare(
-            "SELECT id, name FROM {$this->tables['table']} WHERE file_hash = ? LIMIT 1",
-            's',
-            [$hash]
-        );
-        $duplicate = $this->fetchOneAssoc($stmt->get_result());
-        $stmt->close();
-        if ($duplicate) {
-            return ['success' => false, 'duplicate' => true, 'existing' => $duplicate];
-        }
+        $categoryId = (int)($data['category_id'] ?? $item['suggested_category_id']);
         $categoryStmt = $this->db->prepare(
             "SELECT id, slug FROM {$this->tables['categories_table']} WHERE id = ?",
             'i',
-            [(int)$categoryId]
+            [$categoryId]
         );
         $category = $this->fetchOneAssoc($categoryStmt->get_result());
         $categoryStmt->close();
-        if (!$category) {
-            throw new Exception('Invalid category');
-        }
-        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $category['slug'])) {
-            throw new Exception('Category slug is not safe for uploads');
-        }
-        $base = strtolower(pathinfo($file['name'], PATHINFO_FILENAME));
-        $base = trim(preg_replace('/[^a-z0-9]+/', '-', $base), '-');
-        $base = $base ?: $this->assetType;
-        $directory = dirname(__DIR__, 2) . '/images/' . $this->assetType . '/' . $category['slug'];
+        if (!$category) throw new InvalidArgumentException('Choose a valid category');
+        $directory = $this->paths->categoryDirectory($this->assetType, $category['slug']);
         if (!is_dir($directory) && !mkdir($directory, 0775, true)) {
-            throw new Exception('Could not create upload directory');
+            throw new RuntimeException('Could not create category directory');
         }
-        $filename = $base . '.' . $extension;
-        for ($suffix = 2; file_exists($directory . '/' . $filename); $suffix++) {
-            $filename = $base . '-' . $suffix . '.' . $extension;
-        }
-        $destination = $directory . '/' . $filename;
-        if (!move_uploaded_file($file['tmp_name'], $destination)) {
-            throw new Exception('Could not store uploaded file');
-        }
-        $url = 'images/' . $this->assetType . '/' . $category['slug'] . '/' . $filename;
+        $source = $service->incomingPath($item);
+        if (!is_file($source)) throw new RuntimeException('Incoming file is missing');
+        $extension = pathinfo($item['incoming_filename'], PATHINFO_EXTENSION);
+        $base = $this->paths->sanitizeFilename($item['incoming_filename'], $this->assetType);
+        $filename = $this->paths->collisionSafeFilename($directory, $base, $extension);
+        $destination = $directory . DIRECTORY_SEPARATOR . $filename;
+        $url = $this->paths->categoryUrl($this->assetType, $category['slug']) . $filename;
+        $this->db->beginTransaction();
         try {
+            if (!rename($source, $destination)) throw new RuntimeException('Could not move incoming file');
             $result = $this->addAsset([
-                'name' => ucwords(str_replace('-', ' ', $base)),
+                'name' => trim((string)($data['name'] ?? $item['suggested_name'] ?? ucwords(str_replace('-', ' ', $base)))),
                 'filename' => $filename,
                 'url' => $url,
-                'category_id' => (int)$category['id'],
-                'is_active' => 0,
+                'category_id' => $categoryId,
+                'is_active' => 1,
             ]);
+            $finalAnalysis = $this->enrichSuggestedTags($this->performAnalysis($url));
+            $this->persistAnalysis($result['id'], $finalAnalysis, true);
+            $tagIds = array_values(array_unique(array_map('intval', $data['tags'] ?? [])));
+            if ($tagIds) $this->saveAssetTags($result['id'], $tagIds, false);
             $stmt = $this->db->prepare(
-                "UPDATE {$this->tables['table']} SET file_hash = ? WHERE id = ?",
-                'si',
-                [$hash, (int)$result['id']]
+                "UPDATE {$this->tables['table']}
+                 SET approved_at = NOW(), approved_by = ?, original_filename = ?, original_ingest_id = ?, updated_at = NOW()
+                 WHERE id = ?",
+                'ssii',
+                [
+                    $_SESSION['admin_username'] ?? 'local-admin',
+                    $item['original_filename'],
+                    (int)$item['id'],
+                    (int)$result['id'],
+                ]
             );
             $stmt->close();
-            if ($this->assetType === 'glitter') {
-                $stmt = $this->db->prepare(
-                    "UPDATE {$this->tables['table']} SET name = generated_name WHERE id = ? AND generated_name IS NOT NULL",
-                    'i',
-                    [(int)$result['id']]
-                );
-                $stmt->close();
+            $service->mark($item['id'], 'approved');
+            $this->db->commit();
+            if (!empty($item['thumbnail_url'])) {
+                $incomingThumbnail = dirname($source) . DIRECTORY_SEPARATOR . basename($item['thumbnail_url']);
+                if (is_file($incomingThumbnail)) unlink($incomingThumbnail);
             }
-            return ['success' => true, 'id' => (int)$result['id'], 'url' => $url, 'pending' => true];
+            @rmdir(dirname($source));
+            $this->events->record('ingest', $item['id'], 'asset_approved', [
+                'asset_type' => $this->assetType,
+                'asset_id' => (int)$result['id'],
+                'url' => $url,
+            ]);
+            $this->exportState->markDirty($this->assetType);
+            return ['success' => true, 'id' => (int)$result['id'], 'url' => $url];
         } catch (Throwable $error) {
-            unlink($destination);
+            $this->db->rollback();
+            if (is_file($destination) && !is_file($source)) rename($destination, $source);
             throw $error;
         }
+    }
+
+    public function ingestReject($id, $reason = '')
+    {
+        $service = new AssetIngestService($this->db, $this->config);
+        $item = $service->get((int)$id);
+        if ($item['asset_type'] !== $this->assetType || in_array($item['status'], ['approved', 'rejected'], true)) {
+            throw new InvalidArgumentException('Ingest item cannot be rejected');
+        }
+        $path = $service->incomingPath($item);
+        if (is_file($path) && !unlink($path)) throw new RuntimeException('Could not remove incoming file');
+        if (!empty($item['thumbnail_url'])) {
+            $incomingThumbnail = dirname($path) . DIRECTORY_SEPARATOR . basename($item['thumbnail_url']);
+            if (is_file($incomingThumbnail) && !unlink($incomingThumbnail)) {
+                throw new RuntimeException('Could not remove incoming thumbnail');
+            }
+        }
+        @rmdir(dirname($path));
+        $service->mark($item['id'], 'rejected', $reason ?: null);
+        $this->events->record('ingest', $item['id'], 'asset_rejected', ['asset_type' => $this->assetType, 'reason' => $reason]);
+        return ['success' => true];
+    }
+
+    public function registerExisting($data)
+    {
+        $url = (string)($data['url'] ?? '');
+        $this->paths->urlToFile($url, $this->assetType, true);
+        $categoryId = (int)($data['category_id'] ?? 0);
+        if (!$categoryId) {
+            foreach ($this->getCategories() as $category) {
+                if (!empty($category['id']) && strpos($url, $category['folder_url']) === 0) {
+                    $categoryId = (int)$category['id'];
+                    break;
+                }
+            }
+        }
+        if (!$categoryId) throw new InvalidArgumentException('Choose a category for this existing file');
+        return $this->addAsset([
+            'name' => (string)($data['name'] ?? ucwords(str_replace('-', ' ', pathinfo($url, PATHINFO_FILENAME)))),
+            'filename' => basename($url),
+            'url' => $url,
+            'category_id' => $categoryId,
+            'is_active' => 0,
+        ]);
+    }
+
+    public function storedAnalysis($id)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT analysis_json, analysis_version, analyzed_at, palette_override_json FROM {$this->tables['table']} WHERE id = ?",
+            'i',
+            [(int)$id]
+        );
+        $row = $this->fetchOneAssoc($stmt->get_result());
+        $stmt->close();
+        if (!$row) throw new InvalidArgumentException('Asset not found');
+        return [
+            'analysis' => AssetAnalysisResult::decode($row['analysis_json']),
+            'version' => $row['analysis_version'] === null ? null : (int)$row['analysis_version'],
+            'analyzed_at' => $row['analyzed_at'],
+            'palette_override' => json_decode((string)$row['palette_override_json'], true),
+        ];
     }
 
     public function rejectAsset($id)

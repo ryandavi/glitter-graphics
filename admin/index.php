@@ -4,123 +4,89 @@ require_once('includes/auth.php');
 
 requireAuth('page');
 $adminCsrfToken = getCsrfToken();
+$browserConfig = [
+	'asset_types' => array_keys($CONFIG['asset_types']),
+	'health_severity' => $CONFIG['health_severity'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glitter Admin</title>
-    <script>(function(){try{var s=JSON.parse(localStorage.getItem('glitterEditorSettings')||'{}');document.documentElement.dataset.theme=s.interfaceTheme||'dark';}catch(e){document.documentElement.dataset.theme='dark';}}());</script>
-    <link rel="stylesheet" href="css/swatch_admin.css?v=2">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Admin — Glitter</title>
+	<script>(function(){try{var s=JSON.parse(localStorage.getItem('glitterEditorSettings')||'{}');document.documentElement.dataset.theme=s.interfaceTheme||'dark';}catch(e){document.documentElement.dataset.theme='dark';}}());</script>
+	<link rel="stylesheet" href="css/swatch_admin.css?v=19">
 </head>
-<body>
-    <div class="container">
-       
-        <!-- Header -->
-        <div class="header">
-            <h1><a href="index.php">Glitter Admin</a></h1>
-            <ul>
-                <li><a href="glitter.php">Glitter</a></li>
-                <li><a href="sticker.php">Stickers</a></li>
-            </ul>
-        </div>
+<body class="admin-tool">
+	<div class="container admin-shell">
+		<header class="header admin-shell-header">
+			<h1><a href="index.php">Glitter Admin</a></h1>
+			<nav aria-label="Admin">
+				<ul>
+					<li class="current">Admin</li>
+					<li><a href="glitter.php">Glitter</a></li>
+					<li><a href="sticker.php">Stickers</a></li>
+				</ul>
+			</nav>
+		</header>
 
-        <main class="admin-dashboard">
-            <h2>Asset Health</h2>
-            <p class="modal-help">Review inactive rows before exporting; exports now publish approved assets only.</p>
-            <div class="health-grid" id="healthGrid">
-                <p>Loading health report…</p>
-            </div>
-        </main>
-    </div>
+		<main class="admin-dashboard">
+			<header class="page-header">
+				<div>
+					<h2>Library health</h2>
+					<p class="page-intro">Review incoming files, repair library issues, and keep published data current.</p>
+					<p id="healthCheckedAt" class="page-context">Health check not yet run</p>
+					<div id="exportStatus" class="export-status"></div>
+				</div>
+				<div class="page-actions">
+					<button type="button" class="btn btn-quiet" id="refreshHealth">Refresh</button>
+					<a class="btn btn-secondary" href="glitter.php?ingest=new">Add glitter</a>
+					<a class="btn btn-secondary" href="sticker.php?ingest=new">Add stickers</a>
+				</div>
+			</header>
 
-    <script>
-        const CONFIG = <?php echo json_encode($CONFIG); ?>;
-        const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
-    </script>
-    <script src="js/admin_api.js?v=2"></script>
-    <script>
-        Promise.all(['glitter', 'sticker'].map(async function(type) {
-            const response = await AdminAPI.fetch('includes/api.php?action=health&type=' + type);
-            return [type, await response.json()];
-        })).then(function(reports) {
-            document.getElementById('healthGrid').replaceChildren(...reports.map(function(entry) {
-                const type = entry[0];
-                const report = entry[1];
-                const card = document.createElement('section');
-                card.className = 'health-card';
-                const heading = document.createElement('h3');
-                heading.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-                card.appendChild(heading);
-                ['inactive', 'missing', 'orphans', 'duplicates'].forEach(function(key) {
-                    const values = report[key] || [];
-                    const details = document.createElement('details');
-                    const summary = document.createElement('summary');
-                    summary.textContent = key.charAt(0).toUpperCase() + key.slice(1) + ': ' + values.length;
-                    details.appendChild(summary);
-                    if (values.length) {
-                        const list = document.createElement('ul');
-                        values.forEach(function(value) {
-                            const item = document.createElement('li');
-                            item.className = 'health-result';
-                            const description = document.createElement('span');
-                            if (key === 'duplicates') {
-                                description.textContent = value.url;
-                                item.appendChild(description);
-                                const duplicateLinks = document.createElement('span');
-                                duplicateLinks.className = 'health-actions';
-                                value.assets.forEach(function(asset) {
-                                    duplicateLinks.appendChild(makeAssetLink(type, asset.id, 'Edit ' + asset.name));
-                                });
-                                item.appendChild(duplicateLinks);
-                            } else if (key === 'orphans') {
-                                description.textContent = value.url;
-                                item.appendChild(description);
-                                const actions = document.createElement('span');
-                                actions.className = 'health-actions';
-                                actions.appendChild(makeAssetLink(type, null, 'Add to database', value.url));
-                                actions.appendChild(makeCopyButton(value.url));
-                                item.appendChild(actions);
-                            } else {
-                                description.textContent = value.name + ' — ' + value.url;
-                                item.appendChild(description);
-                                const actions = document.createElement('span');
-                                actions.className = 'health-actions';
-                                actions.appendChild(makeAssetLink(type, value.id, 'Open asset'));
-                                actions.appendChild(makeCopyButton(value.url));
-                                item.appendChild(actions);
-                            }
-                            list.appendChild(item);
-                        });
-                        details.appendChild(list);
-                    }
-                    card.appendChild(details);
-                });
-                return card;
-            }));
-        });
+			<div class="dashboard-filters" role="group" aria-label="Asset type">
+				<button type="button" class="filter-chip selected" data-filter="all">All</button>
+				<button type="button" class="filter-chip" data-filter="glitter">Glitter</button>
+				<button type="button" class="filter-chip" data-filter="sticker">Stickers</button>
+			</div>
 
-        function makeAssetLink(type, id, label, addUrl) {
-            const link = document.createElement('a');
-            const page = type === 'glitter' ? 'glitter.php' : 'sticker.php';
-            link.href = id ? page + '?asset=' + encodeURIComponent(id) : page + '?addUrl=' + encodeURIComponent(addUrl);
-            link.textContent = label;
-            link.className = 'btn btn-secondary btn-sm';
-            return link;
-        }
+			<section class="dashboard-section dashboard-overview" aria-labelledby="overviewHeading">
+				<div class="section-heading-row">
+					<h3 id="overviewHeading">Overview</h3>
+				</div>
+				<div class="overview-strip" id="healthOverview"></div>
+			</section>
 
-        function makeCopyButton(value) {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'btn btn-secondary btn-sm';
-            button.textContent = 'Copy URL';
-            button.addEventListener('click', async function() {
-                await navigator.clipboard.writeText(value);
-                button.textContent = 'Copied';
-            });
-            return button;
-        }
-    </script>
+			<section class="dashboard-section" aria-labelledby="attentionHeading">
+				<div class="section-heading-row">
+					<h3 id="attentionHeading">Needs attention</h3>
+					<button type="button" class="btn btn-quiet btn-sm" id="showAllChecks">Show all checks</button>
+				</div>
+				<div id="healthQueue" class="issue-list" aria-live="polite">
+					<div class="loading-state">Checking assets…</div>
+				</div>
+			</section>
+
+			<section class="dashboard-section" aria-labelledby="activityHeading">
+				<div class="section-heading-row">
+					<h3 id="activityHeading">Recent activity</h3>
+				</div>
+				<div id="recentActivity" class="activity-list">
+					<div class="loading-state">Loading activity…</div>
+				</div>
+			</section>
+		</main>
+		<div class="toast-host" id="toastHost" aria-live="polite"></div>
+	</div>
+
+	<script>
+		const CONFIG = <?php echo json_encode($browserConfig); ?>;
+		const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
+	</script>
+	<script src="js/admin_api.js?v=5"></script>
+	<script src="js/admin_dashboard.js?v=5"></script>
+	<script>new AdminDashboard().init();</script>
 </body>
 </html>

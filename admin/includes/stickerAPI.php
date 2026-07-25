@@ -11,8 +11,13 @@ class StickerAPI extends AssetAPI
         parent::__construct($db, $config, 'sticker');
     }
 
-    protected function formatAssetForExport($asset, $tags)
+    protected function formatAssetForExport($asset, $tags, $searchTerms = [])
     {
+        $analysis = AssetAnalysisResult::decode($asset['analysis_json'] ?? null);
+        // Same resolution as glitter: a human override wins over the
+        // analyzer's observation. Tags stay the gallery's filter surface;
+        // this palette is machine data for masks, matching, and future use.
+        $palette = $this->effectivePalette($asset);
         return [
             'id' => (int)$asset['id'],
             'name' => $asset['name'],
@@ -23,6 +28,10 @@ class StickerAPI extends AssetAPI
             'attribution' => $asset['attribution'] ?? null,
             'stickerText' => $asset['sticker_text'] ?? null,
             'tags' => $tags,
+            'searchTerms' => $searchTerms,
+            'colorCodes' => array_values(array_column($palette, 'hex')),
+            'colorWeights' => array_values(array_map('floatval', array_column($palette, 'weight'))),
+            'paletteType' => $analysis['palette']['type'] ?? null,
             'isAnimated' => (int)$asset['is_animated'],
             'hasTransparency' => (int)$asset['has_transparency'],
             'width' => (int)($asset['width'] ?? 0),

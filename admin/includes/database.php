@@ -19,37 +19,8 @@ class Database
             throw new Exception('Database connection failed: ' . $this->conn->connect_error);
         }
 
-        $this->ensureColumns($config);
-    }
-
-    private function ensureColumns($config)
-    {
-        $migrations = [
-            'glitter' => [
-                'color_weights' => 'VARCHAR(255) NULL AFTER color_codes',
-                'file_hash' => 'CHAR(32) NULL',
-            ],
-            'stickers' => [
-                'thumbnail_url' => 'VARCHAR(255) NULL',
-                'file_hash' => 'CHAR(32) NULL',
-            ],
-        ];
-
-        foreach ($migrations as $table => $columns) {
-            foreach ($columns as $column => $definition) {
-                $stmt = $this->conn->prepare(
-                    'SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?'
-                );
-                $stmt->bind_param('sss', $config['db_name'], $table, $column);
-                $stmt->execute();
-                $stmt->bind_result($exists);
-                $stmt->fetch();
-                $stmt->close();
-                if (!(int)$exists) {
-                    $this->query("ALTER TABLE `$table` ADD COLUMN `$column` $definition");
-                }
-            }
-        }
+        require_once(__DIR__ . '/adminMigrations.php');
+        AdminMigrations::run($this->conn, $config);
     }
 
     public function query($sql)

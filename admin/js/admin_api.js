@@ -5,6 +5,7 @@ window.AdminAPI = {
         'delete',
         'add',
         'reorder',
+        'analyze',
         'analyze_all',
         'save_export',
         'save_categories_export',
@@ -14,7 +15,15 @@ window.AdminAPI = {
         'add_tag',
         'delete_tag',
         'upload',
-        'reject'
+        'reject',
+        'ingest_upload',
+        'ingest_update',
+        'ingest_approve',
+        'ingest_reject',
+        'register_existing',
+        'tag_alias_add',
+        'tag_update',
+        'tag_merge'
     ]),
 
     isMutatingRequest(url, options = {}) {
@@ -46,5 +55,15 @@ window.AdminAPI = {
         }
 
         return response;
+    },
+
+    async json(url, options = {}) {
+        const response = await this.fetch(url, options);
+        const data = await response.json().catch(() => null);
+        if (!response.ok || data?.success === false) {
+            const error = data?.error;
+            throw new Error(typeof error === 'object' ? error.message : (error || `Request failed (${response.status})`));
+        }
+        return data;
     }
 };

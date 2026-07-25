@@ -45,8 +45,8 @@ class AssetEditor {
         if (this.config.enableSorting) {
             this.setupDragAndDrop();
         }
-        
-        this.setupCategoryFormHelpers();
+
+        this.bindHistoryNavigation();
         await this.openRequestedAsset();
     }
 
@@ -135,13 +135,36 @@ class AssetEditor {
         return `<div class="swatch-thumb" style="background-image: url('${CONFIG.image_base_path}${asset.url}');"></div>`;
     }
 
+    // ===== URL STATE =====
+    // Selecting an asset is a navigation, so it gets a history entry: refresh
+    // reopens the same asset and Back returns to the previous one. Modals are
+    // deliberately excluded — a dialog is not a destination, and putting one
+    // in history makes Back close a dialog instead of undoing navigation.
+    pushAssetUrl(id) {
+        const url = new URL(window.location.href);
+        if (String(url.searchParams.get('asset')) === String(id)) return;
+        url.searchParams.delete('ingest');
+        url.searchParams.set('asset', id);
+        window.history.pushState({ assetId: Number(id) }, '', url);
+    }
+
+    bindHistoryNavigation() {
+        window.addEventListener('popstate', async event => {
+            const assetId = Number(event.state?.assetId ?? new URLSearchParams(window.location.search).get('asset'));
+            if (!assetId || !this.assets.some(asset => Number(asset.id) === assetId)) return;
+            if (Number(this.currentAsset?.id) === assetId) return;
+            await this.selectAsset(assetId, { pushHistory: false });
+        });
+    }
+
     // ===== ASSET SELECTION & EDITING =====
 
-    async selectAsset(id) {
+    async selectAsset(id, { pushHistory = true } = {}) {
         if (this.dirty && !confirm('Discard unsaved changes?')) return;
         // Save scroll position
         this.scrollPosition = document.getElementById(this.config.listContainerId).scrollTop;
 
+        if (pushHistory) this.pushAssetUrl(id);
         const response = await adminFetch(`includes/api.php?action=get&id=${id}&type=${this.config.assetType}`);
         this.currentAsset = await response.json();
         this.renderEditor();
@@ -156,6 +179,7 @@ class AssetEditor {
         this.setDirty(false);
         this.bindDirtyTracking();
         this.renderAssetList(); // Update active state
+        this.loadStoredAnalysis();
 
         // Restore scroll position in content
         document.getElementById('contentScroll').scrollTop = 0;
@@ -178,54 +202,125 @@ class AssetEditor {
             if (!sections.has(section)) sections.set(section, []);
             sections.get(section).push(field);
         }
-        const sectionLabels = { basic: 'Basic Info', tech: 'Technical Properties', color: 'Color Properties' };
-        editor.innerHTML = `<h1>${this.escapeHtml(this.currentAsset.name)}</h1>
-            <button class="analyze-btn" type="button" onclick="app.analyzeCurrentAsset()">Auto-Analyze ${this.escapeHtml(this.config.assetLabel)}</button>
-            ${[...sections].map(([section, fields]) => `<div class="form-section">
-                <h3 class="form-section-title">${sectionLabels[section] || section}</h3>
-                <div class="field-schema-grid">${fields.map(field => this.renderField(field)).join('')}</div>
-            </div>`).join('')}
-            <div class="form-section">
-                <h3 class="form-section-title">Tags</h3>
+        // Sections are named for what the user is trying to answer, not for
+        // which table the columns live in. Order is declared here, not
+        // inferred from FIELDS declaration order.
+        const sectionLabels = { basic: 'Identity', organization: 'Organization', color: 'Color', tech: 'File & animation', publishing: 'Publishing' };
+        const ordered = Object.keys(sectionLabels).filter(key => sections.has(key))
+            .concat([...sections.keys()].filter(key => !(key in sectionLabels)));
+        editor.innerHTML = `<div class="editor-title-row">
+                <h1>${this.escapeHtml(this.currentAsset.name)}</h1>
+                <button class="btn btn-secondary btn-sm" type="button" onclick="app.analyzeCurrentAsset()">Auto-Analyze</button>
+            </div>
+            ${ordered.map(section => `<details class="admin-section" open>
+                <summary class="admin-section-title">${sectionLabels[section] || section}</summary>
+                <div class="property-list">${this.renderFieldGroups(sections.get(section)).join('')}</div>
+            </details>`).join('')}
+            <details class="admin-section" open>
+                <summary class="admin-section-title">Tags</summary>
                 <div class="tag-section"><div class="tag-list" id="tagList"></div>
+                    <input type="search" id="tagSearch" placeholder="Search tag names and aliases" oninput="app.updateTagDisplay()">
                     <select id="tagSelect" onchange="app.addTag(); this.value='';"></select>
+                    <div id="tagSearchHint" class="tag-search-hint"></div>
                 </div>
-            </div>`;
+            </details>`;
         this.updateTagDisplay();
     }
 
+    // Renders one row per field, except fields sharing a `group` key
+    // (e.g. width/height), which combine into a single compact row.
+    renderFieldGroups(fields) {
+        const rendered = [];
+        const seen = new Set();
+        for (const field of fields) {
+            if (seen.has(field.key)) continue;
+            if (field.group) {
+                const groupFields = fields.filter(candidate => candidate.group === field.group);
+                groupFields.forEach(candidate => seen.add(candidate.key));
+                rendered.push(this.renderFieldGroupRow(groupFields));
+            } else {
+                seen.add(field.key);
+                rendered.push(this.renderField(field));
+            }
+        }
+        return rendered;
+    }
+
+    renderFieldGroupRow(fields) {
+        const inputs = fields.map((field, index) =>
+            `${index > 0 ? '<span class="property-pair-sep">×</span>' : ''}<input type="number" id="${field.key}" value="${this.escapeHtml(this.currentAsset[field.key] ?? '')}" aria-label="${this.escapeHtml(field.label)}">`).join('');
+        return `<div class="property-row">
+            <span class="property-label">${this.escapeHtml(fields[0].groupLabel || fields[0].label)}</span>
+            <div class="property-control property-control-pair">${inputs}</div>
+        </div>`;
+    }
+
     renderField(field) {
+        const html = this.renderFieldControl(field);
+        if (!field.hint) return html;
+        return html + this.propertyRow(field.label, `<small class="property-hint">${this.escapeHtml(field.hint)}</small>`, { continued: true });
+    }
+
+    renderFieldControl(field) {
         const value = this.currentAsset[field.key];
         if (field.input === 'checkbox') {
-            return `<label class="form-group checkbox-group"><input type="checkbox" id="${field.key}" ${Number(value) ? 'checked' : ''}> ${this.escapeHtml(field.label)}</label>`;
+            return this.propertyRow(field.label, `<input type="checkbox" class="field-switch" id="${field.key}" ${Number(value) ? 'checked' : ''}>`, { htmlFor: field.key });
         }
         if (field.input === 'select') {
-            return `<label class="form-group"><span>${this.escapeHtml(field.label)}</span><select id="${field.key}">
-                ${this.categories.map(category => `<option value="${category.id}" ${Number(category.id) === Number(value) ? 'selected' : ''}>${this.escapeHtml(category.name)}</option>`).join('')}
-            </select></label>`;
+            const options = this.categories.filter(category => category.id)
+                .map(category => `<option value="${category.id}" ${Number(category.id) === Number(value) ? 'selected' : ''}>${this.escapeHtml(category.name)}</option>`).join('');
+            return this.propertyRow(field.label, `<select id="${field.key}">${options}</select>`, { htmlFor: field.key });
+        }
+        if (field.input === 'textarea') {
+            return this.propertyRow(field.label, `<textarea id="${field.key}" rows="3">${this.escapeHtml(value ?? '')}</textarea>`, { htmlFor: field.key, tall: true });
+        }
+        // Observation hosts, filled by loadStoredAnalysis() on selection.
+        if (field.input === 'analysis') {
+            return `<div id="storedAnalysis" class="stored-analysis"></div>`;
+        }
+        if (field.input === 'analysisMeta') {
+            return `<div id="analysisProvenance" class="stored-analysis"></div>`;
         }
         if (field.input === 'colors') {
             const colors = value ? String(value).split(',') : [];
             const weights = this.currentAsset.color_weights ? String(this.currentAsset.color_weights).split(',') : [];
-            return `<div class="form-group field-span-full"><span>${this.escapeHtml(field.label)}</span>
-                <div class="color-inputs" id="colorInputs">${colors.map((color, index) => this.renderColorField(color, index, weights[index])).join('')}</div>
-                <button class="btn btn-secondary" type="button" onclick="app.addColorInput()">Add Color</button>
-            </div>`;
+            return this.propertyRow(field.label, `<div class="color-inputs" id="colorInputs">${colors.map((color, index) => this.renderColorField(color, index, weights[index])).join('')}</div>
+                <button class="btn btn-quiet btn-sm" type="button" onclick="app.addColorInput()">+ Add color</button>`, { tall: true });
         }
         const inputType = field.input === 'number' ? 'number' : 'text';
-        const preview = field.key === 'url' && value ? `<img src="${CONFIG.image_base_path}${this.escapeHtml(value)}" class="preview-image" alt="Preview">` : '';
-        return `<label class="form-group ${field.full ? 'field-span-full' : ''}"><span>${this.escapeHtml(field.label)}</span>
-            <input type="${inputType}" id="${field.key}" value="${this.escapeHtml(value ?? '')}" ${field.step ? `step="${field.step}"` : ''}>
-            ${preview}
-        </label>`;
+        const input = `<input type="${inputType}" id="${field.key}" value="${this.escapeHtml(value ?? '')}" ${field.step ? `step="${field.step}"` : ''}>`;
+        const row = this.propertyRow(field.label, input, { htmlFor: field.key });
+        // The URL field keeps its input inline like every other row; the
+        // preview follows as a continuation row under the same control column.
+        if (field.key === 'url' && value) {
+            return row + this.propertyRow(field.label, `<img src="${CONFIG.image_base_path}${this.escapeHtml(value)}" class="preview-image" alt="Preview">`, { continued: true });
+        }
+        return row;
     }
 
+    // The one row primitive every admin form composes from.
+    propertyRow(label, controlHtml, { htmlFor = null, tall = false, continued = false } = {}) {
+        const classes = ['property-row', tall ? 'property-row-tall' : '', continued ? 'property-row-continued' : ''].filter(Boolean).join(' ');
+        const labelTag = htmlFor
+            ? `<label class="property-label" for="${htmlFor}">${this.escapeHtml(label)}</label>`
+            : `<span class="property-label">${this.escapeHtml(label)}</span>`;
+        return `<div class="${classes}">${labelTag}<div class="property-control">${controlHtml}</div></div>`;
+    }
+
+    // Read-only observed value, same alignment as an editable row.
+    propertyValueRow(label, valueHtml) {
+        return `<div class="property-row"><span class="property-label">${this.escapeHtml(label)}</span><div class="property-value">${valueHtml}</div></div>`;
+    }
+
+    // The analyzed weight rides on the row so editing the list preserves each
+    // color's measured coverage instead of flattening everything to uniform.
     renderColorField(color, index, weight = null) {
-        return `<div class="color-input-wrapper">
-            <input type="color" value="${this.escapeHtml(color)}" onchange="app.syncColorInputs(${index})">
-            <input type="text" value="${this.escapeHtml(color)}" onchange="app.syncColorInputs(${index})">
-            ${weight !== null ? `<span class="color-coverage">${Math.round(Number(weight) * 100)}%</span>` : ''}
-            <button class="color-remove-btn" type="button" onclick="app.removeColorInput(${index})">×</button>
+        const hasWeight = weight != null && weight !== '';
+        return `<div class="color-input-wrapper" data-weight="${hasWeight ? Number(weight) : ''}">
+            <input type="color" value="${this.escapeHtml(color)}" onchange="app.syncColorInputs(${index})" aria-label="Color ${index + 1}">
+            <input type="text" value="${this.escapeHtml(color)}" onchange="app.syncColorInputs(${index})" aria-label="Color ${index + 1} hex">
+            <span class="color-coverage">${hasWeight ? `${Math.round(Number(weight) * 100)}%` : ''}</span>
+            <button class="color-remove-btn" type="button" onclick="app.removeColorInput(${index})" aria-label="Remove color ${index + 1}">×</button>
         </div>`;
     }
 
@@ -285,26 +380,35 @@ class AssetEditor {
             if (contentScroll) contentScroll.scrollTop = scrollTop;
         }, 0);
     } else {
-        this.showStatus('Error: ' + result.error, 'error');
+        this.showStatus('Error: ' + this.errorMessage(result), 'error');
     }
 }
 
     getAssetDataFromForm() {
         const data = { id: this.currentAsset.id };
         for (const field of this.constructor.FIELDS || []) {
-            if (!field.input) continue;
+            if (!field.input || field.input === 'analysis' || field.input === 'analysisMeta') continue; // observed, never posted back
             const input = document.getElementById(field.key);
             const key = field.dbKey || field.key;
+            if (!input && field.input !== 'colors') continue;
             if (field.input === 'checkbox') data[key] = input.checked ? 1 : 0;
             else if (field.input === 'number' || field.input === 'select') data[key] = input.value === '' ? null : Number(input.value);
             else if (field.input === 'colors') {
-                const colors = [...document.querySelectorAll('#colorInputs input[type="text"]')].map(node => node.value.trim()).filter(Boolean);
-                data[key] = colors.join(',');
-                const oldColors = String(this.currentAsset.color_codes || '').split(',').filter(Boolean);
-                const oldWeights = String(this.currentAsset.color_weights || '').split(',').filter(Boolean);
-                data.color_weights = colors.length === oldColors.length && colors.every((color, index) => color === oldColors[index]) && oldWeights.length === colors.length
-                    ? oldWeights.join(',')
-                    : colors.map(() => (1 / colors.length).toFixed(2)).join(',');
+                // Each row carries its own analyzed weight; only rows added by
+                // hand (no measured coverage) fall back to an even share.
+                const rows = [...document.querySelectorAll('#colorInputs .color-input-wrapper')]
+                    .map(row => ({
+                        hex: row.querySelector('input[type="text"]').value.trim(),
+                        weight: row.dataset.weight === '' ? null : Number(row.dataset.weight)
+                    }))
+                    .filter(row => row.hex);
+                const unweighted = rows.filter(row => row.weight == null).length;
+                const remainder = Math.max(0, 1 - rows.reduce((total, row) => total + (row.weight ?? 0), 0));
+                const fallback = unweighted ? remainder / unweighted : 0;
+                data[key] = rows.map(row => row.hex).join(',');
+                data.color_weights = rows
+                    .map(row => Math.max(0.01, row.weight ?? fallback).toFixed(2))
+                    .join(',');
             } else data[key] = input.value || (field.nullable ? null : '');
         }
         data.tags = this.currentAsset.tags.map(tag => Number(tag.id));
@@ -333,366 +437,64 @@ class AssetEditor {
             await this.loadAssets();
             this.showStatus(`${this.config.assetLabel} deleted!`, 'success');
         } else {
-            alert('Error: ' + result.error);
+            alert('Error: ' + this.errorMessage(result));
         }
     }
 
     // ===== ADD ASSET MODAL =====
 
-    showAddModal() {
-        const modal = document.getElementById('addModal');
-        const quickCategory = document.getElementById('quickCategory');
-
-        const options = this.categories.map(cat =>
-            `<option value="${cat.slug}" data-id="${cat.id}">${cat.name}</option>`
-        ).join('');
-
-        quickCategory.innerHTML = '<option value="">Select category...</option>' + options;
-        quickCategory.onchange = () => {
-            if (!quickCategory.value || !this.pendingDropFiles?.length) return;
+    async showAddModal(itemId = null) {
+        if (!this.ingestReview) {
+            this.ingestReview = new IngestReview(this, document.getElementById('addModal'));
+        }
+        await this.ingestReview.open(itemId);
+        if (this.pendingDropFiles?.length) {
             const files = this.pendingDropFiles;
             this.pendingDropFiles = null;
-            this.uploadFiles(files);
-        };
-
-        modal.classList.add('active');
+            await this.ingestReview.upload(files);
+        }
     }
 
     hideAddModal() {
-        document.getElementById('addModal').classList.remove('active');
+        this.deactivateModal(document.getElementById('addModal'));
     }
 
     updateFilePath() {
-        const select = document.getElementById('quickCategory');
-        const urlInput = document.getElementById(`new${this.config.assetLabel}Url`);
-        const nameInput = document.getElementById(`new${this.config.assetLabel}Name`);
-
-        if (select.value && nameInput.value) {
-            const filename = nameInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            urlInput.value = `images/${this.config.assetType}/${select.value}/${filename}.gif`;
-        }
+        // Canonical paths are previewed from server-provided category records.
     }
 
     handleFileSelection(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const select = document.getElementById('quickCategory');
-        const urlInput = document.getElementById(`new${this.config.assetLabel}Url`);
-
-        if (!select.value) {
-            alert('Please select a category first');
-            event.target.value = '';
-            return;
-        }
-
-        const ext = file.name.split('.').pop();
-        const filename = file.name.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        urlInput.value = `images/${this.config.assetType}/${select.value}/${filename}.${ext}`;
         if (event.target.files.length) this.uploadFiles([...event.target.files]);
     }
 
     async addAsset() {
-        const name = document.getElementById(`new${this.config.assetLabel}Name`).value.trim();
-        const url = document.getElementById(`new${this.config.assetLabel}Url`).value.trim();
-        const categorySlug = document.getElementById('quickCategory').value;
-
-        if (!name || !url || !categorySlug) {
-            alert('Please fill in all fields');
-            return;
-        }
-
-        const select = document.getElementById('quickCategory');
-        const categoryId = select.options[select.selectedIndex].dataset.id;
-
-        const data = {
-            name: name,
-            filename: url.split('/').pop(),
-            url: url,
-            category_id: parseInt(categoryId)
-        };
-
-        this.showStatus('Adding...');
-
-        const response = await adminFetch(`includes/api.php?action=add&type=${this.config.assetType}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            this.hideAddModal();
-            await this.loadAssets();
-            this.showStatus(`${this.config.assetLabel} added!`, 'success');
-
-            // Clear form
-            document.getElementById(`new${this.config.assetLabel}Name`).value = '';
-            document.getElementById(`new${this.config.assetLabel}Url`).value = '';
-            document.getElementById('quickCategory').value = '';
-        } else {
-            alert('Error: ' + result.error);
-        }
+        await this.showAddModal();
     }
 
     // ===== CATEGORY MANAGEMENT =====
 
     showManageCategoriesModal() {
-        document.getElementById('categoryModal').classList.add('active');
-        this.renderCategoriesList();
+        if (!this.categoryManager) {
+            this.categoryManager = new CategoryManager(this, document.getElementById('categoryModal'));
+        }
+        this.categoryManager.open();
     }
 
     hideCategoryModal() {
-        document.getElementById('categoryModal').classList.remove('active');
-    }
-
-    async renderCategoriesList() {
-        const response = await adminFetch(`includes/api.php?action=categories&type=${this.config.assetType}`);
-        const categories = await response.json();
-
-        const container = document.getElementById('categoriesList');
-        
-        if (categories.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No categories yet</p>';
-            return;
-        }
-
-        container.innerHTML = categories.map(cat => `
-            <div class="category-item">
-                ${cat.color ? `<div class="category-color-preview" style="background: ${cat.color}"></div>` : ''}
-                ${cat.icon ? `<img src="${CONFIG.image_base_path}${cat.icon}" alt="" class="category-icon-preview">` : ''}
-                <div class="category-info">
-                    <strong>${cat.name}</strong>
-                    <span class="category-slug">${cat.slug}</span>
-                </div>
-                <div class="category-actions">
-                    <button class="btn btn-sm" onclick="app.editCategory(${cat.id})">Edit</button>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteCategory(${cat.id})">Delete</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    setupCategoryFormHelpers() {
-        const nameInput = document.getElementById('newCategoryName');
-        const slugInput = document.getElementById('newCategorySlug');
-
-        if (nameInput && slugInput) {
-            nameInput.addEventListener('input', (e) => {
-                if (!slugInput.dataset.manuallyEdited) {
-                    slugInput.value = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                }
-            });
-
-            slugInput.addEventListener('input', () => {
-                slugInput.dataset.manuallyEdited = 'true';
-            });
-        }
-    }
-
-    async addCategory() {
-        const name = document.getElementById('newCategoryName').value.trim();
-        const slug = document.getElementById('newCategorySlug').value.trim();
-        const description = document.getElementById('newCategoryDescription').value.trim();
-        const icon = document.getElementById('newCategoryIcon').value.trim();
-        const color = document.getElementById('newCategoryColor').value;
-        const sortOrder = parseInt(document.getElementById('newCategorySortOrder').value) || 0;
-
-        if (!name || !slug) {
-            alert('Name and slug are required');
-            return;
-        }
-
-        const data = { name, slug, description, icon, color, sort_order: sortOrder };
-
-        const response = await adminFetch(`includes/api.php?action=add_category&type=${this.config.assetType}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            document.getElementById('newCategoryName').value = '';
-            document.getElementById('newCategorySlug').value = '';
-            document.getElementById('newCategoryDescription').value = '';
-            document.getElementById('newCategoryIcon').value = '';
-            document.getElementById('newCategorySortOrder').value = '0';
-            delete document.getElementById('newCategorySlug').dataset.manuallyEdited;
-            
-            await this.loadCategories();
-            await this.renderCategoriesList();
-            this.showStatus('Category added!', 'success');
-        } else {
-            alert(result.error);
-        }
-    }
-
-    async deleteCategory(id) {
-        if (!confirm('Delete this category? This will fail if any assets use it.')) return;
-
-        const formData = new FormData();
-        formData.append('id', id);
-
-        const response = await adminFetch(`includes/api.php?action=delete_category&type=${this.config.assetType}`, {
-            method: 'POST',
-            body: formData
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            await this.renderCategoriesList();
-            this.showStatus('Category deleted!', 'success');
-        } else {
-            alert(result.error);
-        }
-    }
-
-editCategory(id) {
-    // Convert to int to ensure type match
-    const category = this.categories.find(c => parseInt(c.id) === parseInt(id));
-    if (!category) {
-        this.showStatus('Category not found', 'error');
-        return;
-    }
-
-    document.getElementById('editCategoryId').value = category.id;
-    document.getElementById('editCategoryName').value = category.name;
-    document.getElementById('editCategorySlug').value = category.slug;
-    document.getElementById('editCategoryDescription').value = category.description || '';
-    document.getElementById('editCategoryIcon').value = category.icon || '';
-    document.getElementById('editCategoryColor').value = category.color || '#ff69b4';
-    document.getElementById('editCategorySortOrder').value = category.sort_order || 0;
-
-    document.getElementById('editCategoryModal').classList.add('active');
-}
-
-    hideEditCategoryModal() {
-        document.getElementById('editCategoryModal').classList.remove('active');
-    }
-
-    async saveCategory() {
-        const id = parseInt(document.getElementById('editCategoryId').value);
-        const name = document.getElementById('editCategoryName').value.trim();
-        const slug = document.getElementById('editCategorySlug').value.trim();
-        const description = document.getElementById('editCategoryDescription').value.trim();
-        const icon = document.getElementById('editCategoryIcon').value.trim();
-        const color = document.getElementById('editCategoryColor').value;
-        const sortOrder = parseInt(document.getElementById('editCategorySortOrder').value) || 0;
-
-        const data = { id, name, slug, description, icon, color, sort_order: sortOrder };
-
-        const response = await adminFetch(`includes/api.php?action=update_category&type=${this.config.assetType}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            this.hideEditCategoryModal();
-            await this.loadCategories();
-            await this.renderCategoriesList();
-            this.showStatus('Category updated!', 'success');
-        } else {
-            alert(result.error);
-        }
+        this.deactivateModal(document.getElementById('categoryModal'));
     }
 
     // ===== TAG MANAGEMENT =====
 
     showManageTagsModal() {
         const modal = document.getElementById(this.config.tagModalId || 'tagModal');
-        modal.classList.add('active');
-        this.renderTagList();
-        this.renderTagCategorySelect();
+        if (!this.tagManager) this.tagManager = new TagManager(this, modal);
+        this.tagManager.open();
     }
 
     hideManageTagsModal() {
         const modal = document.getElementById(this.config.tagModalId || 'tagModal');
-        modal.classList.remove('active');
-    }
-
-    renderTagCategorySelect() {
-        const select = document.getElementById('newTagCategory');
-        select.innerHTML = this.tagCategories.map(cat =>
-            `<option value="${cat.id}">${cat.name}</option>`
-        ).join('');
-    }
-
-    async renderTagList() {
-        const response = await adminFetch(`includes/api.php?action=tags&type=${this.config.assetType}`);
-        const tags = await response.json();
-
-        const grouped = {};
-        tags.forEach(tag => {
-            if (!grouped[tag.category_name]) {
-                grouped[tag.category_name] = [];
-            }
-            grouped[tag.category_name].push(tag);
-        });
-
-        // Target the MODAL's tag list, not the editor's tag list
-        const container = document.querySelector(`#${this.config.tagModalId || 'tagModal'} .tag-management-list`);
-        if (!container) {
-            console.error('Tag management list container not found in modal');
-            return;
-        }
-        
-        container.innerHTML = Object.entries(grouped).map(([category, categoryTags]) => `
-            <div>
-                <h5>${category}</h5>
-                ${categoryTags.map(tag => `
-                    <div class="management-item">
-                        <div class="management-item-info">
-                            <div class="management-item-name">
-                                ${tag.hex_color ? `<span class="tag-color" style="background: ${tag.hex_color}; display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; border: 1px solid var(--border-primary);"></span>` : ''}
-                                ${tag.name}
-                            </div>
-                        </div>
-                        <button class="management-item-delete" onclick="app.deleteTag(${tag.id})">Delete</button>
-                    </div>
-                `).join('')}
-            </div>
-        `).join('');
-    }
-
-    async addNewTag() {
-        const name = document.getElementById('newTagName').value.trim();
-        const categoryId = parseInt(document.getElementById('newTagCategory').value);
-        const hexColor = document.getElementById('newTagHexColor').value.trim();
-
-        if (!name || !categoryId) {
-            alert('Name and category are required');
-            return;
-        }
-
-        const data = { name, category_id: categoryId };
-        if (hexColor) data.hex_color = hexColor;
-
-        const response = await adminFetch(`includes/api.php?action=add_tag&type=${this.config.assetType}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            document.getElementById('newTagName').value = '';
-            document.getElementById('newTagHexColor').value = '';
-            await this.loadTags();
-            await this.renderTagList();
-            this.showStatus('Tag added!', 'success');
-        } else {
-            alert(result.error);
-        }
+        this.deactivateModal(modal);
     }
 
     async deleteTag(id) {
@@ -710,13 +512,12 @@ editCategory(id) {
 
         if (result.success) {
             await this.loadTags();
-            await this.renderTagList();
             const msg = result.removed_from ?
                 `Tag deleted! Removed from ${result.removed_from} ${this.config.assetLabel.toLowerCase()}(s).` :
                 'Tag deleted!';
             this.showStatus(msg, 'success');
         } else {
-            alert('Error: ' + result.error);
+            alert('Error: ' + this.errorMessage(result));
         }
     }
 
@@ -742,18 +543,21 @@ editCategory(id) {
 
     updateTagDisplay() {
         const s = this.currentAsset;
-        const tagListHtml = s.tags.map(tag => `
-            <div class="tag">
-                ${tag.hex_color ? `<div class="tag-color" style="background: ${tag.hex_color}"></div>` : ''}
-                <span>${tag.name}</span>
-                <button onclick="app.removeTag(${tag.id})" class="tag-remove">×</button>
-            </div>
-        `).join('');
+        const tagListHtml = s.tags.map(tag => `<span class="tag">
+                ${tag.hex_color ? `<span class="tag-color" style="--tag-color:${this.escapeHtml(tag.hex_color)}"></span>` : ''}
+                <span>${this.escapeHtml(tag.name)}</span>
+                <button type="button" onclick="app.removeTag(${tag.id})" class="tag-remove" aria-label="Remove tag ${this.escapeHtml(tag.name)}">×</button>
+            </span>`).join('');
 
         document.getElementById('tagList').innerHTML = tagListHtml;
 
         const tagSelect = document.getElementById('tagSelect');
-        const availableTags = this.tags.filter(t => !s.tags.find(st => st.id === t.id));
+        const query = document.getElementById('tagSearch')?.value.trim().toLowerCase() || '';
+        const availableTags = this.tags.filter(t => {
+            if (s.tags.find(st => Number(st.id) === Number(t.id))) return false;
+            if (!query) return true;
+            return [t.name, ...(t.aliases || [])].some(value => String(value).toLowerCase().includes(query));
+        });
         const groupedTags = this.groupTagsByCategory(availableTags);
 
         tagSelect.innerHTML = `
@@ -764,6 +568,32 @@ editCategory(id) {
                 </optgroup>
             `).join('')}
         `;
+        const hint = document.getElementById('tagSearchHint');
+        if (hint) {
+            const exact = this.tags.some(tag =>
+                String(tag.name).toLowerCase() === query
+                || (tag.aliases || []).some(alias => String(alias).toLowerCase() === query)
+            );
+            const probable = query && this.tags.find(tag => {
+                const canonical = String(tag.name).toLowerCase();
+                return `${canonical}s` === query || `${query}s` === canonical
+                    || (canonical.endsWith('y') && `${canonical.slice(0, -1)}ies` === query)
+                    || (query.endsWith('y') && `${query.slice(0, -1)}ies` === canonical);
+            });
+            hint.innerHTML = query && !exact
+                ? `${probable ? `<span>Possible duplicate of ${this.escapeHtml(probable.name)}.</span>` : ''}<button type="button" class="btn btn-quiet btn-sm" onclick="app.createTagFromSearch()">Create tag “${this.escapeHtml(query)}”</button>`
+                : '';
+        }
+    }
+
+    async createTagFromSearch() {
+        const query = document.getElementById('tagSearch')?.value.trim();
+        if (!query) return;
+        this.showManageTagsModal();
+        await this.tagManager.load();
+        this.tagManager.openForm();
+        this.tagManager.form.elements.name.value = query;
+        this.tagManager.updateDuplicateWarning();
     }
 
     groupTagsByCategory(tags) {
@@ -796,7 +626,7 @@ editCategory(id) {
             this.exportStale = false;
             this.showStatus(`Saved to ${result.path} (${result.bytes} bytes)`, 'success');
         } else {
-            alert('Error: ' + result.error);
+            alert('Error: ' + this.errorMessage(result));
             this.showStatus('Export failed', 'error');
         }
     }
@@ -813,7 +643,7 @@ editCategory(id) {
         if (result.success) {
             this.showStatus(`Categories saved to ${result.path} (${result.bytes} bytes)`, 'success');
         } else {
-            alert('Error: ' + result.error);
+            alert('Error: ' + this.errorMessage(result));
             this.showStatus('Category export failed', 'error');
         }
     }
@@ -932,6 +762,44 @@ editCategory(id) {
 			event.preventDefault();
 			event.returnValue = '';
 		});
+		document.addEventListener('keydown', event => {
+			const activeModals = [...document.querySelectorAll('.modal.active')];
+			const modal = activeModals[activeModals.length - 1];
+			if (!modal) return;
+			if (modal.querySelector('dialog[open]')) return;
+			if (event.key === 'Escape') {
+				event.preventDefault();
+				this.deactivateModal(modal);
+				return;
+			}
+			if (event.key !== 'Tab') return;
+			const focusable = [...modal.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])')]
+				.filter(element => !element.disabled && element.offsetParent !== null);
+			if (!focusable.length) return;
+			const first = focusable[0];
+			const last = focusable[focusable.length - 1];
+			if (event.shiftKey && document.activeElement === first) {
+				event.preventDefault();
+				last.focus();
+			} else if (!event.shiftKey && document.activeElement === last) {
+				event.preventDefault();
+				first.focus();
+			}
+		});
+	}
+
+	activateModal(modal) {
+		if (!modal.classList.contains('active')) modal._adminOpener = document.activeElement;
+		modal.classList.add('active');
+		requestAnimationFrame(() => {
+			modal.querySelector('button, input, select, textarea, a[href]')?.focus();
+		});
+	}
+
+	deactivateModal(modal) {
+		modal.classList.remove('active');
+		if (modal._adminOpener?.isConnected) modal._adminOpener.focus();
+		modal._adminOpener = null;
 	}
 
 	bindDirtyTracking() {
@@ -957,27 +825,16 @@ editCategory(id) {
 		return node.innerHTML;
 	}
 
+	errorMessage(payload) {
+		if (!payload) return 'Unknown error';
+		if (typeof payload === 'string') return payload;
+		if (typeof payload.error === 'string') return payload.error;
+		return payload.error?.message || payload.message || 'Unknown error';
+	}
+
 	async uploadFiles(files) {
-		const select = document.getElementById('quickCategory');
-		const categoryId = select?.options[select.selectedIndex]?.dataset.id;
-		if (!categoryId) {
-			alert('Please select a category first');
-			return;
-		}
-		for (let index = 0; index < files.length; index++) {
-			this.showStatus(`Uploading ${index + 1} of ${files.length}: ${files[index].name}`);
-			const body = new FormData();
-			body.append('file', files[index]);
-			body.append('category_id', categoryId);
-			const response = await adminFetch(`includes/api.php?action=upload&type=${this.config.assetType}`, { method: 'POST', body });
-			const result = await response.json();
-			if (!result.success) {
-				this.showStatus(result.duplicate ? `Duplicate: ${result.existing.name}` : `Upload failed: ${result.error}`, 'error', 6000);
-			}
-		}
-		await this.loadAssets();
-		this.hideAddModal();
-		this.showStaleStatus('Uploads are pending approval.');
+		await this.showAddModal();
+		await this.ingestReview.upload(files);
 	}
 
 	async analyzeCurrentAsset() {
@@ -986,14 +843,15 @@ editCategory(id) {
 		const response = await adminFetch(`includes/api.php?action=analyze&id=${this.currentAsset.id}&type=${this.config.assetType}`);
 		const analysis = await response.json();
 		if (analysis.error) {
-			this.showStatus(`Analysis failed: ${analysis.error}`, 'error');
+			this.showStatus(`Analysis failed: ${this.errorMessage(analysis)}`, 'error');
 			return;
 		}
 		this.showAnalyzeModal(analysis);
+		this.loadStoredAnalysis(); // the analyze call persisted a new observation
 	}
 
 	async analyzeBulk() {
-		const includeColors = this.config.assetType !== 'glitter' || document.getElementById('bulkIncludeColors')?.checked !== false;
+		const includeColors = this.config.assetType !== 'glitter';
 		if (!confirm(`Analyze all ${this.config.assetLabelPlural.toLowerCase()} in batches?`)) return;
 		const ids = this.assets.filter(asset => Number(asset.is_active)).map(asset => Number(asset.id));
 		const size = 10;
@@ -1006,7 +864,7 @@ editCategory(id) {
 				body: JSON.stringify({ ids: ids.slice(offset, offset + size), include_colors: includeColors })
 			});
 			const result = await response.json();
-			if (result.error) throw new Error(result.error);
+			if (result.error) throw new Error(this.errorMessage(result));
 			updated += result.updated;
 		}
 		await this.loadAssets();
@@ -1030,7 +888,10 @@ editCategory(id) {
 				<input type="checkbox" id="apply_${field.key}" checked>
 				<div class="analyze-result-content">
 					<div class="analyze-result-label">${this.escapeHtml(field.label)}</div>
-					<div class="analyze-comparison"><span>Current: ${this.escapeHtml(format(oldValue))}</span><span>Proposed: ${this.escapeHtml(format(newValue))}</span></div>
+					${this.renderComparison(
+						`<span class="analyze-result-value">${this.escapeHtml(format(oldValue))}</span>`,
+						`<span class="analyze-result-value">${this.escapeHtml(format(newValue))}</span>`
+					)}
 				</div>
 			</div>`;
 		}).join('') + suggestions.map(tag => {
@@ -1041,11 +902,140 @@ editCategory(id) {
 				<span><strong>${this.escapeHtml(tag.name)}</strong> — ${this.escapeHtml(tag.reason)}${tag.tag_id ? '' : ' (create tag first)'}</span>
 			</label>`;
 		}).join('');
+		results.insertAdjacentHTML('beforeend', this.renderColorProposals(analysis));
+		if (analysis.normalized?.palette && this.shouldShowAnalysisPalette()) {
+			results.insertAdjacentHTML('beforeend', this.renderAnalysisPalette(analysis.normalized.palette));
+		}
 		if (!results.children.length) {
 			results.innerHTML = '<p class="analysis-no-changes">No changes detected.</p>';
 		}
 		this.analysisResults = analysis;
-		document.getElementById('analyzeModal').classList.add('active');
+		this.updateAnalysisActions();
+		this.activateModal(document.getElementById('analyzeModal'));
+	}
+
+	// Asset editors render an editable Colors list, so repeating the observed
+	// swatches would show the same colors twice. Hosts without that list
+	// (the intake queue) call renderAnalysisPalette with swatches enabled.
+	shouldShowAnalysisPalette() {
+		return false;
+	}
+
+	// Proposed colors are applied one at a time and additively: colors already
+	// in the list are shown for context but cannot be re-added, so applying
+	// can never duplicate an entry or discard a hand-picked color.
+	renderColorProposals(analysis) {
+		if (!(this.constructor.FIELDS || []).some(field => field.input === 'colors')) return '';
+		const proposed = String(analysis.color_codes || '').split(',').map(value => value.trim()).filter(Boolean);
+		if (!proposed.length) return '';
+		const weights = String(analysis.color_weights || '').split(',').map(Number);
+		const existing = this.currentColorHexes();
+		const rows = proposed.map((hex, index) => {
+			const already = existing.includes(hex.toUpperCase());
+			const weight = Number.isFinite(weights[index]) ? weights[index] : null;
+			return `<label class="analyze-color-option ${already ? 'is-present' : ''}">
+				<input type="checkbox" data-apply-color="${this.escapeHtml(hex)}" data-color-weight="${weight ?? ''}" ${already ? 'disabled' : 'checked'}>
+				<span class="swatch-chip" style="--swatch-color:${this.escapeHtml(hex)}"><i></i><code>${this.escapeHtml(hex)}</code><small>${weight == null ? '' : `${Math.round(weight * 100)}%`}</small></span>
+				<em>${already ? 'already added' : 'add'}</em>
+			</label>`;
+		}).join('');
+		return `<div class="analyze-result-item analyze-colors">
+			<div class="analyze-result-content">
+				<div class="analyze-result-label">Colors</div>
+				<div class="analyze-color-options">${rows}</div>
+			</div>
+		</div>`;
+	}
+
+	currentColorHexes() {
+		return [...document.querySelectorAll('#colorInputs input[type="text"]')]
+			.map(input => input.value.trim().toUpperCase()).filter(Boolean);
+	}
+
+	updateAnalysisActions() {
+		const modal = document.getElementById('analyzeModal');
+		const hasChanges = Boolean(modal.querySelector('#analyzeResults input[type="checkbox"]:not(:disabled)'));
+		const hasPalette = Boolean(modal.querySelector('.analysis-palette'));
+		const apply = modal.querySelector('[data-apply-analysis]');
+		const close = modal.querySelector('[data-close-analysis]');
+		apply.hidden = !hasChanges;
+		close.textContent = hasChanges ? 'Cancel' : 'Close';
+		// Only promise a palette when one is actually rendered — glitter hides
+		// it here because its Color section already lists the same colors.
+		modal.querySelector('[data-analysis-help]').textContent = hasChanges
+			? 'Only values that differ from the current record are available to apply. Palette observations are stored automatically.'
+			: hasPalette
+				? 'No editable values changed. The palette observation below was stored automatically.'
+				: 'Nothing to apply — the stored analysis already matches this record. Colors and palette are shown in the editor under Color.';
+	}
+
+	// Loaded once per asset selection. The stored analysis is an observation,
+	// so it is displayed like any other set of read-only property rows.
+	async loadStoredAnalysis() {
+		const host = document.getElementById('storedAnalysis');
+		if (!host) return;
+		const assetId = this.currentAsset.id;
+		host.innerHTML = '<div class="loading-state">Loading stored analysis…</div>';
+		try {
+			const result = await AdminAPI.json(`includes/api.php?action=analysis_view&type=${this.config.assetType}&id=${assetId}`);
+			if (Number(this.currentAsset?.id) !== Number(assetId)) return;
+			if (!result.analysis) {
+				host.innerHTML = '<div class="empty-row">Not analyzed yet — run Auto-Analyze.</div>';
+				return;
+			}
+			const analysis = result.analysis;
+			host.innerHTML = this.renderAnalysisPalette(analysis.palette, this.shouldShowAnalysisPalette());
+			// Provenance belongs with the file, not with color. Dimensions,
+			// frames and transparency are already editable fields in that
+			// section — repeating them read-only here was pure duplication.
+			const meta = document.getElementById('analysisProvenance');
+			if (meta) {
+				meta.innerHTML = this.propertyValueRow('Analyzed', this.escapeHtml(result.analyzed_at || 'Unknown'))
+					+ this.propertyValueRow('Type', this.escapeHtml(analysis.file.mime || 'Unknown'));
+			}
+		} catch (error) {
+			host.innerHTML = `<div class="field-error">${this.escapeHtml(error.message)}</div>`;
+		}
+	}
+
+	formatBytes(bytes) {
+		const value = Number(bytes) || 0;
+		if (value < 1024) return `${value} B`;
+		if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+		return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+	}
+
+	// `withSwatches` is false where the type already renders an editable
+	// color list (glitter) — the observed palette and the editable palette
+	// are the same colors, and showing both reads as two sources of truth.
+	renderAnalysisPalette(palette, withSwatches = true) {
+		if (!palette) return '';
+		const swatches = withSwatches
+			? `<div class="property-row property-row-tall"><span class="property-label">Observed colors</span><div class="property-value">${this.renderSwatchChips(palette.colors || [])}</div></div>`
+			: '';
+		return `<div class="property-row analysis-palette"><span class="property-label">Palette type</span><div class="property-value"><span class="badge badge-info">${this.escapeHtml(palette.type)}</span></div></div>
+			${palette.explanation ? `<div class="property-row property-row-continued"><span class="property-label">Palette type</span><div class="property-value"><small class="property-hint">${this.escapeHtml(palette.explanation)} Confidence ${Math.round(Number(palette.confidence || 0) * 100)}%.</small></div></div>` : ''}
+			${swatches}`;
+	}
+
+	// Every analyze proposal — plain values and color lists alike — uses this
+	// same labelled two-column shape so the modal reads as one pattern.
+	renderComparison(currentHtml, proposedHtml) {
+		return `<div class="analyze-comparison">
+			<div><small>Current</small>${currentHtml}</div>
+			<div><small>Proposed</small>${proposedHtml}</div>
+		</div>`;
+	}
+
+	// One swatch presentation for every host: analyze modal, stored
+	// analysis, and the intake palette all call this.
+	renderSwatchChips(colors) {
+		const chips = colors.map(color => {
+			const hex = typeof color === 'string' ? color : color.hex;
+			const weight = typeof color === 'string' ? null : color.weight;
+			return `<span class="swatch-chip" style="--swatch-color:${this.escapeHtml(hex)}"><i></i><code>${this.escapeHtml(hex)}</code>${weight == null ? '' : `<small>${Math.round(Number(weight) * 100)}%</small>`}</span>`;
+		}).join('');
+		return `<div class="swatch-chips">${chips}</div>`;
 	}
 
 	analysisValuesEqual(field, oldValue, newValue) {
@@ -1061,30 +1051,31 @@ editCategory(id) {
 
 	async openRequestedAsset() {
 		const params = new URLSearchParams(window.location.search);
+		if (params.has('ingest')) {
+			const ingestId = Number(params.get('ingest'));
+			await this.showAddModal(Number.isFinite(ingestId) && ingestId > 0 ? ingestId : null);
+			return;
+		}
 		const assetId = Number(params.get('asset'));
 		if (assetId && this.assets.some(asset => Number(asset.id) === assetId)) {
-			await this.selectAsset(assetId);
+			// Already the current URL — seed history state without a new entry.
+			window.history.replaceState({ assetId }, '', window.location.href);
+			await this.selectAsset(assetId, { pushHistory: false });
 			return;
 		}
 		const addUrl = params.get('addUrl');
 		if (!addUrl) return;
-		this.showAddModal();
-		const parts = addUrl.split('/');
-		const categorySlug = parts.length >= 4 ? parts[2] : '';
-		const category = this.categories.find(item => item.slug === categorySlug);
-		const categorySelect = document.getElementById('quickCategory');
-		if (category) categorySelect.value = category.slug;
-		const label = this.config.assetLabel;
-		const filename = parts.at(-1) || '';
-		document.getElementById(`new${label}Url`).value = addUrl;
-		document.getElementById(`new${label}Name`).value = filename
-			.replace(/\.[^.]+$/, '')
-			.replace(/[-_]+/g, ' ')
-			.replace(/\b\w/g, letter => letter.toUpperCase());
+		await this.showAddModal();
+		const existing = this.ingestReview.modal.querySelector('.register-existing');
+		existing.open = true;
+		const input = existing.querySelector('[data-existing-url]');
+		input.value = addUrl;
+		input.focus();
+		existing.scrollIntoView({ block: 'nearest' });
 	}
 
 	hideAnalyzeModal() {
-		document.getElementById('analyzeModal').classList.remove('active');
+		this.deactivateModal(document.getElementById('analyzeModal'));
 	}
 
 	applyAnalysis() {
@@ -1100,9 +1091,30 @@ editCategory(id) {
 			const tag = this.tags.find(candidate => Number(candidate.id) === Number(suggestion.tag_id));
 			if (tag && !this.currentAsset.tags.some(existing => Number(existing.id) === Number(tag.id))) this.currentAsset.tags.push(tag);
 		});
+		this.applySelectedColors();
 		this.updateTagDisplay();
 		this.setDirty(true);
 		this.hideAnalyzeModal();
+		// analyzeAsset persisted a fresh observation, so the Color section's
+		// stored-analysis rows are now stale.
+		this.loadStoredAnalysis();
+	}
+
+	// Appends only the checked, not-yet-present colors. Existing entries and
+	// their weights are untouched.
+	applySelectedColors() {
+		const container = document.getElementById('colorInputs');
+		if (!container) return;
+		const selected = [...document.querySelectorAll('[data-apply-color]:checked:not(:disabled)')];
+		if (!selected.length) return;
+		const existing = this.currentColorHexes();
+		for (const input of selected) {
+			const hex = input.dataset.applyColor.trim();
+			if (existing.includes(hex.toUpperCase())) continue;
+			existing.push(hex.toUpperCase());
+			const weight = input.dataset.colorWeight === '' ? null : Number(input.dataset.colorWeight);
+			container.insertAdjacentHTML('beforeend', this.renderColorField(hex, container.children.length, weight));
+		}
 	}
 
 	async approveAsset() {
@@ -1117,7 +1129,7 @@ editCategory(id) {
 		body.append('id', this.currentAsset.id);
 		const response = await adminFetch(`includes/api.php?action=reject&type=${this.config.assetType}`, { method: 'POST', body });
 		const result = await response.json();
-		if (!result.success) throw new Error(result.error);
+		if (!result.success) throw new Error(this.errorMessage(result));
 		this.currentAsset = null;
 		this.setDirty(false);
 		await this.loadAssets();

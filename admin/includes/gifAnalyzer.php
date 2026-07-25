@@ -112,11 +112,16 @@ class GifAnalyzer
 				$bucket['b'] / $bucket['count'],
 			];
 			$lab = rgbToLab($centroid[0], $centroid[1], $centroid[2]);
+			// Nearest cluster, not merely the first within range: greedy
+			// first-match let a bucket land in a worse-fitting cluster that
+			// happened to be created earlier.
 			$match = null;
+			$bestDistance = INF;
 			foreach ($clusters as $index => $cluster) {
-				if (deltaE($lab, $cluster['lab']) < $this->config['cluster_merge_distance']) {
+				$distance = deltaE2000($lab, $cluster['lab']);
+				if ($distance < $this->config['cluster_merge_distance'] && $distance < $bestDistance) {
+					$bestDistance = $distance;
 					$match = $index;
-					break;
 				}
 			}
 			if ($match === null) {
@@ -141,6 +146,8 @@ class GifAnalyzer
 			);
 		}
 
+		$clusters = $this->consolidateClusters($clusters);
+
 		foreach ($clusters as &$cluster) {
 			$count = $cluster['count'];
 			$cluster['rgb'] = [$cluster['r'] / $count, $cluster['g'] / $count, $cluster['b'] / $count];
@@ -154,7 +161,14 @@ class GifAnalyzer
 			return $b['coverage'] <=> $a['coverage'];
 		});
 
-		$threshold = $this->config['color_threshold'] / 100;
+		// Classify before thresholding: a rainbow spreads its coverage across
+		// many small clusters, so the type must be read from the full set.
+		$classification = (new ColorClassifier($this->config))->classify($clusters);
+
+		// Spread palettes keep a lower floor, otherwise a genuine rainbow
+		// exports as the two or three families that happened to clear 5%.
+		$isSpread = in_array($classification['palette_type'], ['rainbow', 'multicolor', 'complex-palette', 'gradient'], true);
+		$threshold = ($isSpread ? $this->config['palette_spread_threshold'] : $this->config['color_threshold']) / 100;
 		$kept = array_values(array_filter($clusters, function ($cluster) use ($threshold) {
 			return $cluster['coverage'] >= $threshold;
 		}));
@@ -182,7 +196,6 @@ class GifAnalyzer
 		$dominant = $dominant ?: $clusters[0];
 		list($hue, $saturation, $value) = rgbToHSV($dominant['rgb'][0], $dominant['rgb'][1], $dominant['rgb'][2]);
 		$colorValue = round(array_sum($dominant['rgb']) / (3 * 255), 2);
-		$classification = (new ColorClassifier($this->config))->classify($clusters);
 
 		return [
 			'color_codes' => implode(',', $codes),
@@ -198,6 +211,54 @@ class GifAnalyzer
 			'suggested_tags' => $this->suggestPatternTag($clusters),
 			'has_transparency' => $hasTransparency ? 1 : 0,
 		];
+	}
+
+	// A cluster's centroid moves as it absorbs buckets, so two clusters that
+	// were far apart when seeded can end up perceptually adjacent. Repeatedly
+	// fuse the closest pair still inside the merge threshold until stable —
+	// without this, one color family still exports as several near-identical
+	// entries and its true coverage stays split across them.
+	private function consolidateClusters($clusters)
+	{
+		$threshold = $this->config['cluster_merge_distance'];
+		$changed = true;
+		while ($changed && count($clusters) > 1) {
+			$changed = false;
+			$closest = null;
+			$bestDistance = $threshold;
+			$keys = array_keys($clusters);
+			foreach ($keys as $i => $keyA) {
+				for ($j = $i + 1; $j < count($keys); $j++) {
+					$distance = deltaE2000($clusters[$keyA]['lab'], $clusters[$keys[$j]]['lab']);
+					if ($distance < $bestDistance) {
+						$bestDistance = $distance;
+						$closest = [$keyA, $keys[$j]];
+					}
+				}
+			}
+			if (!$closest) {
+				break;
+			}
+			list($into, $from) = $closest;
+			// Keep the larger cluster as the survivor so the anchor colour
+			// stays the one with the most pixels behind it.
+			if ($clusters[$from]['count'] > $clusters[$into]['count']) {
+				list($into, $from) = [$from, $into];
+			}
+			foreach (['count', 'r', 'g', 'b'] as $field) {
+				$clusters[$into][$field] += $clusters[$from][$field];
+			}
+			$count = $clusters[$into]['count'];
+			$clusters[$into]['lab'] = rgbToLab(
+				$clusters[$into]['r'] / $count,
+				$clusters[$into]['g'] / $count,
+				$clusters[$into]['b'] / $count
+			);
+			unset($clusters[$from]);
+			$changed = true;
+		}
+
+		return array_values($clusters);
 	}
 
 	private function loadSampleFrames()

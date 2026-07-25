@@ -11,18 +11,15 @@ class GlitterAPI extends AssetAPI
         parent::__construct($db, $config, 'glitter');
     }
 
-    protected function formatAssetForExport($asset, $tags)
+    protected function formatAssetForExport($asset, $tags, $searchTerms = [])
     {
-        $colorCodes = [];
-        $colorWeights = [];
-        if (!empty($asset['color_codes'])) {
-            $colorCodes = array_map('trim', explode(',', $asset['color_codes']));
-        }
-        if (!empty($asset['color_weights'])) {
-            $colorWeights = array_map('floatval', explode(',', $asset['color_weights']));
-        }
+        $palette = $this->effectivePalette($asset);
+        $colorCodes = array_column($palette, 'hex');
+        $colorWeights = array_map('floatval', array_column($palette, 'weight'));
         if (count($colorCodes) !== count($colorWeights)) {
-            throw new Exception('Color code/weight mismatch for glitter ID ' . $asset['id']);
+            $colorWeights = $colorCodes
+                ? array_fill(0, count($colorCodes), round(1 / count($colorCodes), 4))
+                : [];
         }
 
         return [
@@ -46,6 +43,7 @@ class GlitterAPI extends AssetAPI
             'category' => $asset['category_slug'],
             'isPixelated' => (int)$asset['is_pixelated'],
             'tags' => $tags,
+            'searchTerms' => $searchTerms,
         ];
     }
 

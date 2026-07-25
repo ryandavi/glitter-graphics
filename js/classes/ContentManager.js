@@ -144,6 +144,7 @@ class ContentManager {
 			attribution: raw.attribution ?? defaults.attribution ?? null,
 			stickerText: raw.stickerText ?? defaults.stickerText ?? null,
 			tags: this.normalizeArrayValue(raw.tags, defaults.tags || []),
+			searchTerms: this.normalizeArrayValue(raw.searchTerms, defaults.searchTerms || []),
 			colors: this.normalizeArrayValue(raw.colors, defaults.colors || []),
 			generatedName: raw.generatedName ?? defaults.generatedName ?? null,
 			brightness: raw.brightness ?? defaults.brightness ?? null,
@@ -151,6 +152,7 @@ class ContentManager {
 			hue: raw.hue ?? defaults.hue ?? null,
 			colorCodes,
 			colorWeights: Array.isArray(raw.colorWeights) ? raw.colorWeights : (defaults.colorWeights ?? null),
+			paletteType: raw.paletteType ?? defaults.paletteType ?? null,
 			frameCount: this.normalizeNumberValue(raw.frameCount, defaults.frameCount ?? 0),
 			frameRate: this.normalizeNumberValue(raw.frameRate, defaults.frameRate ?? 10),
 			isVariableFramerate: this.normalizeBooleanValue(raw.isVariableFramerate, defaults.isVariableFramerate ?? false),
@@ -294,8 +296,9 @@ class ContentManager {
 			return name.includes(query);
 		} else {
 			const tagsString = (item.tags || []).join(' ').toLowerCase();
+			const aliasesString = (item.searchTerms || []).join(' ').toLowerCase();
 			const stickerText = (item.stickerText || '').toLowerCase();
-			return name.includes(query) || tagsString.includes(query) || stickerText.includes(query);
+			return name.includes(query) || tagsString.includes(query) || aliasesString.includes(query) || stickerText.includes(query);
 		}
 	}
 

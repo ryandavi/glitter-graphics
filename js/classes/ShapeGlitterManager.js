@@ -167,24 +167,47 @@ class ShapeGlitterManager {
 
 	renderShapeGallery() {
 		if (!this.ui.gallery) return;
-		const grid = document.createElement('div');
-		grid.className = 'asset-grid shape-gallery-grid';
-		ShapeLibrary.FILL_SHAPES.forEach(({ id, label }) => {
-			const card = this.buildShapeCard(id, label, 'asset-option shape-gallery-option');
-			card.addEventListener('click', () => {
-				const armedLayer = this.editor.layerManager.getLayerById(this.shapeChangeLayerId);
-				const targetLayer = armedLayer?.type === LayerType.SHAPE ? armedLayer : this.getActiveShapeLayer();
-				if (targetLayer) {
-					this.applyShapeToLayer(targetLayer, id);
-					if (this.shapeChangeLayerId) this.updatePickerStrip();
-					return;
-				}
-				const layer = this.editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: id } });
-				if (layer) this.editor.finishLayerCreation(layer);
+
+		const categories = document.createElement('div');
+		categories.className = 'shape-gallery-categories';
+
+		ShapeLibrary.FILL_SHAPE_CATEGORIES.forEach(({ id: categoryId, label }) => {
+			const shapes = ShapeLibrary.FILL_SHAPES.filter((shape) => shape.category === categoryId);
+			if (!shapes.length) return;
+
+			const section = document.createElement('section');
+			section.className = 'shape-gallery-section';
+
+			const heading = document.createElement('h3');
+			heading.className = 'shape-gallery-heading';
+			heading.id = `shapeGallery${categoryId.charAt(0).toUpperCase()}${categoryId.slice(1)}`;
+			heading.textContent = label;
+			section.appendChild(heading);
+
+			const grid = document.createElement('div');
+			grid.className = 'asset-grid shape-gallery-grid';
+			grid.setAttribute('aria-labelledby', heading.id);
+
+			shapes.forEach(({ id, label: shapeLabel }) => {
+				const card = this.buildShapeCard(id, shapeLabel, 'asset-option shape-gallery-option');
+				card.addEventListener('click', () => {
+					const armedLayer = this.editor.layerManager.getLayerById(this.shapeChangeLayerId);
+					const targetLayer = armedLayer?.type === LayerType.SHAPE ? armedLayer : this.getActiveShapeLayer();
+					if (targetLayer) {
+						this.applyShapeToLayer(targetLayer, id);
+						if (this.shapeChangeLayerId) this.updatePickerStrip();
+						return;
+					}
+					const layer = this.editor.layerManager.addLayer(LayerType.SHAPE, { shapeLayer: { shapeId: id } });
+					if (layer) this.editor.finishLayerCreation(layer);
+				});
+				grid.appendChild(card);
 			});
-			grid.appendChild(card);
+			section.appendChild(grid);
+			categories.appendChild(section);
 		});
-		this.ui.gallery.replaceChildren(grid);
+
+		this.ui.gallery.replaceChildren(categories);
 	}
 
 	_syncPickerActive() {

@@ -47,15 +47,25 @@ $mutatingActions = [
     'delete',
     'add',
     'reorder',
+    'analyze',
     'analyze_all',
     'save_export',
     'save_categories_export',
     'add_category',
     'delete_category',
     'update_category',
+    'reorder_categories',
     'add_tag',
     'delete_tag',
     'upload',
+    'ingest_upload',
+    'ingest_update',
+    'ingest_approve',
+    'ingest_reject',
+    'register_existing',
+    'tag_alias_add',
+    'tag_update',
+    'tag_merge',
     'reject',
 ];
 
@@ -109,15 +119,52 @@ try {
             break;
 
         case 'upload':
-            echo json_encode($api->uploadAsset($_FILES['file'] ?? [], (int)($_POST['category_id'] ?? 0)));
+        case 'ingest_upload':
+            echo json_encode($api->ingestUpload($_FILES['file'] ?? [], $_POST['batch_id'] ?? null));
             break;
 
         case 'reject':
             echo json_encode($api->rejectAsset((int)($_POST['id'] ?? 0)));
             break;
 
+        case 'ingest_list':
+            echo json_encode($api->ingestList($_GET['status'] ?? null));
+            break;
+
+        case 'ingest_update':
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->ingestUpdate($data));
+            break;
+
+        case 'ingest_approve':
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->ingestApprove($data));
+            break;
+
+        case 'ingest_reject':
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->ingestReject((int)($data['id'] ?? 0), (string)($data['reason'] ?? '')));
+            break;
+
+        case 'register_existing':
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->registerExisting($data));
+            break;
+
         case 'health':
             echo json_encode($api->healthReport());
+            break;
+
+        case 'analysis_view':
+            echo json_encode($api->storedAnalysis((int)($_GET['id'] ?? 0)));
+            break;
+
+        case 'export_status':
+            echo json_encode((new ExportStateService($db))->status($assetType));
+            break;
+
+        case 'recent_activity':
+            echo json_encode((new AdminEventService($db))->recent((int)($_GET['limit'] ?? 15)));
             break;
 
         // ===== EXPORT OPERATIONS =====
@@ -157,6 +204,11 @@ try {
             echo json_encode($api->updateCategory($data));
             break;
 
+        case 'reorder_categories':
+            $data = json_decode(file_get_contents('php://input'), true);
+            echo json_encode($api->reorderCategories($data['order'] ?? []));
+            break;
+
         // ===== TAG OPERATIONS =====
         case 'tags':
             echo json_encode($api->getTags());
@@ -176,11 +228,49 @@ try {
             echo json_encode($api->deleteTag($id));
             break;
 
+        case 'tag_alias_add':
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->addTagAlias($data));
+            break;
+
+        case 'tag_update':
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->updateTag($data));
+            break;
+
+        case 'tag_duplicate_candidates':
+            echo json_encode($api->tagDuplicateCandidates());
+            break;
+
+        case 'tag_merge':
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->mergeTags($data));
+            break;
+
         default:
             throw new Exception('Invalid action');
     }
 } catch (Exception $e) {
     http_response_code(400);
-    echo json_encode(['error' => $e->getMessage()]);
+    $message = $e->getMessage();
+    $field = null;
+    $code = strtoupper(preg_replace('/[^A-Z0-9]+/i', '_', get_class($e)));
+    if (stripos($message, 'slug') !== false) {
+        $field = 'slug';
+        $code = stripos($message, 'already exists') !== false ? 'CATEGORY_SLUG_EXISTS' : 'CATEGORY_SLUG_INVALID';
+    } elseif (stripos($message, 'category') !== false) {
+        $field = 'category_id';
+    } elseif (stripos($message, 'name is required') !== false) {
+        $field = 'name';
+    }
+    echo json_encode([
+        'success' => false,
+        'error' => [
+            'code' => $code,
+            'message' => $message,
+            'field' => $field,
+            'details' => new stdClass(),
+        ],
+    ]);
 }
 exit;
