@@ -8,7 +8,14 @@
         "sortOrder": 0,
         "hue": 0.185,
         "colorCodes": [
-            "#FF78C3"
+            "#FF60BA",
+            "#FFBFE4",
+            "#FFFFFF"
+        ],
+        "colorWeights": [
+            0.62,
+            0.26,
+            0.13
         ],
         "frameCount": 3,
         "frameRate": 11,
@@ -20,12 +27,12 @@
         "fileSize": 2145,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
             "Light",
-            "Muted"
-        ]
+            "Muted",
+            "Pink"
+        ],
+        "searchTerms": []
     },
     {
         "id": 86,
@@ -38,9 +45,14 @@
         "colorCodes": [
             "#EF9C99",
             "#E16871",
-            "#FF00CF",
-            "#FFFFFF",
-            "#FF30E5"
+            "#FF0BD4",
+            "#FFFFFF"
+        ],
+        "colorWeights": [
+            0.32,
+            0.3,
+            0.25,
+            0.13
         ],
         "frameCount": 3,
         "frameRate": 11,
@@ -52,15 +64,15 @@
         "fileSize": 1957,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
+            "Light",
+            "Muted",
             "Orange",
             "Pink",
             "Red",
-            "Light",
-            "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 89,
@@ -73,6 +85,9 @@
         "colorCodes": [
             "#FF3C96"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -83,12 +98,12 @@
         "fileSize": 2145,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Pink",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 17,
@@ -102,6 +117,10 @@
             "#D26BA7",
             "#FF007F"
         ],
+        "colorWeights": [
+            0,
+            0.5
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -112,12 +131,12 @@
         "fileSize": 1957,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
             "Muted",
-            "Neon"
-        ]
+            "Neon",
+            "Pink"
+        ],
+        "searchTerms": []
     },
     {
         "id": 101,
@@ -130,6 +149,9 @@
         "colorCodes": [
             "#D269C3"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 0,
         "isVariableFramerate": 0,
@@ -140,12 +162,12 @@
         "fileSize": 1214,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
             "Light",
-            "Muted"
-        ]
+            "Muted",
+            "Pink"
+        ],
+        "searchTerms": []
     },
     {
         "id": 102,
@@ -158,6 +180,9 @@
         "colorCodes": [
             "#E16996"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -168,13 +193,13 @@
         "fileSize": 1957,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
+            "Muted",
             "Pink",
             "Purple",
-            "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 16,
@@ -187,6 +212,9 @@
         "colorCodes": [
             "#B400A5"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -197,13 +225,13 @@
         "fileSize": 1957,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
+            "Neon",
             "Pink",
             "Purple",
-            "Neon",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 107,
@@ -216,6 +244,9 @@
         "colorCodes": [
             "#870078"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -226,13 +257,13 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
             "Contrast",
             "Jewel",
+            "Pink",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 103,
@@ -243,7 +274,16 @@
         "sortOrder": 8,
         "hue": 0.042,
         "colorCodes": [
-            "#FF0000"
+            "#FF33FF",
+            "#C00012",
+            "#FF0300",
+            "#FFFFFF"
+        ],
+        "colorWeights": [
+            0.34,
+            0.29,
+            0.24,
+            0.12
         ],
         "frameCount": 3,
         "frameRate": 11,
@@ -255,24 +295,35 @@
         "fileSize": 1600,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Pink",
             "Red",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 1,
         "url": "images/glitter/sparkle/gliter_red.gif",
         "name": "Red",
         "generatedName": "Vivid Red",
-        "brightness": "1.000",
+        "brightness": "0.400",
         "sortOrder": 9,
-        "hue": 0.042,
+        "hue": 0.958,
         "colorCodes": [
-            "#FF0000"
+            "#FF0000",
+            "#CC0066",
+            "#C00012",
+            "#FF0300",
+            "#FFFFFF"
+        ],
+        "colorWeights": [
+            0.01,
+            0.35,
+            0.29,
+            0.24,
+            0.12
         ],
         "frameCount": 3,
         "frameRate": 11,
@@ -284,12 +335,12 @@
         "fileSize": 1569,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Red",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 2,
@@ -302,6 +353,9 @@
         "colorCodes": [
             "#C3000F"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -312,13 +366,13 @@
         "fileSize": 1569,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Red",
             "Dark",
+            "Red",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 3,
@@ -331,6 +385,9 @@
         "colorCodes": [
             "#78002D"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -341,15 +398,15 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
-            "Red",
             "Dark",
             "Jewel",
+            "Pink",
+            "Red",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 67,
@@ -362,6 +419,9 @@
         "colorCodes": [
             "#FF2D69"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -372,13 +432,13 @@
         "fileSize": 1610,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Orange",
             "Red",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 4,
@@ -391,6 +451,9 @@
         "colorCodes": [
             "#E16996"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -401,16 +464,16 @@
         "fileSize": 1610,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Orange",
-            "Pink",
-            "Red",
             "Light",
             "Muted",
+            "Orange",
             "Pastel",
+            "Pink",
+            "Red",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 93,
@@ -423,6 +486,9 @@
         "colorCodes": [
             "#FF782D"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -433,12 +499,12 @@
         "fileSize": 2145,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Orange",
             "Light",
+            "Orange",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 5,
@@ -451,6 +517,9 @@
         "colorCodes": [
             "#FF6900"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -461,12 +530,12 @@
         "fileSize": 1610,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Orange",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 98,
@@ -479,6 +548,9 @@
         "colorCodes": [
             "#D29600"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -489,12 +561,12 @@
         "fileSize": 1471,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Orange",
             "Dark",
+            "Orange",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 78,
@@ -507,6 +579,9 @@
         "colorCodes": [
             "#B48700"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -517,12 +592,12 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Gold",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 87,
@@ -535,6 +610,9 @@
         "colorCodes": [
             "#FFFF69"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -545,14 +623,14 @@
         "fileSize": 1512,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Yellow",
             "Brown",
-            "Gold",
             "Contrast",
-            "Warm"
-        ]
+            "Gold",
+            "Warm",
+            "Yellow"
+        ],
+        "searchTerms": []
     },
     {
         "id": 7,
@@ -565,6 +643,9 @@
         "colorCodes": [
             "#FFD269"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -575,14 +656,14 @@
         "fileSize": 1512,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Yellow",
             "Gold",
             "Light",
             "Muted",
-            "Warm"
-        ]
+            "Warm",
+            "Yellow"
+        ],
+        "searchTerms": []
     },
     {
         "id": 6,
@@ -595,6 +676,9 @@
         "colorCodes": [
             "#FFF000"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -605,13 +689,13 @@
         "fileSize": 1882,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Yellow",
             "Light",
             "Vivid",
-            "Warm"
-        ]
+            "Warm",
+            "Yellow"
+        ],
+        "searchTerms": []
     },
     {
         "id": 95,
@@ -624,6 +708,9 @@
         "colorCodes": [
             "#96B400"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -634,14 +721,14 @@
         "fileSize": 1882,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Green",
-            "Yellow",
             "Muted",
             "Neon",
-            "Vivid"
-        ]
+            "Vivid",
+            "Yellow"
+        ],
+        "searchTerms": []
     },
     {
         "id": 92,
@@ -654,6 +741,9 @@
         "colorCodes": [
             "#B4D269"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -664,12 +754,12 @@
         "fileSize": 1957,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Green",
             "Light",
             "Muted"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 8,
@@ -682,6 +772,9 @@
         "colorCodes": [
             "#96FF00"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -692,14 +785,14 @@
         "fileSize": 1619,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Green",
-            "Yellow",
             "Light",
             "Neon",
-            "Vivid"
-        ]
+            "Vivid",
+            "Yellow"
+        ],
+        "searchTerms": []
     },
     {
         "id": 88,
@@ -712,6 +805,9 @@
         "colorCodes": [
             "#5A9600"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -722,12 +818,12 @@
         "fileSize": 1957,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Green",
             "Jewel",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 9,
@@ -740,6 +836,9 @@
         "colorCodes": [
             "#0F8700"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -750,12 +849,12 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Green",
             "Jewel",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 80,
@@ -769,6 +868,10 @@
             "#003C4B",
             "#4B5A00"
         ],
+        "colorWeights": [
+            0,
+            0.5
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -779,12 +882,12 @@
         "fileSize": 1950,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Green",
             "Cool",
+            "Green",
             "Muted"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 13,
@@ -797,6 +900,9 @@
         "colorCodes": [
             "#009687"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -807,14 +913,14 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Green",
             "Cool",
+            "Green",
             "Jewel",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 12,
@@ -827,6 +933,9 @@
         "colorCodes": [
             "#008796"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -837,14 +946,14 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Green",
             "Cool",
+            "Green",
             "Jewel",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 68,
@@ -858,6 +967,10 @@
             "#87D2F0",
             "#00FF00"
         ],
+        "colorWeights": [
+            0,
+            0.5
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -868,15 +981,15 @@
         "fileSize": 1950,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Green",
             "Cool",
+            "Green",
             "Light",
-            "Vivid",
-            "Multicolor"
-        ]
+            "Multicolor",
+            "Vivid"
+        ],
+        "searchTerms": []
     },
     {
         "id": 10,
@@ -890,6 +1003,10 @@
             "#87D2F0",
             "#87C369"
         ],
+        "colorWeights": [
+            0,
+            0.5
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -900,16 +1017,16 @@
         "fileSize": 1950,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Green",
             "Cool",
+            "Green",
             "Light",
+            "Multicolor",
             "Muted",
-            "Pastel",
-            "Multicolor"
-        ]
+            "Pastel"
+        ],
+        "searchTerms": []
     },
     {
         "id": 120,
@@ -927,6 +1044,14 @@
             "#5BBDFB",
             "#B4E0FB"
         ],
+        "colorWeights": [
+            0,
+            0.1667,
+            0.1667,
+            0.1667,
+            0.1667,
+            0.1667
+        ],
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -937,11 +1062,11 @@
         "fileSize": 2108,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Light"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 11,
@@ -954,6 +1079,9 @@
         "colorCodes": [
             "#00D2FF"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -964,7 +1092,6 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
@@ -972,7 +1099,8 @@
             "Light",
             "Neon",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 85,
@@ -985,6 +1113,9 @@
         "colorCodes": [
             "#5A87C3"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -995,13 +1126,13 @@
         "fileSize": 1948,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
             "Light",
             "Muted"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 66,
@@ -1014,6 +1145,9 @@
         "colorCodes": [
             "#004B96"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1024,13 +1158,13 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
             "Jewel",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 14,
@@ -1043,6 +1177,9 @@
         "colorCodes": [
             "#002D96"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1053,14 +1190,14 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
             "Dark",
             "Jewel",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 96,
@@ -1073,6 +1210,9 @@
         "colorCodes": [
             "#0F0F1E"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1083,13 +1223,13 @@
         "fileSize": 1788,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
             "Dark",
             "Muted"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 109,
@@ -1102,6 +1242,9 @@
         "colorCodes": [
             "#2D0096"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1112,13 +1255,13 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Purple",
             "Cool",
             "Jewel",
+            "Purple",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 83,
@@ -1131,6 +1274,9 @@
         "colorCodes": [
             "#6900FF"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1141,13 +1287,13 @@
         "fileSize": 1610,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Purple",
             "Cool",
             "Light",
+            "Purple",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 90,
@@ -1160,6 +1306,9 @@
         "colorCodes": [
             "#E196FF"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1170,12 +1319,12 @@
         "fileSize": 2066,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Purple",
             "Light",
-            "Pastel"
-        ]
+            "Pastel",
+            "Purple"
+        ],
+        "searchTerms": []
     },
     {
         "id": 94,
@@ -1188,6 +1337,9 @@
         "colorCodes": [
             "#D296FF"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1198,12 +1350,12 @@
         "fileSize": 609,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Purple",
             "Light",
-            "Muted"
-        ]
+            "Muted",
+            "Purple"
+        ],
+        "searchTerms": []
     },
     {
         "id": 18,
@@ -1218,6 +1370,11 @@
             "#87D2F0",
             "#0069A5"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1228,17 +1385,17 @@
         "fileSize": 1619,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Pink",
-            "Purple",
             "Contrast",
             "Cool",
+            "Multicolor",
             "Neon",
-            "Vivid",
-            "Multicolor"
-        ]
+            "Pink",
+            "Purple",
+            "Vivid"
+        ],
+        "searchTerms": []
     },
     {
         "id": 100,
@@ -1253,6 +1410,11 @@
             "#6900C3",
             "#A500FF"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 3,
         "frameRate": 0,
         "isVariableFramerate": 0,
@@ -1263,15 +1425,15 @@
         "fileSize": 1214,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
+            "Contrast",
+            "Multicolor",
             "Pink",
             "Purple",
-            "Contrast",
             "Vivid",
-            "Warm",
-            "Multicolor"
-        ]
+            "Warm"
+        ],
+        "searchTerms": []
     },
     {
         "id": 110,
@@ -1284,6 +1446,9 @@
         "colorCodes": [
             "#A55A96"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1294,13 +1459,13 @@
         "fileSize": 1957,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
-            "Purple",
             "Contrast",
-            "Muted"
-        ]
+            "Muted",
+            "Pink",
+            "Purple"
+        ],
+        "searchTerms": []
     },
     {
         "id": 104,
@@ -1313,6 +1478,9 @@
         "colorCodes": [
             "#A569D2"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 0,
         "isVariableFramerate": 0,
@@ -1323,12 +1491,12 @@
         "fileSize": 1214,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Purple",
             "Light",
-            "Muted"
-        ]
+            "Muted",
+            "Purple"
+        ],
+        "searchTerms": []
     },
     {
         "id": 15,
@@ -1341,6 +1509,9 @@
         "colorCodes": [
             "#7800B4"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1351,12 +1522,12 @@
         "fileSize": 1931,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Purple",
             "Jewel",
+            "Purple",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 82,
@@ -1371,6 +1542,11 @@
             "#000000",
             "#8700FF"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 3,
         "frameRate": 0,
         "isVariableFramerate": 0,
@@ -1381,14 +1557,14 @@
         "fileSize": 1190,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Purple",
             "Contrast",
             "Cool",
             "Jewel",
+            "Purple",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 84,
@@ -1403,6 +1579,11 @@
             "#000000",
             "#8700FF"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1413,15 +1594,15 @@
         "fileSize": 1598,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Purple",
             "Contrast",
             "Cool",
             "Dark",
             "Jewel",
+            "Purple",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 76,
@@ -1434,6 +1615,9 @@
         "colorCodes": [
             "#F0D2B4"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1444,15 +1628,15 @@
         "fileSize": 1746,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Orange",
             "Cream",
             "Light",
             "Muted",
+            "Orange",
             "Pastel",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 74,
@@ -1465,6 +1649,9 @@
         "colorCodes": [
             "#696969"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1475,15 +1662,15 @@
         "fileSize": 2920,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Beige",
             "Brown",
             "Contrast",
-            "Neutral",
             "Multicolor",
+            "Neutral",
             "Pattern"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 73,
@@ -1496,6 +1683,9 @@
         "colorCodes": [
             "#B48778"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 2,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1506,13 +1696,13 @@
         "fileSize": 5675,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Beige",
             "Brown",
             "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 108,
@@ -1525,6 +1715,9 @@
         "colorCodes": [
             "#967869"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1535,13 +1728,13 @@
         "fileSize": 1746,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
+            "Muted",
             "Orange",
             "Tan",
-            "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 71,
@@ -1554,6 +1747,9 @@
         "colorCodes": [
             "#4B3C2D"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1564,12 +1760,12 @@
         "fileSize": 1746,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Brown",
             "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 72,
@@ -1582,6 +1778,9 @@
         "colorCodes": [
             "#3C2D1E"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 2,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1592,14 +1791,14 @@
         "fileSize": 859,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Brown",
-            "Gold",
             "Contrast",
+            "Gold",
             "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 70,
@@ -1612,6 +1811,9 @@
         "colorCodes": [
             "#3C2D1E"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 2,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1622,12 +1824,12 @@
         "fileSize": 859,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Brown",
             "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 69,
@@ -1640,6 +1842,9 @@
         "colorCodes": [
             "#3C2D1E"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 2,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1650,12 +1855,12 @@
         "fileSize": 859,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Brown",
             "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 77,
@@ -1668,6 +1873,9 @@
         "colorCodes": [
             "#1E1E0F"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1678,13 +1886,13 @@
         "fileSize": 1746,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Brown",
             "Dark",
             "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 20,
@@ -1697,6 +1905,9 @@
         "colorCodes": [
             "#D2D2D2"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1707,14 +1918,14 @@
         "fileSize": 1250,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "White",
-            "Silver",
             "Grayscale",
             "Light",
-            "Neutral"
-        ]
+            "Neutral",
+            "Silver",
+            "White"
+        ],
+        "searchTerms": []
     },
     {
         "id": 22,
@@ -1727,6 +1938,9 @@
         "colorCodes": [
             "#D2D2D2"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1737,14 +1951,14 @@
         "fileSize": 1524,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "White",
-            "Silver",
             "Grayscale",
             "Light",
-            "Neutral"
-        ]
+            "Neutral",
+            "Silver",
+            "White"
+        ],
+        "searchTerms": []
     },
     {
         "id": 21,
@@ -1757,6 +1971,9 @@
         "colorCodes": [
             "#787878"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1767,13 +1984,13 @@
         "fileSize": 1410,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "White",
-            "Silver",
             "Grayscale",
-            "Neutral"
-        ]
+            "Neutral",
+            "Silver",
+            "White"
+        ],
+        "searchTerms": []
     },
     {
         "id": 79,
@@ -1786,6 +2003,9 @@
         "colorCodes": [
             "#2D2D2D"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1796,12 +2016,12 @@
         "fileSize": 1746,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Dark",
             "Grayscale",
             "Neutral"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 64,
@@ -1814,6 +2034,9 @@
         "colorCodes": [
             "#0F0F0F"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1824,13 +2047,13 @@
         "fileSize": 1746,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Black",
             "Dark",
             "Grayscale",
             "Neutral"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 65,
@@ -1843,6 +2066,9 @@
         "colorCodes": [
             "#000000"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 0,
         "isVariableFramerate": 0,
@@ -1853,13 +2079,13 @@
         "fileSize": 640,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Black",
             "Dark",
             "Grayscale",
             "Neutral"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 97,
@@ -1874,6 +2100,11 @@
             "#CCFFFF",
             "#FFCCFF"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1884,81 +2115,15 @@
         "fileSize": 1250,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Pink",
             "Jewel",
             "Light",
+            "Multicolor",
             "Pastel",
-            "Multicolor"
-        ]
-    },
-    {
-        "id": 106,
-        "url": "images/glitter/sparkle/glitter_rainbow.gif",
-        "name": "Rainbow",
-        "generatedName": "Neon Blue",
-        "brightness": "1.000",
-        "sortOrder": 64,
-        "hue": 0.569,
-        "colorCodes": [
-            "#00D2FF"
+            "Pink"
         ],
-        "frameCount": 3,
-        "frameRate": 10,
-        "isVariableFramerate": 0,
-        "isAnimated": 0,
-        "hasTransparency": 0,
-        "width": 61,
-        "height": 30,
-        "fileSize": 6386,
-        "category": "sparkle",
-        "isPixelated": 0,
-        "isActive": 0,
-        "tags": [
-            "Blue",
-            "Green",
-            "Purple",
-            "Red",
-            "Yellow",
-            "Vivid",
-            "Multicolor",
-            "Pattern"
-        ]
-    },
-    {
-        "id": 105,
-        "url": "images/glitter/sparkle/glitter_rainbow-2.gif",
-        "name": "Rainbow 2",
-        "generatedName": "Vivid Orange",
-        "brightness": "1.000",
-        "sortOrder": 65,
-        "hue": 0.108,
-        "colorCodes": [
-            "#FF6900"
-        ],
-        "frameCount": 3,
-        "frameRate": 11,
-        "isVariableFramerate": 0,
-        "isAnimated": 0,
-        "hasTransparency": 0,
-        "width": 47,
-        "height": 58,
-        "fileSize": 4161,
-        "category": "sparkle",
-        "isPixelated": 0,
-        "isActive": 0,
-        "tags": [
-            "Green",
-            "Orange",
-            "Purple",
-            "Red",
-            "Yellow",
-            "Vivid",
-            "Multicolor",
-            "Pattern"
-        ]
+        "searchTerms": []
     },
     {
         "id": 19,
@@ -1972,6 +2137,10 @@
             "#00D200",
             "#F00000"
         ],
+        "colorWeights": [
+            0,
+            0.5
+        ],
         "frameCount": 3,
         "frameRate": 11,
         "isVariableFramerate": 0,
@@ -1982,15 +2151,15 @@
         "fileSize": 1502,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Green",
-            "Red",
             "Contrast",
+            "Green",
             "Light",
-            "Vivid",
-            "Multicolor"
-        ]
+            "Multicolor",
+            "Red",
+            "Vivid"
+        ],
+        "searchTerms": []
     },
     {
         "id": 75,
@@ -2005,6 +2174,11 @@
             "#F00000",
             "#D2002D"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 3,
         "frameRate": 0,
         "isVariableFramerate": 0,
@@ -2015,51 +2189,15 @@
         "fileSize": 1124,
         "category": "sparkle",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Green",
-            "Red",
-            "Yellow",
             "Contrast",
-            "Vivid",
-            "Multicolor"
-        ]
-    },
-    {
-        "id": 121,
-        "url": "images/glitter/sparkle/glitter_red-white-blue-patriotic.gif",
-        "name": "Red, White & Blue",
-        "generatedName": "White",
-        "brightness": "0.570",
-        "sortOrder": 68,
-        "hue": 1.1,
-        "colorCodes": [
-            "#FFFFFF",
-            "#310199",
-            "#CCCCCC",
-            "#1C0166",
-            "#FF0000",
-            "#5C0023",
-            "#4302FF"
-        ],
-        "frameCount": 3,
-        "frameRate": 10,
-        "isVariableFramerate": 0,
-        "isAnimated": 0,
-        "hasTransparency": 0,
-        "width": 52,
-        "height": 55,
-        "fileSize": 2067,
-        "category": "sparkle",
-        "isPixelated": 0,
-        "isActive": 0,
-        "tags": [
-            "Blue",
-            "Red",
-            "White",
+            "Green",
             "Multicolor",
-            "Pattern"
-        ]
+            "Red",
+            "Vivid",
+            "Yellow"
+        ],
+        "searchTerms": []
     },
     {
         "id": 123,
@@ -2074,6 +2212,11 @@
             "#FF99FF",
             "#CC00FF"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 4,
         "frameRate": 20,
         "isVariableFramerate": 0,
@@ -2084,12 +2227,12 @@
         "fileSize": 1390,
         "category": "ember",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Red",
             "Dark",
+            "Red",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 24,
@@ -2104,6 +2247,11 @@
             "#780654",
             "#D51169"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 4,
         "frameRate": 20,
         "isVariableFramerate": 0,
@@ -2114,13 +2262,13 @@
         "fileSize": 1541,
         "category": "ember",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
+            "Dark",
             "Pink",
             "Red",
-            "Dark",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 122,
@@ -2135,6 +2283,11 @@
             "#78061B",
             "#D51D11"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 4,
         "frameRate": 20,
         "isVariableFramerate": 0,
@@ -2145,12 +2298,12 @@
         "fileSize": 1541,
         "category": "ember",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
             "Dark",
+            "Pink",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 47,
@@ -2165,6 +2318,11 @@
             "#782A06",
             "#D57C11"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 4,
         "frameRate": 20,
         "isVariableFramerate": 0,
@@ -2175,14 +2333,14 @@
         "fileSize": 1518,
         "category": "ember",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
+            "Dark",
             "Orange",
             "Red",
-            "Dark",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 126,
@@ -2197,6 +2355,11 @@
             "#AD7C05",
             "#F2DF11"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 4,
         "frameRate": 20,
         "isVariableFramerate": 0,
@@ -2207,13 +2370,13 @@
         "fileSize": 1409,
         "category": "ember",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
+            "Gold",
             "Orange",
             "Red",
-            "Gold",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 125,
@@ -2228,6 +2391,11 @@
             "#097814",
             "#1ED66C"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 4,
         "frameRate": 20,
         "isVariableFramerate": 0,
@@ -2238,12 +2406,12 @@
         "fileSize": 1409,
         "category": "ember",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Green",
             "Dark",
+            "Green",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 25,
@@ -2258,6 +2426,11 @@
             "#067863",
             "#11CCD5"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 4,
         "frameRate": 20,
         "isVariableFramerate": 0,
@@ -2268,13 +2441,13 @@
         "fileSize": 1541,
         "category": "ember",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Green",
             "Cool",
-            "Dark"
-        ]
+            "Dark",
+            "Green"
+        ],
+        "searchTerms": []
     },
     {
         "id": 124,
@@ -2289,6 +2462,11 @@
             "#022D9B",
             "#01A1EF"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 4,
         "frameRate": 20,
         "isVariableFramerate": 0,
@@ -2299,11 +2477,11 @@
         "fileSize": 1409,
         "category": "ember",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Dark",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 26,
@@ -2318,6 +2496,11 @@
             "#3C0678",
             "#9C11D5"
         ],
+        "colorWeights": [
+            0,
+            0.3333,
+            0.3333
+        ],
         "frameCount": 4,
         "frameRate": 20,
         "isVariableFramerate": 0,
@@ -2328,14 +2511,14 @@
         "fileSize": 1541,
         "category": "ember",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Purple",
             "Cool",
             "Dark",
+            "Purple",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 31,
@@ -2348,6 +2531,9 @@
         "colorCodes": [
             "#960069"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 4,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2358,14 +2544,14 @@
         "fileSize": 18389,
         "category": "noise",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
-            "Purple",
             "Jewel",
             "Neon",
+            "Pink",
+            "Purple",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 27,
@@ -2378,6 +2564,9 @@
         "colorCodes": [
             "#D20000"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 4,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2388,13 +2577,13 @@
         "fileSize": 17043,
         "category": "noise",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Red",
             "Light",
+            "Red",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 28,
@@ -2407,6 +2596,9 @@
         "colorCodes": [
             "#966900"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 4,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2417,14 +2609,14 @@
         "fileSize": 18576,
         "category": "noise",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Orange",
             "Bronze",
             "Jewel",
+            "Orange",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 29,
@@ -2437,6 +2629,9 @@
         "colorCodes": [
             "#969600"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 4,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2447,13 +2642,13 @@
         "fileSize": 19276,
         "category": "noise",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Yellow",
             "Jewel",
             "Vivid",
-            "Warm"
-        ]
+            "Warm",
+            "Yellow"
+        ],
+        "searchTerms": []
     },
     {
         "id": 30,
@@ -2466,6 +2661,9 @@
         "colorCodes": [
             "#699600"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 4,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2476,14 +2674,14 @@
         "fileSize": 18389,
         "category": "noise",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Green",
-            "Yellow",
             "Jewel",
             "Neon",
-            "Vivid"
-        ]
+            "Vivid",
+            "Yellow"
+        ],
+        "searchTerms": []
     },
     {
         "id": 32,
@@ -2496,6 +2694,9 @@
         "colorCodes": [
             "#D2D2D2"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 4,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2506,14 +2707,14 @@
         "fileSize": 9165,
         "category": "noise",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "White",
-            "Silver",
             "Grayscale",
             "Light",
-            "Neutral"
-        ]
+            "Neutral",
+            "Silver",
+            "White"
+        ],
+        "searchTerms": []
     },
     {
         "id": 33,
@@ -2526,6 +2727,9 @@
         "colorCodes": [
             "#696969"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 4,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2536,12 +2740,12 @@
         "fileSize": 11859,
         "category": "noise",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Gray",
             "Grayscale",
             "Neutral"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 34,
@@ -2554,6 +2758,9 @@
         "colorCodes": [
             "#000000"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 4,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2564,13 +2771,13 @@
         "fileSize": 33491,
         "category": "noise",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Black",
             "Dark",
             "Grayscale",
             "Neutral"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 115,
@@ -2583,6 +2790,9 @@
         "colorCodes": [
             "#F02DF0"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 8,
         "isVariableFramerate": 0,
@@ -2593,12 +2803,12 @@
         "fileSize": 19265,
         "category": "sparkle-2",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
+            "Pattern",
             "Pink",
-            "Red",
-            "Pattern"
-        ]
+            "Red"
+        ],
+        "searchTerms": []
     },
     {
         "id": 113,
@@ -2611,6 +2821,9 @@
         "colorCodes": [
             "#006900"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2621,11 +2834,11 @@
         "fileSize": 37103,
         "category": "sparkle-2",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Green",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 112,
@@ -2638,6 +2851,9 @@
         "colorCodes": [
             "#3C69FF"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 0,
         "isVariableFramerate": 0,
@@ -2648,11 +2864,11 @@
         "fileSize": 4454,
         "category": "sparkle-2",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 114,
@@ -2665,6 +2881,9 @@
         "colorCodes": [
             "#8796FF"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2675,14 +2894,14 @@
         "fileSize": 38941,
         "category": "sparkle-2",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
             "Light",
             "Muted",
             "Pastel"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 46,
@@ -2695,6 +2914,9 @@
         "colorCodes": [
             "#1E1E1E"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -2705,13 +2927,13 @@
         "fileSize": 5987,
         "category": "sparkle-2",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Black",
             "Dark",
             "Grayscale",
             "Neutral"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 55,
@@ -2724,6 +2946,9 @@
         "colorCodes": [
             "#FF96FF"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -2734,12 +2959,12 @@
         "fileSize": 5816,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
             "Light",
-            "Muted"
-        ]
+            "Muted",
+            "Pink"
+        ],
+        "searchTerms": []
     },
     {
         "id": 58,
@@ -2752,6 +2977,9 @@
         "colorCodes": [
             "#FE3EAB"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2762,10 +2990,10 @@
         "fileSize": 6970,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Pink"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 56,
@@ -2778,6 +3006,9 @@
         "colorCodes": [
             "#FFD24B"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -2788,13 +3019,13 @@
         "fileSize": 6450,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Orange",
             "Light",
+            "Orange",
             "Vivid",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 61,
@@ -2807,6 +3038,9 @@
         "colorCodes": [
             "#C3E1B4"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -2817,12 +3051,12 @@
         "fileSize": 7520,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Green",
             "Light",
             "Pastel"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 54,
@@ -2835,6 +3069,9 @@
         "colorCodes": [
             "#2D4B2D"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2845,12 +3082,12 @@
         "fileSize": 6827,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Green",
             "Contrast",
+            "Green",
             "Muted"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 57,
@@ -2863,6 +3100,9 @@
         "colorCodes": [
             "#1E4B3C"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2873,12 +3113,12 @@
         "fileSize": 7462,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Green",
             "Cool",
+            "Green",
             "Muted"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 99,
@@ -2891,6 +3131,9 @@
         "colorCodes": [
             "#B4D2E1"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -2901,14 +3144,14 @@
         "fileSize": 7520,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Silver",
             "Cool",
             "Light",
-            "Pastel"
-        ]
+            "Pastel",
+            "Silver"
+        ],
+        "searchTerms": []
     },
     {
         "id": 91,
@@ -2921,6 +3164,9 @@
         "colorCodes": [
             "#69C3F0"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2931,14 +3177,14 @@
         "fileSize": 6166,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
             "Light",
             "Muted",
             "Pastel"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 50,
@@ -2951,6 +3197,9 @@
         "colorCodes": [
             "#006987"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -2961,13 +3210,13 @@
         "fileSize": 9232,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
             "Jewel",
             "Vivid"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 59,
@@ -2980,6 +3229,9 @@
         "colorCodes": [
             "#B4B4E1"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -2990,13 +3242,13 @@
         "fileSize": 7520,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
             "Light",
             "Pastel"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 62,
@@ -3009,6 +3261,9 @@
         "colorCodes": [
             "#C3C3C3"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 3,
         "frameRate": 10,
         "isVariableFramerate": 0,
@@ -3019,13 +3274,13 @@
         "fileSize": 412,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Silver",
             "Grayscale",
             "Light",
-            "Neutral"
-        ]
+            "Neutral",
+            "Silver"
+        ],
+        "searchTerms": []
     },
     {
         "id": 53,
@@ -3038,6 +3293,9 @@
         "colorCodes": [
             "#E1D2B4"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -3048,13 +3306,13 @@
         "fileSize": 7520,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Beige",
             "Light",
             "Pastel",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 52,
@@ -3067,6 +3325,9 @@
         "colorCodes": [
             "#B49678"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -3077,12 +3338,12 @@
         "fileSize": 5841,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Bronze",
             "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 51,
@@ -3095,6 +3356,9 @@
         "colorCodes": [
             "#B49678"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -3105,13 +3369,13 @@
         "fileSize": 5841,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Beige",
             "Bronze",
             "Muted",
             "Warm"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 49,
@@ -3124,6 +3388,9 @@
         "colorCodes": [
             "#2D2D2D"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -3134,13 +3401,13 @@
         "fileSize": 2564,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Black",
             "Dark",
             "Grayscale",
             "Neutral"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 48,
@@ -3153,6 +3420,9 @@
         "colorCodes": [
             "#1E1E1E"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 5,
         "frameRate": 2,
         "isVariableFramerate": 0,
@@ -3163,13 +3433,13 @@
         "fileSize": 5366,
         "category": "etc",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Black",
             "Dark",
             "Grayscale",
             "Neutral"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 118,
@@ -3186,6 +3456,13 @@
             "#920000",
             "#0000AA"
         ],
+        "colorWeights": [
+            0,
+            0.2,
+            0.2,
+            0.2,
+            0.2
+        ],
         "frameCount": 4,
         "frameRate": 5,
         "isVariableFramerate": 0,
@@ -3196,12 +3473,12 @@
         "fileSize": 1062,
         "category": "transparent",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
-            "Pink",
             "Light",
+            "Pink",
             "Transparent"
-        ]
+        ],
+        "searchTerms": []
     },
     {
         "id": 116,
@@ -3214,6 +3491,9 @@
         "colorCodes": [
             "#00D2FF"
         ],
+        "colorWeights": [
+            0
+        ],
         "frameCount": 16,
         "frameRate": 15,
         "isVariableFramerate": 0,
@@ -3224,15 +3504,15 @@
         "fileSize": 1761,
         "category": "transparent",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
             "Cool",
             "Light",
-            "Vivid",
             "Pattern",
-            "Transparent"
-        ]
+            "Transparent",
+            "Vivid"
+        ],
+        "searchTerms": []
     },
     {
         "id": 117,
@@ -3248,6 +3528,12 @@
             "#FEFEB6",
             "#5BF9C1"
         ],
+        "colorWeights": [
+            0,
+            0.25,
+            0.25,
+            0.25
+        ],
         "frameCount": 9,
         "frameRate": 8,
         "isVariableFramerate": 0,
@@ -3258,19 +3544,19 @@
         "fileSize": 3619,
         "category": "transparent",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Blue",
-            "Green",
-            "Pink",
-            "Yellow",
             "Gray",
+            "Green",
             "Light",
-            "Pastel",
             "Multicolor",
+            "Pastel",
             "Pattern",
-            "Transparent"
-        ]
+            "Pink",
+            "Transparent",
+            "Yellow"
+        ],
+        "searchTerms": []
     },
     {
         "id": 119,
@@ -3286,6 +3572,12 @@
             "#FF7373",
             "#EDCCF7"
         ],
+        "colorWeights": [
+            0,
+            0.25,
+            0.25,
+            0.25
+        ],
         "frameCount": 8,
         "frameRate": 15,
         "isVariableFramerate": 0,
@@ -3296,18 +3588,18 @@
         "fileSize": 1930,
         "category": "transparent",
         "isPixelated": 1,
-        "isActive": 1,
         "tags": [
             "Green",
+            "Multicolor",
             "Orange",
+            "Pattern",
             "Pink",
             "Purple",
             "Red",
-            "Yellow",
+            "Transparent",
             "White",
-            "Multicolor",
-            "Pattern",
-            "Transparent"
-        ]
+            "Yellow"
+        ],
+        "searchTerms": []
     }
 ]

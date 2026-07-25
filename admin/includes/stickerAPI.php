@@ -23,7 +23,7 @@ class StickerAPI extends AssetAPI
             'name' => $asset['name'],
             'filename' => $asset['filename'],
             'url' => $asset['url'],
-            'thumbnailUrl' => $asset['thumbnail_url'] ?: $asset['url'],
+            'thumbnailUrl' => $asset['url'],
             'category' => $asset['category_slug'],
             'attribution' => $asset['attribution'] ?? null,
             'stickerText' => $asset['sticker_text'] ?? null,
@@ -47,7 +47,7 @@ class StickerAPI extends AssetAPI
     protected function getAssetSpecificFields()
     {
         return [
-            'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text', 'thumbnail_url', 'file_hash'],
+            'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text', 'file_hash'],
             'int' => ['sticker_category_id', 'width', 'height', 'frame_count', 'frame_rate', 'file_size', 'sort_order'],
             'float' => [],
             'bool' => ['is_animated', 'has_transparency', 'is_active', 'is_variable_framerate'],
@@ -80,75 +80,4 @@ class StickerAPI extends AssetAPI
         ];
     }
 
-    protected function persistAnalysis($id, $analysis, $includeColors = true)
-    {
-        parent::persistAnalysis($id, $analysis, $includeColors);
-        $thumbnailUrl = $this->generateThumbnail($id, $this->getAssetUrlById($id)['url']);
-        $stmt = $this->db->prepare(
-            "UPDATE {$this->tables['table']} SET thumbnail_url = ? WHERE id = ?",
-            'si',
-            [$thumbnailUrl, (int)$id]
-        );
-        $stmt->close();
-    }
-
-    public function analyzeAsset($id)
-    {
-        $analysis = parent::analyzeAsset($id);
-        $asset = $this->getAssetUrlById($id);
-        $thumbnailUrl = $this->generateThumbnail($id, $asset['url']);
-        $stmt = $this->db->prepare(
-            "UPDATE {$this->tables['table']} SET thumbnail_url = ? WHERE id = ?",
-            'si',
-            [$thumbnailUrl, (int)$id]
-        );
-        $stmt->close();
-        return $analysis;
-    }
-
-    public function rejectAsset($id)
-    {
-        $result = parent::rejectAsset($id);
-        $thumbnail = dirname(__DIR__, 2) . '/images/stickers/.thumbs/' . (int)$id . '.png';
-        if (file_exists($thumbnail)) {
-            unlink($thumbnail);
-        }
-        return $result;
-    }
-
-    private function generateThumbnail($id, $url)
-    {
-        $sourcePath = $this->assetFilePath($url);
-        $info = @getimagesize($sourcePath);
-        if (!$info) {
-            return null;
-        }
-        $loaders = [
-            IMAGETYPE_GIF => 'imagecreatefromgif',
-            IMAGETYPE_PNG => 'imagecreatefrompng',
-            IMAGETYPE_JPEG => 'imagecreatefromjpeg',
-        ];
-        if (!isset($loaders[$info[2]]) || !($source = @$loaders[$info[2]]($sourcePath))) {
-            return null;
-        }
-        $max = $this->config['thumbnail_max_size'];
-        $scale = min(1, $max / max(imagesx($source), imagesy($source)));
-        $width = max(1, (int)round(imagesx($source) * $scale));
-        $height = max(1, (int)round(imagesy($source) * $scale));
-        $thumb = imagecreatetruecolor($width, $height);
-        imagealphablending($thumb, false);
-        imagesavealpha($thumb, true);
-        imagefill($thumb, 0, 0, imagecolorallocatealpha($thumb, 0, 0, 0, 127));
-        imagecopyresampled($thumb, $source, 0, 0, 0, 0, $width, $height, imagesx($source), imagesy($source));
-        $directory = dirname(__DIR__, 2) . '/images/stickers/.thumbs';
-        if (!is_dir($directory)) {
-            mkdir($directory, 0775, true);
-        }
-        $path = $directory . '/' . (int)$id . '.png';
-        imagepng($thumb, $path);
-        imagedestroy($source);
-        imagedestroy($thumb);
-
-        return 'images/stickers/.thumbs/' . (int)$id . '.png';
-    }
 }

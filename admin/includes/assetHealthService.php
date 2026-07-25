@@ -106,12 +106,6 @@ class AssetHealthService
 		if (strpos($row['url'], $expectedPrefix) !== 0) {
 			$issues[] = $this->item('category_path_mismatch', $row, ['expected_prefix' => $expectedPrefix], ['open_record']);
 		}
-		if ($this->assetType === 'sticker' && (
-			empty($row['thumbnail_url'])
-			|| !is_file($this->paths->urlToFile($row['thumbnail_url']))
-		)) {
-			$issues[] = $this->item('thumbnail_missing', $row, [], ['reanalyze']);
-		}
 	}
 
 	private function findOrphans($knownUrls, &$issues)
@@ -166,7 +160,7 @@ class AssetHealthService
 			'id' => (int)$row['id'],
 			'name' => $row['name'],
 			'url' => $row['url'],
-			'thumbnail_url' => $preview ? ($row['thumbnail_url'] ?? $row['url']) : null,
+			'thumbnail_url' => $preview ? $row['url'] : null,
 			'category' => $row['category_name'] ?? null,
 			'details' => $details,
 			'actions' => $actions,
