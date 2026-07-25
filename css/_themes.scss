@@ -35,6 +35,7 @@
 	--color-accent-light: #6fa1e0;
 	--color-accent-border: #3577cf;
 	--color-accent-active: #2b68bd;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_dusty-dark-blue.gif");
 
 	/* Canvas floor: clearly darker than a white canvas (Figma-style grey,
 	   tinted into the family) */
@@ -130,6 +131,7 @@
 	--color-accent-light: #ef86bf;
 	--color-accent-border: #e0559f;
 	--color-accent-active: #cd4590;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_hot-pink.gif");
 
 	/* Canvas floor: dusty rose so a white canvas pops */
 	--color-bg-workspace: #f0d9e6;
@@ -216,6 +218,7 @@
 	--color-accent-light: #5b8dd6;
 	--color-accent-border: #316ac5;
 	--color-accent-active: #2a5bb0;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_blue-topaz.gif");
 
 	/* Desktop-blue workspace, flat */
 	--color-bg-workspace: #82abdd;
@@ -315,6 +318,7 @@
 	--color-accent-light: #4fc1e8;
 	--color-accent-border: #0d9fd8;
 	--color-accent-active: #0b8dc0;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_aquamarine.gif");
 
 	/* Sky-into-grass workspace */
 	--color-bg-workspace: linear-gradient(to bottom, #bfe9fc 0%, #e3f7fb 55%, #cdedc2 100%);
@@ -400,6 +404,7 @@
 	--color-accent-light: #76aff0;
 	--color-accent-border: #2d7fdc;
 	--color-accent-active: #1d67c2;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_sapphire.gif");
 
 	--color-bg-workspace: linear-gradient(to bottom, #aebdca 0%, #dce3e9 100%);
 
@@ -486,6 +491,7 @@
 	--color-accent-light: #a6d65b;
 	--color-accent-border: #72ad22;
 	--color-accent-active: #598e16;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_lime-green.gif");
 
 	/* Flat brushed-plastic floor, not a decorative web-page background. */
 	--color-bg-workspace: linear-gradient(to bottom, #6d786f 0%, #aeb7af 100%);
@@ -571,6 +577,7 @@
 	--color-accent-light: #5555ff;
 	--color-accent-border: #0000ee;
 	--color-accent-active: #000080;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_rainbow.gif");
 	--color-accent-visited: #551a8b;
 
 	/* A literal repeating image tile, like the background picker on a
@@ -659,6 +666,7 @@
 	--color-accent-light: #9ccc58;
 	--color-accent-border: #69a928;
 	--color-accent-active: #568f1d;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_light-green.gif");
 
 	--color-bg-workspace: linear-gradient(to bottom, #91c7e9 0%, #d8edf8 54%, #ffffff 100%);
 
@@ -742,6 +750,7 @@
 	--color-accent-light: #73e9ff;
 	--color-accent-border: #20d9ff;
 	--color-accent-active: #00b9e6;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_magenta-blue.gif");
 
 	--color-bg-workspace: radial-gradient(circle at 50% 0%, #32174f 0%, #11152b 46%, #070914 100%);
 
@@ -816,6 +825,7 @@
 	--color-accent-light: #6ee784;
 	--color-accent-border: #2fd049;
 	--color-accent-active: #27b83f;
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_green.gif");
 
 	/* Titlebar: brushed-steel gradient with gold WINAMP lettering. */
 	--bar-gradient-top: #4d564f;
@@ -853,6 +863,7 @@
 	   dark-on-dark */
 	--swatch-empty-outline: var(--gray-400);
 	--swatch-empty-bg: var(--gray-500);
+	--new-canvas-preview-bg: var(--color-bg-secondary);
 
 	/* Context-bar slider tracks: the panel track token is a near-surface tint
 	   on these ramps and vanishes against the floating glass bars — drop to

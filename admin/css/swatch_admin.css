@@ -145,6 +145,10 @@
   /* (was var(--blue-400), which doesn't exist — links' :active silently lost color) */
   --color-accent-active: var(--blue-300);
   --color-accent-visited: var(--blue-100);
+  /* Animated accent used by modal link hovers, reference highlights, and the
+     Guide hero. Theme overrides choose an asset by sampled dominant color,
+     then by the theme's accent/personality rather than filename alone. */
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_sapphire.gif");
   --color-danger: var(--red-100);
   --color-danger-bright: #ff4444;
   --color-success: var(--green-100);
@@ -270,6 +274,7 @@
   --color-accent-light: #6fa1e0;
   --color-accent-border: #3577cf;
   --color-accent-active: #2b68bd;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_dusty-dark-blue.gif");
   /* Canvas floor: clearly darker than a white canvas (Figma-style grey,
      tinted into the family) */
   --color-bg-workspace: #dde6f0;
@@ -350,6 +355,7 @@
   --color-accent-light: #ef86bf;
   --color-accent-border: #e0559f;
   --color-accent-active: #cd4590;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_hot-pink.gif");
   /* Canvas floor: dusty rose so a white canvas pops */
   --color-bg-workspace: #f0d9e6;
   /* Shadows: plum-tinted, soft */
@@ -421,6 +427,7 @@
   --color-accent-light: #5b8dd6;
   --color-accent-border: #316ac5;
   --color-accent-active: #2a5bb0;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_blue-topaz.gif");
   /* Desktop-blue workspace, flat */
   --color-bg-workspace: #82abdd;
   /* Warm shadows */
@@ -506,6 +513,7 @@
   --color-accent-light: #4fc1e8;
   --color-accent-border: #0d9fd8;
   --color-accent-active: #0b8dc0;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_aquamarine.gif");
   /* Sky-into-grass workspace */
   --color-bg-workspace: linear-gradient(to bottom, #bfe9fc 0%, #e3f7fb 55%, #cdedc2 100%);
   /* Deep-water shadows */
@@ -578,6 +586,7 @@
   --color-accent-light: #76aff0;
   --color-accent-border: #2d7fdc;
   --color-accent-active: #1d67c2;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_sapphire.gif");
   --color-bg-workspace: linear-gradient(to bottom, #aebdca 0%, #dce3e9 100%);
   /* Cool graphite shadows */
   --color-shadow: rgb(30 45 59 / 12%);
@@ -651,6 +660,7 @@
   --color-accent-light: #a6d65b;
   --color-accent-border: #72ad22;
   --color-accent-active: #598e16;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_lime-green.gif");
   /* Flat brushed-plastic floor, not a decorative web-page background. */
   --color-bg-workspace: linear-gradient(to bottom, #6d786f 0%, #aeb7af 100%);
   --color-shadow: rgb(24 32 24 / 12%);
@@ -723,6 +733,7 @@
   --color-accent-light: #5555ff;
   --color-accent-border: #0000ee;
   --color-accent-active: #000080;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_rainbow.gif");
   --color-accent-visited: #551a8b;
   /* A literal repeating image tile, like the background picker on a
      personal homepage: yellow star plus cyan, white, and pink pixels. */
@@ -798,6 +809,7 @@
   --color-accent-light: #9ccc58;
   --color-accent-border: #69a928;
   --color-accent-active: #568f1d;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_light-green.gif");
   --color-bg-workspace: linear-gradient(to bottom, #91c7e9 0%, #d8edf8 54%, #ffffff 100%);
   --color-shadow: rgb(17 67 102 / 10%);
   --color-shadow-soft: rgb(17 67 102 / 15%);
@@ -868,6 +880,7 @@
   --color-accent-light: #73e9ff;
   --color-accent-border: #20d9ff;
   --color-accent-active: #00b9e6;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_magenta-blue.gif");
   --color-bg-workspace: radial-gradient(circle at 50% 0%, #32174f 0%, #11152b 46%, #070914 100%);
   --color-shadow: rgb(0 0 0 / 28%);
   --color-shadow-soft: rgb(0 0 0 / 38%);
@@ -929,6 +942,7 @@
   --color-accent-light: #6ee784;
   --color-accent-border: #2fd049;
   --color-accent-active: #27b83f;
+  --theme-glitter-image: url("../images/glitter/sparkle/glitter_green.gif");
   /* Titlebar: brushed-steel gradient with gold WINAMP lettering. */
   --bar-gradient-top: #4d564f;
   --bar-gradient-bottom: #232823;
@@ -1097,6 +1111,10 @@ body {
   margin: var(--spacing-sm) var(--spacing-md) 0;
   flex: 0 0 38px;
   background: var(--color-bg-secondary) !important;
+}
+.asset-list-filter::-moz-placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 1;
 }
 .asset-list-filter::placeholder {
   color: var(--color-text-tertiary);
@@ -1384,7 +1402,8 @@ body {
   overflow: hidden;
 }
 .overview-strip .overview-item {
-  appearance: none;
+  -moz-appearance: none;
+       appearance: none;
   -webkit-appearance: none;
   display: flex;
   align-items: baseline;
@@ -1529,7 +1548,8 @@ body {
 .issue-preview img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
 }
 .issue-preview.preview-failed::after {
   content: "Preview unavailable";
@@ -1754,7 +1774,8 @@ body {
 }
 
 input[type=checkbox].field-switch {
-  appearance: none;
+  -moz-appearance: none;
+       appearance: none;
   -webkit-appearance: none;
   flex: 0 0 auto;
   width: 34px;
@@ -1888,7 +1909,9 @@ input[type=checkbox].field-switch:focus-visible {
   margin-bottom: var(--spacing-sm);
   padding: 0 var(--spacing-sm);
   cursor: pointer;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
   list-style: none;
   display: flex;
   align-items: center;
@@ -2042,7 +2065,9 @@ input[type=checkbox].field-switch:focus-visible {
   text-transform: uppercase;
   cursor: pointer;
   list-style: none;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 .admin-section-title::-webkit-details-marker {
   display: none;
@@ -2095,6 +2120,9 @@ textarea {
   font-family: var(--font-family);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
+input[type=text]::-moz-placeholder, input[type=number]::-moz-placeholder, input[type=url]::-moz-placeholder, input[type=search]::-moz-placeholder, input[type=password]::-moz-placeholder, select::-moz-placeholder, textarea::-moz-placeholder {
+  color: var(--color-text-tertiary);
+}
 input[type=text]::placeholder,
 input[type=number]::placeholder,
 input[type=url]::placeholder,
@@ -2136,7 +2164,8 @@ textarea:disabled {
 }
 
 select {
-  appearance: none;
+  -moz-appearance: none;
+       appearance: none;
   -webkit-appearance: none;
   padding-right: var(--spacing-2xl);
   background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
@@ -2925,7 +2954,8 @@ input[type=checkbox] {
 .ingest-preview img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
 }
 
 .ingest-actions {
@@ -3021,6 +3051,4 @@ input[type=checkbox] {
   .ingest-batch-toolbar {
     grid-template-columns: 1fr;
   }
-}
-
-/*# sourceMappingURL=swatch_admin.css.map */
+}/*# sourceMappingURL=swatch_admin.css.map */

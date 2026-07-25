@@ -137,6 +137,9 @@
 
 	/* Canvas workspace floor — must contrast with both dark and white canvases */
 	--color-bg-workspace: var(--color-bg-secondary);
+	/* Miniature page in New Canvas preset cards. It stays a distinct surface
+	   from the button so each preset's aspect ratio remains easy to scan. */
+	--new-canvas-preview-bg: var(--color-border);
 
 	/* Modal overlay scrim behind .modal-content */
 	--color-overlay: rgba(0, 0, 0, 0.85);
@@ -165,6 +168,11 @@
 	/* (was var(--blue-400), which doesn't exist — links' :active silently lost color) */
 	--color-accent-active: var(--blue-300);
 	--color-accent-visited: var(--blue-100);
+
+	/* Animated accent used by modal link hovers, reference highlights, and the
+	   Guide hero. Theme overrides choose an asset by sampled average color,
+	   then by the theme's accent/personality rather than filename alone. */
+	--theme-glitter-image: url("../images/glitter/sparkle/glitter_sapphire.gif");
 
 
 	--color-danger: var(--red-100);

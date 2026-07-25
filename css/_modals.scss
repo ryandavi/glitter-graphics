@@ -118,7 +118,7 @@
 
 			a {
 				&:hover {
-					background: url("../images/glitter/sparkle/glitter_white.gif") repeat;
+					background: var(--theme-glitter-image) repeat;
 					-webkit-background-clip: text;
 					-webkit-text-fill-color: transparent;
 				}
@@ -463,7 +463,7 @@
 				aspect-ratio: 1;
 				border: 1px solid var(--color-border);
 				border-radius: var(--radius-sm);
-				background: var(--color-off-white);
+				background: var(--new-canvas-preview-bg);
 
 				&.wide {
 					width: auto;
@@ -1455,7 +1455,7 @@
 
 	/* Highlight animation for references */
 	.highlight {
-		background: url(../images/glitter/sparkle/glitter_white.gif) repeat;
+		background: var(--theme-glitter-image) repeat;
 		color: var(--color-accent);
 		transition: background-color 0.3s ease;
 		border-radius: 2px;
@@ -1492,6 +1492,12 @@
 #shortcutsModal {
 
 	/* KEYBOARD SHORTCUTS */
+	.shortcut-help {
+		margin-bottom: var(--spacing-lg);
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-sm);
+	}
+
 	.shortcut-list {
 		display: flex;
 		flex-direction: column;
@@ -1599,7 +1605,7 @@
 #guideModal {
 	.modal-hero-image {
 		//tiled background
-		background: url("../images/glitter/sparkle/glitter_sapphire.gif") repeat;
+		background: var(--theme-glitter-image) repeat;
 
 		>h2 {
 			display: none;

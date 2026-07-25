@@ -499,8 +499,8 @@ const CONFIG = {
 				hardMax: 10000
 			},
 		},
-		shortcuts: {
-			tools: [
+		shortcuts: [
+			{ title: 'Tools', items: [
 				{ key: 'V', action: 'Select Tool' },
 				{ key: 'T', action: 'Text Tool' },
 				{ key: 'U', action: 'Shape Tool' },
@@ -508,48 +508,52 @@ const CONFIG = {
 				{ key: 'B', action: 'Mask Brush Tool' },
 				{ key: 'E', action: 'Mask Eraser Tool' },
 				{ key: 'H', action: 'Hand Tool' },
-				{ key: 'Hold Space', action: 'Temporarily Use Hand Tool' },
-				{ key: 'Z', action: 'Zoom Tool' },
+				{ key: 'Z', action: 'Zoom Tool' }
+			] },
+			{ title: 'Selection', items: [
+				{ key: 'Shift + Click Canvas', action: 'Add/Remove Movable Layer from Selection', gestures: ['Click Canvas'] },
+				{ key: 'Shift + Click Layer', action: 'Select Layer Range in Layers Panel', gestures: ['Click Layer'] },
+				{ key: 'Ctrl/Cmd + Click Layer', action: 'Add/Remove One Layer in Layers Panel', gestures: ['Click Layer'] },
+				{ key: 'Alt + Click', action: 'Cycle Through Overlapping Layers', gestures: ['Click'] },
+				{ key: 'Drag on Empty Canvas', action: 'Select Multiple Layers', gestures: ['Drag on Empty Canvas'] },
+				{ key: 'Ctrl + A', action: 'Select All Movable Layers' },
+				{ key: 'Escape', action: 'Cancel Active Transform / Clear Multi-Selection' }
+			] },
+			{ title: 'Transform', items: [
 				{ key: 'Arrow Keys', action: 'Nudge Selected Layer' },
 				{ key: 'Shift + Arrow Keys', action: 'Nudge Selected Layer 10px' },
-				{ key: 'Shift + Click Canvas', action: 'Add/Remove Movable Layer from Selection' },
-				{ key: 'Shift + Click Layer', action: 'Select Layer Range in Layers Panel' },
-				{ key: 'Ctrl/Cmd + Click Layer', action: 'Add/Remove One Layer in Layers Panel' },
-				{ key: 'Alt + Click', action: 'Cycle Through Overlapping Layers' },
-				{ key: 'Alt + Drag', action: 'Duplicate Layer(s) While Dragging' },
+				{ key: 'Alt + Drag', action: 'Duplicate Layer(s) While Dragging', gestures: ['Drag'] },
 				{ key: 'Ctrl + D', action: 'Duplicate Selected Layer(s)' },
-				{ key: 'Drag on Empty Canvas', action: 'Select Multiple Layers' },
-				{ key: 'Ctrl + A', action: 'Select All Movable Layers' },
-				{ key: 'Escape', action: 'Cancel Active Transform / Clear Multi-Selection' },
-				{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move' },
-				{ key: 'Hold Ctrl', action: 'Temporarily Disable Snapping While Dragging' },
-				{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg' },
-				{ key: 'Alt + Resize', action: 'Resize Layer(s) from Center' }
-			],
-			brush: [
+				{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move', gestures: ['Drag'] },
+				{ key: 'Ctrl + Drag', action: 'Temporarily Disable Snapping', instruction: 'Hold', gestures: ['Drag'] },
+				{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg', gestures: ['Rotate'] },
+				{ key: 'Alt + Resize', action: 'Resize Layer(s) from Center', gestures: ['Resize'] }
+			] },
+			{ title: 'Brush', items: [
 				{ key: 'X', action: 'Swap Paint/Erase (Mask Brush)' },
 				{ key: '[ / ]', action: 'Decrease/Increase Brush Size' },
 				{ key: 'Shift + [ / ]', action: 'Adjust Brush Size Faster' },
-				{ key: 'Shift + Drag', action: 'Constrain the stroke to a straight line (0/45/90 deg)' },
-			],
-			view: [
-				{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)' },
-				{ key: 'Scroll Wheel', action: 'Zoom In/Out (Zoom Tool)' },
-				{ key: 'Ctrl + Wheel', action: 'Trackpad Zoom' },
+				{ key: 'Shift + Drag', action: 'Constrain Stroke to 0/45/90deg', gestures: ['Drag'] }
+			] },
+			{ title: 'View', items: [
+				{ key: 'Space', action: 'Temporarily Use Hand Tool', instruction: 'Hold' },
+				{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)', gestures: ['Click'] },
+				{ key: 'Scroll Wheel', action: 'Zoom In/Out (Zoom Tool)', gestures: ['Scroll Wheel'] },
+				{ key: 'Ctrl + Wheel', action: 'Trackpad Zoom', gestures: ['Wheel'] },
 				{ key: 'Ctrl + 0', action: 'Fit Screen' },
 				{ key: 'Ctrl + 1', action: 'Reset Zoom (100%)' },
-				{ key: 'Double-click Zoom %', action: 'Reset Zoom (100%)' },
+				{ key: 'Double-click Zoom %', action: 'Reset Zoom (100%)', gestures: ['Double-click Zoom %'] },
 				{ key: 'Ctrl + +/-', action: 'Zoom In/Out' }
-			],
-			history: [
+			] },
+			{ title: 'History', items: [
 				{ key: 'Ctrl + Z', action: 'Undo' },
 				{ key: 'Ctrl + Shift + Z', action: 'Redo' },
-				{ key: 'Ctrl + Y', action: 'Redo' },
-			],
-			file: [
+				{ key: 'Ctrl + Y', action: 'Redo' }
+			] },
+			{ title: 'File', items: [
 				{ key: 'Ctrl + S', action: 'Save Project' }
-			]
-		}
+			] }
+		]
 	},
 
 	export: {

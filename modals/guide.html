@@ -450,7 +450,7 @@
 					<ul>
 						<li><strong>Marquee</strong> – Drag on empty canvas to select the layers it touches. Hold <kbd class="guide-kbd">Shift</kbd> while dragging to add to the current selection.</li>
 						<li><strong>On the canvas</strong> – <kbd class="guide-kbd">Shift</kbd>-click toggles a layer under the pointer; hold <kbd class="guide-kbd">Alt</kbd> and click to cycle through overlapping layers.</li>
-						<li><strong>In the Layers panel</strong> – <kbd class="guide-kbd">Shift</kbd>-click selects the whole range; <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">Click</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">Click</kbd></span> toggles any single layer, including locked, Base Image, and Glitter Fill layers.</li>
+						<li><strong>In the Layers panel</strong> – <span class="guide-shortcut"><kbd class="guide-kbd">Shift</kbd><span class="shortcut-gesture">Click</span></span> selects the whole range; <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><span class="shortcut-gesture">Click</span></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><span class="shortcut-gesture">Click</span></span> toggles any single layer, including locked, Base Image, and Glitter Fill layers.</li>
 						<li><span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">A</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">A</kbd></span> selects every movable layer; <kbd class="guide-kbd">Escape</kbd> clears the selection.</li>
 					</ul>
 					<p>A selection that includes a protected or non-transformable layer — locked, Base Image, or Glitter Fill — stays selectable but cannot move as a group.</p>
@@ -1159,7 +1159,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Rotation</strong> – Spin the sticker (–180<span class="setting-unit">°</span> to 180<span class="setting-unit">°</span>).</p>
+                    <p><strong>Transform</strong> – Enter exact X/Y position, W/H size, rotation, and opacity, or use the alignment, flip, and reset controls.</p>
                 </div>
             </div>
 
@@ -1172,7 +1172,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Scale X & Y</strong> – Resize width and height independently.</p>
+                    <p><strong>Handles</strong> – Drag corner handles to scale proportionally, or use side handles to resize one axis.</p>
                 </div>
             </div>
 
@@ -1185,7 +1185,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Proportional Scale</strong> – When enabled, X and Y scale together to maintain aspect ratio. Disable to stretch or squash the sticker.</p>
+                    <p><strong>Lock Aspect</strong> – Keep width and height proportional while resizing, or turn it off to stretch or squash the sticker.</p>
                 </div>
             </div>
 
@@ -1373,7 +1373,7 @@
 
         <div class="guide-subsection">
             <h4 id="text-effects">Fill, Border &amp; Shadow</h4>
-            <p>Each part of the text keeps its own source — glitter or solid color.</p>
+            <p>Each part of the text keeps its own source — glitter or solid color, with None also available for the fill.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1384,12 +1384,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Fill</strong> – Choose None, Glitter, Solid, or Gradient. Texture Scale appears for glitter; Opacity applies to glitter, solid, and gradient sources.</p>
-                    <ul>
-                        <li><strong>Gradient type</strong> – Linear or radial, with an adjustable angle and a reset.</li>
-                        <li><strong>Blend</strong> – Linear, Smooth, or Constant (hard bands).</li>
-                        <li><strong>Color stops</strong> – Each has a percentage position and opacity. Drag a handle on the preview strip to move a stop, or click the strip to add one.</li>
-                    </ul>
+                    <p><strong>Fill</strong> – Choose None, Glitter, or Solid. Texture Scale appears for glitter, and Opacity applies to glitter and solid sources.</p>
                 </div>
             </div>
 
@@ -1402,7 +1397,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Border</strong> – Enable an outline around the text and set its width. It defaults to glitter — click the border swatch to choose which one, or switch it to <strong>Solid Color</strong> for a flat color instead.</p>
+                    <p><strong>Border</strong> – Enable an outline around the text and set its width. Choose Glitter or Solid, then control rounded/hard edges, outside/on-edge/inside placement, and whether the border sits behind or on top of the fill.</p>
                 </div>
             </div>
 
@@ -1502,7 +1497,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Border</strong> &amp; <strong>Shadow</strong> – Enable each and pick its own glitter or solid color, width/offset, and opacity. Borders follow the shape's true outline, so even sharp shapes like the star stay smooth. Shape borders can also switch to <strong>Dotted Border</strong> mode with adjustable dot spacing. Open <strong>Advanced</strong> on any slot to recolor its glitter (Hue / Saturation / Brightness).</p>
+                    <p><strong>Border</strong> &amp; <strong>Shadow</strong> – Enable each and pick its own glitter or solid color, width/offset, and opacity. Borders follow the shape's true outline, can be solid or dotted, and expose rounded/hard edges, outside/on-edge/inside placement, plus behind/on-top layering. Open <strong>Advanced</strong> on any slot to recolor its glitter (Hue / Saturation / Brightness).</p>
                 </div>
             </div>
         </div>

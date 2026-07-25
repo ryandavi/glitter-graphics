@@ -1883,25 +1883,23 @@ async resetAllSettings() {
 
 	initializeShortcutsModal() {
 		const list = document.getElementById('shortcutList');
-		const gesturePattern = /^(click|drag|resize|rotate|wheel|scroll wheel|double-click)/i;
-		const buildShortcutToken = (label) => {
+		const buildShortcutToken = (label, type = 'key') => {
 			const token = document.createElement('span');
-			const isGesture = gesturePattern.test(label);
-			token.className = isGesture ? 'shortcut-gesture' : 'kbd';
+			token.className = type === 'gesture' ? 'shortcut-gesture' : 'kbd';
 			token.textContent = label;
 			return token;
 		};
 
-		Object.entries(CONFIG.ui.shortcuts).forEach(([category, shortcutArray]) => {
+		CONFIG.ui.shortcuts.forEach(({ title: groupTitle, items }) => {
 			const group = document.createElement('div');
 			group.className = 'shortcut-group';
 
 			const title = document.createElement('div');
 			title.className = 'shortcut-group-title';
-			title.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+			title.textContent = groupTitle;
 			group.appendChild(title);
 
-			shortcutArray.forEach(sc => {
+			items.forEach(sc => {
 				const item = document.createElement('div');
 				item.className = 'shortcut-item';
 
@@ -1912,16 +1910,16 @@ async resetAllSettings() {
 				const keys = document.createElement('div');
 				keys.className = 'shortcut-keys shortcut-sequence';
 
+				if (sc.instruction) {
+					const instruction = document.createElement('span');
+					instruction.className = 'shortcut-instruction';
+					instruction.textContent = sc.instruction;
+					keys.appendChild(instruction);
+				}
+
 				sc.key.split(' + ').forEach((part) => {
-					if (part.startsWith('Hold ')) {
-						const instruction = document.createElement('span');
-						instruction.className = 'shortcut-instruction';
-						instruction.textContent = 'Hold';
-						keys.appendChild(instruction);
-						keys.appendChild(buildShortcutToken(part.slice(5)));
-						return;
-					}
-					keys.appendChild(buildShortcutToken(part));
+					const type = sc.gestures?.includes(part) ? 'gesture' : 'key';
+					keys.appendChild(buildShortcutToken(part, type));
 				});
 
 				item.appendChild(action);
@@ -3518,7 +3516,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=34',
+				externalContentUrl: 'modals/guide.html?v=35',
 				cacheContent: true,
 				resetScrollOnOpen: true,
 				onContentLoaded: (modalBody) => {
@@ -5514,10 +5512,16 @@ setupWelcomeModalListeners() {
 
 		const previewControls = document.getElementById('previewControls');
 		if (previewControls) previewControls.classList.remove('visible');
+		// Context bars retain their last tool state until explicitly reconciled.
+		// Reset can leave SELECT selected, so setTool(SELECT) below may early-return.
+		this.updateContextToolbars();
 
 		// ======================
 		// Side panels & empty states
 		// ======================
+		// Apply the no-document layout before reconciling panel content so the
+		// start workspace never flashes stale side panels during reset.
+		this.syncDocumentStartState();
 		this.updateSidePanelUI(null);
 
 		this.showLayerSettingsEmptyState();
