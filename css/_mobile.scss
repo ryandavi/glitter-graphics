@@ -33,19 +33,10 @@
 			position: relative;
 			z-index: var(--z-app-header-elevated);
 
-			>.app-header-left > .app-header-logo {
+			>.app-header-left {
 				gap: var(--spacing-sm);
 
-				>.app-header-title {
-					display: block;
-					max-width: 110px;
-					font-size: var(--font-size-sm);
-				}
-
-				>.logo {
-					width: 30px;
-					height: 30px;
-				}
+				>.app-header-title { max-width: 140px; }
 			}
 
 			>.app-header-right { gap: var(--spacing-xs); }

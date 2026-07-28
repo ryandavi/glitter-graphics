@@ -80,6 +80,72 @@ textarea {
 	line-height: 1.4;
 }
 
+.search-toggle-row {
+	--search-control-height: var(--control-height);
+	display: flex;
+	align-items: stretch;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-md);
+
+	>.search-input-wrapper {
+		position: relative;
+		display: flex;
+		flex: 1 1 auto;
+		min-width: 0;
+		height: var(--search-control-height);
+
+		>.search-input-icon {
+			position: absolute;
+			top: 50%;
+			left: 0.5rem;
+			z-index: 1;
+			width: 1.2rem;
+			height: 1.2rem;
+			transform: translateY(-50%);
+			color: var(--color-text-tertiary);
+			pointer-events: none;
+
+			>svg.icon { font-size: 1.2rem; }
+		}
+
+		>input {
+			flex: 1 1 auto;
+			width: 100%;
+			min-width: 0;
+			height: var(--search-control-height);
+			padding: var(--spacing-sm) var(--spacing-md);
+			padding-left: 2rem;
+			box-sizing: border-box;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+			background: var(--color-bg-secondary);
+			color: var(--color-text-primary);
+			font-size: var(--font-size-base);
+
+			&::placeholder {
+				color: var(--color-text-tertiary);
+				opacity: 1;
+			}
+
+			&:hover:not(:disabled) { border-color: var(--color-border-hover); }
+
+			&:focus-visible {
+				outline: none;
+				border-color: var(--color-accent);
+				box-shadow: var(--control-focus-ring);
+			}
+		}
+	}
+
+	>.btn-icon {
+		flex: 0 0 var(--search-control-height);
+		width: var(--search-control-height);
+		height: var(--search-control-height);
+		min-width: var(--search-control-height);
+		aspect-ratio: 1;
+	}
+}
+
 // Shared setting vocabulary. Schema panels and modal settings use the same
 // label, action-row, disclosure, and inset-surface primitives; owners add only
 // layout-specific deltas.

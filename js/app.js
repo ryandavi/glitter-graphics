@@ -3517,7 +3517,8 @@ async resetAllSettings() {
 				closeBtnId: 'closeAboutModal',
 				externalContentUrl: 'modals/about.html?v=5',
 				cacheContent: true,
-				resetScrollOnOpen: true,
+				resetScrollOnOpen: false,
+				rememberScroll: true,
 				onContentLoaded: (modalBody) => {
 					this.renderVersionHistory(modalBody);
 					// Initialize pixel-scaled images
@@ -3528,8 +3529,8 @@ async resetAllSettings() {
 						referenceListSelector: 'ol#AboutReferencesList'
 					});
 
-					// Initialize smooth scrolling for TOC and anchors
 					const modal = document.getElementById('aboutModal');
+					initDocumentModalNavigation(modal);
 					initModalSmoothScroll(modal);
 
 					// Initialize tooltips for dynamically loaded content
@@ -3541,15 +3542,16 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=36',
+				externalContentUrl: 'modals/guide.html?v=39',
 				cacheContent: true,
-				resetScrollOnOpen: true,
+				resetScrollOnOpen: false,
+				rememberScroll: true,
 				onContentLoaded: (modalBody) => {
 					// Initialize pixel-scaled images (for screenshots)
 					initPixelScalerInContainer(modalBody);
 
-					// Initialize smooth scrolling for TOC navigation
 					const modal = document.getElementById('guideModal');
+					initDocumentModalNavigation(modal);
 					initModalSmoothScroll(modal);
 				}
 			});
@@ -3584,7 +3586,7 @@ async resetAllSettings() {
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
-			externalContentUrl: 'modals/welcome.html?v=3',
+			externalContentUrl: 'modals/welcome.html?v=4',
 			cacheContent: true,
 			showWhileLoading: true,
 			loadingLabel: 'Preparing Glitter…',
@@ -3595,11 +3597,13 @@ async resetAllSettings() {
 				this.setupWelcomeModalListeners();
 			},
 			onOpen: () => {
-				const checkbox = document.getElementById('welcomeDontShowAgain');
-				if (checkbox) checkbox.checked = !this.showWelcomeOnStartup;
+				const checked = !this.showWelcomeOnStartup;
+				document.querySelectorAll('#welcomeDontShowAgain, #welcomeDontShowAgainMobile').forEach((checkbox) => {
+					checkbox.checked = checked;
+				});
 			},
 			onClose: () => {
-				const checkbox = document.getElementById('welcomeDontShowAgain');
+				const checkbox = document.querySelector('#welcomeDontShowAgain, #welcomeDontShowAgainMobile');
 				try {
 					localStorage.setItem('glitterEditor_welcomeLastSeenRelease', CONFIG.app.currentRelease);
 					if (checkbox?.checked) {
@@ -3689,12 +3693,21 @@ setupWelcomeModalListeners() {
 	const takeTourBtn = document.getElementById('welcomeTakeTourBtn');
 	const startCreatingBtn = document.getElementById('welcomeStartCreatingBtn');
 	const dontShowCheckbox = document.getElementById('welcomeDontShowAgain');
+	const dontShowMobileCheckbox = document.getElementById('welcomeDontShowAgainMobile');
 	if (takeTourBtn?.dataset.welcomeBound === 'true') return;
 	if (takeTourBtn) takeTourBtn.dataset.welcomeBound = 'true';
 	if (startCreatingBtn) startCreatingBtn.dataset.welcomeBound = 'true';
+
+	[dontShowCheckbox, dontShowMobileCheckbox].filter(Boolean).forEach((checkbox) => {
+		checkbox.addEventListener('change', () => {
+			[dontShowCheckbox, dontShowMobileCheckbox].filter(Boolean).forEach((peer) => {
+				peer.checked = checkbox.checked;
+			});
+		});
+	});
 	
 	const markAsSeenIfChecked = () => {
-		if (dontShowCheckbox && dontShowCheckbox.checked) {
+		if (dontShowCheckbox?.checked || dontShowMobileCheckbox?.checked) {
 			try {
 				localStorage.setItem(storageKey, 'true');
 				this.showWelcomeOnStartup = false;
@@ -3708,8 +3721,7 @@ setupWelcomeModalListeners() {
 	if (takeTourBtn) {
 		takeTourBtn.addEventListener('click', () => {
 			markAsSeenIfChecked();
-			this.modalManager.close('welcomeModal');
-			this.modalManager.open('guideModal');
+			this.modalManager.open('guideModal', { resetScroll: true });
 		});
 	}
 	

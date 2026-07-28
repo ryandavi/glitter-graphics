@@ -6,7 +6,7 @@
 	<!-- Basic meta -->
 	<meta charset="UTF-8">
 	<meta name="viewport"
-		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 	<script>
 		try {
 			const savedSettings = JSON.parse(localStorage.getItem('glitterEditorSettings') || '{}');
@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=206">
+	<link rel="stylesheet" href="css/style.css?v=211">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,14 +58,14 @@
 		<!-- Header -->
 		<div class="app-header">
 			<div class="app-header-left">
-				<a href="index.html" class="app-header-logo">
-					<span class="logo"></span>
-					<span class="app-header-title">RYBABY LABS</span>
+				<a href="https://ryandavi.com" class="app-header-logo" target="_blank" rel="noopener noreferrer" aria-label="Visit ryandavi.com">
+					<span class="logo" aria-hidden="true"></span>
 				</a>
+				<a href="index.html" class="app-header-title">RYBABY LABS</a>
 			</div>
 			<div class="app-header-right">
 				<button class="btn-icon-simple icon-wrapper" id="openWelcomeModal" title="Welcome" aria-label="Open Welcome">
-					<svg class="icon"><use href="#icon-glitter" x="3" y="3" width="24" height="24"></use></svg>
+					<svg class="icon"><use href="#icon-glitter"></use></svg>
 					<span class="name">Welcome</span>
 				</button>
 
@@ -352,6 +352,7 @@
 								<div class="glitter-search">
 									<div class="search-toggle-row">
 										<div class="search-input-wrapper">
+											<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
 											<input type="text" id="glitterSearch" placeholder="Search by name or tag...">
 										</div>
 										<button class="btn-icon icon-wrapper" id="filterToggleBtn" title="Open filters" aria-expanded="false" aria-controls="filtersContainer">
@@ -508,6 +509,7 @@
 								<div class="glitter-search">
 									<div class="search-toggle-row">
 										<div class="search-input-wrapper">
+											<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
 											<input type="text" id="stickersSearch" placeholder="Search stickers...">
 										</div>
 										<button class="btn-icon icon-wrapper" id="stickerFilterToggleBtn" title="Open filters" aria-expanded="false" aria-controls="stickerFiltersContainer">
@@ -1806,7 +1808,7 @@
 					<svg class="icon">
 						<use href="#icon-x-mark"></use>
 					</svg>
-					<span class="name">Image</span>
+					<span class="name">Close</span>
 				</button>
 
 
@@ -2057,7 +2059,7 @@
 					<svg class="icon">
 						<use href="#icon-x-mark"></use>
 					</svg>
-					<span class="name">Image</span>
+					<span class="name">Close</span>
 				</button>
 
 			</div>
@@ -2072,7 +2074,7 @@
 
 	<!-- About Modal -->
 	<div class="modal-overlay" id="aboutModal">
-		<div class="modal-content">
+		<div class="modal-content content-dialog document-dialog about-dialog">
 			<div class="modal-header">
 
 				<div class="modal-title">
@@ -2090,8 +2092,24 @@
 					<svg class="icon">
 						<use href="#icon-x-mark"></use>
 					</svg>
-					<span class="name">Image</span>
+					<span class="name">Close</span>
 				</button>
+			</div>
+			<div class="document-nav search-toggle-row" aria-label="About navigation" hidden>
+				<button type="button" class="btn-simple document-toc-toggle" aria-expanded="false" aria-controls="aboutDocumentTocPanel">
+					<span>Contents</span>
+					<span class="icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+				</button>
+				<label class="search-input-wrapper">
+					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
+					<input type="search" class="document-search-input" placeholder="Search About" aria-label="Search About" aria-controls="aboutDocumentSearchResults">
+				</label>
+				<span class="document-search-status" role="status" aria-live="polite"></span>
+				<button type="button" class="btn-icon icon-wrapper document-back-to-top" aria-label="Back to top" title="Back to top" hidden>
+					<svg class="icon"><use href="#icon-chevron-up"></use></svg>
+				</button>
+				<div class="document-toc-panel" id="aboutDocumentTocPanel" hidden></div>
+				<div class="document-search-results" id="aboutDocumentSearchResults" hidden></div>
 			</div>
 			<div class="modal-body">
 				<!-- Content loaded externally -->
@@ -2101,7 +2119,7 @@
 
 	<!-- Guide Modal -->
 	<div class="modal-overlay" id="guideModal">
-		<div class="modal-content">
+		<div class="modal-content content-dialog document-dialog guide-dialog">
 			<div class="modal-header">
 
 				<div class="modal-title">
@@ -2119,9 +2137,25 @@
 					<svg class="icon">
 						<use href="#icon-x-mark"></use>
 					</svg>
-					<span class="name">Image</span>
+					<span class="name">Close</span>
 				</button>
 
+			</div>
+			<div class="document-nav search-toggle-row" aria-label="Guide navigation" hidden>
+				<button type="button" class="btn-simple document-toc-toggle" aria-expanded="false" aria-controls="guideDocumentTocPanel">
+					<span>Contents</span>
+					<span class="icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+				</button>
+				<label class="search-input-wrapper">
+					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
+					<input type="search" class="document-search-input" placeholder="Search Guide" aria-label="Search Guide" aria-controls="guideDocumentSearchResults">
+				</label>
+				<span class="document-search-status" role="status" aria-live="polite"></span>
+				<button type="button" class="btn-icon icon-wrapper document-back-to-top" aria-label="Back to top" title="Back to top" hidden>
+					<svg class="icon"><use href="#icon-chevron-up"></use></svg>
+				</button>
+				<div class="document-toc-panel" id="guideDocumentTocPanel" hidden></div>
+				<div class="document-search-results" id="guideDocumentSearchResults" hidden></div>
 			</div>
 			<div class="modal-body">
 				<!-- Content loaded externally -->
@@ -2171,7 +2205,7 @@
 
 	<!-- Welcome Modal -->
 	<div class="modal-overlay" id="welcomeModal">
-		<div class="modal-content">
+		<div class="modal-content content-dialog onboarding-dialog">
 			<div class="modal-header">
 				<div class="modal-title">
 					<span class="modal-icon icon-wrapper">
@@ -2681,7 +2715,7 @@
 	<script src="js/transforms/movable-layer.js?v=1"></script>
 
 	<!-- Utils -->
-	<script src="js/core/utils.js?v=8"></script>
+	<script src="js/core/utils.js?v=11"></script>
 	<script src="js/effects/color-adjust.js?v=3"></script>
 	<script src="js/effects/mask-raster.js?v=1"></script>
 	<script src="js/effects/palette-analysis.js?v=1"></script>
@@ -2695,7 +2729,7 @@
 
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=8"></script>
-	<script src="js/classes/ModalManager.js?v=4"></script>
+	<script src="js/classes/ModalManager.js?v=9"></script>
 	<script src="js/classes/ExportTimeline.js?v=3"></script>
 	<script src="js/classes/GifExporter.js?v=44"></script>
 	<script src="js/classes/Mp4Exporter.js?v=6"></script>
@@ -2724,7 +2758,7 @@
 	<script src="js/classes/MobileManager.js?v=17"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=176"></script>
+	<script src="js/app.js?v=179"></script>
 
 </body>
 
