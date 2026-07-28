@@ -377,7 +377,7 @@ class ContentManager {
 
 	createItemElement(item, onSelect = null) {
 		const option = document.createElement('div');
-		option.className = 'asset-option';
+		option.className = 'choice-card asset-option';
 		option.title = item.name;
 
 		// Set both data-id and data-index for compatibility

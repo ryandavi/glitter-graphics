@@ -37,6 +37,7 @@
 	--color-text-primary: var(--gray-100);
 	--color-text-secondary: var(--gray-200);
 	--color-text-tertiary: var(--gray-300);
+	--color-text-on-accent: #fff;
 	--color-off-white: #f5f5f5;
 	/* near-white swatch bg/text (text color filter chips) */
 	--color-bg-accent-tint: #2a3a4a;
@@ -99,7 +100,7 @@
 		color-mix(in srgb, var(--color-danger) 62%, black) 70%,
 		color-mix(in srgb, var(--color-danger-bright) 58%, white) 100%);
 	--danger-btn-border-color: color-mix(in srgb, var(--color-danger) 75%, black);
-	--danger-btn-text-color: #fff;
+	--danger-btn-text-color: var(--color-text-on-accent);
 	--danger-btn-hover-filter: brightness(1.12) saturate(1.08);
 	--danger-btn-active-filter: brightness(0.88) saturate(1.05);
 	/* Gloss buttons are rimless by default; themes whose source UI rims its
@@ -191,20 +192,36 @@
 	--color-success: var(--green-100);
 	--color-warning: var(--orange-100);
 	--color-warning-text: var(--orange-800);
+	--color-info: var(--blue-100);
+	--color-danger-surface: color-mix(in srgb, var(--color-danger) 14%, transparent);
+	--color-danger-text: color-mix(in srgb, var(--color-danger) 82%, var(--color-text-primary));
+	--color-warning-surface: color-mix(in srgb, var(--color-warning) 14%, transparent);
+	--color-warning-border: color-mix(in srgb, var(--color-warning) 45%, var(--color-border));
+	--color-warning-emphasis: color-mix(in srgb, var(--color-warning) 82%, var(--color-text-primary));
+	--color-success-surface: color-mix(in srgb, var(--color-success) 14%, transparent);
+	--color-success-text: color-mix(in srgb, var(--color-success) 82%, var(--color-text-primary));
+	--color-info-surface: color-mix(in srgb, var(--color-info) 14%, transparent);
+	--color-info-text: color-mix(in srgb, var(--color-info) 82%, var(--color-text-primary));
+	--color-accent-surface: color-mix(in srgb, var(--color-accent) 14%, transparent);
 
 	--selected-outline-color: var(--color-accent-border);
 	--smart-guide-color: #ff2d8d;
 	--shape-asset-icon-color: var(--color-icon-strong);
 
-	--disabled-opacity: .25;
+	--opacity-disabled: .4;
+	--opacity-dragging: .5;
+	--disabled-opacity: var(--opacity-disabled);
 
 	/* Spacing */
+	--spacing-2xs: 2px;
 	--spacing-xs: 4px;
 	--spacing-sm: 6px;
 	--spacing-base: 8px;
 	--spacing-md: 10px;
 	--spacing-lg: 15px;
 	--spacing-xl: 20px;
+	--spacing-2xl: 24px;
+	--spacing-3xl: 32px;
 
 	--spacing-from-edge: var(--spacing-md);
 
@@ -214,6 +231,7 @@
 	--radius-md: 6px;
 	--radius-lg: 8px;
 	--radius-full: 50%;
+	--radius-pill: 9999px;
 
 	/* Typography */
 	--font-ui:
@@ -223,6 +241,14 @@
 		"Consolas",
 		"Google Sans Code",
 		monospace;
+	--font-mono:
+		"SF Mono",
+		Monaco,
+		"Cascadia Code",
+		"Roboto Mono",
+		Consolas,
+		"Courier New",
+		monospace;
 	--font-size-xs: 11px;
 	--font-size-sm: 12px;
 	--font-size-base: 14px;
@@ -230,6 +256,13 @@
 	--font-size-lg: 18px;
 	--font-size-xl: 20px;
 	--font-size-2xl: 24px;
+	--font-weight-normal: 400;
+	--font-weight-medium: 500;
+	--font-weight-semibold: 600;
+	--font-weight-bold: 700;
+	--line-height-tight: 1.2;
+	--line-height-normal: 1.5;
+	--line-height-relaxed: 1.7;
 
 	/* Transitions */
 	--transition-fast: 0.2s;
@@ -238,6 +271,7 @@
 	/* Sizes */
 	--control-height: 32px;
 	--control-height-compact: 24px;
+	--control-height-comfortable: 36px;
 	--control-padding-inline: var(--spacing-md);
 	--control-radius: var(--radius-sm);
 	--control-focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);
@@ -268,7 +302,6 @@
 	/* Fallback for older browsers */
 	--mobile-drawer-height: 50dvh;
 	/* Modern browsers override */
-	--mobile-breakpoint: 800px;
 	--mobile-toolbar-width: 50px;
 	--mobile-settings-handle-height: 18px;
 

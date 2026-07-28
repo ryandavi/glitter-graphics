@@ -140,7 +140,7 @@
 	display: flex;
 	flex-direction: column;
 	padding: var(--spacing-sm);
-	gap: 5px;
+	gap: var(--spacing-sm);
 	flex-shrink: 0;
 	position: relative;
 	z-index: var(--z-panel-elevated);
@@ -152,7 +152,7 @@
 	>.toolbar-group {
 		display: flex;
 		flex-direction: column;
-		gap: 5px;
+		gap: var(--spacing-sm);
 
 		+.toolbar-group {
 			border-top: 2px solid var(--color-border);
@@ -470,7 +470,7 @@
 						min-width: 14px;
 						min-height: 14px;
 						padding: 0 3px;
-						border-radius: 999px;
+						border-radius: var(--radius-pill);
 						background: rgba(0, 0, 0, 0.65);
 						color: #ffffff;
 						font-size: 10px;
@@ -892,7 +892,7 @@
 
 .tool-options-group {
 	display: flex;
-	flex-direction: flex;
+	flex-direction: row;
 	flex-wrap: wrap;
 	gap: var(--spacing-sm);
 	letter-spacing: 0.5px;
@@ -1000,7 +1000,6 @@
 	pointer-events: none;
 	will-change: filter;
 
-	// This matches your previous .glitter-background CSS
 	.glitter-background {
 		width: 100%;
 		height: 100%;
@@ -1023,7 +1022,6 @@
 }
 .layer-swatch {
 
-	// ADD: Better sticker thumbnail rendering
 	&[style*="contain"] {
 		background-color: var(--color-bg-tertiary);
 	}
@@ -1060,7 +1058,7 @@
 
 	&[data-panel-mode="sticker"] {
 
-		>.section>.section-header.glitter-header #uploadStickerBtn {
+		>.section>.section-header.glitter-header .upload-sticker-action {
 			visibility: visible;
 			pointer-events: auto;
 		}
@@ -1069,30 +1067,30 @@
 		// while browsing, the glitter browser only while a glitter picker
 		// session is armed (StickerManager toggles picker-mode on the section).
 		// Both pairs stay .visible via LAYER_UI_CONFIG; this picks between them.
-		#designGallerySection:not(.picker-mode) {
+		.design-gallery-section:not(.picker-mode) {
 
-			#glitterSearchSection,
-			#glitterOptions {
+			[data-gallery-search="glitter"],
+			[data-gallery-content="glitter"] {
 				display: none;
 			}
 		}
 
-		#designGallerySection.picker-mode {
+		.design-gallery-section.picker-mode {
 
-			#stickersSearchSection,
-			#stickersOptions {
+			[data-gallery-search="stickers"],
+			[data-gallery-content="stickers"] {
 				display: none;
 			}
 		}
 	}
 
 	&[data-panel-mode="shape"] {
-		#designGallerySection:not(.picker-mode) {
-			#glitterSearchSection,
-			#glitterOptions { display: none; }
+		.design-gallery-section:not(.picker-mode) {
+			[data-gallery-search="glitter"],
+			[data-gallery-content="glitter"] { display: none; }
 		}
 
-		#designGallerySection.picker-mode #shapesOptions { display: none; }
+		.design-gallery-section.picker-mode [data-gallery-content="shapes"] { display: none; }
 	}
 
 
@@ -1627,7 +1625,7 @@ body.no-document .main-content {
 	width: 0;
 	height: 0;
 	border: calc(1px / var(--zoom, 1)) solid var(--color-accent);
-	border-radius: 50%;
+	border-radius: var(--radius-full);
 	transform: translate(-50%, -50%);
 	pointer-events: none;
 	z-index: 30;
@@ -1676,7 +1674,7 @@ body.no-document .main-content {
 		left: 50%;
 		width: calc(4px / var(--zoom, 1));
 		height: calc(4px / var(--zoom, 1));
-		border-radius: 50%;
+		border-radius: var(--radius-full);
 		background: var(--color-bg-primary);
 		border: calc(1px / var(--zoom, 1)) solid var(--color-accent);
 		transform: translate(-50%, -50%);
@@ -1788,7 +1786,7 @@ body.mask-editing {
 
 	.context-value {
 		font-size: var(--font-size-sm);
-		color: var(--color-text);
+		color: var(--color-text-primary);
 		// Wide enough for the largest value+unit ("300px") so the number changing
 		// width never resizes the context bar; the value right-aligns instead.
 		min-width: 5ch;
@@ -1840,7 +1838,7 @@ body.mask-editing {
 	&:has(input:checked) {
 		border-color: var(--color-accent);
 		background: var(--color-accent);
-		color: #fff;
+		color: var(--color-text-on-accent);
 
 		.context-count { color: inherit; }
 	}
@@ -1947,7 +1945,7 @@ body.mask-editing {
 
 		&:hover {
 			background: var(--color-danger);
-			color: white;
+			color: var(--color-text-on-accent);
 		}
 	}
 }
@@ -1959,8 +1957,8 @@ body.mask-editing {
 	left: 50%;
 	transform: translateX(-50%) translateY(100px);
 	background: var(--color-danger);
-	color: white;
-	padding: 12px var(--spacing-xl);
+	color: var(--color-text-on-accent);
+	padding: var(--spacing-md) var(--spacing-xl);
 	border-radius: var(--radius-sm);
 	display: flex;
 	align-items: center;
@@ -1978,7 +1976,7 @@ body.mask-editing {
 	>.error-close {
 		background: none;
 		border: none;
-		color: white;
+		color: inherit;
 		font-size: var(--font-size-xl);
 		cursor: pointer;
 		padding: 0;
@@ -2184,7 +2182,7 @@ body.mask-editing {
 		}
 	}
 
-	@media (max-width: 800px) {
+	@include mobile {
 		top: calc(var(--touch-target-min) + var(--spacing-from-edge));
 		max-width: calc(70% - var(--spacing-lg) * 2);
 		min-width: 200px;
@@ -2222,7 +2220,7 @@ body.mask-editing {
 .layers-panel>.section,
 .design-panel>.section {
 	border: 1px solid var(--color-window-border);
-	border-radius: 5px;
+	border-radius: var(--radius-md);
 	overflow: hidden;
 	box-shadow: 0 2px 5px var(--color-shadow-strong);
 }
@@ -2233,13 +2231,6 @@ body.mask-editing {
 
 
 
-
-
-
-
-
-
-/* FIX */
 
 
 
@@ -2284,17 +2275,6 @@ body.mask-editing {
 				flex-shrink: 0;
 			}
 
-			>.asset-options {
-				flex: 1 1 auto;
-				min-height: 0;
-				min-width: 0;
-				overflow: hidden;
-
-				.asset-browser-content {
-					overflow-y: auto;
-					scrollbar-gutter: stable;
-				}
-			}
 		}
 
 		&.collapsible-section>.section-content {
@@ -2365,20 +2345,25 @@ body.mask-editing {
 					flex-shrink: 0;
 				}
 
-				>.asset-options {
-					flex: 1 1 auto;
-					min-height: 0;
-					min-width: 0;
-					overflow: hidden;
-
-					.asset-browser-content {
-						overflow-y: auto;
-						    scrollbar-gutter: stable;
-					}
-				}
-
-
 			}
+		}
+	}
+
+	>.section:is(.main-section, :not(.collapsible-section)) > .section-content > .asset-options {
+		flex: 1 1 auto;
+		min-height: 0;
+		min-width: 0;
+		overflow: hidden;
+
+		&[data-gallery-content="shapes"] {
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			scrollbar-gutter: stable;
+		}
+
+		.asset-browser-content {
+			overflow-y: auto;
+			scrollbar-gutter: stable;
 		}
 	}
 }
@@ -2423,7 +2408,7 @@ body.mask-editing {
 	}
 }
 
-#designGalleryContent {
+.design-gallery-content {
 	>.gallery-search-section.visible {
 		display: flex;
 		flex: 0 0 auto;
@@ -2440,26 +2425,26 @@ body.mask-editing {
 		}
 	}
 
-	>#glitterSearchSection.filters-open ~ #glitterOptions,
-	>#stickersSearchSection.filters-open ~ #stickersOptions {
+	>[data-gallery-search="glitter"].filters-open ~ [data-gallery-content="glitter"],
+	>[data-gallery-search="stickers"].filters-open ~ [data-gallery-content="stickers"] {
 		display: none;
 	}
 
-	>#glitterSearchSection.filters-returning ~ #glitterOptions,
-	>#stickersSearchSection.filters-returning ~ #stickersOptions {
+	>[data-gallery-search="glitter"].filters-returning ~ [data-gallery-content="glitter"],
+	>[data-gallery-search="stickers"].filters-returning ~ [data-gallery-content="stickers"] {
 		animation: filter-surface-enter var(--transition-fast) ease-out;
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.filters-container.visible,
-	#designGalleryContent > .gallery-search-section.filters-returning ~ .asset-options {
+	.design-gallery-content > .gallery-search-section.filters-returning ~ .asset-options {
 		animation: none;
 	}
 }
 
 
-@media (max-width: 800px) {
+@include mobile {
 
 
 
@@ -2495,7 +2480,7 @@ body.mask-editing {
 	}
 }
 
-#textSettingsSection textarea {
+.text-settings-section textarea {
 	width: 100%;
 	min-height: 96px;
 	resize: vertical;
@@ -2503,15 +2488,15 @@ body.mask-editing {
 
 /* Point text has no frame to align within — hide alignment controls
    (dataset set by TextGlitterManager.updateBoxModeSelection) */
-#textSettingsSection[data-box-mode="auto"] .text-valign-group,
-#textSettingsSection[data-box-mode="auto"] .text-valign-label {
+.text-settings-section[data-box-mode="auto"] .text-valign-group,
+.text-settings-section[data-box-mode="auto"] .text-valign-label {
 	display: none;
 }
 
 /* "Fit to Text" only makes sense once there's a box to fit */
-#textSettingsSection[data-box-mode="auto"] .text-fit-box-group,
-#textSettingsSection[data-box-mode="auto"] .text-fit-box-label,
-#textSettingsSection[data-box-mode="auto"] .text-fit-box-section {
+.text-settings-section[data-box-mode="auto"] .text-fit-box-group,
+.text-settings-section[data-box-mode="auto"] .text-fit-box-label,
+.text-settings-section[data-box-mode="auto"] .text-fit-box-section {
 	display: none;
 }
 
@@ -2548,35 +2533,18 @@ body.mask-editing {
 // Gallery-card styling, reusing the .asset-option card conventions (outline
 // selection state, corner badge) instead of inventing a new visual language.
 .text-font-option {
-	position: relative;
 	flex-shrink: 0;
 	width: 100%;
 	background: var(--color-bg-tertiary);
-	border: none;
 	color: var(--color-text-primary);
 	font: inherit;
-	cursor: pointer;
 	padding: var(--spacing-sm) var(--spacing-md);
 	text-transform: none;
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: 4px;
+	gap: var(--spacing-xs);
 	text-align: left;
-	outline: 1px solid var(--color-border);
-	outline-offset: 0px;
-	border-radius: var(--radius-sm);
-	transition: outline-color var(--transition-fast), outline-offset var(--transition-fast), outline-width var(--transition-fast);
-
-	&:hover {
-		outline-color: var(--color-border-hover);
-	}
-
-	&.active {
-		outline-color: var(--color-accent);
-		outline-width: 2px;
-		outline-offset: 2px;
-	}
 }
 
 .text-font-option-sample {
@@ -2591,6 +2559,7 @@ body.mask-editing {
 
 // Corner badge, same treatment as the Sticker gallery's "Animated" badge.
 .text-font-option-badge {
+	@include badge-base;
 	position: absolute;
 	top: 7px;
 	right: 7px;
@@ -2601,9 +2570,7 @@ body.mask-editing {
 	font-weight: 700;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	padding: 2px 6px;
-	border-radius: var(--radius-xs);
-	border: 1px solid var(--color-border);
+	padding: var(--spacing-2xs) var(--spacing-sm);
 	box-shadow: 0 2px 4px var(--color-shadow-soft);
 	pointer-events: none;
 
@@ -2643,28 +2610,18 @@ body.mask-editing {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 5px;
+	gap: var(--spacing-sm);
 	min-height: 62px;
 	padding: var(--spacing-sm) 2px;
 	background: var(--color-bg-tertiary);
-	border: none;
 	color: var(--color-text-secondary);
 	font: inherit;
-	cursor: pointer;
-	outline: 1px solid var(--color-border);
-	outline-offset: 0;
-	border-radius: var(--radius-sm);
-	transition: color var(--transition-fast), outline-color var(--transition-fast), outline-offset var(--transition-fast), outline-width var(--transition-fast);
 
 	&:hover {
-		outline-color: var(--color-border-hover);
 		color: var(--color-text-primary);
 	}
 
 	&.active {
-		outline-color: var(--color-accent);
-		outline-width: 2px;
-		outline-offset: 2px;
 		color: var(--color-text-primary);
 	}
 }
@@ -2749,7 +2706,7 @@ body.mask-editing {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 	grid-template-rows: repeat(3, 1fr);
-	gap: 2px;
+	gap: var(--spacing-2xs);
 	width: 66px;
 	height: 66px;
 	flex-shrink: 0;
@@ -2806,11 +2763,7 @@ body.mask-editing {
 
 
 .control-group-label {
-	font-size: var(--font-size-sm);
-	font-weight: 600;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--color-text-tertiary);
+	@include field-label(var(--font-size-sm));
 }
 
 .text-box-mode-group { width: 100%; }
@@ -2828,19 +2781,9 @@ body.mask-editing {
 
 		>.shape-gallery-heading {
 			margin: 0;
-			color: var(--color-text-tertiary);
-			font-size: var(--font-size-sm);
-			font-weight: 600;
-			letter-spacing: 0.08em;
-			text-transform: uppercase;
+			@include field-label(var(--font-size-sm));
 		}
 	}
-}
-
-#shapesOptions {
-	overflow-y: auto;
-	overscroll-behavior: contain;
-	scrollbar-gutter: stable;
 }
 
 .shape-gallery-grid {
@@ -2936,7 +2879,7 @@ body.mask-editing {
 
 	&.active {
 		background: var(--color-accent);
-		color: #fff;
+		color: var(--color-text-on-accent);
 	}
 }
 
@@ -3067,7 +3010,7 @@ body.mask-editing {
 			width: 14px;
 			height: 14px;
 			transform: translate(-50%, -50%);
-			border-radius: 50%;
+			border-radius: var(--radius-full);
 			background: var(--stop-color, #fff);
 			border: 2px solid #fff;
 			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
@@ -3096,13 +3039,13 @@ body.mask-editing {
 	.effect-gradient-stop input[type="color"] {
 		width: 36px;
 		height: 28px;
-		padding: 2px;
+		padding: var(--spacing-2xs);
 	}
 
 	.gradient-stop-control {
 		display: grid;
 		grid-template-columns: minmax(38px, 1fr) 30px;
-		gap: 2px;
+		gap: var(--spacing-2xs);
 		align-items: center;
 		min-width: 0;
 
@@ -3189,10 +3132,6 @@ body.mask-editing {
 	width: 100%;
 }
 
-// Redeclares .subsection-note (bare, not scoped) with a smaller font-size —
-// later in the cascade than the first .subsection-note rule above, so it
-// wins for every .subsection-note on the page, not just ones inside
-// .text-effect-subsection.
 .text-effect-source-row {
 	display: flex;
 	align-items: center;
@@ -3246,7 +3185,7 @@ body.mask-editing {
 .gallery-picker-strip-text {
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: var(--spacing-2xs);
 	min-width: 0;
 	flex: 1;
 }
@@ -3313,8 +3252,8 @@ body.mask-editing {
 	display: none !important;
 }
 
-#autoGlitterSettingsSection {
-	> #autoGlitterSettingsContent { padding: 0; }
+.auto-glitter-settings-section {
+	> .section-content { padding: 0; }
 
 	.auto-glitter-preview-group {
 		display: flex;
@@ -3364,7 +3303,7 @@ body.mask-editing {
 	.auto-glitter-footer-group { border-top: 1px solid var(--color-border); }
 
 	.auto-glitter-preview-card .segmented-control,
-	#autoGlitterPaletteStyle,
+	.auto-glitter-palette-style,
 	.auto-glitter-rerun-options {
 		width: 100%;
 	}
@@ -3384,7 +3323,7 @@ body.mask-editing {
 		&.has-warning > p { color: var(--color-warning); }
 	}
 
-	#autoGlitterRerunMode > label {
+	.auto-glitter-rerun-mode > label {
 		display: flex;
 		position: relative;
 		align-items: center;
@@ -3397,13 +3336,13 @@ body.mask-editing {
 
 		&:has(input:checked) {
 			background: var(--color-accent);
-			color: #fff;
+			color: var(--color-text-on-accent);
 		}
 
 		&:has(input:focus-visible) { box-shadow: inset var(--control-focus-ring); }
 	}
 
-	#autoGlitterRerunMode > .segmented-option {
+	.auto-glitter-rerun-mode > .segmented-option {
 		min-width: 0;
 		padding-right: var(--spacing-xs);
 		padding-left: var(--spacing-xs);
@@ -3543,7 +3482,7 @@ body.mask-editing {
 
 .auto-glitter-gallery-empty { display: none; }
 
-.design-panel[data-panel-mode='auto-glitter'] #designGallerySection:not(.picker-mode) #designGalleryContent {
+.design-panel[data-panel-mode='auto-glitter'] .design-gallery-section:not(.picker-mode) .design-gallery-content {
 	> :not(.auto-glitter-gallery-empty) { display: none !important; }
 
 	> .auto-glitter-gallery-empty {
@@ -3552,6 +3491,6 @@ body.mask-editing {
 	}
 }
 
-@media (max-width: 800px) {
-	#autoGlitterSettingsSection .auto-glitter-drag-handle { display: flex; }
+@include mobile {
+	.auto-glitter-settings-section .auto-glitter-drag-handle { display: flex; }
 }

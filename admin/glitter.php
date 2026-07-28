@@ -15,7 +15,7 @@ header('Pragma: no-cache');
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Glitter Admin</title>
 	<script>(function(){try{var s=JSON.parse(localStorage.getItem('glitterEditorSettings')||'{}');document.documentElement.dataset.theme=s.interfaceTheme||'dark';}catch(e){document.documentElement.dataset.theme='dark';}}());</script>
-	<link rel="stylesheet" href="css/swatch_admin.css?v=21">
+	<link rel="stylesheet" href="css/swatch_admin.css?v=22">
 </head>
 <body class="admin-tool">
 	<div class="container">

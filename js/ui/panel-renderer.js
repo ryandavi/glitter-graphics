@@ -127,6 +127,7 @@ function buildSliderRow(options) {
 function buildSegmented(entries, options = {}) {
 	const group = tplClone('tpl-segmented');
 	if (options.id) group.id = options.id;
+	addPanelClasses(group, options.classes);
 	if (options.label) group.setAttribute('aria-label', options.label);
 	group.setAttribute('role', 'group');
 	entries.forEach((entry) => {
@@ -430,6 +431,7 @@ function buildPanelItem(item, schema) {
 		case 'radioSegmented': {
 			const group = tplClone('tpl-segmented');
 			group.id = item.id;
+			addPanelClasses(group, item.classes);
 			group.setAttribute('role', 'radiogroup');
 			group.setAttribute('aria-label', item.label);
 			item.options.forEach((entry) => {

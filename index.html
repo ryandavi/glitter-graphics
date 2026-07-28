@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=211">
+	<link rel="stylesheet" href="css/style.css?v=213">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -221,7 +221,7 @@
 									</svg>
 									<span class="name">New Layer</span>
 								</button>
-								<button class="section-header-action btn-icon icon-wrapper visible" id="layersPanelToggle" title="Collapse section">
+								<button class="section-header-action btn-icon icon-wrapper mobile-hidden-section-toggle visible" id="layersPanelToggle" title="Collapse section">
 									<svg class="icon">
 										<use href="#icon-chevron-down"></use>
 									</svg>
@@ -287,7 +287,7 @@
 						<span></span>
 					</div>
 					<!-- Gallery Header with Tabs -->
-					<div class="section main-section collapsible-section visible" id="designGallerySection">
+					<div class="section main-section collapsible-section design-gallery-section visible" id="designGallerySection">
 						<div class="section-header glitter-header section-header-with-action" id="designGalleryHeader">
 							<h3 class="section-header-title">
 								<span class="section-header-title-icon icon-wrapper sm">
@@ -299,7 +299,7 @@
 								<span class="section-header-title-text">Design</span>
 							</h3>
 							<div class="section-header-actions">
-								<div class="section-header-action btn-icon" id="uploadStickerBtn" data-no-accordion-toggle="true">
+								<div class="section-header-action btn-icon upload-sticker-action" id="uploadStickerBtn" data-no-accordion-toggle="true">
 									<span class="icon-wrapper">
 										<svg class="icon">
 											<use href="#icon-plus"></use>
@@ -307,7 +307,7 @@
 										<span class="name">Add Custom Sticker</span>
 									</span>
 								</div>
-								<div class="section-header-action btn-icon visible" id="designGalleryToggle">
+								<div class="section-header-action btn-icon mobile-hidden-section-toggle visible" id="designGalleryToggle">
 									<span class="icon-wrapper">
 										<svg class="icon">
 											<use href="#icon-chevron-down"></use>
@@ -328,7 +328,7 @@
 
 						</div>
 
-						<div class="section-content" id="designGalleryContent">
+						<div class="section-content design-gallery-content" id="designGalleryContent">
 							<div class="empty-state auto-glitter-gallery-empty" role="status">
 								<div class="empty-state-icon icon-wrapper xl"><svg class="icon"><use href="#icon-glitter"></use></svg></div>
 								<div class="empty-state-text">Choose a Color Match</div>
@@ -348,7 +348,7 @@
 
 							<!-- Glitter Search (visible by default) -->
 							<div class="asset-options gallery-content" id="shapesOptions" data-gallery-content="shapes" aria-label="Shapes"></div>
-							<div class="section-content gallery-search-section" id="glitterSearchSection">
+							<div class="section-content gallery-search-section" id="glitterSearchSection" data-gallery-search="glitter">
 								<div class="glitter-search">
 									<div class="search-toggle-row">
 										<div class="search-input-wrapper">
@@ -505,7 +505,7 @@
 							</div>
 
 							<!-- Stickers Search (hidden by default) -->
-							<div class="section-content gallery-search-section" id="stickersSearchSection">
+							<div class="section-content gallery-search-section" id="stickersSearchSection" data-gallery-search="stickers">
 								<div class="glitter-search">
 									<div class="search-toggle-row">
 										<div class="search-input-wrapper">
@@ -2708,7 +2708,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=126"></script>
+	<script src="js/core/config.js?v=127"></script>
 	<script src="js/core/commands.js?v=4"></script>
 	<script src="js/core/document-scaler.js?v=2"></script>
 	<script src="js/transforms/transform-math.js?v=4"></script>
@@ -2722,7 +2722,7 @@
 	<script src="js/effects/pixel-effects.js?v=9"></script>
 	<script src="js/effects/effect-source.js?v=12"></script>
 	<script src="js/effects/slot-effects.js?v=3"></script>
-	<script src="js/ui/panel-renderer.js?v=44"></script>
+	<script src="js/ui/panel-renderer.js?v=45"></script>
 	<script src="js/ui/picker-session.js?v=3"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=1"></script>
 	<script src="js/core/debug.js?v=1"></script>
@@ -2737,21 +2737,21 @@
 	<script src="js/classes/HistoryManager.js?v=12"></script>
 	<script src="js/classes/ProjectSerializer.js?v=12"></script>
 	<script src="js/classes/MaskCompositor.js"></script>
-	<script src="js/classes/ShapeLibrary.js?v=10"></script>
-	<script src="js/classes/MaskEditor.js?v=16"></script>
+	<script src="js/classes/ShapeLibrary.js?v=12"></script>
+	<script src="js/classes/MaskEditor.js?v=17"></script>
 
 	<!-- Layers-->
 	<script src="js/classes/LayerManager.js?v=48"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=2"></script>
-	<script src="js/classes/ContentManager.js?v=12"></script>
+	<script src="js/classes/ContentManager.js?v=13"></script>
 	<script src="js/classes/LayerTransform.js?v=41"></script>
 	<script src="js/classes/GlitterManager.js?v=39"></script>
 	<script src="js/classes/BaseBackgroundManager.js?v=29"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=31"></script>
-	<script src="js/classes/TextGlitterManager.js?v=57"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=47"></script>
+	<script src="js/classes/TextGlitterManager.js?v=58"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=48"></script>
 	<script src="js/classes/StickerManager.js?v=30"></script>
 	<script src="js/classes/GroupTransformManager.js?v=21"></script>
 

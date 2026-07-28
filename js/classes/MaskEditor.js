@@ -316,7 +316,7 @@ class MaskEditor {
 		MaskEditor.BRUSH_SHAPES.forEach(({ id, label }) => {
 			const card = document.createElement('button');
 			card.type = 'button';
-			card.className = 'brush-shape-option';
+			card.className = 'choice-card brush-shape-option';
 			card.dataset.shape = id;
 			card.title = `${label} brush`;
 			card.setAttribute('role', 'option');

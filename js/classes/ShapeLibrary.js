@@ -76,6 +76,15 @@ const ShapeLibrary = {
 			if ((shape.primitive && !allowedPrimitives.has(shape.primitive)) || (!shape.primitive && !shape.svgPath)) {
 				throw new Error(`Shape "${shape.id}" needs a primitive or SVG path`);
 			}
+			if (shape.sourceBounds && (
+				!Array.isArray(shape.sourceBounds) ||
+				shape.sourceBounds.length !== 4 ||
+				shape.sourceBounds.some((value) => !Number.isFinite(value)) ||
+				shape.sourceBounds[2] <= 0 ||
+				shape.sourceBounds[3] <= 0
+			)) {
+				throw new Error(`Shape "${shape.id}" has invalid source bounds`);
+			}
 			if (shape.uses.includes('shape') && !categoryIds.has(shape.category)) {
 				throw new Error(`Shape "${shape.id}" needs a valid category`);
 			}
@@ -91,7 +100,12 @@ const ShapeLibrary = {
 			defs[shape.id] = {
 				viewBox: shape.viewBox,
 				primitive: shape.primitive || null,
-				svg: shape.svgPath || null
+				svg: shape.svgPath || null,
+				sourceBounds: shape.sourceBounds || null,
+				// Sheet artwork is normalized into a square viewBox without
+				// changing its proportions. Keep that invariant when a shape is
+				// placed in a non-square layer frame.
+				preserveAspect: Boolean(shape.sourceBounds)
 			};
 		});
 		if (!defs.circle || !defs[CONFIG.tools.shapes.defaultShapeId]) {
@@ -120,13 +134,21 @@ const ShapeLibrary = {
 		const def = this.DEFS[id] || this.DEFS.circle;
 		if (def._geom) return def._geom;
 		const path = this._buildPath(def);
-		const bounds = this._computeBounds(path, def.viewBox || 24);
+		const bounds = def.sourceBounds
+			? this._getNormalizedSourceBounds(def)
+			: this._computeBounds(path, def.viewBox || 24);
 		def._geom = { path, bounds };
 		return def._geom;
 	},
 
 	_buildPath(def) {
-		if (def.svg) return new Path2D(def.svg);
+		if (def.svg) {
+			const sourcePath = new Path2D(def.svg);
+			if (!def.sourceBounds) return sourcePath;
+			const path = new Path2D();
+			path.addPath(sourcePath, this._getSourceTransform(def));
+			return path;
+		}
 		const vb = def.viewBox || 24;
 		const p = new Path2D();
 		if (def.primitive === 'square') {
@@ -138,6 +160,35 @@ const ShapeLibrary = {
 			p.arc(vb / 2, vb / 2, vb / 2, 0, Math.PI * 2);
 		}
 		return p;
+	},
+
+	_getSourceTransform(def) {
+		const [x, y, width, height] = def.sourceBounds;
+		const viewBox = def.viewBox || 24;
+		const padding = viewBox / 24;
+		const available = viewBox - (padding * 2);
+		const scale = Math.min(available / width, available / height);
+		const offsetX = padding + ((available - (width * scale)) / 2);
+		const offsetY = padding + ((available - (height * scale)) / 2);
+		return new DOMMatrix([
+			scale,
+			0,
+			0,
+			scale,
+			offsetX - (x * scale),
+			offsetY - (y * scale)
+		]);
+	},
+
+	_getNormalizedSourceBounds(def) {
+		const [x, y, width, height] = def.sourceBounds;
+		const matrix = this._getSourceTransform(def);
+		return {
+			minX: (x * matrix.a) + matrix.e,
+			minY: (y * matrix.d) + matrix.f,
+			maxX: ((x + width) * matrix.a) + matrix.e,
+			maxY: ((y + height) * matrix.d) + matrix.f
+		};
 	},
 
 	_computeBounds(path, viewBox) {
@@ -172,6 +223,7 @@ const ShapeLibrary = {
 	// and, crucially, to STROKE a smooth vector border (uniform lineWidth in
 	// output space, no scalloping) — far cleaner than raster ring-union.
 	buildTransformedPath(id, halfW, halfH, options = {}) {
+		const def = this.DEFS[id] || this.DEFS.circle;
 		const geom = this._geometry(id);
 		const bw = (geom.bounds.maxX - geom.bounds.minX) || 1;
 		const bh = (geom.bounds.maxY - geom.bounds.minY) || 1;
@@ -180,7 +232,7 @@ const ShapeLibrary = {
 
 		let sx = (2 * halfW) / bw;
 		let sy = (2 * halfH) / bh;
-		if ((options.fit || 'contain') === 'contain') {
+		if (def.preserveAspect || (options.fit || 'contain') === 'contain') {
 			sx = sy = Math.min(sx, sy);
 		}
 
@@ -202,7 +254,12 @@ const ShapeLibrary = {
 		const vb = def.viewBox || 24;
 		let inner;
 		if (def.svg) {
-			inner = `<path d="${def.svg}"/>`;
+			if (def.sourceBounds) {
+				const matrix = this._getSourceTransform(def);
+				inner = `<path d="${def.svg}" transform="matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})"/>`;
+			} else {
+				inner = `<path d="${def.svg}"/>`;
+			}
 		} else if (def.primitive === 'square') {
 			inner = `<rect x="0" y="0" width="${vb}" height="${vb}"/>`;
 		} else if (def.primitive === 'calligraphy') {

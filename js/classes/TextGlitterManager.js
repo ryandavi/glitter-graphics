@@ -1187,7 +1187,7 @@ class TextGlitterManager {
 			const extraScripts = scripts.filter((script) => script !== 'latin');
 
 			const card = document.createElement('button');
-			card.className = 'text-font-option';
+			card.className = 'choice-card text-font-option';
 			card.type = 'button';
 			card.dataset.fontId = font.id;
 

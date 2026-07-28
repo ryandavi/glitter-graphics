@@ -1,5 +1,6 @@
 @use '../../css/tokens';
 @use '../../css/themes';
+@use '../../css/mixins' as *;
 @use 'admin-tokens';
 
 // ============================================
@@ -12,7 +13,7 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: var(--font-family);
+    font-family: var(--font-ui);
     background: var(--color-bg-primary);
     color: var(--color-text-primary);
     font-size: var(--font-size-md);
@@ -38,7 +39,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
     border: 2px solid transparent;
-    border-radius: var(--admin-radius-pill);
+	border-radius: var(--radius-pill);
     background: var(--color-border-hover);
     background-clip: content-box;
 
@@ -68,11 +69,6 @@ body {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-height: 36px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
-	background: var(--color-bg-secondary);
-	box-shadow: none;
 	color: var(--color-text-primary);
 	font: inherit;
 	font-weight: var(--font-weight-medium);
@@ -80,14 +76,7 @@ body {
 	text-decoration: none;
 	white-space: nowrap;
 	cursor: pointer;
-	filter: none;
-	transform: none;
-	transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-
-	&:focus-visible {
-		outline: 2px solid var(--color-accent);
-		outline-offset: 2px;
-	}
+	@include flat-control(var(--control-height-comfortable));
 
 	&:disabled {
 		opacity: var(--opacity-disabled);
@@ -109,7 +98,7 @@ body {
 }
 
 .pending-group {
-	border-color: var(--orange-100);
+	border-color: var(--color-warning);
 }
 
 .count-badge {
@@ -128,9 +117,9 @@ body {
 }
 
 .pending-group .count-badge {
-	border-color: color-mix(in srgb, var(--orange-100) 35%, var(--color-border));
-	background: color-mix(in srgb, var(--orange-100) 12%, transparent);
-	color: var(--orange-100);
+	border-color: var(--color-warning-border);
+	background: var(--color-warning-surface);
+	color: var(--color-warning-emphasis);
 }
 
 .pending-actions {
@@ -139,9 +128,9 @@ body {
 	gap: var(--spacing-sm);
 	margin-bottom: var(--spacing-lg);
 	padding: var(--spacing-sm) var(--spacing-md);
-	border: 1px solid color-mix(in srgb, var(--orange-100) 45%, var(--color-border));
+	border: 1px solid var(--color-warning-border);
 	border-radius: var(--radius-sm);
-	background: color-mix(in srgb, var(--orange-100) 10%, var(--color-bg-card));
+	background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-card));
 
 	// Label left, actions right — same as every other action row.
 	> strong {
@@ -152,7 +141,7 @@ body {
 }
 
 .upload-drag-active {
-	outline: 3px dashed var(--blue-200);
+	outline: 3px dashed var(--color-accent);
 	outline-offset: -6px;
 }
 
@@ -181,7 +170,7 @@ body {
 	// row for row instead of wrapping differently on each side.
 	.swatch-chips {
 		flex-direction: column;
-		gap: 2px;
+		gap: var(--spacing-2xs);
 	}
 }
 
@@ -223,7 +212,7 @@ body {
 
 	> code {
 		color: var(--color-text-primary);
-		font-family: var(--font-family-mono);
+		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		text-transform: uppercase;
 	}
@@ -247,7 +236,7 @@ body {
 	align-items: center;
 	gap: var(--spacing-sm);
 	min-height: 28px;
-	padding: 2px var(--spacing-xs);
+	padding: var(--spacing-2xs) var(--spacing-xs);
 	border-radius: var(--radius-sm);
 	cursor: pointer;
 
@@ -406,7 +395,7 @@ body {
 
 .filter-chip.selected {
 	background: var(--color-accent);
-	color: var(--color-text-on-accent, white);
+	color: var(--color-text-on-accent);
 }
 
 .overview-strip {
@@ -463,7 +452,7 @@ body {
 			height: 6px;
 			flex: 0 0 auto;
 			align-self: center;
-			border-radius: 50%;
+			border-radius: var(--radius-full);
 			background: var(--overview-color, var(--color-text-tertiary));
 			content: '';
 		}
@@ -474,15 +463,15 @@ body {
 	}
 
 	.overview-warning {
-		--overview-color: var(--orange-100);
+		--overview-color: var(--color-warning);
 	}
 
 	.overview-critical {
-		--overview-color: var(--red-100);
+		--overview-color: var(--color-danger);
 	}
 
 	.overview-info {
-		--overview-color: var(--blue-100);
+		--overview-color: var(--color-info);
 	}
 
 	.overview-count {
@@ -629,53 +618,50 @@ body {
 }
 
 .badge {
-	display: inline-flex;
-	align-items: center;
+	@include badge-base;
 	min-height: 20px;
-	padding: 2px 6px;
+	padding: var(--spacing-2xs) var(--spacing-sm);
 	border: 1px solid transparent;
 	border-radius: var(--radius-sm);
 	background: var(--color-bg-tertiary);
 	color: var(--color-text-secondary);
-	font-size: var(--font-size-xs);
 	font-weight: var(--font-weight-medium);
-	line-height: 1;
 }
 
 .badge-critical,
 .badge-status-error,
 .badge-status-failed {
-	background: color-mix(in srgb, var(--red-100) 14%, transparent);
-	color: color-mix(in srgb, var(--red-100) 82%, white);
+	background: var(--color-danger-surface);
+	color: var(--color-danger-text);
 }
 
 .badge-warning,
 .badge-status-pending {
-	background: color-mix(in srgb, var(--orange-100) 14%, transparent);
-	color: color-mix(in srgb, var(--orange-100) 82%, white);
+	background: var(--color-warning-surface);
+	color: var(--color-warning-emphasis);
 }
 
 .badge-success,
 .badge-status-ready,
 .badge-status-approved {
-	background: color-mix(in srgb, var(--green-100) 14%, transparent);
-	color: color-mix(in srgb, var(--green-100) 82%, white);
+	background: var(--color-success-surface);
+	color: var(--color-success-text);
 }
 
 .badge-info,
 .badge-status-analyzing {
-	background: color-mix(in srgb, var(--blue-100) 14%, transparent);
-	color: color-mix(in srgb, var(--blue-100) 82%, white);
+	background: var(--color-info-surface);
+	color: var(--color-info-text);
 }
 
 .badge-type-glitter {
-	background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+	background: var(--color-accent-surface);
 	color: var(--color-accent-light);
 }
 
 .badge-type-sticker {
-	background: color-mix(in srgb, var(--blue-100) 14%, transparent);
-	color: var(--blue-100);
+	background: var(--color-info-surface);
+	color: var(--color-info-text);
 }
 
 .activity-row,
@@ -728,12 +714,7 @@ body {
 }
 
 .visually-hidden {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip: rect(0 0 0 0);
-	white-space: nowrap;
+	@include visually-hidden;
 }
 
 // ============================================
@@ -819,7 +800,7 @@ body {
 	font-size: var(--font-size-md);
 
 	code {
-		font-family: var(--font-family-mono);
+		font-family: var(--font-mono);
 		font-size: var(--font-size-sm);
 	}
 }
@@ -850,7 +831,7 @@ input[type="checkbox"].field-switch {
 	margin: 0;
 	padding: 0;
 	border: 1px solid var(--color-border);
-	border-radius: var(--admin-radius-pill);
+    border-radius: var(--radius-pill);
 	background: var(--color-slider-track);
 	position: relative;
 	cursor: pointer;
@@ -863,7 +844,7 @@ input[type="checkbox"].field-switch {
 		left: 2px;
 		width: 14px;
 		height: 14px;
-		border-radius: 50%;
+		border-radius: var(--radius-full);
 		background: var(--switch-knob-color);
 		box-shadow: 0 1px 2px rgb(0 0 0 / 30%);
 		transition: transform var(--transition-fast);
@@ -1057,7 +1038,7 @@ input[type="checkbox"].field-switch {
     }
 
     &.active {
-        background: var(--blue-200);
+        background: var(--color-accent);
     }
 
     &.dragging {
@@ -1193,13 +1174,7 @@ input[type="checkbox"].field-switch {
 
 	&::before {
 		content: '';
-		width: 6px;
-		height: 6px;
-		flex: 0 0 auto;
-		border-right: 1.5px solid currentColor;
-		border-bottom: 1.5px solid currentColor;
-		transform: rotate(-45deg);
-		transition: transform var(--transition-fast);
+		@include disclosure-chevron;
 	}
 }
 
@@ -1235,35 +1210,14 @@ input[type="search"],
 input[type="password"],
 select,
 textarea {
-    width: 100%;
-	min-height: var(--control-height);
-    padding: 6px var(--spacing-sm);
-    background: var(--color-bg-primary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    color: var(--color-text-primary);
-    font-size: var(--font-size-md);
-    font-family: var(--font-family);
-    transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-
-    &::placeholder {
-        color: var(--color-text-tertiary);
-    }
-
-    &:hover:not(:disabled) {
-        border-color: var(--color-border-hover);
-    }
-
-    &:focus {
-        outline: none;
-        border-color: var(--color-accent);
-        box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);
-    }
-
-    &:disabled {
-        opacity: var(--opacity-disabled);
-        cursor: not-allowed;
-    }
+	width: 100%;
+	font-family: var(--font-ui);
+	@include form-control(
+		$background: var(--color-bg-primary),
+		$font-size: var(--font-size-md),
+		$padding: var(--spacing-sm) var(--spacing-base),
+		$min-width: 0
+	);
 }
 
 // Native select needs its own chevron once the browser default is themed out.
@@ -1297,7 +1251,7 @@ input[type="color"] {
     height: 28px;
     min-height: 0;
     flex: 0 0 auto;
-    padding: 2px;
+    padding: var(--spacing-2xs);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
     background: var(--color-bg-primary);
@@ -1357,7 +1311,7 @@ input[type="checkbox"] {
 
     input[type="text"] {
         max-width: 120px;
-        font-family: var(--font-family-mono);
+        font-family: var(--font-mono);
         font-size: var(--font-size-sm);
         text-transform: uppercase;
     }
@@ -1373,7 +1327,7 @@ input[type="checkbox"] {
 // Dim until the row is hovered — secondary actions stay out of the way at rest.
 .color-remove-btn {
     background: transparent;
-    color: var(--red-100);
+    color: var(--color-danger);
     border: 1px solid transparent;
     width: 28px;
     height: 28px;
@@ -1466,7 +1420,7 @@ input[type="checkbox"] {
     width: 8px;
     height: 8px;
     flex: 0 0 auto;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
     background: var(--tag-color);
     box-shadow: inset 0 0 0 1px rgb(0 0 0 / 25%);
 }
@@ -1497,7 +1451,7 @@ input[type="checkbox"] {
 
     &:hover {
         background: var(--color-bg-primary);
-        color: var(--red-100);
+        color: var(--color-danger);
     }
 }
 
@@ -1535,7 +1489,7 @@ input[type="checkbox"] {
 .btn-primary {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-text-on-accent, var(--color-text-primary));
+    color: var(--color-text-on-accent);
 
     &:hover:not(:disabled) {
         background: var(--color-accent-hover);
@@ -1544,12 +1498,12 @@ input[type="checkbox"] {
 }
 
 .btn-danger {
-    background: color-mix(in srgb, var(--red-100) 10%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
     border-color: transparent;
-    color: var(--red-100);
+    color: var(--color-danger);
 
     &:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--red-100) 16%, transparent);
+        background: color-mix(in srgb, var(--color-danger) 16%, transparent);
     }
 }
 
@@ -1587,11 +1541,11 @@ input[type="checkbox"] {
     font-size: var(--font-size-base);
 
     &.success {
-        color: var(--green-100);
+        color: var(--color-success);
     }
 
     &.error {
-        color: var(--red-100);
+        color: var(--color-danger);
     }
 }
 
@@ -1817,7 +1771,7 @@ input[type="checkbox"] {
 	height: 12px;
 	margin-right: 6px;
 	border: 1px solid var(--color-border);
-	border-radius: 50%;
+	border-radius: var(--radius-full);
 	background: var(--tag-color);
 }
 
@@ -2005,7 +1959,7 @@ input[type="checkbox"] {
 
 .field-error {
 	display: block;
-	color: var(--red-100);
+	color: var(--color-danger);
 	font-size: var(--font-size-sm);
 
 	&:empty {
@@ -2051,13 +2005,7 @@ input[type="checkbox"] {
 
 		&::before {
 			content: '';
-			width: 6px;
-			height: 6px;
-			flex: 0 0 auto;
-			border-right: 1.5px solid currentColor;
-			border-bottom: 1.5px solid currentColor;
-			transform: rotate(-45deg);
-			transition: transform var(--transition-fast);
+			@include disclosure-chevron;
 		}
 	}
 
@@ -2154,13 +2102,7 @@ input[type="checkbox"] {
 
 		&::before {
 			content: '';
-			width: 6px;
-			height: 6px;
-			flex: 0 0 auto;
-			border-right: 1.5px solid currentColor;
-			border-bottom: 1.5px solid currentColor;
-			transform: rotate(-45deg);
-			transition: transform var(--transition-fast);
+			@include disclosure-chevron;
 		}
 	}
 

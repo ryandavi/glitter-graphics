@@ -14,20 +14,11 @@
 	--gray-700: #e2eaf3;
 	--gray-800: #ffffff;
 
-	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: #ffffff;
-	--color-bg-tertiary: var(--gray-700);
 	--color-bg-card: #ffffff;
-	--color-border: var(--gray-500);
-	--color-border-hover: var(--gray-400);
-	--color-text-primary: var(--gray-100);
-	--color-text-secondary: var(--gray-200);
-	--color-text-tertiary: var(--gray-300);
-	--color-off-white: var(--gray-100);
 	--color-bg-accent-tint: #ddebfb;
 	--color-checkerboard: #d2dde8;
 	--color-bg-translucent: rgb(252 254 255 / 95%);
-	--color-warning-text: #7d3a00;
 
 	/* Calm selection blue, deeper than the dark theme's neon #007bff */
 	--color-accent: #3577cf;
@@ -85,7 +76,6 @@
 
 	/* Range/switch track: light but never white-on-white */
 	--color-slider-track: #dae5f0;
-	--switch-knob-color: #ffffff;
 
 	/* Overlay: slate-blue scrim, translucent enough to keep the workspace
 	   visible behind the blur instead of dropping to near-black. */
@@ -110,20 +100,11 @@
 	--gray-700: #f6dfeb;
 	--gray-800: #ffffff;
 
-	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: #ffffff;
-	--color-bg-tertiary: var(--gray-700);
 	--color-bg-card: #ffffff;
-	--color-border: var(--gray-500);
-	--color-border-hover: var(--gray-400);
-	--color-text-primary: var(--gray-100);
-	--color-text-secondary: var(--gray-200);
-	--color-text-tertiary: var(--gray-300);
-	--color-off-white: var(--gray-100);
 	--color-bg-accent-tint: #fbdff0;
 	--color-checkerboard: #eed4e2;
 	--color-bg-translucent: rgb(255 250 253 / 95%);
-	--color-warning-text: #7d3a00;
 
 	/* Bubblegum accent */
 	--color-accent: #e0559f;
@@ -172,7 +153,6 @@
 
 	/* Range/switch track + white knob */
 	--color-slider-track: #f0d5e4;
-	--switch-knob-color: #ffffff;
 
 	/* Overlay: plum scrim, workspace stays visible behind the blur */
 	--color-overlay: rgb(88 44 70 / 45%);
@@ -197,20 +177,11 @@
 	--gray-700: #e3dfcc;
 	--gray-800: #fdfdf6;
 
-	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: #fdfdf6;
-	--color-bg-tertiary: var(--gray-700);
 	--color-bg-card: #f8f7ef;
-	--color-border: var(--gray-500);
-	--color-border-hover: var(--gray-400);
-	--color-text-primary: var(--gray-100);
-	--color-text-secondary: var(--gray-200);
-	--color-text-tertiary: var(--gray-300);
-	--color-off-white: var(--gray-100);
 	--color-bg-accent-tint: #d6e5fa;
 	--color-checkerboard: #d9d5c4;
 	--color-bg-translucent: rgb(236 233 216 / 96%);
-	--color-warning-text: #7d3a00;
 
 	/* Selection blue of the era */
 	--color-accent: #316ac5;
@@ -263,7 +234,6 @@
 	--color-icon-strong: #6a6455;
 
 	--color-slider-track: #d9d5c2;
-	--switch-knob-color: #ffffff;
 	--color-overlay: rgb(38 54 92 / 45%);
 	--color-overlay-strong: rgb(38 54 92 / 78%);
 
@@ -289,16 +259,8 @@
 	--gray-700: #d9eef8;
 	--gray-800: #ffffff;
 
-	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: #ffffff;
-	--color-bg-tertiary: var(--gray-700);
 	--color-bg-card: #f4fcff;
-	--color-border: var(--gray-500);
-	--color-border-hover: var(--gray-400);
-	--color-text-primary: var(--gray-100);
-	--color-text-secondary: var(--gray-200);
-	--color-text-tertiary: var(--gray-300);
-	--color-off-white: var(--gray-100);
 	--color-bg-accent-tint: #d3f2fb;
 	--color-checkerboard: #cfe7f1;
 	/* Aero glass: more transparent than the other light themes and a heavier
@@ -310,7 +272,6 @@
 	   backdrop blur so the sky/grass workspace glows through the chrome. */
 	--panel-bg: rgb(233 247 253 / 68%);
 	--panel-backdrop: blur(var(--glass-blur));
-	--color-warning-text: #7d3a00;
 
 	/* Water cyan */
 	--color-accent: #0d9fd8;
@@ -318,6 +279,7 @@
 	--color-accent-light: #4fc1e8;
 	--color-accent-border: #0d9fd8;
 	--color-accent-active: #0b8dc0;
+	--color-text-on-accent: var(--gray-100);
 	--theme-glitter-image: url("../images/glitter/sparkle/glitter_aquamarine.gif");
 
 	/* Sky-into-grass workspace */
@@ -354,7 +316,6 @@
 	--color-icon-strong: #5c8ba0;
 
 	--color-slider-track: #d3e9f3;
-	--switch-knob-color: #ffffff;
 	--color-overlay: rgb(23 76 100 / 48%);
 	--color-overlay-strong: rgb(23 76 100 / 75%);
 
@@ -382,21 +343,14 @@
 	--gray-700: #dfe3e7;
 	--gray-800: #f9fafb;
 
-	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: var(--gray-800);
-	--color-bg-tertiary: var(--gray-700);
 	--color-bg-card: #ffffff;
 	--color-border: #aeb9c3;
 	--color-border-hover: #8798a7;
-	--color-text-primary: var(--gray-100);
-	--color-text-secondary: var(--gray-200);
-	--color-text-tertiary: var(--gray-300);
-	--color-off-white: var(--gray-100);
 	--color-bg-accent-tint: #cfe5ff;
 	--color-checkerboard: #cbd3da;
 	--color-bg-translucent: rgb(244 247 249 / 94%);
 	--panel-bg: repeating-linear-gradient(to bottom, #f1f2f3 0, #f1f2f3 2px, #e5e7e9 2px, #e5e7e9 4px);
-	--color-warning-text: #7d3a00;
 
 	/* Candy selection blue */
 	--color-accent: #2d7fdc;
@@ -442,7 +396,6 @@
 	--color-icon-strong: #566a7a;
 
 	--color-slider-track: #c7d0d8;
-	--switch-knob-color: #ffffff;
 	--color-overlay: rgb(42 56 70 / 46%);
 	--color-overlay-strong: rgb(42 56 70 / 78%);
 
@@ -469,21 +422,14 @@
 	--gray-700: #cbd1cb;
 	--gray-800: #f7f9f7;
 
-	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: var(--gray-800);
-	--color-bg-tertiary: var(--gray-700);
 	--color-bg-card: #eef1ee;
 	--color-border: #9aa39a;
 	--color-border-hover: #687568;
-	--color-text-primary: var(--gray-100);
-	--color-text-secondary: var(--gray-200);
-	--color-text-tertiary: var(--gray-300);
-	--color-off-white: var(--gray-100);
 	--color-bg-accent-tint: #dcebc3;
 	--color-checkerboard: #c7cec7;
 	--color-bg-translucent: rgb(231 235 231 / 96%);
 	--panel-bg: linear-gradient(to bottom, #eef1ee 0%, #d4d9d4 100%);
-	--color-warning-text: #7d3a00;
 
 	/* LimeWire-style connection green */
 	--color-accent: #72ad22;
@@ -491,6 +437,7 @@
 	--color-accent-light: #a6d65b;
 	--color-accent-border: #72ad22;
 	--color-accent-active: #598e16;
+	--color-text-on-accent: var(--gray-100);
 	--theme-glitter-image: url("../images/glitter/sparkle/glitter_lime-green.gif");
 
 	/* Flat brushed-plastic floor, not a decorative web-page background. */
@@ -528,7 +475,6 @@
 	--color-icon-strong: #4f5e50;
 
 	--color-slider-track: #aeb6ae;
-	--switch-knob-color: #ffffff;
 	--color-overlay: rgb(27 38 29 / 48%);
 	--color-overlay-strong: rgb(27 38 29 / 80%);
 
@@ -555,21 +501,14 @@
 	--gray-700: #ddd2e8;
 	--gray-800: #fffdf2;
 
-	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: var(--gray-800);
-	--color-bg-tertiary: var(--gray-700);
 	--color-bg-card: #fffdf2;
 	--color-border: #8255a0;
 	--color-border-hover: #330099;
-	--color-text-primary: var(--gray-100);
-	--color-text-secondary: var(--gray-200);
-	--color-text-tertiary: var(--gray-300);
-	--color-off-white: var(--gray-100);
 	--color-bg-accent-tint: #e3d8ff;
 	--color-checkerboard: #d4c8dc;
 	--color-bg-translucent: rgb(248 243 252 / 96%);
 	--panel-bg: #eee8f4;
-	--color-warning-text: #7d3a00;
 
 	/* Default-link blue is the interaction color; purple remains visited. */
 	--color-accent: #0000ee;
@@ -617,7 +556,6 @@
 	--color-icon-strong: #57376f;
 
 	--color-slider-track: #b8abc3;
-	--switch-knob-color: #ffffff;
 	--color-overlay: rgb(25 0 55 / 52%);
 	--color-overlay-strong: rgb(20 0 45 / 82%);
 
@@ -644,21 +582,13 @@
 	--gray-700: #d8eaf6;
 	--gray-800: #ffffff;
 
-	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: #ffffff;
-	--color-bg-tertiary: var(--gray-700);
 	--color-bg-card: #f7fcff;
-	--color-border: var(--gray-500);
 	--color-border-hover: #75a6c8;
-	--color-text-primary: var(--gray-100);
-	--color-text-secondary: var(--gray-200);
-	--color-text-tertiary: var(--gray-300);
-	--color-off-white: var(--gray-100);
 	--color-bg-accent-tint: #e3f4c9;
 	--color-checkerboard: #d0e2ee;
 	--color-bg-translucent: rgb(244 251 255 / 94%);
 	--panel-bg: linear-gradient(to bottom, rgb(255 255 255 / 92%), rgb(222 240 251 / 92%));
-	--color-warning-text: #7d3a00;
 
 	/* Online-presence green */
 	--color-accent: #69a928;
@@ -666,6 +596,7 @@
 	--color-accent-light: #9ccc58;
 	--color-accent-border: #69a928;
 	--color-accent-active: #568f1d;
+	--color-text-on-accent: var(--gray-100);
 	--theme-glitter-image: url("../images/glitter/sparkle/glitter_light-green.gif");
 
 	--color-bg-workspace: linear-gradient(to bottom, #91c7e9 0%, #d8edf8 54%, #ffffff 100%);
@@ -702,7 +633,6 @@
 	--color-icon-strong: #557d99;
 
 	--color-slider-track: #c7deea;
-	--switch-knob-color: #ffffff;
 	--color-overlay: rgb(20 71 105 / 42%);
 	--color-overlay-strong: rgb(20 71 105 / 76%);
 
@@ -729,15 +659,10 @@
 	--gray-700: #151a31;
 	--gray-800: #0b0e1c;
 
-	--color-bg-primary: var(--gray-600);
 	--color-bg-secondary: var(--gray-800);
-	--color-bg-tertiary: var(--gray-700);
 	--color-bg-card: #272e4d;
 	--color-border: #3c486b;
 	--color-border-hover: #66759f;
-	--color-text-primary: var(--gray-100);
-	--color-text-secondary: var(--gray-200);
-	--color-text-tertiary: var(--gray-300);
 	--color-off-white: #f4f7ff;
 	--color-bg-accent-tint: #123d59;
 	--color-checkerboard: #252c48;
@@ -750,6 +675,7 @@
 	--color-accent-light: #73e9ff;
 	--color-accent-border: #20d9ff;
 	--color-accent-active: #00b9e6;
+	--color-text-on-accent: var(--gray-800);
 	--theme-glitter-image: url("../images/glitter/sparkle/glitter_magenta-blue.gif");
 
 	--color-bg-workspace: radial-gradient(circle at 50% 0%, #32174f 0%, #11152b 46%, #070914 100%);
@@ -825,6 +751,7 @@
 	--color-accent-light: #6ee784;
 	--color-accent-border: #2fd049;
 	--color-accent-active: #27b83f;
+	--color-text-on-accent: var(--gray-800);
 	--theme-glitter-image: url("../images/glitter/sparkle/glitter_green.gif");
 
 	/* Titlebar: brushed-steel gradient with gold WINAMP lettering. */
@@ -864,6 +791,9 @@
 	--swatch-empty-outline: var(--gray-400);
 	--swatch-empty-bg: var(--gray-500);
 	--new-canvas-preview-bg: var(--color-bg-secondary);
+	--color-off-white: var(--gray-100);
+	--switch-knob-color: #fff;
+	--color-warning-text: #7d3a00;
 	--danger-btn-gradient: linear-gradient(to bottom,
 		color-mix(in srgb, var(--color-danger-bright) 12%, white) 0%,
 		color-mix(in srgb, var(--color-danger-bright) 38%, white) 40%,

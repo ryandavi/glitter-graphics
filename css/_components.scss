@@ -41,36 +41,9 @@ img[data-pixel-scale] {
 textarea,
 input[type="text"],
 input[type="number"],
+input[type="search"],
 select {
-	min-width: 100px;
-	min-height: var(--control-height);
-	padding: var(--spacing-sm) var(--control-padding-inline);
-	background: var(--color-bg-secondary);
-	border: 1px solid var(--color-border);
-	border-radius: var(--control-radius);
-	color: var(--color-text-primary);
-	font-size: var(--font-size-sm);
-	transition: border-color var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
-
-	&::placeholder {
-		color: var(--color-text-tertiary);
-		opacity: 1;
-	}
-
-	&:hover:not(:disabled) {
-		border-color: var(--color-border-hover);
-	}
-
-	&:focus-visible {
-		outline: none;
-		border-color: var(--color-accent);
-		box-shadow: var(--control-focus-ring);
-	}
-
-	&:disabled {
-		opacity: var(--disabled-opacity);
-		cursor: not-allowed;
-	}
+	@include form-control;
 }
 
 select { cursor: pointer; }
@@ -116,24 +89,7 @@ textarea {
 			padding: var(--spacing-sm) var(--spacing-md);
 			padding-left: 2rem;
 			box-sizing: border-box;
-			border: 1px solid var(--color-border);
-			border-radius: var(--radius-sm);
-			background: var(--color-bg-secondary);
-			color: var(--color-text-primary);
 			font-size: var(--font-size-base);
-
-			&::placeholder {
-				color: var(--color-text-tertiary);
-				opacity: 1;
-			}
-
-			&:hover:not(:disabled) { border-color: var(--color-border-hover); }
-
-			&:focus-visible {
-				outline: none;
-				border-color: var(--color-accent);
-				box-shadow: var(--control-focus-ring);
-			}
 		}
 	}
 
@@ -151,11 +107,7 @@ textarea {
 // layout-specific deltas.
 .setting-label,
 .effect-option-label {
-	font-size: var(--font-size-xs);
-	font-weight: 600;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--color-text-tertiary);
+	@include field-label;
 }
 
 .settings-action-row {
@@ -169,10 +121,11 @@ textarea {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-md);
-	padding: var(--spacing-md);
-	background: var(--color-bg-card);
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	@include inset-surface;
+}
+
+.choice-card {
+	@include selectable-card;
 }
 
 .advanced-disclosure {
@@ -543,13 +496,13 @@ input[type="range"] {
 	&.transform-handle-rotation {
 		width: calc(10px / var(--zoom, 1));
 		height: calc(10px / var(--zoom, 1));
-		border-radius: 50%;
+		border-radius: var(--radius-full);
 	}
 
 	&.transform-handle-edge {
 		width: calc(12px / var(--zoom, 1));
 		height: calc(12px / var(--zoom, 1));
-		border-radius: 50%;
+		border-radius: var(--radius-full);
 	}
 }
 

@@ -1002,7 +1002,7 @@ const PANEL_SCHEMAS = {
 				] },
 				{ kind: 'card', id: 'autoGlitterExisting', classes: 'auto-glitter-existing', hidden: true, items: [
 					{ kind: 'host', id: 'autoGlitterExistingSummary', tag: 'p' },
-					{ kind: 'radioSegmented', id: 'autoGlitterRerunMode', label: 'How to handle the previous Auto Glitter layers', options: [
+					{ kind: 'radioSegmented', id: 'autoGlitterRerunMode', classes: 'auto-glitter-rerun-mode', label: 'How to handle the previous Auto Glitter layers', options: [
 						{ id: 'autoGlitterEditCurrent', label: 'Edit', value: 'edit' },
 						{ id: 'autoGlitterReplacePrevious', label: 'Replace', value: 'replace' },
 						{ id: 'autoGlitterAddAnother', label: 'Add', value: 'add' }
@@ -1011,7 +1011,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Palette', region: 'scroll', items: [
 				{ kind: 'card', items: [
-					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', label: 'Palette style', visibleLabel: 'Palette Style', options: [
+					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', classes: 'auto-glitter-palette-style', label: 'Palette style', visibleLabel: 'Palette Style', options: [
 						{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced' }, { label: 'Natural', value: 'natural' }
 					] },
 					{ kind: 'slider', id: 'autoGlitterColorCount', slider: 'autoGlitterColorCount' },

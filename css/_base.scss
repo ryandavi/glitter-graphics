@@ -52,7 +52,7 @@ a {
 	text-decoration: underline;
 	text-decoration-thickness: 0.08em;
 	text-underline-offset: 0.15em;
-	transition: color 0.15s ease, text-decoration-color 0.15s ease;
+	transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
 
 	&:hover {
 		color: var(--color-accent-hover);
@@ -147,4 +147,3 @@ select {
 	font-family: var(--font-ui);
 	font-optical-sizing: auto;
 }
-

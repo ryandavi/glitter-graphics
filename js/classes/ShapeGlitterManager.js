@@ -145,7 +145,7 @@ class ShapeGlitterManager {
 	buildShapeCard(id, label, className = 'brush-shape-option') {
 		const card = document.createElement('button');
 		card.type = 'button';
-		card.className = className;
+		card.className = `choice-card ${className}`;
 		card.dataset.shape = id;
 		card.title = label;
 		card.setAttribute('aria-label', label);

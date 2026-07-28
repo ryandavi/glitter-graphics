@@ -10,7 +10,7 @@
 	display: none;
 }
 
-@media (max-width: 800px) {
+@include mobile {
 	:root {
 		--glitter-swatch-columns: 5;
 		--mobile-floating-inset: var(--spacing-sm);
@@ -275,7 +275,7 @@
 				bottom: -4px;
 				width: 12px;
 				height: 12px;
-				border-radius: 999px;
+				border-radius: var(--radius-pill);
 				background: rgba(0, 0, 0, 0.7);
 				color: #fff;
 				font-size: 8px;
@@ -399,30 +399,13 @@
 		>span {
 			width: var(--touch-target-min);
 			height: 4px;
-			border-radius: 999px;
+			border-radius: var(--radius-pill);
 			background: var(--color-border);
 		}
 	}
 
-	body.editOpen {
-		.mobile-settings-drawer {
-			transform: translateY(0);
-			opacity: 1;
-			visibility: visible;
-			pointer-events: auto;
-			transition-delay: 0s;
-		}
-
-		.main-content > .preview-panel {
-			padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-height));
-		}
-	}
-
-	body.designOpen,
-	body.layersOpen {
-		.main-content > .preview-panel {
-			padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-height));
-		}
+	body:is(.editOpen, .designOpen, .layersOpen) .main-content > .preview-panel {
+		padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-height));
 	}
 
 	body.mobile-sheet-dragging {
@@ -467,6 +450,7 @@
 		transition: transform var(--transition-base), visibility 0s var(--transition-base);
 	}
 
+	body.editOpen .mobile-settings-drawer,
 	body.designOpen .main-content > .design-panel,
 	body.layersOpen .main-content > .layers-panel {
 		transform: translateY(0);
@@ -477,7 +461,7 @@
 	}
 
 	body.designOpen .main-content > .design-panel {
-		>.section:not(#designGallerySection) {
+		>.section:not(.design-gallery-section) {
 			display: none !important;
 		}
 
@@ -493,8 +477,7 @@
 		}
 	}
 
-	.main-content > .design-panel #designGalleryToggle,
-	.main-content > .layers-panel #layersPanelToggle {
+	.main-content .mobile-hidden-section-toggle {
 		display: none;
 	}
 
