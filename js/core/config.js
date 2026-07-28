@@ -51,6 +51,37 @@ const CONFIG = {
 		}
 	},
 
+	experimental: {
+		htmlScene: {
+			localHosts: ['localhost', '127.0.0.1', '::1'],
+			defaults: {
+				responsive: true,
+				stickerSizing: 'scale',
+				maxWidth: 1200,
+				background: 'canvas',
+				customBackground: '#ffffff',
+				overflow: 'hidden',
+				imageRendering: 'pixelated',
+				includeBaseImage: false,
+				alignment: 'center',
+				minHeight: 0,
+				fit: 'contain',
+				backgroundRepeat: 'repeat',
+				embedAssets: false,
+				stickerMetadata: {
+					href: '',
+					alt: '',
+					title: '',
+					classes: ''
+				}
+			},
+			limits: {
+				minWidth: 100,
+				maxWidth: 4096
+			}
+		}
+	},
+
 	canvas: {
 		limits: {
 			maxWidth: 1024,
@@ -188,7 +219,7 @@ const CONFIG = {
 				smoothing: 0
 			},
 			stroke: {
-				stampSpacing: 0.25
+				stampSpacing: 0
 			},
 			// Per-mode overrides (WP1): Brush and Eraser keep independent setting
 			// sets (MaskEditor.toolSettings). Only the keys listed here differ from

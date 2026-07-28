@@ -1785,6 +1785,58 @@ body.modal-open {
 	}
 }
 
+.modal-filter-bar {
+	flex: 0 0 auto;
+	padding: var(--spacing-sm) var(--spacing-md);
+	border-bottom: 1px solid var(--color-border);
+	background: var(--color-bg-tertiary);
+
+	>.search-input-wrapper {
+
+		>input {
+			padding-right: 7.5rem;
+
+			&::-webkit-search-cancel-button {
+				display: none;
+			}
+		}
+
+		>.modal-filter-status {
+			position: absolute;
+			top: 50%;
+			right: var(--spacing-sm);
+			max-width: 6.5rem;
+			overflow: hidden;
+			padding: var(--spacing-2xs) var(--spacing-sm);
+			transform: translateY(-50%);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-pill);
+			background: var(--color-bg-secondary);
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-xs);
+			font-variant-numeric: tabular-nums;
+			line-height: 1;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+
+			&:empty {
+				display: none;
+			}
+		}
+	}
+}
+
+.modal-filter-empty {
+	padding: var(--spacing-xl) var(--spacing-md);
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-sm);
+	text-align: center;
+}
+
+.modal-body .is-filtered-out {
+	display: none !important;
+}
+
 // Shared shortcut language for the Keyboard Shortcuts and Guide modals.
 // Keep aliases for the guide's semantic <kbd> markup; both resolve to the
 // same component so size, alignment, and input-type treatment cannot drift.
@@ -1980,41 +2032,19 @@ body.modal-open {
 
 	}
 
-	>.settings-row+.settings-group-title {
-		margin-top: var(--spacing-xl);
+	.settings-group-badge {
+		padding: var(--spacing-2xs) var(--spacing-sm);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		background: var(--color-bg-secondary);
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		line-height: 1;
+		text-transform: uppercase;
 	}
 
-}
-
-// In settings modals the Advanced disclosure reads as a settings group, not
-// the panels' compact inline disclosure: same title size as
-// .settings-group-title with the rule line BELOW the title (headers underline,
-// they don't overline). The panel effect cards keep the compact base styling.
-.modal-body .advanced-disclosure {
-	border-top: none;
-	margin-top: var(--spacing-xl);
-
-	>.advanced-disclosure-toggle {
-		padding: 0 0 var(--spacing-sm);
-		border-bottom: 1px solid var(--color-border);
-		color: var(--color-text-primary);
-
-		>.advanced-disclosure-label {
-			text-transform: none;
-			letter-spacing: normal;
-			font-size: var(--font-size-md);
-			font-weight: 600;
-		}
-
-		>.advanced-disclosure-chevron svg {
-			width: 16px;
-			height: 16px;
-		}
-	}
-
-	>.advanced-disclosure-content {
-		padding-top: var(--spacing-md);
-	}
 }
 
 .settings-row {
@@ -2077,6 +2107,64 @@ body.modal-open {
 	min-width: 300px;
 	max-width: 50%;
 	padding-left: 0;
+}
+
+#settingsModal {
+	.html-scene-sticker-list {
+		display: grid;
+		gap: var(--spacing-sm);
+		width: 100%;
+	}
+
+	.html-scene-sticker-card {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--spacing-sm) var(--spacing-md);
+		margin: 0;
+		padding: var(--spacing-md);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-secondary);
+
+		>legend {
+			padding: 0 var(--spacing-xs);
+			color: var(--color-text-primary);
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
+		}
+
+		>label {
+			display: grid;
+			gap: var(--spacing-xs);
+			min-width: 0;
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-xs);
+
+			>input {
+				width: 100%;
+			}
+		}
+	}
+
+	.html-scene-sticker-empty {
+		padding: var(--spacing-md);
+		border: 1px dashed var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-sm);
+		text-align: center;
+	}
+
+	.html-scene-export-actions {
+		gap: var(--spacing-sm);
+		flex-wrap: wrap;
+	}
+
+	@include mobile {
+		.html-scene-sticker-card {
+			grid-template-columns: 1fr;
+		}
+	}
 }
 
 .multi-selection-actions {

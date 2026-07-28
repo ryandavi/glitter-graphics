@@ -97,6 +97,7 @@ class GlitterEditor {
 		this.maskEditor = new MaskEditor(this);
 		this.historyManager = new HistoryManager(this);
 		this.projectSerializer = new ProjectSerializer(this);
+		this.htmlSceneExporter = new HtmlSceneExporter(this);
 
 		// ============================================================================
 		// INITIALIZATION
@@ -111,6 +112,8 @@ class GlitterEditor {
 		this.initializeAdvancedDisclosures();
 		this.initializeShortcutsModal();
 		this.initializeExportSettings();
+		this.htmlSceneExporter.initialize();
+		this.initializeModalFilters();
 	}
 
 	initializeAltDuplicateFeedback() {
@@ -673,6 +676,7 @@ initializeExportSettings() {
 		if (matteColor) matteColor.disabled = matteDisabled;
 		const buttonName = document.querySelector('#exportGif .name');
 		if (buttonName) buttonName.textContent = isMp4 ? 'Export MP4' : 'Export GIF';
+		this.exportSettingsFilter?.apply();
 		this.updateExportDuration();
 	}
 
@@ -1990,6 +1994,45 @@ async resetAllSettings() {
 			});
 
 			list.appendChild(group);
+		});
+	}
+
+	initializeModalFilters() {
+		this.shortcutsFilter = createModalFilter({
+			root: '#shortcutsModal',
+			inputSelector: '#shortcutSearch',
+			clearSelector: '[data-modal-filter-clear]',
+			statusSelector: '#shortcutSearchStatus',
+			emptySelector: '#shortcutSearchEmpty',
+			itemSelector: '.shortcut-item',
+			groupSelector: '.shortcut-group',
+			groupTitleSelector: '.shortcut-group-title',
+			singularLabel: 'shortcut',
+			pluralLabel: 'shortcuts'
+		});
+		this.exportSettingsFilter = createModalFilter({
+			root: '#exportSettingsModal',
+			inputSelector: '#exportSettingsSearch',
+			clearSelector: '[data-modal-filter-clear]',
+			statusSelector: '#exportSettingsSearchStatus',
+			emptySelector: '#exportSettingsSearchEmpty',
+			itemSelector: '.settings-row',
+			groupSelector: '.settings-group',
+			groupTitleSelector: '.settings-group-title',
+			singularLabel: 'setting',
+			pluralLabel: 'settings'
+		});
+		this.settingsFilter = createModalFilter({
+			root: '#settingsModal',
+			inputSelector: '#settingsSearch',
+			clearSelector: '[data-modal-filter-clear]',
+			statusSelector: '#settingsSearchStatus',
+			emptySelector: '#settingsSearchEmpty',
+			itemSelector: '.settings-row',
+			groupSelector: '.settings-group',
+			groupTitleSelector: '.settings-group-title',
+			singularLabel: 'setting',
+			pluralLabel: 'settings'
 		});
 	}
 
@@ -3521,18 +3564,28 @@ async resetAllSettings() {
 			.register('shortcutsModal', {
 				openBtnId: 'shortcutsBtn',
 				closeBtnId: 'closeShortcutsModal',
-				resetScrollOnOpen: true
+				resetScrollOnOpen: true,
+				initialFocusSelector: '#shortcutSearch',
+				onOpen: () => this.shortcutsFilter?.reset()
 			})
 			.register('exportSettingsModal', {
 				openBtnId: 'exportSettingsBtn',
 				closeBtnId: ['closeExportSettingsModal', 'closeExportSettingsModalFooter'],
 				resetScrollOnOpen: true,
-				onOpen: () => this.updateExportDuration()
+				onOpen: () => {
+					this.exportSettingsFilter?.reset();
+					this.updateExportDuration();
+				}
 			})
 			.register('settingsModal', {
 				openBtnId: ['settingsBtn', 'mobileAppSettingsBtn'],
 				closeBtnId: ['closeSettingsModal', 'closeSettingsModalFooter'],
-				resetScrollOnOpen: true
+				resetScrollOnOpen: true,
+				onOpen: () => {
+					this.htmlSceneExporter?.refreshStickerMetadata();
+					this.settingsFilter?.refresh();
+					this.settingsFilter?.reset();
+				}
 			})
 			.register('exportPreviewModal', {  // ADD THIS
 				closeBtnId: 'closeExportPreviewModal',
@@ -3579,7 +3632,7 @@ async resetAllSettings() {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=39',
+				externalContentUrl: 'modals/guide.html?v=45',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -4765,8 +4818,8 @@ setupWelcomeModalListeners() {
 		const message = document.getElementById('helpfulMessage');
 		const text = document.getElementById('helpfulMessageText');
 		const description = document.getElementById('helpfulMessageDescription');
-		const toolLabel = document.getElementById('helpfulMessageTool');
-		const toolIcon = document.getElementById('helpfulMessageToolIcon');
+		const toolLabel = document.getElementById('helpfulMessageToolContext');
+		const messageIcon = document.getElementById('helpfulMessageIcon');
 		const toolName = document.getElementById('helpfulMessageToolName');
 		const activeLayer = this.layerManager.getActiveLayer();
 		const currentTool = this.currentTool;
@@ -4970,12 +5023,13 @@ setupWelcomeModalListeners() {
 		}
 
 		// Update tool label
-		if (showTool && toolLabel && toolIcon && toolName) {
+		if (showTool && toolLabel && toolName) {
 			const toolInfo = getToolInfo(currentTool);
-			toolIcon.setAttribute('href', `#${toolInfo.icon}`);
+			messageIcon?.setAttribute('href', `#${toolInfo.icon}`);
 			toolName.textContent = toolInfo.name;
 			toolLabel.style.display = 'flex';
 		} else if (toolLabel) {
+			messageIcon?.setAttribute('href', '#icon-circle-info');
 			toolLabel.style.display = 'none';
 		}
 
