@@ -16,7 +16,7 @@ $browserConfig = [
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Admin — Glitter</title>
 	<script>(function(){try{var s=JSON.parse(localStorage.getItem('glitterEditorSettings')||'{}');document.documentElement.dataset.theme=s.interfaceTheme||'dark';}catch(e){document.documentElement.dataset.theme='dark';}}());</script>
-	<link rel="stylesheet" href="css/swatch_admin.css?v=22">
+	<link rel="stylesheet" href="css/swatch_admin.css?v=24">
 </head>
 <body class="admin-tool">
 	<div class="container admin-shell">
@@ -63,8 +63,15 @@ $browserConfig = [
 
 			<section class="dashboard-section" aria-labelledby="attentionHeading">
 				<div class="section-heading-row">
-					<h3 id="attentionHeading">Needs attention</h3>
-					<button type="button" class="btn btn-quiet btn-sm" id="showAllChecks">Show all checks</button>
+					<div class="heading-with-select">
+						<input type="checkbox" id="selectAllIssues" aria-label="Select every item that has a bulk action">
+						<h3 id="attentionHeading">Needs attention</h3>
+					</div>
+					<div class="section-heading-actions">
+						<span class="bulk-count" id="bulkCount"></span>
+						<span class="bulk-actions" id="bulkActions"></span>
+						<button type="button" class="btn btn-quiet btn-sm" id="showAllChecks">Show all checks</button>
+					</div>
 				</div>
 				<div id="healthQueue" class="issue-list" aria-live="polite">
 					<div class="loading-state">Checking assets…</div>
@@ -87,8 +94,8 @@ $browserConfig = [
 		const CONFIG = <?php echo json_encode($browserConfig); ?>;
 		const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
 	</script>
-	<script src="js/admin_api.js?v=5"></script>
-	<script src="js/admin_dashboard.js?v=5"></script>
+	<script src="js/admin_api.js?v=6"></script>
+	<script src="js/admin_dashboard.js?v=7"></script>
 	<script>new AdminDashboard().init();</script>
 </body>
 </html>

@@ -18,6 +18,7 @@ class CategoryManager {
 		body.insertAdjacentHTML('beforebegin', `
 			<div class="manager-toolbar category-manager-toolbar">
 				<label class="search-field"><span class="visually-hidden">Search categories</span><input type="search" data-category-search placeholder="Search categories"></label>
+				<button type="button" class="btn btn-secondary" data-category-export>Export categories JSON</button>
 				<button type="button" class="btn btn-primary" data-category-new>New category</button>
 			</div>
 		`);
@@ -45,6 +46,7 @@ class CategoryManager {
 		this.table = this.modal.querySelector('[data-category-table]');
 		this.dialog = this.modal.querySelector('[data-category-dialog]');
 		this.form = this.dialog.querySelector('form');
+		this.modal.querySelector('[data-category-export]').addEventListener('click', () => this.editor.exportCategoriesJSON());
 		this.search.addEventListener('input', () => {
 			this.query = this.search.value.trim().toLowerCase();
 			this.render();
@@ -66,6 +68,7 @@ class CategoryManager {
 			this.updatePath();
 		});
 		this.form.elements.slug.addEventListener('input', () => {
+			this.form.elements.slug.value = this.form.elements.slug.value.toLowerCase();
 			this.form.elements.slug.dataset.manual = 'true';
 			this.updatePath();
 		});
@@ -99,7 +102,9 @@ class CategoryManager {
 				<div class="category-table-row ${row.folder_status === 'unregistered' ? 'row-muted' : ''}" data-category-id="${row.id || ''}" ${row.id && !this.query ? 'draggable="true"' : ''}>
 					<span class="drag-handle" title="Drag to reorder">${row.id && !this.query ? '⋮⋮' : ''}</span>
 					<div class="category-cell-name">
-						<span class="category-color-dot" style="--category-color:${this.escape(row.color || 'transparent')}"></span>
+						<span class="category-color-dot ${row.icon ? 'has-thumbnail' : ''}" style="--category-color:${this.escape(row.color || 'transparent')}" ${row.icon ? `title="${this.escape(row.icon)}"` : ''}>
+							${row.icon ? `<img src="${CONFIG.image_base_path}${this.escape(row.icon)}" alt="" loading="lazy">` : ''}
+						</span>
 						<span><strong>${this.escape(row.name)}</strong><small>${this.escape(row.slug)}</small></span>
 					</div>
 					<code>${this.escape(row.folder_url)}</code>
@@ -112,6 +117,10 @@ class CategoryManager {
 				</div>
 			`).join('')}
 		`;
+		this.table.querySelectorAll('.category-color-dot img').forEach(image => image.addEventListener('error', () => {
+			image.parentElement.classList.remove('has-thumbnail');
+			image.remove();
+		}));
 		this.bindDragSort();
 		this.table.querySelectorAll('[data-edit]').forEach(button => button.addEventListener('click', () => this.openForm(this.rows.find(row => Number(row.id) === Number(button.dataset.edit)))));
 		this.table.querySelectorAll('[data-delete]').forEach(button => button.addEventListener('click', () => this.remove(Number(button.dataset.delete))));
@@ -168,7 +177,7 @@ class CategoryManager {
 		for (const field of ['name', 'slug', 'description', 'icon', 'color', 'sort_order']) {
 			if (row?.[field] != null) this.form.elements[field].value = row[field];
 		}
-		this.form.elements.slug.disabled = Boolean(this.editing?.slug_locked);
+		this.form.elements.slug.disabled = false;
 		if (this.editing) this.form.elements.slug.dataset.manual = 'true';
 		this.updatePath();
 		this.formDirty = false;

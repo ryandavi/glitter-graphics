@@ -47,6 +47,8 @@ $mutatingActions = [
     'delete',
     'add',
     'reorder',
+    'rename_file',
+    'activate',
     'analyze',
     'analyze_all',
     'save_export',
@@ -103,6 +105,16 @@ try {
         case 'reorder':
             $data = json_decode(file_get_contents('php://input'), true);
             echo json_encode($api->reorderAssets($data));
+            break;
+
+        case 'rename_file':
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->renameAssetFile($data));
+            break;
+
+        case 'activate':
+            $data = json_decode(file_get_contents('php://input'), true) ?: [];
+            echo json_encode($api->activateAssets($data['ids'] ?? []));
             break;
 
         case 'analyze':

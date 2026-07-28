@@ -17,23 +17,21 @@
         "searchTerms": [],
         "colorCodes": [
             "#030102",
-            "#FC369C",
-            "#FA0D6F",
-            "#FB95F5",
-            "#470B27",
-            "#311727",
-            "#F783C6",
-            "#FC69F6"
+            "#F62E98",
+            "#FB8BEE",
+            "#4B1935",
+            "#A42068",
+            "#FEDCF3",
+            "#F3A5C9"
         ],
         "colorWeights": [
             0.32,
-            0.1,
-            0.08,
-            0.08,
-            0.04,
-            0.04,
+            0.27,
+            0.15,
+            0.15,
+            0.06,
             0.03,
-            0.03
+            0.02
         ],
         "paletteType": "gradient",
         "isAnimated": 1,
@@ -215,6 +213,396 @@
         "frameRate": 10,
         "isVariableFramerate": 0,
         "fileSize": 178267,
+        "sortOrder": 0
+    },
+    {
+        "id": 225,
+        "name": "Ryandavi Alien",
+        "filename": "ryandavi_alien.png",
+        "url": "images/stickers/ryandavi/ryandavi_alien.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_alien.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "green"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#8BC43E",
+            "#010201"
+        ],
+        "colorWeights": [
+            0.57,
+            0.39
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 200,
+        "height": 200,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 2805,
+        "sortOrder": 0
+    },
+    {
+        "id": 226,
+        "name": "Ryandavi Cat",
+        "filename": "ryandavi_cat.png",
+        "url": "images/stickers/ryandavi/ryandavi_cat.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_cat.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "pastel",
+            "purple"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#D3B6D6",
+            "#050405"
+        ],
+        "colorWeights": [
+            0.59,
+            0.39
+        ],
+        "paletteType": "neutral",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 200,
+        "height": 200,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 2944,
+        "sortOrder": 0
+    },
+    {
+        "id": 227,
+        "name": "Ryandavi Egg",
+        "filename": "ryandavi_egg.png",
+        "url": "images/stickers/ryandavi/ryandavi_egg.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_egg.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "green",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FFFFFF",
+            "#010101",
+            "#8DC641"
+        ],
+        "colorWeights": [
+            0.71,
+            0.2,
+            0.08
+        ],
+        "paletteType": "neutral",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 400,
+        "height": 500,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 14929,
+        "sortOrder": 0
+    },
+    {
+        "id": 228,
+        "name": "Ryandavi Frog",
+        "filename": "ryandavi_frog.png",
+        "url": "images/stickers/ryandavi/ryandavi_frog.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_frog.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "green"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#8BC43E",
+            "#020201"
+        ],
+        "colorWeights": [
+            0.66,
+            0.32
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 200,
+        "height": 200,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 2559,
+        "sortOrder": 0
+    },
+    {
+        "id": 229,
+        "name": "Ryandavi Ghost",
+        "filename": "ryandavi_ghost.png",
+        "url": "images/stickers/ryandavi/ryandavi_ghost.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_ghost.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "pastel",
+            "purple",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FEFEFF",
+            "#010101",
+            "#D0B5D2"
+        ],
+        "colorWeights": [
+            0.6,
+            0.25,
+            0.15
+        ],
+        "paletteType": "neutral",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 200,
+        "height": 200,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 2725,
+        "sortOrder": 0
+    },
+    {
+        "id": 230,
+        "name": "Ryandavi Gridcat",
+        "filename": "ryandavi_gridcat.png",
+        "url": "images/stickers/ryandavi/ryandavi_gridcat.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_gridcat.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FCFCFC",
+            "#060809"
+        ],
+        "colorWeights": [
+            0.68,
+            0.32
+        ],
+        "paletteType": "neutral",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 300,
+        "height": 175,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 1708,
+        "sortOrder": 0
+    },
+    {
+        "id": 231,
+        "name": "Ryandavi Hamster",
+        "filename": "ryandavi_hamster.png",
+        "url": "images/stickers/ryandavi/ryandavi_hamster.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_hamster.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "red",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#030202",
+            "#FAFAFA",
+            "#CE3234"
+        ],
+        "colorWeights": [
+            0.39,
+            0.31,
+            0.3
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 200,
+        "height": 200,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 2741,
+        "sortOrder": 0
+    },
+    {
+        "id": 232,
+        "name": "Ryandavi Lemur",
+        "filename": "ryandavi_lemur.png",
+        "url": "images/stickers/ryandavi/ryandavi_lemur.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_lemur.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "pastel",
+            "purple",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#070607",
+            "#D4B7D6",
+            "#FEFDFE"
+        ],
+        "colorWeights": [
+            0.41,
+            0.33,
+            0.25
+        ],
+        "paletteType": "neutral",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 200,
+        "height": 200,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 3868,
+        "sortOrder": 0
+    },
+    {
+        "id": 233,
+        "name": "Ryandavi Pizza",
+        "filename": "ryandavi_pizza.png",
+        "url": "images/stickers/ryandavi/ryandavi_pizza.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_pizza.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "gold",
+            "red"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#010100",
+            "#F7C608",
+            "#CF3434"
+        ],
+        "colorWeights": [
+            0.59,
+            0.33,
+            0.08
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 200,
+        "height": 200,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 2890,
+        "sortOrder": 0
+    },
+    {
+        "id": 234,
+        "name": "Ryandavi Rybaby",
+        "filename": "ryandavi_rybaby.png",
+        "url": "images/stickers/ryandavi/ryandavi_rybaby.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_rybaby.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "red",
+            "white",
+            "yellow"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#FBFAFA",
+            "#CD3234",
+            "#020202",
+            "#F5CD24"
+        ],
+        "colorWeights": [
+            0.47,
+            0.26,
+            0.25,
+            0.02
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 800,
+        "height": 400,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 38431,
+        "sortOrder": 0
+    },
+    {
+        "id": 235,
+        "name": "Ryandavi Wow Puppy",
+        "filename": "ryandavi_wow.png",
+        "url": "images/stickers/ryandavi/ryandavi_wow.png",
+        "thumbnailUrl": "images/stickers/ryandavi/ryandavi_wow.png",
+        "category": "ryandavi",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "black",
+            "gold",
+            "white"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#F9F9F9",
+            "#030201",
+            "#FCCC08"
+        ],
+        "colorWeights": [
+            0.38,
+            0.33,
+            0.29
+        ],
+        "paletteType": "single",
+        "isAnimated": 0,
+        "hasTransparency": 1,
+        "width": 275,
+        "height": 275,
+        "frameCount": 1,
+        "frameRate": 0,
+        "isVariableFramerate": 0,
+        "fileSize": 5266,
         "sortOrder": 0
     },
     {
@@ -5817,6 +6205,40 @@
         "isVariableFramerate": 0,
         "fileSize": 49543,
         "sortOrder": 106
+    },
+    {
+        "id": 221,
+        "name": "Bear_blue Heart_glitter",
+        "filename": "bear_blue-heart_glitter.gif",
+        "url": "images/stickers/character/bear_blue-heart_glitter.gif",
+        "thumbnailUrl": "images/stickers/character/bear_blue-heart_glitter.gif",
+        "category": "character",
+        "attribution": null,
+        "stickerText": null,
+        "tags": [
+            "orange",
+            "rainbow",
+            "rose gold"
+        ],
+        "searchTerms": [],
+        "colorCodes": [
+            "#CC9966",
+            "#CCCC82"
+        ],
+        "colorWeights": [
+            0.16,
+            0.13
+        ],
+        "paletteType": "gradient",
+        "isAnimated": 1,
+        "hasTransparency": 1,
+        "width": 146,
+        "height": 173,
+        "frameCount": 3,
+        "frameRate": 40,
+        "isVariableFramerate": 0,
+        "fileSize": 19445,
+        "sortOrder": 0
     },
     {
         "id": 220,

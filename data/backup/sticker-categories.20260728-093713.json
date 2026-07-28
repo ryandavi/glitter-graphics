@@ -80,6 +80,22 @@
         "count": 11
     },
     {
+        "id": "ryandavi",
+        "name": "ryandavi",
+        "icon": "",
+        "color": "#1100ff",
+        "description": "",
+        "count": 11
+    },
+    {
+        "id": "character",
+        "name": "Character",
+        "icon": "images/stickers/character/star_dance.gif",
+        "color": "#E0559F",
+        "description": "Stickers in the character category",
+        "count": 3
+    },
+    {
         "id": "emoji",
         "name": "Emoji",
         "icon": "images/stickers/emoji/emoji_thumbs-up_yellow.gif",
@@ -94,14 +110,6 @@
         "color": "#607D8B",
         "description": "Stickers in the logo category",
         "count": 3
-    },
-    {
-        "id": "character",
-        "name": "Character",
-        "icon": "images/stickers/character/star_dance.gif",
-        "color": "#E0559F",
-        "description": "Stickers in the character category",
-        "count": 2
     },
     {
         "id": "clothing",

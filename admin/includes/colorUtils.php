@@ -43,6 +43,46 @@ function rgbToHSV($r, $g, $b)
 	return [$hue < 0 ? $hue + 360 : $hue, $saturation, $value];
 }
 
+function hueFamily($hue)
+{
+	if ($hue < 15 || $hue >= 345) return 'red';
+	if ($hue < 45) return 'orange';
+	if ($hue < 75) return 'yellow';
+	if ($hue < 165) return 'green';
+	if ($hue < 200) return 'teal';
+	if ($hue < 260) return 'blue';
+	if ($hue < 315) return 'purple';
+	return 'pink';
+}
+
+function simpleFamilyName($family)
+{
+	$names = [
+		'red' => 'Red',
+		'orange' => 'Orange',
+		'yellow' => 'Yellow',
+		'green' => 'Green',
+		'teal' => 'Teal',
+		'blue' => 'Blue',
+		'purple' => 'Purple',
+		'pink' => 'Pink',
+	];
+	return $names[$family] ?? ucfirst($family);
+}
+
+function neutralTagWord($value, $bands)
+{
+	$word = null;
+	$minimum = -INF;
+	foreach ($bands as $candidate => $candidateMinimum) {
+		if ($value >= $candidateMinimum && $candidateMinimum > $minimum) {
+			$word = $candidate;
+			$minimum = $candidateMinimum;
+		}
+	}
+	return $word;
+}
+
 function rgbToLab($r, $g, $b)
 {
 	$channels = [$r / 255, $g / 255, $b / 255];

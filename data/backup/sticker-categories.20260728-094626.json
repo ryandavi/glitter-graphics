@@ -3,7 +3,7 @@
         "id": "user-uploads",
         "name": "User Uploads",
         "icon": "images/stickers/decorative/heart_pink-glitter.gif",
-        "color": "#ff69b4",
+        "color": "#9575CD",
         "description": "Stickers uploaded by user",
         "count": 0
     },
@@ -11,7 +11,7 @@
         "id": "text",
         "name": "Text",
         "icon": "images/stickers/text/sexy_arrow_purple.gif",
-        "color": "#ff69b4",
+        "color": "#66BB6A",
         "description": "Stickers in the text category",
         "count": 65
     },
@@ -19,7 +19,7 @@
         "id": "sparkle",
         "name": "Sparkle",
         "icon": "images/stickers/sparkle/fireworks_yellow-pink.gif",
-        "color": "#ff69b4",
+        "color": "#E8C547",
         "description": "Stickers in the sparkle category",
         "count": 36
     },
@@ -27,7 +27,7 @@
         "id": "flower",
         "name": "Flower",
         "icon": "images/stickers/flower/rose_red-green-glitter.gif",
-        "color": "#ff69b4",
+        "color": "#FF6FA5",
         "description": "Stickers in the flower category",
         "count": 22
     },
@@ -35,7 +35,7 @@
         "id": "decorative",
         "name": "Decorative",
         "icon": "images/stickers/decorative/rainbow_glitter.gif",
-        "color": "#ff69b4",
+        "color": "#F2A65A",
         "description": "Stickers in the decorative category",
         "count": 19
     },
@@ -43,7 +43,7 @@
         "id": "jewelry",
         "name": "Jewelry",
         "icon": "images/stickers/jewelry/gangsta-necklace_gold_4.gif",
-        "color": "#ff69b4",
+        "color": "#4FC3D9",
         "description": "Stickers in the jewelry category",
         "count": 18
     },
@@ -51,7 +51,7 @@
         "id": "animal",
         "name": "Animal",
         "icon": "images/stickers/animal/butterfly_rainbow-glitter.gif",
-        "color": "#ff69b4",
+        "color": "#A0703B",
         "description": "Stickers in the animal category",
         "count": 14
     },
@@ -59,7 +59,7 @@
         "id": "object",
         "name": "Object",
         "icon": "images/stickers/object/money_wave_green.gif",
-        "color": "#ff69b4",
+        "color": "#78909C",
         "description": "Stickers in the object category",
         "count": 13
     },
@@ -67,7 +67,7 @@
         "id": "Frame",
         "name": "Frame",
         "icon": "images/stickers/frame/rose-heart_frame_red.gif",
-        "color": "#ff69b4",
+        "color": "#8D6E63",
         "description": "Stickers in the frame category",
         "count": 11
     },
@@ -75,15 +75,31 @@
         "id": "people",
         "name": "People",
         "icon": "images/stickers/people/lips_red-glitter.gif",
-        "color": "#ff69b4",
+        "color": "#FF8A65",
         "description": "Stickers in the people category",
         "count": 11
+    },
+    {
+        "id": "ryandavi",
+        "name": "ryandavi",
+        "icon": "",
+        "color": "#1100ff",
+        "description": "",
+        "count": 11
+    },
+    {
+        "id": "character",
+        "name": "Character",
+        "icon": "images/stickers/character/star_dance.gif",
+        "color": "#E0559F",
+        "description": "Stickers in the character category",
+        "count": 3
     },
     {
         "id": "emoji",
         "name": "Emoji",
         "icon": "images/stickers/emoji/emoji_thumbs-up_yellow.gif",
-        "color": "#ff69b4",
+        "color": "#FFC93C",
         "description": "Stickers in the emoji category",
         "count": 3
     },
@@ -91,7 +107,7 @@
         "id": "logo",
         "name": "Logo",
         "icon": "images/stickers/logo/playboy_silver-glitter.gif",
-        "color": "#ff69b4",
+        "color": "#607D8B",
         "description": "Stickers in the logo category",
         "count": 3
     },
@@ -99,7 +115,7 @@
         "id": "clothing",
         "name": "Clothing",
         "icon": "images/stickers/clothing/crown_gold-glitter.gif",
-        "color": "#ff69b4",
+        "color": "#9B59B6",
         "description": "Stickers in the clothing category",
         "count": 2
     },
@@ -107,16 +123,8 @@
         "id": "background",
         "name": "Background",
         "icon": "images/stickers/background/checkerboard_emo_rainbow.gif",
-        "color": "#ff69b4",
+        "color": "#5B8DEF",
         "description": "Stickers in the background category",
-        "count": 1
-    },
-    {
-        "id": "character",
-        "name": "Character",
-        "icon": "images/stickers/character/star_dance.gif",
-        "color": "#ff69b4",
-        "description": "Stickers in the character category",
         "count": 1
     }
 ]

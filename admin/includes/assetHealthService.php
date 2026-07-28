@@ -46,7 +46,7 @@ class AssetHealthService
 					];
 				}, $rows),
 				'row_count' => count($rows),
-			], ['review_records', 'copy_url']);
+			], ['review_records']);
 		}
 		$this->findOrphans($urls, $issues);
 		$pending = $this->pendingItems();
@@ -101,6 +101,13 @@ class AssetHealthService
 			$issues[] = $this->item('analysis_missing', $row, [], ['reanalyze']);
 		} elseif (!empty($row['file_hash']) && md5_file($file) !== $row['file_hash']) {
 			$issues[] = $this->item('analysis_stale', $row, ['stored_hash' => $row['file_hash']], ['reanalyze']);
+		} elseif ((int)$row['analysis_version'] !== (int)$this->config['analysis_version']) {
+			// The file is unchanged but the rules that read it moved on, so the
+			// stored palette and type no longer match what analysis produces.
+			$issues[] = $this->item('analysis_stale', $row, [
+				'stored_version' => (int)$row['analysis_version'],
+				'current_version' => (int)$this->config['analysis_version'],
+			], ['reanalyze']);
 		}
 		$expectedPrefix = $this->paths->categoryUrl($this->assetType, $row['category_slug']);
 		if (strpos($row['url'], $expectedPrefix) !== 0) {
@@ -130,7 +137,7 @@ class AssetHealthService
 				'thumbnail_url' => $url,
 				'category' => count($parts) > 2 ? $parts[count($parts) - 2] : null,
 				'details' => ['bytes' => (int)$file->getSize()],
-				'actions' => ['review_add', 'copy_url'],
+				'actions' => ['review_add'],
 			];
 		}
 	}

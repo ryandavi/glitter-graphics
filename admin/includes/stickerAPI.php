@@ -13,7 +13,6 @@ class StickerAPI extends AssetAPI
 
     protected function formatAssetForExport($asset, $tags, $searchTerms = [])
     {
-        $analysis = AssetAnalysisResult::decode($asset['analysis_json'] ?? null);
         // Same resolution as glitter: a human override wins over the
         // analyzer's observation. Tags stay the gallery's filter surface;
         // this palette is machine data for masks, matching, and future use.
@@ -31,7 +30,7 @@ class StickerAPI extends AssetAPI
             'searchTerms' => $searchTerms,
             'colorCodes' => array_values(array_column($palette, 'hex')),
             'colorWeights' => array_values(array_map('floatval', array_column($palette, 'weight'))),
-            'paletteType' => $analysis['palette']['type'] ?? null,
+            'paletteType' => $this->paletteTypeState($asset)['type'],
             'isAnimated' => (int)$asset['is_animated'],
             'hasTransparency' => (int)$asset['has_transparency'],
             'width' => (int)($asset['width'] ?? 0),
@@ -47,7 +46,7 @@ class StickerAPI extends AssetAPI
     protected function getAssetSpecificFields()
     {
         return [
-            'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text', 'file_hash'],
+            'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text', 'file_hash', 'palette_type_override'],
             'int' => ['sticker_category_id', 'width', 'height', 'frame_count', 'frame_rate', 'file_size', 'sort_order'],
             'float' => [],
             'bool' => ['is_animated', 'has_transparency', 'is_active', 'is_variable_framerate'],
@@ -56,7 +55,7 @@ class StickerAPI extends AssetAPI
 
     protected function getNullableStringFields()
     {
-        return ['attribution', 'sticker_text'];
+        return ['attribution', 'sticker_text', 'palette_type_override'];
     }
 
     protected function getUpdateExtraAssignments($data)

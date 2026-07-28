@@ -18,8 +18,10 @@ class StickerEditor extends AssetEditor {
 
 StickerEditor.FIELDS = [
 	{ key: 'name', label: 'Name', input: 'text', section: 'basic' },
-	{ key: 'filename', label: 'Filename', input: 'text', section: 'basic' },
 	{ key: 'url', label: 'URL', input: 'text', section: 'basic' },
+	// Replaces the old free-text `filename` field: that one edited the column
+	// without moving the file, so the two could disagree. Rename owns both.
+	{ key: 'rename', label: 'File name', input: 'rename', section: 'basic', hint: 'Renames the file on disk and repoints this record. The public URL changes, so re-export and expect saved projects using the old path to lose this asset.' },
 	{ key: 'attribution', label: 'Attribution', input: 'text', section: 'basic', nullable: true },
 	{ key: 'sticker_text', label: 'Sticker Text', input: 'text', section: 'basic', nullable: true },
 	{ key: 'sticker_category_id', label: 'Category', input: 'select', section: 'organization' },
@@ -27,6 +29,7 @@ StickerEditor.FIELDS = [
 	// Colors are machine data (masks, matching, future features); tags stay
 	// the gallery's filter surface. Editing here writes a palette override.
 	{ key: 'color_codes', label: 'Colors', input: 'colors', section: 'color', hint: 'Published to the editor for color-aware features. Auto-Analyze proposes these; your edits override them. Gallery filtering uses color tags, not this list.' },
+	{ key: 'palette_type_override', label: 'Palette Type', input: 'paletteType', section: 'color', hint: 'Published as paletteType. Auto re-reads the type from the color list above, so it changes when you edit colors — pick a type to pin it instead. Dithered artwork often reads as more hue families than it has.' },
 	{ key: 'analysis', label: 'Stored analysis', input: 'analysis', section: 'color' },
 	{ key: 'width', label: 'Width (px)', input: 'number', section: 'tech', group: 'dimensions', groupLabel: 'Dimensions (px)', analyze: {} },
 	{ key: 'height', label: 'Height (px)', input: 'number', section: 'tech', group: 'dimensions', groupLabel: 'Dimensions (px)', analyze: {} },

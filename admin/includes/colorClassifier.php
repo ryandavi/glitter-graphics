@@ -14,21 +14,30 @@ class ColorClassifier
 	public function classify($clusters)
 	{
 		$profile = $this->buildProfile($clusters);
-		if (!$profile['colored']) {
+		// Measurements ride on every verdict, so the naming rules below only
+		// have to return the verdict itself.
+		return array_merge($this->describeProfile($profile), [
+			'family_count' => count($profile['families']),
+			'entropy' => $profile['entropy'],
+		]);
+	}
+
+	private function describeProfile($profile)
+	{
+		// A trace of color does not make an asset colored: a glint, a stray
+		// antialiased edge, or one warm cluster in a grayscale ramp would
+		// otherwise name the whole thing after a few percent of its pixels.
+		if (!$profile['colored'] || $profile['colored_coverage'] < $this->config['naming_min_colored_coverage']) {
 			$neutral = $profile['neutral'][0] ?? null;
 			return [
 				'name' => $neutral ? $this->describeNeutral($neutral['value']) : 'Transparent',
 				'palette_type' => 'neutral',
 				'confidence' => $neutral ? min(1, $neutral['coverage'] / 0.5) : 0,
-				'family_count' => 0,
-				'entropy' => 0,
 			];
 		}
 
-		$families = array_values($profile['families']);
-		usort($families, function ($a, $b) {
-			return $b['coverage'] <=> $a['coverage'];
-		});
+		// Already gated to families holding a material share, largest first.
+		$families = $profile['families'];
 		$familyCount = count($families);
 		$dominantShare = $families[0]['coverage'] / max(0.0001, $profile['colored_coverage']);
 		$rainbow = (
@@ -46,8 +55,6 @@ class ColorClassifier
 				'name' => 'Rainbow',
 				'palette_type' => 'rainbow',
 				'confidence' => min(1, ($profile['entropy'] + min(1, $familyCount / 6)) / 2),
-				'family_count' => $familyCount,
-				'entropy' => $profile['entropy'],
 			];
 		}
 
@@ -57,8 +64,6 @@ class ColorClassifier
 				'name' => $this->describeColor($average['hue'], $average['saturation'], $average['value']),
 				'palette_type' => 'gradient',
 				'confidence' => min(1, 1 - ($profile['entropy'] * 0.2)),
-				'family_count' => $familyCount,
-				'entropy' => $profile['entropy'],
 			];
 		}
 
@@ -79,8 +84,6 @@ class ColorClassifier
 				'name' => $this->joinNames($names),
 				'palette_type' => 'multicolor',
 				'confidence' => min(1, array_sum(array_column(array_slice($significantFamilies, 0, 2), 'coverage')) + $whiteCoverage),
-				'family_count' => $familyCount,
-				'entropy' => $profile['entropy'],
 			];
 		}
 
@@ -92,8 +95,6 @@ class ColorClassifier
 				'name' => count($names) <= 3 ? $this->joinNames($names) : 'Multicolor',
 				'palette_type' => 'multicolor',
 				'confidence' => min(1, $profile['entropy'] + 0.15),
-				'family_count' => $familyCount,
-				'entropy' => $profile['entropy'],
 			];
 		}
 
@@ -105,8 +106,6 @@ class ColorClassifier
 				]),
 				'palette_type' => 'two-tone',
 				'confidence' => min(1, $significantFamilies[0]['coverage'] + $significantFamilies[1]['coverage']),
-				'family_count' => $familyCount,
-				'entropy' => $profile['entropy'],
 			];
 		}
 
@@ -115,8 +114,6 @@ class ColorClassifier
 			'name' => $this->describeColor($dominant['hue'], $dominant['saturation'], $dominant['value']),
 			'palette_type' => 'single',
 			'confidence' => min(1, $dominantShare),
-			'family_count' => $familyCount,
-			'entropy' => $profile['entropy'],
 		];
 	}
 
@@ -136,7 +133,7 @@ class ColorClassifier
 				'saturation' => $saturation,
 				'value' => $value,
 			]);
-			if ($saturation < $this->config['naming_min_saturation']) {
+			if ($saturation < $this->config['naming_min_saturation'] || $value < $this->config['naming_min_value']) {
 				$neutral[] = $entry;
 				if ($value >= 88) {
 					$whiteCoverage += $cluster['coverage'];
@@ -150,10 +147,18 @@ class ColorClassifier
 			}
 			$families[$entry['family']]['coverage'] += $cluster['coverage'];
 		}
-		usort($colored, function ($a, $b) {
+		usort($neutral, function ($a, $b) {
 			return $b['coverage'] <=> $a['coverage'];
 		});
-		usort($neutral, function ($a, $b) {
+
+		$families = $this->qualifyFamilies($families, array_sum(array_column($colored, 'coverage')));
+		// Trace families are noise, so nothing downstream — naming averages,
+		// dominance, entropy — may see the clusters that formed them.
+		$kept = array_flip(array_column($families, 'family'));
+		$colored = array_values(array_filter($colored, function ($entry) use ($kept) {
+			return isset($kept[$entry['family']]);
+		}));
+		usort($colored, function ($a, $b) {
 			return $b['coverage'] <=> $a['coverage'];
 		});
 		$coloredCoverage = array_sum(array_column($colored, 'coverage'));
@@ -177,31 +182,39 @@ class ColorClassifier
 		];
 	}
 
+	// A family earns its place by holding a material share of the colored
+	// area, measured both absolutely and relative to that area. Below those
+	// floors it is dither speckle, an antialiased edge, or a gradient step.
+	// If nothing clears the bar the largest family still stands in, so a
+	// thinly-colored image is named rather than treated as colorless.
+	private function qualifyFamilies($families, $coloredCoverage)
+	{
+		$floor = max(
+			$this->config['family_min_coverage'],
+			$this->config['family_min_share'] * $coloredCoverage
+		);
+		$qualified = array_values(array_filter($families, function ($family) use ($floor) {
+			return $family['coverage'] >= $floor;
+		}));
+		if (!$qualified && $families) {
+			$qualified = [array_reduce($families, function ($best, $family) {
+				return $best === null || $family['coverage'] > $best['coverage'] ? $family : $best;
+			})];
+		}
+		usort($qualified, function ($a, $b) {
+			return $b['coverage'] <=> $a['coverage'];
+		});
+		return $qualified;
+	}
+
 	private function hueFamily($hue)
 	{
-		if ($hue < 15 || $hue >= 345) return 'red';
-		if ($hue < 45) return 'orange';
-		if ($hue < 75) return 'yellow';
-		if ($hue < 165) return 'green';
-		if ($hue < 200) return 'teal';
-		if ($hue < 260) return 'blue';
-		if ($hue < 315) return 'purple';
-		return 'pink';
+		return hueFamily($hue);
 	}
 
 	private function simpleFamilyName($family)
 	{
-		$names = [
-			'red' => 'Red',
-			'orange' => 'Orange',
-			'yellow' => 'Yellow',
-			'green' => 'Green',
-			'teal' => 'Teal',
-			'blue' => 'Blue',
-			'purple' => 'Purple',
-			'pink' => 'Pink',
-		];
-		return $names[$family] ?? ucfirst($family);
+		return simpleFamilyName($family);
 	}
 
 	private function describeColor($hue, $saturation, $value)

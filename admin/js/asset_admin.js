@@ -10,14 +10,11 @@ class AssetEditor {
         // Config object defines asset-specific behavior
         this.config = {
             enableSorting: false,
-            showRecentSection: null,
+            showRecentSection: true,
             tagModalId: 'tagModal',
             ...config
         };
-        if (this.config.showRecentSection === null) {
-            this.config.showRecentSection = !this.config.enableSorting;
-        }
-        
+
         // Data arrays
         this.assets = [];
         this.categories = [];
@@ -86,11 +83,14 @@ class AssetEditor {
 		const renderItem = (asset, recent = false) => {
 			const active = this.currentAsset && this.currentAsset.id == asset.id ? 'active' : '';
 			const draggable = this.config.enableSorting && !recent ? 'draggable="true"' : '';
+			const stamp = recent ? this.assetTouchedAt(asset) : null;
 			return `<div class="swatch-item ${active}" data-id="${asset.id}" ${recent ? 'data-recent="true"' : ''} ${draggable}
 				tabindex="0" onclick="app.selectAsset(${asset.id})">
 				${this.config.enableSorting && !recent ? '<span class="drag-handle">⋮⋮</span>' : ''}
 				${this.renderAssetThumbnail(asset)}
 				<span class="swatch-name">${this.escapeHtml(asset.name)}</span>
+				${stamp ? `<time class="swatch-meta" datetime="${this.escapeHtml(new Date(stamp).toISOString())}"
+					title="${this.escapeHtml(new Date(stamp).toLocaleString())}">${this.escapeHtml(this.relativeTime(stamp))}</time>` : ''}
 			</div>`;
 		};
 		let html = '';
@@ -102,10 +102,17 @@ class AssetEditor {
 			</details>`;
 		}
 		if (this.config.showRecentSection) {
-			const recent = assets.filter(asset => Number(asset.is_active)).sort((a, b) => b.id - a.id).slice(0, 10);
+			// One list for both "I just added this" and "I just edited this" —
+			// an addition is the most recent touch a record can have, so a
+			// last-touched ordering surfaces it without a second section.
+			const recent = assets.filter(asset => Number(asset.is_active))
+				.sort((a, b) => this.assetTouchedAt(b) - this.assetTouchedAt(a))
+				.slice(0, CONFIG.admin_recent_limit);
 			if (recent.length) {
-				html += `<details class="category-group" open>
-					<summary class="category-label">Recently Added (${recent.length})</summary>
+				const key = `${this.config.assetType}:__recent`;
+				const isOpen = localStorage.getItem(`adminCategory:${key}`) !== 'closed';
+				html += `<details class="category-group recent-group" data-state-key="${this.escapeHtml(key)}" ${isOpen ? 'open' : ''}>
+					<summary class="category-label">Recent <span class="count-badge">${recent.length}</span></summary>
 					<div class="category-items">${recent.map(asset => renderItem(asset, true)).join('')}</div>
 				</details>`;
 			}
@@ -128,6 +135,26 @@ class AssetEditor {
 			details.addEventListener('toggle', () => localStorage.setItem(`adminCategory:${details.dataset.stateKey}`, details.open ? 'open' : 'closed'));
 		});
 		if (this.scrollPosition !== undefined) container.scrollTop = this.scrollPosition;
+	}
+
+	// Last human touch. updated_at is only written by edits and approvals —
+	// analysis writes analyzed_at — so a Bulk Analyze does not reshuffle this.
+	// Rows predating the column fall back to when they were added.
+	assetTouchedAt(asset) {
+		const stamp = asset.updated_at || asset.created_at;
+		const parsed = stamp ? Date.parse(String(stamp).replace(' ', 'T')) : NaN;
+		return Number.isNaN(parsed) ? 0 : parsed;
+	}
+
+	// Coarse on purpose: the list is ordered, so the label only has to say
+	// "how long ago" well enough to spot today's work.
+	relativeTime(timestamp) {
+		const minutes = Math.round((Date.now() - timestamp) / 60000);
+		if (minutes < 1) return 'now';
+		if (minutes < 60) return `${minutes}m`;
+		if (minutes < 60 * 24) return `${Math.round(minutes / 60)}h`;
+		if (minutes < 60 * 24 * 7) return `${Math.round(minutes / (60 * 24))}d`;
+		return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 	}
 
     // Override in child class for custom thumbnail rendering
@@ -281,10 +308,33 @@ class AssetEditor {
         if (field.input === 'analysisMeta') {
             return `<div id="analysisProvenance" class="stored-analysis"></div>`;
         }
+        // Auto reports what the classifier makes of the palette as it stands,
+        // so it moves when colors are edited; picking a type pins it.
+        if (field.input === 'paletteType') {
+            const auto = this.currentAsset.palette_type_auto;
+            const options = [`<option value="">${auto ? `Auto — ${this.paletteTypeLabel(auto)}` : 'Auto'}</option>`]
+                .concat((CONFIG.palette_types || []).map(type =>
+                    `<option value="${type}" ${type === value ? 'selected' : ''}>${this.escapeHtml(this.paletteTypeLabel(type))}</option>`));
+            return this.propertyRow(field.label, `<select id="${field.key}">${options.join('')}</select>`, { htmlFor: field.key });
+        }
+        // Renaming moves the file on disk, so it applies on its own button
+        // rather than with the form's Save — the URL row below then reflects
+        // where the file actually is.
+        if (field.input === 'rename') {
+            const url = String(this.currentAsset.url || '');
+            const base = url.slice(url.lastIndexOf('/') + 1).replace(/\.[^.]+$/, '');
+            const extension = url.slice(url.lastIndexOf('.'));
+            return this.propertyRow(field.label, `<div class="rename-control">
+                <input type="text" id="renameBase" value="${this.escapeHtml(base)}" spellcheck="false" aria-label="File name without extension">
+                <span class="rename-extension">${this.escapeHtml(extension)}</span>
+                <button class="btn btn-quiet btn-sm" type="button" onclick="app.fillRenameFromName()">Use display name</button>
+                <button class="btn btn-secondary btn-sm" type="button" onclick="app.renameAssetFile()">Rename</button>
+            </div>`, { htmlFor: 'renameBase', tall: true });
+        }
         if (field.input === 'colors') {
             const colors = value ? String(value).split(',') : [];
             const weights = this.currentAsset.color_weights ? String(this.currentAsset.color_weights).split(',') : [];
-            return this.propertyRow(field.label, `<div class="color-inputs" id="colorInputs">${colors.map((color, index) => this.renderColorField(color, index, weights[index])).join('')}</div>
+            return this.propertyRow(field.label, `<div class="color-inputs" id="colorInputs">${colors.map((color, index) => this.renderColorField(color, weights[index])).join('')}</div>
                 <button class="btn btn-quiet btn-sm" type="button" onclick="app.addColorInput()">+ Add color</button>`, { tall: true });
         }
         const inputType = field.input === 'number' ? 'number' : 'text';
@@ -296,6 +346,12 @@ class AssetEditor {
             return row + this.propertyRow(field.label, `<img src="${CONFIG.image_base_path}${this.escapeHtml(value)}" class="preview-image" alt="Preview">`, { continued: true });
         }
         return row;
+    }
+
+    // Palette types are stored as slugs; older records may hold a slug the
+    // current vocabulary no longer offers, so this formats whatever it gets.
+    paletteTypeLabel(type) {
+        return String(type).split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     }
 
     // The one row primitive every admin form composes from.
@@ -314,34 +370,35 @@ class AssetEditor {
 
     // The analyzed weight rides on the row so editing the list preserves each
     // color's measured coverage instead of flattening everything to uniform.
-    renderColorField(color, index, weight = null) {
+    // Handlers take the element, never a row index: an index baked in at
+    // render time points at the wrong row as soon as one is removed.
+    renderColorField(color, weight = null) {
         const hasWeight = weight != null && weight !== '';
         return `<div class="color-input-wrapper" data-weight="${hasWeight ? Number(weight) : ''}">
-            <input type="color" value="${this.escapeHtml(color)}" onchange="app.syncColorInputs(${index})" aria-label="Color ${index + 1}">
-            <input type="text" value="${this.escapeHtml(color)}" onchange="app.syncColorInputs(${index})" aria-label="Color ${index + 1} hex">
+            <input type="color" value="${this.escapeHtml(color)}" onchange="app.syncColorInputs(this)" aria-label="Color">
+            <input type="text" value="${this.escapeHtml(color)}" onchange="app.syncColorInputs(this)" aria-label="Color hex">
             <span class="color-coverage">${hasWeight ? `${Math.round(Number(weight) * 100)}%` : ''}</span>
-            <button class="color-remove-btn" type="button" onclick="app.removeColorInput(${index})" aria-label="Remove color ${index + 1}">×</button>
+            <button class="color-remove-btn" type="button" onclick="app.removeColorInput(this)" aria-label="Remove color">×</button>
         </div>`;
     }
 
-    syncColorInputs(index) {
-        const row = document.querySelectorAll('.color-input-wrapper')[index];
+    syncColorInputs(source) {
+        const row = source.closest('.color-input-wrapper');
         const picker = row?.querySelector('input[type="color"]');
         const text = row?.querySelector('input[type="text"]');
         if (!picker || !text) return;
-        if (document.activeElement === picker) text.value = picker.value;
+        if (source === picker) text.value = picker.value;
         else picker.value = text.value;
         this.setDirty(true);
     }
 
     addColorInput() {
-        const container = document.getElementById('colorInputs');
-        container.insertAdjacentHTML('beforeend', this.renderColorField('#000000', container.children.length));
+        document.getElementById('colorInputs')?.insertAdjacentHTML('beforeend', this.renderColorField('#000000'));
         this.setDirty(true);
     }
 
-    removeColorInput(index) {
-        document.getElementById('colorInputs')?.children[index]?.remove();
+    removeColorInput(button) {
+        button.closest('.color-input-wrapper')?.remove();
         this.setDirty(true);
     }
 
@@ -387,11 +444,14 @@ class AssetEditor {
     getAssetDataFromForm() {
         const data = { id: this.currentAsset.id };
         for (const field of this.constructor.FIELDS || []) {
-            if (!field.input || field.input === 'analysis' || field.input === 'analysisMeta') continue; // observed, never posted back
+            // Observed values and the rename control are never posted back —
+            // the first are derived, the second applies through its own action.
+            if (!field.input || ['analysis', 'analysisMeta', 'rename'].includes(field.input)) continue;
             const input = document.getElementById(field.key);
             const key = field.dbKey || field.key;
             if (!input && field.input !== 'colors') continue;
             if (field.input === 'checkbox') data[key] = input.checked ? 1 : 0;
+            else if (field.input === 'paletteType') data[key] = input.value;
             else if (field.input === 'number' || field.input === 'select') data[key] = input.value === '' ? null : Number(input.value);
             else if (field.input === 'colors') {
                 // Each row carries its own analyzed weight; only rows added by
@@ -414,6 +474,59 @@ class AssetEditor {
         data.tags = this.currentAsset.tags.map(tag => Number(tag.id));
         return data;
     }
+
+	// Mirrors AssetNaming::filename in PHP: spaces become `_` (the segment
+	// separator), a hyphen inside a segment survives. The server sanitizes
+	// again on the way in — this is only so the field shows what you'll get.
+	filenameFromDisplayName(name) {
+		return String(name).trim().toLowerCase()
+			.replace(/\s+/g, '_')
+			.replace(/[^a-z0-9_-]+/g, '')
+			.replace(/-{2,}/g, '-')
+			.replace(/_{2,}/g, '_')
+			.replace(/^[-_]+|[-_]+$/g, '');
+	}
+
+	fillRenameFromName() {
+		const input = document.getElementById('renameBase');
+		const source = document.getElementById('name')?.value ?? this.currentAsset?.name ?? '';
+		const derived = this.filenameFromDisplayName(source);
+		if (!input || !derived) return;
+		input.value = derived;
+		input.focus();
+	}
+
+	async renameAssetFile() {
+		const input = document.getElementById('renameBase');
+		if (!this.currentAsset || !input) return;
+		const base = input.value.trim();
+		if (!base) {
+			this.showStatus('Enter a file name.', 'error');
+			return;
+		}
+		// The rename writes the record's url; unsaved form edits would be
+		// clobbered by the reload that follows, so they go first.
+		if (this.dirty && !confirm('Renaming reloads this record and discards unsaved changes. Continue?')) return;
+
+		const response = await adminFetch(`includes/api.php?action=rename_file&type=${this.config.assetType}`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id: this.currentAsset.id, filename: base })
+		});
+		const result = await response.json();
+		if (!result.success) {
+			this.showStatus('Error: ' + this.errorMessage(result), 'error');
+			return;
+		}
+		if (!result.renamed) {
+			this.showStatus('File name unchanged.');
+			return;
+		}
+		this.setDirty(false);
+		await this.loadAssets();
+		await this.selectAsset(this.currentAsset.id, { pushHistory: false });
+		this.showStaleStatus(`Renamed to ${result.filename}.`);
+	}
 
     async deleteAsset() {
         if (!this.currentAsset) return;
@@ -1031,9 +1144,13 @@ class AssetEditor {
 		const swatches = withSwatches
 			? `<div class="property-row property-row-tall"><span class="property-label">Observed colors</span><div class="property-value">${this.renderSwatchChips(palette.colors || [])}</div></div>`
 			: '';
-		return `<div class="property-row analysis-palette"><span class="property-label">Palette type</span><div class="property-value"><span class="badge badge-info">${this.escapeHtml(palette.type)}</span></div></div>
-			${palette.explanation ? `<div class="property-row property-row-continued"><span class="property-label">Palette type</span><div class="property-value"><small class="property-hint">${this.escapeHtml(palette.explanation)} Confidence ${Math.round(Number(palette.confidence || 0) * 100)}%.</small></div></div>` : ''}
-			${swatches}`;
+		// "Observed", not "Palette type": the published type is the editable
+		// field in the Color section, and this is what the analyzer measured.
+		const observed = palette.type
+			? `<div class="property-row analysis-palette"><span class="property-label">Observed type</span><div class="property-value"><span class="badge badge-info">${this.escapeHtml(this.paletteTypeLabel(palette.type))}</span></div></div>
+				${palette.explanation ? `<div class="property-row property-row-continued"><span class="property-label">Observed type</span><div class="property-value"><small class="property-hint">${this.escapeHtml(palette.explanation)} Confidence ${Math.round(Number(palette.confidence || 0) * 100)}%.</small></div></div>` : ''}`
+			: '';
+		return `${observed}${swatches}`;
 	}
 
 	// Every analyze proposal — plain values and color lists alike — uses this
@@ -1132,7 +1249,7 @@ class AssetEditor {
 			if (existing.includes(hex.toUpperCase())) continue;
 			existing.push(hex.toUpperCase());
 			const weight = input.dataset.colorWeight === '' ? null : Number(input.dataset.colorWeight);
-			container.insertAdjacentHTML('beforeend', this.renderColorField(hex, container.children.length, weight));
+			container.insertAdjacentHTML('beforeend', this.renderColorField(hex, weight));
 		}
 	}
 

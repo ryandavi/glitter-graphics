@@ -22,7 +22,7 @@ function renderManifestAdminPage($library, $title, $itemLabel)
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title><?php echo htmlspecialchars($title); ?> Admin</title>
 	<script>(function(){try{var s=JSON.parse(localStorage.getItem('glitterEditorSettings')||'{}');document.documentElement.dataset.theme=s.interfaceTheme||'dark';}catch(e){document.documentElement.dataset.theme='dark';}}());</script>
-	<link rel="stylesheet" href="css/swatch_admin.css?v=22">
+	<link rel="stylesheet" href="css/swatch_admin.css?v=24">
 </head>
 <body class="admin-tool manifest-admin">
 	<div class="container">
@@ -106,7 +106,7 @@ function renderManifestAdminPage($library, $title, $itemLabel)
 		const CONFIG = <?php echo json_encode($config); ?>;
 		const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
 	</script>
-	<script src="js/admin_api.js?v=5"></script>
+	<script src="js/admin_api.js?v=6"></script>
 	<script src="js/manifest_admin.js?v=6"></script>
 </body>
 </html>

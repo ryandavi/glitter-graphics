@@ -1,9 +1,38 @@
 <?php
 
 require_once(__DIR__ . '/colorUtils.php');
+require_once(__DIR__ . '/colorClassifier.php');
 
 class AssetAnalysisResult
 {
+	// A hand-edited palette goes through the same rules as the analyzer's
+	// clusters, so removing a color changes the type the way the editor
+	// expects. Weights stand in for cluster coverage; sparkle is a pixel-level
+	// observation the palette no longer carries.
+	public static function typeFromPalette($palette, $config)
+	{
+		$clusters = [];
+		foreach ($palette as $color) {
+			$rgb = hexToRgb(is_array($color) ? $color['hex'] : $color);
+			if (!$rgb) {
+				continue;
+			}
+			$clusters[] = [
+				'rgb' => $rgb,
+				'coverage' => is_array($color) ? (float)($color['weight'] ?? 0) : 0.0,
+				'sparkle' => false,
+			];
+		}
+		if (!$clusters) {
+			return null;
+		}
+		usort($clusters, function ($a, $b) {
+			return $b['coverage'] <=> $a['coverage'];
+		});
+
+		return (new ColorClassifier($config))->classify($clusters)['palette_type'];
+	}
+
 	public static function fromAnalyzer($analysis, $filePath, $config)
 	{
 		$colors = self::csv((string)($analysis['color_codes'] ?? ''));

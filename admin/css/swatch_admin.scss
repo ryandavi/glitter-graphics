@@ -552,7 +552,7 @@ body {
 
 .issue-row {
 	display: grid;
-	grid-template-columns: 64px minmax(0, 1fr) auto;
+	grid-template-columns: 20px 64px minmax(0, 1fr) auto;
 	align-items: center;
 	gap: var(--spacing-md);
 	min-height: 80px;
@@ -561,6 +561,36 @@ body {
 
 	&:last-child {
 		border-bottom: 0;
+	}
+}
+
+// The cell is reserved on every row, including issues with no batch action,
+// so previews and text stay in one column down the whole list.
+.issue-select {
+	display: grid;
+	place-items: center;
+	min-width: 0;
+}
+
+.heading-with-select,
+.section-heading-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+}
+
+.bulk-count {
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+	font-variant-numeric: tabular-nums;
+}
+
+.bulk-actions {
+	display: flex;
+	gap: var(--spacing-xs);
+
+	&:not(:empty) {
+		margin-right: var(--spacing-xs);
 	}
 }
 
@@ -819,6 +849,30 @@ body {
 	font-size: var(--font-size-sm);
 }
 
+// The rename row lives in a tall property row, so it lays itself out: the
+// name field takes the slack and the extension rides next to it as a label,
+// making it obvious the extension is not editable.
+.rename-control {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--spacing-xs);
+	width: 100%;
+
+	> input {
+		flex: 1 1 200px;
+		min-width: 0;
+		font-family: var(--font-mono);
+	}
+}
+
+.rename-extension {
+	flex: 0 0 auto;
+	color: var(--color-text-tertiary);
+	font-family: var(--font-mono);
+	font-size: var(--font-size-sm);
+}
+
 // Boolean settings render as a switch, never a bare checkbox — list
 // selection (tag rows, analyze proposals) keeps the plain checkbox.
 // Selector carries [type] so it outranks the base input[type=checkbox] rule.
@@ -1065,6 +1119,21 @@ input[type="checkbox"].field-switch {
     text-overflow: ellipsis;
     font-weight: var(--font-weight-medium);
     font-size: var(--font-size-base);
+}
+
+// Recency label on Recent rows. Fixed-width and tabular so the column of
+// stamps stays straight and never pushes the name around.
+.swatch-meta {
+	flex: 0 0 auto;
+	min-width: 3ch;
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.swatch-item.active .swatch-meta {
+	color: var(--color-text-on-accent);
 }
 
 .drag-handle {
@@ -1881,12 +1950,32 @@ input[type="checkbox"] {
 
 .category-color-dot,
 .tag-color-dot {
-	width: 16px;
-	height: 16px;
 	flex: 0 0 auto;
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-sm);
 	background: var(--category-color, var(--tag-color));
+}
+
+.category-color-dot {
+	display: grid;
+	width: 40px;
+	height: 40px;
+	padding: 3px;
+	overflow: hidden;
+	border-radius: var(--radius-md);
+	place-items: center;
+
+	img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+	}
+}
+
+.tag-color-dot {
+	width: 16px;
+	height: 16px;
 }
 
 .row-muted {
@@ -2302,12 +2391,21 @@ input[type="checkbox"] {
 		grid-template-columns: repeat(2, 1fr);
 	}
 
-	.issue-row,
+	.issue-row {
+		grid-template-columns: 20px 56px minmax(0, 1fr);
+	}
+
 	.ingest-item {
 		grid-template-columns: 56px minmax(0, 1fr);
 	}
 
-	.issue-actions,
+	// The select column stays a gutter on narrow screens, so the wrapped
+	// action row starts where the preview does rather than under the checkbox.
+	.issue-actions {
+		grid-column: 2 / -1;
+		justify-content: flex-start;
+	}
+
 	.ingest-actions {
 		grid-column: 2;
 		justify-content: flex-start;

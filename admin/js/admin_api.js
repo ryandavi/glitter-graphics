@@ -5,6 +5,8 @@ window.AdminAPI = {
         'delete',
         'add',
         'reorder',
+        'rename_file',
+        'activate',
         'analyze',
         'analyze_all',
         'save_export',

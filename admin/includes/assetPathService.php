@@ -28,10 +28,16 @@ class AssetPathService
 		return $slug;
 	}
 
+	// Library filenames separate descriptor segments with `_` and words inside
+	// one segment with `-` (bear_blue-heart_glitter), so both separators survive
+	// sanitizing. Anything else collapses to `-`.
 	public function sanitizeFilename($filename, $fallback = 'asset')
 	{
 		$name = strtolower(pathinfo((string)$filename, PATHINFO_FILENAME));
-		$name = trim(preg_replace('/[^a-z0-9]+/', '-', $name), '-');
+		$name = preg_replace('/[^a-z0-9_-]+/', '-', $name);
+		$name = preg_replace('/-{2,}/', '-', $name);
+		$name = preg_replace('/_{2,}/', '_', $name);
+		$name = trim($name, '-_');
 		return $name ?: $fallback;
 	}
 

@@ -1,6 +1,7 @@
 <?php
 
 require_once(__DIR__ . '/assetPathService.php');
+require_once(__DIR__ . '/assetNaming.php');
 
 class AssetIngestService
 {
@@ -34,7 +35,9 @@ class AssetIngestService
 		if (!move_uploaded_file($file['tmp_name'], $destination)) {
 			throw new RuntimeException('Could not store incoming file');
 		}
-		$suggestedName = ucwords(str_replace('-', ' ', $base));
+		// Named from what the uploader called the file, not from the slug, so
+		// the separators and casing they chose still carry meaning.
+		$suggestedName = AssetNaming::displayName($file['name'], $this->config, $base);
 		$stmt = $this->db->prepare(
 			'INSERT INTO asset_ingest
 			 (batch_id, asset_type, incoming_filename, original_filename, file_hash, status, suggested_name, created_at, updated_at)
