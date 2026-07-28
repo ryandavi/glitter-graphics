@@ -432,7 +432,7 @@
   --color-accent-visited: #551a8b;
   /* A literal repeating image tile, like the background picker on a
      personal homepage: yellow star plus cyan, white, and pink pixels. */
-  --color-bg-workspace: #000033 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cpath fill='%23ffff00' d='M12 5l1.4 4.2h4.4l-3.6 2.6 1.4 4.2-3.6-2.6L8.4 16l1.4-4.2-3.6-2.6h4.4z'/%3E%3Ccircle cx='44' cy='18' r='1.5' fill='%2300ffff'/%3E%3Ccircle cx='31' cy='47' r='1' fill='%23ffffff'/%3E%3Ccircle cx='58' cy='54' r='1.2' fill='%23ff66ff'/%3E%3C/svg%3E") repeat;
+  --color-bg-workspace: url("../images/glitter/etc/etc_space_stars.gif");
   --color-shadow: rgb(35 0 70 / 13%);
   --color-shadow-soft: rgb(35 0 70 / 19%);
   --color-shadow-strong: rgb(35 0 70 / 29%);
@@ -1239,6 +1239,9 @@ textarea {
   padding-left: 2rem;
   box-sizing: border-box;
   font-size: var(--font-size-base);
+}
+.search-toggle-row > .search-input-wrapper > input::-webkit-search-decoration, .search-toggle-row > .search-input-wrapper > input::-webkit-search-results-button, .search-toggle-row > .search-input-wrapper > input::-webkit-search-results-decoration {
+  display: none;
 }
 .search-toggle-row > .btn-icon {
   flex: 0 0 var(--search-control-height);
@@ -4073,7 +4076,7 @@ body.mask-editing .sticker-element {
   align-items: center;
   -moz-column-gap: var(--spacing-sm);
        column-gap: var(--spacing-sm);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
 .helpful-message .helpful-message-icon {
@@ -4091,7 +4094,7 @@ body.mask-editing .sticker-element {
   flex-direction: column;
   gap: var(--spacing-xs);
   min-width: 0;
-  padding: var(--spacing-md) var(--spacing-md) var(--spacing-md) calc(var(--spacing-md) + var(--icon-size-xs) + var(--spacing-sm));
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) calc(var(--spacing-sm) + var(--icon-size-xs) + var(--spacing-sm));
 }
 .helpful-message .helpful-message-tool {
   display: flex;
@@ -4604,7 +4607,6 @@ body.mask-editing .sticker-element {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: var(--spacing-2xs);
   width: 66px;
   height: 66px;
   flex-shrink: 0;
@@ -4618,7 +4620,6 @@ body.mask-editing .sticker-element {
   background: var(--color-bg-tertiary);
   border: none;
   outline: 1px solid var(--color-border);
-  border-radius: var(--radius-xs);
   color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 11px;
@@ -4731,6 +4732,7 @@ body.mask-editing .sticker-element {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
+  border: 1px solid var(--color-border);
 }
 
 .segmented-option {

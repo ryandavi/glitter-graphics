@@ -64,10 +64,10 @@
         "count": 13
     },
     {
-        "id": "Frame",
+        "id": "frame",
         "name": "Frame",
         "icon": "images/stickers/frame/rose-heart_frame_red.gif",
-        "color": "#8D6E63",
+        "color": "#8d6e63",
         "description": "Stickers in the frame category",
         "count": 11
     },
@@ -82,7 +82,7 @@
     {
         "id": "ryandavi",
         "name": "ryandavi",
-        "icon": "",
+        "icon": "images/stickers/ryandavi/ryandavi_wow.png",
         "color": "#1100ff",
         "description": "",
         "count": 11
