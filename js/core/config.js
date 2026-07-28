@@ -345,6 +345,16 @@ const CONFIG = {
 		// Canvas edge coverage; brush Softness remains an independent feather.
 		crispMaskEdges: true,
 		maskAlphaThreshold: 128,
+		textureCoordinates: {
+			defaultAnchor: 'artwork',
+			defaultOffsetX: 0,
+			defaultOffsetY: 0,
+			scalePrecision: 2
+		},
+		transformBehavior: {
+			scaleEffects: true,
+			scaleTextures: true
+		},
 		gradient: {
 			type: 'linear',
 			angle: 180,
@@ -459,6 +469,8 @@ const CONFIG = {
 			maskBrushSpacing: { label: 'Spacing', unit: '%', min: 1, max: 200, value: 25 },
 			maskBrushSmoothing: { label: 'Smoothing', unit: '%', min: 0, max: 100, value: 0 },
 			textureScale: { label: 'Texture Scale', unit: '%', min: 25, max: 300, value: 100 },
+			textureOffsetX: { label: 'Offset X', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
+			textureOffsetY: { label: 'Offset Y', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
 			slotOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },
 			hue: { label: 'Hue', unit: '°', min: -180, max: 180, value: 0 },
 			saturation: { label: 'Saturation', unit: '%', min: 0, max: 200, value: 100 },
@@ -1053,6 +1065,7 @@ const PANEL_SCHEMAS = {
 		groups: [
 			{ title: 'Appearance', items: [
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background',
+					texturePosition: true,
 					modes: ['image', 'none', 'glitter', 'solid'], activeMode: 'image', color: '#ffffff',
 					modeLabels: { none: 'Transparent' },
 					hidePrimaryModes: ['image'],
@@ -1175,6 +1188,7 @@ const PANEL_SCHEMAS = {
 		groups: [
 			{ title: 'Appearance', items: [
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
+					texturePosition: true,
 					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
 					chipTitle: 'Choose fill glitter', assetIdPrefix: 'glitterAsset',
 					assetIds: {
@@ -1248,7 +1262,8 @@ const PANEL_SCHEMAS = {
 		],
 		effects: [
 			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'stickerShadow', title: 'Shadow',
-				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'solid',
+				texturePosition: true,
+				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
 				pre: [{ kind: 'twoColumn', items: [
 					{ kind: 'slider', id: 'stickerShadowOffsetX', slider: 'shadowOffsetX' },
@@ -1279,6 +1294,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', adoptTransformOpacity: true, items: [
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill',
+					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'glitter', color: '#000000',
 					chipTitle: 'Choose fill glitter',
 					primaryIds: { scale: 'textTextureScale', scaleRow: 'textTextureScaleRow', opacity: 'textTextureOpacity' }
@@ -1288,7 +1304,8 @@ const PANEL_SCHEMAS = {
 		],
 		effects: [
 			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Border',
-				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'solid',
+				texturePosition: true,
+				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose border source',
 				primaryIds: { scale: 'textBorderScale', scaleRow: 'textBorderScaleRow', opacity: 'textBorderOpacity' },
 				pre: [{ kind: 'slider', id: 'textBorderWidth', slider: 'textBorderWidth' }],
@@ -1309,7 +1326,8 @@ const PANEL_SCHEMAS = {
 				] }]
 			},
 			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'textShadow', title: 'Shadow',
-				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'solid',
+				texturePosition: true,
+				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose shadow source',
 				primaryIds: { scale: 'textShadowScale', scaleRow: 'textShadowScaleRow', opacity: 'textShadowOpacity' },
 				pre: [{ kind: 'twoColumn', items: [
@@ -1341,6 +1359,7 @@ const PANEL_SCHEMAS = {
 			// the pre-schema panel order.
 			{ title: 'Appearance', adoptTransformOpacity: true, items: [
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill',
+					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'solid',
 					color: '#ff66cc', chipTitle: 'Choose fill glitter' }
 			] },
@@ -1348,8 +1367,9 @@ const PANEL_SCHEMAS = {
 		],
 		effects: [
 			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Border',
+				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
-				modes: ['glitter', 'solid'], activeMode: 'solid',
+				modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
 				pre: [
 					{ kind: 'slider', id: 'shapeBorderWidth', slider: 'borderWidth' },
@@ -1378,8 +1398,9 @@ const PANEL_SCHEMAS = {
 				]
 			},
 			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'shapeShadow', title: 'Shadow',
+				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
-				modes: ['glitter', 'solid'], activeMode: 'solid',
+				modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
 				pre: [
 					{ kind: 'twoColumn', items: [

@@ -374,6 +374,8 @@ class GlitterEditor {
 			showWelcomeOnStartup: this.showWelcomeOnStartup,
 			confirmDestructiveActions: this.confirmDestructiveActions,
 			antialiasEdges: this.antialiasEdges,
+			scaleEffectsOnTransform: this.scaleEffectsOnTransform,
+			scaleTexturesOnTransform: this.scaleTexturesOnTransform,
 			interfaceTheme: this.interfaceTheme,
 			autoSelect: CONFIG.app.behavior.autoSelect
 		};
@@ -438,6 +440,8 @@ initializeExportSettings() {
 	this.showWelcomeOnStartup = savedSettings?.showWelcomeOnStartup ?? !welcomeWasSuppressed;
 	this.confirmDestructiveActions = savedSettings?.confirmDestructiveActions ?? true;
 	this.antialiasEdges = savedSettings?.antialiasEdges ?? !CONFIG.rendering.crispMaskEdges;
+	this.scaleEffectsOnTransform = savedSettings?.scaleEffectsOnTransform ?? CONFIG.rendering.transformBehavior.scaleEffects;
+	this.scaleTexturesOnTransform = savedSettings?.scaleTexturesOnTransform ?? CONFIG.rendering.transformBehavior.scaleTextures;
 	CONFIG.rendering.crispMaskEdges = !this.antialiasEdges;
 	CONFIG.app.behavior.autoSelect = savedSettings?.autoSelect ?? CONFIG.app.behavior.autoSelect;
 	this.interfaceTheme = CONFIG.ui.themes.includes(savedSettings?.interfaceTheme) ? savedSettings.interfaceTheme : 'dark';
@@ -475,6 +479,8 @@ initializeExportSettings() {
 			showWelcomeOnStartup: { checked: this.showWelcomeOnStartup },
 			confirmDestructiveActions: { checked: this.confirmDestructiveActions },
 			antialiasMaskEdges: { checked: this.antialiasEdges },
+			scaleEffectsOnTransform: { checked: this.scaleEffectsOnTransform },
+			scaleTexturesOnTransform: { checked: this.scaleTexturesOnTransform },
 			interfaceTheme: { value: this.interfaceTheme }
 		};
 
@@ -609,6 +615,18 @@ initializeExportSettings() {
 			this.refreshMaskEdgeRendering();
 			this.saveSettingsToStorage();
 			this.updateStatus(this.antialiasEdges ? 'Antialiasing enabled for mask edges' : 'Crisp mask edges enabled');
+		});
+
+		const scaleEffectsInput = document.getElementById('scaleEffectsOnTransform');
+		scaleEffectsInput?.addEventListener('change', (e) => {
+			this.scaleEffectsOnTransform = e.target.checked;
+			this.saveSettingsToStorage();
+		});
+
+		const scaleTexturesInput = document.getElementById('scaleTexturesOnTransform');
+		scaleTexturesInput?.addEventListener('change', (e) => {
+			this.scaleTexturesOnTransform = e.target.checked;
+			this.saveSettingsToStorage();
 		});
 
 		const themeInput = document.getElementById('interfaceTheme');
@@ -821,6 +839,16 @@ async resetSettingsSection(section) {
 			localStorage.removeItem('glitterEditor_welcomeLastSeenRelease');
 			break;
 
+		case 'tools':
+			this.antialiasEdges = false;
+			this.scaleEffectsOnTransform = CONFIG.rendering.transformBehavior.scaleEffects;
+			this.scaleTexturesOnTransform = CONFIG.rendering.transformBehavior.scaleTextures;
+			CONFIG.rendering.crispMaskEdges = !this.antialiasEdges;
+			this.refreshMaskEdgeRendering();
+			this.maskEditor?.resetToolSettingsToDefaults();
+			this.applyDefaultPanelLayout();
+			break;
+
 		case 'export':
 			this.exportSettings.format = CONFIG.export.defaults.format;
 			this.exportSettings.mp4LengthMode = CONFIG.export.mp4.lengthMode;
@@ -892,6 +920,8 @@ async resetAllSettings() {
 	this.showWelcomeOnStartup = true;
 	this.confirmDestructiveActions = true;
 	this.antialiasEdges = false;
+	this.scaleEffectsOnTransform = CONFIG.rendering.transformBehavior.scaleEffects;
+	this.scaleTexturesOnTransform = CONFIG.rendering.transformBehavior.scaleTextures;
 	CONFIG.rendering.crispMaskEdges = true;
 	this.refreshMaskEdgeRendering();
 	this.interfaceTheme = 'dark';
@@ -941,6 +971,7 @@ async resetAllSettings() {
 	getSectionDisplayName(section) {
 		const names = {
 			'interface': 'Interface Settings',
+			'tools': 'Tools & Workspace Settings',
 			'export': 'Export Settings',
 			'encoding': 'Encoding Settings',
 			'framecontrol': 'Frame Control Settings'
@@ -1516,6 +1547,8 @@ async resetAllSettings() {
 
 		// Color adjust (WP4): populate the Advanced HSB sliders from this layer.
 		this.applyColorAdjustToSliders('glitter', s.colorAdjust);
+		layer.fill = { ...buildDefaultFill(), ...(layer.fill || {}) };
+		syncSlotTextureCoordinateControls('glitterFill', layer.fill);
 
 		if (layer.selectedGlitterId) {
 			const glitter = this.glitterManager.getItemById(layer.selectedGlitterId);
@@ -1743,7 +1776,11 @@ async resetAllSettings() {
 	// intentionally NOT persisted — it resets each session/relayout.
 	initializeAdvancedDisclosures() {
 		const initializeSubsections = (root = document) => {
-			root.querySelectorAll?.('.subsection-content-group > .subsection-title').forEach((title) => {
+			const cards = [];
+			if (root.matches?.('.subsection-content-group')) cards.push(root);
+			root.querySelectorAll?.('.subsection-content-group').forEach((card) => cards.push(card));
+			cards.forEach((card) => ensureSubsectionCardBody(card));
+			cards.map((card) => card.querySelector(':scope > .subsection-title')).filter(Boolean).forEach((title) => {
 				const subsection = title.parentElement;
 				if (!subsection || subsection.classList.contains('subsection-section-group')) return;
 				subsection.dataset.collapsibleSubsection = '';

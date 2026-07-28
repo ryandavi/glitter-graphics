@@ -51,6 +51,7 @@ class BaseBackgroundManager {
 			opacity: Number(layer.background.opacity ?? 100),
 			colorAdjust: normalizeColorAdjust(layer.background.colorAdjust)
 		});
+		normalizeSlotTextureCoordinates(layer.background);
 		const legacyPosterize = layer.background.posterize;
 		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings(
 			layer.background.pixelEffects || legacyPosterize,
@@ -147,6 +148,13 @@ class BaseBackgroundManager {
 		this.bindRange('Scale', 'scale');
 		this.bindRange('Opacity', 'opacity');
 		['Hue', 'Saturation', 'Brightness'].forEach((name) => this.bindColorAdjust(name));
+		bindSlotTextureCoordinateControls({
+			prefix: 'baseBackground',
+			getLayer: () => this.getActiveLayer(),
+			getData: (layer) => this.normalizeLayer(layer)?.background,
+			render: () => this.applyChange(false),
+			save: () => this.editor.saveState()
+		});
 		this.bindPixelEffects();
 	}
 
@@ -522,6 +530,7 @@ class BaseBackgroundManager {
 			if (value) value.innerHTML = formatUnit(layer.background[key], '%');
 		});
 		this.editor.applyColorAdjustToSliders('baseBackground', layer.background.colorAdjust);
+		syncSlotTextureCoordinateControls('baseBackground', layer.background);
 		const hasImage = this.hasBaseImage();
 		if (this.ui.imageName) this.ui.imageName.textContent = hasImage
 			? (this.editor.baseImageSource?.file?.name || 'Base Image')

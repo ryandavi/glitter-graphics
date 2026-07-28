@@ -16,7 +16,7 @@ function scaleDocumentLayerState(layer, scaleX, scaleY, uniformScale, options = 
 		return Math.max(minimum, Math.round(Number(value) * factor));
 	};
 	const scaleTexture = (value, factor = uniformScale) => Number.isFinite(Number(value))
-		? Math.max(1, Number(value) * factor)
+		? Math.max(1, roundSlotTextureScale(Number(value) * factor))
 		: value;
 	const scaleShadow = (shadow) => {
 		if (!shadow) return;

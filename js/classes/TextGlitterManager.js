@@ -421,6 +421,19 @@ class TextGlitterManager {
 		this._bindEffectColorAdjust('fill');
 		this._bindEffectColorAdjust('border');
 		this._bindEffectColorAdjust('shadow');
+		[
+			['textFill', 'fill'],
+			['textBorder', 'border'],
+			['textShadow', 'shadow']
+		].forEach(([prefix, slot]) => {
+			bindSlotTextureCoordinateControls({
+				prefix,
+				getLayer: () => this.getActiveTextLayer(),
+				getData: (layer) => this.ensureEffectData(layer, slot),
+				render: (layer) => this.renderLayer(layer),
+				save: () => this.editor.saveState()
+			});
+		});
 	}
 
 	// Wire a slot's three HSB sliders (WP4). Fill writes to layer.settings
@@ -475,15 +488,10 @@ class TextGlitterManager {
 
 	getPointAnchorSnapshot(layer) {
 		this.normalizeLayer(layer);
-		if (!layer?.textData || (layer.textData.boxMode || 'auto') !== 'auto') {
-			return null;
-		}
-
-		const frame = this.getTextFrame(layer);
-		if (!frame) return null;
+		if (!layer?.textData) return null;
 
 		return {
-			world: this.getPointAnchorWorldPosition(layer, frame)
+			world: this.getTextOriginWorldPosition(layer)
 		};
 	}
 
@@ -573,13 +581,40 @@ class TextGlitterManager {
 	}
 
 	applyPointAnchorSnapshot(layer, snapshot, measurement = null) {
-		if (!snapshot || !layer?.textData || (layer.textData.boxMode || 'auto') !== 'auto') {
-			return;
-		}
+		if (!snapshot || !layer?.textData) return;
+		this.setTextOriginWorldPosition(layer, snapshot.world, measurement);
+	}
 
-		const nextFrame = this.getTextFrame(layer, measurement);
-		if (!nextFrame) return;
-		this.setPointAnchorWorldPosition(layer, snapshot.world, nextFrame);
+	getTextOriginLocalPoint(layer, measurement = null) {
+		const entry = measurement || this.getMeasurementEntry(layer);
+		const align = layer.textData.align || 'left';
+		const x = entry.layoutOffsetX + (
+			align === 'center'
+				? entry.layoutWidth / 2
+				: align === 'right'
+					? entry.layoutWidth
+					: 0
+		);
+		return {
+			x: x - entry.width / 2,
+			y: entry.layoutOffsetY + entry.contentOffsetY + entry.ascent - entry.height / 2
+		};
+	}
+
+	getTextOriginWorldPosition(layer, measurement = null) {
+		return this.getWorldPointFromLocal(
+			getLayerTransform(layer),
+			this.getTextOriginLocalPoint(layer, measurement)
+		);
+	}
+
+	setTextOriginWorldPosition(layer, worldPoint, measurement = null) {
+		if (!worldPoint) return;
+		this.setWorldPointFromLocal(
+			getLayerTransform(layer),
+			this.getTextOriginLocalPoint(layer, measurement),
+			worldPoint
+		);
 	}
 
 	// Effects default to GLITTER using the per-effect default id so the slot
@@ -618,6 +653,9 @@ class TextGlitterManager {
 			layer.textData.transform = createDefaultTransform();
 		}
 		syncLayerTransformReference(layer, layer.textData.transform);
+		if (Number.isFinite(Number(layer.settings?.scale))) {
+			layer.settings.scale = roundSlotTextureScale(layer.settings.scale);
+		}
 		if (layer.textData.border === undefined) {
 			layer.textData.border = null;
 		}
@@ -630,9 +668,10 @@ class TextGlitterManager {
 		if (layer.textData.shadow) {
 			layer.textData.shadow = { ...this.getDefaultShadow(), ...layer.textData.shadow };
 		}
-		if (!layer.textData.fill) {
-			layer.textData.fill = this.getDefaultFill();
-		}
+		layer.textData.fill = { ...this.getDefaultFill(), ...(layer.textData.fill || {}) };
+		normalizeSlotTextureCoordinates(layer.textData.fill);
+		normalizeSlotTextureCoordinates(layer.textData.border);
+		normalizeSlotTextureCoordinates(layer.textData.shadow);
 		if (!layer.textData.boxMode) {
 			layer.textData.boxMode = CONFIG.tools.text.defaultBoxMode || 'auto';
 		}
@@ -1619,6 +1658,9 @@ class TextGlitterManager {
 		this._loadEffectColorAdjust('fill', layer.settings?.colorAdjust);
 		this._loadEffectColorAdjust('border', border?.colorAdjust);
 		this._loadEffectColorAdjust('shadow', shadow?.colorAdjust);
+		syncSlotTextureCoordinateControls('textFill', layer.textData.fill);
+		syncSlotTextureCoordinateControls('textBorder', border || borderDefaults);
+		syncSlotTextureCoordinateControls('textShadow', shadow || shadowDefaults);
 
 		this.updateFillSourceUI(layer);
 		this.updateEffectSourceUI(layer, 'border');
@@ -2047,24 +2089,16 @@ class TextGlitterManager {
 		}
 
 		const visibleLines = measuredLines.slice(0, visibleLineCount);
-		let contentLeft = Infinity;
-		let contentTop = Infinity;
-		let contentRight = -Infinity;
-		let contentBottom = -Infinity;
+		let textInkLeft = Infinity;
+		let textInkTop = Infinity;
+		let textInkRight = -Infinity;
+		let textInkBottom = -Infinity;
 		let hasInk = false;
 
 		if (boxMode === 'fixed') {
-			contentLeft = 0;
-			contentTop = 0;
-			contentRight = layoutWidth;
-			contentBottom = layoutHeight;
-			// The box rect IS the content — glyph ink is clipped to it, so ink never
-			// widens the canvas. Vertical align slides the ink block inside the box,
-			// measured from the visible lines' actual ink (not the box-height union,
-			// which would always clamp the offset to zero).
+			// Vertical alignment uses visible glyph ink. Overflow lines are omitted
+			// below, while glyph overhang and effects may extend past the area frame.
 			if (visibleLineCount > 0) {
-				let textInkTop = Infinity;
-				let textInkBottom = -Infinity;
 				visibleLines.forEach((line, index) => {
 					const baselineY = ascent + index * lineHeightPx;
 					textInkTop = Math.min(textInkTop, baselineY - line.ascent);
@@ -2076,38 +2110,43 @@ class TextGlitterManager {
 					textInkBottom - textInkTop
 				) - textInkTop;
 			}
-		} else {
-			visibleLines.forEach((line, index) => {
-				if (!line.text) return;
-				const offsetX = this.getAlignOffset(layer.textData.align, layoutWidth, line.width);
-				const baselineY = ascent + index * lineHeightPx;
-				hasInk = true;
-				contentLeft = Math.min(contentLeft, offsetX - line.inkLeft);
-				contentRight = Math.max(contentRight, offsetX + line.inkRight);
-				contentTop = Math.min(contentTop, baselineY - line.ascent);
-				contentBottom = Math.max(contentBottom, baselineY + line.descent);
-			});
-
-			if (!hasInk) {
-				contentLeft = 0;
-				contentTop = 0;
-				contentRight = 0;
-				contentBottom = 0;
-			}
 		}
 
-		const inkLeft = contentLeft - (borderWidth + Math.max(0, -shadowOffsetX));
-		const inkRight = contentRight + borderWidth + Math.max(0, shadowOffsetX);
-		const inkTop = contentTop - (borderWidth + Math.max(0, -shadowOffsetY));
-		const inkBottom = contentBottom + borderWidth + Math.max(0, shadowOffsetY);
+		visibleLines.forEach((line, index) => {
+			if (!line.text) return;
+			const offsetX = this.getAlignOffset(layer.textData.align, layoutWidth, line.width);
+			const baselineY = contentOffsetY + ascent + index * lineHeightPx;
+			hasInk = true;
+			textInkLeft = Math.min(textInkLeft, offsetX - line.inkLeft);
+			textInkRight = Math.max(textInkRight, offsetX + line.inkRight);
+			textInkTop = Math.min(textInkTop, baselineY - line.ascent);
+			textInkBottom = Math.max(textInkBottom, baselineY + line.descent);
+		});
 
-		const layoutX = padding - inkLeft;
-		const layoutY = padding - inkTop;
-		const canvasWidth = Math.max(1, Math.ceil(inkRight - inkLeft + padding * 2));
-		const canvasHeight = Math.max(1, Math.ceil(inkBottom - inkTop + padding * 2));
+		if (!hasInk) {
+			textInkLeft = 0;
+			textInkTop = 0;
+			textInkRight = 0;
+			textInkBottom = 0;
+		}
+
+		const artLeft = Math.min(textInkLeft - borderWidth, textInkLeft + shadowOffsetX);
+		const artRight = Math.max(textInkRight + borderWidth, textInkRight + shadowOffsetX);
+		const artTop = Math.min(textInkTop - borderWidth, textInkTop + shadowOffsetY);
+		const artBottom = Math.max(textInkBottom + borderWidth, textInkBottom + shadowOffsetY);
+		const frameLeft = boxMode === 'fixed' ? Math.min(0, artLeft) : artLeft;
+		const frameRight = boxMode === 'fixed' ? Math.max(layoutWidth, artRight) : artRight;
+		const frameTop = boxMode === 'fixed' ? Math.min(0, artTop) : artTop;
+		const frameBottom = boxMode === 'fixed' ? Math.max(layoutHeight, artBottom) : artBottom;
+
+		const layoutX = padding - frameLeft;
+		const layoutY = padding - frameTop;
+		const canvasWidth = Math.max(1, Math.ceil(frameRight - frameLeft + padding * 2));
+		const canvasHeight = Math.max(1, Math.ceil(frameBottom - frameTop + padding * 2));
 		const canvas = document.createElement('canvas');
 		canvas.width = canvasWidth;
 		canvas.height = canvasHeight;
+		canvas._textureOrigin = { x: layoutX, y: layoutY };
 
 		const maskCtx = canvas.getContext('2d', { willReadFrequently: true });
 		maskCtx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -2116,24 +2155,13 @@ class TextGlitterManager {
 		maskCtx.textBaseline = 'alphabetic';
 		maskCtx.textAlign = 'left';
 
-		if (boxMode === 'fixed') {
-			maskCtx.save();
-			maskCtx.beginPath();
-			maskCtx.rect(layoutX, layoutY, layoutWidth, layoutHeight);
-			maskCtx.clip();
-		}
-
-		measuredLines.forEach((line, index) => {
+		visibleLines.forEach((line, index) => {
 			this.drawLine(maskCtx, line.text, {
 				startX: layoutX + this.getAlignOffset(layer.textData.align, layoutWidth, line.width),
 				baselineY: layoutY + contentOffsetY + ascent + index * lineHeightPx,
 				letterSpacing
 			});
 		});
-
-		if (boxMode === 'fixed') {
-			maskCtx.restore();
-		}
 
 		if (shouldUseCrispMaskEdges()) {
 			// Hard pixel edges (editor aesthetic, MASK-FEATURE-PLAN decision 5).
@@ -2160,12 +2188,23 @@ class TextGlitterManager {
 			boxMode,
 			contentOffsetY,
 			hasOverflow,
-			// The user-facing frame: the text box in fixed mode, the visible art
-			// (ink + border/shadow) in point mode. Handles, selection outline, and
-			// hit-testing all use this instead of the padded canvas.
-			frameRect: boxMode === 'fixed'
+			textInkRect: {
+				x: layoutX + textInkLeft,
+				y: layoutY + textInkTop,
+				width: textInkRight - textInkLeft,
+				height: textInkBottom - textInkTop
+			},
+			boxRect: boxMode === 'fixed'
 				? { x: layoutX, y: layoutY, width: layoutWidth, height: layoutHeight }
-				: { x: layoutX + inkLeft, y: layoutY + inkTop, width: inkRight - inkLeft, height: inkBottom - inkTop },
+				: null,
+			// Selection and transform bounds describe every visible pixel. Area
+			// text keeps a separate boxRect for its reflow handles.
+			frameRect: {
+				x: layoutX + frameLeft,
+				y: layoutY + frameTop,
+				width: frameRight - frameLeft,
+				height: frameBottom - frameTop
+			},
 			paddingBox: {
 				top: Math.floor(layoutY),
 				right: Math.floor(canvasWidth - layoutX - layoutWidth),
@@ -2180,8 +2219,8 @@ class TextGlitterManager {
 		return entry;
 	}
 
-	// The user-facing frame in text-local units, centered relative to the mask
-	// canvas: the text box in fixed mode, the visible art bounds in point mode.
+	// The user-facing visible-art frame in text-local units, centered relative
+	// to the mask canvas. Fixed text keeps its layout box separately.
 	getTextFrame(layer, measurement = null) {
 		this.normalizeLayer(layer);
 		if (!layer?.textData) return null;
@@ -2203,7 +2242,15 @@ class TextGlitterManager {
 		if (!layer?.textData || (layer.textData.boxMode || 'auto') !== 'fixed') {
 			return null;
 		}
-		return this.getTextFrame(layer, measurement);
+		const entry = measurement || this.getMeasurementEntry(layer);
+		const rect = entry.boxRect;
+		if (!rect) return null;
+		return {
+			width: rect.width,
+			height: rect.height,
+			offsetX: rect.x + rect.width / 2 - entry.width / 2,
+			offsetY: rect.y + rect.height / 2 - entry.height / 2
+		};
 	}
 
 	getAlignOffset(align, maxWidth, lineWidth) {
@@ -2507,7 +2554,14 @@ class TextGlitterManager {
 			);
 			this.applyTextStyles(span, measurement, maskUrl);
 			this.applySpanOffset(span, descriptor.offsetX, descriptor.offsetY);
-			this.applyPaintSource(span, descriptor.source, layer);
+			this.applyPaintSource(
+				span,
+				descriptor.source,
+				layer,
+				descriptor.maskCanvas,
+				descriptor.offsetX,
+				descriptor.offsetY
+			);
 			stack.appendChild(span);
 			existing.delete(descriptor.key);
 		});
@@ -2515,10 +2569,8 @@ class TextGlitterManager {
 		existing.forEach((span) => span.remove());
 	}
 
-	// The stack is a local-space surface: sized to the mask canvas in text-local px
-	// and scaled by CSS transform. That way the glyphs, padding, and clip actually
-	// scale with the layer (the wrapper only sizes the display box), matching the
-	// export path which scales the whole rendered canvas.
+	// The stack is a local-space surface sized to the mask canvas in text-local
+	// pixels and scaled by CSS transform, matching export's rendered canvas.
 	syncStackGeometry(stack, layer, measurement = null) {
 		if (!stack || !layer?.textData) return;
 
@@ -2540,14 +2592,26 @@ class TextGlitterManager {
 		}
 	}
 
-	// Called by LayerTransform.applyTransform so the stack scale stays live
-	// during handle drags (which bypass renderLayer for performance).
+	// Called by LayerTransform.applyTransform so stack scale and canvas-anchored
+	// texture registration stay live during drags (which bypass renderLayer).
 	syncElementScale(layer, wrapper = this.layerElements.get(layer?.id)) {
 		const stack = wrapper?.querySelector('.text-glitter-stack');
 		// System fonts are resolved by the browser and deliberately have no
 		// FontFace cache entry. Their existing stack can still scale live.
 		if (!stack) return;
-		this.syncStackGeometry(stack, layer);
+		const measurement = this.getMeasurementEntry(layer);
+		this.syncStackGeometry(stack, layer, measurement);
+		const spans = new Map(Array.from(stack.children).map((span) => [span.dataset.spanKey, span]));
+		this.getSpanDescriptors(layer, measurement).forEach((descriptor) => {
+			if (descriptor.source?.mode !== 'glitter' || descriptor.source.textureAnchor !== 'canvas') return;
+			const span = spans.get(descriptor.key);
+			if (!span) return;
+			const origin = getSlotTexturePatternOrigin(descriptor.maskCanvas, descriptor.source, layer, {
+				localOffsetX: descriptor.offsetX,
+				localOffsetY: descriptor.offsetY
+			});
+			span.style.backgroundPosition = `${origin.x}px ${origin.y}px`;
+		});
 	}
 
 	getSpanDescriptors(layer, measurement) {
@@ -2643,6 +2707,9 @@ class TextGlitterManager {
 			}
 		}
 
+		if (canvas) {
+			canvas._textureOrigin = { ...fillMask._textureOrigin };
+		}
 		measurement._borderMaskCache = { key: cacheKey, canvas };
 		return { canvas, cacheKey: `${measurement.key}|${cacheKey}` };
 	}
@@ -2792,9 +2859,7 @@ class TextGlitterManager {
 	}
 
 	applyTextStyles(span, measurement, maskObjectUrl) {
-		// Vertical align is baked into padding-top (not the translate) so the
-		// box clip below stays fixed while the text slides inside it — same as
-		// the canvas path, which shifts baselines inside a fixed clip rect.
+		// Vertical alignment is already baked into the shared mask geometry.
 		span.style.display = 'block';
 		span.style.width = `${measurement.width}px`;
 		span.style.height = `${measurement.height}px`;
@@ -2806,10 +2871,6 @@ class TextGlitterManager {
 		span.style.webkitMaskRepeat = 'no-repeat';
 		span.style.webkitMaskPosition = '0 0';
 
-		// Clip at the box rect exactly like the export mask. clip-path is applied
-		// before the span's translate, so effect spans (shadow/border offsets)
-		// carry their clip with them — identical to the export's offset copies
-		// of the box-clipped mask.
 		if (maskObjectUrl) {
 			span.style.maskImage = `url(${maskObjectUrl})`;
 			span.style.webkitMaskImage = `url(${maskObjectUrl})`;
@@ -2827,11 +2888,12 @@ class TextGlitterManager {
 			: 'none';
 	}
 
-	applyPaintSource(span, source, layer) {
+	applyPaintSource(span, source, layer, maskCanvas = null, localOffsetX = 0, localOffsetY = 0) {
 		if (!source) {
 			span.style.backgroundImage = 'none';
 			span.style.backgroundColor = 'transparent';
 			span.style.backgroundSize = '';
+			span.style.backgroundPosition = '';
 			span.style.opacity = '1';
 			span.classList.remove('pixelated');
 			return;
@@ -2841,6 +2903,7 @@ class TextGlitterManager {
 			span.style.backgroundImage = source.mode === 'gradient' ? effectGradientToCss(source.gradient) : 'none';
 			span.style.backgroundColor = source.mode === 'solid' ? source.color : 'transparent';
 			span.style.backgroundSize = '';
+			span.style.backgroundPosition = '';
 			span.style.opacity = String(source.opacity ?? 1);
 			span.style.filter = '';
 			span.classList.remove('pixelated');
@@ -2862,6 +2925,11 @@ class TextGlitterManager {
 		const glitterScale = (source.scale ?? 100) / 100;
 		const baseSize = glitter.frames?.width || glitter.width || 50;
 		span.style.backgroundSize = `${Math.round(baseSize * glitterScale)}px`;
+		const textureOrigin = getSlotTexturePatternOrigin(maskCanvas, source, layer, {
+			localOffsetX,
+			localOffsetY
+		});
+		span.style.backgroundPosition = `${textureOrigin.x}px ${textureOrigin.y}px`;
 		span.classList.toggle('pixelated', Boolean(glitter.isPixelated));
 	}
 
@@ -2992,7 +3060,7 @@ class TextGlitterManager {
 		return true;
 	}
 
-	resizeBoxFromHandle(layer, edge, dragState, canvasPos) {
+	resizeBoxFromHandle(layer, edge, dragState, canvasPos, options = {}) {
 		if (!this.canResizeBoxEdges(layer)) {
 			return false;
 		}
@@ -3009,15 +3077,36 @@ class TextGlitterManager {
 			top: -metrics.baseDisplayHeight / 2,
 			bottom: metrics.baseDisplayHeight / 2
 		};
+		if (!dragState.textBoxSnapEdges) {
+			const measurement = this.getMeasurementEntry(layer);
+			const ink = measurement.textInkRect;
+			const box = measurement.boxRect;
+			dragState.textBoxSnapEdges = ink && box ? {
+				left: (ink.x - box.x - box.width / 2) * metrics.scaleX,
+				right: (ink.x + ink.width - box.x - box.width / 2) * metrics.scaleX,
+				top: (ink.y - box.y - box.height / 2) * metrics.scaleY,
+				bottom: (ink.y + ink.height - box.y - box.height / 2) * metrics.scaleY
+			} : {};
+		}
+		const threshold = CONFIG.snapping.threshold / Math.max(0.01, this.editor.viewport.currentZoom);
+		const snap = (value, target) => (
+			CONFIG.snapping.enabled &&
+			!options.ctrlKey &&
+			Number.isFinite(target) &&
+			Math.abs(value - target) <= threshold
+				? target
+				: value
+		);
+		const inkEdges = dragState.textBoxSnapEdges;
 
 		if (edge === 'right') {
-			rect.right = Math.max(localX, rect.left + metrics.minDisplayWidth);
+			rect.right = Math.max(snap(localX, inkEdges?.right), rect.left + metrics.minDisplayWidth);
 		} else if (edge === 'left') {
-			rect.left = Math.min(localX, rect.right - metrics.minDisplayWidth);
+			rect.left = Math.min(snap(localX, inkEdges?.left), rect.right - metrics.minDisplayWidth);
 		} else if (edge === 'bottom') {
-			rect.bottom = Math.max(localY, rect.top + metrics.minDisplayHeight);
+			rect.bottom = Math.max(snap(localY, inkEdges?.bottom), rect.top + metrics.minDisplayHeight);
 		} else if (edge === 'top') {
-			rect.top = Math.min(localY, rect.bottom - metrics.minDisplayHeight);
+			rect.top = Math.min(snap(localY, inkEdges?.top), rect.bottom - metrics.minDisplayHeight);
 		} else if (edge === 'tl') {
 			rect.left = Math.min(localX, rect.right - metrics.minDisplayWidth);
 			rect.top = Math.min(localY, rect.bottom - metrics.minDisplayHeight);
@@ -3075,12 +3164,36 @@ class TextGlitterManager {
 		}
 
 		const worldCenter = this.getFrameCenterWorldPosition(layer);
-		layer.textData.fontSize = Math.max(
+		const previousFontSize = layer.textData.fontSize;
+		const nextFontSize = Math.max(
 			CONFIG.tools.text.minFontSize,
-			Math.min(CONFIG.tools.text.maxFontSize, Math.round(layer.textData.fontSize * scaleFactor))
+			Math.min(CONFIG.tools.text.maxFontSize, Math.round(previousFontSize * scaleFactor))
 		);
-		transform.scale.x = (scaleX / scaleFactor) * 100;
-		transform.scale.y = (scaleY / scaleFactor) * 100;
+		const bakedFactor = nextFontSize / Math.max(1, previousFontSize);
+		layer.textData.fontSize = nextFontSize;
+		layer.textData.letterSpacing *= bakedFactor;
+		if ((layer.textData.boxMode || 'auto') === 'fixed') {
+			layer.textData.boxWidth *= bakedFactor;
+			layer.textData.boxHeight *= bakedFactor;
+		}
+		if (layer.textData.border && this.editor.scaleEffectsOnTransform) {
+			layer.textData.border.widthPx *= bakedFactor;
+		}
+		if (layer.textData.shadow && this.editor.scaleEffectsOnTransform) {
+			layer.textData.shadow.offsetX *= bakedFactor;
+			layer.textData.shadow.offsetY *= bakedFactor;
+		}
+		if (this.editor.scaleTexturesOnTransform) {
+			layer.settings.scale = roundSlotTextureScale((layer.settings.scale ?? 100) * bakedFactor);
+			if (layer.textData.border) {
+				layer.textData.border.scale = roundSlotTextureScale((layer.textData.border.scale ?? 100) * bakedFactor);
+			}
+			if (layer.textData.shadow) {
+				layer.textData.shadow.scale = roundSlotTextureScale((layer.textData.shadow.scale ?? 100) * bakedFactor);
+			}
+		}
+		transform.scale.x = (scaleX / bakedFactor) * 100;
+		transform.scale.y = (scaleY / bakedFactor) * 100;
 		transform.proportionalScale = true;
 
 		const measurement = this.getMeasurementEntry(layer);

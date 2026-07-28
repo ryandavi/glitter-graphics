@@ -217,6 +217,13 @@ class StickerManager extends ContentManager {
 		attach('Hue', '°', (value, data) => { ensureSlotColorAdjust(data).hue = value; this.refreshShadowSwatch(data); }, COLOR_ADJUST_IDENTITY.hue);
 		attach('Saturation', '%', (value, data) => { ensureSlotColorAdjust(data).saturation = value; this.refreshShadowSwatch(data); }, COLOR_ADJUST_IDENTITY.saturation);
 		attach('Brightness', '%', (value, data) => { ensureSlotColorAdjust(data).brightness = value; this.refreshShadowSwatch(data); }, COLOR_ADJUST_IDENTITY.brightness);
+		bindSlotTextureCoordinateControls({
+			prefix,
+			getLayer: active,
+			getData: (layer) => layer.stickerData.shadow || this.getDefaultShadow(),
+			render: (layer) => this.renderLayer(layer),
+			save: () => this.editor.saveState()
+		});
 		this.ui[prefix + 'Color']?.addEventListener('input', () => {
 			const layer = active();
 			if (!layer?.stickerData.shadow) return;
@@ -360,10 +367,11 @@ class StickerManager extends ContentManager {
 			if (glitter) this.editor.renderGlitterAssetDisplay(els, glitter, sd.colorAdjust);
 			else this.editor.clearGlitterAssetDisplay?.(els);
 		}
+		syncSlotTextureCoordinateControls(prefix, sd);
 		this.updatePickerStrip();
 	}
 
-	applyEffectPaint(element, source, effectData) {
+	applyEffectPaint(element, source, effectData, layer) {
 		if (!element || !source) return;
 		if (source.mode === 'gradient') element.style.backgroundImage = effectGradientToCss(source.gradient);
 		else if (source.mode === 'glitter') {
@@ -371,6 +379,11 @@ class StickerManager extends ContentManager {
 			element.style.backgroundImage = glitter ? `url(${glitter.url})` : 'none';
 			const baseSize = glitter?.frames?.width || glitter?.width || 50;
 			element.style.backgroundSize = `${Math.round(baseSize * (effectData.scale || 100) / 100)}px`;
+			const textureOrigin = getSlotTexturePatternOrigin({
+				width: layer?.stickerData?.width || 0,
+				height: layer?.stickerData?.height || 0
+			}, effectData, layer);
+			element.style.backgroundPosition = `${textureOrigin.x}px ${textureOrigin.y}px`;
 			element.style.filter = buildCssColorFilter(effectData.colorAdjust);
 		} else element.style.backgroundColor = source.color;
 		element.style.opacity = String(source.opacity ?? 1);
@@ -387,7 +400,7 @@ class StickerManager extends ContentManager {
 		this.applyEffectPaint(span, resolveEffectPaintSource(effectData, {
 			glitterId: effectData.glitterId,
 			glitterAvailable: Boolean(this.editor.glitterManager.getItemById(effectData.glitterId))
-		}), effectData);
+		}), effectData, layer);
 		return span;
 	}
 

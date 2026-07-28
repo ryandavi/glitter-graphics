@@ -275,15 +275,47 @@ function buildPrimaryRow(prefix, ids = {}) {
 	return row;
 }
 
-// Advanced = color-adjust only (Hue, then Saturation | Brightness).
-function buildAdvancedDisclosure(prefix, ids = {}) {
+function buildAdvancedControlGroup(title, className) {
+	const group = panelDiv(`advanced-control-group ${className}`);
+	const heading = panelDiv('advanced-control-group-title setting-label');
+	heading.textContent = title;
+	group.appendChild(heading);
+	return group;
+}
+
+// Advanced = grouped color adjustment, then optional texture coordinates.
+function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 	const advanced = tplClone('tpl-advanced');
 	const content = advanced.querySelector('[data-advanced-content]');
-	content.appendChild(buildSliderRow({ id: ids.hue || `${prefix}Hue`, slider: 'hue' }));
-	const columns = tplClone('tpl-two-column');
-	columns.appendChild(buildSliderRow({ id: ids.saturation || `${prefix}Saturation`, slider: 'saturation' }));
-	columns.appendChild(buildSliderRow({ id: ids.brightness || `${prefix}Brightness`, slider: 'brightness' }));
-	content.appendChild(columns);
+	const colorGroup = buildAdvancedControlGroup('Color Adjust', 'advanced-color-adjust-group');
+	colorGroup.appendChild(buildSliderRow({ id: ids.hue || `${prefix}Hue`, slider: 'hue' }));
+	const colorColumns = tplClone('tpl-two-column');
+	colorColumns.appendChild(buildSliderRow({ id: ids.saturation || `${prefix}Saturation`, slider: 'saturation' }));
+	colorColumns.appendChild(buildSliderRow({ id: ids.brightness || `${prefix}Brightness`, slider: 'brightness' }));
+	colorGroup.appendChild(colorColumns);
+	content.appendChild(colorGroup);
+
+	if (options.texturePosition) {
+		const textureGroup = buildAdvancedControlGroup('Texture Position', 'advanced-texture-position-group');
+		const anchor = buildSegmented([
+			{ id: `${prefix}TextureAnchorArtwork`, label: 'Artwork', active: true },
+			{ id: `${prefix}TextureAnchorCanvas`, label: 'Canvas' }
+		], { label: 'Texture anchor' });
+		textureGroup.appendChild(buildOptionGroup('Anchor', [anchor]));
+		const offsets = tplClone('tpl-two-column');
+		offsets.appendChild(buildSliderRow({ id: `${prefix}TextureOffsetX`, slider: 'textureOffsetX' }));
+		offsets.appendChild(buildSliderRow({ id: `${prefix}TextureOffsetY`, slider: 'textureOffsetY' }));
+		textureGroup.appendChild(offsets);
+		const reset = panelDiv('settings-action-row');
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'btn-simple secondary';
+		button.id = `${prefix}ResetTexturePosition`;
+		button.textContent = 'Reset Texture Position';
+		reset.appendChild(button);
+		textureGroup.appendChild(reset);
+		content.appendChild(textureGroup);
+	}
 	return advanced;
 }
 
@@ -292,6 +324,7 @@ function buildAdvancedDisclosure(prefix, ids = {}) {
 // items, Advanced. Order mirrors the pre-template static panels exactly.
 function buildPaintSlotCard(slot) {
 	const card = tplClone('tpl-paint-slot');
+	card.classList.add('has-subsection-title');
 	card.dataset.slot = slot.slot;
 	card.dataset.role = 'paint-slot';
 	if (slot.hidePrimaryModes?.length) card.dataset.hidePrimaryModes = slot.hidePrimaryModes.join(' ');
@@ -309,21 +342,25 @@ function buildPaintSlotCard(slot) {
 		container.id = `${slot.idPrefix}Controls`;
 		card.appendChild(container);
 	}
-	(slot.pre || []).forEach((item) => container.appendChild(buildPanelItem(item)));
+	const main = panelDiv('paint-slot-main');
+	container.appendChild(main);
+	(slot.pre || []).forEach((item) => main.appendChild(buildPanelItem(item)));
 	const source = buildPaintSource(slot);
-	container.appendChild(slot.sourceLabel ? buildOptionGroup(slot.sourceLabel, [source]) : source);
+	main.appendChild(slot.sourceLabel ? buildOptionGroup(slot.sourceLabel, [source]) : source);
 	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds);
 	if (slot.primaryToggle) {
 		const toggle = tplClone('tpl-checkbox');
 		toggle.querySelector('input').id = slot.primaryToggle.id;
 		toggle.querySelector('span').textContent = slot.primaryToggle.label;
 		if (slot.primaryToggle.title) toggle.querySelector('span').title = slot.primaryToggle.title;
-		container.appendChild(buildOptionGroup('Scale & Opacity', [toggle, primaryRow]));
+		main.appendChild(buildOptionGroup('Scale & Opacity', [toggle, primaryRow]));
 	} else {
-		container.appendChild(primaryRow);
+		main.appendChild(primaryRow);
 	}
-	(slot.post || []).forEach((item) => container.appendChild(buildPanelItem(item)));
-	container.appendChild(buildAdvancedDisclosure(slot.idPrefix, slot.advancedIds));
+	(slot.post || []).forEach((item) => main.appendChild(buildPanelItem(item)));
+	container.appendChild(buildAdvancedDisclosure(slot.idPrefix, slot.advancedIds, {
+		texturePosition: slot.texturePosition
+	}));
 	return card;
 }
 
@@ -336,7 +373,10 @@ function buildPanelItem(item, schema) {
 			if (item.hidden) card.hidden = true;
 			addPanelClasses(card, item.classes);
 			const title = card.querySelector('.subsection-title');
-			if (item.title) title.querySelector(':scope > span').textContent = item.title;
+			if (item.title) {
+				title.querySelector(':scope > span').textContent = item.title;
+				card.classList.add('has-subsection-title');
+			}
 			else title.remove();
 			if (item.toggle) {
 				card.dataset.effectCard = '';
@@ -348,7 +388,10 @@ function buildPanelItem(item, schema) {
 				if (item.toggle.title) toggle.querySelector('span').title = item.toggle.title;
 				card.querySelector('.subsection-title').appendChild(toggle);
 			}
-			item.items.forEach((child) => card.appendChild(buildPanelItem(child, schema)));
+			const body = panelDiv('subsection-card-body');
+			if (item.bare) body.classList.add('subsection-card-body-bare');
+			item.items.forEach((child) => body.appendChild(buildPanelItem(child, schema)));
+			card.appendChild(body);
 			return card;
 		}
 		case 'content': {
@@ -500,6 +543,27 @@ function buildPanelItem(item, schema) {
 		default:
 			throw new Error(`panel-renderer: unknown item kind "${item.kind}"`);
 	}
+}
+
+// Legacy/template cards predate the schema body's padding ownership. Normalize
+// them to the same structure without pulling edge-to-edge Advanced disclosures
+// into the padded body.
+function ensureSubsectionCardBody(card) {
+	if (!card?.classList?.contains('subsection-content-group')) return card;
+	if (card.classList.contains('subsection-section-group') || card.classList.contains('effects-stack')) return card;
+	if (card.querySelector(':scope > .subsection-card-body, :scope > .paint-slot-main, :scope > .text-effect-controls')) return card;
+	const children = Array.from(card.children);
+	const content = children.filter((child) =>
+		!child.classList.contains('subsection-title') &&
+		!child.classList.contains('advanced-disclosure')
+	);
+	if (!content.length) return card;
+	const body = panelDiv('subsection-card-body');
+	const advanced = children.find((child) => child.classList.contains('advanced-disclosure'));
+	card.insertBefore(body, advanced || null);
+	content.forEach((child) => body.appendChild(child));
+	if (card.querySelector(':scope > .subsection-title')) card.classList.add('has-subsection-title');
+	return card;
 }
 
 // One state contract for every schema-rendered effect card. Managers supply

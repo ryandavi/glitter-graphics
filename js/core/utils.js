@@ -3,7 +3,10 @@
 // accordion section and scroll target for every asset manager.
 function revealAssetBrowser(editor, manager = null, assetId = null) {
 	const revealRequestedGallery = () => {
-		manager?.ui?.panel?.scrollIntoView?.({ block: 'start', inline: 'nearest', behavior: 'smooth' });
+		// Gallery panels own their scrolling. scrollIntoView can also scroll the
+		// document, pulling all three editor columns underneath the fixed header.
+		const scrollContainer = manager?.browser?.scrollContainer || manager?.ui?.panel;
+		scrollContainer?.scrollTo?.({ top: 0, behavior: 'smooth' });
 	};
 	if (editor.mobileManager?.isMobile) {
 		editor.mobileManager.openDrawer('design');
@@ -14,11 +17,12 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 	// Shapes before Glitter). Align the requested gallery after the accordion or
 	// drawer has completed its layout instead of accepting a partially-visible
 	// `nearest` result that leaves the preceding gallery at the top.
-	requestAnimationFrame(() => requestAnimationFrame(revealRequestedGallery));
 	if (assetId != null) {
-		Promise.resolve(manager?.browser?.navigateToItem(assetId)).then(() => {
-			requestAnimationFrame(revealRequestedGallery);
-		});
+		// navigateToItem owns the inner item scroll and centers the selection.
+		// Resetting the same container afterward would immediately hide it again.
+		Promise.resolve(manager?.browser?.navigateToItem(assetId));
+	} else {
+		requestAnimationFrame(() => requestAnimationFrame(revealRequestedGallery));
 	}
 }
 

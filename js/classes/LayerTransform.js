@@ -931,6 +931,7 @@ createTransformHandles() {
 
         const transform = this.getTransform();
         const frame = this.getHandleFrame();
+		const resizeFrame = this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) || frame;
         const config = CONFIG.ui.stickerHandles;
 
         // Calculate display dimensions
@@ -946,10 +947,18 @@ createTransformHandles() {
         const frameOffsetY = frame.offsetY * (transform.scale.y / 100);
         const centerX = transform.position.x + frameOffsetX * cos - frameOffsetY * sin;
         const centerY = transform.position.y + frameOffsetX * sin + frameOffsetY * cos;
+		const resizeWidth = resizeFrame.width * (transform.scale.x / 100);
+		const resizeHeight = resizeFrame.height * (transform.scale.y / 100);
+		const resizeOffsetX = resizeFrame.offsetX * (transform.scale.x / 100);
+		const resizeOffsetY = resizeFrame.offsetY * (transform.scale.y / 100);
+		const resizeCenterX = transform.position.x + resizeOffsetX * cos - resizeOffsetY * sin;
+		const resizeCenterY = transform.position.y + resizeOffsetX * sin + resizeOffsetY * cos;
 
         // Half dimensions
         const hw = displayWidth / 2;
         const hh = displayHeight / 2;
+		const resizeHw = resizeWidth / 2;
+		const resizeHh = resizeHeight / 2;
 		const zoom = this.editor.viewport.currentZoom;
 		const outset = screenPixelsToCanvasUnits(config.outwardOffset, zoom);
 
@@ -963,16 +972,20 @@ createTransformHandles() {
         };
 
         const edges = {
-			top: { x: 0, y: -hh - outset },
-			right: { x: hw + outset, y: 0 },
-			bottom: { x: 0, y: hh + outset },
-			left: { x: -hw - outset, y: 0 }
+			top: { x: 0, y: -resizeHh - outset },
+			right: { x: resizeHw + outset, y: 0 },
+			bottom: { x: 0, y: resizeHh + outset },
+			left: { x: -resizeHw - outset, y: 0 }
         };
 
         // Rotate corners and translate to position
         const rotatePoint = (local) => ({
             x: centerX + (local.x * cos - local.y * sin),
             y: centerY + (local.x * sin + local.y * cos)
+        });
+        const rotateResizePoint = (local) => ({
+            x: resizeCenterX + (local.x * cos - local.y * sin),
+            y: resizeCenterY + (local.x * sin + local.y * cos)
         });
 
         const rotatedCorners = {};
@@ -1015,7 +1028,7 @@ createTransformHandles() {
                 const wrapper = this.transformHandles.querySelector(`[data-handle-type="edge-${edge}"]`);
                 if (!wrapper) return;
 
-                const pos = rotatePoint(edges[edge]);
+                const pos = rotateResizePoint(edges[edge]);
                 wrapper.style.cssText = `
 					position: absolute;
 					left: ${pos.x}px;
@@ -1307,7 +1320,6 @@ removeTransformHandles() {
             if (
 				this.layer.type === LayerType.TEXT_GLITTER
 				&& ht.startsWith('corner-')
-				&& !this.editor.textGlitterManager?.canResizeBoxEdges?.(this.layer)
 			) {
                 await this.editor.textGlitterManager?.commitScaleToFontSize?.(this.layer);
             } else if (this.layer.type === LayerType.SHAPE && (ht.startsWith('corner-') || ht.startsWith('edge-'))) {
@@ -1421,14 +1433,8 @@ removeTransformHandles() {
      */
     handleCornerDrag(e) {
 		const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
-		const textManager = this.editor.textGlitterManager;
-		if (textManager?.canResizeBoxEdges?.(this.layer)) {
-			const corner = this.activeHandleType.replace('corner-', '');
-			textManager.resizeBoxFromHandle(this.layer, corner, this.dragStartState, canvasPos);
-			return;
-		}
-        // Point text and other transformable layers scale from their visible
-        // frame. Box text is handled above by changing its frame dimensions.
+        // Point and box text scale from their visible frame. Area text's edge
+        // handles resize/reflow its box without scaling the artwork.
         const transform = this.getTransform();
         const start = this.dragStartState;
         const frame = start.handleFrame || { width: start.width, height: start.height, offsetX: 0, offsetY: 0 };
@@ -1523,7 +1529,7 @@ removeTransformHandles() {
 		const textManager = this.editor.textGlitterManager;
 		if (textManager?.canResizeBoxEdges?.(this.layer)) {
 			const canvasPos = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
-			textManager.resizeBoxFromHandle(this.layer, edge, this.dragStartState, canvasPos);
+			textManager.resizeBoxFromHandle(this.layer, edge, this.dragStartState, canvasPos, { ctrlKey: e.ctrlKey });
 			return;
 		}
 

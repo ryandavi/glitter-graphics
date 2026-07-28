@@ -291,6 +291,19 @@ class ShapeGlitterManager {
 		this._bindSlotAdvanced('shapeFill', 'fill');
 		this._bindSlotAdvanced('shapeBorder', 'border');
 		this._bindSlotAdvanced('shapeShadow', 'shadow');
+		[
+			['shapeFill', 'fill'],
+			['shapeBorder', 'border'],
+			['shapeShadow', 'shadow']
+		].forEach(([prefix, slot]) => {
+			bindSlotTextureCoordinateControls({
+				prefix,
+				getLayer: () => this.getActiveShapeLayer(),
+				getData: (layer) => this.ensureEffectData(layer, slot),
+				render: (layer) => this.renderLayer(layer),
+				save: () => this.editor.saveState()
+			});
+		});
 
 		this.ui.borderStyleSolid?.addEventListener('click', () => this.setBorderStyle('solid'));
 		this.ui.borderStyleDotted?.addEventListener('click', () => this.setBorderStyle('dotted'));
@@ -395,8 +408,11 @@ class ShapeGlitterManager {
 			apply: (value) => {
 				const layer = this.getActiveShapeLayer();
 				if (!layer) return;
-				apply(value, layer);
-				if (geometry) this.invalidateMeasurement(layer);
+				if (geometry) {
+					this.mutateGeometryPreservingShape(layer, () => apply(value, layer));
+				} else {
+					apply(value, layer);
+				}
 				this.renderLayer(layer);
 			},
 			onCommit: () => {
@@ -427,16 +443,17 @@ class ShapeGlitterManager {
 	_toggleEffect(slot, enabled) {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
-		layer.shapeData.effectDrafts ||= {};
-		if (enabled) {
-			layer.shapeData[slot] = layer.shapeData.effectDrafts[slot] || this.ensureEffectData(layer, slot);
-			delete layer.shapeData.effectDrafts[slot];
-		} else {
-			if (layer.shapeData[slot]) layer.shapeData.effectDrafts[slot] = layer.shapeData[slot];
-			layer.shapeData[slot] = null;
-		}
+		this.mutateGeometryPreservingShape(layer, () => {
+			layer.shapeData.effectDrafts ||= {};
+			if (enabled) {
+				layer.shapeData[slot] = layer.shapeData.effectDrafts[slot] || this.ensureEffectData(layer, slot);
+				delete layer.shapeData.effectDrafts[slot];
+			} else {
+				if (layer.shapeData[slot]) layer.shapeData.effectDrafts[slot] = layer.shapeData[slot];
+				layer.shapeData[slot] = null;
+			}
+		});
 		this.loadLayerSettings(layer);
-		this.invalidateMeasurement(layer);
 		this.renderLayer(layer);
 		this.editor.saveState();
 		this.editor.layerManager.renderLayersList();
@@ -445,11 +462,12 @@ class ShapeGlitterManager {
 	_resetEffects() {
 		const layer = this.getActiveShapeLayer();
 		if (!layer) return;
-		layer.shapeData.border = null;
-		layer.shapeData.shadow = null;
-		delete layer.shapeData.effectDrafts;
+		this.mutateGeometryPreservingShape(layer, () => {
+			layer.shapeData.border = null;
+			layer.shapeData.shadow = null;
+			delete layer.shapeData.effectDrafts;
+		});
 		this.loadLayerSettings(layer);
-		this.invalidateMeasurement(layer);
 		this.renderLayer(layer);
 		this.editor.saveState();
 		this.editor.layerManager.renderLayersList();
@@ -478,7 +496,7 @@ class ShapeGlitterManager {
 		this.updatePickerStrip();
 		revealAssetBrowser(this.editor);
 		requestAnimationFrame(() => requestAnimationFrame(() => {
-			this.ui.gallery?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+			this.ui.gallery?.scrollTo?.({ top: 0, behavior: 'smooth' });
 		}));
 	}
 
@@ -636,11 +654,14 @@ class ShapeGlitterManager {
 		if (this.ui.shadowOpacity) { this.ui.shadowOpacity.value = sd.opacity ?? shadowDefaults.opacity; this.ui.shadowOpacityValue.innerHTML = formatUnit(sd.opacity ?? shadowDefaults.opacity, '%'); }
 		if (this.ui.shapeShadowColor) this.ui.shapeShadowColor.value = sd.color || '#000000';
 		this._loadColorAdjust('shapeShadow', sd.colorAdjust, sd.scale ?? shadowDefaults.scale);
+		syncSlotTextureCoordinateControls('shapeShadow', sd);
 
 		// Fill
 		if (this.ui.shapeFillColor) this.ui.shapeFillColor.value = d.fill.color || '#ff66cc';
 		if (this.ui.fillOpacity) { this.ui.fillOpacity.value = d.fill.opacity ?? fillDefaults.opacity; this.ui.fillOpacityValue.innerHTML = formatUnit(d.fill.opacity ?? fillDefaults.opacity, '%'); }
 		this._loadColorAdjust('shapeFill', d.fill.colorAdjust, d.fill.scale ?? fillDefaults.scale);
+		syncSlotTextureCoordinateControls('shapeFill', d.fill);
+		syncSlotTextureCoordinateControls('shapeBorder', bd);
 
 		this._refreshSourceUI(layer, 'fill');
 		this._refreshSourceUI(layer, 'border');
@@ -657,18 +678,18 @@ class ShapeGlitterManager {
 		return buildDefaultBorder({
 			config: CONFIG.tools.shapes.border || {},
 			fallbackWidthPx: 6,
-			fallbackMode: 'solid',
+			fallbackMode: 'glitter',
 			includeShapeStyle: true,
 			includeColorAdjust: true,
-			defaultGlitterId: null
+			defaultGlitterId: CONFIG.tools.glitter.defaults.borderGlitterId
 		});
 	}
 
 	getDefaultShadow() {
 		return buildDefaultShadow({
 			config: CONFIG.tools.shapes.shadow || {},
-			defaultMode: 'solid',
-			defaultGlitterId: null,
+			defaultMode: 'glitter',
+			defaultGlitterId: CONFIG.tools.glitter.defaults.shadowGlitterId,
 			includeColorAdjust: true
 		});
 	}
@@ -676,10 +697,14 @@ class ShapeGlitterManager {
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		const data = layer.shapeData;
-		if (!data.fill) data.fill = this.getDefaultFill();
+		data.fill = { ...this.getDefaultFill(), ...(data.fill || {}) };
 		if (data.border === undefined) data.border = null;
 		if (data.border) data.border = { ...this.getDefaultBorder(), ...data.border };
 		if (data.shadow === undefined) data.shadow = null;
+		if (data.shadow) data.shadow = { ...this.getDefaultShadow(), ...data.shadow };
+		normalizeSlotTextureCoordinates(data.fill);
+		normalizeSlotTextureCoordinates(data.border);
+		normalizeSlotTextureCoordinates(data.shadow);
 		if (!data.transform) {
 			data.transform = createDefaultTransform();
 		}
@@ -789,9 +814,10 @@ class ShapeGlitterManager {
 		const border = this.ensureEffectData(layer, 'border');
 		if (border.style === style) return;
 
-		border.style = style === 'dotted' ? 'dotted' : 'solid';
-		this._syncBorderStyleUI(border);
-		this.invalidateMeasurement(layer);
+		this.mutateGeometryPreservingShape(layer, () => {
+			this.ensureEffectData(layer, 'border').style = style === 'dotted' ? 'dotted' : 'solid';
+		});
+		this._syncBorderStyleUI(this.getEffectData(layer, 'border'));
 		this.renderLayer(layer);
 		this.editor.saveState();
 		this.editor.layerManager.renderLayersList();
@@ -804,9 +830,10 @@ class ShapeGlitterManager {
 		const border = this.ensureEffectData(layer, 'border');
 		if (this.getBorderEdgeStyle(border) === edgeStyle) return;
 
-		border.edgeStyle = edgeStyle === 'hard' ? 'hard' : 'round';
-		this._syncBorderEdgeUI(border);
-		this.invalidateMeasurement(layer);
+		this.mutateGeometryPreservingShape(layer, () => {
+			this.ensureEffectData(layer, 'border').edgeStyle = edgeStyle === 'hard' ? 'hard' : 'round';
+		});
+		this._syncBorderEdgeUI(this.getEffectData(layer, 'border'));
 		this.renderLayer(layer);
 		this.editor.saveState();
 		this.editor.layerManager.renderLayersList();
@@ -819,9 +846,10 @@ class ShapeGlitterManager {
 		const border = this.ensureEffectData(layer, 'border');
 		if (this.getBorderPlacement(border) === placement) return;
 
-		border.placement = placement;
-		this._syncBorderPlacementUI(border);
-		this.invalidateMeasurement(layer);
+		this.mutateGeometryPreservingShape(layer, () => {
+			this.ensureEffectData(layer, 'border').placement = placement;
+		});
+		this._syncBorderPlacementUI(this.getEffectData(layer, 'border'));
 		this.renderLayer(layer);
 		this.editor.saveState();
 		this.editor.layerManager.renderLayersList();
@@ -970,10 +998,10 @@ class ShapeGlitterManager {
 		const shX = d.shadow?.offsetX || 0;
 		const shY = d.shadow?.offsetY || 0;
 
-		const inkLeft = -(borderWidth + Math.max(0, -shX));
-		const inkRight = w + borderWidth + Math.max(0, shX);
-		const inkTop = -(borderWidth + Math.max(0, -shY));
-		const inkBottom = h + borderWidth + Math.max(0, shY);
+		const inkLeft = Math.min(-borderWidth, shX);
+		const inkRight = Math.max(w + borderWidth, w + shX);
+		const inkTop = Math.min(-borderWidth, shY);
+		const inkBottom = Math.max(h + borderWidth, h + shY);
 
 		const layoutX = padding - inkLeft;
 		const layoutY = padding - inkTop;
@@ -983,6 +1011,7 @@ class ShapeGlitterManager {
 		const canvas = document.createElement('canvas');
 		canvas.width = canvasWidth;
 		canvas.height = canvasHeight;
+		canvas._textureOrigin = { x: layoutX, y: layoutY };
 		const ctx = canvas.getContext('2d', { willReadFrequently: true });
 		ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 		ctx.fillStyle = '#ffffff';
@@ -1002,7 +1031,13 @@ class ShapeGlitterManager {
 			canvas,
 			width: canvasWidth,
 			height: canvasHeight,
-			frameRect: { x: layoutX, y: layoutY, width: w, height: h },
+			frameRect: {
+				x: layoutX + inkLeft,
+				y: layoutY + inkTop,
+				width: inkRight - inkLeft,
+				height: inkBottom - inkTop
+			},
+			shapeRect: { x: layoutX, y: layoutY, width: w, height: h },
 			// Kept so the border can be re-derived as a vector STROKE of the path
 			// (smooth) rather than a ring-union of the raster silhouette (scalloped).
 			shapeId: d.shapeId,
@@ -1023,9 +1058,8 @@ class ShapeGlitterManager {
 	}
 
 	// The user-facing frame in shape-local units, centered relative to the padded
-	// mask canvas (mirrors TextGlitterManager.getTextFrame). Border width is part
-	// of the selectable shape silhouette, so the frame expands to include it;
-	// shadow padding stays excluded so a shadow never drags the box around.
+	// mask canvas (mirrors TextGlitterManager.getTextFrame). It includes border
+	// and shadow so selection, snapping, and transforms describe visible pixels.
 	// NOT named getShapeFrame(layer): that name is already a class method below
 	// (hit-test frame, returns raw {x,y,width,height} in a different shape) and a
 	// second same-named method here would silently shadow one of them.
@@ -1037,10 +1071,9 @@ class ShapeGlitterManager {
 		const rect = entry.frameRect;
 		if (!rect) return null;
 
-		const borderWidth = this.getBorderOutsidePadding(layer.shapeData.border);
 		return {
-			width: rect.width + borderWidth * 2,
-			height: rect.height + borderWidth * 2,
+			width: rect.width,
+			height: rect.height,
 			offsetX: rect.x + rect.width / 2 - entry.width / 2,
 			offsetY: rect.y + rect.height / 2 - entry.height / 2
 		};
@@ -1069,6 +1102,7 @@ class ShapeGlitterManager {
 		const canvas = document.createElement('canvas');
 		canvas.width = measurement.canvas.width;
 		canvas.height = measurement.canvas.height;
+		canvas._textureOrigin = { ...measurement.canvas._textureOrigin };
 		const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
 		const path = ShapeLibrary.buildTransformedPath(measurement.shapeId, measurement.shapeW / 2, measurement.shapeH / 2, { fit: 'fill' });
@@ -1146,6 +1180,11 @@ class ShapeGlitterManager {
 		const canvas = document.createElement('canvas');
 		canvas.width = sourceCanvas.width;
 		canvas.height = sourceCanvas.height;
+		const sourceOrigin = sourceCanvas._textureOrigin || { x: 0, y: 0 };
+		canvas._textureOrigin = {
+			x: sourceOrigin.x + offsetX,
+			y: sourceOrigin.y + offsetY
+		};
 		canvas.getContext('2d', { willReadFrequently: true }).drawImage(sourceCanvas, offsetX, offsetY);
 		return canvas;
 	}
@@ -1240,7 +1279,14 @@ class ShapeGlitterManager {
 			const maskUrl = this.getPreviewMaskDataUrl(descriptor.maskCanvas, descriptor.maskCacheKey);
 			this.applySpanStyles(span, measurement, maskUrl);
 			this.applySpanOffset(span, descriptor.offsetX, descriptor.offsetY);
-			this.applyPaintSource(span, descriptor.source);
+			this.applyPaintSource(
+				span,
+				descriptor.source,
+				layer,
+				descriptor.maskCanvas,
+				descriptor.offsetX,
+				descriptor.offsetY
+			);
 			stack.appendChild(span);
 			existing.delete(descriptor.key);
 		});
@@ -1343,11 +1389,12 @@ class ShapeGlitterManager {
 	}
 
 	// Mirror of TextGlitterManager.applyPaintSource (glitter/solid + colorAdjust).
-	applyPaintSource(span, source) {
+	applyPaintSource(span, source, layer = null, maskCanvas = null, localOffsetX = 0, localOffsetY = 0) {
 		if (!source) {
 			span.style.backgroundImage = 'none';
 			span.style.backgroundColor = 'transparent';
 			span.style.backgroundSize = '';
+			span.style.backgroundPosition = '';
 			span.style.opacity = '1';
 			span.style.filter = '';
 			span.classList.remove('pixelated');
@@ -1358,6 +1405,7 @@ class ShapeGlitterManager {
 			span.style.backgroundImage = source.mode === 'gradient' ? effectGradientToCss(source.gradient) : 'none';
 			span.style.backgroundColor = source.mode === 'solid' ? source.color : 'transparent';
 			span.style.backgroundSize = '';
+			span.style.backgroundPosition = '';
 			span.style.opacity = String(source.opacity ?? 1);
 			span.style.filter = '';
 			span.classList.remove('pixelated');
@@ -1377,6 +1425,11 @@ class ShapeGlitterManager {
 		const glitterScale = (source.scale ?? 100) / 100;
 		const baseSize = glitter.frames?.width || glitter.width || 50;
 		span.style.backgroundSize = `${Math.round(baseSize * glitterScale)}px`;
+		const textureOrigin = getSlotTexturePatternOrigin(maskCanvas, source, layer, {
+			localOffsetX,
+			localOffsetY
+		});
+		span.style.backgroundPosition = `${textureOrigin.x}px ${textureOrigin.y}px`;
 		span.classList.toggle('pixelated', Boolean(glitter.isPixelated));
 	}
 
@@ -1402,11 +1455,24 @@ class ShapeGlitterManager {
 		}
 	}
 
-	// Called by LayerTransform.applyTransform during handle drags.
+	// Called by LayerTransform.applyTransform during handle drags. Canvas-
+	// anchored repeats must be re-registered as the object transform changes.
 	syncElementScale(layer, wrapper = this.layerElements.get(layer?.id)) {
 		const stack = wrapper?.querySelector('.shape-glitter-stack');
 		if (!stack) return;
-		this.syncStackGeometry(stack, layer);
+		const measurement = this.getMeasurementEntry(layer);
+		this.syncStackGeometry(stack, layer, measurement);
+		const spans = new Map(Array.from(stack.children).map((span) => [span.dataset.spanKey, span]));
+		this.getSpanDescriptors(layer, measurement).forEach((descriptor) => {
+			if (descriptor.source?.mode !== 'glitter' || descriptor.source.textureAnchor !== 'canvas') return;
+			const span = spans.get(descriptor.key);
+			if (!span) return;
+			const origin = getSlotTexturePatternOrigin(descriptor.maskCanvas, descriptor.source, layer, {
+				localOffsetX: descriptor.offsetX,
+				localOffsetY: descriptor.offsetY
+			});
+			span.style.backgroundPosition = `${origin.x}px ${origin.y}px`;
+		});
 	}
 
 	// ===== TRANSFORM COMMIT (re-rasterize on scale) =====
@@ -1425,8 +1491,23 @@ class ShapeGlitterManager {
 
 		layer.shapeData.width = Math.max(CONFIG.tools.shapes.minSize, Math.round(layer.shapeData.width * sx));
 		layer.shapeData.height = Math.max(CONFIG.tools.shapes.minSize, Math.round(layer.shapeData.height * sy));
-		if (layer.shapeData.border) {
-			layer.shapeData.border.widthPx = Math.max(1, Math.round(layer.shapeData.border.widthPx * Math.max(sx, sy)));
+		const effectScale = Math.max(sx, sy);
+		if (layer.shapeData.border && this.editor.scaleEffectsOnTransform) {
+			layer.shapeData.border.widthPx = Math.max(1, Math.round(layer.shapeData.border.widthPx * effectScale));
+			layer.shapeData.border.dotSpacingPx = Math.max(1, layer.shapeData.border.dotSpacingPx * effectScale);
+		}
+		if (layer.shapeData.shadow && this.editor.scaleEffectsOnTransform) {
+			layer.shapeData.shadow.offsetX *= sx;
+			layer.shapeData.shadow.offsetY *= sy;
+		}
+		if (this.editor.scaleTexturesOnTransform) {
+			layer.shapeData.fill.scale = roundSlotTextureScale((layer.shapeData.fill.scale ?? 100) * effectScale);
+			if (layer.shapeData.border) {
+				layer.shapeData.border.scale = roundSlotTextureScale((layer.shapeData.border.scale ?? 100) * effectScale);
+			}
+			if (layer.shapeData.shadow) {
+				layer.shapeData.shadow.scale = roundSlotTextureScale((layer.shapeData.shadow.scale ?? 100) * effectScale);
+			}
 		}
 		t.scale.x = 100;
 		t.scale.y = 100;
@@ -1468,6 +1549,31 @@ class ShapeGlitterManager {
 	}
 
 	// ===== HOUSEKEEPING =====
+
+	mutateGeometryPreservingShape(layer, mutate) {
+		const before = this.getMeasurementEntry(layer);
+		const beforeRect = before.shapeRect;
+		const transform = getLayerTransform(layer);
+		const scaleX = (transform.scale.x || 100) / 100;
+		const scaleY = (transform.scale.y || 100) / 100;
+		const rotation = (transform.rotation * Math.PI) / 180;
+		const cos = Math.cos(rotation);
+		const sin = Math.sin(rotation);
+		const localBeforeX = beforeRect.x + beforeRect.width / 2 - before.width / 2;
+		const localBeforeY = beforeRect.y + beforeRect.height / 2 - before.height / 2;
+		const worldX = transform.position.x + localBeforeX * scaleX * cos - localBeforeY * scaleY * sin;
+		const worldY = transform.position.y + localBeforeX * scaleX * sin + localBeforeY * scaleY * cos;
+
+		mutate();
+		this.invalidateMeasurement(layer);
+
+		const after = this.getMeasurementEntry(layer);
+		const afterRect = after.shapeRect;
+		const localAfterX = afterRect.x + afterRect.width / 2 - after.width / 2;
+		const localAfterY = afterRect.y + afterRect.height / 2 - after.height / 2;
+		transform.position.x = worldX - (localAfterX * scaleX * cos - localAfterY * scaleY * sin);
+		transform.position.y = worldY - (localAfterX * scaleX * sin + localAfterY * scaleY * cos);
+	}
 
 	invalidateMeasurement(layer) {
 		this.measurementCache.clear();

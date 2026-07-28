@@ -1244,8 +1244,11 @@ textarea {
 
 .settings-action-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--spacing-sm);
+}
+.settings-action-row > button {
+  width: 100%;
 }
 
 .asset-info,
@@ -1282,7 +1285,7 @@ textarea {
 .advanced-disclosure {
   display: flex;
   flex-direction: column;
-  margin-top: var(--spacing-sm);
+  margin-top: 0;
   border-top: 1px solid var(--color-border);
 }
 .advanced-disclosure > .advanced-disclosure-toggle {
@@ -1291,9 +1294,9 @@ textarea {
   justify-content: space-between;
   gap: var(--spacing-sm);
   width: 100%;
-  padding: var(--spacing-sm) 0 0;
+  padding: var(--spacing-sm) var(--spacing-md);
   background: none;
-  border: none;
+  border: 0;
   color: var(--color-text-secondary);
   font: inherit;
   font-size: var(--font-size-sm);
@@ -1322,13 +1325,40 @@ textarea {
   display: none;
   flex-direction: column;
   gap: var(--spacing-md);
-  padding-top: var(--spacing-sm);
+  padding: var(--spacing-md);
 }
 .advanced-disclosure.is-open > .advanced-disclosure-content {
   display: flex;
 }
 .advanced-disclosure.is-open .advanced-disclosure-chevron {
   transform: rotate(180deg);
+}
+
+.advanced-control-group,
+.functional-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-card);
+}
+.advanced-control-group > .advanced-control-group-title,
+.advanced-control-group > .functional-control-group-title,
+.functional-control-group > .advanced-control-group-title,
+.functional-control-group > .functional-control-group-title {
+  color: var(--color-text-tertiary);
+}
+.advanced-control-group > .settings-action-row,
+.functional-control-group > .settings-action-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.subsection-card-body > .advanced-disclosure {
+  margin-right: calc(var(--spacing-md) * -1);
+  margin-bottom: calc(var(--spacing-md) * -1);
+  margin-left: calc(var(--spacing-md) * -1);
 }
 
 .input-unit {
@@ -2998,6 +3028,10 @@ input[type=range]:disabled {
   gap: var(--spacing-sm);
   letter-spacing: 0.5px;
   font-size: var(--font-size-base);
+}
+.tool-options-group > .btn-simple {
+  flex: 1 1 100%;
+  width: 100%;
 }
 
 .color-selection .empty-state {
@@ -4882,8 +4916,8 @@ body.mask-editing .sticker-element {
 .text-effect-controls {
   display: none;
   flex-direction: column;
-  gap: var(--spacing-md);
-  padding-top: var(--spacing-md);
+  gap: 0;
+  padding-top: 0;
   border-top: 1px solid var(--color-border);
 }
 .text-effect-controls.visible {
@@ -4891,7 +4925,7 @@ body.mask-editing .sticker-element {
 }
 
 .text-effect-subsection {
-  gap: var(--spacing-lg);
+  gap: 0;
 }
 
 .subsection-content-group.effects-stack,
@@ -5518,6 +5552,12 @@ body.tool-select .preview-canvas {
 }
 .transform-panel .transform-chip {
   flex-shrink: 0;
+  min-height: var(--control-height-compact);
+}
+.transform-panel .transform-chip > span {
+  width: auto;
+  min-height: var(--control-height-compact);
+  padding: 0 var(--spacing-sm);
 }
 .transform-panel .transform-scale-summary {
   display: flex;
@@ -5745,11 +5785,11 @@ body.tool-select .preview-canvas {
 .subsection-content-group {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
   padding: var(--spacing-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-card);
+  padding: 0;
   border-radius: var(--radius-md);
 }
 .subsection-content-group > .subsection-title {
@@ -5762,6 +5802,7 @@ body.tool-select .preview-canvas {
   font-weight: 600;
   text-transform: uppercase;
   color: var(--color-text-tertiary);
+  padding: var(--spacing-md);
 }
 .subsection-content-group[data-collapsible-subsection] > .subsection-title {
   cursor: pointer;
@@ -5790,6 +5831,24 @@ body.tool-select .preview-canvas {
 .subsection-content-group[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)):not(.is-collapsed) > :not(.subsection-title) {
   opacity: var(--disabled-opacity);
   pointer-events: none;
+}
+
+.subsection-card-body,
+.paint-slot-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-width: 0;
+  padding: var(--spacing-md);
+}
+
+.has-subsection-title > .subsection-card-body,
+.has-subsection-title > .paint-slot-main {
+  padding-top: 0;
+}
+
+.subsection-card-body-bare {
+  padding: 0;
 }
 
 .settings-subsection {

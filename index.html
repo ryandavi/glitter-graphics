@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=213">
+	<link rel="stylesheet" href="css/style.css?v=218">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1051,46 +1051,54 @@
 								</div>
 								<div class="subsection-content-group">
 									<div class="subsection-title">Type</div>
-									<div class="settings-group-two-column">
+									<div class="functional-control-group">
+										<div class="functional-control-group-title setting-label">Typography</div>
 										<div class="setting-column right">
 											<div class="setting-header">
 												<span class="setting-label">Font Size</span>
 												<span class="setting-value" id="textFontSizeValue">64px</span>
 											</div>
-									<input type="range" id="textFontSize">
+											<input type="range" id="textFontSize">
 											<button class="btn-text" id="resetTextFontSize" type="button">Reset</button>
 										</div>
+									</div>
+									<div class="functional-control-group">
+										<div class="functional-control-group-title setting-label">Spacing</div>
 										<div class="setting-column right">
 											<div class="setting-header">
 												<span class="setting-label">Letter Spacing</span>
 												<span class="setting-value" id="textLetterSpacingValue">0px</span>
 											</div>
-										<input type="range" id="textLetterSpacing">
+											<input type="range" id="textLetterSpacing">
 											<button class="btn-text" id="resetTextLetterSpacing" type="button">Reset</button>
 										</div>
-									</div>
-									<div class="setting-column right text-line-height-row">
-										<div class="setting-header">
-											<span class="setting-label">Line Height</span>
-											<span class="setting-value" id="textLineHeightValue">110%</span>
+										<div class="setting-column right text-line-height-row">
+											<div class="setting-header">
+												<span class="setting-label">Line Height</span>
+												<span class="setting-value" id="textLineHeightValue">110%</span>
+											</div>
+											<input type="range" id="textLineHeight">
+											<button class="btn-text" id="resetTextLineHeight" type="button">Reset</button>
 										</div>
-										<input type="range" id="textLineHeight">
-										<button class="btn-text" id="resetTextLineHeight" type="button">Reset</button>
 									</div>
 								</div>
 								<div class="subsection-content-group">
 									<div class="subsection-title">Text Alignment</div>
-									<div class="control-group-label text-valign-label">Vertical</div>
-									<div class="segmented-control text-valign-group">
-										<button class="segmented-option active" type="button" data-text-valign="top">Top</button>
-										<button class="segmented-option" type="button" data-text-valign="middle">Middle</button>
-										<button class="segmented-option" type="button" data-text-valign="bottom">Bottom</button>
+									<div class="functional-control-group">
+										<div class="functional-control-group-title control-group-label text-valign-label">Vertical</div>
+										<div class="segmented-control text-valign-group">
+											<button class="segmented-option active" type="button" data-text-valign="top">Top</button>
+											<button class="segmented-option" type="button" data-text-valign="middle">Middle</button>
+											<button class="segmented-option" type="button" data-text-valign="bottom">Bottom</button>
+										</div>
 									</div>
-									<div class="control-group-label text-align-label">Horizontal</div>
-									<div class="segmented-control text-align-group">
-										<button class="segmented-option active" type="button" data-text-align="left">Left</button>
-										<button class="segmented-option" type="button" data-text-align="center">Center</button>
-										<button class="segmented-option" type="button" data-text-align="right">Right</button>
+									<div class="functional-control-group">
+										<div class="functional-control-group-title control-group-label text-align-label">Horizontal</div>
+										<div class="segmented-control text-align-group">
+											<button class="segmented-option active" type="button" data-text-align="left">Left</button>
+											<button class="segmented-option" type="button" data-text-align="center">Center</button>
+											<button class="segmented-option" type="button" data-text-align="right">Right</button>
+										</div>
 									</div>
 								</div>
 							</template>
@@ -1779,8 +1787,10 @@
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Confirm Destructive Actions</div><div class="settings-row-control"><label class="switch" for="confirmDestructiveActions"><input type="checkbox" id="confirmDestructiveActions" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Ask before deleting layers or clearing the entire project.</div></div>
 				</div>
 				<div class="settings-group">
-					<div class="settings-group-title">Tools &amp; Workspace</div>
+					<div class="settings-group-title">Tools &amp; Workspace <button class="btn-text small reset-section-btn" data-section="tools">Reset</button></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Antialias Edges</div><div class="settings-row-control"><label class="switch" for="antialiasMaskEdges"><input type="checkbox" id="antialiasMaskEdges" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Smooth one-pixel mask edges on future brush strokes, text, and shapes. Brush Softness still controls wider feathering.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Scale Borders &amp; Effects</div><div class="settings-row-control"><label class="switch" for="scaleEffectsOnTransform"><input type="checkbox" id="scaleEffectsOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale border widths, dotted spacing, and shadow offsets when text or shapes are resized.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Transform Textures</div><div class="settings-row-control"><label class="switch" for="scaleTexturesOnTransform"><input type="checkbox" id="scaleTexturesOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale glitter texture size with text and shapes. Turn off to resize the artwork while keeping the repeat size unchanged.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Brush &amp; Eraser Defaults</div><div class="settings-row-control"><button class="btn-simple" id="resetToolSettings" type="button">Reset Tools</button></div></div><div class="settings-row-label-desc">Restore saved Brush and Eraser tip, stroke, and pressure settings.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Panel Layout</div><div class="settings-row-control"><button class="btn-simple" id="resetPanelLayout" type="button">Reset Panels</button></div></div><div class="settings-row-label-desc">Expand all collapsible property and tool groups.</div></div>
 				</div>
@@ -2685,18 +2695,21 @@
 		<div class="subsection-content-group transform-panel" data-transform-card>
 			<div class="subsection-title transform-panel-title"><span>Transform</span><div class="transform-panel-title-actions"><label class="checkbox-group transform-chip" data-transform-lock><input type="checkbox" data-transform-role="proportional" checked><span title="Keep aspect ratio when editing size">Lock Aspect</span></label></div></div>
 			<div class="transform-grid">
-				<div data-transform-number-pair="position"></div>
-				<div data-transform-number-pair="size"></div>
-				<div class="setting-column right transform-scale-control transform-scale-x" data-transform-scale-readout><div class="setting-header"><span class="setting-label">Scale X</span><span class="setting-value" data-transform-role="scaleXValue">100%</span></div><input type="range" data-transform-role="scaleX"><button class="btn-text" type="button" data-transform-role="resetScaleX">Reset</button></div>
-				<div class="setting-column right transform-scale-control transform-scale-y" data-transform-scale-readout><div class="setting-header"><span class="setting-label">Scale Y</span><span class="setting-value" data-transform-role="scaleYValue">100%</span></div><input type="range" data-transform-role="scaleY"><button class="btn-text" type="button" data-transform-role="resetScaleY">Reset</button></div>
-				<div class="setting-column right"><div class="setting-header"><span class="setting-label">Rotation</span><span class="setting-value" data-transform-role="rotationValue">0&deg;</span></div><input type="range" data-transform-role="rotation"><button class="btn-text" type="button" data-transform-role="resetRotation">Reset</button></div>
+				<div class="functional-control-group"><div class="functional-control-group-title setting-label">Position</div><div data-transform-number-pair="position"></div></div>
+				<div class="functional-control-group">
+					<div class="functional-control-group-title setting-label">Size</div>
+					<div data-transform-number-pair="size"></div>
+					<div class="setting-column right transform-scale-control transform-scale-x" data-transform-scale-readout><div class="setting-header"><span class="setting-label">Scale X</span><span class="setting-value" data-transform-role="scaleXValue">100%</span></div><input type="range" data-transform-role="scaleX"><button class="btn-text" type="button" data-transform-role="resetScaleX">Reset</button></div>
+					<div class="setting-column right transform-scale-control transform-scale-y" data-transform-scale-readout><div class="setting-header"><span class="setting-label">Scale Y</span><span class="setting-value" data-transform-role="scaleYValue">100%</span></div><input type="range" data-transform-role="scaleY"><button class="btn-text" type="button" data-transform-role="resetScaleY">Reset</button></div>
+				</div>
+				<div class="functional-control-group"><div class="functional-control-group-title setting-label">Rotation</div><div class="setting-column right"><div class="setting-header"><span class="setting-label">Angle</span><span class="setting-value" data-transform-role="rotationValue">0&deg;</span></div><input type="range" data-transform-role="rotation"><button class="btn-text" type="button" data-transform-role="resetRotation">Reset</button></div></div>
 				<div class="transform-panel-footer"><button class="btn-simple transform-reset-all" type="button" data-transform-role="resetTransform">Reset Transform</button></div>
 			</div>
 		</div>
 		<div class="subsection-content-group transform-panel" data-transform-align>
 			<div class="subsection-title">Align</div>
-			<div class="transform-control-group"><div class="control-group-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align left to canvas" data-transform-role="alignLeft">Left</button><button class="segmented-option" type="button" title="Center horizontally on canvas" data-transform-role="alignCenterX">Center</button><button class="segmented-option" type="button" title="Align right to canvas" data-transform-role="alignRight">Right</button></div></div>
-			<div class="transform-control-group"><div class="control-group-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align top to canvas" data-transform-role="alignTop">Top</button><button class="segmented-option" type="button" title="Center vertically on canvas" data-transform-role="alignCenterY">Middle</button><button class="segmented-option" type="button" title="Align bottom to canvas" data-transform-role="alignBottom">Bottom</button></div></div>
+			<div class="transform-control-group functional-control-group"><div class="functional-control-group-title control-group-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align left to canvas" data-transform-role="alignLeft">Left</button><button class="segmented-option" type="button" title="Center horizontally on canvas" data-transform-role="alignCenterX">Center</button><button class="segmented-option" type="button" title="Align right to canvas" data-transform-role="alignRight">Right</button></div></div>
+			<div class="transform-control-group functional-control-group"><div class="functional-control-group-title control-group-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align top to canvas" data-transform-role="alignTop">Top</button><button class="segmented-option" type="button" title="Center vertically on canvas" data-transform-role="alignCenterY">Middle</button><button class="segmented-option" type="button" title="Align bottom to canvas" data-transform-role="alignBottom">Bottom</button></div></div>
 		</div>
 		<div class="subsection-content-group transform-panel" data-transform-flip><div class="subsection-title">Flip</div><div class="transform-button-row"><label class="checkbox-group"><input type="checkbox" data-transform-role="flipX"><span title="Flip horizontally">Flip H</span></label><label class="checkbox-group"><input type="checkbox" data-transform-role="flipY"><span title="Flip vertically">Flip V</span></label></div></div>
 		<div class="subsection-content-group transform-panel" data-transform-opacity><div class="subsection-title">Appearance</div><div class="setting-column right"><div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" data-transform-role="opacityValue">100%</span></div><input type="range" data-transform-role="opacity"><button class="btn-text" type="button" data-transform-role="resetOpacity">Reset</button></div></div>
@@ -2708,21 +2721,21 @@
 	<script src="js/vendor/mp4-muxer.js?v=1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=127"></script>
+	<script src="js/core/config.js?v=132"></script>
 	<script src="js/core/commands.js?v=4"></script>
-	<script src="js/core/document-scaler.js?v=2"></script>
+	<script src="js/core/document-scaler.js?v=3"></script>
 	<script src="js/transforms/transform-math.js?v=4"></script>
 	<script src="js/transforms/movable-layer.js?v=1"></script>
 
 	<!-- Utils -->
-	<script src="js/core/utils.js?v=11"></script>
+	<script src="js/core/utils.js?v=13"></script>
 	<script src="js/effects/color-adjust.js?v=3"></script>
 	<script src="js/effects/mask-raster.js?v=1"></script>
 	<script src="js/effects/palette-analysis.js?v=1"></script>
 	<script src="js/effects/pixel-effects.js?v=9"></script>
-	<script src="js/effects/effect-source.js?v=12"></script>
-	<script src="js/effects/slot-effects.js?v=3"></script>
-	<script src="js/ui/panel-renderer.js?v=45"></script>
+	<script src="js/effects/effect-source.js?v=13"></script>
+	<script src="js/effects/slot-effects.js?v=6"></script>
+	<script src="js/ui/panel-renderer.js?v=49"></script>
 	<script src="js/ui/picker-session.js?v=3"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=1"></script>
 	<script src="js/core/debug.js?v=1"></script>
@@ -2731,7 +2744,7 @@
 	<script src="js/classes/GestureManager.js?v=8"></script>
 	<script src="js/classes/ModalManager.js?v=9"></script>
 	<script src="js/classes/ExportTimeline.js?v=3"></script>
-	<script src="js/classes/GifExporter.js?v=44"></script>
+	<script src="js/classes/GifExporter.js?v=47"></script>
 	<script src="js/classes/Mp4Exporter.js?v=6"></script>
 	<script src="js/classes/ViewportManager.js?v=3"></script>
 	<script src="js/classes/HistoryManager.js?v=12"></script>
@@ -2746,19 +2759,19 @@
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=2"></script>
 	<script src="js/classes/ContentManager.js?v=13"></script>
-	<script src="js/classes/LayerTransform.js?v=41"></script>
-	<script src="js/classes/GlitterManager.js?v=39"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=29"></script>
+	<script src="js/classes/LayerTransform.js?v=42"></script>
+	<script src="js/classes/GlitterManager.js?v=40"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=30"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=31"></script>
-	<script src="js/classes/TextGlitterManager.js?v=58"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=48"></script>
-	<script src="js/classes/StickerManager.js?v=30"></script>
+	<script src="js/classes/TextGlitterManager.js?v=65"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=57"></script>
+	<script src="js/classes/StickerManager.js?v=31"></script>
 	<script src="js/classes/GroupTransformManager.js?v=21"></script>
 
 	<script src="js/classes/MobileManager.js?v=17"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=179"></script>
+	<script src="js/app.js?v=182"></script>
 
 </body>
 

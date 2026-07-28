@@ -11,6 +11,9 @@ function resolveEffectPaintSource(effectData, options = {}) {
 	const scale = options.scale ?? effectData.scale ?? 100;
 	const opacity = options.opacity ?? effectData.opacity ?? 100;
 	const colorAdjust = options.colorAdjust ?? effectData.colorAdjust;
+	const textureAnchor = options.textureAnchor ?? effectData.textureAnchor;
+	const textureOffsetX = options.textureOffsetX ?? effectData.textureOffsetX;
+	const textureOffsetY = options.textureOffsetY ?? effectData.textureOffsetY;
 	const solidColor = options.solidColor ?? effectData.color ?? '#000000';
 	const glitterAvailable = typeof options.glitterAvailable === 'function'
 		? options.glitterAvailable(glitterId)
@@ -33,7 +36,10 @@ function resolveEffectPaintSource(effectData, options = {}) {
 			glitterId,
 			scale,
 			opacity: opacity / 100,
-			colorAdjust
+			colorAdjust,
+			textureAnchor,
+			textureOffsetX,
+			textureOffsetY
 		};
 	}
 

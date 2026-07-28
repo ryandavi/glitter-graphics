@@ -112,8 +112,10 @@ textarea {
 
 .settings-action-row {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: minmax(0, 1fr);
 	gap: var(--spacing-sm);
+
+	>button { width: 100%; }
 }
 
 .asset-info,
@@ -131,7 +133,7 @@ textarea {
 .advanced-disclosure {
 	display: flex;
 	flex-direction: column;
-	margin-top: var(--spacing-sm);
+	margin-top: 0;
 	border-top: 1px solid var(--color-border);
 
 	>.advanced-disclosure-toggle {
@@ -140,9 +142,9 @@ textarea {
 		justify-content: space-between;
 		gap: var(--spacing-sm);
 		width: 100%;
-		padding: var(--spacing-sm) 0 0;
+		padding: var(--spacing-sm) var(--spacing-md);
 		background: none;
-		border: none;
+		border: 0;
 		color: var(--color-text-secondary);
 		font: inherit;
 		font-size: var(--font-size-sm);
@@ -174,13 +176,36 @@ textarea {
 		display: none;
 		flex-direction: column;
 		gap: var(--spacing-md);
-		padding-top: var(--spacing-sm);
+		padding: var(--spacing-md);
 	}
 
 	&.is-open {
 		>.advanced-disclosure-content { display: flex; }
 		.advanced-disclosure-chevron { transform: rotate(180deg); }
 	}
+}
+
+.advanced-control-group,
+.functional-control-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	@include inset-surface;
+
+	>.advanced-control-group-title,
+	>.functional-control-group-title {
+		color: var(--color-text-tertiary);
+	}
+
+	>.settings-action-row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.subsection-card-body > .advanced-disclosure {
+	margin-right: calc(var(--spacing-md) * -1);
+	margin-bottom: calc(var(--spacing-md) * -1);
+	margin-left: calc(var(--spacing-md) * -1);
 }
 
 .input-unit {

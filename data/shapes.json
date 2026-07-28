@@ -255,7 +255,7 @@
 		{
 			"id": "fivePetalFlower",
 			"label": "5-Petal Flower",
-			"viewBox": 24,
+			"viewBox": 24.5,
 			"uses": [
 				"shape"
 			],

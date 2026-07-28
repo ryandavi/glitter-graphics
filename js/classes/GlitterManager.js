@@ -171,6 +171,16 @@ async initBrowser() {
 			getData: () => { const layer = active(); if (!layer) return null; layer.fill ||= { mode: 'glitter', color: '#ff4fa3' }; return layer.fill; },
 			onUpdate: (commit) => { const layer = active(); if (!layer) return; refreshLayerPresentation(layer); if (commit) this.editor.saveState(); }
 		});
+		bindSlotTextureCoordinateControls({
+			prefix: 'glitterFill',
+			getLayer: active,
+			getData: (layer) => {
+				layer.fill = { ...buildDefaultFill(), ...(layer.fill || {}) };
+				return normalizeSlotTextureCoordinates(layer.fill);
+			},
+			render: refreshLayerPresentation,
+			save: () => this.editor.saveState()
+		});
 	}
 
 	setupFilterChips() {
@@ -196,7 +206,7 @@ async initBrowser() {
 			maskHasContent: false,
 			selections: [],
 			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
-			fill: { mode: 'glitter', color: '#ff4fa3', gradient: normalizeEffectGradient(CONFIG.rendering.gradient) },
+			fill: { ...buildDefaultFill(), gradient: normalizeEffectGradient(CONFIG.rendering.gradient) },
 			settings: {
 				threshold: CONFIG.tools.selection.defaults.threshold,
 				feather: CONFIG.tools.selection.defaults.feather,
@@ -574,6 +584,7 @@ async initBrowser() {
 	}
 
 	renderBaseBackground(layer) {
+		this.editor.baseBackgroundManager?.normalizeLayer(layer);
 		const glitter = this.getItemById(layer.selectedGlitterId);
 		if (!glitter) return;
 		let wrapper = this.layerElements.get(layer.id);
@@ -589,6 +600,7 @@ async initBrowser() {
 		inner.style.backgroundImage = `url(${glitter.url})`;
 		inner.style.backgroundColor = 'transparent';
 		inner.style.backgroundSize = `${Math.round((glitter.frames?.width || 50) * layer.background.scale / 100)}px`;
+		inner.style.backgroundPosition = `${layer.background.textureOffsetX}px ${layer.background.textureOffsetY}px`;
 		inner.style.opacity = layer.background.opacity / 100;
 		inner.style.filter = buildCssColorFilter(layer.background.colorAdjust);
 		inner.style.maskImage = 'none';
@@ -600,6 +612,8 @@ async initBrowser() {
 
 	renderLayer(layer, width, height, options = {}) {
 		if (layer.type !== LayerType.GLITTER_FILL) return;
+		layer.fill = { ...buildDefaultFill(), ...(layer.fill || {}) };
+		normalizeSlotTextureCoordinates(layer.fill);
 
 		const glitter = this.getItemById(layer.selectedGlitterId);
 		const fillMode = layer.fill?.mode || 'glitter';
@@ -640,6 +654,9 @@ async initBrowser() {
 		const glitterScale = layer.settings.scale / 100;
 		const baseSize = (glitter?.frames && glitter.frames.width) ? glitter.frames.width : 50;
 		inner.style.backgroundSize = fillMode === 'glitter' ? `${Math.round(baseSize * glitterScale)}px` : 'cover';
+		inner.style.backgroundPosition = fillMode === 'glitter'
+			? `${layer.fill.textureOffsetX}px ${layer.fill.textureOffsetY}px`
+			: '';
 
 		const maskObjectUrl = this.getMaskObjectUrlForLayer(layer, width, height, options);
 		if (maskObjectUrl) {

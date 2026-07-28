@@ -458,7 +458,9 @@ class GifExporter {
 							const frame = frames[this._getReducedFrameIndex(frameIndex, frames.length, reduced)];
 							if (!frame) throw new Error(`Missing background glitter frame for ${layer.id}`);
 							const pattern = ctx.createPattern(this._patternSourceFromFrame(frame, background.colorAdjust), 'repeat');
-							pattern.setTransform(new DOMMatrix().scaleSelf((background.scale || 100) / 100));
+							pattern.setTransform(new DOMMatrix()
+								.translateSelf(Number(background.textureOffsetX) || 0, Number(background.textureOffsetY) || 0)
+								.scaleSelf((background.scale || 100) / 100));
 							ctx.fillStyle = pattern;
 						}
 						ctx.fillRect(0, 0, width, height);
@@ -538,7 +540,9 @@ class GifExporter {
 							const patternSource = this._patternSourceFromFrame(frameImageData, layer.settings.colorAdjust);
 							const pattern = helperCtx.createPattern(patternSource, 'repeat');
 							const scale = (layer.settings.scale <= 0 ? 1 : layer.settings.scale) / 100;
-							pattern.setTransform(new DOMMatrix().scaleSelf(scale, scale));
+							pattern.setTransform(new DOMMatrix()
+								.translateSelf(Number(layer.fill?.textureOffsetX) || 0, Number(layer.fill?.textureOffsetY) || 0)
+								.scaleSelf(scale, scale));
 							helperCtx.fillStyle = pattern;
 						}
 						helperCtx.fillRect(0, 0, width, height);
@@ -827,7 +831,10 @@ class GifExporter {
 			const pattern = fillCtx.createPattern(patternSource, 'repeat');
 			const sourceScale = source.scale ?? layer.settings.scale;
 			const scale = (sourceScale <= 0 ? 1 : sourceScale) / 100;
-			const matrix = new DOMMatrix().scaleSelf(scale, scale);
+			const textureOrigin = getSlotTexturePatternOrigin(maskCanvas, source, layer);
+			const matrix = new DOMMatrix()
+				.translateSelf(textureOrigin.x, textureOrigin.y)
+				.scaleSelf(scale, scale);
 			pattern.setTransform(matrix);
 			fillCtx.fillStyle = pattern;
 		}
@@ -1013,6 +1020,7 @@ class GifExporter {
 		const canvas = document.createElement('canvas');
 		canvas.width = baseCanvas.width;
 		canvas.height = baseCanvas.height;
+		this._copyTextureOrigin(canvas, baseCanvas);
 		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 		ctx.drawImage(baseCanvas, 0, 0);
 		if (subtractCanvas) {
@@ -1033,6 +1041,7 @@ class GifExporter {
 			const horizontal = document.createElement('canvas');
 			horizontal.width = sourceCanvas.width;
 			horizontal.height = sourceCanvas.height;
+			this._copyTextureOrigin(horizontal, sourceCanvas);
 			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true, alpha: true });
 			for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
 				horizontalCtx.drawImage(sourceCanvas, offsetX, 0);
@@ -1041,6 +1050,7 @@ class GifExporter {
 			const canvas = document.createElement('canvas');
 			canvas.width = sourceCanvas.width;
 			canvas.height = sourceCanvas.height;
+			this._copyTextureOrigin(canvas, sourceCanvas);
 			const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 			for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
 				ctx.drawImage(horizontal, 0, offsetY);
@@ -1051,6 +1061,7 @@ class GifExporter {
 		const canvas = document.createElement('canvas');
 		canvas.width = sourceCanvas.width;
 		canvas.height = sourceCanvas.height;
+		this._copyTextureOrigin(canvas, sourceCanvas);
 		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 		ctx.drawImage(sourceCanvas, 0, 0);
 		this._getMorphOffsets(nextRadius).forEach((offset) => {
@@ -1069,6 +1080,7 @@ class GifExporter {
 			const horizontal = document.createElement('canvas');
 			horizontal.width = sourceCanvas.width;
 			horizontal.height = sourceCanvas.height;
+			this._copyTextureOrigin(horizontal, sourceCanvas);
 			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true, alpha: true });
 			horizontalCtx.drawImage(sourceCanvas, 0, 0);
 			horizontalCtx.globalCompositeOperation = 'destination-in';
@@ -1081,6 +1093,7 @@ class GifExporter {
 			const canvas = document.createElement('canvas');
 			canvas.width = sourceCanvas.width;
 			canvas.height = sourceCanvas.height;
+			this._copyTextureOrigin(canvas, sourceCanvas);
 			const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 			ctx.drawImage(horizontal, 0, 0);
 			ctx.globalCompositeOperation = 'destination-in';
@@ -1095,6 +1108,7 @@ class GifExporter {
 		const canvas = document.createElement('canvas');
 		canvas.width = sourceCanvas.width;
 		canvas.height = sourceCanvas.height;
+		this._copyTextureOrigin(canvas, sourceCanvas);
 		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 		ctx.drawImage(sourceCanvas, 0, 0);
 		ctx.globalCompositeOperation = 'destination-in';
@@ -1137,9 +1151,18 @@ class GifExporter {
 		const canvas = document.createElement('canvas');
 		canvas.width = sourceCanvas.width;
 		canvas.height = sourceCanvas.height;
+		this._copyTextureOrigin(canvas, sourceCanvas, offsetX, offsetY);
 		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 		ctx.drawImage(sourceCanvas, offsetX, offsetY);
 		return canvas;
+	}
+
+	_copyTextureOrigin(targetCanvas, sourceCanvas, offsetX = 0, offsetY = 0) {
+		const sourceOrigin = sourceCanvas?._textureOrigin || { x: 0, y: 0 };
+		targetCanvas._textureOrigin = {
+			x: sourceOrigin.x + offsetX,
+			y: sourceOrigin.y + offsetY
+		};
 	}
 
 	_createBorderMaskCanvas(fillMaskCanvas, widthPx, cutOutFill = false) {
