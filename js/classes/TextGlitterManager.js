@@ -166,7 +166,7 @@ class TextGlitterManager {
 					const layer = this.getActiveTextLayer();
 					if (!layer) return;
 					this.renderLayer(layer);
-					if (commit) this.editor.saveState();
+					if (commit) this.editor.saveState('Edit text');
 				}
 			});
 		});
@@ -431,7 +431,7 @@ class TextGlitterManager {
 				getLayer: () => this.getActiveTextLayer(),
 				getData: (layer) => this.ensureEffectData(layer, slot),
 				render: (layer) => this.renderLayer(layer),
-				save: () => this.editor.saveState()
+				save: () => this.editor.saveState('Edit text')
 			});
 		});
 	}
@@ -930,7 +930,7 @@ class TextGlitterManager {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 
-			this.editor.saveState();
+			this.editor.saveState('Edit text');
 			this.loadLayerSettings(layer);
 		});
 	}
@@ -1087,7 +1087,7 @@ class TextGlitterManager {
 			const layer = this.getActiveTextLayer();
 			if (!layer) return;
 
-			this.editor.saveState();
+			this.editor.saveState('Edit text');
 			this.loadLayerSettings(layer);
 		});
 	}
@@ -1116,7 +1116,7 @@ class TextGlitterManager {
 			onCommit: () => {
 				const layer = this.getActiveTextLayer();
 				if (!layer) return;
-				this.editor.saveState();
+				this.editor.saveState('Edit text');
 				this.editor.layerManager.renderLayersList();
 			},
 			onError: (error) => {
@@ -1374,10 +1374,7 @@ class TextGlitterManager {
 	}
 
 	createLayer(options = {}) {
-		if (this.editor.layerManager.layers.length >= CONFIG.app.limits.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
-			return null;
-		}
+		if (!this.editor.layerManager.requireLayerCapacity()) return null;
 
 		const defaultText = options.text ?? CONFIG.tools.text.defaultText;
 		const initialPosition = options.position || {
@@ -1737,31 +1734,19 @@ class TextGlitterManager {
 	}
 
 	getBorderPlacement(borderData) {
-		return borderData?.placement === 'inside'
-			? 'inside'
-			: borderData?.placement === 'center'
-				? 'center'
-				: 'outside';
+		return getBorderPlacement(borderData);
 	}
 
 	getBorderEdgeStyle(borderData) {
-		return borderData?.edgeStyle === 'hard' ? 'hard' : 'round';
+		return getBorderEdgeStyle(borderData);
 	}
 
 	getBorderDrawOrder(borderData) {
-		return borderData?.drawOrder === 'front' ? 'front' : 'behind';
+		return getBorderDrawOrder(borderData);
 	}
 
 	getBorderOutsidePadding(borderData) {
-		const widthPx = Math.max(0, borderData?.widthPx || 0);
-		switch (this.getBorderPlacement(borderData)) {
-			case 'inside':
-				return 0;
-			case 'center':
-				return Math.ceil(widthPx / 2);
-			default:
-				return widthPx;
-		}
+		return getBorderOutsidePadding(borderData);
 	}
 
 	syncBorderOptionUI(borderData) {
@@ -2413,21 +2398,13 @@ class TextGlitterManager {
 	renderContent(layersToShow) {
 		const keep = new Set();
 		layersToShow.forEach((layer) => {
-			if (layer.type === LayerType.TEXT_GLITTER) {
-				keep.add(layer.id);
-			}
+			if (layer.type === LayerType.TEXT_GLITTER) keep.add(layer.id);
 		});
-
 		Array.from(this.layerElements.keys()).forEach((layerId) => {
-			if (!keep.has(layerId)) {
-				this.removeLayerElement(layerId);
-			}
+			if (!keep.has(layerId)) this.removeLayerElement(layerId);
 		});
-
 		layersToShow.forEach((layer) => {
-			if (layer.type === LayerType.TEXT_GLITTER) {
-				this.renderLayer(layer);
-			}
+			if (layer.type === LayerType.TEXT_GLITTER) this.renderLayer(layer);
 		});
 	}
 
@@ -2732,130 +2709,19 @@ class TextGlitterManager {
 	}
 
 	createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
-		const canvas = document.createElement('canvas');
-		canvas.width = baseCanvas.width;
-		canvas.height = baseCanvas.height;
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
-		ctx.drawImage(baseCanvas, 0, 0);
-		if (subtractCanvas) {
-			ctx.globalCompositeOperation = 'destination-out';
-			ctx.drawImage(subtractCanvas, 0, 0);
-			ctx.globalCompositeOperation = 'source-over';
-		}
-		return canvas;
+		return createMaskDifferenceCanvas(baseCanvas, subtractCanvas);
 	}
 
 	createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
-		const nextRadius = Math.max(0, Math.round(radius));
-		if (nextRadius <= 0) {
-			return sourceCanvas;
-		}
-
-		if (edgeStyle === 'hard') {
-			const horizontal = document.createElement('canvas');
-			horizontal.width = sourceCanvas.width;
-			horizontal.height = sourceCanvas.height;
-			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true });
-			for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
-				horizontalCtx.drawImage(sourceCanvas, offsetX, 0);
-			}
-
-			const canvas = document.createElement('canvas');
-			canvas.width = sourceCanvas.width;
-			canvas.height = sourceCanvas.height;
-			const ctx = canvas.getContext('2d', { willReadFrequently: true });
-			for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
-				ctx.drawImage(horizontal, 0, offsetY);
-			}
-			return canvas;
-		}
-
-		const canvas = document.createElement('canvas');
-		canvas.width = sourceCanvas.width;
-		canvas.height = sourceCanvas.height;
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
-		ctx.drawImage(sourceCanvas, 0, 0);
-		this.getMorphOffsets(nextRadius).forEach((offset) => {
-			ctx.drawImage(sourceCanvas, offset.x, offset.y);
-		});
-		return canvas;
+		return createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle);
 	}
 
 	createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
-		const nextRadius = Math.max(0, Math.round(radius));
-		if (nextRadius <= 0) {
-			return sourceCanvas;
-		}
-
-		if (edgeStyle === 'hard') {
-			const horizontal = document.createElement('canvas');
-			horizontal.width = sourceCanvas.width;
-			horizontal.height = sourceCanvas.height;
-			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true });
-			horizontalCtx.drawImage(sourceCanvas, 0, 0);
-			horizontalCtx.globalCompositeOperation = 'destination-in';
-			for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
-				if (offsetX === 0) continue;
-				horizontalCtx.drawImage(sourceCanvas, -offsetX, 0);
-			}
-			horizontalCtx.globalCompositeOperation = 'source-over';
-
-			const canvas = document.createElement('canvas');
-			canvas.width = sourceCanvas.width;
-			canvas.height = sourceCanvas.height;
-			const ctx = canvas.getContext('2d', { willReadFrequently: true });
-			ctx.drawImage(horizontal, 0, 0);
-			ctx.globalCompositeOperation = 'destination-in';
-			for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
-				if (offsetY === 0) continue;
-				ctx.drawImage(horizontal, 0, -offsetY);
-			}
-			ctx.globalCompositeOperation = 'source-over';
-			return canvas;
-		}
-
-		const canvas = document.createElement('canvas');
-		canvas.width = sourceCanvas.width;
-		canvas.height = sourceCanvas.height;
-		const ctx = canvas.getContext('2d', { willReadFrequently: true });
-		ctx.drawImage(sourceCanvas, 0, 0);
-		ctx.globalCompositeOperation = 'destination-in';
-		this.getMorphOffsets(nextRadius).forEach((offset) => {
-			ctx.drawImage(sourceCanvas, -offset.x, -offset.y);
-		});
-		ctx.globalCompositeOperation = 'source-over';
-		return canvas;
+		return createErodedMaskCanvas(sourceCanvas, radius, edgeStyle);
 	}
 
 	getMorphOffsets(widthPx) {
-		const radius = Math.max(1, widthPx);
-		// Sample count scales with the border radius so the outer envelope of the
-		// unioned copies stays smooth (few steps = visible scalloping on wide
-		// borders). Kept in lockstep with GifExporter._createBorderMaskCanvas.
-		const borderSampling = CONFIG.rendering?.borderSampling || {};
-		const steps = Math.max(
-			borderSampling.minSteps ?? 16,
-			Math.min(
-				borderSampling.maxSteps ?? 64,
-				Math.ceil(radius * (borderSampling.stepsPerPixel ?? 4))
-			)
-		);
-		const seen = new Set();
-		const offsets = [];
-
-		for (let index = 0; index < steps; index++) {
-			const angle = (Math.PI * 2 * index) / steps;
-			const x = Math.round(Math.cos(angle) * radius);
-			const y = Math.round(Math.sin(angle) * radius);
-			const key = `${x},${y}`;
-			if (seen.has(key) || (x === 0 && y === 0)) {
-				continue;
-			}
-			seen.add(key);
-			offsets.push({ x, y });
-		}
-
-		return offsets;
+		return getMorphOffsets(widthPx);
 	}
 
 	applyTextStyles(span, measurement, maskObjectUrl) {
@@ -2961,7 +2827,7 @@ class TextGlitterManager {
 		layer._pendingPointAnchorSnapshot = null;
 
 		if (refreshPreview) {
-			this.editor.updatePreview();
+			this.editor.requestPreviewUpdate();
 		} else {
 			this.renderLayer(layer);
 		}
@@ -2975,7 +2841,7 @@ class TextGlitterManager {
 		this.editor.updateHelpfulMessage();
 
 		if (saveHistory) {
-			this.editor.saveState();
+			this.editor.saveState('Edit text');
 		}
 	}
 
@@ -3090,7 +2956,7 @@ class TextGlitterManager {
 		}
 		const threshold = CONFIG.snapping.threshold / Math.max(0.01, this.editor.viewport.currentZoom);
 		const snap = (value, target) => (
-			CONFIG.snapping.enabled &&
+			PREFERENCES.get('snappingEnabled') &&
 			!options.ctrlKey &&
 			Number.isFinite(target) &&
 			Math.abs(value - target) <= threshold
@@ -3176,14 +3042,14 @@ class TextGlitterManager {
 			layer.textData.boxWidth *= bakedFactor;
 			layer.textData.boxHeight *= bakedFactor;
 		}
-		if (layer.textData.border && this.editor.scaleEffectsOnTransform) {
+		if (layer.textData.border && PREFERENCES.get('scaleEffects')) {
 			layer.textData.border.widthPx *= bakedFactor;
 		}
-		if (layer.textData.shadow && this.editor.scaleEffectsOnTransform) {
+		if (layer.textData.shadow && PREFERENCES.get('scaleEffects')) {
 			layer.textData.shadow.offsetX *= bakedFactor;
 			layer.textData.shadow.offsetY *= bakedFactor;
 		}
-		if (this.editor.scaleTexturesOnTransform) {
+		if (PREFERENCES.get('scaleTextures')) {
 			layer.settings.scale = roundSlotTextureScale((layer.settings.scale ?? 100) * bakedFactor);
 			if (layer.textData.border) {
 				layer.textData.border.scale = roundSlotTextureScale((layer.textData.border.scale ?? 100) * bakedFactor);

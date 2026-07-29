@@ -74,7 +74,11 @@ class GestureManager {
 
 		this.viewport.cancelInertia?.();
 
-		if (event.target.closest('.ui-ignore-gestures') || event.target.closest('.transform-handle-wrapper')) {
+		if (event.target.closest('.ui-ignore-gestures')) {
+			return;
+		}
+		const transformHandles = event.target.closest('.transform-handles');
+		if (transformHandles && !event.target.closest('.transform-bounding-box')) {
 			return;
 		}
 

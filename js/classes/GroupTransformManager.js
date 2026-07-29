@@ -171,7 +171,7 @@ class GroupTransformManager {
 		const historyManager = this.editor.historyManager;
 		const snapshot = historyManager?.history?.[historyManager.historyIndex] || null;
 		if (!snapshot) {
-			this.editor.saveState();
+			this.editor.saveState('Transform layers');
 			return;
 		}
 
@@ -184,7 +184,7 @@ class GroupTransformManager {
 			&& snapshotSelectedIds.every((layerId) => currentSelectedIds.includes(layerId));
 
 		if (!sameActive || !sameSelection) {
-			this.editor.saveState();
+			this.editor.saveState('Transform layers');
 		}
 	}
 
@@ -293,7 +293,7 @@ class GroupTransformManager {
 
 		if (this.gestureInteractionChanged) {
 			await this.commitScaledLayers();
-			this.editor.saveState();
+			this.editor.saveState('Transform layers');
 			this.editor.syncTransformHandlesForActiveLayer?.();
 		}
 
@@ -350,7 +350,7 @@ class GroupTransformManager {
 			transform.updateTransform({ position: { x: current.position.x + deltaX, y: current.position.y + deltaY } });
 		});
 		this.applyEntries(entries);
-		this.editor.saveState();
+		this.editor.saveState('Transform layers');
 	}
 
 	distribute(axis) {
@@ -368,7 +368,7 @@ class GroupTransformManager {
 			entry.transform.updateTransform({ position: { x: current.position.x + (axis === 'horizontal' ? delta : 0), y: current.position.y + (axis === 'vertical' ? delta : 0) } });
 		});
 		this.applyEntries(keyed);
-		this.editor.saveState();
+		this.editor.saveState('Transform layers');
 	}
 
 	translateByCanvasDelta(deltaX, deltaY, options = {}) {
@@ -389,7 +389,7 @@ class GroupTransformManager {
 		this.applyEntries(entries);
 
 		if (options.saveState) {
-			this.editor.saveState();
+			this.editor.saveState('Transform layers');
 		}
 	}
 
@@ -691,7 +691,7 @@ class GroupTransformManager {
 						activeLayerId: completedDrag.cloneIds.at(-1)
 					});
 				}
-				this.editor.saveState();
+				this.editor.saveState('Transform layers');
 				this.editor.syncTransformHandlesForActiveLayer?.();
 			}
 

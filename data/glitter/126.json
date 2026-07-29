@@ -1,0 +1,36 @@
+{
+  "id": 126,
+  "url": "images/glitter/ember/ember_gold.gif",
+  "name": "Gold",
+  "generatedName": "Vivid Deep Red-Orange",
+  "brightness": "0.260",
+  "sortOrder": 73,
+  "hue": 0.142,
+  "colorCodes": [
+    "#513100",
+    "#AD7C05",
+    "#F2DF11"
+  ],
+  "colorWeights": [
+    0,
+    0.3333,
+    0.3333
+  ],
+  "frameCount": 4,
+  "frameRate": 20,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1409,
+  "category": "ember",
+  "isPixelated": 1,
+  "tags": [
+    "Gold",
+    "Orange",
+    "Red",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

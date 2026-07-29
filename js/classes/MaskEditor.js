@@ -75,11 +75,11 @@ class MaskEditor {
 			}
 
 			this.editor.glitterManager.clearPaintForLayer(layer);
-			this.editor.updatePreview();
+			this.editor.requestPreviewUpdate();
 			this.editor.layerManager.renderLayersList();
 			this.editor.updateActionButtons();
 			this.editor.updateHelpfulMessage();
-			this.editor.saveState();
+			this.editor.saveState('Paint mask');
 			this.loadLayer(layer);
 			this.renderOverlay();
 		});
@@ -807,11 +807,11 @@ class MaskEditor {
 
 		if (this.strokeChanged) {
 			this.editor.glitterManager.commitPaintState(layer);
-			this.editor.updatePreview();
+			this.editor.requestPreviewUpdate();
 			this.editor.layerManager.renderLayersList();
 			this.editor.updateActionButtons();
 			this.editor.updateHelpfulMessage();
-			this.editor.saveState();
+			this.editor.saveState('Paint mask');
 			this.loadLayer(layer);
 			this.renderOverlay();
 		}
@@ -932,14 +932,14 @@ class MaskEditor {
 		// Erasing has nothing to do on a layer that can't hold glitter —
 		// don't create a fresh glitter layer just to immediately mark it dirty.
 		if (this.getActiveMode() === 'sub') {
-			this.editor.updateStatus('Nothing to erase here — select a glitter layer first');
+			this.editor.showError('Nothing to erase here — select a glitter layer first');
 			return null;
 		}
 
 		// Same convention as the color picker on a non-glitter layer:
 		// auto-create a glitter layer and work in it.
 		if (!CONFIG.app.behavior.autoCreateGlitterLayer) {
-			this.editor.updateStatus('Select a glitter layer to paint on');
+			this.editor.showError('Select a glitter layer to paint on');
 			return null;
 		}
 

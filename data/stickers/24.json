@@ -1,0 +1,28 @@
+{
+  "id": 24,
+  "name": "Lips Kiss",
+  "filename": "lips_kiss_2.gif",
+  "url": "images/stickers/people/lips_kiss_2.gif",
+  "thumbnailUrl": "images/stickers/people/lips_kiss_2.gif",
+  "category": "people",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "kiss",
+    "lips",
+    "love"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 110,
+  "height": 77,
+  "frameCount": 13,
+  "frameRate": 0,
+  "isVariableFramerate": 1,
+  "fileSize": 18167,
+  "sortOrder": 24
+}

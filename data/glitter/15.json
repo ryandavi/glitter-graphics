@@ -1,0 +1,31 @@
+{
+  "id": 15,
+  "url": "images/glitter/sparkle/glitter_amethyst.gif",
+  "name": "Amethyst",
+  "generatedName": "Vivid Purple",
+  "brightness": "1.000",
+  "sortOrder": 45,
+  "hue": 0.819,
+  "colorCodes": [
+    "#7800B4"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 1931,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Jewel",
+    "Purple",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

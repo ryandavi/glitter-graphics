@@ -1,0 +1,32 @@
+{
+  "id": 160,
+  "name": "Money Stacks Gold Glitter Green",
+  "filename": "money-stacks_gold-glitter-green.gif",
+  "url": "images/stickers/object/money-stacks_gold-glitter-green.gif",
+  "thumbnailUrl": "images/stickers/object/money-stacks_gold-glitter-green.gif",
+  "category": "object",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "cash",
+    "glitter",
+    "gold",
+    "green",
+    "money",
+    "stacks",
+    "wealth"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 349,
+  "height": 221,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 125705,
+  "sortOrder": 170
+}

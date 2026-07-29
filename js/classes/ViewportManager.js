@@ -92,12 +92,9 @@ class ViewportManager {
 	 * Essential for sticker placement, selection, etc.
 	 */
 	screenToCanvas(screenX, screenY) {
-		const rect = this.previewContainer.getBoundingClientRect();
-		const containerX = screenX - rect.left;
-		const containerY = screenY - rect.top;
-
-		const canvasX = (containerX - this.panX) / this.currentZoom;
-		const canvasY = (containerY - this.panY) / this.currentZoom;
+		const rect = this.previewWrapper.getBoundingClientRect();
+		const canvasX = (screenX - rect.left) / this.currentZoom;
+		const canvasY = (screenY - rect.top) / this.currentZoom;
 
 		return { x: canvasX, y: canvasY };
 	}

@@ -1,0 +1,33 @@
+{
+  "id": 32,
+  "url": "images/glitter/noise/noise_white.gif",
+  "name": "White",
+  "generatedName": "Light Gray",
+  "brightness": "1.000",
+  "sortOrder": 83,
+  "hue": 1.1,
+  "colorCodes": [
+    "#D2D2D2"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 4,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 100,
+  "height": 100,
+  "fileSize": 9165,
+  "category": "noise",
+  "isPixelated": 1,
+  "tags": [
+    "Grayscale",
+    "Light",
+    "Neutral",
+    "Silver",
+    "White"
+  ],
+  "searchTerms": []
+}

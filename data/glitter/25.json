@@ -1,0 +1,36 @@
+{
+  "id": 25,
+  "url": "images/glitter/ember/ember_turquoise.gif",
+  "name": "Turquoise",
+  "generatedName": "Very Dark Vivid Green",
+  "brightness": "0.000",
+  "sortOrder": 75,
+  "hue": 0.457,
+  "colorCodes": [
+    "#003319",
+    "#067863",
+    "#11CCD5"
+  ],
+  "colorWeights": [
+    0,
+    0.3333,
+    0.3333
+  ],
+  "frameCount": 4,
+  "frameRate": 20,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1541,
+  "category": "ember",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Dark",
+    "Green"
+  ],
+  "searchTerms": []
+}

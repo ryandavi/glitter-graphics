@@ -1,0 +1,28 @@
+{
+  "id": 11,
+  "name": "Rose Bloom",
+  "filename": "rose_bloom.gif",
+  "url": "images/stickers/flower/rose_bloom.gif",
+  "thumbnailUrl": "images/stickers/flower/rose_bloom.gif",
+  "category": "flower",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "bloom",
+    "flower",
+    "rose"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 110,
+  "height": 114,
+  "frameCount": 21,
+  "frameRate": 1,
+  "isVariableFramerate": 0,
+  "fileSize": 32095,
+  "sortOrder": 11
+}

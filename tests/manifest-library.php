@@ -26,7 +26,7 @@ assertManifest(
 );
 
 $shapes = (new ManifestLibraryService('shapes'))->get();
-assertManifest(count($shapes['manifest']['shapes']) === 26, 'all migrated shapes are present');
+assertManifest(count($shapes['manifest']['shapes']) === 42, 'all canonical shapes are present');
 assertManifest(count($shapes['health']['issues']) === 0, 'shapes manifest validates');
 $shapeIds = array_column($shapes['manifest']['shapes'], 'id');
 assertManifest(in_array('circle', $shapeIds, true), 'default circle shape is present');

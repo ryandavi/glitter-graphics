@@ -1,0 +1,30 @@
+{
+  "id": 173,
+  "name": "Hearts Pink Glitter",
+  "filename": "hearts_pink-glitter.gif",
+  "url": "images/stickers/sparkle/hearts_pink-glitter.gif",
+  "thumbnailUrl": "images/stickers/sparkle/hearts_pink-glitter.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "glitter",
+    "hearts",
+    "love",
+    "pink",
+    "sparkle"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 46,
+  "height": 51,
+  "frameCount": 2,
+  "frameRate": 0,
+  "isVariableFramerate": 0,
+  "fileSize": 857,
+  "sortOrder": 183
+}

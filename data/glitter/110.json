@@ -1,0 +1,32 @@
+{
+  "id": 110,
+  "url": "images/glitter/sparkle/glitter_ugly-purple.gif",
+  "name": "Ugly Purple",
+  "generatedName": "Muted Pink",
+  "brightness": "1.000",
+  "sortOrder": 43,
+  "hue": 0.144,
+  "colorCodes": [
+    "#A55A96"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1957,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Contrast",
+    "Muted",
+    "Pink",
+    "Purple"
+  ],
+  "searchTerms": []
+}

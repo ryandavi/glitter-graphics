@@ -1,0 +1,26 @@
+{
+  "id": 70,
+  "name": "Welcome Text",
+  "filename": "welcome.gif",
+  "url": "images/stickers/text/welcome.gif",
+  "thumbnailUrl": "images/stickers/text/welcome.gif",
+  "category": "text",
+  "attribution": "",
+  "stickerText": "Welcome",
+  "tags": [
+    "welcome"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 130,
+  "height": 31,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 11388,
+  "sortOrder": 79
+}

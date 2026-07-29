@@ -1,0 +1,27 @@
+{
+  "id": 90,
+  "name": "Butterfly Pink",
+  "filename": "butterfly_pink.gif",
+  "url": "images/stickers/animal/butterfly_pink.gif",
+  "thumbnailUrl": "images/stickers/animal/butterfly_pink.gif",
+  "category": "animal",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "butterfly",
+    "pink"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 120,
+  "height": 120,
+  "frameCount": 4,
+  "frameRate": 15,
+  "isVariableFramerate": 0,
+  "fileSize": 13922,
+  "sortOrder": 100
+}

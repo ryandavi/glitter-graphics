@@ -1,0 +1,28 @@
+{
+  "id": 34,
+  "name": "Babyface Red Glitter Text",
+  "filename": "babyface_red-glitter.gif",
+  "url": "images/stickers/text/babyface_red-glitter.gif",
+  "thumbnailUrl": "images/stickers/text/babyface_red-glitter.gif",
+  "category": "text",
+  "attribution": "",
+  "stickerText": "Babyface",
+  "tags": [
+    "babyface",
+    "glitter",
+    "red"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 268,
+  "height": 57,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 19223,
+  "sortOrder": 42
+}

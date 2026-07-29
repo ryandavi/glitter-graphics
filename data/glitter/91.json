@@ -1,0 +1,33 @@
+{
+  "id": 91,
+  "url": "images/glitter/sparkle/glitter_light-blue.gif",
+  "name": "Light Blue",
+  "generatedName": "Muted Blue",
+  "brightness": "1.000",
+  "sortOrder": 98,
+  "hue": 0.597,
+  "colorCodes": [
+    "#69C3F0"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 6166,
+  "category": "etc",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Light",
+    "Muted",
+    "Pastel"
+  ],
+  "searchTerms": []
+}

@@ -1,0 +1,28 @@
+{
+  "id": 10,
+  "name": "Red Pansy",
+  "filename": "red_pansy.gif",
+  "url": "images/stickers/flower/red_pansy.gif",
+  "thumbnailUrl": "images/stickers/flower/red_pansy.gif",
+  "category": "flower",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "flower",
+    "pansy",
+    "red"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 65,
+  "height": 74,
+  "frameCount": 5,
+  "frameRate": 20,
+  "isVariableFramerate": 0,
+  "fileSize": 10367,
+  "sortOrder": 10
+}

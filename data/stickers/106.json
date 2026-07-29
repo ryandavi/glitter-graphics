@@ -1,0 +1,27 @@
+{
+  "id": 106,
+  "name": "Pearl White",
+  "filename": "pearl_white.gif",
+  "url": "images/stickers/decorative/pearl_white.gif",
+  "thumbnailUrl": "images/stickers/decorative/pearl_white.gif",
+  "category": "decorative",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "pearl",
+    "white"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 47,
+  "height": 80,
+  "frameCount": 8,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 23351,
+  "sortOrder": 116
+}

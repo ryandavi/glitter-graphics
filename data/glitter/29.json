@@ -1,0 +1,32 @@
+{
+  "id": 29,
+  "url": "images/glitter/noise/noise_yellow.gif",
+  "name": "Yellow",
+  "generatedName": "Jewel Tone Yellow",
+  "brightness": "1.000",
+  "sortOrder": 81,
+  "hue": 0.208,
+  "colorCodes": [
+    "#969600"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 4,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 100,
+  "height": 100,
+  "fileSize": 19276,
+  "category": "noise",
+  "isPixelated": 1,
+  "tags": [
+    "Jewel",
+    "Vivid",
+    "Warm",
+    "Yellow"
+  ],
+  "searchTerms": []
+}

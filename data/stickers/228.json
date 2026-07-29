@@ -1,0 +1,33 @@
+{
+  "id": 228,
+  "name": "Ryandavi Frog",
+  "filename": "ryandavi_frog.png",
+  "url": "images/stickers/ryandavi/ryandavi_frog.png",
+  "thumbnailUrl": "images/stickers/ryandavi/ryandavi_frog.png",
+  "category": "ryandavi",
+  "attribution": null,
+  "stickerText": null,
+  "tags": [
+    "black",
+    "green"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#8BC43E",
+    "#020201"
+  ],
+  "colorWeights": [
+    0.66,
+    0.32
+  ],
+  "paletteType": "single",
+  "isAnimated": 0,
+  "hasTransparency": 1,
+  "width": 200,
+  "height": 200,
+  "frameCount": 1,
+  "frameRate": 0,
+  "isVariableFramerate": 0,
+  "fileSize": 2559,
+  "sortOrder": 0
+}

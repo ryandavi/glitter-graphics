@@ -9,6 +9,8 @@ class ContentManager {
 		// Content arrays
 		this.content = [];
 		this.userContent = [];
+		this.assetDetailPromises = new Map();
+		this.assetDetailBasePath = null;
 
 		this.browser = null;
 		this.useBrowser = false; // Toggle for browser mode
@@ -36,7 +38,6 @@ class ContentManager {
 			searchNameOnly: null
 		};
 
-		this.layerElements = new Map(); // layerId -> HTMLElement
 	}
 
 	async init() {
@@ -184,6 +185,55 @@ class ContentManager {
 		};
 	}
 
+	async loadIndexedManifest({ indexPath, fallbackPath, detailBasePath, defaults }) {
+		let records = null;
+		let indexed = false;
+		try {
+			const response = await fetch(`${indexPath}?v=${CONFIG.app.assets.manifestVersion}`);
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			records = await response.json();
+			indexed = true;
+		} catch (error) {
+			dbg(`[assets] Falling back to ${fallbackPath}: ${error.message}`);
+			const response = await fetch(fallbackPath);
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			records = await response.json();
+		}
+
+		this.assetDetailBasePath = indexed ? detailBasePath : null;
+		this.content = records.map((record) => {
+			const asset = this.normalizeAsset(record, defaults);
+			asset._detailLoaded = !indexed;
+			return asset;
+		});
+		return this.content;
+	}
+
+	async ensureAssetDetails(assetOrId) {
+		const asset = typeof assetOrId === 'object' ? assetOrId : this.getItemById(assetOrId);
+		if (!asset || !this.content.includes(asset) || asset._detailLoaded || !this.assetDetailBasePath) return asset;
+		if (!this.assetDetailPromises.has(asset.id)) {
+			const promise = fetch(
+				`${this.assetDetailBasePath}/${encodeURIComponent(asset.id)}.json?v=${CONFIG.app.assets.manifestVersion}`
+			)
+				.then((response) => {
+					if (!response.ok) throw new Error(`HTTP ${response.status}`);
+					return response.json();
+				})
+				.then((detail) => {
+					const normalized = this.normalizeAsset({ ...asset, ...detail }, asset);
+					Object.assign(asset, normalized, { _detailLoaded: true });
+					return asset;
+				})
+				.catch((error) => {
+					this.assetDetailPromises.delete(asset.id);
+					throw error;
+				});
+			this.assetDetailPromises.set(asset.id, promise);
+		}
+		return this.assetDetailPromises.get(asset.id);
+	}
+
 	populateCategoryChips() {
 		if (!this.ui.categoryChips || this.ui.categoryChips.children.length > 0) return;
 
@@ -207,27 +257,6 @@ class ContentManager {
 			chip.addEventListener('click', () => this.toggleFilterChip(chip));
 
 			this.ui.categoryChips.appendChild(chip);
-		});
-	}
-
-	clearElements() {
-		this.layerElements.forEach((element, layerId) => {
-			if (element.parentNode) {
-				element.parentNode.removeChild(element);
-			}
-		});
-		this.layerElements.clear();
-	}
-
-	renderContent(layersToShow) {
-		const layerType = this.getLayerType();
-		// Clear existing elements for this content type
-		this.clearElements();
-
-		layersToShow.forEach(layer => {
-			if (layer.type === layerType) {
-				this.renderLayer(layer);
-			}
 		});
 	}
 

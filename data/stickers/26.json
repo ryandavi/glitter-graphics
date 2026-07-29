@@ -1,0 +1,28 @@
+{
+  "id": 26,
+  "name": "Lips Pink Glitter",
+  "filename": "lips_pink-glitter.gif",
+  "url": "images/stickers/people/lips_pink-glitter.gif",
+  "thumbnailUrl": "images/stickers/people/lips_pink-glitter.gif",
+  "category": "people",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "glitter",
+    "lips",
+    "pink"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 105,
+  "height": 65,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 7373,
+  "sortOrder": 26
+}

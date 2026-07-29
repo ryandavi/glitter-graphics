@@ -48,41 +48,56 @@ const PANEL_ID_OVERRIDES = Object.freeze({
 	textShadow: Object.freeze({ sourceGlitter: 'textShadowUseGlitter', sourceSolid: 'textShadowUseColor' })
 });
 
-const PANEL_TRANSFORM_IDS = Object.freeze({
-	sticker: Object.freeze({
-		posX: 'stickerPosX', posY: 'stickerPosY', sizeWidth: 'stickerWidth', sizeHeight: 'stickerHeight', sizeGroup: 'stickerSizeGroup',
-		rotation: 'stickerRotation', rotationValue: 'stickerRotationValue', resetRotation: 'resetStickerRotation',
-		opacity: 'stickerOpacity', opacityValue: 'stickerOpacityValue', resetOpacity: 'resetStickerOpacity', proportional: 'stickerProportionalScale',
-		scaleControl: 'stickerScaleControl', scaleSummary: 'stickerScaleSummary', scaleSlider: 'stickerScale', resetScale: 'resetStickerScale',
-		scaleX: 'stickerTransformScaleX', scaleXValue: 'stickerTransformScaleXValue', resetScaleX: 'resetStickerTransformScaleX',
-		scaleY: 'stickerTransformScaleY', scaleYValue: 'stickerTransformScaleYValue', resetScaleY: 'resetStickerTransformScaleY',
-		flipX: 'stickerFlipX', flipY: 'stickerFlipY', alignLeft: 'stickerAlignLeft', alignCenterX: 'stickerAlignCenterX', alignRight: 'stickerAlignRight',
-		alignTop: 'stickerAlignTop', alignCenterY: 'stickerAlignCenterY', alignBottom: 'stickerAlignBottom', resetTransform: 'resetStickerTransform'
-	}),
-	shape: Object.freeze({
-		posX: 'shapePosX', posY: 'shapePosY', sizeWidth: 'shapeWidth', sizeHeight: 'shapeHeight', sizeGroup: 'shapeSizeGroup',
-		rotation: 'shapeRotation', rotationValue: 'shapeRotationValue', resetRotation: 'resetShapeRotation',
-		opacity: 'shapeOpacity', opacityValue: 'shapeOpacityValue', resetOpacity: 'resetShapeOpacity', proportional: 'shapeProportionalScale',
-		scaleControl: 'shapeScaleControl', scaleSummary: 'shapeScaleSummary', scaleSlider: 'shapeScale', resetScale: 'resetShapeScale',
-		scaleX: 'shapeTransformScaleX', scaleXValue: 'shapeTransformScaleXValue', resetScaleX: 'resetShapeTransformScaleX',
-		scaleY: 'shapeTransformScaleY', scaleYValue: 'shapeTransformScaleYValue', resetScaleY: 'resetShapeTransformScaleY',
-		flipX: 'shapeFlipX', flipY: 'shapeFlipY', alignLeft: 'shapeAlignLeft', alignCenterX: 'shapeAlignCenterX', alignRight: 'shapeAlignRight',
-		alignTop: 'shapeAlignTop', alignCenterY: 'shapeAlignCenterY', alignBottom: 'shapeAlignBottom', resetTransform: 'resetShapeTransform'
-	}),
+const TRANSFORM_ID_GRAMMAR = Object.freeze({
+	posX: '{p}PosX',
+	posY: '{p}PosY',
+	sizeWidth: '{p}Width',
+	sizeHeight: '{p}Height',
+	sizeGroup: '{p}SizeGroup',
+	rotation: '{p}Rotation',
+	rotationValue: '{p}RotationValue',
+	resetRotation: 'reset{P}Rotation',
+	opacity: '{p}Opacity',
+	opacityValue: '{p}OpacityValue',
+	resetOpacity: 'reset{P}Opacity',
+	proportional: '{p}ProportionalScale',
+	scaleControl: '{p}ScaleControl',
+	scaleSummary: '{p}ScaleSummary',
+	scaleSlider: '{p}Scale',
+	resetScale: 'reset{P}Scale',
+	scaleX: '{p}TransformScaleX',
+	scaleXValue: '{p}TransformScaleXValue',
+	resetScaleX: 'reset{P}TransformScaleX',
+	scaleY: '{p}TransformScaleY',
+	scaleYValue: '{p}TransformScaleYValue',
+	resetScaleY: 'reset{P}TransformScaleY',
+	flipX: '{p}FlipX',
+	flipY: '{p}FlipY',
+	alignLeft: '{p}AlignLeft',
+	alignCenterX: '{p}AlignCenterX',
+	alignRight: '{p}AlignRight',
+	alignTop: '{p}AlignTop',
+	alignCenterY: '{p}AlignCenterY',
+	alignBottom: '{p}AlignBottom',
+	resetTransform: 'reset{P}Transform'
+});
+
+const TRANSFORM_ID_EXCEPTIONS = Object.freeze({
 	text: Object.freeze({
-		posX: 'textPosX', posY: 'textPosY', sizeWidth: 'textWidth', sizeHeight: 'textHeight', sizeGroup: 'textSizeGroup',
-		rotation: 'textRotation', rotationValue: 'textRotationValue', resetRotation: 'resetTextRotation',
-		opacity: 'textLayerOpacity', opacityValue: 'textLayerOpacityValue', resetOpacity: 'resetTextLayerOpacity', proportional: 'textProportionalScale',
-		scaleControl: 'textScaleControl', scaleSummary: 'textScaleSummary', scaleSlider: 'textScale', resetScale: 'resetTextScale',
-		scaleX: 'textTransformScaleX', scaleXValue: 'textTransformScaleXValue', resetScaleX: 'resetTextTransformScaleX',
-		scaleY: 'textTransformScaleY', scaleYValue: 'textTransformScaleYValue', resetScaleY: 'resetTextTransformScaleY',
-		flipX: 'textFlipX', flipY: 'textFlipY', alignLeft: 'textAlignLeft', alignCenterX: 'textAlignCenterX', alignRight: 'textAlignRight',
-		alignTop: 'textAlignTop', alignCenterY: 'textAlignCenterY', alignBottom: 'textAlignBottom', resetTransform: 'resetTextTransform'
+		opacity: 'textLayerOpacity',
+		opacityValue: 'textLayerOpacityValue',
+		resetOpacity: 'resetTextLayerOpacity'
 	})
 });
 
 function getPanelTransformIds(prefix) {
-	return PANEL_TRANSFORM_IDS[prefix] || PANEL_TRANSFORM_IDS.text;
+	const normalizedPrefix = ['sticker', 'shape', 'text'].includes(prefix) ? prefix : 'text';
+	const capitalized = panelCap(normalizedPrefix);
+	return Object.fromEntries(Object.entries(TRANSFORM_ID_GRAMMAR).map(([role, pattern]) => [
+		role,
+		TRANSFORM_ID_EXCEPTIONS[normalizedPrefix]?.[role]
+			|| pattern.replaceAll('{p}', normalizedPrefix).replaceAll('{P}', capitalized)
+	]));
 }
 
 function panelRoleId(prefix, role) {

@@ -1,0 +1,31 @@
+{
+  "id": 54,
+  "url": "images/glitter/etc/etc_dark-green.gif",
+  "name": "Dark Green",
+  "generatedName": "Muted Green",
+  "brightness": "0.000",
+  "sortOrder": 95,
+  "hue": 0.375,
+  "colorCodes": [
+    "#2D4B2D"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 30,
+  "fileSize": 6827,
+  "category": "etc",
+  "isPixelated": 1,
+  "tags": [
+    "Contrast",
+    "Green",
+    "Muted"
+  ],
+  "searchTerms": []
+}

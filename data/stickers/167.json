@@ -1,0 +1,30 @@
+{
+  "id": 167,
+  "name": "Exploding Hearts Red",
+  "filename": "heaers_exploding_red.gif",
+  "url": "images/stickers/sparkle/heaers_exploding_red.gif",
+  "thumbnailUrl": "images/stickers/sparkle/heaers_exploding_red.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "burst",
+    "exploding",
+    "hearts",
+    "love",
+    "red"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 75,
+  "height": 125,
+  "frameCount": 12,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 3561,
+  "sortOrder": 177
+}

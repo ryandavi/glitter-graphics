@@ -54,23 +54,54 @@ function getCsrfToken()
     return $_SESSION['admin_csrf_token'];
 }
 
+function getAdminLoginRetryAfter()
+{
+    ensureAdminSessionStarted();
+    $blockedUntil = (int)($_SESSION['admin_login_blocked_until'] ?? 0);
+    return max(0, $blockedUntil - time());
+}
+
+function recordAdminLoginFailure()
+{
+    ensureAdminSessionStarted();
+    $failures = (int)($_SESSION['admin_login_failures'] ?? 0) + 1;
+    $_SESSION['admin_login_failures'] = $failures;
+    if ($failures < 5) return;
+
+    $delay = min(300, 2 ** min(8, $failures - 5));
+    $_SESSION['admin_login_blocked_until'] = time() + $delay;
+}
+
+function clearAdminLoginFailures()
+{
+    unset($_SESSION['admin_login_failures'], $_SESSION['admin_login_blocked_until']);
+}
+
 function loginAdmin($username, $password)
 {
     ensureAdminSessionStarted();
+
+    $retryAfter = getAdminLoginRetryAfter();
+    if ($retryAfter > 0) {
+        throw new RuntimeException("Too many login attempts. Try again in {$retryAfter} seconds.");
+    }
 
     $credentials = getAdminCredentials();
     $expectedUsername = (string)$credentials['username'];
     $passwordHash = (string)$credentials['password_hash'];
 
     if (!hash_equals($expectedUsername, (string)$username)) {
+        recordAdminLoginFailure();
         return false;
     }
 
     if (!password_verify((string)$password, $passwordHash)) {
+        recordAdminLoginFailure();
         return false;
     }
 
     session_regenerate_id(true);
+    clearAdminLoginFailures();
     $_SESSION['admin_authed'] = true;
     $_SESSION['admin_username'] = $expectedUsername;
     $_SESSION['admin_csrf_token'] = bin2hex(random_bytes(32));

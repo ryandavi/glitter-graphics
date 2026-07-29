@@ -1,0 +1,37 @@
+{
+  "id": 47,
+  "url": "images/glitter/ember/ember_burnt-orange.gif",
+  "name": "Burnt Orange",
+  "generatedName": "Very Dark Vivid Red",
+  "brightness": "0.140",
+  "sortOrder": 72,
+  "hue": 0.042,
+  "colorCodes": [
+    "#330000",
+    "#782A06",
+    "#D57C11"
+  ],
+  "colorWeights": [
+    0,
+    0.3333,
+    0.3333
+  ],
+  "frameCount": 4,
+  "frameRate": 20,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1518,
+  "category": "ember",
+  "isPixelated": 1,
+  "tags": [
+    "Dark",
+    "Orange",
+    "Red",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

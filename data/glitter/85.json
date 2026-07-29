@@ -1,0 +1,32 @@
+{
+  "id": 85,
+  "url": "images/glitter/sparkle/glitter_dusty-dark-blue.gif",
+  "name": "Dusty Dark Blue",
+  "generatedName": "Muted Blue",
+  "brightness": "1.000",
+  "sortOrder": 33,
+  "hue": 0.636,
+  "colorCodes": [
+    "#5A87C3"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1948,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Light",
+    "Muted"
+  ],
+  "searchTerms": []
+}

@@ -975,19 +975,15 @@ class GifExporter {
 	}
 
 	_getBorderPlacement(borderData) {
-		return borderData?.placement === 'inside'
-			? 'inside'
-			: borderData?.placement === 'center'
-				? 'center'
-				: 'outside';
+		return getBorderPlacement(borderData);
 	}
 
 	_getBorderDrawOrder(borderData) {
-		return borderData?.drawOrder === 'front' ? 'front' : 'behind';
+		return getBorderDrawOrder(borderData);
 	}
 
 	_getBorderEdgeStyle(borderData) {
-		return borderData?.edgeStyle === 'hard' ? 'hard' : 'round';
+		return getBorderEdgeStyle(borderData);
 	}
 
 	_createPlacedBorderMaskCanvas(fillMaskCanvas, borderData) {
@@ -1017,134 +1013,19 @@ class GifExporter {
 	}
 
 	_createMaskDifferenceCanvas(baseCanvas, subtractCanvas) {
-		const canvas = document.createElement('canvas');
-		canvas.width = baseCanvas.width;
-		canvas.height = baseCanvas.height;
-		this._copyTextureOrigin(canvas, baseCanvas);
-		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-		ctx.drawImage(baseCanvas, 0, 0);
-		if (subtractCanvas) {
-			ctx.globalCompositeOperation = 'destination-out';
-			ctx.drawImage(subtractCanvas, 0, 0);
-			ctx.globalCompositeOperation = 'source-over';
-		}
-		return canvas;
+		return createMaskDifferenceCanvas(baseCanvas, subtractCanvas);
 	}
 
 	_createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
-		const nextRadius = Math.max(0, Math.round(radius));
-		if (nextRadius <= 0) {
-			return sourceCanvas;
-		}
-
-		if (edgeStyle === 'hard') {
-			const horizontal = document.createElement('canvas');
-			horizontal.width = sourceCanvas.width;
-			horizontal.height = sourceCanvas.height;
-			this._copyTextureOrigin(horizontal, sourceCanvas);
-			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true, alpha: true });
-			for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
-				horizontalCtx.drawImage(sourceCanvas, offsetX, 0);
-			}
-
-			const canvas = document.createElement('canvas');
-			canvas.width = sourceCanvas.width;
-			canvas.height = sourceCanvas.height;
-			this._copyTextureOrigin(canvas, sourceCanvas);
-			const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-			for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
-				ctx.drawImage(horizontal, 0, offsetY);
-			}
-			return canvas;
-		}
-
-		const canvas = document.createElement('canvas');
-		canvas.width = sourceCanvas.width;
-		canvas.height = sourceCanvas.height;
-		this._copyTextureOrigin(canvas, sourceCanvas);
-		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-		ctx.drawImage(sourceCanvas, 0, 0);
-		this._getMorphOffsets(nextRadius).forEach((offset) => {
-			ctx.drawImage(sourceCanvas, offset.x, offset.y);
-		});
-		return canvas;
+		return createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle);
 	}
 
 	_createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
-		const nextRadius = Math.max(0, Math.round(radius));
-		if (nextRadius <= 0) {
-			return sourceCanvas;
-		}
-
-		if (edgeStyle === 'hard') {
-			const horizontal = document.createElement('canvas');
-			horizontal.width = sourceCanvas.width;
-			horizontal.height = sourceCanvas.height;
-			this._copyTextureOrigin(horizontal, sourceCanvas);
-			const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true, alpha: true });
-			horizontalCtx.drawImage(sourceCanvas, 0, 0);
-			horizontalCtx.globalCompositeOperation = 'destination-in';
-			for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
-				if (offsetX === 0) continue;
-				horizontalCtx.drawImage(sourceCanvas, -offsetX, 0);
-			}
-			horizontalCtx.globalCompositeOperation = 'source-over';
-
-			const canvas = document.createElement('canvas');
-			canvas.width = sourceCanvas.width;
-			canvas.height = sourceCanvas.height;
-			this._copyTextureOrigin(canvas, sourceCanvas);
-			const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-			ctx.drawImage(horizontal, 0, 0);
-			ctx.globalCompositeOperation = 'destination-in';
-			for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
-				if (offsetY === 0) continue;
-				ctx.drawImage(horizontal, 0, -offsetY);
-			}
-			ctx.globalCompositeOperation = 'source-over';
-			return canvas;
-		}
-
-		const canvas = document.createElement('canvas');
-		canvas.width = sourceCanvas.width;
-		canvas.height = sourceCanvas.height;
-		this._copyTextureOrigin(canvas, sourceCanvas);
-		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-		ctx.drawImage(sourceCanvas, 0, 0);
-		ctx.globalCompositeOperation = 'destination-in';
-		this._getMorphOffsets(nextRadius).forEach((offset) => {
-			ctx.drawImage(sourceCanvas, -offset.x, -offset.y);
-		});
-		ctx.globalCompositeOperation = 'source-over';
-		return canvas;
+		return createErodedMaskCanvas(sourceCanvas, radius, edgeStyle);
 	}
 
 	_getMorphOffsets(widthPx) {
-		const radius = Math.max(1, widthPx);
-		const borderSampling = CONFIG.rendering?.borderSampling || {};
-		const steps = Math.max(
-			borderSampling.minSteps ?? 16,
-			Math.min(
-				borderSampling.maxSteps ?? 64,
-				Math.ceil(radius * (borderSampling.stepsPerPixel ?? 4))
-			)
-		);
-		const seen = new Set();
-		const offsets = [];
-
-		for (let index = 0; index < steps; index++) {
-			const angle = (Math.PI * 2 * index) / steps;
-			const x = Math.round(Math.cos(angle) * radius);
-			const y = Math.round(Math.sin(angle) * radius);
-			const key = `${x},${y}`;
-			if (seen.has(key) || (x === 0 && y === 0)) {
-				continue;
-			}
-			seen.add(key);
-			offsets.push({ x, y });
-		}
-
-		return offsets;
+		return getMorphOffsets(widthPx);
 	}
 
 	_createOffsetMaskCanvas(sourceCanvas, offsetX, offsetY) {

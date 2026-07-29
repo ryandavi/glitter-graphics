@@ -264,7 +264,7 @@ class HtmlSceneExporter {
 					metadata[field.key] = input.value;
 					this.editor.isSaved = false;
 				});
-				input.addEventListener('change', () => this.editor.saveState());
+				input.addEventListener('change', () => this.editor.saveState('Edit scene'));
 				label.append(name, input);
 				card.appendChild(label);
 			});

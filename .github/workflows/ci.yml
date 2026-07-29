@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      GLITTER_URL: http://127.0.0.1:8000/
+      GLITTER_APP_URL: http://127.0.0.1:8000/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run lint
+      - name: Verify compiled CSS
+        shell: bash
+        run: |
+          npx sass css/style.scss /tmp/style.css --no-source-map
+          diff -u css/style.css /tmp/style.css
+      - name: Start app server
+        run: php -S 127.0.0.1:8000 -t . > /tmp/glitter-php.log 2>&1 &
+      - run: npm run test:quick
+      - run: npm run test:export

@@ -1,0 +1,32 @@
+{
+  "id": 50,
+  "url": "images/glitter/etc/etc_blue-green.gif",
+  "name": "Blue Green",
+  "generatedName": "Jewel Tone Blue",
+  "brightness": "1.000",
+  "sortOrder": 99,
+  "hue": 0.578,
+  "colorCodes": [
+    "#006987"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 72,
+  "height": 32,
+  "fileSize": 9232,
+  "category": "etc",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Jewel",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

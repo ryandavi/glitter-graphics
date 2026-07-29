@@ -1,0 +1,28 @@
+{
+  "id": 210,
+  "name": "Good Morning Rose Red Text",
+  "filename": "good-morning_rose_red.gif",
+  "url": "images/stickers/text/good-morning_rose_red.gif",
+  "thumbnailUrl": "images/stickers/text/good-morning_rose_red.gif",
+  "category": "text",
+  "attribution": "",
+  "stickerText": "Good Morning",
+  "tags": [
+    "good morning",
+    "red",
+    "rose"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 400,
+  "height": 325,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 129678,
+  "sortOrder": 221
+}

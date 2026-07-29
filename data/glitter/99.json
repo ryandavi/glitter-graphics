@@ -1,0 +1,33 @@
+{
+  "id": 99,
+  "url": "images/glitter/sparkle/glitter_pastel-blue.gif",
+  "name": "Pastel Blue",
+  "generatedName": "Pastel Silver",
+  "brightness": "1.000",
+  "sortOrder": 97,
+  "hue": 1.1,
+  "colorCodes": [
+    "#B4D2E1"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 5,
+  "frameRate": 2,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 7520,
+  "category": "etc",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Light",
+    "Pastel",
+    "Silver"
+  ],
+  "searchTerms": []
+}

@@ -1,0 +1,31 @@
+{
+  "id": 94,
+  "url": "images/glitter/sparkle/glitter_light-purple.gif",
+  "name": "Light Purple",
+  "generatedName": "Muted Purple",
+  "brightness": "1.000",
+  "sortOrder": 40,
+  "hue": 0.803,
+  "colorCodes": [
+    "#D296FF"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 609,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Light",
+    "Muted",
+    "Purple"
+  ],
+  "searchTerms": []
+}

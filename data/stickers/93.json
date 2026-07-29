@@ -1,0 +1,28 @@
+{
+  "id": 93,
+  "name": "Cardinal Blue",
+  "filename": "cardinal_blue.gif",
+  "url": "images/stickers/animal/cardinal_blue.gif",
+  "thumbnailUrl": "images/stickers/animal/cardinal_blue.gif",
+  "category": "animal",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "bird",
+    "blue",
+    "cardinal"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 200,
+  "height": 200,
+  "frameCount": 12,
+  "frameRate": 12,
+  "isVariableFramerate": 0,
+  "fileSize": 101247,
+  "sortOrder": 103
+}

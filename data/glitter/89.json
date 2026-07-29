@@ -1,0 +1,31 @@
+{
+  "id": 89,
+  "url": "images/glitter/sparkle/glitter_hot-pink-2.gif",
+  "name": "Hot Pink 2",
+  "generatedName": "Vivid Pink",
+  "brightness": "1.000",
+  "sortOrder": 2,
+  "hue": 0.201,
+  "colorCodes": [
+    "#FF3C96"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 2145,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Pink",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

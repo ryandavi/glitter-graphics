@@ -37,6 +37,23 @@ foreach ($apis as $type => $api) {
 			}
 		}
 	}
+	$manifestName = $type === 'sticker' ? 'stickers' : 'glitter';
+	$indexPath = __DIR__ . "/../data/$manifestName.index.json";
+	$detailDirectory = __DIR__ . "/../data/$manifestName";
+	$index = json_decode(file_get_contents($indexPath), true);
+	if (!is_array($index) || count($index) !== count($assets)) failContract("$type browse index count differs");
+	$indexById = [];
+	foreach ($index as $record) {
+		$indexById[$record['id']] = $record;
+		if (array_key_exists('fileSize', $record) || array_key_exists('frameCount', $record)) {
+			failContract("$type browse index contains deferred detail fields");
+		}
+	}
+	foreach ($assets as $asset) {
+		if (!isset($indexById[$asset['id']])) failContract("$type browse index is missing asset {$asset['id']}");
+		$detailPath = $detailDirectory . '/' . rawurlencode((string)$asset['id']) . '.json';
+		$detail = json_decode(file_get_contents($detailPath), true);
+		if (json_encode($detail) !== json_encode($asset)) failContract("$type detail record differs for asset {$asset['id']}");
+	}
 	echo 'PASS ', $type, ' public export contract (', count($assets), " assets)\n";
 }
-

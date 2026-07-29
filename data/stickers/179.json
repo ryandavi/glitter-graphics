@@ -1,0 +1,27 @@
+{
+  "id": 179,
+  "name": "Sparkle Blue",
+  "filename": "sparkle_blue.gif",
+  "url": "images/stickers/sparkle/sparkle_blue.gif",
+  "thumbnailUrl": "images/stickers/sparkle/sparkle_blue.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "blue",
+    "sparkle"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 52,
+  "height": 46,
+  "frameCount": 10,
+  "frameRate": 5,
+  "isVariableFramerate": 0,
+  "fileSize": 2944,
+  "sortOrder": 189
+}

@@ -1,0 +1,28 @@
+{
+  "id": 120,
+  "name": "Love Kaomoji Pink",
+  "filename": "kaomoji_love_pink.gif",
+  "url": "images/stickers/emoji/kaomoji_love_pink.gif",
+  "thumbnailUrl": "images/stickers/emoji/kaomoji_love_pink.gif",
+  "category": "emoji",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "cute",
+    "love",
+    "pink"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 87,
+  "height": 28,
+  "frameCount": 2,
+  "frameRate": 20,
+  "isVariableFramerate": 0,
+  "fileSize": 2213,
+  "sortOrder": 130
+}

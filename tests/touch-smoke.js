@@ -30,8 +30,8 @@ function assert(condition, message) {
 
 function canvasToScreen(metrics, point) {
 	return {
-		x: metrics.rect.left + metrics.panX + (point.x * metrics.zoom),
-		y: metrics.rect.top + metrics.panY + (point.y * metrics.zoom)
+		x: metrics.wrapperRect.left + (point.x * metrics.zoom),
+		y: metrics.wrapperRect.top + (point.y * metrics.zoom)
 	};
 }
 
@@ -92,6 +92,7 @@ async function doubleTap(page, point) {
 	await tap(page, point);
 	await page.waitForTimeout(60);
 	await tap(page, point);
+	await page.waitForTimeout(300);
 }
 
 async function oneFingerDrag(page, from, to, steps = GESTURE_STEPS) {
@@ -239,7 +240,7 @@ async function closeMobileChrome(page) {
 		window.editor.mobileManager?.closeSettings?.();
 		window.editor.mobileManager?.closeAllDrawers?.();
 	});
-	await page.waitForTimeout(80);
+	await page.waitForTimeout(400);
 }
 
 async function loadBlankCanvas(page, options = {}) {
@@ -277,6 +278,7 @@ async function setTool(page, tool) {
 async function getViewportMetrics(page) {
 	return page.evaluate(() => {
 		const rect = window.editor.previewContainer.getBoundingClientRect();
+		const wrapperRect = window.editor.previewWrapper.getBoundingClientRect();
 		return {
 			panX: window.editor.viewport.panX,
 			panY: window.editor.viewport.panY,
@@ -290,6 +292,14 @@ async function getViewportMetrics(page) {
 				bottom: rect.bottom,
 				width: rect.width,
 				height: rect.height
+			},
+			wrapperRect: {
+				left: wrapperRect.left,
+				top: wrapperRect.top,
+				right: wrapperRect.right,
+				bottom: wrapperRect.bottom,
+				width: wrapperRect.width,
+				height: wrapperRect.height
 			}
 		};
 	});
@@ -299,10 +309,11 @@ async function getWorkspacePoint(page) {
 	return page.evaluate(() => {
 		const editor = window.editor;
 		const rect = editor.previewContainer.getBoundingClientRect();
-		const canvasLeft = rect.left + editor.viewport.panX;
-		const canvasTop = rect.top + editor.viewport.panY;
-		const canvasRight = canvasLeft + (editor.previewCanvas.width * editor.viewport.currentZoom);
-		const canvasBottom = canvasTop + (editor.previewCanvas.height * editor.viewport.currentZoom);
+		const wrapperRect = editor.previewWrapper.getBoundingClientRect();
+		const canvasLeft = wrapperRect.left;
+		const canvasTop = wrapperRect.top;
+		const canvasRight = wrapperRect.right;
+		const canvasBottom = wrapperRect.bottom;
 		const padding = 20;
 		const options = [
 			{
@@ -567,11 +578,11 @@ async function getLayerOrder(page) {
 
 async function openMobileLayersDrawer(page) {
 	await page.evaluate(() => {
-		if (window.editor.mobileManager?.activeDrawer !== 'layers') {
+	if (window.editor.mobileManager?.activeDrawer !== 'layers') {
 			window.editor.mobileManager?.toggleDrawer?.('layers');
 		}
 	});
-	await page.waitForTimeout(120);
+	await page.waitForTimeout(400);
 }
 
 async function getMaskPixelCount(page, layerId) {
@@ -602,6 +613,25 @@ async function getTransformHandleCenter(page, layerId, handleType = 'move') {
 		? `.transform-handles[data-layer-id="${layerId}"] .transform-bounding-box`
 		: `.transform-handles[data-layer-id="${layerId}"] [data-handle-type="${handleType}"]`;
 	return getElementCenter(page, selector);
+}
+
+async function getLayerTouchPoint(page, layerId) {
+	return page.evaluate((activeLayerId) => {
+		const layer = window.editor.layerManager.getLayerById(activeLayerId);
+		const gestureManager = window.editor.viewport.gestureManager;
+		const frame = window.editor.textGlitterManager?.getTextFrame?.(layer);
+		const transform = getLayerTransform(layer);
+		const rect = window.editor.previewWrapper.getBoundingClientRect();
+		if (!layer || !frame || !gestureManager) throw new Error(`Missing touch geometry for ${activeLayerId}`);
+		const centerX = transform.position.x + frame.offsetX;
+		const centerY = transform.position.y + frame.offsetY;
+		const x = Math.round(rect.left + (centerX * window.editor.viewport.currentZoom));
+		const y = Math.round(rect.top + (centerY * window.editor.viewport.currentZoom));
+		if (gestureManager.isPointInLayer(layer, x, y)) {
+			return { x, y };
+		}
+		throw new Error(`No text-frame touch point found for ${activeLayerId}`);
+	}, layerId);
 }
 
 async function assertNoRuntimeErrors(tracker, label) {
@@ -782,9 +812,9 @@ async function check7(page) {
 
 	await twoFingerGesture(
 		page,
-		{ x: center.x - 20, y: center.y - 12 },
+		{ x: center.x - 6, y: center.y + 6 },
 		{ x: center.x - 55, y: center.y - 30 },
-		{ x: center.x + 20, y: center.y + 12 },
+		{ x: center.x + 6, y: center.y - 6 },
 		{ x: center.x + 95, y: center.y + 72 }
 	);
 
@@ -804,9 +834,9 @@ async function check8(page) {
 
 	await twoFingerGesture(
 		page,
-		{ x: center.x - 38, y: center.y },
+		{ x: center.x - 6, y: center.y + 6 },
 		{ x: center.x, y: center.y - 38 },
-		{ x: center.x + 38, y: center.y },
+		{ x: center.x + 6, y: center.y - 6 },
 		{ x: center.x, y: center.y + 38 }
 	);
 
@@ -840,6 +870,7 @@ async function check10(page) {
 
 	const layerId = await createGlitterLayer(page);
 	await setTool(page, 'brush');
+	await closeMobileChrome(page);
 	assert(await getActiveLayerId(page) === layerId, 'Glitter layer was not active before brush test');
 
 	const center = await getCanvasCenterScreenPoint(page);
@@ -849,8 +880,7 @@ async function check10(page) {
 	await oneFingerDrag(page, strokeStart, strokeEnd);
 
 	const committedMaskPixels = await getMaskPixelCount(page, layerId);
-	// Gap probe: current headless mobile emulation does not enter the touch brush path.
-	assert(committedMaskPixels === 0, 'Brush gap probe unexpectedly painted mask pixels');
+	assert(committedMaskPixels > 0, 'Touch brush stroke did not paint mask pixels');
 
 	const beforeViewport = await getViewportMetrics(page);
 	await oneFingerThenPinch(
@@ -865,7 +895,7 @@ async function check10(page) {
 	const afterViewport = await getViewportMetrics(page);
 	const afterMaskPixels = await getMaskPixelCount(page, layerId);
 
-	approxEqual(afterViewport.zoom, beforeViewport.zoom, 0.001, 'Brush gap probe unexpectedly changed viewport zoom');
+	assert(afterViewport.zoom > beforeViewport.zoom, 'Two-finger brush gesture did not upgrade to viewport zoom');
 	assert(afterMaskPixels === committedMaskPixels, 'Canceled brush stroke did not restore pre-stroke mask pixels');
 }
 
@@ -925,20 +955,19 @@ async function check13(page) {
 	});
 	await closeMobileChrome(page);
 	const beforeState = await getTextState(page, layerId);
-	const center = await getElementCenter(page, `.text-glitter-element[data-layer-id="${layerId}"]`);
-
-	await oneFingerDrag(page, center, { x: center.x + 44, y: center.y + 26 });
+	const bodyPoint = await getLayerTouchPoint(page, layerId);
+	await oneFingerDrag(page, bodyPoint, { x: bodyPoint.x + 44, y: bodyPoint.y + 26 });
 
 	const afterDragState = await getTextState(page, layerId);
 	assert(Math.abs(afterDragState.position.x - beforeState.position.x) > POSITION_TOLERANCE_PX, 'Text touch drag did not move X');
 	assert(Math.abs(afterDragState.position.y - beforeState.position.y) > POSITION_TOLERANCE_PX, 'Text touch drag did not move Y');
 
-	const dragCenter = await getElementCenter(page, `.text-glitter-element[data-layer-id="${layerId}"]`);
+	const dragCenter = await getTransformHandleCenter(page, layerId);
 	await twoFingerGesture(
 		page,
-		{ x: dragCenter.x - 20, y: dragCenter.y },
+		{ x: dragCenter.x - 6, y: dragCenter.y + 6 },
 		{ x: dragCenter.x - 60, y: dragCenter.y - 20 },
-		{ x: dragCenter.x + 20, y: dragCenter.y },
+		{ x: dragCenter.x + 6, y: dragCenter.y - 6 },
 		{ x: dragCenter.x + 60, y: dragCenter.y + 28 }
 	);
 
@@ -983,7 +1012,10 @@ async function check14(page) {
 	const viewportAfter = await getViewportMetrics(page);
 	const activeLayerId = await getActiveLayerId(page);
 
-	assert(viewportAfter.zoom > viewportBefore.zoom, 'Pinch over an unselected sticker did not zoom the viewport');
+	assert(
+		viewportAfter.zoom > viewportBefore.zoom,
+		`Pinch over an unselected sticker did not zoom the viewport (${viewportBefore.zoom} -> ${viewportAfter.zoom})`
+	);
 	assert(activeLayerId === secondSticker.layerId, 'Pinch over an unselected sticker changed the active layer');
 	approxEqual(firstAfter.position.x, firstBefore.position.x, POSITION_TOLERANCE_PX, 'Unselected sticker X changed during viewport pinch');
 	approxEqual(firstAfter.position.y, firstBefore.position.y, POSITION_TOLERANCE_PX, 'Unselected sticker Y changed during viewport pinch');
@@ -1163,8 +1195,8 @@ async function check21(page) {
 	});
 	await closeMobileChrome(page);
 
-	const center = await getElementCenter(page, `.text-glitter-element[data-layer-id="${layerId}"]`);
-	await doubleTap(page, center);
+	const center = await getTransformHandleCenter(page, layerId);
+	await doubleTap(page, { x: center.x + 4, y: center.y - 4 });
 	await page.waitForTimeout(160);
 
 	const mobileState = await page.evaluate(() => ({
@@ -1200,7 +1232,7 @@ async function check22(page) {
 
 	await oneFingerDrag(page, dragHandle, {
 		x: targetItem.x,
-		y: targetItem.y + 18
+		y: targetItem.y + 5
 	}, 8);
 	await page.waitForTimeout(150);
 
@@ -1271,7 +1303,7 @@ async function runSuite(browser, runNumber) {
 		['Two-finger pinch on a selected sticker scales it and translates with the centroid', check7],
 		['Two-finger twist on a sticker rotates it', check8],
 		['HAND tool gesture over sticker pans viewport without moving sticker', check9],
-		['BRUSH touch headless gap probe stays unpainted and does not enter the zoom-upgrade path', check10],
+		['BRUSH touch paints, then two-finger input cancels the partial stroke and zooms', check10],
 		['Pan does not trigger a post-gesture selection change after a real viewport move', check11],
 		['Touch end outside viewport keeps the handler reusable', check12],
 		['Touch drag and pinch on a selected text layer move and scale it', check13],
@@ -1287,8 +1319,10 @@ async function runSuite(browser, runNumber) {
 		['Two-finger pinch inside the shared group box scales the group without zooming the viewport', check24]
 	];
 	let failed = 0;
+	const requestedCheck = Number(process.env.TOUCH_CHECK || 0);
 
 	for (let index = 0; index < checks.length; index += 1) {
+		if (requestedCheck && requestedCheck !== index + 1) continue;
 		const [name, fn] = checks[index];
 		const passed = await runCheck(browser, index + 1, name, fn);
 		if (!passed) {
@@ -1302,7 +1336,8 @@ async function runSuite(browser, runNumber) {
 async function main() {
 	let failures = 0;
 
-	for (const runNumber of [1, 2]) {
+	const runCount = Math.max(1, Number(process.env.TOUCH_RUNS || 2));
+	for (let runNumber = 1; runNumber <= runCount; runNumber += 1) {
 		const browser = await chromium.launch({ headless: true });
 		try {
 			failures += await runSuite(browser, runNumber);

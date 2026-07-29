@@ -13,6 +13,7 @@ class StickerManager extends ContentManager {
 		});
 
 		this.useBrowser = true;
+		this.layerElements = new Map();
 
 		// Store LayerTransform instances for each layer
 		this.layerTransforms = new Map(); // layerId -> LayerTransform
@@ -38,6 +39,19 @@ class StickerManager extends ContentManager {
 
 	getLayerType() {
 		return LayerType.STICKER;
+	}
+
+	renderContent(layersToShow) {
+		reconcileLayerElements(
+			this.layerElements,
+			layersToShow,
+			this.getLayerType(),
+			(layer) => this.renderLayer(layer)
+		);
+	}
+
+	removeLayerElement(layerId) {
+		removeManagedLayerElement(this.layerElements, layerId);
 	}
 
 	setupUI() {
@@ -86,7 +100,7 @@ class StickerManager extends ContentManager {
 				const layer = this.editor.layerManager.getActiveLayer();
 				if (layer?.type !== LayerType.STICKER) return;
 				this.renderLayer(layer);
-				if (commit) this.editor.saveState();
+				if (commit) this.editor.saveState('Edit sticker');
 			}
 		});
 	}
@@ -138,7 +152,7 @@ class StickerManager extends ContentManager {
 					ensureSlotColorAdjust(layer.stickerData)[key] = value;
 					this.refreshColorAdjustVisuals(layer);
 				},
-				onCommit: () => this.editor.saveState()
+				onCommit: () => this.editor.saveState('Edit sticker')
 			});
 		});
 	}
@@ -169,13 +183,13 @@ class StickerManager extends ContentManager {
 				if (layer.stickerData.shadow) layer.stickerData.effectDrafts.shadow = layer.stickerData.shadow;
 				layer.stickerData.shadow = null;
 			}
-			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState();
+			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState('Edit sticker');
 		});
 		this.ui.resetEffects?.addEventListener('click', () => {
 			const layer = active(); if (!layer) return;
 			layer.stickerData.shadow = null;
 			delete layer.stickerData.effectDrafts;
-			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState();
+			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState('Edit sticker');
 		});
 		const setMode = (mode) => {
 			const layer = active();
@@ -184,7 +198,7 @@ class StickerManager extends ContentManager {
 			data.mode = mode;
 			// Glitter mode is never empty — fall back to the slot's default glitter.
 			if (mode === 'glitter' && !data.glitterId) data.glitterId = CONFIG.tools.glitter.defaults.shadowGlitterId;
-			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState();
+			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState('Edit sticker');
 		};
 		this.ui[prefix + 'Glitter']?.addEventListener('click', () => setMode('glitter'));
 		this.ui[prefix + 'Solid']?.addEventListener('click', () => setMode('solid'));
@@ -206,7 +220,7 @@ class StickerManager extends ContentManager {
 					apply(value, data, layer);
 					this.renderLayer(layer);
 				},
-				onCommit: () => this.editor.saveState()
+				onCommit: () => this.editor.saveState('Edit sticker')
 			});
 		};
 		const defaults = this.getDefaultShadow();
@@ -222,7 +236,7 @@ class StickerManager extends ContentManager {
 			getLayer: active,
 			getData: (layer) => layer.stickerData.shadow || this.getDefaultShadow(),
 			render: (layer) => this.renderLayer(layer),
-			save: () => this.editor.saveState()
+			save: () => this.editor.saveState('Edit sticker')
 		});
 		this.ui[prefix + 'Color']?.addEventListener('input', () => {
 			const layer = active();
@@ -230,7 +244,7 @@ class StickerManager extends ContentManager {
 			layer.stickerData.shadow.color = this.ui[prefix + 'Color'].value;
 			this.renderLayer(layer);
 		});
-		this.ui[prefix + 'Color']?.addEventListener('change', () => this.editor.saveState());
+		this.ui[prefix + 'Color']?.addEventListener('change', () => this.editor.saveState('Edit sticker'));
 	}
 
 	// Live-tint the shadow's glitter chip to match a colorAdjust drag without a
@@ -258,7 +272,7 @@ class StickerManager extends ContentManager {
 			proportionalScale: true
 		});
 		this.editor.loadTransformSettings(layer, 'sticker');
-		this.editor.saveState();
+		this.editor.saveState('Edit sticker');
 	}
 
 	armPicker(slot) {
@@ -373,6 +387,11 @@ class StickerManager extends ContentManager {
 
 	applyEffectPaint(element, source, effectData, layer) {
 		if (!element || !source) return;
+		element.style.backgroundColor = '';
+		element.style.backgroundImage = '';
+		element.style.backgroundPosition = '';
+		element.style.backgroundSize = '';
+		element.style.filter = '';
 		if (source.mode === 'gradient') element.style.backgroundImage = effectGradientToCss(source.gradient);
 		else if (source.mode === 'glitter') {
 			const glitter = this.editor.glitterManager.getItemById(effectData.glitterId);
@@ -402,6 +421,32 @@ class StickerManager extends ContentManager {
 			glitterAvailable: Boolean(this.editor.glitterManager.getItemById(effectData.glitterId))
 		}), effectData, layer);
 		return span;
+	}
+
+	reconcileStickerEffectSpan(layer, element) {
+		const shadow = layer.stickerData.shadow;
+		let span = element.querySelector('.sticker-effect-shadow');
+		if (!shadow) {
+			span?.remove();
+			return;
+		}
+		if (!span) {
+			span = document.createElement('span');
+			span.className = 'sticker-effect-layer sticker-effect-shadow';
+			element.prepend(span);
+		}
+		if (span.dataset.maskUrl !== layer.stickerData.url) {
+			span.style.maskImage = `url(${layer.stickerData.url})`;
+			span.style.webkitMaskImage = `url(${layer.stickerData.url})`;
+			span.dataset.maskUrl = layer.stickerData.url;
+		}
+		span.style.maskSize = '100% 100%';
+		span.style.webkitMaskSize = '100% 100%';
+		span.style.transform = `translate(${shadow.offsetX}px, ${shadow.offsetY}px)`;
+		this.applyEffectPaint(span, resolveEffectPaintSource(shadow, {
+			glitterId: shadow.glitterId,
+			glitterAvailable: Boolean(this.editor.glitterManager.getItemById(shadow.glitterId))
+		}), shadow, layer);
 	}
 
 	setupFilterChips() {
@@ -447,10 +492,11 @@ class StickerManager extends ContentManager {
 
 	async loadContent() {
 		try {
-			const response = await fetch('data/stickers.json');
-			const data = await response.json();
-
-			this.content = data.map(item => this.normalizeAsset(item, {
+			await this.loadIndexedManifest({
+				indexPath: 'data/stickers.index.json',
+				fallbackPath: 'data/stickers.json',
+				detailBasePath: 'data/stickers',
+				defaults: {
 				category: 'Uncategorized',
 				tags: [],
 				colors: [],
@@ -466,7 +512,8 @@ class StickerManager extends ContentManager {
 				sortOrder: 0,
 				featured: false,
 				source: 'preset'
-			}));
+				}
+			});
 
 			dbg(`Loaded ${this.content.length} preset stickers`);
 
@@ -680,7 +727,7 @@ class StickerManager extends ContentManager {
 	// ===== LAYER CREATION =====
 
 	async createStickerLayer(stickerSourceId) {
-		const sticker = this.getItemById(stickerSourceId);
+		const sticker = await this.ensureAssetDetails(stickerSourceId);
 		if (!sticker) {
 			console.error('Sticker not found:', stickerSourceId);
 			return null;
@@ -699,13 +746,14 @@ class StickerManager extends ContentManager {
 		this.renderLayer(layer);
 
 		// Save state
-		this.editor.saveState();
+		this.editor.saveState('Edit sticker');
 		this.editor.updateActionButtons();
 
 		return layer;
 	}
 
 	createLayer(stickerSourceId = null) {
+		if (!this.editor.layerManager.requireLayerCapacity()) return null;
 		const sticker = stickerSourceId ? this.getItemById(stickerSourceId) : null;
 		const transform = createDefaultTransform({
 			position: {
@@ -755,7 +803,7 @@ class StickerManager extends ContentManager {
 		}
 
 		const activeLayer = this.editor.layerManager.getActiveLayer();
-		const stickerInfo = this.getItemById(stickerId);
+		const stickerInfo = await this.ensureAssetDetails(stickerId);
 
 		if (!stickerInfo) return;
 
@@ -786,10 +834,10 @@ class StickerManager extends ContentManager {
 			this.editor.layerManager.renderLayersList();
 			this.editor.updateStickerSelection();
 			this.editor.updateStatus('Sticker replaced');
-			this.editor.saveState();
+			this.editor.saveState('Edit sticker');
 
 			// Hide empty state and load settings
-			this.editor.hideStickerSettingsEmptyState();
+			this.editor.setSettingsEmptyState('stickerSettings', false);
 			this.editor.loadStickerSettings(activeLayer);
 
 		} else {
@@ -815,31 +863,34 @@ class StickerManager extends ContentManager {
 			return;
 		}
 
-		const existingElement = this.layerElements.get(layer.id);
+		let element = this.layerElements.get(layer.id);
 		const transform = this.layerTransforms.get(layer.id) || new LayerTransform(layer, this.editor);
 		transform.removeHoverOutline();
-		if (existingElement?.parentNode) {
-			existingElement.parentNode.removeChild(existingElement);
+		let img = element?.querySelector('img.sticker-image');
+		const isNew = !element;
+		if (isNew) {
+			element = document.createElement('div');
+			element.className = 'sticker-element';
+			element.dataset.layerId = layer.id;
+			img = document.createElement('img');
+			img.className = 'sticker-image';
+			img.draggable = false;
+			img.style.imageRendering = 'pixelated';
+			element.appendChild(img);
+			this.editor.canvasElementsContainer.appendChild(element);
+			this.layerElements.set(layer.id, element);
 		}
 
-		// Create DOM element
-		const element = document.createElement('div');
-		element.className = 'sticker-element';
-		element.dataset.layerId = layer.id;
-
-		// Create Image
-		const img = document.createElement('img');
-		img.src = layer.stickerData.url;
-		img.draggable = false;
-		img.style.imageRendering = 'pixelated';
+		// Reassigning an identical URL restarts animated GIFs in some browsers.
+		if (img.dataset.sourceUrl !== layer.stickerData.url) {
+			img.src = layer.stickerData.url;
+			img.dataset.sourceUrl = layer.stickerData.url;
+		}
 		img.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
-
-		const shadow = layer.stickerData.shadow;
-		if (shadow) element.appendChild(this.createStickerEffectSpan(layer, shadow, 'sticker-effect-shadow', shadow.offsetX, shadow.offsetY));
-		element.appendChild(img);
+		this.reconcileStickerEffectSpan(layer, element);
 
 		// The map entry owns the live handles. Keep it across DOM refreshes so
-		// sidebar updates never target a replacement transform with no handles.
+		// sidebar updates always target the live element.
 		transform.layer = layer;
 		transform.element = element;
 
@@ -850,15 +901,10 @@ class StickerManager extends ContentManager {
 		};
 		transform.applyTransform(element, dimensions);
 
-		// Setup interaction
-		transform.setupMouseDrag(element);
-
-		// Add to Container
-		this.editor.canvasElementsContainer.appendChild(element);
+		if (isNew) transform.setupMouseDrag(element);
 
 		// Store References
 		layer.stickerData.element = element;
-		this.layerElements.set(layer.id, element);
 		this.layerTransforms.set(layer.id, transform);
 
 		// Update selection highlight

@@ -1,0 +1,28 @@
+{
+  "id": 20,
+  "name": "Weed Lit",
+  "filename": "weed_lit-2.gif",
+  "url": "images/stickers/object/weed_lit-2.gif",
+  "thumbnailUrl": "images/stickers/object/weed_lit-2.gif",
+  "category": "object",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "leaf",
+    "lit",
+    "weed"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 90,
+  "height": 100,
+  "frameCount": 12,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 13064,
+  "sortOrder": 20
+}

@@ -1,0 +1,29 @@
+{
+  "id": 143,
+  "name": "Gangsta Necklace Gold",
+  "filename": "gangsta-necklace_gold.gif",
+  "url": "images/stickers/jewelry/gangsta-necklace_gold.gif",
+  "thumbnailUrl": "images/stickers/jewelry/gangsta-necklace_gold.gif",
+  "category": "jewelry",
+  "attribution": "",
+  "stickerText": "Gangsta",
+  "tags": [
+    "chain",
+    "gangsta",
+    "gold",
+    "necklace"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 250,
+  "height": 250,
+  "frameCount": 12,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 213854,
+  "sortOrder": 153
+}

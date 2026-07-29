@@ -40,7 +40,7 @@ async function main() {
 			};
 		});
 		assert.strictEqual(structure.hasLegacyGroup, false);
-		assert.deepStrictEqual(structure.cards, ['Pixelate', 'Palette']);
+		assert.deepStrictEqual(structure.cards, ['Pixelate', 'Palette', 'Reset']);
 		assert.strictEqual(structure.modeCount, 2);
 		assert.strictEqual(structure.styleCount, 3);
 		assert.strictEqual(structure.algorithmTag, 'SELECT');

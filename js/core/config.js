@@ -1,4 +1,10 @@
-const CONFIG = {
+function deepFreeze(value) {
+	if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
+	Object.values(value).forEach((entry) => deepFreeze(entry));
+	return Object.freeze(value);
+}
+
+const CONFIG = deepFreeze({
 	project: {
 		extension: 'glitter.json',
 		fileNameSuffix: '_ryandavi-com'
@@ -48,6 +54,9 @@ const CONFIG = {
 		behavior: {
 			autoSelect: true,
 			autoCreateGlitterLayer: true
+		},
+		assets: {
+			manifestVersion: '2026-07-28'
 		}
 	},
 
@@ -535,6 +544,7 @@ const CONFIG = {
 			boundingBoxColor: 'var(--color-accent)',
 			boundingBoxWidth: 1.5,
 			handleHitboxPadding: 8,
+			touchMinHandleSpan: 72,
 			// Layer scale limits. enabled:false = Figma/Photoshop parity (no max);
 			// hardMin/hardMax stay as safety rails so scale can never hit 0 or
 			// blow up the DOM. All scale writes clamp via clampLayerScale().
@@ -546,61 +556,6 @@ const CONFIG = {
 				hardMax: 10000
 			},
 		},
-		shortcuts: [
-			{ title: 'Tools', items: [
-				{ key: 'V', action: 'Select Tool' },
-				{ key: 'T', action: 'Text Tool' },
-				{ key: 'U', action: 'Shape Tool' },
-				{ key: 'I', action: 'Color Fill Tool' },
-				{ key: 'B', action: 'Mask Brush Tool' },
-				{ key: 'E', action: 'Mask Eraser Tool' },
-				{ key: 'H', action: 'Hand Tool' },
-				{ key: 'Z', action: 'Zoom Tool' }
-			] },
-			{ title: 'Selection', items: [
-				{ key: 'Shift + Click Canvas', action: 'Add/Remove Movable Layer from Selection', gestures: ['Click Canvas'] },
-				{ key: 'Shift + Click Layer', action: 'Select Layer Range in Layers Panel', gestures: ['Click Layer'] },
-				{ key: 'Ctrl/Cmd + Click Layer', action: 'Add/Remove One Layer in Layers Panel', gestures: ['Click Layer'] },
-				{ key: 'Alt + Click', action: 'Cycle Through Overlapping Layers', gestures: ['Click'] },
-				{ key: 'Drag on Empty Canvas', action: 'Select Multiple Layers', gestures: ['Drag on Empty Canvas'] },
-				{ key: 'Ctrl + A', action: 'Select All Movable Layers' },
-				{ key: 'Escape', action: 'Cancel Active Transform / Clear Multi-Selection' }
-			] },
-			{ title: 'Transform', items: [
-				{ key: 'Arrow Keys', action: 'Nudge Selected Layer' },
-				{ key: 'Shift + Arrow Keys', action: 'Nudge Selected Layer 10px' },
-				{ key: 'Alt + Drag', action: 'Duplicate Layer(s) While Dragging', gestures: ['Drag'] },
-				{ key: 'Ctrl + D', action: 'Duplicate Selected Layer(s)' },
-				{ key: 'Shift + Drag', action: 'Axis-lock Selected Layer Move', gestures: ['Drag'] },
-				{ key: 'Ctrl + Drag', action: 'Temporarily Disable Snapping', instruction: 'Hold', gestures: ['Drag'] },
-				{ key: 'Shift + Rotate', action: 'Snap Rotation to 15deg', gestures: ['Rotate'] },
-				{ key: 'Alt + Resize', action: 'Resize Layer(s) from Center', gestures: ['Resize'] }
-			] },
-			{ title: 'Brush', items: [
-				{ key: 'X', action: 'Swap Paint/Erase (Mask Brush)' },
-				{ key: '[ / ]', action: 'Decrease/Increase Brush Size' },
-				{ key: 'Shift + [ / ]', action: 'Adjust Brush Size Faster' },
-				{ key: 'Shift + Drag', action: 'Constrain Stroke to 0/45/90deg', gestures: ['Drag'] }
-			] },
-			{ title: 'View', items: [
-				{ key: 'Space', action: 'Temporarily Use Hand Tool', instruction: 'Hold' },
-				{ key: 'Alt + Click', action: 'Zoom Out (Zoom Tool)', gestures: ['Click'] },
-				{ key: 'Scroll Wheel', action: 'Zoom In/Out (Zoom Tool)', gestures: ['Scroll Wheel'] },
-				{ key: 'Ctrl + Wheel', action: 'Trackpad Zoom', gestures: ['Wheel'] },
-				{ key: 'Ctrl + 0', action: 'Fit Screen' },
-				{ key: 'Ctrl + 1', action: 'Reset Zoom (100%)' },
-				{ key: 'Double-click Zoom %', action: 'Reset Zoom (100%)', gestures: ['Double-click Zoom %'] },
-				{ key: 'Ctrl + +/-', action: 'Zoom In/Out' }
-			] },
-			{ title: 'History', items: [
-				{ key: 'Ctrl + Z', action: 'Undo' },
-				{ key: 'Ctrl + Shift + Z', action: 'Redo' },
-				{ key: 'Ctrl + Y', action: 'Redo' }
-			] },
-			{ title: 'File', items: [
-				{ key: 'Ctrl + S', action: 'Save Project' }
-			] }
-		]
 	},
 
 	export: {
@@ -709,7 +664,7 @@ const CONFIG = {
 		forceIOSExportPreview: false,
 		enabled: false
 	},
-};
+});
 
 const LayerType = {
 	GLITTER_FILL: 'glitter-fill',
@@ -847,6 +802,14 @@ const LAYER_UI_CONFIG = {
 
 	[LayerType.BASE_IMAGE]: {
 		displayName: 'Base Image',
+		serialization: {
+			dataKey: 'background',
+			omit: ['name', 'settings'],
+			forceLocked: true,
+			defaultSelectedGlitterId: () => CONFIG.tools.glitter.defaults.fillGlitterId,
+			defaults: { image: null },
+			normalize: (editor, layer) => editor.baseBackgroundManager?.normalizeLayer(layer)
+		},
 		goTo: null,
 		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'baseLayerSettingsSection'],
 		mobileSettingsSections: ['background'],
@@ -858,6 +821,11 @@ const LAYER_UI_CONFIG = {
 
 	[LayerType.GLITTER_FILL]: {
 		displayName: 'Glitter Fill',
+		serialization: {
+			extraKeys: ['selections', 'fill', 'autoGlitter'],
+			includeMaskVersion: true,
+			defaults: { maskHasContent: false }
+		},
 		addedStatusMessage: 'New glitter fill layer added',
 		goTo: 'glitter',
 		addableViaModal: {
@@ -876,14 +844,17 @@ const LAYER_UI_CONFIG = {
 				editor.setTool(ToolType.COLOR_PICKER);
 			}
 			editor.updateGlitterSelection();
-			editor.hideLayerSettingsEmptyState();
-			editor.hideGlitterSettingsEmptyState();
+			editor.setSettingsEmptyState('layerSettings', false);
+			editor.setSettingsEmptyState('glitterSettings', false);
 			editor.loadActiveLayerSettings();
 		}
 	},
 
 	[LayerType.STICKER]: {
 		displayName: 'Sticker',
+		serialization: {
+			custom: { serialize: 'serializeSticker', deserialize: 'deserializeSticker' }
+		},
 		addedStatusMessage: 'New sticker layer added',
 		goTo: 'sticker',
 		addableViaModal: {
@@ -917,11 +888,11 @@ const LAYER_UI_CONFIG = {
 
 			const stickerContent = document.getElementById('stickerSettingsContent');
 			if (layer.stickerSourceId) {
-				editor.hideStickerSettingsEmptyState();
+				editor.setSettingsEmptyState('stickerSettings', false);
 				editor.loadStickerSettings(layer);
 			} else {
 				if (stickerContent) stickerContent.classList.remove('visible');
-				editor.showStickerSettingsEmptyState();
+				editor.setSettingsEmptyState('stickerSettings', true);
 			}
 
 			editor.updateStickerSelection();
@@ -930,6 +901,14 @@ const LAYER_UI_CONFIG = {
 
 	[LayerType.TEXT_GLITTER]: {
 		displayName: 'Text',
+		serialization: {
+			dataKey: 'textData',
+			defaultName: (editor, data) => editor.textGlitterManager?.getLayerName(data?.text || ''),
+			normalize: (editor, layer) => editor.textGlitterManager?.normalizeLayer(layer),
+			hydrate: async (editor, layer) => {
+				if (layer.textData?.fontId) await editor.textGlitterManager?.ensureFontLoaded(layer.textData.fontId);
+			}
+		},
 		addedStatusMessage: 'New text layer added',
 		goTo: 'glitter',
 		addableViaModal: {
@@ -977,6 +956,11 @@ const LAYER_UI_CONFIG = {
 
 	[LayerType.SHAPE]: {
 		displayName: 'Shape',
+		serialization: {
+			dataKey: 'shapeData',
+			defaultName: () => 'Shape',
+			normalize: (editor, layer) => editor.shapeGlitterManager?.normalizeLayer(layer)
+		},
 		addedStatusMessage: 'New shape layer added',
 		goTo: 'glitter',
 		addableViaModal: {

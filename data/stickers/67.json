@@ -1,0 +1,40 @@
+{
+  "id": 67,
+  "name": "Sweetie Red Glitter Text",
+  "filename": "sweetie_red-glitter.gif",
+  "url": "images/stickers/text/sweetie_red-glitter.gif",
+  "thumbnailUrl": "images/stickers/text/sweetie_red-glitter.gif",
+  "category": "text",
+  "attribution": "",
+  "stickerText": "Sweetie",
+  "tags": [
+    "glitter",
+    "red",
+    "sweetie"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#7B0029",
+    "#4A0018",
+    "#E7005A",
+    "#E7E7E7",
+    "#E7297B"
+  ],
+  "colorWeights": [
+    0.32,
+    0.3,
+    0.18,
+    0.14,
+    0.07
+  ],
+  "paletteType": "single",
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 277,
+  "height": 53,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 7107,
+  "sortOrder": 0
+}

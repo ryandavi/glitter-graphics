@@ -1,0 +1,30 @@
+{
+  "id": 102,
+  "name": "Heart Gem Yellow",
+  "filename": "heart-gem_yellow.gif",
+  "url": "images/stickers/decorative/heart-gem_yellow.gif",
+  "thumbnailUrl": "images/stickers/decorative/heart-gem_yellow.gif",
+  "category": "decorative",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "gem",
+    "heart",
+    "jewel",
+    "love",
+    "yellow"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 40,
+  "height": 32,
+  "frameCount": 7,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 11700,
+  "sortOrder": 112
+}

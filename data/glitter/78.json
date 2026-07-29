@@ -1,0 +1,31 @@
+{
+  "id": 78,
+  "url": "images/glitter/sparkle/glitter_dark-gold.gif",
+  "name": "Dark Gold",
+  "generatedName": "Vivid Gold",
+  "brightness": "1.000",
+  "sortOrder": 17,
+  "hue": 0.167,
+  "colorCodes": [
+    "#B48700"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 1931,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Gold",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

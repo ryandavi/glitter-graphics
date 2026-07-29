@@ -1,0 +1,29 @@
+{
+  "id": 17,
+  "name": "Playboy Silver Glitter Logo",
+  "filename": "playboy_silver-glitter.gif",
+  "url": "images/stickers/logo/playboy_silver-glitter.gif",
+  "thumbnailUrl": "images/stickers/logo/playboy_silver-glitter.gif",
+  "category": "logo",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "bunny",
+    "glitter",
+    "playboy",
+    "silver"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 71,
+  "height": 107,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 3374,
+  "sortOrder": 17
+}

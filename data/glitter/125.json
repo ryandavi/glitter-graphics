@@ -1,0 +1,35 @@
+{
+  "id": 125,
+  "url": "images/glitter/ember/ember_emerald.gif",
+  "name": "Emerald",
+  "generatedName": "Very Dark Vivid Green",
+  "brightness": "0.150",
+  "sortOrder": 74,
+  "hue": 0.403,
+  "colorCodes": [
+    "#03320B",
+    "#097814",
+    "#1ED66C"
+  ],
+  "colorWeights": [
+    0,
+    0.3333,
+    0.3333
+  ],
+  "frameCount": 4,
+  "frameRate": 20,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1409,
+  "category": "ember",
+  "isPixelated": 1,
+  "tags": [
+    "Dark",
+    "Green",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

@@ -1,0 +1,38 @@
+{
+  "id": 97,
+  "url": "images/glitter/sparkle/glitter_opalite.gif",
+  "name": "Opalite",
+  "generatedName": "Light Gray",
+  "brightness": "1.000",
+  "sortOrder": 63,
+  "hue": 1.1,
+  "colorCodes": [
+    "#CCCCCC",
+    "#CCFFFF",
+    "#FFCCFF"
+  ],
+  "colorWeights": [
+    0,
+    0.3333,
+    0.3333
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1250,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Jewel",
+    "Light",
+    "Multicolor",
+    "Pastel",
+    "Pink"
+  ],
+  "searchTerms": []
+}

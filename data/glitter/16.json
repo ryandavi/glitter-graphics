@@ -1,0 +1,32 @@
+{
+  "id": 16,
+  "url": "images/glitter/sparkle/glitter_magenta.gif",
+  "name": "Magenta",
+  "generatedName": "Neon Pink",
+  "brightness": "1.000",
+  "sortOrder": 6,
+  "hue": 0.125,
+  "colorCodes": [
+    "#B400A5"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1957,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Neon",
+    "Pink",
+    "Purple",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

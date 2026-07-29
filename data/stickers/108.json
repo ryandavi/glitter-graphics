@@ -1,0 +1,29 @@
+{
+  "id": 108,
+  "name": "Rotating Heart Red",
+  "filename": "red_heart_rotate.gif",
+  "url": "images/stickers/decorative/red_heart_rotate.gif",
+  "thumbnailUrl": "images/stickers/decorative/red_heart_rotate.gif",
+  "category": "decorative",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "heart",
+    "love",
+    "red",
+    "rotating"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 75,
+  "height": 75,
+  "frameCount": 12,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 8162,
+  "sortOrder": 118
+}

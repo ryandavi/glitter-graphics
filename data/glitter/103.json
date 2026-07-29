@@ -1,0 +1,38 @@
+{
+  "id": 103,
+  "url": "images/glitter/sparkle/glitter_pink-red.gif",
+  "name": "Pink Red",
+  "generatedName": "Vivid Red",
+  "brightness": "1.000",
+  "sortOrder": 8,
+  "hue": 0.042,
+  "colorCodes": [
+    "#FF33FF",
+    "#C00012",
+    "#FF0300",
+    "#FFFFFF"
+  ],
+  "colorWeights": [
+    0.34,
+    0.29,
+    0.24,
+    0.12
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1600,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Pink",
+    "Red",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

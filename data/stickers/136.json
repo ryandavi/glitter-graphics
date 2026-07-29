@@ -1,0 +1,29 @@
+{
+  "id": 136,
+  "name": "Rose Heart Frame Red",
+  "filename": "rose-heart_frame_red.gif",
+  "url": "images/stickers/frame/rose-heart_frame_red.gif",
+  "thumbnailUrl": "images/stickers/frame/rose-heart_frame_red.gif",
+  "category": "frame",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "heart",
+    "love",
+    "red",
+    "rose"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 320,
+  "height": 320,
+  "frameCount": 27,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 371065,
+  "sortOrder": 146
+}

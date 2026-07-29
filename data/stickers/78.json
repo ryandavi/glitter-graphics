@@ -1,0 +1,26 @@
+{
+  "id": 78,
+  "name": "Chrome Frame",
+  "filename": "frame_chrome.gif",
+  "url": "images/stickers/frame/frame_chrome.gif",
+  "thumbnailUrl": "images/stickers/frame/frame_chrome.gif",
+  "category": "frame",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "chrome"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 400,
+  "height": 400,
+  "frameCount": 24,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 385345,
+  "sortOrder": 87
+}

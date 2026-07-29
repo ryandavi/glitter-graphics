@@ -1,0 +1,29 @@
+{
+  "id": 149,
+  "name": "Gangsta Pendant Gold Silver",
+  "filename": "gangsta_gold-silver.gif",
+  "url": "images/stickers/jewelry/gangsta_gold-silver.gif",
+  "thumbnailUrl": "images/stickers/jewelry/gangsta_gold-silver.gif",
+  "category": "jewelry",
+  "attribution": "",
+  "stickerText": "Gangsta",
+  "tags": [
+    "gangsta",
+    "gold",
+    "pendant",
+    "silver"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 100,
+  "height": 80,
+  "frameCount": 15,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 36459,
+  "sortOrder": 159
+}

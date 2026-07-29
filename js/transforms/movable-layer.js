@@ -29,6 +29,9 @@ function movableResetTransform(manager, layerId, refresh) {
 }
 
 function movableCreateTransformHandles(manager, layerId) {
+	manager.layerTransforms.forEach((transform, candidateId) => {
+		if (candidateId !== layerId) transform.removeTransformHandles();
+	});
 	manager.layerTransforms.get(layerId)?.createTransformHandles();
 }
 

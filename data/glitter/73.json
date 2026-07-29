@@ -1,0 +1,32 @@
+{
+  "id": 73,
+  "url": "images/glitter/sparkle/glitter_burn-sienna.gif",
+  "name": "Burn Sienna",
+  "generatedName": "Muted Orange",
+  "brightness": "1.000",
+  "sortOrder": 50,
+  "hue": 0.083,
+  "colorCodes": [
+    "#B48778"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 2,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 5675,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Beige",
+    "Brown",
+    "Muted",
+    "Warm"
+  ],
+  "searchTerms": []
+}

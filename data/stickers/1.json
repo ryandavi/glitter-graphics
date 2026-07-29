@@ -1,0 +1,29 @@
+{
+  "id": 1,
+  "name": "Gold Glitter Butterfly",
+  "filename": "butterfly_gold-glitter.gif",
+  "url": "images/stickers/animal/butterfly_gold-glitter.gif",
+  "thumbnailUrl": "images/stickers/animal/butterfly_gold-glitter.gif",
+  "category": "animal",
+  "attribution": null,
+  "stickerText": null,
+  "tags": [
+    "butterfly",
+    "glitter",
+    "gold",
+    "insect"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 143,
+  "height": 140,
+  "frameCount": 3,
+  "frameRate": 8,
+  "isVariableFramerate": 0,
+  "fileSize": 12016,
+  "sortOrder": 0
+}

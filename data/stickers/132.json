@@ -1,0 +1,29 @@
+{
+  "id": 132,
+  "name": "Roses Glitter Blue",
+  "filename": "roses_glitter_blue.gif",
+  "url": "images/stickers/flower/roses_glitter_blue.gif",
+  "thumbnailUrl": "images/stickers/flower/roses_glitter_blue.gif",
+  "category": "flower",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "blue",
+    "flower",
+    "glitter",
+    "roses"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 302,
+  "height": 247,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 84741,
+  "sortOrder": 142
+}

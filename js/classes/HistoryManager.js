@@ -32,10 +32,17 @@ class HistoryManager {
 		};
 	}
 
-	saveState() {
-		const state = this.createStateSnapshot();
+	saveState(label = null, { coalesceKey = null } = {}) {
+		const state = { ...this.createStateSnapshot(), label, coalesceKey };
 
 		this.history = this.history.slice(0, this.historyIndex + 1);
+		const current = this.history[this.historyIndex];
+		if (coalesceKey && current?.coalesceKey === coalesceKey) {
+			this.history[this.historyIndex] = state;
+			this.editor.glitterManager?.prunePaintHistory();
+			this.updateButtons();
+			return;
+		}
 
 		if (this.history.length >= this.limit) {
 			this.history.shift();
@@ -62,13 +69,7 @@ class HistoryManager {
 		// the armed slot may not even exist in the restored layer set. Drop it
 		// here — the full UI refresh at the end of this method repaints the
 		// gallery in browse mode.
-		if (this.editor.textGlitterManager) {
-			this.editor.textGlitterManager.closePickerSession();
-			this.editor.shapeGlitterManager?.closePickerSession();
-			this.editor.stickerManager?.closePickerSession();
-			this.editor.glitterManager?.closePickerSession();
-			this.editor.baseBackgroundManager?.closePickerSession();
-		}
+		this.editor.pickers?.closeAll();
 		this.editor.layers = [];
 
 		for (const layerData of state.layers) {
@@ -82,7 +83,7 @@ class HistoryManager {
 		this.editor.layerManager.restoreSelectionState(state.activeLayerId, state.selectedLayerIds);
 
 		this.editor.layerManager.renderLayersList();
-		this.editor.updatePreview();
+		this.editor.requestPreviewUpdate();
 		this.editor.loadActiveLayerSettings();
 		this.editor.syncTransformHandlesForActiveLayer?.();
 		this.editor.updateActionButtons();
@@ -158,10 +159,14 @@ class HistoryManager {
 
 		if (undoButton) {
 			undoButton.disabled = !this.canUndo();
+			const label = this.canUndo() ? this.history[this.historyIndex]?.label : null;
+			undoButton.title = label ? `Undo ${label}` : 'Undo';
 		}
 
 		if (redoButton) {
 			redoButton.disabled = !this.canRedo();
+			const label = this.canRedo() ? this.history[this.historyIndex + 1]?.label : null;
+			redoButton.title = label ? `Redo ${label}` : 'Redo';
 		}
 	}
 }

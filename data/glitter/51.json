@@ -1,0 +1,32 @@
+{
+  "id": 51,
+  "url": "images/glitter/etc/etc_bronze-2.gif",
+  "name": "Bronze 2",
+  "generatedName": "Muted Orange",
+  "brightness": "1.000",
+  "sortOrder": 104,
+  "hue": 0.125,
+  "colorCodes": [
+    "#B49678"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 5,
+  "frameRate": 2,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 5841,
+  "category": "etc",
+  "isPixelated": 1,
+  "tags": [
+    "Beige",
+    "Bronze",
+    "Muted",
+    "Warm"
+  ],
+  "searchTerms": []
+}

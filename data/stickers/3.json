@@ -1,0 +1,29 @@
+{
+  "id": 3,
+  "name": "Gold Glitter Dove",
+  "filename": "dove_gold-glitter.gif",
+  "url": "images/stickers/animal/dove_gold-glitter.gif",
+  "thumbnailUrl": "images/stickers/animal/dove_gold-glitter.gif",
+  "category": "animal",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "bird",
+    "dove",
+    "glitter",
+    "gold"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 358,
+  "height": 179,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 13742,
+  "sortOrder": 3
+}

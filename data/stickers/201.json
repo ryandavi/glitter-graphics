@@ -1,0 +1,41 @@
+{
+  "id": 201,
+  "name": "Bling Bling Silver Glitter Text",
+  "filename": "bling-bling_silver-glitter.gif",
+  "url": "images/stickers/text/bling-bling_silver-glitter.gif",
+  "thumbnailUrl": "images/stickers/text/bling-bling_silver-glitter.gif",
+  "category": "text",
+  "attribution": "",
+  "stickerText": "Bling Bling",
+  "tags": [
+    "bling bling",
+    "glitter",
+    "silver",
+    "sparkle"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#FCFCFC",
+    "#686868",
+    "#CCCCCC",
+    "#969696",
+    "#3E3E3E"
+  ],
+  "colorWeights": [
+    0.3,
+    0.18,
+    0.18,
+    0.17,
+    0.1
+  ],
+  "paletteType": "neutral",
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 223,
+  "height": 184,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 55568,
+  "sortOrder": 212
+}

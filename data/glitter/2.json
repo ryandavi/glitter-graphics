@@ -1,0 +1,32 @@
+{
+  "id": 2,
+  "url": "images/glitter/sparkle/glitter_crimson.gif",
+  "name": "Crimson",
+  "generatedName": "Vivid Red",
+  "brightness": "1.000",
+  "sortOrder": 10,
+  "hue": 0.028,
+  "colorCodes": [
+    "#C3000F"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1569,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Dark",
+    "Red",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

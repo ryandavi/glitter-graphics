@@ -1,0 +1,40 @@
+{
+  "id": 18,
+  "url": "images/glitter/sparkle/glitter_magenta-blue.gif",
+  "name": "Magenta Blue",
+  "generatedName": "Pink and Blue",
+  "brightness": "1.000",
+  "sortOrder": 41,
+  "hue": 1.2,
+  "colorCodes": [
+    "#FF00FF",
+    "#87D2F0",
+    "#0069A5"
+  ],
+  "colorWeights": [
+    0,
+    0.3333,
+    0.3333
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1619,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Contrast",
+    "Cool",
+    "Multicolor",
+    "Neon",
+    "Pink",
+    "Purple",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

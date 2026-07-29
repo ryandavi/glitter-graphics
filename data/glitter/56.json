@@ -1,0 +1,32 @@
+{
+  "id": 56,
+  "url": "images/glitter/etc/etc_gold.gif",
+  "name": "Gold",
+  "generatedName": "Vivid Orange",
+  "brightness": "1.000",
+  "sortOrder": 93,
+  "hue": 0.164,
+  "colorCodes": [
+    "#FFD24B"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 5,
+  "frameRate": 2,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 6450,
+  "category": "etc",
+  "isPixelated": 1,
+  "tags": [
+    "Light",
+    "Orange",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

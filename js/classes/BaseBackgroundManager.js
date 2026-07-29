@@ -141,7 +141,7 @@ class BaseBackgroundManager {
 			layer.background.color = this.ui.color.value;
 			this.applyChange(false);
 		});
-		this.ui.color?.addEventListener('change', () => this.editor.saveState());
+		this.ui.color?.addEventListener('change', () => this.editor.saveState('Edit background'));
 		[this.ui.glitterChip, this.ui.glitterChange].forEach((button) => button?.addEventListener('click', () => this.armPicker()));
 		this.ui.imageChange?.addEventListener('click', () => this.chooseReplacementImage());
 		this.ui.pickerDone?.addEventListener('click', () => { if (this.hasActivePickerSession()) this.closePicker(); });
@@ -153,7 +153,7 @@ class BaseBackgroundManager {
 			getLayer: () => this.getActiveLayer(),
 			getData: (layer) => this.normalizeLayer(layer)?.background,
 			render: () => this.applyChange(false),
-			save: () => this.editor.saveState()
+			save: () => this.editor.saveState('Edit background')
 		});
 		this.bindPixelEffects();
 	}
@@ -169,7 +169,7 @@ class BaseBackgroundManager {
 				resetValue: spec.value,
 				resetButton: document.getElementById(`reset${id[0].toUpperCase()}${id.slice(1)}`),
 				apply: (next) => this.updatePixelSetting(path, next, false),
-				onCommit: () => this.editor.saveState()
+				onCommit: () => this.editor.saveState('Edit background')
 			});
 		};
 		bindRange('pixelEffectsPixelSize', 'pixelSize', 'pixelEffectsPixelSize');
@@ -393,7 +393,7 @@ class BaseBackgroundManager {
 				this.lastPixelEffectPreview = result;
 				if (animationKey) this.startShimmerPreview(animationKey);
 				setInlineProcessingStatus(this.ui.status);
-				this.editor.updatePreview();
+				this.editor.requestPreviewUpdate();
 			};
 			worker.addEventListener('message', finish);
 			worker.postMessage({
@@ -443,7 +443,7 @@ class BaseBackgroundManager {
 				layer.background[key] = next;
 				this.applyChange(false);
 			},
-			onCommit: () => this.editor.saveState()
+			onCommit: () => this.editor.saveState('Edit background')
 		});
 	}
 
@@ -462,7 +462,7 @@ class BaseBackgroundManager {
 				layer.background.colorAdjust[key] = next;
 				this.applyChange(false);
 			},
-			onCommit: () => this.editor.saveState()
+			onCommit: () => this.editor.saveState('Edit background')
 		});
 	}
 
@@ -479,9 +479,9 @@ class BaseBackgroundManager {
 		this.updateAutoGlitterAvailability();
 		const layer = this.normalizeLayer(this.getActiveLayer());
 		if (layer) this.loadPixelEffectSettings(layer);
-		this.editor.updatePreview();
+		this.editor.requestPreviewUpdate();
 		this.editor.layerManager.renderLayersList();
-		if (commit) this.editor.saveState();
+		if (commit) this.editor.saveState('Edit background');
 	}
 
 	getBackgroundSourceImageData(background, width, height) {

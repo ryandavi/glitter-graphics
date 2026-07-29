@@ -19,7 +19,7 @@ async function openEditor(page) {
 
 async function getBrushAlphaProfile(page, { crisp, softness, flow = 100 }) {
 	return page.evaluate(({ crispEdges, brushSoftness, brushFlow }) => {
-		CONFIG.rendering.crispMaskEdges = crispEdges;
+		PREFERENCES.set('crispMaskEdges', crispEdges);
 		const editor = window.editor;
 		const maskEditor = editor.maskEditor;
 		maskEditor.toolSettings.add.size = 41;
@@ -71,7 +71,7 @@ async function main() {
 			const saved = JSON.parse(localStorage.getItem('glitterEditorSettings'));
 			return {
 				initialChecked,
-				crispMaskEdges: CONFIG.rendering.crispMaskEdges,
+				crispMaskEdges: PREFERENCES.get('crispMaskEdges'),
 				savedAntialiasEdges: saved.antialiasEdges
 			};
 		});
@@ -82,7 +82,7 @@ async function main() {
 		await page.reload({ waitUntil: 'networkidle' });
 		const persistedState = await page.evaluate(() => ({
 			checked: document.getElementById('antialiasMaskEdges').checked,
-			crispMaskEdges: CONFIG.rendering.crispMaskEdges
+			crispMaskEdges: PREFERENCES.get('crispMaskEdges')
 		}));
 		assert(persistedState.checked, 'Antialias Edges did not restore after reload');
 		assert(!persistedState.crispMaskEdges, 'Restored Antialias Edges did not update mask rendering');

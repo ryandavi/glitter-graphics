@@ -1,0 +1,30 @@
+{
+  "id": 174,
+  "name": "Falling Rose Petals Red",
+  "filename": "rose-petals_falling_red.gif",
+  "url": "images/stickers/sparkle/rose-petals_falling_red.gif",
+  "thumbnailUrl": "images/stickers/sparkle/rose-petals_falling_red.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "falling",
+    "flowers",
+    "red",
+    "romantic",
+    "rose petals"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 312,
+  "height": 224,
+  "frameCount": 53,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 44388,
+  "sortOrder": 184
+}

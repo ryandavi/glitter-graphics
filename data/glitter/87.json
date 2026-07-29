@@ -1,0 +1,33 @@
+{
+  "id": 87,
+  "url": "images/glitter/sparkle/glitter_gold-2.gif",
+  "name": "Gold 2",
+  "generatedName": "Muted Yellow",
+  "brightness": "1.000",
+  "sortOrder": 18,
+  "hue": 0.208,
+  "colorCodes": [
+    "#FFFF69"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1512,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Brown",
+    "Contrast",
+    "Gold",
+    "Warm",
+    "Yellow"
+  ],
+  "searchTerms": []
+}

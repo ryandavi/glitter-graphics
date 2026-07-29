@@ -1,0 +1,31 @@
+{
+  "id": 111,
+  "name": "Sketchy Heart White Pink",
+  "filename": "sketchy-heart_white-pink.gif",
+  "url": "images/stickers/decorative/sketchy-heart_white-pink.gif",
+  "thumbnailUrl": "images/stickers/decorative/sketchy-heart_white-pink.gif",
+  "category": "decorative",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "hand-drawn",
+    "heart",
+    "love",
+    "pink",
+    "sketchy",
+    "white"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 24,
+  "height": 19,
+  "frameCount": 2,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 378,
+  "sortOrder": 121
+}

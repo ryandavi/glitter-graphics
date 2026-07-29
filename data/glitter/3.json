@@ -1,0 +1,34 @@
+{
+  "id": 3,
+  "url": "images/glitter/sparkle/glitter_ruby.gif",
+  "name": "Ruby",
+  "generatedName": "Jewel Tone Pink",
+  "brightness": "0.000",
+  "sortOrder": 11,
+  "hue": 0.215,
+  "colorCodes": [
+    "#78002D"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 1931,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Dark",
+    "Jewel",
+    "Pink",
+    "Red",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

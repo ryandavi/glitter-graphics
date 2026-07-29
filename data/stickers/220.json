@@ -1,0 +1,34 @@
+{
+  "id": 220,
+  "name": "Cunty Coffee Cup",
+  "filename": "cunty-coffee-cup.png",
+  "url": "images/stickers/character/cunty-coffee-cup.png",
+  "thumbnailUrl": "images/stickers/character/cunty-coffee-cup.png",
+  "category": "character",
+  "attribution": null,
+  "stickerText": null,
+  "tags": [],
+  "searchTerms": [],
+  "colorCodes": [
+    "#BDBCBB",
+    "#948D88",
+    "#E9E9E7",
+    "#221D1E"
+  ],
+  "colorWeights": [
+    0.65,
+    0.11,
+    0.08,
+    0.05
+  ],
+  "paletteType": "neutral",
+  "isAnimated": 0,
+  "hasTransparency": 1,
+  "width": 500,
+  "height": 350,
+  "frameCount": 1,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 58524,
+  "sortOrder": 0
+}

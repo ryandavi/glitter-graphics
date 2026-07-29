@@ -1,0 +1,30 @@
+{
+  "id": 110,
+  "name": "Sketchy Heart Red",
+  "filename": "sketchy-heart_red.gif",
+  "url": "images/stickers/decorative/sketchy-heart_red.gif",
+  "thumbnailUrl": "images/stickers/decorative/sketchy-heart_red.gif",
+  "category": "decorative",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "hand-drawn",
+    "heart",
+    "love",
+    "red",
+    "sketchy"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 50,
+  "height": 50,
+  "frameCount": 9,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 2920,
+  "sortOrder": 120
+}

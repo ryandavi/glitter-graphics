@@ -1,0 +1,31 @@
+{
+  "id": 98,
+  "url": "images/glitter/sparkle/glitter_orange-dark.gif",
+  "name": "Orange Dark",
+  "generatedName": "Vivid Orange",
+  "brightness": "1.000",
+  "sortOrder": 16,
+  "hue": 0.158,
+  "colorCodes": [
+    "#D29600"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1471,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Dark",
+    "Orange",
+    "Warm"
+  ],
+  "searchTerms": []
+}

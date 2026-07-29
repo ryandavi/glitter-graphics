@@ -1,0 +1,33 @@
+{
+  "id": 28,
+  "url": "images/glitter/noise/noise_orange.gif",
+  "name": "Orange",
+  "generatedName": "Jewel Tone Bronze",
+  "brightness": "1.000",
+  "sortOrder": 80,
+  "hue": 0.158,
+  "colorCodes": [
+    "#966900"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 4,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 100,
+  "height": 100,
+  "fileSize": 18576,
+  "category": "noise",
+  "isPixelated": 1,
+  "tags": [
+    "Bronze",
+    "Jewel",
+    "Orange",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

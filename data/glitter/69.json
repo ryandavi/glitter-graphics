@@ -1,0 +1,31 @@
+{
+  "id": 69,
+  "url": "images/glitter/sparkle/glitter_brown-2.gif",
+  "name": "Brown 2",
+  "generatedName": "Muted Orange",
+  "brightness": "0.000",
+  "sortOrder": 55,
+  "hue": 0.125,
+  "colorCodes": [
+    "#3C2D1E"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 2,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 859,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Brown",
+    "Muted",
+    "Warm"
+  ],
+  "searchTerms": []
+}

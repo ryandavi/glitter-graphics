@@ -1,0 +1,29 @@
+{
+  "id": 175,
+  "name": "Shooting Star Yellow",
+  "filename": "shooting-star_yellow.gif",
+  "url": "images/stickers/sparkle/shooting-star_yellow.gif",
+  "thumbnailUrl": "images/stickers/sparkle/shooting-star_yellow.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "shooting star",
+    "sparkle",
+    "wish",
+    "yellow"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 130,
+  "height": 130,
+  "frameCount": 20,
+  "frameRate": 10,
+  "isVariableFramerate": 1,
+  "fileSize": 16308,
+  "sortOrder": 185
+}

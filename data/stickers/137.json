@@ -1,0 +1,30 @@
+{
+  "id": 137,
+  "name": "Bling Bling Necklace Gold Silver",
+  "filename": "bling-bling-necklace_gold-silver.gif",
+  "url": "images/stickers/jewelry/bling-bling-necklace_gold-silver.gif",
+  "thumbnailUrl": "images/stickers/jewelry/bling-bling-necklace_gold-silver.gif",
+  "category": "jewelry",
+  "attribution": "",
+  "stickerText": "Bling Bling",
+  "tags": [
+    "bling bling",
+    "chain",
+    "gold",
+    "necklace",
+    "silver"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 150,
+  "height": 150,
+  "frameCount": 12,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 88793,
+  "sortOrder": 147
+}

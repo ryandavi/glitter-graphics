@@ -1,0 +1,588 @@
+@use '../mixins' as *;
+
+// One source (fill/border/shadow): mode toggle on top, then exactly one of the
+// glitter asset-info display or the solid-color row. Roomier than the default
+// section spacing so the toggle, source, and sliders read as distinct steps.
+.glitter-source {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
+}
+
+.transform-panel.is-aspect-locked {
+	.transform-scale-x { grid-column: 1 / -1; }
+	.transform-scale-y { display: none; }
+}
+
+// The glitter display reuses the shared .asset-info-* classes so it matches
+// Glitter Properties' Asset section exactly (thumbnail + name + badges + meta).
+.asset-info-meta {
+	// Size / Frames sit below the header, mirroring Glitter Properties.
+	gap: var(--spacing-md);
+}
+
+// Both source displays are toggled via the [hidden] attribute; .asset-info and
+// .text-effect-color-row set display, so they need an explicit override.
+.glitter-source-glitter[hidden],
+.glitter-source-solid[hidden] {
+	display: none;
+}
+
+.paint-slot-primary-row {
+	&[hidden] { display: none; }
+
+	>.setting-column[hidden] { display: none; }
+
+	>.setting-column:only-child,
+	>.setting-column[hidden]+.setting-column {
+		grid-column: 1 / -1;
+	}
+}
+
+.effect-gradient-editor {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+
+	&[hidden],
+	.gradient-angle[hidden],
+	.gradient-stops-heading[hidden] { display: none; }
+
+	// Type + Blend segmented controls stack like the other effect option rows.
+	.gradient-option-rows {
+		gap: var(--spacing-md);
+	}
+
+	// The stops editor is one card: preview strip w/ draggable handles on top,
+	// then the per-stop rows and Add stop.
+	.gradient-preview {
+		position: relative;
+		height: 28px;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--color-border);
+		cursor: copy;
+		touch-action: none;
+
+		// Checkerboard under the strip so stop opacity reads visually.
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			border-radius: inherit;
+			background: repeating-conic-gradient(rgba(0, 0, 0, 0.2) 0% 25%, rgba(255, 255, 255, 0.6) 0% 50%) 0 0 / 12px 12px;
+		}
+	}
+
+	.gradient-preview-bar {
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+
+	.gradient-preview-markers {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.gradient-preview-stop {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 22px;
+		transform: translateX(-50%);
+		pointer-events: auto;
+		cursor: ew-resize;
+
+		&::after {
+			content: '';
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 14px;
+			height: 14px;
+			transform: translate(-50%, -50%);
+			border-radius: var(--radius-full);
+			background: var(--stop-color, #fff);
+			border: 2px solid #fff;
+			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+		}
+	}
+
+	.gradient-stops-heading,
+	.effect-gradient-stop {
+		display: grid;
+		grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr) 26px;
+		gap: var(--spacing-sm);
+		align-items: center;
+	}
+
+	.gradient-stops-heading {
+		@include text-sm;
+		color: var(--color-text-tertiary);
+	}
+
+	.gradient-stops {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
+	.effect-gradient-stop input[type="color"] {
+		width: 36px;
+		height: 28px;
+		padding: var(--spacing-2xs);
+	}
+
+	.gradient-stop-control {
+		display: grid;
+		grid-template-columns: minmax(38px, 1fr) 30px;
+		gap: var(--spacing-2xs);
+		align-items: center;
+		min-width: 0;
+
+		input { width: 100%; }
+	}
+
+	.gradient-stop-value {
+		@include text-sm;
+		color: var(--color-text-secondary);
+		text-align: right;
+		white-space: nowrap;
+	}
+
+	.gradient-stop-remove {
+		width: 26px;
+		height: 26px;
+		padding: var(--spacing-xs);
+	}
+
+	.gradient-add { align-self: flex-end; }
+}
+
+.text-box-hint {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-tertiary);
+}
+
+.text-effect-controls {
+	display: none;
+	flex-direction: column;
+	gap: 0;
+	padding-top: 0;
+	border-top: 1px solid var(--color-border);
+
+	&.visible {
+		display: flex;
+	}
+}
+
+.text-effect-subsection {
+	gap: 0;
+}
+
+.subsection-content-group.effects-stack,
+.subsection-content-group.subsection-section-group {
+	padding: 0;
+	border: 0;
+	background: transparent;
+
+	>.subsection-title,
+	>.subsection-note {
+		padding: 0 var(--spacing-xs);
+	}
+
+	>.text-effect-subsection,
+	>.subsection-content-group,
+	>.transform-panel-host {
+		margin-top: 0;
+	}
+}
+
+// Must follow the transform-host display declarations above so a collapsed
+// schema group also hides its generated transform host.
+.subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
+	display: none;
+}
+
+.subsection-content-group.subsection-section-group {
+	gap: var(--spacing-md);
+
+	>.transform-panel-host {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+	}
+}
+
+.effect-stack-row {
+	grid-template-columns: 1fr !important;
+}
+
+.effect-stack-row > .effect-option-group > .segmented-control,
+.effect-option-group > .segmented-control {
+	width: 100%;
+}
+
+.text-effect-source-row {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-md);
+
+	// Header grows to fill the row, pushing Change to the far right edge.
+	>.asset-info-header {
+		min-width: 0;
+		flex: 1;
+	}
+}
+
+.text-effect-source-change.target-active,
+.asset-info-thumbnail.target-active {
+	border-color: var(--color-accent);
+	box-shadow: 0 0 0 1px var(--color-accent-border);
+}
+
+// D-1c gallery picker strip: names the gallery's armed destination in picker
+// mode, or shows a passive hint for a solid-fill text layer in browse mode.
+// Sticky within the gallery content (not the viewport) so it stays visible as
+// the grid scrolls and works identically inside the mobile design drawer.
+.gallery-picker-strip {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-md);
+	padding: var(--spacing-sm) var(--spacing-md);
+	margin-bottom: var(--spacing-sm);
+	background: var(--color-bg-tertiary);
+	// border-left: 3px solid transparent;
+	// border-radius: var(--radius-sm);
+
+	&[hidden] {
+		display: none;
+	}
+
+	// Browse-mode passive hint: quieter, no accent, no Done.
+	&.is-hint {
+		background: var(--color-bg-primary);
+
+		.gallery-picker-strip-title {
+			color: var(--color-text-tertiary);
+			font-weight: 400;
+		}
+	}
+}
+
+.gallery-picker-strip-text {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2xs);
+	min-width: 0;
+	flex: 1;
+}
+
+.gallery-picker-strip-title {
+	@include text-sm;
+	color: var(--color-text-primary);
+	font-weight: 600;
+}
+
+.gallery-picker-strip-detail {
+	@include text-sm;
+	color: var(--color-text-tertiary);
+
+	&:empty {
+		display: none;
+	}
+}
+
+.gallery-picker-strip-done {
+	flex-shrink: 0;
+	align-self: center;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.text-effect-source-change {
+	flex-shrink: 0;
+	align-self: center;
+	min-height: 28px;
+	padding: 0 var(--spacing-sm);
+	@include text-sm;
+}
+
+.text-effect-color-row {
+	@include spread-row;
+
+	input[type="color"] {
+		width: 56px;
+	}
+}
+
+
+
+// Header controls (Enabled/Global/Proportional) cluster against the right
+// edge next to the collapse chevron instead of floating mid-title. Bare rule
+// on purpose: the effect cards (.text-effect-subsection) are nested, not
+// direct children of .settings-subsection, so the scoped rule above misses them.
+// Schema effect cards share one enable contract. Disabled cards stay
+// collapsible; manually expanding one reveals its saved controls as an inert
+// preview, while enabling it expands the card and makes the controls live.
+
+
+
+
+
+
+// Collapsed panel groups are a state boundary. Keep this after every generated
+// transform-host layout rule so themes and host normalization cannot reopen it.
+.design-panel .settings-subsection > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title),
+.design-panel .panel-scroll-region > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
+	display: none !important;
+}
+
+.auto-glitter-settings-section {
+	> .section-content { padding: 0; }
+
+	.auto-glitter-preview-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+	}
+
+	&.is-open > .section-content.visible { overflow: hidden; }
+
+	.settings-subsection {
+		display: flex;
+		height: 100%;
+		min-height: 0;
+		flex-direction: column;
+		gap: 0;
+		overflow: hidden;
+	}
+
+	.panel-scroll-region {
+		display: flex;
+		width: 100%;
+		min-height: 0;
+		min-width: 0;
+		max-width: 100%;
+		flex: 1 1 auto;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-md);
+		overflow-x: hidden;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable;
+
+		> * {
+			min-width: 0;
+			max-width: 100%;
+		}
+	}
+
+	.auto-glitter-preview-group,
+	.auto-glitter-footer-group {
+		flex: 0 0 auto;
+		padding: var(--spacing-md);
+	}
+
+	.auto-glitter-preview-group { border-bottom: 1px solid var(--color-border); }
+	.auto-glitter-footer-group { border-top: 1px solid var(--color-border); }
+
+	.auto-glitter-preview-card .segmented-control,
+	.auto-glitter-palette-style,
+	.auto-glitter-rerun-options {
+		width: 100%;
+	}
+
+	.auto-glitter-existing {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+
+		&[hidden] { display: none; }
+
+		> p {
+			margin: 0;
+			color: var(--color-text-secondary);
+		}
+
+		&.has-warning > p { color: var(--color-warning); }
+	}
+
+	.auto-glitter-rerun-mode > label {
+		display: flex;
+		position: relative;
+		align-items: center;
+		justify-content: center;
+
+		> input {
+			@include visually-hidden-control;
+			pointer-events: none;
+		}
+
+		&:has(input:checked) {
+			background: var(--color-accent);
+			color: var(--color-text-on-accent);
+		}
+
+		&:has(input:focus-visible) { box-shadow: inset var(--control-focus-ring); }
+	}
+
+	.auto-glitter-rerun-mode > .segmented-option {
+		min-width: 0;
+		padding-right: var(--spacing-xs);
+		padding-left: var(--spacing-xs);
+	}
+
+	.auto-glitter-status {
+		margin: 0;
+		padding: var(--spacing-xs) 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.auto-glitter-results {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+
+		&[hidden] { display: none; }
+	}
+
+	.auto-glitter-match {
+		flex-wrap: wrap;
+		cursor: grab;
+
+		&.is-dragging {
+			opacity: .55;
+			transform: scale(.99);
+		}
+
+		&.is-merge-target {
+			border-color: var(--color-accent);
+			box-shadow: 0 0 0 2px var(--color-accent-light);
+		}
+
+		&.is-merged {
+			margin-top: calc(var(--spacing-sm) * -1);
+			margin-left: calc(var(--icon-size-sm) + var(--spacing-sm));
+			border-style: dashed;
+			background: var(--color-bg-secondary);
+		}
+
+		&.is-skipped {
+			opacity: var(--disabled-opacity);
+			background: var(--color-bg-secondary);
+		}
+	}
+
+	.auto-glitter-drag-handle {
+		display: none;
+
+		&:disabled {
+			opacity: var(--disabled-opacity);
+			cursor: default;
+		}
+	}
+
+	.auto-glitter-source { align-items: flex-start; }
+
+	.auto-glitter-choice {
+		margin-left: auto;
+		padding: 0;
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-secondary);
+		cursor: pointer;
+
+		&:hover,
+		&[aria-expanded='true'] { border-color: var(--color-accent); }
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			image-rendering: pixelated;
+		}
+	}
+
+	.auto-glitter-footer-group {
+		.auto-glitter-actions > button { flex: 1 1 0; }
+	}
+}
+
+.auto-glitter-preview-banner {
+	position: absolute;
+	left: 50%;
+	// Clear the complete context bar, including its floating-ui padding and
+	// border, then repeat its edge inset as the gap between the two bars.
+	bottom: calc(var(--spacing-from-edge) + var(--control-height) + var(--spacing-sm) + var(--spacing-sm) + 2px + var(--spacing-from-edge));
+	z-index: 11;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	max-width: calc(100% - var(--spacing-xl));
+	padding: var(--spacing-sm) var(--spacing-md);
+	white-space: nowrap;
+	cursor: default;
+	transform: translate(-50%, 6px);
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
+	@include floating-ui;
+
+	&[hidden] { display: none; }
+
+	&.visible {
+		@include floating-visible;
+	}
+
+	> .icon-wrapper {
+		color: var(--color-accent);
+
+		> .icon {
+			width: var(--icon-size-xs);
+			height: var(--icon-size-xs);
+		}
+	}
+	> strong { font-size: var(--font-size-sm); }
+	> .inline-processing-status {
+		flex: 0 1 180px;
+		min-width: 0;
+		justify-content: flex-start;
+		color: var(--color-text-tertiary);
+		font-size: var(--font-size-xs);
+		font-weight: 500;
+
+		&.is-error { color: var(--color-warning); }
+	}
+	> span[role="status"] {
+		min-width: 0;
+		overflow: hidden;
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-sm);
+		text-overflow: ellipsis;
+	}
+	> .btn-text { flex: 0 0 auto; }
+}
+
+.auto-glitter-gallery-empty { display: none; }
+
+.design-panel[data-panel-mode='auto-glitter'] .design-gallery-section:not(.picker-mode) .design-gallery-content {
+	> :not(.auto-glitter-gallery-empty) { display: none !important; }
+
+	> .auto-glitter-gallery-empty {
+		display: flex;
+		min-height: 180px;
+	}
+}
+
+@include mobile {
+	.auto-glitter-settings-section .auto-glitter-drag-handle { display: flex; }
+}

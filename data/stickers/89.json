@@ -1,0 +1,27 @@
+{
+  "id": 89,
+  "name": "Butterfly Orange",
+  "filename": "butterfly_orange.gif",
+  "url": "images/stickers/animal/butterfly_orange.gif",
+  "thumbnailUrl": "images/stickers/animal/butterfly_orange.gif",
+  "category": "animal",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "butterfly",
+    "orange"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 105,
+  "height": 82,
+  "frameCount": 4,
+  "frameRate": 12,
+  "isVariableFramerate": 0,
+  "fileSize": 14249,
+  "sortOrder": 99
+}

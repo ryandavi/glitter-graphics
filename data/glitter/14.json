@@ -1,0 +1,33 @@
+{
+  "id": 14,
+  "url": "images/glitter/sparkle/glitter_sapphire.gif",
+  "name": "Sapphire",
+  "generatedName": "Jewel Tone Blue",
+  "brightness": "1.000",
+  "sortOrder": 35,
+  "hue": 0.658,
+  "colorCodes": [
+    "#002D96"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 1931,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Dark",
+    "Jewel",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

@@ -1,0 +1,451 @@
+@use '../mixins' as *;
+
+// ============================================
+// SIDEBAR / PANEL / TOOLBAR STYLES
+// ============================================
+
+
+
+.design-panel,
+.layers-panel {
+	background: unset;
+	padding: var(--spacing-base);
+	gap: var(--spacing-base);
+	border: unset;
+}
+
+.toolbar {
+	margin: var(--spacing-base);
+	margin-right: 0;
+}
+
+.toolbar,
+.layers-panel>.section,
+.design-panel>.section {
+	border: 1px solid var(--color-window-border);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	box-shadow: 0 2px 5px var(--color-shadow-strong);
+}
+
+
+
+
+
+
+
+
+
+
+.design-panel {
+	// Standalone Properties sections participate in the same visibility contract
+	// as gallery content: updateSidePanelUI owns the `.visible` class.
+	>.section:not(.visible) {
+		display: none;
+	}
+
+	>.section.main-section {
+		display: flex;
+		flex-direction: column;
+		flex: 0 0 auto;
+		min-height: 0;
+
+		&.is-open {
+			flex: 1 1 auto;
+
+			>.section-content.visible {
+				overflow: hidden;
+			}
+		}
+
+		>.section-header {
+			position: sticky;
+			top: 0;
+			z-index: 5;
+		}
+
+		>.section-content {
+			padding: 0;
+			min-height: 0;
+
+			&.visible {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+			}
+
+			>.section-content {
+				flex-shrink: 0;
+			}
+
+		}
+
+		&.collapsible-section>.section-content {
+			padding: 0;
+		}
+	}
+
+	>.section {
+		>.section-content {
+			padding: 0;
+		}
+
+		&.collapsible-section {
+			flex-shrink: 0;
+
+			>.section-content {
+				padding: var(--spacing-md);
+
+				&:not(.visible) {
+					display: none;
+				}
+			}
+
+			&.is-open>.section-content.visible {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
+			}
+
+			// An open settings section takes the remaining panel height and scrolls its
+			// own content, so long sections (Text Properties) can't push the other
+			// collapsed headers off screen.
+			&.is-open:not(.main-section) {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
+
+				>.section-header {
+					flex-shrink: 0;
+				}
+
+				>.section-content.visible {
+					flex: 1 1 auto;
+					min-height: 0;
+					overflow-y: auto;
+					overscroll-behavior: contain;
+					scrollbar-gutter: stable;
+				}
+			}
+		}
+
+		&:not(.collapsible-section) {
+			display: flex;
+			flex-direction: column;
+
+			>.section-content {
+				flex: 1 1 auto;
+				min-height: 0;
+				min-width: 0;
+				display: flex;
+				flex-direction: column;
+				background-color: var(--color-bg-primary);
+
+				// gallery-search-section
+				>.section-content {
+					flex-shrink: 0;
+				}
+
+			}
+		}
+	}
+
+	>.section:is(.main-section, :not(.collapsible-section)) > .section-content > .asset-options {
+		flex: 1 1 auto;
+		min-height: 0;
+		min-width: 0;
+		overflow: hidden;
+
+		&[data-gallery-content="shapes"] {
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			scrollbar-gutter: stable;
+		}
+
+		.asset-browser-content {
+			overflow-y: auto;
+			scrollbar-gutter: stable;
+		}
+	}
+}
+
+
+.sticker-search,
+.glitter-search {
+	overflow: hidden;
+	height: 100%;
+	border-bottom: 1px solid var(--color-border);
+
+	>.search-toggle-row {
+		flex-shrink: 0;
+	}
+
+	>.filters-container {
+		flex: 1;
+		min-height: 0;
+		flex-direction: column;
+		gap: 0;
+
+
+		>.filters-container-inner {
+			flex: 1;
+			min-height: 0;
+			max-height: none;
+			overflow-y: auto;
+		}
+
+	}
+}
+
+@keyframes filter-surface-enter {
+	from {
+		opacity: 0;
+		transform: translateY(var(--spacing-xs));
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.design-gallery-content {
+	>.gallery-search-section.visible {
+		display: flex;
+		flex: 0 0 auto;
+		flex-direction: column;
+		overflow: hidden;
+
+		&:not(.filters-open) {
+			>.glitter-search { height: auto; }
+		}
+
+		&.filters-open {
+			flex: 1 1 auto;
+			min-height: 0;
+		}
+	}
+
+	>[data-gallery-search="glitter"].filters-open ~ [data-gallery-content="glitter"],
+	>[data-gallery-search="stickers"].filters-open ~ [data-gallery-content="stickers"] {
+		display: none;
+	}
+
+	>[data-gallery-search="glitter"].filters-returning ~ [data-gallery-content="glitter"],
+	>[data-gallery-search="stickers"].filters-returning ~ [data-gallery-content="stickers"] {
+		animation: filter-surface-enter var(--transition-fast) ease-out;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.filters-container.visible,
+	.design-gallery-content > .gallery-search-section.filters-returning ~ .asset-options {
+		animation: none;
+	}
+}
+
+
+@include mobile {
+
+
+
+	.status-bar {
+		display: none;
+	}
+
+	.section.welcome-section>.section-content>.empty-state,
+	.section.base-layer-settings-section>.section-content>.empty-state,
+	.section.no-layer-settings-section>.section-content>.empty-state {
+		min-height: unset;
+	}
+
+
+	body.layersOpen .main-content>.layers-panel,
+	body.designOpen .main-content>.design-panel {
+		border: 0;
+		box-shadow: none;
+	}
+}
+
+
+
+
+
+
+
+#stickerSettingsControls {
+	display: none;
+
+	&.visible {
+		display: block;
+	}
+}
+
+.text-settings-section textarea {
+	width: 100%;
+	min-height: 96px;
+	resize: vertical;
+}
+
+/* Point text has no frame to align within — hide alignment controls
+   (dataset set by TextGlitterManager.updateBoxModeSelection) */
+.text-settings-section[data-box-mode="auto"] .text-valign-group,
+.text-settings-section[data-box-mode="auto"] .text-valign-label {
+	display: none;
+}
+
+/* "Fit to Text" only makes sense once there's a box to fit */
+.text-settings-section[data-box-mode="auto"] .text-fit-box-group,
+.text-settings-section[data-box-mode="auto"] .text-fit-box-label,
+.text-settings-section[data-box-mode="auto"] .text-fit-box-section {
+	display: none;
+}
+
+.text-settings-section > .section-content.visible {
+	gap: var(--spacing-md);
+}
+
+.text-input-group {
+	width: 100%;
+}
+
+.subsection-note {
+	font-size: var(--font-size-xs);
+	line-height: 1.4;
+	color: var(--color-text-tertiary);
+}
+
+.text-font-picker {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-base);
+	width: 100%;
+	max-height: 220px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	// Reserve room for the scrollbar (stable gutter, no overlay-scrollbar
+	// overlap) and a couple px on every side so the active card's
+	// outline-offset isn't clipped by the scroll container's own edge.
+	scrollbar-gutter: stable;
+	padding: var(--spacing-sm) var(--spacing-base) var(--spacing-sm) var(--spacing-sm);
+}
+
+// Gallery-card styling, reusing the .asset-option card conventions (outline
+// selection state, corner badge) instead of inventing a new visual language.
+.text-font-option {
+	flex-shrink: 0;
+	width: 100%;
+	background: var(--color-bg-tertiary);
+	color: var(--color-text-primary);
+	font: inherit;
+	padding: var(--spacing-sm) var(--spacing-md);
+	text-transform: none;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--spacing-xs);
+	text-align: left;
+}
+
+.text-font-option-sample {
+	font-size: 28px;
+	line-height: 1.2;
+}
+
+.text-font-option-name {
+	@include text-sm;
+	color: var(--color-text-secondary);
+}
+
+// Corner badge, same treatment as the Sticker gallery's "Animated" badge.
+.text-font-option-badge {
+	@include badge-base;
+	position: absolute;
+	top: 7px;
+	right: 7px;
+	min-width: 26px;
+	background: var(--color-bg-card);
+	color: var(--color-text-primary);
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	padding: var(--spacing-2xs) var(--spacing-sm);
+	box-shadow: 0 2px 4px var(--color-shadow-soft);
+	pointer-events: none;
+
+	&.is-ja {
+		background: color-mix(in srgb, var(--color-danger-bright) 16%, var(--color-bg-card));
+		color: var(--color-off-white);
+		border-color: color-mix(in srgb, var(--color-danger-bright) 40%, var(--color-border));
+	}
+
+	&.is-ko {
+		background: color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-card));
+		color: var(--color-off-white);
+		border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border));
+	}
+
+	&.is-zh {
+		background: color-mix(in srgb, var(--color-off-white) 14%, var(--color-bg-card));
+		color: var(--color-off-white);
+		border-color: color-mix(in srgb, var(--color-off-white) 32%, var(--color-border));
+	}
+}
+
+// Brush-shape gallery — same gallery-card conventions as .text-font-option
+// (outline selection state, accent-on-active), but laid out as a responsive
+// grid of small icon tiles since each option is a shape glyph, not a text
+// sample. auto-fill lets it pack 5-across in the wide desktop panel and wrap on
+// the narrower mobile settings drawer.
+.brush-shape-picker {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+	gap: var(--spacing-sm);
+	width: 100%;
+}
+
+.brush-shape-option {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-sm);
+	min-height: 62px;
+	padding: var(--spacing-sm) 2px;
+	background: var(--color-bg-tertiary);
+	color: var(--color-text-secondary);
+	font: inherit;
+
+	&:hover {
+		color: var(--color-text-primary);
+	}
+
+	&.active {
+		color: var(--color-text-primary);
+	}
+}
+
+.brush-shape-option-icon {
+	display: block;
+	width: 26px;
+	height: 26px;
+	color: inherit;
+
+	svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+		fill: currentColor;
+	}
+}
+
+.brush-shape-option-name {
+	font-size: 9px;
+	line-height: 1.1;
+	text-align: center;
+	color: inherit;
+}

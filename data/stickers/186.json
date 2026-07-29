@@ -1,0 +1,27 @@
+{
+  "id": 186,
+  "name": "Sparkle Pink",
+  "filename": "sparkle_pink.gif",
+  "url": "images/stickers/sparkle/sparkle_pink.gif",
+  "thumbnailUrl": "images/stickers/sparkle/sparkle_pink.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "pink",
+    "sparkle"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 52,
+  "height": 46,
+  "frameCount": 11,
+  "frameRate": 5,
+  "isVariableFramerate": 0,
+  "fileSize": 2160,
+  "sortOrder": 196
+}

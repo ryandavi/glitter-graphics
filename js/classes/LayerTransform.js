@@ -21,6 +21,7 @@ class LayerTransform {
         this.gestureInteractionActive = false;
         this.gestureInteractionChanged = false;
         this.gestureRawPosition = null;
+		this.lastTouchMoveHandleTap = null;
 
         // Bind methods for event listeners
         this.handleHandlePointerMove = this.handleHandlePointerMove.bind(this);
@@ -348,7 +349,7 @@ updateTransform(updates) {
     delegateSelectionFromCanvasPoint(canvasPoint, options = {}) {
         const x = Math.round(canvasPoint.x);
         const y = Math.round(canvasPoint.y);
-		if (!CONFIG.app.behavior.autoSelect && !options.toggleSelection && !options.cycleDeep) {
+		if (!PREFERENCES.get('autoSelect') && !options.toggleSelection && !options.cycleDeep) {
 			return false;
 		}
 
@@ -427,7 +428,7 @@ updateTransform(updates) {
             this.updateHandlePositions();
         }
 
-        this.editor.saveState();
+        this.editor.saveState('Transform layer');
     }
 
     resetTransform(options = {}) {
@@ -455,7 +456,7 @@ updateTransform(updates) {
             this.updateHandlePositions();
         }
 
-        this.editor.saveState();
+        this.editor.saveState('Transform layer');
     }
 
     // ===== MOUSE DRAG HANDLING =====
@@ -491,7 +492,7 @@ const swallowFollowupClick = () => {
     if (e.button !== 0) return; // Left click only
 	this.removeHoverOutline();
 	const pinnedTransform = this.editor.currentTool === ToolType.SELECT
-		&& !CONFIG.app.behavior.autoSelect
+		&& !PREFERENCES.get('autoSelect')
 		&& !this.editor.layerManager.hasMultiSelection()
 		? (() => {
 			const activeLayer = this.editor.layerManager.getActiveLayer();
@@ -537,7 +538,7 @@ const swallowFollowupClick = () => {
 		e.stopPropagation();
 		this.editor.layerManager.focusLayerInSelection(this.layer.id);
 		if (!this.editor.layerManager.canTransformMultiSelection()) {
-			this.editor.updateStatus('This selection cannot move because it includes a locked, Base Image, or Glitter Fill layer');
+			this.editor.showError('This selection cannot move because it includes a locked, Base Image, or Glitter Fill layer');
 		}
 		return;
     }
@@ -675,7 +676,7 @@ const handleMouseMove = (e) => {
         startPosition = null;
 		if (didMove) {
             swallowFollowupClick();
-            this.editor.saveState();
+            this.editor.saveState('Transform layer');
 		}
 		if (!didMove && altPending) {
 			const point = this.editor.viewport.screenToCanvas(e.clientX, e.clientY);
@@ -803,7 +804,7 @@ const handleMouseMove = (e) => {
         }
 
         if (this.gestureInteractionChanged) {
-            this.editor.saveState();
+            this.editor.saveState('Transform layer');
         }
 
         this.gestureInteractionActive = false;
@@ -1004,6 +1005,7 @@ createTransformHandles() {
 				height: ${displayHeight}px;
 				transform: translate(-50%, -50%) rotate(${transform.rotation}deg);
 				pointer-events: auto;
+				touch-action: none;
 				cursor: move;
 			`;
         }
@@ -1082,6 +1084,22 @@ createTransformHandles() {
 				pointer-events: none;
 			`;
         }
+
+		const compactTouchWidth = navigator.maxTouchPoints > 0
+			&& displayWidth * zoom < config.touchMinHandleSpan;
+		const compactTouchHeight = navigator.maxTouchPoints > 0
+			&& displayHeight * zoom < config.touchMinHandleSpan;
+		this.transformHandles.querySelectorAll('.transform-handle-wrapper').forEach((wrapper) => {
+			const type = wrapper.dataset.handleType || '';
+			const overlapsCompactDimension = type.startsWith('corner-')
+				? compactTouchWidth || compactTouchHeight
+				: type === 'edge-left' || type === 'edge-right'
+					? compactTouchWidth
+					: type === 'edge-top' || type === 'edge-bottom' || type === 'rotation'
+						? compactTouchHeight
+						: false;
+			wrapper.style.pointerEvents = overlapsCompactDimension ? 'none' : 'auto';
+		});
     }
 
     /**
@@ -1138,11 +1156,22 @@ removeTransformHandles() {
                 }
 
                 const canvasPoint = this.getCanvasPointFromClient(e.clientX, e.clientY);
+				const boundingRect = this.transformHandles
+					.querySelector('.transform-bounding-box')
+					?.getBoundingClientRect();
+				const touchHitsMoveInterior = e.pointerType === 'touch'
+					&& handleType !== 'move'
+					&& boundingRect
+					&& e.clientX >= boundingRect.left + (boundingRect.width * 0.25)
+					&& e.clientX <= boundingRect.right - (boundingRect.width * 0.25)
+					&& e.clientY >= boundingRect.top + (boundingRect.height * 0.25)
+					&& e.clientY <= boundingRect.bottom - (boundingRect.height * 0.25);
+				const effectiveHandleType = touchHitsMoveInterior ? 'move' : handleType;
 				if (handleType === 'move' && e.pointerType === 'mouse' && e.altKey) {
 					this.startAltDuplicateHandleDrag(e);
 					return;
 				}
-                if (handleType === 'move' && !e.altKey && this.delegateSelectionFromCanvasPoint(canvasPoint, {
+                if (effectiveHandleType === 'move' && !e.altKey && this.delegateSelectionFromCanvasPoint(canvasPoint, {
                     toggleSelection: e.shiftKey,
                     cycleDeep: e.altKey
                 })) {
@@ -1153,7 +1182,7 @@ removeTransformHandles() {
                 e.stopPropagation();
                 e.stopImmediatePropagation();
 
-                this.activeHandleType = handleType;
+                this.activeHandleType = effectiveHandleType;
                 this.activeHandleElement = handle;
                 this.activeHandlePointerId = e.pointerId;
                 this.isDraggingHandle = true;
@@ -1179,7 +1208,7 @@ removeTransformHandles() {
                     handleFrame: this.getHandleFrame(),
                     textBoxFrame: this.editor.textGlitterManager?.getFixedBoxFrame?.(this.layer) ?? null,
 					didMove: false,
-					altDuplicatePending: handleType === 'move' && e.altKey,
+					altDuplicatePending: effectiveHandleType === 'move' && e.altKey,
 					targetTransform: this
                 };
             });
@@ -1249,7 +1278,7 @@ removeTransformHandles() {
 			cleanup();
 			if (didMove && clone) {
 				this.editor.layerManager.setActiveLayer(clone.id);
-				this.editor.saveState();
+				this.editor.saveState('Transform layer');
 			} else {
 				const point = this.getCanvasPointFromClient(upEvent.clientX, upEvent.clientY);
 				this.delegateSelectionFromCanvasPoint(point, { cycleDeep: true });
@@ -1329,10 +1358,25 @@ removeTransformHandles() {
 				if (completedDrag.targetLayerId) {
 					this.editor.layerManager.setActiveLayer(completedDrag.targetLayerId);
 				}
-				this.editor.saveState();
+				this.editor.saveState('Transform layer');
 			} else if (completedDrag?.altDuplicatePending) {
 				const point = this.getCanvasPointFromClient(e.clientX, e.clientY);
 				this.delegateSelectionFromCanvasPoint(point, { cycleDeep: true });
+			} else if (e.pointerType === 'touch' && ht === 'move') {
+				const now = Date.now();
+				const previous = this.lastTouchMoveHandleTap;
+				const isDoubleTap = previous
+					&& now - previous.time <= CONFIG.ui.gestures.doubleTapMs
+					&& Math.hypot(e.clientX - previous.x, e.clientY - previous.y) <= CONFIG.ui.gestures.doubleTapSlopPx;
+				if (isDoubleTap) {
+					this.lastTouchMoveHandleTap = null;
+					this.editor.viewport.gestureManager.handleDoubleTap(
+						{ x: e.clientX, y: e.clientY },
+						{ type: 'layerDrag', layerId: this.layer.id }
+					);
+				} else {
+					this.lastTouchMoveHandleTap = { time: now, x: e.clientX, y: e.clientY };
+				}
 			}
 
             if (e.pointerType === 'mouse') {

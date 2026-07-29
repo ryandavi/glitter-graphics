@@ -1,0 +1,32 @@
+{
+  "id": 53,
+  "url": "images/glitter/etc/etc_champagne.gif",
+  "name": "Champagne",
+  "generatedName": "Pastel Silver",
+  "brightness": "1.000",
+  "sortOrder": 102,
+  "hue": 1.1,
+  "colorCodes": [
+    "#E1D2B4"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 5,
+  "frameRate": 2,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 7520,
+  "category": "etc",
+  "isPixelated": 1,
+  "tags": [
+    "Beige",
+    "Light",
+    "Pastel",
+    "Warm"
+  ],
+  "searchTerms": []
+}

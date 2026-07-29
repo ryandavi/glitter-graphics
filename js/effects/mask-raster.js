@@ -1,7 +1,7 @@
 // Shared mask-edge policy for brush stamps, text, and shapes. Softness and
 // flow remain source semantics; this switch controls raster edge antialiasing.
 function shouldUseCrispMaskEdges() {
-	return CONFIG.rendering.crispMaskEdges !== false;
+	return PREFERENCES.get('crispMaskEdges');
 }
 
 function binarizeCanvasAlpha(ctx, width = ctx.canvas.width, height = ctx.canvas.height) {

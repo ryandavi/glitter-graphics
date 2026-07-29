@@ -1,0 +1,182 @@
+@use '../mixins' as *;
+
+// Image and Layers use the canonical collapsible chrome/state contract but
+// remain independently toggleable instead of joining the design accordion.
+.layers-panel > .section.collapsible-section:not(.is-open) {
+	flex: 0 0 auto;
+
+	> .layers-section-bottom-bar { display: none; }
+}
+
+.subsection-section-group {
+	> .subsection-title { cursor: pointer; }
+	.panel-group-label { min-width: 0; }
+	.panel-group-chevron {
+		margin-left: auto;
+		flex: 0 0 auto;
+		transition: transform var(--transition-fast);
+	}
+	> .subsection-title:has(> .checkbox-group) .panel-group-chevron { margin-left: 0; }
+	&.collapsed {
+		> .subsection-title .panel-group-chevron { transform: rotate(-90deg); }
+		> :not(.subsection-title) { display: none; }
+	}
+}
+
+/* ===== APP STRUCTURE ===== */
+.app-container {
+	display: flex;
+	flex-direction: column;
+	/* Fallback for older browsers */
+	height: 100vh;
+	/* Modern browsers with dynamic viewport */
+	height: 100dvh;
+	background-color: var(--color-bg-secondary);
+}
+
+/* ===== HEADER ===== */
+.app-header {
+	--app-header-mark-size: var(--font-size-xl);
+	height: var(--header-height);
+	background: var(--color-bg-secondary);
+	border-bottom: 1px solid var(--color-window-border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--spacing-md);
+	flex-shrink: 0;
+	box-shadow: 0 2px 2px var(--color-shadow);
+
+	@include windows7-bar();
+
+
+	>.app-header-left {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-md);
+		flex: 0 0 auto;
+
+		>.app-header-logo {
+			display: flex;
+			align-items: center;
+			text-decoration: none;
+
+			&[target="_blank"] {
+				padding-right: 0;
+
+				&::after { display: none; }
+			}
+
+			.logo {
+				height: var(--app-header-mark-size);
+				width: var(--app-header-mark-size);
+				/* aspect-ratio needs a real width or height */
+				aspect-ratio: 1/1;
+				display: block;
+				background-image: url("../images/logo.png");
+				background-size: cover;
+				background-repeat: no-repeat;
+
+				&:hover {
+					background-image: url('../images/logo_glitter.gif');
+				}
+			}
+		}
+
+		>.app-header-title {
+			display: flex;
+			align-items: center;
+			// Sits on the bar chrome, so it follows the bar's caption color.
+			color: var(--bar-title-color);
+			font-size: var(--app-header-mark-size);
+			font-weight: 600;
+			line-height: 1;
+			text-decoration: none;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+
+			>img,
+			>svg {
+				display: block;
+				width: auto;
+				height: var(--app-header-mark-size);
+			}
+		}
+	}
+
+	>.app-header-right {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		flex: 0 0 auto;
+		margin-left: auto;
+
+		>.icon-wrapper > svg.icon {
+			width: var(--app-header-mark-size);
+			height: var(--app-header-mark-size);
+			font-size: var(--app-header-mark-size);
+		}
+	}
+
+}
+
+
+/* ===== MAIN AREA ===== */
+.main-area {
+	display: flex;
+	flex: 1;
+	overflow: hidden;
+		  background: var(--color-bg-workspace);
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar {
+	width: var(--toolbar-width);
+	background: var(--panel-bg);
+	-webkit-backdrop-filter: var(--panel-backdrop);
+	backdrop-filter: var(--panel-backdrop);
+	border-right: 1px solid var(--color-border);
+	display: flex;
+	flex-direction: column;
+	padding: var(--spacing-sm);
+	gap: var(--spacing-sm);
+	flex-shrink: 0;
+	position: relative;
+	z-index: var(--z-panel-elevated);
+
+	>.toolbar-spacer {
+		flex: 1;
+	}
+
+	>.toolbar-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+
+		+.toolbar-group {
+			border-top: 2px solid var(--color-border);
+			padding-top: 8px;
+			margin-top: 3px;
+		}
+
+		>.btn-icon {
+			width: 100%;
+			height: auto;
+			aspect-ratio: 1/1;
+
+			@include gloss-button(true);
+		}
+	}
+
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	overflow: visible;
+
+
+}

@@ -1,0 +1,33 @@
+{
+  "id": 95,
+  "url": "images/glitter/sparkle/glitter_muted-green.gif",
+  "name": "Muted Green",
+  "generatedName": "Neon Yellow",
+  "brightness": "1.000",
+  "sortOrder": 21,
+  "hue": 0.236,
+  "colorCodes": [
+    "#96B400"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1882,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Green",
+    "Muted",
+    "Neon",
+    "Vivid",
+    "Yellow"
+  ],
+  "searchTerms": []
+}

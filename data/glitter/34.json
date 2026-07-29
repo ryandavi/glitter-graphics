@@ -1,0 +1,32 @@
+{
+  "id": 34,
+  "url": "images/glitter/noise/noise_black.gif",
+  "name": "Black",
+  "generatedName": "Black",
+  "brightness": "0.000",
+  "sortOrder": 85,
+  "hue": 1.1,
+  "colorCodes": [
+    "#000000"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 4,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 100,
+  "height": 100,
+  "fileSize": 33491,
+  "category": "noise",
+  "isPixelated": 1,
+  "tags": [
+    "Black",
+    "Dark",
+    "Grayscale",
+    "Neutral"
+  ],
+  "searchTerms": []
+}

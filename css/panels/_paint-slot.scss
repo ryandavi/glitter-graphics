@@ -1,0 +1,263 @@
+@use '../mixins' as *;
+
+// ===== Canvas Size (Photoshop-style resize) =====
+.canvas-size-controls {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	width: 100%;
+
+	.settings-row {
+		margin-bottom: 0;
+	}
+}
+
+.scale-design-presets {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	width: 100%;
+}
+
+.scale-design-options {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--spacing-sm);
+
+	>.checkbox-group>span {
+		padding-inline: var(--spacing-sm);
+	}
+}
+
+.document-size-mode {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	// margin-bottom: var(--spacing-md);
+}
+
+.canvas-relative-toggle {
+	align-self: flex-start;
+}
+
+.canvas-size-limit-message {
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	line-height: 1.35;
+
+	&.is-error {
+		color: var(--color-danger-bright);
+	}
+}
+
+.canvas-extension-mode {
+	min-width: 148px;
+}
+
+// 3×3 anchor grid. The chosen cell is where existing content stays pinned as
+// the canvas grows/shrinks (Photoshop's Canvas Size anchor). Each cell shows a
+// directional arrow; the selected cell is a filled dot.
+.anchor-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	grid-template-rows: repeat(3, 1fr);
+	// gap: var(--spacing-2xs);
+	width: 66px;
+	height: 66px;
+	flex-shrink: 0;
+}
+
+.anchor-cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	background: var(--color-bg-tertiary);
+	border: none;
+	outline: 1px solid var(--color-border);
+	// border-radius: var(--radius-xs);
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	font-size: 11px;
+	line-height: 1;
+	transition: background-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
+
+	&:hover {
+		outline-color: var(--color-border-hover);
+		color: var(--color-text-primary);
+	}
+
+	&.active {
+		background: var(--color-accent);
+		outline-color: var(--color-accent);
+		color: var(--color-bg-primary);
+	}
+}
+
+// Live preview of the prospective canvas bounds, drawn inside previewWrapper so
+// it inherits the viewport zoom/pan transform. Border/shadow are divided by
+// --zoom so they keep a consistent on-screen thickness at any zoom level (same
+// technique as the selection outline).
+.canvas-resize-preview {
+	position: absolute;
+	pointer-events: none;
+	z-index: 6;
+	box-sizing: border-box;
+	border: calc(2px / var(--zoom, 1)) dashed var(--color-accent);
+	box-shadow:
+		inset 0 0 0 calc(1px / var(--zoom, 1)) rgba(0, 0, 0, 0.55),
+		0 0 0 calc(1px / var(--zoom, 1)) rgba(0, 0, 0, 0.55);
+	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.text-align-group,
+.text-valign-group {
+	width: 100%;
+}
+
+
+
+.control-group-label {
+	@include field-label(var(--font-size-sm));
+}
+
+.text-box-mode-group { width: 100%; }
+
+.shape-gallery-categories {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
+	padding: var(--spacing-md);
+
+	>.shape-gallery-section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+
+		>.shape-gallery-heading {
+			margin: 0;
+			@include field-label(var(--font-size-sm));
+		}
+	}
+}
+
+.shape-gallery-grid {
+
+	>.shape-gallery-option {
+		display: grid;
+		place-items: center;
+		padding: var(--spacing-sm);
+		border: 0;
+		background: var(--color-bg-secondary);
+		color: var(--color-text-primary);
+
+		>.brush-shape-option-icon {
+			display: grid;
+			place-items: center;
+			width: 100%;
+			height: 100%;
+
+			>svg { width: 75%; height: 75%; fill: currentColor; }
+		}
+
+		>.brush-shape-option-name { display: none; }
+	}
+}
+
+#shapeAssetThumbnail {
+	display: grid;
+	place-items: center;
+	box-sizing: border-box;
+	padding: var(--spacing-sm);
+	color: var(--shape-asset-icon-color);
+	cursor: pointer;
+
+	>svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+		fill: currentColor;
+	}
+}
+
+.text-valign-group > .segmented-option,
+.text-align-group > .segmented-option {
+	flex: 1;
+}
+
+// Segmented control: a connected two-state toggle (Glitter | Solid Color) that
+// reads as one control with two modes, not two loose buttons. Used for every
+// text source (fill/border/shadow) via .text-effect-mode-group.
+.segmented-control {
+	display: flex;
+	min-height: var(--control-height);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	border: 1px solid var(--color-border);
+}
+
+.segmented-option {
+	flex: 1;
+	padding: var(--spacing-sm) var(--spacing-md);
+	border: none;
+	background: var(--color-bg-secondary);
+	color: var(--color-text-tertiary);
+	// Match the design system's label vocabulary (uppercase, like subsection
+	// titles) so the toggle reads as part of the panel, not a pair of buttons.
+	font-size: var(--font-size-xs);
+	font-weight: 600;
+	letter-spacing: 0.75px;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background var(--transition-fast), color var(--transition-fast);
+
+	& + .segmented-option {
+		border-left: 1px solid var(--color-border);
+	}
+
+	&:focus-visible {
+		position: relative;
+		z-index: 1;
+		outline: none;
+		box-shadow: inset var(--control-focus-ring);
+	}
+
+	&:hover:not(.active):not(:disabled) {
+		color: var(--color-text-secondary);
+		background: var(--color-bg-tertiary);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.45;
+	}
+
+	&.active {
+		background: var(--color-accent);
+		color: var(--color-text-on-accent);
+	}
+}
+
+// Paint-source choices can contain Image / Transparent / Glitter / Solid /
+// Gradient. Unlike compact two-state segmented controls, every fill type must
+// stay discoverable, so this variant becomes a responsive choice grid and only
+// creates another row when the available inline width requires it.
+.segmented-control.paint-source-choice-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+	gap: var(--spacing-xs);
+	border: 0;
+	border-radius: 0;
+	overflow: visible;
+
+	>.segmented-option {
+		min-width: 0;
+		padding-inline: var(--spacing-xs);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		white-space: nowrap;
+
+		& + .segmented-option {
+			border-left: 1px solid var(--color-border);
+		}
+	}
+}

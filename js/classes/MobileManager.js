@@ -71,7 +71,10 @@ class MobileManager {
 	cacheSettingsSections() {
 		Object.entries(this.settingsRegistry).forEach(([key, entry]) => {
 			if (entry.element && !this.originalParents.has(key)) {
-				this.originalParents.set(key, entry.element.parentElement);
+				this.originalParents.set(key, {
+					parent: entry.element.parentElement,
+					next: entry.element.nextElementSibling
+				});
 			}
 		});
 	}
@@ -296,8 +299,9 @@ class MobileManager {
 
 	returnSettingsSection(key) {
 		const section = this.settingsRegistry[key]?.element;
-		const parent = this.originalParents.get(key);
-		if (section && parent && !parent.contains(section)) parent.appendChild(section);
+		const anchor = this.originalParents.get(key);
+		if (!section || !anchor?.parent || anchor.parent.contains(section)) return;
+		anchor.parent.insertBefore(section, anchor.next?.parentElement === anchor.parent ? anchor.next : null);
 	}
 
 	returnBrushSection() {
@@ -506,9 +510,9 @@ class MobileManager {
 		if (activeLayer) {
 			LAYER_UI_CONFIG[activeLayer.type]?.onActivate?.(this.editor, activeLayer);
 		} else {
-			this.editor.showLayerSettingsEmptyState();
-			this.editor.showGlitterSettingsEmptyState();
-			this.editor.showStickerSettingsEmptyState();
+			this.editor.setSettingsEmptyState('layerSettings', true, { title: 'No layer selected', subtext: '' });
+			this.editor.setSettingsEmptyState('glitterSettings', true);
+			this.editor.setSettingsEmptyState('stickerSettings', true);
 		}
 	}
 }

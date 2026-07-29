@@ -1,0 +1,32 @@
+{
+  "id": 46,
+  "url": "images/glitter/etc/glitter_black.gif",
+  "name": "Black",
+  "generatedName": "Black",
+  "brightness": "0.000",
+  "sortOrder": 90,
+  "hue": 1.1,
+  "colorCodes": [
+    "#1E1E1E"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 5,
+  "frameRate": 2,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 31,
+  "fileSize": 5987,
+  "category": "sparkle-2",
+  "isPixelated": 1,
+  "tags": [
+    "Black",
+    "Dark",
+    "Grayscale",
+    "Neutral"
+  ],
+  "searchTerms": []
+}

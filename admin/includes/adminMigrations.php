@@ -71,6 +71,8 @@ class AdminMigrations
 		foreach ($columns as $table => $tableColumns) {
 			foreach ($tableColumns as $column => $definition) {
 				if (!self::columnExists($connection, $config, $table, $column)) {
+					// Identifiers and definitions are constants in the migration map above; SQL
+					// parameters cannot represent identifiers or column definitions.
 					if (!$connection->query("ALTER TABLE `$table` ADD COLUMN `$column` $definition")) {
 						throw new Exception('Migration failed: ' . $connection->error);
 					}
@@ -165,15 +167,21 @@ class AdminMigrations
 			['Internal', 'internal', 99],
 		];
 		foreach ($facets as $facet) {
-			$name = $connection->real_escape_string($facet[0]);
-			$slug = $connection->real_escape_string($facet[1]);
+			$name = $facet[0];
+			$slug = $facet[1];
 			$order = (int)$facet[2];
-			$connection->query(
-				"INSERT INTO sticker_tag_categories (name, slug, description, sort_order)
-				 SELECT '$name', '$slug', NULL, $order
-				 WHERE NOT EXISTS (SELECT 1 FROM sticker_tag_categories WHERE slug = '$slug')"
+			$stmt = $connection->prepare(
+				'INSERT INTO sticker_tag_categories (name, slug, description, sort_order)
+				 SELECT ?, ?, NULL, ?
+				 WHERE NOT EXISTS (SELECT 1 FROM sticker_tag_categories WHERE slug = ?)'
 			);
-			$connection->query("UPDATE sticker_tag_categories SET sort_order = $order WHERE slug = '$slug'");
+			$stmt->bind_param('ssis', $name, $slug, $order, $slug);
+			$stmt->execute();
+			$stmt->close();
+			$stmt = $connection->prepare('UPDATE sticker_tag_categories SET sort_order = ? WHERE slug = ?');
+			$stmt->bind_param('is', $order, $slug);
+			$stmt->execute();
+			$stmt->close();
 		}
 	}
 }

@@ -1,0 +1,32 @@
+{
+  "id": 102,
+  "url": "images/glitter/sparkle/glitter_pink-purple.gif",
+  "name": "Pink Purple",
+  "generatedName": "Muted Pink",
+  "brightness": "1.000",
+  "sortOrder": 5,
+  "hue": 0.215,
+  "colorCodes": [
+    "#E16996"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1957,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Muted",
+    "Pink",
+    "Purple",
+    "Warm"
+  ],
+  "searchTerms": []
+}

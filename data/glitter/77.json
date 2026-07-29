@@ -1,0 +1,32 @@
+{
+  "id": 77,
+  "url": "images/glitter/sparkle/glitter_dark-brown.gif",
+  "name": "Dark Brown",
+  "generatedName": "Muted Yellow",
+  "brightness": "0.000",
+  "sortOrder": 56,
+  "hue": 0.208,
+  "colorCodes": [
+    "#1E1E0F"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 1746,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Brown",
+    "Dark",
+    "Muted",
+    "Warm"
+  ],
+  "searchTerms": []
+}

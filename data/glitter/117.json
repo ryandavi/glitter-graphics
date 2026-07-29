@@ -1,0 +1,44 @@
+{
+  "id": 117,
+  "url": "images/glitter/transparent/transparent_pastel-sparkle.gif",
+  "name": "Pastel Sparkle",
+  "generatedName": "Light Gray",
+  "brightness": "0.790",
+  "sortOrder": 109,
+  "hue": 0.928,
+  "colorCodes": [
+    "#F3B1DE",
+    "#05D3FF",
+    "#FEFEB6",
+    "#5BF9C1"
+  ],
+  "colorWeights": [
+    0,
+    0.25,
+    0.25,
+    0.25
+  ],
+  "frameCount": 9,
+  "frameRate": 8,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 77,
+  "height": 97,
+  "fileSize": 3619,
+  "category": "transparent",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Gray",
+    "Green",
+    "Light",
+    "Multicolor",
+    "Pastel",
+    "Pattern",
+    "Pink",
+    "Transparent",
+    "Yellow"
+  ],
+  "searchTerms": []
+}

@@ -1,0 +1,29 @@
+{
+  "id": 2,
+  "name": "Rainbow Glitter Butterfly",
+  "filename": "butterfly_rainbow-glitter.gif",
+  "url": "images/stickers/animal/butterfly_rainbow-glitter.gif",
+  "thumbnailUrl": "images/stickers/animal/butterfly_rainbow-glitter.gif",
+  "category": "animal",
+  "attribution": null,
+  "stickerText": null,
+  "tags": [
+    "butterfly",
+    "colorful",
+    "glitter",
+    "rainbow"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 162,
+  "height": 143,
+  "frameCount": 2,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 16193,
+  "sortOrder": 0
+}

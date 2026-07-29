@@ -1,0 +1,34 @@
+{
+  "id": 221,
+  "name": "Bear_blue Heart_glitter",
+  "filename": "bear_blue-heart_glitter.gif",
+  "url": "images/stickers/character/bear_blue-heart_glitter.gif",
+  "thumbnailUrl": "images/stickers/character/bear_blue-heart_glitter.gif",
+  "category": "character",
+  "attribution": null,
+  "stickerText": null,
+  "tags": [
+    "orange",
+    "rainbow",
+    "rose gold"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#CC9966",
+    "#CCCC82"
+  ],
+  "colorWeights": [
+    0.16,
+    0.13
+  ],
+  "paletteType": "gradient",
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 146,
+  "height": 173,
+  "frameCount": 3,
+  "frameRate": 40,
+  "isVariableFramerate": 0,
+  "fileSize": 19445,
+  "sortOrder": 0
+}

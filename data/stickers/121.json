@@ -1,0 +1,30 @@
+{
+  "id": 121,
+  "name": "Bong Smilie Yellow",
+  "filename": "smilie_bong_yellow.gif",
+  "url": "images/stickers/emoji/smilie_bong_yellow.gif",
+  "thumbnailUrl": "images/stickers/emoji/smilie_bong_yellow.gif",
+  "category": "emoji",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "420",
+    "bong",
+    "smilie",
+    "weed",
+    "yellow"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 26,
+  "height": 28,
+  "frameCount": 26,
+  "frameRate": 1,
+  "isVariableFramerate": 1,
+  "fileSize": 10854,
+  "sortOrder": 131
+}

@@ -1,0 +1,29 @@
+{
+  "id": 177,
+  "name": "Sparkle Stars Black Background",
+  "filename": "sparkle-stars_black-background.gif",
+  "url": "images/stickers/sparkle/sparkle-stars_black-background.gif",
+  "thumbnailUrl": "images/stickers/sparkle/sparkle-stars_black-background.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "black",
+    "night sky",
+    "sparkle",
+    "stars"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 64,
+  "height": 64,
+  "frameCount": 4,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 1062,
+  "sortOrder": 187
+}

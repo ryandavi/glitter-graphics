@@ -1,0 +1,31 @@
+{
+  "id": 61,
+  "url": "images/glitter/etc/etc_seafoam.gif",
+  "name": "Seafoam",
+  "generatedName": "Pastel Silver",
+  "brightness": "1.000",
+  "sortOrder": 94,
+  "hue": 1.1,
+  "colorCodes": [
+    "#C3E1B4"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 5,
+  "frameRate": 2,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 7520,
+  "category": "etc",
+  "isPixelated": 1,
+  "tags": [
+    "Green",
+    "Light",
+    "Pastel"
+  ],
+  "searchTerms": []
+}

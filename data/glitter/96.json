@@ -1,0 +1,32 @@
+{
+  "id": 96,
+  "url": "images/glitter/sparkle/glitter_navy.gif",
+  "name": "Navy",
+  "generatedName": "Muted Blue",
+  "brightness": "0.000",
+  "sortOrder": 36,
+  "hue": 0.708,
+  "colorCodes": [
+    "#0F0F1E"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 1788,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Dark",
+    "Muted"
+  ],
+  "searchTerms": []
+}

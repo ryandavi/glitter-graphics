@@ -1,0 +1,36 @@
+{
+  "id": 24,
+  "url": "images/glitter/ember/ember_red.gif",
+  "name": "Red",
+  "generatedName": "Very Dark Vivid Magenta",
+  "brightness": "0.190",
+  "sortOrder": 70,
+  "hue": 0.875,
+  "colorCodes": [
+    "#330033",
+    "#780654",
+    "#D51169"
+  ],
+  "colorWeights": [
+    0,
+    0.3333,
+    0.3333
+  ],
+  "frameCount": 4,
+  "frameRate": 20,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1541,
+  "category": "ember",
+  "isPixelated": 1,
+  "tags": [
+    "Dark",
+    "Pink",
+    "Red",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

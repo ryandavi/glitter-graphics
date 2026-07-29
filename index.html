@@ -40,15 +40,15 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=227">
+	<link rel="stylesheet" href="css/style.css?v=2fb9ba0d">
 
 	<!-- Preconnect to fonts for performance -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
 	<!-- Favicon -->
-	<link rel="icon" href="images/etc/favicon.ico" type="image/x-icon">
-	<link rel="shortcut icon" href="images/etc/favicon.ico" type="image/x-icon">
+	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
+	<link rel="shortcut icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
 </head>
 
 
@@ -1149,7 +1149,7 @@
 						<!-- Preview Wrapper -->
 						<div class="preview-wrapper" id="previewWrapper">
 							<div class="canvas-elements-container" id="canvasElementsContainer"></div>
-							<canvas class="preview-canvas" id="previewCanvas"></canvas>
+							<canvas class="preview-canvas" id="previewCanvas" tabindex="0" aria-label="Editor canvas"></canvas>
 							<canvas class="mask-overlay-canvas" id="maskOverlayCanvas"></canvas>
 						</div>
 						<div class="auto-glitter-preview-banner ui-ignore-gestures" id="autoGlitterPreviewBanner" aria-label="Auto Glitter Mode" hidden>
@@ -1365,7 +1365,7 @@
 		</div>
 		<!-- Status Bar -->
 		<div class="status-bar">
-			<span class="status-bar-field status-text" id="statusText">Load an image to begin</span>
+			<span class="status-bar-field status-text" id="statusText" role="status" aria-live="polite">Load an image to begin</span>
 			<span class="status-bar-field status-dimensions" id="statusDimensions"></span>
 			<span class="status-bar-field status-zoom" id="statusZoom" title="Double-click to reset zoom to 100%"></span>
 		</div>
@@ -1382,9 +1382,9 @@
 	</div>
 
 	<!-- Error Toast -->
-	<div class="error-toast" id="errorToast">
+	<div class="error-toast" id="errorToast" role="alert" aria-live="assertive" aria-atomic="true">
 		<span id="errorText"></span>
-		<button class="error-close" id="errorClose">×</button>
+		<button class="error-close" id="errorClose" aria-label="Dismiss error">×</button>
 	</div>
 
 	<!-- New Canvas Modal -->
@@ -2761,64 +2761,89 @@
 	</template>
 
 	<!-- External Libs (self-hosted; gif.js pairs with js/workers/gif.worker.js) -->
-	<script src="js/vendor/omggif.js"></script>
-	<script src="js/vendor/gif.js"></script>
-	<script src="js/vendor/mp4-muxer.js?v=1"></script>
+	<script src="js/vendor/omggif.js?v=5014f913"></script>
+	<script src="js/vendor/gif.js?v=d3648ca8"></script>
+	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=137"></script>
-	<script src="js/core/commands.js?v=4"></script>
-	<script src="js/core/document-scaler.js?v=3"></script>
-	<script src="js/transforms/transform-math.js?v=4"></script>
-	<script src="js/transforms/movable-layer.js?v=1"></script>
+	<script src="js/core/config.js?v=e7c294c2"></script>
+	<script src="js/core/preferences.js?v=216cd049"></script>
+	<script src="js/core/commands.js?v=76ea25b9"></script>
+	<script src="js/core/dom.js?v=23ba6e8c"></script>
+	<script src="js/core/document-scaler.js?v=c08bbf8e"></script>
+	<script src="js/transforms/transform-math.js?v=53779101"></script>
+	<script src="js/transforms/movable-layer.js?v=98aa9235"></script>
 
 	<!-- Utils -->
-	<script src="js/core/utils.js?v=13"></script>
-	<script src="js/effects/color-adjust.js?v=3"></script>
-	<script src="js/effects/mask-raster.js?v=1"></script>
-	<script src="js/effects/palette-analysis.js?v=1"></script>
-	<script src="js/effects/pixel-effects.js?v=9"></script>
-	<script src="js/effects/effect-source.js?v=13"></script>
-	<script src="js/effects/slot-effects.js?v=6"></script>
-	<script src="js/ui/panel-renderer.js?v=49"></script>
-	<script src="js/ui/picker-session.js?v=3"></script>
-	<script src="js/ui/context-toolbar-renderer.js?v=1"></script>
-	<script src="js/ui/modal-filter.js?v=3"></script>
-	<script src="js/core/debug.js?v=1"></script>
+	<script src="js/core/format.js?v=cf57fbf6"></script>
+	<script src="js/core/layer-elements.js?v=32584e3b"></script>
+	<script src="js/ui/slider.js?v=3b4c1283"></script>
+	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
+	<script src="js/ui/doc-modal.js?v=96d2362b"></script>
+	<script src="js/ui/gallery.js?v=9dab5316"></script>
+	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
+	<script src="js/effects/mask-raster.js?v=58feb186"></script>
+	<script src="js/effects/mask-geometry.js?v=06dda908"></script>
+	<script src="js/effects/PARITY.js?v=10823f7f"></script>
+	<script src="js/effects/palette-analysis.js?v=0394371e"></script>
+	<script src="js/effects/pixel-effects.js?v=97289451"></script>
+	<script src="js/effects/effect-source.js?v=0a33d343"></script>
+	<script src="js/effects/slot-effects.js?v=b10d7733"></script>
+	<script src="js/ui/panel-renderer.js?v=e44eb896"></script>
+	<script src="js/ui/settings-store.js?v=42089e99"></script>
+	<script src="js/ui/keyboard.js?v=8b909076"></script>
+	<script src="js/ui/clipboard.js?v=75977540"></script>
+	<script src="js/ui/editor-settings.js?v=f4b2b664"></script>
+	<script src="js/ui/editor-panels.js?v=700ef630"></script>
+	<script src="js/ui/editor-disclosures.js?v=2a3a1f61"></script>
+	<script src="js/ui/transform-panel.js?v=6330ed7e"></script>
+	<script src="js/transforms/editor-transform.js?v=32b62b4f"></script>
+	<script src="js/ui/document-start.js?v=2afc299e"></script>
+	<script src="js/ui/modals-wiring.js?v=2a61c526"></script>
+	<script src="js/ui/layer-panel.js?v=454db73c"></script>
+	<script src="js/ui/canvas-gestures.js?v=16576b68"></script>
+	<script src="js/ui/canvas-size.js?v=53305937"></script>
+	<script src="js/core/canvas-resize.js?v=fd22383b"></script>
+	<script src="js/ui/hints.js?v=111dcbcf"></script>
+	<script src="js/ui/picker-session.js?v=8d4d9515"></script>
+	<script src="js/ui/context-toolbar-renderer.js?v=0d24c445"></script>
+	<script src="js/ui/modal-filter.js?v=b00d889b"></script>
+	<script src="js/ui/notify.js?v=b117c567"></script>
+	<script src="js/core/debug.js?v=f9b6fed4"></script>
 
 	<!-- Classes -->
-	<script src="js/classes/GestureManager.js?v=8"></script>
-	<script src="js/classes/ModalManager.js?v=9"></script>
-	<script src="js/classes/ExportTimeline.js?v=3"></script>
-	<script src="js/classes/GifExporter.js?v=47"></script>
-	<script src="js/classes/Mp4Exporter.js?v=6"></script>
-	<script src="js/classes/ViewportManager.js?v=3"></script>
-	<script src="js/classes/HistoryManager.js?v=12"></script>
-	<script src="js/classes/ProjectSerializer.js?v=12"></script>
-	<script src="js/classes/HtmlSceneExporter.js?v=5"></script>
-	<script src="js/classes/MaskCompositor.js"></script>
-	<script src="js/classes/ShapeLibrary.js?v=12"></script>
-	<script src="js/classes/MaskEditor.js?v=17"></script>
+	<script src="js/classes/GestureManager.js?v=7622c129"></script>
+	<script src="js/classes/ModalManager.js?v=98627037"></script>
+	<script src="js/classes/ExportTimeline.js?v=93922fcd"></script>
+	<script src="js/classes/GifExporter.js?v=2fb8fae3"></script>
+	<script src="js/classes/Mp4Exporter.js?v=2ffe9156"></script>
+	<script src="js/classes/ViewportManager.js?v=32d56db5"></script>
+	<script src="js/classes/HistoryManager.js?v=5f3d721d"></script>
+	<script src="js/classes/ProjectSerializer.js?v=be4c7640"></script>
+	<script src="js/classes/HtmlSceneExporter.js?v=d3f0ca56"></script>
+	<script src="js/classes/MaskCompositor.js?v=19c2994c"></script>
+	<script src="js/classes/ShapeLibrary.js?v=fa32fc5a"></script>
+	<script src="js/classes/MaskEditor.js?v=fcd182e9"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=48"></script>
+	<script src="js/classes/LayerManager.js?v=6915f999"></script>
 
 	<!-- Content -->
-	<script src="js/classes/AssetBrowser.js?v=2"></script>
-	<script src="js/classes/ContentManager.js?v=13"></script>
-	<script src="js/classes/LayerTransform.js?v=42"></script>
-	<script src="js/classes/GlitterManager.js?v=40"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=30"></script>
-	<script src="js/classes/AutoGlitterManager.js?v=31"></script>
-	<script src="js/classes/TextGlitterManager.js?v=65"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=57"></script>
-	<script src="js/classes/StickerManager.js?v=31"></script>
-	<script src="js/classes/GroupTransformManager.js?v=21"></script>
+	<script src="js/classes/AssetBrowser.js?v=abc299cc"></script>
+	<script src="js/classes/ContentManager.js?v=d224e836"></script>
+	<script src="js/classes/LayerTransform.js?v=83405952"></script>
+	<script src="js/classes/GlitterManager.js?v=88d61b68"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=024b743e"></script>
+	<script src="js/classes/AutoGlitterManager.js?v=e0f15cce"></script>
+	<script src="js/classes/TextGlitterManager.js?v=a23de8cc"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=05bcc621"></script>
+	<script src="js/classes/StickerManager.js?v=10135f5b"></script>
+	<script src="js/classes/GroupTransformManager.js?v=38908db3"></script>
 
-	<script src="js/classes/MobileManager.js?v=17"></script>
+	<script src="js/classes/MobileManager.js?v=81a06edb"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=189"></script>
+	<script src="js/app.js?v=86b936ff"></script>
 
 </body>
 

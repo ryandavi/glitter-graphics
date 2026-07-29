@@ -1,0 +1,36 @@
+{
+  "id": 19,
+  "url": "images/glitter/sparkle/glitter_christmas.gif",
+  "name": "Christmas",
+  "generatedName": "Green and Red",
+  "brightness": "1.000",
+  "sortOrder": 66,
+  "hue": 1.2,
+  "colorCodes": [
+    "#00D200",
+    "#F00000"
+  ],
+  "colorWeights": [
+    0,
+    0.5
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1502,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Contrast",
+    "Green",
+    "Light",
+    "Multicolor",
+    "Red",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

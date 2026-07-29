@@ -1,0 +1,29 @@
+{
+  "id": 172,
+  "name": "Floating Hearts Red",
+  "filename": "hearts_floating_red_2.gif",
+  "url": "images/stickers/sparkle/hearts_floating_red_2.gif",
+  "thumbnailUrl": "images/stickers/sparkle/hearts_floating_red_2.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "floating",
+    "hearts",
+    "love",
+    "red"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 170,
+  "height": 210,
+  "frameCount": 8,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 7011,
+  "sortOrder": 182
+}

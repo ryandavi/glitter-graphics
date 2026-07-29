@@ -1,0 +1,26 @@
+{
+  "id": 79,
+  "name": "Silver Frame",
+  "filename": "frame_silver.gif",
+  "url": "images/stickers/frame/frame_silver.gif",
+  "thumbnailUrl": "images/stickers/frame/frame_silver.gif",
+  "category": "frame",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "silver"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 400,
+  "height": 400,
+  "frameCount": 4,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 84276,
+  "sortOrder": 88
+}

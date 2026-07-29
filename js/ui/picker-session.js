@@ -1,5 +1,40 @@
 'use strict';
 
+class PickerRegistry {
+	constructor(editor) {
+		this.editor = editor;
+		this.managers = new Set();
+	}
+
+	register(manager) {
+		if (manager) this.managers.add(manager);
+		return manager;
+	}
+
+	get active() {
+		return Array.from(this.managers).find((manager) => manager.pickerSession) || null;
+	}
+
+	closeActive({ returnToProperties = true } = {}) {
+		const manager = this.active;
+		if (!manager) return false;
+		const slot = manager.pickerSession?.slot || 'fill';
+		if (returnToProperties && typeof manager.handlePickerDone === 'function') {
+			manager.handlePickerDone();
+		} else if (returnToProperties && typeof manager.closePicker === 'function') {
+			manager.closePicker();
+		} else {
+			manager.closePickerSession?.();
+			if (returnToProperties) manager.returnToTextProperties?.(slot);
+		}
+		return true;
+	}
+
+	closeAll() {
+		this.managers.forEach((manager) => manager.closePickerSession?.());
+	}
+}
+
 function pickerOpenSession(manager, session, options = {}) {
 	manager.pickerSession = { ...session };
 	options.refresh?.();

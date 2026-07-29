@@ -15,6 +15,7 @@ class GlitterManager extends ContentManager {
 		});
 
 		this.useBrowser = true;
+		this.layerElements = new Map();
 		this.paintMasks = new Map();
 		this.paintHistory = new Map();
 		this.paintHistoryBytes = 0;
@@ -161,15 +162,15 @@ async initBrowser() {
 			layer.fill.mode = mode;
 			syncPaintSlotSourceUI(document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`), mode);
 			refreshLayerPresentation(layer);
-			this.editor.saveState();
+			this.editor.saveState('Edit glitter');
 		}));
 		const color = document.getElementById('glitterFillColor');
 		color.addEventListener('input', () => { const layer = active(); if (!layer) return; layer.fill ||= {}; layer.fill.mode = 'solid'; layer.fill.color = color.value; refreshLayerPresentation(layer); });
-		color.addEventListener('change', () => this.editor.saveState());
+		color.addEventListener('change', () => this.editor.saveState('Edit glitter'));
 		installEffectGradientEditor({
 			prefix: 'glitterFill',
 			getData: () => { const layer = active(); if (!layer) return null; layer.fill ||= { mode: 'glitter', color: '#ff4fa3' }; return layer.fill; },
-			onUpdate: (commit) => { const layer = active(); if (!layer) return; refreshLayerPresentation(layer); if (commit) this.editor.saveState(); }
+			onUpdate: (commit) => { const layer = active(); if (!layer) return; refreshLayerPresentation(layer); if (commit) this.editor.saveState('Edit glitter'); }
 		});
 		bindSlotTextureCoordinateControls({
 			prefix: 'glitterFill',
@@ -179,7 +180,7 @@ async initBrowser() {
 				return normalizeSlotTextureCoordinates(layer.fill);
 			},
 			render: refreshLayerPresentation,
-			save: () => this.editor.saveState()
+			save: () => this.editor.saveState('Edit glitter')
 		});
 	}
 
@@ -192,10 +193,7 @@ async initBrowser() {
 	createLayer(options = {}) {
 		// skipLimitCheck: Auto Glitter session layers may transiently overlap
 		// the previous batch they replace; the session enforces capacity itself.
-		if (!options.skipLimitCheck && this.editor.layerManager.layers.length >= CONFIG.app.limits.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
-			return null;
-		}
+		if (!options.skipLimitCheck && !this.editor.layerManager.requireLayerCapacity()) return null;
 
 		const layer = {
 			id: this.editor.layerManager.generateLayerId(),
@@ -280,13 +278,11 @@ async initBrowser() {
 	async loadContent() {
 		this.content = [];
 		try {
-			const res = await fetch('data/glitter.json');
-			const json = await res.json();
-
-			
-
-			json.forEach(config => {
-				this.content.push(this.normalizeAsset(config, {
+			await this.loadIndexedManifest({
+				indexPath: 'data/glitter.index.json',
+				fallbackPath: 'data/glitter.json',
+				detailBasePath: 'data/glitter',
+				defaults: {
 					frames: null,
 					brightness: null,
 					sortOrder: 0,
@@ -305,7 +301,7 @@ async initBrowser() {
 					isPixelated: false,
 					tags: [],
 					source: 'preset'
-				}));
+				}
 			});
 
 			dbg(`Loaded ${this.content.length} swatches`);
@@ -402,7 +398,7 @@ async initBrowser() {
 			this.editor.showError('You can only add glitter to a background or supported layer effect');
 			return;
 		}
-		const glitter = this.getItemById(id);
+		const glitter = await this.ensureAssetDetails(id);
 
 		if (!glitter) {
 			this.editor.showError('Failed to load selected glitter #' + id);
@@ -496,7 +492,7 @@ async initBrowser() {
 		this.editor.layerManager.renderLayersList();
 
 		if (layer.type === LayerType.BASE_IMAGE) {
-			this.editor.updatePreview();
+			this.editor.requestPreviewUpdate();
 			this.editor.baseBackgroundManager?.loadLayerSettings(layer);
 			this.editor.baseBackgroundManager?.updatePickerStrip();
 		} else if (layer.type === LayerType.TEXT_GLITTER) {
@@ -513,11 +509,11 @@ async initBrowser() {
 			this.editor.stickerManager?.renderLayer(layer);
 			this.editor.stickerManager?.loadLayerSettings(layer);
 		} else if (hasMaskContent(layer)) {
-			this.editor.updatePreview();
+			this.editor.requestPreviewUpdate();
 		}
 
 		this.editor.updateActionButtons();
-		this.editor.saveState();
+		this.editor.saveState('Edit glitter');
 		if (layer.type === LayerType.TEXT_GLITTER && this.editor.textGlitterManager) {
 			const target = this.editor.textGlitterManager.getGlitterSelectionTarget(layer);
 			if (target === 'border' || target === 'shadow') {
@@ -703,12 +699,7 @@ async initBrowser() {
 	}
 
 	removeLayerElement(layerId) {
-		const element = this.layerElements.get(layerId);
-		if (element?.parentNode) {
-			element.parentNode.removeChild(element);
-		}
-
-		this.layerElements.delete(layerId);
+		removeManagedLayerElement(this.layerElements, layerId);
 	}
 
 	revokeMaskImageCache(layer) {

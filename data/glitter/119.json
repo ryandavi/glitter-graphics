@@ -1,0 +1,44 @@
+{
+  "id": 119,
+  "url": "images/glitter/transparent/transparent_rainbow-sparkle.gif",
+  "name": "Rainbow Sparkle",
+  "generatedName": "White",
+  "brightness": "0.710",
+  "sortOrder": 110,
+  "hue": 1.1,
+  "colorCodes": [
+    "#FFFFFF",
+    "#FF0000",
+    "#FF7373",
+    "#EDCCF7"
+  ],
+  "colorWeights": [
+    0,
+    0.25,
+    0.25,
+    0.25
+  ],
+  "frameCount": 8,
+  "frameRate": 15,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 52,
+  "height": 46,
+  "fileSize": 1930,
+  "category": "transparent",
+  "isPixelated": 1,
+  "tags": [
+    "Green",
+    "Multicolor",
+    "Orange",
+    "Pattern",
+    "Pink",
+    "Purple",
+    "Red",
+    "Transparent",
+    "White",
+    "Yellow"
+  ],
+  "searchTerms": []
+}

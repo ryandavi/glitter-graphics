@@ -1,0 +1,29 @@
+{
+  "id": 58,
+  "name": "Naughty Pink Red Glitter Text",
+  "filename": "naughty_pink-red-glitter.gif",
+  "url": "images/stickers/text/naughty_pink-red-glitter.gif",
+  "thumbnailUrl": "images/stickers/text/naughty_pink-red-glitter.gif",
+  "category": "text",
+  "attribution": "",
+  "stickerText": "Naughty",
+  "tags": [
+    "glitter",
+    "naughty",
+    "pink",
+    "red"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 354,
+  "height": 58,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 16483,
+  "sortOrder": 67
+}

@@ -1,0 +1,36 @@
+{
+  "id": 235,
+  "name": "Ryandavi Wow Puppy",
+  "filename": "ryandavi_wow.png",
+  "url": "images/stickers/ryandavi/ryandavi_wow.png",
+  "thumbnailUrl": "images/stickers/ryandavi/ryandavi_wow.png",
+  "category": "ryandavi",
+  "attribution": null,
+  "stickerText": null,
+  "tags": [
+    "black",
+    "gold",
+    "white"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#F9F9F9",
+    "#030201",
+    "#FCCC08"
+  ],
+  "colorWeights": [
+    0.38,
+    0.33,
+    0.29
+  ],
+  "paletteType": "single",
+  "isAnimated": 0,
+  "hasTransparency": 1,
+  "width": 275,
+  "height": 275,
+  "frameCount": 1,
+  "frameRate": 0,
+  "isVariableFramerate": 0,
+  "fileSize": 5266,
+  "sortOrder": 0
+}

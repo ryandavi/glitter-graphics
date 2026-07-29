@@ -1,0 +1,33 @@
+{
+  "id": 230,
+  "name": "Ryandavi Gridcat",
+  "filename": "ryandavi_gridcat.png",
+  "url": "images/stickers/ryandavi/ryandavi_gridcat.png",
+  "thumbnailUrl": "images/stickers/ryandavi/ryandavi_gridcat.png",
+  "category": "ryandavi",
+  "attribution": null,
+  "stickerText": null,
+  "tags": [
+    "black",
+    "white"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#FCFCFC",
+    "#060809"
+  ],
+  "colorWeights": [
+    0.68,
+    0.32
+  ],
+  "paletteType": "neutral",
+  "isAnimated": 0,
+  "hasTransparency": 1,
+  "width": 300,
+  "height": 175,
+  "frameCount": 1,
+  "frameRate": 0,
+  "isVariableFramerate": 0,
+  "fileSize": 1708,
+  "sortOrder": 0
+}

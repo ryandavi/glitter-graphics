@@ -36,7 +36,10 @@ class LayerManager {
 		this.canvasElementsContainer = this.editor.canvasElementsContainer;
 		this.baseImageSwatchDataUrl = '';
 
+		this.layersListContainer?.setAttribute('role', 'listbox');
+		this.layersListContainer?.setAttribute('aria-label', 'Layers');
 		this.setupContainerEvents();
+		this.setupKeyboardNavigation();
 	}
 
 	// ===== INITIALIZATION =====
@@ -61,6 +64,41 @@ class LayerManager {
 			if (e.target === this.layersListContainer) {
 				this.handleLayerDrop(e, null);
 			}
+		});
+	}
+
+	setupKeyboardNavigation() {
+		this.layersListContainer?.addEventListener('keydown', (event) => {
+			if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+			const items = [...this.layersListContainer.querySelectorAll('.layer-item')];
+			if (!items.length) return;
+			const currentIndex = Math.max(0, items.indexOf(document.activeElement));
+			let nextIndex = currentIndex;
+			if (event.key === 'ArrowUp') nextIndex = Math.max(0, currentIndex - 1);
+			if (event.key === 'ArrowDown') nextIndex = Math.min(items.length - 1, currentIndex + 1);
+			if (event.key === 'Home') nextIndex = 0;
+			if (event.key === 'End') nextIndex = items.length - 1;
+			event.preventDefault();
+			const item = items[nextIndex];
+			this.setActiveLayer(item.dataset.layerId);
+			item.focus();
+		});
+
+		this.editor.previewCanvas?.addEventListener('keydown', (event) => {
+			if (event.key !== 'Tab') return;
+			const layers = this.layers.filter((layer) => (
+				layer.visible
+				&& !layer.locked
+				&& isTransformableLayerType(layer.type)
+			));
+			if (!layers.length) return;
+			event.preventDefault();
+			const currentIndex = layers.findIndex((layer) => layer.id === this.activeLayerId);
+			const delta = event.shiftKey ? -1 : 1;
+			const nextIndex = currentIndex < 0
+				? (event.shiftKey ? layers.length - 1 : 0)
+				: (currentIndex + delta + layers.length) % layers.length;
+			this.setActiveLayer(layers[nextIndex].id, { source: 'canvas' });
 		});
 	}
 
@@ -108,150 +146,58 @@ class LayerManager {
 	serializeLayer(layer, options = {}) {
 		const { includeMaskVersion = true } = options;
 		if (!layer) return null;
-
-		if (layer.type === LayerType.STICKER && this.editor.stickerManager) {
-			return this.editor.stickerManager.serializeSticker(layer);
+		const type = layer.type || LayerType.GLITTER_FILL;
+		const spec = LAYER_UI_CONFIG[type]?.serialization || {};
+		if (spec.custom) {
+			const manager = getLayerManagerForType(this.editor, type);
+			return manager?.[spec.custom.serialize]?.(layer) || null;
 		}
 
-		if (layer.type === LayerType.TEXT_GLITTER) {
-			return {
-				id: layer.id,
-				type: LayerType.TEXT_GLITTER,
-				name: layer.name,
-				visible: layer.visible,
-				locked: layer.locked,
-				selectedGlitterId: layer.selectedGlitterId,
-				settings: layer.settings ? { ...layer.settings } : {},
-				textData: layer.textData ? JSON.parse(JSON.stringify(layer.textData)) : null
-			};
-		}
-
-		if (layer.type === LayerType.SHAPE) {
-			return {
-				id: layer.id,
-				type: LayerType.SHAPE,
-				name: layer.name,
-				visible: layer.visible,
-				locked: layer.locked,
-				selectedGlitterId: layer.selectedGlitterId,
-				settings: layer.settings ? { ...layer.settings } : {},
-				shapeData: layer.shapeData ? JSON.parse(JSON.stringify(layer.shapeData)) : null
-			};
-		}
-
-		if (layer.type === LayerType.BASE_IMAGE) {
-			return {
-				id: layer.id,
-				type: LayerType.BASE_IMAGE,
-				visible: layer.visible,
-				locked: true,
-				selectedGlitterId: layer.selectedGlitterId,
-				background: layer.background ? JSON.parse(JSON.stringify(layer.background)) : null
-			};
-		}
-
-		const serialized = {
-			id: layer.id,
-			type: layer.type || LayerType.GLITTER_FILL,
-			name: layer.name,
-			visible: layer.visible,
-			locked: layer.locked,
-			selections: layer.selections ? JSON.parse(JSON.stringify(layer.selections)) : [],
-			selectedGlitterId: layer.selectedGlitterId,
-			settings: layer.settings ? { ...layer.settings } : {}
-		};
-		serialized.fill = layer.fill ? JSON.parse(JSON.stringify(layer.fill)) : null;
-		serialized.autoGlitter = layer.autoGlitter ? JSON.parse(JSON.stringify(layer.autoGlitter)) : null;
-
-		if (includeMaskVersion) {
-			serialized.maskVersion = layer.maskVersion || 0;
-		}
-
+		const serialized = {};
+		['id', 'type', 'name', 'visible', 'locked', 'selectedGlitterId'].forEach((key) => {
+			if (!spec.omit?.includes(key)) serialized[key] = key === 'type' ? type : layer[key];
+		});
+		if (spec.forceLocked) serialized.locked = true;
+		if (!spec.omit?.includes('settings')) serialized.settings = structuredClone(layer.settings || {});
+		[spec.dataKey, ...(spec.extraKeys || [])].filter(Boolean).forEach((key) => {
+			const fallback = key === 'selections' ? [] : null;
+			serialized[key] = layer[key] == null ? fallback : structuredClone(layer[key]);
+		});
+		if (includeMaskVersion && spec.includeMaskVersion) serialized.maskVersion = layer.maskVersion || 0;
 		return serialized;
 	}
 
 	async deserializeLayer(layerData) {
 		if (!layerData) return null;
-
-		if (layerData.type === LayerType.STICKER && this.editor.stickerManager) {
-			return this.editor.stickerManager.deserializeSticker(layerData);
-		}
-
-		if (layerData.type === LayerType.TEXT_GLITTER) {
-			const restoredLayer = {
-				id: layerData.id,
-				type: LayerType.TEXT_GLITTER,
-				name: layerData.name || this.editor.textGlitterManager?.getLayerName(layerData.textData?.text || ''),
-				visible: layerData.visible,
-				locked: layerData.locked,
-				selectedGlitterId: layerData.selectedGlitterId,
-				settings: layerData.settings ? { ...layerData.settings } : {},
-				textData: layerData.textData ? JSON.parse(JSON.stringify(layerData.textData)) : null
-			};
-
-			this.editor.textGlitterManager?.normalizeLayer(restoredLayer);
-
-			if (restoredLayer.textData?.fontId && this.editor.textGlitterManager) {
-				try {
-					await this.editor.textGlitterManager.ensureFontLoaded(restoredLayer.textData.fontId);
-				} catch (error) {
-					this.editor.textGlitterManager.reportFontLoadError(error);
-					throw error;
-				}
-			}
-
-			return restoredLayer;
-		}
-
-		if (layerData.type === LayerType.SHAPE) {
-			const restoredLayer = {
-				id: layerData.id,
-				type: LayerType.SHAPE,
-				name: layerData.name || 'Shape',
-				visible: layerData.visible,
-				locked: layerData.locked,
-				selectedGlitterId: layerData.selectedGlitterId,
-				settings: layerData.settings ? { ...layerData.settings } : {},
-				shapeData: layerData.shapeData ? JSON.parse(JSON.stringify(layerData.shapeData)) : null
-			};
-			this.editor.shapeGlitterManager?.normalizeLayer(restoredLayer);
-			return restoredLayer;
-		}
-
-		if (layerData.type === LayerType.BASE_IMAGE) {
-			const layer = {
-				id: layerData.id,
-				type: LayerType.BASE_IMAGE,
-				visible: layerData.visible,
-				locked: true,
-				selectedGlitterId: layerData.selectedGlitterId || CONFIG.tools.glitter.defaults.fillGlitterId,
-				background: layerData.background ? JSON.parse(JSON.stringify(layerData.background)) : null,
-				image: null
-			};
-			layer.background ||= {
-				mode: 'image', color: '#ffffff', gradient: normalizeEffectGradient(CONFIG.rendering.gradient),
-				scale: CONFIG.tools.effects.defaults.scale, opacity: 100, colorAdjust: null,
-				pixelEffects: JSON.parse(JSON.stringify(CONFIG.tools.pixelEffects.defaults))
-			};
-			layer.background.gradient = normalizeEffectGradient(layer.background.gradient);
-			this.editor.baseBackgroundManager?.normalizeLayer(layer);
-			return layer;
+		const type = layerData.type || LayerType.GLITTER_FILL;
+		const spec = LAYER_UI_CONFIG[type]?.serialization || {};
+		if (spec.custom) {
+			const manager = getLayerManagerForType(this.editor, type);
+			return manager?.[spec.custom.deserialize]?.(layerData) || null;
 		}
 
 		const restored = {
 			id: layerData.id,
-			type: layerData.type || LayerType.GLITTER_FILL,
-			name: layerData.name,
+			type,
 			visible: layerData.visible,
-			locked: layerData.locked,
-			maskVersion: layerData.maskVersion || 0,
-			maskHasContent: false,
-			selections: layerData.selections ? JSON.parse(JSON.stringify(layerData.selections)) : [],
-			selectedGlitterId: layerData.selectedGlitterId,
-			settings: layerData.settings ? { ...layerData.settings } : {}
+			locked: spec.forceLocked ? true : layerData.locked,
+			selectedGlitterId: layerData.selectedGlitterId ?? spec.defaultSelectedGlitterId?.(),
+			...(spec.defaults ? structuredClone(spec.defaults) : {})
 		};
-		restored.fill = layerData.fill ? JSON.parse(JSON.stringify(layerData.fill)) : null;
-		restored.autoGlitter = layerData.autoGlitter ? JSON.parse(JSON.stringify(layerData.autoGlitter)) : null;
+		if (!spec.omit?.includes('name')) restored.name = layerData.name || spec.defaultName?.(this.editor, layerData[spec.dataKey]);
+		if (!spec.omit?.includes('settings')) restored.settings = structuredClone(layerData.settings || {});
+		[spec.dataKey, ...(spec.extraKeys || [])].filter(Boolean).forEach((key) => {
+			const fallback = key === 'selections' ? [] : null;
+			restored[key] = layerData[key] == null ? fallback : structuredClone(layerData[key]);
+		});
+		if (spec.includeMaskVersion) restored.maskVersion = layerData.maskVersion || 0;
+		spec.normalize?.(this.editor, restored);
+		try {
+			await spec.hydrate?.(this.editor, restored);
+		} catch (error) {
+			this.editor.textGlitterManager?.reportFontLoadError(error);
+			throw error;
+		}
 		return restored;
 	}
 
@@ -289,8 +235,28 @@ class LayerManager {
 		}
 	}
 
+	canAddLayers(count = 1) {
+		const occupied = this.layers.filter((layer) => !layer.isPreview).length;
+		const remaining = Math.max(0, CONFIG.app.limits.maxLayers - occupied);
+		if (remaining >= count) return { ok: true, remaining };
+		return {
+			ok: false,
+			remaining,
+			reason: remaining <= 0
+				? `You've reached the ${CONFIG.app.limits.maxLayers}-layer limit. Delete or merge a layer to add another.`
+				: `Only ${remaining} more layer${remaining === 1 ? '' : 's'} can be added (limit is ${CONFIG.app.limits.maxLayers}).`
+		};
+	}
+
+	requireLayerCapacity(count = 1) {
+		const gate = this.canAddLayers(count);
+		if (!gate.ok) this.editor.showError(gate.reason);
+		return gate.ok;
+	}
+
 	// In LayerManager
 	addLayer(type = LayerType.GLITTER_FILL, options = {}) {
+		if (!this.requireLayerCapacity()) return null;
 		const cfg = LAYER_UI_CONFIG[type];
 		const manager = getLayerManagerForType(this.editor, type);
 		if (!manager) {
@@ -319,7 +285,7 @@ class LayerManager {
 		}
 
 		this.renderLayersList();
-		this.editor.saveState();
+		this.editor.saveState('Edit layers');
 		this.editor.updateActionButtons();
 
 		if (type === LayerType.TEXT_GLITTER) {
@@ -353,8 +319,8 @@ class LayerManager {
 		}
 
 		this.renderLayersList();
-		this.editor.saveState();
-		this.editor.updatePreview();
+		this.editor.saveState('Edit layers');
+		this.editor.requestPreviewUpdate();
 		this.editor.updateStatus(`${layer.visible ? 'Shown' : 'Hidden'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
 	}
 
@@ -374,7 +340,7 @@ class LayerManager {
 		this.editor.syncTransformHandlesForActiveLayer?.();
 		this.editor.updateSidePanelUI(this.getActiveLayer());
 		this.editor.updateActionButtons();
-		this.editor.saveState();
+		this.editor.saveState('Edit layers');
 		this.editor.updateStatus(`${layer.locked ? 'Locked' : 'Unlocked'}: ${layer.name || LAYER_UI_CONFIG[layer.type]?.displayName || 'Layer'}`);
 	}
 
@@ -522,7 +488,7 @@ class LayerManager {
 
 		this.editor.updateContextToolbars();
 		this.updateSelectionHighlight();
-		this.editor.updatePreview();
+		this.editor.requestPreviewUpdate();
 		this.editor.syncTransformHandlesForActiveLayer?.();
 		this.editor.updateSidePanelUI(activeLayer);
 
@@ -532,9 +498,9 @@ class LayerManager {
 				config.onActivate(this.editor, activeLayer);
 			}
 		} else if (selectedCount === 0) {
-			this.editor.showLayerSettingsEmptyState();
-			this.editor.showGlitterSettingsEmptyState();
-			this.editor.showStickerSettingsEmptyState();
+			this.editor.setSettingsEmptyState('layerSettings', true, { title: 'No layer selected', subtext: '' });
+			this.editor.setSettingsEmptyState('glitterSettings', true);
+			this.editor.setSettingsEmptyState('stickerSettings', true);
 		}
 
 		if (this.activeLayerId) {
@@ -904,8 +870,11 @@ class LayerManager {
 		// Update add button states
 		const addLayerBtn = document.getElementById('addLayerBtn');
 		const mobileAddLayerBtn = document.getElementById('mobileAddLayerBtn');
+		const addGate = this.canAddLayers();
 		[addLayerBtn, mobileAddLayerBtn].forEach((button) => {
-			if (button) button.disabled = this.layers.length >= CONFIG.app.limits.maxLayers;
+			if (!button) return;
+			button.disabled = !addGate.ok;
+			if (!addGate.ok) button.title = addGate.reason;
 		});
 
 		// Update mobile swatch
@@ -921,12 +890,15 @@ class LayerManager {
 
 		this.layersListContainer.querySelectorAll('.layer-item').forEach(item => {
 			item.classList.remove('active', 'selected');
+			item.setAttribute('aria-selected', 'false');
+			item.tabIndex = -1;
 		});
 
 		this.selectedLayerIds.forEach((layerId) => {
 			const item = this.layersListContainer.querySelector(`[data-layer-id="${layerId}"]`);
 			if (item) {
 				item.classList.add('selected');
+				item.setAttribute('aria-selected', 'true');
 			}
 		});
 
@@ -934,6 +906,7 @@ class LayerManager {
 			const activeItem = this.layersListContainer.querySelector(`[data-layer-id="${this.activeLayerId}"]`);
 			if (activeItem) {
 				activeItem.classList.add('active');
+				activeItem.tabIndex = 0;
 			}
 		}
 	}
@@ -941,7 +914,7 @@ class LayerManager {
 
 	updateBottomBarButtons() {
 		const selectedLayers = this.getSelectedLayers();
-		const canAddLayers = this.layers.length < CONFIG.app.limits.maxLayers;
+		const canAddLayers = this.canAddLayers().ok;
 		const canInteractWithSelected = selectedLayers.length > 0
 			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
 		const hasSingleSelection = selectedLayers.length === 1;
@@ -983,11 +956,7 @@ class LayerManager {
 			return null;
 		}
 
-		// Check max layers
-		if (this.layers.length >= CONFIG.app.limits.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
-			return null;
-		}
+		if (!this.requireLayerCapacity()) return null;
 
 		// Create new layer based on type
 		let clonedLayer;
@@ -1099,7 +1068,7 @@ class LayerManager {
 		this.renderLayersList();
 		this.reorderLayers();
 
-		if (!options.skipHistory) this.editor.saveState();
+		if (!options.skipHistory) this.editor.saveState('Edit layers');
 		this.editor.updateActionButtons();
 
 		return clonedLayer;
@@ -1225,10 +1194,7 @@ class LayerManager {
 	cloneLayers(layerIds, options = {}) {
 		const uniqueIds = [...new Set(layerIds)].filter((layerId) => this.layers.some((layer) => layer.id === layerId));
 		if (!uniqueIds.length) return null;
-		if (this.layers.length + uniqueIds.length > CONFIG.app.limits.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
-			return null;
-		}
+		if (!this.requireLayerCapacity(uniqueIds.length)) return null;
 
 		const clones = [];
 		this.layers
@@ -1254,8 +1220,8 @@ class LayerManager {
 		}
 		this.renderLayersList();
 		this.reorderLayers();
-		this.editor.updatePreview();
-		if (!options.skipHistory) this.editor.saveState();
+		this.editor.requestPreviewUpdate();
+		if (!options.skipHistory) this.editor.saveState('Edit layers');
 		this.editor.updateActionButtons();
 
 		return clones.length === 1 ? clones[0] : clones;
@@ -1303,8 +1269,8 @@ class LayerManager {
 			activeLayerId: nextLayer?.id || null
 		});
 		this.renderLayersList();
-		if (!options.skipHistory) this.editor.saveState();
-		this.editor.updatePreview();
+		if (!options.skipHistory) this.editor.saveState('Edit layers');
+		this.editor.requestPreviewUpdate();
 		this.editor.updateActionButtons();
 		if (!options.silent) this.editor.updateStatus(uniqueIds.length > 1 ? 'Layers deleted' : 'Layer deleted');
 		return true;
@@ -1313,6 +1279,9 @@ class LayerManager {
 		const layerEl = document.createElement('div');
 		layerEl.className = 'layer-item layer-list-row';
 		layerEl.dataset.layerId = layer.id;
+		layerEl.setAttribute('role', 'option');
+		layerEl.setAttribute('aria-selected', String(this.isLayerSelected(layer.id)));
+		layerEl.tabIndex = layer.id === this.activeLayerId ? 0 : -1;
 		layerEl.classList.toggle('is-hidden', !layer.visible);
 		layerEl.classList.toggle('is-locked', Boolean(layer.locked));
 
@@ -1377,7 +1346,7 @@ class LayerManager {
 				const nextName = input.value.trim();
 				if (commit && nextName && nextName !== layer.name) {
 					layer.name = nextName;
-					this.editor.saveState();
+					this.editor.saveState('Edit layers');
 				}
 				this.renderLayersList();
 			};
@@ -1850,7 +1819,7 @@ class LayerManager {
 		// OPTIMIZED: Just reorder DOM instead of recreating
 		this.reorderLayerItems();
 		this.reorderLayers();
-		this.editor.saveState();
+		this.editor.saveState('Edit layers');
 	}
 
 	handleLayerDragEnd(event) {
@@ -1935,22 +1904,19 @@ class LayerManager {
 
 		this.touchDragLastY = event.clientY;
 
-		// Find which layer element we're over
-		const elements = document.elementsFromPoint(event.clientX, event.clientY);
-
-		// Don't target the layer we're currently dragging
-		const targetLayer = elements.find(el =>
-			el.classList.contains('layer-item') &&
-			el.dataset.layerId !== this.draggedLayerId
-		);
+		// Resolve the row even when the finger is over its swatch, text, or actions.
+		const validTargetLayer = document
+			.elementsFromPoint(event.clientX, event.clientY)
+			.map((element) => element.closest('.layer-item'))
+			.find((element) => element?.dataset.layerId && element.dataset.layerId !== this.draggedLayerId);
 
 		const insertionLine = this.layersListContainer.querySelector('.layer-insertion-line');
 
-		if (targetLayer && targetLayer.dataset.layerId) {
-			const targetLayerId = targetLayer.dataset.layerId;
+		if (validTargetLayer?.dataset.layerId) {
+			const targetLayerId = validTargetLayer.dataset.layerId;
 			const targetIndex = this.layers.findIndex(l => l.id === targetLayerId);
 
-			const rect = targetLayer.getBoundingClientRect();
+			const rect = validTargetLayer.getBoundingClientRect();
 			const midpoint = rect.top + rect.height / 2;
 			const insertAbove = event.clientY < midpoint;
 
@@ -2026,7 +1992,7 @@ class LayerManager {
 				this.layers.splice(newIndex, 0, draggedLayer);
 				this.reorderLayerItems();
 				this.reorderLayers();
-				this.editor.saveState();
+				this.editor.saveState('Edit layers');
 			}
 		}
 

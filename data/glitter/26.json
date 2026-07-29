@@ -1,0 +1,37 @@
+{
+  "id": 26,
+  "url": "images/glitter/ember/ember_purple.gif",
+  "name": "Purple",
+  "generatedName": "Very Dark Vivid Blue",
+  "brightness": "0.160",
+  "sortOrder": 77,
+  "hue": 0.734,
+  "colorCodes": [
+    "#080033",
+    "#3C0678",
+    "#9C11D5"
+  ],
+  "colorWeights": [
+    0,
+    0.3333,
+    0.3333
+  ],
+  "frameCount": 4,
+  "frameRate": 20,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1541,
+  "category": "ember",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Dark",
+    "Purple",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

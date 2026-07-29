@@ -1,0 +1,29 @@
+{
+  "id": 59,
+  "name": "Princess Silver Red Glitter Text",
+  "filename": "princess_silver-red-glitter.gif",
+  "url": "images/stickers/text/princess_silver-red-glitter.gif",
+  "thumbnailUrl": "images/stickers/text/princess_silver-red-glitter.gif",
+  "category": "text",
+  "attribution": "",
+  "stickerText": "Princess",
+  "tags": [
+    "glitter",
+    "princess",
+    "red",
+    "silver"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 316,
+  "height": 96,
+  "frameCount": 2,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 20180,
+  "sortOrder": 68
+}

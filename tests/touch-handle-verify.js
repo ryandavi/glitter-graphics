@@ -634,7 +634,7 @@ async function checkSidebarScaleAndResetHandles(page) {
 	await setTool(page, 'select');
 	await createTestSticker(page, { position: { x: 120, y: 100 }, label: 'Sidebar Transform' });
 	const before = await page.locator('.transform-bounding-box').boundingBox();
-	await page.locator('#stickerScale').evaluate((input) => {
+	await page.locator('#stickerTransformScaleX').evaluate((input) => {
 		input.value = '180';
 		input.dispatchEvent(new Event('input', { bubbles: true }));
 		input.dispatchEvent(new Event('change', { bubbles: true }));

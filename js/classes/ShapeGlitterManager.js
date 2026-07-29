@@ -123,7 +123,7 @@ class ShapeGlitterManager {
 					const layer = this.getActiveShapeLayer();
 					if (!layer) return;
 					this.renderLayer(layer);
-					if (commit) this.editor.saveState();
+					if (commit) this.editor.saveState('Edit shape');
 				}
 			});
 		});
@@ -301,7 +301,7 @@ class ShapeGlitterManager {
 				getLayer: () => this.getActiveShapeLayer(),
 				getData: (layer) => this.ensureEffectData(layer, slot),
 				render: (layer) => this.renderLayer(layer),
-				save: () => this.editor.saveState()
+				save: () => this.editor.saveState('Edit shape')
 			});
 		});
 
@@ -327,7 +327,7 @@ class ShapeGlitterManager {
 		this.invalidateMeasurement(layer);
 		this.renderLayer(layer);
 		this.loadLayerSettings(layer);
-		this.editor.saveState();
+		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 		return true;
 	}
@@ -353,7 +353,7 @@ class ShapeGlitterManager {
 				this._refreshSourceUI(layer, slot);
 				this.invalidateMeasurement(layer);
 				this.renderLayer(layer);
-				this.editor.saveState();
+				this.editor.saveState('Edit shape');
 				this.editor.layerManager.renderLayersList();
 			});
 		});
@@ -367,7 +367,7 @@ class ShapeGlitterManager {
 			this.ensureEffectData(layer, slot).color = input.value;
 			this.renderLayer(layer);
 		});
-		input?.addEventListener('change', () => this.editor.saveState());
+		input?.addEventListener('change', () => this.editor.saveState('Edit shape'));
 	}
 
 	_bindSlotAdvanced(prefix, slot) {
@@ -416,7 +416,7 @@ class ShapeGlitterManager {
 				this.renderLayer(layer);
 			},
 			onCommit: () => {
-				this.editor.saveState();
+				this.editor.saveState('Edit shape');
 				this.editor.layerManager.renderLayersList();
 			}
 		});
@@ -455,7 +455,7 @@ class ShapeGlitterManager {
 		});
 		this.loadLayerSettings(layer);
 		this.renderLayer(layer);
-		this.editor.saveState();
+		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 	}
 
@@ -469,7 +469,7 @@ class ShapeGlitterManager {
 		});
 		this.loadLayerSettings(layer);
 		this.renderLayer(layer);
-		this.editor.saveState();
+		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 	}
 
@@ -717,10 +717,7 @@ class ShapeGlitterManager {
 	}
 
 	createLayer(options = {}) {
-		if (this.editor.layerManager.layers.length >= CONFIG.app.limits.maxLayers) {
-			this.editor.showError(`Maximum ${CONFIG.app.limits.maxLayers} layers reached`);
-			return null;
-		}
+		if (!this.editor.layerManager.requireLayerCapacity()) return null;
 
 		const shapeId = options.shapeId || CONFIG.tools.shapes.defaultShapeId;
 		// A drag supplies an explicit box (stretch allowed); a click supplies no
@@ -819,7 +816,7 @@ class ShapeGlitterManager {
 		});
 		this._syncBorderStyleUI(this.getEffectData(layer, 'border'));
 		this.renderLayer(layer);
-		this.editor.saveState();
+		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 	}
 
@@ -835,7 +832,7 @@ class ShapeGlitterManager {
 		});
 		this._syncBorderEdgeUI(this.getEffectData(layer, 'border'));
 		this.renderLayer(layer);
-		this.editor.saveState();
+		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 	}
 
@@ -851,7 +848,7 @@ class ShapeGlitterManager {
 		});
 		this._syncBorderPlacementUI(this.getEffectData(layer, 'border'));
 		this.renderLayer(layer);
-		this.editor.saveState();
+		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 	}
 
@@ -865,7 +862,7 @@ class ShapeGlitterManager {
 		border.drawOrder = drawOrder;
 		this._syncBorderDrawOrderUI(border);
 		this.renderLayer(layer);
-		this.editor.saveState();
+		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 	}
 
@@ -882,34 +879,21 @@ class ShapeGlitterManager {
 	}
 
 	getBorderPlacement(borderData) {
-		return borderData?.placement === 'inside'
-			? 'inside'
-			: borderData?.placement === 'center'
-				? 'center'
-				: 'outside';
+		return getBorderPlacement(borderData);
 	}
 
 	getBorderEdgeStyle(borderData) {
-		return borderData?.edgeStyle === 'hard' ? 'hard' : 'round';
+		return getBorderEdgeStyle(borderData);
 	}
 
 	getBorderDrawOrder(borderData) {
-		return borderData?.drawOrder === 'front' ? 'front' : 'behind';
+		return getBorderDrawOrder(borderData);
 	}
 
 	getBorderOutsidePadding(borderData) {
-		const widthPx = Math.max(0, borderData?.widthPx || 0);
-		const hardEdgeMultiplier = this.getBorderEdgeStyle(borderData) === 'hard'
-			? Math.max(1, CONFIG.tools.shapes.border?.hardEdgeMiterLimit ?? 2)
-			: 1;
-		switch (this.getBorderPlacement(borderData)) {
-			case 'inside':
-				return 0;
-			case 'center':
-				return Math.ceil((widthPx / 2) * hardEdgeMultiplier);
-			default:
-				return Math.ceil(widthPx * hardEdgeMultiplier);
-		}
+		return getBorderOutsidePadding(borderData, {
+			miterLimit: CONFIG.tools.shapes.border.hardEdgeMiterLimit
+		});
 	}
 
 	_syncBorderEdgeUI(borderData) {
@@ -1492,15 +1476,15 @@ class ShapeGlitterManager {
 		layer.shapeData.width = Math.max(CONFIG.tools.shapes.minSize, Math.round(layer.shapeData.width * sx));
 		layer.shapeData.height = Math.max(CONFIG.tools.shapes.minSize, Math.round(layer.shapeData.height * sy));
 		const effectScale = Math.max(sx, sy);
-		if (layer.shapeData.border && this.editor.scaleEffectsOnTransform) {
+		if (layer.shapeData.border && PREFERENCES.get('scaleEffects')) {
 			layer.shapeData.border.widthPx = Math.max(1, Math.round(layer.shapeData.border.widthPx * effectScale));
 			layer.shapeData.border.dotSpacingPx = Math.max(1, layer.shapeData.border.dotSpacingPx * effectScale);
 		}
-		if (layer.shapeData.shadow && this.editor.scaleEffectsOnTransform) {
+		if (layer.shapeData.shadow && PREFERENCES.get('scaleEffects')) {
 			layer.shapeData.shadow.offsetX *= sx;
 			layer.shapeData.shadow.offsetY *= sy;
 		}
-		if (this.editor.scaleTexturesOnTransform) {
+		if (PREFERENCES.get('scaleTextures')) {
 			layer.shapeData.fill.scale = roundSlotTextureScale((layer.shapeData.fill.scale ?? 100) * effectScale);
 			if (layer.shapeData.border) {
 				layer.shapeData.border.scale = roundSlotTextureScale((layer.shapeData.border.scale ?? 100) * effectScale);

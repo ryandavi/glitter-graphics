@@ -1,0 +1,29 @@
+{
+  "id": 96,
+  "name": "Flying Dove White",
+  "filename": "dove_flying_white.gif",
+  "url": "images/stickers/animal/dove_flying_white.gif",
+  "thumbnailUrl": "images/stickers/animal/dove_flying_white.gif",
+  "category": "animal",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "bird",
+    "dove",
+    "flying",
+    "white"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 134,
+  "height": 99,
+  "frameCount": 18,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 49543,
+  "sortOrder": 106
+}

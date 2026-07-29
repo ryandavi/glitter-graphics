@@ -1504,28 +1504,63 @@ abstract class AssetAPI
         $assets = $this->exportAssets();
         $categories = $this->exportCategories();
         $jsonPath = "../../" . $this->tables['json_file'];
+        $indexPath = preg_replace('/\.json$/', '.index.json', $jsonPath);
+        $detailDirectory = preg_replace('/\.json$/', '', $jsonPath);
         $categoriesPath = "../../" . $this->tables['categories_json_file'];
         $json = json_encode($assets, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $indexJson = json_encode(
+            array_map([$this, 'formatAssetForBrowseIndex'], $assets),
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+        );
         $categoriesJson = json_encode($categories, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         $this->backupExport($jsonPath);
+        $this->backupExport($indexPath);
         $this->backupExport($categoriesPath);
         $result = file_put_contents($jsonPath, $json);
+        $indexResult = file_put_contents($indexPath, $indexJson);
         $categoriesResult = file_put_contents($categoriesPath, $categoriesJson);
-        if ($result === false || $categoriesResult === false) {
+        if (!is_dir($detailDirectory) && !mkdir($detailDirectory, 0775, true) && !is_dir($detailDirectory)) {
+            throw new Exception('Failed to create asset detail export directory');
+        }
+        $detailBytes = 0;
+        foreach ($assets as $asset) {
+            $detailJson = json_encode($asset, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            $detailResult = file_put_contents(
+                $detailDirectory . '/' . rawurlencode((string)$asset['id']) . '.json',
+                $detailJson
+            );
+            if ($detailResult === false) {
+                throw new Exception('Failed to write an asset detail record');
+            }
+            $detailBytes += $detailResult;
+        }
+        if ($result === false || $indexResult === false || $categoriesResult === false) {
             throw new Exception('Failed to write a consistent asset/category export');
         }
         $hash = hash('sha256', $json);
         $this->exportState->markCurrent($this->assetType, $hash);
         $this->events->record('export', $this->assetType, 'export_generated', [
-            'bytes' => $result + $categoriesResult,
+            'bytes' => $result + $indexResult + $detailBytes + $categoriesResult,
             'hash' => $hash,
         ]);
         return [
             'success' => true,
             'path' => $jsonPath,
+            'index_path' => $indexPath,
+            'detail_directory' => $detailDirectory,
             'categories_path' => $categoriesPath,
-            'bytes' => $result + $categoriesResult,
+            'bytes' => $result + $indexResult + $detailBytes + $categoriesResult,
         ];
+    }
+
+    protected function formatAssetForBrowseIndex($asset)
+    {
+        $fields = [
+            'id', 'name', 'filename', 'url', 'thumbnailUrl', 'category', 'attribution',
+            'stickerText', 'tags', 'searchTerms', 'colors', 'generatedName', 'sortOrder',
+            'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source',
+        ];
+        return array_intersect_key($asset, array_flip($fields));
     }
 
     protected function backupExport($jsonPath)

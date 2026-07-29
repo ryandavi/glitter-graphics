@@ -1,0 +1,32 @@
+{
+  "id": 83,
+  "url": "images/glitter/sparkle/glitter_dark-vivid-purple.gif",
+  "name": "Dark Vivid Purple",
+  "generatedName": "Vivid Purple",
+  "brightness": "1.000",
+  "sortOrder": 38,
+  "hue": 0.775,
+  "colorCodes": [
+    "#6900FF"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1610,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Cool",
+    "Light",
+    "Purple",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

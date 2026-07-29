@@ -1,0 +1,48 @@
+{
+  "id": 218,
+  "name": "Love You Hearts Pink Red Text",
+  "filename": "love-you_hearts_pink-red.gif",
+  "url": "images/stickers/text/love-you_hearts_pink-red.gif",
+  "thumbnailUrl": "images/stickers/text/love-you_hearts_pink-red.gif",
+  "category": "text",
+  "attribution": null,
+  "stickerText": "Love You",
+  "tags": [
+    "hearts",
+    "love",
+    "love you",
+    "pink",
+    "red"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#F6E7EA",
+    "#EBBBBD",
+    "#E29189",
+    "#DB675C",
+    "#ECBADC",
+    "#CE3326",
+    "#E495BB",
+    "#BB3C38"
+  ],
+  "colorWeights": [
+    0.29,
+    0.17,
+    0.08,
+    0.07,
+    0.05,
+    0.05,
+    0.04,
+    0.03
+  ],
+  "paletteType": "gradient",
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 400,
+  "height": 330,
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 178267,
+  "sortOrder": 0
+}

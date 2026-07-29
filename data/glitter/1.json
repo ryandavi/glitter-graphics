@@ -1,0 +1,39 @@
+{
+  "id": 1,
+  "url": "images/glitter/sparkle/gliter_red.gif",
+  "name": "Red",
+  "generatedName": "Vivid Red",
+  "brightness": "0.400",
+  "sortOrder": 9,
+  "hue": 0.958,
+  "colorCodes": [
+    "#FF0000",
+    "#CC0066",
+    "#C00012",
+    "#FF0300",
+    "#FFFFFF"
+  ],
+  "colorWeights": [
+    0.01,
+    0.35,
+    0.29,
+    0.24,
+    0.12
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1569,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Red",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

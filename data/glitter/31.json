@@ -1,0 +1,33 @@
+{
+  "id": 31,
+  "url": "images/glitter/noise/noise_magenta.gif",
+  "name": "Magenta",
+  "generatedName": "Jewel Tone Pink",
+  "brightness": "1.000",
+  "sortOrder": 78,
+  "hue": 0.161,
+  "colorCodes": [
+    "#960069"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 4,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 100,
+  "height": 100,
+  "fileSize": 18389,
+  "category": "noise",
+  "isPixelated": 1,
+  "tags": [
+    "Jewel",
+    "Neon",
+    "Pink",
+    "Purple",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

@@ -1,0 +1,34 @@
+{
+  "id": 116,
+  "url": "images/glitter/transparent/transparent_bubbles.gif",
+  "name": "Bubbles",
+  "generatedName": "Neon Blue",
+  "brightness": "1.000",
+  "sortOrder": 108,
+  "hue": 0.569,
+  "colorCodes": [
+    "#00D2FF"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 16,
+  "frameRate": 15,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 24,
+  "height": 36,
+  "fileSize": 1761,
+  "category": "transparent",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Light",
+    "Pattern",
+    "Transparent",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

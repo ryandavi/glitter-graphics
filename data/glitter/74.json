@@ -1,0 +1,34 @@
+{
+  "id": 74,
+  "url": "images/glitter/sparkle/glitter_camo-pattern.gif",
+  "name": "Camo Pattern",
+  "generatedName": "Gray",
+  "brightness": "0.000",
+  "sortOrder": 49,
+  "hue": 1.1,
+  "colorCodes": [
+    "#696969"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 2920,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Beige",
+    "Brown",
+    "Contrast",
+    "Multicolor",
+    "Neutral",
+    "Pattern"
+  ],
+  "searchTerms": []
+}

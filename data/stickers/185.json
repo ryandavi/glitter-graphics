@@ -1,0 +1,27 @@
+{
+  "id": 185,
+  "name": "Sparkle Orange",
+  "filename": "sparkle_orange.gif",
+  "url": "images/stickers/sparkle/sparkle_orange.gif",
+  "thumbnailUrl": "images/stickers/sparkle/sparkle_orange.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "orange",
+    "sparkle"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 32,
+  "height": 32,
+  "frameCount": 16,
+  "frameRate": 8,
+  "isVariableFramerate": 0,
+  "fileSize": 2473,
+  "sortOrder": 195
+}

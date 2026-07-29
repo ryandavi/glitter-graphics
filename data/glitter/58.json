@@ -1,0 +1,29 @@
+{
+  "id": 58,
+  "url": "images/glitter/etc/etc_hot-pink.gif",
+  "name": "Hot Pink",
+  "generatedName": "Muted Pink",
+  "brightness": "1.000",
+  "sortOrder": 92,
+  "hue": 0.183,
+  "colorCodes": [
+    "#FE3EAB"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 6970,
+  "category": "etc",
+  "isPixelated": 1,
+  "tags": [
+    "Pink"
+  ],
+  "searchTerms": []
+}

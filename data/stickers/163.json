@@ -1,0 +1,35 @@
+{
+  "id": 163,
+  "name": "Snoop Dogg Dancing Big",
+  "filename": "snoop-dog_dance_big.gif",
+  "url": "images/stickers/people/snoop-dogg_dance_big.gif",
+  "thumbnailUrl": "images/stickers/people/snoop-dogg_dance_big.gif",
+  "category": "people",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "dancing",
+    "hip hop",
+    "rapper",
+    "snoop dogg"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#141413",
+    "#F6F6F6"
+  ],
+  "colorWeights": [
+    0.84,
+    0.06
+  ],
+  "paletteType": "neutral",
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 97,
+  "height": 200,
+  "frameCount": 58,
+  "frameRate": 4,
+  "isVariableFramerate": 0,
+  "fileSize": 302789,
+  "sortOrder": 173
+}

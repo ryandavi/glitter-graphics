@@ -1,0 +1,37 @@
+{
+  "id": 10,
+  "url": "images/glitter/sparkle/glitter_seafoam.gif",
+  "name": "Seafoam",
+  "generatedName": "Blue and Green",
+  "brightness": "1.000",
+  "sortOrder": 30,
+  "hue": 1.2,
+  "colorCodes": [
+    "#87D2F0",
+    "#87C369"
+  ],
+  "colorWeights": [
+    0,
+    0.5
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1950,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool",
+    "Green",
+    "Light",
+    "Multicolor",
+    "Muted",
+    "Pastel"
+  ],
+  "searchTerms": []
+}

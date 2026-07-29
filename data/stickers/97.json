@@ -1,0 +1,30 @@
+{
+  "id": 97,
+  "name": "Kissing Birds Blue Pink",
+  "filename": "two-birds_kiss_blue-pink.gif",
+  "url": "images/stickers/animal/two-birds_kiss_blue-pink.gif",
+  "thumbnailUrl": "images/stickers/animal/two-birds_kiss_blue-pink.gif",
+  "category": "animal",
+  "attribution": null,
+  "stickerText": null,
+  "tags": [
+    "birds",
+    "blue",
+    "kissing",
+    "love",
+    "pink"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 150,
+  "height": 64,
+  "frameCount": 18,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 21640,
+  "sortOrder": 0
+}

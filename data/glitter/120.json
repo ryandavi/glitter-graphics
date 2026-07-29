@@ -1,0 +1,40 @@
+{
+  "id": 120,
+  "url": "images/glitter/sparkle/glitter_sky-blue.gif",
+  "name": "Sky Blue",
+  "generatedName": "Very Light Desaturated Cyan-Blue",
+  "brightness": "0.780",
+  "sortOrder": 31,
+  "hue": 0.607,
+  "colorCodes": [
+    "#9CD6FB",
+    "#2FADFB",
+    "#79C9FB",
+    "#FFFFFF",
+    "#5BBDFB",
+    "#B4E0FB"
+  ],
+  "colorWeights": [
+    0,
+    0.1667,
+    0.1667,
+    0.1667,
+    0.1667,
+    0.1667
+  ],
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 2108,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Light"
+  ],
+  "searchTerms": []
+}

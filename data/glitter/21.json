@@ -1,0 +1,32 @@
+{
+  "id": 21,
+  "url": "images/glitter/sparkle/glitter_silver.gif",
+  "name": "Silver",
+  "generatedName": "Gray",
+  "brightness": "0.000",
+  "sortOrder": 59,
+  "hue": 1.1,
+  "colorCodes": [
+    "#787878"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1410,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Grayscale",
+    "Neutral",
+    "Silver",
+    "White"
+  ],
+  "searchTerms": []
+}

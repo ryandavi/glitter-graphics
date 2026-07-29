@@ -1,0 +1,29 @@
+{
+  "id": 18,
+  "name": "Lava Lamp Blue",
+  "filename": "lava-lamp_blue.gif",
+  "url": "images/stickers/object/lava-lamp_blue.gif",
+  "thumbnailUrl": "images/stickers/object/lava-lamp_blue.gif",
+  "category": "object",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "blue",
+    "lamp",
+    "lava",
+    "retro"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 63,
+  "height": 144,
+  "frameCount": 18,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 16847,
+  "sortOrder": 18
+}

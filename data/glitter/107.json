@@ -1,0 +1,32 @@
+{
+  "id": 107,
+  "url": "images/glitter/sparkle/glitter_rhodolite.gif",
+  "name": "Rhodolite",
+  "generatedName": "Jewel Tone Pink",
+  "brightness": "1.000",
+  "sortOrder": 7,
+  "hue": 0.13,
+  "colorCodes": [
+    "#870078"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 1931,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Contrast",
+    "Jewel",
+    "Pink",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

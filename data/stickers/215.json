@@ -1,0 +1,45 @@
+{
+  "id": 215,
+  "name": "Emo Pink Heart Text",
+  "filename": "less-than-three_emo_pink.gif",
+  "url": "images/stickers/text/less-than-three_emo_pink.gif",
+  "thumbnailUrl": "images/stickers/text/less-than-three_emo_pink.gif",
+  "category": "text",
+  "attribution": null,
+  "stickerText": "<3",
+  "tags": [
+    "emo",
+    "heart",
+    "less than three",
+    "pink"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#030102",
+    "#F62E98",
+    "#FB8BEE",
+    "#4B1935",
+    "#A42068",
+    "#FEDCF3",
+    "#F3A5C9"
+  ],
+  "colorWeights": [
+    0.32,
+    0.27,
+    0.15,
+    0.15,
+    0.06,
+    0.03,
+    0.02
+  ],
+  "paletteType": "gradient",
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 50,
+  "height": 50,
+  "frameCount": 4,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "fileSize": 7740,
+  "sortOrder": 0
+}

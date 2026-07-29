@@ -1,0 +1,29 @@
+{
+  "id": 176,
+  "name": "Falling Snow White",
+  "filename": "snow_falling_white.gif",
+  "url": "images/stickers/sparkle/snow_falling_white.gif",
+  "thumbnailUrl": "images/stickers/sparkle/snow_falling_white.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "falling",
+    "snow",
+    "white",
+    "winter"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 400,
+  "height": 400,
+  "frameCount": 22,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 124277,
+  "sortOrder": 186
+}

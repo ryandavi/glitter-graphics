@@ -1,0 +1,31 @@
+{
+  "id": 90,
+  "url": "images/glitter/sparkle/glitter_lavender.gif",
+  "name": "Lavender",
+  "generatedName": "Muted Purple",
+  "brightness": "1.000",
+  "sortOrder": 39,
+  "hue": 0.825,
+  "colorCodes": [
+    "#E196FF"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 2066,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Light",
+    "Pastel",
+    "Purple"
+  ],
+  "searchTerms": []
+}

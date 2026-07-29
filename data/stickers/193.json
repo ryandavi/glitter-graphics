@@ -1,0 +1,27 @@
+{
+  "id": 193,
+  "name": "Sparkle Silver",
+  "filename": "sparkle_silver_2.gif",
+  "url": "images/stickers/sparkle/sparkle_silver_2.gif",
+  "thumbnailUrl": "images/stickers/sparkle/sparkle_silver_2.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "silver",
+    "sparkle"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 64,
+  "height": 64,
+  "frameCount": 4,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 1708,
+  "sortOrder": 203
+}

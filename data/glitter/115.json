@@ -1,0 +1,31 @@
+{
+  "id": 115,
+  "url": "images/glitter/sparkle_2/sparkle_pink-hearts.gif",
+  "name": "Pink Hearts",
+  "generatedName": "Vivid Pink",
+  "brightness": "1.000",
+  "sortOrder": 86,
+  "hue": 0.111,
+  "colorCodes": [
+    "#F02DF0"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 8,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 78,
+  "height": 110,
+  "fileSize": 19265,
+  "category": "sparkle-2",
+  "isPixelated": 1,
+  "tags": [
+    "Pattern",
+    "Pink",
+    "Red"
+  ],
+  "searchTerms": []
+}

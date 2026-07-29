@@ -1,0 +1,436 @@
+const MODAL_METHODS = {
+updateOrientationButtons(width, height) {
+		const portraitBtn = document.getElementById('orientationPortrait');
+		const landscapeBtn = document.getElementById('orientationLandscape');
+
+		if (!portraitBtn || !landscapeBtn) return;
+
+		// Check if square
+		const isSquare = width === height;
+
+		// Disable buttons if square
+		portraitBtn.disabled = isSquare;
+		landscapeBtn.disabled = isSquare;
+
+		// Remove active from both
+		portraitBtn.classList.remove('active');
+		landscapeBtn.classList.remove('active');
+
+		// Only set active state if not square
+		if (!isSquare) {
+			if (height > width) {
+				portraitBtn.classList.add('active');
+			} else if (width > height) {
+				landscapeBtn.classList.add('active');
+			}
+		}
+	}
+
+,
+	setupModalListeners() {
+		this.modalManager = new ModalManager();
+
+		// Simple modals (inline content)
+		this.modalManager
+			.register('shortcutsModal', {
+				openBtnId: 'shortcutsBtn',
+				closeBtnId: 'closeShortcutsModal',
+				resetScrollOnOpen: true,
+				initialFocusSelector: '#shortcutSearch',
+				onOpen: () => this.shortcutsFilter?.reset()
+			})
+			.register('exportSettingsModal', {
+				openBtnId: 'exportSettingsBtn',
+				closeBtnId: ['closeExportSettingsModal', 'closeExportSettingsModalFooter'],
+				resetScrollOnOpen: true,
+				onOpen: () => {
+					this.exportSettingsFilter?.reset();
+					this.updateExportDuration();
+				}
+			})
+			.register('settingsModal', {
+				openBtnId: ['settingsBtn', 'mobileAppSettingsBtn'],
+				closeBtnId: ['closeSettingsModal', 'closeSettingsModalFooter'],
+				resetScrollOnOpen: true,
+				onOpen: () => {
+					this.htmlSceneExporter?.refreshStickerMetadata();
+					this.settingsFilter?.refresh();
+					this.settingsFilter?.reset();
+				}
+			})
+			.register('exportPreviewModal', {  // ADD THIS
+				closeBtnId: 'closeExportPreviewModal',
+				resetScrollOnOpen: false
+			})
+			.register('confirmationModal', {
+				closeBtnId: ['confirmationModalClose', 'confirmationCancelBtn'],
+				resetScrollOnOpen: false,
+				initialFocusSelector: '#confirmationConfirmBtn',
+				confirmOnEnter: true,
+				enterActionSelector: '#confirmationConfirmBtn',
+				onClose: () => this.resolvePendingConfirmation(this.pendingConfirmationValue)
+			});
+
+		// External content modals use the shared document-modal helpers.
+		this.modalManager
+			.register('aboutModal', {
+				openBtnId: 'aboutBtn',
+				closeBtnId: 'closeAboutModal',
+				externalContentUrl: 'modals/about.html?v=5',
+				cacheContent: true,
+				resetScrollOnOpen: false,
+				rememberScroll: true,
+				onContentLoaded: (modalBody) => {
+					this.renderVersionHistory(modalBody);
+					// Initialize pixel-scaled images
+					initPixelScalerInContainer(modalBody);
+
+					// Initialize references (sup ↔ reference list interaction)
+					initModalReferences(modalBody, {
+						referenceListSelector: 'ol#AboutReferencesList'
+					});
+
+					const modal = document.getElementById('aboutModal');
+					initDocumentModalNavigation(modal);
+					initModalSmoothScroll(modal);
+
+					// Initialize tooltips for dynamically loaded content
+					initTooltipsInContainer(modalBody);
+
+
+				}
+			})
+			.register('guideModal', {
+				openBtnId: 'guideBtn',
+				closeBtnId: 'closeGuideModal',
+				externalContentUrl: 'modals/guide.html?v=45',
+				cacheContent: true,
+				resetScrollOnOpen: false,
+				rememberScroll: true,
+				onContentLoaded: (modalBody) => {
+					// Initialize pixel-scaled images (for screenshots)
+					initPixelScalerInContainer(modalBody);
+
+					const modal = document.getElementById('guideModal');
+					initDocumentModalNavigation(modal);
+					initModalSmoothScroll(modal);
+				}
+			});
+
+
+
+
+		// Layer type picker modal (no open button - opened programmatically)
+		this.modalManager.register('layerTypePickerModal', {
+			closeBtnId: 'closeLayerTypePickerModal',
+			resetScrollOnOpen: false
+		});
+
+		// Sticker upload modal - ONLY uploadStickerBtn opens this
+		this.modalManager.register('stickerUploadModal', {
+			openBtnId: 'uploadStickerBtn',
+			closeBtnId: 'closeStickerUploadModal',
+			resetScrollOnOpen: false
+		});
+
+		// New canvas modal
+		this.modalManager.register('newCanvasModal', {
+			closeBtnId: ['closeNewCanvasModal', 'createCanvasCloseBtn'],
+			resetScrollOnOpen: true,
+			initialFocusSelector: '#newCanvasWidth',
+			confirmOnEnter: true,
+			enterActionSelector: '#createCanvasBtn',
+			onOpen: () => this.initializeNewCanvasModal()
+		});
+
+		// Welcome modal is shown automatically and remains available from the header.
+		this.modalManager.register('welcomeModal', {
+			openBtnId: 'openWelcomeModal',
+			closeBtnId: 'closeWelcomeModal',
+			externalContentUrl: 'modals/welcome.html?v=4',
+			cacheContent: true,
+			showWhileLoading: true,
+			loadingLabel: 'Preparing Glitter…',
+			resetScrollOnOpen: false,
+			onContentLoaded: (modalBody) => {
+				initPixelScalerInContainer(modalBody);
+				this.renderVersionHistory(modalBody, 2);
+				this.setupWelcomeModalListeners();
+			},
+			onOpen: () => {
+				const checked = !this.showWelcomeOnStartup;
+				document.querySelectorAll('#welcomeDontShowAgain, #welcomeDontShowAgainMobile').forEach((checkbox) => {
+					checkbox.checked = checked;
+				});
+			},
+			onClose: () => {
+				const checkbox = document.querySelector('#welcomeDontShowAgain, #welcomeDontShowAgainMobile');
+				try {
+					localStorage.setItem('glitterEditor_welcomeLastSeenRelease', CONFIG.app.currentRelease);
+					if (checkbox?.checked) {
+						localStorage.setItem('glitterEditor_welcomeModalSeen', 'true');
+						this.showWelcomeOnStartup = false;
+					} else {
+						localStorage.removeItem('glitterEditor_welcomeModalSeen');
+						this.showWelcomeOnStartup = true;
+					}
+					this.saveSettingsToStorage();
+				} catch (e) {
+					console.warn('Failed to save welcome modal preference:', e);
+				}
+			}
+		});
+
+		// Check if should show welcome modal on page load
+		this.checkWelcomeModal();
+
+
+		// Setup modal-specific interactions
+		this.setupConfirmationModalListeners();
+		this.setupLayerTypePickerListeners();
+		this.setupLayerPanelListeners();
+		this.setupStickerUploadModalListeners();
+		this.setupNewCanvasModalListeners();
+	}
+
+,
+renderVersionHistory(root, limit = null) {
+	const releases = limit == null ? CONFIG.app.releases : CONFIG.app.releases.slice(0, limit);
+	root.querySelectorAll('[data-version-history]').forEach((history) => {
+		history.replaceChildren(...releases.map((release) => {
+			const entry = document.createElement('section');
+			entry.className = 'version-history-entry';
+
+			const header = document.createElement('div');
+			header.className = 'version-history-header';
+			const title = document.createElement('h4');
+			title.textContent = `v${release.version} — ${release.name}`;
+			const date = document.createElement('time');
+			date.dateTime = release.date;
+			date.textContent = release.dateLabel;
+			header.append(title, date);
+
+			const summary = document.createElement('p');
+			summary.textContent = release.summary;
+			const features = document.createElement('ul');
+			features.append(...release.features.map((feature) => {
+				const item = document.createElement('li');
+				item.textContent = feature;
+				return item;
+			}));
+
+			entry.append(header, summary, features);
+			return entry;
+		}));
+	});
+}
+
+,
+async checkWelcomeModal() {
+	const storageKey = 'glitterEditor_welcomeModalSeen';
+	
+	try {
+		const isSuppressed = localStorage.getItem(storageKey) === 'true';
+		const lastSeenRelease = localStorage.getItem('glitterEditor_welcomeLastSeenRelease');
+		const showOnStartup = this.showWelcomeOnStartup ?? !isSuppressed;
+		const hasUnseenRelease = lastSeenRelease !== CONFIG.app.currentRelease;
+		
+		if (showOnStartup || hasUnseenRelease) {
+			await this.modalManager.open('welcomeModal');
+
+			// Warm the guide after the welcome screen is visible so startup never
+			// waits on content the user has not requested yet.
+			const guideConfig = this.modalManager.modals.get('guideModal');
+			if (guideConfig && guideConfig.externalContentUrl) {
+				this.modalManager.loadExternalContent(guideConfig).catch((error) => dbg('Guide preload failed:', error));
+			}
+		}
+	} catch (e) {
+		console.warn('Failed to check welcome modal status:', e);
+	}
+}
+
+,
+setupWelcomeModalListeners() {
+	const storageKey = 'glitterEditor_welcomeModalSeen';
+	
+	const takeTourBtn = document.getElementById('welcomeTakeTourBtn');
+	const startCreatingBtn = document.getElementById('welcomeStartCreatingBtn');
+	const dontShowCheckbox = document.getElementById('welcomeDontShowAgain');
+	const dontShowMobileCheckbox = document.getElementById('welcomeDontShowAgainMobile');
+	if (takeTourBtn?.dataset.welcomeBound === 'true') return;
+	if (takeTourBtn) takeTourBtn.dataset.welcomeBound = 'true';
+	if (startCreatingBtn) startCreatingBtn.dataset.welcomeBound = 'true';
+
+	[dontShowCheckbox, dontShowMobileCheckbox].filter(Boolean).forEach((checkbox) => {
+		checkbox.addEventListener('change', () => {
+			[dontShowCheckbox, dontShowMobileCheckbox].filter(Boolean).forEach((peer) => {
+				peer.checked = checkbox.checked;
+			});
+		});
+	});
+	
+	const markAsSeenIfChecked = () => {
+		if (dontShowCheckbox?.checked || dontShowMobileCheckbox?.checked) {
+			try {
+				localStorage.setItem(storageKey, 'true');
+				this.showWelcomeOnStartup = false;
+				this.saveSettingsToStorage();
+			} catch (e) {
+				console.warn('Failed to save welcome modal preference:', e);
+			}
+		}
+	};
+	
+	if (takeTourBtn) {
+		takeTourBtn.addEventListener('click', () => {
+			markAsSeenIfChecked();
+			this.modalManager.open('guideModal', { resetScroll: true });
+		});
+	}
+	
+	if (startCreatingBtn) {
+		startCreatingBtn.addEventListener('click', () => {
+			markAsSeenIfChecked();
+			this.modalManager.close('welcomeModal');
+		});
+	}
+}
+
+,
+	setupConfirmationModalListeners() {
+		const confirmBtn = document.getElementById('confirmationConfirmBtn');
+		if (confirmBtn) {
+			confirmBtn.addEventListener('click', () => {
+				this.pendingConfirmationValue = true;
+				this.modalManager.close('confirmationModal');
+			});
+		}
+	}
+
+,
+	resolvePendingConfirmation(value) {
+		if (!this.pendingConfirmationResolve) {
+			this.pendingConfirmationValue = false;
+			return;
+		}
+
+		const resolve = this.pendingConfirmationResolve;
+		this.pendingConfirmationResolve = null;
+		this.pendingConfirmationValue = false;
+		resolve(Boolean(value));
+	}
+
+,
+	confirmAction(options = {}) {
+		const {
+			title = 'Confirm',
+			message = 'Are you sure?',
+			subject = null,
+			facts = [],
+			confirmLabel = 'Confirm',
+			cancelLabel = 'Cancel',
+			destructive = false,
+			details = [],
+			outro = ''
+		} = options;
+
+		if (destructive && this.confirmDestructiveActions === false) {
+			return Promise.resolve(true);
+		}
+
+		if (!this.modalManager || !document.getElementById('confirmationModal')) {
+			return Promise.resolve(confirm(message));
+		}
+
+		if (this.pendingConfirmationResolve) {
+			this.resolvePendingConfirmation(false);
+		}
+
+		const titleNode = document.getElementById('confirmationModalTitle');
+		const messageNode = document.getElementById('confirmationModalMessage');
+		const confirmBtn = document.getElementById('confirmationConfirmBtn');
+		const cancelBtn = document.getElementById('confirmationCancelBtn');
+
+		if (titleNode) titleNode.textContent = title;
+		if (messageNode) {
+			messageNode.replaceChildren();
+			const copy = document.createElement('p');
+			copy.className = 'confirmation-message-copy';
+			copy.textContent = message;
+			messageNode.appendChild(copy);
+			if (subject?.value) {
+				const subjectNode = document.createElement('div');
+				subjectNode.className = 'confirmation-subject';
+				const subjectLabel = document.createElement('span');
+				subjectLabel.className = 'confirmation-subject-label';
+				subjectLabel.textContent = subject.label || 'Item';
+				const subjectValue = document.createElement('strong');
+				subjectValue.className = 'confirmation-subject-value';
+				subjectValue.textContent = subject.value;
+				subjectNode.append(subjectLabel, subjectValue);
+				messageNode.appendChild(subjectNode);
+			}
+			if (facts.length) {
+				const factList = document.createElement('dl');
+				factList.className = 'confirmation-facts';
+				facts.forEach((fact) => {
+					const row = document.createElement('div');
+					const label = document.createElement('dt');
+					label.textContent = fact.label;
+					const value = document.createElement('dd');
+					value.textContent = fact.value;
+					row.append(label, value);
+					factList.appendChild(row);
+				});
+				messageNode.appendChild(factList);
+			}
+			if (details.length) {
+				const list = document.createElement('ul');
+				list.className = 'confirmation-detail-list';
+				details.forEach((detail) => {
+					const item = document.createElement('li');
+					item.textContent = detail;
+					list.appendChild(item);
+				});
+				messageNode.appendChild(list);
+			}
+			if (outro) {
+				const footerCopy = document.createElement('p');
+				footerCopy.className = 'confirmation-message-outro';
+				footerCopy.textContent = outro;
+				messageNode.appendChild(footerCopy);
+			}
+		}
+		if (confirmBtn) confirmBtn.textContent = confirmLabel;
+		confirmBtn?.classList.toggle('modal-action-danger', destructive);
+		if (cancelBtn) cancelBtn.textContent = cancelLabel;
+
+		this.pendingConfirmationValue = false;
+
+		return new Promise((resolve) => {
+			this.pendingConfirmationResolve = resolve;
+			this.modalManager.open('confirmationModal');
+		});
+	}
+
+,
+	alertAction(options = {}) {
+		const {
+			title = 'Notice',
+			message = ''
+		} = options;
+
+		if (!this.modalManager || !document.getElementById('confirmationModal')) {
+			alert(message);
+			return Promise.resolve();
+		}
+
+		const cancelBtn = document.getElementById('confirmationCancelBtn');
+		if (cancelBtn) cancelBtn.style.display = 'none';
+
+		return this.confirmAction({ title, message, confirmLabel: 'OK' }).then(() => {
+			if (cancelBtn) cancelBtn.style.display = '';
+		});
+	}
+};

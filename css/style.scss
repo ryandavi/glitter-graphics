@@ -4,7 +4,13 @@
 @use 'base';
 @use 'components';
 @use 'controls';
-@use 'panels';
+@use 'panels/layout';
+@use 'panels/layers-list';
+@use 'panels/gallery';
+@use 'panels/sections';
+@use 'panels/transform';
+@use 'panels/paint-slot';
+@use 'panels/effects';
 @use 'workspace';
 @use 'settings';
 @use 'assets';

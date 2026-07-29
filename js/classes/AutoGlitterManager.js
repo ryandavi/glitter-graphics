@@ -234,10 +234,7 @@ class AutoGlitterManager {
 	}
 
 	getAvailableSlots() {
-		// Ephemeral session layers don't count: they are reused/replaced by the
-		// batch being sized, not competition for its slots.
-		const occupied = this.editor.layers.filter((layer) => !layer.isPreview).length;
-		const openSlots = CONFIG.app.limits.maxLayers - occupied;
+		const openSlots = this.editor.layerManager.canAddLayers().remaining;
 		return openSlots + (this.shouldReplacePrevious() ? this.previousBatch.layers.length : 0);
 	}
 
@@ -329,7 +326,7 @@ class AutoGlitterManager {
 		this.session.maskSignatures.clear();
 		this.clearResult();
 		this.syncPreviousBatchVisibility();
-		this.editor.updatePreview();
+		this.editor.requestPreviewUpdate();
 		if (this.isEditingPrevious()) {
 			this.loadPreviousBatch();
 			return;
@@ -828,7 +825,7 @@ class AutoGlitterManager {
 			candidate.visible && this.editor.layerManager.isPixelInLayerSelection(candidate, x, y)
 		);
 		if (!layer || layer._autoGlitterRoot == null) {
-			this.editor.updateStatus('No Auto Glitter match at this location');
+			this.editor.showError('No Auto Glitter match at this location');
 			return true;
 		}
 
@@ -902,7 +899,7 @@ class AutoGlitterManager {
 			layer.visible = this.session.previewMode !== 'original' && !color.skipped;
 			this.writeSessionMask(layer, rootIndex, manualRoots);
 		});
-		this.editor.updatePreview();
+		this.editor.requestPreviewUpdate();
 	}
 
 	writeSessionMask(layer, rootIndex, manualRoots) {
@@ -970,7 +967,7 @@ class AutoGlitterManager {
 			this.editor.layerManager.restoreSelectionState(session.previousActiveLayerId, session.previousSelectedLayerIds);
 		}
 		this.editor.historyManager.updateButtons();
-		this.editor.updatePreview();
+		this.editor.requestPreviewUpdate();
 		this.editor.updateActionButtons();
 	}
 
@@ -1026,11 +1023,11 @@ class AutoGlitterManager {
 		this.session = null;
 		this.editor.historyManager.updateButtons();
 		this.editor.layerManager.renderLayersList();
-		this.editor.updatePreview();
+		this.editor.requestPreviewUpdate();
 		const baseLayer = this.editor.layers.find((layer) => layer.type === LayerType.BASE_IMAGE);
 		if (baseLayer) this.editor.layerManager.setActiveLayer(baseLayer.id);
 		this.editor.updateActionButtons();
-		this.editor.saveState();
+		this.editor.saveState('Apply Auto Glitter');
 		this.endSessionUI({ cancel: false, previousShowAllLayers, previousTool });
 		const effectNotice = canvasEffectsDisabled ? '; Canvas Effects turned off (settings preserved)' : '';
 		const action = wasEditingPrevious ? 'Updated' : 'Created';

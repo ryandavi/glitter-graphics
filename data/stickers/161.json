@@ -1,0 +1,30 @@
+{
+  "id": 161,
+  "name": "Waving Money Green",
+  "filename": "money_wave_green.gif",
+  "url": "images/stickers/object/money_wave_green.gif",
+  "thumbnailUrl": "images/stickers/object/money_wave_green.gif",
+  "category": "object",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "cash",
+    "green",
+    "money",
+    "wave",
+    "wealth"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 150,
+  "height": 88,
+  "frameCount": 8,
+  "frameRate": 5,
+  "isVariableFramerate": 0,
+  "fileSize": 62440,
+  "sortOrder": 171
+}

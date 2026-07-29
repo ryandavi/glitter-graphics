@@ -1,0 +1,37 @@
+{
+  "id": 232,
+  "name": "Ryandavi Lemur",
+  "filename": "ryandavi_lemur.png",
+  "url": "images/stickers/ryandavi/ryandavi_lemur.png",
+  "thumbnailUrl": "images/stickers/ryandavi/ryandavi_lemur.png",
+  "category": "ryandavi",
+  "attribution": null,
+  "stickerText": null,
+  "tags": [
+    "black",
+    "pastel",
+    "purple",
+    "white"
+  ],
+  "searchTerms": [],
+  "colorCodes": [
+    "#070607",
+    "#D4B7D6",
+    "#FEFDFE"
+  ],
+  "colorWeights": [
+    0.41,
+    0.33,
+    0.25
+  ],
+  "paletteType": "neutral",
+  "isAnimated": 0,
+  "hasTransparency": 1,
+  "width": 200,
+  "height": 200,
+  "frameCount": 1,
+  "frameRate": 0,
+  "isVariableFramerate": 0,
+  "fileSize": 3868,
+  "sortOrder": 0
+}

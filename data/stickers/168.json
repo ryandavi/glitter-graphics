@@ -1,0 +1,30 @@
+{
+  "id": 168,
+  "name": "Exploding Hearts Pink",
+  "filename": "hearts_exploding_pink.gif",
+  "url": "images/stickers/sparkle/hearts_exploding_pink.gif",
+  "thumbnailUrl": "images/stickers/sparkle/hearts_exploding_pink.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "burst",
+    "exploding",
+    "hearts",
+    "love",
+    "pink"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 168,
+  "height": 215,
+  "frameCount": 9,
+  "frameRate": 12,
+  "isVariableFramerate": 0,
+  "fileSize": 27957,
+  "sortOrder": 178
+}

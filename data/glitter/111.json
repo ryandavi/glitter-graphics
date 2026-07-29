@@ -1,0 +1,35 @@
+{
+  "id": 111,
+  "url": "images/glitter/sparkle/purpe_light-pink.gif",
+  "name": "Light Pink",
+  "generatedName": "Muted Pink",
+  "brightness": "1.000",
+  "sortOrder": 0,
+  "hue": 0.185,
+  "colorCodes": [
+    "#FF60BA",
+    "#FFBFE4",
+    "#FFFFFF"
+  ],
+  "colorWeights": [
+    0.62,
+    0.26,
+    0.13
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 61,
+  "height": 29,
+  "fileSize": 2145,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Light",
+    "Muted",
+    "Pink"
+  ],
+  "searchTerms": []
+}

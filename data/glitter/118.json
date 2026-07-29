@@ -1,0 +1,39 @@
+{
+  "id": 118,
+  "url": "images/glitter/transparent/transparent_pink-sparkle.gif",
+  "name": "Pink Sparkle",
+  "generatedName": "Very Light Magenta",
+  "brightness": "0.640",
+  "sortOrder": 107,
+  "hue": 0.875,
+  "colorCodes": [
+    "#FF49FF",
+    "#9200AA",
+    "#FFFFFF",
+    "#920000",
+    "#0000AA"
+  ],
+  "colorWeights": [
+    0,
+    0.2,
+    0.2,
+    0.2,
+    0.2
+  ],
+  "frameCount": 4,
+  "frameRate": 5,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 64,
+  "height": 64,
+  "fileSize": 1062,
+  "category": "transparent",
+  "isPixelated": 1,
+  "tags": [
+    "Light",
+    "Pink",
+    "Transparent"
+  ],
+  "searchTerms": []
+}

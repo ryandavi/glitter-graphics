@@ -1,0 +1,33 @@
+{
+  "id": 8,
+  "url": "images/glitter/sparkle/glitter_lime-green.gif",
+  "name": "Lime Green",
+  "generatedName": "Vivid Green",
+  "brightness": "1.000",
+  "sortOrder": 23,
+  "hue": 0.275,
+  "colorCodes": [
+    "#96FF00"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1619,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Green",
+    "Light",
+    "Neon",
+    "Vivid",
+    "Yellow"
+  ],
+  "searchTerms": []
+}

@@ -1,0 +1,30 @@
+{
+  "id": 113,
+  "url": "images/glitter/sparkle_2/sparkle_green.gif",
+  "name": "Green",
+  "generatedName": "Vivid Green",
+  "brightness": null,
+  "sortOrder": 87,
+  "hue": 0.375,
+  "colorCodes": [
+    "#006900"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 100,
+  "height": 100,
+  "fileSize": 37103,
+  "category": "sparkle-2",
+  "isPixelated": 1,
+  "tags": [
+    "Green",
+    "Vivid"
+  ],
+  "searchTerms": []
+}

@@ -27,7 +27,7 @@ async function main() {
 			const advanced = document.querySelector('#exportSettingsModal .export-advanced-settings');
 			return {
 				advancedCount: document.querySelectorAll('#exportSettingsModal [data-advanced]').length,
-				advancedIds: [...advanced.querySelectorAll('[id]')].map((node) => node.id),
+				advancedIds: advanced ? [...advanced.querySelectorAll('[id]')].map((node) => node.id) : [],
 				creativeIds: ['exportTransparency', 'exportMatteColor', 'exportWatermarkEnabled', 'exportFrameDelay', 'exportReverse']
 					.filter((id) => !document.getElementById(id)?.closest('[data-advanced]')),
 				sectionResetCount: document.querySelectorAll('#exportSettingsModal .reset-section-btn').length,
@@ -35,9 +35,9 @@ async function main() {
 					.filter((id) => document.getElementById(id)).length
 			};
 		});
-		assert(modalAudit.advancedCount === 1, `Expected one Export Advanced disclosure, got ${modalAudit.advancedCount}`);
+		assert(modalAudit.advancedCount === 0, `Export Settings still contains a nested Advanced disclosure (${modalAudit.advancedCount})`);
 		for (const id of ['exportDitherEnabled', 'exportDitherType', 'exportQuality', 'exportMaxFrames', 'exportSmartFrameReduction', 'exportFrameSkip']) {
-			assert(modalAudit.advancedIds.includes(id), `${id} is not inside Export Advanced`);
+			assert(!modalAudit.advancedIds.includes(id), `${id} is unexpectedly nested inside Export Advanced`);
 		}
 		assert(modalAudit.creativeIds.length === 5, 'Creative export controls are not all top-level');
 		assert(modalAudit.sectionResetCount === 0, 'Export Settings still has per-section reset buttons');
@@ -45,15 +45,13 @@ async function main() {
 		console.log('PASS Export and Settings modal hierarchy');
 
 		await page.evaluate(() => window.editor.modalManager.open('exportSettingsModal'));
-		await page.click('#exportSettingsModal [data-advanced-toggle]');
-		assert(await page.$eval('#exportSettingsModal .export-advanced-settings', (node) => node.classList.contains('is-open')),
-			'Export Advanced disclosure did not open');
-		console.log('PASS Export Advanced disclosure behavior');
+		assert(await page.locator('#exportSettingsModal [data-advanced-toggle]').count() === 0,
+			'Export Settings unexpectedly renders an Advanced disclosure toggle');
+		console.log('PASS Export settings remain flat and searchable');
 
-		await page.evaluate(() => {
-			window.editor.modalManager.close('exportSettingsModal');
-			window.editor.modalManager.open('settingsModal');
-		});
+		await page.evaluate(() => window.editor.modalManager.close('exportSettingsModal'));
+		await page.waitForTimeout(350);
+		await page.evaluate(() => window.editor.modalManager.open('settingsModal'));
 		await page.selectOption('#interfaceTheme', 'light');
 		await page.waitForTimeout(50);
 		const themeState = await page.evaluate(() => ({
@@ -62,7 +60,7 @@ async function main() {
 			saved: JSON.parse(localStorage.getItem('glitterEditorSettings')).interfaceTheme
 		}));
 		assert(themeState.theme === 'light' && themeState.saved === 'light', 'Light theme was not applied and persisted');
-		assert(themeState.background === '#f2f4f7', `Unexpected light theme background token: ${themeState.background}`);
+		assert(themeState.background === '#eef3f9', `Unexpected light theme background token: ${themeState.background}`);
 		console.log('PASS Light theme application and persistence');
 
 		await page.$eval('#showWelcomeOnStartup', (input) => { input.checked = true; input.dispatchEvent(new Event('change', { bubbles: true })); });
@@ -148,17 +146,17 @@ async function main() {
 		console.log('PASS Alt-drag affordance, live clone visibility, and one-step undo');
 
 		await page.setViewportSize({ width: 390, height: 844 });
-		await page.waitForTimeout(100);
+		await page.waitForTimeout(400);
 		const mobileActions = await page.evaluate(() => ({
 			toolbarSettings: getComputedStyle(document.getElementById('settingsBtn')).display,
 			toolbarClearGroup: getComputedStyle(document.getElementById('toolbarClearGroup')).display,
-			layersClear: getComputedStyle(document.getElementById('layersBarClearAll')).display,
-			bottomNavButtons: document.querySelectorAll('.mobile-bottom-nav button').length
+			hasLayersClear: Boolean(document.getElementById('layersBarClearAll')),
+			bottomNavButtons: document.querySelectorAll('.mobile-bottom-nav .mobile-drawer-btn').length
 		}));
 		assert(mobileActions.toolbarSettings !== 'none', 'Mobile toolbar is missing App Settings');
 		assert(mobileActions.toolbarClearGroup === 'none', 'Mobile toolbar still shows Clear All');
-		assert(mobileActions.layersClear !== 'none' && mobileActions.bottomNavButtons === 3,
-			'Mobile three-button navigation or relocated Clear All is unavailable');
+		assert(mobileActions.hasLayersClear && mobileActions.bottomNavButtons === 4,
+			`Mobile four-button navigation or relocated Clear All is unavailable: ${JSON.stringify(mobileActions)}`);
 		console.log('PASS Mobile Settings visibility and Clear All relocation');
 
 		assert(runtimeErrors.length === 0, `Runtime errors:\n${runtimeErrors.join('\n')}`);

@@ -1,0 +1,32 @@
+{
+  "id": 27,
+  "url": "images/glitter/noise/noise_red.gif",
+  "name": "Red",
+  "generatedName": "Vivid Red",
+  "brightness": "1.000",
+  "sortOrder": 79,
+  "hue": 0.042,
+  "colorCodes": [
+    "#D20000"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 4,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 100,
+  "height": 100,
+  "fileSize": 17043,
+  "category": "noise",
+  "isPixelated": 1,
+  "tags": [
+    "Light",
+    "Red",
+    "Vivid",
+    "Warm"
+  ],
+  "searchTerms": []
+}

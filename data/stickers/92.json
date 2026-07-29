@@ -1,0 +1,27 @@
+{
+  "id": 92,
+  "name": "Butterfly Red",
+  "filename": "butterfly_red_2.gif",
+  "url": "images/stickers/animal/butterfly_red_2.gif",
+  "thumbnailUrl": "images/stickers/animal/butterfly_red_2.gif",
+  "category": "animal",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "butterfly",
+    "red"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 120,
+  "height": 120,
+  "frameCount": 4,
+  "frameRate": 15,
+  "isVariableFramerate": 0,
+  "fileSize": 17387,
+  "sortOrder": 102
+}

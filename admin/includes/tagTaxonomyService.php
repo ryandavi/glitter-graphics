@@ -88,14 +88,22 @@ class TagTaxonomyService
 		$targetId = (int)$targetId;
 		$sourceIds = array_values(array_diff(array_unique(array_map('intval', $sourceIds)), [$targetId]));
 		if (!$targetId || !$sourceIds) throw new InvalidArgumentException('Choose a target and at least one source tag');
+		// Table and field identifiers come only from the server-side asset-type configuration.
 		$tagIdField = $this->assetType . '_tag_id';
 		$assetIdField = $this->assetType . '_id';
-		$sourceList = implode(',', $sourceIds);
+		$sourcePlaceholders = implode(',', array_fill(0, count($sourceIds), '?'));
+		$sourceTypes = str_repeat('i', count($sourceIds));
 		$this->db->beginTransaction();
 		try {
-			$result = $this->db->query("SELECT id, name FROM {$this->tables['tags_table']} WHERE id IN ($sourceList)");
+			$sourceStmt = $this->db->prepare(
+				"SELECT id, name FROM {$this->tables['tags_table']} WHERE id IN ($sourcePlaceholders)",
+				$sourceTypes,
+				$sourceIds
+			);
+			$result = $sourceStmt->get_result();
 			$sources = [];
 			while ($row = $result->fetch_assoc()) $sources[] = $row;
+			$sourceStmt->close();
 			foreach ($sources as $source) {
 				$normalized = self::normalize($source['name']);
 				$this->assertAvailable($normalized, $targetId, $sourceIds);
@@ -106,9 +114,12 @@ class TagTaxonomyService
 				);
 				$stmt->close();
 			}
-			$aliasResult = $this->db->query(
-				"SELECT alias, normalized_alias FROM {$this->tables['tag_aliases_table']} WHERE $tagIdField IN ($sourceList)"
+			$aliasStmt = $this->db->prepare(
+				"SELECT alias, normalized_alias FROM {$this->tables['tag_aliases_table']} WHERE $tagIdField IN ($sourcePlaceholders)",
+				$sourceTypes,
+				$sourceIds
 			);
+			$aliasResult = $aliasStmt->get_result();
 			while ($alias = $aliasResult->fetch_assoc()) {
 				$stmt = $this->db->prepare(
 					"INSERT IGNORE INTO {$this->tables['tag_aliases_table']} ($tagIdField, alias, normalized_alias, created_at) VALUES (?, ?, ?, NOW())",
@@ -117,13 +128,32 @@ class TagTaxonomyService
 				);
 				$stmt->close();
 			}
-			$this->db->query("DELETE FROM {$this->tables['tag_aliases_table']} WHERE $tagIdField IN ($sourceList)");
-			$this->db->query(
-				"INSERT IGNORE INTO {$this->tables['tags_map_table']} ($assetIdField, $tagIdField)
-				 SELECT $assetIdField, $targetId FROM {$this->tables['tags_map_table']} WHERE $tagIdField IN ($sourceList)"
+			$aliasStmt->close();
+			$stmt = $this->db->prepare(
+				"DELETE FROM {$this->tables['tag_aliases_table']} WHERE $tagIdField IN ($sourcePlaceholders)",
+				$sourceTypes,
+				$sourceIds
 			);
-			$this->db->query("DELETE FROM {$this->tables['tags_map_table']} WHERE $tagIdField IN ($sourceList)");
-			$this->db->query("DELETE FROM {$this->tables['tags_table']} WHERE id IN ($sourceList)");
+			$stmt->close();
+			$stmt = $this->db->prepare(
+				"INSERT IGNORE INTO {$this->tables['tags_map_table']} ($assetIdField, $tagIdField)
+				 SELECT $assetIdField, ? FROM {$this->tables['tags_map_table']} WHERE $tagIdField IN ($sourcePlaceholders)",
+				'i' . $sourceTypes,
+				array_merge([$targetId], $sourceIds)
+			);
+			$stmt->close();
+			$stmt = $this->db->prepare(
+				"DELETE FROM {$this->tables['tags_map_table']} WHERE $tagIdField IN ($sourcePlaceholders)",
+				$sourceTypes,
+				$sourceIds
+			);
+			$stmt->close();
+			$stmt = $this->db->prepare(
+				"DELETE FROM {$this->tables['tags_table']} WHERE id IN ($sourcePlaceholders)",
+				$sourceTypes,
+				$sourceIds
+			);
+			$stmt->close();
 			$this->db->commit();
 			return ['success' => true, 'target_id' => $targetId, 'merged_ids' => $sourceIds];
 		} catch (Throwable $error) {

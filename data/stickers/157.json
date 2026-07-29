@@ -1,0 +1,28 @@
+{
+  "id": 157,
+  "name": "Fire",
+  "filename": "fire_2.gif",
+  "url": "images/stickers/object/fire_2.gif",
+  "thumbnailUrl": "images/stickers/object/fire_2.gif",
+  "category": "object",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "fire",
+    "flames",
+    "hot"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 185,
+  "height": 160,
+  "frameCount": 12,
+  "frameRate": 15,
+  "isVariableFramerate": 0,
+  "fileSize": 125111,
+  "sortOrder": 167
+}

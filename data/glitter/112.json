@@ -1,0 +1,30 @@
+{
+  "id": 112,
+  "url": "images/glitter/sparkle_2/sparkle_blue.gif",
+  "name": "Blue",
+  "generatedName": "Vivid Blue",
+  "brightness": "1.000",
+  "sortOrder": 88,
+  "hue": 0.669,
+  "colorCodes": [
+    "#3C69FF"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 0,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 55,
+  "height": 55,
+  "fileSize": 4454,
+  "category": "sparkle-2",
+  "isPixelated": 1,
+  "tags": [
+    "Blue",
+    "Cool"
+  ],
+  "searchTerms": []
+}

@@ -1,0 +1,33 @@
+{
+  "id": 7,
+  "url": "images/glitter/sparkle/glitter_gold.gif",
+  "name": "Gold",
+  "generatedName": "Muted Orange",
+  "brightness": "1.000",
+  "sortOrder": 19,
+  "hue": 0.158,
+  "colorCodes": [
+    "#FFD269"
+  ],
+  "colorWeights": [
+    0
+  ],
+  "frameCount": 3,
+  "frameRate": 11,
+  "isVariableFramerate": 0,
+  "isAnimated": 1,
+  "hasTransparency": 0,
+  "width": 60,
+  "height": 30,
+  "fileSize": 1512,
+  "category": "sparkle",
+  "isPixelated": 1,
+  "tags": [
+    "Gold",
+    "Light",
+    "Muted",
+    "Warm",
+    "Yellow"
+  ],
+  "searchTerms": []
+}

@@ -1,0 +1,28 @@
+{
+	"env": {
+		"browser": true,
+		"es2022": true,
+		"node": true
+	},
+	"parserOptions": {
+		"ecmaVersion": 2022,
+		"sourceType": "script"
+	},
+	"rules": {
+		"no-unreachable": "error",
+		"no-unused-vars": [
+			"warn",
+			{
+				"args": "none",
+				"varsIgnorePattern": "^(CONFIG|DEBUG_CONFIG|LayerType|ToolType|LAYER_UI_CONFIG|COMMANDS)$"
+			}
+		],
+		"no-dupe-class-members": "error",
+		"no-fallthrough": "error",
+		"no-self-assign": "error"
+	},
+	"ignorePatterns": [
+		"js/vendor/**",
+		"node_modules/**"
+	]
+}

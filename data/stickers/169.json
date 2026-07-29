@@ -1,0 +1,29 @@
+{
+  "id": 169,
+  "name": "Falling Hearts Pink",
+  "filename": "hearts_falling_pink.gif",
+  "url": "images/stickers/sparkle/hearts_falling_pink.gif",
+  "thumbnailUrl": "images/stickers/sparkle/hearts_falling_pink.gif",
+  "category": "sparkle",
+  "attribution": "",
+  "stickerText": null,
+  "tags": [
+    "falling",
+    "hearts",
+    "love",
+    "pink"
+  ],
+  "searchTerms": [],
+  "colorCodes": [],
+  "colorWeights": [],
+  "paletteType": null,
+  "isAnimated": 1,
+  "hasTransparency": 1,
+  "width": 120,
+  "height": 140,
+  "frameCount": 20,
+  "frameRate": 10,
+  "isVariableFramerate": 0,
+  "fileSize": 28018,
+  "sortOrder": 179
+}
