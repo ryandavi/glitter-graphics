@@ -62,16 +62,24 @@
             </ol>
         </li>
         <li>
+            <a href="#settings">Settings</a>
+            <ol>
+                <li><a href="#app-settings">App Settings</a></li>
+                <li><a href="#editing-settings">Editing &amp; Workspace</a></li>
+            </ol>
+        </li>
+        <li>
             <a href="#export">Export</a>
             <ol>
                 <li><a href="#exporting-process">Exporting</a></li>
+                <li><a href="#export-settings">Export Settings</a></li>
                 <li><a href="#instagram-story">Use an Export in an Instagram Story</a></li>
             </ol>
         </li>
         <li>
-            <a href="#etcetera">Etcetera</a>
+            <a href="#tips">Tips &amp; Performance</a>
             <ol>
-                <li><a href="#tips">Tips</a></li>
+                <li><a href="#quick-tips">Quick Tips</a></li>
             </ol>
         </li>
     </ol>
@@ -175,6 +183,16 @@
             Basics
         </h3>
 
+        <div class="figure-wrapper guide-screenshot">
+            <figure>
+                <img src="images/guide/editor-overview.png" alt="Glitter Editor workspace with the Layers panel on the left, artwork canvas in the center, Text Properties on the right, and editing tools around the workspace">
+                <figcaption>
+                    <cite>Editor workspace</cite>
+                    <span class="figure-description">Manage stacking and selection on the left, edit the artwork in the center, and adjust the selected layer on the right. Tools and view controls surround the canvas.</span>
+                </figcaption>
+            </figure>
+        </div>
+
         <div class="guide-subsection">
             <h4 id="tools">Tools</h4>
             <p>Some tools show context-specific options that appear only when certain elements or layers are selected.</p>
@@ -244,7 +262,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Mask Brush (<kbd class="guide-kbd">B</kbd>)</strong> – With a glitter or text layer selected, paint or erase glitter directly on the canvas.</p>
+                    <p><strong>Mask Brush (<kbd class="guide-kbd">B</kbd>)</strong> – Paint or erase the mask of a Glitter Fill layer directly on the canvas. Painting while another layer type is selected creates a separate Glitter Fill layer.</p>
                     <ul>
                         <li>See <a href="#mask-brush">Mask Brush</a> under Glitter for painting modes and brush settings.</li>
                     </ul>
@@ -525,7 +543,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Toggle Bounds</strong> – Show/hide bounding boxes around stickers.</p>
+                    <p><strong>Toggle Bounds</strong> – Outline the canvas boundary and clip artwork that extends beyond it, so the preview shows what is inside the exported canvas.</p>
                 </div>
             </div>
 
@@ -628,7 +646,7 @@
             <p><strong>Effects</strong> are non-destructive — turning one off keeps its settings, and each card has its own <strong>Enabled</strong> toggle. There are two kinds:</p>
             <ul>
                 <li><strong>Canvas effects</strong> apply to the whole Base Image — the <strong>Pixelate</strong> and <strong>Palette</strong> pipeline described below.</li>
-                <li><strong>Layer effects</strong> apply to a single layer — the <strong>Border</strong> and <strong>Shadow</strong> on Sticker, Text, and Shape layers, covered in each layer's own section.</li>
+                <li><strong>Layer effects</strong> apply to a single layer — <strong>Shadow</strong> on Sticker layers, and <strong>Border</strong> and <strong>Shadow</strong> on Text and Shape layers, covered in each layer's own section.</li>
             </ul>
             <p><strong>Reset Effects</strong> disables every effect on the selected canvas or layer and clears those saved settings. Canvas effects run in a fixed pipeline, each stage feeding the next:</p>
 
@@ -928,7 +946,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Invert</strong> – Select everything except the color clicked.</p>
+                    <p><strong>Invert</strong> – Flip the completed layer mask so glitter covers everything except the selected and painted areas.</p>
                 </div>
             </div>
         </div>
@@ -962,7 +980,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Advanced</strong> – Expand for <strong>Scale</strong> (glitter pattern size) plus <strong>Hue</strong>, <strong>Saturation</strong>, and <strong>Brightness</strong> to recolor any glitter swatch without swapping it. Works on fill layers and on the text Fill, Border, and Shadow slots, and matches in the exported GIF.</p>
+                    <p><strong>Sources &amp; Advanced</strong> – Fill slots can use Glitter, Solid, or Gradient. Expand <strong>Advanced</strong> for <strong>Scale</strong> (glitter pattern size), <strong>Hue</strong>, <strong>Saturation</strong>, and <strong>Brightness</strong>, plus texture anchoring and offsets. These controls also appear on the applicable Sticker, Text, Shape, and Canvas Background slots and match in exports.</p>
                 </div>
             </div>
 
@@ -982,7 +1000,17 @@
 
         <div class="guide-subsection">
             <h4 id="mask-brush">Mask Brush</h4>
-            <p>Beyond color selections, use the <strong>Mask Brush</strong> to manually paint or erase exactly where glitter appears — available for glitter fill and text layers.</p>
+            <p>Beyond color selections, use the <strong>Mask Brush</strong> to manually paint or erase exactly where a Glitter Fill layer appears. Text and Shape layers use their own rendered outlines and cannot hold painted masks.</p>
+
+            <div class="figure-wrapper guide-screenshot">
+                <figure>
+                    <img src="images/guide/mask-brush.png" alt="Mask Brush active with a Glitter Fill layer selected in the Layers panel and Brush Settings visible in the properties panel">
+                    <figcaption>
+                        <cite>Mask Brush setup</cite>
+                        <span class="figure-description">Select a Glitter Fill layer, activate Mask Brush, then adjust its tip and stroke controls in Brush Settings.</span>
+                    </figcaption>
+                </figure>
+            </div>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -993,7 +1021,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Click the <strong>Mask Brush</strong> in the toolbar, or press <kbd class="guide-kbd">B</kbd>, to start painting.</p>
+                    <p>Click the <strong>Mask Brush</strong> in the toolbar, or press <kbd class="guide-kbd">B</kbd>, to start painting. If a Glitter Fill layer is selected, the stroke edits that layer. Otherwise, the first painted stroke creates a new Glitter Fill layer. Erasing requires an existing Glitter Fill layer.</p>
                 </div>
             </div>
 
@@ -1387,7 +1415,7 @@
 
         <div class="guide-subsection">
             <h4 id="text-effects">Fill, Border &amp; Shadow</h4>
-            <p>Each part of the text keeps its own source — glitter or solid color, with None also available for the fill.</p>
+            <p>Each part of the text keeps its own source — glitter, solid color, or gradient, with None also available for the fill.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1398,7 +1426,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Fill</strong> – Choose None, Glitter, or Solid. Texture Scale appears for glitter, and Opacity applies to glitter and solid sources.</p>
+                    <p><strong>Fill</strong> – Choose None, Glitter, Solid, or Gradient. Texture Scale appears for glitter, and Opacity applies to visible sources.</p>
                 </div>
             </div>
 
@@ -1411,7 +1439,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Border</strong> – Enable an outline around the text and set its width. Choose Glitter or Solid, then control rounded/hard edges, outside/on-edge/inside placement, and whether the border sits behind or on top of the fill.</p>
+                    <p><strong>Border</strong> – Enable an outline around the text and set its width. Choose Glitter, Solid, or Gradient, then control rounded/hard edges, outside/on-edge/inside placement, and whether the border sits behind or on top of the fill.</p>
                 </div>
             </div>
 
@@ -1424,7 +1452,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Shadow</strong> – Enable a drop shadow and set its X/Y offset. Like the border, it can use its own glitter or a solid color.</p>
+                    <p><strong>Shadow</strong> – Enable a drop shadow and set its X/Y offset. Like the border, it can use its own glitter, solid color, or gradient.</p>
                 </div>
             </div>
 
@@ -1456,7 +1484,7 @@
 
         <div class="guide-subsection">
             <h4 id="create-shape">Draw a Shape</h4>
-            <p>Add clean vector shapes filled with glitter or solid color. The Design gallery shows every shape at once, organized under <strong>Basic Shapes</strong>, <strong>Stars &amp; Bursts</strong>, <strong>Hearts &amp; Flowers</strong>, <strong>Nature &amp; Weather</strong>, <strong>Arrows &amp; Banners</strong>, <strong>Speech &amp; Music</strong>, and <strong>Symbols &amp; Signs</strong>. Choices include polygons, stars, hearts, flowers, weather icons, arrows, speech bubbles, music notes, identity symbols, and common signs.</p>
+            <p>Add clean vector shapes filled with glitter, solid color, or a gradient. The Design gallery shows every shape at once, organized under <strong>Basic Shapes</strong>, <strong>Stars &amp; Bursts</strong>, <strong>Hearts &amp; Flowers</strong>, <strong>Nature &amp; Weather</strong>, <strong>Arrows &amp; Banners</strong>, <strong>Speech &amp; Music</strong>, and <strong>Symbols &amp; Signs</strong>. Choices include polygons, stars, hearts, flowers, weather icons, arrows, speech bubbles, music notes, identity symbols, and common signs.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1487,7 +1515,7 @@
 
         <div class="guide-subsection">
             <h4 id="shape-fill">Fill, Border &amp; Shadow</h4>
-            <p>Each shape has a Fill plus optional Border and Shadow, and every one can be glitter or a solid color.</p>
+            <p>Each shape has a Fill plus optional Border and Shadow, and every one can be glitter, a solid color, or a gradient.</p>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1498,7 +1526,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Fill</strong> – Choose <strong>None</strong>, <strong>Glitter</strong>, or <strong>Solid</strong>. Set the fill to <strong>None</strong> with a Border on to get an <strong>outline</strong> shape. (The same None option on text makes outlined text.)</p>
+                    <p><strong>Fill</strong> – Choose <strong>None</strong>, <strong>Glitter</strong>, <strong>Solid</strong>, or <strong>Gradient</strong>. Set the fill to <strong>None</strong> with a Border on to get an <strong>outline</strong> shape. (The same None option on text makes outlined text.)</p>
                 </div>
             </div>
 
@@ -1511,7 +1539,92 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Border</strong> &amp; <strong>Shadow</strong> – Enable each and pick its own glitter or solid color, width/offset, and opacity. Borders follow the shape's true outline, can be solid or dotted, and expose rounded/hard edges, outside/on-edge/inside placement, plus behind/on-top layering. Open <strong>Advanced</strong> on any slot to recolor its glitter (Hue / Saturation / Brightness).</p>
+                    <p><strong>Border</strong> &amp; <strong>Shadow</strong> – Enable each and pick its own glitter, solid color, or gradient, plus width/offset and opacity. Borders follow the shape's true outline, can be solid or dotted, and expose rounded/hard edges, outside/on-edge/inside placement, plus behind/on-top layering. Open <strong>Advanced</strong> on any slot to recolor its glitter (Hue / Saturation / Brightness).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="guide-section">
+        <h3 id="settings">
+            <span class="icon-wrapper">
+                <svg class="icon">
+                    <use href="#icon-gear"></use>
+                </svg>
+            </span>
+            Settings
+        </h3>
+
+        <div class="guide-subsection">
+            <h4 id="app-settings">App Settings</h4>
+            <p>Open the <strong>gear button</strong> in the main toolbar to change editor-wide preferences. Search by setting name or description to jump straight to a control.</p>
+
+            <div class="figure-wrapper guide-screenshot guide-screenshot-modal">
+                <figure>
+                    <img src="images/guide/app-settings.png" alt="App Settings dialog showing the searchable Interface and Tools and Workspace groups">
+                    <figcaption>
+                        <cite>App Settings</cite>
+                        <span class="figure-description">Interface preferences and editing behavior are grouped separately, with a Reset action for each group.</span>
+                    </figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Interface</strong> – Choose a theme, show or hide contextual hints, control whether Welcome opens at startup, and decide whether destructive actions need confirmation.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Reset</strong> – Reset one settings group or use <strong>Reset All Settings</strong> for interface, editing, brush, panel, and export preferences. Resetting settings does not change the current project or remove uploaded assets.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="editing-settings">Editing &amp; Workspace</h4>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Antialias Edges</strong> – Smooth the one-pixel rendered edge of text and shapes, plus the edges of future strokes on Glitter Fill masks. It does not make Text or Shape layers paintable with the Mask Brush. Brush Softness remains a separate, wider feather.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Scale Borders &amp; Effects</strong> – Scale border widths, dotted spacing, and shadow offsets when Text or Shape layers are resized.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Transform Textures</strong> – Scale glitter texture size with Text and Shape layers. Turn it off to resize the artwork while keeping the texture repeat size unchanged.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Reset Tools</strong> restores saved Brush and Eraser tip, stroke, and pressure controls. <strong>Reset Panels</strong> expands all collapsible property and tool groups.</p>
                 </div>
             </div>
         </div>
@@ -1583,126 +1696,59 @@
                     <p>Click <strong>Save Project</strong> or press <span class="guide-shortcut"><kbd class="guide-kbd">Ctrl</kbd><kbd class="guide-kbd">S</kbd></span>/<span class="guide-shortcut"><kbd class="guide-kbd">Cmd</kbd><kbd class="guide-kbd">S</kbd></span> to download a <strong>.glitter.json</strong> file you can reopen later with all layers, masks, text, shapes, and uploaded stickers intact.</p>
                 </div>
             </div>
+        </div>
 
-            <h4>Export Settings</h4>
+        <div class="guide-subsection">
+            <h4 id="export-settings">Export Settings</h4>
 			<p>Search by setting name or description, or scan the always-visible <strong>Output</strong>, <strong>Playback</strong>, <strong>Quality</strong>, and <strong>Optimization</strong> groups. Optimization is labeled <strong>Advanced</strong>, but its controls are not hidden behind a disclosure. GIF- and MP4-specific controls appear only when their format is active.</p>
-			<div class="guide-item">
-				<div class="guide-item-icon empty"><span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span></div>
-				<div class="guide-item-content"><p><strong>Format</strong> – GIF is available on every supported browser. MP4 appears only when the device supports video encoding and uses the matte color because video does not support transparency.</p></div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon empty"><span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span></div>
-				<div class="guide-item-content"><p><strong>Video Length (MP4)</strong> – Choose <strong>Exact duration</strong> to end at the entered time, even partway through a loop, or <strong>Complete loops</strong> to end after a whole number of animation loops. The estimated video length updates before export.</p></div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon empty"><span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span></div>
-				<div class="guide-item-content"><p><strong>MP4 Quality</strong> – Choose Compact, Standard, or High video bitrate.</p></div>
-			</div>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-					<p><strong>MP4 result:</strong> The result screen previews the video and shows its file size, frame count, duration, and dimensions before you save, open, or share it.</p>
-				</div>
-			</div>
-			<div class="guide-item">
-				<div class="guide-item-icon empty">
-					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
-				</div>
-				<div class="guide-item-content">
-					<p><strong>Watermark</strong> – Add the optional watermark to the exported result.</p>
-                </div>
+
+            <div class="figure-wrapper guide-screenshot guide-screenshot-modal">
+                <figure>
+                    <img src="images/guide/export-settings.png" alt="Export Settings dialog showing search, Output controls, and the beginning of Playback controls">
+                    <figcaption>
+                        <cite>Export Settings</cite>
+                        <span class="figure-description">Start with Output, then move down through Playback, Quality, and Optimization. Search filters all four groups.</span>
+                    </figcaption>
+                </figure>
             </div>
+
             <div class="guide-item">
                 <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Transparency</strong> – Preserve transparent areas.</p>
-                </div>
-            </div>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Matte Color</strong> – When transparency is disabled, it will replace transparent areas with this color.</p>
+                    <p><strong>Output</strong> – Choose GIF or MP4, preserve transparency where supported, set the matte color used behind transparent areas, and optionally add the watermark. MP4 appears only when the device supports video encoding and always uses the matte color because video does not support transparency.</p>
                 </div>
             </div>
 
             <div class="guide-item">
                 <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Color Quality</strong> – Preserve subtle color differences more accurately. Higher quality takes longer to export but does not change the image dimensions.</p>
+                    <p><strong>Playback</strong> – Fallback Frame Time is used only when a source has no usable timing metadata; normal GIF timing is preserved. MP4 can use an exact duration or stop after complete loops, and its estimated duration updates before export.</p>
                 </div>
             </div>
+
             <div class="guide-item">
                 <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Fallback Frame Time</strong> – Used only when an animation source has no usable timing information. Source GIF timing is otherwise preserved.</p>
+                    <p><strong>Quality</strong> – Color Quality preserves subtler differences at the cost of export time. Dithering reduces GIF color banding but is disabled with GIF transparency so transparent pixels remain reliable. MP4 adds Compact, Standard, and High bitrate presets.</p>
                 </div>
             </div>
+
             <div class="guide-item">
                 <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
+                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Frame Control</strong> – Tune how the animation is condensed into GIF frames.</p>
-                    <ul>
-                        <li><strong>Frame Limit</strong> – A target for animation complexity, not its length.</li>
-                        <li><strong>Optimization Goal</strong> – Choose between fine motion and a smaller file.</li>
-                        <li><strong>Smart Frame Reduction</strong> – Combines frames that look the same, without changing playback length.</li>
-                        <li><strong>Keep Fewer Frames</strong> – A manual override to drop more frames.</li>
-                        <li><strong>Motion Detail</strong> – Controls how often faster visual changes are checked.</li>
-                    </ul>
+                    <p><strong>Optimization</strong> – Frame Limit targets animation complexity, Optimization Goal balances motion fidelity against file size, Smart Frame Reduction combines visually identical frames, Keep Fewer Frames applies a manual reduction, and Motion Detail controls how often fast changes are sampled. These controls preserve the animation's playback length.</p>
                 </div>
             </div>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Dithering</strong> – Helps gradients look smoother when GIF's limited color palette blends similar colors together.</p>
-                    <ul>
-                        <li>GIFs can contain up to 256 colors from the 24-bit RGB color space.</li>
-                        <li>Dithering adds controlled noise or patterns to simulate more colors.</li>
-						<li>Dithering is disabled when GIF transparency is active so transparent pixels remain reliable.</li>
-                    </ul>
-                </div>
-            </div>
+
+            <p>After export, the result screen shows file size, frame count, duration, and dimensions before you save, open, or share the file.</p>
         </div>
 
         <div class="guide-subsection">
@@ -1718,11 +1764,6 @@
 					<p>If MP4 is available on the device, choose <strong>Exact duration</strong> and enter the Story length you need, such as 15 seconds, then export and save or share the video. Instagram may recompress uploaded video, which can soften fine glitter texture or small details; use the <strong>High</strong> quality preset if the result needs more detail.</p>
 				</div>
 			</div>
-			<h4>Experimental HTML Scene</h4>
-			<p>On localhost, App Settings can export visible Sticker layers and a transparent, solid, gradient, or animated glitter background as a standalone page, or copy the same scene as an embeddable HTML snippet with scoped CSS. Sticker and glitter paths are preserved by default for easy integration into a site. Turn on <strong>Embed Assets</strong> for portable one-file output; uploaded session-only assets embed automatically. <strong>Match Canvas</strong> reuses the active Canvas Background source. The original Base Image can be embedded separately when needed.</p>
-			<p>Responsive scenes preserve the canvas aspect ratio and proportional sticker positions. Stickers can either scale with the scene for a fixed composition or keep their pixel dimensions while their centers remain proportional. Modal-hero controls provide a minimum height, contain or cover-and-crop fitting, and top, center, or bottom alignment. Glitter backgrounds can repeat in both directions, one direction, or not at all.</p>
-			<p>Each visible sticker can add an optional link, custom alt text, title tooltip, and CSS classes. This metadata stays with the sticker in saved projects and participates in undo history. Glitter fill layers, text, shapes, masks, sticker shadow effects, and Base Image pixel effects remain intentionally omitted.</p>
-
 			<h4>GIF clipboard method</h4>
 
             <div class="guide-item">
@@ -1839,43 +1880,29 @@
         </div>
     </div>
 
-    <!-- ETC -->
+    <!-- TIPS -->
     <div class="guide-section">
-        <h3 id="etcetera">
+        <h3 id="tips">
             <span class="icon-wrapper">
                 <svg class="icon">
                     <use href="#icon-question-circle"></use>
                 </svg>
             </span>
-            Etcetera
+            Tips &amp; Performance
         </h3>
 
         <div class="guide-subsection">
-            <h4 id="tips">Tips</h4>
+            <h4 id="quick-tips">Quick Tips</h4>
             <div class="guide-item">
                 <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Welcome screen</strong> – Open it any time from App Settings. The adjacent switch controls whether it also appears on startup.</p>
-                </div>
-            </div>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Finding and resetting settings</strong> – Search App Settings by setting name, description, or group. App Settings can restore the saved Brush and Eraser controls or expand all collapsed property and tool groups. <strong>Reset All Settings</strong> includes both, along with export and interface preferences, without changing the current project or user uploads.</p>
-                </div>
-            </div>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
-                </div>
-                <div class="guide-item-content">
-                    <p><strong>Antialias Edges</strong> – App Settings can smooth the one-pixel mask edge on text, shapes, and future brush strokes. It is off by default for crisp edges. Brush Softness remains a separate, wider feather, and existing painted strokes keep the raster edges stored in their history.</p>
-                    <p><strong>Transform behavior</strong> – App Settings can scale borders and shadow geometry with resized text and shapes, and can independently scale glitter textures. Turn Transform Textures off to resize artwork while keeping its repeat size unchanged.</p>
-                    <p><strong>Texture position</strong> – Glitter Fill, Canvas Background, sticker Shadow, and text or shape Fill, Border, and Shadow cards include Advanced texture coordinates. Artwork anchoring moves the repeat with movable artwork; Canvas anchoring registers it to the document so separate objects can share a seamless repeat. Offset X and Y shift the selected slot independently.</p>
+                    <p><strong>Selection range</strong> – Adjust Threshold to narrow or widen the range of colors included in a Glitter Fill selection.</p>
                 </div>
             </div>
             <div class="guide-item">
@@ -1887,7 +1914,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Try different threshold values to fine-tune your glitter fill selections.</p>
+                    <p><strong>Layer isolation</strong> – Enable <strong>Show Only Selected Layer</strong> below the preview. It changes only the workspace view, not the export.</p>
                 </div>
             </div>
             <div class="guide-item">
@@ -1899,19 +1926,7 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Enable <strong>Show Only Selected Layer</strong> below the preview to focus on one layer at a time without changing the export.</p>
-                </div>
-            </div>
-            <div class="guide-item">
-                <div class="guide-item-icon empty">
-                    <span class="icon-wrapper sm">
-                        <svg class="icon">
-                            <use href="#icon-minus"></use>
-                        </svg>
-                    </span>
-                </div>
-                <div class="guide-item-content">
-                    <p>Turn off <strong>Auto-Select</strong> when you want to choose a layer in the Layers panel and keep moving that layer even when the pointer passes over other artwork.</p>
+                    <p><strong>Auto-Select</strong> – Turn it off when you want to choose a layer in the Layers panel and keep moving that selection as you drag across other artwork.</p>
                 </div>
             </div>
 
@@ -1924,10 +1939,10 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Adding more layers or animations with differing frame counts will increase render times.</p>
+                    <p><strong>Export performance</strong> – More animated layers—and sources with different frame counts—require more frames to form a smooth shared loop.</p>
                     <ul>
-                        <li>The system figures out a frame sequence that lets all layers loop together smoothly, even if they have different numbers of frames—this can result in many frames and increase the file size. In certain cases, it will try to reduce the number of frames per element (sticker, glitter) to make the animation loop without having to have hundreds of frames.</li>
-                        <li>On some devices, rendering large or intricate designs may impact performance.</li>
+                        <li>Use Export Settings to lower Motion Detail, set a smaller Frame Limit, or choose Keep Fewer Frames.</li>
+                        <li>Large canvases and intricate designs can also take longer on lower-powered devices.</li>
                     </ul>
 
 

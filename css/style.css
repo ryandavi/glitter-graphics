@@ -7628,6 +7628,55 @@ body.modal-open {
   white-space: nowrap;
 }
 
+.modal-content .figure-wrapper:not(.welcome-example-wrapper) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+  margin: var(--spacing-lg) 0;
+}
+.modal-content .figure-wrapper:not(.welcome-example-wrapper) > figure {
+  display: inline-block;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 80%;
+  padding: var(--spacing-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-tertiary);
+}
+.modal-content .figure-wrapper:not(.welcome-example-wrapper) > figure > img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+.modal-content .figure-wrapper:not(.welcome-example-wrapper) > figure > figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+.modal-content .figure-wrapper:not(.welcome-example-wrapper) > figure > figcaption > cite {
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.modal-content .figure-wrapper:not(.welcome-example-wrapper) > figure > figcaption > .figure-description {
+  color: var(--color-text-secondary);
+}
+.modal-content .figure-wrapper:not(.welcome-example-wrapper) > figure > figcaption > .figure-credit {
+  margin-top: var(--spacing-xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  opacity: 0.85;
+}
+
 /* ===== ABOUT MODAL ===== */
 #aboutModal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
@@ -7639,49 +7688,6 @@ body.modal-open {
   display: block;
   margin: 0 auto;
   text-align: center;
-}
-#aboutModal .figure-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: var(--spacing-lg) 0;
-}
-#aboutModal .figure-wrapper > figure {
-  border: 1px solid var(--color-border);
-  background-color: var(--color-bg-tertiary);
-  border-radius: var(--radius-sm);
-  min-width: 100px;
-  max-width: 80%;
-  padding: var(--spacing-md);
-  display: inline-block;
-}
-#aboutModal .figure-wrapper > figure > img {
-  width: 100%;
-  height: auto;
-  image-rendering: pixelated;
-  display: block;
-}
-#aboutModal .figure-wrapper > figure > figcaption {
-  margin-top: var(--spacing-md);
-  font-size: var(--font-size-sm);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  line-height: 1.4;
-}
-#aboutModal .figure-wrapper > figure > figcaption > cite {
-  font-style: normal;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-#aboutModal .figure-wrapper > figure > figcaption > .figure-description {
-  color: var(--color-text-secondary);
-}
-#aboutModal .figure-wrapper > figure > figcaption > .figure-credit {
-  margin-top: var(--spacing-xs);
-  font-size: var(--font-size-xs);
-  color: var(--color-text-tertiary);
-  opacity: 0.85;
 }
 #aboutModal .context {
   font-weight: bold;
@@ -7925,6 +7931,22 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
+}
+#guideModal .guide-content .guide-screenshot {
+  margin: var(--spacing-md) 0;
+}
+#guideModal .guide-content .guide-screenshot > figure {
+  width: 100%;
+  max-width: 100%;
+  padding: var(--spacing-sm);
+  overflow: hidden;
+}
+#guideModal .guide-content .guide-screenshot > figure > img {
+  image-rendering: auto;
+  border-radius: var(--radius-xs);
+}
+#guideModal .guide-content .guide-screenshot.guide-screenshot-modal > figure {
+  max-width: 720px;
 }
 #guideModal .guide-content > .guide-section {
   display: flex;

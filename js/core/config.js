@@ -914,7 +914,7 @@ const LAYER_UI_CONFIG = {
 		addableViaModal: {
 			label: 'Text',
 			icon: 'text',
-			description: 'Mask glitter inside editable text'
+			description: 'Fill editable text with glitter, color, or gradient'
 		},
 		// No layerSettingsSection / 'tool': Selection Settings only applies to
 		// color-picked glitter fills — text layers hide it instead of showing an
@@ -966,7 +966,7 @@ const LAYER_UI_CONFIG = {
 		addableViaModal: {
 			label: 'Shape',
 			icon: 'square',
-			description: 'Fill a shape with glitter or color'
+			description: 'Fill a shape with glitter, color, or gradient'
 		},
 		// Like text: the glitter gallery picks the shared swatch, plus a dedicated
 		// Shape Properties panel. Selection Settings doesn't apply.

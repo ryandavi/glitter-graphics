@@ -1527,6 +1527,63 @@ body.modal-open {
 	}
 }
 
+.modal-content {
+	.figure-wrapper:not(.welcome-example-wrapper) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 0;
+		max-width: 100%;
+		margin: var(--spacing-lg) 0;
+
+		>figure {
+			display: inline-block;
+			box-sizing: border-box;
+			min-width: 0;
+			max-width: 80%;
+			padding: var(--spacing-md);
+			overflow: hidden;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+			background-color: var(--color-bg-tertiary);
+
+			>img {
+				display: block;
+				width: 100%;
+				max-width: 100%;
+				height: auto;
+				image-rendering: pixelated;
+			}
+
+			>figcaption {
+				display: flex;
+				flex-direction: column;
+				gap: var(--spacing-xs);
+				margin-top: var(--spacing-md);
+				font-size: var(--font-size-sm);
+				line-height: 1.4;
+
+				>cite {
+					font-style: normal;
+					font-weight: 600;
+					letter-spacing: 0.01em;
+				}
+
+				>.figure-description {
+					color: var(--color-text-secondary);
+				}
+
+				>.figure-credit {
+					margin-top: var(--spacing-xs);
+					color: var(--color-text-tertiary);
+					font-size: var(--font-size-xs);
+					opacity: 0.85;
+				}
+			}
+		}
+	}
+}
+
 /* ===== ABOUT MODAL ===== */
 #aboutModal {
 
@@ -1546,74 +1603,6 @@ body.modal-open {
 		margin: 0 auto;
 		text-align: center;
 	}
-
-
-
-
-
-
-
-
-
-
-
-	.figure-wrapper {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin: var(--spacing-lg) 0;
-
-		>figure {
-			border: 1px solid var(--color-border);
-			background-color: var(--color-bg-tertiary);
-			border-radius: var(--radius-sm);
-
-			min-width: 100px;
-			max-width: 80%;
-
-			padding: var(--spacing-md);
-			display: inline-block;
-
-
-			>img {
-				width: 100%;
-				height: auto;
-				image-rendering: pixelated;
-				display: block; // removes inline-gap weirdness
-			}
-
-			>figcaption {
-				margin-top: var(--spacing-md);
-				font-size: var(--font-size-sm);
-				display: flex;
-				flex-direction: column;
-				gap: var(--spacing-xs);
-				line-height: 1.4;
-
-				// title / citation
-				>cite {
-					font-style: normal;
-					font-weight: 600;
-					letter-spacing: 0.01em;
-				}
-
-				// descriptive body
-				>.figure-description {
-					color: var(--color-text-secondary);
-				}
-
-				// rights / attribution
-				>.figure-credit {
-					margin-top: var(--spacing-xs);
-					font-size: var(--font-size-xs);
-					color: var(--color-text-tertiary);
-					opacity: 0.85;
-				}
-			}
-		}
-	}
-
-
 
 
 	.context {
@@ -1914,6 +1903,28 @@ body.modal-open {
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-xl);
+
+		.guide-screenshot {
+			margin: var(--spacing-md) 0;
+
+			>figure {
+				width: 100%;
+				max-width: 100%;
+				padding: var(--spacing-sm);
+				overflow: hidden;
+
+				>img {
+					image-rendering: auto;
+					border-radius: var(--radius-xs);
+				}
+			}
+
+			&.guide-screenshot-modal {
+				>figure {
+					max-width: 720px;
+				}
+			}
+		}
 
 		>.guide-section {
 			display: flex;
