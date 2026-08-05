@@ -57,6 +57,7 @@ class HistoryManager {
 
 	async restoreState(state) {
 		this.editor.maskEditor?.handleStateRestore();
+		const previousLayers = this.editor.layers;
 
 		// Restore canvas dimensions + base image FIRST, before paint/layers: the
 		// paint snapshots referenced below were captured at their own canvas size,
@@ -70,15 +71,20 @@ class HistoryManager {
 		// here — the full UI refresh at the end of this method repaints the
 		// gallery in browse mode.
 		this.editor.pickers?.closeAll();
-		this.editor.layers = [];
+		const restoredLayers = [];
 
 		for (const layerData of state.layers) {
 			const restoredLayer = await this.editor.layerManager.deserializeLayer(layerData);
 			if (restoredLayer) {
-				this.editor.layers.push(restoredLayer);
+				restoredLayers.push(restoredLayer);
 			}
 		}
 
+		// Keep the current layer collection renderable across async font/image
+		// preparation, then commit the restored collection in one step.
+		await this.editor.glitterManager?.ensureLayersPreviewAssetsReady(restoredLayers);
+		this.editor.glitterManager?.reconcileHistoryVisualCaches(previousLayers, restoredLayers);
+		this.editor.layers = restoredLayers;
 		this.editor.glitterManager?.restorePaintState(this.editor.layers);
 		this.editor.layerManager.restoreSelectionState(state.activeLayerId, state.selectedLayerIds);
 

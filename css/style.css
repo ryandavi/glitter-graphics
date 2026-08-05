@@ -1144,10 +1144,6 @@ select {
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-textarea::-moz-placeholder, input[type=email]::-moz-placeholder, input[type=password]::-moz-placeholder, input[type=url]::-moz-placeholder, input[type=text]::-moz-placeholder, input[type=number]::-moz-placeholder, input[type=search]::-moz-placeholder, select::-moz-placeholder {
-  color: var(--color-text-tertiary);
-  opacity: 1;
-}
 textarea::placeholder,
 input[type=email]::placeholder,
 input[type=password]::placeholder,
@@ -1483,8 +1479,7 @@ input[type=range] {
   display: block;
   width: 100%;
   height: var(--control-height);
-  -moz-appearance: none;
-       appearance: none;
+  appearance: none;
   -webkit-appearance: none;
   background: transparent !important;
   border: 0;
@@ -2374,6 +2369,7 @@ input[type=range]:disabled {
 .toolbar {
   width: var(--toolbar-width);
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   border-right: 1px solid var(--color-border);
   display: flex;
@@ -2488,6 +2484,7 @@ input[type=range]:disabled {
   display: flex;
   flex-direction: column;
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
 }
 .image-container > .image-dropzone-wrapper > #imageUpload {
@@ -2599,6 +2596,7 @@ input[type=range]:disabled {
   flex-direction: column;
   overflow: hidden;
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
 }
 .layers-section > .section-header {
@@ -2843,6 +2841,7 @@ input[type=range]:disabled {
 
 .section {
   /* Section Headers */
+  /* Collapsible Section */
 }
 .section > .section-header {
   position: relative;
@@ -2949,12 +2948,10 @@ input[type=range]:disabled {
   opacity: var(--disabled-opacity);
   cursor: not-allowed;
 }
-.section {
-  /* Collapsible Section */
-}
 .section.collapsible-section {
   border-top: 1px solid var(--color-border);
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   flex-shrink: 0;
 }
@@ -3228,9 +3225,7 @@ input[type=range]:disabled {
   display: none;
 }
 .glitter-search .active-filter-summary-chip {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
@@ -3568,6 +3563,7 @@ body.no-document .main-content > .design-panel {
   gap: var(--spacing-sm);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -3734,6 +3730,7 @@ body.mask-editing .sticker-element {
   transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -3904,6 +3901,7 @@ body.mask-editing .sticker-element {
   max-width: 300px;
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -4057,6 +4055,7 @@ body.mask-editing .sticker-element {
   cursor: pointer;
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -4074,8 +4073,7 @@ body.mask-editing .sticker-element {
   display: grid;
   grid-template-columns: var(--icon-size-xs) minmax(0, 1fr);
   align-items: center;
-  -moz-column-gap: var(--spacing-sm);
-       column-gap: var(--spacing-sm);
+  column-gap: var(--spacing-sm);
   padding: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
@@ -5241,8 +5239,7 @@ body.mask-editing .sticker-element {
 .auto-glitter-settings-section .auto-glitter-choice img {
   width: 100%;
   height: 100%;
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   image-rendering: pixelated;
 }
 .auto-glitter-settings-section .auto-glitter-footer-group .auto-glitter-actions > button {
@@ -5268,6 +5265,7 @@ body.mask-editing .sticker-element {
   transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -5549,10 +5547,6 @@ body.tool-select .preview-canvas {
   min-width: unset;
   padding-inline: var(--spacing-sm);
   font-size: var(--font-size-base);
-}
-.sticker-position-group .input-group > input[type=number]:-moz-read-only {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 .sticker-position-group .input-group > input[type=number]:read-only {
   opacity: 0.6;
@@ -5911,7 +5905,6 @@ body.tool-select .preview-canvas {
   align-items: flex-end;
 }
 .setting-column button.btn-text {
-  width: -moz-fit-content;
   width: fit-content;
   padding: 0;
   text-align: right;
@@ -5926,9 +5919,7 @@ body.tool-select .preview-canvas {
   color: var(--color-text-primary);
   font-weight: initial;
   cursor: pointer;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
 }
 .checkbox-group > input[type=checkbox] {
   position: absolute;
@@ -6109,20 +6100,17 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   image-rendering: pixelated;
   -webkit-user-select: none;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
   -webkit-user-drag: none;
 }
 .asset-options.stickers-options .asset-grid > .asset-option {
   background: var(--color-bg-tertiary);
 }
 .asset-options.stickers-options .asset-grid > .asset-option > img {
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   padding: var(--spacing-xs);
 }
 .asset-options.stickers-options .asset-grid > .asset-option.animated::after {
@@ -6239,8 +6227,7 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-image.category-card-glitter-bg {
@@ -6351,8 +6338,7 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-info-header .asset-info-thumbnail.glitter-bg {
@@ -6361,8 +6347,7 @@ body.tool-select .preview-canvas {
   image-rendering: pixelated;
 }
 .asset-info-header .asset-info-thumbnail.base-image-thumbnail > img {
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   image-rendering: auto;
 }
 .asset-info-header .asset-info-details {
@@ -6401,9 +6386,7 @@ body.tool-select .preview-canvas {
   font-weight: 500;
   line-height: 1.2;
   text-overflow: ellipsis;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
 }
 .asset-info-header .asset-info-details .asset-info-badges .asset-info-badge.badge-variable-fps {
   border-color: var(--color-warning-border);
@@ -6453,6 +6436,7 @@ body.modal-open {
   padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   opacity: 0;
   transition: opacity var(--transition-base);
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
   backdrop-filter: blur(var(--modal-backdrop-blur));
 }
 .modal-overlay.visible {
@@ -6573,6 +6557,8 @@ body.modal-open {
   column-gap: 0.5em;
   align-items: start;
   padding: var(--spacing-2xs);
+  /* main content (link) */
+  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li a {
   color: var(--color-text-secondary);
@@ -6587,14 +6573,8 @@ body.modal-open {
   grid-column: 1;
   align-self: start;
 }
-.modal-overlay > .modal-content > .modal-body .toc > ol > li {
-  /* main content (link) */
-}
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > :not(ol) {
   grid-column: 2;
-}
-.modal-overlay > .modal-content > .modal-body .toc > ol > li {
-  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol {
   grid-column: 2;
@@ -6711,9 +6691,7 @@ body.modal-open {
   font-weight: 600;
   line-height: 1.4;
   overflow-wrap: anywhere;
-  -webkit-user-select: text;
-     -moz-user-select: text;
-          user-select: text;
+  user-select: text;
 }
 #confirmationModal .confirmation-facts {
   display: grid;
@@ -6986,9 +6964,7 @@ body.modal-open {
 }
 #newCanvasModal .blank-image-grid .blank-image-option {
   min-width: 0;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   background: var(--color-bg-tertiary);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -7097,8 +7073,7 @@ body.modal-open {
   pointer-events: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 #exportPreviewModal .export-preview-instructions {
   display: block;
@@ -7447,8 +7422,7 @@ body.modal-open {
   display: block;
   width: 100%;
   height: 120px;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 #welcomeModal .welcome-example-wrapper > figure > figcaption {
@@ -7496,8 +7470,7 @@ body.modal-open {
   font-size: var(--font-size-sm);
   cursor: pointer;
   -webkit-user-select: none;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 #welcomeModal .welcome-checkbox > input[type=checkbox] {
   position: absolute;
@@ -7627,6 +7600,87 @@ body.modal-open {
   color: var(--color-text-tertiary);
   white-space: nowrap;
 }
+#welcomeModal .version-history-current,
+#aboutModal .version-history-current {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+#welcomeModal .version-history-image,
+#aboutModal .version-history-image {
+  margin-top: var(--spacing-md);
+}
+#welcomeModal .version-history-image > img,
+#aboutModal .version-history-image > img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+#welcomeModal .version-history-feature + .version-history-feature,
+#aboutModal .version-history-feature + .version-history-feature {
+  margin-top: var(--spacing-xs);
+}
+#welcomeModal .version-history-badge,
+#aboutModal .version-history-badge {
+  display: inline-block;
+  margin-right: var(--spacing-xs);
+  padding: 0 var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: baseline;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+#welcomeModal .version-history-badge.is-added,
+#aboutModal .version-history-badge.is-added {
+  color: var(--color-success);
+}
+#welcomeModal .version-history-badge.is-changed,
+#aboutModal .version-history-badge.is-changed {
+  color: var(--color-accent);
+}
+#welcomeModal .version-history-badge.is-fixed,
+#aboutModal .version-history-badge.is-fixed {
+  color: var(--color-warning);
+}
+#welcomeModal .version-history-guide-link,
+#aboutModal .version-history-guide-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#welcomeModal .version-history-guide-link:hover, #welcomeModal .version-history-guide-link:focus-visible,
+#aboutModal .version-history-guide-link:hover,
+#aboutModal .version-history-guide-link:focus-visible {
+  color: var(--color-text-primary);
+}
+#welcomeModal .version-history-format-note,
+#aboutModal .version-history-format-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.support-note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.export-support-note {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
 
 .modal-content .figure-wrapper:not(.welcome-example-wrapper) {
   display: flex;
@@ -7678,6 +7732,9 @@ body.modal-open {
 }
 
 /* ===== ABOUT MODAL ===== */
+#aboutModal {
+  /* Highlight animation for references */
+}
 #aboutModal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
 }
@@ -7743,9 +7800,6 @@ body.modal-open {
 #aboutModal h5 + ul,
 #aboutModal h5 + ol {
   margin-top: var(--spacing-xs);
-}
-#aboutModal {
-  /* Highlight animation for references */
 }
 #aboutModal .highlight {
   background: var(--theme-glitter-image) repeat;
@@ -8368,6 +8422,7 @@ body.modal-open {
     padding: var(--spacing-sm);
     background: var(--color-bg-translucent);
     border: 1px solid var(--color-border);
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     backdrop-filter: blur(var(--glass-blur));
     border-radius: var(--radius-sm);
     padding: var(--spacing-sm);
@@ -8812,4 +8867,4 @@ body.modal-open {
   .mobile-only {
     display: block !important;
   }
-}/*# sourceMappingURL=style.css.map */
+}

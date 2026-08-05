@@ -23,7 +23,10 @@ class MobileManager {
 		this.drawerCloseElement = null;
 		this.drawerCloseListener = null;
 
+		// index.html ships `mobile-no-image` on <body> so the empty-document mobile
+		// layout is correct on first paint; drop it when we boot on desktop.
 		if (this.isMobile) this.init();
+		else document.body.classList.remove('mobile-no-image');
 		this.setupResizeObserver();
 		this.setupImageEvents();
 	}
@@ -64,8 +67,17 @@ class MobileManager {
 	}
 
 	hasLayerSettings(layer) {
-		const sections = layer && LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections;
+		const sections = this.getLayerSettingsKeys(layer);
 		return Boolean(sections?.some((key) => this.settingsRegistry[key]?.element));
+	}
+
+	getLayerSettingsKeys(layer) {
+		if (!layer) return [];
+		const keys = [...(LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections || [])];
+		if (this.editor.currentTool === ToolType.COLOR_PICKER && layer.type === LayerType.GLITTER_FILL) {
+			keys.unshift('tool');
+		}
+		return keys;
 	}
 
 	cacheSettingsSections() {
@@ -265,7 +277,7 @@ class MobileManager {
 		const wasEditOpen = this.activeDrawer === 'edit';
 		this.returnSettingsSections();
 		let hasSettings = false;
-		const keys = options.keys || LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections || [];
+		const keys = options.keys || this.getLayerSettingsKeys(layer);
 		keys.forEach((key) => {
 			const section = this.settingsRegistry[key]?.element;
 			if (!section) return;
@@ -306,6 +318,17 @@ class MobileManager {
 
 	returnBrushSection() {
 		this.returnSettingsSection('brush');
+	}
+
+	syncToolSettingsPlacement() {
+		if (!this.isMobile) return;
+		const layer = this.editor.layerManager.getActiveLayer();
+		if (this.activeDrawer === 'edit' && layer) {
+			this.prepareSettings(layer, { preserveDrawer: true });
+			return;
+		}
+		this.returnSettingsSection('tool');
+		this.syncEditAvailability();
 	}
 
 	syncBrushSettingsPlacement() {

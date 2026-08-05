@@ -107,6 +107,8 @@ isLayerContentLocked(layer) {
 			}
 		}
 
+		this.syncToolSettingsSectionVisibility(layer);
+
 		if (this.syncCollapsibleSections) {
 			this.syncCollapsibleSections(this.getPreferredDesignSection(layer));
 		}
@@ -129,6 +131,19 @@ isLayerContentLocked(layer) {
 		if ((layer && layer.type !== LayerType.BASE_IMAGE) || hasMultiSelection || !this.originalImage) {
 			this.hideCanvasResizePreview();
 		}
+	}
+
+,
+	syncToolSettingsSectionVisibility(layer = this.layerManager?.getActiveLayer()) {
+		const section = document.getElementById('layerSettingsSection');
+		if (!section) return;
+		const visible = Boolean(
+			this.originalImage
+			&& !this.layerManager?.hasMultiSelection?.()
+			&& this.currentTool === ToolType.COLOR_PICKER
+			&& layer?.type === LayerType.GLITTER_FILL
+		);
+		section.classList.toggle('visible', visible);
 	}
 
 	// Shared tail end of "create a layer via a tool" (Text/Shape click-to-create):

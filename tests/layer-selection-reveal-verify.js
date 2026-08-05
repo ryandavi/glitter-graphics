@@ -69,6 +69,71 @@ async function main() {
 		calls = await page.evaluate(() => window.layerRevealCalls);
 		assert.strictEqual(calls.at(-1)?.layerId, String(ids.shapeId), 'an open mobile Layers drawer reveals the canvas selection');
 
+		const sourceNavigation = await page.evaluate(({ baseId, shapeId }) => {
+			const editor = window.editor;
+			const glitter = editor.glitterManager.createLayer();
+			const sticker = editor.stickerManager.createLayer();
+			const text = editor.textGlitterManager.createLayer();
+			[glitter, sticker, text].forEach((layer) => editor.layerManager.insertLayer(layer));
+			sticker.locked = true;
+			editor.layerManager.renderLayersList();
+
+			const button = document.getElementById('layersBarGoToSelected');
+			const revealCalls = [];
+			window.revealAssetBrowser = (_editor, manager, assetId) => {
+				revealCalls.push({
+					manager: manager === editor.stickerManager ? 'sticker' : 'glitter',
+					assetId
+				});
+			};
+
+			const results = {};
+			[
+				['glitter', glitter.id],
+				['sticker', sticker.id],
+				['text', text.id],
+				['shape', shapeId]
+			].forEach(([name, layerId]) => {
+				editor.layerManager.setActiveLayer(layerId);
+				results[name] = { disabled: button.disabled };
+				button.click();
+			});
+
+			editor.layerManager.setActiveLayer(baseId);
+			results.base = { disabled: button.disabled };
+			editor.layerManager.setSelection([shapeId, text.id], { activeLayerId: text.id });
+			results.multi = { disabled: button.disabled };
+			return { results, revealCalls };
+		}, ids);
+
+		assert.deepStrictEqual(sourceNavigation.results, {
+			glitter: { disabled: false },
+			sticker: { disabled: false },
+			text: { disabled: false },
+			shape: { disabled: false },
+			base: { disabled: true },
+			multi: { disabled: true }
+		});
+		assert.deepStrictEqual(
+			sourceNavigation.revealCalls.map(({ manager }) => manager),
+			['glitter', 'sticker', 'glitter', 'glitter'],
+			'each source-bearing layer type opens its configured asset browser'
+		);
+
+		const filteredReveal = await page.evaluate(async () => {
+			const manager = window.editor.glitterManager;
+			const asset = manager.content[0];
+			manager.activeFilters.search = 'source-that-cannot-match';
+			manager.activeFilters.categories.add('missing-category');
+			await manager.browser.navigateToItem(asset.id);
+			return {
+				search: manager.activeFilters.search,
+				categoryCount: manager.activeFilters.categories.size,
+				found: Boolean(manager.browser.elements.itemGrid.querySelector(`[data-id="${asset.id}"]`))
+			};
+		});
+		assert.deepStrictEqual(filteredReveal, { search: '', categoryCount: 0, found: true }, 'source navigation clears filters that hide the asset');
+
 		console.log('layer selection reveal checks passed');
 	} finally {
 		await browser.close();

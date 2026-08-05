@@ -1004,9 +1004,12 @@ class GlitterEditor {
 			}
 		}
 
+		this.syncToolSettingsSectionVisibility?.(layer);
+
 		// On mobile the brush settings section is tool-scoped, so relocate it into
 		// the settings drawer while brushing instead of letting it show in the
 		// Design drawer (it keeps the .visible class set/cleared just above).
+		this.mobileManager?.syncToolSettingsPlacement?.();
 		this.mobileManager?.syncBrushSettingsPlacement?.();
 	}
 

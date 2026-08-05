@@ -23,6 +23,10 @@ class ProjectSerializer {
 		return {
 			format: ProjectSerializer.FORMAT,
 			version: ProjectSerializer.FORMAT_VERSION,
+			// Which editor build wrote the file. Optional with a sensible default, so
+			// per the rules above this does not bump FORMAT_VERSION. Readers ignore it;
+			// it exists so a project someone sends in can be traced to a release.
+			appVersion: CONFIG.app.version,
 			savedAt: new Date().toISOString(),
 			name: this.editor.projectName || '',
 			canvas: {

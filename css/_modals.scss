@@ -1525,6 +1525,81 @@ body.modal-open {
 			white-space: nowrap;
 		}
 	}
+
+	.version-history-current {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.version-history-image {
+		margin-top: var(--spacing-md);
+
+		>img {
+			display: block;
+			max-width: 100%;
+			height: auto;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+		}
+	}
+
+	.version-history-feature + .version-history-feature {
+		margin-top: var(--spacing-xs);
+	}
+
+	// Change-type badge. Colors come from the shared status tokens so the three
+	// types stay legible across every interface theme.
+	.version-history-badge {
+		display: inline-block;
+		margin-right: var(--spacing-xs);
+		padding: 0 var(--spacing-xs);
+		border-radius: var(--radius-sm);
+		font-size: var(--font-size-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		vertical-align: baseline;
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-secondary);
+
+		&.is-added { color: var(--color-success); }
+		&.is-changed { color: var(--color-accent); }
+		&.is-fixed { color: var(--color-warning); }
+	}
+
+	.version-history-guide-link {
+		padding: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		font-size: var(--font-size-xs);
+		color: var(--color-accent);
+		text-decoration: underline;
+		cursor: pointer;
+		white-space: nowrap;
+
+		&:hover,
+		&:focus-visible { color: var(--color-text-primary); }
+	}
+
+	.version-history-format-note {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+	}
+}
+
+// Optional support link. Deliberately quiet: it sits at the end of content the
+// reader already chose to open, and never competes with a primary action.
+.support-note {
+	font-size: var(--font-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.export-support-note {
+	margin-top: var(--spacing-md);
+	padding-top: var(--spacing-md);
+	border-top: 1px solid var(--color-border);
+	font-size: var(--font-size-xs);
+	text-align: center;
 }
 
 .modal-content {

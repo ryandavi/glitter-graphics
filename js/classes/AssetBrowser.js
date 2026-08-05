@@ -169,6 +169,12 @@ async navigateToItem(itemId) {
 		return;
 	}
 
+	// Source navigation must reveal the requested asset even when the current
+	// gallery filters exclude it.
+	if (!this.getFilteredItems().includes(item)) {
+		this.contentManager.clearFilters({ refreshBrowser: false });
+	}
+
 	// Navigate to the category
 	this.setState('CATEGORY_DETAIL', item.category);
 

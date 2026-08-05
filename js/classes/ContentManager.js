@@ -10,6 +10,7 @@ class ContentManager {
 		this.content = [];
 		this.userContent = [];
 		this.assetDetailPromises = new Map();
+		this.assetImageReadyPromises = new Map();
 		this.assetDetailBasePath = null;
 
 		this.browser = null;
@@ -116,6 +117,30 @@ class ContentManager {
 
 	scrollToContent(contentId) {
 		this.browser.navigateToItem(contentId);
+	}
+
+	ensureAssetImageReady(asset) {
+		if (!asset?.url) return Promise.resolve();
+		const existing = this.assetImageReadyPromises.get(asset.url);
+		if (existing) return existing;
+
+		const promise = new Promise((resolve) => {
+			const image = new Image();
+			image.decoding = 'async';
+			image.onload = async () => {
+				try {
+					await image.decode?.();
+				} catch (_error) {
+					// A loaded animated image can still reject decode(); the
+					// browser cache is warm enough to make the visible swap.
+				}
+				resolve();
+			};
+			image.onerror = resolve;
+			image.src = asset.url;
+		});
+		this.assetImageReadyPromises.set(asset.url, promise);
+		return promise;
 	}
 
 	normalizeBooleanValue(value, fallback = false) {
@@ -639,7 +664,7 @@ class ContentManager {
 		summary.hidden = filters.length === 0;
 	}
 
-	clearFilters() {
+	clearFilters(options = {}) {
 		// Clear all filter values
 		for (let key in this.activeFilters) {
 			const val = this.activeFilters[key];
@@ -666,8 +691,10 @@ class ContentManager {
 		this.syncFilterControls();
 
 		// Re-render and update button state
-		this.browser.handleSearch('');
-		this.browser.setState('CATEGORY_LIST');
+		if (options.refreshBrowser !== false) {
+			this.browser.handleSearch('');
+			this.browser.setState('CATEGORY_LIST');
+		}
 
 		this.updateClearFiltersButton();
 	}

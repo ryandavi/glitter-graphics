@@ -1,3 +1,112 @@
+// Release history, newest first.
+//
+// `id` is the permanent identity of a release: it is written to localStorage as
+// `glitterEditor_welcomeLastSeenRelease` and compared against `CONFIG.app.currentRelease`
+// to decide whether returning visitors see the welcome modal again. Never edit the `id`
+// of a release that has shipped — every visitor would be shown the modal a second time.
+// Dates may be edited freely because nothing keys off them.
+//
+// Each feature is `{ type, text }` where `type` is 'added', 'changed', or 'fixed'.
+// `guide` is an optional element id in modals/guide.html; supplying it renders a link
+// that opens the guide at that section. `projectFormat` records the ProjectSerializer
+// FORMAT_VERSION a release reads and writes, so format changes are traceable from the
+// changelog. `unreleased: true` stages an entry without publishing it — it is hidden
+// from the version history and skipped when resolving `currentRelease`.
+const RELEASES = [
+	{
+		id: 'v0.3.0',
+		version: '0.3.0',
+		name: 'Export and Projects Update',
+		date: '2026-08-01',
+		dateLabel: 'August 1, 2026',
+		projectFormat: 1,
+		/* image: {
+			src: 'images/etc/preview-image.gif',
+			alt: 'Animated glitter graphic made in the editor'
+		}, */
+		summary: 'Added saveable projects, video export, generated glitter, and canvas-wide effects.',
+		features: [
+			{ type: 'added', text: 'Save and reopen projects as .glitter.json files, keeping every layer, mask, and custom sticker editable.', guide: 'export' },
+			{ type: 'added', text: 'Added MP4 export alongside animated GIF.', guide: 'exporting-process' },
+			{ type: 'added', text: 'Added Auto Glitter, which reads an image and builds glitter layers from it. The results stay editable, and you can reopen a batch to adjust it.', guide: 'auto-glitter' },
+			{ type: 'added', text: 'Added canvas effects that apply to the whole document, including shimmer and pixel effects.', guide: 'canvas-effects' },
+			{ type: 'added', text: 'Added a Base Background layer that fills the canvas behind everything with a glitter, gradient, or image.', guide: 'working-with-layers' },
+			{ type: 'added', text: 'Added gradient fills for text and shapes, with multi-stop colors and adjustable angle.', guide: 'shape-fill' },
+			{ type: 'added', text: 'Added the Shape gallery for browsing and placing preset shapes.', guide: 'create-shape' },
+			{ type: 'added', text: 'Added multi-select, so you can move, scale, and align several layers together.', guide: 'selection-alignment' },
+			{ type: 'added', text: 'Added alignment and distribution tools for arranging layers on the canvas.', guide: 'selection-alignment' },
+			{ type: 'added', text: 'Added interface themes, including a light theme.', guide: 'app-settings' },
+			{ type: 'added', text: 'Added document scaling, so you can resize the whole composition and everything on it at once.', guide: 'canvas-view-options' },
+			{ type: 'added', text: 'Added color adjustment for stickers, letting you recolor artwork to match a palette.', guide: 'add-stickers' },
+			{ type: 'added', text: 'Added antialiased mask edges as an editing setting.', guide: 'editing-settings' },
+			{ type: 'added', text: 'Added search and filtering across the sticker, glitter, and shape galleries.', guide: 'add-stickers' },
+			{ type: 'added', text: 'Added optimization details to the export preview, showing how frames were reduced and how the loop was closed.', guide: 'export-settings' },
+			{ type: 'changed', text: 'Rebuilt the settings sidebar so each layer type shows only its own controls, with a context toolbar above the canvas for the tool in use.', guide: 'basics' },
+			{ type: 'changed', text: 'Rebuilt layer transforms with steadier corner scaling and consistent behavior across every layer type.', guide: 'working-with-layers' },
+			{ type: 'changed', text: 'Improved mobile gestures, drawers, and layer reordering.', guide: 'mobile' },
+			{ type: 'changed', text: 'Sped up gallery browsing by loading asset indexes on demand.' },
+			{ type: 'fixed', text: 'Fixed animated stickers flickering in the preview.' }
+		]
+	},
+	{
+		id: 'v0.2.0',
+		version: '0.2.0',
+		name: 'Creative Tools Update',
+		date: '2026-07-01',
+		dateLabel: 'July 1, 2026',
+		summary: 'Expanded the editor beyond color-selected glitter fills with painted masks, text, and shapes.',
+		features: [
+			{ type: 'added', text: 'Added the Mask Brush for painting and erasing glitter masks by hand, with adjustable size, spacing, and smoothing.', guide: 'mask-brush' },
+			{ type: 'added', text: 'Added editable Text layers with typography, layout, fill, border, and shadow controls.', guide: 'text' },
+			{ type: 'added', text: 'Added ten self-hosted display fonts for text layers.', guide: 'text-typography' },
+			{ type: 'added', text: 'Added point text and area text, so a text layer can either grow with what you type or wrap inside a box you draw.', guide: 'create-text' },
+			{ type: 'added', text: 'Added editable Shape layers with glitter, solid, and gradient effects.', guide: 'shapes' },
+			{ type: 'added', text: 'Added canvas size controls for changing the document dimensions after you start.', guide: 'canvas-view-options' },
+			{ type: 'added', text: 'Added a gallery picker for choosing a glitter, replacing the small swatch list.', guide: 'select-colors' },
+			{ type: 'added', text: 'Added confirmation prompts before actions that discard work.' },
+			{ type: 'changed', text: 'Unified mouse and touch input, so pointer behavior is the same on desktop and mobile.', guide: 'mobile' },
+			{ type: 'changed', text: 'Renamed the Color Picker tool to Color Fill to match what it does.', guide: 'tools' }
+		]
+	},
+	{
+		id: 'v0.1.1',
+		version: '0.1.1',
+		name: 'Touch and Detail Update',
+		date: '2026-02-01',
+		dateLabel: 'February 1, 2026',
+		summary: 'Reworked touch handling and surfaced more information about the archived assets.',
+		features: [
+			{ type: 'added', text: 'Added a welcome screen introducing the editor to first-time visitors.' },
+			{ type: 'added', text: 'Added asset details for stickers and glitters, including original source, dimensions, and frame rate.', guide: 'add-stickers' },
+			{ type: 'added', text: 'Added transform handles for scaling and rotating stickers directly on the canvas.', guide: 'working-with-layers' },
+			{ type: 'changed', text: 'Rewrote touch handling so tapping, dragging, pinch-zoom, and transforms behave predictably on phones and tablets.', guide: 'mobile' },
+			{ type: 'changed', text: 'Replaced numeric inputs with sliders throughout the settings panels.' },
+			{ type: 'fixed', text: 'Fixed custom sticker uploads rejecting valid files.', guide: 'add-stickers' }
+		]
+	},
+	{
+		id: 'v0.1.0',
+		version: '0.1.0',
+		name: 'Alpha Release',
+		date: '2026-01-01',
+		dateLabel: 'January 1, 2026',
+		summary: 'The first public release of the layer-based glitter graphics editor.',
+		features: [
+			{ type: 'added', text: 'Added Glitter Fill layers for applying animated fills to selected image colors.', guide: 'create-glitter' },
+			{ type: 'added', text: 'Added Sticker layers and a browser for the archived sticker collection.', guide: 'stickers' },
+			{ type: 'added', text: 'Added custom sticker uploads for bringing in your own artwork.', guide: 'add-stickers' },
+			{ type: 'added', text: 'Added image loading, preset base images, and blank canvas creation.', guide: 'getting-started' },
+			{ type: 'added', text: 'Added layer management with move, scale, rotate, duplicate, reorder, and visibility.', guide: 'working-with-layers' },
+			{ type: 'added', text: 'Added animated GIF export with transparency options, size warnings, and automatic frame reduction.', guide: 'export-settings' },
+			{ type: 'added', text: 'Added pan and zoom with a transparency checkerboard for seeing through the canvas.', guide: 'canvas-view-options' },
+			{ type: 'added', text: 'Added a mobile layout with drawer panels and touch controls.', guide: 'mobile' },
+			{ type: 'added', text: 'Added the built-in guide and contextual hints.', guide: 'getting-started' }
+		]
+	}
+];
+
+const PUBLISHED_RELEASES = RELEASES.filter((release) => !release.unreleased);
+
 function deepFreeze(value) {
 	if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value;
 	Object.values(value).forEach((entry) => deepFreeze(entry));
@@ -11,35 +120,10 @@ const CONFIG = deepFreeze({
 	},
 	app: {
 		siteName: 'ryandavi.com glitter editor',
-		currentRelease: '2026-07-01',
-		releases: [
-			{
-				id: '2026-07-01',
-				version: '0.2.0',
-				name: 'Creative Tools Update',
-				date: '2026-07-01',
-				dateLabel: 'July 1, 2026',
-				summary: 'Expanded the editor beyond color-selected glitter fills with painted masks and editable generated layers.',
-				features: [
-					'Added the Mask Brush for painting and erasing glitter masks.',
-					'Added editable Text layers with typography, layout, fill, border, and shadow controls.',
-					'Added editable Shape layers with glitter, solid, and gradient effects.'
-				]
-			},
-			{
-				id: '2026-01-01',
-				version: '0.1.0',
-				name: 'Alpha Release',
-				date: '2026-01-01',
-				dateLabel: 'January 1, 2026',
-				summary: 'The first public release of the layer-based glitter graphics editor.',
-				features: [
-					'Added Glitter Fill layers for applying animated fills to selected image colors.',
-					'Added Sticker layers and the archived sticker browser.',
-					'Added image loading, layer transforms, animation preview, and animated GIF export.'
-				]
-			}
-		],
+		// Derived from the release list so they can never drift apart.
+		version: PUBLISHED_RELEASES[0].version,
+		currentRelease: PUBLISHED_RELEASES[0].id,
+		releases: PUBLISHED_RELEASES,
 		limits: {
 			maxLayers: 25,
 			historyLimit: 30
@@ -833,8 +917,8 @@ const LAYER_UI_CONFIG = {
 			icon: 'glitter',
 			description: 'Apply glitter fill to base image'
 		},
-		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection', 'layerSettingsSection'],
-		mobileSettingsSections: ['tool', 'glitter'],
+		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection'],
+		mobileSettingsSections: ['glitter'],
 		panelMode: 'glitter',
 		elementClass: 'glitter-element',
 		managerKey: 'glitterManager',

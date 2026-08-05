@@ -76,7 +76,7 @@ updateOrientationButtons(width, height) {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=5',
+				externalContentUrl: 'modals/about.html?v=8',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -196,33 +196,104 @@ updateOrientationButtons(width, height) {
 ,
 renderVersionHistory(root, limit = null) {
 	const releases = limit == null ? CONFIG.app.releases : CONFIG.app.releases.slice(0, limit);
-	root.querySelectorAll('[data-version-history]').forEach((history) => {
-		history.replaceChildren(...releases.map((release) => {
-			const entry = document.createElement('section');
-			entry.className = 'version-history-entry';
 
-			const header = document.createElement('div');
-			header.className = 'version-history-header';
-			const title = document.createElement('h4');
-			title.textContent = `v${release.version} — ${release.name}`;
-			const date = document.createElement('time');
-			date.dateTime = release.date;
-			date.textContent = release.dateLabel;
-			header.append(title, date);
-
-			const summary = document.createElement('p');
-			summary.textContent = release.summary;
-			const features = document.createElement('ul');
-			features.append(...release.features.map((feature) => {
-				const item = document.createElement('li');
-				item.textContent = feature;
-				return item;
-			}));
-
-			entry.append(header, summary, features);
-			return entry;
-		}));
+	root.querySelectorAll('[data-app-version]').forEach((slot) => {
+		slot.textContent = CONFIG.app.version;
 	});
+
+	root.querySelectorAll('[data-version-history]').forEach((history) => {
+		history.replaceChildren(...releases.map((release) => this.buildVersionHistoryEntry(release)));
+		if (history.dataset.guideLinksBound !== 'true') {
+			history.dataset.guideLinksBound = 'true';
+			history.addEventListener('click', (event) => {
+				const link = event.target.closest?.('[data-guide-anchor]');
+				if (!link) return;
+				event.preventDefault();
+				this.openGuideAt(link.dataset.guideAnchor);
+			});
+		}
+	});
+}
+
+,
+buildVersionHistoryEntry(release) {
+	const entry = document.createElement('section');
+	entry.className = 'version-history-entry';
+
+	const header = document.createElement('div');
+	header.className = 'version-history-header';
+	const title = document.createElement('h4');
+	title.textContent = `v${release.version} — ${release.name}`;
+	const date = document.createElement('time');
+	date.dateTime = release.date;
+	date.textContent = release.dateLabel;
+	header.append(title, date);
+	entry.append(header);
+
+	if (release.image?.src) {
+		const figure = document.createElement('figure');
+		figure.className = 'version-history-image';
+		const image = document.createElement('img');
+		image.src = release.image.src;
+		image.alt = release.image.alt || '';
+		image.loading = 'lazy';
+		image.decoding = 'async';
+		figure.append(image);
+		entry.append(figure);
+	}
+
+	const summary = document.createElement('p');
+	summary.textContent = release.summary;
+	entry.append(summary);
+
+	const features = document.createElement('ul');
+	features.append(...release.features.map((feature) => {
+		// Older entries stored features as plain strings; treat those as additions.
+		const { type = 'added', text = feature, guide = null } =
+			typeof feature === 'string' ? {} : feature;
+
+		const item = document.createElement('li');
+		item.className = 'version-history-feature';
+
+		const badge = document.createElement('span');
+		badge.className = `version-history-badge is-${type}`;
+		badge.textContent = type;
+		item.append(badge, document.createTextNode(` ${text} `));
+
+		if (guide) {
+			const link = document.createElement('button');
+			link.type = 'button';
+			link.className = 'version-history-guide-link';
+			link.dataset.guideAnchor = guide;
+			link.textContent = 'Show me';
+			item.append(link);
+		}
+		return item;
+	}));
+	entry.append(features);
+
+	if (release.projectFormat != null) {
+		const note = document.createElement('p');
+		note.className = 'version-history-format-note';
+		note.textContent = `Saves project files in format version ${release.projectFormat}.`;
+		entry.append(note);
+	}
+
+	return entry;
+}
+
+,
+async openGuideAt(anchor) {
+	// open() closes whatever is showing and awaits the guide's external content,
+	// so the target section exists by the time we scroll to it.
+	await this.modalManager.open('guideModal');
+	if (!anchor) return;
+	const target = document.getElementById('guideModal')?.querySelector(`#${CSS.escape(anchor)}`);
+	if (!target) {
+		dbg(`Guide anchor not found: ${anchor}`);
+		return;
+	}
+	requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 }
 
 ,

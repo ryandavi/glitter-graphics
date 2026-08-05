@@ -593,36 +593,16 @@ class LayerManager {
 		const layer = this.getLayerById(layerId);
 		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'glitter') return;
 
-		// Select this layer
 		this.setActiveLayer(layerId);
-
-		// On mobile, open the design drawer
-		if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
-			this.editor.mobileManager.openDrawer('design');
-		}
-
-		// Scroll to the glitter in the picker
-		if (layer.selectedGlitterId !== undefined) {
-			this.editor.glitterManager.scrollToContent(layer.selectedGlitterId);
-		}
+		revealAssetBrowser(this.editor, this.editor.glitterManager, layer.selectedGlitterId);
 	}
 
 	goToSticker(layerId) {
 		const layer = this.getLayerById(layerId);
 		if (!layer || LAYER_UI_CONFIG[layer.type]?.goTo !== 'sticker') return;
 
-		// Select this layer
 		this.setActiveLayer(layerId);
-
-		// On mobile, open the design drawer
-		if (this.editor.mobileManager && this.editor.mobileManager.isMobile) {
-			this.editor.mobileManager.openDrawer('design');
-		}
-
-		// Scroll to the sticker in the picker
-		if (layer.stickerSourceId) {
-			this.editor.stickerManager.scrollToContent(layer.stickerSourceId);
-		}
+		revealAssetBrowser(this.editor, this.editor.stickerManager, layer.stickerSourceId);
 	}
 
 	goToLayerSource(layerId) {
@@ -918,6 +898,8 @@ class LayerManager {
 		const canInteractWithSelected = selectedLayers.length > 0
 			&& selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
 		const hasSingleSelection = selectedLayers.length === 1;
+		const canGoToSelected = hasSingleSelection
+			&& Boolean(LAYER_UI_CONFIG[selectedLayers[0].type]?.goTo);
 		const selectionCount = selectedLayers.length;
 
 		// Add buttons - only check max layers
@@ -933,7 +915,7 @@ class LayerManager {
 		const cloneBtn = document.getElementById('layersBarCloneSelected');
 		const deleteBtn = document.getElementById('layersBarDeleteSelected');
 
-		if (goToBtn) goToBtn.disabled = !hasSingleSelection || !canInteractWithSelected;
+		if (goToBtn) goToBtn.disabled = !canGoToSelected;
 		if (cloneBtn) cloneBtn.disabled = !canInteractWithSelected || !canAddLayers;
 		if (deleteBtn) deleteBtn.disabled = !canInteractWithSelected;
 

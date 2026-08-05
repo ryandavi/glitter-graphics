@@ -423,6 +423,11 @@ async initBrowser() {
 			}
 		}
 
+		// Keep the current fill painted until the browser has decoded the first
+		// frame of its replacement. Frame parsing warms fetch data, not the CSS
+		// image decode cache used by the live DOM preview.
+		await this.ensureAssetImageReady(glitter);
+
 		if (layer.type === LayerType.BASE_IMAGE) {
 			this.editor.baseBackgroundManager?.normalizeLayer(layer);
 			layer.selectedGlitterId = id;
@@ -709,6 +714,60 @@ async initBrowser() {
 		}
 
 		delete layer._maskImageCache;
+	}
+
+	reconcileHistoryVisualCaches(previousLayers, restoredLayers) {
+		const restoredById = new Map(restoredLayers.map((layer) => [layer.id, layer]));
+
+		previousLayers.forEach((previousLayer) => {
+			if (previousLayer.type !== LayerType.GLITTER_FILL || !previousLayer._maskImageCache) return;
+			const restoredLayer = restoredById.get(previousLayer.id);
+			if (restoredLayer?.type === LayerType.GLITTER_FILL) {
+				const cache = previousLayer._maskImageCache;
+				// In-flight encoders still close over the previous layer object.
+				// Preserve its visible URL, but force the restored layer to start
+				// its own encode instead of inheriting an orphaned pending state.
+				restoredLayer._maskImageCache = cache.pending
+					? { key: null, url: cache.url || null, pending: false, fullApplied: false }
+					: cache;
+				delete previousLayer._maskImageCache;
+				return;
+			}
+			this.removeLayerElement(previousLayer.id);
+			this.revokeMaskImageCache(previousLayer);
+		});
+	}
+
+	async ensureLayersPreviewAssetsReady(layers) {
+		const glitterIds = new Set();
+		const addSlot = (slot, fallbackId = null) => {
+			if (slot?.mode !== 'glitter') return;
+			const id = slot.glitterId ?? fallbackId;
+			if (id != null) glitterIds.add(id);
+		};
+		layers.forEach((layer) => {
+			if (!layer.visible) return;
+			if (layer.type === LayerType.BASE_IMAGE) {
+				addSlot(layer.background, layer.selectedGlitterId);
+			} else if (layer.type === LayerType.GLITTER_FILL) {
+				addSlot(layer.fill || { mode: 'glitter' }, layer.selectedGlitterId);
+			} else if (layer.type === LayerType.TEXT_GLITTER) {
+				addSlot(layer.textData?.fill, layer.selectedGlitterId);
+				addSlot(layer.textData?.border);
+				addSlot(layer.textData?.shadow);
+			} else if (layer.type === LayerType.SHAPE) {
+				addSlot(layer.shapeData?.fill, layer.selectedGlitterId);
+				addSlot(layer.shapeData?.border);
+				addSlot(layer.shapeData?.shadow);
+			} else if (layer.type === LayerType.STICKER) {
+				addSlot(layer.stickerData?.shadow);
+			}
+		});
+
+		await Promise.all([...glitterIds].map((id) => {
+			const glitter = this.getItemById(id);
+			return glitter ? this.ensureAssetImageReady(glitter) : null;
+		}));
 	}
 
 	applyMaskObjectUrl(layerId, url) {
