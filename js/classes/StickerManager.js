@@ -829,6 +829,10 @@ class StickerManager extends ContentManager {
 			activeLayer.stickerData.frames = null;
 			activeLayer.stickerData.staticImageData = null;
 
+			// New sticker → its colors are unrelated to the old ones, so a prior
+			// hue/sat/bright tweak would apply to the wrong palette. Reset it.
+			activeLayer.stickerData.colorAdjust = { ...COLOR_ADJUST_IDENTITY };
+
 			// Render
 			this.renderLayer(activeLayer);
 			this.editor.layerManager.renderLayersList();
