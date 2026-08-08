@@ -183,11 +183,14 @@ class GifExporter {
 
 
 
-	_drawTransformedCanvas(ctx, sourceCanvas, transform, width, height) {
+	// `smooth` mirrors the preview's image-rendering: pixel art stays crisp under
+	// the layer scale, art flagged smooth gets the browser's bilinear filtering
+	// so the export matches what the canvas showed.
+	_drawTransformedCanvas(ctx, sourceCanvas, transform, width, height, { smooth = false } = {}) {
 		const metrics = computeLayerTransform(transform, { width, height });
 
 		ctx.save();
-		ctx.imageSmoothingEnabled = false;
+		ctx.imageSmoothingEnabled = smooth;
 		ctx.globalAlpha = metrics.opacity;
 		ctx.translate(metrics.centerX, metrics.centerY);
 
@@ -237,7 +240,9 @@ class GifExporter {
 		const tempCanvas = this._patternSourceFromFrame(imageData, layer.stickerData.colorAdjust);
 		this._renderStickerEffects(layer, ctx, tempCanvas, frameIndex, frameMap, flattenedFrameMap);
 
-		this._drawTransformedCanvas(ctx, tempCanvas, transform, width, height);
+		this._drawTransformedCanvas(ctx, tempCanvas, transform, width, height, {
+			smooth: layer.stickerData.isPixelated === false
+		});
 	}
 
 	_getStickerEffectSource(layer, slot) {
@@ -271,7 +276,10 @@ class GifExporter {
 		const effectMask = this._createOffsetMaskCanvas(mask, shadow.offsetX || 0, shadow.offsetY || 0);
 		if (!source || !effectMask) return;
 		const filled = this._createFilledMaskCanvas(effectMask, source, layer, frameIndex, this._getStickerFrameKey(layer, 'shadow'), frameMap, flattenedFrameMap);
-		this._drawTransformedCanvas(ctx, filled, getLayerTransform(layer), filled.width, filled.height);
+		// The shadow is the sticker's own silhouette, so it scales the same way.
+		this._drawTransformedCanvas(ctx, filled, getLayerTransform(layer), filled.width, filled.height, {
+			smooth: layer.stickerData.isPixelated === false
+		});
 	}
 
 	_renderTextLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null, textMaskCanvases = null) {

@@ -12,7 +12,7 @@ class GlitterEditor extends AssetEditor {
 	}
 
 	renderAssetThumbnail(asset) {
-		return `<img src="${CONFIG.image_base_path}${this.escapeHtml(asset.url)}" class="swatch-thumb" alt="">`;
+		return `<img src="${CONFIG.image_base_path}${this.escapeHtml(asset.url)}" class="swatch-thumb${this.renderingClass(asset)}" alt="">`;
 	}
 
 }
@@ -23,7 +23,7 @@ GlitterEditor.FIELDS = [
 	{ key: 'url', label: 'URL', input: 'text', section: 'basic' },
 	{ key: 'rename', label: 'File name', input: 'rename', section: 'basic', hint: 'Renames the file on disk and repoints this record. The public URL changes, so re-export and expect saved projects using the old path to lose this asset.' },
 	{ key: 'glitter_category_id', label: 'Category', input: 'select', section: 'organization' },
-	{ key: 'is_pixelated', label: 'Pixelated', input: 'checkbox', section: 'tech' },
+	{ key: 'is_pixelated', label: 'Pixelated', input: 'checkbox', section: 'tech', analyze: { format: value => Number(value) ? 'Yes' : 'No' } },
 	{ key: 'is_active', label: 'Active', input: 'checkbox', section: 'publishing' },
 	{ key: 'width', label: 'Width (px)', input: 'number', section: 'tech', group: 'dimensions', groupLabel: 'Dimensions (px)', analyze: {} },
 	{ key: 'height', label: 'Height (px)', input: 'number', section: 'tech', group: 'dimensions', groupLabel: 'Dimensions (px)', analyze: {} },

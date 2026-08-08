@@ -429,38 +429,48 @@ isLayerContentLocked(layer) {
 	renderAssetBadges(badgesEl, asset, manager, getExtraBadges) {
 		if (!badgesEl) return;
 
-		const badgeHTML = [];
+		// Badge text can carry asset data (category names, sticker text), so every
+		// badge is built as an element with textContent rather than interpolated.
+		const addBadge = (className, text, title) => {
+			const badge = document.createElement('span');
+			badge.className = `asset-info-badge ${className}`;
+			badge.title = title;
+			badge.textContent = text;
+			badgesEl.appendChild(badge);
+		};
+
+		badgesEl.replaceChildren();
 
 		// Category badge reveals the asset in its gallery/category.
 		if (asset.category) {
 			const categoryName = asset.category.charAt(0).toUpperCase() + asset.category.slice(1);
-			badgeHTML.push(`<button type="button" class="asset-info-badge badge-category" data-category="${asset.category}" title="Show ${categoryName} in Design">${categoryName}</button>`);
+			const badge = document.createElement('button');
+			badge.type = 'button';
+			badge.className = 'asset-info-badge badge-category';
+			badge.dataset.category = asset.category;
+			badge.title = `Show ${categoryName} in Design`;
+			badge.textContent = categoryName;
+			badgesEl.appendChild(badge);
 		}
 
-		// Animated badge
 		if (asset.isAnimated) {
-			badgeHTML.push('<span class="asset-info-badge badge-animated" title="This asset contains animation frames">Animated</span>');
+			addBadge('badge-animated', 'Animated', 'This asset contains animation frames');
 		}
 
-		// Transparency badge
 		if (asset.hasTransparency) {
-			badgeHTML.push('<span class="asset-info-badge badge-transparency" title="This asset contains transparent pixels">Transparent</span>');
+			addBadge('badge-transparency', 'Transparent', 'This asset contains transparent pixels');
 		}
 
-		// Variable frame rate badge
 		if (asset.isVariableFramerate) {
-			badgeHTML.push('<span class="asset-info-badge badge-variable-fps" title="Animation frames use variable timing">Variable FPS</span>');
+			addBadge('badge-variable-fps', 'Variable FPS', 'Animation frames use variable timing');
 		}
 
 		// Type-specific badges
 		if (getExtraBadges) {
-			const extraBadges = getExtraBadges(asset);
-			extraBadges.forEach(badge => {
-				badgeHTML.push(`<span class="asset-info-badge ${badge.class}" title="Asset property">${badge.text}</span>`);
+			getExtraBadges(asset).forEach(badge => {
+				addBadge(badge.class, badge.text, 'Asset property');
 			});
 		}
-
-		badgesEl.innerHTML = badgeHTML.join('');
 
 		// Add click listener to category badge
 		const categoryBadge = badgesEl.querySelector('.badge-category');

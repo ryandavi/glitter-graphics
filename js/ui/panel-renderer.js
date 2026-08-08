@@ -9,10 +9,6 @@
 // carry data-role/data-slot/data-mode so shared code can resolve meaning
 // without sniffing id suffixes.
 
-function tplClone(templateId) {
-	return document.getElementById(templateId).content.firstElementChild.cloneNode(true);
-}
-
 function panelDiv(className) {
 	const node = document.createElement('div');
 	node.className = className;
@@ -617,7 +613,7 @@ function initializePanelGroupNode(node, prefix, title) {
 	header.appendChild(label);
 	const chevron = document.createElement('span');
 	chevron.className = 'panel-group-chevron icon-wrapper sm';
-	chevron.innerHTML = '<svg class="icon"><use href="#icon-chevron-down"></use></svg>';
+	chevron.appendChild(createIcon('chevron-down'));
 	const key = `${prefix}:${title}`;
 	let state = {};
 	try { state = JSON.parse(localStorage.getItem('glitter.panelGroups') || '{}'); } catch (error) { state = {}; }

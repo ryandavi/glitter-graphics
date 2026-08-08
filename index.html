@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=4baa6307">
+	<link rel="stylesheet" href="css/style.css?v=59c1f50f">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -2758,16 +2758,38 @@
 		<div class="subsection-content-group transform-panel" data-transform-opacity><div class="subsection-title">Appearance</div><div class="setting-column right"><div class="setting-header"><span class="setting-label">Opacity</span><span class="setting-value" data-transform-role="opacityValue">100%</span></div><input type="range" data-transform-role="opacity"><button class="btn-text" type="button" data-transform-role="resetOpacity">Reset</button></div></div>
 	</template>
 
+	<!-- ============ SHARED ELEMENT TEMPLATES ============
+	     Cloned by tplClone (js/core/dom.js) from the builders in js/ui/gallery.js,
+	     js/ui/layer-panel.js, and AssetBrowser. Structure only: labels and asset
+	     names are stamped as textContent, so a sticker or category name can never
+	     inject markup. Class names and nesting are load-bearing for the SCSS. -->
+	<template id="tpl-icon"><svg class="icon"><use></use></svg></template>
+	<template id="tpl-shape-card"><button class="choice-card" type="button"><span class="brush-shape-option-icon" aria-hidden="true"></span><span class="brush-shape-option-name"></span></button></template>
+	<template id="tpl-layer-type-option">
+		<button class="layer-type-option" type="button">
+			<span class="layer-type-icon icon-wrapper"><svg class="icon"><use></use></svg></span>
+			<span class="layer-type-name"></span>
+			<span class="layer-type-description"></span>
+		</button>
+	</template>
+	<template id="tpl-category-card">
+		<div class="category-card">
+			<div class="category-card-image"></div>
+			<div class="category-card-name"></div>
+			<div class="category-card-count"></div>
+		</div>
+	</template>
+
 	<!-- External Libs (self-hosted; gif.js pairs with js/workers/gif.worker.js) -->
 	<script src="js/vendor/omggif.js?v=5014f913"></script>
 	<script src="js/vendor/gif.js?v=d3648ca8"></script>
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=449155a2"></script>
+	<script src="js/core/config.js?v=02c1727d"></script>
 	<script src="js/core/preferences.js?v=216cd049"></script>
 	<script src="js/core/commands.js?v=76ea25b9"></script>
-	<script src="js/core/dom.js?v=23ba6e8c"></script>
+	<script src="js/core/dom.js?v=12f02905"></script>
 	<script src="js/core/document-scaler.js?v=c08bbf8e"></script>
 	<script src="js/transforms/transform-math.js?v=53779101"></script>
 	<script src="js/transforms/movable-layer.js?v=98aa9235"></script>
@@ -2778,7 +2800,7 @@
 	<script src="js/ui/slider.js?v=3b4c1283"></script>
 	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
 	<script src="js/ui/doc-modal.js?v=96d2362b"></script>
-	<script src="js/ui/gallery.js?v=9dab5316"></script>
+	<script src="js/ui/gallery.js?v=b63015bf"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
 	<script src="js/effects/mask-raster.js?v=58feb186"></script>
 	<script src="js/effects/mask-geometry.js?v=06dda908"></script>
@@ -2787,18 +2809,18 @@
 	<script src="js/effects/pixel-effects.js?v=97289451"></script>
 	<script src="js/effects/effect-source.js?v=0a33d343"></script>
 	<script src="js/effects/slot-effects.js?v=b10d7733"></script>
-	<script src="js/ui/panel-renderer.js?v=e44eb896"></script>
+	<script src="js/ui/panel-renderer.js?v=4b6b0b44"></script>
 	<script src="js/ui/settings-store.js?v=42089e99"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
 	<script src="js/ui/editor-settings.js?v=f4b2b664"></script>
-	<script src="js/ui/editor-panels.js?v=7d9aabfd"></script>
-	<script src="js/ui/editor-disclosures.js?v=2a3a1f61"></script>
+	<script src="js/ui/editor-panels.js?v=c39a023b"></script>
+	<script src="js/ui/editor-disclosures.js?v=3fef2222"></script>
 	<script src="js/ui/transform-panel.js?v=6330ed7e"></script>
 	<script src="js/transforms/editor-transform.js?v=32b62b4f"></script>
-	<script src="js/ui/document-start.js?v=2afc299e"></script>
+	<script src="js/ui/document-start.js?v=bd0b7429"></script>
 	<script src="js/ui/modals-wiring.js?v=dfc56d36"></script>
-	<script src="js/ui/layer-panel.js?v=454db73c"></script>
+	<script src="js/ui/layer-panel.js?v=87c24a9d"></script>
 	<script src="js/ui/canvas-gestures.js?v=16576b68"></script>
 	<script src="js/ui/canvas-size.js?v=53305937"></script>
 	<script src="js/core/canvas-resize.js?v=fd22383b"></script>
@@ -2821,21 +2843,21 @@
 	<script src="js/classes/HtmlSceneExporter.js?v=d3f0ca56"></script>
 	<script src="js/classes/MaskCompositor.js?v=19c2994c"></script>
 	<script src="js/classes/ShapeLibrary.js?v=fa32fc5a"></script>
-	<script src="js/classes/MaskEditor.js?v=fcd182e9"></script>
+	<script src="js/classes/MaskEditor.js?v=c3b4c579"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=1b1e5113"></script>
+	<script src="js/classes/LayerManager.js?v=d987cf1a"></script>
 
 	<!-- Content -->
-	<script src="js/classes/AssetBrowser.js?v=5715952f"></script>
+	<script src="js/classes/AssetBrowser.js?v=a18cd184"></script>
 	<script src="js/classes/ContentManager.js?v=a71a7157"></script>
 	<script src="js/classes/LayerTransform.js?v=83405952"></script>
 	<script src="js/classes/GlitterManager.js?v=3b89789d"></script>
 	<script src="js/classes/BaseBackgroundManager.js?v=024b743e"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=e0f15cce"></script>
 	<script src="js/classes/TextGlitterManager.js?v=a23de8cc"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=05bcc621"></script>
-	<script src="js/classes/StickerManager.js?v=10135f5b"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=c2132469"></script>
+	<script src="js/classes/StickerManager.js?v=12a3c1e5"></script>
 	<script src="js/classes/GroupTransformManager.js?v=38908db3"></script>
 
 	<script src="js/classes/MobileManager.js?v=a633cf1c"></script>

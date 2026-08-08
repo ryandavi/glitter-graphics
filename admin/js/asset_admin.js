@@ -157,9 +157,17 @@ class AssetEditor {
 		return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 	}
 
+    // Mirrors the editor: an asset flagged pixelated upscales crisp, anything
+    // else gets the browser's smoothing, so admin previews show the rendering
+    // the canvas will actually use. Asset types without the column (shapes,
+    // fonts) and records predating it keep the crisp default.
+    renderingClass(asset) {
+        return Number(asset?.is_pixelated ?? 1) ? '' : ' rendering-smooth';
+    }
+
     // Override in child class for custom thumbnail rendering
     renderAssetThumbnail(asset) {
-        return `<div class="swatch-thumb" style="background-image: url('${CONFIG.image_base_path}${asset.url}');"></div>`;
+        return `<div class="swatch-thumb${this.renderingClass(asset)}" style="background-image: url('${CONFIG.image_base_path}${asset.url}');"></div>`;
     }
 
     // ===== URL STATE =====
@@ -343,7 +351,7 @@ class AssetEditor {
         // The URL field keeps its input inline like every other row; the
         // preview follows as a continuation row under the same control column.
         if (field.key === 'url' && value) {
-            return row + this.propertyRow(field.label, `<img src="${CONFIG.image_base_path}${this.escapeHtml(value)}" class="preview-image" alt="Preview">`, { continued: true });
+            return row + this.propertyRow(field.label, `<img src="${CONFIG.image_base_path}${this.escapeHtml(value)}" class="preview-image${this.renderingClass(this.currentAsset)}" alt="Preview">`, { continued: true });
         }
         return row;
     }

@@ -1,34 +1,35 @@
 {
-  "id": 95,
-  "name": "Big Dove White",
-  "filename": "dove_big_white.gif",
-  "url": "images/stickers/animal/dove_big_white.gif",
-  "thumbnailUrl": "images/stickers/animal/dove_big_white.gif",
-  "category": "animal",
-  "attribution": "",
-  "stickerText": null,
-  "tags": [
-    "bird",
-    "dove",
-    "white"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#E2E2D8",
-    "#B4AD9B"
-  ],
-  "colorWeights": [
-    0.75,
-    0.2
-  ],
-  "paletteType": "single-color",
-  "isAnimated": 1,
-  "hasTransparency": 1,
-  "width": 400,
-  "height": 400,
-  "frameCount": 4,
-  "frameRate": 20,
-  "isVariableFramerate": 0,
-  "fileSize": 122092,
-  "sortOrder": 105
+    "id": 95,
+    "name": "Big Dove White",
+    "filename": "dove_big_white.gif",
+    "url": "images/stickers/animal/dove_big_white.gif",
+    "thumbnailUrl": "images/stickers/animal/dove_big_white.gif",
+    "category": "animal",
+    "attribution": "",
+    "stickerText": null,
+    "tags": [
+        "bird",
+        "dove",
+        "white"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#E2E2D8",
+        "#B4AD9B"
+    ],
+    "colorWeights": [
+        0.75,
+        0.2
+    ],
+    "paletteType": "single-color",
+    "isAnimated": 1,
+    "hasTransparency": 1,
+    "isPixelated": 1,
+    "width": 400,
+    "height": 400,
+    "frameCount": 4,
+    "frameRate": 20,
+    "isVariableFramerate": 0,
+    "fileSize": 122092,
+    "sortOrder": 105
 }

@@ -1,39 +1,40 @@
 {
-  "id": 77,
-  "name": "Ayumi Hamasaki A Small Logo Pink Glitter",
-  "filename": "ayumi-hamasaki_small_pink-glitter.gif",
-  "url": "images/stickers/logo/ayumi-hamasaki_small_pink-glitter.gif",
-  "thumbnailUrl": "images/stickers/logo/ayumi-hamasaki_small_pink-glitter.gif",
-  "category": "logo",
-  "attribution": "",
-  "stickerText": null,
-  "tags": [
-    "glitter",
-    "pink"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#FF7BC6",
-    "#FF42AD",
-    "#FEB5DE",
-    "#FEFEFE",
-    "#FEDEF6"
-  ],
-  "colorWeights": [
-    0.34,
-    0.29,
-    0.21,
-    0.1,
-    0.06
-  ],
-  "paletteType": "limited",
-  "isAnimated": 1,
-  "hasTransparency": 1,
-  "width": 94,
-  "height": 71,
-  "frameCount": 3,
-  "frameRate": 11,
-  "isVariableFramerate": 0,
-  "fileSize": 8315,
-  "sortOrder": 86
+    "id": 77,
+    "name": "Ayumi Hamasaki A Small Logo Pink Glitter",
+    "filename": "ayumi-hamasaki_small_pink-glitter.gif",
+    "url": "images/stickers/logo/ayumi-hamasaki_small_pink-glitter.gif",
+    "thumbnailUrl": "images/stickers/logo/ayumi-hamasaki_small_pink-glitter.gif",
+    "category": "logo",
+    "attribution": "",
+    "stickerText": null,
+    "tags": [
+        "glitter",
+        "pink"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#FF7BC6",
+        "#FF42AD",
+        "#FEB5DE",
+        "#FEFEFE",
+        "#FEDEF6"
+    ],
+    "colorWeights": [
+        0.34,
+        0.29,
+        0.21,
+        0.1,
+        0.06
+    ],
+    "paletteType": "limited",
+    "isAnimated": 1,
+    "hasTransparency": 1,
+    "isPixelated": 1,
+    "width": 94,
+    "height": 71,
+    "frameCount": 3,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "fileSize": 8315,
+    "sortOrder": 86
 }

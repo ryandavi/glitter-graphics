@@ -479,6 +479,7 @@ class StickerManager extends ContentManager {
 	customizeItemElement(element, item) {
 		if (item.isAnimated) element.classList.add('animated');
 		if (item.hasTransparency) element.classList.add('has-transparency');
+		if (item.isPixelated !== false) element.classList.add('pixelated');
 	}
 
 	async handleItemClick(item) {
@@ -502,6 +503,10 @@ class StickerManager extends ContentManager {
 				colors: [],
 				isAnimated: false,
 				hasTransparency: false,
+				// Records exported before the sticker `is_pixelated` column existed
+				// carry no flag; crisp upscaling is what they have always rendered
+				// with, so absent means pixelated.
+				isPixelated: true,
 				width: 0,
 				height: 0,
 				frameCount: 1,
@@ -532,19 +537,17 @@ class StickerManager extends ContentManager {
 		const categories = [...new Set(this.content.map(item => item.category))].sort();
 
 
-		this.ui.categoryChips.innerHTML = categories.map(cat => {
-			const name = cat.charAt(0).toUpperCase() + cat.slice(1);
-			const slug = cat.toLowerCase().replace(/\s+/g, '-');
-			return `
-				<div class="filter-chip" data-filter="category" data-value="${cat}">
-					${name}
-				</div>
-			`;
-		}).join('');
-
-		// Attach listeners
-		this.ui.categoryChips.querySelectorAll('.filter-chip').forEach(chip => {
+		// Categories come from asset data, so the name goes in as textContent and
+		// the raw value through dataset - never interpolated into markup.
+		this.ui.categoryChips.replaceChildren();
+		categories.forEach(cat => {
+			const chip = document.createElement('div');
+			chip.className = 'filter-chip';
+			chip.dataset.filter = 'category';
+			chip.dataset.value = cat;
+			chip.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
 			chip.addEventListener('click', () => this.toggleFilterChip(chip));
+			this.ui.categoryChips.appendChild(chip);
 		});
 	}
 
@@ -591,6 +594,7 @@ class StickerManager extends ContentManager {
 			// Initially unknown - will be detected
 			isAnimated: false,
 			hasTransparency: false,
+			isPixelated: true,
 			width: 0,
 			height: 0,
 			frameCount: null,
@@ -653,6 +657,7 @@ class StickerManager extends ContentManager {
 			uploadedAt: Date.now(),
 			isAnimated: false,
 			hasTransparency: false,
+			isPixelated: true,
 			width: 0,
 			height: 0,
 			frameCount: null,
@@ -702,6 +707,7 @@ class StickerManager extends ContentManager {
 
 		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 		userSticker.hasTransparency = this.detectActualTransparency(imageData);
+		userSticker.isPixelated = await this.classifyRendering(imageData, file.type, userSticker.hasTransparency);
 
 		// Mark as loaded
 		userSticker.isLoading = false;
@@ -711,6 +717,74 @@ class StickerManager extends ContentManager {
 		this.browser.refresh();
 
 		dbg('Processed uploaded sticker:', userSticker);
+	}
+
+	// The admin decides is_pixelated for library assets, but an upload never
+	// passes through it, so it classifies itself with the same weighted model.
+	// The rules and weights are fetched from data/rendering-rules.json rather
+	// than restated here — a second copy of the numbers is exactly the drift
+	// this is meant to prevent. If they cannot be loaded the upload keeps the
+	// pixelated default instead of guessing.
+	loadRenderingRules() {
+		if (!this.renderingRulesPromise) {
+			this.renderingRulesPromise = fetch(
+				`${CONFIG.tools.stickers.renderingRulesPath}?v=${CONFIG.app.assets.manifestVersion}`
+			)
+				.then((response) => {
+					if (!response.ok) throw new Error(`HTTP ${response.status}`);
+					return response.json();
+				})
+				.catch((error) => {
+					console.warn('Rendering rules unavailable; upload keeps the pixelated default:', error);
+					return null;
+				});
+		}
+
+		return this.renderingRulesPromise;
+	}
+
+	// Mirrors GifAnalyzer::renderingVerdict(). Two differences are inherent and
+	// harmless: canvas reports alpha on 0-255 where GD uses 0-127, so the level
+	// count here is finer against the same floor, and an animated upload is
+	// read from its first frame rather than a sample of three — a GIF's
+	// indexed_gif weight settles it either way.
+	async classifyRendering(imageData, mimeType, hasTransparency) {
+		const rules = await this.loadRenderingRules();
+		if (!rules) return true;
+
+		const data = imageData.data;
+		const alphaLevels = new Set();
+		const colorBuckets = new Set();
+		let visiblePixels = 0;
+		let softPixels = 0;
+		for (let index = 0; index < data.length; index += 4) {
+			const alpha = data[index + 3];
+			if (alpha === 0) continue;
+			visiblePixels++;
+			// Same 12-bit packing the analyzer buckets colors with.
+			colorBuckets.add(((data[index] >> 4) << 8) | ((data[index + 1] >> 4) << 4) | (data[index + 2] >> 4));
+			if (alpha < 255) {
+				softPixels++;
+				alphaLevels.add(alpha);
+			}
+		}
+
+		const coverage = visiblePixels > 0 ? softPixels / visiblePixels : 0;
+		const weights = rules.weights;
+		const evidence = [];
+		if (alphaLevels.size >= rules.softEdge.minAlphaLevels && coverage >= rules.softEdge.minCoverage) {
+			evidence.push(weights.soft_edge_ramp);
+		} else if (hasTransparency) {
+			evidence.push(weights.hard_alpha_cutout);
+		} else {
+			evidence.push(weights.no_alpha_channel);
+		}
+		if (rules.smoothMimeTypes.includes(mimeType)) evidence.push(weights.lossy_photographic_format);
+		if (mimeType === 'image/gif') evidence.push(weights.indexed_gif);
+		evidence.push(colorBuckets.size >= rules.richPaletteBuckets ? weights.rich_palette : weights.limited_palette);
+
+		// Ties stay pixelated, matching the analyzer.
+		return evidence.reduce((total, weight) => total + weight, 0) <= 0;
 	}
 
 	detectActualTransparency(imageData) {
@@ -777,6 +851,7 @@ class StickerManager extends ContentManager {
 				name: sticker?.name || 'Select a Sticker',
 				source: sticker?.source || null,
 				isAnimated: sticker?.isAnimated || false,
+				isPixelated: sticker?.isPixelated !== false,
 				frameCount: sticker?.frameCount || 1,
 				width: sticker?.width || 100,
 				height: sticker?.height || 100,
@@ -823,6 +898,7 @@ class StickerManager extends ContentManager {
 			activeLayer.stickerData.width = stickerInfo.width;
 			activeLayer.stickerData.height = stickerInfo.height;
 			activeLayer.stickerData.isAnimated = stickerInfo.isAnimated;
+			activeLayer.stickerData.isPixelated = stickerInfo.isPixelated !== false;
 			activeLayer.stickerData.frameCount = stickerInfo.frameCount || 1;
 
 			// Clear cached frame data when changing sticker
@@ -879,7 +955,6 @@ class StickerManager extends ContentManager {
 			img = document.createElement('img');
 			img.className = 'sticker-image';
 			img.draggable = false;
-			img.style.imageRendering = 'pixelated';
 			element.appendChild(img);
 			this.editor.canvasElementsContainer.appendChild(element);
 			this.layerElements.set(layer.id, element);
@@ -891,6 +966,9 @@ class StickerManager extends ContentManager {
 			img.dataset.sourceUrl = layer.stickerData.url;
 		}
 		img.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
+		// The canvas stack declares image-rendering: pixelated and every child
+		// inherits it, so smooth art needs the class toggle to opt back out.
+		element.classList.toggle('pixelated', layer.stickerData.isPixelated !== false);
 		this.reconcileStickerEffectSpan(layer, element);
 
 		// The map entry owns the live handles. Keep it across DOM refreshes so
@@ -1084,6 +1162,9 @@ updateTransform(layerId, updates) {
 		layerData.stickerData.width = sticker.width || layerData.stickerData.width;
 		layerData.stickerData.height = sticker.height || layerData.stickerData.height;
 		layerData.stickerData.frameCount = sticker.frameCount || layerData.stickerData.frameCount || 1;
+		// The library asset owns this flag, so a project saved before an admin
+		// change picks up the corrected rendering on reopen.
+		layerData.stickerData.isPixelated = sticker.isPixelated !== false;
 		layerData.stickerData.colorAdjust = normalizeColorAdjust(layerData.stickerData.colorAdjust);
 		// Sticker borders were removed; drop them from older snapshots/projects.
 		layerData.stickerData.border = null;

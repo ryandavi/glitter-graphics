@@ -142,23 +142,12 @@ class ShapeGlitterManager {
 		this.renderShapeGallery();
 	}
 
-	buildShapeCard(id, label, className = 'brush-shape-option') {
-		const card = document.createElement('button');
-		card.type = 'button';
-		card.className = `choice-card ${className}`;
-		card.dataset.shape = id;
-		card.title = label;
-		card.setAttribute('aria-label', label);
-		card.innerHTML = `<span class="brush-shape-option-icon" aria-hidden="true">${ShapeLibrary.getIconSvg(id)}</span><span class="brush-shape-option-name">${label}</span>`;
-		return card;
-	}
-
 	renderShapePicker() {
 		const picker = this.ui.picker;
 		if (!picker) return;
 		picker.innerHTML = '';
 		ShapeLibrary.FILL_SHAPES.forEach(({ id, label }) => {
-			const card = this.buildShapeCard(id, label);
+			const card = createShapeCard(id, label);
 			card.setAttribute('role', 'option');
 			picker.appendChild(card);
 		});
@@ -189,7 +178,7 @@ class ShapeGlitterManager {
 			grid.setAttribute('aria-labelledby', heading.id);
 
 			shapes.forEach(({ id, label: shapeLabel }) => {
-				const card = this.buildShapeCard(id, shapeLabel, 'asset-option shape-gallery-option');
+				const card = createShapeCard(id, shapeLabel, { className: 'asset-option shape-gallery-option' });
 				card.addEventListener('click', () => {
 					const armedLayer = this.editor.layerManager.getLayerById(this.shapeChangeLayerId);
 					const targetLayer = armedLayer?.type === LayerType.SHAPE ? armedLayer : this.getActiveShapeLayer();

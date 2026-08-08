@@ -2146,6 +2146,9 @@ body.modal-open {
 		margin-top: var(--spacing-lg);
 	}
 
+	+.settings-group-title {
+		margin-top: var(--spacing-lg);
+	}
 
 	&.disabled {
 		opacity: var(--disabled-opacity);
@@ -2153,6 +2156,9 @@ body.modal-open {
 		cursor: not-allowed;
 	}
 }
+
+
+
 
 .settings-row-header {
 	@include spread-row;

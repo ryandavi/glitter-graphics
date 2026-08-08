@@ -33,6 +33,7 @@ class StickerAPI extends AssetAPI
             'paletteType' => $this->paletteTypeState($asset)['type'],
             'isAnimated' => (int)$asset['is_animated'],
             'hasTransparency' => (int)$asset['has_transparency'],
+            'isPixelated' => (int)($asset['is_pixelated'] ?? 1),
             'width' => (int)($asset['width'] ?? 0),
             'height' => (int)($asset['height'] ?? 0),
             'frameCount' => (int)($asset['frame_count'] ?? 0),
@@ -49,7 +50,7 @@ class StickerAPI extends AssetAPI
             'string' => ['name', 'filename', 'url', 'attribution', 'sticker_text', 'file_hash', 'palette_type_override'],
             'int' => ['sticker_category_id', 'width', 'height', 'frame_count', 'frame_rate', 'file_size', 'sort_order'],
             'float' => [],
-            'bool' => ['is_animated', 'has_transparency', 'is_active', 'is_variable_framerate'],
+            'bool' => ['is_animated', 'has_transparency', 'is_active', 'is_variable_framerate', 'is_pixelated'],
         ];
     }
 
@@ -75,6 +76,7 @@ class StickerAPI extends AssetAPI
             'url' => ['type' => 's'],
             'sticker_category_id' => ['type' => 'i', 'source' => 'category_id', 'default' => 1],
             'attribution' => ['type' => 's', 'default' => null],
+            'is_pixelated' => ['type' => 'i', 'default' => 1],
             'is_active' => ['type' => 'i', 'default' => 1],
         ];
     }

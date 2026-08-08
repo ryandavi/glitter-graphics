@@ -1,38 +1,39 @@
 {
-  "id": 47,
-  "name": "Happy New Year Silver Glitter Text",
-  "filename": "happy-new-year_silver-glitter.gif",
-  "url": "images/stickers/text/happy-new-year_silver-glitter.gif",
-  "thumbnailUrl": "images/stickers/text/happy-new-year_silver-glitter.gif",
-  "category": "text",
-  "attribution": "",
-  "stickerText": "Happy New Year",
-  "tags": [
-    "glitter",
-    "happy new year",
-    "silver"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#7D7D7D",
-    "#BFBFBF",
-    "#565656",
-    "#F3F3F3"
-  ],
-  "colorWeights": [
-    0.46,
-    0.28,
-    0.15,
-    0.11
-  ],
-  "paletteType": "neutral",
-  "isAnimated": 1,
-  "hasTransparency": 1,
-  "width": 462,
-  "height": 60,
-  "frameCount": 2,
-  "frameRate": 11,
-  "isVariableFramerate": 0,
-  "fileSize": 10266,
-  "sortOrder": 56
+    "id": 47,
+    "name": "Happy New Year Silver Glitter Text",
+    "filename": "happy-new-year_silver-glitter.gif",
+    "url": "images/stickers/text/happy-new-year_silver-glitter.gif",
+    "thumbnailUrl": "images/stickers/text/happy-new-year_silver-glitter.gif",
+    "category": "text",
+    "attribution": "",
+    "stickerText": "Happy New Year",
+    "tags": [
+        "glitter",
+        "happy new year",
+        "silver"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#7D7D7D",
+        "#BFBFBF",
+        "#565656",
+        "#F3F3F3"
+    ],
+    "colorWeights": [
+        0.46,
+        0.28,
+        0.15,
+        0.11
+    ],
+    "paletteType": "neutral",
+    "isAnimated": 1,
+    "hasTransparency": 1,
+    "isPixelated": 1,
+    "width": 462,
+    "height": 60,
+    "frameCount": 2,
+    "frameRate": 11,
+    "isVariableFramerate": 0,
+    "fileSize": 10266,
+    "sortOrder": 56
 }

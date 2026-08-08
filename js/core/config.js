@@ -370,6 +370,10 @@ const CONFIG = deepFreeze({
 			maxCount: 50,
 			maxUploadSize: 10 * 1024 * 1024,
 			allowedTypes: ['image/png', 'image/jpeg', 'image/gif'],
+			// How an upload's image-rendering is decided lives in
+			// data/rendering-rules.json, shared verbatim with the admin
+			// analyzer. Deliberately not duplicated here.
+			renderingRulesPath: 'data/rendering-rules.json',
 			defaults: {
 				transform: {
 					position: { x: 0, y: 0 },
@@ -1598,9 +1602,17 @@ const ASSET_TYPE_CONFIG = {
 		prefix: 'stickerAsset',
 		managerKey: 'stickerManager',
 		renderThumbnail: (thumbnail, asset) => {
-			thumbnail.className = 'asset-info-thumbnail';
+			thumbnail.className = asset.isPixelated === false
+				? 'asset-info-thumbnail'
+				: 'asset-info-thumbnail pixelated';
 			thumbnail.style.backgroundImage = '';
-			thumbnail.innerHTML = `<img src="${asset.thumbnailUrl || asset.url}" alt="${asset.name}">`;
+			// Sticker names are user-supplied (uploads) - set as properties so a
+			// quote or angle bracket in the name can't break out of the markup.
+			thumbnail.replaceChildren();
+			const img = document.createElement('img');
+			img.src = asset.thumbnailUrl || asset.url;
+			img.alt = asset.name;
+			thumbnail.appendChild(img);
 		},
 		getExtraBadges: (asset) => {
 			const badges = [];

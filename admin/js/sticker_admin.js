@@ -39,6 +39,11 @@ StickerEditor.FIELDS = [
 	{ key: 'is_variable_framerate', label: 'Variable Frame Rate', input: 'checkbox', section: 'tech', analyze: { format: value => Number(value) ? 'Yes' : 'No' } },
 	{ key: 'is_animated', label: 'Animated', input: 'checkbox', section: 'tech', analyze: { format: value => Number(value) ? 'Yes' : 'No' } },
 	{ key: 'has_transparency', label: 'Has Transparency', input: 'checkbox', section: 'tech', analyze: { format: value => Number(value) ? 'Yes' : 'No' } },
+	// Drives image-rendering in the editor and every export. On for pixel art
+	// (the default), off for smooth/vector-ish art that should scale cleanly.
+	// Auto-Analyze proposes a value from the artwork's soft-edge pixels, but
+	// never writes it on its own — it stays a judgement you confirm.
+	{ key: 'is_pixelated', label: 'Pixelated', input: 'checkbox', section: 'tech', analyze: { format: value => Number(value) ? 'Yes' : 'No' } },
 	{ key: 'analysis_meta', label: 'Analysis', input: 'analysisMeta', section: 'tech' }
 ];
 

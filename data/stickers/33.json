@@ -1,44 +1,45 @@
 {
-  "id": 33,
-  "name": "Angel Blue Glitter Text",
-  "filename": "angel_blue-glitter.gif",
-  "url": "images/stickers/text/angel_blue-glitter.gif",
-  "thumbnailUrl": "images/stickers/text/angel_blue-glitter.gif",
-  "category": "text",
-  "attribution": "",
-  "stickerText": "Angel",
-  "tags": [
-    "angel",
-    "blue",
-    "glitter"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#F3F5F6",
-    "#3B89D3",
-    "#56AFE8",
-    "#1A68A5",
-    "#B9D8EA",
-    "#A5ADB3",
-    "#42C7E4"
-  ],
-  "colorWeights": [
-    0.38,
-    0.21,
-    0.13,
-    0.1,
-    0.07,
-    0.06,
-    0.05
-  ],
-  "paletteType": "gradient",
-  "isAnimated": 1,
-  "hasTransparency": 1,
-  "width": 98,
-  "height": 49,
-  "frameCount": 3,
-  "frameRate": 16,
-  "isVariableFramerate": 0,
-  "fileSize": 10506,
-  "sortOrder": 41
+    "id": 33,
+    "name": "Angel Blue Glitter Text",
+    "filename": "angel_blue-glitter.gif",
+    "url": "images/stickers/text/angel_blue-glitter.gif",
+    "thumbnailUrl": "images/stickers/text/angel_blue-glitter.gif",
+    "category": "text",
+    "attribution": "",
+    "stickerText": "Angel",
+    "tags": [
+        "angel",
+        "blue",
+        "glitter"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#F3F5F6",
+        "#3B89D3",
+        "#56AFE8",
+        "#1A68A5",
+        "#B9D8EA",
+        "#A5ADB3",
+        "#42C7E4"
+    ],
+    "colorWeights": [
+        0.38,
+        0.21,
+        0.13,
+        0.1,
+        0.07,
+        0.06,
+        0.05
+    ],
+    "paletteType": "gradient",
+    "isAnimated": 1,
+    "hasTransparency": 1,
+    "isPixelated": 1,
+    "width": 98,
+    "height": 49,
+    "frameCount": 3,
+    "frameRate": 16,
+    "isVariableFramerate": 0,
+    "fileSize": 10506,
+    "sortOrder": 41
 }

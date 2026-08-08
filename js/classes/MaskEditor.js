@@ -314,22 +314,11 @@ class MaskEditor {
 
 		picker.innerHTML = '';
 		MaskEditor.BRUSH_SHAPES.forEach(({ id, label }) => {
-			const card = document.createElement('button');
-			card.type = 'button';
-			card.className = 'choice-card brush-shape-option';
-			card.dataset.shape = id;
-			card.title = `${label} brush`;
+			const card = createShapeCard(id, label, { title: `${label} brush` });
 			card.setAttribute('role', 'option');
 			const isActive = id === this.getBrushShape();
 			card.classList.toggle('active', isActive);
 			card.setAttribute('aria-selected', isActive ? 'true' : 'false');
-			card.setAttribute('aria-label', `${label} brush`);
-			// Thumbnail comes from the SAME geometry as the stamp (ShapeLibrary),
-			// so the icon always matches what the brush paints.
-			card.innerHTML =
-				'<span class="brush-shape-option-icon" aria-hidden="true">' +
-				`${ShapeLibrary.getIconSvg(id)}</span>` +
-				`<span class="brush-shape-option-name">${label}</span>`;
 			picker.appendChild(card);
 		});
 	}

@@ -132,8 +132,8 @@ setupImageListeners() {
 		host.className = 'new-canvas-preset-groups';
 		host.replaceChildren();
 		const groups = [
-			{ id: 'social', label: 'Social Media' },
 			{ id: 'classic', label: 'Web Classics' },
+			{ id: 'social', label: 'Social Media' },
 			{ id: 'general', label: 'General' }
 		];
 		groups.forEach((group) => {

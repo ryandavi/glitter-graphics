@@ -1282,13 +1282,10 @@ class LayerManager {
 		// 1. Drag Handle (icon shown active only for unlocked layers)
 		const dragHandle = document.createElement('div');
 		dragHandle.className = 'layer-drag-handle layer-list-drag-handle';
-		dragHandle.innerHTML = `
-				<div class="icon icon-wrapper ${!layer.locked ? 'active' : ''}">
-					<svg class="icon">
-						<use href="#icon-grip-vertical"></use>
-					</svg>
-				</div>
-		`;
+		const dragIcon = document.createElement('div');
+		dragIcon.className = `icon icon-wrapper${layer.locked ? '' : ' active'}`;
+		dragIcon.appendChild(createIcon('grip-vertical'));
+		dragHandle.appendChild(dragIcon);
 
 		// 2. Swatch (Thumbnail)
 		const swatch = document.createElement('div');
@@ -1626,6 +1623,7 @@ class LayerManager {
 			} else {
 				swatch.style.backgroundImage = `url(${layer.stickerData.url})`;
 				swatch.style.filter = buildCssColorFilter(layer.stickerData.colorAdjust);
+				if (layer.stickerData.isPixelated !== false) swatch.classList.add('pixelated');
 			}
 			return;
 		}

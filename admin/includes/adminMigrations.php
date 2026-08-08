@@ -54,6 +54,9 @@ class AdminMigrations
 				'updated_at' => 'DATETIME NULL',
 			],
 			'stickers' => [
+				// Defaults to 1 so the whole existing library keeps the crisp
+				// upscaling it has always rendered with; smooth art is opt-in.
+				'is_pixelated' => 'TINYINT(1) NOT NULL DEFAULT 1',
 				'thumbnail_url' => 'VARCHAR(255) NULL',
 				'file_hash' => 'CHAR(32) NULL',
 				'analysis_json' => 'LONGTEXT NULL',

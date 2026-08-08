@@ -1,43 +1,44 @@
 {
-  "id": 113,
-  "name": "Skull and Crossbones Pink Glitter",
-  "filename": "skull-crossbones_pink-glitter_2.gif",
-  "url": "images/stickers/decorative/skull-crossbones_pink-glitter_2.gif",
-  "thumbnailUrl": "images/stickers/decorative/skull-crossbones_pink-glitter_2.gif",
-  "category": "decorative",
-  "attribution": "",
-  "stickerText": null,
-  "tags": [
-    "crossbones",
-    "emo",
-    "glitter",
-    "pink",
-    "skeleton",
-    "skull"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#F988AA",
-    "#FAB5C9",
-    "#F7628A",
-    "#F93C70",
-    "#FCD9DA"
-  ],
-  "colorWeights": [
-    0.37,
-    0.24,
-    0.17,
-    0.12,
-    0.06
-  ],
-  "paletteType": "limited",
-  "isAnimated": 1,
-  "hasTransparency": 1,
-  "width": 164,
-  "height": 169,
-  "frameCount": 3,
-  "frameRate": 1,
-  "isVariableFramerate": 0,
-  "fileSize": 11804,
-  "sortOrder": 123
+    "id": 113,
+    "name": "Skull and Crossbones Pink Glitter",
+    "filename": "skull-crossbones_pink-glitter_2.gif",
+    "url": "images/stickers/decorative/skull-crossbones_pink-glitter_2.gif",
+    "thumbnailUrl": "images/stickers/decorative/skull-crossbones_pink-glitter_2.gif",
+    "category": "decorative",
+    "attribution": "",
+    "stickerText": null,
+    "tags": [
+        "crossbones",
+        "emo",
+        "glitter",
+        "pink",
+        "skeleton",
+        "skull"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#F988AA",
+        "#FAB5C9",
+        "#F7628A",
+        "#F93C70",
+        "#FCD9DA"
+    ],
+    "colorWeights": [
+        0.37,
+        0.24,
+        0.17,
+        0.12,
+        0.06
+    ],
+    "paletteType": "limited",
+    "isAnimated": 1,
+    "hasTransparency": 1,
+    "isPixelated": 1,
+    "width": 164,
+    "height": 169,
+    "frameCount": 3,
+    "frameRate": 1,
+    "isVariableFramerate": 0,
+    "fileSize": 11804,
+    "sortOrder": 123
 }

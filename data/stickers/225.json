@@ -1,33 +1,34 @@
 {
-  "id": 225,
-  "name": "Ryandavi Alien",
-  "filename": "ryandavi_alien.png",
-  "url": "images/stickers/ryandavi/ryandavi_alien.png",
-  "thumbnailUrl": "images/stickers/ryandavi/ryandavi_alien.png",
-  "category": "ryandavi",
-  "attribution": null,
-  "stickerText": null,
-  "tags": [
-    "black",
-    "green"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#8BC43E",
-    "#010201"
-  ],
-  "colorWeights": [
-    0.57,
-    0.39
-  ],
-  "paletteType": "single",
-  "isAnimated": 0,
-  "hasTransparency": 1,
-  "width": 200,
-  "height": 200,
-  "frameCount": 1,
-  "frameRate": 0,
-  "isVariableFramerate": 0,
-  "fileSize": 2805,
-  "sortOrder": 0
+    "id": 225,
+    "name": "Ryandavi Alien",
+    "filename": "ryandavi_alien.png",
+    "url": "images/stickers/ryandavi/ryandavi_alien.png",
+    "thumbnailUrl": "images/stickers/ryandavi/ryandavi_alien.png",
+    "category": "ryandavi",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "black",
+        "green"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#8BC43E",
+        "#010201"
+    ],
+    "colorWeights": [
+        0.57,
+        0.39
+    ],
+    "paletteType": "single",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 200,
+    "height": 200,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 2805,
+    "sortOrder": 0
 }

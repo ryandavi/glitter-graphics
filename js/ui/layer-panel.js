@@ -31,22 +31,15 @@ setupLayerTypePickerListeners() {
 		const modalConfig = LAYER_UI_CONFIG[type]?.addableViaModal;
 		if (!modalConfig) return null;
 
-		const button = document.createElement('button');
-		button.type = 'button';
-		button.className = 'layer-type-option';
+		const button = tplClone('tpl-layer-type-option');
 		button.dataset.layerType = type;
 		if (id) {
 			button.id = id;
 		}
-		button.innerHTML = `
-			<span class="layer-type-icon icon-wrapper ${iconSizeClass}">
-				<svg class="icon">
-					<use href="#icon-${modalConfig.icon}"></use>
-				</svg>
-			</span>
-			<span class="layer-type-name">${modalConfig.label}</span>
-			<span class="layer-type-description">${modalConfig.description}</span>
-		`;
+		button.querySelector('.layer-type-icon').classList.add(iconSizeClass);
+		button.querySelector('use').setAttribute('href', `#icon-${modalConfig.icon}`);
+		button.querySelector('.layer-type-name').textContent = modalConfig.label;
+		button.querySelector('.layer-type-description').textContent = modalConfig.description;
 		return button;
 	}
 

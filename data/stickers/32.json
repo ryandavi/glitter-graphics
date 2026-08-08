@@ -1,36 +1,37 @@
 {
-  "id": 32,
-  "name": "Aloha Hibiscus Pink Glitter Text",
-  "filename": "aloha_hibiscus_pink-glitter.gif",
-  "url": "images/stickers/text/aloha_hibiscus_pink-glitter.gif",
-  "thumbnailUrl": "images/stickers/text/aloha_hibiscus_pink-glitter.gif",
-  "category": "text",
-  "attribution": "",
-  "stickerText": "Aloha Hibiscus",
-  "tags": [
-    "aloha hibiscus",
-    "glitter",
-    "pink"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#EC17AD",
-    "#F77BD2",
-    "#C41F8E"
-  ],
-  "colorWeights": [
-    0.42,
-    0.11,
-    0.06
-  ],
-  "paletteType": "limited",
-  "isAnimated": 1,
-  "hasTransparency": 1,
-  "width": 390,
-  "height": 90,
-  "frameCount": 3,
-  "frameRate": 10,
-  "isVariableFramerate": 0,
-  "fileSize": 32233,
-  "sortOrder": 40
+    "id": 32,
+    "name": "Aloha Hibiscus Pink Glitter Text",
+    "filename": "aloha_hibiscus_pink-glitter.gif",
+    "url": "images/stickers/text/aloha_hibiscus_pink-glitter.gif",
+    "thumbnailUrl": "images/stickers/text/aloha_hibiscus_pink-glitter.gif",
+    "category": "text",
+    "attribution": "",
+    "stickerText": "Aloha Hibiscus",
+    "tags": [
+        "aloha hibiscus",
+        "glitter",
+        "pink"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#EC17AD",
+        "#F77BD2",
+        "#C41F8E"
+    ],
+    "colorWeights": [
+        0.42,
+        0.11,
+        0.06
+    ],
+    "paletteType": "limited",
+    "isAnimated": 1,
+    "hasTransparency": 1,
+    "isPixelated": 1,
+    "width": 390,
+    "height": 90,
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "fileSize": 32233,
+    "sortOrder": 40
 }

@@ -1,37 +1,38 @@
 {
-  "id": 229,
-  "name": "Ryandavi Ghost",
-  "filename": "ryandavi_ghost.png",
-  "url": "images/stickers/ryandavi/ryandavi_ghost.png",
-  "thumbnailUrl": "images/stickers/ryandavi/ryandavi_ghost.png",
-  "category": "ryandavi",
-  "attribution": null,
-  "stickerText": null,
-  "tags": [
-    "black",
-    "pastel",
-    "purple",
-    "white"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#FEFEFF",
-    "#010101",
-    "#D0B5D2"
-  ],
-  "colorWeights": [
-    0.6,
-    0.25,
-    0.15
-  ],
-  "paletteType": "neutral",
-  "isAnimated": 0,
-  "hasTransparency": 1,
-  "width": 200,
-  "height": 200,
-  "frameCount": 1,
-  "frameRate": 0,
-  "isVariableFramerate": 0,
-  "fileSize": 2725,
-  "sortOrder": 0
+    "id": 229,
+    "name": "Ryandavi Ghost",
+    "filename": "ryandavi_ghost.png",
+    "url": "images/stickers/ryandavi/ryandavi_ghost.png",
+    "thumbnailUrl": "images/stickers/ryandavi/ryandavi_ghost.png",
+    "category": "ryandavi",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "black",
+        "pastel",
+        "purple",
+        "white"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#FEFEFF",
+        "#010101",
+        "#D0B5D2"
+    ],
+    "colorWeights": [
+        0.6,
+        0.25,
+        0.15
+    ],
+    "paletteType": "neutral",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 200,
+    "height": 200,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 2725,
+    "sortOrder": 0
 }

@@ -20,7 +20,16 @@ class GifAnalyzer
 			throw new Exception('File not found: ' . $this->imagePath);
 		}
 
-		return array_merge($this->extractFrameData(), $this->extractColorData());
+		$analysis = array_merge($this->extractFrameData(), $this->extractColorData());
+
+		return array_merge($analysis, $this->renderingVerdict($analysis));
+	}
+
+	private function mimeType()
+	{
+		$info = @getimagesize($this->imagePath);
+
+		return $info['mime'] ?? '';
 	}
 
 	private function extractFrameData()
@@ -58,6 +67,12 @@ class GifAnalyzer
 		$opaquePixels = 0;
 		$brightnessSum = 0;
 		$hasTransparency = false;
+		// Soft-edge evidence: how many visible pixels sit between opaque and
+		// transparent, and how varied they are. Both are collected over the
+		// same pass as the color buckets — see softEdgeReading().
+		$softPixels = 0;
+		$softAlphaLevels = [];
+		$softColorKeys = [];
 		$frames = $this->loadSampleFrames();
 
 		foreach ($frames as $image) {
@@ -81,6 +96,11 @@ class GifAnalyzer
 					$b = $rgba['blue'];
 					$key = (($r >> 4) << 8) | (($g >> 4) << 4) | ($b >> 4);
 					$row[$x] = $key;
+					if ($rgba['alpha'] > 0) {
+						$softPixels++;
+						$softAlphaLevels[$rgba['alpha']] = true;
+						$softColorKeys[$key] = true;
+					}
 					if (!isset($buckets[$key])) {
 						$buckets[$key] = ['count' => 0, 'r' => 0, 'g' => 0, 'b' => 0, 'isolated' => 0];
 					}
@@ -126,6 +146,10 @@ class GifAnalyzer
 				'sparkle_coverage' => 0,
 				'suggested_tags' => [],
 				'has_transparency' => 1,
+				'soft_edge_coverage' => 0,
+				'soft_edge_alpha_levels' => 0,
+				'soft_edge_colors' => 0,
+				'palette_bucket_count' => 0,
 			];
 		}
 
@@ -258,6 +282,62 @@ class GifAnalyzer
 			'sparkle_coverage' => round($sparkleCoverage, 3),
 			'suggested_tags' => $this->suggestPatternTag($clusters),
 			'has_transparency' => $hasTransparency ? 1 : 0,
+			// Raw observations only. renderingVerdict() weighs them, so the
+			// measurement and the judgement stay separable.
+			'soft_edge_coverage' => $opaquePixels > 0 ? round($softPixels / $opaquePixels, 4) : 0,
+			'soft_edge_alpha_levels' => count($softAlphaLevels),
+			'soft_edge_colors' => count($softColorKeys),
+			'palette_bucket_count' => count($buckets),
+		];
+	}
+
+	// Weighs the observations into an is_pixelated suggestion. The rules and
+	// weights live in data/rendering-rules.json so this reader and the upload
+	// path in StickerManager.js cannot drift apart; see that file for why each
+	// signal is worth what it is.
+	//
+	// The alpha evidence is three-way, which is the part a single threshold got
+	// wrong: a long ramp means antialiased, a hard cutout means a sprite, and
+	// no alpha channel at all means the measurement never had anything to read
+	// — the last one must not be scored as though the test came back negative.
+	private function renderingVerdict($analysis)
+	{
+		$rules = $this->config['rendering_rules'];
+		$weights = $rules['weights'];
+		$mime = $this->mimeType();
+		$evidence = [];
+
+		$hasRamp = (int)$analysis['soft_edge_alpha_levels'] >= $rules['softEdge']['minAlphaLevels']
+			&& (float)$analysis['soft_edge_coverage'] >= $rules['softEdge']['minCoverage'];
+		if ($hasRamp) {
+			$evidence['soft_edge_ramp'] = $weights['soft_edge_ramp'];
+		} elseif (!empty($analysis['has_transparency'])) {
+			$evidence['hard_alpha_cutout'] = $weights['hard_alpha_cutout'];
+		} else {
+			$evidence['no_alpha_channel'] = $weights['no_alpha_channel'];
+		}
+
+		if (in_array($mime, $rules['smoothMimeTypes'], true)) {
+			$evidence['lossy_photographic_format'] = $weights['lossy_photographic_format'];
+		}
+		if ($mime === 'image/gif') {
+			$evidence['indexed_gif'] = $weights['indexed_gif'];
+		}
+
+		$evidence[(int)$analysis['palette_bucket_count'] >= $rules['richPaletteBuckets']
+			? 'rich_palette'
+			: 'limited_palette'] = (int)$analysis['palette_bucket_count'] >= $rules['richPaletteBuckets']
+				? $weights['rich_palette']
+				: $weights['limited_palette'];
+
+		$score = array_sum($evidence);
+
+		return [
+			// Ties stay pixelated: it is the library's overwhelming majority and
+			// the safe answer for art that was drawn crisp.
+			'is_pixelated' => $score > 0 ? 0 : 1,
+			'rendering_score' => $score,
+			'rendering_evidence' => $evidence,
 		];
 	}
 

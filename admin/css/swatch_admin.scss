@@ -1110,6 +1110,10 @@ input[type="checkbox"].field-switch {
     border: 1px solid var(--color-border);
     image-rendering: pixelated;
     flex-shrink: 0;
+
+    // Crisp is the default for every asset type; only art the analyzer or an
+    // admin marked as non-pixel opts out. See AssetEditor.renderingClass().
+    &.rendering-smooth { image-rendering: auto; }
 }
 
 .swatch-name {
@@ -1351,6 +1355,8 @@ input[type="checkbox"] {
     border-radius: var(--radius-sm);
     background: var(--color-bg-tertiary);
     image-rendering: pixelated;
+
+    &.rendering-smooth { image-rendering: auto; }
 }
 
 // ============================================

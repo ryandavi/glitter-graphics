@@ -74,6 +74,18 @@ class AssetAnalysisResult
 				'has_transparency' => (bool)($analysis['has_transparency'] ?? false),
 				'opaque_coverage' => round((float)($analysis['opaque_coverage'] ?? 1), 4),
 			],
+			// Why the is_pixelated suggestion came out the way it did. Stored
+			// with the analysis so a verdict stays explainable long after the
+			// Auto-Analyze modal that proposed it is gone.
+			'rendering' => [
+				'pixelated' => (bool)($analysis['is_pixelated'] ?? true),
+				'score' => (int)($analysis['rendering_score'] ?? 0),
+				'evidence' => (array)($analysis['rendering_evidence'] ?? []),
+				'soft_edge_coverage' => round((float)($analysis['soft_edge_coverage'] ?? 0), 4),
+				'soft_edge_alpha_levels' => (int)($analysis['soft_edge_alpha_levels'] ?? 0),
+				'soft_edge_colors' => (int)($analysis['soft_edge_colors'] ?? 0),
+				'palette_bucket_count' => (int)($analysis['palette_bucket_count'] ?? 0),
+			],
 			'palette' => [
 				'type' => $classification['type'],
 				'colors' => array_slice($palette, 0, $classification['limit']),

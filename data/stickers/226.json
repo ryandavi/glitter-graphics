@@ -1,34 +1,35 @@
 {
-  "id": 226,
-  "name": "Ryandavi Cat",
-  "filename": "ryandavi_cat.png",
-  "url": "images/stickers/ryandavi/ryandavi_cat.png",
-  "thumbnailUrl": "images/stickers/ryandavi/ryandavi_cat.png",
-  "category": "ryandavi",
-  "attribution": null,
-  "stickerText": null,
-  "tags": [
-    "black",
-    "pastel",
-    "purple"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#D3B6D6",
-    "#050405"
-  ],
-  "colorWeights": [
-    0.59,
-    0.39
-  ],
-  "paletteType": "neutral",
-  "isAnimated": 0,
-  "hasTransparency": 1,
-  "width": 200,
-  "height": 200,
-  "frameCount": 1,
-  "frameRate": 0,
-  "isVariableFramerate": 0,
-  "fileSize": 2944,
-  "sortOrder": 0
+    "id": 226,
+    "name": "Ryandavi Cat",
+    "filename": "ryandavi_cat.png",
+    "url": "images/stickers/ryandavi/ryandavi_cat.png",
+    "thumbnailUrl": "images/stickers/ryandavi/ryandavi_cat.png",
+    "category": "ryandavi",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "black",
+        "pastel",
+        "purple"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#D3B6D6",
+        "#050405"
+    ],
+    "colorWeights": [
+        0.59,
+        0.39
+    ],
+    "paletteType": "neutral",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 200,
+    "height": 200,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 2944,
+    "sortOrder": 0
 }

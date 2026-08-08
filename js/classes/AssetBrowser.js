@@ -333,29 +333,26 @@ async loadUntilItemFound(itemId) {
 	}
 
 	createCategoryCard(category, count) {
-		const card = document.createElement('div');
-		card.className = 'category-card';
+		const card = tplClone('tpl-category-card');
 		card.dataset.categoryId = category.id;
 		card.style.setProperty('--category-color', category.color);
 
-		// Different rendering for glitter vs stickers
-		const isGlitter = this.displayName === 'Glitter';
-
-		if (isGlitter) {
-			card.innerHTML = `
-				<div class="category-card-image category-card-glitter-bg" style="background-image: url('${category.icon}')"></div>
-				<div class="category-card-name">${category.name}</div>
-				<div class="category-card-count">${count} ${count === 1 ? 'item' : 'items'}</div>
-			`;
+		// Glitter categories tile their icon as a repeating background; every
+		// other library shows it as a contained thumbnail.
+		const image = card.querySelector('.category-card-image');
+		if (this.displayName === 'Glitter') {
+			image.classList.add('category-card-glitter-bg');
+			image.style.backgroundImage = `url('${category.icon}')`;
 		} else {
-			card.innerHTML = `
-				<div class="category-card-image">
-					<img src="${category.icon}" draggable="false" alt="${category.name}">
-				</div>
-				<div class="category-card-name">${category.name}</div>
-				<div class="category-card-count">${count} ${count === 1 ? 'item' : 'items'}</div>
-			`;
+			const img = document.createElement('img');
+			img.src = category.icon;
+			img.draggable = false;
+			img.alt = category.name;
+			image.appendChild(img);
 		}
+
+		card.querySelector('.category-card-name').textContent = category.name;
+		card.querySelector('.category-card-count').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
 
 		card.addEventListener('click', () => {
 			this.setState('CATEGORY_DETAIL', category.id);

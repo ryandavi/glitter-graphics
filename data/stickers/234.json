@@ -1,39 +1,40 @@
 {
-  "id": 234,
-  "name": "Ryandavi Rybaby",
-  "filename": "ryandavi_rybaby.png",
-  "url": "images/stickers/ryandavi/ryandavi_rybaby.png",
-  "thumbnailUrl": "images/stickers/ryandavi/ryandavi_rybaby.png",
-  "category": "ryandavi",
-  "attribution": null,
-  "stickerText": null,
-  "tags": [
-    "black",
-    "red",
-    "white",
-    "yellow"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#FBFAFA",
-    "#CD3234",
-    "#020202",
-    "#F5CD24"
-  ],
-  "colorWeights": [
-    0.47,
-    0.26,
-    0.25,
-    0.02
-  ],
-  "paletteType": "single",
-  "isAnimated": 0,
-  "hasTransparency": 1,
-  "width": 800,
-  "height": 400,
-  "frameCount": 1,
-  "frameRate": 0,
-  "isVariableFramerate": 0,
-  "fileSize": 38431,
-  "sortOrder": 0
+    "id": 234,
+    "name": "Ryandavi Rybaby",
+    "filename": "ryandavi_rybaby.png",
+    "url": "images/stickers/ryandavi/ryandavi_rybaby.png",
+    "thumbnailUrl": "images/stickers/ryandavi/ryandavi_rybaby.png",
+    "category": "ryandavi",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "black",
+        "red",
+        "white",
+        "yellow"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#FBFAFA",
+        "#CD3234",
+        "#020202",
+        "#F5CD24"
+    ],
+    "colorWeights": [
+        0.47,
+        0.26,
+        0.25,
+        0.02
+    ],
+    "paletteType": "single",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 800,
+    "height": 400,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 38431,
+    "sortOrder": 0
 }

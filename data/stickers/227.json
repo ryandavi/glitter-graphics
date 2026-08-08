@@ -1,36 +1,37 @@
 {
-  "id": 227,
-  "name": "Ryandavi Egg",
-  "filename": "ryandavi_egg.png",
-  "url": "images/stickers/ryandavi/ryandavi_egg.png",
-  "thumbnailUrl": "images/stickers/ryandavi/ryandavi_egg.png",
-  "category": "ryandavi",
-  "attribution": null,
-  "stickerText": null,
-  "tags": [
-    "black",
-    "green",
-    "white"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#FFFFFF",
-    "#010101",
-    "#8DC641"
-  ],
-  "colorWeights": [
-    0.71,
-    0.2,
-    0.08
-  ],
-  "paletteType": "neutral",
-  "isAnimated": 0,
-  "hasTransparency": 1,
-  "width": 400,
-  "height": 500,
-  "frameCount": 1,
-  "frameRate": 0,
-  "isVariableFramerate": 0,
-  "fileSize": 14929,
-  "sortOrder": 0
+    "id": 227,
+    "name": "Ryandavi Egg",
+    "filename": "ryandavi_egg.png",
+    "url": "images/stickers/ryandavi/ryandavi_egg.png",
+    "thumbnailUrl": "images/stickers/ryandavi/ryandavi_egg.png",
+    "category": "ryandavi",
+    "attribution": null,
+    "stickerText": null,
+    "tags": [
+        "black",
+        "green",
+        "white"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#FFFFFF",
+        "#010101",
+        "#8DC641"
+    ],
+    "colorWeights": [
+        0.71,
+        0.2,
+        0.08
+    ],
+    "paletteType": "neutral",
+    "isAnimated": 0,
+    "hasTransparency": 1,
+    "isPixelated": 0,
+    "width": 400,
+    "height": 500,
+    "frameCount": 1,
+    "frameRate": 0,
+    "isVariableFramerate": 0,
+    "fileSize": 14929,
+    "sortOrder": 0
 }

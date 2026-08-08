@@ -26,6 +26,22 @@ function revealAssetBrowser(editor, manager = null, assetId = null) {
 	}
 }
 
+// Single source for every shape card: the MaskEditor brush picker, the shape
+// tool picker, and the shape gallery. Only the button class and the title/
+// aria-label wording differ between call sites. The icon comes from
+// ShapeLibrary so the thumbnail always matches the geometry that gets painted.
+function createShapeCard(shapeId, label, { className = 'brush-shape-option', title = label } = {}) {
+	const card = tplClone('tpl-shape-card');
+	card.classList.add(...className.split(/\s+/).filter(Boolean));
+	card.dataset.shape = shapeId;
+	card.title = title;
+	card.setAttribute('aria-label', title);
+	// ShapeLibrary icons are developer-authored SVG source, not asset data.
+	card.querySelector('.brush-shape-option-icon').innerHTML = ShapeLibrary.getIconSvg(shapeId);
+	card.querySelector('.brush-shape-option-name').textContent = label;
+	return card;
+}
+
 function setCollapsibleSectionState(section, content, toggle, isOpen) {
 	section?.classList.toggle('is-open', isOpen);
 	content?.classList.toggle('visible', isOpen);

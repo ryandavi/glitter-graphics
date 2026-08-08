@@ -1,38 +1,39 @@
 {
-  "id": 216,
-  "name": "Love Emo Hearts Black Pink Text",
-  "filename": "love-emo_hearts_black-pink.gif",
-  "url": "images/stickers/text/love-emo_hearts_black-pink.gif",
-  "thumbnailUrl": "images/stickers/text/love-emo_hearts_black-pink.gif",
-  "category": "text",
-  "attribution": null,
-  "stickerText": "Love Emo",
-  "tags": [
-    "black",
-    "emo",
-    "hearts",
-    "love",
-    "pink"
-  ],
-  "searchTerms": [],
-  "colorCodes": [
-    "#000000",
-    "#FCB8E9",
-    "#E589BF"
-  ],
-  "colorWeights": [
-    0.58,
-    0.1,
-    0.08
-  ],
-  "paletteType": "limited",
-  "isAnimated": 1,
-  "hasTransparency": 1,
-  "width": 254,
-  "height": 200,
-  "frameCount": 3,
-  "frameRate": 10,
-  "isVariableFramerate": 0,
-  "fileSize": 62927,
-  "sortOrder": 0
+    "id": 216,
+    "name": "Love Emo Hearts Black Pink Text",
+    "filename": "love-emo_hearts_black-pink.gif",
+    "url": "images/stickers/text/love-emo_hearts_black-pink.gif",
+    "thumbnailUrl": "images/stickers/text/love-emo_hearts_black-pink.gif",
+    "category": "text",
+    "attribution": null,
+    "stickerText": "Love Emo",
+    "tags": [
+        "black",
+        "emo",
+        "hearts",
+        "love",
+        "pink"
+    ],
+    "searchTerms": [],
+    "colorCodes": [
+        "#000000",
+        "#FCB8E9",
+        "#E589BF"
+    ],
+    "colorWeights": [
+        0.58,
+        0.1,
+        0.08
+    ],
+    "paletteType": "limited",
+    "isAnimated": 1,
+    "hasTransparency": 1,
+    "isPixelated": 1,
+    "width": 254,
+    "height": 200,
+    "frameCount": 3,
+    "frameRate": 10,
+    "isVariableFramerate": 0,
+    "fileSize": 62927,
+    "sortOrder": 0
 }

@@ -212,7 +212,8 @@ class HtmlSceneExporter {
 				flipX: transform.flipX,
 				flipY: transform.flipY,
 				filter: buildCssColorFilter(layer.stickerData.colorAdjust),
-				blendMode: this.normalizeBlendMode(layer.stickerData.blendMode)
+				blendMode: this.normalizeBlendMode(layer.stickerData.blendMode),
+				imageRendering: layer.stickerData.isPixelated === false ? 'auto' : 'pixelated'
 			};
 		}));
 		const background = await this.resolveBackground(options);
@@ -467,7 +468,12 @@ ${this.getSceneMarkup(scene)}
 			if (item.blendMode !== 'normal') declarations.push(`mix-blend-mode:${item.blendMode}`);
 			const customClasses = item.classes ? ` ${item.classes}` : '';
 			const titleAttribute = item.title ? ` title="${this.escapeHtml(item.title)}"` : '';
-			const image = `<img class="glitter-scene__sticker" src="${item.src}" alt="${this.escapeHtml(item.alt)}">`;
+			// The scene stylesheet carries the document-wide choice; only stickers
+			// whose own flag disagrees with it need an inline override.
+			const renderingOverride = item.imageRendering === options.imageRendering
+				? ''
+				: ` style="image-rendering:${item.imageRendering}"`;
+			const image = `<img class="glitter-scene__sticker" src="${item.src}" alt="${this.escapeHtml(item.alt)}"${renderingOverride}>`;
 			return item.href
 				? `			<a class="glitter-scene__item${customClasses}" href="${this.escapeHtml(item.href)}"${titleAttribute} style="${declarations.join(';')}">${image}</a>`
 				: `			<div class="glitter-scene__item${customClasses}"${titleAttribute} style="${declarations.join(';')}">${image}</div>`;

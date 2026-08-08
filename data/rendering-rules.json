@@ -1,0 +1,29 @@
+{
+	"_comment": "Single source of truth for how an asset's image-rendering is decided. Read by admin/includes/config.php for library analysis and fetched by js/classes/StickerManager.js for user uploads, so the admin's Auto-Analyze and an upload's self-classification can never drift apart. Edit here, nowhere else.",
+
+	"_model": "No single test settles this, so the signals are weighted and summed: positive scores smooth, zero or negative stays pixelated. Ties resolve to pixelated because that is the library's overwhelming majority and the safe default for art that was drawn crisp. Every asset contributes exactly one alpha verdict and one palette verdict, plus any format weight, and the itemised evidence is stored with the analysis so a verdict can always be explained.",
+
+	"softEdge": {
+		"_comment": "Antialiased artwork fades its silhouette out over a ramp of alpha values; pixel art cuts straight from opaque to transparent. The ramp's LENGTH is the signal, not its coverage: measured over the library, antialiased art holds 14-28 distinct alpha values while its soft pixels are only 0.9%-3.4% of the image, and that share tracks the drawing's perimeter-to-area ratio rather than how it was drawn. Six levels clears a sprite carrying a couple of deliberate semi-transparent pixels. Level counts are not comparable between the two readers (GD reports alpha on a 0-127 scale, canvas on 0-255); only the floor's meaning carries over.",
+		"minAlphaLevels": 6,
+		"minCoverage": 0.002
+	},
+
+	"richPaletteBuckets": 260,
+	"_richPaletteBucketsComment": "Distinct 12-bit colour buckets among visible pixels — the same metric on both readers. Its only job is to stop a fully opaque image being called smooth merely because it has no alpha to measure: paired with no_alpha_channel it nets to zero, so an opaque asset stays pixelated unless its palette is extraordinary. 260 sits just above the most colour-rich artwork in the library (max 252, a dithered glitter GIF), so nothing we actually own trips it. Deliberately NOT tuned to separate photos from pixel art, because measured over this library it cannot: the one photographic sticker holds 98 buckets, fewer than the median dithered GIF. Photographs are caught by their alpha ramp instead. An opaque, few-coloured photograph will read as pixelated — a conservative miss, and the admin checkbox is the answer for it.",
+
+	"smoothMimeTypes": ["image/jpeg"],
+	"_smoothMimeTypesComment": "Formats whose very use is evidence of smooth artwork, decided before any pixels are read. JPEG has no alpha channel, so the soft-edge measurement can never fire on one — and a lossy photographic format is not where pixel art ships. PNG is deliberately absent: it is the standard container for pixel art and smooth art alike, so it proves nothing on its own and the measurement decides it.",
+
+	"weights": {
+		"_comment": "Positive weights argue for smooth rendering, negative for pixelated.",
+		"soft_edge_ramp": 3,
+		"hard_alpha_cutout": -3,
+		"no_alpha_channel": 1,
+		"lossy_photographic_format": 2,
+		"indexed_gif": -4,
+		"rich_palette": 2,
+		"limited_palette": -1
+	},
+	"_weightsComment": "indexed_gif outweighs every combination available to a GIF (at most no_alpha_channel + rich_palette = 3), so a GIF is always pixelated — one-bit alpha cannot express a soft edge, and smoothing an indexed sprite only blurs it. It is a weight rather than a hard rule so the behaviour stays visible and tunable here instead of hidden in code."
+}

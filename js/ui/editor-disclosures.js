@@ -138,7 +138,10 @@ initializeCollapsibleSections() {
 				title.setAttribute('tabindex', '0');
 				title.setAttribute('aria-expanded', 'true');
 				if (!title.querySelector('.subsection-chevron')) {
-					title.insertAdjacentHTML('beforeend', '<span class="subsection-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>');
+					const chevron = document.createElement('span');
+					chevron.className = 'subsection-chevron icon-wrapper';
+					chevron.appendChild(createIcon('chevron-down'));
+					title.appendChild(chevron);
 				}
 				const enabled = title.querySelector('input[data-effect-toggle]');
 				if (enabled) syncPanelEffectToggle(enabled, enabled.checked);

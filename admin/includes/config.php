@@ -100,7 +100,10 @@ $CONFIG = [
         'jpg' => ['mime' => ['image/jpeg']],
         'jpeg' => ['mime' => ['image/jpeg']],
     ],
-    'analysis_version' => 6,
+    // 7 adds the soft-edge measurement behind is_pixelated. Bumping this marks
+    // stored analyses as stale in Health so a Bulk Analyze picks up the new
+    // reading; it does not change any palette rule.
+    'analysis_version' => 7,
     'palette_sample_limit' => 8,
     'palette_limited_limit' => 5,
     'palette_photographic_entropy' => 0.78,
@@ -168,3 +171,15 @@ $CONFIG = [
         ]
     ]
 ];
+
+// How image-rendering is decided, shared verbatim with the editor's upload path
+// so the two readers cannot disagree. Kept out of the array literal above
+// because it is data both languages own, not an admin setting.
+$renderingRulesPath = __DIR__ . '/../../data/rendering-rules.json';
+$renderingRules = is_readable($renderingRulesPath)
+    ? json_decode(file_get_contents($renderingRulesPath), true)
+    : null;
+if (!is_array($renderingRules)) {
+    throw new Exception('Missing or unreadable data/rendering-rules.json');
+}
+$CONFIG['rendering_rules'] = $renderingRules;

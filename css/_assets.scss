@@ -64,7 +64,13 @@
 		>img {
 			object-fit: contain;
 			padding: var(--spacing-xs);
+			// Per-asset, from the sticker's isPixelated flag. The shared rule above
+			// pixelates every gallery thumbnail; smooth art opts back out here so
+			// the gallery previews it the way the canvas will render it.
+			image-rendering: auto;
 		}
+
+		&.pixelated>img { image-rendering: pixelated; }
 
 		&.animated::after {
 			content: '\25B6';
@@ -338,6 +344,9 @@
 		}
 
 		>img { @include pixelated-contain-image; }
+
+		// Sticker asset-info thumbnails carry .pixelated from the asset flag.
+		&:not(.pixelated)>img { image-rendering: auto; }
 
 		&.glitter-bg {
 			background-repeat: repeat;
