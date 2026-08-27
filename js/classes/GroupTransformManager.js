@@ -36,10 +36,14 @@ class GroupTransformManager {
 		const rotateRad = (rotateDeg * Math.PI) / 180;
 		const cos = Math.cos(rotateRad);
 		const sin = Math.sin(rotateRad);
+		const originX = options.originX ?? bounds.centerX;
+		const originY = options.originY ?? bounds.centerY;
+		const targetX = options.targetX ?? (originX + translateX);
+		const targetY = options.targetY ?? (originY + translateY);
 
 		layerStates.forEach(({ transform, position, scale, rotation }) => {
-			const relativeX = position.x - bounds.centerX;
-			const relativeY = position.y - bounds.centerY;
+			const relativeX = position.x - originX;
+			const relativeY = position.y - originY;
 			const scaledX = relativeX * scaleFactor;
 			const scaledY = relativeY * scaleFactor;
 			const rotatedX = (scaledX * cos) - (scaledY * sin);
@@ -47,8 +51,8 @@ class GroupTransformManager {
 
 			transform.updateTransform({
 				position: {
-					x: bounds.centerX + rotatedX + translateX,
-					y: bounds.centerY + rotatedY + translateY
+					x: targetX + rotatedX,
+					y: targetY + rotatedY
 				},
 				scale: {
 					x: clampLayerScale(scale.x * scaleFactor),
@@ -247,8 +251,11 @@ class GroupTransformManager {
 		const bounds = this.getBounds();
 		if (!entries.length || !bounds) return;
 
-		const translateCanvasX = gestureDelta.translateX / this.editor.viewport.currentZoom;
-		const translateCanvasY = gestureDelta.translateY / this.editor.viewport.currentZoom;
+		const previousCentroid = this.editor.viewport.screenToCanvas(
+			gestureDelta.previousCentroidX ?? gestureDelta.centroidX,
+			gestureDelta.previousCentroidY ?? gestureDelta.centroidY
+		);
+		const centroid = this.editor.viewport.screenToCanvas(gestureDelta.centroidX, gestureDelta.centroidY);
 		const scaleFactor = Math.max(0.1, Math.min(5, gestureDelta.scale || 1));
 		const rotateDeg = gestureDelta.rotateDeg || 0;
 		const layerStates = entries.map(({ transform }) => {
@@ -262,8 +269,10 @@ class GroupTransformManager {
 		});
 
 		this.applyLayerStateDelta(layerStates, bounds, {
-			translateX: translateCanvasX,
-			translateY: translateCanvasY,
+			originX: previousCentroid.x,
+			originY: previousCentroid.y,
+			targetX: centroid.x,
+			targetY: centroid.y,
 			scaleFactor,
 			rotateDeg
 		});

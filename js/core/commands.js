@@ -4,6 +4,19 @@ const COMMANDS = {
 	zoomReset: { label: 'Reset Zoom (100%)', group: 'View', keys: ['mod+1'], displayKey: 'Ctrl/Cmd + 1', run: (editor) => editor.viewport.resetZoom({ animate: true }) },
 	zoomFit: { label: 'Fit Screen', group: 'View', keys: ['mod+0'], displayKey: 'Ctrl/Cmd + 0', run: (editor) => editor.viewport.zoomToFit({ animate: true }) },
 	zoomFill: { run: (editor) => editor.viewport.zoomToFill({ animate: true }) },
+	zoomSelection: {
+		label: 'Zoom to Selection', group: 'View', keys: ['shift+2'], displayKey: 'Shift + 2',
+		when: (editor) => editor.getSelectedActionableLayers().length > 0,
+		run: (editor) => editor.zoomToSelection({ animate: true })
+	},
+	trackpadPan: { label: 'Pan Canvas', group: 'View', binding: { type: 'gesture', device: 'trackpad', gesture: 'Two-finger swipe' } },
+	trackpadZoom: { label: 'Zoom Around Pointer', group: 'View', binding: { type: 'gesture', device: 'trackpad', gesture: 'Pinch' } },
+	touchPan: { label: 'Pan Canvas', group: 'View', binding: { type: 'gesture', device: 'touch', gesture: 'Drag empty canvas' } },
+	touchTransform: { label: 'Move, Scale, and Rotate Selection', group: 'Transform', binding: { type: 'gesture', device: 'touch', gesture: 'Two-finger transform' } },
+	middleButtonPan: { label: 'Pan Canvas from Any Tool', group: 'View', binding: { type: 'gesture', device: 'pointer', gesture: 'Middle-button drag' } },
+	scrubbyZoom: { label: 'Smooth Zoom with Zoom Tool', group: 'View', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag right/up or left/down' } },
+	fitToolGesture: { label: 'Fit Canvas to Workspace', group: 'View', binding: { type: 'gesture', device: 'pointer', gesture: 'Double-click Hand tool' } },
+	resetToolGesture: { label: 'Reset Zoom to 100%', group: 'View', binding: { type: 'gesture', device: 'pointer', gesture: 'Double-click Zoom tool' } },
 	centerCanvasH: { run: (editor) => editor.viewport.centerHorizontal({ animate: true }) },
 	centerCanvasV: { run: (editor) => editor.viewport.centerVertical({ animate: true }) },
 	centerSelectionH: { run: (editor) => centerSelection(editor, 'centerHorizontal', 'centerX') },
@@ -48,20 +61,46 @@ const COMMANDS = {
 	nudge: { label: 'Nudge Selected Layer', group: 'Transform', displayKey: 'Arrow Keys' },
 	nudgeFast: { label: 'Nudge Selected Layer 10px', group: 'Transform', displayKey: 'Shift + Arrow Keys' },
 	clearSelection: { label: 'Cancel Active Transform / Clear Multi-Selection', group: 'Selection', displayKey: 'Escape' },
-	duplicateDrag: { label: 'Duplicate Layer(s) While Dragging', group: 'Transform', displayKey: 'Alt + Drag', gestures: ['Drag'] },
-	axisLock: { label: 'Axis-lock Selected Layer Move', group: 'Transform', displayKey: 'Shift + Drag', gestures: ['Drag'] },
-	disableSnapping: { label: 'Temporarily Disable Snapping', group: 'Transform', displayKey: 'Ctrl + Drag', instruction: 'Hold', gestures: ['Drag'] },
-	snapRotation: { label: 'Snap Rotation to 15deg', group: 'Transform', displayKey: 'Shift + Rotate', gestures: ['Rotate'] },
-	resizeCenter: { label: 'Resize Layer(s) from Center', group: 'Transform', displayKey: 'Alt + Resize', gestures: ['Resize'] }
+	duplicateDrag: { label: 'Duplicate Layer(s) While Dragging', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['alt'] } },
+	axisLock: { label: 'Axis-lock Selected Layer Move', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['shift'] } },
+	disableSnapping: { label: 'Temporarily Disable Snapping', group: 'Transform', instruction: 'Hold', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['control'] } },
+	snapRotation: { label: 'Snap Rotation to 15deg', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Rotate', modifiers: ['shift'] } },
+	resizeCenter: { label: 'Resize Layer(s) from Center', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Resize', modifiers: ['alt'] } }
 };
 
-function getShortcutGroups() {
+
+const SHORTCUT_GROUP_ALIASES = Object.freeze({
+	File: 'Essentials',
+	History: 'Essentials',
+	Clipboard: 'Essentials',
+	View: 'Canvas & View'
+});
+
+function isGestureCommand(command) {
+	return command.binding?.type === 'gesture';
+}
+
+function getShortcutGroups(kind = 'keyboard') {
 	const groups = new Map();
-	Object.values(COMMANDS).filter((command) => command.label && command.displayKey).forEach((command) => {
-		if (!groups.has(command.group)) groups.set(command.group, []);
-		groups.get(command.group).push(command);
+	Object.values(COMMANDS).filter((command) => {
+		if (!command.label) return false;
+		return kind === 'gesture' ? isGestureCommand(command) : Boolean(command.displayKey) && !isGestureCommand(command);
+	}).forEach((command) => {
+		const group = kind === 'gesture'
+			? (command.group === 'Transform' ? 'Move & Transform' : 'Navigate')
+			: (SHORTCUT_GROUP_ALIASES[command.group] || command.group);
+		if (!groups.has(group)) groups.set(group, []);
+		groups.get(group).push(command);
 	});
-	return Array.from(groups, ([title, items]) => ({ title, items }));
+	const order = kind === 'gesture'
+		? ['Navigate', 'Move & Transform']
+		: ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush'];
+	const rank = (title) => {
+		const index = order.indexOf(title);
+		return index === -1 ? order.length : index;
+	};
+	return Array.from(groups, ([title, items]) => ({ title, items }))
+		.sort((a, b) => rank(a.title) - rank(b.title));
 }
 
 function centerSelection(editor, method, groupAxis) {

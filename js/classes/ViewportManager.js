@@ -26,6 +26,11 @@ class ViewportManager {
 		this.inertiaVelocityX = 0;
 		this.inertiaVelocityY = 0;
 
+		// Frame-batched wheel / precision-trackpad input. Deltas accumulate here
+		// and apply as one composed transform per animation frame.
+		this._inputFrame = null;
+		this._pendingInput = this._emptyPendingInput();
+
 		// Resize tracking
 		this.lastViewportWidth = 0;
 		this.lastViewportHeight = 0;
@@ -54,22 +59,27 @@ class ViewportManager {
 		window.addEventListener('resize', () => this.handleWindowResize());
 		window.visualViewport?.addEventListener('resize', () => this.handleWindowResize());
 
-		// Mouse pan
+		// Mouse pan. The editor starts left-button Hand-tool pans; the viewport
+		// owns middle-button navigation so it remains available from every tool.
 		this.previewContainer.addEventListener('mousedown', (e) => {
-			if (e.button === 0) { // Left click only
-				this._handlePanStart(e);
+			if (e.button === 1) {
+				e.preventDefault();
+				this.startPan(e.clientX, e.clientY);
 			}
 		});
+		this.previewContainer.addEventListener('auxclick', (e) => {
+			if (e.button === 1) e.preventDefault();
+		});
 
-		this.previewContainer.addEventListener('mousemove', (e) => {
+		window.addEventListener('mousemove', (e) => {
 			this._handlePanMove(e);
 		});
 
-		this.previewContainer.addEventListener('mouseup', () => {
+		window.addEventListener('mouseup', () => {
 			this.endPan();
 		});
 
-		this.previewContainer.addEventListener('mouseleave', () => {
+		window.addEventListener('blur', () => {
 			this.endPan();
 		});
 
@@ -131,18 +141,10 @@ class ViewportManager {
 
 	restoreViewState(state, options = {}) {
 		if (!state || !this.canvasWidth) return;
-		if (options.animate) this.startViewTransition();
-		this.cancelInertia();
+		this.prepareViewChange(options);
 		const rect = this.previewContainer.getBoundingClientRect();
 		this.currentZoom = state.zoom;
-		let closestDiff = Number.MAX_VALUE;
-		CONFIG.ui.zoom.levels.forEach((zoom, index) => {
-			const diff = Math.abs(zoom - this.currentZoom);
-			if (diff < closestDiff) {
-				closestDiff = diff;
-				this.currentZoomIndex = index;
-			}
-		});
+		this._syncZoomIndex();
 		this.panX = rect.width / 2 - state.focusX * this.currentZoom;
 		this.panY = rect.height / 2 - state.focusY * this.currentZoom;
 		this.lastViewportWidth = rect.width;
@@ -166,12 +168,18 @@ class ViewportManager {
 		this.previewWrapper.classList.remove('viewport-transition');
 	}
 
+	prepareViewChange(options = {}) {
+		if (options.animate) this.startViewTransition();
+		else this.cancelViewTransition();
+		this.cancelInertia();
+		this.cancelQueuedInput();
+	}
+
 	// ===== ZOOM METHODS =====
 
 	setZoom(newZoom, clickX = null, clickY = null, options = {}) {
 		if (!this.canvasWidth) return;
-		if (options.animate) this.startViewTransition();
-		this.cancelInertia();
+		this.prepareViewChange(options);
 
 		const oldZoom = this.currentZoom;
 		const containerRect = this.previewContainer.getBoundingClientRect();
@@ -206,15 +214,7 @@ class ViewportManager {
 			Math.min(CONFIG.ui.zoom.levels[CONFIG.ui.zoom.levels.length - 1], newZoom)
 		);
 
-		// Update index for UI
-		let closestDiff = Number.MAX_VALUE;
-		CONFIG.ui.zoom.levels.forEach((z, i) => {
-			const diff = Math.abs(this.currentZoom - z);
-			if (diff < closestDiff) {
-				closestDiff = diff;
-				this.currentZoomIndex = i;
-			}
-		});
+		this._syncZoomIndex();
 
 		// 6. Calculate new Pan
 		// The new pan is: Screen Anchor Position - (Clamped Canvas Pixel * New Zoom)
@@ -226,28 +226,95 @@ class ViewportManager {
 		this._notifyViewportChanged();
 	}
 
-	zoomIn(clickX = null, clickY = null, options = {}) {
-		if (this.currentZoomIndex < CONFIG.ui.zoom.levels.length - 1) {
-			this.setZoom(CONFIG.ui.zoom.levels[this.currentZoomIndex + 1], clickX, clickY, options);
-		} else {
-			const nextZoom = this.currentZoom * 1.5;
-			this.setZoom(nextZoom, clickX, clickY, options);
+	/**
+	 * Apply a continuous zoom delta around a screen-space anchor. Touch pinch,
+	 * trackpad pinch, and future gesture sources all share this one primitive.
+	 */
+	zoomByFactor(factor, anchorX = null, anchorY = null, options = {}) {
+		if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return;
+		this.setZoom(this.currentZoom * factor, anchorX, anchorY, options);
+	}
+
+	// ===== FRAME-BATCHED INPUT =====
+	// Wheel and precision-trackpad streams emit many events per frame. Callers
+	// queue their intent through these; a single composed transform is applied
+	// on the next animation frame so intermediate states never reach a paint.
+
+	_emptyPendingInput() {
+		return { panX: 0, panY: 0, zoomFactor: 1, zoomAnchorX: null, zoomAnchorY: null };
+	}
+
+	queuePanBy(deltaX, deltaY) {
+		if (!this.canvasWidth || (!deltaX && !deltaY)) return;
+		this._pendingInput.panX += deltaX;
+		this._pendingInput.panY += deltaY;
+		this._scheduleInputFlush();
+	}
+
+	queueZoomByFactor(factor, anchorX = null, anchorY = null) {
+		if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return;
+		this._pendingInput.zoomFactor *= factor;
+		this._pendingInput.zoomAnchorX = anchorX;
+		this._pendingInput.zoomAnchorY = anchorY;
+		this._scheduleInputFlush();
+	}
+
+	_scheduleInputFlush() {
+		if (this._inputFrame !== null) return;
+		this._inputFrame = requestAnimationFrame(() => {
+			this._inputFrame = null;
+			this._flushQueuedInput();
+		});
+	}
+
+	_flushQueuedInput() {
+		const pending = this._pendingInput;
+		this._pendingInput = this._emptyPendingInput();
+
+		if (pending.zoomFactor !== 1) {
+			// One frame's worth of high-resolution wheel deltas should not snap the
+			// zoom across several stops at once.
+			const factor = Math.max(0.5, Math.min(2, pending.zoomFactor));
+			this.zoomByFactor(factor, pending.zoomAnchorX, pending.zoomAnchorY);
+		}
+		if (pending.panX || pending.panY) {
+			this.panBy(pending.panX, pending.panY);
 		}
 	}
 
-	zoomOut(clickX = null, clickY = null, options = {}) {
-		if (this.currentZoomIndex > 0) {
-			this.setZoom(CONFIG.ui.zoom.levels[this.currentZoomIndex - 1], clickX, clickY, options);
-		} else {
-			const nextZoom = this.currentZoom / 1.5;
-			this.setZoom(nextZoom, clickX, clickY, options);
+	cancelQueuedInput() {
+		if (this._inputFrame !== null) {
+			cancelAnimationFrame(this._inputFrame);
+			this._inputFrame = null;
 		}
+		this._pendingInput = this._emptyPendingInput();
+	}
+
+	_syncZoomIndex() {
+		let closestDiff = Number.MAX_VALUE;
+		CONFIG.ui.zoom.levels.forEach((z, i) => {
+			const diff = Math.abs(this.currentZoom - z);
+			if (diff < closestDiff) {
+				closestDiff = diff;
+				this.currentZoomIndex = i;
+			}
+		});
+	}
+
+	zoomIn(clickX = null, clickY = null, options = {}) {
+		const next = CONFIG.ui.zoom.levels.find((zoom) => zoom > this.currentZoom + 0.0001);
+		this.setZoom(next ?? this.currentZoom * 1.5, clickX, clickY, options);
+	}
+
+	zoomOut(clickX = null, clickY = null, options = {}) {
+		const next = [...CONFIG.ui.zoom.levels].reverse()
+			.find((zoom) => zoom < this.currentZoom - 0.0001);
+		this.setZoom(next ?? this.currentZoom / 1.5, clickX, clickY, options);
 	}
 
 	zoomToFit(options = {}) {
 		if (!this.canvasWidth) return;
-		if (options.animate) this.startViewTransition();
-		this.cancelInertia();
+		this.prepareViewChange(options);
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const padding = 40;
@@ -272,8 +339,7 @@ class ViewportManager {
 
 	zoomToFill(options = {}) {
 		if (!this.canvasWidth) return;
-		if (options.animate) this.startViewTransition();
-		this.cancelInertia();
+		this.prepareViewChange(options);
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const padding = 40;
@@ -296,10 +362,32 @@ class ViewportManager {
 		this._notifyViewportChanged();
 	}
 
+	zoomToBounds(bounds, options = {}) {
+		if (!bounds || !this.canvasWidth) return;
+		const width = Math.max(1, bounds.right - bounds.left);
+		const height = Math.max(1, bounds.bottom - bounds.top);
+		const rect = this.previewContainer.getBoundingClientRect();
+		const padding = options.padding ?? 80;
+		const availableWidth = Math.max(1, rect.width - padding);
+		const availableHeight = Math.max(1, rect.height - padding);
+		const minZoom = CONFIG.ui.zoom.levels[0];
+		const maxZoom = CONFIG.ui.zoom.levels[CONFIG.ui.zoom.levels.length - 1];
+		const zoom = Math.max(minZoom, Math.min(maxZoom,
+			Math.min(availableWidth / width, availableHeight / height)
+		));
+
+		this.prepareViewChange(options);
+		this.currentZoom = zoom;
+		this._syncZoomIndex();
+		this.panX = rect.width / 2 - ((bounds.left + bounds.right) / 2) * zoom;
+		this.panY = rect.height / 2 - ((bounds.top + bounds.bottom) / 2) * zoom;
+		this.applyTransform();
+		this._notifyViewportChanged();
+	}
+
 	resetZoom(options = {}) {
 		if (!this.canvasWidth) return;
-		if (options.animate) this.startViewTransition();
-		this.cancelInertia();
+		this.prepareViewChange(options);
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 
@@ -339,7 +427,7 @@ class ViewportManager {
 
 	resetViewport() {
 		if (!this.canvasWidth) return;
-		this.cancelInertia();
+		this.prepareViewChange();
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 
@@ -362,8 +450,7 @@ class ViewportManager {
 
 	centerHorizontal(options = {}) {
 		if (!this.canvasWidth) return;
-		if (options.animate) this.startViewTransition();
-		this.cancelInertia();
+		this.prepareViewChange(options);
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const scaledWidth = this.canvasWidth * this.currentZoom;
@@ -377,8 +464,7 @@ class ViewportManager {
 
 	centerVertical(options = {}) {
 		if (!this.canvasWidth) return;
-		if (options.animate) this.startViewTransition();
-		this.cancelInertia();
+		this.prepareViewChange(options);
 
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const scaledHeight = this.canvasHeight * this.currentZoom;
@@ -396,6 +482,7 @@ class ViewportManager {
 		if (!this.canvasWidth) return;
 		this.cancelViewTransition();
 		this.cancelInertia();
+		this.cancelQueuedInput();
 
 		this.isPanning = true;
 		this.panStartX = x;
@@ -426,7 +513,10 @@ class ViewportManager {
 	}
 
 	panBy(deltaX, deltaY) {
+		if (!this.canvasWidth || (!deltaX && !deltaY)) return;
 		this.cancelViewTransition();
+		this.cancelInertia();
+		this.cancelQueuedInput();
 		this.panX += deltaX;
 		this.panY += deltaY;
 		this.clampPanToVisibleBounds();
@@ -442,25 +532,36 @@ class ViewportManager {
 	}
 
 	pinchZoomAt(scale, clientX, clientY) {
+		this.zoomByFactor(scale, clientX, clientY);
+	}
+
+	/**
+	 * Apply a two-finger scale and translation as one transform. The canvas point
+	 * below the previous centroid lands below the new centroid without an
+	 * intermediate paint or duplicated translation.
+	 */
+	transformByGesture(scale, fromClientX, fromClientY, toClientX, toClientY) {
+		if (!this.canvasWidth || !Number.isFinite(scale) || scale <= 0) return;
 		this.cancelViewTransition();
 		this.cancelInertia();
+		this.cancelQueuedInput();
+
 		const rect = this.previewContainer.getBoundingClientRect();
-		const anchorX = clientX - rect.left;
-		const anchorY = clientY - rect.top;
-
-		const canvasX = (anchorX - this.panX) / this.currentZoom;
-		const canvasY = (anchorY - this.panY) / this.currentZoom;
-
-		let newZoom = this.currentZoom * scale;
+		const fromX = fromClientX - rect.left;
+		const fromY = fromClientY - rect.top;
+		const toX = toClientX - rect.left;
+		const toY = toClientY - rect.top;
+		const canvasX = (fromX - this.panX) / this.currentZoom;
+		const canvasY = (fromY - this.panY) / this.currentZoom;
 		const minZoom = CONFIG.ui.zoom.levels[0];
 		const maxZoom = CONFIG.ui.zoom.levels[CONFIG.ui.zoom.levels.length - 1];
-		newZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+		const newZoom = Math.max(minZoom, Math.min(maxZoom, this.currentZoom * scale));
 
-		this.panX = anchorX - (canvasX * newZoom);
-		this.panY = anchorY - (canvasY * newZoom);
 		this.currentZoom = newZoom;
+		this._syncZoomIndex();
+		this.panX = toX - (canvasX * newZoom);
+		this.panY = toY - (canvasY * newZoom);
 		this.clampPanToVisibleBounds();
-
 		this.applyTransform();
 		this._notifyViewportChanged();
 	}
@@ -477,6 +578,12 @@ class ViewportManager {
 
 	startInertia(velocityX, velocityY) {
 		if (!CONFIG.ui.gestures.inertia?.enabled) {
+			return;
+		}
+
+		// Momentum is motion the user did not ask to continue; honor a reduced-motion
+		// preference the same way animated zoom transitions do.
+		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
 			return;
 		}
 
@@ -573,11 +680,6 @@ class ViewportManager {
 
 	// ===== PRIVATE HELPERS =====
 
-	_handlePanStart(e) {
-		// Will be controlled by editor based on current tool
-		// Editor will call startPan() when appropriate
-	}
-
 	_handlePanMove(e) {
 		if (!this.isPanning) return;
 
@@ -587,7 +689,9 @@ class ViewportManager {
 		this.panX = this.lastPanX + deltaX;
 		this.panY = this.lastPanY + deltaY;
 
+		this.clampPanToVisibleBounds();
 		this.applyTransform();
+		this._notifyViewportChanged();
 		e.preventDefault();
 	}
 

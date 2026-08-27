@@ -66,6 +66,10 @@ togglePreview() {
 			if (this.currentTool === ToolType.TEXT) {
 				return;
 			}
+			if (this.currentTool === ToolType.ZOOM && this.originalImage && e.button === 0) {
+				this.startScrubbyZoom(e);
+				return;
+			}
 			if (this.currentTool === ToolType.SELECT && this.originalImage && e.button === 0 &&
 				!e.altKey &&
 				!e.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR) &&
@@ -99,6 +103,39 @@ togglePreview() {
 				e.preventDefault();
 			}
 		});
+	}
+
+,
+	startScrubbyZoom(event) {
+		const start = { x: event.clientX, y: event.clientY, zoom: this.viewport.currentZoom };
+		let active = false;
+		const cleanup = () => {
+			window.removeEventListener('pointermove', onMove);
+			window.removeEventListener('pointerup', onUp);
+			window.removeEventListener('pointercancel', onCancel);
+			this.previewContainer.classList.remove('scrubby-zooming');
+		};
+		const onMove = (moveEvent) => {
+			const dx = moveEvent.clientX - start.x;
+			const dy = moveEvent.clientY - start.y;
+			if (!active && Math.hypot(dx, dy) < 4) return;
+			active = true;
+			this.previewContainer.classList.add('scrubby-zooming');
+			// Right/up zoom in; left/down zoom out. Absolute-from-start math avoids
+			// compounding event-rate differences between mice and trackpads.
+			const distance = dx - dy;
+			this.viewport.setZoom(start.zoom * Math.exp(distance * 0.005), start.x, start.y);
+		};
+		const onUp = () => {
+			cleanup();
+			if (!active) return;
+			this.ignoreNextClick = true;
+			setTimeout(() => { this.ignoreNextClick = false; }, 0);
+		};
+		const onCancel = () => cleanup();
+		window.addEventListener('pointermove', onMove);
+		window.addEventListener('pointerup', onUp);
+		window.addEventListener('pointercancel', onCancel);
 	}
 
 ,
@@ -399,6 +436,38 @@ togglePreview() {
 			}
 		});
 
+		// Safari exposes trackpad pinch through proprietary GestureEvents. Keep
+		// this scoped to the workspace and suppress its companion wheel stream so
+		// a physical pinch can never be applied twice.
+		let nativeGestureScale = 1;
+		let nativeGestureActive = false;
+		let nativeGestureSuppressWheelUntil = 0;
+		this.previewContainer.addEventListener('gesturestart', (e) => {
+			if (!this.originalImage) return;
+			e.preventDefault();
+			nativeGestureScale = Number.isFinite(e.scale) && e.scale > 0 ? e.scale : 1;
+			nativeGestureActive = true;
+			nativeGestureSuppressWheelUntil = performance.now() + 100;
+		}, { passive: false });
+		this.previewContainer.addEventListener('gesturechange', (e) => {
+			if (!this.originalImage) return;
+			e.preventDefault();
+			nativeGestureSuppressWheelUntil = performance.now() + 100;
+			// Pointer Events already own direct-screen touches; GestureEvents here
+			// are only a fallback for pointerless Safari trackpad pinches.
+			if (this.viewport.gestureManager?.pointers?.size) return;
+			const nextScale = Number.isFinite(e.scale) && e.scale > 0 ? e.scale : nativeGestureScale;
+			this.viewport.zoomByFactor(nextScale / nativeGestureScale, e.clientX, e.clientY);
+			nativeGestureScale = nextScale;
+		}, { passive: false });
+		this.previewContainer.addEventListener('gestureend', (e) => {
+			if (!nativeGestureActive) return;
+			e.preventDefault();
+			nativeGestureActive = false;
+			nativeGestureScale = 1;
+			nativeGestureSuppressWheelUntil = performance.now() + 100;
+		}, { passive: false });
+
 		// Scroll zoom
 		this.previewContainer.addEventListener('wheel', (e) => {
 			if (!this.originalImage) {
@@ -406,22 +475,17 @@ togglePreview() {
 			}
 
 			e.preventDefault();
+			if (nativeGestureActive || performance.now() < nativeGestureSuppressWheelUntil) return;
 
-			if (e.ctrlKey || e.metaKey) {
-				if (e.deltaY < 0) {
-					this.viewport.zoomIn(e.clientX, e.clientY);
-				} else {
-					this.viewport.zoomOut(e.clientX, e.clientY);
-				}
-				return;
+			const input = VIEWPORT_INPUT.normalizeWheel(e, {
+				pageSize: this.previewContainer.clientHeight,
+				zoomSensitivity: CONFIG.ui.gestures.wheelZoomSensitivity
+			});
+			if (input.type === 'zoom') {
+				this.viewport.queueZoomByFactor(input.factor, input.clientX, input.clientY);
+			} else {
+				this.viewport.queuePanBy(input.deltaX, input.deltaY);
 			}
-
-			if (e.shiftKey) {
-				this.viewport.panBy(-e.deltaY, 0);
-				return;
-			}
-
-			this.viewport.panBy(0, -e.deltaY);
 		}, { passive: false });
 	}
 };

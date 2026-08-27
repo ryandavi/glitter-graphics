@@ -14,6 +14,8 @@ class GestureManager {
 		this.lastSinglePanMoveTime = 0;
 		this.touchGestureActive = false;
 		this.suppressClickUntil = 0;
+		this.pendingSingleTimer = null;
+		this.ignoredPointerIds = new Set();
 
 		this.boundPointerDown = this.handlePointerDown.bind(this);
 		this.boundPointerMove = this.handlePointerMove.bind(this);
@@ -24,7 +26,6 @@ class GestureManager {
 		this.boundCancelActiveGesture = this.cancelActiveGesture.bind(this);
 
 		this.setupEventListeners();
-		this.setupIOSGestureGuards();
 	}
 
 	get editor() {
@@ -42,20 +43,6 @@ class GestureManager {
 		this.previewContainer.addEventListener('click', this.boundClickCapture, options);
 		window.addEventListener('blur', this.boundCancelActiveGesture);
 		document.addEventListener('visibilitychange', this.boundCancelActiveGesture);
-	}
-
-	setupIOSGestureGuards() {
-		if (GestureManager.iOSGuardsInstalled) {
-			return;
-		}
-
-		const preventGestureZoom = (event) => {
-			event.preventDefault();
-		};
-
-		document.addEventListener('gesturestart', preventGestureZoom, { passive: false });
-		document.addEventListener('gesturechange', preventGestureZoom, { passive: false });
-		GestureManager.iOSGuardsInstalled = true;
 	}
 
 	handleClickCapture(event) {
@@ -83,8 +70,20 @@ class GestureManager {
 		}
 
 		this.previewContainer.setPointerCapture?.(event.pointerId);
-		event.preventDefault();
-		event.stopPropagation();
+			event.preventDefault();
+			event.stopPropagation();
+
+		if (this.pointers.size >= 2) {
+			this.ignoredPointerIds.add(event.pointerId);
+			return;
+		}
+
+		// A palm landing next to an active finger must not become the second pinch
+		// contact. Only devices that actually measure contact geometry can trip this.
+		if (this.pointers.size === 1 && this.isLikelyPalmContact(event)) {
+			this.ignoredPointerIds.add(event.pointerId);
+			return;
+		}
 
 		const pointer = this.createPointerRecord(event);
 		this.pointers.set(event.pointerId, pointer);
@@ -98,6 +97,7 @@ class GestureManager {
 			this.lastAngle = 0;
 			this.touchGestureActive = false;
 			this.startRouteIfNeeded(this.route);
+			this.schedulePendingSingleStart();
 			return;
 		}
 
@@ -113,6 +113,10 @@ class GestureManager {
 
 		const pointer = this.pointers.get(event.pointerId);
 		if (!pointer) {
+			if (this.ignoredPointerIds.has(event.pointerId)) {
+				event.preventDefault();
+				event.stopPropagation();
+			}
 			return;
 		}
 
@@ -143,7 +147,11 @@ class GestureManager {
 	}
 
 	handlePointerCancel(event) {
-		this.finishPointer(event);
+		if (event.pointerType !== 'touch') return;
+		if (!this.pointers.has(event.pointerId) && !this.ignoredPointerIds.has(event.pointerId)) return;
+		event.preventDefault();
+		event.stopPropagation();
+		this.cancelActiveGesture(true);
 	}
 
 	handleLostPointerCapture(event) {
@@ -153,9 +161,10 @@ class GestureManager {
 		});
 	}
 
-	cancelActiveGesture() {
-		if (document.visibilityState === 'visible' && document.hasFocus() && this.pointers.size === 0) return;
+	cancelActiveGesture(force = false) {
+		if (!force && document.visibilityState === 'visible' && document.hasFocus() && this.pointers.size === 0) return;
 		this.cancelRouteInteraction(this.route);
+		this.finishActiveRoute(this.route);
 		this.notifyGestureEnd();
 		this.pointers.clear();
 		this.resetGestureState();
@@ -163,6 +172,13 @@ class GestureManager {
 
 	finishPointer(event) {
 		if (event.pointerType !== 'touch') {
+			return;
+		}
+
+		if (this.ignoredPointerIds.delete(event.pointerId)) {
+			event.preventDefault();
+			event.stopPropagation();
+			this.previewContainer.releasePointerCapture?.(event.pointerId);
 			return;
 		}
 
@@ -182,6 +198,7 @@ class GestureManager {
 		const routeBeforeRemoval = this.route;
 
 		this.pointers.delete(event.pointerId);
+		this.clearPendingSingleStart();
 
 		if (wasPending && this.pointers.size === 0) {
 			if (this.isTap(pointer, routeBeforeRemoval)) {
@@ -215,8 +232,47 @@ class GestureManager {
 			startX: event.clientX,
 			startY: event.clientY,
 			downTime: Date.now(),
-			target: event.target
+			target: event.target,
+			width: Number.isFinite(event.width) ? event.width : 0,
+			height: Number.isFinite(event.height) ? event.height : 0
 		};
+	}
+
+	isLikelyPalmContact(event) {
+		const maxPx = CONFIG.ui.gestures.palmRejectionContactPx || 0;
+		if (!maxPx) return false;
+
+		const width = Number(event.width);
+		const height = Number(event.height);
+		// A contact box of 0/1 means the device reports no real geometry — every
+		// touchscreen that does this must keep working, so never judge those.
+		if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 1 || height <= 1) {
+			return false;
+		}
+
+		if (Math.max(width, height) >= maxPx) return true;
+
+		const primary = this.getPrimaryPointer();
+		if (primary && primary.width > 1 && primary.height > 1) {
+			return width * height >= primary.width * primary.height * 3;
+		}
+		return false;
+	}
+
+	schedulePendingSingleStart() {
+		this.clearPendingSingleStart();
+		const graceMs = Math.max(0, CONFIG.ui.gestures.secondFingerGraceMs || 0);
+		if (!graceMs) return;
+		this.pendingSingleTimer = setTimeout(() => {
+			this.pendingSingleTimer = null;
+			if (this.state !== 'pending' || this.pointers.size !== 1) return;
+			this.maybeStartSingleFingerGesture(this.getPrimaryPointer(), true);
+		}, graceMs);
+	}
+
+	clearPendingSingleStart() {
+		if (this.pendingSingleTimer !== null) clearTimeout(this.pendingSingleTimer);
+		this.pendingSingleTimer = null;
 	}
 
 	resolveSinglePointerRoute(pointer) {
@@ -299,7 +355,7 @@ class GestureManager {
 		return route;
 	}
 
-	maybeStartSingleFingerGesture(pointer) {
+	maybeStartSingleFingerGesture(pointer, graceElapsed = false) {
 		const dx = pointer.x - pointer.startX;
 		const dy = pointer.y - pointer.startY;
 		const distance = Math.hypot(dx, dy);
@@ -311,13 +367,19 @@ class GestureManager {
 		if (distance <= CONFIG.ui.gestures.tapSlopPx) {
 			return;
 		}
+		const commitSlop = CONFIG.ui.gestures.secondFingerCommitSlopPx ?? (CONFIG.ui.gestures.tapSlopPx * 2.5);
+		if (!graceElapsed && distance < commitSlop &&
+			Date.now() - pointer.downTime < (CONFIG.ui.gestures.secondFingerGraceMs || 0)) {
+			return;
+		}
 
+		this.clearPendingSingleStart();
 		this.state = 'dragging';
-		this.lastCenter = { x: pointer.x, y: pointer.y };
 		this.beginRouteInteraction(this.route, pointer);
 		this.notifyGestureStart('single_pan');
 		this.lastTap = null;
 		this.resetSinglePanVelocity();
+		this.applySingleFingerMove(pointer);
 	}
 
 	beginRouteInteraction(route, pointer = null) {
@@ -376,9 +438,14 @@ class GestureManager {
 	}
 
 	upgradeToTwoFinger() {
+		this.clearPendingSingleStart();
 		const previousRoute = this.route;
-		this.cancelRouteInteraction(previousRoute);
-		this.route = this.resolveTwoFingerRoute();
+		const nextRoute = this.resolveTwoFingerRoute();
+		if (!this.routesShareInteraction(previousRoute, nextRoute)) {
+			this.cancelRouteInteraction(previousRoute);
+			this.finishActiveRoute(previousRoute);
+		}
+		this.route = nextRoute;
 		this.state = 'twoFinger';
 		this.lastTap = null;
 		this.beginRouteInteraction(this.route);
@@ -392,6 +459,13 @@ class GestureManager {
 		if (previousRoute?.type === 'brush') {
 			this.editor.maskEditor?.handleTouchGestureStart('two_finger');
 		}
+	}
+
+	routesShareInteraction(previousRoute, nextRoute) {
+		if (!previousRoute || !nextRoute) return false;
+		if (previousRoute.type === 'groupDrag' && nextRoute.type === 'groupGesture') return true;
+		return previousRoute.type === 'layerDrag' && nextRoute.type === 'layerGesture' &&
+			previousRoute.layerId === nextRoute.layerId;
 	}
 
 	initializeTwoFingerMetrics() {
@@ -431,7 +505,9 @@ class GestureManager {
 			translateX: center.x - this.lastCenter.x,
 			translateY: center.y - this.lastCenter.y,
 			centroidX: center.x,
-			centroidY: center.y
+			centroidY: center.y,
+			previousCentroidX: this.lastCenter.x,
+			previousCentroidY: this.lastCenter.y
 		};
 
 		if (this.route?.type === 'groupGesture') {
@@ -440,8 +516,13 @@ class GestureManager {
 			const transform = this.getLayerTransform(this.route.layerId);
 			transform?.applyGestureDelta?.(composite);
 		} else {
-			this.viewport.pinchZoomAt(composite.scale, composite.centroidX, composite.centroidY);
-			this.viewport.panBy(composite.translateX, composite.translateY);
+			this.viewport.transformByGesture(
+				composite.scale,
+				composite.previousCentroidX,
+				composite.previousCentroidY,
+				composite.centroidX,
+				composite.centroidY
+			);
 		}
 
 		this.lastCenter = center;
@@ -684,6 +765,7 @@ class GestureManager {
 	}
 
 	resetGestureState() {
+		this.clearPendingSingleStart();
 		this.state = 'idle';
 		this.route = null;
 		this.primaryPointerId = null;
@@ -692,6 +774,7 @@ class GestureManager {
 		this.lastAngle = 0;
 		this.resetSinglePanVelocity();
 		this.touchGestureActive = false;
+		this.ignoredPointerIds.clear();
 		if (this.editor) {
 			this.editor.touchGestureActive = false;
 		}
@@ -727,6 +810,7 @@ class GestureManager {
 	}
 
 	destroy() {
+		this.clearPendingSingleStart();
 		const options = { capture: true };
 		this.previewContainer.removeEventListener('pointerdown', this.boundPointerDown, options);
 		this.previewContainer.removeEventListener('pointermove', this.boundPointerMove, options);
@@ -738,5 +822,3 @@ class GestureManager {
 		document.removeEventListener('visibilitychange', this.boundCancelActiveGesture);
 	}
 }
-
-GestureManager.iOSGuardsInstalled = false;

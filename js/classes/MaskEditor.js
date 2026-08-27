@@ -622,25 +622,38 @@ class MaskEditor {
 			return;
 		}
 
-		const point = this._getCanvasPoint(event);
-		if (!point) {
-			return;
-		}
-
-		point.pressure = event.pressure;
-
 		event.preventDefault();
 		event.stopPropagation();
 
 		const layer = this.editor.layerManager.getActiveLayer();
-		const paint = this.editor.glitterManager.getPaintMask(layer.id);
+		const paint = layer ? this.editor.glitterManager.getPaintMask(layer.id) : null;
 		if (!paint) {
 			return;
 		}
 
-		const nextPoint = this._resolveStrokePoint(point, event.shiftKey);
-		this._stampAlongPath(layer, paint, this.lastPoint, nextPoint);
-		this.lastPoint = nextPoint;
+		// Pens and high-frequency mice report several positions between frames.
+		// Painting each coalesced sample keeps a fast stroke continuous instead of
+		// faceted; the smoothing anchor advances through every sample in order.
+		for (const sample of this._pointerSamples(event)) {
+			const point = this._getCanvasPointFromScreen(sample.clientX, sample.clientY);
+			if (!point) {
+				continue;
+			}
+			point.pressure = sample.pressure;
+			const nextPoint = this._resolveStrokePoint(point, event.shiftKey);
+			this._stampAlongPath(layer, paint, this.lastPoint, nextPoint);
+			this.lastPoint = nextPoint;
+		}
+	}
+
+	// Coalesced pointer samples when the browser exposes them, else the event
+	// itself. Consumers read clientX / clientY / pressure only.
+	_pointerSamples(event) {
+		const coalesced = event.getCoalescedEvents?.();
+		if (coalesced && coalesced.length) {
+			return coalesced;
+		}
+		return [event];
 	}
 
 	// Turns a raw pointer sample into the point actually painted this move.

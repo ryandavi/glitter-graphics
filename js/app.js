@@ -142,6 +142,12 @@ class GlitterEditor {
 		document.getElementById('statusZoom')?.addEventListener('dblclick', () => {
 			if (this.originalImage) this.viewport.resetZoom({ animate: true });
 		});
+		document.getElementById('handTool')?.addEventListener('dblclick', () => {
+			if (this.originalImage) this.viewport.zoomToFit({ animate: true });
+		});
+		document.getElementById('zoomTool')?.addEventListener('dblclick', () => {
+			if (this.originalImage) this.viewport.resetZoom({ animate: true });
+		});
 		this.previewContainer?.addEventListener('dblclick', (event) => {
 			if (this.currentTool !== ToolType.SELECT || !event.target.closest(TRANSFORMABLE_LAYER_ELEMENT_SELECTOR)) return;
 			const layer = this.layerManager.getActiveLayer();

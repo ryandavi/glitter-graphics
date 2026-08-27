@@ -32,8 +32,8 @@ const HINT_RULES = [
 		hint: (_editor, { isMobile }) => `This glitter layer is empty—use the ${isMobile ? 'color fill' : 'Color Fill'} or Mask Brush to add glitter`,
 		context: { desktop: 'Click colors to build a selection, or paint directly with the Mask Brush.', mobile: 'Tap colors to build a selection, or paint directly in the editor.' }
 	},
-	{ id: 'zoom', tool: true, when: (_editor, { tool }) => tool === ToolType.ZOOM, hint: (_editor, { isMobile }) => isMobile ? 'Pinch to zoom in and out' : 'Click to zoom in • Shift+click to zoom out' },
-	{ id: 'hand', tool: true, when: (_editor, { tool }) => tool === ToolType.HAND, hint: (_editor, { isMobile }) => isMobile ? 'Use one or two fingers to pan around the canvas' : 'Click and drag to move around the canvas' },
+	{ id: 'zoom', tool: true, when: (_editor, { tool }) => tool === ToolType.ZOOM, hint: (_editor, { isMobile }) => isMobile ? 'Pinch to zoom in and out' : 'Click to zoom • drag to zoom smoothly • Alt-click to zoom out' },
+	{ id: 'hand', tool: true, when: (_editor, { tool }) => tool === ToolType.HAND, hint: (_editor, { isMobile }) => isMobile ? 'Use one or two fingers to pan around the canvas' : 'Drag to pan • middle-drag works from any tool' },
 	{ id: 'text-tool', tool: true, when: (_editor, { tool }) => tool === ToolType.TEXT, hint: 'Click empty canvas space to create a point-text layer', context: 'The click becomes the text anchor. Existing layers stay put until you switch back to Select.' },
 	{ id: 'shape-tool', tool: true, when: (_editor, { tool }) => tool === ToolType.SHAPE, hint: 'Drag on the canvas to draw a shape at that size', context: 'Hold Shift to keep it square. A single click makes a default-size shape. Pick the shape and its fill/border/shadow in Shape Properties.' },
 	{

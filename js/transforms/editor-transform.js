@@ -1,4 +1,19 @@
 const TRANSFORM_INTERACTION_METHODS = {
+zoomToSelection(options = {}) {
+		const metrics = this.layerManager.getSelectedLayers()
+			.map((layer) => this.getMovableLayerContext(layer)?.manager?.layerTransforms?.get(layer.id)?.getFrameMetrics?.())
+			.filter(Boolean);
+		if (!metrics.length) return false;
+		this.viewport.zoomToBounds({
+			left: Math.min(...metrics.map((item) => item.minX)),
+			top: Math.min(...metrics.map((item) => item.minY)),
+			right: Math.max(...metrics.map((item) => item.maxX)),
+			bottom: Math.max(...metrics.map((item) => item.maxY))
+		}, options);
+		return true;
+	}
+
+,
 snapTransformPosition(transform, position, options = {}) {
 		const config = CONFIG.snapping;
 		if (!config.enabled || options.ctrlKey) {

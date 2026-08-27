@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=59c1f50f">
+	<link rel="stylesheet" href="css/style.css?v=5e9feafd">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -161,11 +161,11 @@
 
 				<!-- Keyboard -->
 				<div class="toolbar-group" id="toolbarSettingsGroup">
-					<button class="btn-icon icon-wrapper" id="shortcutsBtn" title="Keyboard Shortcuts">
+					<button class="btn-icon icon-wrapper" id="shortcutsBtn" title="Commands & Shortcuts">
 						<svg class="icon">
 							<use href="#icon-keyboard"></use>
 						</svg>
-						<span class="name">Keyboard Shortcuts</span>
+						<span class="name">Commands & Shortcuts</span>
 					</button>
 
 					<!-- Settings -->
@@ -2095,7 +2095,7 @@
 						<span class="name">Keyboard</span>
 					</span>
 
-					<span class="modal-title-text">Keyboard Shortcuts</span>
+					<span class="modal-title-text">Commands & Shortcuts</span>
 				</div>
 
 
@@ -2110,17 +2110,27 @@
 			<div class="modal-filter-bar search-toggle-row" data-modal-filter>
 				<label class="search-input-wrapper">
 					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
-					<input type="search" id="shortcutSearch" placeholder="Find a command or key…" aria-label="Find a command or key" aria-controls="shortcutList">
+					<input type="search" id="shortcutSearch" placeholder="Find a command, key, or gesture…" aria-label="Find a command, key, or gesture" aria-controls="shortcutList">
 					<span class="modal-filter-status" id="shortcutSearchStatus" role="status" aria-live="polite"></span>
 				</label>
 				<button type="button" class="btn-icon icon-wrapper" data-modal-filter-clear aria-label="Clear keyboard shortcut search" title="Clear search" hidden><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Clear search</span></button>
 			</div>
 			<div class="modal-body">
-				<p class="shortcut-help">Keys use keycaps. Pointer and wheel actions use rounded gesture labels. “Hold” describes when to keep a key pressed while performing the following action.</p>
+				<div class="shortcut-view-tabs" role="tablist" aria-label="Command input type">
+					<button type="button" class="shortcut-view-tab active" id="shortcutKeyboardTab" role="tab" aria-selected="true" aria-controls="shortcutList" data-shortcut-view="keyboard">
+						<svg class="icon" aria-hidden="true"><use href="#icon-keyboard"></use></svg>
+						Keyboard
+					</button>
+					<button type="button" class="shortcut-view-tab" id="shortcutGesturesTab" role="tab" aria-selected="false" aria-controls="shortcutList" data-shortcut-view="gesture" tabindex="-1">
+						<svg class="icon" aria-hidden="true"><use href="#icon-hand-pointer"></use></svg>
+						Canvas Gestures
+					</button>
+				</div>
+				<p class="shortcut-help" id="shortcutViewDescription">Shortcuts use the keys for this device. Alternate bindings are separated by “or.”</p>
 				<div class="shortcut-list" id="shortcutList">
 					<!-- Populated via JS -->
 				</div>
-				<div class="modal-filter-empty" id="shortcutSearchEmpty" hidden>No keyboard shortcuts match your search.</div>
+				<div class="modal-filter-empty" id="shortcutSearchEmpty" hidden>No commands or shortcuts match your search.</div>
 			</div>
 		</div>
 	</div>
@@ -2786,9 +2796,10 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=02c1727d"></script>
+	<script src="js/core/config.js?v=a503e551"></script>
 	<script src="js/core/preferences.js?v=216cd049"></script>
-	<script src="js/core/commands.js?v=76ea25b9"></script>
+	<script src="js/core/viewport-input.js?v=f964a04c"></script>
+	<script src="js/core/commands.js?v=76e66132"></script>
 	<script src="js/core/dom.js?v=12f02905"></script>
 	<script src="js/core/document-scaler.js?v=c08bbf8e"></script>
 	<script src="js/transforms/transform-math.js?v=53779101"></script>
@@ -2815,16 +2826,16 @@
 	<script src="js/ui/clipboard.js?v=75977540"></script>
 	<script src="js/ui/editor-settings.js?v=f4b2b664"></script>
 	<script src="js/ui/editor-panels.js?v=c39a023b"></script>
-	<script src="js/ui/editor-disclosures.js?v=3fef2222"></script>
+	<script src="js/ui/editor-disclosures.js?v=f84c7ddd"></script>
 	<script src="js/ui/transform-panel.js?v=6330ed7e"></script>
-	<script src="js/transforms/editor-transform.js?v=32b62b4f"></script>
+	<script src="js/transforms/editor-transform.js?v=43457e31"></script>
 	<script src="js/ui/document-start.js?v=bd0b7429"></script>
-	<script src="js/ui/modals-wiring.js?v=dfc56d36"></script>
+	<script src="js/ui/modals-wiring.js?v=0d935bbe"></script>
 	<script src="js/ui/layer-panel.js?v=87c24a9d"></script>
-	<script src="js/ui/canvas-gestures.js?v=16576b68"></script>
+	<script src="js/ui/canvas-gestures.js?v=fce9978d"></script>
 	<script src="js/ui/canvas-size.js?v=53305937"></script>
 	<script src="js/core/canvas-resize.js?v=fd22383b"></script>
-	<script src="js/ui/hints.js?v=111dcbcf"></script>
+	<script src="js/ui/hints.js?v=7346d428"></script>
 	<script src="js/ui/picker-session.js?v=8d4d9515"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=0d24c445"></script>
 	<script src="js/ui/modal-filter.js?v=b00d889b"></script>
@@ -2832,18 +2843,18 @@
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
 
 	<!-- Classes -->
-	<script src="js/classes/GestureManager.js?v=7622c129"></script>
+	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
 	<script src="js/classes/ExportTimeline.js?v=93922fcd"></script>
 	<script src="js/classes/GifExporter.js?v=2fb8fae3"></script>
 	<script src="js/classes/Mp4Exporter.js?v=2ffe9156"></script>
-	<script src="js/classes/ViewportManager.js?v=32d56db5"></script>
+	<script src="js/classes/ViewportManager.js?v=8f36cfde"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>
 	<script src="js/classes/ProjectSerializer.js?v=4b62eaa0"></script>
 	<script src="js/classes/HtmlSceneExporter.js?v=d3f0ca56"></script>
 	<script src="js/classes/MaskCompositor.js?v=19c2994c"></script>
 	<script src="js/classes/ShapeLibrary.js?v=fa32fc5a"></script>
-	<script src="js/classes/MaskEditor.js?v=c3b4c579"></script>
+	<script src="js/classes/MaskEditor.js?v=678d8446"></script>
 
 	<!-- Layers-->
 	<script src="js/classes/LayerManager.js?v=d987cf1a"></script>
@@ -2851,19 +2862,19 @@
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=a18cd184"></script>
 	<script src="js/classes/ContentManager.js?v=a71a7157"></script>
-	<script src="js/classes/LayerTransform.js?v=83405952"></script>
+	<script src="js/classes/LayerTransform.js?v=299048bc"></script>
 	<script src="js/classes/GlitterManager.js?v=3b89789d"></script>
 	<script src="js/classes/BaseBackgroundManager.js?v=024b743e"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=e0f15cce"></script>
 	<script src="js/classes/TextGlitterManager.js?v=a23de8cc"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=c2132469"></script>
 	<script src="js/classes/StickerManager.js?v=12a3c1e5"></script>
-	<script src="js/classes/GroupTransformManager.js?v=38908db3"></script>
+	<script src="js/classes/GroupTransformManager.js?v=f19f8e9d"></script>
 
 	<script src="js/classes/MobileManager.js?v=a633cf1c"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=4d747b72"></script>
+	<script src="js/app.js?v=ed52518d"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

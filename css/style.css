@@ -1100,6 +1100,15 @@ img[data-pixel-scale] {
   /* Fallback for older browsers */
 }
 
+svg.icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  vertical-align: middle;
+}
+
 .icon-wrapper {
   display: inline-flex;
   align-items: center;
@@ -1107,13 +1116,8 @@ img[data-pixel-scale] {
   aspect-ratio: 1;
 }
 .icon-wrapper > svg.icon {
-  display: inline-block;
   z-index: 1;
-  width: 1em;
-  height: 1em;
   font-size: var(--font-size-2xl);
-  fill: currentColor;
-  vertical-align: middle;
 }
 .icon-wrapper > .name {
   display: none;
@@ -3420,7 +3424,7 @@ input[type=range]:disabled {
   flex: 1;
   display: block;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
@@ -7863,26 +7867,72 @@ body.modal-open {
 }
 
 /* ===== SHORTCUTS MODAL ===== */
-#shortcutsModal {
-  /* KEYBOARD SHORTCUTS */
+#shortcutsModal > .modal-content {
+  width: 820px;
+}
+#shortcutsModal .shortcut-view-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  margin-bottom: var(--spacing-md);
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-tertiary);
+}
+#shortcutsModal .shortcut-view-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  min-height: 36px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 0;
+  border-radius: calc(var(--radius-md) - 2px);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+#shortcutsModal .shortcut-view-tab > svg.icon {
+  font-size: 14px;
+}
+#shortcutsModal .shortcut-view-tab:hover {
+  color: var(--color-text-primary);
+}
+#shortcutsModal .shortcut-view-tab.active {
+  background: var(--color-bg-primary);
+  box-shadow: 0 1px 3px var(--color-shadow-soft);
+  color: var(--color-text-primary);
+}
+#shortcutsModal .shortcut-view-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--control-focus-ring);
 }
 #shortcutsModal .shortcut-help {
-  margin-bottom: var(--spacing-lg);
+  min-height: 1.4em;
+  margin: 0 0 var(--spacing-lg);
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
 }
 #shortcutsModal .shortcut-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--spacing-xl);
 }
 #shortcutsModal .shortcut-list > .shortcut-group {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+#shortcutsModal .shortcut-list > .shortcut-group[hidden] {
+  display: none;
 }
 #shortcutsModal .shortcut-list > .shortcut-group > .shortcut-group-title {
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-primary);
   padding-bottom: var(--spacing-sm);
@@ -7890,11 +7940,14 @@ body.modal-open {
 }
 #shortcutsModal .shortcut-item {
   display: flex;
+  min-height: 30px;
   justify-content: space-between;
   align-items: center;
+  gap: var(--spacing-md);
 }
 #shortcutsModal .shortcut-item > .shortcut-action {
-  font-size: var(--font-size-md);
+  min-width: 0;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   font-weight: 500;
 }
@@ -7904,6 +7957,11 @@ body.modal-open {
   gap: var(--spacing-xs);
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+@media (max-width: 640px) {
+  #shortcutsModal .shortcut-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .modal-filter-bar {
@@ -7961,16 +8019,20 @@ body.modal-open {
   vertical-align: baseline;
   white-space: nowrap;
 }
+#shortcutsModal .shortcut-input-token,
+#shortcutsModal .shortcut-gesture,
 #shortcutsModal .kbd,
 #shortcutsModal .guide-kbd,
+#guideModal .shortcut-input-token,
+#guideModal .shortcut-gesture,
 #guideModal .kbd,
 #guideModal .guide-kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  min-width: 1.45em;
-  height: 1.35em;
+  min-width: 20px;
+  height: 18px;
   padding: 0 0.35em;
   vertical-align: 0.08em;
   background: var(--color-bg-secondary);
@@ -7993,14 +8055,31 @@ body.modal-open {
 }
 #shortcutsModal .shortcut-gesture,
 #guideModal .shortcut-gesture {
-  background: var(--color-bg-tertiary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  padding: var(--spacing-2xs) var(--spacing-base);
+  gap: 6px;
+  min-width: 0;
+  background: var(--color-bg-secondary);
   color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
+  font-family: inherit;
+  font-size: 0.82em;
   font-weight: 500;
   white-space: nowrap;
+}
+#shortcutsModal .shortcut-device-icon,
+#guideModal .shortcut-device-icon {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+#shortcutsModal .shortcut-binding,
+#guideModal .shortcut-binding {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+#shortcutsModal .shortcut-alternative,
+#guideModal .shortcut-alternative {
+  padding: 0 2px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
 }
 #shortcutsModal .shortcut-instruction,
 #guideModal .shortcut-instruction {

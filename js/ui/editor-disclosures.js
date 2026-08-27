@@ -304,16 +304,70 @@ initializeCollapsibleSections() {
 ,
 	initializeShortcutsModal() {
 		const list = document.getElementById('shortcutList');
-		const buildShortcutToken = (label, type = 'key') => {
+		if (!list) return;
+		list.replaceChildren();
+		const platform = navigator.userAgentData?.platform || navigator.platform || '';
+		const isMac = /mac/i.test(platform);
+		const keyLabels = isMac
+			? { 'Ctrl/Cmd': '⌘', Cmd: '⌘', Control: '⌃', Ctrl: '⌃', Alt: '⌥', Option: '⌥', Shift: '⇧' }
+			: { 'Ctrl/Cmd': 'Ctrl', Cmd: 'Ctrl', Control: 'Ctrl', Ctrl: 'Ctrl', Alt: 'Alt', Option: 'Alt', Shift: 'Shift' };
+		const gestureDescriptions = {
+			keyboard: 'Shortcuts use the keys for this device. Alternate bindings are separated by “or.”',
+			gesture: 'Trackpad, touch, and pointer controls remain available without changing tools unless noted.'
+		};
+		const deviceIcons = {
+			trackpad: 'icon-arrows-left-right',
+			touch: 'icon-hand-pointer',
+			pointer: 'icon-pointer'
+		};
+		const formatKey = (label) => keyLabels[label] || label;
+		const buildShortcutToken = (label, type = 'key', device = null) => {
 			const token = document.createElement('span');
-			token.className = type === 'gesture' ? 'shortcut-gesture' : 'kbd';
-			token.textContent = label;
+			token.className = `shortcut-input-token ${type === 'gesture' ? 'shortcut-gesture' : 'kbd'}`;
+			if (type === 'gesture') {
+				const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+				icon.setAttribute('class', 'icon shortcut-device-icon');
+				icon.setAttribute('aria-hidden', 'true');
+				const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+				use.setAttribute('href', `#${deviceIcons[device] || 'icon-pointer'}`);
+				icon.appendChild(use);
+				token.appendChild(icon);
+			}
+			const text = document.createElement('span');
+			text.textContent = label;
+			token.appendChild(text);
 			return token;
 		};
+		const appendKeyboardBinding = (container, command) => {
+			command.displayKey.split(' / ').forEach((alternative, index) => {
+				if (index) {
+					const separator = document.createElement('span');
+					separator.className = 'shortcut-alternative';
+					separator.textContent = 'or';
+					container.appendChild(separator);
+				}
+				const binding = document.createElement('span');
+				binding.className = 'shortcut-binding';
+				alternative.split(' + ').forEach((part) => {
+					binding.appendChild(buildShortcutToken(formatKey(part)));
+				});
+				container.appendChild(binding);
+			});
+		};
+		const appendGestureBinding = (container, command) => {
+			const binding = command.binding;
+			(binding.modifiers || []).forEach((modifier) => {
+				const labels = { alt: 'Alt', shift: 'Shift', control: 'Control', command: 'Cmd' };
+				container.appendChild(buildShortcutToken(formatKey(labels[modifier] || modifier)));
+			});
+			container.appendChild(buildShortcutToken(binding.gesture, 'gesture', binding.device));
+		};
 
-		getShortcutGroups().forEach(({ title: groupTitle, items }) => {
+		['keyboard', 'gesture'].forEach((kind) => getShortcutGroups(kind).forEach(({ title: groupTitle, items }) => {
 			const group = document.createElement('div');
 			group.className = 'shortcut-group';
+			group.dataset.shortcutKind = kind;
+			group.hidden = kind !== 'keyboard';
 
 			const title = document.createElement('div');
 			title.className = 'shortcut-group-title';
@@ -330,6 +384,7 @@ initializeCollapsibleSections() {
 
 				const keys = document.createElement('div');
 				keys.className = 'shortcut-keys shortcut-sequence';
+				item.dataset.searchAliases = `${command.displayKey || ''} ${command.binding?.device || ''} ${command.binding?.gesture || ''} ${(command.binding?.modifiers || []).join(' ')}`;
 
 				if (command.instruction) {
 					const instruction = document.createElement('span');
@@ -338,10 +393,8 @@ initializeCollapsibleSections() {
 					keys.appendChild(instruction);
 				}
 
-				command.displayKey.split(' + ').forEach((part) => {
-					const type = command.gestures?.includes(part) ? 'gesture' : 'key';
-					keys.appendChild(buildShortcutToken(part, type));
-				});
+				if (kind === 'gesture') appendGestureBinding(keys, command);
+				else appendKeyboardBinding(keys, command);
 
 				item.appendChild(action);
 				item.appendChild(keys);
@@ -349,6 +402,33 @@ initializeCollapsibleSections() {
 			});
 
 			list.appendChild(group);
+		}));
+
+		const tabs = Array.from(document.querySelectorAll('#shortcutsModal [data-shortcut-view]'));
+		const description = document.getElementById('shortcutViewDescription');
+		const setView = (kind, options = {}) => {
+			tabs.forEach((tab) => {
+				const active = tab.dataset.shortcutView === kind;
+				tab.classList.toggle('active', active);
+				tab.setAttribute('aria-selected', String(active));
+				tab.tabIndex = active ? 0 : -1;
+			});
+			list.querySelectorAll('.shortcut-group').forEach((group) => {
+				group.hidden = group.dataset.shortcutKind !== kind;
+			});
+			if (description) description.textContent = gestureDescriptions[kind];
+			this.shortcutsFilter?.refresh();
+			if (options.focus) tabs.find((tab) => tab.dataset.shortcutView === kind)?.focus();
+		};
+		tabs.forEach((tab, index) => {
+			tab.addEventListener('click', () => setView(tab.dataset.shortcutView));
+			tab.addEventListener('keydown', (event) => {
+				if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+				event.preventDefault();
+				const direction = event.key === 'ArrowRight' ? 1 : -1;
+				const next = tabs[(index + direction + tabs.length) % tabs.length];
+				setView(next.dataset.shortcutView, { focus: true });
+			});
 		});
 	}
 

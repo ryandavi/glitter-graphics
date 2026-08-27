@@ -518,9 +518,16 @@ const CONFIG = deepFreeze({
 		gestures: {
 			tapMaxMs: 300,
 			tapSlopPx: 10,
+			wheelZoomSensitivity: 0.002,
 			secondFingerGraceMs: 150,
+			secondFingerCommitSlopPx: 24,
 			doubleTapMs: 300,
 			doubleTapSlopPx: 30,
+			// A second touch whose measured contact box exceeds this (CSS px on its
+			// longer side, or ~3x the first contact's area) is treated as a palm and
+			// kept out of the pinch pair. Set well clear of a thumb tip; devices that
+			// don't measure contact geometry report 0/1 and are never affected.
+			palmRejectionContactPx: 60,
 			inertia: {
 				enabled: true,
 				decay: 0.92

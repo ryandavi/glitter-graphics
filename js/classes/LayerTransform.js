@@ -750,6 +750,10 @@ const handleMouseMove = (e) => {
         this.beginGestureInteraction();
 
         const transform = this.getTransform();
+        const previousCentroidCanvas = this.editor.viewport.screenToCanvas(
+            gestureDelta.previousCentroidX ?? gestureDelta.centroidX,
+            gestureDelta.previousCentroidY ?? gestureDelta.centroidY
+        );
         const centroidCanvas = this.editor.viewport.screenToCanvas(gestureDelta.centroidX, gestureDelta.centroidY);
         const currentScaleX = transform.scale.x || 100;
         const currentScaleY = transform.scale.y || 100;
@@ -759,10 +763,8 @@ const handleMouseMove = (e) => {
             : clampLayerScale(currentScaleY * gestureDelta.scale);
         const scaleFactor = currentScaleX !== 0 ? nextScaleX / currentScaleX : 1;
         const rotationDeltaRad = (gestureDelta.rotateDeg * Math.PI) / 180;
-        const translateCanvasX = gestureDelta.translateX / this.editor.viewport.currentZoom;
-        const translateCanvasY = gestureDelta.translateY / this.editor.viewport.currentZoom;
-        const relativeX = transform.position.x - centroidCanvas.x;
-        const relativeY = transform.position.y - centroidCanvas.y;
+        const relativeX = transform.position.x - previousCentroidCanvas.x;
+        const relativeY = transform.position.y - previousCentroidCanvas.y;
         const scaledX = relativeX * scaleFactor;
         const scaledY = relativeY * scaleFactor;
         const rotatedX = (scaledX * Math.cos(rotationDeltaRad)) - (scaledY * Math.sin(rotationDeltaRad));
@@ -770,8 +772,8 @@ const handleMouseMove = (e) => {
 
         this.updateTransform({
             position: {
-                x: centroidCanvas.x + rotatedX + translateCanvasX,
-                y: centroidCanvas.y + rotatedY + translateCanvasY
+                x: centroidCanvas.x + rotatedX,
+                y: centroidCanvas.y + rotatedY
             },
             scale: {
                 x: nextScaleX,

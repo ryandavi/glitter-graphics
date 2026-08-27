@@ -1992,6 +1992,9 @@ input[type=checkbox].field-switch:focus-visible {
   image-rendering: pixelated;
   flex-shrink: 0;
 }
+.swatch-thumb.rendering-smooth {
+  image-rendering: auto;
+}
 
 .swatch-name {
   flex: 1;
@@ -2260,6 +2263,9 @@ input[type=checkbox] {
   border-radius: var(--radius-sm);
   background: var(--color-bg-tertiary);
   image-rendering: pixelated;
+}
+.preview-image.rendering-smooth {
+  image-rendering: auto;
 }
 
 .color-inputs {
