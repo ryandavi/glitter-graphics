@@ -17,9 +17,38 @@
 .toolbar {
 	margin: var(--spacing-base);
 	margin-right: 0;
+	border: 1px solid var(--color-window-border);
+	border-radius: var(--radius-md);
+	box-shadow: 0 2px 5px var(--color-shadow-strong);
+
+	// Short/split windows can make the rail taller than the viewport; scroll it
+	// rather than clipping the last tools (this replaces the shared
+	// `overflow: hidden` the sidebar sections still use). No scrollbar — a wheel/
+	// trackpad/touch scroll is enough, and a bar in a ~50px rail looks bad
+	// (Safari renders it non-overlay). Instead a mask fades whichever edge
+	// currently hides tools past it, toggled by JS (setupToolbarOverflowFade):
+	// none at the top when scrolled up, none at the bottom when the last tool is
+	// fully shown, and none at all when the rail fits.
+	--toolbar-fade: var(--spacing-lg);
+	overflow-x: hidden;
+	overflow-y: auto;
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar { display: none; }
+
+	&.has-overflow-top.has-overflow-bottom {
+		mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
+	}
+
+	&.has-overflow-top:not(.has-overflow-bottom) {
+		mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
+	}
+
+	&.has-overflow-bottom:not(.has-overflow-top) {
+		mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
+	}
 }
 
-.toolbar,
 .layers-panel>.section,
 .design-panel>.section {
 	border: 1px solid var(--color-window-border);

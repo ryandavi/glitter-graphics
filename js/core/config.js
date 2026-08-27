@@ -578,6 +578,10 @@ const CONFIG = deepFreeze({
 				] }
 			] },
 			{ id: 'maskBrushControls', tool: 'brush', controls: [
+				{ kind: 'segmented', id: 'maskBrushMode', options: [
+					{ label: 'Paint', mode: 'add', action: 'brushSetPaint', title: 'Paint mask (B)' },
+					{ label: 'Erase', mode: 'sub', action: 'brushSetErase', title: 'Erase mask (E / X)' }
+				] },
 				{ kind: 'slider', id: 'maskBrushSizeQuick', valueId: 'maskBrushSizeQuickValue', label: 'Size', min: 1, max: 300, value: 40, unit: 'px' }
 			] }
 		],

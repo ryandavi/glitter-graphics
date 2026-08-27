@@ -379,10 +379,10 @@
 
 					transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 
-					.icon {
-						width: .8em;
-						height: .8em;
-					}
+					// Glyph size comes from the shared `.sm` icon-wrapper path
+					// (button carries the `sm` class — see createIconButton). The old
+					// explicit `.icon { width/height: .8em }` here resolved against
+					// the button's 30px font-size, rendering a 24px glyph.
 
 
 

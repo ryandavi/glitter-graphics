@@ -174,8 +174,9 @@ body.no-document .main-content {
 	left: var(--spacing-from-edge);
 	right: var(--spacing-from-edge);
 	display: none;
-	justify-content: space-between;
-	align-items: center;
+	align-items: flex-start;
+	flex-wrap: wrap;
+	gap: var(--spacing-sm);
 	z-index: 10;
 	pointer-events: none;
 
@@ -187,21 +188,23 @@ body.no-document .main-content {
 		pointer-events: auto;
 	}
 
-	>.preview-controls-right,
-	>.preview-controls-center {
+	// Two distinct clusters — view toggles on the left, export on the right.
+	// Flow them with flex + wrap instead of absolutely centring the left cluster:
+	// centred, it had nothing stopping it from sliding under the right cluster (or
+	// the mobile toolbar). Now the right cluster's `margin-left: auto` keeps them
+	// apart, and when the row is too narrow it wraps below rather than overlapping.
+	>.preview-controls-center,
+	>.preview-controls-right {
 		display: flex;
+		flex-wrap: wrap;
 		gap: var(--spacing-sm);
 		@include floating-ui();
 	}
 
+	// Right cluster hugs the right edge on its line — beside the left cluster when
+	// they fit, on the row below (still right-aligned) when they don't.
 	>.preview-controls-right {
 		margin-left: auto;
-	}
-
-	>.preview-controls-center {
-		position: absolute;
-		left: 50%;
-		transform: translateX(-50%);
 	}
 }
 
@@ -373,7 +376,7 @@ body.mask-editing {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: var(--spacing-sm);
 	z-index: 10;
 	max-width: calc(100% - var(--spacing-xl));
@@ -383,6 +386,39 @@ body.mask-editing {
 	transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
 
 	@include floating-ui;
+	overflow: hidden;
+	// floating-ui is also used by always-interactive panels; context bars must not
+	// intercept canvas input while hidden.
+	pointer-events: none;
+
+	.context-toolbar-handle {
+		align-self: stretch;
+		width: 18px;
+		min-width: 18px;
+		margin: calc(var(--spacing-sm) * -1) 0 calc(var(--spacing-sm) * -1) calc(var(--spacing-sm) * -1);
+		padding: 0;
+		border: 0;
+		border-right: 1px solid var(--color-border);
+		background: transparent;
+		cursor: grab;
+		touch-action: none;
+
+		span {
+			display: block;
+			width: 6px;
+			height: 14px;
+			margin: auto;
+			background: repeating-linear-gradient(90deg, var(--color-text-secondary) 0 2px, transparent 2px 4px);
+		}
+	}
+
+	&.is-dragging {
+		transition: none;
+		user-select: none;
+		box-shadow: 0 8px 24px var(--color-shadow-strong), 0 0 0 2px var(--color-accent);
+
+		.context-toolbar-handle { cursor: grabbing; }
+	}
 
 	&.visible {
 		@include floating-visible;
@@ -396,6 +432,22 @@ body.mask-editing {
 	}
 }
 
+.context-toolbar-snap-guide {
+	position: absolute;
+	z-index: 9;
+	border: 1px solid var(--color-accent);
+	border-radius: var(--radius-sm);
+	background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 18%, transparent);
+	pointer-events: none;
+	animation: context-snap-guide-in var(--transition-fast) ease-out;
+}
+
+@keyframes context-snap-guide-in {
+	from { opacity: 0; transform: scale(0.96); }
+	to { opacity: 1; transform: scale(1); }
+}
+
 /* Zoom Controls */
 .zoom-controls {
 
@@ -406,18 +458,19 @@ body.mask-editing {
 		@include text-sm;
 		font-weight: 600;
 		cursor: pointer;
-		padding: var(--spacing-xs) var(--spacing-sm);
-		border-radius: var(--radius-sm);
-		transition: background var(--transition-fast);
+		appearance: none;
+		padding: 0 var(--spacing-xs);
+		border: 0;
+		border-radius: 0;
+		background: transparent;
+		box-shadow: none;
 
 		align-self: stretch;
 		justify-content: center;
 		align-items: center;
 		display: flex;
 
-		&:hover {
-			background: rgba(255, 255, 255, 0.1);
-		}
+		&:hover { color: var(--color-accent); }
 	}
 
 	>.zoom-fit-btn {
@@ -532,7 +585,7 @@ body.mask-editing {
 
 /* Mask Brush Controls Specific */
 .mask-brush-controls {
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	justify-content: center;
 	max-width: min(90vw, 560px);
 

@@ -441,10 +441,9 @@ input[type="range"] {
 	justify-content: center;
 	flex: 0 0 var(--icon-size-sm);
 
-	.icon {
-		width: .8em;
-		height: .8em;
-	}
+	// Glyph size comes from the shared `.sm` icon-wrapper path (these buttons
+	// carry `btn-icon-simple icon-wrapper sm`). An explicit `.icon { width: .8em }`
+	// here resolved against the button's 30px font-size instead.
 
 	&.visibility.hidden { color: var(--color-text-secondary); }
 }

@@ -142,20 +142,35 @@
 .shape-gallery-grid {
 
 	>.shape-gallery-option {
-		display: grid;
-		place-items: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		// Definite height for the icon chain to resolve against (also matches the
+		// square `.asset-option` tile this element doubles as).
+		aspect-ratio: 1;
 		padding: var(--spacing-sm);
 		border: 0;
 		background: var(--color-bg-secondary);
 		color: var(--color-text-primary);
 
 		>.brush-shape-option-icon {
-			display: grid;
-			place-items: center;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 			width: 100%;
 			height: 100%;
 
-			>svg { width: 75%; height: 75%; fill: currentColor; }
+			// Safari aligns a replaced element (the <svg>) to the start of its
+			// grid/flex container instead of honouring align/justify; `margin:auto`
+			// centres it in the free space the definite parent height provides.
+			// `display:block` also drops the inline-SVG baseline gap.
+			>svg {
+				display: block;
+				width: 75%;
+				height: 75%;
+				margin: auto;
+				fill: currentColor;
+			}
 		}
 
 		>.brush-shape-option-name { display: none; }

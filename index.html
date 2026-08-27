@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=5e9feafd">
+	<link rel="stylesheet" href="css/style.css?v=f9a981bc">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -60,29 +60,47 @@
 				<a href="index.html" class="app-header-title">RYBABY LABS</a>
 			</div>
 			<div class="app-header-right">
-				<button class="btn-icon-simple icon-wrapper" id="openWelcomeModal" title="Welcome" aria-label="Open Welcome">
-					<svg class="icon"><use href="#icon-glitter"></use></svg>
-					<span class="name">Welcome</span>
-				</button>
+				<div class="app-menu" id="appMenu">
+					<button class="btn-icon-simple icon-wrapper app-menu-trigger" id="appMenuBtn" type="button"
+						title="Menu" aria-label="Menu" aria-haspopup="menu" aria-expanded="false"
+						aria-controls="appMenuPanel">
+						<svg class="icon"><use href="#icon-ellipsis-vertical"></use></svg>
+						<span class="name">Menu</span>
+					</button>
 
-				<button class="btn-icon-simple icon-wrapper" id="guideBtn" title="Info">
-					<svg class="icon">
-						<use href="#icon-question-circle"></use>
-					</svg>
-					<span class="name">Guide</span>
-				</button>
+					<div class="app-menu-panel" id="appMenuPanel" role="menu" aria-labelledby="appMenuBtn" hidden>
+						<button class="app-menu-item" id="openWelcomeModal" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-glitter"></use></svg></span>
+							<span class="app-menu-item-label">Welcome</span>
+						</button>
+						<button class="app-menu-item" id="guideBtn" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-question-circle"></use></svg></span>
+							<span class="app-menu-item-label">Guide</span>
+						</button>
+						<button class="app-menu-item" id="aboutBtn" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-circle-info"></use></svg></span>
+							<span class="app-menu-item-label">About</span>
+						</button>
 
-				<button class="btn-icon-simple icon-wrapper" id="aboutBtn" title="About">
-					<svg class="icon">
-						<use href="#icon-circle-info"></use>
-					</svg>
-					<span class="name">About</span>
-				</button>
+						<div class="app-menu-separator" role="separator"></div>
 
-				<button class="btn-icon-simple icon-wrapper mobile-only-action" id="mobileAppSettingsBtn" title="App Settings" aria-label="App Settings">
-					<svg class="icon"><use href="#icon-gear"></use></svg>
-					<span class="name">App Settings</span>
-				</button>
+						<button class="app-menu-item" id="shortcutsBtn" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-keyboard"></use></svg></span>
+							<span class="app-menu-item-label">Commands &amp; Shortcuts</span>
+						</button>
+						<button class="app-menu-item" id="settingsBtn" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-gear"></use></svg></span>
+							<span class="app-menu-item-label">App Settings</span>
+						</button>
+
+						<div class="app-menu-separator" role="separator"></div>
+
+						<button class="app-menu-item app-menu-item-danger" id="clearAllTool" type="button" role="menuitem" disabled>
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-x-mark"></use></svg></span>
+							<span class="app-menu-item-label">Clear All</span>
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 		
@@ -116,17 +134,11 @@
 						</svg>
 						<span class="name">Color Fill</span>
 					</button>
-					<button class="btn-icon icon-wrapper" id="brushTool" title="Mask Brush (B)" disabled>
+					<button class="btn-icon icon-wrapper" id="brushTool" title="Mask Brush (B) — Paint/Erase in the context bar, or X to swap" disabled>
 						<svg class="icon">
 							<use href="#icon-brush"></use>
 						</svg>
 						<span class="name">Mask Brush</span>
-					</button>
-					<button class="btn-icon icon-wrapper" id="eraserTool" title="Mask Eraser (E)" disabled>
-						<svg class="icon">
-							<use href="#icon-eraser"></use>
-						</svg>
-						<span class="name">Eraser</span>
 					</button>
 					<button class="btn-icon icon-wrapper" id="textTool" title="Text (T)" disabled>
 						<svg class="icon">
@@ -157,36 +169,8 @@
 						<span class="name">Redo</span>
 					</button>
 				</div>
-				<div class="toolbar-spacer"></div>
-
-				<!-- Keyboard -->
-				<div class="toolbar-group" id="toolbarSettingsGroup">
-					<button class="btn-icon icon-wrapper" id="shortcutsBtn" title="Commands & Shortcuts">
-						<svg class="icon">
-							<use href="#icon-keyboard"></use>
-						</svg>
-						<span class="name">Commands & Shortcuts</span>
-					</button>
-
-					<!-- Settings -->
-					<button class="btn-icon icon-wrapper" id="settingsBtn" title="Settings">
-						<svg class="icon">
-							<use href="#icon-gear"></use>
-						</svg>
-						<span class="name">App Settings</span>
-					</button>
-				</div>
-
-				<!-- Clear -->
-				<div class="toolbar-group" id="toolbarClearGroup">
-					<button class="btn-icon icon-wrapper" id="clearAllTool" title="Reset (Clear Image & All Layers)"
-						disabled>
-						<svg class="icon">
-							<use href="#icon-x-mark"></use>
-						</svg>
-						<span class="name">Clear All</span>
-					</button>
-				</div>
+				<!-- App-level actions (Shortcuts, Settings, Clear All) now live in the
+				     header "Menu" popover — see .app-menu in the app header. -->
 			</div>
 
 			<div class="main-content">
@@ -1281,6 +1265,10 @@
 						     Mirrors the canonical #maskBrushSize slider in the Brush Settings
 						     sidebar section — see setupMaskEditorListeners' syncQuickSlider. -->
 						<div class="mask-brush-controls ui-ignore-gestures" id="maskBrushControls">
+							<div class="segmented-control context-segmented-control" id="maskBrushMode">
+								<button class="segmented-option active" type="button" data-brush-mode="add" aria-pressed="true" title="Paint mask (B)">Paint</button>
+								<button class="segmented-option" type="button" data-brush-mode="sub" aria-pressed="false" title="Erase mask (E / X)">Erase</button>
+							</div>
 							<div class="context-slider-group">
 								<span class="context-label">Size</span>
 								<input type="range" id="maskBrushSizeQuick" min="1" max="300" value="40" class="context-slider">
@@ -1703,7 +1691,7 @@
 	<template id="tpl-auto-glitter-match">
 		<div class="auto-glitter-match layer-list-row">
 			<button class="auto-glitter-drag-handle layer-list-drag-handle" type="button"><span class="icon-wrapper active"><svg class="icon"><use href="#icon-grip-vertical"></use></svg></span></button>
-			<button class="auto-glitter-skip btn-icon-simple icon-wrapper layer-action-btn visibility" type="button" aria-pressed="false"><svg class="icon"><use href="#icon-eye"></use></svg><span class="name">Skip color</span></button>
+			<button class="auto-glitter-skip btn-icon-simple icon-wrapper sm layer-action-btn visibility" type="button" aria-pressed="false"><svg class="icon"><use href="#icon-eye"></use></svg><span class="name">Skip color</span></button>
 			<span class="auto-glitter-source-color layer-list-swatch" aria-hidden="true"></span>
 			<div class="auto-glitter-source layer-list-info"><span class="auto-glitter-color-name layer-list-name"></span><small class="auto-glitter-coverage layer-list-description"></small></div>
 			<button class="auto-glitter-choice layer-list-swatch" type="button" aria-expanded="false"><img alt=""></button>
@@ -2559,6 +2547,10 @@
 					<path d="M288 104C288 81.9 270.1 64 248 64L200 64C177.9 64 160 81.9 160 104L160 152C160 174.1 177.9 192 200 192L248 192C270.1 192 288 174.1 288 152L288 104zM288 296C288 273.9 270.1 256 248 256L200 256C177.9 256 160 273.9 160 296L160 344C160 366.1 177.9 384 200 384L248 384C270.1 384 288 366.1 288 344L288 296zM160 488L160 536C160 558.1 177.9 576 200 576L248 576C270.1 576 288 558.1 288 536L288 488C288 465.9 270.1 448 248 448L200 448C177.9 448 160 465.9 160 488zM480 104C480 81.9 462.1 64 440 64L392 64C369.9 64 352 81.9 352 104L352 152C352 174.1 369.9 192 392 192L440 192C462.1 192 480 174.1 480 152L480 104zM352 296L352 344C352 366.1 369.9 384 392 384L440 384C462.1 384 480 366.1 480 344L480 296C480 273.9 462.1 256 440 256L392 256C369.9 256 352 273.9 352 296zM480 488C480 465.9 462.1 448 440 448L392 448C369.9 448 352 465.9 352 488L352 536C352 558.1 369.9 576 392 576L440 576C462.1 576 480 558.1 480 536L480 488z" />
 				</symbol>
 
+				<symbol id="icon-ellipsis-vertical" viewBox="0 0 640 640">
+					<path d="M320 120a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm0 152a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm0 152a48 48 0 1 0 0 96 48 48 0 0 0 0-96z" />
+				</symbol>
+
 				<!-- Portrait icon -->
 				<symbol id="icon-portrait" viewBox="0 0 24 24">
 					<rect x="7" y="4" width="10" height="16" stroke="currentColor" stroke-width="2" fill="none" rx="1" />
@@ -2796,10 +2788,10 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=a503e551"></script>
+	<script src="js/core/config.js?v=dfee645f"></script>
 	<script src="js/core/preferences.js?v=216cd049"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=76e66132"></script>
+	<script src="js/core/commands.js?v=9be0a880"></script>
 	<script src="js/core/dom.js?v=12f02905"></script>
 	<script src="js/core/document-scaler.js?v=c08bbf8e"></script>
 	<script src="js/transforms/transform-math.js?v=53779101"></script>
@@ -2830,14 +2822,14 @@
 	<script src="js/ui/transform-panel.js?v=6330ed7e"></script>
 	<script src="js/transforms/editor-transform.js?v=43457e31"></script>
 	<script src="js/ui/document-start.js?v=bd0b7429"></script>
-	<script src="js/ui/modals-wiring.js?v=0d935bbe"></script>
+	<script src="js/ui/modals-wiring.js?v=70c51309"></script>
 	<script src="js/ui/layer-panel.js?v=87c24a9d"></script>
 	<script src="js/ui/canvas-gestures.js?v=fce9978d"></script>
 	<script src="js/ui/canvas-size.js?v=53305937"></script>
 	<script src="js/core/canvas-resize.js?v=fd22383b"></script>
 	<script src="js/ui/hints.js?v=7346d428"></script>
 	<script src="js/ui/picker-session.js?v=8d4d9515"></script>
-	<script src="js/ui/context-toolbar-renderer.js?v=0d24c445"></script>
+	<script src="js/ui/context-toolbar-renderer.js?v=3d437132"></script>
 	<script src="js/ui/modal-filter.js?v=b00d889b"></script>
 	<script src="js/ui/notify.js?v=b117c567"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
@@ -2846,18 +2838,18 @@
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
 	<script src="js/classes/ExportTimeline.js?v=93922fcd"></script>
-	<script src="js/classes/GifExporter.js?v=2fb8fae3"></script>
+	<script src="js/classes/GifExporter.js?v=83038dfa"></script>
 	<script src="js/classes/Mp4Exporter.js?v=2ffe9156"></script>
 	<script src="js/classes/ViewportManager.js?v=8f36cfde"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>
 	<script src="js/classes/ProjectSerializer.js?v=4b62eaa0"></script>
-	<script src="js/classes/HtmlSceneExporter.js?v=d3f0ca56"></script>
+	<script src="js/classes/HtmlSceneExporter.js?v=2380ad65"></script>
 	<script src="js/classes/MaskCompositor.js?v=19c2994c"></script>
-	<script src="js/classes/ShapeLibrary.js?v=fa32fc5a"></script>
-	<script src="js/classes/MaskEditor.js?v=678d8446"></script>
+	<script src="js/classes/ShapeLibrary.js?v=1e588ee0"></script>
+	<script src="js/classes/MaskEditor.js?v=d199dcd2"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=d987cf1a"></script>
+	<script src="js/classes/LayerManager.js?v=72e73ea0"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=a18cd184"></script>
@@ -2868,13 +2860,13 @@
 	<script src="js/classes/AutoGlitterManager.js?v=e0f15cce"></script>
 	<script src="js/classes/TextGlitterManager.js?v=a23de8cc"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=c2132469"></script>
-	<script src="js/classes/StickerManager.js?v=12a3c1e5"></script>
+	<script src="js/classes/StickerManager.js?v=fc0abfac"></script>
 	<script src="js/classes/GroupTransformManager.js?v=f19f8e9d"></script>
 
 	<script src="js/classes/MobileManager.js?v=a633cf1c"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=ed52518d"></script>
+	<script src="js/app.js?v=c2fd8846"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

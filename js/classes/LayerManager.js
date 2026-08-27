@@ -1531,7 +1531,7 @@ class LayerManager {
 
 	createIconButton({ className = '', id = '', disabled = false, title = '', iconType = '', label = '', onClick }) {
 		const btn = document.createElement('button');
-		btn.className = "btn-icon-simple icon-wrapper " + className;
+		btn.className = "btn-icon-simple icon-wrapper sm " + className;
 		if (id) btn.id = id;
 		if (disabled) btn.disabled = true;
 		if (title) btn.title = title;

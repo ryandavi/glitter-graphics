@@ -249,6 +249,10 @@ const ShapeLibrary = {
 
 	// Full <svg> markup for a picker thumbnail — same geometry as trace(), so the
 	// thumbnail matches the stamped/filled result. fill:currentColor is theme-aware.
+	// The explicit width/height attributes match the viewBox so WebKit computes a
+	// 1:1 intrinsic aspect ratio: without them Safari falls back to the 300x150
+	// replaced-element default and the artwork renders off-centre in its (square)
+	// CSS box. CSS width/height still override the rendered size.
 	getIconSvg(id) {
 		const def = this.DEFS[id] || this.DEFS.circle;
 		const vb = def.viewBox || 24;
@@ -267,7 +271,7 @@ const ShapeLibrary = {
 		} else {
 			inner = `<circle cx="${vb / 2}" cy="${vb / 2}" r="${vb / 2}"/>`;
 		}
-		return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vb} ${vb}">${inner}</svg>`;
+		return `<svg xmlns="http://www.w3.org/2000/svg" width="${vb}" height="${vb}" viewBox="0 0 ${vb} ${vb}">${inner}</svg>`;
 	},
 
 	// Natural aspect ratio (width / height) of a shape's content bounds, so a

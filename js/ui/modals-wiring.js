@@ -49,7 +49,7 @@ updateOrientationButtons(width, height) {
 				}
 			})
 			.register('settingsModal', {
-				openBtnId: ['settingsBtn', 'mobileAppSettingsBtn'],
+				openBtnId: 'settingsBtn',
 				closeBtnId: ['closeSettingsModal', 'closeSettingsModalFooter'],
 				resetScrollOnOpen: true,
 				onOpen: () => {
@@ -191,6 +191,69 @@ updateOrientationButtons(width, height) {
 		this.setupLayerPanelListeners();
 		this.setupStickerUploadModalListeners();
 		this.setupNewCanvasModalListeners();
+		this.setupAppMenu();
+	}
+
+,
+	// The header "Menu" popover is a thin shell: its items keep the same ids the
+	// ModalManager (and the toolbar action wiring for #clearAllTool) already bind
+	// to, so this only owns open/close, focus, and dismissal of the panel.
+	setupAppMenu() {
+		const root = document.getElementById('appMenu');
+		const trigger = document.getElementById('appMenuBtn');
+		const panel = document.getElementById('appMenuPanel');
+		if (!root || !trigger || !panel) return;
+
+		const isOpen = () => !panel.hidden;
+
+		const close = ({ focusTrigger = false } = {}) => {
+			if (!isOpen()) return;
+			panel.hidden = true;
+			root.classList.remove('is-open');
+			trigger.setAttribute('aria-expanded', 'false');
+			document.removeEventListener('keydown', onKeydown, true);
+			document.removeEventListener('pointerdown', onPointerDown, true);
+			if (focusTrigger) trigger.focus();
+		};
+
+		const open = () => {
+			if (isOpen()) return;
+			panel.hidden = false;
+			root.classList.add('is-open');
+			trigger.setAttribute('aria-expanded', 'true');
+			document.addEventListener('keydown', onKeydown, true);
+			document.addEventListener('pointerdown', onPointerDown, true);
+			const first = panel.querySelector('.app-menu-item:not([disabled])');
+			first?.focus();
+		};
+
+		function onPointerDown(event) {
+			if (!root.contains(event.target)) close();
+		}
+
+		function onKeydown(event) {
+			if (event.key === 'Escape') {
+				event.stopPropagation();
+				close({ focusTrigger: true });
+				return;
+			}
+			if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+			const items = Array.from(panel.querySelectorAll('.app-menu-item:not([disabled])'));
+			if (!items.length) return;
+			event.preventDefault();
+			const current = items.indexOf(document.activeElement);
+			const step = event.key === 'ArrowDown' ? 1 : -1;
+			const next = (current + step + items.length) % items.length;
+			items[next].focus();
+		}
+
+		trigger.addEventListener('click', () => (isOpen() ? close() : open()));
+
+		// Any activated item runs its own handler (modal open, resetAll, …) — we
+		// just dismiss the panel afterwards.
+		panel.addEventListener('click', (event) => {
+			if (event.target.closest('.app-menu-item')) close();
+		});
 	}
 
 ,

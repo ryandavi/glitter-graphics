@@ -155,10 +155,18 @@
 	aspect-ratio: 1/1;
 
 	&.icon-wrapper {
+		// Size the glyph off font-size (1em) so the shared .sm / .xl icon-wrapper
+		// modifiers actually take effect — an explicit width/height here silently
+		// overrode them, leaving every "sm" button (e.g. the layers bottom bar)
+		// at the full 30px.
 		>svg.icon {
-			width: var(--icon-size-sm);
-			height: var(--icon-size-sm);
+			width: 1em;
+			height: 1em;
+			font-size: var(--icon-size-sm);
 		}
+
+		&.sm > svg.icon { font-size: var(--font-size-md); }
+		&.xl > svg.icon { font-size: 48px; }
 	}
 
 

@@ -122,6 +122,98 @@
 }
 
 
+/* ===== APP MENU (header "…" popover) ===== */
+// One affordance for the low-frequency app chrome: Welcome / Guide / About,
+// then Commands & Shortcuts / App Settings, then Clear All. Items keep the ids
+// the ModalManager and toolbar wiring bind to — this is only the surface.
+.app-menu {
+	position: relative;
+	display: flex;
+	align-items: center;
+
+	// Keep the trigger glyph the same size as the other header marks even though
+	// it is no longer a direct child of .app-header-right.
+	>.app-menu-trigger.icon-wrapper > svg.icon {
+		width: var(--app-header-mark-size);
+		height: var(--app-header-mark-size);
+		font-size: var(--app-header-mark-size);
+	}
+}
+
+.app-menu-panel {
+	position: absolute;
+	top: calc(100% + var(--spacing-xs));
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 220px;
+	max-width: min(280px, calc(100vw - var(--spacing-md) * 2));
+	// vh fallback first for engines without dvh; dvh wins where supported.
+	max-height: calc(100vh - var(--header-height) - var(--spacing-lg));
+	max-height: calc(100dvh - var(--header-height) - var(--spacing-lg));
+	overflow-y: auto;
+	padding: var(--spacing-xs);
+
+	@include mini-modal();
+
+	// The header bar paints a text-shadow onto its subtree; the menu is a plain
+	// panel surface and should not inherit it.
+	text-shadow: none;
+}
+
+.app-menu-separator {
+	height: 1px;
+	margin: var(--spacing-xs) 0;
+	background: var(--color-border);
+}
+
+.app-menu-item {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	width: 100%;
+	padding: var(--spacing-sm);
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--color-text-primary);
+	font-size: var(--font-size-base);
+	text-align: left;
+	cursor: pointer;
+
+	>.app-menu-item-icon {
+		flex: 0 0 auto;
+		color: var(--color-icon-muted);
+	}
+
+	>.app-menu-item-label { flex: 1 1 auto; }
+
+	&:not(:disabled):hover,
+	&:not(:disabled):focus-visible {
+		background: var(--color-bg-tertiary);
+		color: var(--color-text-primary);
+		outline: none;
+	}
+
+	&:disabled {
+		opacity: var(--disabled-opacity);
+		cursor: not-allowed;
+	}
+
+	&.app-menu-item-danger {
+		color: var(--color-danger-text);
+
+		>.app-menu-item-icon { color: var(--color-danger-text); }
+
+		&:not(:disabled):hover,
+		&:not(:disabled):focus-visible {
+			background: var(--color-danger-surface);
+			color: var(--color-danger-text);
+		}
+	}
+}
+
+
 /* ===== MAIN AREA ===== */
 .main-area {
 	display: flex;
@@ -144,6 +236,9 @@
 	flex-shrink: 0;
 	position: relative;
 	z-index: var(--z-panel-elevated);
+
+	// NOTE: the rail's overflow/scroll treatment lives in panels/_transform.scss,
+	// which re-declares .toolbar overflow later in the cascade.
 
 	>.toolbar-spacer {
 		flex: 1;

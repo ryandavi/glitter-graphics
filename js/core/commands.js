@@ -52,6 +52,8 @@ const COMMANDS = {
 	},
 	deleteSelection: { label: 'Delete Selected Layer(s)', group: 'Transform', keys: ['Delete', 'Backspace'], displayKey: 'Delete / Backspace', when: (editor) => editor.getSelectedActionableLayers().length > 0, run: (editor) => editor.deleteSelectedLayers() },
 	swapBrushMode: { label: 'Swap Paint/Erase (Mask Brush)', group: 'Brush', keys: ['x'], displayKey: 'X', when: (editor) => editor.currentTool === ToolType.BRUSH, run: (editor) => editor.maskEditor?.toggleMode() },
+	brushSetPaint: { run: (editor) => editor.maskEditor?.setMode('add') },
+	brushSetErase: { run: (editor) => editor.maskEditor?.setMode('sub') },
 	brushSizeDown: { label: 'Decrease Brush Size', group: 'Brush', keys: ['BracketLeft', 'shift+BracketLeft'], displayKey: '[ / Shift + [', when: (editor) => editor.currentTool === ToolType.BRUSH, run: (editor, event) => editor.maskEditor?.adjustBrushSize(event.shiftKey ? -10 : -5) },
 	brushSizeUp: { label: 'Increase Brush Size', group: 'Brush', keys: ['BracketRight', 'shift+BracketRight'], displayKey: '] / Shift + ]', when: (editor) => editor.currentTool === ToolType.BRUSH, run: (editor, event) => editor.maskEditor?.adjustBrushSize(event.shiftKey ? 10 : 5) },
 	saveProject: { label: 'Save Project', group: 'File', keys: ['mod+s'], displayKey: 'Ctrl/Cmd + S', allowWhileTyping: true, run: (editor) => editor.saveProjectFile() },

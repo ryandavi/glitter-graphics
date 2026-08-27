@@ -63,6 +63,16 @@ async function main() {
 		const nonzeroFlow = lowFlow.paintAlpha.filter((alpha) => alpha > 0);
 		assert(nonzeroFlow.length === 1, `Flow introduced a blurred edge ramp: ${lowFlow.paintAlpha}`);
 
+		const pointerPressure = await page.evaluate(() => {
+			const maskEditor = window.editor.maskEditor;
+			return {
+				trackpad: maskEditor._getPointerPressure('mouse', 0),
+				pen: maskEditor._getPointerPressure('pen', 0.25)
+			};
+		});
+		assert(pointerPressure.trackpad === null, 'Mouse/trackpad pressure was not ignored');
+		assert(pointerPressure.pen === 0.25, 'Pen pressure was not preserved');
+
 		const settingsState = await page.evaluate(() => {
 			const input = document.getElementById('antialiasMaskEdges');
 			const initialChecked = input.checked;
@@ -91,6 +101,7 @@ async function main() {
 		console.log('PASS Disabling crisp mode restores antialiased brush edges');
 		console.log('PASS Softness remains feathered independently of antialiasing');
 		console.log('PASS Flow remains uniform across a crisp stamp');
+		console.log('PASS Mouse and Force Touch trackpad input ignores pressure while pen pressure is preserved');
 		console.log('PASS Antialias Edges defaults off and persists when enabled');
 	} finally {
 		await page.evaluate(() => {

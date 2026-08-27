@@ -265,17 +265,37 @@ async function main() {
 
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.waitForTimeout(400);
-		const mobileActions = await page.evaluate(() => ({
-			toolbarSettings: getComputedStyle(document.getElementById('settingsBtn')).display,
-			toolbarClearGroup: getComputedStyle(document.getElementById('toolbarClearGroup')).display,
-			hasLayersClear: Boolean(document.getElementById('layersBarClearAll')),
-			bottomNavButtons: document.querySelectorAll('.mobile-bottom-nav .mobile-drawer-btn').length
-		}));
-		assert(mobileActions.toolbarSettings !== 'none', 'Mobile toolbar is missing App Settings');
-		assert(mobileActions.toolbarClearGroup === 'none', 'Mobile toolbar still shows Clear All');
+		const mobileActions = await page.evaluate(() => {
+			const menuBtn = document.getElementById('appMenuBtn');
+			const panel = document.getElementById('appMenuPanel');
+			menuBtn?.click();
+			const openState = {
+				expanded: menuBtn?.getAttribute('aria-expanded'),
+				panelVisible: Boolean(panel) && !panel.hidden,
+				settingsInMenu: Boolean(panel?.querySelector('#settingsBtn')),
+				shortcutsInMenu: Boolean(panel?.querySelector('#shortcutsBtn')),
+				clearInMenu: Boolean(panel?.querySelector('#clearAllTool'))
+			};
+			menuBtn?.click();
+			return {
+				...openState,
+				collapsedAfterToggle: menuBtn?.getAttribute('aria-expanded') === 'false',
+				toolbarHasSettings: Boolean(document.querySelector('.toolbar #settingsBtn')),
+				toolbarHasClear: Boolean(document.querySelector('.toolbar #clearAllTool')),
+				hasLayersClear: Boolean(document.getElementById('layersBarClearAll')),
+				bottomNavButtons: document.querySelectorAll('.mobile-bottom-nav .mobile-drawer-btn').length
+			};
+		});
+		assert(mobileActions.expanded === 'true' && mobileActions.panelVisible,
+			'App menu does not open on mobile');
+		assert(mobileActions.settingsInMenu && mobileActions.shortcutsInMenu && mobileActions.clearInMenu,
+			'App menu is missing Settings, Shortcuts, or Clear All');
+		assert(!mobileActions.toolbarHasSettings && !mobileActions.toolbarHasClear,
+			'Toolbar still carries the app-level Settings/Clear groups');
+		assert(mobileActions.collapsedAfterToggle, 'App menu does not close on re-tap');
 		assert(mobileActions.hasLayersClear && mobileActions.bottomNavButtons === 4,
 			`Mobile four-button navigation or relocated Clear All is unavailable: ${JSON.stringify(mobileActions)}`);
-		console.log('PASS Mobile Settings visibility and Clear All relocation');
+		console.log('PASS App menu consolidation and mobile four-button navigation');
 
 		assert(runtimeErrors.length === 0, `Runtime errors:\n${runtimeErrors.join('\n')}`);
 		console.log('\nUX polish verification finished with all checks passing.');

@@ -450,11 +450,6 @@ class MaskEditor {
 		if (brushTool) {
 			brushTool.disabled = !enabled;
 		}
-
-		const eraserTool = document.getElementById('eraserTool');
-		if (eraserTool) {
-			eraserTool.disabled = !enabled;
-		}
 	}
 
 	loadLayer(layer) {
@@ -605,7 +600,7 @@ class MaskEditor {
 
 		this._startStrokeFromScreenPoint(event.clientX, event.clientY, {
 			pointerId: event.pointerId,
-			pressure: event.pressure,
+			pressure: this._getPointerPressure(event.pointerType, event.pressure),
 			shiftKey: event.shiftKey
 		});
 		this._updateCursorPosition(event);
@@ -639,7 +634,11 @@ class MaskEditor {
 			if (!point) {
 				continue;
 			}
-			point.pressure = sample.pressure;
+			// WebKit can expose Force Touch trackpad values through PointerEvent
+			// pressure while still identifying the device as a mouse. Pressure is a
+			// brush feature only for actual pen input; a mouse/trackpad must paint at
+			// the configured Flow even when Safari reports zero pressure.
+			point.pressure = this._getPointerPressure(event.pointerType, sample.pressure);
 			const nextPoint = this._resolveStrokePoint(point, event.shiftKey);
 			this._stampAlongPath(layer, paint, this.lastPoint, nextPoint);
 			this.lastPoint = nextPoint;
@@ -654,6 +653,10 @@ class MaskEditor {
 			return coalesced;
 		}
 		return [event];
+	}
+
+	_getPointerPressure(pointerType, pressure) {
+		return pointerType === 'pen' ? pressure : null;
 	}
 
 	// Turns a raw pointer sample into the point actually painted this move.
@@ -1015,8 +1018,8 @@ class MaskEditor {
 			return flow;
 		}
 
-		// Mouse/non-pressure input reports a constant 0.5, so this multiplier
-		// is 1 (unchanged) for anyone without a pressure-sensitive pen.
+		// Non-pen input is normalized to null before it reaches this method, so
+		// only a pressure-sensitive pen can alter the configured Flow.
 		const pressureMultiplier = Math.max(0, pressure * 2);
 		return Math.min(1, flow * pressureMultiplier);
 	}
@@ -1296,13 +1299,16 @@ class MaskEditor {
 	}
 
 	_syncModeButtons() {
-		// Brush and Eraser share ToolType.BRUSH, so their toolbar highlight
-		// follows the paint mode rather than the generic tool-switch logic.
+		// The single Mask Brush button is "active" whenever the tool is engaged,
+		// regardless of paint mode; add vs. sub is shown by the Paint/Erase
+		// segmented control in the mask-brush context bar.
 		const isBrushActive = this.editor.currentTool === ToolType.BRUSH;
-		const brushTool = document.getElementById('brushTool');
-		const eraserTool = document.getElementById('eraserTool');
-		if (brushTool) brushTool.classList.toggle('active', isBrushActive && this.mode === 'add');
-		if (eraserTool) eraserTool.classList.toggle('active', isBrushActive && this.mode === 'sub');
+		document.getElementById('brushTool')?.classList.toggle('active', isBrushActive);
+		document.querySelectorAll('#maskBrushControls [data-brush-mode]').forEach((option) => {
+			const on = option.dataset.brushMode === this.mode;
+			option.classList.toggle('active', on);
+			option.setAttribute('aria-pressed', on ? 'true' : 'false');
+		});
 	}
 
 	_getOverlayPalette(layer) {

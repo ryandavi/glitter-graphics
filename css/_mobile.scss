@@ -95,23 +95,29 @@
 
 	.toolbar {
 		position: fixed;
-		top: 50%;
+		// Pinned below the header with the same floating-inset every other piece
+		// of mobile chrome uses (preview-controls top, the bottom control bars),
+		// instead of vertically centred — centring gave it a large, viewport-
+		// dependent, asymmetric gap. It hugs its content; if the tools would run
+		// past the bottom nav it caps one inset short of it and scrolls.
+		top: calc(var(--mobile-header-height) + var(--mobile-floating-inset));
 		left: var(--mobile-floating-inset);
 		margin: 0;
-		transform: translateY(-50%);
+		transform: none;
 		width: var(--mobile-toolbar-width);
 		height: auto;
+		max-height: calc(100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height) - var(--mobile-floating-inset) * 2);
 		z-index: var(--z-header-menu);
 		display: flex;
 		padding: var(--spacing-sm);
 		@include floating-ui;
 		transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s;
 
-		>.toolbar-spacer,
-		#shortcutsBtn,
-		#toolbarClearGroup {
-			display: none;
-		}
+		// Edge-fade mask + scrollbar treatment is shared from _transform.scss.
+		overflow-y: auto;
+		overflow-x: hidden;
+		overscroll-behavior: contain;
+		touch-action: pan-y;
 
 		>.toolbar-group+.toolbar-group {
 			margin: 0;
@@ -119,13 +125,17 @@
 			border: 0;
 		}
 
-		#toolbarSettingsGroup { display: none; }
 		#handTool { display: none; }
 	}
 
+	// Roomier touch targets for the header menu on phones.
+	.app-menu-item { padding: var(--spacing-md) var(--spacing-sm); }
+
 	.preview-controls {
 		top: var(--mobile-floating-inset);
-		left: var(--mobile-floating-inset);
+		// Start past the floating tool rail (fixed, left edge) so the top controls
+		// can never sit on top of it whatever the pill's height does.
+		left: calc(var(--mobile-toolbar-width) + var(--mobile-floating-inset) * 2);
 		right: var(--mobile-floating-inset);
 	}
 
@@ -135,25 +145,14 @@
 	.color-picker-controls,
 	.mask-brush-controls {
 		bottom: var(--mobile-floating-inset);
-	}
+		max-width: calc(100% - var(--mobile-floating-inset) * 2);
+		gap: var(--spacing-xs);
+		padding: var(--spacing-xs);
 
-	@media (max-width: 360px) {
-		.preview-controls.visible {
-			display: grid;
-			grid-template-columns: minmax(0, 1fr) auto;
-			gap: var(--spacing-sm);
-
-			>.preview-controls-center {
-				position: static;
-				transform: none;
-				justify-self: start;
-			}
-
-			>.preview-controls-right {
-				margin-left: 0;
-				justify-self: end;
-			}
-		}
+		.context-toolbar-handle { display: none; }
+		.context-slider { width: clamp(64px, 24vw, 88px); }
+		.context-checkbox-group { padding-inline: var(--spacing-xs); }
+		.context-label { font-size: var(--font-size-xs); }
 	}
 
 	body.designOpen,
@@ -171,7 +170,7 @@
 		}
 
 		.toolbar {
-			transform: translate(calc(-100% - var(--mobile-floating-inset)), -50%);
+			transform: translateX(calc(-100% - var(--mobile-floating-inset)));
 			transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
 		}
 	}

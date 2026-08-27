@@ -511,15 +511,10 @@ class GlitterEditor {
 			if (btn) btn.addEventListener('click', () => this.setTool(type));
 		});
 
-		// Brush and Eraser are both the Mask Brush tool with a different paint mode,
-		// so each button sets the tool then forces its own mode.
+		// One Mask Brush button; Paint vs Erase lives in the mask-brush context bar
+		// (and X / E). Re-selecting the tool keeps whichever mode was last used.
 		document.getElementById('brushTool')?.addEventListener('click', () => {
 			this.setTool(ToolType.BRUSH);
-			this.maskEditor?.setMode('add');
-		});
-		document.getElementById('eraserTool')?.addEventListener('click', () => {
-			this.setTool(ToolType.BRUSH);
-			this.maskEditor?.setMode('sub');
 		});
 
 		const actions = [
@@ -532,6 +527,31 @@ class GlitterEditor {
 			const btn = document.getElementById(id);
 			if (btn) btn.addEventListener('click', handler);
 		});
+
+		this.setupToolbarOverflowFade();
+	}
+
+	// Fade only the edge that actually has hidden tools past it: no top fade when
+	// scrolled to the top, no bottom fade when the last tool is fully in view,
+	// and no fade at all when the whole rail fits. CSS keys off the classes.
+	setupToolbarOverflowFade() {
+		const toolbar = document.querySelector('.toolbar');
+		if (!toolbar) return;
+
+		const update = () => {
+			const slack = toolbar.scrollHeight - toolbar.clientHeight;
+			const overflowing = slack > 1;
+			toolbar.classList.toggle('has-overflow-top', overflowing && toolbar.scrollTop > 1);
+			toolbar.classList.toggle('has-overflow-bottom', overflowing && toolbar.scrollTop < slack - 1);
+		};
+
+		toolbar.addEventListener('scroll', update, { passive: true });
+		if (typeof ResizeObserver === 'function') {
+			new ResizeObserver(update).observe(toolbar);
+		} else {
+			window.addEventListener('resize', update);
+		}
+		update();
 	}
 
 
@@ -980,6 +1000,7 @@ class GlitterEditor {
 		});
 
 		activeToolbar?.element.classList.add('visible');
+		if (activeToolbar?.element) this.contextToolbarRenderer?.applyPlacement(activeToolbar.element);
 		if (activeToolbar?.config.id === 'layerCenterControls') {
 			const canTransformSelection = (hasMultiSelection && this.layerManager.canTransformMultiSelection()) || Boolean(
 				layer
@@ -1339,7 +1360,6 @@ class GlitterEditor {
 		const handTool = document.getElementById('handTool');
 		const zoomTool = document.getElementById('zoomTool');
 		const brushTool = document.getElementById('brushTool');
-		const eraserTool = document.getElementById('eraserTool');
 		const zoomControls = document.getElementById('zoomControls');
 		const addBtn = document.getElementById('addLayerBtn');
 		const previewToggle = document.getElementById('previewModeToggle');
@@ -1374,7 +1394,6 @@ class GlitterEditor {
 		if (zoomTool) zoomTool.disabled = !hasImage;
 		this.maskEditor?.updateToolButtonState();
 		if (brushTool) brushTool.disabled ||= autoPreviewActive;
-		if (eraserTool) eraserTool.disabled ||= autoPreviewActive;
 		const layersPanel = document.getElementById('layersPanel');
 		if (layersPanel) layersPanel.inert = autoPreviewActive;
 
