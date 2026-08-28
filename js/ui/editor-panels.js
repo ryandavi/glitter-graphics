@@ -69,6 +69,8 @@ isLayerContentLocked(layer) {
 			'shapeSettingsSection',
 			'stickersOptions',
 			'stickersSearchSection',
+			'brushTipOptions',
+			'brushTipSearchSection',
 			'shapesOptions'
 		];
 
@@ -83,7 +85,16 @@ isLayerContentLocked(layer) {
 
 		// 3. Determine which config to use
 		let config;
-		if (this.autoGlitterManager?.isSessionActive()) {
+		// Asset pickers are temporary panel modes and take precedence over the
+		// selected layer. Brush tips configure the Brush/Eraser tool itself, so a
+		// Canvas selection (or no fill layer yet) must not route the drawer back to
+		// Canvas Quick Add / Project content while the picker is open.
+		if (this.brushTipManager?.pickerSession) {
+			config = {
+				designPanelSections: ['brushTipSearchSection', 'brushTipOptions'],
+				panelMode: 'brush-tips'
+			};
+		} else if (this.autoGlitterManager?.isSessionActive()) {
 			config = LAYER_UI_CONFIG.AUTO_GLITTER;
 		} else if (!this.originalImage) {
 			config = LAYER_UI_CONFIG.NO_IMAGE;
@@ -125,6 +136,7 @@ isLayerContentLocked(layer) {
 		this.stickerManager?.updatePickerStrip();
 		this.glitterManager?.updatePickerStrip();
 		this.baseBackgroundManager?.updatePickerStrip();
+		this.brushTipManager?.updatePickerStrip();
 
 		// Canvas Size belongs to Canvas Background; drop its temporary preview
 		// when editing any content layer or when no image is loaded.
@@ -172,17 +184,17 @@ isLayerContentLocked(layer) {
 	// Properties; otherwise the Design Gallery (nothing to edit / browse mode).
 ,
 	getPreferredDesignSection(layer) {
+		// An armed picker keeps the gallery focused (Done/selection returns you).
+		if (this.pickers.active) {
+			return 'designGallery';
+		}
+
 		// Tool settings take focus when the active layer can use that tool.
 		if (this.currentTool === ToolType.BRUSH) {
 			return 'brushSettings';
 		}
 		if (this.currentTool === ToolType.COLOR_PICKER && layer?.type === LayerType.GLITTER_FILL) {
 			return 'layerSettings';
-		}
-
-		// An armed glitter pick-session keeps the gallery focused (Done returns you).
-		if (this.pickers.active) {
-			return 'designGallery';
 		}
 
 		if (!this.originalImage || this.layerManager?.hasMultiSelection?.() || !layer) {
@@ -289,7 +301,7 @@ isLayerContentLocked(layer) {
 			if (emptyText) emptyText.textContent = `${multiCount} layers selected`;
 			if (emptySubtext) emptySubtext.textContent = canTransform
 				? 'Drag the shared box to move them. Shift+click changes the selection; use Align and Actions below.'
-				: 'Selected together for layer actions. Movement and alignment are unavailable while the selection includes a locked, Base Image, or Glitter Fill layer.';
+				: 'Selected together for layer actions. Movement and alignment are unavailable while the selection includes a locked, Base Image, or Fill layer.';
 			document.querySelectorAll('#multiSelectionAlignScope button, [data-multi-align]').forEach((button) => { button.disabled = !canTransform; });
 			document.querySelectorAll('[data-multi-distribute]').forEach((button) => { button.disabled = !canTransform || multiCount < 3; });
 			const canChangeLayers = selectedLayers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
@@ -322,6 +334,7 @@ isLayerContentLocked(layer) {
 
 		const { prefix, managerKey, renderThumbnail, getExtraBadges } = config;
 		const manager = this[managerKey];
+		const assetId = String(asset.id);
 
 		const thumbnail = document.getElementById(`${prefix}Thumbnail`);
 		const name = document.getElementById(`${prefix}Name`);
@@ -349,6 +362,7 @@ isLayerContentLocked(layer) {
 			// Remove old listeners and add new one
 			thumbnail.replaceWith(thumbnail.cloneNode(true));
 			const newThumbnail = document.getElementById(`${prefix}Thumbnail`);
+			newThumbnail.dataset.assetId = assetId;
 
 			// Re-render after cloning
 			renderThumbnail(newThumbnail, asset);
@@ -370,6 +384,19 @@ isLayerContentLocked(layer) {
 		// Properties, and the text Fill/Border/Shadow pickers all read identically.
 		if (size) size.innerHTML = this.formatAssetSize(asset);
 		if (frames) frames.innerHTML = this.formatAssetFrames(asset);
+
+		// Indexed manifests intentionally omit the heavier dimensions/animation
+		// metadata. Fill it in when this properties card becomes visible, while
+		// guarding against an older request overwriting a newer selection.
+		if (!asset._detailLoaded && manager?.ensureAssetDetails) {
+			manager.ensureAssetDetails(asset).then((detailedAsset) => {
+				const currentThumbnail = document.getElementById(`${prefix}Thumbnail`);
+				if (!detailedAsset || currentThumbnail?.dataset.assetId !== assetId) return;
+				if (size) size.innerHTML = this.formatAssetSize(detailedAsset);
+				if (frames) frames.innerHTML = this.formatAssetFrames(detailedAsset);
+				this.renderAssetBadges(badges, detailedAsset, manager, getExtraBadges);
+			}).catch((error) => console.warn(`Could not load ${type} details:`, error));
+		}
 	}
 
 	// ===== Shared asset-info formatting (one place to change size/frames text) =====,
@@ -379,13 +406,13 @@ isLayerContentLocked(layer) {
 		if (asset?.width && asset?.height) {
 			return formatDimensions(asset.width, asset.height);
 		}
-		return 'Undefined';
+		return '—';
 	}
 
 ,
 	formatAssetFrames(asset) {
 		if (asset?.frameCount === undefined || asset?.frameCount === null) {
-			return 'Undefined';
+			return '—';
 		}
 		if (asset.frameCount <= 1 && !asset.isAnimated) {
 			return 'Static';
@@ -403,6 +430,9 @@ isLayerContentLocked(layer) {
 ,
 	renderGlitterAssetDisplay(els, glitter, colorAdjust = null) {
 		if (!glitter) return;
+		const assetId = String(glitter.id);
+		const displayNodes = [els.thumbnail, els.name, els.badges, els.size, els.frames].filter(Boolean);
+		displayNodes.forEach((node) => { node.dataset.assetId = assetId; });
 		if (els.thumbnail) {
 			els.thumbnail.classList.add('glitter-bg');
 			els.thumbnail.style.backgroundImage = `url(${glitter.url})`;
@@ -419,6 +449,19 @@ isLayerContentLocked(layer) {
 		}
 		if (els.size) els.size.innerHTML = this.formatAssetSize(glitter);
 		if (els.frames) els.frames.innerHTML = this.formatAssetFrames(glitter);
+
+		// Indexed gallery records omit dimensions and animation timing. Hydrate
+		// them in this shared renderer so Shape, Text, Background, and effect fills
+		// all show the same authoritative metadata. Asset markers prevent a slow
+		// response from repainting a slot after another glitter has been selected.
+		if (!glitter._detailLoaded && this.glitterManager?.ensureAssetDetails) {
+			this.glitterManager.ensureAssetDetails(glitter).then((detailedGlitter) => {
+				if (!detailedGlitter || displayNodes.some((node) => node.dataset.assetId !== assetId)) return;
+				if (els.badges) this.renderAssetBadges(els.badges, detailedGlitter, this.glitterManager, () => []);
+				if (els.size) els.size.innerHTML = this.formatAssetSize(detailedGlitter);
+				if (els.frames) els.frames.innerHTML = this.formatAssetFrames(detailedGlitter);
+			}).catch((error) => console.warn('Could not load glitter details:', error));
+		}
 	}
 
 	// Shared by Glitter/Sticker asset info (updateAssetInfo) and the Text

@@ -56,7 +56,7 @@ async function main() {
 				brushShapes: ShapeLibrary.BRUSH_SHAPES.length,
 				maskEditorBrushShapes: MaskEditor.BRUSH_SHAPES.length,
 				shapeCards: document.querySelectorAll('.shape-gallery-option').length,
-				brushCards: document.querySelectorAll('#brushShapePicker .brush-shape-option').length,
+				brushTips: window.editor.brushTipManager.content.length,
 				normalizedShapes
 			};
 		});
@@ -68,7 +68,7 @@ async function main() {
 		assert(result.brushShapes === 5, `Expected 5 brush shapes, got ${result.brushShapes}`);
 		assert(result.maskEditorBrushShapes === result.brushShapes, 'MaskEditor brush alias is stale');
 		assert(result.shapeCards === result.fillShapes, 'Shape gallery does not match the manifest');
-		assert(result.brushCards === result.brushShapes, 'Brush gallery does not match the manifest');
+		assert(result.brushTips === result.brushShapes + Object.keys(BrushLibrary.BRUSHES).length, 'Brush gallery does not match its vector and raster manifests');
 		assert(result.normalizedShapes.length === 21, `Expected 21 normalized supplied shapes, got ${result.normalizedShapes.length}`);
 		result.normalizedShapes.forEach(({ id, bounds }) => {
 			assert(bounds.minX >= 0.75 && bounds.minY >= 0.75, `${id} extends above or left of its 24x24 viewBox`);

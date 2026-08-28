@@ -442,24 +442,28 @@ class MobileManager {
 			handle.addEventListener('pointermove', (event) => {
 				if (!this.sheetDrag || event.pointerId !== this.sheetDrag.pointerId) return;
 				const delta = ((this.sheetDrag.startY - event.clientY) / window.innerHeight) * 100;
-				this.setSheetHeight(Math.max(0, Math.min(85, this.sheetDrag.startHeight + delta)));
+				this.setSheetHeight(Math.max(12, Math.min(85, this.sheetDrag.startHeight + delta)));
 				event.preventDefault();
 			});
 			const finish = (event) => {
 				if (!this.sheetDrag || event.pointerId !== this.sheetDrag.pointerId) return;
 				this.sheetDrag = null;
 				document.body.classList.remove('mobile-sheet-dragging');
-				if (this.sheetHeight <= 32) {
+				// Keep the exact released height. Only a clearly collapsed sheet
+				// dismisses, so small adjustments never snap back or expand themselves.
+				if (this.sheetHeight <= 20) {
 					this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
-				} else {
-					this.setSheetHeight(this.sheetHeight >= 68 ? 85 : 50);
 				}
 			};
 			handle.addEventListener('pointerup', finish);
 			handle.addEventListener('pointercancel', finish);
 			handle.addEventListener('keydown', (event) => {
 				if (event.key === 'Escape') this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
-				if (event.key === 'ArrowDown') this.setSheetHeight(Math.max(30, this.sheetHeight - 10));
+				if (event.key === 'ArrowDown') {
+					const nextHeight = this.sheetHeight - 10;
+					if (nextHeight <= 20) this.closeAllDrawers({ releaseBrush: this.activeDrawer === 'edit' });
+					else this.setSheetHeight(nextHeight);
+				}
 				if (event.key === 'ArrowUp') this.setSheetHeight(Math.min(85, this.sheetHeight + 10));
 			});
 		});
@@ -487,14 +491,13 @@ class MobileManager {
 
 	scheduleDrawerViewportUpdate(mode, restoreState = null) {
 		this.cancelDrawerViewportUpdate();
-		this.editor.viewport?.startViewTransition?.();
 		this.drawerLayoutFrame = requestAnimationFrame(() => {
 			this.drawerLayoutFrame = requestAnimationFrame(() => {
 				this.drawerViewportSyncing = true;
 				if (mode === 'restore' && restoreState) {
-					this.editor.viewport?.restoreViewState?.(restoreState);
+					this.editor.viewport?.restoreViewState?.(restoreState, { animate: true });
 				} else {
-					this.editor.viewport?.performResizeUpdate();
+					this.editor.viewport?.performResizeUpdate({ animate: true });
 				}
 				this.drawerViewportLastZoom = this.editor.viewport?.currentZoom ?? null;
 				this.drawerViewportSyncing = false;

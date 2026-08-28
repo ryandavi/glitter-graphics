@@ -419,7 +419,7 @@ function buildPanelItem(item, schema) {
 				label.textContent = item.label;
 				content.appendChild(label);
 			}
-			const list = panelDiv('tool-options-group');
+			const list = panelDiv('tool-options-group settings-toggle-list');
 			item.items.forEach((entry) => {
 				const checkbox = tplClone('tpl-checkbox');
 				checkbox.querySelector('input').id = entry.id;

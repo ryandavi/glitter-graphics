@@ -478,6 +478,18 @@
 	}
 }
 
+// Toggle lists are single-column controls: every choice gets the same full
+// width whether the list contains one option or several.
+.settings-toggle-list,
+.tool-options-group.settings-toggle-list {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--spacing-sm);
+	width: 100%;
+
+	>.checkbox-group { width: 100%; }
+}
+
 .transform-panel .checkbox-group>span { white-space: nowrap; }
 
 /* ===== SETTINGS SECTION VISIBILITY ===== */

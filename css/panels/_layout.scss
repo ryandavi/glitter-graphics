@@ -247,6 +247,7 @@
 	>.toolbar-group {
 		display: flex;
 		flex-direction: column;
+		flex: 0 0 auto;
 		gap: var(--spacing-sm);
 
 		+.toolbar-group {
@@ -263,6 +264,8 @@
 			@include gloss-button(true);
 		}
 	}
+
+	>.toolbar-group.toolbar-utility-group { margin-top: auto; }
 
 }
 

@@ -22,6 +22,8 @@ const SUITES = [
 	{ file: 'export-parity.js', tags: ['export'] },
 	{ file: 'shape-border-verify.js', tags: ['export', 'shape'] },
 	{ file: 'mask-edge-verify.js', tags: ['export', 'mask'] },
+	{ file: 'brush-raster-verify.js', tags: ['unit', 'mask'] },
+	{ file: 'abr-import-verify.js', tags: ['unit', 'mask'] },
 	{ file: 'mp4-export-verify.js', tags: ['export'] },
 	{ file: 'effects-consistency-verify.js', tags: ['export', 'effects'] },
 	{ file: 'panel-parity.js', tags: ['panels'] },

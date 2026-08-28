@@ -258,12 +258,14 @@
 	}
 
 	>[data-gallery-search="glitter"].filters-open ~ [data-gallery-content="glitter"],
-	>[data-gallery-search="stickers"].filters-open ~ [data-gallery-content="stickers"] {
+	>[data-gallery-search="stickers"].filters-open ~ [data-gallery-content="stickers"],
+	>[data-gallery-search="brush-tips"].filters-open ~ [data-gallery-content="brush-tips"] {
 		display: none;
 	}
 
 	>[data-gallery-search="glitter"].filters-returning ~ [data-gallery-content="glitter"],
-	>[data-gallery-search="stickers"].filters-returning ~ [data-gallery-content="stickers"] {
+	>[data-gallery-search="stickers"].filters-returning ~ [data-gallery-content="stickers"],
+	>[data-gallery-search="brush-tips"].filters-returning ~ [data-gallery-content="brush-tips"] {
 		animation: filter-surface-enter var(--transition-fast) ease-out;
 	}
 }
@@ -425,17 +427,33 @@
 	}
 }
 
-// Brush-shape gallery — same gallery-card conventions as .text-font-option
-// (outline selection state, accent-on-active), but laid out as a responsive
-// grid of small icon tiles since each option is a shape glyph, not a text
-// sample. auto-fill lets it pack 5-across in the wide desktop panel and wrap on
-// the narrower mobile settings drawer.
-.brush-shape-picker {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+// Scatter & Jitter rows reuse the standard setting-column look; raster-only rows
+// (Angle / Roundness / Flip) collapse for vector tips.
+.brush-dynamics {
+	display: flex;
+	flex-direction: column;
 	gap: var(--spacing-sm);
-	width: 100%;
 }
+
+.brush-dynamic-row[hidden] { display: none; }
+
+.brush-dynamic-row.is-overridden .setting-label::after {
+	content: '•';
+	margin-left: 4px;
+	color: var(--color-accent, currentColor);
+}
+
+.brush-dynamic-toggles {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--spacing-sm);
+
+	label[hidden] { display: none; }
+}
+
+.brush-dynamic-pair:has(> [hidden]) > :not([hidden]) { grid-column: 1 / -1; }
+
+.brush-settings-section .checkbox-list-content .effect-option-label { margin-bottom: var(--spacing-sm); }
 
 .brush-shape-option {
 	display: flex;

@@ -48,7 +48,13 @@ const HINT_RULES = [
 		tool: true,
 		when: (_editor, { tool }) => tool === ToolType.COLOR_PICKER,
 		resolve(editor, { layer }) {
-			if (!layer || layer.type === LayerType.BASE_IMAGE) return { hint: 'Click anywhere on your image to create a glitter fill layer', context: 'Glitter fills are based on color selection from your base image.' };
+			if (!layer || layer.type === LayerType.BASE_IMAGE) {
+				if (editor.baseImageSource?.hasBaseImage === false) return {
+					hint: 'This canvas has one flat background color, so Color Fill will select the whole canvas',
+					context: 'Choose a glitter first, then tap once to fill it. Use the Mask Brush when you only want glitter in part of the canvas.'
+				};
+				return { hint: 'Click anywhere on your image to create a glitter fill layer', context: 'Glitter fills are based on color selection from your base image.' };
+			}
 			if (layer.type === LayerType.STICKER) return { hint: 'Switch to select tool to move stickers, or add a glitter layer' };
 			if (layer.type === LayerType.TEXT_GLITTER) return { hint: 'Switch to the Select tool to move glitter text, or choose a glitter in the browser for the fill' };
 			if (layer.type !== LayerType.GLITTER_FILL) return null;

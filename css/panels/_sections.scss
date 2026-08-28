@@ -398,6 +398,22 @@ body.no-document .main-content {
 		stroke: var(--color-warning);
 		stroke-dasharray: 4 3;
 	}
+
+	// Raster tips show their own stamp bitmap, faint, instead of a stroked
+	// silhouette (there is no vector outline to trace).
+	&.raster >.mask-brush-cursor-shape img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		opacity: 0.5;
+		filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
+	}
+
+	&.raster.erasing >.mask-brush-cursor-shape img {
+		filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
+		opacity: 0.4;
+	}
 }
 
 body.mask-editing {
@@ -950,6 +966,8 @@ body.mask-editing {
 	}
 
 	.helpful-message-disable {
+		width: 100%;
+		margin-top: var(--spacing-xs);
 		padding: var(--spacing-xs) var(--spacing-sm);
 		border: none;
 		background: var(--color-bg-tertiary);
@@ -993,13 +1011,20 @@ body.mask-editing {
 
 	@include mobile {
 		top: calc(var(--icon-size) + var(--spacing-sm) * 2 + var(--mobile-floating-inset) * 2);
-		max-width: calc(70% - var(--spacing-lg) * 2);
+		max-width: min(320px, calc(100% - var(--mobile-toolbar-width) - var(--spacing-lg) * 2));
 		min-width: 200px;
 
+		.helpful-message-header { padding: var(--spacing-xs) var(--spacing-sm); }
+		.helpful-message-body {
+			gap: 2px;
+			padding-top: var(--spacing-xs);
+		}
+		.helpful-message-text { font-size: var(--font-size-xs); }
+		.helpful-message-description { font-size: 0.6875rem; }
+
 		.helpful-message-disable {
-			max-width: 7rem;
-			overflow: hidden;
-			text-overflow: ellipsis;
+			max-width: none;
+			min-height: 32px;
 		}
 	}
 }

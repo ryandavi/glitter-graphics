@@ -14,6 +14,7 @@
 	:root {
 		--glitter-swatch-columns: 5;
 		--mobile-floating-inset: var(--spacing-sm);
+		--mobile-sheet-inset: var(--mobile-floating-inset);
 	}
 
 	body {
@@ -95,15 +96,12 @@
 
 	.toolbar {
 		position: fixed;
-		// Pinned below the header with the same floating-inset every other piece
-		// of mobile chrome uses (preview-controls top, the bottom control bars),
-		// instead of vertically centred — centring gave it a large, viewport-
-		// dependent, asymmetric gap. It hugs its content; if the tools would run
-		// past the bottom nav it caps one inset short of it and scrolls.
-		top: calc(var(--mobile-header-height) + var(--mobile-floating-inset));
+		// Balance the rail in the workspace between the app header and bottom nav.
+		// Its max-height still protects short screens and turns overflow into scroll.
+		top: calc(var(--mobile-header-height) + (100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height)) / 2);
 		left: var(--mobile-floating-inset);
 		margin: 0;
-		transform: none;
+		transform: translateY(-50%);
 		width: var(--mobile-toolbar-width);
 		height: auto;
 		max-height: calc(100dvh - var(--mobile-header-height) - var(--mobile-bottom-nav-height) - var(--mobile-floating-inset) * 2);
@@ -126,6 +124,7 @@
 		}
 
 		#handTool { display: none; }
+		>.toolbar-utility-group { display: none; }
 	}
 
 	// Roomier touch targets for the header menu on phones.
@@ -137,6 +136,17 @@
 		// can never sit on top of it whatever the pill's height does.
 		left: calc(var(--mobile-toolbar-width) + var(--mobile-floating-inset) * 2);
 		right: var(--mobile-floating-inset);
+		justify-content: flex-start;
+
+		// Center both control pills as one composition. If they cannot share a
+		// row, flex wrapping keeps each complete pill centered on its own line.
+		>.preview-controls-center { margin: 0 auto; }
+		>.preview-controls-right {
+			margin-left: 0;
+			flex-direction: column;
+		}
+
+		#exportSettingsBtn { display: none; }
 	}
 
 	.zoom-controls,
@@ -158,6 +168,8 @@
 	body.designOpen,
 	body.layersOpen,
 	body.editOpen {
+		.preview-controls { left: var(--mobile-floating-inset); }
+
 		.toolbar,
 		.zoom-controls,
 		.layer-center-controls,
@@ -170,7 +182,7 @@
 		}
 
 		.toolbar {
-			transform: translateX(calc(-100% - var(--mobile-floating-inset)));
+			transform: translate(calc(-100% - var(--mobile-floating-inset)), -50%);
 			transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
 		}
 	}
@@ -305,16 +317,16 @@
 
 	.mobile-settings-drawer {
 		position: fixed;
-		bottom: var(--mobile-bottom-nav-height);
-		left: 0;
-		right: 0;
+		bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-sheet-inset));
+		left: var(--mobile-sheet-inset);
+		right: var(--mobile-sheet-inset);
 		display: flex;
 		height: var(--mobile-drawer-height);
 		max-height: 85dvh;
 		background: var(--panel-bg);
 		backdrop-filter: var(--panel-backdrop);
-		border-top: 1px solid var(--color-border);
-		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
 		box-shadow: 0 -4px 12px var(--color-shadow-soft);
 		z-index: var(--z-header-menu-elevated);
 		transform: translateY(100%);
@@ -404,7 +416,7 @@
 	}
 
 	body:is(.editOpen, .designOpen, .layersOpen) .main-content > .preview-panel {
-		padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-height));
+		padding-bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-drawer-height) + var(--mobile-sheet-inset));
 	}
 
 	body.mobile-sheet-dragging {
@@ -428,15 +440,18 @@
 	.main-content > .layers-panel {
 		display: flex;
 		top: auto;
-		bottom: var(--mobile-bottom-nav-height);
+		bottom: calc(var(--mobile-bottom-nav-height) + var(--mobile-sheet-inset));
+		left: var(--mobile-sheet-inset);
+		right: var(--mobile-sheet-inset);
+		width: auto;
 		height: var(--mobile-drawer-height);
 		max-height: var(--mobile-drawer-height);
 		background: var(--panel-bg);
 		backdrop-filter: var(--panel-backdrop);
 		padding-top: var(--spacing-lg);
 		z-index: var(--z-header-menu-elevated);
-		border-top: 1px solid var(--color-border);
-		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
 		box-shadow: 0 -4px 12px var(--color-shadow-soft);
 		overflow: hidden;
 		isolation: isolate;

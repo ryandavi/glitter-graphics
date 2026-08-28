@@ -104,7 +104,17 @@ initializeExportSettings() {
 		if (matteColorRow) {
 			matteColorRow.classList.toggle('disabled', this.exportSettings.format !== 'mp4' && this.exportSettings.transparency);
 		}
+		this.updateWatermarkPreview?.();
 		this.updateExportFormatUI();
+	}
+
+,
+	updateWatermarkPreview() {
+		const preview = document.querySelector('#exportWatermarkPreview img');
+		if (!preview) return;
+		const option = CONFIG.export.watermark.options.find(({ url }) => url === this.exportSettings.watermark);
+		preview.src = option?.url || CONFIG.export.defaults.watermark;
+		preview.alt = `${option?.label || 'Selected'} watermark preview`;
 	}
 
 ,
@@ -114,6 +124,13 @@ initializeExportSettings() {
 			this.updateExportDuration();
 			if (key === 'ditherEnabled') {
 				document.getElementById('ditherTypeRow')?.classList.toggle('disabled', !value);
+			}
+			if (key === 'watermark') {
+				this.exportSettings.watermarkEnabled = true;
+				const enabledInput = document.getElementById('exportWatermarkEnabled');
+				if (enabledInput) enabledInput.checked = true;
+				this.updateWatermarkPreview?.();
+				this.saveSettingsToStorage();
 			}
 			if (key === 'transparency' || key === 'mp4LengthMode') this.updateExportFormatUI();
 		});

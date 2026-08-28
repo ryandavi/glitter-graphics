@@ -92,6 +92,10 @@ function renderPickerStrip(state = {}) {
 	strip.classList.toggle('is-armed', armed);
 	strip.classList.toggle('is-hint', hint);
 	section?.classList.toggle('picker-mode', armed && state.pickerMode !== false);
+	if (section) {
+		if (visible && state.library) section.dataset.pickerLibrary = state.library;
+		else delete section.dataset.pickerLibrary;
+	}
 	if (!visible) return;
 	if (title) title.textContent = state.title || '';
 	if (detail) detail.textContent = state.detail || '';

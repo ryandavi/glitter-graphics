@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=913912f7">
+	<link rel="stylesheet" href="css/style.css?v=3a70d5e1">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -91,6 +91,10 @@
 						<button class="app-menu-item" id="settingsBtn" type="button" role="menuitem">
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-gear"></use></svg></span>
 							<span class="app-menu-item-label">App Settings</span>
+						</button>
+						<button class="app-menu-item mobile-only-action" id="mobileExportSettingsBtn" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-export"></use></svg></span>
+							<span class="app-menu-item-label">Export Settings</span>
 						</button>
 
 						<div class="app-menu-separator" role="separator"></div>
@@ -169,8 +173,16 @@
 						<span class="name">Redo</span>
 					</button>
 				</div>
-				<!-- App-level actions (Shortcuts, Settings, Clear All) now live in the
-				     header "Menu" popover — see .app-menu in the app header. -->
+				<div class="toolbar-group toolbar-utility-group" aria-label="Application tools">
+					<button class="btn-icon icon-wrapper" id="toolbarShortcutsBtn" type="button" title="Commands &amp; Shortcuts">
+						<svg class="icon"><use href="#icon-keyboard"></use></svg>
+						<span class="name">Commands &amp; Shortcuts</span>
+					</button>
+					<button class="btn-icon icon-wrapper" id="toolbarSettingsBtn" type="button" title="App Settings">
+						<svg class="icon"><use href="#icon-gear"></use></svg>
+						<span class="name">App Settings</span>
+					</button>
+				</div>
 			</div>
 
 			<div class="main-content">
@@ -614,6 +626,42 @@
 
 							</div>
 
+							<!-- Brush Tips Search (shown while a brush-tip picker session is armed) -->
+							<div class="section-content gallery-search-section" id="brushTipSearchSection" data-gallery-search="brush-tips">
+								<div class="glitter-search">
+									<div class="search-toggle-row">
+										<div class="search-input-wrapper">
+											<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
+											<input type="text" id="brushTipSearch" placeholder="Search brush tips...">
+										</div>
+										<button class="btn-icon icon-wrapper" id="brushTipFilterToggleBtn" title="Open filters" aria-expanded="false" aria-controls="brushTipFiltersContainer">
+											<svg class="icon"><use href="#icon-filter"></use></svg><span class="name">Filter</span>
+										</button>
+									</div>
+									<div class="active-filter-summary" id="brushTipActiveFilterSummary" role="group" aria-label="Active filters" aria-live="polite" hidden></div>
+									<div class="filters-container" id="brushTipFiltersContainer">
+										<div class="filters-container-inner"><div class="filter-section"><div class="filter-label">Category</div><div class="filter-chips" id="brushTipCategoryChips"></div></div></div>
+										<div class="filter-actions"><button class="btn-simple secondary" id="clearBrushTipFiltersBtn" disabled>Clear all</button><button class="btn-simple primary" id="closeBrushTipFiltersBtn" type="button">Show results</button></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="asset-options gallery-content brush-tip-options" id="brushTipOptions" data-gallery-content="brush-tips">
+								<div class="asset-browser" id="brushTipBrowser">
+									<div class="asset-browser-header">
+										<button class="btn-icon-simple icon-wrapper" id="brushTipBrowserBack" disabled><svg class="icon"><use href="#icon-chevron-left"></use></svg><span class="name">Back</span></button>
+										<div class="asset-browser-title" id="brushTipBrowserTitle">Brush Tips</div>
+									</div>
+									<div class="asset-browser-content" id="brushTipBrowserContent">
+										<div class="empty-state" id="brushTipBrowserEmpty"><div class="empty-state-icon">🔍</div><div class="empty-state-text" id="brushTipBrowserEmptyText">No items found</div><button class="btn-simple empty-state-clear-filters" type="button" hidden>Clear search and filters</button></div>
+										<div class="category-grid" id="brushTipCategoryGrid"></div>
+										<div class="search-results-container" id="brushTipSearchResults"></div>
+										<div class="asset-grid" id="brushTipItemGrid"></div>
+										<div class="asset-browser-sentinel" id="brushTipBrowserSentinel"></div>
+									</div>
+								</div>
+							</div>
+
 							<!-- Base Layer Settings Section -->
 							<div class="base-layer-settings-section section collapsible-section" id="baseLayerSettingsSection">
 								<div class="section-content">
@@ -855,11 +903,11 @@
 
 					<div class="auto-glitter-settings-section section collapsible-section" id="autoGlitterSettingsSection"></div>
 
-						<!-- Glitter Properties Section -->
+						<!-- Fill Properties Section -->
 						<div class="glitter-settings-section section collapsible-section" id="glitterSettingsSection">
 						</div>
 
-						<!-- Brush Settings Section (shown for the Brush/Eraser tool, independent of layer type) -->
+						<!-- Mask Settings Section (shown for the Brush/Eraser tool, independent of layer type) -->
 					<div class="brush-settings-section section collapsible-section" id="brushSettingsSection">
 						<div class="section-header section-header-with-action" id="brushSettingsHeader">
 							<h3 class="section-header-title">
@@ -869,7 +917,7 @@
 									</svg>
 									<span class="name">Brush</span>
 								</span>
-								<span class="section-header-title-text" id="brushSettingsTitleText">Brush Settings</span>
+								<span class="section-header-title-text" id="brushSettingsTitleText">Mask Settings</span>
 							</h3>
 							<div class="section-header-action btn-icon visible collapsed" id="brushSettingsToggle">
 								<span class="icon-wrapper">
@@ -886,10 +934,7 @@
 										<span>Brush Tip</span>
 									</div>
 									<div class="subsection-content">
-										<!-- Populated by MaskEditor.renderBrushShapePicker() with
-												.brush-shape-option cards (same gallery-card conventions
-												as the font/sticker pickers). -->
-										<div class="brush-shape-picker" id="brushShapePicker" role="listbox" aria-label="Brush shape"></div>
+										<!-- Replaced at boot by PANEL_SCHEMAS.brush. -->
 									</div>
 								</div>
 								<div class="subsection-content-group">
@@ -951,10 +996,7 @@
 								</div>
 
 								<div class="subsection-content-group">
-									<div class="subsection-title">
-										<span>Input</span>
-									</div>
-									<div class="subsection-content">
+									<div class="subsection-content settings-toggle-list">
 										<label class="checkbox-group">
 											<input type="checkbox" id="maskBrushPressure" checked>
 											<span title="Vary flow with pen pressure (no effect on mouse/touch)">Pressure Sensitivity</span>
@@ -1263,7 +1305,7 @@
 						</div>
 
 						<!-- Mask Brush Controls: quick brush-size access while painting.
-						     Mirrors the canonical #maskBrushSize slider in the Brush Settings
+						     Mirrors the canonical #maskBrushSize slider in Mask Settings
 						     sidebar section — see setupMaskEditorListeners' syncQuickSlider. -->
 						<div class="mask-brush-controls ui-ignore-gestures" id="maskBrushControls">
 							<div class="segmented-control context-segmented-control" id="maskBrushMode">
@@ -1333,7 +1375,6 @@
 										<span class="helpful-message-tool-name" id="helpfulMessageToolName">Select Tool</span>
 									</div>
 									<div class="helpful-message-actions">
-										<button class="helpful-message-disable" id="helpfulMessageDisable">Don't show hints</button>
 										<button class="helpful-message-close" id="helpfulMessageClose" title="Close hint">×</button>
 									</div>
 								</div>
@@ -1341,6 +1382,7 @@
 							<div class="helpful-message-body">
 								<div class="helpful-message-text" id="helpfulMessageText"></div>
 								<div class="helpful-message-description" id="helpfulMessageDescription"></div>
+								<button class="helpful-message-disable" id="helpfulMessageDisable">Don't show hints</button>
 							</div>
 						</div>
 
@@ -1783,7 +1825,7 @@
 				</div>
 				<div class="settings-group">
 					<div class="settings-group-title">Tools &amp; Workspace <button class="btn-text small reset-section-btn" data-section="tools">Reset</button></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Antialias Edges</div><div class="settings-row-control"><label class="switch" for="antialiasMaskEdges"><input type="checkbox" id="antialiasMaskEdges" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Smooth rendered edges on text and shapes, plus edges of future Glitter Fill brush strokes Aliasing = Pixelated edge, Anti-Aliasing = Smooth edge</div></div>
+					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Antialias Edges</div><div class="settings-row-control"><label class="switch" for="antialiasMaskEdges"><input type="checkbox" id="antialiasMaskEdges" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Smooth rendered edges on text and shapes, plus edges of future Fill layer mask strokes. Aliasing = Pixelated edge, Anti-Aliasing = Smooth edge.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Scale Borders &amp; Effects</div><div class="settings-row-control"><label class="switch" for="scaleEffectsOnTransform"><input type="checkbox" id="scaleEffectsOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale border widths, dotted spacing, and shadow offsets when text or shapes are resized.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Transform Textures</div><div class="settings-row-control"><label class="switch" for="scaleTexturesOnTransform"><input type="checkbox" id="scaleTexturesOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale glitter texture size with text and shapes. Turn off to resize the artwork while keeping the repeat size unchanged.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Brush &amp; Eraser Defaults</div><div class="settings-row-control"><button class="btn-simple" id="resetToolSettings" type="button">Reset Tools</button></div></div><div class="settings-row-label-desc">Restore saved Brush and Eraser tip, stroke, and pressure settings.</div></div>
@@ -1899,6 +1941,21 @@
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Add a cheeky little watermark overlay to the exported result.</div>
+					</div>
+					<div class="settings-row" id="watermarkSelectionRow">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="exportWatermark">Watermark Style</label>
+							<div class="settings-row-control">
+								<select id="exportWatermark">
+									<option value="images/watermark/2.png">Rybaby Signature</option>
+									<option value="images/watermark/1.gif">Made with Rybaby</option>
+								</select>
+							</div>
+						</div>
+						<div class="watermark-preview" id="exportWatermarkPreview">
+							<img src="images/watermark/2.png" alt="Rybaby Signature watermark preview" />
+						</div>
+						<div class="settings-row-label-desc">Choosing a style turns Watermark on. The preview is export-only and is not added to the canvas.</div>
 					</div>
 				</div>
 
@@ -2789,10 +2846,10 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=dfee645f"></script>
+	<script src="js/core/config.js?v=95ec74b2"></script>
 	<script src="js/core/preferences.js?v=216cd049"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=9be0a880"></script>
+	<script src="js/core/commands.js?v=263e9de6"></script>
 	<script src="js/core/dom.js?v=12f02905"></script>
 	<script src="js/core/document-scaler.js?v=c08bbf8e"></script>
 	<script src="js/transforms/transform-math.js?v=53779101"></script>
@@ -2804,7 +2861,7 @@
 	<script src="js/ui/slider.js?v=3b4c1283"></script>
 	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
 	<script src="js/ui/doc-modal.js?v=96d2362b"></script>
-	<script src="js/ui/gallery.js?v=b63015bf"></script>
+	<script src="js/ui/gallery.js?v=9568db2b"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
 	<script src="js/effects/mask-raster.js?v=58feb186"></script>
 	<script src="js/effects/mask-geometry.js?v=06dda908"></script>
@@ -2813,23 +2870,23 @@
 	<script src="js/effects/pixel-effects.js?v=97289451"></script>
 	<script src="js/effects/effect-source.js?v=0a33d343"></script>
 	<script src="js/effects/slot-effects.js?v=b10d7733"></script>
-	<script src="js/ui/panel-renderer.js?v=4b6b0b44"></script>
-	<script src="js/ui/settings-store.js?v=42089e99"></script>
+	<script src="js/ui/panel-renderer.js?v=c6812fa4"></script>
+	<script src="js/ui/settings-store.js?v=2e82320b"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
-	<script src="js/ui/editor-settings.js?v=f4b2b664"></script>
-	<script src="js/ui/editor-panels.js?v=c39a023b"></script>
+	<script src="js/ui/editor-settings.js?v=86d99dd8"></script>
+	<script src="js/ui/editor-panels.js?v=19d67fa3"></script>
 	<script src="js/ui/editor-disclosures.js?v=f84c7ddd"></script>
 	<script src="js/ui/transform-panel.js?v=6330ed7e"></script>
 	<script src="js/transforms/editor-transform.js?v=43457e31"></script>
 	<script src="js/ui/document-start.js?v=bd0b7429"></script>
-	<script src="js/ui/modals-wiring.js?v=70c51309"></script>
+		<script src="js/ui/modals-wiring.js?v=8d4c1f02"></script>
 	<script src="js/ui/layer-panel.js?v=87c24a9d"></script>
 	<script src="js/ui/canvas-gestures.js?v=fce9978d"></script>
 	<script src="js/ui/canvas-size.js?v=53305937"></script>
 	<script src="js/core/canvas-resize.js?v=fd22383b"></script>
-	<script src="js/ui/hints.js?v=7346d428"></script>
-	<script src="js/ui/picker-session.js?v=8d4d9515"></script>
+		<script src="js/ui/hints.js?v=1b9e63af"></script>
+	<script src="js/ui/picker-session.js?v=164f3036"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=c44c65d8"></script>
 	<script src="js/ui/modal-filter.js?v=b00d889b"></script>
 	<script src="js/ui/notify.js?v=b117c567"></script>
@@ -2839,35 +2896,37 @@
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
 	<script src="js/classes/ExportTimeline.js?v=93922fcd"></script>
-	<script src="js/classes/GifExporter.js?v=83038dfa"></script>
+	<script src="js/classes/GifExporter.js?v=0724b8e0"></script>
 	<script src="js/classes/Mp4Exporter.js?v=2ffe9156"></script>
-	<script src="js/classes/ViewportManager.js?v=8f36cfde"></script>
+	<script src="js/classes/ViewportManager.js?v=8791e465"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>
 	<script src="js/classes/ProjectSerializer.js?v=4b62eaa0"></script>
 	<script src="js/classes/HtmlSceneExporter.js?v=2380ad65"></script>
 	<script src="js/classes/MaskCompositor.js?v=19c2994c"></script>
-	<script src="js/classes/ShapeLibrary.js?v=1e588ee0"></script>
-	<script src="js/classes/MaskEditor.js?v=d199dcd2"></script>
+	<script src="js/classes/ShapeLibrary.js?v=2d3e5618"></script>
+	<script src="js/classes/BrushLibrary.js?v=825c3c31"></script>
+	<script src="js/classes/MaskEditor.js?v=1af1b8b0"></script>
 
 	<!-- Layers-->
 	<script src="js/classes/LayerManager.js?v=72e73ea0"></script>
 
 	<!-- Content -->
-	<script src="js/classes/AssetBrowser.js?v=a18cd184"></script>
+	<script src="js/classes/AssetBrowser.js?v=06e2b458"></script>
 	<script src="js/classes/ContentManager.js?v=a71a7157"></script>
-	<script src="js/classes/LayerTransform.js?v=299048bc"></script>
-	<script src="js/classes/GlitterManager.js?v=3b89789d"></script>
+	<script src="js/classes/BrushTipManager.js?v=b8c305de"></script>
+	<script src="js/classes/LayerTransform.js?v=8ac8c72f"></script>
+	<script src="js/classes/GlitterManager.js?v=3c3bfe93"></script>
 	<script src="js/classes/BaseBackgroundManager.js?v=024b743e"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=e0f15cce"></script>
-	<script src="js/classes/TextGlitterManager.js?v=a23de8cc"></script>
+	<script src="js/classes/TextGlitterManager.js?v=43fa8d71"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=c2132469"></script>
 	<script src="js/classes/StickerManager.js?v=fc0abfac"></script>
 	<script src="js/classes/GroupTransformManager.js?v=f19f8e9d"></script>
 
-	<script src="js/classes/MobileManager.js?v=a633cf1c"></script>
+		<script src="js/classes/MobileManager.js?v=f2740bc8"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=c2fd8846"></script>
+	<script src="js/app.js?v=20beac51"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

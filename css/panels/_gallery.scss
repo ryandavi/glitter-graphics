@@ -61,6 +61,17 @@
 		.design-gallery-section.picker-mode [data-gallery-content="shapes"] { display: none; }
 	}
 
+	&[data-panel-mode="glitter"] {
+		.design-gallery-section:not([data-picker-library="brush-tips"]) {
+			[data-gallery-search="brush-tips"],
+			[data-gallery-content="brush-tips"] { display: none; }
+		}
+		.design-gallery-section[data-picker-library="brush-tips"] {
+			[data-gallery-search="glitter"],
+			[data-gallery-content="glitter"] { display: none; }
+		}
+	}
+
 
 }
 

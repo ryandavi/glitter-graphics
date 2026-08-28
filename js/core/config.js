@@ -338,6 +338,37 @@ const CONFIG = deepFreeze({
 			},
 			livePreview: {
 				throttle: 'raf'
+			},
+			// Sampled bitmap-tip brush packs (imported from Photoshop .abr — see
+			// tools/abr-import.js). BrushLibrary loads this at boot alongside the
+			// vector tips in ShapeLibrary.
+			rasterBrushes: {
+				manifest: 'data/brushes.json?v=1'
+			},
+			brushTips: {
+				categories: 'data/brush-categories.json'
+			},
+			// Per-brush "Scatter & Jitter" panel: slider ranges + the neutral
+			// defaults a brush falls back to. Stored overrides live per brush id in
+			// MaskEditor's brushDynamics store; Reset drops back to the brush's
+			// manifest value (BrushLibrary.defaultDynamics), else these.
+			dynamics: {
+				defaults: {
+					scatter: 0,        // 0..300 (% of brush size), 0 = off
+					count: 1,          // 1..16 dabs per stamp
+					countJitter: 0,    // 0..100 (%)
+					sizeJitter: 0,     // 0..100 (%)
+					angleJitter: 0,    // 0..100 (%)
+					angle: 0,          // -180..180 (deg) — raster tips only
+					roundness: 100,    // 5..100 (%) — raster tips only
+					flipX: false,
+					flipY: false,
+					bothAxes: true     // scatter across the stroke normal AND tangent
+				},
+				limits: {
+					scatterMax: 1000,   // % of brush size — matches Photoshop's Scatter range
+					countMax: 16
+				}
 			}
 		},
 		glitter: {
@@ -705,7 +736,8 @@ const CONFIG = deepFreeze({
 			smartFrameReduction: true,
 			optimizationPreset: 'balanced',
 			maxSamplingFps: 24,
-			watermarkEnabled: false
+			watermarkEnabled: false,
+			watermark: 'images/watermark/2.png'
 		},
 		mp4: {
 			lengthMode: 'duration',
@@ -756,6 +788,10 @@ const CONFIG = deepFreeze({
 		watermark: {
 			alphaThreshold: 128,
 			url: 'images/watermark/2.png',
+			options: [
+				{ label: 'Made with Rybaby', url: 'images/watermark/1.gif' },
+				{ label: 'Rybaby Signature', url: 'images/watermark/2.png' }
+			],
 			position: 'bottom-right',
 			paddingX: 5,
 			paddingY: 5,
@@ -924,20 +960,20 @@ const LAYER_UI_CONFIG = {
 	},
 
 	[LayerType.GLITTER_FILL]: {
-		displayName: 'Glitter Fill',
+		displayName: 'Fill Layer',
 		serialization: {
 			extraKeys: ['selections', 'fill', 'autoGlitter'],
 			includeMaskVersion: true,
 			defaults: { maskHasContent: false }
 		},
-		addedStatusMessage: 'New glitter fill layer added',
+		addedStatusMessage: 'New fill layer added',
 		goTo: 'glitter',
 		addableViaModal: {
-			label: 'Glitter Fill',
+			label: 'Fill Layer',
 			icon: 'glitter',
-			description: 'Apply glitter fill to base image'
+			description: 'Paint an animated or solid fill onto the image'
 		},
-		designPanelSections: ['glitterSearchSection', 'glitterOptions', 'glitterSettingsSection'],
+		designPanelSections: ['brushTipSearchSection', 'brushTipOptions', 'glitterSearchSection', 'glitterOptions', 'glitterSettingsSection'],
 		mobileSettingsSections: ['glitter'],
 		panelMode: 'glitter',
 		elementClass: 'glitter-element',
@@ -1262,13 +1298,15 @@ const PANEL_SCHEMAS = {
 		mobileKey: 'brush',
 		replaceStatic: true,
 		section: {
-			id: 'brushSettingsSection', icon: 'brush', iconName: 'Brush', title: 'Brush Settings',
+			id: 'brushSettingsSection', icon: 'brush', iconName: 'Brush', title: 'Mask Settings',
 			titleIconId: 'brushSettingsTitleIcon', titleTextId: 'brushSettingsTitleText'
 		},
 		groups: [
 			{ title: 'Brush Tip', items: [
 				{ kind: 'card', title: 'Shape', items: [
-					{ kind: 'host', id: 'brushShapePicker', classes: 'brush-shape-picker', attrs: { role: 'listbox', 'aria-label': 'Brush shape' }, wrapInContent: true }
+					{ kind: 'assetInfo', info: 'brushTipInfo', thumbnail: 'brushTipThumbnail',
+						name: 'brushTipName', badges: 'brushTipBadges', change: 'brushTipChange',
+						title: 'Choose another brush tip', compact: true }
 				] }
 			] },
 			{ title: 'Stroke', items: [
@@ -1282,9 +1320,12 @@ const PANEL_SCHEMAS = {
 						{ kind: 'slider', id: 'maskBrushSpacing', slider: 'maskBrushSpacing', title: 'Distance between stamps along a stroke, as a percentage of brush size. Higher values create more space.' }
 					] },
 					{ kind: 'slider', id: 'maskBrushSmoothing', slider: 'maskBrushSmoothing', title: 'Stabilizes shaky strokes by easing the brush toward the cursor. Higher values are smoother but add lag.' },
-					{ kind: 'checkboxList', label: 'Pen Input', items: [
+					{ kind: 'checkboxList', items: [
 						{ id: 'maskBrushPressure', label: 'Pressure Sensitivity', title: 'Vary flow with pen pressure (no effect on mouse/touch)', checked: true }
 					] }
+				] },
+				{ kind: 'card', title: 'Scatter & Jitter', items: [
+					{ kind: 'host', id: 'brushDynamicsHost', classes: 'brush-dynamics', wrapInContent: true }
 				] }
 			] },
 			{ title: 'Actions', items: [
@@ -1302,7 +1343,7 @@ const PANEL_SCHEMAS = {
 		prefix: 'glitter',
 		sectionPrefix: 'glitterSettings',
 		mobileKey: 'glitter',
-		section: { id: 'glitterSettingsSection', icon: 'glitter', iconName: 'Glitter', title: 'Glitter Properties' },
+		section: { id: 'glitterSettingsSection', icon: 'glitter', iconName: 'Glitter', title: 'Fill Properties' },
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', emptyText: 'Select a glitter fill from the gallery to get started.' },
 		groups: [
 			{ title: 'Appearance', items: [

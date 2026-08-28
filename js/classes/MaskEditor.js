@@ -1,3 +1,16 @@
+// Small deterministic PRNG (mulberry32) — seeds scatter/jitter per stroke so a
+// live re-render or an undo/redo reproduces the same spray.
+function maskMulberry32(seed) {
+	let a = seed >>> 0;
+	return function () {
+		a |= 0; a = (a + 0x6D2B79F5) | 0;
+		let t = Math.imul(a ^ (a >>> 15), 1 | a);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
+const maskClamp = (value, lo, hi) => Math.min(hi, Math.max(lo, Number.isFinite(value) ? value : lo));
+
 class MaskEditor {
 	constructor(editor) {
 		this.editor = editor;
@@ -32,6 +45,17 @@ class MaskEditor {
 		// pen-eraser override uses eraser settings). Seeded from CONFIG, then
 		// merged with any localStorage-persisted values.
 		this.toolSettings = this._loadToolSettings();
+		// Scatter / jitter / tip-orientation overrides, keyed by BRUSH id (not by
+		// paint mode — a scatter setting means the same thing painting or erasing).
+		// Empty entry => fall back to BrushLibrary.defaultDynamics(id). WP-raster.
+		this.brushDynamics = this._loadBrushDynamics();
+		// Per-stroke seeded PRNG so scatter is stable across live re-renders and
+		// reproducible on undo/redo. Seeded in _startStrokeFromScreenPoint.
+		this._strokeRng = null;
+		// Travel direction of the last painted segment, so a single click-stamp
+		// still has an axis to scatter across.
+		this._lastDirX = 1;
+		this._lastDirY = 0;
 		this.overlayPatternCache = new Map();
 		this.ui = {
 			overlayToggle: document.getElementById('maskOverlayToggle'),
@@ -41,7 +65,12 @@ class MaskEditor {
 			pressureToggle: document.getElementById('maskBrushPressure'),
 			overlayCanvas: document.getElementById('maskOverlayCanvas'),
 			cursor: document.getElementById('maskBrushCursor'),
-			cursorShape: document.getElementById('maskBrushCursorShape')
+			cursorShape: document.getElementById('maskBrushCursorShape'),
+			dynamicsHost: document.getElementById('brushDynamicsHost'),
+			tipThumbnail: document.getElementById('brushTipThumbnail'),
+			tipName: document.getElementById('brushTipName'),
+			tipBadges: document.getElementById('brushTipBadges'),
+			tipChange: document.getElementById('brushTipChange')
 		};
 		// Last brush-shape id painted into the cursor's outline SVG, so
 		// _syncCursorAppearance only rebuilds the markup when the tip changes.
@@ -102,12 +131,10 @@ class MaskEditor {
 			this.editor.updateStatus(`${label} settings reset`);
 		});
 
-		this.renderBrushShapePicker();
-		const shapePicker = document.getElementById('brushShapePicker');
-		shapePicker?.addEventListener('click', (event) => {
-			const card = event.target.closest('.brush-shape-option');
-			if (card) this.setBrushShape(card.dataset.shape);
+		[this.ui.tipThumbnail, this.ui.tipChange].forEach((control) => {
+			control?.addEventListener('click', () => this.editor.brushTipManager?.openPicker());
 		});
+		this.renderDynamicsPanel();
 
 		this._bindSettingInputs();
 		// Seed the one DOM panel from the active mode's stored settings.
@@ -143,7 +170,7 @@ class MaskEditor {
 			['size', 'softness', 'flow', 'spacing', 'smoothing'].forEach((key) => {
 				if (Number.isFinite(raw[key])) out[key] = raw[key];
 			});
-			if (typeof raw.shape === 'string' && MaskEditor.BRUSH_SHAPES.some((e) => e.id === raw.shape)) {
+			if (typeof raw.shape === 'string' && MaskEditor.isKnownBrushShape(raw.shape)) {
 				out.shape = raw.shape;
 			}
 			if (typeof raw.pressure === 'boolean') out.pressure = raw.pressure;
@@ -211,9 +238,16 @@ class MaskEditor {
 			if (!el) return;
 			el.addEventListener('input', () => {
 				const value = parseInt(el.value, 10);
-				if (Number.isFinite(value)) this.toolSettings[this.mode][key] = value;
+				if (Number.isFinite(value)) {
+					this.toolSettings[this.mode][key] = value;
+					// A raster tip remembers its own size (Photoshop presets do),
+					// so switching brushes doesn't clobber it.
+					if (key === 'size' && MaskEditor.isRasterBrush(this.getBrushShape())) {
+						this._setBrushDynamicRaw('size', value);
+					}
+				}
 			});
-			el.addEventListener('change', () => this._saveToolSettings());
+			el.addEventListener('change', () => { this._saveToolSettings(); this._saveBrushDynamics(); });
 		});
 
 		const pressure = document.getElementById('maskBrushPressure');
@@ -246,26 +280,42 @@ class MaskEditor {
 
 		this._applyShapeToPicker(s.shape);
 		this._syncCursorAppearance();
+		this._syncDynamicsPanel();
 		// The stamp cache key embeds the shape/size/softness, so switching modes
 		// must invalidate the cached stamp.
 		this.stampCacheKey = '';
 	}
 
 	_applyShapeToPicker(shape) {
-		document.querySelectorAll('#brushShapePicker .brush-shape-option').forEach((el) => {
-			const selected = el.dataset.shape === shape;
-			el.classList.toggle('active', selected);
-			el.setAttribute('aria-selected', selected ? 'true' : 'false');
-		});
+		const preview = this.ui.tipThumbnail;
+		if (!preview) return;
+		const raster = MaskEditor.isRasterBrush(shape);
+		const label = raster ? BrushLibrary.get(shape)?.label : MaskEditor.BRUSH_SHAPES.find((entry) => entry.id === shape)?.label;
+		preview.classList.toggle('is-raster', raster);
+		preview.classList.toggle('is-vector', !raster);
+		preview.replaceChildren();
+		if (raster) preview.innerHTML = BrushLibrary.getCursorMarkup(shape);
+		else preview.innerHTML = ShapeLibrary.getIconSvg(shape);
+		if (this.ui.tipName) this.ui.tipName.textContent = label || shape;
+		if (this.ui.tipBadges) {
+			this.ui.tipBadges.replaceChildren(this._assetBadge(raster ? BrushLibrary.packById(BrushLibrary.get(shape).packId)?.label : 'Basic'));
+		}
+		this.editor.brushTipManager?.updateSelection();
 	}
 
-	// Retitle the one shared settings section to match the active mode, and swap
-	// its header icon (Brush ↔ Eraser). Mobile relocates this same section, so
-	// the drawer picks the retitle up automatically.
+	_assetBadge(label) {
+		const badge = document.createElement('span');
+		badge.className = 'asset-info-badge badge-category';
+		badge.textContent = label || '';
+		return badge;
+	}
+
+	// Keep the shared Mask Settings title stable and swap its header icon to show
+	// the active paint mode (Brush ↔ Eraser). Mobile relocates the same section.
 	_updatePanelTitle() {
 		const isEraser = this.mode === 'sub';
 		const titleText = document.getElementById('brushSettingsTitleText');
-		if (titleText) titleText.textContent = isEraser ? 'Eraser Settings' : 'Brush Settings';
+		if (titleText) titleText.textContent = 'Mask Settings';
 		const titleIcon = document.getElementById('brushSettingsTitleIcon');
 		if (titleIcon) titleIcon.setAttribute('href', isEraser ? '#icon-eraser' : '#icon-brush');
 		if (this.ui.copySettingsButton) {
@@ -298,35 +348,247 @@ class MaskEditor {
 	}
 
 	setBrushShape(shape) {
-		if (!MaskEditor.BRUSH_SHAPES.some((entry) => entry.id === shape)) return;
+		if (!MaskEditor.isKnownBrushShape(shape)) return;
 		const settings = this.toolSettings[this.mode];
 		if (settings.shape === shape) return;
+		const prevShape = settings.shape;
 		settings.shape = shape;
 		// The stamp cache key includes the shape, so the next stamp regenerates;
 		// clear it eagerly so nothing reuses the previous shape mid-session.
 		this.stampCacheKey = '';
+		// Size follows the brush (Photoshop presets do): a raster tip picks up the
+		// size you last gave it, else its native tip diameter. Leaving a raster tip
+		// stashes the current size against it and restores the shared/vector size.
+		if (MaskEditor.isRasterBrush(prevShape) && prevShape !== shape) {
+			this._setBrushDynamicRaw('size', settings.size, prevShape);
+			this._saveBrushDynamics();
+		}
+		if (MaskEditor.isRasterBrush(shape)) {
+			const lim = CONFIG.tools.maskBrush.limits;
+			const native = BrushLibrary.get(shape)?.dynamics.diameter || 128;
+			settings.size = Math.round(maskClamp(this.brushDynamics[shape]?.size ?? native, lim.minSize, lim.maxSize));
+		}
 		this._applyShapeToPicker(shape);
 		this._syncCursorAppearance();
 		this._saveToolSettings();
+		this._applySettingsToDOM(this.mode);
+		this._syncDynamicsPanel();
+		this._updateBrushCursorSize();
 	}
 
-	// Builds the brush-shape gallery, reusing the same gallery-card conventions
-	// as the font/sticker pickers. The card preview is an inline SVG (fill:
-	// currentColor) so it stays crisp and theme-aware; the actual painted stamp
-	// is generated by _getStampCanvas from the matching shape id.
-	renderBrushShapePicker() {
-		const picker = document.getElementById('brushShapePicker');
-		if (!picker) return;
+	// ===== PER-BRUSH DYNAMICS STORE (scatter / jitter / tip orientation) =====
+	// Stored in PANEL units (scatter %, roundness %, jitter %) keyed by brush id,
+	// holding only the keys the user changed. getBrushDynamics() resolves the
+	// manifest default underneath and converts to engine units for the stamp loop.
 
-		picker.innerHTML = '';
-		MaskEditor.BRUSH_SHAPES.forEach(({ id, label }) => {
-			const card = createShapeCard(id, label, { title: `${label} brush` });
-			card.setAttribute('role', 'option');
-			const isActive = id === this.getBrushShape();
-			card.classList.toggle('active', isActive);
-			card.setAttribute('aria-selected', isActive ? 'true' : 'false');
-			picker.appendChild(card);
+	_loadBrushDynamics() {
+		try {
+			const raw = localStorage.getItem(MaskEditor.DYNAMICS_STORAGE_KEY);
+			const parsed = raw ? JSON.parse(raw) : null;
+			if (parsed && typeof parsed === 'object') return parsed;
+		} catch (error) {
+			// Corrupt payload — start clean.
+		}
+		return {};
+	}
+
+	_saveBrushDynamics() {
+		try {
+			localStorage.setItem(MaskEditor.DYNAMICS_STORAGE_KEY, JSON.stringify(this.brushDynamics));
+		} catch (error) {
+			// Non-fatal: overrides just won't persist this session.
+		}
+	}
+
+	// The brush's manifest defaults, in PANEL units, before user overrides.
+	_dynamicsManifestModel(shape = this.getBrushShape()) {
+		const base = (typeof BrushLibrary !== 'undefined')
+			? BrushLibrary.defaultDynamics(shape)
+			: { ...CONFIG.tools.maskBrush.dynamics.defaults, scatter: 0, roundness: 1, countJitter: 0, sizeJitter: 0, angleJitter: 0, count: 1, angle: 0, flipX: false, flipY: false, bothAxes: true };
+		return {
+			scatter: Math.round((base.scatter || 0) * 100),
+			count: base.count || 1,
+			countJitter: Math.round((base.countJitter || 0) * 100),
+			sizeJitter: Math.round((base.sizeJitter || 0) * 100),
+			angleJitter: Math.round((base.angleJitter || 0) * 100),
+			angle: base.angle || 0,
+			roundness: Math.round((base.roundness ?? 1) * 100),
+			flipX: base.flipX === true,
+			flipY: base.flipY === true,
+			bothAxes: base.bothAxes !== false,
+			smoothing: base.smoothing !== false
+		};
+	}
+
+	// Manifest defaults + this brush's stored overrides, still in PANEL units.
+	_dynamicsPanelModel(shape = this.getBrushShape()) {
+		return Object.assign(this._dynamicsManifestModel(shape), this.brushDynamics[shape] || {});
+	}
+
+	// Engine units for the stamp loop: scatter/jitter as 0..1 fractions, angle in
+	// degrees, roundness 0..1, count an int.
+	getBrushDynamics() {
+		const m = this._dynamicsPanelModel();
+		const limits = CONFIG.tools.maskBrush.dynamics.limits;
+		return {
+			scatter: maskClamp(m.scatter, 0, limits.scatterMax) / 100,
+			count: Math.round(maskClamp(m.count, 1, limits.countMax)),
+			countJitter: maskClamp(m.countJitter, 0, 100) / 100,
+			sizeJitter: maskClamp(m.sizeJitter, 0, 100) / 100,
+			angleJitter: maskClamp(m.angleJitter, 0, 100) / 100,
+			angle: maskClamp(m.angle, -360, 360),
+			roundness: maskClamp(m.roundness, 5, 100) / 100,
+			flipX: m.flipX === true,
+			flipY: m.flipY === true,
+			bothAxes: m.bothAxes !== false,
+			smoothing: m.smoothing !== false
+		};
+	}
+
+	// True when the active brush would stamp exactly like the pre-dynamics engine
+	// (one upright dab, no scatter/jitter) AND the tip is vector — lets the plain
+	// fast path keep running for the common case and existing edge tests.
+	_dynamicsAreNeutral() {
+		if (MaskEditor.isRasterBrush(this.getBrushShape())) return false;
+		const d = this.getBrushDynamics();
+		return d.count === 1 && d.scatter === 0 && d.sizeJitter === 0 &&
+			d.angleJitter === 0 && d.angle === 0 && d.roundness === 1 &&
+			!d.flipX && !d.flipY;
+	}
+
+	setBrushDynamic(key, value) {
+		const shape = this.getBrushShape();
+		const manifest = this._dynamicsManifestModel(shape);
+		if (!(key in manifest)) return;
+		const store = this.brushDynamics[shape] || (this.brushDynamics[shape] = {});
+		const next = (typeof manifest[key] === 'boolean') ? Boolean(value) : Number(value);
+		if (next === manifest[key]) delete store[key];       // back at default — don't persist
+		else store[key] = next;
+		if (!Object.keys(store).length) delete this.brushDynamics[shape];
+		this._saveBrushDynamics();
+	}
+
+	// Write a raw per-brush value (e.g. remembered `size`) that isn't part of the
+	// Scatter & Jitter manifest model, so setBrushDynamic's "drop if default"
+	// logic doesn't apply. Saved by the caller.
+	_setBrushDynamicRaw(key, value, shape = this.getBrushShape()) {
+		if (!MaskEditor.isRasterBrush(shape)) return;
+		(this.brushDynamics[shape] || (this.brushDynamics[shape] = {}))[key] = value;
+	}
+
+	resetBrushDynamics() {
+		const shape = this.getBrushShape();
+		const keptSize = this.brushDynamics[shape]?.size;
+		delete this.brushDynamics[shape];
+		// Reset covers scatter/jitter/orientation, not the remembered brush size.
+		if (keptSize != null) this._setBrushDynamicRaw('size', keptSize, shape);
+		this._saveBrushDynamics();
+		this._syncDynamicsPanel();
+	}
+
+	// Builds the Scatter & Jitter rows into #brushDynamicsHost once; _syncDynamicsPanel
+	// keeps their values and raster-only visibility current.
+	renderDynamicsPanel() {
+		const host = this.ui.dynamicsHost;
+		if (!host) return;
+		host.innerHTML = '';
+
+		const buildRow = (spec) => {
+			const row = document.createElement('div');
+			row.className = 'setting-column right brush-dynamic-row';
+			row.dataset.dynamic = spec.key;
+			if (spec.rasterOnly) row.dataset.rasterOnly = '';
+			row.innerHTML =
+				`<div class="setting-header">` +
+					`<span class="setting-label" title="${spec.hint}">${spec.label}</span>` +
+					`<span class="setting-value" data-dynamic-value></span>` +
+				`</div>` +
+				`<input type="range" min="${spec.min}" max="${spec.max}" step="${spec.step || 1}" data-dynamic-input>` +
+				`<button class="btn-text" type="button" data-dynamic-reset>Reset</button>`;
+			return row;
+		};
+		const specs = new Map(MaskEditor.DYNAMICS_SLIDERS.map((spec) => [spec.key, spec]));
+		[['scatter', 'count'], ['countJitter', 'sizeJitter'], ['angle', 'angleJitter']].forEach((keys) => {
+			const pair = document.createElement('div');
+			pair.className = 'settings-group-two-column brush-dynamic-pair';
+			keys.forEach((key) => pair.appendChild(buildRow(specs.get(key))));
+			host.appendChild(pair);
 		});
+		host.appendChild(buildRow(specs.get('roundness')));
+
+		const flips = document.createElement('div');
+		flips.className = 'brush-dynamic-toggles';
+		MaskEditor.DYNAMICS_TOGGLES.forEach((spec) => {
+			const label = document.createElement('label');
+			label.className = 'checkbox-group';
+			if (spec.rasterOnly) label.dataset.rasterOnly = '';
+			label.innerHTML = `<input type="checkbox" data-dynamic-toggle="${spec.key}"><span title="${spec.hint}">${spec.label}</span>`;
+			flips.appendChild(label);
+		});
+		host.appendChild(flips);
+
+		const actions = document.createElement('div');
+		actions.className = 'tool-options-group';
+		actions.innerHTML = '<button class="btn-simple" type="button" id="brushResetDynamics" title="Restore this brush’s scatter and jitter to its defaults">Reset Scatter &amp; Jitter</button>';
+		host.appendChild(actions);
+
+		host.addEventListener('input', (event) => {
+			const slider = event.target.closest('[data-dynamic-input]');
+			if (slider) {
+				this.setBrushDynamic(slider.closest('[data-dynamic]').dataset.dynamic, slider.value);
+				this._syncDynamicsRowValue(slider.closest('[data-dynamic]'));
+				return;
+			}
+			const toggle = event.target.closest('[data-dynamic-toggle]');
+			if (toggle) this.setBrushDynamic(toggle.dataset.dynamicToggle, toggle.checked);
+		});
+		host.addEventListener('click', (event) => {
+			if (event.target.closest('[data-dynamic-reset]')) {
+				const row = event.target.closest('[data-dynamic]');
+				const store = this.brushDynamics[this.getBrushShape()];
+				if (store) { delete store[row.dataset.dynamic]; if (!Object.keys(store).length) delete this.brushDynamics[this.getBrushShape()]; }
+				this._saveBrushDynamics();
+				this._syncDynamicsPanel();
+			} else if (event.target.closest('#brushResetDynamics')) {
+				this.resetBrushDynamics();
+			}
+		});
+
+		this._syncDynamicsPanel();
+	}
+
+	_syncDynamicsRowValue(row) {
+		const spec = MaskEditor.DYNAMICS_SLIDERS.find((entry) => entry.key === row.dataset.dynamic);
+		const input = row.querySelector('[data-dynamic-input]');
+		const out = row.querySelector('[data-dynamic-value]');
+		if (spec && out) out.textContent = `${input.value}${spec.unit}`;
+		const manifest = this._dynamicsManifestModel();
+		row.classList.toggle('is-overridden', Number(input.value) !== manifest[row.dataset.dynamic]);
+	}
+
+	_syncDynamicsPanel() {
+		const host = this.ui.dynamicsHost;
+		if (!host) return;
+		const model = this._dynamicsPanelModel();
+		const isRaster = MaskEditor.isRasterBrush(this.getBrushShape());
+
+		host.querySelectorAll('[data-dynamic]').forEach((row) => {
+			const key = row.dataset.dynamic;
+			const input = row.querySelector('[data-dynamic-input]');
+			input.value = String(model[key]);
+			this._syncDynamicsRowValue(row);
+			if ('rasterOnly' in row.dataset) row.hidden = !isRaster;
+		});
+		host.querySelectorAll('.brush-dynamic-pair').forEach((pair) => {
+			pair.hidden = Array.from(pair.querySelectorAll('[data-dynamic]')).every((row) => row.hidden);
+		});
+		host.querySelectorAll('[data-dynamic-toggle]').forEach((toggle) => {
+			toggle.checked = Boolean(model[toggle.dataset.dynamicToggle]);
+			const label = toggle.closest('label');
+			if (label && 'rasterOnly' in label.dataset) label.hidden = !isRaster;
+		});
+		const resetBtn = host.querySelector('#brushResetDynamics');
+		if (resetBtn) resetBtn.disabled = !this.brushDynamics[this.getBrushShape()];
 	}
 
 	canActivate() {
@@ -994,6 +1256,11 @@ class MaskEditor {
 		// stamp).
 		this.stampCarry = 0;
 		this.smoothedPoint = { x: point.x, y: point.y };
+		// Seed the per-stroke scatter/jitter PRNG so a live re-render (and an
+		// undo/redo) reproduces the exact same spray for this stroke.
+		this._strokeRng = maskMulberry32((Date.now() ^ (point.x * 73856093) ^ (point.y * 19349663)) >>> 0);
+		this._lastDirX = 1;
+		this._lastDirY = 0;
 		// WP2: this point anchors axis-lock for a Shift-drag that follows. Shift
 		// constrains ONLY the current stroke (from this point) — it deliberately
 		// does NOT connect a line from a previous stroke, which surprised users.
@@ -1062,6 +1329,11 @@ class MaskEditor {
 			return;
 		}
 
+		// Remember this segment's heading so scatter has an axis to spread across
+		// (the normal) even on a slow, near-stationary drag.
+		this._lastDirX = dx / distance;
+		this._lastDirY = dy / distance;
+
 		const fromPressure = fromPoint.pressure;
 		const toPressure = toPoint.pressure;
 		const carry = this.stampCarry || 0;
@@ -1112,16 +1384,34 @@ class MaskEditor {
 	}
 
 	_stampAtPoint(layer, paint, x, y, pressure) {
+		const alpha = this._getStampAlpha(pressure);
+		const activeMode = this.getActiveMode();
+		const targetCtx = (activeMode === 'add' ? paint.add : paint.sub).getContext('2d', { willReadFrequently: true });
+		const oppositeCtx = (activeMode === 'add' ? paint.sub : paint.add).getContext('2d', { willReadFrequently: true });
+
+		if (this._dynamicsAreNeutral()) {
+			this._stampPlainDab(targetCtx, oppositeCtx, x, y, alpha);
+		} else if (!this._stampDynamicDabs(targetCtx, oppositeCtx, x, y, alpha)) {
+			return;   // raster tip still decoding — nothing painted, try again next move
+		}
+
+		paint.liveRevision++;
+		paint.hasContent = true;
+		layer.maskHasContent = true;
+		this.strokeChanged = true;
+		this._queueOverlayRefresh();
+	}
+
+	// The pre-dynamics path: one upright vector stamp, size×size, optionally
+	// pixel-snapped for crisp edges. Kept byte-for-byte so existing mask-edge
+	// behaviour and tests are untouched when no dynamics are in play.
+	_stampPlainDab(targetCtx, oppositeCtx, x, y, alpha) {
 		const stamp = this._getStampCanvas();
 		const size = this.getBrushSize();
 		const halfSize = size / 2;
 		const crispStamp = this.getBrushSoftness() === 0 && shouldUseCrispMaskEdges();
 		const destinationX = crispStamp ? Math.round(x - halfSize) : x - halfSize;
 		const destinationY = crispStamp ? Math.round(y - halfSize) : y - halfSize;
-		const alpha = this._getStampAlpha(pressure);
-		const activeMode = this.getActiveMode();
-		const targetCtx = (activeMode === 'add' ? paint.add : paint.sub).getContext('2d', { willReadFrequently: true });
-		const oppositeCtx = (activeMode === 'add' ? paint.sub : paint.add).getContext('2d', { willReadFrequently: true });
 
 		targetCtx.save();
 		targetCtx.globalCompositeOperation = 'source-over';
@@ -1136,12 +1426,82 @@ class MaskEditor {
 		if (crispStamp) oppositeCtx.imageSmoothingEnabled = false;
 		oppositeCtx.drawImage(stamp, destinationX, destinationY, size, size);
 		oppositeCtx.restore();
+	}
 
-		paint.liveRevision++;
-		paint.hasContent = true;
-		layer.maskHasContent = true;
-		this.strokeChanged = true;
-		this._queueOverlayRefresh();
+	// Scatter / jitter path. Emits `count` dabs around (x,y); each is drawn into
+	// BOTH the active mask (source-over) and the opposite mask (destination-out)
+	// so erasing stays exact. Returns false only when a raster tip hasn't decoded
+	// yet (so the caller can skip cleanly). Randomness comes from the per-stroke
+	// seeded PRNG — a live re-render lays the same spray.
+	_stampDynamicDabs(targetCtx, oppositeCtx, x, y, alpha) {
+		const tip = this._activeTip();
+		if (!tip) return false;
+
+		const size = this.getBrushSize();
+		const dyn = this.getBrushDynamics();
+		const rng = this._strokeRng || Math.random;
+		const sym = () => rng() * 2 - 1;
+		const randInt = (min, max) => min + Math.floor(rng() * (max - min + 1));
+
+		// Stroke normal (scatter across) and tangent (scatter along, when bothAxes).
+		const dl = Math.hypot(this._lastDirX, this._lastDirY) || 1;
+		const tx = this._lastDirX / dl, ty = this._lastDirY / dl;
+		const nx = -ty, ny = tx;
+		const scatterPx = dyn.scatter * size;
+
+		const maxCount = maskClamp(Math.round(dyn.count), 1, CONFIG.tools.maskBrush.dynamics.limits.countMax);
+		const minCount = Math.max(1, Math.round(maxCount * (1 - dyn.countJitter)));
+		const count = dyn.countJitter > 0 ? randInt(minCount, maxCount) : maxCount;
+
+		for (let i = 0; i < count; i++) {
+			const offN = sym() * scatterPx;
+			const offT = dyn.bothAxes ? sym() * scatterPx : 0;
+			const cx = x + nx * offN + tx * offT;
+			const cy = y + ny * offN + ty * offT;
+			const dabSize = Math.max(1, size * (1 - rng() * dyn.sizeJitter));
+			const rot = (dyn.angle + sym() * dyn.angleJitter * 180) * Math.PI / 180;
+			this._drawDab(targetCtx, oppositeCtx, tip, cx, cy, dabSize, rot, dyn.roundness, dyn.flipX, dyn.flipY, alpha, dyn.smoothing);
+		}
+		return true;
+	}
+
+	// One transformed dab into the active + opposite masks. `tip` is a canvas
+	// (white RGB, alpha = coverage); its larger side is fit to `dabSize`
+	// (Photoshop "diameter"), then squashed by `roundness` and mirrored by flips.
+	_drawDab(targetCtx, oppositeCtx, tip, cx, cy, dabSize, rot, roundness, flipX, flipY, alpha, smoothing = true) {
+		const aspect = tip.width / tip.height;
+		let w, h;
+		if (aspect >= 1) { w = dabSize; h = dabSize / aspect; }
+		else { h = dabSize; w = dabSize * aspect; }
+		h *= roundness;
+		const sx = flipX ? -1 : 1;
+		const sy = flipY ? -1 : 1;
+
+		for (const [ctx, op] of [[targetCtx, 'source-over'], [oppositeCtx, 'destination-out']]) {
+			ctx.save();
+			ctx.globalCompositeOperation = op;
+			ctx.globalAlpha = alpha;
+			ctx.imageSmoothingEnabled = smoothing;   // false → crisp nearest-neighbour for tiny pixel tips
+			ctx.translate(cx, cy);
+			if (rot) ctx.rotate(rot);
+			if (sx !== 1 || sy !== 1) ctx.scale(sx, sy);
+			ctx.drawImage(tip, -w / 2, -h / 2, w, h);
+			ctx.restore();
+		}
+	}
+
+	// The active tip as a plain canvas for the dab renderer: the vector stamp
+	// (size×size) as-is, or the raster pack tip at native resolution. Returns null
+	// if a raster tip is still decoding (loadTip re-renders when it lands).
+	_activeTip() {
+		const shape = this.getBrushShape();
+		if (MaskEditor.isRasterBrush(shape)) {
+			const canvas = BrushLibrary.getTipCanvas(shape);
+			if (canvas) return canvas;
+			BrushLibrary.loadTip(shape).then(() => this._queueOverlayRefresh()).catch(() => {});
+			return null;
+		}
+		return this._getStampCanvas();
 	}
 
 	_queueOverlayRefresh() {
@@ -1385,14 +1745,17 @@ class MaskEditor {
 		const shape = this.getBrushShape();
 		if (shape !== this._cursorShapeId) {
 			this._cursorShapeId = shape;
+			const raster = MaskEditor.isRasterBrush(shape);
 			if (this.ui.cursorShape) {
-				// 'round' keeps the crisp CSS-border circle; every other tip swaps in
-				// a stroked SVG silhouette. getContentSvg (not getIconSvg) so the
-				// outline is sized/centred exactly like the stamp, with no design-box
-				// padding — matters for heart / calligraphy.
-				this.ui.cursorShape.innerHTML = shape === 'round' ? '' : ShapeLibrary.getContentSvg(shape);
+				// 'round' keeps the crisp CSS-border circle; a vector tip swaps in a
+				// stroked SVG silhouette (getContentSvg, so it matches the stamp with
+				// no design-box padding); a raster tip shows its own bitmap, faint.
+				this.ui.cursorShape.innerHTML = raster
+					? BrushLibrary.getCursorMarkup(shape)
+					: (shape === 'round' ? '' : ShapeLibrary.getContentSvg(shape));
 			}
 			cursor.classList.toggle('shaped', shape !== 'round');
+			cursor.classList.toggle('raster', raster);
 		}
 	}
 
@@ -1571,10 +1934,36 @@ class MaskEditor {
 // version suffix if the stored shape ever changes incompatibly.
 MaskEditor.SETTINGS_STORAGE_KEY = 'glitter.toolSettings.v1';
 
+// Per-brush scatter/jitter overrides (keyed by brush id), independent of the
+// per-mode settings above.
+MaskEditor.DYNAMICS_STORAGE_KEY = 'glitter.brushDynamics.v1';
+
 // Minimum canvas-space travel (WP2) before a Shift-drag commits to an axis-lock
 // direction — avoids a jittery direction pick on the first pixel of movement.
 MaskEditor.AXIS_LOCK_MIN_DISTANCE = 4;
 
-// Brush tip catalog now lives in ShapeLibrary (shared with the Shape tool, WP5a).
-// Kept as a static alias so existing MaskEditor.BRUSH_SHAPES references still work.
+// Brush tip catalog: the vector tips live in ShapeLibrary (shared with the Shape
+// tool, WP5a); raster packs live in BrushLibrary. This static alias keeps
+// existing MaskEditor.BRUSH_SHAPES references working for the vector set.
 MaskEditor.BRUSH_SHAPES = ShapeLibrary.BRUSH_SHAPES;
+
+MaskEditor.isRasterBrush = (id) => typeof BrushLibrary !== 'undefined' && BrushLibrary.isRaster(id);
+MaskEditor.isKnownBrushShape = (id) =>
+	MaskEditor.BRUSH_SHAPES.some((entry) => entry.id === id) || MaskEditor.isRasterBrush(id);
+
+// Scatter & Jitter panel rows (PANEL units). rasterOnly rows hide for vector tips.
+MaskEditor.DYNAMICS_SLIDERS = [
+	{ key: 'scatter', label: 'Scatter', unit: '%', min: 0, max: CONFIG.tools.maskBrush.dynamics.limits.scatterMax, hint: 'Spread each stamp off the stroke path, as a percentage of brush size.' },
+	{ key: 'count', label: 'Count', unit: '', min: 1, max: CONFIG.tools.maskBrush.dynamics.limits.countMax, hint: 'How many dabs to lay down at every stamp position.' },
+	{ key: 'countJitter', label: 'Count Jitter', unit: '%', min: 0, max: 100, hint: 'Randomly vary the dab count between 1 and Count.' },
+	{ key: 'sizeJitter', label: 'Size Jitter', unit: '%', min: 0, max: 100, hint: 'Randomly shrink each dab from the full brush size.' },
+	{ key: 'angle', label: 'Angle', unit: '°', min: -180, max: 180, rasterOnly: true, hint: 'Base rotation of the tip.' },
+	{ key: 'angleJitter', label: 'Angle Jitter', unit: '%', min: 0, max: 100, hint: 'Randomly rotate each dab.' },
+	{ key: 'roundness', label: 'Roundness', unit: '%', min: 5, max: 100, rasterOnly: true, hint: 'Squash the tip along one axis (100% = unchanged).' }
+];
+MaskEditor.DYNAMICS_TOGGLES = [
+	{ key: 'bothAxes', label: 'Scatter both axes', hint: 'Scatter along the stroke as well as across it.' },
+	{ key: 'smoothing', label: 'Smooth scaling', rasterOnly: true, hint: 'Off = crisp nearest-neighbour pixels — better for tiny pixel tips like Stardust.' },
+	{ key: 'flipX', label: 'Flip X', rasterOnly: true, hint: 'Mirror the tip horizontally.' },
+	{ key: 'flipY', label: 'Flip Y', rasterOnly: true, hint: 'Mirror the tip vertically.' }
+];

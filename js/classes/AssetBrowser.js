@@ -29,6 +29,14 @@ class AssetBrowser {
 			emptyText: document.getElementById(elementIds.emptyText),
 			emptyClearFilters: document.getElementById(elementIds.emptyState)?.querySelector('.empty-state-clear-filters')
 		};
+		this.collectionInfo = document.createElement('div');
+		this.collectionInfo.className = 'asset-browser-collection-info';
+		this.collectionInfo.hidden = true;
+		this.elements.itemGrid.before(this.collectionInfo);
+		this.indexLead = document.createElement('div');
+		this.indexLead.className = 'asset-browser-index-lead';
+		this.indexLead.hidden = true;
+		this.elements.categoryGrid.before(this.indexLead);
 
 		// Store parent containers
 		this.assetOptions = this.elements.browser.closest('.asset-options');
@@ -135,6 +143,8 @@ class AssetBrowser {
 		this.elements.categoryGrid.classList.remove('visible');
 		this.elements.searchResults.classList.remove('visible');
 		this.elements.itemGrid.classList.remove('visible');
+		this.collectionInfo.hidden = true;
+		this.indexLead.hidden = true;
 
 		if (this.state === 'CATEGORY_LIST') {
 			this.renderCategoryList();
@@ -246,6 +256,7 @@ async loadUntilItemFound(itemId) {
 		// Update header
 		this.elements.backBtn.disabled = true;
 		this.elements.title.textContent = this.displayName;
+		this._renderIndexLead();
 
 		// Show category grid
 		this.elements.categoryGrid.classList.add('visible');
@@ -257,6 +268,15 @@ async loadUntilItemFound(itemId) {
 		} else {
 			this.updateCategoryCounts();
 		}
+	}
+
+	_renderIndexLead() {
+		this.indexLead.replaceChildren();
+		const lead = this.contentManager.createCollectionIndexLead?.();
+		if (!lead) { this.indexLead.hidden = true; return; }
+		this.indexLead.appendChild(lead);
+		this.indexLead.hidden = false;
+		this.contentManager.updateSelection?.();
 	}
 
 
@@ -280,11 +300,12 @@ async loadUntilItemFound(itemId) {
 		// Show empty state if no categories
 		if (!hasCategories) {
 			this.elements.categoryGrid.classList.remove('visible');
-			this.showEmptyState('No items found');
+			if (!this.indexLead.querySelector('.asset-option')) this.showEmptyState('No items found');
 		}
 	}
 
 	updateCategoryCounts() {
+		this._renderIndexLead();
 		// Make sure we're showing the right container
 		this.elements.emptyState.classList.remove('visible');
 		this.elements.searchResults.classList.remove('visible');
@@ -328,7 +349,7 @@ async loadUntilItemFound(itemId) {
 		// Show empty state if no visible categories
 		if (!hasVisibleCategories) {
 			this.elements.categoryGrid.classList.remove('visible');
-			this.showEmptyState('No items found');
+			if (!this.indexLead.querySelector('.asset-option')) this.showEmptyState('No items found');
 		}
 	}
 
@@ -353,6 +374,7 @@ async loadUntilItemFound(itemId) {
 
 		card.querySelector('.category-card-name').textContent = category.name;
 		card.querySelector('.category-card-count').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
+		this.contentManager.customizeCollectionCard?.(card, category);
 
 		card.addEventListener('click', () => {
 			this.setState('CATEGORY_DETAIL', category.id);
@@ -382,6 +404,12 @@ async loadUntilItemFound(itemId) {
 		// Update header
 		this.elements.backBtn.disabled = false;
 		this.elements.title.textContent = category.name;
+		this.collectionInfo.replaceChildren();
+		const info = this.contentManager.createCollectionInfo?.(category);
+		if (info) {
+			this.collectionInfo.appendChild(info);
+			this.collectionInfo.hidden = false;
+		}
 
 		// Show item grid
 		this.elements.itemGrid.classList.add('visible');

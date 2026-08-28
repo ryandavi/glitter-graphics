@@ -88,6 +88,7 @@ class GlitterEditor {
 		this.layerManager = new LayerManager(this);
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this);
+		this.brushTipManager = new BrushTipManager(this);
 		this.baseBackgroundManager = new BaseBackgroundManager(this);
 		this.autoGlitterManager = new AutoGlitterManager(this);
 		this.textGlitterManager = new TextGlitterManager(this);
@@ -98,7 +99,8 @@ class GlitterEditor {
 			this.baseBackgroundManager,
 			this.textGlitterManager,
 			this.shapeGlitterManager,
-			this.stickerManager
+			this.stickerManager,
+			this.brushTipManager
 		].forEach((manager) => this.pickers.register(manager));
 		this.groupTransformManager = new GroupTransformManager(this);
 		this.mobileManager = new MobileManager(this);
@@ -364,6 +366,7 @@ class GlitterEditor {
 		this.mp4Exporter = new Mp4Exporter(this.exporter);
 		await this.stickerManager.init();
 		await this.glitterManager.init(); // NEW
+		await this.brushTipManager.init();
 		await this.textGlitterManager.init();
 		this.updateSidePanelUI(null);
 	}
@@ -885,7 +888,14 @@ class GlitterEditor {
 	setTool(tool, options = {}) {
 		if (tool === ToolType.BRUSH && !this.maskEditor?.canActivate()) return;
 
-		if (this.currentTool === tool) return;
+		if (this.currentTool === tool) {
+			// Clicking the active tool is still a meaningful exit from a gallery
+			// picker (for example Brush while "Choosing brush tip" is showing).
+			if (this.pickers?.closeActive({ returnToProperties: false })) {
+				this.syncCollapsibleSections?.(this.getPreferredDesignSection(this.layerManager.getActiveLayer()));
+			}
+			return;
+		}
 		if (this.autoGlitterManager?.isSessionActive() && !this.autoGlitterManager.allowsPreviewTool(tool)) {
 			this.pendingAutoGlitterTool = tool;
 			if (!this.autoGlitterToolPrompt) {
@@ -901,6 +911,11 @@ class GlitterEditor {
 			}
 			return;
 		}
+
+		// Picker sessions belong to the tool/context that opened them. End the
+		// session before the destination tool computes its preferred panel, so a
+		// stale gallery strip cannot override Text, Shape, Brush, or Select UI.
+		this.pickers?.closeActive({ returnToProperties: false });
 
 		this.currentTool = tool;
 		if (!this.temporaryHandToolActive && options.persist !== false) sessionStorage.setItem('glitter:lastTool', tool);
@@ -1270,7 +1285,7 @@ class GlitterEditor {
 		const hasMultiSelection = this.layerManager.hasMultiSelection();
 		if (hasMultiSelection && !this.layerManager.canTransformMultiSelection()) {
 			e.preventDefault();
-			this.showError('This selection cannot move because it includes a locked, Base Image, or Glitter Fill layer');
+			this.showError('This selection cannot move because it includes a locked, Base Image, or Fill layer');
 			return true;
 		}
 		const layer = this.layerManager.getActiveLayer();
@@ -2624,6 +2639,13 @@ GlitterEditor.CANVAS_ANCHORS = CANVAS_SIZE_CONTROL_METHODS.CANVAS_ANCHORS;
 // everything inside IIFE
 (async () => {
 	await ShapeLibrary.loadManifest();
+	// Raster brush packs sit on top of the vector tips; a failure here must not
+	// block the editor (the Basic vector tips still work).
+	try {
+		await BrushLibrary.loadManifest();
+	} catch (error) {
+		console.warn('Raster brush packs unavailable:', error);
+	}
 	const editor = new GlitterEditor();
 	await editor.init();
 

@@ -623,7 +623,7 @@ class ViewportManager {
 		}, 100);
 	}
 
-	performResizeUpdate() {
+	performResizeUpdate(options = {}) {
 		const containerRect = this.previewContainer.getBoundingClientRect();
 		const newWidth = containerRect.width;
 		const newHeight = containerRect.height;
@@ -640,7 +640,7 @@ class ViewportManager {
 			this._notifyViewportChanged();
 
 			// Optional: auto-fit on resize
-			this.zoomToFit();
+			this.zoomToFit({ animate: options.animate === true });
 		}
 
 		// Update stored dimensions

@@ -1143,7 +1143,7 @@ class GifExporter {
 		// 1.75. Load Watermark (if enabled)
 		let watermark = null;
 		if (exportSettings.watermarkEnabled) {
-			watermark = await this._loadWatermark(callbacks);
+			watermark = await this._loadWatermark(callbacks, exportSettings.watermark);
 			if (watermark) {
 				dbg('[GifExporter] Watermark loaded:', watermark);
 			}
@@ -1838,6 +1838,9 @@ class GifExporter {
 			const watermarkFrameIndex = frameIndex % frameCount;
 			const frame = watermark.frames[watermarkFrameIndex];
 			sourceData = this._getFrameImageData(frame, watermark.width, watermark.height);
+		} else if (watermark.frames?.length) {
+			// A one-frame GIF is static, but still uses the GIF frame representation.
+			sourceData = this._getFrameImageData(watermark.frames[0], watermark.width, watermark.height);
 		} else {
 			sourceData = watermark.imageData;
 		}
@@ -1938,15 +1941,15 @@ class GifExporter {
 		}
 	}
 
-	async _loadWatermark(callbacks) {
-		if (!CONFIG.export.watermark.url) {
+	async _loadWatermark(callbacks, watermarkUrl = CONFIG.export.watermark.url) {
+		if (!watermarkUrl) {
 			return null;
 		}
 
 		callbacks.onStatus('Loading watermark...');
 
 		try {
-			const response = await fetch(CONFIG.export.watermark.url);
+			const response = await fetch(watermarkUrl);
 			const blob = await response.blob();
 			const arrayBuffer = await blob.arrayBuffer();
 			const uint8Array = new Uint8Array(arrayBuffer);
@@ -1955,12 +1958,15 @@ class GifExporter {
 			const isGif = uint8Array[0] === 0x47 && uint8Array[1] === 0x49 && uint8Array[2] === 0x46;
 
 			if (isGif) {
-				const frames = await this._parseGifWithMetadata(CONFIG.export.watermark.url, uint8Array);
+				const frames = await this._parseGifWithMetadata(watermarkUrl, uint8Array);
 
 				// Process alpha threshold ONCE during load if threshold is active
 				if (this.config.watermarkAlphaThreshold > 0) {
 					frames.frames.forEach(frame => {
-						const data = frame.data.data;
+						// GIF frames store patch pixels directly as a typed array. Accept
+						// ImageData too so this stays compatible with other frame sources.
+						const data = frame.data?.data || frame.data;
+						if (!data) return;
 						for (let i = 3; i < data.length; i += 4) {
 							data[i] = data[i] < this.config.watermarkAlphaThreshold ? 0 : 255;
 						}
@@ -1968,11 +1974,13 @@ class GifExporter {
 				}
 
 				return {
-					isAnimated: true,
+					isAnimated: frames.frameCount > 1,
 					width: frames.width,
 					height: frames.height,
 					frames: frames.frames,
 					frameCount: frames.frameCount,
+					frameDelay: frames.frameDelay,
+					frameDelays: frames.frameDelays,
 					alphaProcessed: true // Flag to skip processing in render
 				};
 			} else {
@@ -2008,7 +2016,7 @@ class GifExporter {
 					};
 
 					img.onerror = () => reject(new Error('Failed to load watermark image'));
-					img.src = CONFIG.export.watermark.url;
+					img.src = watermarkUrl;
 				});
 			}
 		} catch (error) {

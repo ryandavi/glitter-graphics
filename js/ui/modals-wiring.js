@@ -71,6 +71,15 @@ updateOrientationButtons(width, height) {
 				onClose: () => this.resolvePendingConfirmation(this.pendingConfirmationValue)
 			});
 
+		// Desktop rail shortcuts mirror the header menu actions so both entry
+		// points share the same modal lifecycle and focus behavior.
+		document.getElementById('toolbarShortcutsBtn')?.addEventListener('click', () => {
+			document.getElementById('shortcutsBtn')?.click();
+		});
+		document.getElementById('toolbarSettingsBtn')?.addEventListener('click', () => {
+			document.getElementById('settingsBtn')?.click();
+		});
+
 		// External content modals use the shared document-modal helpers.
 		this.modalManager
 			.register('aboutModal', {
@@ -248,6 +257,9 @@ updateOrientationButtons(width, height) {
 		}
 
 		trigger.addEventListener('click', () => (isOpen() ? close() : open()));
+		document.getElementById('mobileExportSettingsBtn')?.addEventListener('click', () => {
+			document.getElementById('exportSettingsBtn')?.click();
+		});
 
 		// Any activated item runs its own handler (modal open, resetAll, …) — we
 		// just dismiss the panel afterwards.

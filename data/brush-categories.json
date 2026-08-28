@@ -1,0 +1,7 @@
+[
+  { "id": "swirlies", "name": "Swirlies", "icon": "images/brushes/swirlies/swirlies-tip-1.png", "color": "#9575CD", "description": "Archived Photoshop brush set", "count": 4 },
+  { "id": "swirlies-ii", "name": "Swirlies II", "icon": "images/brushes/swirlies-ii/swirlies-ii-tip-1.png", "color": "#7E57C2", "description": "Archived Photoshop brush set", "count": 4 },
+  { "id": "sparkles", "name": "Sparkles", "icon": "images/brushes/sparkles/sparkles-tip-1.png", "color": "#E8C547", "description": "Archived Photoshop brush set", "count": 4 },
+  { "id": "stardust", "name": "Stardust", "icon": "images/brushes/stardust/stardust-tip-1.png", "color": "#4FC3D9", "description": "Archived Photoshop brush set", "count": 1 },
+  { "id": "heartattack", "name": "Heart Attack", "icon": "images/brushes/heartattack/heartattack-tip-1.png", "color": "#FF6FA5", "description": "Archived Photoshop brush set", "count": 2 }
+]

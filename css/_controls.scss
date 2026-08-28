@@ -17,11 +17,20 @@
 }
 
 .filter-chip {
+	appearance: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	padding: var(--spacing-xs) var(--spacing-md);
+	border: 0;
 	border-radius: var(--radius-pill);
 	outline: 2px solid transparent;
 	outline-offset: 2px;
 	background: var(--color-bg-secondary);
+	color: var(--color-text-secondary);
+	font-family: inherit;
+	line-height: 1.2;
+	text-align: center;
 	cursor: pointer;
 	transition: background-color var(--transition-fast), color var(--transition-fast), outline-color var(--transition-fast);
 	-webkit-user-select: none;
@@ -38,6 +47,10 @@
 		outline-color: var(--color-accent-hover);
 		background: var(--color-accent);
 		color: var(--color-text-on-accent);
+	}
+
+	&:focus-visible {
+		outline-color: var(--color-accent);
 	}
 }
 

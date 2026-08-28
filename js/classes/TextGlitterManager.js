@@ -1718,6 +1718,9 @@ class TextGlitterManager {
 	// Glitter mode but the asset couldn't be resolved (missing/unloaded) — reset
 	// the display to a neutral placeholder. Shared by fill and border/shadow.
 	clearGlitterAssetDisplay(els, placeholder = 'No glitter selected') {
+		[els.thumbnail, els.name, els.badges, els.size, els.frames]
+			.filter(Boolean)
+			.forEach((node) => { delete node.dataset.assetId; });
 		if (els.thumbnail) {
 			els.thumbnail.classList.remove('glitter-bg');
 			els.thumbnail.style.backgroundImage = 'none';

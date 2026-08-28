@@ -129,7 +129,7 @@ async initBrowser() {
 		if (layer?.type !== LayerType.GLITTER_FILL) return;
 		if (this.pickerSession && this.pickerSession.layerId !== layer.id) pickerCloseSession(this);
 		const armed = this.hasActivePickerSession();
-		const copy = formatPickerStripText('fill', layer.name, 'glitter layer');
+		const copy = formatPickerStripText('fill', layer.name, 'fill layer');
 		renderPickerStrip({ ownsStrip: true, visible: armed, armed, ...copy });
 	}
 

@@ -1,0 +1,596 @@
+{
+	"version": "2026-08-28",
+	"packs": [
+		{
+			"id": "swirlies",
+			"label": "Swirlies",
+			"order": 10,
+			"source": "BHBrush04Swirlies.abr",
+			"attribution": {
+				"author": "bruisedxheart.org",
+				"authorUrl": "https://web.archive.org/web/20050514023929/http://bruisedxheart.org/",
+				"archivedBy": "Belle — Salvaged",
+				"archiveUrl": "https://salvaged.nu/2022/03/24/brush-packs-from-bruisedxheartorg/",
+				"license": "unknown",
+				"notes": "Original brushes from bruisedxheart.org (defunct; Wayback capture only). Preserved and re-shared by Belle of Salvaged as an ABR archival effort; included here in the same spirit. Happy to further credit the original creator or remove on request."
+			},
+			"brushes": [
+				{
+					"id": "swirlies-1",
+					"label": "Swirlies 1",
+					"order": 0,
+					"tags": [
+						"swirl",
+						"flourish",
+						"decorative",
+						"y2k"
+					],
+					"categories": [
+						"ornament"
+					],
+					"tip": {
+						"src": "images/brushes/swirlies/swirlies-tip-1.png",
+						"width": 220,
+						"height": 238
+					},
+					"dynamics": {
+						"diameter": 238,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "swirlies-2",
+					"label": "Swirlies 2",
+					"order": 1,
+					"tags": [
+						"swirl",
+						"flourish",
+						"decorative",
+						"y2k"
+					],
+					"categories": [
+						"ornament"
+					],
+					"tip": {
+						"src": "images/brushes/swirlies/swirlies-tip-2.png",
+						"width": 250,
+						"height": 206
+					},
+					"dynamics": {
+						"diameter": 250,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "swirlies-3",
+					"label": "Swirlies 3",
+					"order": 2,
+					"tags": [
+						"swirl",
+						"flourish",
+						"decorative",
+						"y2k"
+					],
+					"categories": [
+						"ornament"
+					],
+					"tip": {
+						"src": "images/brushes/swirlies/swirlies-tip-3.png",
+						"width": 203,
+						"height": 221
+					},
+					"dynamics": {
+						"diameter": 221,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "swirlies-4",
+					"label": "Swirlies 4",
+					"order": 3,
+					"tags": [
+						"swirl",
+						"flourish",
+						"decorative",
+						"y2k"
+					],
+					"categories": [
+						"ornament"
+					],
+					"tip": {
+						"src": "images/brushes/swirlies/swirlies-tip-4.png",
+						"width": 228,
+						"height": 211
+					},
+					"dynamics": {
+						"diameter": 228,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				}
+			]
+		},
+		{
+			"id": "swirlies-ii",
+			"label": "Swirlies II",
+			"order": 20,
+			"source": "bhbrush05swirlies2.abr",
+			"attribution": {
+				"author": "bruisedxheart.org",
+				"authorUrl": "https://web.archive.org/web/20050514023929/http://bruisedxheart.org/",
+				"archivedBy": "Belle — Salvaged",
+				"archiveUrl": "https://salvaged.nu/2022/03/24/brush-packs-from-bruisedxheartorg/",
+				"license": "unknown",
+				"notes": "Original brushes from bruisedxheart.org (defunct; Wayback capture only). Preserved and re-shared by Belle of Salvaged as an ABR archival effort; included here in the same spirit. Happy to further credit the original creator or remove on request."
+			},
+			"brushes": [
+				{
+					"id": "swirlies-ii-1",
+					"label": "Swirlies II 1",
+					"order": 0,
+					"tags": [
+						"swirl",
+						"flourish",
+						"decorative",
+						"y2k"
+					],
+					"categories": [
+						"ornament"
+					],
+					"tip": {
+						"src": "images/brushes/swirlies-ii/swirlies-ii-tip-1.png",
+						"width": 206,
+						"height": 170
+					},
+					"dynamics": {
+						"diameter": 206,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "swirlies-ii-2",
+					"label": "Swirlies II 2",
+					"order": 1,
+					"tags": [
+						"swirl",
+						"flourish",
+						"decorative",
+						"y2k"
+					],
+					"categories": [
+						"ornament"
+					],
+					"tip": {
+						"src": "images/brushes/swirlies-ii/swirlies-ii-tip-2.png",
+						"width": 198,
+						"height": 126
+					},
+					"dynamics": {
+						"diameter": 198,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "swirlies-ii-3",
+					"label": "Swirlies II 3",
+					"order": 2,
+					"tags": [
+						"swirl",
+						"flourish",
+						"decorative",
+						"y2k"
+					],
+					"categories": [
+						"ornament"
+					],
+					"tip": {
+						"src": "images/brushes/swirlies-ii/swirlies-ii-tip-3.png",
+						"width": 224,
+						"height": 233
+					},
+					"dynamics": {
+						"diameter": 233,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "swirlies-ii-4",
+					"label": "Swirlies II 4",
+					"order": 3,
+					"tags": [
+						"swirl",
+						"flourish",
+						"decorative",
+						"y2k"
+					],
+					"categories": [
+						"ornament"
+					],
+					"tip": {
+						"src": "images/brushes/swirlies-ii/swirlies-ii-tip-4.png",
+						"width": 209,
+						"height": 233
+					},
+					"dynamics": {
+						"diameter": 233,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				}
+			]
+		},
+		{
+			"id": "sparkles",
+			"label": "Sparkles",
+			"order": 30,
+			"source": "bhbrush43.abr",
+			"attribution": {
+				"author": "bruisedxheart.org",
+				"authorUrl": "https://web.archive.org/web/20050514023929/http://bruisedxheart.org/",
+				"archivedBy": "Belle — Salvaged",
+				"archiveUrl": "https://salvaged.nu/2022/03/24/brush-packs-from-bruisedxheartorg/",
+				"license": "unknown",
+				"notes": "Original brushes from bruisedxheart.org (defunct; Wayback capture only). Preserved and re-shared by Belle of Salvaged as an ABR archival effort; included here in the same spirit. Happy to further credit the original creator or remove on request."
+			},
+			"brushes": [
+				{
+					"id": "sparkles-1",
+					"label": "Sparkles 1",
+					"order": 0,
+					"tags": [
+						"sparkle",
+						"star",
+						"glitter",
+						"y2k"
+					],
+					"categories": [
+						"sparkle"
+					],
+					"tip": {
+						"src": "images/brushes/sparkles/sparkles-tip-1.png",
+						"width": 255,
+						"height": 255
+					},
+					"dynamics": {
+						"diameter": 255,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "sparkles-2",
+					"label": "Sparkles 2",
+					"order": 1,
+					"tags": [
+						"sparkle",
+						"star",
+						"glitter",
+						"y2k"
+					],
+					"categories": [
+						"sparkle"
+					],
+					"tip": {
+						"src": "images/brushes/sparkles/sparkles-tip-2.png",
+						"width": 255,
+						"height": 255
+					},
+					"dynamics": {
+						"diameter": 255,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "sparkles-3",
+					"label": "Sparkles 3",
+					"order": 2,
+					"tags": [
+						"sparkle",
+						"star",
+						"glitter",
+						"y2k"
+					],
+					"categories": [
+						"sparkle"
+					],
+					"tip": {
+						"src": "images/brushes/sparkles/sparkles-tip-3.png",
+						"width": 255,
+						"height": 255
+					},
+					"dynamics": {
+						"diameter": 255,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "sparkles-4",
+					"label": "Sparkles 4",
+					"order": 3,
+					"tags": [
+						"sparkle",
+						"star",
+						"glitter",
+						"y2k"
+					],
+					"categories": [
+						"sparkle"
+					],
+					"tip": {
+						"src": "images/brushes/sparkles/sparkles-tip-4.png",
+						"width": 255,
+						"height": 255
+					},
+					"dynamics": {
+						"diameter": 255,
+						"spacing": 0.1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				}
+			]
+		},
+		{
+			"id": "stardust",
+			"label": "Stardust",
+			"order": 40,
+			"source": "at0mica_net-stardust.abr",
+			"attribution": {
+				"author": "Heather Onnen — at0mica.net",
+				"authorUrl": "https://web.archive.org/web/20170203085633/http://www.at0mica.net/goodies/brushes/",
+				"archivedBy": "Belle — Salvaged",
+				"archiveUrl": "https://salvaged.nu/2023/05/22/17x-brushes-from-at0mica-net/",
+				"license": "personal-use",
+				"notes": "© Heather Onnen (at0mica.net, defunct; Wayback capture only). The .abr embeds a NO REDISTRIBUTING credit stamp (dropped on import). Preserved by Belle of Salvaged; personal-use only, will remove on the creator's request."
+			},
+			"brushes": [
+				{
+					"id": "stardust-1",
+					"label": "Stardust",
+					"order": 0,
+					"tags": [
+						"sparkle",
+						"star",
+						"glitter",
+						"scatter",
+						"y2k"
+					],
+					"categories": [
+						"sparkle"
+					],
+					"tip": {
+						"src": "images/brushes/stardust/stardust-tip-1.png",
+						"width": 9,
+						"height": 9
+					},
+					"dynamics": {
+						"diameter": 9,
+						"spacing": 1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 10,
+						"bothAxes": false,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": false
+					}
+				}
+			]
+		},
+		{
+			"id": "heartattack",
+			"label": "Heart Attack",
+			"order": 50,
+			"source": "at0mica_net-heartattack.abr",
+			"attribution": {
+				"author": "Heather Onnen — at0mica.net",
+				"authorUrl": "https://web.archive.org/web/20170203085633/http://www.at0mica.net/goodies/brushes/",
+				"archivedBy": "Belle — Salvaged",
+				"archiveUrl": "https://salvaged.nu/2023/05/22/17x-brushes-from-at0mica-net/",
+				"license": "personal-use",
+				"notes": "© Heather Onnen (at0mica.net, defunct; Wayback capture only). The .abr embeds a NO REDISTRIBUTING credit stamp (dropped on import). Preserved by Belle of Salvaged; personal-use only, will remove on the creator's request."
+			},
+			"brushes": [
+				{
+					"id": "heartattack-1",
+					"label": "Heart Attack",
+					"order": 0,
+					"tags": [
+						"heart",
+						"love",
+						"scatter",
+						"y2k"
+					],
+					"categories": [
+						"heart"
+					],
+					"tip": {
+						"src": "images/brushes/heartattack/heartattack-tip-1.png",
+						"width": 48,
+						"height": 41
+					},
+					"dynamics": {
+						"diameter": 48,
+						"spacing": 1,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 2.42,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0.75,
+						"sizeJitter": 0.88,
+						"angleJitter": 0.36,
+						"smoothing": true
+					}
+				},
+				{
+					"id": "heartattack-2",
+					"label": "Heart Attack Stamp",
+					"order": 1,
+					"tags": [
+						"heart",
+						"love",
+						"scatter",
+						"y2k"
+					],
+					"categories": [
+						"heart"
+					],
+					"tip": {
+						"src": "images/brushes/heartattack/heartattack-tip-1.png",
+						"width": 48,
+						"height": 41
+					},
+					"dynamics": {
+						"diameter": 48,
+						"spacing": 0.25,
+						"angle": 0,
+						"roundness": 1,
+						"flipX": false,
+						"flipY": false,
+						"scatter": 0,
+						"bothAxes": true,
+						"count": 1,
+						"countJitter": 0,
+						"sizeJitter": 0,
+						"angleJitter": 0,
+						"smoothing": true
+					}
+				}
+			]
+		}
+	]
+}

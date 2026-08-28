@@ -538,7 +538,7 @@ const swallowFollowupClick = () => {
 		e.stopPropagation();
 		this.editor.layerManager.focusLayerInSelection(this.layer.id);
 		if (!this.editor.layerManager.canTransformMultiSelection()) {
-			this.editor.showError('This selection cannot move because it includes a locked, Base Image, or Glitter Fill layer');
+			this.editor.showError('This selection cannot move because it includes a locked, Base Image, or Fill layer');
 		}
 		return;
     }
