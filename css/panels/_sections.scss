@@ -342,6 +342,62 @@ body.no-document .main-content {
 		border: calc(1px / var(--zoom, 1)) solid var(--color-accent);
 		transform: translate(-50%, -50%);
 	}
+
+	// Erase mode: dashed warning-tinted ring with a minus (drop the vertical bar
+	// of the crosshair) so the pointer itself shows you're removing, not adding.
+	&.erasing {
+		border-style: dashed;
+		border-color: var(--color-warning);
+
+		&::before,
+		&::after {
+			background: var(--color-warning);
+		}
+
+		&::after {
+			display: none;
+		}
+
+		>.mask-brush-cursor-dot {
+			border-color: var(--color-warning);
+		}
+	}
+
+	// Non-round tips: swap the CSS circle for a stroked silhouette of the actual
+	// brush shape (same geometry as the shape picker), so a square / star /
+	// calligraphy nib is obvious before the first stroke. Populated by
+	// MaskEditor._syncCursorAppearance.
+	>.mask-brush-cursor-shape {
+		position: absolute;
+		inset: 0;
+		display: none;
+
+		svg {
+			display: block;
+			width: 100%;
+			height: 100%;
+			overflow: visible;
+			fill: none;
+			stroke: var(--color-accent);
+			stroke-width: 1.5;
+			vector-effect: non-scaling-stroke;
+			filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
+		}
+	}
+
+	&.shaped {
+		border-color: transparent;
+		box-shadow: none;
+
+		>.mask-brush-cursor-shape {
+			display: block;
+		}
+	}
+
+	&.shaped.erasing >.mask-brush-cursor-shape svg {
+		stroke: var(--color-warning);
+		stroke-dasharray: 4 3;
+	}
 }
 
 body.mask-editing {
@@ -434,13 +490,45 @@ body.mask-editing {
 
 .context-toolbar-snap-guide {
 	position: absolute;
+	box-sizing: border-box;
 	z-index: 9;
-	border: 1px solid var(--color-accent);
+	border: 2px dashed var(--color-accent);
 	border-radius: var(--radius-sm);
-	background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 18%, transparent);
+	background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-bg-primary) 50%, transparent);
 	pointer-events: none;
 	animation: context-snap-guide-in var(--transition-fast) ease-out;
+}
+
+.context-toolbar-snap-targets {
+	position: absolute;
+	inset: 0;
+	z-index: 8;
+	pointer-events: none;
+
+	i {
+		position: absolute;
+		display: block;
+		opacity: 0.28;
+		transition: opacity var(--transition-fast), filter var(--transition-fast);
+
+		&.is-active {
+			opacity: 0.9;
+			filter: drop-shadow(0 0 3px var(--color-accent));
+		}
+	}
+
+	.is-vertical {
+		top: 0;
+		bottom: 0;
+		border-left: 1px dashed var(--color-accent);
+	}
+
+	.is-horizontal {
+		left: 0;
+		right: 0;
+		border-top: 1px dashed var(--color-accent);
+	}
 }
 
 @keyframes context-snap-guide-in {

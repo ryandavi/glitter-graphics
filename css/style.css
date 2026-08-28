@@ -3782,6 +3782,46 @@ body.no-document .main-content > .design-panel {
   border: calc(1px / var(--zoom, 1)) solid var(--color-accent);
   transform: translate(-50%, -50%);
 }
+.mask-brush-cursor.erasing {
+  border-style: dashed;
+  border-color: var(--color-warning);
+}
+.mask-brush-cursor.erasing::before, .mask-brush-cursor.erasing::after {
+  background: var(--color-warning);
+}
+.mask-brush-cursor.erasing::after {
+  display: none;
+}
+.mask-brush-cursor.erasing > .mask-brush-cursor-dot {
+  border-color: var(--color-warning);
+}
+.mask-brush-cursor > .mask-brush-cursor-shape {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+.mask-brush-cursor > .mask-brush-cursor-shape svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
+}
+.mask-brush-cursor.shaped {
+  border-color: transparent;
+  box-shadow: none;
+}
+.mask-brush-cursor.shaped > .mask-brush-cursor-shape {
+  display: block;
+}
+.mask-brush-cursor.shaped.erasing > .mask-brush-cursor-shape svg {
+  stroke: var(--color-warning);
+  stroke-dasharray: 4 3;
+}
 
 body.mask-editing .preview-wrapper,
 body.mask-editing .preview-wrapper .preview-canvas,
@@ -3890,13 +3930,41 @@ body.mask-editing .sticker-element {
 
 .context-toolbar-snap-guide {
   position: absolute;
+  box-sizing: border-box;
   z-index: 9;
-  border: 1px solid var(--color-accent);
+  border: 2px dashed var(--color-accent);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-bg-primary) 50%, transparent);
   pointer-events: none;
   animation: context-snap-guide-in var(--transition-fast) ease-out;
+}
+
+.context-toolbar-snap-targets {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+.context-toolbar-snap-targets i {
+  position: absolute;
+  display: block;
+  opacity: 0.28;
+  transition: opacity var(--transition-fast), filter var(--transition-fast);
+}
+.context-toolbar-snap-targets i.is-active {
+  opacity: 0.9;
+  filter: drop-shadow(0 0 3px var(--color-accent));
+}
+.context-toolbar-snap-targets .is-vertical {
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--color-accent);
+}
+.context-toolbar-snap-targets .is-horizontal {
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--color-accent);
 }
 
 @keyframes context-snap-guide-in {

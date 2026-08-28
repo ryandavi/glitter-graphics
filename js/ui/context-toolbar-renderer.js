@@ -13,7 +13,7 @@ class ContextToolbarRenderer {
 			handle.type = 'button';
 			handle.className = 'context-toolbar-handle';
 			handle.setAttribute('aria-label', 'Move context bar');
-			handle.title = 'Drag to move · Double-click to reset';
+			handle.title = 'Drag to move · Alt for precision · Esc to cancel · Double-click to reset';
 			handle.innerHTML = '<span aria-hidden="true"></span>';
 			host.replaceChildren(handle, ...(toolbar.controls || []).map((control) => this.build(control)));
 			host.dataset.contextToolbar = '';
@@ -55,6 +55,7 @@ class ContextToolbarRenderer {
 			if (matchMedia(`(max-width: ${CONFIG.ui.mobile.breakpoint}px)`).matches || event.button !== 0) return;
 			event.preventDefault();
 			this.showSnapPreview(host, null);
+			this.showSnapTargets(host);
 			const container = host.offsetParent;
 			if (!container) return;
 			const containerRect = container.getBoundingClientRect();
@@ -63,6 +64,8 @@ class ContextToolbarRenderer {
 			const offsetY = event.clientY - hostRect.top;
 			host.classList.add('is-dragging');
 			handle.setPointerCapture(event.pointerId);
+			const startingPlacement = { ...this.placement };
+			let finished = false;
 
 			const move = (moveEvent) => {
 				const maxX = Math.max(0, containerRect.width - host.offsetWidth);
@@ -73,53 +76,117 @@ class ContextToolbarRenderer {
 				const snap = moveEvent.altKey ? null : this.nearestAnchor(host, x, y);
 				this.showSnapPreview(host, snap);
 			};
-			const end = () => {
+			const end = (cancelled = false) => {
+				if (finished) return;
+				finished = true;
 				host.classList.remove('is-dragging');
 				const x = parseFloat(host.style.left) || 0;
 				const y = parseFloat(host.style.top) || 0;
 				const snap = this.previewedSnap;
 				const parentWidth = host.offsetParent?.clientWidth || host.offsetWidth;
 				const parentHeight = host.offsetParent?.clientHeight || host.offsetHeight;
-				this.savePlacement(snap ? { anchor: snap.name } : {
-					centerX: (x + host.offsetWidth / 2) / parentWidth,
-					centerY: (y + host.offsetHeight / 2) / parentHeight
+				const finalX = snap?.x ?? x;
+				const finalY = snap?.y ?? y;
+				this.savePlacement(cancelled ? startingPlacement : {
+					horizontal: snap?.horizontal || null,
+					vertical: snap?.vertical || null,
+					centerX: (finalX + host.offsetWidth / 2) / parentWidth,
+					centerY: (finalY + host.offsetHeight / 2) / parentHeight
 				});
 				this.showSnapPreview(host, null);
+				this.hideSnapTargets();
 				this.hosts.forEach((item) => this.applyPlacement(item));
 				handle.removeEventListener('pointermove', move);
-				handle.removeEventListener('pointerup', end);
-				handle.removeEventListener('pointercancel', end);
+				handle.removeEventListener('pointerup', finish);
+				handle.removeEventListener('pointercancel', cancel);
+				document.removeEventListener('keydown', keydown, true);
+			};
+			const finish = () => end(false);
+			const cancel = () => end(true);
+			const keydown = (keyEvent) => {
+				if (keyEvent.key !== 'Escape') return;
+				keyEvent.preventDefault();
+				cancel();
+				this.editor.updateStatus?.('Context bar move cancelled');
 			};
 			handle.addEventListener('pointermove', move);
-			handle.addEventListener('pointerup', end);
-			handle.addEventListener('pointercancel', end);
+			handle.addEventListener('pointerup', finish);
+			handle.addEventListener('pointercancel', cancel);
+			document.addEventListener('keydown', keydown, true);
 		});
 	}
 
 	anchorPositions(host) {
 		const parent = host.offsetParent;
 		const inset = 12;
+		const parentRect = parent?.getBoundingClientRect();
+		const topChromeBottom = [...document.querySelectorAll('#previewControls.visible > *, #helpfulMessage.visible')]
+			.reduce((bottom, node) => Math.max(bottom, node.getBoundingClientRect().bottom - (parentRect?.top || 0)), 0);
+		const safeTop = Math.min(Math.max(inset, topChromeBottom + inset), Math.max(inset, (parent?.clientHeight || 0) / 2));
 		const maxX = Math.max(0, (parent?.clientWidth || 0) - host.offsetWidth);
 		const maxY = Math.max(0, (parent?.clientHeight || 0) - host.offsetHeight);
 		const centerX = maxX / 2;
-		const centerY = maxY / 2;
-		return [
-			{ name: 'top-left', x: Math.min(inset, maxX), y: Math.min(inset, maxY) },
-			{ name: 'top-center', x: centerX, y: Math.min(inset, maxY) },
-			{ name: 'top-right', x: Math.max(0, maxX - inset), y: Math.min(inset, maxY) },
-			{ name: 'center', x: centerX, y: centerY },
-			{ name: 'bottom-left', x: Math.min(inset, maxX), y: Math.max(0, maxY - inset) },
-			{ name: 'bottom-center', x: centerX, y: Math.max(0, maxY - inset) },
-			{ name: 'bottom-right', x: Math.max(0, maxX - inset), y: Math.max(0, maxY - inset) }
-		];
+		const centerY = Math.max(safeTop, maxY / 2);
+		return {
+			horizontal: [
+				{ name: 'left', value: Math.min(inset, maxX) },
+				{ name: 'center', value: centerX },
+				{ name: 'right', value: Math.max(0, maxX - inset) }
+			],
+			vertical: [
+				{ name: 'top', value: Math.min(safeTop, maxY) },
+				{ name: 'center', value: centerY },
+				{ name: 'bottom', value: Math.max(0, maxY - inset) }
+			]
+		};
 	}
 
 	nearestAnchor(host, x, y) {
 		const threshold = (host.offsetParent?.clientWidth || innerWidth) < 900 ? 22 : 32;
-		return this.anchorPositions(host)
-			.map((anchor) => ({ ...anchor, distance: Math.hypot(anchor.x - x, anchor.y - y) }))
-			.sort((a, b) => a.distance - b.distance)
-			.find((anchor) => anchor.distance <= threshold) || null;
+		const positions = this.anchorPositions(host);
+		const nearest = (targets, value) => targets
+			.map((target) => ({ ...target, distance: Math.abs(target.value - value) }))
+			.sort((a, b) => a.distance - b.distance)[0];
+		const horizontal = nearest(positions.horizontal, x);
+		const vertical = nearest(positions.vertical, y);
+		const snapX = horizontal.distance <= threshold ? horizontal : null;
+		const snapY = vertical.distance <= threshold ? vertical : null;
+		if (!snapX && !snapY) return null;
+		return {
+			name: `${snapX?.name || 'free'}-${snapY?.name || 'free'}`,
+			horizontal: snapX?.name || null,
+			vertical: snapY?.name || null,
+			x: snapX?.value ?? x,
+			y: snapY?.value ?? y
+		};
+	}
+
+	showSnapTargets(host) {
+		this.hideSnapTargets();
+		const parent = host.offsetParent;
+		if (!parent) return;
+		const positions = this.anchorPositions(host);
+		const layer = document.createElement('div');
+		layer.className = 'context-toolbar-snap-targets';
+		positions.horizontal.forEach(({ name, value }) => {
+			const guide = document.createElement('i');
+			guide.className = `is-vertical is-${name}`;
+			guide.style.left = `${value + (name === 'center' ? host.offsetWidth / 2 : name === 'right' ? host.offsetWidth : 0)}px`;
+			layer.appendChild(guide);
+		});
+		positions.vertical.forEach(({ name, value }) => {
+			const guide = document.createElement('i');
+			guide.className = `is-horizontal is-${name}`;
+			guide.style.top = `${value + (name === 'center' ? host.offsetHeight / 2 : name === 'bottom' ? host.offsetHeight : 0)}px`;
+			layer.appendChild(guide);
+		});
+		parent.appendChild(layer);
+		this.snapTargets = layer;
+	}
+
+	hideSnapTargets() {
+		this.snapTargets?.remove();
+		this.snapTargets = null;
 	}
 
 	showSnapPreview(host, snap) {
@@ -127,6 +194,9 @@ class ContextToolbarRenderer {
 		const nextName = snap?.name || null;
 		if (previousName === nextName && this.snapGuide?.isConnected === Boolean(snap)) return;
 		this.previewedSnap = snap;
+		this.snapTargets?.querySelectorAll('.is-active').forEach((guide) => guide.classList.remove('is-active'));
+		if (snap?.horizontal) this.snapTargets?.querySelector(`.is-vertical.is-${snap.horizontal}`)?.classList.add('is-active');
+		if (snap?.vertical) this.snapTargets?.querySelector(`.is-horizontal.is-${snap.vertical}`)?.classList.add('is-active');
 		this.snapGuide?.remove();
 		this.snapGuide = null;
 		host.classList.toggle('has-snap-preview', Boolean(snap));
@@ -163,12 +233,18 @@ class ContextToolbarRenderer {
 			const maxY = Math.max(0, parentHeight - host.offsetHeight);
 			let position;
 			if (this.placement.anchor) {
-				position = positions.find((item) => item.name === this.placement.anchor)
-					|| positions.find((item) => item.name === 'bottom-center');
+				const [verticalName, horizontalName] = this.placement.anchor === 'center'
+					? ['center', 'center'] : this.placement.anchor.split('-');
+				position = {
+					x: positions.horizontal.find((item) => item.name === horizontalName)?.value ?? maxX / 2,
+					y: positions.vertical.find((item) => item.name === verticalName)?.value ?? maxY
+				};
 			} else if (Number.isFinite(this.placement.centerX) && Number.isFinite(this.placement.centerY)) {
 				position = {
-					x: this.placement.centerX * parentWidth - host.offsetWidth / 2,
-					y: this.placement.centerY * parentHeight - host.offsetHeight / 2
+					x: positions.horizontal.find((item) => item.name === this.placement.horizontal)?.value
+						?? this.placement.centerX * parentWidth - host.offsetWidth / 2,
+					y: positions.vertical.find((item) => item.name === this.placement.vertical)?.value
+						?? this.placement.centerY * parentHeight - host.offsetHeight / 2
 				};
 			} else {
 				// Migrate the original top-left free-position preference to the new

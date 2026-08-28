@@ -326,7 +326,12 @@ const CONFIG = deepFreeze({
 			overlay: {
 				color: '#ff2d8a',
 				opacity: 0.75,
-				stripeOpacityBoost: 0.15
+				stripeOpacityBoost: 0.15,
+				// While an erase stroke is in progress the overlay also paints the
+				// region removed SO FAR this stroke in this colour, so "what you're
+				// taking out" is visible rather than just an edge quietly receding.
+				eraseBiteColor: '#ff3b30',
+				eraseBiteOpacity: 0.6
 			},
 			cursor: {
 				stroke: '#ffffff'

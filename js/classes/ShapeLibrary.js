@@ -247,6 +247,27 @@ const ShapeLibrary = {
 		ctx.fill(this.buildTransformedPath(id, halfW, halfH, options));
 	},
 
+	// The shape's drawable element(s) in its native `viewBox`-unit space — a
+	// <path> (with the sheet-normalize matrix when the def carries sourceBounds),
+	// or a primitive rect/ellipse/circle. Shared by getIconSvg / getContentSvg.
+	_shapeInnerSvg(def) {
+		const vb = def.viewBox || 24;
+		if (def.svg) {
+			if (def.sourceBounds) {
+				const m = this._getSourceTransform(def);
+				return `<path d="${def.svg}" transform="matrix(${m.a} ${m.b} ${m.c} ${m.d} ${m.e} ${m.f})"/>`;
+			}
+			return `<path d="${def.svg}"/>`;
+		}
+		if (def.primitive === 'square') {
+			return `<rect x="0" y="0" width="${vb}" height="${vb}"/>`;
+		}
+		if (def.primitive === 'calligraphy') {
+			return `<ellipse cx="${vb / 2}" cy="${vb / 2}" rx="${vb / 2}" ry="${vb * 0.16}" transform="rotate(-45 ${vb / 2} ${vb / 2})"/>`;
+		}
+		return `<circle cx="${vb / 2}" cy="${vb / 2}" r="${vb / 2}"/>`;
+	},
+
 	// Full <svg> markup for a picker thumbnail — same geometry as trace(), so the
 	// thumbnail matches the stamped/filled result. fill:currentColor is theme-aware.
 	// The explicit width/height attributes match the viewBox so WebKit computes a
@@ -256,22 +277,21 @@ const ShapeLibrary = {
 	getIconSvg(id) {
 		const def = this.DEFS[id] || this.DEFS.circle;
 		const vb = def.viewBox || 24;
-		let inner;
-		if (def.svg) {
-			if (def.sourceBounds) {
-				const matrix = this._getSourceTransform(def);
-				inner = `<path d="${def.svg}" transform="matrix(${matrix.a} ${matrix.b} ${matrix.c} ${matrix.d} ${matrix.e} ${matrix.f})"/>`;
-			} else {
-				inner = `<path d="${def.svg}"/>`;
-			}
-		} else if (def.primitive === 'square') {
-			inner = `<rect x="0" y="0" width="${vb}" height="${vb}"/>`;
-		} else if (def.primitive === 'calligraphy') {
-			inner = `<ellipse cx="${vb / 2}" cy="${vb / 2}" rx="${vb / 2}" ry="${vb * 0.16}" transform="rotate(-45 ${vb / 2} ${vb / 2})"/>`;
-		} else {
-			inner = `<circle cx="${vb / 2}" cy="${vb / 2}" r="${vb / 2}"/>`;
-		}
-		return `<svg xmlns="http://www.w3.org/2000/svg" width="${vb}" height="${vb}" viewBox="0 0 ${vb} ${vb}">${inner}</svg>`;
+		return `<svg xmlns="http://www.w3.org/2000/svg" width="${vb}" height="${vb}" viewBox="0 0 ${vb} ${vb}">${this._shapeInnerSvg(def)}</svg>`;
+	},
+
+	// Like getIconSvg, but the viewBox is tightened to the shape's rasterized
+	// content bounds — no design-box padding, and centred on the content, not the
+	// box. Scaling this into a square viewport (default preserveAspectRatio =
+	// contain + centre) reproduces exactly what trace() / the brush stamp does
+	// with fit:'contain', so the brush cursor outline matches the stamp for
+	// off-centre or non-square tips (heart, calligraphy).
+	getContentSvg(id) {
+		const def = this.DEFS[id] || this.DEFS.circle;
+		const { minX, minY, maxX, maxY } = this._geometry(id).bounds;
+		const bw = (maxX - minX) || 1;
+		const bh = (maxY - minY) || 1;
+		return `<svg xmlns="http://www.w3.org/2000/svg" width="${bw}" height="${bh}" viewBox="${minX} ${minY} ${bw} ${bh}">${this._shapeInnerSvg(def)}</svg>`;
 	},
 
 	// Natural aspect ratio (width / height) of a shape's content bounds, so a

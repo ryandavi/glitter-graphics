@@ -40,8 +40,12 @@ class MaskEditor {
 			resetSettingsButton: document.getElementById('maskResetCurrentSettings'),
 			pressureToggle: document.getElementById('maskBrushPressure'),
 			overlayCanvas: document.getElementById('maskOverlayCanvas'),
-			cursor: document.getElementById('maskBrushCursor')
+			cursor: document.getElementById('maskBrushCursor'),
+			cursorShape: document.getElementById('maskBrushCursorShape')
 		};
+		// Last brush-shape id painted into the cursor's outline SVG, so
+		// _syncCursorAppearance only rebuilds the markup when the tip changes.
+		this._cursorShapeId = null;
 
 		this.overlayCtx = this.ui.overlayCanvas?.getContext('2d', { willReadFrequently: true }) || null;
 
@@ -241,6 +245,7 @@ class MaskEditor {
 		if (pressure) pressure.checked = s.pressure;
 
 		this._applyShapeToPicker(s.shape);
+		this._syncCursorAppearance();
 		// The stamp cache key embeds the shape/size/softness, so switching modes
 		// must invalidate the cached stamp.
 		this.stampCacheKey = '';
@@ -301,6 +306,7 @@ class MaskEditor {
 		// clear it eagerly so nothing reuses the previous shape mid-session.
 		this.stampCacheKey = '';
 		this._applyShapeToPicker(shape);
+		this._syncCursorAppearance();
 		this._saveToolSettings();
 	}
 
@@ -480,6 +486,7 @@ class MaskEditor {
 			this._saveToolSettings();
 		}
 		this._syncModeButtons();
+		this._syncCursorAppearance();
 		this.editor.updateHelpfulMessage();
 	}
 
@@ -566,6 +573,57 @@ class MaskEditor {
 		}
 		this.overlayCtx.globalCompositeOperation = 'source-over';
 		this.overlayCtx.globalAlpha = 1;
+
+		// Erase strokes get a second pass: the mask removed SO FAR this stroke is
+		// painted back in a solid contrasting slab, so you can see what you're
+		// taking out instead of just watching an edge quietly recede.
+		if (this.getActiveMode() === 'sub') {
+			const bite = this._getEraseBiteCanvas(layer);
+			if (bite) {
+				this.overlayCtx.globalAlpha = CONFIG.tools.maskBrush.overlay.eraseBiteOpacity ?? 0.6;
+				this.overlayCtx.drawImage(bite, 0, 0);
+				this.overlayCtx.globalAlpha = 1;
+			}
+		}
+	}
+
+	// A pre-tinted canvas of the glitter removed so far by the current erase
+	// stroke: this stroke's eraser footprint (current sub-mask minus its
+	// stroke-start snapshot), clipped to the mask that was painted before the
+	// stroke started. Erasing a selection-only mask isn't highlighted here — the
+	// composite still visibly recedes. The work canvas is reused between frames.
+	_getEraseBiteCanvas(layer) {
+		const paint = this.editor.glitterManager.getPaintMask(layer.id);
+		if (!paint || !this.scratchSubCanvas || !this.scratchAddCanvas) {
+			return null;
+		}
+
+		const w = paint.sub.width;
+		const h = paint.sub.height;
+		if (!this._biteCanvas) {
+			this._biteCanvas = document.createElement('canvas');
+		}
+		const canvas = this._biteCanvas;
+		if (canvas.width !== w || canvas.height !== h) {
+			canvas.width = w;
+			canvas.height = h;
+		}
+		const ctx = canvas.getContext('2d', { willReadFrequently: true });
+		ctx.globalCompositeOperation = 'source-over';
+		ctx.clearRect(0, 0, w, h);
+
+		ctx.drawImage(paint.sub, 0, 0);
+		ctx.globalCompositeOperation = 'destination-out';
+		ctx.drawImage(this.scratchSubCanvas, 0, 0);
+		ctx.globalCompositeOperation = 'destination-in';
+		ctx.drawImage(this.scratchAddCanvas, 0, 0);
+
+		ctx.globalCompositeOperation = 'source-in';
+		ctx.fillStyle = CONFIG.tools.maskBrush.overlay.eraseBiteColor || '#ff3b30';
+		ctx.fillRect(0, 0, w, h);
+		ctx.globalCompositeOperation = 'source-over';
+
+		return canvas;
 	}
 
 	_setupPointerListeners() {
@@ -598,11 +656,17 @@ class MaskEditor {
 		// _resetStrokeState restores the toolbar-selected mode.
 		this.strokeModeOverride = eraserInput ? 'sub' : null;
 
-		this._startStrokeFromScreenPoint(event.clientX, event.clientY, {
+		const started = this._startStrokeFromScreenPoint(event.clientX, event.clientY, {
 			pointerId: event.pointerId,
 			pressure: this._getPointerPressure(event.pointerType, event.pressure),
 			shiftKey: event.shiftKey
 		});
+		// A refused stroke (nothing to erase, non-paintable layer) never reaches
+		// _resetStrokeState, so clear the pen-eraser override here or it would
+		// linger onto the next hover and mislabel the cursor.
+		if (!started) {
+			this.strokeModeOverride = null;
+		}
 		this._updateCursorPosition(event);
 	}
 
@@ -869,6 +933,9 @@ class MaskEditor {
 		this.scratchSubCanvas = null;
 		this.livePreviewQueued = false;
 		this.liveOverlayQueued = false;
+		// A pen-eraser override just cleared — put the ring back to whatever the
+		// toolbar mode is before the next hover frame.
+		this._syncCursorAppearance();
 		this.renderOverlay();
 	}
 
@@ -892,6 +959,15 @@ class MaskEditor {
 
 		const layer = this._ensurePaintableLayer();
 		if (!layer) {
+			return false;
+		}
+
+		// Erase mode on a layer with nothing to remove: don't start a stroke that
+		// would silently pile up in the subtract mask, flip maskHasContent true,
+		// and commit an empty "Paint mask" undo state. The user has most likely
+		// not noticed the Paint/Erase control is set to Erase — say so, once.
+		if (this.getActiveMode() === 'sub' && !hasMaskContent(layer)) {
+			this._warnNothingToErase();
 			return false;
 		}
 
@@ -925,6 +1001,17 @@ class MaskEditor {
 		this.axisLockDir = null;
 		this._stampAtPoint(layer, paint, point.x, point.y, point.pressure);
 		return true;
+	}
+
+	// Debounced so scrubbing the eraser back and forth over an empty layer nags
+	// once, not once per attempted stroke.
+	_warnNothingToErase() {
+		const now = Date.now();
+		if (now - (this._lastNothingToEraseWarning || 0) < 1500) {
+			return;
+		}
+		this._lastNothingToEraseWarning = now;
+		this.editor.showError('Nothing to erase on this layer yet — switch to Paint to add glitter');
 	}
 
 	_ensurePaintableLayer() {
@@ -1220,6 +1307,7 @@ class MaskEditor {
 		this.ui.cursor.style.left = `${screenX}px`;
 		this.ui.cursor.style.top = `${screenY}px`;
 		this.ui.cursor.classList.add('visible');
+		this._syncCursorAppearance();
 		this.cursorVisible = true;
 	}
 
@@ -1261,6 +1349,7 @@ class MaskEditor {
 		this.ui.cursor.style.left = `${screenOffsetX}px`;
 		this.ui.cursor.style.top = `${screenOffsetY}px`;
 		this.ui.cursor.classList.add('visible', 'touch-preview');
+		this._syncCursorAppearance();
 		this.cursorVisible = true;
 
 		this.touchRingTimeout = setTimeout(() => {
@@ -1278,6 +1367,33 @@ class MaskEditor {
 		const diameter = this.getBrushSize() * this.editor.viewport.currentZoom;
 		this.ui.cursor.style.width = `${diameter}px`;
 		this.ui.cursor.style.height = `${diameter}px`;
+	}
+
+	// Keep the on-canvas cursor honest about the current tool: an eraser look
+	// (dashed warning-tinted, minus glyph instead of plus) whenever the active
+	// mode subtracts — a per-stroke pen-eraser override counts — and an outline
+	// that traces the actual brush tip instead of always a circle, so a square /
+	// star / calligraphy tip is obvious before the first stroke.
+	_syncCursorAppearance() {
+		const cursor = this.ui.cursor;
+		if (!cursor) {
+			return;
+		}
+
+		cursor.classList.toggle('erasing', this.getActiveMode() === 'sub');
+
+		const shape = this.getBrushShape();
+		if (shape !== this._cursorShapeId) {
+			this._cursorShapeId = shape;
+			if (this.ui.cursorShape) {
+				// 'round' keeps the crisp CSS-border circle; every other tip swaps in
+				// a stroked SVG silhouette. getContentSvg (not getIconSvg) so the
+				// outline is sized/centred exactly like the stamp, with no design-box
+				// padding — matters for heart / calligraphy.
+				this.ui.cursorShape.innerHTML = shape === 'round' ? '' : ShapeLibrary.getContentSvg(shape);
+			}
+			cursor.classList.toggle('shaped', shape !== 'round');
+		}
 	}
 
 	_hideCursor() {
