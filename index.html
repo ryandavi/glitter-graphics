@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=3a70d5e1">
+	<link rel="stylesheet" href="css/style.css?v=8042b744">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -1733,7 +1733,7 @@
 
 	<template id="tpl-auto-glitter-match">
 		<div class="auto-glitter-match layer-list-row">
-			<button class="auto-glitter-drag-handle layer-list-drag-handle" type="button"><span class="icon-wrapper active"><svg class="icon"><use href="#icon-grip-vertical"></use></svg></span></button>
+			<button class="auto-glitter-drag-handle layer-list-drag-handle" type="button" aria-label="Reorder color match"><span class="drag-handle-mark" aria-hidden="true"></span></button>
 			<button class="auto-glitter-skip btn-icon-simple icon-wrapper sm layer-action-btn visibility" type="button" aria-pressed="false"><svg class="icon"><use href="#icon-eye"></use></svg><span class="name">Skip color</span></button>
 			<span class="auto-glitter-source-color layer-list-swatch" aria-hidden="true"></span>
 			<div class="auto-glitter-source layer-list-info"><span class="auto-glitter-color-name layer-list-name"></span><small class="auto-glitter-coverage layer-list-description"></small></div>
@@ -1935,14 +1935,14 @@
 							<div class="settings-row-label-main">Watermark</div>
 							<div class="settings-row-control">
 								<label class="switch" for="exportWatermarkEnabled">
-									<input type="checkbox" id="exportWatermarkEnabled" />
+									<input type="checkbox" id="exportWatermarkEnabled" aria-controls="watermarkSelectionRow" aria-expanded="false" />
 									<div class="slider round"></div>
 								</label>
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Add a cheeky little watermark overlay to the exported result.</div>
 					</div>
-					<div class="settings-row" id="watermarkSelectionRow">
+					<div class="settings-row" id="watermarkSelectionRow" hidden>
 						<div class="settings-row-header">
 							<label class="settings-row-label-main" for="exportWatermark">Watermark Style</label>
 							<div class="settings-row-control">
@@ -1955,7 +1955,7 @@
 						<div class="watermark-preview" id="exportWatermarkPreview">
 							<img src="images/watermark/2.png" alt="Rybaby Signature watermark preview" />
 						</div>
-						<div class="settings-row-label-desc">Choosing a style turns Watermark on. The preview is export-only and is not added to the canvas.</div>
+						<div class="settings-row-label-desc">The preview is export-only and is not added to the canvas.</div>
 					</div>
 				</div>
 
@@ -1995,6 +1995,17 @@
 							<select id="exportMp4Quality"><option value="compact">Compact</option><option value="standard">Standard</option><option value="high">High</option></select>
 						</div></div><div class="settings-row-label-desc">Higher quality uses a higher video bitrate and creates a larger file.</div>
 					</div>
+					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherPreset">GIF Look</label><div class="settings-row-control"><select id="exportDitherPreset"><option value="clean">Clean · Automatic</option><option value="classic">Classic Web</option><option value="textured">Textured 64</option><option value="crunchy">Crunchy Pixel</option><option value="shimmer">Sparkle Noise</option><option value="custom">Custom</option></select></div></div><div class="settings-row-label-desc">Choosing a look changes all of the grouped GIF palette and texture settings below. Editing one of those settings changes the look to Custom.</div></div>
+					<div class="settings-subsection export-gif-look-settings" data-export-format-section="gif" role="group" aria-label="Settings controlled by GIF Look" style="padding-left:var(--spacing-md);border-left:2px solid var(--color-border)">
+					<div class="settings-row" data-export-format-section="gif">
+						<div class="settings-row-header"><div class="settings-row-label-main">GIF Colors</div><div class="settings-row-control">
+							<select id="exportColorCount"><option value="auto">Automatic</option><option value="256">256 · Cleanest</option><option value="128">128 · Classic web</option><option value="64">64 · Textured</option><option value="32">32 · Crunchy</option></select>
+						</div></div><div class="settings-row-label-desc">Automatic preserves the encoder’s clean per-frame color choices. Fixed counts use one stable animation palette; fewer colors create stronger texture and smaller files.</div>
+					</div>
+					<div class="settings-row" data-export-format-section="gif">
+						<div class="settings-row-header"><div class="settings-row-label-main">Palette Character</div><div class="settings-row-control"><select id="exportPaletteStyle"><option value="vivid">Vivid Web</option><option value="balanced">Balanced</option><option value="natural">Natural</option><option value="websafe">Web Safe</option></select></div></div>
+						<div class="settings-row-label-desc">Vivid Web gives saturated pinks, blues, and glitter highlights more influence when choosing shared colors.</div>
+					</div>
 					<div class="settings-row" data-export-format-section="gif">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Dithering</div>
@@ -2005,23 +2016,30 @@
 								</label>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Reduces color banding in gradients. Disable for sharper
-							edges.</div>
+						<div class="settings-row-label-desc">Blends the chosen GIF palette into a deliberate pixel texture. Disable for flat art and the sharpest edges.</div>
 					</div>
 					<div class="settings-row" id="ditherTypeRow" data-export-format-section="gif">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Dithering Type</div>
 							<div class="settings-row-control">
 								<select id="exportDitherType">
-									<option value="FloydSteinberg">Floyd-Steinberg</option>
+									<option value="FloydSteinberg-serpentine">Floyd-Steinberg · Smooth</option>
+									<option value="FloydSteinberg">Floyd-Steinberg · Classic</option>
 									<option value="FalseFloydSteinberg">False Floyd-Steinberg</option>
 									<option value="Stucki">Stucki</option>
 									<option value="Atkinson">Atkinson</option>
+									<option value="Bayer">Ordered · Bayer</option>
+									<option value="Halftone">Halftone</option>
 								</select>
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Different algorithms for dithering patterns.</div>
 					</div>
+					<div class="settings-row export-dither-preview-row" data-export-format-section="gif"><canvas id="exportDitherPreview" width="240" height="72" aria-label="Live dithering texture preview" style="display:block;width:min(100%, 240px);height:auto;aspect-ratio:10 / 3;image-rendering:pixelated;border-radius:6px"></canvas><div class="settings-row-label-desc" id="exportDitherPreviewDescription" aria-live="polite"></div></div>
+					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherAmount">Dither Amount</label><output class="setting-value" id="exportDitherAmountValue" for="exportDitherAmount">80%</output></div><input id="exportDitherAmount" type="range" min="0" max="100" step="5" value="80" aria-describedby="exportDitherAmountDescription"><div class="settings-row-label-desc" id="exportDitherAmountDescription">Lower values soften noisy dots; 100% gives full error diffusion or pattern contrast.</div></div>
+					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherScale">Texture Scale</label><div class="settings-row-control"><select id="exportDitherScale"><option value="1">1× Fine</option><option value="2">2×</option><option value="3">3×</option><option value="4">4× Chunky</option></select></div></div><div class="settings-row-label-desc">Enlarges ordered and halftone patterns without lowering the artwork resolution. Diffusion remains naturally one-pixel grain.</div></div>
+					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherTemporalMode">Texture Motion</label><div class="settings-row-control"><select id="exportDitherTemporalMode"><option value="stable">Stable</option><option value="animated">Animated shimmer</option></select></div></div><div class="settings-row-label-desc">Stable avoids crawling. Animated intentionally shifts ordered and halftone patterns between frames.</div></div>
+					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><div class="settings-row-label-main">Protect Edges</div><div class="settings-row-control"><label class="switch" for="exportDitherEdgeProtection"><input type="checkbox" id="exportDitherEdgeProtection"><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Stops diffusion crossing strong boundaries, keeping text, transparency edges, and outlines cleaner.</div></div>
 					<div class="settings-row" data-export-format-section="gif">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Color Quality</div>
@@ -2034,6 +2052,7 @@
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Preserves subtle color differences more accurately. Higher quality takes longer to export but does not change the image dimensions.</div>
+					</div>
 					</div>
 				</div>
 
@@ -2846,7 +2865,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=95ec74b2"></script>
+	<script src="js/core/config.js?v=df7aad32"></script>
 	<script src="js/core/preferences.js?v=216cd049"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
 	<script src="js/core/commands.js?v=263e9de6"></script>
@@ -2867,27 +2886,27 @@
 	<script src="js/effects/mask-geometry.js?v=06dda908"></script>
 	<script src="js/effects/PARITY.js?v=10823f7f"></script>
 	<script src="js/effects/palette-analysis.js?v=0394371e"></script>
-	<script src="js/effects/pixel-effects.js?v=97289451"></script>
+	<script src="js/effects/pixel-effects.js?v=c68cfdfc"></script>
 	<script src="js/effects/effect-source.js?v=0a33d343"></script>
 	<script src="js/effects/slot-effects.js?v=b10d7733"></script>
-	<script src="js/ui/panel-renderer.js?v=c6812fa4"></script>
-	<script src="js/ui/settings-store.js?v=2e82320b"></script>
+	<script src="js/ui/panel-renderer.js?v=7af88ed0"></script>
+	<script src="js/ui/settings-store.js?v=f21628c7"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
-	<script src="js/ui/editor-settings.js?v=86d99dd8"></script>
-	<script src="js/ui/editor-panels.js?v=19d67fa3"></script>
+	<script src="js/ui/editor-settings.js?v=c6963b98"></script>
+	<script src="js/ui/editor-panels.js?v=2b18172f"></script>
 	<script src="js/ui/editor-disclosures.js?v=f84c7ddd"></script>
 	<script src="js/ui/transform-panel.js?v=6330ed7e"></script>
 	<script src="js/transforms/editor-transform.js?v=43457e31"></script>
 	<script src="js/ui/document-start.js?v=bd0b7429"></script>
-		<script src="js/ui/modals-wiring.js?v=8d4c1f02"></script>
+		<script src="js/ui/modals-wiring.js?v=6391abe4"></script>
 	<script src="js/ui/layer-panel.js?v=87c24a9d"></script>
 	<script src="js/ui/canvas-gestures.js?v=fce9978d"></script>
 	<script src="js/ui/canvas-size.js?v=53305937"></script>
 	<script src="js/core/canvas-resize.js?v=fd22383b"></script>
-		<script src="js/ui/hints.js?v=1b9e63af"></script>
+		<script src="js/ui/hints.js?v=a9e46b7c"></script>
 	<script src="js/ui/picker-session.js?v=164f3036"></script>
-	<script src="js/ui/context-toolbar-renderer.js?v=c44c65d8"></script>
+	<script src="js/ui/context-toolbar-renderer.js?v=17884f04"></script>
 	<script src="js/ui/modal-filter.js?v=b00d889b"></script>
 	<script src="js/ui/notify.js?v=b117c567"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
@@ -2895,8 +2914,9 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
-	<script src="js/classes/ExportTimeline.js?v=93922fcd"></script>
-	<script src="js/classes/GifExporter.js?v=0724b8e0"></script>
+	<script src="js/classes/ExportTimeline.js?v=15c2fe36"></script>
+	<script src="js/classes/GifPalette.js?v=8ef21a75"></script>
+	<script src="js/classes/GifExporter.js?v=96a3990a"></script>
 	<script src="js/classes/Mp4Exporter.js?v=2ffe9156"></script>
 	<script src="js/classes/ViewportManager.js?v=8791e465"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>
@@ -2908,22 +2928,22 @@
 	<script src="js/classes/MaskEditor.js?v=1af1b8b0"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=72e73ea0"></script>
+	<script src="js/classes/LayerManager.js?v=a96a75a7"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=06e2b458"></script>
 	<script src="js/classes/ContentManager.js?v=a71a7157"></script>
-	<script src="js/classes/BrushTipManager.js?v=b8c305de"></script>
+	<script src="js/classes/BrushTipManager.js?v=68f1cea1"></script>
 	<script src="js/classes/LayerTransform.js?v=8ac8c72f"></script>
 	<script src="js/classes/GlitterManager.js?v=3c3bfe93"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=024b743e"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=0fa3641a"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=e0f15cce"></script>
-	<script src="js/classes/TextGlitterManager.js?v=43fa8d71"></script>
+	<script src="js/classes/TextGlitterManager.js?v=cd718d57"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=c2132469"></script>
 	<script src="js/classes/StickerManager.js?v=fc0abfac"></script>
 	<script src="js/classes/GroupTransformManager.js?v=f19f8e9d"></script>
 
-		<script src="js/classes/MobileManager.js?v=f2740bc8"></script>
+		<script src="js/classes/MobileManager.js?v=3e178244"></script>
 
 	<!-- App -->
 	<script src="js/app.js?v=20beac51"></script>

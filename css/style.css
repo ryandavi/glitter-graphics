@@ -1571,13 +1571,33 @@ input[type=range]:disabled {
   color: var(--color-text-secondary);
   cursor: grab;
   touch-action: none;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
 }
 .layer-list-drag-handle:active {
   cursor: grabbing;
 }
-.layer-list-drag-handle > .icon-wrapper > .icon {
-  width: 16px;
-  height: 16px;
+.layer-list-drag-handle:hover:not(:disabled) {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+.layer-list-drag-handle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+.layer-list-drag-handle:disabled {
+  opacity: var(--disabled-opacity);
+  cursor: default;
+}
+
+.drag-handle-mark {
+  display: block;
+  width: 6px;
+  height: 14px;
+  margin: auto;
+  background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 4px);
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .layer-list-swatch {
@@ -2730,6 +2750,8 @@ input[type=range]:disabled {
 .layers-section > .layers-list > .layer-item {
   margin-bottom: var(--spacing-sm);
   cursor: pointer;
+  padding: var(--spacing-sm);
+  gap: var(--spacing-xs);
   transform: translateZ(0);
 }
 .layers-section > .layers-list > .layer-item.active {
@@ -2753,14 +2775,11 @@ input[type=range]:disabled {
 .layers-section > .layers-list > .layer-item.is-locked > .layer-drag-handle {
   cursor: default;
 }
-.layers-section > .layers-list > .layer-item.is-locked > .layer-drag-handle > .icon:not(.active) {
-  opacity: 0.35;
-}
 .layers-section > .layers-list > .layer-item > .layer-swatch {
   background-size: cover;
   transition: opacity var(--transition-fast);
   transform: translateZ(0);
-  margin-right: var(--spacing-sm);
+  margin-right: var(--spacing-xs);
 }
 .layers-section > .layers-list > .layer-item > .layer-swatch.sticker {
   background-size: contain;
@@ -2821,11 +2840,12 @@ input[type=range]:disabled {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-transform: uppercase;
+  text-transform: none;
 }
 .layers-section > .layers-list > .layer-item > .layer-info > .layer-color {
   font-size: var(--font-size-sm);
   letter-spacing: 0.5px;
+  letter-spacing: 0;
   color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -2839,12 +2859,12 @@ input[type=range]:disabled {
 }
 .layers-section > .layers-list > .layer-item > .layer-info > .layer-meta > .layer-type {
   font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-transform: uppercase;
+  text-transform: none;
   min-width: 0;
 }
 .layers-section > .layers-list > .layer-item > .layer-info .layer-badge {
@@ -2866,6 +2886,8 @@ input[type=range]:disabled {
 }
 .layers-section > .layers-list > .layer-item > .layer-actions {
   display: flex;
+  align-items: center;
+  gap: var(--spacing-2xs);
   flex-shrink: 0;
 }
 .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn {
@@ -2899,17 +2921,18 @@ input[type=range]:disabled {
 .layers-section > .layers-list > .layer-item > .layer-actions > .layer-action-btn.clone {
   display: none;
 }
+.layers-section > .layers-list > .layer-item > .layer-visibility {
+  flex: 0 0 var(--icon-size-sm);
+  color: var(--color-icon-strong);
+}
+.layers-section > .layers-list > .layer-item > .layer-visibility.hidden {
+  color: var(--color-text-tertiary);
+}
 .layers-section > .layers-list > .layer-item > .layer-drag-handle {
-  display: none;
-  transition: opacity var(--transition-fast);
-}
-.layers-section > .layers-list > .layer-item > .layer-drag-handle > .icon > .icon {
-  width: 16px;
-  height: 16px;
-}
-.layers-section > .layers-list > .layer-item > .layer-drag-handle > .icon:not(.active) {
-  opacity: 0.2;
-  cursor: default;
+  display: flex;
+  width: 18px;
+  height: var(--icon-size-sm);
+  flex-basis: 18px;
 }
 .layers-section > .layers-list > .layer-insertion-line {
   position: absolute;
@@ -3924,17 +3947,7 @@ body.mask-editing .sticker-element {
   background: transparent;
   cursor: grab;
   touch-action: none;
-}
-.zoom-controls .context-toolbar-handle span,
-.layer-center-controls .context-toolbar-handle span,
-.pan-controls .context-toolbar-handle span,
-.color-picker-controls .context-toolbar-handle span,
-.mask-brush-controls .context-toolbar-handle span {
-  display: block;
-  width: 6px;
-  height: 14px;
-  margin: auto;
-  background: repeating-linear-gradient(90deg, var(--color-text-secondary) 0 2px, transparent 2px 4px);
+  color: var(--color-text-secondary);
 }
 .zoom-controls.is-dragging,
 .layer-center-controls.is-dragging,

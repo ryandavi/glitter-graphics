@@ -254,7 +254,7 @@ const CONFIG = deepFreeze({
 				detail: 4,
 				cleanEdges: true,
 				dither: {
-					algorithm: 'bayer', angle: 45, strength: 100,
+					algorithm: 'bayer', angle: 45, strength: 100, scale: 1, edgeProtection: true, serpentine: true,
 					palette: 'auto', duotone: ['#000000', '#ffffff'], shimmer: false
 				}
 			},
@@ -637,6 +637,7 @@ const CONFIG = deepFreeze({
 			pixelEffectsMergeDistinctness: { label: 'Combine Similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
 			pixelEffectsDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
 			pixelEffectsStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },
+			pixelEffectsDitherScale: { label: 'Texture Scale', unit: '×', min: 1, max: 4, step: 1, value: 1 },
 			pixelEffectsAngle: { label: 'Angle', unit: 'Â°', min: 0, max: 360, step: 1, value: 45 },
 			maskBrushSize: { label: 'Size', unit: 'px', min: 1, max: 300, value: 40 },
 			maskBrushSoftness: { label: 'Softness', unit: '%', min: 0, max: 100, value: 0 },
@@ -727,8 +728,15 @@ const CONFIG = deepFreeze({
 			transparency: true,
 			matteColor: '#ffffff',
 			quality: 10,
-			ditherEnabled: true,
-			ditherType: 'FloydSteinberg',
+			ditherEnabled: false,
+			ditherType: 'FloydSteinberg-serpentine',
+			colorCount: 'auto',
+			ditherAmount: 80,
+			ditherScale: 1,
+			ditherTemporalMode: 'stable',
+			ditherEdgeProtection: true,
+			paletteStyle: 'balanced',
+			ditherPreset: 'clean',
 			frameDelay: 110,
 			maxFrames: 60,
 			frameSkip: 1,
@@ -1267,6 +1275,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'host', id: 'pixelEffectsDuotone', classes: 'text-effect-color-row pixel-effects-duotone' },
 						{ kind: 'card', title: 'Pattern', classes: 'pixel-effects-control-section', items: [
 							{ kind: 'slider', id: 'pixelEffectsStrength', slider: 'pixelEffectsStrength' },
+							{ kind: 'slider', id: 'pixelEffectsDitherScale', slider: 'pixelEffectsDitherScale' },
 							{ kind: 'slider', id: 'pixelEffectsAngle', slider: 'pixelEffectsAngle' }
 						] },
 						{ kind: 'card', title: 'Shimmer', classes: 'pixel-effects-control-section', items: [

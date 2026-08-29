@@ -1279,13 +1279,16 @@ class LayerManager {
 			layerEl.classList.add('active');
 		}
 
-		// 1. Drag Handle (icon shown active only for unlocked layers)
-		const dragHandle = document.createElement('div');
+		// 1. Reorder handle. The mark is shared with context bars and Auto Glitter.
+		const dragHandle = document.createElement('button');
+		dragHandle.type = 'button';
 		dragHandle.className = 'layer-drag-handle layer-list-drag-handle';
-		const dragIcon = document.createElement('div');
-		dragIcon.className = `icon icon-wrapper${layer.locked ? '' : ' active'}`;
-		dragIcon.appendChild(createIcon('grip-vertical'));
-		dragHandle.appendChild(dragIcon);
+		dragHandle.disabled = Boolean(layer.locked);
+		dragHandle.setAttribute('aria-label', layer.locked ? 'Layer is locked' : `Reorder ${layer.name || 'layer'}`);
+		const dragMark = document.createElement('span');
+		dragMark.className = 'drag-handle-mark';
+		dragMark.setAttribute('aria-hidden', 'true');
+		dragHandle.appendChild(dragMark);
 
 		// 2. Swatch (Thumbnail)
 		const swatch = document.createElement('div');
@@ -1366,7 +1369,7 @@ class LayerManager {
 			case LayerType.STICKER: {
 				const sticker = this.editor.stickerManager.getItemById(layer.stickerSourceId); // Changed this line
 				nameText.textContent = layer.name || 'Sticker';
-				typeText.textContent = sticker?.category ? `Sticker / ${sticker.category}` : 'Sticker';
+				typeText.textContent = sticker?.category ? `Sticker · ${sticker.category}` : 'Sticker';
 				break;
 			}
 			case LayerType.GLITTER_FILL: {
@@ -1375,30 +1378,31 @@ class LayerManager {
 					|| fill.glitter?.name
 					|| fill.name
 					|| `${fill.modeLabel} Fill`;
-				typeText.textContent = `Fill / ${fill.mode === 'none' ? 'None' : fill.modeLabel}`;
+				typeText.textContent = `Fill · ${fill.mode === 'none' ? 'None' : fill.modeLabel}`;
 				break;
 			}
 			case LayerType.TEXT_GLITTER: {
 				const fill = getFillDisplay(layer.textData?.fill, layer.selectedGlitterId);
 				nameText.textContent = layer.name || 'Text';
-				typeText.textContent = `Text / ${fill.modeLabel} Fill`;
+				typeText.textContent = `Text · ${fill.modeLabel}`;
 				break;
 			}
 			case LayerType.SHAPE: {
 				const fill = getFillDisplay(layer.shapeData?.fill, layer.selectedGlitterId);
 				nameText.textContent = layer.name || 'Shape';
-				typeText.textContent = `Shape / ${fill.modeLabel} Fill`;
+				typeText.textContent = `Shape · ${fill.modeLabel}`;
 				break;
 			}
 			case LayerType.BASE_IMAGE:
 				nameText.textContent = 'Base Image';
-				typeText.textContent = `Fixed Background / ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}`;
+				typeText.textContent = `Background · ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}`;
 				break;
 			default:
 				nameText.textContent = 'Unknown Layer';
 				typeText.textContent = 'Unknown';
 		}
 
+		typeText.title = typeText.textContent;
 		metaRow.appendChild(typeText);
 
 		LAYER_BADGES.forEach((badgeConfig) => {
@@ -1426,13 +1430,9 @@ class LayerManager {
 
 
 
-		// 4. Actions
-		const actions = document.createElement('div');
-		actions.className = 'layer-actions';
-
-		// Visibility is always first and uses a distinct state icon.
+		// 4. Visibility belongs with layer identity, matching modern layer panels.
 		const visBtn = this.createIconButton({
-			className: 'layer-action-btn visibility' + (!layer.visible ? ' hidden' : ''),
+			className: 'layer-action-btn layer-visibility visibility' + (!layer.visible ? ' hidden' : ''),
 			title: layer.visible ? 'Hide layer' : 'Show layer',
 			iconType: layer.visible ? 'eye' : 'eye-slash',
 			onClick: (e) => {
@@ -1440,7 +1440,10 @@ class LayerManager {
 				this.toggleLayerVisibility(layer.id);
 			}
 		});
-		actions.appendChild(visBtn);
+
+		// 5. Right-side actions are reserved for state and secondary actions.
+		const actions = document.createElement('div');
+		actions.className = 'layer-actions';
 
 		const isBaseLayer = layer.type === LayerType.BASE_IMAGE;
 		const lockBtn = this.createIconButton({
@@ -1489,7 +1492,7 @@ class LayerManager {
 			});
 		actions.appendChild(delBtn);
 
-		layerEl.append(dragHandle, swatch, info, actions);
+		layerEl.append(dragHandle, visBtn, swatch, info, actions);
 		layerEl.onclick = (event) => {
 			// Dispatch custom event for mobile manager
 			window.dispatchEvent(new CustomEvent('layerItemClick', {

@@ -136,8 +136,8 @@ async function main() {
 	const tinyLayerA = frame(0, 255, 16);
 	const tinyLayerB = frame(0, 255, 16);
 	tinyLayerB.data[0] = 255;
-	assert(CompositeFrameReducer.difference(tinyLayerA, tinyLayerB) < 0.008,
-		'A tiny animated region was not weighted by final canvas coverage.');
+	assert(CompositeFrameReducer.difference(tinyLayerA, tinyLayerB) > 0.02,
+		'A tiny high-contrast sparkle was not protected from smart reduction.');
 
 	assert(CompositeFrameReducer.hash(frame(12)) === '2x2:1598205349',
 		'Golden no-reduction composed-frame hash changed.');

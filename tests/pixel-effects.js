@@ -23,6 +23,8 @@ for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 
 const normalized = PixelEffects.normalizeSettings({}, config);
 assert.deepStrictEqual(normalized.dither.duotone, ['#000000', '#ffffff'], 'defaults normalize into independent state');
+assert.strictEqual(normalized.dither.scale, 1, 'dither texture scale has a stable one-pixel default');
+assert.strictEqual(normalized.dither.edgeProtection, true, 'dither edge protection defaults on');
 const normalizedLegacy = PixelEffects.normalizeSettings({ enabled: true, colorCount: 3, mergeDistinctness: 0.08 }, config);
 assert.strictEqual(normalizedLegacy.paletteEnabled, true, 'legacy Posterize enabled migrates to an enabled Palette card');
 assert.strictEqual(normalizedLegacy.paletteMode, 'posterize', 'legacy Posterize enabled migrates to Palette mode');

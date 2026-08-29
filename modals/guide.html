@@ -1737,7 +1737,13 @@
                     <span class="icon-wrapper sm"><svg class="icon"><use href="#icon-minus"></use></svg></span>
                 </div>
                 <div class="guide-item-content">
-                    <p><strong>Quality</strong> – Color Quality preserves subtler differences at the cost of export time. Dithering reduces GIF color banding but is disabled with GIF transparency so transparent pixels remain reliable. MP4 adds Compact, Standard, and High bitrate presets.</p>
+					<p><strong>Quality</strong> – Start with <strong>Clean · Automatic</strong>, which keeps the encoder’s proven per-frame color selection and adds no export texture. The other GIF Look presets intentionally switch to a shared palette: 128 gives a classic-web balance, while 64 and 32 create progressively chunkier texture. The live preview shows the selected dither against gradients and hard edges. MP4 adds Compact, Standard, and High bitrate presets.</p>
+					<ul>
+						<li><strong>Creative dithering</strong> in the Base Image Palette effect is part of the artwork. It appears in preview, PNG-style rendering, GIF, and MP4 and may intentionally shimmer.</li>
+						<li><strong>Export dithering</strong> happens afterward, only while fitting the completed artwork into a GIF palette. Keep it stable for clean animation or animate Bayer/Halftone for intentional noise.</li>
+						<li>Using both is allowed. It creates a second, finer export texture; the result screen calls this out so double dithering is deliberate.</li>
+						<li><strong>Texture Scale</strong> enlarges the pattern without lowering artwork resolution. Pixelate changes the artwork itself by making larger color cells.</li>
+					</ul>
                 </div>
             </div>
 

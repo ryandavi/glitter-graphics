@@ -403,9 +403,24 @@ input[type="range"] {
 	color: var(--color-text-secondary);
 	cursor: grab;
 	touch-action: none;
+	border-radius: var(--radius-sm);
+	transition: background-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
 
 	&:active { cursor: grabbing; }
-	>.icon-wrapper>.icon { width: 16px; height: 16px; }
+	&:hover:not(:disabled) { background: var(--color-bg-secondary); color: var(--color-text-primary); }
+	&:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+	&:disabled { opacity: var(--disabled-opacity); cursor: default; }
+}
+
+// One reorder language across floating context bars and sortable panel rows.
+.drag-handle-mark {
+	display: block;
+	width: 6px;
+	height: 14px;
+	margin: auto;
+	background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 4px);
+	opacity: .8;
+	pointer-events: none;
 }
 
 .layer-list-swatch {

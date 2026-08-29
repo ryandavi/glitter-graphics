@@ -85,7 +85,7 @@ class BaseBackgroundManager {
 			mergeDistinctness: id('pixelEffectsMergeDistinctness'), detail: id('pixelEffectsDetail'),
 			cleanEdges: id('pixelEffectsCleanEdges'), paletteControls: id('pixelEffectsPaletteControls'),
 			posterizeControls: id('pixelEffectsPosterizeControls'), ditherControls: id('pixelEffectsDitherControls'),
-			algorithm: id('pixelEffectsAlgorithm'), ditherPalette: id('pixelEffectsDitherPalette'),
+			algorithm: id('pixelEffectsAlgorithm'), ditherPalette: id('pixelEffectsDitherPalette'), ditherScale: id('pixelEffectsDitherScale'),
 			duotone: id('pixelEffectsDuotone'), strength: id('pixelEffectsStrength'), angle: id('pixelEffectsAngle'),
 			shimmer: id('pixelEffectsShimmer'), status: id('pixelEffectsStatus')
 		});
@@ -177,6 +177,7 @@ class BaseBackgroundManager {
 		bindRange('pixelEffectsMergeDistinctness', 'mergeDistinctness', 'pixelEffectsMergeDistinctness');
 		bindRange('pixelEffectsDetail', 'detail', 'pixelEffectsDetail');
 		bindRange('pixelEffectsStrength', 'dither.strength', 'pixelEffectsStrength');
+		bindRange('pixelEffectsDitherScale', 'dither.scale', 'pixelEffectsDitherScale');
 		bindRange('pixelEffectsAngle', 'dither.angle', 'pixelEffectsAngle');
 		this.bindPixelSegment(this.ui.paletteMode, 'paletteMode');
 		this.bindPixelSegment(this.ui.paletteStyle, 'paletteStyle');
@@ -578,6 +579,7 @@ class BaseBackgroundManager {
 		setRange('pixelEffectsMergeDistinctness', settings.mergeDistinctness, '');
 		setRange('pixelEffectsDetail', settings.detail, 'px');
 		setRange('pixelEffectsStrength', settings.dither.strength, '%');
+		setRange('pixelEffectsDitherScale', settings.dither.scale, '×');
 		setRange('pixelEffectsAngle', settings.dither.angle, '°');
 		if (this.ui.cleanEdges) this.ui.cleanEdges.checked = settings.cleanEdges;
 		if (this.ui.shimmer) {
@@ -591,6 +593,7 @@ class BaseBackgroundManager {
 		if (this.ui.ditherControls) this.ui.ditherControls.hidden = settings.paletteMode !== 'dither';
 		if (this.ui.duotone) this.ui.duotone.hidden = settings.dither.palette !== 'duotone';
 		if (this.ui.angle) this.ui.angle.closest('.setting-column').hidden = settings.dither.algorithm !== 'halftone';
+		if (this.ui.ditherScale) this.ui.ditherScale.closest('.setting-column').hidden = !['bayer', 'halftone'].includes(settings.dither.algorithm);
 	}
 
 	updateGlitterInfo(layer) {

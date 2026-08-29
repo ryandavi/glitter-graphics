@@ -73,16 +73,22 @@ class CompositeFrameReducer {
 		const dataB = right.data;
 		const stride = sampled ? Math.max(4, Math.floor(dataA.length / 4096 / 4) * 4) : 4;
 		let error = 0;
+		let peakError = 0;
 		let samples = 0;
 		for (let index = 0; index < dataA.length; index += stride) {
 			const red = Math.abs(dataA[index] - dataB[index]);
 			const green = Math.abs(dataA[index + 1] - dataB[index + 1]);
 			const blue = Math.abs(dataA[index + 2] - dataB[index + 2]);
 			const alpha = Math.abs(dataA[index + 3] - dataB[index + 3]);
-			error += (red + green + blue + alpha) / (255 * 4);
+			const pixelError = (red + green + blue + alpha) / (255 * 4);
+			error += pixelError;
+			peakError = Math.max(peakError, pixelError);
 			samples++;
 		}
-		return samples ? error / samples : 0;
+		// Whole-canvas averages erase the tiny, bright flashes that define glitter.
+		// A small peak term protects those intentional details without outweighing
+		// the mean error for broad motion or gradients.
+		return samples ? Math.max(error / samples, peakError * 0.09) : 0;
 	}
 
 	reduce(input, { enabled, visualErrorThreshold, preferredFrameBudget, hardFrameLimit }) {

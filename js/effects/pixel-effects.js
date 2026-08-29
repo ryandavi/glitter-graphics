@@ -256,9 +256,12 @@
 			detail: clamp(Math.round(finiteNumber(source.detail, defaults.detail)), 1, 64),
 			cleanEdges: source.cleanEdges == null ? defaults.cleanEdges : Boolean(source.cleanEdges),
 			dither: {
-				algorithm: ['bayer', 'floyd', 'atkinson', 'halftone'].includes(dither.algorithm) ? dither.algorithm : defaults.dither.algorithm,
+				algorithm: ['bayer', 'floyd', 'falsefloyd', 'stucki', 'atkinson', 'halftone'].includes(dither.algorithm) ? dither.algorithm : defaults.dither.algorithm,
 				angle: clamp(finiteNumber(dither.angle, defaults.dither.angle), 0, 360),
 				strength: clamp(finiteNumber(dither.strength, defaults.dither.strength), 0, 100),
+				scale: clamp(Math.round(finiteNumber(dither.scale, defaults.dither.scale || 1)), 1, 4),
+				edgeProtection: dither.edgeProtection == null ? defaults.dither.edgeProtection !== false : Boolean(dither.edgeProtection),
+				serpentine: dither.serpentine == null ? defaults.dither.serpentine !== false : Boolean(dither.serpentine),
 				palette: dither.palette === 'auto' || dither.palette === 'duotone' || config.presets[dither.palette] ? dither.palette : defaults.dither.palette,
 				duotone: duotone.map((color, index) => /^#[0-9a-f]{6}$/i.test(color) ? color : defaults.dither.duotone[index]),
 				shimmer: Boolean(dither.shimmer)
@@ -280,6 +283,7 @@
 		const strength = settings.dither.strength / 100;
 		const shimmer = settings.dither.shimmer && animation ? frameIndex * animation.offsetPerFrame : 0;
 		const angle = settings.dither.angle * Math.PI / 180;
+		const scale = settings.dither.scale || 1;
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			const offset = (y * width + x) * 4;
 			if (!source[offset + 3]) { output[offset + 3] = source[offset + 3]; continue; }
@@ -287,8 +291,8 @@
 			const pair = nearestTwo(color, palette);
 			let chosen = pair[0].index;
 			if (pair.length > 1 && strength > 0) {
-				const rx = Math.round(x * Math.cos(angle) - y * Math.sin(angle));
-				const ry = Math.round(x * Math.sin(angle) + y * Math.cos(angle));
+				const rx = Math.round((x * Math.cos(angle) - y * Math.sin(angle)) / scale);
+				const ry = Math.round((x * Math.sin(angle) + y * Math.cos(angle)) / scale);
 				const threshold = (BAYER_8[((ry + shimmer) & 7) * 8 + ((rx + shimmer) & 7)] + 0.5) / 64;
 				const ratio = pair[0].distance / Math.max(1, pair[0].distance + pair[1].distance);
 				if (ratio * strength > threshold) chosen = pair[1].index;
@@ -306,9 +310,13 @@
 		const strength = settings.dither.strength / 100;
 		const kernels = algorithm === 'atkinson'
 			? [[1, 0, 1 / 8], [2, 0, 1 / 8], [-1, 1, 1 / 8], [0, 1, 1 / 8], [1, 1, 1 / 8], [0, 2, 1 / 8]]
-			: [[1, 0, 7 / 16], [-1, 1, 3 / 16], [0, 1, 5 / 16], [1, 1, 1 / 16]];
+			: algorithm === 'falsefloyd'
+				? [[1, 0, 3 / 8], [0, 1, 3 / 8], [1, 1, 2 / 8]]
+				: algorithm === 'stucki'
+					? [[1, 0, 8 / 42], [2, 0, 4 / 42], [-2, 1, 2 / 42], [-1, 1, 4 / 42], [0, 1, 8 / 42], [1, 1, 4 / 42], [2, 1, 2 / 42], [-2, 2, 1 / 42], [-1, 2, 2 / 42], [0, 2, 4 / 42], [1, 2, 2 / 42], [2, 2, 1 / 42]]
+					: [[1, 0, 7 / 16], [-1, 1, 3 / 16], [0, 1, 5 / 16], [1, 1, 1 / 16]];
 		for (let y = 0; y < height; y++) {
-			const reverse = y % 2 === 1;
+			const reverse = settings.dither.serpentine && y % 2 === 1;
 			for (let step = 0; step < width; step++) {
 				const x = reverse ? width - 1 - step : step;
 				const offset = (y * width + x) * 4;
@@ -322,6 +330,10 @@
 					const ny = y + dy;
 					if (nx < 0 || nx >= width || ny >= height) continue;
 					const next = (ny * width + nx) * 4;
+					if (settings.dither.edgeProtection && colorDistance(
+						[source[offset], source[offset + 1], source[offset + 2]],
+						[source[next], source[next + 1], source[next + 2]]
+					) > 32 * 32) continue;
 					for (let channel = 0; channel < 3; channel++) work[next + channel] += (current[channel] - chosen[channel]) * weight * strength;
 				}
 			}
@@ -334,7 +346,7 @@
 		const strength = settings.dither.strength / 100;
 		const radians = settings.dither.angle * Math.PI / 180;
 		const shimmer = settings.dither.shimmer && animation ? frameIndex * animation.offsetPerFrame : 0;
-		const cell = 8;
+		const cell = 8 * (settings.dither.scale || 1);
 		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
 			const offset = (y * width + x) * 4;
 			if (!source[offset + 3]) { output[offset + 3] = source[offset + 3]; continue; }
@@ -369,7 +381,7 @@
 		const reduced = pixelSize > 1 ? downsampleCells(source, width, height, pixelSize) : { pixels, width, height };
 		const shimmerAnimation = getShimmerAnimation(settings.dither.algorithm, config);
 		let dithered;
-		if (settings.dither.algorithm === 'floyd' || settings.dither.algorithm === 'atkinson') {
+		if (['floyd', 'falsefloyd', 'stucki', 'atkinson'].includes(settings.dither.algorithm)) {
 			dithered = diffusionDither(reduced.pixels, reduced.width, reduced.height, palette, settings, settings.dither.algorithm);
 		} else if (settings.dither.algorithm === 'halftone') {
 			dithered = halftoneDither(reduced.pixels, reduced.width, reduced.height, palette, settings, frameIndex, shimmerAnimation);

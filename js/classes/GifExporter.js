@@ -159,6 +159,42 @@ class GifExporter {
 		return null;
 	}
 
+	_applyGifDither(frames, paletteBytes, settings) {
+		if (!settings.ditherEnabled || settings.hasTransparency) return frames;
+		const palette = [];
+		for (let index = 0; index < paletteBytes.length; index += 3) palette.push(paletteBytes.slice(index, index + 3));
+		const type = String(settings.ditherType || '').toLowerCase();
+		const algorithm = type.includes('atkinson') ? 'atkinson'
+			: type.includes('falsefloyd') ? 'falsefloyd'
+				: type.includes('stucki') ? 'stucki'
+			: type.includes('bayer') ? 'bayer'
+				: type.includes('halftone') ? 'halftone' : 'floyd';
+		return frames.map((frame, frameIndex) => new ImageData(
+			GlitterPixelEffects.applyPixelEffects(frame.data, frame.width, frame.height, {
+				pixelateEnabled: false,
+				paletteEnabled: true,
+				pixelSize: 1,
+				paletteMode: 'dither',
+				dither: {
+					algorithm,
+					angle: 45,
+					strength: settings.ditherAmount,
+					scale: settings.ditherScale,
+					edgeProtection: settings.ditherEdgeProtection,
+					serpentine: type.includes('serpentine'),
+					shimmer: settings.ditherTemporalMode === 'animated',
+					palette: 'auto',
+					duotone: ['#000000', '#ffffff']
+				}
+			}, {
+				pixelEffects: CONFIG.tools.pixelEffects,
+				autoGlitter: CONFIG.tools.autoGlitter
+			}, frameIndex, palette),
+			frame.width,
+			frame.height
+		));
+	}
+
 	_getReducedFrameIndex(frameIndex, originalFrameCount, reducedFrameCount = null) {
 		if (!originalFrameCount) {
 			return 0;
@@ -1267,7 +1303,17 @@ class GifExporter {
 		plan.height = canvasData.height;
 		plan.frameDelay = plan.totalDuration / plan.frames.length;
 		plan.colorAnalysis = this._analyzeGifColors(plan.frames);
-		if (plan.colorAnalysis) plan.colorAnalysis.ditherEnabled = Boolean(exportSettings.ditherEnabled);
+		const gifColorCount = GifPalette.resolveColorCount(exportSettings.colorCount, plan.colorAnalysis);
+		const useNativePalette = exportSettings.colorCount === 'auto' && !exportSettings.ditherEnabled;
+		if (plan.colorAnalysis) {
+			plan.colorAnalysis.ditherEnabled = Boolean(exportSettings.ditherEnabled && !needsTransparency);
+			plan.colorAnalysis.paletteSize = gifColorCount;
+			plan.colorAnalysis.paletteMode = useNativePalette ? 'native' : 'shared';
+			plan.colorAnalysis.authoredDither = visibleLayers.some((layer) => {
+				const effects = layer.background?.pixelEffects;
+				return effects?.paletteEnabled && effects.paletteMode === 'dither';
+			});
+		}
 		plan.reductions = [];
 		if (plan.reduction.exactDuplicatesMerged) plan.reductions.push({ reason: 'exact-duplicates', count: plan.reduction.exactDuplicatesMerged });
 		if (plan.reduction.nearDuplicatesMerged) plan.reductions.push({ reason: 'near-duplicates', count: plan.reduction.nearDuplicatesMerged });
@@ -1285,16 +1331,27 @@ class GifExporter {
 			dbg(`[GifExporter] Using fixed quality: ${finalQuality}`);
 		}
 
+		// Preserve gif.js's mature per-frame NeuQuant path for the clean default.
+		// The custom shared palette is an explicit aesthetic choice, not a tax on
+		// every export.
+		const globalPalette = useNativePalette ? null : GifPalette.build(plan.frames, gifColorCount, {
+			transparentColor: needsTransparency && safeKey ? safeKey.hex : null,
+			style: exportSettings.paletteStyle,
+			maxSamples: exportSettings.quality <= 1 ? 524288 : (exportSettings.quality <= 10 ? 262144 : 131072)
+		});
+		const encodedFrames = useNativePalette ? plan.frames : this._applyGifDither(plan.frames, globalPalette, {
+			...exportSettings,
+			hasTransparency: needsTransparency
+		});
 		const gifOptions = {
 			workers: this.config.workers,
 			quality: finalQuality,
 			width: canvasData.width,
 			height: canvasData.height,
 			workerScript: this.config.workerScript,
-			dither: needsTransparency
-				? false
-				: (exportSettings.ditherEnabled ? exportSettings.ditherType : false)
+			dither: false
 		};
+		if (globalPalette) gifOptions.globalPalette = globalPalette;
 
 		if (needsTransparency && safeKey) {
 			gifOptions.transparent = safeKey.hex;
@@ -1307,7 +1364,7 @@ class GifExporter {
 		}
 
 		const gif = new GIF(gifOptions);
-		plan.frames.forEach((frame, index) => gif.addFrame(frame, {
+		encodedFrames.forEach((frame, index) => gif.addFrame(frame, {
 			delay: plan.frameDurations[index],
 			copy: true
 		}));
@@ -1335,6 +1392,7 @@ class GifExporter {
 			totalDuration: plan.totalDuration,
 			workers: this.config.workers,
 			quality: exportSettings.quality,
+			colors: gifColorCount,
 			key: safeKey,
 			transparencyActive: needsTransparency
 		});
@@ -2125,12 +2183,19 @@ class GifExporter {
 		const formatNotices = document.getElementById('exportFormatNotices');
 		const colorNoticeText = document.getElementById('exportColorNoticeText');
 		const colorAnalysis = options.timelinePlan?.colorAnalysis;
-		const showColorNotice = !isVideo && Boolean(colorAnalysis?.significant);
+		const showColorNotice = !isVideo && Boolean(colorAnalysis?.significant || (colorAnalysis?.authoredDither && colorAnalysis?.ditherEnabled));
 		if (formatNotices) formatNotices.hidden = !showColorNotice;
 		if (showColorNotice && colorNoticeText) {
-			colorNoticeText.textContent = colorAnalysis.ditherEnabled
-				? 'GIFs can display up to 256 colors in each frame. This artwork uses many more, so similar colors were blended together. Dithering helps gradients look smoother, but may add a fine texture.'
-				: 'GIFs can display up to 256 colors in each frame. This artwork uses many more, so similar colors were blended together. Gradients and photos may show bands of color; turn on Dithering in Export Settings to smooth them.';
+			if (colorAnalysis.paletteMode === 'native') {
+				colorNoticeText.textContent = 'GIF colors were chosen automatically for each frame without adding an export texture.';
+			} else {
+				const authoredNote = colorAnalysis.authoredDither && colorAnalysis.ditherEnabled
+					? ' The artwork already contains a creative dither effect, so this adds a second, finer export texture.'
+					: '';
+				colorNoticeText.textContent = (colorAnalysis.ditherEnabled
+					? `This GIF uses one stable ${colorAnalysis.paletteSize}-color palette across the animation. Dithering blends missing shades into a consistent pixel texture.`
+					: `This GIF uses one stable ${colorAnalysis.paletteSize}-color palette across the animation. Gradients may show intentional color bands with dithering off.`) + authoredNote;
+			}
 		}
 
 		const timelinePlan = options.timelinePlan?.reduction ? options.timelinePlan : null;

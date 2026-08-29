@@ -198,6 +198,8 @@
 		>.layer-item {
 			margin-bottom: var(--spacing-sm);
 			cursor: pointer;
+			padding: var(--spacing-sm);
+			gap: var(--spacing-xs);
 
 			transform: translateZ(0); // ios fix for radius + hidden
 
@@ -228,11 +230,7 @@
 				}
 			}
 
-			&.is-locked > .layer-drag-handle {
-				cursor: default;
-
-				>.icon:not(.active) { opacity: 0.35; }
-			}
+			&.is-locked > .layer-drag-handle { cursor: default; }
 
 			>.layer-swatch {
 				background-size: cover;
@@ -241,7 +239,7 @@
 
 				transform: translateZ(0); // ios fix for radius + hidden
 
-				margin-right: var(--spacing-sm);
+				margin-right: var(--spacing-xs);
 
 				&.sticker {
 					background-size: contain;
@@ -311,11 +309,12 @@
 					white-space: nowrap;
 					overflow: hidden;
 					text-overflow: ellipsis;
-					text-transform: uppercase;
+					text-transform: none;
 				}
 
 				>.layer-color {
 					@include text-sm;
+					letter-spacing: 0;
 					color: var(--color-text-primary);
 					white-space: nowrap;
 					overflow: hidden;
@@ -330,12 +329,12 @@
 
 					>.layer-type {
 						font-size: var(--font-size-sm);
-						letter-spacing: 0.5px;
+						letter-spacing: 0;
 						color: var(--color-text-secondary);
 						white-space: nowrap;
 						overflow: hidden;
 						text-overflow: ellipsis;
-						text-transform: uppercase;
+						text-transform: none;
 						min-width: 0;
 						// flex: 1;
 					}
@@ -364,7 +363,8 @@
 
 			>.layer-actions {
 				display: flex;
-
+				align-items: center;
+				gap: var(--spacing-2xs);
 				flex-shrink: 0;
 
 				>.layer-action-btn {
@@ -418,28 +418,18 @@
 				}
 			}
 
+			>.layer-visibility {
+				flex: 0 0 var(--icon-size-sm);
+				color: var(--color-icon-strong);
+
+				&.hidden { color: var(--color-text-tertiary); }
+			}
+
 			>.layer-drag-handle {
-				display: none;
-				transition: opacity var(--transition-fast);
-
-
-
-
-
-
-				>.icon {
-
-					>.icon {
-						width: 16px;
-						height: 16px;
-					}
-
-					&:not(.active) {
-						opacity: .2;
-						cursor: default;
-					}
-				}
-
+				display: flex;
+				width: 18px;
+				height: var(--icon-size-sm);
+				flex-basis: 18px;
 			}
 
 

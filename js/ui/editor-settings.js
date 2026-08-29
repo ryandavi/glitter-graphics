@@ -2,6 +2,7 @@ const EDITOR_SETTINGS_METHODS = {
 saveSettingsToStorage() {
 		const settings = {
 			...this.settingsStore.serialize(this.exportSettings),
+			exportDitherPipelineVersion: 2,
 			showHelpfulHints: this.showHints,
 			showWelcomeOnStartup: this.showWelcomeOnStartup,
 			confirmDestructiveActions: this.confirmDestructiveActions,
@@ -38,7 +39,20 @@ saveSettingsToStorage() {
 
 ,
 initializeExportSettings() {
-	const savedSettings = this.loadSettingsFromStorage();
+	let savedSettings = this.loadSettingsFromStorage();
+	if (savedSettings?.exportColorCount != null && savedSettings.exportDitherPipelineVersion !== 2) {
+		// The first palette-pipeline rollout made a strongly stylized 128-color
+		// look the default. Migrate that temporary default back to a clean export;
+		// users can opt into the aesthetic presets explicitly.
+		savedSettings = {
+			...savedSettings,
+			exportColorCount: 'auto',
+			exportPaletteStyle: 'balanced',
+			exportDitherEnabled: false,
+			exportDitherPreset: 'clean',
+			exportDitherPipelineVersion: 2
+		};
+	}
 	let welcomeWasSuppressed = false;
 	try {
 		welcomeWasSuppressed = localStorage.getItem('glitterEditor_welcomeModalSeen') === 'true';
@@ -95,17 +109,71 @@ initializeExportSettings() {
 		});
 
 		// Update visibility states
-		const ditherTypeRow = document.getElementById('ditherTypeRow');
-		if (ditherTypeRow) {
-			ditherTypeRow.classList.toggle('disabled', !this.exportSettings.ditherEnabled);
-		}
+		['ditherTypeRow', 'exportDitherAmount', 'exportDitherScale', 'exportDitherTemporalMode', 'exportDitherEdgeProtection'].forEach((id) => {
+			const control = document.getElementById(id);
+			const row = id === 'ditherTypeRow' ? control : control?.closest('.settings-row');
+			row?.classList.toggle('disabled', !this.exportSettings.ditherEnabled);
+		});
 
 		const matteColorRow = document.getElementById('matteColorRow');
 		if (matteColorRow) {
 			matteColorRow.classList.toggle('disabled', this.exportSettings.format !== 'mp4' && this.exportSettings.transparency);
 		}
-		this.updateWatermarkPreview?.();
+		this.updateWatermarkUI?.();
 		this.updateExportFormatUI();
+		const ditherAmountValue = document.getElementById('exportDitherAmountValue');
+		if (ditherAmountValue) ditherAmountValue.textContent = `${this.exportSettings.ditherAmount}%`;
+		this.renderExportDitherPreview?.();
+	}
+
+,
+	renderExportDitherPreview() {
+		const canvas = document.getElementById('exportDitherPreview');
+		const description = document.getElementById('exportDitherPreviewDescription');
+		if (!canvas || typeof GifPalette === 'undefined' || typeof GlitterPixelEffects === 'undefined') return;
+		const width = canvas.width;
+		const height = canvas.height;
+		const source = new Uint8ClampedArray(width * height * 4);
+		for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+			const offset = (y * width + x) * 4;
+			const t = x / (width - 1);
+			source[offset] = Math.round(255 * (1 - t) + 255 * Math.max(0, (t - 0.55) / 0.45));
+			source[offset + 1] = Math.round(225 * Math.max(0, (t - 0.45) / 0.55));
+			source[offset + 2] = Math.round(210 * Math.min(1, t * 1.8) * (1 - Math.max(0, (t - 0.7) / 0.3)));
+			if (y > 48 && x > 18 && x < 222) source[offset] = source[offset + 1] = source[offset + 2] = x < 120 ? 22 : 240;
+			source[offset + 3] = 255;
+		}
+		const original = new ImageData(source, width, height);
+		const count = GifPalette.resolveColorCount(this.exportSettings.colorCount, { observedColorCount: 1024 });
+		// A deliberately constrained demonstration palette makes each texture
+		// legible even when the actual export is set to Automatic/256 colors.
+		const paletteBytes = GifPalette.build([original], Math.min(count, 16), { style: this.exportSettings.paletteStyle });
+		const palette = [];
+		for (let index = 0; index < paletteBytes.length; index += 3) palette.push(paletteBytes.slice(index, index + 3));
+		const type = String(this.exportSettings.ditherType || '').toLowerCase();
+		const algorithm = type.includes('atkinson') ? 'atkinson' : type.includes('falsefloyd') ? 'falsefloyd'
+			: type.includes('stucki') ? 'stucki' : type.includes('bayer') ? 'bayer' : type.includes('halftone') ? 'halftone' : 'floyd';
+		const pixels = GlitterPixelEffects.applyPixelEffects(source, width, height, {
+			pixelateEnabled: false, paletteEnabled: true, pixelSize: 1, paletteMode: 'dither',
+			dither: { algorithm, angle: 45, strength: this.exportSettings.ditherAmount, scale: this.exportSettings.ditherScale, edgeProtection: this.exportSettings.ditherEdgeProtection, serpentine: type.includes('serpentine'), shimmer: false, palette: 'auto', duotone: ['#000000', '#ffffff'] }
+		}, { pixelEffects: CONFIG.tools.pixelEffects, autoGlitter: CONFIG.tools.autoGlitter }, 0, palette);
+		canvas.getContext('2d').putImageData(new ImageData(pixels, width, height), 0, 0);
+		const descriptions = {
+			floyd: 'Diffusion: organic, Photoshop-like gradient texture.', falsefloyd: 'False Floyd–Steinberg: sharper and rougher with fewer neighboring dots.',
+			stucki: 'Stucki: soft, detailed diffusion with a wider texture field.', atkinson: 'Atkinson: airy Macintosh-style dots with stronger highlights.',
+			bayer: 'Bayer: regular tiled pixels—the clearest early-web pattern.', halftone: 'Halftone: graphic printed dots rather than photographic diffusion.'
+		};
+		if (description) description.textContent = `${this.exportSettings.ditherEnabled ? '' : 'Preview only—export dithering is currently off. '}${descriptions[algorithm]}`;
+	}
+
+,
+	updateWatermarkUI() {
+		const enabled = Boolean(this.exportSettings.watermarkEnabled);
+		const selectionRow = document.getElementById('watermarkSelectionRow');
+		const enabledInput = document.getElementById('exportWatermarkEnabled');
+		if (selectionRow) selectionRow.hidden = !enabled;
+		if (enabledInput) enabledInput.setAttribute('aria-expanded', String(enabled));
+		if (enabled) this.updateWatermarkPreview?.();
 	}
 
 ,
@@ -119,18 +187,43 @@ initializeExportSettings() {
 
 ,
 	setupExportSettingsListeners() {
+		const ditherPresets = {
+			classic: { colorCount: 128, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'FloydSteinberg-serpentine', ditherAmount: 80, ditherScale: 1, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
+			clean: { colorCount: 'auto', paletteStyle: 'balanced', ditherEnabled: false, ditherType: 'FloydSteinberg-serpentine', ditherAmount: 80, ditherScale: 1, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
+			textured: { colorCount: 64, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'Bayer', ditherAmount: 90, ditherScale: 2, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
+			crunchy: { colorCount: 32, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'Bayer', ditherAmount: 100, ditherScale: 3, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
+			shimmer: { colorCount: 64, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'Bayer', ditherAmount: 80, ditherScale: 2, ditherTemporalMode: 'animated', ditherEdgeProtection: true }
+		};
+		const presetControl = document.getElementById('exportDitherPreset');
+		if (presetControl && !presetControl.dataset.bound) {
+			presetControl.dataset.bound = 'true';
+			presetControl.addEventListener('change', () => {
+				const preset = ditherPresets[presetControl.value];
+				if (!preset) return;
+				Object.assign(this.exportSettings, preset, { ditherPreset: presetControl.value });
+				this.settingsStore.syncToUI(this.exportSettings);
+				this.saveSettingsToStorage();
+				this.syncSettingsUI();
+			});
+		}
 		this.settingsStore.bindListeners(this.exportSettings, (key, value) => {
+			if (presetControl && ['colorCount', 'paletteStyle', 'ditherEnabled', 'ditherType', 'ditherAmount', 'ditherScale', 'ditherTemporalMode', 'ditherEdgeProtection'].includes(key)) {
+				presetControl.value = 'custom';
+				this.exportSettings.ditherPreset = 'custom';
+			}
 			this.saveSettingsToStorage();
+			this.renderExportDitherPreview?.();
 			this.updateExportDuration();
 			if (key === 'ditherEnabled') {
-				document.getElementById('ditherTypeRow')?.classList.toggle('disabled', !value);
+				['ditherTypeRow', 'exportDitherAmount', 'exportDitherScale', 'exportDitherTemporalMode', 'exportDitherEdgeProtection'].forEach((id) => {
+					const control = document.getElementById(id);
+					const row = id === 'ditherTypeRow' ? control : control?.closest('.settings-row');
+					row?.classList.toggle('disabled', !value);
+				});
 			}
+			if (key === 'watermarkEnabled') this.updateWatermarkUI?.();
 			if (key === 'watermark') {
-				this.exportSettings.watermarkEnabled = true;
-				const enabledInput = document.getElementById('exportWatermarkEnabled');
-				if (enabledInput) enabledInput.checked = true;
 				this.updateWatermarkPreview?.();
-				this.saveSettingsToStorage();
 			}
 			if (key === 'transparency' || key === 'mp4LengthMode') this.updateExportFormatUI();
 		});
@@ -138,6 +231,17 @@ initializeExportSettings() {
 		// Delegate live repeat changes so the duration remains bound even if modal
 		// controls are reinitialized or replaced in a responsive UI rebuild.
 		document.addEventListener('input', (event) => {
+			if (event.target?.id === 'exportDitherAmount') {
+				const value = Math.min(100, Math.max(0, Math.round(event.target.valueAsNumber / 5) * 5));
+				this.exportSettings.ditherAmount = value;
+				this.exportSettings.ditherPreset = 'custom';
+				if (presetControl) presetControl.value = 'custom';
+				const output = document.getElementById('exportDitherAmountValue');
+				if (output) output.textContent = `${value}%`;
+				this.renderExportDitherPreview?.();
+				this.saveSettingsToStorage();
+				return;
+			}
 			if (!['exportMp4LoopCount', 'exportMp4TargetDuration'].includes(event.target?.id)) return;
 			const value = event.target.valueAsNumber;
 			if (Number.isFinite(value)) {

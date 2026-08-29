@@ -474,14 +474,8 @@ body.mask-editing {
 		background: transparent;
 		cursor: grab;
 		touch-action: none;
+		color: var(--color-text-secondary);
 
-		span {
-			display: block;
-			width: 6px;
-			height: 14px;
-			margin: auto;
-			background: repeating-linear-gradient(90deg, var(--color-text-secondary) 0 2px, transparent 2px 4px);
-		}
 	}
 
 	&.is-dragging {

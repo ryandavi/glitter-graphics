@@ -7,6 +7,7 @@ const SUITES = [
 	{ file: 'touch-smoke.js', tags: ['quick', 'touch'] },
 	{ file: 'touch-handle-verify.js', tags: ['quick', 'touch'] },
 	{ file: 'export-timeline-unit.js', tags: ['unit', 'export'] },
+	{ file: 'gif-palette-unit.js', tags: ['unit', 'export'] },
 	{ file: 'viewport-navigation-unit.js', tags: ['unit', 'quick'] },
 	{ file: 'gesture-manager-unit.js', tags: ['unit', 'quick', 'touch'] },
 	{ file: 'pixel-effects.js', tags: ['unit', 'effects'] },

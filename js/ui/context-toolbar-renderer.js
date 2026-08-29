@@ -14,7 +14,7 @@ class ContextToolbarRenderer {
 			handle.className = 'context-toolbar-handle';
 			handle.setAttribute('aria-label', 'Move context bar');
 			handle.title = 'Drag to move · Alt for precision · Esc to cancel · Double-click to reset';
-			handle.innerHTML = '<span aria-hidden="true"></span>';
+			handle.innerHTML = '<span class="drag-handle-mark" aria-hidden="true"></span>';
 			host.replaceChildren(handle, ...(toolbar.controls || []).map((control) => this.build(control)));
 			host.dataset.contextToolbar = '';
 			this.hosts.push(host);
