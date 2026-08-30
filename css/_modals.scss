@@ -37,7 +37,7 @@ body.modal-open {
 		background: var(--color-bg-primary);
 		border: 1px solid var(--color-window-border);
 		border-radius: var(--radius-lg);
-		width: 700px;
+		width: var(--modal-width, 700px);
 
 		/* Fallback for older browsers */
 		max-height: 90vh;
@@ -51,6 +51,19 @@ body.modal-open {
 		display: flex;
 		flex-direction: column;
 		box-shadow: 0 20px 60px var(--color-shadow-modal);
+
+		// Browse modals are windows, not sheets that grow with their contents:
+		// switching a tab, changing export format, typing in the filter or
+		// expanding a disclosure must not resize the frame around the reader.
+		&.modal-browse {
+			--modal-width: var(--modal-width-browse);
+			height: min(var(--modal-browse-height), 90dvh);
+		}
+
+		&.modal-reading {
+			--modal-width: var(--modal-width-reading);
+			height: min(var(--modal-browse-height), 90dvh);
+		}
 
 		>.modal-header {
 			flex-shrink: 0;
@@ -396,17 +409,14 @@ body.modal-open {
 		max-height: 88vh;
 		max-height: 88dvh;
 	}
-
-	&.about-dialog {
-		width: 760px;
-	}
-
-	&.guide-dialog {
-		width: 840px;
-	}
 }
 
-.document-nav {
+// The single chrome strip that sits between a modal's header and its body.
+// Every browse modal uses it, so the bar's height, ground and rhythm cannot
+// drift between Settings, Export Settings, Shortcuts, Guide and About. It
+// carries up to three slots: Contents (jumps), Search (filters text), and
+// Scope (filters by kind).
+.modal-nav {
 	position: relative;
 	z-index: 3;
 	flex: 0 0 auto;
@@ -415,6 +425,73 @@ body.modal-open {
 
 	&[hidden] { display: none; }
 
+	>.modal-nav-scope {
+		flex: 0 0 auto;
+		min-height: var(--search-control-height);
+
+		>.segmented-option {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: var(--spacing-sm);
+			white-space: nowrap;
+
+			>svg.icon { font-size: 14px; }
+		}
+	}
+
+	>.search-input-wrapper {
+
+		>input {
+			padding-right: 7.5rem;
+
+			&::-webkit-search-cancel-button {
+				display: none;
+			}
+		}
+
+		>.modal-filter-status {
+			position: absolute;
+			top: 50%;
+			right: var(--spacing-sm);
+			max-width: 6.5rem;
+			overflow: hidden;
+			padding: var(--spacing-2xs) var(--spacing-sm);
+			transform: translateY(-50%);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-pill);
+			background: var(--color-bg-secondary);
+			color: var(--color-text-tertiary);
+			font-size: var(--font-size-xs);
+			font-variant-numeric: tabular-nums;
+			line-height: 1;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+
+			&:empty {
+				display: none;
+			}
+		}
+	}
+}
+
+// Narrow bars stack their slots rather than starving the search field: a
+// scope control and a search input side by side at phone width leaves the
+// placeholder truncated to two characters.
+@media (max-width: 600px) {
+	.modal-nav.search-toggle-row {
+		flex-wrap: wrap;
+
+		>.modal-nav-scope {
+			order: -1;
+			width: 100%;
+		}
+
+		>.search-input-wrapper { flex: 1 1 60%; }
+	}
+}
+
+.document-nav {
 	>.document-toc-toggle {
 		display: flex;
 		align-items: center;
@@ -1547,23 +1624,16 @@ body.modal-open {
 		margin-top: var(--spacing-xs);
 	}
 
-	// Change-type badge. Colors come from the shared status tokens so the three
-	// types stay legible across every interface theme.
+	// Change-type badge. Built on the shared `.badge` primitive; only the
+	// status colour varies, and it comes from the shared status tokens so the
+	// three types stay legible across every interface theme.
 	.version-history-badge {
-		display: inline-block;
 		margin-right: var(--spacing-xs);
-		padding: 0 var(--spacing-xs);
-		border-radius: var(--radius-sm);
-		font-size: var(--font-size-xs);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
 		vertical-align: baseline;
-		background: var(--color-bg-tertiary);
-		color: var(--color-text-secondary);
 
-		&.is-added { color: var(--color-success); }
-		&.is-changed { color: var(--color-accent); }
-		&.is-fixed { color: var(--color-warning); }
+		&.is-added { border-color: var(--color-success); color: var(--color-success); }
+		&.is-changed { border-color: var(--color-accent-border); color: var(--color-accent); }
+		&.is-fixed { border-color: var(--color-warning-border); color: var(--color-warning); }
 	}
 
 	.version-history-guide-link {
@@ -1798,56 +1868,10 @@ body.modal-open {
 }
 
 /* ===== SHORTCUTS MODAL ===== */
+// Keyboard vs Canvas Gestures is a scope filter, not a set of pages, so it
+// lives in the chrome bar as the shared `.segmented-control` rather than a
+// bespoke tab strip inside the scrolling body.
 #shortcutsModal {
-	>.modal-content {
-		width: 820px;
-	}
-
-	.shortcut-view-tabs {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 2px;
-		margin-bottom: var(--spacing-md);
-		padding: 3px;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-bg-tertiary);
-	}
-
-	.shortcut-view-tab {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--spacing-sm);
-		min-height: 36px;
-		padding: var(--spacing-sm) var(--spacing-md);
-		border: 0;
-		border-radius: calc(var(--radius-md) - 2px);
-		background: transparent;
-		color: var(--color-text-tertiary);
-		font: inherit;
-		font-size: var(--font-size-sm);
-		font-weight: 600;
-		cursor: pointer;
-
-		>svg.icon {
-			font-size: 14px;
-		}
-
-		&:hover { color: var(--color-text-primary); }
-
-		&.active {
-			background: var(--color-bg-primary);
-			box-shadow: 0 1px 3px var(--color-shadow-soft);
-			color: var(--color-text-primary);
-		}
-
-		&:focus-visible {
-			outline: none;
-			box-shadow: var(--control-focus-ring);
-		}
-	}
-
 	.shortcut-help {
 		min-height: 1.4em;
 		margin: 0 0 var(--spacing-lg);
@@ -1903,47 +1927,6 @@ body.modal-open {
 
 	@media (max-width: 640px) {
 		.shortcut-list { grid-template-columns: minmax(0, 1fr); }
-	}
-}
-
-.modal-filter-bar {
-	flex: 0 0 auto;
-	padding: var(--spacing-sm) var(--spacing-md);
-	border-bottom: 1px solid var(--color-border);
-	background: var(--color-bg-tertiary);
-
-	>.search-input-wrapper {
-
-		>input {
-			padding-right: 7.5rem;
-
-			&::-webkit-search-cancel-button {
-				display: none;
-			}
-		}
-
-		>.modal-filter-status {
-			position: absolute;
-			top: 50%;
-			right: var(--spacing-sm);
-			max-width: 6.5rem;
-			overflow: hidden;
-			padding: var(--spacing-2xs) var(--spacing-sm);
-			transform: translateY(-50%);
-			border: 1px solid var(--color-border);
-			border-radius: var(--radius-pill);
-			background: var(--color-bg-secondary);
-			color: var(--color-text-tertiary);
-			font-size: var(--font-size-xs);
-			font-variant-numeric: tabular-nums;
-			line-height: 1;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-
-			&:empty {
-				display: none;
-			}
-		}
 	}
 }
 
@@ -2172,7 +2155,10 @@ body.modal-open {
 	}
 }
 
-/* SETTINGS MODAL SPECIFIC */
+/* ===== SETTINGS MODALS ===== */
+// A settings group reads the same as a panel subsection — same label
+// vocabulary (small, uppercase, tertiary) — with a rule that carries the
+// wider modal column.
 .settings-group {
 	margin-bottom: var(--spacing-xl);
 
@@ -2180,10 +2166,14 @@ body.modal-open {
 		margin-bottom: 0;
 	}
 
+	&[hidden] { display: none; }
+
 	>.settings-group-title {
-		font-size: var(--font-size-md);
+		@include text-sm;
 		font-weight: 600;
-		color: var(--color-text-primary);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-text-tertiary);
 		margin-bottom: var(--spacing-md);
 		padding-bottom: var(--spacing-sm);
 		border-bottom: 1px solid var(--color-border);
@@ -2191,22 +2181,37 @@ body.modal-open {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: var(--spacing-sm);
 
+		>.settings-group-title-text {
+			display: inline-flex;
+			align-items: center;
+			gap: var(--spacing-sm);
+			min-width: 0;
+		}
+	}
+}
+
+// The design system's badge: `badge-base` corners, no case transform. Status
+// colour is a modifier, never a new class.
+.badge {
+	@include badge-base;
+	padding: 2px var(--spacing-sm);
+	background: var(--color-bg-secondary);
+	color: var(--color-text-tertiary);
+	font-weight: 500;
+
+	&.is-accent {
+		border-color: var(--color-accent-border);
+		background: var(--color-accent-surface);
+		color: var(--color-accent-light);
 	}
 
-	.settings-group-badge {
-		padding: var(--spacing-2xs) var(--spacing-sm);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
-		background: var(--color-bg-secondary);
-		color: var(--color-text-tertiary);
-		font-size: var(--font-size-xs);
-		font-weight: 600;
-		letter-spacing: 0.04em;
-		line-height: 1;
-		text-transform: uppercase;
+	&.is-warning {
+		border-color: var(--color-warning-border);
+		background: var(--color-warning-surface);
+		color: var(--color-warning-emphasis);
 	}
-
 }
 
 .settings-row {
@@ -2215,7 +2220,7 @@ body.modal-open {
 	gap: 6px;
 
 	+.settings-row {
-		margin-top: var(--spacing-md);
+		margin-top: var(--spacing-lg);
 	}
 
 	+ .control-group-label {
@@ -2226,18 +2231,31 @@ body.modal-open {
 		margin-top: var(--spacing-lg);
 	}
 
-	&.disabled {
-		opacity: var(--disabled-opacity);
-		pointer-events: none;
-		cursor: not-allowed;
+	// A setting that exists and matters but is currently held off by another
+	// visible control. Its own controls carry the real `disabled` property —
+	// this class only carries the look, and the reason line says what to turn
+	// on. Never `pointer-events: none`: that stops the mouse and not the Tab
+	// key, which leaves a "disabled" control a keyboard user can still change.
+	&.is-inactive {
+		> :not(.settings-row-reason) { opacity: var(--disabled-opacity); }
+		.settings-row-label-main { cursor: not-allowed; }
 	}
 }
 
+.settings-row-reason {
+	display: none;
+	align-items: center;
+	gap: var(--spacing-xs);
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+	font-style: italic;
 
-
+	.is-inactive > & { display: flex; }
+}
 
 .settings-row-header {
 	@include spread-row;
+	align-items: center;
 }
 
 .settings-row-label-main {
@@ -2246,11 +2264,29 @@ body.modal-open {
 	font-weight: 500;
 }
 
+label.settings-row-label-main { cursor: pointer; }
+
+// Value controls (select, number, text, colour) all take the same column
+// width so the right edge of a settings list is an alignment line. Switches,
+// segmented controls and action buttons size to themselves and hang off that
+// same edge — a switch stretched to the column width looks broken.
 .settings-row-control {
-	min-width: 120px;
 	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
 	justify-content: flex-end;
+	gap: var(--spacing-sm);
+	width: var(--settings-control-width);
+	max-width: 100%;
 	text-align: right;
+
+	&:has(>.switch),
+	&:has(>.segmented-control),
+	&:has(>button),
+	&:has(>input[type="color"]),
+	&:has(>.orientation-buttons) {
+		width: auto;
+	}
 
 	>.orientation-buttons {
 		display: flex;
@@ -2258,23 +2294,124 @@ body.modal-open {
 		gap: var(--spacing-sm);
 	}
 
-	>select {
+	>select,
+	>input,
+	>.input-unit {
 		width: 100%;
+		min-width: 0;
+	}
+
+	>select {
 		@include text-sm;
+		text-overflow: ellipsis;
 	}
 
 	>input[type="color"] {
-		width: 50px;
+		width: 56px;
+		height: var(--control-height);
+		padding: 2px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--control-radius);
+		background: var(--color-bg-secondary);
+		cursor: pointer;
 	}
 }
 
 .settings-row-label-desc {
 	font-size: var(--font-size-sm);
 	color: var(--color-text-tertiary);
-	width: 50%;
-	min-width: 300px;
-	max-width: 50%;
+	width: 100%;
+	max-width: min(100%, var(--settings-desc-measure));
 	padding-left: 0;
+}
+
+// ---- Subordination ------------------------------------------------------
+// One device, one meaning: an indented rail says "the row above controls
+// this." It reads the same whether the parent is a switch gating a single
+// companion (Watermark → Watermark Style) or a preset writing eight values
+// (GIF Look → its palette and texture rows), and it holds whether the
+// dependent row is currently active or inactive.
+//
+// The disclosure built on top of it — collapse, summary, Customize — is a
+// separate idea and belongs only to presets, where one control stands in for
+// many. Rail = subordination; disclosure = preset with overrides.
+@mixin settings-rail {
+	padding-left: var(--spacing-md);
+	border-left: 2px solid var(--color-border);
+}
+
+// A single row governed by the row directly above it.
+.settings-row--dependent {
+	@include settings-rail;
+}
+
+// A preset row plus the rail of the rows it writes.
+.governed-set {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+
+	&[hidden] { display: none; }
+
+	>.governed-rail {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-lg);
+		@include settings-rail;
+
+		>.settings-row + .settings-row { margin-top: 0; }
+	}
+
+	&.is-collapsed > .governed-rail { display: none; }
+}
+
+.governed-summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-md);
+	flex-wrap: wrap;
+}
+
+.governed-summary-values {
+	min-width: 0;
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+	font-variant-numeric: tabular-nums;
+
+	&:empty { display: none; }
+}
+
+.governed-toggle {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+
+	>.governed-toggle-chevron {
+		width: 12px;
+		height: 12px;
+		transition: transform var(--transition-fast);
+
+		>svg.icon { font-size: 12px; }
+	}
+
+	&[aria-expanded="true"] > .governed-toggle-chevron { transform: rotate(180deg); }
+}
+
+// A live search has to be able to reveal a governed row, so filtering forces
+// every rail open for as long as there is a query.
+.is-filtering .governed-set.is-collapsed > .governed-rail { display: flex; }
+
+// The GIF Look's illustration: what the current palette and texture settings
+// actually do, drawn from the live values rather than described in prose.
+.export-dither-preview {
+	display: block;
+	width: min(100%, 240px);
+	height: auto;
+	aspect-ratio: 10 / 3;
+	border-radius: var(--radius-sm);
+	image-rendering: pixelated;
 }
 
 .watermark-preview {
@@ -2417,6 +2554,14 @@ body.modal-open {
 			max-width: 100%;
 			max-height: 100%;
 
+			// Browse modals become full-height sheets rather than a fixed
+			// desktop frame floating in a phone viewport.
+			&.modal-browse,
+			&.modal-reading {
+				width: 100%;
+				height: 100%;
+			}
+
 			>.modal-header {
 				min-height: 48px;
 				padding: var(--spacing-2xs) var(--spacing-xs) var(--spacing-2xs) var(--spacing-md);
@@ -2473,6 +2618,12 @@ body.modal-open {
 		}
 	}
 
+	// The control column keeps its alignment but yields width to the label
+	// rather than pushing the modal into horizontal scroll.
+	.settings-row-control {
+		width: min(var(--settings-control-width), 52%);
+	}
+
 	.document-nav {
 		>.document-toc-panel,
 		>.document-search-results {
@@ -2508,5 +2659,39 @@ body.modal-open {
 			justify-content: center;
 			margin-top: var(--spacing-xl);
 		}
+	}
+}
+
+// ---- Touch targets ------------------------------------------------------
+// Keyed off the pointer rather than the viewport: a 30px switch is fine under
+// a mouse at any width, and too small for a finger at any width.
+@media (pointer: coarse) {
+	.settings-row-control {
+		>select,
+		>input[type="color"],
+		>input[type="number"],
+		>.input-unit > input {
+			min-height: var(--touch-target-min);
+		}
+	}
+
+	// The switch keeps its drawn size; only its hit area grows, centered on
+	// the track. The pseudo-element is inside the <label>, so a tap on it
+	// still toggles the associated input.
+	.settings-row .switch::after {
+		content: "";
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: max(100%, var(--touch-target-min));
+		height: var(--touch-target-min);
+		transform: translate(-50%, -50%);
+	}
+
+	.settings-group-title > .btn-text,
+	.governed-toggle,
+	.modal-nav .segmented-option,
+	.settings-row-control .segmented-option {
+		min-height: var(--touch-target-min);
 	}
 }

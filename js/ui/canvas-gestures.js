@@ -49,8 +49,12 @@ togglePreview() {
 		if (snappingToggle) {
 			snappingToggle.classList.toggle('active', PREFERENCES.get('snappingEnabled'));
 			snappingToggle.addEventListener('click', () => {
-				PREFERENCES.set('snappingEnabled', !PREFERENCES.get('snappingEnabled'));
-				snappingToggle.classList.toggle('active', PREFERENCES.get('snappingEnabled'));
+				const enabled = !PREFERENCES.get('snappingEnabled');
+				PREFERENCES.set('snappingEnabled', enabled);
+				snappingToggle.classList.toggle('active', enabled);
+				// Settings shows the same preference, so it has to agree.
+				const settingsInput = document.getElementById('snappingEnabled');
+				if (settingsInput) settingsInput.checked = enabled;
 				this.clearSmartGuides();
 			});
 		}

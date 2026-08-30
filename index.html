@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=8042b744">
+	<link rel="stylesheet" href="css/style.css?v=2fa51b69">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -1564,13 +1564,14 @@
 
 					<!-- Color Picker (shown when "Color" is selected) -->
 
-					<div class="settings-row" id="canvasColorRow">
-						<div class="settings-row-header ">
-							<div class="settings-row-label-main">Color</div>
+					<div class="settings-row settings-row--dependent" id="canvasColorRow" data-inactive-reason="Choose the Color background to pick a color.">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="newCanvasColor">Color</label>
 							<div class="settings-row-control">
 								<input type="color" id="newCanvasColor" value="#ffffff">
 							</div>
 						</div>
+						<div class="settings-row-reason" data-inactive-reason-text></div>
 					</div>
 
 
@@ -1805,8 +1806,8 @@
 
 	<!-- App Settings Modal -->
 	<div class="modal-overlay" id="settingsModal">
-		<div class="modal-content"><div class="modal-header"><div class="modal-title"><span class="modal-icon icon-wrapper"><svg class="icon"><use href="#icon-gear"></use></svg><span class="name">Settings</span></span><span class="modal-title-text">Settings</span></div><button class="btn-icon icon-wrapper modal-close" id="closeSettingsModal"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button></div>
-			<div class="modal-filter-bar search-toggle-row" data-modal-filter>
+		<div class="modal-content modal-browse"><div class="modal-header"><div class="modal-title"><span class="modal-icon icon-wrapper"><svg class="icon"><use href="#icon-gear"></use></svg><span class="name">Settings</span></span><span class="modal-title-text">Settings</span></div><button class="btn-icon icon-wrapper modal-close" id="closeSettingsModal"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Close</span></button></div>
+			<div class="modal-nav search-toggle-row" data-modal-filter>
 				<label class="search-input-wrapper">
 					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
 					<input type="search" id="settingsSearch" placeholder="Find a setting…" aria-label="Find a setting" aria-controls="settingsGroups">
@@ -1817,22 +1818,27 @@
 			<div class="modal-body">
 				<div id="settingsGroups">
 				<div class="settings-group">
-					<div class="settings-group-title">Interface <button class="btn-text small reset-section-btn" data-section="interface">Reset</button></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Theme</div><div class="settings-row-control"><select id="interfaceTheme"><optgroup label="Dark themes"><option value="dark">Default Dark</option><option value="llama">Llama</option><option value="cyber-chrome">Cyber Chrome</option></optgroup><optgroup label="Light themes"><option value="light">Default Light</option><option value="bubblegum">Bubblegum</option><option value="bliss">Bliss</option><option value="dew">Dew</option><option value="aqua">Aqua</option><option value="p2p">P2P</option><option value="homepage">Homepage</option><option value="buddy-list">Buddy List</option></optgroup></select></div></div><div class="settings-row-label-desc">Choose the editor interface appearance.</div></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Helpful Hints</div><div class="settings-row-control"><label class="switch" for="showHelpfulHints"><input type="checkbox" id="showHelpfulHints" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Welcome on Startup</div><div class="settings-row-control"><label class="switch" for="showWelcomeOnStartup"><input type="checkbox" id="showWelcomeOnStartup" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show the Welcome screen when Glitter Editor starts.</div></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Confirm Destructive Actions</div><div class="settings-row-control"><label class="switch" for="confirmDestructiveActions"><input type="checkbox" id="confirmDestructiveActions" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Ask before deleting layers or clearing the entire project.</div></div>
+					<div class="settings-group-title"><span class="settings-group-title-text">Interface</span><button class="btn-text small reset-section-btn" data-section="interface">Reset</button></div>
+					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="interfaceTheme">Theme</label><div class="settings-row-control"><select id="interfaceTheme"><optgroup label="Dark themes"><option value="dark">Default Dark</option><option value="llama">Llama</option><option value="cyber-chrome">Cyber Chrome</option></optgroup><optgroup label="Light themes"><option value="light">Default Light</option><option value="bubblegum">Bubblegum</option><option value="bliss">Bliss</option><option value="dew">Dew</option><option value="aqua">Aqua</option><option value="p2p">P2P</option><option value="homepage">Homepage</option><option value="buddy-list">Buddy List</option></optgroup></select></div></div><div class="settings-row-label-desc">Choose the editor interface appearance.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="showHelpfulHints">Helpful Hints</label><div class="settings-row-control"><label class="switch" for="showHelpfulHints"><input type="checkbox" id="showHelpfulHints" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show contextual hints based on active tool and selected layer.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="showWelcomeOnStartup">Welcome on Startup</label><div class="settings-row-control"><label class="switch" for="showWelcomeOnStartup"><input type="checkbox" id="showWelcomeOnStartup" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Show the Welcome screen when Glitter Editor starts.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="confirmDestructiveActions">Confirm Destructive Actions</label><div class="settings-row-control"><label class="switch" for="confirmDestructiveActions"><input type="checkbox" id="confirmDestructiveActions" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Ask before deleting layers or clearing the entire project.</div></div>
+					<div class="settings-row" data-search-aliases="animation accessibility motion transitions"><div class="settings-row-header"><label class="settings-row-label-main" for="reduceMotion">Reduce Motion</label><div class="settings-row-control"><label class="switch" for="reduceMotion"><input type="checkbox" id="reduceMotion" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Turn off interface transitions and animated previews. Exported animation is unaffected.</div></div>
 				</div>
 				<div class="settings-group">
-					<div class="settings-group-title">Tools &amp; Workspace <button class="btn-text small reset-section-btn" data-section="tools">Reset</button></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Antialias Edges</div><div class="settings-row-control"><label class="switch" for="antialiasMaskEdges"><input type="checkbox" id="antialiasMaskEdges" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Smooth rendered edges on text and shapes, plus edges of future Fill layer mask strokes. Aliasing = Pixelated edge, Anti-Aliasing = Smooth edge.</div></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Scale Borders &amp; Effects</div><div class="settings-row-control"><label class="switch" for="scaleEffectsOnTransform"><input type="checkbox" id="scaleEffectsOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale border widths, dotted spacing, and shadow offsets when text or shapes are resized.</div></div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Transform Textures</div><div class="settings-row-control"><label class="switch" for="scaleTexturesOnTransform"><input type="checkbox" id="scaleTexturesOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale glitter texture size with text and shapes. Turn off to resize the artwork while keeping the repeat size unchanged.</div></div>
+					<div class="settings-group-title"><span class="settings-group-title-text">Tools &amp; Workspace</span><button class="btn-text small reset-section-btn" data-section="tools">Reset</button></div>
+					<div class="settings-row" data-search-aliases="click pick layer canvas"><div class="settings-row-header"><label class="settings-row-label-main" for="autoSelectLayers">Auto-Select Layers</label><div class="settings-row-control"><label class="switch" for="autoSelectLayers"><input type="checkbox" id="autoSelectLayers" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Clicking the canvas selects the layer under the pointer. Turn off to keep the current selection while dragging on the canvas.</div></div>
+					<div class="settings-row" data-search-aliases="snap align guides magnetic"><div class="settings-row-header"><label class="settings-row-label-main" for="snappingEnabled">Snapping</label><div class="settings-row-control"><label class="switch" for="snappingEnabled"><input type="checkbox" id="snappingEnabled" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Align layers to the canvas edges, its center, and other layers while dragging.</div></div>
+					<div class="settings-row" data-search-aliases="momentum pan flick scroll"><div class="settings-row-header"><label class="settings-row-label-main" for="panInertia">Pan Momentum</label><div class="settings-row-control"><label class="switch" for="panInertia"><input type="checkbox" id="panInertia" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Let the canvas keep gliding after a flick with the Hand tool. Turn off for panning that stops the moment you let go.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="antialiasMaskEdges">Antialias Edges</label><div class="settings-row-control"><label class="switch" for="antialiasMaskEdges"><input type="checkbox" id="antialiasMaskEdges" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Smooth rendered edges on text and shapes, plus edges of future Fill layer mask strokes. Aliasing = Pixelated edge, Anti-Aliasing = Smooth edge.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="scaleEffectsOnTransform">Scale Borders &amp; Effects</label><div class="settings-row-control"><label class="switch" for="scaleEffectsOnTransform"><input type="checkbox" id="scaleEffectsOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale border widths, dotted spacing, and shadow offsets when text or shapes are resized.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="scaleTexturesOnTransform">Transform Textures</label><div class="settings-row-control"><label class="switch" for="scaleTexturesOnTransform"><input type="checkbox" id="scaleTexturesOnTransform" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Scale glitter texture size with text and shapes. Turn off to resize the artwork while keeping the repeat size unchanged.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Brush &amp; Eraser Defaults</div><div class="settings-row-control"><button class="btn-simple" id="resetToolSettings" type="button">Reset Tools</button></div></div><div class="settings-row-label-desc">Restore saved Brush and Eraser tip, stroke, and pressure settings.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Panel Layout</div><div class="settings-row-control"><button class="btn-simple" id="resetPanelLayout" type="button">Reset Panels</button></div></div><div class="settings-row-label-desc">Expand all collapsible property and tool groups.</div></div>
+					<div class="settings-row" data-search-aliases="context bar position moved dragged floating"><div class="settings-row-header"><div class="settings-row-label-main">Toolbar Position</div><div class="settings-row-control"><button class="btn-simple" id="resetToolbarPlacement" type="button">Reset Toolbar</button></div></div><div class="settings-row-label-desc">Return the floating tool bar to its default position at the bottom of the canvas.</div></div>
 				</div>
 				<div class="settings-group" id="htmlSceneSettingsGroup" hidden>
-					<div class="settings-group-title"><span>Experimental HTML Scene</span><span class="settings-group-badge">Localhost</span></div>
+					<div class="settings-group-title"><span class="settings-group-title-text">Experimental HTML Scene<span class="badge">Localhost</span></span></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Responsive Scene</div><div class="settings-row-control"><label class="switch" for="htmlSceneResponsive"><input type="checkbox" id="htmlSceneResponsive"><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Keep the artboard aspect ratio while it grows and shrinks with its container.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Responsive Stickers</div><div class="settings-row-control"><select id="htmlSceneStickerSizing"><option value="scale">Scale with scene</option><option value="fixed">Keep pixel size</option></select></div></div><div class="settings-row-label-desc">Scale the whole composition, or keep sticker dimensions fixed while their center positions remain proportional.</div></div>
 					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Maximum Width</div><div class="settings-row-control"><span class="input-unit"><input type="number" id="htmlSceneMaxWidth" min="100" max="4096" step="10" inputmode="numeric"><span class="input-unit-suffix">px</span></span></div></div><div class="settings-row-label-desc">Limit how wide a responsive scene can grow in its destination.</div></div>
@@ -1852,12 +1858,12 @@
 				<div class="modal-filter-empty" id="settingsSearchEmpty" hidden>No settings match your search.</div>
 				</div>
 			</div>
-			<div class="modal-footer left-right"><button class="btn-text modal-action secondary reset-all-settings-btn">Reset All Settings</button><button class="btn-simple modal-action modal-close" id="closeSettingsModalFooter">Close</button></div></div>
+			<div class="modal-footer left-right"><button class="btn-text modal-action secondary reset-all-settings-btn">Reset Everything</button><button class="btn-simple modal-action modal-close" id="closeSettingsModalFooter">Close</button></div></div>
 	</div>
 
 	<!-- Export Settings Modal -->
 	<div class="modal-overlay" id="exportSettingsModal">
-		<div class="modal-content">
+		<div class="modal-content modal-browse">
 			<div class="modal-header">
 
 				<div class="modal-title">
@@ -1881,7 +1887,7 @@
 
 			</div>
 
-			<div class="modal-filter-bar search-toggle-row" data-modal-filter>
+			<div class="modal-nav search-toggle-row" data-modal-filter>
 				<label class="search-input-wrapper">
 					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
 					<input type="search" id="exportSettingsSearch" placeholder="Find an export setting…" aria-label="Find an export setting" aria-controls="exportSettingsGroups">
@@ -1893,8 +1899,7 @@
 			<div class="modal-body">
 				<div id="exportSettingsGroups">
 				<div class="settings-group">
-
-					<div class="settings-group-title">Output</div>
+					<div class="settings-group-title"><span class="settings-group-title-text">Output</span><button class="btn-text small reset-section-btn" data-section="output">Reset</button></div>
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<div class="settings-row-label-main">Format</div>
@@ -1909,7 +1914,7 @@
 					</div>
 					<div class="settings-row" id="transparencySettingsRow" data-export-format-section="gif">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Transparency</div>
+							<label class="settings-row-label-main" for="exportTransparency">Transparency</label>
 							<div class="settings-row-control">
 								<label class="switch" for="exportTransparency">
 									<input type="checkbox" id="exportTransparency" />
@@ -1917,32 +1922,43 @@
 								</label>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Preserve transparent areas from the original image if it has it. When
-							disabled, transparent areas use the matte color.</div>
+						<div class="settings-row-label-desc">Preserve transparent areas from the original image if it has it. When disabled, transparent areas use the matte color.</div>
 					</div>
-					<div class="settings-row" id="matteColorRow">
+					<div class="settings-row settings-row--dependent" id="matteColorRow" data-inactive-reason="Turn off Transparency to use a matte color.">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Matte Color</div>
+							<label class="settings-row-label-main" for="exportMatteColor">Matte Color</label>
 							<div class="settings-row-control">
 								<input type="color" id="exportMatteColor" value="#ffffff">
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Background color for transparent areas when transparency is
-							disabled.</div>
+						<div class="settings-row-label-desc">Background color for transparent areas when transparency is disabled.</div>
+						<div class="settings-row-reason" data-inactive-reason-text></div>
+					</div>
+					<div class="settings-row" data-search-aliases="photo background original artwork behind">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="exportBaseImage">Include Base Image</label>
+							<div class="settings-row-control">
+								<label class="switch" for="exportBaseImage">
+									<input type="checkbox" id="exportBaseImage" />
+									<div class="slider round"></div>
+								</label>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Render the Base Image beneath the other layers. Turn off to export only the glitter, stickers, text, and shapes without changing your project.</div>
 					</div>
 					<div class="settings-row">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Watermark</div>
+							<label class="settings-row-label-main" for="exportWatermarkEnabled">Watermark</label>
 							<div class="settings-row-control">
 								<label class="switch" for="exportWatermarkEnabled">
-									<input type="checkbox" id="exportWatermarkEnabled" aria-controls="watermarkSelectionRow" aria-expanded="false" />
+									<input type="checkbox" id="exportWatermarkEnabled" aria-controls="watermarkSelectionRow" />
 									<div class="slider round"></div>
 								</label>
 							</div>
 						</div>
 						<div class="settings-row-label-desc">Add a cheeky little watermark overlay to the exported result.</div>
 					</div>
-					<div class="settings-row" id="watermarkSelectionRow" hidden>
+					<div class="settings-row settings-row--dependent" id="watermarkSelectionRow" data-inactive-reason="Turn on Watermark to choose a style.">
 						<div class="settings-row-header">
 							<label class="settings-row-label-main" for="exportWatermark">Watermark Style</label>
 							<div class="settings-row-control">
@@ -1956,23 +1972,24 @@
 							<img src="images/watermark/2.png" alt="Rybaby Signature watermark preview" />
 						</div>
 						<div class="settings-row-label-desc">The preview is export-only and is not added to the canvas.</div>
+						<div class="settings-row-reason" data-inactive-reason-text></div>
 					</div>
 				</div>
 
 				<div class="settings-group">
-					<div class="settings-group-title">Playback</div>
+					<div class="settings-group-title"><span class="settings-group-title-text">Playback</span><button class="btn-text small reset-section-btn" data-section="playback">Reset</button></div>
 					<div class="settings-row" data-export-format-section="mp4" hidden>
-						<div class="settings-row-header"><div class="settings-row-label-main">Video Length</div><div class="settings-row-control">
+						<div class="settings-row-header"><label class="settings-row-label-main" for="exportMp4LengthMode">Video Length</label><div class="settings-row-control">
 							<select id="exportMp4LengthMode"><option value="duration">Exact duration</option><option value="loops">Complete loops</option></select>
 						</div></div><div class="settings-row-label-desc">Choose a specific video length or preserve a whole number of animation loops.</div>
 					</div>
-					<div class="settings-row" id="exportMp4TargetDurationRow" data-export-format-section="mp4" hidden>
-						<div class="settings-row-header"><div class="settings-row-label-main">Duration</div><div class="settings-row-control">
+					<div class="settings-row settings-row--dependent" id="exportMp4TargetDurationRow" data-export-format-section="mp4" hidden>
+						<div class="settings-row-header"><label class="settings-row-label-main" for="exportMp4TargetDuration">Duration</label><div class="settings-row-control">
 							<span class="input-unit"><input type="number" id="exportMp4TargetDuration" min="1" max="600" step="0.5" value="15" inputmode="decimal" aria-label="Video duration in seconds"><span class="input-unit-suffix">sec</span></span>
 						</div></div><div class="settings-row-label-desc">The MP4 ends exactly at this time, even if that falls partway through an animation loop.</div>
 					</div>
-					<div class="settings-row" id="exportMp4LoopCountRow" data-export-format-section="mp4" hidden>
-						<div class="settings-row-header"><div class="settings-row-label-main">Complete Loops</div><div class="settings-row-control">
+					<div class="settings-row settings-row--dependent" id="exportMp4LoopCountRow" data-export-format-section="mp4" hidden>
+						<div class="settings-row-header"><label class="settings-row-label-main" for="exportMp4LoopCount">Complete Loops</label><div class="settings-row-control">
 							<span class="input-unit"><input type="number" id="exportMp4LoopCount" min="1" max="100" step="1" value="3" inputmode="numeric" aria-label="Number of complete animation loops"><span class="input-unit-suffix">×</span></span>
 						</div></div><div class="settings-row-label-desc">The video ends after this many complete animation loops.</div>
 					</div>
@@ -1981,86 +1998,119 @@
 						<div class="settings-row-label-desc" id="exportMp4Duration" aria-live="polite">Calculating...</div>
 					</div>
 					<div class="settings-row" data-export-format-section="gif">
-						<div class="settings-row-header"><div class="settings-row-label-main">Fallback Frame Time</div><div class="settings-row-control">
+						<div class="settings-row-header"><label class="settings-row-label-main" for="exportFrameDelay">Fallback Frame Time</label><div class="settings-row-control">
 							<select id="exportFrameDelay"><option value="50">50ms (20 FPS)</option><option value="67">67ms (15 FPS)</option><option value="83">83ms (12 FPS)</option><option value="100">100ms (10 FPS)</option><option value="110">110ms (9 FPS)</option><option value="125">125ms (8 FPS)</option><option value="167">167ms (6 FPS)</option></select>
 						</div></div><div class="settings-row-label-desc">Used only when a source has no usable timing metadata. GIF source timing is preserved.</div>
 					</div>
-					<div class="settings-row"><div class="settings-row-header"><div class="settings-row-label-main">Reverse Animation</div><div class="settings-row-control"><label class="switch" for="exportReverse"><input type="checkbox" id="exportReverse" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Play animation backwards.</div></div>
+					<div class="settings-row"><div class="settings-row-header"><label class="settings-row-label-main" for="exportReverse">Reverse Animation</label><div class="settings-row-control"><label class="switch" for="exportReverse"><input type="checkbox" id="exportReverse" /><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Play animation backwards.</div></div>
 				</div>
 
 				<div class="settings-group">
-					<div class="settings-group-title">Quality</div>
+					<div class="settings-group-title"><span class="settings-group-title-text">Quality</span><button class="btn-text small reset-section-btn" data-section="quality">Reset</button></div>
 					<div class="settings-row" data-export-format-section="mp4" hidden>
-						<div class="settings-row-header"><div class="settings-row-label-main">MP4 Quality</div><div class="settings-row-control">
+						<div class="settings-row-header"><label class="settings-row-label-main" for="exportMp4Quality">MP4 Quality</label><div class="settings-row-control">
 							<select id="exportMp4Quality"><option value="compact">Compact</option><option value="standard">Standard</option><option value="high">High</option></select>
 						</div></div><div class="settings-row-label-desc">Higher quality uses a higher video bitrate and creates a larger file.</div>
 					</div>
-					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherPreset">GIF Look</label><div class="settings-row-control"><select id="exportDitherPreset"><option value="clean">Clean · Automatic</option><option value="classic">Classic Web</option><option value="textured">Textured 64</option><option value="crunchy">Crunchy Pixel</option><option value="shimmer">Sparkle Noise</option><option value="custom">Custom</option></select></div></div><div class="settings-row-label-desc">Choosing a look changes all of the grouped GIF palette and texture settings below. Editing one of those settings changes the look to Custom.</div></div>
-					<div class="settings-subsection export-gif-look-settings" data-export-format-section="gif" role="group" aria-label="Settings controlled by GIF Look" style="padding-left:var(--spacing-md);border-left:2px solid var(--color-border)">
-					<div class="settings-row" data-export-format-section="gif">
-						<div class="settings-row-header"><div class="settings-row-label-main">GIF Colors</div><div class="settings-row-control">
-							<select id="exportColorCount"><option value="auto">Automatic</option><option value="256">256 · Cleanest</option><option value="128">128 · Classic web</option><option value="64">64 · Textured</option><option value="32">32 · Crunchy</option></select>
-						</div></div><div class="settings-row-label-desc">Automatic preserves the encoder’s clean per-frame color choices. Fixed counts use one stable animation palette; fewer colors create stronger texture and smaller files.</div>
-					</div>
-					<div class="settings-row" data-export-format-section="gif">
-						<div class="settings-row-header"><div class="settings-row-label-main">Palette Character</div><div class="settings-row-control"><select id="exportPaletteStyle"><option value="vivid">Vivid Web</option><option value="balanced">Balanced</option><option value="natural">Natural</option><option value="websafe">Web Safe</option></select></div></div>
-						<div class="settings-row-label-desc">Vivid Web gives saturated pinks, blues, and glitter highlights more influence when choosing shared colors.</div>
-					</div>
-					<div class="settings-row" data-export-format-section="gif">
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Dithering</div>
-							<div class="settings-row-control">
-								<label class="switch" for="exportDitherEnabled">
-									<input type="checkbox" id="exportDitherEnabled" />
-									<div class="slider round"></div>
-								</label>
+
+					<div class="governed-set is-collapsed" id="exportGifLookSet" data-governed-set="gifLook" data-export-format-section="gif">
+						<div class="settings-row" data-filter-pin>
+							<div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherPreset">GIF Look</label><div class="settings-row-control"><select id="exportDitherPreset"><option value="clean">Clean · Automatic</option><option value="classic">Classic Web</option><option value="textured">Textured 64</option><option value="crunchy">Crunchy Pixel</option><option value="shimmer">Sparkle Noise</option><option value="custom">Custom</option></select></div></div>
+							<div class="settings-row-label-desc">A look sets the palette and texture settings below in one step. Changing any of them switches the look to Custom.</div>
+							<canvas id="exportDitherPreview" class="export-dither-preview" width="240" height="72" aria-label="Live preview of the selected GIF look"></canvas>
+							<div class="settings-row-label-desc" id="exportDitherPreviewDescription" aria-live="polite"></div>
+							<div class="governed-summary">
+								<span class="governed-summary-values" data-governed-summary></span>
+								<button type="button" class="btn-text small governed-toggle" data-governed-toggle aria-expanded="false" aria-controls="exportGifLookRail">
+									<span data-governed-toggle-label>Customize</span>
+									<span class="governed-toggle-chevron icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+								</button>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Blends the chosen GIF palette into a deliberate pixel texture. Disable for flat art and the sharpest edges.</div>
-					</div>
-					<div class="settings-row" id="ditherTypeRow" data-export-format-section="gif">
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Dithering Type</div>
-							<div class="settings-row-control">
-								<select id="exportDitherType">
-									<option value="FloydSteinberg-serpentine">Floyd-Steinberg · Smooth</option>
-									<option value="FloydSteinberg">Floyd-Steinberg · Classic</option>
-									<option value="FalseFloydSteinberg">False Floyd-Steinberg</option>
-									<option value="Stucki">Stucki</option>
-									<option value="Atkinson">Atkinson</option>
-									<option value="Bayer">Ordered · Bayer</option>
-									<option value="Halftone">Halftone</option>
-								</select>
+
+						<div class="governed-rail" id="exportGifLookRail" role="group" aria-label="Settings controlled by GIF Look">
+							<div class="settings-row">
+								<div class="settings-row-header"><label class="settings-row-label-main" for="exportColorCount">GIF Colors</label><div class="settings-row-control">
+									<select id="exportColorCount"><option value="auto">Automatic</option><option value="256">256 · Cleanest</option><option value="128">128 · Classic web</option><option value="64">64 · Textured</option><option value="32">32 · Crunchy</option></select>
+								</div></div><div class="settings-row-label-desc">Automatic preserves the encoder’s clean per-frame color choices. Fixed counts use one stable animation palette; fewer colors create stronger texture and smaller files.</div>
 							</div>
-						</div>
-						<div class="settings-row-label-desc">Different algorithms for dithering patterns.</div>
-					</div>
-					<div class="settings-row export-dither-preview-row" data-export-format-section="gif"><canvas id="exportDitherPreview" width="240" height="72" aria-label="Live dithering texture preview" style="display:block;width:min(100%, 240px);height:auto;aspect-ratio:10 / 3;image-rendering:pixelated;border-radius:6px"></canvas><div class="settings-row-label-desc" id="exportDitherPreviewDescription" aria-live="polite"></div></div>
-					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherAmount">Dither Amount</label><output class="setting-value" id="exportDitherAmountValue" for="exportDitherAmount">80%</output></div><input id="exportDitherAmount" type="range" min="0" max="100" step="5" value="80" aria-describedby="exportDitherAmountDescription"><div class="settings-row-label-desc" id="exportDitherAmountDescription">Lower values soften noisy dots; 100% gives full error diffusion or pattern contrast.</div></div>
-					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherScale">Texture Scale</label><div class="settings-row-control"><select id="exportDitherScale"><option value="1">1× Fine</option><option value="2">2×</option><option value="3">3×</option><option value="4">4× Chunky</option></select></div></div><div class="settings-row-label-desc">Enlarges ordered and halftone patterns without lowering the artwork resolution. Diffusion remains naturally one-pixel grain.</div></div>
-					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherTemporalMode">Texture Motion</label><div class="settings-row-control"><select id="exportDitherTemporalMode"><option value="stable">Stable</option><option value="animated">Animated shimmer</option></select></div></div><div class="settings-row-label-desc">Stable avoids crawling. Animated intentionally shifts ordered and halftone patterns between frames.</div></div>
-					<div class="settings-row" data-export-format-section="gif"><div class="settings-row-header"><div class="settings-row-label-main">Protect Edges</div><div class="settings-row-control"><label class="switch" for="exportDitherEdgeProtection"><input type="checkbox" id="exportDitherEdgeProtection"><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Stops diffusion crossing strong boundaries, keeping text, transparency edges, and outlines cleaner.</div></div>
-					<div class="settings-row" data-export-format-section="gif">
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Color Quality</div>
-							<div class="settings-row-control">
-								<select id="exportQuality">
-									<option value="1">Best (slowest)</option>
-									<option value="10">Good</option>
-									<option value="20">Fast</option>
-								</select>
+							<div class="settings-row">
+								<div class="settings-row-header"><label class="settings-row-label-main" for="exportPaletteStyle">Palette Bias</label><div class="settings-row-control"><select id="exportPaletteStyle"><option value="vivid">Vivid Web</option><option value="balanced">Balanced</option><option value="natural">Natural</option><option value="websafe">Web Safe</option></select></div></div>
+								<div class="settings-row-label-desc">Vivid Web gives saturated pinks, blues, and glitter highlights more influence when choosing shared colors.</div>
 							</div>
+							<div class="settings-row">
+								<div class="settings-row-header">
+									<label class="settings-row-label-main" for="exportDitherEnabled">Dithering</label>
+									<div class="settings-row-control">
+										<label class="switch" for="exportDitherEnabled">
+											<input type="checkbox" id="exportDitherEnabled" />
+											<div class="slider round"></div>
+										</label>
+									</div>
+								</div>
+								<div class="settings-row-label-desc">Blends the chosen GIF palette into a deliberate pixel texture. Turn off for flat art and the sharpest edges.</div>
+							</div>
+							<div class="settings-row" id="ditherTypeRow" data-inactive-reason="Turn on Dithering to change this.">
+								<div class="settings-row-header">
+									<label class="settings-row-label-main" for="exportDitherType">Pattern</label>
+									<div class="settings-row-control">
+										<select id="exportDitherType">
+											<option value="FloydSteinberg-serpentine">Floyd-Steinberg · Smooth</option>
+											<option value="FloydSteinberg">Floyd-Steinberg · Classic</option>
+											<option value="FalseFloydSteinberg">False Floyd-Steinberg</option>
+											<option value="Stucki">Stucki</option>
+											<option value="Atkinson">Atkinson</option>
+											<option value="Bayer">Ordered · Bayer</option>
+											<option value="Halftone">Halftone</option>
+										</select>
+									</div>
+								</div>
+								<div class="settings-row-label-desc">Different algorithms produce different dithering textures.</div>
+								<div class="settings-row-reason" data-inactive-reason-text></div>
+							</div>
+							<div class="settings-row" id="ditherAmountRow" data-inactive-reason="Turn on Dithering to change this."><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherAmount">Strength</label><output class="setting-value" id="exportDitherAmountValue" for="exportDitherAmount">80%</output></div><input id="exportDitherAmount" type="range" min="0" max="100" step="5" value="80" aria-describedby="exportDitherAmountDescription"><div class="settings-row-label-desc" id="exportDitherAmountDescription">Lower values soften noisy dots; 100% gives full error diffusion or pattern contrast.</div><div class="settings-row-reason" data-inactive-reason-text></div></div>
+							<div class="settings-row" id="ditherScaleRow" data-inactive-reason="Turn on Dithering to change this."><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherScale">Pattern Scale</label><div class="settings-row-control"><select id="exportDitherScale"><option value="1">1× Fine</option><option value="2">2×</option><option value="3">3×</option><option value="4">4× Chunky</option></select></div></div><div class="settings-row-label-desc">Enlarges ordered and halftone patterns without lowering the artwork resolution. Diffusion remains naturally one-pixel grain.</div><div class="settings-row-reason" data-inactive-reason-text></div></div>
+							<div class="settings-row" id="ditherTemporalModeRow" data-inactive-reason="Turn on Dithering to change this."><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherTemporalMode">Pattern Motion</label><div class="settings-row-control"><select id="exportDitherTemporalMode"><option value="stable">Stable</option><option value="animated">Animated shimmer</option></select></div></div><div class="settings-row-label-desc">Stable avoids crawling. Animated intentionally shifts ordered and halftone patterns between frames.</div><div class="settings-row-reason" data-inactive-reason-text></div></div>
+							<div class="settings-row" id="ditherEdgeProtectionRow" data-inactive-reason="Turn on Dithering to change this."><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherEdgeProtection">Edge Protection</label><div class="settings-row-control"><label class="switch" for="exportDitherEdgeProtection"><input type="checkbox" id="exportDitherEdgeProtection"><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Stops diffusion crossing strong boundaries, keeping text, transparency edges, and outlines cleaner.</div><div class="settings-row-reason" data-inactive-reason-text></div></div>
 						</div>
-						<div class="settings-row-label-desc">Preserves subtle color differences more accurately. Higher quality takes longer to export but does not change the image dimensions.</div>
-					</div>
 					</div>
 				</div>
 
 				<div class="settings-group">
-					<div class="settings-group-title"><span>Optimization</span><span class="settings-group-badge">Advanced</span></div>
+					<div class="settings-group-title"><span class="settings-group-title-text">Optimization</span><button class="btn-text small reset-section-btn" data-section="optimization">Reset</button></div>
+
 					<div class="settings-row">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Frame Limit</div>
+							<label class="settings-row-label-main" for="exportOptimizationPreset">Optimization Goal</label>
+							<div class="settings-row-control">
+								<select id="exportOptimizationPreset">
+									<option value="highFidelity">High Fidelity</option>
+									<option value="balanced">Balanced</option>
+									<option value="smallFile">Small File</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Choose whether to favor fine motion detail or a smaller file. The animation keeps the same playback length.</div>
+					</div>
+
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="exportMaxSamplingFps">Motion Detail</label>
+							<div class="settings-row-control">
+								<select id="exportMaxSamplingFps">
+									<option value="auto">Match optimization goal</option>
+									<option value="15">Standard (15 samples/sec)</option>
+									<option value="24">Smooth (24 samples/sec)</option>
+									<option value="30">Finest (30 samples/sec)</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">How often the animation is checked for visual changes. Higher settings preserve faster motion, but can take longer and create a larger file. Slower source animations keep their original timing.</div>
+					</div>
+
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="exportMaxFrames">Frame Limit</label>
 							<div class="settings-row-control">
 								<select id="exportMaxFrames">
 									<option value="30">30 frames</option>
@@ -2076,21 +2126,7 @@
 
 					<div class="settings-row">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Optimization Goal</div>
-							<div class="settings-row-control">
-								<select id="exportOptimizationPreset">
-									<option value="highFidelity">High Fidelity</option>
-									<option value="balanced">Balanced</option>
-									<option value="smallFile">Small File</option>
-								</select>
-							</div>
-						</div>
-						<div class="settings-row-label-desc">Choose whether to favor fine motion detail or a smaller file. The animation keeps the same playback length.</div>
-					</div>
-
-					<div class="settings-row">
-						<div class="settings-row-header">
-							<div class="settings-row-label-main">Smart Frame Reduction</div>
+							<label class="settings-row-label-main" for="exportSmartFrameReduction">Smart Frame Reduction</label>
 							<div class="settings-row-control">
 								<label class="switch" for="exportSmartFrameReduction">
 									<input type="checkbox" id="exportSmartFrameReduction" />
@@ -2101,10 +2137,9 @@
 						<div class="settings-row-label-desc">Combines frames that look the same while keeping the animation at its original speed.</div>
 					</div>
 
-
 					<div class="settings-row">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Keep Fewer Frames</div>
+							<label class="settings-row-label-main" for="exportFrameSkip">Keep Fewer Frames</label>
 							<div class="settings-row-control">
 								<select id="exportFrameSkip">
 									<option value="1">Off</option>
@@ -2117,18 +2152,18 @@
 						<div class="settings-row-label-desc">An optional manual shortcut for smaller files. Skipped frame time is added to the frames that remain, so the speed and length stay the same.</div>
 					</div>
 
-					<div class="settings-row">
+					<div class="settings-row" data-export-format-section="gif" data-search-aliases="color quality encoder accuracy precision">
 						<div class="settings-row-header">
-							<div class="settings-row-label-main">Motion Detail</div>
+							<label class="settings-row-label-main" for="exportQuality">Encoder Precision</label>
 							<div class="settings-row-control">
-								<select id="exportMaxSamplingFps">
-									<option value="15">Standard (15 samples/sec)</option>
-									<option value="24">Smooth (24 samples/sec)</option>
-									<option value="30">Finest (30 samples/sec)</option>
+								<select id="exportQuality">
+									<option value="1">Best (slowest)</option>
+									<option value="10">Good</option>
+									<option value="20">Fast</option>
 								</select>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">How often the animation is checked for visual changes. Higher settings preserve faster motion, but can take longer and create a larger file. Slower source animations keep their original timing.</div>
+						<div class="settings-row-label-desc">How carefully the encoder matches subtle color differences. Higher precision takes longer to export but does not change the image dimensions.</div>
 					</div>
 				</div>
 				</div>
@@ -2138,7 +2173,7 @@
 			<!-- Footer with Reset All button -->
 			<div class="modal-footer left-right">
 				<button class="btn-text modal-action secondary reset-export-settings-btn">
-					Reset Export Settings
+					Reset All Export Settings
 				</button>
 				<button class="btn-simple modal-action modal-close" id="closeExportSettingsModalFooter">Close</button>
 			</div>
@@ -2149,7 +2184,7 @@
 
 	<!-- Shortcuts Modal -->
 	<div class="modal-overlay" id="shortcutsModal">
-		<div class="modal-content">
+		<div class="modal-content modal-reading">
 			<div class="modal-header">
 
 				<div class="modal-title">
@@ -2172,7 +2207,17 @@
 				</button>
 
 			</div>
-			<div class="modal-filter-bar search-toggle-row" data-modal-filter>
+			<div class="modal-nav search-toggle-row" data-modal-filter>
+				<div class="segmented-control modal-nav-scope" id="shortcutScopeControl" role="group" aria-label="Command input type">
+					<button type="button" class="segmented-option active" id="shortcutKeyboardTab" data-shortcut-view="keyboard" aria-pressed="true" aria-controls="shortcutList">
+						<svg class="icon" aria-hidden="true"><use href="#icon-keyboard"></use></svg>
+						Keyboard
+					</button>
+					<button type="button" class="segmented-option" id="shortcutGesturesTab" data-shortcut-view="gesture" aria-pressed="false" aria-controls="shortcutList">
+						<svg class="icon" aria-hidden="true"><use href="#icon-hand-pointer"></use></svg>
+						Gestures
+					</button>
+				</div>
 				<label class="search-input-wrapper">
 					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
 					<input type="search" id="shortcutSearch" placeholder="Find a command, key, or gesture…" aria-label="Find a command, key, or gesture" aria-controls="shortcutList">
@@ -2181,16 +2226,6 @@
 				<button type="button" class="btn-icon icon-wrapper" data-modal-filter-clear aria-label="Clear keyboard shortcut search" title="Clear search" hidden><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Clear search</span></button>
 			</div>
 			<div class="modal-body">
-				<div class="shortcut-view-tabs" role="tablist" aria-label="Command input type">
-					<button type="button" class="shortcut-view-tab active" id="shortcutKeyboardTab" role="tab" aria-selected="true" aria-controls="shortcutList" data-shortcut-view="keyboard">
-						<svg class="icon" aria-hidden="true"><use href="#icon-keyboard"></use></svg>
-						Keyboard
-					</button>
-					<button type="button" class="shortcut-view-tab" id="shortcutGesturesTab" role="tab" aria-selected="false" aria-controls="shortcutList" data-shortcut-view="gesture" tabindex="-1">
-						<svg class="icon" aria-hidden="true"><use href="#icon-hand-pointer"></use></svg>
-						Canvas Gestures
-					</button>
-				</div>
 				<p class="shortcut-help" id="shortcutViewDescription">Shortcuts use the keys for this device. Alternate bindings are separated by “or.”</p>
 				<div class="shortcut-list" id="shortcutList">
 					<!-- Populated via JS -->
@@ -2202,7 +2237,7 @@
 
 	<!-- About Modal -->
 	<div class="modal-overlay" id="aboutModal">
-		<div class="modal-content content-dialog document-dialog about-dialog">
+		<div class="modal-content modal-reading content-dialog document-dialog about-dialog">
 			<div class="modal-header">
 
 				<div class="modal-title">
@@ -2223,7 +2258,7 @@
 					<span class="name">Close</span>
 				</button>
 			</div>
-			<div class="document-nav search-toggle-row" aria-label="About navigation" hidden>
+			<div class="modal-nav document-nav search-toggle-row" aria-label="About navigation" hidden>
 				<button type="button" class="btn-simple document-toc-toggle" aria-expanded="false" aria-controls="aboutDocumentTocPanel">
 					<span>Contents</span>
 					<span class="icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
@@ -2247,7 +2282,7 @@
 
 	<!-- Guide Modal -->
 	<div class="modal-overlay" id="guideModal">
-		<div class="modal-content content-dialog document-dialog guide-dialog">
+		<div class="modal-content modal-reading content-dialog document-dialog guide-dialog">
 			<div class="modal-header">
 
 				<div class="modal-title">
@@ -2269,7 +2304,7 @@
 				</button>
 
 			</div>
-			<div class="document-nav search-toggle-row" aria-label="Guide navigation" hidden>
+			<div class="modal-nav document-nav search-toggle-row" aria-label="Guide navigation" hidden>
 				<button type="button" class="btn-simple document-toc-toggle" aria-expanded="false" aria-controls="guideDocumentTocPanel">
 					<span>Contents</span>
 					<span class="icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
@@ -2865,8 +2900,8 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=df7aad32"></script>
-	<script src="js/core/preferences.js?v=216cd049"></script>
+	<script src="js/core/config.js?v=5341d727"></script>
+	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
 	<script src="js/core/commands.js?v=263e9de6"></script>
 	<script src="js/core/dom.js?v=12f02905"></script>
@@ -2890,24 +2925,24 @@
 	<script src="js/effects/effect-source.js?v=0a33d343"></script>
 	<script src="js/effects/slot-effects.js?v=b10d7733"></script>
 	<script src="js/ui/panel-renderer.js?v=7af88ed0"></script>
-	<script src="js/ui/settings-store.js?v=f21628c7"></script>
+	<script src="js/ui/settings-store.js?v=94ba4d01"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
-	<script src="js/ui/editor-settings.js?v=c6963b98"></script>
+	<script src="js/ui/editor-settings.js?v=87692bc7"></script>
 	<script src="js/ui/editor-panels.js?v=2b18172f"></script>
-	<script src="js/ui/editor-disclosures.js?v=f84c7ddd"></script>
+	<script src="js/ui/editor-disclosures.js?v=ed86891e"></script>
 	<script src="js/ui/transform-panel.js?v=6330ed7e"></script>
 	<script src="js/transforms/editor-transform.js?v=43457e31"></script>
-	<script src="js/ui/document-start.js?v=bd0b7429"></script>
-		<script src="js/ui/modals-wiring.js?v=6391abe4"></script>
+	<script src="js/ui/document-start.js?v=c4ce37a0"></script>
+		<script src="js/ui/modals-wiring.js?v=1084cde4"></script>
 	<script src="js/ui/layer-panel.js?v=87c24a9d"></script>
-	<script src="js/ui/canvas-gestures.js?v=fce9978d"></script>
+	<script src="js/ui/canvas-gestures.js?v=569d61e7"></script>
 	<script src="js/ui/canvas-size.js?v=53305937"></script>
 	<script src="js/core/canvas-resize.js?v=fd22383b"></script>
 		<script src="js/ui/hints.js?v=a9e46b7c"></script>
 	<script src="js/ui/picker-session.js?v=164f3036"></script>
-	<script src="js/ui/context-toolbar-renderer.js?v=17884f04"></script>
-	<script src="js/ui/modal-filter.js?v=b00d889b"></script>
+	<script src="js/ui/context-toolbar-renderer.js?v=245d036a"></script>
+	<script src="js/ui/modal-filter.js?v=2a5c14d8"></script>
 	<script src="js/ui/notify.js?v=b117c567"></script>
 	<script src="js/core/debug.js?v=f9b6fed4"></script>
 
@@ -2916,9 +2951,9 @@
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
 	<script src="js/classes/ExportTimeline.js?v=15c2fe36"></script>
 	<script src="js/classes/GifPalette.js?v=8ef21a75"></script>
-	<script src="js/classes/GifExporter.js?v=96a3990a"></script>
+	<script src="js/classes/GifExporter.js?v=5a569673"></script>
 	<script src="js/classes/Mp4Exporter.js?v=2ffe9156"></script>
-	<script src="js/classes/ViewportManager.js?v=8791e465"></script>
+	<script src="js/classes/ViewportManager.js?v=2a060275"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>
 	<script src="js/classes/ProjectSerializer.js?v=4b62eaa0"></script>
 	<script src="js/classes/HtmlSceneExporter.js?v=2380ad65"></script>
@@ -2946,7 +2981,7 @@
 		<script src="js/classes/MobileManager.js?v=3e178244"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=20beac51"></script>
+	<script src="js/app.js?v=190fd544"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

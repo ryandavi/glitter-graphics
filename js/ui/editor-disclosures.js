@@ -404,29 +404,31 @@ initializeCollapsibleSections() {
 			list.appendChild(group);
 		}));
 
-		const tabs = Array.from(document.querySelectorAll('#shortcutsModal [data-shortcut-view]'));
+		// Keyboard vs Canvas Gestures narrows which commands are listed — it is a
+		// scope filter, not a set of pages — so it uses the shared segmented
+		// control in the chrome bar, alongside the text filter it works with.
+		const scopeButtons = Array.from(document.querySelectorAll('#shortcutsModal [data-shortcut-view]'));
 		const description = document.getElementById('shortcutViewDescription');
 		const setView = (kind, options = {}) => {
-			tabs.forEach((tab) => {
-				const active = tab.dataset.shortcutView === kind;
-				tab.classList.toggle('active', active);
-				tab.setAttribute('aria-selected', String(active));
-				tab.tabIndex = active ? 0 : -1;
+			scopeButtons.forEach((button) => {
+				const active = button.dataset.shortcutView === kind;
+				button.classList.toggle('active', active);
+				button.setAttribute('aria-pressed', String(active));
 			});
 			list.querySelectorAll('.shortcut-group').forEach((group) => {
 				group.hidden = group.dataset.shortcutKind !== kind;
 			});
 			if (description) description.textContent = gestureDescriptions[kind];
 			this.shortcutsFilter?.refresh();
-			if (options.focus) tabs.find((tab) => tab.dataset.shortcutView === kind)?.focus();
+			if (options.focus) scopeButtons.find((button) => button.dataset.shortcutView === kind)?.focus();
 		};
-		tabs.forEach((tab, index) => {
-			tab.addEventListener('click', () => setView(tab.dataset.shortcutView));
-			tab.addEventListener('keydown', (event) => {
+		scopeButtons.forEach((button, index) => {
+			button.addEventListener('click', () => setView(button.dataset.shortcutView));
+			button.addEventListener('keydown', (event) => {
 				if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
 				event.preventDefault();
 				const direction = event.key === 'ArrowRight' ? 1 : -1;
-				const next = tabs[(index + direction + tabs.length) % tabs.length];
+				const next = scopeButtons[(index + direction + scopeButtons.length) % scopeButtons.length];
 				setView(next.dataset.shortcutView, { focus: true });
 			});
 		});

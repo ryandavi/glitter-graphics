@@ -147,3 +147,19 @@ select {
 	font-family: var(--font-ui);
 	font-optical-sizing: auto;
 }
+
+// An in-app Reduce Motion override, for people whose OS setting is off or who
+// only want the editor itself quieter. Mirrors what `prefers-reduced-motion:
+// reduce` already does for the spinner and the filter panel.
+:root[data-reduce-motion="true"] {
+	&,
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		transition-delay: 0s !important;
+		scroll-behavior: auto !important;
+	}
+}

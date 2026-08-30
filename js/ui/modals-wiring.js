@@ -331,7 +331,7 @@ buildVersionHistoryEntry(release) {
 		item.className = 'version-history-feature';
 
 		const badge = document.createElement('span');
-		badge.className = `version-history-badge is-${type}`;
+		badge.className = `badge version-history-badge is-${type}`;
 		badge.textContent = type;
 		item.append(badge, document.createTextNode(` ${text} `));
 

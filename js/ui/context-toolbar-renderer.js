@@ -43,11 +43,17 @@ class ContextToolbarRenderer {
 		localStorage.setItem('glitterEditor_contextToolbarPlacement', JSON.stringify(placement));
 	}
 
+	// Returning the bar home is reachable two ways: double-clicking its handle,
+	// and Settings — a bar dragged off screen has to be recoverable from a menu.
+	resetPlacement() {
+		this.savePlacement({ anchor: 'bottom-center' });
+		this.hosts.forEach((item) => this.applyPlacement(item));
+	}
+
 	bindPlacement(host, handle) {
 		this.applyPlacement(host);
 		handle.addEventListener('dblclick', () => {
-			this.savePlacement({ anchor: 'bottom-center' });
-			this.hosts.forEach((item) => this.applyPlacement(item));
+			this.resetPlacement();
 			this.editor.updateStatus?.('Context bar position reset');
 		});
 

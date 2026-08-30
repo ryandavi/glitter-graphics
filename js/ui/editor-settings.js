@@ -1,3 +1,55 @@
+'use strict';
+
+// A setting that exists and matters but is currently held off by another
+// control the reader can see. It stays in place, carries the real `disabled`
+// property on its own controls, and says what to turn on. Hiding it instead
+// would teach nothing; `pointer-events: none` alone would leave it reachable
+// by Tab.
+function setSettingsRowInactive(row, inactive) {
+	if (!row) return;
+	row.classList.toggle('is-inactive', inactive);
+	row.querySelectorAll('input, select, textarea, button').forEach((control) => {
+		control.disabled = inactive;
+	});
+	const reason = row.querySelector('[data-inactive-reason-text]');
+	if (reason) reason.textContent = inactive ? (row.dataset.inactiveReason || '') : '';
+}
+
+// The keys a GIF Look writes. Declared once: the preset objects, the "editing
+// one of these switches the look to Custom" rule, and the collapsed summary
+// all read from this list, so they cannot drift apart.
+const GIF_LOOK_GOVERNED_KEYS = Object.freeze([
+	'colorCount', 'paletteStyle', 'ditherEnabled', 'ditherType',
+	'ditherAmount', 'ditherScale', 'ditherTemporalMode', 'ditherEdgeProtection'
+]);
+
+const GIF_LOOK_PRESETS = Object.freeze({
+	clean: { colorCount: 'auto', paletteStyle: 'balanced', ditherEnabled: false, ditherType: 'FloydSteinberg-serpentine', ditherAmount: 80, ditherScale: 1, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
+	classic: { colorCount: 128, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'FloydSteinberg-serpentine', ditherAmount: 80, ditherScale: 1, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
+	textured: { colorCount: 64, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'Bayer', ditherAmount: 90, ditherScale: 2, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
+	crunchy: { colorCount: 32, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'Bayer', ditherAmount: 100, ditherScale: 3, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
+	shimmer: { colorCount: 64, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'Bayer', ditherAmount: 80, ditherScale: 2, ditherTemporalMode: 'animated', ditherEdgeProtection: true }
+});
+
+// What the collapsed preset row says the current look actually means.
+function describeGifLook(settings) {
+	const patternNames = {
+		'FloydSteinberg-serpentine': 'Floyd-Steinberg', FloydSteinberg: 'Floyd-Steinberg',
+		FalseFloydSteinberg: 'False Floyd-Steinberg', Stucki: 'Stucki',
+		Atkinson: 'Atkinson', Bayer: 'Bayer', Halftone: 'Halftone'
+	};
+	const parts = [settings.colorCount === 'auto' ? 'Automatic colors' : `${settings.colorCount} colors`];
+	if (!settings.ditherEnabled) {
+		parts.push('no dithering');
+	} else {
+		parts.push(patternNames[settings.ditherType] || 'dithered');
+		parts.push(`${settings.ditherAmount}%`);
+		if (settings.ditherScale > 1) parts.push(`${settings.ditherScale}\u00d7 scale`);
+		if (settings.ditherTemporalMode === 'animated') parts.push('animated');
+	}
+	return parts.join(' \u00b7 ');
+}
+
 const EDITOR_SETTINGS_METHODS = {
 saveSettingsToStorage() {
 		const settings = {
@@ -78,6 +130,7 @@ initializeExportSettings() {
 	this.scaleTexturesOnTransform = PREFERENCES.get('scaleTextures');
 	this.interfaceTheme = CONFIG.ui.themes.includes(savedSettings?.interfaceTheme) ? savedSettings.interfaceTheme : 'dark';
 	this.applyInterfaceTheme();
+	this.applyReduceMotion();
 
 	// Sync UI to match exportSettings
 	this.syncExportSettingsToUI();
@@ -97,6 +150,10 @@ initializeExportSettings() {
 			antialiasMaskEdges: { checked: this.antialiasEdges },
 			scaleEffectsOnTransform: { checked: this.scaleEffectsOnTransform },
 			scaleTexturesOnTransform: { checked: this.scaleTexturesOnTransform },
+			autoSelectLayers: { checked: PREFERENCES.get('autoSelect') },
+			snappingEnabled: { checked: PREFERENCES.get('snappingEnabled') },
+			panInertia: { checked: PREFERENCES.get('panInertia') },
+			reduceMotion: { checked: PREFERENCES.get('reduceMotion') },
 			interfaceTheme: { value: this.interfaceTheme }
 		};
 
@@ -108,22 +165,39 @@ initializeExportSettings() {
 			if ('checked' in props) element.checked = props.checked;
 		});
 
-		// Update visibility states
-		['ditherTypeRow', 'exportDitherAmount', 'exportDitherScale', 'exportDitherTemporalMode', 'exportDitherEdgeProtection'].forEach((id) => {
-			const control = document.getElementById(id);
-			const row = id === 'ditherTypeRow' ? control : control?.closest('.settings-row');
-			row?.classList.toggle('disabled', !this.exportSettings.ditherEnabled);
-		});
-
-		const matteColorRow = document.getElementById('matteColorRow');
-		if (matteColorRow) {
-			matteColorRow.classList.toggle('disabled', this.exportSettings.format !== 'mp4' && this.exportSettings.transparency);
-		}
+		this.updateDitherDependentUI();
+		this.updateMatteColorUI();
 		this.updateWatermarkUI?.();
+		this.updateGifLookSummary();
 		this.updateExportFormatUI();
 		const ditherAmountValue = document.getElementById('exportDitherAmountValue');
 		if (ditherAmountValue) ditherAmountValue.textContent = `${this.exportSettings.ditherAmount}%`;
 		this.renderExportDitherPreview?.();
+	}
+
+,
+	// Everything the Dithering toggle governs. Inactive, not hidden: a person
+	// needs to see that dithering has options in order to know why to turn it on.
+	updateDitherDependentUI() {
+		const inactive = !this.exportSettings.ditherEnabled;
+		['ditherTypeRow', 'ditherAmountRow', 'ditherScaleRow', 'ditherTemporalModeRow', 'ditherEdgeProtectionRow']
+			.forEach((id) => setSettingsRowInactive(document.getElementById(id), inactive));
+	}
+
+,
+	updateMatteColorUI() {
+		setSettingsRowInactive(
+			document.getElementById('matteColorRow'),
+			this.exportSettings.format !== 'mp4' && this.exportSettings.transparency
+		);
+	}
+
+,
+	// The collapsed preset row states what the current look means, so the eight
+	// rows it wrote do not have to be expanded to be understood.
+	updateGifLookSummary() {
+		const summary = document.querySelector('[data-governed-summary]');
+		if (summary) summary.textContent = describeGifLook(this.exportSettings);
 	}
 
 ,
@@ -169,11 +243,36 @@ initializeExportSettings() {
 ,
 	updateWatermarkUI() {
 		const enabled = Boolean(this.exportSettings.watermarkEnabled);
-		const selectionRow = document.getElementById('watermarkSelectionRow');
-		const enabledInput = document.getElementById('exportWatermarkEnabled');
-		if (selectionRow) selectionRow.hidden = !enabled;
-		if (enabledInput) enabledInput.setAttribute('aria-expanded', String(enabled));
-		if (enabled) this.updateWatermarkPreview?.();
+		// Governed by a toggle directly above it, so it stays visible and goes
+		// inactive rather than disappearing — the same rule the dither rows use.
+		setSettingsRowInactive(document.getElementById('watermarkSelectionRow'), !enabled);
+		this.updateWatermarkPreview?.();
+	}
+
+,
+	// A preset row plus the rail of rows it writes. The rail is collapsed by
+	// default: the summary beside the preset already says what it means.
+	setupGovernedSets() {
+		document.querySelectorAll('[data-governed-set]').forEach((set) => {
+			const toggle = set.querySelector('[data-governed-toggle]');
+			if (!toggle || toggle.dataset.bound === 'true') return;
+			toggle.dataset.bound = 'true';
+			toggle.addEventListener('click', () => {
+				this.setGifLookExpanded(set.classList.contains('is-collapsed'));
+			});
+		});
+		this.setGifLookExpanded(this.exportSettings.ditherPreset === 'custom');
+	}
+
+,
+	setGifLookExpanded(expanded) {
+		const set = document.getElementById('exportGifLookSet');
+		if (!set) return;
+		set.classList.toggle('is-collapsed', !expanded);
+		const toggle = set.querySelector('[data-governed-toggle]');
+		const label = set.querySelector('[data-governed-toggle-label]');
+		if (toggle) toggle.setAttribute('aria-expanded', String(expanded));
+		if (label) label.textContent = expanded ? 'Done' : 'Customize';
 	}
 
 ,
@@ -187,45 +286,40 @@ initializeExportSettings() {
 
 ,
 	setupExportSettingsListeners() {
-		const ditherPresets = {
-			classic: { colorCount: 128, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'FloydSteinberg-serpentine', ditherAmount: 80, ditherScale: 1, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
-			clean: { colorCount: 'auto', paletteStyle: 'balanced', ditherEnabled: false, ditherType: 'FloydSteinberg-serpentine', ditherAmount: 80, ditherScale: 1, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
-			textured: { colorCount: 64, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'Bayer', ditherAmount: 90, ditherScale: 2, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
-			crunchy: { colorCount: 32, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'Bayer', ditherAmount: 100, ditherScale: 3, ditherTemporalMode: 'stable', ditherEdgeProtection: true },
-			shimmer: { colorCount: 64, paletteStyle: 'vivid', ditherEnabled: true, ditherType: 'Bayer', ditherAmount: 80, ditherScale: 2, ditherTemporalMode: 'animated', ditherEdgeProtection: true }
-		};
 		const presetControl = document.getElementById('exportDitherPreset');
 		if (presetControl && !presetControl.dataset.bound) {
 			presetControl.dataset.bound = 'true';
 			presetControl.addEventListener('change', () => {
-				const preset = ditherPresets[presetControl.value];
+				const preset = GIF_LOOK_PRESETS[presetControl.value];
+				// Picking a named look re-collapses the rail — the summary now
+				// says everything it wrote. Custom keeps it open to be edited.
+				this.setGifLookExpanded(!preset);
 				if (!preset) return;
 				Object.assign(this.exportSettings, preset, { ditherPreset: presetControl.value });
-				this.settingsStore.syncToUI(this.exportSettings);
 				this.saveSettingsToStorage();
-				this.syncSettingsUI();
+				// `syncExportSettingsToUI` already pushes the values to the
+				// controls; the old call here named a method that never existed,
+				// so picking a look threw before it could refresh anything.
+				this.syncExportSettingsToUI();
 			});
 		}
+		this.setupGovernedSets();
 		this.settingsStore.bindListeners(this.exportSettings, (key, value) => {
-			if (presetControl && ['colorCount', 'paletteStyle', 'ditherEnabled', 'ditherType', 'ditherAmount', 'ditherScale', 'ditherTemporalMode', 'ditherEdgeProtection'].includes(key)) {
+			if (presetControl && GIF_LOOK_GOVERNED_KEYS.includes(key)) {
 				presetControl.value = 'custom';
 				this.exportSettings.ditherPreset = 'custom';
 			}
 			this.saveSettingsToStorage();
 			this.renderExportDitherPreview?.();
+			this.updateGifLookSummary();
 			this.updateExportDuration();
-			if (key === 'ditherEnabled') {
-				['ditherTypeRow', 'exportDitherAmount', 'exportDitherScale', 'exportDitherTemporalMode', 'exportDitherEdgeProtection'].forEach((id) => {
-					const control = document.getElementById(id);
-					const row = id === 'ditherTypeRow' ? control : control?.closest('.settings-row');
-					row?.classList.toggle('disabled', !value);
-				});
-			}
+			if (key === 'ditherEnabled') this.updateDitherDependentUI();
 			if (key === 'watermarkEnabled') this.updateWatermarkUI?.();
 			if (key === 'watermark') {
 				this.updateWatermarkPreview?.();
 			}
 			if (key === 'transparency' || key === 'mp4LengthMode') this.updateExportFormatUI();
+			if (key === 'transparency' || key === 'format') this.updateMatteColorUI();
 		});
 
 		// Delegate live repeat changes so the duration remains bound even if modal
@@ -323,6 +417,53 @@ initializeExportSettings() {
 			this.applyInterfaceTheme();
 			this.saveSettingsToStorage();
 		});
+
+		// Preferences that used to be reachable only from a transient canvas
+		// control. The canvas controls stay; Settings is simply where a person
+		// looks to find out whether they are on.
+		this.bindPreferenceToggle('autoSelectLayers', 'autoSelect', (value) => {
+			const canvasToggle = document.getElementById('contextAutoSelect');
+			if (canvasToggle) canvasToggle.checked = value;
+		});
+		this.bindPreferenceToggle('snappingEnabled', 'snappingEnabled', (value) => {
+			document.getElementById('snappingToggle')?.classList.toggle('active', value);
+		});
+		this.bindPreferenceToggle('panInertia', 'panInertia');
+		this.bindPreferenceToggle('reduceMotion', 'reduceMotion', () => this.applyReduceMotion());
+
+		document.getElementById('resetToolbarPlacement')?.addEventListener('click', () => this.resetToolbarPlacement());
+	}
+
+,
+	bindPreferenceToggle(elementId, preferenceKey, onChange = null) {
+		const input = document.getElementById(elementId);
+		if (!input || input.dataset.bound === 'true') return;
+		input.dataset.bound = 'true';
+		input.addEventListener('change', () => {
+			PREFERENCES.set(preferenceKey, input.checked);
+			this.saveSettingsToStorage();
+			onChange?.(input.checked);
+		});
+	}
+
+,
+	applyReduceMotion() {
+		// Only stamp the attribute when the preference is on, so the universal
+		// selector it gates never has to be evaluated in the common case.
+		if (PREFERENCES.get('reduceMotion')) document.documentElement.dataset.reduceMotion = 'true';
+		else delete document.documentElement.dataset.reduceMotion;
+	}
+
+,
+	async resetToolbarPlacement() {
+		const confirmed = await this.confirmSettingsAction({
+			title: 'Reset Toolbar Position',
+			message: 'The floating tool bar returns to its default position at the bottom of the canvas.',
+			confirmLabel: 'Reset Toolbar'
+		});
+		if (!confirmed) return;
+		this.contextToolbarRenderer?.resetPlacement?.();
+		this.updateStatus('Toolbar position reset');
 	}
 
 ,
@@ -355,11 +496,7 @@ initializeExportSettings() {
 		if (loopCountRow) loopCountRow.hidden = !isMp4 || usesTargetDuration;
 		const transparency = document.getElementById('exportTransparency');
 		if (transparency) transparency.disabled = isMp4;
-		const matteColorRow = document.getElementById('matteColorRow');
-		const matteColor = document.getElementById('exportMatteColor');
-		const matteDisabled = !isMp4 && this.exportSettings.transparency;
-		matteColorRow?.classList.toggle('disabled', matteDisabled);
-		if (matteColor) matteColor.disabled = matteDisabled;
+		this.updateMatteColorUI();
 		const buttonName = document.querySelector('#exportGif .name');
 		if (buttonName) buttonName.textContent = isMp4 ? 'Export MP4' : 'Export GIF';
 		this.exportSettingsFilter?.apply();
@@ -534,45 +671,54 @@ async resetSettingsSection(section) {
 			this.confirmDestructiveActions = true;
 			this.interfaceTheme = 'dark';
 			this.applyInterfaceTheme();
+			PREFERENCES.reset('reduceMotion');
+			this.applyReduceMotion();
 			localStorage.removeItem('glitterEditor_welcomeModalSeen');
 			localStorage.removeItem('glitterEditor_welcomeLastSeenRelease');
 			break;
 
 		case 'tools':
-			PREFERENCES.reset('crispMaskEdges');
-			PREFERENCES.reset('scaleEffects');
-			PREFERENCES.reset('scaleTextures');
+			['crispMaskEdges', 'scaleEffects', 'scaleTextures', 'autoSelect', 'snappingEnabled', 'panInertia']
+				.forEach((key) => PREFERENCES.reset(key));
 			this.antialiasEdges = !PREFERENCES.get('crispMaskEdges');
 			this.scaleEffectsOnTransform = PREFERENCES.get('scaleEffects');
 			this.scaleTexturesOnTransform = PREFERENCES.get('scaleTextures');
 			this.refreshMaskEdgeRendering();
 			this.maskEditor?.resetToolSettingsToDefaults();
 			this.applyDefaultPanelLayout();
+			this.contextToolbarRenderer?.resetPlacement?.();
 			break;
 
-		case 'export':
-			this.settingsStore.reset(this.exportSettings, 'export');
-			break;
-
-		case 'encoding':
-			this.settingsStore.reset(this.exportSettings, 'encoding');
-			break;
-
-		case 'framecontrol':
-			this.settingsStore.reset(this.exportSettings, 'framecontrol');
+		// Export sections map one-to-one onto the headings in the Export
+		// Settings modal, so a group Reset restores exactly the rows below it.
+		case 'output':
+		case 'playback':
+		case 'quality':
+		case 'optimization':
+			this.settingsStore.reset(this.exportSettings, section);
 			break;
 	}
 
+	this.syncCanvasPreferenceControls();
 	this.syncExportSettingsToUI();
 	this.saveSettingsToStorage();
 }
 
 ,
+// Preferences shown in both Settings and a canvas control have to agree after
+// a reset, whichever surface triggered it.
+syncCanvasPreferenceControls() {
+	const autoSelect = document.getElementById('contextAutoSelect');
+	if (autoSelect) autoSelect.checked = PREFERENCES.get('autoSelect');
+	document.getElementById('snappingToggle')?.classList.toggle('active', PREFERENCES.get('snappingEnabled'));
+}
+
+,
 async resetAllSettings() {
 	const confirmed = await this.confirmSettingsAction({
-		title: 'Reset All Settings',
-		message: 'Export settings, interface preferences, and everything else will be restored to their defaults.',
-		confirmLabel: 'Reset'
+		title: 'Reset Everything',
+		message: 'Every setting in this window and in Export Settings, plus your panel layout and toolbar position, will be restored to its default.',
+		confirmLabel: 'Reset Everything'
 	});
 	if (!confirmed) {
 		return;
@@ -589,6 +735,9 @@ async resetAllSettings() {
 	this.scaleEffectsOnTransform = PREFERENCES.get('scaleEffects');
 	this.scaleTexturesOnTransform = PREFERENCES.get('scaleTextures');
 	this.refreshMaskEdgeRendering();
+	this.applyReduceMotion();
+	this.syncCanvasPreferenceControls();
+	this.contextToolbarRenderer?.resetPlacement?.();
 	this.interfaceTheme = 'dark';
 	this.applyInterfaceTheme();
 	localStorage.removeItem('glitterEditor_welcomeModalSeen');
@@ -603,8 +752,8 @@ async resetAllSettings() {
 ,
 	async resetExportSettings() {
 		const confirmed = await this.confirmAction({
-			title: 'Reset Export Settings',
-			message: 'Export, encoding, and frame-control settings will be restored to their defaults.',
+			title: 'Reset All Export Settings',
+			message: 'Every setting in this window — Output, Playback, Quality, and Optimization — will be restored to its default.',
 			confirmLabel: 'Reset'
 		});
 		if (!confirmed) return;
@@ -619,9 +768,10 @@ async resetAllSettings() {
 		const names = {
 			'interface': 'Interface Settings',
 			'tools': 'Tools & Workspace Settings',
-			'export': 'Export Settings',
-			'encoding': 'Encoding Settings',
-			'framecontrol': 'Frame Control Settings'
+			'output': 'Output Settings',
+			'playback': 'Playback Settings',
+			'quality': 'Quality Settings',
+			'optimization': 'Optimization Settings'
 		};
 		return names[section] || 'Settings';
 	}

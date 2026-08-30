@@ -406,6 +406,9 @@ class GlitterEditor {
 		toggle.checked = PREFERENCES.get('autoSelect');
 		toggle.addEventListener('change', () => {
 			PREFERENCES.set('autoSelect', toggle.checked);
+			// Settings shows the same preference, so it has to agree.
+			const settingsInput = document.getElementById('autoSelectLayers');
+			if (settingsInput) settingsInput.checked = toggle.checked;
 			this.saveSettingsToStorage();
 			this.updateStatus(toggle.checked
 				? 'Auto-Select on: click an object to select it'

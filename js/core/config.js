@@ -743,7 +743,8 @@ const CONFIG = deepFreeze({
 			reverse: false,
 			smartFrameReduction: true,
 			optimizationPreset: 'balanced',
-			maxSamplingFps: 24,
+			// 'auto' follows the chosen Optimization Goal.
+			maxSamplingFps: 'auto',
 			watermarkEnabled: false,
 			watermark: 'images/watermark/2.png'
 		},

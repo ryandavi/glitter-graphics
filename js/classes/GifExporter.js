@@ -1270,7 +1270,7 @@ class GifExporter {
 			timelines: sourceTimelines,
 			fallbackDuration: exportSettings.frameDelay,
 			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
-			maxSamplingFps: exportSettings.maxSamplingFps || preset.maxSamplingFps,
+			maxSamplingFps: exportSettings.maxSamplingFps === 'auto' ? preset.maxSamplingFps : (exportSettings.maxSamplingFps || preset.maxSamplingFps),
 			manualFrameSkip: exportSettings.exportFrameSkip,
 			reverse: exportSettings.exportReverse,
 			smartReduction: exportSettings.smartFrameReduction,

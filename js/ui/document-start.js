@@ -198,7 +198,7 @@ setupImageListeners() {
 		if (colorRadio) colorRadio.checked = true;
 
 		// Enable color row since we default to color background
-		if (colorRow) colorRow.classList.remove('disabled');
+		setSettingsRowInactive(colorRow, false);
 
 		// Find and activate matching preset
 		let matchingPreset = null;
@@ -315,9 +315,7 @@ setupImageListeners() {
 		// Background type toggle
 		backgroundRadios.forEach(radio => {
 			radio.addEventListener('change', (e) => {
-				if (colorRow) {
-					colorRow.classList.toggle('disabled', radio.value !== 'color');
-				}
+				setSettingsRowInactive(colorRow, radio.value !== 'color');
 			});
 		});
 

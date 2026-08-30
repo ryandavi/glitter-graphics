@@ -251,8 +251,11 @@
 	width: var(--switch-width);
 	position: relative;
 
+	// The input stays in the tab order and the accessibility tree — it is the
+	// control. `display: none` would remove both, leaving a switch that only a
+	// mouse can reach. Same contract as `.checkbox-group`.
 	>input[type="checkbox"] {
-		display: none;
+		@include visually-hidden-control;
 
 		&:checked+.slider {
 			background-color: var(--slider-checked-bg);
@@ -260,6 +263,14 @@
 			&:before {
 				transform: translateX(calc(var(--switch-width) - var(--switch-height)));
 			}
+		}
+
+		&:focus-visible+.slider {
+			box-shadow: var(--control-focus-ring);
+		}
+
+		&:disabled+.slider {
+			cursor: not-allowed;
 		}
 	}
 

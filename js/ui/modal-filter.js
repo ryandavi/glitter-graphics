@@ -25,20 +25,31 @@ function createModalFilter(options) {
 			.map(({ terms }) => terms);
 		return [normalized, ...aliases].join(' ');
 	};
+	// Buttons and badges in a group heading are chrome, not searchable content:
+	// indexing them made every row under "Optimization · Advanced" match
+	// "advanced", and every group with a Reset button match "reset".
+	const readableText = (element) => {
+		if (!element) return '';
+		const copy = element.cloneNode(true);
+		copy.querySelectorAll('button, .badge').forEach((node) => node.remove());
+		return copy.textContent || '';
+	};
+
 	let groups = [];
 	let records = [];
 	const collect = () => {
 		groups = Array.from(root.querySelectorAll(options.groupSelector));
 		records = Array.from(root.querySelectorAll(options.itemSelector)).map((item) => {
 			const group = item.closest(options.groupSelector);
-			const groupTitle = group?.querySelector(options.groupTitleSelector)?.textContent || '';
-			const itemText = Array.from(item.querySelectorAll('*'))
-				.filter((element) => !element.children.length)
-				.map((element) => element.textContent)
-				.join(' ');
+			const groupTitle = readableText(group?.querySelector(options.groupTitleSelector));
+			const itemText = readableText(item);
 			return {
 				item,
 				group,
+				// A preset row owns the rows beneath it, so it stays visible
+				// whenever anything in its group matches — otherwise a match on
+				// a governed row leaves an indented rail under no heading.
+				isPinned: item.hasAttribute('data-filter-pin'),
 				searchText: expandAliases(`${groupTitle} ${itemText} ${item.dataset.searchAliases || ''}`)
 			};
 		});
@@ -57,10 +68,18 @@ function createModalFilter(options) {
 		});
 
 		groups.forEach((group) => {
-			const hasMatch = records.some((record) => record.group === group && !record.item.classList.contains('is-filtered-out'));
-			group.classList.toggle('is-filtered-out', terms.length > 0 && !hasMatch);
+			const groupRecords = records.filter((record) => record.group === group);
+			const isVisible = (record) => !record.item.classList.contains('is-filtered-out');
+			const hasGovernedMatch = groupRecords.some((record) => !record.isPinned && isVisible(record));
+			groupRecords.forEach((record) => {
+				if (record.isPinned && hasGovernedMatch) record.item.classList.remove('is-filtered-out');
+			});
+			group.classList.toggle('is-filtered-out', terms.length > 0 && !groupRecords.some(isVisible));
 		});
 
+		// Collapsed disclosures inside the body have to open while a query is
+		// active, or a matching row would be filtered "in" but still hidden.
+		root.classList.toggle('is-filtering', terms.length > 0);
 		if (clearButton) clearButton.hidden = !terms.length;
 		if (emptyState) emptyState.hidden = !terms.length || matchCount > 0;
 		if (status) {

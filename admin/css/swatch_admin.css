@@ -288,6 +288,17 @@
   /* mobile app-header's own stacking context — above open drawers (10000), below modals (20000) */
   --modal-z-index: 20000;
   --z-tooltip: 100000;
+  /* ===== MODALS ===== */
+  /* Two widths only. Settings-shaped modals read as a single column of rows;
+     reading modals carry two columns of prose or shortcuts. */
+  --modal-width-browse: 720px;
+  --modal-width-reading: 880px;
+  --modal-browse-height: 720px;
+  /* ===== SETTINGS ROWS ===== */
+  /* One column width for every value control, so the right edge of a settings
+     list is an alignment line rather than a by-product of option text. */
+  --settings-control-width: 200px;
+  --settings-desc-measure: 64ch;
 }
 
 :root[data-theme=light] {

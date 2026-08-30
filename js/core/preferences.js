@@ -5,7 +5,9 @@ const PREFERENCE_SCHEMA = Object.freeze({
 	autoSelect: { default: () => CONFIG.app.behavior.autoSelect },
 	snappingEnabled: { default: () => CONFIG.snapping.enabled },
 	scaleEffects: { default: () => CONFIG.rendering.transformBehavior.scaleEffects },
-	scaleTextures: { default: () => CONFIG.rendering.transformBehavior.scaleTextures }
+	scaleTextures: { default: () => CONFIG.rendering.transformBehavior.scaleTextures },
+	panInertia: { default: () => CONFIG.ui.gestures.inertia.enabled },
+	reduceMotion: { default: () => false }
 });
 
 class Preferences {

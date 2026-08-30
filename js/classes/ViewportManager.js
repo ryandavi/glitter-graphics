@@ -577,13 +577,13 @@ class ViewportManager {
 	}
 
 	startInertia(velocityX, velocityY) {
-		if (!CONFIG.ui.gestures.inertia?.enabled) {
+		if (!PREFERENCES.get('panInertia')) {
 			return;
 		}
 
-		// Momentum is motion the user did not ask to continue; honor a reduced-motion
-		// preference the same way animated zoom transitions do.
-		if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+		// Momentum is motion the user did not ask to continue; honor both the OS
+		// setting and the editor's own Reduce Motion preference.
+		if (PREFERENCES.get('reduceMotion') || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
 			return;
 		}
 

@@ -30,6 +30,7 @@ const SUITES = [
 	{ file: 'panel-parity.js', tags: ['panels'] },
 	{ file: 'pixel-effects-ui-verify.js', tags: ['panels', 'effects'] },
 	{ file: 'ux-polish-verify.js', tags: ['panels'] },
+	{ file: 'modal-settings-verify.js', tags: ['panels'] },
 	{ file: 'document-start-verify.js', tags: ['document'] },
 	{ file: 'auto-glitter-reopen-verify.js', tags: ['document', 'effects'] },
 	{ file: 'layer-reorder-transform-verify.js', tags: ['layers'] },
