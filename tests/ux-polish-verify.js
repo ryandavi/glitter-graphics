@@ -25,13 +25,18 @@ async function main() {
 
 		await page.evaluate(() => window.editor.modalManager.open('shortcutsModal'));
 		const shortcutKeyboardState = await page.evaluate(() => ({
-			tabs: document.querySelectorAll('#shortcutsModal [role="tab"]').length,
-			selected: document.querySelector('#shortcutsModal [role="tab"][aria-selected="true"]')?.dataset.shortcutView,
+			tabs: document.querySelectorAll('#shortcutsModal [data-shortcut-view]').length,
+			selected: document.querySelector('#shortcutsModal [data-shortcut-view].active')?.dataset.shortcutView,
 			groups: document.querySelectorAll('#shortcutList .shortcut-group[data-shortcut-kind="keyboard"]:not([hidden])').length,
-			tabIconSize: getComputedStyle(document.querySelector('#shortcutsModal .shortcut-view-tab svg.icon')).width
+			inChrome: !!document.querySelector('#shortcutsModal > .modal-content > .modal-nav [data-shortcut-view]'),
+			tabIconSize: getComputedStyle(document.querySelector('#shortcutsModal .modal-nav-scope svg.icon')).width
 		}));
 		assert(shortcutKeyboardState.tabs === 2 && shortcutKeyboardState.selected === 'keyboard' && shortcutKeyboardState.groups === 6,
 			`Commands panel keyboard organization is incomplete: ${JSON.stringify(shortcutKeyboardState)}`);
+		// The scope control filters the list; it belongs in the modal's chrome bar
+		// beside the text filter, not inside the body it scrolls with.
+		assert(shortcutKeyboardState.inChrome,
+			`Commands scope control is not in the modal chrome: ${JSON.stringify(shortcutKeyboardState)}`);
 		assert(shortcutKeyboardState.tabIconSize === '14px',
 			`Commands panel tab icons are not constrained: ${JSON.stringify(shortcutKeyboardState)}`);
 		await page.click('#shortcutGesturesTab');
@@ -42,7 +47,7 @@ async function main() {
 			const gestureStyle = getComputedStyle(gesture);
 			const deviceIconStyle = getComputedStyle(gesture.querySelector('.shortcut-device-icon'));
 			return {
-				selected: document.querySelector('#shortcutsModal [role="tab"][aria-selected="true"]')?.dataset.shortcutView,
+				selected: document.querySelector('#shortcutsModal [data-shortcut-view].active')?.dataset.shortcutView,
 				groups: document.querySelectorAll('#shortcutList .shortcut-group[data-shortcut-kind="gesture"]:not([hidden])').length,
 				icons: document.querySelectorAll('#shortcutList .shortcut-group[data-shortcut-kind="gesture"] .shortcut-device-icon').length,
 				sameHeight: keyStyle.height === gestureStyle.height,
@@ -71,7 +76,14 @@ async function main() {
 				advancedIds: advanced ? [...advanced.querySelectorAll('[id]')].map((node) => node.id) : [],
 				creativeIds: ['exportTransparency', 'exportMatteColor', 'exportWatermarkEnabled', 'exportFrameDelay', 'exportReverse']
 					.filter((id) => !document.getElementById(id)?.closest('[data-advanced]')),
-				sectionResetCount: document.querySelectorAll('#exportSettingsModal .reset-section-btn').length,
+				// Every visible heading owns a Reset, and every Reset names a real
+				// schema group — the two were previously unrelated, which is why
+				// the group-reset code was unreachable.
+				exportSections: [...document.querySelectorAll('#exportSettingsModal .settings-group')].map((group) => ({
+					title: group.querySelector('.settings-group-title-text')?.textContent,
+					section: group.querySelector('.reset-section-btn')?.dataset.section
+				})),
+				schemaGroups: [...new Set(Object.values(EXPORT_SETTINGS_SCHEMA).map((spec) => spec.group))].sort(),
 				settingsRows: ['interfaceTheme', 'showHelpfulHints', 'showWelcomeOnStartup', 'confirmDestructiveActions']
 					.filter((id) => document.getElementById(id)).length
 			};
@@ -81,7 +93,10 @@ async function main() {
 			assert(!modalAudit.advancedIds.includes(id), `${id} is unexpectedly nested inside Export Advanced`);
 		}
 		assert(modalAudit.creativeIds.length === 5, 'Creative export controls are not all top-level');
-		assert(modalAudit.sectionResetCount === 0, 'Export Settings still has per-section reset buttons');
+		assert(modalAudit.exportSections.length === 4 && modalAudit.exportSections.every((s) => s.title && s.section),
+			`Export Settings groups are missing a heading or a Reset: ${JSON.stringify(modalAudit.exportSections)}`);
+		assert(JSON.stringify(modalAudit.exportSections.map((s) => s.section).sort()) === JSON.stringify(modalAudit.schemaGroups),
+			`Export Reset buttons do not map onto the settings schema groups: ${JSON.stringify(modalAudit)}`);
 		assert(modalAudit.settingsRows === 4, 'Settings modal is missing backed interface controls');
 		console.log('PASS Export and Settings modal hierarchy');
 
