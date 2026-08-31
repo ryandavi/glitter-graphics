@@ -495,22 +495,21 @@ class MaskEditor {
 
 		const buildRow = (spec) => {
 			const row = document.createElement('div');
-			row.className = 'setting-column right brush-dynamic-row';
+			row.className = 'property-row brush-dynamic-row';
 			row.dataset.dynamic = spec.key;
 			if (spec.rasterOnly) row.dataset.rasterOnly = '';
 			row.innerHTML =
-				`<div class="setting-header">` +
-					`<span class="setting-label" title="${spec.hint}">${spec.label}</span>` +
-					`<span class="setting-value" data-dynamic-value></span>` +
-				`</div>` +
+				`<span class="property-label" title="${spec.hint}">${spec.label}</span>` +
 				`<input type="range" min="${spec.min}" max="${spec.max}" step="${spec.step || 1}" data-dynamic-input>` +
-				`<button class="btn-text" type="button" data-dynamic-reset>Reset</button>`;
+				`<span class="property-value" data-dynamic-value></span>` +
+				`<button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-dynamic-reset>` +
+					`<svg class="icon"><use href="#icon-undo"></use></svg></button>`;
 			return row;
 		};
 		const specs = new Map(MaskEditor.DYNAMICS_SLIDERS.map((spec) => [spec.key, spec]));
 		[['scatter', 'count'], ['countJitter', 'sizeJitter'], ['angle', 'angleJitter']].forEach((keys) => {
 			const pair = document.createElement('div');
-			pair.className = 'settings-group-two-column brush-dynamic-pair';
+			pair.className = 'property-pair-group brush-dynamic-pair';
 			keys.forEach((key) => pair.appendChild(buildRow(specs.get(key))));
 			host.appendChild(pair);
 		});
@@ -520,9 +519,13 @@ class MaskEditor {
 		flips.className = 'brush-dynamic-toggles';
 		MaskEditor.DYNAMICS_TOGGLES.forEach((spec) => {
 			const label = document.createElement('label');
-			label.className = 'checkbox-group';
+			// R4: a boolean setting is a toggle row, the same as every other
+			// boolean in the panel - not a full-width pill.
+			label.className = 'property-row is-toggle';
 			if (spec.rasterOnly) label.dataset.rasterOnly = '';
-			label.innerHTML = `<input type="checkbox" data-dynamic-toggle="${spec.key}"><span title="${spec.hint}">${spec.label}</span>`;
+			label.innerHTML = `<span class="property-label" title="${spec.hint}">${spec.label}</span>`
+				+ `<input type="checkbox" data-dynamic-toggle="${spec.key}">`
+				+ `<span class="property-switch" aria-hidden="true"></span>`;
 			flips.appendChild(label);
 		});
 		host.appendChild(flips);
@@ -563,7 +566,11 @@ class MaskEditor {
 		const out = row.querySelector('[data-dynamic-value]');
 		if (spec && out) out.textContent = `${input.value}${spec.unit}`;
 		const manifest = this._dynamicsManifestModel();
-		row.classList.toggle('is-overridden', Number(input.value) !== manifest[row.dataset.dynamic]);
+		const isDefault = Number(input.value) === manifest[row.dataset.dynamic];
+		row.classList.toggle('is-overridden', !isDefault);
+		// Rule D: the revert is inert (and therefore invisible) at the default.
+		const revert = row.querySelector('[data-dynamic-reset]');
+		if (revert) revert.disabled = isDefault;
 	}
 
 	_syncDynamicsPanel() {

@@ -1504,7 +1504,14 @@ class TextGlitterManager {
 			button.classList.toggle('active', button.dataset.fontId === fontId);
 		});
 
-		this.scrollActiveFontIntoView();
+		// Only reveal the active card when the font actually changed. This runs
+		// on every panel sync, so scrolling unconditionally threw the list back
+		// to the selected font whenever anything else about the text changed -
+		// pressing Bold while browsing further down the list lost your place.
+		if (fontId !== this.lastRevealedFontId) {
+			this.lastRevealedFontId = fontId;
+			this.scrollActiveFontIntoView();
+		}
 	}
 
 	updateFontStyleSelection(textData) {

@@ -100,14 +100,62 @@ function panelRoleId(prefix, role) {
 	return PANEL_ID_OVERRIDES[prefix]?.[role] || prefix + PANEL_ROLES.paintSlot[role];
 }
 
+// Every slider's default, keyed by the element id it ends up carrying. One
+// registry, filled wherever a spec is applied (schema rows, legacy template
+// cards, the transform panel), so rule D's "revert is inert at default" holds
+// for all of them instead of the seven that were hand-listed in app.js.
+const PANEL_SLIDER_DEFAULTS = Object.create(null);
+
 function applySliderSpec(input, spec) {
 	input.min = String(spec.min);
 	input.max = String(spec.max);
 	input.setAttribute('value', String(spec.value));
 	if (spec.step != null) input.step = String(spec.step);
+	if (input.id) PANEL_SLIDER_DEFAULTS[input.id] = spec.value;
 }
 
-// One slider row: label + value readout + range + Reset. Ids follow the role
+// Rule D, applied to any revert the panel owns: the control is disabled (and
+// therefore invisible) while its slider sits at the default. Buttons already
+// wired by bindSlider mark themselves so this never double-handles a click.
+function syncPropertyRevert(slider) {
+	if (!slider?.id) return;
+	const fallback = PANEL_SLIDER_DEFAULTS[slider.id];
+	if (fallback === undefined) return;
+	const button = document.getElementById(`reset${slider.id.charAt(0).toUpperCase()}${slider.id.slice(1)}`);
+	if (!button) return;
+	button.disabled = Number(slider.value) === Number(fallback);
+}
+
+function initializePropertyReverts(root = document) {
+	root.querySelectorAll('input[type="range"][id]').forEach(syncPropertyRevert);
+	if (initializePropertyReverts.bound) return;
+	initializePropertyReverts.bound = true;
+	document.addEventListener('input', (event) => {
+		if (event.target.matches?.('input[type="range"][id]')) syncPropertyRevert(event.target);
+	});
+	document.addEventListener('change', (event) => {
+		if (event.target.matches?.('input[type="range"][id]')) syncPropertyRevert(event.target);
+	});
+	// Fallback revert for sliders whose reset button bindSlider never claimed.
+	document.addEventListener('click', (event) => {
+		const button = event.target.closest?.('.property-revert');
+		if (!button || button.disabled || button.dataset.revertBound !== undefined) return;
+		const sliderId = button.id.replace(/^reset/, '');
+		const slider = document.getElementById(sliderId.charAt(0).toLowerCase() + sliderId.slice(1))
+			|| document.getElementById(sliderId);
+		const fallback = slider && PANEL_SLIDER_DEFAULTS[slider.id];
+		if (!slider || fallback === undefined) return;
+		slider.value = String(fallback);
+		slider.dispatchEvent(new Event('input', { bubbles: true }));
+		slider.dispatchEvent(new Event('change', { bubbles: true }));
+	});
+}
+
+// Sliders whose range or precision earns a full-width track (R2). Everything
+// else uses the compact inline row (R1) - this list is the entire exception.
+const PROPERTY_WIDE_SLIDERS = new Set([]);
+
+// One property row (R1): label | control | value | revert. Ids follow the role
 // grammar (`{id}Value`, `reset{Id}`); ranges come from CONFIG.ui.sliders.
 // The boot value text is plain `value+unit` to match the static markup —
 // bindSlider swaps in formatUnit markup on first interaction, as it always has.
@@ -118,10 +166,10 @@ function buildSliderRow(options) {
 	if (options.hidden) row.hidden = true;
 	if (options.extraClass) row.classList.add(options.extraClass);
 	row.dataset.role = `${options.role || options.slider}-row`;
-	const label = row.querySelector('.setting-label');
+	const label = row.querySelector('.property-label');
 	label.textContent = options.label || spec.label;
 	if (options.title) label.title = options.title;
-	const value = row.querySelector('.setting-value');
+	const value = row.querySelector('.property-value');
 	value.id = `${options.id}Value`;
 	value.dataset.role = `${options.role || options.slider}-value`;
 	value.textContent = `${spec.value}${spec.unit}`;
@@ -132,6 +180,64 @@ function buildSliderRow(options) {
 	const reset = row.querySelector('button');
 	reset.id = `reset${panelCap(options.id)}`;
 	reset.dataset.role = `${options.role || options.slider}-reset`;
+	// R2: precision controls keep a full-width track instead of sharing the
+	// row with the label. Declared per slider, never inferred.
+	if (options.wide || PROPERTY_WIDE_SLIDERS.has(options.slider)) row.classList.add('is-stacked');
+	return row;
+}
+
+// R3, as specced: ONE row holding two properties that read as a single value -
+// `Offset  [X ---- 6] [Y ---- 6]`. Each cell keeps the exact ids the managers
+// bind (`{id}`, `{id}Value`, `reset{Id}`); only the chrome around them changes.
+function buildPairRow(item) {
+	const row = tplClone('tpl-slider-row');
+	row.className = 'property-row is-pair';
+	row.replaceChildren();
+	if (item.rowId) row.id = item.rowId;
+	const label = document.createElement('span');
+	label.className = 'property-label';
+	label.textContent = item.label;
+	if (item.title) label.title = item.title;
+	row.appendChild(label);
+
+	const pair = panelDiv('property-pair');
+	item.items.forEach((entry) => {
+		const spec = CONFIG.ui.sliders[entry.slider];
+		const cell = panelDiv('property-pair-cell');
+		const mark = document.createElement('span');
+		mark.className = 'property-pair-mark';
+		mark.textContent = entry.mark;
+		mark.title = entry.label || spec.label;
+		cell.appendChild(mark);
+
+		const input = document.createElement('input');
+		input.type = 'range';
+		input.id = entry.id;
+		applySliderSpec(input, spec);
+		input.dataset.role = entry.role || entry.slider;
+		input.setAttribute('aria-label', entry.label || spec.label);
+		cell.appendChild(input);
+
+		const value = document.createElement('span');
+		value.className = 'property-value';
+		value.id = `${entry.id}Value`;
+		value.dataset.role = `${entry.role || entry.slider}-value`;
+		value.textContent = `${spec.value}${spec.unit}`;
+		cell.appendChild(value);
+
+		const reset = document.createElement('button');
+		reset.type = 'button';
+		reset.className = 'property-revert';
+		reset.id = `reset${panelCap(entry.id)}`;
+		reset.dataset.role = `${entry.role || entry.slider}-reset`;
+		reset.title = 'Reset to default';
+		reset.setAttribute('aria-label', `Reset ${entry.label || spec.label}`);
+		reset.appendChild(createIcon('undo'));
+		cell.appendChild(reset);
+
+		pair.appendChild(cell);
+	});
+	row.appendChild(pair);
 	return row;
 }
 
@@ -157,8 +263,17 @@ function buildSegmented(entries, options = {}) {
 
 function buildOptionGroup(label, children) {
 	const group = tplClone('tpl-option-group');
-	group.querySelector('.effect-option-label').textContent = label;
+	const labelNode = group.querySelector('.property-set-label');
+	labelNode.textContent = label;
+	labelNode.classList.add('property-label');
 	children.forEach((child) => group.appendChild(child));
+	// A label plus one control IS a property row (R1/R2) - not a container
+	// level of its own. Keeping .effect-option-group as well preserves the
+	// selectors BaseBackgroundManager and the gradient editor rely on.
+	group.classList.add('property-row');
+	const options = children[0]?.querySelectorAll?.('.segmented-option')?.length || 0;
+	const isWide = options === 0 || options > 2 || children.length > 1;
+	if (isWide) group.classList.add('is-stacked');
 	return group;
 }
 
@@ -223,7 +338,7 @@ function buildAssetInfo(options) {
 	const change = info.querySelector('button');
 	change.id = options.change;
 	change.dataset.role = 'asset-change';
-	const meta = info.querySelectorAll('.asset-info-meta .setting-value');
+	const meta = info.querySelectorAll('.asset-info-meta .property-value');
 	if (options.compact) {
 		info.querySelector('.asset-info-meta')?.remove();
 	} else {
@@ -286,10 +401,24 @@ function buildPrimaryRow(prefix, ids = {}) {
 	return row;
 }
 
-function buildAdvancedControlGroup(title, className) {
+// Rule D, tier 2: a set-scoped reset lives at the right edge of the set's own
+// label, never as a full-width button of its own. `reset` supplies the id and
+// wording; the affordance itself is identical everywhere.
+function buildAdvancedControlGroup(title, className, reset = null) {
 	const group = panelDiv(`advanced-control-group ${className}`);
-	const heading = panelDiv('advanced-control-group-title setting-label');
+	const heading = panelDiv('property-set-label property-set-label');
 	heading.textContent = title;
+	if (reset) {
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'property-revert property-set-reset';
+		button.id = reset.id;
+		button.title = reset.title || 'Reset to default';
+		button.setAttribute('aria-label', reset.title || `Reset ${title}`);
+		button.appendChild(createIcon('undo'));
+		heading.classList.add('has-set-reset');
+		heading.appendChild(button);
+	}
 	group.appendChild(heading);
 	return group;
 }
@@ -300,31 +429,28 @@ function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 	const content = advanced.querySelector('[data-advanced-content]');
 	const colorGroup = buildAdvancedControlGroup('Color Adjust', 'advanced-color-adjust-group');
 	colorGroup.appendChild(buildSliderRow({ id: ids.hue || `${prefix}Hue`, slider: 'hue' }));
-	const colorColumns = tplClone('tpl-two-column');
-	colorColumns.appendChild(buildSliderRow({ id: ids.saturation || `${prefix}Saturation`, slider: 'saturation' }));
-	colorColumns.appendChild(buildSliderRow({ id: ids.brightness || `${prefix}Brightness`, slider: 'brightness' }));
-	colorGroup.appendChild(colorColumns);
+	colorGroup.appendChild(buildSliderRow({ id: ids.saturation || `${prefix}Saturation`, slider: 'saturation' }));
+	colorGroup.appendChild(buildSliderRow({ id: ids.brightness || `${prefix}Brightness`, slider: 'brightness' }));
 	content.appendChild(colorGroup);
 
 	if (options.texturePosition) {
-		const textureGroup = buildAdvancedControlGroup('Texture Position', 'advanced-texture-position-group');
+		const textureGroup = buildAdvancedControlGroup('Texture Position', 'advanced-texture-position-group', {
+			id: `${prefix}ResetTexturePosition`,
+			label: 'Reset',
+			title: 'Reset texture anchor and offset'
+		});
 		const anchor = buildSegmented([
 			{ id: `${prefix}TextureAnchorArtwork`, label: 'Artwork', active: true },
 			{ id: `${prefix}TextureAnchorCanvas`, label: 'Canvas' }
 		], { label: 'Texture anchor' });
 		textureGroup.appendChild(buildOptionGroup('Anchor', [anchor]));
-		const offsets = tplClone('tpl-two-column');
-		offsets.appendChild(buildSliderRow({ id: `${prefix}TextureOffsetX`, slider: 'textureOffsetX' }));
-		offsets.appendChild(buildSliderRow({ id: `${prefix}TextureOffsetY`, slider: 'textureOffsetY' }));
-		textureGroup.appendChild(offsets);
-		const reset = panelDiv('settings-action-row');
-		const button = document.createElement('button');
-		button.type = 'button';
-		button.className = 'btn-simple secondary';
-		button.id = `${prefix}ResetTexturePosition`;
-		button.textContent = 'Reset Texture Position';
-		reset.appendChild(button);
-		textureGroup.appendChild(reset);
+		textureGroup.appendChild(buildPairRow({
+			label: 'Offset',
+			items: [
+				{ id: `${prefix}TextureOffsetX`, slider: 'textureOffsetX', mark: 'X', label: 'Offset X' },
+				{ id: `${prefix}TextureOffsetY`, slider: 'textureOffsetY', mark: 'Y', label: 'Offset Y' }
+			]
+		}));
 		content.appendChild(textureGroup);
 	}
 	return advanced;
@@ -344,9 +470,15 @@ function buildPaintSlotCard(slot) {
 	if (slot.toggle) {
 		card.dataset.effectCard = '';
 		const toggle = tplClone('tpl-checkbox');
+		// R5: the enable control leads the module header as a switch. It keeps
+		// .checkbox-group so every existing selector (effect-toggle binding,
+		// title-control click guard) still matches.
+		toggle.classList.add('effect-switch');
+		toggle.title = `Enable ${slot.title}`;
 		const input = toggle.querySelector('input');
 		input.id = `${slot.idPrefix}Enabled`;
 		input.dataset.effectToggle = '';
+		input.setAttribute('aria-label', `Enable ${slot.title}`);
 		toggle.querySelector('span').textContent = 'Enabled';
 		card.querySelector('.subsection-title').appendChild(toggle);
 		container = panelDiv('text-effect-controls');
@@ -357,7 +489,16 @@ function buildPaintSlotCard(slot) {
 	container.appendChild(main);
 	(slot.pre || []).forEach((item) => main.appendChild(buildPanelItem(item)));
 	const source = buildPaintSource(slot);
-	main.appendChild(slot.sourceLabel ? buildOptionGroup(slot.sourceLabel, [source]) : source);
+	// R5: Source is a property of the module, so it reads as a row - the old
+	// titled option group added a heading level for a single control.
+	source.classList.add('paint-slot-source');
+	if (slot.sourceLabel) {
+		// The same component as every other set label, not a lookalike.
+		const label = panelDiv('property-set-label paint-slot-source-label');
+		label.textContent = slot.sourceLabel;
+		source.prepend(label);
+	}
+	main.appendChild(source);
 	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds);
 	if (slot.primaryToggle) {
 		const toggle = tplClone('tpl-checkbox');
@@ -382,6 +523,10 @@ function buildPanelItem(item, schema) {
 			if (item.bare) card.classList.remove('subsection-content-group');
 			if (item.id) card.id = item.id;
 			if (item.hidden) card.hidden = true;
+			// Opt-in collapsibility (rule E). Without this the block renders as a
+			// plain titled run of rows; editor-disclosures only stamps a chevron
+			// on blocks that ask for one or carry an effect toggle.
+			if (item.collapsible) card.dataset.collapsible = '';
 			addPanelClasses(card, item.classes);
 			const title = card.querySelector('.subsection-title');
 			if (item.title) {
@@ -392,9 +537,12 @@ function buildPanelItem(item, schema) {
 			if (item.toggle) {
 				card.dataset.effectCard = '';
 				const toggle = tplClone('tpl-checkbox');
+				toggle.classList.add('effect-switch');
+				toggle.title = item.toggle.title || `Enable ${item.title || ''}`.trim();
 				const input = toggle.querySelector('input');
 				input.id = item.toggle.id;
 				input.dataset.effectToggle = '';
+				input.setAttribute('aria-label', toggle.title || item.toggle.label);
 				toggle.querySelector('span').textContent = item.toggle.label;
 				if (item.toggle.title) toggle.querySelector('span').title = item.toggle.title;
 				card.querySelector('.subsection-title').appendChild(toggle);
@@ -412,23 +560,26 @@ function buildPanelItem(item, schema) {
 			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
 			return content;
 		}
+		// R4. A boolean reads as a labelled switch on its own row, not as a
+		// full-width uppercase pill - the pill made every toggle shout louder
+		// than the properties around it.
 		case 'checkboxList': {
-			const content = panelDiv('subsection-content checkbox-list-content');
+			const content = panelDiv('property-toggle-list');
 			if (item.label) {
-				const label = panelDiv('effect-option-label setting-label');
+				const label = panelDiv('property-group-label');
 				label.textContent = item.label;
 				content.appendChild(label);
 			}
-			const list = panelDiv('tool-options-group settings-toggle-list');
 			item.items.forEach((entry) => {
-				const checkbox = tplClone('tpl-checkbox');
-				checkbox.querySelector('input').id = entry.id;
-				checkbox.querySelector('input').checked = Boolean(entry.checked);
-				checkbox.querySelector('span').textContent = entry.label;
-				if (entry.title) checkbox.querySelector('span').title = entry.title;
-				list.appendChild(checkbox);
+				const row = tplClone('tpl-toggle-row');
+				const input = row.querySelector('input');
+				input.id = entry.id;
+				input.checked = Boolean(entry.checked);
+				const label = row.querySelector('.property-label');
+				label.textContent = entry.label;
+				if (entry.title) label.title = entry.title;
+				content.appendChild(row);
 			});
-			content.appendChild(list);
 			return content;
 		}
 		case 'actionRow': {
@@ -450,6 +601,8 @@ function buildPanelItem(item, schema) {
 			return buildAssetInfo(item);
 		case 'slider':
 			return buildSliderRow(item);
+		case 'pair':
+			return buildPairRow(item);
 		case 'twoColumn': {
 			const row = tplClone('tpl-two-column');
 			item.items.forEach((child) => row.appendChild(buildPanelItem(child, schema)));
@@ -540,6 +693,57 @@ function buildPanelItem(item, schema) {
 			host.id = `${schema.prefix}TransformPanelHost`;
 			return host;
 		}
+		// Composes ONE block out of elements lifted from a legacy template,
+		// dropping the source cards' own titles and wrappers. This is how the
+		// text panel's eight hand-authored cards collapse into four blocks
+		// without touching TextGlitterManager - every id comes across intact.
+		case 'templateBlock': {
+			const template = document.getElementById(item.template);
+			if (!template) throw new Error(`panel-renderer: missing template "${item.template}"`);
+			const card = tplClone('tpl-card');
+			if (item.id) card.id = item.id;
+			addPanelClasses(card, item.classes);
+			const title = card.querySelector('.subsection-title');
+			if (item.title) {
+				title.querySelector(':scope > span').textContent = item.title;
+				card.classList.add('has-subsection-title');
+			} else {
+				title.remove();
+			}
+			const body = panelDiv('subsection-card-body');
+			const target = item.pair ? panelDiv('property-pair-group') : body;
+			if (item.pair) body.appendChild(target);
+			item.items.forEach((entry) => {
+				const found = template.content.querySelector(entry.selector);
+				if (!found) throw new Error(`panel-renderer: missing "${entry.selector}" in ${item.template}`);
+				const node = entry.row ? found.closest('.property-row') || found : found;
+				const clone = node.cloneNode(true);
+				if (entry.classes) addPanelClasses(clone, entry.classes);
+				// A control without a label is the one thing the row system does
+				// not permit: `label` wraps the clone in a property row so a
+				// lifted legacy control is named like every other setting.
+				if (entry.label) {
+					const row = panelDiv('property-row');
+					const options = clone.querySelectorAll?.('.segmented-option')?.length || 0;
+					// Inline where the control fits beside its label: a select, or a
+					// segmented with at most two options. Everything else stacks.
+					const inline = clone.tagName === 'SELECT' || (options > 0 && options <= 2);
+					if (!inline) row.classList.add('is-stacked');
+					const label = panelDiv('property-label');
+					label.textContent = entry.label;
+					row.append(label, clone);
+					target.appendChild(row);
+					return;
+				}
+				target.appendChild(clone);
+			});
+			body.querySelectorAll('input[type="range"][id]').forEach((input) => {
+				const spec = CONFIG.ui.sliders[input.id];
+				if (spec) applySliderSpec(input, spec);
+			});
+			card.appendChild(body);
+			return card;
+		}
 		case 'templateCard': {
 			const template = document.getElementById(item.template);
 			const source = template?.content.querySelector(item.selector)?.closest('.subsection-content-group');
@@ -554,6 +758,98 @@ function buildPanelItem(item, schema) {
 		default:
 			throw new Error(`panel-renderer: unknown item kind "${item.kind}"`);
 	}
+}
+
+// R5: a module row states what it is currently set to, so a collapsed effect
+// is still readable ("Sparkle Pink - 80%") without expanding it. Managers write
+// their values straight into the DOM without firing events, so the summary
+// mirrors the card's own nodes through an observer rather than trying to hook
+// every manager's sync path.
+function buildModuleSummary(card) {
+	if (!card || card.querySelector(':scope > .subsection-title > .property-module-summary')) return null;
+	const title = card.querySelector(':scope > .subsection-title');
+	if (!title) return null;
+	const summary = document.createElement('span');
+	summary.className = 'property-module-summary';
+	summary.setAttribute('aria-hidden', 'true');
+	const chevron = title.querySelector('.subsection-chevron');
+	title.insertBefore(summary, chevron || null);
+	return summary;
+}
+
+function readModuleSummary(card) {
+	// A disabled module shows no summary: the switch beside the title already
+	// states the on/off condition, and an "Off" label that vanishes the moment
+	// you expand a still-disabled module contradicts itself.
+	const toggle = card.querySelector(':scope > .subsection-title input[data-effect-toggle]');
+	if (toggle && !toggle.checked) return '';
+	const mode = card.dataset.paintMode || '';
+	const parts = [];
+	if (mode === 'none') return 'None';
+	if (mode === 'glitter') {
+		const name = card.querySelector('.asset-info:not([hidden]) .asset-info-name')?.textContent?.trim();
+		if (name) parts.push(name);
+	} else if (mode === 'solid') {
+		parts.push('Solid');
+	} else if (mode === 'gradient') {
+		parts.push('Gradient');
+	}
+	const opacity = card.querySelector('.paint-slot-opacity .property-value')?.textContent?.trim();
+	if (opacity && opacity !== '100%') parts.push(opacity);
+	return parts.join(' · ');
+}
+
+function syncModuleSummary(card) {
+	const summary = card.querySelector(':scope > .subsection-title > .property-module-summary');
+	if (!summary) return;
+	const text = readModuleSummary(card);
+	if (summary.textContent !== text) summary.textContent = text;
+}
+
+function initializeModuleSummaries(root = document) {
+	root.querySelectorAll('[data-role="paint-slot"][data-effect-card]').forEach((card) => {
+		if (card.dataset.moduleSummary !== undefined) return;
+		card.dataset.moduleSummary = '';
+		buildModuleSummary(card);
+		syncModuleSummary(card);
+		let queued = false;
+		const observer = new MutationObserver(() => {
+			if (queued) return;
+			queued = true;
+			requestAnimationFrame(() => {
+				queued = false;
+				syncModuleSummary(card);
+			});
+		});
+		observer.observe(card, {
+			childList: true, subtree: true, characterData: true,
+			attributes: true, attributeFilter: ['hidden', 'data-paint-mode', 'value', 'checked', 'class']
+		});
+		card.addEventListener('change', () => syncModuleSummary(card));
+	});
+}
+
+// Rule A, applied mechanically instead of case by case: a block whose title
+// only repeats the label of its single control drops the title. The row's own
+// label already names it, so keeping both produced the "Opacity > Opacity 100%"
+// stutter. Blocks that carry an effect toggle or are collapsible keep their
+// title - it is the host for those controls.
+function dedupeBlockTitle(card) {
+	if (!card?.classList?.contains('subsection-content-group')) return card;
+	if (card.classList.contains('subsection-section-group') || card.classList.contains('effects-stack')) return card;
+	if (card.dataset.effectCard !== undefined || card.dataset.collapsible !== undefined) return card;
+	const title = card.querySelector(':scope > .subsection-title');
+	if (!title || title.querySelector('input, button, select, .checkbox-group')) return card;
+	const rows = card.querySelectorAll('.property-row, .property-pair-group > .property-row');
+	if (rows.length !== 1) return card;
+	const controls = card.querySelectorAll('input, select, textarea');
+	if (controls.length !== 1) return card;
+	const titleText = (title.querySelector(':scope > span') || title).textContent.trim().toLowerCase();
+	const rowLabel = rows[0].querySelector('.property-label')?.textContent.trim().toLowerCase();
+	if (!titleText || titleText !== rowLabel) return card;
+	title.remove();
+	card.classList.remove('has-subsection-title');
+	return card;
 }
 
 // Legacy/template cards predate the schema body's padding ownership. Normalize
@@ -799,7 +1095,12 @@ function normalizeTransformPanelHost(editor, prefix, externalActions = null) {
 		else title.textContent = label;
 	};
 	setTitle(geometry, 'Transform');
-	setTitle(opacity, 'Opacity');
+	// "Layer Opacity", not "Opacity": a fill/effect module already contains its
+	// own Opacity, and two controls with the same name a few rows apart read as
+	// a duplicate rather than two different scopes.
+	setTitle(opacity, 'Layer Opacity');
+	const opacityLabel = opacity?.querySelector('.property-label');
+	if (opacityLabel) opacityLabel.textContent = 'Layer Opacity';
 
 	if (actions && reset) {
 		const footer = reset.closest('.transform-panel-footer');

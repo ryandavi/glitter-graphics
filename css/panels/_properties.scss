@@ -1,0 +1,1191 @@
+@use 'sass:list';
+@use '../mixins' as *;
+
+// ===========================================================================
+// PROPERTY PANEL SYSTEM
+// ---------------------------------------------------------------------------
+// The single home for the design sidebar's property vocabulary. Seven row types
+// and three grouping levels; nothing else exists. A new setting picks a row, it
+// does not invent a layout.
+//
+//   R1 .property-row              label | control | value | revert   (default)
+//   R2 .property-row.is-stacked   label+value, control full width
+//   R3 .property-pair-group       two properties reading as one value
+//   R4 .property-row.is-toggle    label | switch
+//   R5 [data-effect-card]         module: one line collapsed, editor beneath
+//   R6 .property-actions          buttons, at the end of their block
+//   R7 .property-note             helper text, status, empty state
+//
+// THE STRUCTURE, which the spacing rules follow from:
+//
+//   block            header is a SIBLING of the content, not inside it
+//   |- title         (the block's own gap separates them)
+//   `- body          holds the options; its gap separates one from the next
+//      |- option     label + control (a .property-row)
+//      `- option
+//
+// Spacing between siblings is ALWAYS the parent's `gap`, or an explicit
+// `element + element { margin-top }`. Never a bare margin on a child: a margin
+// survives when its neighbour is hidden, so conditional content leaves phantom
+// space, and two elements each guessing their own spacing is how the panel
+// drifted out of rhythm in the first place.
+//
+// The one exception is a BORDERED card, which needs interior clearance at the
+// bottom because its border is a hard edge the content would otherwise sit on.
+// `tools/gutter-check.js` verifies that clearance.
+//
+// THE GUTTER RULE, which everything else depends on:
+//   Horizontal inset is owned by ROWS and HEADERS only. Bodies, groups, blocks
+//   and modules never add horizontal padding. Break this and titles stop
+//   lining up with the controls beneath them.
+//
+// Rules enforced here:
+//   B  the only borders in a panel body are hairlines between groups
+//   C  uppercase is reserved for ONE level - the group label
+//   D  a revert sits at the right edge of what it reverts, never its own row
+//   F  a container with nothing visible inside it collapses (see :has, below)
+// ===========================================================================
+
+.design-panel {
+	// ---- geometry --------------------------------------------------------
+	--property-row-h: 26px;
+	--property-label-col: 76px;
+	--property-value-col: 46px;
+	--property-revert-col: 18px;
+	--property-gutter: 10px;
+	--property-card-inset: 10px; // a bordered module's distance from the panel wall
+	--property-pair-min: 128px;
+
+	// ---- vertical rhythm, anchored to the horizontal gutter ---------------
+	// Separation between siblings is owned by the PARENT's gap, never by a
+	// margin on the sibling: a margin survives when its neighbour is hidden,
+	// which is how conditional rows left phantom space behind.
+	--property-row-gap: 2px;                          // row -> row (tight)
+	--property-field-gap: 5px;                        // label -> its control
+	--property-block-gap: var(--property-gutter);     // block -> block  (= 10px)
+	--property-group-gap: calc(var(--property-gutter) * 1.4); // group -> group
+
+	// ---- switch geometry (same proportions as the settings modal's) ------
+	--switch-w: 30px;
+	--switch-h: 18px;
+}
+
+// Elements that already own their horizontal inset, either because they apply
+// the gutter themselves or because they are a heading that does. Anything else
+// dropped into a body or a set gets the gutter from its parent.
+//
+// Defined ONCE as a list and interpolated, because a hand-maintained chain of
+// sixteen :not()s repeated across two rules is unreadable and drifts.
+$gutter-owners:
+	'.property-row', '.property-pair-group', '.subsection-title', '.property-note',
+	'.settings-action-row', '.property-actions', '.advanced-disclosure',
+	'.property-toggle-list', '.settings-toggle-list', '.subsection-content-group',
+	'.subsection-content', '.asset-info', '.paint-slot-source',
+	'.effect-option-group', '.functional-control-group', '.advanced-control-group',
+	'.property-set', '.property-set-label', '.property-set-label',
+	'.property-set-label', '.property-set-label', '.property-set-label',
+	'.text-box-hint', '.settings-row-label-desc';
+
+// A single :not() taking a selector list - not sixteen chained ones.
+$not-gutter-owner: ':not(#{list.join($gutter-owners, (), $separator: comma)})';
+
+// ...and the same list again as the "already contains one" guard, so a container
+// of rows is never insetted on top of the rows inside it.
+$not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comma)}))';
+
+// ===== Typography: six levels, one of which shouts =========================
+
+.property-group-label,
+.design-panel .subsection-section-group > .subsection-title,
+.design-panel .effects-stack > .subsection-title {
+	font-size: 10.5px;
+	font-weight: var(--font-weight-semibold);
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+	line-height: 1.2;
+}
+
+.property-block-title,
+.design-panel .subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) > .subsection-title {
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-semibold);
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--color-text-secondary);
+	line-height: 1.2;
+}
+
+// Rule C, in one place: everything below the group label is sentence case, so a
+// stray uppercase cannot creep back in feature by feature.
+.design-panel {
+	// ONE class for a set/group label. It insets itself, so it does not depend
+	// on being a direct child of any particular container - which is why
+	// "Dimensions", "Quick Scale" and "Options" had no gutter at all.
+	.property-set-label,
+	.advanced-disclosure-label {
+		font-size: var(--font-size-sm);
+		font-weight: 400;
+		letter-spacing: 0;
+		text-transform: none;
+		color: var(--color-text-tertiary);
+		line-height: 1.3;
+		padding: var(--spacing-xs) var(--property-gutter) var(--spacing-2xs);
+	}
+
+	.segmented-option,
+	.checkbox-group > span,
+	.filter-chip {
+		letter-spacing: 0;
+		text-transform: none;
+		font-size: var(--font-size-sm);
+		font-weight: 500;
+	}
+}
+
+.property-label {
+	font-size: var(--font-size-sm);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--color-text-secondary);
+	line-height: 1.3;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+
+	&[title] { cursor: help; }
+}
+
+.property-value {
+	font-size: var(--font-size-sm);
+	font-weight: 500;
+	color: var(--color-text-primary);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+	white-space: nowrap;
+	line-height: 1.3;
+}
+
+.property-note,
+.design-panel .text-box-hint,
+.design-panel .settings-row-label-desc {
+	font-size: var(--font-size-xs);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--color-text-tertiary);
+	line-height: 1.45;
+	margin: 0;
+	padding: var(--spacing-2xs) var(--property-gutter) var(--spacing-xs);
+
+	&:empty,
+	&[hidden] { display: none; }
+}
+
+// ===== The slider's box ====================================================
+// The global range input is 32px tall for a 16px thumb, which parks ~8px of
+// invisible box above and below every track. Inside a dense panel that dead
+// space swamps the 2-6px gaps the rhythm is built on and makes spacing look
+// arbitrary. Here the box matches the control's visual weight; coarse pointers
+// get the taller target back, because that is an input-modality question rather
+// than a layout one.
+.design-panel input[type="range"] {
+	height: 20px;
+}
+
+@media (pointer: coarse) {
+	.design-panel input[type="range"] { height: 28px; }
+}
+
+// ===== R1: the property row ================================================
+// The revert column is always reserved, so a value crossing its default can
+// never reflow the row.
+
+.property-row {
+	display: grid;
+	grid-template-columns:
+		var(--property-label-col)
+		minmax(0, 1fr)
+		var(--property-value-col)
+		var(--property-revert-col);
+	align-items: center;
+	column-gap: var(--spacing-sm);
+	min-height: var(--property-row-h);
+	padding: 0 var(--property-gutter);
+
+	&[hidden] { display: none; }
+
+	> input[type="range"] { width: 100%; margin: 0; }
+
+	// Controls with no separate readout take the value and revert columns too.
+	> .segmented-control,
+	> select,
+	> input[type="color"],
+	> textarea,
+	> .property-control-wide { grid-column: 2 / -1; }
+
+	> input[type="color"] { justify-self: end; }
+}
+
+// R2: the control needs full width. Placement is explicit because the control
+// sits between label and value in the DOM - correct for R1's single line, but
+// auto-placement would drop the value below the track.
+.property-row.is-stacked {
+	grid-template-columns: minmax(0, 1fr) var(--property-value-col) var(--property-revert-col);
+	grid-template-rows: auto auto;
+	row-gap: var(--property-field-gap);
+	padding-top: var(--spacing-2xs);
+	padding-bottom: var(--spacing-xs);
+
+	> .property-label { grid-area: 1 / 1 / 2 / 2; }
+	> .property-value { grid-area: 1 / 2 / 2 / 3; }
+	> .property-revert { grid-area: 1 / 3 / 2 / 4; }
+
+	> input[type="range"],
+	> .segmented-control,
+	> select,
+	> textarea,
+	> .property-control-wide { grid-area: 2 / 1 / 3 / 4; }
+}
+
+// R3: a declared pair - ONE row holding two properties that read as a single
+// value. Each cell is a micro-mark, a track and its readout, so `Offset X/Y`
+// costs one line rather than two full rows.
+.property-row.is-pair {
+	grid-template-columns: var(--property-label-col) minmax(0, 1fr);
+	align-items: center;
+
+	> .property-pair { grid-column: 2 / -1; }
+}
+
+.property-pair {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--spacing-sm);
+	min-width: 0;
+}
+
+.property-pair-cell {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto var(--property-revert-col);
+	align-items: center;
+	gap: var(--spacing-2xs);
+	min-width: 0;
+
+	> .property-pair-mark {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 10px;
+		color: var(--color-text-tertiary);
+		cursor: help;
+	}
+
+	> input[type="range"] { min-width: 0; }
+
+	> .property-value { font-size: var(--font-size-xs); }
+}
+
+// The remaining two-column groups hold two UNRELATED properties, so they stack
+// as ordinary single-line rows rather than pretending to be one value. This is
+// what the spec's mockup shows and it is both denser and easier to scan.
+.property-pair-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--property-row-gap);
+	width: 100%;
+
+	&[hidden] { display: none; }
+
+	> * { min-width: 0; }
+}
+
+// R4: a boolean. The switch sits where a value would.
+.property-row.is-toggle {
+	grid-template-columns: minmax(0, 1fr) auto;
+	cursor: pointer;
+	user-select: none;
+
+	> input[type="checkbox"] { @include visually-hidden-control; }
+
+	> .property-switch {
+		grid-column: 2;
+		justify-self: end;
+		@include switch-track(var(--switch-w), var(--switch-h), 3px);
+	}
+
+	> input:checked + .property-switch { @include switch-track-on(var(--switch-w), var(--switch-h)); }
+	> input:focus-visible + .property-switch { box-shadow: var(--control-focus-ring); }
+	> input:disabled + .property-switch { opacity: var(--disabled-opacity); }
+
+	&:has(> input:disabled) { cursor: not-allowed; }
+	&:hover > input:not(:disabled) + .property-switch { border-color: var(--color-border-hover); }
+}
+
+.property-toggle-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--property-row-gap);
+
+	> .property-group-label { padding: var(--spacing-xs) var(--property-gutter) 0; }
+
+	&[hidden] { display: none; }
+}
+
+// ===== Rule D: revert ======================================================
+// Quiet by default, present only when there is something to undo. Hover reveals
+// it faintly on rows already at their default, so the affordance is
+// discoverable without shouting on every changed value.
+
+.property-revert {
+	width: var(--property-revert-col);
+	height: var(--property-revert-col);
+	display: grid;
+	place-items: center;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: none;
+	color: var(--color-text-tertiary);
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+
+	> .icon {
+		width: 12px;
+		height: 12px;
+		fill: currentColor;
+		opacity: 1;
+	}
+
+	&:not(:disabled) { opacity: 1; }
+
+	&:not(:disabled):hover {
+		background: var(--color-bg-tertiary);
+		color: var(--color-accent);
+	}
+
+	&:disabled { cursor: default; opacity: 0; }
+
+	&:focus-visible {
+		opacity: 1;
+		outline: none;
+		box-shadow: var(--control-focus-ring);
+	}
+}
+
+.property-row:hover > .property-revert:disabled,
+.property-row:focus-within > .property-revert:disabled { opacity: 0.35; }
+
+// Rule D, tier 2: a set-scoped reset sits at the right edge of its set label.
+.design-panel .has-set-reset {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--spacing-sm);
+}
+
+.design-panel .property-set-reset {
+	flex: 0 0 auto;
+	padding: 0;
+	font-size: var(--font-size-xs);
+	font-weight: 500;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--color-text-tertiary);
+
+	&:hover { color: var(--color-accent); }
+}
+
+// ===== Grouping: dividers, not boxes (rule B) ==============================
+
+.design-panel {
+	// L1 group: no box, a hairline above, gutter on its own header.
+	.subsection-content-group.subsection-section-group,
+	.subsection-content-group.effects-stack {
+		display: flex;
+		flex-direction: column;
+		// The gap sits under the group title as well as between blocks, so it
+		// stays modest; the divider above already separates groups.
+		gap: var(--spacing-sm);
+		padding: 0;
+		border: 0;
+		background: transparent;
+
+		> .subsection-title {
+			display: flex;
+			align-items: center;
+			gap: var(--spacing-sm);
+			min-height: var(--control-height-compact);
+			padding: var(--spacing-xs) var(--property-gutter);
+		}
+
+		// A divider is the whole separation: no gap above it and no padding above
+		// it (the header's own padding lifts it off the line). Stacking all three
+		// is what made the group boundary feel loose and arbitrary.
+		+ .subsection-content-group.subsection-section-group,
+		+ .subsection-content-group.effects-stack {
+			border-top: 1px solid var(--color-border);
+		}
+
+		// ...but an open group needs room under its last row, or the content
+		// runs straight into the next divider.
+		&:not(.collapsed) { padding-bottom: var(--property-block-gap); }
+	}
+
+	// L2 block: title + rows. This is the DEFAULT, so it is written with
+	// :where() - zero specificity - and any rule that grants a surface (the card
+	// rule below) outranks it without an escalation war. Chaining :not()s here
+	// is what silently un-carded Fill and the effect modules twice before.
+	.subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) {
+		display: flex;
+		flex-direction: column;
+		gap: var(--property-row-gap);
+		padding: 0;
+		border: 0;
+		border-radius: var(--radius-sm);
+		background: transparent;
+
+		> .subsection-title {
+			display: flex;
+			align-items: center;
+			gap: var(--spacing-sm);
+			min-height: var(--control-height-compact);
+			padding: var(--spacing-2xs) var(--property-gutter);
+		}
+
+		// Separation comes from the parent group's gap - see above.
+	}
+
+	// Bodies never add horizontal padding - the gutter rule.
+	// Bodies never inset - see THE GUTTER RULE at the top of this file.
+	.subsection-card-body,
+	.paint-slot-main,
+	.subsection-content {
+		display: flex;
+		flex-direction: column;
+		gap: var(--property-row-gap);
+		min-width: 0;
+		// Space is added ABOVE something that follows, never trailed off the
+		// bottom - a trailing pad on the last element in a card is dead space.
+		padding: 0;
+
+		+ * { margin-top: var(--spacing-xs); }
+
+		// ...but anything dropped straight into a body that is NOT one of the
+		// gutter-owning primitives still has to line up with them. Stated as
+		// "everything else", so a control added later inherits the alignment
+		// instead of needing a new rule - which is how the textarea, Point/Box
+		// and Fit to Text ended up edge-to-edge.
+		// The rule itself, encoded: inset a child unless it is a gutter owner, or
+		// it CONTAINS one. The :has() guard is what makes this self-maintaining -
+		// a new container of rows inherits the right behaviour instead of needing
+		// its own exclusion, which is how .transform-grid ended up double-indented.
+		> *#{$not-gutter-owner}#{$not-contains-owner} {
+			margin-inline: var(--property-gutter);
+			// width:100% plus a horizontal margin always overflows; auto fills
+			// the space that is actually left.
+			width: auto;
+			max-width: calc(100% - var(--property-gutter) * 2);
+		}
+	}
+
+	.subsection-card-body-bare { padding: 0; }
+
+	// A labelled set. Three legacy names for one concept, rendered identically.
+	.effect-option-group:not(.property-row),
+	.functional-control-group,
+	.advanced-control-group,
+	.property-set {
+		display: flex;
+		flex-direction: column;
+		gap: var(--property-row-gap);
+		min-width: 0;
+		width: 100%;
+		padding: 0;
+		border: 0;
+		background: transparent;
+
+
+		// Controls that are not rows still need the gutter.
+		// Everything in a set that is not a self-insetting row needs the gutter,
+		// stated as "everything else" for the same reason the body rule is: a
+		// control added later inherits the alignment instead of sitting flush.
+		// This is what left .sticker-position-group misaligned with its label.
+		> *#{$not-gutter-owner}#{$not-contains-owner} {
+			margin-inline: var(--property-gutter);
+			// width:100% plus a horizontal margin always overflows; auto fills
+			// the space that is actually left.
+			width: auto;
+			max-width: calc(100% - var(--property-gutter) * 2);
+		}
+
+		// ...but a toggle list holds .property-row.is-toggle, which insets
+		// itself. Adding it here would double up.
+		> .settings-toggle-list { margin: 0; }
+
+		// No sibling margin: a set that follows another is separated by its
+		// container's gap, so hiding one leaves no phantom space.
+		+ .effect-option-group,
+		+ .functional-control-group,
+		+ .advanced-control-group,
+		+ .property-set { margin-top: 0; }
+	}
+}
+
+// ===== R5: module row ======================================================
+// Collapsed, a module is one line: switch, name, current value, chevron. The
+// summary is what makes that line worth reading.
+
+.design-panel {
+	// EVERY block gets the same surface. Which blocks are carded used to be a
+	// hardcoded list of feature classes ([data-effect-card], .transform-panel,
+	// .text-effect-subsection), so Transform and Effects had cards while Font,
+	// Asset and Selection did not - a distinction no one could read off the UI,
+	// and one a newly added block would never inherit.
+	//
+	// It is structural now: a block that is a DIRECT child of a group is a card.
+	// A block nested inside another block is not, which is what prevents
+	// card-in-card without needing to name the offenders.
+	.subsection-section-group > .subsection-content-group,
+	.effects-stack > .subsection-content-group,
+	.subsection-section-group > .transform-panel-host > .subsection-content-group,
+	.settings-subsection > .transform-panel-host > .subsection-content-group {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg-card);
+		overflow: hidden;
+		margin-inline: var(--property-card-inset);
+		// Rows inside a card use a smaller internal gutter, so content is not
+		// indented twice over.
+		--property-gutter: var(--spacing-sm);
+
+		> .subsection-title { padding: var(--spacing-2xs) var(--property-gutter); }
+
+		// A bordered card needs interior clearance at the bottom: its border is a
+		// hard edge the last row would otherwise sit on. Borderless content uses
+		// the `+ *` rule instead.
+		> .subsection-card-body,
+		> .text-effect-controls > .paint-slot-main,
+		> .paint-slot-main {
+			padding-bottom: var(--spacing-sm);
+		}
+	}
+
+	[data-effect-card] > .subsection-title,
+	[data-role="paint-slot"] > .subsection-title {
+		gap: var(--spacing-sm);
+		min-height: 28px;
+
+		> span:first-of-type {
+			flex: 1 1 auto;
+			min-width: 0;
+			text-align: left;
+			font-size: var(--font-size-sm);
+			font-weight: var(--font-weight-semibold);
+			color: var(--color-text-primary);
+		}
+	}
+
+	// The enable control leads the header, using the ONE switch.
+	.checkbox-group.effect-switch {
+		order: -1;
+		flex: 0 0 auto;
+		min-height: auto;
+		margin-left: 0 !important;
+
+		> input[type="checkbox"] { @include visually-hidden-control; }
+
+		> span {
+			// Declarations first: the mixin emits a nested ::after rule, and Sass
+			// warns about declarations that follow one.
+			color: transparent;
+			font-size: 0;
+			overflow: hidden;
+			text-indent: -9999px;
+			@include switch-track(var(--switch-w), var(--switch-h), 3px);
+		}
+
+		> input:checked + span {
+			color: transparent;
+			@include switch-track-on(var(--switch-w), var(--switch-h));
+		}
+
+		> input:focus-visible + span { box-shadow: var(--control-focus-ring); }
+		&:hover > input:not(:checked) + span { border-color: var(--color-border-hover); }
+	}
+
+	// A disabled module reads as one quiet line.
+	[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)) > .subsection-title > span:first-of-type {
+		color: var(--color-text-tertiary);
+	}
+
+	.text-effect-controls { border-top: 1px solid var(--color-border); }
+
+	.paint-slot-source,
+	.glitter-source {
+		display: flex;
+		flex-direction: column;
+		// Roomier than the row gap: this stack mixes a segmented control, a
+		// boxed asset summary and a colour row, which need separating.
+		gap: var(--spacing-sm);
+	}
+
+
+	// A bare `.glitter-source` (the `glitterSource` optionGroup wrapper) is a
+	// pass-through: the set's catch-all already insets it, so its control fills
+	// it rather than insetting again.
+	.effect-option-group > .glitter-source > .segmented-control,
+	.functional-control-group > .glitter-source > .segmented-control,
+	.advanced-control-group > .glitter-source > .segmented-control {
+		margin: 0;
+		width: 100%;
+	}
+
+	// One segmented control on one line - an auto-fit grid wrapped the fourth
+	// option onto a second row and broke the control's shape.
+	.paint-source-choice-grid {
+		display: flex;
+		margin: 0 var(--property-gutter);
+
+		> .segmented-option {
+			flex: 1 1 0;
+			min-width: 0;
+			padding-inline: var(--spacing-xs);
+		}
+	}
+
+	// No gutter here: this is a stack of .property-row, and each row insets
+	// itself. Adding it again is the double-padding bug.
+	.paint-slot-primary-row { padding: 0; }
+
+	// Number pairs (X/Y, W/H) must be able to shrink. A flex item defaults to
+	// min-width:auto, so the input's intrinsic width plus its unit suffix formed
+	// a floor and pushed the second field off the panel edge.
+	.sticker-position-group {
+		gap: var(--spacing-sm);
+		min-width: 0;
+
+		> .input-group {
+			min-width: 0;
+
+			> .input-unit { min-width: 0; }
+
+			> .input-unit > input[type="number"],
+			> input[type="number"] {
+				min-width: 0;
+				width: 100%;
+			}
+		}
+	}
+}
+
+.property-module-summary {
+	flex: 0 1 auto;
+	max-width: 55%;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	text-align: right;
+	font-size: var(--font-size-xs);
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--color-text-tertiary);
+	font-variant-numeric: tabular-nums;
+
+	&:empty { display: none; }
+}
+
+// Expanded, every value is already on screen; the summary would duplicate it.
+.design-panel [data-effect-card]:not(.is-collapsed) > .subsection-title > .property-module-summary {
+	visibility: hidden;
+}
+
+// ===== Asset summary =======================================================
+// One row inside a module: thumbnail, name, Change.
+
+.design-panel {
+	.asset-info {
+		gap: var(--spacing-xs);
+		// Horizontal margin insets it; vertical separation is the source
+		// stack's gap, not a margin of its own.
+		margin: 0 var(--property-gutter);
+		padding: var(--spacing-sm);
+		border-radius: var(--radius-sm);
+	}
+
+	.asset-info-header {
+		gap: var(--spacing-sm);
+		align-items: center;
+	}
+
+	.asset-info-thumbnail {
+		width: 28px;
+		height: 28px;
+		min-width: 28px;
+		flex: 0 0 auto;
+	}
+
+	.asset-info-name {
+		font-size: var(--font-size-sm);
+		font-weight: 500;
+	}
+
+	.asset-info-badges:empty { display: none; }
+
+	.text-effect-source-change {
+		min-height: 22px;
+		padding: 0 var(--spacing-sm);
+		font-size: var(--font-size-xs);
+	}
+
+	.asset-info-meta {
+		gap: var(--spacing-2xs) var(--spacing-md);
+		padding: 0;
+	}
+}
+
+.property-meta-cell {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--spacing-sm);
+	min-width: 0;
+
+	// Rule F: a label with no value is an empty shell.
+	&:not(:has(> .property-value:not(:empty))) { display: none; }
+}
+
+// ===== Selected colour chips ===============================================
+// Multi-select tokens, matching the filter chips' height and radius so the
+// sidebar has one selectable-token feel.
+
+.design-panel {
+	.selected-colors-display {
+		gap: var(--spacing-xs);
+		// Horizontal margin insets it; the block's gap handles the rest.
+		margin: 0 var(--property-gutter);
+		padding: 0;
+
+		> .selected-color-chip {
+			gap: var(--spacing-xs);
+			min-height: var(--control-height-compact);
+			padding: 0 var(--spacing-2xs) 0 var(--spacing-xs);
+			border-radius: var(--radius-pill);
+			font-size: var(--font-size-xs);
+			letter-spacing: 0;
+			text-transform: none;
+
+			> .selected-color-swatch {
+				width: 13px;
+				height: 13px;
+			}
+
+			> .selected-color-remove {
+				width: 16px;
+				height: 16px;
+				margin-left: 0;
+				font-size: var(--font-size-sm);
+			}
+		}
+	}
+
+	.color-selection .empty-state {
+		margin: 0 var(--property-gutter);
+		min-height: var(--control-height-compact);
+		padding: var(--spacing-2xs) var(--spacing-sm);
+		font-size: var(--font-size-xs);
+		letter-spacing: 0;
+		text-transform: none;
+	}
+}
+
+// ===== R6: actions =========================================================
+
+.property-actions,
+.design-panel .settings-action-row {
+	// One button per line. Buttons carry words, and an auto-fit grid squeezed
+	// them until the labels were unreadable; a second column is opt-in at a
+	// width where two full labels genuinely fit.
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--spacing-sm);
+	padding: var(--spacing-xs) var(--property-gutter) var(--spacing-2xs);
+
+	> button { width: 100%; }
+
+	&[hidden] { display: none; }
+}
+
+// ===== Advanced disclosure =================================================
+
+.design-panel .advanced-disclosure {
+	margin: 0;
+	border-top: 1px solid var(--color-border);
+
+	> .advanced-disclosure-toggle { padding: var(--spacing-2xs) var(--property-gutter); }
+
+	> .advanced-disclosure-content {
+		gap: var(--property-row-gap);
+		// The disclosure is usually the last thing in a card, so its content
+		// needs the same bottom clearance a card body gets.
+		padding: 0 0 var(--spacing-sm);
+	}
+}
+
+// ===== Rule F: nothing renders an empty shell ==============================
+// A container whose meaningful children are all hidden disappears entirely -
+// border, padding, heading and layout footprint.
+
+.design-panel {
+	.subsection-content-group:not(.subsection-section-group):not(.effects-stack):not([data-effect-card]):not(:has(> :not(.subsection-title):not([hidden]))),
+	.subsection-card-body:not(:has(> :not([hidden]))),
+	.paint-slot-main:not(:has(> :not([hidden]))),
+	.property-pair-group:not(:has(> :not([hidden]))),
+	.property-toggle-list:not(:has(> :not(.property-group-label):not([hidden]))),
+	.effect-option-group:not(:has(> :not(.property-set-label):not([hidden]))),
+	.settings-action-row:not(:has(> :not([hidden]))),
+	.subsection-content:not(:has(> :not([hidden]))),
+	.asset-info-meta:not(:has(> .property-meta-cell > .property-value:not(:empty))) {
+		display: none;
+	}
+}
+
+// ===== A boolean in a header is a compact switch ==========================
+// Same component as the effect modules' Enabled control, so every boolean in
+// the panel is either a toggle row (in a body) or a compact switch (in a
+// header). Lock Aspect was the last one still rendering as a bordered chip.
+.design-panel .transform-chip {
+	flex: 0 0 auto;
+	min-height: auto;
+	margin-left: auto;
+
+	> input[type="checkbox"] { @include visually-hidden-control; }
+
+	> span {
+		color: transparent;
+		font-size: 0;
+		overflow: hidden;
+		text-indent: -9999px;
+		white-space: nowrap;
+		@include switch-track(var(--switch-w), var(--switch-h), 3px);
+	}
+
+	> input:checked + span {
+		color: transparent;
+		@include switch-track-on(var(--switch-w), var(--switch-h));
+	}
+
+	> input:focus-visible + span { box-shadow: var(--control-focus-ring); }
+	&:hover > input:not(:checked) + span { border-color: var(--color-border-hover); }
+}
+
+// ===== Responsive: container queries, never media queries ==================
+// MobileManager moves these exact sections into the drawer, so the same DOM
+// renders at two widths. Width, not viewport, decides the layout.
+
+.settings-subsection {
+	container-type: inline-size;
+	container-name: propertypanel;
+}
+
+@container propertypanel (max-width: 360px) {
+	.property-row.is-pair {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: var(--spacing-2xs);
+		padding-top: var(--spacing-2xs);
+		padding-bottom: var(--spacing-2xs);
+
+		> .property-label,
+		> .property-pair { grid-column: 1 / -1; }
+	}
+
+	.property-pair { grid-template-columns: minmax(0, 1fr); }
+}
+
+@container propertypanel (max-width: 280px) {
+	.design-panel {
+		--property-label-col: 62px;
+		--property-value-col: 40px;
+	}
+}
+
+// ===== Sidebar resize handles ==============================================
+
+.panel-resize-handle {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 9px;
+	z-index: var(--z-panel-elevated);
+	cursor: col-resize;
+	touch-action: none;
+	background: transparent;
+
+	&.panel-resize-handle-start { left: -4px; }
+	&.panel-resize-handle-end { right: -4px; }
+
+	&::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 50%;
+		width: 2px;
+		transform: translateX(-50%);
+		background: var(--color-accent);
+		opacity: 0;
+		transition: opacity var(--transition-fast);
+	}
+
+	&:hover::after,
+	&.is-dragging::after { opacity: 0.7; }
+
+	&:focus-visible {
+		outline: none;
+
+		&::after { opacity: 1; }
+	}
+}
+
+body.is-resizing-panel {
+	cursor: col-resize !important;
+	user-select: none;
+
+	iframe,
+	canvas { pointer-events: none; }
+}
+
+
+// ===== One chevron =========================================================
+// Three collapse affordances existed at three sizes and colours: the group
+// chevron (16px), the module chevron (a 24px glyph clipped into a 13.6px box)
+// and the Advanced chevron (14px). They all mean the same thing, so they look
+// the same; what distinguishes them is where they sit and what they sit beside,
+// not their weight.
+
+.design-panel {
+	.panel-group-chevron,
+	.subsection-chevron,
+	.advanced-disclosure-chevron {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 14px;
+		height: 14px;
+		min-width: 14px;
+		flex: 0 0 auto;
+		margin-left: auto;
+		color: var(--color-text-tertiary);
+		transition: transform var(--transition-fast), color var(--transition-fast);
+
+		> svg.icon {
+			width: 11px;
+			height: 11px;
+			font-size: 11px;
+			fill: currentColor;
+			opacity: 1;
+		}
+	}
+
+	// A header that can be clicked brightens its chevron on hover, so the
+	// affordance reads as interactive rather than decorative.
+	.subsection-title:hover > .subsection-chevron,
+	.subsection-title:hover > .panel-group-chevron,
+	.advanced-disclosure-toggle:hover > .advanced-disclosure-chevron {
+		color: var(--color-text-secondary);
+	}
+
+	// Collapsed states point the same way at every level.
+	.subsection-section-group.collapsed > .subsection-title > .panel-group-chevron,
+	[data-collapsible-subsection].is-collapsed > .subsection-title > .subsection-chevron {
+		transform: rotate(-90deg);
+	}
+
+	.advanced-disclosure:not(.is-open) > .advanced-disclosure-toggle > .advanced-disclosure-chevron {
+		transform: rotate(-90deg);
+	}
+
+	.advanced-disclosure.is-open > .advanced-disclosure-toggle > .advanced-disclosure-chevron {
+		transform: rotate(0deg);
+	}
+}
+
+
+// A second action column only where two full labels actually fit.
+@container propertypanel (min-width: 380px) {
+	.design-panel .settings-action-row:not(.is-stacked),
+	.design-panel .property-actions:not(.is-stacked) {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+// ===== The gradient editor, brought onto the system ========================
+// Legacy markup that never got migrated: its own heading sizes, its own column
+// class and its own spacing. It uses the shared vocabulary now.
+.design-panel .effect-gradient-editor {
+	gap: var(--spacing-sm);
+	margin-inline: var(--property-gutter);
+
+	> .property-set-label { padding-inline: 0; }
+
+	.gradient-option-rows {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		padding: 0;
+		gap: var(--spacing-sm);
+	}
+
+	.effect-option-group > .segmented-control { margin-inline: 0; }
+	.effect-option-group > .property-set-label { padding-inline: 0; }
+
+	.gradient-stops-box { padding: var(--spacing-sm); }
+
+	.gradient-stops-heading {
+		font-size: var(--font-size-xs);
+		letter-spacing: 0;
+		text-transform: none;
+		color: var(--color-text-tertiary);
+	}
+
+	.property-row.gradient-angle { padding-inline: 0; }
+}
+
+
+// ===== An optionGroup rendered as a row ====================================
+// It carries .property-row now, so the row already applies the gutter - its
+// label must not apply it a second time.
+.design-panel .effect-option-group.property-row {
+	> .property-set-label { padding-inline: 0; }
+
+	&.is-stacked > .property-set-label { grid-area: 1 / 1 / 2 / 2; }
+
+	&:not(.is-stacked) > .segmented-control,
+	&:not(.is-stacked) > select,
+	&:not(.is-stacked) > .glitter-source { grid-column: 2 / -1; margin-inline: 0; }
+
+	&.is-stacked > .segmented-control,
+	&.is-stacked > select,
+	&.is-stacked > .glitter-source { grid-area: 2 / 1 / 3 / 4; margin-inline: 0; }
+}
+
+// ===== A set-scoped reset is the same icon, one step quieter ==============
+.design-panel .property-set-reset {
+	flex: 0 0 auto;
+	width: var(--property-revert-col);
+	height: var(--property-revert-col);
+	margin-left: auto;
+}
+
+// ===== Inline placeholders speak the panel's language =====================
+// `.empty-state` is a large centred block; used inline for "None" it was a
+// component borrowed for a job it was never meant to do.
+// `.empty-state` is `display:none` until JS adds `.visible`. Restyling it
+// without honouring that contract is what left "None" showing next to a real
+// selection.
+.design-panel .color-selection .empty-state:not(.visible) { display: none; }
+
+.design-panel .color-selection .empty-state.visible,
+.design-panel .property-empty-inline {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--property-row-h);
+	margin: 0 var(--property-gutter);
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-sm);
+	font-weight: 400;
+	font-style: italic;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+
+// ===== Segmented controls fill their row ==================================
+// A segmented control is a single control occupying one slot, so it spans that
+// slot. Several places were adding their own horizontal margin on top of the
+// gutter the row already applies, leaving it inset twice and short of full
+// width.
+.design-panel {
+	// A segmented control fills its slot and WRAPS. Five source options cannot
+	// fit one 300px line, and the alternatives are worse: squeezing them makes
+	// the labels unreadable, and a horizontal scroller hides options entirely.
+	// Wrapped, it reads as a button grid - the joined-bar look is worth less
+	// than being able to see every choice.
+	.segmented-control {
+		display: flex;
+		flex-wrap: wrap;
+		width: 100%;
+		margin-inline: 0;
+
+		> .segmented-option {
+			flex: 1 1 var(--segmented-option-min, 72px);
+			min-width: var(--segmented-option-min, 72px);
+		}
+
+		// Once it wraps, each row needs its own edges rather than one long bar.
+		&:has(> .segmented-option:nth-child(4)) {
+			gap: 1px;
+
+			> .segmented-option { border-radius: var(--radius-sm); }
+		}
+	}
+
+	// The one exception: a segmented sitting directly in a body or a set (not in
+	// a row) still needs the gutter, because nothing else supplies it.
+	.subsection-card-body > .segmented-control,
+	.paint-slot-main > .segmented-control,
+	.subsection-content > .segmented-control,
+	.effect-option-group:not(.property-row) > .segmented-control,
+	.functional-control-group > .segmented-control,
+	.advanced-control-group > .segmented-control,
+	.property-set > .segmented-control,
+	.paint-slot-source > .segmented-control {
+		width: auto;
+		margin-inline: var(--property-gutter);
+	}
+}
+
+// ===== A card's interior padding is symmetric =============================
+// A titled card gets its top spacing from the title. An UNTITLED card had none,
+// so its single row sat tight against the top border and loose against the
+// bottom - which is the lopsided Layer Opacity card.
+.design-panel .subsection-content-group:not(.has-subsection-title) > .subsection-card-body {
+	padding-top: var(--spacing-sm);
+}
+
+// ===== Selected colour chips ==============================================
+// A chip is a token: swatch, value, remove. It reads as one object rather than
+// three loose parts, and its remove control behaves like every other icon
+// button in the panel.
+.design-panel .selected-color-chip {
+	background: var(--color-bg-secondary);
+	border: 1px solid var(--color-border);
+	transition: border-color var(--transition-fast), background-color var(--transition-fast);
+
+	> .selected-color-swatch {
+		border: 1px solid var(--color-border);
+		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+	}
+
+	> span {
+		font-variant-numeric: tabular-nums;
+		color: var(--color-text-secondary);
+	}
+
+	> .selected-color-remove {
+		color: var(--color-text-tertiary);
+		border-radius: var(--radius-full);
+		transition: color var(--transition-fast), background-color var(--transition-fast);
+
+		&:hover {
+			background: var(--color-bg-tertiary);
+			color: var(--color-danger-text, var(--color-accent));
+		}
+	}
+
+	&:hover { border-color: var(--color-border-hover); }
+}

@@ -14,5 +14,9 @@
 @use 'workspace';
 @use 'settings';
 @use 'assets';
+// LAST of the panel sheets on purpose: this file is the single owner of the
+// property vocabulary, so it has to win the cascade against the feature sheets
+// (settings, assets, effects, transform) that still carry legacy declarations.
+@use 'panels/properties';
 @use 'modals';
 @use 'mobile';

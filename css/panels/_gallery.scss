@@ -159,35 +159,40 @@
 		animation: filter-surface-enter var(--transition-fast) ease-out;
 	}
 
+	// The panel already scrolls; a 200px inner scroller inside it was a trap
+	// (two nested scroll regions competing for the same wheel gesture).
 	>.filters-container-inner {
-		max-height: 200px;
-		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
 	}
 
+	// Rule B: a filter group is a label plus its chips, separated by a hairline
+	// - not a card stack. Rule C: its label is the group-label level, the same
+	// one the property panels use, not a fourth uppercase variant.
 	.filter-section {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-md);
+		gap: var(--spacing-sm);
+		padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg);
+		margin: 0;
+		background: transparent;
+		border-radius: 0;
 
+		+ .filter-section { border-top: 1px solid var(--color-border); }
 
-		padding: var(--spacing-md);
-		background-color: var(--color-bg-card);
-		border-radius: var(--spacing-md);
-
-		margin: var(--spacing-md);
-
-
-		>.filter-label {
-			@include text-xs;
+		>.property-set-label {
+			font-size: 10.5px;
+			font-weight: var(--font-weight-semibold);
+			letter-spacing: 0.09em;
 			text-transform: uppercase;
 			color: var(--color-text-tertiary);
-			font-weight: 600;
+			line-height: 1.2;
 		}
 
 		>.filter-chips {
 			display: flex;
 			flex-wrap: wrap;
-			gap: var(--spacing-base);
+			gap: var(--spacing-sm);
 		}
 
 		>.color-filter-chips {

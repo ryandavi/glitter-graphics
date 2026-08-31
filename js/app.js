@@ -121,6 +121,9 @@ class GlitterEditor {
 		this.initializeAltDuplicateFeedback();
 		this.initializeCollapsibleSections();
 		this.initializeAdvancedDisclosures();
+		// Rule D: every panel slider's revert reflects whether it is at default.
+		initializePropertyReverts();
+		initializePanelResize(this);
 		this.initializeShortcutsModal();
 		this.initializeExportSettings();
 		this.htmlSceneExporter.initialize();
@@ -834,7 +837,10 @@ class GlitterEditor {
 			glitterSaturation: CONFIG.tools.glitter.defaults.colorAdjust.saturation,
 			glitterBrightness: CONFIG.tools.glitter.defaults.colorAdjust.brightness
 		};
-		return resetValues[sliderId];
+		// Explicit overrides first, then the slider's own declared default from
+		// CONFIG.ui.sliders (registered at render time). Every slider gets
+		// default-aware revert state, not just the seven listed above.
+		return resetValues[sliderId] !== undefined ? resetValues[sliderId] : PANEL_SLIDER_DEFAULTS[sliderId];
 	}
 
 	updateResetButton(sliderId) {

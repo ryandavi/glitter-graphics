@@ -31,10 +31,10 @@
 .paint-slot-primary-row {
 	&[hidden] { display: none; }
 
-	>.setting-column[hidden] { display: none; }
+	>.property-row[hidden] { display: none; }
 
-	>.setting-column:only-child,
-	>.setting-column[hidden]+.setting-column {
+	>.property-row:only-child,
+	>.property-row[hidden]+.property-row {
 		grid-column: 1 / -1;
 	}
 }

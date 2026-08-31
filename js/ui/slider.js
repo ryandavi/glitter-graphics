@@ -82,6 +82,8 @@ function bindSlider(slider, valueEl, options = {}) {
 	});
 
 	if (resetButton && resetValue !== undefined) {
+		// Claim this button so the panel-wide revert fallback leaves it alone.
+		resetButton.dataset.revertBound = '';
 		resetButton.addEventListener('click', resetToDefault);
 	}
 

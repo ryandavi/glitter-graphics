@@ -16,12 +16,16 @@
 	@include windows7-tooltip;
 }
 
+// Chips are multi-select tags, so they stay pills rather than joining the
+// segmented control - but they share its height, radius and focus ring so the
+// sidebar has one selectable-token feel.
 .filter-chip {
 	appearance: none;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: var(--spacing-xs) var(--spacing-md);
+	min-height: var(--control-height-compact);
+	padding: var(--spacing-2xs) var(--spacing-md);
 	border: 0;
 	border-radius: var(--radius-pill);
 	outline: 2px solid transparent;

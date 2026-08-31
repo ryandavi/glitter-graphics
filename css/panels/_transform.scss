@@ -122,8 +122,13 @@
 		&.collapsible-section {
 			flex-shrink: 0;
 
+			// Horizontal inset is owned by the property gutter alone (see
+			// panels/_properties.scss). Padding here stacked on top of it and put
+			// every control ~20px from the panel edge for no reason.
 			>.section-content {
-				padding: var(--spacing-md);
+				// No top padding: the first group's own header supplies it, and
+				// doubling up left a dead band under every section header.
+				padding: 0 0 var(--spacing-sm);
 
 				&:not(.visible) {
 					display: none;
@@ -437,7 +442,7 @@
 
 .brush-dynamic-row[hidden] { display: none; }
 
-.brush-dynamic-row.is-overridden .setting-label::after {
+.brush-dynamic-row.is-overridden .property-label::after {
 	content: '•';
 	margin-left: 4px;
 	color: var(--color-accent, currentColor);
@@ -453,7 +458,7 @@
 
 .brush-dynamic-pair:has(> [hidden]) > :not([hidden]) { grid-column: 1 / -1; }
 
-.brush-settings-section .checkbox-list-content .effect-option-label { margin-bottom: var(--spacing-sm); }
+.brush-settings-section .checkbox-list-content .property-set-label { margin-bottom: var(--spacing-sm); }
 
 .brush-shape-option {
 	display: flex;

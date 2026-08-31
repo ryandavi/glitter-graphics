@@ -99,7 +99,7 @@ class BaseBackgroundManager {
 				const group = document.createElement('label');
 				group.className = 'effect-option-group';
 				const text = document.createElement('span');
-				text.className = 'effect-option-label setting-label';
+				text.className = 'property-set-label';
 				text.textContent = label;
 				const input = document.createElement('input');
 				input.type = 'color';
@@ -592,8 +592,8 @@ class BaseBackgroundManager {
 		if (this.ui.posterizeControls) this.ui.posterizeControls.hidden = settings.paletteMode !== 'posterize';
 		if (this.ui.ditherControls) this.ui.ditherControls.hidden = settings.paletteMode !== 'dither';
 		if (this.ui.duotone) this.ui.duotone.hidden = settings.dither.palette !== 'duotone';
-		if (this.ui.angle) this.ui.angle.closest('.setting-column').hidden = settings.dither.algorithm !== 'halftone';
-		if (this.ui.ditherScale) this.ui.ditherScale.closest('.setting-column').hidden = !['bayer', 'halftone'].includes(settings.dither.algorithm);
+		if (this.ui.angle) this.ui.angle.closest('.property-row').hidden = settings.dither.algorithm !== 'halftone';
+		if (this.ui.ditherScale) this.ui.ditherScale.closest('.property-row').hidden = !['bayer', 'halftone'].includes(settings.dither.algorithm);
 	}
 
 	updateGlitterInfo(layer) {

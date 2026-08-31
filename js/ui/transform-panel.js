@@ -212,7 +212,7 @@ renderTransformPanels() {
 		}
 		const transformPanel = document.querySelector(`[data-transform-prefix="${prefix}"]`);
 		transformPanel?.classList.toggle('is-aspect-locked', Boolean(proportional?.checked));
-		const scaleXLabel = transformPanel?.querySelector('.transform-scale-x .setting-label');
+		const scaleXLabel = transformPanel?.querySelector('.transform-scale-x .property-label');
 		if (scaleXLabel) scaleXLabel.textContent = proportional?.checked ? 'Scale' : 'Scale X';
 		const scaleSummary = document.getElementById(ids.scaleSummary);
 		if (scaleSummary) {

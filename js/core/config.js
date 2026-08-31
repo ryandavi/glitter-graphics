@@ -1321,14 +1321,10 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Stroke', items: [
 				{ kind: 'card', title: 'Dynamics', items: [
-					{ kind: 'twoColumn', items: [
-						{ kind: 'slider', id: 'maskBrushSize', slider: 'maskBrushSize' },
-						{ kind: 'slider', id: 'maskBrushSoftness', slider: 'maskBrushSoftness' }
-					] },
-					{ kind: 'twoColumn', items: [
-						{ kind: 'slider', id: 'maskBrushFlow', slider: 'maskBrushFlow' },
-						{ kind: 'slider', id: 'maskBrushSpacing', slider: 'maskBrushSpacing', title: 'Distance between stamps along a stroke, as a percentage of brush size. Higher values create more space.' }
-					] },
+					{ kind: 'slider', id: 'maskBrushSize', slider: 'maskBrushSize' },
+					{ kind: 'slider', id: 'maskBrushSoftness', slider: 'maskBrushSoftness' },
+					{ kind: 'slider', id: 'maskBrushFlow', slider: 'maskBrushFlow' },
+					{ kind: 'slider', id: 'maskBrushSpacing', slider: 'maskBrushSpacing', title: 'Distance between stamps along a stroke, as a percentage of brush size. Higher values create more space.' },
 					{ kind: 'slider', id: 'maskBrushSmoothing', slider: 'maskBrushSmoothing', title: 'Stabilizes shaky strokes by easing the brush toward the cursor. Higher values are smoother but add lag.' },
 					{ kind: 'checkboxList', items: [
 						{ id: 'maskBrushPressure', label: 'Pressure Sensitivity', title: 'Vary flow with pen pressure (no effect on mouse/touch)', checked: true }
@@ -1401,10 +1397,8 @@ const PANEL_SCHEMAS = {
 						] }
 					] },
 					{ kind: 'card', title: 'Refine Selection', items: [
-						{ kind: 'twoColumn', items: [
-							{ kind: 'slider', id: 'threshold', slider: 'threshold' },
-							{ kind: 'slider', id: 'feather', slider: 'feather' }
-						] }
+						{ kind: 'slider', id: 'threshold', slider: 'threshold' },
+						{ kind: 'slider', id: 'feather', slider: 'feather' }
 					] }
 				] }
 			]
@@ -1435,9 +1429,9 @@ const PANEL_SCHEMAS = {
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
-				pre: [{ kind: 'twoColumn', items: [
-					{ kind: 'slider', id: 'stickerShadowOffsetX', slider: 'shadowOffsetX' },
-					{ kind: 'slider', id: 'stickerShadowOffsetY', slider: 'shadowOffsetY' }
+				pre: [{ kind: 'pair', label: 'Offset', items: [
+					{ id: 'stickerShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
+					{ id: 'stickerShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }]
 			},
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
@@ -1452,15 +1446,32 @@ const PANEL_SCHEMAS = {
 		sourceTemplate: 'tpl-text-content',
 		section: { id: 'textSettingsSection', icon: 'text', iconName: 'Text', title: 'Text Properties' },
 		groups: [
+			// Eight legacy cards composed into four blocks. Order follows the way
+			// text is actually authored: type it, choose the face, set the metrics,
+			// then place it.
 			{ title: 'Content', items: [
-				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textLayerInput' },
-				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textBoxModeHint' },
-				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFontPicker' },
-				{ kind: 'templateCard', template: 'tpl-text-content', selector: '.text-style-group' },
-				{ kind: 'templateCard', template: 'tpl-text-content', selector: '.text-case-group-wrap' },
-				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFontSize' },
-				{ kind: 'templateCard', template: 'tpl-text-content', selector: '.text-align-group' },
-				{ kind: 'templateCard', template: 'tpl-text-content', selector: '#textFitBoxToContent' }
+				{ kind: 'templateBlock', template: 'tpl-text-content', title: 'Text', items: [
+					{ selector: '.text-input-group' },
+					{ selector: '.text-box-mode-group', label: 'Mode' },
+					{ selector: '#textBoxModeHint' },
+					{ selector: '.text-fit-box-group' }
+				] },
+				{ kind: 'templateBlock', template: 'tpl-text-content', title: 'Font', items: [
+					{ selector: '#textFontPicker' },
+					{ selector: '.text-style-group', label: 'Style' },
+					{ selector: '#textCaseSelect', label: 'Case' },
+					{ selector: '#textFontSize', row: true }
+				] },
+				{ kind: 'templateBlock', template: 'tpl-text-content', title: 'Spacing', pair: true, items: [
+					{ selector: '#textLetterSpacing', row: true },
+					{ selector: '#textLineHeight', row: true }
+				] },
+				{ kind: 'templateBlock', template: 'tpl-text-content', title: 'Alignment', items: [
+					// The wrappers carry the Horizontal / Vertical set labels; two bare
+					// segmented rows would not say which axis they control.
+					{ selector: '.functional-control-group:has(.text-align-group)' },
+					{ selector: '.functional-control-group:has(.text-valign-group)' }
+				] }
 			] },
 			{ title: 'Appearance', adoptTransformOpacity: true, items: [
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill',
@@ -1500,9 +1511,9 @@ const PANEL_SCHEMAS = {
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose shadow source',
 				primaryIds: { scale: 'textShadowScale', scaleRow: 'textShadowScaleRow', opacity: 'textShadowOpacity' },
-				pre: [{ kind: 'twoColumn', items: [
-					{ kind: 'slider', id: 'textShadowOffsetX', slider: 'shadowOffsetX' },
-					{ kind: 'slider', id: 'textShadowOffsetY', slider: 'shadowOffsetY' }
+				pre: [{ kind: 'pair', label: 'Offset', items: [
+					{ id: 'textShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
+					{ id: 'textShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }]
 			},
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
@@ -1573,9 +1584,9 @@ const PANEL_SCHEMAS = {
 				modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
 				pre: [
-					{ kind: 'twoColumn', items: [
-						{ kind: 'slider', id: 'shapeShadowOffsetX', slider: 'shadowOffsetX' },
-						{ kind: 'slider', id: 'shapeShadowOffsetY', slider: 'shadowOffsetY' }
+					{ kind: 'pair', label: 'Offset', items: [
+						{ id: 'shapeShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
+						{ id: 'shapeShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 					] }
 				]
 			},

@@ -11,7 +11,9 @@
 .sticker-position-group {
 	display: flex;
 	gap: var(--spacing-md);
-	width: 100%;
+	// No width:100% - the property gutter applies a horizontal margin, and
+	// 100% + margin always overflows its container.
+	width: auto;
 
 	.input-group {
 		display: flex;
@@ -272,95 +274,32 @@
 .pixel-effects-actions>.btn-simple,
 .layer-effects-actions>.btn-simple { width: 100%; }
 
-.setting-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	width: 100%;
-
-	>.setting-label {
-		position: relative;
-
-		&[data-tooltip] { cursor: help; }
-
-		+.setting-value {
-			@include text-sm;
-			color: var(--color-text-primary);
-		}
-	}
-}
-
-.setting-value {
-	color: var(--color-text-primary);
-	font-size: var(--font-size-sm);
-	font-weight: 500;
-	font-variant-numeric: tabular-nums;
-}
-
+// Layout for blocks, bodies and modules lives in panels/_properties.scss - the
+// one owner. What stays here is only the state behaviour that markup and JS
+// depend on (collapsible chevron, effect-card enable states).
 .subsection-content-group {
-	display: flex;
-	flex-direction: column;
-	@include inset-surface;
-	padding: 0;
-	border-radius: var(--radius-md);
-
-	>.subsection-title {
-		display: flex;
-		min-height: var(--control-height-compact);
-		justify-content: space-between;
-		align-items: center;
-		@include text-sm;
-		font-weight: 600;
-		text-transform: uppercase;
-		color: var(--color-text-tertiary);
-		padding: var(--spacing-md);
-	}
-
-	&[data-collapsible-subsection]>.subsection-title {
+	&[data-collapsible-subsection] > .subsection-title {
 		cursor: pointer;
 
-		>.subsection-chevron {
-			width: 1rem;
-			height: 1rem;
+		> .subsection-chevron {
+			width: 0.85rem;
+			height: 0.85rem;
 			transition: transform var(--transition-fast);
 		}
 	}
 
 	&[data-collapsible-subsection].is-collapsed {
-		>.subsection-title>.subsection-chevron { transform: rotate(-90deg); }
-		>:not(.subsection-title) { display: none; }
+		> .subsection-title > .subsection-chevron { transform: rotate(-90deg); }
+		> :not(.subsection-title) { display: none; }
 	}
 
-	>.subsection-content {
-		display: flex;
-		gap: var(--spacing-md);
+	&[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)) {
+		&:not(.is-collapsed) > .text-effect-controls { display: flex; }
 
-		+.subsection-title { margin-top: var(--spacing-sm); }
-	}
-
-	&[data-effect-card]:has(>.subsection-title input[data-effect-toggle]:not(:checked)) {
-		&:not(.is-collapsed)>.text-effect-controls { display: flex; }
-
-		&:not(.is-collapsed)>:not(.subsection-title) {
+		&:not(.is-collapsed) > :not(.subsection-title) {
 			opacity: var(--disabled-opacity);
 			pointer-events: none;
 		}
-	}
-}
-
-.subsection-card-body,
-.paint-slot-main {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-md);
-	min-width: 0;
-	padding: var(--spacing-md);
-}
-
-.has-subsection-title {
-	>.subsection-card-body,
-	>.paint-slot-main {
-		padding-top: 0;
 	}
 }
 
@@ -371,7 +310,9 @@
 .settings-subsection {
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-md);
+	// No gap: a group is separated by its divider plus its own bottom padding.
+	// A gap here stacked a third mechanism on top of those two.
+	gap: 0;
 
 	.layer-type-options>.layer-type-option { background-color: var(--color-bg-primary); }
 
@@ -388,27 +329,6 @@
 	>.checkbox-group { margin-left: auto; }
 }
 
-.settings-group-two-column {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: var(--spacing-lg);
-	width: 100%;
-}
-
-.setting-column {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-sm);
-	width: 100%;
-
-	&.right { align-items: flex-end; }
-
-	button.btn-text {
-		width: fit-content;
-		padding: 0;
-		text-align: right;
-	}
-}
 
 .checkbox-group {
 	display: inline-flex;
@@ -492,6 +412,21 @@
 
 .transform-panel .checkbox-group>span { white-space: nowrap; }
 
+
+// Rule C: the ONE uppercase level. L1 group titles stay shouty so they separate
+// from the sentence-case block titles beneath them without needing a box.
+.subsection-content-group.subsection-section-group > .subsection-title,
+.subsection-content-group.effects-stack > .subsection-title {
+	font-size: 10.5px;
+	font-weight: var(--font-weight-semibold);
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+	padding: var(--spacing-xs) var(--spacing-md);
+}
+
+// R3 containers carry the gutter so pair rows align with the R1 rows above and
+// below them; the rows themselves stay flush inside it.
 /* ===== SETTINGS SECTION VISIBILITY ===== */
 .welcome-section,
 .no-layer-settings-section,
