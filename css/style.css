@@ -1170,10 +1170,6 @@ select {
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
-textarea::-moz-placeholder, input[type=email]::-moz-placeholder, input[type=password]::-moz-placeholder, input[type=url]::-moz-placeholder, input[type=text]::-moz-placeholder, input[type=number]::-moz-placeholder, input[type=search]::-moz-placeholder, select::-moz-placeholder {
-  color: var(--color-text-tertiary);
-  opacity: 1;
-}
 textarea::placeholder,
 input[type=email]::placeholder,
 input[type=password]::placeholder,
@@ -1221,8 +1217,7 @@ select:disabled {
 
 select {
   -webkit-appearance: none;
-  -moz-appearance: none;
-       appearance: none;
+  appearance: none;
   padding-right: calc(var(--control-padding-inline) + 20px);
   background-image: linear-gradient(45deg, transparent 50%, var(--color-text-tertiary) 50%), linear-gradient(135deg, var(--color-text-tertiary) 50%, transparent 50%);
   background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
@@ -1540,8 +1535,7 @@ input[type=range] {
   display: block;
   width: 100%;
   height: var(--control-height);
-  -moz-appearance: none;
-       appearance: none;
+  appearance: none;
   -webkit-appearance: none;
   background: transparent !important;
   border: 0;
@@ -1846,9 +1840,7 @@ input[type=range]:disabled {
 }
 
 .filter-chip {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2493,6 +2485,7 @@ input[type=range]:disabled {
   padding: var(--spacing-xs);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -2560,6 +2553,7 @@ input[type=range]:disabled {
 .toolbar {
   width: var(--toolbar-width);
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   border-right: 1px solid var(--color-border);
   display: flex;
@@ -2678,6 +2672,7 @@ input[type=range]:disabled {
   display: flex;
   flex-direction: column;
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
 }
 .image-container > .image-dropzone-wrapper > #imageUpload {
@@ -2789,6 +2784,7 @@ input[type=range]:disabled {
   flex-direction: column;
   overflow: hidden;
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
 }
 .layers-section > .section-header {
@@ -3032,6 +3028,7 @@ input[type=range]:disabled {
 
 .section {
   /* Section Headers */
+  /* Collapsible Section */
 }
 .section > .section-header {
   position: relative;
@@ -3138,12 +3135,10 @@ input[type=range]:disabled {
   opacity: var(--disabled-opacity);
   cursor: not-allowed;
 }
-.section {
-  /* Collapsible Section */
-}
 .section.collapsible-section {
   border-top: 1px solid var(--color-border);
   background: var(--panel-bg);
+  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   flex-shrink: 0;
 }
@@ -3425,9 +3420,7 @@ input[type=range]:disabled {
   display: none;
 }
 .glitter-search .active-filter-summary-chip {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
@@ -3770,6 +3763,7 @@ body.no-document .main-content > .design-panel {
   gap: var(--spacing-sm);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -3942,8 +3936,7 @@ body.no-document .main-content > .design-panel {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   opacity: 0.5;
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
 }
@@ -3984,6 +3977,7 @@ body.mask-editing .sticker-element {
   transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -4014,9 +4008,7 @@ body.mask-editing .sticker-element {
 .color-picker-controls.is-dragging,
 .mask-brush-controls.is-dragging {
   transition: none;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
   box-shadow: 0 8px 24px var(--color-shadow-strong), 0 0 0 2px var(--color-accent);
 }
 .zoom-controls.is-dragging .context-toolbar-handle,
@@ -4105,9 +4097,7 @@ body.mask-editing .sticker-element {
   letter-spacing: 0.5px;
   font-weight: 600;
   cursor: pointer;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   padding: 0 var(--spacing-xs);
   border: 0;
   border-radius: 0;
@@ -4245,6 +4235,7 @@ body.mask-editing .sticker-element {
   max-width: 300px;
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -4398,6 +4389,7 @@ body.mask-editing .sticker-element {
   cursor: pointer;
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -4415,8 +4407,7 @@ body.mask-editing .sticker-element {
   display: grid;
   grid-template-columns: var(--icon-size-xs) minmax(0, 1fr);
   align-items: center;
-  -moz-column-gap: var(--spacing-sm);
-       column-gap: var(--spacing-sm);
+  column-gap: var(--spacing-sm);
   padding: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
@@ -4570,16 +4561,13 @@ body.mask-editing .sticker-element {
   display: none;
 }
 .toolbar.has-overflow-top.has-overflow-bottom {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
-          mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
 }
 .toolbar.has-overflow-top:not(.has-overflow-bottom) {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
-          mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
 }
 .toolbar.has-overflow-bottom:not(.has-overflow-top) {
-  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
-          mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
+  mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
 }
 
 .layers-panel > .section,
@@ -4979,10 +4967,6 @@ body.mask-editing .sticker-element {
 .document-size-mode {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-}
-
-.canvas-relative-toggle {
-  align-self: flex-start;
 }
 
 .canvas-size-limit-message {
@@ -5641,8 +5625,7 @@ body.mask-editing .sticker-element {
 .auto-glitter-settings-section .auto-glitter-choice img {
   width: 100%;
   height: 100%;
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   image-rendering: pixelated;
 }
 .auto-glitter-settings-section .auto-glitter-footer-group .auto-glitter-actions > button {
@@ -5668,6 +5651,7 @@ body.mask-editing .sticker-element {
   transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -5951,10 +5935,6 @@ body.tool-select .preview-canvas {
   padding-inline: var(--spacing-sm);
   font-size: var(--font-size-base);
 }
-.sticker-position-group .input-group > input[type=number]:-moz-read-only {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 .sticker-position-group .input-group > input[type=number]:read-only {
   opacity: 0.6;
   cursor: not-allowed;
@@ -6225,9 +6205,7 @@ body.tool-select .preview-canvas {
   color: var(--color-text-primary);
   font-weight: initial;
   cursor: pointer;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
 }
 .checkbox-group > input[type=checkbox] {
   position: absolute;
@@ -6430,20 +6408,17 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   image-rendering: pixelated;
   -webkit-user-select: none;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
   -webkit-user-drag: none;
 }
 .asset-options.stickers-options .asset-grid > .asset-option {
   background: var(--color-bg-tertiary);
 }
 .asset-options.stickers-options .asset-grid > .asset-option > img {
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   padding: var(--spacing-xs);
   image-rendering: auto;
 }
@@ -6466,8 +6441,7 @@ body.tool-select .preview-canvas {
   background: var(--color-bg-tertiary);
 }
 .asset-options.brush-tip-options .asset-grid > .asset-option > img {
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   padding: var(--spacing-sm);
 }
 .asset-options.brush-tip-options .asset-grid > .asset-option.is-vector > img {
@@ -6601,8 +6575,7 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
 }
 #brushTipThumbnail.is-vector {
   color: var(--shape-asset-icon-color);
@@ -6716,8 +6689,7 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-image.category-card-glitter-bg {
@@ -6828,8 +6800,7 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-info-header .asset-info-thumbnail:not(.pixelated) > img {
@@ -6841,8 +6812,7 @@ body.tool-select .preview-canvas {
   image-rendering: pixelated;
 }
 .asset-info-header .asset-info-thumbnail.base-image-thumbnail > img {
-  -o-object-fit: cover;
-     object-fit: cover;
+  object-fit: cover;
   image-rendering: auto;
 }
 .asset-info-header .asset-info-details {
@@ -6881,9 +6851,7 @@ body.tool-select .preview-canvas {
   font-weight: 500;
   line-height: 1.2;
   text-overflow: ellipsis;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
 }
 .asset-info-header .asset-info-details .asset-info-badges .asset-info-badge.badge-variable-fps {
   border-color: var(--color-warning-border);
@@ -6948,6 +6916,13 @@ body.tool-select .preview-canvas {
   text-transform: none;
   color: var(--color-text-secondary);
   line-height: 1.2;
+}
+
+.design-panel .property-block-title {
+  padding: 0;
+}
+.design-panel .property-block-title + * {
+  margin-top: var(--spacing-sm);
 }
 
 .design-panel .property-set-label {
@@ -7036,8 +7011,7 @@ body.tool-select .preview-canvas {
   display: grid;
   grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-value-col) var(--property-revert-col);
   align-items: center;
-  -moz-column-gap: var(--spacing-sm);
-       column-gap: var(--spacing-sm);
+  column-gap: var(--spacing-sm);
   min-height: var(--property-row-h);
   padding: 0 var(--property-gutter);
 }
@@ -7051,6 +7025,7 @@ body.tool-select .preview-canvas {
 .property-row > .segmented-control,
 .property-row > select,
 .property-row > input[type=color],
+.property-row > input[type=text],
 .property-row > .input-unit,
 .property-row > textarea,
 .property-row > .property-control-wide {
@@ -7135,9 +7110,7 @@ body.tool-select .preview-canvas {
 .property-row.is-toggle {
   grid-template-columns: minmax(0, 1fr) auto;
   cursor: pointer;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
 }
 .property-row.is-toggle > input[type=checkbox] {
   position: absolute;
@@ -7282,17 +7255,13 @@ body.tool-select .preview-canvas {
   align-items: center;
   gap: var(--spacing-sm);
   min-height: var(--control-height-compact);
-  padding: var(--spacing-xs) var(--property-gutter);
+  padding: var(--property-gutter);
 }
 .design-panel .subsection-content-group.subsection-section-group + .subsection-content-group.subsection-section-group,
 .design-panel .subsection-content-group.subsection-section-group + .subsection-content-group.effects-stack,
 .design-panel .subsection-content-group.effects-stack + .subsection-content-group.subsection-section-group,
 .design-panel .subsection-content-group.effects-stack + .subsection-content-group.effects-stack {
   border-top: 1px solid var(--color-border);
-}
-.design-panel .subsection-content-group.subsection-section-group:not(.collapsed):has(> :not(.subsection-title):not([hidden])) + .subsection-content-group:is(.subsection-section-group, .effects-stack),
-.design-panel .subsection-content-group.effects-stack:not(.collapsed):has(> :not(.subsection-title):not([hidden])) + .subsection-content-group:is(.subsection-section-group, .effects-stack) {
-  margin-top: var(--spacing-sm);
 }
 .design-panel .subsection-content-group.subsection-section-group > .subsection-content-group + .subsection-content-group,
 .design-panel .subsection-content-group.subsection-section-group > .transform-panel-host + .subsection-content-group,
@@ -7301,6 +7270,10 @@ body.tool-select .preview-canvas {
 .design-panel .subsection-content-group.effects-stack > .transform-panel-host + .subsection-content-group,
 .design-panel .subsection-content-group.effects-stack > .subsection-content-group + .transform-panel-host {
   margin-top: var(--spacing-sm);
+}
+.design-panel .subsection-content-group.subsection-section-group > .subsection-content-group + .settings-action-row,
+.design-panel .subsection-content-group.effects-stack > .subsection-content-group + .settings-action-row {
+  margin-top: var(--property-block-gap);
 }
 .design-panel .subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) {
   display: flex;
@@ -7332,9 +7305,9 @@ body.tool-select .preview-canvas {
 .design-panel .subsection-content + * {
   margin-top: var(--spacing-xs);
 }
-.design-panel .subsection-card-body > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc)),
-.design-panel .paint-slot-main > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc)),
-.design-panel .subsection-content > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc)) {
+.design-panel .subsection-card-body > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
+.design-panel .paint-slot-main > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
+.design-panel .subsection-content > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)) {
   margin-inline: var(--property-gutter);
   width: auto;
   max-width: calc(100% - var(--property-gutter) * 2);
@@ -7355,10 +7328,10 @@ body.tool-select .preview-canvas {
   border: 0;
   background: transparent;
 }
-.design-panel .effect-option-group:not(.property-row) > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc)),
-.design-panel .functional-control-group > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc)),
-.design-panel .advanced-control-group > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc)),
-.design-panel .property-set > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .text-box-hint, .settings-row-label-desc)) {
+.design-panel .effect-option-group:not(.property-row) > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
+.design-panel .functional-control-group > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
+.design-panel .advanced-control-group > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
+.design-panel .property-set > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)) {
   margin-inline: var(--property-gutter);
   width: auto;
   max-width: calc(100% - var(--property-gutter) * 2);
@@ -7388,10 +7361,21 @@ body.tool-select .preview-canvas {
   margin-top: 0;
 }
 
+.design-panel .property-block-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--property-block-gap);
+}
+
+.design-panel .subsection-card-body > .property-row + .settings-action-row {
+  margin-top: var(--property-block-gap);
+}
+
 .design-panel .subsection-section-group > .subsection-content-group,
 .design-panel .effects-stack > .subsection-content-group,
 .design-panel .subsection-section-group > .transform-panel-host > .subsection-content-group,
-.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group {
+.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group,
+.design-panel .property-card {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg-card);
@@ -7402,14 +7386,20 @@ body.tool-select .preview-canvas {
 .design-panel .subsection-section-group > .subsection-content-group > .subsection-title,
 .design-panel .effects-stack > .subsection-content-group > .subsection-title,
 .design-panel .subsection-section-group > .transform-panel-host > .subsection-content-group > .subsection-title,
-.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .subsection-title {
-  padding: var(--spacing-2xs) var(--property-gutter);
+.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .subsection-title,
+.design-panel .property-card > .subsection-title {
+  padding: var(--property-gutter);
 }
 .design-panel .subsection-section-group > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
 .design-panel .effects-stack > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
 .design-panel .subsection-section-group > .transform-panel-host > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
-.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child) {
+.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
+.design-panel .property-card > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child) {
   padding-bottom: var(--spacing-sm);
+}
+.design-panel .property-block-list > .property-card {
+  margin-inline: 0;
+  --property-gutter: var(--property-card-inset);
 }
 .design-panel [data-effect-card] > .subsection-title,
 .design-panel [data-role=paint-slot] > .subsection-title {
@@ -7535,6 +7525,14 @@ body.tool-select .preview-canvas {
   padding-bottom: var(--spacing-sm);
 }
 
+.design-panel .subsection-content-group > .subsection-card-body:has(> .asset-info:last-child) {
+  padding-bottom: var(--property-gutter);
+}
+
+.design-panel .subsection-content-group:has(> .advanced-disclosure) > .subsection-card-body:has(> .asset-info:last-child) {
+  padding-bottom: var(--property-card-inset);
+}
+
 .property-module-summary {
   flex: 0 1 auto;
   max-width: 55%;
@@ -7559,27 +7557,51 @@ body.tool-select .preview-canvas {
 }
 
 .design-panel .asset-info {
+  --asset-summary-thumbnail-size: 40px;
   gap: var(--spacing-xs);
   margin: 0 var(--property-gutter);
   padding: var(--spacing-sm);
   border-radius: var(--radius-sm);
+  background: var(--color-bg-tertiary);
 }
 .design-panel .asset-info-header {
   gap: var(--spacing-sm);
   align-items: center;
 }
 .design-panel .asset-info-thumbnail {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  flex: 0 0 auto;
+  width: var(--asset-summary-thumbnail-size);
+  height: var(--asset-summary-thumbnail-size);
+  min-width: var(--asset-summary-thumbnail-size);
+  flex: 0 0 var(--asset-summary-thumbnail-size);
+}
+.design-panel .asset-info-details {
+  min-width: 0;
+  min-height: var(--asset-summary-thumbnail-size);
+  justify-content: center;
 }
 .design-panel .asset-info-name {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   font-size: var(--font-size-sm);
   font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.design-panel .asset-info-badges {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
 }
 .design-panel .asset-info-badges:empty {
   display: none;
+}
+.design-panel .asset-info-badges > .asset-info-badge {
+  min-width: 0;
+  flex: 0 1 auto;
+  white-space: nowrap;
 }
 .design-panel .text-effect-source-change {
   min-height: 22px;
@@ -7640,7 +7662,7 @@ body.tool-select .preview-canvas {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--spacing-sm);
-  padding: var(--spacing-xs) var(--property-gutter) var(--spacing-2xs);
+  padding: 0 var(--property-gutter) var(--spacing-2xs);
 }
 .property-actions > button,
 .design-panel .settings-action-row > button {
@@ -7809,9 +7831,7 @@ body.tool-select .preview-canvas {
 
 body.is-resizing-panel {
   cursor: col-resize !important;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-          user-select: none;
+  user-select: none;
 }
 body.is-resizing-panel iframe,
 body.is-resizing-panel canvas {
@@ -7965,10 +7985,6 @@ body.is-resizing-panel canvas {
   margin-inline: var(--property-gutter);
 }
 
-.design-panel .subsection-content-group:not(.has-subsection-title) > .subsection-card-body {
-  padding-top: var(--spacing-sm);
-}
-
 .design-panel .selected-color-chip {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
@@ -8015,6 +8031,7 @@ body.modal-open {
   padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   opacity: 0;
   transition: opacity var(--transition-base);
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
   backdrop-filter: blur(var(--modal-backdrop-blur));
 }
 .modal-overlay.visible {
@@ -8143,6 +8160,8 @@ body.modal-open {
   column-gap: 0.5em;
   align-items: start;
   padding: var(--spacing-2xs);
+  /* main content (link) */
+  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li a {
   color: var(--color-text-secondary);
@@ -8157,14 +8176,8 @@ body.modal-open {
   grid-column: 1;
   align-self: start;
 }
-.modal-overlay > .modal-content > .modal-body .toc > ol > li {
-  /* main content (link) */
-}
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > :not(ol) {
   grid-column: 2;
-}
-.modal-overlay > .modal-content > .modal-body .toc > ol > li {
-  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol {
   grid-column: 2;
@@ -8281,9 +8294,7 @@ body.modal-open {
   font-weight: 600;
   line-height: 1.4;
   overflow-wrap: anywhere;
-  -webkit-user-select: text;
-     -moz-user-select: text;
-          user-select: text;
+  user-select: text;
 }
 #confirmationModal .confirmation-facts {
   display: grid;
@@ -8604,9 +8615,7 @@ body.modal-open {
 }
 #newCanvasModal .blank-image-grid .blank-image-option {
   min-width: 0;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   background: var(--color-bg-tertiary);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -8715,8 +8724,7 @@ body.modal-open {
   pointer-events: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 #exportPreviewModal .export-preview-instructions {
   display: block;
@@ -9065,8 +9073,7 @@ body.modal-open {
   display: block;
   width: 100%;
   height: 120px;
-  -o-object-fit: contain;
-     object-fit: contain;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 #welcomeModal .welcome-example-wrapper > figure > figcaption {
@@ -9114,8 +9121,7 @@ body.modal-open {
   font-size: var(--font-size-sm);
   cursor: pointer;
   -webkit-user-select: none;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 #welcomeModal .welcome-checkbox > input[type=checkbox] {
   position: absolute;
@@ -9372,6 +9378,9 @@ body.modal-open {
 }
 
 /* ===== ABOUT MODAL ===== */
+#aboutModal {
+  /* Highlight animation for references */
+}
 #aboutModal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
 }
@@ -9437,9 +9446,6 @@ body.modal-open {
 #aboutModal h5 + ul,
 #aboutModal h5 + ol {
   margin-top: var(--spacing-xs);
-}
-#aboutModal {
-  /* Highlight animation for references */
 }
 #aboutModal .highlight {
   background: var(--theme-glitter-image) repeat;
@@ -10250,6 +10256,7 @@ label.settings-row-label-main {
     padding: var(--spacing-sm);
     background: var(--color-bg-translucent);
     border: 1px solid var(--color-border);
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     backdrop-filter: blur(var(--glass-blur));
     border-radius: var(--radius-sm);
     padding: var(--spacing-sm);
@@ -10728,4 +10735,4 @@ label.settings-row-label-main {
   .mobile-only {
     display: block !important;
   }
-}/*# sourceMappingURL=style.css.map */
+}

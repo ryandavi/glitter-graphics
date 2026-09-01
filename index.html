@@ -692,13 +692,13 @@
 									</div>
 
 									<!-- Project Meta Info -->
-									<div class="settings-subsection" id="noLayerDefaultGroups">
+									<div class="settings-subsection property-block-list" id="noLayerDefaultGroups">
 
 
 
 										<!-- Specific Quick Actions -->
 										<div class="subsection-content-group">
-											<div class="subsection-title">Quick Add</div>
+											<div class="property-block-title">Quick Add</div>
 
 											<!-- Quick Add -->
 											<div class="layer-type-options quick-add" id="quickAddOptions"></div>
@@ -706,20 +706,18 @@
 										</div>
 
 										<!-- Project -->
-										<div class="subsection-content-group" id="projectMetaGroup">
-											<div class="subsection-title">Project</div>
-											<div class="settings-row">
-												<div class="settings-row-header">
-													<div class="settings-row-label-main">Name</div>
-													<div class="settings-row-control">
-														<input type="text" id="projectNameInput" maxlength="60" spellcheck="false" placeholder="Name...">
-													</div>
-												</div>
+									<div class="subsection-content-group property-card" id="projectMetaGroup">
+										<div class="subsection-title">Project</div>
+										<div class="subsection-card-body">
+											<div class="property-row">
+												<span class="property-label">Name</span>
+												<input type="text" id="projectNameInput" maxlength="60" spellcheck="false" placeholder="Name...">
 											</div>
 											<div class="canvas-project-actions settings-action-row">
 												<button class="btn-simple" id="openProjectSidebarBtn" type="button">Open Project</button>
 												<button class="btn-simple primary" id="saveProject" type="button" disabled>Save Project</button>
 											</div>
+										</div>
 										</div>
 
 										<!-- Document sizing is moved intact into Canvas Properties at boot.

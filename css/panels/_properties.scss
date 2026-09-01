@@ -84,7 +84,7 @@ $gutter-owners:
 	'.effect-option-group', '.functional-control-group', '.advanced-control-group',
 	'.property-set', '.property-set-label', '.property-set-label',
 	'.property-set-label', '.property-set-label', '.property-set-label',
-	'.text-box-hint', '.settings-row-label-desc';
+	'.layer-type-options', '.text-box-hint', '.settings-row-label-desc';
 
 // A single :not() taking a selector list - not sixteen chained ones.
 $not-gutter-owner: ':not(#{list.join($gutter-owners, (), $separator: comma)})';
@@ -114,6 +114,15 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	text-transform: none;
 	color: var(--color-text-secondary);
 	line-height: 1.2;
+}
+
+// A block title is text, not a padded header surface. Its parent establishes
+// the outer inset; the title-to-content relationship establishes vertical
+// separation regardless of which control follows it.
+.design-panel .property-block-title {
+	padding: 0;
+
+	+ * { margin-top: var(--spacing-sm); }
 }
 
 // Rule C, in one place: everything below the group label is sentence case, so a
@@ -233,6 +242,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	> .segmented-control,
 	> select,
 	> input[type="color"],
+	> input[type="text"],
 	> .input-unit,
 	> textarea,
 	> .property-control-wide { grid-column: 2 / -1; }
@@ -426,7 +436,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 			align-items: center;
 			gap: var(--spacing-sm);
 			min-height: var(--control-height-compact);
-			padding: var(--spacing-xs) var(--property-gutter);
+			padding: var(--property-gutter);
 		}
 
 		// A divider is the whole separation: no gap above it and no padding above
@@ -437,19 +447,15 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 			border-top: 1px solid var(--color-border);
 		}
 
-		// Only visible content earns separation from the following group. A
-		// collapsed heading therefore keeps the compact accordion rhythm, while
-		// the last card in an open group no longer touches the next divider.
-		&:not(.collapsed):has(> :not(.subsection-title):not([hidden]))
-			+ .subsection-content-group:is(.subsection-section-group, .effects-stack) {
-			margin-top: var(--spacing-sm);
-		}
-
 		// Cards separate from cards, not from the group heading.
 		> .subsection-content-group + .subsection-content-group,
 		> .transform-panel-host + .subsection-content-group,
 		> .subsection-content-group + .transform-panel-host {
 			margin-top: var(--spacing-sm);
+		}
+
+		> .subsection-content-group + .settings-action-row {
+			margin-top: var(--property-block-gap);
 		}
 
 	}
@@ -554,6 +560,19 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	}
 }
 
+// A sequence of peer blocks outside an accordion group (for example the
+// no-selection Quick Add and Project blocks) uses the same block rhythm
+// without inventing another card surface.
+.design-panel .property-block-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--property-block-gap);
+}
+
+.design-panel .subsection-card-body > .property-row + .settings-action-row {
+	margin-top: var(--property-block-gap);
+}
+
 // ===== R5: module row ======================================================
 // Collapsed, a module is one line: switch, name, current value, chevron. The
 // summary is what makes that line worth reading.
@@ -571,7 +590,8 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	.subsection-section-group > .subsection-content-group,
 	.effects-stack > .subsection-content-group,
 	.subsection-section-group > .transform-panel-host > .subsection-content-group,
-	.settings-subsection > .transform-panel-host > .subsection-content-group {
+	.settings-subsection > .transform-panel-host > .subsection-content-group,
+	.property-card {
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-sm);
 		background: var(--color-bg-card);
@@ -581,7 +601,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 		// indented twice over.
 		--property-gutter: var(--spacing-sm);
 
-		> .subsection-title { padding: var(--spacing-2xs) var(--property-gutter); }
+		> .subsection-title { padding: var(--property-gutter); }
 
 		// Clearance belongs to the final component that needs breathing room,
 		// not to every body. Ordinary rows already own their line height; sets,
@@ -591,6 +611,11 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 			:is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child) {
 			padding-bottom: var(--spacing-sm);
 		}
+	}
+
+	.property-block-list > .property-card {
+		margin-inline: 0;
+		--property-gutter: var(--property-card-inset);
 	}
 
 	[data-effect-card] > .subsection-title,
@@ -713,6 +738,18 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	padding-bottom: var(--spacing-sm);
 }
 
+// Asset summaries expose the same inset on each open side. A following
+// Advanced divider gets the roomier card inset; a card edge uses the row
+// gutter that already separates the asset from its left and right edges.
+.design-panel .subsection-content-group > .subsection-card-body:has(> .asset-info:last-child) {
+	padding-bottom: var(--property-gutter);
+}
+
+.design-panel .subsection-content-group:has(> .advanced-disclosure)
+	> .subsection-card-body:has(> .asset-info:last-child) {
+	padding-bottom: var(--property-card-inset);
+}
+
 .property-module-summary {
 	flex: 0 1 auto;
 	max-width: 55%;
@@ -741,12 +778,14 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 
 .design-panel {
 	.asset-info {
+		--asset-summary-thumbnail-size: 40px;
 		gap: var(--spacing-xs);
 		// Horizontal margin insets it; vertical separation is the source
 		// stack's gap, not a margin of its own.
 		margin: 0 var(--property-gutter);
 		padding: var(--spacing-sm);
 		border-radius: var(--radius-sm);
+		background: var(--color-bg-tertiary);
 	}
 
 	.asset-info-header {
@@ -755,18 +794,43 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	}
 
 	.asset-info-thumbnail {
-		width: 28px;
-		height: 28px;
-		min-width: 28px;
-		flex: 0 0 auto;
+		width: var(--asset-summary-thumbnail-size);
+		height: var(--asset-summary-thumbnail-size);
+		min-width: var(--asset-summary-thumbnail-size);
+		flex: 0 0 var(--asset-summary-thumbnail-size);
+	}
+
+	.asset-info-details {
+		min-width: 0;
+		min-height: var(--asset-summary-thumbnail-size);
+		justify-content: center;
 	}
 
 	.asset-info-name {
+		display: block;
+		max-width: 100%;
+		overflow: hidden;
 		font-size: var(--font-size-sm);
 		font-weight: 500;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 
-	.asset-info-badges:empty { display: none; }
+	.asset-info-badges {
+		min-width: 0;
+		max-width: 100%;
+		flex-wrap: nowrap;
+		overflow: hidden;
+		white-space: nowrap;
+
+		&:empty { display: none; }
+
+		> .asset-info-badge {
+			min-width: 0;
+			flex: 0 1 auto;
+			white-space: nowrap;
+		}
+	}
 
 	.text-effect-source-change {
 		min-height: 22px;
@@ -845,7 +909,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	gap: var(--spacing-sm);
-	padding: var(--spacing-xs) var(--property-gutter) var(--spacing-2xs);
+	padding: 0 var(--property-gutter) var(--spacing-2xs);
 
 	> button { width: 100%; }
 
@@ -1196,14 +1260,6 @@ body.is-resizing-panel {
 		width: auto;
 		margin-inline: var(--property-gutter);
 	}
-}
-
-// ===== A card's interior padding is symmetric =============================
-// A titled card gets its top spacing from the title. An UNTITLED card had none,
-// so its single row sat tight against the top border and loose against the
-// bottom - which is the lopsided Layer Opacity card.
-.design-panel .subsection-content-group:not(.has-subsection-title) > .subsection-card-body {
-	padding-top: var(--spacing-sm);
 }
 
 // ===== Selected colour chips ==============================================
