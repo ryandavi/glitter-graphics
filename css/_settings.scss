@@ -96,17 +96,6 @@
 		text-align: center;
 	}
 
-	.transform-button-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--spacing-sm);
-
-		>.checkbox-group {
-			flex: 1 1 0;
-			>span { display: inline-flex; }
-		}
-	}
-
 	.transform-panel-footer { display: flex; }
 	.transform-reset-all { width: 100%; }
 }

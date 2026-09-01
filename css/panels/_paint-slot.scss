@@ -18,16 +18,6 @@
 	width: 100%;
 }
 
-.scale-design-options {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--spacing-sm);
-
-	>.checkbox-group>span {
-		padding-inline: var(--spacing-sm);
-	}
-}
-
 .document-size-mode {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);

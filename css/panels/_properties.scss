@@ -122,7 +122,17 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	// ONE class for a set/group label. It insets itself, so it does not depend
 	// on being a direct child of any particular container - which is why
 	// "Dimensions", "Quick Scale" and "Options" had no gutter at all.
-	.property-set-label,
+	.property-set-label {
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-semibold);
+		letter-spacing: 0;
+		text-transform: none;
+		color: var(--color-text-tertiary);
+		line-height: 1.3;
+		padding: var(--spacing-xs) var(--property-gutter) var(--spacing-2xs);
+	}
+
+	// The disclosure button owns its gutter; its text must not add a second one.
 	.advanced-disclosure-label {
 		font-size: var(--font-size-sm);
 		font-weight: 400;
@@ -130,7 +140,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 		text-transform: none;
 		color: var(--color-text-tertiary);
 		line-height: 1.3;
-		padding: var(--spacing-xs) var(--property-gutter) var(--spacing-2xs);
+		padding: 0;
 	}
 
 	.segmented-option,
@@ -223,6 +233,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	> .segmented-control,
 	> select,
 	> input[type="color"],
+	> .input-unit,
 	> textarea,
 	> .property-control-wide { grid-column: 2 / -1; }
 
@@ -405,9 +416,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	.subsection-content-group.effects-stack {
 		display: flex;
 		flex-direction: column;
-		// The gap sits under the group title as well as between blocks, so it
-		// stays modest; the divider above already separates groups.
-		gap: var(--spacing-sm);
+		gap: 0;
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -428,9 +437,21 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 			border-top: 1px solid var(--color-border);
 		}
 
-		// ...but an open group needs room under its last row, or the content
-		// runs straight into the next divider.
-		&:not(.collapsed) { padding-bottom: var(--property-block-gap); }
+		// Only visible content earns separation from the following group. A
+		// collapsed heading therefore keeps the compact accordion rhythm, while
+		// the last card in an open group no longer touches the next divider.
+		&:not(.collapsed):has(> :not(.subsection-title):not([hidden]))
+			+ .subsection-content-group:is(.subsection-section-group, .effects-stack) {
+			margin-top: var(--spacing-sm);
+		}
+
+		// Cards separate from cards, not from the group heading.
+		> .subsection-content-group + .subsection-content-group,
+		> .transform-panel-host + .subsection-content-group,
+		> .subsection-content-group + .transform-panel-host {
+			margin-top: var(--spacing-sm);
+		}
+
 	}
 
 	// L2 block: title + rows. This is the DEFAULT, so it is written with
@@ -562,12 +583,12 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 
 		> .subsection-title { padding: var(--spacing-2xs) var(--property-gutter); }
 
-		// A bordered card needs interior clearance at the bottom: its border is a
-		// hard edge the last row would otherwise sit on. Borderless content uses
-		// the `+ *` rule instead.
-		> .subsection-card-body,
-		> .text-effect-controls > .paint-slot-main,
-		> .paint-slot-main {
+		// Clearance belongs to the final component that needs breathing room,
+		// not to every body. Ordinary rows already own their line height; sets,
+		// action rows and inset asset summaries need space before a card edge or
+		// a following Advanced divider.
+		> .subsection-card-body:has(>
+			:is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child) {
 			padding-bottom: var(--spacing-sm);
 		}
 	}
@@ -678,6 +699,18 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 			}
 		}
 	}
+}
+
+// Schema cards can also live in panel scroll regions or nested control
+// sections rather than directly under an L1 group. The same last-component
+// clearance contract applies there.
+.design-panel .subsection-content-group > .subsection-card-body:has(>
+	:is(.settings-action-row, .property-actions, .segmented-control, .auto-glitter-results, button)) {
+	padding-bottom: var(--spacing-sm);
+}
+
+.design-panel .subsection-content-group > .subsection-card-body:has(> :last-child .btn-simple:last-child) {
+	padding-bottom: var(--spacing-sm);
 }
 
 .property-module-summary {
@@ -829,9 +862,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 
 	> .advanced-disclosure-content {
 		gap: var(--property-row-gap);
-		// The disclosure is usually the last thing in a card, so its content
-		// needs the same bottom clearance a card body gets.
-		padding: 0 0 var(--spacing-sm);
+		padding: 0;
 	}
 }
 
@@ -903,6 +934,24 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	}
 
 	.property-pair { grid-template-columns: minmax(0, 1fr); }
+
+	// Once a pair stacks, each cell becomes a normal row so X/Y tracks and
+	// readouts line up with Hue, Texture Scale and every other R1 property.
+	.property-pair-cell {
+		grid-template-columns:
+			var(--property-label-col)
+			minmax(0, 1fr)
+			var(--property-value-col)
+			var(--property-revert-col);
+		gap: var(--spacing-sm);
+
+		> .property-pair-mark {
+			font-family: inherit;
+			font-size: var(--font-size-sm);
+		}
+
+		> .property-value { font-size: var(--font-size-sm); }
+	}
 }
 
 @container propertypanel (max-width: 280px) {
@@ -1057,9 +1106,9 @@ body.is-resizing-panel {
 // It carries .property-row now, so the row already applies the gutter - its
 // label must not apply it a second time.
 .design-panel .effect-option-group.property-row {
-	> .property-set-label { padding-inline: 0; }
+	> .property-label { padding-inline: 0; }
 
-	&.is-stacked > .property-set-label { grid-area: 1 / 1 / 2 / 2; }
+	&.is-stacked > .property-label { grid-area: 1 / 1 / 2 / 2; }
 
 	&:not(.is-stacked) > .segmented-control,
 	&:not(.is-stacked) > select,

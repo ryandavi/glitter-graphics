@@ -437,7 +437,7 @@
 .brush-dynamics {
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-sm);
+	gap: var(--property-row-gap);
 }
 
 .brush-dynamic-row[hidden] { display: none; }
@@ -451,7 +451,7 @@
 .brush-dynamic-toggles {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
-	gap: var(--spacing-sm);
+	gap: var(--property-row-gap);
 
 	label[hidden] { display: none; }
 }

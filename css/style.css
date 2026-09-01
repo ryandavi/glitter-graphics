@@ -4891,7 +4891,7 @@ body.mask-editing .sticker-element {
 .brush-dynamics {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--property-row-gap);
 }
 
 .brush-dynamic-row[hidden] {
@@ -4907,7 +4907,7 @@ body.mask-editing .sticker-element {
 .brush-dynamic-toggles {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--spacing-sm);
+  gap: var(--property-row-gap);
 }
 .brush-dynamic-toggles label[hidden] {
   display: none;
@@ -4974,15 +4974,6 @@ body.mask-editing .sticker-element {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   width: 100%;
-}
-
-.scale-design-options {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--spacing-sm);
-}
-.scale-design-options > .checkbox-group > span {
-  padding-inline: var(--spacing-sm);
 }
 
 .document-size-mode {
@@ -6010,17 +6001,6 @@ body.tool-select .preview-canvas {
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
-.transform-panel .transform-button-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-}
-.transform-panel .transform-button-row > .checkbox-group {
-  flex: 1 1 0;
-}
-.transform-panel .transform-button-row > .checkbox-group > span {
-  display: inline-flex;
-}
 .transform-panel .transform-panel-footer {
   display: flex;
 }
@@ -6651,13 +6631,14 @@ body.tool-select .preview-canvas {
   z-index: 2;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: var(--control-height);
+  padding: var(--spacing-xs) var(--property-gutter, 10px);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg-secondary);
 }
 .asset-browser > .asset-browser-header > button {
-  width: var(--icon-size-sm);
-  height: var(--icon-size-sm);
+  width: var(--control-height-compact);
+  height: var(--control-height-compact);
   flex-shrink: 0;
 }
 .asset-browser > .asset-browser-header > button:disabled {
@@ -6665,10 +6646,10 @@ body.tool-select .preview-canvas {
   opacity: 0.5;
 }
 .asset-browser > .asset-browser-header > .asset-browser-title {
-  font-weight: 600;
-  font-size: var(--font-size-md);
-  color: var(--color-text-primary);
-  text-transform: uppercase;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-transform: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -6969,7 +6950,15 @@ body.tool-select .preview-canvas {
   line-height: 1.2;
 }
 
-.design-panel .property-set-label,
+.design-panel .property-set-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-text-tertiary);
+  line-height: 1.3;
+  padding: var(--spacing-xs) var(--property-gutter) var(--spacing-2xs);
+}
 .design-panel .advanced-disclosure-label {
   font-size: var(--font-size-sm);
   font-weight: 400;
@@ -6977,7 +6966,7 @@ body.tool-select .preview-canvas {
   text-transform: none;
   color: var(--color-text-tertiary);
   line-height: 1.3;
-  padding: var(--spacing-xs) var(--property-gutter) var(--spacing-2xs);
+  padding: 0;
 }
 .design-panel .segmented-option,
 .design-panel .checkbox-group > span,
@@ -7062,6 +7051,7 @@ body.tool-select .preview-canvas {
 .property-row > .segmented-control,
 .property-row > select,
 .property-row > input[type=color],
+.property-row > .input-unit,
 .property-row > textarea,
 .property-row > .property-control-wide {
   grid-column: 2/-1;
@@ -7281,7 +7271,7 @@ body.tool-select .preview-canvas {
 .design-panel .subsection-content-group.effects-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 0;
   padding: 0;
   border: 0;
   background: transparent;
@@ -7300,9 +7290,17 @@ body.tool-select .preview-canvas {
 .design-panel .subsection-content-group.effects-stack + .subsection-content-group.effects-stack {
   border-top: 1px solid var(--color-border);
 }
-.design-panel .subsection-content-group.subsection-section-group:not(.collapsed),
-.design-panel .subsection-content-group.effects-stack:not(.collapsed) {
-  padding-bottom: var(--property-block-gap);
+.design-panel .subsection-content-group.subsection-section-group:not(.collapsed):has(> :not(.subsection-title):not([hidden])) + .subsection-content-group:is(.subsection-section-group, .effects-stack),
+.design-panel .subsection-content-group.effects-stack:not(.collapsed):has(> :not(.subsection-title):not([hidden])) + .subsection-content-group:is(.subsection-section-group, .effects-stack) {
+  margin-top: var(--spacing-sm);
+}
+.design-panel .subsection-content-group.subsection-section-group > .subsection-content-group + .subsection-content-group,
+.design-panel .subsection-content-group.subsection-section-group > .transform-panel-host + .subsection-content-group,
+.design-panel .subsection-content-group.subsection-section-group > .subsection-content-group + .transform-panel-host,
+.design-panel .subsection-content-group.effects-stack > .subsection-content-group + .subsection-content-group,
+.design-panel .subsection-content-group.effects-stack > .transform-panel-host + .subsection-content-group,
+.design-panel .subsection-content-group.effects-stack > .subsection-content-group + .transform-panel-host {
+  margin-top: var(--spacing-sm);
 }
 .design-panel .subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) {
   display: flex;
@@ -7407,18 +7405,10 @@ body.tool-select .preview-canvas {
 .design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .subsection-title {
   padding: var(--spacing-2xs) var(--property-gutter);
 }
-.design-panel .subsection-section-group > .subsection-content-group > .subsection-card-body,
-.design-panel .subsection-section-group > .subsection-content-group > .text-effect-controls > .paint-slot-main,
-.design-panel .subsection-section-group > .subsection-content-group > .paint-slot-main,
-.design-panel .effects-stack > .subsection-content-group > .subsection-card-body,
-.design-panel .effects-stack > .subsection-content-group > .text-effect-controls > .paint-slot-main,
-.design-panel .effects-stack > .subsection-content-group > .paint-slot-main,
-.design-panel .subsection-section-group > .transform-panel-host > .subsection-content-group > .subsection-card-body,
-.design-panel .subsection-section-group > .transform-panel-host > .subsection-content-group > .text-effect-controls > .paint-slot-main,
-.design-panel .subsection-section-group > .transform-panel-host > .subsection-content-group > .paint-slot-main,
-.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .subsection-card-body,
-.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .text-effect-controls > .paint-slot-main,
-.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .paint-slot-main {
+.design-panel .subsection-section-group > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
+.design-panel .effects-stack > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
+.design-panel .subsection-section-group > .transform-panel-host > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
+.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child) {
   padding-bottom: var(--spacing-sm);
 }
 .design-panel [data-effect-card] > .subsection-title,
@@ -7535,6 +7525,14 @@ body.tool-select .preview-canvas {
 .design-panel .sticker-position-group > .input-group > input[type=number] {
   min-width: 0;
   width: 100%;
+}
+
+.design-panel .subsection-content-group > .subsection-card-body:has(> :is(.settings-action-row, .property-actions, .segmented-control, .auto-glitter-results, button)) {
+  padding-bottom: var(--spacing-sm);
+}
+
+.design-panel .subsection-content-group > .subsection-card-body:has(> :last-child .btn-simple:last-child) {
+  padding-bottom: var(--spacing-sm);
 }
 
 .property-module-summary {
@@ -7662,7 +7660,7 @@ body.tool-select .preview-canvas {
 }
 .design-panel .advanced-disclosure > .advanced-disclosure-content {
   gap: var(--property-row-gap);
-  padding: 0 0 var(--spacing-sm);
+  padding: 0;
 }
 
 .design-panel .subsection-content-group:not(.subsection-section-group):not(.effects-stack):not([data-effect-card]):not(:has(> :not(.subsection-title):not([hidden]))),
@@ -7752,6 +7750,17 @@ body.tool-select .preview-canvas {
   }
   .property-pair {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .property-pair-cell {
+    grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-value-col) var(--property-revert-col);
+    gap: var(--spacing-sm);
+  }
+  .property-pair-cell > .property-pair-mark {
+    font-family: inherit;
+    font-size: var(--font-size-sm);
+  }
+  .property-pair-cell > .property-value {
+    font-size: var(--font-size-sm);
   }
 }
 @container propertypanel (max-width: 280px) {
@@ -7885,10 +7894,10 @@ body.is-resizing-panel canvas {
   padding-inline: 0;
 }
 
-.design-panel .effect-option-group.property-row > .property-set-label {
+.design-panel .effect-option-group.property-row > .property-label {
   padding-inline: 0;
 }
-.design-panel .effect-option-group.property-row.is-stacked > .property-set-label {
+.design-panel .effect-option-group.property-row.is-stacked > .property-label {
   grid-area: 1/1/2/2;
 }
 .design-panel .effect-option-group.property-row:not(.is-stacked) > .segmented-control, .design-panel .effect-option-group.property-row:not(.is-stacked) > select, .design-panel .effect-option-group.property-row:not(.is-stacked) > .glitter-source {

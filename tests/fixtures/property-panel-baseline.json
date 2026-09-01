@@ -1037,11 +1037,6 @@
 			"tag": "div",
 			"section": "brushSettingsSection"
 		},
-		"brushResetDynamics": {
-			"tag": "button",
-			"section": "brushSettingsSection",
-			"type": "button"
-		},
 		"maskCopyOppositeSettings": {
 			"tag": "button",
 			"section": "brushSettingsSection",
@@ -3996,7 +3991,6 @@
 			"resetMaskBrushSmoothing": true,
 			"maskBrushPressure": true,
 			"brushDynamicsHost": true,
-			"brushResetDynamics": true,
 			"maskCopyOppositeSettings": true,
 			"maskResetCurrentSettings": true,
 			"clearMaskPaint": true,
@@ -4690,7 +4684,6 @@
 			"resetMaskBrushSmoothing": true,
 			"maskBrushPressure": true,
 			"brushDynamicsHost": true,
-			"brushResetDynamics": true,
 			"maskCopyOppositeSettings": true,
 			"maskResetCurrentSettings": true,
 			"clearMaskPaint": true,
@@ -5384,7 +5377,6 @@
 			"resetMaskBrushSmoothing": true,
 			"maskBrushPressure": true,
 			"brushDynamicsHost": true,
-			"brushResetDynamics": true,
 			"maskCopyOppositeSettings": true,
 			"maskResetCurrentSettings": true,
 			"clearMaskPaint": true,
@@ -6078,7 +6070,6 @@
 			"resetMaskBrushSmoothing": true,
 			"maskBrushPressure": true,
 			"brushDynamicsHost": true,
-			"brushResetDynamics": true,
 			"maskCopyOppositeSettings": true,
 			"maskResetCurrentSettings": true,
 			"clearMaskPaint": true,
@@ -6772,7 +6763,6 @@
 			"resetMaskBrushSmoothing": true,
 			"maskBrushPressure": true,
 			"brushDynamicsHost": true,
-			"brushResetDynamics": true,
 			"maskCopyOppositeSettings": true,
 			"maskResetCurrentSettings": true,
 			"clearMaskPaint": true,
@@ -7466,7 +7456,6 @@
 			"resetMaskBrushSmoothing": true,
 			"maskBrushPressure": true,
 			"brushDynamicsHost": true,
-			"brushResetDynamics": true,
 			"maskCopyOppositeSettings": true,
 			"maskResetCurrentSettings": true,
 			"clearMaskPaint": true,
@@ -7971,7 +7960,7 @@
 	},
 	"metrics": {
 		"noLayerSettingsSection": {
-			"scrollHeight": 637,
+			"scrollHeight": 644,
 			"boxes": 8,
 			"deepestCollapsibleChain": 2,
 			"shells": 0,
@@ -7979,15 +7968,15 @@
 			"sliders": 0
 		},
 		"baseLayerSettingsSection": {
-			"scrollHeight": 1349,
-			"boxes": 38,
+			"scrollHeight": 1331,
+			"boxes": 44,
 			"deepestCollapsibleChain": 4,
 			"shells": 0,
 			"collapsibleCards": 2,
 			"sliders": 15
 		},
 		"glitterSettingsSection": {
-			"scrollHeight": 92,
+			"scrollHeight": 86,
 			"boxes": 3,
 			"deepestCollapsibleChain": 3,
 			"shells": 0,
@@ -7995,15 +7984,15 @@
 			"sliders": 8
 		},
 		"brushSettingsSection": {
-			"scrollHeight": 808,
-			"boxes": 14,
+			"scrollHeight": 708,
+			"boxes": 17,
 			"deepestCollapsibleChain": 2,
 			"shells": 0,
 			"collapsibleCards": 0,
 			"sliders": 12
 		},
 		"stickerSettingsSection": {
-			"scrollHeight": 73,
+			"scrollHeight": 67,
 			"boxes": 3,
 			"deepestCollapsibleChain": 4,
 			"shells": 0,
@@ -8011,23 +8000,23 @@
 			"sliders": 17
 		},
 		"textSettingsSection": {
-			"scrollHeight": 3359,
-			"boxes": 124,
+			"scrollHeight": 3380,
+			"boxes": 136,
 			"deepestCollapsibleChain": 4,
 			"shells": 0,
 			"collapsibleCards": 2,
 			"sliders": 34
 		},
 		"shapeSettingsSection": {
-			"scrollHeight": 2624,
-			"boxes": 73,
+			"scrollHeight": 2636,
+			"boxes": 82,
 			"deepestCollapsibleChain": 4,
 			"shells": 0,
 			"collapsibleCards": 2,
 			"sliders": 32
 		},
 		"layerSettingsSection": {
-			"scrollHeight": 81,
+			"scrollHeight": 75,
 			"boxes": 3,
 			"deepestCollapsibleChain": 2,
 			"shells": 0,
@@ -8035,10 +8024,10 @@
 			"sliders": 2
 		},
 		"autoGlitterSettingsSection": {
-			"scrollHeight": 12,
-			"boxes": 17,
+			"scrollHeight": 6,
+			"boxes": 20,
 			"deepestCollapsibleChain": 2,
-			"shells": 1,
+			"shells": 0,
 			"collapsibleCards": 0,
 			"sliders": 3
 		}

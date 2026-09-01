@@ -265,7 +265,7 @@ function buildOptionGroup(label, children) {
 	const group = tplClone('tpl-option-group');
 	const labelNode = group.querySelector('.property-set-label');
 	labelNode.textContent = label;
-	labelNode.classList.add('property-label');
+	labelNode.className = 'property-label';
 	children.forEach((child) => group.appendChild(child));
 	// A label plus one control IS a property row (R1/R2) - not a container
 	// level of its own. Keeping .effect-option-group as well preserves the

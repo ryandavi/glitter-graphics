@@ -476,16 +476,6 @@ class MaskEditor {
 		(this.brushDynamics[shape] || (this.brushDynamics[shape] = {}))[key] = value;
 	}
 
-	resetBrushDynamics() {
-		const shape = this.getBrushShape();
-		const keptSize = this.brushDynamics[shape]?.size;
-		delete this.brushDynamics[shape];
-		// Reset covers scatter/jitter/orientation, not the remembered brush size.
-		if (keptSize != null) this._setBrushDynamicRaw('size', keptSize, shape);
-		this._saveBrushDynamics();
-		this._syncDynamicsPanel();
-	}
-
 	// Builds the Scatter & Jitter rows into #brushDynamicsHost once; _syncDynamicsPanel
 	// keeps their values and raster-only visibility current.
 	renderDynamicsPanel() {
@@ -530,11 +520,6 @@ class MaskEditor {
 		});
 		host.appendChild(flips);
 
-		const actions = document.createElement('div');
-		actions.className = 'tool-options-group';
-		actions.innerHTML = '<button class="btn-simple" type="button" id="brushResetDynamics" title="Restore this brush’s scatter and jitter to its defaults">Reset Scatter &amp; Jitter</button>';
-		host.appendChild(actions);
-
 		host.addEventListener('input', (event) => {
 			const slider = event.target.closest('[data-dynamic-input]');
 			if (slider) {
@@ -552,8 +537,6 @@ class MaskEditor {
 				if (store) { delete store[row.dataset.dynamic]; if (!Object.keys(store).length) delete this.brushDynamics[this.getBrushShape()]; }
 				this._saveBrushDynamics();
 				this._syncDynamicsPanel();
-			} else if (event.target.closest('#brushResetDynamics')) {
-				this.resetBrushDynamics();
 			}
 		});
 
@@ -564,7 +547,7 @@ class MaskEditor {
 		const spec = MaskEditor.DYNAMICS_SLIDERS.find((entry) => entry.key === row.dataset.dynamic);
 		const input = row.querySelector('[data-dynamic-input]');
 		const out = row.querySelector('[data-dynamic-value]');
-		if (spec && out) out.textContent = `${input.value}${spec.unit}`;
+		if (spec && out) out.innerHTML = formatUnit(input.value, spec.unit);
 		const manifest = this._dynamicsManifestModel();
 		const isDefault = Number(input.value) === manifest[row.dataset.dynamic];
 		row.classList.toggle('is-overridden', !isDefault);
@@ -594,8 +577,6 @@ class MaskEditor {
 			const label = toggle.closest('label');
 			if (label && 'rasterOnly' in label.dataset) label.hidden = !isRaster;
 		});
-		const resetBtn = host.querySelector('#brushResetDynamics');
-		if (resetBtn) resetBtn.disabled = !this.brushDynamics[this.getBrushShape()];
 	}
 
 	canActivate() {
@@ -1961,7 +1942,7 @@ MaskEditor.isKnownBrushShape = (id) =>
 // Scatter & Jitter panel rows (PANEL units). rasterOnly rows hide for vector tips.
 MaskEditor.DYNAMICS_SLIDERS = [
 	{ key: 'scatter', label: 'Scatter', unit: '%', min: 0, max: CONFIG.tools.maskBrush.dynamics.limits.scatterMax, hint: 'Spread each stamp off the stroke path, as a percentage of brush size.' },
-	{ key: 'count', label: 'Count', unit: '', min: 1, max: CONFIG.tools.maskBrush.dynamics.limits.countMax, hint: 'How many dabs to lay down at every stamp position.' },
+	{ key: 'count', label: 'Count', unit: '×', min: 1, max: CONFIG.tools.maskBrush.dynamics.limits.countMax, hint: 'How many dabs to lay down at every stamp position.' },
 	{ key: 'countJitter', label: 'Count Jitter', unit: '%', min: 0, max: 100, hint: 'Randomly vary the dab count between 1 and Count.' },
 	{ key: 'sizeJitter', label: 'Size Jitter', unit: '%', min: 0, max: 100, hint: 'Randomly shrink each dab from the full brush size.' },
 	{ key: 'angle', label: 'Angle', unit: '°', min: -180, max: 180, rasterOnly: true, hint: 'Base rotation of the tip.' },
