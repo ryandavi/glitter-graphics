@@ -87,7 +87,7 @@ const HINT_RULES = [
 		id: 'glitter-refine',
 		when: (_editor, { layer }) => layer?.type === LayerType.GLITTER_FILL && hasMaskContent(layer) && layer.selectedGlitterId,
 		hint: (_editor, { isMobile }) => isMobile ? 'Tap settings to adjust scale, opacity, or refine your selection' : 'Use the settings panel to adjust scale, opacity, threshold, or feather — or paint with the Mask Brush',
-		context: (_editor, { isMobile }) => isMobile ? 'Threshold controls color tolerance—higher values select more similar colors.' : 'Threshold controls color tolerance. Feather softens edges. The Mask Brush adds painted detail.'
+		context: (_editor, { isMobile }) => isMobile ? 'Higher Color Tolerance selects more similar colors.' : 'Color Tolerance selects similar colors. Edge Feather softens the boundary. The Mask Brush adds painted detail.'
 	},
 	{ id: 'text-refine', when: (_editor, { layer }) => layer?.type === LayerType.TEXT_GLITTER && layer.textData.text.trim(), hint: 'Use the Text section to edit the copy, font, spacing, and alignment', context: 'The glitter browser controls the fill, and texture scale and opacity change the motion inside the letters.' }
 ];

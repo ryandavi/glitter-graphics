@@ -181,7 +181,7 @@ initializeCollapsibleSections() {
 		});
 		// Interactive controls living in the title (Enabled/Global checkboxes,
 		// reset chips) must not also collapse the subsection when clicked.
-		const isTitleControl = (target) => Boolean(target.closest?.('.checkbox-group, button, input, select'));
+		const isTitleControl = (target) => Boolean(target.closest?.('.property-header-switch, button, input, select'));
 		document.addEventListener('click', (event) => {
 			const subsectionToggle = event.target.closest('[data-subsection-toggle]');
 			if (subsectionToggle) {

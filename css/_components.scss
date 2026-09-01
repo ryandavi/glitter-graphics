@@ -132,8 +132,7 @@ textarea {
 // Legacy label names still emitted by the transform/canvas-size/effect markup
 // that WP7-WP8 migrate. One rule, so they already read as the property
 // The property panel's set/group label. ONE class - the aliases it used to sit
-// beside (effect-option-label, control-group-label, functional-control-group-title,
-// advanced-control-group-title, filter-label, setting-label) are gone from the
+// beside the older effect/control/filter label aliases are gone from the
 // markup entirely, so there is a single place to change this.
 .property-set-label {
 	font-size: 10.5px;
@@ -142,17 +141,6 @@ textarea {
 	text-transform: uppercase;
 	color: var(--color-text-tertiary);
 	line-height: 1.2;
-}
-
-// R6: actions sit at the end of the block they act on, sharing a line when they
-// fit rather than stacking full-width.
-.settings-action-row {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
-	gap: var(--spacing-sm);
-	padding: var(--spacing-sm) var(--property-gutter, 10px) var(--spacing-2xs);
-
-	>button { width: 100%; }
 }
 
 .asset-info,
@@ -219,42 +207,6 @@ textarea {
 	&.is-open {
 		>.advanced-disclosure-content { display: flex; }
 		.advanced-disclosure-chevron { transform: rotate(180deg); }
-	}
-}
-
-// Rule B: a named cluster of controls is spacing + a label, not another box.
-// These three names are one concept (a labelled set); WP8 collapses them into
-// .property-set, and until then they all render as one.
-.advanced-control-group,
-.functional-control-group,
-.effect-option-group {
-	display: flex;
-	flex-direction: column;
-	gap: var(--property-row-gap, 2px);
-	min-width: 0;
-	width: 100%;
-	padding: 0;
-	border: 0;
-	background: transparent;
-
-	>.property-set-label,
-	>.property-set-label,
-	>.property-set-label,
-	>.property-set-label {
-		padding: var(--spacing-xs) var(--property-gutter, 10px) 0;
-		color: var(--color-text-tertiary);
-	}
-
-	>.settings-action-row {
-		grid-template-columns: minmax(0, 1fr);
-	}
-
-	// Controls that are not rows still need the panel gutter.
-	>.segmented-control,
-	>select,
-	>.tool-options-group {
-		margin: 0 var(--property-gutter, 10px);
-		width: auto;
 	}
 }
 

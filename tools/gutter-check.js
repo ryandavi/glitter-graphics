@@ -41,12 +41,12 @@ const CHROME = process.env.CHROME_PATH
 		});
 		await page.waitForTimeout(600);
 
-		const findings = await page.evaluate(() => {
+		const auditLayout = () => page.evaluate(() => {
 			// Only structural containers are in scope. A control's own padding
 			// (a button, an input, a segmented option) is its chrome, not a
 			// gutter, and nesting it inside an inset container is correct.
 			const STRUCTURAL = [
-				'property-row', 'property-pair-group', 'property-pair', 'property-toggle-list',
+				'property-row', 'property-pair-group', 'property-pair', 'property-toggle-list', 'property-block',
 				'subsection-card-body', 'paint-slot-main', 'subsection-content',
 				'subsection-content-group', 'effect-option-group', 'functional-control-group',
 				'advanced-control-group', 'property-set', 'settings-action-row', 'property-actions',
@@ -174,14 +174,40 @@ const CHROME = process.env.CHROME_PATH
 			return [...seen.values()].sort((a, b) => b.count - a.count);
 		});
 
+		const findings = [];
+		const widths = [280, 320, 360, 400, 450];
+		const themes = ['dark', 'light'];
+		for (const theme of themes) {
+		for (const width of widths) {
+			await page.evaluate((value) => {
+				document.documentElement.style.setProperty('--glitter-panel-width', `${value}px`);
+				document.querySelectorAll('.subsection-section-group, .effects-stack')
+					.forEach((node) => node.classList.remove('collapsed'));
+			}, width);
+			await page.waitForTimeout(80);
+			await page.evaluate((value) => {
+				if (value === 'dark') document.documentElement.removeAttribute('data-theme');
+				else document.documentElement.dataset.theme = value;
+			}, theme);
+			(await auditLayout()).forEach((finding) => findings.push({ ...finding, state: `${theme}/${width}px/open` }));
+
+			await page.evaluate(() => {
+				document.querySelectorAll('.subsection-section-group, .effects-stack')
+					.forEach((node, index) => node.classList.toggle('collapsed', index % 2 === 0));
+			});
+			await page.waitForTimeout(80);
+			(await auditLayout()).forEach((finding) => findings.push({ ...finding, state: `${theme}/${width}px/mixed` }));
+		}
+		}
+
 		await browser.close();
 		if (!findings.length) {
 			console.log('OK - gutter applied exactly once on every path.');
 			return;
 		}
-		console.log(`!!! ${findings.length} double-inset paths !!!\n`);
+		console.log(`!!! ${findings.length} layout findings across the width/state matrix !!!\n`);
 		findings.forEach((f) => {
-			console.log(`  ${f.el}  (+${f.own}px)\n    inside ${f.ancestor}  (+${f.ancestorInset}px)   x${f.count}`);
+			console.log(`  [${f.state}] ${f.el}  (+${f.own}px)\n    inside ${f.ancestor}  (+${f.ancestorInset}px)   x${f.count}`);
 		});
 		process.exitCode = 1;
 	} finally { stop(); }

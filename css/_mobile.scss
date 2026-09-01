@@ -12,7 +12,6 @@
 
 @include mobile {
 	:root {
-		--glitter-swatch-columns: 5;
 		--mobile-floating-inset: var(--spacing-sm);
 		--mobile-sheet-inset: var(--mobile-floating-inset);
 	}

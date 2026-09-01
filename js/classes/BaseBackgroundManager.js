@@ -97,7 +97,7 @@ class BaseBackgroundManager {
 		if (this.ui.duotone) {
 			['Dark', 'Light'].forEach((label, index) => {
 				const group = document.createElement('label');
-				group.className = 'effect-option-group';
+				group.className = 'property-set pixel-effects-color-set';
 				const text = document.createElement('span');
 				text.className = 'property-set-label';
 				text.textContent = label;

@@ -21,7 +21,10 @@
 
 	.asset-grid {
 		display: grid;
-		grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
+		// Let the gallery's own inline size choose the count. An 84px floor keeps
+		// thumbnails recognizable while naturally yielding roughly 2 / 3 / 4
+		// columns in 280 / 320-360 / 400-450px sidebars.
+		grid-template-columns: repeat(auto-fill, minmax(min(84px, 100%), 1fr));
 		gap: var(--spacing-sm);
 
 		>.asset-option {
@@ -205,7 +208,7 @@
 		align-items: center;
 		gap: var(--spacing-sm);
 		min-height: var(--control-height);
-		padding: var(--spacing-xs) var(--property-gutter, 10px);
+		padding: var(--property-gutter, 10px);
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-bg-secondary);
 
@@ -395,14 +398,12 @@
 @media (max-width: 1700px) {
 	:root {
 		--layer-panel-width: 300px;
-		--glitter-swatch-columns: 3;
 	}
 }
 
 @media (max-width: 1200px) {
 	:root {
 		--glitter-panel-width: 250px;
-		--glitter-swatch-columns: 2;
 	}
 }
 

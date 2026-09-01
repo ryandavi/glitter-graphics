@@ -66,7 +66,7 @@ async function settle(page) {
 // ranges/defaults (catches CONFIG.ui.sliders drift).
 async function captureStructure(page) {
 	return page.evaluate((sectionIds) => {
-		document.querySelectorAll('.text-effect-subsection[data-slot]').forEach((slot) => {
+		document.querySelectorAll('.paint-slot-card[data-slot]').forEach((slot) => {
 			const glitterMode = slot.querySelector('.segmented-option[data-mode="glitter"]');
 			if (!glitterMode) return;
 			if (!slot.querySelector('.asset-info')) throw new Error(`Paint slot ${slot.dataset.slot} has no asset-info block`);
@@ -160,7 +160,7 @@ async function captureLayerState(page) {
 			for (const button of buttons) {
 				button.click();
 				await raf2();
-				const slotRoot = button.closest('.text-effect-subsection')
+				const slotRoot = button.closest('.paint-slot-card')
 					|| button.closest('.subsection-content-group')
 					|| button.closest('.glitter-source');
 				sweep[groupKey][button.id] = slotRoot ? slotState(slotRoot) : null;

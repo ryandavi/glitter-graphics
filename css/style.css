@@ -931,7 +931,6 @@
   /* PANELS */
   --layer-panel-width: 400px;
   --glitter-panel-width: calc(var(--layer-panel-width) + var(--toolbar-width));
-  --glitter-swatch-columns: 4;
   --color-filter-chip-size: var(--icon-size-sm);
   /* MOBILE */
   --mobile-menu-height: 60px;
@@ -1170,6 +1169,10 @@ select {
   font-size: var(--font-size-sm);
   transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
+textarea::-moz-placeholder, input[type=email]::-moz-placeholder, input[type=password]::-moz-placeholder, input[type=url]::-moz-placeholder, input[type=text]::-moz-placeholder, input[type=number]::-moz-placeholder, input[type=search]::-moz-placeholder, select::-moz-placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 1;
+}
 textarea::placeholder,
 input[type=email]::placeholder,
 input[type=password]::placeholder,
@@ -1217,7 +1220,8 @@ select:disabled {
 
 select {
   -webkit-appearance: none;
-  appearance: none;
+  -moz-appearance: none;
+       appearance: none;
   padding-right: calc(var(--control-padding-inline) + 20px);
   background-image: linear-gradient(45deg, transparent 50%, var(--color-text-tertiary) 50%), linear-gradient(135deg, var(--color-text-tertiary) 50%, transparent 50%);
   background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
@@ -1287,16 +1291,6 @@ textarea {
   text-transform: uppercase;
   color: var(--color-text-tertiary);
   line-height: 1.2;
-}
-
-.settings-action-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--property-gutter, 10px) var(--spacing-2xs);
-}
-.settings-action-row > button {
-  width: 100%;
 }
 
 .asset-info,
@@ -1380,51 +1374,6 @@ textarea {
 }
 .advanced-disclosure.is-open .advanced-disclosure-chevron {
   transform: rotate(180deg);
-}
-
-.advanced-control-group,
-.functional-control-group,
-.effect-option-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--property-row-gap, 2px);
-  min-width: 0;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
-.advanced-control-group > .property-set-label,
-.advanced-control-group > .property-set-label,
-.advanced-control-group > .property-set-label,
-.advanced-control-group > .property-set-label,
-.functional-control-group > .property-set-label,
-.functional-control-group > .property-set-label,
-.functional-control-group > .property-set-label,
-.functional-control-group > .property-set-label,
-.effect-option-group > .property-set-label,
-.effect-option-group > .property-set-label,
-.effect-option-group > .property-set-label,
-.effect-option-group > .property-set-label {
-  padding: var(--spacing-xs) var(--property-gutter, 10px) 0;
-  color: var(--color-text-tertiary);
-}
-.advanced-control-group > .settings-action-row,
-.functional-control-group > .settings-action-row,
-.effect-option-group > .settings-action-row {
-  grid-template-columns: minmax(0, 1fr);
-}
-.advanced-control-group > .segmented-control,
-.advanced-control-group > select,
-.advanced-control-group > .tool-options-group,
-.functional-control-group > .segmented-control,
-.functional-control-group > select,
-.functional-control-group > .tool-options-group,
-.effect-option-group > .segmented-control,
-.effect-option-group > select,
-.effect-option-group > .tool-options-group {
-  margin: 0 var(--property-gutter, 10px);
-  width: auto;
 }
 
 .subsection-card-body > .advanced-disclosure {
@@ -1535,7 +1484,8 @@ input[type=range] {
   display: block;
   width: 100%;
   height: var(--control-height);
-  appearance: none;
+  -moz-appearance: none;
+       appearance: none;
   -webkit-appearance: none;
   background: transparent !important;
   border: 0;
@@ -1840,7 +1790,9 @@ input[type=range]:disabled {
 }
 
 .filter-chip {
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2343,7 +2295,7 @@ input[type=range]:disabled {
   flex: 0 0 auto;
   transition: transform var(--transition-fast);
 }
-.subsection-section-group > .subsection-title:has(> .checkbox-group) .panel-group-chevron {
+.subsection-section-group > .subsection-title:has(> .property-header-switch) .panel-group-chevron {
   margin-left: 0;
 }
 .subsection-section-group.collapsed > .subsection-title .panel-group-chevron {
@@ -2485,7 +2437,6 @@ input[type=range]:disabled {
   padding: var(--spacing-xs);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -2553,7 +2504,6 @@ input[type=range]:disabled {
 .toolbar {
   width: var(--toolbar-width);
   background: var(--panel-bg);
-  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   border-right: 1px solid var(--color-border);
   display: flex;
@@ -2672,7 +2622,6 @@ input[type=range]:disabled {
   display: flex;
   flex-direction: column;
   background: var(--panel-bg);
-  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
 }
 .image-container > .image-dropzone-wrapper > #imageUpload {
@@ -2784,7 +2733,6 @@ input[type=range]:disabled {
   flex-direction: column;
   overflow: hidden;
   background: var(--panel-bg);
-  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
 }
 .layers-section > .section-header {
@@ -3028,7 +2976,6 @@ input[type=range]:disabled {
 
 .section {
   /* Section Headers */
-  /* Collapsible Section */
 }
 .section > .section-header {
   position: relative;
@@ -3135,10 +3082,12 @@ input[type=range]:disabled {
   opacity: var(--disabled-opacity);
   cursor: not-allowed;
 }
+.section {
+  /* Collapsible Section */
+}
 .section.collapsible-section {
   border-top: 1px solid var(--color-border);
   background: var(--panel-bg);
-  -webkit-backdrop-filter: var(--panel-backdrop);
   backdrop-filter: var(--panel-backdrop);
   flex-shrink: 0;
 }
@@ -3420,7 +3369,9 @@ input[type=range]:disabled {
   display: none;
 }
 .glitter-search .active-filter-summary-chip {
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
@@ -3763,7 +3714,6 @@ body.no-document .main-content > .design-panel {
   gap: var(--spacing-sm);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -3936,7 +3886,8 @@ body.no-document .main-content > .design-panel {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
   opacity: 0.5;
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
 }
@@ -3977,7 +3928,6 @@ body.mask-editing .sticker-element {
   transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -4008,7 +3958,9 @@ body.mask-editing .sticker-element {
 .color-picker-controls.is-dragging,
 .mask-brush-controls.is-dragging {
   transition: none;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
   box-shadow: 0 8px 24px var(--color-shadow-strong), 0 0 0 2px var(--color-accent);
 }
 .zoom-controls.is-dragging .context-toolbar-handle,
@@ -4097,7 +4049,9 @@ body.mask-editing .sticker-element {
   letter-spacing: 0.5px;
   font-weight: 600;
   cursor: pointer;
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   padding: 0 var(--spacing-xs);
   border: 0;
   border-radius: 0;
@@ -4235,7 +4189,6 @@ body.mask-editing .sticker-element {
   max-width: 300px;
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -4389,7 +4342,6 @@ body.mask-editing .sticker-element {
   cursor: pointer;
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-lg);
   z-index: var(--z-header-menu-elevated);
@@ -4407,7 +4359,8 @@ body.mask-editing .sticker-element {
   display: grid;
   grid-template-columns: var(--icon-size-xs) minmax(0, 1fr);
   align-items: center;
-  column-gap: var(--spacing-sm);
+  -moz-column-gap: var(--spacing-sm);
+       column-gap: var(--spacing-sm);
   padding: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
@@ -4561,13 +4514,16 @@ body.mask-editing .sticker-element {
   display: none;
 }
 .toolbar.has-overflow-top.has-overflow-bottom {
-  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade), #000 calc(100% - var(--toolbar-fade)), transparent 100%);
 }
 .toolbar.has-overflow-top:not(.has-overflow-bottom) {
-  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
+          mask-image: linear-gradient(to bottom, transparent 0, #000 var(--toolbar-fade));
 }
 .toolbar.has-overflow-bottom:not(.has-overflow-top) {
-  mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
+  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
+          mask-image: linear-gradient(to top, transparent 0, #000 var(--toolbar-fade));
 }
 
 .layers-panel > .section,
@@ -5319,18 +5275,18 @@ body.mask-editing .sticker-element {
   color: var(--color-text-tertiary);
 }
 
-.text-effect-controls {
+.property-module-content {
   display: none;
   flex-direction: column;
   gap: 0;
   padding-top: 0;
   border-top: 1px solid var(--color-border);
 }
-.text-effect-controls.visible {
+.property-module-content.visible {
   display: flex;
 }
 
-.text-effect-subsection {
+.paint-slot-card {
   gap: 0;
 }
 
@@ -5346,10 +5302,10 @@ body.mask-editing .sticker-element {
 .subsection-content-group.subsection-section-group > .subsection-note {
   padding: 0 var(--spacing-xs);
 }
-.subsection-content-group.effects-stack > .text-effect-subsection,
+.subsection-content-group.effects-stack > .paint-slot-card,
 .subsection-content-group.effects-stack > .subsection-content-group,
 .subsection-content-group.effects-stack > .transform-panel-host,
-.subsection-content-group.subsection-section-group > .text-effect-subsection,
+.subsection-content-group.subsection-section-group > .paint-slot-card,
 .subsection-content-group.subsection-section-group > .subsection-content-group,
 .subsection-content-group.subsection-section-group > .transform-panel-host {
   margin-top: 0;
@@ -5372,8 +5328,7 @@ body.mask-editing .sticker-element {
   grid-template-columns: 1fr !important;
 }
 
-.effect-stack-row > .effect-option-group > .segmented-control,
-.effect-option-group > .segmented-control {
+.effect-stack-row > .property-row > .segmented-control {
   width: 100%;
 }
 
@@ -5625,7 +5580,8 @@ body.mask-editing .sticker-element {
 .auto-glitter-settings-section .auto-glitter-choice img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  -o-object-fit: cover;
+     object-fit: cover;
   image-rendering: pixelated;
 }
 .auto-glitter-settings-section .auto-glitter-footer-group .auto-glitter-actions > button {
@@ -5651,7 +5607,6 @@ body.mask-editing .sticker-element {
   transition: opacity var(--transition-fast), transform var(--transition-fast), visibility 0s var(--transition-fast);
   background: var(--color-bg-translucent);
   border: 1px solid var(--color-border);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm);
@@ -5935,6 +5890,10 @@ body.tool-select .preview-canvas {
   padding-inline: var(--spacing-sm);
   font-size: var(--font-size-base);
 }
+.sticker-position-group .input-group > input[type=number]:-moz-read-only {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .sticker-position-group .input-group > input[type=number]:read-only {
   opacity: 0.6;
   cursor: not-allowed;
@@ -6099,14 +6058,6 @@ body.tool-select .preview-canvas {
     animation: none;
   }
 }
-.effect-option-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  min-width: 0;
-  width: 100%;
-}
-
 .effect-option-select {
   width: 100%;
 }
@@ -6123,7 +6074,7 @@ body.tool-select .preview-canvas {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-sm);
 }
-.pixel-effects-card .pixel-effects-duotone .effect-option-group {
+.pixel-effects-card .pixel-effects-duotone .property-set {
   display: grid;
   gap: var(--spacing-xs);
 }
@@ -6163,7 +6114,7 @@ body.tool-select .preview-canvas {
 .subsection-content-group[data-collapsible-subsection].is-collapsed > :not(.subsection-title) {
   display: none;
 }
-.subsection-content-group[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)):not(.is-collapsed) > .text-effect-controls {
+.subsection-content-group[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)):not(.is-collapsed) > .property-module-content {
   display: flex;
 }
 .subsection-content-group[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)):not(.is-collapsed) > :not(.subsection-title) {
@@ -6192,11 +6143,11 @@ body.tool-select .preview-canvas {
 .subsection-title {
   gap: var(--spacing-sm);
 }
-.subsection-title > .checkbox-group {
+.subsection-title > .property-header-switch {
   margin-left: auto;
 }
 
-.checkbox-group {
+.property-header-switch {
   display: inline-flex;
   position: relative;
   align-items: center;
@@ -6205,9 +6156,11 @@ body.tool-select .preview-canvas {
   color: var(--color-text-primary);
   font-weight: initial;
   cursor: pointer;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
-.checkbox-group > input[type=checkbox] {
+.property-header-switch > input[type=checkbox] {
   position: absolute;
   width: 0;
   height: 0;
@@ -6215,15 +6168,15 @@ body.tool-select .preview-canvas {
   opacity: 0;
   cursor: pointer;
 }
-.checkbox-group > input[type=checkbox]:checked + span {
+.property-header-switch > input[type=checkbox]:checked + span {
   background: var(--color-accent);
   border-color: var(--color-accent-border);
   color: var(--color-text-on-accent);
 }
-.checkbox-group > input[type=checkbox]:focus-visible + span {
+.property-header-switch > input[type=checkbox]:focus-visible + span {
   box-shadow: var(--control-focus-ring);
 }
-.checkbox-group > span {
+.property-header-switch > span {
   display: inline-flex;
   position: relative;
   align-items: center;
@@ -6243,40 +6196,28 @@ body.tool-select .preview-canvas {
   cursor: pointer;
   transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
 }
-.checkbox-group:hover > span {
+.property-header-switch:hover > span {
   color: var(--color-text-primary);
   background-color: var(--color-bg-tertiary);
   border-color: var(--color-border-hover);
 }
-.checkbox-group:has(> input:disabled) {
+.property-header-switch:has(> input:disabled) {
   opacity: var(--disabled-opacity);
   cursor: not-allowed;
 }
-.checkbox-group:has(> input:disabled) > span {
+.property-header-switch:has(> input:disabled) > span {
   cursor: not-allowed;
 }
 
-.subsection-title > .checkbox-group {
+.subsection-title > .property-header-switch {
   min-height: var(--control-height-compact);
 }
-.subsection-title > .checkbox-group > span {
+.subsection-title > .property-header-switch > span {
   min-height: var(--control-height-compact);
   padding: 0 var(--spacing-sm);
 }
 
-.settings-toggle-list,
-.tool-options-group.settings-toggle-list {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--spacing-sm);
-  width: 100%;
-}
-.settings-toggle-list > .checkbox-group,
-.tool-options-group.settings-toggle-list > .checkbox-group {
-  width: 100%;
-}
-
-.transform-panel .checkbox-group > span {
+.transform-panel .property-header-switch > span {
   white-space: nowrap;
 }
 
@@ -6378,7 +6319,7 @@ body.tool-select .preview-canvas {
 }
 .asset-options .asset-grid {
   display: grid;
-  grid-template-columns: repeat(var(--glitter-swatch-columns), 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(min(84px, 100%), 1fr));
   gap: var(--spacing-sm);
 }
 .asset-options .asset-grid > .asset-option {
@@ -6408,17 +6349,20 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  -o-object-fit: cover;
+     object-fit: cover;
   image-rendering: pixelated;
   -webkit-user-select: none;
-  user-select: none;
+  -moz-user-select: none;
+       user-select: none;
   -webkit-user-drag: none;
 }
 .asset-options.stickers-options .asset-grid > .asset-option {
   background: var(--color-bg-tertiary);
 }
 .asset-options.stickers-options .asset-grid > .asset-option > img {
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
   padding: var(--spacing-xs);
   image-rendering: auto;
 }
@@ -6441,7 +6385,8 @@ body.tool-select .preview-canvas {
   background: var(--color-bg-tertiary);
 }
 .asset-options.brush-tip-options .asset-grid > .asset-option > img {
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
   padding: var(--spacing-sm);
 }
 .asset-options.brush-tip-options .asset-grid > .asset-option.is-vector > img {
@@ -6575,7 +6520,8 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
 }
 #brushTipThumbnail.is-vector {
   color: var(--shape-asset-icon-color);
@@ -6605,7 +6551,7 @@ body.tool-select .preview-canvas {
   align-items: center;
   gap: var(--spacing-sm);
   min-height: var(--control-height);
-  padding: var(--spacing-xs) var(--property-gutter, 10px);
+  padding: var(--property-gutter, 10px);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-bg-secondary);
 }
@@ -6689,7 +6635,8 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-browser > .asset-browser-content > .category-grid > .category-card > .category-card-image.category-card-glitter-bg {
@@ -6755,13 +6702,11 @@ body.tool-select .preview-canvas {
 @media (max-width: 1700px) {
   :root {
     --layer-panel-width: 300px;
-    --glitter-swatch-columns: 3;
   }
 }
 @media (max-width: 1200px) {
   :root {
     --glitter-panel-width: 250px;
-    --glitter-swatch-columns: 2;
   }
 }
 @keyframes elementPulse {
@@ -6800,7 +6745,8 @@ body.tool-select .preview-canvas {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
   image-rendering: pixelated;
 }
 .asset-info-header .asset-info-thumbnail:not(.pixelated) > img {
@@ -6812,7 +6758,8 @@ body.tool-select .preview-canvas {
   image-rendering: pixelated;
 }
 .asset-info-header .asset-info-thumbnail.base-image-thumbnail > img {
-  object-fit: cover;
+  -o-object-fit: cover;
+     object-fit: cover;
   image-rendering: auto;
 }
 .asset-info-header .asset-info-details {
@@ -6851,7 +6798,9 @@ body.tool-select .preview-canvas {
   font-weight: 500;
   line-height: 1.2;
   text-overflow: ellipsis;
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
 }
 .asset-info-header .asset-info-details .asset-info-badges .asset-info-badge.badge-variable-fps {
   border-color: var(--color-warning-border);
@@ -6944,7 +6893,7 @@ body.tool-select .preview-canvas {
   padding: 0;
 }
 .design-panel .segmented-option,
-.design-panel .checkbox-group > span,
+.design-panel .property-header-switch > span,
 .design-panel .filter-chip {
   letter-spacing: 0;
   text-transform: none;
@@ -6979,8 +6928,7 @@ body.tool-select .preview-canvas {
 }
 
 .property-note,
-.design-panel .text-box-hint,
-.design-panel .settings-row-label-desc {
+.design-panel .text-box-hint {
   font-size: var(--font-size-xs);
   font-weight: 400;
   letter-spacing: 0;
@@ -6992,9 +6940,7 @@ body.tool-select .preview-canvas {
 }
 .property-note:empty, .property-note[hidden],
 .design-panel .text-box-hint:empty,
-.design-panel .text-box-hint[hidden],
-.design-panel .settings-row-label-desc:empty,
-.design-panel .settings-row-label-desc[hidden] {
+.design-panel .text-box-hint[hidden] {
   display: none;
 }
 
@@ -7011,7 +6957,8 @@ body.tool-select .preview-canvas {
   display: grid;
   grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-value-col) var(--property-revert-col);
   align-items: center;
-  column-gap: var(--spacing-sm);
+  -moz-column-gap: var(--spacing-sm);
+       column-gap: var(--spacing-sm);
   min-height: var(--property-row-h);
   padding: 0 var(--property-gutter);
 }
@@ -7110,7 +7057,9 @@ body.tool-select .preview-canvas {
 .property-row.is-toggle {
   grid-template-columns: minmax(0, 1fr) auto;
   cursor: pointer;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 .property-row.is-toggle > input[type=checkbox] {
   position: absolute;
@@ -7189,7 +7138,7 @@ body.tool-select .preview-canvas {
   background: none;
   color: var(--color-text-tertiary);
   cursor: pointer;
-  opacity: 0;
+  opacity: 1;
   transition: opacity var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
 }
 .property-revert > .icon {
@@ -7198,26 +7147,18 @@ body.tool-select .preview-canvas {
   fill: currentColor;
   opacity: 1;
 }
-.property-revert:not(:disabled) {
-  opacity: 1;
-}
 .property-revert:not(:disabled):hover {
   background: var(--color-bg-tertiary);
   color: var(--color-accent);
 }
 .property-revert:disabled {
   cursor: default;
-  opacity: 0;
+  opacity: 0.3;
 }
 .property-revert:focus-visible {
   opacity: 1;
   outline: none;
   box-shadow: var(--control-focus-ring);
-}
-
-.property-row:hover > .property-revert:disabled,
-.property-row:focus-within > .property-revert:disabled {
-  opacity: 0.35;
 }
 
 .design-panel .has-set-reset {
@@ -7271,9 +7212,17 @@ body.tool-select .preview-canvas {
 .design-panel .subsection-content-group.effects-stack > .subsection-content-group + .transform-panel-host {
   margin-top: var(--spacing-sm);
 }
-.design-panel .subsection-content-group.subsection-section-group > .subsection-content-group + .settings-action-row,
-.design-panel .subsection-content-group.effects-stack > .subsection-content-group + .settings-action-row {
+.design-panel .subsection-content-group.subsection-section-group > .subsection-content-group + .property-actions,
+.design-panel .subsection-content-group.effects-stack > .subsection-content-group + .property-actions {
   margin-top: var(--property-block-gap);
+}
+.design-panel .subsection-content-group.subsection-section-group:not(.collapsed):has(> :not(.subsection-title):not([hidden])),
+.design-panel .subsection-content-group.effects-stack:not(.collapsed):has(> :not(.subsection-title):not([hidden])) {
+  padding-bottom: var(--property-gutter);
+}
+.design-panel .subsection-content-group.subsection-section-group:not(.collapsed):has(> .property-actions:last-child:not([hidden])),
+.design-panel .subsection-content-group.effects-stack:not(.collapsed):has(> .property-actions:last-child:not([hidden])) {
+  padding-bottom: 0;
 }
 .design-panel .subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) {
   display: flex;
@@ -7305,9 +7254,9 @@ body.tool-select .preview-canvas {
 .design-panel .subsection-content + * {
   margin-top: var(--spacing-xs);
 }
-.design-panel .subsection-card-body > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
-.design-panel .paint-slot-main > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
-.design-panel .subsection-content > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)) {
+.design-panel .subsection-card-body > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .property-actions, .advanced-disclosure, .property-toggle-list, .property-block, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .property-set, .property-set-label, .layer-type-options, .text-box-hint):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .property-actions, .advanced-disclosure, .property-toggle-list, .property-block, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .property-set, .property-set-label, .layer-type-options, .text-box-hint)),
+.design-panel .paint-slot-main > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .property-actions, .advanced-disclosure, .property-toggle-list, .property-block, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .property-set, .property-set-label, .layer-type-options, .text-box-hint):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .property-actions, .advanced-disclosure, .property-toggle-list, .property-block, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .property-set, .property-set-label, .layer-type-options, .text-box-hint)),
+.design-panel .subsection-content > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .property-actions, .advanced-disclosure, .property-toggle-list, .property-block, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .property-set, .property-set-label, .layer-type-options, .text-box-hint):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .property-actions, .advanced-disclosure, .property-toggle-list, .property-block, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .property-set, .property-set-label, .layer-type-options, .text-box-hint)) {
   margin-inline: var(--property-gutter);
   width: auto;
   max-width: calc(100% - var(--property-gutter) * 2);
@@ -7315,9 +7264,6 @@ body.tool-select .preview-canvas {
 .design-panel .subsection-card-body-bare {
   padding: 0;
 }
-.design-panel .effect-option-group:not(.property-row),
-.design-panel .functional-control-group,
-.design-panel .advanced-control-group,
 .design-panel .property-set {
   display: flex;
   flex-direction: column;
@@ -7328,35 +7274,11 @@ body.tool-select .preview-canvas {
   border: 0;
   background: transparent;
 }
-.design-panel .effect-option-group:not(.property-row) > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
-.design-panel .functional-control-group > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
-.design-panel .advanced-control-group > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)),
-.design-panel .property-set > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .settings-action-row, .property-actions, .advanced-disclosure, .property-toggle-list, .settings-toggle-list, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .effect-option-group, .functional-control-group, .advanced-control-group, .property-set, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .property-set-label, .layer-type-options, .text-box-hint, .settings-row-label-desc)) {
+.design-panel .property-set > *:not(.property-row, .property-pair-group, .subsection-title, .property-note, .property-actions, .advanced-disclosure, .property-toggle-list, .property-block, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .property-set, .property-set-label, .layer-type-options, .text-box-hint):not(:has(.property-row, .property-pair-group, .subsection-title, .property-note, .property-actions, .advanced-disclosure, .property-toggle-list, .property-block, .subsection-content-group, .subsection-content, .asset-info, .paint-slot-source, .property-set, .property-set-label, .layer-type-options, .text-box-hint)) {
   margin-inline: var(--property-gutter);
   width: auto;
   max-width: calc(100% - var(--property-gutter) * 2);
 }
-.design-panel .effect-option-group:not(.property-row) > .settings-toggle-list,
-.design-panel .functional-control-group > .settings-toggle-list,
-.design-panel .advanced-control-group > .settings-toggle-list,
-.design-panel .property-set > .settings-toggle-list {
-  margin: 0;
-}
-.design-panel .effect-option-group:not(.property-row) + .effect-option-group,
-.design-panel .effect-option-group:not(.property-row) + .functional-control-group,
-.design-panel .effect-option-group:not(.property-row) + .advanced-control-group,
-.design-panel .effect-option-group:not(.property-row) + .property-set,
-.design-panel .functional-control-group + .effect-option-group,
-.design-panel .functional-control-group + .functional-control-group,
-.design-panel .functional-control-group + .advanced-control-group,
-.design-panel .functional-control-group + .property-set,
-.design-panel .advanced-control-group + .effect-option-group,
-.design-panel .advanced-control-group + .functional-control-group,
-.design-panel .advanced-control-group + .advanced-control-group,
-.design-panel .advanced-control-group + .property-set,
-.design-panel .property-set + .effect-option-group,
-.design-panel .property-set + .functional-control-group,
-.design-panel .property-set + .advanced-control-group,
 .design-panel .property-set + .property-set {
   margin-top: 0;
 }
@@ -7367,7 +7289,7 @@ body.tool-select .preview-canvas {
   gap: var(--property-block-gap);
 }
 
-.design-panel .subsection-card-body > .property-row + .settings-action-row {
+.design-panel .subsection-card-body > .property-row + .property-actions {
   margin-top: var(--property-block-gap);
 }
 
@@ -7390,13 +7312,6 @@ body.tool-select .preview-canvas {
 .design-panel .property-card > .subsection-title {
   padding: var(--property-gutter);
 }
-.design-panel .subsection-section-group > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
-.design-panel .effects-stack > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
-.design-panel .subsection-section-group > .transform-panel-host > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
-.design-panel .settings-subsection > .transform-panel-host > .subsection-content-group > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child),
-.design-panel .property-card > .subsection-card-body:has(> :is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child) {
-  padding-bottom: var(--spacing-sm);
-}
 .design-panel .property-block-list > .property-card {
   margin-inline: 0;
   --property-gutter: var(--property-card-inset);
@@ -7415,20 +7330,20 @@ body.tool-select .preview-canvas {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
-.design-panel .checkbox-group.effect-switch {
+.design-panel .property-header-switch.effect-switch {
   order: -1;
   flex: 0 0 auto;
   min-height: auto;
   margin-left: 0 !important;
 }
-.design-panel .checkbox-group.effect-switch > input[type=checkbox] {
+.design-panel .property-header-switch.effect-switch > input[type=checkbox] {
   position: absolute;
   width: 0;
   height: 0;
   margin: 0;
   opacity: 0;
 }
-.design-panel .checkbox-group.effect-switch > span {
+.design-panel .property-header-switch.effect-switch > span {
   color: transparent;
   font-size: 0;
   overflow: hidden;
@@ -7446,7 +7361,7 @@ body.tool-select .preview-canvas {
   cursor: pointer;
   transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
-.design-panel .checkbox-group.effect-switch > span::after {
+.design-panel .property-header-switch.effect-switch > span::after {
   content: "";
   position: absolute;
   top: 3px;
@@ -7457,24 +7372,24 @@ body.tool-select .preview-canvas {
   background: var(--switch-knob-color);
   transition: transform var(--transition-fast);
 }
-.design-panel .checkbox-group.effect-switch > input:checked + span {
+.design-panel .property-header-switch.effect-switch > input:checked + span {
   color: transparent;
   background: var(--color-accent);
   border-color: var(--color-accent-border);
 }
-.design-panel .checkbox-group.effect-switch > input:checked + span::after {
+.design-panel .property-header-switch.effect-switch > input:checked + span::after {
   transform: translateX(calc(var(--switch-w) - var(--switch-h)));
 }
-.design-panel .checkbox-group.effect-switch > input:focus-visible + span {
+.design-panel .property-header-switch.effect-switch > input:focus-visible + span {
   box-shadow: var(--control-focus-ring);
 }
-.design-panel .checkbox-group.effect-switch:hover > input:not(:checked) + span {
+.design-panel .property-header-switch.effect-switch:hover > input:not(:checked) + span {
   border-color: var(--color-border-hover);
 }
 .design-panel [data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)) > .subsection-title > span:first-of-type {
   color: var(--color-text-tertiary);
 }
-.design-panel .text-effect-controls {
+.design-panel .property-module-content {
   border-top: 1px solid var(--color-border);
 }
 .design-panel .paint-slot-source,
@@ -7483,9 +7398,7 @@ body.tool-select .preview-canvas {
   flex-direction: column;
   gap: var(--spacing-sm);
 }
-.design-panel .effect-option-group > .glitter-source > .segmented-control,
-.design-panel .functional-control-group > .glitter-source > .segmented-control,
-.design-panel .advanced-control-group > .glitter-source > .segmented-control {
+.design-panel .property-set > .glitter-source > .segmented-control {
   margin: 0;
   width: 100%;
 }
@@ -7517,11 +7430,7 @@ body.tool-select .preview-canvas {
   width: 100%;
 }
 
-.design-panel .subsection-content-group > .subsection-card-body:has(> :is(.settings-action-row, .property-actions, .segmented-control, .auto-glitter-results, button)) {
-  padding-bottom: var(--spacing-sm);
-}
-
-.design-panel .subsection-content-group > .subsection-card-body:has(> :last-child .btn-simple:last-child) {
+.design-panel .subsection-content-group > .subsection-card-body:has(> :is(.property-block, .property-set, .property-actions, .asset-info, .segmented-control, .property-list, button):last-child) {
   padding-bottom: var(--spacing-sm);
 }
 
@@ -7629,6 +7538,9 @@ body.tool-select .preview-canvas {
   margin: 0 var(--property-gutter);
   padding: 0;
 }
+.design-panel .selected-colors-display:not(:empty) {
+  margin-bottom: var(--property-gutter);
+}
 .design-panel .selected-colors-display > .selected-color-chip {
   gap: var(--spacing-xs);
   min-height: var(--control-height-compact);
@@ -7657,19 +7569,16 @@ body.tool-select .preview-canvas {
   text-transform: none;
 }
 
-.property-actions,
-.design-panel .settings-action-row {
+.property-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--spacing-sm);
-  padding: 0 var(--property-gutter) var(--spacing-2xs);
+  padding: var(--property-gutter);
 }
-.property-actions > button,
-.design-panel .settings-action-row > button {
+.property-actions > button {
   width: 100%;
 }
-.property-actions[hidden],
-.design-panel .settings-action-row[hidden] {
+.property-actions[hidden] {
   display: none;
 }
 
@@ -7690,8 +7599,8 @@ body.tool-select .preview-canvas {
 .design-panel .paint-slot-main:not(:has(> :not([hidden]))),
 .design-panel .property-pair-group:not(:has(> :not([hidden]))),
 .design-panel .property-toggle-list:not(:has(> :not(.property-group-label):not([hidden]))),
-.design-panel .effect-option-group:not(:has(> :not(.property-set-label):not([hidden]))),
-.design-panel .settings-action-row:not(:has(> :not([hidden]))),
+.design-panel .property-set:not(:has(> :not(.property-set-label):not([hidden]))),
+.design-panel .property-actions:not(:has(> :not([hidden]))),
 .design-panel .subsection-content:not(:has(> :not([hidden]))),
 .design-panel .asset-info-meta:not(:has(> .property-meta-cell > .property-value:not(:empty))) {
   display: none;
@@ -7831,7 +7740,9 @@ body.tool-select .preview-canvas {
 
 body.is-resizing-panel {
   cursor: col-resize !important;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 body.is-resizing-panel iframe,
 body.is-resizing-panel canvas {
@@ -7878,7 +7789,6 @@ body.is-resizing-panel canvas {
 }
 
 @container propertypanel (min-width: 380px) {
-  .design-panel .settings-action-row:not(.is-stacked),
   .design-panel .property-actions:not(.is-stacked) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -7895,11 +7805,8 @@ body.is-resizing-panel canvas {
   padding: 0;
   gap: var(--spacing-sm);
 }
-.design-panel .effect-gradient-editor .effect-option-group > .segmented-control {
+.design-panel .effect-gradient-editor .property-row > .segmented-control {
   margin-inline: 0;
-}
-.design-panel .effect-gradient-editor .effect-option-group > .property-set-label {
-  padding-inline: 0;
 }
 .design-panel .effect-gradient-editor .gradient-stops-box {
   padding: var(--spacing-sm);
@@ -7914,17 +7821,17 @@ body.is-resizing-panel canvas {
   padding-inline: 0;
 }
 
-.design-panel .effect-option-group.property-row > .property-label {
+.design-panel .property-row > .property-label {
   padding-inline: 0;
 }
-.design-panel .effect-option-group.property-row.is-stacked > .property-label {
+.design-panel .property-row.is-stacked > .property-label {
   grid-area: 1/1/2/2;
 }
-.design-panel .effect-option-group.property-row:not(.is-stacked) > .segmented-control, .design-panel .effect-option-group.property-row:not(.is-stacked) > select, .design-panel .effect-option-group.property-row:not(.is-stacked) > .glitter-source {
+.design-panel .property-row:not(.is-stacked) > .segmented-control, .design-panel .property-row:not(.is-stacked) > select, .design-panel .property-row:not(.is-stacked) > .glitter-source {
   grid-column: 2/-1;
   margin-inline: 0;
 }
-.design-panel .effect-option-group.property-row.is-stacked > .segmented-control, .design-panel .effect-option-group.property-row.is-stacked > select, .design-panel .effect-option-group.property-row.is-stacked > .glitter-source {
+.design-panel .property-row.is-stacked > .segmented-control, .design-panel .property-row.is-stacked > select, .design-panel .property-row.is-stacked > .glitter-source {
   grid-area: 2/1/3/4;
   margin-inline: 0;
 }
@@ -7976,9 +7883,6 @@ body.is-resizing-panel canvas {
 .design-panel .subsection-card-body > .segmented-control,
 .design-panel .paint-slot-main > .segmented-control,
 .design-panel .subsection-content > .segmented-control,
-.design-panel .effect-option-group:not(.property-row) > .segmented-control,
-.design-panel .functional-control-group > .segmented-control,
-.design-panel .advanced-control-group > .segmented-control,
 .design-panel .property-set > .segmented-control,
 .design-panel .paint-slot-source > .segmented-control {
   width: auto;
@@ -8031,7 +7935,6 @@ body.modal-open {
   padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   opacity: 0;
   transition: opacity var(--transition-base);
-  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
   backdrop-filter: blur(var(--modal-backdrop-blur));
 }
 .modal-overlay.visible {
@@ -8160,8 +8063,6 @@ body.modal-open {
   column-gap: 0.5em;
   align-items: start;
   padding: var(--spacing-2xs);
-  /* main content (link) */
-  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li a {
   color: var(--color-text-secondary);
@@ -8176,8 +8077,14 @@ body.modal-open {
   grid-column: 1;
   align-self: start;
 }
+.modal-overlay > .modal-content > .modal-body .toc > ol > li {
+  /* main content (link) */
+}
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > :not(ol) {
   grid-column: 2;
+}
+.modal-overlay > .modal-content > .modal-body .toc > ol > li {
+  /* nested list should also align under content */
 }
 .modal-overlay > .modal-content > .modal-body .toc > ol > li > ol {
   grid-column: 2;
@@ -8294,7 +8201,9 @@ body.modal-open {
   font-weight: 600;
   line-height: 1.4;
   overflow-wrap: anywhere;
-  user-select: text;
+  -webkit-user-select: text;
+     -moz-user-select: text;
+          user-select: text;
 }
 #confirmationModal .confirmation-facts {
   display: grid;
@@ -8615,7 +8524,9 @@ body.modal-open {
 }
 #newCanvasModal .blank-image-grid .blank-image-option {
   min-width: 0;
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   background: var(--color-bg-tertiary);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -8724,7 +8635,8 @@ body.modal-open {
   pointer-events: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  user-select: none;
+  -moz-user-select: none;
+       user-select: none;
 }
 #exportPreviewModal .export-preview-instructions {
   display: block;
@@ -9073,7 +8985,8 @@ body.modal-open {
   display: block;
   width: 100%;
   height: 120px;
-  object-fit: contain;
+  -o-object-fit: contain;
+     object-fit: contain;
   image-rendering: pixelated;
 }
 #welcomeModal .welcome-example-wrapper > figure > figcaption {
@@ -9121,7 +9034,8 @@ body.modal-open {
   font-size: var(--font-size-sm);
   cursor: pointer;
   -webkit-user-select: none;
-  user-select: none;
+  -moz-user-select: none;
+       user-select: none;
 }
 #welcomeModal .welcome-checkbox > input[type=checkbox] {
   position: absolute;
@@ -9378,9 +9292,6 @@ body.modal-open {
 }
 
 /* ===== ABOUT MODAL ===== */
-#aboutModal {
-  /* Highlight animation for references */
-}
 #aboutModal .modal-hero-image {
   background: url("../images/glitter/sparkle/glitter_lime-green.gif") repeat;
 }
@@ -9446,6 +9357,9 @@ body.modal-open {
 #aboutModal h5 + ul,
 #aboutModal h5 + ol {
   margin-top: var(--spacing-xs);
+}
+#aboutModal {
+  /* Highlight animation for references */
 }
 #aboutModal .highlight {
   background: var(--theme-glitter-image) repeat;
@@ -10173,7 +10087,6 @@ label.settings-row-label-main {
 
 @media (max-width: 800px) {
   :root {
-    --glitter-swatch-columns: 5;
     --mobile-floating-inset: var(--spacing-sm);
     --mobile-sheet-inset: var(--mobile-floating-inset);
   }
@@ -10256,7 +10169,6 @@ label.settings-row-label-main {
     padding: var(--spacing-sm);
     background: var(--color-bg-translucent);
     border: 1px solid var(--color-border);
-    -webkit-backdrop-filter: blur(var(--glass-blur));
     backdrop-filter: blur(var(--glass-blur));
     border-radius: var(--radius-sm);
     padding: var(--spacing-sm);
@@ -10735,4 +10647,4 @@ label.settings-row-label-main {
   .mobile-only {
     display: block !important;
   }
-}
+}/*# sourceMappingURL=style.css.map */

@@ -16,7 +16,7 @@
 		flex: 0 0 auto;
 		transition: transform var(--transition-fast);
 	}
-	> .subsection-title:has(> .checkbox-group) .panel-group-chevron { margin-left: 0; }
+	> .subsection-title:has(> .property-header-switch) .panel-group-chevron { margin-left: 0; }
 	&.collapsed {
 		> .subsection-title .panel-group-chevron { transform: rotate(-90deg); }
 		> :not(.subsection-title) { display: none; }

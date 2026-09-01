@@ -109,7 +109,7 @@ class ShapeGlitterManager {
 			this.ui[prefix + 'Color'] = id(prefix + 'Color');
 			// The slot's Advanced (color-adjust) block — glitter-only.
 			const info = this.ui[prefix + 'GlitterInfo'];
-			this.ui[prefix + 'Advanced'] = info?.closest('.text-effect-subsection')?.querySelector('.advanced-disclosure') || null;
+			this.ui[prefix + 'Advanced'] = info?.closest('.paint-slot-card')?.querySelector('.advanced-disclosure') || null;
 		});
 		['shapeFill', 'shapeBorder', 'shapeShadow'].forEach((prefix) => {
 			const slot = prefix === 'shapeFill' ? 'fill' : prefix === 'shapeBorder' ? 'border' : 'shadow';
@@ -621,7 +621,7 @@ class ShapeGlitterManager {
 		// Border
 		const border = d.border;
 		syncPanelEffectToggle(this.ui.borderEnabled, Boolean(border));
-		// .text-effect-controls is display:none until it has the .visible class
+		// .property-module-content is display:none until it has the .visible class
 		// (NOT the hidden attribute) — reuse the same mechanism as text.
 		const bd = border || borderDefaults;
 		if (this.ui.borderWidth) { this.ui.borderWidth.value = bd.widthPx; this.ui.borderWidthValue.innerHTML = formatUnit(bd.widthPx, 'px'); }

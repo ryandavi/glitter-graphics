@@ -78,13 +78,11 @@
 // sixteen :not()s repeated across two rules is unreadable and drifts.
 $gutter-owners:
 	'.property-row', '.property-pair-group', '.subsection-title', '.property-note',
-	'.settings-action-row', '.property-actions', '.advanced-disclosure',
-	'.property-toggle-list', '.settings-toggle-list', '.subsection-content-group',
+	'.property-actions', '.advanced-disclosure',
+	'.property-toggle-list', '.property-block', '.subsection-content-group',
 	'.subsection-content', '.asset-info', '.paint-slot-source',
-	'.effect-option-group', '.functional-control-group', '.advanced-control-group',
-	'.property-set', '.property-set-label', '.property-set-label',
-	'.property-set-label', '.property-set-label', '.property-set-label',
-	'.layer-type-options', '.text-box-hint', '.settings-row-label-desc';
+	'.property-set', '.property-set-label',
+	'.layer-type-options', '.text-box-hint';
 
 // A single :not() taking a selector list - not sixteen chained ones.
 $not-gutter-owner: ':not(#{list.join($gutter-owners, (), $separator: comma)})';
@@ -153,7 +151,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	}
 
 	.segmented-option,
-	.checkbox-group > span,
+	.property-header-switch > span,
 	.filter-chip {
 		letter-spacing: 0;
 		text-transform: none;
@@ -188,8 +186,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 }
 
 .property-note,
-.design-panel .text-box-hint,
-.design-panel .settings-row-label-desc {
+.design-panel .text-box-hint {
 	font-size: var(--font-size-xs);
 	font-weight: 400;
 	letter-spacing: 0;
@@ -354,9 +351,8 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 }
 
 // ===== Rule D: revert ======================================================
-// Quiet by default, present only when there is something to undo. Hover reveals
-// it faintly on rows already at their default, so the affordance is
-// discoverable without shouting on every changed value.
+// The column always shows what it is for: disabled reverts stay subdued, then
+// become fully legible when the value differs from its default.
 
 .property-revert {
 	width: var(--property-revert-col);
@@ -369,7 +365,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	background: none;
 	color: var(--color-text-tertiary);
 	cursor: pointer;
-	opacity: 0;
+	opacity: 1;
 	transition: opacity var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
 
 	> .icon {
@@ -379,14 +375,12 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 		opacity: 1;
 	}
 
-	&:not(:disabled) { opacity: 1; }
-
 	&:not(:disabled):hover {
 		background: var(--color-bg-tertiary);
 		color: var(--color-accent);
 	}
 
-	&:disabled { cursor: default; opacity: 0; }
+	&:disabled { cursor: default; opacity: 0.3; }
 
 	&:focus-visible {
 		opacity: 1;
@@ -394,9 +388,6 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 		box-shadow: var(--control-focus-ring);
 	}
 }
-
-.property-row:hover > .property-revert:disabled,
-.property-row:focus-within > .property-revert:disabled { opacity: 0.35; }
 
 // Rule D, tier 2: a set-scoped reset sits at the right edge of its set label.
 .design-panel .has-set-reset {
@@ -454,8 +445,21 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 			margin-top: var(--spacing-sm);
 		}
 
-		> .subsection-content-group + .settings-action-row {
+		> .subsection-content-group + .property-actions {
 			margin-top: var(--property-block-gap);
+		}
+
+		// An expanded group owns the same closing inset as its left and right
+		// edges. Collapsed groups remain header-only, so their compact rhythm is
+		// unchanged.
+		&:not(.collapsed):has(> :not(.subsection-title):not([hidden])) {
+			padding-bottom: var(--property-gutter);
+		}
+
+		// Actions own an even inset on all four sides, so they also satisfy the
+		// section's closing edge instead of stacking two bottom gutters.
+		&:not(.collapsed):has(> .property-actions:last-child:not([hidden])) {
+			padding-bottom: 0;
 		}
 
 	}
@@ -519,10 +523,8 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 
 	.subsection-card-body-bare { padding: 0; }
 
-	// A labelled set. Three legacy names for one concept, rendered identically.
-	.effect-option-group:not(.property-row),
-	.functional-control-group,
-	.advanced-control-group,
+	// A labelled set. Feature classes may describe behaviour, but geometry is
+	// supplied by this single semantic primitive.
 	.property-set {
 		display: flex;
 		flex-direction: column;
@@ -547,15 +549,8 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 			max-width: calc(100% - var(--property-gutter) * 2);
 		}
 
-		// ...but a toggle list holds .property-row.is-toggle, which insets
-		// itself. Adding it here would double up.
-		> .settings-toggle-list { margin: 0; }
-
 		// No sibling margin: a set that follows another is separated by its
 		// container's gap, so hiding one leaves no phantom space.
-		+ .effect-option-group,
-		+ .functional-control-group,
-		+ .advanced-control-group,
 		+ .property-set { margin-top: 0; }
 	}
 }
@@ -569,7 +564,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	gap: var(--property-block-gap);
 }
 
-.design-panel .subsection-card-body > .property-row + .settings-action-row {
+.design-panel .subsection-card-body > .property-row + .property-actions {
 	margin-top: var(--property-block-gap);
 }
 
@@ -580,7 +575,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 .design-panel {
 	// EVERY block gets the same surface. Which blocks are carded used to be a
 	// hardcoded list of feature classes ([data-effect-card], .transform-panel,
-	// .text-effect-subsection), so Transform and Effects had cards while Font,
+	// .paint-slot-card), so Transform and Effects had cards while Font,
 	// Asset and Selection did not - a distinction no one could read off the UI,
 	// and one a newly added block would never inherit.
 	//
@@ -603,14 +598,6 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 
 		> .subsection-title { padding: var(--property-gutter); }
 
-		// Clearance belongs to the final component that needs breathing room,
-		// not to every body. Ordinary rows already own their line height; sets,
-		// action rows and inset asset summaries need space before a card edge or
-		// a following Advanced divider.
-		> .subsection-card-body:has(>
-			:is(.functional-control-group, .advanced-control-group, .property-set, .settings-action-row, .property-actions, .asset-info, .segmented-control, .auto-glitter-results, button):last-child) {
-			padding-bottom: var(--spacing-sm);
-		}
 	}
 
 	.property-block-list > .property-card {
@@ -634,7 +621,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	}
 
 	// The enable control leads the header, using the ONE switch.
-	.checkbox-group.effect-switch {
+	.property-header-switch.effect-switch {
 		order: -1;
 		flex: 0 0 auto;
 		min-height: auto;
@@ -666,7 +653,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 		color: var(--color-text-tertiary);
 	}
 
-	.text-effect-controls { border-top: 1px solid var(--color-border); }
+	.property-module-content { border-top: 1px solid var(--color-border); }
 
 	.paint-slot-source,
 	.glitter-source {
@@ -681,9 +668,7 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	// A bare `.glitter-source` (the `glitterSource` optionGroup wrapper) is a
 	// pass-through: the set's catch-all already insets it, so its control fills
 	// it rather than insetting again.
-	.effect-option-group > .glitter-source > .segmented-control,
-	.functional-control-group > .glitter-source > .segmented-control,
-	.advanced-control-group > .glitter-source > .segmented-control {
+	.property-set > .glitter-source > .segmented-control {
 		margin: 0;
 		width: 100%;
 	}
@@ -726,15 +711,12 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	}
 }
 
-// Schema cards can also live in panel scroll regions or nested control
-// sections rather than directly under an L1 group. The same last-component
-// clearance contract applies there.
+// Card clearance depends only on the semantic kind of its final component.
+// Ordinary property rows own enough line height already; sets, action groups,
+// inset summaries, direct segmented controls and lists need breathing room
+// before the card edge.
 .design-panel .subsection-content-group > .subsection-card-body:has(>
-	:is(.settings-action-row, .property-actions, .segmented-control, .auto-glitter-results, button)) {
-	padding-bottom: var(--spacing-sm);
-}
-
-.design-panel .subsection-content-group > .subsection-card-body:has(> :last-child .btn-simple:last-child) {
+	:is(.property-block, .property-set, .property-actions, .asset-info, .segmented-control, .property-list, button):last-child) {
 	padding-bottom: var(--spacing-sm);
 }
 
@@ -866,6 +848,10 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 		margin: 0 var(--property-gutter);
 		padding: 0;
 
+		// A populated token run needs a closing inset against the card edge.
+		// The separate inline empty state already has the correct row rhythm.
+		&:not(:empty) { margin-bottom: var(--property-gutter); }
+
 		> .selected-color-chip {
 			gap: var(--spacing-xs);
 			min-height: var(--control-height-compact);
@@ -901,15 +887,14 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 
 // ===== R6: actions =========================================================
 
-.property-actions,
-.design-panel .settings-action-row {
+.property-actions {
 	// One button per line. Buttons carry words, and an auto-fit grid squeezed
 	// them until the labels were unreadable; a second column is opt-in at a
 	// width where two full labels genuinely fit.
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	gap: var(--spacing-sm);
-	padding: 0 var(--property-gutter) var(--spacing-2xs);
+	padding: var(--property-gutter);
 
 	> button { width: 100%; }
 
@@ -940,8 +925,8 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	.paint-slot-main:not(:has(> :not([hidden]))),
 	.property-pair-group:not(:has(> :not([hidden]))),
 	.property-toggle-list:not(:has(> :not(.property-group-label):not([hidden]))),
-	.effect-option-group:not(:has(> :not(.property-set-label):not([hidden]))),
-	.settings-action-row:not(:has(> :not([hidden]))),
+	.property-set:not(:has(> :not(.property-set-label):not([hidden]))),
+	.property-actions:not(:has(> :not([hidden]))),
 	.subsection-content:not(:has(> :not([hidden]))),
 	.asset-info-meta:not(:has(> .property-meta-cell > .property-value:not(:empty))) {
 		display: none;
@@ -1129,7 +1114,6 @@ body.is-resizing-panel {
 
 // A second action column only where two full labels actually fit.
 @container propertypanel (min-width: 380px) {
-	.design-panel .settings-action-row:not(.is-stacked),
 	.design-panel .property-actions:not(.is-stacked) {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -1150,8 +1134,7 @@ body.is-resizing-panel {
 		gap: var(--spacing-sm);
 	}
 
-	.effect-option-group > .segmented-control { margin-inline: 0; }
-	.effect-option-group > .property-set-label { padding-inline: 0; }
+	.property-row > .segmented-control { margin-inline: 0; }
 
 	.gradient-stops-box { padding: var(--spacing-sm); }
 
@@ -1169,7 +1152,7 @@ body.is-resizing-panel {
 // ===== An optionGroup rendered as a row ====================================
 // It carries .property-row now, so the row already applies the gutter - its
 // label must not apply it a second time.
-.design-panel .effect-option-group.property-row {
+.design-panel .property-row {
 	> .property-label { padding-inline: 0; }
 
 	&.is-stacked > .property-label { grid-area: 1 / 1 / 2 / 2; }
@@ -1252,9 +1235,6 @@ body.is-resizing-panel {
 	.subsection-card-body > .segmented-control,
 	.paint-slot-main > .segmented-control,
 	.subsection-content > .segmented-control,
-	.effect-option-group:not(.property-row) > .segmented-control,
-	.functional-control-group > .segmented-control,
-	.advanced-control-group > .segmented-control,
 	.property-set > .segmented-control,
 	.paint-slot-source > .segmented-control {
 		width: auto;

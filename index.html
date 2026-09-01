@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=2fa51b69">
+	<link rel="stylesheet" href="css/style.css?v=7fa6a5ea">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -713,7 +713,7 @@
 												<span class="property-label">Name</span>
 												<input type="text" id="projectNameInput" maxlength="60" spellcheck="false" placeholder="Name...">
 											</div>
-											<div class="canvas-project-actions settings-action-row">
+											<div class="canvas-project-actions property-actions">
 												<button class="btn-simple" id="openProjectSidebarBtn" type="button">Open Project</button>
 												<button class="btn-simple primary" id="saveProject" type="button" disabled>Save Project</button>
 											</div>
@@ -729,7 +729,7 @@
 												<button class="segmented-option active" type="button" data-size-mode="image" aria-pressed="true">Image Size</button>
 												<button class="segmented-option" type="button" data-size-mode="canvas" aria-pressed="false">Canvas Size</button>
 											</div>
-											<div class="subsection-content document-size-panel" id="canvasSizePanel" hidden>
+											<div class="subsection-content property-block document-size-panel" id="canvasSizePanel" hidden>
 												<div class="canvas-size-controls">
 													<div class="property-note">Crop or extend the canvas without scaling content.</div>
 													<div class="subsection-content-group document-size-card">
@@ -754,7 +754,7 @@
 																	<button class="segmented-option" type="button" data-extension-mode="color" aria-pressed="false">Color</button></div>
 													</div>
 													<div class="property-row" id="canvasExtensionColorRow" hidden><span class="property-label" data-for="canvasExtensionColor">Extension Color</span><input type="color" id="canvasExtensionColor" value="#ffffff"></div>
-													<div class="canvas-size-actions settings-action-row">
+													<div class="canvas-size-actions property-actions">
 														<button class="btn-simple" id="canvasSizeReset" type="button">Reset</button>
 														<button class="btn-simple primary" id="canvasSizeApply" type="button">Resize Canvas</button>
 													</div>
@@ -763,7 +763,7 @@
 											</div>
 										</div>
 
-									<div class="document-size-panel" id="scaleDesignPanel">
+									<div class="property-block document-size-panel" id="scaleDesignPanel">
 											<div class="subsection-content">
 												<div class="canvas-size-controls scale-design-controls">
 													<div class="property-note">Resize the canvas and everything in the design. Proportions stay linked.</div>
@@ -791,7 +791,7 @@
 
 													</div>
 													
-													<div class="canvas-size-actions settings-action-row">
+													<div class="canvas-size-actions property-actions">
 														<button class="btn-simple" id="scaleDesignReset" type="button">Reset</button>
 														<button class="btn-simple primary" id="scaleDesignApply" type="button">Scale Design</button>
 													</div>
@@ -810,11 +810,11 @@
 											<div class="transform-control-group"><div class="property-set-label">Align to</div><div class="segmented-control transform-segmented-control" id="multiSelectionAlignScope"><button class="segmented-option" type="button" data-scope="selection">Selection</button><button class="segmented-option active" type="button" data-scope="canvas">Canvas</button></div></div>
 											<div class="transform-control-group"><div class="property-set-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="left" title="Align left">Left</button><button class="segmented-option" type="button" data-multi-align="centerX" title="Align horizontal centers">Center</button><button class="segmented-option" type="button" data-multi-align="right" title="Align right">Right</button></div></div>
 											<div class="transform-control-group"><div class="property-set-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="top" title="Align top">Top</button><button class="segmented-option" type="button" data-multi-align="centerY" title="Align vertical centers">Middle</button><button class="segmented-option" type="button" data-multi-align="bottom" title="Align bottom">Bottom</button></div></div>
-											<div class="settings-action-row multi-selection-actions"><button class="btn-simple" data-multi-distribute="horizontal" type="button">Distribute H</button><button class="btn-simple" data-multi-distribute="vertical" type="button">Distribute V</button></div>
+											<div class="property-actions multi-selection-actions"><button class="btn-simple" data-multi-distribute="horizontal" type="button">Distribute H</button><button class="btn-simple" data-multi-distribute="vertical" type="button">Distribute V</button></div>
 										</div>
 										<div class="subsection-content-group" data-collapsible-subsection>
 											<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Actions</div>
-											<div class="settings-action-row multi-selection-actions"><button class="btn-simple" id="multiSelectionDuplicateBtn" type="button">Duplicate</button><button class="btn-simple" id="multiSelectionDeleteBtn" type="button">Delete</button></div>
+											<div class="property-actions multi-selection-actions"><button class="btn-simple" id="multiSelectionDuplicateBtn" type="button">Duplicate</button><button class="btn-simple" id="multiSelectionDeleteBtn" type="button">Delete</button></div>
 										</div>
 									</div>
 								</div>
@@ -837,207 +837,14 @@
 						<div class="glitter-settings-section section collapsible-section" id="glitterSettingsSection">
 						</div>
 
-						<!-- Mask Settings Section (shown for the Brush/Eraser tool, independent of layer type) -->
-					<div class="brush-settings-section section collapsible-section" id="brushSettingsSection">
-						<div class="section-header section-header-with-action" id="brushSettingsHeader">
-							<h3 class="section-header-title">
-								<span class="section-header-title-icon icon-wrapper sm">
-									<svg class="icon">
-										<use href="#icon-brush" id="brushSettingsTitleIcon"></use>
-									</svg>
-									<span class="name">Brush</span>
-								</span>
-								<span class="section-header-title-text" id="brushSettingsTitleText">Mask Settings</span>
-							</h3>
-							<div class="section-header-action btn-icon visible collapsed" id="brushSettingsToggle">
-								<span class="icon-wrapper">
-									<svg class="icon">
-										<use href="#icon-chevron-down"></use>
-									</svg>
-								</span>
-							</div>
-						</div>
-						<div class="section-content" id="brushSettingsContent">
-							<div class="settings-subsection">
-								<div class="subsection-content-group">
-									<div class="subsection-title">
-										<span>Brush Tip</span>
-									</div>
-									<div class="subsection-content">
-										<!-- Replaced at boot by PANEL_SCHEMAS.brush. -->
-									</div>
-								</div>
-								<div class="subsection-content-group">
-									<div class="subsection-title">
-										<span>Stroke</span>
-									</div>
-									<div class="subsection-content">
-										<div class="settings-group-two-column">
-											<div class="property-row">
-												<span class="property-label">Size</span>
-												<input type="range" id="maskBrushSize" min="1" max="300" value="40">
-												<span class="property-value" id="maskBrushSizeValue">40px</span>
-												<button class="property-revert" id="resetMaskBrushSize" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button>
-											</div>
-											<div class="property-row">
-												<span class="property-label">Softness</span>
-												<input type="range" id="maskBrushSoftness" min="0" max="100" value="0">
-												<span class="property-value" id="maskBrushSoftnessValue">0%</span>
-												<button class="property-revert" id="resetMaskBrushSoftness" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button>
-											</div>
-										</div>
-									</div>
-
-									<div class="subsection-content">
-										<div class="settings-group-two-column">
-											<div class="property-row">
-												<span class="property-label">Flow</span>
-												<input type="range" id="maskBrushFlow" min="1" max="100" value="100">
-												<span class="property-value" id="maskBrushFlowValue">100%</span>
-												<button class="property-revert" id="resetMaskBrushFlow" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button>
-											</div>
-											<div class="property-row">
-												<span class="property-label" title="Distance between stamps along a stroke, as a percentage of brush size. Higher = more spaced out (great for the star and heart tips).">Spacing</span>
-												<input type="range" id="maskBrushSpacing" min="1" max="200" value="25">
-												<span class="property-value" id="maskBrushSpacingValue">25%</span>
-												<button class="property-revert" id="resetMaskBrushSpacing" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button>
-											</div>
-										</div>
-									</div>
-
-									<div class="subsection-content">
-										<div class="property-row">
-											<span class="property-label" title="Stabilizes shaky strokes by easing the brush toward the cursor. Higher = smoother but more lag.">Smoothing</span>
-												<input type="range" id="maskBrushSmoothing" min="0" max="100" value="0">
-												<span class="property-value" id="maskBrushSmoothingValue">0%</span>
-												<button class="property-revert" id="resetMaskBrushSmoothing" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button>
-										</div>
-									</div>
-								</div>
-
-								<div class="subsection-content-group">
-									<div class="subsection-content settings-toggle-list">
-										<label class="checkbox-group">
-											<input type="checkbox" id="maskBrushPressure" checked>
-											<span title="Vary flow with pen pressure (no effect on mouse/touch)">Pressure Sensitivity</span>
-										</label>
-									</div>
-								</div>
-								<div class="subsection-content-group">
-									<div class="subsection-title">
-										<span>Actions</span>
-									</div>
-									<div class="subsection-content">
-										<div class="tool-options-group">
-											<button class="btn-simple" id="maskCopyOppositeSettings" type="button" title="Copy the other tool's settings into this one">Copy Eraser Settings</button>
-											<button class="btn-simple" id="maskResetCurrentSettings" type="button" title="Restore brush settings to their defaults">Reset Brush</button>
-											<button class="btn-simple" id="clearMaskPaint" type="button" title="Remove all painted strokes (color selections stay)">Clear Paint</button>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
+						<!-- Generated from PANEL_SCHEMAS.brush at boot. -->
+					<div class="brush-settings-section section collapsible-section" id="brushSettingsSection"></div>
 
 						<!-- Sticker Properties Section -->
 							<div class="sticker-settings-section section collapsible-section" id="stickerSettingsSection"></div>
 
 							<!-- Text Settings -->
 							<div class="text-settings-section section collapsible-section" id="textSettingsSection"></div>
-								<template id="tpl-text-content">
-								<div class="subsection-content-group">
-									<div class="subsection-title">Text</div>
-									<div class="subsection-content">
-										<div class="text-input-group">
-											<textarea id="textLayerInput" rows="4" maxlength="200" placeholder="Type your glitter text"></textarea>
-										</div>
-									</div>
-								</div>
-								<div class="subsection-content-group">
-									<div class="subsection-title">Font</div>
-									<div class="subsection-content">
-										<div class="text-font-picker" id="textFontPicker"></div>
-									</div>
-								</div>
-								<div class="subsection-content-group">
-									<div class="subsection-title">Style</div>
-									<div class="segmented-control text-style-group">
-										<button class="segmented-option" id="textFontBold" type="button" aria-pressed="false"><strong>Bold</strong></button>
-										<button class="segmented-option" id="textFontItalic" type="button" aria-pressed="false"><em>Italic</em></button>
-									</div>
-								</div>
-								<div class="subsection-content-group text-case-group-wrap">
-									<div class="subsection-title">Case</div>
-									<select class="effect-option-select text-case-select" id="textCaseSelect" aria-label="Text case">
-										<option value="none">As Typed</option>
-										<option value="upper">UPPERCASE</option>
-										<option value="lower">lowercase</option>
-										<option value="title">Title Case</option>
-									</select>
-								</div>
-								<div class="subsection-content-group">
-									<div class="subsection-title">Box Mode</div>
-									<div class="segmented-control text-box-mode-group">
-										<button class="segmented-option active" type="button" data-text-box-mode="auto">Point</button>
-										<button class="segmented-option" type="button" data-text-box-mode="fixed">Box</button>
-									</div>
-									<div class="text-box-hint" id="textBoxModeHint">Point text hugs the copy. Switch to Box for wrapping and edge resizing.</div>
-								</div>
-								<div class="subsection-content-group text-fit-box-section">
-									<div class="subsection-title">Actions</div>
-									<div class="subsection-content">
-										<div class="tool-options-group text-fit-box-group">
-											<button class="btn-simple" id="textFitBoxToContent" type="button" title="Resize the box to exactly fit the current text (keeps existing line breaks/wraps)">Fit to Text</button>
-										</div>
-									</div>
-								</div>
-								<div class="subsection-content-group">
-									<div class="subsection-title">Type</div>
-									<div class="functional-control-group">
-										<div class="property-set-label">Typography</div>
-										<div class="property-row">
-											<span class="property-label">Font Size</span>
-												<input type="range" id="textFontSize">
-												<span class="property-value" id="textFontSizeValue">64px</span>
-												<button class="property-revert" id="resetTextFontSize" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button>
-										</div>
-									</div>
-									<div class="functional-control-group">
-										<div class="property-set-label">Spacing</div>
-										<div class="property-row">
-											<span class="property-label">Letter Spacing</span>
-												<input type="range" id="textLetterSpacing">
-												<span class="property-value" id="textLetterSpacingValue">0px</span>
-												<button class="property-revert" id="resetTextLetterSpacing" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button>
-										</div>
-										<div class="property-row text-line-height-row">
-											<span class="property-label">Line Height</span>
-												<input type="range" id="textLineHeight">
-												<span class="property-value" id="textLineHeightValue">110%</span>
-												<button class="property-revert" id="resetTextLineHeight" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button>
-										</div>
-									</div>
-								</div>
-								<div class="subsection-content-group">
-									<div class="subsection-title">Text Alignment</div>
-									<div class="functional-control-group">
-										<div class="property-set-label property-set-label text-valign-label">Vertical</div>
-										<div class="segmented-control text-valign-group">
-											<button class="segmented-option active" type="button" data-text-valign="top">Top</button>
-											<button class="segmented-option" type="button" data-text-valign="middle">Middle</button>
-											<button class="segmented-option" type="button" data-text-valign="bottom">Bottom</button>
-										</div>
-									</div>
-									<div class="functional-control-group">
-										<div class="property-set-label property-set-label text-align-label">Horizontal</div>
-										<div class="segmented-control text-align-group">
-											<button class="segmented-option active" type="button" data-text-align="left">Left</button>
-											<button class="segmented-option" type="button" data-text-align="center">Center</button>
-											<button class="segmented-option" type="button" data-text-align="right">Right</button>
-										</div>
-									</div>
-								</div>
-							</template>
 
 					<!-- Shape Properties Section (WP5b) -->
 					<div class="shape-settings-section section collapsible-section" id="shapeSettingsSection">
@@ -2694,8 +2501,8 @@
 		<button class="segmented-option" type="button"></button>
 	</template>
 	<template id="tpl-option-group">
-		<div class="effect-option-group">
-			<div class="property-set-label"></div>
+		<div class="property-row">
+			<div class="property-label"></div>
 		</div>
 	</template>
 	<template id="tpl-paint-source">
@@ -2713,13 +2520,13 @@
 		</div>
 	</template>
 	<template id="tpl-paint-slot">
-		<div class="subsection-content-group text-effect-subsection"><div class="subsection-title"><span></span></div></div>
+		<div class="subsection-content-group paint-slot-card"><div class="subsection-title"><span></span></div></div>
 	</template>
 	<template id="tpl-number-pair">
 		<div class="sticker-position-group"><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div></div>
 	</template>
 	<template id="tpl-action-row">
-		<div class="settings-action-row"><button class="btn-simple" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-simple" data-prefix-id="FillCanvas" type="button">Fill canvas</button></div>
+		<div class="property-actions"><button class="btn-simple" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-simple" data-prefix-id="FillCanvas" type="button">Fill canvas</button></div>
 	</template>
 	<template id="tpl-advanced">
 		<div class="advanced-disclosure glitter-source-glitter" data-advanced>
@@ -2733,7 +2540,7 @@
 		</div>
 	</template>
 	<template id="tpl-checkbox">
-		<label class="checkbox-group"><input type="checkbox"><span></span></label>
+		<label class="property-header-switch"><input type="checkbox"><span></span></label>
 	</template>
 	<template id="tpl-toggle-row">
 		<label class="property-row is-toggle">
@@ -2745,8 +2552,8 @@
 	<template id="tpl-gradient-editor">
 		<div class="effect-gradient-editor carded-subsection" hidden>
 			<div class="property-pair-group effect-stack-row gradient-option-rows">
-				<div class="effect-option-group"><div class="property-set-label">Type</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-type="linear">Linear</button><button type="button" class="segmented-option" data-type="radial">Radial</button></div></div>
-				<div class="effect-option-group"><div class="property-set-label">Blend</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-interpolation="linear">Linear</button><button type="button" class="segmented-option" data-interpolation="smooth">Smooth</button><button type="button" class="segmented-option" data-interpolation="steps">Constant</button></div></div>
+				<div class="property-row is-stacked"><div class="property-label">Type</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-type="linear">Linear</button><button type="button" class="segmented-option" data-type="radial">Radial</button></div></div>
+				<div class="property-row is-stacked"><div class="property-label">Blend</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-interpolation="linear">Linear</button><button type="button" class="segmented-option" data-interpolation="smooth">Smooth</button><button type="button" class="segmented-option" data-interpolation="steps">Constant</button></div></div>
 			</div>
 			<div class="property-set-label">Stops</div>
 			<div class="gradient-stops-box">
@@ -2772,23 +2579,23 @@
 			<div data-transform-action-row></div>
 		</div>
 		<div class="subsection-content-group transform-panel" data-transform-card>
-			<div class="subsection-title transform-panel-title"><span>Transform</span><div class="transform-panel-title-actions"><label class="checkbox-group transform-chip" data-transform-lock title="Lock aspect ratio when editing size"><input type="checkbox" data-transform-role="proportional" checked aria-label="Lock aspect ratio"><span>Lock Aspect</span></label></div></div>
+			<div class="subsection-title transform-panel-title"><span>Transform</span><div class="transform-panel-title-actions"><label class="property-header-switch transform-chip" data-transform-lock title="Lock aspect ratio when editing size"><input type="checkbox" data-transform-role="proportional" checked aria-label="Lock aspect ratio"><span>Lock Aspect</span></label></div></div>
 			<div class="transform-grid">
-				<div class="functional-control-group"><div class="property-set-label">Position</div><div data-transform-number-pair="position"></div></div>
-				<div class="functional-control-group">
+				<div class="property-set"><div class="property-set-label">Position</div><div data-transform-number-pair="position"></div></div>
+				<div class="property-set">
 					<div class="property-set-label">Size</div>
 					<div data-transform-number-pair="size"></div>
 					<div class="property-row transform-scale-control transform-scale-x" data-transform-scale-readout><span class="property-label">Scale X</span><input type="range" data-transform-role="scaleX"><span class="property-value" data-transform-role="scaleXValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleX"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
 					<div class="property-row transform-scale-control transform-scale-y" data-transform-scale-readout><span class="property-label">Scale Y</span><input type="range" data-transform-role="scaleY"><span class="property-value" data-transform-role="scaleYValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleY"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
 				</div>
-				<div class="functional-control-group"><div class="property-set-label">Rotation</div><div class="property-row"><span class="property-label">Angle</span><input type="range" data-transform-role="rotation"><span class="property-value" data-transform-role="rotationValue">0&deg;</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetRotation"><svg class="icon"><use href="#icon-undo"></use></svg></button></div></div>
+				<div class="property-set"><div class="property-set-label">Rotation</div><div class="property-row"><span class="property-label">Angle</span><input type="range" data-transform-role="rotation"><span class="property-value" data-transform-role="rotationValue">0&deg;</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetRotation"><svg class="icon"><use href="#icon-undo"></use></svg></button></div></div>
 				<div class="transform-panel-footer"><button class="btn-simple transform-reset-all" type="button" data-transform-role="resetTransform">Reset Transform</button></div>
 			</div>
 		</div>
 		<div class="subsection-content-group transform-panel" data-transform-align>
 			<div class="subsection-title">Align</div>
-			<div class="transform-control-group functional-control-group"><div class="property-set-label property-set-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align left to canvas" data-transform-role="alignLeft">Left</button><button class="segmented-option" type="button" title="Center horizontally on canvas" data-transform-role="alignCenterX">Center</button><button class="segmented-option" type="button" title="Align right to canvas" data-transform-role="alignRight">Right</button></div></div>
-			<div class="transform-control-group functional-control-group"><div class="property-set-label property-set-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align top to canvas" data-transform-role="alignTop">Top</button><button class="segmented-option" type="button" title="Center vertically on canvas" data-transform-role="alignCenterY">Middle</button><button class="segmented-option" type="button" title="Align bottom to canvas" data-transform-role="alignBottom">Bottom</button></div></div>
+			<div class="transform-control-group property-set"><div class="property-set-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align left to canvas" data-transform-role="alignLeft">Left</button><button class="segmented-option" type="button" title="Center horizontally on canvas" data-transform-role="alignCenterX">Center</button><button class="segmented-option" type="button" title="Align right to canvas" data-transform-role="alignRight">Right</button></div></div>
+			<div class="transform-control-group property-set"><div class="property-set-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align top to canvas" data-transform-role="alignTop">Top</button><button class="segmented-option" type="button" title="Center vertically on canvas" data-transform-role="alignCenterY">Middle</button><button class="segmented-option" type="button" title="Align bottom to canvas" data-transform-role="alignBottom">Bottom</button></div></div>
 		</div>
 		<div class="subsection-content-group transform-panel" data-transform-flip><div class="subsection-title">Flip</div><div class="property-toggle-list"><label class="property-row is-toggle"><span class="property-label" title="Flip horizontally">Flip H</span><input type="checkbox" data-transform-role="flipX"><span class="property-switch" aria-hidden="true"></span></label><label class="property-row is-toggle"><span class="property-label" title="Flip vertically">Flip V</span><input type="checkbox" data-transform-role="flipY"><span class="property-switch" aria-hidden="true"></span></label></div></div>
 		<div class="subsection-content-group transform-panel" data-transform-opacity><div class="subsection-title">Appearance</div><div class="property-row"><span class="property-label">Opacity</span><input type="range" data-transform-role="opacity"><span class="property-value" data-transform-role="opacityValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetOpacity"><svg class="icon"><use href="#icon-undo"></use></svg></button></div></div>
@@ -2822,7 +2629,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=5341d727"></script>
+	<script src="js/core/config.js?v=97f5ed30"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
 	<script src="js/core/commands.js?v=263e9de6"></script>
@@ -2834,7 +2641,7 @@
 	<!-- Utils -->
 	<script src="js/core/format.js?v=cf57fbf6"></script>
 	<script src="js/core/layer-elements.js?v=32584e3b"></script>
-	<script src="js/ui/slider.js?v=3b4c1283"></script>
+	<script src="js/ui/slider.js?v=a9669643"></script>
 	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
 	<script src="js/ui/doc-modal.js?v=96d2362b"></script>
 	<script src="js/ui/gallery.js?v=9568db2b"></script>
@@ -2844,17 +2651,17 @@
 	<script src="js/effects/PARITY.js?v=10823f7f"></script>
 	<script src="js/effects/palette-analysis.js?v=0394371e"></script>
 	<script src="js/effects/pixel-effects.js?v=c68cfdfc"></script>
-	<script src="js/effects/effect-source.js?v=0a33d343"></script>
+	<script src="js/effects/effect-source.js?v=ef695f2e"></script>
 	<script src="js/effects/slot-effects.js?v=b10d7733"></script>
-	<script src="js/ui/panel-renderer.js?v=7af88ed0"></script>
+	<script src="js/ui/panel-renderer.js?v=972d5659"></script>
 	<script src="js/ui/settings-store.js?v=94ba4d01"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
 	<script src="js/ui/editor-settings.js?v=87692bc7"></script>
 	<script src="js/ui/editor-panels.js?v=2b18172f"></script>
-	<script src="js/ui/editor-disclosures.js?v=ed86891e"></script>
-	<script src="js/ui/panel-resize.js"></script>
-	<script src="js/ui/transform-panel.js?v=6330ed7e"></script>
+	<script src="js/ui/editor-disclosures.js?v=fb08237f"></script>
+	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
+	<script src="js/ui/transform-panel.js?v=715534bd"></script>
 	<script src="js/transforms/editor-transform.js?v=43457e31"></script>
 	<script src="js/ui/document-start.js?v=c4ce37a0"></script>
 		<script src="js/ui/modals-wiring.js?v=1084cde4"></script>
@@ -2862,7 +2669,7 @@
 	<script src="js/ui/canvas-gestures.js?v=569d61e7"></script>
 	<script src="js/ui/canvas-size.js?v=53305937"></script>
 	<script src="js/core/canvas-resize.js?v=fd22383b"></script>
-		<script src="js/ui/hints.js?v=a9e46b7c"></script>
+		<script src="js/ui/hints.js?v=c40adaef"></script>
 	<script src="js/ui/picker-session.js?v=164f3036"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=245d036a"></script>
 	<script src="js/ui/modal-filter.js?v=2a5c14d8"></script>
@@ -2883,7 +2690,7 @@
 	<script src="js/classes/MaskCompositor.js?v=19c2994c"></script>
 	<script src="js/classes/ShapeLibrary.js?v=2d3e5618"></script>
 	<script src="js/classes/BrushLibrary.js?v=825c3c31"></script>
-	<script src="js/classes/MaskEditor.js?v=1af1b8b0"></script>
+	<script src="js/classes/MaskEditor.js?v=0959c402"></script>
 
 	<!-- Layers-->
 	<script src="js/classes/LayerManager.js?v=a96a75a7"></script>
@@ -2894,17 +2701,17 @@
 	<script src="js/classes/BrushTipManager.js?v=68f1cea1"></script>
 	<script src="js/classes/LayerTransform.js?v=8ac8c72f"></script>
 	<script src="js/classes/GlitterManager.js?v=3c3bfe93"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=0fa3641a"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=b05ee77d"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=e0f15cce"></script>
-	<script src="js/classes/TextGlitterManager.js?v=cd718d57"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=c2132469"></script>
+	<script src="js/classes/TextGlitterManager.js?v=44bdebd7"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=e42d3aa3"></script>
 	<script src="js/classes/StickerManager.js?v=fc0abfac"></script>
 	<script src="js/classes/GroupTransformManager.js?v=f19f8e9d"></script>
 
 		<script src="js/classes/MobileManager.js?v=3e178244"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=190fd544"></script>
+	<script src="js/app.js?v=283bc6d7"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

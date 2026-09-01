@@ -214,14 +214,6 @@
 	.inline-processing-spinner { animation: none; }
 }
 
-.effect-option-group {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-md);
-	min-width: 0;
-	width: 100%;
-}
-
 .effect-option-select { width: 100%; }
 
 .pixel-effects-card {
@@ -237,7 +229,7 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: var(--spacing-sm);
 
-		.effect-option-group {
+		.property-set {
 			display: grid;
 			gap: var(--spacing-xs);
 		}
@@ -283,7 +275,7 @@
 	}
 
 	&[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)) {
-		&:not(.is-collapsed) > .text-effect-controls { display: flex; }
+		&:not(.is-collapsed) > .property-module-content { display: flex; }
 
 		&:not(.is-collapsed) > :not(.subsection-title) {
 			opacity: var(--disabled-opacity);
@@ -315,11 +307,10 @@
 .subsection-title {
 	gap: var(--spacing-sm);
 
-	>.checkbox-group { margin-left: auto; }
+	>.property-header-switch { margin-left: auto; }
 }
 
-
-.checkbox-group {
+.property-header-switch {
 	display: inline-flex;
 	position: relative;
 	align-items: center;
@@ -378,7 +369,7 @@
 	}
 }
 
-.subsection-title>.checkbox-group {
+.subsection-title>.property-header-switch {
 	min-height: var(--control-height-compact);
 
 	>span {
@@ -387,19 +378,7 @@
 	}
 }
 
-// Toggle lists are single-column controls: every choice gets the same full
-// width whether the list contains one option or several.
-.settings-toggle-list,
-.tool-options-group.settings-toggle-list {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr);
-	gap: var(--spacing-sm);
-	width: 100%;
-
-	>.checkbox-group { width: 100%; }
-}
-
-.transform-panel .checkbox-group>span { white-space: nowrap; }
+.transform-panel .property-header-switch>span { white-space: nowrap; }
 
 
 // Rule C: the ONE uppercase level. L1 group titles stay shouty so they separate

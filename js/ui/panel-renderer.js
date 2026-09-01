@@ -250,11 +250,18 @@ function buildSegmented(entries, options = {}) {
 	entries.forEach((entry) => {
 		const button = tplClone('tpl-segmented-option');
 		if (entry.id) button.id = entry.id;
-		button.textContent = entry.label;
+		if (entry.contentTag) {
+			const content = document.createElement(entry.contentTag);
+			content.textContent = entry.label;
+			button.appendChild(content);
+		} else {
+			button.textContent = entry.label;
+		}
 		if (entry.active) button.classList.add('active');
 		if (entry.mode) button.dataset.mode = entry.mode;
 		else if (entry.value != null) button.dataset.value = entry.value;
 		button.dataset.role = entry.role || (entry.mode ? `source-${entry.mode}` : 'segmented-option');
+		Object.entries(entry.attrs || {}).forEach(([name, value]) => button.setAttribute(name, value));
 		button.setAttribute('aria-pressed', entry.active ? 'true' : 'false');
 		group.appendChild(button);
 	});
@@ -263,14 +270,10 @@ function buildSegmented(entries, options = {}) {
 
 function buildOptionGroup(label, children) {
 	const group = tplClone('tpl-option-group');
-	const labelNode = group.querySelector('.property-set-label');
+	const labelNode = group.querySelector('.property-label');
 	labelNode.textContent = label;
-	labelNode.className = 'property-label';
 	children.forEach((child) => group.appendChild(child));
-	// A label plus one control IS a property row (R1/R2) - not a container
-	// level of its own. Keeping .effect-option-group as well preserves the
-	// selectors BaseBackgroundManager and the gradient editor rely on.
-	group.classList.add('property-row');
+	// A label plus one control is a property row (R1/R2), never a set.
 	const options = children[0]?.querySelectorAll?.('.segmented-option')?.length || 0;
 	const isWide = options === 0 || options > 2 || children.length > 1;
 	if (isWide) group.classList.add('is-stacked');
@@ -405,8 +408,8 @@ function buildPrimaryRow(prefix, ids = {}) {
 // label, never as a full-width button of its own. `reset` supplies the id and
 // wording; the affordance itself is identical everywhere.
 function buildAdvancedControlGroup(title, className, reset = null) {
-	const group = panelDiv(`advanced-control-group ${className}`);
-	const heading = panelDiv('property-set-label property-set-label');
+	const group = panelDiv(`property-set ${className}`);
+	const heading = panelDiv('property-set-label');
 	heading.textContent = title;
 	if (reset) {
 		const button = document.createElement('button');
@@ -470,9 +473,8 @@ function buildPaintSlotCard(slot) {
 	if (slot.toggle) {
 		card.dataset.effectCard = '';
 		const toggle = tplClone('tpl-checkbox');
-		// R5: the enable control leads the module header as a switch. It keeps
-		// .checkbox-group so every existing selector (effect-toggle binding,
-		// title-control click guard) still matches.
+		// R5: the enable control leads the module header as the shared compact
+		// header switch.
 		toggle.classList.add('effect-switch');
 		toggle.title = `Enable ${slot.title}`;
 		const input = toggle.querySelector('input');
@@ -481,7 +483,7 @@ function buildPaintSlotCard(slot) {
 		input.setAttribute('aria-label', `Enable ${slot.title}`);
 		toggle.querySelector('span').textContent = 'Enabled';
 		card.querySelector('.subsection-title').appendChild(toggle);
-		container = panelDiv('text-effect-controls');
+		container = panelDiv('property-module-content');
 		container.id = `${slot.idPrefix}Controls`;
 		card.appendChild(container);
 	}
@@ -583,7 +585,7 @@ function buildPanelItem(item, schema) {
 			return content;
 		}
 		case 'actionRow': {
-			const row = addPanelClasses(panelDiv('settings-action-row'), item.classes);
+			const row = addPanelClasses(panelDiv('property-actions'), item.classes);
 			item.actions.forEach((action) => {
 				const button = document.createElement('button');
 				button.type = 'button';
@@ -625,6 +627,7 @@ function buildPanelItem(item, schema) {
 			const select = document.createElement('select');
 			select.id = item.id;
 			select.className = 'effect-option-select';
+			addPanelClasses(select, item.classes);
 			select.setAttribute('aria-label', item.label || item.visibleLabel);
 			item.options.forEach((entry) => {
 				const option = document.createElement('option');
@@ -634,6 +637,18 @@ function buildPanelItem(item, schema) {
 				select.appendChild(option);
 			});
 			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [select]) : select;
+		}
+		case 'textarea': {
+			const textarea = document.createElement('textarea');
+			textarea.id = item.id;
+			textarea.rows = item.rows || 4;
+			if (item.maxlength) textarea.maxLength = item.maxlength;
+			if (item.placeholder) textarea.placeholder = item.placeholder;
+			addPanelClasses(textarea, item.controlClasses);
+			if (!item.classes) return textarea;
+			const wrapper = addPanelClasses(panelDiv(), item.classes);
+			wrapper.appendChild(textarea);
+			return wrapper;
 		}
 		case 'radioSegmented': {
 			const group = tplClone('tpl-segmented');
@@ -692,57 +707,6 @@ function buildPanelItem(item, schema) {
 			const host = panelDiv('transform-panel-host');
 			host.id = `${schema.prefix}TransformPanelHost`;
 			return host;
-		}
-		// Composes ONE block out of elements lifted from a legacy template,
-		// dropping the source cards' own titles and wrappers. This is how the
-		// text panel's eight hand-authored cards collapse into four blocks
-		// without touching TextGlitterManager - every id comes across intact.
-		case 'templateBlock': {
-			const template = document.getElementById(item.template);
-			if (!template) throw new Error(`panel-renderer: missing template "${item.template}"`);
-			const card = tplClone('tpl-card');
-			if (item.id) card.id = item.id;
-			addPanelClasses(card, item.classes);
-			const title = card.querySelector('.subsection-title');
-			if (item.title) {
-				title.querySelector(':scope > span').textContent = item.title;
-				card.classList.add('has-subsection-title');
-			} else {
-				title.remove();
-			}
-			const body = panelDiv('subsection-card-body');
-			const target = item.pair ? panelDiv('property-pair-group') : body;
-			if (item.pair) body.appendChild(target);
-			item.items.forEach((entry) => {
-				const found = template.content.querySelector(entry.selector);
-				if (!found) throw new Error(`panel-renderer: missing "${entry.selector}" in ${item.template}`);
-				const node = entry.row ? found.closest('.property-row') || found : found;
-				const clone = node.cloneNode(true);
-				if (entry.classes) addPanelClasses(clone, entry.classes);
-				// A control without a label is the one thing the row system does
-				// not permit: `label` wraps the clone in a property row so a
-				// lifted legacy control is named like every other setting.
-				if (entry.label) {
-					const row = panelDiv('property-row');
-					const options = clone.querySelectorAll?.('.segmented-option')?.length || 0;
-					// Inline where the control fits beside its label: a select, or a
-					// segmented with at most two options. Everything else stacks.
-					const inline = clone.tagName === 'SELECT' || (options > 0 && options <= 2);
-					if (!inline) row.classList.add('is-stacked');
-					const label = panelDiv('property-label');
-					label.textContent = entry.label;
-					row.append(label, clone);
-					target.appendChild(row);
-					return;
-				}
-				target.appendChild(clone);
-			});
-			body.querySelectorAll('input[type="range"][id]').forEach((input) => {
-				const spec = CONFIG.ui.sliders[input.id];
-				if (spec) applySliderSpec(input, spec);
-			});
-			card.appendChild(body);
-			return card;
 		}
 		case 'templateCard': {
 			const template = document.getElementById(item.template);
@@ -839,7 +803,7 @@ function dedupeBlockTitle(card) {
 	if (card.classList.contains('subsection-section-group') || card.classList.contains('effects-stack')) return card;
 	if (card.dataset.effectCard !== undefined || card.dataset.collapsible !== undefined) return card;
 	const title = card.querySelector(':scope > .subsection-title');
-	if (!title || title.querySelector('input, button, select, .checkbox-group')) return card;
+	if (!title || title.querySelector('input, button, select')) return card;
 	const rows = card.querySelectorAll('.property-row, .property-pair-group > .property-row');
 	if (rows.length !== 1) return card;
 	const controls = card.querySelectorAll('input, select, textarea');
@@ -858,7 +822,7 @@ function dedupeBlockTitle(card) {
 function ensureSubsectionCardBody(card) {
 	if (!card?.classList?.contains('subsection-content-group')) return card;
 	if (card.classList.contains('subsection-section-group') || card.classList.contains('effects-stack')) return card;
-	if (card.querySelector(':scope > .subsection-card-body, :scope > .paint-slot-main, :scope > .text-effect-controls')) return card;
+	if (card.querySelector(':scope > .subsection-card-body, :scope > .paint-slot-main, :scope > .property-module-content')) return card;
 	const children = Array.from(card.children);
 	const content = children.filter((child) =>
 		!child.classList.contains('subsection-title') &&
@@ -886,7 +850,7 @@ function syncPanelEffectToggle(toggle, enabled) {
 	card.dataset.effectEnabled = String(next);
 	if (previous == null || String(next) !== previous) card.classList.toggle('is-collapsed', !next);
 	card.querySelector(':scope > .subsection-title')?.setAttribute('aria-expanded', card.classList.contains('is-collapsed') ? 'false' : 'true');
-	card.querySelector(':scope > .text-effect-controls')?.classList.toggle('visible', next);
+	card.querySelector(':scope > .property-module-content')?.classList.toggle('visible', next);
 }
 
 // Availability is separate from enablement: a card can retain enabled state
@@ -1104,7 +1068,7 @@ function normalizeTransformPanelHost(editor, prefix, externalActions = null) {
 
 	if (actions && reset) {
 		const footer = reset.closest('.transform-panel-footer');
-		const row = actions.querySelector('.settings-action-row, .tool-options-group');
+		const row = actions.querySelector('.property-actions, .tool-options-group');
 		if (row) row.appendChild(reset);
 		footer?.remove();
 	}

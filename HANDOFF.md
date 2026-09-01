@@ -59,10 +59,16 @@ a switch.
 Measured: text panel **5573 → ~3300px**, shape **4259 → ~2500px**, collapsible cards
 **16 → 2**, zero empty shells.
 
-**Still legacy — convert, don't style around:**
-1. The **gradient editor** (`tpl-gradient-editor`) — hand-authored, own spacing/headings.
-2. The **`.checkbox-group`** wrapper that header switches still ride on.
-3. `tpl-text-content` still exists as the source `templateBlock` clones from.
+**Legacy conversion completed:**
+1. The gradient editor uses standard R1/R2 property rows and shared set/spacing rules.
+2. Header booleans use `.property-header-switch`; the sidebar `.checkbox-group` is gone.
+3. Text content is schema-native; `tpl-text-content` and `templateBlock` are gone.
+4. Brush has one authoritative schema source; its replaced static implementation is gone.
+5. Shared paint slots use generic `.paint-slot-card` / `.property-module-content` names.
+
+The gutter audit now runs at 280, 320, 360, 400 and 450px, with open and mixed
+collapse states under both dark and light theme tokens. Empty semantic containers are a
+hard failure in the panel audit.
 
 ## How to work on this (learned the hard way)
 

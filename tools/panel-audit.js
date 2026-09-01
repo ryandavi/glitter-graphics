@@ -120,9 +120,14 @@ async function captureMetrics(page) {
 			const s = document.getElementById(id);
 			if (!s) return;
 			const visible = (el) => {
-				const r = el.getBoundingClientRect();
-				const cs = getComputedStyle(el);
-				return cs.display !== 'none' && cs.visibility !== 'hidden' && !el.hidden && r.height > 0;
+				if (!el.getClientRects().length) return false;
+				let node = el;
+				while (node && node !== document.body) {
+					const cs = getComputedStyle(node);
+					if (cs.display === 'none' || cs.visibility === 'hidden' || node.hidden) return false;
+					node = node.parentElement;
+				}
+				return true;
 			};
 			const boxes = Array.from(s.querySelectorAll('*')).filter((n) => {
 				const cs = getComputedStyle(n);
@@ -138,7 +143,12 @@ async function captureMetrics(page) {
 			});
 			// containers rendering with no visible meaningful content
 			let shells = 0;
-			s.querySelectorAll('div').forEach((el) => {
+			const shellCandidates = [
+				'.subsection-content-group', '.subsection-card-body', '.paint-slot-main',
+				'.property-set', '.property-toggle-list', '.settings-action-row',
+				'.property-actions', '.advanced-disclosure-content'
+			].join(',');
+			s.querySelectorAll(shellCandidates).forEach((el) => {
 				if (!visible(el)) return;
 				const kids = Array.from(el.children).filter((c) => !/label|title/.test(c.className));
 				if (!kids.length) return;
@@ -220,6 +230,9 @@ function diff(current, baseline) {
 		});
 	});
 	current.errors.forEach((e) => problems.push(`RUNTIME ${e}`));
+	Object.entries(current.metrics).forEach(([section, metrics]) => {
+		if (metrics.shells > 0) problems.push(`EMPTY SHELLS ${section}: ${metrics.shells}`);
+	});
 	return { problems, notes };
 }
 

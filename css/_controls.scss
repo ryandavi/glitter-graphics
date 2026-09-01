@@ -257,7 +257,7 @@
 
 	// The input stays in the tab order and the accessibility tree — it is the
 	// control. `display: none` would remove both, leaving a switch that only a
-	// mouse can reach. Same contract as `.checkbox-group`.
+	// mouse can reach. Same contract as the compact header switch.
 	>input[type="checkbox"] {
 		@include visually-hidden-control;
 

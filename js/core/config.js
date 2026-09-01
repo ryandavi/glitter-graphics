@@ -656,8 +656,8 @@ const CONFIG = deepFreeze({
 			borderDotSpacing: { label: 'Dot Spacing', unit: 'px', min: 1, max: 60, value: 10 },
 			shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
 			shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
-			threshold: { label: 'Threshold', unit: '', min: 0, max: 255, value: 50 },
-			feather: { label: 'Feather', unit: '', min: 0, max: 50, value: 0 },
+			threshold: { label: 'Color Tolerance', unit: '', min: 0, max: 255, value: 50 },
+			feather: { label: 'Edge Feather', unit: '', min: 0, max: 50, value: 0 },
 			textFontSize: { label: 'Font Size', unit: 'px', min: 12, max: 256, value: 64 },
 			textLetterSpacing: { label: 'Letter Spacing', unit: 'px', min: -20, max: 40, value: 0 },
 			textLineHeight: { label: 'Line Height', unit: '%', min: 50, max: 250, value: 110 },
@@ -1192,13 +1192,13 @@ const PANEL_SCHEMAS = {
 					] },
 					{ kind: 'slider', id: 'autoGlitterColorCount', slider: 'autoGlitterColorCount' },
 					{ kind: 'slider', id: 'autoGlitterMergeDistinctness', slider: 'autoGlitterMergeDistinctness' },
-					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'settings-row-label-desc' }
+					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'property-note' }
 				] }
 			] },
 			{ title: 'Color Matches', region: 'scroll', items: [
 				{ kind: 'card', classes: 'auto-glitter-review', items: [
 					{ kind: 'host', id: 'autoGlitterStatus', classes: 'auto-glitter-status', attrs: { role: 'status', 'aria-live': 'polite' }, text: 'Finding the image\'s distinct colors…' },
-					{ kind: 'host', id: 'autoGlitterResults', classes: 'auto-glitter-results', attrs: { 'aria-label': 'Detected color regions and glitter matches' } }
+					{ kind: 'host', id: 'autoGlitterResults', classes: 'property-list auto-glitter-results', attrs: { 'aria-label': 'Detected color regions and glitter matches' } }
 				] }
 			] },
 			{ title: 'Advanced', region: 'scroll', items: [
@@ -1266,7 +1266,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'slider', id: 'pixelEffectsDetail', slider: 'pixelEffectsDetail' },
 						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsCleanEdges', label: 'Clean Edges', checked: true, title: 'Absorb tiny connected regions into their neighbors' }] }
 					] },
-					{ kind: 'content', id: 'pixelEffectsDitherControls', classes: 'pixel-effects-controls pixel-effects-dither-controls', hidden: true, items: [
+					{ kind: 'content', id: 'pixelEffectsDitherControls', classes: 'property-block pixel-effects-controls pixel-effects-dither-controls', hidden: true, items: [
 						{ kind: 'select', id: 'pixelEffectsAlgorithm', label: 'Dither algorithm', visibleLabel: 'Algorithm', options: [
 							{ label: 'Bayer', value: 'bayer', active: true }, { label: 'Floyd–Steinberg', value: 'floyd' }, { label: 'Atkinson', value: 'atkinson' }, { label: 'Halftone', value: 'halftone' }
 						] },
@@ -1281,7 +1281,7 @@ const PANEL_SCHEMAS = {
 						] },
 						{ kind: 'card', title: 'Shimmer', classes: 'pixel-effects-control-section', items: [
 							{ kind: 'checkboxList', items: [{ id: 'pixelEffectsShimmer', label: 'Animate Dither', title: 'Animate the Bayer or Halftone pattern in the preview and exported GIF' }] },
-							{ kind: 'host', id: 'pixelEffectsShimmerHint', classes: 'settings-row-label-desc', text: 'Bayer and Halftone only. Animates the preview and exported GIF; may increase file size.' }
+							{ kind: 'host', id: 'pixelEffectsShimmerHint', classes: 'property-note', text: 'Bayer and Halftone only. Animates the preview and exported GIF; may increase file size.' }
 						] }
 					] }
 				] },
@@ -1397,6 +1397,7 @@ const PANEL_SCHEMAS = {
 						] }
 					] },
 					{ kind: 'card', title: 'Refine Selection', items: [
+						{ kind: 'host', id: 'selectionRefineNote', classes: 'property-note', text: 'Color Tolerance includes colors similar to the one you picked. Edge Feather softens the selection boundary.' },
 						{ kind: 'slider', id: 'threshold', slider: 'threshold' },
 						{ kind: 'slider', id: 'feather', slider: 'feather' }
 					] }
@@ -1443,34 +1444,51 @@ const PANEL_SCHEMAS = {
 		prefix: 'text',
 		sectionPrefix: 'textSettings',
 		mobileKey: 'text',
-		sourceTemplate: 'tpl-text-content',
 		section: { id: 'textSettingsSection', icon: 'text', iconName: 'Text', title: 'Text Properties' },
 		groups: [
-			// Eight legacy cards composed into four blocks. Order follows the way
-			// text is actually authored: type it, choose the face, set the metrics,
-			// then place it.
+			// Text is schema-native like every other property panel: type it,
+			// choose the face, set the metrics, then place it.
 			{ title: 'Content', items: [
-				{ kind: 'templateBlock', template: 'tpl-text-content', title: 'Text', items: [
-					{ selector: '.text-input-group' },
-					{ selector: '.text-box-mode-group', label: 'Mode' },
-					{ selector: '#textBoxModeHint' },
-					{ selector: '.text-fit-box-group' }
+				{ kind: 'card', title: 'Text', items: [
+					{ kind: 'textarea', id: 'textLayerInput', classes: 'text-input-group', rows: 4, maxlength: 200, placeholder: 'Type your glitter text' },
+					{ kind: 'segmented', visibleLabel: 'Mode', label: 'Text box mode', classes: 'text-box-mode-group', options: [
+						{ label: 'Point', active: true, attrs: { 'data-text-box-mode': 'auto' } },
+						{ label: 'Box', attrs: { 'data-text-box-mode': 'fixed' } }
+					] },
+					{ kind: 'host', id: 'textBoxModeHint', classes: 'text-box-hint', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
+					{ kind: 'actionRow', classes: 'text-fit-box-group', actions: [
+						{ id: 'textFitBoxToContent', label: 'Fit to Text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
+					] }
 				] },
-				{ kind: 'templateBlock', template: 'tpl-text-content', title: 'Font', items: [
-					{ selector: '#textFontPicker' },
-					{ selector: '.text-style-group', label: 'Style' },
-					{ selector: '#textCaseSelect', label: 'Case' },
-					{ selector: '#textFontSize', row: true }
+				{ kind: 'card', title: 'Font', items: [
+					{ kind: 'host', id: 'textFontPicker', classes: 'text-font-picker' },
+					{ kind: 'segmented', visibleLabel: 'Style', label: 'Text style', classes: 'text-style-group', options: [
+						{ id: 'textFontBold', label: 'Bold', contentTag: 'strong' },
+						{ id: 'textFontItalic', label: 'Italic', contentTag: 'em' }
+					] },
+					{ kind: 'select', id: 'textCaseSelect', label: 'Text case', visibleLabel: 'Case', classes: 'text-case-select', options: [
+						{ value: 'none', label: 'As Typed' }, { value: 'upper', label: 'UPPERCASE' },
+						{ value: 'lower', label: 'lowercase' }, { value: 'title', label: 'Title Case' }
+					] },
+					{ kind: 'slider', id: 'textFontSize', slider: 'textFontSize' }
 				] },
-				{ kind: 'templateBlock', template: 'tpl-text-content', title: 'Spacing', pair: true, items: [
-					{ selector: '#textLetterSpacing', row: true },
-					{ selector: '#textLineHeight', row: true }
+				{ kind: 'card', title: 'Spacing', items: [
+					{ kind: 'twoColumn', items: [
+						{ kind: 'slider', id: 'textLetterSpacing', slider: 'textLetterSpacing' },
+						{ kind: 'slider', id: 'textLineHeight', slider: 'textLineHeight', classes: 'text-line-height-row' }
+					] }
 				] },
-				{ kind: 'templateBlock', template: 'tpl-text-content', title: 'Alignment', items: [
-					// The wrappers carry the Horizontal / Vertical set labels; two bare
-					// segmented rows would not say which axis they control.
-					{ selector: '.functional-control-group:has(.text-align-group)' },
-					{ selector: '.functional-control-group:has(.text-valign-group)' }
+				{ kind: 'card', title: 'Alignment', items: [
+					{ kind: 'segmented', visibleLabel: 'Horizontal', label: 'Horizontal text alignment', classes: 'text-align-group', options: [
+						{ label: 'Left', active: true, attrs: { 'data-text-align': 'left' } },
+						{ label: 'Center', attrs: { 'data-text-align': 'center' } },
+						{ label: 'Right', attrs: { 'data-text-align': 'right' } }
+					] },
+					{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical text alignment', classes: 'text-valign-group', options: [
+						{ label: 'Top', active: true, attrs: { 'data-text-valign': 'top' } },
+						{ label: 'Middle', attrs: { 'data-text-valign': 'middle' } },
+						{ label: 'Bottom', attrs: { 'data-text-valign': 'bottom' } }
+					] }
 				] }
 			] },
 			{ title: 'Appearance', adoptTransformOpacity: true, items: [

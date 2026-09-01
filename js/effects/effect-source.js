@@ -189,7 +189,7 @@ function createEffectCanvasGradient(ctx, gradient, rect) {
 }
 
 function syncPaintSlotSourceUI(sourceButton, mode) {
-	const slot = sourceButton?.closest('.text-effect-subsection') || sourceButton?.closest('.subsection-content-group');
+	const slot = sourceButton?.closest('.paint-slot-card') || sourceButton?.closest('.subsection-content-group');
 	if (!slot) return;
 	const normalizedMode = ['image', 'none', 'glitter', 'solid', 'gradient'].includes(mode) ? mode : 'solid';
 	slot.dataset.paintMode = normalizedMode;
@@ -285,12 +285,12 @@ function installEffectGradientEditor(options) {
 			inputs[1].value = Math.round(stop.offset * 100);
 			inputs[2].value = Math.round(stop.alpha * 100);
 			const values = row.querySelectorAll('.gradient-stop-value');
-			values[0].textContent = `${inputs[1].value}%`;
-			values[1].textContent = `${inputs[2].value}%`;
+			values[0].innerHTML = formatUnit(inputs[1].value, '%');
+			values[1].innerHTML = formatUnit(inputs[2].value, '%');
 			row.querySelector('button').disabled = data.gradient.stops.length <= 2;
 			inputs[0].addEventListener('input', () => { stop.color = inputs[0].value; syncPreview(data.gradient); update(false); });
-			inputs[1].addEventListener('input', () => { stop.offset = Number(inputs[1].value) / 100; inputs[1].nextElementSibling.textContent = `${inputs[1].value}%`; syncPreview(data.gradient); update(false); });
-			inputs[2].addEventListener('input', () => { stop.alpha = Number(inputs[2].value) / 100; inputs[2].nextElementSibling.textContent = `${inputs[2].value}%`; syncPreview(data.gradient); update(false); });
+			inputs[1].addEventListener('input', () => { stop.offset = Number(inputs[1].value) / 100; inputs[1].nextElementSibling.innerHTML = formatUnit(inputs[1].value, '%'); syncPreview(data.gradient); update(false); });
+			inputs[2].addEventListener('input', () => { stop.alpha = Number(inputs[2].value) / 100; inputs[2].nextElementSibling.innerHTML = formatUnit(inputs[2].value, '%'); syncPreview(data.gradient); update(false); });
 			inputs.forEach((input) => input.addEventListener('change', () => { update(true); render(); }));
 			row.querySelector('button').addEventListener('click', () => { data.gradient.stops.splice(index, 1); update(true); render(); });
 			return row;

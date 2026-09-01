@@ -165,7 +165,7 @@
 	color: var(--color-text-tertiary);
 }
 
-.text-effect-controls {
+.property-module-content {
 	display: none;
 	flex-direction: column;
 	gap: 0;
@@ -177,7 +177,7 @@
 	}
 }
 
-.text-effect-subsection {
+.paint-slot-card {
 	gap: 0;
 }
 
@@ -192,7 +192,7 @@
 		padding: 0 var(--spacing-xs);
 	}
 
-	>.text-effect-subsection,
+	>.paint-slot-card,
 	>.subsection-content-group,
 	>.transform-panel-host {
 		margin-top: 0;
@@ -219,8 +219,7 @@
 	grid-template-columns: 1fr !important;
 }
 
-.effect-stack-row > .effect-option-group > .segmented-control,
-.effect-option-group > .segmented-control {
+.effect-stack-row > .property-row > .segmented-control {
 	width: 100%;
 }
 
@@ -326,7 +325,7 @@
 
 // Header controls (Enabled/Global/Proportional) cluster against the right
 // edge next to the collapse chevron instead of floating mid-title. Bare rule
-// on purpose: the effect cards (.text-effect-subsection) are nested, not
+// on purpose: the effect cards (.paint-slot-card) are nested, not
 // direct children of .settings-subsection, so the scoped rule above misses them.
 // Schema effect cards share one enable contract. Disabled cards stay
 // collapsible; manually expanding one reveals its saved controls as an inert
