@@ -22,7 +22,7 @@ async function main() {
 			const effects = document.querySelector('[data-panel-group="Effects"]');
 			return {
 				hasLegacyGroup: Boolean(document.querySelector('[data-panel-group="Palette Effects"]')),
-				cards: [...effects.querySelectorAll(':scope > .subsection-content-group > .subsection-title > span:first-child')].map((node) => node.textContent),
+				cards: [...effects.querySelectorAll(':scope > .panel-group-content > .panel-group-blocks > .subsection-content-group > .subsection-title > span:first-child')].map((node) => node.textContent),
 				modeCount: document.querySelectorAll('#pixelEffectsPaletteMode > .segmented-option').length,
 				styleCount: document.querySelectorAll('#pixelEffectsPaletteStyle > .segmented-option').length,
 				algorithmTag: document.getElementById('pixelEffectsAlgorithm').tagName,

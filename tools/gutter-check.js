@@ -68,7 +68,7 @@ const CHROME = process.env.CHROME_PATH
 				const value = parseFloat(cs.paddingLeft) + parseFloat(cs.marginLeft);
 				return value >= gutter ? value : 0;
 			};
-			const label = (el) => `${el.tagName.toLowerCase()}.${(el.className || '').toString().trim().split(/\s+/).slice(0, 3).join('.')}`;
+			const label = (el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}.${(el.className || '').toString().trim().split(/\s+/).slice(0, 3).join('.')}`;
 			const out = [];
 			document.querySelectorAll('#designPanel .settings-subsection').forEach((root) => {
 				root.querySelectorAll('*').forEach((el) => {
@@ -160,6 +160,49 @@ const CHROME = process.env.CHROME_PATH
 					el: label(target),
 					own: Math.round(clearance),
 					ancestor: `TOUCHES CARD BOTTOM BORDER (clearance px) in ${label(card)}`,
+					ancestorInset: 0
+				});
+			});
+
+			// Actions owns one equal inset around its buttons. If a card or wrapper
+			// adds another trailing gutter, the last button looks vertically off-
+			// centre even though the Actions rule itself is symmetric.
+			document.querySelectorAll('#designPanel .property-actions').forEach((actions) => {
+				if (!actions.getClientRects().length) return;
+				const buttons = [...actions.children].filter((child) => child.matches('button') && child.getClientRects().length);
+				if (!buttons.length) return;
+				const rect = actions.getBoundingClientRect();
+				const top = buttons[0].getBoundingClientRect().top - rect.top;
+				const bottom = rect.bottom - buttons[buttons.length - 1].getBoundingClientRect().bottom;
+				if (Math.abs(top - bottom) <= 1) return;
+				out.push({
+					el: label(actions),
+					own: Math.round(bottom),
+					ancestor: `ASYMMETRIC ACTION INSET (top ${Math.round(top)}px / bottom ${Math.round(bottom)}px)`,
+					ancestorInset: 0
+				});
+			});
+
+			document.querySelectorAll('#designPanel .subsection-content-group').forEach((card) => {
+				const cs = getComputedStyle(card);
+				if (parseFloat(cs.borderBottomWidth) < 1 || !card.getClientRects().length) return;
+				let node = card;
+				let trailingActions = null;
+				for (let depth = 0; depth < 10; depth += 1) {
+					const kids = [...node.children].filter((child) => child.getClientRects().length);
+					if (!kids.length) break;
+					node = kids[kids.length - 1];
+					if (node.classList.contains('property-actions')) trailingActions = node;
+				}
+				if (!trailingActions || !node.matches('button')) return;
+				const innerBottom = card.getBoundingClientRect().bottom - parseFloat(cs.borderBottomWidth);
+				const clearance = innerBottom - node.getBoundingClientRect().bottom;
+				const expected = parseFloat(getComputedStyle(trailingActions).paddingBottom);
+				if (Math.abs(clearance - expected) <= 1) return;
+				out.push({
+					el: label(node),
+					own: Math.round(clearance),
+					ancestor: `TRAILING ACTION HAS STACKED CARD CLEARANCE (expected ${Math.round(expected)}px) in ${label(card)}`,
 					ancestorInset: 0
 				});
 			});

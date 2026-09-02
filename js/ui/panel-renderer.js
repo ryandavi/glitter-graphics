@@ -268,8 +268,9 @@ function buildSegmented(entries, options = {}) {
 	return group;
 }
 
-function buildOptionGroup(label, children) {
+function buildOptionGroup(label, children, rowClasses = '') {
 	const group = tplClone('tpl-option-group');
+	addPanelClasses(group, rowClasses);
 	const labelNode = group.querySelector('.property-label');
 	labelNode.textContent = label;
 	children.forEach((child) => group.appendChild(child));
@@ -381,7 +382,7 @@ function buildPaintSource(slot) {
 		active: mode === slot.activeMode,
 		mode
 	})));
-	sourceChoices.classList.add('paint-source-choice-grid');
+	sourceChoices.classList.add('choice-grid');
 	source.prepend(sourceChoices);
 	const colorRow = source.querySelector('.text-effect-color-row');
 	colorRow.id = `${prefix}ColorRow`;
@@ -522,7 +523,7 @@ function buildPanelItem(item, schema) {
 	switch (item.kind) {
 		case 'card': {
 			const card = tplClone('tpl-card');
-			if (item.bare) card.classList.remove('subsection-content-group');
+			if (item.bare) card.classList.remove('subsection-content-group', 'property-card');
 			if (item.id) card.id = item.id;
 			if (item.hidden) card.hidden = true;
 			// Opt-in collapsibility (rule E). Without this the block renders as a
@@ -551,8 +552,17 @@ function buildPanelItem(item, schema) {
 			}
 			const body = panelDiv('subsection-card-body');
 			if (item.bare) body.classList.add('subsection-card-body-bare');
-			item.items.forEach((child) => body.appendChild(buildPanelItem(child, schema)));
+			const edgeChildren = [];
+			item.items.forEach((child) => {
+				const node = buildPanelItem(child, schema);
+				// Advanced is an edge-to-edge card footer, not padded body content.
+				// Keeping that structural contract here means every future schema card
+				// receives the same spacing without a feature-specific selector.
+				if (node.classList?.contains('advanced-disclosure')) edgeChildren.push(node);
+				else body.appendChild(node);
+			});
 			card.appendChild(body);
+			edgeChildren.forEach((node) => card.appendChild(node));
 			return card;
 		}
 		case 'content': {
@@ -617,11 +627,11 @@ function buildPanelItem(item, schema) {
 				child = panelDiv('glitter-source');
 				child.appendChild(segmented);
 			}
-			return buildOptionGroup(item.label, [child]);
+			return buildOptionGroup(item.label, [child], item.rowClasses);
 		}
 		case 'segmented': {
 			const group = buildSegmented(item.options, item);
-			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [group]) : group;
+			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [group], item.rowClasses) : group;
 		}
 		case 'select': {
 			const select = document.createElement('select');
@@ -636,7 +646,7 @@ function buildPanelItem(item, schema) {
 				option.selected = Boolean(entry.selected || entry.active);
 				select.appendChild(option);
 			});
-			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [select]) : select;
+			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [select], item.rowClasses) : select;
 		}
 		case 'textarea': {
 			const textarea = document.createElement('textarea');
@@ -646,7 +656,7 @@ function buildPanelItem(item, schema) {
 			if (item.placeholder) textarea.placeholder = item.placeholder;
 			addPanelClasses(textarea, item.controlClasses);
 			if (!item.classes) return textarea;
-			const wrapper = addPanelClasses(panelDiv(), item.classes);
+			const wrapper = addPanelClasses(panelDiv('property-inset'), item.classes);
 			wrapper.appendChild(textarea);
 			return wrapper;
 		}
@@ -861,7 +871,7 @@ function syncPanelEffectAvailability(card, available) {
 	card.hidden = !available;
 	const group = card.closest('[data-effect-group]');
 	if (!group) return;
-	group.hidden = !Array.from(group.querySelectorAll(':scope > [data-effect-card]'))
+	group.hidden = !Array.from(group.querySelectorAll(':scope > .panel-group-content > .panel-group-blocks > [data-effect-card]'))
 		.some((effectCard) => !effectCard.hidden);
 }
 
@@ -906,8 +916,21 @@ function buildPanelGroup(group, schema) {
 	}
 	header.appendChild(chevron);
 	node.dataset.panelGroup = group.title;
-	group.items.forEach((item) => node.appendChild(buildPanelItem(item, schema)));
-	if (node.querySelector(':scope > [data-effect-card]')) node.dataset.effectGroup = '';
+	const content = panelDiv('panel-group-content');
+	const blocks = panelDiv('panel-group-blocks');
+	const actions = [];
+	group.items.forEach((item) => {
+		const child = buildPanelItem(item, schema);
+		if (child.classList?.contains('property-actions')) actions.push(child);
+		else blocks.appendChild(child);
+	});
+	// Keep the block host even when the schema starts empty. Some groups (for
+	// example Appearance) adopt controls after the transform panel is rendered.
+	// A stable host lets that composition work without special-case placement.
+	content.appendChild(blocks);
+	actions.forEach((action) => content.appendChild(action));
+	node.appendChild(content);
+	if (blocks.querySelector(':scope > [data-effect-card]')) node.dataset.effectGroup = '';
 	return node;
 }
 
@@ -993,6 +1016,7 @@ function renderLegacyPanelTemplate(sectionId, templateId) {
 function buildTransformPanel(editor, container, prefix, capabilities) {
 	const ids = editor.getTransformIds(prefix);
 	const fragment = document.getElementById('tpl-transform-panel').content.cloneNode(true);
+	fragment.querySelectorAll('.subsection-content-group').forEach((card) => card.classList.add('property-card'));
 	const buildNumberPair = (roles, labels, min = null) => {
 		const pair = tplClone('tpl-number-pair');
 		pair.querySelectorAll('.input-group').forEach((group, index) => {
@@ -1091,6 +1115,7 @@ function finalizePanelSchemaSections(editor) {
 		if (!adopter) return;
 		const groupNode = content.querySelector(`[data-panel-group="${adopter.title}"]`);
 		const opacityCard = document.getElementById(editor.getTransformIds(schema.prefix).opacity)?.closest('.subsection-content-group');
-		if (groupNode && opacityCard) groupNode.appendChild(opacityCard);
+		const blocks = groupNode?.querySelector(':scope > .panel-group-content > .panel-group-blocks');
+		if (blocks && opacityCard) blocks.appendChild(opacityCard);
 	});
 }

@@ -4,7 +4,9 @@
 .canvas-size-controls {
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-md);
+	// Children own their appropriate edge: notes carry note padding, rows use
+	// the card gutter, and trailing Actions owns an equal four-sided inset.
+	gap: 0;
 	width: 100%;
 
 	.settings-row {
@@ -235,30 +237,5 @@
 	&.active {
 		background: var(--color-accent);
 		color: var(--color-text-on-accent);
-	}
-}
-
-// Paint-source choices can contain Image / Transparent / Glitter / Solid /
-// Gradient. Unlike compact two-state segmented controls, every fill type must
-// stay discoverable, so this variant becomes a responsive choice grid and only
-// creates another row when the available inline width requires it.
-.segmented-control.paint-source-choice-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
-	gap: var(--spacing-xs);
-	border: 0;
-	border-radius: 0;
-	overflow: visible;
-
-	>.segmented-option {
-		min-width: 0;
-		padding-inline: var(--spacing-xs);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		white-space: nowrap;
-
-		& + .segmented-option {
-			border-left: 1px solid var(--color-border);
-		}
 	}
 }

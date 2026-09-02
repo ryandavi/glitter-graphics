@@ -192,9 +192,7 @@
 		padding: 0 var(--spacing-xs);
 	}
 
-	>.paint-slot-card,
-	>.subsection-content-group,
-	>.transform-panel-host {
+	> .panel-group-content {
 		margin-top: 0;
 	}
 }
@@ -203,16 +201,6 @@
 // schema group also hides its generated transform host.
 .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title) {
 	display: none;
-}
-
-.subsection-content-group.subsection-section-group {
-	gap: var(--spacing-md);
-
-	>.transform-panel-host {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-md);
-	}
 }
 
 .effect-stack-row {
@@ -371,8 +359,8 @@
 		max-width: 100%;
 		flex: 1 1 auto;
 		flex-direction: column;
-		gap: var(--spacing-sm);
-		padding: var(--spacing-md);
+		gap: 0;
+		padding: 0;
 		overflow-x: hidden;
 		overflow-y: auto;
 		overscroll-behavior: contain;
@@ -384,10 +372,14 @@
 		}
 	}
 
-	.auto-glitter-preview-group,
-	.auto-glitter-footer-group {
+	.auto-glitter-preview-group {
 		flex: 0 0 auto;
 		padding: var(--spacing-md);
+	}
+
+	.auto-glitter-footer-group {
+		flex: 0 0 auto;
+		padding: 0;
 	}
 
 	.auto-glitter-preview-group { border-bottom: 1px solid var(--color-border); }
@@ -510,9 +502,6 @@
 		}
 	}
 
-	.auto-glitter-footer-group {
-		.auto-glitter-actions > button { flex: 1 1 0; }
-	}
 }
 
 .auto-glitter-preview-banner {

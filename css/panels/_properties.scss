@@ -1,4 +1,3 @@
-@use 'sass:list';
 @use '../mixins' as *;
 
 // ===========================================================================
@@ -69,27 +68,6 @@
 	--switch-w: 30px;
 	--switch-h: 18px;
 }
-
-// Elements that already own their horizontal inset, either because they apply
-// the gutter themselves or because they are a heading that does. Anything else
-// dropped into a body or a set gets the gutter from its parent.
-//
-// Defined ONCE as a list and interpolated, because a hand-maintained chain of
-// sixteen :not()s repeated across two rules is unreadable and drifts.
-$gutter-owners:
-	'.property-row', '.property-pair-group', '.subsection-title', '.property-note',
-	'.property-actions', '.advanced-disclosure',
-	'.property-toggle-list', '.property-block', '.subsection-content-group',
-	'.subsection-content', '.asset-info', '.paint-slot-source',
-	'.property-set', '.property-set-label',
-	'.layer-type-options', '.text-box-hint';
-
-// A single :not() taking a selector list - not sixteen chained ones.
-$not-gutter-owner: ':not(#{list.join($gutter-owners, (), $separator: comma)})';
-
-// ...and the same list again as the "already contains one" guard, so a container
-// of rows is never insetted on top of the rows inside it.
-$not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comma)}))';
 
 // ===== Typography: six levels, one of which shouts =========================
 
@@ -245,6 +223,29 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	> .property-control-wide { grid-column: 2 / -1; }
 
 	> input[type="color"] { justify-self: end; }
+}
+
+// A control that is not a row still participates in the same horizontal
+// rhythm. Apply this role in markup instead of making its container guess from
+// tag names, descendants, or feature-specific selectors.
+.property-inset {
+	min-width: 0;
+	width: auto;
+	max-width: calc(100% - var(--property-gutter) * 2);
+	margin-inline: var(--property-gutter);
+}
+
+// A bounded scrolling control inside a card (font list, compact picker, etc.).
+// The inset locates it; this primitive owns only the scroll surface and its
+// equal internal clearance.
+.property-scrollbox {
+	padding: var(--spacing-sm);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: var(--color-bg-secondary);
+	overflow: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
 }
 
 // R2: the control needs full width. Placement is explicit because the control
@@ -438,30 +439,37 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 			border-top: 1px solid var(--color-border);
 		}
 
-		// Cards separate from cards, not from the group heading.
-		> .subsection-content-group + .subsection-content-group,
-		> .transform-panel-host + .subsection-content-group,
-		> .subsection-content-group + .transform-panel-host {
-			margin-top: var(--spacing-sm);
-		}
+	}
 
-		> .subsection-content-group + .property-actions {
-			margin-top: var(--property-block-gap);
-		}
+	// L1 structure: the title is outside the content stack, cards share one gap,
+	// and a trailing Actions primitive owns its own four-sided edge.
+	.panel-group-content {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
 
-		// An expanded group owns the same closing inset as its left and right
-		// edges. Collapsed groups remain header-only, so their compact rhythm is
-		// unchanged.
-		&:not(.collapsed):has(> :not(.subsection-title):not([hidden])) {
-			padding-bottom: var(--property-gutter);
-		}
+	.panel-group-blocks {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
 
-		// Actions own an even inset on all four sides, so they also satisfy the
-		// section's closing edge instead of stacking two bottom gutters.
-		&:not(.collapsed):has(> .property-actions:last-child:not([hidden])) {
-			padding-bottom: 0;
+		> .transform-panel-host {
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-sm);
 		}
+	}
 
+	// Schema groups can be populated after their initial render. Empty block
+	// hosts therefore remain in the DOM, while an actually empty group takes no
+	// visual space. Both selectors update automatically when content is adopted.
+	.panel-group-blocks:empty {
+		display: none;
+	}
+
+	.panel-group-content:not(:has(> .property-actions:last-child:not([hidden]))) {
+		padding-bottom: var(--property-gutter);
 	}
 
 	// L2 block: title + rows. This is the DEFAULT, so it is written with
@@ -501,24 +509,6 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 		// bottom - a trailing pad on the last element in a card is dead space.
 		padding: 0;
 
-		+ * { margin-top: var(--spacing-xs); }
-
-		// ...but anything dropped straight into a body that is NOT one of the
-		// gutter-owning primitives still has to line up with them. Stated as
-		// "everything else", so a control added later inherits the alignment
-		// instead of needing a new rule - which is how the textarea, Point/Box
-		// and Fit to Text ended up edge-to-edge.
-		// The rule itself, encoded: inset a child unless it is a gutter owner, or
-		// it CONTAINS one. The :has() guard is what makes this self-maintaining -
-		// a new container of rows inherits the right behaviour instead of needing
-		// its own exclusion, which is how .transform-grid ended up double-indented.
-		> *#{$not-gutter-owner}#{$not-contains-owner} {
-			margin-inline: var(--property-gutter);
-			// width:100% plus a horizontal margin always overflows; auto fills
-			// the space that is actually left.
-			width: auto;
-			max-width: calc(100% - var(--property-gutter) * 2);
-		}
 	}
 
 	.subsection-card-body-bare { padding: 0; }
@@ -535,20 +525,6 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 		border: 0;
 		background: transparent;
 
-
-		// Controls that are not rows still need the gutter.
-		// Everything in a set that is not a self-insetting row needs the gutter,
-		// stated as "everything else" for the same reason the body rule is: a
-		// control added later inherits the alignment instead of sitting flush.
-		// This is what left .sticker-position-group misaligned with its label.
-		> *#{$not-gutter-owner}#{$not-contains-owner} {
-			margin-inline: var(--property-gutter);
-			// width:100% plus a horizontal margin always overflows; auto fills
-			// the space that is actually left.
-			width: auto;
-			max-width: calc(100% - var(--property-gutter) * 2);
-		}
-
 		// No sibling margin: a set that follows another is separated by its
 		// container's gap, so hiding one leaves no phantom space.
 		+ .property-set { margin-top: 0; }
@@ -562,10 +538,6 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	display: flex;
 	flex-direction: column;
 	gap: var(--property-block-gap);
-}
-
-.design-panel .subsection-card-body > .property-row + .property-actions {
-	margin-top: var(--property-block-gap);
 }
 
 // ===== R5: module row ======================================================
@@ -582,10 +554,6 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	// It is structural now: a block that is a DIRECT child of a group is a card.
 	// A block nested inside another block is not, which is what prevents
 	// card-in-card without needing to name the offenders.
-	.subsection-section-group > .subsection-content-group,
-	.effects-stack > .subsection-content-group,
-	.subsection-section-group > .transform-panel-host > .subsection-content-group,
-	.settings-subsection > .transform-panel-host > .subsection-content-group,
 	.property-card {
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-sm);
@@ -673,19 +641,6 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 		width: 100%;
 	}
 
-	// One segmented control on one line - an auto-fit grid wrapped the fourth
-	// option onto a second row and broke the control's shape.
-	.paint-source-choice-grid {
-		display: flex;
-		margin: 0 var(--property-gutter);
-
-		> .segmented-option {
-			flex: 1 1 0;
-			min-width: 0;
-			padding-inline: var(--spacing-xs);
-		}
-	}
-
 	// No gutter here: this is a stack of .property-row, and each row insets
 	// itself. Adding it again is the double-padding bug.
 	.paint-slot-primary-row { padding: 0; }
@@ -711,25 +666,50 @@ $not-contains-owner: ':not(:has(#{list.join($gutter-owners, (), $separator: comm
 	}
 }
 
-// Card clearance depends only on the semantic kind of its final component.
-// Ordinary property rows own enough line height already; sets, action groups,
-// inset summaries, direct segmented controls and lists need breathing room
-// before the card edge.
-.design-panel .subsection-content-group > .subsection-card-body:has(>
-	:is(.property-block, .property-set, .property-actions, .asset-info, .segmented-control, .property-list, button):last-child) {
-	padding-bottom: var(--spacing-sm);
-}
-
-// Asset summaries expose the same inset on each open side. A following
-// Advanced divider gets the roomier card inset; a card edge uses the row
-// gutter that already separates the asset from its left and right edges.
-.design-panel .subsection-content-group > .subsection-card-body:has(> .asset-info:last-child) {
+// A bordered card owns its closing inset regardless of what its final child
+// happens to be. This is deliberately not a last-child kind whitelist: new
+// controls inherit correct clearance without another selector. A trailing
+// Actions primitive already owns equal padding on all four sides, so the body
+// transfers its closing edge to Actions instead of stacking two gutters.
+.design-panel .property-card > .subsection-card-body:not(:empty) {
 	padding-bottom: var(--property-gutter);
 }
 
-.design-panel .subsection-content-group:has(> .advanced-disclosure)
-	> .subsection-card-body:has(> .asset-info:last-child) {
-	padding-bottom: var(--property-card-inset);
+// A titled card gets its opening edge from the title. An untitled card gets
+// the same edge from its body, so moving content between cards does not change
+// its internal geometry.
+.design-panel .property-card:not(:has(> .subsection-title)) > .subsection-card-body:not(:empty) {
+	padding-top: var(--property-gutter);
+}
+
+// A single row already has the control height needed to clear the border.
+// Extra block padding makes these compact cards (Opacity, a lone toggle, etc.)
+// visually taller on one edge for no additional hierarchy.
+.design-panel .property-card:not(:has(> .subsection-title)) > .subsection-card-body:has(> .property-row:only-child) {
+	padding-block: 0;
+}
+
+// The card owns its closing edge. Notes may separate themselves from preceding
+// controls, but must not stack another trailing pad against the card border.
+.design-panel .property-card > .subsection-card-body > .property-note:last-child {
+	padding-bottom: 0;
+}
+
+.design-panel .property-card > .subsection-card-body:has(> .property-actions:last-child) {
+	padding-bottom: 0;
+}
+
+// A property block whose terminal component is Actions already owns its final
+// edge. Ordinary property blocks keep the card body's default closing inset.
+.design-panel .property-card > .subsection-card-body:has(
+	> .property-block:last-child .property-actions:last-child) {
+	padding-bottom: 0;
+}
+
+// Effect modules use paint-slot-main as their body. It follows the same card
+// edge contract, including the gap before an edge-to-edge Advanced footer.
+.design-panel .property-module-content > .paint-slot-main:not(:empty) {
+	padding-bottom: var(--property-gutter);
 }
 
 .property-module-summary {
@@ -1206,27 +1186,42 @@ body.is-resizing-panel {
 // gutter the row already applies, leaving it inset twice and short of full
 // width.
 .design-panel {
-	// A segmented control fills its slot and WRAPS. Five source options cannot
-	// fit one 300px line, and the alternatives are worse: squeezing them makes
-	// the labels unreadable, and a horizontal scroller hides options entirely.
-	// Wrapped, it reads as a button grid - the joined-bar look is worth less
-	// than being able to see every choice.
+	// A true segmented control is one connected, non-wrapping row. Controls with
+	// too many choices use `.choice-grid` instead; wrapping a joined control
+	// creates ambiguous borders and uneven final rows.
 	.segmented-control {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		width: 100%;
 		margin-inline: 0;
 
 		> .segmented-option {
-			flex: 1 1 var(--segmented-option-min, 72px);
-			min-width: var(--segmented-option-min, 72px);
+			flex: 1 1 0;
+			min-width: 0;
+			padding-inline: var(--spacing-xs);
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
+	}
 
-		// Once it wraps, each row needs its own edges rather than one long bar.
-		&:has(> .segmented-option:nth-child(4)) {
-			gap: 1px;
+	// A larger set of choices is a responsive grid, not a wrapped segmented
+	// control. auto-fill preserves empty tracks, so an incomplete final row does
+	// not stretch its last option across the available width.
+	.segmented-control.choice-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(96px, 100%), 1fr));
+		gap: var(--spacing-xs);
+		border: 0;
+		border-radius: 0;
+		overflow: visible;
 
-			> .segmented-option { border-radius: var(--radius-sm); }
+		> .segmented-option {
+			min-width: 0;
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-md);
+
+			& + .segmented-option { border-left: 1px solid var(--color-border); }
 		}
 	}
 

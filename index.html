@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=7fa6a5ea">
+	<link rel="stylesheet" href="css/style.css?v=855ba39e">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -361,7 +361,7 @@
 											<!-- Based on Name -->
 											<div class="filter-section">
 												<div class="property-set-label">Filter</div>
-												<div class="filter-chips">
+												<div class="property-toggle-list">
 													<label class="property-row is-toggle"><span class="property-label">Search by name only</span><input type="checkbox" id="searchGlitterNameOnly"><span class="property-switch" aria-hidden="true"></span></label>
 												</div>
 											</div>
@@ -426,7 +426,7 @@
 												</div>
 											</div>
 										</div>
-										<div class="filter-actions">
+										<div class="filter-actions property-actions">
 											<button class="btn-simple secondary" id="clearFiltersBtn" disabled>Clear all</button>
 											<button class="btn-simple primary" id="closeGlitterFiltersBtn" type="button">Show results</button>
 										</div>
@@ -515,7 +515,7 @@
 											<!-- Based on Name -->
 											<div class="filter-section">
 												<div class="property-set-label">Filter</div>
-												<div class="filter-chips">
+												<div class="property-toggle-list">
 													<label class="property-row is-toggle"><span class="property-label">Search by name only</span><input type="checkbox" id="searchStickerNameOnly"><span class="property-switch" aria-hidden="true"></span></label>
 												</div>
 											</div>
@@ -559,7 +559,7 @@
 												</div>
 											</div>
 										</div>
-										<div class="filter-actions">
+										<div class="filter-actions property-actions">
 											<button class="btn-simple secondary" id="clearStickerFiltersBtn" disabled>Clear all</button>
 											<button class="btn-simple primary" id="closeStickerFiltersBtn" type="button">Show results</button>
 										</div>
@@ -635,7 +635,7 @@
 									<div class="active-filter-summary" id="brushTipActiveFilterSummary" role="group" aria-label="Active filters" aria-live="polite" hidden></div>
 									<div class="filters-container" id="brushTipFiltersContainer">
 										<div class="filters-container-inner"><div class="filter-section"><div class="property-set-label">Category</div><div class="filter-chips" id="brushTipCategoryChips"></div></div></div>
-										<div class="filter-actions"><button class="btn-simple secondary" id="clearBrushTipFiltersBtn" disabled>Clear all</button><button class="btn-simple primary" id="closeBrushTipFiltersBtn" type="button">Show results</button></div>
+										<div class="filter-actions property-actions"><button class="btn-simple secondary" id="clearBrushTipFiltersBtn" disabled>Clear all</button><button class="btn-simple primary" id="closeBrushTipFiltersBtn" type="button">Show results</button></div>
 									</div>
 								</div>
 							</div>
@@ -732,7 +732,7 @@
 											<div class="subsection-content property-block document-size-panel" id="canvasSizePanel" hidden>
 												<div class="canvas-size-controls">
 													<div class="property-note">Crop or extend the canvas without scaling content.</div>
-													<div class="subsection-content-group document-size-card">
+											<div class="subsection-content-group property-card document-size-card">
 														<div class="property-set-label">Dimensions</div>
 													<div class="canvas-size-limit-message" id="canvasSizeLimitMessage" role="status"></div>
 													<label class="property-row is-toggle canvas-relative-toggle"><span class="property-label">Relative</span><input type="checkbox" id="canvasSizeRelative"><span class="property-switch" aria-hidden="true"></span></label>
@@ -767,7 +767,7 @@
 											<div class="subsection-content">
 												<div class="canvas-size-controls scale-design-controls">
 													<div class="property-note">Resize the canvas and everything in the design. Proportions stay linked.</div>
-													<div class="subsection-content-group document-size-card">
+											<div class="subsection-content-group property-card document-size-card">
 														<div class="property-set-label">Dimensions</div>
 													<div class="property-row"><span class="property-label">Width</span><span class="input-unit">
 																	<input type="number" id="scaleDesignWidth" min="1" step="1" inputmode="numeric">
@@ -2471,7 +2471,7 @@
 		</div>
 	</template>
 	<template id="tpl-card">
-		<div class="subsection-content-group">
+		<div class="subsection-content-group property-card">
 			<div class="subsection-title"><span></span></div>
 		</div>
 	</template>
@@ -2520,10 +2520,10 @@
 		</div>
 	</template>
 	<template id="tpl-paint-slot">
-		<div class="subsection-content-group paint-slot-card"><div class="subsection-title"><span></span></div></div>
+		<div class="subsection-content-group property-card paint-slot-card"><div class="subsection-title"><span></span></div></div>
 	</template>
 	<template id="tpl-number-pair">
-		<div class="sticker-position-group"><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div></div>
+		<div class="property-inset sticker-position-group"><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div></div>
 	</template>
 	<template id="tpl-action-row">
 		<div class="property-actions"><button class="btn-simple" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-simple" data-prefix-id="FillCanvas" type="button">Fill canvas</button></div>
@@ -2578,7 +2578,7 @@
 			<div class="subsection-title">Actions</div>
 			<div data-transform-action-row></div>
 		</div>
-		<div class="subsection-content-group transform-panel" data-transform-card>
+		<div class="subsection-content-group property-card transform-panel" data-transform-card>
 			<div class="subsection-title transform-panel-title"><span>Transform</span><div class="transform-panel-title-actions"><label class="property-header-switch transform-chip" data-transform-lock title="Lock aspect ratio when editing size"><input type="checkbox" data-transform-role="proportional" checked aria-label="Lock aspect ratio"><span>Lock Aspect</span></label></div></div>
 			<div class="transform-grid">
 				<div class="property-set"><div class="property-set-label">Position</div><div data-transform-number-pair="position"></div></div>
@@ -2629,7 +2629,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=97f5ed30"></script>
+	<script src="js/core/config.js?v=ea234f57"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
 	<script src="js/core/commands.js?v=263e9de6"></script>
@@ -2653,7 +2653,7 @@
 	<script src="js/effects/pixel-effects.js?v=c68cfdfc"></script>
 	<script src="js/effects/effect-source.js?v=ef695f2e"></script>
 	<script src="js/effects/slot-effects.js?v=b10d7733"></script>
-	<script src="js/ui/panel-renderer.js?v=972d5659"></script>
+	<script src="js/ui/panel-renderer.js?v=072ecd04"></script>
 	<script src="js/ui/settings-store.js?v=94ba4d01"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>

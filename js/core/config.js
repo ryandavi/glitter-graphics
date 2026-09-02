@@ -1197,8 +1197,8 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Color Matches', region: 'scroll', items: [
 				{ kind: 'card', classes: 'auto-glitter-review', items: [
-					{ kind: 'host', id: 'autoGlitterStatus', classes: 'auto-glitter-status', attrs: { role: 'status', 'aria-live': 'polite' }, text: 'Finding the image\'s distinct colors…' },
-					{ kind: 'host', id: 'autoGlitterResults', classes: 'property-list auto-glitter-results', attrs: { 'aria-label': 'Detected color regions and glitter matches' } }
+					{ kind: 'host', id: 'autoGlitterStatus', classes: 'property-inset auto-glitter-status', attrs: { role: 'status', 'aria-live': 'polite' }, text: 'Finding the image\'s distinct colors…' },
+					{ kind: 'host', id: 'autoGlitterResults', classes: 'property-inset property-list auto-glitter-results', attrs: { 'aria-label': 'Detected color regions and glitter matches' } }
 				] }
 			] },
 			{ title: 'Advanced', region: 'scroll', items: [
@@ -1461,7 +1461,7 @@ const PANEL_SCHEMAS = {
 					] }
 				] },
 				{ kind: 'card', title: 'Font', items: [
-					{ kind: 'host', id: 'textFontPicker', classes: 'text-font-picker' },
+					{ kind: 'host', id: 'textFontPicker', classes: 'property-inset property-scrollbox text-font-picker' },
 					{ kind: 'segmented', visibleLabel: 'Style', label: 'Text style', classes: 'text-style-group', options: [
 						{ id: 'textFontBold', label: 'Bold', contentTag: 'strong' },
 						{ id: 'textFontItalic', label: 'Italic', contentTag: 'em' }
@@ -1484,7 +1484,7 @@ const PANEL_SCHEMAS = {
 						{ label: 'Center', attrs: { 'data-text-align': 'center' } },
 						{ label: 'Right', attrs: { 'data-text-align': 'right' } }
 					] },
-					{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical text alignment', classes: 'text-valign-group', options: [
+					{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: [
 						{ label: 'Top', active: true, attrs: { 'data-text-valign': 'top' } },
 						{ label: 'Middle', attrs: { 'data-text-valign': 'middle' } },
 						{ label: 'Bottom', attrs: { 'data-text-valign': 'bottom' } }
