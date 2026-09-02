@@ -9455,6 +9455,10 @@ body.modal-open {
 #guideModal .guide-shortcut > .guide-kbd {
   vertical-align: baseline;
 }
+#shortcutsModal .guide-key-label,
+#guideModal .guide-key-label {
+  white-space: nowrap;
+}
 #shortcutsModal .shortcut-gesture,
 #guideModal .shortcut-gesture {
   gap: 6px;

@@ -126,8 +126,16 @@ function syncPropertyRevert(slider) {
 	button.disabled = Number(slider.value) === Number(fallback);
 }
 
-function initializePropertyReverts(root = document) {
+// A slider written programmatically (a panel reloading its values, a transform
+// baking a new texture scale) fires no input/change event, so the listeners below
+// never see it and its revert keeps whatever state it had. Panels call this after
+// repopulating so the control matches the value actually on screen.
+function syncPropertyReverts(root = document) {
 	root.querySelectorAll('input[type="range"][id]').forEach(syncPropertyRevert);
+}
+
+function initializePropertyReverts(root = document) {
+	syncPropertyReverts(root);
 	if (initializePropertyReverts.bound) return;
 	initializePropertyReverts.bound = true;
 	document.addEventListener('input', (event) => {

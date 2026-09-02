@@ -14,6 +14,40 @@
 // from the version history and skipped when resolving `currentRelease`.
 const RELEASES = [
 	{
+		id: 'v0.4.0',
+		version: '0.4.0',
+		name: 'Brushes and Controls Update',
+		date: '2026-09-01',
+		dateLabel: 'September 1, 2026',
+		projectFormat: 1,
+		summary: 'Added imported brush tips with scatter and jitter, rebuilt the settings sidebar, and expanded export dithering and navigation.',
+		features: [
+			{ type: 'added', text: 'Added imported brush tips from archived Photoshop brush packs, so mask strokes can stamp real artwork instead of only geometric shapes.', guide: 'mask-brush' },
+			{ type: 'added', text: 'Added a brush tip gallery with search and categories for choosing a tip.', guide: 'mask-brush' },
+			{ type: 'added', text: 'Added Scatter & Jitter controls for each brush, including scatter distance, dabs per stamp, size and angle jitter, and roundness and flip for imported tips.', guide: 'mask-brush' },
+			{ type: 'added', text: 'Added GIF Look presets that set palette size and dithering together, with a live preview showing the result on gradients and hard edges.', guide: 'export-settings' },
+			{ type: 'added', text: 'Added export dithering controls for pattern, strength, texture scale, edge protection, and whether the pattern holds still or shimmers across frames.', guide: 'export-settings' },
+			{ type: 'added', text: 'Added an optional watermark on exports, with a choice of marks.', guide: 'export-settings' },
+			{ type: 'added', text: 'Added a Canvas Gestures tab to Commands & Shortcuts, listing pointer, trackpad, and touch gestures next to the keyboard shortcuts.', guide: 'tools' },
+			{ type: 'added', text: 'Added trackpad pinch-zoom and two-finger panning, scrubby zoom by dragging with the Zoom tool, Space-drag and middle-button panning, and Zoom to Selection.', guide: 'canvas-view-options' },
+			{ type: 'added', text: 'Added resizable Layers and Design sidebars that snap to useful widths and remember what you set.', guide: 'app-settings' },
+			{ type: 'added', text: 'Added a revert control on panel settings, shown only where a value differs from its default.', guide: 'basics' },
+			{ type: 'changed', text: 'Combined the Brush and Eraser into one Mask Brush with Paint and Erase modes in the context toolbar. Each mode still keeps its own settings.', guide: 'mask-brush' },
+			{ type: 'changed', text: 'Erase strokes now tint the area removed so far, so you can see what a stroke is taking out.', guide: 'mask-brush' },
+			{ type: 'changed', text: 'Made the context toolbar draggable, so you can move it out of the way and it stays where you put it.', guide: 'basics' },
+			{ type: 'changed', text: 'Rebuilt the settings sidebar on one property system, so every panel uses the same rows, cards, and collapsible groups, and long panels are much shorter.', guide: 'basics' },
+			{ type: 'changed', text: 'Renamed Glitter Fill layers to Fill Layers, since they also take solid and gradient fills.', guide: 'create-glitter' },
+			{ type: 'changed', text: 'Renamed the color selection sliders to Color Tolerance and Edge Feather, so their names say what they do.', guide: 'select-colors' },
+			{ type: 'changed', text: 'Regrouped the export settings into Output, Playback, Quality, and Optimization.', guide: 'export-settings' },
+			{ type: 'changed', text: 'Improved pixel art handling, so pixelated stickers stay crisp on the canvas and in every export instead of being smoothed.', guide: 'add-stickers' },
+			{ type: 'changed', text: 'Improved touch handling with palm rejection, so a resting hand no longer joins a pinch gesture.', guide: 'mobile' },
+			{ type: 'changed', text: 'Improved gallery and modal search, keeping group headings and pinned rows visible while filtering.', guide: 'add-stickers' },
+			{ type: 'changed', text: 'Improved the Layers panel with clearer drag handles and better keyboard access.', guide: 'working-with-layers' },
+			{ type: 'fixed', text: 'Fixed exported GIF colors shifting between frames by sharing one palette across the animation.', guide: 'export-settings' },
+			{ type: 'fixed', text: 'Fixed a new sticker picking up the color adjustments left over from the previously selected one.', guide: 'add-stickers' }
+		]
+	},
+	{
 		id: 'v0.3.0',
 		version: '0.3.0',
 		name: 'Export and Projects Update',

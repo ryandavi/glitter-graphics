@@ -112,13 +112,17 @@ updateOrientationButtons(width, height) {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=7045e0e6',
+				externalContentUrl: 'modals/guide.html?v=35dcc985',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
 				onContentLoaded: (modalBody) => {
 					// Initialize pixel-scaled images (for screenshots)
 					initPixelScalerInContainer(modalBody);
+
+					// The guide's key names are authored generically ('Ctrl/Cmd');
+					// resolve them to this platform's labels, as the shortcuts modal does.
+					localizeKeyLabels(modalBody);
 
 					const modal = document.getElementById('guideModal');
 					initDocumentModalNavigation(modal);

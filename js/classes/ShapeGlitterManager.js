@@ -1489,6 +1489,8 @@ class ShapeGlitterManager {
 		// Border/fill/shadow sliders show pre-commit values otherwise (e.g. border
 		// width baked larger by the scale) until the layer is reselected.
 		this.loadLayerSettings(layer);
+		// Baked values are no longer the defaults those sliders shipped with.
+		syncPropertyReverts();
 	}
 
 	setShapeSize(layer, width, height) {

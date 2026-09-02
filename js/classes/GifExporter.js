@@ -505,6 +505,7 @@ class GifExporter {
 							pattern.setTransform(new DOMMatrix()
 								.translateSelf(Number(background.textureOffsetX) || 0, Number(background.textureOffsetY) || 0)
 								.scaleSelf((background.scale || 100) / 100));
+							ctx.imageSmoothingEnabled = !this._isGlitterPixelated(layer.selectedGlitterId);
 							ctx.fillStyle = pattern;
 						}
 						ctx.fillRect(0, 0, width, height);
@@ -587,6 +588,7 @@ class GifExporter {
 							pattern.setTransform(new DOMMatrix()
 								.translateSelf(Number(layer.fill?.textureOffsetX) || 0, Number(layer.fill?.textureOffsetY) || 0)
 								.scaleSelf(scale, scale));
+							helperCtx.imageSmoothingEnabled = !this._isGlitterPixelated(layer.selectedGlitterId);
 							helperCtx.fillStyle = pattern;
 						}
 						helperCtx.fillRect(0, 0, width, height);
@@ -880,6 +882,7 @@ class GifExporter {
 				.translateSelf(textureOrigin.x, textureOrigin.y)
 				.scaleSelf(scale, scale);
 			pattern.setTransform(matrix);
+			fillCtx.imageSmoothingEnabled = !this._isGlitterPixelated(source.glitterId);
 			fillCtx.fillStyle = pattern;
 		}
 
@@ -889,6 +892,21 @@ class GifExporter {
 		fillCtx.globalCompositeOperation = 'source-over';
 
 		return fillCanvas;
+	}
+
+	// Which glitters are pixel art, by id, for the length of one export. A texture
+	// drawn through createPattern().setTransform() is resampled by the destination
+	// context, so a scaled pixel-art tile blurs unless smoothing is turned off —
+	// the canvas preview avoids this with image-rendering: pixelated, and the
+	// export has to make the same decision from the same flag.
+	_indexPixelatedGlitters(library) {
+		this._pixelatedGlitterIds = new Set(
+			(library || []).filter((item) => item?.isPixelated).map((item) => item.id)
+		);
+	}
+
+	_isGlitterPixelated(glitterId) {
+		return Boolean(glitterId) && Boolean(this._pixelatedGlitterIds?.has(glitterId));
 	}
 
 	// Build the repeating-pattern source canvas for a glitter frame, applying the
@@ -1187,6 +1205,7 @@ class GifExporter {
 
 		// 2. De-Optimize Frames
 		callbacks.onProgress(5, 'Processing frames...', 0, 0);
+		this._indexPixelatedGlitters(glitterGifs);
 		const flattenedFrameMap = this._buildFlattenedFrameMap(visibleLayers, glitterGifs);
 
 		// De-optimize watermark if animated

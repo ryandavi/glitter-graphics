@@ -544,6 +544,10 @@ isLayerContentLocked(layer) {
 		const layer = this.layerManager.getActiveLayer();
 		if (!layer) return;
 
+		// Every branch below writes slider values directly, which fires no events;
+		// the reverts are swept once the panel has been repopulated.
+		queueMicrotask(() => syncPropertyReverts());
+
 		// Handle different layer types
 		if (layer.type === LayerType.STICKER) {
 			// Load sticker settings

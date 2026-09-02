@@ -3086,6 +3086,8 @@ class TextGlitterManager {
 		} catch (error) {
 			this.reportFontLoadError(error);
 		}
+		// Baked values are no longer the defaults those sliders shipped with.
+		syncPropertyReverts();
 	}
 
 	createTransformHandles(layerId) {

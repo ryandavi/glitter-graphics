@@ -1985,6 +1985,13 @@ body.modal-open {
 		vertical-align: baseline;
 	}
 
+	// A key named inline in a sentence rather than shown as a chip. It carries no
+	// treatment of its own on purpose — the surrounding prose reads as prose — and
+	// exists so localizeKeyLabels() can find and rewrite it.
+	.guide-key-label {
+		white-space: nowrap;
+	}
+
 	.shortcut-gesture {
 		gap: 6px;
 		min-width: 0;

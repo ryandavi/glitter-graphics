@@ -318,11 +318,9 @@ initializeCollapsibleSections() {
 		const list = document.getElementById('shortcutList');
 		if (!list) return;
 		list.replaceChildren();
-		const platform = navigator.userAgentData?.platform || navigator.platform || '';
-		const isMac = /mac/i.test(platform);
-		const keyLabels = isMac
-			? { 'Ctrl/Cmd': '⌘', Cmd: '⌘', Control: '⌃', Ctrl: '⌃', Alt: '⌥', Option: '⌥', Shift: '⇧' }
-			: { 'Ctrl/Cmd': 'Ctrl', Cmd: 'Ctrl', Control: 'Ctrl', Ctrl: 'Ctrl', Alt: 'Alt', Option: 'Alt', Shift: 'Shift' };
+		// Native modifier names come from js/core/key-labels.js, shared with the
+		// guide so the two never disagree about what a key is called here.
+		const keyLabels = getKeyLabels();
 		const gestureDescriptions = {
 			keyboard: 'Shortcuts use the keys for this device. Alternate bindings are separated by “or.”',
 			gesture: 'Trackpad, touch, and pointer controls remain available without changing tools unless noted.'
@@ -332,7 +330,7 @@ initializeCollapsibleSections() {
 			touch: 'icon-hand-pointer',
 			pointer: 'icon-pointer'
 		};
-		const formatKey = (label) => keyLabels[label] || label;
+		const formatKey = (label) => formatKeyLabel(label, keyLabels);
 		const buildShortcutToken = (label, type = 'key', device = null) => {
 			const token = document.createElement('span');
 			token.className = `shortcut-input-token ${type === 'gesture' ? 'shortcut-gesture' : 'kbd'}`;
