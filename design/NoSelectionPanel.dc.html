@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff;
+      --pad:8px; --row-gap:4px; --block-gap:8px; --group-gap:14px;
+      --label-w:70px; --rev-w:16px; --rev-gut:24px; --row-h:26px;
+      --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+    .body{display:flex;flex-direction:column;gap:var(--group-gap);padding:0 0 var(--pad)}
+    .group{display:flex;flex-direction:column;gap:var(--block-gap)}
+    .group + .group{border-top:1px solid var(--border);padding-top:var(--group-gap)}
+    .glabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px}
+    /* standalone intro line: top spacing from its own padding, bottom from the
+       parent gap. even, no divider right after. */
+    .lead{font-size:11px;color:var(--t3);line-height:1.45;padding:var(--group-gap) calc(16px + var(--rev-gut)) 0 16px}
+    .card{display:flex;flex-direction:column;gap:var(--row-gap);margin:0 var(--pad);padding:var(--pad);
+      border:1px solid var(--border);border-radius:var(--r-card);background:var(--card)}
+    .card > .ctitle{font-size:12px;font-weight:600;color:var(--t1)}
+
+    .row{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h)}
+    .row > .rl{font-size:12px;color:var(--t2);white-space:nowrap}
+    .row > .num{grid-column:3;justify-self:end}
+    .row > .seg,.row > .sel,.row > .textin{grid-column:2 / -2}
+    .rr{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;color:var(--t3)}
+    .rr svg{width:11px;height:11px}
+    .rr.blank{visibility:hidden}
+    .row.is-pair{grid-template-columns:var(--label-w) 1fr var(--rev-w)}
+    .row.is-pair > .pair{grid-column:2}
+    .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}
+    .row.is-toggle{grid-template-columns:1fr auto var(--rev-w);min-height:26px;cursor:pointer}
+    .row.is-toggle > .sw{grid-column:2;justify-self:end}
+    .row.is-toggle > .rr{grid-column:3}
+    .sw{width:30px;height:16px;border-radius:9999px;background:var(--sunk);border:1px solid var(--border);position:relative;flex:0 0 auto}
+    .sw::after{content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--t2);transition:left .12s}
+    .sw.on{background:var(--accent);border-color:var(--accent)}
+    .sw.on::after{left:15px;background:#fff}
+
+    .textin{display:flex;align-items:center;height:24px;padding:0 8px;background:var(--sunk);border:1px solid var(--border);
+      border-radius:var(--r-field);font-size:12px;color:var(--t1)}
+    .textin.ph{color:var(--t3)}
+    .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:46px;padding:0 6px;
+      background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;color:var(--t1);font-variant-numeric:tabular-nums}
+    .num .u{color:var(--t3);margin-left:3px}
+    .numf{display:flex;align-items:center;gap:6px;height:24px;padding:0 8px;min-width:0;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field)}
+    .numf .k{font-size:10.5px;font-family:ui-monospace,Consolas,monospace;color:var(--t3)}
+    .numf .v{font-size:11px;color:var(--t1);font-variant-numeric:tabular-nums}
+    .sel{height:24px;display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-field);padding:0 8px;font-size:12px;color:var(--t1)}
+    .sel svg{width:11px;height:11px;color:var(--t3)}
+    .seg{display:flex;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
+    .seg > button{flex:1;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--t2);
+      background:none;border:0;border-left:1px solid var(--border);cursor:pointer;white-space:nowrap}
+    .seg > button:first-child{border-left:0}
+    .seg > button.on{background:var(--accent);color:#fff}
+    .btn{display:flex;align-items:center;justify-content:center;gap:6px;height:28px;padding:0 10px;font-size:12px;font-weight:500;
+      color:var(--t1);background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    /* a form's submit actions: full-bleed divider in the card, own even padding */
+    .formactions{border-top:1px solid var(--border);margin:var(--row-gap) calc(-1*var(--pad)) calc(-1*var(--pad));
+      padding:var(--pad);display:flex;gap:8px}
+    .formactions .btn{flex:1}
+    .note{font-size:11px;color:var(--t3);line-height:1.45}
+
+    /* Quick add tile grid */
+    .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px}
+    .tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+      height:62px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);color:var(--t2);cursor:pointer}
+    .tile:hover{border-color:var(--border-hi);color:var(--t1)}
+    .tile svg{width:20px;height:20px}
+    .tile span{font-size:11px;font-weight:500}
+    .btitle{font-size:12px;font-weight:600;color:var(--t1);padding:0 16px}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l6-3 6 3-6 3z"/><path d="M2 8l6 3 6-3M2 11l6 3 6-3"/></svg>
+      <span class="sp">Canvas</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="body">
+
+      <div class="lead">Nothing selected. Pick a layer to edit it, or add content below.</div>
+
+      <div class="group">
+        <div class="btitle">Quick add</div>
+        <div class="tiles">
+          <div class="tile"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 4h10M8 4v9"/></svg><span>Text</span></div>
+          <div class="tile"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg><span>Sticker</span></div>
+          <div class="tile"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="10" height="10" rx="2.5"/></svg><span>Shape</span></div>
+          <div class="tile"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2s5 5.5 5 9a5 5 0 0 1-10 0c0-3.5 5-9 5-9z"/></svg><span>Glitter fill</span></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">Project</div>
+        <div class="card">
+          <div class="row">
+            <span class="rl">Name</span>
+            <div class="textin ph">Untitled project</div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="formactions">
+            <button class="btn">Open project</button>
+            <button class="btn primary">Save project</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">Size</div>
+        <div class="card" style="margin:0 var(--pad)">
+          <div class="row">
+            <span class="rl">Operation</span>
+            <div class="seg"><button class="on">Image Size</button><button>Canvas Size</button></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row is-pair">
+            <span class="rl">Dimensions</span>
+            <div class="pair"><span class="numf"><span class="k">W</span><span class="v">1080</span></span><span class="numf"><span class="k">H</span><span class="v">1080</span></span></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row"><span class="rl">Scale</span><span class="num">100<span class="u">%</span></span><span class="rr blank"></span></div>
+          <div class="row is-toggle"><span class="rl">Scale textures</span><span class="sw on"></span><span class="rr blank"></span></div>
+          <div class="row is-toggle"><span class="rl">Scale effects</span><span class="sw on"></span><span class="rr blank"></span></div>
+          <div class="formactions"><button class="btn">Apply</button></div>
+        </div>
+        <div class="note" style="margin:0 16px">This is the same Size control that appears in Canvas Properties. It is moved between the two panels, never shown twice. Canvas Size mode swaps in the anchor grid and an extension fill.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

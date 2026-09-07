@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff;
+      --pad:8px; --group-gap:14px; --rev-gut:24px;
+      --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+    .body{padding:28px 20px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+    .empty-icon{width:56px;height:56px;border-radius:var(--r-card);background:var(--sunk);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;color:var(--t3);margin-bottom:10px}
+    .empty-icon svg{width:26px;height:26px}
+    .empty-title{font-size:14px;font-weight:600;color:var(--t1)}
+    .empty-sub{font-size:12px;color:var(--t3);line-height:1.5;max-width:280px}
+    .empty-actions{display:flex;flex-direction:column;gap:8px;width:100%;max-width:260px;margin-top:14px}
+    .btn{display:flex;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 12px;font-size:12px;font-weight:500;
+      color:var(--t1);background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn svg{width:13px;height:13px;color:var(--t2)}
+    .btn.primary svg{color:#fff}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg>
+      <span class="sp">Glitter</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="body">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15l4-4 3 3 4-5 7 7"/><circle cx="9" cy="9" r="1.6"/></svg>
+      </div>
+      <div class="empty-title">Add an image to begin</div>
+      <div class="empty-sub">Open a photo to glitterize, or start from a blank canvas. Stickers, text and shapes work on both.</div>
+      <div class="empty-actions">
+        <button class="btn primary"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l3.5-4 2.5 3 3-4 4 5"/><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/></svg>Open image</button>
+        <button class="btn">New blank canvas</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

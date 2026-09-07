@@ -1,0 +1,209 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff; --accent-surface:rgba(0,123,255,.16);
+      --pad:8px; --row-gap:4px; --block-gap:8px; --group-gap:14px;
+      --label-w:78px; --rev-w:16px; --rev-gut:24px; --row-h:26px;
+      --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    /* fixed height so the sticky footer has something to stick to */
+    .panel{width:404px;height:760px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);
+      overflow:hidden;display:flex;flex-direction:column}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);flex:0 0 auto;
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+
+    /* PREVIEW: pinned above the scroll region */
+    .preview{flex:0 0 auto;padding:var(--pad);border-bottom:1px solid var(--border)}
+    .seg{display:flex;width:100%;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
+    .seg > button{flex:1;height:26px;font-size:12px;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .seg > button:first-child{border-left:0}
+    .seg > button.on{background:var(--accent);color:#fff}
+
+    /* SCROLL REGION: the only thing that scrolls */
+    .scroll{flex:1 1 auto;overflow:auto;display:flex;flex-direction:column;gap:var(--group-gap);padding:var(--pad) 0 var(--pad)}
+    .group{display:flex;flex-direction:column;gap:var(--block-gap)}
+    .group + .group{border-top:1px solid var(--border);padding-top:var(--group-gap)}
+    .glabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px}
+    .card{display:flex;flex-direction:column;gap:var(--row-gap);margin:0 var(--pad);padding:var(--pad);
+      border:1px solid var(--border);border-radius:var(--r-card);background:var(--card)}
+    .row{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h)}
+    .row > .rl{font-size:12px;color:var(--t2);white-space:nowrap}
+    .row > .num{grid-column:3;justify-self:end}
+    .row > .seg{grid-column:2 / -2}
+    .rr{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;color:var(--t3);background:none;border:0;padding:0;cursor:pointer}
+    .rr:hover{color:var(--accent)}
+    .rr svg{width:11px;height:11px}
+    .rr.blank{visibility:hidden}
+    .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:44px;padding:0 6px;
+      background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;color:var(--t1);font-variant-numeric:tabular-nums}
+    .slider{position:relative;height:16px;display:flex;align-items:center;min-width:0}
+    .slider .trk{height:4px;width:100%;border-radius:9999px;background:var(--border)}
+    .slider .fil{position:absolute;left:0;height:4px;border-radius:9999px;background:var(--accent)}
+    .slider .knb{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--t1);border:1px solid var(--border);transform:translateX(-50%)}
+    .sw{width:30px;height:16px;border-radius:9999px;background:var(--sunk);border:1px solid var(--border);position:relative;flex:0 0 auto}
+    .sw::after{content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--t2);transition:left .12s}
+    .sw.on{background:var(--accent);border-color:var(--accent)}
+    .sw.on::after{left:15px;background:#fff}
+    .row.is-toggle{grid-template-columns:1fr auto var(--rev-w);min-height:26px;cursor:pointer}
+    .row.is-toggle > .sw{grid-column:2;justify-self:end}
+    .row.is-toggle > .rr{grid-column:3}
+    .note{font-size:11px;color:var(--t3);line-height:1.45}
+    .status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);margin:0 16px}
+    .status .spin{width:10px;height:10px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;flex:0 0 auto}
+
+    /* Color Matches: a list of detected region -> matched glitter */
+    .match{display:flex;align-items:center;gap:9px;padding:7px 8px;background:var(--sunk);border-radius:var(--r-inner);margin:0 16px}
+    .match .from,.match .to{width:26px;height:26px;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.16);flex:0 0 auto}
+    .match .arrow{color:var(--t3);flex:0 0 auto}
+    .match .arrow svg{width:12px;height:12px}
+    .match .mn{flex:1;min-width:0;font-size:11px}
+    .match .mn b{display:block;font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .match .mn span{color:var(--t3)}
+    .match .swap{height:22px;padding:0 8px;font-size:11px;font-weight:500;color:var(--t2);background:var(--card);
+      border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer;flex:0 0 auto}
+
+    /* STICKY FOOTER: always visible, never scrolls */
+    .footer{flex:0 0 auto;border-top:1px solid var(--border);background:var(--bg);padding:var(--pad);display:flex;gap:8px}
+    .footer button{height:32px;border-radius:var(--r-field);font-size:12px;font-weight:600;cursor:pointer}
+    .footer .cancel{flex:0 0 auto;padding:0 14px;background:var(--sunk);border:1px solid var(--border);color:var(--t2)}
+    .footer .create{flex:1;background:var(--accent);border:1px solid var(--accent);color:#fff}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg>
+      <span class="sp">Auto Glitter</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="preview">
+      <div class="seg"><button>Original</button><button>Flat</button><button class="on">Glitter</button></div>
+    </div>
+
+    <div class="scroll">
+
+      <div class="group">
+        <div class="glabel">Palette</div>
+        <div class="card">
+          <div class="row">
+            <span class="rl">Style</span>
+            <div class="seg"><button>Vibrant</button><button class="on">Balanced</button><button>Natural</button></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row">
+            <span class="rl">Colors</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:40%"></div><div class="knb" style="left:40%"></div></div>
+            <span class="num">8</span>
+            <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+          </div>
+          <div class="row">
+            <span class="rl">Merge</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:55%"></div><div class="knb" style="left:55%"></div></div>
+            <span class="num">55<span style="color:var(--t3);margin-left:2px">%</span></span>
+            <span class="rr blank"></span>
+          </div>
+          <div class="note">8 of a possible 24 layers. Fewer colors merge similar regions together.</div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">Color Matches</div>
+        <div class="status"><span class="spin"></span>8 regions found, matched to the closest glitter</div>
+        <div class="match">
+          <span class="from" style="background:#c94f7c"></span>
+          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          <span class="to" style="background:linear-gradient(135deg,#ff5db1,#c77dff)"></span>
+          <span class="mn"><b>Rose Foil</b><span>92% match</span></span>
+          <button class="swap">Change</button>
+        </div>
+        <div class="match">
+          <span class="from" style="background:#3e5c8a"></span>
+          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          <span class="to" style="background:linear-gradient(135deg,#3577cf,#33e6d0)"></span>
+          <span class="mn"><b>Ocean Holo</b><span>88% match</span></span>
+          <button class="swap">Change</button>
+        </div>
+        <div class="match">
+          <span class="from" style="background:#d9c27a"></span>
+          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          <span class="to" style="background:linear-gradient(135deg,#ffd23f,#ff9800)"></span>
+          <span class="mn"><b>Gold Leaf</b><span>95% match</span></span>
+          <button class="swap">Change</button>
+        </div>
+        <div class="match">
+          <span class="from" style="background:#2a2f3a"></span>
+          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          <span class="to" style="background:#0b0b0d"></span>
+          <span class="mn"><b>Onyx</b><span>solid, no glitter</span></span>
+          <button class="swap">Change</button>
+        </div>
+        <div class="match">
+          <span class="from" style="background:#8fbf8f"></span>
+          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          <span class="to" style="background:linear-gradient(135deg,#4caf50,#33e6d0)"></span>
+          <span class="mn"><b>Mint Holo</b><span>84% match</span></span>
+          <button class="swap">Change</button>
+        </div>
+        <div class="match">
+          <span class="from" style="background:#e8ddca"></span>
+          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          <span class="to" style="background:radial-gradient(circle at 30% 30%,#fff,#e8ddca 60%,#c9b98f)"></span>
+          <span class="mn"><b>Pearl</b><span>90% match</span></span>
+          <button class="swap">Change</button>
+        </div>
+        <div class="match">
+          <span class="from" style="background:#7a4b8a"></span>
+          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          <span class="to" style="background:linear-gradient(135deg,#7d5bff,#c77dff)"></span>
+          <span class="mn"><b>Amethyst</b><span>87% match</span></span>
+          <button class="swap">Change</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">Advanced</div>
+        <div class="card">
+          <div class="row">
+            <span class="rl">Detail</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:25%"></div><div class="knb" style="left:25%"></div></div>
+            <span class="num">40<span style="color:var(--t3);margin-left:2px">px</span></span>
+            <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+          </div>
+          <div class="row is-toggle"><span class="rl">Clean edges</span><span class="sw on"></span><span class="rr blank"></span></div>
+          <div class="row is-toggle"><span class="rl">Tune matched glitter hue</span><span class="sw on"></span><span class="rr blank"></span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <button class="cancel">Cancel</button>
+      <button class="create">Create 8 layers</button>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

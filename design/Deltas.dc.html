@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff; --add:#4caf50; --rem:#ff9800; --keep:#858c95; --park:#7d5bff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--workspace);color:var(--t1);
+      font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .sheet{width:520px;display:flex;flex-direction:column;gap:16px}
+    h2{margin:0;font-size:14px;font-weight:700}
+    .sub{font-size:12px;color:var(--t2);line-height:1.5;margin-top:6px}
+    .frame{background:var(--bg);border:1px solid var(--accent);border-radius:8px;padding:14px}
+    .frame p{margin:0 0 6px;font-size:11.5px;line-height:1.5;color:var(--t2)}
+    .frame p:last-child{margin-bottom:0}
+    .frame b{color:var(--t1)}
+    .block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px}
+    .block h3{margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+    .block.add h3{color:var(--add)} .block.rem h3{color:var(--rem)}
+    .block.keep h3{color:var(--keep)} .block.park h3{color:var(--park)}
+    .block .lead{font-size:11px;color:var(--t3);margin:0 0 10px;line-height:1.45}
+    .item{border-top:1px solid var(--border);padding:8px 0}
+    .item:first-of-type{border-top:0}
+    .item b{font-size:12px;font-weight:600;color:var(--t1)}
+    .item p{margin:2px 0 0;font-size:11px;color:var(--t2);line-height:1.5}
+    .src{font-family:ui-monospace,Consolas,monospace;color:var(--t3)}
+    code{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;color:#8fd0ff;background:var(--sunk);padding:1px 4px;border-radius:3px}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="sheet">
+
+    <div class="frame">
+      <h2 style="margin-bottom:8px">Deltas: current app vs this design</h2>
+      <p>Every line below is <b>the codebase as it stands today</b> compared to <b>what this design specifies</b>.
+      It is written to hand to an implementer.</p>
+      <p><b>Add</b> = this design shows it as a real control; the app has no equivalent yet.</p>
+      <p><b>Remove / replace</b> = exists in the app now; this design eliminates or supersedes it.</p>
+      <p><b>Keep</b> = exists in the app now; this design preserves it, possibly restyled.</p>
+      <p><b>Parked</b> = discussed, not in this design. Revisit separately.</p>
+      <p>Nothing here may break the preservation contract: <code>tests/panel-parity.js</code> requires the set of
+      element ids in each section to stay identical.</p>
+      <p style="margin-top:6px">This sheet plus the Panels Inventory are the running record; they stay current as
+      the panels iterate.</p>
+    </div>
+
+    <div class="block" style="border-color:var(--accent)">
+      <h3 style="color:var(--accent)">System rule, not a feature: concentric radii</h3>
+      <p style="font-size:11.5px;line-height:1.5;color:var(--t2)">Rounded elements nested in rounded elements step
+      the radius down by the gap between them (window 8, card 6, field 4, inner 3), recursively, floored at 3.
+      Tokens <code>--r-panel / --r-card / --r-field / --r-inner</code>. Apply across the whole app.</p>
+    </div>
+
+    <div class="block add">
+      <h3>Add &mdash; not in the app today</h3>
+      <p class="lead">Appears in the mockup as a real control. Confirmed in scope.</p>
+
+      <div class="item"><b>Editable Scale field</b>
+        <p>Today Scale is <span class="src">scaleReadout: true</span>, display only. Make it a field that types a
+        percent and drives W / H proportionally.</p></div>
+
+      <div class="item"><b>Shape corner radius</b>
+        <p><span class="src">LayerType.SHAPE</span> has no radius control. Add a bounded slider on the shape asset
+        (rounded-rectangle and similar).</p></div>
+
+      <div class="item"><b>Type-to-set number fields</b>
+        <p>Most numeric values are slider-only today. Every value in the mockup is an editable field;
+        X / Y / W / H / Scale have no slider at all.</p></div>
+
+      <div class="item"><b>Container-query responsive layout</b>
+        <p><span class="src">.settings-group-two-column</span> is 2-up at every width, no query anywhere. Needs
+        <span class="src">container-type: inline-size</span> plus stack rules under ~360px.</p></div>
+
+      <div class="item"><b>Opt-in collapsibility</b>
+        <p><span class="src">initializeAdvancedDisclosures()</span> stamps every
+        <span class="src">.subsection-content-group</span> as collapsible. Make it opt-in per schema item, so
+        only modules and the Advanced disclosure collapse.</p></div>
+
+      <div class="item"><b>Panel scroll region + sticky footer</b>
+        <p>Auto Glitter needs a scrolling body with a pinned "Create Layers" action, a live status host and a
+        dynamic results list. Needs <span class="src">.panel-scroll</span> + <span class="src">.panel-footer</span>
+        primitives that do not break the spacing rules.</p></div>
+    </div>
+
+    <div class="block park">
+      <h3>Parked &mdash; discussed, not in this design</h3>
+      <p class="lead">Too involved or undecided. Kept here so they are not lost, not built now.</p>
+
+      <div class="item"><b>Saved styles / presets</b>
+        <p>Save a Fill + Border + Shadow combination as a named style and re-apply it. New storage + picker.
+        Complex. Not now.</p></div>
+      <div class="item"><b>Stacked effects</b>
+        <p>Allow more than one Border / Shadow (a second shadow, an inner glow). Not now.</p></div>
+      <div class="item"><b>Copy source between paint slots</b>
+        <p>"Use same glitter as Fill" for Border / Shadow. Not now.</p></div>
+      <div class="item"><b>Blend mode on fills</b>
+        <p>Normal / Multiply / Screen / Overlay over the base. Undecided.</p></div>
+      <div class="item"><b>Eyedropper for Solid</b>
+        <p>Pick a color off the canvas for a solid source. Undecided.</p></div>
+    </div>
+
+    <div class="block rem">
+      <h3>Remove / replace &mdash; in the app now</h3>
+      <p class="lead">Migrated deliberately, one work package at a time. No selector disappears in the same commit
+      that introduces its replacement.</p>
+
+      <div class="item"><b>Eight label vocabularies</b>
+        <p><span class="src">setting-label, effect-option-label, functional-control-group-title,
+        advanced-control-group-title, control-group-label, settings-row-label-main</span> all collapse to
+        <span class="src">.property-label</span> and <span class="src">.property-group-label</span>.</p></div>
+
+      <div class="item"><b>Auto-collapsible cards</b>
+        <p>Every L2 card is currently made collapsible with an injected chevron. Becomes opt-in.</p></div>
+
+      <div class="item"><b>Per-slider "Reset" link row</b>
+        <p>Every slider gets a full-width <span class="src">&lt;button&gt;Reset&lt;/button&gt;</span> on its own
+        third row (34 of them in the text panel). Replaced by the one revert icon in the row.</p></div>
+
+      <div class="item"><b>Free-form module summaries</b>
+        <p>"Solid, 2, 3, 35%" value dumps in collapsed headers. Replaced by one identifier.</p></div>
+
+      <div class="item"><b>Wrapping segmented control</b>
+        <p>Two segmented visuals exist (one-line and one that wraps). The wrapping one goes; large sets use a
+        dropdown or <span class="src">.choice-grid</span>.</p></div>
+
+      <div class="item"><b>Redundant title / label pairs</b>
+        <p>A card titled "Opacity" wrapping one row labelled "Opacity" (measured 120px tall for one slider). The
+        block drops its title when it would equal the control's label.</p></div>
+
+      <div class="item"><b>settings-row-* modal vocabulary in the sidebar</b>
+        <p>Canvas Size is authored in modal markup and moved into the panel at boot. Re-authored in the row
+        vocabulary (Canvas Properties + No-selection Size).</p></div>
+
+      <div class="item"><b>Five inconsistent empty states</b>
+        <p>Three use an <span class="src">icon-wrapper xl</span> SVG, three use a literal emoji. Become one
+        <span class="src">.property-empty</span> component.</p></div>
+
+      <div class="item"><b>Filter sections are cards</b>
+        <p>Each <span class="src">.filter-section</span> has a card background, radius, padding (six stacked cards
+        in the drawer). Become label + chips separated by hairline dividers.</p></div>
+
+      <div class="item"><b>filter-label is a fourth uppercase level</b>
+        <p>Collapses into <span class="src">.property-group-label</span>, the one uppercase level.</p></div>
+
+      <div class="item"><b>Nested scroll trap in the filter drawer</b>
+        <p><span class="src">.filters-container-inner</span> has <span class="src">max-height:200px;
+        overflow-y:auto</span> inside the already-scrolling panel. Removed; the panel scrolls.</p></div>
+    </div>
+
+    <div class="block keep">
+      <h3>Keep &mdash; in the app now, preserved</h3>
+      <div class="item"><b>Asset dimensions and frame count</b>
+        <p>Reconsidered: staying. Useful, especially stickers ("512 x 512") and animated glitter ("12 frames").
+        One muted meta line under the name, not a metadata grid. Frame count + Animated badge only when frames &gt; 1.</p></div>
+      <div class="item"><b>L0 accordion, one open at a time</b>
+        <p>The Y2K gloss bar (<span class="src">windows7-bar</span> mixin) stays. This is where the era chrome lives.</p></div>
+      <div class="item"><b>Font picker</b>
+        <p><span class="src">renderFontPicker()</span> preview cards, sample rendered in the face. Unchanged.</p></div>
+      <div class="item"><b>buildAssetInfo component</b>
+        <p>Already one shared asset-summary component with a compact variant. Only styling / placement changes.</p></div>
+      <div class="item"><b>All element ids and manager bindings</b>
+        <p>Managers bind by id. Every stamped id keeps its legacy name; only structure and CSS change.</p></div>
+      <div class="item"><b>Image Size: Scale Textures / Scale Effects</b>
+        <p>Both toggles stay, under the Image Size mode of the Canvas Size control. Earlier draft wrongly implied
+        they were dropped.</p></div>
+      <div class="item"><b>Canvas Size: anchor grid + extension fill</b>
+        <p>The 9-cell anchor (<span class="src">canvasSizeAnchor</span>) and the Transparent / Color extension
+        with a conditional fill-color row stay, re-drawn in the row vocabulary.</p></div>
+      <div class="item"><b>Palette: Posterize and Dither branches</b>
+        <p>One module, one Mode switch. The mid rows swap between the two; both branches kept
+        (Cleanup for Posterize; Algorithm / Color palette / Pattern / Shimmer for Dither).</p></div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

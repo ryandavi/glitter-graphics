@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff; --accent-tint:#2a3a4a;
+      --pad:8px; --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden;display:flex;flex-direction:column}
+
+    /* L0 accordion bar, same chrome as the property panels */
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);flex:0 0 auto;
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .ico{width:14px;height:14px;opacity:.85}
+    .phead .ttl{font-weight:600}
+    .phead .count{font-size:11px;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums}
+    .phead .sp{flex:1 1 auto}
+    .phead .act{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);
+      background:none;border:0;cursor:pointer}
+    .phead .act svg{width:14px;height:14px}
+
+    .list{display:flex;flex-direction:column;gap:4px;padding:var(--pad)}
+
+    .layer{display:grid;grid-template-columns:14px 34px 1fr auto;align-items:center;column-gap:8px;
+      padding:6px 7px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);cursor:pointer}
+    .layer.active{border-color:var(--accent);background:var(--accent-tint)}
+    .layer.selected{border-color:var(--border-hi);background:var(--accent-tint)}
+    .layer .drag{color:var(--t3);display:flex;align-items:center;justify-content:center;cursor:grab}
+    .layer .drag svg{width:10px;height:14px}
+    .layer .sw{width:34px;height:34px;border-radius:var(--r-inner);border:1px solid var(--border);background:var(--sunk);
+      background-size:cover;background-position:center}
+    .layer .info{min-width:0;display:flex;flex-direction:column;gap:1px}
+    .layer .info .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .layer .info .meta{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--t3)}
+    .layer .info .meta .badge{border:1px solid var(--border);border-radius:var(--r-inner);padding:0 4px;color:var(--t2)}
+    .layer .acts{display:flex;align-items:center;gap:2px}
+    .layer .acts button{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--t3);
+      background:none;border:0;border-radius:var(--r-inner);cursor:pointer}
+    .layer .acts button:hover{color:var(--t1);background:var(--sunk)}
+    .layer .acts button.on{color:var(--t1)}
+    .layer .acts button svg{width:13px;height:13px}
+    .layer.is-hidden .sw{opacity:.35}
+    .layer.is-hidden .nm,.layer.is-hidden .meta{color:var(--t3)}
+    .layer.is-locked .drag{visibility:hidden}
+
+    /* bottom bar of icon actions, in the panel chrome */
+    .bar{display:flex;align-items:center;gap:2px;padding:6px var(--pad);border-top:1px solid var(--border);background:var(--sunk)}
+    .bar button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--t2);
+      background:none;border:1px solid transparent;border-radius:var(--r-field);cursor:pointer}
+    .bar button:hover{color:var(--t1);background:var(--card);border-color:var(--border)}
+    .bar button.danger:hover{color:#ff6b6b}
+    .bar button svg{width:15px;height:15px}
+    .bar .spacer{flex:1}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l6 3-6 3-6-3z"/><path d="M2 8l6 3 6-3M2 11l6 3 6-3"/></svg>
+      <span class="ttl">Layers</span>
+      <span class="count">5</span>
+      <span class="sp"></span>
+      <button class="act" title="New layer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></button>
+      <button class="act" title="Collapse"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>
+    </div>
+
+    <div class="list">
+
+      <div class="layer active">
+        <span class="drag"><svg viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="3" r="1.2"/><circle cx="7" cy="3" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11" r="1.2"/><circle cx="7" cy="11" r="1.2"/></svg></span>
+        <span class="sw" style="background:linear-gradient(135deg,#ff5db1,#7d5bff)"></span>
+        <span class="info"><span class="nm">Sparkle &amp; Shine</span><span class="meta"><span>Text</span></span></span>
+        <span class="acts">
+          <button title="Lock"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="9" height="6" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></button>
+          <button class="on" title="Hide"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg></button>
+        </span>
+      </div>
+
+      <div class="layer">
+        <span class="drag"><svg viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="3" r="1.2"/><circle cx="7" cy="3" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11" r="1.2"/><circle cx="7" cy="11" r="1.2"/></svg></span>
+        <span class="sw" style="background:radial-gradient(circle at 50% 50%,#ffd23f 0 30%,#ff5db1 60%,#7d5bff)"></span>
+        <span class="info"><span class="nm">starburst.svg</span><span class="meta"><span>Sticker</span></span></span>
+        <span class="acts">
+          <button title="Lock"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="9" height="6" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></button>
+          <button class="on" title="Hide"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg></button>
+        </span>
+      </div>
+
+      <div class="layer is-hidden">
+        <span class="drag"><svg viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="3" r="1.2"/><circle cx="7" cy="3" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11" r="1.2"/><circle cx="7" cy="11" r="1.2"/></svg></span>
+        <span class="sw" style="background:linear-gradient(135deg,#33e6d0,#2bb0ff)"></span>
+        <span class="info"><span class="nm">Ocean Fill</span><span class="meta"><span>Glitter fill</span><span class="badge">Masked</span></span></span>
+        <span class="acts">
+          <button title="Lock"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="9" height="6" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></button>
+          <button title="Show"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><path d="M3 3l10 10"/></svg></button>
+        </span>
+      </div>
+
+      <div class="layer">
+        <span class="drag"><svg viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="3" r="1.2"/><circle cx="7" cy="3" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11" r="1.2"/><circle cx="7" cy="11" r="1.2"/></svg></span>
+        <span class="sw" style="background:linear-gradient(135deg,#c9a24b,#8d6e3a)"></span>
+        <span class="info"><span class="nm">Gold Leaf</span><span class="meta"><span>Glitter fill</span></span></span>
+        <span class="acts">
+          <button title="Lock"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="9" height="6" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></button>
+          <button class="on" title="Hide"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg></button>
+        </span>
+      </div>
+
+      <div class="layer is-locked">
+        <span class="drag"><svg viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="3" r="1.2"/></svg></span>
+        <span class="sw" style="background:linear-gradient(120deg,#c98a5a,#7b9bd1 55%,#2c3550)"></span>
+        <span class="info"><span class="nm">beach-sunset.jpg</span><span class="meta"><span>Canvas</span><span class="badge">Locked</span></span></span>
+        <span class="acts">
+          <button class="on" title="Unlock"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="9" height="6" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0"/></svg></button>
+          <button class="on" title="Hide"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg></button>
+        </span>
+      </div>
+
+    </div>
+
+    <div class="bar">
+      <button title="Add glitter layer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2s5 5.5 5 9a5 5 0 0 1-10 0c0-3.5 5-9 5-9z"/></svg></button>
+      <button title="Add sticker layer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8 2l1.6 4.4L14 8l-4.4 1.6L8 14l-1.6-4.4L2 8l4.4-1.6z"/></svg></button>
+      <button title="Add text layer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 4h10M8 4v9"/></svg></button>
+      <span class="spacer"></span>
+      <button title="Duplicate selected"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="5" y="5" width="8" height="8" rx="1.5"/><path d="M3 11V4a1 1 0 0 1 1-1h7" fill="none" stroke-linecap="round"/></svg></button>
+      <button title="Go to selected"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></button>
+      <button class="danger" title="Delete selected"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M6 4V3h4v1M5 4l1 9h4l1-9"/></svg></button>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

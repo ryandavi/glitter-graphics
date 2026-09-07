@@ -1,0 +1,412 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff; --accent-surface:rgba(0,123,255,.16);
+      --ok:#4caf50; --no:#d3453a;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--workspace);color:var(--t1);
+      font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .sheet{width:480px;display:flex;flex-direction:column;gap:16px}
+    h2{margin:0;font-size:14px;font-weight:700;color:var(--t1)}
+    h3{margin:0 0 8px;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3)}
+    p{margin:0;font-size:12px;line-height:1.5;color:var(--t2)}
+    code{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#8fd0ff;background:var(--sunk);
+      padding:1px 4px;border-radius:3px}
+    .block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px}
+    table{width:100%;border-collapse:collapse;font-size:11px}
+    td{padding:5px 6px;border-top:1px solid var(--border);vertical-align:top;color:var(--t2);line-height:1.4}
+    tr:first-child td{border-top:0}
+    td:first-child{color:var(--t1);white-space:nowrap;font-family:ui-monospace,Consolas,monospace}
+    .bar{display:inline-block;height:8px;background:var(--accent);border-radius:2px;vertical-align:middle}
+    ul{margin:6px 0 0;padding-left:16px}
+    li{font-size:12px;line-height:1.5;color:var(--t2);margin-bottom:3px}
+    .do::marker{color:var(--ok)} .dont::marker{color:var(--no)}
+    .tag{display:inline-block;font-size:9px;font-weight:700;color:var(--accent);border:1px solid var(--accent);
+      border-radius:3px;padding:1px 4px;margin-left:6px}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="sheet">
+
+    <div class="block">
+      <h2>Panel system, the generic vocabulary</h2>
+      <p style="margin-top:6px">A small fixed set of classes for the design sidebar. This is being built for
+      Text Properties first, then applied unchanged to Sticker, Shape, Fill, Canvas, the tool panels, the state
+      panels and Auto Glitter. Every color, font and radius is from <code>_tokens.scss</code>. The panel adds
+      only the tokens and classes below, scoped to <code>.design-panel</code>, to replace the current
+      <code>setting-label</code> / <code>effect-option-*</code> / <code>functional-control-group-*</code>
+      vocabulary.</p>
+    </div>
+
+    <div class="block" style="border-color:#ff9800">
+      <h3 style="color:#ff9800">Read this before implementing</h3>
+      <p><b>The artboards are a spec, not paste-able CSS.</b> Each <code>.dc.html</code> file has its own inline
+      <code>&lt;style&gt;</code> written to render that one isolated frame. Build the real
+      <code>_properties.scss</code> from the RULES on this sheet, not by copying an artboard's stylesheet.</p>
+      <p style="margin-top:8px">Mockup shortcuts that must NOT survive into production:</p>
+      <ul>
+        <li>Non-row body items reserve the revert gutter with <code>margin-right</code> here. In production that
+          is a <b>container <code>padding-right</code></b>: the body owns the gutter, children still carry no
+          margin. The rule "separation is the parent's gap, never a child margin" still holds.</li>
+        <li><code>.disc</code> uses negative margins to bleed its divider full width. In production the divider is
+          a border on the body edge or a full-bleed pseudo-element, not a negative margin.</li>
+        <li>Per-artboard <code>--pad</code>, <code>--r-card</code> etc. are re-declared in every file. In
+          production they are declared once on <code>.design-panel</code>.</li>
+        <li>Inline <code>style=</code> on individual elements (montage colours, one-off widths) is mockup data,
+          not a pattern. Real values live in classes and tokens.</li>
+      </ul>
+      <p style="margin-top:8px"><b>Do not wipe the current styling.</b> Strategy (from PLAN-property-panel-system
+      &sect;6): add the new <code>.property-*</code> classes alongside the old ones, migrate the renderer and the
+      known JS-to-DOM couplings one work package at a time, delete the old property-only vocabulary at the end.
+      Shared primitives stay and are reused: the switch / pill toggle (<code>switch-track</code> mixin, also used
+      in Settings), the focus ring, <code>inset-surface</code>, the icon set, the token scales.
+      <code>tests/panel-parity.js</code> guards that no element id is lost.</p>
+    </div>
+
+    <div class="block">
+      <h3>What to hand the implementer</h3>
+      <ul>
+        <li>This canvas (the visual target) + <b>this System Key</b> (the rules to build from).</li>
+        <li><code>PLAN-property-panel-system.md</code> and its work-package list (WP1..WP10). Build in that order:
+          collapsibility opt-in, then the token / row / typography SCSS, then the renderer naming rule, then
+          revert, then conditionality, then module rows, then the text panel off its legacy template, then the
+          canvas-size vocabulary, then gallery / filters, then the theme + mobile sweep.</li>
+        <li>The <b>Deltas sheet</b>: what is net-new (build it), what is being replaced (migrate it), what is
+          kept (leave it), what is parked (do not build it).</li>
+        <li>The <b>preservation contract</b>: <code>node tests/panel-parity.js</code> and
+          <code>node tools/panel-audit.js</code> green before and after every work package; no manager file
+          (<code>TextGlitterManager</code>, <code>ShapeGlitterManager</code>, ...) edited to accommodate layout.</li>
+        <li>One instruction that prevents the last failure: <b>a rule that needs <code>:has()</code> to read
+          structure or <code>:not()</code> to carve exceptions means the markup is wrong. Fix the class, not the
+          selector.</b></li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h3>Spacing, the only values that exist</h3>
+      <p style="margin-bottom:8px">Every boxed container gets <code>--pad</code> on all four sides. Every stack
+      separates children with one <code>gap</code>. No child carries a margin.</p>
+      <table>
+        <tr><td>--pad</td><td><span class="bar" style="width:8px"></span> 8px</td><td>uniform inset: card, module header, module body, disclosure header</td></tr>
+        <tr><td>--row-gap</td><td><span class="bar" style="width:4px"></span> 4px</td><td>row to row inside a body</td></tr>
+        <tr><td>--block-gap</td><td><span class="bar" style="width:8px"></span> 8px</td><td>card to card</td></tr>
+        <tr><td>--group-gap</td><td><span class="bar" style="width:14px"></span> 14px</td><td>L1 group to L1 group</td></tr>
+      </table>
+    </div>
+
+    <div class="block">
+      <h3>The classes</h3>
+      <table>
+        <tr><td>.panel-group</td><td>L1. flex column, <code>block-gap</code>. Hairline above + one uppercase label. No box.</td></tr>
+        <tr><td>.panel-card</td><td>L2. The one surface. An explicit class, never inferred from position.</td></tr>
+        <tr><td>.panel-module</td><td>.panel-card + a header that enables and collapses. Fill, Transform, Border, Shadow.</td></tr>
+        <tr><td>.row</td><td>label, control, value, revert. One grid. EVERYTHING in a body is a row.</td></tr>
+        <tr><td>.row.is-stacked</td><td>control drops full width under the label (textarea, font list).</td></tr>
+        <tr><td>.row.is-pair</td><td>two number fields reading as one value (X/Y, W/H).</td></tr>
+        <tr><td>.row.is-toggle</td><td>EVERY boolean: label left, switch right-aligned to the value column, revert slot after. No checkboxes.</td></tr>
+        <tr><td>switch in a header</td><td>the module / effect ENABLE, leading its header (Fill, Border, Shadow, Pixelate, Palette).</td></tr>
+        <tr><td>.asset</td><td>thumbnail, name, meta line, Change. One earned surface.</td></tr>
+        <tr><td>.disc</td><td>Advanced. Divider spans the body; padding lives on the header.</td></tr>
+        <tr><td>.btn</td><td>full-width action button.</td></tr>
+        <tr><td>.note</td><td>11px tertiary helper text.</td></tr>
+      </table>
+      <p style="margin-top:8px">No <code>.set</code> / sub-label level. Align (Horizontal + Vertical rows) and
+      Flip are ordinary rows with an icon control, matching the Font Alignment card exactly, so their label is
+      the same 12px as Position, Size and Scale.</p>
+    </div>
+
+    <div class="block" style="border-color:var(--accent)">
+      <h3>How the SCSS is written <span class="tag">important</span></h3>
+      <p><b>No long list of hyper-specific selectors.</b> The last attempt failed because it specced behaviour and
+      then implemented it as <code>:has()</code> chains and <code>:where(:not():not())</code> exclusion lists.
+      That is what is being replaced, not extended.</p>
+      <ul style="margin-top:8px">
+        <li class="do">A repeating concept gets its own <b>class</b> (<code>.row</code>, <code>.panel-card</code>,
+          <code>.numf</code>, <code>.asset</code>). Variants are <b>modifier classes on the same element</b>
+          (<code>.row.is-pair</code>), never a descendant selector reaching into it.</li>
+        <li class="do">A more specific class is <b>added alongside</b> the generic one when JS needs a hook:
+          <code>class="row is-pair transform-position"</code>. The specific class carries no layout, only the
+          binding.</li>
+        <li class="do"><b>CSS custom properties</b> for every value that repeats or that a theme overrides. All
+          geometry is tokens on <code>.design-panel</code>; a card that needs a tighter gutter re-sets the
+          token, it does not add a selector.</li>
+        <li class="do"><b>Mixins</b> for a genuinely shared multi-property pattern (switch track, focus ring,
+          inset surface). Not for one-offs.</li>
+        <li class="do"><b>Nesting</b> one level deep, for state and variants only (<code>&amp;:hover</code>,
+          <code>&amp;.is-open</code>). Nesting that MIRRORS THE DOM
+          (<code>.panel .group .card .row .label</code>) is the bad practice: it welds structure into selectors,
+          so moving an element breaks its styles, and specificity climbs. SCSS nesting purely to group related
+          rules visually is fine as long as it compiles to flat, single-class selectors.</li>
+        <li class="do"><b>Organisation</b>: one file, <code>_properties.scss</code>, ordered sections with a
+          header comment each (tokens, typography, row types, grouping, modules, responsive).</li>
+        <li class="dont">If a rule needs <code>:has()</code> to sniff structure or <code>:not()</code> to carve
+          out exceptions, the markup is wrong. Fix the class or the structure, not the selector.</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h3>One segmented control, and when NOT to use it <span class="tag">consistency</span></h3>
+      <p style="margin-bottom:8px">There is ONE segmented control: one line, never wraps. The old wrapping
+      variant is gone. Choose by what the options are, not how many happen to fit today:</p>
+      <table>
+        <tr><td>.seg</td><td>2 to 3 <b>fixed</b> short options that will not grow: Mode, Style, Edges, Layering,
+          H / V align (icons).</td></tr>
+        <tr><td>.sel dropdown</td><td>anything <b>enumerated</b>, could grow, 4+, or "set once": <b>Source</b>
+          (same control in every panel, Canvas has 4 modes), Case, Placement, Blend, Palette.</td></tr>
+        <tr><td>.choice-grid</td><td>a genuine gallery of many equal choices: font tag filters, shape picker.
+          Separate bordered buttons that wrap. Never a wrapped <code>.seg</code>.</td></tr>
+      </table>
+      <p style="margin-top:8px">Source is a dropdown <b>everywhere</b>, even where 3 modes would fit as a
+      segmented, so it reads and behaves identically across Text, Sticker, Shape, Fill and Canvas.</p>
+    </div>
+
+    <div class="block">
+      <h3>Sliders only where a value is bounded</h3>
+      <p>A slider needs a real 0 to max range: opacity, font size, border width, letter / line spacing, rotation
+      (0 to 360). X, Y, W, H, Scale have no natural maximum, so they are number fields only (the Figma pattern).
+      This also removes the tiny-slider problem in pair rows. No scrub fields.</p>
+    </div>
+
+    <div class="block">
+      <h3>Value and revert</h3>
+      <p><b>In a row</b> the value sits in an editable field and the 16px revert slot is <b>always reserved</b>,
+      so a value crossing its default never reflows the grid. The revert icon paints only when the value is
+      off-default, and is never hover-only. A pure readout (there are almost none now) stays plain tertiary text.</p>
+      <p style="margin-top:8px"><b>In a module header</b> the revert is <b>present-only</b>, not reserved, because
+      nothing sits below it to stay aligned with. The chevron is the right-edge anchor; the revert appears just
+      left of it when the module is off-default. That is why the collapsed Shadow header has no gap before its
+      chevron and the Fill header does.</p>
+      <p style="margin-top:8px">The revert column is reserved on <b>every row</b> - value, slider, segmented,
+      dropdown, toggle alike - so one right edge runs down all the rows. Alignment, Source and Mode have no
+      default to return to, so their slot just stays blank. <b>Non-row block elements</b> - asset cards, notes,
+      full-width buttons, group footers - do NOT reserve it; they span the full content width (16px inset each
+      side). Two side-by-side action buttons (Open project / Save project) stay a 2-up.</p>
+    </div>
+
+    <div class="block">
+      <h3>Solid color is an editable field</h3>
+      <p>A Solid source shows <code>.colorfield</code>: the swatch plus the hex, in a field you can select and
+      paste a code into, not a read-only chip. Same height and radius as every other field.</p>
+    </div>
+
+    <div class="block">
+      <h3>The Content / asset section is a module</h3>
+      <p>Wherever a panel has an asset (Sticker, Shape, Brush tip), Content is a <code>.panel-module</code>: a
+      header in the chrome bar (name, revert, chevron), then the <code>.asset</code> row and any settings in the
+      body. Same shell as the Transform and effect modules. Shape used to be a plain card with a bare asset row;
+      it matches the rest now.</p>
+    </div>
+
+    <div class="block">
+      <h3>Concentric corner radii <span class="tag">app-wide</span></h3>
+      <p>Rounded elements nested inside other rounded elements do NOT repeat the same radius. Each inner radius is
+      its parent's radius minus the gap between them, so the curves stay parallel; recursively, so a deeper nest
+      is tighter still. Moving outward, add the gap; moving inward, subtract it. Floor at 3px.</p>
+      <p style="margin-top:8px">The panel scale: window <code>8</code>, card / module <code>6</code>, field and
+      button <code>4</code>, asset surface and swatch <code>3</code>. Tokens
+      <code>--r-panel / --r-card / --r-field / --r-inner</code>. Applies to every panel and should be the rule
+      across the whole app, not just here.</p>
+    </div>
+
+    <div class="block">
+      <h3>Label text size</h3>
+      <p>Property labels are 12px today. Recommendation: drop to <b>11px</b> to match the value fields, the way
+      Figma and Photoshop size panel labels. One token change (<code>--property-label-size</code>). Keep the
+      group label at 10.5px and the block title at 12px. Not yet applied to the artboards, which stay at 12px so
+      they read as one set.</p>
+    </div>
+
+    <div class="block">
+      <h3>Booleans: one primitive</h3>
+      <p>Every boolean is a <b>toggle switch</b> (<code>.row.is-toggle</code>): label on the left, switch
+      right-aligned to the <b>value column</b> (same right edge as every value field), then the reserved revert
+      slot. Lock aspect ratio, Relative, Resample, Scale Textures / Effects, Pressure, Clean edges, the Selection
+      options, Tune matched glitter hue. Nothing is a left-aligned checkbox. The one switch that sits elsewhere
+      is the module / effect <b>enable</b>, which leads its header.</p>
+    </div>
+
+    <div class="block">
+      <h3>Actions: contextual vs form submit</h3>
+      <p>A <b>contextual action</b> acts on the block right above it: Fit box to text, Reset Effects (which sits
+      below a full-bleed hairline, full content width, its own even padding). A <b>form submit</b> commits a set
+      of fields and gets a footer: a full-bleed divider, its own even padding, visually detached from the inputs.
+      Same treatment as the filter drawer's Clear all / Show results bar. Applies to Project's Open / Save, Image
+      Size's Scale design, Canvas Size's Resize canvas, the no-selection Apply. All full-width buttons span the
+      full content width now - no revert-column clearance.</p>
+      <p style="margin-top:8px">Buttons still stack one per line, full width. A two-up row is allowed only for
+      exactly two actions whose labels both fit (Open / Save). Group / Duplicate / Merge down / Delete stack.</p>
+    </div>
+
+    <div class="block">
+      <h3>Empty and populated states are both drawn, both labelled</h3>
+      <p>Any component with a filled form and an empty form is shown twice on the sheet, each with a small
+      <code>Shown when empty</code> / <code>Shown when populated</code> tag, so the implementer never has to
+      guess which markup is which. Color selections is the example.</p>
+    </div>
+
+    <div class="block">
+      <h3>Label tooltips</h3>
+      <p>Not every label. A label MAY carry a schema <code>title:</code> for a terse or technical term (Merge,
+      Detail, Feather, Contiguous, Dot gap). It renders <code>cursor: help</code> and reveals on hover; obvious
+      labels (Opacity, Rotation, Size) stay bare. This is already how the schema works, the design just styles
+      <code>.property-label[title]</code>.</p>
+    </div>
+
+    <div class="block">
+      <h3>Why Color Fill Settings has a "Color Picker" tag</h3>
+      <p>It is a <b>tool</b> panel, not a layer panel. It only appears when the Color Picker tool is active on a
+      glitter fill (<code>syncToolSettingsSectionVisibility</code>), and it configures how that tool selects
+      colors on the fill's mask. The tag names the tool it belongs to, same as the Brush tag on Mask Settings, so
+      the user knows these settings are the tool's and will change when they switch tools. Photoshop
+      options-bar model.</p>
+    </div>
+
+    <div class="block">
+      <h3>Standalone text blocks</h3>
+      <p>A lead line or note that stands on its own (no-selection intro, multi-select summary) gets its top
+      spacing from its own <code>padding-top</code> and its bottom spacing from the parent's <code>gap</code> so
+      the two are equal, and never has a divider immediately after it. The "more space below than above" was a
+      body top-pad plus a group divider stacking under a zero-pad line.</p>
+    </div>
+
+    <div class="block">
+      <h3>Disclosure label</h3>
+      <p>The Advanced disclosure is labelled with a topic, at most two words, never a list of its contents.
+      "Advanced" is the default; a pure-purpose one may be topical ("Adjust color", "Cleanup"). Not
+      "Adjust color, hue, saturation, brightness".</p>
+    </div>
+
+    <div class="block">
+      <h3>Collapsed module summary</h3>
+      <p>The summary is ONE identifier, never a value dump. Fill shows the glitter name ("Holo Foil"), Border and
+      Shadow show the source ("Glitter" / "Solid"), Transform shows nothing (the revert icon is the "edited"
+      signal). The swatch carries the color. Offsets, widths and percentages live inside the expanded module,
+      not in the summary line.</p>
+    </div>
+
+    <div class="block">
+      <h3>Units</h3>
+      <p>Shown only where a value could be misread without it. <b>px is never shown</b> on Position or Size (it is
+      the only unit they ever use, and Figma / Photoshop omit it). <b>Degrees and percent are always shown</b>,
+      because rotation could be read as radians and Scale vs Opacity are both 0 to 100.</p>
+    </div>
+
+    <div class="block">
+      <h3>Responsive: container queries, never media queries</h3>
+      <p>The mobile drawer moves these exact sections, so the same DOM renders at ~450px (resizable desktop
+      panel) and ~330px (drawer). <code>.settings-subsection</code> gets <code>container-type: inline-size</code>.
+      Below ~360px: X/Y and W/H pairs stack one field per line, the label column shrinks. See the Narrow artboard.</p>
+    </div>
+
+    <div class="block">
+      <h3>Asset browser</h3>
+      <p>Same chrome as the panels. A slim header (<code>Back</code> + title + count), a search row (input +
+      Filter button), an optional armed picker strip that names the destination, an active-filter chip summary,
+      then the content: a <b>category grid</b> (2-up folder cards) by default, an <b>asset grid</b> (4-up
+      swatch / tile cards) inside a category or in search results.</p>
+      <p style="margin-top:8px">The <b>filter drawer</b> is redesigned per PLAN &sect;3.8: each group is a
+      <code>.property-group-label</code> (the same single uppercase level, not a fourth <code>filter-label</code>)
+      over a chip row, separated by <b>hairline dividers, not cards</b>. The nested
+      <code>max-height:200px; overflow:auto</code> scroll trap is removed; the panel scrolls. Colours are round
+      swatch chips, everything else a pill. Clear all / Show results pinned at the bottom.</p>
+      <p style="margin-top:8px"><b>Three layouts, chosen by the collection, and that is fine.</b></p>
+      <ul>
+        <li><b>Glitter, stickers</b> (100s to 1000s): a category folder grid, with a <code>By category / Show
+          all</code> toggle. "Show all" is every item visible, grouped under category headers, nothing hidden,
+          nothing collapsed. Not a flat mixed grid.</li>
+        <li><b>Brush tips</b>: basic brushes listed flat as today, then <b>Brush sets</b> as folders (like
+          glitter). Opening a set is its own screen: a back line, the set name, a <code>Source &amp; Usage</code>
+          credit block (attribution + link), then its tips. Search / filter scope to the current screen; the
+          back line clears the scope.</li>
+        <li><b>Shapes</b> (~48): too small for folders and too small to hide. Every category shown, grouped under
+          headers, always. Same layout as glitter's "Show all".</li>
+      </ul>
+      <p style="margin-top:6px">No Featured row. Grid columns are a container query (3-up narrow, 4-up default,
+      5-up wide), same mechanism as the panels. An animated item gets a corner play glyph.</p>
+      <p style="margin-top:8px"><b>Item chrome:</b> an animated item (glitter or sticker) carries a small
+      play-glyph badge in a corner (it affects the exported GIF, so it earns the mark). Brush <b>sets</b> get a
+      set title and a <code>Source &amp; Usage</code> credit block (attribution + link) above their tips;
+      individual basic brushes do not. The active-filter <code>Clear all</code> is a bordered pill with an x
+      icon, not a plain word.</p>
+      <p style="margin-top:8px"><b>Asset meta line</b> (dimensions and animation): <code>W &times; H</code>, then
+      for animated assets <code>&middot; N frames &middot; R fps</code>. Fallbacks the code already carries:
+      variable rate renders <code>&middot; variable</code>, no rate renders just <code>&middot; N frames</code>,
+      no dimensions omits that segment. The renderer drops empty segments, it never prints "0 fps" or "undefined".</p>
+    </div>
+
+    <div class="block">
+      <h3>Scroll region + sticky footer</h3>
+      <p>Auto Glitter is the one panel whose body must scroll under a pinned action bar. The panel is a flex
+      column with a fixed height: a <b>pinned preview</b> (<code>flex: 0 0 auto</code>), a <b>scroll region</b>
+      (<code>flex: 1; overflow: auto</code>) holding the groups, and a <b>footer</b>
+      (<code>flex: 0 0 auto</code>, hairline on top) with Cancel / Create N layers. No group inside the scroll
+      region changes; the same <code>.card</code>, <code>.row</code>, <code>.glabel</code>, revert gutter and
+      <code>.is-check</code> apply. Color Matches is a list of <code>region &rarr; matched glitter</code> rows,
+      each a swatch pair, a name, a match %, and a Change chip.</p>
+    </div>
+
+    <div class="block">
+      <h3>Layers panel parity</h3>
+      <p>Left side, but it should read as one family with the rest. Same Y2K bar (icon, "Layers", count, a New
+      Layer action, a collapse chevron). A layer row is one card: drag dots, a 34px swatch, name + type meta
+      (plus a <code>Masked</code> / <code>Locked</code> badge), then visibility and lock icon buttons. States:
+      <code>.active</code> (accent border + tint), <code>.selected</code>, <code>.is-hidden</code> (dimmed
+      swatch and name), <code>.is-locked</code> (no drag handle). The bottom bar of add / clone / go-to / delete
+      icon buttons sits in the panel chrome, same tokens as the property panels.</p>
+    </div>
+
+    <div class="block">
+      <h3>Collection credit block</h3>
+      <p>From <code>.asset-collection-credit</code>, reformatted, same information: a <code>Source &amp; usage</code>
+      label, a byline (<code>Created by &lt;a&gt;</code>), a meta row of dot-separated muted spans (license,
+      archivist), an optional <code>&lt;details&gt;</code> archival note that stays collapsed, and a links row
+      (View archived set). It lives at the top of a brush set's page, inside a card, above the tips grid.
+      Basic brushes have no credit.</p>
+    </div>
+
+    <div class="block">
+      <h3>Rules that keep it from drifting</h3>
+      <ul>
+        <li class="do">Spacing is the parent's <code>gap</code> or nothing. Never a margin on a child.</li>
+        <li class="do">Cardness is the <code>.panel-card</code> class. A block inside a block is not a card.</li>
+        <li class="do">One uppercase level, the group label. One body label size, 12px.</li>
+        <li class="do">Conditional content: <code>hidden</code> on the outermost owned node, then
+          <code>.row[hidden]{display:none}</code> and <code>.panel-card:empty{display:none}</code>.</li>
+        <li class="dont">No <code>:has()</code> chains, no <code>:where(:not():not())</code>, no feature-named selectors.</li>
+        <li class="dont">No card in a card. No fourth label level. No per-element margin math. No wrapping segmented.</li>
+      </ul>
+    </div>
+
+    <div class="block">
+      <h3>Applying to the other panels</h3>
+      <p>The Panels Inventory artboard lists all twelve right-panel types. Sticker, Shape, Fill, Canvas, the two
+      tool panels and the three state panels are drafted on their own pages, and the asset browser (gallery,
+      category, search + filter, shapes, brush tips) on another. Sticker and Shape share Text's structure. <b>Fill</b> is the minimal case (one
+      module + a read-only Mask summary) and proves the system does not sprawl. <b>Canvas Properties</b> is the
+      density stress test: its Size group is the real two-mode control (<b>Image Size</b>, which scales content
+      and keeps Scale Textures / Scale Effects, vs <b>Canvas Size</b>, which crops or extends and carries the
+      anchor and an extension fill), re-authored from the modal <code>settings-row-*</code> markup. <b>Auto
+      Glitter</b> is the layout stress test: a scrolling body with a pinned "Create Layers" footer, a live status
+      host and a dynamic list, needing <code>.panel-scroll</code> + <code>.panel-footer</code>. Design one at a
+      time, then re-check earlier ones.</p>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

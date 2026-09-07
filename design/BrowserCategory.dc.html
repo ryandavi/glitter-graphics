@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff; --accent-surface:rgba(0,123,255,.16);
+      --pad:8px; --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden;display:flex;flex-direction:column}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+
+    /* armed picker strip: names the destination */
+    .pickstrip{display:flex;align-items:center;gap:8px;padding:7px var(--pad);background:var(--accent-surface);border-bottom:1px solid var(--border)}
+    .pickstrip .txt{flex:1;min-width:0}
+    .pickstrip .txt b{font-size:11.5px;font-weight:600;display:block}
+    .pickstrip .txt span{font-size:11px;color:var(--t3)}
+    .pickstrip .done{height:24px;padding:0 12px;font-size:11px;font-weight:600;color:#fff;background:var(--accent);border:0;border-radius:var(--r-field);cursor:pointer}
+
+    .abh{display:flex;align-items:center;gap:6px;height:30px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
+    .abh .back{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t2);background:none;border:0;padding:2px 4px;cursor:pointer}
+    .abh .back:hover{color:var(--t1)}
+    .abh .back svg{width:12px;height:12px}
+    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1}
+    .abh .count{font-size:11px;color:var(--t3)}
+
+    .summary{display:flex;flex-wrap:wrap;gap:6px;padding:8px var(--pad) 4px}
+    .schip{display:flex;align-items:center;gap:5px;height:22px;padding:0 5px 0 8px;background:var(--accent-surface);
+      border:1px solid var(--accent);border-radius:9999px;font-size:11px;color:var(--t1)}
+    .schip .x{width:13px;height:13px;display:flex;align-items:center;justify-content:center;color:var(--t2)}
+    /* an action, not a caption: bordered pill with an icon */
+    .summary .clear{display:flex;align-items:center;gap:4px;height:22px;padding:0 9px;font-size:11px;font-weight:500;
+      color:var(--t2);background:none;border:1px solid var(--border);border-radius:9999px;cursor:pointer;align-self:center}
+    .summary .clear:hover{color:var(--t1);border-color:var(--border-hi)}
+    .summary .clear svg{width:11px;height:11px}
+    .anim{position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:50%;background:rgba(0,0,0,.55);
+      display:flex;align-items:center;justify-content:center}
+    .anim svg{width:8px;height:8px;color:#fff}
+    .item .th{position:relative}
+
+    .browserbody{padding:4px var(--pad) var(--pad);overflow:auto}
+    .assetgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+    .item{display:flex;flex-direction:column;gap:3px;cursor:pointer}
+    .item .th{aspect-ratio:1;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.14)}
+    .item.on .th{outline:2px solid var(--accent);outline-offset:1px}
+    .item .nm{font-size:9.5px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M4 8h8"/></svg>
+      <span class="sp">Design</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="pickstrip">
+      <span class="txt"><b>Choosing Fill for &ldquo;Sparkle&rdquo;</b><span>Text layer &middot; tap a swatch to apply</span></span>
+      <button class="done">Done</button>
+    </div>
+
+    <div class="abh">
+      <button class="back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg>Glitter</button>
+      <span class="title">Holographic</span>
+      <span class="count">84</span>
+    </div>
+
+    <div class="summary">
+      <span class="schip">Pink<span class="x">&times;</span></span>
+      <span class="schip">Vivid<span class="x">&times;</span></span>
+      <button class="clear"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>Clear all</button>
+    </div>
+
+    <div class="browserbody">
+      <div class="assetgrid">
+        <div class="item on"><span class="th" style="background:linear-gradient(135deg,#ff5db1,#7d5bff 55%,#33e6d0)"></span><span class="nm">Holo Foil</span></div>
+        <div class="item"><span class="th" style="background:conic-gradient(#ff5db1,#ffd23f,#33e6d0,#7d5bff,#ff5db1)"><span class="anim"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3l8 5-8 5z"/></svg></span></span><span class="nm">Prism</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#ff9de0,#c77dff)"></span><span class="nm">Bubblegum</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(120deg,#ffd1f0,#d1e6ff,#d1ffe6)"></span><span class="nm">Opal</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#ff2d8d,#ff6f00)"></span><span class="nm">Sunset Foil</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#b06dff,#6d9bff)"></span><span class="nm">Amethyst</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#ff5db1,#33e6d0)"></span><span class="nm">Mermaid</span></div>
+        <div class="item"><span class="th" style="background:radial-gradient(circle at 30% 30%,#fff,#ff5db1 40%,#7d5bff)"></span><span class="nm">Pearl Pop</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#ffd23f,#ff5db1 60%,#7d5bff)"></span><span class="nm">Candy</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#c77dff,#ff9de0)"></span><span class="nm">Orchid</span></div>
+        <div class="item"><span class="th" style="background:linear-gradient(135deg,#ff5db1,#ffd1f0)"></span><span class="nm">Rose Glass</span></div>
+        <div class="item"><span class="th" style="background:conic-gradient(from 90deg,#ff5db1,#c77dff,#ff5db1)"></span><span class="nm">Fuchsia Spin</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

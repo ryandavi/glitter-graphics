@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff; --accent-surface:rgba(0,123,255,.16);
+      --pad:8px; --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden;display:flex;flex-direction:column}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+    .abh{display:flex;align-items:center;gap:6px;height:30px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
+    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1}
+
+    .searchrow{display:flex;gap:6px;padding:var(--pad)}
+    .searchbox{flex:1;display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;background:var(--sunk);
+      border:1px solid var(--accent);border-radius:var(--r-field);font-size:12px;color:var(--t1)}
+    .searchbox svg{width:12px;height:12px;color:var(--t3);flex:0 0 auto}
+    .searchbox .clr{margin-left:auto;color:var(--t3)}
+    .filterbtn{display:flex;align-items:center;gap:4px;height:28px;padding:0 10px;background:var(--accent-surface);
+      border:1px solid var(--accent);border-radius:var(--r-field);font-size:11px;font-weight:500;color:var(--t1);cursor:pointer}
+    .filterbtn svg{width:13px;height:13px}
+
+    /* active-filter summary (above the drawer) */
+    .summary{display:flex;flex-wrap:wrap;gap:6px;padding:0 var(--pad) 8px}
+    .schip{display:flex;align-items:center;gap:5px;height:22px;padding:0 5px 0 8px;background:var(--accent-surface);
+      border:1px solid var(--accent);border-radius:9999px;font-size:11px;color:var(--t1)}
+    .schip .x{width:13px;height:13px;display:flex;align-items:center;justify-content:center;color:var(--t2)}
+
+    /* THE FILTER DRAWER, redesigned: label + chips + hairline dividers.
+       no cards, no fourth uppercase level, no nested scroll region. */
+    .drawer{border-top:1px solid var(--border)}
+    .fgroup{padding:10px var(--pad)}
+    .fgroup + .fgroup{border-top:1px solid var(--border)}
+    .fgroup > .flabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);margin-bottom:7px}
+    .chips{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{height:24px;padding:0 10px;display:flex;align-items:center;background:var(--sunk);border:1px solid var(--border);
+      border-radius:9999px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer}
+    .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+    .cchip{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);cursor:pointer}
+    .cchip.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-surface)}
+    .toggle-row{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;min-height:24px}
+    .check{width:14px;height:14px;border-radius:3px;border:1px solid var(--border);background:var(--sunk);position:relative}
+    .check.on{background:var(--accent);border-color:var(--accent)}
+    .check.on::after{content:"";position:absolute;left:4px;top:1px;width:3.5px;height:7px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+    .toggle-row span{font-size:12px;color:var(--t2)}
+    .factions{display:flex;gap:8px;padding:10px var(--pad);border-top:1px solid var(--border)}
+    .factions button{flex:1;height:28px;border-radius:var(--r-field);font-size:12px;font-weight:500;cursor:pointer}
+    .factions .sec{background:var(--sunk);border:1px solid var(--border);color:var(--t2)}
+    .factions .pri{background:var(--accent);border:1px solid var(--accent);color:#fff}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M4 8h8"/></svg>
+      <span class="sp">Design</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="abh"><span class="title">Glitter</span><span style="font-size:11px;color:var(--t3)">36 results</span></div>
+
+    <div class="searchrow">
+      <div class="searchbox"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg>foil<span class="clr">&times;</span></div>
+      <button class="filterbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4h12M4 8h8M6 12h4"/></svg>Filter &middot; 3</button>
+    </div>
+
+    <div class="summary">
+      <span class="schip">Pink<span class="x">&times;</span></span>
+      <span class="schip">Vivid<span class="x">&times;</span></span>
+      <span class="schip">Metallic<span class="x">&times;</span></span>
+    </div>
+
+    <div class="drawer">
+      <div class="fgroup">
+        <div class="flabel">Match</div>
+        <div class="toggle-row"><span class="check"></span><span>Search by name only</span></div>
+      </div>
+
+      <div class="fgroup">
+        <div class="flabel">Colors</div>
+        <div class="chips">
+          <span class="cchip" style="background:#d3453a"></span>
+          <span class="cchip" style="background:#ff9800"></span>
+          <span class="cchip" style="background:#ffd23f"></span>
+          <span class="cchip" style="background:#4caf50"></span>
+          <span class="cchip" style="background:#3577cf"></span>
+          <span class="cchip" style="background:#7d5bff"></span>
+          <span class="cchip on" style="background:#e0559f"></span>
+          <span class="cchip" style="background:#9aa0a8"></span>
+          <span class="cchip" style="background:#8d6e4b"></span>
+          <span class="cchip" style="background:linear-gradient(135deg,#c9a24b,#9fb0c0)"></span>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <div class="flabel">Tone</div>
+        <div class="chips">
+          <span class="chip">Light</span><span class="chip">Dark</span><span class="chip">Pastel</span><span class="chip">Neon</span><span class="chip">Jewel</span>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <div class="flabel">Intensity</div>
+        <div class="chips"><span class="chip on">Vivid</span><span class="chip">Muted</span></div>
+      </div>
+
+      <div class="fgroup">
+        <div class="flabel">Temperature</div>
+        <div class="chips"><span class="chip">Warm</span><span class="chip">Cool</span></div>
+      </div>
+
+      <div class="fgroup">
+        <div class="flabel">Category</div>
+        <div class="chips">
+          <span class="chip">Holographic</span><span class="chip on">Metallic</span><span class="chip">Solid</span><span class="chip">Pattern</span><span class="chip">Pastel</span>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <div class="flabel">Vibe</div>
+        <div class="chips"><span class="chip">Pattern</span><span class="chip">Multicolor</span></div>
+      </div>
+    </div>
+
+    <div class="factions">
+      <button class="sec">Clear all</button>
+      <button class="pri">Show 36 results</button>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

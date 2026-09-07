@@ -1,0 +1,344 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff;
+      --pad:8px; --row-gap:4px; --block-gap:8px; --group-gap:14px;
+      --label-w:78px; --rev-w:16px; --rev-gut:24px; --row-h:26px;
+      --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+    .body{display:flex;flex-direction:column;gap:var(--group-gap);padding:var(--pad) 0}
+    .group{display:flex;flex-direction:column;gap:var(--block-gap)}
+    .group + .group{border-top:1px solid var(--border);padding-top:var(--group-gap)}
+    .glabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px}
+    .group > .row{padding-left:16px;padding-right:16px}
+    .group > .note{margin:0 16px}
+    .group > .btn{margin:0 16px}
+    .card{display:flex;flex-direction:column;gap:var(--row-gap);margin:0 var(--pad);padding:var(--pad);
+      border:1px solid var(--border);border-radius:var(--r-card);background:var(--card)}
+    .card > .ctitle{font-size:12px;font-weight:600;color:var(--t1)}
+    .card > .cnote{font-size:11px;color:var(--t3);line-height:1.4;margin-right:var(--rev-gut)}
+    .row{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h)}
+    .row > .rl{font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row > .num{grid-column:3;justify-self:end}
+    .row > .seg,.row > .sel,.row > .anchor,.row > .colorfield{grid-column:2 / -2}
+    .colorfield{display:flex;align-items:center;gap:8px;height:24px;padding:0 8px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-field);font-size:12px;color:var(--t1)}
+    .colorfield .sw2{width:14px;height:14px;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.2);flex:0 0 auto}
+    .colorfield .hex{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+    .row.is-pair{grid-template-columns:var(--label-w) 1fr var(--rev-w)}
+    .row.is-pair > .pair{grid-column:2}
+    .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}
+    .rr{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;color:var(--t3);background:none;border:0;padding:0;cursor:pointer}
+    .rr:hover{color:var(--accent)}
+    .rr svg{width:11px;height:11px}
+    .rr.blank{visibility:hidden}
+    .row.is-toggle{grid-template-columns:1fr auto var(--rev-w);min-height:26px;cursor:pointer}
+    .row.is-toggle > .sw{grid-column:2;justify-self:end}
+    .row.is-toggle > .rr{grid-column:3}
+    /* a form's submit lives in a footer: full-bleed divider inside the card,
+       own even padding, separated from the fields. */
+    .formactions{border-top:1px solid var(--border);margin:var(--row-gap) calc(-1*var(--pad)) calc(-1*var(--pad));
+      padding:var(--pad);display:flex;gap:8px}
+    .formactions .btn{flex:1}
+    .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:46px;padding:0 6px;
+      background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;font-weight:500;
+      font-variant-numeric:tabular-nums;color:var(--t1)}
+    .num .u{color:var(--t3);margin-left:3px}
+    .numf{display:flex;align-items:center;gap:6px;height:24px;padding:0 8px;min-width:0;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field)}
+    .numf .k{flex:0 0 auto;font-size:10.5px;font-family:ui-monospace,Consolas,monospace;color:var(--t3)}
+    .numf .v{font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--t1)}
+    .slider{position:relative;height:16px;display:flex;align-items:center;min-width:0}
+    .slider .trk{height:4px;width:100%;border-radius:9999px;background:var(--border)}
+    .slider .fil{position:absolute;left:0;height:4px;border-radius:9999px;background:var(--accent)}
+    .slider .knb{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--t1);border:1px solid var(--border);transform:translateX(-50%)}
+    .sel{height:24px;display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-field);padding:0 8px;font-size:12px;color:var(--t1)}
+    .sel svg{width:11px;height:11px;color:var(--t3)}
+    .seg{display:flex;width:100%;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
+    .seg > button{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;height:24px;padding:0 6px;
+      font-size:12px;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+    .seg > button:first-child{border-left:0}
+    .seg > button.on{background:var(--accent);color:#fff}
+    .sw{width:30px;height:16px;border-radius:9999px;background:var(--sunk);border:1px solid var(--border);position:relative;flex:0 0 auto}
+    .sw::after{content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--t2);transition:left .12s}
+    .sw.on{background:var(--accent);border-color:var(--accent)}
+    .sw.on::after{left:15px;background:#fff}
+    .anchor{display:grid;grid-template-columns:repeat(3,20px);gap:3px}
+    .anchor button{width:20px;height:20px;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-inner);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t3)}
+    .anchor button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+    .anchor button svg{width:11px;height:11px}
+    .btn{display:flex;align-items:center;justify-content:center;gap:6px;height:28px;padding:0 10px;
+      font-size:12px;font-weight:500;color:var(--t1);background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
+    .btn:hover{border-color:var(--border-hi)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn svg{width:13px;height:13px;color:var(--t2)}
+    .btn.primary svg{color:#fff}
+    .note{font-size:11px;color:var(--t3);line-height:1.45}
+    .status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);padding:2px 0}
+    .status .spin{width:10px;height:10px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;flex:0 0 auto}
+    .mod{display:flex;flex-direction:column;margin:0 var(--pad);border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);overflow:hidden}
+    .mh{display:flex;align-items:center;gap:8px;padding:var(--pad);cursor:pointer}
+    .mh .swatch{width:14px;height:14px;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.18);flex:0 0 auto}
+    .mh .mname{font-size:12px;font-weight:600;color:var(--t1);flex:1 1 auto}
+    .mh .msum{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+    .mh .chev{width:13px;height:13px;color:var(--t3);flex:0 0 auto}
+    .mbody{display:flex;flex-direction:column;gap:var(--row-gap);border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
+    .asset{display:flex;align-items:center;gap:9px;background:var(--sunk);border-radius:var(--r-inner);padding:7px 8px}
+    .asset .th{width:38px;height:38px;border-radius:var(--r-inner);flex:0 0 auto;border:1px solid var(--border)}
+    .asset .an{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+    .asset .anrow{display:flex;align-items:center;gap:6px;min-width:0}
+    .asset .anrow b{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .asset .ameta{font-size:11px;color:var(--t3)}
+    .asset .btn{width:auto;height:24px;padding:0 10px;flex:0 0 auto}
+    .disc{margin:calc(var(--pad) - var(--row-gap)) calc(-1*var(--pad)) calc(-1*var(--pad));border-top:1px solid var(--border)}
+    .disc > .dhead{display:flex;align-items:center;gap:6px;padding:var(--pad);font-size:12px;color:var(--t3);cursor:pointer}
+    .disc > .dhead svg{width:11px;height:11px;transition:transform .12s}
+    .disc.open > .dhead svg{transform:rotate(90deg)}
+    .disc > .dbody{display:none;flex-direction:column;gap:var(--row-gap);padding:0 var(--pad) var(--pad)}
+    .disc.open > .dbody{display:flex}
+    .effect-reset{border-top:1px solid var(--border);margin-top:var(--block-gap);display:flex}
+    .effect-reset > .btn{flex:1;margin:var(--pad) 16px}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 10l3-3 3 3 3-4 3 3" stroke-linecap="round"/></svg>
+      <span class="sp">Canvas Properties</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="body">
+
+      <!-- APPEARANCE : background paint slot. 4-mode Source proves the dropdown rule. -->
+      <div class="group">
+        <div class="glabel">Appearance</div>
+        <div class="mod">
+          <div class="mh">
+            <span class="swatch" style="background:linear-gradient(135deg,#6b7a8f,#3a4553)"></span>
+            <span class="mname">Background</span>
+            <span class="msum">Image</span>
+            <span class="rr blank"></span>
+            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>
+          </div>
+          <div class="mbody">
+            <div class="row">
+              <span class="rl">Source</span>
+              <div class="sel"><span>Image</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></div>
+              <span class="rr blank"></span>
+            </div>
+            <div class="asset">
+              <span class="th" style="background:linear-gradient(120deg,#c98a5a,#7b9bd1 55%,#2c3550)"></span>
+              <span class="an"><span class="anrow"><b>beach-sunset.jpg</b></span><span class="ameta">1920 x 1080</span></span>
+              <button class="btn">Replace</button>
+            </div>
+            <div class="row">
+              <span class="rl">Scale</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
+              <span class="num">100<span class="u">%</span></span>
+              <span class="rr blank"></span>
+            </div>
+            <div class="row">
+              <span class="rl">Opacity</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:100%"></div><div class="knb" style="left:100%"></div></div>
+              <span class="num">100<span class="u">%</span></span>
+              <span class="rr blank"></span>
+            </div>
+            <div class="disc">
+              <div class="dhead">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>
+                <span>Advanced</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIZE : the real two-mode UI, both modes shown -->
+      <div class="group">
+        <div class="glabel">Size</div>
+        <div class="row">
+          <span class="rl">Operation</span>
+          <div class="seg"><button class="on">Image Size</button><button>Canvas Size</button></div>
+          <span class="rr blank"></span>
+        </div>
+
+        <div class="card">
+          <div class="ctitle">Image Size</div>
+          <div class="cnote">Resizes the canvas and everything in it. Proportions stay linked.</div>
+          <div class="row is-pair">
+            <span class="rl">Dimensions</span>
+            <div class="pair"><span class="numf"><span class="k">W</span><span class="v">1920</span></span><span class="numf"><span class="k">H</span><span class="v">1080</span></span></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row is-pair">
+            <span class="rl">Scale</span>
+            <div class="pair" style="grid-template-columns:1fr"><span class="numf"><span class="k">%</span><span class="v">100</span></span></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row">
+            <span class="rl">Quick scale</span>
+            <div class="seg"><button>50%</button><button class="on">100%</button><button>200%</button></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row is-toggle"><span class="rl">Scale textures</span><span class="sw on"></span><span class="rr blank"></span></div>
+          <div class="row is-toggle"><span class="rl">Scale effects</span><span class="sw on"></span><span class="rr blank"></span></div>
+          <div class="formactions"><button class="btn wide">Scale design</button></div>
+        </div>
+
+        <div class="card">
+          <div class="ctitle">Canvas Size</div>
+          <div class="cnote">Crops or extends the canvas without scaling content.</div>
+          <div class="row is-toggle"><span class="rl">Relative</span><span class="sw"></span><span class="rr blank"></span></div>
+          <div class="row is-pair">
+            <span class="rl">Dimensions</span>
+            <div class="pair"><span class="numf"><span class="k">W</span><span class="v">2400</span></span><span class="numf"><span class="k">H</span><span class="v">1080</span></span></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row">
+            <span class="rl">Anchor</span>
+            <div class="anchor">
+              <button title="Top left"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8 4 4M4 4h3M4 4v3"/></svg></button>
+              <button title="Top"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3M3.5 5.5 6 3l2.5 2.5"/></svg></button>
+              <button title="Top right"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 8 4M8 4H5M8 4v3"/></svg></button>
+              <button title="Left"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6H3M5.5 3.5 3 6l2.5 2.5"/></svg></button>
+              <button class="on" title="Center"><svg viewBox="0 0 12 12" fill="currentColor" stroke="none"><circle cx="6" cy="6" r="2.4"/></svg></button>
+              <button title="Right"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h6M6.5 3.5 9 6l-2.5 2.5"/></svg></button>
+              <button title="Bottom left"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4 4 8M4 8h3M4 8V5"/></svg></button>
+              <button title="Bottom"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6M3.5 6.5 6 9l2.5-2.5"/></svg></button>
+              <button title="Bottom right"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4 8 8M8 8H5M8 8V5"/></svg></button>
+            </div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row">
+            <span class="rl">Extension</span>
+            <div class="seg"><button>Transparent</button><button class="on">Color</button></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row">
+            <span class="rl">Fill color</span>
+            <div class="colorfield"><span class="sw2" style="background:#ffffff"></span><span class="hex">#FFFFFF</span></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="formactions"><button class="btn wide">Resize canvas</button></div>
+        </div>
+        <div class="note">In the app these are one segmented toggle, one visible at a time. Both drawn here so every state is on the sheet.</div>
+      </div>
+
+      <!-- EFFECTS : Pixelate + Palette, the deepest panel. Cleanup disclosure shown open. -->
+      <div class="group">
+        <div class="glabel">Effects</div>
+
+        <div class="mod">
+          <div class="mh">
+            <span class="sw on"></span>
+            <span class="mname">Pixelate</span>
+            <span class="msum">14 px</span>
+            <button class="rr" title="Reset pixelate"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>
+          </div>
+          <div class="mbody">
+            <div class="row">
+              <span class="rl">Cell size</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:28%"></div><div class="knb" style="left:28%"></div></div>
+              <span class="num">14<span class="u">px</span></span>
+              <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+            </div>
+            <div class="note">1 is off. Larger values build crisp mosaic cells before the palette step.</div>
+          </div>
+        </div>
+
+        <div class="mod">
+          <div class="mh">
+            <span class="sw on"></span>
+            <span class="swatch" style="background:linear-gradient(90deg,#ff4fa3,#ffd23f,#33e6d0,#7d5bff)"></span>
+            <span class="mname">Palette</span>
+            <span class="msum">Posterize</span>
+            <button class="rr" title="Reset palette"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>
+          </div>
+          <div class="mbody">
+            <div class="row">
+              <span class="rl">Mode</span>
+              <div class="seg"><button class="on">Posterize</button><button>Dither</button></div>
+              <span class="rr blank"></span>
+            </div>
+            <div class="status"><span class="spin"></span><span>Reduced to 6 colors, 2 regions merged</span></div>
+            <div class="row">
+              <span class="rl">Style</span>
+              <div class="seg"><button>Vibrant</button><button class="on">Balanced</button><button>Natural</button></div>
+              <span class="rr blank"></span>
+            </div>
+            <div class="row">
+              <span class="rl">Colors</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:38%"></div><div class="knb" style="left:38%"></div></div>
+              <span class="num">6</span>
+              <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+            </div>
+            <div class="row">
+              <span class="rl">Merge</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:55%"></div><div class="knb" style="left:55%"></div></div>
+              <span class="num">55<span class="u">%</span></span>
+              <span class="rr blank"></span>
+            </div>
+            <div class="disc open">
+              <div class="dhead">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>
+                <span>Cleanup</span>
+              </div>
+              <div class="dbody">
+                <div class="row">
+                  <span class="rl">Detail</span>
+                  <div class="slider"><div class="trk"></div><div class="fil" style="width:30%"></div><div class="knb" style="left:30%"></div></div>
+                  <span class="num">12<span class="u">px</span></span>
+                  <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+                </div>
+                <div class="row is-toggle"><span class="rl">Clean edges</span><span class="sw on"></span><span class="rr blank"></span></div>
+              </div>
+            </div>
+            <div class="note">Dither mode swaps Style / Colors / Merge for an Algorithm dropdown, a Color palette dropdown, and Pattern + Shimmer rows.</div>
+          </div>
+        </div>
+
+        <div class="effect-reset"><button class="btn">Reset Effects</button></div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="group">
+        <div class="glabel">Actions</div>
+        <button class="btn primary">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.4 3.8L13 7l-3.6 1.2L8 12l-1.4-3.8L3 7l3.6-1.2z"/></svg>
+          Auto Glitter
+        </button>
+        <div class="note">Turn the image colors into editable glitter fill layers.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

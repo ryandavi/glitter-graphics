@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff;
+      --pad:8px; --row-gap:4px; --block-gap:8px; --group-gap:14px;
+      --label-w:88px; --rev-w:16px; --rev-gut:24px; --row-h:26px;
+      --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead .tool{font-size:11px;font-weight:600;color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.25);border-radius:var(--r-inner);padding:1px 6px}
+    .phead svg{width:14px;height:14px;opacity:.85}
+    .body{display:flex;flex-direction:column;gap:var(--group-gap);padding:var(--pad) 0}
+    .group{display:flex;flex-direction:column;gap:var(--block-gap)}
+    .glabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px}
+    .card{display:flex;flex-direction:column;gap:var(--row-gap);margin:0 var(--pad);padding:var(--pad);
+      border:1px solid var(--border);border-radius:var(--r-card);background:var(--card)}
+    .card > .ctitle{font-size:12px;font-weight:600;color:var(--t1)}
+    .row{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h)}
+    .row > .rl{font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row > .num{grid-column:3;justify-self:end}
+    .rr{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;color:var(--t3);background:none;border:0;padding:0;cursor:pointer}
+    .rr:hover{color:var(--accent)}
+    .rr svg{width:11px;height:11px}
+    .rr.blank{visibility:hidden}
+    .row.is-toggle{grid-template-columns:1fr auto var(--rev-w);min-height:26px;cursor:pointer}
+    .row.is-toggle > .sw{grid-column:2;justify-self:end}
+    .row.is-toggle > .rr{grid-column:3}
+    .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:46px;padding:0 6px;
+      background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;font-weight:500;
+      font-variant-numeric:tabular-nums;color:var(--t1)}
+    .num .u{color:var(--t3);margin-left:3px}
+    .slider{position:relative;height:16px;display:flex;align-items:center;min-width:0}
+    .slider .trk{height:4px;width:100%;border-radius:9999px;background:var(--border)}
+    .slider .fil{position:absolute;left:0;height:4px;border-radius:9999px;background:var(--accent)}
+    .slider .knb{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--t1);border:1px solid var(--border);transform:translateX(-50%)}
+    .sw{width:30px;height:16px;border-radius:9999px;background:var(--sunk);border:1px solid var(--border);position:relative;flex:0 0 auto}
+    .sw::after{content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--t2);transition:left .12s}
+    .sw.on{background:var(--accent);border-color:var(--accent)}
+    .sw.on::after{left:15px;background:#fff}
+    .note{font-size:11px;color:var(--t3);line-height:1.45}
+    .chips{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{display:flex;align-items:center;gap:6px;height:22px;padding:0 4px 0 7px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:9999px;font-size:11px;color:var(--t2);font-variant-numeric:tabular-nums}
+    .chip .sw2{width:12px;height:12px;border-radius:var(--r-inner);border:1px solid var(--border)}
+    .chip .x{width:14px;height:14px;display:flex;align-items:center;justify-content:center;color:var(--t3);border-radius:50%}
+    .empty{font-size:12px;font-style:italic;color:var(--t3)}
+    .statelbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);
+      border:1px solid var(--border);border-radius:var(--r-inner);padding:1px 5px;align-self:flex-start;margin-bottom:2px}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2l3 3-7 7-4 1 1-4z"/></svg>
+      <span class="sp">Color Fill Settings</span>
+      <span class="tool">Color Picker</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="body">
+
+      <div class="group">
+        <div class="glabel">Selection</div>
+
+        <div class="card">
+          <div class="ctitle">Options</div>
+          <div class="row is-toggle"><span class="rl">Contiguous</span><span class="sw on"></span><span class="rr blank"></span></div>
+          <div class="row is-toggle"><span class="rl">Invert</span><span class="sw"></span><span class="rr blank"></span></div>
+          <div class="row is-toggle"><span class="rl">Multi-select</span><span class="sw on"></span><span class="rr blank"></span></div>
+        </div>
+
+        <div class="card">
+          <div class="ctitle">Color selections</div>
+          <span class="statelbl">Shown when empty</span>
+          <span class="empty">None</span>
+          <div class="note">Pick a color on the canvas to add it.</div>
+        </div>
+
+        <div class="card">
+          <div class="ctitle">Color selections</div>
+          <span class="statelbl">Shown when populated</span>
+          <div class="chips">
+            <span class="chip"><span class="sw2" style="background:#e0559f"></span>#E0559F<span class="x">&times;</span></span>
+            <span class="chip"><span class="sw2" style="background:#3577cf"></span>#3577CF<span class="x">&times;</span></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ctitle">Refine</div>
+          <div class="note">Color Tolerance includes colors similar to the one you picked. Edge Feather softens the boundary.</div>
+          <div class="row">
+            <span class="rl">Color tolerance</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:30%"></div><div class="knb" style="left:30%"></div></div>
+            <span class="num">30</span>
+            <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+          </div>
+          <div class="row">
+            <span class="rl">Edge feather</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:12%"></div><div class="knb" style="left:12%"></div></div>
+            <span class="num">2<span class="u">px</span></span>
+            <span class="rr blank"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

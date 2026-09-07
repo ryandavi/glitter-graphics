@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff;
+      --pad:8px; --row-gap:4px; --block-gap:8px; --group-gap:14px;
+      --label-w:70px; --rev-w:16px; --rev-gut:24px; --row-h:26px;
+      --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+    .body{display:flex;flex-direction:column;gap:var(--group-gap);padding:0 0 var(--pad)}
+    .group{display:flex;flex-direction:column;gap:var(--block-gap)}
+    .group + .group{border-top:1px solid var(--border);padding-top:var(--group-gap)}
+    .glabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px}
+    .lead{font-size:11px;color:var(--t3);line-height:1.45;padding:var(--group-gap) calc(16px + var(--rev-gut)) 0 16px}
+    .card{display:flex;flex-direction:column;gap:var(--row-gap);margin:0 var(--pad);padding:var(--pad);
+      border:1px solid var(--border);border-radius:var(--r-card);background:var(--card)}
+
+    .row{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h)}
+    .row > .rl{font-size:12px;color:var(--t2);white-space:nowrap}
+    .row > .num{grid-column:3;justify-self:end}
+    .row > .seg,.row > .sel{grid-column:2 / -2}
+    .rr{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;color:var(--t3)}
+    .rr svg{width:11px;height:11px}
+    .rr.blank{visibility:hidden}
+    .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:46px;padding:0 6px;
+      background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;color:var(--t1);font-variant-numeric:tabular-nums}
+    .num .u{color:var(--t3);margin-left:3px}
+    .sel{height:24px;display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-field);padding:0 8px;font-size:12px;color:var(--t1)}
+    .sel svg{width:11px;height:11px;color:var(--t3)}
+    .seg{display:flex;width:100%;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
+    .seg > button{flex:1;height:24px;display:flex;align-items:center;justify-content:center;color:var(--t2);
+      background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .seg > button:first-child{border-left:0}
+    .seg > button svg{width:14px;height:14px}
+    .slider{position:relative;height:16px;display:flex;align-items:center;min-width:0}
+    .slider .trk{height:4px;width:100%;border-radius:9999px;background:var(--border)}
+    .slider .fil{position:absolute;left:0;height:4px;border-radius:9999px;background:var(--accent)}
+    .slider .knb{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--t1);border:1px solid var(--border);transform:translateX(-50%)}
+    .btn{display:flex;align-items:center;justify-content:center;gap:6px;height:28px;padding:0 10px;font-size:12px;font-weight:500;
+      color:var(--t1);background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
+    /* actions are direct card children: one per line, card gap, right gutter.
+       identical to the Mask Settings Actions card. */
+    .card > .btn{margin-right:var(--rev-gut)}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="6" y="6" width="8" height="8" rx="1"/></svg>
+      <span class="sp">3 layers selected</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="body">
+
+      <div class="lead">Text, Sticker and Shape. Shared properties are editable; type-specific ones are hidden.</div>
+
+      <div class="group">
+        <div class="glabel">Appearance</div>
+        <div class="card" style="margin:0 var(--pad)">
+          <div class="row">
+            <span class="rl">Opacity</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:100%"></div><div class="knb" style="left:100%"></div></div>
+            <span class="num" style="grid-column:3">Mixed</span>
+            <span class="rr blank"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">Align</div>
+        <div class="card" style="margin:0 var(--pad)">
+          <div class="row">
+            <span class="rl">Align to</span>
+            <div class="sel"><span>Selection</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row">
+            <span class="rl">Horizontal</span>
+            <div class="seg">
+              <button title="Align left"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v12" opacity=".5"/><rect x="4.5" y="5" width="7.5" height="6" rx="1"/></svg></button>
+              <button title="Align center"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v12" opacity=".5" stroke-dasharray="2 2"/><rect x="3.5" y="5" width="9" height="6" rx="1"/></svg></button>
+              <button title="Align right"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 2v12" opacity=".5"/><rect x="4" y="5" width="7.5" height="6" rx="1"/></svg></button>
+            </div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row">
+            <span class="rl">Vertical</span>
+            <div class="seg">
+              <button title="Align top"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2.5h12" opacity=".5"/><rect x="5" y="4.5" width="6" height="7.5" rx="1"/></svg></button>
+              <button title="Align middle"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12" opacity=".5" stroke-dasharray="2 2"/><rect x="5" y="3.5" width="6" height="9" rx="1"/></svg></button>
+              <button title="Align bottom"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.5h12" opacity=".5"/><rect x="5" y="4" width="6" height="7.5" rx="1"/></svg></button>
+            </div>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row">
+            <span class="rl">Distribute</span>
+            <div class="seg">
+              <button title="Distribute horizontally"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2v12M14 2v12M8 4v8"/></svg></button>
+              <button title="Distribute vertically"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2h12M2 14h12M4 8h8"/></svg></button>
+            </div>
+            <span class="rr blank"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">Actions</div>
+        <div class="card" style="margin:0 var(--pad)">
+          <button class="btn">Group</button>
+          <button class="btn">Duplicate</button>
+          <button class="btn">Merge down</button>
+          <button class="btn">Delete</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

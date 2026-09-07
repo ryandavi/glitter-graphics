@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff;
+      --pad:8px; --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden;display:flex;flex-direction:column}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+    .abh{display:flex;align-items:center;gap:6px;height:30px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
+    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1}
+    .abh .count{font-size:11px;color:var(--t3)}
+    .searchrow{display:flex;gap:6px;padding:var(--pad)}
+    .searchbox{flex:1;display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-field);font-size:12px;color:var(--t3)}
+    .searchbox svg{width:12px;height:12px;color:var(--t3);flex:0 0 auto}
+    .filterbtn{display:flex;align-items:center;gap:4px;height:28px;padding:0 10px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;font-weight:500;color:var(--t2);cursor:pointer}
+    .filterbtn svg{width:13px;height:13px}
+    .body-b{padding:0 var(--pad) var(--pad);overflow:auto}
+    .viewtoggle{display:flex;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden;margin:0 0 8px}
+    .viewtoggle button{flex:1;height:26px;font-size:11px;font-weight:500;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .viewtoggle button:first-child{border-left:0}
+    .viewtoggle button.on{background:var(--accent);color:#fff}
+    /* SHOW ALL = every item visible, grouped under category headers, nothing hidden */
+    .catgroup{margin-top:4px}
+    .cathead{display:flex;align-items:baseline;gap:6px;padding:8px 0 6px}
+    .cathead b{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3)}
+    .cathead i{font-size:10px;font-style:normal;color:var(--t3)}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+    .item{display:flex;flex-direction:column;gap:3px;cursor:pointer}
+    .item .th{aspect-ratio:1;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.14)}
+    .item .nm{font-size:9.5px;color:var(--t3);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M4 8h8"/></svg>
+      <span class="sp">Design</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+    <div class="abh"><span class="title">Glitter</span><span class="count">1,240 items</span></div>
+    <div class="searchrow">
+      <div class="searchbox"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg>Search by name or tag</div>
+      <button class="filterbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4h12M4 8h8M6 12h4"/></svg>Filter</button>
+    </div>
+
+    <div class="body-b">
+      <div class="viewtoggle">
+        <button>By category</button>
+        <button class="on">Show all</button>
+      </div>
+
+      <div class="catgroup">
+        <div class="cathead"><b>Holographic</b><i>84</i></div>
+        <div class="grid">
+          <div class="item"><span class="th" style="background:linear-gradient(135deg,#ff5db1,#7d5bff 55%,#33e6d0)"></span><span class="nm">Holo Foil</span></div>
+          <div class="item"><span class="th" style="background:conic-gradient(#ff5db1,#ffd23f,#33e6d0,#7d5bff,#ff5db1)"></span><span class="nm">Prism</span></div>
+          <div class="item"><span class="th" style="background:linear-gradient(120deg,#ffd1f0,#d1e6ff,#d1ffe6)"></span><span class="nm">Opal</span></div>
+          <div class="item"><span class="th" style="background:linear-gradient(135deg,#b06dff,#6d9bff)"></span><span class="nm">Amethyst</span></div>
+        </div>
+      </div>
+
+      <div class="catgroup">
+        <div class="cathead"><b>Metallic</b><i>112</i></div>
+        <div class="grid">
+          <div class="item"><span class="th" style="background:linear-gradient(135deg,#c9a24b,#8d6e3a)"></span><span class="nm">Gold Leaf</span></div>
+          <div class="item"><span class="th" style="background:linear-gradient(135deg,#9fb0c0,#5b6b7d)"></span><span class="nm">Silver</span></div>
+          <div class="item"><span class="th" style="background:linear-gradient(135deg,#b08d57,#7a5c34)"></span><span class="nm">Bronze</span></div>
+          <div class="item"><span class="th" style="background:linear-gradient(135deg,#e8c9d0,#b98a94)"></span><span class="nm">Rose Gold</span></div>
+        </div>
+      </div>
+
+      <div class="catgroup">
+        <div class="cathead"><b>Solid</b><i>260</i></div>
+        <div class="grid">
+          <div class="item"><span class="th" style="background:#e0559f"></span><span class="nm">Magenta</span></div>
+          <div class="item"><span class="th" style="background:#3577cf"></span><span class="nm">Cobalt</span></div>
+          <div class="item"><span class="th" style="background:#4caf50"></span><span class="nm">Grass</span></div>
+          <div class="item"><span class="th" style="background:#ff9800"></span><span class="nm">Tangerine</span></div>
+        </div>
+      </div>
+
+      <div class="catgroup">
+        <div class="cathead"><b>Pattern</b><i>96</i></div>
+        <div class="grid">
+          <div class="item"><span class="th" style="background:repeating-linear-gradient(45deg,#fff2,#fff2 3px,transparent 3px,transparent 7px),#ff5db1"></span><span class="nm">Stripe Pink</span></div>
+          <div class="item"><span class="th" style="background:radial-gradient(#fff3 30%,transparent 32%),#7d5bff"></span><span class="nm">Dot Violet</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

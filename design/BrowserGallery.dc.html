@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff;
+      --pad:8px; --gap:8px; --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden;display:flex;flex-direction:column}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+    .abh{display:flex;align-items:center;gap:6px;height:30px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
+    .abh .back{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t3);background:none;border:0;padding:2px 4px;cursor:not-allowed}
+    .abh .back svg{width:12px;height:12px}
+    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1}
+    .abh .count{font-size:11px;color:var(--t3)}
+    .searchrow{display:flex;gap:6px;padding:var(--pad)}
+    .searchbox{flex:1;display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-field);font-size:12px;color:var(--t3)}
+    .searchbox svg{width:12px;height:12px;color:var(--t3);flex:0 0 auto}
+    .filterbtn{display:flex;align-items:center;gap:4px;height:28px;padding:0 10px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;font-weight:500;color:var(--t2);cursor:pointer}
+    .filterbtn svg{width:13px;height:13px}
+    .browserbody{padding:0 var(--pad) var(--pad);overflow:auto}
+    .viewtoggle{display:flex;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden;margin:0 0 8px}
+    .viewtoggle button{flex:1;height:26px;font-size:11px;font-weight:500;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .viewtoggle button:first-child{border-left:0}
+    .viewtoggle button.on{background:var(--accent);color:#fff}
+    .grouplabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:8px 0 6px}
+    .catgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .cat{display:flex;flex-direction:column;gap:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;cursor:pointer}
+    .cat:hover{border-color:var(--border-hi)}
+    .cat .montage{height:74px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+    .cat .montage span{display:block}
+    .cat .lbl{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:6px 8px}
+    .cat .lbl b{font-size:12px;font-weight:600}
+    .cat .lbl i{font-size:10px;font-style:normal;color:var(--t3)}
+    .featured{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+    .sw{aspect-ratio:1;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.14)}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M4 8h8"/></svg>
+      <span class="sp">Design</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="abh">
+      <button class="back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg>Back</button>
+      <span class="title">Glitter</span>
+      <span class="count">1,240 items</span>
+    </div>
+
+    <div class="searchrow">
+      <div class="searchbox"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg>Search by name or tag</div>
+      <button class="filterbtn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4h12M4 8h8M6 12h4"/></svg>Filter</button>
+    </div>
+
+    <div class="browserbody">
+      <div class="viewtoggle">
+        <button class="on">By category</button>
+        <button>Show all</button>
+      </div>
+      <div class="catgrid">
+        <div class="cat">
+          <div class="montage">
+            <span style="background:linear-gradient(135deg,#ff5db1,#7d5bff)"></span><span style="background:linear-gradient(135deg,#33e6d0,#2bb0ff)"></span>
+            <span style="background:linear-gradient(135deg,#ffd23f,#ff6f00)"></span><span style="background:linear-gradient(135deg,#a0e,#7d5bff)"></span>
+          </div>
+          <div class="lbl"><b>Holographic</b><i>84</i></div>
+        </div>
+        <div class="cat">
+          <div class="montage">
+            <span style="background:#c9a24b"></span><span style="background:#9fb0c0"></span>
+            <span style="background:#b08d57"></span><span style="background:#d9d2c3"></span>
+          </div>
+          <div class="lbl"><b>Metallic</b><i>112</i></div>
+        </div>
+        <div class="cat">
+          <div class="montage">
+            <span style="background:#e0559f"></span><span style="background:#3577cf"></span>
+            <span style="background:#4caf50"></span><span style="background:#ff9800"></span>
+          </div>
+          <div class="lbl"><b>Solid</b><i>260</i></div>
+        </div>
+        <div class="cat">
+          <div class="montage">
+            <span style="background:repeating-linear-gradient(45deg,#fff2,#fff2 3px,transparent 3px,transparent 6px),#ff5db1"></span><span style="background:repeating-linear-gradient(45deg,#fff2,#fff2 3px,transparent 3px,transparent 6px),#7d5bff"></span>
+            <span style="background:repeating-linear-gradient(45deg,#fff2,#fff2 3px,transparent 3px,transparent 6px),#33e6d0"></span><span style="background:repeating-linear-gradient(45deg,#fff2,#fff2 3px,transparent 3px,transparent 6px),#ffd23f"></span>
+          </div>
+          <div class="lbl"><b>Pattern</b><i>96</i></div>
+        </div>
+        <div class="cat">
+          <div class="montage">
+            <span style="background:#f3d9e6"></span><span style="background:#d9e6f3"></span>
+            <span style="background:#e6f3d9"></span><span style="background:#f3ecd9"></span>
+          </div>
+          <div class="lbl"><b>Pastel</b><i>73</i></div>
+        </div>
+        <div class="cat">
+          <div class="montage">
+            <span style="background:#12131a"></span><span style="background:#1f2430"></span>
+            <span style="background:#0b0b0d"></span><span style="background:#2a2f3a"></span>
+          </div>
+          <div class="lbl"><b>Dark</b><i>41</i></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff;
+      --r-card:8px; --r-field:5px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .stage{min-height:520px;display:flex;align-items:center;justify-content:center;padding:40px;
+      background:radial-gradient(120% 80% at 50% 0%,#22262e,#191c20)}
+    .card{width:420px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);
+      padding:26px 24px 22px;box-shadow:0 12px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:16px}
+    .copy h2{margin:0 0 6px;font-size:18px;font-weight:700}
+    .copy p{margin:0;font-size:13px;color:var(--t2);line-height:1.5}
+    .actions{display:flex;flex-direction:column;gap:8px}
+    .btn{display:flex;align-items:center;gap:9px;height:38px;padding:0 14px;font-size:13px;font-weight:500;
+      color:var(--t1);background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer;text-align:left}
+    .btn:hover{border-color:var(--border-hi)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn svg{width:16px;height:16px;color:var(--t2);flex:0 0 auto}
+    .btn.primary svg{color:#fff}
+    .btn .sp{flex:1}
+    .drop{border:1.5px dashed var(--border);border-radius:var(--r-field);padding:16px;text-align:center;
+      display:flex;flex-direction:column;gap:4px}
+    .drop span{font-size:12px;color:var(--t2)}
+    .drop small{font-size:11px;color:var(--t3)}
+  </style>
+</helmet>
+
+<div class="stage">
+  <div class="card">
+    <div class="copy">
+      <h2>Create a glitter graphic</h2>
+      <p>Open an image, choose a canvas size, or continue a saved project.</p>
+    </div>
+    <div class="actions">
+      <button class="btn primary">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 10l3-3 3 3 3-4 3 3"/><circle cx="6" cy="6" r="1"/></svg>
+        <span class="sp">Open image</span>
+      </button>
+      <button class="btn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M8 6v4M6 8h4"/></svg>
+        <span class="sp">New canvas</span>
+      </button>
+      <button class="btn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h5l1.5 2H14v7H2z"/></svg>
+        <span class="sp">Open project</span>
+      </button>
+    </div>
+    <div class="drop">
+      <span>or drop an image or Glitter project here</span>
+      <small>Images up to 10 MB &middot; canvas up to 1024 &times; 1024 px</small>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

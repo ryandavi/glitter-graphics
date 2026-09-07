@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff;
+      --pad:8px; --r-panel:8px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden;display:flex;flex-direction:column}
+    .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
+      background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
+      color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
+    .phead .sp{flex:1 1 auto}
+    .phead svg{width:14px;height:14px;opacity:.85}
+    .abh{display:flex;align-items:center;gap:6px;height:30px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
+    .abh .back{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t2);background:none;border:0;padding:2px 4px;cursor:pointer}
+    .abh .back:hover{color:var(--t1)}
+    .abh .back svg{width:12px;height:12px}
+    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1}
+    .abh .count{font-size:11px;color:var(--t3)}
+    .body-b{padding:var(--pad);overflow:auto}
+
+    /* CREDIT: from .asset-collection-credit. reformatted, same information. */
+    .credit{border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);padding:10px;margin-bottom:10px}
+    .credit .head{font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+    .credit .byline{font-size:12px;color:var(--t1);margin-bottom:5px}
+    .credit .byline b{font-weight:600}
+    .credit .meta{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:11px;color:var(--t3);margin-bottom:6px}
+    .credit .meta span{position:relative}
+    .credit .meta span + span::before{content:"";position:absolute;left:-5px;top:50%;width:2px;height:2px;border-radius:50%;background:var(--t3);transform:translateY(-50%)}
+    .credit details{border-top:1px solid var(--border);margin:0 -10px;padding:6px 10px 0}
+    .credit summary{font-size:11px;font-weight:500;color:var(--t2);cursor:pointer;list-style:none;display:flex;align-items:center;gap:5px}
+    .credit summary::-webkit-details-marker{display:none}
+    .credit summary::before{content:"";width:0;height:0;border:4px solid transparent;border-left-color:var(--t3);transition:transform .12s}
+    .credit details[open] summary::before{transform:rotate(90deg)}
+    .credit details > div{font-size:11px;color:var(--t3);line-height:1.5;padding:6px 0 2px}
+    .credit .links{border-top:1px solid var(--border);margin:6px -10px 0;padding:7px 10px 0;font-size:11px}
+    .credit .links svg{width:10px;height:10px;vertical-align:-1px;margin-right:3px}
+
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+    .item{display:flex;flex-direction:column;gap:3px;cursor:pointer}
+    .item .th{aspect-ratio:1;border-radius:var(--r-inner);border:1px solid var(--border);background:var(--card);
+      display:flex;align-items:center;justify-content:center;color:var(--t2)}
+    .item.on .th{outline:2px solid var(--accent);outline-offset:1px;color:var(--t1)}
+    .item .th svg{width:58%;height:58%}
+    .item .nm{font-size:9.5px;color:var(--t3);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="panel">
+
+    <div class="phead">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c2-1 3-4 6-7s5-3 5-3l-1 4c-1 1-4 3-6 5s-4 1-4 1z"/></svg>
+      <span class="sp">Brush</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+    </div>
+
+    <div class="abh">
+      <button class="back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg>Brush sets</button>
+      <span class="title">bruisedxheart hearts</span>
+      <span class="count">12 tips</span>
+    </div>
+
+    <div class="body-b">
+      <div class="credit">
+        <div class="head">Source &amp; usage</div>
+        <div class="byline">Created by <a href="#">bruisedxheart.org</a></div>
+        <div class="meta"><span>License unknown</span><span>Archived by Belle &mdash; Salvaged</span></div>
+        <details>
+          <summary>Archival note</summary>
+          <div>Original brushes from bruisedxheart.org (defunct; Wayback capture only). Preserved and re-shared by Belle of Salvaged as an ABR archival effort; included here in the same spirit. Happy to further credit the original creator or remove on request.</div>
+        </details>
+        <div class="links"><a href="#"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3v10h10v-3M9 3h4v4M13 3L7 9"/></svg>View archived set</a></div>
+      </div>
+
+      <div class="grid">
+        <div class="item on"><span class="th" style="color:var(--t1)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-5-8-11a5 5 0 0 1 8-3 5 5 0 0 1 8 3c0 6-8 11-8 11z"/></svg></span><span class="nm">Heart Solid</span></div>
+        <div class="item"><span class="th"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.5-7-10a4.5 4.5 0 0 1 7-3 4.5 4.5 0 0 1 7 3c0 5.5-7 10-7 10z"/></svg></span><span class="nm">Heart Line</span></div>
+        <div class="item"><span class="th"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 15s-4-2.5-4-6a2.5 2.5 0 0 1 4-1.6A2.5 2.5 0 0 1 11 9c0 3.5-4 6-4 6z"/><path d="M16 20s-4-2.5-4-6a2.5 2.5 0 0 1 4-1.6A2.5 2.5 0 0 1 20 14c0 3.5-4 6-4 6z"/></svg></span><span class="nm">Heart Pair</span></div>
+        <div class="item"><span class="th"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="7" cy="8" r="1.6"/><path d="M12 16s-3-2-3-4.5A1.9 1.9 0 0 1 12 10a1.9 1.9 0 0 1 3 1.5c0 2.5-3 4.5-3 4.5z"/><circle cx="17" cy="15" r="1.3"/></svg></span><span class="nm">Scatter</span></div>
+        <div class="item"><span class="th"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 14c3-1 4-6 8-6s5 5 8 4"/></svg></span><span class="nm">Trail</span></div>
+        <div class="item"><span class="th"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5l2 5 5 .5-4 3.5 1.5 5-4.5-3-4.5 3 1.5-5-4-3.5 5-.5z"/></svg></span><span class="nm">Sparkle</span></div>
+        <div class="item"><span class="th"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-5-8-11a5 5 0 0 1 8-3 5 5 0 0 1 8 3c0 6-8 11-8 11z" opacity=".5"/></svg></span><span class="nm">Heart Soft</span></div>
+        <div class="item"><span class="th"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="7" r="1.4"/><circle cx="11" cy="12" r="1.8"/><circle cx="17" cy="9" r="1.2"/><circle cx="15" cy="16" r="1.4"/><circle cx="8" cy="16" r="1"/></svg></span><span class="nm">Confetti</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

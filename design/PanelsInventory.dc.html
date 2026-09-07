@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff; --done:#4caf50; --wip:#ff9800;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--workspace);color:var(--t1);
+      font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{padding:24px;display:flex;justify-content:center}
+    .sheet{width:560px;display:flex;flex-direction:column;gap:14px}
+    h2{margin:0;font-size:14px;font-weight:700}
+    .sub{font-size:12px;color:var(--t2);line-height:1.5;margin-top:6px}
+    .grp{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+    .grp h3{margin:0 0 2px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t3)}
+    .grp .glead{font-size:11px;color:var(--t3);margin:0 0 8px}
+    .item{border-top:1px solid var(--border);padding:9px 0}
+    .item:first-of-type{border-top:0}
+    .ihead{display:flex;align-items:baseline;gap:8px}
+    .ihead b{font-size:12.5px;font-weight:600}
+    .ihead .id{font-family:ui-monospace,Consolas,monospace;font-size:10px;color:var(--t3);margin-left:auto}
+    .item p{margin:3px 0 0;font-size:11px;color:var(--t2);line-height:1.5}
+    .pill{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:9px;letter-spacing:.02em}
+    .pill.done{background:rgba(76,175,80,.15);color:var(--done);border:1px solid rgba(76,175,80,.4)}
+    .pill.next{background:rgba(0,123,255,.15);color:var(--accent);border:1px solid rgba(0,123,255,.4)}
+    .pill.todo{background:var(--sunk);color:var(--t3);border:1px solid var(--border)}
+    code{font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fd0ff;background:var(--sunk);padding:1px 4px;border-radius:3px}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="sheet">
+
+    <div class="grp" style="border-color:var(--accent)">
+      <h2>Every right-panel type in the app</h2>
+      <p class="sub">From <code>updateSidePanelUI()</code>: one <code>#designPanel</code> swaps between these modes by
+      <code>data-panel-mode</code>. Design them one at a time, then re-check earlier ones for consistency. Status
+      reflects this canvas, not the codebase.</p>
+    </div>
+
+    <div class="grp">
+      <h3>A. Layer property panels</h3>
+      <p class="glead">Shown when a layer is selected. All share the row + module system.</p>
+      <div class="item">
+        <div class="ihead"><b>Text Properties</b> <span class="pill next">iterating</span><span class="id">textSettingsSection &middot; mode: text</span></div>
+        <p>Content (Text, Font, Spacing, Alignment) &middot; Appearance (Fill, Opacity) &middot; Transform &middot; Effects (Border, Shadow).</p>
+      </div>
+      <div class="item">
+        <div class="ihead"><b>Sticker Properties</b> <span class="pill next">drafted</span><span class="id">stickerSettingsSection &middot; mode: sticker</span></div>
+        <p>Content module (Asset + Adjust color: hue / saturation / brightness) &middot; Appearance (Opacity) &middot; Transform &middot; Effects (Shadow). Uses <code>buildAssetInfo</code>.</p>
+      </div>
+      <div class="item">
+        <div class="ihead"><b>Shape Properties</b> <span class="pill next">drafted</span><span class="id">shapeSettingsSection &middot; mode: shape</span></div>
+        <p>Content (Asset + Radius) &middot; Appearance (Fill, Opacity) &middot; Transform &middot; Effects (Border with Style / Dotted / Dot gap / Edges / Placement / Layering, Shadow). Radius is a net-new control.</p>
+      </div>
+      <div class="item">
+        <div class="ihead"><b>Fill Properties</b> <span class="pill next">drafted</span><span class="id">glitterSettingsSection &middot; mode: glitter</span></div>
+        <p>One paint slot (glitter / solid, scale, opacity, Advanced: texture position + hue / sat / bright). No transform. Read-only Mask summary.</p>
+      </div>
+      <div class="item">
+        <div class="ihead"><b>Canvas Properties</b> <span class="pill next">drafted</span><span class="id">baseLayerSettingsSection &middot; mode: base-layer</span></div>
+        <p>Appearance (background: image / transparent / glitter / solid) &middot; Size (Image Size vs Canvas Size, two-mode) &middot; Effects (Pixelate + Palette with Posterize / Dither branch) &middot; Actions (Auto Glitter). The densest panel.</p>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h3>B. Tool-setting panels</h3>
+      <p class="glead">Shown while a settings tool is active (Photoshop options-bar model), independent of selection.</p>
+      <div class="item">
+        <div class="ihead"><b>Mask Settings (Brush / Eraser)</b> <span class="pill next">drafted</span><span class="id">brushSettingsSection &middot; schema: brush</span></div>
+        <p>Brush Tip (Asset) &middot; Stroke (Dynamics: size, softness, flow, spacing, smoothing, pressure; Scatter &amp; Jitter) &middot; Actions (copy opposite, reset, clear strokes). Title carries a Brush / Eraser tag.</p>
+      </div>
+      <div class="item">
+        <div class="ihead"><b>Color Fill Settings</b> <span class="pill next">drafted</span><span class="id">layerSettingsSection &middot; auxiliary</span></div>
+        <p>Only with the Color Picker tool on a glitter fill. Options (contiguous, invert, multi-select toggles) &middot; Color selections (chip list) &middot; Refine (color tolerance, edge feather).</p>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h3>C. State panels</h3>
+      <div class="item">
+        <div class="ihead"><b>No selection / Canvas home</b> <span class="pill next">drafted</span><span class="id">noLayerSettingsSection &middot; mode: no-layer</span></div>
+        <p>A lead line &middot; Quick add (layer-type tile grid) &middot; Project (name field, Open / Save) &middot; Size (Image Size / Canvas Size, re-authored from modal <code>settings-row-*</code> markup). Shown on load and when nothing is selected. Not an accordion, a flat block list.</p>
+      </div>
+      <div class="item">
+        <div class="ihead"><b>Multi-selection</b> <span class="pill next">drafted</span><span class="id">multiLayerSelectionGroup</span></div>
+        <p>Appearance (shared Opacity, "Mixed" when they differ) &middot; Align (Align-to scope dropdown, Horizontal / Vertical / Distribute) &middot; Actions (Group, Duplicate, Merge down, Delete).</p>
+      </div>
+      <div class="item">
+        <div class="ihead"><b>Welcome / no image</b> <span class="pill next">drafted</span><span class="id">mode: welcome</span></div>
+        <p>One <code>.property-empty</code> component: icon tile, title, subtext, an Open image primary action + New blank canvas. The same component replaces the five inconsistent empty states (three SVG, three literal emoji).</p>
+      </div>
+      <div class="item">
+        <div class="ihead"><b>Auto Glitter wizard</b> <span class="pill todo">not started</span><span class="id">autoGlitterSettingsSection &middot; mode: auto-glitter</span></div>
+        <p>The stress test. Preview &middot; Palette (scroll) &middot; Color Matches (scroll, dynamic results, live status host) &middot; Advanced (scroll) &middot; Finish (pinned Cancel / Create Layers). Needs <code>.panel-scroll</code> + a pinned <code>.panel-footer</code>.</p>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h3>D. Asset browser</h3>
+      <div class="item">
+        <div class="ihead"><b>Gallery + search + filters</b> <span class="pill next">drafted</span><span class="id">designGallerySection</span></div>
+        <p>Contextual per asset type: glitter, stickers, shapes, brush tips. Header (Back + title + count), search row, armed picker strip, active-filter chips, then a category grid (2-up folders) or an asset grid (4-up). Filter drawer redesigned: <code>.property-group-label</code> + chip rows + hairline dividers (no cards, no fourth uppercase level, no nested 200px scroll).</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
