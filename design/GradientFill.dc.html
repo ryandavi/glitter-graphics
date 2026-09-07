@@ -68,30 +68,34 @@
     .mh .chev{width:13px;height:13px;color:var(--t3);flex:0 0 auto}
     .mbody{display:flex;flex-direction:column;gap:var(--row-gap);border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
 
-    /* GRADIENT EDITOR — a nested editor, so it earns a box (rule B). --sunk well. */
-    .grad{display:flex;flex-direction:column;gap:8px;background:var(--sunk);border:1px solid var(--border);
-      border-radius:var(--r-inner);padding:9px}
-    /* the stop track: the live gradient with draggable stops sitting on it */
-    .gtrack{position:relative;height:22px;border-radius:var(--r-field);border:1px solid var(--border);
-      background:linear-gradient(90deg,#ff5db1 0%,#7d5bff 52%,#33e6d0 100%);
-      background-image:linear-gradient(90deg,#ff5db1 0%,#7d5bff 52%,#33e6d0 100%),
+    /* GRADIENT EDITOR — a nested editor, so it earns a box (rule B). --sunk well.
+       Figma model: a gradient bar with stop handles BELOW it (pointer up),
+       midpoint diamonds between stops, click bar to add / drag handle off to
+       remove. The selected stop is ONE row — colour+alpha field, position as
+       the row's value — so it obeys the panel's row grammar, not a sub-form. */
+    .grad{display:flex;flex-direction:column;gap:7px;background:var(--sunk);border:1px solid var(--border);
+      border-radius:var(--r-inner);padding:9px 9px 8px}
+    .gbarwrap{position:relative;padding-bottom:11px}
+    .gbar{height:20px;border-radius:var(--r-field);border:1px solid var(--border);
+      background-image:linear-gradient(90deg,#ff5db1,#7d5bff 52%,#33e6d0),
         repeating-conic-gradient(#0000 0 25%,rgba(255,255,255,.09) 0 50%);
       background-size:100% 100%,10px 10px}
-    .gstop{position:absolute;top:-4px;width:12px;height:30px;transform:translateX(-50%);cursor:grab}
-    .gstop::before{content:"";position:absolute;inset:0;border-radius:3px;border:2px solid #fff;
-      box-shadow:0 1px 3px rgba(0,0,0,.5);background:var(--c)}
-    .gstop.sel::before{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-surface),0 1px 3px rgba(0,0,0,.5)}
-    .gaddhint{font-size:10.5px;color:var(--t3)}
-    /* selected-stop editor: colour + position, one line each, no revert gutter (block) */
-    .grow{display:grid;grid-template-columns:var(--label-w) 1fr;align-items:center;column-gap:8px;min-height:24px}
-    .grow > .rl{font-size:11px;color:var(--t2)}
-    .gnum{justify-self:start;display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:56px;padding:0 6px;
-      background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;color:var(--t1);font-variant-numeric:tabular-nums}
-    .gnum .u{color:var(--t3);margin-left:3px}
-    .gactions{display:flex;gap:6px}
-    .gactions button{height:22px;padding:0 8px;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t2);
-      background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
-    .gactions button svg{width:11px;height:11px}
+    .gmid{position:absolute;top:7px;width:6px;height:6px;transform:translateX(-50%) rotate(45deg);
+      background:var(--t2);border:1px solid var(--sunk)}
+    .ghandle{position:absolute;bottom:0;width:12px;height:12px;transform:translateX(-50%);border-radius:3px;
+      border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5);background:var(--c);cursor:grab}
+    .ghandle::before{content:"";position:absolute;left:50%;top:-6px;transform:translateX(-50%);
+      border:4px solid transparent;border-bottom-color:#fff}
+    .ghandle.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-surface),0 1px 3px rgba(0,0,0,.5)}
+    .ghandle.sel::before{border-bottom-color:var(--accent)}
+    .ghint{font-size:10.5px;color:var(--t3);line-height:1.4}
+    .srow{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:24px}
+    .srow > .rl{font-size:11px;color:var(--t2)}
+    .srow > .num{grid-column:3;justify-self:end}
+    .colorfield .stopa{margin-left:auto;color:var(--t3);font-size:11px;font-variant-numeric:tabular-nums}
+    .grev{align-self:flex-start;display:flex;align-items:center;gap:5px;height:22px;padding:0 8px;margin-top:1px;
+      font-size:11px;color:var(--t2);background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
+    .grev svg{width:12px;height:12px}
 
     .disc{margin:calc(var(--pad) - var(--row-gap)) calc(-1*var(--pad)) calc(-1*var(--pad));border-top:1px solid var(--border)}
     .disc > .dhead{display:flex;align-items:center;gap:6px;padding:var(--pad);font-size:12px;color:var(--t3);cursor:pointer}
@@ -138,28 +142,22 @@
             </div>
 
             <div class="grad">
-              <div class="gtrack">
-                <span class="gstop" style="left:0%;--c:#ff5db1"></span>
-                <span class="gstop sel" style="left:52%;--c:#7d5bff"></span>
-                <span class="gstop" style="left:100%;--c:#33e6d0"></span>
+              <div class="gbarwrap">
+                <div class="gbar"></div>
+                <span class="gmid" style="left:26%"></span>
+                <span class="gmid" style="left:76%"></span>
+                <span class="ghandle" style="left:0%;--c:#ff5db1"></span>
+                <span class="ghandle sel" style="left:52%;--c:#7d5bff"></span>
+                <span class="ghandle" style="left:100%;--c:#33e6d0"></span>
               </div>
-              <div class="gaddhint">Click the bar to add a stop &middot; drag a stop off to remove it</div>
-              <div class="grow">
-                <span class="rl">Stop color</span>
-                <div class="colorfield" style="grid-column:2"><span class="sw2" style="background:#7d5bff"></span><span class="hex">#7D5BFF</span></div>
+              <div class="ghint">Click the bar to add a stop &middot; drag a handle off to remove &middot; drag a diamond to shift the blend midpoint</div>
+              <div class="srow">
+                <span class="rl">Stop</span>
+                <div class="colorfield"><span class="sw2" style="background:#7d5bff"></span><span class="hex">#7D5BFF</span><span class="stopa">100%</span></div>
+                <span class="num">52<span class="u">%</span></span>
+                <button class="rr" title="Reset stop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
               </div>
-              <div class="grow">
-                <span class="rl">Position</span>
-                <span class="gnum">52<span class="u">%</span></span>
-              </div>
-              <div class="grow">
-                <span class="rl">Stops</span>
-                <div class="gactions" style="grid-column:2">
-                  <button><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>Add</button>
-                  <button><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 8h10"/></svg>Remove</button>
-                  <button><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M8 3l-2 2 2-2 2 2M8 13l-2-2 2 2 2-2"/></svg>Flip</button>
-                </div>
-              </div>
+              <button class="grev"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a5 5 0 0 1 8-1l1.5 1.5M13.5 4v3h-3M12 11a5 5 0 0 1-8 1L2.5 10.5M2.5 12V9h3"/></svg>Reverse stops</button>
             </div>
 
             <div class="row">
@@ -202,7 +200,7 @@
   </div>
 </div>
 
-<div class="specnote">Gradient is a third Source mode of the shared paint-slot module, beside Glitter and Solid. The stop bar, stop-colour / position rows and Type / Angle replace the glitter texture picker; Scale drops out; Opacity and Advanced are unchanged. Radial hides Angle (when:).</div>
+<div class="specnote">Gradient is a third Source mode of the shared paint-slot module (beside Glitter / Solid). Figma-style: a bar with stop handles below it, midpoint diamonds, click-to-add / drag-off-to-remove. The selected stop is ONE row &mdash; colour + alpha field, position as the row's value &mdash; not a sub-form. Add / Remove get no buttons (the bar is the affordance); only Reverse, which isn't discoverable, keeps a control. Type / Angle replace the texture picker; Scale drops out; Opacity + Advanced unchanged. Radial hides Angle (when:).</div>
 
 </x-dc>
 </body>
