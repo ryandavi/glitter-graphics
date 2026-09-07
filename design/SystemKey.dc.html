@@ -54,9 +54,14 @@
 
     <div class="block" style="border-color:#ff9800">
       <h3 style="color:#ff9800">Read this before implementing</h3>
-      <p><b>The artboards are a spec, not paste-able CSS.</b> Each <code>.dc.html</code> file has its own inline
-      <code>&lt;style&gt;</code> written to render that one isolated frame. Build the real
-      <code>_properties.scss</code> from the RULES on this sheet, not by copying an artboard's stylesheet.</p>
+      <p>All docs live in <code>docs/panel-redesign/</code>. The full build spec is
+      <code>PANEL-REDESIGN-SPEC.md</code> there: tokens, the class list, the non-obvious rules, the icons to reuse
+      vs add, conditional elements, the component ledger, what stays as-is, what is mockup-only, and the migration
+      contract. <code>PANEL-REDESIGN-ARTBOARD-DIFF.md</code> maps each artboard to its live app section. This sheet
+      is the visual summary.</p>
+      <p style="margin-top:8px"><b>The artboards are a spec, not paste-able CSS.</b> Each <code>.dc.html</code>
+      file has its own inline <code>&lt;style&gt;</code> written to render that one isolated frame. Build the real
+      <code>_properties.scss</code> from the RULES, not by copying an artboard's stylesheet.</p>
       <p style="margin-top:8px">Mockup shortcuts that must NOT survive into production:</p>
       <ul>
         <li>Non-row body items reserve the revert gutter with <code>margin-right</code> here. In production that
@@ -69,8 +74,9 @@
         <li>Inline <code>style=</code> on individual elements (montage colours, one-off widths) is mockup data,
           not a pattern. Real values live in classes and tokens.</li>
       </ul>
-      <p style="margin-top:8px"><b>Do not wipe the current styling.</b> Strategy (from PLAN-property-panel-system
-      &sect;6): add the new <code>.property-*</code> classes alongside the old ones, migrate the renderer and the
+      <p style="margin-top:8px"><b>Do not wipe the current styling.</b> Strategy (from
+      <code>docs/panel-redesign/PLAN-property-panel-system.md</code> &sect;6): add the new <code>.property-*</code>
+      classes alongside the old ones, migrate the renderer and the
       known JS-to-DOM couplings one work package at a time, delete the old property-only vocabulary at the end.
       Shared primitives stay and are reused: the switch / pill toggle (<code>switch-track</code> mixin, also used
       in Settings), the focus ring, <code>inset-surface</code>, the icon set, the token scales.
@@ -81,7 +87,7 @@
       <h3>What to hand the implementer</h3>
       <ul>
         <li>This canvas (the visual target) + <b>this System Key</b> (the rules to build from).</li>
-        <li><code>PLAN-property-panel-system.md</code> and its work-package list (WP1..WP10). Build in that order:
+        <li><code>docs/panel-redesign/PLAN-property-panel-system.md</code> and its work-package list (WP1..WP10). Build in that order:
           collapsibility opt-in, then the token / row / typography SCSS, then the renderer naming rule, then
           revert, then conditionality, then module rows, then the text panel off its legacy template, then the
           canvas-size vocabulary, then gallery / filters, then the theme + mobile sweep.</li>
@@ -120,7 +126,8 @@
         <tr><td>.row.is-toggle</td><td>EVERY boolean: label left, switch right-aligned to the value column, revert slot after. No checkboxes.</td></tr>
         <tr><td>switch in a header</td><td>the module / effect ENABLE, leading its header (Fill, Border, Shadow, Pixelate, Palette).</td></tr>
         <tr><td>.asset</td><td>thumbnail, name, meta line, Change. One earned surface.</td></tr>
-        <tr><td>.disc</td><td>Advanced. Divider spans the body; padding lives on the header.</td></tr>
+        <tr><td>.disc</td><td>Advanced. Divider spans the body; padding lives on the header. Same disclosure everywhere, incl. Auto Glitter.</td></tr>
+        <tr><td>collapse chevron</td><td>ONE glyph for every expand/collapse: the down chevron (same as the accordion bar and every dropdown), rotated &minus;90&deg; to point right when collapsed. Module headers, <code>.disc</code>, the No-selection form blocks, the credit archival note.</td></tr>
         <tr><td>.btn</td><td>full-width action button.</td></tr>
         <tr><td>.note</td><td>11px tertiary helper text.</td></tr>
       </table>
@@ -209,6 +216,11 @@
       header in the chrome bar (name, revert, chevron), then the <code>.asset</code> row and any settings in the
       body. Same shell as the Transform and effect modules. Shape used to be a plain card with a bare asset row;
       it matches the rest now.</p>
+      <p style="margin-top:8px"><b>Shared asset anatomy.</b> <code>.asset</code>, a Layers-panel row and an Auto
+      Glitter match row are the same object: 34px thumbnail, name 12&#8202;/&#8202;600, meta 11&#8202;/&#8202;tertiary,
+      8px gap. What differs is set by context, not taste: the module <code>.asset</code> keeps the sunk inset (it
+      is one field's current value, acted on by a text button); list rows are carded on the panel ground and act
+      through icon buttons.</p>
     </div>
 
     <div class="block">
@@ -373,7 +385,7 @@
       <h3>Collection credit block</h3>
       <p>From <code>.asset-collection-credit</code>, reformatted, same information: a <code>Source &amp; usage</code>
       label, a byline (<code>Created by &lt;a&gt;</code>), a meta row of dot-separated muted spans (license,
-      archivist), an optional <code>&lt;details&gt;</code> archival note that stays collapsed, and a links row
+      archivist), an optional <code>&lt;details&gt;</code> archival note (collapsible, drawn open on the sheet), and a links row
       (View archived set). It lives at the top of a brush set's page, inside a card, above the tips grid.
       Basic brushes have no credit.</p>
     </div>

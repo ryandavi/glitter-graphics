@@ -1,7 +1,8 @@
 # Property panel refactor — progress & resume notes
 
-Companion to `PLAN-property-panel-system.md` (the spec).
-Visual spec: <https://claude.ai/code/artifact/e4197bd2-0548-4d62-9867-daaad78c97f8>
+Companion to `PLAN-property-panel-system.md` (the plan) and
+`PANEL-REDESIGN-SPEC.md` (the build spec), all in this folder.
+Design canvas: <https://claude.ai/code/artifact/5780b5f2-6f7f-450c-8ee5-3452b602b3ee>
 
 ## How to verify anything
 

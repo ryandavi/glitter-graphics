@@ -32,12 +32,13 @@
     .pickstrip .txt span{font-size:11px;color:var(--t3)}
     .pickstrip .done{height:24px;padding:0 12px;font-size:11px;font-weight:600;color:#fff;background:var(--accent);border:0;border-radius:var(--r-field);cursor:pointer}
 
-    .abh{display:flex;align-items:center;gap:6px;height:30px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
-    .abh .back{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t2);background:none;border:0;padding:2px 4px;cursor:pointer}
-    .abh .back:hover{color:var(--t1)}
-    .abh .back svg{width:12px;height:12px}
-    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1}
-    .abh .count{font-size:11px;color:var(--t3)}
+    .abh{display:flex;align-items:center;gap:6px;height:32px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
+    .abh .back{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--t2);background:none;border:0;border-radius:var(--r-field);cursor:pointer;flex:0 0 auto}
+    .abh .back:hover:not(:disabled){color:var(--t1);background:var(--card)}
+    .abh .back:disabled{color:var(--t3);opacity:.35;cursor:default}
+    .abh .back svg{width:13px;height:13px}
+    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .abh .count{font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums;flex:0 0 auto}
 
     .summary{display:flex;flex-wrap:wrap;gap:6px;padding:8px var(--pad) 4px}
     .schip{display:flex;align-items:center;gap:5px;height:22px;padding:0 5px 0 8px;background:var(--accent-surface);
@@ -48,8 +49,10 @@
       color:var(--t2);background:none;border:1px solid var(--border);border-radius:9999px;cursor:pointer;align-self:center}
     .summary .clear:hover{color:var(--t1);border-color:var(--border-hi)}
     .summary .clear svg{width:11px;height:11px}
-    .anim{position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:50%;background:rgba(0,0,0,.55);
-      display:flex;align-items:center;justify-content:center}
+    /* corner badge on a grid card: one treatment for animated / System / language.
+       ~14px, r-inner radius, 5px inset. content = one glyph or one short word. */
+    .anim{position:absolute;top:5px;right:5px;height:14px;padding:0 4px;border-radius:var(--r-inner);
+      background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
     .anim svg{width:8px;height:8px;color:#fff}
     .item .th{position:relative}
 
@@ -66,7 +69,7 @@
   <div class="panel">
 
     <div class="phead">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M4 8h8"/></svg>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2a6 6 0 1 0 0 12c.7 0 1.2-.6 1.2-1.3 0-.9.7-1.5 1.6-1.5H13a2 2 0 0 0 2-2c0-4-3.1-7.2-7-7.2Z"/><circle cx="5.2" cy="7" r=".7" fill="currentColor" stroke="none"/><circle cx="8" cy="4.9" r=".7" fill="currentColor" stroke="none"/><circle cx="10.8" cy="7" r=".7" fill="currentColor" stroke="none"/></svg>
       <span class="sp">Design</span>
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
     </div>
@@ -76,11 +79,7 @@
       <button class="done">Done</button>
     </div>
 
-    <div class="abh">
-      <button class="back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg>Glitter</button>
-      <span class="title">Holographic</span>
-      <span class="count">84</span>
-    </div>
+    <div class="abh"><button class="back" title="Back to Glitter"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg></button><span class="title">Holographic</span><span class="count">84</span></div>
 
     <div class="summary">
       <span class="schip">Pink<span class="x">&times;</span></span>

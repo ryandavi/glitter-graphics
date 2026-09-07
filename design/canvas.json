@@ -1,49 +1,301 @@
 {
   "pages": [
-    { "id": "page-3", "name": "Layer property panels" },
-    { "id": "page-4", "name": "Tool panels" },
-    { "id": "page-5", "name": "State + start" },
-    { "id": "page-7", "name": "Auto Glitter + Layers" },
-    { "id": "page-6", "name": "Asset browser" },
-    { "id": "page-1", "name": "System + docs" }
+    {
+      "id": "page-3",
+      "name": "Layer property panels"
+    },
+    {
+      "id": "page-4",
+      "name": "Tool panels"
+    },
+    {
+      "id": "page-5",
+      "name": "State + start"
+    },
+    {
+      "id": "page-7",
+      "name": "Auto Glitter + Layers"
+    },
+    {
+      "id": "page-6",
+      "name": "Asset browser"
+    },
+    {
+      "id": "page-1",
+      "name": "System + docs"
+    }
   ],
   "artboards": [
-    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 452, "h": 2180, "title": "Text properties", "page": "page-3" },
-    { "file": "StickerPanel.dc.html", "x": 524, "y": 0, "w": 452, "h": 1560, "title": "Sticker properties", "page": "page-3" },
-    { "file": "ShapePanel.dc.html", "x": 1048, "y": 0, "w": 452, "h": 2260, "title": "Shape properties", "page": "page-3" },
-    { "file": "FillPanel.dc.html", "x": 1572, "y": 0, "w": 452, "h": 1120, "title": "Fill properties", "page": "page-3" },
-    { "file": "CanvasPanel.dc.html", "x": 2096, "y": 0, "w": 452, "h": 2720, "title": "Canvas properties", "page": "page-3" },
-
-    { "file": "MaskPanel.dc.html", "x": 0, "y": 0, "w": 452, "h": 1360, "title": "Brush settings", "page": "page-4" },
-    { "file": "ColorFillPanel.dc.html", "x": 524, "y": 0, "w": 452, "h": 1160, "title": "Color fill settings", "page": "page-4" },
-
-    { "file": "NoSelectionPanel.dc.html", "x": 0, "y": 0, "w": 452, "h": 1180, "title": "No selection", "page": "page-5" },
-    { "file": "MultiSelectPanel.dc.html", "x": 524, "y": 0, "w": 452, "h": 1020, "title": "Multi-selection", "page": "page-5" },
-    { "file": "WelcomePanel.dc.html", "x": 1048, "y": 0, "w": 452, "h": 520, "title": "Welcome / no image", "page": "page-5" },
-    { "file": "WorkspaceStart.dc.html", "x": 1572, "y": 0, "w": 620, "h": 600, "title": "Workspace start card", "page": "page-5" },
-    { "file": "AddLayerModal.dc.html", "x": 2264, "y": 0, "w": 520, "h": 560, "title": "Add a layer modal", "page": "page-5" },
-
-    { "file": "AutoGlitterPanel.dc.html", "x": 0, "y": 0, "w": 452, "h": 820, "title": "Auto Glitter wizard", "page": "page-7" },
-    { "file": "LayersPanel.dc.html", "x": 524, "y": 0, "w": 452, "h": 620, "title": "Layers panel", "page": "page-7" },
-
-    { "file": "BrowserGallery.dc.html", "x": 0, "y": 0, "w": 452, "h": 660, "title": "Browser: category view", "page": "page-6" },
-    { "file": "BrowserShowAll.dc.html", "x": 524, "y": 0, "w": 452, "h": 820, "title": "Browser: show all", "page": "page-6" },
-    { "file": "BrowserCategory.dc.html", "x": 1048, "y": 0, "w": 452, "h": 640, "title": "Browser: inside a category", "page": "page-6" },
-    { "file": "BrowserFilter.dc.html", "x": 1572, "y": 0, "w": 452, "h": 900, "title": "Browser: search + filter", "page": "page-6" },
-    { "file": "BrowserShapesBrush.dc.html", "x": 2096, "y": 0, "w": 940, "h": 900, "title": "Browser: shapes + brush tips", "page": "page-6" },
-    { "file": "BrowserBrushSet.dc.html", "x": 3088, "y": 0, "w": 452, "h": 640, "title": "Browser: a brush set page", "page": "page-6" },
-
-    { "file": "SystemKey.dc.html", "x": 0, "y": 0, "w": 528, "h": 5900, "title": "Panel system key", "page": "page-1" },
-    { "file": "Deltas.dc.html", "x": 600, "y": 0, "w": 568, "h": 3200, "title": "Deltas: current app vs this design", "page": "page-1" },
-    { "file": "PanelsInventory.dc.html", "x": 1240, "y": 0, "w": 616, "h": 2280, "title": "All right-panel types", "page": "page-1" },
-    { "file": "NarrowWidth.dc.html", "x": 1928, "y": 0, "w": 560, "h": 620, "title": "Narrow width behaviour", "page": "page-1" }
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 452,
+      "h": 2180,
+      "title": "Text properties",
+      "page": "page-3"
+    },
+    {
+      "file": "StickerPanel.dc.html",
+      "x": 524,
+      "y": 0,
+      "w": 452,
+      "h": 1560,
+      "title": "Sticker properties",
+      "page": "page-3"
+    },
+    {
+      "file": "ShapePanel.dc.html",
+      "x": 1048,
+      "y": 0,
+      "w": 452,
+      "h": 2260,
+      "title": "Shape properties",
+      "page": "page-3"
+    },
+    {
+      "file": "FillPanel.dc.html",
+      "x": 1572,
+      "y": 0,
+      "w": 452,
+      "h": 1120,
+      "title": "Fill properties",
+      "page": "page-3"
+    },
+    {
+      "file": "CanvasPanel.dc.html",
+      "x": 2096,
+      "y": 0,
+      "w": 452,
+      "h": 2860,
+      "title": "Canvas properties",
+      "page": "page-3"
+    },
+    {
+      "file": "GradientFill.dc.html",
+      "x": 2620,
+      "y": 0,
+      "w": 452,
+      "h": 1180,
+      "title": "Gradient fill (Fill source mode)",
+      "page": "page-3"
+    },
+    {
+      "file": "MaskPanel.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 452,
+      "h": 1360,
+      "title": "Mask Settings",
+      "page": "page-4"
+    },
+    {
+      "file": "ColorFillPanel.dc.html",
+      "x": 524,
+      "y": 0,
+      "w": 452,
+      "h": 1160,
+      "title": "Color fill settings",
+      "page": "page-4"
+    },
+    {
+      "file": "NoSelectionPanel.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 452,
+      "h": 1240,
+      "title": "No selection",
+      "page": "page-5"
+    },
+    {
+      "file": "MultiSelectPanel.dc.html",
+      "x": 524,
+      "y": 0,
+      "w": 452,
+      "h": 1020,
+      "title": "Multi-selection",
+      "page": "page-5"
+    },
+    {
+      "file": "WelcomePanel.dc.html",
+      "x": 1048,
+      "y": 0,
+      "w": 452,
+      "h": 520,
+      "title": "Welcome / no image",
+      "page": "page-5"
+    },
+    {
+      "file": "WorkspaceStart.dc.html",
+      "x": 1572,
+      "y": 0,
+      "w": 620,
+      "h": 600,
+      "title": "Workspace start card",
+      "page": "page-5"
+    },
+    {
+      "file": "AddLayerModal.dc.html",
+      "x": 2264,
+      "y": 0,
+      "w": 520,
+      "h": 560,
+      "title": "Add a layer modal",
+      "page": "page-5"
+    },
+    {
+      "file": "AutoGlitterPanel.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 452,
+      "h": 820,
+      "title": "Auto Glitter wizard",
+      "page": "page-7"
+    },
+    {
+      "file": "LayersPanel.dc.html",
+      "x": 524,
+      "y": 0,
+      "w": 452,
+      "h": 620,
+      "title": "Layers panel",
+      "page": "page-7"
+    },
+    {
+      "file": "BrowserGallery.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 452,
+      "h": 660,
+      "title": "Browser: category view",
+      "page": "page-6"
+    },
+    {
+      "file": "BrowserShowAll.dc.html",
+      "x": 524,
+      "y": 0,
+      "w": 452,
+      "h": 820,
+      "title": "Browser: show all",
+      "page": "page-6"
+    },
+    {
+      "file": "BrowserCategory.dc.html",
+      "x": 1048,
+      "y": 0,
+      "w": 452,
+      "h": 640,
+      "title": "Browser: inside a category",
+      "page": "page-6"
+    },
+    {
+      "file": "BrowserFilter.dc.html",
+      "x": 1572,
+      "y": 0,
+      "w": 452,
+      "h": 900,
+      "title": "Browser: search + filter",
+      "page": "page-6"
+    },
+    {
+      "file": "BrowserShapesBrush.dc.html",
+      "x": 2096,
+      "y": 0,
+      "w": 940,
+      "h": 900,
+      "title": "Browser: shapes + brush tips",
+      "page": "page-6"
+    },
+    {
+      "file": "BrowserBrushSet.dc.html",
+      "x": 3088,
+      "y": 0,
+      "w": 452,
+      "h": 640,
+      "title": "Browser: a brush set page",
+      "page": "page-6"
+    },
+    {
+      "file": "SystemKey.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 528,
+      "h": 5900,
+      "title": "Panel system key",
+      "page": "page-1"
+    },
+    {
+      "file": "Deltas.dc.html",
+      "x": 600,
+      "y": 0,
+      "w": 568,
+      "h": 3200,
+      "title": "Deltas: current app vs this design",
+      "page": "page-1"
+    },
+    {
+      "file": "PanelsInventory.dc.html",
+      "x": 1240,
+      "y": 0,
+      "w": 616,
+      "h": 2280,
+      "title": "All right-panel types",
+      "page": "page-1"
+    },
+    {
+      "file": "NarrowWidth.dc.html",
+      "x": 1928,
+      "y": 0,
+      "w": 560,
+      "h": 620,
+      "title": "Narrow width behaviour",
+      "page": "page-1"
+    }
   ],
   "annotations": [
-    { "id": "layer-panels-note", "page": "page-3", "x": 0, "y": -160, "w": 900, "text": "THE FIVE LAYER PROPERTY PANELS, one system. L0 accordion bar, group order CONTENT / APPEARANCE / TRANSFORM / EFFECTS where it applies (Fill has no Transform; Canvas has SIZE + ACTIONS). One Transform module, one paint-slot module for every Fill / Border / Shadow / Background, one .asset row, one Opacity row, one Reset Effects footer, one Advanced disclosure per module. Source is always a dropdown. Every in-body boolean is a left-aligned checkbox; the switch is only a module enable in a header. Concentric radii (8 / 6 / 4 / 3), universal 24px revert gutter down the right edge, values in editable fields." },
-    { "id": "start-note", "page": "page-5", "x": 1572, "y": -110, "w": 620, "text": "WORKSPACE START CARD (#workspaceStart): the centred card on the canvas when nothing is loaded. Distinct from the sidebar Welcome panel to its left. Heading + one sentence, three stacked actions (Open image primary, New canvas, Open project), a dashed drop zone with the size limits. Warmer than a settings surface; still the app's tokens." },
-    { "id": "wizard-note", "page": "page-7", "x": 0, "y": -220, "w": 900, "text": "AUTO GLITTER WIZARD + LAYERS PANEL.\n\nAUTO GLITTER (autoGlitterSettingsSection): the panel that needs a scroll region. Fixed-height flex column: a PINNED preview mode segmented, a SCROLL region holding Palette (style, colors, merge), Color Matches (a live status line + a list of region -> matched glitter rows, each with a swatch pair, name, match % and a Change chip) and Advanced (detail + checkboxes), then a STICKY FOOTER with Cancel / Create N layers. Nothing inside the scroll region is a new primitive.\n\nLAYERS PANEL (left side, brought to parity): same Y2K bar with an icon, 'Layers', a count, a New Layer action and a collapse chevron. A layer row is one card: drag dots, a 34px swatch, name + type meta (+ a Masked / Locked badge), then visibility and lock icon buttons. States: active (accent border + tint), selected, is-hidden (dimmed), is-locked (no drag handle). A bottom bar of add / clone / go-to / delete icon buttons in the chrome.\n\nOpen: whether the layers list should adopt the same 6px card gap as the property panels' blocks (currently 4)." },
-    { "id": "browser-note", "page": "page-6", "x": 0, "y": -300, "w": 980, "text": "ASSET BROWSER. Three layouts, chosen by the collection.\n\nGLITTER / STICKERS (category view): header (Back + title + count), search row, a 'By category / Show all' toggle, then a 2-up category folder grid. No Featured. 'Show all' (its own artboard) is every item visible, grouped under category headers, nothing collapsed.\n\nINSIDE A CATEGORY: the armed PICKER STRIP names the destination with a Done button; Back returns to the list; the active-filter summary has a real 'Clear all' pill; a 4-up asset grid, selected one outlined, animated items badged with a corner play glyph.\n\nSEARCH + FILTER: the filter drawer: each group a .property-group-label over a chip row, hairline dividers, NO cards, NO fourth uppercase level, NO nested scroll. Round swatch chips for colours, pills for the rest. Clear all / Show N results pinned.\n\nBRUSH TIPS: basic brushes listed flat, then Brush SETS as folders. A SET PAGE (its own artboard) is a back line, the set name, the Source & usage credit (label, byline, dot-separated meta, a collapsed Archival note, a links row), then the tips.\n\nSHAPES: too small for folders. Every category shown, grouped under headers, always.\n\nGrid columns are a container query (3 / 4 / 5-up)." },
-    { "id": "changelog", "page": "page-1", "x": -430, "y": 0, "w": 400, "text": "CHANGELOG\n\np15 (this round):\n- Booleans: reverted to ONE toggle switch, label left, switch right-aligned to the value column (same right edge as every value). No checkboxes anywhere. Applied to Lock aspect, Relative, Resample, Scale Textures/Effects, Pressure, Selection options, Clean edges, Tune hue.\n- Full-width buttons, group footers, asset cards and notes now span the FULL content width (16px each side). Only value rows reserve the revert column. Two-up buttons (Open/Save) stay side by side.\n- Auto Glitter: fixed the reset-icon button (was showing browser chrome), gave Color Matches its left margin, added more match rows so the scroll actually overflows instead of leaving space under Advanced.\n- Add-a-layer modal drafted: reuses the Quick Add tile grid, on a scrim, with a header and a Cancel footer.\n- Canvas Scale is a number field (no slider - unbounded, like X/Y/W/H). Noted that the Size control is MOVED between No selection and Canvas Properties, never shown twice.\n- Removed the placeholder 'Tap a set to open its page' line.\n\np14: Auto Glitter wizard (scroll + sticky footer), Layers panel at parity, workspace start card, credit block rebuilt, Text moved to the layer-panels page, multi-select actions match the Mask actions card.\n\np13: Reset Effects + form submits get a footer. Empty/populated both drawn + labelled. Browser: Show all = grouped headers; brush = basics + set folders; shapes = grouped headers.\n\np12: browser iteration; archive removed; frames + fps fallbacks. p11: 'read before implementing' + handoff. p10: state panels. p9: universal revert column (since narrowed to rows only). p8: concentric radii. p7: one row grid.\n\n---\n\np14 (prior round):\n- Auto Glitter wizard: scroll region under a sticky Cancel / Create N layers footer, pinned preview on top. Color Matches is a list of region -> matched-glitter rows.\n- Layers panel drafted (left side) at parity: same Y2K bar, one-card layer rows with drag / swatch / name+meta / visibility / lock, active-selected-hidden-locked states, a bottom icon bar.\n- Workspace start card (#workspaceStart): the centred canvas card, distinct from the sidebar Welcome panel.\n- Credit block rebuilt from .asset-collection-credit: label, byline, dot-separated meta spans, a collapsed Archival-note <details>, a links row. On its own Brush set page artboard.\n- Text properties moved onto the Layer property panels page with Sticker / Shape / Fill / Canvas. Pages reorganised; page 1 is now System + docs.\n- Multi-select Actions: buttons are direct card children, card gap, right gutter - identical to the Mask Settings Actions card. No more extra spacing.\n\np13: booleans are one primitive (checkbox in body, switch only for header enable). Reset Effects + form submits get a footer (divider + own padding). Empty/populated states both drawn and labelled. Browser: Show all = grouped headers; brush tips = basics + set folders; shapes = grouped headers.\n\np12: browser iteration; archive removed; frames + fps with fallbacks.\np11: 'read before implementing' + handoff block; label size 11px recommended.\np10: state panels. p9: universal revert column. p8: re-grounded 4 panels, concentric radii. p7: Align split, one row grid." }
+    {
+      "id": "layer-panels-note",
+      "page": "page-3",
+      "x": 0,
+      "y": -160,
+      "w": 900,
+      "text": "THE FIVE LAYER PROPERTY PANELS, one system. Full spec: docs/panel-redesign/PANEL-REDESIGN-SPEC.md. L0 accordion bar; group order CONTENT / APPEARANCE / TRANSFORM / EFFECTS where it applies (Fill has no Transform; Canvas has SIZE + ACTIONS). One Transform module, one paint-slot module for every Fill / Border / Shadow / Background, one .asset row, one Opacity row, one Reset Effects footer, one Advanced disclosure per module. Source is always a dropdown. Every boolean is a toggle switch, label left, switch right-aligned to the value column. Concentric radii (8 / 6 / 4 / 3). The revert column is reserved on every ROW; block elements (assets, notes, buttons, footers) span full width. Property labels 11px. Values in editable fields."
+    },
+    {
+      "id": "start-note",
+      "page": "page-5",
+      "x": 1572,
+      "y": -110,
+      "w": 620,
+      "text": "WORKSPACE START CARD (#workspaceStart): the centred card on the canvas when nothing is loaded. Distinct from the sidebar Welcome panel to its left. Heading + one sentence, three stacked actions (Open image primary, New canvas, Open project), a dashed drop zone with the size limits. Warmer than a settings surface; still the app's tokens."
+    },
+    {
+      "id": "wizard-note",
+      "page": "page-7",
+      "x": 0,
+      "y": -220,
+      "w": 900,
+      "text": "AUTO GLITTER WIZARD + LAYERS PANEL.\n\nAUTO GLITTER (autoGlitterSettingsSection): the panel that needs a scroll region. Fixed-height flex column: a PINNED preview mode segmented, a SCROLL region holding Palette (style, colors, merge), Color Matches (a live status line + a list of region -> matched glitter rows, each with a swatch pair, name, match % and a Change chip) and Advanced (detail + two toggles), then a STICKY FOOTER with Cancel / Create N layers. The running spinner sits in a fixed-height status slot so it never reflows the list. Nothing inside the scroll region is a new primitive.\n\nLAYERS PANEL (left side, brought to parity): same Y2K bar with an icon, 'Layers', a count, a New Layer action and a collapse chevron. A layer row is one card: drag dots, a 34px swatch, name + type meta (+ a Masked / Locked badge), then visibility and lock icon buttons. States: active (accent border + tint), selected, is-hidden (dimmed), is-locked (no drag handle). A bottom bar of add / clone / go-to / delete icon buttons in the chrome.\n\nOpen: whether the layers list should adopt the same 6px card gap as the property panels' blocks (currently 4)."
+    },
+    {
+      "id": "browser-note",
+      "page": "page-6",
+      "x": 0,
+      "y": -300,
+      "w": 980,
+      "text": "ASSET BROWSER. Three layouts, chosen by the collection.\n\nGLITTER / STICKERS (category view): header (Back + title + count), search row, a 'By category / Show all' toggle, then a 2-up category folder grid. 'Show all' (its own artboard) is every item visible, grouped under category headers, nothing collapsed.\n\nINSIDE A CATEGORY: the armed PICKER STRIP names the destination with a Done button; Back returns to the list; the active-filter summary has a real 'Clear all' pill; a 4-up asset grid, selected one outlined, animated items badged with a corner play glyph.\n\nSEARCH + FILTER: the filter drawer: each group a .property-group-label over a chip row, hairline dividers, NO cards, NO fourth uppercase level, NO nested scroll. Round swatch chips for colours, pills for the rest. Clear all / Show N results pinned.\n\nBRUSH TIPS: basic brushes listed flat, then Brush SETS as folders. A SET PAGE (its own artboard) is a back line, the set name, the Source & usage credit (label, byline, dot-separated meta, a collapsed Archival note, a links row), then the tips.\n\nSHAPES: too small for folders. Every category shown, grouped under headers, always.\n\nGrid columns are a container query (3 / 4 / 5-up)."
+    },
+    {
+      "id": "changelog",
+      "page": "page-1",
+      "x": -430,
+      "y": 0,
+      "w": 400,
+      "text": "CHANGELOG (newest first)\n\np22: Added GradientFill artboard - gradient is a third Source mode of the shared paint-slot module (beside Glitter / Solid): a stop bar with draggable stops, stop-colour + position rows, Type (Linear/Radial), Angle slider (Radial hides it, when:). Scale drops out; Opacity + Advanced unchanged. The stop bar is a nested editor so it earns a --sunk box (rule B).\n\np21: One collapse glyph everywhere - the down chevron (as the accordion bar + dropdowns use), rotated -90deg when collapsed. Replaced the module-header up-caret (19x) and the .disc right-arrow twisty (spec rule 17). No selection: Project drawn expanded (was collapsed) - nothing is shown collapsed unless its expanded state is on the sheet elsewhere. Brush-set Archival note drawn open, triangle -> chevron. Filter 'Search by name only' FIX: flex:1 was hitting the switch too (also a <span>) and stretching it - scoped to the label; switch now truly right-aligned. AutoGlitter iterated: Palette + Advanced lose their card boxes (rule B); Advanced is now the shared .disc disclosure (chevron + label + divider, collapsed by default), not a peer titled group. HANDOFF scope line corrected (layers panel + add-layer modal are in, parity only).\n\np20 (docs, no artboard change): all panel-redesign docs collected under docs/panel-redesign/ (PLAN + PROGRESS + HANDOFF + SPEC + ARTBOARD-DIFF). SPEC gained a component ledger (S12: kept / changed / new, and what renders each) and a behaviour add/change list (S13). New ARTBOARD-DIFF walks every artboard against its live app section with tagged deltas. PLAN S3 links look / build / per-artboard-diff. This Deltas artboard is the on-canvas summary; the doc is its full form.\n\np19: Consistency pass. Mask panel 'Brush' -> 'Mask Settings' (one panel serves brush + eraser; header icon + Copy/Reset labels swap); stale 'separate eraser panel' note -> SPEC NOTE. Brush Count gets the app's 'x' unit. No-selection header icon -> palette. Asset summary / Layers row / Auto Glitter match unified to one anatomy (34px thumb, name 12/600, meta 11, 8px gap); surface follows container - module .asset keeps the sunk inset + text button, list rows stay carded + icon. Every browser 'Design' bar -> palette icon. Text 'Line' spacing shows % not a bare number. Confirmed app-accurate, no change: Canvas 'Replace' for the base image (assets stay 'Change'); Image Size Scale is a number field (rule 9) + Quick scale kept.\n\np18: Scope corrected - layers panel + Add-a-layer modal ARE in (visual parity only). Quick Add / modal tile copy now verbatim from LAYER_UI_CONFIG.addableViaModal; 'Glitter fill' -> 'Fill Layer'; subtext capped width. Project + Size (No selection) and Image/Canvas Size (Canvas Properties) are .formmod blocks: card-ground header + footer, panel-ground fields; group labels dropped where the module name carries it (rule A). Shared-Size caption is a SPEC NOTE. No-selection title 'Canvas' -> 'Design'; other panel titles stay (distinct panels).\n\np17: Layers panel icons bumped, list gap 4->6 (matches block gap). Auto Glitter Color Matches rebuilt to look like a Layers row (bordered card, swatch-pair thumbnail, name + match%, Change icon). Asset browser nav header is one component: Back always present (disabled+faded at root, reserving its slot), title, BARE count number. Panel Y2K title is Design in every browser view. Corner badges unified (animated glyph + font System/language marker, one ~14px pill). Filter drawer Search-by-name-only is a toggle switch now. Canvas Properties two-states caption is a dashed SPEC NOTE box.\n\np16: wrote docs/PANEL-REDESIGN-SPEC.md (the build spec). Labels 11px. Segmented text 11. Texture->Offset relabel. Fit-box-to-text in a card footer, Box mode only. Multi-select drops Merge down. Add-layer modal + Quick Add share one taller tile. Auto Glitter status fixed height. Canvas Scale format matches Transform.\n\np15: booleans are ONE toggle switch everywhere (label left, switch right-aligned to the value column). Full-width buttons / footers / assets. Add-layer modal. Reset-icon button fix.\n\np14: Auto Glitter wizard (scroll + sticky footer). Layers panel. Workspace start card. Credit block rebuilt. Text moved to the layer-panels page.\n\np13: footers for form submits (hairline + own padding). Empty + populated states both drawn and labelled. Browser layouts chosen by collection size.\n\np12: browser iteration; first-pass archive removed; frames + fps with fallbacks.\n\np11: read-before-implementing + handoff block. p10: state panels. p9: revert column narrowed to rows only. p8: re-grounded 4 panels; concentric radii. p7: Transform Align split; one row grid. p6: module-header revert present-only. p5: X/Y/W/H/Scale are number fields; Placement a dropdown. p4: even --pad, one gap. p3: Fill is a paint slot; font picker is preview cards."
+    }
   ],
-  "launch": { "view": "canvas", "page": "page-7" }
+  "launch": {
+    "view": "canvas",
+    "page": "page-7"
+  }
 }

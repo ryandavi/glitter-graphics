@@ -201,11 +201,22 @@ property design system.
 
 ## 3. The target system — approved
 
-Visual spec: <https://claude.ai/code/artifact/e4197bd2-0548-4d62-9867-daaad78c97f8>
+- **The look** — design canvas `glitter-property-panels`:
+  <https://claude.ai/code/artifact/5780b5f2-6f7f-450c-8ee5-3452b602b3ee>
+  (source artboards in [`design/`](../../design/); `SystemKey` / `Deltas` /
+  `PanelsInventory` / `NarrowWidth` are reference artboards, not surfaces).
+- **The build** — [`PANEL-REDESIGN-SPEC.md`](PANEL-REDESIGN-SPEC.md):
+  tokens (§2), class vocabulary (§3), rules (§4), icons (§6), the component
+  ledger (§12), and behaviour adds/changes (§13).
+- **Today → target per artboard** —
+  [`PANEL-REDESIGN-ARTBOARD-DIFF.md`](PANEL-REDESIGN-ARTBOARD-DIFF.md).
+- **Progress / resume notes** — [`PLAN-property-panel-PROGRESS.md`](PLAN-property-panel-PROGRESS.md).
+  Original goal statement — [`HANDOFF.md`](HANDOFF.md).
 
 Mandate: **refactor plus a scoped redesign of the right sidebar.** The container model is
-replaced, not tidied. Out of scope and untouched: app chrome, toolbar, canvas, layers
-panel, modals, export.
+replaced, not tidied. Untouched: app chrome, toolbar, canvas, export. The layers panel and
+the Add-a-layer modal are in for **visual parity only** — same Y2K bar, tokens and tile
+grid — with no behaviour or structural change. Other modals are out.
 
 ### 3.1 The unit is a row, not a card
 

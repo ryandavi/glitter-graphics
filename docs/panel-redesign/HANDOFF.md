@@ -1,5 +1,9 @@
 # Property panel refactor — handoff
 
+> The original goal statement. Current scope, decisions and per-artboard deltas
+> live in `PLAN-property-panel-system.md`, `PANEL-REDESIGN-SPEC.md` and
+> `PANEL-REDESIGN-ARTBOARD-DIFF.md` (same folder) — where they differ, those win.
+
 ## The goal
 
 One coherent property-panel design system for the **right sidebar** (`#designPanel`) of this
@@ -11,10 +15,12 @@ Consistency is the point. If two things do the same job they use the same class,
 component and the same words. **Generic classes over feature-specific ones**, so a value can
 be changed in one place.
 
-Scope: every property panel in the right sidebar, plus the gallery/search/filters for visual
-consistency. Not the toolbar, canvas, layers panel, modals or export.
+Scope: every property panel in the right sidebar, plus the gallery / search / filters, the
+Layers panel and the Add-a-layer modal — the last two for **visual parity only** (same Y2K
+bar, tokens, tile grid), no behaviour change. Not the toolbar, canvas, other modals or
+export.
 
-Visual spec (approved): <https://claude.ai/code/artifact/e4197bd2-0548-4d62-9867-daaad78c97f8>
+Design canvas: <https://claude.ai/code/artifact/5780b5f2-6f7f-450c-8ee5-3452b602b3ee>
 
 ## Verify before and after every change
 

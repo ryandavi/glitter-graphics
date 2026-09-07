@@ -42,7 +42,7 @@
 
     /* ROWS: 4-column grid. col 4 is the revert, ALWAYS reserved. */
     .row{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h)}
-    .row > .rl{font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row > .rl{font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .row > .num{grid-column:3;justify-self:end}
     .row > .rv{grid-column:3;justify-self:end;font-size:12px;color:var(--t3);font-variant-numeric:tabular-nums;white-space:nowrap}
     .row > .seg,.row > .sel,.row > .colorfield{grid-column:2 / -2}
@@ -67,6 +67,11 @@
        Only value ROWS reserve the 16px revert column. */
     .effect-reset{border-top:1px solid var(--border);margin-top:var(--block-gap);display:flex}
     .effect-reset > .btn{flex:1;margin:var(--pad) 16px}
+    /* a conditional / form action at the end of a card: full-bleed hairline,
+       its own even padding, so it does not sit loose against the fields. */
+    .cardfoot{border-top:1px solid var(--border);margin:var(--row-gap) calc(-1*var(--pad)) calc(-1*var(--pad));
+      padding:var(--pad);display:flex}
+    .cardfoot > .btn{flex:1}
 
     .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:46px;padding:0 6px;
       background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;font-weight:500;
@@ -93,7 +98,7 @@
 
     .seg{display:flex;width:100%;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
     .seg > button{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;height:24px;padding:0 6px;
-      font-size:12px;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+      font-size:11px;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
     .seg > button:first-child{border-left:0}
     .seg > button.on{background:var(--accent);color:#fff}
     .seg > button.tog-on{background:var(--accent-surface);color:var(--t1)}
@@ -118,7 +123,9 @@
     .fontcard.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
     .fontcard .fsample{font-size:25px;line-height:1.12;color:var(--t1)}
     .fontcard .fname{font-size:12px;color:var(--t2)}
-    .fontcard .fbadge{position:absolute;top:6px;right:6px;font-size:9px;font-weight:600;padding:2px 5px;border-radius:var(--r-inner);background:var(--sunk);color:var(--t2);border:1px solid var(--border)}
+    /* same corner-badge treatment as the asset grid: 14px, r-inner, 5px inset */
+    .fontcard .fbadge{position:absolute;top:5px;right:5px;height:14px;display:flex;align-items:center;padding:0 5px;
+      font-size:9px;font-weight:600;border-radius:var(--r-inner);background:var(--sunk);color:var(--t2);border:1px solid var(--border)}
     .fontfade{position:absolute;left:0;right:0;bottom:0;height:22px;border-radius:0 0 var(--r-field) var(--r-field);background:linear-gradient(to top,var(--sunk),transparent);pointer-events:none}
 
     .mod{display:flex;flex-direction:column;margin:0 var(--pad);border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);overflow:hidden}
@@ -131,8 +138,11 @@
     .mod.off .swatch{opacity:.35}
     .mbody{display:flex;flex-direction:column;gap:var(--row-gap);border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
 
-    .asset{display:flex;align-items:center;gap:9px;background:var(--sunk);border-radius:var(--r-inner);padding:7px 8px}
-    .asset .th{width:38px;height:38px;border-radius:var(--r-inner);flex:0 0 auto;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+    /* asset summary: shared anatomy with the Layers row (34px thumb, name 12/600,
+       meta 11/t3, 8px gap) — surface stays the sunk inset because this is the
+       current value of ONE field inside a module, and its action is a text button. */
+    .asset{display:flex;align-items:center;gap:8px;background:var(--sunk);border-radius:var(--r-inner);padding:7px 8px}
+    .asset .th{width:34px;height:34px;border-radius:var(--r-inner);flex:0 0 auto;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
     .asset .an{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
     .asset .anrow{display:flex;align-items:center;gap:6px;min-width:0}
     .asset .anrow b{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -143,7 +153,7 @@
     .disc{margin:calc(var(--pad) - var(--row-gap)) calc(-1*var(--pad)) calc(-1*var(--pad));border-top:1px solid var(--border)}
     .disc > .dhead{display:flex;align-items:center;gap:6px;padding:var(--pad);font-size:12px;color:var(--t3);cursor:pointer}
     .disc > .dhead svg{width:11px;height:11px;transition:transform .12s}
-    .disc.open > .dhead svg{transform:rotate(90deg)}
+    .disc:not(.open) > .dhead svg{transform:rotate(-90deg)}
     .disc > .dbody{display:none;flex-direction:column;gap:var(--row-gap);padding:0 var(--pad) var(--pad)}
     .disc.open > .dbody{display:flex}
   </style>
@@ -168,11 +178,13 @@
           <div class="textbox">Sparkle &amp; Shine</div>
           <div class="row">
             <span class="rl">Mode</span>
-            <div class="seg"><button class="on">Point</button><button>Box</button></div>
+            <div class="seg"><button>Point</button><button class="on">Box</button></div>
             <span class="rr blank"></span>
           </div>
-          <div class="note">Point text hugs the copy. Box wraps and can be edge-resized.</div>
-          <button class="btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M2 8l3-3M2 8l3 3M14 8l-3-3M14 8l-3 3"/></svg>Fit box to text</button>
+          <div class="note">Box wraps and can be edge-resized. Fit trims it to the current text. Shown only in Box mode.</div>
+          <div class="cardfoot">
+            <button class="btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M2 8l3-3M2 8l3 3M14 8l-3-3M14 8l-3 3"/></svg>Fit box to text</button>
+          </div>
         </div>
 
         <div class="card">
@@ -214,7 +226,7 @@
           <div class="row">
             <span class="rl">Line</span>
             <div class="slider"><div class="trk"></div><div class="fil" style="width:32%"></div><div class="knb" style="left:32%"></div></div>
-            <span class="num">1.2</span>
+            <span class="num">120<span class="u">%</span></span>
             <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
           </div>
         </div>
@@ -252,7 +264,7 @@
             <span class="mname">Fill</span>
             <span class="msum">Holo Foil</span>
             <button class="rr" title="Reset fill"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
-            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>
+            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
           </div>
           <div class="mbody">
             <div class="row">
@@ -280,12 +292,12 @@
             </div>
             <div class="disc open">
               <div class="dhead">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
                 <span>Advanced</span>
               </div>
               <div class="dbody">
                 <div class="row is-pair">
-                  <span class="rl">Texture</span>
+                  <span class="rl">Offset</span>
                   <div class="pair"><span class="numf"><span class="k">X</span><span class="v">0</span></span><span class="numf"><span class="k">Y</span><span class="v">0</span></span></div>
                   <span class="rr blank"></span>
                 </div>
@@ -326,7 +338,7 @@
           <div class="mh">
             <span class="mname">Transform</span>
             <button class="rr" title="Reset transform"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
-            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>
+            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
           </div>
           <div class="mbody">
             <div class="row is-pair">
@@ -387,7 +399,7 @@
             <span class="mname">Border</span>
             <span class="msum">Glitter</span>
             <button class="rr" title="Reset border"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
-            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>
+            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
           </div>
           <div class="mbody">
             <div class="row">
@@ -423,7 +435,7 @@
             </div>
             <div class="disc">
               <div class="dhead">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
                 <span>Advanced</span>
               </div>
             </div>

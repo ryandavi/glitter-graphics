@@ -24,11 +24,13 @@
       color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
     .phead .sp{flex:1 1 auto}
     .phead svg{width:14px;height:14px;opacity:.85}
-    .abh{display:flex;align-items:center;gap:6px;height:30px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
-    .abh .back{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--t3);background:none;border:0;padding:2px 4px;cursor:not-allowed}
-    .abh .back svg{width:12px;height:12px}
-    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1}
-    .abh .count{font-size:11px;color:var(--t3)}
+    .abh{display:flex;align-items:center;gap:6px;height:32px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
+    .abh .back{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--t2);background:none;border:0;border-radius:var(--r-field);cursor:pointer;flex:0 0 auto}
+    .abh .back:hover:not(:disabled){color:var(--t1);background:var(--card)}
+    .abh .back:disabled{color:var(--t3);opacity:.35;cursor:default}
+    .abh .back svg{width:13px;height:13px}
+    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .abh .count{font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums;flex:0 0 auto}
     .searchrow{display:flex;gap:6px;padding:var(--pad)}
     .searchbox{flex:1;display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;background:var(--sunk);
       border:1px solid var(--border);border-radius:var(--r-field);font-size:12px;color:var(--t3)}
@@ -59,16 +61,12 @@
   <div class="panel">
 
     <div class="phead">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M4 8h8"/></svg>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2a6 6 0 1 0 0 12c.7 0 1.2-.6 1.2-1.3 0-.9.7-1.5 1.6-1.5H13a2 2 0 0 0 2-2c0-4-3.1-7.2-7-7.2Z"/><circle cx="5.2" cy="7" r=".7" fill="currentColor" stroke="none"/><circle cx="8" cy="4.9" r=".7" fill="currentColor" stroke="none"/><circle cx="10.8" cy="7" r=".7" fill="currentColor" stroke="none"/></svg>
       <span class="sp">Design</span>
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
     </div>
 
-    <div class="abh">
-      <button class="back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg>Back</button>
-      <span class="title">Glitter</span>
-      <span class="count">1,240 items</span>
-    </div>
+    <div class="abh"><button class="back" disabled title="Back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg></button><span class="title">Glitter</span><span class="count">1,240</span></div>
 
     <div class="searchrow">
       <div class="searchbox"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg>Search by name or tag</div>

@@ -33,37 +33,40 @@
       background:none;border:0;cursor:pointer}
     .phead .act svg{width:14px;height:14px}
 
-    .list{display:flex;flex-direction:column;gap:4px;padding:var(--pad)}
+    /* card gap matches the property panels' block gap */
+    .list{display:flex;flex-direction:column;gap:6px;padding:var(--pad)}
 
-    .layer{display:grid;grid-template-columns:14px 34px 1fr auto;align-items:center;column-gap:8px;
-      padding:6px 7px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);cursor:pointer}
+    .layer{display:grid;grid-template-columns:16px 34px 1fr auto;align-items:center;column-gap:8px;
+      padding:7px 8px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);cursor:pointer}
     .layer.active{border-color:var(--accent);background:var(--accent-tint)}
     .layer.selected{border-color:var(--border-hi);background:var(--accent-tint)}
     .layer .drag{color:var(--t3);display:flex;align-items:center;justify-content:center;cursor:grab}
-    .layer .drag svg{width:10px;height:14px}
+    .layer .drag svg{width:12px;height:16px}
+    /* shared asset anatomy: 34px thumb, name 12/600, meta 11/t3 — same as the
+       property panels' .asset; the carded surface is what a list row adds. */
     .layer .sw{width:34px;height:34px;border-radius:var(--r-inner);border:1px solid var(--border);background:var(--sunk);
       background-size:cover;background-position:center}
-    .layer .info{min-width:0;display:flex;flex-direction:column;gap:1px}
+    .layer .info{min-width:0;display:flex;flex-direction:column;gap:2px}
     .layer .info .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .layer .info .meta{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--t3)}
+    .layer .info .meta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3)}
     .layer .info .meta .badge{border:1px solid var(--border);border-radius:var(--r-inner);padding:0 4px;color:var(--t2)}
     .layer .acts{display:flex;align-items:center;gap:2px}
-    .layer .acts button{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--t3);
-      background:none;border:0;border-radius:var(--r-inner);cursor:pointer}
+    .layer .acts button{width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--t3);
+      background:none;border:0;border-radius:var(--r-field);cursor:pointer}
     .layer .acts button:hover{color:var(--t1);background:var(--sunk)}
     .layer .acts button.on{color:var(--t1)}
-    .layer .acts button svg{width:13px;height:13px}
+    .layer .acts button svg{width:15px;height:15px}
     .layer.is-hidden .sw{opacity:.35}
     .layer.is-hidden .nm,.layer.is-hidden .meta{color:var(--t3)}
     .layer.is-locked .drag{visibility:hidden}
 
     /* bottom bar of icon actions, in the panel chrome */
     .bar{display:flex;align-items:center;gap:2px;padding:6px var(--pad);border-top:1px solid var(--border);background:var(--sunk)}
-    .bar button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:var(--t2);
+    .bar button{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--t2);
       background:none;border:1px solid transparent;border-radius:var(--r-field);cursor:pointer}
     .bar button:hover{color:var(--t1);background:var(--card);border-color:var(--border)}
     .bar button.danger:hover{color:#ff6b6b}
-    .bar button svg{width:15px;height:15px}
+    .bar button svg{width:16px;height:16px}
     .bar .spacer{flex:1}
   </style>
 </helmet>

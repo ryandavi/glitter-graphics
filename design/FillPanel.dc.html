@@ -32,7 +32,7 @@
     .group + .group{border-top:1px solid var(--border);padding-top:var(--group-gap)}
     .glabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px}
     .row{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h)}
-    .row > .rl{font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row > .rl{font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .row > .num{grid-column:3;justify-self:end}
     .row > .seg,.row > .sel{grid-column:2 / -2}
     .row.is-pair{grid-template-columns:var(--label-w) 1fr var(--rev-w)}
@@ -67,8 +67,8 @@
     .mh .msum{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
     .mh .chev{width:13px;height:13px;color:var(--t3);flex:0 0 auto}
     .mbody{display:flex;flex-direction:column;gap:var(--row-gap);border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
-    .asset{display:flex;align-items:center;gap:9px;background:var(--sunk);border-radius:var(--r-inner);padding:7px 8px}
-    .asset .th{width:38px;height:38px;border-radius:var(--r-inner);flex:0 0 auto;border:1px solid var(--border)}
+    .asset{display:flex;align-items:center;gap:8px;background:var(--sunk);border-radius:var(--r-inner);padding:7px 8px}
+    .asset .th{width:34px;height:34px;border-radius:var(--r-inner);flex:0 0 auto;border:1px solid var(--border)}
     .asset .an{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
     .asset .anrow{display:flex;align-items:center;gap:6px;min-width:0}
     .asset .anrow b{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -78,7 +78,7 @@
     .disc{margin:calc(var(--pad) - var(--row-gap)) calc(-1*var(--pad)) calc(-1*var(--pad));border-top:1px solid var(--border)}
     .disc > .dhead{display:flex;align-items:center;gap:6px;padding:var(--pad);font-size:12px;color:var(--t3);cursor:pointer}
     .disc > .dhead svg{width:11px;height:11px;transition:transform .12s}
-    .disc.open > .dhead svg{transform:rotate(90deg)}
+    .disc:not(.open) > .dhead svg{transform:rotate(-90deg)}
     .disc > .dbody{display:none;flex-direction:column;gap:var(--row-gap);padding:0 var(--pad) var(--pad)}
     .disc.open > .dbody{display:flex}
     .maskcard{margin:0 var(--pad);padding:var(--pad);border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);display:flex;flex-direction:column;gap:6px}
@@ -108,7 +108,7 @@
             <span class="mname">Fill</span>
             <span class="msum">Confetti</span>
             <button class="rr" title="Reset fill"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
-            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>
+            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
           </div>
           <div class="mbody">
             <div class="row">
@@ -138,12 +138,12 @@
             </div>
             <div class="disc open">
               <div class="dhead">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
                 <span>Advanced</span>
               </div>
               <div class="dbody">
                 <div class="row is-pair">
-                  <span class="rl">Texture</span>
+                  <span class="rl">Offset</span>
                   <div class="pair"><span class="numf"><span class="k">X</span><span class="v">0</span></span><span class="numf"><span class="k">Y</span><span class="v">0</span></span></div>
                   <span class="rr blank"></span>
                 </div>

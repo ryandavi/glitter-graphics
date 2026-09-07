@@ -24,8 +24,13 @@
       color:#fff;text-shadow:0 1px 1px #000;font-size:13px;font-weight:600}
     .phead .sp{flex:1 1 auto}
     .phead svg{width:14px;height:14px;opacity:.85}
-    .abh{display:flex;align-items:center;gap:6px;height:30px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
-    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1}
+    .abh{display:flex;align-items:center;gap:6px;height:32px;padding:0 var(--pad);border-bottom:1px solid var(--border);background:var(--sunk)}
+    .abh .back{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--t2);background:none;border:0;border-radius:var(--r-field);cursor:pointer;flex:0 0 auto}
+    .abh .back:hover:not(:disabled){color:var(--t1);background:var(--card)}
+    .abh .back:disabled{color:var(--t3);opacity:.35;cursor:default}
+    .abh .back svg{width:13px;height:13px}
+    .abh .title{font-size:12px;font-weight:600;color:var(--t1);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .abh .count{font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums;flex:0 0 auto}
 
     .searchrow{display:flex;gap:6px;padding:var(--pad)}
     .searchbox{flex:1;display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;background:var(--sunk);
@@ -54,11 +59,16 @@
     .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
     .cchip{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);cursor:pointer}
     .cchip.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-surface)}
-    .toggle-row{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;min-height:24px}
-    .check{width:14px;height:14px;border-radius:3px;border:1px solid var(--border);background:var(--sunk);position:relative}
-    .check.on{background:var(--accent);border-color:var(--accent)}
-    .check.on::after{content:"";position:absolute;left:4px;top:1px;width:3.5px;height:7px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
-    .toggle-row span{font-size:12px;color:var(--t2)}
+    /* same boolean primitive as the property panels: label left, switch
+       right-aligned. The 16px trailing gutter echoes the panels' reserved
+       revert column, so the switch lands on the same right edge as a panel toggle.
+       NB: scope the flex:1 to the label only — `.sw` is also a <span> child. */
+    .toggle-row{display:flex;align-items:center;min-height:26px;padding-right:16px}
+    .toggle-row > span:first-child{font-size:12px;color:var(--t2);flex:1 1 auto;min-width:0}
+    .sw{width:30px;height:16px;border-radius:9999px;background:var(--sunk);border:1px solid var(--border);position:relative;flex:0 0 auto}
+    .sw::after{content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--t2);transition:left .12s}
+    .sw.on{background:var(--accent);border-color:var(--accent)}
+    .sw.on::after{left:15px;background:#fff}
     .factions{display:flex;gap:8px;padding:10px var(--pad);border-top:1px solid var(--border)}
     .factions button{flex:1;height:28px;border-radius:var(--r-field);font-size:12px;font-weight:500;cursor:pointer}
     .factions .sec{background:var(--sunk);border:1px solid var(--border);color:var(--t2)}
@@ -70,12 +80,12 @@
   <div class="panel">
 
     <div class="phead">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M4 8h8"/></svg>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2a6 6 0 1 0 0 12c.7 0 1.2-.6 1.2-1.3 0-.9.7-1.5 1.6-1.5H13a2 2 0 0 0 2-2c0-4-3.1-7.2-7-7.2Z"/><circle cx="5.2" cy="7" r=".7" fill="currentColor" stroke="none"/><circle cx="8" cy="4.9" r=".7" fill="currentColor" stroke="none"/><circle cx="10.8" cy="7" r=".7" fill="currentColor" stroke="none"/></svg>
       <span class="sp">Design</span>
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
     </div>
 
-    <div class="abh"><span class="title">Glitter</span><span style="font-size:11px;color:var(--t3)">36 results</span></div>
+    <div class="abh"><button class="back" disabled title="Back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4l-4 4 4 4"/></svg></button><span class="title">Glitter</span><span class="count">36</span></div>
 
     <div class="searchrow">
       <div class="searchbox"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l3 3"/></svg>foil<span class="clr">&times;</span></div>
@@ -91,7 +101,7 @@
     <div class="drawer">
       <div class="fgroup">
         <div class="flabel">Match</div>
-        <div class="toggle-row"><span class="check"></span><span>Search by name only</span></div>
+        <div class="toggle-row"><span>Search by name only</span><span class="sw"></span></div>
       </div>
 
       <div class="fgroup">

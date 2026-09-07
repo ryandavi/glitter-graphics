@@ -33,7 +33,7 @@
     /* PREVIEW: pinned above the scroll region */
     .preview{flex:0 0 auto;padding:var(--pad);border-bottom:1px solid var(--border)}
     .seg{display:flex;width:100%;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
-    .seg > button{flex:1;height:26px;font-size:12px;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .seg > button{flex:1;height:26px;font-size:11px;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
     .seg > button:first-child{border-left:0}
     .seg > button.on{background:var(--accent);color:#fff}
 
@@ -42,10 +42,20 @@
     .group{display:flex;flex-direction:column;gap:var(--block-gap)}
     .group + .group{border-top:1px solid var(--border);padding-top:var(--group-gap)}
     .glabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px}
-    .card{display:flex;flex-direction:column;gap:var(--row-gap);margin:0 var(--pad);padding:var(--pad);
-      border:1px solid var(--border);border-radius:var(--r-card);background:var(--card)}
+    /* rows and notes own the 16px edge inset — no card box around a plain group (rule B) */
+    .group > .row{padding-left:16px;padding-right:16px}
+    .group > .note{margin:0 16px}
+    /* Advanced is the SAME disclosure as the property panels, not a peer group:
+       a top divider, a chevron + label, a collapsed body. Shown open on the sheet. */
+    .adv{border-top:1px solid var(--border);padding-top:var(--block-gap)}
+    .adv > .ahead{display:flex;align-items:center;gap:6px;padding:2px 16px;font-size:12px;color:var(--t3);cursor:pointer}
+    .adv > .ahead svg{width:11px;height:11px;transition:transform .12s}
+    .adv:not(.open) > .ahead svg{transform:rotate(-90deg)}
+    .adv > .abody{display:none;flex-direction:column;gap:var(--row-gap);padding:0 16px 10px}
+    .adv.open > .abody{display:flex}
+    .adv > .abody > .row{padding:0}
     .row{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h)}
-    .row > .rl{font-size:12px;color:var(--t2);white-space:nowrap}
+    .row > .rl{font-size:11px;color:var(--t2);white-space:nowrap}
     .row > .num{grid-column:3;justify-self:end}
     .row > .seg{grid-column:2 / -2}
     .rr{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;color:var(--t3);background:none;border:0;padding:0;cursor:pointer}
@@ -66,19 +76,26 @@
     .row.is-toggle > .sw{grid-column:2;justify-self:end}
     .row.is-toggle > .rr{grid-column:3}
     .note{font-size:11px;color:var(--t3);line-height:1.45}
-    .status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);margin:0 16px}
+    /* fixed height so the running spinner never reflows the list under it */
+    .status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3);margin:0 16px;min-height:20px}
+    .status .spin{flex:0 0 auto}
     .status .spin{width:10px;height:10px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;flex:0 0 auto}
 
-    /* Color Matches: a list of detected region -> matched glitter */
-    .match{display:flex;align-items:center;gap:9px;padding:7px 8px;background:var(--sunk);border-radius:var(--r-inner);margin:0 16px}
-    .match .from,.match .to{width:26px;height:26px;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.16);flex:0 0 auto}
-    .match .arrow{color:var(--t3);flex:0 0 auto}
-    .match .arrow svg{width:12px;height:12px}
-    .match .mn{flex:1;min-width:0;font-size:11px}
-    .match .mn b{display:block;font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .match .mn span{color:var(--t3)}
-    .match .swap{height:22px;padding:0 8px;font-size:11px;font-weight:500;color:var(--t2);background:var(--card);
-      border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer;flex:0 0 auto}
+    /* Color Matches: one row per region, built like a Layers-panel row -
+       a bordered --card, a thumbnail cluster, name + meta, one action. */
+    .match{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:8px;
+      padding:7px 8px;margin:0 16px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);cursor:pointer}
+    .match .swz{display:flex;align-items:center;gap:4px}
+    .match .from,.match .to{width:24px;height:24px;border-radius:var(--r-inner);border:1px solid var(--border);flex:0 0 auto}
+    .match .arrow{color:var(--t3);flex:0 0 auto;display:flex}
+    .match .arrow svg{width:11px;height:11px}
+    .match .mn{min-width:0;display:flex;flex-direction:column;gap:2px}
+    .match .mn b{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .match .mn span{font-size:11px;color:var(--t3)}
+    .match .swap{width:26px;height:26px;display:flex;align-items:center;justify-content:center;color:var(--t3);
+      background:none;border:0;border-radius:var(--r-field);cursor:pointer;flex:0 0 auto}
+    .match .swap:hover{color:var(--t1);background:var(--sunk)}
+    .match .swap svg{width:15px;height:15px}
 
     /* STICKY FOOTER: always visible, never scrolls */
     .footer{flex:0 0 auto;border-top:1px solid var(--border);background:var(--bg);padding:var(--pad);display:flex;gap:8px}
@@ -105,85 +122,74 @@
 
       <div class="group">
         <div class="glabel">Palette</div>
-        <div class="card">
-          <div class="row">
-            <span class="rl">Style</span>
-            <div class="seg"><button>Vibrant</button><button class="on">Balanced</button><button>Natural</button></div>
-            <span class="rr blank"></span>
-          </div>
-          <div class="row">
-            <span class="rl">Colors</span>
-            <div class="slider"><div class="trk"></div><div class="fil" style="width:40%"></div><div class="knb" style="left:40%"></div></div>
-            <span class="num">8</span>
-            <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
-          </div>
-          <div class="row">
-            <span class="rl">Merge</span>
-            <div class="slider"><div class="trk"></div><div class="fil" style="width:55%"></div><div class="knb" style="left:55%"></div></div>
-            <span class="num">55<span style="color:var(--t3);margin-left:2px">%</span></span>
-            <span class="rr blank"></span>
-          </div>
-          <div class="note">8 of a possible 24 layers. Fewer colors merge similar regions together.</div>
+        <div class="row">
+          <span class="rl">Style</span>
+          <div class="seg"><button>Vibrant</button><button class="on">Balanced</button><button>Natural</button></div>
+          <span class="rr blank"></span>
         </div>
+        <div class="row">
+          <span class="rl">Colors</span>
+          <div class="slider"><div class="trk"></div><div class="fil" style="width:40%"></div><div class="knb" style="left:40%"></div></div>
+          <span class="num">8</span>
+          <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+        </div>
+        <div class="row">
+          <span class="rl">Merge</span>
+          <div class="slider"><div class="trk"></div><div class="fil" style="width:55%"></div><div class="knb" style="left:55%"></div></div>
+          <span class="num">55<span style="color:var(--t3);margin-left:2px">%</span></span>
+          <span class="rr blank"></span>
+        </div>
+        <div class="note">8 of a possible 24 layers. Fewer colors merge similar regions together.</div>
       </div>
 
       <div class="group">
         <div class="glabel">Color Matches</div>
         <div class="status"><span class="spin"></span>8 regions found, matched to the closest glitter</div>
         <div class="match">
-          <span class="from" style="background:#c94f7c"></span>
-          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
-          <span class="to" style="background:linear-gradient(135deg,#ff5db1,#c77dff)"></span>
+          <span class="swz"><span class="from" style="background:#c94f7c"></span><span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="to" style="background:linear-gradient(135deg,#ff5db1,#c77dff)"></span></span>
           <span class="mn"><b>Rose Foil</b><span>92% match</span></span>
-          <button class="swap">Change</button>
+          <button class="swap" title="Change match"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 0 1 8.5-3.5L14 7M14 3v4h-4M13 8a5 5 0 0 1-8.5 3.5L2 9M2 13V9h4"/></svg></button>
         </div>
         <div class="match">
-          <span class="from" style="background:#3e5c8a"></span>
-          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
-          <span class="to" style="background:linear-gradient(135deg,#3577cf,#33e6d0)"></span>
+          <span class="swz"><span class="from" style="background:#3e5c8a"></span><span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="to" style="background:linear-gradient(135deg,#3577cf,#33e6d0)"></span></span>
           <span class="mn"><b>Ocean Holo</b><span>88% match</span></span>
-          <button class="swap">Change</button>
+          <button class="swap" title="Change match"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 0 1 8.5-3.5L14 7M14 3v4h-4M13 8a5 5 0 0 1-8.5 3.5L2 9M2 13V9h4"/></svg></button>
         </div>
         <div class="match">
-          <span class="from" style="background:#d9c27a"></span>
-          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
-          <span class="to" style="background:linear-gradient(135deg,#ffd23f,#ff9800)"></span>
+          <span class="swz"><span class="from" style="background:#d9c27a"></span><span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="to" style="background:linear-gradient(135deg,#ffd23f,#ff9800)"></span></span>
           <span class="mn"><b>Gold Leaf</b><span>95% match</span></span>
-          <button class="swap">Change</button>
+          <button class="swap" title="Change match"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 0 1 8.5-3.5L14 7M14 3v4h-4M13 8a5 5 0 0 1-8.5 3.5L2 9M2 13V9h4"/></svg></button>
         </div>
         <div class="match">
-          <span class="from" style="background:#2a2f3a"></span>
-          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
-          <span class="to" style="background:#0b0b0d"></span>
+          <span class="swz"><span class="from" style="background:#2a2f3a"></span><span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="to" style="background:#0b0b0d"></span></span>
           <span class="mn"><b>Onyx</b><span>solid, no glitter</span></span>
-          <button class="swap">Change</button>
+          <button class="swap" title="Change match"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 0 1 8.5-3.5L14 7M14 3v4h-4M13 8a5 5 0 0 1-8.5 3.5L2 9M2 13V9h4"/></svg></button>
         </div>
         <div class="match">
-          <span class="from" style="background:#8fbf8f"></span>
-          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
-          <span class="to" style="background:linear-gradient(135deg,#4caf50,#33e6d0)"></span>
+          <span class="swz"><span class="from" style="background:#8fbf8f"></span><span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="to" style="background:linear-gradient(135deg,#4caf50,#33e6d0)"></span></span>
           <span class="mn"><b>Mint Holo</b><span>84% match</span></span>
-          <button class="swap">Change</button>
+          <button class="swap" title="Change match"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 0 1 8.5-3.5L14 7M14 3v4h-4M13 8a5 5 0 0 1-8.5 3.5L2 9M2 13V9h4"/></svg></button>
         </div>
         <div class="match">
-          <span class="from" style="background:#e8ddca"></span>
-          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
-          <span class="to" style="background:radial-gradient(circle at 30% 30%,#fff,#e8ddca 60%,#c9b98f)"></span>
+          <span class="swz"><span class="from" style="background:#e8ddca"></span><span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="to" style="background:radial-gradient(circle at 30% 30%,#fff,#e8ddca 60%,#c9b98f)"></span></span>
           <span class="mn"><b>Pearl</b><span>90% match</span></span>
-          <button class="swap">Change</button>
+          <button class="swap" title="Change match"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 0 1 8.5-3.5L14 7M14 3v4h-4M13 8a5 5 0 0 1-8.5 3.5L2 9M2 13V9h4"/></svg></button>
         </div>
         <div class="match">
-          <span class="from" style="background:#7a4b8a"></span>
-          <span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
-          <span class="to" style="background:linear-gradient(135deg,#7d5bff,#c77dff)"></span>
+          <span class="swz"><span class="from" style="background:#7a4b8a"></span><span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="to" style="background:linear-gradient(135deg,#7d5bff,#c77dff)"></span></span>
           <span class="mn"><b>Amethyst</b><span>87% match</span></span>
-          <button class="swap">Change</button>
+          <button class="swap" title="Change match"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 0 1 8.5-3.5L14 7M14 3v4h-4M13 8a5 5 0 0 1-8.5 3.5L2 9M2 13V9h4"/></svg></button>
         </div>
       </div>
 
-      <div class="group">
-        <div class="glabel">Advanced</div>
-        <div class="card">
+      <!-- Advanced: the shared disclosure, not a peer group. Collapsed by default in
+           the app; drawn open here so its contents are on the sheet. -->
+      <div class="adv open">
+        <div class="ahead">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+          <span>Advanced</span>
+        </div>
+        <div class="abody">
           <div class="row">
             <span class="rl">Detail</span>
             <div class="slider"><div class="trk"></div><div class="fil" style="width:25%"></div><div class="knb" style="left:25%"></div></div>

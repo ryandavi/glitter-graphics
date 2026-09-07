@@ -36,7 +36,7 @@
       border:1px solid var(--border);border-radius:var(--r-card);background:var(--card)}
     .card > .ctitle{font-size:12px;font-weight:600;color:var(--t1)}
     .row{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h)}
-    .row > .rl{font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row > .rl{font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .row > .num{grid-column:3;justify-self:end}
     .row > .seg,.row > .sel{grid-column:2 / -2}
     .rr{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;color:var(--t3);background:none;border:0;padding:0;cursor:pointer}
@@ -63,14 +63,18 @@
     .btn:hover{border-color:var(--border-hi)}
     .btn svg{width:13px;height:13px;color:var(--t2)}
     .note{font-size:11px;color:var(--t3);line-height:1.45}
+    /* a spec annotation, NOT panel UI: dashed, off to the side, prefixed */
+    .specnote{margin:6px 16px 0;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);
+      font-size:10.5px;line-height:1.45;color:var(--t3)}
+    .specnote::before{content:"SPEC NOTE  ";font-weight:700;letter-spacing:.06em;color:#c8963c}
     .mod{display:flex;flex-direction:column;margin:0 var(--pad);border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);overflow:hidden}
     .mh{display:flex;align-items:center;gap:8px;padding:var(--pad);cursor:pointer}
     .mh .mname{font-size:12px;font-weight:600;color:var(--t1);flex:1 1 auto}
     .mh .msum{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
     .mh .chev{width:13px;height:13px;color:var(--t3);flex:0 0 auto}
     .mbody{display:flex;flex-direction:column;gap:var(--row-gap);border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
-    .asset{display:flex;align-items:center;gap:9px;background:var(--sunk);border-radius:var(--r-inner);padding:7px 8px}
-    .asset .th{width:38px;height:38px;border-radius:var(--r-inner);flex:0 0 auto;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2)}
+    .asset{display:flex;align-items:center;gap:8px;background:var(--sunk);border-radius:var(--r-inner);padding:7px 8px}
+    .asset .th{width:34px;height:34px;border-radius:var(--r-inner);flex:0 0 auto;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2)}
     .asset .an{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
     .asset .anrow{display:flex;align-items:center;gap:6px;min-width:0}
     .asset .anrow b{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -86,7 +90,7 @@
 
     <div class="phead">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c2-1 3-4 6-7s5-3 5-3l-1 4c-1 1-4 3-6 5s-4 1-4 1z"/></svg>
-      <span class="sp">Brush</span>
+      <span class="sp">Mask Settings</span>
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
     </div>
 
@@ -99,7 +103,7 @@
             <span class="mname">Tip</span>
             <span class="msum">Soft Round</span>
             <span class="rr blank"></span>
-            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l4-4 4 4"/></svg>
+            <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
           </div>
           <div class="mbody">
             <div class="asset">
@@ -109,7 +113,7 @@
             </div>
           </div>
         </div>
-        <div class="note">Eraser is a separate panel with its own tip and stroke settings.</div>
+        <div class="specnote">One panel serves both Brush and Eraser. Switching tools swaps the header icon (brush &harr; eraser) and relabels the Copy / Reset actions to name the other tool; each tool keeps its own tip and stroke settings.</div>
       </div>
 
       <div class="group">
@@ -161,7 +165,7 @@
           <div class="row">
             <span class="rl">Count</span>
             <div class="slider"><div class="trk"></div><div class="fil" style="width:10%"></div><div class="knb" style="left:10%"></div></div>
-            <span class="num">1</span>
+            <span class="num">1<span class="u">&times;</span></span>
             <span class="rr blank"></span>
           </div>
           <div class="row">
