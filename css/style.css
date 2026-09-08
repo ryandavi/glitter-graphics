@@ -3161,6 +3161,12 @@ input[type=range]:disabled {
   width: 100%;
 }
 
+.color-selection .color-selection-empty-note {
+  display: none;
+}
+.color-selection:has(.property-empty-inline.visible) .color-selection-empty-note {
+  display: block;
+}
 .color-selection .selected-colors-display {
   display: flex;
   flex-wrap: wrap;
@@ -5869,6 +5875,31 @@ body.tool-select .preview-canvas {
   color: var(--color-text-secondary);
 }
 
+.no-layer-settings-section.panel-redesign .quick-add {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+.no-layer-settings-section.panel-redesign .quick-add > .layer-type-option {
+  min-height: 84px;
+  padding: var(--spacing-md) var(--spacing-sm);
+  gap: var(--spacing-sm);
+  border-width: 1px;
+  border-radius: var(--radius-sm);
+}
+.no-layer-settings-section.panel-redesign .quick-add > .layer-type-option .icon-wrapper {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+}
+.no-layer-settings-section.panel-redesign .quick-add > .layer-type-option .layer-type-name {
+  font-size: var(--font-size-base);
+}
+.no-layer-settings-section.panel-redesign .quick-add > .layer-type-option .layer-type-description {
+  max-width: 16ch;
+  font-size: var(--font-size-xs);
+  line-height: 1.25;
+}
+
 @keyframes inline-processing-spin {
   to {
     transform: rotate(360deg);
@@ -8208,7 +8239,6 @@ body.is-resizing-panel canvas {
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure-content {
   padding: 0 var(--property-pad) var(--property-pad);
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell,
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -8219,7 +8249,6 @@ body.is-resizing-panel canvas {
   border-radius: var(--property-r-field);
   background: var(--color-bg-secondary);
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > input[type=range],
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > input[type=range] {
   position: absolute;
   width: 0;
@@ -8227,7 +8256,6 @@ body.is-resizing-panel canvas {
   margin: 0;
   opacity: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > .property-value,
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > .property-value {
   justify-content: flex-start;
   min-width: 0;
@@ -8236,27 +8264,16 @@ body.is-resizing-panel canvas {
   border: 0;
   background: transparent;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell.numf > .property-value > .setting-unit,
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf.numf > .property-value > .setting-unit {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > .property-value > .setting-unit {
   display: none;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell.numf > .property-revert,
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf.numf > .property-revert {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > .property-revert {
   position: absolute;
   width: 0;
   height: 0;
   margin: 0;
   opacity: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell {
-  grid-template-columns: auto minmax(0, 1fr) var(--property-revert-col);
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > .property-revert {
-  width: var(--property-revert-col);
-  height: var(--property-revert-col);
-  margin-right: calc(-1 * var(--spacing-2xs));
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair,
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.has-num-fields > .property-pair {
   width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));

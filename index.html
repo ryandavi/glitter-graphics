@@ -799,16 +799,22 @@
 									</div>
 
 									<div class="settings-subsection" id="multiLayerSelectionGroup" hidden>
-										<div class="subsection-content-group" data-collapsible-subsection>
-											<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Align</div>
-											<div class="transform-control-group"><div class="property-set-label">Align to</div><div class="segmented-control transform-segmented-control" id="multiSelectionAlignScope"><button class="segmented-option" type="button" data-scope="selection">Selection</button><button class="segmented-option active" type="button" data-scope="canvas">Canvas</button></div></div>
-											<div class="transform-control-group"><div class="property-set-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="left" title="Align left">Left</button><button class="segmented-option" type="button" data-multi-align="centerX" title="Align horizontal centers">Center</button><button class="segmented-option" type="button" data-multi-align="right" title="Align right">Right</button></div></div>
-											<div class="transform-control-group"><div class="property-set-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="top" title="Align top">Top</button><button class="segmented-option" type="button" data-multi-align="centerY" title="Align vertical centers">Middle</button><button class="segmented-option" type="button" data-multi-align="bottom" title="Align bottom">Bottom</button></div></div>
-											<div class="property-actions multi-selection-actions"><button class="btn-simple" data-multi-distribute="horizontal" type="button">Distribute H</button><button class="btn-simple" data-multi-distribute="vertical" type="button">Distribute V</button></div>
+										<div class="subsection-content-group subsection-section-group panel-group">
+											<div class="subsection-title">Appearance</div>
+											<div class="subsection-content-group property-card"><div class="subsection-card-body"><div class="property-row"><span class="property-label">Opacity</span><input type="range" id="multiSelectionOpacity" min="0" max="100" step="1" value="100"><span class="property-value" id="multiSelectionOpacityValue">100%</span><button class="property-revert" type="button" id="resetMultiSelectionOpacity" title="Reset to default" aria-label="Reset opacity to default" disabled><svg class="icon"><use href="#icon-undo"></use></svg></button></div></div></div>
 										</div>
-										<div class="subsection-content-group" data-collapsible-subsection>
-											<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Actions</div>
-											<div class="property-actions multi-selection-actions"><button class="btn-simple" id="multiSelectionDuplicateBtn" type="button">Duplicate</button><button class="btn-simple" id="multiSelectionDeleteBtn" type="button">Delete</button></div>
+										<div class="subsection-content-group subsection-section-group panel-group">
+											<div class="subsection-title">Align</div>
+											<div class="subsection-content-group property-card"><div class="subsection-card-body">
+												<div class="property-row is-stacked"><span class="property-label">Align to</span><div class="segmented-control transform-segmented-control" id="multiSelectionAlignScope"><button class="segmented-option active" type="button" data-scope="selection">Selection</button><button class="segmented-option" type="button" data-scope="canvas">Canvas</button></div></div>
+												<div class="transform-control-group"><div class="property-set-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="left" title="Align left">Left</button><button class="segmented-option" type="button" data-multi-align="centerX" title="Align horizontal centers">Center</button><button class="segmented-option" type="button" data-multi-align="right" title="Align right">Right</button></div></div>
+												<div class="transform-control-group"><div class="property-set-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="top" title="Align top">Top</button><button class="segmented-option" type="button" data-multi-align="centerY" title="Align vertical centers">Middle</button><button class="segmented-option" type="button" data-multi-align="bottom" title="Align bottom">Bottom</button></div></div>
+												<div class="transform-control-group"><div class="property-set-label">Distribute</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" data-multi-distribute="horizontal" type="button">Horizontal</button><button class="segmented-option" data-multi-distribute="vertical" type="button">Vertical</button></div></div>
+											</div></div>
+										</div>
+										<div class="subsection-content-group subsection-section-group panel-group">
+											<div class="subsection-title">Actions</div>
+											<div class="subsection-content-group property-card"><div class="property-actions multi-selection-actions"><button class="btn-simple" id="multiSelectionDuplicateBtn" type="button">Duplicate</button><button class="btn-simple" id="multiSelectionDeleteBtn" type="button">Delete</button></div></div>
 										</div>
 									</div>
 								</div>

@@ -110,6 +110,37 @@ setupLayerTypePickerListeners() {
 	}
 
 ,
+	getMultiSelectionLayerOpacity(layer) {
+		if (layer?.type === LayerType.STICKER) return layer.stickerData?.opacity ?? 100;
+		if (layer?.type === LayerType.SHAPE) return getLayerTransform(layer)?.opacity ?? 100;
+		if ([LayerType.TEXT_GLITTER, LayerType.GLITTER_FILL].includes(layer?.type)) return layer.settings?.opacity ?? 100;
+		return null;
+	}
+
+,
+	setMultiSelectionLayerOpacity(layer, value) {
+		if (layer?.type === LayerType.STICKER && layer.stickerData) layer.stickerData.opacity = value;
+		else if (layer?.type === LayerType.SHAPE) getLayerTransform(layer).opacity = value;
+		else if ([LayerType.TEXT_GLITTER, LayerType.GLITTER_FILL].includes(layer?.type) && layer.settings) layer.settings.opacity = value;
+	}
+
+,
+	syncMultiSelectionOpacity(layers = []) {
+		const input = document.getElementById('multiSelectionOpacity');
+		const value = document.getElementById('multiSelectionOpacityValue');
+		const reset = document.getElementById('resetMultiSelectionOpacity');
+		if (!input || !value || !reset) return;
+		const opacities = layers.map((layer) => this.getMultiSelectionLayerOpacity(layer)).filter(Number.isFinite);
+		const editable = opacities.length === layers.length
+			&& layers.every((layer) => layer.type !== LayerType.BASE_IMAGE && !layer.locked);
+		const mixed = opacities.some((opacity) => opacity !== opacities[0]);
+		input.value = mixed ? 100 : (opacities[0] ?? 100);
+		value.textContent = mixed ? 'Mixed' : `${input.value}%`;
+		input.disabled = !editable;
+		reset.disabled = !editable || (!mixed && Number(input.value) === 100);
+	}
+
+,
 	setupLayerPanelListeners() {
 		// Add layer buttons - open layer type picker
 		['addLayerBtn', 'mobileAddLayerBtn'].forEach((id) => {
@@ -190,7 +221,25 @@ setupLayerTypePickerListeners() {
 
 		const multiDuplicateBtn = document.getElementById('multiSelectionDuplicateBtn');
 		const multiDeleteBtn = document.getElementById('multiSelectionDeleteBtn');
-		this.multiSelectionAlignScope = 'canvas';
+		const multiOpacity = document.getElementById('multiSelectionOpacity');
+		const resetMultiOpacity = document.getElementById('resetMultiSelectionOpacity');
+		this.multiSelectionAlignScope = 'selection';
+
+		const applyMultiOpacity = (commit = false) => {
+			const layers = this.layerManager.getSelectedLayers();
+			if (layers.length < 2 || multiOpacity?.disabled) return;
+			const opacity = Number(multiOpacity.value);
+			layers.forEach((layer) => this.setMultiSelectionLayerOpacity(layer, opacity));
+			this.syncMultiSelectionOpacity(layers);
+			this.requestPreviewUpdate();
+			if (commit) this.saveState('Change selected layer opacity');
+		};
+		multiOpacity?.addEventListener('input', () => applyMultiOpacity(false));
+		multiOpacity?.addEventListener('change', () => applyMultiOpacity(true));
+		resetMultiOpacity?.addEventListener('click', () => {
+			multiOpacity.value = 100;
+			applyMultiOpacity(true);
+		});
 
 		if (multiDuplicateBtn) {
 			multiDuplicateBtn.addEventListener('click', () => {

@@ -318,6 +318,7 @@ isLayerContentLocked(layer) {
 				duplicate.title = gate.ok ? 'Duplicate selected layers' : gate.reason;
 			}
 			if (remove) remove.disabled = !canChangeLayers;
+			this.syncMultiSelectionOpacity?.(selectedLayers);
 			return;
 		}
 
