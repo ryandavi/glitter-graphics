@@ -1266,7 +1266,7 @@
 		{
 			"id": "brushSettingsSection",
 			"tag": "div",
-			"classes": "brush-settings-section collapsible-section section",
+			"classes": "brush-settings-section collapsible-section panel-redesign section",
 			"parent": "designPanel"
 		},
 		{
@@ -1302,7 +1302,7 @@
 		{
 			"id": "brushTipInfo",
 			"tag": "div",
-			"classes": "asset-info",
+			"classes": "asset asset-info",
 			"parent": "brushSettingsContent"
 		},
 		{

@@ -1352,15 +1352,15 @@ const PANEL_SCHEMAS = {
 		mobileKey: 'brush',
 		replaceStatic: true,
 		section: {
-			id: 'brushSettingsSection', icon: 'brush', iconName: 'Brush', title: 'Mask Settings',
+			id: 'brushSettingsSection', classes: 'panel-redesign', icon: 'brush', iconName: 'Brush', title: 'Mask Settings',
 			titleIconId: 'brushSettingsTitleIcon', titleTextId: 'brushSettingsTitleText'
 		},
 		groups: [
-			{ title: 'Brush Tip', items: [
-				{ kind: 'card', title: 'Shape', items: [
+			{ title: 'Brush Tip', collapsible: false, items: [
+				{ kind: 'card', title: 'Tip', collapsible: true, moduleSummary: 'asset', classes: 'panel-module', items: [
 					{ kind: 'assetInfo', info: 'brushTipInfo', thumbnail: 'brushTipThumbnail',
 						name: 'brushTipName', badges: 'brushTipBadges', change: 'brushTipChange',
-						title: 'Choose another brush tip', compact: true },
+						title: 'Choose another brush tip', compact: true, redesign: true },
 					{ kind: 'checkboxList', items: [
 						{ id: 'brushAntialiasToggle', label: 'Antialias Edges',
 							title: 'Smooth the edges of mask strokes. Off gives crisp pixel edges; a shared setting with text and shapes.' }
@@ -1368,7 +1368,7 @@ const PANEL_SCHEMAS = {
 					{ kind: 'host', id: 'brushAntialiasNote', classes: 'property-note', attrs: { hidden: 'hidden' } }
 				] }
 			] },
-			{ title: 'Stroke', items: [
+			{ title: 'Stroke', collapsible: false, items: [
 				{ kind: 'card', title: 'Dynamics', items: [
 					{ kind: 'slider', id: 'maskBrushSize', slider: 'maskBrushSize' },
 					{ kind: 'slider', id: 'maskBrushSoftness', slider: 'maskBrushSoftness' },
@@ -1381,11 +1381,16 @@ const PANEL_SCHEMAS = {
 				] },
 				{ kind: 'card', title: 'Scatter & Jitter', items: [
 					{ kind: 'host', id: 'brushDynamicsHost', classes: 'brush-dynamics', wrapInContent: true }
-				] },
-				{ kind: 'actionRow', actions: [
+				] }
+			] },
+			{ title: 'Actions', collapsible: false, items: [
+				{ kind: 'card', bare: true, items: [
+					{ kind: 'host', classes: 'property-note panel-note', text: 'Brush and Eraser keep separate tip and stroke settings. The copy and reset labels follow the active tool.' },
+					{ kind: 'actionRow', actions: [
 					{ id: 'maskCopyOppositeSettings', label: 'Copy Eraser Settings', title: 'Copy the other tool\'s settings into this one' },
 					{ id: 'maskResetCurrentSettings', label: 'Reset Brush', title: 'Restore this tool\'s settings to their defaults' },
 					{ id: 'clearMaskPaint', label: 'Clear Paint', title: 'Remove all painted strokes (color selections stay)' }
+					] }
 				] }
 			] }
 		]
