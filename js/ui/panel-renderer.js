@@ -60,6 +60,42 @@ const PANEL_ROLES = Object.freeze({
 	})
 });
 
+// Inline glyphs are transcribed from design/Main.dc.html. They stay real SVG
+// elements so stroke opacity, joins, and active-state currentColor match the
+// target instead of approximating the artwork with font or CSS-mask icons.
+const DESIGN_PANEL_GLYPHS = Object.freeze({
+	textAlignLeft: '<path d="M3 2v12M3 6h9M3 10h6"/>',
+	textAlignCenter: '<path d="M8 2v12M3.5 6h9M5 10h6"/>',
+	textAlignRight: '<path d="M13 2v12M4 6h9M7 10h6"/>',
+	textAlignTop: '<path d="M2 3h12M6 3v9M10 3v6"/>',
+	textAlignMiddle: '<path d="M2 8h12M6 3.5v9M10 5v6"/>',
+	textAlignBottom: '<path d="M2 13h12M6 4v9M10 7v6"/>',
+	transformAlignLeft: '<path d="M2.5 2v12" opacity=".5"/><rect x="4.5" y="5" width="7.5" height="6" rx="1"/>',
+	transformAlignCenterX: '<path d="M8 2v12" opacity=".5" stroke-dasharray="2 2"/><rect x="3.5" y="5" width="9" height="6" rx="1"/>',
+	transformAlignRight: '<path d="M13.5 2v12" opacity=".5"/><rect x="4" y="5" width="7.5" height="6" rx="1"/>',
+	transformAlignTop: '<path d="M2 2.5h12" opacity=".5"/><rect x="5" y="4.5" width="6" height="7.5" rx="1"/>',
+	transformAlignCenterY: '<path d="M2 8h12" opacity=".5" stroke-dasharray="2 2"/><rect x="5" y="3.5" width="6" height="9" rx="1"/>',
+	transformAlignBottom: '<path d="M2 13.5h12" opacity=".5"/><rect x="5" y="4" width="6" height="7.5" rx="1"/>',
+	transformFlipX: '<path d="M8 2v12" opacity=".5" stroke-dasharray="2 2"/><path d="M6 4.5L2.5 8 6 11.5z"/><path d="M10 4.5L13.5 8 10 11.5z"/>',
+	transformFlipY: '<path d="M2 8h12M4.5 6L8 2.5 11.5 6z"/><path d="M4.5 10L8 13.5 11.5 10z"/>'
+});
+
+function createDesignPanelGlyph(name) {
+	const markup = DESIGN_PANEL_GLYPHS[name];
+	if (!markup) return null;
+	const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+	svg.classList.add('design-panel-glyph');
+	svg.setAttribute('viewBox', '0 0 16 16');
+	svg.setAttribute('fill', 'none');
+	svg.setAttribute('stroke', 'currentColor');
+	svg.setAttribute('stroke-width', name.startsWith('text') ? '1.5' : '1.4');
+	svg.setAttribute('stroke-linecap', 'round');
+	svg.setAttribute('stroke-linejoin', 'round');
+	svg.setAttribute('aria-hidden', 'true');
+	svg.innerHTML = markup;
+	return svg;
+}
+
 // Full legacy ids are explicit exceptions to the default
 // `{prefix}{Slot}{Role}` grammar. Managers continue binding these unchanged.
 const PANEL_ID_OVERRIDES = Object.freeze({
@@ -345,7 +381,11 @@ function buildSegmented(entries, options = {}) {
 	entries.forEach((entry) => {
 		const button = tplClone('tpl-segmented-option');
 		if (entry.id) button.id = entry.id;
-		if (entry.contentTag) {
+		if (entry.designGlyph) {
+			button.appendChild(createDesignPanelGlyph(entry.designGlyph));
+			button.title = entry.label;
+			button.setAttribute('aria-label', entry.label);
+		} else if (entry.contentTag) {
 			const content = document.createElement(entry.contentTag);
 			content.textContent = entry.label;
 			button.appendChild(content);
@@ -1001,6 +1041,21 @@ function initializeModuleSummaries(root = document) {
 	});
 }
 
+function initializeScrollBoundaryFades(root = document) {
+	root.querySelectorAll('.text-font-picker').forEach((scrollbox) => {
+		if (scrollbox.dataset.scrollBoundaryFade !== undefined) return;
+		scrollbox.dataset.scrollBoundaryFade = '';
+		const update = () => {
+			const remaining = scrollbox.scrollHeight - scrollbox.clientHeight - scrollbox.scrollTop;
+			scrollbox.classList.toggle('has-overflow-bottom', remaining > 1);
+		};
+		scrollbox.addEventListener('scroll', update, { passive: true });
+		new MutationObserver(update).observe(scrollbox, { childList: true });
+		if (typeof ResizeObserver === 'function') new ResizeObserver(update).observe(scrollbox);
+		update();
+	});
+}
+
 // Rule A, applied mechanically instead of case by case: a block whose title
 // only repeats the label of its single control drops the title. The row's own
 // label already names it, so keeping both produced the "Opacity > Opacity 100%"
@@ -1183,6 +1238,7 @@ function renderPanelSection(schema) {
 	// Keep generated section chrome before any retained static host content.
 	(schema.sourceTemplate ? document.getElementById(schema.sourceTemplate) : host.querySelector(':scope > template'))?.remove();
 	host.prepend(fragment);
+	initializeScrollBoundaryFades(host);
 	if (schema.section.classes?.split(/\s+/).includes('panel-redesign')) {
 		host.querySelectorAll('.property-card').forEach((node) => node.classList.add('panel-card'));
 		host.querySelectorAll('.subsection-section-group').forEach((node) => node.classList.add('panel-group'));
@@ -1225,6 +1281,7 @@ function redesignTransformFragment(fragment) {
 		const node = document.createElement('span');
 		node.className = 'property-revert is-placeholder';
 		node.setAttribute('aria-hidden', 'true');
+		node.appendChild(createIcon('undo'));
 		return node;
 	};
 	const rowLabel = (text) => {
@@ -1283,6 +1340,15 @@ function redesignTransformFragment(fragment) {
 		row.querySelector('.segmented-control').classList.add('segmented');
 		row.appendChild(placeholder());
 	});
+	const transformGlyphs = {
+		alignLeft: 'transformAlignLeft', alignCenterX: 'transformAlignCenterX', alignRight: 'transformAlignRight',
+		alignTop: 'transformAlignTop', alignCenterY: 'transformAlignCenterY', alignBottom: 'transformAlignBottom'
+	};
+	align.querySelectorAll('.segmented-option[data-transform-role]').forEach((button) => {
+		const label = button.textContent;
+		button.replaceChildren(createDesignPanelGlyph(transformGlyphs[button.dataset.transformRole]));
+		button.setAttribute('aria-label', label);
+	});
 
 	const flipControl = panelDiv('segmented-control segmented transform-flip-control');
 	flip.querySelectorAll('.property-toggle-list > label').forEach((option, index) => {
@@ -1290,7 +1356,10 @@ function redesignTransformFragment(fragment) {
 		const visible = option.querySelector('.property-label');
 		option.className = 'segmented-option';
 		visible.className = '';
-		visible.textContent = index === 0 ? 'Horizontal' : 'Vertical';
+		const label = index === 0 ? 'Horizontal' : 'Vertical';
+		visible.textContent = '';
+		visible.appendChild(createDesignPanelGlyph(index === 0 ? 'transformFlipX' : 'transformFlipY'));
+		option.setAttribute('aria-label', label);
 		option.replaceChildren(input, visible);
 		flipControl.appendChild(option);
 	});

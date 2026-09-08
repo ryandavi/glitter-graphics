@@ -325,7 +325,7 @@
 		background: var(--panel-bg);
 		backdrop-filter: var(--panel-backdrop);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-panel);
 		box-shadow: 0 -4px 12px var(--color-shadow-soft);
 		z-index: var(--z-header-menu-elevated);
 		transform: translateY(100%);
@@ -343,7 +343,7 @@
 			flex-direction: column;
 			overflow: hidden;
 			border: 1px solid var(--color-window-border);
-			border-radius: var(--radius-md);
+			border-radius: var(--radius-card);
 			box-shadow: 0 2px 5px var(--color-shadow-strong);
 
 			>#mobileEditHeader {
@@ -450,7 +450,7 @@
 		padding-top: var(--spacing-lg);
 		z-index: var(--z-header-menu-elevated);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-panel);
 		box-shadow: 0 -4px 12px var(--color-shadow-soft);
 		overflow: hidden;
 		isolation: isolate;

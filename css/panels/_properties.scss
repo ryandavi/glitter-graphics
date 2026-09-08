@@ -53,10 +53,10 @@
 	--property-block-gap: 8px;
 	--property-group-gap: 14px;
 	--property-edge: 16px;
-	--property-r-panel: 8px;
-	--property-r-card: 6px;
-	--property-r-field: 4px;
-	--property-r-inner: 3px;
+	--property-r-panel: var(--radius-panel);
+	--property-r-card: var(--radius-card);
+	--property-r-field: var(--radius-control);
+	--property-r-inner: var(--radius-inner);
 	--property-label-w: 70px;
 	--property-label-size: 11px;
 	--property-value-col: 46px;
@@ -302,7 +302,7 @@
 .property-scrollbox {
 	padding: var(--spacing-sm);
 	border: 1px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	border-radius: var(--property-r-field);
 	background: var(--color-bg-secondary);
 	overflow: auto;
 	overscroll-behavior: contain;
@@ -316,8 +316,8 @@
 	grid-template-columns: minmax(0, 1fr) var(--property-value-col) var(--property-revert-col);
 	grid-template-rows: auto auto;
 	row-gap: var(--property-field-gap);
-	padding-top: var(--spacing-2xs);
-	padding-bottom: var(--spacing-xs);
+	// padding-top: var(--spacing-2xs);
+	// padding-bottom: var(--spacing-xs);
 
 	> .property-label { grid-area: 1 / 1 / 2 / 2; }
 	> .property-value { grid-area: 1 / 2 / 2 / 3; }
@@ -437,12 +437,18 @@
 		opacity: 1;
 	}
 
-	&:not(:disabled):hover {
+	&:not(:disabled):not(.is-placeholder):hover {
 		background: var(--color-bg-tertiary);
 		color: var(--color-accent);
 	}
 
+	&.is-placeholder { cursor: default; opacity: 0.18; }
 	&:disabled { cursor: default; opacity: 0.3; }
+	&.is-placeholder {
+		background: none;
+		cursor: default;
+		opacity: 0.18;
+	}
 
 	&:focus-visible {
 		opacity: 1;
@@ -529,10 +535,6 @@
 		display: none;
 	}
 
-	.panel-group-content:not(:has(> .property-actions:last-child:not([hidden]))) {
-		padding-bottom: var(--property-gutter);
-	}
-
 	// L2 block: title + rows. This is the DEFAULT, so it is written with
 	// :where() - zero specificity - and any rule that grants a surface (the card
 	// rule below) outranks it without an escalation war. Chaining :not()s here
@@ -540,7 +542,7 @@
 	.subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) {
 		display: flex;
 		flex-direction: column;
-		gap: var(--property-row-gap);
+		// gap: var(--property-row-gap);
 		padding: 0;
 		border: 0;
 		border-radius: var(--radius-sm);
@@ -571,6 +573,8 @@
 		padding: 0;
 
 	}
+
+	.subsection-card-body { gap: 0; }
 
 	.subsection-card-body-bare { padding: 0; }
 
@@ -617,7 +621,7 @@
 	// card-in-card without needing to name the offenders.
 	.property-card {
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--property-r-card);
 		background: var(--color-bg-card);
 		overflow: hidden;
 		margin-inline: var(--property-card-inset);
@@ -625,7 +629,7 @@
 		// indented twice over.
 		--property-gutter: var(--spacing-sm);
 
-		> .subsection-title { padding: var(--property-gutter); }
+		> .subsection-title { padding: var(--property-card-inset); }
 
 	}
 
@@ -743,6 +747,11 @@
 // transfers its closing edge to Actions instead of stacking two gutters.
 :is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:not(:empty) {
 	padding-bottom: var(--property-gutter);
+	gap: var(--property-row-gap);
+}
+
+:is(.design-panel, .mobile-settings-drawer) .property-card[data-collapsible] > .subsection-card-body:not(:empty) {
+	gap: 0;
 }
 
 // A titled card gets its opening edge from the title. An untitled card gets
@@ -780,6 +789,7 @@
 // edge contract, including the gap before an edge-to-edge Advanced footer.
 :is(.design-panel, .mobile-settings-drawer) .property-module-content > .paint-slot-main:not(:empty) {
 	padding-bottom: var(--property-gutter);
+	padding-top: var(--property-gutter);
 }
 
 .property-module-summary {
@@ -947,6 +957,7 @@
 
 :is(.design-panel, .mobile-settings-drawer) .advanced-disclosure {
 	margin: 0;
+	margin-top: var(--property-pad);
 	border-top: 1px solid var(--color-border);
 
 	> .advanced-disclosure-toggle { padding: var(--spacing-2xs) var(--property-gutter); }
@@ -990,7 +1001,7 @@
 	.property-set-label {
 		font-size: 12px;
 		font-weight: var(--font-weight-semibold);
-		padding: var(--property-pad) var(--property-pad) 0;
+		padding: 0 var(--property-gutter);
 	}
 
 	.property-select-control { min-width: 0; }
@@ -1101,12 +1112,9 @@
 		color: var(--color-text-primary);
 	}
 
-	// Redesigned cards stack contiguous rows. The card and its body must not
-	// insert a second gap between a title, body, transform grid, and footer.
-	.panel-module,
-	.subsection-card-body,
-	.paint-slot-main,
-	.subsection-content { gap: 0; }
+	// Collapsible modules wrap their body separately, so only the module itself
+	// removes the title-to-wrapper gap. Ordinary cards retain row rhythm.
+	.panel-module[data-collapsible] { gap: 0; }
 }
 
 // ===== Rule F: nothing renders an empty shell ==============================
@@ -1208,8 +1216,8 @@
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign > .section-content > .settings-subsection {
 	display: flex;
 	flex-direction: column;
-	gap: var(--property-group-gap);
-	padding: var(--property-pad) 0;
+	gap: var(--property-card-inset);
+	padding: 0;
 }
 
 @container propertypanel (max-width: 360px) {
@@ -1509,9 +1517,9 @@ body.is-resizing-panel {
 		background: var(--color-bg-secondary);
 	}
 
-	.property-revert:disabled { opacity: 0; }
+	.property-revert:disabled { opacity: 0.18; }
 
-	.transform-scale-x > input[type="range"] {
+	.transform-panel.is-aspect-locked .transform-scale-x > input[type="range"] {
 		position: absolute;
 		left: calc(var(--property-label-w) + var(--property-pad));
 		top: 50%;
@@ -1530,6 +1538,59 @@ body.is-resizing-panel {
 // P-Text opts into the redesign vocabulary without changing the established
 // geometry of the remaining property panels.
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+	.subsection-content-group.subsection-section-group,
+	.subsection-content-group.effects-stack { gap: 0; }
+
+	.subsection-section-group > .subsection-title,
+	.effects-stack > .subsection-title {
+		min-height: 0;
+		line-height: 1.2;
+		padding: calc(var(--property-card-inset) * 1.5) var(--property-card-inset);
+	}
+
+	.panel-group-content {
+		    gap: var(--property-pad);
+		padding-bottom: 0;
+	}
+
+	.panel-module > .subsection-title {
+		height: 34px;
+		min-height: 34px;
+		max-height: 34px;
+		box-sizing: border-box;
+	}
+
+	.panel-card:not(.panel-module) > .subsection-title {
+		font-size: 12px;
+		font-weight: var(--font-weight-semibold);
+		color: var(--color-text-primary);
+	}
+
+	.property-module-summary {
+		flex: 0 1 130px;
+		max-width: 130px;
+		min-width: 24px;
+		line-height: 16px;
+		overflow: hidden;
+	}
+
+	.property-row.is-pair {
+		grid-template-columns:
+			var(--property-label-col)
+			minmax(0, 1fr)
+			var(--property-revert-col);
+
+		> .property-pair { grid-column: 2; }
+		> .property-revert { grid-column: 3; }
+	}
+
+	.property-row.is-toggle {
+		grid-template-columns: minmax(0, 1fr) auto var(--property-revert-col);
+
+		> .property-switch { grid-column: 2; }
+		> .property-revert { grid-column: 3; }
+	}
+
 	.property-row:not(.is-stacked) > :is(.segmented-control, select, .glitter-source, .property-select-control) {
 		grid-column: 2 / -2;
 	}
@@ -1545,6 +1606,22 @@ body.is-resizing-panel {
 
 		> .property-label { grid-area: 1 / 1 / 2 / 2; }
 		> .text-case-select { grid-area: 1 / 2 / 2 / 3; width: 100%; min-width: 0; }
+	}
+
+	.property-row.is-stacked:has(> :is(.text-align-group, .text-valign-group)) {
+		grid-template-columns:
+			var(--property-label-col)
+			minmax(0, 1fr)
+			var(--property-revert-col);
+		grid-template-rows: var(--control-height-compact);
+		padding-block: 0;
+
+		> .property-label { grid-area: 1 / 1 / 2 / 2; }
+		> :is(.text-align-group, .text-valign-group) {
+			grid-area: 1 / 2 / 2 / 3;
+			width: 100%;
+			min-width: 0;
+		}
 	}
 
 	.segmented-control {
@@ -1591,6 +1668,29 @@ body.is-resizing-panel {
 
 	.property-header-switch.effect-switch { align-items: center; }
 
+	.input-group.horizontal {
+		> .input-unit {
+			height: 100%;
+			min-height: 0;
+			box-sizing: border-box;
+		}
+
+		input[type="number"] {
+			height: 100%;
+			min-height: 0;
+			box-sizing: border-box;
+		}
+	}
+
+	.transform-pair-row > .sticker-position-group > .input-group.horizontal {
+		> .input-unit,
+		> .input-unit > input[type="number"] {
+			height: 100%;
+			min-height: 100%;
+			align-self: stretch;
+		}
+	}
+
 	.property-row > .property-value[data-editable-value] {
 		cursor: text;
 		font-variant-numeric: tabular-nums;
@@ -1615,6 +1715,23 @@ body.is-resizing-panel {
 	}
 
 	.transform-scale-x > .property-revert { grid-column: 4; }
+
+	.property-color-row {
+		display: grid;
+		grid-template-columns:
+			var(--property-label-col)
+			minmax(0, 1fr)
+			var(--property-value-col)
+			var(--property-revert-col);
+		gap: var(--property-field-gap);
+
+		> input[type="color"] {
+			grid-column: 2 / -2;
+			justify-self: stretch;
+			width: 100%;
+			height: var(--control-height-compact);
+		}
+	}
 
 	// A disabled/unset source is distinct from an enabled solid black swatch.
 	.paint-slot-card:has(> .subsection-title input:not(:checked)) .property-module-swatch,
@@ -1642,6 +1759,57 @@ body.is-resizing-panel {
 
 	.advanced-disclosure-content {
 		padding: 0 var(--property-pad) var(--property-pad);
+	}
+
+	.advanced-texture-position-group .property-pair-cell {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 6px;
+		height: var(--control-height-compact);
+		padding: 0 var(--property-pad);
+		border: 1px solid var(--color-border);
+		border-radius: var(--property-r-field);
+		background: var(--color-bg-secondary);
+
+		> input[type="range"],
+		> .property-revert {
+			@include visually-hidden-control;
+		}
+
+		> .property-value {
+			justify-content: flex-start;
+			min-width: 0;
+			height: auto;
+			padding: 0;
+			border: 0;
+			background: transparent;
+		}
+	}
+
+	.advanced-texture-position-group .property-pair {
+		width: 100%;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.design-panel-glyph {
+		display: block;
+		width: 14px;
+		height: 14px;
+		color: currentColor;
+		pointer-events: none;
+	}
+
+	.segmented-option.active .design-panel-glyph,
+	.transform-flip-control > .segmented-option:has(> input:checked) .design-panel-glyph {
+		color: var(--color-white, #fff);
+	}
+
+	.transform-flip-control > .segmented-option { padding: 0; }
+
+	// Real inline SVGs from the design replace the earlier fallback masks.
+	:is(.segmented-option[data-text-align], .segmented-option[data-text-valign], .transform-segmented-control > .segmented-option):has(> .design-panel-glyph)::before,
+	.transform-flip-control > .segmented-option > span:has(> .design-panel-glyph)::before {
+		content: none;
 	}
 
 	// Alignment and flip use the exact 16px line vocabulary from the target.

@@ -18,7 +18,7 @@
 	margin: var(--spacing-base);
 	margin-right: 0;
 	border: 1px solid var(--color-window-border);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-panel);
 	box-shadow: 0 2px 5px var(--color-shadow-strong);
 
 	// Short/split windows can make the rail taller than the viewport; scroll it
@@ -52,7 +52,7 @@
 .layers-panel>.section,
 .design-panel>.section {
 	border: 1px solid var(--color-window-border);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-panel);
 	overflow: hidden;
 	box-shadow: 0 2px 5px var(--color-shadow-strong);
 }
@@ -350,10 +350,11 @@
 }
 
 .text-font-picker {
+	--font-picker-fade-size: 30px;
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: var(--spacing-base);
 	max-height: 206px;
 	overflow: hidden;
 
@@ -362,12 +363,16 @@
 		position: sticky;
 		left: 0;
 		right: 0;
-		bottom: -6px;
-		flex: 0 0 22px;
-		margin-top: -28px;
-		background: linear-gradient(to top, var(--color-bg-secondary), transparent);
+		bottom: calc(-1 * var(--spacing-base));
+		flex: 0 0 var(--font-picker-fade-size);
+		margin-top: calc(0px - var(--font-picker-fade-size) - var(--spacing-base));
+		background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
+		opacity: 0;
 		pointer-events: none;
+		transition: opacity var(--transition-fast);
 	}
+
+	&.has-overflow-bottom::after { opacity: 1; }
 }
 
 // Gallery-card styling, reusing the .asset-option card conventions (outline
@@ -385,7 +390,7 @@
 	align-items: flex-start;
 	gap: 1px;
 	text-align: left;
-	border-radius: 3px;
+	border-radius: var(--radius-inner);
 }
 
 .text-font-option-sample {

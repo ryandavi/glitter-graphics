@@ -1512,14 +1512,14 @@ const PANEL_SCHEMAS = {
 				] },
 				{ kind: 'card', title: 'Alignment', items: [
 					{ kind: 'segmented', visibleLabel: 'Horizontal', label: 'Horizontal text alignment', classes: 'text-align-group', options: [
-						{ label: 'Left', active: true, attrs: { 'data-text-align': 'left' } },
-						{ label: 'Center', attrs: { 'data-text-align': 'center' } },
-						{ label: 'Right', attrs: { 'data-text-align': 'right' } }
+						{ label: 'Left', designGlyph: 'textAlignLeft', active: true, attrs: { 'data-text-align': 'left' } },
+						{ label: 'Center', designGlyph: 'textAlignCenter', attrs: { 'data-text-align': 'center' } },
+						{ label: 'Right', designGlyph: 'textAlignRight', attrs: { 'data-text-align': 'right' } }
 					] },
 					{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: [
-						{ label: 'Top', active: true, attrs: { 'data-text-valign': 'top' } },
-						{ label: 'Middle', attrs: { 'data-text-valign': 'middle' } },
-						{ label: 'Bottom', attrs: { 'data-text-valign': 'bottom' } }
+						{ label: 'Top', designGlyph: 'textAlignTop', active: true, attrs: { 'data-text-valign': 'top' } },
+						{ label: 'Middle', designGlyph: 'textAlignMiddle', attrs: { 'data-text-valign': 'middle' } },
+						{ label: 'Bottom', designGlyph: 'textAlignBottom', attrs: { 'data-text-valign': 'bottom' } }
 					] }
 				] }
 			] },

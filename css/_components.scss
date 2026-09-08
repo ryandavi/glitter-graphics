@@ -311,7 +311,7 @@ input[type="range"] {
 	gap: var(--spacing-sm);
 	padding: var(--spacing-base);
 	border: 2px solid transparent;
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-card);
 	background: var(--color-bg-tertiary);
 	overflow: hidden;
 	transition: background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
@@ -334,7 +334,7 @@ input[type="range"] {
 	color: var(--color-text-secondary);
 	cursor: grab;
 	touch-action: none;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control);
 	transition: background-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
 
 	&:active { cursor: grabbing; }
@@ -361,7 +361,7 @@ input[type="range"] {
 	align-items: center;
 	justify-content: center;
 	flex: 0 0 var(--icon-size-sm);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-inner);
 	overflow: hidden;
 }
 
