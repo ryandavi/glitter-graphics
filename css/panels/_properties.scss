@@ -1174,10 +1174,9 @@
 		padding: var(--property-pad) 0;
 	}
 
-	// Transform sets are consecutive; the effect-body sets are separated by the
-	// Source / colour rows, so divide on "a set that follows anything but a set".
-	.transform-grid > .property-set + .property-set,
-	.paint-slot-main > :not(.property-set):not(.property-set-label) + .property-set {
+	// A run of chunks (Transform groups, the effect-body Source / Scale·Opacity /
+	// Stroke / Placement sets, a card body split into sets) is hairline-divided.
+	:is(.transform-grid, .paint-slot-main, .subsection-card-body) > .property-set + .property-set {
 		border-top: 1px solid var(--color-border);
 	}
 
@@ -2056,10 +2055,24 @@ body.is-resizing-panel {
 		}
 	}
 
+	// because we do border-top property-set now, we don't need the gap 
+	.transform-grid,
+	.paint-slot-main {
+		gap: 0;
+	}
 
-	.paint-slot-source,
+	// owns vertical spacing
 	.property-set {
-			padding: var(--property-pad) 0;
+		padding: var(--property-pad) 0;
+
+		+ .property-set {
+		border-top: 1px solid var(--color-border);
+	}
+
+	// hiding it now just to see how it feels
+		.property-set-label {
+			display: none;
+		}
 	}
 
 	.paint-slot-main {

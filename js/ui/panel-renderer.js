@@ -756,6 +756,18 @@ function buildPrimaryRow(prefix, ids = {}, redesign = false) {
 	return row;
 }
 
+// The shared "chunk" primitive: a run of built nodes wrapped in a .property-set
+// so padding and the hairline divider between chunks come from one rule
+// (.property-set { padding } / .property-set + .property-set { border-top })
+// instead of a per-container special case. A lone node that is already a
+// .property-set passes straight through.
+function wrapPropertySet(nodes) {
+	if (nodes.length === 1 && nodes[0].classList?.contains('property-set')) return nodes[0];
+	const set = panelDiv('property-set');
+	nodes.forEach((node) => set.appendChild(node));
+	return set;
+}
+
 // Rule D, tier 2: a set-scoped reset lives at the right edge of the set's own
 // label, never as a full-width button of its own. `reset` supplies the id and
 // wording; the affordance itself is identical everywhere.
@@ -864,7 +876,12 @@ function buildPaintSlotCard(slot) {
 	}
 	const main = panelDiv('paint-slot-main');
 	container.appendChild(main);
-	(slot.pre || []).forEach((item) => main.appendChild(buildPanelItem(item)));
+	// Every chunk of the module body is its own .property-set: Source, then the
+	// Scale/Opacity row, then any pre/afterSource/post groups — hairline-divided
+	// by the shared rule, same as Transform and the card bodies.
+	const addChunk = (node) => main.appendChild(node.classList?.contains('property-set') ? node : wrapPropertySet([node]));
+
+	(slot.pre || []).forEach((item) => addChunk(buildPanelItem(item)));
 	const source = buildPaintSource(slot);
 	// R5: Source is a property of the module, so it reads as a row - the old
 	// titled option group added a heading level for a single control.
@@ -875,19 +892,19 @@ function buildPaintSlotCard(slot) {
 		label.textContent = slot.sourceLabel;
 		source.prepend(label);
 	}
-	main.appendChild(source);
-	(slot.afterSource || []).forEach((item) => main.appendChild(buildPanelItem(item)));
+	main.appendChild(wrapPropertySet([source]));
+	(slot.afterSource || []).forEach((item) => addChunk(buildPanelItem(item)));
 	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds, slot.redesign);
 	if (slot.primaryToggle) {
 		const toggle = tplClone('tpl-checkbox');
 		toggle.querySelector('input').id = slot.primaryToggle.id;
 		toggle.querySelector('span').textContent = slot.primaryToggle.label;
 		if (slot.primaryToggle.title) toggle.querySelector('span').title = slot.primaryToggle.title;
-		main.appendChild(buildOptionGroup('Scale & Opacity', [toggle, primaryRow]));
+		main.appendChild(wrapPropertySet([buildOptionGroup('Scale & Opacity', [toggle, primaryRow])]));
 	} else {
-		main.appendChild(primaryRow);
+		main.appendChild(wrapPropertySet([primaryRow]));
 	}
-	(slot.post || []).forEach((item) => main.appendChild(buildPanelItem(item)));
+	(slot.post || []).forEach((item) => addChunk(buildPanelItem(item)));
 	const advanced = buildAdvancedDisclosure(slot.idPrefix, slot.advancedIds, {
 		texturePosition: slot.texturePosition,
 		coordinateFields: slot.coordinateFields ?? slot.redesign
@@ -938,6 +955,7 @@ function buildPanelItem(item, schema) {
 			const body = panelDiv('subsection-card-body');
 			if (item.bare) body.classList.add('subsection-card-body-bare');
 			const edgeChildren = [];
+			const bodyChildren = [];
 			item.items.forEach((child) => {
 				const node = buildPanelItem(child, schema);
 				// Advanced and a trailing actions row are edge-to-edge card footers,
@@ -945,8 +963,19 @@ function buildPanelItem(item, schema) {
 				// every future schema card gets the same spacing without a
 				// feature-specific selector.
 				if (node.classList?.contains('advanced-disclosure') || node.classList?.contains('property-actions')) edgeChildren.push(node);
-				else body.appendChild(node);
+				else bodyChildren.push(node);
 			});
+			// A card body carries its content in a .property-set so vertical padding
+			// and inter-set dividers come from the shared primitive, not a
+			// per-container special case. Bare cards stay edge-to-edge; a body that
+			// is already all sets (kind:'set') is left as-is.
+			if (bodyChildren.length) {
+				if (item.bare || bodyChildren.every((node) => node.classList.contains('property-set'))) {
+					bodyChildren.forEach((node) => body.appendChild(node));
+				} else {
+					body.appendChild(wrapPropertySet(bodyChildren));
+				}
+			}
 			card.appendChild(body);
 			edgeChildren.forEach((node) => card.appendChild(node));
 			return card;
