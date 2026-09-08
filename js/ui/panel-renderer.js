@@ -1103,7 +1103,7 @@ function buildPanelItem(item, schema) {
 		}
 		case 'host': {
 			const node = document.createElement(item.tag || 'div');
-			node.id = item.id;
+			if (item.id) node.id = item.id;
 			if (item.classes) node.className = item.classes;
 			if (item.text) node.textContent = item.text;
 			Object.entries(item.attrs || {}).forEach(([name, value]) => node.setAttribute(name, value));

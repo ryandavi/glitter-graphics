@@ -19,7 +19,12 @@ const CHROME = process.env.CHROME_PATH
 	const srv = spawn(process.platform === 'win32' ? 'python' : 'python3', ['-m', 'http.server', String(PORT)], {
 		cwd: path.join(__dirname, '..'), stdio: 'ignore', detached: true
 	});
-	const stop = () => { try { process.kill(-srv.pid); } catch (e) { /* gone */ } };
+	const stop = () => {
+		try {
+			if (process.platform === 'win32') srv.kill();
+			else process.kill(-srv.pid);
+		} catch (e) { /* gone */ }
+	};
 	try {
 		await new Promise((r) => setTimeout(r, 900));
 		const browser = await chromium.launch({ executablePath: CHROME });

@@ -1388,11 +1388,12 @@ const PANEL_SCHEMAS = {
 		prefix: 'glitter',
 		sectionPrefix: 'glitterSettings',
 		mobileKey: 'glitter',
-		section: { id: 'glitterSettingsSection', icon: 'glitter', iconName: 'Glitter', title: 'Fill Properties' },
+		section: { id: 'glitterSettingsSection', classes: 'panel-redesign', icon: 'glitter', iconName: 'Glitter', title: 'Fill Properties' },
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', empty: { icon: 'glitter', text: 'Select a glitter fill from the gallery to get started.' } },
 		groups: [
-			{ title: 'Appearance', items: [
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
+			{ title: 'Appearance', collapsible: false, items: [
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', redesign: true, coordinateFields: false,
+					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
 					chipTitle: 'Choose fill glitter', assetIdPrefix: 'glitterAsset',
@@ -1404,6 +1405,11 @@ const PANEL_SCHEMAS = {
 					primaryIds: { scale: 'scale', opacity: 'opacity' },
 					advancedIds: { hue: 'glitterHue', saturation: 'glitterSaturation', brightness: 'glitterBrightness' }
 				}
+			] },
+			{ title: 'Mask', collapsible: false, items: [
+				{ kind: 'card', classes: 'fill-mask-summary', items: [
+					{ kind: 'host', classes: 'property-note panel-note', text: 'Edit color selections with the Color Picker, or paint the mask with the Brush and Eraser.' }
+				] }
 			] }
 		],
 		auxiliarySections: [{
