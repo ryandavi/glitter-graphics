@@ -49,7 +49,7 @@
 	// ---- geometry --------------------------------------------------------
 	--property-row-h: 26px;
 	--property-pad: 8px;
-	--property-row-gap: 4px;
+	--property-row-gap: 6px; // was 4px
 	--property-block-gap: 8px;
 	--property-group-gap: 14px;
 	--property-edge: 16px;
@@ -63,7 +63,7 @@
 	--property-revert-w: 16px;
 	--property-label-col: 76px;
 	--property-revert-col: 18px;
-	--property-gutter: 10px;
+	--property-gutter: 12px; // was 10px
 	--property-card-inset: 10px;
 	--property-pair-min: 128px;
 
@@ -627,7 +627,7 @@
 		margin-inline: var(--property-card-inset);
 		// Rows inside a card use a smaller internal gutter, so content is not
 		// indented twice over.
-		--property-gutter: var(--spacing-sm);
+		--property-gutter: var(--spacing-md);
 
 		> .subsection-title { padding: var(--property-card-inset); }
 
@@ -740,15 +740,30 @@
 	}
 }
 
+.property-card > .subsection-card-body:not(:empty) {
+	padding-bottom: var(--property-gutter);
+	gap: var(--property-row-gap);
+}
+
+.property-card.has-footer > .subsection-card-body:not(:empty) {
+	gap: 0;
+	padding-bottom: 0;
+}
+
+/*
+
 // A bordered card owns its closing inset regardless of what its final child
 // happens to be. This is deliberately not a last-child kind whitelist: new
 // controls inherit correct clearance without another selector. A trailing
 // Actions primitive already owns equal padding on all four sides, so the body
 // transfers its closing edge to Actions instead of stacking two gutters.
 :is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:not(:empty) {
-	padding-bottom: var(--property-gutter);
+	//padding-bottom: var(--property-gutter);
 	gap: var(--property-row-gap);
 }
+
+
+
 
 :is(.design-panel, .mobile-settings-drawer) .property-card[data-collapsible] > .subsection-card-body:not(:empty) {
 	gap: 0;
@@ -791,6 +806,8 @@
 	padding-bottom: var(--property-gutter);
 	padding-top: var(--property-gutter);
 }
+
+*/
 
 .property-module-summary {
 	flex: 0 1 auto;
@@ -1211,12 +1228,12 @@
 .settings-subsection {
 	container-type: inline-size;
 	container-name: propertypanel;
+	gap: var(--property-card-inset);
 }
 
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign > .section-content > .settings-subsection {
 	display: flex;
 	flex-direction: column;
-	gap: var(--property-card-inset);
 	padding: 0;
 }
 
@@ -1761,7 +1778,8 @@ body.is-resizing-panel {
 		padding: 0 var(--property-pad) var(--property-pad);
 	}
 
-	.advanced-texture-position-group .property-pair-cell {
+	.advanced-texture-position-group .property-pair-cell,
+	.property-pair-cell.numf {
 		display: grid;
 		grid-template-columns: auto minmax(0, 1fr);
 		gap: 6px;
@@ -1784,9 +1802,12 @@ body.is-resizing-panel {
 			border: 0;
 			background: transparent;
 		}
+
+		&.numf > .property-value > .setting-unit { display: none; }
 	}
 
-	.advanced-texture-position-group .property-pair {
+	.advanced-texture-position-group .property-pair,
+	.property-row.has-num-fields > .property-pair {
 		width: 100%;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -1903,4 +1924,91 @@ body.is-resizing-panel {
 	}
 
 	&:hover { border-color: var(--color-border-hover); }
+}
+
+
+// match .transform-grid 
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+
+	.settings-subsection {
+		gap: calc(var(--property-card-inset) * 1.5);
+	}
+
+	.text-box-hint {
+		padding-top: 0;
+		padding-bottom: 0;
+	}
+
+	.subsection-title {
+		height: 34px;
+		min-height: 34px;
+		max-height: 34px;
+		box-sizing: border-box;
+	}
+
+	.subsection-card-body {
+		border-top: 1px solid var(--color-border);
+		padding: var(--property-gutter) 0;
+		background: var(--color-bg-primary);
+	}
+
+	// transform footer
+	.subsection-card-body > .property-actions {
+		background: var(--color-bg-card);
+		margin-top: var(--property-gutter);
+		padding: var(--property-pad);
+		border-top: 1px solid var(--color-border);
+	}
+
+	// other foots
+	.property-actions {
+		border: none;
+		padding: 0 var(--property-pad);
+	}
+
+	.transform-grid {
+		padding: 0;
+		border-top: none;
+	}
+
+	.property-module-content {
+		border: none;
+	}
+
+	.asset-info {
+		.asset-info-badges {
+			display: none;
+		}
+	}
+
+
+
+	.advanced-disclosure {
+	margin-top: 0;
+
+			.advanced-disclosure-content {
+				padding: 0;
+				padding: var(--property-pad) 0;
+				border-top: 1px solid var(--color-border);
+
+				> .property-set + .property-set {
+					margin-inline: 0;
+					padding-inline: 0;
+				}
+			}
+		}
+
+
+
+	.paint-slot-main {
+		padding: var(--property-pad) 0;
+		border-top: 1px solid var(--color-border);
+		background: var(--color-bg-primary);
+
+
+
+
+
+
+	}
 }

@@ -1054,6 +1054,7 @@ const LAYER_UI_CONFIG = {
 		hitTestMethod: 'isPointInSticker',
 		transformPrefix: 'sticker',
 		transformCapabilities: {
+			panelRedesign: true,
 			position: true,
 			size: true,
 			scaleReadout: true,
@@ -1441,28 +1442,29 @@ const PANEL_SCHEMAS = {
 		prefix: 'sticker',
 		sectionPrefix: 'stickerSettings',
 		mobileKey: 'sticker',
-		section: { id: 'stickerSettingsSection', icon: 'sliders', iconName: 'Sliders', title: 'Sticker Properties' },
+		section: { id: 'stickerSettingsSection', classes: 'panel-redesign', icon: 'sticker', iconName: 'Sticker', title: 'Sticker Properties' },
 		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', empty: { icon: 'sticker', text: 'Select a sticker to edit its properties.' } },
 			groups: [
-				{ title: 'Content', items: [
-					{ kind: 'card', title: 'Asset', items: [
+				{ title: 'Content', collapsible: false, items: [
+					{ kind: 'card', title: 'Asset', collapsible: true, moduleSummary: 'asset', classes: 'panel-module sticker-asset-module', items: [
 						{ kind: 'assetInfo', info: 'stickerAssetInfo', thumbnail: 'stickerAssetThumbnail',
 							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
 							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' },
-						{ kind: 'colorAdjust' }
+						{ kind: 'colorAdjust', label: 'Adjust color' }
 					] }
 				] },
-			{ title: 'Appearance', adoptTransformOpacity: true, items: [] },
-			{ title: 'Transform', items: [
+			{ title: 'Appearance', collapsible: false, adoptTransformOpacity: true, items: [] },
+			{ title: 'Transform', collapsible: false, items: [
 				{ kind: 'transformHost' }
 			] }
 		],
 		effects: [
-			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'stickerShadow', title: 'Shadow',
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'stickerShadow', title: 'Shadow', redesign: true,
+				sourceSelect: true, advancedStyle: 'flat',
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
-				pre: [{ kind: 'pair', label: 'Offset', items: [
+				afterSource: [{ kind: 'pair', label: 'Offset', fields: true, items: [
 					{ id: 'stickerShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'stickerShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }]

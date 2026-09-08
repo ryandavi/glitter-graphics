@@ -323,6 +323,7 @@ function buildSliderRow(options) {
 function buildPairRow(item) {
 	const row = tplClone('tpl-slider-row');
 	row.className = 'property-row is-pair';
+	if (item.fields) row.classList.add('has-num-fields');
 	row.replaceChildren();
 	if (item.rowId) row.id = item.rowId;
 	const label = document.createElement('span');
@@ -335,6 +336,7 @@ function buildPairRow(item) {
 	item.items.forEach((entry) => {
 		const spec = CONFIG.ui.sliders[entry.slider];
 		const cell = panelDiv('property-pair-cell');
+		if (item.fields) cell.classList.add('numf');
 		const mark = document.createElement('span');
 		mark.className = 'property-pair-mark';
 		mark.textContent = entry.mark;
@@ -369,6 +371,12 @@ function buildPairRow(item) {
 		pair.appendChild(cell);
 	});
 	row.appendChild(pair);
+	if (item.fields) {
+		const placeholder = panelDiv('property-revert is-placeholder');
+		placeholder.setAttribute('aria-hidden', 'true');
+		placeholder.appendChild(createIcon('undo'));
+		row.appendChild(placeholder);
+	}
 	return row;
 }
 
@@ -635,6 +643,7 @@ function buildAdvancedControlGroup(title, className, reset = null) {
 // Advanced = grouped color adjustment, then optional texture coordinates.
 function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 	const advanced = tplClone('tpl-advanced');
+	if (options.label) advanced.querySelector('.advanced-disclosure-label').textContent = options.label;
 	const content = advanced.querySelector('[data-advanced-content]');
 	const colorGroup = buildAdvancedControlGroup('Color adjust', 'advanced-color-adjust-group');
 	colorGroup.appendChild(buildSliderRow({ id: ids.hue || `${prefix}Hue`, slider: 'hue' }));
@@ -728,6 +737,7 @@ function buildPaintSlotCard(slot) {
 		source.prepend(label);
 	}
 	main.appendChild(source);
+	(slot.afterSource || []).forEach((item) => main.appendChild(buildPanelItem(item)));
 	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds, slot.redesign);
 	if (slot.primaryToggle) {
 		const toggle = tplClone('tpl-checkbox');
@@ -763,6 +773,7 @@ function buildPanelItem(item, schema) {
 			// plain titled run of rows; editor-disclosures only stamps a chevron
 			// on blocks that ask for one or carry an effect toggle.
 			if (item.collapsible) card.dataset.collapsible = '';
+			if (item.moduleSummary) card.dataset.moduleSummaryType = item.moduleSummary;
 			addPanelClasses(card, item.classes);
 			const title = card.querySelector('.subsection-title');
 			if (item.title) {
@@ -925,7 +936,7 @@ function buildPanelItem(item, schema) {
 			return advanced;
 		}
 		case 'colorAdjust':
-			return buildAdvancedDisclosure(item.prefix || schema.prefix, item.ids);
+			return buildAdvancedDisclosure(item.prefix || schema.prefix, item.ids, { label: item.label });
 		case 'stackRow': {
 			const row = tplClone('tpl-two-column');
 			row.classList.add('effect-stack-row');
@@ -980,6 +991,9 @@ function buildModuleSummary(card) {
 }
 
 function readModuleSummary(card) {
+	if (card.dataset.moduleSummaryType === 'asset') {
+		return card.querySelector('.asset-info-name')?.textContent?.trim() || '';
+	}
 	// A disabled module shows no summary: the switch beside the title already
 	// states the on/off condition, and an "Off" label that vanishes the moment
 	// you expand a still-disabled module contradicts itself.
@@ -1019,7 +1033,7 @@ function syncModuleSummary(card) {
 }
 
 function initializeModuleSummaries(root = document) {
-	root.querySelectorAll('[data-role="paint-slot"][data-effect-card], [data-role="paint-slot"][data-collapsible]').forEach((card) => {
+	root.querySelectorAll('[data-role="paint-slot"][data-effect-card], [data-role="paint-slot"][data-collapsible], [data-module-summary-type]').forEach((card) => {
 		if (card.dataset.moduleSummary !== undefined) return;
 		card.dataset.moduleSummary = '';
 		buildModuleSummary(card);

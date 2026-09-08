@@ -6674,7 +6674,7 @@ body.tool-select .preview-canvas {
 :is(.design-panel, .mobile-settings-drawer) {
   --property-row-h: 26px;
   --property-pad: 8px;
-  --property-row-gap: 4px;
+  --property-row-gap: 6px;
   --property-block-gap: 8px;
   --property-group-gap: 14px;
   --property-edge: 16px;
@@ -6688,7 +6688,7 @@ body.tool-select .preview-canvas {
   --property-revert-w: 16px;
   --property-label-col: 76px;
   --property-revert-col: 18px;
-  --property-gutter: 10px;
+  --property-gutter: 12px;
   --property-card-inset: 10px;
   --property-pair-min: 128px;
   --property-row-gap: 2px;
@@ -7201,7 +7201,7 @@ body.tool-select .preview-canvas {
   background: var(--color-bg-card);
   overflow: hidden;
   margin-inline: var(--property-card-inset);
-  --property-gutter: var(--spacing-sm);
+  --property-gutter: var(--spacing-md);
 }
 :is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-title {
   padding: var(--property-card-inset);
@@ -7323,40 +7323,74 @@ body.tool-select .preview-canvas {
   width: 100%;
 }
 
-:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:not(:empty) {
+.property-card > .subsection-card-body:not(:empty) {
   padding-bottom: var(--property-gutter);
   gap: var(--property-row-gap);
 }
 
-:is(.design-panel, .mobile-settings-drawer) .property-card[data-collapsible] > .subsection-card-body:not(:empty) {
+.property-card.has-footer > .subsection-card-body:not(:empty) {
   gap: 0;
-}
-
-:is(.design-panel, .mobile-settings-drawer) .property-card:not(:has(> .subsection-title)) > .subsection-card-body:not(:empty) {
-  padding-top: var(--property-gutter);
-}
-
-:is(.design-panel, .mobile-settings-drawer) .property-card:not(:has(> .subsection-title)) > .subsection-card-body:has(> .property-row:only-child) {
-  padding-block: 0;
-}
-
-:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body > .property-note:last-child {
   padding-bottom: 0;
+}
+
+/*
+
+// A bordered card owns its closing inset regardless of what its final child
+// happens to be. This is deliberately not a last-child kind whitelist: new
+// controls inherit correct clearance without another selector. A trailing
+// Actions primitive already owns equal padding on all four sides, so the body
+// transfers its closing edge to Actions instead of stacking two gutters.
+:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:not(:empty) {
+	//padding-bottom: var(--property-gutter);
+	gap: var(--property-row-gap);
+}
+
+
+
+
+:is(.design-panel, .mobile-settings-drawer) .property-card[data-collapsible] > .subsection-card-body:not(:empty) {
+	gap: 0;
+}
+
+// A titled card gets its opening edge from the title. An untitled card gets
+// the same edge from its body, so moving content between cards does not change
+// its internal geometry.
+:is(.design-panel, .mobile-settings-drawer) .property-card:not(:has(> .subsection-title)) > .subsection-card-body:not(:empty) {
+	padding-top: var(--property-gutter);
+}
+
+// A single row already has the control height needed to clear the border.
+// Extra block padding makes these compact cards (Opacity, a lone toggle, etc.)
+// visually taller on one edge for no additional hierarchy.
+:is(.design-panel, .mobile-settings-drawer) .property-card:not(:has(> .subsection-title)) > .subsection-card-body:has(> .property-row:only-child) {
+	padding-block: 0;
+}
+
+// The card owns its closing edge. Notes may separate themselves from preceding
+// controls, but must not stack another trailing pad against the card border.
+:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body > .property-note:last-child {
+	padding-bottom: 0;
 }
 
 :is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:has(> .property-actions:last-child) {
-  padding-bottom: 0;
+	padding-bottom: 0;
 }
 
-:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:has(> .property-block:last-child .property-actions:last-child) {
-  padding-bottom: 0;
+// A property block whose terminal component is Actions already owns its final
+// edge. Ordinary property blocks keep the card body's default closing inset.
+:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:has(
+	> .property-block:last-child .property-actions:last-child) {
+	padding-bottom: 0;
 }
 
+// Effect modules use paint-slot-main as their body. It follows the same card
+// edge contract, including the gap before an edge-to-edge Advanced footer.
 :is(.design-panel, .mobile-settings-drawer) .property-module-content > .paint-slot-main:not(:empty) {
-  padding-bottom: var(--property-gutter);
-  padding-top: var(--property-gutter);
+	padding-bottom: var(--property-gutter);
+	padding-top: var(--property-gutter);
 }
 
+*/
 .property-module-summary {
   flex: 0 1 auto;
   max-width: 55%;
@@ -7752,12 +7786,12 @@ body.tool-select .preview-canvas {
 .settings-subsection {
   container-type: inline-size;
   container-name: propertypanel;
+  gap: var(--property-card-inset);
 }
 
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign > .section-content > .settings-subsection {
   display: flex;
   flex-direction: column;
-  gap: var(--property-card-inset);
   padding: 0;
 }
 
@@ -8219,7 +8253,8 @@ body.is-resizing-panel canvas {
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure-content {
   padding: 0 var(--property-pad) var(--property-pad);
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell,
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 6px;
@@ -8230,14 +8265,17 @@ body.is-resizing-panel canvas {
   background: var(--color-bg-secondary);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > input[type=range],
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > .property-revert {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > .property-revert,
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > input[type=range],
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > .property-revert {
   position: absolute;
   width: 0;
   height: 0;
   margin: 0;
   opacity: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > .property-value {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > .property-value,
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > .property-value {
   justify-content: flex-start;
   min-width: 0;
   height: auto;
@@ -8245,7 +8283,12 @@ body.is-resizing-panel canvas {
   border: 0;
   background: transparent;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell.numf > .property-value > .setting-unit,
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf.numf > .property-value > .setting-unit {
+  display: none;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair,
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.has-num-fields > .property-pair {
   width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -8341,6 +8384,62 @@ body.is-resizing-panel canvas {
 }
 :is(.design-panel, .mobile-settings-drawer) .selected-color-chip:hover {
   border-color: var(--color-border-hover);
+}
+
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .settings-subsection {
+  gap: calc(var(--property-card-inset) * 1.5);
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .text-box-hint {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .subsection-title {
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  box-sizing: border-box;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .subsection-card-body {
+  border-top: 1px solid var(--color-border);
+  padding: var(--property-gutter) 0;
+  background: var(--color-bg-primary);
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .subsection-card-body > .property-actions {
+  background: var(--color-bg-card);
+  margin-top: var(--property-gutter);
+  padding: var(--property-pad);
+  border-top: 1px solid var(--color-border);
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-actions {
+  border: none;
+  padding: 0 var(--property-pad);
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-grid {
+  padding: 0;
+  border-top: none;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-module-content {
+  border: none;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .asset-info .asset-info-badges {
+  display: none;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure {
+  margin-top: 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure .advanced-disclosure-content {
+  padding: 0;
+  padding: var(--property-pad) 0;
+  border-top: 1px solid var(--color-border);
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure .advanced-disclosure-content > .property-set + .property-set {
+  margin-inline: 0;
+  padding-inline: 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-main {
+  padding: var(--property-pad) 0;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-primary);
 }
 
 /* ===== MODAL ===== */
