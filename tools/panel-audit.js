@@ -100,7 +100,6 @@ async function expandAll(page) {
 		document.querySelectorAll('.collapsed').forEach((n) => n.classList.remove('collapsed'));
 		document.querySelectorAll('.is-collapsed').forEach((n) => n.classList.remove('is-collapsed'));
 		document.querySelectorAll('[data-advanced]').forEach((n) => n.classList.add('is-open'));
-		document.querySelectorAll('.text-effect-controls').forEach((n) => n.classList.add('visible'));
 	});
 	await page.waitForTimeout(120);
 }
@@ -133,8 +132,9 @@ async function captureMetrics(page) {
 				const cs = getComputedStyle(n);
 				return visible(n) && (parseFloat(cs.borderTopWidth) > 0 || (cs.backgroundColor !== 'rgba(0, 0, 0, 0)' && cs.backgroundColor !== 'transparent'));
 			}).length;
-			// deepest chain of nested collapsibles
-			const sel = '.collapsible-section, [data-collapsible-subsection], .subsection-section-group, [data-panel-group], [data-advanced]';
+			// Deepest chain of actual interactive disclosures. L0's section accordion
+			// counts as one; rule E allows at most two more clicks below it.
+			const sel = '.collapsible-section, [data-collapsible-group], [data-collapsible-subsection], [data-advanced]';
 			let deepest = 0;
 			s.querySelectorAll(sel).forEach((n) => {
 				let d = 0; let p = n;
@@ -145,7 +145,7 @@ async function captureMetrics(page) {
 			let shells = 0;
 			const shellCandidates = [
 				'.subsection-content-group', '.subsection-card-body', '.paint-slot-main',
-				'.property-set', '.property-toggle-list', '.settings-action-row',
+				'.property-set', '.property-toggle-list',
 				'.property-actions', '.advanced-disclosure-content'
 			].join(',');
 			s.querySelectorAll(shellCandidates).forEach((el) => {
@@ -181,11 +181,11 @@ async function run() {
 		states.base = await captureVisibility(page);
 
 		// Paint-source sweep on every slot that has one.
-		const slots = await page.evaluate(() => Array.from(document.querySelectorAll('.text-effect-subsection[data-slot], [data-role="paint-slot"]'))
+		const slots = await page.evaluate(() => Array.from(document.querySelectorAll('[data-role="paint-slot"]'))
 			.map((s) => s.querySelector('.segmented-control')?.id || s.dataset.slot).filter(Boolean));
 		for (const mode of ['glitter', 'solid', 'none', 'gradient']) {
 			await page.evaluate((m) => {
-				document.querySelectorAll(`[data-role="paint-slot"] .segmented-option[data-mode="${m}"], .text-effect-subsection .segmented-option[data-mode="${m}"]`)
+				document.querySelectorAll(`[data-role="paint-slot"] .segmented-option[data-mode="${m}"]`)
 					.forEach((b) => b.click());
 			}, mode);
 			await page.waitForTimeout(280);
@@ -232,6 +232,7 @@ function diff(current, baseline) {
 	current.errors.forEach((e) => problems.push(`RUNTIME ${e}`));
 	Object.entries(current.metrics).forEach(([section, metrics]) => {
 		if (metrics.shells > 0) problems.push(`EMPTY SHELLS ${section}: ${metrics.shells}`);
+		if (metrics.deepestCollapsibleChain > 3) problems.push(`DEPTH BUDGET ${section}: ${metrics.deepestCollapsibleChain} nested disclosures (max 3 including section)`);
 	});
 	return { problems, notes };
 }

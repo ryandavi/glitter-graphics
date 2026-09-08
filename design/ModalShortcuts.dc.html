@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73; --accent:#007bff;
+      --pad:8px; --r-modal:10px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .scrim{min-height:100%;padding:40px 24px;display:flex;justify-content:center;align-items:flex-start;background:rgba(10,12,15,.55)}
+    .modal{width:480px;max-width:100%;max-height:640px;background:var(--bg);border:1px solid var(--border-hi);border-radius:var(--r-modal);
+      box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden;display:flex;flex-direction:column}
+    .mhead{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:40px;padding:0 10px;
+      background-image:linear-gradient(to top,#20242a 55%,#3c424a 100%);border-bottom:1px solid var(--border);color:#fff;text-shadow:0 1px 1px #000}
+    .mhead .mi{width:16px;height:16px;opacity:.9}
+    .mhead .mt{flex:1;font-size:13px;font-weight:600}
+    .mhead .mx{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);background:none;border:0;border-radius:var(--r-field);cursor:pointer}
+    .mhead .mx svg{width:13px;height:13px}
+    .mnav{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--sunk)}
+    /* the app's keyboard / gestures scope toggle — a .segmented-control */
+    .scope{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden;flex:0 0 auto}
+    .scope button{display:flex;align-items:center;gap:5px;height:26px;padding:0 10px;font-size:11px;font-weight:500;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .scope button:first-child{border-left:0}
+    .scope button.on{background:var(--accent);color:#fff}
+    .scope button svg{width:12px;height:12px}
+    .mnav .search{flex:1;display:flex;align-items:center;gap:6px;height:26px;padding:0 8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-field);color:var(--t3);font-size:12px}
+    .mnav .search svg{width:12px;height:12px}
+    .mbody{flex:1 1 auto;min-height:0;overflow-y:auto;padding:var(--pad) 0;display:flex;flex-direction:column;gap:14px;
+      scrollbar-width:thin;scrollbar-color:var(--border-hi) transparent}
+    .mbody::-webkit-scrollbar{width:9px}
+    .mbody::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:5px;border:2px solid var(--bg)}
+    .help{font-size:11px;color:var(--t3);line-height:1.45;padding:2px 16px 0}
+
+    .group{display:flex;flex-direction:column;gap:2px}
+    .glabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px 4px}
+    .item{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;min-height:26px;padding:3px 16px}
+    .item .n{font-size:11px;color:var(--t2)}
+    .keys{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+    .bind{display:flex;align-items:center;gap:3px}
+    .kbd{font-size:10px;font-weight:600;color:var(--t1);background:var(--sunk);border:1px solid var(--border-hi);
+      border-bottom-width:2px;border-radius:var(--r-inner);padding:1px 5px;font-variant-numeric:tabular-nums;line-height:1.5}
+    .keys .or{font-size:10px;color:var(--t3)}
+    .gest{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t2);background:var(--sunk);border:1px dashed var(--border-hi);border-radius:var(--r-inner);padding:1px 6px}
+    .gest svg{width:11px;height:11px;color:var(--t3)}
+
+    .specnote{margin:8px 16px 14px;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);font-size:10.5px;line-height:1.45;color:var(--t3)}
+    .specnote::before{content:"SPEC NOTE  ";font-weight:700;letter-spacing:.06em;color:#c8963c}
+  </style>
+</helmet>
+
+<div class="scrim">
+  <div class="modal">
+
+    <div class="mhead">
+      <svg class="mi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="4" width="13" height="8" rx="1.5"/><path d="M4 6.5h.01M6.5 6.5h.01M9 6.5h.01M11.5 6.5h.01M4 9h6" stroke-linecap="round"/></svg>
+      <span class="mt">Commands &amp; Shortcuts</span>
+      <button class="mx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>
+
+    <div class="mnav">
+      <div class="scope">
+        <button class="on"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="4" width="13" height="8" rx="1.5"/><path d="M4 9h6" stroke-linecap="round"/></svg>Keyboard</button>
+        <button><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8V4a1.2 1.2 0 0 1 2.4 0v3M8.4 7V3.4a1.2 1.2 0 0 1 2.4 0V8M10.8 8V5a1.2 1.2 0 0 1 2.4 0v5a4 4 0 0 1-4 4H8l-3-3-1.4-1.4a1.3 1.3 0 0 1 2-1.7L6 10.5"/></svg>Gestures</button>
+      </div>
+      <div class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/></svg><span>Find a command, key, or gesture…</span></div>
+    </div>
+
+    <div class="mbody">
+      <p class="help">Shortcuts use the keys for this device. Alternate bindings are separated by &ldquo;or.&rdquo;</p>
+
+      <div class="group">
+        <div class="glabel">File</div>
+        <div class="item"><span class="n">New canvas</span><span class="keys"><span class="bind"><span class="kbd">Ctrl</span><span class="kbd">N</span></span></span></div>
+        <div class="item"><span class="n">Open project</span><span class="keys"><span class="bind"><span class="kbd">Ctrl</span><span class="kbd">O</span></span></span></div>
+        <div class="item"><span class="n">Save project</span><span class="keys"><span class="bind"><span class="kbd">Ctrl</span><span class="kbd">S</span></span></span></div>
+        <div class="item"><span class="n">Export</span><span class="keys"><span class="bind"><span class="kbd">Ctrl</span><span class="kbd">E</span></span></span></div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">Edit</div>
+        <div class="item"><span class="n">Undo</span><span class="keys"><span class="bind"><span class="kbd">Ctrl</span><span class="kbd">Z</span></span></span></div>
+        <div class="item"><span class="n">Redo</span><span class="keys"><span class="bind"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">Z</span></span><span class="or">or</span><span class="bind"><span class="kbd">Ctrl</span><span class="kbd">Y</span></span></span></div>
+        <div class="item"><span class="n">Duplicate layer</span><span class="keys"><span class="bind"><span class="kbd">Ctrl</span><span class="kbd">D</span></span></span></div>
+        <div class="item"><span class="n">Delete layer</span><span class="keys"><span class="bind"><span class="kbd">Delete</span></span></span></div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">View &amp; tools</div>
+        <div class="item"><span class="n">Zoom in</span><span class="keys"><span class="bind"><span class="kbd">Ctrl</span><span class="kbd">+</span></span></span></div>
+        <div class="item"><span class="n">Hand tool</span><span class="keys"><span class="bind"><span class="kbd">Space</span></span><span class="or">or</span><span class="bind"><span class="kbd">H</span></span></span></div>
+        <div class="item"><span class="n">Brush tool</span><span class="keys"><span class="bind"><span class="kbd">B</span></span></span></div>
+      </div>
+
+      <div class="specnote">Regression fix: the modal's <b>Keyboard / Gestures</b> scope toggle (<code>.segmented-control</code> in the nav) is back &mdash; gestures are their own view, not rows inside the keyboard groups. Shell + search-toggle row unchanged; the help sentence swaps with the scope. <code>shortcut-group-title</code> &rarr; the <code>.glabel</code> label. <code>shortcut-item</code> = name left, keys right. Key tokens: <code>.kbd</code> chips (2px bottom border) grouped into a <code>.shortcut-binding</code> per chord, a muted &ldquo;or&rdquo; between alternates. The Gestures view uses the same layout with a dashed <code>.shortcut-gesture</code> chip (device icon + label) plus any modifier <code>.kbd</code>s. No-results uses <code>.property-empty</code>.</div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

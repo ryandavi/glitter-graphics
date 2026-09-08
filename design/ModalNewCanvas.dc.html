@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff; --accent-surface:rgba(0,123,255,.16);
+      --pad:8px; --group-gap:16px; --row-h:26px;
+      --label-w:132px; --rev-w:16px; --ctl-w:188px;
+      --r-modal:10px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    a{color:#4ba3ff}a:hover{color:#7dbcff}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .scrim{min-height:100%;padding:40px 24px;display:flex;justify-content:center;align-items:flex-start;background:rgba(10,12,15,.55)}
+    .modal{width:440px;max-width:100%;max-height:640px;background:var(--bg);border:1px solid var(--border-hi);border-radius:var(--r-modal);
+      box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden;display:flex;flex-direction:column}
+    .mhead{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:40px;padding:0 10px;
+      background-image:linear-gradient(to top,#20242a 55%,#3c424a 100%);border-bottom:1px solid var(--border);color:#fff;text-shadow:0 1px 1px #000}
+    .mhead .mi{width:16px;height:16px;opacity:.9}
+    .mhead .mt{flex:1;font-size:13px;font-weight:600}
+    .mhead .mx{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);background:none;border:0;border-radius:var(--r-field);cursor:pointer}
+    .mhead .mx svg{width:13px;height:13px}
+    .mbody{flex:1 1 auto;min-height:0;overflow-y:auto;padding:var(--pad) 0;display:flex;flex-direction:column;gap:var(--group-gap);
+      scrollbar-width:thin;scrollbar-color:var(--border-hi) transparent}
+    .mbody::-webkit-scrollbar{width:9px}
+    .mbody::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:5px;border:2px solid var(--bg)}
+    .mfoot{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:var(--sunk);justify-content:flex-end}
+    .btn{height:28px;padding:0 12px;font-size:12px;font-weight:500;color:var(--t1);background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn svg{width:13px;height:13px}
+
+    .group{display:flex;flex-direction:column;gap:2px}
+    .glabel{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px 4px}
+
+    /* presets — grouped by category, each category a 3-up grid of IDENTICAL cards:
+       a fixed 42px preview STAGE (ratio box centred both axes so every ratio
+       occupies the same space), then name / size / ratio on fixed rows that
+       align straight down the grid. */
+    .pcat{padding:0 16px}
+    .pcat + .pcat{margin-top:9px}
+    .pcat .catlbl{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);padding:0 0 4px}
+    .prow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+    .preset{display:grid;grid-template-rows:42px 14px 12px 11px;align-items:center;justify-items:center;row-gap:3px;
+      padding:7px 4px 7px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);cursor:pointer}
+    .preset.on{border-color:var(--accent);background:var(--accent-surface)}
+    .preset .stage{width:100%;height:42px;display:flex;align-items:center;justify-content:center}
+    .preset .pv{background:#fff;border:1px solid var(--border-hi);border-radius:var(--r-inner)}
+    .preset .pv.r11{width:32px;height:32px}
+    .preset .pv.r45{width:26px;height:32px}
+    .preset .pv.r34{width:24px;height:32px}
+    .preset .pv.r916{width:18px;height:32px}
+    .preset .pv.r54{width:32px;height:26px}
+    .preset .pv.r43{width:32px;height:24px}
+    .preset .pv.r169{width:32px;height:18px}
+    .preset .pname{font-size:10.5px;font-weight:600;color:var(--t1);line-height:1}
+    .preset .pdim{font-size:9.5px;color:var(--t2);font-variant-numeric:tabular-nums;line-height:1}
+    .preset .prat{font-size:9px;color:var(--t3);line-height:1}
+
+    /* ONE control-width band — same as Settings / Export Settings: every control
+       sits in a fixed 188px right-aligned column, label takes the rest. */
+    .row{display:grid;grid-template-columns:1fr var(--ctl-w) var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h);padding:3px 16px}
+    .row > .rl{grid-column:1;font-size:11px;color:var(--t2)}
+    .row > .rr{grid-column:3}
+    .row > .seg{grid-column:2;width:100%}
+    .row > .num{grid-column:2;justify-self:end}
+    .row > .colorfield{grid-column:2;justify-self:end}
+    .rr{width:var(--rev-w);height:var(--rev-w)}
+    .rr.blank{visibility:hidden}
+    .note{font-size:11px;color:var(--t3);line-height:1.4;padding:2px 40px 4px 16px}
+
+    .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:72px;padding:0 6px;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;color:var(--t1);font-variant-numeric:tabular-nums}
+    .num .u{color:var(--t3);margin-left:3px}
+    .seg{display:flex;width:100%;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
+    .seg > button{flex:1;height:24px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .seg > button:first-child{border-left:0}
+    .seg > button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+    .seg > button svg{width:13px;height:13px}
+    /* color field hugs its content (swatch + hex) — no dead space to the right */
+    .colorfield{height:24px;display:inline-flex;align-items:center;gap:7px;padding:0 8px;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;font-variant-numeric:tabular-nums;color:var(--t1)}
+    .colorfield .sw2{width:13px;height:13px;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.2)}
+
+    .specnote{margin:10px 16px 16px;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);font-size:10.5px;line-height:1.45;color:var(--t3)}
+    .specnote::before{content:"SPEC NOTE  ";font-weight:700;letter-spacing:.06em;color:#c8963c}
+  </style>
+</helmet>
+
+<div class="scrim">
+  <div class="modal">
+
+    <div class="mhead">
+      <svg class="mi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M8 5.5v5M5.5 8h5"/></svg>
+      <span class="mt">New Canvas</span>
+      <button class="mx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>
+
+    <div class="mbody">
+
+      <div class="group">
+        <div class="glabel">Presets</div>
+
+        <div class="pcat">
+          <div class="catlbl">Square</div>
+          <div class="prow">
+            <div class="preset"><span class="stage"><span class="pv r11"></span></span><span class="pname">Avatar</span><span class="pdim">400 &times; 400</span><span class="prat">1:1</span></div>
+            <div class="preset on"><span class="stage"><span class="pv r11"></span></span><span class="pname">Square</span><span class="pdim">800 &times; 800</span><span class="prat">1:1</span></div>
+            <div class="preset"><span class="stage"><span class="pv r11"></span></span><span class="pname">Large</span><span class="pdim">1024 &times; 1024</span><span class="prat">1:1</span></div>
+          </div>
+        </div>
+
+        <div class="pcat">
+          <div class="catlbl">Portrait</div>
+          <div class="prow">
+            <div class="preset"><span class="stage"><span class="pv r45"></span></span><span class="pname">Portrait</span><span class="pdim">640 &times; 800</span><span class="prat">4:5</span></div>
+            <div class="preset"><span class="stage"><span class="pv r34"></span></span><span class="pname">Book</span><span class="pdim">600 &times; 800</span><span class="prat">3:4</span></div>
+            <div class="preset"><span class="stage"><span class="pv r916"></span></span><span class="pname">Story</span><span class="pdim">576 &times; 1024</span><span class="prat">9:16</span></div>
+          </div>
+        </div>
+
+        <div class="pcat">
+          <div class="catlbl">Landscape</div>
+          <div class="prow">
+            <div class="preset"><span class="stage"><span class="pv r54"></span></span><span class="pname">Landscape</span><span class="pdim">800 &times; 640</span><span class="prat">5:4</span></div>
+            <div class="preset"><span class="stage"><span class="pv r43"></span></span><span class="pname">Screen</span><span class="pdim">800 &times; 600</span><span class="prat">4:3</span></div>
+            <div class="preset"><span class="stage"><span class="pv r169"></span></span><span class="pname">Wide</span><span class="pdim">1024 &times; 576</span><span class="prat">16:9</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">Dimensions</div>
+        <div class="row">
+          <span class="rl">Width</span>
+          <span class="num">800<span class="u">px</span></span>
+          <span class="rr blank"></span>
+        </div>
+        <div class="row">
+          <span class="rl">Height</span>
+          <span class="num">800<span class="u">px</span></span>
+          <span class="rr blank"></span>
+        </div>
+        <div class="row">
+          <span class="rl">Orientation</span>
+          <div class="seg">
+            <button class="on"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4.5" y="2.5" width="7" height="11" rx="1"/></svg>Portrait</button>
+            <button><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="4.5" width="11" height="7" rx="1"/></svg>Landscape</button>
+          </div>
+          <span class="rr blank"></span>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="glabel">Background</div>
+        <div class="row">
+          <span class="rl">Fill</span>
+          <div class="seg"><button class="on">Color</button><button>Transparent</button></div>
+          <span class="rr blank"></span>
+        </div>
+        <div class="row">
+          <span class="rl">Color</span>
+          <div class="colorfield"><span class="sw2" style="background:#ffffff"></span><span>#FFFFFF</span></div>
+          <span class="rr blank"></span>
+        </div>
+        <div class="note">Color row shows only while Fill is Color (conditional row, <code>when:</code>).</div>
+      </div>
+
+      <div class="specnote">Shell unchanged; fixed viewport-fraction height, body scrolls. <b>Presets</b>: grouped <b>Square / Portrait / Landscape</b>; within each, a 3-up grid of identical cards &mdash; a fixed 42px preview <b>stage</b> that centres the ratio box both axes (every ratio occupies the same footprint), then <b>name / size / ratio</b> on fixed rows that align straight down. All &le; 1024 to match the app's canvas cap &mdash; a proposed set, expanded past the current four. <b>Orientation</b> and <b>Background</b> are <code>.segmented</code> in the <b>same 188px control band</b> as Settings / Export Settings; Width / Height are <code>.num</code> (rule 9); the color picker is a conditional <code>.colorfield</code> row that <b>hugs its content</b> (swatch + hex), right-aligned in the band &mdash; no dead space beside the hex.</div>
+
+    </div>
+
+    <div class="mfoot">
+      <button class="btn">Cancel</button>
+      <button class="btn primary"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg>Create Canvas</button>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

@@ -1280,7 +1280,7 @@ const PANEL_SCHEMAS = {
 				{ kind: 'host', id: 'baseCanvasSizeHost' }
 			] },
 
-			{ title: 'Effects', items: [
+			{ title: 'Effects', collapsible: false, items: [
 				{ kind: 'card', classes: 'pixelate-effect-card', title: 'Pixelate', toggle: { id: 'pixelEffectsPixelateEnabled', label: 'Enabled' }, items: [
 					{ kind: 'slider', id: 'pixelEffectsPixelSize', slider: 'pixelEffectsPixelSize', title: '1 is off; larger values create crisp mosaic cells before palette processing' },
 				] },
@@ -1307,7 +1307,7 @@ const PANEL_SCHEMAS = {
 						{ kind: 'select', id: 'pixelEffectsDitherPalette', label: 'Dither palette', visibleLabel: 'Color Palette', options: [
 							{ label: 'Auto (Image Colors)', value: 'auto', active: true }, { label: 'Black & White', value: 'bw' }, { label: 'Game Boy', value: 'gameboy' }, { label: 'CGA', value: 'cga' }, { label: 'Sepia', value: 'sepia' }, { label: 'Duotone', value: 'duotone' }
 						] },
-						{ kind: 'host', id: 'pixelEffectsDuotone', classes: 'text-effect-color-row pixel-effects-duotone' },
+						{ kind: 'host', id: 'pixelEffectsDuotone', classes: 'property-color-row pixel-effects-duotone' },
 						{ kind: 'card', title: 'Pattern', classes: 'pixel-effects-control-section', items: [
 							{ kind: 'slider', id: 'pixelEffectsStrength', slider: 'pixelEffectsStrength' },
 							{ kind: 'slider', id: 'pixelEffectsDitherScale', slider: 'pixelEffectsDitherScale' },
@@ -1366,15 +1366,11 @@ const PANEL_SCHEMAS = {
 				] },
 				{ kind: 'card', title: 'Scatter & Jitter', items: [
 					{ kind: 'host', id: 'brushDynamicsHost', classes: 'brush-dynamics', wrapInContent: true }
-				] }
-			] },
-			{ title: 'Actions', items: [
-				{ kind: 'card', items: [
-					{ kind: 'actionRow', actions: [
-						{ id: 'maskCopyOppositeSettings', label: 'Copy Eraser Settings', title: 'Copy the other tool\'s settings into this one' },
-						{ id: 'maskResetCurrentSettings', label: 'Reset Brush', title: 'Restore this tool\'s settings to their defaults' },
-						{ id: 'clearMaskPaint', label: 'Clear Paint', title: 'Remove all painted strokes (color selections stay)' }
-					] }
+				] },
+				{ kind: 'actionRow', actions: [
+					{ id: 'maskCopyOppositeSettings', label: 'Copy Eraser Settings', title: 'Copy the other tool\'s settings into this one' },
+					{ id: 'maskResetCurrentSettings', label: 'Reset Brush', title: 'Restore this tool\'s settings to their defaults' },
+					{ id: 'clearMaskPaint', label: 'Clear Paint', title: 'Remove all painted strokes (color selections stay)' }
 				] }
 			] }
 		]
@@ -1384,7 +1380,7 @@ const PANEL_SCHEMAS = {
 		sectionPrefix: 'glitterSettings',
 		mobileKey: 'glitter',
 		section: { id: 'glitterSettingsSection', icon: 'glitter', iconName: 'Glitter', title: 'Fill Properties' },
-		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', emptyText: 'Select a glitter fill from the gallery to get started.' },
+		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', empty: { icon: 'glitter', text: 'Select a glitter fill from the gallery to get started.' } },
 		groups: [
 			{ title: 'Appearance', items: [
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill',
@@ -1409,11 +1405,7 @@ const PANEL_SCHEMAS = {
 			section: { id: 'layerSettingsSection', icon: 'paint-bucket', iconName: 'Sliders', title: 'Color Fill Settings' },
 			controls: {
 				id: 'layerSettingsControls', emptyId: 'layerSettingsEmpty',
-				emptyItems: [
-					{ className: 'empty-state-icon', text: '📋' },
-					{ className: 'empty-state-text', id: 'layerSettingsEmptyText', text: 'No layer selected' },
-					{ className: 'empty-state-subtext', id: 'layerSettingsEmptySubtext' }
-				]
+				empty: { icon: 'paint-bucket', titleId: 'layerSettingsEmptyText', title: 'No layer selected', textId: 'layerSettingsEmptySubtext', text: '' }
 			},
 			groups: [
 				{ title: 'Selection', items: [
@@ -1426,7 +1418,7 @@ const PANEL_SCHEMAS = {
 					] },
 					{ kind: 'card', title: 'Color Selections', classes: 'color-selection', items: [
 						{ kind: 'content', items: [
-							{ kind: 'host', id: 'selectedColorsEmpty', tag: 'span', classes: 'empty-state visible', text: 'None' },
+							{ kind: 'host', id: 'selectedColorsEmpty', tag: 'span', classes: 'property-empty-inline visible', text: 'None' },
 							{ kind: 'host', id: 'selectedColorsDisplay', classes: 'selected-colors-display' }
 						] }
 					] },
@@ -1444,7 +1436,7 @@ const PANEL_SCHEMAS = {
 		sectionPrefix: 'stickerSettings',
 		mobileKey: 'sticker',
 		section: { id: 'stickerSettingsSection', icon: 'sliders', iconName: 'Sliders', title: 'Sticker Properties' },
-		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', emptyText: 'Select a sticker to edit its properties.' },
+		controls: { id: 'stickerSettingsControls', emptyId: 'stickerSettingsEmpty', empty: { icon: 'sticker', text: 'Select a sticker to edit its properties.' } },
 			groups: [
 				{ title: 'Content', items: [
 					{ kind: 'card', title: 'Asset', items: [

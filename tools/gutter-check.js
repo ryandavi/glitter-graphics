@@ -41,36 +41,35 @@ const CHROME = process.env.CHROME_PATH
 		});
 		await page.waitForTimeout(600);
 
-		const auditLayout = () => page.evaluate(() => {
+		const auditLayout = (targetPage = page) => targetPage.evaluate(() => {
 			// Only structural containers are in scope. A control's own padding
 			// (a button, an input, a segmented option) is its chrome, not a
 			// gutter, and nesting it inside an inset container is correct.
 			const STRUCTURAL = [
 				'property-row', 'property-pair-group', 'property-pair', 'property-toggle-list', 'property-block',
 				'subsection-card-body', 'paint-slot-main', 'subsection-content',
-				'subsection-content-group', 'effect-option-group', 'functional-control-group',
-				'advanced-control-group', 'property-set', 'settings-action-row', 'property-actions',
+				'subsection-content-group',
+				'property-set', 'property-actions',
 				'glitter-source', 'paint-slot-source', 'asset-info', 'selected-colors-display',
 				'advanced-disclosure-content', 'settings-toggle-list',
 				// Labels inset themselves, so a set that also insets double-indents
 				// them - the defect that pushed "Anchor" past its own group title.
-				'effect-option-label', 'functional-control-group-title',
-				'advanced-control-group-title', 'control-group-label', 'property-set-label',
+				'property-set-label',
 				'property-label', 'sticker-position-group', 'transform-grid'
 			];
 			const isStructural = (el) => STRUCTURAL.some((c) => el.classList.contains(c));
-			const gutter = parseFloat(getComputedStyle(document.querySelector('.design-panel'))
+			const gutter = (el) => parseFloat(getComputedStyle(el.closest('.design-panel, .mobile-settings-drawer') || document.documentElement)
 				.getPropertyValue('--property-gutter')) || 10;
 			// Only an inset at (or beyond) the gutter counts; small nudges are
 			// deliberate optical spacing, not a second gutter.
 			const inset = (el) => {
 				const cs = getComputedStyle(el);
 				const value = parseFloat(cs.paddingLeft) + parseFloat(cs.marginLeft);
-				return value >= gutter ? value : 0;
+				return value >= gutter(el) ? value : 0;
 			};
 			const label = (el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}.${(el.className || '').toString().trim().split(/\s+/).slice(0, 3).join('.')}`;
 			const out = [];
-			document.querySelectorAll('#designPanel .settings-subsection').forEach((root) => {
+			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .settings-subsection').forEach((root) => {
 				root.querySelectorAll('*').forEach((el) => {
 					if (!isStructural(el)) return;
 					const own = inset(el);
@@ -94,17 +93,18 @@ const CHROME = process.env.CHROME_PATH
 			// are legitimately flush - their child rows apply the gutter - so the
 			// only meaningful test is whether something you can see or click ends
 			// up against the edge. Zeroing a shared rule causes exactly this.
-			document.querySelectorAll('#designPanel .settings-subsection').forEach((root) => {
+			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .settings-subsection').forEach((root) => {
 				const rootLeft = root.getBoundingClientRect().left;
+				const rootGutter = gutter(root);
 				root.querySelectorAll('input, select, textarea, button, .property-label, .property-value, .segmented-control, .asset-info').forEach((el) => {
 					if (!el.getClientRects().length) return;
 					if (el.type === 'checkbox' || el.type === 'radio') return; // visually hidden
 					if (el.closest('.panel-resize-handle')) return;
 					// An element that insets its own contents (a full-width click
 					// strip, a padded label) is legitimately flush as a box.
-					if (parseFloat(getComputedStyle(el).paddingLeft) >= gutter - 2) return;
+					if (parseFloat(getComputedStyle(el).paddingLeft) >= rootGutter - 2) return;
 					const left = el.getBoundingClientRect().left;
-					if (left - rootLeft >= gutter - 2) return;
+					if (left - rootLeft >= rootGutter - 2) return;
 					const owner = el.closest('.subsection-content-group');
 					out.push({
 						el: label(el),
@@ -118,7 +118,7 @@ const CHROME = process.env.CHROME_PATH
 			// Overflow: anything rendering past the panel's right edge. `width:100%`
 			// combined with a horizontal margin is the usual cause, and it is
 			// invisible in a narrow screenshot until a field is already clipped.
-			document.querySelectorAll('#designPanel .settings-subsection').forEach((root) => {
+			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .settings-subsection').forEach((root) => {
 				const rootRight = root.getBoundingClientRect().right;
 				root.querySelectorAll('*').forEach((el) => {
 					if (!el.getClientRects().length) return;
@@ -137,7 +137,7 @@ const CHROME = process.env.CHROME_PATH
 			// Vertical clearance: a bordered card whose last child sits on the
 			// bottom border. The counterpart to the horizontal checks - it is the
 			// same defect turned ninety degrees, and just as easy to miss.
-			document.querySelectorAll('#designPanel .subsection-content-group').forEach((card) => {
+			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .subsection-content-group').forEach((card) => {
 				const cs = getComputedStyle(card);
 				if (parseFloat(cs.borderBottomWidth) < 1) return;
 				if (!card.getClientRects().length) return;
@@ -167,7 +167,7 @@ const CHROME = process.env.CHROME_PATH
 			// Actions owns one equal inset around its buttons. If a card or wrapper
 			// adds another trailing gutter, the last button looks vertically off-
 			// centre even though the Actions rule itself is symmetric.
-			document.querySelectorAll('#designPanel .property-actions').forEach((actions) => {
+			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .property-actions').forEach((actions) => {
 				if (!actions.getClientRects().length) return;
 				const buttons = [...actions.children].filter((child) => child.matches('button') && child.getClientRects().length);
 				if (!buttons.length) return;
@@ -183,7 +183,7 @@ const CHROME = process.env.CHROME_PATH
 				});
 			});
 
-			document.querySelectorAll('#designPanel .subsection-content-group').forEach((card) => {
+			document.querySelectorAll(':is(#designPanel, #mobileSettingsContainer) .subsection-content-group').forEach((card) => {
 				const cs = getComputedStyle(card);
 				if (parseFloat(cs.borderBottomWidth) < 1 || !card.getClientRects().length) return;
 				let node = card;
@@ -219,7 +219,7 @@ const CHROME = process.env.CHROME_PATH
 
 		const findings = [];
 		const widths = [280, 320, 360, 400, 450];
-		const themes = ['dark', 'light'];
+		const themes = await page.evaluate(() => CONFIG.ui.themes.slice());
 		for (const theme of themes) {
 		for (const width of widths) {
 			await page.evaluate((value) => {
@@ -242,6 +242,36 @@ const CHROME = process.env.CHROME_PATH
 			(await auditLayout()).forEach((finding) => findings.push({ ...finding, state: `${theme}/${width}px/mixed` }));
 		}
 		}
+
+		const mobilePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+		await mobilePage.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'networkidle' });
+		await mobilePage.evaluate(() => document.querySelectorAll('.modal-overlay.visible').forEach((n) => n.classList.remove('visible')));
+		await mobilePage.evaluate(async () => { await window.editor.loadBlankImage(500, 400, '#ffffff'); });
+		await mobilePage.waitForFunction(() => Boolean(window.editor?.originalImage));
+		await mobilePage.evaluate(async () => { await window.editor.textGlitterManager?.addTextLayer?.(); });
+		await mobilePage.waitForTimeout(900);
+		await mobilePage.evaluate(() => {
+			const layer = window.editor.layerManager.getActiveLayer();
+			window.editor.mobileManager.prepareSettings(layer, { preserveDrawer: true });
+			window.editor.mobileManager.openDrawer('edit');
+			document.querySelectorAll('#mobileSettingsContainer .section.collapsible-section').forEach((section) => {
+				section.classList.add('visible', 'is-open');
+				section.querySelector(':scope > .section-content')?.classList.add('visible');
+			});
+			document.querySelectorAll('#mobileSettingsContainer .collapsed, #mobileSettingsContainer .is-collapsed')
+				.forEach((node) => node.classList.remove('collapsed', 'is-collapsed'));
+			document.querySelectorAll('#mobileSettingsContainer [data-advanced]').forEach((node) => node.classList.add('is-open'));
+			document.querySelectorAll('#mobileSettingsContainer input[data-effect-toggle]').forEach((control) => { if (!control.checked) control.click(); });
+		});
+		await mobilePage.waitForTimeout(600);
+		for (const theme of themes) {
+			await mobilePage.evaluate((value) => {
+				if (value === 'dark') document.documentElement.removeAttribute('data-theme');
+				else document.documentElement.dataset.theme = value;
+			}, theme);
+			(await auditLayout(mobilePage)).forEach((finding) => findings.push({ ...finding, state: `${theme}/390px/mobile-edit` }));
+		}
+		await mobilePage.close();
 
 		await browser.close();
 		if (!findings.length) {

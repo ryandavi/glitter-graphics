@@ -8,10 +8,6 @@
 	// the card gutter, and trailing Actions owns an equal four-sided inset.
 	gap: 0;
 	width: 100%;
-
-	.settings-row {
-		margin-bottom: 0;
-	}
 }
 
 .scale-design-presets {
@@ -188,7 +184,7 @@
 
 // Segmented control: a connected two-state toggle (Glitter | Solid Color) that
 // reads as one control with two modes, not two loose buttons. Used for every
-// text source (fill/border/shadow) via .text-effect-mode-group.
+// paint source, gradient type and gradient interpolation controls.
 .segmented-control {
 	display: flex;
 	min-height: var(--control-height);

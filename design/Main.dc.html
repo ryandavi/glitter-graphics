@@ -137,6 +137,8 @@
     .mod.off .mname{color:var(--t3)}
     .mod.off .swatch{opacity:.35}
     .mbody{display:flex;flex-direction:column;gap:var(--row-gap);border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
+    .mfoot{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
+    .mfoot > .btn{width:100%}
 
     /* asset summary: shared anatomy with the Layers row (34px thumb, name 12/600,
        meta 11/t3, 8px gap) — surface stays the sunk inset because this is the
@@ -346,13 +348,13 @@
               <div class="pair"><span class="numf"><span class="k">X</span><span class="v">120</span></span><span class="numf"><span class="k">Y</span><span class="v">64</span></span></div>
               <button class="rr" title="Reset position"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
             </div>
+            <div class="row is-toggle"><span class="rl">Lock aspect ratio</span><span class="sw on"></span><span class="rr blank"></span></div>
             <div class="row is-pair">
               <span class="rl">Size</span>
               <div class="pair"><span class="numf"><span class="k">W</span><span class="v">300</span></span><span class="numf"><span class="k">H</span><span class="v">180</span></span></div>
               <button class="rr" title="Reset size"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
             </div>
             <div class="row"><span class="rl">Scale</span><span class="num">124<span class="u">%</span></span><button class="rr" title="Reset scale"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button></div>
-            <div class="row is-toggle"><span class="rl">Lock aspect ratio</span><span class="sw on"></span><span class="rr blank"></span></div>
             <div class="row">
               <span class="rl">Rotation</span>
               <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
@@ -385,6 +387,11 @@
               </div>
               <span class="rr blank"></span>
             </div>
+          </div>
+          <div class="mfoot">
+            <button class="btn">Fit canvas</button>
+            <button class="btn">Fill canvas</button>
+            <button class="btn">Reset Transform</button>
           </div>
         </div>
       </div>
@@ -433,11 +440,17 @@
               <div class="seg"><button class="on">Behind text</button><button>On top</button></div>
               <span class="rr blank"></span>
             </div>
-            <div class="disc">
-              <div class="dhead">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
-                <span>Advanced</span>
-              </div>
+            <div class="row">
+              <span class="rl">Scale</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
+              <span class="num">100<span class="u">%</span></span>
+              <span class="rr blank"></span>
+            </div>
+            <div class="row">
+              <span class="rl">Opacity</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:100%"></div><div class="knb" style="left:100%"></div></div>
+              <span class="num">100<span class="u">%</span></span>
+              <span class="rr blank"></span>
             </div>
           </div>
         </div>

@@ -20,7 +20,9 @@
     *{box-sizing:border-box}
     button{font:inherit;color:inherit}
     body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
-    .wrap{padding:24px;display:flex;justify-content:center}
+    .wrap{padding:24px;display:flex;flex-direction:column;align-items:center}
+    .specnotes{width:404px;margin:14px auto 24px;display:flex;flex-direction:column;gap:8px}
+    .specnotes .specnote{margin:0}
     .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
     .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
       background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
@@ -81,6 +83,13 @@
     .disc:not(.open) > .dhead svg{transform:rotate(-90deg)}
     .disc > .dbody{display:none;flex-direction:column;gap:var(--row-gap);padding:0 var(--pad) var(--pad)}
     .disc.open > .dbody{display:flex}
+    .seg{display:flex;width:100%;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
+    .seg > button{flex:1;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;
+      color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .seg > button:first-child{border-left:0}
+    .seg > button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+    .setlabel{font-size:11px;font-weight:600;color:var(--t3);margin-top:2px}
+    .advsep{height:1px;background:var(--border);margin:5px calc(-1*var(--pad)) 3px}
     .maskcard{margin:0 var(--pad);padding:var(--pad);border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);display:flex;flex-direction:column;gap:6px}
     .maskcard .mrow{display:flex;align-items:center;gap:8px;font-size:12px}
     .maskcard .mrow b{font-weight:600}
@@ -142,11 +151,7 @@
                 <span>Advanced</span>
               </div>
               <div class="dbody">
-                <div class="row is-pair">
-                  <span class="rl">Offset</span>
-                  <div class="pair"><span class="numf"><span class="k">X</span><span class="v">0</span></span><span class="numf"><span class="k">Y</span><span class="v">0</span></span></div>
-                  <span class="rr blank"></span>
-                </div>
+                <div class="setlabel">Color adjust</div>
                 <div class="row">
                   <span class="rl">Hue</span>
                   <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
@@ -165,6 +170,19 @@
                   <span class="num">100<span class="u">%</span></span>
                   <span class="rr blank"></span>
                 </div>
+
+                <div class="advsep"></div>
+                <div class="setlabel">Texture position</div>
+                <div class="row">
+                  <span class="rl">Anchor</span>
+                  <div class="seg"><button class="on">Artwork</button><button>Canvas</button></div>
+                  <span class="rr blank"></span>
+                </div>
+                <div class="row is-pair">
+                  <span class="rl">Offset</span>
+                  <div class="pair"><span class="numf"><span class="k">X</span><span class="v">0</span></span><span class="numf"><span class="k">Y</span><span class="v">0</span></span></div>
+                  <button class="rr" title="Reset texture position"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+                </div>
               </div>
             </div>
           </div>
@@ -182,6 +200,10 @@
       </div>
 
     </div>
+  </div>
+
+  <div class="specnotes">
+    <div class="specnote"><b>Fill</b> is the only slot with an Advanced disclosure. It splits into two labelled sets: <b>Color adjust</b> (Hue / Saturation / Brightness) and <b>Texture position</b> (Anchor + Offset), separated by a full-bleed hairline &mdash; texture coordinates are a different space from color. Anchor = the app's <code>TextureAnchor Artwork / Canvas</code> segmented. "Reset texture position" is the set-scoped revert on the Offset row. Border and Shadow have no Advanced.</div>
   </div>
 </div>
 </x-dc>

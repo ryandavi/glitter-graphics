@@ -20,7 +20,7 @@
     *{box-sizing:border-box}
     button{font:inherit;color:inherit}
     body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
-    .wrap{padding:24px;display:flex;justify-content:center}
+    .wrap{padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
     .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
     .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
       background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
@@ -64,7 +64,10 @@
     .btn svg{width:13px;height:13px;color:var(--t2)}
     .note{font-size:11px;color:var(--t3);line-height:1.45}
     /* a spec annotation, NOT panel UI: dashed, off to the side, prefixed */
-    .specnote{margin:6px 16px 0;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);
+    /* full-bleed divider inside a card / editor — spec rule 18 */
+    .subdiv{height:1px;background:var(--border);margin:5px calc(-1*var(--pad)) 3px}
+    .specnotes{width:404px;margin:14px auto 24px;display:flex;flex-direction:column;gap:8px}
+    .specnote{margin:0;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);
       font-size:10.5px;line-height:1.45;color:var(--t3)}
     .specnote::before{content:"SPEC NOTE  ";font-weight:700;letter-spacing:.06em;color:#c8963c}
     .mod{display:flex;flex-direction:column;margin:0 var(--pad);border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);overflow:hidden}
@@ -113,7 +116,6 @@
             </div>
           </div>
         </div>
-        <div class="specnote">One panel serves both Brush and Eraser. Switching tools swaps the header icon (brush &harr; eraser) and relabels the Copy / Reset actions to name the other tool; each tool keeps its own tip and stroke settings.</div>
       </div>
 
       <div class="group">
@@ -162,17 +164,18 @@
             <span class="num">0<span class="u">%</span></span>
             <span class="rr blank"></span>
           </div>
+          <div class="row is-toggle"><span class="rl">Both axes</span><span class="sw on"></span><span class="rr blank"></span></div>
           <div class="row">
             <span class="rl">Count</span>
-            <div class="slider"><div class="trk"></div><div class="fil" style="width:10%"></div><div class="knb" style="left:10%"></div></div>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:0%"></div><div class="knb" style="left:0%"></div></div>
             <span class="num">1<span class="u">&times;</span></span>
             <span class="rr blank"></span>
           </div>
           <div class="row">
-            <span class="rl">Angle jitter</span>
-            <div class="slider"><div class="trk"></div><div class="fil" style="width:20%"></div><div class="knb" style="left:20%"></div></div>
-            <span class="num">15<span class="u">&deg;</span></span>
-            <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+            <span class="rl">Count jitter</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:0%"></div><div class="knb" style="left:0%"></div></div>
+            <span class="num">0<span class="u">%</span></span>
+            <span class="rr blank"></span>
           </div>
           <div class="row">
             <span class="rl">Size jitter</span>
@@ -180,6 +183,29 @@
             <span class="num">0<span class="u">%</span></span>
             <span class="rr blank"></span>
           </div>
+          <div class="row">
+            <span class="rl">Angle jitter</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:0%"></div><div class="knb" style="left:0%"></div></div>
+            <span class="num">0<span class="u">%</span></span>
+            <span class="rr blank"></span>
+          </div>
+
+          <div class="subdiv"></div>
+          <div class="note" style="margin:0">Raster tips only</div>
+          <div class="row">
+            <span class="rl">Angle</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
+            <span class="num">0<span class="u">&deg;</span></span>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row">
+            <span class="rl">Roundness</span>
+            <div class="slider"><div class="trk"></div><div class="fil" style="width:100%"></div><div class="knb" style="left:100%"></div></div>
+            <span class="num">100<span class="u">%</span></span>
+            <span class="rr blank"></span>
+          </div>
+          <div class="row is-toggle"><span class="rl">Flip X</span><span class="sw"></span><span class="rr blank"></span></div>
+          <div class="row is-toggle"><span class="rl">Flip Y</span><span class="sw"></span><span class="rr blank"></span></div>
         </div>
       </div>
 
@@ -193,6 +219,11 @@
       </div>
 
     </div>
+  </div>
+
+  <div class="specnotes">
+    <div class="specnote">One panel serves both Brush and Eraser. Switching tools swaps the header icon and relabels the Copy / Reset actions to name the other tool; each keeps its own tip and stroke settings.</div>
+    <div class="specnote">Scatter &amp; Jitter = the full <code>CONFIG.editor.brushTips.dynamics</code> set. Scatter 0&ndash;300&#37; of brush size (max 1000); Count 1&ndash;16 dabs/stamp; Count / Size / Angle jitter 0&ndash;100&#37;. Angle, Roundness, Flip X/Y are <code>when:</code> raster tips only.</div>
   </div>
 </div>
 </x-dc>

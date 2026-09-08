@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff;
+      --pad:12px; --r-modal:10px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    a{color:#4ba3ff}a:hover{color:#7dbcff}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .scrim{min-height:100%;padding:44px 24px;display:flex;justify-content:center;align-items:flex-start;background:rgba(10,12,15,.55)}
+    .modal{width:400px;max-width:100%;max-height:660px;background:var(--bg);border:1px solid var(--border-hi);border-radius:var(--r-modal);
+      box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden;display:flex;flex-direction:column}
+    .mhead{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:40px;padding:0 10px;
+      background-image:linear-gradient(to top,#20242a 55%,#3c424a 100%);border-bottom:1px solid var(--border);color:#fff;text-shadow:0 1px 1px #000}
+    .mhead .mi{width:16px;height:16px;opacity:.9}
+    .mhead .mt{flex:1;font-size:13px;font-weight:600}
+    .mhead .mx{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);background:none;border:0;border-radius:var(--r-field);cursor:pointer}
+    .mhead .mx svg{width:13px;height:13px}
+    .mbody{flex:1 1 auto;min-height:0;overflow-y:auto;padding:var(--pad);display:flex;flex-direction:column;gap:9px;
+      scrollbar-width:thin;scrollbar-color:var(--border-hi) transparent}
+    .mbody::-webkit-scrollbar{width:9px}
+    .mbody::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:5px;border:2px solid var(--bg)}
+    .mfoot{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:var(--sunk);justify-content:flex-end}
+    .btn{height:28px;padding:0 12px;font-size:12px;font-weight:500;color:var(--t1);background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+    .btn svg{width:13px;height:13px}
+
+    .preview{aspect-ratio:1;background:repeating-conic-gradient(#2b2f35 0 25%,#242830 0 50%);background-size:16px 16px;
+      border:1px solid var(--border);border-radius:var(--r-card);display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:11px}
+
+    /* STATS — a grid of stat cells: uppercase key over a bold tabular value. Real
+       cell borders, no hairline-grid trick. Colors spans the row (GIF only). */
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .stat{background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-card);padding:6px 10px;display:flex;flex-direction:column;gap:1px}
+    .stat .k{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--t3)}
+    .stat .v{font-size:13px;font-weight:600;color:var(--t1);font-variant-numeric:tabular-nums}
+    .stat.full{grid-column:1 / -1;flex-direction:row;align-items:baseline;justify-content:space-between;padding:7px 10px}
+    .stat.full .v{font-size:12px}
+
+    /* "Large file" — a card (spec: a bordered container with its own inset). No colored rail. */
+    .card{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;background:var(--sunk);
+      border:1px solid var(--border);border-radius:var(--r-card);font-size:11px;line-height:1.4;color:var(--t2)}
+    .card svg{width:14px;height:14px;color:var(--t3);flex:0 0 auto;margin-top:1px}
+    .card b{color:var(--t1)}
+
+    /* "Export details" — shared .disc disclosure. Top hairline is FULL-BLEED
+       (spans the modal-body padding), per spec rule 18. Shown OPEN here. */
+    .disc{border-top:1px solid var(--border);margin:2px calc(-1 * var(--pad)) 0;padding:0 var(--pad)}
+    .disc > .dh{display:flex;align-items:center;gap:6px;padding:9px 0 0;font-size:11px;font-weight:600;color:var(--t3);cursor:pointer}
+    .disc > .dh svg{width:11px;height:11px;transition:transform .12s}
+    .disc:not(.open) > .dh svg{transform:rotate(-90deg)}
+    .disc > .db{display:none;flex-direction:column;gap:3px;padding:4px 0 2px}
+    .disc.open > .db{display:flex}
+    .disc .rt{font-size:11px;color:var(--t3);line-height:1.4;margin:0}
+    .facts{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
+    .facts > div{display:flex;justify-content:space-between;gap:12px;padding:4px 9px;font-size:11px}
+    .facts > div + div{border-top:1px solid var(--border)}
+    .facts dt{color:var(--t3);margin:0}
+    .facts dd{color:var(--t1);margin:0;font-variant-numeric:tabular-nums;text-align:right}
+
+    .inst{font-size:11px;color:var(--t3);line-height:1.45;text-align:center;margin:0}
+    .support{font-size:11px;color:var(--t3);text-align:center;margin:0}
+
+    .specnotes{margin-top:6px}
+    .specnote{margin:0;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);font-size:10.5px;line-height:1.45;color:var(--t3)}
+    .specnote::before{content:"SPEC NOTE  ";font-weight:700;letter-spacing:.06em;color:#c8963c}
+  </style>
+</helmet>
+
+<div class="scrim">
+  <div class="modal">
+
+    <div class="mhead">
+      <svg class="mi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5L13 5"/></svg>
+      <span class="mt">Export Ready</span>
+      <button class="mx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>
+
+    <div class="mbody">
+      <div class="preview">GIF preview</div>
+
+      <div class="stats">
+        <div class="stat"><span class="k">File size</span><span class="v">1.8 MB</span></div>
+        <div class="stat"><span class="k">Dimensions</span><span class="v">800 &times; 800</span></div>
+        <div class="stat"><span class="k">Frames</span><span class="v">24</span></div>
+        <div class="stat"><span class="k">Duration</span><span class="v">2.0s</span></div>
+        <div class="stat full"><span class="k">Colors</span><span class="v">247 / 256</span></div>
+      </div>
+
+      <div class="card">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l6 11H2z" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.2v.1" stroke-linecap="round"/></svg>
+        <span><b>Large file.</b> 1.8 MB may be slow to share &mdash; lower GIF Colors or Frame Limit in Export Settings.</span>
+      </div>
+
+      <p class="inst">Long-press the preview to save on iOS, or use the buttons below.</p>
+      <p class="support">Like what you made? You can <a href="#">buy me a coffee on Ko-fi</a>.</p>
+
+      <div class="disc open">
+        <div class="dh"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg><span>Export details</span></div>
+        <div class="db">
+          <p class="rt">16 near-identical frames were removed and the timing eased so the loop reads smoothly at a smaller size. Loop ending is seamless.</p>
+          <dl class="facts">
+            <div><dt>Frames kept</dt><dd>24 of 40</dd></div>
+            <div><dt>Repeated frames removed</dt><dd>11</dd></div>
+            <div><dt>Similar frames removed</dt><dd>5</dd></div>
+            <div><dt>Playback speed</dt><dd>1.0&times; (83 ms/frame)</dd></div>
+            <div><dt>Max visual difference</dt><dd>2.1%</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="specnotes">
+        <div class="specnote">Preview &rarr; a <b>stats grid</b> (uppercase key over a bold tabular value; real cell borders, no hairline-grid trick; Colors spans the row, GIF only) &rarr; <b>Large file</b> as a bordered <b>card</b>, conditional, icon + copy, no rail (rule 21) &rarr; the instruction line + Ko-fi &rarr; the <b>Export details</b> disclosure last (shown open; <b>auto-collapsed</b> in the app). Its top hairline is <b>full-bleed</b> across the modal-body padding (rule 18). Inside, tight: the reduction summary text then the optimization <code>dl</code> (<code>exportReductionText</code> + <code>exportDetail*</code>). Footer keeps <code>btn-text-with-icon</code>.</div>
+      </div>
+    </div>
+
+    <div class="mfoot">
+      <button class="btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10V2M5 5l3-3 3 3M3 10v3a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-3"/></svg>Save</button>
+      <button class="btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3v10h10v-3M9 3h4v4M13 3L7 9"/></svg>Open GIF</button>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

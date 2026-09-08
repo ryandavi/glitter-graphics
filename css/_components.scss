@@ -231,55 +231,6 @@ textarea {
 	}
 }
 
-.empty-state {
-	display: none;
-	gap: var(--spacing-base);
-	padding: var(--spacing-xl);
-	text-align: center;
-
-	&.visible { display: block; }
-
-	>.empty-state-inner-wrapper {
-		@include centered-column;
-	}
-
-	.empty-state-icon-large {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 64px;
-		height: 64px;
-		margin-bottom: var(--spacing-sm);
-		border-radius: var(--radius-md);
-		background-color: var(--color-bg-tertiary);
-
-		>.icon {
-			width: 32px;
-			height: 32px;
-			color: var(--color-text-tertiary);
-		}
-	}
-
-	>.empty-state-icon {
-		display: none;
-		margin-bottom: var(--spacing-md);
-		font-size: 48px;
-		opacity: 0.3;
-	}
-
-	.empty-state-text {
-		color: var(--color-text-primary);
-		font-size: var(--font-size-md);
-		font-weight: 600;
-	}
-
-	.empty-state-subtext {
-		color: var(--color-text-tertiary);
-		font-size: var(--font-size-sm);
-		line-height: 1.4;
-	}
-}
-
 input[type="color"] {
 	width: 56px;
 	height: var(--control-height);

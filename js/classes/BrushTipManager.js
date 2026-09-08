@@ -62,7 +62,7 @@ class BrushTipManager extends ContentManager {
 		lead.className = 'brush-library-index';
 		if (basic.length) {
 			const heading = document.createElement('h3');
-			heading.className = 'asset-browser-section-title';
+			heading.className = 'asset-browser-section-title property-block-title';
 			heading.textContent = 'Basic brushes';
 			lead.appendChild(heading);
 			const grid = document.createElement('div');
@@ -72,7 +72,7 @@ class BrushTipManager extends ContentManager {
 		}
 		if (raster.length) {
 			const setsHeading = document.createElement('h3');
-			setsHeading.className = 'asset-browser-section-title raster-sets-title';
+			setsHeading.className = 'asset-browser-section-title property-block-title raster-sets-title';
 			setsHeading.textContent = 'Raster brush sets';
 			lead.appendChild(setsHeading);
 		}
@@ -105,7 +105,7 @@ class BrushTipManager extends ContentManager {
 		const info = document.createElement('div');
 		info.className = 'asset-collection-credit';
 		const heading = document.createElement('div');
-		heading.className = 'asset-collection-credit-heading';
+		heading.className = 'asset-collection-credit-heading property-group-label';
 		heading.textContent = 'Source & usage';
 		info.appendChild(heading);
 		const byline = document.createElement('div');

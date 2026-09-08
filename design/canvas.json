@@ -23,6 +23,10 @@
     {
       "id": "page-1",
       "name": "System + docs"
+    },
+    {
+      "id": "page-8",
+      "name": "Modals"
     }
   ],
   "artboards": [
@@ -31,7 +35,7 @@
       "x": 0,
       "y": 0,
       "w": 452,
-      "h": 2180,
+      "h": 2380,
       "title": "Text properties",
       "page": "page-3"
     },
@@ -40,7 +44,7 @@
       "x": 524,
       "y": 0,
       "w": 452,
-      "h": 1560,
+      "h": 1770,
       "title": "Sticker properties",
       "page": "page-3"
     },
@@ -49,7 +53,7 @@
       "x": 1048,
       "y": 0,
       "w": 452,
-      "h": 2260,
+      "h": 2560,
       "title": "Shape properties",
       "page": "page-3"
     },
@@ -58,7 +62,7 @@
       "x": 1572,
       "y": 0,
       "w": 452,
-      "h": 1120,
+      "h": 1420,
       "title": "Fill properties",
       "page": "page-3"
     },
@@ -76,7 +80,7 @@
       "x": 2620,
       "y": 0,
       "w": 452,
-      "h": 1180,
+      "h": 1340,
       "title": "Gradient fill (Fill source mode)",
       "page": "page-3"
     },
@@ -85,7 +89,7 @@
       "x": 0,
       "y": 0,
       "w": 452,
-      "h": 1360,
+      "h": 1820,
       "title": "Mask Settings",
       "page": "page-4"
     },
@@ -250,6 +254,69 @@
       "h": 620,
       "title": "Narrow width behaviour",
       "page": "page-1"
+    },
+    {
+      "file": "ModalNewCanvas.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 600,
+      "h": 1020,
+      "title": "New Canvas modal",
+      "page": "page-8"
+    },
+    {
+      "file": "ModalSettings.dc.html",
+      "x": 700,
+      "y": 0,
+      "w": 600,
+      "h": 820,
+      "title": "Settings modal",
+      "page": "page-8"
+    },
+    {
+      "file": "ModalExportSettings.dc.html",
+      "x": 1400,
+      "y": 0,
+      "w": 600,
+      "h": 820,
+      "title": "Export Settings modal",
+      "page": "page-8"
+    },
+    {
+      "file": "ModalExportReady.dc.html",
+      "x": 2100,
+      "y": 0,
+      "w": 600,
+      "h": 780,
+      "title": "Export Ready modal",
+      "page": "page-8"
+    },
+    {
+      "file": "ModalPreflight.dc.html",
+      "x": 2800,
+      "y": 0,
+      "w": 600,
+      "h": 560,
+      "title": "Project Asset Preflight modal",
+      "page": "page-8"
+    },
+    {
+      "file": "ModalShortcuts.dc.html",
+      "x": 3500,
+      "y": 0,
+      "w": 600,
+      "h": 780,
+      "title": "Commands & Shortcuts modal",
+      "page": "page-8"
+    },
+    {
+      "file": "BrowserEmpty.dc.html",
+      "x": 3620,
+      "y": 0,
+      "w": 900,
+      "h": 600,
+      "title": "Browser: empty states",
+      "page": "page-6"
     }
   ],
   "annotations": [
@@ -291,11 +358,11 @@
       "x": -430,
       "y": 0,
       "w": 400,
-      "text": "CHANGELOG (newest first)\n\np22: GradientFill artboard - gradient as a 3rd Source mode of the paint-slot module. Figma model: a bar with stop HANDLES below it (pointer up) + midpoint diamonds; click-to-add / drag-off-to-remove, no Add/Remove buttons. Selected stop = ONE row (colour+alpha field, position as the value), not a sub-form. Only Reverse keeps a control. Type (Linear/Radial) + Angle (Radial hides it). Scale drops out; Opacity + Advanced unchanged. Nested editor -> sunk box (rule B).\n\np21: One collapse glyph everywhere - the down chevron (as the accordion bar + dropdowns use), rotated -90deg when collapsed. Replaced the module-header up-caret (19x) and the .disc right-arrow twisty (spec rule 17). No selection: Project drawn expanded (was collapsed) - nothing is shown collapsed unless its expanded state is on the sheet elsewhere. Brush-set Archival note drawn open, triangle -> chevron. Filter 'Search by name only' FIX: flex:1 was hitting the switch too (also a <span>) and stretching it - scoped to the label; switch now truly right-aligned. AutoGlitter iterated: Palette + Advanced lose their card boxes (rule B); Advanced is now the shared .disc disclosure (chevron + label + divider, collapsed by default), not a peer titled group. HANDOFF scope line corrected (layers panel + add-layer modal are in, parity only).\n\np20 (docs, no artboard change): all panel-redesign docs collected under docs/panel-redesign/ (PLAN + PROGRESS + HANDOFF + SPEC + ARTBOARD-DIFF). SPEC gained a component ledger (S12: kept / changed / new, and what renders each) and a behaviour add/change list (S13). New ARTBOARD-DIFF walks every artboard against its live app section with tagged deltas. PLAN S3 links look / build / per-artboard-diff. This Deltas artboard is the on-canvas summary; the doc is its full form.\n\np19: Consistency pass. Mask panel 'Brush' -> 'Mask Settings' (one panel serves brush + eraser; header icon + Copy/Reset labels swap); stale 'separate eraser panel' note -> SPEC NOTE. Brush Count gets the app's 'x' unit. No-selection header icon -> palette. Asset summary / Layers row / Auto Glitter match unified to one anatomy (34px thumb, name 12/600, meta 11, 8px gap); surface follows container - module .asset keeps the sunk inset + text button, list rows stay carded + icon. Every browser 'Design' bar -> palette icon. Text 'Line' spacing shows % not a bare number. Confirmed app-accurate, no change: Canvas 'Replace' for the base image (assets stay 'Change'); Image Size Scale is a number field (rule 9) + Quick scale kept.\n\np18: Scope corrected - layers panel + Add-a-layer modal ARE in (visual parity only). Quick Add / modal tile copy now verbatim from LAYER_UI_CONFIG.addableViaModal; 'Glitter fill' -> 'Fill Layer'; subtext capped width. Project + Size (No selection) and Image/Canvas Size (Canvas Properties) are .formmod blocks: card-ground header + footer, panel-ground fields; group labels dropped where the module name carries it (rule A). Shared-Size caption is a SPEC NOTE. No-selection title 'Canvas' -> 'Design'; other panel titles stay (distinct panels).\n\np17: Layers panel icons bumped, list gap 4->6 (matches block gap). Auto Glitter Color Matches rebuilt to look like a Layers row (bordered card, swatch-pair thumbnail, name + match%, Change icon). Asset browser nav header is one component: Back always present (disabled+faded at root, reserving its slot), title, BARE count number. Panel Y2K title is Design in every browser view. Corner badges unified (animated glyph + font System/language marker, one ~14px pill). Filter drawer Search-by-name-only is a toggle switch now. Canvas Properties two-states caption is a dashed SPEC NOTE box.\n\np16: wrote docs/PANEL-REDESIGN-SPEC.md (the build spec). Labels 11px. Segmented text 11. Texture->Offset relabel. Fit-box-to-text in a card footer, Box mode only. Multi-select drops Merge down. Add-layer modal + Quick Add share one taller tile. Auto Glitter status fixed height. Canvas Scale format matches Transform.\n\np15: booleans are ONE toggle switch everywhere (label left, switch right-aligned to the value column). Full-width buttons / footers / assets. Add-layer modal. Reset-icon button fix.\n\np14: Auto Glitter wizard (scroll + sticky footer). Layers panel. Workspace start card. Credit block rebuilt. Text moved to the layer-panels page.\n\np13: footers for form submits (hairline + own padding). Empty + populated states both drawn and labelled. Browser layouts chosen by collection size.\n\np12: browser iteration; first-pass archive removed; frames + fps with fallbacks.\n\np11: read-before-implementing + handoff block. p10: state panels. p9: revert column narrowed to rows only. p8: re-grounded 4 panels; concentric radii. p7: Transform Align split; one row grid. p6: module-header revert present-only. p5: X/Y/W/H/Scale are number fields; Placement a dropdown. p4: even --pad, one gap. p3: Fill is a paint slot; font picker is preview cards."
+      "text": "CHANGELOG (newest first)\n\np34: Modal consistency pass. New Canvas rows now use the same 188px control band as Settings / Export Settings. Color fields hug their content (swatch + hex), right-aligned - no dead space beside the hex - in New Canvas + Export Settings. Export Settings gains the identical rule-D reset set as Settings (per-row + per-section shown-when-changed + footer Reset all); footer reset label unified to \"Reset all\". SPEC gains SS14 Modals: the one modal contract, control band, reset scopes, and a component ledger (kept shell / reused property vocabulary / new modal-only primitives: --ctl-w band, .btn.reset, .stat-grid, .notice-card, .preset-tile, .hairline-list). CODEX-BRIEF + README point at SS14.\n\np33: Settings reset affordance, rule D, three scopes: per-ROW undo icon (hidden at default, faint on hover, solid when changed - Theme + Reduce motion shown edited); per-SECTION undo icon on the group label, shown only when that section has an edit (Interface yes, Tools no); footer \"Reset all settings\" restyled - transparent + tertiary + leading undo glyph so it is not a peer of the now-solid Close. Same footer treatment in Export Settings. Export Ready: tightened the reduction-text -> dl gap again (3px).\n\np32: Settings + Export Settings: ONE control-width band - every control (dropdown, segmented incl. Format, slider+value, colorfield, number, switch) sits in a fixed 188px right-aligned column; nothing stretches modal-wide (matches the app). New Canvas presets regrouped into Square / Portrait / Landscape categories, each a 3-up of the consistent fixed-stage cards.\n\np26-p31 (modals, superseded detail): gradient handles -> circles on the bar, .num Pos/Alpha, 2-up .btn actions; modal shells -> fixed viewport fraction, one scroll region; Colour->Color; Export Ready rebuilt toward the app default (stat grid, Large-file card, auto-collapsed \"Export details\" .disc); Missing Project Content rename + <ul> reset; New Canvas presets -> consistent fixed-stage cards; Shortcuts Keyboard/Gestures toggle restored.\n\np22-p25 (summary): GradientFill added then reconciled with the live app; Multi-select Align-to segmented + Group dropped; Mask Scatter & Jitter full option set; Transform actions footer + Lock-above-Size on Shape/Sticker/Text; Border/Shadow lose Advanced; Fill Advanced split into Color adjust + Texture position + Anchor; asset-browser empty states; six modal artboards (bodies adopt the panel vocabulary, shell unchanged).\n\np3-p21 (summary): row grammar + 7 row types; concentric radii (8/6/4/3); one switch mixin; one gutter rule; one collapse glyph (down chevron); Transform Align/Flip folded in; per-slider Reset -> one revert icon; SPEC + component ledger + ARTBOARD-DIFF written; layers panel + Add-layer modal in scope (parity only); Mask panel -> \"Mask Settings\" (one panel serves brush + eraser); asset summary / Layers row / Auto Glitter match unified; browser nav header one component; Quick Add copy from LAYER_UI_CONFIG; Auto Glitter wizard (scroll + sticky footer); empty + populated states drawn."
     }
   ],
   "launch": {
     "view": "canvas",
-    "page": "page-7"
+    "page": "page-8"
   }
 }

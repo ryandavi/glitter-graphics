@@ -244,8 +244,8 @@ Chromium path is hardcoded for this machine (`chromium-1228`); override with `CH
   a chevron on *every* titled `.subsection-content-group`.
 - `CONFIG.ui.sliders` already declares a `value` default for all 30 sliders;
   `getResetValueForSlider` had only 7 hardcoded.
-- The text panel's Content group is 8 legacy cards cloned from `tpl-text-content` via the
-  `templateCard` schema kind — they bypass every schema rule.
+- The text panel's Content group was moved off `tpl-text-content`; the obsolete
+  `templateCard` renderer path has now been removed.
 
 ## Done
 
@@ -254,37 +254,36 @@ Chromium path is hardcoded for this machine (`chromium-1228`); override with `CH
 | WP1 collapsibility opt-in | **done** | `js/ui/editor-disclosures.js`, `panel-renderer.js` (`item.collapsible` → `data-collapsible`) |
 | WP2 row primitives R1/R3 | **done** | `css/panels/_properties.scss` (new), `tpl-slider-row`, `tpl-two-column` |
 | WP4 default-aware reverts | **done** | `PANEL_SLIDER_DEFAULTS` + `initializePropertyReverts()` in `panel-renderer.js`; `slider.js` marks `data-revertBound`; `app.js` falls back |
-| WP3 partial | typography + de-boxing done | `css/_settings.scss` |
-| WP5 partial | `:has()` shell collapse live | `css/panels/_properties.scss` bottom |
+| WP3 naming and hierarchy | **done** | shared renderer title resolution plus property typography/de-boxing |
+| WP5 conditionality | **done** | shared `:has()` shell-collapse contract in `css/panels/_properties.scss` |
 | R4 toggle rows | **done** | `tpl-toggle-row`, `checkboxList` case in `panel-renderer.js` |
 | WP3 rule A (title dedupe) | **done** | `dedupeBlockTitle()` in `panel-renderer.js`, called from `editor-disclosures.js` |
 | Rule C enforced | **done** | uppercase now only on L1 group labels; segmented options, set labels, chips all sentence case |
-| R5 module switch | **partial** | effect Enabled is a leading switch (`.effect-switch`); the collapsed one-line summary (swatch + name + value) is NOT done |
-| WP9 gallery filters | **partial** | `.filter-section` de-carded, `.filter-label` → group-label level, nested 200px scroll trap removed, chips share control height |
+| R5 module rows | **done** | one leading switch, summary, and disclosure treatment for effect/fill modules |
+| WP9 gallery, search and filters | **done** | filter groups de-carded; nested scroll removed; labels use `.property-group-label`; filter/removable chips and selectable cards share primitives; browser headings use property typography; all sidebar/browser empty states use `.property-empty` |
 | **Sidebar resizing** | **done** | `js/ui/panel-resize.js` (new) — drag handles on both sidebars, snap points, min/max, canvas floor, persistence, dbl-click reset, keyboard |
 | WP6 module rows (R5) | **done** | `buildModuleSummary`/`syncModuleSummary`/`initializeModuleSummaries` in `panel-renderer.js`; collapsed effects read `Border … Off ›` |
 | WP7 text panel | **done** | new `templateBlock` schema kind; text Content went 8 legacy cards → **4 blocks** (Text / Font / Spacing / Alignment) |
 | Asset summary compact | **done** | one row: 30px thumb + name + Change; empty `Size`/`Frames` cells collapse (rule F) |
+| WP8 legacy vocabulary | **done** | sidebar `settings-row-*`, `effect-option-*`, control-group, `setting-label` and `text-effect-*` hooks removed; modal rows retained; dead `templateCard` branch removed; `_sections.scss` renamed `_preview.scss` |
+| WP10 theme, mobile and lint | **done** | Effects groups are titled but non-collapsible; audit enforces max depth 3 including L0; property scope covers desktop and reparented mobile sections; gutter matrix runs every configured theme plus the live 390px mobile drawer; 11-theme visual contact sheet reviewed |
+| Transform consolidation (Δ7) | **done** | Align and Flip are generic sets inside the shared Transform card |
+| Action footers (Δ8) | **done** | Transform and Mask Settings actions use the shared group-footer `property-actions` primitive |
 
-### Metrics vs baseline (fully expanded)
+### Current audit metrics (fully expanded)
 
 | Section | Height | Boxes | Collapsible cards |
 |---|---|---|---|
-| Brush | 1074 → 848 | 16 → 12 | 3 → 0 |
-| Canvas | 1882 → 1812 | 45 → 41 | 8 → 2 |
-| No-selection | 700 → 642 | 10 → 8 | 4 → 2 |
-| Text | 5573 → **4132** | 155 → **132** | 16 → **2** |
-| Shape | 4259 → **3422** | 93 → **81** | 9 → **2** |
+| Brush | 708 → 717 | 17 → 15 | 0 → 0 |
+| Canvas | 1331 → 1431 | 44 → 44 | 2 → 2 |
+| No-selection | 644 → 745 | 8 → 8 | 2 → 2 |
+| Text | 3380 → 3505 | 136 → 134 | 2 → 2 |
+| Shape | 2636 → 2714 | 82 → 79 | 2 → 2 |
 
-Text and Shape are still above their targets (≤2400 / ≤2000). The remaining bulk is the
-font picker's large cards, the transform panel's number pairs, and the gradient editor —
-none of which is wasted chrome any more, so the next reduction is a product call about what
-to show at rest, not a structural one.
-
-Deepest collapsible chain is 4 where effects exist (section → group → effect module →
-advanced). Dropping to 3 means making the Effects *group* non-collapsible, since the module
-toggle already owns expansion — needs a `collapsible: false` group option, because
-`static: true` removes the title and `BaseBackgroundManager.js:92` binds to it.
+Height is not treated as a success proxy: consistent row rhythm adds space in a few panels
+while removing redundant surfaces. Box counts fall where cards were consolidated. The
+deepest collapsible chain is 3, including the section accordion, and the audit enforces
+that budget.
 
 ### Baseline was re-captured once, deliberately
 After the asset-summary work, 60 VISIBILITY diffs appeared — all 10 `*GlitterSize` /
@@ -297,45 +296,18 @@ otherwise the same way.**
 ### Verified passing
 `pixel-effects-ui-verify`, `modal-settings-verify`, `shortcut-coverage`,
 `hint-rules-verify`, `keyboard-shortcuts-verify`, `notification-policy`, plus
-`tools/panel-audit.js` clean after every step.
+`tools/panel-audit.js` and `tools/gutter-check.js` clean after every increment.
 
 Note: `tools/panel-audit.js` spawns its own server on :8899. If a stale server is bound
 there it will silently connect to that instead and fail with
 `Cannot read properties of undefined (reading 'loadBlankImage')` — `pkill -f http.server`
 and re-run.
 
-## Remaining, in priority order
+## Remaining
 
-### WP8 — delete legacy vocabulary. **Start here.**
-`settings-row-*` (in `noLayerSettingsSection` + canvas size), `effect-option-*`,
-`functional-control-group-*`, `advanced-control-group-*`, `control-group-label`,
-`setting-label`, `text-effect-*`. Rename `css/panels/_sections.scss` → `_preview.scss`
-(it contains no section rules).
-
-### WP9 — gallery, search, filters
-- `.filter-section` is a card → label + chips with dividers (rule B)
-- `.filter-label` is a 4th uppercase level → `.property-group-label` (rule C)
-- `.filters-container-inner` has `max-height:200px; overflow-y:auto` — a scroll trap
-  inside an already-scrolling panel. Remove.
-- Unify `.filter-chip` / `.active-filter-summary-chip` / asset+category cards to shared
-  control heights, radii, focus ring.
-- **Empty states are inconsistent**: 3 use `icon-wrapper xl` SVG, 3 use a literal `🔍`
-  emoji (`#glitterBrowserEmpty`, `#stickerBrowserEmpty`, `#brushTipBrowserEmpty`).
-  Consolidate to one `.property-empty`.
-
-### WP10 — theme + mobile + lint
-A token sweep across all 11 themes passes (every theme resolves distinct label/module
-colours from tokens; dark themes get dark module cards, light themes light). **This was a
-token check, not a visual review** — the design still needs eyes on each theme.
-Mobile drawer and the depth-budget lint are untouched.
-
-### Also worth doing
-- `tpl-text-content` still exists and still holds the source markup the `templateBlock`
-  clones from. It can only be deleted once the text controls are authored natively.
-- The `templateCard` kind now has one remaining consumer path; check before removing.
-- `#brushSettingsSection`'s `Actions` and the transform `Actions` cards should fold into
-  section footers (Δ8) — not done.
-- Align/Flip still exist as separate transform cards (Δ7) — not done.
+No implementation item remains in the approved property-panel plan. Further reductions in
+expanded panel height would be a separate product decision about default visibility, not a
+design-system consolidation task.
 
 ## Files changed so far
 

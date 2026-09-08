@@ -70,7 +70,7 @@ async function captureStructure(page) {
 			const glitterMode = slot.querySelector('.segmented-option[data-mode="glitter"]');
 			if (!glitterMode) return;
 			if (!slot.querySelector('.asset-info')) throw new Error(`Paint slot ${slot.dataset.slot} has no asset-info block`);
-			if (!slot.querySelector('.text-effect-source-change')) throw new Error(`Paint slot ${slot.dataset.slot} has no Change button`);
+			if (!slot.querySelector('.asset-info-change')) throw new Error(`Paint slot ${slot.dataset.slot} has no Change button`);
 		});
 		const entries = [];
 		sectionIds.forEach((sectionId) => {

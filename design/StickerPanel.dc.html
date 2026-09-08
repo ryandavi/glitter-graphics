@@ -81,6 +81,8 @@
     .mh .msum{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
     .mh .chev{width:13px;height:13px;color:var(--t3);flex:0 0 auto}
     .mbody{display:flex;flex-direction:column;gap:var(--row-gap);border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
+    .mfoot{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
+    .mfoot > .btn{width:100%}
     .asset{display:flex;align-items:center;gap:8px;background:var(--sunk);border-radius:var(--r-inner);padding:7px 8px}
     .asset .th{width:34px;height:34px;border-radius:var(--r-inner);flex:0 0 auto;border:1px solid var(--border)}
     .asset .an{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
@@ -183,13 +185,13 @@
               <div class="pair"><span class="numf"><span class="k">X</span><span class="v">0</span></span><span class="numf"><span class="k">Y</span><span class="v">0</span></span></div>
               <span class="rr blank"></span>
             </div>
+            <div class="row is-toggle"><span class="rl">Lock aspect ratio</span><span class="sw on"></span><span class="rr blank"></span></div>
             <div class="row is-pair">
               <span class="rl">Size</span>
               <div class="pair"><span class="numf"><span class="k">W</span><span class="v">220</span></span><span class="numf"><span class="k">H</span><span class="v">220</span></span></div>
               <button class="rr" title="Reset size"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
             </div>
             <div class="row"><span class="rl">Scale</span><span class="num">100<span class="u">%</span></span><span class="rr blank"></span></div>
-            <div class="row is-toggle"><span class="rl">Lock aspect ratio</span><span class="sw on"></span><span class="rr blank"></span></div>
             <div class="row">
               <span class="rl">Rotation</span>
               <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
@@ -223,6 +225,11 @@
               <span class="rr blank"></span>
             </div>
           </div>
+          <div class="mfoot">
+            <button class="btn">Fit canvas</button>
+            <button class="btn">Fill canvas</button>
+            <button class="btn">Reset Transform</button>
+          </div>
         </div>
       </div>
 
@@ -254,11 +261,17 @@
               <div class="pair"><span class="numf"><span class="k">X</span><span class="v">4</span></span><span class="numf"><span class="k">Y</span><span class="v">6</span></span></div>
               <button class="rr" title="Reset offset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
             </div>
-            <div class="disc">
-              <div class="dhead">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
-                <span>Advanced</span>
-              </div>
+            <div class="row">
+              <span class="rl">Scale</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
+              <span class="num">100<span class="u">%</span></span>
+              <span class="rr blank"></span>
+            </div>
+            <div class="row">
+              <span class="rl">Opacity</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:75%"></div><div class="knb" style="left:75%"></div></div>
+              <span class="num">75<span class="u">%</span></span>
+              <span class="rr blank"></span>
             </div>
           </div>
         </div>

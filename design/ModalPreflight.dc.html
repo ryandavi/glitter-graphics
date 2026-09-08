@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff;
+      --pad:8px; --r-modal:10px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .scrim{min-height:100%;padding:56px 24px;display:flex;justify-content:center;align-items:flex-start;background:rgba(10,12,15,.55)}
+    .modal{width:420px;max-width:100%;max-height:600px;background:var(--bg);border:1px solid var(--border-hi);border-radius:var(--r-modal);
+      box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden;display:flex;flex-direction:column}
+    .mhead{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:40px;padding:0 10px;
+      background-image:linear-gradient(to top,#20242a 55%,#3c424a 100%);border-bottom:1px solid var(--border);color:#fff;text-shadow:0 1px 1px #000}
+    .mhead .mi{width:16px;height:16px;opacity:.9}
+    .mhead .mt{flex:1;font-size:13px;font-weight:600}
+    .mhead .mx{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);background:none;border:0;border-radius:var(--r-field);cursor:pointer}
+    .mhead .mx svg{width:13px;height:13px}
+    .mbody{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;
+      scrollbar-width:thin;scrollbar-color:var(--border-hi) transparent}
+    .mbody::-webkit-scrollbar{width:9px}
+    .mbody::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:5px;border:2px solid var(--bg)}
+    .mfoot{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:var(--sunk);justify-content:flex-end}
+    .btn{height:28px;padding:0 12px;font-size:12px;font-weight:500;color:var(--t1);background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+
+    /* top-of-modal text — same treatment as the No Selection / Multi-selection lead */
+    .lead{font-size:11px;color:var(--t3);line-height:1.45;margin:0}
+
+    /* detail list — one issue per row, hairline-separated (dividers edge to edge).
+       ZERO the UA <ul> margin + 40px padding-inline-start (that was the left indent
+       and the gap above the outro). No icon column — the row is not indented. */
+    .details{list-style:none;margin:0;padding:0;border:1px solid var(--border);border-radius:var(--r-card);background:var(--sunk);overflow:hidden}
+    .details li{display:block;padding:7px 9px;font-size:11px;line-height:1.45;color:var(--t2)}
+    .details li + li{border-top:1px solid var(--border)}
+    .details li .d1{color:var(--t1);font-weight:600}
+    .details li .kind{color:var(--t3);text-transform:uppercase;font-size:9px;font-weight:700;letter-spacing:.05em;margin-right:5px}
+
+    .outro{font-size:11px;color:var(--t1);line-height:1.45;margin:0}
+
+    .specnotes{width:100%;margin-top:6px}
+    .specnote{margin:0;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);font-size:10.5px;line-height:1.45;color:var(--t3)}
+    .specnote::before{content:"SPEC NOTE  ";font-weight:700;letter-spacing:.06em;color:#c8963c}
+  </style>
+</helmet>
+
+<div class="scrim">
+  <div class="modal">
+
+    <div class="mhead">
+      <svg class="mi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5h4l1.5 2h5.5v6.5a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1V4.5z"/><path d="M8 8.5v3M8 6.6v.01"/></svg>
+      <span class="mt">Missing Project Content</span>
+      <button class="mx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>
+
+    <div class="mbody">
+      <p class="lead">&ldquo;Sparkle Poster&rdquo; uses 3 items that aren&rsquo;t available here. They&rsquo;ll be replaced with defaults so the project can still open &mdash; your saved file won&rsquo;t change.</p>
+
+      <ul class="details">
+        <li><span class="kind">Font</span><span class="d1">Title</span> &mdash; &ldquo;Rybon Slab&rdquo; unavailable, uses the default font</li>
+        <li><span class="kind">Sticker</span><span class="d1">Sticker 3</span> &mdash; &ldquo;usr-8842&rdquo; missing, the layer loads empty</li>
+        <li><span class="kind">Glitter</span><span class="d1">Heart fill</span> &mdash; &ldquo;312&rdquo; unavailable, a default glitter is substituted</li>
+      </ul>
+
+      <p class="outro">Open the project with these replacements?</p>
+
+      <div class="specnotes">
+        <div class="specnote">This is <code>editor.confirmAction()</code> on the shared <code>#confirmationModal</code>, not a new modal. Renamed &ldquo;Project Asset Preflight&rdquo; &rarr; <b>Missing Project Content</b> (the newer-format branch keeps &ldquo;Newer Project Version&rdquo;). The count folds into the lead sentence. The detail <code>&lt;ul&gt;</code> has its UA margin + 40px indent zeroed &mdash; rows are edge to edge, no glyph column, each is a small kind tag + the <b>layer name</b> + the outcome. <code>subject</code> / <code>facts</code> / <code>outro</code> support kept.</div>
+      </div>
+    </div>
+
+    <div class="mfoot">
+      <button class="btn">Cancel</button>
+      <button class="btn primary">Open Project</button>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

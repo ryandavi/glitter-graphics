@@ -291,9 +291,9 @@
 		display: none;
 	}
 
-	.section.welcome-section>.section-content>.empty-state,
-	.section.base-layer-settings-section>.section-content>.empty-state,
-	.section.no-layer-settings-section>.section-content>.empty-state {
+	.section.welcome-section>.section-content>.property-empty,
+	.section.base-layer-settings-section>.section-content>.property-empty,
+	.section.no-layer-settings-section>.section-content>.property-empty {
 		min-height: unset;
 	}
 
@@ -419,7 +419,7 @@
 	}
 }
 
-// Scatter & Jitter rows reuse the standard setting-column look; raster-only rows
+// Scatter & Jitter rows reuse the standard property-row look; raster-only rows
 // (Angle / Roundness / Flip) collapse for vector tips.
 .brush-dynamics {
 	display: flex;

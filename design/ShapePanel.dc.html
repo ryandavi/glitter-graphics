@@ -20,7 +20,9 @@
     *{box-sizing:border-box}
     button{font:inherit;color:inherit}
     body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
-    .wrap{padding:24px;display:flex;justify-content:center}
+    .wrap{padding:24px;display:flex;flex-direction:column;align-items:center}
+    .specnotes{width:404px;margin:14px auto 24px;display:flex;flex-direction:column;gap:8px}
+    .specnotes .specnote{margin:0}
     .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
     .phead{display:flex;align-items:center;gap:8px;height:34px;padding:0 var(--pad);
       background-image:linear-gradient(to top,#212429 55%,#3c424a 100%);border-bottom:1px solid var(--border);
@@ -89,6 +91,8 @@
     .mh .chev{width:13px;height:13px;color:var(--t3);flex:0 0 auto}
     .mod.off .mname{color:var(--t3)}
     .mbody{display:flex;flex-direction:column;gap:var(--row-gap);border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
+    .mfoot{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
+    .mfoot > .btn{width:100%}
     .asset{display:flex;align-items:center;gap:8px;background:var(--sunk);border-radius:var(--r-inner);padding:7px 8px}
     .asset .th{width:34px;height:34px;border-radius:var(--r-inner);flex:0 0 auto;border:1px solid var(--border)}
     .asset .an{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
@@ -193,13 +197,13 @@
               <div class="pair"><span class="numf"><span class="k">X</span><span class="v">0</span></span><span class="numf"><span class="k">Y</span><span class="v">0</span></span></div>
               <span class="rr blank"></span>
             </div>
+            <div class="row is-toggle"><span class="rl">Lock aspect ratio</span><span class="sw on"></span><span class="rr blank"></span></div>
             <div class="row is-pair">
               <span class="rl">Size</span>
               <div class="pair"><span class="numf"><span class="k">W</span><span class="v">360</span></span><span class="numf"><span class="k">H</span><span class="v">160</span></span></div>
               <button class="rr" title="Reset size"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
             </div>
             <div class="row"><span class="rl">Scale</span><span class="num">100<span class="u">%</span></span><span class="rr blank"></span></div>
-            <div class="row is-toggle"><span class="rl">Lock aspect ratio</span><span class="sw"></span><span class="rr blank"></span></div>
             <div class="row">
               <span class="rl">Rotation</span>
               <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
@@ -233,10 +237,15 @@
               <span class="rr blank"></span>
             </div>
           </div>
+          <div class="mfoot">
+            <button class="btn">Fit canvas</button>
+            <button class="btn">Fill canvas</button>
+            <button class="btn">Reset Transform</button>
+          </div>
         </div>
       </div>
 
-      <!-- EFFECTS : Border with the conditional Dot spacing row + Advanced open -->
+      <!-- EFFECTS : Border with the conditional Dot spacing row -->
       <div class="group">
         <div class="glabel">Effects</div>
 
@@ -293,31 +302,17 @@
               <div class="seg"><button class="on">Behind</button><button>On top</button></div>
               <span class="rr blank"></span>
             </div>
-            <div class="disc open">
-              <div class="dhead">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
-                <span>Advanced</span>
-              </div>
-              <div class="dbody">
-                <div class="row">
-                  <span class="rl">Scale</span>
-                  <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
-                  <span class="num">100<span class="u">%</span></span>
-                  <span class="rr blank"></span>
-                </div>
-                <div class="row">
-                  <span class="rl">Opacity</span>
-                  <div class="slider"><div class="trk"></div><div class="fil" style="width:100%"></div><div class="knb" style="left:100%"></div></div>
-                  <span class="num">100<span class="u">%</span></span>
-                  <span class="rr blank"></span>
-                </div>
-                <div class="row">
-                  <span class="rl">Hue</span>
-                  <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
-                  <span class="num">0<span class="u">&deg;</span></span>
-                  <span class="rr blank"></span>
-                </div>
-              </div>
+            <div class="row">
+              <span class="rl">Scale</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div>
+              <span class="num">100<span class="u">%</span></span>
+              <span class="rr blank"></span>
+            </div>
+            <div class="row">
+              <span class="rl">Opacity</span>
+              <div class="slider"><div class="trk"></div><div class="fil" style="width:100%"></div><div class="knb" style="left:100%"></div></div>
+              <span class="num">100<span class="u">%</span></span>
+              <span class="rr blank"></span>
             </div>
           </div>
         </div>
@@ -336,6 +331,11 @@
       </div>
 
     </div>
+  </div>
+
+  <div class="specnotes">
+    <div class="specnote">Transform module is byte-identical on Shape / Sticker / Text: Lock aspect ratio is a toggle row above Size (was the header chip); the <code>Fit canvas</code> / <code>Fill canvas</code> / <code>Reset Transform</code> footer is the app's <code>data-transform-actions</code> as the shared <code>.panel-actions</code> group-footer; the header revert icon still signals "transform edited".</div>
+    <div class="specnote">Only <b>Fill</b> has an Advanced disclosure (color adjust + texture position). <b>Border</b> and <b>Shadow</b> have none &mdash; their Scale and Opacity sit as plain rows.</div>
   </div>
 </div>
 </x-dc>

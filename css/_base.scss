@@ -26,7 +26,7 @@ html {
 	user-select: none;
 }
 
-// Many components (.setting-column, .text-effect-color-row, etc.) declare an
+// Many components (.property-row, .property-color-row, etc.) declare an
 // unconditional `display`, which — at equal specificity — beats the browser's
 // default `[hidden] { display: none }` UA rule. That silently broke every
 // `element.hidden = true` toggle on those components. Force it to actually work.

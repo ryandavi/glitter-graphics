@@ -22,6 +22,30 @@ function addPanelClasses(node, classes) {
 	return node;
 }
 
+function buildPropertyEmpty(options = {}) {
+	const empty = panelDiv('property-empty');
+	if (options.id) empty.id = options.id;
+	if (options.visible) empty.classList.add('visible');
+	if (options.icon) {
+		const icon = panelDiv('property-empty-icon icon-wrapper xl');
+		icon.appendChild(createIcon(options.icon));
+		empty.appendChild(icon);
+	}
+	if (options.title !== undefined) {
+		const title = panelDiv('property-empty-title');
+		if (options.titleId) title.id = options.titleId;
+		title.textContent = options.title;
+		empty.appendChild(title);
+	}
+	if (options.text !== undefined) {
+		const text = panelDiv('property-empty-text');
+		if (options.textId) text.id = options.textId;
+		text.textContent = options.text;
+		empty.appendChild(text);
+	}
+	return empty;
+}
+
 function panelCap(value) {
 	return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -369,7 +393,7 @@ function buildPaintSource(slot) {
 	if (slot.imageAsset) {
 		const imageInfo = buildAssetInfo({ ...slot.imageAsset, sourceMode: 'image' });
 		imageInfo.classList.remove('glitter-source-glitter');
-		source.querySelector('.text-effect-color-row').before(imageInfo);
+		source.querySelector('.property-color-row').before(imageInfo);
 	}
 	const assetInfo = buildAssetInfo({
 		info: `${assetPrefix}Info`,
@@ -383,7 +407,7 @@ function buildPaintSource(slot) {
 		hidden: slot.activeMode !== 'glitter',
 		glitterSource: true
 	});
-	source.querySelector('.text-effect-color-row').before(assetInfo);
+	source.querySelector('.property-color-row').before(assetInfo);
 	const sourceChoices = buildSegmented(slot.modes.map((mode) => ({
 		id: panelRoleId(prefix, `source${panelCap(mode)}`),
 		label: slot.modeLabels?.[mode] || panelCap(mode),
@@ -392,7 +416,7 @@ function buildPaintSource(slot) {
 	})));
 	sourceChoices.classList.add('choice-grid');
 	source.prepend(sourceChoices);
-	const colorRow = source.querySelector('.text-effect-color-row');
+	const colorRow = source.querySelector('.property-color-row');
 	colorRow.id = `${prefix}ColorRow`;
 	colorRow.dataset.role = 'solid-color-row';
 	colorRow.hidden = slot.activeMode !== 'solid';
@@ -644,7 +668,6 @@ function buildPanelItem(item, schema) {
 		case 'select': {
 			const select = document.createElement('select');
 			select.id = item.id;
-			select.className = 'effect-option-select';
 			addPanelClasses(select, item.classes);
 			select.setAttribute('aria-label', item.label || item.visibleLabel);
 			item.options.forEach((entry) => {
@@ -725,17 +748,6 @@ function buildPanelItem(item, schema) {
 			const host = panelDiv('transform-panel-host');
 			host.id = `${schema.prefix}TransformPanelHost`;
 			return host;
-		}
-		case 'templateCard': {
-			const template = document.getElementById(item.template);
-			const source = template?.content.querySelector(item.selector)?.closest('.subsection-content-group');
-			if (!source) throw new Error(`panel-renderer: missing template card "${item.selector}"`);
-			const card = source.cloneNode(true);
-			card.querySelectorAll('input[type="range"][id]').forEach((input) => {
-				const spec = CONFIG.ui.sliders[input.id];
-				if (spec) applySliderSpec(input, spec);
-			});
-			return card;
 		}
 		default:
 			throw new Error(`panel-renderer: unknown item kind "${item.kind}"`);
@@ -883,12 +895,14 @@ function syncPanelEffectAvailability(card, available) {
 		.some((effectCard) => !effectCard.hidden);
 }
 
-function initializePanelGroupNode(node, prefix, title) {
+function initializePanelGroupNode(node, prefix, title, { collapsible = true } = {}) {
 	const header = node.querySelector('.subsection-title');
 	const label = document.createElement('span');
 	label.className = 'panel-group-label';
 	label.textContent = title;
 	header.appendChild(label);
+	if (!collapsible) return { header, chevron: null };
+	node.dataset.collapsibleGroup = '';
 	const chevron = document.createElement('span');
 	chevron.className = 'panel-group-chevron icon-wrapper sm';
 	chevron.appendChild(createIcon('chevron-down'));
@@ -915,14 +929,14 @@ function buildPanelGroup(group, schema) {
 		group.items.forEach((item) => node.appendChild(buildPanelItem(item, schema)));
 		return node;
 	}
-	const { header, chevron } = initializePanelGroupNode(node, schema.prefix, group.title);
+	const { header, chevron } = initializePanelGroupNode(node, schema.prefix, group.title, { collapsible: group.collapsible !== false });
 	if (group.toggle) {
 		const toggle = tplClone('tpl-checkbox');
 		toggle.querySelector('input').id = group.toggle.id;
 		toggle.querySelector('span').textContent = group.toggle.label;
 		header.appendChild(toggle);
 	}
-	header.appendChild(chevron);
+	if (chevron) header.appendChild(chevron);
 	node.dataset.panelGroup = group.title;
 	const content = panelDiv('panel-group-content');
 	const blocks = panelDiv('panel-group-blocks');
@@ -974,25 +988,13 @@ function renderPanelSection(schema) {
 		}
 	});
 	if (schema.effects?.length) {
-		const stack = buildPanelGroup({ title: 'Effects', items: schema.effects }, schema);
+		const stack = buildPanelGroup({ title: 'Effects', collapsible: false, items: schema.effects }, schema);
 		stack.classList.add('effects-stack');
 		subsection.appendChild(stack);
 	}
 	if (schema.controls) {
 		const content = fragment.querySelector('.section-content');
-		const empty = panelDiv('empty-state visible');
-		empty.id = schema.controls.emptyId;
-		if (schema.controls.emptyItems) {
-			schema.controls.emptyItems.forEach((item) => {
-				const element = document.createElement('div');
-				element.className = item.className;
-				if (item.id) element.id = item.id;
-				element.textContent = item.text || '';
-				empty.appendChild(element);
-			});
-		} else {
-			empty.textContent = schema.controls.emptyText;
-		}
+		const empty = buildPropertyEmpty({ id: schema.controls.emptyId, visible: true, ...schema.controls.empty });
 		const controls = document.createElement('div');
 		controls.id = schema.controls.id;
 		controls.appendChild(subsection);
@@ -1037,7 +1039,6 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 		});
 		return pair;
 	};
-	fragment.querySelector('[data-transform-action-row]').replaceWith(tplClone('tpl-action-row'));
 	fragment.querySelector('[data-transform-number-pair="position"]').replaceWith(buildNumberPair(['posX', 'posY'], ['X', 'Y']));
 	const sizePair = buildNumberPair(['sizeWidth', 'sizeHeight'], ['W', 'H'], 1);
 	sizePair.dataset.transformRole = 'sizeGroup';
@@ -1069,19 +1070,16 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	container.replaceChildren(fragment);
 }
 
-// Shared schema finalization: retitle the transform panel's geometry/opacity cards, fold
-// Reset Transform into the actions row, and settle host card order.
-function normalizeTransformPanelHost(editor, prefix, externalActions = null) {
+// Shared schema finalization: retitle the transform and opacity cards, move the
+// shared action primitive to the group footer, and settle host card order.
+function normalizeTransformPanelHost(editor, prefix) {
 	const host = document.getElementById(`${prefix}TransformPanelHost`);
 	if (!host) return null;
 	const card = (id) => document.getElementById(id)?.closest('.subsection-content-group');
 	const ids = editor.getTransformIds(prefix);
 	const geometry = host.querySelector(':scope > [data-transform-prefix]');
 	const opacity = card(ids.opacity);
-	const align = card(ids.alignLeft);
-	const flip = card(ids.flipX);
-	const actions = externalActions || card(`${prefix}FitCanvas`);
-	const reset = document.getElementById(ids.resetTransform);
+	const actions = host.querySelector(':scope > [data-transform-actions]');
 
 	const setTitle = (section, label) => {
 		const title = section?.querySelector(':scope > .subsection-title');
@@ -1098,15 +1096,8 @@ function normalizeTransformPanelHost(editor, prefix, externalActions = null) {
 	const opacityLabel = opacity?.querySelector('.property-label');
 	if (opacityLabel) opacityLabel.textContent = 'Layer Opacity';
 
-	if (actions && reset) {
-		const footer = reset.closest('.transform-panel-footer');
-		const row = actions.querySelector('.property-actions, .tool-options-group');
-		if (row) row.appendChild(reset);
-		footer?.remove();
-	}
-
-	[geometry, opacity, align, flip].filter(Boolean).forEach((section) => host.appendChild(section));
-	if (actions) host.appendChild(actions);
+	[geometry, opacity].filter(Boolean).forEach((section) => host.appendChild(section));
+	if (actions) host.closest('.panel-group-content')?.appendChild(actions);
 	return host;
 }
 

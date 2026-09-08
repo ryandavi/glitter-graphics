@@ -19,6 +19,7 @@
     }
     *{box-sizing:border-box}
     button{font:inherit;color:inherit}
+    a{color:#4ba3ff}a:hover{color:#7dbcff}
     body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
     .wrap{padding:24px;display:flex;justify-content:center}
     .panel{width:404px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-panel);overflow:hidden}
@@ -39,7 +40,8 @@
     .rr svg{width:11px;height:11px}
     .rr.blank{visibility:hidden}
 
-    .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:46px;padding:0 6px;
+    /* canonical readout field — value + unit suffix, used everywhere */
+    .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:52px;padding:0 6px;
       background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;font-weight:500;
       font-variant-numeric:tabular-nums;color:var(--t1)}
     .num .u{color:var(--t3);margin-left:3px}
@@ -54,59 +56,82 @@
     .sel{height:24px;display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--sunk);
       border:1px solid var(--border);border-radius:var(--r-field);padding:0 8px;font-size:12px;color:var(--t1)}
     .sel svg{width:11px;height:11px;color:var(--t3)}
-    .sw{width:30px;height:16px;border-radius:9999px;background:var(--sunk);border:1px solid var(--border);position:relative;flex:0 0 auto}
-    .sw::after{content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--t2)}
-    .sw.on{background:var(--accent);border-color:var(--accent)}
-    .sw.on::after{left:15px;background:#fff}
-    .note{font-size:11px;color:var(--t3);line-height:1.45}
+
+    .seg{display:flex;width:100%;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
+    .seg > button{flex:1;height:24px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;
+      color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .seg > button:first-child{border-left:0}
+    .seg > button svg{width:13px;height:13px}
+    .seg > button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+    .btn{display:flex;align-items:center;justify-content:center;gap:5px;height:26px;padding:0 8px;font-size:11px;font-weight:500;
+      color:var(--t1);background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
+    .btn svg{width:12px;height:12px;color:var(--t2)}
 
     .mod{display:flex;flex-direction:column;margin:0 var(--pad);border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);overflow:hidden}
     .mh{display:flex;align-items:center;gap:8px;padding:var(--pad);cursor:pointer}
+    .mh .sw{width:30px;height:16px;border-radius:9999px;background:var(--accent);border:1px solid var(--accent);position:relative;flex:0 0 auto}
+    .mh .sw::after{content:"";position:absolute;top:1px;left:15px;width:12px;height:12px;border-radius:50%;background:#fff}
     .mh .swatch{width:14px;height:14px;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.18);flex:0 0 auto}
     .mh .mname{font-size:12px;font-weight:600;color:var(--t1);flex:1 1 auto}
     .mh .msum{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
     .mh .chev{width:13px;height:13px;color:var(--t3);flex:0 0 auto}
     .mbody{display:flex;flex-direction:column;gap:var(--row-gap);border-top:1px solid var(--border);background:var(--bg);padding:var(--pad)}
 
-    /* GRADIENT EDITOR — a nested editor, so it earns a box (rule B). --sunk well.
-       Figma model: a gradient bar with stop handles BELOW it (pointer up),
-       midpoint diamonds between stops, click bar to add / drag handle off to
-       remove. The selected stop is ONE row — colour+alpha field, position as
-       the row's value — so it obeys the panel's row grammar, not a sub-form. */
-    .grad{display:flex;flex-direction:column;gap:7px;background:var(--sunk);border:1px solid var(--border);
-      border-radius:var(--r-inner);padding:9px 9px 8px}
-    .gbarwrap{position:relative;padding-bottom:11px}
-    .gbar{height:20px;border-radius:var(--r-field);border:1px solid var(--border);
+    /* GRADIENT EDITOR — a nested editor, so it earns a box (spec rule B): --sunk well. */
+    .grad{display:flex;flex-direction:column;gap:9px;background:var(--sunk);border:1px solid var(--border);
+      border-radius:var(--r-inner);padding:11px 10px 10px}
+
+    /* preview bar — circular stop handles SITTING ON the bar (not below it). */
+    .gbarwrap{position:relative;height:26px}
+    .gbar{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);height:16px;border-radius:var(--r-field);
+      border:1px solid var(--border);
       background-image:linear-gradient(90deg,#ff5db1,#7d5bff 52%,#33e6d0),
         repeating-conic-gradient(#0000 0 25%,rgba(255,255,255,.09) 0 50%);
       background-size:100% 100%,10px 10px}
-    .gmid{position:absolute;top:7px;width:6px;height:6px;transform:translateX(-50%) rotate(45deg);
-      background:var(--t2);border:1px solid var(--sunk)}
-    .ghandle{position:absolute;bottom:0;width:12px;height:12px;transform:translateX(-50%);border-radius:3px;
-      border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.5);background:var(--c);cursor:grab}
-    .ghandle::before{content:"";position:absolute;left:50%;top:-6px;transform:translateX(-50%);
-      border:4px solid transparent;border-bottom-color:#fff}
-    .ghandle.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-surface),0 1px 3px rgba(0,0,0,.5)}
-    .ghandle.sel::before{border-bottom-color:var(--accent)}
+    .gmid{position:absolute;top:50%;width:7px;height:7px;box-sizing:border-box;transform:translate(-50%,-50%) rotate(45deg);
+      background:#dfe2e6;border:1px solid rgba(0,0,0,.55);box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+    .ghandle{position:absolute;top:50%;left:0;display:block;box-sizing:border-box;width:15px;height:15px;aspect-ratio:1;
+      margin:0;padding:0;transform:translate(-50%,-50%);border-radius:50%;
+      border:2px solid #fff;box-shadow:0 0 3px rgba(0,0,0,.55);background:var(--c);cursor:grab}
+    .ghandle.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-surface),0 0 3px rgba(0,0,0,.55)}
+
+    /* stop list */
+    .stops{display:flex;flex-direction:column;gap:3px}
+    .stops-cols{display:grid;grid-template-columns:1fr 58px 58px var(--rev-w);column-gap:6px;padding:0 6px 1px;
+      font-size:9.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3)}
+    .stops-cols span:nth-child(2),.stops-cols span:nth-child(3){text-align:right}
+    .stop{display:grid;grid-template-columns:1fr 58px 58px var(--rev-w);align-items:center;column-gap:6px;
+      min-height:28px;padding:2px 6px;border-radius:var(--r-field)}
+    .stop.sel{background:var(--accent-surface);box-shadow:inset 0 0 0 1px var(--accent)}
+    .stop .cf{display:flex;align-items:center;gap:6px;min-width:0}
+    .stop .sw2{width:13px;height:13px;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.22);flex:0 0 auto}
+    .stop .hex{font-size:11px;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;color:var(--t1)}
+    .stop .num{min-width:0;width:100%}
+    .stop .x{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;
+      color:var(--t3);background:none;border:0;padding:0;cursor:pointer}
+    .stop .x svg{width:10px;height:10px}
+    .stop .x[disabled]{opacity:.28;cursor:default}
+
+    /* editor action bar — 2-up standard buttons, the app's Open/Save pattern */
+    .gacts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+
     .ghint{font-size:10.5px;color:var(--t3);line-height:1.4}
-    .srow{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:24px}
-    .srow > .rl{font-size:11px;color:var(--t2)}
-    .srow > .num{grid-column:3;justify-self:end}
-    .colorfield .stopa{margin-left:auto;color:var(--t3);font-size:11px;font-variant-numeric:tabular-nums}
-    .grev{align-self:flex-start;display:flex;align-items:center;gap:5px;height:22px;padding:0 8px;margin-top:1px;
-      font-size:11px;color:var(--t2);background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
-    .grev svg{width:12px;height:12px}
+    .gsep{height:1px;background:var(--border);margin:2px -10px}
+    .grow{display:grid;grid-template-columns:var(--label-w) 1fr auto var(--rev-w);align-items:center;column-gap:8px;min-height:24px}
+    .grow > .rl{font-size:11px;color:var(--t2)}
+    .grow > .seg{grid-column:2 / -2}
+    .grow > .num{grid-column:3;justify-self:end}
 
     .disc{margin:calc(var(--pad) - var(--row-gap)) calc(-1*var(--pad)) calc(-1*var(--pad));border-top:1px solid var(--border)}
     .disc > .dhead{display:flex;align-items:center;gap:6px;padding:var(--pad);font-size:12px;color:var(--t3);cursor:pointer}
     .disc > .dhead svg{width:11px;height:11px;transition:transform .12s}
     .disc:not(.open) > .dhead svg{transform:rotate(-90deg)}
-    .disc > .dbody{display:none;flex-direction:column;gap:var(--row-gap);padding:0 var(--pad) var(--pad)}
-    .disc.open > .dbody{display:flex}
 
     .specnote{margin:6px 16px 0;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);
       font-size:10.5px;line-height:1.45;color:var(--t3)}
     .specnote::before{content:"SPEC NOTE  ";font-weight:700;letter-spacing:.06em;color:#c8963c}
+    .specnote.new::before{content:"NEW FEATURE  ";color:#5bb85b}
   </style>
 </helmet>
 
@@ -126,7 +151,7 @@
 
         <div class="mod">
           <div class="mh">
-            <span class="sw on"></span>
+            <span class="sw"></span>
             <span class="swatch" style="background:linear-gradient(90deg,#ff5db1,#7d5bff 52%,#33e6d0)"></span>
             <span class="mname">Fill</span>
             <span class="msum">Linear gradient</span>
@@ -142,6 +167,7 @@
             </div>
 
             <div class="grad">
+
               <div class="gbarwrap">
                 <div class="gbar"></div>
                 <span class="gmid" style="left:26%"></span>
@@ -150,27 +176,67 @@
                 <span class="ghandle sel" style="left:52%;--c:#7d5bff"></span>
                 <span class="ghandle" style="left:100%;--c:#33e6d0"></span>
               </div>
-              <div class="ghint">Click the bar to add a stop &middot; drag a handle off to remove &middot; drag a diamond to shift the blend midpoint</div>
-              <div class="srow">
-                <span class="rl">Stop</span>
-                <div class="colorfield"><span class="sw2" style="background:#7d5bff"></span><span class="hex">#7D5BFF</span><span class="stopa">100%</span></div>
-                <span class="num">52<span class="u">%</span></span>
-                <button class="rr" title="Reset stop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+
+              <div class="stops">
+                <div class="stops-cols"><span>Color</span><span>Pos</span><span>Alpha</span><span></span></div>
+
+                <div class="stop">
+                  <div class="cf"><span class="sw2" style="background:#ff5db1"></span><span class="hex">#FF5DB1</span></div>
+                  <span class="num">0<span class="u">%</span></span>
+                  <span class="num">100<span class="u">%</span></span>
+                  <button class="x"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+                </div>
+
+                <div class="stop sel">
+                  <div class="cf"><span class="sw2" style="background:#7d5bff"></span><span class="hex">#7D5BFF</span></div>
+                  <span class="num">52<span class="u">%</span></span>
+                  <span class="num">100<span class="u">%</span></span>
+                  <button class="x"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+                </div>
+
+                <div class="stop">
+                  <div class="cf"><span class="sw2" style="background:#33e6d0"></span><span class="hex">#33E6D0</span></div>
+                  <span class="num">100<span class="u">%</span></span>
+                  <span class="num">100<span class="u">%</span></span>
+                  <button class="x" disabled><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+                </div>
               </div>
-              <button class="grev"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a5 5 0 0 1 8-1l1.5 1.5M13.5 4v3h-3M12 11a5 5 0 0 1-8 1L2.5 10.5M2.5 12V9h3"/></svg>Reverse stops</button>
+
+              <div class="gacts">
+                <button class="btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg>Add stop</button>
+                <button class="btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5a4.5 4.5 0 0 1 7.5-1L13 6M13 3.5V6h-2.5M12 10.5a4.5 4.5 0 0 1-7.5 1L3 10M3 12.5V10h2.5"/></svg>Reverse</button>
+              </div>
+
+              <div class="ghint">Click the bar to add a stop &middot; drag a handle off to remove</div>
+
+              <div class="gsep"></div>
+
+              <div class="grow">
+                <span class="rl">Type</span>
+                <div class="seg">
+                  <button class="on"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 13L13 3"/></svg>Linear</button>
+                  <button><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5"/></svg>Radial</button>
+                </div>
+              </div>
+
+              <div class="grow">
+                <span class="rl">Blend</span>
+                <div class="seg">
+                  <button class="on">Linear</button>
+                  <button>Smooth</button>
+                  <button>Constant</button>
+                </div>
+              </div>
+
+              <div class="grow">
+                <span class="rl">Angle</span>
+                <div class="slider"><div class="trk"></div><div class="fil" style="width:12.5%"></div><div class="knb" style="left:12.5%"></div></div>
+                <span class="num">45<span class="u">&deg;</span></span>
+                <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+              </div>
+
             </div>
 
-            <div class="row">
-              <span class="rl">Type</span>
-              <div class="sel"><span>Linear</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></div>
-              <span class="rr blank"></span>
-            </div>
-            <div class="row">
-              <span class="rl">Angle</span>
-              <div class="slider"><div class="trk"></div><div class="fil" style="width:12%"></div><div class="knb" style="left:12%"></div></div>
-              <span class="num">45<span class="u">&deg;</span></span>
-              <button class="rr" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
-            </div>
             <div class="row">
               <span class="rl">Opacity</span>
               <div class="slider"><div class="trk"></div><div class="fil" style="width:100%"></div><div class="knb" style="left:100%"></div></div>
@@ -188,19 +254,15 @@
           </div>
         </div>
 
-        <div class="row" style="padding:0 16px">
-          <span class="rl">Opacity</span>
-          <div class="slider"><div class="trk"></div><div class="fil" style="width:100%"></div><div class="knb" style="left:100%"></div></div>
-          <span class="num">100<span class="u">%</span></span>
-          <span class="rr blank"></span>
-        </div>
       </div>
 
     </div>
   </div>
 </div>
 
-<div class="specnote">Gradient is a third Source mode of the shared paint-slot module (beside Glitter / Solid). Figma-style: a bar with stop handles below it, midpoint diamonds, click-to-add / drag-off-to-remove. The selected stop is ONE row &mdash; colour + alpha field, position as the row's value &mdash; not a sub-form. Add / Remove get no buttons (the bar is the affordance); only Reverse, which isn't discoverable, keeps a control. Type / Angle replace the texture picker; Scale drops out; Opacity + Advanced unchanged. Radial hides Angle (when:).</div>
+<div class="specnote">Gradient is a third Source mode of the shared paint-slot module (beside Glitter / Solid), reconciled with the live app (<code>js/effects/effect-source.js</code>, <code>CONFIG.rendering.gradient</code>). Stop handles are <b>circles sitting on the bar</b> (matching the app's <code>.gradient-preview-stop</code>). The stop LIST shows every stop; Pos / Alpha use the standard <code>.num</code> readout with a <code>%</code> suffix (alpha has no slider &mdash; a deliberate space tradeoff; the compact field is the cost of keeping every stop visible). <b>Add stop</b> and <b>Reverse</b> are a 2-up of the standard <code>.btn</code> (the Open/Save pair pattern), not accent text or icon buttons. <b>Type</b> = segmented Linear / Radial. <b>Blend</b> = segmented Linear / Smooth / Constant (<code>gradient.interpolation</code>). <b>Angle</b> is a slider, Linear only (<code>when:</code>). The divider above Type is full-bleed. One Opacity row (the fill's), inside the module.</div>
+
+<div class="specnote new">Midpoint <b>diamonds</b> between stops (drag to bias the blend toward one side) are drawn here but are <b>not in the app yet</b> &mdash; <code>CONFIG.rendering.gradient</code> has no per-segment midpoint. Implementing them means adding a <code>midpoint</code> (0&ndash;1) to each stop pair and honouring it in <code>getEffectGradientRenderStops()</code> / <code>createEffectCanvasGradient()</code>. Ship the rest without the diamonds if that's out of scope for now.</div>
 
 </x-dc>
 </body>

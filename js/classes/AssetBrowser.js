@@ -27,7 +27,7 @@ class AssetBrowser {
 			sentinel: document.getElementById(elementIds.sentinel),
 			emptyState: document.getElementById(elementIds.emptyState),
 			emptyText: document.getElementById(elementIds.emptyText),
-			emptyClearFilters: document.getElementById(elementIds.emptyState)?.querySelector('.empty-state-clear-filters')
+			emptyClearFilters: document.getElementById(elementIds.emptyState)?.querySelector('.property-empty-action')
 		};
 		this.collectionInfo = document.createElement('div');
 		this.collectionInfo.className = 'asset-browser-collection-info';

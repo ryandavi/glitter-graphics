@@ -22,7 +22,7 @@
 }
 
 // Both source displays are toggled via the [hidden] attribute; .asset-info and
-// .text-effect-color-row set display, so they need an explicit override.
+// .property-color-row sets display, so hidden rows need an explicit override.
 .glitter-source-glitter[hidden],
 .glitter-source-solid[hidden] {
 	display: none;
@@ -211,19 +211,7 @@
 	width: 100%;
 }
 
-.text-effect-source-row {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-md);
-
-	// Header grows to fill the row, pushing Change to the far right edge.
-	>.asset-info-header {
-		min-width: 0;
-		flex: 1;
-	}
-}
-
-.text-effect-source-change.target-active,
+.asset-info-change.target-active,
 .asset-info-thumbnail.target-active {
 	border-color: var(--color-accent);
 	box-shadow: 0 0 0 1px var(--color-accent-border);
@@ -293,7 +281,7 @@
 	}
 }
 
-.text-effect-source-change {
+.asset-info-change {
 	flex-shrink: 0;
 	align-self: center;
 	min-height: 28px;
@@ -301,7 +289,7 @@
 	@include text-sm;
 }
 
-.text-effect-color-row {
+.property-color-row {
 	@include spread-row;
 
 	input[type="color"] {

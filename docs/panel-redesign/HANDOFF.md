@@ -3,6 +3,14 @@
 > The original goal statement. Current scope, decisions and per-artboard deltas
 > live in `PLAN-property-panel-system.md`, `PANEL-REDESIGN-SPEC.md` and
 > `PANEL-REDESIGN-ARTBOARD-DIFF.md` (same folder) — where they differ, those win.
+>
+> **Handing this to Codex / another implementer?** Start at
+> [`CODEX-BRIEF.md`](CODEX-BRIEF.md) — it has the reading order, the revised
+> preservation contract, the per-surface table, and a fill-in prompt. The
+> design source of truth is the `.dc.html` files in
+> [`../../design/`](../../design/) (plain HTML + inline CSS, in the repo), **not**
+> the Claude Design artifact URL below, which is a reference render only and
+> cannot be opened by most implementers.
 
 ## The goal
 
@@ -20,7 +28,9 @@ Layers panel and the Add-a-layer modal — the last two for **visual parity only
 bar, tokens, tile grid), no behaviour change. Not the toolbar, canvas, other modals or
 export.
 
-Design canvas: <https://claude.ai/code/artifact/5780b5f2-6f7f-450c-8ee5-3452b602b3ee>
+Design source: [`../../design/*.dc.html`](../../design/) (the visual target, as
+inspectable markup). Reference render (do not hand this URL to an implementer —
+it is not the source): <https://claude.ai/code/artifact/5780b5f2-6f7f-450c-8ee5-3452b602b3ee>
 
 ## Verify before and after every change
 
@@ -93,9 +103,13 @@ hard failure in the panel audit.
 
 ## Suggested opener for a new conversation
 
-> Read `HANDOFF.md` and `PLAN-property-panel-system.md` in this repo. I'm continuing a
-> property-panel design-system refactor of the right sidebar. Goal is consistency: generic
-> reusable classes, one component per concept, so I can change a value in one place.
-> Run `node tools/panel-audit.js` and `node tools/gutter-check.js` before and after every
-> change — both must stay clean. Start with [the gradient editor / whatever you want].
-> Prefer deleting legacy classes over adding rules beside them.
+> Read `docs/panel-redesign/CODEX-BRIEF.md`, then `PANEL-REDESIGN-SPEC.md` and
+> `PANEL-REDESIGN-ARTBOARD-DIFF.md` in the same folder, then the
+> `design/<Surface>.dc.html` for the surface I name. I'm continuing a
+> property-panel redesign of the right sidebar; the structural refactor has
+> landed and this is the **visual parity** pass — make each panel look like its
+> `design/*.dc.html` artboard using the SPEC's §2 tokens and §3 classes.
+> Run `node tools/panel-audit.js`, `node tools/gutter-check.js` and
+> `node tests/panel-parity.js` before and after every change — all must stay
+> clean. Prefer deleting legacy classes over adding rules beside them. Start
+> with [surface].

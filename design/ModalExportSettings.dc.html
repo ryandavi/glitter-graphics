@@ -1,0 +1,178 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    :root{
+      --bg:#292d33; --workspace:#191c20; --card:#2e3339; --sunk:#212429;
+      --border:#383d44; --border-hi:#474d55;
+      --t1:#dfe2e6; --t2:#858c95; --t3:#646a73;
+      --accent:#007bff; --accent-surface:rgba(0,123,255,.16);
+      --pad:8px; --group-gap:16px; --row-h:26px;
+      --label-w:132px; --rev-w:16px; --ctl-w:188px;
+      --r-modal:10px; --r-card:6px; --r-field:4px; --r-inner:3px;
+    }
+    *{box-sizing:border-box}
+    button{font:inherit;color:inherit}
+    a{color:#4ba3ff}a:hover{color:#7dbcff}
+    body{margin:0;background:var(--workspace);color:var(--t1);font-family:"Segoe UI","Tahoma","Verdana",sans-serif;-webkit-font-smoothing:antialiased}
+    .scrim{min-height:100%;padding:36px 24px;display:flex;justify-content:center;align-items:flex-start;background:rgba(10,12,15,.55)}
+    .modal{width:520px;max-width:100%;max-height:680px;background:var(--bg);border:1px solid var(--border-hi);border-radius:var(--r-modal);
+      box-shadow:0 24px 60px rgba(0,0,0,.5);overflow:hidden;display:flex;flex-direction:column}
+    .mhead{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:40px;padding:0 10px;
+      background-image:linear-gradient(to top,#20242a 55%,#3c424a 100%);border-bottom:1px solid var(--border);color:#fff;text-shadow:0 1px 1px #000}
+    .mhead .mi{width:16px;height:16px;opacity:.9}
+    .mhead .mt{flex:1;font-size:13px;font-weight:600}
+    .mhead .mx{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);background:none;border:0;border-radius:var(--r-field);cursor:pointer}
+    .mhead .mx svg{width:13px;height:13px}
+    .mnav{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--sunk)}
+    .mnav .search{flex:1;display:flex;align-items:center;gap:6px;height:26px;padding:0 8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-field);color:var(--t3);font-size:12px}
+    .mnav .search svg{width:12px;height:12px}
+    .mbody{flex:1 1 auto;min-height:0;overflow-y:auto;padding:var(--pad) 0;display:flex;flex-direction:column;gap:var(--group-gap);
+      scrollbar-width:thin;scrollbar-color:var(--border-hi) transparent}
+    .mbody::-webkit-scrollbar{width:9px}
+    .mbody::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:5px;border:2px solid var(--bg)}
+    .mfoot{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--border);background:var(--sunk)}
+    .mfoot .sp{flex:1}
+    .btn{height:28px;padding:0 12px;font-size:12px;font-weight:500;color:var(--t1);background:var(--card);border:1px solid var(--border);border-radius:var(--r-field);cursor:pointer}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn.reset{background:none;border:1px solid var(--border);color:var(--t3);display:inline-flex;align-items:center;gap:5px}
+    .btn.reset svg{width:12px;height:12px}
+    .btn.reset:hover{color:var(--t1);border-color:var(--border-hi)}
+
+    .group{display:flex;flex-direction:column;gap:2px}
+    .glabel{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);padding:0 16px 4px}
+    .glabel .sp{flex:1}
+    /* section-scoped reset — shown only when the section has an edited setting */
+    .glabel .rr{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;color:var(--t2);background:none;border:0;cursor:pointer;visibility:hidden}
+    .glabel .rr.changed{visibility:visible}
+    .glabel .rr:hover{color:var(--accent)}
+    .glabel .rr svg{width:11px;height:11px}
+
+    /* ONE control-width band: every control (dropdown, segmented, slider+value,
+       colorfield, number, switch) sits in a fixed 188px column, right-aligned.
+       So the Format segmented is 188px, not modal-wide; sliders aren't wide. */
+    .row{display:grid;grid-template-columns:1fr var(--ctl-w) var(--rev-w);align-items:center;column-gap:8px;min-height:var(--row-h);padding:3px 16px}
+    .row > .rl{grid-column:1;font-size:11px;color:var(--t2)}
+    .row > .rr{grid-column:3}
+    .row > .sel,.row > .seg{grid-column:2;width:100%}
+    .row > .sw,.row > .num{grid-column:2;justify-self:end}
+    .row > .colorfield{grid-column:2;justify-self:end}
+    .row > .ctl{grid-column:2;display:flex;align-items:center;gap:8px;min-width:0}
+    .row > .ctl .slider{flex:1}
+    .row > .ctl .num{flex:0 0 auto;min-width:0}
+    /* per-row revert — hidden at default, faint on row hover, solid when changed */
+    .rr{width:var(--rev-w);height:var(--rev-w);display:flex;align-items:center;justify-content:center;color:var(--t3);background:none;border:0;padding:0;cursor:pointer;visibility:hidden}
+    .rr svg{width:11px;height:11px}
+    .row:hover > .rr{visibility:visible}
+    .rr.changed{visibility:visible;color:var(--t2)}
+    .rr.changed:hover{color:var(--accent)}
+    .rr.blank{visibility:hidden}
+    .note{font-size:11px;color:var(--t3);line-height:1.4;padding:0 40px 5px 16px}
+
+    .sel{height:24px;display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);padding:0 8px;font-size:12px;color:var(--t1)}
+    .sel svg{width:11px;height:11px;color:var(--t3)}
+    .seg{display:flex;width:100%;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);overflow:hidden}
+    .seg > button{flex:1;height:24px;font-size:11px;color:var(--t2);background:none;border:0;border-left:1px solid var(--border);cursor:pointer}
+    .seg > button:first-child{border-left:0}
+    .seg > button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+    .num{display:inline-flex;align-items:center;justify-content:flex-end;height:22px;min-width:66px;padding:0 6px;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;color:var(--t1);font-variant-numeric:tabular-nums}
+    .num .u{color:var(--t3);margin-left:3px}
+    .slider{position:relative;height:16px;display:flex;align-items:center;min-width:0}
+    .slider .trk{height:4px;width:100%;border-radius:9999px;background:var(--border)}
+    .slider .fil{position:absolute;left:0;height:4px;border-radius:9999px;background:var(--accent)}
+    .slider .knb{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--t1);border:1px solid var(--border);transform:translateX(-50%)}
+    .sw{width:30px;height:16px;border-radius:9999px;background:var(--sunk);border:1px solid var(--border);position:relative;flex:0 0 auto}
+    .sw::after{content:"";position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--t2)}
+    .sw.on{background:var(--accent);border-color:var(--accent)}
+    .sw.on::after{left:15px;background:#fff}
+    /* color field hugs its content (swatch + hex) — no dead space to the right */
+    .colorfield{height:24px;display:inline-flex;align-items:center;gap:7px;padding:0 8px;background:var(--sunk);border:1px solid var(--border);border-radius:var(--r-field);font-size:11px;font-variant-numeric:tabular-nums;color:var(--t1)}
+    .colorfield .sw2{width:13px;height:13px;border-radius:var(--r-inner);border:1px solid rgba(255,255,255,.2)}
+
+    .specnote{margin:10px 16px 16px;padding:6px 8px;border:1px dashed var(--border-hi);border-radius:var(--r-field);font-size:10.5px;line-height:1.45;color:var(--t3)}
+    .specnote::before{content:"SPEC NOTE  ";font-weight:700;letter-spacing:.06em;color:#c8963c}
+  </style>
+</helmet>
+
+<div class="scrim">
+  <div class="modal">
+
+    <div class="mhead">
+      <svg class="mi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 6l3 4 3-4M3 13h10"/></svg>
+      <span class="mt">Export Settings</span>
+      <button class="mx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>
+
+    <div class="mnav">
+      <div class="search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/></svg><span>Search export settings</span></div>
+    </div>
+
+    <div class="mbody">
+
+      <div class="group">
+        <div class="glabel"><span class="sp">Output</span><button class="rr" title="Reset Output to defaults"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button></div>
+        <div class="row">
+          <span class="rl">Format</span>
+          <div class="seg"><button class="on">GIF</button><button>MP4</button><button>PNG</button></div>
+          <span class="rr blank"></span>
+        </div>
+        <div class="row is-toggle"><span class="rl">Transparency</span><span class="sw on"></span><span class="rr blank"></span></div>
+        <div class="note">Keep transparent areas transparent. Off fills them with the matte color.</div>
+        <div class="row">
+          <span class="rl">Matte color</span>
+          <div class="colorfield"><span class="sw2" style="background:#ffffff"></span><span>#FFFFFF</span></div>
+          <span class="rr blank"></span>
+        </div>
+        <div class="row is-toggle"><span class="rl">Include base image</span><span class="sw on"></span><span class="rr blank"></span></div>
+        <div class="row is-toggle"><span class="rl">Watermark</span><span class="sw"></span><span class="rr blank"></span></div>
+      </div>
+
+      <div class="group">
+        <div class="glabel"><span class="sp">Quality</span><button class="rr changed" title="Reset Quality to defaults"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button></div>
+        <div class="row">
+          <span class="rl">GIF Look</span>
+          <div class="sel"><span>Balanced</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></div>
+          <span class="rr blank"></span>
+        </div>
+        <div class="note">Presets set GIF Colors and Dithering together. Change a control below to switch to Custom.</div>
+        <div class="row">
+          <span class="rl">GIF colors</span>
+          <div class="ctl"><div class="slider"><div class="trk"></div><div class="fil" style="width:50%"></div><div class="knb" style="left:50%"></div></div><span class="num">128</span></div>
+          <button class="rr changed" title="Reset to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4.5h4a3.5 3.5 0 0 1 0 7H4"/><path d="M6.5 2.5l-2 2 2 2"/></svg></button>
+        </div>
+        <div class="row is-toggle"><span class="rl">Dithering</span><span class="sw on"></span><span class="rr blank"></span></div>
+        <div class="row">
+          <span class="rl">Pattern</span>
+          <div class="sel"><span>Blue noise</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></div>
+          <span class="rr blank"></span>
+        </div>
+        <div class="row">
+          <span class="rl">Strength</span>
+          <div class="ctl"><div class="slider"><div class="trk"></div><div class="fil" style="width:70%"></div><div class="knb" style="left:70%"></div></div><span class="num">70<span class="u">%</span></span></div>
+          <span class="rr blank"></span>
+        </div>
+      </div>
+
+      <div class="specnote">Same shell, same body rules as Settings; fixed viewport-fraction height with the body as the one scroll region. Format is a <code>.segmented</code> (GIF / MP4 / PNG); the groups below react to it (<code>when:</code> &mdash; MP4 shows Playback + MP4 Quality, GIF shows GIF Look / Colors / Dithering). Every control &mdash; the Format segmented, dropdowns, sliders+value, colorfield, number, switch &mdash; sits in the <b>same 188px right-aligned band</b> as Settings, so nothing (not even Format) stretches modal-wide; the colour field hugs its content. <b>Reset is identical to Settings (rule D):</b> per-row undo icon (hidden / hover / solid-when-changed &mdash; GIF colors shown edited), per-section icon on the <code>.glabel</code> shown only when that section has an edit (Quality yes, Output no), and the footer <b>Reset all</b> (muted, undo glyph, not a peer of the primary Export). "GIF Look" is a preset that writes several rows and flips to Custom on manual edit. All four groups (Output / Playback / Quality / Optimization, ~25 rows) follow this.</div>
+
+    </div>
+
+    <div class="mfoot">
+      <button class="btn reset"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a5 5 0 1 1 1.6 3.7"/><path d="M3 11.5V8h3.5"/></svg>Reset all</button>
+      <span class="sp"></span>
+      <button class="btn">Close</button>
+      <button class="btn primary">Export</button>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+</body>
+</html>

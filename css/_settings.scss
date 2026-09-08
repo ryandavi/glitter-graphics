@@ -96,8 +96,6 @@
 		text-align: center;
 	}
 
-	.transform-panel-footer { display: flex; }
-	.transform-reset-all { width: 100%; }
 }
 
 .transform-control-group {
@@ -208,8 +206,6 @@
 @media (prefers-reduced-motion: reduce) {
 	.inline-processing-spinner { animation: none; }
 }
-
-.effect-option-select { width: 100%; }
 
 .pixel-effects-card {
 	.pixel-effects-controls { margin-top: var(--spacing-sm); }

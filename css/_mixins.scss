@@ -146,6 +146,12 @@ $mobile-breakpoint: 800px;
 	&:is(.active, .selected) {
 		outline-color: var(--color-accent);
 	}
+
+	&:focus-visible {
+		outline-color: var(--color-accent);
+		outline-width: 2px;
+		outline-offset: 2px;
+	}
 }
 
 // The panel's switch, built to the same proportions as the settings modal's

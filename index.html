@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=57190479">
+	<link rel="stylesheet" href="css/style.css?v=fd258d92">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -321,10 +321,10 @@
 						</div>
 
 						<div class="section-content design-gallery-content" id="designGalleryContent">
-							<div class="empty-state auto-glitter-gallery-empty" role="status">
-								<div class="empty-state-icon icon-wrapper xl"><svg class="icon"><use href="#icon-glitter"></use></svg></div>
-								<div class="empty-state-text">Choose a Color Match</div>
-								<div class="empty-state-subtext">Select a glitter swatch in the Auto Glitter Color Matches panel to change it.</div>
+							<div class="property-empty auto-glitter-gallery-empty" role="status">
+								<div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-glitter"></use></svg></div>
+								<div class="property-empty-title">Choose a Color Match</div>
+								<div class="property-empty-text">Select a glitter swatch in the Auto Glitter Color Matches panel to change it.</div>
 							</div>
 
 							<!-- Picker-mode strip (D-1c): names the armed destination.
@@ -360,7 +360,7 @@
 
 											<!-- Based on Name -->
 											<div class="filter-section">
-												<div class="property-set-label">Filter</div>
+												<div class="property-group-label">Filter</div>
 												<div class="property-toggle-list">
 													<label class="property-row is-toggle"><span class="property-label">Search by name only</span><input type="checkbox" id="searchGlitterNameOnly"><span class="property-switch" aria-hidden="true"></span></label>
 												</div>
@@ -368,7 +368,7 @@
 
 											<!-- Based on Tag-->
 											<div class="filter-section">
-												<div class="property-set-label">Colors</div>
+												<div class="property-group-label">Colors</div>
 												<div class="color-filter-chips">
 													<div class="filter-chip color-filter-chip" data-color="red" data-filter="color" title="Red"></div>
 													<div class="filter-chip color-filter-chip" data-color="orange" data-filter="color" title="Orange"></div>
@@ -385,7 +385,7 @@
 
 											<!-- Based on Tag-->
 											<div class="filter-section">
-												<div class="property-set-label">Tone</div>
+												<div class="property-group-label">Tone</div>
 												<div class="filter-chips">
 													<div class="filter-chip text-filter-chip" data-color="light" data-filter="tone" title="Light">Light</div>
 													<div class="filter-chip text-filter-chip" data-color="dark" data-filter="tone" title="dark">Dark</div>
@@ -396,7 +396,7 @@
 											</div>
 
 											<div class="filter-section">
-												<div class="property-set-label">Intensity</div>
+												<div class="property-group-label">Intensity</div>
 												<div class="filter-chips">
 													<div class="filter-chip text-filter-chip" data-color="vivid" data-filter="intensity" title="Vivid">Vivid</div>
 													<div class="filter-chip text-filter-chip" data-color="muted" data-filter="intensity" title="Muted">Muted</div>
@@ -404,7 +404,7 @@
 											</div>
 
 											<div class="filter-section">
-												<div class="property-set-label">Temperature</div>
+												<div class="property-group-label">Temperature</div>
 												<div class="filter-chips">
 													<div class="filter-chip text-filter-chip" data-color="warm" data-filter="temperature" title="Warm">Warm</div>
 													<div class="filter-chip text-filter-chip" data-color="cool" data-filter="temperature" title="Cool">Cool</div>
@@ -412,14 +412,14 @@
 											</div>
 
 											<div class="filter-section">
-												<div class="property-set-label">Category</div>
+												<div class="property-group-label">Category</div>
 												<div class="filter-chips" id="glitterCategoryChips">
 													<!-- Populated dynamically from glitter data -->
 												</div>
 											</div>
 
 											<div class="filter-section">
-												<div class="property-set-label">Vibe</div>
+												<div class="property-group-label">Vibe</div>
 												<div class="filter-chips">
 													<div class="filter-chip text-filter-chip" data-color="pattern" data-filter="special" title="Pattern">Pattern</div>
 													<div class="filter-chip text-filter-chip" data-color="multicolor" data-filter="special" title="Multicolor">Multicolor</div>
@@ -463,10 +463,10 @@
 									<!-- Browser Content -->
 									<div class="asset-browser-content" id="glitterBrowserContent">
 										<!-- Empty State -->
-										<div class="empty-state" id="glitterBrowserEmpty">
-											<div class="empty-state-icon">🔍</div>
-											<div class="empty-state-text" id="glitterBrowserEmptyText">No items found</div>
-											<button class="btn-simple empty-state-clear-filters" type="button" hidden>Clear search and filters</button>
+										<div class="property-empty" id="glitterBrowserEmpty">
+											<div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></div>
+											<div class="property-empty-title" id="glitterBrowserEmptyText">No items found</div>
+											<button class="btn-simple property-empty-action" type="button" hidden>Clear search and filters</button>
 										</div>
 
 										<!-- Category Grid (shown by default) -->
@@ -514,14 +514,14 @@
 
 											<!-- Based on Name -->
 											<div class="filter-section">
-												<div class="property-set-label">Filter</div>
+												<div class="property-group-label">Filter</div>
 												<div class="property-toggle-list">
 													<label class="property-row is-toggle"><span class="property-label">Search by name only</span><input type="checkbox" id="searchStickerNameOnly"><span class="property-switch" aria-hidden="true"></span></label>
 												</div>
 											</div>
 
 											<div class="filter-section">
-												<div class="property-set-label">Motion</div>
+												<div class="property-group-label">Motion</div>
 												<div class="filter-chips">
 													<div class="filter-chip text-filter-chip" data-animated="true" data-filter="animated" title="Animated">Animated</div>
 													<div class="filter-chip text-filter-chip" data-animated="false" data-filter="animated" title="Static">Static</div>
@@ -530,7 +530,7 @@
 
 											<!-- Based on Tag-->
 											<div class="filter-section">
-												<div class="property-set-label">Colors</div>
+												<div class="property-group-label">Colors</div>
 												<div class="color-filter-chips">
 													<div class="filter-chip color-filter-chip" data-color="red" data-filter="color" title="Red"></div>
 													<div class="filter-chip color-filter-chip" data-color="orange" data-filter="color" title="Orange"></div>
@@ -544,7 +544,7 @@
 
 											<!-- Based on Tag-->
 											<div class="filter-section">
-												<div class="property-set-label">Vibe</div>
+												<div class="property-group-label">Vibe</div>
 												<div class="filter-chips">
 													<div class="filter-chip text-filter-chip" data-color="glitter" data-filter="vibe" title="Glitter">Glitter</div>
 													<div class="filter-chip text-filter-chip" data-color="emo" data-filter="vibe" title="Emo">Emo</div>
@@ -553,7 +553,7 @@
 												</div>
 											</div>
 											<div class="filter-section">
-												<div class="property-set-label">Category</div>
+												<div class="property-group-label">Category</div>
 												<div class="filter-chips" id="stickerCategoryChips">
 													<!-- Populated dynamically from sticker data -->
 												</div>
@@ -593,10 +593,10 @@
 									<!-- Browser Content -->
 									<div class="asset-browser-content" id="stickerBrowserContent">
 										<!-- Empty State -->
-										<div class="empty-state" id="stickerBrowserEmpty">
-											<div class="empty-state-icon">🔍</div>
-											<div class="empty-state-text" id="stickerBrowserEmptyText">No items found</div>
-											<button class="btn-simple empty-state-clear-filters" type="button" hidden>Clear search and filters</button>
+										<div class="property-empty" id="stickerBrowserEmpty">
+											<div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></div>
+											<div class="property-empty-title" id="stickerBrowserEmptyText">No items found</div>
+											<button class="btn-simple property-empty-action" type="button" hidden>Clear search and filters</button>
 										</div>
 
 										<!-- Category Grid (shown by default) -->
@@ -634,7 +634,7 @@
 									</div>
 									<div class="active-filter-summary" id="brushTipActiveFilterSummary" role="group" aria-label="Active filters" aria-live="polite" hidden></div>
 									<div class="filters-container" id="brushTipFiltersContainer">
-										<div class="filters-container-inner"><div class="filter-section"><div class="property-set-label">Category</div><div class="filter-chips" id="brushTipCategoryChips"></div></div></div>
+									<div class="filters-container-inner"><div class="filter-section"><div class="property-group-label">Category</div><div class="filter-chips" id="brushTipCategoryChips"></div></div></div>
 										<div class="filter-actions property-actions"><button class="btn-simple secondary" id="clearBrushTipFiltersBtn" disabled>Clear all</button><button class="btn-simple primary" id="closeBrushTipFiltersBtn" type="button">Show results</button></div>
 									</div>
 								</div>
@@ -647,7 +647,7 @@
 										<div class="asset-browser-title" id="brushTipBrowserTitle">Brush Tips</div>
 									</div>
 									<div class="asset-browser-content" id="brushTipBrowserContent">
-										<div class="empty-state" id="brushTipBrowserEmpty"><div class="empty-state-icon">🔍</div><div class="empty-state-text" id="brushTipBrowserEmptyText">No items found</div><button class="btn-simple empty-state-clear-filters" type="button" hidden>Clear search and filters</button></div>
+										<div class="property-empty" id="brushTipBrowserEmpty"><div class="property-empty-icon icon-wrapper xl"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></div><div class="property-empty-title" id="brushTipBrowserEmptyText">No items found</div><button class="btn-simple property-empty-action" type="button" hidden>Clear search and filters</button></div>
 										<div class="category-grid" id="brushTipCategoryGrid"></div>
 										<div class="search-results-container" id="brushTipSearchResults"></div>
 										<div class="asset-grid" id="brushTipItemGrid"></div>
@@ -659,14 +659,14 @@
 							<!-- Base Layer Settings Section -->
 							<div class="base-layer-settings-section section collapsible-section" id="baseLayerSettingsSection">
 								<div class="section-content">
-									<div class="empty-state visible">
-										<div class="empty-state-icon icon-wrapper xl">
+									<div class="property-empty visible">
+										<div class="property-empty-icon icon-wrapper xl">
 											<svg class="icon">
 												<use href="#icon-lock"></use>
 											</svg>
 										</div>
-										<div class="empty-state-text">Canvas Properties</div>
-										<div class="empty-state-subtext">
+										<div class="property-empty-title">Canvas Properties</div>
+										<div class="property-empty-text">
 											The background is protected from moving or deletion, but its appearance can be edited.
 										</div>
 									</div>
@@ -677,16 +677,16 @@
 							<div class="no-layer-settings-section section" id="noLayerSettingsSection">
 								<div class="section-content">
 
-									<div class="empty-state visible">
+									<div class="property-empty visible">
 
 
-										<div class="empty-state-icon icon-wrapper xl">
+										<div class="property-empty-icon icon-wrapper xl">
 											<svg class="icon">
 												<use href="#icon-layers"></use>
 											</svg>
 										</div>
-										<div class="empty-state-text" id="noLayerEmptyText">Canvas</div>
-										<div class="empty-state-subtext" id="noLayerEmptySubtext">
+										<div class="property-empty-title" id="noLayerEmptyText">Canvas</div>
+										<div class="property-empty-text" id="noLayerEmptySubtext">
 											Select a layer to edit it, or add new content below.
 										</div>
 									</div>
@@ -2495,7 +2495,7 @@
 		<div class="property-pair-group"></div>
 	</template>
 	<template id="tpl-segmented">
-		<div class="segmented-control text-effect-mode-group"></div>
+		<div class="segmented-control"></div>
 	</template>
 	<template id="tpl-segmented-option">
 		<button class="segmented-option" type="button"></button>
@@ -2507,7 +2507,7 @@
 	</template>
 	<template id="tpl-paint-source">
 		<div class="glitter-source">
-			<div class="property-row text-effect-color-row glitter-source-solid">
+			<div class="property-row property-color-row glitter-source-solid">
 				<span class="property-label">Solid Color</span>
 				<input type="color">
 			</div>
@@ -2515,7 +2515,7 @@
 	</template>
 	<template id="tpl-asset-info">
 		<div class="asset-info glitter-source-glitter" hidden>
-			<div class="asset-info-header"><div class="asset-info-thumbnail"></div><div class="asset-info-details"><div class="asset-info-name">Glitter</div><div class="asset-info-badges"></div></div><button class="btn-simple text-effect-source-change" type="button">Change</button></div>
+			<div class="asset-info-header"><div class="asset-info-thumbnail"></div><div class="asset-info-details"><div class="asset-info-name">Glitter</div><div class="asset-info-badges"></div></div><button class="btn-simple asset-info-change" type="button">Change</button></div>
 			<div class="property-pair-group asset-info-meta"><div class="property-meta-cell"><span class="property-label">Size</span><span class="property-value"></span></div><div class="property-meta-cell"><span class="property-label">Frames</span><span class="property-value"></span></div></div>
 		</div>
 	</template>
@@ -2524,9 +2524,6 @@
 	</template>
 	<template id="tpl-number-pair">
 		<div class="property-inset sticker-position-group"><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div><div class="input-group horizontal"><label></label><span class="input-unit"><input type="number"><span class="input-unit-suffix">px</span></span></div></div>
-	</template>
-	<template id="tpl-action-row">
-		<div class="property-actions"><button class="btn-simple" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-simple" data-prefix-id="FillCanvas" type="button">Fill canvas</button></div>
 	</template>
 	<template id="tpl-advanced">
 		<div class="advanced-disclosure glitter-source-glitter" data-advanced>
@@ -2552,8 +2549,8 @@
 	<template id="tpl-gradient-editor">
 		<div class="effect-gradient-editor carded-subsection" hidden>
 			<div class="property-pair-group effect-stack-row gradient-option-rows">
-				<div class="property-row is-stacked"><div class="property-label">Type</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-type="linear">Linear</button><button type="button" class="segmented-option" data-type="radial">Radial</button></div></div>
-				<div class="property-row is-stacked"><div class="property-label">Blend</div><div class="segmented-control text-effect-mode-group"><button type="button" class="segmented-option" data-interpolation="linear">Linear</button><button type="button" class="segmented-option" data-interpolation="smooth">Smooth</button><button type="button" class="segmented-option" data-interpolation="steps">Constant</button></div></div>
+				<div class="property-row is-stacked"><div class="property-label">Type</div><div class="segmented-control"><button type="button" class="segmented-option" data-type="linear">Linear</button><button type="button" class="segmented-option" data-type="radial">Radial</button></div></div>
+				<div class="property-row is-stacked"><div class="property-label">Blend</div><div class="segmented-control"><button type="button" class="segmented-option" data-interpolation="linear">Linear</button><button type="button" class="segmented-option" data-interpolation="smooth">Smooth</button><button type="button" class="segmented-option" data-interpolation="steps">Constant</button></div></div>
 			</div>
 			<div class="property-set-label">Stops</div>
 			<div class="gradient-stops-box">
@@ -2574,10 +2571,7 @@
 		</div>
 	</template>
 	<template id="tpl-transform-panel">
-		<div class="subsection-content-group transform-panel" data-transform-actions>
-			<div class="subsection-title">Actions</div>
-			<div data-transform-action-row></div>
-		</div>
+		<div class="property-actions" data-transform-actions><button class="btn-simple" data-prefix-id="FitCanvas" type="button">Fit canvas</button><button class="btn-simple" data-prefix-id="FillCanvas" type="button">Fill canvas</button><button class="btn-simple" type="button" data-transform-role="resetTransform">Reset Transform</button></div>
 		<div class="subsection-content-group property-card transform-panel" data-transform-card>
 			<div class="subsection-title transform-panel-title"><span>Transform</span><div class="transform-panel-title-actions"><label class="property-header-switch transform-chip" data-transform-lock title="Lock aspect ratio when editing size"><input type="checkbox" data-transform-role="proportional" checked aria-label="Lock aspect ratio"><span>Lock Aspect</span></label></div></div>
 			<div class="transform-grid">
@@ -2589,15 +2583,14 @@
 					<div class="property-row transform-scale-control transform-scale-y" data-transform-scale-readout><span class="property-label">Scale Y</span><input type="range" data-transform-role="scaleY"><span class="property-value" data-transform-role="scaleYValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleY"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
 				</div>
 				<div class="property-set"><div class="property-set-label">Rotation</div><div class="property-row"><span class="property-label">Angle</span><input type="range" data-transform-role="rotation"><span class="property-value" data-transform-role="rotationValue">0&deg;</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetRotation"><svg class="icon"><use href="#icon-undo"></use></svg></button></div></div>
-				<div class="transform-panel-footer"><button class="btn-simple transform-reset-all" type="button" data-transform-role="resetTransform">Reset Transform</button></div>
+				<div class="property-set" data-transform-align>
+					<div class="property-set-label">Align</div>
+					<div class="property-row is-stacked"><span class="property-label">Horizontal</span><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align left to canvas" data-transform-role="alignLeft">Left</button><button class="segmented-option" type="button" title="Center horizontally on canvas" data-transform-role="alignCenterX">Center</button><button class="segmented-option" type="button" title="Align right to canvas" data-transform-role="alignRight">Right</button></div></div>
+					<div class="property-row is-stacked"><span class="property-label">Vertical</span><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align top to canvas" data-transform-role="alignTop">Top</button><button class="segmented-option" type="button" title="Center vertically on canvas" data-transform-role="alignCenterY">Middle</button><button class="segmented-option" type="button" title="Align bottom to canvas" data-transform-role="alignBottom">Bottom</button></div></div>
+				</div>
+				<div class="property-set" data-transform-flip><div class="property-set-label">Flip</div><div class="property-toggle-list"><label class="property-row is-toggle"><span class="property-label" title="Flip horizontally">Flip H</span><input type="checkbox" data-transform-role="flipX"><span class="property-switch" aria-hidden="true"></span></label><label class="property-row is-toggle"><span class="property-label" title="Flip vertically">Flip V</span><input type="checkbox" data-transform-role="flipY"><span class="property-switch" aria-hidden="true"></span></label></div></div>
 			</div>
 		</div>
-		<div class="subsection-content-group transform-panel" data-transform-align>
-			<div class="subsection-title">Align</div>
-			<div class="transform-control-group property-set"><div class="property-set-label">Horizontal</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align left to canvas" data-transform-role="alignLeft">Left</button><button class="segmented-option" type="button" title="Center horizontally on canvas" data-transform-role="alignCenterX">Center</button><button class="segmented-option" type="button" title="Align right to canvas" data-transform-role="alignRight">Right</button></div></div>
-			<div class="transform-control-group property-set"><div class="property-set-label">Vertical</div><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align top to canvas" data-transform-role="alignTop">Top</button><button class="segmented-option" type="button" title="Center vertically on canvas" data-transform-role="alignCenterY">Middle</button><button class="segmented-option" type="button" title="Align bottom to canvas" data-transform-role="alignBottom">Bottom</button></div></div>
-		</div>
-		<div class="subsection-content-group transform-panel" data-transform-flip><div class="subsection-title">Flip</div><div class="property-toggle-list"><label class="property-row is-toggle"><span class="property-label" title="Flip horizontally">Flip H</span><input type="checkbox" data-transform-role="flipX"><span class="property-switch" aria-hidden="true"></span></label><label class="property-row is-toggle"><span class="property-label" title="Flip vertically">Flip V</span><input type="checkbox" data-transform-role="flipY"><span class="property-switch" aria-hidden="true"></span></label></div></div>
 		<div class="subsection-content-group transform-panel" data-transform-opacity><div class="subsection-title">Appearance</div><div class="property-row"><span class="property-label">Opacity</span><input type="range" data-transform-role="opacity"><span class="property-value" data-transform-role="opacityValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetOpacity"><svg class="icon"><use href="#icon-undo"></use></svg></button></div></div>
 	</template>
 
@@ -2616,11 +2609,11 @@
 		</button>
 	</template>
 	<template id="tpl-category-card">
-		<div class="category-card">
+		<button class="choice-card category-card" type="button">
 			<div class="category-card-image"></div>
 			<div class="category-card-name"></div>
 			<div class="category-card-count"></div>
-		</div>
+		</button>
 	</template>
 
 	<!-- External Libs (self-hosted; gif.js pairs with js/workers/gif.worker.js) -->
@@ -2629,7 +2622,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=f5273c34"></script>
+	<script src="js/core/config.js?v=68cd8d96"></script>
 	<script src="js/core/key-labels.js?v=01376e04"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
@@ -2654,7 +2647,7 @@
 	<script src="js/effects/pixel-effects.js?v=c68cfdfc"></script>
 	<script src="js/effects/effect-source.js?v=ef695f2e"></script>
 	<script src="js/effects/slot-effects.js?v=b10d7733"></script>
-	<script src="js/ui/panel-renderer.js?v=e246718f"></script>
+	<script src="js/ui/panel-renderer.js?v=273ea5f3"></script>
 	<script src="js/ui/settings-store.js?v=94ba4d01"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
@@ -2697,9 +2690,9 @@
 	<script src="js/classes/LayerManager.js?v=a96a75a7"></script>
 
 	<!-- Content -->
-	<script src="js/classes/AssetBrowser.js?v=06e2b458"></script>
-	<script src="js/classes/ContentManager.js?v=a71a7157"></script>
-	<script src="js/classes/BrushTipManager.js?v=68f1cea1"></script>
+	<script src="js/classes/AssetBrowser.js?v=af14bba7"></script>
+	<script src="js/classes/ContentManager.js?v=d059fb30"></script>
+	<script src="js/classes/BrushTipManager.js?v=150d1066"></script>
 	<script src="js/classes/LayerTransform.js?v=8ac8c72f"></script>
 	<script src="js/classes/GlitterManager.js?v=3c3bfe93"></script>
 	<script src="js/classes/BaseBackgroundManager.js?v=b05ee77d"></script>

@@ -647,7 +647,7 @@ class ContentManager {
 		summary.replaceChildren(...filters.map((filter) => {
 			const chip = document.createElement('button');
 			chip.type = 'button';
-			chip.className = 'active-filter-summary-chip';
+			chip.className = 'filter-chip is-removable';
 			chip.setAttribute('aria-label', `Remove ${filter.label} filter`);
 			const label = document.createElement('span');
 			label.textContent = filter.label;
