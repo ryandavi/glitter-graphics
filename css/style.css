@@ -8458,15 +8458,15 @@ body.is-resizing-panel canvas {
   margin-inline: 0;
   padding-inline: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-set + .property-set {
-  border-top: 1px solid var(--color-border);
-}
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-grid,
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-main {
   gap: 0;
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-set {
   padding: var(--property-pad) 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-set + .property-set {
+  border-top: 1px solid var(--color-border);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-set .property-set-label {
   display: none;

@@ -1994,7 +1994,6 @@ body.is-resizing-panel {
 	}
 
 	.subsection-card-body {
-		// padding: var(--property-gutter) 0;
 		padding: 0;
 		background: var(--color-bg-primary);
 	}
@@ -2010,7 +2009,7 @@ body.is-resizing-panel {
 		padding: var(--property-pad);
 		border-top: 1px solid var(--color-border);
 
-		// layer effects just floats
+		// layer effects just floats - no border or background
 		&.layer-effects-actions {
 			background: none;
 			border-top: none;
@@ -2075,6 +2074,7 @@ body.is-resizing-panel {
 		}
 	}
 
+	// make it look more like transform
 	.paint-slot-main {
 		// padding: var(--property-pad) 0;
 		padding: 0;
