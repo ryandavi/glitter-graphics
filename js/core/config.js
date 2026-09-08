@@ -1263,10 +1263,11 @@ const PANEL_SCHEMAS = {
 		sectionPrefix: 'baseLayerSettings',
 		mobileKey: 'background',
 		replaceStatic: true,
-		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties' },
+		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties', classes: 'panel-redesign' },
 		groups: [
 			{ title: 'Appearance', items: [
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background',
+					redesign: true, coordinateFields: false, sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['image', 'none', 'glitter', 'solid'], activeMode: 'image', color: '#ffffff',
 					modeLabels: { none: 'Transparent' },
@@ -1275,7 +1276,7 @@ const PANEL_SCHEMAS = {
 					imageAsset: {
 						info: 'baseBackgroundImageInfo', thumbnail: 'baseBackgroundImageThumbnail',
 						name: 'baseBackgroundImageName', badges: 'baseBackgroundImageBadges',
-						change: 'baseBackgroundImageChange', title: 'Replace base image', compact: true
+						change: 'baseBackgroundImageChange', title: 'Replace base image', compact: true, redesign: true
 					},
 					primaryIds: { scale: 'baseBackgroundScale', opacity: 'baseBackgroundOpacity' }
 				}
@@ -1285,15 +1286,17 @@ const PANEL_SCHEMAS = {
 			] },
 
 			{ title: 'Effects', collapsible: false, items: [
-				{ kind: 'card', classes: 'pixelate-effect-card', title: 'Pixelate', toggle: { id: 'pixelEffectsPixelateEnabled', label: 'Enabled' }, items: [
+				{ kind: 'card', classes: 'pixelate-effect-card panel-module', title: 'Pixelate', collapsible: true, toggle: { id: 'pixelEffectsPixelateEnabled', label: 'Enabled' }, items: [
 					{ kind: 'slider', id: 'pixelEffectsPixelSize', slider: 'pixelEffectsPixelSize', title: '1 is off; larger values create crisp mosaic cells before palette processing' },
+					{ kind: 'host', classes: 'property-note panel-note', text: 'Larger cell sizes create a crisp mosaic before palette processing.' }
 				] },
-				{ kind: 'card', classes: 'pixel-effects-card', title: 'Palette', toggle: { id: 'pixelEffectsPaletteEnabled', label: 'Enabled' }, items: [
+				{ kind: 'card', classes: 'pixel-effects-card panel-module', title: 'Palette', collapsible: true, toggle: { id: 'pixelEffectsPaletteEnabled', label: 'Enabled' }, items: [
 					{ kind: 'segmented', id: 'pixelEffectsPaletteMode', label: 'Palette effect', options: [
 							{ label: 'Posterize', value: 'posterize', active: true }, { label: 'Dither', value: 'dither' }
 					] },
 					{ kind: 'processingStatus', id: 'pixelEffectsStatus', classes: 'pixel-effects-status' },
-					{ kind: 'card', id: 'pixelEffectsPaletteControls', title: 'Colors', classes: 'pixel-effects-controls pixel-effects-control-section', hidden: true, items: [
+					{ kind: 'content', id: 'pixelEffectsPaletteControls', classes: 'pixel-effects-controls pixel-effects-control-section', hidden: true, items: [
+						{ kind: 'host', classes: 'property-set-label', text: 'Colors' },
 						{ kind: 'segmented', id: 'pixelEffectsPaletteStyle', label: 'Palette style', visibleLabel: 'Palette Style', options: [
 							{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced', active: true }, { label: 'Natural', value: 'natural' }
 						] },
@@ -1312,28 +1315,31 @@ const PANEL_SCHEMAS = {
 							{ label: 'Auto (Image Colors)', value: 'auto', active: true }, { label: 'Black & White', value: 'bw' }, { label: 'Game Boy', value: 'gameboy' }, { label: 'CGA', value: 'cga' }, { label: 'Sepia', value: 'sepia' }, { label: 'Duotone', value: 'duotone' }
 						] },
 						{ kind: 'host', id: 'pixelEffectsDuotone', classes: 'property-color-row pixel-effects-duotone' },
-						{ kind: 'card', title: 'Pattern', classes: 'pixel-effects-control-section', items: [
+						{ kind: 'content', classes: 'pixel-effects-control-section', items: [
+							{ kind: 'host', classes: 'property-set-label', text: 'Pattern' },
 							{ kind: 'slider', id: 'pixelEffectsStrength', slider: 'pixelEffectsStrength' },
 							{ kind: 'slider', id: 'pixelEffectsDitherScale', slider: 'pixelEffectsDitherScale' },
 							{ kind: 'slider', id: 'pixelEffectsAngle', slider: 'pixelEffectsAngle' }
 						] },
-						{ kind: 'card', title: 'Shimmer', classes: 'pixel-effects-control-section', items: [
+						{ kind: 'content', classes: 'pixel-effects-control-section', items: [
+							{ kind: 'host', classes: 'property-set-label', text: 'Shimmer' },
 							{ kind: 'checkboxList', items: [{ id: 'pixelEffectsShimmer', label: 'Animate Dither', title: 'Animate the Bayer or Halftone pattern in the preview and exported GIF' }] },
 							{ kind: 'host', id: 'pixelEffectsShimmerHint', classes: 'property-note', text: 'Bayer and Halftone only. Animates the preview and exported GIF; may increase file size.' }
 						] }
 					] }
 				] },
-				{ kind: 'card', title: 'Reset', classes: 'pixel-effects-reset-card', items: [
+				{ kind: 'card', bare: true, classes: 'pixel-effects-reset-card', items: [
 					{ kind: 'actionRow', classes: 'pixel-effects-actions', actions: [
 						{ id: 'resetPixelEffects', label: 'Reset Effects', secondary: true, title: 'Restore all Pixelate and Palette settings to their defaults' }
 					] }
 				] }
 			] },
 			{ title: 'Actions', items: [
-				{ kind: 'card', items: [
+				{ kind: 'card', bare: true, items: [
 					{ kind: 'actionRow', actions: [
 						{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', primary: true, title: 'Turn the image colors into editable glitter fill layers' }
-					] }
+					] },
+					{ kind: 'host', classes: 'property-note panel-note', text: 'Turn the image colors into editable glitter fill layers.' }
 				] }
 			] },
 

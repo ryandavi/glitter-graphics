@@ -723,13 +723,13 @@
 										<!-- Document sizing is moved intact into Canvas Properties at boot.
 										     Keeping the source markup here preserves the existing
 										     ids/listeners without duplicating controls. -->
-										<div class="subsection-content-group" id="documentSizeGroup">
-											<div class="subsection-title">Size</div>
+										<div class="document-size-group" id="documentSizeGroup">
 											<div class="segmented-control document-size-mode" id="documentSizeMode" aria-label="Sizing operation">
 												<button class="segmented-option active" type="button" data-size-mode="image" aria-pressed="true">Image Size</button>
 												<button class="segmented-option" type="button" data-size-mode="canvas" aria-pressed="false">Canvas Size</button>
 											</div>
-											<div class="subsection-content property-block document-size-panel" id="canvasSizePanel" hidden>
+											<div class="subsection-content-group property-card panel-module document-size-panel" id="canvasSizePanel" data-collapsible-subsection hidden>
+												<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Canvas Size</div>
 												<div class="canvas-size-controls">
 													<div class="property-note">Crop or extend the canvas without scaling content.</div>
 											<div class="subsection-content-group property-card document-size-card">
@@ -763,7 +763,8 @@
 											</div>
 										</div>
 
-									<div class="property-block document-size-panel" id="scaleDesignPanel">
+									<div class="subsection-content-group property-card panel-module document-size-panel" id="scaleDesignPanel" data-collapsible-subsection>
+										<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Image Size</div>
 											<div class="subsection-content">
 												<div class="canvas-size-controls scale-design-controls">
 													<div class="property-note">Resize the canvas and everything in the design. Proportions stay linked.</div>
@@ -2622,7 +2623,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=4235444d"></script>
+	<script src="js/core/config.js?v=79be8bdd"></script>
 	<script src="js/core/key-labels.js?v=01376e04"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
