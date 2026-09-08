@@ -3,32 +3,20 @@
 		{
 			"id": "noLayerSettingsSection",
 			"tag": "div",
-			"classes": "collapsible-section no-layer-settings-section panel-redesign section visible",
+			"classes": "no-layer-settings-section panel-redesign section visible",
 			"parent": "designGalleryContent"
 		},
 		{
-			"id": "noLayerSettingsHeader",
+			"id": "noLayerSettingsContent",
 			"tag": "div",
-			"classes": "section-header section-header-with-action",
+			"classes": "section-content",
 			"parent": "noLayerSettingsSection"
 		},
 		{
 			"id": "noLayerEmptyText",
 			"tag": "span",
-			"classes": "section-header-title-text",
-			"parent": "noLayerSettingsHeader"
-		},
-		{
-			"id": "noLayerSettingsToggle",
-			"tag": "div",
-			"classes": "btn-icon collapsed section-header-action visible",
-			"parent": "noLayerSettingsHeader"
-		},
-		{
-			"id": "noLayerSettingsContent",
-			"tag": "div",
-			"classes": "section-content visible",
-			"parent": "noLayerSettingsSection"
+			"classes": "",
+			"parent": "noLayerSettingsContent"
 		},
 		{
 			"id": "noLayerEmptySubtext",
@@ -104,10 +92,16 @@
 			"parent": "projectMetaGroup"
 		},
 		{
+			"id": "noLayerSizeModule",
+			"tag": "div",
+			"classes": "panel-module property-card subsection-content-group",
+			"parent": "noLayerDefaultGroups"
+		},
+		{
 			"id": "noLayerCanvasSizeHost",
 			"tag": "div",
-			"classes": "",
-			"parent": "noLayerDefaultGroups"
+			"classes": "subsection-card-body",
+			"parent": "noLayerSizeModule"
 		},
 		{
 			"id": "documentSizeGroup",
@@ -124,7 +118,7 @@
 		{
 			"id": "canvasSizePanel",
 			"tag": "div",
-			"classes": "document-size-panel has-subsection-title panel-module property-card subsection-content-group",
+			"classes": "document-size-panel panel-module property-card subsection-content-group",
 			"parent": "documentSizeGroup"
 		},
 		{
@@ -218,7 +212,7 @@
 		{
 			"id": "scaleDesignPanel",
 			"tag": "div",
-			"classes": "document-size-panel has-subsection-title panel-module property-card subsection-content-group",
+			"classes": "document-size-panel panel-module property-card subsection-content-group",
 			"parent": "documentSizeGroup"
 		},
 		{
@@ -311,9 +305,34 @@
 			"parent": "noLayerSettingsContent"
 		},
 		{
+			"id": "multiSelectionOpacity",
+			"tag": "input",
+			"classes": "",
+			"parent": "multiLayerSelectionGroup",
+			"input": {
+				"type": "range",
+				"min": "0",
+				"max": "100",
+				"step": "1",
+				"value": "100"
+			}
+		},
+		{
+			"id": "multiSelectionOpacityValue",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
+			"id": "resetMultiSelectionOpacity",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "multiLayerSelectionGroup"
+		},
+		{
 			"id": "multiSelectionAlignScope",
 			"tag": "div",
-			"classes": "segmented-control transform-segmented-control",
+			"classes": "segmented-control",
 			"parent": "multiLayerSelectionGroup"
 		},
 		{
@@ -616,24 +635,12 @@
 			"classes": "",
 			"parent": "baseLayerSettingsContent",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
-		},
-		{
-			"id": "baseBackgroundTextureOffsetXValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "baseLayerSettingsContent"
-		},
-		{
-			"id": "resetBaseBackgroundTextureOffsetX",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "baseLayerSettingsContent"
 		},
 		{
 			"id": "baseBackgroundTextureOffsetY",
@@ -641,21 +648,15 @@
 			"classes": "",
 			"parent": "baseLayerSettingsContent",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
 		},
 		{
-			"id": "baseBackgroundTextureOffsetYValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "baseLayerSettingsContent"
-		},
-		{
-			"id": "resetBaseBackgroundTextureOffsetY",
+			"id": "baseBackgroundResetTexturePosition",
 			"tag": "button",
 			"classes": "property-revert",
 			"parent": "baseLayerSettingsContent"
@@ -1249,24 +1250,12 @@
 			"classes": "",
 			"parent": "glitterSettingsControls",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
-		},
-		{
-			"id": "glitterFillTextureOffsetXValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "glitterSettingsControls"
-		},
-		{
-			"id": "resetGlitterFillTextureOffsetX",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "glitterSettingsControls"
 		},
 		{
 			"id": "glitterFillTextureOffsetY",
@@ -1274,21 +1263,15 @@
 			"classes": "",
 			"parent": "glitterSettingsControls",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
 		},
 		{
-			"id": "glitterFillTextureOffsetYValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "glitterSettingsControls"
-		},
-		{
-			"id": "resetGlitterFillTextureOffsetY",
+			"id": "glitterFillResetTexturePosition",
 			"tag": "button",
 			"classes": "property-revert",
 			"parent": "glitterSettingsControls"
@@ -1751,25 +1734,6 @@
 			}
 		},
 		{
-			"id": "stickerProportionalScale",
-			"tag": "input",
-			"classes": "",
-			"parent": "stickerTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "true"
-			}
-		},
-		{
-			"id": "resetStickerProportionalScale",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "stickerTransformPanelHost"
-		},
-		{
 			"id": "stickerSizeGroup",
 			"tag": "div",
 			"classes": "is-pair property-row row transform-pair-row",
@@ -1800,6 +1764,25 @@
 				"step": null,
 				"value": ""
 			}
+		},
+		{
+			"id": "stickerProportionalScale",
+			"tag": "input",
+			"classes": "",
+			"parent": "stickerTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "true"
+			}
+		},
+		{
+			"id": "resetStickerProportionalScale",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "stickerTransformPanelHost"
 		},
 		{
 			"id": "stickerTransformScaleX",
@@ -1877,6 +1860,38 @@
 			"parent": "stickerTransformPanelHost"
 		},
 		{
+			"id": "stickerFlipX",
+			"tag": "input",
+			"classes": "",
+			"parent": "stickerTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "false"
+			}
+		},
+		{
+			"id": "stickerFlipY",
+			"tag": "input",
+			"classes": "",
+			"parent": "stickerTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "false"
+			}
+		},
+		{
+			"id": "resetStickerFlip",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "stickerTransformPanelHost"
+		},
+		{
 			"id": "stickerAlignLeft",
 			"tag": "button",
 			"classes": "segmented-option",
@@ -1910,38 +1925,6 @@
 			"id": "stickerAlignBottom",
 			"tag": "button",
 			"classes": "segmented-option",
-			"parent": "stickerTransformPanelHost"
-		},
-		{
-			"id": "stickerFlipX",
-			"tag": "input",
-			"classes": "",
-			"parent": "stickerTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "false"
-			}
-		},
-		{
-			"id": "stickerFlipY",
-			"tag": "input",
-			"classes": "",
-			"parent": "stickerTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "false"
-			}
-		},
-		{
-			"id": "resetStickerFlip",
-			"tag": "button",
-			"classes": "property-revert",
 			"parent": "stickerTransformPanelHost"
 		},
 		{
@@ -2720,25 +2703,6 @@
 			}
 		},
 		{
-			"id": "textProportionalScale",
-			"tag": "input",
-			"classes": "",
-			"parent": "textTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "true"
-			}
-		},
-		{
-			"id": "resetTextProportionalScale",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "textTransformPanelHost"
-		},
-		{
 			"id": "textSizeGroup",
 			"tag": "div",
 			"classes": "is-pair property-row row transform-pair-row",
@@ -2769,6 +2733,25 @@
 				"step": null,
 				"value": ""
 			}
+		},
+		{
+			"id": "textProportionalScale",
+			"tag": "input",
+			"classes": "",
+			"parent": "textTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "true"
+			}
+		},
+		{
+			"id": "resetTextProportionalScale",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textTransformPanelHost"
 		},
 		{
 			"id": "textTransformScaleX",
@@ -2846,6 +2829,38 @@
 			"parent": "textTransformPanelHost"
 		},
 		{
+			"id": "textFlipX",
+			"tag": "input",
+			"classes": "",
+			"parent": "textTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "false"
+			}
+		},
+		{
+			"id": "textFlipY",
+			"tag": "input",
+			"classes": "",
+			"parent": "textTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "false"
+			}
+		},
+		{
+			"id": "resetTextFlip",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textTransformPanelHost"
+		},
+		{
 			"id": "textAlignLeft",
 			"tag": "button",
 			"classes": "segmented-option",
@@ -2879,38 +2894,6 @@
 			"id": "textAlignBottom",
 			"tag": "button",
 			"classes": "segmented-option",
-			"parent": "textTransformPanelHost"
-		},
-		{
-			"id": "textFlipX",
-			"tag": "input",
-			"classes": "",
-			"parent": "textTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "false"
-			}
-		},
-		{
-			"id": "textFlipY",
-			"tag": "input",
-			"classes": "",
-			"parent": "textTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "false"
-			}
-		},
-		{
-			"id": "resetTextFlip",
-			"tag": "button",
-			"classes": "property-revert",
 			"parent": "textTransformPanelHost"
 		},
 		{
@@ -2949,31 +2932,6 @@
 			"tag": "div",
 			"classes": "property-module-content",
 			"parent": "textSettingsContent"
-		},
-		{
-			"id": "textBorderWidth",
-			"tag": "input",
-			"classes": "",
-			"parent": "textBorderControls",
-			"input": {
-				"type": "range",
-				"min": "1",
-				"max": "24",
-				"step": null,
-				"value": "4"
-			}
-		},
-		{
-			"id": "textBorderWidthValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "textBorderControls"
-		},
-		{
-			"id": "resetTextBorderWidth",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "textBorderControls"
 		},
 		{
 			"id": "textBorderUseGlitter",
@@ -3053,6 +3011,31 @@
 				"step": null,
 				"value": "#000000"
 			}
+		},
+		{
+			"id": "textBorderWidth",
+			"tag": "input",
+			"classes": "",
+			"parent": "textBorderControls",
+			"input": {
+				"type": "range",
+				"min": "1",
+				"max": "24",
+				"step": null,
+				"value": "4"
+			}
+		},
+		{
+			"id": "textBorderWidthValue",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "textBorderControls"
+		},
+		{
+			"id": "resetTextBorderWidth",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "textBorderControls"
 		},
 		{
 			"id": "textBorderScaleRow",
@@ -3646,7 +3629,7 @@
 				"min": "0",
 				"max": "100",
 				"step": null,
-				"value": "12"
+				"value": "0"
 			}
 		},
 		{
@@ -3889,24 +3872,12 @@
 			"classes": "",
 			"parent": "shapeSettingsContent",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
-		},
-		{
-			"id": "shapeFillTextureOffsetXValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "shapeSettingsContent"
-		},
-		{
-			"id": "resetShapeFillTextureOffsetX",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeFillTextureOffsetY",
@@ -3914,21 +3885,15 @@
 			"classes": "",
 			"parent": "shapeSettingsContent",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
 		},
 		{
-			"id": "shapeFillTextureOffsetYValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "shapeSettingsContent"
-		},
-		{
-			"id": "resetShapeFillTextureOffsetY",
+			"id": "shapeFillResetTexturePosition",
 			"tag": "button",
 			"classes": "property-revert",
 			"parent": "shapeSettingsContent"
@@ -3991,25 +3956,6 @@
 			}
 		},
 		{
-			"id": "shapeProportionalScale",
-			"tag": "input",
-			"classes": "",
-			"parent": "shapeTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "true"
-			}
-		},
-		{
-			"id": "resetShapeProportionalScale",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "shapeTransformPanelHost"
-		},
-		{
 			"id": "shapeSizeGroup",
 			"tag": "div",
 			"classes": "is-pair property-row row transform-pair-row",
@@ -4040,6 +3986,25 @@
 				"step": null,
 				"value": ""
 			}
+		},
+		{
+			"id": "shapeProportionalScale",
+			"tag": "input",
+			"classes": "",
+			"parent": "shapeTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "true"
+			}
+		},
+		{
+			"id": "resetShapeProportionalScale",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "shapeTransformPanelHost"
 		},
 		{
 			"id": "shapeTransformScaleX",
@@ -4117,6 +4082,38 @@
 			"parent": "shapeTransformPanelHost"
 		},
 		{
+			"id": "shapeFlipX",
+			"tag": "input",
+			"classes": "",
+			"parent": "shapeTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "false"
+			}
+		},
+		{
+			"id": "shapeFlipY",
+			"tag": "input",
+			"classes": "",
+			"parent": "shapeTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "false"
+			}
+		},
+		{
+			"id": "resetShapeFlip",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "shapeTransformPanelHost"
+		},
+		{
 			"id": "shapeAlignLeft",
 			"tag": "button",
 			"classes": "segmented-option",
@@ -4150,38 +4147,6 @@
 			"id": "shapeAlignBottom",
 			"tag": "button",
 			"classes": "segmented-option",
-			"parent": "shapeTransformPanelHost"
-		},
-		{
-			"id": "shapeFlipX",
-			"tag": "input",
-			"classes": "",
-			"parent": "shapeTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "false"
-			}
-		},
-		{
-			"id": "shapeFlipY",
-			"tag": "input",
-			"classes": "",
-			"parent": "shapeTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "false"
-			}
-		},
-		{
-			"id": "resetShapeFlip",
-			"tag": "button",
-			"classes": "property-revert",
 			"parent": "shapeTransformPanelHost"
 		},
 		{
@@ -4224,13 +4189,13 @@
 		{
 			"id": "shapeBorderGlitter",
 			"tag": "button",
-			"classes": "active segmented-option",
+			"classes": "segmented-option",
 			"parent": "shapeBorderControls"
 		},
 		{
 			"id": "shapeBorderSolid",
 			"tag": "button",
-			"classes": "segmented-option",
+			"classes": "active segmented-option",
 			"parent": "shapeBorderControls"
 		},
 		{
@@ -4553,24 +4518,12 @@
 			"classes": "",
 			"parent": "shapeBorderControls",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
-		},
-		{
-			"id": "shapeBorderTextureOffsetXValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "shapeBorderControls"
-		},
-		{
-			"id": "resetShapeBorderTextureOffsetX",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "shapeBorderControls"
 		},
 		{
 			"id": "shapeBorderTextureOffsetY",
@@ -4578,21 +4531,15 @@
 			"classes": "",
 			"parent": "shapeBorderControls",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
 		},
 		{
-			"id": "shapeBorderTextureOffsetYValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "shapeBorderControls"
-		},
-		{
-			"id": "resetShapeBorderTextureOffsetY",
+			"id": "shapeBorderResetTexturePosition",
 			"tag": "button",
 			"classes": "property-revert",
 			"parent": "shapeBorderControls"
@@ -4701,24 +4648,12 @@
 			"classes": "",
 			"parent": "shapeShadowControls",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-60",
 				"max": "60",
-				"step": null,
-				"value": "6"
+				"step": "1",
+				"value": ""
 			}
-		},
-		{
-			"id": "shapeShadowOffsetXValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "shapeShadowControls"
-		},
-		{
-			"id": "resetShapeShadowOffsetX",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "shapeShadowControls"
 		},
 		{
 			"id": "shapeShadowOffsetY",
@@ -4726,24 +4661,12 @@
 			"classes": "",
 			"parent": "shapeShadowControls",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-60",
 				"max": "60",
-				"step": null,
-				"value": "6"
+				"step": "1",
+				"value": ""
 			}
-		},
-		{
-			"id": "shapeShadowOffsetYValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "shapeShadowControls"
-		},
-		{
-			"id": "resetShapeShadowOffsetY",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "shapeShadowControls"
 		},
 		{
 			"id": "shapeShadowScale",
@@ -4888,24 +4811,12 @@
 			"classes": "",
 			"parent": "shapeShadowControls",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
-		},
-		{
-			"id": "shapeShadowTextureOffsetXValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "shapeShadowControls"
-		},
-		{
-			"id": "resetShapeShadowTextureOffsetX",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "shapeShadowControls"
 		},
 		{
 			"id": "shapeShadowTextureOffsetY",
@@ -4913,21 +4824,15 @@
 			"classes": "",
 			"parent": "shapeShadowControls",
 			"input": {
-				"type": "range",
+				"type": "number",
 				"min": "-500",
 				"max": "500",
 				"step": "1",
-				"value": "0"
+				"value": ""
 			}
 		},
 		{
-			"id": "shapeShadowTextureOffsetYValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "shapeShadowControls"
-		},
-		{
-			"id": "resetShapeShadowTextureOffsetY",
+			"id": "shapeShadowResetTexturePosition",
 			"tag": "button",
 			"classes": "property-revert",
 			"parent": "shapeShadowControls"
@@ -5026,15 +4931,15 @@
 			}
 		},
 		{
-			"id": "selectedColorsEmpty",
-			"tag": "span",
-			"classes": "property-empty-inline visible",
-			"parent": "layerSettingsControls"
-		},
-		{
 			"id": "selectedColorsDisplay",
 			"tag": "div",
 			"classes": "selected-colors-display",
+			"parent": "layerSettingsControls"
+		},
+		{
+			"id": "selectedColorsEmptyNote",
+			"tag": "div",
+			"classes": "color-selection-empty-note panel-note property-note",
 			"parent": "layerSettingsControls"
 		},
 		{
@@ -5098,10 +5003,8 @@
 		"SHAPE": {
 			"visibility": {
 				"noLayerSettingsSection": "shown",
-				"noLayerSettingsHeader": "shown",
-				"noLayerEmptyText": "shown",
-				"noLayerSettingsToggle": "shown",
 				"noLayerSettingsContent": "shown",
+				"noLayerEmptyText": "hidden",
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
@@ -5113,8 +5016,12 @@
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
+				"noLayerSizeModule": "shown",
 				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
+				"multiSelectionOpacity": "shown",
+				"multiSelectionOpacityValue": "shown",
+				"resetMultiSelectionOpacity": "shown",
 				"multiSelectionAlignScope": "shown",
 				"multiSelectionDuplicateBtn": "shown",
 				"multiSelectionDeleteBtn": "shown",
@@ -5159,11 +5066,8 @@
 				"baseBackgroundTextureAnchorArtwork": "shown",
 				"baseBackgroundTextureAnchorCanvas": "shown",
 				"baseBackgroundTextureOffsetX": "shown",
-				"baseBackgroundTextureOffsetXValue": "shown",
-				"resetBaseBackgroundTextureOffsetX": "shown",
 				"baseBackgroundTextureOffsetY": "shown",
-				"baseBackgroundTextureOffsetYValue": "shown",
-				"resetBaseBackgroundTextureOffsetY": "shown",
+				"baseBackgroundResetTexturePosition": "shown",
 				"baseCanvasSizeHost": "shown",
 				"documentSizeGroup": "shown",
 				"documentSizeMode": "shown",
@@ -5262,11 +5166,8 @@
 				"glitterFillTextureAnchorArtwork": "shown",
 				"glitterFillTextureAnchorCanvas": "shown",
 				"glitterFillTextureOffsetX": "shown",
-				"glitterFillTextureOffsetXValue": "shown",
-				"resetGlitterFillTextureOffsetX": "shown",
 				"glitterFillTextureOffsetY": "shown",
-				"glitterFillTextureOffsetYValue": "shown",
-				"resetGlitterFillTextureOffsetY": "shown",
+				"glitterFillResetTexturePosition": "shown",
 				"brushSettingsSection": "shown",
 				"brushSettingsHeader": "shown",
 				"brushSettingsTitleIcon": "shown",
@@ -5328,11 +5229,11 @@
 				"stickerTransformPanelHost": "shown",
 				"stickerPosX": "shown",
 				"stickerPosY": "shown",
-				"stickerProportionalScale": "shown",
-				"resetStickerProportionalScale": "shown",
 				"stickerSizeGroup": "shown",
 				"stickerWidth": "shown",
 				"stickerHeight": "shown",
+				"stickerProportionalScale": "shown",
+				"resetStickerProportionalScale": "shown",
 				"stickerTransformScaleX": "shown",
 				"stickerTransformScaleXValue": "shown",
 				"resetStickerTransformScaleX": "shown",
@@ -5342,15 +5243,15 @@
 				"stickerRotation": "shown",
 				"stickerRotationValue": "shown",
 				"resetStickerRotation": "shown",
+				"stickerFlipX": "shown",
+				"stickerFlipY": "shown",
+				"resetStickerFlip": "shown",
 				"stickerAlignLeft": "shown",
 				"stickerAlignCenterX": "shown",
 				"stickerAlignRight": "shown",
 				"stickerAlignTop": "shown",
 				"stickerAlignCenterY": "shown",
 				"stickerAlignBottom": "shown",
-				"stickerFlipX": "shown",
-				"stickerFlipY": "shown",
-				"resetStickerFlip": "shown",
 				"stickerFitCanvas": "shown",
 				"stickerFillCanvas": "shown",
 				"resetStickerTransform": "shown",
@@ -5451,11 +5352,11 @@
 				"textTransformPanelHost": "shown",
 				"textPosX": "shown",
 				"textPosY": "shown",
-				"textProportionalScale": "shown",
-				"resetTextProportionalScale": "shown",
 				"textSizeGroup": "shown",
 				"textWidth": "shown",
 				"textHeight": "shown",
+				"textProportionalScale": "shown",
+				"resetTextProportionalScale": "shown",
 				"textTransformScaleX": "shown",
 				"textTransformScaleXValue": "shown",
 				"resetTextTransformScaleX": "shown",
@@ -5465,23 +5366,20 @@
 				"textRotation": "shown",
 				"textRotationValue": "shown",
 				"resetTextRotation": "shown",
+				"textFlipX": "shown",
+				"textFlipY": "shown",
+				"resetTextFlip": "shown",
 				"textAlignLeft": "shown",
 				"textAlignCenterX": "shown",
 				"textAlignRight": "shown",
 				"textAlignTop": "shown",
 				"textAlignCenterY": "shown",
 				"textAlignBottom": "shown",
-				"textFlipX": "shown",
-				"textFlipY": "shown",
-				"resetTextFlip": "shown",
 				"textFitCanvas": "shown",
 				"textFillCanvas": "shown",
 				"resetTextTransform": "shown",
 				"textBorderEnabled": "shown",
 				"textBorderControls": "shown",
-				"textBorderWidth": "shown",
-				"textBorderWidthValue": "shown",
-				"resetTextBorderWidth": "shown",
 				"textBorderUseGlitter": "shown",
 				"textBorderUseColor": "shown",
 				"textBorderGradient": "shown",
@@ -5494,6 +5392,9 @@
 				"textBorderGlitterChange": "shown",
 				"textBorderColorRow": "hidden",
 				"textBorderColor": "shown",
+				"textBorderWidth": "shown",
+				"textBorderWidthValue": "shown",
+				"resetTextBorderWidth": "shown",
 				"textBorderScaleRow": "shown",
 				"textBorderScale": "shown",
 				"textBorderScaleValue": "shown",
@@ -5569,7 +5470,7 @@
 				"shapeAssetName": "shown",
 				"shapeAssetBadges": "shown",
 				"shapeAssetChange": "shown",
-				"shapeRadiusRow": "hidden",
+				"shapeRadiusRow": "shown",
 				"shapeRadius": "shown",
 				"shapeRadiusValue": "shown",
 				"resetShapeRadius": "shown",
@@ -5604,22 +5505,19 @@
 				"shapeFillTextureAnchorArtwork": "shown",
 				"shapeFillTextureAnchorCanvas": "shown",
 				"shapeFillTextureOffsetX": "shown",
-				"shapeFillTextureOffsetXValue": "shown",
-				"resetShapeFillTextureOffsetX": "shown",
 				"shapeFillTextureOffsetY": "shown",
-				"shapeFillTextureOffsetYValue": "shown",
-				"resetShapeFillTextureOffsetY": "shown",
+				"shapeFillResetTexturePosition": "shown",
 				"shapeOpacity": "shown",
 				"shapeOpacityValue": "shown",
 				"resetShapeOpacity": "shown",
 				"shapeTransformPanelHost": "shown",
 				"shapePosX": "shown",
 				"shapePosY": "shown",
-				"shapeProportionalScale": "shown",
-				"resetShapeProportionalScale": "shown",
 				"shapeSizeGroup": "shown",
 				"shapeWidth": "shown",
 				"shapeHeight": "shown",
+				"shapeProportionalScale": "shown",
+				"resetShapeProportionalScale": "shown",
 				"shapeTransformScaleX": "shown",
 				"shapeTransformScaleXValue": "shown",
 				"resetShapeTransformScaleX": "shown",
@@ -5629,15 +5527,15 @@
 				"shapeRotation": "shown",
 				"shapeRotationValue": "shown",
 				"resetShapeRotation": "shown",
+				"shapeFlipX": "shown",
+				"shapeFlipY": "shown",
+				"resetShapeFlip": "shown",
 				"shapeAlignLeft": "shown",
 				"shapeAlignCenterX": "shown",
 				"shapeAlignRight": "shown",
 				"shapeAlignTop": "shown",
 				"shapeAlignCenterY": "shown",
 				"shapeAlignBottom": "shown",
-				"shapeFlipX": "shown",
-				"shapeFlipY": "shown",
-				"resetShapeFlip": "shown",
 				"shapeFitCanvas": "shown",
 				"shapeFillCanvas": "shown",
 				"resetShapeTransform": "shown",
@@ -5689,11 +5587,8 @@
 				"shapeBorderTextureAnchorArtwork": "shown",
 				"shapeBorderTextureAnchorCanvas": "shown",
 				"shapeBorderTextureOffsetX": "shown",
-				"shapeBorderTextureOffsetXValue": "shown",
-				"resetShapeBorderTextureOffsetX": "shown",
 				"shapeBorderTextureOffsetY": "shown",
-				"shapeBorderTextureOffsetYValue": "shown",
-				"resetShapeBorderTextureOffsetY": "shown",
+				"shapeBorderResetTexturePosition": "shown",
 				"shapeShadowEnabled": "shown",
 				"shapeShadowControls": "shown",
 				"shapeShadowGlitter": "shown",
@@ -5709,11 +5604,7 @@
 				"shapeShadowColorRow": "hidden",
 				"shapeShadowColor": "shown",
 				"shapeShadowOffsetX": "shown",
-				"shapeShadowOffsetXValue": "shown",
-				"resetShapeShadowOffsetX": "shown",
 				"shapeShadowOffsetY": "shown",
-				"shapeShadowOffsetYValue": "shown",
-				"resetShapeShadowOffsetY": "shown",
 				"shapeShadowScale": "shown",
 				"shapeShadowScaleValue": "shown",
 				"resetShapeShadowScale": "shown",
@@ -5732,11 +5623,8 @@
 				"shapeShadowTextureAnchorArtwork": "shown",
 				"shapeShadowTextureAnchorCanvas": "shown",
 				"shapeShadowTextureOffsetX": "shown",
-				"shapeShadowTextureOffsetXValue": "shown",
-				"resetShapeShadowTextureOffsetX": "shown",
 				"shapeShadowTextureOffsetY": "shown",
-				"shapeShadowTextureOffsetYValue": "shown",
-				"resetShapeShadowTextureOffsetY": "shown",
+				"shapeShadowResetTexturePosition": "shown",
 				"resetShapeEffects": "shown",
 				"layerSettingsSection": "shown",
 				"layerSettingsHeader": "shown",
@@ -5749,8 +5637,8 @@
 				"contiguous": "shown",
 				"invert": "shown",
 				"multiSelect": "shown",
-				"selectedColorsEmpty": "shown",
 				"selectedColorsDisplay": "shown",
+				"selectedColorsEmptyNote": "shown",
 				"selectionRefineNote": "shown",
 				"threshold": "shown",
 				"thresholdValue": "shown",
@@ -5801,11 +5689,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundNone": {
@@ -5848,11 +5733,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundGlitter": {
@@ -5895,11 +5777,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundSolid": {
@@ -5942,11 +5821,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundGradient": {
@@ -5989,11 +5865,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -6031,11 +5904,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					},
 					"glitterFillSolid": {
@@ -6071,11 +5941,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					},
 					"glitterFillGradient": {
@@ -6111,11 +5978,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -6408,9 +6272,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -6423,6 +6284,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -6458,9 +6322,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -6473,6 +6334,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -6508,9 +6372,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -6523,6 +6384,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -6717,11 +6581,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillGlitter": {
@@ -6758,11 +6619,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillSolid": {
@@ -6799,11 +6657,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillGradient": {
@@ -6840,11 +6695,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -6900,11 +6752,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderSolid": {
@@ -6958,11 +6807,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderGradient": {
@@ -7016,11 +6862,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -7076,11 +6919,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderStyleDotted": {
@@ -7134,11 +6974,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -7161,11 +6998,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -7184,11 +7017,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					},
 					"shapeShadowSolid": {
@@ -7209,11 +7039,7 @@
 							"shapeShadowColorRow": "shown",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -7232,11 +7058,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					},
 					"shapeShadowGradient": {
@@ -7257,11 +7080,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -7280,11 +7099,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					}
 				}
@@ -7293,10 +7109,8 @@
 		"TEXT_GLITTER": {
 			"visibility": {
 				"noLayerSettingsSection": "shown",
-				"noLayerSettingsHeader": "shown",
-				"noLayerEmptyText": "shown",
-				"noLayerSettingsToggle": "shown",
 				"noLayerSettingsContent": "shown",
+				"noLayerEmptyText": "hidden",
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
@@ -7308,8 +7122,12 @@
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
+				"noLayerSizeModule": "shown",
 				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
+				"multiSelectionOpacity": "shown",
+				"multiSelectionOpacityValue": "shown",
+				"resetMultiSelectionOpacity": "shown",
 				"multiSelectionAlignScope": "shown",
 				"multiSelectionDuplicateBtn": "shown",
 				"multiSelectionDeleteBtn": "shown",
@@ -7354,11 +7172,8 @@
 				"baseBackgroundTextureAnchorArtwork": "shown",
 				"baseBackgroundTextureAnchorCanvas": "shown",
 				"baseBackgroundTextureOffsetX": "shown",
-				"baseBackgroundTextureOffsetXValue": "shown",
-				"resetBaseBackgroundTextureOffsetX": "shown",
 				"baseBackgroundTextureOffsetY": "shown",
-				"baseBackgroundTextureOffsetYValue": "shown",
-				"resetBaseBackgroundTextureOffsetY": "shown",
+				"baseBackgroundResetTexturePosition": "shown",
 				"baseCanvasSizeHost": "shown",
 				"documentSizeGroup": "shown",
 				"documentSizeMode": "shown",
@@ -7457,11 +7272,8 @@
 				"glitterFillTextureAnchorArtwork": "shown",
 				"glitterFillTextureAnchorCanvas": "shown",
 				"glitterFillTextureOffsetX": "shown",
-				"glitterFillTextureOffsetXValue": "shown",
-				"resetGlitterFillTextureOffsetX": "shown",
 				"glitterFillTextureOffsetY": "shown",
-				"glitterFillTextureOffsetYValue": "shown",
-				"resetGlitterFillTextureOffsetY": "shown",
+				"glitterFillResetTexturePosition": "shown",
 				"brushSettingsSection": "shown",
 				"brushSettingsHeader": "shown",
 				"brushSettingsTitleIcon": "shown",
@@ -7523,11 +7335,11 @@
 				"stickerTransformPanelHost": "shown",
 				"stickerPosX": "shown",
 				"stickerPosY": "shown",
-				"stickerProportionalScale": "shown",
-				"resetStickerProportionalScale": "shown",
 				"stickerSizeGroup": "shown",
 				"stickerWidth": "shown",
 				"stickerHeight": "shown",
+				"stickerProportionalScale": "shown",
+				"resetStickerProportionalScale": "shown",
 				"stickerTransformScaleX": "shown",
 				"stickerTransformScaleXValue": "shown",
 				"resetStickerTransformScaleX": "shown",
@@ -7537,15 +7349,15 @@
 				"stickerRotation": "shown",
 				"stickerRotationValue": "shown",
 				"resetStickerRotation": "shown",
+				"stickerFlipX": "shown",
+				"stickerFlipY": "shown",
+				"resetStickerFlip": "shown",
 				"stickerAlignLeft": "shown",
 				"stickerAlignCenterX": "shown",
 				"stickerAlignRight": "shown",
 				"stickerAlignTop": "shown",
 				"stickerAlignCenterY": "shown",
 				"stickerAlignBottom": "shown",
-				"stickerFlipX": "shown",
-				"stickerFlipY": "shown",
-				"resetStickerFlip": "shown",
 				"stickerFitCanvas": "shown",
 				"stickerFillCanvas": "shown",
 				"resetStickerTransform": "shown",
@@ -7646,11 +7458,11 @@
 				"textTransformPanelHost": "shown",
 				"textPosX": "shown",
 				"textPosY": "shown",
-				"textProportionalScale": "shown",
-				"resetTextProportionalScale": "shown",
 				"textSizeGroup": "shown",
 				"textWidth": "shown",
 				"textHeight": "shown",
+				"textProportionalScale": "shown",
+				"resetTextProportionalScale": "shown",
 				"textTransformScaleX": "shown",
 				"textTransformScaleXValue": "shown",
 				"resetTextTransformScaleX": "shown",
@@ -7660,23 +7472,20 @@
 				"textRotation": "shown",
 				"textRotationValue": "shown",
 				"resetTextRotation": "shown",
+				"textFlipX": "shown",
+				"textFlipY": "shown",
+				"resetTextFlip": "shown",
 				"textAlignLeft": "shown",
 				"textAlignCenterX": "shown",
 				"textAlignRight": "shown",
 				"textAlignTop": "shown",
 				"textAlignCenterY": "shown",
 				"textAlignBottom": "shown",
-				"textFlipX": "shown",
-				"textFlipY": "shown",
-				"resetTextFlip": "shown",
 				"textFitCanvas": "shown",
 				"textFillCanvas": "shown",
 				"resetTextTransform": "shown",
 				"textBorderEnabled": "shown",
 				"textBorderControls": "shown",
-				"textBorderWidth": "shown",
-				"textBorderWidthValue": "shown",
-				"resetTextBorderWidth": "shown",
 				"textBorderUseGlitter": "shown",
 				"textBorderUseColor": "shown",
 				"textBorderGradient": "shown",
@@ -7689,6 +7498,9 @@
 				"textBorderGlitterChange": "shown",
 				"textBorderColorRow": "hidden",
 				"textBorderColor": "shown",
+				"textBorderWidth": "shown",
+				"textBorderWidthValue": "shown",
+				"resetTextBorderWidth": "shown",
 				"textBorderScaleRow": "hidden",
 				"textBorderScale": "shown",
 				"textBorderScaleValue": "shown",
@@ -7799,22 +7611,19 @@
 				"shapeFillTextureAnchorArtwork": "shown",
 				"shapeFillTextureAnchorCanvas": "shown",
 				"shapeFillTextureOffsetX": "shown",
-				"shapeFillTextureOffsetXValue": "shown",
-				"resetShapeFillTextureOffsetX": "shown",
 				"shapeFillTextureOffsetY": "shown",
-				"shapeFillTextureOffsetYValue": "shown",
-				"resetShapeFillTextureOffsetY": "shown",
+				"shapeFillResetTexturePosition": "shown",
 				"shapeOpacity": "shown",
 				"shapeOpacityValue": "shown",
 				"resetShapeOpacity": "shown",
 				"shapeTransformPanelHost": "shown",
 				"shapePosX": "shown",
 				"shapePosY": "shown",
-				"shapeProportionalScale": "shown",
-				"resetShapeProportionalScale": "shown",
 				"shapeSizeGroup": "shown",
 				"shapeWidth": "shown",
 				"shapeHeight": "shown",
+				"shapeProportionalScale": "shown",
+				"resetShapeProportionalScale": "shown",
 				"shapeTransformScaleX": "shown",
 				"shapeTransformScaleXValue": "shown",
 				"resetShapeTransformScaleX": "shown",
@@ -7824,15 +7633,15 @@
 				"shapeRotation": "shown",
 				"shapeRotationValue": "shown",
 				"resetShapeRotation": "shown",
+				"shapeFlipX": "shown",
+				"shapeFlipY": "shown",
+				"resetShapeFlip": "shown",
 				"shapeAlignLeft": "shown",
 				"shapeAlignCenterX": "shown",
 				"shapeAlignRight": "shown",
 				"shapeAlignTop": "shown",
 				"shapeAlignCenterY": "shown",
 				"shapeAlignBottom": "shown",
-				"shapeFlipX": "shown",
-				"shapeFlipY": "shown",
-				"resetShapeFlip": "shown",
 				"shapeFitCanvas": "shown",
 				"shapeFillCanvas": "shown",
 				"resetShapeTransform": "shown",
@@ -7841,14 +7650,14 @@
 				"shapeBorderGlitter": "shown",
 				"shapeBorderSolid": "shown",
 				"shapeBorderGradient": "shown",
-				"shapeBorderGlitterInfo": "shown",
+				"shapeBorderGlitterInfo": "hidden",
 				"shapeBorderGlitterChip": "shown",
 				"shapeBorderGlitterLabel": "shown",
 				"shapeBorderGlitterBadges": "shown",
 				"shapeBorderGlitterSize": "shown",
 				"shapeBorderGlitterFrames": "shown",
 				"shapeBorderGlitterChange": "shown",
-				"shapeBorderColorRow": "hidden",
+				"shapeBorderColorRow": "shown",
 				"shapeBorderColor": "shown",
 				"shapeBorderWidth": "shown",
 				"shapeBorderWidthValue": "shown",
@@ -7884,11 +7693,8 @@
 				"shapeBorderTextureAnchorArtwork": "shown",
 				"shapeBorderTextureAnchorCanvas": "shown",
 				"shapeBorderTextureOffsetX": "shown",
-				"shapeBorderTextureOffsetXValue": "shown",
-				"resetShapeBorderTextureOffsetX": "shown",
 				"shapeBorderTextureOffsetY": "shown",
-				"shapeBorderTextureOffsetYValue": "shown",
-				"resetShapeBorderTextureOffsetY": "shown",
+				"shapeBorderResetTexturePosition": "shown",
 				"shapeShadowEnabled": "shown",
 				"shapeShadowControls": "shown",
 				"shapeShadowGlitter": "shown",
@@ -7904,11 +7710,7 @@
 				"shapeShadowColorRow": "hidden",
 				"shapeShadowColor": "shown",
 				"shapeShadowOffsetX": "shown",
-				"shapeShadowOffsetXValue": "shown",
-				"resetShapeShadowOffsetX": "shown",
 				"shapeShadowOffsetY": "shown",
-				"shapeShadowOffsetYValue": "shown",
-				"resetShapeShadowOffsetY": "shown",
 				"shapeShadowScale": "shown",
 				"shapeShadowScaleValue": "shown",
 				"resetShapeShadowScale": "shown",
@@ -7927,11 +7729,8 @@
 				"shapeShadowTextureAnchorArtwork": "shown",
 				"shapeShadowTextureAnchorCanvas": "shown",
 				"shapeShadowTextureOffsetX": "shown",
-				"shapeShadowTextureOffsetXValue": "shown",
-				"resetShapeShadowTextureOffsetX": "shown",
 				"shapeShadowTextureOffsetY": "shown",
-				"shapeShadowTextureOffsetYValue": "shown",
-				"resetShapeShadowTextureOffsetY": "shown",
+				"shapeShadowResetTexturePosition": "shown",
 				"resetShapeEffects": "shown",
 				"layerSettingsSection": "shown",
 				"layerSettingsHeader": "shown",
@@ -7944,8 +7743,8 @@
 				"contiguous": "shown",
 				"invert": "shown",
 				"multiSelect": "shown",
-				"selectedColorsEmpty": "shown",
 				"selectedColorsDisplay": "shown",
+				"selectedColorsEmptyNote": "shown",
 				"selectionRefineNote": "shown",
 				"threshold": "shown",
 				"thresholdValue": "shown",
@@ -7996,11 +7795,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundNone": {
@@ -8043,11 +7839,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundGlitter": {
@@ -8090,11 +7883,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundSolid": {
@@ -8137,11 +7927,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundGradient": {
@@ -8184,11 +7971,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -8226,11 +8010,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					},
 					"glitterFillSolid": {
@@ -8266,11 +8047,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					},
 					"glitterFillGradient": {
@@ -8306,11 +8084,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -8603,9 +8378,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -8618,6 +8390,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -8653,9 +8428,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown",
 							"textBorderUseColor": "shown+active",
 							"textBorderGradient": "shown",
@@ -8668,6 +8440,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "shown",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "hidden",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -8703,9 +8478,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown+active",
@@ -8718,6 +8490,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "hidden",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -8912,11 +8687,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillGlitter": {
@@ -8953,11 +8725,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillSolid": {
@@ -8994,11 +8763,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillGradient": {
@@ -9035,11 +8801,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -9049,17 +8812,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -9095,11 +8858,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderSolid": {
@@ -9107,17 +8867,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -9153,11 +8913,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderGradient": {
@@ -9165,17 +8922,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -9211,11 +8968,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -9225,17 +8979,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -9271,11 +9025,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderStyleDotted": {
@@ -9283,17 +9034,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -9329,11 +9080,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -9356,11 +9104,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -9379,11 +9123,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					},
 					"shapeShadowSolid": {
@@ -9404,11 +9145,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -9427,11 +9164,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					},
 					"shapeShadowGradient": {
@@ -9452,11 +9186,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -9475,11 +9205,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					}
 				}
@@ -9488,10 +9215,8 @@
 		"STICKER": {
 			"visibility": {
 				"noLayerSettingsSection": "shown",
-				"noLayerSettingsHeader": "shown",
-				"noLayerEmptyText": "shown",
-				"noLayerSettingsToggle": "shown",
 				"noLayerSettingsContent": "shown",
+				"noLayerEmptyText": "hidden",
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
@@ -9503,8 +9228,12 @@
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
+				"noLayerSizeModule": "shown",
 				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
+				"multiSelectionOpacity": "shown",
+				"multiSelectionOpacityValue": "shown",
+				"resetMultiSelectionOpacity": "shown",
 				"multiSelectionAlignScope": "shown",
 				"multiSelectionDuplicateBtn": "shown",
 				"multiSelectionDeleteBtn": "shown",
@@ -9549,11 +9278,8 @@
 				"baseBackgroundTextureAnchorArtwork": "shown",
 				"baseBackgroundTextureAnchorCanvas": "shown",
 				"baseBackgroundTextureOffsetX": "shown",
-				"baseBackgroundTextureOffsetXValue": "shown",
-				"resetBaseBackgroundTextureOffsetX": "shown",
 				"baseBackgroundTextureOffsetY": "shown",
-				"baseBackgroundTextureOffsetYValue": "shown",
-				"resetBaseBackgroundTextureOffsetY": "shown",
+				"baseBackgroundResetTexturePosition": "shown",
 				"baseCanvasSizeHost": "shown",
 				"documentSizeGroup": "shown",
 				"documentSizeMode": "shown",
@@ -9652,11 +9378,8 @@
 				"glitterFillTextureAnchorArtwork": "shown",
 				"glitterFillTextureAnchorCanvas": "shown",
 				"glitterFillTextureOffsetX": "shown",
-				"glitterFillTextureOffsetXValue": "shown",
-				"resetGlitterFillTextureOffsetX": "shown",
 				"glitterFillTextureOffsetY": "shown",
-				"glitterFillTextureOffsetYValue": "shown",
-				"resetGlitterFillTextureOffsetY": "shown",
+				"glitterFillResetTexturePosition": "shown",
 				"brushSettingsSection": "shown",
 				"brushSettingsHeader": "shown",
 				"brushSettingsTitleIcon": "shown",
@@ -9718,11 +9441,11 @@
 				"stickerTransformPanelHost": "shown",
 				"stickerPosX": "shown",
 				"stickerPosY": "shown",
-				"stickerProportionalScale": "shown",
-				"resetStickerProportionalScale": "shown",
 				"stickerSizeGroup": "shown",
 				"stickerWidth": "shown",
 				"stickerHeight": "shown",
+				"stickerProportionalScale": "shown",
+				"resetStickerProportionalScale": "shown",
 				"stickerTransformScaleX": "shown",
 				"stickerTransformScaleXValue": "shown",
 				"resetStickerTransformScaleX": "shown",
@@ -9732,15 +9455,15 @@
 				"stickerRotation": "shown",
 				"stickerRotationValue": "shown",
 				"resetStickerRotation": "shown",
+				"stickerFlipX": "shown",
+				"stickerFlipY": "shown",
+				"resetStickerFlip": "shown",
 				"stickerAlignLeft": "shown",
 				"stickerAlignCenterX": "shown",
 				"stickerAlignRight": "shown",
 				"stickerAlignTop": "shown",
 				"stickerAlignCenterY": "shown",
 				"stickerAlignBottom": "shown",
-				"stickerFlipX": "shown",
-				"stickerFlipY": "shown",
-				"resetStickerFlip": "shown",
 				"stickerFitCanvas": "shown",
 				"stickerFillCanvas": "shown",
 				"resetStickerTransform": "shown",
@@ -9841,11 +9564,11 @@
 				"textTransformPanelHost": "shown",
 				"textPosX": "shown",
 				"textPosY": "shown",
-				"textProportionalScale": "shown",
-				"resetTextProportionalScale": "shown",
 				"textSizeGroup": "shown",
 				"textWidth": "shown",
 				"textHeight": "shown",
+				"textProportionalScale": "shown",
+				"resetTextProportionalScale": "shown",
 				"textTransformScaleX": "shown",
 				"textTransformScaleXValue": "shown",
 				"resetTextTransformScaleX": "shown",
@@ -9855,23 +9578,20 @@
 				"textRotation": "shown",
 				"textRotationValue": "shown",
 				"resetTextRotation": "shown",
+				"textFlipX": "shown",
+				"textFlipY": "shown",
+				"resetTextFlip": "shown",
 				"textAlignLeft": "shown",
 				"textAlignCenterX": "shown",
 				"textAlignRight": "shown",
 				"textAlignTop": "shown",
 				"textAlignCenterY": "shown",
 				"textAlignBottom": "shown",
-				"textFlipX": "shown",
-				"textFlipY": "shown",
-				"resetTextFlip": "shown",
 				"textFitCanvas": "shown",
 				"textFillCanvas": "shown",
 				"resetTextTransform": "shown",
 				"textBorderEnabled": "shown",
 				"textBorderControls": "shown",
-				"textBorderWidth": "shown",
-				"textBorderWidthValue": "shown",
-				"resetTextBorderWidth": "shown",
 				"textBorderUseGlitter": "shown",
 				"textBorderUseColor": "shown",
 				"textBorderGradient": "shown",
@@ -9884,6 +9604,9 @@
 				"textBorderGlitterChange": "shown",
 				"textBorderColorRow": "hidden",
 				"textBorderColor": "shown",
+				"textBorderWidth": "shown",
+				"textBorderWidthValue": "shown",
+				"resetTextBorderWidth": "shown",
 				"textBorderScaleRow": "shown",
 				"textBorderScale": "shown",
 				"textBorderScaleValue": "shown",
@@ -9994,22 +9717,19 @@
 				"shapeFillTextureAnchorArtwork": "shown",
 				"shapeFillTextureAnchorCanvas": "shown",
 				"shapeFillTextureOffsetX": "shown",
-				"shapeFillTextureOffsetXValue": "shown",
-				"resetShapeFillTextureOffsetX": "shown",
 				"shapeFillTextureOffsetY": "shown",
-				"shapeFillTextureOffsetYValue": "shown",
-				"resetShapeFillTextureOffsetY": "shown",
+				"shapeFillResetTexturePosition": "shown",
 				"shapeOpacity": "shown",
 				"shapeOpacityValue": "shown",
 				"resetShapeOpacity": "shown",
 				"shapeTransformPanelHost": "shown",
 				"shapePosX": "shown",
 				"shapePosY": "shown",
-				"shapeProportionalScale": "shown",
-				"resetShapeProportionalScale": "shown",
 				"shapeSizeGroup": "shown",
 				"shapeWidth": "shown",
 				"shapeHeight": "shown",
+				"shapeProportionalScale": "shown",
+				"resetShapeProportionalScale": "shown",
 				"shapeTransformScaleX": "shown",
 				"shapeTransformScaleXValue": "shown",
 				"resetShapeTransformScaleX": "shown",
@@ -10019,15 +9739,15 @@
 				"shapeRotation": "shown",
 				"shapeRotationValue": "shown",
 				"resetShapeRotation": "shown",
+				"shapeFlipX": "shown",
+				"shapeFlipY": "shown",
+				"resetShapeFlip": "shown",
 				"shapeAlignLeft": "shown",
 				"shapeAlignCenterX": "shown",
 				"shapeAlignRight": "shown",
 				"shapeAlignTop": "shown",
 				"shapeAlignCenterY": "shown",
 				"shapeAlignBottom": "shown",
-				"shapeFlipX": "shown",
-				"shapeFlipY": "shown",
-				"resetShapeFlip": "shown",
 				"shapeFitCanvas": "shown",
 				"shapeFillCanvas": "shown",
 				"resetShapeTransform": "shown",
@@ -10036,14 +9756,14 @@
 				"shapeBorderGlitter": "shown",
 				"shapeBorderSolid": "shown",
 				"shapeBorderGradient": "shown",
-				"shapeBorderGlitterInfo": "shown",
+				"shapeBorderGlitterInfo": "hidden",
 				"shapeBorderGlitterChip": "shown",
 				"shapeBorderGlitterLabel": "shown",
 				"shapeBorderGlitterBadges": "shown",
 				"shapeBorderGlitterSize": "shown",
 				"shapeBorderGlitterFrames": "shown",
 				"shapeBorderGlitterChange": "shown",
-				"shapeBorderColorRow": "hidden",
+				"shapeBorderColorRow": "shown",
 				"shapeBorderColor": "shown",
 				"shapeBorderWidth": "shown",
 				"shapeBorderWidthValue": "shown",
@@ -10079,11 +9799,8 @@
 				"shapeBorderTextureAnchorArtwork": "shown",
 				"shapeBorderTextureAnchorCanvas": "shown",
 				"shapeBorderTextureOffsetX": "shown",
-				"shapeBorderTextureOffsetXValue": "shown",
-				"resetShapeBorderTextureOffsetX": "shown",
 				"shapeBorderTextureOffsetY": "shown",
-				"shapeBorderTextureOffsetYValue": "shown",
-				"resetShapeBorderTextureOffsetY": "shown",
+				"shapeBorderResetTexturePosition": "shown",
 				"shapeShadowEnabled": "shown",
 				"shapeShadowControls": "shown",
 				"shapeShadowGlitter": "shown",
@@ -10099,11 +9816,7 @@
 				"shapeShadowColorRow": "hidden",
 				"shapeShadowColor": "shown",
 				"shapeShadowOffsetX": "shown",
-				"shapeShadowOffsetXValue": "shown",
-				"resetShapeShadowOffsetX": "shown",
 				"shapeShadowOffsetY": "shown",
-				"shapeShadowOffsetYValue": "shown",
-				"resetShapeShadowOffsetY": "shown",
 				"shapeShadowScale": "shown",
 				"shapeShadowScaleValue": "shown",
 				"resetShapeShadowScale": "shown",
@@ -10122,11 +9835,8 @@
 				"shapeShadowTextureAnchorArtwork": "shown",
 				"shapeShadowTextureAnchorCanvas": "shown",
 				"shapeShadowTextureOffsetX": "shown",
-				"shapeShadowTextureOffsetXValue": "shown",
-				"resetShapeShadowTextureOffsetX": "shown",
 				"shapeShadowTextureOffsetY": "shown",
-				"shapeShadowTextureOffsetYValue": "shown",
-				"resetShapeShadowTextureOffsetY": "shown",
+				"shapeShadowResetTexturePosition": "shown",
 				"resetShapeEffects": "shown",
 				"layerSettingsSection": "shown",
 				"layerSettingsHeader": "shown",
@@ -10139,8 +9849,8 @@
 				"contiguous": "shown",
 				"invert": "shown",
 				"multiSelect": "shown",
-				"selectedColorsEmpty": "shown",
 				"selectedColorsDisplay": "shown",
+				"selectedColorsEmptyNote": "shown",
 				"selectionRefineNote": "shown",
 				"threshold": "shown",
 				"thresholdValue": "shown",
@@ -10191,11 +9901,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundNone": {
@@ -10238,11 +9945,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundGlitter": {
@@ -10285,11 +9989,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundSolid": {
@@ -10332,11 +10033,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundGradient": {
@@ -10379,11 +10077,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -10421,11 +10116,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					},
 					"glitterFillSolid": {
@@ -10461,11 +10153,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					},
 					"glitterFillGradient": {
@@ -10501,11 +10190,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -10798,9 +10484,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -10813,6 +10496,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -10848,9 +10534,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -10863,6 +10546,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -10898,9 +10584,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -10913,6 +10596,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -11107,11 +10793,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillGlitter": {
@@ -11148,11 +10831,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillSolid": {
@@ -11189,11 +10869,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillGradient": {
@@ -11230,11 +10907,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -11244,17 +10918,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -11290,11 +10964,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderSolid": {
@@ -11302,17 +10973,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -11348,11 +11019,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderGradient": {
@@ -11360,17 +11028,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -11406,11 +11074,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -11420,17 +11085,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -11466,11 +11131,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderStyleDotted": {
@@ -11478,17 +11140,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -11524,11 +11186,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -11551,11 +11210,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -11574,11 +11229,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					},
 					"shapeShadowSolid": {
@@ -11599,11 +11251,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -11622,11 +11270,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					},
 					"shapeShadowGradient": {
@@ -11647,11 +11292,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -11670,11 +11311,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					}
 				}
@@ -11683,10 +11321,8 @@
 		"GLITTER_FILL": {
 			"visibility": {
 				"noLayerSettingsSection": "shown",
-				"noLayerSettingsHeader": "shown",
-				"noLayerEmptyText": "shown",
-				"noLayerSettingsToggle": "shown",
 				"noLayerSettingsContent": "shown",
+				"noLayerEmptyText": "hidden",
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
@@ -11698,8 +11334,12 @@
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
+				"noLayerSizeModule": "shown",
 				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
+				"multiSelectionOpacity": "shown",
+				"multiSelectionOpacityValue": "shown",
+				"resetMultiSelectionOpacity": "shown",
 				"multiSelectionAlignScope": "shown",
 				"multiSelectionDuplicateBtn": "shown",
 				"multiSelectionDeleteBtn": "shown",
@@ -11744,11 +11384,8 @@
 				"baseBackgroundTextureAnchorArtwork": "shown",
 				"baseBackgroundTextureAnchorCanvas": "shown",
 				"baseBackgroundTextureOffsetX": "shown",
-				"baseBackgroundTextureOffsetXValue": "shown",
-				"resetBaseBackgroundTextureOffsetX": "shown",
 				"baseBackgroundTextureOffsetY": "shown",
-				"baseBackgroundTextureOffsetYValue": "shown",
-				"resetBaseBackgroundTextureOffsetY": "shown",
+				"baseBackgroundResetTexturePosition": "shown",
 				"baseCanvasSizeHost": "shown",
 				"documentSizeGroup": "shown",
 				"documentSizeMode": "shown",
@@ -11847,11 +11484,8 @@
 				"glitterFillTextureAnchorArtwork": "shown",
 				"glitterFillTextureAnchorCanvas": "shown",
 				"glitterFillTextureOffsetX": "shown",
-				"glitterFillTextureOffsetXValue": "shown",
-				"resetGlitterFillTextureOffsetX": "shown",
 				"glitterFillTextureOffsetY": "shown",
-				"glitterFillTextureOffsetYValue": "shown",
-				"resetGlitterFillTextureOffsetY": "shown",
+				"glitterFillResetTexturePosition": "shown",
 				"brushSettingsSection": "shown",
 				"brushSettingsHeader": "shown",
 				"brushSettingsTitleIcon": "shown",
@@ -11913,11 +11547,11 @@
 				"stickerTransformPanelHost": "shown",
 				"stickerPosX": "shown",
 				"stickerPosY": "shown",
-				"stickerProportionalScale": "shown",
-				"resetStickerProportionalScale": "shown",
 				"stickerSizeGroup": "shown",
 				"stickerWidth": "shown",
 				"stickerHeight": "shown",
+				"stickerProportionalScale": "shown",
+				"resetStickerProportionalScale": "shown",
 				"stickerTransformScaleX": "shown",
 				"stickerTransformScaleXValue": "shown",
 				"resetStickerTransformScaleX": "shown",
@@ -11927,15 +11561,15 @@
 				"stickerRotation": "shown",
 				"stickerRotationValue": "shown",
 				"resetStickerRotation": "shown",
+				"stickerFlipX": "shown",
+				"stickerFlipY": "shown",
+				"resetStickerFlip": "shown",
 				"stickerAlignLeft": "shown",
 				"stickerAlignCenterX": "shown",
 				"stickerAlignRight": "shown",
 				"stickerAlignTop": "shown",
 				"stickerAlignCenterY": "shown",
 				"stickerAlignBottom": "shown",
-				"stickerFlipX": "shown",
-				"stickerFlipY": "shown",
-				"resetStickerFlip": "shown",
 				"stickerFitCanvas": "shown",
 				"stickerFillCanvas": "shown",
 				"resetStickerTransform": "shown",
@@ -12036,11 +11670,11 @@
 				"textTransformPanelHost": "shown",
 				"textPosX": "shown",
 				"textPosY": "shown",
-				"textProportionalScale": "shown",
-				"resetTextProportionalScale": "shown",
 				"textSizeGroup": "shown",
 				"textWidth": "shown",
 				"textHeight": "shown",
+				"textProportionalScale": "shown",
+				"resetTextProportionalScale": "shown",
 				"textTransformScaleX": "shown",
 				"textTransformScaleXValue": "shown",
 				"resetTextTransformScaleX": "shown",
@@ -12050,23 +11684,20 @@
 				"textRotation": "shown",
 				"textRotationValue": "shown",
 				"resetTextRotation": "shown",
+				"textFlipX": "shown",
+				"textFlipY": "shown",
+				"resetTextFlip": "shown",
 				"textAlignLeft": "shown",
 				"textAlignCenterX": "shown",
 				"textAlignRight": "shown",
 				"textAlignTop": "shown",
 				"textAlignCenterY": "shown",
 				"textAlignBottom": "shown",
-				"textFlipX": "shown",
-				"textFlipY": "shown",
-				"resetTextFlip": "shown",
 				"textFitCanvas": "shown",
 				"textFillCanvas": "shown",
 				"resetTextTransform": "shown",
 				"textBorderEnabled": "shown",
 				"textBorderControls": "shown",
-				"textBorderWidth": "shown",
-				"textBorderWidthValue": "shown",
-				"resetTextBorderWidth": "shown",
 				"textBorderUseGlitter": "shown",
 				"textBorderUseColor": "shown",
 				"textBorderGradient": "shown",
@@ -12079,6 +11710,9 @@
 				"textBorderGlitterChange": "shown",
 				"textBorderColorRow": "hidden",
 				"textBorderColor": "shown",
+				"textBorderWidth": "shown",
+				"textBorderWidthValue": "shown",
+				"resetTextBorderWidth": "shown",
 				"textBorderScaleRow": "shown",
 				"textBorderScale": "shown",
 				"textBorderScaleValue": "shown",
@@ -12189,22 +11823,19 @@
 				"shapeFillTextureAnchorArtwork": "shown",
 				"shapeFillTextureAnchorCanvas": "shown",
 				"shapeFillTextureOffsetX": "shown",
-				"shapeFillTextureOffsetXValue": "shown",
-				"resetShapeFillTextureOffsetX": "shown",
 				"shapeFillTextureOffsetY": "shown",
-				"shapeFillTextureOffsetYValue": "shown",
-				"resetShapeFillTextureOffsetY": "shown",
+				"shapeFillResetTexturePosition": "shown",
 				"shapeOpacity": "shown",
 				"shapeOpacityValue": "shown",
 				"resetShapeOpacity": "shown",
 				"shapeTransformPanelHost": "shown",
 				"shapePosX": "shown",
 				"shapePosY": "shown",
-				"shapeProportionalScale": "shown",
-				"resetShapeProportionalScale": "shown",
 				"shapeSizeGroup": "shown",
 				"shapeWidth": "shown",
 				"shapeHeight": "shown",
+				"shapeProportionalScale": "shown",
+				"resetShapeProportionalScale": "shown",
 				"shapeTransformScaleX": "shown",
 				"shapeTransformScaleXValue": "shown",
 				"resetShapeTransformScaleX": "shown",
@@ -12214,15 +11845,15 @@
 				"shapeRotation": "shown",
 				"shapeRotationValue": "shown",
 				"resetShapeRotation": "shown",
+				"shapeFlipX": "shown",
+				"shapeFlipY": "shown",
+				"resetShapeFlip": "shown",
 				"shapeAlignLeft": "shown",
 				"shapeAlignCenterX": "shown",
 				"shapeAlignRight": "shown",
 				"shapeAlignTop": "shown",
 				"shapeAlignCenterY": "shown",
 				"shapeAlignBottom": "shown",
-				"shapeFlipX": "shown",
-				"shapeFlipY": "shown",
-				"resetShapeFlip": "shown",
 				"shapeFitCanvas": "shown",
 				"shapeFillCanvas": "shown",
 				"resetShapeTransform": "shown",
@@ -12231,14 +11862,14 @@
 				"shapeBorderGlitter": "shown",
 				"shapeBorderSolid": "shown",
 				"shapeBorderGradient": "shown",
-				"shapeBorderGlitterInfo": "shown",
+				"shapeBorderGlitterInfo": "hidden",
 				"shapeBorderGlitterChip": "shown",
 				"shapeBorderGlitterLabel": "shown",
 				"shapeBorderGlitterBadges": "shown",
 				"shapeBorderGlitterSize": "shown",
 				"shapeBorderGlitterFrames": "shown",
 				"shapeBorderGlitterChange": "shown",
-				"shapeBorderColorRow": "hidden",
+				"shapeBorderColorRow": "shown",
 				"shapeBorderColor": "shown",
 				"shapeBorderWidth": "shown",
 				"shapeBorderWidthValue": "shown",
@@ -12274,11 +11905,8 @@
 				"shapeBorderTextureAnchorArtwork": "shown",
 				"shapeBorderTextureAnchorCanvas": "shown",
 				"shapeBorderTextureOffsetX": "shown",
-				"shapeBorderTextureOffsetXValue": "shown",
-				"resetShapeBorderTextureOffsetX": "shown",
 				"shapeBorderTextureOffsetY": "shown",
-				"shapeBorderTextureOffsetYValue": "shown",
-				"resetShapeBorderTextureOffsetY": "shown",
+				"shapeBorderResetTexturePosition": "shown",
 				"shapeShadowEnabled": "shown",
 				"shapeShadowControls": "shown",
 				"shapeShadowGlitter": "shown",
@@ -12294,11 +11922,7 @@
 				"shapeShadowColorRow": "hidden",
 				"shapeShadowColor": "shown",
 				"shapeShadowOffsetX": "shown",
-				"shapeShadowOffsetXValue": "shown",
-				"resetShapeShadowOffsetX": "shown",
 				"shapeShadowOffsetY": "shown",
-				"shapeShadowOffsetYValue": "shown",
-				"resetShapeShadowOffsetY": "shown",
 				"shapeShadowScale": "shown",
 				"shapeShadowScaleValue": "shown",
 				"resetShapeShadowScale": "shown",
@@ -12317,11 +11941,8 @@
 				"shapeShadowTextureAnchorArtwork": "shown",
 				"shapeShadowTextureAnchorCanvas": "shown",
 				"shapeShadowTextureOffsetX": "shown",
-				"shapeShadowTextureOffsetXValue": "shown",
-				"resetShapeShadowTextureOffsetX": "shown",
 				"shapeShadowTextureOffsetY": "shown",
-				"shapeShadowTextureOffsetYValue": "shown",
-				"resetShapeShadowTextureOffsetY": "shown",
+				"shapeShadowResetTexturePosition": "shown",
 				"resetShapeEffects": "shown",
 				"layerSettingsSection": "shown",
 				"layerSettingsHeader": "shown",
@@ -12334,8 +11955,8 @@
 				"contiguous": "shown",
 				"invert": "shown",
 				"multiSelect": "shown",
-				"selectedColorsEmpty": "shown",
 				"selectedColorsDisplay": "shown",
+				"selectedColorsEmptyNote": "shown",
 				"selectionRefineNote": "shown",
 				"threshold": "shown",
 				"thresholdValue": "shown",
@@ -12386,11 +12007,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundNone": {
@@ -12433,11 +12051,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundGlitter": {
@@ -12480,11 +12095,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundSolid": {
@@ -12527,11 +12139,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					},
 					"baseBackgroundGradient": {
@@ -12574,11 +12183,8 @@
 							"baseBackgroundTextureAnchorArtwork": "shown+active",
 							"baseBackgroundTextureAnchorCanvas": "shown",
 							"baseBackgroundTextureOffsetX": "shown",
-							"baseBackgroundTextureOffsetXValue": "shown",
-							"resetBaseBackgroundTextureOffsetX": "shown",
 							"baseBackgroundTextureOffsetY": "shown",
-							"baseBackgroundTextureOffsetYValue": "shown",
-							"resetBaseBackgroundTextureOffsetY": "shown"
+							"baseBackgroundResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -12616,11 +12222,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					},
 					"glitterFillSolid": {
@@ -12656,11 +12259,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					},
 					"glitterFillGradient": {
@@ -12696,11 +12296,8 @@
 							"glitterFillTextureAnchorArtwork": "shown+active",
 							"glitterFillTextureAnchorCanvas": "shown",
 							"glitterFillTextureOffsetX": "shown",
-							"glitterFillTextureOffsetXValue": "shown",
-							"resetGlitterFillTextureOffsetX": "shown",
 							"glitterFillTextureOffsetY": "shown",
-							"glitterFillTextureOffsetYValue": "shown",
-							"resetGlitterFillTextureOffsetY": "shown"
+							"glitterFillResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -12993,9 +12590,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -13008,6 +12602,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -13043,9 +12640,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -13058,6 +12652,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -13093,9 +12690,6 @@
 						"controls": {
 							"textBorderEnabled": "shown",
 							"textBorderControls": "shown",
-							"textBorderWidth": "shown",
-							"textBorderWidthValue": "shown",
-							"resetTextBorderWidth": "shown",
 							"textBorderUseGlitter": "shown+active",
 							"textBorderUseColor": "shown",
 							"textBorderGradient": "shown",
@@ -13108,6 +12702,9 @@
 							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
+							"textBorderWidth": "shown",
+							"textBorderWidthValue": "shown",
+							"resetTextBorderWidth": "shown",
 							"textBorderScaleRow": "shown",
 							"textBorderScale": "shown",
 							"textBorderScaleValue": "shown",
@@ -13302,11 +12899,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillGlitter": {
@@ -13343,11 +12937,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillSolid": {
@@ -13384,11 +12975,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					},
 					"shapeFillGradient": {
@@ -13425,11 +13013,8 @@
 							"shapeFillTextureAnchorArtwork": "shown+active",
 							"shapeFillTextureAnchorCanvas": "shown",
 							"shapeFillTextureOffsetX": "shown",
-							"shapeFillTextureOffsetXValue": "shown",
-							"resetShapeFillTextureOffsetX": "shown",
 							"shapeFillTextureOffsetY": "shown",
-							"shapeFillTextureOffsetYValue": "shown",
-							"resetShapeFillTextureOffsetY": "shown"
+							"shapeFillResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -13439,17 +13024,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -13485,11 +13070,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderSolid": {
@@ -13497,17 +13079,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -13543,11 +13125,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderGradient": {
@@ -13555,17 +13134,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -13601,11 +13180,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -13615,17 +13191,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -13661,11 +13237,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					},
 					"shapeBorderStyleDotted": {
@@ -13673,17 +13246,17 @@
 						"controls": {
 							"shapeBorderEnabled": "shown",
 							"shapeBorderControls": "shown",
-							"shapeBorderGlitter": "shown+active",
-							"shapeBorderSolid": "shown",
+							"shapeBorderGlitter": "shown",
+							"shapeBorderSolid": "shown+active",
 							"shapeBorderGradient": "shown",
-							"shapeBorderGlitterInfo": "shown",
+							"shapeBorderGlitterInfo": "hidden",
 							"shapeBorderGlitterChip": "shown",
 							"shapeBorderGlitterLabel": "shown",
 							"shapeBorderGlitterBadges": "shown",
 							"shapeBorderGlitterSize": "shown",
 							"shapeBorderGlitterFrames": "shown",
 							"shapeBorderGlitterChange": "shown",
-							"shapeBorderColorRow": "hidden",
+							"shapeBorderColorRow": "shown",
 							"shapeBorderColor": "shown",
 							"shapeBorderWidth": "shown",
 							"shapeBorderWidthValue": "shown",
@@ -13719,11 +13292,8 @@
 							"shapeBorderTextureAnchorArtwork": "shown+active",
 							"shapeBorderTextureAnchorCanvas": "shown",
 							"shapeBorderTextureOffsetX": "shown",
-							"shapeBorderTextureOffsetXValue": "shown",
-							"resetShapeBorderTextureOffsetX": "shown",
 							"shapeBorderTextureOffsetY": "shown",
-							"shapeBorderTextureOffsetYValue": "shown",
-							"resetShapeBorderTextureOffsetY": "shown"
+							"shapeBorderResetTexturePosition": "shown"
 						}
 					}
 				},
@@ -13746,11 +13316,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -13769,11 +13335,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					},
 					"shapeShadowSolid": {
@@ -13794,11 +13357,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -13817,11 +13376,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					},
 					"shapeShadowGradient": {
@@ -13842,11 +13398,7 @@
 							"shapeShadowColorRow": "hidden",
 							"shapeShadowColor": "shown",
 							"shapeShadowOffsetX": "shown",
-							"shapeShadowOffsetXValue": "shown",
-							"resetShapeShadowOffsetX": "shown",
 							"shapeShadowOffsetY": "shown",
-							"shapeShadowOffsetYValue": "shown",
-							"resetShapeShadowOffsetY": "shown",
 							"shapeShadowScale": "shown",
 							"shapeShadowScaleValue": "shown",
 							"resetShapeShadowScale": "shown",
@@ -13865,11 +13417,8 @@
 							"shapeShadowTextureAnchorArtwork": "shown+active",
 							"shapeShadowTextureAnchorCanvas": "shown",
 							"shapeShadowTextureOffsetX": "shown",
-							"shapeShadowTextureOffsetXValue": "shown",
-							"resetShapeShadowTextureOffsetX": "shown",
 							"shapeShadowTextureOffsetY": "shown",
-							"shapeShadowTextureOffsetYValue": "shown",
-							"resetShapeShadowTextureOffsetY": "shown"
+							"shapeShadowResetTexturePosition": "shown"
 						}
 					}
 				}

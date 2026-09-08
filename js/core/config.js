@@ -1265,7 +1265,7 @@ const PANEL_SCHEMAS = {
 		replaceStatic: true,
 		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties', classes: 'panel-redesign' },
 		groups: [
-			{ title: 'Appearance', items: [
+			{ title: 'Appearance', collapsible: false, items: [
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background',
 					redesign: true, sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
@@ -1281,7 +1281,7 @@ const PANEL_SCHEMAS = {
 					primaryIds: { scale: 'baseBackgroundScale', opacity: 'baseBackgroundOpacity' }
 				}
 			] },
-			{ title: 'Canvas', items: [
+			{ title: 'Canvas', collapsible: false, items: [
 				{ kind: 'host', id: 'baseCanvasSizeHost' }
 			] },
 
@@ -1334,7 +1334,7 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
-			{ title: 'Actions', items: [
+			{ title: 'Actions', collapsible: false, items: [
 				{ kind: 'card', bare: true, items: [
 					{ kind: 'actionRow', actions: [
 						{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', primary: true, title: 'Turn the image colors into editable glitter fill layers' }

@@ -78,8 +78,9 @@ isLayerContentLocked(layer) {
 		allSections.forEach(id => {
 			const el = document.getElementById(id);
 			if (el) {
-				el.classList.remove('visible');
-				el.style.display = '';
+				el.classList.remove('visible', 'is-open');
+				el.querySelector(':scope > .section-content')?.classList.remove('visible');
+				el.style.display = 'none';
 			}
 		});
 
@@ -108,7 +109,10 @@ isLayerContentLocked(layer) {
 		if (config) {
 			config.designPanelSections.forEach(id => {
 				const el = document.getElementById(id);
-				if (el) el.classList.add('visible');
+				if (el) {
+					el.style.display = '';
+					el.classList.add('visible');
+				}
 			});
 
 			// 5. Set panel mode
@@ -298,12 +302,14 @@ isLayerContentLocked(layer) {
 		const defaultGroups = document.getElementById('noLayerDefaultGroups');
 		const multiGroup = document.getElementById('multiLayerSelectionGroup');
 		const emptyText = document.getElementById('noLayerEmptyText');
+		const designTitle = document.getElementById('designGalleryTitleText');
 		const emptySubtext = document.getElementById('noLayerEmptySubtext');
 
 		if (multiCount > 1) {
 			if (defaultGroups) defaultGroups.hidden = true;
 			if (multiGroup) multiGroup.hidden = false;
 			if (emptyText) emptyText.textContent = `${multiCount} layers selected`;
+			if (designTitle) designTitle.textContent = `${multiCount} layers selected`;
 			if (emptySubtext) emptySubtext.textContent = canTransform
 				? 'Drag the shared box to move them. Shift+click changes the selection; use Align and Actions below.'
 				: 'Selected together for layer actions. Movement and alignment are unavailable while the selection includes a locked, Base Image, or Fill layer.';
@@ -325,6 +331,7 @@ isLayerContentLocked(layer) {
 		if (defaultGroups) defaultGroups.hidden = false;
 		if (multiGroup) multiGroup.hidden = true;
 		if (emptyText) emptyText.textContent = 'Design';
+		if (designTitle) designTitle.textContent = 'Design';
 		if (emptySubtext) emptySubtext.textContent = 'Nothing selected. Pick a layer to edit it, or add content below.';
 	}
 

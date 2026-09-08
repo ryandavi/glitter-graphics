@@ -105,6 +105,9 @@ const CHROME = process.env.CHROME_PATH
 					if (!el.getClientRects().length) return;
 					if (el.type === 'checkbox' || el.type === 'radio') return; // visually hidden
 					if (el.closest('.panel-resize-handle')) return;
+					// Quick Add tiles fill an already-inset grid cell; requiring another
+					// tile-level gutter would double the design's 16px panel inset.
+					if (el.matches('.quick-add > .layer-type-option')) return;
 					// An element that insets its own contents (a full-width click
 					// strip, a padded label) is legitimately flush as a box.
 					if (parseFloat(getComputedStyle(el).paddingLeft) >= rootGutter - 2) return;
