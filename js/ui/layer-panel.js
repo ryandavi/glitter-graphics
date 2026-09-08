@@ -48,8 +48,9 @@ setupLayerTypePickerListeners() {
 		container.innerHTML = '';
 		const iconSizeClass = options.iconSizeClass || 'xl';
 		const idMap = options.idMap || {};
+		const layerTypes = options.layerTypes || getAddableLayerTypes();
 
-		getAddableLayerTypes().forEach((type) => {
+		layerTypes.forEach((type) => {
 			const id = idMap[type] || null;
 			const button = this.createLayerTypeOptionButton(type, { iconSizeClass, id });
 			if (button) {
@@ -154,6 +155,7 @@ setupLayerTypePickerListeners() {
 		if (quickAddOptions) {
 			this.renderLayerTypePickerOptions(quickAddOptions, {
 				iconSizeClass: '',
+				layerTypes: [LayerType.TEXT_GLITTER, LayerType.STICKER, LayerType.SHAPE, LayerType.GLITTER_FILL],
 				idMap: {
 					[LayerType.GLITTER_FILL]: 'quickActionAddGlitter',
 					[LayerType.STICKER]: 'quickActionAddSticker',

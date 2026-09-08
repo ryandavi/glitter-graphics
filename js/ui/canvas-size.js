@@ -97,6 +97,8 @@ get CANVAS_ANCHORS() {
 ,
 	setDocumentSizeMode(mode) {
 		const resolved = mode === 'canvas' ? 'canvas' : 'image';
+		const sizeSummary = document.getElementById('noLayerSizeSummary');
+		if (sizeSummary) sizeSummary.textContent = resolved === 'canvas' ? 'Canvas Size' : 'Image Size';
 		document.getElementById('scaleDesignPanel').hidden = resolved !== 'image';
 		document.getElementById('canvasSizePanel').hidden = resolved !== 'canvas';
 		document.querySelectorAll('#documentSizeMode [data-size-mode]').forEach((button) => {

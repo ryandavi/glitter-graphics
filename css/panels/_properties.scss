@@ -969,6 +969,8 @@
 	> button { width: 100%; }
 
 	&[hidden] { display: none; }
+
+	&.is-split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 // R6 as a card footer: an actions row that ends a card is lifted out of the

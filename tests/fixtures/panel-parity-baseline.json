@@ -9,7 +9,7 @@
 		{
 			"id": "noLayerSettingsContent",
 			"tag": "div",
-			"classes": "section-content",
+			"classes": "no-layer-content section-content",
 			"parent": "noLayerSettingsSection"
 		},
 		{
@@ -37,7 +37,7 @@
 			"parent": "noLayerDefaultGroups"
 		},
 		{
-			"id": "quickActionAddGlitter",
+			"id": "quickActionAddText",
 			"tag": "button",
 			"classes": "layer-type-option",
 			"parent": "quickAddOptions"
@@ -49,13 +49,13 @@
 			"parent": "quickAddOptions"
 		},
 		{
-			"id": "quickActionAddText",
+			"id": "quickActionAddShape",
 			"tag": "button",
 			"classes": "layer-type-option",
 			"parent": "quickAddOptions"
 		},
 		{
-			"id": "quickActionAddShape",
+			"id": "quickActionAddGlitter",
 			"tag": "button",
 			"classes": "layer-type-option",
 			"parent": "quickAddOptions"
@@ -98,6 +98,12 @@
 			"parent": "noLayerDefaultGroups"
 		},
 		{
+			"id": "noLayerSizeSummary",
+			"tag": "span",
+			"classes": "property-module-summary",
+			"parent": "noLayerSizeModule"
+		},
+		{
 			"id": "noLayerCanvasSizeHost",
 			"tag": "div",
 			"classes": "subsection-card-body",
@@ -118,7 +124,7 @@
 		{
 			"id": "canvasSizePanel",
 			"tag": "div",
-			"classes": "document-size-panel panel-module property-card subsection-content-group",
+			"classes": "document-size-panel subsection-content-group",
 			"parent": "documentSizeGroup"
 		},
 		{
@@ -212,7 +218,7 @@
 		{
 			"id": "scaleDesignPanel",
 			"tag": "div",
-			"classes": "document-size-panel panel-module property-card subsection-content-group",
+			"classes": "document-size-panel subsection-content-group",
 			"parent": "documentSizeGroup"
 		},
 		{
@@ -5008,15 +5014,16 @@
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
-				"quickActionAddGlitter": "shown",
-				"quickActionAddSticker": "shown",
 				"quickActionAddText": "shown",
+				"quickActionAddSticker": "shown",
 				"quickActionAddShape": "shown",
+				"quickActionAddGlitter": "shown",
 				"projectMetaGroup": "shown",
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
 				"noLayerSizeModule": "shown",
+				"noLayerSizeSummary": "shown",
 				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
 				"multiSelectionOpacity": "shown",
@@ -7114,15 +7121,16 @@
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
-				"quickActionAddGlitter": "shown",
-				"quickActionAddSticker": "shown",
 				"quickActionAddText": "shown",
+				"quickActionAddSticker": "shown",
 				"quickActionAddShape": "shown",
+				"quickActionAddGlitter": "shown",
 				"projectMetaGroup": "shown",
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
 				"noLayerSizeModule": "shown",
+				"noLayerSizeSummary": "shown",
 				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
 				"multiSelectionOpacity": "shown",
@@ -9220,15 +9228,16 @@
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
-				"quickActionAddGlitter": "shown",
-				"quickActionAddSticker": "shown",
 				"quickActionAddText": "shown",
+				"quickActionAddSticker": "shown",
 				"quickActionAddShape": "shown",
+				"quickActionAddGlitter": "shown",
 				"projectMetaGroup": "shown",
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
 				"noLayerSizeModule": "shown",
+				"noLayerSizeSummary": "shown",
 				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
 				"multiSelectionOpacity": "shown",
@@ -11326,15 +11335,16 @@
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
-				"quickActionAddGlitter": "shown",
-				"quickActionAddSticker": "shown",
 				"quickActionAddText": "shown",
+				"quickActionAddSticker": "shown",
 				"quickActionAddShape": "shown",
+				"quickActionAddGlitter": "shown",
 				"projectMetaGroup": "shown",
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
 				"noLayerSizeModule": "shown",
+				"noLayerSizeSummary": "shown",
 				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
 				"multiSelectionOpacity": "shown",

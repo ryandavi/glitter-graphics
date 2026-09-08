@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=8a0d8f29">
+	<link rel="stylesheet" href="css/style.css?v=acaea421">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -675,7 +675,7 @@
 
 							<!-- 2. NO LAYER SELECTED SECTION (Image Loaded, but nothing selected) -->
 							<div class="no-layer-settings-section section panel-redesign" id="noLayerSettingsSection">
-								<div class="section-content visible" id="noLayerSettingsContent">
+								<div class="section-content no-layer-content visible" id="noLayerSettingsContent">
 									<span id="noLayerEmptyText" hidden>Design</span>
 									<div class="property-note panel-note no-selection-intro" id="noLayerEmptySubtext">Nothing selected. Pick a layer to edit it, or add content below.</div>
 
@@ -702,14 +702,14 @@
 												<input type="text" id="projectNameInput" maxlength="60" spellcheck="false" placeholder="Name...">
 											</div></div>
 										</div>
-											<div class="canvas-project-actions property-actions">
+											<div class="canvas-project-actions property-actions is-split">
 												<button class="btn-simple" id="openProjectSidebarBtn" type="button">Open Project</button>
 												<button class="btn-simple primary" id="saveProject" type="button" disabled>Save Project</button>
 											</div>
 										</div></div></div>
 
 										<div class="panel-group-content"><div class="panel-group-blocks"><div class="subsection-content-group property-card panel-module" id="noLayerSizeModule" data-collapsible-subsection>
-											<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Size</div>
+											<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true"><span>Size</span><span class="property-module-summary" id="noLayerSizeSummary">Image Size</span></div>
 											<div class="subsection-card-body" id="noLayerCanvasSizeHost"></div>
 										</div></div></div>
 
@@ -727,7 +727,7 @@
 													<div class="property-set"><div class="property-row is-stacked"><span class="property-label">Anchor</span><div class="anchor-grid" id="canvasSizeAnchor" role="radiogroup" aria-label="Canvas resize anchor"></div></div></div>
 													<div class="property-set"><div class="property-row is-stacked"><span class="property-label">Extension</span><div class="segmented-control canvas-extension-mode" id="canvasExtensionMode"><button class="segmented-option active" type="button" data-extension-mode="transparent" aria-pressed="true">Transparent</button><button class="segmented-option" type="button" data-extension-mode="color" aria-pressed="false">Color</button></div></div><div class="property-row" id="canvasExtensionColorRow" hidden><span class="property-label" data-for="canvasExtensionColor">Fill Color</span><input type="color" id="canvasExtensionColor" value="#ffffff"></div></div>
 												</div>
-												<div class="canvas-size-actions property-actions"><button class="btn-simple" id="canvasSizeReset" type="button">Reset</button><button class="btn-simple primary" id="canvasSizeApply" type="button">Resize Canvas</button></div>
+												<div class="canvas-size-actions property-actions is-split"><button class="btn-simple" id="canvasSizeReset" type="button">Reset</button><button class="btn-simple primary" id="canvasSizeApply" type="button">Resize Canvas</button></div>
 											</div>
 											<div class="subsection-content-group property-card panel-module document-size-panel" id="scaleDesignPanel" data-collapsible-subsection>
 												<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Image Size</div>
@@ -737,7 +737,7 @@
 													<div class="property-set"><div class="property-row is-stacked"><span class="property-label">Quick Scale</span><div class="segmented-control scale-design-presets" id="scaleDesignPresets" aria-label="Scale presets"></div></div></div>
 													<div class="property-set property-toggle-list"><label class="property-row is-toggle"><span class="property-label">Scale Textures</span><input type="checkbox" id="scaleDesignTextures" checked><span class="property-switch" aria-hidden="true"></span></label><label class="property-row is-toggle"><span class="property-label">Scale Effects</span><input type="checkbox" id="scaleDesignEffects" checked><span class="property-switch" aria-hidden="true"></span></label></div>
 												</div>
-												<div class="canvas-size-actions property-actions"><button class="btn-simple" id="scaleDesignReset" type="button">Reset</button><button class="btn-simple primary" id="scaleDesignApply" type="button">Scale Design</button></div>
+												<div class="canvas-size-actions property-actions is-split"><button class="btn-simple" id="scaleDesignReset" type="button">Reset</button><button class="btn-simple primary" id="scaleDesignApply" type="button">Apply</button></div>
 											</div>
 										</div>
 
@@ -753,10 +753,12 @@
 										<div class="subsection-content-group subsection-section-group panel-group">
 											<div class="subsection-title">Align</div>
 											<div class="panel-group-content"><div class="panel-group-blocks"><div class="subsection-content-group property-card panel-card"><div class="subsection-card-body">
-												<div class="property-set"><div class="property-row is-stacked"><span class="property-label">Align to</span><div class="segmented-control" id="multiSelectionAlignScope"><button class="segmented-option active" type="button" data-scope="selection">Selection</button><button class="segmented-option" type="button" data-scope="canvas">Canvas</button></div></div></div>
-												<div class="property-set"><div class="property-row is-stacked"><span class="property-label">Horizontal</span><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="left" title="Align left"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 2v12" opacity=".5"/><rect x="4.5" y="5" width="7.5" height="6" rx="1"/></svg></button><button class="segmented-option" type="button" data-multi-align="centerX" title="Align horizontal centers"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2v12" opacity=".5" stroke-dasharray="2 2"/><rect x="3.5" y="5" width="9" height="6" rx="1"/></svg></button><button class="segmented-option" type="button" data-multi-align="right" title="Align right"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 2v12" opacity=".5"/><rect x="4" y="5" width="7.5" height="6" rx="1"/></svg></button></div></div></div>
-												<div class="property-set"><div class="property-row is-stacked"><span class="property-label">Vertical</span><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="top" title="Align top"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 2.5h12" opacity=".5"/><rect x="5" y="4.5" width="6" height="7.5" rx="1"/></svg></button><button class="segmented-option" type="button" data-multi-align="centerY" title="Align vertical centers"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 8h12" opacity=".5" stroke-dasharray="2 2"/><rect x="5" y="3.5" width="6" height="9" rx="1"/></svg></button><button class="segmented-option" type="button" data-multi-align="bottom" title="Align bottom"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13.5h12" opacity=".5"/><rect x="5" y="4" width="6" height="7.5" rx="1"/></svg></button></div></div></div>
-												<div class="property-set"><div class="property-row is-stacked"><span class="property-label">Distribute</span><div class="segmented-control transform-segmented-control"><button class="segmented-option" data-multi-distribute="horizontal" type="button" title="Distribute horizontally"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 2v12M14 2v12M8 4v8"/></svg></button><button class="segmented-option" data-multi-distribute="vertical" type="button" title="Distribute vertically"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 2h12M2 14h12M4 8h8"/></svg></button></div></div></div>
+												<div class="property-set">
+													<div class="property-row is-stacked"><span class="property-label">Align to</span><div class="segmented-control" id="multiSelectionAlignScope"><button class="segmented-option active" type="button" data-scope="selection">Selection</button><button class="segmented-option" type="button" data-scope="canvas">Canvas</button></div></div>
+													<div class="property-row is-stacked"><span class="property-label">Horizontal</span><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="left" title="Align left"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 2v12" opacity=".5"/><rect x="4.5" y="5" width="7.5" height="6" rx="1"/></svg></button><button class="segmented-option" type="button" data-multi-align="centerX" title="Align horizontal centers"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2v12" opacity=".5" stroke-dasharray="2 2"/><rect x="3.5" y="5" width="9" height="6" rx="1"/></svg></button><button class="segmented-option" type="button" data-multi-align="right" title="Align right"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M13.5 2v12" opacity=".5"/><rect x="4" y="5" width="7.5" height="6" rx="1"/></svg></button></div></div>
+													<div class="property-row is-stacked"><span class="property-label">Vertical</span><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" data-multi-align="top" title="Align top"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 2.5h12" opacity=".5"/><rect x="5" y="4.5" width="6" height="7.5" rx="1"/></svg></button><button class="segmented-option" type="button" data-multi-align="centerY" title="Align vertical centers"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 8h12" opacity=".5" stroke-dasharray="2 2"/><rect x="5" y="3.5" width="6" height="9" rx="1"/></svg></button><button class="segmented-option" type="button" data-multi-align="bottom" title="Align bottom"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13.5h12" opacity=".5"/><rect x="5" y="4" width="6" height="7.5" rx="1"/></svg></button></div></div>
+													<div class="property-row is-stacked"><span class="property-label">Distribute</span><div class="segmented-control transform-segmented-control"><button class="segmented-option" data-multi-distribute="horizontal" type="button" title="Distribute horizontally"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 2v12M14 2v12M8 4v8"/></svg></button><button class="segmented-option" data-multi-distribute="vertical" type="button" title="Distribute vertically"><svg class="design-panel-glyph" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 2h12M2 14h12M4 8h8"/></svg></button></div></div>
+												</div>
 											</div></div></div></div>
 										</div>
 										<div class="subsection-content-group subsection-section-group panel-group">
@@ -2599,16 +2601,16 @@
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
 	<script src="js/ui/editor-settings.js?v=079a4fca"></script>
-	<script src="js/ui/editor-panels.js?v=327386ad"></script>
+	<script src="js/ui/editor-panels.js?v=b0cbe717"></script>
 	<script src="js/ui/editor-disclosures.js?v=54142c3b"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/ui/transform-panel.js?v=e49f4a5c"></script>
 	<script src="js/transforms/editor-transform.js?v=62568255"></script>
 	<script src="js/ui/document-start.js?v=c4ce37a0"></script>
 		<script src="js/ui/modals-wiring.js?v=dd20b745"></script>
-	<script src="js/ui/layer-panel.js?v=e1d390d7"></script>
+	<script src="js/ui/layer-panel.js?v=9bbe3af6"></script>
 	<script src="js/ui/canvas-gestures.js?v=569d61e7"></script>
-	<script src="js/ui/canvas-size.js?v=53305937"></script>
+	<script src="js/ui/canvas-size.js?v=471a91cb"></script>
 	<script src="js/core/canvas-resize.js?v=fd22383b"></script>
 		<script src="js/ui/hints.js?v=c40adaef"></script>
 	<script src="js/ui/picker-session.js?v=164f3036"></script>
