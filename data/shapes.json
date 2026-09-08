@@ -116,17 +116,6 @@
 			]
 		},
 		{
-			"id": "roundedRectangle",
-			"label": "Rounded Rectangle",
-			"viewBox": 24,
-			"uses": [
-				"shape"
-			],
-			"category": "basic",
-			"shapeOrder": 7,
-			"svgPath": "M6 2 H18 Q22 2 22 6 V18 Q22 22 18 22 H6 Q2 22 2 18 V6 Q2 2 6 2 Z"
-		},
-		{
 			"id": "star",
 			"label": "Star",
 			"viewBox": 24,

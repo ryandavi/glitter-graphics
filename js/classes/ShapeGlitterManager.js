@@ -88,10 +88,6 @@ class ShapeGlitterManager {
 		this.ui.borderOrderFront = id('shapeBorderOrderFront');
 		this.ui.shadowEnabled = id('shapeShadowEnabled');
 		this.ui.shadowControls = id('shapeShadowControls');
-		this.ui.shadowOffsetX = id('shapeShadowOffsetX');
-		this.ui.shadowOffsetXValue = id('shapeShadowOffsetXValue');
-		this.ui.shadowOffsetY = id('shapeShadowOffsetY');
-		this.ui.shadowOffsetYValue = id('shapeShadowOffsetYValue');
 		this.ui.shadowOpacity = id('shapeShadowOpacity');
 		this.ui.shadowOpacityValue = id('shapeShadowOpacityValue');
 		this.ui.resetEffects = id('resetShapeEffects');
@@ -269,8 +265,21 @@ class ShapeGlitterManager {
 		this._attachSlider(this.ui.radius, this.ui.radiusValue, 'px', (v, l) => { l.shapeData.cornerRadiusPx = v; }, CONFIG.ui.sliders.shapeRadius.value, true);
 		this._attachSlider(this.ui.borderWidth, this.ui.borderWidthValue, 'px', (v, l) => { this.ensureEffectData(l, 'border').widthPx = v; }, this.getDefaultBorder().widthPx, true);
 		this._attachSlider(this.ui.borderDotSpacing, this.ui.borderDotSpacingValue, 'px', (v, l) => { this.ensureEffectData(l, 'border').dotSpacingPx = v; }, this.getDefaultBorder().dotSpacingPx, true);
-		this._attachSlider(this.ui.shadowOffsetX, this.ui.shadowOffsetXValue, 'px', (v, l) => { this.ensureEffectData(l, 'shadow').offsetX = v; }, this.getDefaultShadow().offsetX, true);
-		this._attachSlider(this.ui.shadowOffsetY, this.ui.shadowOffsetYValue, 'px', (v, l) => { this.ensureEffectData(l, 'shadow').offsetY = v; }, this.getDefaultShadow().offsetY, true);
+
+		// Shadow Offset is number fields (parity with Text Properties). It grows the
+		// mask footprint, so the write goes through mutateGeometryPreservingShape.
+		bindEffectOffsetPair({
+			prefix: 'shapeShadow',
+			slider: 'shadowOffsetX',
+			getLayer: () => this.getActiveShapeLayer(),
+			getData: (layer) => this.ensureEffectData(layer, 'shadow'),
+			render: (layer) => this.renderLayer(layer),
+			save: () => { this.editor.saveState('Edit shape'); this.editor.layerManager.renderLayersList(); },
+			applyValue: (layer, mutate) => {
+				this.mutateGeometryPreservingShape(layer, mutate);
+				this.renderLayer(layer);
+			}
+		});
 
 		// Non-geometry sliders (opacity, hsb) — re-render only.
 		this._attachSlider(this.ui.borderOpacity, this.ui.borderOpacityValue, '%', (v, l) => { this.ensureEffectData(l, 'border').opacity = v; }, 100, false);
@@ -618,7 +627,7 @@ class ShapeGlitterManager {
 		if (this.ui.assetName) this.ui.assetName.textContent = this.getShapeLabel(d.shapeId);
 		if (this.ui.radius) this.ui.radius.value = d.cornerRadiusPx;
 		if (this.ui.radiusValue) this.ui.radiusValue.innerHTML = formatUnit(d.cornerRadiusPx, 'px');
-		if (this.ui.radiusRow) this.ui.radiusRow.hidden = d.shapeId !== 'roundedRectangle';
+		if (this.ui.radiusRow) this.ui.radiusRow.hidden = d.shapeId !== 'square';
 
 		this._syncPickerActive();
 
@@ -645,8 +654,7 @@ class ShapeGlitterManager {
 		const shadow = d.shadow;
 		syncPanelEffectToggle(this.ui.shadowEnabled, Boolean(shadow));
 		const sd = shadow || shadowDefaults;
-		if (this.ui.shadowOffsetX) { this.ui.shadowOffsetX.value = sd.offsetX; if (this.ui.shadowOffsetXValue) this.ui.shadowOffsetXValue.innerHTML = formatUnit(sd.offsetX, 'px'); }
-		if (this.ui.shadowOffsetY) { this.ui.shadowOffsetY.value = sd.offsetY; if (this.ui.shadowOffsetYValue) this.ui.shadowOffsetYValue.innerHTML = formatUnit(sd.offsetY, 'px'); }
+		syncEffectOffsetPair('shapeShadow', sd);
 		if (this.ui.shadowOpacity) { this.ui.shadowOpacity.value = sd.opacity ?? shadowDefaults.opacity; this.ui.shadowOpacityValue.innerHTML = formatUnit(sd.opacity ?? shadowDefaults.opacity, '%'); }
 		if (this.ui.shapeShadowColor) this.ui.shapeShadowColor.value = sd.color || '#000000';
 		this._loadColorAdjust('shapeShadow', sd.colorAdjust, sd.scale ?? shadowDefaults.scale);
@@ -662,6 +670,12 @@ class ShapeGlitterManager {
 		this._refreshSourceUI(layer, 'fill');
 		this._refreshSourceUI(layer, 'border');
 		this._refreshSourceUI(layer, 'shadow');
+
+		// This method writes slider values and option-active classes directly, which
+		// fires no events; sweep the reverts so they match what's on screen (the
+		// sticker/text/glitter panels get this sweep via loadActiveLayerSettings —
+		// shapes load through LAYER_UI_CONFIG.onActivate instead).
+		syncPropertyReverts();
 	}
 
 	// ===== DEFAULTS / DATA MODEL =====
@@ -693,6 +707,8 @@ class ShapeGlitterManager {
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		const data = layer.shapeData;
+		// The rounded rectangle folded into the parametric square (corner radius 0).
+		if (data.shapeId === 'roundedRectangle') data.shapeId = 'square';
 		data.cornerRadiusPx ??= CONFIG.ui.sliders.shapeRadius.value;
 		data.fill = { ...this.getDefaultFill(), ...(data.fill || {}) };
 		if (data.border === undefined) data.border = null;
@@ -949,7 +965,7 @@ class ShapeGlitterManager {
 			d.shapeId,
 			d.width,
 			d.height,
-			d.shapeId === 'roundedRectangle' ? d.cornerRadiusPx : null,
+			d.shapeId === 'square' ? d.cornerRadiusPx : null,
 			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, this.getBorderPlacement(d.border), this.getBorderEdgeStyle(d.border)] : null,
 			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null,
 			shouldUseCrispMaskEdges(),
@@ -976,14 +992,24 @@ class ShapeGlitterManager {
 		const w = d.width;
 		const h = d.height;
 		const padding = CONFIG.rendering?.maskPaddingPx ?? 8;
-		const borderWidth = this.getBorderOutsidePadding(d.border);
+		// Canvas allocation reserves the worst-case hard-miter spike (miterLimit ×
+		// width) so a star point never clips; the user-facing frame uses only the
+		// nominal outward border extent so the transform box hugs the shape instead
+		// of the reservation. For round edges the two are equal.
+		const borderReserve = this.getBorderOutsidePadding(d.border);
+		const borderExtent = getBorderOutsidePadding(d.border);
 		const shX = d.shadow?.offsetX || 0;
 		const shY = d.shadow?.offsetY || 0;
 
-		const inkLeft = Math.min(-borderWidth, shX);
-		const inkRight = Math.max(w + borderWidth, w + shX);
-		const inkTop = Math.min(-borderWidth, shY);
-		const inkBottom = Math.max(h + borderWidth, h + shY);
+		const inkLeft = Math.min(-borderReserve, shX);
+		const inkRight = Math.max(w + borderReserve, w + shX);
+		const inkTop = Math.min(-borderReserve, shY);
+		const inkBottom = Math.max(h + borderReserve, h + shY);
+
+		const frameLeft = Math.min(-borderExtent, shX);
+		const frameRight = Math.max(w + borderExtent, w + shX);
+		const frameTop = Math.min(-borderExtent, shY);
+		const frameBottom = Math.max(h + borderExtent, h + shY);
 
 		const layoutX = padding - inkLeft;
 		const layoutY = padding - inkTop;
@@ -1014,10 +1040,10 @@ class ShapeGlitterManager {
 			width: canvasWidth,
 			height: canvasHeight,
 			frameRect: {
-				x: layoutX + inkLeft,
-				y: layoutY + inkTop,
-				width: inkRight - inkLeft,
-				height: inkBottom - inkTop
+				x: layoutX + frameLeft,
+				y: layoutY + frameTop,
+				width: frameRight - frameLeft,
+				height: frameBottom - frameTop
 			},
 			shapeRect: { x: layoutX, y: layoutY, width: w, height: h },
 			// Kept so the border can be re-derived as a vector STROKE of the path

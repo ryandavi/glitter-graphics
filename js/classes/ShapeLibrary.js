@@ -223,13 +223,20 @@ const ShapeLibrary = {
 	// and, crucially, to STROKE a smooth vector border (uniform lineWidth in
 	// output space, no scalloping) — far cleaner than raster ring-union.
 	buildTransformedPath(id, halfW, halfH, options = {}) {
-		if (id === 'roundedRectangle' && Number.isFinite(options.cornerRadiusPx)) {
-			const radius = Math.max(0, Math.min(options.cornerRadiusPx, halfW, halfH));
+		const def = this.DEFS[id] || this.DEFS.circle;
+		// The square is parametric: its corner radius (0 = a plain square) is a
+		// per-layer property, not a separate shape.
+		if (def.primitive === 'square') {
+			// 'contain' (the brush) keeps the stamp square; 'fill' (the Shape tool)
+			// stretches to the layer frame.
+			let hw = halfW;
+			let hh = halfH;
+			if ((options.fit || 'contain') === 'contain') hw = hh = Math.min(halfW, halfH);
+			const radius = Math.max(0, Math.min(Number(options.cornerRadiusPx) || 0, hw, hh));
 			const path = new Path2D();
-			path.roundRect(-halfW, -halfH, halfW * 2, halfH * 2, radius);
+			path.roundRect(-hw, -hh, hw * 2, hh * 2, radius);
 			return path;
 		}
-		const def = this.DEFS[id] || this.DEFS.circle;
 		const geom = this._geometry(id);
 		const bw = (geom.bounds.maxX - geom.bounds.minX) || 1;
 		const bh = (geom.bounds.maxY - geom.bounds.minY) || 1;

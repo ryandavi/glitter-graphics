@@ -781,7 +781,7 @@ class GlitterEditor {
 		// (the resulting stroke is baked into the mask), so no live re-render.
 		this.setupSlider('maskBrushSpacing', 'maskBrushSpacingValue', '%', null,
 			() => this.maskEditor?.rasterSliderDefault('maskBrushSpacing')
-				?? Math.round(CONFIG.tools.maskBrush.stroke.stampSpacing * 100));
+				?? CONFIG.ui.sliders.maskBrushSpacing.value);
 
 		// Smoothing (EMA stabilizer); affects the live stroke only, no re-render.
 		this.setupSlider('maskBrushSmoothing', 'maskBrushSmoothingValue', '%', null,
@@ -1574,7 +1574,7 @@ class GlitterEditor {
 		// ======================
 		// Selected colors
 		// ======================
-		document.getElementById('selectedColorsEmpty').classList.add('visible');
+		document.querySelector('.color-selection')?.classList.add('is-empty');
 		document.getElementById('selectedColorsDisplay').innerHTML = '';
 
 		// ======================
@@ -2333,15 +2333,17 @@ class GlitterEditor {
 		if (!container) return;
 
 		const layer = this.layerManager.getActiveLayer();
+		const card = container.closest('.color-selection');
 
-		// Only show for glitter layers with selections
+		// Only show for glitter layers with selections; otherwise the card shows just
+		// its "Pick a color on the canvas to add it." note.
 		if (!layer || layer.type !== LayerType.GLITTER_FILL || !layer.selections || layer.selections.length === 0) {
-			document.getElementById('selectedColorsEmpty')?.classList.add('visible');
+			card?.classList.add('is-empty');
 			container.innerHTML = '';
 			return;
 		}
 
-		document.getElementById('selectedColorsEmpty')?.classList.remove('visible');
+		card?.classList.remove('is-empty');
 		container.innerHTML = '';
 
 		layer.selections.forEach((sel, index) => {

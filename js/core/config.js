@@ -499,7 +499,7 @@ const CONFIG = deepFreeze({
 			}
 		},
 		shapes: {
-			manifest: 'data/shapes.json?v=1',
+			manifest: 'data/shapes.json?v=2',
 			defaultShapeId: 'circle',   // one of ShapeLibrary.FILL_SHAPES ids
 			defaultSize: 160,           // intrinsic px for a click (no-drag) create
 			minSize: 8,
@@ -676,7 +676,7 @@ const CONFIG = deepFreeze({
 			maskBrushSize: { label: 'Size', unit: 'px', min: 1, max: 1000, value: 40, scale: 'log' },
 			maskBrushSoftness: { label: 'Softness', unit: '%', min: 0, max: 100, value: 0 },
 			maskBrushFlow: { label: 'Flow', unit: '%', min: 1, max: 100, value: 100 },
-			maskBrushSpacing: { label: 'Spacing', unit: '%', min: 1, max: 200, value: 25 },
+			maskBrushSpacing: { label: 'Spacing', unit: '%', min: 1, max: 200, value: 1 },
 			maskBrushSmoothing: { label: 'Smoothing', unit: '%', min: 0, max: 100, value: 0 },
 			textureScale: { label: 'Texture Scale', unit: '%', min: 25, max: 300, value: 100 },
 			textureOffsetX: { label: 'Offset X', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
@@ -688,7 +688,7 @@ const CONFIG = deepFreeze({
 			borderWidth: { label: 'Width', unit: 'px', min: 1, max: 60, value: 6 },
 			textBorderWidth: { label: 'Width', unit: 'px', min: 1, max: 24, value: 4 },
 			borderDotSpacing: { label: 'Dot Spacing', unit: 'px', min: 1, max: 60, value: 10 },
-			shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 12 },
+			shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 0 },
 			shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
 			shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
 			threshold: { label: 'Color Tolerance', unit: '', min: 0, max: 255, value: 50 },
@@ -1267,7 +1267,7 @@ const PANEL_SCHEMAS = {
 		groups: [
 			{ title: 'Appearance', items: [
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background',
-					redesign: true, coordinateFields: false, sourceSelect: true, sourceRevert: true, colorRevert: true,
+					redesign: true, sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['image', 'none', 'glitter', 'solid'], activeMode: 'image', color: '#ffffff',
 					modeLabels: { none: 'Transparent' },
@@ -1403,7 +1403,7 @@ const PANEL_SCHEMAS = {
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', empty: { icon: 'glitter', text: 'Select a glitter fill from the gallery to get started.' } },
 		groups: [
 			{ title: 'Appearance', collapsible: false, items: [
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', redesign: true, coordinateFields: false,
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', redesign: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
@@ -1444,9 +1444,8 @@ const PANEL_SCHEMAS = {
 					] },
 					{ kind: 'card', title: 'Color Selections', classes: 'color-selection', items: [
 						{ kind: 'content', items: [
-							{ kind: 'host', id: 'selectedColorsEmpty', tag: 'span', classes: 'property-empty-inline visible', text: 'None' },
 							{ kind: 'host', id: 'selectedColorsDisplay', classes: 'selected-colors-display' },
-							{ kind: 'host', classes: 'property-note panel-note color-selection-empty-note', text: 'Pick a color on the canvas to add it.' }
+							{ kind: 'host', id: 'selectedColorsEmptyNote', classes: 'property-note panel-note color-selection-empty-note', text: 'Pick a color on the canvas to add it.' }
 						] }
 					] },
 					{ kind: 'card', title: 'Refine', items: [
@@ -1563,22 +1562,30 @@ const PANEL_SCHEMAS = {
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose border source',
 				primaryIds: { scale: 'textBorderScale', scaleRow: 'textBorderScaleRow', opacity: 'textBorderOpacity' },
-				pre: [{ kind: 'slider', id: 'textBorderWidth', slider: 'textBorderWidth' }],
-				post: [{ kind: 'stackRow', revert: true, groups: [
-					{ label: 'Edges', options: [
-						{ id: 'textBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
-						{ id: 'textBorderEdgeHard', label: 'Hard', value: 'hard' }
-					] },
-					{ label: 'Placement', control: 'select', options: [
-						{ id: 'textBorderPositionOutside', label: 'Outside', active: true, value: 'outside' },
-						{ id: 'textBorderPositionCenter', label: 'On Edge', value: 'center' },
-						{ id: 'textBorderPositionInside', label: 'Inside', value: 'inside' }
-					] },
-					{ label: 'Layering', options: [
-						{ id: 'textBorderOrderBehind', label: 'Behind text', active: true, value: 'behind' },
-						{ id: 'textBorderOrderFront', label: 'On top', value: 'front' }
+				afterSource: [
+					{ kind: 'set', label: 'Stroke', items: [
+						{ kind: 'slider', id: 'textBorderWidth', slider: 'textBorderWidth' }
 					] }
-				] }]
+				],
+				post: [
+					{ kind: 'set', label: 'Placement', items: [
+					{ kind: 'stackRow', revert: true, groups: [
+						{ label: 'Edges', options: [
+							{ id: 'textBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
+							{ id: 'textBorderEdgeHard', label: 'Hard', value: 'hard' }
+						] },
+						{ label: 'Placement', control: 'select', options: [
+							{ id: 'textBorderPositionOutside', label: 'Outside', active: true, value: 'outside' },
+							{ id: 'textBorderPositionCenter', label: 'On Edge', value: 'center' },
+							{ id: 'textBorderPositionInside', label: 'Inside', value: 'inside' }
+						] },
+						{ label: 'Layering', options: [
+							{ id: 'textBorderOrderBehind', label: 'Behind text', active: true, value: 'behind' },
+							{ id: 'textBorderOrderFront', label: 'On top', value: 'front' }
+						] }
+					] }
+					] }
+				]
 			},
 			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'textShadow', title: 'Shadow', redesign: true,
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
@@ -1615,7 +1622,7 @@ const PANEL_SCHEMAS = {
 			// (finalizePanelSchemaSections), mirroring the old shape branch of
 			// the pre-schema panel order.
 			{ title: 'Appearance', collapsible: false, adoptTransformOpacity: true, items: [
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', redesign: true, coordinateFields: false,
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', redesign: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'solid',
@@ -1624,21 +1631,24 @@ const PANEL_SCHEMAS = {
 			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
 		],
 		effects: [
-			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Border', redesign: true, coordinateFields: false,
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Border', redesign: true,
 				sourceSelect: true, sourceRevert: true, colorRevert: true, hideAdvanced: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
-				modes: ['glitter', 'solid'], activeMode: 'glitter',
+				modes: ['glitter', 'solid'], activeMode: 'solid',
 				color: '#000000', chipTitle: 'Choose glitter',
 				afterSource: [
-					{ kind: 'slider', id: 'shapeBorderWidth', slider: 'borderWidth' },
-					{ kind: 'optionGroup', label: 'Style', glitterSource: true, revert: true, options: [
-						{ id: 'shapeBorderStyleSolid', label: 'Solid', active: true, value: 'solid' },
-						{ id: 'shapeBorderStyleDotted', label: 'Dotted', value: 'dotted' }
-					] },
-					{ kind: 'slider', id: 'shapeBorderDotSpacing', slider: 'borderDotSpacing', rowId: 'shapeBorderDotSpacingRow', hidden: true }
+					{ kind: 'set', label: 'Stroke', items: [
+						{ kind: 'slider', id: 'shapeBorderWidth', slider: 'borderWidth' },
+						{ kind: 'optionGroup', label: 'Style', glitterSource: true, revert: true, options: [
+							{ id: 'shapeBorderStyleSolid', label: 'Solid', active: true, value: 'solid' },
+							{ id: 'shapeBorderStyleDotted', label: 'Dotted', value: 'dotted' }
+						] },
+						{ kind: 'slider', id: 'shapeBorderDotSpacing', slider: 'borderDotSpacing', rowId: 'shapeBorderDotSpacingRow', hidden: true }
+					] }
 				],
 				post: [
+					{ kind: 'set', label: 'Placement', items: [
 					{ kind: 'stackRow', revert: true, groups: [
 						{ label: 'Edges', options: [
 							{ id: 'shapeBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
@@ -1654,16 +1664,17 @@ const PANEL_SCHEMAS = {
 							{ id: 'shapeBorderOrderFront', label: 'On Top', value: 'front' }
 						] }
 					] }
+					] }
 				]
 			},
-			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'shapeShadow', title: 'Shadow', redesign: true, coordinateFields: false,
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'shapeShadow', title: 'Shadow', redesign: true,
 				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
 				modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
 				afterSource: [
-					{ kind: 'pair', label: 'Offset', items: [
+					{ kind: 'numberPair', label: 'Offset', items: [
 						{ id: 'shapeShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 						{ id: 'shapeShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 					] }

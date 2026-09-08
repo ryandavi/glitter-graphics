@@ -3164,7 +3164,7 @@ input[type=range]:disabled {
 .color-selection .color-selection-empty-note {
   display: none;
 }
-.color-selection:has(.property-empty-inline.visible) .color-selection-empty-note {
+.color-selection.is-empty .color-selection-empty-note {
   display: block;
 }
 .color-selection .selected-colors-display {
@@ -5737,45 +5737,45 @@ body.tool-select .preview-canvas {
   flex-shrink: 0;
 }
 
-.sticker-position-group {
+.number-field-pair {
   display: flex;
   gap: var(--spacing-md);
   width: auto;
 }
-.sticker-position-group .input-group {
+.number-field-pair .input-group {
   display: flex;
   flex: 1;
   flex-direction: column;
   gap: var(--spacing-xs);
 }
-.sticker-position-group .input-group.horizontal {
+.number-field-pair .input-group.horizontal {
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
 }
-.sticker-position-group .input-group > label {
+.number-field-pair .input-group > label {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   font-weight: 500;
 }
-.sticker-position-group .input-group > .input-unit {
+.number-field-pair .input-group > .input-unit {
   flex: 1;
 }
-.sticker-position-group .input-group > .input-unit > input[type=number] {
+.number-field-pair .input-group > .input-unit > input[type=number] {
   padding-right: 26px;
 }
-.sticker-position-group .input-group > input[type=number] {
+.number-field-pair .input-group > input[type=number] {
   width: 100%;
   min-width: unset;
   padding-inline: var(--spacing-sm);
   font-size: var(--font-size-base);
 }
-.sticker-position-group .input-group > input[type=number]:-moz-read-only {
+.number-field-pair .input-group > input[type=number]:-moz-read-only {
   opacity: 0.6;
   cursor: not-allowed;
 }
-.sticker-position-group .input-group > input[type=number]:read-only {
+.number-field-pair .input-group > input[type=number]:read-only {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -6715,6 +6715,7 @@ body.tool-select .preview-canvas {
   --property-gutter: 12px;
   --property-card-inset: 10px;
   --property-pair-min: 128px;
+  --property-control-height: 32px;
   --property-row-gap: 2px;
   --property-field-gap: 5px;
   --property-block-gap: var(--property-gutter);
@@ -7193,9 +7194,6 @@ body.tool-select .preview-canvas {
   min-width: 0;
   padding: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .subsection-card-body {
-  gap: 0;
-}
 :is(.design-panel, .mobile-settings-drawer) .subsection-card-body-bare {
   padding: 0;
 }
@@ -7333,25 +7331,20 @@ body.tool-select .preview-canvas {
 :is(.design-panel, .mobile-settings-drawer) .paint-slot-primary-row {
   padding: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .sticker-position-group {
+:is(.design-panel, .mobile-settings-drawer) .number-field-pair {
   gap: var(--spacing-sm);
   min-width: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .sticker-position-group > .input-group {
+:is(.design-panel, .mobile-settings-drawer) .number-field-pair > .input-group {
   min-width: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .sticker-position-group > .input-group > .input-unit {
+:is(.design-panel, .mobile-settings-drawer) .number-field-pair > .input-group > .input-unit {
   min-width: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .sticker-position-group > .input-group > .input-unit > input[type=number],
-:is(.design-panel, .mobile-settings-drawer) .sticker-position-group > .input-group > input[type=number] {
+:is(.design-panel, .mobile-settings-drawer) .number-field-pair > .input-group > .input-unit > input[type=number],
+:is(.design-panel, .mobile-settings-drawer) .number-field-pair > .input-group > input[type=number] {
   min-width: 0;
   width: 100%;
-}
-
-.property-card > .subsection-card-body:not(:empty) {
-  padding-bottom: var(--property-gutter);
-  gap: var(--property-row-gap);
 }
 
 /*
@@ -7504,9 +7497,6 @@ body.tool-select .preview-canvas {
   margin: 0 var(--property-gutter);
   padding: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .selected-colors-display:not(:empty) {
-  margin-bottom: var(--property-gutter);
-}
 :is(.design-panel, .mobile-settings-drawer) .selected-colors-display > .selected-color-chip {
   gap: var(--spacing-xs);
   min-height: var(--control-height-compact);
@@ -7581,9 +7571,9 @@ body.tool-select .preview-canvas {
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-select {
   width: 100%;
-  height: 24px;
-  min-height: 24px;
-  max-height: 24px;
+  height: var(--property-control-height);
+  min-height: var(--property-control-height);
+  max-height: var(--property-control-height);
   box-sizing: border-box;
   padding: 0 28px 0 var(--property-pad);
   border-radius: var(--property-r-field);
@@ -7619,7 +7609,7 @@ body.tool-select .preview-canvas {
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   align-content: center;
-  gap: 1px 6px;
+  gap: 3px 6px;
   min-height: 34px;
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .asset-info-name {
@@ -7660,8 +7650,8 @@ body.tool-select .preview-canvas {
   border-top: 1px solid var(--color-border);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .panel-actions > .btn-simple {
-  height: 28px;
-  min-height: 28px;
+  height: var(--property-control-height);
+  min-height: var(--property-control-height);
   padding: 0 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--property-r-field);
@@ -7721,46 +7711,55 @@ body.tool-select .preview-canvas {
   border-top: 1px solid var(--color-border);
   background: var(--color-bg-primary);
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-scale-rows,
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign [data-transform-align] {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-scale-rows {
   display: contents;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .sticker-position-group {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign :is(.transform-grid, .paint-slot-main) > .property-set {
+  padding: var(--property-pad) 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-grid > .property-set + .property-set,
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-main > :not(.property-set):not(.property-set-label) + .property-set {
+  border-top: 1px solid var(--color-border);
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign :is(.transform-grid, .paint-slot-main) > .property-set > .property-set-label {
+  margin-bottom: var(--spacing-2xs);
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .number-field-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-column: 2;
   gap: var(--property-pad);
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .sticker-position-group > .input-group.horizontal {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .number-field-pair > .input-group.horizontal {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 6px;
-  height: 24px;
+  height: var(--property-control-height);
   padding: 0 var(--property-pad);
   border: 1px solid var(--color-border);
   border-radius: var(--property-r-field);
   background: var(--color-bg-secondary);
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .sticker-position-group > .input-group.horizontal > label {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .number-field-pair > .input-group.horizontal > label {
   width: auto;
   min-width: 0;
   font-size: 10.5px;
   font-weight: 400;
   color: var(--color-text-tertiary);
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .sticker-position-group > .input-group.horizontal .input-unit {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .number-field-pair > .input-group.horizontal .input-unit {
   height: auto;
   border: 0;
   background: transparent;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .sticker-position-group > .input-group.horizontal input[type=number] {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .number-field-pair > .input-group.horizontal input[type=number] {
   height: auto;
   padding: 0;
   border: 0;
   background: transparent;
   font-size: 11px;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .sticker-position-group > .input-group.horizontal .input-unit-suffix {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .number-field-pair > .input-group.horizontal .input-unit-suffix {
   display: none;
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-flip-control > .segmented-option {
@@ -7796,7 +7795,7 @@ body.tool-select .preview-canvas {
   padding: 0;
 }
 
-@container propertypanel (max-width: 360px) {
+@container propertypanel (max-width: 240px) {
   .property-row.is-pair {
     grid-template-columns: minmax(0, 1fr);
     row-gap: var(--spacing-2xs);
@@ -8037,7 +8036,7 @@ body.is-resizing-panel canvas {
   align-items: center;
   justify-content: flex-end;
   min-width: 46px;
-  height: 22px;
+  height: var(--property-control-height);
   padding: 0 6px;
   border: 1px solid var(--color-border);
   border-radius: var(--property-r-field);
@@ -8102,7 +8101,7 @@ body.is-resizing-panel canvas {
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> .text-case-select) {
   grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-revert-col);
-  grid-template-rows: var(--control-height-compact);
+  grid-template-rows: var(--property-control-height);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> .text-case-select) > .property-label {
   grid-area: 1/1/2/2;
@@ -8114,7 +8113,7 @@ body.is-resizing-panel canvas {
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> :is(.text-align-group, .text-valign-group)) {
   grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-revert-col);
-  grid-template-rows: var(--control-height-compact);
+  grid-template-rows: var(--property-control-height);
   padding-block: 0;
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> :is(.text-align-group, .text-valign-group)) > .property-label {
@@ -8126,9 +8125,9 @@ body.is-resizing-panel canvas {
   min-width: 0;
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .segmented-control {
-  height: var(--control-height-compact);
-  min-height: var(--control-height-compact);
-  max-height: var(--control-height-compact);
+  height: var(--property-control-height);
+  min-height: var(--property-control-height);
+  max-height: var(--property-control-height);
   box-sizing: border-box;
   align-items: stretch;
   border-radius: var(--property-r-field);
@@ -8152,7 +8151,12 @@ body.is-resizing-panel canvas {
   width: 100%;
   height: 100%;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign :is(select, .property-select, .property-select-control, .input-group.horizontal, .property-header-switch.effect-switch) {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign :is(select, .property-select, .property-select-control, .input-group.horizontal) {
+  height: var(--property-control-height);
+  min-height: var(--property-control-height);
+  box-sizing: border-box;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-header-switch.effect-switch {
   height: var(--control-height-compact);
   min-height: var(--control-height-compact);
   box-sizing: border-box;
@@ -8175,8 +8179,8 @@ body.is-resizing-panel canvas {
   min-height: 0;
   box-sizing: border-box;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .sticker-position-group > .input-group.horizontal > .input-unit,
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .sticker-position-group > .input-group.horizontal > .input-unit > input[type=number] {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .number-field-pair > .input-group.horizontal > .input-unit,
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .number-field-pair > .input-group.horizontal > .input-unit > input[type=number] {
   height: 100%;
   min-height: 100%;
   align-self: stretch;
@@ -8203,6 +8207,9 @@ body.is-resizing-panel canvas {
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-scale-x > .property-revert {
   grid-column: 4;
 }
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .is-aspect-locked .transform-scale-y {
+  display: none;
+}
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-color-row {
   display: grid;
   grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-value-col) var(--property-revert-col);
@@ -8212,7 +8219,7 @@ body.is-resizing-panel canvas {
   grid-column: 2/-2;
   justify-self: stretch;
   width: 100%;
-  height: var(--control-height-compact);
+  height: var(--property-control-height);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-card:has(> .subsection-title input:not(:checked)) .property-module-swatch,
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-card:has(.segmented-option[data-mode=none].active) .property-module-swatch {
@@ -8243,7 +8250,7 @@ body.is-resizing-panel canvas {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 6px;
-  height: var(--control-height-compact);
+  height: var(--property-control-height);
   padding: 0 var(--property-pad);
   border: 1px solid var(--color-border);
   border-radius: var(--property-r-field);
@@ -8372,9 +8379,31 @@ body.is-resizing-panel canvas {
   border-color: var(--color-border-hover);
 }
 
+@container propertypanel (max-width: 240px) {
+  :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-pair {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--spacing-2xs);
+  }
+  :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-pair > .property-label,
+  :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-pair > .property-pair {
+    grid-column: 1/-1;
+  }
+  :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-pair > .property-revert {
+    grid-column: 1/-1;
+    justify-self: end;
+  }
+  :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-pair > .property-revert.is-placeholder {
+    display: none;
+  }
+  :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair,
+  :is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .number-field-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .settings-subsection {
   gap: calc(var(--property-card-inset) * 1.5);
 }
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-note,
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .text-box-hint {
   padding-top: 0;
   padding-bottom: 0;
@@ -8385,10 +8414,15 @@ body.is-resizing-panel canvas {
   max-height: 34px;
   box-sizing: border-box;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .subsection-card-body {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .subsection-title + .subsection-card-body {
   border-top: 1px solid var(--color-border);
-  padding: var(--property-gutter) 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .subsection-card-body {
+  padding: 0;
   background: var(--color-bg-primary);
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .property-pair {
+  gap: var(--spacing-xs);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-actions {
   background: var(--color-bg-card);
@@ -8419,15 +8453,18 @@ body.is-resizing-panel canvas {
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure .advanced-disclosure-content {
   padding: 0;
-  padding: var(--property-pad) 0;
   border-top: 1px solid var(--color-border);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure .advanced-disclosure-content > .property-set + .property-set {
   margin-inline: 0;
   padding-inline: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-main {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-source,
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-set {
   padding: var(--property-pad) 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-main {
+  padding: 0;
   border-top: 1px solid var(--color-border);
   background: var(--color-bg-primary);
 }

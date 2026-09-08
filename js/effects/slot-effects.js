@@ -287,9 +287,13 @@ function syncSlotTextureCoordinateControls(prefix, data) {
 // bound straight to an effect-data object's offsetX/offsetY. No per-row revert -
 // like Transform Position; the module's Enabled switch and "Reset Effects" cover
 // resetting. `getData` returns the effect data (may be null when the effect is
-// off, in which case edits are ignored).
+// off, in which case edits are ignored). `applyValue(layer, mutate)` is an
+// optional hook: when the offset changes the mask footprint (shapes grow their
+// mask canvas asymmetrically), the manager wraps the write so the object stays
+// anchored — it owns the mutate + re-render; otherwise the write goes straight
+// in and `render` runs.
 function bindEffectOffsetPair(options) {
-	const { prefix, slider = 'shadowOffsetX', getLayer, getData, render, save } = options;
+	const { prefix, slider = 'shadowOffsetX', getLayer, getData, render, save, applyValue } = options;
 	const spec = CONFIG.ui.sliders[slider] || {};
 	const clamp = (n) => Math.max(spec.min ?? -Infinity, Math.min(spec.max ?? Infinity, Math.round(n)));
 	[['X', 'offsetX'], ['Y', 'offsetY']].forEach(([axis, key]) => {
@@ -301,8 +305,13 @@ function bindEffectOffsetPair(options) {
 			if (!data) return;
 			const raw = parseFloat(input.value);
 			if (Number.isNaN(raw)) return;
-			data[key] = clamp(raw);
-			render(layer);
+			const next = clamp(raw);
+			if (applyValue) {
+				applyValue(layer, () => { data[key] = next; });
+			} else {
+				data[key] = next;
+				render(layer);
+			}
 			if (commit) save();
 		};
 		input.addEventListener('input', () => write(false));

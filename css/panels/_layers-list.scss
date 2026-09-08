@@ -716,7 +716,7 @@
 .color-selection {
 	.color-selection-empty-note { display: none; }
 
-	&:has(.property-empty-inline.visible) .color-selection-empty-note { display: block; }
+	&.is-empty .color-selection-empty-note { display: block; }
 
 	.selected-colors-display {
 		display: flex;

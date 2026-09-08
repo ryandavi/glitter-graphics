@@ -67,6 +67,11 @@
 	--property-card-inset: 10px;
 	--property-pair-min: 128px;
 
+	// One knob for the height of every interactive control in the property
+	// panels — segmented controls, selects, number/text/colour inputs, the
+	// .property-value pill. Toggles keep their own switch geometry.
+	--property-control-height: 32px; // var(--control-height-compact);
+
 	// ---- vertical rhythm, anchored to the horizontal gutter ---------------
 	// Separation between siblings is owned by the PARENT's gap, never by a
 	// margin on the sibling: a margin survives when its neighbour is hidden,
@@ -574,7 +579,7 @@
 
 	}
 
-	.subsection-card-body { gap: 0; }
+	// .subsection-card-body { gap: 0; }
 
 	.subsection-card-body-bare { padding: 0; }
 
@@ -726,7 +731,7 @@
 	// Number pairs (X/Y, W/H) must be able to shrink. A flex item defaults to
 	// min-width:auto, so the input's intrinsic width plus its unit suffix formed
 	// a floor and pushed the second field off the panel edge.
-	.sticker-position-group {
+	.number-field-pair {
 		gap: var(--spacing-sm);
 		min-width: 0;
 
@@ -745,8 +750,8 @@
 }
 
 .property-card > .subsection-card-body:not(:empty) {
-	padding-bottom: var(--property-gutter);
-	gap: var(--property-row-gap);
+	// padding-bottom: var(--property-gutter);
+	// gap: var(--property-row-gap);
 }
 
 
@@ -925,10 +930,6 @@
 		margin: 0 var(--property-gutter);
 		padding: 0;
 
-		// A populated token run needs a closing inset against the card edge.
-		// The separate inline empty state already has the correct row rhythm.
-		&:not(:empty) { margin-bottom: var(--property-gutter); }
-
 		> .selected-color-chip {
 			gap: var(--spacing-xs);
 			min-height: var(--control-height-compact);
@@ -1017,9 +1018,9 @@
 
 	.property-select {
 		width: 100%;
-		height: 24px;
-		min-height: 24px;
-		max-height: 24px;
+		height: var(--property-control-height);
+		min-height: var(--property-control-height);
+		max-height: var(--property-control-height);
 		box-sizing: border-box;
 		padding: 0 28px 0 var(--property-pad);
 		border-radius: var(--property-r-field);
@@ -1059,7 +1060,7 @@
 		display: grid;
 		grid-template-columns: minmax(0, auto) minmax(0, 1fr);
 		align-content: center;
-		gap: 1px 6px;
+		gap: 3px 6px;
 		min-height: 34px;
 	}
 
@@ -1096,8 +1097,8 @@
 	}
 
 	.panel-actions > .btn-simple {
-		height: 28px;
-		min-height: 28px;
+		height: var(--property-control-height);
+		min-height: var(--property-control-height);
 		padding: 0 10px;
 		border: 1px solid var(--color-border);
 		border-radius: var(--property-r-field);
@@ -1163,14 +1164,32 @@
 		background: var(--color-bg-primary);
 	}
 
-	.transform-scale-rows,
-	[data-transform-align] { display: contents; }
+	.transform-scale-rows { display: contents; }
+
+	// Transform (Position & size / Rotation & flip / Align to canvas) and the
+	// Border effect body (Stroke / Placement) are runs of labelled groups,
+	// hairline-divided like the Advanced disclosure. One primitive
+	// (.property-set + .property-set-label) everywhere it repeats.
+	:is(.transform-grid, .paint-slot-main) > .property-set {
+		padding: var(--property-pad) 0;
+	}
+
+	// Transform sets are consecutive; the effect-body sets are separated by the
+	// Source / colour rows, so divide on "a set that follows anything but a set".
+	.transform-grid > .property-set + .property-set,
+	.paint-slot-main > :not(.property-set):not(.property-set-label) + .property-set {
+		border-top: 1px solid var(--color-border);
+	}
+
+	:is(.transform-grid, .paint-slot-main) > .property-set > .property-set-label {
+		margin-bottom: var(--spacing-2xs);
+	}
 
 	// Locking the aspect ratio links the two axes; it does not hide a control.
 	// Both Scale X and Scale Y keep their sliders in every state - dragging one
 	// drives the other (js/transforms/editor-transform.js bindAxisScale).
 
-	.transform-pair-row > .sticker-position-group {
+	.transform-pair-row > .number-field-pair {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		grid-column: 2;
@@ -1180,7 +1199,7 @@
 			display: grid;
 			grid-template-columns: auto minmax(0, 1fr);
 			gap: 6px;
-			height: 24px;
+			height: var(--property-control-height);
 			padding: 0 var(--property-pad);
 			border: 1px solid var(--color-border);
 			border-radius: var(--property-r-field);
@@ -1228,7 +1247,11 @@
 	padding: 0;
 }
 
-@container propertypanel (max-width: 360px) {
+// Pairs stack (label over inputs) only when the panel is genuinely too narrow
+// for a label column + two fields — well below the ~324px default subsection, so
+// Position / Size / Offset read label-beside-inputs like every other row at the
+// widths the panel is actually used.
+@container propertypanel (max-width: 240px) {
 	.property-row.is-pair {
 		grid-template-columns: minmax(0, 1fr);
 		row-gap: var(--spacing-2xs);
@@ -1518,7 +1541,7 @@ body.is-resizing-panel {
 		align-items: center;
 		justify-content: flex-end;
 		min-width: 46px;
-		height: 22px;
+		height: var(--property-control-height);
 		padding: 0 6px;
 		border: 1px solid var(--color-border);
 		border-radius: var(--property-r-field);
@@ -1595,7 +1618,7 @@ body.is-resizing-panel {
 			var(--property-label-col)
 			minmax(0, 1fr)
 			var(--property-revert-col);
-		grid-template-rows: var(--control-height-compact);
+		grid-template-rows: var(--property-control-height);
 
 		> .property-label { grid-area: 1 / 1 / 2 / 2; }
 		> .text-case-select { grid-area: 1 / 2 / 2 / 3; width: 100%; min-width: 0; }
@@ -1606,7 +1629,7 @@ body.is-resizing-panel {
 			var(--property-label-col)
 			minmax(0, 1fr)
 			var(--property-revert-col);
-		grid-template-rows: var(--control-height-compact);
+		grid-template-rows: var(--property-control-height);
 		padding-block: 0;
 
 		> .property-label { grid-area: 1 / 1 / 2 / 2; }
@@ -1618,9 +1641,9 @@ body.is-resizing-panel {
 	}
 
 	.segmented-control {
-		height: var(--control-height-compact);
-		min-height: var(--control-height-compact);
-		max-height: var(--control-height-compact);
+		height: var(--property-control-height);
+		min-height: var(--property-control-height);
+		max-height: var(--property-control-height);
 		box-sizing: border-box;
 		align-items: stretch;
 		border-radius: var(--property-r-field);
@@ -1647,7 +1670,15 @@ body.is-resizing-panel {
 		}
 	}
 
-	:is(select, .property-select, .property-select-control, .input-group.horizontal, .property-header-switch.effect-switch) {
+	:is(select, .property-select, .property-select-control, .input-group.horizontal) {
+		height: var(--property-control-height);
+		min-height: var(--property-control-height);
+		box-sizing: border-box;
+	}
+
+	// The effect Enabled switch lives in a subsection title and keeps its own
+	// switch geometry — not tied to --property-control-height.
+	.property-header-switch.effect-switch {
 		height: var(--control-height-compact);
 		min-height: var(--control-height-compact);
 		box-sizing: border-box;
@@ -1675,7 +1706,7 @@ body.is-resizing-panel {
 		}
 	}
 
-	.transform-pair-row > .sticker-position-group > .input-group.horizontal {
+	.transform-pair-row > .number-field-pair > .input-group.horizontal {
 		> .input-unit,
 		> .input-unit > input[type="number"] {
 			height: 100%;
@@ -1709,6 +1740,10 @@ body.is-resizing-panel {
 
 	.transform-scale-x > .property-revert { grid-column: 4; }
 
+	// Aspect ratio locked: the X slider drives both axes and reads simply "Scale",
+	// so the separate Y row is redundant.
+	.is-aspect-locked .transform-scale-y { display: none; }
+
 	.property-color-row {
 		display: grid;
 		grid-template-columns:
@@ -1722,7 +1757,7 @@ body.is-resizing-panel {
 			grid-column: 2 / -2;
 			justify-self: stretch;
 			width: 100%;
-			height: var(--control-height-compact);
+			height: var(--property-control-height);
 		}
 	}
 
@@ -1755,13 +1790,13 @@ body.is-resizing-panel {
 	}
 
 	// The .numf number-field cell (Shadow offset). Texture-position Offset now
-	// uses the shared .transform-pair-row / .sticker-position-group number inputs
+	// uses the shared .transform-pair-row / .number-field-pair number inputs
 	// instead, so it is no longer styled here.
 	.property-pair-cell.numf {
 		display: grid;
 		grid-template-columns: auto minmax(0, 1fr);
 		gap: 6px;
-		height: var(--control-height-compact);
+		height: var(--property-control-height);
 		padding: 0 var(--property-pad);
 		border: 1px solid var(--color-border);
 		border-radius: var(--property-r-field);
@@ -1908,6 +1943,29 @@ body.is-resizing-panel {
 }
 
 
+// The redesigned panels re-declare .property-row.is-pair and the pair grids
+// above, so the narrow-panel stack has to be restated AFTER them at matching
+// weight. Same tiny breakpoint as the base pair stack — above it, pairs keep the
+// label beside the inputs like every other row.
+@container propertypanel (max-width: 240px) {
+	:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+		.property-row.is-pair {
+			grid-template-columns: minmax(0, 1fr);
+			row-gap: var(--spacing-2xs);
+
+			> .property-label,
+			> .property-pair { grid-column: 1 / -1; }
+
+			> .property-revert { grid-column: 1 / -1; justify-self: end; }
+			> .property-revert.is-placeholder { display: none; }
+		}
+
+		.property-pair,
+		.transform-pair-row > .number-field-pair {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+}
 
 
 
@@ -1919,6 +1977,7 @@ body.is-resizing-panel {
 		gap: calc(var(--property-card-inset) * 1.5);
 	}
 
+	.property-note,
 	.text-box-hint {
 		padding-top: 0;
 		padding-bottom: 0;
@@ -1931,11 +1990,18 @@ body.is-resizing-panel {
 		box-sizing: border-box;
 	}
 
-	.subsection-card-body {
+	.subsection-title + .subsection-card-body {
 		border-top: 1px solid var(--color-border);
-		padding: var(--property-gutter) 0;
-		background: var(--color-bg-primary);
+	}
 
+	.subsection-card-body {
+		// padding: var(--property-gutter) 0;
+		padding: 0;
+		background: var(--color-bg-primary);
+	}
+
+	.transform-pair-row > .property-pair {
+		gap: var(--spacing-xs);
 	}
 
 	// transform footer
@@ -1980,7 +2046,7 @@ body.is-resizing-panel {
 
 		.advanced-disclosure-content {
 			padding: 0;
-			padding: var(--property-pad) 0;
+			// padding: var(--property-pad) 0;
 			border-top: 1px solid var(--color-border);
 
 			> .property-set + .property-set {
@@ -1990,8 +2056,15 @@ body.is-resizing-panel {
 		}
 	}
 
+
+	.paint-slot-source,
+	.property-set {
+			padding: var(--property-pad) 0;
+	}
+
 	.paint-slot-main {
-		padding: var(--property-pad) 0;
+		// padding: var(--property-pad) 0;
+		padding: 0;
 		border-top: 1px solid var(--color-border);
 		background: var(--color-bg-primary);
 	}

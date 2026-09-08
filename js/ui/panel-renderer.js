@@ -466,7 +466,7 @@ function buildPairRow(item) {
 }
 
 // A labelled X/Y (or W/H) row of real number inputs - the exact structure the
-// transform panel's Position/Size use (tpl-number-pair + .sticker-position-group
+// transform panel's Position/Size use (tpl-number-pair + .number-field-pair
 // inside a .transform-pair-row), so any offset pair reads and behaves the same.
 // `reset` adds one shared revert at the row's right edge, outside the fields.
 function buildNumberFieldPair(options) {
@@ -479,7 +479,7 @@ function buildNumberFieldPair(options) {
 	row.appendChild(label);
 
 	const pair = tplClone('tpl-number-pair');
-	pair.className = 'property-pair sticker-position-group';
+	pair.className = 'property-pair number-field-pair';
 	const groups = pair.querySelectorAll('.input-group');
 	options.items.forEach((entry, index) => {
 		const spec = entry.slider ? (CONFIG.ui.sliders[entry.slider] || {}) : {};
@@ -1008,6 +1008,19 @@ function buildPanelItem(item, schema) {
 			item.items.forEach((child) => row.appendChild(buildPanelItem(child, schema)));
 			return row;
 		}
+		// A labelled group of rows — the same .property-set + .property-set-label
+		// primitive the Transform panel and the Advanced disclosure use, so effect
+		// bodies (Border: Stroke / Placement) read consistently.
+		case 'set': {
+			const set = addPanelClasses(panelDiv('property-set'), item.classes);
+			if (item.label) {
+				const heading = panelDiv('property-set-label');
+				heading.textContent = item.label;
+				set.appendChild(heading);
+			}
+			(item.items || []).forEach((child) => set.appendChild(buildPanelItem(child, schema)));
+			return set;
+		}
 		case 'optionGroup': {
 			const segmented = buildSegmented(item.options);
 			let child = segmented;
@@ -1502,15 +1515,12 @@ function redesignTransformFragment(fragment) {
 	const sizeRow = makePairRow(size, 'Size');
 	sizeRow.dataset.transformRole = 'sizeGroup';
 	sizeRow.querySelector('.property-pair').removeAttribute('data-transform-role');
-	sizeRow.before(lock);
-	sizeRow.after(scaleRows);
 
 	const rotationRow = rotation.querySelector('.property-row');
 	rotationRow.classList.add('row');
 	rotationRow.querySelector('.property-label').textContent = 'Rotation';
-	rotation.replaceWith(rotationRow);
 
-	align.querySelector(':scope > .property-set-label').remove();
+	align.querySelector(':scope > .property-set-label').textContent = 'Align to canvas';
 	align.querySelectorAll(':scope > .property-row').forEach((row) => {
 		row.classList.remove('is-stacked');
 		row.classList.add('row');
@@ -1542,6 +1552,22 @@ function redesignTransformFragment(fragment) {
 	flip.className = 'property-row row';
 	flip.replaceChildren(rowLabel('Flip'), flipControl, revertControl('resetFlip'));
 
+	// Labelled groups, hairline-divided (.transform-grid > .property-set in
+	// panels/_properties.scss). Same three groups for sticker / text / shape.
+	// Layer Opacity is adopted into the Appearance group, so it isn't here.
+	const makeGroup = (label, nodes) => {
+		const set = panelDiv('property-set');
+		const heading = panelDiv('property-set-label');
+		heading.textContent = label;
+		set.append(heading, ...nodes);
+		return set;
+	};
+	grid.replaceChildren(
+		makeGroup('Position & size', [position, sizeRow, lock, scaleRows]),
+		makeGroup('Rotation & flip', [rotationRow, flip]),
+		align
+	);
+
 	actions.classList.add('panel-actions');
 	card.appendChild(actions);
 	fragment.querySelector('[data-transform-opacity] .property-row')?.classList.add('row');
@@ -1553,7 +1579,7 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	fragment.querySelectorAll('.subsection-content-group').forEach((card) => card.classList.add('property-card'));
 	const buildNumberPair = (roles, labels, min = null) => {
 		const pair = tplClone('tpl-number-pair');
-		if (capabilities.panelRedesign) pair.className = 'property-pair sticker-position-group';
+		if (capabilities.panelRedesign) pair.className = 'property-pair number-field-pair';
 		pair.querySelectorAll('.input-group').forEach((group, index) => {
 			const label = group.querySelector('label');
 			const input = group.querySelector('input');

@@ -217,7 +217,7 @@ async function check4(page) {
 
 async function check5(page) {
 	const layerId = await createBorderedShape(page, {
-		shapeId: 'roundedRectangle',
+		shapeId: 'square',
 		width: 140,
 		height: 90,
 		borderWidth: 8
@@ -239,15 +239,47 @@ async function check5(page) {
 	}, layerId);
 
 	assert(rounded.radius === 30, 'Radius slider did not update the shape data');
-	assert(rounded.rowHidden === false, 'Radius row was hidden for a rounded rectangle');
-	assert(rounded.cornerAlpha === 0, 'Rounded rectangle radius did not cut out the corner pixels');
+	assert(rounded.rowHidden === false, 'Radius row was hidden for the parametric square');
+	assert(rounded.cornerAlpha === 0, 'Square corner radius did not cut out the corner pixels');
 
 	await page.evaluate((id) => {
 		const editor = window.editor;
 		const layer = editor.layerManager.layers.find((entry) => entry.id === id);
-		editor.shapeGlitterManager.applyShapeToLayer(layer, 'square');
+		editor.shapeGlitterManager.applyShapeToLayer(layer, 'circle');
 	}, layerId);
-	assert(await page.locator('#shapeRadiusRow').evaluate((row) => row.hidden), 'Radius row stayed visible for a square');
+	assert(await page.locator('#shapeRadiusRow').evaluate((row) => row.hidden), 'Radius row stayed visible for a non-square shape');
+}
+
+async function check6(page) {
+	// A hard-edge border must not inflate the transform box to the worst-case
+	// miter reservation — the handle frame tracks the nominal border box.
+	const layerId = await createBorderedShape(page, {
+		shapeId: 'square',
+		width: 120,
+		height: 80,
+		borderWidth: 12
+	});
+
+	const frames = await page.evaluate((id) => {
+		const editor = window.editor;
+		const layer = editor.layerManager.layers.find((entry) => entry.id === id);
+		const read = () => {
+			editor.shapeGlitterManager.invalidateMeasurement(layer);
+			return editor.shapeGlitterManager.getShapeHandleFrame(layer);
+		};
+		layer.shapeData.border.edgeStyle = 'round';
+		const round = read();
+		layer.shapeData.border.edgeStyle = 'hard';
+		const hard = read();
+		return { round, hard };
+	}, layerId);
+
+	// width 120 + 2 × 12px border, both edge styles.
+	approxEqual(frames.round.width, 144, POSITION_TOLERANCE_PX, 'Round-edge handle frame width');
+	approxEqual(frames.hard.width, 144, POSITION_TOLERANCE_PX, 'Hard-edge handle frame width ballooned past the nominal border');
+	approxEqual(frames.hard.height, 104, POSITION_TOLERANCE_PX, 'Hard-edge handle frame height ballooned past the nominal border');
+	approxEqual(frames.hard.offsetX, 0, POSITION_TOLERANCE_PX, 'Hard-edge handle frame is offset from the shape');
+	approxEqual(frames.hard.offsetY, 0, POSITION_TOLERANCE_PX, 'Hard-edge handle frame is offset from the shape');
 }
 
 async function runCheck(browser, label, checkFn) {
@@ -269,6 +301,7 @@ async function main() {
 		await runCheck(browser, '3. Dotted shape border toggles spacing UI and produces a mask', check3);
 		await runCheck(browser, '4. Undo restoring a removed shape border keeps the transform box aligned', check4);
 		await runCheck(browser, '5. Rounded rectangle radius updates geometry and conditional UI', check5);
+		await runCheck(browser, '6. Hard-edge border keeps the transform box tight to the shape', check6);
 		console.log('\nShape border verification finished with all checks passing.');
 	} finally {
 		await browser.close();

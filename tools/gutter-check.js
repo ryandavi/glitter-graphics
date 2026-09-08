@@ -60,7 +60,7 @@ const CHROME = process.env.CHROME_PATH
 				// Labels inset themselves, so a set that also insets double-indents
 				// them - the defect that pushed "Anchor" past its own group title.
 				'property-set-label',
-				'property-label', 'sticker-position-group', 'transform-grid'
+				'property-label', 'number-field-pair', 'transform-grid'
 			];
 			const isStructural = (el) => STRUCTURAL.some((c) => el.classList.contains(c));
 			const gutter = (el) => parseFloat(getComputedStyle(el.closest('.design-panel, .mobile-settings-drawer') || document.documentElement)
