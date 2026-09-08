@@ -5040,13 +5040,6 @@ body.mask-editing .sticker-element {
   gap: var(--spacing-lg);
 }
 
-.transform-panel.is-aspect-locked .transform-scale-x {
-  grid-column: 1/-1;
-}
-.transform-panel.is-aspect-locked .transform-scale-y {
-  display: none;
-}
-
 .asset-info-meta {
   gap: var(--spacing-md);
 }
@@ -7211,12 +7204,14 @@ body.tool-select .preview-canvas {
   --property-gutter: var(--property-card-inset);
 }
 :is(.design-panel, .mobile-settings-drawer) [data-effect-card] > .subsection-title,
-:is(.design-panel, .mobile-settings-drawer) [data-role=paint-slot] > .subsection-title {
+:is(.design-panel, .mobile-settings-drawer) [data-role=paint-slot] > .subsection-title,
+:is(.design-panel, .mobile-settings-drawer) [data-module-summary-type] > .subsection-title {
   gap: var(--spacing-sm);
   min-height: 28px;
 }
 :is(.design-panel, .mobile-settings-drawer) [data-effect-card] > .subsection-title > span:first-of-type,
-:is(.design-panel, .mobile-settings-drawer) [data-role=paint-slot] > .subsection-title > span:first-of-type {
+:is(.design-panel, .mobile-settings-drawer) [data-role=paint-slot] > .subsection-title > span:first-of-type,
+:is(.design-panel, .mobile-settings-drawer) [data-module-summary-type] > .subsection-title > span:first-of-type {
   flex: 1 1 auto;
   min-width: 0;
   text-align: left;
@@ -7328,11 +7323,6 @@ body.tool-select .preview-canvas {
   gap: var(--property-row-gap);
 }
 
-.property-card.has-footer > .subsection-card-body:not(:empty) {
-  gap: 0;
-  padding-bottom: 0;
-}
-
 /*
 
 // A bordered card owns its closing inset regardless of what its final child
@@ -7408,10 +7398,6 @@ body.tool-select .preview-canvas {
 }
 .property-module-summary:empty {
   display: none;
-}
-
-:is(.design-panel, .mobile-settings-drawer) [data-effect-card]:not(.is-collapsed) > .subsection-title > .property-module-summary {
-  visibility: hidden;
 }
 
 :is(.design-panel, .mobile-settings-drawer) .asset-info {
@@ -7523,6 +7509,15 @@ body.tool-select .preview-canvas {
   display: none;
 }
 
+:is(.design-panel, .mobile-settings-drawer) .property-card > .property-actions {
+  border-top: 1px solid var(--color-border);
+}
+
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-card > .property-actions {
+  border-top: 1px solid var(--color-border);
+  padding: var(--property-pad);
+}
+
 :is(.design-panel, .mobile-settings-drawer) .advanced-disclosure {
   margin: 0;
   margin-top: var(--property-pad);
@@ -7536,30 +7531,11 @@ body.tool-select .preview-canvas {
   padding: 0;
 }
 
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure-content > .property-set + .property-set,
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-advanced-flat > .property-set + .property-set {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure-content > .property-set + .property-set {
   border-top: 1px solid var(--color-border);
   padding-top: var(--property-pad);
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure-content > .property-set + .property-set {
   margin-inline: calc(-1 * var(--property-pad));
   padding-inline: var(--property-pad);
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-advanced-flat {
-  position: absolute;
-  left: var(--property-pad);
-  bottom: var(--property-pad);
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.001);
-  transform-origin: bottom left;
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-advanced-flat[hidden] {
-  display: none;
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .paint-slot-card {
   position: relative;
@@ -7718,9 +7694,6 @@ body.tool-select .preview-canvas {
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign [data-transform-align] {
   display: contents;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-panel.is-aspect-locked .transform-scale-y {
-  display: none;
-}
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-pair-row > .sticker-position-group {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -7778,9 +7751,6 @@ body.tool-select .preview-canvas {
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-flip-control > .segmented-option > input:checked + span {
   background: var(--color-accent-surface);
   color: var(--color-text-primary);
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-panel > .panel-actions {
-  background: var(--color-bg-primary);
 }
 
 .settings-subsection {
@@ -8045,21 +8015,6 @@ body.is-resizing-panel canvas {
 :is(.design-panel, .mobile-settings-drawer) .property-revert:disabled {
   opacity: 0.18;
 }
-:is(.design-panel, .mobile-settings-drawer) .transform-panel.is-aspect-locked .transform-scale-x > input[type=range] {
-  position: absolute;
-  left: calc(var(--property-label-w) + var(--property-pad));
-  top: 50%;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.001);
-}
-:is(.design-panel, .mobile-settings-drawer) .transform-scale-x {
-  position: relative;
-}
 
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .subsection-content-group.subsection-section-group,
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .subsection-content-group.effects-stack {
@@ -8265,9 +8220,7 @@ body.is-resizing-panel canvas {
   background: var(--color-bg-secondary);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > input[type=range],
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > .property-revert,
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > input[type=range],
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > .property-revert {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf > input[type=range] {
   position: absolute;
   width: 0;
   height: 0;
@@ -8286,6 +8239,22 @@ body.is-resizing-panel canvas {
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell.numf > .property-value > .setting-unit,
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf.numf > .property-value > .setting-unit {
   display: none;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell.numf > .property-revert,
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-pair-cell.numf.numf > .property-revert {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin: 0;
+  opacity: 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell {
+  grid-template-columns: auto minmax(0, 1fr) var(--property-revert-col);
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair-cell > .property-revert {
+  width: var(--property-revert-col);
+  height: var(--property-revert-col);
+  margin-right: calc(-1 * var(--spacing-2xs));
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-texture-position-group .property-pair,
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.has-num-fields > .property-pair {
@@ -8404,14 +8373,15 @@ body.is-resizing-panel canvas {
   padding: var(--property-gutter) 0;
   background: var(--color-bg-primary);
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .subsection-card-body > .property-actions {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-actions {
   background: var(--color-bg-card);
-  margin-top: var(--property-gutter);
+  margin-top: 0;
   padding: var(--property-pad);
   border-top: 1px solid var(--color-border);
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-actions {
-  border: none;
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-actions.layer-effects-actions {
+  background: none;
+  border-top: none;
   padding: 0 var(--property-pad);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-grid {
@@ -8423,6 +8393,9 @@ body.is-resizing-panel canvas {
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .asset-info .asset-info-badges {
   display: none;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .panel-group-blocks {
+  gap: var(--property-pad);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .advanced-disclosure {
   margin-top: 0;

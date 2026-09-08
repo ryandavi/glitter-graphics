@@ -639,10 +639,14 @@
 	}
 
 	[data-effect-card] > .subsection-title,
-	[data-role="paint-slot"] > .subsection-title {
+	[data-role="paint-slot"] > .subsection-title,
+	[data-module-summary-type] > .subsection-title {
 		gap: var(--spacing-sm);
 		min-height: 28px;
 
+		// The title text takes the slack so the module summary always lands at the
+		// right edge - the same in an effect module, a paint slot, or the sticker
+		// Asset card.
 		> span:first-of-type {
 			flex: 1 1 auto;
 			min-width: 0;
@@ -745,10 +749,7 @@
 	gap: var(--property-row-gap);
 }
 
-.property-card.has-footer > .subsection-card-body:not(:empty) {
-	gap: 0;
-	padding-bottom: 0;
-}
+
 
 /*
 
@@ -827,10 +828,9 @@
 	&:empty { display: none; }
 }
 
-// Expanded, every value is already on screen; the summary would duplicate it.
-:is(.design-panel, .mobile-settings-drawer) [data-effect-card]:not(.is-collapsed) > .subsection-title > .property-module-summary {
-	visibility: hidden;
-}
+// The module summary stays visible whether the card is open or collapsed, so a
+// module reads the same at a glance in both states - matching the Appearance
+// Fill module, which was already behaving this way.
 
 // ===== Asset summary =======================================================
 // One row inside a module: thumbnail, name, Change.
@@ -970,6 +970,18 @@
 	&[hidden] { display: none; }
 }
 
+// R6 as a card footer: an actions row that ends a card is lifted out of the
+// padded body (panel-renderer buildPanelItem) and sits edge-to-edge with a
+// hairline above it - the same structural contract as the Advanced disclosure.
+:is(.design-panel, .mobile-settings-drawer) .property-card > .property-actions {
+	border-top: 1px solid var(--color-border);
+}
+
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-card > .property-actions {
+	border-top: 1px solid var(--color-border);
+	padding: var(--property-pad);
+}
+
 // ===== Advanced disclosure =================================================
 
 :is(.design-panel, .mobile-settings-drawer) .advanced-disclosure {
@@ -986,31 +998,11 @@
 }
 
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign {
-	.advanced-disclosure-content > .property-set + .property-set,
-	.paint-slot-advanced-flat > .property-set + .property-set {
+	.advanced-disclosure-content > .property-set + .property-set {
 		border-top: 1px solid var(--color-border);
 		padding-top: var(--property-pad);
-	}
-
-	.advanced-disclosure-content > .property-set + .property-set {
 		margin-inline: calc(-1 * var(--property-pad));
 		padding-inline: var(--property-pad);
-	}
-
-	.paint-slot-advanced-flat {
-		position: absolute;
-		left: var(--property-pad);
-		bottom: var(--property-pad);
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip-path: inset(50%);
-		opacity: 0;
-		pointer-events: none;
-		transform: scale(0.001);
-		transform-origin: bottom left;
-
-		&[hidden] { display: none; }
 	}
 
 	.paint-slot-card { position: relative; }
@@ -1174,7 +1166,9 @@
 	.transform-scale-rows,
 	[data-transform-align] { display: contents; }
 
-	.transform-panel.is-aspect-locked .transform-scale-y { display: none; }
+	// Locking the aspect ratio links the two axes; it does not hide a control.
+	// Both Scale X and Scale Y keep their sliders in every state - dragging one
+	// drives the other (js/transforms/editor-transform.js bindAxisScale).
 
 	.transform-pair-row > .sticker-position-group {
 		display: grid;
@@ -1216,9 +1210,6 @@
 		}
 	}
 
-	.transform-panel > .panel-actions {
-		background: var(--color-bg-primary);
-	}
 }
 
 // ===== Responsive: container queries, never media queries ==================
@@ -1535,21 +1526,6 @@ body.is-resizing-panel {
 	}
 
 	.property-revert:disabled { opacity: 0.18; }
-
-	.transform-panel.is-aspect-locked .transform-scale-x > input[type="range"] {
-		position: absolute;
-		left: calc(var(--property-label-w) + var(--property-pad));
-		top: 50%;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip-path: inset(50%);
-		opacity: 0;
-		pointer-events: none;
-		transform: scale(0.001);
-	}
-
-	.transform-scale-x { position: relative; }
 }
 
 // P-Text opts into the redesign vocabulary without changing the established
@@ -1778,7 +1754,9 @@ body.is-resizing-panel {
 		padding: 0 var(--property-pad) var(--property-pad);
 	}
 
-	.advanced-texture-position-group .property-pair-cell,
+	// The .numf number-field cell (Shadow offset). Texture-position Offset now
+	// uses the shared .transform-pair-row / .sticker-position-group number inputs
+	// instead, so it is no longer styled here.
 	.property-pair-cell.numf {
 		display: grid;
 		grid-template-columns: auto minmax(0, 1fr);
@@ -1789,8 +1767,7 @@ body.is-resizing-panel {
 		border-radius: var(--property-r-field);
 		background: var(--color-bg-secondary);
 
-		> input[type="range"],
-		> .property-revert {
+		> input[type="range"] {
 			@include visually-hidden-control;
 		}
 
@@ -1803,10 +1780,14 @@ body.is-resizing-panel {
 			background: transparent;
 		}
 
-		&.numf > .property-value > .setting-unit { display: none; }
+		> .property-value > .setting-unit { display: none; }
+
+		// The per-cell revert stays in the DOM for id parity but never shows - the
+		// pair reverts as a unit from an inert placeholder at the row's right edge
+		// (matching Transform Position), OUTSIDE these field boxes.
+		> .property-revert { @include visually-hidden-control; }
 	}
 
-	.advanced-texture-position-group .property-pair,
 	.property-row.has-num-fields > .property-pair {
 		width: 100%;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1927,7 +1908,11 @@ body.is-resizing-panel {
 }
 
 
-// match .transform-grid 
+
+
+
+
+// RYAN'S STYLES -- DO NOT TOUCH! THIS IS THE DIRECTION WE ARE GOING
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign {
 
 	.settings-subsection {
@@ -1950,20 +1935,23 @@ body.is-resizing-panel {
 		border-top: 1px solid var(--color-border);
 		padding: var(--property-gutter) 0;
 		background: var(--color-bg-primary);
+
 	}
 
 	// transform footer
-	.subsection-card-body > .property-actions {
+	.property-actions {
 		background: var(--color-bg-card);
-		margin-top: var(--property-gutter);
+		margin-top: 0;
 		padding: var(--property-pad);
 		border-top: 1px solid var(--color-border);
-	}
 
-	// other foots
-	.property-actions {
-		border: none;
-		padding: 0 var(--property-pad);
+		// layer effects just floats
+		&.layer-effects-actions {
+			background: none;
+			border-top: none;
+			padding: 0 var(--property-pad);
+		}
+
 	}
 
 	.transform-grid {
@@ -1975,40 +1963,36 @@ body.is-resizing-panel {
 		border: none;
 	}
 
+	// hide badges temporarily
 	.asset-info {
 		.asset-info-badges {
 			display: none;
 		}
 	}
 
+	.panel-group-blocks {
+		gap: var(--property-pad);
+	}
 
-
+	// footer
 	.advanced-disclosure {
-	margin-top: 0;
+		margin-top: 0;
 
-			.advanced-disclosure-content {
-				padding: 0;
-				padding: var(--property-pad) 0;
-				border-top: 1px solid var(--color-border);
+		.advanced-disclosure-content {
+			padding: 0;
+			padding: var(--property-pad) 0;
+			border-top: 1px solid var(--color-border);
 
-				> .property-set + .property-set {
-					margin-inline: 0;
-					padding-inline: 0;
-				}
+			> .property-set + .property-set {
+				margin-inline: 0;
+				padding-inline: 0;
 			}
 		}
-
-
+	}
 
 	.paint-slot-main {
 		padding: var(--property-pad) 0;
 		border-top: 1px solid var(--color-border);
 		background: var(--color-bg-primary);
-
-
-
-
-
-
 	}
 }

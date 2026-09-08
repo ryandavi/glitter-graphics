@@ -129,6 +129,8 @@ const TRANSFORM_ID_GRAMMAR = Object.freeze({
 	resetScaleY: 'reset{P}TransformScaleY',
 	flipX: '{p}FlipX',
 	flipY: '{p}FlipY',
+	resetFlip: 'reset{P}Flip',
+	resetProportional: 'reset{P}ProportionalScale',
 	alignLeft: '{p}AlignLeft',
 	alignCenterX: '{p}AlignCenterX',
 	alignRight: '{p}AlignRight',
@@ -213,6 +215,89 @@ function syncPropertyRevert(slider) {
 // repopulating so the control matches the value actually on screen.
 function syncPropertyReverts(root = document) {
 	root.querySelectorAll('input[type="range"][id]').forEach(syncPropertyRevert);
+	// The non-slider rows that opted into a revert (Mode/Style/Case/Source/Solid
+	// Color/Edges/Placement/Layering) are driven by managers that write the DOM
+	// without firing an event, so they lean on this same sweep to re-evaluate.
+	root.querySelectorAll('.property-option-revert').forEach((button) => button._syncOptionRevert?.());
+}
+
+// Rule D for the option rows that opt in via a schema `revert` flag. "Default"
+// is whatever the schema rendered active/selected - and for a multi-toggle like
+// text Style, no option active is itself the default. Revert replays the same
+// gesture a click would, so each manager's existing change handler still records
+// the history entry. Handles a <select> (including buildSelectProxy's), a
+// .segmented-control, or a bare colour input.
+function attachOptionRevert(row, control, spec = {}) {
+	const select = control.tagName === 'SELECT' ? control : control.querySelector?.('select');
+	const color = !select && control.matches?.('input[type="color"]') ? control : null;
+	const segmented = select || color ? null
+		: (control.classList?.contains('segmented-control') ? control : control.querySelector?.('.segmented-control'));
+	if (!select && !color && !segmented) return;
+
+	const button = document.createElement('button');
+	button.type = 'button';
+	button.className = 'property-revert property-option-revert';
+	button.dataset.revertBound = '';
+	button.dataset.role = `${spec.roleId || 'option'}-reset`;
+	button.title = 'Reset to default';
+	button.setAttribute('aria-label', `Reset ${spec.label || 'option'}`);
+	button.appendChild(createIcon('undo'));
+	row.appendChild(button);
+
+	const options = spec.options || [];
+	let defaultValue = '';
+	if (select) {
+		const chosen = options.find((option) => option.selected || option.active) || options[0];
+		defaultValue = String(chosen?.value ?? chosen?.mode ?? '');
+	} else if (color) {
+		defaultValue = String(spec.defaultValue ?? control.getAttribute('value') ?? control.value).toLowerCase();
+	} else {
+		Array.from(segmented.querySelectorAll('.segmented-option')).forEach((option, index) => {
+			if (options[index]?.active) option.dataset.defaultActive = '';
+		});
+	}
+
+	const isDefault = () => {
+		if (select) return String(select.value) === defaultValue;
+		if (color) return String(control.value).toLowerCase() === defaultValue;
+		return Array.from(segmented.querySelectorAll('.segmented-option'))
+			.every((option) => (option.dataset.defaultActive !== undefined) === option.classList.contains('active'));
+	};
+	const sync = () => { button.disabled = isDefault(); };
+	button._syncOptionRevert = sync;
+
+	button.addEventListener('click', () => {
+		if (isDefault()) return;
+		if (select) {
+			select.value = defaultValue;
+			select.dispatchEvent(new Event('change', { bubbles: true }));
+		} else if (color) {
+			control.value = defaultValue;
+			control.dispatchEvent(new Event('input', { bubbles: true }));
+			control.dispatchEvent(new Event('change', { bubbles: true }));
+		} else {
+			// Single-select groups (Mode, Edges, Layering, Anchor): click the one
+			// default option and let the manager's own radio behaviour clear the
+			// rest - clicking the others too would re-fire their handlers and, if a
+			// manager mutates synchronously before awaiting, re-apply what we just
+			// reverted. Multi-toggles (text Style) have no default-active option, so
+			// there we do clear every active one.
+			const opts = Array.from(segmented.querySelectorAll('.segmented-option'));
+			const wanted = opts.filter((o) => o.dataset.defaultActive !== undefined);
+			if (wanted.length) {
+				wanted.filter((o) => !o.classList.contains('active')).forEach((o) => o.click());
+			} else {
+				opts.filter((o) => o.classList.contains('active')).forEach((o) => o.click());
+			}
+		}
+		requestAnimationFrame(sync);
+	});
+
+	(select || color || segmented).addEventListener('change', () => requestAnimationFrame(sync));
+	if (color) color.addEventListener('input', () => requestAnimationFrame(sync));
+	const watched = segmented || control.querySelector?.('.property-select-hooks') || select || color;
+	if (watched) new MutationObserver(sync).observe(watched, { subtree: true, attributes: true, attributeFilter: ['class', 'value'] });
+	sync();
 }
 
 function initializePropertyReverts(root = document) {
@@ -245,7 +330,7 @@ function initializePropertyReverts(root = document) {
 // established id/listener while giving the compact value cell real input
 // behaviour instead of merely making a span look editable.
 function initializeEditablePropertyValues(root = document) {
-	root.querySelectorAll('.property-row > .property-value').forEach((value) => {
+	root.querySelectorAll(':is(.property-row, .property-pair-cell) > .property-value').forEach((value) => {
 		if (value.dataset.editableValue !== undefined) return;
 		const owner = value.closest('.property-pair-cell, .property-row');
 		const input = owner?.querySelector(':scope > input[type="range"]');
@@ -376,6 +461,57 @@ function buildPairRow(item) {
 		placeholder.setAttribute('aria-hidden', 'true');
 		placeholder.appendChild(createIcon('undo'));
 		row.appendChild(placeholder);
+	}
+	return row;
+}
+
+// A labelled X/Y (or W/H) row of real number inputs - the exact structure the
+// transform panel's Position/Size use (tpl-number-pair + .sticker-position-group
+// inside a .transform-pair-row), so any offset pair reads and behaves the same.
+// `reset` adds one shared revert at the row's right edge, outside the fields.
+function buildNumberFieldPair(options) {
+	const row = panelDiv('property-row is-pair transform-pair-row');
+	if (options.rowId) row.id = options.rowId;
+	const label = document.createElement('span');
+	label.className = 'property-label';
+	label.textContent = options.label;
+	if (options.title) label.title = options.title;
+	row.appendChild(label);
+
+	const pair = tplClone('tpl-number-pair');
+	pair.className = 'property-pair sticker-position-group';
+	const groups = pair.querySelectorAll('.input-group');
+	options.items.forEach((entry, index) => {
+		const spec = entry.slider ? (CONFIG.ui.sliders[entry.slider] || {}) : {};
+		const group = groups[index];
+		const mark = group.querySelector('label');
+		const input = group.querySelector('input');
+		const suffix = group.querySelector('.input-unit-suffix');
+		mark.textContent = entry.mark;
+		mark.htmlFor = entry.id;
+		input.id = entry.id;
+		input.dataset.role = entry.role || entry.slider || 'value';
+		if (spec.min != null) input.min = String(spec.min);
+		if (spec.max != null) input.max = String(spec.max);
+		input.step = String(entry.step ?? spec.step ?? 1);
+		input.setAttribute('aria-label', entry.label || spec.label || entry.mark);
+		if (suffix) suffix.textContent = entry.unit ?? spec.unit ?? '';
+		if (entry.id && PANEL_SLIDER_DEFAULTS[entry.id] === undefined && spec.value != null) {
+			PANEL_SLIDER_DEFAULTS[entry.id] = spec.value;
+		}
+	});
+	row.appendChild(pair);
+
+	if (options.reset) {
+		const reset = document.createElement('button');
+		reset.type = 'button';
+		reset.className = 'property-revert';
+		reset.id = options.reset.id;
+		reset.disabled = true;
+		reset.title = options.reset.title || 'Reset to default';
+		reset.setAttribute('aria-label', options.reset.title || `Reset ${options.label}`);
+		reset.appendChild(createIcon('undo'));
+		row.appendChild(reset);
 	}
 	return row;
 }
@@ -588,6 +724,7 @@ function buildPaintSource(slot) {
 	if (slot.sourceSelect) {
 		const sourceRow = buildOptionGroup(slot.sourceLabel || 'Source', [sourceChoices]);
 		sourceRow.classList.remove('is-stacked');
+		if (slot.sourceRevert) attachOptionRevert(sourceRow, sourceChoices, { options: sourceEntries, roleId: `${prefix}Source`, label: slot.sourceLabel || 'Source' });
 		const hooks = sourceRow.querySelector('.property-select-hooks');
 		if (hooks) {
 			hooks.remove();
@@ -605,6 +742,7 @@ function buildPaintSource(slot) {
 	colorInput.id = `${prefix}Color`;
 	colorInput.dataset.role = 'solid-color';
 	colorInput.setAttribute('value', slot.color);
+	if (slot.colorRevert) attachOptionRevert(colorRow, colorInput, { roleId: `${prefix}Color`, label: 'Solid color', defaultValue: slot.color });
 	return source;
 }
 
@@ -652,23 +790,24 @@ function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 	content.appendChild(colorGroup);
 
 	if (options.texturePosition) {
-		const textureGroup = buildAdvancedControlGroup('Texture position', 'advanced-texture-position-group', {
-			id: `${prefix}ResetTexturePosition`,
-			label: 'Reset',
-			title: 'Reset texture anchor and offset'
-		});
+		const textureGroup = buildAdvancedControlGroup('Texture position', 'advanced-texture-position-group');
 		const anchor = buildSegmented([
 			{ id: `${prefix}TextureAnchorArtwork`, label: 'Artwork', active: true },
 			{ id: `${prefix}TextureAnchorCanvas`, label: 'Canvas' }
 		], { label: 'Texture anchor' });
-		textureGroup.appendChild(buildOptionGroup('Anchor', [anchor]));
-		textureGroup.appendChild(buildPairRow({
-			label: 'Offset',
-			items: [
-				{ id: `${prefix}TextureOffsetX`, slider: 'textureOffsetX', mark: 'X', label: 'Offset X' },
-				{ id: `${prefix}TextureOffsetY`, slider: 'textureOffsetY', mark: 'Y', label: 'Offset Y' }
-			]
-		}));
+		const anchorRow = buildOptionGroup('Anchor', [anchor]);
+		attachOptionRevert(anchorRow, anchor, { options: [{ active: true }, {}], roleId: `${prefix}TextureAnchor`, label: 'Texture anchor' });
+		textureGroup.appendChild(anchorRow);
+		const offsetItems = [
+			{ id: `${prefix}TextureOffsetX`, slider: 'textureOffsetX', mark: 'X', label: 'Offset X' },
+			{ id: `${prefix}TextureOffsetY`, slider: 'textureOffsetY', mark: 'Y', label: 'Offset Y' }
+		];
+		// Redesigned panels use the transform-panel number fields; the rest keep
+		// the slider pair. Offset X+Y read as one value and share a single revert
+		// at the row's right edge (slot-effects.js `${prefix}ResetTexturePosition`).
+		textureGroup.appendChild(options.redesign
+			? buildNumberFieldPair({ label: 'Offset', reset: { id: `${prefix}ResetTexturePosition`, title: 'Reset texture offset' }, items: offsetItems })
+			: buildPairRow({ label: 'Offset', items: offsetItems }));
 		content.appendChild(textureGroup);
 	}
 	return advanced;
@@ -750,7 +889,8 @@ function buildPaintSlotCard(slot) {
 	}
 	(slot.post || []).forEach((item) => main.appendChild(buildPanelItem(item)));
 	const advanced = buildAdvancedDisclosure(slot.idPrefix, slot.advancedIds, {
-		texturePosition: slot.texturePosition
+		texturePosition: slot.texturePosition,
+		redesign: slot.redesign
 	});
 	if (slot.advancedStyle === 'flat') {
 		const flat = panelDiv('paint-slot-advanced-flat glitter-source-glitter');
@@ -799,10 +939,11 @@ function buildPanelItem(item, schema) {
 			const edgeChildren = [];
 			item.items.forEach((child) => {
 				const node = buildPanelItem(child, schema);
-				// Advanced is an edge-to-edge card footer, not padded body content.
-				// Keeping that structural contract here means every future schema card
-				// receives the same spacing without a feature-specific selector.
-				if (node.classList?.contains('advanced-disclosure')) edgeChildren.push(node);
+				// Advanced and a trailing actions row are edge-to-edge card footers,
+				// not padded body content. Keeping that structural contract here means
+				// every future schema card gets the same spacing without a
+				// feature-specific selector.
+				if (node.classList?.contains('advanced-disclosure') || node.classList?.contains('property-actions')) edgeChildren.push(node);
 				else body.appendChild(node);
 			});
 			card.appendChild(body);
@@ -859,6 +1000,8 @@ function buildPanelItem(item, schema) {
 			return buildSliderRow(item);
 		case 'pair':
 			return buildPairRow(item);
+		case 'numberPair':
+			return buildNumberFieldPair(item);
 		case 'twoColumn': {
 			const row = tplClone('tpl-two-column');
 			item.items.forEach((child) => row.appendChild(buildPanelItem(child, schema)));
@@ -875,7 +1018,10 @@ function buildPanelItem(item, schema) {
 		}
 		case 'segmented': {
 			const group = buildSegmented(item.options, item);
-			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [group], item.rowClasses) : group;
+			if (!item.visibleLabel) return group;
+			const row = buildOptionGroup(item.visibleLabel, [group], item.rowClasses);
+			if (item.revert) attachOptionRevert(row, group, { options: item.options, roleId: item.id || item.visibleLabel, label: item.visibleLabel });
+			return row;
 		}
 		case 'select': {
 			const select = document.createElement('select');
@@ -889,7 +1035,10 @@ function buildPanelItem(item, schema) {
 				option.selected = Boolean(entry.selected || entry.active);
 				select.appendChild(option);
 			});
-			return item.visibleLabel ? buildOptionGroup(item.visibleLabel, [select], item.rowClasses) : select;
+			if (!item.visibleLabel) return select;
+			const row = buildOptionGroup(item.visibleLabel, [select], item.rowClasses);
+			if (item.revert) attachOptionRevert(row, select, { options: item.options, roleId: item.id || item.visibleLabel, label: item.visibleLabel });
+			return row;
 		}
 		case 'textarea': {
 			const textarea = document.createElement('textarea');
@@ -946,6 +1095,7 @@ function buildPanelItem(item, schema) {
 					: buildSegmented(group.options);
 				const optionRow = buildOptionGroup(group.label, [control]);
 				if (group.control === 'select') optionRow.classList.remove('is-stacked');
+				if (item.revert || group.revert) attachOptionRevert(optionRow, control, { options: group.options, roleId: group.options[0]?.id || group.label, label: group.label });
 				row.appendChild(optionRow);
 			});
 			return row;
@@ -1003,14 +1153,11 @@ function readModuleSummary(card) {
 	const parts = [];
 	if (mode === 'none') return 'None';
 	if (mode === 'glitter') {
-		if (card.dataset.slot === 'fill') {
-			const name = card.querySelector('.asset-info:not([hidden]) .asset-info-name')?.textContent?.trim();
-			if (name) parts.push(name);
-		} else {
-			parts.push('Glitter');
-		}
+		const name = card.querySelector('.asset-info:not([hidden]) .asset-info-name')?.textContent?.trim();
+		parts.push(name || 'Glitter');
 	} else if (mode === 'solid') {
-		parts.push('Solid');
+		const color = card.querySelector('.property-color-row:not([hidden]) input[type="color"]')?.value;
+		parts.push(color ? color.toUpperCase() : 'Solid');
 	} else if (mode === 'gradient') {
 		parts.push('Gradient');
 	}
@@ -1100,15 +1247,15 @@ function ensureSubsectionCardBody(card) {
 	if (!card?.classList?.contains('subsection-content-group')) return card;
 	if (card.classList.contains('subsection-section-group') || card.classList.contains('effects-stack')) return card;
 	if (card.querySelector(':scope > .subsection-card-body, :scope > .paint-slot-main, :scope > .property-module-content')) return card;
+	const isFooter = (child) => child.classList.contains('advanced-disclosure') || child.classList.contains('property-actions');
 	const children = Array.from(card.children);
 	const content = children.filter((child) =>
-		!child.classList.contains('subsection-title') &&
-		!child.classList.contains('advanced-disclosure')
+		!child.classList.contains('subsection-title') && !isFooter(child)
 	);
 	if (!content.length) return card;
 	const body = panelDiv('subsection-card-body');
-	const advanced = children.find((child) => child.classList.contains('advanced-disclosure'));
-	card.insertBefore(body, advanced || null);
+	const footer = children.find(isFooter);
+	card.insertBefore(body, footer || null);
 	content.forEach((child) => body.appendChild(child));
 	if (card.querySelector(':scope > .subsection-title')) card.classList.add('has-subsection-title');
 	return card;
@@ -1298,16 +1445,31 @@ function redesignTransformFragment(fragment) {
 		node.appendChild(createIcon('undo'));
 		return node;
 	};
+	// A real per-row revert for the transform controls that have a meaningful
+	// default to return to (Flip, Lock aspect ratio). editor-transform.js wires
+	// the click and toggles `disabled` from the layer state; the id is stamped by
+	// buildTransformPanel's [data-transform-role] pass.
+	const revertControl = (role) => {
+		const node = document.createElement('button');
+		node.type = 'button';
+		node.className = 'property-revert';
+		node.dataset.transformRole = role;
+		node.title = 'Reset to default';
+		node.setAttribute('aria-label', 'Reset to default');
+		node.disabled = true;
+		node.appendChild(createIcon('undo'));
+		return node;
+	};
 	const rowLabel = (text) => {
 		const node = document.createElement('span');
 		node.className = 'property-label';
 		node.textContent = text;
 		return node;
 	};
-	const makePairRow = (set, label) => {
+	const makePairRow = (set, label, { revert = true } = {}) => {
 		const pair = set.querySelector('.property-pair');
 		set.className = 'property-row row is-pair transform-pair-row';
-		set.replaceChildren(rowLabel(label), pair, placeholder());
+		set.replaceChildren(rowLabel(label), pair, ...(revert ? [placeholder()] : []));
 		return set;
 	};
 
@@ -1321,7 +1483,7 @@ function redesignTransformFragment(fragment) {
 	lockSwitch.className = 'property-switch';
 	lockSwitch.textContent = '';
 	lockSwitch.setAttribute('aria-hidden', 'true');
-	lock.replaceChildren(rowLabel('Lock aspect ratio'), lockInput, lockSwitch, placeholder());
+	lock.replaceChildren(rowLabel('Lock aspect ratio'), lockInput, lockSwitch, revertControl('resetProportional'));
 	header.querySelector('.transform-panel-title-actions').remove();
 	const signal = document.createElement('button');
 	signal.type = 'button';
@@ -1332,7 +1494,7 @@ function redesignTransformFragment(fragment) {
 	signal.appendChild(createIcon('undo'));
 	header.appendChild(signal);
 
-	makePairRow(position, 'Position');
+	makePairRow(position, 'Position', { revert: false });
 	const scaleRows = panelDiv('transform-scale-rows');
 	scaleRows.append(...size.querySelectorAll('[data-transform-scale-readout]'));
 	scaleRows.querySelector('.transform-scale-x > .property-label').textContent = 'Scale';
@@ -1352,7 +1514,6 @@ function redesignTransformFragment(fragment) {
 		row.classList.remove('is-stacked');
 		row.classList.add('row');
 		row.querySelector('.segmented-control').classList.add('segmented');
-		row.appendChild(placeholder());
 	});
 	const transformGlyphs = {
 		alignLeft: 'transformAlignLeft', alignCenterX: 'transformAlignCenterX', alignRight: 'transformAlignRight',
@@ -1378,7 +1539,7 @@ function redesignTransformFragment(fragment) {
 		flipControl.appendChild(option);
 	});
 	flip.className = 'property-row row';
-	flip.replaceChildren(rowLabel('Flip'), flipControl, placeholder());
+	flip.replaceChildren(rowLabel('Flip'), flipControl, revertControl('resetFlip'));
 
 	actions.classList.add('panel-actions');
 	card.appendChild(actions);

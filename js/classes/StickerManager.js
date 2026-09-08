@@ -224,8 +224,13 @@ class StickerManager extends ContentManager {
 			});
 		};
 		const defaults = this.getDefaultShadow();
-		attach('OffsetX', 'px', (value, data) => { data.offsetX = value; }, defaults.offsetX);
-		attach('OffsetY', 'px', (value, data) => { data.offsetY = value; }, defaults.offsetY);
+		bindEffectOffsetPair({
+			prefix,
+			getLayer: active,
+			getData: (layer) => layer.stickerData.shadow,
+			render: (layer) => this.renderLayer(layer),
+			save: () => this.editor.saveState('Edit sticker')
+		});
 		attach('Scale', '%', (value, data) => { data.scale = value; }, 100);
 		attach('Opacity', '%', (value, data) => { data.opacity = value; }, 100);
 		attach('Hue', '°', (value, data) => { ensureSlotColorAdjust(data).hue = value; this.refreshShadowSwatch(data); }, COLOR_ADJUST_IDENTITY.hue);
@@ -358,8 +363,7 @@ class StickerManager extends ContentManager {
 			if (input) input.value = value;
 			if (display) display.innerHTML = formatUnit(value, unit);
 		};
-		set('OffsetX', sd.offsetX, 'px');
-		set('OffsetY', sd.offsetY, 'px');
+		syncEffectOffsetPair(prefix, sd);
 		set('Scale', sd.scale ?? 100, '%');
 		set('Opacity', sd.opacity ?? 100, '%');
 		const adjust = normalizeColorAdjust(sd.colorAdjust);

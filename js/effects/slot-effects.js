@@ -188,28 +188,64 @@ function bindSlotTextureCoordinateControls(options) {
 	document.getElementById(`${prefix}TextureAnchorArtwork`)?.addEventListener('click', () => setAnchor('artwork'));
 	document.getElementById(`${prefix}TextureAnchorCanvas`)?.addEventListener('click', () => setAnchor('canvas'));
 
+	const offsetSpec = CONFIG.ui.sliders.textureOffsetX || {};
+	const clampOffset = (n) => Math.max(offsetSpec.min ?? -500, Math.min(offsetSpec.max ?? 500, Math.round(n)));
+	const syncOffsetReset = (data) => {
+		const button = document.getElementById(`${prefix}ResetTexturePosition`);
+		if (button) {
+			button.disabled = (data.textureOffsetX || 0) === defaults.defaultOffsetX
+				&& (data.textureOffsetY || 0) === defaults.defaultOffsetY;
+		}
+	};
+
 	[['X', 'textureOffsetX'], ['Y', 'textureOffsetY']].forEach(([axis, key]) => {
-		const slider = document.getElementById(`${prefix}TextureOffset${axis}`);
-		const value = document.getElementById(`${prefix}TextureOffset${axis}Value`);
-		if (!slider) return;
-		bindSlider(slider, value, {
-			suffix: 'px',
-			resetValue: axis === 'X' ? defaults.defaultOffsetX : defaults.defaultOffsetY,
-			resetButton: document.getElementById(`reset${prefix.charAt(0).toUpperCase() + prefix.slice(1)}TextureOffset${axis}`),
-			apply: (next) => {
+		const input = document.getElementById(`${prefix}TextureOffset${axis}`);
+		if (!input) return;
+		if (input.type === 'number') {
+			// Redesigned panels: real number field (buildNumberFieldPair).
+			const write = (commit) => {
 				const active = getActive();
 				if (!active) return;
-				active.data[key] = next;
+				const raw = parseFloat(input.value);
+				if (Number.isNaN(raw)) return;
+				active.data[key] = clampOffset(raw);
 				render(active.layer);
-			},
-			onCommit: save
-		});
+				syncOffsetReset(active.data);
+				if (commit) save();
+			};
+			input.addEventListener('input', () => write(false));
+			input.addEventListener('change', () => write(true));
+			input.addEventListener('keydown', (event) => {
+				if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+				event.preventDefault();
+				const step = event.shiftKey ? 10 : 1;
+				const current = parseFloat(input.value || '0') || 0;
+				input.value = String(clampOffset(current + (event.key === 'ArrowUp' ? step : -step)));
+				input.dispatchEvent(new Event('input'));
+				input.dispatchEvent(new Event('change'));
+			});
+		} else {
+			// Other panels: the slider pair (buildPairRow), with per-axis revert.
+			bindSlider(input, document.getElementById(`${prefix}TextureOffset${axis}Value`), {
+				suffix: 'px',
+				resetValue: axis === 'X' ? defaults.defaultOffsetX : defaults.defaultOffsetY,
+				resetButton: document.getElementById(`reset${prefix.charAt(0).toUpperCase() + prefix.slice(1)}TextureOffset${axis}`),
+				apply: (next) => {
+					const active = getActive();
+					if (!active) return;
+					active.data[key] = next;
+					render(active.layer);
+				},
+				onCommit: save
+			});
+		}
 	});
 
+	// One revert for the Offset pair (Anchor keeps its own). Resets X and Y only.
+	// Only the redesigned panels render this button.
 	document.getElementById(`${prefix}ResetTexturePosition`)?.addEventListener('click', () => {
 		const active = getActive();
 		if (!active) return;
-		active.data.textureAnchor = defaults.defaultAnchor;
 		active.data.textureOffsetX = defaults.defaultOffsetX;
 		active.data.textureOffsetY = defaults.defaultOffsetY;
 		syncSlotTextureCoordinateControls(prefix, active.data);
@@ -228,9 +264,63 @@ function syncSlotTextureCoordinateControls(prefix, data) {
 		button?.setAttribute('aria-pressed', String(active));
 	});
 	[['X', normalized.textureOffsetX], ['Y', normalized.textureOffsetY]].forEach(([axis, value]) => {
-		const slider = document.getElementById(`${prefix}TextureOffset${axis}`);
-		const valueEl = document.getElementById(`${prefix}TextureOffset${axis}Value`);
-		if (slider) slider.value = value;
-		if (valueEl) valueEl.innerHTML = formatUnit(value, 'px');
+		const input = document.getElementById(`${prefix}TextureOffset${axis}`);
+		if (!input) return;
+		if (input.type === 'number') {
+			// Don't yank the field out from under someone mid-edit.
+			if (document.activeElement !== input) input.value = Math.round(value);
+		} else {
+			input.value = value;
+			const valueEl = document.getElementById(`${prefix}TextureOffset${axis}Value`);
+			if (valueEl) valueEl.innerHTML = formatUnit(value, 'px');
+		}
+	});
+	const defaults = CONFIG.rendering.textureCoordinates;
+	const resetOffset = document.getElementById(`${prefix}ResetTexturePosition`);
+	if (resetOffset) {
+		resetOffset.disabled = normalized.textureOffsetX === defaults.defaultOffsetX
+			&& normalized.textureOffsetY === defaults.defaultOffsetY;
+	}
+}
+
+// A redesigned effect Offset pair (buildNumberFieldPair, ids `${prefix}OffsetX/Y`)
+// bound straight to an effect-data object's offsetX/offsetY. No per-row revert -
+// like Transform Position; the module's Enabled switch and "Reset Effects" cover
+// resetting. `getData` returns the effect data (may be null when the effect is
+// off, in which case edits are ignored).
+function bindEffectOffsetPair(options) {
+	const { prefix, slider = 'shadowOffsetX', getLayer, getData, render, save } = options;
+	const spec = CONFIG.ui.sliders[slider] || {};
+	const clamp = (n) => Math.max(spec.min ?? -Infinity, Math.min(spec.max ?? Infinity, Math.round(n)));
+	[['X', 'offsetX'], ['Y', 'offsetY']].forEach(([axis, key]) => {
+		const input = document.getElementById(`${prefix}Offset${axis}`);
+		if (!input) return;
+		const write = (commit) => {
+			const layer = getLayer();
+			const data = layer && getData(layer);
+			if (!data) return;
+			const raw = parseFloat(input.value);
+			if (Number.isNaN(raw)) return;
+			data[key] = clamp(raw);
+			render(layer);
+			if (commit) save();
+		};
+		input.addEventListener('input', () => write(false));
+		input.addEventListener('change', () => write(true));
+		input.addEventListener('keydown', (event) => {
+			if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+			event.preventDefault();
+			const step = event.shiftKey ? 10 : 1;
+			input.value = String(clamp((parseFloat(input.value || '0') || 0) + (event.key === 'ArrowUp' ? step : -step)));
+			input.dispatchEvent(new Event('input'));
+			input.dispatchEvent(new Event('change'));
+		});
+	});
+}
+
+function syncEffectOffsetPair(prefix, data) {
+	[['X', 'offsetX'], ['Y', 'offsetY']].forEach(([axis, key]) => {
+		const input = document.getElementById(`${prefix}Offset${axis}`);
+		if (input && document.activeElement !== input) input.value = Math.round((data && data[key]) || 0);
 	});
 }

@@ -9,10 +9,8 @@
 	gap: var(--spacing-lg);
 }
 
-.transform-panel.is-aspect-locked {
-	.transform-scale-x { grid-column: 1 / -1; }
-	.transform-scale-y { display: none; }
-}
+// Locking the aspect ratio links Scale X and Scale Y (dragging one drives the
+// other, see editor-transform.js bindAxisScale); both keep their own slider.
 
 // The glitter display reuses the shared .asset-info-* classes so it matches
 // Glitter Properties' Asset section exactly (thumbnail + name + badges + meta).

@@ -372,13 +372,13 @@ class TextGlitterManager {
 			this.ensureEffectData(layer, 'border').widthPx = value;
 		}, this.getDefaultBorder().widthPx);
 
-		this.attachSlider(this.ui.shadowOffsetX, this.ui.shadowOffsetXValue, 'px', (value, layer) => {
-			this.ensureEffectData(layer, 'shadow').offsetX = value;
-		}, this.getDefaultShadow().offsetX);
-
-		this.attachSlider(this.ui.shadowOffsetY, this.ui.shadowOffsetYValue, 'px', (value, layer) => {
-			this.ensureEffectData(layer, 'shadow').offsetY = value;
-		}, this.getDefaultShadow().offsetY);
+		bindEffectOffsetPair({
+			prefix: 'textShadow',
+			getLayer: () => this.getActiveTextLayer(),
+			getData: (layer) => this.ensureEffectData(layer, 'shadow'),
+			render: (layer) => this.renderLayer(layer),
+			save: () => this.editor.saveState('Edit text')
+		});
 
 		this.bindEffectGlitterPicker([this.ui.borderGlitterChip, this.ui.borderGlitterChange], 'border');
 		this.bindEffectGlitterPicker([this.ui.shadowGlitterChip, this.ui.shadowGlitterChange], 'shadow');
@@ -1627,10 +1627,7 @@ class TextGlitterManager {
 		}
 
 		if (shadow) {
-			this.ui.shadowOffsetX.value = shadow.offsetX;
-			this.ui.shadowOffsetXValue.innerHTML = formatUnit(shadow.offsetX, 'px');
-			this.ui.shadowOffsetY.value = shadow.offsetY;
-			this.ui.shadowOffsetYValue.innerHTML = formatUnit(shadow.offsetY, 'px');
+			syncEffectOffsetPair('textShadow', shadow);
 			this.ui.shadowColor.value = shadow.color;
 			if (this.ui.shadowScale) {
 				this.ui.shadowScale.value = shadow.scale ?? shadowDefaults.scale;
@@ -1642,10 +1639,7 @@ class TextGlitterManager {
 			}
 		} else {
 			const defaults = shadowDefaults;
-			this.ui.shadowOffsetX.value = defaults.offsetX;
-			this.ui.shadowOffsetXValue.innerHTML = formatUnit(defaults.offsetX, 'px');
-			this.ui.shadowOffsetY.value = defaults.offsetY;
-			this.ui.shadowOffsetYValue.innerHTML = formatUnit(defaults.offsetY, 'px');
+			syncEffectOffsetPair('textShadow', defaults);
 			this.ui.shadowColor.value = defaults.color;
 			if (this.ui.shadowScale) {
 				this.ui.shadowScale.value = defaults.scale;

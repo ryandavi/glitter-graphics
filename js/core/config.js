@@ -1449,7 +1449,7 @@ const PANEL_SCHEMAS = {
 					{ kind: 'card', title: 'Asset', collapsible: true, moduleSummary: 'asset', classes: 'panel-module sticker-asset-module', items: [
 						{ kind: 'assetInfo', info: 'stickerAssetInfo', thumbnail: 'stickerAssetThumbnail',
 							name: 'stickerAssetName', badges: 'stickerAssetBadges', change: 'stickerAssetChange',
-							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker' },
+							size: 'stickerAssetSize', frames: 'stickerAssetFrames', title: 'Choose another sticker', redesign: true },
 						{ kind: 'colorAdjust', label: 'Adjust color' }
 					] }
 				] },
@@ -1460,11 +1460,11 @@ const PANEL_SCHEMAS = {
 		],
 		effects: [
 			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'stickerShadow', title: 'Shadow', redesign: true,
-				sourceSelect: true, advancedStyle: 'flat',
+				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
-				afterSource: [{ kind: 'pair', label: 'Offset', fields: true, items: [
+				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'stickerShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'stickerShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }]
@@ -1485,7 +1485,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Content', collapsible: false, items: [
 				{ kind: 'card', title: 'Text', items: [
 					{ kind: 'textarea', id: 'textLayerInput', classes: 'text-input-group', rows: 4, maxlength: 200, placeholder: 'Type your glitter text' },
-					{ kind: 'segmented', visibleLabel: 'Mode', label: 'Text box mode', classes: 'text-box-mode-group', options: [
+					{ kind: 'segmented', visibleLabel: 'Mode', label: 'Text box mode', classes: 'text-box-mode-group', revert: true, options: [
 						{ label: 'Point', active: true, attrs: { 'data-text-box-mode': 'auto' } },
 						{ label: 'Box', attrs: { 'data-text-box-mode': 'fixed' } }
 					] },
@@ -1496,11 +1496,11 @@ const PANEL_SCHEMAS = {
 				] },
 				{ kind: 'card', title: 'Font', items: [
 					{ kind: 'host', id: 'textFontPicker', classes: 'property-inset property-scrollbox text-font-picker' },
-					{ kind: 'segmented', visibleLabel: 'Style', label: 'Text style', classes: 'text-style-group', options: [
+					{ kind: 'segmented', visibleLabel: 'Style', label: 'Text style', classes: 'text-style-group', revert: true, options: [
 						{ id: 'textFontBold', label: 'Bold', contentTag: 'strong' },
 						{ id: 'textFontItalic', label: 'Italic', contentTag: 'em' }
 					] },
-					{ kind: 'select', id: 'textCaseSelect', label: 'Text case', visibleLabel: 'Case', classes: 'text-case-select', options: [
+					{ kind: 'select', id: 'textCaseSelect', label: 'Text case', visibleLabel: 'Case', classes: 'text-case-select', revert: true, options: [
 						{ value: 'none', label: 'As Typed' }, { value: 'upper', label: 'UPPERCASE' },
 						{ value: 'lower', label: 'lowercase' }, { value: 'title', label: 'Title Case' }
 					] },
@@ -1527,7 +1527,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', collapsible: false, adoptTransformOpacity: true, items: [
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', redesign: true,
-					sourceSelect: true,
+					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'glitter', color: '#000000',
 					chipTitle: 'Choose fill glitter',
@@ -1538,13 +1538,13 @@ const PANEL_SCHEMAS = {
 		],
 		effects: [
 			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Border', redesign: true,
-				sourceSelect: true, advancedStyle: 'flat',
+				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose border source',
 				primaryIds: { scale: 'textBorderScale', scaleRow: 'textBorderScaleRow', opacity: 'textBorderOpacity' },
 				pre: [{ kind: 'slider', id: 'textBorderWidth', slider: 'textBorderWidth' }],
-				post: [{ kind: 'stackRow', groups: [
+				post: [{ kind: 'stackRow', revert: true, groups: [
 					{ label: 'Edges', options: [
 						{ id: 'textBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
 						{ id: 'textBorderEdgeHard', label: 'Hard', value: 'hard' }
@@ -1561,12 +1561,12 @@ const PANEL_SCHEMAS = {
 				] }]
 			},
 			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'textShadow', title: 'Shadow', redesign: true,
-				sourceSelect: true, advancedStyle: 'flat',
+				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose shadow source',
 				primaryIds: { scale: 'textShadowScale', scaleRow: 'textShadowScaleRow', opacity: 'textShadowOpacity' },
-				pre: [{ kind: 'pair', label: 'Offset', items: [
+				pre: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'textShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'textShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }]

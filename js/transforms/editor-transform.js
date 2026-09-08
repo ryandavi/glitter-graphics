@@ -428,6 +428,42 @@ snapTransformPosition(transform, position, options = {}) {
 		attachFlip(ids.flipX, 'flipX');
 		attachFlip(ids.flipY, 'flipY');
 
+		// Per-row revert for Flip: back to unflipped on both axes.
+		const resetFlip = document.getElementById(ids.resetFlip);
+		if (resetFlip) {
+			resetFlip.addEventListener('click', () => {
+				const active = activeManager();
+				if (!active) return;
+				const flipX = document.getElementById(ids.flipX);
+				const flipY = document.getElementById(ids.flipY);
+				if (flipX) flipX.checked = false;
+				if (flipY) flipY.checked = false;
+				active.manager.updateTransform(active.layer.id, { flipX: false, flipY: false });
+				this.syncResetTransformState(prefix, active.layer);
+				this.saveState('Transform layer');
+			});
+		}
+
+		// Per-row revert for Lock aspect ratio: the default is locked (an unlocked
+		// ratio is what hasResettableTransformAdjustments counts as an adjustment).
+		const resetProportional = document.getElementById(ids.resetProportional);
+		if (resetProportional) {
+			resetProportional.addEventListener('click', () => {
+				const active = activeManager();
+				if (!active) return;
+				const checkbox = document.getElementById(ids.proportional);
+				if (checkbox) checkbox.checked = true;
+				const current = getLayerTransform(active.layer);
+				active.manager.updateTransform(active.layer.id, {
+					proportionalScale: true,
+					scale: { x: current.scale.x, y: current.scale.x }
+				});
+				this.loadTransformSettings(active.layer, prefix);
+				this.syncResetTransformState(prefix, active.layer);
+				this.saveState('Transform layer');
+			});
+		}
+
 		[
 			['left', ids.alignLeft],
 			['centerX', ids.alignCenterX],

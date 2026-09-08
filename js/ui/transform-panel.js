@@ -79,14 +79,18 @@ renderTransformPanels() {
 ,
 	syncResetTransformState(prefix, layer) {
 		const ids = this.getTransformIds(prefix);
+		const transform = this.getLayerTransformData(layer);
 		const resetTransform = document.getElementById(ids.resetTransform);
 		if (resetTransform) {
-			const disabled = !this.hasResettableTransformAdjustments(
-				this.getLayerTransformData(layer)
-			);
+			const disabled = !this.hasResettableTransformAdjustments(transform);
 			resetTransform.disabled = disabled;
 			document.querySelector(`[data-transform-prefix="${prefix}"] [data-transform-revert-signal]`)?.toggleAttribute('disabled', disabled);
 		}
+		// Per-row reverts: on only when their control is away from its default.
+		const resetFlip = document.getElementById(ids.resetFlip);
+		if (resetFlip) resetFlip.disabled = !(transform?.flipX || transform?.flipY);
+		const resetProportional = document.getElementById(ids.resetProportional);
+		if (resetProportional) resetProportional.disabled = transform?.proportionalScale !== false;
 	}
 
 ,
@@ -214,6 +218,8 @@ renderTransformPanels() {
 		}
 		const transformPanel = document.querySelector(`[data-transform-prefix="${prefix}"]`);
 		transformPanel?.classList.toggle('is-aspect-locked', Boolean(proportional?.checked));
+		// Both axes always show their own slider; when the ratio is locked the X
+		// row reads simply "Scale" since dragging it moves both.
 		const scaleXLabel = transformPanel?.querySelector('.transform-scale-x .property-label');
 		if (scaleXLabel) scaleXLabel.textContent = proportional?.checked ? 'Scale' : 'Scale X';
 		const scaleSummary = document.getElementById(ids.scaleSummary);
