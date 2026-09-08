@@ -688,6 +688,7 @@ const CONFIG = deepFreeze({
 			borderWidth: { label: 'Width', unit: 'px', min: 1, max: 60, value: 6 },
 			textBorderWidth: { label: 'Width', unit: 'px', min: 1, max: 24, value: 4 },
 			borderDotSpacing: { label: 'Dot Spacing', unit: 'px', min: 1, max: 60, value: 10 },
+			shapeRadius: { label: 'Radius', unit: 'px', min: 0, max: 100, value: 12 },
 			shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
 			shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
 			threshold: { label: 'Color Tolerance', unit: '', min: 0, max: 255, value: 50 },
@@ -1164,6 +1165,7 @@ const LAYER_UI_CONFIG = {
 		hitTestMethod: 'isPointInShape',
 		transformPrefix: 'shape',
 		transformCapabilities: {
+			panelRedesign: true,
 			position: true,
 			size: true,
 			scaleReadout: true,
@@ -1580,48 +1582,51 @@ const PANEL_SCHEMAS = {
 		prefix: 'shape',
 		sectionPrefix: 'shapeSettings',
 		mobileKey: 'shape',
-		section: { id: 'shapeSettingsSection', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
+		section: { id: 'shapeSettingsSection', classes: 'panel-redesign', icon: 'square', iconName: 'Shape', title: 'Shape Properties' },
 		groups: [
-			{ title: 'Content', items: [
-				{ kind: 'card', title: 'Asset', items: [
+			{ title: 'Content', collapsible: false, items: [
+				{ kind: 'card', title: 'Asset', collapsible: true, moduleSummary: 'asset', classes: 'panel-module shape-asset-module', items: [
 					{ kind: 'assetInfo', info: 'shapeAssetInfo', thumbnail: 'shapeAssetThumbnail',
 						name: 'shapeAssetName', badges: 'shapeAssetBadges', change: 'shapeAssetChange',
-						title: 'Choose another shape', compact: true }
+						title: 'Choose another shape', compact: true, redesign: true },
+					{ kind: 'slider', id: 'shapeRadius', slider: 'shapeRadius', rowId: 'shapeRadiusRow', hidden: true }
 				] }
 			] },
 			// The shared transform panel emits its own Opacity card into the host;
 			// this group adopts it after renderTransformPanels runs
 			// (finalizePanelSchemaSections), mirroring the old shape branch of
 			// the pre-schema panel order.
-			{ title: 'Appearance', adoptTransformOpacity: true, items: [
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill',
+			{ title: 'Appearance', collapsible: false, adoptTransformOpacity: true, items: [
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', redesign: true, coordinateFields: false,
+					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'solid',
 					color: '#ff66cc', chipTitle: 'Choose fill glitter' }
 			] },
-			{ title: 'Transform', items: [{ kind: 'transformHost' }] }
+			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
 		],
 		effects: [
-			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Border',
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'shapeBorder', title: 'Border', redesign: true, coordinateFields: false,
+				sourceSelect: true, sourceRevert: true, colorRevert: true, hideAdvanced: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
 				modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
-				pre: [
+				afterSource: [
 					{ kind: 'slider', id: 'shapeBorderWidth', slider: 'borderWidth' },
-					{ kind: 'optionGroup', label: 'Style', glitterSource: true, options: [
-						{ id: 'shapeBorderStyleSolid', label: 'Solid Border', active: true, value: 'solid' },
-						{ id: 'shapeBorderStyleDotted', label: 'Dotted Border', value: 'dotted' }
+					{ kind: 'optionGroup', label: 'Style', glitterSource: true, revert: true, options: [
+						{ id: 'shapeBorderStyleSolid', label: 'Solid', active: true, value: 'solid' },
+						{ id: 'shapeBorderStyleDotted', label: 'Dotted', value: 'dotted' }
 					] },
 					{ kind: 'slider', id: 'shapeBorderDotSpacing', slider: 'borderDotSpacing', rowId: 'shapeBorderDotSpacingRow', hidden: true }
 				],
 				post: [
-					{ kind: 'stackRow', groups: [
+					{ kind: 'stackRow', revert: true, groups: [
 						{ label: 'Edges', options: [
 							{ id: 'shapeBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
 							{ id: 'shapeBorderEdgeHard', label: 'Hard', value: 'hard' }
 						] },
-						{ label: 'Placement', options: [
+						{ label: 'Placement', control: 'select', options: [
 							{ id: 'shapeBorderPositionOutside', label: 'Outside', active: true, value: 'outside' },
 							{ id: 'shapeBorderPositionCenter', label: 'On Edge', value: 'center' },
 							{ id: 'shapeBorderPositionInside', label: 'Inside', value: 'inside' }
@@ -1633,12 +1638,13 @@ const PANEL_SCHEMAS = {
 					] }
 				]
 			},
-			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'shapeShadow', title: 'Shadow',
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'shapeShadow', title: 'Shadow', redesign: true, coordinateFields: false,
+				sourceSelect: true, sourceRevert: true, colorRevert: true,
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source',
 				modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose glitter',
-				pre: [
+				afterSource: [
 					{ kind: 'pair', label: 'Offset', items: [
 						{ id: 'shapeShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 						{ id: 'shapeShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }

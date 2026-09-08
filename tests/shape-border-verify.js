@@ -215,6 +215,41 @@ async function check4(page) {
 	approxEqual(restored.frame.height, selected.frame.height, POSITION_TOLERANCE_PX, 'Border frame height changed after undo');
 }
 
+async function check5(page) {
+	const layerId = await createBorderedShape(page, {
+		shapeId: 'roundedRectangle',
+		width: 140,
+		height: 90,
+		borderWidth: 8
+	});
+
+	const rounded = await page.evaluate((id) => {
+		const editor = window.editor;
+		const layer = editor.layerManager.layers.find((entry) => entry.id === id);
+		const input = document.getElementById('shapeRadius');
+		input.value = '30';
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		const measurement = editor.shapeGlitterManager.getMeasurementEntry(layer);
+		const { x, y } = measurement.shapeRect;
+		return {
+			radius: layer.shapeData.cornerRadiusPx,
+			rowHidden: document.getElementById('shapeRadiusRow').hidden,
+			cornerAlpha: measurement.canvas.getContext('2d').getImageData(Math.floor(x), Math.floor(y), 1, 1).data[3]
+		};
+	}, layerId);
+
+	assert(rounded.radius === 30, 'Radius slider did not update the shape data');
+	assert(rounded.rowHidden === false, 'Radius row was hidden for a rounded rectangle');
+	assert(rounded.cornerAlpha === 0, 'Rounded rectangle radius did not cut out the corner pixels');
+
+	await page.evaluate((id) => {
+		const editor = window.editor;
+		const layer = editor.layerManager.layers.find((entry) => entry.id === id);
+		editor.shapeGlitterManager.applyShapeToLayer(layer, 'square');
+	}, layerId);
+	assert(await page.locator('#shapeRadiusRow').evaluate((row) => row.hidden), 'Radius row stayed visible for a square');
+}
+
 async function runCheck(browser, label, checkFn) {
 	const page = await browser.newPage({ viewport: VIEWPORT });
 	try {
@@ -233,6 +268,7 @@ async function main() {
 		await runCheck(browser, '2. Rotated shadowed shape border stays aligned through reselect', check2);
 		await runCheck(browser, '3. Dotted shape border toggles spacing UI and produces a mask', check3);
 		await runCheck(browser, '4. Undo restoring a removed shape border keeps the transform box aligned', check4);
+		await runCheck(browser, '5. Rounded rectangle radius updates geometry and conditional UI', check5);
 		console.log('\nShape border verification finished with all checks passing.');
 	} finally {
 		await browser.close();
@@ -243,4 +279,3 @@ main().catch((error) => {
 	console.error(error?.stack || String(error));
 	process.exit(1);
 });
-

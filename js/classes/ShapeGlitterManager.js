@@ -51,6 +51,9 @@ class ShapeGlitterManager {
 		this.ui.assetThumbnail = id('shapeAssetThumbnail');
 		this.ui.assetName = id('shapeAssetName');
 		this.ui.assetChange = id('shapeAssetChange');
+		this.ui.radius = id('shapeRadius');
+		this.ui.radiusValue = id('shapeRadiusValue');
+		this.ui.radiusRow = id('shapeRadiusRow');
 		// Shared gallery picker strip (same DOM the text picker uses).
 		this.ui.gallerySection = id('designGallerySection');
 		this.ui.pickerStrip = id('galleryPickerStrip');
@@ -263,6 +266,7 @@ class ShapeGlitterManager {
 		this.ui.resetEffects?.addEventListener('click', () => this._resetEffects());
 
 		// Geometry sliders (change the mask → invalidate).
+		this._attachSlider(this.ui.radius, this.ui.radiusValue, 'px', (v, l) => { l.shapeData.cornerRadiusPx = v; }, CONFIG.ui.sliders.shapeRadius.value, true);
 		this._attachSlider(this.ui.borderWidth, this.ui.borderWidthValue, 'px', (v, l) => { this.ensureEffectData(l, 'border').widthPx = v; }, this.getDefaultBorder().widthPx, true);
 		this._attachSlider(this.ui.borderDotSpacing, this.ui.borderDotSpacingValue, 'px', (v, l) => { this.ensureEffectData(l, 'border').dotSpacingPx = v; }, this.getDefaultBorder().dotSpacingPx, true);
 		this._attachSlider(this.ui.shadowOffsetX, this.ui.shadowOffsetXValue, 'px', (v, l) => { this.ensureEffectData(l, 'shadow').offsetX = v; }, this.getDefaultShadow().offsetX, true);
@@ -612,6 +616,9 @@ class ShapeGlitterManager {
 		const shadowDefaults = this.getDefaultShadow();
 		if (this.ui.assetThumbnail) this.ui.assetThumbnail.innerHTML = ShapeLibrary.getIconSvg(d.shapeId);
 		if (this.ui.assetName) this.ui.assetName.textContent = this.getShapeLabel(d.shapeId);
+		if (this.ui.radius) this.ui.radius.value = d.cornerRadiusPx;
+		if (this.ui.radiusValue) this.ui.radiusValue.innerHTML = formatUnit(d.cornerRadiusPx, 'px');
+		if (this.ui.radiusRow) this.ui.radiusRow.hidden = d.shapeId !== 'roundedRectangle';
 
 		this._syncPickerActive();
 
@@ -638,8 +645,8 @@ class ShapeGlitterManager {
 		const shadow = d.shadow;
 		syncPanelEffectToggle(this.ui.shadowEnabled, Boolean(shadow));
 		const sd = shadow || shadowDefaults;
-		if (this.ui.shadowOffsetX) { this.ui.shadowOffsetX.value = sd.offsetX; this.ui.shadowOffsetXValue.innerHTML = formatUnit(sd.offsetX, 'px'); }
-		if (this.ui.shadowOffsetY) { this.ui.shadowOffsetY.value = sd.offsetY; this.ui.shadowOffsetYValue.innerHTML = formatUnit(sd.offsetY, 'px'); }
+		if (this.ui.shadowOffsetX) { this.ui.shadowOffsetX.value = sd.offsetX; if (this.ui.shadowOffsetXValue) this.ui.shadowOffsetXValue.innerHTML = formatUnit(sd.offsetX, 'px'); }
+		if (this.ui.shadowOffsetY) { this.ui.shadowOffsetY.value = sd.offsetY; if (this.ui.shadowOffsetYValue) this.ui.shadowOffsetYValue.innerHTML = formatUnit(sd.offsetY, 'px'); }
 		if (this.ui.shadowOpacity) { this.ui.shadowOpacity.value = sd.opacity ?? shadowDefaults.opacity; this.ui.shadowOpacityValue.innerHTML = formatUnit(sd.opacity ?? shadowDefaults.opacity, '%'); }
 		if (this.ui.shapeShadowColor) this.ui.shapeShadowColor.value = sd.color || '#000000';
 		this._loadColorAdjust('shapeShadow', sd.colorAdjust, sd.scale ?? shadowDefaults.scale);
@@ -686,6 +693,7 @@ class ShapeGlitterManager {
 	normalizeLayer(layer) {
 		if (!layer || layer.type !== LayerType.SHAPE) return;
 		const data = layer.shapeData;
+		data.cornerRadiusPx ??= CONFIG.ui.sliders.shapeRadius.value;
 		data.fill = { ...this.getDefaultFill(), ...(data.fill || {}) };
 		if (data.border === undefined) data.border = null;
 		if (data.border) data.border = { ...this.getDefaultBorder(), ...data.border };
@@ -941,6 +949,7 @@ class ShapeGlitterManager {
 			d.shapeId,
 			d.width,
 			d.height,
+			d.shapeId === 'roundedRectangle' ? d.cornerRadiusPx : null,
 			d.border ? [d.border.widthPx, d.border.style || 'solid', d.border.dotSpacingPx ?? this.getDefaultBorder().dotSpacingPx, this.getBorderPlacement(d.border), this.getBorderEdgeStyle(d.border)] : null,
 			d.shadow ? [d.shadow.offsetX, d.shadow.offsetY] : null,
 			shouldUseCrispMaskEdges(),
@@ -992,7 +1001,7 @@ class ShapeGlitterManager {
 		ctx.translate(layoutX + w / 2, layoutY + h / 2);
 		// trace() fills the shape at the current origin (ShapeLibrary is the single
 		// geometry source shared with the brush + the picker thumbnails).
-		ShapeLibrary.trace(d.shapeId, ctx, w / 2, h / 2, { fit: 'fill' });
+		ShapeLibrary.trace(d.shapeId, ctx, w / 2, h / 2, { fit: 'fill', cornerRadiusPx: d.cornerRadiusPx });
 		ctx.restore();
 
 		if (shouldUseCrispMaskEdges()) {
@@ -1016,6 +1025,7 @@ class ShapeGlitterManager {
 			shapeId: d.shapeId,
 			shapeW: w,
 			shapeH: h,
+			cornerRadiusPx: d.cornerRadiusPx,
 			layoutX,
 			layoutY
 		};
@@ -1078,7 +1088,10 @@ class ShapeGlitterManager {
 		canvas._textureOrigin = { ...measurement.canvas._textureOrigin };
 		const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-		const path = ShapeLibrary.buildTransformedPath(measurement.shapeId, measurement.shapeW / 2, measurement.shapeH / 2, { fit: 'fill' });
+		const path = ShapeLibrary.buildTransformedPath(measurement.shapeId, measurement.shapeW / 2, measurement.shapeH / 2, {
+			fit: 'fill',
+			cornerRadiusPx: measurement.cornerRadiusPx
+		});
 		ctx.save();
 		ctx.translate(measurement.layoutX + measurement.shapeW / 2, measurement.layoutY + measurement.shapeH / 2);
 		ctx.strokeStyle = '#ffffff';

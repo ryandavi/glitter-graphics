@@ -25,7 +25,7 @@ const SECTIONS = [
 ];
 
 function serve() {
-	const child = spawn('python3', ['-m', 'http.server', String(PORT)], {
+	const child = spawn(process.platform === 'win32' ? 'python' : 'python3', ['-m', 'http.server', String(PORT)], {
 		cwd: path.join(__dirname, '..'), stdio: 'ignore', detached: true
 	});
 	return () => { try { process.kill(-child.pid); } catch (e) { /* already gone */ } };

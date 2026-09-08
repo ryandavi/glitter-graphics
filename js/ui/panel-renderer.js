@@ -805,7 +805,7 @@ function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 		// Redesigned panels use the transform-panel number fields; the rest keep
 		// the slider pair. Offset X+Y read as one value and share a single revert
 		// at the row's right edge (slot-effects.js `${prefix}ResetTexturePosition`).
-		textureGroup.appendChild(options.redesign
+		textureGroup.appendChild(options.coordinateFields
 			? buildNumberFieldPair({ label: 'Offset', reset: { id: `${prefix}ResetTexturePosition`, title: 'Reset texture offset' }, items: offsetItems })
 			: buildPairRow({ label: 'Offset', items: offsetItems }));
 		content.appendChild(textureGroup);
@@ -890,8 +890,9 @@ function buildPaintSlotCard(slot) {
 	(slot.post || []).forEach((item) => main.appendChild(buildPanelItem(item)));
 	const advanced = buildAdvancedDisclosure(slot.idPrefix, slot.advancedIds, {
 		texturePosition: slot.texturePosition,
-		redesign: slot.redesign
+		coordinateFields: slot.coordinateFields ?? slot.redesign
 	});
+	if (slot.hideAdvanced) advanced.hidden = true;
 	if (slot.advancedStyle === 'flat') {
 		const flat = panelDiv('paint-slot-advanced-flat glitter-source-glitter');
 		flat.append(...advanced.querySelector('[data-advanced-content]').children);
