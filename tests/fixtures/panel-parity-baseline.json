@@ -3,26 +3,44 @@
 		{
 			"id": "noLayerSettingsSection",
 			"tag": "div",
-			"classes": "no-layer-settings-section section visible",
+			"classes": "collapsible-section no-layer-settings-section panel-redesign section visible",
 			"parent": "designGalleryContent"
 		},
 		{
-			"id": "noLayerEmptyText",
+			"id": "noLayerSettingsHeader",
 			"tag": "div",
-			"classes": "property-empty-title",
+			"classes": "section-header section-header-with-action",
+			"parent": "noLayerSettingsSection"
+		},
+		{
+			"id": "noLayerEmptyText",
+			"tag": "span",
+			"classes": "section-header-title-text",
+			"parent": "noLayerSettingsHeader"
+		},
+		{
+			"id": "noLayerSettingsToggle",
+			"tag": "div",
+			"classes": "btn-icon collapsed section-header-action visible",
+			"parent": "noLayerSettingsHeader"
+		},
+		{
+			"id": "noLayerSettingsContent",
+			"tag": "div",
+			"classes": "section-content visible",
 			"parent": "noLayerSettingsSection"
 		},
 		{
 			"id": "noLayerEmptySubtext",
 			"tag": "div",
-			"classes": "property-empty-text",
-			"parent": "noLayerSettingsSection"
+			"classes": "no-selection-intro panel-note property-note",
+			"parent": "noLayerSettingsContent"
 		},
 		{
 			"id": "noLayerDefaultGroups",
 			"tag": "div",
 			"classes": "property-block-list settings-subsection",
-			"parent": "noLayerSettingsSection"
+			"parent": "noLayerSettingsContent"
 		},
 		{
 			"id": "quickAddOptions",
@@ -57,7 +75,7 @@
 		{
 			"id": "projectMetaGroup",
 			"tag": "div",
-			"classes": "property-card subsection-content-group",
+			"classes": "panel-module property-card subsection-content-group",
 			"parent": "noLayerDefaultGroups"
 		},
 		{
@@ -86,10 +104,211 @@
 			"parent": "projectMetaGroup"
 		},
 		{
+			"id": "noLayerCanvasSizeHost",
+			"tag": "div",
+			"classes": "",
+			"parent": "noLayerDefaultGroups"
+		},
+		{
+			"id": "documentSizeGroup",
+			"tag": "div",
+			"classes": "document-size-group",
+			"parent": "noLayerCanvasSizeHost"
+		},
+		{
+			"id": "documentSizeMode",
+			"tag": "div",
+			"classes": "document-size-mode segmented-control",
+			"parent": "documentSizeGroup"
+		},
+		{
+			"id": "canvasSizePanel",
+			"tag": "div",
+			"classes": "document-size-panel has-subsection-title panel-module property-card subsection-content-group",
+			"parent": "documentSizeGroup"
+		},
+		{
+			"id": "canvasSizeLimitMessage",
+			"tag": "div",
+			"classes": "canvas-size-limit-message",
+			"parent": "canvasSizePanel"
+		},
+		{
+			"id": "canvasSizeRelative",
+			"tag": "input",
+			"classes": "",
+			"parent": "canvasSizePanel",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "false"
+			}
+		},
+		{
+			"id": "canvasSizeWidth",
+			"tag": "input",
+			"classes": "",
+			"parent": "canvasSizePanel",
+			"input": {
+				"type": "number",
+				"min": "1",
+				"max": "1024",
+				"step": "1",
+				"value": "500"
+			}
+		},
+		{
+			"id": "canvasSizeHeight",
+			"tag": "input",
+			"classes": "",
+			"parent": "canvasSizePanel",
+			"input": {
+				"type": "number",
+				"min": "1",
+				"max": "1024",
+				"step": "1",
+				"value": "400"
+			}
+		},
+		{
+			"id": "canvasSizeAnchor",
+			"tag": "div",
+			"classes": "anchor-grid",
+			"parent": "canvasSizePanel"
+		},
+		{
+			"id": "canvasExtensionMode",
+			"tag": "div",
+			"classes": "canvas-extension-mode segmented-control",
+			"parent": "canvasSizePanel"
+		},
+		{
+			"id": "canvasExtensionColorRow",
+			"tag": "div",
+			"classes": "property-row",
+			"parent": "canvasSizePanel"
+		},
+		{
+			"id": "canvasExtensionColor",
+			"tag": "input",
+			"classes": "",
+			"parent": "canvasExtensionColorRow",
+			"input": {
+				"type": "color",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "#ffffff"
+			}
+		},
+		{
+			"id": "canvasSizeReset",
+			"tag": "button",
+			"classes": "btn-simple",
+			"parent": "canvasSizePanel"
+		},
+		{
+			"id": "canvasSizeApply",
+			"tag": "button",
+			"classes": "btn-simple primary",
+			"parent": "canvasSizePanel"
+		},
+		{
+			"id": "scaleDesignPanel",
+			"tag": "div",
+			"classes": "document-size-panel has-subsection-title panel-module property-card subsection-content-group",
+			"parent": "documentSizeGroup"
+		},
+		{
+			"id": "scaleDesignWidth",
+			"tag": "input",
+			"classes": "",
+			"parent": "scaleDesignPanel",
+			"input": {
+				"type": "number",
+				"min": "1",
+				"max": "1024",
+				"step": "1",
+				"value": "500"
+			}
+		},
+		{
+			"id": "scaleDesignHeight",
+			"tag": "input",
+			"classes": "",
+			"parent": "scaleDesignPanel",
+			"input": {
+				"type": "number",
+				"min": "1",
+				"max": "1024",
+				"step": "1",
+				"value": "400"
+			}
+		},
+		{
+			"id": "scaleDesignPercent",
+			"tag": "input",
+			"classes": "",
+			"parent": "scaleDesignPanel",
+			"input": {
+				"type": "number",
+				"min": "0.1",
+				"max": "204.8",
+				"step": "1",
+				"value": "100"
+			}
+		},
+		{
+			"id": "scaleDesignPresets",
+			"tag": "div",
+			"classes": "scale-design-presets segmented-control",
+			"parent": "scaleDesignPanel"
+		},
+		{
+			"id": "scaleDesignTextures",
+			"tag": "input",
+			"classes": "",
+			"parent": "scaleDesignPanel",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "true"
+			}
+		},
+		{
+			"id": "scaleDesignEffects",
+			"tag": "input",
+			"classes": "",
+			"parent": "scaleDesignPanel",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "true"
+			}
+		},
+		{
+			"id": "scaleDesignReset",
+			"tag": "button",
+			"classes": "btn-simple",
+			"parent": "scaleDesignPanel"
+		},
+		{
+			"id": "scaleDesignApply",
+			"tag": "button",
+			"classes": "btn-simple primary",
+			"parent": "scaleDesignPanel"
+		},
+		{
 			"id": "multiLayerSelectionGroup",
 			"tag": "div",
 			"classes": "settings-subsection",
-			"parent": "noLayerSettingsSection"
+			"parent": "noLayerSettingsContent"
 		},
 		{
 			"id": "multiSelectionAlignScope",
@@ -442,199 +661,10 @@
 			"parent": "baseLayerSettingsContent"
 		},
 		{
-			"id": "documentSizeGroup",
+			"id": "baseCanvasSizeHost",
 			"tag": "div",
-			"classes": "document-size-group",
+			"classes": "",
 			"parent": "baseLayerSettingsContent"
-		},
-		{
-			"id": "documentSizeMode",
-			"tag": "div",
-			"classes": "document-size-mode segmented-control",
-			"parent": "documentSizeGroup"
-		},
-		{
-			"id": "canvasSizePanel",
-			"tag": "div",
-			"classes": "document-size-panel has-subsection-title panel-module property-card subsection-content-group",
-			"parent": "documentSizeGroup"
-		},
-		{
-			"id": "canvasSizeLimitMessage",
-			"tag": "div",
-			"classes": "canvas-size-limit-message",
-			"parent": "canvasSizePanel"
-		},
-		{
-			"id": "canvasSizeRelative",
-			"tag": "input",
-			"classes": "",
-			"parent": "canvasSizePanel",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "false"
-			}
-		},
-		{
-			"id": "canvasSizeWidth",
-			"tag": "input",
-			"classes": "",
-			"parent": "canvasSizePanel",
-			"input": {
-				"type": "number",
-				"min": "1",
-				"max": "1024",
-				"step": "1",
-				"value": "500"
-			}
-		},
-		{
-			"id": "canvasSizeHeight",
-			"tag": "input",
-			"classes": "",
-			"parent": "canvasSizePanel",
-			"input": {
-				"type": "number",
-				"min": "1",
-				"max": "1024",
-				"step": "1",
-				"value": "400"
-			}
-		},
-		{
-			"id": "canvasSizeAnchor",
-			"tag": "div",
-			"classes": "anchor-grid",
-			"parent": "canvasSizePanel"
-		},
-		{
-			"id": "canvasExtensionMode",
-			"tag": "div",
-			"classes": "canvas-extension-mode segmented-control",
-			"parent": "canvasSizePanel"
-		},
-		{
-			"id": "canvasExtensionColorRow",
-			"tag": "div",
-			"classes": "property-row",
-			"parent": "canvasSizePanel"
-		},
-		{
-			"id": "canvasExtensionColor",
-			"tag": "input",
-			"classes": "",
-			"parent": "canvasExtensionColorRow",
-			"input": {
-				"type": "color",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "#ffffff"
-			}
-		},
-		{
-			"id": "canvasSizeReset",
-			"tag": "button",
-			"classes": "btn-simple",
-			"parent": "canvasSizePanel"
-		},
-		{
-			"id": "canvasSizeApply",
-			"tag": "button",
-			"classes": "btn-simple primary",
-			"parent": "canvasSizePanel"
-		},
-		{
-			"id": "scaleDesignPanel",
-			"tag": "div",
-			"classes": "document-size-panel has-subsection-title panel-module property-card subsection-content-group",
-			"parent": "documentSizeGroup"
-		},
-		{
-			"id": "scaleDesignWidth",
-			"tag": "input",
-			"classes": "",
-			"parent": "scaleDesignPanel",
-			"input": {
-				"type": "number",
-				"min": "1",
-				"max": "1024",
-				"step": "1",
-				"value": "500"
-			}
-		},
-		{
-			"id": "scaleDesignHeight",
-			"tag": "input",
-			"classes": "",
-			"parent": "scaleDesignPanel",
-			"input": {
-				"type": "number",
-				"min": "1",
-				"max": "1024",
-				"step": "1",
-				"value": "400"
-			}
-		},
-		{
-			"id": "scaleDesignPercent",
-			"tag": "input",
-			"classes": "",
-			"parent": "scaleDesignPanel",
-			"input": {
-				"type": "number",
-				"min": "0.1",
-				"max": "204.8",
-				"step": "1",
-				"value": "100"
-			}
-		},
-		{
-			"id": "scaleDesignPresets",
-			"tag": "div",
-			"classes": "scale-design-presets segmented-control",
-			"parent": "scaleDesignPanel"
-		},
-		{
-			"id": "scaleDesignTextures",
-			"tag": "input",
-			"classes": "",
-			"parent": "scaleDesignPanel",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "true"
-			}
-		},
-		{
-			"id": "scaleDesignEffects",
-			"tag": "input",
-			"classes": "",
-			"parent": "scaleDesignPanel",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "true"
-			}
-		},
-		{
-			"id": "scaleDesignReset",
-			"tag": "button",
-			"classes": "btn-simple",
-			"parent": "scaleDesignPanel"
-		},
-		{
-			"id": "scaleDesignApply",
-			"tag": "button",
-			"classes": "btn-simple primary",
-			"parent": "scaleDesignPanel"
 		},
 		{
 			"id": "pixelEffectsStatus",
@@ -5068,7 +5098,10 @@
 		"SHAPE": {
 			"visibility": {
 				"noLayerSettingsSection": "shown",
+				"noLayerSettingsHeader": "shown",
 				"noLayerEmptyText": "shown",
+				"noLayerSettingsToggle": "shown",
+				"noLayerSettingsContent": "shown",
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
@@ -5080,6 +5113,7 @@
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
+				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
 				"multiSelectionAlignScope": "shown",
 				"multiSelectionDuplicateBtn": "shown",
@@ -5130,6 +5164,7 @@
 				"baseBackgroundTextureOffsetY": "shown",
 				"baseBackgroundTextureOffsetYValue": "shown",
 				"resetBaseBackgroundTextureOffsetY": "shown",
+				"baseCanvasSizeHost": "shown",
 				"documentSizeGroup": "shown",
 				"documentSizeMode": "shown",
 				"canvasSizePanel": "hidden",
@@ -7258,7 +7293,10 @@
 		"TEXT_GLITTER": {
 			"visibility": {
 				"noLayerSettingsSection": "shown",
+				"noLayerSettingsHeader": "shown",
 				"noLayerEmptyText": "shown",
+				"noLayerSettingsToggle": "shown",
+				"noLayerSettingsContent": "shown",
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
@@ -7270,6 +7308,7 @@
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
+				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
 				"multiSelectionAlignScope": "shown",
 				"multiSelectionDuplicateBtn": "shown",
@@ -7320,6 +7359,7 @@
 				"baseBackgroundTextureOffsetY": "shown",
 				"baseBackgroundTextureOffsetYValue": "shown",
 				"resetBaseBackgroundTextureOffsetY": "shown",
+				"baseCanvasSizeHost": "shown",
 				"documentSizeGroup": "shown",
 				"documentSizeMode": "shown",
 				"canvasSizePanel": "hidden",
@@ -9448,7 +9488,10 @@
 		"STICKER": {
 			"visibility": {
 				"noLayerSettingsSection": "shown",
+				"noLayerSettingsHeader": "shown",
 				"noLayerEmptyText": "shown",
+				"noLayerSettingsToggle": "shown",
+				"noLayerSettingsContent": "shown",
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
@@ -9460,6 +9503,7 @@
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
+				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
 				"multiSelectionAlignScope": "shown",
 				"multiSelectionDuplicateBtn": "shown",
@@ -9510,6 +9554,7 @@
 				"baseBackgroundTextureOffsetY": "shown",
 				"baseBackgroundTextureOffsetYValue": "shown",
 				"resetBaseBackgroundTextureOffsetY": "shown",
+				"baseCanvasSizeHost": "shown",
 				"documentSizeGroup": "shown",
 				"documentSizeMode": "shown",
 				"canvasSizePanel": "hidden",
@@ -11638,7 +11683,10 @@
 		"GLITTER_FILL": {
 			"visibility": {
 				"noLayerSettingsSection": "shown",
+				"noLayerSettingsHeader": "shown",
 				"noLayerEmptyText": "shown",
+				"noLayerSettingsToggle": "shown",
+				"noLayerSettingsContent": "shown",
 				"noLayerEmptySubtext": "shown",
 				"noLayerDefaultGroups": "shown",
 				"quickAddOptions": "shown",
@@ -11650,6 +11698,7 @@
 				"projectNameInput": "shown",
 				"openProjectSidebarBtn": "shown",
 				"saveProject": "shown",
+				"noLayerCanvasSizeHost": "shown",
 				"multiLayerSelectionGroup": "hidden",
 				"multiSelectionAlignScope": "shown",
 				"multiSelectionDuplicateBtn": "shown",
@@ -11700,6 +11749,7 @@
 				"baseBackgroundTextureOffsetY": "shown",
 				"baseBackgroundTextureOffsetYValue": "shown",
 				"resetBaseBackgroundTextureOffsetY": "shown",
+				"baseCanvasSizeHost": "shown",
 				"documentSizeGroup": "shown",
 				"documentSizeMode": "shown",
 				"canvasSizePanel": "hidden",

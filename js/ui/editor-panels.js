@@ -125,6 +125,11 @@ isLayerContentLocked(layer) {
 		}
 
 		this.syncNoLayerPanelState();
+		const documentSize = document.getElementById('documentSizeGroup');
+		const sizeHost = !layer && !hasMultiSelection
+			? document.getElementById('noLayerCanvasSizeHost')
+			: document.getElementById('baseCanvasSizeHost');
+		if (documentSize && sizeHost && documentSize.parentElement !== sizeHost) sizeHost.appendChild(documentSize);
 		this.syncLockedLayerUI(layer);
 
 		// D-1c: keep the gallery picker strip in sync when the active layer
@@ -318,8 +323,8 @@ isLayerContentLocked(layer) {
 
 		if (defaultGroups) defaultGroups.hidden = false;
 		if (multiGroup) multiGroup.hidden = true;
-		if (emptyText) emptyText.textContent = 'Canvas';
-		if (emptySubtext) emptySubtext.textContent = 'Select a layer to edit it, or add new content below.';
+		if (emptyText) emptyText.textContent = 'Design';
+		if (emptySubtext) emptySubtext.textContent = 'Nothing selected. Pick a layer to edit it, or add content below.';
 	}
 
 ,

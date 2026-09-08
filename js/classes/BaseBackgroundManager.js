@@ -120,7 +120,7 @@ class BaseBackgroundManager {
 		const scaleDesign = id('scaleDesignPanel');
 		const canvasHost = id('baseCanvasSizeHost');
 		if (documentSize && canvasHost) {
-			canvasHost.replaceWith(documentSize);
+			canvasHost.appendChild(documentSize);
 			if (scaleDesign) documentSize.appendChild(scaleDesign);
 		}
 		installEffectGradientEditor({

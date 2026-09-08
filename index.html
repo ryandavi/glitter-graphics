@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=824a33b7">
+	<link rel="stylesheet" href="css/style.css?v=7b75dfea">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -674,22 +674,13 @@
 							</div>
 
 							<!-- 2. NO LAYER SELECTED SECTION (Image Loaded, but nothing selected) -->
-							<div class="no-layer-settings-section section" id="noLayerSettingsSection">
-								<div class="section-content">
-
-									<div class="property-empty visible">
-
-
-										<div class="property-empty-icon icon-wrapper xl">
-											<svg class="icon">
-												<use href="#icon-layers"></use>
-											</svg>
-										</div>
-										<div class="property-empty-title" id="noLayerEmptyText">Canvas</div>
-										<div class="property-empty-text" id="noLayerEmptySubtext">
-											Select a layer to edit it, or add new content below.
-										</div>
-									</div>
+							<div class="no-layer-settings-section section collapsible-section panel-redesign" id="noLayerSettingsSection">
+								<div class="section-header section-header-with-action" id="noLayerSettingsHeader">
+									<h3 class="section-header-title"><span class="section-header-title-icon icon-wrapper sm"><svg class="icon"><use href="#icon-palette"></use></svg><span class="name">Design</span></span><span class="section-header-title-text" id="noLayerEmptyText">Design</span></h3>
+									<div class="section-header-action btn-icon visible collapsed" id="noLayerSettingsToggle"><span class="icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span></div>
+								</div>
+								<div class="section-content visible" id="noLayerSettingsContent">
+									<div class="property-note panel-note no-selection-intro" id="noLayerEmptySubtext">Nothing selected. Pick a layer to edit it, or add content below.</div>
 
 									<!-- Project Meta Info -->
 									<div class="settings-subsection property-block-list" id="noLayerDefaultGroups">
@@ -697,8 +688,8 @@
 
 
 										<!-- Specific Quick Actions -->
-										<div class="subsection-content-group">
-											<div class="property-block-title">Quick Add</div>
+										<div class="subsection-content-group subsection-section-group panel-group">
+											<div class="subsection-title">Start</div>
 
 											<!-- Quick Add -->
 											<div class="layer-type-options quick-add" id="quickAddOptions"></div>
@@ -706,19 +697,21 @@
 										</div>
 
 										<!-- Project -->
-									<div class="subsection-content-group property-card" id="projectMetaGroup">
-										<div class="subsection-title">Project</div>
+									<div class="subsection-content-group property-card panel-module" id="projectMetaGroup" data-collapsible-subsection>
+										<div class="subsection-title" data-subsection-toggle role="button" tabindex="0" aria-expanded="true">Project</div>
 										<div class="subsection-card-body">
 											<div class="property-row">
 												<span class="property-label">Name</span>
 												<input type="text" id="projectNameInput" maxlength="60" spellcheck="false" placeholder="Name...">
 											</div>
+										</div>
 											<div class="canvas-project-actions property-actions">
 												<button class="btn-simple" id="openProjectSidebarBtn" type="button">Open Project</button>
 												<button class="btn-simple primary" id="saveProject" type="button" disabled>Save Project</button>
 											</div>
 										</div>
-										</div>
+
+										<div id="noLayerCanvasSizeHost"></div>
 
 										<!-- Document sizing is moved intact into Canvas Properties at boot.
 										     Keeping the source markup here preserves the existing
@@ -2653,7 +2646,7 @@
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
 	<script src="js/ui/editor-settings.js?v=079a4fca"></script>
-	<script src="js/ui/editor-panels.js?v=3b4d1b76"></script>
+	<script src="js/ui/editor-panels.js?v=5e711804"></script>
 	<script src="js/ui/editor-disclosures.js?v=54142c3b"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/ui/transform-panel.js?v=e49f4a5c"></script>
@@ -2696,7 +2689,7 @@
 	<script src="js/classes/BrushTipManager.js?v=150d1066"></script>
 	<script src="js/classes/LayerTransform.js?v=8ac8c72f"></script>
 	<script src="js/classes/GlitterManager.js?v=3c3bfe93"></script>
-	<script src="js/classes/BaseBackgroundManager.js?v=b05ee77d"></script>
+	<script src="js/classes/BaseBackgroundManager.js?v=540acbb1"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=e0f15cce"></script>
 	<script src="js/classes/TextGlitterManager.js?v=b865b317"></script>
 	<script src="js/classes/ShapeGlitterManager.js?v=1ac0eac7"></script>
