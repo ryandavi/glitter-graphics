@@ -331,7 +331,7 @@ const CONFIG = deepFreeze({
 		maskBrush: {
 			limits: {
 				minSize: 1,
-				maxSize: 300
+				maxSize: 1000
 			},
 			defaults: {
 				size: 40,
@@ -652,7 +652,7 @@ const CONFIG = deepFreeze({
 					{ label: 'Paint', mode: 'add', action: 'brushSetPaint', title: 'Paint mask (B)' },
 					{ label: 'Erase', mode: 'sub', action: 'brushSetErase', title: 'Erase mask (E / X)' }
 				] },
-				{ kind: 'slider', id: 'maskBrushSizeQuick', valueId: 'maskBrushSizeQuickValue', label: 'Size', min: 1, max: 300, value: 40, unit: 'px' }
+				{ kind: 'slider', id: 'maskBrushSizeQuick', valueId: 'maskBrushSizeQuickValue', label: 'Size', min: 1, max: 1000, value: 40, unit: 'px', scale: 'log' }
 			] }
 		],
 		// Ranges/defaults for renderer-stamped panel sliders (js/ui/panel-renderer.js
@@ -673,7 +673,7 @@ const CONFIG = deepFreeze({
 			pixelEffectsStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 			pixelEffectsDitherScale: { label: 'Texture Scale', unit: '×', min: 1, max: 4, step: 1, value: 1 },
 			pixelEffectsAngle: { label: 'Angle', unit: 'Â°', min: 0, max: 360, step: 1, value: 45 },
-			maskBrushSize: { label: 'Size', unit: 'px', min: 1, max: 300, value: 40 },
+			maskBrushSize: { label: 'Size', unit: 'px', min: 1, max: 1000, value: 40, scale: 'log' },
 			maskBrushSoftness: { label: 'Softness', unit: '%', min: 0, max: 100, value: 0 },
 			maskBrushFlow: { label: 'Flow', unit: '%', min: 1, max: 100, value: 100 },
 			maskBrushSpacing: { label: 'Spacing', unit: '%', min: 1, max: 200, value: 25 },
@@ -1111,6 +1111,7 @@ const LAYER_UI_CONFIG = {
 		hitTestMethod: 'isPointInText',
 		transformPrefix: 'text',
 		transformCapabilities: {
+			panelRedesign: true,
 			position: true,
 			size: true,
 			scaleReadout: true,
@@ -1350,7 +1351,12 @@ const PANEL_SCHEMAS = {
 				{ kind: 'card', title: 'Shape', items: [
 					{ kind: 'assetInfo', info: 'brushTipInfo', thumbnail: 'brushTipThumbnail',
 						name: 'brushTipName', badges: 'brushTipBadges', change: 'brushTipChange',
-						title: 'Choose another brush tip', compact: true }
+						title: 'Choose another brush tip', compact: true },
+					{ kind: 'checkboxList', items: [
+						{ id: 'brushAntialiasToggle', label: 'Antialias Edges',
+							title: 'Smooth the edges of mask strokes. Off gives crisp pixel edges; a shared setting with text and shapes.' }
+					] },
+					{ kind: 'host', id: 'brushAntialiasNote', classes: 'property-note', attrs: { hidden: 'hidden' } }
 				] }
 			] },
 			{ title: 'Stroke', items: [
@@ -1470,20 +1476,20 @@ const PANEL_SCHEMAS = {
 		prefix: 'text',
 		sectionPrefix: 'textSettings',
 		mobileKey: 'text',
-		section: { id: 'textSettingsSection', icon: 'text', iconName: 'Text', title: 'Text Properties' },
+		section: { id: 'textSettingsSection', classes: 'panel-redesign', icon: 'text', iconName: 'Text', title: 'Text Properties' },
 		groups: [
 			// Text is schema-native like every other property panel: type it,
 			// choose the face, set the metrics, then place it.
-			{ title: 'Content', items: [
+			{ title: 'Content', collapsible: false, items: [
 				{ kind: 'card', title: 'Text', items: [
 					{ kind: 'textarea', id: 'textLayerInput', classes: 'text-input-group', rows: 4, maxlength: 200, placeholder: 'Type your glitter text' },
 					{ kind: 'segmented', visibleLabel: 'Mode', label: 'Text box mode', classes: 'text-box-mode-group', options: [
 						{ label: 'Point', active: true, attrs: { 'data-text-box-mode': 'auto' } },
 						{ label: 'Box', attrs: { 'data-text-box-mode': 'fixed' } }
 					] },
-					{ kind: 'host', id: 'textBoxModeHint', classes: 'text-box-hint', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
-					{ kind: 'actionRow', classes: 'text-fit-box-group', actions: [
-						{ id: 'textFitBoxToContent', label: 'Fit to Text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
+					{ kind: 'host', id: 'textBoxModeHint', classes: 'text-box-hint panel-note', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
+					{ kind: 'actionRow', classes: 'text-fit-box-group card-foot', actions: [
+						{ id: 'textFitBoxToContent', label: 'Fit box to text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
 					] }
 				] },
 				{ kind: 'card', title: 'Font', items: [
@@ -1496,12 +1502,12 @@ const PANEL_SCHEMAS = {
 						{ value: 'none', label: 'As Typed' }, { value: 'upper', label: 'UPPERCASE' },
 						{ value: 'lower', label: 'lowercase' }, { value: 'title', label: 'Title Case' }
 					] },
-					{ kind: 'slider', id: 'textFontSize', slider: 'textFontSize' }
+					{ kind: 'slider', id: 'textFontSize', slider: 'textFontSize', label: 'Size' }
 				] },
 				{ kind: 'card', title: 'Spacing', items: [
 					{ kind: 'twoColumn', items: [
-						{ kind: 'slider', id: 'textLetterSpacing', slider: 'textLetterSpacing' },
-						{ kind: 'slider', id: 'textLineHeight', slider: 'textLineHeight', classes: 'text-line-height-row' }
+						{ kind: 'slider', id: 'textLetterSpacing', slider: 'textLetterSpacing', label: 'Letter' },
+						{ kind: 'slider', id: 'textLineHeight', slider: 'textLineHeight', label: 'Line', classes: 'text-line-height-row' }
 					] }
 				] },
 				{ kind: 'card', title: 'Alignment', items: [
@@ -1517,18 +1523,20 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
-			{ title: 'Appearance', adoptTransformOpacity: true, items: [
-				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill',
+			{ title: 'Appearance', collapsible: false, adoptTransformOpacity: true, items: [
+				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', redesign: true,
+					sourceSelect: true,
 					texturePosition: true,
 					modes: ['none', 'glitter', 'solid'], activeMode: 'glitter', color: '#000000',
 					chipTitle: 'Choose fill glitter',
 					primaryIds: { scale: 'textTextureScale', scaleRow: 'textTextureScaleRow', opacity: 'textTextureOpacity' }
 				}
 			] },
-			{ title: 'Transform', items: [{ kind: 'transformHost' }] }
+			{ title: 'Transform', collapsible: false, items: [{ kind: 'transformHost' }] }
 		],
 		effects: [
-			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Border',
+			{ kind: 'paintSlot', slot: 'border', idPrefix: 'textBorder', title: 'Border', redesign: true,
+				sourceSelect: true, advancedStyle: 'flat',
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose border source',
@@ -1539,18 +1547,19 @@ const PANEL_SCHEMAS = {
 						{ id: 'textBorderEdgeRounded', label: 'Rounded', active: true, value: 'round' },
 						{ id: 'textBorderEdgeHard', label: 'Hard', value: 'hard' }
 					] },
-					{ label: 'Placement', options: [
+					{ label: 'Placement', control: 'select', options: [
 						{ id: 'textBorderPositionOutside', label: 'Outside', active: true, value: 'outside' },
 						{ id: 'textBorderPositionCenter', label: 'On Edge', value: 'center' },
 						{ id: 'textBorderPositionInside', label: 'Inside', value: 'inside' }
 					] },
 					{ label: 'Layering', options: [
-						{ id: 'textBorderOrderBehind', label: 'Behind', active: true, value: 'behind' },
-						{ id: 'textBorderOrderFront', label: 'On Top', value: 'front' }
+						{ id: 'textBorderOrderBehind', label: 'Behind text', active: true, value: 'behind' },
+						{ id: 'textBorderOrderFront', label: 'On top', value: 'front' }
 					] }
 				] }]
 			},
-			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'textShadow', title: 'Shadow',
+			{ kind: 'paintSlot', slot: 'shadow', idPrefix: 'textShadow', title: 'Shadow', redesign: true,
+				sourceSelect: true, advancedStyle: 'flat',
 				texturePosition: true,
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose shadow source',

@@ -70,7 +70,9 @@ class MaskEditor {
 			tipThumbnail: document.getElementById('brushTipThumbnail'),
 			tipName: document.getElementById('brushTipName'),
 			tipBadges: document.getElementById('brushTipBadges'),
-			tipChange: document.getElementById('brushTipChange')
+			tipChange: document.getElementById('brushTipChange'),
+			antialiasToggle: document.getElementById('brushAntialiasToggle'),
+			antialiasNote: document.getElementById('brushAntialiasNote')
 		};
 		// Last brush-shape id painted into the cursor's outline SVG, so
 		// _syncCursorAppearance only rebuilds the markup when the tip changes.
@@ -213,7 +215,29 @@ class MaskEditor {
 
 	resetToolModeToDefaults(mode = this.mode) {
 		if (mode !== 'add' && mode !== 'sub') return;
-		this.toolSettings[mode] = { ...this._defaultToolSettings()[mode] };
+		const shape = this.toolSettings[mode]?.shape;
+		const base = this._defaultToolSettings()[mode];
+
+		if (MaskEditor.isRasterBrush(shape)) {
+			// A raster tip is its own brush, not the round default: keep it
+			// selected and restore ITS authored values, dropping this brush's
+			// Scatter & Jitter overrides too.
+			const lim = CONFIG.tools.maskBrush.limits;
+			const man = (typeof BrushLibrary !== 'undefined' && BrushLibrary.get(shape)?.dynamics) || {};
+			this.toolSettings[mode] = {
+				...base,
+				shape,
+				size: Math.round(maskClamp(man.diameter || base.size, lim.minSize, lim.maxSize)),
+				spacing: maskClamp(this._rasterSpacingPct(man), 1, 200)
+			};
+			if (this.brushDynamics[shape]) {
+				delete this.brushDynamics[shape];
+				this._saveBrushDynamics();
+			}
+		} else {
+			this.toolSettings[mode] = { ...base };
+		}
+
 		this._saveToolSettings();
 		if (mode === this.mode) this._applySettingsToDOM(mode);
 		this._updateBrushCursorSize();
@@ -237,7 +261,9 @@ class MaskEditor {
 			const el = document.getElementById(id);
 			if (!el) return;
 			el.addEventListener('input', () => {
-				const value = parseInt(el.value, 10);
+				// Size runs a log scale, so read the logical px value, not the raw
+				// slider position (readSliderValue is identity for the others).
+				const value = readSliderValue(el);
 				if (Number.isFinite(value)) {
 					this.toolSettings[this.mode][key] = value;
 					// A raster tip remembers its own size (Photoshop presets do),
@@ -265,7 +291,7 @@ class MaskEditor {
 		const setSlider = (id, value) => {
 			const el = document.getElementById(id);
 			if (!el) return;
-			el.value = String(value);
+			writeSliderValue(el, value);   // scale-aware; identity for linear sliders
 			el.dispatchEvent(new Event('input'));
 		};
 
@@ -293,6 +319,9 @@ class MaskEditor {
 		const label = raster ? BrushLibrary.get(shape)?.label : MaskEditor.BRUSH_SHAPES.find((entry) => entry.id === shape)?.label;
 		preview.classList.toggle('is-raster', raster);
 		preview.classList.toggle('is-vector', !raster);
+		const dyn = this.getBrushDynamics();
+		preview.classList.toggle('flip-x', raster && dyn.flipX === true);
+		preview.classList.toggle('flip-y', raster && dyn.flipY === true);
 		preview.replaceChildren();
 		if (raster) preview.innerHTML = BrushLibrary.getCursorMarkup(shape);
 		else preview.innerHTML = ShapeLibrary.getIconSvg(shape);
@@ -301,6 +330,41 @@ class MaskEditor {
 			this.ui.tipBadges.replaceChildren(this._assetBadge(raster ? BrushLibrary.packById(BrushLibrary.get(shape).packId)?.label : 'Basic'));
 		}
 		this.editor.brushTipManager?.updateSelection();
+		this._syncAntialiasControls();
+	}
+
+	// Raster tips carry soft, feathered alpha. With "Antialias Edges" off we hard-
+	// threshold them (shouldUseCrispMaskEdges), which can read as chunky on fine
+	// sparkle / swirl tips. The panel surfaces that shared preference as a plain
+	// toggle row (R4); the note below it (R7) only explains the trade-off when a
+	// raster tip is active and edges are crisp. The toggle mirrors the modal's
+	// #antialiasMaskEdges — flipping it here routes through that one handler and
+	// this method syncs the checked state back.
+	_syncAntialiasControls() {
+		const toggle = this.ui.antialiasToggle;
+		const note = this.ui.antialiasNote;
+		const edgesCrisp = shouldUseCrispMaskEdges();
+
+		if (toggle) {
+			if (!toggle.dataset.wired) {
+				toggle.dataset.wired = '1';
+				toggle.addEventListener('change', () => {
+					const master = document.getElementById('antialiasMaskEdges');
+					if (!master || master.checked === toggle.checked) return;
+					master.checked = toggle.checked;
+					master.dispatchEvent(new Event('change', { bubbles: true }));
+				});
+			}
+			toggle.checked = !edgesCrisp;
+		}
+
+		if (note) {
+			if (!note.dataset.built) {
+				note.dataset.built = '1';
+				note.textContent = 'Off gives crisp pixel edges; textured tips can look chunky. Turn on for smoother edges.';
+			}
+			note.hidden = !(MaskEditor.isRasterBrush(this.getBrushShape()) && edgesCrisp);
+		}
 	}
 
 	_assetBadge(label) {
@@ -356,17 +420,19 @@ class MaskEditor {
 		// The stamp cache key includes the shape, so the next stamp regenerates;
 		// clear it eagerly so nothing reuses the previous shape mid-session.
 		this.stampCacheKey = '';
-		// Size follows the brush (Photoshop presets do): a raster tip picks up the
-		// size you last gave it, else its native tip diameter. Leaving a raster tip
-		// stashes the current size against it and restores the shared/vector size.
+		// Size and Spacing follow the brush (Photoshop presets do): a raster tip
+		// picks up the values you last gave it, else its authored diameter /
+		// spacing. Leaving a raster tip stashes the current values against it.
 		if (MaskEditor.isRasterBrush(prevShape) && prevShape !== shape) {
 			this._setBrushDynamicRaw('size', settings.size, prevShape);
+			this._setBrushDynamicRaw('spacing', settings.spacing, prevShape);
 			this._saveBrushDynamics();
 		}
 		if (MaskEditor.isRasterBrush(shape)) {
 			const lim = CONFIG.tools.maskBrush.limits;
-			const native = BrushLibrary.get(shape)?.dynamics.diameter || 128;
-			settings.size = Math.round(maskClamp(this.brushDynamics[shape]?.size ?? native, lim.minSize, lim.maxSize));
+			const man = BrushLibrary.get(shape)?.dynamics || {};
+			settings.size = Math.round(maskClamp(this.brushDynamics[shape]?.size ?? (man.diameter || 128), lim.minSize, lim.maxSize));
+			settings.spacing = maskClamp(this.brushDynamics[shape]?.spacing ?? this._rasterSpacingPct(man), 1, 200);
 		}
 		this._applyShapeToPicker(shape);
 		this._syncCursorAppearance();
@@ -374,6 +440,27 @@ class MaskEditor {
 		this._applySettingsToDOM(this.mode);
 		this._syncDynamicsPanel();
 		this._updateBrushCursorSize();
+	}
+
+	// A raster tip's authored spacing as a panel-unit percentage (manifest stores
+	// it as a fraction of brush size, Photoshop "Spcn").
+	_rasterSpacingPct(dynamics) {
+		return Math.round((dynamics?.spacing ?? 0.25) * 100);
+	}
+
+	// The value a Size / Spacing revert should target while a raster tip is
+	// active: that brush's authored (manifest) value. undefined for vector tips —
+	// callers fall back to the global slider default. Mirrors how the Scatter &
+	// Jitter rows already revert to BrushLibrary.defaultDynamics.
+	rasterSliderDefault(sliderId) {
+		const shape = this.getBrushShape();
+		if (!MaskEditor.isRasterBrush(shape) || typeof BrushLibrary === 'undefined') return undefined;
+		const man = BrushLibrary.get(shape)?.dynamics;
+		if (!man) return undefined;
+		const lim = CONFIG.tools.maskBrush.limits;
+		if (sliderId === 'maskBrushSize') return Math.round(maskClamp(man.diameter || 128, lim.minSize, lim.maxSize));
+		if (sliderId === 'maskBrushSpacing') return maskClamp(this._rasterSpacingPct(man), 1, 200);
+		return undefined;
 	}
 
 	// ===== PER-BRUSH DYNAMICS STORE (scatter / jitter / tip orientation) =====
@@ -466,6 +553,12 @@ class MaskEditor {
 		else store[key] = next;
 		if (!Object.keys(store).length) delete this.brushDynamics[shape];
 		this._saveBrushDynamics();
+		// Flip is the one dynamic that changes how the tip *looks*, so keep the
+		// cursor ghost and the panel thumbnail in sync with it.
+		if (key === 'flipX' || key === 'flipY') {
+			this._applyShapeToPicker(shape);
+			this._syncCursorAppearance();
+		}
 	}
 
 	// Write a raw per-brush value (e.g. remembered `size`) that isn't part of the
@@ -766,7 +859,8 @@ class MaskEditor {
 			return false;
 		}
 
-		const currentValue = parseInt(slider.value || CONFIG.tools.maskBrush.defaults.size, 10);
+		// Work in logical px, not the raw slider position — Size runs a log scale.
+		const currentValue = readSliderValue(slider) || CONFIG.tools.maskBrush.defaults.size;
 		const nextValue = Math.max(
 			CONFIG.tools.maskBrush.limits.minSize,
 			Math.min(CONFIG.tools.maskBrush.limits.maxSize, currentValue + delta)
@@ -776,7 +870,7 @@ class MaskEditor {
 			return false;
 		}
 
-		slider.value = String(nextValue);
+		writeSliderValue(slider, nextValue);
 		// 'input' updates the display + store (via _bindSettingInputs); 'change'
 		// persists it to localStorage.
 		slider.dispatchEvent(new Event('input'));
@@ -1464,12 +1558,19 @@ class MaskEditor {
 		h *= roundness;
 		const sx = flipX ? -1 : 1;
 		const sy = flipY ? -1 : 1;
+		// "Antialias Edges" off ⇒ hard-edged dabs: _activeTip already thresholds
+		// the tip's coverage alpha, so scale/rotate it nearest-neighbour too or
+		// the resample feathers the edge straight back in. Only forced when the
+		// source is actually hard (raster tip, or a vector stamp at softness 0 —
+		// a deliberately soft brush keeps its falloff).
+		const crispEdges = shouldUseCrispMaskEdges()
+			&& (MaskEditor.isRasterBrush(this.getBrushShape()) || this.getBrushSoftness() === 0);
 
 		for (const [ctx, op] of [[targetCtx, 'source-over'], [oppositeCtx, 'destination-out']]) {
 			ctx.save();
 			ctx.globalCompositeOperation = op;
 			ctx.globalAlpha = alpha;
-			ctx.imageSmoothingEnabled = smoothing;   // false → crisp nearest-neighbour for tiny pixel tips
+			ctx.imageSmoothingEnabled = crispEdges ? false : smoothing;   // false → crisp nearest-neighbour for tiny pixel tips
 			ctx.translate(cx, cy);
 			if (rot) ctx.rotate(rot);
 			if (sx !== 1 || sy !== 1) ctx.scale(sx, sy);
@@ -1485,11 +1586,31 @@ class MaskEditor {
 		const shape = this.getBrushShape();
 		if (MaskEditor.isRasterBrush(shape)) {
 			const canvas = BrushLibrary.getTipCanvas(shape);
-			if (canvas) return canvas;
+			if (canvas) return this._crispRasterTip(shape, canvas);
 			BrushLibrary.loadTip(shape).then(() => this._queueOverlayRefresh()).catch(() => {});
 			return null;
 		}
 		return this._getStampCanvas();
+	}
+
+	// With "Antialias Edges" off, a raster tip paints hard-edged too — its own
+	// feathered alpha *is* the antialiasing here. Threshold a copy to 0/255 once
+	// and cache it; BrushLibrary's tip canvas is shared, so it's never mutated.
+	// (_drawDab then scales that copy nearest-neighbour so the edge stays hard.)
+	_crispRasterTip(shape, tip) {
+		if (!shouldUseCrispMaskEdges()) return tip;
+		const key = `${shape}|${tip.width}x${tip.height}|${CONFIG.rendering.maskAlphaThreshold}`;
+		if (this._crispTipKey !== key) {
+			const crisp = document.createElement('canvas');
+			crisp.width = tip.width;
+			crisp.height = tip.height;
+			const ctx = crisp.getContext('2d', { willReadFrequently: true });
+			ctx.drawImage(tip, 0, 0);
+			binarizeCanvasAlpha(ctx);
+			this._crispTip = crisp;
+			this._crispTipKey = key;
+		}
+		return this._crispTip;
 	}
 
 	_queueOverlayRefresh() {
@@ -1729,6 +1850,13 @@ class MaskEditor {
 		}
 
 		cursor.classList.toggle('erasing', this.getActiveMode() === 'sub');
+
+		// Flip X/Y mirror the actual stamp, so mirror the tip shown at the cursor
+		// too — otherwise the preview lies about the mark that's about to land.
+		// Toggled every sync (a flip can change without the tip id changing).
+		const dyn = this.getBrushDynamics();
+		cursor.classList.toggle('flip-x', dyn.flipX === true);
+		cursor.classList.toggle('flip-y', dyn.flipY === true);
 
 		const shape = this.getBrushShape();
 		if (shape !== this._cursorShapeId) {

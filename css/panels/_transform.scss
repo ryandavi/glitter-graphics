@@ -321,7 +321,8 @@
 
 .text-settings-section textarea {
 	width: 100%;
-	min-height: 96px;
+	height: 52px;
+	min-height: 52px;
 	resize: vertical;
 }
 
@@ -352,8 +353,21 @@
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-base);
-	max-height: 220px;
+	gap: 6px;
+	max-height: 206px;
+	overflow: hidden;
+
+	&::after {
+		content: '';
+		position: sticky;
+		left: 0;
+		right: 0;
+		bottom: -6px;
+		flex: 0 0 22px;
+		margin-top: -28px;
+		background: linear-gradient(to top, var(--color-bg-secondary), transparent);
+		pointer-events: none;
+	}
 }
 
 // Gallery-card styling, reusing the .asset-option card conventions (outline
@@ -364,18 +378,19 @@
 	background: var(--color-bg-tertiary);
 	color: var(--color-text-primary);
 	font: inherit;
-	padding: var(--spacing-sm) var(--spacing-md);
+	padding: 6px 10px;
 	text-transform: none;
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: var(--spacing-xs);
+	gap: 1px;
 	text-align: left;
+	border-radius: 3px;
 }
 
 .text-font-option-sample {
-	font-size: 28px;
-	line-height: 1.2;
+	font-size: 25px;
+	line-height: 1.12;
 }
 
 .text-font-option-name {
@@ -387,16 +402,17 @@
 .text-font-option-badge {
 	@include badge-base;
 	position: absolute;
-	top: 7px;
-	right: 7px;
-	min-width: 26px;
+	top: 5px;
+	right: 5px;
+	height: 14px;
+	min-width: 0;
 	background: var(--color-bg-card);
 	color: var(--color-text-primary);
 	font-size: 9px;
-	font-weight: 700;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	padding: var(--spacing-2xs) var(--spacing-sm);
+	font-weight: 600;
+	letter-spacing: 0;
+	text-transform: none;
+	padding: 0 5px;
 	box-shadow: 0 2px 4px var(--color-shadow-soft);
 	pointer-events: none;
 

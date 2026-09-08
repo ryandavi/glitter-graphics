@@ -81,9 +81,11 @@ renderTransformPanels() {
 		const ids = this.getTransformIds(prefix);
 		const resetTransform = document.getElementById(ids.resetTransform);
 		if (resetTransform) {
-			resetTransform.disabled = !this.hasResettableTransformAdjustments(
+			const disabled = !this.hasResettableTransformAdjustments(
 				this.getLayerTransformData(layer)
 			);
+			resetTransform.disabled = disabled;
+			document.querySelector(`[data-transform-prefix="${prefix}"] [data-transform-revert-signal]`)?.toggleAttribute('disabled', disabled);
 		}
 	}
 

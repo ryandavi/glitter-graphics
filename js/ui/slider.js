@@ -1,3 +1,32 @@
+// A range input's raw position (an integer over its min..max) can map to a
+// different logical value via data-scale. Only 'log' exists: position runs
+// geometrically across [data-scale-min, data-scale-max], so the low end of the
+// track gets far more resolution. With no data-scale, value === position, so
+// every existing slider is untouched.
+function sliderScaleFor(el) {
+	if (!el || el.dataset.scale !== 'log') {
+		return { toValue: (pos) => pos, toPosition: (val) => val };
+	}
+	const posMax = Number(el.max) || 1000;
+	const lo = Math.log(Number(el.dataset.scaleMin) || 1);
+	const hi = Math.log(Number(el.dataset.scaleMax) || 100);
+	const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+	return {
+		toValue: (pos) => Math.round(Math.exp(lo + (clamp(pos, 0, posMax) / posMax) * (hi - lo))),
+		toPosition: (val) => Math.round(posMax * (Math.log(clamp(Number(val), Math.exp(lo), Math.exp(hi))) - lo) / (hi - lo))
+	};
+}
+
+// The logical value of a slider (px, %, …): its DOM position through the scale.
+function readSliderValue(el) {
+	return sliderScaleFor(el).toValue(Number(el.value));
+}
+
+// Put a logical value onto a slider, converting to a raw position first.
+function writeSliderValue(el, value) {
+	el.value = String(sliderScaleFor(el).toPosition(value));
+}
+
 function bindSlider(slider, valueEl, options = {}) {
 	if (!slider) return null;
 
@@ -18,6 +47,11 @@ function bindSlider(slider, valueEl, options = {}) {
 	let commitTimeout = null;
 	let commitVersion = 0;
 
+	// resetValue may be a function so the revert target can follow context (e.g.
+	// the mask brush's Size/Spacing revert to the active raster tip's manifest
+	// value, not a fixed default). Resolved fresh on every read.
+	const resolveReset = () => (typeof resetValue === 'function' ? resetValue() : resetValue);
+
 	const handleError = (error) => {
 		if (typeof onError === 'function') {
 			onError(error);
@@ -26,13 +60,14 @@ function bindSlider(slider, valueEl, options = {}) {
 		console.error(error);
 	};
 
-	const readValue = () => parseValue(slider.value);
+	const readValue = () => sliderScaleFor(slider).toValue(parseValue(slider.value));
 	const updateDisplay = (value) => {
 		if (valueEl) valueEl.innerHTML = formatValue(value);
 	};
 	const syncResetButton = (value) => {
-		if (!resetButton || resetValue === undefined) return;
-		resetButton.disabled = value === resetValue;
+		const target = resolveReset();
+		if (!resetButton || target === undefined) return;
+		resetButton.disabled = value === target;
 	};
 	const runApply = (value, event) => {
 		updateDisplay(value);
@@ -61,8 +96,9 @@ function bindSlider(slider, valueEl, options = {}) {
 		}, debounceMs);
 	};
 	const resetToDefault = () => {
-		if (resetValue === undefined) return;
-		slider.value = String(resetValue);
+		const target = resolveReset();
+		if (target === undefined) return;
+		writeSliderValue(slider, target);
 		slider.dispatchEvent(new Event('input'));
 		slider.dispatchEvent(new Event('change'));
 	};

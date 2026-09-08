@@ -131,11 +131,32 @@ function panelRoleId(prefix, role) {
 const PANEL_SLIDER_DEFAULTS = Object.create(null);
 
 function applySliderSpec(input, spec) {
-	input.min = String(spec.min);
-	input.max = String(spec.max);
-	input.setAttribute('value', String(spec.value));
-	if (spec.step != null) input.step = String(spec.step);
+	if (spec.scale === 'log') {
+		// The DOM range is a 0..positions integer track; data-scale maps it
+		// geometrically onto the real [min, max] value domain. spec.value stays a
+		// real value everywhere else (defaults registry, revert targets).
+		const positions = spec.positions || 1000;
+		input.min = '0';
+		input.max = String(positions);
+		input.step = '1';
+		input.dataset.scale = 'log';
+		input.dataset.scaleMin = String(spec.min);
+		input.dataset.scaleMax = String(spec.max);
+		input.setAttribute('value', String(sliderScaleFor(input).toPosition(spec.value)));
+	} else {
+		input.min = String(spec.min);
+		input.max = String(spec.max);
+		input.setAttribute('value', String(spec.value));
+		if (spec.step != null) input.step = String(spec.step);
+	}
 	if (input.id) PANEL_SLIDER_DEFAULTS[input.id] = spec.value;
+}
+
+// The revert target for a slider: normally its registered default, but the mask
+// brush's Size/Spacing follow the active raster tip's manifest value instead.
+function panelSliderDefault(id) {
+	const brushDefault = window.editor?.maskEditor?.rasterSliderDefault?.(id);
+	return brushDefault !== undefined ? brushDefault : PANEL_SLIDER_DEFAULTS[id];
 }
 
 // Rule D, applied to any revert the panel owns: the control is disabled (and
@@ -143,11 +164,11 @@ function applySliderSpec(input, spec) {
 // wired by bindSlider mark themselves so this never double-handles a click.
 function syncPropertyRevert(slider) {
 	if (!slider?.id) return;
-	const fallback = PANEL_SLIDER_DEFAULTS[slider.id];
+	const fallback = panelSliderDefault(slider.id);
 	if (fallback === undefined) return;
 	const button = document.getElementById(`reset${slider.id.charAt(0).toUpperCase()}${slider.id.slice(1)}`);
 	if (!button) return;
-	button.disabled = Number(slider.value) === Number(fallback);
+	button.disabled = readSliderValue(slider) === Number(fallback);
 }
 
 // A slider written programmatically (a panel reloading its values, a transform
@@ -175,11 +196,53 @@ function initializePropertyReverts(root = document) {
 		const sliderId = button.id.replace(/^reset/, '');
 		const slider = document.getElementById(sliderId.charAt(0).toLowerCase() + sliderId.slice(1))
 			|| document.getElementById(sliderId);
-		const fallback = slider && PANEL_SLIDER_DEFAULTS[slider.id];
+		const fallback = slider && panelSliderDefault(slider.id);
 		if (!slider || fallback === undefined) return;
-		slider.value = String(fallback);
+		writeSliderValue(slider, fallback);
 		slider.dispatchEvent(new Event('input', { bubbles: true }));
 		slider.dispatchEvent(new Event('change', { bubbles: true }));
+	});
+}
+
+// Redesigned value fields remain the manager-owned display nodes, but also
+// proxy typed values to their existing range inputs. This preserves every
+// established id/listener while giving the compact value cell real input
+// behaviour instead of merely making a span look editable.
+function initializeEditablePropertyValues(root = document) {
+	root.querySelectorAll('.property-row > .property-value').forEach((value) => {
+		if (value.dataset.editableValue !== undefined) return;
+		const owner = value.closest('.property-pair-cell, .property-row');
+		const input = owner?.querySelector(':scope > input[type="range"]');
+		if (!input) return;
+		value.dataset.editableValue = '';
+		value.contentEditable = 'plaintext-only';
+		value.spellcheck = false;
+		value.inputMode = 'decimal';
+		value.setAttribute('role', 'spinbutton');
+		value.setAttribute('aria-label', input.getAttribute('aria-label') || owner.querySelector('.property-label, .property-pair-mark')?.textContent || 'Value');
+		value.setAttribute('aria-valuemin', input.dataset.scaleMin || input.min);
+		value.setAttribute('aria-valuemax', input.dataset.scaleMax || input.max);
+		value.addEventListener('keydown', (event) => {
+			if (event.key === 'Enter') {
+				event.preventDefault();
+				value.blur();
+			} else if (event.key === 'Escape') {
+				event.preventDefault();
+				value.dataset.cancelEdit = '';
+				value.blur();
+			}
+		});
+		value.addEventListener('blur', () => {
+			const next = Number.parseFloat(value.textContent);
+			if (value.dataset.cancelEdit === undefined && Number.isFinite(next)) {
+				writeSliderValue(input, next);
+				input.dispatchEvent(new Event('input', { bubbles: true }));
+				input.dispatchEvent(new Event('change', { bubbles: true }));
+			} else {
+				delete value.dataset.cancelEdit;
+				input.dispatchEvent(new Event('input', { bubbles: true }));
+			}
+		});
 	});
 }
 
@@ -300,6 +363,56 @@ function buildSegmented(entries, options = {}) {
 	return group;
 }
 
+function buildSelectProxy(entries, options = {}) {
+	const select = document.createElement('select');
+	select.className = 'property-select';
+	select.setAttribute('aria-label', options.label || 'Choose option');
+	entries.forEach((entry) => {
+		const option = document.createElement('option');
+		option.value = String(entry.mode ?? entry.value ?? entry.label);
+		option.textContent = entry.label;
+		option.selected = Boolean(entry.active);
+		select.appendChild(option);
+	});
+	const hooks = buildSegmented(entries, options);
+	hooks.classList.add('property-select-hooks');
+	hooks.setAttribute('aria-hidden', 'true');
+	const syncOptions = () => {
+		let activeValue = '';
+		Array.from(hooks.querySelectorAll('.segmented-option')).forEach((button) => {
+			const value = button.dataset.mode ?? button.dataset.value ?? button.textContent;
+			if (!Array.from(select.options).some((option) => option.value === value)) {
+				const option = document.createElement('option');
+				option.value = value;
+				option.textContent = button.textContent;
+				select.appendChild(option);
+			}
+			if (button.classList.contains('active')) {
+				select.value = value;
+				activeValue = value;
+			}
+		});
+		const card = hooks.closest('.paint-slot-card');
+		if (card && activeValue) {
+			if (activeValue !== 'none') card._lastPaintMode = activeValue;
+			const toggle = card.querySelector(':scope > .subsection-title input[data-paint-slot-toggle]');
+			if (toggle) toggle.checked = activeValue !== 'none';
+		}
+	};
+	select.addEventListener('change', () => {
+		const button = Array.from(hooks.querySelectorAll('.segmented-option')).find((candidate) =>
+			(candidate.dataset.mode ?? candidate.dataset.value ?? candidate.textContent) === select.value
+		);
+		button?.click();
+	});
+	hooks.addEventListener('click', () => requestAnimationFrame(syncOptions));
+	new MutationObserver(syncOptions).observe(hooks, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+	syncOptions();
+	const control = panelDiv('property-select-control');
+	control.append(select, hooks);
+	return control;
+}
+
 function buildOptionGroup(label, children, rowClasses = '') {
 	const group = tplClone('tpl-option-group');
 	addPanelClasses(group, rowClasses);
@@ -378,6 +491,11 @@ function buildAssetInfo(options) {
 	if (options.compact) {
 		info.querySelector('.asset-info-meta')?.remove();
 	} else {
+		if (options.redesign) {
+			const details = info.querySelector('.asset-info-details');
+			const metaRow = info.querySelector('.asset-info-meta');
+			if (details && metaRow) details.appendChild(metaRow);
+		}
 		meta[0].id = options.size;
 		meta[1].id = options.frames;
 		meta[0].dataset.role = 'asset-size';
@@ -403,19 +521,34 @@ function buildPaintSource(slot) {
 		change: slot.assetIds?.change || `${assetPrefix}Change`,
 		size: slot.assetIds?.size || `${assetPrefix}Size`,
 		frames: slot.assetIds?.frames || `${assetPrefix}Frames`,
+		redesign: slot.redesign,
 		title: slot.chipTitle,
 		hidden: slot.activeMode !== 'glitter',
 		glitterSource: true
 	});
 	source.querySelector('.property-color-row').before(assetInfo);
-	const sourceChoices = buildSegmented(slot.modes.map((mode) => ({
+	const sourceEntries = slot.modes.map((mode) => ({
 		id: panelRoleId(prefix, `source${panelCap(mode)}`),
 		label: slot.modeLabels?.[mode] || panelCap(mode),
 		active: mode === slot.activeMode,
 		mode
-	})));
-	sourceChoices.classList.add('choice-grid');
-	source.prepend(sourceChoices);
+	}));
+	const sourceChoices = slot.sourceSelect
+		? buildSelectProxy(sourceEntries, { label: `${slot.title} source` })
+		: buildSegmented(sourceEntries);
+	if (!slot.sourceSelect) sourceChoices.classList.add('choice-grid');
+	if (slot.sourceSelect) {
+		const sourceRow = buildOptionGroup(slot.sourceLabel || 'Source', [sourceChoices]);
+		sourceRow.classList.remove('is-stacked');
+		const hooks = sourceRow.querySelector('.property-select-hooks');
+		if (hooks) {
+			hooks.remove();
+			source.prepend(hooks);
+		}
+		source.prepend(sourceRow);
+	} else {
+		source.prepend(sourceChoices);
+	}
 	const colorRow = source.querySelector('.property-color-row');
 	colorRow.id = `${prefix}ColorRow`;
 	colorRow.dataset.role = 'solid-color-row';
@@ -429,10 +562,10 @@ function buildPaintSource(slot) {
 
 // Canonical [Texture Scale | Opacity] row (FILL-CONSISTENCY-PLAN spec);
 // syncPaintSlotSourceUI drives its per-mode visibility at runtime.
-function buildPrimaryRow(prefix, ids = {}) {
+function buildPrimaryRow(prefix, ids = {}, redesign = false) {
 	const row = tplClone('tpl-two-column');
 	row.classList.add('paint-slot-primary-row');
-	row.appendChild(buildSliderRow({ id: ids.scale || `${prefix}Scale`, rowId: ids.scaleRow, slider: 'textureScale', extraClass: 'paint-slot-scale', role: 'texture-scale' }));
+	row.appendChild(buildSliderRow({ id: ids.scale || `${prefix}Scale`, rowId: ids.scaleRow, slider: 'textureScale', label: redesign ? 'Scale' : null, extraClass: 'paint-slot-scale', role: 'texture-scale' }));
 	row.appendChild(buildSliderRow({ id: ids.opacity || `${prefix}Opacity`, rowId: ids.opacityRow, slider: 'slotOpacity', extraClass: 'paint-slot-opacity', role: 'slot-opacity' }));
 	return row;
 }
@@ -463,14 +596,14 @@ function buildAdvancedControlGroup(title, className, reset = null) {
 function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 	const advanced = tplClone('tpl-advanced');
 	const content = advanced.querySelector('[data-advanced-content]');
-	const colorGroup = buildAdvancedControlGroup('Color Adjust', 'advanced-color-adjust-group');
+	const colorGroup = buildAdvancedControlGroup('Color adjust', 'advanced-color-adjust-group');
 	colorGroup.appendChild(buildSliderRow({ id: ids.hue || `${prefix}Hue`, slider: 'hue' }));
 	colorGroup.appendChild(buildSliderRow({ id: ids.saturation || `${prefix}Saturation`, slider: 'saturation' }));
 	colorGroup.appendChild(buildSliderRow({ id: ids.brightness || `${prefix}Brightness`, slider: 'brightness' }));
 	content.appendChild(colorGroup);
 
 	if (options.texturePosition) {
-		const textureGroup = buildAdvancedControlGroup('Texture Position', 'advanced-texture-position-group', {
+		const textureGroup = buildAdvancedControlGroup('Texture position', 'advanced-texture-position-group', {
 			id: `${prefix}ResetTexturePosition`,
 			label: 'Reset',
 			title: 'Reset texture anchor and offset'
@@ -498,10 +631,17 @@ function buildAdvancedDisclosure(prefix, ids = {}, options = {}) {
 function buildPaintSlotCard(slot) {
 	const card = tplClone('tpl-paint-slot');
 	card.classList.add('has-subsection-title');
+	if (slot.redesign) card.dataset.collapsible = '';
 	card.dataset.slot = slot.slot;
 	card.dataset.role = 'paint-slot';
 	if (slot.hidePrimaryModes?.length) card.dataset.hidePrimaryModes = slot.hidePrimaryModes.join(' ');
-	card.querySelector('.subsection-title > span').textContent = slot.title;
+	const header = card.querySelector('.subsection-title');
+	const title = header.querySelector(':scope > span');
+	title.textContent = slot.title;
+	if (slot.redesign) {
+		const swatch = panelDiv('property-module-swatch');
+		header.insertBefore(swatch, title);
+	}
 	let container = card;
 	if (slot.toggle) {
 		card.dataset.effectCard = '';
@@ -515,10 +655,24 @@ function buildPaintSlotCard(slot) {
 		input.dataset.effectToggle = '';
 		input.setAttribute('aria-label', `Enable ${slot.title}`);
 		toggle.querySelector('span').textContent = 'Enabled';
-		card.querySelector('.subsection-title').appendChild(toggle);
+		header.appendChild(toggle);
 		container = panelDiv('property-module-content');
 		container.id = `${slot.idPrefix}Controls`;
 		card.appendChild(container);
+	} else if (slot.redesign && slot.modes.includes('none')) {
+		const toggle = tplClone('tpl-checkbox');
+		toggle.classList.add('effect-switch', 'paint-slot-enable');
+		toggle.title = `Enable ${slot.title}`;
+		const input = toggle.querySelector('input');
+		input.checked = slot.activeMode !== 'none';
+		input.dataset.paintSlotToggle = '';
+		input.setAttribute('aria-label', `Enable ${slot.title}`);
+		toggle.querySelector('span').textContent = 'Enabled';
+		input.addEventListener('change', () => {
+			const mode = input.checked ? (card._lastPaintMode || 'glitter') : 'none';
+			card.querySelector(`.segmented-option[data-mode="${mode}"]`)?.click();
+		});
+		header.appendChild(toggle);
 	}
 	const main = panelDiv('paint-slot-main');
 	container.appendChild(main);
@@ -527,14 +681,14 @@ function buildPaintSlotCard(slot) {
 	// R5: Source is a property of the module, so it reads as a row - the old
 	// titled option group added a heading level for a single control.
 	source.classList.add('paint-slot-source');
-	if (slot.sourceLabel) {
+	if (slot.sourceLabel && !slot.sourceSelect) {
 		// The same component as every other set label, not a lookalike.
 		const label = panelDiv('property-set-label paint-slot-source-label');
 		label.textContent = slot.sourceLabel;
 		source.prepend(label);
 	}
 	main.appendChild(source);
-	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds);
+	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds, slot.redesign);
 	if (slot.primaryToggle) {
 		const toggle = tplClone('tpl-checkbox');
 		toggle.querySelector('input').id = slot.primaryToggle.id;
@@ -545,9 +699,16 @@ function buildPaintSlotCard(slot) {
 		main.appendChild(primaryRow);
 	}
 	(slot.post || []).forEach((item) => main.appendChild(buildPanelItem(item)));
-	container.appendChild(buildAdvancedDisclosure(slot.idPrefix, slot.advancedIds, {
+	const advanced = buildAdvancedDisclosure(slot.idPrefix, slot.advancedIds, {
 		texturePosition: slot.texturePosition
-	}));
+	});
+	if (slot.advancedStyle === 'flat') {
+		const flat = panelDiv('paint-slot-advanced-flat glitter-source-glitter');
+		flat.append(...advanced.querySelector('[data-advanced-content]').children);
+		container.appendChild(flat);
+	} else {
+		container.appendChild(advanced);
+	}
 	return card;
 }
 
@@ -728,7 +889,14 @@ function buildPanelItem(item, schema) {
 		case 'stackRow': {
 			const row = tplClone('tpl-two-column');
 			row.classList.add('effect-stack-row');
-			item.groups.forEach((group) => row.appendChild(buildOptionGroup(group.label, [buildSegmented(group.options)])));
+			item.groups.forEach((group) => {
+				const control = group.control === 'select'
+					? buildSelectProxy(group.options, { label: group.label })
+					: buildSegmented(group.options);
+				const optionRow = buildOptionGroup(group.label, [control]);
+				if (group.control === 'select') optionRow.classList.remove('is-stacked');
+				row.appendChild(optionRow);
+			});
 			return row;
 		}
 		case 'host': {
@@ -777,12 +945,16 @@ function readModuleSummary(card) {
 	// you expand a still-disabled module contradicts itself.
 	const toggle = card.querySelector(':scope > .subsection-title input[data-effect-toggle]');
 	if (toggle && !toggle.checked) return '';
-	const mode = card.dataset.paintMode || '';
+	const mode = card.dataset.paintMode || card.querySelector('.segmented-option.active[data-mode]')?.dataset.mode || '';
 	const parts = [];
 	if (mode === 'none') return 'None';
 	if (mode === 'glitter') {
-		const name = card.querySelector('.asset-info:not([hidden]) .asset-info-name')?.textContent?.trim();
-		if (name) parts.push(name);
+		if (card.dataset.slot === 'fill') {
+			const name = card.querySelector('.asset-info:not([hidden]) .asset-info-name')?.textContent?.trim();
+			if (name) parts.push(name);
+		} else {
+			parts.push('Glitter');
+		}
 	} else if (mode === 'solid') {
 		parts.push('Solid');
 	} else if (mode === 'gradient') {
@@ -798,10 +970,16 @@ function syncModuleSummary(card) {
 	if (!summary) return;
 	const text = readModuleSummary(card);
 	if (summary.textContent !== text) summary.textContent = text;
+	const swatch = card.querySelector(':scope > .subsection-title > .property-module-swatch');
+	if (swatch) {
+		const source = card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail');
+		const solid = card.querySelector('.property-color-row:not([hidden]) input[type="color"]');
+		swatch.style.background = solid?.value || source?.style.background || source?.style.backgroundImage || '';
+	}
 }
 
 function initializeModuleSummaries(root = document) {
-	root.querySelectorAll('[data-role="paint-slot"][data-effect-card]').forEach((card) => {
+	root.querySelectorAll('[data-role="paint-slot"][data-effect-card], [data-role="paint-slot"][data-collapsible]').forEach((card) => {
 		if (card.dataset.moduleSummary !== undefined) return;
 		card.dataset.moduleSummary = '';
 		buildModuleSummary(card);
@@ -899,6 +1077,7 @@ function initializePanelGroupNode(node, prefix, title, { collapsible = true } = 
 	const header = node.querySelector('.subsection-title');
 	const label = document.createElement('span');
 	label.className = 'panel-group-label';
+	if (node.closest('.panel-redesign')) label.classList.add('property-group-label');
 	label.textContent = title;
 	header.appendChild(label);
 	if (!collapsible) return { header, chevron: null };
@@ -959,6 +1138,7 @@ function buildPanelGroup(group, schema) {
 function renderPanelSection(schema) {
 	const host = document.getElementById(schema.section.id);
 	if (!host) return;
+	addPanelClasses(host, schema.section.classes);
 	if (schema.replaceStatic) host.replaceChildren();
 	else if (host.querySelector(':scope > .section-header')) return;
 	const fragment = document.getElementById('tpl-section').content.cloneNode(true);
@@ -1003,6 +1183,18 @@ function renderPanelSection(schema) {
 	// Keep generated section chrome before any retained static host content.
 	(schema.sourceTemplate ? document.getElementById(schema.sourceTemplate) : host.querySelector(':scope > template'))?.remove();
 	host.prepend(fragment);
+	if (schema.section.classes?.split(/\s+/).includes('panel-redesign')) {
+		host.querySelectorAll('.property-card').forEach((node) => node.classList.add('panel-card'));
+		host.querySelectorAll('.subsection-section-group').forEach((node) => node.classList.add('panel-group'));
+		host.querySelectorAll('.panel-group-label').forEach((node) => node.classList.add('property-group-label'));
+		host.querySelectorAll('.property-row').forEach((node) => node.classList.add('row'));
+		host.querySelectorAll('.segmented-control').forEach((node) => node.classList.add('segmented'));
+		host.querySelectorAll('.asset-info').forEach((node) => node.classList.add('asset'));
+		host.querySelectorAll('.advanced-disclosure').forEach((node) => node.classList.add('disc'));
+		host.querySelectorAll('.property-actions').forEach((node) => node.classList.add('panel-actions'));
+		host.querySelectorAll('.paint-slot-card').forEach((node) => node.classList.add('panel-module'));
+		initializeEditablePropertyValues(host);
+	}
 }
 
 // Boot entry point. Must run before renderTransformPanels (it creates the
@@ -1023,12 +1215,100 @@ function renderLegacyPanelTemplate(sectionId, templateId) {
 	template.remove();
 }
 
+function redesignTransformFragment(fragment) {
+	const card = fragment.querySelector('[data-transform-card]');
+	const grid = card.querySelector('.transform-grid');
+	const header = card.querySelector('.transform-panel-title');
+	const actions = fragment.querySelector('[data-transform-actions]');
+	const [position, size, rotation, align, flip] = grid.querySelectorAll(':scope > .property-set');
+	const placeholder = () => {
+		const node = document.createElement('span');
+		node.className = 'property-revert is-placeholder';
+		node.setAttribute('aria-hidden', 'true');
+		return node;
+	};
+	const rowLabel = (text) => {
+		const node = document.createElement('span');
+		node.className = 'property-label';
+		node.textContent = text;
+		return node;
+	};
+	const makePairRow = (set, label) => {
+		const pair = set.querySelector('.property-pair');
+		set.className = 'property-row row is-pair transform-pair-row';
+		set.replaceChildren(rowLabel(label), pair, placeholder());
+		return set;
+	};
+
+	card.classList.add('panel-card', 'panel-module');
+	card.dataset.panelRedesign = '';
+	card.dataset.collapsible = '';
+	const lock = header.querySelector('[data-transform-lock]');
+	lock.className = 'property-row row is-toggle transform-lock-row';
+	const lockInput = lock.querySelector('input');
+	const lockSwitch = lock.querySelector('span');
+	lockSwitch.className = 'property-switch';
+	lockSwitch.textContent = '';
+	lockSwitch.setAttribute('aria-hidden', 'true');
+	lock.replaceChildren(rowLabel('Lock aspect ratio'), lockInput, lockSwitch, placeholder());
+	header.querySelector('.transform-panel-title-actions').remove();
+	const signal = document.createElement('button');
+	signal.type = 'button';
+	signal.className = 'property-revert transform-revert-signal';
+	signal.title = 'Reset transform';
+	signal.setAttribute('aria-label', 'Reset transform');
+	signal.dataset.transformRevertSignal = '';
+	signal.appendChild(createIcon('undo'));
+	header.appendChild(signal);
+
+	makePairRow(position, 'Position');
+	const scaleRows = panelDiv('transform-scale-rows');
+	scaleRows.append(...size.querySelectorAll('[data-transform-scale-readout]'));
+	scaleRows.querySelector('.transform-scale-x > .property-label').textContent = 'Scale';
+	const sizeRow = makePairRow(size, 'Size');
+	sizeRow.dataset.transformRole = 'sizeGroup';
+	sizeRow.querySelector('.property-pair').removeAttribute('data-transform-role');
+	sizeRow.before(lock);
+	sizeRow.after(scaleRows);
+
+	const rotationRow = rotation.querySelector('.property-row');
+	rotationRow.classList.add('row');
+	rotationRow.querySelector('.property-label').textContent = 'Rotation';
+	rotation.replaceWith(rotationRow);
+
+	align.querySelector(':scope > .property-set-label').remove();
+	align.querySelectorAll(':scope > .property-row').forEach((row) => {
+		row.classList.remove('is-stacked');
+		row.classList.add('row');
+		row.querySelector('.segmented-control').classList.add('segmented');
+		row.appendChild(placeholder());
+	});
+
+	const flipControl = panelDiv('segmented-control segmented transform-flip-control');
+	flip.querySelectorAll('.property-toggle-list > label').forEach((option, index) => {
+		const input = option.querySelector('input');
+		const visible = option.querySelector('.property-label');
+		option.className = 'segmented-option';
+		visible.className = '';
+		visible.textContent = index === 0 ? 'Horizontal' : 'Vertical';
+		option.replaceChildren(input, visible);
+		flipControl.appendChild(option);
+	});
+	flip.className = 'property-row row';
+	flip.replaceChildren(rowLabel('Flip'), flipControl, placeholder());
+
+	actions.classList.add('panel-actions');
+	card.appendChild(actions);
+	fragment.querySelector('[data-transform-opacity] .property-row')?.classList.add('row');
+}
+
 function buildTransformPanel(editor, container, prefix, capabilities) {
 	const ids = editor.getTransformIds(prefix);
 	const fragment = document.getElementById('tpl-transform-panel').content.cloneNode(true);
 	fragment.querySelectorAll('.subsection-content-group').forEach((card) => card.classList.add('property-card'));
 	const buildNumberPair = (roles, labels, min = null) => {
 		const pair = tplClone('tpl-number-pair');
+		if (capabilities.panelRedesign) pair.className = 'property-pair sticker-position-group';
 		pair.querySelectorAll('.input-group').forEach((group, index) => {
 			const label = group.querySelector('label');
 			const input = group.querySelector('input');
@@ -1041,9 +1321,11 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	};
 	fragment.querySelector('[data-transform-number-pair="position"]').replaceWith(buildNumberPair(['posX', 'posY'], ['X', 'Y']));
 	const sizePair = buildNumberPair(['sizeWidth', 'sizeHeight'], ['W', 'H'], 1);
-	sizePair.dataset.transformRole = 'sizeGroup';
+	if (!capabilities.panelRedesign) sizePair.dataset.transformRole = 'sizeGroup';
 	fragment.querySelector('[data-transform-number-pair="size"]').replaceWith(sizePair);
-	fragment.querySelector('[data-transform-card]').dataset.transformPrefix = prefix;
+	if (capabilities.panelRedesign) redesignTransformFragment(fragment);
+	const transformCard = fragment.querySelector('[data-transform-card]');
+	transformCard.dataset.transformPrefix = prefix;
 	fragment.querySelectorAll('[data-transform-role]').forEach((element) => {
 		const id = ids[element.dataset.transformRole];
 		if (id) element.id = id;
@@ -1065,9 +1347,13 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	fragment.querySelectorAll('[data-prefix-id]').forEach((element) => {
 		element.id = prefix + element.dataset.prefixId;
 	});
+	fragment.querySelector('[data-transform-revert-signal]')?.addEventListener('click', () => {
+		document.getElementById(ids.resetTransform)?.click();
+	});
 	if (!capabilities.lockAspect) fragment.querySelector('[data-transform-lock]').remove();
 	if (!capabilities.scaleReadout) fragment.querySelectorAll('[data-transform-scale-readout]').forEach((element) => element.remove());
 	container.replaceChildren(fragment);
+	if (capabilities.panelRedesign) initializeEditablePropertyValues(container);
 }
 
 // Shared schema finalization: retitle the transform and opacity cards, move the
@@ -1079,7 +1365,7 @@ function normalizeTransformPanelHost(editor, prefix) {
 	const ids = editor.getTransformIds(prefix);
 	const geometry = host.querySelector(':scope > [data-transform-prefix]');
 	const opacity = card(ids.opacity);
-	const actions = host.querySelector(':scope > [data-transform-actions]');
+	const actions = host.querySelector('[data-transform-actions]');
 
 	const setTitle = (section, label) => {
 		const title = section?.querySelector(':scope > .subsection-title');
@@ -1097,7 +1383,7 @@ function normalizeTransformPanelHost(editor, prefix) {
 	if (opacityLabel) opacityLabel.textContent = 'Layer Opacity';
 
 	[geometry, opacity].filter(Boolean).forEach((section) => host.appendChild(section));
-	if (actions) host.closest('.panel-group-content')?.appendChild(actions);
+	if (actions && geometry && !geometry.hasAttribute('data-panel-redesign')) host.closest('.panel-group-content')?.appendChild(actions);
 	return host;
 }
 
@@ -1115,6 +1401,12 @@ function finalizePanelSchemaSections(editor) {
 		const groupNode = content.querySelector(`[data-panel-group="${adopter.title}"]`);
 		const opacityCard = document.getElementById(editor.getTransformIds(schema.prefix).opacity)?.closest('.subsection-content-group');
 		const blocks = groupNode?.querySelector(':scope > .panel-group-content > .panel-group-blocks');
-		if (blocks && opacityCard) blocks.appendChild(opacityCard);
+		const redesign = schema.section.classes?.split(/\s+/).includes('panel-redesign');
+		const opacityRow = opacityCard?.querySelector('.property-row');
+		if (redesign && blocks && opacityRow) {
+			opacityRow.querySelector('.property-label').textContent = 'Opacity';
+			blocks.appendChild(opacityRow);
+			opacityCard.remove();
+		} else if (blocks && opacityCard) blocks.appendChild(opacityCard);
 	});
 }

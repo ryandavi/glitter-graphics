@@ -177,6 +177,10 @@
 		>svg { fill: currentColor; }
 	}
 	&.is-raster>img { image-rendering: pixelated; }
+	// Match the brush's Flip X/Y dynamics in the tip preview.
+	&.flip-x>img { transform: scaleX(-1); }
+	&.flip-y>img { transform: scaleY(-1); }
+	&.flip-x.flip-y>img { transform: scale(-1, -1); }
 }
 
 /* ===== ASSET BROWSER ===== */

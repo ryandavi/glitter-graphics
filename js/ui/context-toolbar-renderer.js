@@ -312,7 +312,8 @@ class ContextToolbarRenderer {
 			const spec = control.slider ? CONFIG.ui.sliders[control.slider] : control;
 			const node = document.getElementById('tpl-context-slider').content.firstElementChild.cloneNode(true);
 			node.querySelector('.context-label').textContent = control.label || spec.label;
-			const input = node.querySelector('input'); input.id = control.id; input.min = spec.min; input.max = spec.max; input.value = spec.value;
+			const input = node.querySelector('input'); input.id = control.id;
+			applySliderSpec(input, spec);   // handles data-scale (log) sliders; plain min/max otherwise
 			input.setAttribute('aria-label', control.label || spec.label);
 			const value = node.querySelector('.context-value'); value.id = control.valueId; value.textContent = `${spec.value}${control.unit || spec.unit || ''}`;
 			return node;

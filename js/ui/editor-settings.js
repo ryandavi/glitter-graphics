@@ -581,6 +581,7 @@ initializeExportSettings() {
 			.filter((layer) => layer.type === LayerType.TEXT_GLITTER)
 			.forEach((layer) => this.textGlitterManager?.revokePreviewMaskCache(layer));
 		this.shapeGlitterManager?.invalidateMeasurement();
+		this.maskEditor?._syncAntialiasControls();
 		this.requestPreviewUpdate();
 	}
 

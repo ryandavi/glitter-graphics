@@ -762,9 +762,12 @@ class GlitterEditor {
 	}
 
 	setupMaskEditorListeners() {
+		// Size / Spacing revert to the ACTIVE raster tip's manifest value (its
+		// authored diameter / spacing), falling back to the global default for
+		// vector tips. Passed as a thunk so bindSlider resolves it per click.
 		this.setupSlider('maskBrushSize', 'maskBrushSizeValue', 'px', () => {
 			this.maskEditor?._updateBrushCursorSize();
-		}, CONFIG.tools.maskBrush.defaults.size);
+		}, () => this.maskEditor?.rasterSliderDefault('maskBrushSize') ?? CONFIG.tools.maskBrush.defaults.size);
 
 		this.setupSlider('maskBrushSoftness', 'maskBrushSoftnessValue', '%', () => {
 			this.maskEditor?.renderOverlay();
@@ -777,7 +780,8 @@ class GlitterEditor {
 		// Spacing is a percentage of brush size; it only affects future stamps
 		// (the resulting stroke is baked into the mask), so no live re-render.
 		this.setupSlider('maskBrushSpacing', 'maskBrushSpacingValue', '%', null,
-			Math.round(CONFIG.tools.maskBrush.stroke.stampSpacing * 100));
+			() => this.maskEditor?.rasterSliderDefault('maskBrushSpacing')
+				?? Math.round(CONFIG.tools.maskBrush.stroke.stampSpacing * 100));
 
 		// Smoothing (EMA stabilizer); affects the live stroke only, no re-render.
 		this.setupSlider('maskBrushSmoothing', 'maskBrushSmoothingValue', '%', null,
@@ -798,15 +802,23 @@ class GlitterEditor {
 
 		quick.min = canonical.min;
 		quick.max = canonical.max;
+		// Mirror any non-linear scale so the quick slider's raw position maps the
+		// same way the canonical one does (positions are copied verbatim below).
+		if (canonical.dataset.scale) {
+			quick.dataset.scale = canonical.dataset.scale;
+			quick.dataset.scaleMin = canonical.dataset.scaleMin;
+			quick.dataset.scaleMax = canonical.dataset.scaleMax;
+			quick.step = canonical.step;
+		}
 		quick.value = canonical.value;
-		if (quickValue) quickValue.innerHTML = formatUnit(canonical.value, suffix);
+		if (quickValue) quickValue.innerHTML = formatUnit(readSliderValue(canonical), suffix);
 
 		let syncing = false;
 		canonical.addEventListener('input', () => {
 			if (syncing) return;
 			syncing = true;
 			quick.value = canonical.value;
-			if (quickValue) quickValue.innerHTML = formatUnit(canonical.value, suffix);
+			if (quickValue) quickValue.innerHTML = formatUnit(readSliderValue(canonical), suffix);
 			syncing = false;
 		});
 
@@ -814,7 +826,7 @@ class GlitterEditor {
 			if (syncing) return;
 			syncing = true;
 			canonical.value = quick.value;
-			if (quickValue) quickValue.innerHTML = formatUnit(quick.value, suffix);
+			if (quickValue) quickValue.innerHTML = formatUnit(readSliderValue(quick), suffix);
 			canonical.dispatchEvent(new Event('input'));
 			syncing = false;
 		});

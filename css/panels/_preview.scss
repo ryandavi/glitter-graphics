@@ -414,6 +414,12 @@ body.no-document .main-content {
 		filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
 		opacity: 0.4;
 	}
+
+	// Flip X/Y: mirror the tip silhouette so the cursor matches the stamp the
+	// brush's Flip dynamics will actually lay down.
+	&.flip-x >.mask-brush-cursor-shape { transform: scaleX(-1); }
+	&.flip-y >.mask-brush-cursor-shape { transform: scaleY(-1); }
+	&.flip-x.flip-y >.mask-brush-cursor-shape { transform: scale(-1, -1); }
 }
 
 body.mask-editing {

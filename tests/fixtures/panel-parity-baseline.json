@@ -9,13 +9,13 @@
 		{
 			"id": "noLayerEmptyText",
 			"tag": "div",
-			"classes": "empty-state-text",
+			"classes": "property-empty-title",
 			"parent": "noLayerSettingsSection"
 		},
 		{
 			"id": "noLayerEmptySubtext",
 			"tag": "div",
-			"classes": "empty-state-subtext",
+			"classes": "property-empty-text",
 			"parent": "noLayerSettingsSection"
 		},
 		{
@@ -190,7 +190,7 @@
 		{
 			"id": "baseBackgroundImageChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "baseBackgroundImageInfo"
 		},
 		{
@@ -220,7 +220,7 @@
 		{
 			"id": "baseBackgroundGlitterChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "baseBackgroundGlitterInfo"
 		},
 		{
@@ -238,7 +238,7 @@
 		{
 			"id": "baseBackgroundColorRow",
 			"tag": "div",
-			"classes": "glitter-source-solid property-row text-effect-color-row",
+			"classes": "glitter-source-solid property-color-row property-row",
 			"parent": "baseLayerSettingsContent"
 		},
 		{
@@ -702,19 +702,19 @@
 		{
 			"id": "pixelEffectsPaletteMode",
 			"tag": "div",
-			"classes": "segmented-control text-effect-mode-group",
+			"classes": "segmented-control",
 			"parent": "baseLayerSettingsContent"
 		},
 		{
 			"id": "pixelEffectsPaletteControls",
 			"tag": "div",
-			"classes": "has-subsection-title pixel-effects-control-section pixel-effects-controls subsection-content-group",
+			"classes": "has-subsection-title pixel-effects-control-section pixel-effects-controls property-card subsection-content-group",
 			"parent": "baseLayerSettingsContent"
 		},
 		{
 			"id": "pixelEffectsPaletteStyle",
 			"tag": "div",
-			"classes": "segmented-control text-effect-mode-group",
+			"classes": "segmented-control",
 			"parent": "pixelEffectsPaletteControls"
 		},
 		{
@@ -768,50 +768,6 @@
 			"parent": "pixelEffectsPaletteControls"
 		},
 		{
-			"id": "pixelEffectsPosterizeControls",
-			"tag": "div",
-			"classes": "advanced-disclosure pixel-effects-controls",
-			"parent": "baseLayerSettingsContent"
-		},
-		{
-			"id": "pixelEffectsDetail",
-			"tag": "input",
-			"classes": "",
-			"parent": "pixelEffectsPosterizeControls",
-			"input": {
-				"type": "range",
-				"min": "1",
-				"max": "64",
-				"step": "1",
-				"value": "4"
-			}
-		},
-		{
-			"id": "pixelEffectsDetailValue",
-			"tag": "span",
-			"classes": "property-value",
-			"parent": "pixelEffectsPosterizeControls"
-		},
-		{
-			"id": "resetPixelEffectsDetail",
-			"tag": "button",
-			"classes": "property-revert",
-			"parent": "pixelEffectsPosterizeControls"
-		},
-		{
-			"id": "pixelEffectsCleanEdges",
-			"tag": "input",
-			"classes": "",
-			"parent": "pixelEffectsPosterizeControls",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "true"
-			}
-		},
-		{
 			"id": "pixelEffectsDitherControls",
 			"tag": "div",
 			"classes": "pixel-effects-controls pixel-effects-dither-controls property-block subsection-content",
@@ -820,19 +776,19 @@
 		{
 			"id": "pixelEffectsAlgorithm",
 			"tag": "select",
-			"classes": "effect-option-select",
+			"classes": "",
 			"parent": "pixelEffectsDitherControls"
 		},
 		{
 			"id": "pixelEffectsDitherPalette",
 			"tag": "select",
-			"classes": "effect-option-select",
+			"classes": "",
 			"parent": "pixelEffectsDitherControls"
 		},
 		{
 			"id": "pixelEffectsDuotone",
 			"tag": "div",
-			"classes": "pixel-effects-duotone text-effect-color-row",
+			"classes": "pixel-effects-duotone property-color-row",
 			"parent": "pixelEffectsDitherControls"
 		},
 		{
@@ -956,6 +912,50 @@
 			"parent": "pixelEffectsDitherControls"
 		},
 		{
+			"id": "pixelEffectsPosterizeControls",
+			"tag": "div",
+			"classes": "advanced-disclosure pixel-effects-controls",
+			"parent": "baseLayerSettingsContent"
+		},
+		{
+			"id": "pixelEffectsDetail",
+			"tag": "input",
+			"classes": "",
+			"parent": "pixelEffectsPosterizeControls",
+			"input": {
+				"type": "range",
+				"min": "1",
+				"max": "64",
+				"step": "1",
+				"value": "4"
+			}
+		},
+		{
+			"id": "pixelEffectsDetailValue",
+			"tag": "span",
+			"classes": "property-value",
+			"parent": "pixelEffectsPosterizeControls"
+		},
+		{
+			"id": "resetPixelEffectsDetail",
+			"tag": "button",
+			"classes": "property-revert",
+			"parent": "pixelEffectsPosterizeControls"
+		},
+		{
+			"id": "pixelEffectsCleanEdges",
+			"tag": "input",
+			"classes": "",
+			"parent": "pixelEffectsPosterizeControls",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "true"
+			}
+		},
+		{
 			"id": "resetPixelEffects",
 			"tag": "button",
 			"classes": "btn-simple secondary",
@@ -994,7 +994,7 @@
 		{
 			"id": "glitterSettingsEmpty",
 			"tag": "div",
-			"classes": "empty-state visible",
+			"classes": "property-empty visible",
 			"parent": "glitterSettingsContent"
 		},
 		{
@@ -1048,7 +1048,7 @@
 		{
 			"id": "glitterAssetChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "glitterAssetInfo"
 		},
 		{
@@ -1066,7 +1066,7 @@
 		{
 			"id": "glitterFillColorRow",
 			"tag": "div",
-			"classes": "glitter-source-solid property-row text-effect-color-row",
+			"classes": "glitter-source-solid property-color-row property-row",
 			"parent": "glitterSettingsControls"
 		},
 		{
@@ -1338,8 +1338,27 @@
 		{
 			"id": "brushTipChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "brushTipInfo"
+		},
+		{
+			"id": "brushAntialiasToggle",
+			"tag": "input",
+			"classes": "",
+			"parent": "brushSettingsContent",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "false"
+			}
+		},
+		{
+			"id": "brushAntialiasNote",
+			"tag": "div",
+			"classes": "property-note",
+			"parent": "brushSettingsContent"
 		},
 		{
 			"id": "maskBrushSize",
@@ -1348,10 +1367,10 @@
 			"parent": "brushSettingsContent",
 			"input": {
 				"type": "range",
-				"min": "1",
-				"max": "300",
-				"step": null,
-				"value": "40"
+				"min": "0",
+				"max": "1000",
+				"step": "1",
+				"value": "534"
 			}
 		},
 		{
@@ -1530,7 +1549,7 @@
 		{
 			"id": "stickerSettingsEmpty",
 			"tag": "div",
-			"classes": "empty-state visible",
+			"classes": "property-empty visible",
 			"parent": "stickerSettingsContent"
 		},
 		{
@@ -1566,7 +1585,7 @@
 		{
 			"id": "stickerAssetChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "stickerAssetInfo"
 		},
 		{
@@ -1729,7 +1748,7 @@
 		{
 			"id": "stickerSizeGroup",
 			"tag": "div",
-			"classes": "sticker-position-group",
+			"classes": "property-inset sticker-position-group",
 			"parent": "stickerTransformPanelHost"
 		},
 		{
@@ -1899,19 +1918,19 @@
 			"id": "stickerFitCanvas",
 			"tag": "button",
 			"classes": "btn-simple",
-			"parent": "stickerTransformPanelHost"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerFillCanvas",
 			"tag": "button",
 			"classes": "btn-simple",
-			"parent": "stickerTransformPanelHost"
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "resetStickerTransform",
 			"tag": "button",
-			"classes": "btn-simple transform-reset-all",
-			"parent": "stickerTransformPanelHost"
+			"classes": "btn-simple",
+			"parent": "stickerSettingsControls"
 		},
 		{
 			"id": "stickerShadowEnabled",
@@ -2027,7 +2046,7 @@
 		{
 			"id": "stickerShadowGlitterChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "stickerShadowGlitterInfo"
 		},
 		{
@@ -2045,7 +2064,7 @@
 		{
 			"id": "stickerShadowColorRow",
 			"tag": "div",
-			"classes": "glitter-source-solid property-row text-effect-color-row",
+			"classes": "glitter-source-solid property-color-row property-row",
 			"parent": "stickerShadowControls"
 		},
 		{
@@ -2263,7 +2282,7 @@
 		{
 			"id": "textSettingsSection",
 			"tag": "div",
-			"classes": "collapsible-section section text-settings-section",
+			"classes": "collapsible-section panel-redesign section text-settings-section",
 			"parent": "designPanel"
 		},
 		{
@@ -2293,7 +2312,7 @@
 		{
 			"id": "textBoxModeHint",
 			"tag": "div",
-			"classes": "text-box-hint",
+			"classes": "panel-note text-box-hint",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -2305,7 +2324,7 @@
 		{
 			"id": "textFontPicker",
 			"tag": "div",
-			"classes": "text-font-picker",
+			"classes": "property-inset property-scrollbox text-font-picker",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -2323,7 +2342,7 @@
 		{
 			"id": "textCaseSelect",
 			"tag": "select",
-			"classes": "effect-option-select text-case-select",
+			"classes": "text-case-select",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -2428,7 +2447,7 @@
 		{
 			"id": "textFillGlitterInfo",
 			"tag": "div",
-			"classes": "asset-info glitter-source-glitter",
+			"classes": "asset asset-info glitter-source-glitter",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -2450,12 +2469,6 @@
 			"parent": "textFillGlitterInfo"
 		},
 		{
-			"id": "textFillGlitterChange",
-			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
-			"parent": "textFillGlitterInfo"
-		},
-		{
 			"id": "textFillGlitterSize",
 			"tag": "span",
 			"classes": "property-value",
@@ -2468,9 +2481,15 @@
 			"parent": "textFillGlitterInfo"
 		},
 		{
+			"id": "textFillGlitterChange",
+			"tag": "button",
+			"classes": "asset-info-change btn-simple",
+			"parent": "textFillGlitterInfo"
+		},
+		{
 			"id": "textFillColorRow",
 			"tag": "div",
-			"classes": "glitter-source-solid property-row text-effect-color-row",
+			"classes": "glitter-source-solid property-color-row property-row row",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -2489,7 +2508,7 @@
 		{
 			"id": "textTextureScaleRow",
 			"tag": "div",
-			"classes": "paint-slot-scale property-row",
+			"classes": "paint-slot-scale property-row row",
 			"parent": "textSettingsContent"
 		},
 		{
@@ -2717,19 +2736,6 @@
 			"parent": "textSettingsContent"
 		},
 		{
-			"id": "textProportionalScale",
-			"tag": "input",
-			"classes": "",
-			"parent": "textTransformPanelHost",
-			"input": {
-				"type": "checkbox",
-				"min": null,
-				"max": null,
-				"step": null,
-				"value": "true"
-			}
-		},
-		{
 			"id": "textPosX",
 			"tag": "input",
 			"classes": "",
@@ -2756,9 +2762,22 @@
 			}
 		},
 		{
+			"id": "textProportionalScale",
+			"tag": "input",
+			"classes": "",
+			"parent": "textTransformPanelHost",
+			"input": {
+				"type": "checkbox",
+				"min": null,
+				"max": null,
+				"step": null,
+				"value": "true"
+			}
+		},
+		{
 			"id": "textSizeGroup",
 			"tag": "div",
-			"classes": "sticker-position-group",
+			"classes": "is-pair property-row row transform-pair-row",
 			"parent": "textTransformPanelHost"
 		},
 		{
@@ -2939,7 +2958,7 @@
 		{
 			"id": "resetTextTransform",
 			"tag": "button",
-			"classes": "btn-simple transform-reset-all",
+			"classes": "btn-simple",
 			"parent": "textTransformPanelHost"
 		},
 		{
@@ -3007,7 +3026,7 @@
 		{
 			"id": "textBorderGlitterInfo",
 			"tag": "div",
-			"classes": "asset-info glitter-source-glitter",
+			"classes": "asset asset-info glitter-source-glitter",
 			"parent": "textBorderControls"
 		},
 		{
@@ -3029,12 +3048,6 @@
 			"parent": "textBorderGlitterInfo"
 		},
 		{
-			"id": "textBorderGlitterChange",
-			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
-			"parent": "textBorderGlitterInfo"
-		},
-		{
 			"id": "textBorderGlitterSize",
 			"tag": "span",
 			"classes": "property-value",
@@ -3047,9 +3060,15 @@
 			"parent": "textBorderGlitterInfo"
 		},
 		{
+			"id": "textBorderGlitterChange",
+			"tag": "button",
+			"classes": "asset-info-change btn-simple",
+			"parent": "textBorderGlitterInfo"
+		},
+		{
 			"id": "textBorderColorRow",
 			"tag": "div",
-			"classes": "glitter-source-solid property-row text-effect-color-row",
+			"classes": "glitter-source-solid property-color-row property-row row",
 			"parent": "textBorderControls"
 		},
 		{
@@ -3068,7 +3087,7 @@
 		{
 			"id": "textBorderScaleRow",
 			"tag": "div",
-			"classes": "paint-slot-scale property-row",
+			"classes": "paint-slot-scale property-row row",
 			"parent": "textBorderControls"
 		},
 		{
@@ -3396,7 +3415,7 @@
 		{
 			"id": "textShadowGlitterInfo",
 			"tag": "div",
-			"classes": "asset-info glitter-source-glitter",
+			"classes": "asset asset-info glitter-source-glitter",
 			"parent": "textShadowControls"
 		},
 		{
@@ -3418,12 +3437,6 @@
 			"parent": "textShadowGlitterInfo"
 		},
 		{
-			"id": "textShadowGlitterChange",
-			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
-			"parent": "textShadowGlitterInfo"
-		},
-		{
 			"id": "textShadowGlitterSize",
 			"tag": "span",
 			"classes": "property-value",
@@ -3436,9 +3449,15 @@
 			"parent": "textShadowGlitterInfo"
 		},
 		{
+			"id": "textShadowGlitterChange",
+			"tag": "button",
+			"classes": "asset-info-change btn-simple",
+			"parent": "textShadowGlitterInfo"
+		},
+		{
 			"id": "textShadowColorRow",
 			"tag": "div",
-			"classes": "glitter-source-solid property-row text-effect-color-row",
+			"classes": "glitter-source-solid property-color-row property-row row",
 			"parent": "textShadowControls"
 		},
 		{
@@ -3457,7 +3476,7 @@
 		{
 			"id": "textShadowScaleRow",
 			"tag": "div",
-			"classes": "paint-slot-scale property-row",
+			"classes": "paint-slot-scale property-row row",
 			"parent": "textShadowControls"
 		},
 		{
@@ -3710,7 +3729,7 @@
 		{
 			"id": "shapeAssetChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "shapeAssetInfo"
 		},
 		{
@@ -3764,7 +3783,7 @@
 		{
 			"id": "shapeFillGlitterChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "shapeFillGlitterInfo"
 		},
 		{
@@ -3782,7 +3801,7 @@
 		{
 			"id": "shapeFillColorRow",
 			"tag": "div",
-			"classes": "glitter-source-solid property-row text-effect-color-row",
+			"classes": "glitter-source-solid property-color-row property-row",
 			"parent": "shapeSettingsContent"
 		},
 		{
@@ -4064,7 +4083,7 @@
 		{
 			"id": "shapeSizeGroup",
 			"tag": "div",
-			"classes": "sticker-position-group",
+			"classes": "property-inset sticker-position-group",
 			"parent": "shapeTransformPanelHost"
 		},
 		{
@@ -4234,19 +4253,19 @@
 			"id": "shapeFitCanvas",
 			"tag": "button",
 			"classes": "btn-simple",
-			"parent": "shapeTransformPanelHost"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeFillCanvas",
 			"tag": "button",
 			"classes": "btn-simple",
-			"parent": "shapeTransformPanelHost"
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "resetShapeTransform",
 			"tag": "button",
-			"classes": "btn-simple transform-reset-all",
-			"parent": "shapeTransformPanelHost"
+			"classes": "btn-simple",
+			"parent": "shapeSettingsContent"
 		},
 		{
 			"id": "shapeBorderEnabled",
@@ -4380,7 +4399,7 @@
 		{
 			"id": "shapeBorderGlitterChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "shapeBorderGlitterInfo"
 		},
 		{
@@ -4398,7 +4417,7 @@
 		{
 			"id": "shapeBorderColorRow",
 			"tag": "div",
-			"classes": "glitter-source-solid property-row text-effect-color-row",
+			"classes": "glitter-source-solid property-color-row property-row",
 			"parent": "shapeBorderControls"
 		},
 		{
@@ -4763,7 +4782,7 @@
 		{
 			"id": "shapeShadowGlitterChange",
 			"tag": "button",
-			"classes": "btn-simple text-effect-source-change",
+			"classes": "asset-info-change btn-simple",
 			"parent": "shapeShadowGlitterInfo"
 		},
 		{
@@ -4781,7 +4800,7 @@
 		{
 			"id": "shapeShadowColorRow",
 			"tag": "div",
-			"classes": "glitter-source-solid property-row text-effect-color-row",
+			"classes": "glitter-source-solid property-color-row property-row",
 			"parent": "shapeShadowControls"
 		},
 		{
@@ -5023,19 +5042,19 @@
 		{
 			"id": "layerSettingsEmpty",
 			"tag": "div",
-			"classes": "empty-state visible",
+			"classes": "property-empty visible",
 			"parent": "layerSettingsContent"
 		},
 		{
 			"id": "layerSettingsEmptyText",
 			"tag": "div",
-			"classes": "empty-state-text",
+			"classes": "property-empty-title",
 			"parent": "layerSettingsEmpty"
 		},
 		{
 			"id": "layerSettingsEmptySubtext",
 			"tag": "div",
-			"classes": "empty-state-subtext",
+			"classes": "property-empty-text",
 			"parent": "layerSettingsEmpty"
 		},
 		{
@@ -5086,13 +5105,19 @@
 		{
 			"id": "selectedColorsEmpty",
 			"tag": "span",
-			"classes": "empty-state visible",
+			"classes": "property-empty-inline visible",
 			"parent": "layerSettingsControls"
 		},
 		{
 			"id": "selectedColorsDisplay",
 			"tag": "div",
 			"classes": "selected-colors-display",
+			"parent": "layerSettingsControls"
+		},
+		{
+			"id": "selectionRefineNote",
+			"tag": "div",
+			"classes": "property-note",
 			"parent": "layerSettingsControls"
 		},
 		{
@@ -5250,11 +5275,6 @@
 				"pixelEffectsMergeDistinctness": "shown",
 				"pixelEffectsMergeDistinctnessValue": "shown",
 				"resetPixelEffectsMergeDistinctness": "shown",
-				"pixelEffectsPosterizeControls": "hidden",
-				"pixelEffectsDetail": "shown",
-				"pixelEffectsDetailValue": "shown",
-				"resetPixelEffectsDetail": "shown",
-				"pixelEffectsCleanEdges": "shown",
 				"pixelEffectsDitherControls": "hidden",
 				"pixelEffectsAlgorithm": "shown",
 				"pixelEffectsDitherPalette": "shown",
@@ -5272,6 +5292,11 @@
 				"resetPixelEffectsAngle": "shown",
 				"pixelEffectsShimmer": "shown",
 				"pixelEffectsShimmerHint": "shown",
+				"pixelEffectsPosterizeControls": "hidden",
+				"pixelEffectsDetail": "shown",
+				"pixelEffectsDetailValue": "shown",
+				"resetPixelEffectsDetail": "shown",
+				"pixelEffectsCleanEdges": "shown",
 				"resetPixelEffects": "shown",
 				"autoGlitterImageBtn": "shown",
 				"glitterSettingsSection": "shown",
@@ -5327,6 +5352,8 @@
 				"brushTipName": "shown",
 				"brushTipBadges": "shown",
 				"brushTipChange": "shown",
+				"brushAntialiasToggle": "shown",
+				"brushAntialiasNote": "hidden",
 				"maskBrushSize": "shown",
 				"maskBrushSizeValue": "shown",
 				"resetMaskBrushSize": "shown",
@@ -5472,9 +5499,9 @@
 				"textFillGlitterChip": "shown",
 				"textFillGlitterLabel": "shown",
 				"textFillGlitterBadges": "shown",
-				"textFillGlitterChange": "shown",
 				"textFillGlitterSize": "shown",
 				"textFillGlitterFrames": "shown",
+				"textFillGlitterChange": "shown",
 				"textFillColorRow": "hidden",
 				"textFillColor": "shown",
 				"textTextureScaleRow": "shown",
@@ -5506,9 +5533,9 @@
 				"textLayerOpacityValue": "shown",
 				"resetTextLayerOpacity": "shown",
 				"textTransformPanelHost": "shown",
-				"textProportionalScale": "shown",
 				"textPosX": "shown",
 				"textPosY": "shown",
+				"textProportionalScale": "shown",
 				"textSizeGroup": "shown",
 				"textWidth": "shown",
 				"textHeight": "shown",
@@ -5544,9 +5571,9 @@
 				"textBorderGlitterChip": "shown",
 				"textBorderGlitterLabel": "shown",
 				"textBorderGlitterBadges": "shown",
-				"textBorderGlitterChange": "shown",
 				"textBorderGlitterSize": "shown",
 				"textBorderGlitterFrames": "shown",
+				"textBorderGlitterChange": "shown",
 				"textBorderColorRow": "hidden",
 				"textBorderColor": "shown",
 				"textBorderScaleRow": "shown",
@@ -5596,9 +5623,9 @@
 				"textShadowGlitterChip": "shown",
 				"textShadowGlitterLabel": "shown",
 				"textShadowGlitterBadges": "shown",
-				"textShadowGlitterChange": "shown",
 				"textShadowGlitterSize": "shown",
 				"textShadowGlitterFrames": "shown",
+				"textShadowGlitterChange": "shown",
 				"textShadowColorRow": "hidden",
 				"textShadowColor": "shown",
 				"textShadowScaleRow": "shown",
@@ -5815,6 +5842,7 @@
 				"multiSelect": "shown",
 				"selectedColorsEmpty": "shown",
 				"selectedColorsDisplay": "shown",
+				"selectionRefineNote": "shown",
 				"threshold": "shown",
 				"thresholdValue": "shown",
 				"resetThreshold": "shown",
@@ -6351,9 +6379,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -6394,9 +6422,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -6437,9 +6465,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -6480,9 +6508,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -6529,9 +6557,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -6583,9 +6611,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -6637,9 +6665,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -6696,9 +6724,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",
@@ -6746,9 +6774,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",
@@ -6796,9 +6824,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",
@@ -7552,11 +7580,6 @@
 				"pixelEffectsMergeDistinctness": "shown",
 				"pixelEffectsMergeDistinctnessValue": "shown",
 				"resetPixelEffectsMergeDistinctness": "shown",
-				"pixelEffectsPosterizeControls": "hidden",
-				"pixelEffectsDetail": "shown",
-				"pixelEffectsDetailValue": "shown",
-				"resetPixelEffectsDetail": "shown",
-				"pixelEffectsCleanEdges": "shown",
 				"pixelEffectsDitherControls": "hidden",
 				"pixelEffectsAlgorithm": "shown",
 				"pixelEffectsDitherPalette": "shown",
@@ -7574,6 +7597,11 @@
 				"resetPixelEffectsAngle": "shown",
 				"pixelEffectsShimmer": "shown",
 				"pixelEffectsShimmerHint": "shown",
+				"pixelEffectsPosterizeControls": "hidden",
+				"pixelEffectsDetail": "shown",
+				"pixelEffectsDetailValue": "shown",
+				"resetPixelEffectsDetail": "shown",
+				"pixelEffectsCleanEdges": "shown",
 				"resetPixelEffects": "shown",
 				"autoGlitterImageBtn": "shown",
 				"glitterSettingsSection": "shown",
@@ -7629,6 +7657,8 @@
 				"brushTipName": "shown",
 				"brushTipBadges": "shown",
 				"brushTipChange": "shown",
+				"brushAntialiasToggle": "shown",
+				"brushAntialiasNote": "hidden",
 				"maskBrushSize": "shown",
 				"maskBrushSizeValue": "shown",
 				"resetMaskBrushSize": "shown",
@@ -7774,9 +7804,9 @@
 				"textFillGlitterChip": "shown",
 				"textFillGlitterLabel": "shown",
 				"textFillGlitterBadges": "shown",
-				"textFillGlitterChange": "shown",
 				"textFillGlitterSize": "shown",
 				"textFillGlitterFrames": "shown",
+				"textFillGlitterChange": "shown",
 				"textFillColorRow": "hidden",
 				"textFillColor": "shown",
 				"textTextureScaleRow": "hidden",
@@ -7808,9 +7838,9 @@
 				"textLayerOpacityValue": "shown",
 				"resetTextLayerOpacity": "shown",
 				"textTransformPanelHost": "shown",
-				"textProportionalScale": "shown",
 				"textPosX": "shown",
 				"textPosY": "shown",
+				"textProportionalScale": "shown",
 				"textSizeGroup": "shown",
 				"textWidth": "shown",
 				"textHeight": "shown",
@@ -7846,9 +7876,9 @@
 				"textBorderGlitterChip": "shown",
 				"textBorderGlitterLabel": "shown",
 				"textBorderGlitterBadges": "shown",
-				"textBorderGlitterChange": "shown",
 				"textBorderGlitterSize": "shown",
 				"textBorderGlitterFrames": "shown",
+				"textBorderGlitterChange": "shown",
 				"textBorderColorRow": "hidden",
 				"textBorderColor": "shown",
 				"textBorderScaleRow": "hidden",
@@ -7898,9 +7928,9 @@
 				"textShadowGlitterChip": "shown",
 				"textShadowGlitterLabel": "shown",
 				"textShadowGlitterBadges": "shown",
-				"textShadowGlitterChange": "shown",
 				"textShadowGlitterSize": "shown",
 				"textShadowGlitterFrames": "shown",
+				"textShadowGlitterChange": "shown",
 				"textShadowColorRow": "hidden",
 				"textShadowColor": "shown",
 				"textShadowScaleRow": "hidden",
@@ -8117,6 +8147,7 @@
 				"multiSelect": "shown",
 				"selectedColorsEmpty": "shown",
 				"selectedColorsDisplay": "shown",
+				"selectionRefineNote": "shown",
 				"threshold": "shown",
 				"thresholdValue": "shown",
 				"resetThreshold": "shown",
@@ -8653,9 +8684,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "hidden",
@@ -8696,9 +8727,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -8739,9 +8770,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "shown",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "hidden",
@@ -8782,9 +8813,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "hidden",
@@ -8831,9 +8862,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -8885,9 +8916,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "shown",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "hidden",
@@ -8939,9 +8970,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "hidden",
@@ -8998,9 +9029,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",
@@ -9048,9 +9079,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "shown",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "hidden",
@@ -9098,9 +9129,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "hidden",
@@ -9854,11 +9885,6 @@
 				"pixelEffectsMergeDistinctness": "shown",
 				"pixelEffectsMergeDistinctnessValue": "shown",
 				"resetPixelEffectsMergeDistinctness": "shown",
-				"pixelEffectsPosterizeControls": "hidden",
-				"pixelEffectsDetail": "shown",
-				"pixelEffectsDetailValue": "shown",
-				"resetPixelEffectsDetail": "shown",
-				"pixelEffectsCleanEdges": "shown",
 				"pixelEffectsDitherControls": "hidden",
 				"pixelEffectsAlgorithm": "shown",
 				"pixelEffectsDitherPalette": "shown",
@@ -9876,6 +9902,11 @@
 				"resetPixelEffectsAngle": "shown",
 				"pixelEffectsShimmer": "shown",
 				"pixelEffectsShimmerHint": "shown",
+				"pixelEffectsPosterizeControls": "hidden",
+				"pixelEffectsDetail": "shown",
+				"pixelEffectsDetailValue": "shown",
+				"resetPixelEffectsDetail": "shown",
+				"pixelEffectsCleanEdges": "shown",
 				"resetPixelEffects": "shown",
 				"autoGlitterImageBtn": "shown",
 				"glitterSettingsSection": "shown",
@@ -9931,6 +9962,8 @@
 				"brushTipName": "shown",
 				"brushTipBadges": "shown",
 				"brushTipChange": "shown",
+				"brushAntialiasToggle": "shown",
+				"brushAntialiasNote": "hidden",
 				"maskBrushSize": "shown",
 				"maskBrushSizeValue": "shown",
 				"resetMaskBrushSize": "shown",
@@ -10076,9 +10109,9 @@
 				"textFillGlitterChip": "shown",
 				"textFillGlitterLabel": "shown",
 				"textFillGlitterBadges": "shown",
-				"textFillGlitterChange": "shown",
 				"textFillGlitterSize": "shown",
 				"textFillGlitterFrames": "shown",
+				"textFillGlitterChange": "shown",
 				"textFillColorRow": "hidden",
 				"textFillColor": "shown",
 				"textTextureScaleRow": "shown",
@@ -10110,9 +10143,9 @@
 				"textLayerOpacityValue": "shown",
 				"resetTextLayerOpacity": "shown",
 				"textTransformPanelHost": "shown",
-				"textProportionalScale": "shown",
 				"textPosX": "shown",
 				"textPosY": "shown",
+				"textProportionalScale": "shown",
 				"textSizeGroup": "shown",
 				"textWidth": "shown",
 				"textHeight": "shown",
@@ -10148,9 +10181,9 @@
 				"textBorderGlitterChip": "shown",
 				"textBorderGlitterLabel": "shown",
 				"textBorderGlitterBadges": "shown",
-				"textBorderGlitterChange": "shown",
 				"textBorderGlitterSize": "shown",
 				"textBorderGlitterFrames": "shown",
+				"textBorderGlitterChange": "shown",
 				"textBorderColorRow": "hidden",
 				"textBorderColor": "shown",
 				"textBorderScaleRow": "shown",
@@ -10200,9 +10233,9 @@
 				"textShadowGlitterChip": "shown",
 				"textShadowGlitterLabel": "shown",
 				"textShadowGlitterBadges": "shown",
-				"textShadowGlitterChange": "shown",
 				"textShadowGlitterSize": "shown",
 				"textShadowGlitterFrames": "shown",
+				"textShadowGlitterChange": "shown",
 				"textShadowColorRow": "hidden",
 				"textShadowColor": "shown",
 				"textShadowScaleRow": "shown",
@@ -10419,6 +10452,7 @@
 				"multiSelect": "shown",
 				"selectedColorsEmpty": "shown",
 				"selectedColorsDisplay": "shown",
+				"selectionRefineNote": "shown",
 				"threshold": "shown",
 				"thresholdValue": "shown",
 				"resetThreshold": "shown",
@@ -10955,9 +10989,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -10998,9 +11032,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -11041,9 +11075,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -11084,9 +11118,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -11133,9 +11167,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -11187,9 +11221,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -11241,9 +11275,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -11300,9 +11334,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",
@@ -11350,9 +11384,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",
@@ -11400,9 +11434,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",
@@ -12156,11 +12190,6 @@
 				"pixelEffectsMergeDistinctness": "shown",
 				"pixelEffectsMergeDistinctnessValue": "shown",
 				"resetPixelEffectsMergeDistinctness": "shown",
-				"pixelEffectsPosterizeControls": "hidden",
-				"pixelEffectsDetail": "shown",
-				"pixelEffectsDetailValue": "shown",
-				"resetPixelEffectsDetail": "shown",
-				"pixelEffectsCleanEdges": "shown",
 				"pixelEffectsDitherControls": "hidden",
 				"pixelEffectsAlgorithm": "shown",
 				"pixelEffectsDitherPalette": "shown",
@@ -12178,6 +12207,11 @@
 				"resetPixelEffectsAngle": "shown",
 				"pixelEffectsShimmer": "shown",
 				"pixelEffectsShimmerHint": "shown",
+				"pixelEffectsPosterizeControls": "hidden",
+				"pixelEffectsDetail": "shown",
+				"pixelEffectsDetailValue": "shown",
+				"resetPixelEffectsDetail": "shown",
+				"pixelEffectsCleanEdges": "shown",
 				"resetPixelEffects": "shown",
 				"autoGlitterImageBtn": "shown",
 				"glitterSettingsSection": "shown",
@@ -12233,6 +12267,8 @@
 				"brushTipName": "shown",
 				"brushTipBadges": "shown",
 				"brushTipChange": "shown",
+				"brushAntialiasToggle": "shown",
+				"brushAntialiasNote": "hidden",
 				"maskBrushSize": "shown",
 				"maskBrushSizeValue": "shown",
 				"resetMaskBrushSize": "shown",
@@ -12378,9 +12414,9 @@
 				"textFillGlitterChip": "shown",
 				"textFillGlitterLabel": "shown",
 				"textFillGlitterBadges": "shown",
-				"textFillGlitterChange": "shown",
 				"textFillGlitterSize": "shown",
 				"textFillGlitterFrames": "shown",
+				"textFillGlitterChange": "shown",
 				"textFillColorRow": "hidden",
 				"textFillColor": "shown",
 				"textTextureScaleRow": "shown",
@@ -12412,9 +12448,9 @@
 				"textLayerOpacityValue": "shown",
 				"resetTextLayerOpacity": "shown",
 				"textTransformPanelHost": "shown",
-				"textProportionalScale": "shown",
 				"textPosX": "shown",
 				"textPosY": "shown",
+				"textProportionalScale": "shown",
 				"textSizeGroup": "shown",
 				"textWidth": "shown",
 				"textHeight": "shown",
@@ -12450,9 +12486,9 @@
 				"textBorderGlitterChip": "shown",
 				"textBorderGlitterLabel": "shown",
 				"textBorderGlitterBadges": "shown",
-				"textBorderGlitterChange": "shown",
 				"textBorderGlitterSize": "shown",
 				"textBorderGlitterFrames": "shown",
+				"textBorderGlitterChange": "shown",
 				"textBorderColorRow": "hidden",
 				"textBorderColor": "shown",
 				"textBorderScaleRow": "shown",
@@ -12502,9 +12538,9 @@
 				"textShadowGlitterChip": "shown",
 				"textShadowGlitterLabel": "shown",
 				"textShadowGlitterBadges": "shown",
-				"textShadowGlitterChange": "shown",
 				"textShadowGlitterSize": "shown",
 				"textShadowGlitterFrames": "shown",
+				"textShadowGlitterChange": "shown",
 				"textShadowColorRow": "hidden",
 				"textShadowColor": "shown",
 				"textShadowScaleRow": "shown",
@@ -12721,6 +12757,7 @@
 				"multiSelect": "shown",
 				"selectedColorsEmpty": "shown",
 				"selectedColorsDisplay": "shown",
+				"selectionRefineNote": "shown",
 				"threshold": "shown",
 				"thresholdValue": "shown",
 				"resetThreshold": "shown",
@@ -13257,9 +13294,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -13300,9 +13337,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -13343,9 +13380,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -13386,9 +13423,9 @@
 							"textFillGlitterChip": "shown",
 							"textFillGlitterLabel": "shown",
 							"textFillGlitterBadges": "shown",
-							"textFillGlitterChange": "shown",
 							"textFillGlitterSize": "shown",
 							"textFillGlitterFrames": "shown",
+							"textFillGlitterChange": "shown",
 							"textFillColorRow": "hidden",
 							"textFillColor": "shown",
 							"textTextureScaleRow": "shown",
@@ -13435,9 +13472,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -13489,9 +13526,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -13543,9 +13580,9 @@
 							"textBorderGlitterChip": "shown",
 							"textBorderGlitterLabel": "shown",
 							"textBorderGlitterBadges": "shown",
-							"textBorderGlitterChange": "shown",
 							"textBorderGlitterSize": "shown",
 							"textBorderGlitterFrames": "shown",
+							"textBorderGlitterChange": "shown",
 							"textBorderColorRow": "hidden",
 							"textBorderColor": "shown",
 							"textBorderScaleRow": "shown",
@@ -13602,9 +13639,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",
@@ -13652,9 +13689,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",
@@ -13702,9 +13739,9 @@
 							"textShadowGlitterChip": "shown",
 							"textShadowGlitterLabel": "shown",
 							"textShadowGlitterBadges": "shown",
-							"textShadowGlitterChange": "shown",
 							"textShadowGlitterSize": "shown",
 							"textShadowGlitterFrames": "shown",
+							"textShadowGlitterChange": "shown",
 							"textShadowColorRow": "hidden",
 							"textShadowColor": "shown",
 							"textShadowScaleRow": "shown",

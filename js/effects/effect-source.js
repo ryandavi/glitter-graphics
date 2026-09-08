@@ -193,6 +193,9 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 	if (!slot) return;
 	const normalizedMode = ['image', 'none', 'glitter', 'solid', 'gradient'].includes(mode) ? mode : 'solid';
 	slot.dataset.paintMode = normalizedMode;
+	if (normalizedMode !== 'none') slot.dataset.lastPaintMode = normalizedMode;
+	const slotToggle = slot.querySelector(':scope > .subsection-title input[data-paint-slot-toggle]');
+	if (slotToggle) slotToggle.checked = normalizedMode !== 'none';
 	sourceButton.closest('.segmented-control')?.querySelectorAll('.segmented-option').forEach((button) => {
 		const buttonMode = button.dataset.mode;
 		if (buttonMode) button.classList.toggle('active', buttonMode === normalizedMode);
@@ -210,6 +213,8 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 	if (primaryRow) primaryRow.hidden = normalizedMode === 'none' || hidePrimaryModes.has(normalizedMode) || (normalizedMode !== 'glitter' && !opacity);
 	const advanced = slot.querySelector('.advanced-disclosure');
 	if (advanced) advanced.hidden = normalizedMode !== 'glitter';
+	const flatAdvanced = slot.querySelector('.paint-slot-advanced-flat');
+	if (flatAdvanced) flatAdvanced.hidden = normalizedMode !== 'glitter';
 	const gradient = slot.querySelector('.effect-gradient-editor');
 	if (gradient) {
 		gradient.hidden = normalizedMode !== 'gradient';
