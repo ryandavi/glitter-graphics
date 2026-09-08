@@ -4911,7 +4911,7 @@
 		{
 			"id": "layerSettingsSection",
 			"tag": "div",
-			"classes": "collapsible-section layer-settings-section section",
+			"classes": "collapsible-section layer-settings-section panel-redesign section",
 			"parent": "designPanel"
 		},
 		{
@@ -5010,7 +5010,7 @@
 		{
 			"id": "selectionRefineNote",
 			"tag": "div",
-			"classes": "property-note",
+			"classes": "panel-note property-note",
 			"parent": "layerSettingsControls"
 		},
 		{

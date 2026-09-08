@@ -714,6 +714,10 @@
 }
 
 .color-selection {
+	.color-selection-empty-note { display: none; }
+
+	&:has(.property-empty-inline.visible) .color-selection-empty-note { display: block; }
+
 	.selected-colors-display {
 		display: flex;
 		flex-wrap: wrap;

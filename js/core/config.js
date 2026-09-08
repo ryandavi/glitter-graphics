@@ -1428,14 +1428,14 @@ const PANEL_SCHEMAS = {
 			sectionPrefix: 'layerSettings',
 			mobileKey: 'tool',
 			replaceStatic: true,
-			section: { id: 'layerSettingsSection', icon: 'paint-bucket', iconName: 'Sliders', title: 'Color Fill Settings' },
+			section: { id: 'layerSettingsSection', classes: 'panel-redesign', icon: 'paint-bucket', iconName: 'Sliders', title: 'Color Fill Settings' },
 			controls: {
 				id: 'layerSettingsControls', emptyId: 'layerSettingsEmpty',
 				empty: { icon: 'paint-bucket', titleId: 'layerSettingsEmptyText', title: 'No layer selected', textId: 'layerSettingsEmptySubtext', text: '' }
 			},
 			groups: [
-				{ title: 'Selection', items: [
-					{ kind: 'card', title: 'Selection Options', items: [
+				{ title: 'Selection', collapsible: false, items: [
+					{ kind: 'card', title: 'Options', items: [
 						{ kind: 'checkboxList', items: [
 							{ id: 'contiguous', label: 'Contiguous', title: 'Select only connected pixels of the same color' },
 							{ id: 'invert', label: 'Invert', title: "Invert this layer's mask — glitter covers everything except the selected and painted areas" },
@@ -1445,11 +1445,12 @@ const PANEL_SCHEMAS = {
 					{ kind: 'card', title: 'Color Selections', classes: 'color-selection', items: [
 						{ kind: 'content', items: [
 							{ kind: 'host', id: 'selectedColorsEmpty', tag: 'span', classes: 'property-empty-inline visible', text: 'None' },
-							{ kind: 'host', id: 'selectedColorsDisplay', classes: 'selected-colors-display' }
+							{ kind: 'host', id: 'selectedColorsDisplay', classes: 'selected-colors-display' },
+							{ kind: 'host', classes: 'property-note panel-note color-selection-empty-note', text: 'Pick a color on the canvas to add it.' }
 						] }
 					] },
-					{ kind: 'card', title: 'Refine Selection', items: [
-						{ kind: 'host', id: 'selectionRefineNote', classes: 'property-note', text: 'Color Tolerance includes colors similar to the one you picked. Edge Feather softens the selection boundary.' },
+					{ kind: 'card', title: 'Refine', items: [
+						{ kind: 'host', id: 'selectionRefineNote', classes: 'property-note panel-note', text: 'Color Tolerance includes colors similar to the one you picked. Edge Feather softens the selection boundary.' },
 						{ kind: 'slider', id: 'threshold', slider: 'threshold' },
 						{ kind: 'slider', id: 'feather', slider: 'feather' }
 					] }
