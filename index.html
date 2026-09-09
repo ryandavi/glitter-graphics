@@ -729,15 +729,15 @@
 								</div>
 								<div class="workspace-start-actions">
 									<button class="btn-text-with-icon icon-wrapper primary" id="openImageBtn" type="button">
-										<svg class="icon"><use href="#icon-image"></use></svg>
+										<svg class="icon"><use href="#icon-open-image"></use></svg>
 										<span class="name">Open Image</span>
 									</button>
 									<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openNewCanvasBtn" type="button">
-										<svg class="icon"><use href="#icon-plus"></use></svg>
+										<svg class="icon"><use href="#icon-new-canvas"></use></svg>
 										<span class="name">New Canvas</span>
 									</button>
 									<button class="btn-text-with-icon icon-wrapper btn-secondary" id="openProjectBtn" type="button">
-										<svg class="icon"><use href="#icon-export"></use></svg>
+										<svg class="icon"><use href="#icon-open-project"></use></svg>
 										<span class="name">Open Project</span>
 									</button>
 								</div>
@@ -2276,6 +2276,38 @@
 	H83.1z" />
 				</symbol>
 
+				<!-- Line-art panel glyphs. Transcribed from design/*.dc.html; single
+				     source of truth for the segmented-control icons (text align,
+				     transform align / flip / distribute), gradient type, and the
+				     workspace-start actions. fill/stroke live on the symbol so the
+				     shared `svg.icon { fill: currentColor }` rule never fills them. -->
+				<symbol id="icon-text-align-left" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v12M3 6h9M3 10h6" /></symbol>
+				<symbol id="icon-text-align-center" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v12M3.5 6h9M5 10h6" /></symbol>
+				<symbol id="icon-text-align-right" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2v12M4 6h9M7 10h6" /></symbol>
+				<symbol id="icon-text-align-top" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h12M6 3v9M10 3v6" /></symbol>
+				<symbol id="icon-text-align-middle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M6 3.5v9M10 5v6" /></symbol>
+				<symbol id="icon-text-align-bottom" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13h12M6 4v9M10 7v6" /></symbol>
+
+				<symbol id="icon-align-left" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v12" opacity=".5" /><rect x="4.5" y="5" width="7.5" height="6" rx="1" /></symbol>
+				<symbol id="icon-align-center-x" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v12" opacity=".5" stroke-dasharray="2 2" /><rect x="3.5" y="5" width="9" height="6" rx="1" /></symbol>
+				<symbol id="icon-align-right" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 2v12" opacity=".5" /><rect x="4" y="5" width="7.5" height="6" rx="1" /></symbol>
+				<symbol id="icon-align-top" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2.5h12" opacity=".5" /><rect x="5" y="4.5" width="6" height="7.5" rx="1" /></symbol>
+				<symbol id="icon-align-center-y" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12" opacity=".5" stroke-dasharray="2 2" /><rect x="5" y="3.5" width="6" height="9" rx="1" /></symbol>
+				<symbol id="icon-align-bottom" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.5h12" opacity=".5" /><rect x="5" y="4" width="6" height="7.5" rx="1" /></symbol>
+
+				<symbol id="icon-flip-x" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v12" opacity=".5" stroke-dasharray="2 2" /><path d="M6 4.5L2.5 8 6 11.5z" /><path d="M10 4.5L13.5 8 10 11.5z" /></symbol>
+				<symbol id="icon-flip-y" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h12M4.5 6L8 2.5 11.5 6z" /><path d="M4.5 10L8 13.5 11.5 10z" /></symbol>
+
+				<symbol id="icon-distribute-x" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2v12M14 2v12M8 4v8" /></symbol>
+				<symbol id="icon-distribute-y" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2h12M2 14h12M4 8h8" /></symbol>
+
+				<symbol id="icon-gradient-linear" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13L13 3" /></symbol>
+				<symbol id="icon-gradient-radial" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5" /></symbol>
+
+				<symbol id="icon-open-image" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5" /><path d="M2 10l3-3 3 3 3-4 3 3" /><circle cx="6" cy="6" r="1" /></symbol>
+				<symbol id="icon-new-canvas" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5" /><path d="M8 6v4M6 8h4" /></symbol>
+				<symbol id="icon-open-project" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h5l1.5 2H14v7H2z" /></symbol>
+
 
 		</defs>
 	</svg>
@@ -2419,7 +2451,7 @@
 		<div class="property-set effect-gradient-editor" hidden>
 			<div class="property-row gradient-type">
 				<span class="property-label">Type</span>
-				<div class="segmented-control"><button type="button" class="segmented-option" data-type="linear">Linear</button><button type="button" class="segmented-option" data-type="radial">Radial</button></div>
+				<div class="segmented-control"><button type="button" class="segmented-option" data-type="linear"><svg class="icon"><use href="#icon-gradient-linear"></use></svg>Linear</button><button type="button" class="segmented-option" data-type="radial"><svg class="icon"><use href="#icon-gradient-radial"></use></svg>Radial</button></div>
 				<button type="button" class="property-revert gradient-type-reset" title="Reset to default" aria-label="Reset gradient type"><svg class="icon"><use href="#icon-undo"></use></svg></button>
 			</div>
 			<div class="property-row gradient-blend">

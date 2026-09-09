@@ -1705,6 +1705,7 @@ class GifExporter {
 
 			let previousFrameData = null;
 			let previousDisposal = null;
+			let previousFrameRect = null;
 
 			if (rawFrames.length > 0) {
 				const firstFrameImage = this._getFrameImageData(rawFrames[0], width, height);
@@ -1794,7 +1795,14 @@ class GifExporter {
 					: calculatedDisposal;
 
 				if (i > 0 && previousDisposal === 2) {
-					ctx.clearRect(0, 0, width, height);
+					// GIF89a disposal 2 ("restore to background") applies only to the
+					// previous frame's image-descriptor rect, not the whole logical
+					// screen. Clearing the full canvas here wiped pixels contributed
+					// by earlier non-disposed frames that the current (partial) frame
+					// never redraws — e.g. the top band of a sticker whose later
+					// frames only encode a sub-rectangle.
+					const r = previousFrameRect || { x: 0, y: 0, width, height };
+					ctx.clearRect(r.x, r.y, r.width, r.height);
 				} else if (i > 0 && previousDisposal === 3 && previousFrameData) {
 					ctx.putImageData(previousFrameData, 0, 0);
 				}
@@ -1821,6 +1829,12 @@ class GifExporter {
 				}
 
 				previousDisposal = currentDisposal;
+				previousFrameRect = {
+					x: frame.x || 0,
+					y: frame.y || 0,
+					width: frame.width || width,
+					height: frame.height || height
+				};
 			}
 
 			flattenedFrameMap.set(mapKey, flattenedFrames);

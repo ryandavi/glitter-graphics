@@ -1265,20 +1265,20 @@ const PANEL_SCHEMAS = {
 							] },
 						{ kind: 'segmented', visibleLabel: 'Horizontal', label: 'Align horizontally',
 							classes: 'transform-segmented-control', stacked: false, options: [
-								{ designGlyph: 'transformAlignLeft', label: 'Align left', attrs: { 'data-multi-align': 'left' } },
-								{ designGlyph: 'transformAlignCenterX', label: 'Align horizontal centers', attrs: { 'data-multi-align': 'centerX' } },
-								{ designGlyph: 'transformAlignRight', label: 'Align right', attrs: { 'data-multi-align': 'right' } }
+								{ icon: 'align-left', label: 'Align left', attrs: { 'data-multi-align': 'left' } },
+								{ icon: 'align-center-x', label: 'Align horizontal centers', attrs: { 'data-multi-align': 'centerX' } },
+								{ icon: 'align-right', label: 'Align right', attrs: { 'data-multi-align': 'right' } }
 							] },
 						{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Align vertically',
 							classes: 'transform-segmented-control', stacked: false, options: [
-								{ designGlyph: 'transformAlignTop', label: 'Align top', attrs: { 'data-multi-align': 'top' } },
-								{ designGlyph: 'transformAlignCenterY', label: 'Align vertical centers', attrs: { 'data-multi-align': 'centerY' } },
-								{ designGlyph: 'transformAlignBottom', label: 'Align bottom', attrs: { 'data-multi-align': 'bottom' } }
+								{ icon: 'align-top', label: 'Align top', attrs: { 'data-multi-align': 'top' } },
+								{ icon: 'align-center-y', label: 'Align vertical centers', attrs: { 'data-multi-align': 'centerY' } },
+								{ icon: 'align-bottom', label: 'Align bottom', attrs: { 'data-multi-align': 'bottom' } }
 							] },
 						{ kind: 'segmented', visibleLabel: 'Distribute', label: 'Distribute selected layers',
 							classes: 'transform-segmented-control', stacked: false, options: [
-								{ designGlyph: 'transformDistributeX', label: 'Distribute horizontally', attrs: { 'data-multi-distribute': 'horizontal' } },
-								{ designGlyph: 'transformDistributeY', label: 'Distribute vertically', attrs: { 'data-multi-distribute': 'vertical' } }
+								{ icon: 'distribute-x', label: 'Distribute horizontally', attrs: { 'data-multi-distribute': 'horizontal' } },
+								{ icon: 'distribute-y', label: 'Distribute vertically', attrs: { 'data-multi-distribute': 'vertical' } }
 							] }
 					] }
 				] },
@@ -1626,14 +1626,14 @@ const PANEL_SCHEMAS = {
 				] },
 				{ kind: 'card', title: 'Alignment', items: [
 					{ kind: 'segmented', visibleLabel: 'Horizontal', label: 'Horizontal text alignment', classes: 'text-align-group', options: [
-						{ label: 'Left', designGlyph: 'textAlignLeft', active: true, attrs: { 'data-text-align': 'left' } },
-						{ label: 'Center', designGlyph: 'textAlignCenter', attrs: { 'data-text-align': 'center' } },
-						{ label: 'Right', designGlyph: 'textAlignRight', attrs: { 'data-text-align': 'right' } }
+						{ label: 'Left', icon: 'text-align-left', active: true, attrs: { 'data-text-align': 'left' } },
+						{ label: 'Center', icon: 'text-align-center', attrs: { 'data-text-align': 'center' } },
+						{ label: 'Right', icon: 'text-align-right', attrs: { 'data-text-align': 'right' } }
 					] },
 					{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Vertical text alignment', classes: 'text-valign-group', rowClasses: 'text-valign-row', options: [
-						{ label: 'Top', designGlyph: 'textAlignTop', active: true, attrs: { 'data-text-valign': 'top' } },
-						{ label: 'Middle', designGlyph: 'textAlignMiddle', attrs: { 'data-text-valign': 'middle' } },
-						{ label: 'Bottom', designGlyph: 'textAlignBottom', attrs: { 'data-text-valign': 'bottom' } }
+						{ label: 'Top', icon: 'text-align-top', active: true, attrs: { 'data-text-valign': 'top' } },
+						{ label: 'Middle', icon: 'text-align-middle', attrs: { 'data-text-valign': 'middle' } },
+						{ label: 'Bottom', icon: 'text-align-bottom', attrs: { 'data-text-valign': 'bottom' } }
 					] }
 				] }
 			] },

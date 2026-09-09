@@ -60,42 +60,12 @@ const PANEL_ROLES = Object.freeze({
 	})
 });
 
-// Inline glyphs are transcribed from design/Main.dc.html. They stay real SVG
-// elements so stroke opacity, joins, and active-state currentColor match the
-// target instead of approximating the artwork with font or CSS-mask icons.
-const DESIGN_PANEL_GLYPHS = Object.freeze({
-	textAlignLeft: '<path d="M3 2v12M3 6h9M3 10h6"/>',
-	textAlignCenter: '<path d="M8 2v12M3.5 6h9M5 10h6"/>',
-	textAlignRight: '<path d="M13 2v12M4 6h9M7 10h6"/>',
-	textAlignTop: '<path d="M2 3h12M6 3v9M10 3v6"/>',
-	textAlignMiddle: '<path d="M2 8h12M6 3.5v9M10 5v6"/>',
-	textAlignBottom: '<path d="M2 13h12M6 4v9M10 7v6"/>',
-	transformAlignLeft: '<path d="M2.5 2v12" opacity=".5"/><rect x="4.5" y="5" width="7.5" height="6" rx="1"/>',
-	transformAlignCenterX: '<path d="M8 2v12" opacity=".5" stroke-dasharray="2 2"/><rect x="3.5" y="5" width="9" height="6" rx="1"/>',
-	transformAlignRight: '<path d="M13.5 2v12" opacity=".5"/><rect x="4" y="5" width="7.5" height="6" rx="1"/>',
-	transformAlignTop: '<path d="M2 2.5h12" opacity=".5"/><rect x="5" y="4.5" width="6" height="7.5" rx="1"/>',
-	transformAlignCenterY: '<path d="M2 8h12" opacity=".5" stroke-dasharray="2 2"/><rect x="5" y="3.5" width="6" height="9" rx="1"/>',
-	transformAlignBottom: '<path d="M2 13.5h12" opacity=".5"/><rect x="5" y="4" width="6" height="7.5" rx="1"/>',
-	transformFlipX: '<path d="M8 2v12" opacity=".5" stroke-dasharray="2 2"/><path d="M6 4.5L2.5 8 6 11.5z"/><path d="M10 4.5L13.5 8 10 11.5z"/>',
-	transformFlipY: '<path d="M2 8h12M4.5 6L8 2.5 11.5 6z"/><path d="M4.5 10L8 13.5 11.5 10z"/>',
-	transformDistributeX: '<path d="M2 2v12M14 2v12M8 4v8"/>',
-	transformDistributeY: '<path d="M2 2h12M2 14h12M4 8h8"/>'
-});
-
-function createDesignPanelGlyph(name) {
-	const markup = DESIGN_PANEL_GLYPHS[name];
-	if (!markup) return null;
-	const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-	svg.classList.add('design-panel-glyph');
-	svg.setAttribute('viewBox', '0 0 16 16');
-	svg.setAttribute('fill', 'none');
-	svg.setAttribute('stroke', 'currentColor');
-	svg.setAttribute('stroke-width', name.startsWith('text') ? '1.5' : '1.4');
-	svg.setAttribute('stroke-linecap', 'round');
-	svg.setAttribute('stroke-linejoin', 'round');
-	svg.setAttribute('aria-hidden', 'true');
-	svg.innerHTML = markup;
-	return svg;
+// Panel glyphs (segmented-control align / flip / distribute) ride the shared
+// #icon-* sprite like every other icon. Schemas name a bare sprite key
+// (`icon: 'align-left'`); createIcon adds the `icon-` prefix. Thin wrapper kept
+// as the single seam these call sites route through.
+function createPanelGlyph(name) {
+	return createIcon(name.startsWith('icon-') ? name.slice(5) : name);
 }
 
 // Full legacy ids are explicit exceptions to the default
@@ -605,8 +575,8 @@ function buildSegmented(entries, options = {}) {
 	entries.forEach((entry) => {
 		const button = tplClone('tpl-segmented-option');
 		if (entry.id) button.id = entry.id;
-		if (entry.designGlyph) {
-			button.appendChild(createDesignPanelGlyph(entry.designGlyph));
+		if (entry.icon) {
+			button.appendChild(createPanelGlyph(entry.icon));
 			button.title = entry.label;
 			button.setAttribute('aria-label', entry.label);
 		} else if (entry.contentTag) {
@@ -1370,8 +1340,12 @@ function buildModuleSummary(card) {
 	const summary = document.createElement('span');
 	summary.className = 'property-module-summary';
 	summary.setAttribute('aria-hidden', 'true');
-	const chevron = title.querySelector('.subsection-chevron');
-	title.insertBefore(summary, chevron || null);
+	// The summary sits before the swatch (when there is one) so the fixed-size
+	// swatch pins to the right edge next to the chevron — a stable anchor across
+	// modules — while the variable-width value text grows leftward.
+	const anchor = title.querySelector(':scope > .property-module-swatch')
+		|| title.querySelector('.subsection-chevron');
+	title.insertBefore(summary, anchor || null);
 	return summary;
 }
 
@@ -1890,12 +1864,12 @@ function redesignTransformFragment(fragment) {
 		row.querySelector('.segmented-control').classList.add('segmented');
 	});
 	const transformGlyphs = {
-		alignLeft: 'transformAlignLeft', alignCenterX: 'transformAlignCenterX', alignRight: 'transformAlignRight',
-		alignTop: 'transformAlignTop', alignCenterY: 'transformAlignCenterY', alignBottom: 'transformAlignBottom'
+		alignLeft: 'align-left', alignCenterX: 'align-center-x', alignRight: 'align-right',
+		alignTop: 'align-top', alignCenterY: 'align-center-y', alignBottom: 'align-bottom'
 	};
 	align.querySelectorAll('.segmented-option[data-transform-role]').forEach((button) => {
 		const label = button.textContent;
-		button.replaceChildren(createDesignPanelGlyph(transformGlyphs[button.dataset.transformRole]));
+		button.replaceChildren(createPanelGlyph(transformGlyphs[button.dataset.transformRole]));
 		button.setAttribute('aria-label', label);
 	});
 
@@ -1907,7 +1881,7 @@ function redesignTransformFragment(fragment) {
 		visible.className = '';
 		const label = index === 0 ? 'Horizontal' : 'Vertical';
 		visible.textContent = '';
-		visible.appendChild(createDesignPanelGlyph(index === 0 ? 'transformFlipX' : 'transformFlipY'));
+		visible.appendChild(createPanelGlyph(index === 0 ? 'flip-x' : 'flip-y'));
 		option.setAttribute('aria-label', label);
 		option.replaceChildren(input, visible);
 		flipControl.appendChild(option);

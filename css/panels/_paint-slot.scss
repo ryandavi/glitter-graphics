@@ -248,3 +248,22 @@
 		color: var(--color-text-on-accent);
 	}
 }
+
+// Line-art glyphs in segmented options (text align, transform align / flip,
+// distribute, gradient type) come from the shared #icon-* sprite. The symbols
+// carry their own stroke, so the option just sizes the glyph and — when an icon
+// sits beside a text label — becomes a centred flex row.
+.segmented-option > svg.icon,
+.segmented-option > span > svg.icon {
+	width: 1em;
+	height: 1em;
+	font-size: 16px;
+	fill: none;
+}
+
+.segmented-option:has(> svg.icon) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4em;
+}
