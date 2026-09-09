@@ -9,9 +9,6 @@
 	gap: var(--spacing-lg);
 }
 
-// Locking the aspect ratio links Scale X and Scale Y (dragging one drives the
-// other, see editor-transform.js bindAxisScale); both keep their own slider.
-
 // The glitter display reuses the shared .asset-info-* classes so it matches
 // Glitter Properties' Asset section exactly (thumbnail + name + badges + meta).
 .asset-info-meta {
@@ -158,11 +155,6 @@
 	.gradient-add { align-self: flex-end; }
 }
 
-.text-box-hint {
-	font-size: var(--font-size-sm);
-	color: var(--color-text-tertiary);
-}
-
 .property-module-content {
 	display: none;
 	flex-direction: column;
@@ -229,8 +221,6 @@
 	padding: var(--spacing-sm) var(--spacing-md);
 	margin-bottom: var(--spacing-sm);
 	background: var(--color-bg-tertiary);
-	// border-left: 3px solid transparent;
-	// border-radius: var(--radius-sm);
 
 	&[hidden] {
 		display: none;
@@ -295,21 +285,6 @@
 	}
 }
 
-
-
-// Header controls (Enabled/Global/Proportional) cluster against the right
-// edge next to the collapse chevron instead of floating mid-title. Bare rule
-// on purpose: the effect cards (.paint-slot-card) are nested, not
-// direct children of .settings-subsection, so the scoped rule above misses them.
-// Schema effect cards share one enable contract. Disabled cards stay
-// collapsible; manually expanding one reveals its saved controls as an inert
-// preview, while enabling it expands the card and makes the controls live.
-
-
-
-
-
-
 // Collapsed panel groups are a state boundary. Keep this after every generated
 // transform-host layout rule so themes and host normalization cannot reopen it.
 .design-panel .settings-subsection > .subsection-content-group.subsection-section-group.collapsed > :not(.subsection-title),
@@ -318,62 +293,12 @@
 }
 
 .auto-glitter-settings-section {
-	> .section-content { padding: 0; }
-
-	.auto-glitter-preview-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
-	}
-
-	&.is-open > .section-content.visible { overflow: hidden; }
-
-	.settings-subsection {
-		display: flex;
-		height: 100%;
-		min-height: 0;
-		flex-direction: column;
-		gap: 0;
-		overflow: hidden;
-	}
-
-	.panel-scroll-region {
-		display: flex;
-		width: 100%;
-		min-height: 0;
-		min-width: 0;
-		max-width: 100%;
-		flex: 1 1 auto;
-		flex-direction: column;
-		gap: 0;
-		padding: 0;
-		overflow-x: hidden;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		scrollbar-gutter: stable;
-
-		> * {
-			min-width: 0;
-			max-width: 100%;
-		}
-	}
-
-	.auto-glitter-preview-group {
-		flex: 0 0 auto;
-		padding: var(--spacing-md);
-	}
-
-	.auto-glitter-footer-group {
-		flex: 0 0 auto;
-		padding: 0;
-	}
-
-	.auto-glitter-preview-group { border-bottom: 1px solid var(--color-border); }
-	.auto-glitter-footer-group { border-top: 1px solid var(--color-border); }
+	// Sticky-header / scroll-region / sticky-footer layout is the generic
+	// `.has-scroll-region` block in panels/_properties.scss. Only the
+	// section-specific bits stay here.
 
 	.auto-glitter-preview-card .segmented-control,
-	.auto-glitter-palette-style,
-	.auto-glitter-rerun-options {
+	.auto-glitter-palette-style {
 		width: 100%;
 	}
 
@@ -384,12 +309,9 @@
 
 		&[hidden] { display: none; }
 
-		> p {
-			margin: 0;
-			color: var(--color-text-secondary);
-		}
-
-		&.has-warning > p { color: var(--color-warning); }
+		// The summary is a plain `.property-note`; only its warning state is
+		// auto-glitter-specific.
+		&.has-warning .property-note { color: var(--color-warning); }
 	}
 
 	.auto-glitter-rerun-mode > label {
@@ -417,12 +339,7 @@
 		padding-left: var(--spacing-xs);
 	}
 
-	.auto-glitter-status {
-		margin: 0;
-		padding: var(--spacing-xs) 0;
-		font-size: var(--font-size-sm);
-		color: var(--color-text-secondary);
-	}
+	// #autoGlitterStatus is a plain `.property-note` now — no bespoke styling.
 
 	.auto-glitter-results {
 		display: flex;

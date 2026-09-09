@@ -75,6 +75,21 @@ $mobile-breakpoint: 800px;
 	gap: var(--spacing-md);
 }
 
+// The shared "no value here" fill: a faint diagonal hatch. Used for a paint
+// slot whose source is None / disabled (`.property-module-swatch`) and for an
+// asset thumbnail with nothing to show (`.asset-info-thumbnail`), so "unset"
+// and "no thumbnail available" read the same wherever they appear. `$important`
+// is for the module swatch, which must out-rank an inline `style.background`.
+@mixin swatch-unset-fill($important: false) {
+	@if $important {
+		background: repeating-linear-gradient(135deg, transparent 0 3px, var(--color-border) 3px 4px) !important;
+		border-color: var(--color-border) !important;
+	} @else {
+		background: repeating-linear-gradient(135deg, transparent 0 3px, var(--color-border) 3px 4px);
+		border-color: var(--color-border);
+	}
+}
+
 @mixin mini-modal($hover: false) {
 	@include glass-surface;
 	border-radius: var(--radius-lg);

@@ -176,8 +176,14 @@ class AutoGlitterManager {
 	updateControlReadout(input) {
 		const value = document.getElementById(`${input.id}Value`);
 		if (!value) return;
-		// Same styled `value + unit` markup as every other panel readout.
-		value.innerHTML = formatUnit(input.value, CONFIG.ui.sliders[input.id]?.unit || '');
+		const spec = CONFIG.ui.sliders[input.id] || {};
+		// Same styled `value + unit` markup as every other panel readout; a
+		// `valueScale: percent` row shows the 0-100% position through its range.
+		if (value.dataset.valueScale === 'percent') {
+			value.innerHTML = formatRangePercent(input.value, spec.min, spec.max);
+			return;
+		}
+		value.innerHTML = formatUnit(input.value, spec.unit || '');
 	}
 
 	scheduleReduce() {

@@ -383,8 +383,11 @@ function initializeEditablePropertyValues(root = document) {
 		value.inputMode = 'decimal';
 		value.setAttribute('role', 'spinbutton');
 		value.setAttribute('aria-label', input.getAttribute('aria-label') || owner.querySelector('.property-label, .property-pair-mark')?.textContent || 'Value');
-		value.setAttribute('aria-valuemin', input.dataset.scaleMin || input.min);
-		value.setAttribute('aria-valuemax', input.dataset.scaleMax || input.max);
+		const asPercent = value.dataset.valueScale === 'percent';
+		const rangeMin = () => Number(input.dataset.scaleMin ?? input.min);
+		const rangeMax = () => Number(input.dataset.scaleMax ?? input.max);
+		value.setAttribute('aria-valuemin', asPercent ? '0' : (input.dataset.scaleMin || input.min));
+		value.setAttribute('aria-valuemax', asPercent ? '100' : (input.dataset.scaleMax || input.max));
 		value.addEventListener('keydown', (event) => {
 			if (event.key === 'Enter') {
 				event.preventDefault();
@@ -396,7 +399,10 @@ function initializeEditablePropertyValues(root = document) {
 			}
 		});
 		value.addEventListener('blur', () => {
-			const next = Number.parseFloat(value.textContent);
+			const typed = Number.parseFloat(value.textContent);
+			const next = asPercent && Number.isFinite(typed)
+				? rangePercentToValue(typed, rangeMin(), rangeMax())
+				: typed;
 			if (value.dataset.cancelEdit === undefined && Number.isFinite(next)) {
 				writeSliderValue(input, next);
 				input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -425,13 +431,18 @@ function buildSliderRow(options) {
 	if (options.extraClass) row.classList.add(options.extraClass);
 	addPanelClasses(row, options.classes);
 	row.dataset.role = `${options.role || options.slider}-row`;
+	// `valueScale: 'percent'` — the readout is a 0-100% position through the
+	// slider's real range (a raw 0.01-0.12 value reads as "45 %").
+	if (options.valueScale) row.querySelector('.property-value').dataset.valueScale = options.valueScale;
 	const label = row.querySelector('.property-label');
 	label.textContent = options.label || spec.label;
 	if (options.title) label.title = options.title;
 	const value = row.querySelector('.property-value');
 	value.id = `${options.id}Value`;
 	value.dataset.role = `${options.role || options.slider}-value`;
-	value.textContent = `${spec.value}${spec.unit}`;
+	value.textContent = options.valueScale === 'percent'
+		? `${Math.round((spec.value - spec.min) / (spec.max - spec.min) * 100)}%`
+		: `${spec.value}${spec.unit}`;
 	const input = row.querySelector('input');
 	input.id = options.id;
 	applySliderSpec(input, spec);
@@ -1367,11 +1378,12 @@ function readModuleSummary(card) {
 	if (card.dataset.moduleSummaryType === 'asset') {
 		return card.querySelector('.asset-info-name')?.textContent?.trim() || '';
 	}
-	// A disabled module shows no summary: the switch beside the title already
-	// states the on/off condition, and an "Off" label that vanishes the moment
-	// you expand a still-disabled module contradicts itself.
+	// A disabled effect module reads "Off" beside its title — it pairs with the
+	// hatched "unset" swatch (see the paint-slot-card `:has()` rule in
+	// _properties.scss) so a switched-off module still states its condition
+	// whether collapsed or open, the same way a None paint slot reads "None".
 	const toggle = card.querySelector(':scope > .subsection-title input[data-effect-toggle]');
-	if (toggle && !toggle.checked) return '';
+	if (toggle && !toggle.checked) return 'Off';
 	// `data-summary-from`: mirror one named control's current label (a segmented
 	// control's active option, or a <select>'s chosen option) — the Palette
 	// card's Posterize/Dither mode, etc.
@@ -1386,6 +1398,12 @@ function readModuleSummary(card) {
 	const mode = card.dataset.paintMode || card.querySelector('.segmented-option.active[data-mode]')?.dataset.mode || '';
 	const parts = [];
 	if (mode === 'none') return 'None';
+	// The Background slot's Image mode: "None" until a base image is chosen (the
+	// image chip carries `.empty` until then), otherwise just "Image" — the
+	// asset-info row below already names the file.
+	if (mode === 'image') {
+		return card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail.empty') ? 'None' : 'Image';
+	}
 	if (mode === 'glitter') {
 		const name = card.querySelector('.asset-info:not([hidden]) .asset-info-name')?.textContent?.trim();
 		parts.push(name || 'Glitter');
@@ -1407,14 +1425,22 @@ function syncModuleSummary(card) {
 	if (summary.textContent !== text) summary.textContent = text;
 	const swatch = card.querySelector(':scope > .subsection-title > .property-module-swatch');
 	if (swatch) {
-		const source = card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail');
+		const mode = card.dataset.paintMode || card.querySelector('.segmented-option.active[data-mode]')?.dataset.mode || '';
+		const chip = card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail:not(.empty)');
+		// The base-image chip holds an <img>, not an inline background (unlike a
+		// glitter chip) — mirror its src so Image mode still gets a real swatch.
+		const chipImg = chip?.querySelector(':scope > img')?.src;
 		const solid = card.querySelector('.property-color-row:not([hidden]) input[type="color"]');
-		// Gradient mode shows neither an asset chip nor the solid row — mirror the
-		// gradient editor's own preview bar so the swatch tracks it too.
-		const gradient = card.querySelector('.gradient-preview-bar');
+		// Only mirror the gradient editor's preview bar while gradient is the
+		// ACTIVE mode — the editor stays in the DOM (hidden) in every other mode
+		// with its last gradient still inline, which would otherwise leak in.
+		const gradient = mode === 'gradient' ? card.querySelector('.gradient-preview-bar') : null;
+		// Empty (`.empty` chip, None, image-with-no-image) → clear the inline
+		// background so the `_properties.scss` "unset" hatch shows through.
 		swatch.style.background = solid?.value
-			|| source?.style.background
-			|| source?.style.backgroundImage
+			|| chip?.style.background
+			|| chip?.style.backgroundImage
+			|| (chipImg ? `center / cover no-repeat url("${chipImg}")` : '')
 			|| gradient?.style.backgroundImage
 			|| '';
 	}
@@ -1713,7 +1739,12 @@ function renderPanelSection(schema) {
 	fragment.querySelector('.section-header-action').id = `${sectionPrefix}Toggle`;
 	fragment.querySelector('.section-content').id = `${sectionPrefix}Content`;
 	const subsection = fragment.querySelector('.settings-subsection');
+	// Sticky-region layout: a group's `region` puts it in a fixed `header` /
+	// `footer` band or the single scrolling middle. The structural CSS is generic
+	// (`.settings-subsection.has-scroll-region` in _properties.scss); declare
+	// header/footer groups first/last so DOM order matches. First user: Auto Glitter.
 	let scrollRegion = null;
+	let hasStickyRegions = false;
 	schema.groups.forEach((group) => {
 		const node = buildPanelGroup(group, schema);
 		if (group.region === 'scroll') {
@@ -1722,10 +1753,19 @@ function renderPanelSection(schema) {
 				subsection.appendChild(scrollRegion);
 			}
 			scrollRegion.appendChild(node);
+			hasStickyRegions = true;
+		} else if (group.region === 'header' || group.region === 'footer') {
+			node.classList.add(group.region === 'header' ? 'panel-sticky-header' : 'panel-sticky-footer');
+			subsection.appendChild(node);
+			hasStickyRegions = true;
 		} else {
 			subsection.appendChild(node);
 		}
 	});
+	if (hasStickyRegions) {
+		subsection.classList.add('has-scroll-region');
+		host.classList.add('has-scroll-region');
+	}
 	if (schema.effects?.length) {
 		const stack = buildPanelGroup({ title: 'Effects', collapsible: false, items: schema.effects }, schema);
 		stack.classList.add('effects-stack');

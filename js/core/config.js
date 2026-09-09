@@ -1212,7 +1212,7 @@ const PANEL_SCHEMAS = {
 		section: { id: 'noLayerSettingsSection', bare: true, classes: 'panel-redesign' },
 		preamble: [
 			{ kind: 'host', tag: 'span', id: 'noLayerEmptyText', text: 'Design', attrs: { hidden: 'hidden' } },
-			{ kind: 'host', id: 'noLayerEmptySubtext', classes: 'property-note panel-note no-selection-intro',
+			{ kind: 'host', id: 'noLayerEmptySubtext', classes: 'property-note no-selection-intro',
 				text: 'Nothing selected. Pick a layer to edit it, or add content below.' }
 		],
 		subsections: [
@@ -1288,14 +1288,14 @@ const PANEL_SCHEMAS = {
 		replaceStatic: true,
 		section: { id: 'autoGlitterSettingsSection', classes: 'panel-redesign', icon: 'palette', iconName: 'Palette', title: 'Auto Glitter' },
 		groups: [
-			{ title: 'Preview', classes: 'auto-glitter-preview-group', static: true, bare: true, items: [
+			{ title: 'Preview', region: 'header', static: true, bare: true, items: [
 				{ kind: 'card', classes: 'auto-glitter-preview-card', bare: true, items: [
 					{ kind: 'segmented', id: 'autoGlitterPreviewMode', label: 'Preview mode', options: [
 						{ label: 'Original', value: 'original' }, { label: 'Flat', value: 'flat' }, { label: 'Glitter', value: 'glitter', active: true }
 					] }
 				] },
 				{ kind: 'card', id: 'autoGlitterExisting', classes: 'auto-glitter-existing', hidden: true, items: [
-					{ kind: 'host', id: 'autoGlitterExistingSummary', tag: 'p' },
+					{ kind: 'host', id: 'autoGlitterExistingSummary', classes: 'property-note' },
 					{ kind: 'radioSegmented', id: 'autoGlitterRerunMode', classes: 'auto-glitter-rerun-mode', label: 'How to handle the previous Auto Glitter layers', options: [
 						{ id: 'autoGlitterEditCurrent', label: 'Edit', value: 'edit' },
 						{ id: 'autoGlitterReplacePrevious', label: 'Replace', value: 'replace' },
@@ -1303,32 +1303,32 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
-			{ title: 'Palette', region: 'scroll', items: [
+			{ title: 'Palette', region: 'scroll', collapsible: false, items: [
 				{ kind: 'card', items: [
 					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', classes: 'auto-glitter-palette-style', label: 'Palette style', visibleLabel: 'Style', revert: true, options: [
 						{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced', active: true }, { label: 'Natural', value: 'natural' }
 					] },
 					{ kind: 'slider', id: 'autoGlitterColorCount', slider: 'autoGlitterColorCount', label: 'Colors' },
-					{ kind: 'slider', id: 'autoGlitterMergeDistinctness', slider: 'autoGlitterMergeDistinctness', label: 'Merge' },
-					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'property-note panel-note' }
+					{ kind: 'slider', id: 'autoGlitterMergeDistinctness', slider: 'autoGlitterMergeDistinctness', label: 'Merge', valueScale: 'percent' },
+					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'property-note' }
 				] }
 			] },
-			{ title: 'Color Matches', region: 'scroll', items: [
+			{ title: 'Color Matches', region: 'scroll', collapsible: false, items: [
 				{ kind: 'card', classes: 'auto-glitter-review', items: [
-					{ kind: 'host', id: 'autoGlitterStatus', classes: 'property-inset auto-glitter-status', attrs: { role: 'status', 'aria-live': 'polite' }, text: 'Finding the image\'s distinct colors…' },
+					{ kind: 'host', id: 'autoGlitterStatus', classes: 'property-note', attrs: { role: 'status', 'aria-live': 'polite' }, text: 'Finding the image\'s distinct colors…' },
 					{ kind: 'host', id: 'autoGlitterResults', classes: 'property-inset property-list auto-glitter-results', attrs: { 'aria-label': 'Detected color regions and glitter matches' } }
 				] }
 			] },
-			{ title: 'Advanced', region: 'scroll', items: [
+			{ title: 'Advanced', region: 'scroll', collapsible: false, items: [
 				{ kind: 'card', items: [
-					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'autoGlitterDetail', title: 'Absorb connected regions smaller than this many pixels' },
+					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'autoGlitterDetail', label: 'Detail', title: 'Absorb connected regions smaller than this many pixels' },
 					{ kind: 'checkboxList', items: [
 						{ id: 'autoGlitterCleanEdges', label: 'Clean Edges', checked: true, revert: true, title: 'Absorb anti-aliased blend colors into their neighboring regions' },
 						{ id: 'autoGlitterTuneHue', label: 'Tune Matched Glitter Hue', checked: true, revert: true, title: 'Apply a small hue correction to improve the closest glitter match' }
 					] }
 				] }
 			] },
-			{ title: 'Finish', classes: 'auto-glitter-footer-group', static: true, bare: true, items: [
+			{ title: 'Finish', region: 'footer', static: true, bare: true, items: [
 				{ kind: 'actionRow', classes: 'auto-glitter-actions is-split', actions: [
 					{ id: 'cancelAutoGlitterBtn', label: 'Cancel', secondary: true },
 					{ id: 'autoGlitterCreateBtn', label: 'Create Layers', primary: true }
@@ -1366,7 +1366,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Effects', collapsible: false, items: [
 				{ kind: 'card', classes: 'pixelate-effect-card panel-module', title: 'Pixelate', collapsible: true, toggle: { id: 'pixelEffectsPixelateEnabled', label: 'Enabled' }, items: [
 					{ kind: 'slider', id: 'pixelEffectsPixelSize', slider: 'pixelEffectsPixelSize', title: '1 is off; larger values create crisp mosaic cells before palette processing' },
-					{ kind: 'host', classes: 'property-note panel-note', text: 'Larger cell sizes create a crisp mosaic before palette processing.' }
+					{ kind: 'host', classes: 'property-note', text: 'Larger cell sizes create a crisp mosaic before palette processing.' }
 				] },
 				{ kind: 'card', classes: 'pixel-effects-card panel-module', title: 'Palette', collapsible: true,
 					toggle: { id: 'pixelEffectsPaletteEnabled', label: 'Enabled' },
@@ -1382,7 +1382,7 @@ const PANEL_SCHEMAS = {
 							{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced', active: true }, { label: 'Natural', value: 'natural' }
 						] },
 						{ kind: 'slider', id: 'pixelEffectsColorCount', slider: 'pixelEffectsColorCount' },
-						{ kind: 'slider', id: 'pixelEffectsMergeDistinctness', slider: 'pixelEffectsMergeDistinctness' }
+						{ kind: 'slider', id: 'pixelEffectsMergeDistinctness', slider: 'pixelEffectsMergeDistinctness', valueScale: 'percent' }
 					] },
 					{ kind: 'advanced', id: 'pixelEffectsPosterizeControls', label: 'Cleanup', hidden: true, items: [
 						{ kind: 'slider', id: 'pixelEffectsDetail', slider: 'pixelEffectsDetail' },
@@ -1412,7 +1412,7 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Actions', collapsible: false, items: [
-				{ kind: 'host', classes: 'property-note panel-note', text: 'Turn the image colors into editable glitter fill layers.' },
+				{ kind: 'host', classes: 'property-note', text: 'Turn the image colors into editable glitter fill layers.' },
 				{ kind: 'actionRow', actions: [
 					{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', primary: true, title: 'Turn the image colors into editable glitter fill layers' }
 				] }
@@ -1459,7 +1459,7 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Actions', collapsible: false, items: [
-				{ kind: 'host', classes: 'property-note panel-note', text: 'Brush and Eraser keep separate tip and stroke settings. The copy and reset labels follow the active tool.' },
+				{ kind: 'host', classes: 'property-note', text: 'Brush and Eraser keep separate tip and stroke settings. The copy and reset labels follow the active tool.' },
 				{ kind: 'actionRow', actions: [
 					{ id: 'maskCopyOppositeSettings', label: 'Copy Eraser Settings', title: 'Copy the other tool\'s settings into this one' },
 					{ id: 'maskResetCurrentSettings', label: 'Reset Brush', title: 'Restore this tool\'s settings to their defaults' },
@@ -1492,7 +1492,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Mask', collapsible: false, items: [
 				{ kind: 'card', classes: 'fill-mask-summary', items: [
-					{ kind: 'host', classes: 'property-note panel-note', text: 'Edit color selections with the Color Picker, or paint the mask with the Brush and Eraser.' }
+					{ kind: 'host', classes: 'property-note', text: 'Edit color selections with the Color Picker, or paint the mask with the Brush and Eraser.' }
 				] }
 			] }
 		],
@@ -1518,11 +1518,11 @@ const PANEL_SCHEMAS = {
 					{ kind: 'card', title: 'Color Selections', classes: 'color-selection', items: [
 						{ kind: 'content', items: [
 							{ kind: 'host', id: 'selectedColorsDisplay', classes: 'selected-colors-display' },
-							{ kind: 'host', id: 'selectedColorsEmptyNote', classes: 'property-note panel-note color-selection-empty-note', text: 'Pick a color on the canvas to add it.' }
+							{ kind: 'host', id: 'selectedColorsEmptyNote', classes: 'property-note color-selection-empty-note', text: 'Pick a color on the canvas to add it.' }
 						] }
 					] },
 					{ kind: 'card', title: 'Refine', items: [
-						{ kind: 'host', id: 'selectionRefineNote', classes: 'property-note panel-note', text: 'Color Tolerance includes colors similar to the one you picked. Edge Feather softens the selection boundary.' },
+						{ kind: 'host', id: 'selectionRefineNote', classes: 'property-note', text: 'Color Tolerance includes colors similar to the one you picked. Edge Feather softens the selection boundary.' },
 						{ kind: 'slider', id: 'threshold', slider: 'threshold' },
 						{ kind: 'slider', id: 'feather', slider: 'feather' }
 					] }
@@ -1581,7 +1581,7 @@ const PANEL_SCHEMAS = {
 						{ label: 'Point', active: true, attrs: { 'data-text-box-mode': 'auto' } },
 						{ label: 'Box', attrs: { 'data-text-box-mode': 'fixed' } }
 					] },
-					{ kind: 'host', id: 'textBoxModeHint', classes: 'text-box-hint panel-note', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
+					{ kind: 'host', id: 'textBoxModeHint', classes: 'property-note', text: 'Point text hugs the copy. Switch to Box for wrapping and edge resizing.' },
 					{ kind: 'actionRow', classes: 'text-fit-box-group card-foot', actions: [
 						{ id: 'textFitBoxToContent', label: 'Fit box to text', title: 'Resize the box to exactly fit the current text (keeps existing line breaks/wraps)' }
 					] }
@@ -1793,8 +1793,8 @@ const PANEL_SCHEMAS = {
 			// are top-level card items so buildPanelItem lifts them to card footers.
 			{ kind: 'content', id: 'canvasSizePanel', classes: 'document-size-panel canvas-size-controls', hidden: true, items: [
 				{ kind: 'set', items: [
-					{ kind: 'host', classes: 'property-note panel-note', text: 'Crop or extend the canvas without scaling content.' },
-					{ kind: 'host', id: 'canvasSizeLimitMessage', classes: 'property-note panel-note canvas-size-limit-message', attrs: { role: 'status' } }
+					{ kind: 'host', classes: 'property-note', text: 'Crop or extend the canvas without scaling content.' },
+					{ kind: 'host', id: 'canvasSizeLimitMessage', classes: 'property-note canvas-size-limit-message', attrs: { role: 'status' } }
 				] },
 				{ kind: 'set', items: [
 					{ kind: 'numberPair', label: 'Size', reset: { revertFor: 'canvasSizeWidth canvasSizeHeight', title: 'Reset size' }, items: [
@@ -1817,7 +1817,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ kind: 'content', id: 'scaleDesignPanel', classes: 'document-size-panel scale-design-controls', items: [
 				{ kind: 'set', items: [
-					{ kind: 'host', classes: 'property-note panel-note', text: 'Resize the canvas and everything in the design. Proportions stay linked.' }
+					{ kind: 'host', classes: 'property-note', text: 'Resize the canvas and everything in the design. Proportions stay linked.' }
 				] },
 				{ kind: 'set', items: [
 					{ kind: 'numberPair', label: 'Size', reset: { revertFor: 'scaleDesignWidth scaleDesignHeight', title: 'Reset size' }, items: [

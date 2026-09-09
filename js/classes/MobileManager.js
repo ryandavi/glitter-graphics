@@ -72,6 +72,12 @@ class MobileManager {
 	}
 
 	getLayerSettingsKeys(layer) {
+		// An Auto Glitter session owns the edit drawer regardless of which layer
+		// is active — its panel replaces the active layer's own settings, the
+		// same way editor-panels.js swaps in LAYER_UI_CONFIG.AUTO_GLITTER. Without
+		// this, openDrawer('edit') re-runs prepareSettings off the active (base)
+		// layer and clobbers the just-mounted Auto Glitter section.
+		if (this.editor.autoGlitterManager?.isSessionActive()) return [...LAYER_UI_CONFIG.AUTO_GLITTER.mobileSettingsSections];
 		if (!layer) return [];
 		const keys = [...(LAYER_UI_CONFIG[layer.type]?.mobileSettingsSections || [])];
 		if (this.editor.currentTool === ToolType.COLOR_PICKER && layer.type === LayerType.GLITTER_FILL) {

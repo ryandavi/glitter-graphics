@@ -2283,7 +2283,7 @@
 		{
 			"id": "textBoxModeHint",
 			"tag": "div",
-			"classes": "panel-note text-box-hint",
+			"classes": "property-note",
 			"parent": "textSettingsContent"
 		},
 		{

@@ -569,7 +569,12 @@ class BaseBackgroundManager {
 			const input = document.getElementById(id);
 			if (input) input.value = value;
 			const output = document.getElementById(`${id}Value`);
-			if (output) output.innerHTML = formatUnit(value, suffix);
+			if (!output) return;
+			// A `data-value-scale="percent"` readout (e.g. "Combine Similar") shows
+			// its 0–100 % position through the slider's real range, matching Auto Glitter.
+			output.innerHTML = output.dataset.valueScale === 'percent' && input
+				? formatRangePercent(value, input.dataset.scaleMin ?? input.min, input.dataset.scaleMax ?? input.max)
+				: formatUnit(value, suffix);
 		};
 		setRange('pixelEffectsPixelSize', settings.pixelSize, 'px');
 		setRange('pixelEffectsColorCount', settings.colorCount, '');

@@ -7,6 +7,21 @@ function formatDimensions(width, height, unit = 'px') {
 	return `${width}<span class="setting-separator"> × </span>${height}<span class="setting-unit">${unit}</span>`;
 }
 
+// A slider whose raw value is an opaque internal range (Auto Glitter / Canvas
+// pixel-effects "Combine Similar" run 0.01–0.12) reads as its 0–100 % position
+// through that range instead. One home for the maths so the boot text, the live
+// bindSlider readout, the editable pill and every manager agree.
+function formatRangePercent(value, min, max) {
+	const span = Number(max) - Number(min);
+	const percent = span ? Math.round((Number(value) - Number(min)) / span * 100) : 0;
+	return formatUnit(percent, '%');
+}
+
+function rangePercentToValue(percent, min, max) {
+	const clamped = Math.min(100, Math.max(0, Number(percent)));
+	return Number(min) + clamped / 100 * (Number(max) - Number(min));
+}
+
 // ============================================
 // GALLERY PICKER STRIP COPY
 // ============================================
