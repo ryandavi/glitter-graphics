@@ -1223,7 +1223,7 @@
 
 	// Locking the aspect ratio links the two axes; it does not hide a control.
 	// Both Scale X and Scale Y keep their sliders in every state - dragging one
-	// drives the other (js/transforms/editor-transform.js bindAxisScale).
+	// drives the other (js/editor/transform-interaction.js bindAxisScale).
 
 	.transform-pair-row > .number-field-pair {
 		display: grid;

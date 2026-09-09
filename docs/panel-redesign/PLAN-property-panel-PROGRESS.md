@@ -251,7 +251,7 @@ Chromium path is hardcoded for this machine (`chromium-1228`); override with `CH
 
 | WP | Status | Where |
 |---|---|---|
-| WP1 collapsibility opt-in | **done** | `js/ui/editor-disclosures.js`, `panel-renderer.js` (`item.collapsible` → `data-collapsible`) |
+| WP1 collapsibility opt-in | **done** | `js/editor/disclosures.js`, `panel-renderer.js` (`item.collapsible` → `data-collapsible`) |
 | WP2 row primitives R1/R3 | **done** | `css/panels/_properties.scss` (new), `tpl-slider-row`, `tpl-two-column` |
 | WP4 default-aware reverts | **done** | `PANEL_SLIDER_DEFAULTS` + `initializePropertyReverts()` in `panel-renderer.js`; `slider.js` marks `data-revertBound`; `app.js` falls back |
 | WP3 naming and hierarchy | **done** | shared renderer title resolution plus property typography/de-boxing |
@@ -317,7 +317,7 @@ new:  css/panels/_properties.scss, js/ui/panel-resize.js, tools/panel-audit.js,
       PLAN-property-panel-system.md, PLAN-property-panel-PROGRESS.md
 mod:  index.html, css/style.scss, css/_settings.scss, css/_components.scss,
       css/panels/_effects.scss, js/app.js, js/ui/panel-renderer.js,
-      js/ui/editor-disclosures.js, js/ui/slider.js, js/core/config.js,
+      js/editor/disclosures.js, js/ui/slider.js, js/core/config.js,
       js/classes/MaskEditor.js, js/classes/BaseBackgroundManager.js,
       css/_controls.scss, css/panels/_gallery.scss
 ```

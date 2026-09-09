@@ -48,7 +48,7 @@ The problems are in the **rules** the system applies, not in the absence of a sy
 
 ### F1 — Everything is collapsible, automatically (root cause of the nesting complaint)
 
-`initializeAdvancedDisclosures()` in `js/ui/editor-disclosures.js:127-150` walks **every**
+`initializeAdvancedDisclosures()` in `js/editor/disclosures.js:127-150` walks **every**
 `.subsection-content-group` in the document and, if it has a `.subsection-title`,
 unconditionally stamps `data-collapsible-subsection`, `role="button"`, `tabindex="0"`,
 and injects a chevron.

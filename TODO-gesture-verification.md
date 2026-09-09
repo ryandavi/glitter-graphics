@@ -59,7 +59,7 @@ that too — hashes were bumped by hand this session and may have drifted.
 - `node tests/touch-smoke.js` and the other `tests/touch-*.js` suites (Chromium touch emulation).
 - Manual: wheel + pinch in **Firefox** and **Safari** specifically — neither was
   exercised. Safari trackpad pinch goes through the `gesturestart/change/end`
-  fallback path in `js/ui/canvas-gestures.js`.
+  fallback path in `js/editor/canvas-gestures.js`.
 
 ---
 

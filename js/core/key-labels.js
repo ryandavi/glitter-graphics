@@ -1,7 +1,7 @@
 'use strict';
 
 // Platform key vocabulary, shared by the Commands & Shortcuts modal
-// (js/ui/editor-disclosures.js) and the guide (js/ui/modals-wiring.js) so the
+// (js/editor/disclosures.js) and the guide (js/editor/modals-wiring.js) so the
 // two never disagree about what a modifier is called on this machine.
 //
 // Bindings are authored with the generic names below — 'Ctrl/Cmd' for the

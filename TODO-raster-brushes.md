@@ -86,7 +86,7 @@ Inside `#designGalleryContent` (~line 307), mirror the sticker block (~line 564�
   constructed later in `app.js`).
 
 ### 1e. Panel-state wiring (the fiddly part — verify with the app running)
-- `getPreferredDesignSection` (`js/ui/editor-panels.js`, ~line 176): with the Brush tool
+- `getPreferredDesignSection` (`js/editor/panels.js`, ~line 176): with the Brush tool
   active it already returns `'brushSettings'`. When the brush-tip **picker session is
   armed**, it must return `'designGallery'` (the `if (this.pickers.active)` branch already
   does this — just make sure `BrushTipManager` is registered so `pickers.active` sees it).
