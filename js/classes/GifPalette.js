@@ -65,13 +65,15 @@ class GifPalette {
 			});
 			if (splitIndex < 0) break;
 			const box = boxes[splitIndex].sort((a, b) => a[splitChannel] - b[splitChannel]);
-			const total = box.reduce((sum, color) => sum + color.count, 0);
-			let cumulative = 0;
-			let pivot = 1;
-			for (; pivot < box.length; pivot++) {
-				cumulative += box[pivot - 1].count;
-				if (cumulative >= total / 2) break;
-			}
+			// Split at the median distinct color (array midpoint), not the
+			// cumulative-population median. When one color dominates the frame
+			// (e.g. a flat white matte behind glitter text) a population median
+			// isolates that single entry on one side and never rebalances the
+			// rest, so 128 boxes collapse to a handful of distinct averages and
+			// the exported GIF looks 2-tone. Box *selection* above still weights
+			// by sqrt(population), so busy regions keep getting more palette
+			// entries — just not pathologically.
+			const pivot = Math.max(1, Math.floor(box.length / 2));
 			boxes.splice(splitIndex, 1, box.slice(0, pivot), box.slice(pivot));
 		}
 
