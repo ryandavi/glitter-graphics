@@ -207,6 +207,11 @@
 	&[hidden] { display: none; }
 }
 
+// A note that is reporting a live validation failure (canvas-size limits).
+.property-note.is-error {
+	color: var(--color-danger-bright, var(--color-danger-text, var(--color-accent)));
+}
+
 // R7: one empty-state component for property panels and asset browsers.
 // Visibility remains opt-in because managers toggle `.visible` as content
 // becomes available or search results change.
@@ -645,7 +650,8 @@
 
 	[data-effect-card] > .subsection-title,
 	[data-role="paint-slot"] > .subsection-title,
-	[data-module-summary-type] > .subsection-title {
+	[data-module-summary-type] > .subsection-title,
+	[data-title-summary] > .subsection-title {
 		gap: var(--spacing-sm);
 		min-height: 28px;
 
@@ -669,6 +675,12 @@
 		border: 1px solid rgba(255, 255, 255, 0.18);
 		border-radius: var(--property-r-inner);
 		background: var(--color-bg-secondary);
+	}
+
+	// Swatch + summary are one "current value" unit at the right of the title:
+	// tight to each other, the normal title gap to the name and chevron.
+	.property-module-swatch + .property-module-summary {
+		margin-left: calc(var(--spacing-2xs) - var(--spacing-sm));
 	}
 
 	// The enable control leads the header, using the ONE switch.
@@ -1248,6 +1260,25 @@
 	padding: 0;
 }
 
+// The no-selection panel is a redesigned property panel without an accordion
+// header (`section.bare`). Give its `.section-content` the SAME layout the
+// collapsible sections get from `.design-panel > .section.collapsible-section >
+// .section-content` — one column, gutter owned by the rows, a trailing edge —
+// so it is not a special case with its own padding rhythm.
+:is(.design-panel, .mobile-settings-drawer) .section.panel-redesign:not(.collapsible-section) > .section-content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--property-card-inset);
+	// It has no header of its own, so (unlike a collapsible section) it owns its
+	// opening edge.
+	padding: var(--property-pad) 0 var(--spacing-sm);
+	min-width: 0;
+
+	// The intro note ("Nothing selected…" / the multi-select summary) aligns to
+	// the same inset as the group label and the cards below it.
+	> .property-note { padding-inline: var(--property-card-inset); }
+}
+
 // Pairs stack (label over inputs) only when the panel is genuinely too narrow
 // for a label column + two fields — well below the ~324px default subsection, so
 // Position / Size / Offset read label-beside-inputs like every other row at the
@@ -1401,6 +1432,12 @@ body.is-resizing-panel {
 
 	:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-actions:not(.is-stacked) {
 		grid-template-columns: minmax(0, 1fr);
+	}
+
+	// `is-split` is an explicit opt-in to a two-up row (Open / Save Project,
+	// canvas Reset / Apply) — it keeps its two columns in the redesign panels.
+	:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-actions.is-split {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
@@ -1584,9 +1621,11 @@ body.is-resizing-panel {
 	}
 
 	.property-module-summary {
-		flex: 0 1 130px;
-		max-width: 130px;
-		min-width: 24px;
+		// Size to the value text (capped), not a fixed 130px slot — otherwise a
+		// short value ("Solid") floats at the right of an empty box and the
+		// swatch before it looks detached. The name span (flex: 1 1 auto) takes
+		// the slack instead.
+		min-width: 0;
 		line-height: 16px;
 		overflow: hidden;
 	}
@@ -1612,9 +1651,11 @@ body.is-resizing-panel {
 		grid-column: 2 / -2;
 	}
 
-	// Case is an ordinary label/control row. Its four menu choices do not make
-	// the closed select a wide control, so keep the label beside it at all widths.
-	.property-row.is-stacked:has(> .text-case-select) {
+	// A closed <select> is a compact control, never a full-width one: keep the
+	// label beside it at every width (Case, the Dither algorithm/palette, …).
+	// buildOptionGroup can't tell a select from a wide control, so it stacks
+	// them all; this un-stacks every one, in one place.
+	.property-row.is-stacked:has(> select) {
 		grid-template-columns:
 			var(--property-label-col)
 			minmax(0, 1fr)
@@ -1622,7 +1663,7 @@ body.is-resizing-panel {
 		grid-template-rows: var(--property-control-height);
 
 		> .property-label { grid-area: 1 / 1 / 2 / 2; }
-		> .text-case-select { grid-area: 1 / 2 / 2 / 3; width: 100%; min-width: 0; }
+		> select { grid-area: 1 / 2 / 2 / 3; width: 100%; min-width: 0; }
 	}
 
 	.property-row.is-stacked:has(> :is(.text-align-group, .text-valign-group)) {
@@ -1676,6 +1717,26 @@ body.is-resizing-panel {
 		min-height: var(--property-control-height);
 		box-sizing: border-box;
 	}
+
+	// A schema `field` row (project name) sizes its input to the shared control
+	// height, matching the Transform panel's fields.
+	.property-row > .input-unit > input,
+	.property-row > input[type="text"],
+	.property-row > input[type="number"] {
+		height: var(--property-control-height);
+		min-height: var(--property-control-height);
+		box-sizing: border-box;
+	}
+
+	// A `field` control with a trailing revert stops at the reserved revert
+	// column instead of spanning the row edge and colliding with the button.
+	.property-row > :is(.input-unit, input[type="text"], input[type="number"]):not(:last-child) {
+		grid-column: 2 / -2;
+	}
+
+	// A single-field numberPair (if ever used) aligns under the first column.
+	.number-field-pair.is-single { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.number-field-pair.is-single > .input-group { grid-column: 1; }
 
 	// The effect Enabled switch lives in a subsection title and keeps its own
 	// switch geometry — not tied to --property-control-height.
@@ -2083,4 +2144,40 @@ body.is-resizing-panel {
 		border-top: 1px solid var(--color-border);
 		background: var(--color-bg-primary);
 	}
+}
+
+// ===== Panel-end action rows =============================================
+// A group-level actionRow (multi-select / Mask / Auto Glitter "Actions", the
+// effect "Reset" rows) is a different concept from a card-footer actionRow
+// (Transform's Reset Transform, Canvas Size's Reset/Apply): it is not attached
+// to a card, so it carries NO surface and NO divider above it — just the
+// buttons at the panel's end. The renderer stamps `.section-actions` on every
+// group-level actionRow; this intentionally overrides the redesigned
+// `.property-actions` card-footer default.
+//
+// Its horizontal inset matches the group label (`.subsection-section-group >
+// .subsection-title` = `--property-card-inset`), NOT the wider panel gutter —
+// so the buttons and any sibling note line up under "ACTIONS".
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+	.property-actions.section-actions {
+		background: none;
+		border: 0;
+		margin: 0;
+		padding: 0 var(--property-pad);
+	}
+
+	// A note living directly in a group (an "Actions" group's explainer, etc.)
+	// aligns to the same group-label inset, not the panel gutter.
+	.panel-group-blocks > .property-note,
+	.panel-group-content > .property-note {
+		padding-inline: var(--property-card-inset);
+	}
+}
+
+// The Palette (pixel effects) card is dense enough that its `.property-set`
+// group labels earn their keep — Colors / Dither / Pattern / Shimmer. Opt this
+// one card back into showing them (the redesign hides set labels by default).
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .pixel-effects-card .property-set > .property-set-label {
+	display: block;
+	padding-inline: var(--property-card-inset);
 }

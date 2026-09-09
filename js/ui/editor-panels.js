@@ -129,19 +129,14 @@ isLayerContentLocked(layer) {
 		}
 
 		this.syncNoLayerPanelState();
+		// The document-size form is one self-contained "Size" card (PANEL_SCHEMAS
+		// .documentSize). Relocate the single node between the no-selection panel
+		// and Canvas Properties; it carries identical chrome in both.
 		const documentSize = document.getElementById('documentSizeGroup');
 		const sizeHost = !layer && !hasMultiSelection
 			? document.getElementById('noLayerCanvasSizeHost')
 			: document.getElementById('baseCanvasSizeHost');
 		if (documentSize && sizeHost && documentSize.parentElement !== sizeHost) sizeHost.appendChild(documentSize);
-		const embedsSizeForm = sizeHost?.id === 'noLayerCanvasSizeHost';
-		documentSize?.querySelectorAll('.document-size-panel').forEach((panel) => {
-			panel.classList.toggle('property-card', !embedsSizeForm);
-			panel.classList.toggle('panel-module', !embedsSizeForm);
-			panel.toggleAttribute('data-collapsible-subsection', !embedsSizeForm);
-			const title = panel.querySelector(':scope > .subsection-title');
-			if (title) title.hidden = embedsSizeForm;
-		});
 		this.syncLockedLayerUI(layer);
 
 		// D-1c: keep the gallery picker strip in sync when the active layer

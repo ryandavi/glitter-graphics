@@ -216,7 +216,6 @@ const CONFIG = deepFreeze({
 			paintHistoryMaxMB: 128,
 			maxFileSizeMB: 10
 		},
-		scalePresets: [50, 100, 200],
 		defaults: {
 			blankDocument: { width: 400, height: 400, color: '#ffffff' }
 		},
@@ -698,7 +697,9 @@ const CONFIG = deepFreeze({
 			textLineHeight: { label: 'Line Height', unit: '%', min: 50, max: 250, value: 110 },
 			transformScale: { label: 'Scale', unit: '%', min: 10, max: 500, value: 100 },
 			transformRotation: { label: 'Rotation', unit: '°', min: 0, max: 360, step: 1, value: 0 },
-			transformOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 }
+			transformOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },
+			multiSelectionOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, step: 1, value: 100 },
+			documentScale: { label: 'Scale', unit: '%', min: 10, max: 500, step: 1, value: 100 }
 		},
 		// Valid values for the Settings > Theme select; each needs a matching
 		// :root[data-theme="…"] token block in css/_themes.scss.
@@ -1201,6 +1202,85 @@ const LAYER_UI_CONFIG = {
 // capitalized role. Panels not listed here are still static index.html
 // markup awaiting migration.
 const PANEL_SCHEMAS = {
+	// The "nothing selected" panel: sits under the shared Design gallery header
+	// (so it renders headerless — `section.bare`) and carries two mutually
+	// exclusive `.settings-subsection` blocks. syncNoLayerPanelState toggles
+	// #noLayerDefaultGroups vs #multiLayerSelectionGroup by id; every control id
+	// and its listener is preserved from the pre-schema static markup.
+	noSelection: {
+		prefix: 'noLayer',
+		section: { id: 'noLayerSettingsSection', bare: true, classes: 'panel-redesign' },
+		preamble: [
+			{ kind: 'host', tag: 'span', id: 'noLayerEmptyText', text: 'Design', attrs: { hidden: 'hidden' } },
+			{ kind: 'host', id: 'noLayerEmptySubtext', classes: 'property-note panel-note no-selection-intro',
+				text: 'Nothing selected. Pick a layer to edit it, or add content below.' }
+		],
+		subsections: [
+			// One L1 group holding the default-state cards, exactly like Text's
+			// "Content" group — so Quick add / Project / Size all get the ordinary
+			// `.property-card` treatment (not the `.property-block-list` override).
+			{ id: 'noLayerDefaultGroups', items: [
+				{ kind: 'group', title: 'Start', collapsible: false, items: [
+					{ kind: 'card', title: 'Quick add', items: [
+						{ kind: 'host', id: 'quickAddOptions', classes: 'layer-type-options quick-add' }
+					] },
+					{ kind: 'card', title: 'Project', collapsible: true,
+					titleSummary: { id: 'projectNameSummary', text: 'Untitled project' }, items: [
+						{ kind: 'field', id: 'projectNameInput', label: 'Name', type: 'text',
+							maxlength: 60, spellcheck: false, placeholder: 'Name...' },
+						{ kind: 'actionRow', classes: 'canvas-project-actions is-split', actions: [
+							{ id: 'openProjectSidebarBtn', label: 'Open Project' },
+							{ id: 'saveProject', label: 'Save Project', primary: true, disabled: true }
+						] }
+					] },
+					// The document-size fragment card mounts here at boot and is
+					// relocated to #baseCanvasSizeHost when Canvas Properties is shown.
+					{ kind: 'host', id: 'noLayerCanvasSizeHost' }
+				] }
+			] },
+			{ id: 'multiLayerSelectionGroup', hidden: true, groups: [
+				{ title: 'Appearance', collapsible: false, items: [
+					{ kind: 'card', items: [
+						{ kind: 'slider', id: 'multiSelectionOpacity', slider: 'multiSelectionOpacity', label: 'Opacity' }
+					] }
+				] },
+				{ title: 'Align', collapsible: false, items: [
+					{ kind: 'card', items: [
+						{ kind: 'segmented', id: 'multiSelectionAlignScope', visibleLabel: 'Align to',
+							label: 'Alignment reference', stacked: false, options: [
+								{ label: 'Selection', active: true, attrs: { 'data-scope': 'selection' } },
+								{ label: 'Canvas', attrs: { 'data-scope': 'canvas' } }
+							] },
+						{ kind: 'segmented', visibleLabel: 'Horizontal', label: 'Align horizontally',
+							classes: 'transform-segmented-control', stacked: false, options: [
+								{ designGlyph: 'transformAlignLeft', label: 'Align left', attrs: { 'data-multi-align': 'left' } },
+								{ designGlyph: 'transformAlignCenterX', label: 'Align horizontal centers', attrs: { 'data-multi-align': 'centerX' } },
+								{ designGlyph: 'transformAlignRight', label: 'Align right', attrs: { 'data-multi-align': 'right' } }
+							] },
+						{ kind: 'segmented', visibleLabel: 'Vertical', label: 'Align vertically',
+							classes: 'transform-segmented-control', stacked: false, options: [
+								{ designGlyph: 'transformAlignTop', label: 'Align top', attrs: { 'data-multi-align': 'top' } },
+								{ designGlyph: 'transformAlignCenterY', label: 'Align vertical centers', attrs: { 'data-multi-align': 'centerY' } },
+								{ designGlyph: 'transformAlignBottom', label: 'Align bottom', attrs: { 'data-multi-align': 'bottom' } }
+							] },
+						{ kind: 'segmented', visibleLabel: 'Distribute', label: 'Distribute selected layers',
+							classes: 'transform-segmented-control', stacked: false, options: [
+								{ designGlyph: 'transformDistributeX', label: 'Distribute horizontally', attrs: { 'data-multi-distribute': 'horizontal' } },
+								{ designGlyph: 'transformDistributeY', label: 'Distribute vertically', attrs: { 'data-multi-distribute': 'vertical' } }
+							] }
+					] }
+				] },
+				// Panel-end actions: a group-level actionRow (no card wrapper) — the
+				// renderer stamps `.section-actions`, so no surface / border above.
+				{ title: 'Actions', collapsible: false, items: [
+					{ kind: 'actionRow', classes: 'multi-selection-actions', actions: [
+						{ id: 'multiSelectionDuplicateBtn', label: 'Duplicate' },
+						{ id: 'multiSelectionDeleteBtn', label: 'Delete' }
+					] }
+				] }
+			] }
+		]
+	},
 	autoGlitterSession: {
 		prefix: 'autoGlitter',
 		sectionPrefix: 'autoGlitterSettings',
@@ -1249,11 +1329,9 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Finish', classes: 'auto-glitter-footer-group', static: true, bare: true, items: [
-				{ kind: 'card', bare: true, items: [
-					{ kind: 'actionRow', classes: 'auto-glitter-actions', actions: [
-						{ id: 'cancelAutoGlitterBtn', label: 'Cancel', secondary: true },
-						{ id: 'autoGlitterCreateBtn', label: 'Create Layers', primary: true }
-					] }
+				{ kind: 'actionRow', classes: 'auto-glitter-actions', actions: [
+					{ id: 'cancelAutoGlitterBtn', label: 'Cancel', secondary: true },
+					{ id: 'autoGlitterCreateBtn', label: 'Create Layers', primary: true }
 				] }
 			] }
 		]
@@ -1290,56 +1368,53 @@ const PANEL_SCHEMAS = {
 					{ kind: 'slider', id: 'pixelEffectsPixelSize', slider: 'pixelEffectsPixelSize', title: '1 is off; larger values create crisp mosaic cells before palette processing' },
 					{ kind: 'host', classes: 'property-note panel-note', text: 'Larger cell sizes create a crisp mosaic before palette processing.' }
 				] },
-				{ kind: 'card', classes: 'pixel-effects-card panel-module', title: 'Palette', collapsible: true, toggle: { id: 'pixelEffectsPaletteEnabled', label: 'Enabled' }, items: [
-					{ kind: 'segmented', id: 'pixelEffectsPaletteMode', label: 'Palette effect', options: [
+				{ kind: 'card', classes: 'pixel-effects-card panel-module', title: 'Palette', collapsible: true,
+					toggle: { id: 'pixelEffectsPaletteEnabled', label: 'Enabled' },
+					summaryFrom: 'pixelEffectsPaletteMode', items: [
+					{ kind: 'set', items: [
+						{ kind: 'segmented', id: 'pixelEffectsPaletteMode', visibleLabel: 'Mode', label: 'Palette effect', options: [
 							{ label: 'Posterize', value: 'posterize', active: true }, { label: 'Dither', value: 'dither' }
+						] },
+						{ kind: 'processingStatus', id: 'pixelEffectsStatus', classes: 'pixel-effects-status' }
 					] },
-					{ kind: 'processingStatus', id: 'pixelEffectsStatus', classes: 'pixel-effects-status' },
-					{ kind: 'content', id: 'pixelEffectsPaletteControls', classes: 'pixel-effects-controls pixel-effects-control-section', hidden: true, items: [
-						{ kind: 'host', classes: 'property-set-label', text: 'Colors' },
-						{ kind: 'segmented', id: 'pixelEffectsPaletteStyle', label: 'Palette style', visibleLabel: 'Palette Style', options: [
+					{ kind: 'set', id: 'pixelEffectsPaletteControls', label: 'Colors', hidden: true, items: [
+						{ kind: 'segmented', id: 'pixelEffectsPaletteStyle', label: 'Palette style', visibleLabel: 'Style', revert: true, options: [
 							{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced', active: true }, { label: 'Natural', value: 'natural' }
 						] },
 						{ kind: 'slider', id: 'pixelEffectsColorCount', slider: 'pixelEffectsColorCount' },
 						{ kind: 'slider', id: 'pixelEffectsMergeDistinctness', slider: 'pixelEffectsMergeDistinctness' }
 					] },
-					{ kind: 'advanced', id: 'pixelEffectsPosterizeControls', label: 'Cleanup', classes: 'pixel-effects-controls', hidden: true, items: [
+					{ kind: 'advanced', id: 'pixelEffectsPosterizeControls', label: 'Cleanup', hidden: true, items: [
 						{ kind: 'slider', id: 'pixelEffectsDetail', slider: 'pixelEffectsDetail' },
 						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsCleanEdges', label: 'Clean Edges', checked: true, title: 'Absorb tiny connected regions into their neighbors' }] }
 					] },
-					{ kind: 'content', id: 'pixelEffectsDitherControls', classes: 'property-block pixel-effects-controls pixel-effects-dither-controls', hidden: true, items: [
-						{ kind: 'select', id: 'pixelEffectsAlgorithm', label: 'Dither algorithm', visibleLabel: 'Algorithm', options: [
+					{ kind: 'set', id: 'pixelEffectsDitherControls', classes: 'pixel-effects-dither-controls', label: 'Dither', hidden: true, items: [
+						{ kind: 'select', id: 'pixelEffectsAlgorithm', label: 'Dither algorithm', visibleLabel: 'Algorithm', revert: true, options: [
 							{ label: 'Bayer', value: 'bayer', active: true }, { label: 'Floyd–Steinberg', value: 'floyd' }, { label: 'Atkinson', value: 'atkinson' }, { label: 'Halftone', value: 'halftone' }
 						] },
-						{ kind: 'select', id: 'pixelEffectsDitherPalette', label: 'Dither palette', visibleLabel: 'Color Palette', options: [
+						{ kind: 'select', id: 'pixelEffectsDitherPalette', label: 'Dither palette', visibleLabel: 'Color Palette', revert: true, options: [
 							{ label: 'Auto (Image Colors)', value: 'auto', active: true }, { label: 'Black & White', value: 'bw' }, { label: 'Game Boy', value: 'gameboy' }, { label: 'CGA', value: 'cga' }, { label: 'Sepia', value: 'sepia' }, { label: 'Duotone', value: 'duotone' }
 						] },
-						{ kind: 'host', id: 'pixelEffectsDuotone', classes: 'property-color-row pixel-effects-duotone' },
-						{ kind: 'content', classes: 'pixel-effects-control-section', items: [
-							{ kind: 'host', classes: 'property-set-label', text: 'Pattern' },
-							{ kind: 'slider', id: 'pixelEffectsStrength', slider: 'pixelEffectsStrength' },
-							{ kind: 'slider', id: 'pixelEffectsDitherScale', slider: 'pixelEffectsDitherScale' },
-							{ kind: 'slider', id: 'pixelEffectsAngle', slider: 'pixelEffectsAngle' }
-						] },
-						{ kind: 'content', classes: 'pixel-effects-control-section', items: [
-							{ kind: 'host', classes: 'property-set-label', text: 'Shimmer' },
-							{ kind: 'checkboxList', items: [{ id: 'pixelEffectsShimmer', label: 'Animate Dither', title: 'Animate the Bayer or Halftone pattern in the preview and exported GIF' }] },
-							{ kind: 'host', id: 'pixelEffectsShimmerHint', classes: 'property-note', text: 'Bayer and Halftone only. Animates the preview and exported GIF; may increase file size.' }
-						] }
+						{ kind: 'host', id: 'pixelEffectsDuotone', classes: 'property-color-row pixel-effects-duotone' }
+					] },
+					{ kind: 'set', classes: 'pixel-effects-dither-controls', label: 'Pattern', hidden: true, items: [
+						{ kind: 'slider', id: 'pixelEffectsStrength', slider: 'pixelEffectsStrength' },
+						{ kind: 'slider', id: 'pixelEffectsDitherScale', slider: 'pixelEffectsDitherScale' },
+						{ kind: 'slider', id: 'pixelEffectsAngle', slider: 'pixelEffectsAngle' }
+					] },
+					{ kind: 'set', classes: 'pixel-effects-dither-controls', label: 'Shimmer', hidden: true, items: [
+						{ kind: 'checkboxList', items: [{ id: 'pixelEffectsShimmer', label: 'Animate Dither', title: 'Animate the Bayer or Halftone pattern in the preview and exported GIF' }] },
+						{ kind: 'host', id: 'pixelEffectsShimmerHint', classes: 'property-note', text: 'Bayer and Halftone only. Animates the preview and exported GIF; may increase file size.' }
 					] }
 				] },
-				{ kind: 'card', bare: true, classes: 'pixel-effects-reset-card', items: [
-					{ kind: 'actionRow', classes: 'pixel-effects-actions', actions: [
-						{ id: 'resetPixelEffects', label: 'Reset Effects', secondary: true, title: 'Restore all Pixelate and Palette settings to their defaults' }
-					] }
+				{ kind: 'actionRow', classes: 'pixel-effects-actions', actions: [
+					{ id: 'resetPixelEffects', label: 'Reset Effects', secondary: true, title: 'Restore all Pixelate and Palette settings to their defaults' }
 				] }
 			] },
 			{ title: 'Actions', collapsible: false, items: [
-				{ kind: 'card', bare: true, items: [
-					{ kind: 'actionRow', actions: [
-						{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', primary: true, title: 'Turn the image colors into editable glitter fill layers' }
-					] },
-					{ kind: 'host', classes: 'property-note panel-note', text: 'Turn the image colors into editable glitter fill layers.' }
+				{ kind: 'host', classes: 'property-note panel-note', text: 'Turn the image colors into editable glitter fill layers.' },
+				{ kind: 'actionRow', actions: [
+					{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', primary: true, title: 'Turn the image colors into editable glitter fill layers' }
 				] }
 			] },
 
@@ -1384,13 +1459,11 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ title: 'Actions', collapsible: false, items: [
-				{ kind: 'card', bare: true, items: [
-					{ kind: 'host', classes: 'property-note panel-note', text: 'Brush and Eraser keep separate tip and stroke settings. The copy and reset labels follow the active tool.' },
-					{ kind: 'actionRow', actions: [
+				{ kind: 'host', classes: 'property-note panel-note', text: 'Brush and Eraser keep separate tip and stroke settings. The copy and reset labels follow the active tool.' },
+				{ kind: 'actionRow', actions: [
 					{ id: 'maskCopyOppositeSettings', label: 'Copy Eraser Settings', title: 'Copy the other tool\'s settings into this one' },
 					{ id: 'maskResetCurrentSettings', label: 'Reset Brush', title: 'Restore this tool\'s settings to their defaults' },
 					{ id: 'clearMaskPaint', label: 'Clear Paint', title: 'Remove all painted strokes (color selections stay)' }
-					] }
 				] }
 			] }
 		]
@@ -1682,6 +1755,91 @@ const PANEL_SCHEMAS = {
 			},
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetShapeEffects', label: 'Reset Effects', secondary: true, title: 'Disable all shape effects and clear their saved settings' }
+			] }
+		]
+	},
+	// The document-size form (Image Size / Canvas Size). ONE self-contained
+	// "Size" card, mounted into #noLayerCanvasSizeHost at boot; updateSidePanelUI
+	// and BaseBackgroundManager relocate this single node to #baseCanvasSizeHost
+	// for Canvas Properties. Defined last so its mount host (from the noSelection
+	// schema) already exists. canvas-size.js still owns every value/range and
+	// toggles #canvasSizePanel / #scaleDesignPanel by id.
+	documentSize: {
+		fragment: true,
+		prefix: 'documentSize',
+		fragmentId: 'documentSizeGroup',
+		fragmentHost: 'noLayerCanvasSizeHost',
+		fragmentClasses: 'document-size-group',
+		fragmentCard: { title: 'Size', collapsible: true, summaryId: 'noLayerSizeSummary', summaryText: 'Image Size' },
+		items: [
+			// Operation is its own property-set so the hairline before the mode
+			// panel is always `.property-set + .property-set` — it no longer
+			// vanishes when switching to Canvas Size.
+			{ kind: 'set', items: [
+				{ kind: 'segmented', id: 'documentSizeMode', visibleLabel: 'Operation', label: 'Sizing operation',
+					classes: 'document-size-mode', stacked: false, options: [
+						{ label: 'Image Size', active: true, attrs: { 'data-size-mode': 'image', 'aria-pressed': 'true' } },
+						{ label: 'Canvas Size', attrs: { 'data-size-mode': 'canvas', 'aria-pressed': 'false' } }
+					] }
+			] },
+			// `#canvasSizePanel` / `#scaleDesignPanel` are zero-padding `.property-set`
+			// wrappers (canvas-size.js toggles their `hidden`); Operation → mode
+			// panel and the inner groups are all hairline-divided by the shared
+			// `.property-set + .property-set` rule, the same as the Transform grid.
+			// Each mode panel is a zero-padding `.property-set` wrapper (canvas-size.js
+			// toggles its `hidden`); its inner `.property-set` groups — notes, the
+			// size fields, the fill — are hairline-divided by `.property-set +
+			// .property-set`, the same as the Transform grid. The Reset/Apply rows
+			// are top-level card items so buildPanelItem lifts them to card footers.
+			{ kind: 'content', id: 'canvasSizePanel', classes: 'document-size-panel canvas-size-controls', hidden: true, items: [
+				{ kind: 'set', items: [
+					{ kind: 'host', classes: 'property-note panel-note', text: 'Crop or extend the canvas without scaling content.' },
+					{ kind: 'host', id: 'canvasSizeLimitMessage', classes: 'property-note panel-note canvas-size-limit-message', attrs: { role: 'status' } }
+				] },
+				{ kind: 'set', items: [
+					{ kind: 'numberPair', label: 'Size', reset: { revertFor: 'canvasSizeWidth canvasSizeHeight', title: 'Reset size' }, items: [
+						{ id: 'canvasSizeWidth', mark: 'W', label: 'Width', step: 1, inputMode: 'numeric' },
+						{ id: 'canvasSizeHeight', mark: 'H', label: 'Height', step: 1, inputMode: 'numeric' }
+					] },
+					{ kind: 'checkboxList', items: [ { id: 'canvasSizeRelative', label: 'Relative', revert: 'canvasSizeRelative' } ] },
+					{ kind: 'labeled', label: 'Anchor', stacked: true, revert: 'canvasSizeAnchor', control: { kind: 'host', id: 'canvasSizeAnchor',
+						classes: 'anchor-grid', attrs: { role: 'radiogroup', 'aria-label': 'Canvas resize anchor' } } }
+				] },
+				{ kind: 'set', items: [
+					{ kind: 'segmented', id: 'canvasExtensionMode', visibleLabel: 'Extension', label: 'Canvas extension fill',
+						classes: 'canvas-extension-mode', stacked: false, revertFor: 'canvasExtensionMode', options: [
+							{ label: 'Transparent', active: true, attrs: { 'data-extension-mode': 'transparent', 'aria-pressed': 'true' } },
+							{ label: 'Color', attrs: { 'data-extension-mode': 'color', 'aria-pressed': 'false' } }
+						] },
+					{ kind: 'field', id: 'canvasExtensionColor', rowId: 'canvasExtensionColorRow', label: 'Fill Color',
+						type: 'color', value: '#ffffff', hidden: true, revert: true }
+				] }
+			] },
+			{ kind: 'content', id: 'scaleDesignPanel', classes: 'document-size-panel scale-design-controls', items: [
+				{ kind: 'set', items: [
+					{ kind: 'host', classes: 'property-note panel-note', text: 'Resize the canvas and everything in the design. Proportions stay linked.' }
+				] },
+				{ kind: 'set', items: [
+					{ kind: 'numberPair', label: 'Size', reset: { revertFor: 'scaleDesignWidth scaleDesignHeight', title: 'Reset size' }, items: [
+						{ id: 'scaleDesignWidth', mark: 'W', label: 'Width', step: 1, inputMode: 'numeric' },
+						{ id: 'scaleDesignHeight', mark: 'H', label: 'Height', step: 1, inputMode: 'numeric' }
+					] },
+					{ kind: 'slider', id: 'scaleDesignPercent', slider: 'documentScale', label: 'Scale' }
+				] },
+				{ kind: 'set', items: [
+					{ kind: 'checkboxList', items: [
+						{ id: 'scaleDesignTextures', label: 'Scale Textures', checked: true, revert: 'scaleDesignTextures' },
+						{ id: 'scaleDesignEffects', label: 'Scale Effects', checked: true, revert: 'scaleDesignEffects' }
+					] }
+				] }
+			] },
+			{ kind: 'actionRow', id: 'canvasSizeActions', classes: 'canvas-size-actions is-split', hidden: true, actions: [
+				{ id: 'canvasSizeReset', label: 'Reset' },
+				{ id: 'canvasSizeApply', label: 'Resize Canvas', primary: true }
+			] },
+			{ kind: 'actionRow', id: 'scaleDesignActions', classes: 'scale-design-actions is-split', actions: [
+				{ id: 'scaleDesignReset', label: 'Reset' },
+				{ id: 'scaleDesignApply', label: 'Apply', primary: true }
 			] }
 		]
 	}

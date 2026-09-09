@@ -37,25 +37,19 @@ get CANVAS_ANCHORS() {
 		anchorGrid.addEventListener('click', (event) => {
 			const cell = event.target.closest('.anchor-cell');
 			if (!cell) return;
-			this.canvasSizeAnchorIndex = parseInt(cell.dataset.anchorIndex, 10);
-			anchorGrid.querySelectorAll('.anchor-cell').forEach((el) => {
-				const idx = parseInt(el.dataset.anchorIndex, 10);
-				const selected = idx === this.canvasSizeAnchorIndex;
-				el.classList.toggle('active', selected);
-				el.setAttribute('aria-checked', selected ? 'true' : 'false');
-				el.textContent = selected ? '•' : GlitterEditor.CANVAS_ANCHORS[idx].arrow;
-			});
-			this.updateCanvasResizePreview();
+			this.setCanvasAnchorIndex(parseInt(cell.dataset.anchorIndex, 10));
 		});
 
 		// Live on-canvas preview of the prospective bounds as the user edits.
 		widthInput.addEventListener('input', () => {
 			this.updateCanvasSizeValidation();
 			this.updateCanvasResizePreview();
+			this.syncDocumentSizeReverts();
 		});
 		heightInput.addEventListener('input', () => {
 			this.updateCanvasSizeValidation();
 			this.updateCanvasResizePreview();
+			this.syncDocumentSizeReverts();
 		});
 		relativeInput?.addEventListener('change', () => {
 			this.syncCanvasSizeInputs();
@@ -64,6 +58,16 @@ get CANVAS_ANCHORS() {
 		extensionMode?.addEventListener('click', (event) => {
 			const button = event.target.closest('[data-extension-mode]');
 			if (button) this.setCanvasExtensionMode(button.dataset.extensionMode);
+		});
+		// One delegated handler for every per-field revert in the document-size
+		// form (data-revert-for = one or more input ids, or the anchor/extension
+		// pseudo-fields). Bound to the group node so it survives the node being
+		// relocated between the no-selection panel and Canvas Properties.
+		document.getElementById('documentSizeGroup')?.addEventListener('click', (event) => {
+			const button = event.target.closest('[data-revert-for]');
+			if (!button || button.disabled) return;
+			event.preventDefault();
+			this.handleDocumentSizeRevert(button);
 		});
 
 		resetBtn?.addEventListener('click', () => {
@@ -84,6 +88,84 @@ get CANVAS_ANCHORS() {
 	}
 
 ,
+	setCanvasAnchorIndex(index) {
+		this.canvasSizeAnchorIndex = Number.isFinite(index) ? index : 4;
+		const anchorGrid = document.getElementById('canvasSizeAnchor');
+		anchorGrid?.querySelectorAll('.anchor-cell').forEach((el) => {
+			const idx = parseInt(el.dataset.anchorIndex, 10);
+			const selected = idx === this.canvasSizeAnchorIndex;
+			el.classList.toggle('active', selected);
+			el.setAttribute('aria-checked', selected ? 'true' : 'false');
+			el.textContent = selected ? '•' : GlitterEditor.CANVAS_ANCHORS[idx].arrow;
+		});
+		this.updateCanvasResizePreview();
+		this.syncDocumentSizeReverts();
+	}
+
+	// Live defaults for the document-size per-field reverts. Width/Height track
+	// the current canvas, so the revert means "back to the unedited state" —
+	// the panel's Reset button, scoped to one field. (Scale and the extension
+	// Fill Color own their own reverts: bindSlider / attachOptionRevert.)
+,
+	_documentSizeDefaults() {
+		const canvas = this.originalCanvas;
+		const relative = document.getElementById('canvasSizeRelative')?.checked === true;
+		const width = canvas?.width ?? 0;
+		const height = canvas?.height ?? 0;
+		return {
+			canvasSizeWidth: relative ? 0 : width,
+			canvasSizeHeight: relative ? 0 : height,
+			canvasSizeRelative: false,
+			canvasExtensionMode: this.baseImageSource?.kind === 'preset' ? 'color' : 'transparent',
+			scaleDesignWidth: width,
+			scaleDesignHeight: height,
+			scaleDesignTextures: true,
+			scaleDesignEffects: true
+		};
+	}
+
+,
+	_documentSizeFieldIsDefault(id, defaults) {
+		if (id === 'canvasSizeAnchor') return this.canvasSizeAnchorIndex === 4;
+		if (id === 'canvasExtensionMode') return (this.canvasExtensionMode || 'transparent') === defaults.canvasExtensionMode;
+		const el = document.getElementById(id);
+		if (!el || !(id in defaults)) return true;
+		if (el.type === 'checkbox') return el.checked === defaults[id];
+		return Number(el.value) === Number(defaults[id]);
+	}
+
+,
+	syncDocumentSizeReverts() {
+		const group = document.getElementById('documentSizeGroup');
+		if (!group) return;
+		const defaults = this._documentSizeDefaults();
+		group.querySelectorAll('[data-revert-for]').forEach((button) => {
+			const targets = button.dataset.revertFor.split(/\s+/).filter(Boolean);
+			button.disabled = targets.every((id) => this._documentSizeFieldIsDefault(id, defaults));
+		});
+	}
+
+,
+	handleDocumentSizeRevert(button) {
+		const defaults = this._documentSizeDefaults();
+		button.dataset.revertFor.split(/\s+/).filter(Boolean).forEach((id) => {
+			if (id === 'canvasSizeAnchor') { this.setCanvasAnchorIndex(4); return; }
+			if (id === 'canvasExtensionMode') { this.setCanvasExtensionMode(defaults.canvasExtensionMode); return; }
+			const el = document.getElementById(id);
+			if (!el || !(id in defaults)) return;
+			if (el.type === 'checkbox') {
+				el.checked = Boolean(defaults[id]);
+				el.dispatchEvent(new Event('change', { bubbles: true }));
+			} else {
+				el.value = String(defaults[id]);
+				el.dispatchEvent(new Event('input', { bubbles: true }));
+				el.dispatchEvent(new Event('change', { bubbles: true }));
+			}
+		});
+		this.syncDocumentSizeReverts();
+	}
+
+,
 	setupDocumentSizeModeControls() {
 		const control = document.getElementById('documentSizeMode');
 		if (!control) return;
@@ -101,6 +183,8 @@ get CANVAS_ANCHORS() {
 		if (sizeSummary) sizeSummary.textContent = resolved === 'canvas' ? 'Canvas Size' : 'Image Size';
 		document.getElementById('scaleDesignPanel').hidden = resolved !== 'image';
 		document.getElementById('canvasSizePanel').hidden = resolved !== 'canvas';
+		document.getElementById('scaleDesignActions')?.toggleAttribute('hidden', resolved !== 'image');
+		document.getElementById('canvasSizeActions')?.toggleAttribute('hidden', resolved !== 'canvas');
 		document.querySelectorAll('#documentSizeMode [data-size-mode]').forEach((button) => {
 			const active = button.dataset.sizeMode === resolved;
 			button.classList.toggle('active', active);
@@ -108,6 +192,7 @@ get CANVAS_ANCHORS() {
 		});
 		if (resolved === 'canvas') this.updateCanvasResizePreview();
 		else this.hideCanvasResizePreview();
+		this.syncDocumentSizeReverts();
 	}
 
 ,
@@ -119,6 +204,7 @@ get CANVAS_ANCHORS() {
 			button.setAttribute('aria-pressed', String(active));
 		});
 		document.getElementById('canvasExtensionColorRow').hidden = this.canvasExtensionMode !== 'color';
+		this.syncDocumentSizeReverts();
 	}
 
 ,
@@ -127,8 +213,13 @@ get CANVAS_ANCHORS() {
 		const presetColor = this.baseImageSource?.preset?.color;
 		const backgroundColor = this.layers.find((layer) => layer.type === LayerType.BASE_IMAGE)?.background?.color;
 		const colorInput = document.getElementById('canvasExtensionColor');
-		if (colorInput) colorInput.value = presetColor || backgroundColor || '#ffffff';
+		if (colorInput) {
+			colorInput.value = presetColor || backgroundColor || '#ffffff';
+			// Let the shared attachOptionRevert re-evaluate its button state.
+			colorInput.dispatchEvent(new Event('input', { bubbles: true }));
+		}
 		this.setCanvasExtensionMode(this.baseImageSource?.kind === 'preset' ? 'color' : 'transparent');
+		this.syncDocumentSizeReverts();
 	}
 
 ,
@@ -148,6 +239,7 @@ get CANVAS_ANCHORS() {
 			? String(CONFIG.canvas.limits.maxHeight - this.originalCanvas.height)
 			: String(CONFIG.canvas.limits.maxHeight);
 		this.updateCanvasSizeValidation();
+		this.syncDocumentSizeReverts();
 	}
 
 ,
@@ -211,28 +303,23 @@ get CANVAS_ANCHORS() {
 		const widthInput = document.getElementById('scaleDesignWidth');
 		const heightInput = document.getElementById('scaleDesignHeight');
 		const percentInput = document.getElementById('scaleDesignPercent');
-		const presets = document.getElementById('scaleDesignPresets');
 		const applyBtn = document.getElementById('scaleDesignApply');
 		const resetBtn = document.getElementById('scaleDesignReset');
-		if (!widthInput || !heightInput || !percentInput || !presets || !applyBtn) return;
-
-		presets.replaceChildren(...CONFIG.canvas.scalePresets.map((percent) => {
-			const button = document.createElement('button');
-			button.type = 'button';
-			button.className = 'segmented-option';
-			button.dataset.scalePercent = String(percent);
-			button.textContent = `${percent}%`;
-			return button;
-		}));
+		if (!widthInput || !heightInput || !percentInput || !applyBtn) return;
 
 		widthInput.addEventListener('input', () => this.updateScaleDesignFromDimension('width'));
 		heightInput.addEventListener('input', () => this.updateScaleDesignFromDimension('height'));
-		percentInput.addEventListener('input', () => this.updateScaleDesignFromPercent());
-		presets.addEventListener('click', (event) => {
-			const button = event.target.closest('[data-scale-percent]');
-			if (!button) return;
-			percentInput.value = button.dataset.scalePercent;
-			this.updateScaleDesignFromPercent();
+		// Scale is a slider + editable readout, wired like every other panel
+		// slider (textureScale, opacity, …) — bindSlider owns its value pill and
+		// its reset button.
+		this._scaleDesignSlider = bindSlider(percentInput, document.getElementById('scaleDesignPercentValue'), {
+			suffix: '%',
+			resetValue: 100,
+			resetButton: document.getElementById('resetScaleDesignPercent'),
+			apply: () => this.updateScaleDesignFromPercent()
+		});
+		['scaleDesignTextures', 'scaleDesignEffects'].forEach((id) => {
+			document.getElementById(id)?.addEventListener('change', () => this.syncDocumentSizeReverts());
 		});
 		resetBtn?.addEventListener('click', () => this.syncScaleDesignInputs());
 		applyBtn.addEventListener('click', () => this.applyScaleDesign());
@@ -260,8 +347,9 @@ get CANVAS_ANCHORS() {
 			CONFIG.canvas.limits.maxHeight / this.originalCanvas.height
 		) * 100);
 		percentInput.value = '100';
-		this.updateScaleDesignPresetState(100);
-		this.updateScaleDesignPresetAvailability();
+		this._scaleDesignSlider?.updateDisplay(100);
+		this._scaleDesignSlider?.syncResetButton(100);
+		this.syncDocumentSizeReverts();
 	}
 
 ,
@@ -289,34 +377,11 @@ get CANVAS_ANCHORS() {
 		const height = Math.max(1, Math.round(this.originalCanvas.height * scale));
 		document.getElementById('scaleDesignWidth').value = width;
 		document.getElementById('scaleDesignHeight').value = height;
-		document.getElementById('scaleDesignPercent').value = this._formatScaleDesignPercent(scale * 100);
-		this.updateScaleDesignPresetState(scale * 100);
-		this.updateScaleDesignPresetAvailability();
-	}
-
-,
-	updateScaleDesignPresetAvailability() {
-		if (!this.originalImage) return;
-		const maximum = Math.min(
-			CONFIG.canvas.limits.maxWidth / this.originalCanvas.width,
-			CONFIG.canvas.limits.maxHeight / this.originalCanvas.height
-		) * 100;
-		document.querySelectorAll('#scaleDesignPresets [data-scale-percent]').forEach((button) => {
-			const unavailable = Number(button.dataset.scalePercent) > maximum + 0.01;
-			button.disabled = unavailable;
-			button.title = unavailable
-				? `Maximum for this design is ${this._formatScaleDesignPercent(maximum)}% (${CONFIG.canvas.limits.maxWidth} × ${CONFIG.canvas.limits.maxHeight} px limit)`
-				: '';
-		});
-	}
-
-,
-	updateScaleDesignPresetState(percent) {
-		document.querySelectorAll('#scaleDesignPresets [data-scale-percent]').forEach((button) => {
-			const active = Math.abs(Number(button.dataset.scalePercent) - percent) < 0.01;
-			button.classList.toggle('active', active);
-			button.setAttribute('aria-pressed', String(active));
-		});
+		const pct = Math.round(scale * 100);
+		document.getElementById('scaleDesignPercent').value = String(pct);
+		this._scaleDesignSlider?.updateDisplay(pct);
+		this._scaleDesignSlider?.syncResetButton(pct);
+		this.syncDocumentSizeReverts();
 	}
 
 ,

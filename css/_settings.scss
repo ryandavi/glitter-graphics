@@ -158,6 +158,9 @@
 .no-layer-settings-section.panel-redesign .quick-add {
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: var(--spacing-sm);
+	// The grid is not a .property-row, so it does not self-inset — give it the
+	// card gutter so it lines up with the rows in the Project and Size cards.
+	margin-inline: var(--property-pad);
 
 	>.layer-type-option {
 		display: grid;
@@ -178,23 +181,21 @@
 			> svg.icon { font-size: 22px; }
 		}
 
-		.layer-type-name { font-size: var(--font-size-base); }
+		.layer-type-name { 
+			font-size: var(--font-size-base); 
+
+			+ .layer-type-description {
+				margin-top: var(--spacing-sm);
+			}
+		}
 
 		.layer-type-description {
 			align-self: start;
 			max-width: 22ch;
 			font-size: var(--font-size-xs);
-			line-height: 1.25;
+			line-height: 1.125;
 		}
 	}
-}
-
-.no-layer-content {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-base);
-	min-width: 0;
-	padding: 0;
 }
 
 @keyframes inline-processing-spin {
@@ -251,12 +252,7 @@
 }
 
 .pixel-effects-card {
-	.pixel-effects-controls { margin-top: var(--spacing-sm); }
-
-	.pixel-effects-dither-controls {
-		flex-direction: column;
-		align-items: stretch;
-	}
+	// Grouping + spacing come from the `.property-set` primitive now.
 
 	.pixel-effects-duotone {
 		display: grid;
@@ -477,7 +473,7 @@
 	}
 }
 
-.section:is(.welcome-section, .base-layer-settings-section, .no-layer-settings-section)>.section-content {
+.section:is(.welcome-section, .base-layer-settings-section)>.section-content {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-base);

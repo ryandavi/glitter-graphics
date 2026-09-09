@@ -10,25 +10,38 @@
 	width: 100%;
 }
 
-.scale-design-presets {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	width: 100%;
-}
-
 .document-size-mode {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
 	// margin-bottom: var(--spacing-md);
 }
 
-.canvas-size-limit-message {
-	color: var(--color-text-tertiary);
-	font-size: var(--font-size-xs);
-	line-height: 1.35;
+// The document-size "Size" card (#documentSizeGroup) is rendered once and moved
+// between these two hosts. `display: contents` lets it sit as a direct child of
+// whichever peer-card list it lands in, so it gets the same card chrome in the
+// no-selection panel and in Canvas Properties.
+#noLayerCanvasSizeHost,
+#baseCanvasSizeHost {
+	display: contents;
+}
 
-	&.is-error {
-		color: var(--color-danger-bright);
+// #canvasSizeLimitMessage is a `.property-note` like every other panel message;
+// canvas-size.js toggles `.is-error` on it (see `.property-note.is-error`).
+
+// The mode panel (`#canvasSizePanel` / `#scaleDesignPanel`) is a transparent
+// `.subsection-content` wrapper — NOT a property-set, so no set-inside-set. Its
+// `.property-set` groups are the dividable units: hairline-separated by the
+// shared `.property-set + .property-set`, plus one rule for the Operation → mode
+// boundary so that line survives switching modes (a hidden mode panel keeps the
+// DOM adjacency the `+` needs).
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+	.document-size-panel {
+		gap: 0;
+		padding: 0;
+	}
+
+	.subsection-card-body > :is(.property-set, .document-size-panel) + .document-size-panel > .property-set:first-child {
+		border-top: 1px solid var(--color-border);
 	}
 }
 

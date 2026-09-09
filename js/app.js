@@ -284,9 +284,17 @@ class GlitterEditor {
 
 		input.placeholder = 'Name...';
 		input.value = this.projectName;
+		this.syncProjectNameSummary();
 		input.addEventListener('input', () => {
 			this.setProjectName(input.value, { markDirty: true, syncInput: false });
 		});
+	}
+
+	// The Project card's title readout (#projectNameSummary) — shows the current
+	// name when the card is collapsed.
+	syncProjectNameSummary() {
+		const summary = document.getElementById('projectNameSummary');
+		if (summary) summary.textContent = this.projectName || 'Untitled project';
 	}
 
 	setProjectName(name, options = {}) {
@@ -302,6 +310,7 @@ class GlitterEditor {
 				input.value = this.projectName;
 			}
 		}
+		this.syncProjectNameSummary();
 
 		if (markDirty && (this.originalImage || this.historyManager.canUndo())) {
 			this.isSaved = false;

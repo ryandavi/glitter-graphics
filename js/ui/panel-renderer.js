@@ -77,7 +77,9 @@ const DESIGN_PANEL_GLYPHS = Object.freeze({
 	transformAlignCenterY: '<path d="M2 8h12" opacity=".5" stroke-dasharray="2 2"/><rect x="5" y="3.5" width="6" height="9" rx="1"/>',
 	transformAlignBottom: '<path d="M2 13.5h12" opacity=".5"/><rect x="5" y="4" width="6" height="7.5" rx="1"/>',
 	transformFlipX: '<path d="M8 2v12" opacity=".5" stroke-dasharray="2 2"/><path d="M6 4.5L2.5 8 6 11.5z"/><path d="M10 4.5L13.5 8 10 11.5z"/>',
-	transformFlipY: '<path d="M2 8h12M4.5 6L8 2.5 11.5 6z"/><path d="M4.5 10L8 13.5 11.5 10z"/>'
+	transformFlipY: '<path d="M2 8h12M4.5 6L8 2.5 11.5 6z"/><path d="M4.5 10L8 13.5 11.5 10z"/>',
+	transformDistributeX: '<path d="M2 2v12M14 2v12M8 4v8"/>',
+	transformDistributeY: '<path d="M2 2h12M2 14h12M4 8h8"/>'
 });
 
 function createDesignPanelGlyph(name) {
@@ -469,6 +471,23 @@ function buildPairRow(item) {
 // transform panel's Position/Size use (tpl-number-pair + .number-field-pair
 // inside a .transform-pair-row), so any offset pair reads and behaves the same.
 // `reset` adds one shared revert at the row's right edge, outside the fields.
+// A revert affordance for a plain (non-slider) field row: the same `.property-revert`
+// icon button every panel uses, carrying `data-revert-for` so one delegated
+// handler in the owning manager can restore the target(s) to their live default
+// and light the button up when the value differs. `target` is one id or a
+// space-separated list.
+function buildFieldRevert(target) {
+	const button = document.createElement('button');
+	button.type = 'button';
+	button.className = 'property-revert';
+	button.dataset.revertFor = target;
+	button.disabled = true;
+	button.title = 'Reset to default';
+	button.setAttribute('aria-label', 'Reset to default');
+	button.appendChild(createIcon('undo'));
+	return button;
+}
+
 function buildNumberFieldPair(options) {
 	const row = panelDiv('property-row is-pair transform-pair-row');
 	if (options.rowId) row.id = options.rowId;
@@ -480,7 +499,13 @@ function buildNumberFieldPair(options) {
 
 	const pair = tplClone('tpl-number-pair');
 	pair.className = 'property-pair number-field-pair';
-	const groups = pair.querySelectorAll('.input-group');
+	const groups = Array.from(pair.querySelectorAll('.input-group'));
+	// One field (document Scale) uses the same boxed `.input-group.horizontal` as
+	// the W/H pair above it — just one column instead of two.
+	if (options.items.length === 1) {
+		pair.classList.add('is-single');
+		groups.slice(1).forEach((group) => group.remove());
+	}
 	options.items.forEach((entry, index) => {
 		const spec = entry.slider ? (CONFIG.ui.sliders[entry.slider] || {}) : {};
 		const group = groups[index];
@@ -491,9 +516,11 @@ function buildNumberFieldPair(options) {
 		mark.htmlFor = entry.id;
 		input.id = entry.id;
 		input.dataset.role = entry.role || entry.slider || 'value';
-		if (spec.min != null) input.min = String(spec.min);
+		if (entry.min != null) input.min = String(entry.min);
+		else if (spec.min != null) input.min = String(spec.min);
 		if (spec.max != null) input.max = String(spec.max);
 		input.step = String(entry.step ?? spec.step ?? 1);
+		if (entry.inputMode) input.inputMode = entry.inputMode;
 		input.setAttribute('aria-label', entry.label || spec.label || entry.mark);
 		if (suffix) suffix.textContent = entry.unit ?? spec.unit ?? '';
 		if (entry.id && PANEL_SLIDER_DEFAULTS[entry.id] === undefined && spec.value != null) {
@@ -506,7 +533,8 @@ function buildNumberFieldPair(options) {
 		const reset = document.createElement('button');
 		reset.type = 'button';
 		reset.className = 'property-revert';
-		reset.id = options.reset.id;
+		if (options.reset.id) reset.id = options.reset.id;
+		if (options.reset.revertFor) reset.dataset.revertFor = options.reset.revertFor;
 		reset.disabled = true;
 		reset.title = options.reset.title || 'Reset to default';
 		reset.setAttribute('aria-label', options.reset.title || `Reset ${options.label}`);
@@ -839,8 +867,9 @@ function buildPaintSlotCard(slot) {
 	const title = header.querySelector(':scope > span');
 	title.textContent = slot.title;
 	if (slot.redesign) {
-		const swatch = panelDiv('property-module-swatch');
-		header.insertBefore(swatch, title);
+		// The swatch is a "current value" indicator, so it sits with the
+		// module summary at the right edge — not as a bullet before the name.
+		header.appendChild(panelDiv('property-module-swatch'));
 	}
 	let container = card;
 	if (slot.toggle) {
@@ -932,11 +961,27 @@ function buildPanelItem(item, schema) {
 			// on blocks that ask for one or carry an effect toggle.
 			if (item.collapsible) card.dataset.collapsible = '';
 			if (item.moduleSummary) card.dataset.moduleSummaryType = item.moduleSummary;
+			if (item.summaryFrom) {
+				card.dataset.summaryFrom = item.summaryFrom;
+				if (!item.moduleSummary) card.dataset.moduleSummaryType = 'control';
+			}
 			addPanelClasses(card, item.classes);
 			const title = card.querySelector('.subsection-title');
 			if (item.title) {
 				title.querySelector(':scope > span').textContent = item.title;
 				card.classList.add('has-subsection-title');
+				// A manager-driven readout beside the title (the project name on the
+				// no-selection Project card). Uses the same `.property-module-summary`
+				// primitive as the effect modules; `data-title-summary` gives its
+				// row the same flush-right treatment.
+				if (item.titleSummary) {
+					card.dataset.titleSummary = '';
+					const summary = document.createElement('span');
+					summary.className = 'property-module-summary';
+					if (item.titleSummary.id) summary.id = item.titleSummary.id;
+					summary.textContent = item.titleSummary.text || '';
+					title.appendChild(summary);
+				}
 			}
 			else title.remove();
 			if (item.toggle) {
@@ -970,7 +1015,10 @@ function buildPanelItem(item, schema) {
 			// per-container special case. Bare cards stay edge-to-edge; a body that
 			// is already all sets (kind:'set') is left as-is.
 			if (bodyChildren.length) {
-				if (item.bare || bodyChildren.every((node) => node.classList.contains('property-set'))) {
+				// `flatBody`: the body is a hairline-divided run of mixed blocks
+				// (the document-size card: an Operation set + two mode `content`
+				// wrappers), like the Transform grid — do not wrap it in one set.
+				if (item.flatBody || item.bare || bodyChildren.every((node) => node.classList.contains('property-set'))) {
 					bodyChildren.forEach((node) => body.appendChild(node));
 				} else {
 					body.appendChild(wrapPropertySet(bodyChildren));
@@ -987,6 +1035,12 @@ function buildPanelItem(item, schema) {
 			item.items.forEach((child) => content.appendChild(buildPanelItem(child, schema)));
 			return content;
 		}
+		// A nested L1 group (title + `.panel-group-content > .panel-group-blocks`),
+		// the same primitive `renderPanelSection` uses at the top level — so cards
+		// inside it get the ordinary `.property-card` treatment, not the
+		// `.property-block-list` peer-card override.
+		case 'group':
+			return buildPanelGroup(item, schema);
 		// R4. A boolean reads as a labelled switch on its own row, not as a
 		// full-width uppercase pill - the pill made every toggle shout louder
 		// than the properties around it.
@@ -1005,12 +1059,17 @@ function buildPanelItem(item, schema) {
 				const label = row.querySelector('.property-label');
 				label.textContent = entry.label;
 				if (entry.title) label.title = entry.title;
+				// The redesign toggle grid reserves a revert column; a `revert`
+				// target lights it via the shared data-revert-for handler.
+				if (entry.revert) row.appendChild(buildFieldRevert(entry.revert));
 				content.appendChild(row);
 			});
 			return content;
 		}
 		case 'actionRow': {
 			const row = addPanelClasses(panelDiv('property-actions'), item.classes);
+			if (item.id) row.id = item.id;
+			if (item.hidden) row.hidden = true;
 			item.actions.forEach((action) => {
 				const button = document.createElement('button');
 				button.type = 'button';
@@ -1018,6 +1077,7 @@ function buildPanelItem(item, schema) {
 				button.id = action.id;
 				button.textContent = action.label;
 				if (action.title) button.title = action.title;
+				if (action.disabled) button.disabled = true;
 				row.appendChild(button);
 			});
 			return row;
@@ -1042,6 +1102,8 @@ function buildPanelItem(item, schema) {
 		// bodies (Border: Stroke / Placement) read consistently.
 		case 'set': {
 			const set = addPanelClasses(panelDiv('property-set'), item.classes);
+			if (item.id) set.id = item.id;
+			if (item.hidden) set.hidden = true;
 			if (item.label) {
 				const heading = panelDiv('property-set-label');
 				heading.textContent = item.label;
@@ -1049,6 +1111,74 @@ function buildPanelItem(item, schema) {
 			}
 			(item.items || []).forEach((child) => set.appendChild(buildPanelItem(child, schema)));
 			return set;
+		}
+		// A single labelled input row: label | control [| unit]. `type` picks the
+		// input (text/number/color/…); `unit` wraps it in `.input-unit` with a
+		// suffix. Ids/ranges are still driven imperatively by the owning manager
+		// (canvas-size.js, the project-name binding) — this only stamps structure.
+		case 'field': {
+			const input = document.createElement('input');
+			input.type = item.type || 'text';
+			if (item.id) input.id = item.id;
+			if (item.placeholder) input.placeholder = item.placeholder;
+			if (item.maxlength != null) input.maxLength = item.maxlength;
+			if (item.min != null) input.min = String(item.min);
+			if (item.max != null) input.max = String(item.max);
+			if (item.step != null) input.step = String(item.step);
+			if (item.value != null) input.setAttribute('value', String(item.value));
+			if (item.inputMode) input.inputMode = item.inputMode;
+			if (item.spellcheck === false) input.spellcheck = false;
+			Object.entries(item.attrs || {}).forEach(([name, value]) => input.setAttribute(name, value));
+
+			// A colour field IS the paint-slot solid-colour row: same
+			// `.property-row.property-color-row` markup, same `attachOptionRevert`
+			// wiring — one component, not a second colour control.
+			if (item.type === 'color') {
+				const row = addPanelClasses(panelDiv('property-row property-color-row'), item.rowClasses);
+				if (item.rowId) row.id = item.rowId;
+				if (item.hidden) row.hidden = true;
+				if (item.role) row.dataset.role = item.role;
+				const label = document.createElement('span');
+				label.className = 'property-label';
+				label.textContent = item.label || '';
+				row.append(label, input);
+				if (item.revert) attachOptionRevert(row, input, { roleId: item.id || item.label, label: item.label, defaultValue: item.value });
+				return row;
+			}
+
+			const row = addPanelClasses(panelDiv('property-row'), item.rowClasses);
+			if (item.rowId) row.id = item.rowId;
+			if (item.hidden) row.hidden = true;
+			if (item.role) row.dataset.role = item.role;
+			const label = document.createElement('span');
+			label.className = 'property-label';
+			label.textContent = item.label || '';
+			if (item.title) label.title = item.title;
+			row.appendChild(label);
+			if (item.unit) {
+				const unit = document.createElement('span');
+				unit.className = 'input-unit';
+				const suffix = document.createElement('span');
+				suffix.className = 'input-unit-suffix';
+				suffix.textContent = item.unit;
+				unit.append(input, suffix);
+				row.appendChild(unit);
+			} else {
+				row.appendChild(input);
+			}
+			if (item.revert) row.appendChild(buildFieldRevert(item.revert));
+			return row;
+		}
+		// A label paired with one arbitrary built control, using the same
+		// `.property-row` chrome as every other labelled row. `stacked` overrides
+		// buildOptionGroup's width heuristic when the caller knows better.
+		case 'labeled': {
+			const control = buildPanelItem(item.control, schema);
+			const row = buildOptionGroup(item.label, [control], item.rowClasses);
+			if (item.stacked === false) row.classList.remove('is-stacked');
+			else if (item.stacked === true) row.classList.add('is-stacked');
+			if (item.revert) row.appendChild(buildFieldRevert(item.revert));
+			return row;
 		}
 		case 'optionGroup': {
 			const segmented = buildSegmented(item.options);
@@ -1063,7 +1193,10 @@ function buildPanelItem(item, schema) {
 			const group = buildSegmented(item.options, item);
 			if (!item.visibleLabel) return group;
 			const row = buildOptionGroup(item.visibleLabel, [group], item.rowClasses);
+			if (item.stacked === false) row.classList.remove('is-stacked');
+			else if (item.stacked === true) row.classList.add('is-stacked');
 			if (item.revert) attachOptionRevert(row, group, { options: item.options, roleId: item.id || item.visibleLabel, label: item.visibleLabel });
+			if (item.revertFor) row.appendChild(buildFieldRevert(item.revertFor));
 			return row;
 		}
 		case 'select': {
@@ -1192,6 +1325,17 @@ function readModuleSummary(card) {
 	// you expand a still-disabled module contradicts itself.
 	const toggle = card.querySelector(':scope > .subsection-title input[data-effect-toggle]');
 	if (toggle && !toggle.checked) return '';
+	// `data-summary-from`: mirror one named control's current label (a segmented
+	// control's active option, or a <select>'s chosen option) — the Palette
+	// card's Posterize/Dither mode, etc.
+	if (card.dataset.summaryFrom) {
+		const src = document.getElementById(card.dataset.summaryFrom);
+		if (!src) return '';
+		const active = src.querySelector?.('.segmented-option.active');
+		if (active) return active.textContent.trim();
+		if (src.tagName === 'SELECT') return src.options[src.selectedIndex]?.text || '';
+		return '';
+	}
 	const mode = card.dataset.paintMode || card.querySelector('.segmented-option.active[data-mode]')?.dataset.mode || '';
 	const parts = [];
 	if (mode === 'none') return 'None';
@@ -1218,7 +1362,14 @@ function syncModuleSummary(card) {
 	if (swatch) {
 		const source = card.querySelector('.asset-info:not([hidden]) .asset-info-thumbnail');
 		const solid = card.querySelector('.property-color-row:not([hidden]) input[type="color"]');
-		swatch.style.background = solid?.value || source?.style.background || source?.style.backgroundImage || '';
+		// Gradient mode shows neither an asset chip nor the solid row — mirror the
+		// gradient editor's own preview bar so the swatch tracks it too.
+		const gradient = card.querySelector('.gradient-preview-bar');
+		swatch.style.background = solid?.value
+			|| source?.style.background
+			|| source?.style.backgroundImage
+			|| gradient?.style.backgroundImage
+			|| '';
 	}
 }
 
@@ -1364,7 +1515,11 @@ function buildPanelGroup(group, schema) {
 	if (group.static) {
 		node.querySelector('.subsection-title')?.remove();
 		node.dataset.panelGroup = group.title;
-		group.items.forEach((item) => node.appendChild(buildPanelItem(item, schema)));
+		group.items.forEach((item) => {
+			const child = buildPanelItem(item, schema);
+			if (child.classList?.contains('property-actions')) child.classList.add('section-actions');
+			node.appendChild(child);
+		});
 		return node;
 	}
 	const { header, chevron } = initializePanelGroupNode(node, schema.prefix, group.title, { collapsible: group.collapsible !== false });
@@ -1381,8 +1536,13 @@ function buildPanelGroup(group, schema) {
 	const actions = [];
 	group.items.forEach((item) => {
 		const child = buildPanelItem(item, schema);
-		if (child.classList?.contains('property-actions')) actions.push(child);
-		else blocks.appendChild(child);
+		if (child.classList?.contains('property-actions')) {
+			// A group-level action row is a panel-end action set — no card, no
+			// surface, no divider above it. Card footers (an actionRow inside a
+			// card's items) never reach here, so they keep `.panel-actions`.
+			child.classList.add('section-actions');
+			actions.push(child);
+		} else blocks.appendChild(child);
 	});
 	// Keep the block host even when the schema starts empty. Some groups (for
 	// example Appearance) adopt controls after the transform panel is rendered.
@@ -1394,7 +1554,100 @@ function buildPanelGroup(group, schema) {
 	return node;
 }
 
+// The panel-redesign class-bridge pass: schema markup carries the semantic
+// classes, this stamps the redesign aliases the redesign SCSS also keys on.
+// Extracted so the bare-section and fragment renderers get the identical
+// treatment as a full schema section.
+function applyPanelRedesignClasses(root) {
+	root.querySelectorAll('.property-card').forEach((node) => node.classList.add('panel-card'));
+	root.querySelectorAll('.subsection-section-group').forEach((node) => node.classList.add('panel-group'));
+	root.querySelectorAll('.panel-group-label').forEach((node) => node.classList.add('property-group-label'));
+	root.querySelectorAll('.property-row').forEach((node) => node.classList.add('row'));
+	root.querySelectorAll('.segmented-control').forEach((node) => node.classList.add('segmented'));
+	root.querySelectorAll('.asset-info').forEach((node) => node.classList.add('asset'));
+	root.querySelectorAll('.advanced-disclosure').forEach((node) => node.classList.add('disc'));
+	root.querySelectorAll('.property-actions').forEach((node) => node.classList.add('panel-actions'));
+	root.querySelectorAll('.paint-slot-card').forEach((node) => node.classList.add('panel-module'));
+	initializeEditablePropertyValues(root);
+}
+
+// Render one or more `.settings-subsection` blocks from a schema. `subsections`
+// lets a panel carry several keyed blocks (the no-selection panel toggles
+// #noLayerDefaultGroups vs #multiLayerSelectionGroup) whose entries are either
+// `groups` (buildPanelGroup) or bare `items` (buildPanelItem — the
+// `.property-block-list` peer-card layout).
+function renderPanelSubsections(schema, parent) {
+	const defs = schema.subsections || [{ groups: schema.groups }];
+	defs.forEach((def) => {
+		const block = panelDiv('settings-subsection');
+		if (def.id) block.id = def.id;
+		addPanelClasses(block, def.classes);
+		if (def.hidden) block.hidden = true;
+		(def.groups || []).forEach((group) => block.appendChild(buildPanelGroup(group, schema)));
+		(def.items || []).forEach((item) => block.appendChild(buildPanelItem(item, schema)));
+		parent.appendChild(block);
+	});
+}
+
+// A headerless ("bare") schema section: no tpl-section chrome, no accordion —
+// the groups render straight into the host's existing `.section-content` (the
+// no-selection panel, which sits under the shared Design gallery header).
+// `preamble` items render ahead of the subsections (the "nothing selected"
+// intro note keeps its id so syncNoLayerPanelState still drives its text).
+function renderBarePanelSection(schema) {
+	const host = document.getElementById(schema.section.id);
+	if (!host) return;
+	addPanelClasses(host, schema.section.classes);
+	let content = host.querySelector(':scope > .section-content');
+	if (!content) {
+		content = panelDiv('section-content');
+		host.appendChild(content);
+	}
+	if (content.querySelector(':scope > .settings-subsection')) return;
+	content.replaceChildren();
+	(schema.preamble || []).forEach((item) => content.appendChild(buildPanelItem(item, schema)));
+	renderPanelSubsections(schema, content);
+	initializeScrollBoundaryFades(host);
+	if (schema.section.classes?.split(/\s+/).includes('panel-redesign')) applyPanelRedesignClasses(host);
+}
+
+// A schema fragment with no section of its own: builds one self-contained
+// `.property-card` (id = fragmentId) and mounts it into fragmentHost. The
+// document-size form uses this so ONE card definition serves both the
+// no-selection Size slot and Canvas Properties (managers relocate the single
+// node between the two hosts at runtime; it is never rendered twice).
+function renderPanelFragment(schema) {
+	if (document.getElementById(schema.fragmentId)) return;
+	const mount = document.getElementById(schema.fragmentHost);
+	if (!mount) return;
+	// Built through the SAME `buildPanelItem('card')` path as every schema card,
+	// so trailing action rows become edge-to-edge card footers, the body wraps
+	// its property-sets exactly as elsewhere, etc. — no bespoke card assembly.
+	const card = buildPanelItem({
+		kind: 'card',
+		id: schema.fragmentId,
+		title: schema.fragmentCard?.title,
+		collapsible: schema.fragmentCard?.collapsible,
+		moduleSummary: schema.fragmentCard?.moduleSummary,
+		flatBody: true,
+		classes: `panel-module ${schema.fragmentClasses || ''}`.trim(),
+		items: schema.items || []
+	}, schema);
+	if (schema.fragmentCard?.summaryId) {
+		card.dataset.titleSummary = '';
+		const title = card.querySelector(':scope > .subsection-title');
+		const summary = document.createElement('span');
+		summary.className = 'property-module-summary';
+		summary.id = schema.fragmentCard.summaryId;
+		summary.textContent = schema.fragmentCard.summaryText || '';
+		title.appendChild(summary);
+	}
+	mount.appendChild(card);
+	applyPanelRedesignClasses(card);
+}
+
 function renderPanelSection(schema) {
+	if (schema.section?.bare) return renderBarePanelSection(schema);
 	const host = document.getElementById(schema.section.id);
 	if (!host) return;
 	addPanelClasses(host, schema.section.classes);
@@ -1443,25 +1696,17 @@ function renderPanelSection(schema) {
 	(schema.sourceTemplate ? document.getElementById(schema.sourceTemplate) : host.querySelector(':scope > template'))?.remove();
 	host.prepend(fragment);
 	initializeScrollBoundaryFades(host);
-	if (schema.section.classes?.split(/\s+/).includes('panel-redesign')) {
-		host.querySelectorAll('.property-card').forEach((node) => node.classList.add('panel-card'));
-		host.querySelectorAll('.subsection-section-group').forEach((node) => node.classList.add('panel-group'));
-		host.querySelectorAll('.panel-group-label').forEach((node) => node.classList.add('property-group-label'));
-		host.querySelectorAll('.property-row').forEach((node) => node.classList.add('row'));
-		host.querySelectorAll('.segmented-control').forEach((node) => node.classList.add('segmented'));
-		host.querySelectorAll('.asset-info').forEach((node) => node.classList.add('asset'));
-		host.querySelectorAll('.advanced-disclosure').forEach((node) => node.classList.add('disc'));
-		host.querySelectorAll('.property-actions').forEach((node) => node.classList.add('panel-actions'));
-		host.querySelectorAll('.paint-slot-card').forEach((node) => node.classList.add('panel-module'));
-		initializeEditablePropertyValues(host);
-	}
+	if (schema.section.classes?.split(/\s+/).includes('panel-redesign')) applyPanelRedesignClasses(host);
 }
 
 // Boot entry point. Must run before renderTransformPanels (it creates the
 // transform hosts) and before any manager constructor caches panel elements.
+// Fragment schemas (documentSize) run last so their mount hosts — created by an
+// earlier section schema — already exist.
 function renderPanelSections(editor) {
 	Object.values(PANEL_SCHEMAS).forEach((schema) => {
 		if (schema.template) renderLegacyPanelTemplate(schema.section.id, schema.template);
+		else if (schema.fragment) renderPanelFragment(schema);
 		else renderPanelSection(schema);
 		(schema.auxiliarySections || []).forEach((section) => renderPanelSection(section));
 	});

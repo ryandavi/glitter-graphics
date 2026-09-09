@@ -224,7 +224,6 @@ setupLayerTypePickerListeners() {
 		const multiDuplicateBtn = document.getElementById('multiSelectionDuplicateBtn');
 		const multiDeleteBtn = document.getElementById('multiSelectionDeleteBtn');
 		const multiOpacity = document.getElementById('multiSelectionOpacity');
-		const resetMultiOpacity = document.getElementById('resetMultiSelectionOpacity');
 		this.multiSelectionAlignScope = 'selection';
 
 		const applyMultiOpacity = (commit = false) => {
@@ -238,10 +237,9 @@ setupLayerTypePickerListeners() {
 		};
 		multiOpacity?.addEventListener('input', () => applyMultiOpacity(false));
 		multiOpacity?.addEventListener('change', () => applyMultiOpacity(true));
-		resetMultiOpacity?.addEventListener('click', () => {
-			multiOpacity.value = 100;
-			applyMultiOpacity(true);
-		});
+		// The reset button (#resetMultiSelectionOpacity, stamped by buildSliderRow)
+		// is driven by the shared property-revert handler — it writes the slider
+		// default and fires input/change, which the listeners above pick up.
 
 		if (multiDuplicateBtn) {
 			multiDuplicateBtn.addEventListener('click', () => {

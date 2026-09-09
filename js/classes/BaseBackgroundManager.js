@@ -114,15 +114,12 @@ class BaseBackgroundManager {
 		if (this.ui.section && designGallery?.parentElement && this.ui.section.parentElement !== designGallery.parentElement) {
 			designGallery.after(this.ui.section);
 		}
-		// Document sizing is a canvas/background property. Move both existing
-		// controls intact so their established listeners and ids remain authoritative.
+		// Document sizing is a canvas/background property. The schema renders the
+		// self-contained #documentSizeGroup "Size" card once (into the no-selection
+		// host); move that single node here so its ids/listeners stay authoritative.
 		const documentSize = id('documentSizeGroup');
-		const scaleDesign = id('scaleDesignPanel');
 		const canvasHost = id('baseCanvasSizeHost');
-		if (documentSize && canvasHost) {
-			canvasHost.appendChild(documentSize);
-			if (scaleDesign) documentSize.appendChild(scaleDesign);
-		}
+		if (documentSize && canvasHost) canvasHost.appendChild(documentSize);
 		installEffectGradientEditor({
 			prefix: 'baseBackground',
 			getData: () => this.normalizeLayer(this.getActiveLayer())?.background || null,
@@ -590,7 +587,9 @@ class BaseBackgroundManager {
 		[0, 1].forEach((index) => { const input = document.getElementById(`pixelEffectsDuotone${index}`); if (input) input.value = settings.dither.duotone[index]; });
 		if (this.ui.paletteControls) this.ui.paletteControls.hidden = settings.paletteMode === 'dither' && settings.dither.palette !== 'auto';
 		if (this.ui.posterizeControls) this.ui.posterizeControls.hidden = settings.paletteMode !== 'posterize';
-		if (this.ui.ditherControls) this.ui.ditherControls.hidden = settings.paletteMode !== 'dither';
+		// The dither controls are three hairline-divided `.property-set` groups
+		// (Dither / Pattern / Shimmer) sharing this class — hide them together.
+		document.querySelectorAll('.pixel-effects-dither-controls').forEach((el) => { el.hidden = settings.paletteMode !== 'dither'; });
 		if (this.ui.duotone) this.ui.duotone.hidden = settings.dither.palette !== 'duotone';
 		if (this.ui.angle) this.ui.angle.closest('.property-row').hidden = settings.dither.algorithm !== 'halftone';
 		if (this.ui.ditherScale) this.ui.ditherScale.closest('.property-row').hidden = !['bayer', 'halftone'].includes(settings.dither.algorithm);
