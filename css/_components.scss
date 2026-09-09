@@ -71,6 +71,24 @@ textarea {
 	line-height: 1.4;
 }
 
+/* Feature maturity badge - "Beta" / "Alpha" pill next to a feature's title or
+   banner while it is still under test. Rendered by panel-renderer (section
+   `badge:`) and inline in index.html (Auto Glitter canvas banner). */
+.feature-badge {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+	padding: 1px var(--spacing-xs);
+	border-radius: var(--radius-pill);
+	background: var(--color-accent-surface);
+	color: var(--color-accent);
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-bold);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	line-height: 1.5;
+}
+
 .search-toggle-row {
 	--search-control-height: var(--control-height);
 	display: flex;

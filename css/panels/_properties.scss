@@ -987,6 +987,10 @@
 
 	> button { width: 100%; }
 
+	// Icon + label actions (schema `icon:`) center their content like the
+	// workspace-start card buttons rather than left-aligning it.
+	> .btn-text-with-icon { justify-content: center; }
+
 	&[hidden] { display: none; }
 
 	&.is-split { grid-template-columns: repeat(2, minmax(0, 1fr)); }

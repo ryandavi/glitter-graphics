@@ -631,7 +631,7 @@ const CONFIG = deepFreeze({
 				{ kind: 'button', id: 'zoomOut', icon: 'minus', name: 'Zoom Out', title: 'Zoom Out (-)', action: 'zoomOut' },
 				{ kind: 'readout', id: 'zoomPercentage', title: 'Click to reset to 100%', value: '100%', action: 'zoomReset' },
 				{ kind: 'button', id: 'zoomIn', icon: 'plus', name: 'Zoom In', title: 'Zoom In (+)', action: 'zoomIn' },
-				{ kind: 'button', id: 'fitScreen', icon: 'arrows-up-down', name: 'Fit Screen', title: 'Fit Screen (Ctrl+0)', action: 'zoomFit' },
+				{ kind: 'button', id: 'fitScreen', icon: 'fit-screen', name: 'Fit Screen', title: 'Fit Screen (Ctrl+0)', action: 'zoomFit' },
 				{ kind: 'button', id: 'fillScreen', icon: 'maximize', name: 'Fill Screen', title: 'Fill Screen', action: 'zoomFill' }
 			] },
 			{ id: 'panControls', tool: 'hand', controls: [
@@ -1241,8 +1241,8 @@ const PANEL_SCHEMAS = {
 						{ kind: 'field', id: 'projectNameInput', label: 'Name', type: 'text',
 							maxlength: 60, spellcheck: false, placeholder: 'Name...' },
 						{ kind: 'actionRow', classes: 'canvas-project-actions is-split', actions: [
-							{ id: 'openProjectSidebarBtn', label: 'Open Project' },
-							{ id: 'saveProject', label: 'Save Project', primary: true, disabled: true }
+							{ id: 'openProjectSidebarBtn', label: 'Open Project', icon: 'open-project' },
+							{ id: 'saveProject', label: 'Save Project', icon: 'save', primary: true, disabled: true }
 						] }
 					] },
 					// The document-size fragment card mounts here at boot and is
@@ -1298,7 +1298,7 @@ const PANEL_SCHEMAS = {
 		sectionPrefix: 'autoGlitterSettings',
 		mobileKey: 'autoGlitter',
 		replaceStatic: true,
-		section: { id: 'autoGlitterSettingsSection', classes: 'panel-redesign', icon: 'palette', iconName: 'Palette', title: 'Auto Glitter' },
+		section: { id: 'autoGlitterSettingsSection', classes: 'panel-redesign', icon: 'magic-wand', iconName: 'Auto Glitter', title: 'Auto Glitter', badge: 'beta' },
 		groups: [
 			{ title: 'Preview', region: 'header', static: true, bare: true, items: [
 				{ kind: 'card', classes: 'auto-glitter-preview-card', bare: true, items: [

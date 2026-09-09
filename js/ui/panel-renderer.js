@@ -209,7 +209,7 @@ function attachOptionRevert(row, control, spec = {}) {
 	button.dataset.role = `${spec.roleId || 'option'}-reset`;
 	button.title = 'Reset to default';
 	button.setAttribute('aria-label', `Reset ${spec.label || 'option'}`);
-	button.appendChild(createIcon('undo'));
+	button.appendChild(createIcon('reset'));
 	row.appendChild(button);
 
 	const options = spec.options || [];
@@ -470,7 +470,7 @@ function buildPairRow(item) {
 		reset.dataset.role = `${entry.role || entry.slider}-reset`;
 		reset.title = 'Reset to default';
 		reset.setAttribute('aria-label', `Reset ${entry.label || spec.label}`);
-		reset.appendChild(createIcon('undo'));
+		reset.appendChild(createIcon('reset'));
 		cell.appendChild(reset);
 
 		pair.appendChild(cell);
@@ -479,7 +479,7 @@ function buildPairRow(item) {
 	if (item.fields) {
 		const placeholder = panelDiv('property-revert is-placeholder');
 		placeholder.setAttribute('aria-hidden', 'true');
-		placeholder.appendChild(createIcon('undo'));
+		placeholder.appendChild(createIcon('reset'));
 		row.appendChild(placeholder);
 	}
 	return row;
@@ -506,7 +506,7 @@ function buildFieldRevert(target, defaultValue) {
 	button.disabled = true;
 	button.title = 'Reset to default';
 	button.setAttribute('aria-label', 'Reset to default');
-	button.appendChild(createIcon('undo'));
+	button.appendChild(createIcon('reset'));
 	return button;
 }
 
@@ -560,7 +560,7 @@ function buildNumberFieldPair(options) {
 		reset.disabled = true;
 		reset.title = options.reset.title || 'Reset to default';
 		reset.setAttribute('aria-label', options.reset.title || `Reset ${options.label}`);
-		reset.appendChild(createIcon('undo'));
+		reset.appendChild(createIcon('reset'));
 		row.appendChild(reset);
 	}
 	return row;
@@ -837,7 +837,7 @@ function buildAdvancedControlGroup(title, className, reset = null) {
 		button.id = reset.id;
 		button.title = reset.title || 'Reset to default';
 		button.setAttribute('aria-label', reset.title || `Reset ${title}`);
-		button.appendChild(createIcon('undo'));
+		button.appendChild(createIcon('reset'));
 		heading.classList.add('has-set-reset');
 		heading.appendChild(button);
 	}
@@ -1102,9 +1102,21 @@ function buildPanelItem(item, schema) {
 			item.actions.forEach((action) => {
 				const button = document.createElement('button');
 				button.type = 'button';
-				button.className = `btn-simple${action.primary ? ' primary' : ''}${action.secondary ? ' secondary' : ''}`;
+				// `icon` opts a sidebar action into the same icon + label treatment
+				// the workspace-start card uses, so the same action carries the same
+				// glyph here as everywhere else (see AGENTS.md "Icons").
+				const base = action.icon ? 'btn-text-with-icon icon-wrapper' : 'btn-simple';
+				button.className = `${base}${action.primary ? ' primary' : ''}${action.secondary ? ' secondary' : ''}`;
 				button.id = action.id;
-				button.textContent = action.label;
+				if (action.icon) {
+					button.appendChild(createIcon(action.icon));
+					const name = document.createElement('span');
+					name.className = 'name';
+					name.textContent = action.label;
+					button.appendChild(name);
+				} else {
+					button.textContent = action.label;
+				}
 				if (action.title) button.title = action.title;
 				if (action.disabled) button.disabled = true;
 				row.appendChild(button);
@@ -1712,6 +1724,15 @@ function renderPanelSection(schema) {
 	const titleText = fragment.querySelector('.section-header-title-text');
 	titleText.textContent = schema.section.title;
 	if (schema.section.titleTextId) titleText.id = schema.section.titleTextId;
+	// `badge: 'beta'` (or 'alpha') marks a feature still under test — a small pill
+	// after the section title. Same `.feature-badge` component used on the canvas
+	// Auto Glitter banner.
+	if (schema.section.badge) {
+		const badge = document.createElement('span');
+		badge.className = `feature-badge feature-badge-${schema.section.badge}`;
+		badge.textContent = panelCap(schema.section.badge);
+		titleText.after(badge);
+	}
 	fragment.querySelector('.section-header-action').id = `${sectionPrefix}Toggle`;
 	fragment.querySelector('.section-content').id = `${sectionPrefix}Content`;
 	const subsection = fragment.querySelector('.settings-subsection');
@@ -1793,7 +1814,7 @@ function redesignTransformFragment(fragment) {
 		const node = document.createElement('span');
 		node.className = 'property-revert is-placeholder';
 		node.setAttribute('aria-hidden', 'true');
-		node.appendChild(createIcon('undo'));
+		node.appendChild(createIcon('reset'));
 		return node;
 	};
 	// A real per-row revert for the transform controls that have a meaningful
@@ -1808,7 +1829,7 @@ function redesignTransformFragment(fragment) {
 		node.title = 'Reset to default';
 		node.setAttribute('aria-label', 'Reset to default');
 		node.disabled = true;
-		node.appendChild(createIcon('undo'));
+		node.appendChild(createIcon('reset'));
 		return node;
 	};
 	const rowLabel = (text) => {
@@ -1842,7 +1863,7 @@ function redesignTransformFragment(fragment) {
 	signal.title = 'Reset transform';
 	signal.setAttribute('aria-label', 'Reset transform');
 	signal.dataset.transformRevertSignal = '';
-	signal.appendChild(createIcon('undo'));
+	signal.appendChild(createIcon('reset'));
 	header.appendChild(signal);
 
 	makePairRow(position, 'Position', { revert: false });

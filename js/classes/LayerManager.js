@@ -1467,7 +1467,7 @@ class LayerManager {
 		const arrowBtn = this.createIconButton({
 			className: `layer-action-btn goto-glitter${sourceType ? '' : ' unavailable'}`,
 			title: sourceType ? (sourceType === 'sticker' ? 'Show sticker in Design' : 'Show glitter in Design') : 'No source asset for this layer',
-			iconType: 'chevron-right',
+			iconType: 'locate',
 			disabled: !sourceType,
 			onClick: (e) => {
 				e.stopPropagation();
@@ -1480,7 +1480,7 @@ class LayerManager {
 		const delBtn = this.createIconButton({
 				className: `layer-action-btn delete${cannotDelete ? ' unavailable' : ''}`,
 				title: isBaseLayer ? 'Base layer cannot be deleted' : (layer.locked ? 'Unlock layer to delete it' : 'Delete layer'),
-				iconType: 'x-mark',
+				iconType: 'trash',
 				disabled: cannotDelete,
 				onClick: async (e) => {
 					e.stopPropagation();

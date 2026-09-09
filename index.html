@@ -100,7 +100,7 @@
 						<div class="app-menu-separator" role="separator"></div>
 
 						<button class="app-menu-item app-menu-item-danger" id="clearAllTool" type="button" role="menuitem" disabled>
-							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-x-mark"></use></svg></span>
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-broom"></use></svg></span>
 							<span class="app-menu-item-label">Clear All</span>
 						</button>
 					</div>
@@ -248,7 +248,7 @@
 
 							<!-- go to selected -->
 							<button class="btn-icon-simple icon-wrapper go-to sm" title="Go to selected layer" id="layersBarGoToSelected" disabled><svg class="icon">
-									<use href="#icon-chevron-right"></use>
+									<use href="#icon-locate"></use>
 								</svg></button>
 
 							<!-- delete selected -->
@@ -294,7 +294,7 @@
 								<div class="section-header-action btn-icon upload-sticker-action" id="uploadStickerBtn" data-no-accordion-toggle="true">
 									<span class="icon-wrapper">
 										<svg class="icon">
-											<use href="#icon-plus"></use>
+											<use href="#icon-upload"></use>
 										</svg>
 										<span class="name">Add Custom Sticker</span>
 									</span>
@@ -755,8 +755,9 @@
 							<canvas class="mask-overlay-canvas" id="maskOverlayCanvas"></canvas>
 						</div>
 						<div class="auto-glitter-preview-banner ui-ignore-gestures" id="autoGlitterPreviewBanner" aria-label="Auto Glitter Mode" hidden>
-							<span class="icon-wrapper"><svg class="icon"><use href="#icon-glitter"></use></svg></span>
+							<span class="icon-wrapper"><svg class="icon"><use href="#icon-magic-wand"></use></svg></span>
 							<strong>Auto Glitter Mode</strong>
+							<span class="feature-badge feature-badge-beta">Beta</span>
 							<span id="autoGlitterCanvasStatus" role="status" aria-live="polite" hidden></span>
 							<button class="btn-text" id="autoGlitterPreviewExit" type="button">Exit</button>
 						</div>
@@ -787,12 +788,12 @@
 								<button class="bounds-toggle btn-icon icon-wrapper" id="boundsToggle"
 									title="Toggle Bounds" disabled>
 									<svg class="icon">
-										<use href="#icon-square"></use>
+										<use href="#icon-bounding-box"></use>
 									</svg>
 									<span class="name">Bounds</span>
 								</button>
 								<button class="btn-icon icon-wrapper active" id="snappingToggle" title="Toggle snapping">
-									<svg class="icon"><use href="#icon-move"></use></svg><span class="name">Snapping</span>
+									<svg class="icon"><use href="#icon-magnet"></use></svg><span class="name">Snapping</span>
 								</button>
 
 								<button class="mask-overlay-toggle btn-icon icon-wrapper active" id="maskOverlayToggle"
@@ -838,13 +839,13 @@
 								<svg class="icon">
 									<use href="#icon-plus"></use>
 								</svg>
-								<span class="name">Zoom Out</span>
+								<span class="name">Zoom In</span>
 							</button>
 
 							<!-- Fit/Fill Screen -->
 							<button class="icon-wrapper btn-icon" id="fitScreen" title="Fit Screen (Ctrl+0)">
 								<svg class="icon">
-									<use href="#icon-arrows-up-down"></use>
+									<use href="#icon-fit-screen"></use>
 								</svg>
 								<span class="name">Fit Screen</span>
 							</button>
@@ -1169,7 +1170,7 @@
 				<!-- Create Canvas -->
 				<button class="btn-text-with-icon icon-wrapper modal-action primary" id="createCanvasBtn">
 					<svg class="icon">
-						<use href="#icon-plus"></use>
+						<use href="#icon-new-canvas"></use>
 					</svg>
 					<span class="name">Create Canvas</span>
 				</button>
@@ -1982,7 +1983,7 @@
 						<span class="name">Open Tutorial</span>
 					</button>
 					<button class="btn-text-with-icon icon-wrapper modal-action modal-action-hero" id="welcomeStartCreatingBtn">
-						<svg class="icon"><use href="#icon-plus"></use></svg>
+						<svg class="icon"><use href="#icon-glitter"></use></svg>
 						<span class="name">Start Creating</span>
 					</button>
 				</div>
@@ -2057,13 +2058,6 @@
 			<symbol id="icon-magic-wand" viewBox="0 0 640 640">
 				<path
 					d="M295.4 37L310.2 73.8L347 88.6C350 89.8 352 92.8 352 96C352 99.2 350 102.2 347 103.4L310.2 118.2L295.4 155C294.2 158 291.2 160 288 160C284.8 160 281.8 158 280.6 155L265.8 118.2L229 103.4C226 102.2 224 99.2 224 96C224 92.8 226 89.8 229 88.6L265.8 73.8L280.6 37C281.8 34 284.8 32 288 32C291.2 32 294.2 34 295.4 37zM142.7 105.7L164.2 155.8L214.3 177.3C220.2 179.8 224 185.6 224 192C224 198.4 220.2 204.2 214.3 206.7L164.2 228.2L142.7 278.3C140.2 284.2 134.4 288 128 288C121.6 288 115.8 284.2 113.3 278.3L91.8 228.2L41.7 206.7C35.8 204.2 32 198.4 32 192C32 185.6 35.8 179.8 41.7 177.3L91.8 155.8L113.3 105.7C115.8 99.8 121.6 96 128 96C134.4 96 140.2 99.8 142.7 105.7zM496 368C502.4 368 508.2 371.8 510.7 377.7L532.2 427.8L582.3 449.3C588.2 451.8 592 457.6 592 464C592 470.4 588.2 476.2 582.3 478.7L532.2 500.2L510.7 550.3C508.2 556.2 502.4 560 496 560C489.6 560 483.8 556.2 481.3 550.3L459.8 500.2L409.7 478.7C403.8 476.2 400 470.4 400 464C400 457.6 403.8 451.8 409.7 449.3L459.8 427.8L481.3 377.7C483.8 371.8 489.6 368 496 368zM492 64C503 64 513.6 68.4 521.5 76.2L563.8 118.5C571.6 126.4 576 137 576 148C576 159 571.6 169.6 563.8 177.5L475.6 265.7L374.3 164.4L462.5 76.2C470.4 68.4 481 64 492 64zM76.2 462.5L340.4 198.3L441.7 299.6L177.5 563.8C169.6 571.6 159 576 148 576C137 576 126.4 571.6 118.5 563.8L76.2 521.5C68.4 513.6 64 503 64 492C64 481 68.4 470.4 76.2 462.5z" />
-				<symbol id="icon-eye-dropper" viewBox="0 0 512 512">
-					<path
-						d="M50.75 333.25c-12 12-18.75 28.28-18.75 45.26V424L0 480l32 32 56-32h45.49c16.97 0 33.25-6.74 45.25-18.74l126.64-126.62-128-128L50.75 333.25zM483.88 28.12c-37.47-37.5-98.28-37.5-135.75 0l-77.09 77.09-13.1-13.1c-9.44-9.44-24.65-9.31-33.94 0l-40.97 40.97c-9.37 9.37-9.37 24.57 0 33.94l161.94 161.94c9.44 9.44 24.65 9.31 33.94 0L419.88 288c9.37-9.37 9.37-24.57 0-33.94l-13.1-13.1 77.09-77.09c37.51-37.48 37.51-98.26.01-135.75z" />
-				</symbol>
-				<symbol id="icon-cursor" viewBox="0 0 640 640">
-					<path
-						d="M173.3 66.5C181.4 62.4 191.2 63.3 198.4 68.8L518.4 308.7C526.7 314.9 530 325.7 526.8 335.5C523.6 345.3 514.4 351.9 504 351.9L351.7 351.9L440.6 529.6C448.5 545.4 442.1 564.6 426.3 572.5C410.5 580.4 391.3 574 383.4 558.2L294.5 380.5L203.2 502.3C197 510.6 186.2 513.9 176.4 510.7C166.6 507.5 160 498.3 160 488L160 88C160 78.9 165.1 70.6 173.3 66.5z" />
 				</symbol>
 				<symbol id="icon-pointer" viewBox="0 0 640 640">
 					<path
@@ -2177,11 +2171,6 @@
 					<path d="M384 64C366.3 64 352 78.3 352 96C352 113.7 366.3 128 384 128L466.7 128L265.3 329.4C252.8 341.9 252.8 362.2 265.3 374.7C277.8 387.2 298.1 387.2 310.6 374.7L512 173.3L512 256C512 273.7 526.3 288 544 288C561.7 288 576 273.7 576 256L576 96C576 78.3 561.7 64 544 64L384 64zM144 160C99.8 160 64 195.8 64 240L64 496C64 540.2 99.8 576 144 576L400 576C444.2 576 480 540.2 480 496L480 416C480 398.3 465.7 384 448 384C430.3 384 416 398.3 416 416L416 496C416 504.8 408.8 512 400 512L144 512C135.2 512 128 504.8 128 496L128 240C128 231.2 135.2 224 144 224L224 224C241.7 224 256 209.7 256 192C256 174.3 241.7 160 224 160L144 160z" />
 				</symbol>
 
-				<symbol id="icon-arrow-left" viewBox="0 0 640 640">
-					<path d="M73.4 297.4C60.9 309.9 60.9 330.2 73.4 342.7L233.4 502.7C245.9 515.2 266.2 515.2 278.7 502.7C291.2 490.2 291.2 469.9 278.7 457.4L173.3 352L544 352C561.7 352 576 337.7 576 320C576 302.3 561.7 288 544 288L173.3 288L278.7 182.6C291.2 170.1 291.2 149.8 278.7 137.3C266.2 124.8 245.9 124.8 233.4 137.3L73.4 297.3z" />
-				</symbol>
-
-
 				<symbol id="icon-arrows-up-down" viewBox="0 0 640 640">
 					<path d="M342.6 41.4C330.1 28.9 309.8 28.9 297.3 41.4L201.3 137.4C188.8 149.9 188.8 170.2 201.3 182.7C213.8 195.2 234.1 195.2 246.6 182.7L288 141.3L288 498.7L246.6 457.4C234.1 444.9 213.8 444.9 201.3 457.4C188.8 469.9 188.8 490.2 201.3 502.7L297.3 598.7C303.3 604.7 311.4 608.1 319.9 608.1C328.4 608.1 336.5 604.7 342.5 598.7L438.5 502.7C451 490.2 451 469.9 438.5 457.4C426 444.9 405.7 444.9 393.2 457.4L351.8 498.8L351.8 141.3L393.2 182.7C405.7 195.2 426 195.2 438.5 182.7C451 170.2 451 149.9 438.5 137.4L342.5 41.4z" />
 				</symbol>
@@ -2231,14 +2220,6 @@
 				</symbol>
 
 
-				<symbol id="icon-lightbulb" viewBox="0 0 640 640">
-					<path d="M420.9 448C428.2 425.7 442.8 405.5 459.3 388.1C492 353.7 512 307.2 512 256C512 150 426 64 320 64C214 64 128 150 128 256C128 307.2 148 353.7 180.7 388.1C197.2 405.5 211.9 425.7 219.1 448L420.8 448zM416 496L224 496L224 512C224 556.2 259.8 592 304 592L336 592C380.2 592 416 556.2 416 512L416 496zM312 176C272.2 176 240 208.2 240 248C240 261.3 229.3 272 216 272C202.7 272 192 261.3 192 248C192 181.7 245.7 128 312 128C325.3 128 336 138.7 336 152C336 165.3 325.3 176 312 176z" />
-				</symbol>
-
-				<symbol id="icon-grip-vertical" viewBox="0 0 640 640">
-					<path d="M288 104C288 81.9 270.1 64 248 64L200 64C177.9 64 160 81.9 160 104L160 152C160 174.1 177.9 192 200 192L248 192C270.1 192 288 174.1 288 152L288 104zM288 296C288 273.9 270.1 256 248 256L200 256C177.9 256 160 273.9 160 296L160 344C160 366.1 177.9 384 200 384L248 384C270.1 384 288 366.1 288 344L288 296zM160 488L160 536C160 558.1 177.9 576 200 576L248 576C270.1 576 288 558.1 288 536L288 488C288 465.9 270.1 448 248 448L200 448C177.9 448 160 465.9 160 488zM480 104C480 81.9 462.1 64 440 64L392 64C369.9 64 352 81.9 352 104L352 152C352 174.1 369.9 192 392 192L440 192C462.1 192 480 174.1 480 152L480 104zM352 296L352 344C352 366.1 369.9 384 392 384L440 384C462.1 384 480 366.1 480 344L480 296C480 273.9 462.1 256 440 256L392 256C369.9 256 352 273.9 352 296zM480 488C480 465.9 462.1 448 440 448L392 448C369.9 448 352 465.9 352 488L352 536C352 558.1 369.9 576 392 576L440 576C462.1 576 480 558.1 480 536L480 488z" />
-				</symbol>
-
 				<symbol id="icon-ellipsis-vertical" viewBox="0 0 640 640">
 					<path d="M320 120a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm0 152a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm0 152a48 48 0 1 0 0 96 48 48 0 0 0 0-96z" />
 				</symbol>
@@ -2276,11 +2257,35 @@
 	H83.1z" />
 				</symbol>
 
+				<!-- Solid family, added in the 2026 icon-system pass. One glyph per
+				     action; see AGENTS.md "Icons" for the action -> icon registry. -->
+				<symbol id="icon-magnet" viewBox="0 0 640 640">
+					<path fill-rule="evenodd" d="M112 128c0-26.5 21.5-48 48-48h80c26.5 0 48 21.5 48 48v224c0 17.7 14.3 32 32 32s32-14.3 32-32V128c0-26.5 21.5-48 48-48h80c26.5 0 48 21.5 48 48v224c0 114.9-93.1 208-208 208S112 466.9 112 352V128zm64 16v208c0 79.5 64.5 144 144 144s144-64.5 144-144V144h-48v208c0 53-43 96-96 96s-96-43-96-96V144h-48z" />
+				</symbol>
+				<symbol id="icon-bounding-box" viewBox="0 0 640 640">
+					<path d="M96 96h160v48H144v112H96V96zm288 0h160v160h-48V144H384V96zM96 384h48v112h112v48H96V384zm400 0h48v112H384v-48h112V384z" />
+				</symbol>
+				<symbol id="icon-fit-screen" viewBox="0 0 640 640">
+					<path fill-rule="evenodd" d="M96 128c0-17.7 14.3-32 32-32h384c17.7 0 32 14.3 32 32v384c0 17.7-14.3 32-32 32H128c-17.7 0-32-14.3-32-32V128zm48 16v352h352V144H144z" />
+					<path d="M224 240h192v160H224z" />
+				</symbol>
+				<symbol id="icon-upload" viewBox="0 0 640 640">
+					<path d="M297.4 137.4c12.5-12.5 32.8-12.5 45.3 0l96 96c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L352 237.3V424c0 17.7-14.3 32-32 32s-32-14.3-32-32V237.3l-41.4 41.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l96-96zM160 384c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64v-32c0-35.3-28.7-64-64-64h-49.5c-8.5 0-16.6 3.4-22.6 9.4l-33.9 33.9c-24 24-62.9 24-86.9 0l-33.9-33.9c-6-6-14.1-9.4-22.6-9.4H160zm304 40a24 24 0 1 1 0 48 24 24 0 0 1 0-48z" />
+				</symbol>
+				<symbol id="icon-reset" viewBox="0 0 640 640">
+					<path d="M320 96c-53.4 0-102.5 18.6-141.2 49.6l-38.2-38.2C130.4 97.2 112 104.3 112 119v128c0 8.8 7.2 16 16 16h128c14.7 0 21.8-17.8 11.4-28.2l-40.5-40.5C264.6 173.1 300.6 160 340 160c88.4 0 160 71.6 160 160s-71.6 160-160 160c-66.3 0-123.2-40.3-147.4-97.8-6.9-16.3-25.6-23.9-41.9-17s-23.9 25.6-17 41.9C110.7 470.8 210.7 544 320 544c123.7 0 224-100.3 224-224S443.7 96 320 96z" />
+				</symbol>
+				<symbol id="icon-locate" viewBox="0 0 640 640">
+					<path fill-rule="evenodd" d="M320 96c17.7 0 32 14.3 32 32v9.6c66.9 13.4 119 65.5 132.4 132.4H494c17.7 0 32 14.3 32 32s-14.3 32-32 32h-9.6c-13.4 66.9-65.5 119-132.4 132.4V512c0 17.7-14.3 32-32 32s-32-14.3-32-32v-9.6c-66.9-13.4-119-65.5-132.4-132.4H146c-17.7 0-32-14.3-32-32s14.3-32 32-32h9.6c13.4-66.9 65.5-119 132.4-132.4V128c0-17.7 14.3-32 32-32zM224 320a96 96 0 1 0 192 0 96 96 0 0 0-192 0z" />
+					<circle cx="320" cy="320" r="40" />
+				</symbol>
+
 				<!-- Line-art panel glyphs. Transcribed from design/*.dc.html; single
 				     source of truth for the segmented-control icons (text align,
 				     transform align / flip / distribute), gradient type, and the
-				     workspace-start actions. fill/stroke live on the symbol so the
+				     workspace-start / file actions. fill/stroke live on the symbol so the
 				     shared `svg.icon { fill: currentColor }` rule never fills them. -->
+				<symbol id="icon-save" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h7.6L13.5 5.4V13a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z" /><path d="M5 2.5v3.6h5V2.5M5.6 13.5v-4.2h4.8v4.2" /></symbol>
 				<symbol id="icon-text-align-left" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v12M3 6h9M3 10h6" /></symbol>
 				<symbol id="icon-text-align-center" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v12M3.5 6h9M5 10h6" /></symbol>
 				<symbol id="icon-text-align-right" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2v12M4 6h9M7 10h6" /></symbol>
@@ -2307,6 +2312,27 @@
 				<symbol id="icon-open-image" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1.5" /><path d="M2 10l3-3 3 3 3-4 3 3" /><circle cx="6" cy="6" r="1" /></symbol>
 				<symbol id="icon-new-canvas" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5" /><path d="M8 6v4M6 8h4" /></symbol>
 				<symbol id="icon-open-project" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h5l1.5 2H14v7H2z" /></symbol>
+
+				<!-- ==========================================================
+				     UNDER REVIEW - not referenced anywhere in the app or guide.
+				     Grouped here (not deleted) pending the icon-direction
+				     decision. If still unused after that, remove them.
+				     ========================================================== -->
+				<symbol id="icon-cursor" viewBox="0 0 640 640">
+					<path d="M173.3 66.5C181.4 62.4 191.2 63.3 198.4 68.8L518.4 308.7C526.7 314.9 530 325.7 526.8 335.5C523.6 345.3 514.4 351.9 504 351.9L351.7 351.9L440.6 529.6C448.5 545.4 442.1 564.6 426.3 572.5C410.5 580.4 391.3 574 383.4 558.2L294.5 380.5L203.2 502.3C197 510.6 186.2 513.9 176.4 510.7C166.6 507.5 160 498.3 160 488L160 88C160 78.9 165.1 70.6 173.3 66.5z" />
+				</symbol>
+				<symbol id="icon-eye-dropper" viewBox="0 0 512 512">
+					<path d="M50.75 333.25c-12 12-18.75 28.28-18.75 45.26V424L0 480l32 32 56-32h45.49c16.97 0 33.25-6.74 45.25-18.74l126.64-126.62-128-128L50.75 333.25zM483.88 28.12c-37.47-37.5-98.28-37.5-135.75 0l-77.09 77.09-13.1-13.1c-9.44-9.44-24.65-9.31-33.94 0l-40.97 40.97c-9.37 9.37-9.37 24.57 0 33.94l161.94 161.94c9.44 9.44 24.65 9.31 33.94 0L419.88 288c9.37-9.37 9.37-24.57 0-33.94l-13.1-13.1 77.09-77.09c37.51-37.48 37.51-98.26.01-135.75z" />
+				</symbol>
+				<symbol id="icon-arrow-left" viewBox="0 0 640 640">
+					<path d="M73.4 297.4C60.9 309.9 60.9 330.2 73.4 342.7L233.4 502.7C245.9 515.2 266.2 515.2 278.7 502.7C291.2 490.2 291.2 469.9 278.7 457.4L173.3 352L544 352C561.7 352 576 337.7 576 320C576 302.3 561.7 288 544 288L173.3 288L278.7 182.6C291.2 170.1 291.2 149.8 278.7 137.3C266.2 124.8 245.9 124.8 233.4 137.3L73.4 297.3z" />
+				</symbol>
+				<symbol id="icon-lightbulb" viewBox="0 0 640 640">
+					<path d="M420.9 448C428.2 425.7 442.8 405.5 459.3 388.1C492 353.7 512 307.2 512 256C512 150 426 64 320 64C214 64 128 150 128 256C128 307.2 148 353.7 180.7 388.1C197.2 405.5 211.9 425.7 219.1 448L420.8 448zM416 496L224 496L224 512C224 556.2 259.8 592 304 592L336 592C380.2 592 416 556.2 416 512L416 496zM312 176C272.2 176 240 208.2 240 248C240 261.3 229.3 272 216 272C202.7 272 192 261.3 192 248C192 181.7 245.7 128 312 128C325.3 128 336 138.7 336 152C336 165.3 325.3 176 312 176z" />
+				</symbol>
+				<symbol id="icon-grip-vertical" viewBox="0 0 640 640">
+					<path d="M288 104C288 81.9 270.1 64 248 64L200 64C177.9 64 160 81.9 160 104L160 152C160 174.1 177.9 192 200 192L248 192C270.1 192 288 174.1 288 152L288 104zM288 296C288 273.9 270.1 256 248 256L200 256C177.9 256 160 273.9 160 296L160 344C160 366.1 177.9 384 200 384L248 384C270.1 384 288 366.1 288 344L288 296zM160 488L160 536C160 558.1 177.9 576 200 576L248 576C270.1 576 288 558.1 288 536L288 488C288 465.9 270.1 448 248 448L200 448C177.9 448 160 465.9 160 488zM480 104C480 81.9 462.1 64 440 64L392 64C369.9 64 352 81.9 352 104L352 152C352 174.1 369.9 192 392 192L440 192C462.1 192 480 174.1 480 152L480 104zM352 296L352 344C352 366.1 369.9 384 392 384L440 384C462.1 384 480 366.1 480 344L480 296C480 273.9 462.1 256 440 256L392 256C369.9 256 352 273.9 352 296zM480 488C480 465.9 462.1 448 440 448L392 448C369.9 448 352 465.9 352 488L352 536C352 558.1 369.9 576 392 576L440 576C462.1 576 480 558.1 480 536L480 488z" />
+				</symbol>
 
 
 		</defs>
@@ -2379,7 +2405,7 @@
 			<span class="property-label"></span>
 			<input type="range">
 			<span class="property-value"></span>
-			<button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button>
+			<button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-reset"></use></svg></button>
 		</div>
 	</template>
 	<template id="tpl-two-column">
@@ -2452,14 +2478,14 @@
 			<div class="property-row gradient-type">
 				<span class="property-label">Type</span>
 				<div class="segmented-control"><button type="button" class="segmented-option" data-type="linear"><svg class="icon"><use href="#icon-gradient-linear"></use></svg>Linear</button><button type="button" class="segmented-option" data-type="radial"><svg class="icon"><use href="#icon-gradient-radial"></use></svg>Radial</button></div>
-				<button type="button" class="property-revert gradient-type-reset" title="Reset to default" aria-label="Reset gradient type"><svg class="icon"><use href="#icon-undo"></use></svg></button>
+				<button type="button" class="property-revert gradient-type-reset" title="Reset to default" aria-label="Reset gradient type"><svg class="icon"><use href="#icon-reset"></use></svg></button>
 			</div>
 			<div class="property-row gradient-blend">
 				<span class="property-label">Blend</span>
 				<div class="segmented-control"><button type="button" class="segmented-option" data-interpolation="linear">Linear</button><button type="button" class="segmented-option" data-interpolation="smooth">Smooth</button><button type="button" class="segmented-option" data-interpolation="steps">Constant</button></div>
-				<button type="button" class="property-revert gradient-blend-reset" title="Reset to default" aria-label="Reset gradient blend"><svg class="icon"><use href="#icon-undo"></use></svg></button>
+				<button type="button" class="property-revert gradient-blend-reset" title="Reset to default" aria-label="Reset gradient blend"><svg class="icon"><use href="#icon-reset"></use></svg></button>
 			</div>
-			<div class="property-row gradient-angle"><span class="property-label">Angle</span><input type="range" min="0" max="360"><span class="property-value gradient-angle-value">180&deg;</span><button type="button" class="property-revert gradient-angle-reset" title="Reset to default" aria-label="Reset gradient angle"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
+			<div class="property-row gradient-angle"><span class="property-label">Angle</span><input type="range" min="0" max="360"><span class="property-value gradient-angle-value">180&deg;</span><button type="button" class="property-revert gradient-angle-reset" title="Reset to default" aria-label="Reset gradient angle"><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
 			<div class="advanced-disclosure gradient-advanced" data-advanced hidden>
 				<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
 					<span class="advanced-disclosure-label">Advanced</span>
@@ -2468,7 +2494,7 @@
 				<div class="advanced-disclosure-content" data-advanced-content>
 					<div class="property-set">
 						<div class="property-set-label">Smooth blend</div>
-						<div class="property-row gradient-smoothing"><span class="property-label" title="Number of blend samples the Smooth blend mode inserts between stops">Samples</span><input type="range" min="3" max="16" step="1" aria-label="Smoothing samples"><span class="property-value gradient-smoothing-value">8&times;</span><button type="button" class="property-revert gradient-smoothing-reset" title="Reset to default" aria-label="Reset smoothing"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
+						<div class="property-row gradient-smoothing"><span class="property-label" title="Number of blend samples the Smooth blend mode inserts between stops">Samples</span><input type="range" min="3" max="16" step="1" aria-label="Smoothing samples"><span class="property-value gradient-smoothing-value">8&times;</span><button type="button" class="property-revert gradient-smoothing-reset" title="Reset to default" aria-label="Reset smoothing"><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
 					</div>
 				</div>
 			</div>
@@ -2491,10 +2517,10 @@
 				<div class="property-set">
 					<div class="property-set-label">Size</div>
 					<div data-transform-number-pair="size"></div>
-					<div class="property-row transform-scale-control transform-scale-x" data-transform-scale-readout><span class="property-label">Scale X</span><input type="range" data-transform-role="scaleX"><span class="property-value" data-transform-role="scaleXValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleX"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
-					<div class="property-row transform-scale-control transform-scale-y" data-transform-scale-readout><span class="property-label">Scale Y</span><input type="range" data-transform-role="scaleY"><span class="property-value" data-transform-role="scaleYValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleY"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
+					<div class="property-row transform-scale-control transform-scale-x" data-transform-scale-readout><span class="property-label">Scale X</span><input type="range" data-transform-role="scaleX"><span class="property-value" data-transform-role="scaleXValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleX"><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
+					<div class="property-row transform-scale-control transform-scale-y" data-transform-scale-readout><span class="property-label">Scale Y</span><input type="range" data-transform-role="scaleY"><span class="property-value" data-transform-role="scaleYValue">100%</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetScaleY"><svg class="icon"><use href="#icon-reset"></use></svg></button></div>
 				</div>
-				<div class="property-set"><div class="property-set-label">Rotation</div><div class="property-row"><span class="property-label">Angle</span><input type="range" data-transform-role="rotation"><span class="property-value" data-transform-role="rotationValue">0&deg;</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetRotation"><svg class="icon"><use href="#icon-undo"></use></svg></button></div></div>
+				<div class="property-set"><div class="property-set-label">Rotation</div><div class="property-row"><span class="property-label">Angle</span><input type="range" data-transform-role="rotation"><span class="property-value" data-transform-role="rotationValue">0&deg;</span><button class="property-revert" type="button" title="Reset to default" aria-label="Reset to default" data-transform-role="resetRotation"><svg class="icon"><use href="#icon-reset"></use></svg></button></div></div>
 				<div class="property-set" data-transform-align>
 					<div class="property-set-label">Align</div>
 					<div class="property-row is-stacked"><span class="property-label">Horizontal</span><div class="segmented-control transform-segmented-control"><button class="segmented-option" type="button" title="Align left to canvas" data-transform-role="alignLeft">Left</button><button class="segmented-option" type="button" title="Center horizontally on canvas" data-transform-role="alignCenterX">Center</button><button class="segmented-option" type="button" title="Align right to canvas" data-transform-role="alignRight">Right</button></div></div>
@@ -2533,7 +2559,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=677b211c"></script>
+	<script src="js/core/config.js?v=7f7287ef"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
@@ -2559,7 +2585,7 @@
 	<script src="js/effects/pixel-effects.js?v=c68cfdfc"></script>
 	<script src="js/effects/effect-source.js?v=99811269"></script>
 	<script src="js/effects/slot-effects.js?v=9ea3e3d1"></script>
-	<script src="js/ui/panel-renderer.js?v=50f523b9"></script>
+	<script src="js/ui/panel-renderer.js?v=2e406218"></script>
 	<script src="js/ui/settings-store.js?v=94ba4d01"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
@@ -2575,7 +2601,7 @@
 	<script src="js/editor/canvas-gestures.js?v=569d61e7"></script>
 	<script src="js/editor/canvas-size.js?v=699b6298"></script>
 	<script src="js/editor/canvas-resize.js?v=fd22383b"></script>
-		<script src="js/ui/hints.js?v=c40adaef"></script>
+		<script src="js/ui/hints.js?v=6a83a9aa"></script>
 	<script src="js/ui/picker-session.js?v=164f3036"></script>
 	<script src="js/ui/context-toolbar-renderer.js?v=50ca26d6"></script>
 	<script src="js/ui/modal-filter.js?v=2a5c14d8"></script>
@@ -2599,7 +2625,7 @@
 	<script src="js/classes/MaskEditor.js?v=de28a63b"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=adf5f21f"></script>
+	<script src="js/classes/LayerManager.js?v=15e7ed4b"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=af14bba7"></script>
