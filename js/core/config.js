@@ -559,6 +559,10 @@ const CONFIG = deepFreeze({
 			// 'steps' (hard bands). Implemented as stop-list expansion in
 			// effects/effect-source.js so CSS preview and canvas export share literal stops.
 			interpolation: 'linear',
+			// Default subdivision count for the 'smooth' blend approximation; each
+			// gradient carries its own value (editable via the Smoothing slider,
+			// CONFIG.ui.sliders.gradientSmoothing, shown in the gradient editor's
+			// Advanced disclosure only when Blend = Smooth).
 			smoothSubdivisions: 8,
 			stops: [
 				{ offset: 0, color: '#ff4fa3', alpha: 1 },
@@ -583,6 +587,12 @@ const CONFIG = deepFreeze({
 		independentCollapsibleSections: ['layersPanel'],
 		zoom: {
 			levels: [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16]
+		},
+		gradientEditor: {
+			keyboardStep: 0.01,
+			snapStep: 0.05,
+			magneticOffsets: [0, 0.25, 0.5, 0.75, 1],
+			magneticThresholdPx: 5
 		},
 		gestures: {
 			tapMaxMs: 300,
@@ -681,6 +691,7 @@ const CONFIG = deepFreeze({
 			textureOffsetX: { label: 'Offset X', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
 			textureOffsetY: { label: 'Offset Y', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
 			slotOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },
+			gradientSmoothing: { label: 'Smoothing', unit: '×', min: 3, max: 16, step: 1, value: 8 },
 			hue: { label: 'Hue', unit: '°', min: -180, max: 180, value: 0 },
 			saturation: { label: 'Saturation', unit: '%', min: 0, max: 200, value: 100 },
 			brightness: { label: 'Brightness', unit: '%', min: 25, max: 200, value: 100 },

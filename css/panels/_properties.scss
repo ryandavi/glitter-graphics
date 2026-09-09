@@ -680,11 +680,7 @@
 		background: var(--color-bg-secondary);
 	}
 
-	// Swatch + summary are one "current value" unit at the right of the title:
-	// tight to each other, the normal title gap to the name and chevron.
-	.property-module-swatch + .property-module-summary {
-		margin-left: calc(var(--spacing-2xs) - var(--spacing-sm));
-	}
+
 
 	// The enable control leads the header, using the ONE switch.
 	.property-header-switch.effect-switch {
@@ -1464,34 +1460,10 @@ body.is-resizing-panel {
 	}
 }
 
-// ===== The gradient editor, brought onto the system ========================
-// Legacy markup that never got migrated: its own heading sizes, its own column
-// class and its own spacing. It uses the shared vocabulary now.
-:is(.design-panel, .mobile-settings-drawer) .effect-gradient-editor {
-	gap: var(--spacing-sm);
-	margin-inline: var(--property-gutter);
-
-	> .property-set-label { padding-inline: 0; }
-
-	.gradient-option-rows {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		padding: 0;
-		gap: var(--spacing-sm);
-	}
-
-	.property-row > .segmented-control { margin-inline: 0; }
-
-	.gradient-stops-box { padding: var(--spacing-sm); }
-
-	.gradient-stops-heading {
-		font-size: var(--font-size-xs);
-		letter-spacing: 0;
-		text-transform: none;
-		color: var(--color-text-tertiary);
-	}
-
-	.property-row.gradient-angle { padding-inline: 0; }
-}
+// The gradient editor's own styling lives in panels/_effects.scss — it renders
+// where the glitter `.asset-info` summary does (a transparent, gutter-aligned
+// stack) and its option rows are the shared `.property-row` / `.property-note`
+// vocabulary.
 
 
 // ===== An optionGroup rendered as a row ====================================

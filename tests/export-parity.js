@@ -218,10 +218,12 @@ async function verifyGradientStopLiveEditing(page) {
 		const layer = editor.layerManager.layers.find((entry) => entry.type === LayerType.TEXT_GLITTER);
 		editor.layerManager.setActiveLayer(layer.id);
 		editor.textGlitterManager.loadLayerSettings(layer);
-		const panel = document.querySelector('#textFillGradient')?.closest('.glitter-source')?.querySelector('.effect-gradient-editor')
-			|| document.querySelector('#textFillGradient')?.parentElement?.parentElement?.querySelector('.effect-gradient-editor');
-		const position = panel?.querySelector('input[aria-label="Stop position"]');
-		const color = panel?.querySelector('input[aria-label="Stop color"]');
+		// The gradient editor is spread across `.paint-slot-main` chunks of the Fill
+		// card (the stop table, the Type/Blend/Angle options, the preview in the
+		// source, the Smoothing disclosure at module level).
+		const fillCard = document.querySelector('#textFillGradient')?.closest('.paint-slot-card');
+		const position = fillCard?.querySelector('input[aria-label="Stop position"]');
+		const color = fillCard?.querySelector('input[aria-label="Stop color"]');
 		if (!position || !color) return { error: 'Missing text gradient stop controls' };
 		position.value = '25';
 		position.dispatchEvent(new Event('input', { bubbles: true }));
@@ -232,18 +234,35 @@ async function verifyGradientStopLiveEditing(page) {
 		color.dispatchEvent(new Event('input', { bubbles: true }));
 		color.value = '#654321';
 		color.dispatchEvent(new Event('input', { bubbles: true }));
+		const connectedAfterSecond = position.isConnected && color.isConnected;
+		position.dispatchEvent(new Event('change', { bubbles: true }));
+		const editedIndex = layer.textData.fill.gradient.stops.findIndex((stop) => stop.color === '#654321');
+		let marker = fillCard.querySelector(`.gradient-preview-stop[data-index="${editedIndex}"]`);
+		const keyboardAccessible = marker?.getAttribute('role') === 'slider' && marker.tabIndex === 0;
+		marker?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+		marker = fillCard.querySelector('.gradient-preview-stop.is-selected');
+		marker?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true, bubbles: true }));
+		const stopCountBeforeAdd = layer.textData.fill.gradient.stops.length;
+		fillCard.querySelector('.gradient-add')?.click();
+		const stopCountAfterAdd = layer.textData.fill.gradient.stops.length;
+		marker = fillCard.querySelector('.gradient-preview-stop.is-selected');
+		marker?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
 		const result = {
 			connectedAfterFirst,
-			connectedAfterSecond: position.isConnected && color.isConnected,
-			offset: layer.textData.fill.gradient.stops[0].offset,
-			color: layer.textData.fill.gradient.stops[0].color,
+			connectedAfterSecond,
+			keyboardAccessible,
+			stopCountBeforeAdd,
+			stopCountAfterAdd,
+			stopCountAfterDelete: layer.textData.fill.gradient.stops.length,
+			offset: layer.textData.fill.gradient.stops.find((stop) => stop.color === '#654321')?.offset,
+			color: layer.textData.fill.gradient.stops.find((stop) => stop.color === '#654321')?.color,
 			stickerShadowLayers: document.querySelectorAll('.sticker-effect-shadow').length
 		};
 		editor.saveState();
 		return result;
 	});
 	if (result.error) throw new Error(result.error);
-	if (!result.connectedAfterFirst || !result.connectedAfterSecond || Math.abs(result.offset - 0.7) > 0.001 || result.color !== '#654321' || !result.stickerShadowLayers) {
+	if (!result.connectedAfterFirst || !result.connectedAfterSecond || !result.keyboardAccessible || result.stopCountAfterAdd !== result.stopCountBeforeAdd + 1 || result.stopCountAfterDelete !== result.stopCountBeforeAdd || Math.abs(result.offset - 0.76) > 0.001 || result.color !== '#654321' || !result.stickerShadowLayers) {
 		throw new Error(`Gradient stop live editing lost its control or state: ${JSON.stringify(result)}`);
 	}
 }

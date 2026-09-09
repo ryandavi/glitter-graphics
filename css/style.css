@@ -5066,112 +5066,192 @@ body.mask-editing .sticker-element {
   grid-column: 1/-1;
 }
 
-.effect-gradient-editor {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+.effect-gradient-editor .property-row:not(.is-stacked) > .segmented-control {
+  grid-column: 2/-2;
 }
-.effect-gradient-editor[hidden],
-.effect-gradient-editor .gradient-angle[hidden],
-.effect-gradient-editor .gradient-stops-heading[hidden] {
+
+.gradient-stop-set .gradient-stops-heading,
+.gradient-stop-set .gradient-stops,
+.gradient-stop-set .gradient-actions {
+  margin-inline: var(--property-gutter);
+}
+.gradient-stop-set .gradient-stops-heading,
+.gradient-stop-set .effect-gradient-stop {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px 56px var(--property-revert-col);
+  -moz-column-gap: var(--spacing-xs);
+       column-gap: var(--spacing-xs);
+  align-items: center;
+}
+.gradient-stop-set .gradient-stops-heading {
+  padding: 0 var(--spacing-sm) 1px;
+  font-size: 9.5px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.gradient-stop-set .gradient-stops-heading > span:nth-child(2),
+.gradient-stop-set .gradient-stops-heading > span:nth-child(3) {
+  text-align: right;
+  padding-right: calc(1px + var(--spacing-sm));
+}
+.gradient-stop-set .gradient-stops-heading[hidden] {
   display: none;
 }
-.effect-gradient-editor .gradient-option-rows {
-  gap: var(--spacing-md);
+.gradient-stop-set .gradient-stops {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2xs);
 }
-.effect-gradient-editor .gradient-preview {
-  position: relative;
-  height: 28px;
-  border-radius: var(--radius-sm);
+.gradient-stop-set .effect-gradient-stop {
+  min-height: 28px;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-control);
+}
+.gradient-stop-set .effect-gradient-stop.is-selected {
+  background: var(--color-accent-surface);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+.gradient-stop-set .gradient-stop-color {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+  cursor: pointer;
+}
+.gradient-stop-set .gradient-stop-color > input[type=color] {
+  flex: 0 0 auto;
+  width: var(--property-control-height);
+  height: var(--property-control-height);
+  aspect-ratio: 1;
+  padding: 2px;
+  border-radius: var(--radius-inner);
+}
+.gradient-stop-set .gradient-stop-hex {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--color-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gradient-stop-set .gradient-stop-field {
+  min-width: 0;
+  height: var(--property-control-height);
+  padding: 0 6px;
   border: 1px solid var(--color-border);
-  cursor: copy;
-  touch-action: none;
+  border-radius: var(--property-r-field);
+  background: var(--color-bg-secondary);
 }
-.effect-gradient-editor .gradient-preview::before {
+.gradient-stop-set .gradient-stop-field > input[type=number] {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+  text-align: right;
+  -webkit-appearance: textfield;
+     -moz-appearance: textfield;
+          appearance: textfield;
+}
+.gradient-stop-set .gradient-stop-field > input[type=number]::-webkit-outer-spin-button, .gradient-stop-set .gradient-stop-field > input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+          appearance: none;
+  margin: 0;
+}
+.gradient-stop-set .gradient-stop-field > .input-unit-suffix {
+  position: static;
+  flex: 0 0 auto;
+  margin-left: 2px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}
+.gradient-stop-set .gradient-stop-remove[disabled] {
+  opacity: 0.28;
+  cursor: default;
+}
+.gradient-stop-set .gradient-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+.gradient-stop-set .gradient-actions > .btn-text-with-icon {
+  justify-content: center;
+}
+.gradient-stop-set .gradient-hint {
+  line-height: 1.4;
+}
+
+.paint-slot-source > .gradient-preview {
+  position: relative;
+  height: 32px;
+  margin-inline: var(--property-gutter);
+  touch-action: none;
+  cursor: copy;
+}
+.paint-slot-source > .gradient-preview::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: repeating-conic-gradient(rgba(0, 0, 0, 0.2) 0% 25%, rgba(255, 255, 255, 0.6) 0% 50%) 0 0/12px 12px;
+  inset-inline: 0;
+  top: 50%;
+  height: 16px;
+  transform: translateY(-50%);
+  border-radius: var(--radius-control);
+  background: repeating-conic-gradient(rgba(0, 0, 0, 0) 0 25%, rgba(255, 255, 255, 0.09) 0 50%) 0 0/10px 10px;
 }
-.effect-gradient-editor .gradient-preview-bar {
+.paint-slot-source > .gradient-preview > .gradient-preview-bar {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  inset-inline: 0;
+  top: 50%;
+  height: 100%;
+  transform: translateY(-50%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
 }
-.effect-gradient-editor .gradient-preview-markers {
+.paint-slot-source > .gradient-preview > .gradient-preview-markers {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
-.effect-gradient-editor .gradient-preview-stop {
+.paint-slot-source > .gradient-preview .gradient-preview-stop {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 22px;
-  transform: translateX(-50%);
-  pointer-events: auto;
-  cursor: ew-resize;
-}
-.effect-gradient-editor .gradient-preview-stop::after {
-  content: "";
-  position: absolute;
-  left: 50%;
   top: 50%;
-  width: 14px;
-  height: 14px;
+  box-sizing: border-box;
+  width: 15px;
+  height: 15px;
   transform: translate(-50%, -50%);
+  border: 2px solid #fff;
   border-radius: var(--radius-full);
   background: var(--stop-color, #fff);
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+  cursor: grab;
 }
-.effect-gradient-editor .gradient-stops-heading,
-.effect-gradient-editor .effect-gradient-stop {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr) 26px;
-  gap: var(--spacing-sm);
-  align-items: center;
+.paint-slot-source > .gradient-preview .gradient-preview-stop::before {
+  content: "";
+  position: absolute;
+  inset: -14px -5px;
 }
-.effect-gradient-editor .gradient-stops-heading {
-  font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
+.paint-slot-source > .gradient-preview .gradient-preview-stop.is-selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-surface), 0 0 3px rgba(0, 0, 0, 0.55);
+}
+.paint-slot-source > .gradient-preview .gradient-preview-stop:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.gradient-advanced .property-value .setting-unit {
+  margin-left: 2px;
   color: var(--color-text-tertiary);
-}
-.effect-gradient-editor .gradient-stops {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-.effect-gradient-editor .effect-gradient-stop input[type=color] {
-  width: 36px;
-  height: 28px;
-  padding: var(--spacing-2xs);
-}
-.effect-gradient-editor .gradient-stop-control {
-  display: grid;
-  grid-template-columns: minmax(38px, 1fr) 30px;
-  gap: var(--spacing-2xs);
-  align-items: center;
-  min-width: 0;
-}
-.effect-gradient-editor .gradient-stop-control input {
-  width: 100%;
-}
-.effect-gradient-editor .gradient-stop-value {
-  font-size: var(--font-size-sm);
-  letter-spacing: 0.5px;
-  color: var(--color-text-secondary);
-  text-align: right;
-  white-space: nowrap;
-}
-.effect-gradient-editor .gradient-stop-remove {
-  width: 26px;
-  height: 26px;
-  padding: var(--spacing-xs);
-}
-.effect-gradient-editor .gradient-add {
-  align-self: flex-end;
 }
 
 .property-module-content {
@@ -7201,9 +7281,6 @@ body.tool-select .preview-canvas {
   border-radius: var(--property-r-inner);
   background: var(--color-bg-secondary);
 }
-:is(.design-panel, .mobile-settings-drawer) .property-module-swatch + .property-module-summary {
-  margin-left: calc(var(--spacing-2xs) - var(--spacing-sm));
-}
 :is(.design-panel, .mobile-settings-drawer) .property-header-switch.effect-switch {
   order: -1;
   flex: 0 0 auto;
@@ -7905,34 +7982,6 @@ body.is-resizing-panel canvas {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-:is(.design-panel, .mobile-settings-drawer) .effect-gradient-editor {
-  gap: var(--spacing-sm);
-  margin-inline: var(--property-gutter);
-}
-:is(.design-panel, .mobile-settings-drawer) .effect-gradient-editor > .property-set-label {
-  padding-inline: 0;
-}
-:is(.design-panel, .mobile-settings-drawer) .effect-gradient-editor .gradient-option-rows {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 0;
-  gap: var(--spacing-sm);
-}
-:is(.design-panel, .mobile-settings-drawer) .effect-gradient-editor .property-row > .segmented-control {
-  margin-inline: 0;
-}
-:is(.design-panel, .mobile-settings-drawer) .effect-gradient-editor .gradient-stops-box {
-  padding: var(--spacing-sm);
-}
-:is(.design-panel, .mobile-settings-drawer) .effect-gradient-editor .gradient-stops-heading {
-  font-size: var(--font-size-xs);
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--color-text-tertiary);
-}
-:is(.design-panel, .mobile-settings-drawer) .effect-gradient-editor .property-row.gradient-angle {
-  padding-inline: 0;
-}
-
 :is(.design-panel, .mobile-settings-drawer) .property-row > .property-label {
   padding-inline: 0;
 }

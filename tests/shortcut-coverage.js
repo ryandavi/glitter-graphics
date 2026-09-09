@@ -33,7 +33,7 @@ Object.entries(context.__commands).forEach(([id, command]) => {
 
 const keyboardGroups = Array.from(context.__getShortcutGroups('keyboard'), ({ title }) => title);
 const gestureGroups = Array.from(context.__getShortcutGroups('gesture'), ({ title }) => title);
-assert.deepStrictEqual(keyboardGroups, ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush']);
+assert.deepStrictEqual(keyboardGroups, ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush', 'Gradient']);
 assert.deepStrictEqual(gestureGroups, ['Navigate', 'Move & Transform']);
 
 process.stdout.write('PASS documented keyboard commands are covered by the guide\n');

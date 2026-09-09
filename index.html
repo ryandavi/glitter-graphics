@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=5ddde5c6">
+	<link rel="stylesheet" href="css/style.css?v=c6756081">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -2406,27 +2406,48 @@
 		</label>
 	</template>
 	<template id="tpl-gradient-editor">
-		<div class="effect-gradient-editor carded-subsection" hidden>
-			<div class="property-pair-group effect-stack-row gradient-option-rows">
-				<div class="property-row is-stacked"><div class="property-label">Type</div><div class="segmented-control"><button type="button" class="segmented-option" data-type="linear">Linear</button><button type="button" class="segmented-option" data-type="radial">Radial</button></div></div>
-				<div class="property-row is-stacked"><div class="property-label">Blend</div><div class="segmented-control"><button type="button" class="segmented-option" data-interpolation="linear">Linear</button><button type="button" class="segmented-option" data-interpolation="smooth">Smooth</button><button type="button" class="segmented-option" data-interpolation="steps">Constant</button></div></div>
+		<div class="gradient-preview" data-paint-source-mode="gradient" title="Click to add a stop. Drag to move; hold Shift to snap or Alt to duplicate."><div class="gradient-preview-bar"></div><div class="gradient-preview-markers"></div></div>
+		<div class="property-set gradient-stop-set" hidden>
+			<div class="gradient-stops-heading" aria-hidden="true"><span>Color</span><span>Pos</span><span>Alpha</span><span></span></div>
+			<div class="gradient-stops"></div>
+			<div class="gradient-actions">
+				<button type="button" class="btn-text-with-icon icon-wrapper gradient-add"><svg class="icon"><use href="#icon-plus"></use></svg><span class="name">Add stop</span></button>
+				<button type="button" class="btn-text-with-icon icon-wrapper gradient-reverse"><svg class="icon"><use href="#icon-arrows-left-right"></use></svg><span class="name">Reverse</span></button>
 			</div>
-			<div class="property-set-label">Stops</div>
-			<div class="gradient-stops-box">
-				<div class="gradient-preview" title="Drag a handle to move a stop. Click the bar to add one."><div class="gradient-preview-bar"></div><div class="gradient-preview-markers" aria-hidden="true"></div></div>
-				<div class="gradient-stops-heading" aria-hidden="true"><span>Color</span><span>Position</span><span>Opacity</span><span></span></div>
-				<div class="gradient-stops"></div>
-				<button type="button" class="btn-simple gradient-add">Add stop</button>
+			<p class="property-note gradient-hint">Click to add &middot; Shift-drag to snap &middot; Alt-drag to duplicate</p>
+		</div>
+		<div class="property-set effect-gradient-editor" hidden>
+			<div class="property-row gradient-type">
+				<span class="property-label">Type</span>
+				<div class="segmented-control"><button type="button" class="segmented-option" data-type="linear">Linear</button><button type="button" class="segmented-option" data-type="radial">Radial</button></div>
+				<button type="button" class="property-revert gradient-type-reset" title="Reset to default" aria-label="Reset gradient type"><svg class="icon"><use href="#icon-undo"></use></svg></button>
 			</div>
-			<div class="property-row gradient-angle"><span class="property-label">Angle</span><input type="range" min="0" max="360"><span class="property-value gradient-angle-value">180&deg;</span><button type="button" class="property-revert gradient-angle-reset" title="Reset to default" aria-label="Reset to default"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
+			<div class="property-row gradient-blend">
+				<span class="property-label">Blend</span>
+				<div class="segmented-control"><button type="button" class="segmented-option" data-interpolation="linear">Linear</button><button type="button" class="segmented-option" data-interpolation="smooth">Smooth</button><button type="button" class="segmented-option" data-interpolation="steps">Constant</button></div>
+				<button type="button" class="property-revert gradient-blend-reset" title="Reset to default" aria-label="Reset gradient blend"><svg class="icon"><use href="#icon-undo"></use></svg></button>
+			</div>
+			<div class="property-row gradient-angle"><span class="property-label">Angle</span><input type="range" min="0" max="360"><span class="property-value gradient-angle-value">180&deg;</span><button type="button" class="property-revert gradient-angle-reset" title="Reset to default" aria-label="Reset gradient angle"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
+			<div class="advanced-disclosure gradient-advanced" data-advanced hidden>
+				<button type="button" class="advanced-disclosure-toggle" data-advanced-toggle aria-expanded="false">
+					<span class="advanced-disclosure-label">Advanced</span>
+					<span class="advanced-disclosure-chevron icon-wrapper"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+				</button>
+				<div class="advanced-disclosure-content" data-advanced-content>
+					<div class="property-set">
+						<div class="property-set-label">Smooth blend</div>
+						<div class="property-row gradient-smoothing"><span class="property-label" title="Number of blend samples the Smooth blend mode inserts between stops">Samples</span><input type="range" min="3" max="16" step="1" aria-label="Smoothing samples"><span class="property-value gradient-smoothing-value">8&times;</span><button type="button" class="property-revert gradient-smoothing-reset" title="Reset to default" aria-label="Reset smoothing"><svg class="icon"><use href="#icon-undo"></use></svg></button></div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</template>
 	<template id="tpl-gradient-stop">
 		<div class="effect-gradient-stop">
-			<input type="color" aria-label="Stop color">
-			<span class="gradient-stop-control"><input type="range" min="0" max="100" aria-label="Stop position"><span class="gradient-stop-value"></span></span>
-			<span class="gradient-stop-control"><input type="range" min="0" max="100" aria-label="Stop opacity"><span class="gradient-stop-value"></span></span>
-			<button type="button" class="btn-icon icon-wrapper gradient-stop-remove" title="Remove gradient stop" aria-label="Remove gradient stop"><svg class="icon"><use href="#icon-x-mark"></use></svg><span class="name">Remove</span></button>
+			<label class="gradient-stop-color"><input type="color" aria-label="Stop color"><span class="gradient-stop-hex"></span></label>
+			<span class="input-unit gradient-stop-field"><input type="number" min="0" max="100" step="1" aria-label="Stop position"><span class="input-unit-suffix">%</span></span>
+			<span class="input-unit gradient-stop-field"><input type="number" min="0" max="100" step="1" aria-label="Stop opacity"><span class="input-unit-suffix">%</span></span>
+			<button type="button" class="property-revert gradient-stop-remove" title="Remove gradient stop" aria-label="Remove gradient stop"><svg class="icon"><use href="#icon-x-mark"></use></svg></button>
 		</div>
 	</template>
 	<template id="tpl-transform-panel">
@@ -2481,11 +2502,11 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=45a29d88"></script>
+	<script src="js/core/config.js?v=9b3b689a"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
-	<script src="js/core/commands.js?v=263e9de6"></script>
+	<script src="js/core/commands.js?v=f7f90caf"></script>
 	<script src="js/core/dom.js?v=12f02905"></script>
 	<script src="js/core/document-scaler.js?v=c08bbf8e"></script>
 	<script src="js/transforms/transform-math.js?v=53779101"></script>
@@ -2501,12 +2522,12 @@
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
 	<script src="js/effects/mask-raster.js?v=58feb186"></script>
 	<script src="js/effects/mask-geometry.js?v=06dda908"></script>
-	<script src="js/effects/PARITY.js?v=10823f7f"></script>
+	<script src="js/effects/preview-export-parity.js?v=10823f7f"></script>
 	<script src="js/effects/palette-analysis.js?v=0394371e"></script>
 	<script src="js/effects/pixel-effects.js?v=c68cfdfc"></script>
-	<script src="js/effects/effect-source.js?v=9f17232c"></script>
+	<script src="js/effects/effect-source.js?v=99811269"></script>
 	<script src="js/effects/slot-effects.js?v=8d4e4f1c"></script>
-	<script src="js/ui/panel-renderer.js?v=196527f3"></script>
+	<script src="js/ui/panel-renderer.js?v=a17406a3"></script>
 	<script src="js/ui/settings-store.js?v=94ba4d01"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>

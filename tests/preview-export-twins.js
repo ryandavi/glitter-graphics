@@ -10,7 +10,7 @@ const sources = {
 	ShapeGlitterManager: fs.readFileSync(path.join(root, 'js/classes/ShapeGlitterManager.js'), 'utf8'),
 	GifExporter: fs.readFileSync(path.join(root, 'js/classes/GifExporter.js'), 'utf8')
 };
-const paritySource = fs.readFileSync(path.join(root, 'js/effects/PARITY.js'), 'utf8');
+const paritySource = fs.readFileSync(path.join(root, 'js/effects/preview-export-parity.js'), 'utf8');
 const context = {};
 vm.runInNewContext(`${paritySource}\nglobalThis.twins = PREVIEW_EXPORT_TWINS;`, context);
 

@@ -62,8 +62,13 @@ const COMMANDS = {
 	temporaryHand: { label: 'Temporarily Use Hand Tool', group: 'View', displayKey: 'Space', instruction: 'Hold' },
 	nudge: { label: 'Nudge Selected Layer', group: 'Transform', displayKey: 'Arrow Keys' },
 	nudgeFast: { label: 'Nudge Selected Layer 10px', group: 'Transform', displayKey: 'Shift + Arrow Keys' },
+	gradientStopNudge: { label: 'Move Focused Gradient Stop 1%', group: 'Gradient', displayKey: 'Arrow Keys' },
+	gradientStopNudgeSnap: { label: 'Move Focused Gradient Stop 5%', group: 'Gradient', displayKey: 'Shift + Arrow Keys' },
+	gradientStopDelete: { label: 'Delete Focused Gradient Stop', group: 'Gradient', displayKey: 'Delete / Backspace' },
 	clearSelection: { label: 'Cancel Active Transform / Clear Multi-Selection', group: 'Selection', displayKey: 'Escape' },
 	duplicateDrag: { label: 'Duplicate Layer(s) While Dragging', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['alt'] } },
+	gradientStopDuplicateDrag: { label: 'Duplicate Gradient Stop While Dragging', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag gradient stop', modifiers: ['alt'] } },
+	gradientStopSnapDrag: { label: 'Snap Gradient Stop to 5% Steps', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag gradient stop', modifiers: ['shift'] } },
 	axisLock: { label: 'Axis-lock Selected Layer Move', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['shift'] } },
 	disableSnapping: { label: 'Temporarily Disable Snapping', group: 'Transform', instruction: 'Hold', binding: { type: 'gesture', device: 'pointer', gesture: 'Drag', modifiers: ['control'] } },
 	snapRotation: { label: 'Snap Rotation to 15deg', group: 'Transform', binding: { type: 'gesture', device: 'pointer', gesture: 'Rotate', modifiers: ['shift'] } },
@@ -96,7 +101,7 @@ function getShortcutGroups(kind = 'keyboard') {
 	});
 	const order = kind === 'gesture'
 		? ['Navigate', 'Move & Transform']
-		: ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush'];
+		: ['Essentials', 'Tools', 'Canvas & View', 'Selection', 'Transform', 'Brush', 'Gradient'];
 	const rank = (title) => {
 		const index = order.indexOf(title);
 		return index === -1 ? order.length : index;

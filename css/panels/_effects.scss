@@ -34,47 +34,193 @@
 	}
 }
 
-.effect-gradient-editor {
-	display: flex;
-	flex-direction: column;
-	gap: var(--spacing-md);
+// The gradient editor is laid out exactly like the glitter source: `.paint-slot-main`
+// holds a flat run of `.property-set` chunks, hairline-divided by the shared
+// `.property-set + .property-set` rule (never a manual divider, never a set inside
+// a set). effect-source.js splits the template into:
+//   - `.gradient-preview` → the Source `.property-set` (a `[data-paint-source-mode]`
+//     display block, where `.asset-info` sits) — styled in the block below;
+//   - `.gradient-stop-set` → a `.property-set` chunk: the stop table + actions + hint;
+//   - `.effect-gradient-editor` → a `.property-set` chunk: Type / Blend / Angle
+//     `.property-row`s, plus the fill's Opacity row for the Gradient source;
+//   - the Smoothing `.advanced-disclosure` → module level, beside the glitter Advanced.
 
-	&[hidden],
-	.gradient-angle[hidden],
-	.gradient-stops-heading[hidden] { display: none; }
+// Options chunk — just a run of `.property-row`s; the segmented takes the value +
+// revert columns like every other segmented row in the panel.
+.effect-gradient-editor .property-row:not(.is-stacked) > .segmented-control {
+	grid-column: 2 / -2;
+}
 
-	// Type + Blend segmented controls stack like the other effect option rows.
-	.gradient-option-rows {
-		gap: var(--spacing-md);
+// Stop-table chunk.
+.gradient-stop-set {
+	// Table / actions / hint take the gutter like `.asset-info`.
+	.gradient-stops-heading,
+	.gradient-stops,
+	.gradient-actions { margin-inline: var(--property-gutter); }
+
+	.gradient-stops-heading,
+	.effect-gradient-stop {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 56px 56px var(--property-revert-col);
+		column-gap: var(--spacing-xs);
+		align-items: center;
 	}
 
-	// The stops editor is one card: preview strip w/ draggable handles on top,
-	// then the per-stop rows and Add stop.
-	.gradient-preview {
-		position: relative;
-		height: 28px;
-		border-radius: var(--radius-sm);
-		border: 1px solid var(--color-border);
-		cursor: copy;
-		touch-action: none;
+	// Heading pads to line its column labels up with the padded stop rows; the
+	// Pos / Alpha labels also clear the number field's border + inner padding so
+	// they sit directly over the value, not the field edge.
+	.gradient-stops-heading {
+		padding: 0 var(--spacing-sm) 1px;
+		font-size: 9.5px;
+		font-weight: var(--font-weight-semibold);
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--color-text-tertiary);
 
-		// Checkerboard under the strip so stop opacity reads visually.
-		&::before {
-			content: '';
-			position: absolute;
-			inset: 0;
-			border-radius: inherit;
-			background: repeating-conic-gradient(rgba(0, 0, 0, 0.2) 0% 25%, rgba(255, 255, 255, 0.6) 0% 50%) 0 0 / 12px 12px;
+		> span:nth-child(2),
+		> span:nth-child(3) {
+			text-align: right;
+			padding-right: calc(1px + var(--spacing-sm));
+		}
+
+		&[hidden] { display: none; }
+	}
+
+	.gradient-stops {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-2xs);
+	}
+
+	.effect-gradient-stop {
+		min-height: 28px;
+		padding: var(--spacing-sm);
+		border-radius: var(--radius-control);
+
+		&.is-selected {
+			background: var(--color-accent-surface);
+			box-shadow: inset 0 0 0 1px var(--color-accent);
 		}
 	}
 
-	.gradient-preview-bar {
-		position: absolute;
-		inset: 0;
-		border-radius: inherit;
+	.gradient-stop-color {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		min-width: 0;
+		cursor: pointer;
+
+		// Square swatch, the same height as the Pos / Alpha number fields.
+		> input[type="color"] {
+			flex: 0 0 auto;
+			width: var(--property-control-height);
+			height: var(--property-control-height);
+			aspect-ratio: 1;
+			padding: 2px;
+			border-radius: var(--radius-inner);
+		}
 	}
 
-	.gradient-preview-markers {
+	.gradient-stop-hex {
+		min-width: 0;
+		overflow: hidden;
+		font-size: var(--font-size-sm);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: 0.02em;
+		color: var(--color-text-primary);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	// Pos / Alpha: same box, size and unit treatment as a `.property-value`
+	// readout — mirrors `:is(.design-panel…) .panel-redesign .property-row >
+	// .property-value` (an `<input>` fills it; the `%` is the shared `.setting-unit`).
+	.gradient-stop-field {
+		min-width: 0;
+		height: var(--property-control-height);
+		padding: 0 6px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--property-r-field);
+		background: var(--color-bg-secondary);
+
+		> input[type="number"] {
+			flex: 1 1 auto;
+			min-width: 0;
+			height: 100%;
+			padding: 0;
+			border: 0;
+			background: none;
+			font-size: var(--font-size-sm);
+			font-weight: 500;
+			font-variant-numeric: tabular-nums;
+			color: var(--color-text-primary);
+			text-align: right;
+			appearance: textfield;
+
+			&::-webkit-outer-spin-button,
+			&::-webkit-inner-spin-button { appearance: none; margin: 0; }
+		}
+
+		> .input-unit-suffix {
+			position: static;
+			flex: 0 0 auto;
+			margin-left: 2px;
+			font-size: var(--font-size-sm);
+			color: var(--color-text-tertiary);
+		}
+	}
+
+	.gradient-stop-remove[disabled] {
+		opacity: 0.28;
+		cursor: default;
+	}
+
+	// Add stop / Reverse: a plain 2-up of the shared icon+label button.
+	.gradient-actions {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--spacing-sm);
+
+		> .btn-text-with-icon { justify-content: center; }
+	}
+
+	.gradient-hint { line-height: 1.4; }
+}
+
+// The preview bar, moved into the Source `.property-set` by effect-source.js —
+// gutter-inset like `.asset-info`, mode-toggled via `[data-paint-source-mode]`.
+// Circular stop handles SIT ON a bar centred in a taller track so they overflow
+// it; the checkerboard is a ::before under the JS-set gradient (same paint order
+// as the old markup, so stop alpha reads through).
+.paint-slot-source > .gradient-preview {
+	position: relative;
+	height: 32px;
+	margin-inline: var(--property-gutter);
+	touch-action: none;
+	cursor: copy;
+
+	&::before {
+		content: '';
+		position: absolute;
+		inset-inline: 0;
+		top: 50%;
+		height: 16px;
+		transform: translateY(-50%);
+		border-radius: var(--radius-control);
+		background: repeating-conic-gradient(#0000 0 25%, rgba(255, 255, 255, 0.09) 0 50%) 0 0 / 10px 10px;
+	}
+
+	> .gradient-preview-bar {
+		position: absolute;
+		inset-inline: 0;
+		top: 50%;
+		height: 100%;
+		transform: translateY(-50%);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-control);
+	}
+
+	> .gradient-preview-markers {
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
@@ -82,77 +228,44 @@
 
 	.gradient-preview-stop {
 		position: absolute;
-		top: 0;
-		bottom: 0;
-		width: 22px;
-		transform: translateX(-50%);
+		top: 50%;
+		box-sizing: border-box;
+		width: 15px;
+		height: 15px;
+		transform: translate(-50%, -50%);
+		border: 2px solid #fff;
+		border-radius: var(--radius-full);
+		background: var(--stop-color, #fff);
+		box-shadow: 0 0 3px rgba(0, 0, 0, 0.55);
 		pointer-events: auto;
-		cursor: ew-resize;
+		cursor: grab;
 
-		&::after {
+		&::before {
 			content: '';
 			position: absolute;
-			left: 50%;
-			top: 50%;
-			width: 14px;
-			height: 14px;
-			transform: translate(-50%, -50%);
-			border-radius: var(--radius-full);
-			background: var(--stop-color, #fff);
-			border: 2px solid #fff;
-			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+			inset: -14px -5px;
+		}
+
+		&.is-selected {
+			border-color: var(--color-accent);
+			box-shadow: 0 0 0 2px var(--color-accent-surface), 0 0 3px rgba(0, 0, 0, 0.55);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--color-accent);
+			outline-offset: 3px;
 		}
 	}
+}
 
-	.gradient-stops-heading,
-	.effect-gradient-stop {
-		display: grid;
-		grid-template-columns: 36px minmax(0, 1fr) minmax(0, 1fr) 26px;
-		gap: var(--spacing-sm);
-		align-items: center;
-	}
-
-	.gradient-stops-heading {
-		@include text-sm;
-		color: var(--color-text-tertiary);
-	}
-
-	.gradient-stops {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
-	}
-
-	.effect-gradient-stop input[type="color"] {
-		width: 36px;
-		height: 28px;
-		padding: var(--spacing-2xs);
-	}
-
-	.gradient-stop-control {
-		display: grid;
-		grid-template-columns: minmax(38px, 1fr) 30px;
-		gap: var(--spacing-2xs);
-		align-items: center;
-		min-width: 0;
-
-		input { width: 100%; }
-	}
-
-	.gradient-stop-value {
-		@include text-sm;
-		color: var(--color-text-secondary);
-		text-align: right;
-		white-space: nowrap;
-	}
-
-	.gradient-stop-remove {
-		width: 26px;
-		height: 26px;
-		padding: var(--spacing-xs);
-	}
-
-	.gradient-add { align-self: flex-end; }
+// The Smoothing Advanced disclosure is re-parented (by installEffectGradientEditor)
+// to sit beside the glitter source's own Advanced — a module-level sibling, not a
+// child of the editor. It reuses the shared `.advanced-disclosure` treatment
+// verbatim; effect-source.js toggles `hidden` (global `[hidden]` rule hides it).
+// It is gradient-only + Smooth-blend-only.
+.gradient-advanced .property-value .setting-unit {
+	margin-left: 2px;
+	color: var(--color-text-tertiary);
 }
 
 .property-module-content {

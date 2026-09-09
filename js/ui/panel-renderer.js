@@ -1411,7 +1411,8 @@ function readModuleSummary(card) {
 		const color = card.querySelector('.property-color-row:not([hidden]) input[type="color"]')?.value;
 		parts.push(color ? color.toUpperCase() : 'Solid');
 	} else if (mode === 'gradient') {
-		parts.push('Gradient');
+		const type = card.querySelector('.effect-gradient-editor [data-type].active')?.dataset.type;
+		parts.push(type === 'radial' ? 'Radial gradient' : 'Linear gradient');
 	}
 	const opacity = card.querySelector('.paint-slot-opacity .property-value')?.textContent?.trim();
 	if (opacity && opacity !== '100%') parts.push(opacity);
