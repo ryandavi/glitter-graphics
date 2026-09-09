@@ -339,6 +339,17 @@ class AssetEditor {
                 <button class="btn btn-secondary btn-sm" type="button" onclick="app.renameAssetFile()">Rename</button>
             </div>`, { htmlFor: 'renameBase', tall: true });
         }
+        if (field.input === 'attribution') {
+            const a = this.parseAttribution(value);
+            const opt = (v, l) => `<option value="${v}" ${(a.license || '') === v ? 'selected' : ''}>${l}</option>`;
+            const text = (key) => `<input type="text" id="attr_${key}" value="${this.escapeHtml(a[key] || '')}">`;
+            return this.propertyRow(field.label, text('author'), { htmlFor: 'attr_author' })
+                + this.propertyRow('Author URL', text('authorUrl'), { htmlFor: 'attr_authorUrl', continued: true })
+                + this.propertyRow('Source', text('source'), { htmlFor: 'attr_source', continued: true })
+                + this.propertyRow('Source URL', text('sourceUrl'), { htmlFor: 'attr_sourceUrl', continued: true })
+                + this.propertyRow('License', `<select id="attr_license">${opt('', '— none —')}${opt('unknown', 'License unknown')}${opt('personal-use', 'Personal use only')}${opt('commercial', 'Commercial use OK')}${opt('public-domain', 'Public domain')}${opt('CC0-1.0', 'CC0 1.0')}${opt('CC-BY-4.0', 'CC BY 4.0')}${opt('CC-BY-SA-4.0', 'CC BY-SA 4.0')}${opt('OFL-1.1', 'SIL Open Font License 1.1')}${opt('system', 'System font')}</select>`, { htmlFor: 'attr_license', continued: true })
+                + this.propertyRow('Notes', `<textarea id="attr_notes" rows="2">${this.escapeHtml(a.notes || '')}</textarea>`, { htmlFor: 'attr_notes', continued: true, tall: true });
+        }
         if (field.input === 'colors') {
             const colors = value ? String(value).split(',') : [];
             const weights = this.currentAsset.color_weights ? String(this.currentAsset.color_weights).split(',') : [];
@@ -354,6 +365,20 @@ class AssetEditor {
             return row + this.propertyRow(field.label, `<img src="${CONFIG.image_base_path}${this.escapeHtml(value)}" class="preview-image${this.renderingClass(this.currentAsset)}" alt="Preview">`, { continued: true });
         }
         return row;
+    }
+
+    // Stored attribution is a JSON string (js/core/attribution.js shape); a
+    // legacy value is free text -> shown as the Notes field.
+    parseAttribution(value) {
+        if (value && typeof value === 'object') return value;
+        if (typeof value === 'string' && value.trim()) {
+            try {
+                const parsed = JSON.parse(value);
+                if (parsed && typeof parsed === 'object') return parsed;
+            } catch (_error) { /* legacy free text */ }
+            return { notes: value.trim() };
+        }
+        return {};
     }
 
     // Palette types are stored as slugs; older records may hold a slug the
@@ -457,9 +482,18 @@ class AssetEditor {
             if (!field.input || ['analysis', 'analysisMeta', 'rename'].includes(field.input)) continue;
             const input = document.getElementById(field.key);
             const key = field.dbKey || field.key;
-            if (!input && field.input !== 'colors') continue;
+            if (!input && !['colors', 'attribution'].includes(field.input)) continue;
             if (field.input === 'checkbox') data[key] = input.checked ? 1 : 0;
             else if (field.input === 'paletteType') data[key] = input.value;
+            else if (field.input === 'attribution') {
+                const get = (subKey) => (document.getElementById(`attr_${subKey}`)?.value || '').trim();
+                const attribution = {};
+                ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes'].forEach((subKey) => {
+                    const entry = get(subKey);
+                    if (entry) attribution[subKey] = entry;
+                });
+                data[key] = Object.keys(attribution).length ? JSON.stringify(attribution) : null;
+            }
             else if (field.input === 'number' || field.input === 'select') data[key] = input.value === '' ? null : Number(input.value);
             else if (field.input === 'colors') {
                 // Each row carries its own analyzed weight; only rows added by

@@ -48,6 +48,7 @@ const brushCtx = {
 };
 brushCtx.window = brushCtx; brushCtx.globalThis = brushCtx;
 vm.createContext(brushCtx);
+vm.runInContext(load('js/core/attribution.js'), brushCtx, { filename: 'attribution.js' });
 vm.runInContext(load('js/classes/BrushLibrary.js') + '\nthis.BrushLibrary = BrushLibrary;', brushCtx, { filename: 'BrushLibrary.js' });
 const BrushLibrary = brushCtx.BrushLibrary;
 
@@ -67,7 +68,7 @@ assets.filter((asset) => asset.kind === 'raster').forEach((asset) => {
 	assert(fs.existsSync(path.join(root, asset.thumbnailUrl)), `${asset.id} thumbnail exists`);
 });
 
-const someRaster = manifest.packs[0].brushes[0].id;
+const someRaster = manifest.brushes[0].id;
 assert(BrushLibrary.isRaster(someRaster));
 assert(!BrushLibrary.isRaster('round'));
 
@@ -85,28 +86,29 @@ assert.deepStrictEqual(
 // attribution: brush override beats pack default, else falls back to the pack
 const withOverride = {
 	version: 'x',
-	packs: [{
-		id: 'p', label: 'P', order: 1,
-		attribution: { author: 'Pack Author', license: 'unknown' },
-		brushes: [
-			{ id: 'p-1', label: 'P 1', tip: { src: 'images/brushes/p/1.png', width: 4, height: 4 } },
-			{ id: 'p-2', label: 'P 2', tip: { src: 'images/brushes/p/2.png', width: 4, height: 4 }, attribution: { author: 'Solo', license: 'CC0-1.0' } }
-		]
-	}]
+	packs: [{ id: 'p', label: 'P', order: 1, attribution: { author: 'Pack Author', license: 'unknown' } }],
+	brushes: [
+		{ id: 'p-1', pack: 'p', label: 'P 1', tip: { src: 'images/brushes/p/1.png', width: 4, height: 4 } },
+		{ id: 'p-2', pack: 'p', label: 'P 2', tip: { src: 'images/brushes/p/2.png', width: 4, height: 4 }, attribution: { author: 'Solo', license: 'CC0-1.0' } }
+	]
 };
 BrushLibrary.applyManifest(withOverride);
 assert.strictEqual(BrushLibrary.attributionFor('p-1').author, 'Pack Author');
 assert.strictEqual(BrushLibrary.attributionFor('p-2').author, 'Solo');
 assert.strictEqual(BrushLibrary.attributionFor('p-2').license, 'CC0-1.0');
 
-// validation: colliding id and unknown licence both throw
+// validation: colliding id, unknown pack ref and unknown licence all throw
 assert.throws(() => BrushLibrary.applyManifest({
-	version: 'x', packs: [{ id: 'q', label: 'Q', order: 1, attribution: { license: 'unknown' },
-		brushes: [{ id: 'round', label: 'x', tip: { src: 'images/brushes/x.png', width: 1, height: 1 } }] }]
+	version: 'x', packs: [{ id: 'q', label: 'Q', order: 1, attribution: { license: 'unknown' } }],
+	brushes: [{ id: 'round', pack: 'q', label: 'x', tip: { src: 'images/brushes/x.png', width: 1, height: 1 } }]
 }), /colliding brush id/);
 assert.throws(() => BrushLibrary.applyManifest({
-	version: 'x', packs: [{ id: 'q', label: 'Q', order: 1, attribution: { license: 'nope' },
-		brushes: [{ id: 'z1', label: 'x', tip: { src: 'images/brushes/x.png', width: 1, height: 1 } }] }]
+	version: 'x', packs: [{ id: 'q', label: 'Q', order: 1, attribution: { license: 'unknown' } }],
+	brushes: [{ id: 'z1', pack: 'nope', label: 'x', tip: { src: 'images/brushes/x.png', width: 1, height: 1 } }]
+}), /unknown pack/);
+assert.throws(() => BrushLibrary.applyManifest({
+	version: 'x', packs: [{ id: 'q', label: 'Q', order: 1, attribution: { license: 'nope' } }],
+	brushes: [{ id: 'z1', pack: 'q', label: 'x', tip: { src: 'images/brushes/x.png', width: 1, height: 1 } }]
 }), /license/);
 
 BrushLibrary.applyManifest(manifest);

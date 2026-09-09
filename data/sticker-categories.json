@@ -84,8 +84,12 @@
         "name": "ryandavi",
         "icon": "images/stickers/ryandavi/ryandavi_wow.png",
         "color": "#1100ff",
-        "description": "",
-        "count": 11
+        "description": "Original stickers by Ryan Davis",
+        "count": 11,
+        "attribution": {
+            "author": "Ryan Davis",
+            "authorUrl": "https://ryandavi.com"
+        }
     },
     {
         "id": "character",

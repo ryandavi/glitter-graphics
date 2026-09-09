@@ -39,8 +39,6 @@ const BrushLibrary = {
 		smoothing: true       // bilinear tip scaling; false = nearest-neighbour (crisp pixels)
 	}),
 
-	KNOWN_LICENSES: new Set(['unknown', 'personal-use', 'commercial', 'public-domain', 'CC0-1.0', 'CC-BY-4.0', 'CC-BY-SA-4.0']),
-
 	async loadManifest() {
 		if (this.manifestPromise) return this.manifestPromise;
 
@@ -63,8 +61,8 @@ const BrushLibrary = {
 	},
 
 	applyManifest(manifest) {
-		if (typeof manifest?.version !== 'string' || !Array.isArray(manifest?.packs)) {
-			throw new Error('Brushes manifest needs a version string and a packs array');
+		if (typeof manifest?.version !== 'string' || !Array.isArray(manifest?.packs) || !Array.isArray(manifest?.brushes)) {
+			throw new Error('Brushes manifest needs a version string, a packs array and a brushes array');
 		}
 
 		// Vector tip ids are reserved — a raster brush must never reuse one.
@@ -74,6 +72,9 @@ const BrushLibrary = {
 		const packs = [];
 		const brushes = {};
 
+		// Packs are metadata only (label / order / source / attribution) — the
+		// pack ↔ brush relation is `brush.pack`, mirroring shapes.json's
+		// categories[] + shape.category.
 		manifest.packs.forEach((pack) => {
 			if (!/^[a-z][a-z0-9-]*$/.test(pack?.id) || packIds.has(pack.id)) {
 				throw new Error(`Brushes manifest has an invalid or duplicate pack id: ${pack?.id}`);
@@ -81,15 +82,26 @@ const BrushLibrary = {
 			if (!pack.label || !Number.isFinite(pack.order)) {
 				throw new Error(`Brush pack "${pack.id}" needs a label and a numeric order`);
 			}
-			const attribution = this._sanitizeAttribution(pack.attribution, pack.id);
-			if (!Array.isArray(pack.brushes) || !pack.brushes.length) {
-				throw new Error(`Brush pack "${pack.id}" has no brushes`);
-			}
 			packIds.add(pack.id);
+			packs.push({
+				id: pack.id,
+				label: pack.label,
+				order: pack.order,
+				source: pack.source || '',
+				attribution: this._sanitizeAttribution(pack.attribution, pack.id),
+				brushIds: []
+			});
+		});
 
-			pack.brushes.forEach((brush) => {
+		manifest.brushes
+			.slice()
+			.sort((a, b) => (a.order || 0) - (b.order || 0))
+			.forEach((brush) => {
 				if (!/^[a-z][a-z0-9-]*$/.test(brush?.id) || brushIds.has(brush.id) || vectorIds.has(brush.id)) {
-					throw new Error(`Brush pack "${pack.id}" has an invalid or colliding brush id: ${brush?.id}`);
+					throw new Error(`Brushes manifest has an invalid or colliding brush id: ${brush?.id}`);
+				}
+				if (!packIds.has(brush.pack)) {
+					throw new Error(`Brush "${brush.id}" references unknown pack "${brush.pack}"`);
 				}
 				if (!brush.label) throw new Error(`Brush "${brush.id}" needs a label`);
 				const tip = brush.tip || {};
@@ -101,7 +113,7 @@ const BrushLibrary = {
 				}
 				brushIds.add(brush.id);
 				brushes[brush.id] = {
-					packId: pack.id,
+					packId: brush.pack,
 					label: brush.label,
 					order: Number.isFinite(brush.order) ? brush.order : 0,
 					sourceName: brush.sourceName || '',
@@ -111,20 +123,8 @@ const BrushLibrary = {
 					dynamics: this._sanitizeDynamics(brush.dynamics),
 					attribution: brush.attribution ? this._sanitizeAttribution(brush.attribution, brush.id) : null
 				};
+				packs.find((pack) => pack.id === brush.pack).brushIds.push(brush.id);
 			});
-
-			packs.push({
-				id: pack.id,
-				label: pack.label,
-				order: pack.order,
-				source: pack.source || '',
-				attribution,
-				brushIds: pack.brushes
-					.slice()
-					.sort((a, b) => (a.order || 0) - (b.order || 0))
-					.map((brush) => brush.id)
-			});
-		});
 
 		packs.sort((a, b) => a.order - b.order);
 
@@ -140,20 +140,7 @@ const BrushLibrary = {
 	},
 
 	_sanitizeAttribution(raw, ownerId) {
-		const a = raw && typeof raw === 'object' ? raw : {};
-		const str = (value) => (typeof value === 'string' ? value.trim() : '');
-		const license = str(a.license) || 'unknown';
-		if (!this.KNOWN_LICENSES.has(license)) {
-			throw new Error(`"${ownerId}" attribution.license "${license}" is not a known value`);
-		}
-		return {
-			author: str(a.author),
-			authorUrl: str(a.authorUrl),
-			archivedBy: str(a.archivedBy),
-			archiveUrl: str(a.archiveUrl),
-			license,
-			notes: str(a.notes)
-		};
+		return Attribution.sanitize(raw, ownerId);
 	},
 
 	_sanitizeDynamics(raw) {
@@ -223,19 +210,12 @@ const BrushLibrary = {
 		const brush = this.BRUSHES[id];
 		if (!brush) return null;
 		const pack = this.packById(brush.packId);
-		return { ...(pack ? pack.attribution : {}), ...(brush.attribution || {}) };
+		return Attribution.resolve(pack && pack.attribution, brush.attribution);
 	},
 
-	// A one-line human credit, e.g. "bruisedxheart.org · archived by Belle — Salvaged · unknown licence".
+	// A one-line human credit, e.g. "bruisedxheart.org · via Belle — Salvaged · license unknown".
 	creditLine(id) {
-		const a = this.attributionFor(id);
-		if (!a) return '';
-		const parts = [];
-		if (a.author) parts.push(a.author);
-		if (a.archivedBy) parts.push(`archived by ${a.archivedBy}`);
-		if (a.license && a.license !== 'unknown') parts.push(`${a.license} licence`);
-		else if (a.license === 'unknown') parts.push('licence unknown');
-		return parts.join(' · ');
+		return Attribution.creditLine(this.attributionFor(id));
 	},
 
 	// ----- tip bitmaps -----

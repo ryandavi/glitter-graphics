@@ -376,7 +376,7 @@ const CONFIG = deepFreeze({
 			// tools/abr-import.js). BrushLibrary loads this at boot alongside the
 			// vector tips in ShapeLibrary.
 			rasterBrushes: {
-				manifest: 'data/brushes.json?v=1'
+				manifest: 'data/brushes.json?v=3'
 			},
 			brushTips: {
 				categories: 'data/brush-categories.json'
@@ -467,7 +467,7 @@ const CONFIG = deepFreeze({
 			defaultTextCase: 'none',
 			// Stage Two in-canvas typing is intentionally paused; this is its future gate.
 			canvasEditing: false,
-			fontsManifest: 'data/fonts.json?v=4',
+			fontsManifest: 'data/fonts.json?v=5',
 			defaultFontId: 'luckiest-guy',
 			defaultFontWeight: 400,
 			defaultFontStyle: 'normal',

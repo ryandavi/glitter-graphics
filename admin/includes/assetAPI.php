@@ -444,6 +444,46 @@ abstract class AssetAPI
         return $this->paths->urlToFile($url, $this->assetType);
     }
 
+    // Shared attribution shape — mirrors js/core/attribution.js and
+    // ManifestLibraryService::validateAttribution. Returns a compact JSON string
+    // for storage, or null when nothing usable is present.
+    protected function normalizeAttributionJson($value)
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = is_array($decoded) ? $decoded : ['notes' => trim($value)];
+        }
+        if (!is_array($value)) {
+            return null;
+        }
+        $fields = ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes'];
+        $licenses = ['unknown', 'personal-use', 'commercial', 'public-domain', 'CC0-1.0', 'CC-BY-4.0', 'CC-BY-SA-4.0', 'OFL-1.1', 'system'];
+        $out = [];
+        foreach ($fields as $field) {
+            $entry = trim((string)($value[$field] ?? ''));
+            if ($entry === '') continue;
+            if ($field === 'license' && !in_array($entry, $licenses, true)) {
+                throw new InvalidArgumentException("Attribution license \"$entry\" is not recognized");
+            }
+            $out[$field] = $entry;
+        }
+        return $out ? json_encode($out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null;
+    }
+
+    // Storage form -> the structured shape the editor consumes. A legacy
+    // free-text value becomes {notes: "…"}; empty becomes null.
+    protected function decodeAttribution($value)
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $decoded = json_decode((string)$value, true);
+        if (is_array($decoded)) {
+            return $decoded ?: null;
+        }
+        return ['notes' => trim((string)$value)];
+    }
+
     public function getCategories()
     {
         $categoryIdField = $this->getCategoryIdField();
@@ -471,6 +511,12 @@ abstract class AssetAPI
         foreach ($categories as &$category) {
             $category['active_count'] = (int)$category['active_count'];
             $category['pending_count'] = $pending[(int)$category['id']] ?? 0;
+            if (array_key_exists('attribution', $category)) {
+                $decoded = $category['attribution'] === null || $category['attribution'] === ''
+                    ? null
+                    : json_decode((string)$category['attribution'], true);
+                $category['attribution'] = is_array($decoded) ? $decoded : null;
+            }
             $category['folder_url'] = $this->paths->categoryUrl($this->assetType, $category['slug']);
             try {
                 $directory = $this->paths->categoryDirectory($this->assetType, $category['slug']);
@@ -509,8 +555,8 @@ abstract class AssetAPI
         if ($name === '') throw new InvalidArgumentException('Category name is required');
         $this->assertCategorySlugAvailable($slug);
         $stmt = $this->db->prepare(
-            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
-            'sssssi',
+            "INSERT INTO {$this->tables['categories_table']} (name, slug, description, icon, color, sort_order, attribution) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            'sssssis',
             [
                 $name,
                 $slug,
@@ -518,6 +564,7 @@ abstract class AssetAPI
                 (string)($data['icon'] ?? ''),
                 (string)($data['color'] ?? '#ff69b4'),
                 (int)($data['sort_order'] ?? 999),
+                $this->normalizeAttributionJson($data['attribution'] ?? null),
             ]
         );
         $stmt->close();
@@ -593,8 +640,25 @@ abstract class AssetAPI
         $rows = $this->fetchAllAssoc($result);
         $categories = [];
 
+        // Attribution is not (yet) a column on the category tables. Carry any
+        // hand-authored `attribution` block forward from the existing JSON so an
+        // export never drops it. A DB `attribution` column, if one is added
+        // later, wins over the file.
+        $existingAttribution = [];
+        $existingPath = "../../" . $this->tables['categories_json_file'];
+        if (is_file($existingPath)) {
+            $existing = json_decode((string)file_get_contents($existingPath), true);
+            if (is_array($existing)) {
+                foreach ($existing as $entry) {
+                    if (isset($entry['id'], $entry['attribution']) && is_array($entry['attribution']) && $entry['attribution']) {
+                        $existingAttribution[$entry['id']] = $entry['attribution'];
+                    }
+                }
+            }
+        }
+
         foreach ($rows as $row) {
-            $categories[] = [
+            $category = [
                 'id' => $row['slug'],
                 'name' => $row['name'],
                 'icon' => isset($row['icon']) ? $row['icon'] : '',
@@ -602,6 +666,16 @@ abstract class AssetAPI
                 'description' => isset($row['description']) ? $row['description'] : '',
                 'count' => isset($row['item_count']) ? (int)$row['item_count'] : 0,
             ];
+            $attribution = null;
+            if (isset($row['attribution']) && $row['attribution'] !== '') {
+                $decoded = json_decode((string)$row['attribution'], true);
+                if (is_array($decoded) && $decoded) $attribution = $decoded;
+            }
+            if ($attribution === null && isset($existingAttribution[$row['slug']])) {
+                $attribution = $existingAttribution[$row['slug']];
+            }
+            if ($attribution !== null) $category['attribution'] = $attribution;
+            $categories[] = $category;
         }
 
         return $categories;
@@ -664,6 +738,12 @@ abstract class AssetAPI
             $fields[] = "sort_order = ?";
             $types .= 'i';
             $params[] = (int)$data['sort_order'];
+        }
+
+        if (array_key_exists('attribution', $data)) {
+            $fields[] = "attribution = ?";
+            $types .= 's';
+            $params[] = $this->normalizeAttributionJson($data['attribution']);
         }
 
         if (empty($fields)) {
@@ -1132,6 +1212,9 @@ abstract class AssetAPI
         if (array_key_exists('palette_type_override', $data)) {
             $data['palette_type_override'] = $this->normalizePaletteTypeOverride($data['palette_type_override']);
         }
+        if (array_key_exists('attribution', $data)) {
+            $data['attribution'] = $this->normalizeAttributionJson($data['attribution']);
+        }
         $this->updateAssetRecord(
             (int)$data['id'],
             $data,
@@ -1151,6 +1234,9 @@ abstract class AssetAPI
 
     public function addAsset($data)
     {
+        if (array_key_exists('attribution', $data)) {
+            $data['attribution'] = $this->normalizeAttributionJson($data['attribution']);
+        }
         $map = $this->getAddFieldMap();
         $columns = [];
         $placeholders = [];

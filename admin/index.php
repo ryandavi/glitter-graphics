@@ -29,6 +29,7 @@ $browserConfig = [
 					<li><a href="sticker.php">Stickers</a></li>
 					<li><a href="fonts.php">Fonts</a></li>
 					<li><a href="shapes.php">Shapes</a></li>
+					<li><a href="brushes.php">Brushes</a></li>
 				</ul>
 			</nav>
 		</header>

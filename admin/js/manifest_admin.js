@@ -13,9 +13,9 @@ class ManifestAdmin {
 	}
 
 	bind() {
-		document.getElementById('addManifestItem').addEventListener('click', () => this.add());
-		document.getElementById('saveManifestItem').addEventListener('click', () => this.save());
-		document.getElementById('deleteManifestItem').addEventListener('click', () => this.remove());
+		document.getElementById('addManifestItem')?.addEventListener('click', () => this.add());
+		document.getElementById('saveManifestItem')?.addEventListener('click', () => this.save());
+		document.getElementById('deleteManifestItem')?.addEventListener('click', () => this.remove());
 		document.getElementById('manageManifestCategories')?.addEventListener('click', () => this.openCategories());
 		document.getElementById('saveManifestCategories')?.addEventListener('click', () => this.applyCategories());
 		document.getElementById('addManifestTaxonomy')?.addEventListener('click', () => this.addTaxonomyEntry());
@@ -52,7 +52,9 @@ class ManifestAdmin {
 	}
 
 	items() {
-		return this.config.library === 'fonts' ? this.manifest.fonts : this.manifest.shapes;
+		if (this.config.library === 'fonts') return this.manifest.fonts;
+		if (this.config.library === 'brushes') return this.manifest.brushes;
+		return this.manifest.shapes;
 	}
 
 	async loadFontFaces() {
@@ -72,15 +74,35 @@ class ManifestAdmin {
 		const host = document.getElementById('libraryList');
 		const itemHtml = (item) => {
 			const active = this.current && item.id === this.current.id ? 'active' : '';
-			const preview = this.config.library === 'fonts'
-				? `<span class="swatch-thumb" style="display:flex;align-items:center;justify-content:center;${this.fontPreviewStyle(item)}">${this.fontPreviewGlyph(item)}</span>`
-				: `<span class="swatch-thumb">${this.shapeSvg(item)}</span>`;
+			let preview;
+			if (this.config.library === 'fonts') {
+				preview = `<span class="swatch-thumb" style="display:flex;align-items:center;justify-content:center;${this.fontPreviewStyle(item)}">${this.fontPreviewGlyph(item)}</span>`;
+			} else if (this.config.library === 'brushes') {
+				// The thumbnail is the brush's own stamp tip — the single image the
+				// dab engine, cursor and picker card all use.
+				preview = `<span class="swatch-thumb">${item.tip?.src ? `<img src="${CONFIG.imageBasePath}${this.escape(item.tip.src)}" alt="" style="width:100%;height:100%;object-fit:contain">` : ''}</span>`;
+			} else {
+				preview = `<span class="swatch-thumb">${this.shapeSvg(item)}</span>`;
+			}
 			return `<button type="button" class="swatch-item btn btn-quiet ${active}" style="width:100%;text-align:left" data-manifest-id="${this.escape(item.id)}">
 				${preview}<span class="swatch-name">${this.escape(item.label || item.name)}</span>
 			</button>`;
 		};
 
-		if (this.config.library === 'shapes') {
+		if (this.config.library === 'brushes') {
+			host.innerHTML = this.manifest.packs
+				.slice()
+				.sort((a, b) => (a.order || 0) - (b.order || 0))
+				.map((pack) => {
+					const brushes = this.manifest.brushes
+						.filter((brush) => brush.pack === pack.id)
+						.sort((a, b) => (a.order || 0) - (b.order || 0));
+					return `<details class="category-group" open>
+						<summary class="category-label">${this.escape(pack.label)} (${brushes.length})</summary>
+						<div class="category-items">${brushes.map(itemHtml).join('')}</div>
+					</details>`;
+				}).join('');
+		} else if (this.config.library === 'shapes') {
 			if (this.shapeFilter === 'brush' || this.shapeFilter === 'brush-only') {
 				const shapes = this.manifest.shapes.filter((shape) =>
 					shape.uses.includes('brush') && (this.shapeFilter !== 'brush-only' || !shape.uses.includes('shape'))
@@ -119,7 +141,9 @@ class ManifestAdmin {
 		const issues = this.health?.issues || [];
 		const summary = this.config.library === 'fonts'
 			? `${this.health.registered} registered / ${this.health.files} files / ${this.health.tags} tags`
-			: `${this.health.registered} shapes / ${this.health.categories} categories`;
+			: this.config.library === 'brushes'
+				? `${this.health.registered} brushes / ${this.health.categories} packs`
+				: `${this.health.registered} shapes / ${this.health.categories} categories`;
 		if (!issues.length) {
 			host.innerHTML = `<span class="badge badge-success">Manifest valid</span><p>${this.escape(summary)}</p>`;
 			return;
@@ -148,6 +172,10 @@ class ManifestAdmin {
 
 	add() {
 		if (this.dirty && !confirm('Discard unsaved manifest changes?')) return;
+		if (this.config.library === 'brushes') {
+			this.status('Brush packs are created by the ABR importer (tools/abr-import.js), not here.', 'error');
+			return;
+		}
 		if (this.config.library === 'fonts') {
 			this.current = {
 				id: this.uniqueId('new-font'),
@@ -197,7 +225,9 @@ class ManifestAdmin {
 		document.getElementById('emptyState').style.display = 'none';
 		const editor = document.getElementById('editorContent');
 		editor.style.display = 'block';
-		editor.innerHTML = this.config.library === 'fonts' ? this.fontEditor() : this.shapeEditor();
+		editor.innerHTML = this.config.library === 'fonts' ? this.fontEditor()
+			: this.config.library === 'brushes' ? this.brushEditor()
+			: this.shapeEditor();
 		editor.querySelectorAll('input, select, textarea').forEach((control) => {
 			control.addEventListener('input', () => this.setDirty(true));
 			control.addEventListener('change', () => {
@@ -230,7 +260,8 @@ class ManifestAdmin {
 			<details class="admin-section" open>
 				<summary class="admin-section-title">Tags</summary>
 				${this.fontTagRows(font)}
-			</details>`;
+			</details>
+			${this.attributionSection(font)}`;
 	}
 
 	fontSpecimenRows(font) {
@@ -319,7 +350,58 @@ class ManifestAdmin {
 					${['circle', 'square', 'calligraphy'].map((primitive) => `<option value="${primitive}" ${shape.primitive === primitive ? 'selected' : ''}>${primitive}</option>`).join('')}
 				</select>`)}
 				${this.row('SVG path', `<textarea name="svgPath" rows="8">${this.escape(shape.svgPath || '')}</textarea>`, true)}
-			</details>`;
+			</details>
+			${this.attributionSection(shape)}`;
+	}
+
+	// One brush is the editable item (like one shape). Its stamp tip + dynamics
+	// come from the ABR importer (tools/abr-import.js); the tip PNG itself can't
+	// be swapped here, but every metadata field is editable. Pack metadata +
+	// attribution live in the Packs dialog.
+	brushEditor() {
+		const brush = this.current;
+		const dynamics = brush.dynamics || {};
+		const packOptions = this.manifest.packs
+			.map((pack) => `<option value="${this.escape(pack.id)}" ${brush.pack === pack.id ? 'selected' : ''}>${this.escape(pack.label)}</option>`).join('');
+		const numRow = (key, label) => this.row(label, `<input type="number" step="any" name="dyn.${key}" value="${this.escape(dynamics[key] ?? '')}">`);
+		const boolRow = (key, label) => this.row(label, this.checkbox(`dyn.${key}`, dynamics[key]));
+		return `<div class="editor-title-row"><h1>${this.escape(brush.label)}</h1></div>
+			<div class="property-row property-row-tall">
+				<span class="property-label">Tip</span>
+				<div class="property-control"><span class="swatch-thumb"><img src="${CONFIG.imageBasePath}${this.escape(brush.tip?.src || '')}" alt="" style="width:100%;height:100%;object-fit:contain"></span></div>
+			</div>
+			<details class="admin-section" open>
+				<summary class="admin-section-title">Brush</summary>
+				${this.row('ID', this.input('id', brush.id, 'text', true))}
+				${this.row('Label', this.input('label', brush.label))}
+				${this.row('Pack', `<select name="pack">${packOptions}</select>`)}
+				${this.row('Order', this.input('order', brush.order ?? 0, 'number'))}
+				${this.row('Tags', this.input('tags', (brush.tags || []).join(', ')))}
+				${this.row('Categories', this.input('categories', (brush.categories || []).join(', ')))}
+			</details>
+			<details class="admin-section">
+				<summary class="admin-section-title">Tip file</summary>
+				${this.row('Source', this.input('tipSrc', brush.tip?.src || '', 'text', true))}
+				${this.row('Width', this.input('tipWidth', brush.tip?.width ?? '', 'number', true))}
+				${this.row('Height', this.input('tipHeight', brush.tip?.height ?? '', 'number', true))}
+			</details>
+			<details class="admin-section">
+				<summary class="admin-section-title">Dynamics</summary>
+				${numRow('diameter', 'Diameter')}
+				${numRow('spacing', 'Spacing')}
+				${numRow('angle', 'Angle')}
+				${numRow('roundness', 'Roundness')}
+				${boolRow('flipX', 'Flip X')}
+				${boolRow('flipY', 'Flip Y')}
+				${numRow('scatter', 'Scatter')}
+				${boolRow('bothAxes', 'Scatter both axes')}
+				${numRow('count', 'Count')}
+				${numRow('countJitter', 'Count jitter')}
+				${numRow('sizeJitter', 'Size jitter')}
+				${numRow('angleJitter', 'Angle jitter')}
+				${boolRow('smoothing', 'Smoothing')}
+			</details>
+			${this.attributionSection(brush)}`;
 	}
 
 	readEditor() {
@@ -343,7 +425,34 @@ class ManifestAdmin {
 				item.file = value('file');
 			}
 			if (value('fallbackFontId')) item.fallbackFontId = value('fallbackFontId');
+			const fontAttribution = this.readAttribution(form);
+			if (fontAttribution) item.attribution = fontAttribution;
 			return item;
+		}
+
+		if (this.config.library === 'brushes') {
+			// id + tip (the PNG on disk) are not editable here — carry them through.
+			const list = (name) => value(name).split(',').map((entry) => entry.trim().toLowerCase()).filter(Boolean);
+			const num = (name) => { const raw = value(`dyn.${name}`); return raw === '' ? undefined : Number(raw); };
+			const dynamics = { ...(this.current.dynamics || {}) };
+			['diameter', 'spacing', 'angle', 'roundness', 'scatter', 'count', 'countJitter', 'sizeJitter', 'angleJitter'].forEach((key) => {
+				const parsed = num(key);
+				if (parsed !== undefined && Number.isFinite(parsed)) dynamics[key] = parsed;
+			});
+			['flipX', 'flipY', 'bothAxes', 'smoothing'].forEach((key) => { dynamics[key] = checked(`dyn.${key}`); });
+			const brush = {
+				...this.current,
+				label: value('label'),
+				pack: value('pack'),
+				order: Number(value('order')) || 0,
+				tags: list('tags'),
+				categories: list('categories'),
+				dynamics
+			};
+			const brushAttribution = this.readAttribution(form);
+			if (brushAttribution) brush.attribution = brushAttribution;
+			else delete brush.attribution;
+			return brush;
 		}
 
 		const uses = [];
@@ -362,10 +471,18 @@ class ManifestAdmin {
 		if (uses.includes('brush')) item.brushOrder = Number(value('brushOrder'));
 		if (value('primitive')) item.primitive = value('primitive');
 		else item.svgPath = value('svgPath');
+		// sourceBounds is the sheet-import bbox — not editable here, but it must
+		// survive a round-trip or the shape renders unnormalized after a save.
+		if (!item.primitive && this.current && this.shapeSourceBounds(this.current)) {
+			item.sourceBounds = this.current.sourceBounds;
+		}
+		const shapeAttribution = this.readAttribution(form);
+		if (shapeAttribution) item.attribution = shapeAttribution;
 		return item;
 	}
 
 	syncConditionalFields() {
+		if (this.config.library === 'brushes') return;
 		const editor = document.getElementById('editorContent');
 		if (this.config.library === 'fonts') {
 			const system = Boolean(editor.querySelector('[name="system"]')?.checked);
@@ -461,7 +578,33 @@ class ManifestAdmin {
 			host.innerHTML = this.manifest.tagGroups.map((group) => this.fontTagGroupEditor(group)).join('');
 			return;
 		}
+		if (this.config.library === 'brushes') {
+			host.innerHTML = this.manifest.packs.map((pack) => this.brushPackEditor(pack)).join('');
+			return;
+		}
 		host.innerHTML = this.manifest.categories.map((category) => this.shapeCategoryEditor(category)).join('');
+	}
+
+	brushPackEditor(pack) {
+		const a = pack.attribution || {};
+		const hasBrushes = this.manifest.brushes.some((brush) => brush.pack === pack.id);
+		const attrField = (key, placeholder) => `<label>${placeholder} ${this.taxonomyInput(`packAttr.${key}`, a[key] || '', placeholder)}</label>`;
+		return `<div class="manifest-taxonomy-row manifest-category-row" data-brush-pack data-pack-id="${this.escape(pack.id)}">
+			<label>ID ${this.taxonomyInput('packId', pack.id, 'swirlies')}</label>
+			<label>Label ${this.taxonomyInput('packLabel', pack.label, 'Swirlies')}</label>
+			<label>Order ${this.taxonomyInput('packOrder', pack.order ?? 0, '10')}</label>
+			<label>Source ${this.taxonomyInput('packSource', pack.source || '', 'file.abr')}</label>
+			<button type="button" class="btn btn-quiet btn-sm" data-remove-brush-pack aria-label="Remove pack" ${hasBrushes ? 'disabled title="Pack still has brushes"' : ''}>&times;</button>
+			<details class="manifest-taxonomy-attr" ${Object.keys(a).length ? 'open' : ''}>
+				<summary>Attribution</summary>
+				${attrField('author', 'Author')}
+				${attrField('authorUrl', 'Author URL')}
+				${attrField('source', 'Source')}
+				${attrField('sourceUrl', 'Source URL')}
+				<label>License <select name="packAttr.license">${this.licenseOptions(a.license)}</select></label>
+				${attrField('notes', 'Notes')}
+			</details>
+		</div>`;
 	}
 
 	fontTagGroupEditor(group) {
@@ -490,10 +633,21 @@ class ManifestAdmin {
 	}
 
 	shapeCategoryEditor(category) {
+		const a = category.attribution || {};
+		const attrField = (key, placeholder) => `<label>${placeholder} ${this.taxonomyInput(`catAttr.${key}`, a[key] || '', placeholder)}</label>`;
 		return `<div class="manifest-taxonomy-row manifest-category-row" data-shape-category>
 			<label>ID ${this.taxonomyInput('categoryId', category.id, 'basic')}</label>
 			<label>Label ${this.taxonomyInput('categoryLabel', category.label, 'Basic Shapes')}</label>
 			<button type="button" class="btn btn-quiet btn-sm" data-remove-shape-category aria-label="Remove category">&times;</button>
+			<details class="manifest-taxonomy-attr" ${Object.keys(a).length ? 'open' : ''}>
+				<summary>Attribution</summary>
+				${attrField('author', 'Author')}
+				${attrField('authorUrl', 'Author URL')}
+				${attrField('source', 'Source')}
+				${attrField('sourceUrl', 'Source URL')}
+				<label>License <select name="catAttr.license">${this.licenseOptions(a.license)}</select></label>
+				${attrField('notes', 'Notes')}
+			</details>
 		</div>`;
 	}
 
@@ -507,6 +661,12 @@ class ManifestAdmin {
 		if (this.config.library === 'fonts') {
 			const id = this.uniqueTaxonomyId('new-group', 'tagGroupId');
 			host.insertAdjacentHTML('beforeend', this.fontTagGroupEditor({ id, label: 'New Group', tags: [] }));
+			return;
+		}
+		if (this.config.library === 'brushes') {
+			const id = this.uniqueTaxonomyId('new-pack', 'packId');
+			const order = this.manifest.packs.reduce((max, pack) => Math.max(max, pack.order || 0), 0) + 10;
+			host.insertAdjacentHTML('beforeend', this.brushPackEditor({ id, label: 'New Pack', order }));
 			return;
 		}
 		const id = this.uniqueTaxonomyId('new-category', 'categoryId');
@@ -527,6 +687,8 @@ class ManifestAdmin {
 			button.closest('[data-font-tag]').remove();
 		} else if (button.matches('[data-remove-shape-category]')) {
 			button.closest('[data-shape-category]').remove();
+		} else if (button.matches('[data-remove-brush-pack]')) {
+			button.closest('[data-brush-pack]').remove();
 		} else {
 			changed = false;
 		}
@@ -561,10 +723,40 @@ class ManifestAdmin {
 			if (this.current) this.renderEditor();
 			return;
 		}
-		this.manifest.categories = Array.from(host.querySelectorAll('[data-shape-category]'), (category) => ({
-			id: value(category, 'categoryId'),
-			label: value(category, 'categoryLabel')
-		}));
+		if (this.config.library === 'brushes') {
+			const renames = new Map();
+			this.manifest.packs = Array.from(host.querySelectorAll('[data-brush-pack]'), (row) => {
+				const oldId = row.dataset.packId || '';
+				const pack = {
+					id: value(row, 'packId'),
+					label: value(row, 'packLabel'),
+					order: Number(value(row, 'packOrder')) || 0
+				};
+				const source = value(row, 'packSource');
+				if (source) pack.source = source;
+				const attribution = this.readAttribution(row, 'packAttr');
+				if (attribution) pack.attribution = attribution;
+				if (oldId && oldId !== pack.id) renames.set(oldId, pack.id);
+				return pack;
+			});
+			// A pack id can be renamed here — keep every brush's `pack` ref valid.
+			if (renames.size) {
+				this.manifest.brushes.forEach((brush) => {
+					if (renames.has(brush.pack)) brush.pack = renames.get(brush.pack);
+				});
+			}
+			this.closeCategories();
+			this.setDirty(true);
+			this.renderList();
+			if (this.current) this.renderEditor();
+			return;
+		}
+		this.manifest.categories = Array.from(host.querySelectorAll('[data-shape-category]'), (category) => {
+			const entry = { id: value(category, 'categoryId'), label: value(category, 'categoryLabel') };
+			const attribution = this.readAttribution(category, 'catAttr');
+			if (attribution) entry.attribution = attribution;
+			return entry;
+		});
 		this.closeCategories();
 		this.setDirty(true);
 		this.renderList();
@@ -605,6 +797,46 @@ class ManifestAdmin {
 		return `<input type="checkbox" class="field-switch" name="${name}" ${checked ? 'checked' : ''}>`;
 	}
 
+	// ----- attribution (shared shape with js/core/attribution.js) -----
+	licenseOptions(selected) {
+		return [
+			['', '— none —'],
+			['unknown', 'License unknown'],
+			['personal-use', 'Personal use only'],
+			['commercial', 'Commercial use OK'],
+			['public-domain', 'Public domain'],
+			['CC0-1.0', 'CC0 1.0'],
+			['CC-BY-4.0', 'CC BY 4.0'],
+			['CC-BY-SA-4.0', 'CC BY-SA 4.0'],
+			['OFL-1.1', 'SIL Open Font License 1.1'],
+			['system', 'System font']
+		].map(([value, label]) => `<option value="${value}" ${(selected || '') === value ? 'selected' : ''}>${label}</option>`).join('');
+	}
+
+	attributionSection(item, prefix = 'attr') {
+		const a = item.attribution || {};
+		const field = (key, label) => this.row(label, `<input type="text" name="${prefix}.${key}" value="${this.escape(a[key] || '')}">`);
+		return `<details class="admin-section" ${a && Object.keys(a).length ? 'open' : ''}>
+			<summary class="admin-section-title">Attribution</summary>
+			${field('author', 'Author')}
+			${field('authorUrl', 'Author URL')}
+			${field('source', 'Source')}
+			${field('sourceUrl', 'Source URL')}
+			${this.row('License', `<select name="${prefix}.license">${this.licenseOptions(a.license)}</select>`)}
+			${this.row('Notes', `<textarea name="${prefix}.notes" rows="3">${this.escape(a.notes || '')}</textarea>`, true)}
+		</details>`;
+	}
+
+	readAttribution(form, prefix = 'attr') {
+		const value = (key) => form.querySelector(`[name="${prefix}.${key}"]`)?.value.trim() || '';
+		const out = {};
+		['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes'].forEach((key) => {
+			const entry = value(key);
+			if (entry) out[key] = entry;
+		});
+		return Object.keys(out).length ? out : null;
+	}
+
 	fontPreviewStyle(font) {
 		if (font.system) return `font-family:${this.escape(font.family || font.fallback)};`;
 		return `font-family:'${this.escape(font.name)}',${this.escape(font.fallback)};`;
@@ -613,11 +845,37 @@ class ManifestAdmin {
 	shapeSvg(shape) {
 		const viewBox = Number(shape.viewBox) || 24;
 		let inner = '';
-		if (shape.svgPath) inner = `<path d="${this.escape(shape.svgPath)}"/>`;
+		if (shape.svgPath) {
+			// Sheet-imported paths (Photoshop custom shapes) live in arbitrary
+			// coordinate space far outside the viewBox. sourceBounds is the
+			// artwork's real bbox; normalize it into the box the same way the
+			// editor's ShapeLibrary does, or the thumbnail renders tiny / clipped
+			// / off-centre / invisible.
+			const bounds = this.shapeSourceBounds(shape);
+			if (bounds) {
+				const [x, y, w, h] = bounds;
+				const padding = viewBox / 24;
+				const available = viewBox - (padding * 2);
+				const scale = Math.min(available / w, available / h);
+				const e = padding + ((available - (w * scale)) / 2) - (x * scale);
+				const f = padding + ((available - (h * scale)) / 2) - (y * scale);
+				inner = `<path d="${this.escape(shape.svgPath)}" transform="matrix(${scale} 0 0 ${scale} ${e} ${f})"/>`;
+			} else {
+				inner = `<path d="${this.escape(shape.svgPath)}"/>`;
+			}
+		}
 		else if (shape.primitive === 'square') inner = `<rect width="${viewBox}" height="${viewBox}"/>`;
 		else if (shape.primitive === 'calligraphy') inner = `<ellipse cx="${viewBox / 2}" cy="${viewBox / 2}" rx="${viewBox / 2}" ry="${viewBox * 0.16}" transform="rotate(-45 ${viewBox / 2} ${viewBox / 2})"/>`;
 		else inner = `<circle cx="${viewBox / 2}" cy="${viewBox / 2}" r="${viewBox / 2}"/>`;
 		return `<svg viewBox="0 0 ${viewBox} ${viewBox}" style="width:100%;height:100%;fill:currentColor" aria-hidden="true">${inner}</svg>`;
+	}
+
+	shapeSourceBounds(shape) {
+		const raw = shape.sourceBounds;
+		if (Array.isArray(raw) && raw.length === 4 && raw.every((value) => Number.isFinite(value)) && raw[2] > 0 && raw[3] > 0) {
+			return raw;
+		}
+		return null;
 	}
 
 	status(message, type = '') {

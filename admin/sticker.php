@@ -21,7 +21,7 @@ header('Pragma: no-cache');
 	<div class="container">
 		<header class="header">
 			<h1><a href="index.php">Glitter Admin</a> / Stickers</h1>
-			<nav aria-label="Admin"><ul><li><a href="index.php">Admin</a></li><li><a href="glitter.php">Glitter</a></li><li class="current">Stickers</li><li><a href="fonts.php">Fonts</a></li><li><a href="shapes.php">Shapes</a></li></ul></nav>
+			<nav aria-label="Admin"><ul><li><a href="index.php">Admin</a></li><li><a href="glitter.php">Glitter</a></li><li class="current">Stickers</li><li><a href="fonts.php">Fonts</a></li><li><a href="shapes.php">Shapes</a></li><li><a href="brushes.php">Brushes</a></li></ul></nav>
 		</header>
 
 		<aside class="sidebar">
@@ -64,10 +64,10 @@ header('Pragma: no-cache');
 		const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
 	</script>
 	<script src="js/admin_api.js?v=6"></script>
-	<script src="js/asset_admin.js?v=24"></script>
-	<script src="js/category_manager.js?v=12"></script>
+	<script src="js/asset_admin.js?v=25"></script>
+	<script src="js/category_manager.js?v=13"></script>
 	<script src="js/tag_manager.js?v=8"></script>
 	<script src="js/ingest_review.js?v=14"></script>
-	<script src="js/sticker_admin.js?v=10"></script>
+	<script src="js/sticker_admin.js?v=11"></script>
 </body>
 </html>

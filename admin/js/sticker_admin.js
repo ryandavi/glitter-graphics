@@ -22,7 +22,7 @@ StickerEditor.FIELDS = [
 	// Replaces the old free-text `filename` field: that one edited the column
 	// without moving the file, so the two could disagree. Rename owns both.
 	{ key: 'rename', label: 'File name', input: 'rename', section: 'basic', hint: 'Renames the file on disk and repoints this record. The public URL changes, so re-export and expect saved projects using the old path to lose this asset.' },
-	{ key: 'attribution', label: 'Attribution', input: 'text', section: 'basic', nullable: true },
+	{ key: 'attribution', label: 'Attribution', input: 'attribution', section: 'basic', nullable: true },
 	{ key: 'sticker_text', label: 'Sticker Text', input: 'text', section: 'basic', nullable: true },
 	{ key: 'sticker_category_id', label: 'Category', input: 'select', section: 'organization' },
 	{ key: 'is_active', label: 'Active', input: 'checkbox', section: 'publishing' },

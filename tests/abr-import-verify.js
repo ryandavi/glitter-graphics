@@ -42,23 +42,27 @@ assert(stardust.samples.length === 1 && stardust.samples[0].width === 9,
 assert(stardust.presets.some((p) => p.scatter > 0), 'stardust has a scattered preset');
 
 // ---- generated manifest sanity --------------------------------------------
+// Flat shape: packs[] is metadata, brushes[] carries `pack` (mirrors shapes.json).
 const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'brushes.json'), 'utf8'));
-assert(typeof manifest.version === 'string' && Array.isArray(manifest.packs));
-const brushIds = new Set();
+assert(typeof manifest.version === 'string' && Array.isArray(manifest.packs) && Array.isArray(manifest.brushes));
+const packIds = new Set();
 for (const pack of manifest.packs) {
 	assert(/^[a-z][a-z0-9-]*$/.test(pack.id), `pack id ${pack.id}`);
 	assert(pack.attribution && pack.attribution.license, `${pack.id} keeps an attribution.license`);
-	for (const brush of pack.brushes) {
-		assert(!brushIds.has(brush.id), `duplicate brush id ${brush.id}`);
-		brushIds.add(brush.id);
-		const tip = path.join(__dirname, '..', brush.tip.src);
-		assert(fs.existsSync(tip), `${brush.id} tip file exists: ${brush.tip.src}`);
-		const png = fs.readFileSync(tip);
-		assert.strictEqual(png.readUInt32BE(16), brush.tip.width, `${brush.id} tip width matches PNG`);
-		assert.strictEqual(png.readUInt32BE(20), brush.tip.height, `${brush.id} tip height matches PNG`);
-		assert(brush.dynamics.scatter >= 0 && brush.dynamics.scatter <= 10);
-		assert(Number.isInteger(brush.dynamics.count) && brush.dynamics.count >= 1);
-	}
+	packIds.add(pack.id);
+}
+const brushIds = new Set();
+for (const brush of manifest.brushes) {
+	assert(!brushIds.has(brush.id), `duplicate brush id ${brush.id}`);
+	brushIds.add(brush.id);
+	assert(packIds.has(brush.pack), `${brush.id} references a real pack (${brush.pack})`);
+	const tip = path.join(__dirname, '..', brush.tip.src);
+	assert(fs.existsSync(tip), `${brush.id} tip file exists: ${brush.tip.src}`);
+	const png = fs.readFileSync(tip);
+	assert.strictEqual(png.readUInt32BE(16), brush.tip.width, `${brush.id} tip width matches PNG`);
+	assert.strictEqual(png.readUInt32BE(20), brush.tip.height, `${brush.id} tip height matches PNG`);
+	assert(brush.dynamics.scatter >= 0 && brush.dynamics.scatter <= 10);
+	assert(Number.isInteger(brush.dynamics.count) && brush.dynamics.count >= 1);
 }
 
 process.stdout.write(`PASS abr-lib decodes v6.1 + v6.2 packs; ${manifest.packs.length} packs / ${brushIds.size} brushes in data/brushes.json check out\n`);

@@ -1,4 +1,9 @@
 {
+	"attribution": {
+		"source": "Google Fonts",
+		"sourceUrl": "https://fonts.google.com",
+		"license": "OFL-1.1"
+	},
 	"tagGroups": [
 		{
 			"id": "style",

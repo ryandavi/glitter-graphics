@@ -3,8 +3,9 @@
 // abr-import — Photoshop ABR  ->  our raster-brush format
 // ============================================
 // Decodes an .abr into normalised stamp PNGs under images/brushes/<pack>/ and
-// patches data/brushes.json with a pack entry (dynamics from the ABR brush
-// descriptor, plus attribution you supply). Pure Node, zero deps.
+// patches data/brushes.json — a pack entry in `packs[]` (metadata + attribution)
+// and one entry per tip in the flat `brushes[]` (each with `pack: <id>`, mirroring
+// shapes.json's categories[] + shape.category). Pure Node, zero deps.
 //
 //   node tools/abr-import.js <file.abr> [options]
 //
@@ -13,8 +14,8 @@
 //   --order <n>         sort order among packs. Default: (max existing)+10.
 //   --author <text>     original brush author / site.
 //   --author-url <url>  original source URL (often a web.archive.org capture).
-//   --archived-by <t>   archivist / re-host who preserved the pack.
-//   --archive-url <url> the archivist's post or collection URL.
+//   --source <text>     archivist / re-host who preserved the pack.
+//   --source-url <url>  the archivist's post or collection URL.
 //   --license <text>    e.g. "unknown", "personal-use", "CC-BY-4.0".
 //   --notes <text>      free-form provenance note.
 //   --tags a,b,c        tags applied to every brush in the pack.
@@ -132,9 +133,18 @@ function trim(coverage, w, h, threshold = 2) {
 // ---------- manifest ----------
 function loadManifest() {
 	if (!fs.existsSync(MANIFEST)) {
-		return { version: today(), packs: [] };
+		return { version: today(), packs: [], brushes: [] };
 	}
-	return JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
+	const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
+	// Tolerate the pre-flatten shape (packs[].brushes) so a re-import upgrades it.
+	if (!Array.isArray(manifest.brushes)) {
+		manifest.brushes = [];
+		(manifest.packs || []).forEach((pack) => {
+			(pack.brushes || []).forEach((brush) => manifest.brushes.push({ ...brush, pack: pack.id }));
+			delete pack.brushes;
+		});
+	}
+	return manifest;
 }
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -273,6 +283,7 @@ function main() {
 		const n = brushes.length + 1;
 		brushes.push({
 			id: uniqueId(`${packId}-${n}`, brushes),
+			pack: packId,
 			label,
 			order: idx,
 			tags: args.tags.slice(),
@@ -282,20 +293,21 @@ function main() {
 		});
 	});
 
+	const attribution = {};
+	const setIf = (key, value) => { if (value) attribution[key] = value; };
+	setIf('author', args.author);
+	setIf('authorUrl', args.authorUrl);
+	setIf('source', args.source || args.archivedBy);
+	setIf('sourceUrl', args.sourceUrl || args.archiveUrl);
+	attribution.license = args.license || 'unknown';
+	setIf('notes', args.notes);
+
 	const pack = {
 		id: packId,
 		label: packLabel,
 		order,
 		source: path.basename(abrPath),
-		attribution: {
-			author: args.author || '',
-			authorUrl: args.authorUrl || '',
-			archivedBy: args.archivedBy || '',
-			archiveUrl: args.archiveUrl || '',
-			license: args.license || 'unknown',
-			notes: args.notes || ''
-		},
-		brushes
+		attribution
 	};
 
 	if (args.check || args.checkDir) runCheck(args.checkDir || path.dirname(abrPath), brushes);
@@ -303,6 +315,9 @@ function main() {
 	if (existingIdx >= 0) manifest.packs[existingIdx] = pack;
 	else manifest.packs.push(pack);
 	manifest.packs.sort((a, b) => (a.order || 0) - (b.order || 0));
+	// Replace this pack's brushes wholesale (the folder is rebuilt from scratch).
+	manifest.brushes = manifest.brushes.filter((brush) => brush.pack !== packId).concat(brushes);
+	manifest.brushes.sort((a, b) => (a.pack === b.pack ? (a.order || 0) - (b.order || 0) : 0));
 	manifest.version = today();
 
 	process.stdout.write(`pack "${packId}" — ${brushes.length} brush(es)\n`);
@@ -314,7 +329,7 @@ function main() {
 	}
 	fs.mkdirSync(path.dirname(MANIFEST), { recursive: true });
 	fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, '\t') + '\n');
-	process.stdout.write(`\nwrote ${path.relative(ROOT, MANIFEST)} (${manifest.packs.length} packs)\n`);
+	process.stdout.write(`\nwrote ${path.relative(ROOT, MANIFEST)} (${manifest.packs.length} packs, ${manifest.brushes.length} brushes)\n`);
 }
 
 function uniqueId(want, brushes) {

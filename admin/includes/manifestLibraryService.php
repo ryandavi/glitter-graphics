@@ -11,6 +11,7 @@ class ManifestLibraryService
 		$definitions = [
 			'fonts' => 'data/fonts.json',
 			'shapes' => 'data/shapes.json',
+			'brushes' => 'data/brushes.json',
 		];
 		if (!isset($definitions[$library])) {
 			throw new InvalidArgumentException('Invalid manifest library');
@@ -48,13 +49,92 @@ class ManifestLibraryService
 		return $this->get() + ['success' => true];
 	}
 
+	// Shared attribution shape — mirrors js/core/attribution.js. Optional
+	// everywhere; an empty object or null is fine.
+	private const ATTRIBUTION_FIELDS = ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes'];
+	private const ATTRIBUTION_LICENSES = ['unknown', 'personal-use', 'commercial', 'public-domain', 'CC0-1.0', 'CC-BY-4.0', 'CC-BY-SA-4.0', 'OFL-1.1', 'system'];
+
 	private function validate($manifest)
 	{
 		if ($this->library === 'fonts') {
 			$this->validateFonts($manifest);
 			return;
 		}
+		if ($this->library === 'brushes') {
+			$this->validateBrushes($manifest);
+			return;
+		}
 		$this->validateShapes($manifest);
+	}
+
+	// Mirrors BrushLibrary.applyManifest (js/classes/BrushLibrary.js). Flat shape
+	// (packs[] metadata + brushes[] with `brush.pack`) mirrors shapes.json. This
+	// admin edits pack + brush metadata; the tips + dynamics come from the ABR
+	// importer (tools/abr-import.js), so those are validated but not created here.
+	private function validateBrushes($manifest)
+	{
+		if (!is_array($manifest) || !is_string($manifest['version'] ?? null)
+			|| !array_is_list($manifest['packs'] ?? null) || !array_is_list($manifest['brushes'] ?? null)) {
+			throw new InvalidArgumentException('Brushes manifest needs a version string, a packs array and a brushes array');
+		}
+		$packIds = [];
+		foreach ($manifest['packs'] as $packIndex => $pack) {
+			$packId = trim((string)($pack['id'] ?? ''));
+			if (!preg_match('/^[a-z][a-z0-9-]*$/', $packId) || isset($packIds[$packId])) {
+				throw new InvalidArgumentException('Brush pack ' . ($packIndex + 1) . ' has an invalid or duplicate id');
+			}
+			if (trim((string)($pack['label'] ?? '')) === '' || !is_numeric($pack['order'] ?? null)) {
+				throw new InvalidArgumentException("Brush pack \"$packId\" needs a label and a numeric order");
+			}
+			$this->validateAttribution($pack['attribution'] ?? null, "Brush pack \"$packId\"");
+			$packIds[$packId] = true;
+		}
+
+		$brushIds = [];
+		foreach ($manifest['brushes'] as $brushIndex => $brush) {
+			$brushId = trim((string)($brush['id'] ?? ''));
+			if (!preg_match('/^[a-z][a-z0-9-]*$/', $brushId) || isset($brushIds[$brushId])) {
+				throw new InvalidArgumentException('Brush ' . ($brushIndex + 1) . ' has an invalid or colliding id');
+			}
+			if (!isset($packIds[$brush['pack'] ?? ''])) {
+				throw new InvalidArgumentException("Brush \"$brushId\" references unknown pack \"" . ($brush['pack'] ?? '') . '"');
+			}
+			if (trim((string)($brush['label'] ?? '')) === '') {
+				throw new InvalidArgumentException("Brush \"$brushId\" needs a label");
+			}
+			$tip = $brush['tip'] ?? [];
+			$src = (string)($tip['src'] ?? '');
+			if (strpos($src, 'images/brushes/') !== 0) {
+				throw new InvalidArgumentException("Brush \"$brushId\" tip.src must be under images/brushes/");
+			}
+			if (!is_int($tip['width'] ?? null) || !is_int($tip['height'] ?? null) || $tip['width'] < 1 || $tip['height'] < 1) {
+				throw new InvalidArgumentException("Brush \"$brushId\" needs positive integer tip dimensions");
+			}
+			$this->validateAttribution($brush['attribution'] ?? null, "Brush \"$brushId\"");
+			$brushIds[$brushId] = true;
+		}
+	}
+
+	private function validateAttribution($value, $label)
+	{
+		if ($value === null || $value === []) {
+			return;
+		}
+		if (!is_array($value) || array_is_list($value)) {
+			throw new InvalidArgumentException("$label attribution must be an object");
+		}
+		foreach ($value as $key => $fieldValue) {
+			if (!in_array($key, self::ATTRIBUTION_FIELDS, true)) {
+				throw new InvalidArgumentException("$label attribution has an unknown field \"$key\"");
+			}
+			if (!is_string($fieldValue)) {
+				throw new InvalidArgumentException("$label attribution \"$key\" must be a string");
+			}
+		}
+		$license = trim((string)($value['license'] ?? ''));
+		if ($license !== '' && !in_array($license, self::ATTRIBUTION_LICENSES, true)) {
+			throw new InvalidArgumentException("$label attribution license \"$license\" is not recognized");
+		}
 	}
 
 	private function validateFonts($manifest)
@@ -62,6 +142,7 @@ class ManifestLibraryService
 		if (!is_array($manifest) || !array_is_list($manifest['tagGroups'] ?? null) || !array_is_list($manifest['fonts'] ?? null)) {
 			throw new InvalidArgumentException('Fonts manifest must contain tagGroups and fonts arrays');
 		}
+		$this->validateAttribution($manifest['attribution'] ?? null, 'Fonts manifest');
 		$tagIds = [];
 		$groupIds = [];
 		foreach ($manifest['tagGroups'] as $groupIndex => $group) {
@@ -88,6 +169,7 @@ class ManifestLibraryService
 			if ($name === '') throw new InvalidArgumentException("$label name is required");
 			if (isset($ids[$id])) throw new InvalidArgumentException("Duplicate font id \"$id\"");
 			if (isset($names[strtolower($name)])) throw new InvalidArgumentException("Duplicate font name \"$name\"");
+			$this->validateAttribution($font['attribution'] ?? null, "Font \"$id\"");
 			$ids[$id] = true;
 			$names[strtolower($name)] = true;
 
@@ -141,6 +223,7 @@ class ManifestLibraryService
 			$id = $this->requireId($category['id'] ?? null, 'Shape category ' . ($index + 1));
 			if (isset($categoryIds[$id])) throw new InvalidArgumentException("Duplicate shape category \"$id\"");
 			if (trim((string)($category['label'] ?? '')) === '') throw new InvalidArgumentException("Shape category \"$id\" needs a label");
+			$this->validateAttribution($category['attribution'] ?? null, "Shape category \"$id\"");
 			$categoryIds[$id] = true;
 		}
 
@@ -153,6 +236,7 @@ class ManifestLibraryService
 			$id = $this->requireShapeId($shape['id'] ?? null, 'Shape ' . ($index + 1));
 			if (isset($ids[$id])) throw new InvalidArgumentException("Duplicate shape id \"$id\"");
 			$ids[$id] = true;
+			$this->validateAttribution($shape['attribution'] ?? null, "Shape \"$id\"");
 			if (trim((string)($shape['label'] ?? '')) === '') throw new InvalidArgumentException("Shape \"$id\" needs a label");
 			if (!is_numeric($shape['viewBox'] ?? null) || (float)$shape['viewBox'] <= 0) {
 				throw new InvalidArgumentException("Shape \"$id\" needs a positive viewBox");
@@ -225,6 +309,21 @@ class ManifestLibraryService
 				'issues' => [],
 				'registered' => count($manifest['shapes']),
 				'categories' => count($manifest['categories']),
+			];
+		}
+
+		if ($this->library === 'brushes') {
+			$issues = [];
+			foreach ($manifest['brushes'] as $brush) {
+				$src = (string)($brush['tip']['src'] ?? '');
+				if ($src !== '' && !is_file($this->root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $src))) {
+					$issues[] = ['issue' => 'missing_file', 'id' => $brush['id'] ?? '', 'name' => $brush['label'] ?? '', 'file' => $src];
+				}
+			}
+			return [
+				'issues' => $issues,
+				'registered' => count($manifest['brushes']),
+				'categories' => count($manifest['packs']),
 			];
 		}
 

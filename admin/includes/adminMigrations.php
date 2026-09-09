@@ -70,6 +70,14 @@ class AdminMigrations
 				'original_ingest_id' => 'BIGINT UNSIGNED NULL',
 				'updated_at' => 'DATETIME NULL',
 			],
+			// Optional JSON attribution block per category (js/core/attribution.js
+			// shape) — every asset in the category inherits it in the editor.
+			'sticker_categories' => [
+				'attribution' => 'TEXT NULL',
+			],
+			'glitter_categories' => [
+				'attribution' => 'TEXT NULL',
+			],
 		];
 		foreach ($columns as $table => $tableColumns) {
 			foreach ($tableColumns as $column => $definition) {

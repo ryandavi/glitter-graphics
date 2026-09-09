@@ -183,7 +183,7 @@ class ContentManager {
 			url: raw.url ?? defaults.url ?? null,
 			thumbnailUrl: raw.thumbnailUrl ?? raw.url ?? defaults.thumbnailUrl ?? null,
 			category: raw.category ?? defaults.category ?? 'Uncategorized',
-			attribution: raw.attribution ?? defaults.attribution ?? null,
+			attribution: Attribution.coerce(raw.attribution ?? defaults.attribution, `asset ${raw.id ?? ''}`),
 			stickerText: raw.stickerText ?? defaults.stickerText ?? null,
 			tags: this.normalizeArrayValue(raw.tags, defaults.tags || []),
 			searchTerms: this.normalizeArrayValue(raw.searchTerms, defaults.searchTerms || []),
@@ -257,6 +257,13 @@ class ContentManager {
 			this.assetDetailPromises.set(asset.id, promise);
 		}
 		return this.assetDetailPromises.get(asset.id);
+	}
+
+	// Per-collection credit block for the asset browser. A category carries an
+	// optional `attribution` in its *-categories.json entry; every asset in it
+	// inherits it (item-level attribution, when surfaced, resolves over this).
+	createCollectionInfo(category) {
+		return Attribution.buildCreditElement(category && category.attribution, { bylineVerb: 'Created by' });
 	}
 
 	populateCategoryChips() {

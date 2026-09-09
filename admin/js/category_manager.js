@@ -37,6 +37,26 @@ class CategoryManager {
 							<div class="property-row"><label class="property-label" for="category-color">Color</label><div class="property-control"><input type="color" id="category-color" name="color" value="#ff69b4"></div></div>
 							<div class="property-row"><label class="property-label" for="category-sort-order">Sort order</label><div class="property-control"><input type="number" id="category-sort-order" name="sort_order" min="0" value="0"></div></div>
 						</div>
+						<details class="property-list category-attribution">
+							<summary>Attribution</summary>
+							<div class="property-row"><label class="property-label" for="category-attr-author">Author</label><div class="property-control"><input type="text" id="category-attr-author" name="attr_author"></div></div>
+							<div class="property-row"><label class="property-label" for="category-attr-author-url">Author URL</label><div class="property-control"><input type="text" id="category-attr-author-url" name="attr_authorUrl"></div></div>
+							<div class="property-row"><label class="property-label" for="category-attr-source">Source</label><div class="property-control"><input type="text" id="category-attr-source" name="attr_source"></div></div>
+							<div class="property-row"><label class="property-label" for="category-attr-source-url">Source URL</label><div class="property-control"><input type="text" id="category-attr-source-url" name="attr_sourceUrl"></div></div>
+							<div class="property-row"><label class="property-label" for="category-attr-license">License</label><div class="property-control"><select id="category-attr-license" name="attr_license">
+								<option value="">— none —</option>
+								<option value="unknown">License unknown</option>
+								<option value="personal-use">Personal use only</option>
+								<option value="commercial">Commercial use OK</option>
+								<option value="public-domain">Public domain</option>
+								<option value="CC0-1.0">CC0 1.0</option>
+								<option value="CC-BY-4.0">CC BY 4.0</option>
+								<option value="CC-BY-SA-4.0">CC BY-SA 4.0</option>
+								<option value="OFL-1.1">SIL Open Font License 1.1</option>
+								<option value="system">System font</option>
+							</select></div></div>
+							<div class="property-row property-row-tall"><label class="property-label" for="category-attr-notes">Notes</label><div class="property-control"><textarea id="category-attr-notes" name="attr_notes" rows="2"></textarea></div></div>
+						</details>
 					</div>
 					<footer class="manager-dialog-footer"><button type="button" class="btn btn-secondary" data-form-close>Cancel</button><button type="submit" class="btn btn-primary">Save category</button></footer>
 				</form>
@@ -177,6 +197,11 @@ class CategoryManager {
 		for (const field of ['name', 'slug', 'description', 'icon', 'color', 'sort_order']) {
 			if (row?.[field] != null) this.form.elements[field].value = row[field];
 		}
+		const attribution = row?.attribution || {};
+		for (const key of ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes']) {
+			this.form.elements[`attr_${key}`].value = attribution[key] || '';
+		}
+		this.form.querySelector('.category-attribution').open = Object.keys(attribution).length > 0;
 		this.form.elements.slug.disabled = false;
 		if (this.editing) this.form.elements.slug.dataset.manual = 'true';
 		this.updatePath();
@@ -188,6 +213,13 @@ class CategoryManager {
 	async save() {
 		const values = Object.fromEntries(new FormData(this.form));
 		values.sort_order = Number(values.sort_order || 0);
+		const attribution = {};
+		for (const key of ['author', 'authorUrl', 'source', 'sourceUrl', 'license', 'notes']) {
+			const entry = String(values[`attr_${key}`] || '').trim();
+			if (entry) attribution[key] = entry;
+			delete values[`attr_${key}`];
+		}
+		values.attribution = attribution;
 		if (this.editing) values.id = Number(this.editing.id);
 		if (this.form.elements.slug.disabled) values.slug = this.editing.slug;
 		const action = this.editing ? 'update_category' : 'add_category';

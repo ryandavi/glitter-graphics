@@ -1142,8 +1142,13 @@ class TextGlitterManager {
 			this.validateFontsManifest(manifest);
 			this.fontManifest = manifest.fonts;
 			this.fontTagGroups = manifest.tagGroups;
+			// Resolve each font's credit once: the manifest default (a foundry /
+			// license that covers the bundled set) with per-font overrides on top.
+			// System fonts ship with the OS, so they skip the bundled-set default.
+			const manifestAttribution = Attribution.sanitize(manifest.attribution, 'fonts manifest');
 			this.fontsById.clear();
 			this.fontManifest.forEach((font) => {
+				font.attribution = Attribution.resolve(font.system ? null : manifestAttribution, font.attribution);
 				this.fontsById.set(font.id, font);
 			});
 
@@ -1231,6 +1236,8 @@ class TextGlitterManager {
 			card.className = 'choice-card text-font-option';
 			card.type = 'button';
 			card.dataset.fontId = font.id;
+			const credit = Attribution.creditLine(font.attribution);
+			card.title = credit ? `${font.name} — ${credit}` : font.name;
 
 			const sample = document.createElement('span');
 			sample.className = 'text-font-option-sample';

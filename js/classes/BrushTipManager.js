@@ -101,59 +101,7 @@ class BrushTipManager extends ContentManager {
 	createCollectionInfo(collection) {
 		const pack = BrushLibrary.packById(collection.id);
 		if (!pack) return null;
-		const attribution = pack.attribution;
-		const info = document.createElement('div');
-		info.className = 'asset-collection-credit';
-		const heading = document.createElement('div');
-		heading.className = 'asset-collection-credit-heading property-group-label';
-		heading.textContent = 'Source & usage';
-		info.appendChild(heading);
-		const byline = document.createElement('div');
-		byline.className = 'asset-collection-credit-byline';
-		byline.append('Created by ');
-		if (attribution.authorUrl) {
-			const author = document.createElement('a');
-			author.href = attribution.authorUrl;
-			author.target = '_blank';
-			author.rel = 'noopener';
-			author.textContent = attribution.author || 'unknown creator';
-			byline.appendChild(author);
-		} else byline.append(attribution.author || 'unknown creator');
-		info.appendChild(byline);
-		const meta = document.createElement('div');
-		meta.className = 'asset-collection-credit-meta';
-		const license = document.createElement('span');
-		license.textContent = attribution.license === 'personal-use' ? 'Personal use' : attribution.license === 'unknown' ? 'License unknown' : attribution.license;
-		meta.appendChild(license);
-		if (attribution.archivedBy) {
-			const archived = document.createElement('span');
-			archived.textContent = `Archived by ${attribution.archivedBy}`;
-			meta.appendChild(archived);
-		}
-		info.appendChild(meta);
-		if (attribution.notes) {
-			const notes = document.createElement('details');
-			notes.className = 'asset-collection-credit-notes';
-			const summary = document.createElement('summary');
-			summary.textContent = 'Archival note';
-			const copy = document.createElement('div');
-			copy.textContent = attribution.notes;
-			notes.append(summary, copy);
-			info.appendChild(notes);
-		}
-		const links = document.createElement('div');
-		links.className = 'asset-collection-credit-links';
-		[['View archived set', attribution.archiveUrl]].forEach(([label, url]) => {
-			if (!url) return;
-			const link = document.createElement('a');
-			link.href = url;
-			link.target = '_blank';
-			link.rel = 'noopener';
-			link.textContent = label;
-			links.appendChild(link);
-		});
-		if (links.childElementCount) info.appendChild(links);
-		return info;
+		return Attribution.buildCreditElement(pack.attribution, { bylineVerb: 'Created by' });
 	}
 
 	updateSelection() {

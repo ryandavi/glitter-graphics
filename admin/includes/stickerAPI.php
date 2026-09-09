@@ -24,7 +24,7 @@ class StickerAPI extends AssetAPI
             'url' => $asset['url'],
             'thumbnailUrl' => $asset['url'],
             'category' => $asset['category_slug'],
-            'attribution' => $asset['attribution'] ?? null,
+            'attribution' => $this->decodeAttribution($asset['attribution'] ?? null),
             'stickerText' => $asset['sticker_text'] ?? null,
             'tags' => $tags,
             'searchTerms' => $searchTerms,

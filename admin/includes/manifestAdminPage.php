@@ -35,6 +35,7 @@ function renderManifestAdminPage($library, $title, $itemLabel)
 					<li><a href="sticker.php">Stickers</a></li>
 					<li class="<?php echo $library === 'fonts' ? 'current' : ''; ?>"><?php echo $library === 'fonts' ? 'Fonts' : '<a href="fonts.php">Fonts</a>'; ?></li>
 					<li class="<?php echo $library === 'shapes' ? 'current' : ''; ?>"><?php echo $library === 'shapes' ? 'Shapes' : '<a href="shapes.php">Shapes</a>'; ?></li>
+					<li class="<?php echo $library === 'brushes' ? 'current' : ''; ?>"><?php echo $library === 'brushes' ? 'Brushes' : '<a href="brushes.php">Brushes</a>'; ?></li>
 				</ul>
 			</nav>
 		</header>
@@ -42,9 +43,11 @@ function renderManifestAdminPage($library, $title, $itemLabel)
 		<aside class="sidebar">
 			<div class="sidebar-header">
 				<h2><?php echo htmlspecialchars($title); ?></h2>
-				<button type="button" class="btn btn-primary add-swatch-btn" id="addManifestItem">Add <?php echo strtolower(htmlspecialchars($itemLabel)); ?></button>
+				<?php if ($library !== 'brushes') { ?>
+					<button type="button" class="btn btn-primary add-swatch-btn" id="addManifestItem">Add <?php echo strtolower(htmlspecialchars($itemLabel)); ?></button>
+				<?php } ?>
 				<div class="sidebar-bulk-action">
-					<button type="button" class="btn btn-secondary bulk-analyze-button" id="manageManifestCategories"><?php echo $library === 'fonts' ? 'Tags' : 'Categories'; ?></button>
+					<button type="button" class="btn btn-secondary bulk-analyze-button" id="manageManifestCategories"><?php echo $library === 'fonts' ? 'Tags' : ($library === 'brushes' ? 'Packs' : 'Categories'); ?></button>
 				</div>
 				<?php if ($library === 'shapes') { ?>
 					<div class="sidebar-bulk-action">
@@ -82,16 +85,18 @@ function renderManifestAdminPage($library, $title, $itemLabel)
 	<div class="modal" id="manifestCategoriesModal">
 		<div class="modal-content modal-width-md">
 			<div class="modal-header">
-				<h3><?php echo $library === 'fonts' ? 'Font Tags' : 'Shape Categories'; ?></h3>
+				<h3><?php echo $library === 'fonts' ? 'Font Tags' : ($library === 'brushes' ? 'Brush Packs' : 'Shape Categories'); ?></h3>
 				<button type="button" class="close-btn" data-close-categories aria-label="Close">&times;</button>
 			</div>
 			<div class="modal-body">
 				<div class="modal-body-content">
 					<p class="property-hint"><?php echo $library === 'fonts'
 						? 'Organize reusable tags into groups. Removing a tag that is assigned to a font will fail validation when the manifest is saved.'
-						: 'Categories organize the Shape picker. Removing a category that is assigned to a shape will fail validation when the manifest is saved.'; ?></p>
+						: ($library === 'brushes'
+							? 'Packs group the brushes and carry their shared attribution. Brushes themselves are added by the ABR importer; a pack that still has brushes can\'t be removed.'
+							: 'Categories organize the Shape picker. Removing a category that is assigned to a shape will fail validation when the manifest is saved.'); ?></p>
 					<div class="manifest-taxonomy-editor" id="manifestTaxonomyEditor"></div>
-					<button type="button" class="btn btn-secondary btn-sm manifest-taxonomy-add" id="addManifestTaxonomy"><?php echo $library === 'fonts' ? 'Add tag group' : 'Add category'; ?></button>
+					<button type="button" class="btn btn-secondary btn-sm manifest-taxonomy-add" id="addManifestTaxonomy"><?php echo $library === 'fonts' ? 'Add tag group' : ($library === 'brushes' ? 'Add pack' : 'Add category'); ?></button>
 				</div>
 			</div>
 			<div class="modal-footer">
@@ -107,7 +112,7 @@ function renderManifestAdminPage($library, $title, $itemLabel)
 		const ADMIN_CSRF_TOKEN = <?php echo json_encode($adminCsrfToken); ?>;
 	</script>
 	<script src="js/admin_api.js?v=6"></script>
-	<script src="js/manifest_admin.js?v=6"></script>
+	<script src="js/manifest_admin.js?v=9"></script>
 </body>
 </html>
 	<?php
