@@ -283,31 +283,29 @@ snapTransformPosition(transform, position, options = {}) {
 			});
 		}
 
-		// Opacity
-		const opacity = document.getElementById(ids.opacity);
-		const opacityValue = document.getElementById(ids.opacityValue);
-		const resetOpacity = document.getElementById(ids.resetOpacity);
-
-		if (opacity && opacityValue) {
-			opacity.addEventListener('input', (e) => {
+		// v2 opacity model: the standalone "Layer Opacity" row in the panel's
+		// Appearance group. Writes layer.opacity (updateTransform mirrors it onto
+		// transform.opacity and re-applies the element).
+		const layerOpacity = document.getElementById(`${prefix}LayerOpacity`);
+		const layerOpacityValue = document.getElementById(`${prefix}LayerOpacityValue`);
+		const resetLayerOpacity = document.getElementById(`reset${prefix.charAt(0).toUpperCase()}${prefix.slice(1)}LayerOpacity`);
+		if (layerOpacity && layerOpacityValue) {
+			layerOpacity.addEventListener('input', (e) => {
 				const value = parseFloat(e.target.value);
-				showUnit(opacityValue, value, '%');
-
+				showUnit(layerOpacityValue, value, '%');
 				const active = activeManager();
 				if (active) active.manager.updateTransform(active.layer.id, { opacity: value });
 			});
-
-			opacity.addEventListener('change', () => this.saveState('Transform layer'));
+			layerOpacity.addEventListener('change', () => this.saveState('Transform layer'));
 		}
-
-		if (resetOpacity) {
-			resetOpacity.addEventListener('click', () => {
-				if (opacity) opacity.value = CONFIG.tools.stickers.defaults.transform.opacity;
-				showUnit(opacityValue, CONFIG.tools.stickers.defaults.transform.opacity, '%');
-
+		if (resetLayerOpacity) {
+			resetLayerOpacity.addEventListener('click', () => {
+				const fallback = CONFIG.tools.stickers.defaults.transform.opacity;
+				if (layerOpacity) layerOpacity.value = fallback;
+				showUnit(layerOpacityValue, fallback, '%');
 				const active = activeManager();
 				if (active) {
-					active.manager.updateTransform(active.layer.id, { opacity: CONFIG.tools.stickers.defaults.transform.opacity });
+					active.manager.updateTransform(active.layer.id, { opacity: fallback });
 					this.saveState('Transform layer');
 				}
 			});

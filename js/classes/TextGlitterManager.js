@@ -275,7 +275,9 @@ class TextGlitterManager {
 		}, CONFIG.tools.effects.defaults.scale, false);
 
 		this.attachSlider(this.ui.textureOpacity, this.ui.textureOpacityValue, '%', (value, layer) => {
-			layer.settings.opacity = value;
+			// v2 opacity model: this is the Fill slot's per-paint opacity, stored
+			// on the slot like border/shadow (no longer aliased to settings.opacity).
+			this.ensureEffectData(layer, 'fill').opacity = value;
 		}, CONFIG.tools.effects.defaults.opacity, false);
 
 		this.ui.alignButtons.forEach((button) => {
@@ -1394,6 +1396,7 @@ class TextGlitterManager {
 			name: this.getLayerName(defaultText),
 			visible: true,
 			locked: false,
+			opacity: 100,
 			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
 			settings: {
 				scale: CONFIG.tools.effects.defaults.scale,
@@ -1468,8 +1471,9 @@ class TextGlitterManager {
 		}
 
 		if (this.ui.textureOpacity && this.ui.textureOpacityValue) {
-			this.ui.textureOpacity.value = layer.settings.opacity;
-			this.ui.textureOpacityValue.innerHTML = formatUnit(layer.settings.opacity, '%');
+			const fillOpacity = this.getEffectData(layer, 'fill')?.opacity ?? layer.settings.opacity ?? 100;
+			this.ui.textureOpacity.value = fillOpacity;
+			this.ui.textureOpacityValue.innerHTML = formatUnit(fillOpacity, '%');
 		}
 
 		this.updateFontSelection(layer.textData.fontId);
@@ -2698,11 +2702,12 @@ class TextGlitterManager {
 	// Shared with GifExporter via resolveEffectPaintSource so preview/export stay aligned.
 	getEffectPaintSource(layer, effectName) {
 		if (effectName === 'fill') {
-			return resolveEffectPaintSource(this.ensureEffectData(layer, 'fill'), {
+			const fillData = this.ensureEffectData(layer, 'fill');
+			return resolveEffectPaintSource(fillData, {
 				allowNone: true,
 				glitterId: layer.selectedGlitterId,
 				scale: layer.settings.scale ?? 100,
-				opacity: layer.settings.opacity ?? 100,
+				opacity: fillData?.opacity ?? layer.settings.opacity ?? 100,
 				colorAdjust: layer.settings.colorAdjust
 			});
 		}

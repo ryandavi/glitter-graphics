@@ -286,7 +286,7 @@ class HtmlSceneExporter {
 
 		const background = {
 			mode,
-			opacity: Math.max(0, Math.min(1, Number(data.opacity ?? 100) / 100)),
+			opacity: Math.max(0, Math.min(1, Number(baseLayer?.opacity ?? data.opacity ?? 100) / 100)),
 			filter: ['gradient', 'glitter'].includes(mode) ? buildCssColorFilter(data.colorAdjust) : ''
 		};
 		if (mode === 'solid') {

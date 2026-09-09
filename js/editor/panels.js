@@ -619,8 +619,11 @@ isLayerContentLocked(layer) {
 		}
 
 		if (opacity && opacityValue) {
-			opacity.value = s.opacity;
-			opacityValue.innerHTML = formatUnit(s.opacity, '%');
+			// Canonical whole-layer opacity (v2 model); a Fill layer is a single
+			// masked paint, so this is its only opacity control.
+			const layerOpacity = Number.isFinite(layer.opacity) ? layer.opacity : (s.opacity ?? 100);
+			opacity.value = layerOpacity;
+			opacityValue.innerHTML = formatUnit(layerOpacity, '%');
 			this.updateResetButton('opacity');
 		}
 
@@ -680,6 +683,10 @@ isLayerContentLocked(layer) {
 		// Only apply to active layer if it is a Glitter Fill layer
 		if (activeLayer && activeLayer.type === LayerType.GLITTER_FILL) {
 			activeLayer.settings = settings;
+			// v2 opacity model: the '#opacity' slider is this layer's canonical
+			// whole-layer opacity. settings.opacity is kept in sync for legacy
+			// readers but render/export read layer.opacity.
+			activeLayer.opacity = settings.opacity;
 			this.maskCompositor.invalidate(activeLayer.id);
 		}
 

@@ -60,8 +60,8 @@ class ShapeGlitterManager {
 		this.ui.pickerStripTitle = id('galleryPickerStripTitle');
 		this.ui.pickerStripDetail = id('galleryPickerStripDetail');
 		this.ui.pickerStripDone = id('galleryPickerStripDone');
-		this.ui.opacity = id('shapeOpacity');
-		this.ui.opacityValue = id('shapeOpacityValue');
+		this.ui.opacity = id('shapeLayerOpacity');
+		this.ui.opacityValue = id('shapeLayerOpacityValue');
 		this.ui.rotation = id('shapeRotation');
 		this.ui.rotationValue = id('shapeRotationValue');
 		this.ui.posX = id('shapePosX');
@@ -196,6 +196,7 @@ class ShapeGlitterManager {
 		});
 
 		this.ui.gallery.replaceChildren(categories);
+		this._syncPickerActive();
 	}
 
 	_syncPickerActive() {
@@ -205,6 +206,10 @@ class ShapeGlitterManager {
 			const selected = el.dataset.shape === current;
 			el.classList.toggle('active', selected);
 			el.setAttribute('aria-selected', selected ? 'true' : 'false');
+		});
+		this.ui.gallery?.querySelectorAll('.shape-gallery-option').forEach((el) => {
+			const selected = el.dataset.shape === current;
+			el.classList.toggle('selected', selected);
 		});
 	}
 
@@ -760,6 +765,7 @@ class ShapeGlitterManager {
 			name: this.getShapeLabel(shapeId),
 			visible: true,
 			locked: false,
+			opacity: 100,
 			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
 			settings: { scale: CONFIG.tools.effects.defaults.scale, opacity: CONFIG.tools.effects.defaults.opacity },
 			shapeData: {
@@ -1236,7 +1242,7 @@ class ShapeGlitterManager {
 		}
 
 		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
-		wrapper.style.opacity = String((layer.shapeData.transform.opacity ?? 100) / 100);
+		wrapper.style.opacity = String((layer.opacity ?? layer.shapeData.transform.opacity ?? 100) / 100);
 		if (!wrapper.parentNode) {
 			this.editor.canvasElementsContainer.appendChild(wrapper);
 		}

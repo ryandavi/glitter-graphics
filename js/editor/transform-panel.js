@@ -246,17 +246,21 @@ renderTransformPanels() {
 			if (reset) reset.disabled = Math.abs(value - 100) < 0.01;
 		});
 
-		const opacity = document.getElementById(ids.opacity);
-		const opacityValue = document.getElementById(ids.opacityValue);
-		if (opacity && opacityValue) {
-			opacity.value = transform.opacity;
-			opacityValue.innerHTML = formatUnit(Math.round(transform.opacity), '%');
-		}
-
 		const flipX = document.getElementById(ids.flipX);
 		const flipY = document.getElementById(ids.flipY);
 		if (flipX) flipX.checked = transform.flipX;
 		if (flipY) flipY.checked = transform.flipY;
+
+		// v2 opacity model: standalone "Layer Opacity" row in the Appearance group.
+		const layerOpacity = document.getElementById(`${prefix}LayerOpacity`);
+		const layerOpacityValue = document.getElementById(`${prefix}LayerOpacityValue`);
+		if (layerOpacity && layerOpacityValue) {
+			const value = Number.isFinite(layer.opacity) ? layer.opacity : (transform.opacity ?? 100);
+			layerOpacity.value = value;
+			layerOpacityValue.innerHTML = formatUnit(Math.round(value), '%');
+			const resetLayerOpacity = document.getElementById(`reset${prefix.charAt(0).toUpperCase()}${prefix.slice(1)}LayerOpacity`);
+			if (resetLayerOpacity) resetLayerOpacity.disabled = Math.round(value) === 100;
+		}
 
 		this.syncTransformAlignmentButtons(prefix, this.getTransformAlignmentState(layer));
 

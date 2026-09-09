@@ -35,6 +35,15 @@ function syncLayerTransformReference(layer, transform = null) {
 	const host = getLegacyTransformHost(layer);
 	const resolved = transform || layer.transform || host?.transform || createDefaultTransform();
 
+	// v2 opacity model: `layer.opacity` is the canonical whole-layer opacity.
+	// `transform.opacity` is a read mirror kept in sync here so the render/export
+	// metrics pipeline (computeLayerTransform -> metrics.opacity) stays unchanged.
+	if (Number.isFinite(layer.opacity)) {
+		resolved.opacity = layer.opacity;
+	} else if (Number.isFinite(resolved.opacity)) {
+		layer.opacity = resolved.opacity;
+	}
+
 	layer.transform = resolved;
 	if (host) {
 		host.transform = resolved;

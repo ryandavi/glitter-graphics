@@ -11,22 +11,23 @@
 // an options object supplied by thin wrapper methods, so no call site changes.
 // Semantics are byte-identical to the pre-extraction per-manager bodies.
 
-// The fill slot's texture scale/opacity/colorAdjust are (for text) the
-// existing layer-level settings.scale/settings.opacity, not duplicated on the
-// slot; text omits them (includeTexture false) while shape carries its own.
+// The fill slot's texture scale/colorAdjust are (for text) still the existing
+// layer-level settings.scale/settings.colorAdjust, not duplicated on the slot;
+// text omits them (includeTexture false) while shape carries its own. Per the
+// v2 opacity model, `opacity` is always a real per-slot field on every fill.
 function buildDefaultFill(options = {}) {
 	const defaults = CONFIG.tools.glitter.defaults;
 	const coordinates = CONFIG.rendering.textureCoordinates;
 	const fill = {
 		mode: 'glitter',
 		color: defaults.fillColor,
+		opacity: 100,
 		textureAnchor: coordinates.defaultAnchor,
 		textureOffsetX: coordinates.defaultOffsetX,
 		textureOffsetY: coordinates.defaultOffsetY
 	};
 	if (options.includeTexture) {
 		fill.scale = 100;
-		fill.opacity = 100;
 		fill.colorAdjust = null;
 	}
 	return fill;

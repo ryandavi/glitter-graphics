@@ -322,6 +322,9 @@ async function configureBasePixelEffects(page, paletteMode, { shimmer = false } 
 			stops: [{ offset: 0, color: '#18112d', alpha: 1 }, { offset: 0.48, color: '#e74672', alpha: 0.8 }, { offset: 1, color: '#f6d365', alpha: 1 }]
 		});
 		layer.background.colorAdjust = { hue: 18, saturation: 112, brightness: 94 };
+		// v2 opacity model: canvas-layer opacity is canonical on layer.opacity
+		// (normalizeLayer mirrors it onto background.opacity).
+		layer.opacity = 73;
 		layer.background.opacity = 73;
 		layer.background.pixelEffects = GlitterPixelEffects.normalizeSettings({
 			pixelateEnabled: true,

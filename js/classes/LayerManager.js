@@ -129,6 +129,7 @@ class LayerManager {
 			image: null,
 			visible: true,
 			locked: true,
+			opacity: 100,
 			selectedGlitterId: CONFIG.tools.glitter.defaults.fillGlitterId,
 			background: {
 				mode: 'image',
@@ -157,6 +158,8 @@ class LayerManager {
 		['id', 'type', 'name', 'visible', 'locked', 'selectedGlitterId'].forEach((key) => {
 			if (!spec.omit?.includes(key)) serialized[key] = key === 'type' ? type : layer[key];
 		});
+		// Canonical whole-layer opacity (0-100), shared by every layer type.
+		serialized.opacity = Number.isFinite(layer.opacity) ? layer.opacity : 100;
 		if (spec.forceLocked) serialized.locked = true;
 		if (!spec.omit?.includes('settings')) serialized.settings = structuredClone(layer.settings || {});
 		[spec.dataKey, ...(spec.extraKeys || [])].filter(Boolean).forEach((key) => {
@@ -182,6 +185,7 @@ class LayerManager {
 			visible: layerData.visible,
 			locked: spec.forceLocked ? true : layerData.locked,
 			selectedGlitterId: layerData.selectedGlitterId ?? spec.defaultSelectedGlitterId?.(),
+			opacity: Number.isFinite(layerData.opacity) ? layerData.opacity : 100,
 			...(spec.defaults ? structuredClone(spec.defaults) : {})
 		};
 		if (!spec.omit?.includes('name')) restored.name = layerData.name || spec.defaultName?.(this.editor, layerData[spec.dataKey]);
@@ -805,7 +809,7 @@ class LayerManager {
 			!this.editor.originalCanvas
 			|| layer?.type !== LayerType.GLITTER_FILL
 			|| layer.fill?.mode === 'none'
-			|| (layer.settings?.opacity ?? 100) <= 0
+			|| (layer.opacity ?? layer.settings?.opacity ?? 100) <= 0
 		) {
 			return false;
 		}

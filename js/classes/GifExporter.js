@@ -455,7 +455,7 @@ class GifExporter {
 				allowNone: true,
 				glitterId: layer.selectedGlitterId,
 				scale: layer.settings.scale ?? 100,
-				opacity: layer.settings.opacity ?? 100,
+				opacity: layer.textData?.fill?.opacity ?? layer.settings.opacity ?? 100,
 				colorAdjust: layer.settings.colorAdjust
 			});
 		}
@@ -576,7 +576,7 @@ class GifExporter {
 						helperCtx.save();
 						helperCtx.clearRect(0, 0, width, height);
 
-						helperCtx.globalAlpha = layer.settings.opacity / 100;
+						helperCtx.globalAlpha = (layer.opacity ?? layer.settings.opacity ?? 100) / 100;
 						if (fillMode === 'solid') {
 							helperCtx.fillStyle = layer.fill.color;
 						} else if (fillMode === 'gradient') {
@@ -1146,7 +1146,7 @@ class GifExporter {
 			if (
 				!layer.visible ||
 				layer.type !== LayerType.GLITTER_FILL ||
-				layer.settings.opacity !== 100
+				(layer.opacity ?? layer.settings.opacity ?? 100) !== 100
 			) {
 				return false;
 			}

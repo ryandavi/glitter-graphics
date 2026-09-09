@@ -200,6 +200,7 @@ async initBrowser() {
 			type: this.getLayerType(),
 			visible: true,
 			locked: false,
+			opacity: 100,
 			maskVersion: 0,
 			maskHasContent: false,
 			selections: [],
@@ -602,7 +603,7 @@ async initBrowser() {
 		inner.style.backgroundColor = 'transparent';
 		inner.style.backgroundSize = `${Math.round((glitter.frames?.width || 50) * layer.background.scale / 100)}px`;
 		inner.style.backgroundPosition = `${layer.background.textureOffsetX}px ${layer.background.textureOffsetY}px`;
-		inner.style.opacity = layer.background.opacity / 100;
+		inner.style.opacity = (layer.opacity ?? layer.background.opacity ?? 100) / 100;
 		inner.style.filter = buildCssColorFilter(layer.background.colorAdjust);
 		inner.style.maskImage = 'none';
 		inner.style.webkitMaskImage = 'none';
@@ -647,7 +648,7 @@ async initBrowser() {
 		// Apply glitter texture
 		inner.style.backgroundImage = fillMode === 'gradient' ? effectGradientToCss(layer.fill.gradient) : fillMode === 'glitter' ? `url(${glitter.url})` : 'none';
 		inner.style.backgroundColor = fillMode === 'solid' ? layer.fill.color : 'transparent';
-		inner.style.opacity = layer.settings.opacity / 100;
+		inner.style.opacity = (layer.opacity ?? layer.settings.opacity ?? 100) / 100;
 		// Color adjust (WP4): CSS filter mirrors the export matrix pass. Empty
 		// string for an identity/absent adjust clears any previous filter.
 		inner.style.filter = fillMode === 'glitter' ? buildCssColorFilter(layer.settings.colorAdjust) : '';

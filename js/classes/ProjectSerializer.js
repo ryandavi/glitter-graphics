@@ -1,6 +1,6 @@
 class ProjectSerializer {
 	static FORMAT = 'glitter-project';
-	static FORMAT_VERSION = 1;
+	static FORMAT_VERSION = 2;
 
 	/*
 	Format rules:
@@ -9,7 +9,40 @@ class ProjectSerializer {
 	- Never repurpose an old key name.
 	- Unknown keys are ignored for forward-tolerance.
 	*/
-	static MIGRATIONS = {};
+	static MIGRATIONS = {
+		// v1 -> v2: opacity model unification. Every layer now carries a single
+		// canonical top-level `opacity` (whole-layer composite fade). Text's fill
+		// opacity, which used to double as `settings.opacity`, moves into its own
+		// per-slot `textData.fill.opacity` like border/shadow already had.
+		1(data) {
+			(data.layers || []).forEach((layer) => {
+				if (!layer || typeof layer !== 'object') return;
+				const transform = layer.transform
+					|| layer.stickerData?.transform
+					|| layer.textData?.transform
+					|| layer.shapeData?.transform
+					|| null;
+				let layerOpacity = 100;
+				if (layer.type === LayerType.TEXT_GLITTER) {
+					layerOpacity = transform?.opacity ?? 100;
+					const fillOpacity = layer.settings?.opacity ?? 100;
+					layer.textData = layer.textData || {};
+					layer.textData.fill = layer.textData.fill || {};
+					if (layer.textData.fill.opacity == null) layer.textData.fill.opacity = fillOpacity;
+				} else if (layer.type === LayerType.SHAPE) {
+					layerOpacity = transform?.opacity ?? layer.shapeData?.transform?.opacity ?? 100;
+				} else if (layer.type === LayerType.STICKER) {
+					layerOpacity = transform?.opacity ?? layer.stickerData?.opacity ?? 100;
+				} else if (layer.type === LayerType.GLITTER_FILL) {
+					layerOpacity = layer.settings?.opacity ?? 100;
+				} else if (layer.type === LayerType.BASE_IMAGE) {
+					layerOpacity = layer.background?.opacity ?? 100;
+				}
+				if (layer.opacity == null) layer.opacity = layerOpacity;
+			});
+			data.version = 2;
+		}
+	};
 
 	constructor(editor) {
 		this.editor = editor;

@@ -57,11 +57,11 @@
 	--property-r-card: var(--radius-card);
 	--property-r-field: var(--radius-control);
 	--property-r-inner: var(--radius-inner);
-	--property-label-w: 70px;
+	--property-label-w: 76px;
 	--property-label-size: 11px;
 	--property-value-col: 46px;
 	--property-revert-w: 16px;
-	--property-label-col: 76px;
+	--property-label-col: 84px;
 	--property-revert-col: 18px;
 	--property-gutter: 12px; // was 10px
 	--property-card-inset: 10px;
@@ -877,9 +877,9 @@
 
 	// "No thumbnail available" — the same hatch a None/disabled paint slot
 	// shows. Only when the chip is genuinely empty: a glitter chip carries
-	// `.glitter-bg` (+ an inline background-image), a sticker/base chip an
-	// `<img>`; neither of those gets the hatch.
-	.asset-info-thumbnail:not(.glitter-bg):not(:has(> img)) {
+	// `.glitter-bg` (+ an inline background-image), and other chips an
+	// `<img>` or `<svg>`; none of those gets the hatch.
+	.asset-info-thumbnail:not(.glitter-bg):not(:has(> :is(img, svg))) {
 		@include swatch-unset-fill;
 	}
 
@@ -1338,6 +1338,32 @@
 	:is(.design-panel, .mobile-settings-drawer) {
 		--property-label-col: 62px;
 		--property-value-col: 40px;
+	}
+}
+
+// The label column earns more room as the sidebar widens, so "Combine Similar",
+// "Layer Opacity", "Texture Scale" and friends stop truncating to an ellipsis on
+// a resized-wide panel. Scoped to the property container (tracks the resize
+// handle, not the viewport) and set on the row itself so both the base and
+// `.panel-redesign` (`--property-label-col: var(--property-label-w)`) resolve it.
+@container propertypanel (min-width: 320px) {
+	:is(.design-panel, .mobile-settings-drawer) :is(.property-row, .property-pair-cell) {
+		--property-label-w: 92px;
+		--property-label-col: 92px;
+	}
+}
+
+@container propertypanel (min-width: 400px) {
+	:is(.design-panel, .mobile-settings-drawer) :is(.property-row, .property-pair-cell) {
+		--property-label-w: 118px;
+		--property-label-col: 118px;
+	}
+}
+
+@container propertypanel (min-width: 480px) {
+	:is(.design-panel, .mobile-settings-drawer) :is(.property-row, .property-pair-cell) {
+		--property-label-w: 144px;
+		--property-label-col: 144px;
 	}
 }
 

@@ -44,11 +44,16 @@ class BaseBackgroundManager {
 		if (!layer.background.gradient || !Array.isArray(layer.background.gradient.stops) || layer.background.gradient.stops.length < 2) {
 			layer.background.gradient = normalizeEffectGradient(layer.background.gradient);
 		}
+		// v2 opacity model: the canvas layer's opacity is the canonical top-level
+		// `layer.opacity`. `background.opacity` is kept mirrored for legacy readers.
+		if (!Number.isFinite(layer.opacity)) {
+			layer.opacity = Number(layer.background.opacity ?? 100);
+		}
 		Object.assign(layer.background, {
 			mode: ['image', 'none', 'glitter', 'solid', 'gradient'].includes(layer.background.mode) ? layer.background.mode : 'image',
 			color: layer.background.color || '#ffffff',
 			scale: Number(layer.background.scale ?? CONFIG.tools.effects.defaults.scale),
-			opacity: Number(layer.background.opacity ?? 100),
+			opacity: Number(layer.opacity ?? layer.background.opacity ?? 100),
 			colorAdjust: normalizeColorAdjust(layer.background.colorAdjust)
 		});
 		normalizeSlotTextureCoordinates(layer.background);
@@ -439,6 +444,9 @@ class BaseBackgroundManager {
 				const layer = this.normalizeLayer(this.getActiveLayer());
 				if (!layer) return;
 				layer.background[key] = next;
+				// v2 opacity model: the canvas layer's opacity is canonical on
+				// layer.opacity; keep background.opacity mirrored for legacy readers.
+				if (key === 'opacity') layer.opacity = next;
 				this.applyChange(false);
 			},
 			onCommit: () => this.editor.saveState('Edit background')

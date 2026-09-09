@@ -846,6 +846,7 @@ class StickerManager extends ContentManager {
 			name: sticker?.name || 'New Sticker',
 			visible: true,
 			locked: false,
+			opacity: 100,
 			stickerSourceId: stickerSourceId,
 			transform,
 
@@ -1135,6 +1136,9 @@ updateTransform(layerId, updates) {
 	}
 
 	async deserializeSticker(layerData) {
+		if (!Number.isFinite(layerData.opacity)) {
+			layerData.opacity = layerData.stickerData?.transform?.opacity ?? layerData.transform?.opacity ?? 100;
+		}
 		// Handle empty sticker layers (no sticker selected yet)
 		if (!layerData.stickerSourceId) {
 			syncLayerTransformReference(layerData, layerData.stickerData?.transform || layerData.transform);

@@ -112,17 +112,21 @@ setupLayerTypePickerListeners() {
 
 ,
 	getMultiSelectionLayerOpacity(layer) {
-		if (layer?.type === LayerType.STICKER) return layer.stickerData?.opacity ?? 100;
-		if (layer?.type === LayerType.SHAPE) return getLayerTransform(layer)?.opacity ?? 100;
-		if ([LayerType.TEXT_GLITTER, LayerType.GLITTER_FILL].includes(layer?.type)) return layer.settings?.opacity ?? 100;
-		return null;
+		if (!layer || layer.type === LayerType.BASE_IMAGE) return null;
+		// v2 opacity model: one canonical whole-layer opacity for every type.
+		return Number.isFinite(layer.opacity) ? layer.opacity : 100;
 	}
 
 ,
 	setMultiSelectionLayerOpacity(layer, value) {
-		if (layer?.type === LayerType.STICKER && layer.stickerData) layer.stickerData.opacity = value;
-		else if (layer?.type === LayerType.SHAPE) getLayerTransform(layer).opacity = value;
-		else if ([LayerType.TEXT_GLITTER, LayerType.GLITTER_FILL].includes(layer?.type) && layer.settings) layer.settings.opacity = value;
+		if (!layer || layer.type === LayerType.BASE_IMAGE) return;
+		layer.opacity = value;
+		// Keep the transform mirror current for transformable types so the live
+		// element updates without waiting for a getLayerTransform() pass.
+		if ([LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(layer.type)) {
+			const transform = getLayerTransform(layer);
+			if (transform) transform.opacity = value;
+		}
 	}
 
 ,

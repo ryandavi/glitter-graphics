@@ -6724,11 +6724,11 @@ body.tool-select .preview-canvas {
   --property-r-card: var(--radius-card);
   --property-r-field: var(--radius-control);
   --property-r-inner: var(--radius-inner);
-  --property-label-w: 70px;
+  --property-label-w: 76px;
   --property-label-size: 11px;
   --property-value-col: 46px;
   --property-revert-w: 16px;
-  --property-label-col: 76px;
+  --property-label-col: 84px;
   --property-revert-col: 18px;
   --property-gutter: 12px;
   --property-card-inset: 10px;
@@ -7467,7 +7467,7 @@ body.tool-select .preview-canvas {
   min-width: var(--asset-summary-thumbnail-size);
   flex: 0 0 var(--asset-summary-thumbnail-size);
 }
-:is(.design-panel, .mobile-settings-drawer) .asset-info-thumbnail:not(.glitter-bg):not(:has(> img)) {
+:is(.design-panel, .mobile-settings-drawer) .asset-info-thumbnail:not(.glitter-bg):not(:has(> :is(img, svg))) {
   background: repeating-linear-gradient(135deg, transparent 0 3px, var(--color-border) 3px 4px);
   border-color: var(--color-border);
 }
@@ -7881,6 +7881,24 @@ body.tool-select .preview-canvas {
   :is(.design-panel, .mobile-settings-drawer) {
     --property-label-col: 62px;
     --property-value-col: 40px;
+  }
+}
+@container propertypanel (min-width: 320px) {
+  :is(.design-panel, .mobile-settings-drawer) :is(.property-row, .property-pair-cell) {
+    --property-label-w: 92px;
+    --property-label-col: 92px;
+  }
+}
+@container propertypanel (min-width: 400px) {
+  :is(.design-panel, .mobile-settings-drawer) :is(.property-row, .property-pair-cell) {
+    --property-label-w: 118px;
+    --property-label-col: 118px;
+  }
+}
+@container propertypanel (min-width: 480px) {
+  :is(.design-panel, .mobile-settings-drawer) :is(.property-row, .property-pair-cell) {
+    --property-label-w: 144px;
+    --property-label-col: 144px;
   }
 }
 .panel-resize-handle {

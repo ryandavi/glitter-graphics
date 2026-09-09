@@ -142,13 +142,9 @@ const TRANSFORM_ID_GRAMMAR = Object.freeze({
 	resetTransform: 'reset{P}Transform'
 });
 
-const TRANSFORM_ID_EXCEPTIONS = Object.freeze({
-	text: Object.freeze({
-		opacity: 'textLayerOpacity',
-		opacityValue: 'textLayerOpacityValue',
-		resetOpacity: 'resetTextLayerOpacity'
-	})
-});
+// Per-prefix id overrides for the transform grammar. Empty since the v2 opacity
+// model removed the transform-panel opacity control (its text-only id override).
+const TRANSFORM_ID_EXCEPTIONS = Object.freeze({});
 
 function getPanelTransformIds(prefix) {
 	const normalizedPrefix = ['sticker', 'shape', 'text'].includes(prefix) ? prefix : 'text';
@@ -832,11 +828,16 @@ function buildPaintSource(slot) {
 
 // Canonical [Texture Scale | Opacity] row (FILL-CONSISTENCY-PLAN spec);
 // syncPaintSlotSourceUI drives its per-mode visibility at runtime.
-function buildPrimaryRow(prefix, ids = {}, redesign = false) {
+function buildPrimaryRow(prefix, ids = {}, redesign = false, noSlotOpacity = false) {
 	const row = tplClone('tpl-two-column');
 	row.classList.add('paint-slot-primary-row');
 	row.appendChild(buildSliderRow({ id: ids.scale || `${prefix}Scale`, rowId: ids.scaleRow, slider: 'textureScale', label: redesign ? 'Scale' : null, extraClass: 'paint-slot-scale', role: 'texture-scale' }));
-	row.appendChild(buildSliderRow({ id: ids.opacity || `${prefix}Opacity`, rowId: ids.opacityRow, slider: 'slotOpacity', extraClass: 'paint-slot-opacity', role: 'slot-opacity' }));
+	// v2 opacity model: single-paint layer types (Fill layer, canvas background)
+	// carry only a whole-layer opacity, so the slot's own opacity column is
+	// suppressed. syncPaintSlotSourceUI tolerates the missing `.paint-slot-opacity`.
+	if (!noSlotOpacity) {
+		row.appendChild(buildSliderRow({ id: ids.opacity || `${prefix}Opacity`, rowId: ids.opacityRow, slider: 'slotOpacity', extraClass: 'paint-slot-opacity', role: 'slot-opacity' }));
+	}
 	return row;
 }
 
@@ -979,7 +980,7 @@ function buildPaintSlotCard(slot) {
 	}
 	main.appendChild(wrapPropertySet([source]));
 	(slot.afterSource || []).forEach((item) => addChunk(buildPanelItem(item)));
-	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds, slot.redesign);
+	const primaryRow = buildPrimaryRow(slot.idPrefix, slot.primaryIds, slot.redesign, slot.noSlotOpacity);
 	if (slot.primaryToggle) {
 		const toggle = tplClone('tpl-checkbox');
 		toggle.querySelector('input').id = slot.primaryToggle.id;
@@ -1932,7 +1933,6 @@ function redesignTransformFragment(fragment) {
 
 	actions.classList.add('panel-actions');
 	card.appendChild(actions);
-	fragment.querySelector('[data-transform-opacity] .property-row')?.classList.add('row');
 }
 
 function buildTransformPanel(editor, container, prefix, capabilities) {
@@ -1985,61 +1985,42 @@ function buildTransformPanel(editor, container, prefix, capabilities) {
 	});
 	if (!capabilities.lockAspect) fragment.querySelector('[data-transform-lock]').remove();
 	if (!capabilities.scaleReadout) fragment.querySelectorAll('[data-transform-scale-readout]').forEach((element) => element.remove());
+	// v2 opacity model: whole-layer opacity is a standalone "Layer Opacity" row in
+	// each panel's Appearance group, not a card inside the Transform panel.
+	fragment.querySelector('[data-transform-opacity]')?.remove();
 	container.replaceChildren(fragment);
 	if (capabilities.panelRedesign) initializeEditablePropertyValues(container);
 }
 
-// Shared schema finalization: retitle the transform and opacity cards, move the
-// shared action primitive to the group footer, and settle host card order.
+// Shared schema finalization: retitle the transform card, move the shared action
+// primitive to the group footer, and settle host card order. (v2 opacity model:
+// there is no transform-panel opacity card any more — whole-layer opacity is a
+// standalone "Layer Opacity" row in each panel's Appearance group.)
 function normalizeTransformPanelHost(editor, prefix) {
 	const host = document.getElementById(`${prefix}TransformPanelHost`);
 	if (!host) return null;
-	const card = (id) => document.getElementById(id)?.closest('.subsection-content-group');
-	const ids = editor.getTransformIds(prefix);
 	const geometry = host.querySelector(':scope > [data-transform-prefix]');
-	const opacity = card(ids.opacity);
 	const actions = host.querySelector('[data-transform-actions]');
 
-	const setTitle = (section, label) => {
-		const title = section?.querySelector(':scope > .subsection-title');
-		if (!title) return;
+	const title = geometry?.querySelector(':scope > .subsection-title');
+	if (title) {
 		const labelNode = title.querySelector(':scope > span');
-		if (labelNode) labelNode.textContent = label;
-		else title.textContent = label;
-	};
-	setTitle(geometry, 'Transform');
-	// "Layer Opacity", not "Opacity": a fill/effect module already contains its
-	// own Opacity, and two controls with the same name a few rows apart read as
-	// a duplicate rather than two different scopes.
-	setTitle(opacity, 'Layer Opacity');
-	const opacityLabel = opacity?.querySelector('.property-label');
-	if (opacityLabel) opacityLabel.textContent = 'Layer Opacity';
+		if (labelNode) labelNode.textContent = 'Transform';
+		else title.textContent = 'Transform';
+	}
 
-	[geometry, opacity].filter(Boolean).forEach((section) => host.appendChild(section));
+	if (geometry) host.appendChild(geometry);
 	if (actions && geometry && !geometry.hasAttribute('data-panel-redesign')) host.closest('.panel-group-content')?.appendChild(actions);
 	return host;
 }
 
-// Post-transform-render arrangement for schema-rendered panels: normalize the
-// host, then let the schema group flagged adoptTransformOpacity take the
-// transform panel's Opacity card. Runs once from renderTransformPanels.
+// Post-transform-render arrangement for schema-rendered panels. Runs once from
+// renderTransformPanels.
 function finalizePanelSchemaSections(editor) {
 	Object.values(PANEL_SCHEMAS).forEach((schema) => {
 		if (!schema.groups) return;
 		const content = document.getElementById(`${schema.prefix}SettingsContent`);
 		if (!content) return;
 		normalizeTransformPanelHost(editor, schema.prefix);
-		const adopter = schema.groups.find((group) => group.adoptTransformOpacity);
-		if (!adopter) return;
-		const groupNode = content.querySelector(`[data-panel-group="${adopter.title}"]`);
-		const opacityCard = document.getElementById(editor.getTransformIds(schema.prefix).opacity)?.closest('.subsection-content-group');
-		const blocks = groupNode?.querySelector(':scope > .panel-group-content > .panel-group-blocks');
-		const redesign = schema.section.classes?.split(/\s+/).includes('panel-redesign');
-		const opacityRow = opacityCard?.querySelector('.property-row');
-		if (redesign && blocks && opacityRow) {
-			opacityRow.querySelector('.property-label').textContent = 'Opacity';
-			blocks.appendChild(opacityRow);
-			opacityCard.remove();
-		} else if (blocks && opacityCard) blocks.appendChild(opacityCard);
 	});
 }

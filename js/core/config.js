@@ -691,6 +691,7 @@ const CONFIG = deepFreeze({
 			textureOffsetX: { label: 'Offset X', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
 			textureOffsetY: { label: 'Offset Y', unit: 'px', min: -500, max: 500, step: 1, value: 0 },
 			slotOpacity: { label: 'Opacity', unit: '%', min: 0, max: 100, value: 100 },
+			layerOpacity: { label: 'Layer Opacity', unit: '%', min: 0, max: 100, value: 100 },
 			gradientSmoothing: { label: 'Smoothing', unit: '×', min: 3, max: 16, step: 1, value: 8 },
 			hue: { label: 'Hue', unit: '°', min: -180, max: 180, value: 0 },
 			saturation: { label: 'Saturation', unit: '%', min: 0, max: 200, value: 100 },
@@ -1355,9 +1356,12 @@ const PANEL_SCHEMAS = {
 		section: { id: 'baseLayerSettingsSection', icon: 'paint-bucket', iconName: 'Canvas', title: 'Canvas Properties', classes: 'panel-redesign' },
 		groups: [
 			{ title: 'Appearance', collapsible: false, items: [
+				// The canvas layer is a single paint; its only opacity IS the
+				// whole-layer opacity. Keeps legacy id `baseBackgroundOpacity`.
+				{ kind: 'slider', id: 'baseBackgroundOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'paintSlot', slot: 'background', idPrefix: 'baseBackground', title: 'Background',
 					redesign: true, sourceSelect: true, sourceRevert: true, colorRevert: true,
-					texturePosition: true,
+					texturePosition: true, noSlotOpacity: true,
 					modes: ['image', 'none', 'glitter', 'solid'], activeMode: 'image', color: '#ffffff',
 					modeLabels: { none: 'Transparent' },
 					hidePrimaryModes: ['image'],
@@ -1367,7 +1371,7 @@ const PANEL_SCHEMAS = {
 						name: 'baseBackgroundImageName', badges: 'baseBackgroundImageBadges',
 						change: 'baseBackgroundImageChange', title: 'Replace base image', compact: true, redesign: true
 					},
-					primaryIds: { scale: 'baseBackgroundScale', opacity: 'baseBackgroundOpacity' }
+					primaryIds: { scale: 'baseBackgroundScale' }
 				}
 			] },
 			{ title: 'Canvas', collapsible: false, items: [
@@ -1487,9 +1491,12 @@ const PANEL_SCHEMAS = {
 		controls: { id: 'glitterSettingsControls', emptyId: 'glitterSettingsEmpty', empty: { icon: 'glitter', text: 'Select a glitter fill from the gallery to get started.' } },
 		groups: [
 			{ title: 'Appearance', collapsible: false, items: [
+				// A Fill layer is a single masked paint, so its only opacity IS the
+				// whole-layer opacity. Keeps legacy id `opacity` (panels.js binding).
+				{ kind: 'slider', id: 'opacity', valueId: 'opacityValue', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', redesign: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
-					texturePosition: true,
+					texturePosition: true, noSlotOpacity: true,
 					modes: ['glitter', 'solid'], activeMode: 'glitter', color: '#ff4fa3',
 					chipTitle: 'Choose fill glitter', assetIdPrefix: 'glitterAsset',
 					assetIds: {
@@ -1497,7 +1504,7 @@ const PANEL_SCHEMAS = {
 						badges: 'glitterAssetBadges', change: 'glitterAssetChange',
 						size: 'glitterAssetSize', frames: 'glitterAssetFrames'
 					},
-					primaryIds: { scale: 'scale', opacity: 'opacity' },
+					primaryIds: { scale: 'scale' },
 					advancedIds: { hue: 'glitterHue', saturation: 'glitterSaturation', brightness: 'glitterBrightness' }
 				}
 			] },
@@ -1556,7 +1563,9 @@ const PANEL_SCHEMAS = {
 						{ kind: 'colorAdjust', label: 'Adjust color' }
 					] }
 				] },
-			{ title: 'Appearance', collapsible: false, adoptTransformOpacity: true, items: [] },
+			{ title: 'Appearance', collapsible: false, items: [
+				{ kind: 'slider', id: 'stickerLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' }
+			] },
 			{ title: 'Transform', collapsible: false, items: [
 				{ kind: 'transformHost' }
 			] }
@@ -1628,7 +1637,8 @@ const PANEL_SCHEMAS = {
 					] }
 				] }
 			] },
-			{ title: 'Appearance', collapsible: false, adoptTransformOpacity: true, items: [
+			{ title: 'Appearance', collapsible: false, items: [
+				{ kind: 'slider', id: 'textLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', redesign: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
@@ -1705,7 +1715,8 @@ const PANEL_SCHEMAS = {
 			// this group adopts it after renderTransformPanels runs
 			// (finalizePanelSchemaSections), mirroring the old shape branch of
 			// the pre-schema panel order.
-			{ title: 'Appearance', collapsible: false, adoptTransformOpacity: true, items: [
+			{ title: 'Appearance', collapsible: false, items: [
+				{ kind: 'slider', id: 'shapeLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', redesign: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
