@@ -4650,9 +4650,11 @@ body.mask-editing .sticker-element {
   resize: vertical;
 }
 
-/* Point text has no frame to align within — hide alignment controls
+/* Point text has no frame to align within, and line-height only matters for
+   wrapped copy — hide both in point ("auto") mode.
    (dataset set by TextGlitterManager.updateBoxModeSelection) */
-.text-settings-section[data-box-mode=auto] .text-valign-row {
+.text-settings-section[data-box-mode=auto] .text-valign-row,
+.text-settings-section[data-box-mode=auto] .text-line-height-row {
   display: none;
 }
 
@@ -8126,30 +8128,21 @@ body.is-resizing-panel canvas {
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row:not(.is-stacked) > :is(.segmented-control, select, .glitter-source, .property-select-control) {
   grid-column: 2/-2;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> select) {
-  grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-revert-col);
-  grid-template-rows: var(--property-control-height);
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> select) > .property-label {
-  grid-area: 1/1/2/2;
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> select) > select {
-  grid-area: 1/2/2/3;
-  width: 100%;
-  min-width: 0;
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> :is(.text-align-group, .text-valign-group)) {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> :is(.segmented-control, select)) {
   grid-template-columns: var(--property-label-col) minmax(0, 1fr) var(--property-revert-col);
   grid-template-rows: var(--property-control-height);
   padding-block: 0;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> :is(.text-align-group, .text-valign-group)) > .property-label {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> :is(.segmented-control, select)) > .property-label {
   grid-area: 1/1/2/2;
 }
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> :is(.text-align-group, .text-valign-group)) > :is(.text-align-group, .text-valign-group) {
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> :is(.segmented-control, select)) > :is(.segmented-control, select) {
   grid-area: 1/2/2/3;
   width: 100%;
   min-width: 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-row.is-stacked:has(> :is(.segmented-control, select)) > .property-revert {
+  grid-area: 1/3/2/4;
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .segmented-control {
   height: var(--property-control-height);
@@ -8535,6 +8528,17 @@ body.is-resizing-panel canvas {
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .pixel-effects-card .property-set > .property-set-label {
   display: block;
   padding-inline: var(--property-card-inset);
+}
+
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign.auto-glitter-settings-section .settings-subsection {
+  gap: 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign.auto-glitter-settings-section .auto-glitter-preview-card .segmented-control {
+  width: 100%;
+  margin-inline: 0;
+}
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign.auto-glitter-settings-section .auto-glitter-footer-group .property-actions.is-split {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 /* ===== MODAL ===== */

@@ -1651,22 +1651,12 @@ body.is-resizing-panel {
 		grid-column: 2 / -2;
 	}
 
-	// A closed <select> is a compact control, never a full-width one: keep the
-	// label beside it at every width (Case, the Dither algorithm/palette, …).
-	// buildOptionGroup can't tell a select from a wide control, so it stacks
-	// them all; this un-stacks every one, in one place.
-	.property-row.is-stacked:has(> select) {
-		grid-template-columns:
-			var(--property-label-col)
-			minmax(0, 1fr)
-			var(--property-revert-col);
-		grid-template-rows: var(--property-control-height);
-
-		> .property-label { grid-area: 1 / 1 / 2 / 2; }
-		> select { grid-area: 1 / 2 / 2 / 3; width: 100%; min-width: 0; }
-	}
-
-	.property-row.is-stacked:has(> :is(.text-align-group, .text-valign-group)) {
+	// A segmented control or a closed <select> is a compact control — label
+	// beside it, never wrapping to its own line. buildOptionGroup stacks a row
+	// whenever it can't recognise the control as narrow (3+ options, a select),
+	// so this un-stacks every one of them, in one place. Genuinely wide controls
+	// (sliders, textareas, number pairs) keep `.is-stacked`.
+	.property-row.is-stacked:has(> :is(.segmented-control, select)) {
 		grid-template-columns:
 			var(--property-label-col)
 			minmax(0, 1fr)
@@ -1675,11 +1665,12 @@ body.is-resizing-panel {
 		padding-block: 0;
 
 		> .property-label { grid-area: 1 / 1 / 2 / 2; }
-		> :is(.text-align-group, .text-valign-group) {
+		> :is(.segmented-control, select) {
 			grid-area: 1 / 2 / 2 / 3;
 			width: 100%;
 			min-width: 0;
 		}
+		> .property-revert { grid-area: 1 / 3 / 2 / 4; }
 	}
 
 	.segmented-control {
@@ -2180,4 +2171,25 @@ body.is-resizing-panel {
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .pixel-effects-card .property-set > .property-set-label {
 	display: block;
 	padding-inline: var(--property-card-inset);
+}
+
+// ===== Auto Glitter: keep the sticky-header / scroll-region / sticky-footer
+// layout after opting the section into `.panel-redesign`. These few rules must
+// out-rank the redesign defaults above; the rest of the section's styling (the
+// scroll region internals, the colour-match list, drag states) lives in
+// panels/_effects.scss and does not collide.
+:is(.design-panel, .mobile-settings-drawer) .panel-redesign.auto-glitter-settings-section {
+	.settings-subsection { gap: 0; }
+
+	// The preview-mode toggle spans the panel — it's a mode switch, not a
+	// property control inset by the gutter.
+	.auto-glitter-preview-card .segmented-control {
+		width: 100%;
+		margin-inline: 0;
+	}
+
+	// Cancel / Create sit side by side regardless of panel width.
+	.auto-glitter-footer-group .property-actions.is-split {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }

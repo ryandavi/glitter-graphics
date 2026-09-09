@@ -67,11 +67,13 @@ class AutoGlitterManager {
 			this.scheduleReduce();
 		}));
 		[this.ui.count, this.ui.mergeDistinctness, this.ui.detail].forEach((input) => {
-			document.getElementById(`reset${input.id.charAt(0).toUpperCase()}${input.id.slice(1)}`)?.addEventListener('click', () => {
+			const resetBtn = document.getElementById(`reset${input.id.charAt(0).toUpperCase()}${input.id.slice(1)}`);
+			if (!resetBtn) return;
+			// Claim the button so the shared property-revert fallback leaves it alone.
+			resetBtn.dataset.revertBound = '';
+			resetBtn.addEventListener('click', () => {
 				input.value = CONFIG.ui.sliders[input.id].value;
-				this.updateControlReadout(input);
-				this.applyCapacity();
-				this.scheduleReduce();
+				input.dispatchEvent(new Event('input', { bubbles: true }));
 			});
 		});
 		[this.ui.tuneHue, this.ui.cleanEdges].forEach((input) => input?.addEventListener('change', () => this.scheduleReduce()));
@@ -174,7 +176,8 @@ class AutoGlitterManager {
 	updateControlReadout(input) {
 		const value = document.getElementById(`${input.id}Value`);
 		if (!value) return;
-		value.textContent = `${input.value}${CONFIG.ui.sliders[input.id]?.unit || ''}`;
+		// Same styled `value + unit` markup as every other panel readout.
+		value.innerHTML = formatUnit(input.value, CONFIG.ui.sliders[input.id]?.unit || '');
 	}
 
 	scheduleReduce() {

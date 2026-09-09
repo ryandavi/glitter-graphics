@@ -1286,7 +1286,7 @@ const PANEL_SCHEMAS = {
 		sectionPrefix: 'autoGlitterSettings',
 		mobileKey: 'autoGlitter',
 		replaceStatic: true,
-		section: { id: 'autoGlitterSettingsSection', icon: 'palette', iconName: 'Palette', title: 'Auto Glitter' },
+		section: { id: 'autoGlitterSettingsSection', classes: 'panel-redesign', icon: 'palette', iconName: 'Palette', title: 'Auto Glitter' },
 		groups: [
 			{ title: 'Preview', classes: 'auto-glitter-preview-group', static: true, bare: true, items: [
 				{ kind: 'card', classes: 'auto-glitter-preview-card', bare: true, items: [
@@ -1305,12 +1305,12 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Palette', region: 'scroll', items: [
 				{ kind: 'card', items: [
-					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', classes: 'auto-glitter-palette-style', label: 'Palette style', visibleLabel: 'Palette Style', options: [
-						{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced' }, { label: 'Natural', value: 'natural' }
+					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', classes: 'auto-glitter-palette-style', label: 'Palette style', visibleLabel: 'Style', revert: true, options: [
+						{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced', active: true }, { label: 'Natural', value: 'natural' }
 					] },
-					{ kind: 'slider', id: 'autoGlitterColorCount', slider: 'autoGlitterColorCount' },
-					{ kind: 'slider', id: 'autoGlitterMergeDistinctness', slider: 'autoGlitterMergeDistinctness' },
-					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'property-note' }
+					{ kind: 'slider', id: 'autoGlitterColorCount', slider: 'autoGlitterColorCount', label: 'Colors' },
+					{ kind: 'slider', id: 'autoGlitterMergeDistinctness', slider: 'autoGlitterMergeDistinctness', label: 'Merge' },
+					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'property-note panel-note' }
 				] }
 			] },
 			{ title: 'Color Matches', region: 'scroll', items: [
@@ -1323,13 +1323,13 @@ const PANEL_SCHEMAS = {
 				{ kind: 'card', items: [
 					{ kind: 'slider', id: 'autoGlitterDetail', slider: 'autoGlitterDetail', title: 'Absorb connected regions smaller than this many pixels' },
 					{ kind: 'checkboxList', items: [
-						{ id: 'autoGlitterCleanEdges', label: 'Clean Edges', checked: true, title: 'Absorb anti-aliased blend colors into their neighboring regions' },
-						{ id: 'autoGlitterTuneHue', label: 'Tune Matched Glitter Hue', checked: true, title: 'Apply a small hue correction to improve the closest glitter match' }
+						{ id: 'autoGlitterCleanEdges', label: 'Clean Edges', checked: true, revert: true, title: 'Absorb anti-aliased blend colors into their neighboring regions' },
+						{ id: 'autoGlitterTuneHue', label: 'Tune Matched Glitter Hue', checked: true, revert: true, title: 'Apply a small hue correction to improve the closest glitter match' }
 					] }
 				] }
 			] },
 			{ title: 'Finish', classes: 'auto-glitter-footer-group', static: true, bare: true, items: [
-				{ kind: 'actionRow', classes: 'auto-glitter-actions', actions: [
+				{ kind: 'actionRow', classes: 'auto-glitter-actions is-split', actions: [
 					{ id: 'cancelAutoGlitterBtn', label: 'Cancel', secondary: true },
 					{ id: 'autoGlitterCreateBtn', label: 'Create Layers', primary: true }
 				] }

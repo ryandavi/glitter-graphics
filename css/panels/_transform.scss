@@ -326,9 +326,11 @@
 	resize: vertical;
 }
 
-/* Point text has no frame to align within — hide alignment controls
+/* Point text has no frame to align within, and line-height only matters for
+   wrapped copy — hide both in point ("auto") mode.
    (dataset set by TextGlitterManager.updateBoxModeSelection) */
-.text-settings-section[data-box-mode="auto"] .text-valign-row {
+.text-settings-section[data-box-mode="auto"] .text-valign-row,
+.text-settings-section[data-box-mode="auto"] .text-line-height-row {
 	display: none;
 }
 

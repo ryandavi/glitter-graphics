@@ -302,8 +302,27 @@ function attachOptionRevert(row, control, spec = {}) {
 	sync();
 }
 
+// A `.property-revert[data-revert-for][data-revert-value]` button (from
+// buildFieldRevert with a static default) — restore its target and light the
+// button when the value differs. One target id or a space-separated list.
+function syncFieldRevert(button) {
+	if (button.dataset.revertValue === undefined) return;
+	const wanted = button.dataset.revertValue;
+	const at = (id) => {
+		const el = document.getElementById(id);
+		if (!el) return true;
+		return el.type === 'checkbox' ? String(el.checked) === wanted : String(el.value) === wanted;
+	};
+	button.disabled = button.dataset.revertFor.split(/\s+/).filter(Boolean).every(at);
+}
+
+function syncFieldReverts(root = document) {
+	root.querySelectorAll('.property-revert[data-revert-for][data-revert-value]').forEach(syncFieldRevert);
+}
+
 function initializePropertyReverts(root = document) {
 	syncPropertyReverts(root);
+	syncFieldReverts(root);
 	if (initializePropertyReverts.bound) return;
 	initializePropertyReverts.bound = true;
 	document.addEventListener('input', (event) => {
@@ -311,6 +330,27 @@ function initializePropertyReverts(root = document) {
 	});
 	document.addEventListener('change', (event) => {
 		if (event.target.matches?.('input[type="range"][id]')) syncPropertyRevert(event.target);
+		// A static-default field changed — re-evaluate any revert that targets it.
+		const id = event.target.id;
+		if (id) document.querySelectorAll(`.property-revert[data-revert-for~="${id}"][data-revert-value]`).forEach(syncFieldRevert);
+	});
+	// Static-default field reverts (checkboxes, selects, colours built with an
+	// explicit default). Dynamic-default ones (canvas W/H) carry no
+	// data-revert-value and are handled by their owning manager.
+	document.addEventListener('click', (event) => {
+		const button = event.target.closest?.('.property-revert[data-revert-for][data-revert-value]');
+		if (!button || button.disabled) return;
+		event.preventDefault();
+		const value = button.dataset.revertValue;
+		button.dataset.revertFor.split(/\s+/).filter(Boolean).forEach((id) => {
+			const el = document.getElementById(id);
+			if (!el) return;
+			if (el.type === 'checkbox') el.checked = value === 'true';
+			else el.value = value;
+			el.dispatchEvent(new Event('input', { bubbles: true }));
+			el.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+		syncFieldRevert(button);
 	});
 	// Fallback revert for sliders whose reset button bindSlider never claimed.
 	document.addEventListener('click', (event) => {
@@ -383,6 +423,7 @@ function buildSliderRow(options) {
 	if (options.rowId) row.id = options.rowId;
 	if (options.hidden) row.hidden = true;
 	if (options.extraClass) row.classList.add(options.extraClass);
+	addPanelClasses(row, options.classes);
 	row.dataset.role = `${options.role || options.slider}-row`;
 	const label = row.querySelector('.property-label');
 	label.textContent = options.label || spec.label;
@@ -476,11 +517,15 @@ function buildPairRow(item) {
 // handler in the owning manager can restore the target(s) to their live default
 // and light the button up when the value differs. `target` is one id or a
 // space-separated list.
-function buildFieldRevert(target) {
+function buildFieldRevert(target, defaultValue) {
 	const button = document.createElement('button');
 	button.type = 'button';
 	button.className = 'property-revert';
 	button.dataset.revertFor = target;
+	// A static default → the shared handler in initializePropertyReverts owns it;
+	// no default → the owning manager reverts it (dynamic defaults, e.g. canvas
+	// W/H that track the current canvas).
+	if (defaultValue !== undefined) button.dataset.revertValue = String(defaultValue);
 	button.disabled = true;
 	button.title = 'Reset to default';
 	button.setAttribute('aria-label', 'Reset to default');
@@ -1059,9 +1104,11 @@ function buildPanelItem(item, schema) {
 				const label = row.querySelector('.property-label');
 				label.textContent = entry.label;
 				if (entry.title) label.title = entry.title;
-				// The redesign toggle grid reserves a revert column; a `revert`
-				// target lights it via the shared data-revert-for handler.
-				if (entry.revert) row.appendChild(buildFieldRevert(entry.revert));
+				// The redesign toggle grid reserves a revert column. `revert: true`
+				// → a static-default revert the shared handler owns (default = the
+				// item's initial `checked`); a string → a manager-owned target id.
+				if (entry.revert === true) row.appendChild(buildFieldRevert(entry.id, Boolean(entry.checked)));
+				else if (entry.revert) row.appendChild(buildFieldRevert(entry.revert));
 				content.appendChild(row);
 			});
 			return content;
