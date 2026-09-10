@@ -196,7 +196,11 @@
 
 
 		>.layer-item {
-			margin-bottom: var(--spacing-sm);
+
+			+ .layer-item {
+				margin-top: var(--spacing-sm);
+			}
+			
 			cursor: pointer;
 			padding: var(--spacing-sm);
 			gap: var(--spacing-xs);

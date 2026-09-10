@@ -2770,8 +2770,10 @@ input[type=range]:disabled {
   z-index: 0;
   padding: var(--spacing-md);
 }
+.layers-section > .layers-list > .layer-item + .layer-item {
+  margin-top: var(--spacing-sm);
+}
 .layers-section > .layers-list > .layer-item {
-  margin-bottom: var(--spacing-sm);
   cursor: pointer;
   padding: var(--spacing-sm);
   gap: var(--spacing-xs);

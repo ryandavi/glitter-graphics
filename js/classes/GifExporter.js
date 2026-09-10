@@ -1298,9 +1298,9 @@ class GifExporter {
 				: preset.visualError,
 			preferredFrameBudget: exportSettings.maxFrames || timelineConfig.preferredFrameBudget,
 			hardFrameLimit: timelineConfig.hardFrameLimit,
-			renderFrame: (timestamp, frameSelection) => {
+			renderFrame: (timestamp, frameSelection, candidateCount) => {
 				renderedCandidateCount++;
-				callbacks.onProgress(10, `Composing frame ${renderedCandidateCount}...`, renderedCandidateCount, 0);
+				callbacks.onProgress(10, `Composing frame ${renderedCandidateCount} of ${candidateCount}...`, renderedCandidateCount, candidateCount);
 				return this._renderFrame(
 					0,
 					canvasData,
@@ -1336,6 +1336,7 @@ class GifExporter {
 		plan.reductions = [];
 		if (plan.reduction.exactDuplicatesMerged) plan.reductions.push({ reason: 'exact-duplicates', count: plan.reduction.exactDuplicatesMerged });
 		if (plan.reduction.nearDuplicatesMerged) plan.reductions.push({ reason: 'near-duplicates', count: plan.reduction.nearDuplicatesMerged });
+		if (plan.timingResolution.cadenceGroupsNormalized) callbacks.onStatus('Aligned compatible source frame-rate groups to avoid a long redundant loop.');
 		if (!plan.loopSeam.exact) callbacks.onStatus('Loop optimized with a best-fit seam; the exact common loop was too long.');
 		if (plan.reduction.budgetCompromiseRequired) callbacks.onStatus('The hard frame limit requires a quality compromise; no frames were silently truncated.');
 
@@ -1856,7 +1857,7 @@ class GifExporter {
 		return flattenedFrameMap;
 	}
 
-	async estimateLoopDuration({ layers, library, fallbackDuration, parseGif }) {
+	async estimateLoopDuration({ layers, library, fallbackDuration, parseGif, smartReduction = false }) {
 		await this._loadMissingFrames(layers, library, {
 			parseGif,
 			onStatus: () => {},
@@ -1881,7 +1882,8 @@ class GifExporter {
 		return new CompositeTimelinePlanner(timelineConfig).estimateLoop(
 			timelines,
 			fallbackDuration,
-			timelineConfig.maxLoopDurationMs
+			timelineConfig.maxLoopDurationMs,
+			smartReduction
 		);
 	}
 
@@ -2235,12 +2237,16 @@ class GifExporter {
 		const reductionSummary = document.getElementById('exportReductionSummary');
 		if (reductionSummary) {
 			const reduction = timelinePlan?.reduction;
-			const removedFrames = reduction
+			const pixelRemovedFrames = reduction
 				? reduction.exactDuplicatesMerged + reduction.nearDuplicatesMerged
 				: 0;
-			const hasReduction = Boolean(reduction?.smartReductionEnabled && removedFrames > 0);
+			const preRenderRemovedFrames = reduction
+				? reduction.selectionDuplicatesMerged + reduction.preRenderFramesSkipped
+				: 0;
+			const hasReduction = Boolean(reduction?.smartReductionEnabled && (pixelRemovedFrames > 0 || preRenderRemovedFrames > 0));
 			const hasPlanWarning = Boolean(timelinePlan && (
-				!timelinePlan.loopSeam.exact
+				timelinePlan.timingResolution?.cadenceGroupsNormalized
+					|| !timelinePlan.loopSeam.exact
 					|| !reduction.preferredBudgetMet
 					|| reduction.budgetCompromiseRequired
 					|| !reduction.durationPreserved
@@ -2255,11 +2261,15 @@ class GifExporter {
 				const seam = document.getElementById('exportSeamStatus');
 				title.textContent = hasPlanWarning ? 'About this animation' : 'File size optimized';
 				if (hasReduction) {
-					const frameLabel = removedFrames === 1 ? 'frame' : 'frames';
-					const kind = reduction.nearDuplicatesMerged > 0
-						? (reduction.exactDuplicatesMerged > 0 ? 'repeated or nearly identical' : 'nearly identical')
-						: 'repeated';
-					summary.textContent = `Removed ${removedFrames} ${kind} ${frameLabel} without changing the speed.`;
+					if (preRenderRemovedFrames > 0) {
+						summary.textContent = `Resolved ${reduction.originalFrameCount} timing changes into ${reduction.renderedFrameCount} composed frames, then exported ${reduction.outputFrameCount}.`;
+					} else {
+						const frameLabel = pixelRemovedFrames === 1 ? 'frame' : 'frames';
+						const kind = reduction.nearDuplicatesMerged > 0
+							? (reduction.exactDuplicatesMerged > 0 ? 'repeated or nearly identical' : 'nearly identical')
+							: 'repeated';
+						summary.textContent = `Removed ${pixelRemovedFrames} ${kind} ${frameLabel} without changing the speed.`;
+					}
 
 					document.getElementById('exportDetailFrames').textContent = `${reduction.originalFrameCount} → ${reduction.outputFrameCount}`;
 					document.getElementById('exportDetailExact').textContent = String(reduction.exactDuplicatesMerged);
@@ -2275,6 +2285,13 @@ class GifExporter {
 				}
 
 				const planMessages = [];
+				if (timelinePlan.timingResolution?.cadenceGroupsNormalized) {
+					const resolutions = timelinePlan.timingResolution.groups.map((group) => {
+						const sourceRates = group.sourceCadences.map((duration) => `${duration} ms`).join(', ');
+						return `${sourceRates} to ${group.cadence} ms`;
+					});
+					planMessages.push(`Aligned compatible source timing (${resolutions.join('; ')}) so each group shares a shorter clean loop.`);
+				}
 				if (!timelinePlan.loopSeam.exact) {
 					planMessages.push('The animations repeat at different times, so the beginning and ending may not match perfectly.');
 				}

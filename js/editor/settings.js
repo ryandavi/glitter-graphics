@@ -548,7 +548,8 @@ initializeExportSettings() {
 				layers: visibleLayers,
 				library: this.glitterManager.content,
 				fallbackDuration: this.exportSettings.frameDelay,
-				parseGif: (url) => this.glitterManager.parseGifFromUrl(url)
+				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
+				smartReduction: this.exportSettings.smartFrameReduction
 			});
 			if (requestId !== this.exportDurationRequestId) return;
 			const loopDurationSeconds = estimate.duration / 1000;

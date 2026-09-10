@@ -42,7 +42,11 @@ function timeline(key, count, durations) {
 }
 
 async function buildPlan(timelines, overrides = {}) {
-	const planner = new CompositeTimelinePlanner();
+	const planner = new CompositeTimelinePlanner({
+		nearCadenceTolerance: 0.12,
+		cadenceClusterSpanTolerance: 0.25,
+		preRenderBudgetMultiplier: 1.5
+	});
 	return planner.plan({
 		timelines,
 		fallbackDuration: 100,
@@ -84,6 +88,63 @@ async function main() {
 	]);
 	assert(!longCommonLoop.loopSeam.exact && longCommonLoop.totalDuration <= 12000,
 		'Long exact common loop was not bounded with a reported seam decision.');
+
+	const nearCadences = await buildPlan([
+		timeline('three-at-ten-fps', 3, [100, 100, 100]),
+		timeline('four-at-nine-fps', 4, [110, 110, 110, 110])
+	], { smartReduction: true });
+	assert(nearCadences.timingResolution.cadenceGroupsNormalized && nearCadences.reduction.originalFrameCount === 12,
+		'Near-identical source rates did not resolve to their compact shared-cadence loop.');
+	assert(nearCadences.timingResolution.groups[0].sourceCadences.join(',') === '100,110'
+		&& nearCadences.timingResolution.groups[0].cadence === 110,
+		'Near-identical source rates did not report their resolved cadence.');
+	assert(nearCadences.totalDuration === 1320 && nearCadences.loopSeam.exact,
+		'Shared-cadence resolution did not preserve a clean complete loop.');
+
+	const mixedRates = await buildPlan([
+		timeline('ninety', 3, [90, 90, 90]),
+		timeline('one-hundred', 4, [100, 100, 100, 100]),
+		timeline('one-ten', 5, [110, 110, 110, 110, 110]),
+		timeline('two-hundred', 2, [200, 200]),
+		timeline('variable', 2, [70, 130])
+	], {
+		smartReduction: true,
+		preferredFrameBudget: 5,
+		hardFrameLimit: 100
+	});
+	assert(mixedRates.timingResolution.groups.length === 1
+		&& mixedRates.timingResolution.groups[0].sourceCadences.join(',') === '90,100,110'
+		&& mixedRates.timingResolution.groups[0].cadence === 100,
+		'Mixed rates did not cluster nearby steady cadences independently.');
+	assert(mixedRates.reduction.renderedFrameCount <= 8 && mixedRates.reduction.preRenderFramesSkipped > 0,
+		'Mixed-rate planning exceeded its bounded pre-render candidate budget.');
+	assert(mixedRates.reduction.durationPreserved, 'Pre-render candidate sampling changed the loop duration.');
+
+	const stressTimelines = [
+		timeline('rate-70', 3, [70, 70, 70]),
+		timeline('rate-80', 4, [80, 80, 80, 80]),
+		timeline('rate-90', 5, [90, 90, 90, 90, 90]),
+		timeline('rate-100', 6, [100, 100, 100, 100, 100, 100]),
+		timeline('rate-110', 7, [110, 110, 110, 110, 110, 110, 110]),
+		timeline('rate-130', 3, [130, 130, 130]),
+		timeline('rate-170', 4, [170, 170, 170, 170]),
+		timeline('rate-200', 5, [200, 200, 200, 200, 200]),
+		timeline('variable-stress', 3, [60, 140, 90])
+	];
+	let stressRenderCalls = 0;
+	const stressPlan = await buildPlan(stressTimelines, {
+		smartReduction: true,
+		preferredFrameBudget: 60,
+		renderFrame: (_, selection) => {
+			stressRenderCalls++;
+			return frame([...selection.values()].reduce((sum, selected) => sum + selected.frameIndex, 0));
+		}
+	});
+	assert(stressPlan.reduction.originalFrameCount > 90
+		&& stressPlan.reduction.renderedFrameCount === 90
+		&& stressRenderCalls === 90,
+		'Many-rate stress planning did not cap expensive frame composition at 1.5x the target.');
+	assert(stressPlan.reduction.durationPreserved, 'Many-rate stress planning changed the loop duration.');
 
 	const effects = await buildPlan([
 		timeline('sticker', 3, [80, 120, 100]),

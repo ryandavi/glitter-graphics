@@ -152,8 +152,11 @@ async initBrowser() {
 			return layer?.type === LayerType.GLITTER_FILL ? layer : null;
 		};
 		const refreshLayerPresentation = (layer) => {
+			const selectedGlitter = this.getItemById(layer.selectedGlitterId);
+			if (layer.fill?.mode !== 'glitter' && layer.name === selectedGlitter?.name) layer.name = null;
 			this.renderLayer(layer, this.editor.originalCanvas.width, this.editor.originalCanvas.height);
 			this.editor.layerManager.renderLayersList();
+			this.updatePickerStrip();
 		};
 		['glitter', 'solid'].forEach((mode) => document.getElementById(`glitterFill${mode[0].toUpperCase()}${mode.slice(1)}`).addEventListener('click', () => {
 			const layer = active();
@@ -399,6 +402,9 @@ async initBrowser() {
 			this.editor.showError('You can only add glitter to a background or supported layer effect');
 			return;
 		}
+		const previousGlitter = layer.type === LayerType.GLITTER_FILL
+			? this.getItemById(layer.selectedGlitterId)
+			: null;
 		const glitter = await this.ensureAssetDetails(id);
 
 		if (!glitter) {
@@ -480,6 +486,9 @@ async initBrowser() {
 			effect.colorAdjust = null;
 		} else if (layer.type === LayerType.GLITTER_FILL) {
 			layer.selectedGlitterId = id;
+			// Auto Glitter layers use their swatch as the initial name. Keep that
+			// generated name live, while preserving names the user entered.
+			if (layer.name === previousGlitter?.name) layer.name = glitter.name;
 			layer.fill ||= {
 				mode: 'glitter',
 				color: '#ff4fa3',
@@ -496,6 +505,7 @@ async initBrowser() {
 
 		this.editor.updateGlitterSelection();
 		this.editor.layerManager.renderLayersList();
+		if (layer.type === LayerType.GLITTER_FILL) this.updatePickerStrip();
 
 		if (layer.type === LayerType.BASE_IMAGE) {
 			this.editor.requestPreviewUpdate();

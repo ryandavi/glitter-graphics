@@ -167,6 +167,60 @@ class CompositeTimelinePlanner {
 		return value > limit ? null : value;
 	}
 
+	_resolveCadenceClusters(timelines, enabled) {
+		const unchanged = { timelines, normalized: false, groups: [] };
+		if (!enabled
+			|| !Number.isFinite(this.config.nearCadenceTolerance)
+			|| !Number.isFinite(this.config.cadenceClusterSpanTolerance)) return unchanged;
+		const steady = timelines.map((timeline, index) => {
+			if (!Number.isFinite(timeline.cycleDuration)) return null;
+			const cadence = timeline.frameDurations[0];
+			return timeline.frameDurations.every((duration) => duration === cadence)
+				? { timeline, index, cadence }
+				: null;
+		}).filter(Boolean).sort((left, right) => left.cadence - right.cadence);
+		if (steady.length < 2) return unchanged;
+
+		const clusters = [];
+		steady.forEach((entry) => {
+			const cluster = clusters.at(-1);
+			const adjacent = cluster ? cluster.at(-1).cadence : null;
+			const clusterMinimum = cluster ? cluster[0].cadence : null;
+			const joinsAdjacent = cluster && (entry.cadence - adjacent) / adjacent <= this.config.nearCadenceTolerance;
+			const fitsCluster = cluster && (entry.cadence - clusterMinimum) / clusterMinimum <= this.config.cadenceClusterSpanTolerance;
+			if (joinsAdjacent && fitsCluster) cluster.push(entry);
+			else clusters.push([entry]);
+		});
+
+		const replacements = new Map();
+		const groups = [];
+		clusters.forEach((cluster) => {
+			const sourceCadences = [...new Set(cluster.map((entry) => entry.cadence))];
+			if (sourceCadences.length < 2) return;
+			// The upper median avoids speeding up a source on a two-rate tie. Using
+			// unique rates prevents duplicate layers from changing the shared clock.
+			const cadence = sourceCadences[Math.floor(sourceCadences.length / 2)];
+			cluster.forEach(({ timeline, index }) => {
+				if (timeline.frameDurations[0] === cadence) return;
+				replacements.set(index, new AnimationSourceTimeline({
+					key: timeline.key,
+					ownerLayerId: timeline.ownerLayerId,
+					effectSlot: timeline.effectSlot,
+					frames: timeline.frames,
+					frameDurations: timeline.frames.map(() => cadence),
+					fallbackDuration: cadence
+				}));
+			});
+			groups.push({ sourceCadences, cadence });
+		});
+		if (!groups.length) return unchanged;
+		return {
+			timelines: timelines.map((timeline, index) => replacements.get(index) || timeline),
+			normalized: true,
+			groups
+		};
+	}
+
 	_chooseLoopDuration(timelines, fallbackDuration, maximumDuration) {
 		const animated = timelines.filter((timeline) => Number.isFinite(timeline.cycleDuration));
 		if (!animated.length) return { duration: fallbackDuration, exact: true, seamError: 0, completedSources: 0 };
@@ -216,9 +270,41 @@ class CompositeTimelinePlanner {
 		return selected;
 	}
 
-	estimateLoop(timelines, fallbackDuration, maximumDuration) {
+	estimateLoop(timelines, fallbackDuration, maximumDuration, normalizeCadenceGroups = false) {
 		const normalizedFallback = AnimationSourceTimeline.normalizeDuration(fallbackDuration, 100);
-		return this._chooseLoopDuration(timelines, normalizedFallback, maximumDuration);
+		const resolved = this._resolveCadenceClusters(timelines, normalizeCadenceGroups);
+		return this._chooseLoopDuration(resolved.timelines, normalizedFallback, maximumDuration);
+	}
+
+	_selectionSignature(selection) {
+		return [...selection.values()].map((entry) => entry.frameIndex).join(',');
+	}
+
+	_collapseSelectionDuplicates(entries) {
+		const collapsed = [];
+		entries.forEach((entry) => {
+			const previous = collapsed.at(-1);
+			if (previous && this._selectionSignature(previous.selection) === this._selectionSignature(entry.selection)) {
+				previous.duration += entry.duration;
+				return;
+			}
+			collapsed.push({ ...entry, selection: new Map(entry.selection) });
+		});
+		return collapsed;
+	}
+
+	_limitPreRenderCandidates(entries, budget) {
+		if (entries.length <= budget) return entries;
+		const sampled = [];
+		for (let bucket = 0; bucket < budget; bucket++) {
+			const start = Math.floor(bucket * entries.length / budget);
+			const end = Math.floor((bucket + 1) * entries.length / budget);
+			const middle = Math.floor((start + end - 1) / 2);
+			const entry = { ...entries[middle], selection: new Map(entries[middle].selection) };
+			entry.duration = entries.slice(start, end).reduce((sum, candidate) => sum + candidate.duration, 0);
+			sampled.push(entry);
+		}
+		return sampled;
 	}
 
 	_applyManualSampling(entries, every) {
@@ -234,8 +320,10 @@ class CompositeTimelinePlanner {
 	}
 
 	async plan(options) {
-		const timelines = options.timelines || [];
+		const sourceTimelines = options.timelines || [];
 		const fallbackDuration = AnimationSourceTimeline.normalizeDuration(options.fallbackDuration, 100);
+		const timingResolution = this._resolveCadenceClusters(sourceTimelines, options.smartReduction);
+		const timelines = timingResolution.timelines;
 		const loop = this._chooseLoopDuration(timelines, fallbackDuration, options.maxLoopDurationMs);
 		const timestamps = this._buildTimestamps(timelines, loop.duration, options.maxSamplingFps);
 		let entries = [];
@@ -243,14 +331,29 @@ class CompositeTimelinePlanner {
 			const timestamp = timestamps[index];
 			const selection = new Map(timelines.map((timeline) => [timeline.key, { frameIndex: timeline.frameIndexAt(timestamp) }]));
 			entries.push({
-				frame: await options.renderFrame(timestamp, selection),
+				timestamp,
 				duration: timestamps[index + 1] - timestamp,
 				selection
 			});
 		}
 		const originalFrameCount = entries.length;
+		entries = this._collapseSelectionDuplicates(entries);
+		const selectionDuplicatesMerged = originalFrameCount - entries.length;
 		entries = this._applyManualSampling(entries, Math.max(1, options.manualFrameSkip || 1));
+		const manuallySampledFrameCount = entries.length;
+		const preRenderBudget = options.smartReduction
+			? Math.min(options.hardFrameLimit, Math.max(
+				options.preferredFrameBudget,
+				Math.ceil(options.preferredFrameBudget * this.config.preRenderBudgetMultiplier)
+			))
+			: options.hardFrameLimit;
+		entries = this._limitPreRenderCandidates(entries, preRenderBudget);
+		const preRenderFramesSkipped = manuallySampledFrameCount - entries.length;
 		if (options.reverse) entries.reverse();
+		for (let index = 0; index < entries.length; index++) {
+			entries[index].frame = await options.renderFrame(entries[index].timestamp, entries[index].selection, entries.length);
+		}
+		const renderedFrameCount = entries.length;
 
 		const reduced = this.reducer.reduce({
 			frames: entries.map((entry) => entry.frame),
@@ -279,10 +382,17 @@ class CompositeTimelinePlanner {
 				completedSources: loop.completedSources,
 				duration: loop.duration
 			},
+			timingResolution: {
+				cadenceGroupsNormalized: timingResolution.normalized,
+				groups: timingResolution.groups
+			},
 			reduction: {
 				smartReductionEnabled: Boolean(options.smartReduction),
 				originalFrameCount,
-				manuallySampledFrameCount: entries.length,
+				selectionDuplicatesMerged,
+				manuallySampledFrameCount,
+				preRenderFramesSkipped,
+				renderedFrameCount,
 				outputFrameCount: reduced.frames.length,
 				exactDuplicatesMerged: reduced.exactDuplicatesMerged,
 				nearDuplicatesMerged: reduced.nearDuplicatesMerged,

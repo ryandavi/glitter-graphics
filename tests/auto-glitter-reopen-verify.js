@@ -131,6 +131,29 @@ async function main() {
 		assert.strictEqual(applied.batchSize, 2, 'Apply did not commit the reopened Color Matches');
 		assert.strictEqual(applied.hasSessionState, true, 'Apply did not save the Auto Glitter controls');
 		assert.strictEqual(applied.sessionActive, false, 'Apply left Auto Glitter mode active');
+
+		const renamed = await page.evaluate(async () => {
+			const editor = window.editor;
+			const [first, second] = editor.glitterManager.getAllContent().filter((item) => item.isAnimated).slice(0, 2);
+			if (!first || !second) throw new Error('Need two animated glitters for layer-name coverage');
+			const layer = editor.glitterManager.createLayer();
+			layer.selectedGlitterId = first.id;
+			layer.name = first.name;
+			editor.layerManager.insertLayer(layer);
+			editor.glitterManager.armAssetPicker();
+			await editor.glitterManager.selectGlitter(second.id);
+			const generatedName = layer.name;
+			const rowName = editor.layerManager.layersListContainer
+				.querySelector(`[data-layer-id="${layer.id}"] .layer-name`)?.textContent;
+			const pickerDetail = editor.glitterManager.ui.pickerStripDetail.textContent;
+			layer.name = 'My custom fill';
+			await editor.glitterManager.selectGlitter(first.id);
+			return { generatedName, rowName, pickerDetail, customName: layer.name, expected: second.name };
+		});
+		assert.strictEqual(renamed.generatedName, renamed.expected, 'Generated fill-layer name did not follow its new swatch');
+		assert.strictEqual(renamed.rowName, renamed.expected, 'Layers panel kept the previous swatch name');
+		assert.ok(renamed.pickerDetail.includes(renamed.expected), 'Gallery picker strip kept the previous swatch name');
+		assert.strictEqual(renamed.customName, 'My custom fill', 'Swatch selection replaced a custom layer name');
 		assert.deepStrictEqual(pageErrors, [], `Page errors: ${pageErrors.join('; ')}`);
 		console.log('PASS Auto Glitter reopens, cancels safely, and applies over the current batch');
 	} finally {

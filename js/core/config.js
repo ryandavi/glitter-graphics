@@ -755,6 +755,9 @@ const CONFIG = deepFreeze({
 		},
 		timeline: {
 			maxSamplingFps: 30,
+			nearCadenceTolerance: 0.12,
+			cadenceClusterSpanTolerance: 0.25,
+			preRenderBudgetMultiplier: 1.5,
 			preferredFrameBudget: 60,
 			hardFrameLimit: 1000,
 			exactDuplicateThreshold: 0,
