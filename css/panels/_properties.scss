@@ -179,7 +179,11 @@
 	padding: var(--spacing-xs) var(--spacing-md);
 }
 
-.property-panel {
+// The redesign token set. `.property-panel` is the design sidebar + mobile
+// drawer; `.panel-redesign` lets any other surface (a modal body, the layers
+// panel) opt into the same vocabulary by carrying that one class.
+.property-panel,
+.panel-redesign {
 	// ---- geometry --------------------------------------------------------
 	--property-row-h: 26px;
 	--property-pad: 8px;
@@ -220,7 +224,7 @@
 	--switch-h: 18px;
 }
 
-.property-panel .panel-redesign {
+.panel-redesign {
 	--property-row-gap: 4px;
 	--property-block-gap: 8px;
 	--property-group-gap: 14px;

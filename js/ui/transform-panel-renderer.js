@@ -135,7 +135,17 @@ function redesignTransformFragment(fragment) {
 function buildTransformPanel(editor, container, prefix, capabilities) {
 	const ids = editor.getTransformIds(prefix);
 	const fragment = document.getElementById('tpl-transform-panel').content.cloneNode(true);
-	fragment.querySelectorAll('.subsection-content-group').forEach((card) => card.classList.add('property-card'));
+	// The transform card is injected AFTER renderPanelSection's
+	// applyPanelRedesignClasses pass, so stamp the same redesign aliases here:
+	// `property-card`, and `property-block` for the L2-block layout (flex title
+	// row, etc.) that keyed off `.subsection-content-group:where(:not(section-group))`
+	// before it became a positive class.
+	fragment.querySelectorAll('.subsection-content-group').forEach((card) => {
+		card.classList.add('property-card');
+		if (!card.classList.contains('subsection-section-group') && !card.classList.contains('effects-stack')) {
+			card.classList.add('property-block');
+		}
+	});
 	const buildNumberPair = (roles, labels, min = null) => {
 		const pair = tplClone('tpl-number-pair');
 		if (capabilities.panelRedesign) pair.className = 'property-pair number-field-pair';
