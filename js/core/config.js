@@ -260,19 +260,19 @@ const CONFIG = deepFreeze({
 
 	tools: {
 		autoGlitter: {
-			defaults: { colorLayers: 5, paletteStyle: 'vibrant', tuneGlitterHue: true, cleanEdges: true, detail: 4 },
+			defaults: { colorLayers: 5, paletteStyle: 'natural', tuneGlitterHue: true, cleanEdges: true, detail: 4 },
 			previewToolAccess: { groups: ['navigation', 'selection'], tools: [] },
 			limits: { minColorLayers: 2, maxColorLayers: 20, maxSamples: 24000 },
 			timing: { reduceThrottleMs: 80 },
-			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: 20, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5 },
+			analysis: { iterations: 12, alphaThreshold: 1, candidateCount: 24, gradientWeight: 18, seedChromaWeight: 12, seedMaxColorBoost: 3.5, hueMinChroma: 0.04, maxHueShift: 20, neutralMatchSaturation: 0, componentDensityBase: 0.55, componentDensityScale: 0.45, highlightLightness: 0.84, highlightImportanceBoost: 1.2, highlightMergeScale: 0.55, swatchPrimaryWeight: 0.75, swatchMinCoverage: 0.08, swatchCoverageBias: 1.5 },
 			cleanup: {
 				aliasDissolve: { enabled: true, maxMixtureDistance: 0.12, minBoundaryShare: 0.55, maxShare: 0.25 },
 				despeckle: { enabled: true, absMin: 4, shareMin: 0.00004 }
 			},
 			paletteStyles: {
-				vibrant: { mergeDistinctness: 0.045, neutralSimilarityScale: 2.333333, neutralChromaThreshold: 0.075, chromaWeight: 12, maxColorBoost: 3.5, neutralImportance: 0.62, coherenceBase: 0.4, coherenceScale: 0.75, connectedAreaWeight: 4, maxConnectedBoost: 1, connectedNeutralProtection: 0.65, fragmentedSimilarityBoost: 0.6 },
-				balanced: { mergeDistinctness: 0.045, neutralSimilarityScale: 1.444444, neutralChromaThreshold: 0.06, chromaWeight: 8, maxColorBoost: 2, neutralImportance: 0.82, coherenceBase: 0.5, coherenceScale: 0.65, connectedAreaWeight: 3, maxConnectedBoost: 0.75, connectedNeutralProtection: 0.75, fragmentedSimilarityBoost: 0.35 },
-				natural: { mergeDistinctness: 0.035, neutralSimilarityScale: 1.285714, neutralChromaThreshold: 0.05, chromaWeight: 4, maxColorBoost: 1, neutralImportance: 1, coherenceBase: 0.65, coherenceScale: 0.5, connectedAreaWeight: 2, maxConnectedBoost: 0.5, connectedNeutralProtection: 0.9, fragmentedSimilarityBoost: 0.15 }
+				vibrant: { mergeDistinctness: 0.045, matchedSaturation: 125, neutralSimilarityScale: 2.333333, neutralChromaThreshold: 0.075, chromaWeight: 12, maxColorBoost: 3.5, neutralImportance: 0.62, coherenceBase: 0.4, coherenceScale: 0.75, connectedAreaWeight: 4, maxConnectedBoost: 1, connectedNeutralProtection: 0.65, fragmentedSimilarityBoost: 0.6 },
+				balanced: { mergeDistinctness: 0.045, matchedSaturation: 110, neutralSimilarityScale: 1.444444, neutralChromaThreshold: 0.06, chromaWeight: 8, maxColorBoost: 2, neutralImportance: 0.82, coherenceBase: 0.5, coherenceScale: 0.65, connectedAreaWeight: 3, maxConnectedBoost: 0.75, connectedNeutralProtection: 0.75, fragmentedSimilarityBoost: 0.35 },
+				natural: { mergeDistinctness: 0.035, matchedSaturation: 100, neutralSimilarityScale: 1.285714, neutralChromaThreshold: 0.05, chromaWeight: 4, maxColorBoost: 1, neutralImportance: 1, coherenceBase: 0.65, coherenceScale: 0.5, connectedAreaWeight: 2, maxConnectedBoost: 0.5, connectedNeutralProtection: 0.9, fragmentedSimilarityBoost: 0.15 }
 			}
 		},
 		pixelEffects: {
@@ -635,8 +635,8 @@ const CONFIG = deepFreeze({
 				{ kind: 'button', id: 'fillScreen', icon: 'maximize', name: 'Fill Screen', title: 'Fill Screen', action: 'zoomFill' }
 			] },
 			{ id: 'panControls', tool: 'hand', controls: [
-				{ kind: 'button', id: 'centerCanvasHorizontal', icon: 'arrows-left-right', name: 'Center H', title: 'Center Horizontally', action: 'centerCanvasH' },
-				{ kind: 'button', id: 'centerCanvasVertical', icon: 'arrows-up-down', name: 'Center V', title: 'Center Vertically', action: 'centerCanvasV' }
+				{ kind: 'button', id: 'centerCanvasHorizontal', icon: 'align-center-x', name: 'Center H', title: 'Center Horizontally', action: 'centerCanvasH' },
+				{ kind: 'button', id: 'centerCanvasVertical', icon: 'align-center-y', name: 'Center V', title: 'Center Vertically', action: 'centerCanvasV' }
 			] },
 			{
 				id: 'layerCenterControls',
@@ -644,8 +644,8 @@ const CONFIG = deepFreeze({
 				allowMultiSelection: true,
 				controls: [
 					{ kind: 'toggle', id: 'contextAutoSelect', label: 'Auto-Select' },
-					{ kind: 'button', id: 'centerLayerHorizontal', icon: 'arrows-left-right', name: 'Center H', title: 'Center Horizontally', action: 'centerSelectionH' },
-					{ kind: 'button', id: 'centerLayerVertical', icon: 'arrows-up-down', name: 'Center V', title: 'Center Vertically', action: 'centerSelectionV' },
+					{ kind: 'button', id: 'centerLayerHorizontal', icon: 'align-center-x', name: 'Center H', title: 'Center Horizontally', action: 'centerSelectionH' },
+					{ kind: 'button', id: 'centerLayerVertical', icon: 'align-center-y', name: 'Center V', title: 'Center Vertically', action: 'centerSelectionV' },
 					{ kind: 'button', id: 'duplicateLayerSelection', icon: 'clone', name: 'Duplicate', title: 'Duplicate selected layer(s) (Ctrl+D)', action: 'duplicateSelection' }
 				]
 			},
@@ -1318,8 +1318,11 @@ const PANEL_SCHEMAS = {
 			{ title: 'Palette', region: 'scroll', collapsible: false, items: [
 				{ kind: 'card', items: [
 					{ kind: 'segmented', id: 'autoGlitterPaletteStyle', classes: 'auto-glitter-palette-style', label: 'Palette style', visibleLabel: 'Style', revert: true, options: [
-						{ label: 'Vibrant', value: 'vibrant' }, { label: 'Balanced', value: 'balanced', active: true }, { label: 'Natural', value: 'natural' }
+						{ label: 'Faithful', value: 'natural', active: true, attrs: { title: 'Preserve the image\'s color balance without boosting saturation' } },
+						{ label: 'Balanced', value: 'balanced', attrs: { title: 'Gently favor colorful regions and boost glitter saturation' } },
+						{ label: 'Vibrant', value: 'vibrant', attrs: { title: 'Prioritize colorful accents and strongly boost glitter saturation' } }
 					] },
+					{ kind: 'host', classes: 'property-note', text: 'Faithful follows the image; Balanced and Vibrant progressively emphasize color.' },
 					{ kind: 'slider', id: 'autoGlitterColorCount', slider: 'autoGlitterColorCount', label: 'Colors' },
 					{ kind: 'slider', id: 'autoGlitterMergeDistinctness', slider: 'autoGlitterMergeDistinctness', label: 'Merge', valueScale: 'percent' },
 					{ kind: 'host', id: 'autoGlitterCapacity', classes: 'property-note' }
@@ -1429,7 +1432,7 @@ const PANEL_SCHEMAS = {
 			{ title: 'Actions', collapsible: false, items: [
 				{ kind: 'host', classes: 'property-note', text: 'Turn the image colors into editable glitter fill layers.' },
 				{ kind: 'actionRow', actions: [
-					{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', primary: true, title: 'Turn the image colors into editable glitter fill layers' }
+					{ id: 'autoGlitterImageBtn', label: 'Auto Glitter', icon: 'magic-wand', badge: 'beta', primary: true, title: 'Turn the image colors into editable glitter fill layers' }
 				] }
 			] },
 

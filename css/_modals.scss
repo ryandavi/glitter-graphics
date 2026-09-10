@@ -277,16 +277,9 @@ body.modal-open {
 
 		}
 
-		.modal-action {
-			min-height: var(--control-height-comfortable);
-			padding-inline: var(--spacing-lg);
-		}
-
-		.modal-action-hero {
-			min-height: 40px;
-			padding-inline: var(--spacing-xl);
-		}
-
+		// modal-action / modal-action-hero no longer carry their own size -
+		// modal buttons are just buttons (--button-height, shared inline
+		// padding). Prominence for a hero CTA comes from `.primary`, not scale.
 		.modal-action-danger {
 			--btn-gradient: var(--danger-btn-gradient);
 			--btn-border-color: var(--danger-btn-border-color);
@@ -1556,12 +1549,6 @@ body.modal-open {
 				min-height: 48px;
 			}
 		}
-	}
-}
-
-@include mobile {
-	.modal-overlay > .modal-content .modal-action {
-		min-height: var(--touch-target-min);
 	}
 }
 

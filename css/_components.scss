@@ -78,15 +78,26 @@ textarea {
 	display: inline-flex;
 	align-items: center;
 	flex: 0 0 auto;
-	padding: 1px var(--spacing-xs);
-	border-radius: var(--radius-pill);
-	background: var(--color-accent-surface);
-	color: var(--color-accent);
-	font-size: var(--font-size-xs);
-	font-weight: var(--font-weight-bold);
-	letter-spacing: 0.04em;
+	padding: 0 var(--spacing-sm);
+	border-radius: var(--radius-xs);
+	/* Solid accent chip - reads on any surface (painted bar, panel header,
+	   banner). --color-accent-surface (14% into transparent) washed out. */
+	background: var(--color-accent);
+	color: var(--color-text-on-accent, #fff);
+	/* one step below the --font-size-xs micro-label; a badge is a marker, not a
+	   control, so it sits smaller than chrome text. */
+	font-size: 10px;
+	font-weight: var(--font-weight-semibold);
+	letter-spacing: 0.06em;
+	line-height: 1.7;
 	text-transform: uppercase;
-	line-height: 1.5;
+}
+
+/* On a glossy-primary button the solid-accent badge is accent-on-accent;
+   flip to a light chip. */
+:is(.btn-simple, .btn-text-with-icon).primary > .feature-badge {
+	background: var(--color-text-on-accent, #fff);
+	color: var(--color-accent);
 }
 
 .search-toggle-row {

@@ -245,6 +245,9 @@
   --control-height: 32px;
   --control-height-compact: 24px;
   --control-height-comfortable: 36px;
+  /* Buttons sit one notch taller than fields (36 vs 32) - the one button
+     height everywhere: sidebar action rows, modal footers, workspace card. */
+  --button-height: var(--control-height-comfortable);
   --control-padding-inline: var(--spacing-md);
   --control-radius: var(--radius-sm);
   --control-focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);

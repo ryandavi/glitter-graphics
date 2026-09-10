@@ -8,6 +8,10 @@ const browseFields = new Set([
 	'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source'
 ]);
 
+const typeBrowseFields = {
+	glitter: new Set(['colorCodes', 'colorWeights'])
+};
+
 for (const type of ['glitter', 'stickers']) {
 	const manifestPath = path.join(root, 'data', `${type}.json`);
 	const records = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -15,7 +19,7 @@ for (const type of ['glitter', 'stickers']) {
 	fs.mkdirSync(detailDirectory, { recursive: true });
 
 	const index = records.map((record) => Object.fromEntries(
-		Object.entries(record).filter(([key]) => browseFields.has(key))
+		Object.entries(record).filter(([key]) => browseFields.has(key) || typeBrowseFields[type]?.has(key))
 	));
 	fs.writeFileSync(
 		path.join(root, 'data', `${type}.index.json`),

@@ -484,7 +484,7 @@ class AutoGlitterManager {
 
 	ensureWorker() {
 		if (this.worker) return;
-		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=12');
+		this.worker = new Worker('js/workers/auto-glitter.worker.js?v=14');
 		this.worker.onmessage = ({ data }) => {
 			const pending = this.workerRequests.get(data.requestId);
 			if (!pending) return;

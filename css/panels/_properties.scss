@@ -1121,37 +1121,10 @@
 		border-top: 1px solid var(--color-border);
 	}
 
-	.panel-actions > .btn-simple {
-		height: var(--property-control-height);
-		min-height: var(--property-control-height);
-		padding: 0 10px;
-		border: 1px solid var(--color-border);
-		border-radius: var(--property-r-field);
-		background: var(--color-bg-secondary);
-		background-image: none;
-		box-shadow: none;
-		color: var(--color-text-primary);
-		font-size: 12px;
-		font-weight: 500;
-		text-shadow: none;
-
-		&:hover { border-color: var(--color-border-hover); }
-		&:disabled { color: var(--color-text-tertiary); opacity: 1; }
-
-		&::before { content: none; }
-
-		// The primary action of a row keeps the accent — flattening it lost the
-		// "this is the button to press" signal (Create Layers, Resize Canvas,
-		// Save Project, Apply).
-		&.primary {
-			border-color: var(--color-accent);
-			background: var(--color-accent);
-			color: var(--color-text-on-accent, #fff);
-
-			&:hover { border-color: var(--color-accent); background: var(--color-accent-hover, var(--color-accent)); }
-			&:disabled { border-color: var(--color-border); background: var(--color-bg-secondary); color: var(--color-text-tertiary); }
-		}
-	}
+	// Panel action buttons are ordinary buttons - no flat override. `.btn-simple`
+	// and `.btn-text-with-icon` share the same box (_controls.scss) and the
+	// `.primary` accent lives there too, so the transform Fit/Fill/Reset row
+	// reads the same as Open/Save Project.
 
 	.transform-panel-title > span:first-child {
 		font-size: 12px;
@@ -2137,17 +2110,24 @@ body.is-resizing-panel {
 // per schema group with `region: 'header' | 'scroll' | 'footer'`: the renderer
 // wraps the scroll groups in `.panel-scroll-region`, tags header/footer groups
 // `.panel-sticky-header` / `.panel-sticky-footer`, and stamps `.has-scroll-region`
-// on both the subsection and its section. First user: Auto Glitter.
+// on the section. First user: Auto Glitter.
 .section.has-scroll-region > .section-content { padding: 0; }
 .section.has-scroll-region.is-open > .section-content.visible { overflow: hidden; }
 
-.settings-subsection.has-scroll-region {
+
+.design-panel > .section.has-scroll-region.collapsible-section.is-open:not(.main-section) > .section-content.visible {
+	    scrollbar-gutter: auto;
+		padding: 0;
+}
+
+.section.has-scroll-region > .section-content .settings-subsection {
 	display: flex;
 	height: 100%;
 	min-height: 0;
 	flex-direction: column;
 	gap: 0;
 	overflow: hidden;
+
 
 	> .panel-sticky-header,
 	> .panel-sticky-footer { flex: 0 0 auto; }
@@ -2163,6 +2143,7 @@ body.is-resizing-panel {
 	> .panel-sticky-footer {
 		padding: 0;
 		border-top: 1px solid var(--color-border);
+		padding: var(--property-pad) 0;
 	}
 
 	> .panel-scroll-region {
@@ -2181,6 +2162,8 @@ body.is-resizing-panel {
 		overflow-y: auto;
 		overscroll-behavior: contain;
 		scrollbar-gutter: stable;
+
+		padding-bottom: var(--property-pad);
 
 		> * {
 			min-width: 0;

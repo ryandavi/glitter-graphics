@@ -152,7 +152,7 @@ body.no-document .main-content {
 	justify-content: center;
 	gap: var(--spacing-sm);
 
-	>button { min-height: 40px; }
+	>button { min-height: var(--control-height-comfortable); }
 }
 
 .workspace-start-drop {

@@ -922,6 +922,9 @@
   --control-height: 32px;
   --control-height-compact: 24px;
   --control-height-comfortable: 36px;
+  /* Buttons sit one notch taller than fields (36 vs 32) - the one button
+     height everywhere: sidebar action rows, modal footers, workspace card. */
+  --button-height: var(--control-height-comfortable);
   --control-padding-inline: var(--spacing-md);
   --control-radius: var(--radius-sm);
   --control-focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 28%, transparent);
@@ -1237,6 +1240,35 @@ select {
 textarea {
   min-height: calc(var(--control-height) * 3);
   line-height: 1.4;
+}
+
+/* Feature maturity badge - "Beta" / "Alpha" pill next to a feature's title or
+   banner while it is still under test. Rendered by panel-renderer (section
+   `badge:`) and inline in index.html (Auto Glitter canvas banner). */
+.feature-badge {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 var(--spacing-sm);
+  border-radius: var(--radius-xs);
+  /* Solid accent chip - reads on any surface (painted bar, panel header,
+     banner). --color-accent-surface (14% into transparent) washed out. */
+  background: var(--color-accent);
+  color: var(--color-text-on-accent, #fff);
+  /* one step below the --font-size-xs micro-label; a badge is a marker, not a
+     control, so it sits smaller than chrome text. */
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+
+/* On a glossy-primary button the solid-accent badge is accent-on-accent;
+   flip to a light chip. */
+:is(.btn-simple, .btn-text-with-icon).primary > .feature-badge {
+  background: var(--color-text-on-accent, #fff);
+  color: var(--color-accent);
 }
 
 .search-toggle-row {
@@ -1926,11 +1958,36 @@ input[type=range]:disabled {
   filter: none;
 }
 
+.btn-simple,
 .btn-text-with-icon {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  justify-content: center;
+  gap: var(--spacing-xs);
+  min-height: var(--button-height);
+  padding: 0 var(--spacing-md);
+  line-height: 1.2;
   aspect-ratio: unset;
+}
+.btn-simple > svg.icon,
+.btn-text-with-icon > svg.icon {
+  font-size: inherit;
+  width: 1.15em;
+  height: 1.15em;
+  flex: 0 0 auto;
+}
+.btn-simple > .name,
+.btn-text-with-icon > .name {
+  display: block;
+}
+
+@media (max-width: 800px) {
+  .btn-simple,
+  .btn-text-with-icon {
+    min-height: var(--touch-target-min);
+  }
+}
+.btn-text-with-icon {
   background: none;
   overflow: hidden;
   color: var(--btn-text-color);
@@ -1989,15 +2046,6 @@ input[type=range]:disabled {
 }
 .btn-text-with-icon.icon-wrapper {
   aspect-ratio: unset;
-  gap: var(--spacing-sm);
-}
-.btn-text-with-icon.icon-wrapper > svg.icon {
-  width: var(--icon-size-sm);
-  height: var(--icon-size-sm);
-}
-.btn-text-with-icon.icon-wrapper > svg.icon + span.name {
-  display: block;
-  padding-right: var(--spacing-sm);
 }
 .btn-text-with-icon:hover {
   border-color: var(--color-border-hover);
@@ -2127,7 +2175,6 @@ input[type=range]:disabled {
 }
 
 .btn-simple {
-  padding: var(--spacing-sm) var(--spacing-lg);
   background: none;
   overflow: hidden;
   color: var(--btn-text-color);
@@ -3587,7 +3634,7 @@ body.no-document .main-content > .design-panel {
   gap: var(--spacing-sm);
 }
 .workspace-start-actions > button {
-  min-height: 40px;
+  min-height: var(--control-height-comfortable);
 }
 
 .workspace-start-drop {
@@ -7570,6 +7617,9 @@ body.tool-select .preview-canvas {
 .property-actions > button {
   width: 100%;
 }
+.property-actions > .btn-text-with-icon {
+  justify-content: center;
+}
 .property-actions[hidden] {
   display: none;
 }
@@ -7695,44 +7745,6 @@ body.tool-select .preview-canvas {
   gap: 6px;
   padding: var(--property-pad);
   border-top: 1px solid var(--color-border);
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .panel-actions > .btn-simple {
-  height: var(--property-control-height);
-  min-height: var(--property-control-height);
-  padding: 0 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--property-r-field);
-  background: var(--color-bg-secondary);
-  background-image: none;
-  box-shadow: none;
-  color: var(--color-text-primary);
-  font-size: 12px;
-  font-weight: 500;
-  text-shadow: none;
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .panel-actions > .btn-simple:hover {
-  border-color: var(--color-border-hover);
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .panel-actions > .btn-simple:disabled {
-  color: var(--color-text-tertiary);
-  opacity: 1;
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .panel-actions > .btn-simple::before {
-  content: none;
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .panel-actions > .btn-simple.primary {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-text-on-accent, #fff);
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .panel-actions > .btn-simple.primary:hover {
-  border-color: var(--color-accent);
-  background: var(--color-accent-hover, var(--color-accent));
-}
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .panel-actions > .btn-simple.primary:disabled {
-  border-color: var(--color-border);
-  background: var(--color-bg-secondary);
-  color: var(--color-text-tertiary);
 }
 :is(.design-panel, .mobile-settings-drawer) .panel-redesign .transform-panel-title > span:first-child {
   font-size: 12px;
@@ -8508,7 +8520,12 @@ body.is-resizing-panel canvas {
   overflow: hidden;
 }
 
-.settings-subsection.has-scroll-region {
+.design-panel > .section.has-scroll-region.collapsible-section.is-open:not(.main-section) > .section-content.visible {
+  scrollbar-gutter: auto;
+  padding: 0;
+}
+
+.section.has-scroll-region > .section-content .settings-subsection {
   display: flex;
   height: 100%;
   min-height: 0;
@@ -8516,22 +8533,23 @@ body.is-resizing-panel canvas {
   gap: 0;
   overflow: hidden;
 }
-.settings-subsection.has-scroll-region > .panel-sticky-header,
-.settings-subsection.has-scroll-region > .panel-sticky-footer {
+.section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-header,
+.section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-footer {
   flex: 0 0 auto;
 }
-.settings-subsection.has-scroll-region > .panel-sticky-header {
+.section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-header {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
   border-bottom: 1px solid var(--color-border);
 }
-.settings-subsection.has-scroll-region > .panel-sticky-footer {
+.section.has-scroll-region > .section-content .settings-subsection > .panel-sticky-footer {
   padding: 0;
   border-top: 1px solid var(--color-border);
+  padding: var(--property-pad) 0;
 }
-.settings-subsection.has-scroll-region > .panel-scroll-region {
+.section.has-scroll-region > .section-content .settings-subsection > .panel-scroll-region {
   display: flex;
   width: 100%;
   min-width: 0;
@@ -8545,8 +8563,9 @@ body.is-resizing-panel canvas {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+  padding-bottom: var(--property-pad);
 }
-.settings-subsection.has-scroll-region > .panel-scroll-region > * {
+.section.has-scroll-region > .section-content .settings-subsection > .panel-scroll-region > * {
   min-width: 0;
   max-width: 100%;
 }
@@ -8774,14 +8793,6 @@ body.modal-open {
   display: flex;
   align-items: center;
   aspect-ratio: unset;
-}
-.modal-overlay > .modal-content .modal-action {
-  min-height: var(--control-height-comfortable);
-  padding-inline: var(--spacing-lg);
-}
-.modal-overlay > .modal-content .modal-action-hero {
-  min-height: 40px;
-  padding-inline: var(--spacing-xl);
 }
 .modal-overlay > .modal-content .modal-action-danger {
   --btn-gradient: var(--danger-btn-gradient);
@@ -9767,11 +9778,6 @@ body.modal-open {
   }
 }
 
-@media (max-width: 800px) {
-  .modal-overlay > .modal-content .modal-action {
-    min-height: var(--touch-target-min);
-  }
-}
 #welcomeModal .version-history,
 #aboutModal .version-history {
   display: flex;

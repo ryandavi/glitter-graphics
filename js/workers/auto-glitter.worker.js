@@ -30,14 +30,19 @@ function assignSuggestedSwatches(palette, swatches, options) {
 		weights: Array.isArray(swatch.weights) && swatch.weights.length === swatch.colors.length
 			? swatch.weights
 			: swatch.colors.map(() => 1 / swatch.colors.length),
-		primary: hexToLab(swatch.colors[0])
+		primary: hexToLab(swatch.colors[0]),
+		averageChroma: getAverageChroma(swatch.colors.map(hexToLab), swatch.weights)
 	}));
+	const neutralSwatches = preparedSwatches.filter(swatch => swatch.averageChroma < options.hueMinChroma * 0.25);
 	for (const entry of palette) {
 		let bestIndex = -1;
 		let bestColor = null;
 		let bestDistance = Infinity;
-		for (let index = 0; index < preparedSwatches.length; index++) {
-			const swatch = preparedSwatches[index];
+		const candidatesForEntry = GlitterPaletteAnalysis.labChroma(entry.lab) < options.hueMinChroma && neutralSwatches.length
+			? neutralSwatches
+			: preparedSwatches;
+		for (let index = 0; index < candidatesForEntry.length; index++) {
+			const swatch = candidatesForEntry[index];
 			const eligible = swatch.colors.map((color, colorIndex) => ({ color, colorIndex }))
 				.filter(item => swatch.colors.length === 1 || swatch.weights[item.colorIndex] >= options.swatchMinCoverage);
 			const candidates = eligible.length ? eligible : [{ color: swatch.colors[0], colorIndex: 0 }];
@@ -55,20 +60,35 @@ function assignSuggestedSwatches(palette, swatches, options) {
 				bestColor = closestColor;
 			}
 		}
-		entry.suggestedGlitterId = bestIndex >= 0 ? preparedSwatches[bestIndex].id : null;
-		entry.suggestedColorAdjust = options.tuneGlitterHue ? getHueAdjustment(bestColor, entry.lab, options) : null;
+		entry.suggestedGlitterId = bestIndex >= 0 ? candidatesForEntry[bestIndex].id : null;
+		entry.suggestedColorAdjust = getSuggestedColorAdjust(bestColor, entry.lab, options);
 	}
 }
 
-function getHueAdjustment(source, target, options) {
-	if (!source || GlitterPaletteAnalysis.labChroma(source) < options.hueMinChroma || GlitterPaletteAnalysis.labChroma(target) < options.hueMinChroma) return null;
-	const sourceHue = Math.atan2(source[2], source[1]) * 180 / Math.PI;
-	const targetHue = Math.atan2(target[2], target[1]) * 180 / Math.PI;
-	let hue = Math.round(targetHue - sourceHue);
-	while (hue > 180) hue -= 360;
-	while (hue < -180) hue += 360;
-	hue = Math.max(-options.maxHueShift, Math.min(options.maxHueShift, hue));
-	return Math.abs(hue) >= 2 ? { hue, saturation: 100, brightness: 100 } : null;
+function getAverageChroma(colors, weights) {
+	const normalizedWeights = Array.isArray(weights) && weights.length === colors.length
+		? weights.map(weight => Math.max(0, Number(weight) || 0))
+		: colors.map(() => 1);
+	const totalWeight = normalizedWeights.reduce((sum, weight) => sum + weight, 0);
+	const effectiveWeights = totalWeight > 0 ? normalizedWeights : colors.map(() => 1);
+	const effectiveTotal = totalWeight > 0 ? totalWeight : colors.length;
+	return colors.reduce((sum, color, index) => sum + GlitterPaletteAnalysis.labChroma(color) * effectiveWeights[index], 0) / effectiveTotal;
+}
+
+function getSuggestedColorAdjust(source, target, options) {
+	const targetChroma = GlitterPaletteAnalysis.labChroma(target);
+	const saturation = targetChroma < options.hueMinChroma ? options.neutralMatchSaturation : options.matchedSaturation;
+	let hue = 0;
+	if (options.tuneGlitterHue && source && GlitterPaletteAnalysis.labChroma(source) >= options.hueMinChroma && targetChroma >= options.hueMinChroma) {
+		const sourceHue = Math.atan2(source[2], source[1]) * 180 / Math.PI;
+		const targetHue = Math.atan2(target[2], target[1]) * 180 / Math.PI;
+		hue = Math.round(targetHue - sourceHue);
+		while (hue > 180) hue -= 360;
+		while (hue < -180) hue += 360;
+		hue = Math.max(-options.maxHueShift, Math.min(options.maxHueShift, hue));
+		if (Math.abs(hue) < 2) hue = 0;
+	}
+	return hue !== 0 || saturation !== 100 ? { hue, saturation, brightness: 100 } : null;
 }
 
 function hexToLab(value) {

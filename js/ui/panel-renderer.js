@@ -1102,20 +1102,25 @@ function buildPanelItem(item, schema) {
 			item.actions.forEach((action) => {
 				const button = document.createElement('button');
 				button.type = 'button';
-				// `icon` opts a sidebar action into the same icon + label treatment
-				// the workspace-start card uses, so the same action carries the same
-				// glyph here as everywhere else (see AGENTS.md "Icons").
-				const base = action.icon ? 'btn-text-with-icon icon-wrapper' : 'btn-simple';
-				button.className = `${base}${action.primary ? ' primary' : ''}${action.secondary ? ' secondary' : ''}`;
+				// Every sidebar action button is a `btn-text-with-icon` so a mixed
+				// row lines up (`icon-wrapper` only when there's a glyph). Same
+				// class -> same box everywhere (see AGENTS.md "Icons").
+				const cls = ['btn-text-with-icon'];
+				if (action.icon) cls.push('icon-wrapper');
+				if (action.primary) cls.push('primary');
+				if (action.secondary) cls.push('secondary');
+				button.className = cls.join(' ');
 				button.id = action.id;
-				if (action.icon) {
-					button.appendChild(createIcon(action.icon));
-					const name = document.createElement('span');
-					name.className = 'name';
-					name.textContent = action.label;
-					button.appendChild(name);
-				} else {
-					button.textContent = action.label;
+				if (action.icon) button.appendChild(createIcon(action.icon));
+				const name = document.createElement('span');
+				name.className = 'name';
+				name.textContent = action.label;
+				button.appendChild(name);
+				if (action.badge) {
+					const badge = document.createElement('span');
+					badge.className = `feature-badge feature-badge-${action.badge}`;
+					badge.textContent = panelCap(action.badge);
+					button.appendChild(badge);
 				}
 				if (action.title) button.title = action.title;
 				if (action.disabled) button.disabled = true;
@@ -1738,7 +1743,7 @@ function renderPanelSection(schema) {
 	const subsection = fragment.querySelector('.settings-subsection');
 	// Sticky-region layout: a group's `region` puts it in a fixed `header` /
 	// `footer` band or the single scrolling middle. The structural CSS is generic
-	// (`.settings-subsection.has-scroll-region` in _properties.scss); declare
+	// (`.section.has-scroll-region` in _properties.scss); declare
 	// header/footer groups first/last so DOM order matches. First user: Auto Glitter.
 	let scrollRegion = null;
 	let hasStickyRegions = false;
@@ -1760,7 +1765,6 @@ function renderPanelSection(schema) {
 		}
 	});
 	if (hasStickyRegions) {
-		subsection.classList.add('has-scroll-region');
 		host.classList.add('has-scroll-region');
 	}
 	if (schema.effects?.length) {

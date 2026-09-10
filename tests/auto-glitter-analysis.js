@@ -49,12 +49,16 @@ const baseOptions = {
 	fragmentedSimilarityBoost: 0.6,
 	hueMinChroma: 0.04,
 	maxHueShift: 20,
+	neutralMatchSaturation: 0,
+	matchedSaturation: 125,
 	componentDensityBase: 0.55,
 	componentDensityScale: 0.45,
 	highlightLightness: 0.84,
 	highlightImportanceBoost: 1.2,
 	highlightMergeScale: 0.55,
 	swatchPrimaryWeight: 0.75,
+	swatchMinCoverage: 0.08,
+	swatchCoverageBias: 1.5,
 	tuneGlitterHue: true,
 	maxSamples: 24000,
 	cleanup: {
@@ -112,6 +116,7 @@ result = reduce(3, baseOptions, [{ id: 'blue', colors: ['#234fd8'] }]);
 const hueAdjustedRed = result.palette.find(color => color.r > 200 && color.g < 70 && color.b < 70);
 assert.strictEqual(hueAdjustedRed.suggestedGlitterId, 'blue', 'a recolorable glitter can be selected for a vivid region');
 assert.ok(Math.abs(hueAdjustedRed.suggestedColorAdjust?.hue || 0) >= 2, 'the suggested glitter hue correction remains visible and editable');
+assert.strictEqual(hueAdjustedRed.suggestedColorAdjust?.saturation, 125, 'Vibrant boosts the matched glitter saturation');
 
 const glyphWidth = 40;
 const glyphHeight = 24;
@@ -163,9 +168,26 @@ const naturalOptions = {
 	neutralChromaThreshold: 0.05,
 	neutralImportance: 1,
 	connectedNeutralProtection: 0.9,
-	fragmentedSimilarityBoost: 0.15
+	fragmentedSimilarityBoost: 0.15,
+	matchedSaturation: 100
 };
 const naturalCount = reduce(12, naturalOptions).palette.length;
 assert.ok(vibrantCount < naturalCount, 'Vibrant still combines more neutral shades than Natural');
+
+const glitterIndex = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'glitter.index.json'), 'utf8'));
+const indexedSwatches = glitterIndex
+	.filter(glitter => !glitter.hasTransparency && glitter.colorCodes?.length)
+	.map(glitter => ({ id: glitter.id, colors: glitter.colorCodes, weights: glitter.colorWeights }));
+const grayscalePixels = image(80, 20, x => {
+	const value = [0, 64, 128, 224][Math.floor(x / 20)];
+	return [value, value, value];
+});
+segment(grayscalePixels, 80, 20);
+result = reduce(4, baseOptions, indexedSwatches);
+const indexedById = new Map(glitterIndex.map(glitter => [glitter.id, glitter]));
+const grayscaleMatches = result.palette.map(color => indexedById.get(color.suggestedGlitterId));
+assert.ok(grayscaleMatches.every(glitter => glitter?.tags.includes('Neutral')), `grayscale regions choose neutral glitter from the browse index: ${grayscaleMatches.map(glitter => glitter?.name).join(', ')}`);
+assert.ok(new Set(grayscaleMatches.map(glitter => glitter?.id)).size >= 3, 'grayscale brightness levels do not collapse to one glitter match');
+assert.ok(result.palette.every(color => color.suggestedColorAdjust?.saturation === 0), 'grayscale matches remove residual glitter color casts');
 
 console.log('auto-glitter analysis checks passed');

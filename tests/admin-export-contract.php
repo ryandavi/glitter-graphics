@@ -48,6 +48,9 @@ foreach ($apis as $type => $api) {
 		if (array_key_exists('fileSize', $record) || array_key_exists('frameCount', $record)) {
 			failContract("$type browse index contains deferred detail fields");
 		}
+		if ($type === 'glitter' && (!array_key_exists('colorCodes', $record) || !array_key_exists('colorWeights', $record))) {
+			failContract('glitter browse index omits palette metadata needed for Auto Glitter');
+		}
 	}
 	foreach ($assets as $asset) {
 		if (!isset($indexById[$asset['id']])) failContract("$type browse index is missing asset {$asset['id']}");

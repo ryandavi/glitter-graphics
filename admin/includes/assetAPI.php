@@ -1646,6 +1646,10 @@ abstract class AssetAPI
             'stickerText', 'tags', 'searchTerms', 'colors', 'generatedName', 'sortOrder',
             'isAnimated', 'hasTransparency', 'isPixelated', 'featured', 'source',
         ];
+        if ($this->assetType === 'glitter') {
+            $fields[] = 'colorCodes';
+            $fields[] = 'colorWeights';
+        }
         return array_intersect_key($asset, array_flip($fields));
     }
 
