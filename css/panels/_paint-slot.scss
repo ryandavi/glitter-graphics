@@ -34,7 +34,7 @@
 // shared `.property-set + .property-set`, plus one rule for the Operation → mode
 // boundary so that line survives switching modes (a hidden mode panel keeps the
 // DOM adjacency the `+` needs).
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+.property-panel .panel-redesign {
 	.document-size-panel {
 		gap: 0;
 		padding: 0;

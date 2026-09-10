@@ -133,7 +133,7 @@
 	}
 
 	// Pos / Alpha: same box, size and unit treatment as a `.property-value`
-	// readout — mirrors `:is(.design-panel…) .panel-redesign .property-row >
+	// readout — mirrors `.property-panel .panel-redesign .property-row >
 	// .property-value` (an `<input>` fills it; the `%` is the shared `.setting-unit`).
 	.gradient-stop-field {
 		min-width: 0;

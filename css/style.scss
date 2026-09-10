@@ -8,7 +8,10 @@
 @use 'panels/layers-list';
 @use 'panels/gallery';
 @use 'panels/preview';
-@use 'panels/transform';
+@use 'panels/panel-shell';
+@use 'panels/panel-mobile';
+@use 'panels/text-panel';
+@use 'panels/brush-panel';
 @use 'panels/paint-slot';
 @use 'panels/effects';
 @use 'workspace';

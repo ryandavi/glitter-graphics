@@ -1626,12 +1626,7 @@ function buildPanelGroup(group, schema) {
 // treatment as a full schema section.
 function applyPanelRedesignClasses(root) {
 	root.querySelectorAll('.property-card').forEach((node) => node.classList.add('panel-card'));
-	root.querySelectorAll('.subsection-section-group').forEach((node) => node.classList.add('panel-group'));
 	root.querySelectorAll('.panel-group-label').forEach((node) => node.classList.add('property-group-label'));
-	root.querySelectorAll('.property-row').forEach((node) => node.classList.add('row'));
-	root.querySelectorAll('.segmented-control').forEach((node) => node.classList.add('segmented'));
-	root.querySelectorAll('.asset-info').forEach((node) => node.classList.add('asset'));
-	root.querySelectorAll('.advanced-disclosure').forEach((node) => node.classList.add('disc'));
 	root.querySelectorAll('.property-actions').forEach((node) => node.classList.add('panel-actions'));
 	root.querySelectorAll('.paint-slot-card').forEach((node) => node.classList.add('panel-module'));
 	initializeEditablePropertyValues(root);
@@ -1879,14 +1874,11 @@ function redesignTransformFragment(fragment) {
 	sizeRow.querySelector('.property-pair').removeAttribute('data-transform-role');
 
 	const rotationRow = rotation.querySelector('.property-row');
-	rotationRow.classList.add('row');
 	rotationRow.querySelector('.property-label').textContent = 'Rotation';
 
 	align.querySelector(':scope > .property-set-label').textContent = 'Align to canvas';
 	align.querySelectorAll(':scope > .property-row').forEach((row) => {
 		row.classList.remove('is-stacked');
-		row.classList.add('row');
-		row.querySelector('.segmented-control').classList.add('segmented');
 	});
 	const transformGlyphs = {
 		alignLeft: 'align-left', alignCenterX: 'align-center-x', alignRight: 'align-right',
@@ -1898,7 +1890,7 @@ function redesignTransformFragment(fragment) {
 		button.setAttribute('aria-label', label);
 	});
 
-	const flipControl = panelDiv('segmented-control segmented transform-flip-control');
+	const flipControl = panelDiv('segmented-control transform-flip-control');
 	flip.querySelectorAll('.property-toggle-list > label').forEach((option, index) => {
 		const input = option.querySelector('input');
 		const visible = option.querySelector('.property-label');

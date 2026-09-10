@@ -45,7 +45,7 @@
 //   F  a container with nothing visible inside it collapses (see :has, below)
 // ===========================================================================
 
-:is(.design-panel, .mobile-settings-drawer) {
+.property-panel {
 	// ---- geometry --------------------------------------------------------
 	--property-row-h: 26px;
 	--property-pad: 8px;
@@ -86,7 +86,7 @@
 	--switch-h: 18px;
 }
 
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+.property-panel .panel-redesign {
 	--property-row-gap: 4px;
 	--property-block-gap: 8px;
 	--property-group-gap: 14px;
@@ -101,8 +101,8 @@
 // ===== Typography: six levels, one of which shouts =========================
 
 .property-group-label,
-:is(.design-panel, .mobile-settings-drawer) .subsection-section-group > .subsection-title,
-:is(.design-panel, .mobile-settings-drawer) .effects-stack > .subsection-title {
+.property-panel .subsection-section-group > .subsection-title,
+.property-panel .effects-stack > .subsection-title {
 	font-size: 10.5px;
 	font-weight: var(--font-weight-semibold);
 	letter-spacing: 0.09em;
@@ -112,7 +112,7 @@
 }
 
 .property-block-title,
-:is(.design-panel, .mobile-settings-drawer) .subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) > .subsection-title {
+.property-panel .subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) > .subsection-title {
 	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-semibold);
 	letter-spacing: 0;
@@ -124,7 +124,7 @@
 // A block title is text, not a padded header surface. Its parent establishes
 // the outer inset; the title-to-content relationship establishes vertical
 // separation regardless of which control follows it.
-:is(.design-panel, .mobile-settings-drawer) .property-block-title {
+.property-panel .property-block-title {
 	padding: 0;
 
 	+ * { margin-top: var(--spacing-sm); }
@@ -132,7 +132,7 @@
 
 // Rule C, in one place: everything below the group label is sentence case, so a
 // stray uppercase cannot creep back in feature by feature.
-:is(.design-panel, .mobile-settings-drawer) {
+.property-panel {
 	// ONE class for a set/group label. It insets itself, so it does not depend
 	// on being a direct child of any particular container - which is why
 	// "Dimensions", "Quick Scale" and "Options" had no gutter at all.
@@ -259,12 +259,12 @@
 // arbitrary. Here the box matches the control's visual weight; coarse pointers
 // get the taller target back, because that is an input-modality question rather
 // than a layout one.
-:is(.design-panel, .mobile-settings-drawer) input[type="range"] {
+.property-panel input[type="range"] {
 	height: 20px;
 }
 
 @media (pointer: coarse) {
-	:is(.design-panel, .mobile-settings-drawer) input[type="range"] { height: 28px; }
+	.property-panel input[type="range"] { height: 28px; }
 }
 
 // ===== R1: the property row ================================================
@@ -471,14 +471,14 @@
 }
 
 // Rule D, tier 2: a set-scoped reset sits at the right edge of its set label.
-:is(.design-panel, .mobile-settings-drawer) .has-set-reset {
+.property-panel .has-set-reset {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
 	gap: var(--spacing-sm);
 }
 
-:is(.design-panel, .mobile-settings-drawer) .property-set-reset {
+.property-panel .property-set-reset {
 	flex: 0 0 auto;
 	padding: 0;
 	font-size: var(--font-size-xs);
@@ -492,7 +492,7 @@
 
 // ===== Grouping: dividers, not boxes (rule B) ==============================
 
-:is(.design-panel, .mobile-settings-drawer) {
+.property-panel {
 	// L1 group: no box, a hairline above, gutter on its own header.
 	.subsection-content-group.subsection-section-group,
 	.subsection-content-group.effects-stack {
@@ -612,7 +612,7 @@
 // A sequence of peer blocks outside an accordion group (for example the
 // no-selection Quick Add and Project blocks) uses the same block rhythm
 // without inventing another card surface.
-:is(.design-panel, .mobile-settings-drawer) .property-block-list {
+.property-panel .property-block-list {
 	display: flex;
 	flex-direction: column;
 	gap: var(--property-block-gap);
@@ -622,7 +622,7 @@
 // Collapsed, a module is one line: switch, name, current value, chevron. The
 // summary is what makes that line worth reading.
 
-:is(.design-panel, .mobile-settings-drawer) {
+.property-panel {
 	// EVERY block gets the same surface. Which blocks are carded used to be a
 	// hardcoded list of feature classes ([data-effect-card], .transform-panel,
 	// .paint-slot-card), so Transform and Effects had cards while Font,
@@ -774,7 +774,7 @@
 // controls inherit correct clearance without another selector. A trailing
 // Actions primitive already owns equal padding on all four sides, so the body
 // transfers its closing edge to Actions instead of stacking two gutters.
-:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:not(:empty) {
+.property-panel .property-card > .subsection-card-body:not(:empty) {
 	//padding-bottom: var(--property-gutter);
 	gap: var(--property-row-gap);
 }
@@ -782,44 +782,44 @@
 
 
 
-:is(.design-panel, .mobile-settings-drawer) .property-card[data-collapsible] > .subsection-card-body:not(:empty) {
+.property-panel .property-card[data-collapsible] > .subsection-card-body:not(:empty) {
 	gap: 0;
 }
 
 // A titled card gets its opening edge from the title. An untitled card gets
 // the same edge from its body, so moving content between cards does not change
 // its internal geometry.
-:is(.design-panel, .mobile-settings-drawer) .property-card:not(:has(> .subsection-title)) > .subsection-card-body:not(:empty) {
+.property-panel .property-card:not(:has(> .subsection-title)) > .subsection-card-body:not(:empty) {
 	padding-top: var(--property-gutter);
 }
 
 // A single row already has the control height needed to clear the border.
 // Extra block padding makes these compact cards (Opacity, a lone toggle, etc.)
 // visually taller on one edge for no additional hierarchy.
-:is(.design-panel, .mobile-settings-drawer) .property-card:not(:has(> .subsection-title)) > .subsection-card-body:has(> .property-row:only-child) {
+.property-panel .property-card:not(:has(> .subsection-title)) > .subsection-card-body:has(> .property-row:only-child) {
 	padding-block: 0;
 }
 
 // The card owns its closing edge. Notes may separate themselves from preceding
 // controls, but must not stack another trailing pad against the card border.
-:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body > .property-note:last-child {
+.property-panel .property-card > .subsection-card-body > .property-note:last-child {
 	padding-bottom: 0;
 }
 
-:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:has(> .property-actions:last-child) {
+.property-panel .property-card > .subsection-card-body:has(> .property-actions:last-child) {
 	padding-bottom: 0;
 }
 
 // A property block whose terminal component is Actions already owns its final
 // edge. Ordinary property blocks keep the card body's default closing inset.
-:is(.design-panel, .mobile-settings-drawer) .property-card > .subsection-card-body:has(
+.property-panel .property-card > .subsection-card-body:has(
 	> .property-block:last-child .property-actions:last-child) {
 	padding-bottom: 0;
 }
 
 // Effect modules use paint-slot-main as their body. It follows the same card
 // edge contract, including the gap before an edge-to-edge Advanced footer.
-:is(.design-panel, .mobile-settings-drawer) .property-module-content > .paint-slot-main:not(:empty) {
+.property-panel .property-module-content > .paint-slot-main:not(:empty) {
 	padding-bottom: var(--property-gutter);
 	padding-top: var(--property-gutter);
 }
@@ -851,7 +851,7 @@
 // ===== Asset summary =======================================================
 // One row inside a module: thumbnail, name, Change.
 
-:is(.design-panel, .mobile-settings-drawer) {
+.property-panel {
 	.asset-info {
 		--asset-summary-thumbnail-size: 40px;
 		gap: var(--spacing-xs);
@@ -942,7 +942,7 @@
 // Multi-select tokens, matching the filter chips' height and radius so the
 // sidebar has one selectable-token feel.
 
-:is(.design-panel, .mobile-settings-drawer) {
+.property-panel {
 	.selected-colors-display {
 		gap: var(--spacing-xs);
 		// Horizontal margin insets it; the block's gap handles the rest.
@@ -999,18 +999,18 @@
 // R6 as a card footer: an actions row that ends a card is lifted out of the
 // padded body (panel-renderer buildPanelItem) and sits edge-to-edge with a
 // hairline above it - the same structural contract as the Advanced disclosure.
-:is(.design-panel, .mobile-settings-drawer) .property-card > .property-actions {
+.property-panel .property-card > .property-actions {
 	border-top: 1px solid var(--color-border);
 }
 
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-card > .property-actions {
+.property-panel .panel-redesign .property-card > .property-actions {
 	border-top: 1px solid var(--color-border);
 	padding: var(--property-pad);
 }
 
 // ===== Advanced disclosure =================================================
 
-:is(.design-panel, .mobile-settings-drawer) .advanced-disclosure {
+.property-panel .advanced-disclosure {
 	margin: 0;
 	margin-top: var(--property-pad);
 	border-top: 1px solid var(--color-border);
@@ -1023,7 +1023,7 @@
 	}
 }
 
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+.property-panel .panel-redesign {
 	.advanced-disclosure-content > .property-set + .property-set {
 		border-top: 1px solid var(--color-border);
 		padding-top: var(--property-pad);
@@ -1141,7 +1141,7 @@
 // A container whose meaningful children are all hidden disappears entirely -
 // border, padding, heading and layout footprint.
 
-:is(.design-panel, .mobile-settings-drawer) {
+.property-panel {
 	.subsection-content-group:not(.subsection-section-group):not(.effects-stack):not([data-effect-card]):not(:has(> :not(.subsection-title):not([hidden]))),
 	.subsection-card-body:not(:has(> :not([hidden]))),
 	.paint-slot-main:not(:has(> :not([hidden]))),
@@ -1157,7 +1157,7 @@
 
 // ===== Shared Transform module ============================================
 
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+.property-panel .panel-redesign {
 	.transform-panel-title {
 		gap: var(--property-pad);
 
@@ -1250,7 +1250,7 @@
 	gap: var(--property-card-inset);
 }
 
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign > .section-content > .settings-subsection {
+.property-panel .panel-redesign > .section-content > .settings-subsection {
 	display: flex;
 	flex-direction: column;
 	padding: 0;
@@ -1261,7 +1261,7 @@
 // collapsible sections get from `.design-panel > .section.collapsible-section >
 // .section-content` — one column, gutter owned by the rows, a trailing edge —
 // so it is not a special case with its own padding rhythm.
-:is(.design-panel, .mobile-settings-drawer) .section.panel-redesign:not(.collapsible-section) > .section-content {
+.property-panel .section.panel-redesign:not(.collapsible-section) > .section-content {
 	display: flex;
 	flex-direction: column;
 	gap: var(--property-card-inset);
@@ -1312,7 +1312,7 @@
 }
 
 @container propertypanel (max-width: 280px) {
-	:is(.design-panel, .mobile-settings-drawer) {
+	.property-panel {
 		--property-label-col: 62px;
 		--property-value-col: 40px;
 	}
@@ -1324,21 +1324,21 @@
 // handle, not the viewport) and set on the row itself so both the base and
 // `.panel-redesign` (`--property-label-col: var(--property-label-w)`) resolve it.
 @container propertypanel (min-width: 320px) {
-	:is(.design-panel, .mobile-settings-drawer) :is(.property-row, .property-pair-cell) {
+	.property-panel :is(.property-row, .property-pair-cell) {
 		--property-label-w: 92px;
 		--property-label-col: 92px;
 	}
 }
 
 @container propertypanel (min-width: 400px) {
-	:is(.design-panel, .mobile-settings-drawer) :is(.property-row, .property-pair-cell) {
+	.property-panel :is(.property-row, .property-pair-cell) {
 		--property-label-w: 118px;
 		--property-label-col: 118px;
 	}
 }
 
 @container propertypanel (min-width: 480px) {
-	:is(.design-panel, .mobile-settings-drawer) :is(.property-row, .property-pair-cell) {
+	.property-panel :is(.property-row, .property-pair-cell) {
 		--property-label-w: 144px;
 		--property-label-col: 144px;
 	}
@@ -1398,7 +1398,7 @@ body.is-resizing-panel {
 // the same; what distinguishes them is where they sit and what they sit beside,
 // not their weight.
 
-:is(.design-panel, .mobile-settings-drawer) {
+.property-panel {
 	.panel-group-chevron,
 	.subsection-chevron,
 	.advanced-disclosure-chevron {
@@ -1448,17 +1448,17 @@ body.is-resizing-panel {
 
 // A second action column only where two full labels actually fit.
 @container propertypanel (min-width: 380px) {
-	:is(.design-panel, .mobile-settings-drawer) .property-actions:not(.is-stacked) {
+	.property-panel .property-actions:not(.is-stacked) {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-actions:not(.is-stacked) {
+	.property-panel .panel-redesign .property-actions:not(.is-stacked) {
 		grid-template-columns: minmax(0, 1fr);
 	}
 
 	// `is-split` is an explicit opt-in to a two-up row (Open / Save Project,
 	// canvas Reset / Apply) — it keeps its two columns in the redesign panels.
-	:is(.design-panel, .mobile-settings-drawer) .panel-redesign .property-actions.is-split {
+	.property-panel .panel-redesign .property-actions.is-split {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
@@ -1472,7 +1472,7 @@ body.is-resizing-panel {
 // ===== An optionGroup rendered as a row ====================================
 // It carries .property-row now, so the row already applies the gutter - its
 // label must not apply it a second time.
-:is(.design-panel, .mobile-settings-drawer) .property-row {
+.property-panel .property-row {
 	> .property-label { padding-inline: 0; }
 
 	&.is-stacked > .property-label { grid-area: 1 / 1 / 2 / 2; }
@@ -1487,7 +1487,7 @@ body.is-resizing-panel {
 }
 
 // ===== A set-scoped reset is the same icon, one step quieter ==============
-:is(.design-panel, .mobile-settings-drawer) .property-set-reset {
+.property-panel .property-set-reset {
 	flex: 0 0 auto;
 	width: var(--property-revert-col);
 	height: var(--property-revert-col);
@@ -1497,9 +1497,9 @@ body.is-resizing-panel {
 // ===== Inline placeholders speak the panel's language =====================
 // Inline "None" placeholders are a separate R7 variant, not a full empty
 // state squeezed into a row. Their visibility is still manager-controlled.
-:is(.design-panel, .mobile-settings-drawer) .property-empty-inline:not(.visible) { display: none; }
+.property-panel .property-empty-inline:not(.visible) { display: none; }
 
-:is(.design-panel, .mobile-settings-drawer) .property-empty-inline.visible {
+.property-panel .property-empty-inline.visible {
 	display: inline-flex;
 	align-items: center;
 	min-height: var(--property-row-h);
@@ -1521,7 +1521,7 @@ body.is-resizing-panel {
 // slot. Several places were adding their own horizontal margin on top of the
 // gutter the row already applies, leaving it inset twice and short of full
 // width.
-:is(.design-panel, .mobile-settings-drawer) {
+.property-panel {
 	// A true segmented control is one connected, non-wrapping row. Controls with
 	// too many choices use `.choice-grid` instead; wrapping a joined control
 	// creates ambiguous borders and uneven final rows.
@@ -1589,7 +1589,7 @@ body.is-resizing-panel {
 
 // P-Text opts into the redesign vocabulary without changing the established
 // geometry of the remaining property panels.
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+.property-panel .panel-redesign {
 	.subsection-content-group.subsection-section-group,
 	.subsection-content-group.effects-stack { gap: 0; }
 
@@ -1899,7 +1899,7 @@ body.is-resizing-panel {
 // A chip is a token: swatch, value, remove. It reads as one object rather than
 // three loose parts, and its remove control behaves like every other icon
 // button in the panel.
-:is(.design-panel, .mobile-settings-drawer) .selected-color-chip {
+.property-panel .selected-color-chip {
 	background: var(--color-bg-secondary);
 	border: 1px solid var(--color-border);
 	transition: border-color var(--transition-fast), background-color var(--transition-fast);
@@ -1934,7 +1934,7 @@ body.is-resizing-panel {
 // weight. Same tiny breakpoint as the base pair stack — above it, pairs keep the
 // label beside the inputs like every other row.
 @container propertypanel (max-width: 240px) {
-	:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+	.property-panel .panel-redesign {
 		.property-row.is-pair {
 			grid-template-columns: minmax(0, 1fr);
 			row-gap: var(--spacing-2xs);
@@ -1956,18 +1956,26 @@ body.is-resizing-panel {
 
 
 
-// RYAN'S STYLES -- DO NOT TOUCH! THIS IS THE DIRECTION WE ARE GOING
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+// ===== The redesign: card surfaces, rhythm, footers ========================
+// The settled overrides for the schema-rendered panels. Cards are flat
+// (no interior padding, primary ground); groups are divided by a single
+// hairline between `.property-set`s rather than boxed or gapped; footers sit
+// edge-to-edge on the card, except the layer-effects footer which floats.
+// This is the canonical direction — feature sheets defer to it.
 
-	.settings-subsection {
-		gap: calc(var(--property-card-inset) * 1.5);
-	}
+.property-panel .panel-redesign {
+
+	// ---- vertical rhythm -------------------------------------------------
+	.settings-subsection { gap: calc(var(--property-card-inset) * 1.5); }
+	.panel-group-blocks { gap: var(--property-pad); }
+	.transform-pair-row > .property-pair { gap: var(--spacing-xs); }
 
 	.property-note {
 		padding-top: 0;
 		padding-bottom: 0;
 	}
 
+	// ---- card surfaces & titles ----------------------------------------
 	.subsection-title {
 		height: 34px;
 		min-height: 34px;
@@ -1984,53 +1992,57 @@ body.is-resizing-panel {
 		background: var(--color-bg-primary);
 	}
 
-	.transform-pair-row > .property-pair {
-		gap: var(--spacing-xs);
+	.property-module-content { border: none; }
+
+	// The transform grid and paint-slot body are flat panels: no interior
+	// padding, no gap (the per-`.property-set` hairline is the whole
+	// separation). The paint-slot keeps a hairline above it and the primary
+	// ground so it reads like the transform block.
+	.transform-grid {
+		gap: 0;
+		padding: 0;
+		border-top: none;
 	}
 
-	// transform footer
+	.paint-slot-main {
+		gap: 0;
+		padding: 0;
+		border-top: 1px solid var(--color-border);
+		background: var(--color-bg-primary);
+	}
+
+	// ---- `.property-set` is the divider unit --------------------------
+	// It owns its own vertical padding; a hairline separates one from the
+	// next; the set label is hidden (the redesign leans on card titles).
+	.property-set {
+		padding: var(--property-pad) 0;
+
+		+ .property-set { border-top: 1px solid var(--color-border); }
+
+		.property-set-label { display: none; }
+	}
+
+	// ---- footers -----------------------------------------------------
+	// A card footer sits edge-to-edge on the card with a hairline above it.
 	.property-actions {
 		background: var(--color-bg-card);
 		margin-top: 0;
 		padding: var(--property-pad);
 		border-top: 1px solid var(--color-border);
 
-		// layer effects just floats - no border or background
+		// The layer-effects footer floats instead — no surface, no divider.
 		&.layer-effects-actions {
 			background: none;
 			border-top: none;
 			padding: 0 var(--property-pad);
 		}
-
 	}
 
-	.transform-grid {
-		padding: 0;
-		border-top: none;
-	}
-
-	.property-module-content {
-		border: none;
-	}
-
-	// hide badges temporarily
-	.asset-info {
-		.asset-info-badges {
-			display: none;
-		}
-	}
-
-	.panel-group-blocks {
-		gap: var(--property-pad);
-	}
-
-	// footer
 	.advanced-disclosure {
 		margin-top: 0;
 
 		.advanced-disclosure-content {
 			padding: 0;
-			// padding: var(--property-pad) 0;
 			border-top: 1px solid var(--color-border);
 
 			> .property-set + .property-set {
@@ -2040,33 +2052,8 @@ body.is-resizing-panel {
 		}
 	}
 
-	// because we do border-top property-set now, we don't need the gap 
-	.transform-grid,
-	.paint-slot-main {
-		gap: 0;
-	}
-
-	// owns vertical spacing
-	.property-set {
-		padding: var(--property-pad) 0;
-
-		+ .property-set {
-		border-top: 1px solid var(--color-border);
-	}
-
-	// hiding it now just to see how it feels
-		.property-set-label {
-			display: none;
-		}
-	}
-
-	// make it look more like transform
-	.paint-slot-main {
-		// padding: var(--property-pad) 0;
-		padding: 0;
-		border-top: 1px solid var(--color-border);
-		background: var(--color-bg-primary);
-	}
+	// ---- temporary: badges hidden pending the attribution pass ---------
+	.asset-info .asset-info-badges { display: none; }
 }
 
 // ===== Panel-end action rows =============================================
@@ -2081,7 +2068,7 @@ body.is-resizing-panel {
 // Its horizontal inset matches the group label (`.subsection-section-group >
 // .subsection-title` = `--property-card-inset`), NOT the wider panel gutter —
 // so the buttons and any sibling note line up under "ACTIONS".
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign {
+.property-panel .panel-redesign {
 	.property-actions.section-actions {
 		background: none;
 		border: 0;
@@ -2100,7 +2087,7 @@ body.is-resizing-panel {
 // The Palette (pixel effects) card is dense enough that its `.property-set`
 // group labels earn their keep — Colors / Dither / Pattern / Shimmer. Opt this
 // one card back into showing them (the redesign hides set labels by default).
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign .pixel-effects-card .property-set > .property-set-label {
+.property-panel .panel-redesign .pixel-effects-card .property-set > .property-set-label {
 	display: block;
 	padding-inline: var(--property-card-inset);
 }
@@ -2111,72 +2098,74 @@ body.is-resizing-panel {
 // wraps the scroll groups in `.panel-scroll-region`, tags header/footer groups
 // `.panel-sticky-header` / `.panel-sticky-footer`, and stamps `.has-scroll-region`
 // on the section. First user: Auto Glitter.
-.section.has-scroll-region > .section-content { padding: 0; }
-.section.has-scroll-region.is-open > .section-content.visible { overflow: hidden; }
+.section.has-scroll-region {
+	> .section-content { padding: 0; }
+	&.is-open > .section-content.visible { overflow: hidden; }
 
-
-.design-panel > .section.has-scroll-region.collapsible-section.is-open:not(.main-section) > .section-content.visible {
-	    scrollbar-gutter: auto;
-		padding: 0;
-}
-
-.section.has-scroll-region > .section-content .settings-subsection {
-	display: flex;
-	height: 100%;
-	min-height: 0;
-	flex-direction: column;
-	gap: 0;
-	overflow: hidden;
-
-
-	> .panel-sticky-header,
-	> .panel-sticky-footer { flex: 0 0 auto; }
-
-	> .panel-sticky-header {
+	// The one scrolling middle: a fixed header and/or footer band around a
+	// `.panel-scroll-region` that takes the slack and scrolls.
+	> .section-content .settings-subsection {
 		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-sm);
-		padding: var(--spacing-md);
-		border-bottom: 1px solid var(--color-border);
-	}
-
-	> .panel-sticky-footer {
-		padding: 0;
-		border-top: 1px solid var(--color-border);
-		padding: var(--property-pad) 0;
-	}
-
-	> .panel-scroll-region {
-		display: flex;
-		width: 100%;
-		min-width: 0;
-		max-width: 100%;
+		height: 100%;
 		min-height: 0;
-		flex: 1 1 auto;
 		flex-direction: column;
-		// The scroll-region groups keep the inter-group rhythm they'd have in a
-		// plain `.settings-subsection`.
-		gap: calc(var(--property-card-inset) * 1.5);
-		padding: 0;
-		overflow-x: hidden;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		scrollbar-gutter: stable;
+		gap: 0;
+		overflow: hidden;
 
-		padding-bottom: var(--property-pad);
+		> .panel-sticky-header,
+		> .panel-sticky-footer { flex: 0 0 auto; }
 
-		> * {
+		> .panel-sticky-header {
+			display: flex;
+			flex-direction: column;
+			gap: var(--spacing-sm);
+			padding: var(--spacing-md);
+			border-bottom: 1px solid var(--color-border);
+		}
+
+		> .panel-sticky-footer {
+			border-top: 1px solid var(--color-border);
+			padding: var(--property-pad) 0;
+		}
+
+		> .panel-scroll-region {
+			display: flex;
+			width: 100%;
 			min-width: 0;
 			max-width: 100%;
+			min-height: 0;
+			flex: 1 1 auto;
+			flex-direction: column;
+			// The scroll-region groups keep the inter-group rhythm they'd have in a
+			// plain `.settings-subsection`.
+			gap: calc(var(--property-card-inset) * 1.5);
+			padding: 0 0 var(--property-pad);
+			overflow-x: hidden;
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			scrollbar-gutter: stable;
+
+			> * {
+				min-width: 0;
+				max-width: 100%;
+			}
 		}
 	}
+}
+
+// Deliberately narrower than the `.section.has-scroll-region` rules above:
+// only the DESIGN-panel accordion has an open collapsible section that must
+// drop its scrollbar gutter (the mobile drawer never nests these).
+.design-panel > .section.has-scroll-region.collapsible-section.is-open:not(.main-section) > .section-content.visible {
+	scrollbar-gutter: auto;
+	padding: 0;
 }
 
 // ===== Auto Glitter: the few section-specific overrides. The sticky-header /
 // scroll-region / sticky-footer layout is now the generic
 // `.settings-subsection.has-scroll-region` block above; the scroll-region
 // internals, the colour-match list and drag states live in panels/_effects.scss.
-:is(.design-panel, .mobile-settings-drawer) .panel-redesign.auto-glitter-settings-section {
+.property-panel .panel-redesign.auto-glitter-settings-section {
 	// The preview-mode toggle spans the panel — it's a mode switch, not a
 	// property control inset by the gutter.
 	.auto-glitter-preview-card .segmented-control {

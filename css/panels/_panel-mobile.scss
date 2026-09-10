@@ -1,0 +1,27 @@
+@use '../mixins' as *;
+
+// ===========================================================================
+// PANEL SHELL — mobile overrides
+// ---------------------------------------------------------------------------
+// The handful of shell tweaks that only apply on the mobile breakpoint: no
+// status bar, no empty-state min-height, and no window rim on the panel once
+// it is a full-bleed drawer.
+// ===========================================================================
+
+@include mobile {
+	.status-bar {
+		display: none;
+	}
+
+	.section.welcome-section > .section-content > .property-empty,
+	.section.base-layer-settings-section > .section-content > .property-empty,
+	.section.no-layer-settings-section > .section-content > .property-empty {
+		min-height: unset;
+	}
+
+	body.layersOpen .main-content > .layers-panel,
+	body.designOpen .main-content > .design-panel {
+		border: 0;
+		box-shadow: none;
+	}
+}

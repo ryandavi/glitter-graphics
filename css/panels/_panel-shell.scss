@@ -1,0 +1,166 @@
+@use '../mixins' as *;
+
+// ===========================================================================
+// PANEL SHELL
+// ---------------------------------------------------------------------------
+// The design/layers sidebar chrome: the panel box itself, the tool rail, and
+// the section-accordion mechanics (visibility, main-section stickiness,
+// collapsible open/close, the non-collapsible gallery sections). The property
+// vocabulary INSIDE a section lives in panels/_properties.scss.
+// ===========================================================================
+
+.design-panel,
+.layers-panel {
+	background: unset;
+	padding: var(--spacing-base);
+	gap: var(--spacing-base);
+	border: unset;
+}
+
+// The tool rail's box, layout and overflow/mask-fade treatment live together in
+// panels/_layout.scss alongside the other app-frame regions.
+
+.layers-panel > .section,
+.design-panel > .section {
+	border: 1px solid var(--color-window-border);
+	border-radius: var(--radius-panel);
+	overflow: hidden;
+	box-shadow: 0 2px 5px var(--color-shadow-strong);
+}
+
+.design-panel {
+	// Standalone Properties sections participate in the same visibility contract
+	// as gallery content: updateSidePanelUI owns the `.visible` class.
+	> .section:not(.visible) {
+		display: none;
+	}
+
+	> .section.main-section {
+		display: flex;
+		flex-direction: column;
+		flex: 0 0 auto;
+		min-height: 0;
+
+		&.is-open {
+			flex: 1 1 auto;
+
+			> .section-content.visible {
+				overflow: hidden;
+			}
+		}
+
+		> .section-header {
+			position: sticky;
+			top: 0;
+			z-index: 5;
+		}
+
+		> .section-content {
+			padding: 0;
+			min-height: 0;
+
+			&.visible {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+			}
+
+			> .section-content {
+				flex-shrink: 0;
+			}
+		}
+
+		&.collapsible-section > .section-content {
+			padding: 0;
+		}
+	}
+
+	> .section {
+		> .section-content {
+			padding: 0;
+		}
+
+		&.collapsible-section {
+			flex-shrink: 0;
+
+			// Horizontal inset is owned by the property gutter alone (see
+			// panels/_properties.scss). Padding here stacked on top of it and put
+			// every control ~20px from the panel edge for no reason.
+			> .section-content {
+				// No top padding: the first group's own header supplies it, and
+				// doubling up left a dead band under every section header.
+				padding: 0 0 var(--spacing-sm);
+
+				&:not(.visible) {
+					display: none;
+				}
+			}
+
+			&.is-open > .section-content.visible {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
+			}
+
+			// An open settings section takes the remaining panel height and scrolls its
+			// own content, so long sections (Text Properties) can't push the other
+			// collapsed headers off screen.
+			&.is-open:not(.main-section) {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
+
+				> .section-header {
+					flex-shrink: 0;
+				}
+
+				> .section-content.visible {
+					flex: 1 1 auto;
+					min-height: 0;
+					overflow-y: auto;
+					overscroll-behavior: contain;
+					scrollbar-gutter: stable;
+				}
+			}
+		}
+
+		&:not(.collapsible-section) {
+			display: flex;
+			flex-direction: column;
+
+			> .section-content {
+				flex: 1 1 auto;
+				min-height: 0;
+				min-width: 0;
+				display: flex;
+				flex-direction: column;
+				background-color: var(--color-bg-primary);
+
+				// gallery-search-section
+				> .section-content {
+					flex-shrink: 0;
+				}
+			}
+		}
+	}
+
+	> .section:is(.main-section, :not(.collapsible-section)) > .section-content > .asset-options {
+		flex: 1 1 auto;
+		min-height: 0;
+		min-width: 0;
+		overflow: hidden;
+
+		&[data-gallery-content="shapes"] {
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			scrollbar-gutter: stable;
+		}
+
+		.asset-browser-content {
+			overflow-y: auto;
+			scrollbar-gutter: stable;
+		}
+	}
+}

@@ -274,3 +274,83 @@
 		text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
 	}
 }
+
+/* ===== SEARCH / FILTER SURFACE ===== */
+// The collapsible search + filters strip above the sticker / glitter / brush-tip
+// galleries, and the show/hide choreography between the filter surface and the
+// asset grid below it. (The glitter-specific search chrome is the .glitter-search
+// block higher in this file.)
+
+.sticker-search,
+.glitter-search {
+	overflow: hidden;
+	height: 100%;
+	border-bottom: 1px solid var(--color-border);
+
+	> .search-toggle-row {
+		flex-shrink: 0;
+	}
+
+	> .filters-container {
+		flex: 1;
+		min-height: 0;
+		flex-direction: column;
+		gap: 0;
+
+		> .filters-container-inner {
+			flex: 1;
+			min-height: 0;
+			max-height: none;
+			overflow-y: auto;
+		}
+	}
+}
+
+@keyframes filter-surface-enter {
+	from {
+		opacity: 0;
+		transform: translateY(var(--spacing-xs));
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.design-gallery-content {
+	> .gallery-search-section.visible {
+		display: flex;
+		flex: 0 0 auto;
+		flex-direction: column;
+		overflow: hidden;
+
+		&:not(.filters-open) {
+			> .glitter-search { height: auto; }
+		}
+
+		&.filters-open {
+			flex: 1 1 auto;
+			min-height: 0;
+		}
+	}
+
+	> [data-gallery-search="glitter"].filters-open ~ [data-gallery-content="glitter"],
+	> [data-gallery-search="stickers"].filters-open ~ [data-gallery-content="stickers"],
+	> [data-gallery-search="brush-tips"].filters-open ~ [data-gallery-content="brush-tips"] {
+		display: none;
+	}
+
+	> [data-gallery-search="glitter"].filters-returning ~ [data-gallery-content="glitter"],
+	> [data-gallery-search="stickers"].filters-returning ~ [data-gallery-content="stickers"],
+	> [data-gallery-search="brush-tips"].filters-returning ~ [data-gallery-content="brush-tips"] {
+		animation: filter-surface-enter var(--transition-fast) ease-out;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.filters-container.visible,
+	.design-gallery-content > .gallery-search-section.filters-returning ~ .asset-options {
+		animation: none;
+	}
+}
