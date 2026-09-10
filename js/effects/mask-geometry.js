@@ -59,17 +59,7 @@ function createDilatedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 	if (nextRadius <= 0) return sourceCanvas;
 
 	if (edgeStyle === 'hard') {
-		const horizontal = createMaskCanvasLike(sourceCanvas);
-		const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true, alpha: true });
-		for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
-			horizontalCtx.drawImage(sourceCanvas, offsetX, 0);
-		}
-		const canvas = createMaskCanvasLike(sourceCanvas);
-		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-		for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
-			ctx.drawImage(horizontal, 0, offsetY);
-		}
-		return canvas;
+		return createCrossMorphCanvas(sourceCanvas, nextRadius, 'dilate');
 	}
 
 	const canvas = createMaskCanvasLike(sourceCanvas);
@@ -86,24 +76,7 @@ function createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 	if (nextRadius <= 0) return sourceCanvas;
 
 	if (edgeStyle === 'hard') {
-		const horizontal = createMaskCanvasLike(sourceCanvas);
-		const horizontalCtx = horizontal.getContext('2d', { willReadFrequently: true, alpha: true });
-		horizontalCtx.drawImage(sourceCanvas, 0, 0);
-		horizontalCtx.globalCompositeOperation = 'destination-in';
-		for (let offsetX = -nextRadius; offsetX <= nextRadius; offsetX++) {
-			if (offsetX !== 0) horizontalCtx.drawImage(sourceCanvas, -offsetX, 0);
-		}
-		horizontalCtx.globalCompositeOperation = 'source-over';
-
-		const canvas = createMaskCanvasLike(sourceCanvas);
-		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-		ctx.drawImage(horizontal, 0, 0);
-		ctx.globalCompositeOperation = 'destination-in';
-		for (let offsetY = -nextRadius; offsetY <= nextRadius; offsetY++) {
-			if (offsetY !== 0) ctx.drawImage(horizontal, 0, -offsetY);
-		}
-		ctx.globalCompositeOperation = 'source-over';
-		return canvas;
+		return createCrossMorphCanvas(sourceCanvas, nextRadius, 'erode');
 	}
 
 	const canvas = createMaskCanvasLike(sourceCanvas);
@@ -115,6 +88,25 @@ function createErodedMaskCanvas(sourceCanvas, radius, edgeStyle = 'round') {
 	});
 	ctx.globalCompositeOperation = 'source-over';
 	return canvas;
+}
+
+function createCrossMorphCanvas(sourceCanvas, radius, operation) {
+	const buffers = [createMaskCanvasLike(sourceCanvas), createMaskCanvasLike(sourceCanvas)];
+	let current = sourceCanvas;
+	for (let step = 0; step < radius; step++) {
+		const canvas = buffers[step % buffers.length];
+		const ctx = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(current, 0, 0);
+		ctx.globalCompositeOperation = operation === 'erode' ? 'destination-in' : 'source-over';
+		ctx.drawImage(current, -1, 0);
+		ctx.drawImage(current, 1, 0);
+		ctx.drawImage(current, 0, -1);
+		ctx.drawImage(current, 0, 1);
+		ctx.globalCompositeOperation = 'source-over';
+		current = canvas;
+	}
+	return current;
 }
 
 function getMorphOffsets(widthPx) {

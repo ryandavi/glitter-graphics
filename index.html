@@ -1246,6 +1246,13 @@
 								<div id="exportDetailErrorRow"><dt>Maximum visual difference</dt><dd id="exportDetailError"></dd></div>
 							</dl>
 						</details>
+						<details class="export-optimization-details" id="exportAssetAnalysis" hidden>
+							<summary>
+								<span>Asset analysis</span>
+								<span class="export-details-chevron icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+							</summary>
+							<dl class="export-asset-analysis-list" id="exportAssetAnalysisList"></dl>
+						</details>
 					</div>
 				</div>
 
@@ -1757,7 +1764,7 @@
 								</label>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Combines frames that look alike. Smaller-file fidelity levels may also align compatible source timing to avoid excessively long loops.</div>
+						<div class="settings-row-label-desc">Combines frames that look alike and may align nearby source rates to avoid excessively long loops.</div>
 					</div>
 
 					<div class="settings-row">
@@ -2402,7 +2409,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=ebc0a892"></script>
+	<script src="js/core/config.js?v=891b97e3"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
@@ -2422,7 +2429,7 @@
 	<script src="js/ui/gallery.js?v=9568db2b"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
 	<script src="js/effects/mask-raster.js?v=58feb186"></script>
-	<script src="js/effects/mask-geometry.js?v=06dda908"></script>
+	<script src="js/effects/mask-geometry.js?v=286b6e97"></script>
 	<script src="js/effects/preview-export-parity.js?v=10823f7f"></script>
 	<script src="js/effects/palette-analysis.js?v=0394371e"></script>
 	<script src="js/effects/pixel-effects.js?v=c68cfdfc"></script>
@@ -2455,9 +2462,9 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
-	<script src="js/classes/ExportTimeline.js?v=e6b2d06e"></script>
+	<script src="js/classes/ExportTimeline.js?v=5a31141b"></script>
 	<script src="js/classes/GifPalette.js?v=aece541e"></script>
-	<script src="js/classes/GifExporter.js?v=e6933c87"></script>
+	<script src="js/classes/GifExporter.js?v=6d34c750"></script>
 	<script src="js/classes/Mp4Exporter.js?v=39ed19d0"></script>
 	<script src="js/classes/ViewportManager.js?v=2a060275"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>

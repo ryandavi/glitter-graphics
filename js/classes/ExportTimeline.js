@@ -1,7 +1,8 @@
 // Export timeline planning primitives. Loaded before GifExporter and Mp4Exporter.
 class AnimationSourceTimeline {
-	constructor({ key, ownerLayerId = null, effectSlot = null, frames = [], frameDurations = [], fallbackDuration = 100 }) {
+	constructor({ key, label = null, ownerLayerId = null, effectSlot = null, frames = [], frameDurations = [], fallbackDuration = 100 }) {
 		this.key = key;
+		this.label = label;
 		this.ownerLayerId = ownerLayerId;
 		this.effectSlot = effectSlot;
 		this.frames = frames;
@@ -214,13 +215,14 @@ class CompositeTimelinePlanner {
 		clusters.forEach((cluster) => {
 			const sourceCadences = [...new Set(cluster.map((entry) => entry.cadence))];
 			if (sourceCadences.length < 2) return;
-			// The upper median avoids speeding up a source on a two-rate tie. Using
-			// unique rates prevents duplicate layers from changing the shared clock.
-			const cadence = sourceCadences[Math.floor(sourceCadences.length / 2)];
+			// The weighted median minimizes how many source timelines are retimed.
+			// The upper entry on an even split selects the slower cadence.
+			const cadence = cluster[Math.floor(cluster.length / 2)].cadence;
 			cluster.forEach(({ timeline, index }) => {
 				if (timeline.frameDurations[0] === cadence) return;
 				replacements.set(index, new AnimationSourceTimeline({
 					key: timeline.key,
+					label: timeline.label,
 					ownerLayerId: timeline.ownerLayerId,
 					effectSlot: timeline.effectSlot,
 					frames: timeline.frames,
@@ -333,6 +335,7 @@ class CompositeTimelinePlanner {
 			);
 			replacements.set(layer.timeline, new AnimationSourceTimeline({
 				key: layer.timeline.key,
+				label: layer.timeline.label,
 				ownerLayerId: layer.timeline.ownerLayerId,
 				effectSlot: layer.timeline.effectSlot,
 				frames: layer.timeline.frames,
@@ -513,12 +516,36 @@ class CompositeTimelinePlanner {
 		timelines.forEach((timeline) => {
 			sourceFrameSelections.set(timeline.key, reduced.selections.map((selection) => selection.get(timeline.key)?.frameIndex ?? 0));
 		});
+		const resolvedTimelines = new Map(timelines.map((timeline) => [timeline.key, timeline]));
+		const sourceAnalysis = sourceTimelines
+			.filter((timeline) => Number.isFinite(timeline.cycleDuration))
+			.map((timeline) => {
+				const resolved = resolvedTimelines.get(timeline.key) || timeline;
+				const nativeFps = timeline.frames.length * 1000 / timeline.cycleDuration;
+				const resolvedFps = resolved.frames.length * 1000 / resolved.cycleDuration;
+				const timingChanged = timeline.frameDurations.some((duration, index) =>
+					Math.abs(duration - resolved.frameDurations[index]) >= 0.01);
+				return {
+					key: timeline.key,
+					label: timeline.label || String(timeline.key),
+					ownerLayerId: timeline.ownerLayerId,
+					effectSlot: timeline.effectSlot,
+					frameCount: timeline.frames.length,
+					nativeFps,
+					resolvedFps,
+					nativeCycleDuration: timeline.cycleDuration,
+					resolvedCycleDuration: resolved.cycleDuration,
+					variableTiming: new Set(timeline.frameDurations).size > 1,
+					timingChanged
+				};
+			});
 
 		return {
 			frames: reduced.frames,
 			frameDurations: reduced.frameDurations,
 			totalDuration,
 			sourceFrameSelections,
+			sourceAnalysis,
 			loopSeam: {
 				exact: loop.exact,
 				error: loop.seamError,

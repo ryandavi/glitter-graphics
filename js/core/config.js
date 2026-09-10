@@ -150,7 +150,7 @@ function deepFreeze(value) {
 const EXPORT_FIDELITY_STOPS = [
 	{ label: 'Exactly as previewed', visualError: 0, maxSamplingFps: 30, rateReconciliation: false },
 	{ label: 'High detail', visualError: 0.004, maxSamplingFps: 30, rateReconciliation: false },
-	{ label: 'Balanced', visualError: 0.008, maxSamplingFps: 24, rateReconciliation: false },
+	{ label: 'Balanced', visualError: 0.008, maxSamplingFps: 24, rateReconciliation: true },
 	{ label: 'Small file', visualError: 0.02, maxSamplingFps: 15, rateReconciliation: true },
 	{ label: 'Smallest file', visualError: 0.04, maxSamplingFps: 12, rateReconciliation: true }
 ];
@@ -1716,7 +1716,7 @@ const PANEL_SCHEMAS = {
 				toggle: true, sourceLabel: 'Source', modes: ['glitter', 'solid'], activeMode: 'glitter',
 				color: '#000000', chipTitle: 'Choose shadow source',
 				primaryIds: { scale: 'textShadowScale', scaleRow: 'textShadowScaleRow', opacity: 'textShadowOpacity' },
-				pre: [{ kind: 'numberPair', label: 'Offset', items: [
+				afterSource: [{ kind: 'numberPair', label: 'Offset', items: [
 					{ id: 'textShadowOffsetX', slider: 'shadowOffsetX', mark: 'X', label: 'Offset X' },
 					{ id: 'textShadowOffsetY', slider: 'shadowOffsetY', mark: 'Y', label: 'Offset Y' }
 				] }]

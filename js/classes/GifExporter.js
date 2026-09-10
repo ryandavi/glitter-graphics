@@ -1318,6 +1318,7 @@ class GifExporter {
 			const animation = GlitterPixelEffects.getShimmerAnimation(settings.dither.algorithm, CONFIG.tools.pixelEffects);
 			sourceTimelines.push(new AnimationSourceTimeline({
 				key: '__base_dither',
+				label: 'Base image shimmer',
 				ownerLayerId: shimmerBase.id,
 				frames: Array.from({ length: animation.frames }, (_value, index) => index),
 				fallbackDuration: CONFIG.tools.pixelEffects.animation.frameDurationMs
@@ -1326,6 +1327,7 @@ class GifExporter {
 		if (watermark?.isAnimated) {
 			sourceTimelines.push(new AnimationSourceTimeline({
 				key: '__watermark',
+				label: 'Animated watermark',
 				frames: watermark.frames,
 				frameDurations: watermark.frameDelays || [],
 				fallbackDuration: watermark.frameDelay || exportSettings.frameDelay
@@ -1948,6 +1950,7 @@ class GifExporter {
 			flattenedFrameMap.set(mapKey, flattenedFrames);
 			sourceTimelines.push(new AnimationSourceTimeline({
 				key: mapKey,
+				label: name,
 				ownerLayerId: String(mapKey).split(':')[0],
 				effectSlot: String(mapKey).includes(':') ? String(mapKey).split(':').at(-1) : null,
 				frames: flattenedFrames,
@@ -1985,10 +1988,11 @@ class GifExporter {
 			ensureTextFont: async () => {}
 		});
 		const timelines = [];
-		const collectTimeline = (key, animation) => {
+		const collectTimeline = (key, animation, name) => {
 			if (!animation?.frames?.length) return;
 			timelines.push(new AnimationSourceTimeline({
 				key,
+				label: name,
 				frames: animation.frames,
 				frameDurations: animation.frameDelays || [],
 				fallbackDuration: animation.frameDelay || fallbackDuration
@@ -2433,6 +2437,8 @@ class GifExporter {
 		const reductionSummary = document.getElementById('exportReductionSummary');
 		if (reductionSummary) {
 			const reduction = timelinePlan?.reduction;
+			const sourceAnalysis = timelinePlan?.sourceAnalysis || [];
+			const hasAssetAnalysis = sourceAnalysis.length > 0;
 			const pixelRemovedFrames = reduction
 				? reduction.framesRemoved
 				: 0;
@@ -2449,9 +2455,34 @@ class GifExporter {
 					|| !reduction.durationPreserved
 			));
 			const optimizationDetails = document.getElementById('exportOptimizationDetails');
-			reductionSummary.hidden = !hasReduction && !hasPlanWarning;
+			const assetAnalysis = document.getElementById('exportAssetAnalysis');
+			const assetAnalysisList = document.getElementById('exportAssetAnalysisList');
+			reductionSummary.hidden = !hasReduction && !hasPlanWarning && !hasAssetAnalysis;
 			optimizationDetails.hidden = !hasReduction;
 			optimizationDetails.open = false;
+			assetAnalysis.hidden = !hasAssetAnalysis;
+			assetAnalysis.open = false;
+			assetAnalysisList.replaceChildren();
+			const groupedAssets = new Map();
+			sourceAnalysis.forEach((asset) => {
+				const groupKey = [asset.label, asset.frameCount, asset.nativeFps.toFixed(3), asset.resolvedFps.toFixed(3), asset.resolvedCycleDuration].join(':');
+				const group = groupedAssets.get(groupKey);
+				if (group) group.uses++;
+				else groupedAssets.set(groupKey, { ...asset, uses: 1 });
+			});
+			groupedAssets.forEach((asset) => {
+				const row = document.createElement('div');
+				const name = document.createElement('dt');
+				const value = document.createElement('dd');
+				const nativeRate = `${asset.nativeFps.toFixed(1)} fps`;
+				const resolvedRate = `${asset.resolvedFps.toFixed(1)} fps`;
+				const rate = asset.variableTiming ? `${nativeRate} average` : nativeRate;
+				const timing = asset.timingChanged ? `${rate} → ${resolvedRate}` : rate;
+				name.textContent = asset.uses > 1 ? `${asset.label} ×${asset.uses}` : asset.label;
+				value.textContent = `${asset.frameCount} frames · ${timing} · ${(asset.resolvedCycleDuration / 1000).toFixed(2)} s loop`;
+				row.append(name, value);
+				assetAnalysisList.append(row);
+			});
 			if (!reductionSummary.hidden) {
 				const title = document.getElementById('exportReductionTitle');
 				const summary = document.getElementById('exportReductionText');
@@ -2478,7 +2509,9 @@ class GifExporter {
 					document.getElementById('exportDetailError').textContent = `${(reduction.maximumVisualError * 100).toFixed(2)}%`;
 					document.getElementById('exportDetailErrorRow').hidden = reduction.nearDuplicatesMerged === 0;
 				} else {
-					summary.textContent = '';
+					summary.textContent = hasAssetAnalysis
+						? `${sourceAnalysis.length} animated ${sourceAnalysis.length === 1 ? 'asset' : 'assets'} contributed to this export.`
+						: '';
 				}
 
 				const planMessages = [];

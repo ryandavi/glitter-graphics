@@ -1129,6 +1129,17 @@ body.modal-open {
 					font-weight: 600;
 					white-space: nowrap;
 				}
+
+				&.export-asset-analysis-list {
+					grid-template-columns: 1fr;
+
+					>div { align-items: flex-start; }
+
+					dd {
+						white-space: normal;
+						text-align: right;
+					}
+				}
 			}
 		}
 

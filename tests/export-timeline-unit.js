@@ -234,7 +234,8 @@ async function main() {
 		maxSamplingFps: 24,
 		preferredFrameBudget: 60,
 		visualErrorThreshold: 0,
-		rateReconciliation: { enabled: false },
+		normalizeCadenceGroups: true,
+		rateReconciliation: { enabled: true },
 		renderFrame: (_timestamp, selection) => {
 			const data = new Uint8ClampedArray(selection.size * 4);
 			[...selection.values()].forEach((selected, index) => {
@@ -244,16 +245,57 @@ async function main() {
 			return new ImageDataPolyfill(data, selection.size, 1);
 		}
 	});
-	assert(!balancedMixedRates.timingResolution.cadenceGroupsNormalized
+	assert(balancedMixedRates.timingResolution.cadenceGroupsNormalized
 		&& !balancedMixedRates.timingResolution.rateReconciliation,
-		'Balanced mixed-rate planning changed native source timing.');
+		'Balanced mixed-rate planning did not limit reconciliation to the nearby steady sources.');
 	assert(balancedMixedRates.totalDuration === 6000
-		&& balancedMixedRates.reduction.originalFrameCount === 161
+		&& balancedMixedRates.reduction.originalFrameCount === 96
 		&& balancedMixedRates.reduction.renderedFrameCount === 60
-		&& balancedMixedRates.reduction.preRenderFramesSkipped === 101,
+		&& balancedMixedRates.reduction.preRenderFramesSkipped === 36,
 		'Mixed low-rate sources were not sampled evenly to the Balanced composition budget.');
 	assert(balancedMixedRates.frameDurations.reduce((sum, duration) => sum + duration, 0) === 6000,
 		'Balanced composition sampling changed the resolved loop duration.');
+
+	const balancedNearRates = await buildPlan([
+		timeline('three-at-ten-fps', 3, [100, 100, 100]),
+		timeline('three-at-eleven-fps', 3, [91, 91, 91])
+	], {
+		smartReduction: true,
+		normalizeCadenceGroups: true,
+		preRenderSampling: true,
+		preRenderBudgetMultiplier: 1,
+		preferredFrameBudget: 60,
+		visualErrorThreshold: 0
+	});
+	assert(balancedNearRates.timingResolution.cadenceGroupsNormalized
+		&& balancedNearRates.totalDuration === 300
+		&& balancedNearRates.reduction.outputFrameCount === 3,
+		'Balanced did not reconcile equal-length 10 fps and 11 fps sources to a compact three-frame loop.');
+	const retimedNearSource = balancedNearRates.sourceAnalysis.find((asset) => asset.key === 'three-at-eleven-fps');
+	assert(balancedNearRates.sourceAnalysis.length === 2
+		&& retimedNearSource.timingChanged
+		&& Math.abs(retimedNearSource.nativeFps - 10.989) < 0.001
+		&& retimedNearSource.resolvedFps === 10,
+		'Asset analysis did not report the resolved source cadence.');
+
+	const cadenceDominanceCases = [
+		{ label: '10 fps dominant', tenFps: 5, elevenFps: 3, expectedCadence: 100 },
+		{ label: '11 fps dominant', tenFps: 3, elevenFps: 5, expectedCadence: 91 },
+		{ label: 'even split', tenFps: 4, elevenFps: 4, expectedCadence: 100 }
+	];
+	for (const testCase of cadenceDominanceCases) {
+		const sources = [
+			...Array.from({ length: testCase.tenFps }, (_, index) => timeline(`ten-${index}`, 3, [100, 100, 100])),
+			...Array.from({ length: testCase.elevenFps }, (_, index) => timeline(`eleven-${index}`, 3, [91, 91, 91]))
+		];
+		const result = await buildPlan(sources, {
+			smartReduction: true,
+			normalizeCadenceGroups: true,
+			visualErrorThreshold: 0
+		});
+		assert(result.timingResolution.groups[0]?.cadence === testCase.expectedCadence,
+			`${testCase.label} did not select the source-weighted cadence.`);
+	}
 
 	const exactOnlyResult = reducer.reduce({
 		frames: [frame(50, 255, 4), nearMiddle, frame(90, 255, 4)],
