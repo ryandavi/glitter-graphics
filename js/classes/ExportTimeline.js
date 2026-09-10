@@ -143,7 +143,7 @@ class CompositeFrameReducer {
 			};
 
 			if (effectiveVisualErrorThreshold > 0) {
-				while (frames.length > 2 && mergeWithinThreshold(effectiveVisualErrorThreshold)) {}
+				while (frames.length > preferredFrameBudget && mergeWithinThreshold(effectiveVisualErrorThreshold)) {}
 			}
 
 			while (frames.length > hardFrameLimit && frames.length > 1) {
@@ -357,15 +357,23 @@ class CompositeTimelinePlanner {
 	_buildTimestamps(timelines, duration, maxSamplingFps) {
 		const minimumInterval = 1000 / Math.max(1, maxSamplingFps);
 		const candidates = new Set([0, duration]);
-		timelines.forEach((timeline) => timeline.boundariesUntil(duration).forEach((time) => candidates.add(time)));
-		const sorted = [...candidates].sort((left, right) => left - right);
-		const selected = [0];
-		for (let index = 1; index < sorted.length - 1; index++) {
-			if (sorted[index] - selected.at(-1) >= minimumInterval) selected.push(sorted[index]);
+		let needsSamplingGrid = false;
+		timelines.forEach((timeline) => {
+			if (timeline.frameDurations.some((frameDuration) => frameDuration < minimumInterval)) {
+				needsSamplingGrid = true;
+				return;
+			}
+			timeline.boundariesUntil(duration).forEach((time) => candidates.add(time));
+		});
+		// The sampling limit applies to each source, not to the combined event
+		// stream. Independent low-rate animations can change close together and
+		// both changes must survive or one layer visibly holds on its old frame.
+		if (needsSamplingGrid) {
+			for (let timestamp = minimumInterval; timestamp < duration; timestamp += minimumInterval) {
+				candidates.add(timestamp);
+			}
 		}
-		if (duration - selected.at(-1) < minimumInterval && selected.length > 1) selected.pop();
-		selected.push(duration);
-		return selected;
+		return [...candidates].sort((left, right) => left - right);
 	}
 
 	estimateLoop(timelines, fallbackDuration, maximumDuration, normalizeCadenceGroups = false, rateReconciliation = null) {
@@ -396,15 +404,34 @@ class CompositeTimelinePlanner {
 
 	_limitPreRenderCandidates(entries, budget) {
 		if (entries.length <= budget) return entries;
+		const totalDuration = entries.reduce((sum, entry) => sum + entry.duration, 0);
+		const interval = totalDuration / budget;
+		const integerInterval = Math.floor(interval);
+		const remainder = Number.isInteger(totalDuration) ? totalDuration - integerInterval * budget : 0;
 		const sampled = [];
+		let sourceIndex = 0;
+		let sourceStart = 0;
+		let assignedDuration = 0;
 		for (let bucket = 0; bucket < budget; bucket++) {
-			const start = Math.floor(bucket * entries.length / budget);
-			const end = Math.floor((bucket + 1) * entries.length / budget);
-			const middle = Math.floor((start + end - 1) / 2);
-			const entry = { ...entries[middle], selection: new Map(entries[middle].selection) };
-			entry.duration = entries.slice(start, end).reduce((sum, candidate) => sum + candidate.duration, 0);
-			sampled.push(entry);
+			const duration = Number.isInteger(totalDuration)
+				? integerInterval + (bucket < remainder ? 1 : 0)
+				: (bucket === budget - 1 ? totalDuration - assignedDuration : interval);
+			const sampleTime = assignedDuration + duration / 2;
+			while (sourceIndex < entries.length - 1
+				&& sampleTime >= sourceStart + entries[sourceIndex].duration) {
+				sourceStart += entries[sourceIndex].duration;
+				sourceIndex++;
+			}
+			sampled.push({
+				...entries[sourceIndex],
+				timestamp: entries[0].timestamp + assignedDuration,
+				duration,
+				selection: new Map(entries[sourceIndex].selection)
+			});
+			assignedDuration += duration;
 		}
+		const sampledDuration = sampled.reduce((sum, entry) => sum + entry.duration, 0);
+		sampled.at(-1).duration += totalDuration - sampledDuration;
 		return sampled;
 	}
 
@@ -423,7 +450,7 @@ class CompositeTimelinePlanner {
 	async plan(options) {
 		const sourceTimelines = options.timelines || [];
 		const fallbackDuration = AnimationSourceTimeline.normalizeDuration(options.fallbackDuration, 100);
-		const timingResolution = this._resolveCadenceClusters(sourceTimelines, options.smartReduction);
+		const timingResolution = this._resolveCadenceClusters(sourceTimelines, options.normalizeCadenceGroups);
 		let timelines = timingResolution.timelines;
 		let loop = this._chooseLoopDuration(timelines, fallbackDuration, options.maxLoopDurationMs);
 		let rateReconciliation = { timelines, reconciled: false, gridIntervalMs: null, layers: [] };
@@ -456,10 +483,11 @@ class CompositeTimelinePlanner {
 		const selectionDuplicatesMerged = originalFrameCount - entries.length;
 		entries = this._applyManualSampling(entries, Math.max(1, options.manualFrameSkip || 1));
 		const manuallySampledFrameCount = entries.length;
-		const preRenderBudget = options.smartReduction
+		const preRenderBudgetMultiplier = options.preRenderBudgetMultiplier || this.config.preRenderBudgetMultiplier;
+		const preRenderBudget = options.smartReduction && options.preRenderSampling
 			? Math.min(options.hardFrameLimit, Math.max(
 				options.preferredFrameBudget,
-				Math.ceil(options.preferredFrameBudget * this.config.preRenderBudgetMultiplier)
+				Math.ceil(options.preferredFrameBudget * preRenderBudgetMultiplier)
 			))
 			: options.hardFrameLimit;
 		entries = this._limitPreRenderCandidates(entries, preRenderBudget);
@@ -518,7 +546,7 @@ class CompositeTimelinePlanner {
 				framesRemoved: reduced.framesRemoved,
 				maximumVisualError: reduced.maximumVisualError,
 				effectiveVisualErrorThreshold: reduced.effectiveVisualErrorThreshold,
-				durationPreserved: totalDuration === loop.duration,
+				durationPreserved: Math.abs(totalDuration - loop.duration) < 0.001,
 				preferredBudgetMet: reduced.preferredBudgetMet,
 				budgetCompromiseRequired: reduced.budgetCompromiseRequired
 			}

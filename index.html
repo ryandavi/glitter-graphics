@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=68a5612f">
+	<link rel="stylesheet" href="css/style.css?v=53178747">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -1656,6 +1656,20 @@
 							<div class="settings-row" id="ditherEdgeProtectionRow" data-inactive-reason="Turn on Dithering to change this."><div class="settings-row-header"><label class="settings-row-label-main" for="exportDitherEdgeProtection">Edge Protection</label><div class="settings-row-control"><label class="switch" for="exportDitherEdgeProtection"><input type="checkbox" id="exportDitherEdgeProtection"><div class="slider round"></div></label></div></div><div class="settings-row-label-desc">Stops diffusion crossing strong boundaries, keeping text, transparency edges, and outlines cleaner.</div><div class="settings-row-reason" data-inactive-reason-text></div></div>
 						</div>
 					</div>
+
+					<div class="settings-row" data-export-format-section="gif" data-search-aliases="color quality encoder accuracy precision">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="exportQuality">Encoder Precision</label>
+							<div class="settings-row-control">
+								<select id="exportQuality">
+									<option value="1">Best (slowest)</option>
+									<option value="10">Good</option>
+									<option value="20">Fast</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">How carefully the GIF encoder matches subtle color differences. Higher precision takes longer to export but does not change the image dimensions.</div>
+					</div>
 				</div>
 
 				<div class="settings-group">
@@ -1743,7 +1757,7 @@
 								</label>
 							</div>
 						</div>
-						<div class="settings-row-label-desc">Aligns compatible source timing and combines frames that look alike, preserving the loop length while avoiding excessive calculations.</div>
+						<div class="settings-row-label-desc">Combines frames that look alike. Smaller-file fidelity levels may also align compatible source timing to avoid excessively long loops.</div>
 					</div>
 
 					<div class="settings-row">
@@ -1761,20 +1775,6 @@
 						<div class="settings-row-label-desc">An optional manual shortcut for smaller files. Skipped frame time is added to the frames that remain, so the speed and length stay the same.</div>
 					</div>
 						</div>
-					</div>
-
-					<div class="settings-row" data-export-format-section="gif" data-search-aliases="color quality encoder accuracy precision">
-						<div class="settings-row-header">
-							<label class="settings-row-label-main" for="exportQuality">Encoder Precision</label>
-							<div class="settings-row-control">
-								<select id="exportQuality">
-									<option value="1">Best (slowest)</option>
-									<option value="10">Good</option>
-									<option value="20">Fast</option>
-								</select>
-							</div>
-						</div>
-						<div class="settings-row-label-desc">How carefully the encoder matches subtle color differences. Higher precision takes longer to export but does not change the image dimensions.</div>
 					</div>
 				</div>
 				</div>
@@ -2402,7 +2402,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=928bd3db"></script>
+	<script src="js/core/config.js?v=ebc0a892"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
@@ -2455,9 +2455,9 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
-	<script src="js/classes/ExportTimeline.js?v=ff8aaf8f"></script>
+	<script src="js/classes/ExportTimeline.js?v=e6b2d06e"></script>
 	<script src="js/classes/GifPalette.js?v=aece541e"></script>
-	<script src="js/classes/GifExporter.js?v=d5da3708"></script>
+	<script src="js/classes/GifExporter.js?v=e6933c87"></script>
 	<script src="js/classes/Mp4Exporter.js?v=39ed19d0"></script>
 	<script src="js/classes/ViewportManager.js?v=2a060275"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>

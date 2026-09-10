@@ -1348,6 +1348,11 @@ class GifExporter {
 			manualFrameSkip: exportSettings.exportFrameSkip,
 			reverse: exportSettings.exportReverse,
 			smartReduction: exportSettings.smartFrameReduction,
+			normalizeCadenceGroups: exportSettings.smartFrameReduction
+				&& preset.rateReconciliation
+				&& exportSettings.targetFrameRate === 'auto',
+			preRenderSampling: fidelityIndex >= 2,
+			preRenderBudgetMultiplier: fidelityIndex >= 3 ? timelineConfig.preRenderBudgetMultiplier : 1,
 			rateReconciliation: {
 				...timelineConfig.rateReconciliation,
 				enabled: exportSettings.smartFrameReduction && timelineConfig.rateReconciliation.enabled
@@ -2013,6 +2018,11 @@ class GifExporter {
 			manualFrameSkip,
 			reverse: false,
 			smartReduction,
+			normalizeCadenceGroups: smartReduction
+				&& fidelity.rateReconciliation
+				&& targetFrameRate === 'auto',
+			preRenderSampling: fidelityIndex >= 2,
+			preRenderBudgetMultiplier: fidelityIndex >= 3 ? timelineConfig.preRenderBudgetMultiplier : 1,
 			rateReconciliation,
 			visualErrorThreshold: Number.isFinite(visualErrorThreshold) ? visualErrorThreshold : fidelity.visualError,
 			preferredFrameBudget: maxFrames,

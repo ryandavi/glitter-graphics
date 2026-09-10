@@ -104,6 +104,10 @@
   /* Range/switch track — must read against card AND panel backgrounds
      (recessed a step below --gray-800 so it never vanishes on cards) */
   --color-slider-track: #14161a;
+  /* Export progress sits on translucent mini-modal glass, so its empty track
+     needs a dedicated recessed surface and a visible inner rim. */
+  --progress-track: var(--gray-700);
+  --progress-track-border: var(--gray-500);
   /* Context-bar sliders (Color Fill threshold, quick brush size) sit on
      floating translucent glass, not panel chrome — light themes deepen this
      a ramp step so the track never melts into the bar. */
@@ -982,6 +986,8 @@
      on these ramps and vanishes against the floating glass bars — drop to
      the mid ramp step for real contrast. */
   --context-slider-track: var(--gray-400);
+  --progress-track: var(--gray-700);
+  --progress-track-border: var(--gray-500);
 }
 
 :root {

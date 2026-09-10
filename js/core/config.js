@@ -150,7 +150,7 @@ function deepFreeze(value) {
 const EXPORT_FIDELITY_STOPS = [
 	{ label: 'Exactly as previewed', visualError: 0, maxSamplingFps: 30, rateReconciliation: false },
 	{ label: 'High detail', visualError: 0.004, maxSamplingFps: 30, rateReconciliation: false },
-	{ label: 'Balanced', visualError: 0.008, maxSamplingFps: 24, rateReconciliation: true },
+	{ label: 'Balanced', visualError: 0.008, maxSamplingFps: 24, rateReconciliation: false },
 	{ label: 'Small file', visualError: 0.02, maxSamplingFps: 15, rateReconciliation: true },
 	{ label: 'Smallest file', visualError: 0.04, maxSamplingFps: 12, rateReconciliation: true }
 ];

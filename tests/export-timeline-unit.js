@@ -113,7 +113,7 @@ async function main() {
 	const nearCadences = await buildPlan([
 		timeline('three-at-ten-fps', 3, [100, 100, 100]),
 		timeline('four-at-nine-fps', 4, [110, 110, 110, 110])
-	], { smartReduction: true });
+	], { smartReduction: true, normalizeCadenceGroups: true });
 	assert(nearCadences.timingResolution.cadenceGroupsNormalized && nearCadences.reduction.originalFrameCount === 12,
 		'Near-identical source rates did not resolve to their compact shared-cadence loop.');
 	assert(nearCadences.timingResolution.groups[0].sourceCadences.join(',') === '100,110'
@@ -130,6 +130,8 @@ async function main() {
 		timeline('variable', 2, [70, 130])
 	], {
 		smartReduction: true,
+		normalizeCadenceGroups: true,
+		preRenderSampling: true,
 		preferredFrameBudget: 5,
 		hardFrameLimit: 100
 	});
@@ -155,6 +157,7 @@ async function main() {
 	let stressRenderCalls = 0;
 	const stressPlan = await buildPlan(stressTimelines, {
 		smartReduction: true,
+		preRenderSampling: true,
 		preferredFrameBudget: 60,
 		renderFrame: (_, selection) => {
 			stressRenderCalls++;
@@ -217,8 +220,40 @@ async function main() {
 		frameDurations: [100, 100, 100],
 		selections: [new Map(), new Map(), new Map()]
 	}, { enabled: true, visualErrorThreshold: 0.01, preferredFrameBudget: 60, hardFrameLimit: 1000 });
-	assert(underBudgetResult.framesRemoved > 0 && underBudgetResult.frames.length < 3,
-		'Threshold-first reduction did not remove near-identical frames below the preferred budget.');
+	assert(underBudgetResult.framesRemoved === 0 && underBudgetResult.frames.length === 3,
+		'Under-budget motion was reduced even though it already fit the frame target.');
+
+	const balancedMixedRates = await buildPlan([
+		timeline('butterfly', 3, [125, 125, 125]),
+		timeline('text-glitter', 3, [91, 91, 91]),
+		timeline('shape-fill', 4, [100, 100, 100, 100])
+	], {
+		smartReduction: true,
+		preRenderSampling: true,
+		preRenderBudgetMultiplier: 1,
+		maxSamplingFps: 24,
+		preferredFrameBudget: 60,
+		visualErrorThreshold: 0,
+		rateReconciliation: { enabled: false },
+		renderFrame: (_timestamp, selection) => {
+			const data = new Uint8ClampedArray(selection.size * 4);
+			[...selection.values()].forEach((selected, index) => {
+				data[index * 4] = selected.frameIndex;
+				data[index * 4 + 3] = 255;
+			});
+			return new ImageDataPolyfill(data, selection.size, 1);
+		}
+	});
+	assert(!balancedMixedRates.timingResolution.cadenceGroupsNormalized
+		&& !balancedMixedRates.timingResolution.rateReconciliation,
+		'Balanced mixed-rate planning changed native source timing.');
+	assert(balancedMixedRates.totalDuration === 6000
+		&& balancedMixedRates.reduction.originalFrameCount === 161
+		&& balancedMixedRates.reduction.renderedFrameCount === 60
+		&& balancedMixedRates.reduction.preRenderFramesSkipped === 101,
+		'Mixed low-rate sources were not sampled evenly to the Balanced composition budget.');
+	assert(balancedMixedRates.frameDurations.reduce((sum, duration) => sum + duration, 0) === 6000,
+		'Balanced composition sampling changed the resolved loop duration.');
 
 	const exactOnlyResult = reducer.reduce({
 		frames: [frame(50, 255, 4), nearMiddle, frame(90, 255, 4)],

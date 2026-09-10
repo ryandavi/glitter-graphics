@@ -8130,7 +8130,6 @@ body.is-resizing-panel canvas {
   height: 100%;
   min-height: 0;
   box-sizing: border-box;
-  padding-inline: var(--spacing-xs);
   font-size: 11px;
   line-height: 1;
 }
