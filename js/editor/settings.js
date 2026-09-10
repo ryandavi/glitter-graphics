@@ -169,6 +169,7 @@ initializeExportSettings() {
 		this.updateMatteColorUI();
 		this.updateWatermarkUI?.();
 		this.updateGifLookSummary();
+		this.updateExportFidelityUI();
 		this.updateExportFormatUI();
 		const ditherAmountValue = document.getElementById('exportDitherAmountValue');
 		if (ditherAmountValue) ditherAmountValue.textContent = `${this.exportSettings.ditherAmount}%`;
@@ -250,29 +251,39 @@ initializeExportSettings() {
 	}
 
 ,
-	// A preset row plus the rail of rows it writes. The rail is collapsed by
-	// default: the summary beside the preset already says what it means.
+	// A primary setting plus the rail of rows it governs. The rail is collapsed
+	// by default because the summary already states its effective values.
 	setupGovernedSets() {
 		document.querySelectorAll('[data-governed-set]').forEach((set) => {
 			const toggle = set.querySelector('[data-governed-toggle]');
 			if (!toggle || toggle.dataset.bound === 'true') return;
 			toggle.dataset.bound = 'true';
 			toggle.addEventListener('click', () => {
-				this.setGifLookExpanded(set.classList.contains('is-collapsed'));
+				this.setGovernedSetExpanded(set, set.classList.contains('is-collapsed'));
 			});
 		});
 		this.setGifLookExpanded(this.exportSettings.ditherPreset === 'custom');
+		this.setExportFidelityExpanded(false);
 	}
 
 ,
-	setGifLookExpanded(expanded) {
-		const set = document.getElementById('exportGifLookSet');
+	setGovernedSetExpanded(set, expanded) {
 		if (!set) return;
 		set.classList.toggle('is-collapsed', !expanded);
 		const toggle = set.querySelector('[data-governed-toggle]');
 		const label = set.querySelector('[data-governed-toggle-label]');
 		if (toggle) toggle.setAttribute('aria-expanded', String(expanded));
 		if (label) label.textContent = expanded ? 'Done' : 'Customize';
+	}
+
+,
+	setGifLookExpanded(expanded) {
+		this.setGovernedSetExpanded(document.getElementById('exportGifLookSet'), expanded);
+	}
+
+,
+	setExportFidelityExpanded(expanded) {
+		this.setGovernedSetExpanded(document.getElementById('exportFidelitySet'), expanded);
 	}
 
 ,
@@ -312,6 +323,8 @@ initializeExportSettings() {
 			this.saveSettingsToStorage();
 			this.renderExportDitherPreview?.();
 			this.updateGifLookSummary();
+			this.updateExportFidelityUI();
+			if (key === 'exportFidelity') this.setExportFidelityExpanded(false);
 			this.updateExportDuration();
 			if (key === 'ditherEnabled') this.updateDitherDependentUI();
 			if (key === 'watermarkEnabled') this.updateWatermarkUI?.();
@@ -325,6 +338,13 @@ initializeExportSettings() {
 		// Delegate live repeat changes so the duration remains bound even if modal
 		// controls are reinitialized or replaced in a responsive UI rebuild.
 		document.addEventListener('input', (event) => {
+			if (event.target?.id === 'exportFidelity') {
+				this.exportSettings.exportFidelity = Math.round(event.target.valueAsNumber);
+				this.updateExportFidelityUI();
+				this.updateExportDuration();
+				this.saveSettingsToStorage();
+				return;
+			}
 			if (event.target?.id === 'exportDitherAmount') {
 				const value = Math.min(100, Math.max(0, Math.round(event.target.valueAsNumber / 5) * 5));
 				this.exportSettings.ditherAmount = value;
@@ -504,9 +524,30 @@ initializeExportSettings() {
 	}
 
 ,
+	updateExportFidelityUI() {
+		const stop = CONFIG.export.timeline.fidelityStops[this.exportSettings.exportFidelity]
+			|| CONFIG.export.timeline.fidelityStops[CONFIG.export.defaults.exportFidelity];
+		const output = document.getElementById('exportFidelityValue');
+		if (output) output.textContent = stop.label;
+		const summary = document.querySelector('[data-export-fidelity-summary]');
+		if (!summary) return;
+		const samplesPerSecond = this.exportSettings.maxSamplingFps === 'auto'
+			? stop.maxSamplingFps
+			: this.exportSettings.maxSamplingFps;
+		const visualError = Number.isFinite(this.exportSettings.visualErrorThreshold)
+			? this.exportSettings.visualErrorThreshold
+			: stop.visualError;
+		const frameTarget = this.exportSettings.maxFrames >= CONFIG.export.limits.maxFramesHardLimit
+			? 'No frame target'
+			: `${this.exportSettings.maxFrames}-frame target`;
+		summary.textContent = `${samplesPerSecond} samples/sec · ${frameTarget} · ≤ ${(visualError * 100).toFixed(1)}% difference`;
+	}
+
+,
 	async updateExportDuration() {
 		const output = document.getElementById('exportMp4Duration');
-		if (!output) return;
+		const fidelityOutput = document.getElementById('exportFidelityEstimate');
+		if (!output && !fidelityOutput) return;
 		const requestId = (this.exportDurationRequestId || 0) + 1;
 		this.exportDurationRequestId = requestId;
 		const usesTargetDuration = this.exportSettings.mp4LengthMode === 'duration';
@@ -533,14 +574,17 @@ initializeExportSettings() {
 			return `${rounded} ${rounded === 1 ? 'second' : 'seconds'}`;
 		};
 
-		if (usesTargetDuration) {
+		if (output && usesTargetDuration) {
 			output.textContent = `${formatSeconds(targetDuration)}. The animation repeats as needed and ends at that time.`;
-		} else {
+		} else if (output) {
 			output.textContent = 'Calculating from the source animation timing…';
 		}
+		if (fidelityOutput) fidelityOutput.textContent = 'Calculating animation estimate…';
 
 		if (!this.exporter || !this.glitterManager?.content) return;
-		const visibleLayers = this.layers.filter((layer) => layer.visible && layerHasVisibleContent(layer));
+		const visibleLayers = this.layers.filter((layer) => layer.visible
+			&& layerHasVisibleContent(layer)
+			&& this._layerIntersectsExportCanvas(layer));
 		if (!visibleLayers.length) return;
 
 		try {
@@ -549,24 +593,43 @@ initializeExportSettings() {
 				library: this.glitterManager.content,
 				fallbackDuration: this.exportSettings.frameDelay,
 				parseGif: (url) => this.glitterManager.parseGifFromUrl(url),
-				smartReduction: this.exportSettings.smartFrameReduction
+				smartReduction: this.exportSettings.smartFrameReduction,
+				exportFidelity: this.exportSettings.exportFidelity,
+				maxSamplingFps: this.exportSettings.maxSamplingFps,
+				maxFrames: this.exportSettings.maxFrames,
+				manualFrameSkip: this.exportSettings.exportFrameSkip,
+				targetFrameRate: this.exportSettings.targetFrameRate,
+				visualErrorThreshold: this.exportSettings.visualErrorThreshold
 			});
 			if (requestId !== this.exportDurationRequestId) return;
 			const loopDurationSeconds = estimate.duration / 1000;
-			if (usesTargetDuration) {
+			if (output && usesTargetDuration) {
 				const repeats = targetDuration / loopDurationSeconds;
 				const completeRepeats = Math.round(repeats);
 				const isCompleteLoop = Math.abs(repeats - completeRepeats) < 0.001;
 				output.textContent = isCompleteLoop
 					? `${formatSeconds(targetDuration)}. ${completeRepeats} complete ${completeRepeats === 1 ? 'loop' : 'loops'}.`
 					: `${formatSeconds(targetDuration)}. About ${repeats.toFixed(repeats >= 10 ? 1 : 2)} loops; the video ends at the requested time.`;
-			} else {
+			} else if (output) {
 				output.textContent = `${formatSeconds(loopDurationSeconds * loopCount)}. ${loopCount} complete ${loopCount === 1 ? 'loop' : 'loops'}.`;
+			}
+			if (fidelityOutput) {
+				const stop = CONFIG.export.timeline.fidelityStops[this.exportSettings.exportFidelity]
+					|| CONFIG.export.timeline.fidelityStops[CONFIG.export.defaults.exportFidelity];
+				const visualError = Number.isFinite(this.exportSettings.visualErrorThreshold)
+					? this.exportSettings.visualErrorThreshold
+					: stop.visualError;
+				const rateChanges = estimate.timingResolution?.rateReconciliation?.layers
+					.filter((layer) => layer.snapped && Math.abs(layer.nativeFps - layer.exportFps) >= 0.01)
+					.map((layer) => `${layer.key} ${Math.round(layer.nativeFps)}→${Math.round(layer.exportFps)} fps`) || [];
+				const rateDetail = rateChanges.length ? ` · ${rateChanges.join(', ')}` : '';
+				fidelityOutput.textContent = `~${estimate.estimatedFrameCount} frames · loop ${loopDurationSeconds.toFixed(1)} s · frames differ by ≤ ${(visualError * 100).toFixed(1)}%${rateDetail}`;
 			}
 		} catch (error) {
 			if (requestId !== this.exportDurationRequestId) return;
 			console.warn('Export duration estimate failed:', error);
-			if (!usesTargetDuration) output.textContent = 'Could not load an animation source to estimate the duration. Export will try again.';
+			if (output && !usesTargetDuration) output.textContent = 'Could not load an animation source to estimate the duration. Export will try again.';
+			if (fidelityOutput) fidelityOutput.textContent = 'Could not estimate this animation. Export will calculate it again.';
 		}
 	}
 

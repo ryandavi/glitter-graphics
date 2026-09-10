@@ -98,6 +98,8 @@ class CompositeFrameReducer {
 		let exactDuplicatesMerged = 0;
 		let nearDuplicatesMerged = 0;
 		let maximumVisualError = 0;
+		let effectiveVisualErrorThreshold = Math.max(0, visualErrorThreshold || 0);
+		let budgetCompromiseRequired = false;
 
 		if (enabled) {
 			const hashes = frames.map(CompositeFrameReducer.hash);
@@ -113,22 +115,23 @@ class CompositeFrameReducer {
 				}
 			}
 
-			while (frames.length > preferredFrameBudget && frames.length > 2) {
+			const mergeWithinThreshold = (threshold) => {
 				let best = null;
-				for (let index = 1; index < frames.length - 1; index++) {
+				for (let index = 1; index < frames.length; index++) {
 					const sampledPrev = CompositeFrameReducer.difference(frames[index], frames[index - 1], true);
-					const sampledNext = CompositeFrameReducer.difference(frames[index], frames[index + 1], true);
+					const hasNext = index < frames.length - 1;
+					const sampledNext = hasNext ? CompositeFrameReducer.difference(frames[index], frames[index + 1], true) : Infinity;
 					const sampledScore = Math.min(sampledPrev, sampledNext);
-					if (sampledScore > visualErrorThreshold * 1.5) continue;
+					if (sampledScore > threshold * 1.5) continue;
 					const prev = CompositeFrameReducer.difference(frames[index], frames[index - 1]);
-					const next = CompositeFrameReducer.difference(frames[index], frames[index + 1]);
+					const next = hasNext ? CompositeFrameReducer.difference(frames[index], frames[index + 1]) : Infinity;
 					const score = Math.min(prev, next);
-					const materialChange = prev > visualErrorThreshold * 4 && next > visualErrorThreshold * 4;
-					if (!materialChange && score <= visualErrorThreshold && (!best || score < best.score)) {
+					const materialChange = hasNext && prev > threshold * 4 && next > threshold * 4;
+					if (!materialChange && score < threshold && (!best || score < best.score)) {
 						best = { index, score, mergePrevious: prev <= next };
 					}
 				}
-				if (!best) break;
+				if (!best) return false;
 				if (best.mergePrevious) frameDurations[best.index - 1] += frameDurations[best.index];
 				else frameDurations[best.index + 1] += frameDurations[best.index];
 				frames.splice(best.index, 1);
@@ -136,6 +139,18 @@ class CompositeFrameReducer {
 				selections.splice(best.index, 1);
 				nearDuplicatesMerged++;
 				maximumVisualError = Math.max(maximumVisualError, best.score);
+				return true;
+			};
+
+			if (effectiveVisualErrorThreshold > 0) {
+				while (frames.length > 2 && mergeWithinThreshold(effectiveVisualErrorThreshold)) {}
+			}
+
+			while (frames.length > hardFrameLimit && frames.length > 1) {
+				budgetCompromiseRequired = true;
+				effectiveVisualErrorThreshold = Math.min(1, Math.max(0.001, effectiveVisualErrorThreshold * 1.5));
+				const merged = mergeWithinThreshold(effectiveVisualErrorThreshold);
+				if (!merged && effectiveVisualErrorThreshold >= 1) break;
 			}
 		}
 
@@ -145,8 +160,10 @@ class CompositeFrameReducer {
 			selections,
 			exactDuplicatesMerged,
 			nearDuplicatesMerged,
+			framesRemoved: exactDuplicatesMerged + nearDuplicatesMerged,
 			maximumVisualError,
-			budgetCompromiseRequired: frames.length > hardFrameLimit,
+			effectiveVisualErrorThreshold,
+			budgetCompromiseRequired,
 			preferredBudgetMet: frames.length <= preferredFrameBudget
 		};
 	}
@@ -256,6 +273,87 @@ class CompositeTimelinePlanner {
 		return { duration: best.duration, exact: false, seamError: best.seamError, completedSources: best.completedSources };
 	}
 
+	_reconcileRates(timelines, config = {}) {
+		const animated = timelines.filter((timeline) => Number.isFinite(timeline.cycleDuration));
+		const unchanged = { timelines, reconciled: false, gridIntervalMs: null, layers: [] };
+		if (!config.enabled || animated.length < 2) return unchanged;
+		const sourceData = animated.map((timeline) => ({
+			timeline,
+			interval: timeline.cycleDuration / timeline.frames.length
+		}));
+		const minimumInterval = Math.min(...sourceData.map((source) => source.interval));
+		const forcedFps = Number(config.gridSource);
+		const candidates = Number.isFinite(forcedFps) && forcedFps > 0
+			? [1000 / forcedFps]
+			: [
+				minimumInterval,
+				minimumInterval / 2,
+				minimumInterval / 3,
+				...sourceData.map((source) => source.interval),
+				...(config.niceIntervalsMs || [])
+			];
+		const weights = config.weights || {};
+		let best = null;
+		[...new Set(candidates.filter((value) => Number.isFinite(value) && value > 0).map((value) => Number(value.toFixed(6))))]
+			.forEach((gridIntervalMs) => {
+				const layers = sourceData.map(({ timeline, interval }) => {
+					const multiple = Math.max(1, Math.round(interval / gridIntervalMs));
+					const adjustedInterval = multiple * gridIntervalMs;
+					const drift = Math.abs(adjustedInterval - interval) / interval;
+					return {
+						timeline,
+						multiple,
+						adjustedInterval,
+						drift,
+						snapped: drift <= config.maxCycleDriftRatio
+					};
+				});
+				const snapped = layers.filter((layer) => layer.snapped);
+				let gridLoopFrames = 1;
+				snapped.forEach((layer) => {
+					gridLoopFrames = this._lcmBounded(gridLoopFrames, layer.multiple * layer.timeline.frames.length, Number.MAX_SAFE_INTEGER) || Number.MAX_SAFE_INTEGER;
+				});
+				const drifts = layers.map((layer) => layer.drift);
+				const maximumDrift = Math.max(...drifts);
+				const meanDrift = drifts.reduce((sum, drift) => sum + drift, 0) / drifts.length;
+				const unsnappedCount = layers.length - snapped.length;
+				const score = (weights.frames || 1) * gridLoopFrames
+					+ (weights.maxDrift || 0) * maximumDrift
+					+ (weights.meanDrift || 0) * meanDrift
+					+ (weights.unsnapped || 0) * unsnappedCount;
+				if (!best || score < best.score) best = { gridIntervalMs, layers, score };
+			});
+		if (!best || !best.layers.some((layer) => layer.snapped)) return unchanged;
+
+		const replacements = new Map();
+		best.layers.forEach((layer) => {
+			if (!layer.snapped) return;
+			const frameDurations = layer.timeline.frameDurations.map((duration) =>
+				Math.max(best.gridIntervalMs, Math.round(duration / best.gridIntervalMs) * best.gridIntervalMs)
+			);
+			replacements.set(layer.timeline, new AnimationSourceTimeline({
+				key: layer.timeline.key,
+				ownerLayerId: layer.timeline.ownerLayerId,
+				effectSlot: layer.timeline.effectSlot,
+				frames: layer.timeline.frames,
+				frameDurations,
+				fallbackDuration: best.gridIntervalMs
+			}));
+		});
+		return {
+			timelines: timelines.map((timeline) => replacements.get(timeline) || timeline),
+			reconciled: true,
+			gridIntervalMs: best.gridIntervalMs,
+			layers: best.layers.map((layer) => ({
+				key: layer.timeline.key,
+				nativeFps: 1000 / layer.interval,
+				exportFps: layer.snapped ? 1000 / layer.adjustedInterval : 1000 / layer.interval,
+				driftPercent: layer.drift * 100,
+				snapped: layer.snapped
+			}))
+		};
+	}
+
 	_buildTimestamps(timelines, duration, maxSamplingFps) {
 		const minimumInterval = 1000 / Math.max(1, maxSamplingFps);
 		const candidates = new Set([0, duration]);
@@ -270,10 +368,13 @@ class CompositeTimelinePlanner {
 		return selected;
 	}
 
-	estimateLoop(timelines, fallbackDuration, maximumDuration, normalizeCadenceGroups = false) {
+	estimateLoop(timelines, fallbackDuration, maximumDuration, normalizeCadenceGroups = false, rateReconciliation = null) {
 		const normalizedFallback = AnimationSourceTimeline.normalizeDuration(fallbackDuration, 100);
 		const resolved = this._resolveCadenceClusters(timelines, normalizeCadenceGroups);
-		return this._chooseLoopDuration(resolved.timelines, normalizedFallback, maximumDuration);
+		const initialLoop = this._chooseLoopDuration(resolved.timelines, normalizedFallback, maximumDuration);
+		if (initialLoop.exact) return initialLoop;
+		const reconciliation = this._reconcileRates(resolved.timelines, rateReconciliation || {});
+		return this._chooseLoopDuration(reconciliation.timelines, normalizedFallback, maximumDuration);
 	}
 
 	_selectionSignature(selection) {
@@ -323,8 +424,22 @@ class CompositeTimelinePlanner {
 		const sourceTimelines = options.timelines || [];
 		const fallbackDuration = AnimationSourceTimeline.normalizeDuration(options.fallbackDuration, 100);
 		const timingResolution = this._resolveCadenceClusters(sourceTimelines, options.smartReduction);
-		const timelines = timingResolution.timelines;
-		const loop = this._chooseLoopDuration(timelines, fallbackDuration, options.maxLoopDurationMs);
+		let timelines = timingResolution.timelines;
+		let loop = this._chooseLoopDuration(timelines, fallbackDuration, options.maxLoopDurationMs);
+		let rateReconciliation = { timelines, reconciled: false, gridIntervalMs: null, layers: [] };
+		if (!loop.exact) {
+			rateReconciliation = this._reconcileRates(timelines, options.rateReconciliation || {});
+			if (rateReconciliation.reconciled) {
+				timelines = rateReconciliation.timelines;
+				loop = this._chooseLoopDuration(timelines, fallbackDuration, options.maxLoopDurationMs);
+				const snappedChanges = rateReconciliation.layers
+					.filter((layer) => layer.snapped && Math.abs(layer.nativeFps - layer.exportFps) >= 0.01)
+					.map((layer) => `${layer.key} ${Math.round(layer.nativeFps)} → ${Math.round(layer.exportFps)} fps`);
+				const gridFps = Math.round(1000 / rateReconciliation.gridIntervalMs);
+				if (snappedChanges.length) options.onStatus?.(`Matched layer frame rates to a shared ${gridFps} fps grid (${snappedChanges.join(', ')}) so the loop stays short.`);
+			}
+		}
+		if (!loop.exact) options.onStatus?.('Loop optimized with a best-fit seam; the exact common loop was too long.');
 		const timestamps = this._buildTimestamps(timelines, loop.duration, options.maxSamplingFps);
 		let entries = [];
 		for (let index = 0; index < timestamps.length - 1; index++) {
@@ -384,7 +499,11 @@ class CompositeTimelinePlanner {
 			},
 			timingResolution: {
 				cadenceGroupsNormalized: timingResolution.normalized,
-				groups: timingResolution.groups
+				groups: timingResolution.groups,
+				rateReconciliation: rateReconciliation.reconciled ? {
+					gridIntervalMs: rateReconciliation.gridIntervalMs,
+					layers: rateReconciliation.layers
+				} : null
 			},
 			reduction: {
 				smartReductionEnabled: Boolean(options.smartReduction),
@@ -396,7 +515,9 @@ class CompositeTimelinePlanner {
 				outputFrameCount: reduced.frames.length,
 				exactDuplicatesMerged: reduced.exactDuplicatesMerged,
 				nearDuplicatesMerged: reduced.nearDuplicatesMerged,
+				framesRemoved: reduced.framesRemoved,
 				maximumVisualError: reduced.maximumVisualError,
+				effectiveVisualErrorThreshold: reduced.effectiveVisualErrorThreshold,
 				durationPreserved: totalDuration === loop.duration,
 				preferredBudgetMet: reduced.preferredBudgetMet,
 				budgetCompromiseRequired: reduced.budgetCompromiseRequired

@@ -89,6 +89,27 @@ async function main() {
 	assert(!longCommonLoop.loopSeam.exact && longCommonLoop.totalDuration <= 12000,
 		'Long exact common loop was not bounded with a reported seam decision.');
 
+	const reconciledRates = await buildPlan([
+		timeline('four-at-twenty-fps', 4, Array(4).fill(50)),
+		timeline('three-at-eleven-fps', 3, Array(3).fill(91))
+	], {
+		smartReduction: true,
+		visualErrorThreshold: 0,
+		rateReconciliation: {
+			enabled: true,
+			gridSource: 'auto',
+			maxCycleDriftRatio: 0.15,
+			niceIntervalsMs: [33.333, 40, 41.667, 50, 66.667, 80, 83.333, 100],
+			weights: { frames: 1, maxDrift: 400, meanDrift: 150, unsnapped: 250 }
+		}
+	});
+	const elevenFpsResolution = reconciledRates.timingResolution.rateReconciliation.layers
+		.find((layer) => layer.key === 'three-at-eleven-fps');
+	assert(reconciledRates.loopSeam.exact && reconciledRates.reduction.originalFrameCount <= 15,
+		'20 fps / 11 fps reconciliation did not produce a short exact loop.');
+	assert(elevenFpsResolution.snapped && Math.round(elevenFpsResolution.exportFps) === 10,
+		'The 11 fps source was not reported as snapped to 10 fps.');
+
 	const nearCadences = await buildPlan([
 		timeline('three-at-ten-fps', 3, [100, 100, 100]),
 		timeline('four-at-nine-fps', 4, [110, 110, 110, 110])
@@ -191,6 +212,22 @@ async function main() {
 	assert(nearResult.frameDurations.reduce((sum, duration) => sum + duration, 0) === 300,
 		'Near-duplicate reduction changed duration.');
 
+	const underBudgetResult = reducer.reduce({
+		frames: [frame(50, 255, 4), nearMiddle, frame(90, 255, 4)],
+		frameDurations: [100, 100, 100],
+		selections: [new Map(), new Map(), new Map()]
+	}, { enabled: true, visualErrorThreshold: 0.01, preferredFrameBudget: 60, hardFrameLimit: 1000 });
+	assert(underBudgetResult.framesRemoved > 0 && underBudgetResult.frames.length < 3,
+		'Threshold-first reduction did not remove near-identical frames below the preferred budget.');
+
+	const exactOnlyResult = reducer.reduce({
+		frames: [frame(50, 255, 4), nearMiddle, frame(90, 255, 4)],
+		frameDurations: [100, 100, 100],
+		selections: [new Map(), new Map(), new Map()]
+	}, { enabled: true, visualErrorThreshold: 0, preferredFrameBudget: 1, hardFrameLimit: 1000 });
+	assert(exactOnlyResult.nearDuplicatesMerged === 0 && exactOnlyResult.frames.length === 3,
+		'Zero visual error performed a perceptual merge.');
+
 	const alphaDifference = CompositeFrameReducer.difference(frame(0, 0), frame(0, 1));
 	assert(alphaDifference > 0, 'Alpha-only changes were ignored.');
 
@@ -205,7 +242,7 @@ async function main() {
 	assert(sevenEleven.reduction.durationPreserved && sampled.reduction.durationPreserved,
 		'No-reduction and sampled plans did not preserve total duration.');
 
-	console.log('PASS export timeline fixtures: timing, seams, sampling, duplicates, alpha, effects, and visual error.');
+	console.log(`PASS export timeline fixtures: reconciliation=${reconciledRates.reduction.originalFrameCount} frames; timing, seams, sampling, duplicates, alpha, effects, and visual error.`);
 }
 
 main().catch((error) => {

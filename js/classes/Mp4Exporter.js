@@ -1,6 +1,28 @@
 // ============================================
 // MP4 EXPORT MANAGER CLASS
 // ============================================
+const MP4_EXPORT_PROGRESS_PHASES = Object.freeze({
+	loading: { label: 'Loading sources', start: 0, end: 8 },
+	masks: { label: 'Preparing masks', start: 8, end: 12 },
+	planning: { label: 'Planning timing', start: 12, end: 15 },
+	composing: { label: 'Composing frames', start: 15, end: 65 },
+	reducing: { label: 'Reducing frames', start: 65, end: 70 },
+	palette: { label: 'Building palette', start: 70, end: 78 },
+	encoding: { label: 'Encoding', start: 78, end: 99 },
+	finalizing: { label: 'Finalizing', start: 99, end: 100 }
+});
+
+function reportMp4ExportProgress(callbacks, phaseKey, ratio = 0, detail = '', phaseCurrent = 0, phaseTotal = 0) {
+	const phase = MP4_EXPORT_PROGRESS_PHASES[phaseKey];
+	const boundedRatio = Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
+	callbacks.onProgress(phase.start + ((phase.end - phase.start) * boundedRatio), detail, phaseCurrent, phaseTotal, {
+		phase: phase.label,
+		detail,
+		phaseCurrent,
+		phaseTotal
+	});
+}
+
 class Mp4Exporter {
 	constructor(frameComposer) {
 		this.frameComposer = frameComposer;
@@ -130,14 +152,10 @@ class Mp4Exporter {
 			outputIndex++;
 			timestampMs += outputFrame.duration;
 			if (encoder.encodeQueueSize > CONFIG.export.mp4.maxEncodeQueueSize) await encoder.flush();
-			callbacks.onProgress(
-				75 + Math.floor((outputIndex / totalFrames) * 24),
-				`Encoding MP4 frame ${outputIndex}/${totalFrames}...`,
-				outputIndex,
-				totalFrames
-			);
+			reportMp4ExportProgress(callbacks, 'encoding', outputIndex / totalFrames, `Encoding MP4 frame ${outputIndex} / ${totalFrames}`, outputIndex, totalFrames);
 		}
 
+		reportMp4ExportProgress(callbacks, 'finalizing', 0, 'Finalizing MP4…');
 		await encoder.flush();
 		encoder.close();
 		if (encoderError) throw encoderError;
@@ -145,7 +163,7 @@ class Mp4Exporter {
 		const blob = new Blob([target.buffer], { type: 'video/mp4' });
 		if (!blob.size) throw new Error('MP4 encoder produced an empty file.');
 
-		callbacks.onProgress(100, 'Export complete!', 0, 0);
+		reportMp4ExportProgress(callbacks, 'finalizing', 1, 'Export complete');
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete({ smartReduced: plan.reductions.length > 0, timelinePlan: plan });
 		const file = new File([blob], this.fileName, { type: 'video/mp4', lastModified: Date.now() });

@@ -723,10 +723,17 @@ body.mask-editing {
 		pointer-events: auto;
 	}
 
+	&.is-indeterminate > .export-progress-bar > .export-progress-fill {
+		width: 35% !important;
+		transition: none;
+		animation: export-progress-indeterminate 1.2s ease-in-out infinite;
+	}
+
 	>.export-progress-bar {
 		width: 100%;
-		height: 8px;
-		background: var(--color-bg-secondary);
+		height: 10px;
+		background: var(--progress-track);
+		box-shadow: inset 0 0 0 1px var(--progress-track-border);
 		border-radius: var(--radius-sm);
 		overflow: hidden;
 		margin-bottom: var(--spacing-md);
@@ -747,7 +754,23 @@ body.mask-editing {
 		font-weight: 600;
 	}
 
+	>.export-progress-detail {
+		height: 2.8em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		text-align: center;
+		@include text-sm;
+		color: var(--color-text-secondary);
+		margin-top: var(--spacing-xs);
+	}
+
 	>.export-progress-time {
+		height: 1.5em;
+		line-height: 1.5;
+		overflow: hidden;
+		white-space: nowrap;
 		text-align: center;
 		@include text-xs;
 		color: var(--color-text-secondary);
@@ -764,6 +787,19 @@ body.mask-editing {
 			background: var(--color-danger);
 			color: var(--color-text-on-accent);
 		}
+	}
+}
+
+@keyframes export-progress-indeterminate {
+	from { transform: translateX(-120%); }
+	to { transform: translateX(310%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.export-progress.is-indeterminate > .export-progress-bar > .export-progress-fill {
+		width: 100% !important;
+		opacity: 0.45;
+		animation: none;
 	}
 }
 

@@ -981,10 +981,11 @@
 
 	<!-- Export Progress -->
 	<div class="export-progress" id="exportProgress">
-		<div class="export-progress-bar">
+		<div class="export-progress-bar" role="progressbar" aria-label="Export progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
 			<div class="export-progress-fill" id="exportProgressFill"></div>
 		</div>
-		<div class="export-progress-text" id="exportProgressText">Preparing...</div>
+		<div class="export-progress-text" id="exportProgressText" aria-live="polite">Preparing...</div>
+		<div class="export-progress-detail" id="exportProgressDetail"></div>
 		<div class="export-progress-time" id="exportProgressTime"></div>
 		<button class="btn export-progress-cancel" id="exportProgressCancel">Cancel</button>
 	</div>
@@ -1660,26 +1661,32 @@
 				<div class="settings-group">
 					<div class="settings-group-title"><span class="settings-group-title-text">Optimization</span><button class="btn-text small reset-section-btn" data-section="optimization">Reset</button></div>
 
-					<div class="settings-row">
+					<div class="governed-set is-collapsed" id="exportFidelitySet" data-governed-set="exportFidelity">
+					<div class="settings-row" data-filter-pin>
 						<div class="settings-row-header">
-							<label class="settings-row-label-main" for="exportOptimizationPreset">Optimization Goal</label>
-							<div class="settings-row-control">
-								<select id="exportOptimizationPreset">
-									<option value="highFidelity">High Fidelity</option>
-									<option value="balanced">Balanced</option>
-									<option value="smallFile">Small File</option>
-								</select>
-							</div>
+							<label class="settings-row-label-main" for="exportFidelity">Export fidelity</label>
+							<output class="setting-value" id="exportFidelityValue" for="exportFidelity">Balanced</output>
 						</div>
-						<div class="settings-row-label-desc">Choose whether to favor fine motion detail or a smaller file. The animation keeps the same playback length.</div>
+						<input id="exportFidelity" type="range" min="0" max="4" step="1" value="2" list="exportFidelityStops" aria-describedby="exportFidelityEstimate">
+						<datalist id="exportFidelityStops"><option value="0"></option><option value="1"></option><option value="2"></option><option value="3"></option><option value="4"></option></datalist>
+						<div class="export-fidelity-ticks" aria-hidden="true"><span>Exact</span><span>High</span><span>Balanced</span><span>Small</span><span>Smallest</span></div>
+						<div class="settings-row-label-desc export-fidelity-estimate" id="exportFidelityEstimate">Calculating animation estimate…</div>
+						<div class="governed-summary">
+							<span class="governed-summary-values" data-export-fidelity-summary></span>
+							<button type="button" class="btn-text small governed-toggle" data-governed-toggle aria-expanded="false" aria-controls="exportFidelityRail">
+								<span data-governed-toggle-label>Customize</span>
+								<span class="governed-toggle-chevron icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+							</button>
+						</div>
 					</div>
 
+					<div class="governed-rail" id="exportFidelityRail" role="group" aria-label="Settings controlled by Export fidelity">
 					<div class="settings-row">
 						<div class="settings-row-header">
 							<label class="settings-row-label-main" for="exportMaxSamplingFps">Motion Detail</label>
 							<div class="settings-row-control">
 								<select id="exportMaxSamplingFps">
-									<option value="auto">Match optimization goal</option>
+									<option value="auto">Match fidelity setting</option>
 									<option value="15">Standard (15 samples/sec)</option>
 									<option value="24">Smooth (24 samples/sec)</option>
 									<option value="30">Finest (30 samples/sec)</option>
@@ -1687,6 +1694,27 @@
 							</div>
 						</div>
 						<div class="settings-row-label-desc">How often the animation is checked for visual changes. Higher settings preserve faster motion, but can take longer and create a larger file. Slower source animations keep their original timing.</div>
+					</div>
+
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="exportTargetFrameRate">Target frame rate</label>
+							<div class="settings-row-control">
+								<select id="exportTargetFrameRate">
+									<option value="auto">Automatic</option>
+									<option value="30">30 fps</option><option value="25">25 fps</option><option value="24">24 fps</option><option value="20">20 fps</option><option value="15">15 fps</option><option value="12">12 fps</option><option value="10">10 fps</option>
+								</select>
+							</div>
+						</div>
+						<div class="settings-row-label-desc">Overrides the shared timing grid. Sources outside the safe drift limit keep their native rate.</div>
+					</div>
+
+					<div class="settings-row">
+						<div class="settings-row-header">
+							<label class="settings-row-label-main" for="exportVisualErrorThreshold">Max frame difference</label>
+							<div class="settings-row-control input-unit"><input id="exportVisualErrorThreshold" type="number" min="0" max="100" step="0.1" placeholder="Auto"><span>%</span></div>
+						</div>
+						<div class="settings-row-label-desc">Overrides the fidelity setting's visual difference limit. Set 0 for exact-pixel deduplication only.</div>
 					</div>
 
 					<div class="settings-row">
@@ -1731,6 +1759,8 @@
 							</div>
 						</div>
 						<div class="settings-row-label-desc">An optional manual shortcut for smaller files. Skipped frame time is added to the frames that remain, so the speed and length stay the same.</div>
+					</div>
+						</div>
 					</div>
 
 					<div class="settings-row" data-export-format-section="gif" data-search-aliases="color quality encoder accuracy precision">
@@ -2372,7 +2402,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=44b953a1"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=7b159433"></script>
+	<script src="js/core/config.js?v=928bd3db"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
@@ -2398,12 +2428,12 @@
 	<script src="js/effects/pixel-effects.js?v=c68cfdfc"></script>
 	<script src="js/effects/effect-source.js?v=99811269"></script>
 	<script src="js/effects/slot-effects.js?v=271ac780"></script>
-	<script src="js/ui/panel-renderer.js?v=1994b9db"></script>
+	<script src="js/ui/panel-renderer.js?v=5ae3c701"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=3db8a3c8"></script>
-	<script src="js/ui/settings-store.js?v=94ba4d01"></script>
+	<script src="js/ui/settings-store.js?v=428ffaea"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
-	<script src="js/editor/settings.js?v=33987240"></script>
+	<script src="js/editor/settings.js?v=09d12d60"></script>
 	<script src="js/editor/panels.js?v=8c6c2f3f"></script>
 	<script src="js/editor/disclosures.js?v=54142c3b"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
@@ -2425,10 +2455,10 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
-	<script src="js/classes/ExportTimeline.js?v=8e263c63"></script>
+	<script src="js/classes/ExportTimeline.js?v=ff8aaf8f"></script>
 	<script src="js/classes/GifPalette.js?v=aece541e"></script>
-	<script src="js/classes/GifExporter.js?v=f9bf551e"></script>
-	<script src="js/classes/Mp4Exporter.js?v=2ffe9156"></script>
+	<script src="js/classes/GifExporter.js?v=d5da3708"></script>
+	<script src="js/classes/Mp4Exporter.js?v=39ed19d0"></script>
 	<script src="js/classes/ViewportManager.js?v=2a060275"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>
 	<script src="js/classes/ProjectSerializer.js?v=61bad0df"></script>
@@ -2457,7 +2487,7 @@
 		<script src="js/classes/MobileManager.js?v=b1a5756a"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=65edd382"></script>
+	<script src="js/app.js?v=63dabd3a"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

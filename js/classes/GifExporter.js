@@ -1,6 +1,30 @@
 // ============================================
 // GIF EXPORT MANAGER CLASS
 // ============================================
+const GIF_EXPORT_PROGRESS_PHASES = Object.freeze({
+	loading: { label: 'Loading sources', start: 0, end: 8 },
+	masks: { label: 'Preparing masks', start: 8, end: 12 },
+	planning: { label: 'Planning timing', start: 12, end: 15 },
+	composing: { label: 'Composing frames', start: 15, end: 65 },
+	reducing: { label: 'Reducing frames', start: 65, end: 70 },
+	palette: { label: 'Building palette', start: 70, end: 78 },
+	encoding: { label: 'Encoding', start: 78, end: 99 },
+	finalizing: { label: 'Finalizing', start: 99, end: 100 }
+});
+
+function reportGifExportProgress(callbacks, phaseKey, ratio = 0, detail = '', phaseCurrent = 0, phaseTotal = 0, options = {}) {
+	const phase = GIF_EXPORT_PROGRESS_PHASES[phaseKey];
+	const boundedRatio = Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
+	const percent = phase.start + ((phase.end - phase.start) * boundedRatio);
+	callbacks.onProgress(percent, detail, phaseCurrent, phaseTotal, {
+		phase: phase.label,
+		detail,
+		phaseCurrent,
+		phaseTotal,
+		indeterminate: options.indeterminate ?? phaseTotal <= 0
+	});
+}
+
 class GifExporter {
 	constructor() {
 		const exportConfig = CONFIG.export || {};
@@ -159,7 +183,7 @@ class GifExporter {
 		return null;
 	}
 
-	_applyGifDither(frames, paletteBytes, settings) {
+	async _applyGifDither(frames, paletteBytes, settings, callbacks) {
 		if (!settings.ditherEnabled || settings.hasTransparency) return frames;
 		const palette = [];
 		for (let index = 0; index < paletteBytes.length; index += 3) palette.push(paletteBytes.slice(index, index + 3));
@@ -169,8 +193,10 @@ class GifExporter {
 				: type.includes('stucki') ? 'stucki'
 			: type.includes('bayer') ? 'bayer'
 				: type.includes('halftone') ? 'halftone' : 'floyd';
-		return frames.map((frame, frameIndex) => new ImageData(
-			GlitterPixelEffects.applyPixelEffects(frame.data, frame.width, frame.height, {
+		const encodedFrames = [];
+		for (let frameIndex = 0; frameIndex < frames.length; frameIndex++) {
+			const frame = frames[frameIndex];
+			encodedFrames.push(new ImageData(GlitterPixelEffects.applyPixelEffects(frame.data, frame.width, frame.height, {
 				pixelateEnabled: false,
 				paletteEnabled: true,
 				pixelSize: 1,
@@ -189,10 +215,13 @@ class GifExporter {
 			}, {
 				pixelEffects: CONFIG.tools.pixelEffects,
 				autoGlitter: CONFIG.tools.autoGlitter
-			}, frameIndex, palette),
-			frame.width,
-			frame.height
-		));
+			}, frameIndex, palette), frame.width, frame.height));
+			reportGifExportProgress(callbacks, 'palette', 0.5 + (((frameIndex + 1) / frames.length) * 0.5), `Applying palette to frame ${frameIndex + 1} / ${frames.length}`, frameIndex + 1, frames.length);
+			if (frameIndex + 1 < frames.length && (frameIndex + 1) % CONFIG.export.progress.yieldEveryFrames === 0) {
+				await this._yieldForProgress();
+			}
+		}
+		return encodedFrames;
 	}
 
 	_getReducedFrameIndex(frameIndex, originalFrameCount, reducedFrameCount = null) {
@@ -1174,15 +1203,43 @@ class GifExporter {
 		exportSettings.frameDelay = Math.max(20, exportSettings.frameDelay || 100);
 
 		// 1. Ensure Frames Loaded
-		callbacks.onProgress(0, 'Loading glitter frames...', 0, 0);
-		await this._loadMissingFrames(visibleLayers, glitterGifs, callbacks);
+		reportGifExportProgress(callbacks, 'loading', 0, 'Loading animation sources…', 0, visibleLayers.length);
+		let loadingSourceCount = 0;
+		const loadingCallbacks = {
+			...callbacks,
+			onStatus: (detail) => {
+				callbacks.onStatus(detail);
+				if (!detail.startsWith('Loading ')) return;
+				loadingSourceCount++;
+				reportGifExportProgress(callbacks, 'loading', 0, detail, loadingSourceCount, 0, { indeterminate: true });
+			},
+			onLayerLoaded: (current, total) => {
+				const layerShare = exportSettings.watermarkEnabled ? 0.45 : 0.9;
+				reportGifExportProgress(callbacks, 'loading', layerShare * (current / total), `Loaded layer sources ${current} / ${total}`, current, total);
+			},
+			onSourceProgress: (detail, current, total) => {
+				const hasTotal = Number.isFinite(total) && total > 0;
+				const progress = hasTotal ? Math.min(1, current / total) : 0;
+				const isDecode = detail.startsWith('Decoding');
+				const ratio = isDecode ? 0.65 + (progress * 0.3) : 0.45 + (progress * 0.2);
+				reportGifExportProgress(callbacks, 'loading', ratio, detail, current, total, { indeterminate: !hasTotal });
+			}
+		};
+		await this._loadMissingFrames(visibleLayers, glitterGifs, loadingCallbacks);
+		let watermark = null;
+		if (exportSettings.watermarkEnabled) {
+			watermark = await this._loadWatermark(loadingCallbacks, exportSettings.watermark);
+			if (watermark) dbg('[GifExporter] Watermark loaded:', watermark);
+		}
+		reportGifExportProgress(callbacks, 'loading', 1, 'Animation sources ready', visibleLayers.length, visibleLayers.length);
 
 		// 1.5. Prepare masks so preview and export share identical data
-		callbacks.onProgress(3, 'Preparing masks...', 0, 0);
+		reportGifExportProgress(callbacks, 'masks', 0, 'Preparing layer masks…', 0, visibleLayers.length);
 		const maskDataMap = new Map();
 		const maskCanvases = new Map();
 		const textMaskCanvases = new Map();
 		const shapeMaskCanvases = new Map();
+		let preparedMaskCount = 0;
 		for (const layer of visibleLayers) {
 			await this._buildLayerExportPlan(layer).prepareMasks({
 				maskDataMap,
@@ -1192,25 +1249,19 @@ class GifExporter {
 				canvasData,
 				callbacks
 			});
-		}
-
-		// 1.75. Load Watermark (if enabled)
-		let watermark = null;
-		if (exportSettings.watermarkEnabled) {
-			watermark = await this._loadWatermark(callbacks, exportSettings.watermark);
-			if (watermark) {
-				dbg('[GifExporter] Watermark loaded:', watermark);
-			}
+			preparedMaskCount++;
+			reportGifExportProgress(callbacks, 'masks', preparedMaskCount / visibleLayers.length, `Prepared mask ${preparedMaskCount} / ${visibleLayers.length}`, preparedMaskCount, visibleLayers.length);
 		}
 
 		// 2. De-Optimize Frames
-		callbacks.onProgress(5, 'Processing frames...', 0, 0);
+		reportGifExportProgress(callbacks, 'planning', 0, 'Indexing animation frames…');
+		await this._yieldForProgress();
 		this._indexPixelatedGlitters(glitterGifs);
 		const flattenedFrameMap = this._buildFlattenedFrameMap(visibleLayers, glitterGifs);
 
 		// De-optimize watermark if animated
 		if (watermark && watermark.isAnimated) {
-			this._deoptimizeWatermarkFrames(watermark);
+			await this._deoptimizeWatermarkFrames(watermark, callbacks);
 		}
 
 		// Around line 6596-6611 - Fix transparency detection when base is off
@@ -1249,8 +1300,12 @@ class GifExporter {
 
 		// 4. Build a time-based plan from the timing of every visible source.
 		const timelineConfig = CONFIG.export.timeline;
-		const presetName = exportSettings.optimizationPreset || timelineConfig.defaultPreset;
-		const preset = timelineConfig.presets[presetName] || timelineConfig.presets[timelineConfig.defaultPreset];
+		const requestedFidelity = Number(exportSettings.exportFidelity);
+		const fidelityIndex = Math.max(0, Math.min(
+			timelineConfig.fidelityStops.length - 1,
+			Number.isFinite(requestedFidelity) ? requestedFidelity : CONFIG.export.defaults.exportFidelity
+		));
+		const preset = timelineConfig.fidelityStops[fidelityIndex];
 		const sourceTimelines = [...(flattenedFrameMap.sourceTimelines || [])];
 		const shimmerBase = visibleLayers.find((layer) => {
 			if (layer.type !== LayerType.BASE_IMAGE || layer.visible === false || !exportSettings.baseImage) return false;
@@ -1278,7 +1333,7 @@ class GifExporter {
 		}
 
 		callbacks.onStatus('Planning animation timing...');
-		callbacks.onProgress(10, 'Preparing timeline...', 0, 0);
+		reportGifExportProgress(callbacks, 'planning', 0.5, 'Resolving source timing…');
 		this.helperCanvas.width = canvasData.width;
 		this.helperCanvas.height = canvasData.height;
 		this.canvas.width = canvasData.width;
@@ -1293,15 +1348,27 @@ class GifExporter {
 			manualFrameSkip: exportSettings.exportFrameSkip,
 			reverse: exportSettings.exportReverse,
 			smartReduction: exportSettings.smartFrameReduction,
+			rateReconciliation: {
+				...timelineConfig.rateReconciliation,
+				enabled: exportSettings.smartFrameReduction && timelineConfig.rateReconciliation.enabled
+					&& (preset.rateReconciliation || Number.isFinite(Number(exportSettings.targetFrameRate))),
+				gridSource: exportSettings.targetFrameRate === 'auto'
+					? timelineConfig.rateReconciliation.gridSource
+					: exportSettings.targetFrameRate
+			},
 			visualErrorThreshold: Number.isFinite(exportSettings.visualErrorThreshold)
 				? exportSettings.visualErrorThreshold
 				: preset.visualError,
 			preferredFrameBudget: exportSettings.maxFrames || timelineConfig.preferredFrameBudget,
 			hardFrameLimit: timelineConfig.hardFrameLimit,
-			renderFrame: (timestamp, frameSelection, candidateCount) => {
+			onStatus: (detail) => {
+				callbacks.onStatus(detail);
+				reportGifExportProgress(callbacks, 'planning', 1, detail);
+			},
+			renderFrame: async (timestamp, frameSelection, candidateCount) => {
 				renderedCandidateCount++;
-				callbacks.onProgress(10, `Composing frame ${renderedCandidateCount} of ${candidateCount}...`, renderedCandidateCount, candidateCount);
-				return this._renderFrame(
+				reportGifExportProgress(callbacks, 'composing', renderedCandidateCount / candidateCount, `Composing frame ${renderedCandidateCount} / ${candidateCount}`, renderedCandidateCount, candidateCount);
+				const frame = this._renderFrame(
 					0,
 					canvasData,
 					visibleLayers,
@@ -1316,11 +1383,19 @@ class GifExporter {
 					frameSelection,
 					flattenedFrameMap
 				);
+				if (renderedCandidateCount < candidateCount
+					&& renderedCandidateCount % CONFIG.export.progress.yieldEveryFrames === 0) {
+					await this._yieldForProgress();
+				}
+				return frame;
 			}
 		});
 		plan.width = canvasData.width;
 		plan.height = canvasData.height;
 		plan.frameDelay = plan.totalDuration / plan.frames.length;
+		reportGifExportProgress(callbacks, 'reducing', 1, `Removed ${plan.reduction.exactDuplicatesMerged + plan.reduction.nearDuplicatesMerged} duplicate or near-duplicate frames`, plan.reduction.outputFrameCount, plan.reduction.renderedFrameCount);
+		reportGifExportProgress(callbacks, 'palette', 0, 'Analyzing export colors…');
+		await this._yieldForProgress();
 		plan.colorAnalysis = this._analyzeGifColors(plan.frames);
 		const gifColorCount = GifPalette.resolveColorCount(exportSettings.colorCount, plan.colorAnalysis);
 		const useNativePalette = exportSettings.colorCount === 'auto' && !exportSettings.ditherEnabled;
@@ -1336,9 +1411,15 @@ class GifExporter {
 		plan.reductions = [];
 		if (plan.reduction.exactDuplicatesMerged) plan.reductions.push({ reason: 'exact-duplicates', count: plan.reduction.exactDuplicatesMerged });
 		if (plan.reduction.nearDuplicatesMerged) plan.reductions.push({ reason: 'near-duplicates', count: plan.reduction.nearDuplicatesMerged });
-		if (plan.timingResolution.cadenceGroupsNormalized) callbacks.onStatus('Aligned compatible source frame-rate groups to avoid a long redundant loop.');
-		if (!plan.loopSeam.exact) callbacks.onStatus('Loop optimized with a best-fit seam; the exact common loop was too long.');
-		if (plan.reduction.budgetCompromiseRequired) callbacks.onStatus('The hard frame limit requires a quality compromise; no frames were silently truncated.');
+		if (plan.timingResolution.cadenceGroupsNormalized) {
+			const detail = 'Aligned compatible source frame-rate groups to avoid a long redundant loop.';
+			callbacks.onStatus(detail);
+		}
+		if (plan.reduction.budgetCompromiseRequired) {
+			const detail = 'The hard frame limit requires a quality compromise; no frames were silently truncated.';
+			callbacks.onStatus(detail);
+			reportGifExportProgress(callbacks, 'reducing', 1, detail);
+		}
 
 		// 5. Setup Encoder with Adaptive Quality
 		let finalQuality = exportSettings.quality;
@@ -1354,15 +1435,20 @@ class GifExporter {
 		// Preserve gif.js's mature per-frame NeuQuant path for the clean default.
 		// The custom shared palette is an explicit aesthetic choice, not a tax on
 		// every export.
+		reportGifExportProgress(callbacks, 'palette', 0.25, useNativePalette ? 'Preparing per-frame colors…' : 'Choosing a shared palette…');
+		await this._yieldForProgress();
 		const globalPalette = useNativePalette ? null : GifPalette.build(plan.frames, gifColorCount, {
 			transparentColor: needsTransparency && safeKey ? safeKey.hex : null,
 			style: exportSettings.paletteStyle,
 			maxSamples: exportSettings.quality <= 1 ? 524288 : (exportSettings.quality <= 10 ? 262144 : 131072)
 		});
-		const encodedFrames = useNativePalette ? plan.frames : this._applyGifDither(plan.frames, globalPalette, {
+		reportGifExportProgress(callbacks, 'palette', 0.5, exportSettings.ditherEnabled ? 'Applying the export palette…' : 'Palette ready');
+		await this._yieldForProgress();
+		const encodedFrames = useNativePalette ? plan.frames : await this._applyGifDither(plan.frames, globalPalette, {
 			...exportSettings,
 			hasTransparency: needsTransparency
-		});
+		}, callbacks);
+		reportGifExportProgress(callbacks, 'palette', 1, `Palette ready for ${plan.frames.length} frames`, plan.frames.length, plan.frames.length);
 		const gifOptions = {
 			workers: this.config.workers,
 			quality: finalQuality,
@@ -1390,7 +1476,7 @@ class GifExporter {
 		}));
 
 		// 6. Output
-		callbacks.onProgress(75, 'Encoding GIF...', plan.frames.length, plan.frames.length);
+		reportGifExportProgress(callbacks, 'encoding', 0, 'Encoding… 0%', 0, plan.frames.length);
 
 		// NOTE: these fire from gif.js's event emitter, outside the caller's
 		// try/catch — throwing here would leave the progress bar stuck and the
@@ -1404,7 +1490,14 @@ class GifExporter {
 			if (callbacks.onError) callbacks.onError(new Error('Export cancelled'));
 		});
 
-		gif.on('finished', (blob) => this._handleFileSave(blob, callbacks, plan));
+		gif.on('progress', (progress) => {
+			reportGifExportProgress(callbacks, 'encoding', progress, `Encoding… ${Math.round(progress * 100)}%`, Math.round(progress * plan.frames.length), plan.frames.length);
+		});
+
+		gif.on('finished', (blob) => {
+			reportGifExportProgress(callbacks, 'finalizing', 0, 'Preparing exported file…');
+			this._handleFileSave(blob, callbacks, plan);
+		});
 
 		dbg('Starting GIF render:', {
 			originalFrames: plan.reduction.originalFrameCount,
@@ -1609,7 +1702,7 @@ class GifExporter {
 		return ctx.getImageData(0, 0, width, height);
 	}
 
-	async _parseGifWithMetadata(url, providedBytes = null) {
+	async _parseGifWithMetadata(url, providedBytes = null, onProgress = null) {
 		try {
 			let uintArray = providedBytes;
 			if (!uintArray) {
@@ -1628,6 +1721,7 @@ class GifExporter {
 			const height = reader.height;
 			const frames = [];
 			const frameDelays = [];
+			onProgress?.(0, frameCount);
 
 			for (let i = 0; i < frameCount; i++) {
 				const frameInfo = reader.frameInfo(i);
@@ -1665,6 +1759,10 @@ class GifExporter {
 					y: patchY,
 					disposal: frameInfo.disposal
 				});
+				onProgress?.(i + 1, frameCount);
+				if (i + 1 < frameCount && (i + 1) % CONFIG.export.progress.yieldEveryFrames === 0) {
+					await this._yieldForProgress();
+				}
 			}
 
 			return {
@@ -1680,6 +1778,10 @@ class GifExporter {
 			if (this.config.debug) console.error(`[_parseGifWithMetadata] Error loading ${url}:`, error);
 			throw error;
 		}
+	}
+
+	_yieldForProgress() {
+		return new Promise((resolve) => requestAnimationFrame(resolve));
 	}
 
 	_buildFlattenedFrameMap(layers, library) {
@@ -1857,7 +1959,19 @@ class GifExporter {
 		return flattenedFrameMap;
 	}
 
-	async estimateLoopDuration({ layers, library, fallbackDuration, parseGif, smartReduction = false }) {
+	async estimateLoopDuration({
+		layers,
+		library,
+		fallbackDuration,
+		parseGif,
+		smartReduction = false,
+		exportFidelity = CONFIG.export.defaults.exportFidelity,
+		maxSamplingFps = 'auto',
+		maxFrames = CONFIG.export.defaults.maxFrames,
+		manualFrameSkip = CONFIG.export.defaults.frameSkip,
+		targetFrameRate = CONFIG.export.defaults.targetFrameRate,
+		visualErrorThreshold = CONFIG.export.defaults.visualErrorThreshold
+	}) {
 		await this._loadMissingFrames(layers, library, {
 			parseGif,
 			onStatus: () => {},
@@ -1879,15 +1993,50 @@ class GifExporter {
 			this._buildLayerExportPlan(layer).flattenFrames(library, collectTimeline);
 		});
 		const timelineConfig = CONFIG.export.timeline;
-		return new CompositeTimelinePlanner(timelineConfig).estimateLoop(
+		const requestedFidelity = Number(exportFidelity);
+		const fidelityIndex = Math.max(0, Math.min(
+			timelineConfig.fidelityStops.length - 1,
+			Number.isFinite(requestedFidelity) ? requestedFidelity : CONFIG.export.defaults.exportFidelity
+		));
+		const fidelity = timelineConfig.fidelityStops[fidelityIndex];
+		const rateReconciliation = {
+			...timelineConfig.rateReconciliation,
+			enabled: smartReduction && timelineConfig.rateReconciliation.enabled
+				&& (fidelity.rateReconciliation || Number.isFinite(Number(targetFrameRate))),
+			gridSource: targetFrameRate === 'auto' ? timelineConfig.rateReconciliation.gridSource : targetFrameRate
+		};
+		const plan = await new CompositeTimelinePlanner(timelineConfig).plan({
 			timelines,
 			fallbackDuration,
-			timelineConfig.maxLoopDurationMs,
-			smartReduction
-		);
+			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
+			maxSamplingFps: maxSamplingFps === 'auto' ? fidelity.maxSamplingFps : maxSamplingFps,
+			manualFrameSkip,
+			reverse: false,
+			smartReduction,
+			rateReconciliation,
+			visualErrorThreshold: Number.isFinite(visualErrorThreshold) ? visualErrorThreshold : fidelity.visualError,
+			preferredFrameBudget: maxFrames,
+			hardFrameLimit: timelineConfig.hardFrameLimit,
+			renderFrame: (_timestamp, selection) => {
+				const data = new Uint8ClampedArray(Math.max(1, timelines.length) * 4);
+				timelines.forEach((timeline, index) => {
+					const frameIndex = selection.get(timeline.key)?.frameIndex || 0;
+					data[index * 4] = Math.round(frameIndex / Math.max(1, timeline.frames.length - 1) * 255);
+					data[index * 4 + 3] = 255;
+				});
+				return new ImageData(data, Math.max(1, timelines.length), 1);
+			}
+		});
+		return {
+			...plan.loopSeam,
+			duration: plan.totalDuration,
+			estimatedFrameCount: plan.frames.length,
+			maximumVisualError: plan.reduction.maximumVisualError,
+			timingResolution: plan.timingResolution
+		};
 	}
 
-	_deoptimizeWatermarkFrames(watermark) {
+	async _deoptimizeWatermarkFrames(watermark, callbacks) {
 		if (!watermark || !watermark.isAnimated) return;
 
 		const { width, height, frames } = watermark;
@@ -1917,6 +2066,10 @@ class GifExporter {
 
 			if (frame.disposal === 2) {
 				prevFrame = ctx.getImageData(0, 0, width, height);
+			}
+			reportGifExportProgress(callbacks, 'planning', 0.1 + (((i + 1) / frames.length) * 0.3), `Preparing watermark frame ${i + 1} / ${frames.length}`, i + 1, frames.length);
+			if (i + 1 < frames.length && (i + 1) % CONFIG.export.progress.yieldEveryFrames === 0) {
+				await this._yieldForProgress();
 			}
 		}
 	}
@@ -2029,8 +2182,12 @@ class GifExporter {
 
 
 	async _loadMissingFrames(layers, library, callbacks) {
-		for (const layer of layers) {
-			await this._buildLayerExportPlan(layer).loadSources(library, callbacks);
+		for (let index = 0; index < layers.length; index++) {
+			await this._buildLayerExportPlan(layers[index]).loadSources(library, callbacks);
+			if (callbacks.onLayerLoaded) {
+				callbacks.onLayerLoaded(index + 1, layers.length);
+				await this._yieldForProgress();
+			}
 		}
 	}
 
@@ -2043,7 +2200,25 @@ class GifExporter {
 
 		try {
 			const response = await fetch(watermarkUrl);
-			const blob = await response.blob();
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			const contentLength = Number(response.headers.get('content-length'));
+			let blob;
+			if (response.body && Number.isFinite(contentLength) && contentLength > 0) {
+				const reader = response.body.getReader();
+				const chunks = [];
+				let received = 0;
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+					chunks.push(value);
+					received += value.byteLength;
+					callbacks.onSourceProgress?.(`Downloading watermark… ${Math.round(received / 1024)} / ${Math.round(contentLength / 1024)} KB`, received, contentLength);
+				}
+				blob = new Blob(chunks, { type: response.headers.get('content-type') || '' });
+			} else {
+				callbacks.onSourceProgress?.('Downloading watermark…', 0, 0);
+				blob = await response.blob();
+			}
 			const arrayBuffer = await blob.arrayBuffer();
 			const uint8Array = new Uint8Array(arrayBuffer);
 
@@ -2051,7 +2226,12 @@ class GifExporter {
 			const isGif = uint8Array[0] === 0x47 && uint8Array[1] === 0x49 && uint8Array[2] === 0x46;
 
 			if (isGif) {
-				const frames = await this._parseGifWithMetadata(watermarkUrl, uint8Array);
+				callbacks.onSourceProgress?.('Decoding animated watermark…', 0, 0);
+				await this._yieldForProgress();
+				const frames = await this._parseGifWithMetadata(watermarkUrl, uint8Array, (current, total) => {
+					const detail = current > 0 ? `Decoding watermark frame ${current} / ${total}` : `Preparing ${total} watermark frames…`;
+					callbacks.onSourceProgress?.(detail, current, total);
+				});
 
 				// Process alpha threshold ONCE during load if threshold is active
 				if (this.config.watermarkAlphaThreshold > 0) {
@@ -2078,11 +2258,14 @@ class GifExporter {
 				};
 			} else {
 				// For static images
+				callbacks.onSourceProgress?.('Decoding watermark image…', 0, 0);
+				await this._yieldForProgress();
 				return new Promise((resolve, reject) => {
 					const img = new Image();
-					img.crossOrigin = 'anonymous';
+					const objectUrl = URL.createObjectURL(blob);
 
 					img.onload = () => {
+						URL.revokeObjectURL(objectUrl);
 						const canvas = document.createElement('canvas');
 						canvas.width = img.naturalWidth;
 						canvas.height = img.naturalHeight;
@@ -2108,8 +2291,11 @@ class GifExporter {
 						});
 					};
 
-					img.onerror = () => reject(new Error('Failed to load watermark image'));
-					img.src = watermarkUrl;
+					img.onerror = () => {
+						URL.revokeObjectURL(objectUrl);
+						reject(new Error('Failed to load watermark image'));
+					};
+					img.src = objectUrl;
 				});
 			}
 		} catch (error) {
@@ -2147,10 +2333,10 @@ class GifExporter {
 
 	_handleFileSave(blob, callbacks, plan) {
 		dbg('_handleFileSave called with blob size:', blob.size);
-		callbacks.onProgress(100, 'Export complete!', 0, 0);
+		reportGifExportProgress(callbacks, 'finalizing', 1, 'Export complete');
 		callbacks.onStatus('Export complete!');
 		callbacks.onComplete({
-			smartReduced: plan.reduction.exactDuplicatesMerged + plan.reduction.nearDuplicatesMerged > 0,
+			smartReduced: plan.reduction.framesRemoved > 0,
 			timelinePlan: plan
 		});
 
@@ -2238,7 +2424,7 @@ class GifExporter {
 		if (reductionSummary) {
 			const reduction = timelinePlan?.reduction;
 			const pixelRemovedFrames = reduction
-				? reduction.exactDuplicatesMerged + reduction.nearDuplicatesMerged
+				? reduction.framesRemoved
 				: 0;
 			const preRenderRemovedFrames = reduction
 				? reduction.selectionDuplicatesMerged + reduction.preRenderFramesSkipped
@@ -2246,6 +2432,7 @@ class GifExporter {
 			const hasReduction = Boolean(reduction?.smartReductionEnabled && (pixelRemovedFrames > 0 || preRenderRemovedFrames > 0));
 			const hasPlanWarning = Boolean(timelinePlan && (
 				timelinePlan.timingResolution?.cadenceGroupsNormalized
+					|| timelinePlan.timingResolution?.rateReconciliation
 					|| !timelinePlan.loopSeam.exact
 					|| !reduction.preferredBudgetMet
 					|| reduction.budgetCompromiseRequired
@@ -2291,6 +2478,13 @@ class GifExporter {
 						return `${sourceRates} to ${group.cadence} ms`;
 					});
 					planMessages.push(`Aligned compatible source timing (${resolutions.join('; ')}) so each group shares a shorter clean loop.`);
+				}
+				const reconciliation = timelinePlan.timingResolution?.rateReconciliation;
+				if (reconciliation) {
+					const changes = reconciliation.layers
+						.filter((layer) => layer.snapped && Math.abs(layer.nativeFps - layer.exportFps) >= 0.01)
+						.map((layer) => `${layer.key}: ${layer.nativeFps.toFixed(1)} → ${layer.exportFps.toFixed(1)} fps (${layer.driftPercent.toFixed(1)}% drift)`);
+					if (changes.length) planMessages.push(`Matched source timing to a shared ${(1000 / reconciliation.gridIntervalMs).toFixed(1)} fps grid: ${changes.join('; ')}.`);
 				}
 				if (!timelinePlan.loopSeam.exact) {
 					planMessages.push('The animations repeat at different times, so the beginning and ending may not match perfectly.');

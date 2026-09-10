@@ -147,6 +147,14 @@ function deepFreeze(value) {
 	return Object.freeze(value);
 }
 
+const EXPORT_FIDELITY_STOPS = [
+	{ label: 'Exactly as previewed', visualError: 0, maxSamplingFps: 30, rateReconciliation: false },
+	{ label: 'High detail', visualError: 0.004, maxSamplingFps: 30, rateReconciliation: false },
+	{ label: 'Balanced', visualError: 0.008, maxSamplingFps: 24, rateReconciliation: true },
+	{ label: 'Small file', visualError: 0.02, maxSamplingFps: 15, rateReconciliation: true },
+	{ label: 'Smallest file', visualError: 0.04, maxSamplingFps: 12, rateReconciliation: true }
+];
+
 const CONFIG = deepFreeze({
 	project: {
 		extension: 'glitter.json',
@@ -753,6 +761,11 @@ const CONFIG = deepFreeze({
 				maxFrames: 60
 			}
 		},
+		progress: {
+			yieldEveryFrames: 2,
+			slowPhaseNoticeMs: 2000,
+			timerRefreshMs: 500
+		},
 		timeline: {
 			maxSamplingFps: 30,
 			nearCadenceTolerance: 0.12,
@@ -764,11 +777,19 @@ const CONFIG = deepFreeze({
 			balancedVisualError: 0.008,
 			smallFileVisualError: 0.02,
 			maxLoopDurationMs: 12000,
+			rateReconciliation: {
+				enabled: true,
+				gridSource: 'auto',
+				maxCycleDriftRatio: 0.15,
+				niceIntervalsMs: [33.333, 40, 41.667, 50, 66.667, 80, 83.333, 100],
+				weights: { frames: 1, maxDrift: 400, meanDrift: 150, unsnapped: 250 }
+			},
+			fidelityStops: EXPORT_FIDELITY_STOPS,
 			defaultPreset: 'balanced',
 			presets: {
-				highFidelity: { label: 'High Fidelity', visualError: 0, maxSamplingFps: 30 },
-				balanced: { label: 'Balanced', visualError: 0.008, maxSamplingFps: 24 },
-				smallFile: { label: 'Small File', visualError: 0.02, maxSamplingFps: 15 }
+				highFidelity: EXPORT_FIDELITY_STOPS[1],
+				balanced: EXPORT_FIDELITY_STOPS[2],
+				smallFile: EXPORT_FIDELITY_STOPS[3]
 			}
 		},
 		defaults: {
@@ -793,9 +814,11 @@ const CONFIG = deepFreeze({
 			frameSkip: 1,
 			reverse: false,
 			smartFrameReduction: true,
-			optimizationPreset: 'balanced',
-			// 'auto' follows the chosen Optimization Goal.
+			exportFidelity: 2,
+			// 'auto' follows the chosen Export fidelity stop.
 			maxSamplingFps: 'auto',
+			targetFrameRate: 'auto',
+			visualErrorThreshold: 'auto',
 			watermarkEnabled: false,
 			watermark: 'images/watermark/2.png'
 		},

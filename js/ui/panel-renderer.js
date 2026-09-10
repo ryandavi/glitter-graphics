@@ -1625,14 +1625,23 @@ function buildPanelGroup(group, schema) {
 // Extracted so the bare-section and fragment renderers get the identical
 // treatment as a full schema section.
 function applyPanelRedesignClasses(root) {
-	root.querySelectorAll('.property-card').forEach((node) => node.classList.add('panel-card'));
-	root.querySelectorAll('.panel-group-label').forEach((node) => node.classList.add('property-group-label'));
-	root.querySelectorAll('.property-actions').forEach((node) => node.classList.add('panel-actions'));
-	root.querySelectorAll('.paint-slot-card').forEach((node) => node.classList.add('panel-module'));
+	// `querySelectorAll` never matches `root` itself, so include it in each pass.
+	// `renderPanelFragment` hands us the lone card node directly — without this it
+	// would never pick up `.property-block`/`.panel-card`, and its
+	// `.subsection-title` would stay `display:block` (module summary not flush).
+	const withRoot = (selector) => {
+		const matches = Array.from(root.querySelectorAll(selector));
+		if (root.matches?.(selector)) matches.unshift(root);
+		return matches;
+	};
+	withRoot('.property-card').forEach((node) => node.classList.add('panel-card'));
+	withRoot('.panel-group-label').forEach((node) => node.classList.add('property-group-label'));
+	withRoot('.property-actions').forEach((node) => node.classList.add('panel-actions'));
+	withRoot('.paint-slot-card').forEach((node) => node.classList.add('panel-module'));
 	// The L2 block: a `.subsection-content-group` that is neither an L1
 	// section-group nor the effects stack. A positive class lets the SCSS nest
 	// the DOM directly instead of `:where(:not(.subsection-section-group)…)`.
-	root.querySelectorAll('.subsection-content-group').forEach((group) => {
+	withRoot('.subsection-content-group').forEach((group) => {
 		const structural = group.classList.contains('subsection-section-group')
 			|| group.classList.contains('effects-stack');
 		group.classList.toggle('property-block', !structural);

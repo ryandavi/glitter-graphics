@@ -674,6 +674,8 @@
      on these ramps and vanishes against the floating glass bars — drop to
      the mid ramp step for real contrast. */
   --context-slider-track: var(--gray-400);
+  --progress-track: var(--gray-700);
+  --progress-track-border: var(--gray-500);
 }
 
 /* ===== CSS VARIABLES ===== */
@@ -781,6 +783,10 @@
   /* Range/switch track — must read against card AND panel backgrounds
      (recessed a step below --gray-800 so it never vanishes on cards) */
   --color-slider-track: #14161a;
+  /* Export progress sits on translucent mini-modal glass, so its empty track
+     needs a dedicated recessed surface and a visible inner rim. */
+  --progress-track: var(--gray-700);
+  --progress-track-border: var(--gray-500);
   /* Context-bar sliders (Color Fill threshold, quick brush size) sit on
      floating translucent glass, not panel chrome — light themes deepen this
      a ramp step so the track never melts into the bar. */
@@ -3926,10 +3932,16 @@ body.mask-editing .sticker-element {
   opacity: 1;
   pointer-events: auto;
 }
+.export-progress.is-indeterminate > .export-progress-bar > .export-progress-fill {
+  width: 35% !important;
+  transition: none;
+  animation: export-progress-indeterminate 1.2s ease-in-out infinite;
+}
 .export-progress > .export-progress-bar {
   width: 100%;
-  height: 8px;
-  background: var(--color-bg-secondary);
+  height: 10px;
+  background: var(--progress-track);
+  box-shadow: inset 0 0 0 1px var(--progress-track-border);
   border-radius: var(--radius-sm);
   overflow: hidden;
   margin-bottom: var(--spacing-md);
@@ -3948,7 +3960,23 @@ body.mask-editing .sticker-element {
   color: var(--color-text-primary);
   font-weight: 600;
 }
+.export-progress > .export-progress-detail {
+  height: 2.8em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+}
 .export-progress > .export-progress-time {
+  height: 1.5em;
+  line-height: 1.5;
+  overflow: hidden;
+  white-space: nowrap;
   text-align: center;
   font-size: var(--font-size-xs);
   letter-spacing: 0.75px;
@@ -3967,6 +3995,21 @@ body.mask-editing .sticker-element {
   color: var(--color-text-on-accent);
 }
 
+@keyframes export-progress-indeterminate {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(310%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .export-progress.is-indeterminate > .export-progress-bar > .export-progress-fill {
+    width: 100% !important;
+    opacity: 0.45;
+    animation: none;
+  }
+}
 /* ===== ERROR TOAST ===== */
 .error-toast {
   position: fixed;
@@ -10186,6 +10229,23 @@ body.modal-open {
   align-items: center;
   gap: var(--spacing-sm);
   min-width: 0;
+}
+
+.export-fidelity-ticks {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-2xs);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+.export-fidelity-ticks > span {
+  text-align: center;
+}
+
+.export-fidelity-estimate {
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .badge {

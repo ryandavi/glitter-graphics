@@ -2525,51 +2525,132 @@ class GlitterEditor {
 	// ===== EXPORT PROGRESS =====
 	showExportProgress() {
 		const progress = document.getElementById('exportProgress');
+		const bar = progress.querySelector('.export-progress-bar');
 		const fill = document.getElementById('exportProgressFill');
 		const text = document.getElementById('exportProgressText');
+		const detail = document.getElementById('exportProgressDetail');
 		const time = document.getElementById('exportProgressTime');
 		progress.classList.add('visible');
 		fill.style.width = '0%';
-		text.textContent = 'Preparing...';
+		bar.setAttribute('aria-valuenow', '0');
+		text.textContent = 'Preparing export';
+		detail.textContent = '';
 		time.textContent = '';
 		this.exportStartTime = Date.now();
+		this.exportProgressPercent = 0;
+		this.exportProgressIsIndeterminate = true;
+		clearInterval(this.exportProgressTimer);
+		this.exportProgressTimer = window.setInterval(
+			() => this._updateExportProgressTime(),
+			CONFIG.export.progress.timerRefreshMs
+		);
 		this.exportCancelled = false;
 	}
 
-	updateExportProgress(percent, message, currentFrame = 0, totalFrames = 0) {
+	updateExportProgress(percent, message, currentFrame = 0, totalFrames = 0, progressInfo = {}) {
+		const progress = document.getElementById('exportProgress');
+		const bar = progress.querySelector('.export-progress-bar');
 		const fill = document.getElementById('exportProgressFill');
 		const text = document.getElementById('exportProgressText');
+		const detail = document.getElementById('exportProgressDetail');
+		const monotonicPercent = Math.max(this.exportProgressPercent || 0, Math.max(0, Math.min(100, percent)));
+		this.exportProgressPercent = monotonicPercent;
+		this.exportProgressIsIndeterminate = Boolean(progressInfo.indeterminate);
+		progress.classList.toggle('is-indeterminate', this.exportProgressIsIndeterminate);
+		if (this.exportProgressIsIndeterminate) bar.removeAttribute('aria-valuenow');
+		else bar.setAttribute('aria-valuenow', String(Math.round(monotonicPercent)));
+		fill.style.width = `${monotonicPercent}%`;
+		text.textContent = progressInfo.phase || 'Preparing export';
+		detail.textContent = progressInfo.detail || message || '';
+		this._updateExportProgressTime();
+	}
+
+	_updateExportProgressTime() {
 		const time = document.getElementById('exportProgressTime');
-		fill.style.width = `${percent}%`;
-		text.textContent = message;
-		if (percent > 0 && currentFrame > 0 && totalFrames > 0) {
-			const elapsed = Date.now() - this.exportStartTime;
-			const estimatedTotal = (elapsed / percent) * 100;
-			const remaining = estimatedTotal - elapsed;
-			if (remaining > 1000) {
-				const seconds = Math.ceil(remaining / 1000);
-				time.textContent = `~${seconds}s remaining`;
-			}
+		if (!time || !this.exportStartTime) return;
+		const elapsed = Date.now() - this.exportStartTime;
+		const elapsedSeconds = Math.max(1, Math.floor(elapsed / 1000));
+		if (this.exportProgressIsIndeterminate || this.exportProgressPercent <= 0) {
+			time.textContent = elapsed >= CONFIG.export.progress.slowPhaseNoticeMs
+				? `${elapsedSeconds}s elapsed · Still working…`
+				: '';
+			return;
 		}
+		if (this.exportProgressPercent >= 100) {
+			time.textContent = '';
+			return;
+		}
+		const estimatedTotal = (elapsed / this.exportProgressPercent) * 100;
+		const remaining = estimatedTotal - elapsed;
+		time.textContent = remaining > 1000
+			? `About ${Math.ceil(remaining / 1000)}s remaining`
+			: elapsed >= CONFIG.export.progress.slowPhaseNoticeMs ? `${elapsedSeconds}s elapsed` : '';
 	}
 
 	hideExportProgress() {
-		document.getElementById('exportProgress').classList.remove('visible');
+		clearInterval(this.exportProgressTimer);
+		this.exportProgressTimer = null;
+		const progress = document.getElementById('exportProgress');
+		progress.classList.remove('visible', 'is-indeterminate');
 	}
 
 	validateExportSettings() {
 		this.settingsStore.validate(this.exportSettings);
 	}
 
+	_layerIntersectsExportCanvas(layer) {
+		if (![LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(layer?.type)) return true;
+		if (!this.originalCanvas?.width || !this.originalCanvas?.height) return true;
+
+		try {
+			const context = this.getMovableLayerContext(layer);
+			const layerTransform = context?.manager?.layerTransforms?.get(layer.id) || new LayerTransform(layer, this);
+			const metrics = layerTransform.getFrameMetrics();
+			let minX = metrics.minX;
+			let maxX = metrics.maxX;
+			let minY = metrics.minY;
+			let maxY = metrics.maxY;
+
+			// Text and shape handle frames already include their border and shadow.
+			// Sticker handles describe the sticker itself, so conservatively add the
+			// padded shadow canvas used by GifExporter before testing intersection.
+			if (layer.type === LayerType.STICKER && layer.stickerData?.shadow) {
+				const shadow = layer.stickerData.shadow;
+				const padding = Math.ceil(Math.max(Math.abs(shadow.offsetX || 0), Math.abs(shadow.offsetY || 0))) + 2;
+				const localX = padding * Math.abs(metrics.scaleX);
+				const localY = padding * Math.abs(metrics.scaleY);
+				const worldX = Math.abs(metrics.cos) * localX + Math.abs(metrics.sin) * localY;
+				const worldY = Math.abs(metrics.sin) * localX + Math.abs(metrics.cos) * localY;
+				minX -= worldX;
+				maxX += worldX;
+				minY -= worldY;
+				maxY += worldY;
+			}
+
+			return maxX > 0
+				&& maxY > 0
+				&& minX < this.originalCanvas.width
+				&& minY < this.originalCanvas.height;
+		} catch (error) {
+			dbg('[Export] Could not measure layer bounds; keeping layer in export.', layer?.id, error);
+			return true;
+		}
+	}
+
 	async exportAnimatedGif() {
 		// Filter visible layers (ephemeral Auto Glitter previews never export)
-		const visibleLayers = this.layers.filter(l => {
+		const candidateLayers = this.layers.filter(l => {
 			if (!l.visible || l.isPreview) return false;
 			return layerHasVisibleContent(l);
 		});
+		const visibleLayers = candidateLayers.filter((layer) => this._layerIntersectsExportCanvas(layer));
+		const offCanvasLayerCount = candidateLayers.length - visibleLayers.length;
+		if (offCanvasLayerCount > 0) dbg(`[Export] Skipping ${offCanvasLayerCount} fully off-canvas layer(s).`);
 
 		if (visibleLayers.length === 0) {
-			this.showError('No visible layers with content to export!');
+			this.showError(candidateLayers.length
+				? 'All visible content is outside the canvas.'
+				: 'No visible layers with content to export!');
 			return;
 		}
 
@@ -2600,9 +2681,9 @@ class GlitterEditor {
 			exportSettings: this.exportSettings,
 			callbacks: {
 				onStatus: (msg) => this.updateStatus(msg),
-				onProgress: (percent, text, currentFrame, totalFrames) => {
+				onProgress: (percent, text, currentFrame, totalFrames, progressInfo) => {
 					if (this.exportCancelled) throw new Error('Export cancelled');
-					this.updateExportProgress(percent, text, currentFrame, totalFrames);
+					this.updateExportProgress(percent, text, currentFrame, totalFrames, progressInfo);
 				},
 				onComplete: () => {
 					exportBtn.disabled = false;

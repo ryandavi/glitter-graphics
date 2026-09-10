@@ -26,10 +26,12 @@ const EXPORT_SETTINGS_SCHEMA = Object.freeze({
 	exportFrameSkip: { storageKey: 'exportFrameSkip', element: 'exportFrameSkip', kind: 'integer', default: () => CONFIG.export.defaults.frameSkip, group: 'optimization', validate: (value) => Number.isFinite(value) && value >= 1 ? Math.round(value) : CONFIG.export.defaults.frameSkip },
 	exportReverse: { storageKey: 'exportReverse', element: 'exportReverse', kind: 'checkbox', default: () => CONFIG.export.defaults.reverse, group: 'playback', validate: Boolean },
 	smartFrameReduction: { storageKey: 'exportSmartFrameReduction', element: 'exportSmartFrameReduction', kind: 'checkbox', default: () => CONFIG.export.defaults.smartFrameReduction, group: 'optimization', validate: Boolean },
-	optimizationPreset: { storageKey: 'exportOptimizationPreset', element: 'exportOptimizationPreset', default: () => CONFIG.export.defaults.optimizationPreset, group: 'optimization', validate: (value) => CONFIG.export.timeline.presets[value] ? value : CONFIG.export.timeline.defaultPreset },
-	// 'auto' defers to the Optimization Goal's own sampling rate. Without it the
+	exportFidelity: { storageKey: 'exportFidelity', element: 'exportFidelity', kind: 'integer', default: () => CONFIG.export.defaults.exportFidelity, group: 'optimization', validate: (value) => clampNumber(value, 0, CONFIG.export.timeline.fidelityStops.length - 1, CONFIG.export.defaults.exportFidelity, true) },
+	// 'auto' defers to the Export fidelity stop's own sampling rate. Without it the
 	// stored number always won, which made the goal's fidelity setting inert.
-	maxSamplingFps: { storageKey: 'exportMaxSamplingFps', element: 'exportMaxSamplingFps', group: 'optimization', default: () => CONFIG.export.defaults.maxSamplingFps, parse: (value) => value === 'auto' ? 'auto' : parseInt(value), validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 1, CONFIG.export.timeline.maxSamplingFps, CONFIG.export.defaults.maxSamplingFps, true) }
+	maxSamplingFps: { storageKey: 'exportMaxSamplingFps', element: 'exportMaxSamplingFps', group: 'optimization', default: () => CONFIG.export.defaults.maxSamplingFps, parse: (value) => value === 'auto' ? 'auto' : parseInt(value), validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 1, CONFIG.export.timeline.maxSamplingFps, CONFIG.export.defaults.maxSamplingFps, true) },
+	targetFrameRate: { storageKey: 'exportTargetFrameRate', element: 'exportTargetFrameRate', group: 'optimization', default: () => CONFIG.export.defaults.targetFrameRate, parse: (value) => value === 'auto' ? 'auto' : parseFloat(value), validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 1, 60, CONFIG.export.defaults.targetFrameRate) },
+	visualErrorThreshold: { storageKey: 'exportVisualErrorThreshold', element: 'exportVisualErrorThreshold', group: 'optimization', default: () => CONFIG.export.defaults.visualErrorThreshold, parse: (value) => value === '' ? 'auto' : parseFloat(value) / 100, format: (value) => value === 'auto' ? '' : value * 100, validate: (value) => value === 'auto' ? 'auto' : clampNumber(value, 0, 1, CONFIG.export.defaults.visualErrorThreshold) }
 });
 
 function clampNumber(value, minimum, maximum, fallback, integer = false) {
@@ -46,9 +48,15 @@ class SettingsStore {
 	}
 
 	load(source = {}) {
+		const migratedSource = { ...source };
+		if (!Object.prototype.hasOwnProperty.call(migratedSource, 'exportFidelity')) {
+			const legacyPreset = migratedSource.exportOptimizationPreset ?? migratedSource.optimizationPreset;
+			const legacyStops = { highFidelity: 1, balanced: 2, smallFile: 3 };
+			if (Object.prototype.hasOwnProperty.call(legacyStops, legacyPreset)) migratedSource.exportFidelity = legacyStops[legacyPreset];
+		}
 		return Object.fromEntries(Object.entries(this.schema).map(([key, spec]) => {
-			const value = Object.prototype.hasOwnProperty.call(source, spec.storageKey)
-				? source[spec.storageKey]
+			const value = Object.prototype.hasOwnProperty.call(migratedSource, spec.storageKey)
+				? migratedSource[spec.storageKey]
 				: spec.default();
 			return [key, spec.validate(value)];
 		}));
@@ -74,7 +82,7 @@ class SettingsStore {
 			const element = el(spec.element);
 			if (!element) return;
 			if (spec.kind === 'checkbox') element.checked = Boolean(values[key]);
-			else element.value = values[key];
+			else element.value = spec.format ? spec.format(values[key]) : values[key];
 		});
 	}
 

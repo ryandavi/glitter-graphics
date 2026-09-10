@@ -2186,6 +2186,22 @@ body.modal-open {
 	}
 }
 
+.export-fidelity-ticks {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--spacing-xs);
+	margin-top: var(--spacing-2xs);
+	color: var(--color-text-tertiary);
+	font-size: var(--font-size-xs);
+
+	>span { text-align: center; }
+}
+
+.export-fidelity-estimate {
+	color: var(--color-text-secondary);
+	font-variant-numeric: tabular-nums;
+}
+
 // The design system's badge: `badge-base` corners, no case transform. Status
 // colour is a modifier, never a new class.
 .badge {
