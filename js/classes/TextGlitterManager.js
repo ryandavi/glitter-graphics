@@ -662,15 +662,15 @@ class TextGlitterManager {
 			layer.textData.border = null;
 		}
 		if (layer.textData.border) {
-			layer.textData.border = { ...this.getDefaultBorder(), ...layer.textData.border };
+			layer.textData.border = mergeSlotEffectDefaults(layer.textData.border, this.getDefaultBorder());
 		}
 		if (layer.textData.shadow === undefined) {
 			layer.textData.shadow = null;
 		}
 		if (layer.textData.shadow) {
-			layer.textData.shadow = { ...this.getDefaultShadow(), ...layer.textData.shadow };
+			layer.textData.shadow = mergeSlotEffectDefaults(layer.textData.shadow, this.getDefaultShadow());
 		}
-		layer.textData.fill = { ...this.getDefaultFill(), ...(layer.textData.fill || {}) };
+		layer.textData.fill = mergeSlotEffectDefaults(layer.textData.fill, this.getDefaultFill());
 		normalizeSlotTextureCoordinates(layer.textData.fill);
 		normalizeSlotTextureCoordinates(layer.textData.border);
 		normalizeSlotTextureCoordinates(layer.textData.shadow);

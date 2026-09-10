@@ -15,11 +15,15 @@
 @use 'panels/paint-slot';
 @use 'panels/effects';
 @use 'workspace';
-@use 'settings';
+@use 'panels/transform-panel';
+@use 'panels/panel-sections';
+@use 'panels/layer-picker';
+@use 'processing-status';
 @use 'assets';
 // LAST of the panel sheets on purpose: this file is the single owner of the
 // property vocabulary, so it has to win the cascade against the feature sheets
-// (settings, assets, effects, transform) that still carry legacy declarations.
+// (assets, effects) that still carry legacy declarations. The redesign
+// grouping vocabulary now lives at the top of THIS file.
 @use 'panels/properties';
 @use 'modals';
 @use 'mobile';

@@ -105,7 +105,7 @@ function ensureSlotEffectData(root, slot, options = {}) {
 	if (!root[slot]) {
 		root[slot] = builders[slot]();
 	} else if (slot === 'border' && mergeBorderDefaults) {
-		root[slot] = { ...builders.border(), ...root[slot] };
+		root[slot] = mergeSlotEffectDefaults(root[slot], builders.border());
 	}
 	return root[slot];
 }
@@ -113,6 +113,11 @@ function ensureSlotEffectData(root, slot, options = {}) {
 function getSlotEffectData(root, slot) {
 	if (!root) return null;
 	return root[slot] || null;
+}
+
+function mergeSlotEffectDefaults(target, defaults) {
+	if (!target) return { ...defaults };
+	return Object.assign(target, { ...defaults, ...target });
 }
 
 function normalizeSlotTextureCoordinates(target) {
@@ -307,10 +312,16 @@ function bindEffectOffsetPair(options) {
 			const raw = parseFloat(input.value);
 			if (Number.isNaN(raw)) return;
 			const next = clamp(raw);
+			// A geometry mutation may normalize the layer before applying the value.
+			// Reacquire the slot so the write always targets live layer state.
+			const mutate = () => {
+				const liveData = getData(layer);
+				if (liveData) liveData[key] = next;
+			};
 			if (applyValue) {
-				applyValue(layer, () => { data[key] = next; });
+				applyValue(layer, mutate);
 			} else {
-				data[key] = next;
+				mutate();
 				render(layer);
 			}
 			if (commit) save();

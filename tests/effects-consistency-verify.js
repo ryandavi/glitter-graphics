@@ -127,6 +127,99 @@ async function main() {
 			return data?.border === null && data.shadow === null && data.effectDrafts == null;
 		}, textLayerId);
 
+		const shapeSources = await page.evaluate(() => {
+			const editor = window.editor;
+			return [
+				['border', 'shapeBorderGlitter', 'borderGlitterId'],
+				['shadow', 'shapeShadowGlitter', 'shadowGlitterId']
+			].map(([slot, buttonId, defaultKey]) => {
+				const layer = editor.shapeGlitterManager.createLayer({ shapeId: 'square' });
+				layer.shapeData[slot] = slot === 'border'
+					? editor.shapeGlitterManager.getDefaultBorder()
+					: editor.shapeGlitterManager.getDefaultShadow();
+				layer.shapeData[slot].mode = 'solid';
+				layer.shapeData[slot].glitterId = null;
+				editor.layerManager.insertLayer(layer);
+				editor.layerManager.setActiveLayer(layer.id);
+				editor.shapeGlitterManager.loadLayerSettings(layer);
+				document.getElementById(buttonId).click();
+				editor.shapeGlitterManager.loadLayerSettings(layer);
+				return {
+					slot,
+					mode: layer.shapeData[slot].mode,
+					defaulted: layer.shapeData[slot].glitterId === CONFIG.tools.glitter.defaults[defaultKey],
+					active: document.getElementById(buttonId).classList.contains('active')
+				};
+			});
+		});
+		assert.deepStrictEqual(shapeSources, [
+			{ slot: 'border', mode: 'glitter', defaulted: true, active: true },
+			{ slot: 'shadow', mode: 'glitter', defaulted: true, active: true }
+		]);
+
+		const offsets = await page.evaluate(() => {
+			const editor = window.editor;
+			const cases = [
+				{
+					prefix: 'stickerShadow',
+					create: () => editor.stickerManager.createLayer(),
+					manager: editor.stickerManager,
+					prepare: (layer) => { layer.stickerData.shadow = editor.stickerManager.getDefaultShadow(); },
+					getEffects: (layer) => [layer.stickerData.shadow]
+				},
+				{
+					prefix: 'textShadow',
+					create: () => editor.textGlitterManager.createLayer({ text: 'Offset' }),
+					manager: editor.textGlitterManager,
+					prepare: (layer) => {
+						layer.textData.border = editor.textGlitterManager.getDefaultBorder();
+						layer.textData.shadow = editor.textGlitterManager.getDefaultShadow();
+					},
+					getEffects: (layer) => [layer.textData.fill, layer.textData.border, layer.textData.shadow]
+				},
+				{
+					prefix: 'shapeShadow',
+					create: () => editor.shapeGlitterManager.createLayer({ shapeId: 'square' }),
+					manager: editor.shapeGlitterManager,
+					prepare: (layer) => {
+						layer.shapeData.border = editor.shapeGlitterManager.getDefaultBorder();
+						layer.shapeData.shadow = editor.shapeGlitterManager.getDefaultShadow();
+					},
+					getEffects: (layer) => [layer.shapeData.fill, layer.shapeData.border, layer.shapeData.shadow]
+				}
+			];
+			return cases.map((entry, index) => {
+				const layer = entry.create();
+				entry.prepare(layer);
+				entry.manager.normalizeLayer?.(layer);
+				const effectReferences = entry.getEffects(layer);
+				editor.layerManager.insertLayer(layer);
+				editor.layerManager.setActiveLayer(layer.id);
+				entry.manager.loadLayerSettings(layer);
+				const input = document.getElementById(`${entry.prefix}OffsetX`);
+				input.value = String(21 + index);
+				input.dispatchEvent(new Event('input', { bubbles: true }));
+				input.dispatchEvent(new Event('change', { bubbles: true }));
+				const stored = entry.getEffects(layer).at(-1).offsetX;
+				const title = input.closest('[data-effect-card]').querySelector(':scope > .subsection-title');
+				title.click();
+				title.click();
+				entry.manager.loadLayerSettings(layer);
+				const liveEffects = entry.getEffects(layer);
+				return {
+					prefix: entry.prefix,
+					stored,
+					reopened: Number(input.value),
+					stableReferences: effectReferences.map((effect, effectIndex) => effect === liveEffects[effectIndex])
+				};
+			});
+		});
+		assert.deepStrictEqual(offsets, [
+			{ prefix: 'stickerShadow', stored: 21, reopened: 21, stableReferences: [true] },
+			{ prefix: 'textShadow', stored: 22, reopened: 22, stableReferences: [true, true, true] },
+			{ prefix: 'shapeShadow', stored: 23, reopened: 23, stableReferences: [true, true, true] }
+		]);
+
 		console.log('effects consistency checks passed');
 	} finally {
 		await browser.close();

@@ -35,19 +35,6 @@ function canvasToScreen(metrics, point) {
 	};
 }
 
-function applyTouchSlop(deltaX, deltaY, slop = 10) {
-	const distance = Math.hypot(deltaX, deltaY);
-	if (distance <= slop || distance === 0) {
-		return { x: 0, y: 0 };
-	}
-
-	const ratio = (distance - slop) / distance;
-	return {
-		x: deltaX * ratio,
-		y: deltaY * ratio
-	};
-}
-
 function describeError(error) {
 	if (!error) return 'Unknown error';
 	if (error.stack) return error.stack;
@@ -774,12 +761,17 @@ async function check6(page) {
 	const beforeViewport = await getViewportMetrics(page);
 	const center = await getElementCenter(page, `.sticker-element[data-layer-id="${sticker.layerId}"]`);
 	const dragDelta = { x: 48, y: 30 };
-	const expectedDelta = applyTouchSlop(dragDelta.x, dragDelta.y);
+	const snappingBefore = await page.evaluate(() => PREFERENCES.get('snappingEnabled'));
+	await page.evaluate(() => PREFERENCES.set('snappingEnabled', false));
 
-	await oneFingerDrag(page, center, {
-		x: center.x + dragDelta.x,
-		y: center.y + dragDelta.y
-	});
+	try {
+		await oneFingerDrag(page, center, {
+			x: center.x + dragDelta.x,
+			y: center.y + dragDelta.y
+		});
+	} finally {
+		await page.evaluate((enabled) => PREFERENCES.set('snappingEnabled', enabled), snappingBefore);
+	}
 
 	const afterState = await getStickerState(page, sticker.layerId);
 	const afterHistoryIndex = await getHistoryIndex(page);
@@ -788,13 +780,13 @@ async function check6(page) {
 
 	approxEqual(
 		afterState.position.x - beforeState.position.x,
-		expectedDelta.x / beforeViewport.zoom,
+		expectedDeltaX,
 		POSITION_TOLERANCE_PX,
 		'Sticker X drag delta was incorrect'
 	);
 	approxEqual(
 		afterState.position.y - beforeState.position.y,
-		expectedDelta.y / beforeViewport.zoom,
+		expectedDeltaY,
 		POSITION_TOLERANCE_PX,
 		'Sticker Y drag delta was incorrect'
 	);
@@ -1299,7 +1291,7 @@ async function runSuite(browser, runNumber) {
 		['Two-finger pan moves the viewport', check3],
 		['Tap on bare canvas with SELECT tool switches selection to the base image', check4],
 		['Tap on a sticker with SELECT tool selects it', check5],
-		['One-finger sticker drag moves it with current touch-slop behavior and one history entry', check6],
+		['One-finger sticker drag preserves the full pointer delta and creates one history entry', check6],
 		['Two-finger pinch on a selected sticker scales it and translates with the centroid', check7],
 		['Two-finger twist on a sticker rotates it', check8],
 		['HAND tool gesture over sticker pans viewport without moving sticker', check9],

@@ -1,0 +1,112 @@
+@use '../mixins' as *;
+
+// ===========================================================================
+// TRANSFORM PANEL
+// ---------------------------------------------------------------------------
+// The shared transform card (Position / Size / Scale / Rotation / Align /
+// Flip) used by the sticker, text and shape panels. The redesign-scoped
+// overrides live in panels/_properties.scss; this is the base layout plus the
+// `.number-field-pair` primitive the transform and canvas-size number inputs
+// both use.
+// ===========================================================================
+
+.number-field-pair {
+	display: flex;
+	gap: var(--spacing-md);
+	// No width:100% - the property gutter applies a horizontal margin, and
+	// 100% + margin always overflows its container.
+	width: auto;
+
+	.input-group {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+
+		&.horizontal {
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			gap: var(--spacing-sm);
+		}
+
+		> label {
+			color: var(--color-text-secondary);
+			font-size: var(--font-size-sm);
+			font-weight: 500;
+		}
+
+		> .input-unit {
+			flex: 1;
+
+			> input[type="number"] { padding-right: 26px; }
+		}
+
+		> input[type="number"] {
+			width: 100%;
+			min-width: unset;
+			padding-inline: var(--spacing-sm);
+			font-size: var(--font-size-base);
+
+			&:read-only {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+		}
+	}
+}
+
+.transform-panel {
+	.transform-grid {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+	}
+
+	.transform-panel-title-actions {
+		display: flex;
+		align-items: center;
+		margin-left: auto;
+
+		&:empty { display: none; }
+	}
+
+	.transform-chip {
+		flex-shrink: 0;
+		min-height: var(--control-height-compact);
+
+		> span {
+			width: auto;
+			min-height: var(--control-height-compact);
+			padding: 0 var(--spacing-sm);
+		}
+	}
+
+	.transform-scale-summary {
+		@include spread-row;
+
+		> .setting-header { flex: 1 1 auto; }
+	}
+
+	.transform-scale-control { width: 100%; }
+
+	.input-group.horizontal > label {
+		width: 1.75ch;
+		min-width: 1.75ch;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+		font-variant-numeric: tabular-nums;
+		text-align: center;
+	}
+
+	.property-header-switch > span { white-space: nowrap; }
+}
+
+.transform-control-group {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+}
+
+.transform-segmented-control {
+	width: 100%;
+}

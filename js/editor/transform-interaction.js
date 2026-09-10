@@ -16,7 +16,7 @@ zoomToSelection(options = {}) {
 ,
 snapTransformPosition(transform, position, options = {}) {
 		const config = CONFIG.snapping;
-		if (!config.enabled || options.ctrlKey) {
+		if (!PREFERENCES.get('snappingEnabled') || options.ctrlKey) {
 			this.clearSmartGuides();
 			return position;
 		}
@@ -74,7 +74,7 @@ snapTransformPosition(transform, position, options = {}) {
 ,
 	snapGroupDelta(bounds, delta, excludedIds, options = {}) {
 		const config = CONFIG.snapping;
-		if (!config.enabled || options.ctrlKey || !bounds) { this.clearSmartGuides(); return delta; }
+		if (!PREFERENCES.get('snappingEnabled') || options.ctrlKey || !bounds) { this.clearSmartGuides(); return delta; }
 		const targetsX = config.snapToCanvas ? [0, this.originalCanvas.width / 2, this.originalCanvas.width] : [];
 		const targetsY = config.snapToCanvas ? [0, this.originalCanvas.height / 2, this.originalCanvas.height] : [];
 		if (config.snapToLayers) this.layerManager.layers.forEach((layer) => {

@@ -343,3 +343,105 @@
 		}
 	}
 }
+
+
+// ===== Tool-panel control groups ==========================================
+// Generic groups used across the tool panels (radio rows, a full-width
+// button stack, the non-redesign colour-selection list).
+
+.radio-button-group {
+	display: flex;
+	gap: var(--spacing-lg);
+
+	.radio-button-group-item {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-base);
+		cursor: pointer;
+
+		input[type="radio"] {
+			cursor: pointer;
+		}
+
+		span {
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+	}
+}
+
+.tool-options-group {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: var(--spacing-sm);
+	letter-spacing: 0.5px;
+	font-size: var(--font-size-base);
+
+	>.btn-simple {
+		flex: 1 1 100%;
+		width: 100%;
+	}
+}
+
+.color-selection {
+	.color-selection-empty-note { display: none; }
+
+	&.is-empty .color-selection-empty-note { display: block; }
+
+	.selected-colors-display {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
+		@include text-xs;
+
+
+
+
+		>.selected-color-chip {
+			display: flex;
+			align-items: center;
+			gap: var(--spacing-sm);
+			min-height: var(--control-height-compact);
+			padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) var(--spacing-sm);
+			background: var(--color-bg-secondary);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-sm);
+
+
+			>.selected-color-swatch {
+				width: 16px;
+				height: 16px;
+				border-radius: var(--radius-full);
+				border: 1px solid var(--color-border);
+				flex-shrink: 0;
+			}
+
+			>.selected-color-remove {
+				background: none;
+				border: none;
+				color: var(--color-text-tertiary);
+				cursor: pointer;
+				padding: 0;
+				width: 24px;
+				height: 24px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: var(--font-size-base);
+				line-height: 1;
+				margin-left: var(--spacing-xs);
+				border-radius: var(--radius-full);
+
+				&:focus-visible {
+					outline: 2px solid var(--color-accent);
+					outline-offset: 1px;
+				}
+
+				&:hover {
+					color: var(--color-danger-bright);
+				}
+			}
+		}
+	}
+}

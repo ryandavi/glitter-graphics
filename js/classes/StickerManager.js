@@ -1167,9 +1167,12 @@ updateTransform(layerId, updates) {
 		layerData.stickerData.url = sticker.url;
 		layerData.stickerData.name = sticker.name;
 		layerData.stickerData.source = sticker.source;
-		layerData.stickerData.width = sticker.width || layerData.stickerData.width;
-		layerData.stickerData.height = sticker.height || layerData.stickerData.height;
-		layerData.stickerData.frameCount = sticker.frameCount || layerData.stickerData.frameCount || 1;
+		// Geometry belongs to the saved layer, not to asynchronously hydrated
+		// library metadata. Replacing it here made undo resize a sticker whenever
+		// its detail record finished loading after the snapshot was captured.
+		layerData.stickerData.width = layerData.stickerData.width || sticker.width;
+		layerData.stickerData.height = layerData.stickerData.height || sticker.height;
+		layerData.stickerData.frameCount = layerData.stickerData.frameCount || sticker.frameCount || 1;
 		// The library asset owns this flag, so a project saved before an admin
 		// change picks up the corrected rendering on reopen.
 		layerData.stickerData.isPixelated = sticker.isPixelated !== false;

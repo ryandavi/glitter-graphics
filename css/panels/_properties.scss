@@ -45,6 +45,140 @@
 //   F  a container with nothing visible inside it collapses (see :has, below)
 // ===========================================================================
 
+// ===== Grouping vocabulary: state + unscoped base ==========================
+// Was panels/_redesign-groups.scss (and _settings.scss before that). Kept
+// FIRST in this file so the scoped `.property-panel …` layout rules further
+// down still win a tie. State behaviour (collapsible chevron, effect-card
+// enable) that markup + JS depend on; the layout is owned below.
+
+.subsection-content-group {
+	&[data-collapsible-subsection] > .subsection-title {
+		cursor: pointer;
+
+		> .subsection-chevron {
+			width: 0.85rem;
+			height: 0.85rem;
+			transition: transform var(--transition-fast);
+		}
+	}
+
+	&[data-collapsible-subsection].is-collapsed {
+		> .subsection-title > .subsection-chevron { transform: rotate(-90deg); }
+		> :not(.subsection-title) { display: none; }
+	}
+
+	&[data-effect-card]:has(> .subsection-title input[data-effect-toggle]:not(:checked)) {
+		&:not(.is-collapsed) > .property-module-content { display: flex; }
+
+		&:not(.is-collapsed) > :not(.subsection-title) {
+			opacity: var(--disabled-opacity);
+			pointer-events: none;
+		}
+	}
+}
+
+.settings-subsection {
+	display: flex;
+	flex-direction: column;
+	// No gap: a group is separated by its divider plus its own bottom padding.
+	// A gap here stacked a third mechanism on top of those two.
+	gap: 0;
+
+	.layer-type-options > .layer-type-option { background-color: var(--color-bg-primary); }
+
+	> .transform-panel-host {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+	}
+}
+
+.subsection-title {
+	gap: var(--spacing-sm);
+
+	> .property-header-switch { margin-left: auto; }
+}
+
+.property-header-switch {
+	display: inline-flex;
+	position: relative;
+	align-items: center;
+	gap: var(--spacing-sm);
+	min-height: var(--control-height);
+	color: var(--color-text-primary);
+	font-weight: initial;
+	cursor: pointer;
+	user-select: none;
+
+	> input[type="checkbox"] {
+		@include visually-hidden-control;
+		cursor: pointer;
+
+		&:checked + span {
+			background: var(--color-accent);
+			border-color: var(--color-accent-border);
+			color: var(--color-text-on-accent);
+		}
+
+		&:focus-visible + span { box-shadow: var(--control-focus-ring); }
+	}
+
+	> span {
+		display: inline-flex;
+		position: relative;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		min-height: var(--control-height);
+		padding: 0 var(--spacing-base);
+		border: 1px solid var(--color-border);
+		border-radius: var(--control-radius);
+		background: transparent;
+		color: var(--color-text-secondary);
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+		letter-spacing: 0.75px;
+		text-align: center;
+		text-transform: uppercase;
+		cursor: pointer;
+		transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+	}
+
+	&:hover > span {
+		color: var(--color-text-primary);
+		background-color: var(--color-bg-tertiary);
+		border-color: var(--color-border-hover);
+	}
+
+	&:has(> input:disabled) {
+		opacity: var(--disabled-opacity);
+		cursor: not-allowed;
+
+		> span { cursor: not-allowed; }
+	}
+}
+
+.subsection-title > .property-header-switch {
+	min-height: var(--control-height-compact);
+
+	> span {
+		min-height: var(--control-height-compact);
+		padding: 0 var(--spacing-sm);
+	}
+}
+
+// Rule C: the ONE uppercase level. L1 group titles stay shouty so they separate
+// from the sentence-case block titles beneath them without needing a box.
+.subsection-content-group.subsection-section-group > .subsection-title,
+.subsection-content-group.effects-stack > .subsection-title {
+	font-size: 10.5px;
+	font-weight: var(--font-weight-semibold);
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--color-text-tertiary);
+	padding: var(--spacing-xs) var(--spacing-md);
+}
+
 .property-panel {
 	// ---- geometry --------------------------------------------------------
 	--property-row-h: 26px;
@@ -112,7 +246,7 @@
 }
 
 .property-block-title,
-.property-panel .subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) > .subsection-title {
+.property-panel .property-block > .subsection-title {
 	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-semibold);
 	letter-spacing: 0;
@@ -548,11 +682,13 @@
 		display: none;
 	}
 
-	// L2 block: title + rows. This is the DEFAULT, so it is written with
-	// :where() - zero specificity - and any rule that grants a surface (the card
-	// rule below) outranks it without an escalation war. Chaining :not()s here
-	// is what silently un-carded Fill and the effect modules twice before.
-	.subsection-content-group:where(:not(.subsection-section-group):not(.effects-stack)) {
+	// L2 block: title + rows. This is the DEFAULT. `.property-block` is stamped
+	// by the renderer (applyPanelRedesignClasses) on exactly the
+	// `.subsection-content-group`s that are neither an L1 section-group nor the
+	// effects stack, so this one class == the old
+	// `:where(:not(.subsection-section-group):not(.effects-stack))` at the same
+	// (single-class) weight — any rule that grants a surface still outranks it.
+	.property-block {
 		display: flex;
 		flex-direction: column;
 		// gap: var(--property-row-gap);
@@ -1142,7 +1278,7 @@
 // border, padding, heading and layout footprint.
 
 .property-panel {
-	.subsection-content-group:not(.subsection-section-group):not(.effects-stack):not([data-effect-card]):not(:has(> :not(.subsection-title):not([hidden]))),
+	.property-block:not([data-effect-card]):not(:has(> :not(.subsection-title):not([hidden]))),
 	.subsection-card-body:not(:has(> :not([hidden]))),
 	.paint-slot-main:not(:has(> :not([hidden]))),
 	.property-pair-group:not(:has(> :not([hidden]))),
@@ -1895,8 +2031,9 @@ body.is-resizing-panel {
 	}
 }
 
-// ===== Selected colour chips ==============================================
-// A chip is a token: swatch, value, remove. It reads as one object rather than
+// ===== Selected colour chips: appearance ==================================
+// Geometry for these lives in the "Selected colour chips" block above; this is
+// the surface — a chip reads as one token (swatch, value, remove) rather than
 // three loose parts, and its remove control behaves like every other icon
 // button in the panel.
 .property-panel .selected-color-chip {

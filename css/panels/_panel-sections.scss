@@ -1,0 +1,89 @@
+@use '../mixins' as *;
+
+// ===========================================================================
+// PANEL SECTION VISIBILITY
+// ---------------------------------------------------------------------------
+// Which design-panel section is on screen is driven by `.visible` (managers
+// toggle it as the selection changes). Settings sections that can take the
+// remaining panel height and scroll also opt into the flex/`is-open` contract.
+// ===========================================================================
+
+.sticker-settings-section {
+	position: relative;
+	z-index: 100;
+	flex-shrink: 0;
+}
+
+.welcome-section,
+.no-layer-settings-section,
+.base-layer-settings-section,
+.gallery-search-section {
+	display: none;
+
+	&.visible {
+		display: block;
+		overflow-y: auto;
+	}
+}
+
+.sticker-settings-section,
+.glitter-settings-section,
+.text-settings-section,
+.shape-settings-section,
+.layer-settings-section,
+.brush-settings-section {
+	display: none;
+
+	&.visible {
+		display: flex;
+		flex: 0 0 auto;
+		flex-direction: column;
+		min-height: 0;
+
+		&.is-open {
+			flex: 1 1 auto;
+
+			> .section-content.visible {
+				overflow-y: auto;
+				overscroll-behavior: contain;
+			}
+		}
+	}
+}
+
+.glitter-options,
+.sticker-options {
+	display: none;
+
+	&.visible {
+		display: flex;
+		flex-direction: column;
+	}
+}
+
+.section:is(.welcome-section, .base-layer-settings-section) > .section-content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-base);
+}
+
+
+// Settings sections that sit at the foot of a panel: keep them above the
+// list they overlay, and let their controls host toggle on `.visible`.
+
+.glitter-settings-section,
+.layer-settings-section {
+	position: relative;
+	z-index: 100;
+	// box-shadow: 0px -5px 3px 0px rgba(0, 0, 0, 0.13);
+	flex-shrink: 0;
+}
+
+#layerSettingsControls,
+#glitterSettingsControls {
+	display: none;
+
+	&.visible {
+		display: block;
+	}
+}

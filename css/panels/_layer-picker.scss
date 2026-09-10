@@ -1,0 +1,98 @@
+@use '../mixins' as *;
+
+// ===========================================================================
+// LAYER-TYPE PICKER
+// ---------------------------------------------------------------------------
+// The card grid used by the Add-Layer modal and the no-selection panel's
+// "quick add" strip.
+// ===========================================================================
+
+.layer-type-options {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+	align-items: stretch;
+	gap: var(--spacing-base);
+
+	> .layer-type-option {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: var(--spacing-sm);
+		width: 100%;
+		max-width: 100%;
+		padding: var(--spacing-xl);
+		border: 2px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-bg-secondary);
+		text-align: center;
+		cursor: pointer;
+		transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+
+		&:hover {
+			border-color: var(--color-accent);
+			background: var(--color-bg-tertiary);
+			box-shadow: 0 4px 12px var(--color-shadow-soft);
+		}
+
+		.icon-wrapper {
+			margin-bottom: var(--spacing-base);
+			color: var(--color-text-tertiary);
+		}
+
+		&:hover .icon-wrapper { opacity: 1; }
+
+		.layer-type-name {
+			color: var(--color-text-primary);
+			font-size: var(--font-size-lg);
+		}
+
+		.layer-type-description {
+			@include text-sm;
+			color: var(--color-text-secondary);
+		}
+	}
+}
+
+.no-layer-settings-section.panel-redesign .quick-add {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--spacing-sm);
+	// The grid is not a .property-row, so it does not self-inset — give it the
+	// card gutter so it lines up with the rows in the Project and Size cards.
+	margin-inline: var(--property-pad);
+
+	> .layer-type-option {
+		display: grid;
+		grid-template-rows: 30px 15px 40px;
+		place-items: center;
+		align-content: center;
+		min-height: 112px;
+		padding: var(--spacing-md) var(--spacing-sm);
+		gap: 0;
+		border-width: 1px;
+		border-radius: var(--radius-sm);
+
+		.icon-wrapper {
+			width: 22px;
+			height: 22px;
+			margin: 0;
+
+			> svg.icon { font-size: 22px; }
+		}
+
+		.layer-type-name {
+			font-size: var(--font-size-base);
+
+			+ .layer-type-description {
+				margin-top: var(--spacing-sm);
+			}
+		}
+
+		.layer-type-description {
+			align-self: start;
+			max-width: 22ch;
+			font-size: var(--font-size-xs);
+			line-height: 1.125;
+		}
+	}
+}

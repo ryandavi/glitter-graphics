@@ -715,11 +715,11 @@ class ShapeGlitterManager {
 		// The rounded rectangle folded into the parametric square (corner radius 0).
 		if (data.shapeId === 'roundedRectangle') data.shapeId = 'square';
 		data.cornerRadiusPx ??= CONFIG.ui.sliders.shapeRadius.value;
-		data.fill = { ...this.getDefaultFill(), ...(data.fill || {}) };
+		data.fill = mergeSlotEffectDefaults(data.fill, this.getDefaultFill());
 		if (data.border === undefined) data.border = null;
-		if (data.border) data.border = { ...this.getDefaultBorder(), ...data.border };
+		if (data.border) data.border = mergeSlotEffectDefaults(data.border, this.getDefaultBorder());
 		if (data.shadow === undefined) data.shadow = null;
-		if (data.shadow) data.shadow = { ...this.getDefaultShadow(), ...data.shadow };
+		if (data.shadow) data.shadow = mergeSlotEffectDefaults(data.shadow, this.getDefaultShadow());
 		normalizeSlotTextureCoordinates(data.fill);
 		normalizeSlotTextureCoordinates(data.border);
 		normalizeSlotTextureCoordinates(data.shadow);

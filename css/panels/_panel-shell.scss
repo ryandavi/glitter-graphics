@@ -9,6 +9,193 @@
 // vocabulary INSIDE a section lives in panels/_properties.scss.
 // ===========================================================================
 
+// ===== Generic section chrome: header bar + collapsible ====================
+// The base look of any panel `.section` (design + layers). The panel-scoped
+// accordion behaviour is below; the property vocabulary INSIDE a section is
+// in panels/_properties.scss.
+
+.section {
+
+	/* Section Headers */
+	>.section-header {
+		position: relative;
+		border-bottom: 1px solid var(--color-border);
+		flex-shrink: 0;
+
+		padding: var(--spacing-sm);
+
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		cursor: pointer;
+
+		@include windows7-bar();
+
+		>.section-header-title {
+
+			display: flex;
+			align-items: center;
+			justify-content: flex-start;
+			flex: 1 1 auto;
+			min-width: 0;
+			gap: var(--spacing-base);
+
+
+			font-size: var(--font-size-base);
+			font-weight: 600;
+			text-transform: uppercase;
+			color: var(--color-text-secondary);
+
+
+
+			>.section-header-title-icon {
+				color: var(--bar-icon-color);
+				flex-shrink: 0;
+			}
+
+			>.section-header-title-text {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			>.section-header-title-count {
+				@include text-sm;
+				// Sits on the bar chrome, not the panel — tertiary text goes
+				// invisible once a theme paints the bar a color.
+				color: var(--bar-icon-color);
+
+				&::before {
+					content: attr(data-count);
+				}
+
+			}
+
+		}
+
+		>.section-header-actions {
+			display: flex;
+			align-items: center;
+			gap: var(--spacing-sm);
+			flex-shrink: 0;
+		}
+
+
+		&.section-header-with-action {
+
+			>.section-header-action,
+			>.section-header-actions>.section-header-action {
+
+				cursor: pointer;
+				text-transform: none;
+				visibility: hidden;
+				pointer-events: none;
+
+				width: var(--icon-size-sm);
+				height: var(--icon-size-sm);
+				flex-shrink: 0;
+
+
+
+				&.visible {
+					visibility: visible;
+					pointer-events: auto;
+				}
+			}
+
+			>.section-header-action#addLayerBtn:not(.visible),
+			>.section-header-actions>.section-header-action#addLayerBtn:not(.visible) {
+				visibility: visible;
+				opacity: var(--disabled-opacity);
+			}
+		}
+	}
+
+	>.section-content {
+
+		padding: var(--spacing-base);
+	}
+
+	&.is-layer-edit-locked {
+		>.section-header > .section-header-title > .locked-layer-badge {
+			flex-shrink: 0;
+			padding: var(--spacing-2xs) var(--spacing-xs);
+			border: 1px solid var(--color-border);
+			border-radius: var(--radius-xs);
+			background: var(--color-bg-tertiary);
+			color: var(--color-text-secondary);
+			font-size: var(--font-size-xs);
+			font-weight: 600;
+			line-height: 1;
+			text-transform: none;
+		}
+
+		>.section-content {
+			opacity: var(--disabled-opacity);
+			cursor: not-allowed;
+		}
+	}
+
+	/* Collapsible Section */
+	&.collapsible-section {
+		border-top: 1px solid var(--color-border);
+
+		background: var(--panel-bg);
+		-webkit-backdrop-filter: var(--panel-backdrop);
+		backdrop-filter: var(--panel-backdrop);
+		flex-shrink: 0;
+
+
+
+		>.section-header {
+
+			border-bottom: unset;
+
+			>h3.section-header-title {
+				+.section-header-action {
+					background-color: unset;
+
+
+					&:hover {
+						background-color: unset;
+					}
+
+					&.collapsed .icon {
+						transform: rotate(-90deg);
+					}
+				}
+			}
+
+			>.section-header-actions>.section-header-action {
+				background-color: unset;
+
+				&:hover {
+					background-color: unset;
+				}
+
+				&.collapsed .icon {
+					transform: rotate(-90deg);
+				}
+			}
+		}
+
+		>.section-content {
+
+			display: none;
+			padding: var(--spacing-md);
+			border-top: 1px solid var(--color-border);
+
+			&.visible {
+				display: block;
+			}
+		}
+
+		@include windows7-bar(true);
+	}
+}
+
+
 .design-panel,
 .layers-panel {
 	background: unset;
