@@ -316,6 +316,32 @@ const CONFIG = deepFreeze({
 				sepia: ['#2b1b17', '#704f3a', '#b79268', '#f2dfc2']
 			}
 		},
+		filter: {
+			defaultType: 'basic',
+			types: {
+				instagram: { presetId: null, showName: false, strength: 100 },
+				basic: { brightness: 0, contrast: 0, saturation: 0, hue: 0 },
+				invert: { amount: 100 },
+				grayscale: { amount: 100 },
+				sepia: { amount: 100 },
+				tint: { color: '#ff9838', mode: 'soft-light', amount: 40 },
+				vignette: { amount: 45, midpoint: 55, roundness: 0, feather: 60, color: '#000000' },
+				grain: { amount: 35, size: 1, roughness: 50, monochrome: true, mode: 'soft-light' },
+				blur: { radius: 8 }
+			},
+			tintQuickPicks: { warm: '#ff9838', cool: '#4f8cff' },
+			nameCaption: {
+				fontPx: 28,
+				minFontPx: 16,
+				fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif',
+				color: '#ffffff',
+				shadow: { color: 'rgba(0,0,0,0.5)', offsetX: 0, offsetY: 1, blur: 2 },
+				position: 'center',
+				maxWidthFraction: 0.6,
+				stampField: 'name'
+			},
+			grainTilePx: 256
+		},
 		selection: {
 			defaults: {
 				threshold: 50,
@@ -680,6 +706,23 @@ const CONFIG = deepFreeze({
 		// borderWidth/borderDotSpacing maxes are boot defaults that
 		// ShapeGlitterManager raises from CONFIG.tools.shapes.border at bind time.
 			sliders: {
+			filterInstagramStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },
+			filterBrightness: { label: 'Brightness', unit: '%', min: -100, max: 100, step: 1, value: 0 },
+			filterContrast: { label: 'Contrast', unit: '%', min: -100, max: 100, step: 1, value: 0 },
+			filterSaturation: { label: 'Saturation', unit: '%', min: -100, max: 100, step: 1, value: 0 },
+			filterHue: { label: 'Hue', unit: '°', min: -180, max: 180, step: 1, value: 0 },
+			filterInvertAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
+			filterGrayscaleAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
+			filterSepiaAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
+			filterTintAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 40 },
+			filterVignetteAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 45 },
+			filterVignetteMidpoint: { label: 'Midpoint', unit: '%', min: 0, max: 100, step: 1, value: 55 },
+			filterVignetteRoundness: { label: 'Roundness', unit: '%', min: -100, max: 100, step: 1, value: 0 },
+			filterVignetteFeather: { label: 'Feather', unit: '%', min: 1, max: 100, step: 1, value: 60 },
+			filterGrainAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 35 },
+			filterGrainSize: { label: 'Size', unit: 'px', min: 0.25, max: 16, step: 0.25, value: 1 },
+			filterGrainRoughness: { label: 'Roughness', unit: '%', min: 0, max: 100, step: 1, value: 50 },
+			filterBlurRadius: { label: 'Radius', unit: 'px', min: 0, max: 64, step: 1, value: 8 },
 			autoGlitterColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
 			autoGlitterMergeDistinctness: { label: 'Combine Similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
 			autoGlitterDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
@@ -895,6 +938,7 @@ const LayerType = {
 	TEXT_GLITTER: 'text-glitter',
 	SHAPE: 'shape',
 	BASE_IMAGE: 'base-image',
+	FILTER: 'filter'
 };
 
 const ToolType = {
@@ -993,6 +1037,8 @@ function layerHasVisibleContent(layer) {
 			return hasMaskContent(layer);
 		case LayerType.BASE_IMAGE:
 			return true;
+		case LayerType.FILTER:
+			return GlitterFilter.isActive(layer.filterData, layer.opacity);
 		default:
 			return false;
 	}
@@ -1042,6 +1088,35 @@ const LAYER_UI_CONFIG = {
 		}
 	},
 
+	[LayerType.FILTER]: {
+		displayName: 'Filter',
+		serialization: {
+			dataKey: 'filterData',
+			omit: ['settings', 'selectedGlitterId'],
+			defaultName: () => 'Filter',
+			normalize: (editor, layer) => editor.filterLayerManager?.normalizeLayer(layer)
+		},
+		addedStatusMessage: 'New filter layer added',
+		goTo: null,
+		addableViaModal: {
+			label: 'Filter',
+			icon: 'sliders',
+			description: 'Adjust the appearance of every layer below'
+		},
+		showDesignGallery: false,
+		designPanelSections: ['filterSettingsSection'],
+		mobileSettingsSections: ['filter'],
+		panelMode: 'filter',
+		elementClass: 'filter-layer-overlay',
+		transformable: false,
+		managerKey: 'filterLayerManager',
+		mobileCreateDrawer: 'edit',
+		onActivate: (editor, layer) => {
+			editor.setTool(ToolType.SELECT);
+			editor.filterLayerManager?.loadLayerSettings(layer);
+		}
+	},
+
 	[LayerType.GLITTER_FILL]: {
 		displayName: 'Fill Layer',
 		serialization: {
@@ -1054,7 +1129,9 @@ const LAYER_UI_CONFIG = {
 		addableViaModal: {
 			label: 'Fill Layer',
 			icon: 'glitter',
-			description: 'Paint an animated or solid fill onto the image'
+			description: 'Paint glitter, color, or a gradient onto the canvas',
+			quickAddId: 'quickActionAddGlitter',
+			quickAddOrder: 4
 		},
 		designPanelSections: ['brushTipSearchSection', 'brushTipOptions', 'glitterSearchSection', 'glitterOptions', 'glitterSettingsSection'],
 		mobileSettingsSections: ['glitter'],
@@ -1083,7 +1160,9 @@ const LAYER_UI_CONFIG = {
 		addableViaModal: {
 			label: 'Sticker',
 			icon: 'sticker',
-			description: 'Add images and graphics'
+			description: 'Place an image or animated graphic',
+			quickAddId: 'quickActionAddSticker',
+			quickAddOrder: 2
 		},
 		designPanelSections: ['stickersSearchSection', 'stickersOptions', 'glitterSearchSection', 'glitterOptions', 'stickerSettingsSection'],
 		mobileSettingsSections: ['sticker'],
@@ -1138,7 +1217,9 @@ const LAYER_UI_CONFIG = {
 		addableViaModal: {
 			label: 'Text',
 			icon: 'text',
-			description: 'Fill editable text with glitter, color, or gradient'
+			description: 'Add editable text with glitter, color, or a gradient',
+			quickAddId: 'quickActionAddText',
+			quickAddOrder: 1
 		},
 		// No layerSettingsSection / 'tool': Selection Settings only applies to
 		// color-picked glitter fills — text layers hide it instead of showing an
@@ -1191,7 +1272,9 @@ const LAYER_UI_CONFIG = {
 		addableViaModal: {
 			label: 'Shape',
 			icon: 'square',
-			description: 'Fill a shape with glitter, color, or gradient'
+			description: 'Add a shape with glitter, color, or a gradient',
+			quickAddId: 'quickActionAddShape',
+			quickAddOrder: 3
 		},
 		// Like text: the glitter gallery picks the shared swatch, plus a dedicated
 		// Shape Properties panel. Selection Settings doesn't apply.
@@ -1373,6 +1456,66 @@ const PANEL_SCHEMAS = {
 				{ kind: 'actionRow', classes: 'auto-glitter-actions is-split', actions: [
 					{ id: 'cancelAutoGlitterBtn', label: 'Cancel', secondary: true },
 					{ id: 'autoGlitterCreateBtn', label: 'Create Layers', primary: true }
+				] }
+			] }
+		]
+	},
+	[LayerType.FILTER]: {
+		prefix: 'filter',
+		sectionPrefix: 'filterSettings',
+		mobileKey: 'filter',
+		replaceStatic: true,
+		section: { id: 'filterSettingsSection', classes: 'panel-redesign', icon: 'sliders', iconName: 'Filter', title: 'Filter Properties' },
+		groups: [
+			{ title: 'Filter', collapsible: false, items: [
+				{ kind: 'card', items: [
+					{ kind: 'select', id: 'filterType', label: 'Filter type', visibleLabel: 'Type', options: [
+						{ label: 'Instagram', value: 'instagram' }, { label: 'Basic', value: 'basic', active: true },
+						{ label: 'Invert', value: 'invert' }, { label: 'Grayscale', value: 'grayscale' },
+						{ label: 'Sepia', value: 'sepia' }, { label: 'Tint', value: 'tint' },
+						{ label: 'Vignette', value: 'vignette' }, { label: 'Grain', value: 'grain' }, { label: 'Blur', value: 'blur' }
+					] },
+					{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' }
+				] }
+			] },
+			{ title: 'Settings', collapsible: false, items: [
+				{ kind: 'card', items: [
+					{ kind: 'set', id: 'filterInstagramSettings', classes: 'filter-type-settings', items: [
+						{ kind: 'host', id: 'filterPresetPicker', classes: 'property-inset property-scrollbox filter-preset-picker' },
+						{ kind: 'slider', id: 'filterStrength', slider: 'filterInstagramStrength', revert: true },
+						{ kind: 'checkboxList', items: [{ id: 'filterShowName', label: 'Show Filter Name' }] }
+					] },
+					{ kind: 'set', id: 'filterBasicSettings', classes: 'filter-type-settings', hidden: true, items: [
+						{ kind: 'slider', id: 'filterBrightness', slider: 'filterBrightness', revert: true },
+						{ kind: 'slider', id: 'filterContrast', slider: 'filterContrast', revert: true },
+						{ kind: 'slider', id: 'filterSaturation', slider: 'filterSaturation', revert: true },
+						{ kind: 'slider', id: 'filterHue', slider: 'filterHue', revert: true }
+					] },
+					{ kind: 'set', id: 'filterInvertSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterInvertAmount', slider: 'filterInvertAmount', revert: true }] },
+					{ kind: 'set', id: 'filterGrayscaleSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterGrayscaleAmount', slider: 'filterGrayscaleAmount', revert: true }] },
+					{ kind: 'set', id: 'filterSepiaSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterSepiaAmount', slider: 'filterSepiaAmount', revert: true }] },
+					{ kind: 'set', id: 'filterTintSettings', classes: 'filter-type-settings', hidden: true, items: [
+						{ kind: 'field', id: 'filterTintColor', label: 'Color', type: 'color', value: '#ff9838', revert: true },
+						{ kind: 'select', id: 'filterTintMode', label: 'Blend mode', visibleLabel: 'Blend', options: [] },
+						{ kind: 'slider', id: 'filterTintAmount', slider: 'filterTintAmount', revert: true },
+						{ kind: 'actionRow', classes: 'filter-tint-picks is-split', actions: [
+							{ id: 'filterTintWarm', label: 'Warm' }, { id: 'filterTintCool', label: 'Cool' }
+						] }
+					] },
+					{ kind: 'set', id: 'filterVignetteSettings', classes: 'filter-type-settings', hidden: true, items: [
+						{ kind: 'slider', id: 'filterVignetteAmount', slider: 'filterVignetteAmount', revert: true },
+						{ kind: 'slider', id: 'filterVignetteMidpoint', slider: 'filterVignetteMidpoint', revert: true },
+						{ kind: 'slider', id: 'filterVignetteRoundness', slider: 'filterVignetteRoundness', revert: true },
+						{ kind: 'slider', id: 'filterVignetteFeather', slider: 'filterVignetteFeather', revert: true },
+						{ kind: 'field', id: 'filterVignetteColor', label: 'Color', type: 'color', value: '#000000', revert: true }
+					] },
+					{ kind: 'set', id: 'filterGrainSettings', classes: 'filter-type-settings', hidden: true, items: [
+						{ kind: 'slider', id: 'filterGrainAmount', slider: 'filterGrainAmount', revert: true },
+						{ kind: 'slider', id: 'filterGrainSize', slider: 'filterGrainSize', revert: true },
+						{ kind: 'slider', id: 'filterGrainRoughness', slider: 'filterGrainRoughness', revert: true },
+						{ kind: 'checkboxList', items: [{ id: 'filterGrainMono', label: 'Monochrome', checked: true }] }
+					] },
+					{ kind: 'set', id: 'filterBlurSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterBlurRadius', slider: 'filterBlurRadius', revert: true }] }
 				] }
 			] }
 		]
@@ -1924,6 +2067,12 @@ function getLayerManagerForType(editor, type) {
 
 function getAddableLayerTypes() {
 	return Object.values(LayerType).filter((type) => Boolean(LAYER_UI_CONFIG[type]?.addableViaModal));
+}
+
+function getQuickAddLayerTypes() {
+	return getAddableLayerTypes()
+		.filter((type) => Boolean(LAYER_UI_CONFIG[type].addableViaModal.quickAddId))
+		.sort((a, b) => LAYER_UI_CONFIG[a].addableViaModal.quickAddOrder - LAYER_UI_CONFIG[b].addableViaModal.quickAddOrder);
 }
 
 const LAYER_BADGES = [

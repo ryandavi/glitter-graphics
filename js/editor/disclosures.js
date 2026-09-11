@@ -1,6 +1,9 @@
 const EDITOR_DISCLOSURE_METHODS = {
 initializeCollapsibleSections() {
-		const sections = ['designGallery', 'autoGlitterSettings', 'baseLayerSettings', 'layerSettings', 'glitterSettings', 'stickerSettings', 'textSettings', 'shapeSettings', 'brushSettings'];
+		const sections = ['designGallery', ...new Set(Object.values(PANEL_SCHEMAS)
+			.flatMap((schema) => [schema, ...(schema.auxiliarySections || [])])
+			.map((schema) => schema.sectionPrefix)
+			.filter(Boolean))];
 
 			const setOpen = (name, isOpen, accordion = false) => {
 				const section = document.getElementById(`${name}Section`);
@@ -26,7 +29,7 @@ initializeCollapsibleSections() {
 			const visibleSections = sections.filter((name) => {
 				const section = document.getElementById(`${name}Section`);
 				if (!section) return false;
-				return name === 'designGallery' || section.classList.contains('visible');
+				return section.classList.contains('visible');
 			});
 
 			if (!visibleSections.length) {

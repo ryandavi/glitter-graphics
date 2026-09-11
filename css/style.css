@@ -1231,6 +1231,17 @@ select:disabled {
   cursor: not-allowed;
 }
 
+input[type=number] {
+  -webkit-appearance: textfield;
+     -moz-appearance: textfield;
+          appearance: textfield;
+}
+input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+          appearance: none;
+  margin: 0;
+}
+
 select {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -3000,6 +3011,12 @@ input[type=range]:disabled {
   background-color: var(--color-bg-tertiary);
 }
 
+.layer-swatch.filter canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 /* ===== GLITTER COLUMN ===== */
 .design-panel {
   width: var(--glitter-panel-width);
@@ -3047,6 +3064,11 @@ input[type=range]:disabled {
 .design-panel[data-panel-mode=glitter] .design-gallery-section[data-picker-library=brush-tips] [data-gallery-search=glitter],
 .design-panel[data-panel-mode=glitter] .design-gallery-section[data-picker-library=brush-tips] [data-gallery-content=glitter] {
   display: none;
+}
+@media (min-width: 801px) {
+  .design-panel[data-gallery-visible=false] > .design-gallery-section {
+    display: none;
+  }
 }
 
 .glitter-search {
@@ -4703,6 +4725,56 @@ body.mask-editing .sticker-element {
   border-color: color-mix(in srgb, var(--color-off-white) 32%, var(--color-border));
 }
 
+.filter-preset-picker {
+  --filter-picker-fade-size: 30px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-base);
+  max-height: 206px;
+  overflow-y: auto;
+}
+.filter-preset-picker::after {
+  content: "";
+  position: sticky;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--spacing-base));
+  flex: 0 0 var(--filter-picker-fade-size);
+  margin-top: calc(0px - var(--filter-picker-fade-size) - var(--spacing-base));
+  background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+.filter-preset-picker.has-overflow-bottom::after {
+  opacity: 1;
+}
+
+.filter-preset-option {
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 6px 10px;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  font: inherit;
+  text-align: left;
+  text-transform: none;
+  border-radius: var(--radius-inner);
+}
+
+.filter-preset-swatch {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 28px;
+  display: block;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-inner);
+}
+
 .brush-dynamics {
   display: flex;
   flex-direction: column;
@@ -5109,14 +5181,6 @@ body.mask-editing .sticker-element {
   font-variant-numeric: tabular-nums;
   color: var(--color-text-primary);
   text-align: right;
-  -webkit-appearance: textfield;
-     -moz-appearance: textfield;
-          appearance: textfield;
-}
-.gradient-stop-set .gradient-stop-field > input[type=number]::-webkit-outer-spin-button, .gradient-stop-set .gradient-stop-field > input[type=number]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-          appearance: none;
-  margin: 0;
 }
 .gradient-stop-set .gradient-stop-field > .input-unit-suffix {
   position: static;
@@ -5748,6 +5812,26 @@ body.tool-select .preview-canvas {
 }
 .glitter-element .glitter-background.pixelated {
   image-rendering: pixelated;
+}
+
+.filter-layer-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.filter-layer-overlay > * {
+  position: absolute;
+  inset: 0;
+}
+
+.filter-layer-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .number-field-pair {
@@ -9440,6 +9524,16 @@ body.modal-open {
   color: var(--color-text-primary);
   font-weight: 600;
   white-space: nowrap;
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details dl.export-asset-analysis-list {
+  grid-template-columns: 1fr;
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details dl.export-asset-analysis-list > div {
+  align-items: flex-start;
+}
+#exportPreviewModal .export-reduction-summary .export-optimization-details dl.export-asset-analysis-list dd {
+  white-space: normal;
+  text-align: right;
 }
 #exportPreviewModal .export-reduction-summary p {
   margin: 0;

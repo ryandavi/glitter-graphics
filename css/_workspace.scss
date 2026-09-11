@@ -221,3 +221,24 @@ body.tool-select {
 		}
 	}
 }
+
+.filter-layer-overlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+
+	> * {
+		position: absolute;
+		inset: 0;
+	}
+}
+
+.filter-layer-name {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	color: #fff;
+	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}

@@ -1,0 +1,51 @@
+@use '../mixins' as *;
+
+.filter-preset-picker {
+	--filter-picker-fade-size: 30px;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-base);
+	max-height: 206px;
+	overflow-y: auto;
+
+	&::after {
+		content: '';
+		position: sticky;
+		left: 0;
+		right: 0;
+		bottom: calc(-1 * var(--spacing-base));
+		flex: 0 0 var(--filter-picker-fade-size);
+		margin-top: calc(0px - var(--filter-picker-fade-size) - var(--spacing-base));
+		background: linear-gradient(to top, var(--color-bg-secondary) 8%, transparent 100%);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity var(--transition-fast);
+	}
+
+	&.has-overflow-bottom::after { opacity: 1; }
+}
+
+.filter-preset-option {
+	flex-shrink: 0;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	padding: 6px 10px;
+	background: var(--color-bg-tertiary);
+	color: var(--color-text-primary);
+	font: inherit;
+	text-align: left;
+	text-transform: none;
+	border-radius: var(--radius-inner);
+}
+
+.filter-preset-swatch {
+	flex: 0 0 42px;
+	width: 42px;
+	height: 28px;
+	display: block;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-inner);
+}

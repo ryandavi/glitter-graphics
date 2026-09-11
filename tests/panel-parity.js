@@ -35,6 +35,7 @@ const SECTION_IDS = [
 	'stickerSettingsSection',
 	'textSettingsSection',
 	'shapeSettingsSection',
+	'filterSettingsSection',
 	'layerSettingsSection'
 ];
 
@@ -172,6 +173,25 @@ async function captureLayerState(page) {
 }
 
 const LAYER_SETUPS = {
+	FILTER: async (page) => {
+		await page.evaluate(() => {
+			const editor = window.editor;
+			const layer = editor.filterLayerManager.createLayer();
+			layer.filterData = GlitterFilter.normalizeFilterData({ type: 'instagram', presetId: 'clarendon' });
+			editor.layerManager.insertLayer(layer);
+			editor.layerManager.setActiveLayer(layer.id);
+			const section = document.getElementById('filterSettingsSection');
+			if (!section?.classList.contains('visible')) throw new Error('Filter Properties did not become visible');
+			if (!document.getElementById('filterSettingsContent')?.classList.contains('visible')) throw new Error('Filter Properties did not open');
+			if (document.getElementById('designPanel')?.dataset.galleryVisible !== 'false') throw new Error('Filter did not opt out of the Design Gallery');
+
+			const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square' });
+			editor.layerManager.insertLayer(shape);
+			editor.layerManager.setActiveLayer(shape.id);
+			if (section.classList.contains('visible')) throw new Error('Filter Properties remained visible for another layer type');
+			editor.layerManager.setActiveLayer(layer.id);
+		});
+	},
 	SHAPE: async (page) => {
 		await page.evaluate(() => {
 			const editor = window.editor;

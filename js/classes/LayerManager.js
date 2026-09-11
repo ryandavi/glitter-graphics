@@ -280,12 +280,11 @@ class LayerManager {
 		this.insertLayer(layer);
 		this.setActiveLayer(layer.id);
 
-		// On mobile, open design panel for gallery-driven layer types (not Shape -
-		// see LAYER_UI_CONFIG[type].autoOpenDesignDrawerOnCreate).
+		// Mobile creation routes to the layer's declared workflow; legacy
+		// gallery-driven types default to Design.
 		if (this.editor.mobileManager && this.editor.mobileManager.isMobile && CONFIG.ui.mobile.openDrawOnLayerAdd) {
-			if (cfg.autoOpenDesignDrawerOnCreate) {
-				this.editor.mobileManager.openDrawer('design');
-			}
+			const drawer = cfg.mobileCreateDrawer || (cfg.autoOpenDesignDrawerOnCreate ? 'design' : null);
+			if (drawer) this.editor.mobileManager.openDrawer(drawer);
 		}
 
 		this.renderLayersList();
@@ -1013,6 +1012,16 @@ class LayerManager {
 			const transform = getLayerTransform(clonedLayer);
 			transform.position.x += positionOffset.x;
 			transform.position.y += positionOffset.y;
+		} else if (sourceLayer.type === LayerType.FILTER) {
+			clonedLayer = {
+				id: this.generateLayerId(),
+				type: LayerType.FILTER,
+				name: sourceLayer.name,
+				visible: sourceLayer.visible,
+				locked: false,
+				opacity: sourceLayer.opacity,
+				filterData: structuredClone(sourceLayer.filterData)
+			};
 		} else {
 			// Clone fill layer
 			clonedLayer = {
@@ -1045,7 +1054,7 @@ class LayerManager {
 		// (Higher index = visually above in the stack)
 		const sourceIndex = this.layers.findIndex(l => l.id === layerId);
 		this.layers.splice(sourceIndex + 1, 0, clonedLayer);
-		if (sourceLayer.type === LayerType.TEXT_GLITTER || sourceLayer.type === LayerType.SHAPE) {
+		if ([LayerType.TEXT_GLITTER, LayerType.SHAPE, LayerType.FILTER].includes(sourceLayer.type)) {
 			this.renderClonedLayerPreview(clonedLayer);
 		}
 
@@ -1133,6 +1142,18 @@ class LayerManager {
 			return clonedLayer;
 		}
 
+		if (sourceLayer.type === LayerType.FILTER) {
+			return {
+				id: this.generateLayerId(),
+				type: LayerType.FILTER,
+				name: sourceLayer.name,
+				visible: sourceLayer.visible,
+				locked: false,
+				opacity: sourceLayer.opacity,
+				filterData: structuredClone(sourceLayer.filterData)
+			};
+		}
+
 		const clonedLayer = {
 			id: this.generateLayerId(),
 			type: LayerType.GLITTER_FILL,
@@ -1165,6 +1186,11 @@ class LayerManager {
 
 		if (layer.type === LayerType.SHAPE) {
 			this.editor.shapeGlitterManager?.renderLayer(layer);
+			return;
+		}
+
+		if (layer.type === LayerType.FILTER) {
+			this.editor.filterLayerManager?.renderLayer(layer);
 			return;
 		}
 
@@ -1401,6 +1427,10 @@ class LayerManager {
 				nameText.textContent = 'Base Image';
 				typeText.textContent = `Background · ${layer.background?.mode === 'none' ? 'Transparent' : panelCap(layer.background?.mode || 'image')}`;
 				break;
+			case LayerType.FILTER:
+				nameText.textContent = layer.name || 'Filter';
+				typeText.textContent = `Filter · ${GlitterFilter.summaryText(layer.filterData)}`;
+				break;
 			default:
 				nameText.textContent = 'Unknown Layer';
 				typeText.textContent = 'Unknown';
@@ -1592,7 +1622,7 @@ class LayerManager {
 
 	renderLayerSwatch(swatch, layer, options = {}) {
 		const compact = Boolean(options.compact);
-		swatch.classList.remove('empty', 'pixelated', 'text-layer', 'sticker', 'glitter', 'baseImage');
+		swatch.classList.remove('empty', 'pixelated', 'text-layer', 'sticker', 'glitter', 'baseImage', 'filter');
 		swatch.removeAttribute('style');
 		swatch.replaceChildren();
 
@@ -1662,6 +1692,16 @@ class LayerManager {
 			} else if (!renderPaint(background, layer.selectedGlitterId, background.colorAdjust)) {
 				swatch.classList.add('empty');
 			}
+			return;
+		}
+
+		if (layer.type === LayerType.FILTER) {
+			const thumbnail = document.createElement('canvas');
+			thumbnail.width = compact ? 48 : 64;
+			thumbnail.height = compact ? 48 : 64;
+			GlitterFilter.renderThumbnail(thumbnail, layer.filterData, this.editor.originalCanvas, layer.opacity / 100);
+			swatch.classList.add('filter');
+			swatch.append(thumbnail);
 			return;
 		}
 

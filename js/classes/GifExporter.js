@@ -50,6 +50,7 @@ class GifExporter {
 		this.helperCtx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
 		this.basePixelEffectCache = new Map();
 		this.baseDitherPaletteCache = new Map();
+		this.filterGrainTileCache = new Map();
 		this.previewBlobUrl = null;
 	}
 
@@ -812,6 +813,30 @@ class GifExporter {
 				};
 			}
 
+			case LayerType.FILTER: {
+				return {
+					prepareMasks: async () => {},
+					loadSources: async () => {},
+					flattenFrames: () => {},
+					collectTransparencyFrames: () => {},
+					collectFrameCounts: (library, counts) => counts.set(layer.id, 1),
+					hasMultiFrameGlitter: () => false,
+					render: ({ ctx, width, height, needsTransparency, safeKey, alphaThreshold, captionStackIndex }) => {
+						if (!GlitterFilter.isActive(layer.filterData, layer.opacity)) return;
+						const caption = GlitterFilter.resolve(layer.filterData).caption;
+						const captionSpec = caption ? GlitterFilter.nameCaptionSpec(caption, { width, height, stackIndex: captionStackIndex }) : null;
+						GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
+							keepAlpha: needsTransparency,
+							safeKey,
+							alphaThreshold,
+							seed: layer.id,
+							tileCache: this.filterGrainTileCache,
+							renderSource: captionSpec ? (sourceContext) => GlitterFilter.drawCaption(sourceContext, captionSpec) : null
+						});
+					}
+				};
+			}
+
 			default:
 				return {
 					prepareMasks: async () => {},
@@ -1198,6 +1223,7 @@ class GifExporter {
 
 	async process(params) {
 		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks, frameSink = null } = params;
+		this.filterGrainTileCache.clear();
 
 		// Validate frame delay at the start
 		exportSettings.frameDelay = Math.max(20, exportSettings.frameDelay || 100);
@@ -1671,6 +1697,10 @@ class GifExporter {
 		}
 
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
+		const captionLayers = layers.filter((layer) => layer.visible !== false
+			&& layer.type === LayerType.FILTER
+			&& GlitterFilter.isActive(layer.filterData, layer.opacity)
+			&& GlitterFilter.resolve(layer.filterData).caption);
 		layers.forEach((layer) => {
 			if (layer.visible === false) return;
 			if (layer.type === LayerType.BASE_IMAGE && !exportSettings.baseImage) return;
@@ -1684,7 +1714,11 @@ class GifExporter {
 				shapeMaskCanvases,
 				helperCtx: hCtx,
 				width,
-				height
+				height,
+				needsTransparency,
+				safeKey,
+				alphaThreshold,
+				captionStackIndex: Math.max(0, captionLayers.indexOf(layer))
 			});
 		});
 

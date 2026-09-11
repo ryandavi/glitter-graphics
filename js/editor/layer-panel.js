@@ -157,15 +157,11 @@ setupLayerTypePickerListeners() {
 
 		const quickAddOptions = document.getElementById('quickAddOptions');
 		if (quickAddOptions) {
+			const quickAddTypes = getQuickAddLayerTypes();
 			this.renderLayerTypePickerOptions(quickAddOptions, {
 				iconSizeClass: '',
-				layerTypes: [LayerType.TEXT_GLITTER, LayerType.STICKER, LayerType.SHAPE, LayerType.GLITTER_FILL],
-				idMap: {
-					[LayerType.GLITTER_FILL]: 'quickActionAddGlitter',
-					[LayerType.STICKER]: 'quickActionAddSticker',
-					[LayerType.TEXT_GLITTER]: 'quickActionAddText',
-					[LayerType.SHAPE]: 'quickActionAddShape'
-				}
+				layerTypes: quickAddTypes,
+				idMap: Object.fromEntries(quickAddTypes.map((type) => [type, LAYER_UI_CONFIG[type].addableViaModal.quickAddId]))
 			});
 
 			quickAddOptions.addEventListener('click', (event) => {

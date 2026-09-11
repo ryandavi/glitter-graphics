@@ -93,6 +93,7 @@ class GlitterEditor {
 		this.autoGlitterManager = new AutoGlitterManager(this);
 		this.textGlitterManager = new TextGlitterManager(this);
 		this.shapeGlitterManager = new ShapeGlitterManager(this);
+		this.filterLayerManager = new FilterLayerManager(this);
 		this.pickers = new PickerRegistry(this);
 		[
 			this.glitterManager,
@@ -2425,6 +2426,7 @@ class GlitterEditor {
 		if (this.textGlitterManager) {
 			this.textGlitterManager.clearElements();
 		}
+		this.filterLayerManager?.clearElements();
 	}
 
 	// ===== PREVIEW & RENDERING =====
@@ -2462,6 +2464,7 @@ class GlitterEditor {
 			this.stickerManager.renderContent(layersToShow);
 			this.textGlitterManager.renderContent(layersToShow);
 			this.shapeGlitterManager.renderContent(layersToShow);
+			this.filterLayerManager.renderContent(layersToShow);
 			return;
 		}
 
@@ -2473,6 +2476,7 @@ class GlitterEditor {
 		this.stickerManager.renderContent(layersToShow);
 		this.textGlitterManager.renderContent(layersToShow);
 		this.shapeGlitterManager.renderContent(layersToShow);
+		this.filterLayerManager.renderContent(layersToShow);
 	}
 
 	renderPreviewCanvas(layersToShow) {

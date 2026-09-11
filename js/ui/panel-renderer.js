@@ -1502,7 +1502,7 @@ function initializeModuleSummaries(root = document) {
 }
 
 function initializeScrollBoundaryFades(root = document) {
-	root.querySelectorAll('.text-font-picker').forEach((scrollbox) => {
+	root.querySelectorAll('.text-font-picker, .filter-preset-picker').forEach((scrollbox) => {
 		if (scrollbox.dataset.scrollBoundaryFade !== undefined) return;
 		scrollbox.dataset.scrollBoundaryFade = '';
 		const update = () => {

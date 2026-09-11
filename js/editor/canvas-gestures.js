@@ -430,6 +430,7 @@ togglePreview() {
 			this.updateStatusBar();
 			this.maskEditor?._updateBrushCursorSize();
 			this.maskEditor?.renderOverlay();
+			this.requestPreviewUpdate();
 		});
 
 		// Prevent leaving if unsaved

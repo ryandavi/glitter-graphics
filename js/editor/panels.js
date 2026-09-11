@@ -15,13 +15,9 @@ isLayerContentLocked(layer) {
 ,
 	syncLockedLayerUI(layer) {
 		const locked = this.isLayerContentLocked(layer) && !this.layerManager.hasMultiSelection();
-		const propertySectionIds = [
-			'glitterSettingsSection',
-			'layerSettingsSection',
-			'stickerSettingsSection',
-			'textSettingsSection',
-			'shapeSettingsSection'
-		];
+		const propertySectionIds = [...new Set(Object.values(LayerType)
+			.map((type) => PANEL_SCHEMAS[type]?.section?.id)
+			.filter(Boolean))];
 		propertySectionIds.forEach((id) => {
 			const section = document.getElementById(id);
 			if (!section) return;
@@ -56,23 +52,8 @@ isLayerContentLocked(layer) {
 		const hasMultiSelection = this.layerManager?.hasMultiSelection?.() ?? false;
 
 		// 1. Define ALL possible sections to hide them first
-		const allSections = [
-			'noLayerSettingsSection',
-			'autoGlitterSettingsSection',
-			'baseLayerSettingsSection',
-			'glitterSettingsSection',
-			'layerSettingsSection',
-			'glitterOptions',
-			'glitterSearchSection',
-			'stickerSettingsSection',
-			'textSettingsSection',
-			'shapeSettingsSection',
-			'stickersOptions',
-			'stickersSearchSection',
-			'brushTipOptions',
-			'brushTipSearchSection',
-			'shapesOptions'
-		];
+		const allSections = [...new Set(Object.values(LAYER_UI_CONFIG)
+			.flatMap((entry) => entry.designPanelSections || []))];
 
 		// 2. Hide everything
 		allSections.forEach(id => {
@@ -119,6 +100,7 @@ isLayerContentLocked(layer) {
 			const designPanel = document.getElementById('designPanel');
 			if (designPanel) {
 				designPanel.dataset.panelMode = config.panelMode;
+				designPanel.dataset.galleryVisible = String(config.showDesignGallery !== false);
 			}
 		}
 
@@ -213,23 +195,7 @@ isLayerContentLocked(layer) {
 			return 'designGallery';
 		}
 
-		if (layer.type === LayerType.TEXT_GLITTER) {
-			return 'textSettings';
-		}
-
-		if (layer.type === LayerType.BASE_IMAGE) {
-			return 'baseLayerSettings';
-		}
-
-		if (layer.type === LayerType.STICKER) {
-			return 'stickerSettings';
-		}
-
-		if (layer.type === LayerType.SHAPE) {
-			return 'shapeSettings';
-		}
-
-		return 'glitterSettings';
+		return PANEL_SCHEMAS[layer.type]?.sectionPrefix || 'designGallery';
 	}
 
 ,
