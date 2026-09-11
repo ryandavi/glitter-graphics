@@ -1,14 +1,15 @@
 (function (root) {
-	const GRAIN_IDENTITY = Object.freeze({ amount: 0, size: 1, roughness: 0.5, monochrome: true });
+	const GRAIN_IDENTITY = Object.freeze({ amount: 0, size: 25, roughness: 0.5, monochrome: true });
 
 	function clamp(value, minimum, maximum) {
 		return Math.min(maximum, Math.max(minimum, value));
 	}
 
 	function normalizeGrain(value) {
+		const size = Number(value?.size);
 		return {
 			amount: clamp(Number(value?.amount) || 0, 0, 1),
-			size: clamp(Number(value?.size) || 1, 0.25, 16),
+			size: clamp(Number.isFinite(size) ? size : GRAIN_IDENTITY.size, 0, 100),
 			roughness: clamp(value?.roughness == null ? GRAIN_IDENTITY.roughness : Number(value.roughness), 0, 1),
 			monochrome: value?.monochrome !== false
 		};
@@ -20,7 +21,7 @@
 
 	function tileSignature(value, seed) {
 		const grain = normalizeGrain(value);
-		return `${grain.roughness}|${grain.monochrome}|${String(seed)}`;
+		return `${grain.size}|${grain.roughness}|${grain.monochrome}|${String(seed)}`;
 	}
 
 	function hashSeed(seed) {
@@ -35,34 +36,41 @@
 	function createNoise(value, seed, tileSize = 256) {
 		const grain = normalizeGrain(value);
 		const baseSeed = hashSeed(seed);
-		const randomAt = (x, y, channel, octave) => {
-			let next = baseSeed ^ Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(channel + 1, 2246822519) ^ Math.imul(octave + 1, 3266489917);
+		const randomAt = (x, y, channel, salt) => {
+			let next = baseSeed ^ Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(channel + 1, 2246822519) ^ Math.imul(salt + 1, 3266489917);
 			next = Math.imul(next ^ next >>> 13, 1274126177);
 			return ((next ^ next >>> 16) >>> 0) / 4294967295;
 		};
-		const octave = (x, y, channel, cell, level) => {
-			if (cell === 1) return randomAt(x, y, channel, level);
-			const x0 = Math.floor(x / cell);
-			const y0 = Math.floor(y / cell);
-			const tx = (x % cell) / cell;
-			const ty = (y % cell) / cell;
-			const smoothX = tx * tx * (3 - 2 * tx);
-			const smoothY = ty * ty * (3 - 2 * ty);
-			const top = randomAt(x0, y0, channel, level) * (1 - smoothX) + randomAt(x0 + 1, y0, channel, level) * smoothX;
-			const bottom = randomAt(x0, y0 + 1, channel, level) * (1 - smoothX) + randomAt(x0 + 1, y0 + 1, channel, level) * smoothX;
-			return top * (1 - smoothY) + bottom * smoothY;
+		const smoothNoise = (x, y, channel, salt, cells) => {
+			const gridX = x / tileSize * cells;
+			const gridY = y / tileSize * cells;
+			const x0 = Math.floor(gridX);
+			const y0 = Math.floor(gridY);
+			const tx = gridX - x0;
+			const ty = gridY - y0;
+			const easeX = tx * tx * (3 - 2 * tx);
+			const easeY = ty * ty * (3 - 2 * ty);
+			const wrap = (coordinate) => (coordinate % cells + cells) % cells;
+			const top = randomAt(wrap(x0), wrap(y0), channel, salt) * (1 - easeX) + randomAt(wrap(x0 + 1), wrap(y0), channel, salt) * easeX;
+			const bottom = randomAt(wrap(x0), wrap(y0 + 1), channel, salt) * (1 - easeX) + randomAt(wrap(x0 + 1), wrap(y0 + 1), channel, salt) * easeX;
+			return top * (1 - easeY) + bottom * easeY;
 		};
+		const sizeMix = Math.pow(grain.size / 100, 0.7);
+		const particlePx = 0.75 + Math.pow(grain.size / 100, 1.35) * 5.25;
+		const particleCells = Math.max(12, Math.round(tileSize / particlePx));
 		const data = new Uint8ClampedArray(tileSize * tileSize * 4);
-		const contrast = 72 + grain.roughness * 183;
 		for (let y = 0; y < tileSize; y++) for (let x = 0; x < tileSize; x++) {
 			const index = (y * tileSize + x) * 4;
 			for (let channel = 0; channel < 3; channel++) {
 				const sourceChannel = grain.monochrome ? 0 : channel;
-				const smooth = octave(x, y, sourceChannel, 16, 0);
-				const medium = octave(x, y, sourceChannel, 4, 1);
-				const harsh = octave(x, y, sourceChannel, 1, 2);
-				const detail = smooth * (1 - grain.roughness) + (medium * 0.55 + harsh * 0.45) * grain.roughness;
-				data[index + channel] = clamp(128 + (detail - 0.5) * contrast, 0, 255);
+				const fine = (randomAt(x, y, sourceChannel, 0) + randomAt(x, y, sourceChannel, 1) + randomAt(x, y, sourceChannel, 2)) / 3;
+				const particle = (smoothNoise(x, y, sourceChannel, 3, particleCells) + smoothNoise(x, y, sourceChannel, 4, particleCells) + smoothNoise(x, y, sourceChannel, 5, particleCells)) / 3;
+				const regular = fine * (1 - sizeMix) + particle * sizeMix;
+				const irregular = randomAt(x, y, sourceChannel, 6);
+				const clump = 0.8 + smoothNoise(x, y, sourceChannel, 7, 19) * 0.4;
+				let detail = (regular - 0.5) * (1 - grain.roughness * 0.15) + (irregular - 0.5) * grain.roughness * 0.4;
+				detail *= 1 + (clump - 1) * grain.roughness;
+				data[index + channel] = clamp(128 + detail * 290, 0, 255);
 			}
 			data[index + 3] = 255;
 		}

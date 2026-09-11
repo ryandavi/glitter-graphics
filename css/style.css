@@ -3010,8 +3010,7 @@ input[type=range]:disabled {
 .layer-swatch[style*=contain] {
   background-color: var(--color-bg-tertiary);
 }
-
-.layer-swatch.filter canvas {
+.layer-swatch.filter .filter-css-thumbnail {
   display: block;
   width: 100%;
   height: 100%;
@@ -4767,12 +4766,77 @@ body.mask-editing .sticker-element {
 }
 
 .filter-preset-swatch {
+  position: relative;
+  overflow: hidden;
   flex: 0 0 42px;
   width: 42px;
   height: 28px;
   display: block;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-inner);
+}
+
+.filter-css-thumbnail {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background: #8b789f;
+}
+.filter-css-thumbnail > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.filter-css-thumbnail-base {
+  inset: -8% !important;
+  background: radial-gradient(circle at 73% 24%, #f6d17a 0 13%, transparent 14%), radial-gradient(circle at 24% 76%, #3e8bb8 0 25%, transparent 26%), linear-gradient(145deg, #473778 0 30%, #d15e75 31% 65%, #efae62 66%);
+}
+
+.filter-css-thumbnail-basic .filter-css-thumbnail-base {
+  background: linear-gradient(90deg, transparent 48%, rgba(255, 255, 255, 0.34) 49% 52%, transparent 53%), linear-gradient(145deg, #2e65b0 0 33%, #d83f77 34% 66%, #f0ba55 67%);
+}
+
+.filter-css-thumbnail-invert .filter-css-thumbnail-base {
+  background: linear-gradient(135deg, #f8f8f8 0 49%, #171923 50%);
+}
+
+.filter-css-thumbnail-grayscale .filter-css-thumbnail-base {
+  background: linear-gradient(135deg, #111 0%, #777 50%, #f4f4f4 100%);
+}
+
+.filter-css-thumbnail-sepia .filter-css-thumbnail-base {
+  background: linear-gradient(135deg, #372114 0%, #a06f3e 52%, #ead6aa 100%);
+}
+
+.filter-css-thumbnail-tint .filter-css-thumbnail-base {
+  background: radial-gradient(circle at 72% 25%, #ffd283 0 18%, transparent 19%), linear-gradient(135deg, #75395f, #ef8455);
+}
+
+.filter-css-thumbnail-vignette .filter-css-thumbnail-base {
+  background: radial-gradient(circle at center, #f4bf76 0 22%, #9b5268 46%, #15121d 100%);
+}
+
+.filter-css-thumbnail-grain .filter-css-thumbnail-base {
+  background: linear-gradient(135deg, #474b54, #b8aa98);
+}
+.filter-css-thumbnail-grain .filter-css-thumbnail-grain, .filter-css-thumbnail-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-radial-gradient(circle at 17% 29%, rgba(255, 255, 255, 0.9) 0 0.6px, transparent 0.8px 2.4px), repeating-radial-gradient(circle at 71% 63%, rgba(0, 0, 0, 0.85) 0 0.7px, transparent 0.9px 2.8px);
+  background-size: 7px 9px, 11px 8px;
+  mix-blend-mode: soft-light;
+  opacity: 0.9;
+}
+
+.filter-css-thumbnail-blur .filter-css-thumbnail-base {
+  inset: -22% !important;
+  filter: blur(5px) !important;
+  background: radial-gradient(circle at 22% 68%, #217eb0 0 25%, transparent 26%), radial-gradient(circle at 73% 28%, #f6bc54 0 20%, transparent 21%), linear-gradient(135deg, #6b357c, #de5d72);
 }
 
 .brush-dynamics {

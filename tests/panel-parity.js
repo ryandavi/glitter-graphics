@@ -184,6 +184,19 @@ const LAYER_SETUPS = {
 			if (!section?.classList.contains('visible')) throw new Error('Filter Properties did not become visible');
 			if (!document.getElementById('filterSettingsContent')?.classList.contains('visible')) throw new Error('Filter Properties did not open');
 			if (document.getElementById('designPanel')?.dataset.galleryVisible !== 'false') throw new Error('Filter did not opt out of the Design Gallery');
+			const typeOptions = [...document.getElementById('filterType').options];
+			if (typeOptions[0]?.value !== 'basic' || typeOptions.at(-1)?.value !== 'instagram') throw new Error('Filter type order is incorrect');
+			if (!document.getElementById('filterType').closest('.property-set')?.closest('.property-card')) throw new Error('Filter Type is not grouped inside the Filter card');
+			if (document.getElementById('filterLayerOpacity')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Opacity') throw new Error('Filter opacity does not use the shared label');
+			const filterUnits = ['filterHueValue', 'filterGrainSizeValue', 'filterTintAmountValue'].map((id) => document.getElementById(id)?.textContent);
+			if (!filterUnits[0]?.endsWith('°') || !filterUnits[1]?.endsWith('%') || !filterUnits[2]?.endsWith('%')) throw new Error(`Filter control units are missing: ${filterUnits.join(', ')}`);
+			if (document.querySelector('#filterTintSettings .property-actions')) throw new Error('Tint quick picks still use a nested property-actions row');
+			const tintPresets = [...document.getElementById('filterTintPreset').options];
+			if (tintPresets[0]?.value !== 'warming-85' || tintPresets.at(-1)?.value !== 'custom') throw new Error('Tint preset order is incorrect');
+			const firstPreset = document.querySelector('#filterPresetPicker .filter-preset-option');
+			if (firstPreset?.dataset.presetId !== 'rio') throw new Error('Rio de Janeiro is not the first Instagram preset');
+			if (!firstPreset.querySelector('.filter-css-thumbnail') || firstPreset.querySelector('canvas')) throw new Error('Instagram preset thumbnail is not CSS-only');
+			if (!document.querySelector('.layer-swatch.filter .filter-css-thumbnail') || document.querySelector('.layer-swatch.filter canvas')) throw new Error('Filter layer thumbnail is not CSS-only');
 
 			const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square' });
 			editor.layerManager.insertLayer(shape);

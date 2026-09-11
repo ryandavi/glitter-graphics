@@ -4,7 +4,7 @@
 	const Blur = root.GlitterBlur || (typeof require === 'function' ? require('./blur.js') : null);
 	const BlendModes = root.GlitterBlendModes || (typeof require === 'function' ? require('./blend-modes.js') : null);
 	const Presets = root.FILTER_PRESETS || (typeof require === 'function' ? require('../core/filter-presets.js') : null);
-	const FILTER_TYPES = Object.freeze(['instagram', 'basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur']);
+	const FILTER_TYPES = Object.freeze(['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur', 'instagram']);
 
 	function config() {
 		return CONFIG.tools.filter;
@@ -27,7 +27,7 @@
 		Object.keys(defaults).forEach((key) => {
 			normalized[key] = source[key] == null ? structuredClone(defaults[key]) : structuredClone(source[key]);
 		});
-		if (type === 'instagram' && !Presets[normalized.presetId]) normalized.presetId = null;
+		if (type === 'instagram' && !Presets[normalized.presetId]) normalized.presetId = defaults.presetId;
 		if (type === 'instagram') {
 			normalized.strength = clamp(number(normalized.strength, defaults.strength), 0, 100);
 			normalized.showName = Boolean(normalized.showName);
@@ -39,6 +39,10 @@
 		}
 		if (type === 'tint') {
 			normalized.color = /^#[0-9a-f]{6}$/i.test(normalized.color) ? normalized.color : defaults.color;
+			const matchingPreset = Object.entries(config().tintPresets).find(([, preset]) => preset.color?.toLowerCase() === normalized.color.toLowerCase())?.[0];
+			const requestedPreset = Object.hasOwn(source, 'presetId') ? source.presetId : (source.color == null ? defaults.presetId : matchingPreset || 'custom');
+			normalized.presetId = config().tintPresets[requestedPreset] ? requestedPreset : 'custom';
+			if (normalized.presetId !== 'custom') normalized.color = config().tintPresets[normalized.presetId].color;
 			normalized.mode = BlendModes.isBlendMode(normalized.mode) ? normalized.mode : defaults.mode;
 		} else if (type === 'vignette') {
 			normalized.midpoint = clamp(number(normalized.midpoint, defaults.midpoint), 0, 100);
@@ -46,7 +50,7 @@
 			normalized.feather = clamp(number(normalized.feather, defaults.feather), 1, 100);
 			normalized.color = /^#[0-9a-f]{6}$/i.test(normalized.color) ? normalized.color : defaults.color;
 		} else if (type === 'grain') {
-			normalized.size = clamp(number(normalized.size, defaults.size), 0.25, 16);
+			normalized.size = clamp(number(normalized.size, defaults.size), 0, 100);
 			normalized.roughness = clamp(number(normalized.roughness, defaults.roughness), 0, 100);
 			normalized.monochrome = normalized.monochrome !== false;
 			normalized.mode = BlendModes.isBlendMode(normalized.mode) ? normalized.mode : defaults.mode;
@@ -82,8 +86,7 @@
 		if (data.type === 'sepia') return `Sepia ${Math.round(data.amount)}%`;
 		if (data.type === 'grain') return `Grain ${Math.round(data.amount)}%`;
 		if (data.type === 'blur') return data.radius > 0 ? `Blur ${data.radius}px` : 'Off';
-		if (data.type === 'tint' && data.color.toLowerCase() === config().tintQuickPicks.warm) return 'Warm Tint';
-		if (data.type === 'tint' && data.color.toLowerCase() === config().tintQuickPicks.cool) return 'Cool Tint';
+		if (data.type === 'tint') return config().tintPresets[data.presetId]?.label || 'Custom Tint';
 		return data.type.charAt(0).toUpperCase() + data.type.slice(1);
 	}
 
@@ -168,8 +171,7 @@
 				const tile = tileCache?.get(signature) || Grain.buildTile(op, seed, config().grainTilePx);
 				styles.push({ className: 'filter-layer-grain', style: {
 				backgroundImage: `url(${tileDataUrl(tile)})`,
-				backgroundRepeat: 'repeat', backgroundSize: `${config().grainTilePx * op.size * viewScale}px`, mixBlendMode: op.mode, opacity: op.amount,
-				imageRendering: 'pixelated'
+				backgroundRepeat: 'repeat', backgroundSize: `${config().grainTilePx * viewScale}px`, mixBlendMode: op.mode, opacity: op.amount
 				} });
 			}
 		}
@@ -242,7 +244,6 @@
 				if (options.tileCache && !options.tileCache.has(signature)) options.tileCache.set(signature, Grain.buildTile(op, options.seed, config().grainTilePx));
 				const tile = options.tileCache?.get(signature) || Grain.buildTile(op, options.seed, config().grainTilePx);
 				const pattern = scratch.createPattern(tile, 'repeat');
-				if (pattern?.setTransform && typeof DOMMatrix !== 'undefined') pattern.setTransform(new DOMMatrix().scale(op.size));
 				scratch.fillStyle = pattern;
 				scratch.fillRect(0, 0, width, height);
 			}
@@ -282,30 +283,31 @@
 		context.restore();
 	}
 
-	function renderThumbnail(canvas, value, sourceCanvas, strength = 1) {
-		if (!canvas?.getContext) return;
-		const width = canvas.width;
-		const height = canvas.height;
-		const context = canvas.getContext('2d', { willReadFrequently: true });
-		context.clearRect(0, 0, width, height);
-		if (sourceCanvas?.width && sourceCanvas?.height) {
-			const scale = Math.max(width / sourceCanvas.width, height / sourceCanvas.height);
-			const drawWidth = sourceCanvas.width * scale;
-			const drawHeight = sourceCanvas.height * scale;
-			context.drawImage(sourceCanvas, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
-		} else {
-			const sample = context.createLinearGradient(0, 0, width, height);
-			sample.addColorStop(0, '#3267a8');
-			sample.addColorStop(0.45, '#e7b56c');
-			sample.addColorStop(1, '#8c304f');
-			context.fillStyle = sample;
-			context.fillRect(0, 0, width, height);
-			context.fillStyle = 'rgba(255,255,255,0.65)';
-			context.fillRect(width * 0.12, height * 0.15, width * 0.26, height * 0.7);
-			context.fillStyle = 'rgba(20,24,32,0.7)';
-			context.fillRect(width * 0.62, height * 0.15, width * 0.26, height * 0.7);
-		}
-		renderToCanvas(context, width, height, value, strength);
+	function renderCssThumbnail(element, value, strength = 1) {
+		if (!element) return;
+		const data = normalizeFilterData(value);
+		const resolved = resolve(data);
+		FILTER_TYPES.forEach((type) => element.classList.remove(`filter-css-thumbnail-${type}`));
+		element.classList.add('filter-css-thumbnail', `filter-css-thumbnail-${data.type}`);
+		element.style.opacity = clamp(number(strength, 1), 0, 1);
+		element.replaceChildren();
+
+		const base = document.createElement('span');
+		base.className = 'filter-css-thumbnail-base';
+		const toneFilter = Tone.toneCssFilterString(resolved.tone);
+		if (toneFilter) base.style.filter = toneFilter;
+		if (resolved.blur) base.style.filter = `${base.style.filter} ${Blur.cssBlurString(resolved.blur, 1)}`.trim();
+		element.appendChild(base);
+
+		resolved.ops.forEach((op) => {
+			const overlay = document.createElement('span');
+			overlay.className = `filter-css-thumbnail-overlay filter-css-thumbnail-${op.kind}`;
+			overlay.style.mixBlendMode = op.mode;
+			overlay.style.opacity = op.kind === 'grain' ? op.amount : op.opacity;
+			if (op.kind === 'fill') overlay.style.background = op.color;
+			else if (op.kind === 'gradient') overlay.style.backgroundImage = gradientCss(op.gradient);
+			element.appendChild(overlay);
+		});
 	}
 
 	function nameCaptionSpec(text, { width, height, stackIndex = 0 } = {}) {
@@ -320,7 +322,7 @@
 			textAlign: 'center', textBaseline: 'middle' };
 	}
 
-	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, toneCssFilter, overlayLayerStyles, renderToCanvas, drawCaption, renderThumbnail, nameCaptionSpec };
+	const api = { FILTER_TYPES, normalizeFilterData, isActive, summaryText, resolve, toneCssFilter, overlayLayerStyles, renderToCanvas, drawCaption, renderCssThumbnail, nameCaptionSpec };
 	root.GlitterFilter = api;
 	if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof self !== 'undefined' ? self : globalThis);

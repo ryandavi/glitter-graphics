@@ -39,12 +39,15 @@ class FilterLayerManager {
 			strength: get('filterStrength'), showName: get('filterShowName'),
 			brightness: get('filterBrightness'), contrast: get('filterContrast'), saturation: get('filterSaturation'), hue: get('filterHue'),
 			invertAmount: get('filterInvertAmount'), grayscaleAmount: get('filterGrayscaleAmount'), sepiaAmount: get('filterSepiaAmount'),
-			tintColor: get('filterTintColor'), tintMode: get('filterTintMode'), tintAmount: get('filterTintAmount'),
+			tintPreset: get('filterTintPreset'), tintColor: get('filterTintColor'), tintMode: get('filterTintMode'), tintAmount: get('filterTintAmount'),
 			vignetteAmount: get('filterVignetteAmount'), vignetteMidpoint: get('filterVignetteMidpoint'),
 			vignetteRoundness: get('filterVignetteRoundness'), vignetteFeather: get('filterVignetteFeather'), vignetteColor: get('filterVignetteColor'),
 			grainAmount: get('filterGrainAmount'), grainSize: get('filterGrainSize'), grainRoughness: get('filterGrainRoughness'), grainMono: get('filterGrainMono'),
-			blurRadius: get('filterBlurRadius'), tintWarm: get('filterTintWarm'), tintCool: get('filterTintCool')
+			blurRadius: get('filterBlurRadius')
 		};
+		if (this.ui.tintPreset && !this.ui.tintPreset.options.length) {
+			Object.entries(CONFIG.tools.filter.tintPresets).forEach(([id, preset]) => this.ui.tintPreset.add(new Option(preset.label, id)));
+		}
 		if (this.ui.tintMode && !this.ui.tintMode.options.length) {
 			GlitterBlendModes.BLEND_MODES.forEach((mode) => this.ui.tintMode.add(new Option(GlitterBlendModes.labelOf(mode), mode)));
 		}
@@ -68,7 +71,9 @@ class FilterLayerManager {
 
 	bindRange(control, key) {
 		if (!control) return;
+		const suffix = CONFIG.ui.sliders[control.dataset.role]?.unit || '';
 		bindSlider(control, document.getElementById(`${control.id}Value`), {
+			suffix,
 			parseValue: (value) => Number(value),
 			apply: (value) => this.update(key, value),
 			onCommit: () => this.editor.saveState('Edit filter')
@@ -92,21 +97,31 @@ class FilterLayerManager {
 			['grainAmount', 'amount'], ['grainSize', 'size'], ['grainRoughness', 'roughness'], ['blurRadius', 'radius']]
 			.forEach(([control, key]) => this.bindRange(this.ui[control], key));
 		[['showName', 'showName'], ['grainMono', 'monochrome']].forEach(([control, key]) => this.ui[control]?.addEventListener('change', () => this.update(key, this.ui[control].checked, true)));
-		[['tintColor', 'color'], ['tintMode', 'mode'], ['vignetteColor', 'color']].forEach(([control, key]) => {
+		this.ui.tintPreset?.addEventListener('change', () => this.applyTintPreset(this.ui.tintPreset.value));
+		this.ui.tintColor?.addEventListener('input', () => {
+			const layer = this.getActiveLayer();
+			if (!layer || layer.filterData.type !== 'tint') return;
+			layer.filterData.presetId = 'custom';
+			this.ui.tintPreset.value = 'custom';
+			this.update('color', this.ui.tintColor.value);
+		});
+		this.ui.tintColor?.addEventListener('change', () => this.update('color', this.ui.tintColor.value, true));
+		[['tintMode', 'mode'], ['vignetteColor', 'color']].forEach(([control, key]) => {
 			this.ui[control]?.addEventListener('input', () => this.update(key, this.ui[control].value));
 			this.ui[control]?.addEventListener('change', () => this.update(key, this.ui[control].value, true));
 		});
-		this.ui.tintWarm?.addEventListener('click', () => this.applyTintPick(CONFIG.tools.filter.tintQuickPicks.warm));
-		this.ui.tintCool?.addEventListener('click', () => this.applyTintPick(CONFIG.tools.filter.tintQuickPicks.cool));
 	}
 
-	applyTintPick(color) {
+	applyTintPreset(presetId) {
 		const layer = this.getActiveLayer();
 		if (!layer || layer.filterData.type !== 'tint') return;
-		layer.filterData.color = color;
+		const preset = CONFIG.tools.filter.tintPresets[presetId];
+		if (!preset) return;
+		layer.filterData.presetId = presetId;
+		if (preset.color) layer.filterData.color = preset.color;
 		this.loadLayerSettings(layer);
 		this.editor.requestPreviewUpdate();
-		this.editor.saveState('Edit filter');
+		this.editor.saveState('Choose tint preset');
 	}
 
 	loadLayerSettings(layer) {
@@ -135,6 +150,7 @@ class FilterLayerManager {
 		});
 		if (this.ui.showName) this.ui.showName.checked = Boolean(data.showName);
 		if (this.ui.grainMono) this.ui.grainMono.checked = data.monochrome !== false;
+		if (this.ui.tintPreset && data.type === 'tint') this.ui.tintPreset.value = data.presetId;
 		if (this.ui.tintColor && data.type === 'tint') this.ui.tintColor.value = data.color;
 		if (this.ui.tintMode && data.type === 'tint') this.ui.tintMode.value = data.mode;
 		if (this.ui.vignetteColor && data.type === 'vignette') this.ui.vignetteColor.value = data.color;
@@ -152,11 +168,9 @@ class FilterLayerManager {
 			card.className = 'choice-card filter-preset-option';
 			card.classList.toggle('active', id === active);
 			card.dataset.presetId = id;
-			const chip = document.createElement('canvas');
+			const chip = document.createElement('span');
 			chip.className = 'filter-preset-swatch';
-			chip.width = 84;
-			chip.height = 56;
-			GlitterFilter.renderThumbnail(chip, { type: 'instagram', presetId: id, strength: 100, showName: false }, this.editor.originalImage ? this.editor.originalCanvas : null);
+			GlitterFilter.renderCssThumbnail(chip, { type: 'instagram', presetId: id, strength: 100, showName: false });
 			const name = document.createElement('span');
 			name.textContent = preset.name || preset.instagramName;
 			card.append(chip, name);

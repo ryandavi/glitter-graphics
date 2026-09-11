@@ -10,6 +10,11 @@
 	const recipe = (instagramName, tone, ops) => ({ name: '', instagramName, attribution, tone: tone || null, ops: ops || [] });
 
 	const FILTER_PRESETS = Object.freeze({
+		rio: recipe('Rio de Janeiro', { contrast: 1.05, saturate: 1.18, brightness: 1.02 }, [
+			{ kind: 'gradient', mode: 'soft-light', opacity: 0.55, gradient: { type: 'linear', angle: 160, stops: [
+				stop(0, '#4a48b1'), stop(0.35, '#922b83'), stop(0.7, '#c13d5b'), stop(1, '#e07a35')
+			] } }
+		]),
 		clarendon: recipe('Clarendon', { contrast: 1.2, saturate: 1.35 }, [fill('rgba(127,187,227,0.2)', 'overlay')]),
 		juno: recipe('Juno', { sepia: 0.35, contrast: 1.15, brightness: 1.15, saturate: 1.8 }, [fill('rgba(255,190,100,0.3)', 'overlay')]),
 		lark: recipe('Lark', { contrast: 0.9 }, [fill('#22253f', 'color-dodge'), fill('rgba(242,242,242,0.8)', 'darken')]),
@@ -29,12 +34,7 @@
 		willow: recipe('Willow', { grayscale: 0.5, contrast: 0.95, brightness: 0.9 }, [radial(0.85, [stop(0.55, '#d4a9af'), stop(1, '#562135')], 'overlay'), fill('#d8cdcb', 'color')]),
 		inkwell: recipe('Inkwell', { sepia: 0.3, contrast: 1.1, brightness: 1.1, grayscale: 1 }, []),
 		mayfair: recipe('Mayfair', { contrast: 1.1, saturate: 1.1 }, [radial(1, [stop(0, 'rgba(255,255,255,0.8)'), stop(0.3, 'rgba(255,200,200,0.6)'), stop(0.6, '#111111')], 'overlay', 0.4, [0.4, 0.4])]),
-		hefe: recipe('Hefe', { contrast: 1.5, brightness: 1.05, saturate: 1.3 }, [radial(1.1, [stop(0.7, 'transparent'), stop(1.5, '#222222')], 'multiply'), fill('#302011', 'overlay', 0.4)]),
-		rio: recipe('Rio de Janeiro', { contrast: 1.05, saturate: 1.18, brightness: 1.02 }, [
-			{ kind: 'gradient', mode: 'soft-light', opacity: 0.55, gradient: { type: 'linear', angle: 160, stops: [
-				stop(0, '#4a48b1'), stop(0.35, '#922b83'), stop(0.7, '#c13d5b'), stop(1, '#e07a35')
-			] } }
-		])
+		hefe: recipe('Hefe', { contrast: 1.5, brightness: 1.05, saturate: 1.3 }, [radial(1.1, [stop(0.7, 'transparent'), stop(1.5, '#222222')], 'multiply'), fill('#302011', 'overlay', 0.4)])
 	});
 
 	root.FILTER_PRESETS = FILTER_PRESETS;

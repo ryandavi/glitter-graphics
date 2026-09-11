@@ -319,17 +319,26 @@ const CONFIG = deepFreeze({
 		filter: {
 			defaultType: 'basic',
 			types: {
-				instagram: { presetId: null, showName: false, strength: 100 },
+				instagram: { presetId: 'rio', showName: false, strength: 100 },
 				basic: { brightness: 0, contrast: 0, saturation: 0, hue: 0 },
 				invert: { amount: 100 },
 				grayscale: { amount: 100 },
 				sepia: { amount: 100 },
-				tint: { color: '#ff9838', mode: 'soft-light', amount: 40 },
+				tint: { presetId: 'warming-85', color: '#ec8a00', mode: 'soft-light', amount: 40 },
 				vignette: { amount: 45, midpoint: 55, roundness: 0, feather: 60, color: '#000000' },
-				grain: { amount: 35, size: 1, roughness: 50, monochrome: true, mode: 'soft-light' },
+				grain: { amount: 25, size: 25, roughness: 50, monochrome: true, mode: 'soft-light' },
 				blur: { radius: 8 }
 			},
-			tintQuickPicks: { warm: '#ff9838', cool: '#4f8cff' },
+			tintPresets: {
+				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
+				'warming-81': { label: 'Warming Filter (81)', color: '#efb45a' },
+				'cooling-80': { label: 'Cooling Filter (80)', color: '#006dff' },
+				'cooling-82': { label: 'Cooling Filter (82)', color: '#00b5ff' },
+				sepia: { label: 'Sepia', color: '#ac7a33' },
+				deepBlue: { label: 'Deep Blue', color: '#1c3f95' },
+				deepEmerald: { label: 'Deep Emerald', color: '#009e6c' },
+				custom: { label: 'Custom', color: null }
+			},
 			nameCaption: {
 				fontPx: 28,
 				minFontPx: 16,
@@ -719,8 +728,8 @@ const CONFIG = deepFreeze({
 			filterVignetteMidpoint: { label: 'Midpoint', unit: '%', min: 0, max: 100, step: 1, value: 55 },
 			filterVignetteRoundness: { label: 'Roundness', unit: '%', min: -100, max: 100, step: 1, value: 0 },
 			filterVignetteFeather: { label: 'Feather', unit: '%', min: 1, max: 100, step: 1, value: 60 },
-			filterGrainAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 35 },
-			filterGrainSize: { label: 'Size', unit: 'px', min: 0.25, max: 16, step: 0.25, value: 1 },
+			filterGrainAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 25 },
+			filterGrainSize: { label: 'Size', unit: '%', min: 0, max: 100, step: 1, value: 25 },
 			filterGrainRoughness: { label: 'Roughness', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 			filterBlurRadius: { label: 'Radius', unit: 'px', min: 0, max: 64, step: 1, value: 8 },
 			autoGlitterColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
@@ -1467,25 +1476,24 @@ const PANEL_SCHEMAS = {
 		replaceStatic: true,
 		section: { id: 'filterSettingsSection', classes: 'panel-redesign', icon: 'sliders', iconName: 'Filter', title: 'Filter Properties' },
 		groups: [
-			{ title: 'Filter', collapsible: false, items: [
-				{ kind: 'card', items: [
-					{ kind: 'select', id: 'filterType', label: 'Filter type', visibleLabel: 'Type', options: [
-						{ label: 'Instagram', value: 'instagram' }, { label: 'Basic', value: 'basic', active: true },
+			{ title: 'Appearance', collapsible: false, items: [
+				{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Opacity' },
+				{ kind: 'card', title: 'Filter', flatBody: true, items: [
+					{ kind: 'set', items: [
+						{ kind: 'select', id: 'filterType', label: 'Filter type', visibleLabel: 'Type', options: [
+						{ label: 'Basic', value: 'basic', active: true },
 						{ label: 'Invert', value: 'invert' }, { label: 'Grayscale', value: 'grayscale' },
 						{ label: 'Sepia', value: 'sepia' }, { label: 'Tint', value: 'tint' },
-						{ label: 'Vignette', value: 'vignette' }, { label: 'Grain', value: 'grain' }, { label: 'Blur', value: 'blur' }
+						{ label: 'Vignette', value: 'vignette' }, { label: 'Grain', value: 'grain' }, { label: 'Blur', value: 'blur' },
+						{ label: 'Instagram', value: 'instagram' }
+					] }
 					] },
-					{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' }
-				] }
-			] },
-			{ title: 'Settings', collapsible: false, items: [
-				{ kind: 'card', items: [
-					{ kind: 'set', id: 'filterInstagramSettings', classes: 'filter-type-settings', items: [
+					{ kind: 'set', id: 'filterInstagramSettings', classes: 'filter-type-settings', hidden: true, label: 'Preset', items: [
 						{ kind: 'host', id: 'filterPresetPicker', classes: 'property-inset property-scrollbox filter-preset-picker' },
 						{ kind: 'slider', id: 'filterStrength', slider: 'filterInstagramStrength', revert: true },
 						{ kind: 'checkboxList', items: [{ id: 'filterShowName', label: 'Show Filter Name' }] }
 					] },
-					{ kind: 'set', id: 'filterBasicSettings', classes: 'filter-type-settings', hidden: true, items: [
+					{ kind: 'set', id: 'filterBasicSettings', classes: 'filter-type-settings', label: 'Adjustments', items: [
 						{ kind: 'slider', id: 'filterBrightness', slider: 'filterBrightness', revert: true },
 						{ kind: 'slider', id: 'filterContrast', slider: 'filterContrast', revert: true },
 						{ kind: 'slider', id: 'filterSaturation', slider: 'filterSaturation', revert: true },
@@ -1495,12 +1503,10 @@ const PANEL_SCHEMAS = {
 					{ kind: 'set', id: 'filterGrayscaleSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterGrayscaleAmount', slider: 'filterGrayscaleAmount', revert: true }] },
 					{ kind: 'set', id: 'filterSepiaSettings', classes: 'filter-type-settings', hidden: true, items: [{ kind: 'slider', id: 'filterSepiaAmount', slider: 'filterSepiaAmount', revert: true }] },
 					{ kind: 'set', id: 'filterTintSettings', classes: 'filter-type-settings', hidden: true, items: [
-						{ kind: 'field', id: 'filterTintColor', label: 'Color', type: 'color', value: '#ff9838', revert: true },
+						{ kind: 'select', id: 'filterTintPreset', label: 'Tint preset', visibleLabel: 'Preset', options: [] },
+						{ kind: 'field', id: 'filterTintColor', label: 'Color', type: 'color', value: '#ec8a00', revert: true },
 						{ kind: 'select', id: 'filterTintMode', label: 'Blend mode', visibleLabel: 'Blend', options: [] },
-						{ kind: 'slider', id: 'filterTintAmount', slider: 'filterTintAmount', revert: true },
-						{ kind: 'actionRow', classes: 'filter-tint-picks is-split', actions: [
-							{ id: 'filterTintWarm', label: 'Warm' }, { id: 'filterTintCool', label: 'Cool' }
-						] }
+						{ kind: 'slider', id: 'filterTintAmount', slider: 'filterTintAmount', revert: true }
 					] },
 					{ kind: 'set', id: 'filterVignetteSettings', classes: 'filter-type-settings', hidden: true, items: [
 						{ kind: 'slider', id: 'filterVignetteAmount', slider: 'filterVignetteAmount', revert: true },

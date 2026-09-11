@@ -1696,10 +1696,8 @@ class LayerManager {
 		}
 
 		if (layer.type === LayerType.FILTER) {
-			const thumbnail = document.createElement('canvas');
-			thumbnail.width = compact ? 48 : 64;
-			thumbnail.height = compact ? 48 : 64;
-			GlitterFilter.renderThumbnail(thumbnail, layer.filterData, this.editor.originalCanvas, layer.opacity / 100);
+			const thumbnail = document.createElement('span');
+			GlitterFilter.renderCssThumbnail(thumbnail, layer.filterData, layer.opacity / 100);
 			swatch.classList.add('filter');
 			swatch.append(thumbnail);
 			return;
