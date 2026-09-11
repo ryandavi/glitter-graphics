@@ -369,7 +369,7 @@ const CONFIG = deepFreeze({
 				opacity: 0.75,
 				stripeOpacityBoost: 0.15,
 				// While an erase stroke is in progress the overlay also paints the
-				// region removed SO FAR this stroke in this colour, so "what you're
+				// region removed SO FAR this stroke in this color, so "what you're
 				// taking out" is visible rather than just an edge quietly receding.
 				eraseBiteColor: '#ff3b30',
 				eraseBiteOpacity: 0.6
@@ -689,7 +689,7 @@ const CONFIG = deepFreeze({
 			pixelEffectsDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
 			pixelEffectsStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 			pixelEffectsDitherScale: { label: 'Texture Scale', unit: '×', min: 1, max: 4, step: 1, value: 1 },
-			pixelEffectsAngle: { label: 'Angle', unit: 'Â°', min: 0, max: 360, step: 1, value: 45 },
+			pixelEffectsAngle: { label: 'Angle', unit: '°', min: 0, max: 360, step: 1, value: 45 },
 			maskBrushSize: { label: 'Size', unit: 'px', min: 1, max: 1000, value: 40, scale: 'log' },
 			maskBrushSoftness: { label: 'Softness', unit: '%', min: 0, max: 100, value: 0 },
 			maskBrushFlow: { label: 'Flow', unit: '%', min: 1, max: 100, value: 100 },
@@ -711,7 +711,7 @@ const CONFIG = deepFreeze({
 			shadowOffsetX: { label: 'Offset X', unit: 'px', min: -60, max: 60, value: 6 },
 			shadowOffsetY: { label: 'Offset Y', unit: 'px', min: -60, max: 60, value: 6 },
 			threshold: { label: 'Color Tolerance', unit: '', min: 0, max: 255, value: 50 },
-			feather: { label: 'Edge Feather', unit: '', min: 0, max: 50, value: 0 },
+			feather: { label: 'Edge Feather', unit: 'px', min: 0, max: 50, value: 0 },
 			textFontSize: { label: 'Font Size', unit: 'px', min: 12, max: 256, value: 64 },
 			textLetterSpacing: { label: 'Letter Spacing', unit: 'px', min: -20, max: 40, value: 0 },
 			textLineHeight: { label: 'Line Height', unit: '%', min: 50, max: 250, value: 110 },

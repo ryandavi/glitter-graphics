@@ -10,7 +10,7 @@ gallery, tighten the scatter math to match Photoshop, and chase an undo bug.
 
 | File | Role |
 |---|---|
-| `tools/abr-lib.js` | Parses Photoshop `.abr` v6.1/v6.2 — 8BIM sections, Action Descriptor, `samp` RLE tip bitmaps. Extracts `Dmtr/Spcn/Angl/Rndn/flipX/flipY` + Scattering (`useScatter`, `scatterDynamics.jitter`, `Cnt `, `countDynamics`) + Shape Dynamics (`useTipDynamics`, `szVr`, `angleDynamics`). Colour Dynamics captured but unused. |
+| `tools/abr-lib.js` | Parses Photoshop `.abr` v6.1/v6.2 — 8BIM sections, Action Descriptor, `samp` RLE tip bitmaps. Extracts `Dmtr/Spcn/Angl/Rndn/flipX/flipY` + Scattering (`useScatter`, `scatterDynamics.jitter`, `Cnt `, `countDynamics`) + Shape Dynamics (`useTipDynamics`, `szVr`, `angleDynamics`). color Dynamics captured but unused. |
 | `tools/abr-import.js` | `.abr` → normalised grey+alpha stamp PNGs in `images/brushes/<pack>/` + a pack entry in `data/brushes.json`. **Curation:** one brush per sampled tip = the preset that uses the most of the brush engine (`dynScore`). Flags: `--all-presets`, `--keep-plain`, `--drop-sample`, `--author/--license/--tags/...`. |
 | `tools/rebuild-brushes.sh` | Provenance-as-code: the exact `abr-import.js` invocation + full attribution for every pack. **Re-run after any importer change.** Needs a Node — see "Testing" below. |
 | `tools/brush-sources/*.abr` | Committed originals (not served). |
@@ -80,7 +80,7 @@ Inside `#designGalleryContent` (~line 307), mirror the sticker block (~line 564�
   + content with empty-state / category-grid / search-results / item-grid / sentinel).
 - A `<div class="section-content gallery-search-section" data-gallery-search="brush-tips">`
   with a search input (`id="brushTipSearch"`) and a `filters-container` (category chips only
-  — brush tips don't need the colour/tone/temperature filters glitter has).
+  — brush tips don't need the color/tone/temperature filters glitter has).
 - Add a `<script src="js/classes/BrushTipManager.js?v=…">` tag near the other class scripts
   (after `BrushLibrary.js`, before `MaskEditor.js` is fine — `BrushTipManager` is
   constructed later in `app.js`).
@@ -153,8 +153,8 @@ path at `Spacing`, drop `Count` dabs per step, offset each perpendicular to the 
    maxes at 1000%. We store the fraction (`scatter` 0–10) and multiply by `size` — correct.
    Just confirm `CONFIG.tools.maskBrush.dynamics.limits.scatterMax === 1000` and the panel
    slider matches (it does).
-4. **Colour Dynamics: nothing to do — and can't be done.** The mask brush paints coverage
-   (alpha) only; all colour comes from the glitter-fill layer under the mask. Photoshop's
+4. **color Dynamics: nothing to do — and can't be done.** The mask brush paints coverage
+   (alpha) only; all color comes from the glitter-fill layer under the mask. Photoshop's
    foreground/background + HSB jitter has no meaning here. `abr-lib.js` already captures
    `colorDynamics` for reference and `abr-import.js` discards it. Leave it that way; note it
    in the Scatter & Jitter panel help text if anything.

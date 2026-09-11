@@ -194,7 +194,7 @@ function syncPropertyReverts(root = document) {
 // text Style, no option active is itself the default. Revert replays the same
 // gesture a click would, so each manager's existing change handler still records
 // the history entry. Handles a <select> (including buildSelectProxy's), a
-// .segmented-control, or a bare colour input.
+// .segmented-control, or a bare color input.
 function attachOptionRevert(row, control, spec = {}) {
 	const select = control.tagName === 'SELECT' ? control : control.querySelector?.('select');
 	const color = !select && control.matches?.('input[type="color"]') ? control : null;
@@ -300,7 +300,7 @@ function initializePropertyReverts(root = document) {
 		const id = event.target.id;
 		if (id) document.querySelectorAll(`.property-revert[data-revert-for~="${id}"][data-revert-value]`).forEach(syncFieldRevert);
 	});
-	// Static-default field reverts (checkboxes, selects, colours built with an
+	// Static-default field reverts (checkboxes, selects, colors built with an
 	// explicit default). Dynamic-default ones (canvas W/H) carry no
 	// data-revert-value and are handled by their owning manager.
 	document.addEventListener('click', (event) => {
@@ -362,6 +362,23 @@ function initializeEditablePropertyValues(root = document) {
 				event.preventDefault();
 				value.dataset.cancelEdit = '';
 				value.blur();
+			} else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+				// No native stepping exists on a contenteditable span - step the
+				// underlying range input directly (same raw domain a real
+				// <input type="range"> would step in, so log-scale sliders like
+				// Brush Size step correctly too) and let its own 'input' listener
+				// (slider.js bindSlider) redraw this readout. Shift = a x10 fast
+				// step, the same modifier the plain-number fields get below.
+				event.preventDefault();
+				const dir = event.key === 'ArrowUp' ? 1 : -1;
+				const mult = event.shiftKey ? 10 : 1;
+				const rawStep = Number(input.step) || 1;
+				const rawMin = Number(input.min);
+				const rawMax = Number(input.max);
+				const nextRaw = Math.min(rawMax, Math.max(rawMin, Number(input.value) + rawStep * mult * dir));
+				input.value = String(nextRaw);
+				input.dispatchEvent(new Event('input', { bubbles: true }));
+				input.dispatchEvent(new Event('change', { bubbles: true }));
 			}
 		});
 		value.addEventListener('blur', () => {
@@ -377,6 +394,28 @@ function initializeEditablePropertyValues(root = document) {
 				delete value.dataset.cancelEdit;
 				input.dispatchEvent(new Event('input', { bubbles: true }));
 			}
+		});
+	});
+	// Real <input type="number"> fields (Transform, gradient stops, Canvas
+	// Size) already get native Arrow-key stepping for free from the browser -
+	// this only layers the same Shift = x10 fast step on top, so both value
+	// flavors behave identically. A plain arrow press is left untouched:
+	// native stepping and every manager's own input/change listener stay
+	// exactly as they were.
+	root.querySelectorAll('input[type="number"]').forEach((input) => {
+		if (input.dataset.fastStep !== undefined) return;
+		input.dataset.fastStep = '';
+		input.addEventListener('keydown', (event) => {
+			if (!event.shiftKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+			event.preventDefault();
+			const dir = event.key === 'ArrowUp' ? 1 : -1;
+			const step = Number(input.step) || 1;
+			const min = input.min !== '' ? Number(input.min) : -Infinity;
+			const max = input.max !== '' ? Number(input.max) : Infinity;
+			const next = Math.min(max, Math.max(min, (Number(input.value) || 0) + step * 10 * dir));
+			input.value = String(next);
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+			input.dispatchEvent(new Event('change', { bubbles: true }));
 		});
 	});
 }
@@ -1176,9 +1215,9 @@ function buildPanelItem(item, schema) {
 			if (item.spellcheck === false) input.spellcheck = false;
 			Object.entries(item.attrs || {}).forEach(([name, value]) => input.setAttribute(name, value));
 
-			// A colour field IS the paint-slot solid-colour row: same
+			// A color field IS the paint-slot solid-color row: same
 			// `.property-row.property-color-row` markup, same `attachOptionRevert`
-			// wiring — one component, not a second colour control.
+			// wiring — one component, not a second color control.
 			if (item.type === 'color') {
 				const row = addPanelClasses(panelDiv('property-row property-color-row'), item.rowClasses);
 				if (item.rowId) row.id = item.rowId;

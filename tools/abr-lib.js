@@ -147,8 +147,8 @@ function mapPreset(preset) {
 		// Shape Dynamics
 		sizeJitter: tipDynOn ? jitterOf(preset['szVr']) : 0,                  // 0..1
 		angleJitter: tipDynOn ? jitterOf(preset['angleDynamics']) : 0,        // 0..1
-		// Colour Dynamics — captured for reference only; the mask brush paints
-		// coverage, not colour, so MaskEditor ignores these.
+		// color Dynamics — captured for reference only; the mask brush paints
+		// coverage, not color, so MaskEditor ignores these.
 		colorDynamics: preset['useColorDynamics'] === true ? {
 			hue: pct(preset['H   '], 0),
 			saturation: pct(preset['Strt'], 0),

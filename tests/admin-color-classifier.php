@@ -82,9 +82,9 @@ $twoToneWithSpeckle = [
 ];
 assertType($classifier->classify($twoToneWithSpeckle), 'two-tone', 'trace hue families are not a rainbow');
 
-// A glint of colour on an otherwise grey asset does not make it a coloured
+// A glint of color on an otherwise grey asset does not make it a colored
 // asset: a silver rhinestone with a gold highlight read as "Tan" before the
-// coloured share had to clear a floor of its own.
+// colored share had to clear a floor of its own.
 $silverWithGlint = [
 	cluster('#D6D9D8', 0.56),
 	cluster('#3C3C3B', 0.21),
@@ -92,16 +92,16 @@ $silverWithGlint = [
 	cluster('#C9A263', 0.04),
 ];
 assertName($classifier->classify($silverWithGlint)['name'], 'Off-White', 'a glint does not name a neutral asset');
-assertType($classifier->classify($silverWithGlint), 'neutral', 'a glint does not colour a neutral asset');
+assertType($classifier->classify($silverWithGlint), 'neutral', 'a glint does not color a neutral asset');
 
-// The floor is a floor, not a veto — real colour over a neutral ground still
-// names the asset after the colour.
-$colouredOverGrey = [
+// The floor is a floor, not a veto — real color over a neutral ground still
+// names the asset after the color.
+$coloredOverGrey = [
 	cluster('#6A6A6A', 0.55),
 	cluster('#C92332', 0.30),
 	cluster('#F2F2F2', 0.15),
 ];
-assertType($classifier->classify($colouredOverGrey), 'single', 'colour above the floor still names the asset');
+assertType($classifier->classify($coloredOverGrey), 'single', 'color above the floor still names the asset');
 
 foreach (['#8BC43E', '#4CAF50', '#2E7D32'] as $green) {
 	$rgb = hexToRgb($green);

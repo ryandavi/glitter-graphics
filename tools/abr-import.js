@@ -97,7 +97,7 @@ function encodePng(coverage, w, h) {
 	const ihdr = Buffer.alloc(13);
 	ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4);
 	ihdr[8] = 8;   // bit depth
-	ihdr[9] = 4;   // colour type: greyscale + alpha
+	ihdr[9] = 4;   // color type: greyscale + alpha
 	return Buffer.concat([
 		Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
 		chunk('IHDR', ihdr),

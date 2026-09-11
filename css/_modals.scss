@@ -1623,7 +1623,7 @@ body.modal-open {
 	}
 
 	// Change-type badge. Built on the shared `.badge` primitive; only the
-	// status colour varies, and it comes from the shared status tokens so the
+	// status color varies, and it comes from the shared status tokens so the
 	// three types stay legible across every interface theme.
 	.version-history-badge {
 		margin-right: var(--spacing-xs);
@@ -2214,7 +2214,7 @@ body.modal-open {
 }
 
 // The design system's badge: `badge-base` corners, no case transform. Status
-// colour is a modifier, never a new class.
+// color is a modifier, never a new class.
 .badge {
 	@include badge-base;
 	padding: 2px var(--spacing-sm);
@@ -2287,7 +2287,7 @@ body.modal-open {
 
 label.settings-row-label-main { cursor: pointer; }
 
-// Value controls (select, number, text, colour) all take the same column
+// Value controls (select, number, text, color) all take the same column
 // width so the right edge of a settings list is an alignment line. Switches,
 // segmented controls and action buttons size to themselves and hang off that
 // same edge — a switch stretched to the column width looks broken.

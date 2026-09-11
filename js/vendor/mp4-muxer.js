@@ -446,9 +446,9 @@ var Mp4Muxer = (() => {
   };
   var colr = (track) => box("colr", [
     ascii("nclx"),
-    // Colour type
+    // color type
     u16(COLOR_PRIMARIES_MAP[track.info.decoderConfig.colorSpace.primaries]),
-    // Colour primaries
+    // color primaries
     u16(TRANSFER_CHARACTERISTICS_MAP[track.info.decoderConfig.colorSpace.transfer]),
     // Transfer characteristics
     u16(MATRIX_COEFFICIENTS_MAP[track.info.decoderConfig.colorSpace.matrix]),
@@ -478,7 +478,7 @@ var Mp4Muxer = (() => {
     let bitDepth = Number(parts[3]);
     let chromaSubsampling = 0;
     let thirdByte = (bitDepth << 4) + (chromaSubsampling << 1) + Number(decoderConfig.colorSpace.fullRange);
-    let colourPrimaries = 2;
+    let colorPrimaries = 2;
     let transferCharacteristics = 2;
     let matrixCoefficients = 2;
     return fullBox("vpcC", 1, 0, [
@@ -488,8 +488,8 @@ var Mp4Muxer = (() => {
       // Level
       u8(thirdByte),
       // Bit depth, chroma subsampling, full range
-      u8(colourPrimaries),
-      // Colour primaries
+      u8(colorPrimaries),
+      // color primaries
       u8(transferCharacteristics),
       // Transfer characteristics
       u8(matrixCoefficients),

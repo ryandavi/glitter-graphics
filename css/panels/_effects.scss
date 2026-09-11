@@ -155,10 +155,7 @@
 			font-variant-numeric: tabular-nums;
 			color: var(--color-text-primary);
 			text-align: right;
-			appearance: textfield;
-
-			&::-webkit-outer-spin-button,
-			&::-webkit-inner-spin-button { appearance: none; margin: 0; }
+			// Spin-button suppression is global now (`_components.scss`).
 		}
 
 		> .input-unit-suffix {

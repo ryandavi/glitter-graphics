@@ -408,7 +408,7 @@ class GifAnalyzer
 				break;
 			}
 			list($into, $from) = $closest;
-			// Keep the larger cluster as the survivor so the anchor colour
+			// Keep the larger cluster as the survivor so the anchor color
 			// stays the one with the most pixels behind it.
 			if ($clusters[$from]['count'] > $clusters[$into]['count']) {
 				list($into, $from) = [$from, $into];

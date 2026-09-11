@@ -53,6 +53,22 @@ select {
 	@include form-control;
 }
 
+// The native up/down spinner reads as a foreign control next to the app's own
+// flat fields and revert-icon affordance (and looks especially heavy in
+// Safari) — every number field gets the app's Arrow/Shift+Arrow stepping via
+// JS instead (see `initializeEditablePropertyValues`), so the native spinner
+// is redundant everywhere, not just where it was previously suppressed
+// (the gradient-stop fields).
+input[type="number"] {
+	appearance: textfield;
+
+	&::-webkit-outer-spin-button,
+	&::-webkit-inner-spin-button {
+		appearance: none;
+		margin: 0;
+	}
+}
+
 select {
 	-webkit-appearance: none;
 	appearance: none;

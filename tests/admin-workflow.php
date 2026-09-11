@@ -205,11 +205,11 @@ try {
 	$ramp = (new GifAnalyzer($rampPath, $CONFIG))->analyze();
 	assertTrue(
 		neutralCount($overlay['color_codes']) === 1,
-		'scattered grey ramp over colour folds to one entry (' . $overlay['color_codes'] . ')'
+		'scattered grey ramp over color folds to one entry (' . $overlay['color_codes'] . ')'
 	);
 	assertTrue(
 		neutralCount($ramp['color_codes']) >= 3,
-		'the same ramp with no colour under it is kept (' . $ramp['color_codes'] . ')'
+		'the same ramp with no color under it is kept (' . $ramp['color_codes'] . ')'
 	);
 } finally {
 	@unlink($overlayPath);

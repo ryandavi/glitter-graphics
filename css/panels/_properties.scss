@@ -206,7 +206,7 @@
 	--property-pair-min: 128px;
 
 	// One knob for the height of every interactive control in the property
-	// panels — segmented controls, selects, number/text/colour inputs, the
+	// panels — segmented controls, selects, number/text/color inputs, the
 	// .property-value pill. Toggles keep their own switch geometry.
 	--property-control-height: 32px; // var(--control-height-compact);
 
@@ -862,7 +862,7 @@
 		display: flex;
 		flex-direction: column;
 		// Roomier than the row gap: this stack mixes a segmented control, a
-		// boxed asset summary and a colour row, which need separating.
+		// boxed asset summary and a color row, which need separating.
 		gap: var(--spacing-sm);
 	}
 
@@ -1078,7 +1078,7 @@
 	&:not(:has(> .property-value:not(:empty))) { display: none; }
 }
 
-// ===== Selected colour chips ===============================================
+// ===== Selected color chips ===============================================
 // Multi-select tokens, matching the filter chips' height and radius so the
 // sidebar has one selectable-token feel.
 
@@ -1532,7 +1532,7 @@ body.is-resizing-panel {
 
 
 // ===== One chevron =========================================================
-// Three collapse affordances existed at three sizes and colours: the group
+// Three collapse affordances existed at three sizes and colors: the group
 // chevron (16px), the module chevron (a 24px glyph clipped into a 13.6px box)
 // and the Advanced chevron (14px). They all mean the same thing, so they look
 // the same; what distinguishes them is where they sit and what they sit beside,
@@ -2026,7 +2026,7 @@ body.is-resizing-panel {
 	// Segmented-control glyphs (text align, transform align / flip, distribute)
 	// ride the shared #icon-* sprite via createPanelGlyph. Sizing + the flex row
 	// for an icon-beside-label option live globally in _paint-slot.scss; only the
-	// active/checked colour override is panel-scoped here, matching the filled
+	// active/checked color override is panel-scoped here, matching the filled
 	// segment behind the glyph.
 	.segmented-option.active > svg.icon,
 	.transform-flip-control > .segmented-option:has(> input:checked) svg.icon {
@@ -2034,8 +2034,8 @@ body.is-resizing-panel {
 	}
 }
 
-// ===== Selected colour chips: appearance ==================================
-// Geometry for these lives in the "Selected colour chips" block above; this is
+// ===== Selected color chips: appearance ==================================
+// Geometry for these lives in the "Selected color chips" block above; this is
 // the surface — a chip reads as one token (swatch, value, remove) rather than
 // three loose parts, and its remove control behaves like every other icon
 // button in the panel.
@@ -2304,7 +2304,7 @@ body.is-resizing-panel {
 // ===== Auto Glitter: the few section-specific overrides. The sticky-header /
 // scroll-region / sticky-footer layout is now the generic
 // `.settings-subsection.has-scroll-region` block above; the scroll-region
-// internals, the colour-match list and drag states live in panels/_effects.scss.
+// internals, the color-match list and drag states live in panels/_effects.scss.
 .property-panel .panel-redesign.auto-glitter-settings-section {
 	// The preview-mode toggle spans the panel — it's a mode switch, not a
 	// property control inset by the gutter.

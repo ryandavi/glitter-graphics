@@ -239,7 +239,7 @@ function syncPaintSlotSourceUI(sourceButton, mode) {
 	const hidePrimaryModes = new Set((slot.dataset.hidePrimaryModes || '').split(/\s+/).filter(Boolean));
 	if (primaryRow) primaryRow.hidden = normalizedMode === 'none' || hidePrimaryModes.has(normalizedMode) || (normalizedMode !== 'glitter' && !opacity);
 	// Two module-level Advanced disclosures share the slot: the glitter source's
-	// own (colour adjust / texture position) is glitter-only; the gradient
+	// own (color adjust / texture position) is glitter-only; the gradient
 	// editor's `.gradient-advanced` (Smoothing) is gradient-only — and the
 	// editor's render() narrows it further to the Smooth blend.
 	const advanced = slot.querySelector('.advanced-disclosure:not(.gradient-advanced)');
