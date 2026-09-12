@@ -1125,6 +1125,7 @@ const LAYER_UI_CONFIG = {
 		elementClass: 'filter-layer-overlay',
 		transformable: false,
 		managerKey: 'filterLayerManager',
+		blendable: true,
 		mobileCreateDrawer: 'edit',
 		onActivate: (editor, layer) => {
 			editor.setTool(ToolType.SELECT);
@@ -1494,6 +1495,7 @@ const PANEL_SCHEMAS = {
 		groups: [
 			{ title: 'Appearance', collapsible: false, items: [
 				{ kind: 'slider', id: 'filterLayerOpacity', slider: 'layerOpacity', label: 'Opacity' },
+				{ kind: 'select', id: 'filterLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				{ kind: 'card', title: 'Filter', flatBody: true, items: [
 					{ kind: 'set', items: [
 						{ kind: 'select', id: 'filterType', label: 'Filter type', visibleLabel: 'Type', options: [

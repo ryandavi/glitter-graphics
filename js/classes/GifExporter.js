@@ -834,6 +834,7 @@ class GifExporter {
 							alphaThreshold,
 							seed: layer.id,
 							tileCache: this.filterGrainTileCache,
+							blendMode: GlitterBlendModes.forLayer(layer),
 							renderSource: captionSpec ? (sourceContext) => GlitterFilter.drawCaption(sourceContext, captionSpec) : null
 						});
 					}
@@ -1710,8 +1711,14 @@ class GifExporter {
 			const blendMode = LAYER_UI_CONFIG[layer.type]?.blendable
 				? GlitterBlendModes.forLayer(layer)
 				: CONFIG.layers.defaultBlendMode;
-			const renderCtx = blendMode === CONFIG.layers.defaultBlendMode ? ctx : this.layerBlendCtx;
-			if (renderCtx === this.layerBlendCtx) {
+			// Filter layers read the real canvas beneath them (tone/blur adjust
+			// existing pixels in place) rather than painting independent content,
+			// so they can't be routed through the offscreen layer-group blend used
+			// by paint layers - that would hand them a blank canvas to read from.
+			// Their blend mode is applied internally, per paint op, instead.
+			const usesLayerGroupBlend = layer.type !== LayerType.FILTER;
+			const renderCtx = (!usesLayerGroupBlend || blendMode === CONFIG.layers.defaultBlendMode) ? ctx : this.layerBlendCtx;
+			if (usesLayerGroupBlend && renderCtx === this.layerBlendCtx) {
 				renderCtx.setTransform(1, 0, 0, 1, 0, 0);
 				renderCtx.globalAlpha = 1;
 				renderCtx.globalCompositeOperation = 'source-over';
@@ -1732,7 +1739,7 @@ class GifExporter {
 				safeKey,
 				alphaThreshold
 			});
-			if (renderCtx === this.layerBlendCtx) {
+			if (usesLayerGroupBlend && renderCtx === this.layerBlendCtx) {
 				if (blendMode === 'color-burn') {
 					const destination = ctx.getImageData(0, 0, width, height);
 					const source = renderCtx.getImageData(0, 0, width, height);

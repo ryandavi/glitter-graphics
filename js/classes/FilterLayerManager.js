@@ -132,6 +132,10 @@ class FilterLayerManager {
 			vignette: 'filterVignetteSettings', grain: 'filterGrainSettings', blur: 'filterBlurSettings'
 		};
 		Object.entries(settingsIds).forEach(([type, id]) => { document.getElementById(id).hidden = type !== data.type; });
+		// Blend mode only has paint to act on for tint/vignette/grain - the rest
+		// adjust the backdrop in place via CSS filter and have nothing to blend.
+		const blendRow = document.getElementById('filterLayerBlendMode')?.closest('.property-row');
+		if (blendRow) blendRow.hidden = !['tint', 'vignette', 'grain'].includes(data.type);
 		const values = {
 			opacity: layer.opacity, strength: data.strength, brightness: data.brightness, contrast: data.contrast, saturation: data.saturation, hue: data.hue,
 			invertAmount: data.amount, grayscaleAmount: data.amount, sepiaAmount: data.amount, tintAmount: data.amount,
@@ -199,7 +203,8 @@ class FilterLayerManager {
 		const width = this.editor.previewCanvas?.width || 1;
 		const height = this.editor.previewCanvas?.height || 1;
 		const viewScale = this.editor.viewport?.currentZoom || 1;
-		const signature = `${JSON.stringify(layer.filterData)}|${layer.opacity}|${this.editor.layerManager.getLayerZIndex(layer.id)}|${width}|${height}|${viewScale}`;
+		const blendMode = GlitterBlendModes.forLayer(layer);
+		const signature = `${JSON.stringify(layer.filterData)}|${layer.opacity}|${blendMode}|${this.editor.layerManager.getLayerZIndex(layer.id)}|${width}|${height}|${viewScale}`;
 		if (element.dataset.renderSignature === signature) return element;
 		element.dataset.renderSignature = signature;
 		const layerZIndex = this.editor.layerManager.getLayerZIndex(layer.id);
@@ -208,7 +213,12 @@ class FilterLayerManager {
 		element.style.opacity = '';
 		element.style.backdropFilter = '';
 		element.style.webkitBackdropFilter = '';
-		const children = GlitterFilter.overlayLayerStyles(layer.filterData, { width, height, seed: layer.id, viewScale, tileCache: this.grainTileCache });
+		// Not applied as element.style.mixBlendMode on this container: it paints
+		// no content of its own (children paint the tint/vignette/grain overlays,
+		// and tone/blur adjust the backdrop directly via CSS filter), so a
+		// container-level blend mode would be a no-op at best. Each paint op
+		// gets the override directly instead - see overlayLayerStyles.
+		const children = GlitterFilter.overlayLayerStyles(layer.filterData, { width, height, seed: layer.id, viewScale, tileCache: this.grainTileCache, blendMode });
 		const retained = new Set();
 		const caption = GlitterFilter.resolve(layer.filterData).caption;
 		if (caption) {

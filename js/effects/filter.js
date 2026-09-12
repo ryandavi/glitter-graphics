@@ -157,20 +157,31 @@
 		return canvas.toDataURL();
 	}
 
-	function overlayLayerStyles(value, { seed = '', viewScale = 1, tileCache = null } = {}) {
+	// The layer's own blend mode only has paint to act on for fill/gradient/
+	// grain ops (tint/vignette/grain) - tone/blur adjust the backdrop in place
+	// via CSS filter and have nothing to blend. 'normal' means "no override",
+	// since that's also the unset default - each op keeps its own built-in mode
+	// (e.g. vignette's luminance-picked screen/multiply) until the user chooses
+	// something else.
+	function resolveOpMode(op, blendMode) {
+		return blendMode && blendMode !== 'normal' ? blendMode : op.mode;
+	}
+
+	function overlayLayerStyles(value, { seed = '', viewScale = 1, tileCache = null, blendMode = null } = {}) {
 		const resolved = resolve(value);
 		const styles = [];
 		const filters = [Tone.toneCssFilterString(resolved.tone), Blur.cssBlurString(resolved.blur, viewScale)].filter(Boolean).join(' ');
 		for (const op of resolved.ops) {
-			if (op.kind === 'fill') styles.push({ className: 'filter-layer-fill', style: { background: op.color, mixBlendMode: op.mode, opacity: op.opacity } });
-			if (op.kind === 'gradient') styles.push({ className: 'filter-layer-gradient', style: { backgroundImage: gradientCss(op.gradient), mixBlendMode: op.mode, opacity: op.opacity } });
+			const mode = resolveOpMode(op, blendMode);
+			if (op.kind === 'fill') styles.push({ className: 'filter-layer-fill', style: { background: op.color, mixBlendMode: mode, opacity: op.opacity } });
+			if (op.kind === 'gradient') styles.push({ className: 'filter-layer-gradient', style: { backgroundImage: gradientCss(op.gradient), mixBlendMode: mode, opacity: op.opacity } });
 			if (op.kind === 'grain') {
 				const signature = `${Grain.tileSignature(op, seed)}|${config().grainTilePx}`;
 				if (tileCache && !tileCache.has(signature)) tileCache.set(signature, Grain.buildTile(op, seed, config().grainTilePx));
 				const tile = tileCache?.get(signature) || Grain.buildTile(op, seed, config().grainTilePx);
 				styles.push({ className: 'filter-layer-grain', style: {
 				backgroundImage: `url(${tileDataUrl(tile)})`,
-				backgroundRepeat: 'repeat', backgroundSize: `${config().grainTilePx * viewScale}px`, mixBlendMode: op.mode, opacity: op.amount
+				backgroundRepeat: 'repeat', backgroundSize: `${config().grainTilePx * viewScale}px`, mixBlendMode: mode, opacity: op.amount
 				} });
 			}
 		}
@@ -231,7 +242,7 @@
 		scratch.putImageData(post, 0, 0);
 		for (const op of resolved.ops) {
 			scratch.save();
-			scratch.globalCompositeOperation = BlendModes.cssToGCO(op.mode);
+			scratch.globalCompositeOperation = BlendModes.cssToGCO(resolveOpMode(op, options.blendMode));
 			scratch.globalAlpha = op.kind === 'grain' ? op.amount : op.opacity;
 			if (op.kind === 'fill') {
 				scratch.fillStyle = op.color;
