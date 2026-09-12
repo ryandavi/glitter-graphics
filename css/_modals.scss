@@ -1861,7 +1861,6 @@ body.modal-open {
 	}
 
 	sup {
-		transition: color var(--transition-fast);
 		margin-left: 2px;
 
 		font-size: 0.7em;
@@ -1870,10 +1869,13 @@ body.modal-open {
 		position: relative;
 		top: -0.5em;
 
+		.ref-num {
+			transition: color var(--transition-fast);
 
-		&:hover {
-			color: var(--color-accent-hover);
-			text-decoration: underline;
+			&:hover {
+				color: var(--color-accent-hover);
+				text-decoration: underline;
+			}
 		}
 	}
 

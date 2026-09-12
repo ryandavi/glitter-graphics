@@ -17,25 +17,33 @@ const initModalReferences = (modalBody, options = {}) => {
 	};
 
 	// --- Reference Highlighting ---
+	// A <sup> may hold several bracketed refs back-to-back, e.g. "[44][45][46]" —
+	// wrap each number in its own clickable span so they route to the right
+	// reference without inserting spacing between the brackets.
 	const sups = modalBody.querySelectorAll('sup');
 	sups.forEach((sup, index) => {
-		const match = sup.textContent.match(/\d+/);
-		if (!match) return;
+		const matches = [...sup.textContent.matchAll(/\d+/g)];
+		if (!matches.length) return;
 
-		const refNum = match[0];
-		sup.id = `ref-link-${refNum}-${index}`;
-		sup.classList.add(`ref-${refNum}`);
-		sup.style.cursor = 'pointer';
+		sup.innerHTML = sup.textContent.replace(/\d+/g, num => `<span class="ref-num" data-ref="${num}">${num}</span>`);
 
-		sup.addEventListener('click', e => {
-			e.preventDefault();
-			const targetRef = modalBody.querySelector(`#ref-${refNum}`);
-			if (!targetRef) return;
+		sup.querySelectorAll('.ref-num').forEach((span, refIndex) => {
+			const refNum = span.dataset.ref;
+			span.id = `ref-link-${refNum}-${index}-${refIndex}`;
+			span.classList.add(`ref-${refNum}`);
+			span.style.cursor = 'pointer';
 
-			clearHighlights();
-			targetRef.classList.add('highlight');
-			scrollToElement(targetRef, 'center');
-			setTimeout(() => targetRef.classList.remove('highlight'), config.highlightDuration);
+			span.addEventListener('click', e => {
+				e.preventDefault();
+				e.stopPropagation();
+				const targetRef = modalBody.querySelector(`#ref-${refNum}`);
+				if (!targetRef) return;
+
+				clearHighlights();
+				targetRef.classList.add('highlight');
+				scrollToElement(targetRef, 'center');
+				setTimeout(() => targetRef.classList.remove('highlight'), config.highlightDuration);
+			});
 		});
 	});
 
@@ -51,7 +59,7 @@ const initModalReferences = (modalBody, options = {}) => {
 				if (e.target.tagName === 'A') return;
 				e.preventDefault();
 
-				const targetSups = modalBody.querySelectorAll(`sup.ref-${refNum}`);
+				const targetSups = modalBody.querySelectorAll(`.ref-num.ref-${refNum}`);
 				if (!targetSups.length) return;
 
 				clearHighlights();

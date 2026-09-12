@@ -3064,10 +3064,8 @@ input[type=range]:disabled {
 .design-panel[data-panel-mode=glitter] .design-gallery-section[data-picker-library=brush-tips] [data-gallery-content=glitter] {
   display: none;
 }
-@media (min-width: 801px) {
-  .design-panel[data-gallery-visible=false] > .design-gallery-section {
-    display: none;
-  }
+.design-panel[data-gallery-visible=false] > .design-gallery-section {
+  display: none;
 }
 
 .glitter-search {
@@ -10114,7 +10112,6 @@ body.modal-open {
   border-radius: 2px;
 }
 #aboutModal sup {
-  transition: color var(--transition-fast);
   margin-left: 2px;
   font-size: 0.7em;
   line-height: 1;
@@ -10122,7 +10119,10 @@ body.modal-open {
   position: relative;
   top: -0.5em;
 }
-#aboutModal sup:hover {
+#aboutModal sup .ref-num {
+  transition: color var(--transition-fast);
+}
+#aboutModal sup .ref-num:hover {
   color: var(--color-accent-hover);
   text-decoration: underline;
 }

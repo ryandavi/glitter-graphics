@@ -72,10 +72,8 @@
 		}
 	}
 
-	@media (min-width: ($mobile-breakpoint + 1px)) {
-		&[data-gallery-visible="false"] > .design-gallery-section {
-			display: none;
-		}
+	&[data-gallery-visible="false"] > .design-gallery-section {
+		display: none;
 	}
 
 
