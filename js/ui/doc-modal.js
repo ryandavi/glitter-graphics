@@ -77,11 +77,16 @@ const initModalSmoothScroll = (modal) => {
 		if (link.getAttribute('href').match(/^#ref-/)) return;
 
 		link.addEventListener('click', e => {
+			// Always suppress the browser's own hash navigation for an in-modal
+			// link — letting it through pushes a plain (state-less) history
+			// entry, and ModalManager's popstate listener reads that as "the
+			// user navigated away from this modal" and closes it.
+			e.preventDefault();
+
 			const targetId = link.getAttribute('href').slice(1);
 			const targetEl = modal.querySelector(`#${targetId}`);
 			if (!targetEl) return;
 
-			e.preventDefault();
 			scrollToElement(targetEl, 'start');
 		});
 	});
@@ -136,6 +141,11 @@ const initDocumentModalNavigation = (modal) => {
 	tocPanel.addEventListener('click', (event) => {
 		const link = event.target.closest('a[href^="#"]');
 		if (!link) return;
+
+		// See initModalSmoothScroll's matching comment: without this, the
+		// browser's own hash navigation fires alongside our scroll handling
+		// and its state-less history entry makes ModalManager close the modal.
+		event.preventDefault();
 
 		const target = modal.querySelector(link.getAttribute('href'));
 		closeToc();

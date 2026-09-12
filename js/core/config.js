@@ -327,7 +327,7 @@ const CONFIG = deepFreeze({
 				tint: { presetId: 'warming-85', color: '#ec8a00', mode: 'soft-light', amount: 40 },
 				vignette: { amount: 45, midpoint: 55, roundness: 0, feather: 60, color: '#000000' },
 				grain: { amount: 25, size: 25, roughness: 50, monochrome: true, mode: 'soft-light' },
-				blur: { radius: 8 }
+				blur: { radius: 1 }
 			},
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
@@ -723,7 +723,7 @@ const CONFIG = deepFreeze({
 			filterInvertAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 			filterGrayscaleAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 			filterSepiaAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 100 },
-			filterTintAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 40 },
+			filterTintAmount: { label: 'Density', unit: '%', min: 0, max: 100, step: 1, value: 40 },
 			filterVignetteAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 45 },
 			filterVignetteMidpoint: { label: 'Midpoint', unit: '%', min: 0, max: 100, step: 1, value: 55 },
 			filterVignetteRoundness: { label: 'Roundness', unit: '%', min: -100, max: 100, step: 1, value: 0 },
@@ -731,7 +731,7 @@ const CONFIG = deepFreeze({
 			filterGrainAmount: { label: 'Amount', unit: '%', min: 0, max: 100, step: 1, value: 25 },
 			filterGrainSize: { label: 'Size', unit: '%', min: 0, max: 100, step: 1, value: 25 },
 			filterGrainRoughness: { label: 'Roughness', unit: '%', min: 0, max: 100, step: 1, value: 50 },
-			filterBlurRadius: { label: 'Radius', unit: 'px', min: 0, max: 64, step: 1, value: 8 },
+			filterBlurRadius: { label: 'Radius', unit: 'px', min: 0, max: 64, step: 1, value: 1 },
 			autoGlitterColorCount: { label: 'Colors', unit: '', min: 2, max: 12, step: 1, value: 5 },
 			autoGlitterMergeDistinctness: { label: 'Combine Similar', unit: '', min: 0.01, max: 0.12, step: 0.005, value: 0.045 },
 			autoGlitterDetail: { label: 'Detail', unit: 'px', min: 1, max: 64, step: 1, value: 4 },
@@ -1505,7 +1505,6 @@ const PANEL_SCHEMAS = {
 					{ kind: 'set', id: 'filterTintSettings', classes: 'filter-type-settings', hidden: true, items: [
 						{ kind: 'select', id: 'filterTintPreset', label: 'Tint preset', visibleLabel: 'Preset', options: [] },
 						{ kind: 'field', id: 'filterTintColor', label: 'Color', type: 'color', value: '#ec8a00', revert: true },
-						{ kind: 'select', id: 'filterTintMode', label: 'Blend mode', visibleLabel: 'Blend', options: [] },
 						{ kind: 'slider', id: 'filterTintAmount', slider: 'filterTintAmount', revert: true }
 					] },
 					{ kind: 'set', id: 'filterVignetteSettings', classes: 'filter-type-settings', hidden: true, items: [

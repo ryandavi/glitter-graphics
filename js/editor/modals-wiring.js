@@ -85,11 +85,13 @@ updateOrientationButtons(width, height) {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=8',
+				externalContentUrl: 'modals/about.html?v=9',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
 				onContentLoaded: (modalBody) => {
+					// Every entry starts collapsed to keep the About page from turning
+					// into an endless scroll of past release notes.
 					this.renderVersionHistory(modalBody);
 					// Initialize pixel-scaled images
 					initPixelScalerInContainer(modalBody);
@@ -112,7 +114,7 @@ updateOrientationButtons(width, height) {
 			.register('guideModal', {
 				openBtnId: 'guideBtn',
 				closeBtnId: 'closeGuideModal',
-				externalContentUrl: 'modals/guide.html?v=35dcc985',
+				externalContentUrl: 'modals/guide.html?v=filters01',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -160,15 +162,19 @@ updateOrientationButtons(width, height) {
 		this.modalManager.register('welcomeModal', {
 			openBtnId: 'openWelcomeModal',
 			closeBtnId: 'closeWelcomeModal',
-			externalContentUrl: 'modals/welcome.html?v=4',
+			externalContentUrl: 'modals/welcome.html?v=7',
 			cacheContent: true,
 			showWhileLoading: true,
 			loadingLabel: 'Preparing Glitter…',
 			resetScrollOnOpen: false,
 			onContentLoaded: (modalBody) => {
 				initPixelScalerInContainer(modalBody);
-				this.renderVersionHistory(modalBody, 2);
+				// Only the latest release earns a first-time reader's attention;
+				// older ones are a click away instead of pushing past the fold.
+				this.renderVersionHistory(modalBody, { limit: 1, openCount: 1 });
+				this.setupWelcomeUpdatesActions(modalBody);
 				this.setupWelcomeModalListeners();
+				initTooltipsInContainer(modalBody);
 			},
 			onOpen: () => {
 				const checked = !this.showWelcomeOnStartup;
@@ -273,7 +279,7 @@ updateOrientationButtons(width, height) {
 	}
 
 ,
-renderVersionHistory(root, limit = null) {
+renderVersionHistory(root, { limit = null, openCount = 0 } = {}) {
 	const releases = limit == null ? CONFIG.app.releases : CONFIG.app.releases.slice(0, limit);
 
 	root.querySelectorAll('[data-app-version]').forEach((slot) => {
@@ -281,7 +287,8 @@ renderVersionHistory(root, limit = null) {
 	});
 
 	root.querySelectorAll('[data-version-history]').forEach((history) => {
-		history.replaceChildren(...releases.map((release) => this.buildVersionHistoryEntry(release)));
+		history.replaceChildren(...releases.map((release, index) =>
+			this.buildVersionHistoryEntry(release, { open: index < openCount })));
 		if (history.dataset.guideLinksBound !== 'true') {
 			history.dataset.guideLinksBound = 'true';
 			history.addEventListener('click', (event) => {
@@ -295,19 +302,42 @@ renderVersionHistory(root, limit = null) {
 }
 
 ,
-buildVersionHistoryEntry(release) {
-	const entry = document.createElement('section');
-	entry.className = 'version-history-entry';
+// Each entry reuses the app's one "Advanced disclosure" primitive
+// (`.advanced-disclosure` / `data-advanced-toggle`, see disclosures.js) so
+// expand/collapse comes from the same delegated click handler every property
+// panel already uses, instead of a modal-specific accordion.
+buildVersionHistoryEntry(release, { open = false } = {}) {
+	const entry = document.createElement('div');
+	entry.className = 'advanced-disclosure version-history-entry';
+	entry.dataset.advanced = '';
+	if (open) entry.classList.add('is-open');
 
-	const header = document.createElement('div');
+	const toggle = document.createElement('button');
+	toggle.type = 'button';
+	toggle.className = 'advanced-disclosure-toggle version-history-toggle';
+	toggle.dataset.advancedToggle = '';
+	toggle.setAttribute('aria-expanded', String(open));
+
+	const header = document.createElement('span');
 	header.className = 'version-history-header';
-	const title = document.createElement('h4');
+	const title = document.createElement('span');
+	title.className = 'version-history-title';
 	title.textContent = `v${release.version} — ${release.name}`;
 	const date = document.createElement('time');
 	date.dateTime = release.date;
 	date.textContent = release.dateLabel;
 	header.append(title, date);
-	entry.append(header);
+
+	const chevron = document.createElement('span');
+	chevron.className = 'advanced-disclosure-chevron icon-wrapper';
+	chevron.innerHTML = '<svg class="icon"><use href="#icon-chevron-down"></use></svg>';
+
+	toggle.append(header, chevron);
+	entry.append(toggle);
+
+	const content = document.createElement('div');
+	content.className = 'advanced-disclosure-content version-history-content';
+	content.dataset.advancedContent = '';
 
 	if (release.image?.src) {
 		const figure = document.createElement('figure');
@@ -318,12 +348,12 @@ buildVersionHistoryEntry(release) {
 		image.loading = 'lazy';
 		image.decoding = 'async';
 		figure.append(image);
-		entry.append(figure);
+		content.append(figure);
 	}
 
 	const summary = document.createElement('p');
 	summary.textContent = release.summary;
-	entry.append(summary);
+	content.append(summary);
 
 	const features = document.createElement('ul');
 	features.append(...release.features.map((feature) => {
@@ -349,27 +379,57 @@ buildVersionHistoryEntry(release) {
 		}
 		return item;
 	}));
-	entry.append(features);
+	content.append(features);
 
 	if (release.projectFormat != null) {
 		const note = document.createElement('p');
 		note.className = 'version-history-format-note';
 		note.textContent = `Saves project files in format version ${release.projectFormat}.`;
-		entry.append(note);
+		content.append(note);
 	}
 
+	entry.append(content);
 	return entry;
 }
 
 ,
+// "Show more" reveals the rest of the changelog inline, collapsed; "See all
+// past updates" jumps straight to About's full (also collapsed) history.
+setupWelcomeUpdatesActions(modalBody) {
+	const showMoreBtn = modalBody.querySelector('[data-welcome-show-more]');
+	const pastUpdatesBtn = modalBody.querySelector('[data-welcome-past-updates]');
+
+	if (showMoreBtn) {
+		if (CONFIG.app.releases.length <= 1) {
+			showMoreBtn.hidden = true;
+		} else {
+			showMoreBtn.addEventListener('click', () => {
+				this.renderVersionHistory(modalBody, { openCount: 1 });
+				showMoreBtn.hidden = true;
+			}, { once: true });
+		}
+	}
+
+	if (pastUpdatesBtn) {
+		pastUpdatesBtn.addEventListener('click', () => this.openDocumentAt('aboutModal', 'AboutVersionHistory'));
+	}
+}
+
+,
 async openGuideAt(anchor) {
-	// open() closes whatever is showing and awaits the guide's external content,
-	// so the target section exists by the time we scroll to it.
-	await this.modalManager.open('guideModal');
+	return this.openDocumentAt('guideModal', anchor);
+}
+
+,
+// Shared by the Guide and About deep links: open() closes whatever is
+// showing and awaits the target modal's external content, so the anchored
+// section exists by the time we scroll to it.
+async openDocumentAt(modalId, anchor) {
+	await this.modalManager.open(modalId);
 	if (!anchor) return;
-	const target = document.getElementById('guideModal')?.querySelector(`#${CSS.escape(anchor)}`);
+	const target = document.getElementById(modalId)?.querySelector(`#${CSS.escape(anchor)}`);
 	if (!target) {
-		dbg(`Guide anchor not found: ${anchor}`);
+		dbg(`Document anchor not found: ${anchor} in ${modalId}`);
 		return;
 	}
 	requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));

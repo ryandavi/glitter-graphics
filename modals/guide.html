@@ -62,6 +62,13 @@
             </ol>
         </li>
         <li>
+            <a href="#filters">Filters</a>
+            <ol>
+                <li><a href="#create-filter">Add a Filter Layer</a></li>
+                <li><a href="#filter-types">Filter Types</a></li>
+            </ol>
+        </li>
+        <li>
             <a href="#settings">Settings</a>
             <ol>
                 <li><a href="#app-settings">App Settings</a></li>
@@ -343,19 +350,9 @@
                     </span>
                 </div>
                 <div class="guide-item-content">
-                    <p>Click <strong>+</strong> to add a new <strong>Glitter Fill</strong>, <strong>Sticker</strong>, <strong>Text</strong>, <strong>Shape</strong>, or <strong>Filter</strong> layer.</p>
+                    <p>Click <strong>+</strong> to add a new <strong>Glitter Fill</strong>, <strong>Sticker</strong>, <strong>Text</strong>, <strong>Shape</strong>, or <strong>Filter</strong> layer. Filter layers get their own adjustable, stackable effects — see <a href="#filters">Filters</a>.</p>
                 </div>
             </div>
-
-			<div class="guide-item">
-				<div class="guide-item-icon">
-					<span class="icon-wrapper sm"><svg class="icon"><use href="#icon-sliders"></use></svg></span>
-				</div>
-				<div class="guide-item-content">
-					<h4>Filter Properties</h4>
-					<p>Filter layers process everything below them in the layer stack. Choose Basic, Invert, Grayscale, Sepia, Tint, Vignette, Grain, Blur, or Instagram. Tint includes warming, cooling, and color presets plus a custom color. Grain uses Amount, Size, and Roughness to build film-like texture without enlarging pixels. Stack filters to combine them; use Strength for an Instagram recipe and Opacity to fade the complete filter layer, including its optional centered name.</p>
-				</div>
-			</div>
 
             <div class="guide-item">
                 <div class="guide-item-icon">
@@ -1553,6 +1550,158 @@
                 </div>
                 <div class="guide-item-content">
                     <p><strong>Border</strong> &amp; <strong>Shadow</strong> – Enable each and pick its own glitter, solid color, or gradient, plus width/offset and opacity. Borders follow the shape's true outline, can be solid or dotted, and expose rounded/hard edges, outside/on-edge/inside placement, plus behind/on-top layering. Open <strong>Advanced</strong> on any slot to recolor its glitter (Hue / Saturation / Brightness).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="guide-section">
+        <h3 id="filters">
+            <span class="icon-wrapper">
+                <svg class="icon">
+                    <use href="#icon-filter"></use>
+                </svg>
+            </span>
+            Filters
+        </h3>
+
+        <div class="guide-subsection">
+            <h4 id="create-filter">Add a Filter Layer</h4>
+            <p>A filter layer doesn't draw anything of its own — it re-processes everything already composited below it, live on the canvas and baked into export.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-plus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Click <strong>+</strong> in the Layers panel and choose <strong>Filter</strong>. It starts as a Basic adjustment — switch types any time from Filter Properties.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-layers"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Order matters.</strong> A filter only affects layers beneath it, so drag it in the Layers panel to change what it reaches. Stack several filter layers to combine effects — each one processes the already-filtered result of everything below it. A filter with nothing beneath it still affects the canvas background.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p>Filter layers have no position, size, or transform handles on the canvas — only their effect on the layers below is visible, so they're skipped by the transform tools and alignment.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-subsection">
+            <h4 id="filter-types">Filter Types</h4>
+            <p>Pick a type from the picker at the top of Filter Properties; each one swaps in its own controls. <strong>Opacity</strong> fades the whole filter layer the same way it does on every other layer type.</p>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-image"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Instagram</strong> – Pick a classic preset from the scrollable list. <strong>Strength</strong> fades the preset's own recipe back toward the untouched original; turn on <strong>Show filter name</strong> for a centered caption with the preset's name that stays fully visible even at Strength 0 (use layer Opacity to fade the name too).</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-sliders"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Basic</strong> – Brightness, Contrast, Saturation, and Hue in one adjustment. Stack two Basic filters if you want to fade them independently.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Invert</strong>, <strong>Grayscale</strong>, and <strong>Sepia</strong> – Each is a single Amount slider.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Tint</strong> – Choose a warming, cooling, or color preset, or set a custom color; <strong>Density</strong> controls how strong the color cast reads.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Vignette</strong> – Amount, Midpoint, Roundness, Feather, and Color shape a darkened (or colored) edge.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Grain</strong> – Amount, Size, Roughness, and a Monochrome toggle build film-like texture without enlarging pixels; it stays sharp at any zoom or export size.</p>
+                </div>
+            </div>
+
+            <div class="guide-item">
+                <div class="guide-item-icon empty">
+                    <span class="icon-wrapper sm">
+                        <svg class="icon">
+                            <use href="#icon-minus"></use>
+                        </svg>
+                    </span>
+                </div>
+                <div class="guide-item-content">
+                    <p><strong>Blur</strong> – A single Radius slider softens everything beneath it.</p>
                 </div>
             </div>
         </div>

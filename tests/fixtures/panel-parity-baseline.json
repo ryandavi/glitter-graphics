@@ -5191,12 +5191,6 @@
 			}
 		},
 		{
-			"id": "filterTintMode",
-			"tag": "select",
-			"classes": "",
-			"parent": "filterTintSettings"
-		},
-		{
 			"id": "filterTintAmount",
 			"tag": "input",
 			"classes": "",
@@ -5450,7 +5444,7 @@
 				"min": "0",
 				"max": "64",
 				"step": "1",
-				"value": "8"
+				"value": "1"
 			}
 		},
 		{
@@ -6293,7 +6287,6 @@
 				"filterTintSettings": "hidden",
 				"filterTintPreset": "shown",
 				"filterTintColor": "shown",
-				"filterTintMode": "shown",
 				"filterTintAmount": "shown",
 				"filterTintAmountValue": "shown",
 				"resetFilterTintAmount": "shown",
@@ -8453,7 +8446,6 @@
 				"filterTintSettings": "hidden",
 				"filterTintPreset": "shown",
 				"filterTintColor": "shown",
-				"filterTintMode": "shown",
 				"filterTintAmount": "shown",
 				"filterTintAmountValue": "shown",
 				"resetFilterTintAmount": "shown",
@@ -10613,7 +10605,6 @@
 				"filterTintSettings": "hidden",
 				"filterTintPreset": "shown",
 				"filterTintColor": "shown",
-				"filterTintMode": "shown",
 				"filterTintAmount": "shown",
 				"filterTintAmountValue": "shown",
 				"resetFilterTintAmount": "shown",
@@ -12773,7 +12764,6 @@
 				"filterTintSettings": "hidden",
 				"filterTintPreset": "shown",
 				"filterTintColor": "shown",
-				"filterTintMode": "shown",
 				"filterTintAmount": "shown",
 				"filterTintAmountValue": "shown",
 				"resetFilterTintAmount": "shown",
@@ -14933,7 +14923,6 @@
 				"filterTintSettings": "hidden",
 				"filterTintPreset": "shown",
 				"filterTintColor": "shown",
-				"filterTintMode": "shown",
 				"filterTintAmount": "shown",
 				"filterTintAmountValue": "shown",
 				"resetFilterTintAmount": "shown",

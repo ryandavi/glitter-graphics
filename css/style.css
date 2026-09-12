@@ -9861,17 +9861,17 @@ body.modal-open {
 }
 #welcomeModal .version-history-entry,
 #aboutModal .version-history-entry {
+  margin-top: 0;
+}
+#welcomeModal .version-history-entry:first-child,
+#aboutModal .version-history-entry:first-child {
+  border-top: 0;
+}
+#welcomeModal .version-history-toggle,
+#aboutModal .version-history-toggle {
   padding: var(--spacing-md) 0;
-}
-#welcomeModal .version-history-entry + .version-history-entry,
-#aboutModal .version-history-entry + .version-history-entry {
-  border-top: 1px solid var(--color-border);
-}
-#welcomeModal .version-history-entry > p,
-#welcomeModal .version-history-entry > ul,
-#aboutModal .version-history-entry > p,
-#aboutModal .version-history-entry > ul {
-  margin-top: var(--spacing-sm);
+  align-items: baseline;
+  text-align: left;
 }
 #welcomeModal .version-history-header,
 #aboutModal .version-history-header {
@@ -9879,17 +9879,30 @@ body.modal-open {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--spacing-md);
+  flex: 1 1 auto;
+  min-width: 0;
   flex-wrap: wrap;
 }
-#welcomeModal .version-history-header > h4,
-#aboutModal .version-history-header > h4 {
+#welcomeModal .version-history-title,
+#aboutModal .version-history-title {
   color: var(--color-text-primary);
+  font-weight: 600;
 }
-#welcomeModal .version-history-header > time,
-#aboutModal .version-history-header > time {
+#welcomeModal .version-history-header time,
+#aboutModal .version-history-header time {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   white-space: nowrap;
+}
+#welcomeModal .version-history-content,
+#aboutModal .version-history-content {
+  padding-bottom: var(--spacing-md);
+}
+#welcomeModal .version-history-content > p,
+#welcomeModal .version-history-content > ul,
+#aboutModal .version-history-content > p,
+#aboutModal .version-history-content > ul {
+  margin-top: var(--spacing-sm);
 }
 #welcomeModal .version-history-current,
 #aboutModal .version-history-current {
@@ -9953,6 +9966,13 @@ body.modal-open {
 #aboutModal .version-history-format-note {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
+}
+#welcomeModal .version-history-more-actions,
+#aboutModal .version-history-more-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-md);
 }
 
 .support-note {
@@ -10111,6 +10131,35 @@ body.modal-open {
 }
 #aboutModal > .modal-content > .modal-body ol li:hover {
   background-color: rgba(0, 102, 204, 0.05);
+}
+
+/* Inline "Feature Name [Beta]" label — .feature-badge is sized for a card
+   header/banner and sits too tall/close for running list copy, so give this
+   pairing its own gap and vertical centering without touching the shared
+   component. */
+#welcomeModal .feature-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* Same "term with a hover definition" treatment as #aboutModal .context,
+   reused where the Welcome modal names a feature that benefits from a
+   one-line explanation without sending someone off to the Guide. */
+#welcomeModal .context {
+  font-weight: bold;
+  cursor: help;
+  color: inherit;
+  display: inline;
+  -webkit-text-decoration: underline dotted;
+  text-decoration: underline dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+  -webkit-text-decoration-skip: ink;
+  text-decoration-skip-ink: auto;
+}
+#welcomeModal .context:hover {
+  color: var(--color-text-primary);
 }
 
 /* ===== SHORTCUTS MODAL ===== */

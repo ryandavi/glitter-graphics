@@ -11,7 +11,7 @@ global.CONFIG = {
 				tint: { presetId: 'warming-85', color: '#ec8a00', mode: 'soft-light', amount: 40 },
 				vignette: { amount: 45, midpoint: 55, roundness: 0, feather: 60, color: '#000000' },
 				grain: { amount: 25, size: 25, roughness: 50, monochrome: true, mode: 'soft-light' },
-				blur: { radius: 8 }
+				blur: { radius: 1 }
 			},
 			tintPresets: {
 				'warming-85': { label: 'Warming Filter (85)', color: '#ec8a00' },
@@ -87,6 +87,7 @@ assert.strictEqual(xProStyles.at(-1).className, 'filter-layer-backdrop', 'tone a
 const tintStyles = Filter.overlayLayerStyles({ type: 'tint', color: '#ff0000', mode: 'soft-light', amount: 100 });
 assert.strictEqual(tintStyles[0].style.mixBlendMode, 'soft-light');
 assert.strictEqual(tintStyles[0].style.opacity, 1);
+assert.strictEqual(Filter.normalizeFilterData({ type: 'tint', mode: 'multiply' }).mode, 'soft-light');
 assert.strictEqual(Filter.normalizeFilterData({ type: 'tint' }).presetId, 'warming-85');
 assert.strictEqual(Filter.normalizeFilterData({ type: 'tint', presetId: 'cooling-80' }).color, '#006dff');
 assert.strictEqual(Filter.normalizeFilterData({ type: 'tint', color: '#ff0000' }).presetId, 'custom');

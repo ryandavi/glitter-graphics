@@ -1563,8 +1563,10 @@ body.modal-open {
 	}
 }
 
-// Release notes use the same document hierarchy in Welcome and About. Entries
-// are separated like sections of prose rather than presented as dashboard cards.
+// Release notes use the same document hierarchy in Welcome and About. Each
+// entry is the app's shared "Advanced disclosure" primitive (see
+// .advanced-disclosure in _components.scss and disclosures.js) rather than a
+// bespoke accordion, so it collapses/expands, chevron included, for free.
 #welcomeModal,
 #aboutModal {
 	.version-history {
@@ -1573,16 +1575,15 @@ body.modal-open {
 	}
 
 	.version-history-entry {
+		margin-top: 0;
+
+		&:first-child { border-top: 0; }
+	}
+
+	.version-history-toggle {
 		padding: var(--spacing-md) 0;
-
-		+.version-history-entry {
-			border-top: 1px solid var(--color-border);
-		}
-
-		>p,
-		>ul {
-			margin-top: var(--spacing-sm);
-		}
+		align-items: baseline;
+		text-align: left;
 	}
 
 	.version-history-header {
@@ -1590,14 +1591,28 @@ body.modal-open {
 		align-items: baseline;
 		justify-content: space-between;
 		gap: var(--spacing-md);
+		flex: 1 1 auto;
+		min-width: 0;
 		flex-wrap: wrap;
+	}
 
-		>h4 { color: var(--color-text-primary); }
+	.version-history-title {
+		color: var(--color-text-primary);
+		font-weight: 600;
+	}
 
-		>time {
-			font-size: var(--font-size-xs);
-			color: var(--color-text-tertiary);
-			white-space: nowrap;
+	.version-history-header time {
+		font-size: var(--font-size-xs);
+		color: var(--color-text-tertiary);
+		white-space: nowrap;
+	}
+
+	.version-history-content {
+		padding-bottom: var(--spacing-md);
+
+		>p,
+		>ul {
+			margin-top: var(--spacing-sm);
 		}
 	}
 
@@ -1652,6 +1667,13 @@ body.modal-open {
 	.version-history-format-note {
 		font-size: var(--font-size-xs);
 		color: var(--color-text-tertiary);
+	}
+
+	.version-history-more-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-lg);
+		margin-top: var(--spacing-md);
 	}
 }
 
@@ -1863,6 +1885,37 @@ body.modal-open {
 		}
 	}
 
+}
+
+/* Inline "Feature Name [Beta]" label — .feature-badge is sized for a card
+   header/banner and sits too tall/close for running list copy, so give this
+   pairing its own gap and vertical centering without touching the shared
+   component. */
+#welcomeModal .feature-name {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+}
+
+/* Same "term with a hover definition" treatment as #aboutModal .context,
+   reused where the Welcome modal names a feature that benefits from a
+   one-line explanation without sending someone off to the Guide. */
+#welcomeModal .context {
+	font-weight: bold;
+	cursor: help;
+	color: inherit;
+	display: inline;
+
+	-webkit-text-decoration: underline dotted;
+	text-decoration: underline dotted;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 2px;
+	-webkit-text-decoration-skip: ink;
+	text-decoration-skip-ink: auto;
+
+	&:hover {
+		color: var(--color-text-primary);
+	}
 }
 
 /* ===== SHORTCUTS MODAL ===== */

@@ -39,7 +39,7 @@ class FilterLayerManager {
 			strength: get('filterStrength'), showName: get('filterShowName'),
 			brightness: get('filterBrightness'), contrast: get('filterContrast'), saturation: get('filterSaturation'), hue: get('filterHue'),
 			invertAmount: get('filterInvertAmount'), grayscaleAmount: get('filterGrayscaleAmount'), sepiaAmount: get('filterSepiaAmount'),
-			tintPreset: get('filterTintPreset'), tintColor: get('filterTintColor'), tintMode: get('filterTintMode'), tintAmount: get('filterTintAmount'),
+			tintPreset: get('filterTintPreset'), tintColor: get('filterTintColor'), tintAmount: get('filterTintAmount'),
 			vignetteAmount: get('filterVignetteAmount'), vignetteMidpoint: get('filterVignetteMidpoint'),
 			vignetteRoundness: get('filterVignetteRoundness'), vignetteFeather: get('filterVignetteFeather'), vignetteColor: get('filterVignetteColor'),
 			grainAmount: get('filterGrainAmount'), grainSize: get('filterGrainSize'), grainRoughness: get('filterGrainRoughness'), grainMono: get('filterGrainMono'),
@@ -47,9 +47,6 @@ class FilterLayerManager {
 		};
 		if (this.ui.tintPreset && !this.ui.tintPreset.options.length) {
 			Object.entries(CONFIG.tools.filter.tintPresets).forEach(([id, preset]) => this.ui.tintPreset.add(new Option(preset.label, id)));
-		}
-		if (this.ui.tintMode && !this.ui.tintMode.options.length) {
-			GlitterBlendModes.BLEND_MODES.forEach((mode) => this.ui.tintMode.add(new Option(GlitterBlendModes.labelOf(mode), mode)));
 		}
 	}
 
@@ -106,7 +103,7 @@ class FilterLayerManager {
 			this.update('color', this.ui.tintColor.value);
 		});
 		this.ui.tintColor?.addEventListener('change', () => this.update('color', this.ui.tintColor.value, true));
-		[['tintMode', 'mode'], ['vignetteColor', 'color']].forEach(([control, key]) => {
+		[['vignetteColor', 'color']].forEach(([control, key]) => {
 			this.ui[control]?.addEventListener('input', () => this.update(key, this.ui[control].value));
 			this.ui[control]?.addEventListener('change', () => this.update(key, this.ui[control].value, true));
 		});
@@ -152,7 +149,6 @@ class FilterLayerManager {
 		if (this.ui.grainMono) this.ui.grainMono.checked = data.monochrome !== false;
 		if (this.ui.tintPreset && data.type === 'tint') this.ui.tintPreset.value = data.presetId;
 		if (this.ui.tintColor && data.type === 'tint') this.ui.tintColor.value = data.color;
-		if (this.ui.tintMode && data.type === 'tint') this.ui.tintMode.value = data.mode;
 		if (this.ui.vignetteColor && data.type === 'vignette') this.ui.vignetteColor.value = data.color;
 		this.loadingSettings = false;
 		this.renderPresetPicker();

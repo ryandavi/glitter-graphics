@@ -191,6 +191,8 @@ const LAYER_SETUPS = {
 			const filterUnits = ['filterHueValue', 'filterGrainSizeValue', 'filterTintAmountValue'].map((id) => document.getElementById(id)?.textContent);
 			if (!filterUnits[0]?.endsWith('°') || !filterUnits[1]?.endsWith('%') || !filterUnits[2]?.endsWith('%')) throw new Error(`Filter control units are missing: ${filterUnits.join(', ')}`);
 			if (document.querySelector('#filterTintSettings .property-actions')) throw new Error('Tint quick picks still use a nested property-actions row');
+			if (document.getElementById('filterTintMode')) throw new Error('Tint still exposes a separate blend mode');
+			if (document.getElementById('filterTintAmount')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Density') throw new Error('Tint strength is not labelled Density');
 			const tintPresets = [...document.getElementById('filterTintPreset').options];
 			if (tintPresets[0]?.value !== 'warming-85' || tintPresets.at(-1)?.value !== 'custom') throw new Error('Tint preset order is incorrect');
 			const firstPreset = document.querySelector('#filterPresetPicker .filter-preset-option');

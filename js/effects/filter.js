@@ -43,7 +43,7 @@
 			const requestedPreset = Object.hasOwn(source, 'presetId') ? source.presetId : (source.color == null ? defaults.presetId : matchingPreset || 'custom');
 			normalized.presetId = config().tintPresets[requestedPreset] ? requestedPreset : 'custom';
 			if (normalized.presetId !== 'custom') normalized.color = config().tintPresets[normalized.presetId].color;
-			normalized.mode = BlendModes.isBlendMode(normalized.mode) ? normalized.mode : defaults.mode;
+			normalized.mode = defaults.mode;
 		} else if (type === 'vignette') {
 			normalized.midpoint = clamp(number(normalized.midpoint, defaults.midpoint), 0, 100);
 			normalized.roundness = clamp(number(normalized.roundness, defaults.roundness), -100, 100);
