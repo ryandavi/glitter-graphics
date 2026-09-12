@@ -132,10 +132,6 @@ class FilterLayerManager {
 			vignette: 'filterVignetteSettings', grain: 'filterGrainSettings', blur: 'filterBlurSettings'
 		};
 		Object.entries(settingsIds).forEach(([type, id]) => { document.getElementById(id).hidden = type !== data.type; });
-		// Blend mode only has paint to act on for tint/vignette/grain - the rest
-		// adjust the backdrop in place via CSS filter and have nothing to blend.
-		const blendRow = document.getElementById('filterLayerBlendMode')?.closest('.property-row');
-		if (blendRow) blendRow.hidden = !['tint', 'vignette', 'grain'].includes(data.type);
 		const values = {
 			opacity: layer.opacity, strength: data.strength, brightness: data.brightness, contrast: data.contrast, saturation: data.saturation, hue: data.hue,
 			invertAmount: data.amount, grayscaleAmount: data.amount, sepiaAmount: data.amount, tintAmount: data.amount,

@@ -157,12 +157,9 @@
 		return canvas.toDataURL();
 	}
 
-	// The layer's own blend mode only has paint to act on for fill/gradient/
-	// grain ops (tint/vignette/grain) - tone/blur adjust the backdrop in place
-	// via CSS filter and have nothing to blend. 'normal' means "no override",
-	// since that's also the unset default - each op keeps its own built-in mode
-	// (e.g. vignette's luminance-picked screen/multiply) until the user chooses
-	// something else.
+	// 'normal' means "no override" (it's also the unset default), so each op
+	// keeps its own built-in mode (e.g. vignette's luminance-picked screen/
+	// multiply) until the user chooses something else.
 	function resolveOpMode(op, blendMode) {
 		return blendMode && blendMode !== 'normal' ? blendMode : op.mode;
 	}
@@ -186,7 +183,15 @@
 			}
 		}
 		// CSSgram filters the composited image after its ::before/::after blends.
-		if (filters) styles.push({ className: 'filter-layer-backdrop', style: { backdropFilter: filters, WebkitBackdropFilter: filters } });
+		if (filters) {
+			const backdropStyle = { backdropFilter: filters, WebkitBackdropFilter: filters };
+			// Tone/blur (no ops) is the only paint on this layer, so it's safe to
+			// blend directly here. When ops are also present (Tint/Vignette/Grain/
+			// Instagram) they already carry the chosen mode themselves - blending
+			// this backdrop too would double it up against the same real backdrop.
+			if (!resolved.ops.length) backdropStyle.mixBlendMode = resolveOpMode({ mode: 'normal' }, blendMode);
+			styles.push({ className: 'filter-layer-backdrop', style: backdropStyle });
+		}
 		return styles;
 	}
 
@@ -263,20 +268,51 @@
 		if (resolved.tone) Tone.applyToneToImageData(rendered, resolved.tone, options.alphaThreshold || 0);
 		if (resolved.blur) Blur.applyBlurToImageData(rendered, resolved.blur.radius);
 		const amount = clamp(number(strength, 1), 0, 1);
+		// Ops (Tint/Vignette/Grain/Instagram) already blended against the real
+		// backdrop above; blending the whole result again here would double it
+		// up, so only tone/blur-only filters (Basic/Invert/Grayscale/Sepia/Blur)
+		// use the layer's chosen blend mode for this final composite - the rest
+		// stay a plain opacity cross-fade, matching the live CSS preview.
+		const blendMode = resolved.ops.length ? 'normal' : BlendModes.normalize(options.blendMode);
+		let composited;
+		if (blendMode === 'normal') {
+			composited = rendered;
+			for (let index = 0; index < pre.data.length; index += 4) {
+				for (let channel = 0; channel < 4; channel++) composited.data[index + channel] = Math.round(pre.data[index + channel] + (rendered.data[index + channel] - pre.data[index + channel]) * amount);
+			}
+		} else if (blendMode === 'color-burn') {
+			// Chromium's canvas color-burn mishandles opaque dark pixels when the
+			// source is otherwise-transparent; composite the pixels directly (see
+			// BlendModes.compositeColorBurn) instead of drawing through canvas.
+			const scaledSource = new ImageData(new Uint8ClampedArray(rendered.data), width, height);
+			for (let index = 3; index < scaledSource.data.length; index += 4) scaledSource.data[index] = Math.round(scaledSource.data[index] * amount);
+			composited = new ImageData(new Uint8ClampedArray(pre.data), width, height);
+			BlendModes.compositeColorBurn(composited, scaledSource);
+		} else {
+			const preCanvas = createScratch(width, height);
+			const blendCtx = preCanvas.getContext('2d');
+			blendCtx.putImageData(pre, 0, 0);
+			const renderedCanvas = createScratch(width, height);
+			renderedCanvas.getContext('2d').putImageData(rendered, 0, 0);
+			blendCtx.globalAlpha = amount;
+			blendCtx.globalCompositeOperation = BlendModes.cssToGCO(blendMode);
+			blendCtx.drawImage(renderedCanvas, 0, 0);
+			composited = blendCtx.getImageData(0, 0, width, height);
+		}
 		const safeKey = options.safeKey;
 		const threshold = options.alphaThreshold || 0;
-		for (let index = 0; index < pre.data.length; index += 4) {
-			const keyPixel = safeKey && pre.data[index] === safeKey.r && pre.data[index + 1] === safeKey.g && pre.data[index + 2] === safeKey.b;
-			if (options.keepAlpha && (pre.data[index + 3] < threshold || keyPixel)) {
-				rendered.data[index] = safeKey?.r || 0;
-				rendered.data[index + 1] = safeKey?.g || 0;
-				rendered.data[index + 2] = safeKey?.b || 0;
-				rendered.data[index + 3] = pre.data[index + 3];
-				continue;
+		if (options.keepAlpha) {
+			for (let index = 0; index < pre.data.length; index += 4) {
+				const keyPixel = safeKey && pre.data[index] === safeKey.r && pre.data[index + 1] === safeKey.g && pre.data[index + 2] === safeKey.b;
+				if (pre.data[index + 3] < threshold || keyPixel) {
+					composited.data[index] = safeKey?.r || 0;
+					composited.data[index + 1] = safeKey?.g || 0;
+					composited.data[index + 2] = safeKey?.b || 0;
+					composited.data[index + 3] = pre.data[index + 3];
+				}
 			}
-			for (let channel = 0; channel < 4; channel++) rendered.data[index + channel] = Math.round(pre.data[index + channel] + (rendered.data[index + channel] - pre.data[index + channel]) * amount);
 		}
-		context.putImageData(rendered, 0, 0);
+		context.putImageData(composited, 0, 0);
 	}
 
 	function drawCaption(context, spec) {
