@@ -1849,7 +1849,73 @@ body.modal-open {
 		margin-top: var(--spacing-xs);
 	}
 
+	/* Chronological reference list in the Timeline section — a plain ul so
+	   it inherits the h3/ul spacing rules above instead of needing its own.
+	   .timeline-start/-acquisition/-closure set --tl-color once per item;
+	   the left border (on li) and the dot (in the legend) both read it,
+	   so the three category colors only exist in one place below. */
+	.timeline-start { --tl-color: var(--color-success); }
+	.timeline-acquisition { --tl-color: var(--color-info); }
+	.timeline-closure { --tl-color: var(--color-danger); }
 
+	.timeline-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-md);
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+
+	.timeline-legend-item {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--spacing-xs);
+	}
+
+	.timeline-dot {
+		width: 9px;
+		height: 9px;
+		border-radius: 50%;
+		background: var(--tl-color, var(--color-text-tertiary));
+		flex: 0 0 auto;
+	}
+
+	.timeline-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+
+		li {
+			display: flex;
+			gap: var(--spacing-md);
+			padding: var(--spacing-sm) 0;
+			padding-left: var(--spacing-sm);
+			border-bottom: 1px solid var(--color-border);
+			border-left: 3px solid var(--tl-color, var(--color-border));
+
+			&:last-child {
+				border-bottom: none;
+			}
+		}
+
+		.timeline-date {
+			flex: 0 0 auto;
+			width: 6.5rem;
+			font-weight: 600;
+			color: var(--color-text-secondary);
+		}
+
+		@media (max-width: 480px) {
+			li {
+				flex-direction: column;
+				gap: var(--spacing-xs);
+			}
+
+			.timeline-date {
+				width: auto;
+			}
+		}
+	}
 
 
 	/* Highlight animation for references */
