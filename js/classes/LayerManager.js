@@ -160,6 +160,7 @@ class LayerManager {
 		});
 		// Canonical whole-layer opacity (0-100), shared by every layer type.
 		serialized.opacity = Number.isFinite(layer.opacity) ? layer.opacity : 100;
+		if (LAYER_UI_CONFIG[type]?.blendable) serialized.blendMode = GlitterBlendModes.forLayer(layer);
 		if (spec.forceLocked) serialized.locked = true;
 		if (!spec.omit?.includes('settings')) serialized.settings = structuredClone(layer.settings || {});
 		[spec.dataKey, ...(spec.extraKeys || [])].filter(Boolean).forEach((key) => {
@@ -186,6 +187,7 @@ class LayerManager {
 			locked: spec.forceLocked ? true : layerData.locked,
 			selectedGlitterId: layerData.selectedGlitterId ?? spec.defaultSelectedGlitterId?.(),
 			opacity: Number.isFinite(layerData.opacity) ? layerData.opacity : 100,
+			...(LAYER_UI_CONFIG[type]?.blendable ? { blendMode: GlitterBlendModes.forLayer(layerData) } : {}),
 			...(spec.defaults ? structuredClone(spec.defaults) : {})
 		};
 		if (!spec.omit?.includes('name')) restored.name = layerData.name || spec.defaultName?.(this.editor, layerData[spec.dataKey]);
@@ -210,6 +212,7 @@ class LayerManager {
 
 	insertLayer(layer, options = {}) {
 		const { suppressDesignGalleryFocus = false } = options;
+		if (LAYER_UI_CONFIG[layer.type]?.blendable) layer.blendMode = GlitterBlendModes.forLayer(layer);
 
 		// Insert above the currently selected layer, or at the top if none selected
 		if (this.activeLayerId) {
@@ -480,6 +483,7 @@ class LayerManager {
 		this.editor.glitterManager?.closePickerSession?.();
 		this.editor.stickerManager?.closePickerSession?.();
 		this.editor.baseBackgroundManager?.closePickerSession?.();
+		this.editor.brushTipManager?.closePickerSession?.();
 		this.editor.maskEditor?.handleLayerChange(this.activeLayerId);
 		this.updateActiveLayerListSelection();
 		if (options.source === 'canvas') this.revealLayerInList(this.activeLayerId);
@@ -1051,6 +1055,7 @@ class LayerManager {
 		}
 
 		// Find original layer index and insert clone right after it
+		if (LAYER_UI_CONFIG[sourceLayer.type]?.blendable) clonedLayer.blendMode = GlitterBlendModes.forLayer(sourceLayer);
 		// (Higher index = visually above in the stack)
 		const sourceIndex = this.layers.findIndex(l => l.id === layerId);
 		this.layers.splice(sourceIndex + 1, 0, clonedLayer);
@@ -1214,6 +1219,7 @@ class LayerManager {
 			.forEach((sourceLayer) => {
 				const clonedLayer = this.buildClonedLayer(sourceLayer, options);
 				if (!clonedLayer) return;
+				if (LAYER_UI_CONFIG[sourceLayer.type]?.blendable) clonedLayer.blendMode = GlitterBlendModes.forLayer(sourceLayer);
 				const sourceIndex = this.layers.findIndex((layer) => layer.id === sourceLayer.id);
 				this.layers.splice(sourceIndex + 1, 0, clonedLayer);
 				clones.push(clonedLayer);
@@ -2102,7 +2108,11 @@ class LayerManager {
 		this.layers.forEach(layer => {
 			const el = existingElements.get(layer.id);
 			if (el) {
-				el.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+				// A z-index on the filter wrapper traps its blended children in a new
+				// stacking context. Filter children carry the layer z-index themselves.
+				el.style.zIndex = layer.type === LayerType.FILTER
+					? ''
+					: this.editor.layerManager.getLayerZIndex(layer.id);
 				fragment.appendChild(el);
 			}
 		});
@@ -2113,5 +2123,6 @@ class LayerManager {
 				container.appendChild(el);
 			}
 		});
+		this.editor.requestPreviewUpdate();
 	}
 }

@@ -1,4 +1,30 @@
 const EDITOR_PANEL_METHODS = {
+
+setupLayerBlendModeListeners() {
+	if (this._layerBlendModeListenersBound) return;
+	this._layerBlendModeListenersBound = true;
+	document.addEventListener('change', (event) => {
+		const control = event.target.closest?.('select.layer-blend-mode');
+		if (!control) return;
+		const layer = this.layerManager?.getActiveLayer();
+		if (!layer || !LAYER_UI_CONFIG[layer.type]?.blendable) return;
+		layer.blendMode = GlitterBlendModes.normalize(control.value);
+		this.requestPreviewUpdate();
+		this.saveState('Edit appearance');
+	});
+}
+
+,
+syncLayerBlendModeControl(layer) {
+	if (!layer || !LAYER_UI_CONFIG[layer.type]?.blendable) return;
+	const sectionId = PANEL_SCHEMAS[layer.type]?.section?.id;
+	const control = sectionId ? document.querySelector(`#${sectionId} select.layer-blend-mode`) : null;
+	if (!control) return;
+	control.value = GlitterBlendModes.forLayer(layer);
+	syncPropertyReverts(control.closest('.property-row'));
+}
+
+,
 isLayerContentLocked(layer) {
 		return Boolean(layer?.locked && layer.type !== LayerType.BASE_IMAGE);
 	}
@@ -49,6 +75,7 @@ isLayerContentLocked(layer) {
 
 ,
 	updateSidePanelUI(layer) {
+		this.setupLayerBlendModeListeners();
 		const hasMultiSelection = this.layerManager?.hasMultiSelection?.() ?? false;
 
 		// 1. Define ALL possible sections to hide them first
@@ -103,6 +130,7 @@ isLayerContentLocked(layer) {
 				designPanel.dataset.galleryVisible = String(config.showDesignGallery !== false);
 			}
 		}
+		this.syncLayerBlendModeControl(layer);
 
 		this.syncToolSettingsSectionVisibility(layer);
 

@@ -643,6 +643,7 @@ async initBrowser() {
 		}
 
 		wrapper.style.zIndex = this.editor.layerManager.getLayerZIndex(layer.id);
+		wrapper.style.mixBlendMode = GlitterBlendModes.forLayer(layer);
 
 		if (!inner) {
 			// 2. Create the INNER Background

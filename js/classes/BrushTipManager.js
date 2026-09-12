@@ -131,11 +131,15 @@ class BrushTipManager extends ContentManager {
 	}
 
 	closePicker() {
-		pickerCloseSession(this, { refresh: () => this.updatePickerStrip({ closing: true }), updateSelection: () => this.updateSelection() });
+		this.closePickerSession();
 		// Leave the temporary Brush Tips panel mode before returning to settings.
 		// This restores Canvas/Shape/Text/etc. Design content from the active layer.
 		this.editor.updateSidePanelUI(this.editor.layerManager.getActiveLayer());
 		returnFromPickerToProperties(this.editor, { section: 'brushSettings', focusId: 'brushTipThumbnail' });
+	}
+
+	closePickerSession() {
+		return pickerCloseSession(this, { refresh: () => this.updatePickerStrip({ closing: true }), updateSelection: () => this.updateSelection() });
 	}
 
 	updatePickerStrip(options = {}) {

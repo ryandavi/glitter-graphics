@@ -847,6 +847,7 @@ class StickerManager extends ContentManager {
 			visible: true,
 			locked: false,
 			opacity: 100,
+			blendMode: CONFIG.layers.defaultBlendMode,
 			stickerSourceId: stickerSourceId,
 			transform,
 
@@ -866,7 +867,6 @@ class StickerManager extends ContentManager {
 				transform,
 
 				element: null,
-				blendMode: 'normal',
 				maskEnabled: false,
 				shadow: null
 			}
@@ -1120,22 +1120,32 @@ updateTransform(layerId, updates) {
 			flipX: sourceTransform.flipX,
 			flipY: sourceTransform.flipY
 		};
+		const stickerData = {
+			...layer.stickerData,
+			element: null,    // Can't serialize DOM
+			frames: null,      // Don't need frames for undo/redo - reload from URL on restore
+			staticImageData: null,
+
+			// Deep copy transform object for undo/redo
+			transform
+		};
+		delete stickerData.blendMode;
 		return {
 			...layer,
+			blendMode: GlitterBlendModes.forLayer(layer),
 			transform,
 			stickerSourceId: layer.stickerSourceId,
-			stickerData: {
-				...layer.stickerData,
-				element: null,    // Can't serialize DOM
-				frames: null,      // Don't need frames for undo/redo - reload from URL on restore
-
-				// Deep copy transform object for undo/redo
-				transform
-			}
+			stickerData
 		};
 	}
 
 	async deserializeSticker(layerData) {
+		layerData.blendMode = GlitterBlendModes.forLayer(layerData);
+		if (layerData.stickerData) {
+			delete layerData.stickerData.blendMode;
+			layerData.stickerData.frames = null;
+			layerData.stickerData.staticImageData = null;
+		}
 		if (!Number.isFinite(layerData.opacity)) {
 			layerData.opacity = layerData.stickerData?.transform?.opacity ?? layerData.transform?.opacity ?? 100;
 		}

@@ -6,14 +6,22 @@
 		kind: 'gradient', mode, opacity,
 		gradient: { type: 'radial', center, radius, shape: 'circle', sizing: 'farthest-corner', stops }
 	});
+	const linear = (angle, stops, mode, opacity = 1) => ({
+		kind: 'gradient', mode, opacity,
+		gradient: { type: 'linear', angle, stops }
+	});
 	const stop = (at, color) => ({ at, color });
 	const recipe = (instagramName, tone, ops) => ({ name: '', instagramName, attribution, tone: tone || null, ops: ops || [] });
+	const rioStops = [
+		stop(0, '#4a48b1'), stop(1 / 11, '#6740a6'), stop(2 / 11, '#7b379a'), stop(3 / 11, '#8a2e8d'),
+		stop(4 / 11, '#95267f'), stop(5 / 11, '#9f2273'), stop(6 / 11, '#a62167'), stop(7 / 11, '#ab235b'),
+		stop(8 / 11, '#b12b4f'), stop(9 / 11, '#b33643'), stop(10 / 11, '#b34238'), stop(1, '#b14e2e')
+	];
 
 	const FILTER_PRESETS = Object.freeze({
-		rio: recipe('Rio de Janeiro', { contrast: 1.05, saturate: 1.18, brightness: 1.02 }, [
-			{ kind: 'gradient', mode: 'soft-light', opacity: 0.55, gradient: { type: 'linear', angle: 160, stops: [
-				stop(0, '#4a48b1'), stop(0.35, '#922b83'), stop(0.7, '#c13d5b'), stop(1, '#e07a35')
-			] } }
+		rio: recipe('Rio de Janeiro', { brightness: 1, contrast: 1.3, saturate: 0.9 }, [
+			linear(160, rioStops, 'screen', 0.3),
+			linear(160, rioStops, 'lighten', 0.3)
 		]),
 		clarendon: recipe('Clarendon', { contrast: 1.2, saturate: 1.35 }, [fill('rgba(127,187,227,0.2)', 'overlay')]),
 		juno: recipe('Juno', { sepia: 0.35, contrast: 1.15, brightness: 1.15, saturate: 1.8 }, [fill('rgba(255,190,100,0.3)', 'overlay')]),

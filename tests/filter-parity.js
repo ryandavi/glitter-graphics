@@ -37,6 +37,15 @@ const Presets = require('../js/core/filter-presets.js');
 const Filter = require('../js/effects/filter.js');
 
 assert.strictEqual(Blend.cssToGCO('normal'), 'source-over');
+assert.strictEqual(Blend.normalize('screen'), 'screen');
+assert.strictEqual(Blend.normalize('not-a-mode'), 'normal');
+assert.strictEqual(Blend.forLayer({ blendMode: 'multiply' }), 'multiply');
+assert.strictEqual(Blend.forLayer({ stickerData: { blendMode: 'overlay' } }), 'overlay');
+assert.strictEqual(Blend.forLayer({ blendMode: 'invalid', stickerData: { blendMode: 'screen' } }), 'normal');
+const colorBurnBackdrop = { data: new Uint8ClampedArray([255, 79, 163, 255, 57, 255, 20, 255]) };
+const colorBurnSource = { data: new Uint8ClampedArray([0, 0, 0, 255, 0, 0, 0, 0]) };
+Blend.compositeColorBurn(colorBurnBackdrop, colorBurnSource);
+assert.deepStrictEqual(Array.from(colorBurnBackdrop.data), [0, 0, 0, 255, 57, 255, 20, 255]);
 assert.deepStrictEqual(Array.from(Tone.composeToneAffine(null).m), [1, 0, 0, 0, 1, 0, 0, 0, 1]);
 assert.strictEqual(Filter.normalizeFilterData({}).type, 'basic');
 assert.deepStrictEqual(Filter.FILTER_TYPES, ['basic', 'invert', 'grayscale', 'sepia', 'tint', 'vignette', 'grain', 'blur', 'instagram']);
@@ -79,6 +88,16 @@ assert.strictEqual(
 );
 assert.strictEqual(Presets.rio.instagramName, 'Rio de Janeiro');
 assert.strictEqual(Presets.rio.ops.some((op) => op.kind === 'fill'), false);
+assert.deepStrictEqual(Presets.rio.tone, { brightness: 1, contrast: 1.3, saturate: 0.9 });
+assert.deepStrictEqual(Presets.rio.ops.map((op) => [op.mode, op.opacity, op.gradient.angle, op.gradient.stops.length]), [
+	['screen', 0.3, 160, 12], ['lighten', 0.3, 160, 12]
+]);
+assert.deepStrictEqual(Presets.rio.ops[0].gradient.stops, Presets.rio.ops[1].gradient.stops);
+assert.deepStrictEqual(Presets.rio.ops[0].gradient.stops.map((entry) => entry.color), [
+	'#4a48b1', '#6740a6', '#7b379a', '#8a2e8d', '#95267f', '#9f2273',
+	'#a62167', '#ab235b', '#b12b4f', '#b33643', '#b34238', '#b14e2e'
+]);
+Presets.rio.ops[0].gradient.stops.forEach((entry, index) => assert.strictEqual(entry.at, index / 11));
 const xProStyles = Filter.overlayLayerStyles({ type: 'instagram', presetId: 'crossprocess', strength: 100 });
 const xProGradient = xProStyles.find((style) => style.className === 'filter-layer-gradient');
 assert(xProGradient.style.backgroundImage.includes('circle farthest-corner'), 'preset radial gradients must preserve a circle on non-square images');
@@ -91,6 +110,13 @@ assert.strictEqual(Filter.normalizeFilterData({ type: 'tint', mode: 'multiply' }
 assert.strictEqual(Filter.normalizeFilterData({ type: 'tint' }).presetId, 'warming-85');
 assert.strictEqual(Filter.normalizeFilterData({ type: 'tint', presetId: 'cooling-80' }).color, '#006dff');
 assert.strictEqual(Filter.normalizeFilterData({ type: 'tint', color: '#ff0000' }).presetId, 'custom');
+assert.strictEqual(Filter.summaryText({ type: 'basic', brightness: 100 }), 'Basic');
+assert.strictEqual(Filter.summaryText({ type: 'blur', radius: 24 }), 'Blur');
+assert.strictEqual(Filter.summaryText({ type: 'instagram', presetId: 'rio' }), 'Rio de Janeiro');
+assert.strictEqual(Filter.summaryText({ type: 'tint', presetId: 'warming-85' }), 'Warming Filter (85)');
+assert.strictEqual(Filter.summaryText({ type: 'tint', presetId: 'custom', color: '#ffffff' }), 'Custom Tint');
+assert.strictEqual(Filter.resolve({ type: 'vignette', color: '#ffffff' }).ops[0].mode, 'screen');
+assert.strictEqual(Filter.resolve({ type: 'vignette', color: '#000000' }).ops[0].mode, 'multiply');
 assert.strictEqual(Grain.isIdentityGrain({ amount: 0 }), true);
 assert.deepStrictEqual(Array.from(Grain.createNoise({ roughness: 0.5 }, 'fixed', 4)), Array.from(Grain.createNoise({ roughness: 0.5 }, 'fixed', 4)));
 assert.notStrictEqual(Grain.tileSignature({ size: 10 }, 'fixed'), Grain.tileSignature({ size: 80 }, 'fixed'));

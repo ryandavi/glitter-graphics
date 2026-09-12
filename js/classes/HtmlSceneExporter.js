@@ -212,7 +212,7 @@ class HtmlSceneExporter {
 				flipX: transform.flipX,
 				flipY: transform.flipY,
 				filter: buildCssColorFilter(layer.stickerData.colorAdjust),
-				blendMode: this.normalizeBlendMode(layer.stickerData.blendMode),
+				blendMode: GlitterBlendModes.forLayer(layer),
 				imageRendering: layer.stickerData.isPixelated === false ? 'auto' : 'pixelated'
 			};
 		}));

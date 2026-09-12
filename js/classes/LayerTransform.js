@@ -127,6 +127,7 @@ applyTransform(element, dimensions) {
         `pointer-events: ${pointerEvents}`,
         `display: ${this.layer.visible ? 'block' : 'none'}`,
         `z-index: ${zIndex}`,
+		`mix-blend-mode: ${GlitterBlendModes.forLayer(this.layer)}`,
         `touch-action: none`
     ].join('; ') + ';';
     

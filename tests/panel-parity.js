@@ -174,13 +174,17 @@ async function captureLayerState(page) {
 
 const LAYER_SETUPS = {
 	FILTER: async (page) => {
-		await page.evaluate(() => {
+		await page.evaluate(async () => {
 			const editor = window.editor;
+			const raf2 = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+			editor.brushTipManager.openPicker();
+			if (!editor.brushTipManager.pickerSession || !document.getElementById('galleryPickerStrip')?.classList.contains('is-armed')) throw new Error('Brush-tip picker did not arm for the filter-selection regression setup');
 			const layer = editor.filterLayerManager.createLayer();
 			layer.filterData = GlitterFilter.normalizeFilterData({ type: 'instagram', presetId: 'clarendon' });
 			editor.layerManager.insertLayer(layer);
 			editor.layerManager.setActiveLayer(layer.id);
 			const section = document.getElementById('filterSettingsSection');
+			if (editor.brushTipManager.pickerSession || document.getElementById('galleryPickerStrip')?.classList.contains('is-armed')) throw new Error('Selecting a filter did not close the brush-tip picker');
 			if (!section?.classList.contains('visible')) throw new Error('Filter Properties did not become visible');
 			if (!document.getElementById('filterSettingsContent')?.classList.contains('visible')) throw new Error('Filter Properties did not open');
 			if (document.getElementById('designPanel')?.dataset.galleryVisible !== 'false') throw new Error('Filter did not opt out of the Design Gallery');
@@ -192,6 +196,14 @@ const LAYER_SETUPS = {
 			if (!filterUnits[0]?.endsWith('°') || !filterUnits[1]?.endsWith('%') || !filterUnits[2]?.endsWith('%')) throw new Error(`Filter control units are missing: ${filterUnits.join(', ')}`);
 			if (document.querySelector('#filterTintSettings .property-actions')) throw new Error('Tint quick picks still use a nested property-actions row');
 			if (document.getElementById('filterTintMode')) throw new Error('Tint still exposes a separate blend mode');
+			const expectedBlendModes = CONFIG.layers.blendModes.join(',');
+			['glitterLayerBlendMode', 'stickerLayerBlendMode', 'textLayerBlendMode', 'shapeLayerBlendMode'].forEach((id) => {
+				const control = document.getElementById(id);
+				if (!control) throw new Error(`${id} is missing`);
+				if ([...control.options].map((option) => option.value).join(',') !== expectedBlendModes) throw new Error(`${id} has the wrong blend modes`);
+				if (control.value !== CONFIG.layers.defaultBlendMode) throw new Error(`${id} does not default to Normal`);
+				if (control.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Blend') throw new Error(`${id} is not labelled Blend`);
+			});
 			if (document.getElementById('filterTintAmount')?.closest('.property-row')?.querySelector('.property-label')?.textContent !== 'Density') throw new Error('Tint strength is not labelled Density');
 			const tintPresets = [...document.getElementById('filterTintPreset').options];
 			if (tintPresets[0]?.value !== 'warming-85' || tintPresets.at(-1)?.value !== 'custom') throw new Error('Tint preset order is incorrect');
@@ -199,17 +211,30 @@ const LAYER_SETUPS = {
 			if (firstPreset?.dataset.presetId !== 'rio') throw new Error('Rio de Janeiro is not the first Instagram preset');
 			if (!firstPreset.querySelector('.filter-css-thumbnail') || firstPreset.querySelector('canvas')) throw new Error('Instagram preset thumbnail is not CSS-only');
 			if (!document.querySelector('.layer-swatch.filter .filter-css-thumbnail') || document.querySelector('.layer-swatch.filter canvas')) throw new Error('Filter layer thumbnail is not CSS-only');
+			const filterType = document.querySelector(`[data-layer-id="${layer.id}"] .layer-type`)?.textContent;
+			if (filterType !== 'Filter · Clarendon') throw new Error(`Filter layer summary is incorrect: ${filterType}`);
 
 			const shape = editor.shapeGlitterManager.createLayer({ shapeId: 'square' });
 			editor.layerManager.insertLayer(shape);
 			editor.layerManager.setActiveLayer(shape.id);
+			await raf2();
+			const filterIndex = editor.layers.findIndex((entry) => entry.id === layer.id);
+			editor.layers.splice(filterIndex, 1);
+			editor.layers.push(layer);
+			editor.layerManager.reorderLayerItems();
+			editor.layerManager.reorderLayers();
+			const filterElement = editor.filterLayerManager.layerElements.get(layer.id);
+			if (filterElement?.style.zIndex) throw new Error('Reordering created a stacking context on the filter wrapper');
+			await raf2();
+			if (filterElement?.querySelector('.filter-layer-fill')?.style.mixBlendMode !== 'overlay') throw new Error('Filter blend mode did not survive layer reordering');
 			if (section.classList.contains('visible')) throw new Error('Filter Properties remained visible for another layer type');
 			editor.layerManager.setActiveLayer(layer.id);
 		});
 	},
 	SHAPE: async (page) => {
-		await page.evaluate(() => {
+		await page.evaluate(async () => {
 			const editor = window.editor;
+			const raf2 = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 			const layer = editor.shapeGlitterManager.createLayer({
 				shapeId: 'square',
 				width: 120,
@@ -218,6 +243,16 @@ const LAYER_SETUPS = {
 			});
 			editor.layerManager.insertLayer(layer);
 			editor.layerManager.setActiveLayer(layer.id);
+			await raf2();
+			const blend = document.getElementById('shapeLayerBlendMode');
+			blend.value = 'multiply';
+			blend.dispatchEvent(new Event('change', { bubbles: true }));
+			await raf2();
+			if (layer.blendMode !== 'multiply') throw new Error('Shape Blend did not update the layer');
+			const wrapper = editor.shapeGlitterManager.layerElements.get(layer.id);
+			if (wrapper?.style.mixBlendMode !== 'multiply') throw new Error('Shape Blend did not update the preview wrapper');
+			const restored = await editor.layerManager.deserializeLayer(editor.layerManager.serializeLayer(layer));
+			if (restored.blendMode !== 'multiply') throw new Error('Shape Blend did not survive serialization');
 		});
 	},
 	TEXT_GLITTER: async (page) => {

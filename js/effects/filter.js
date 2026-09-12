@@ -76,17 +76,9 @@
 	function summaryText(value) {
 		const data = normalizeFilterData(value);
 		if (data.type === 'instagram') return presetFor(data)?.name || presetFor(data)?.instagramName || 'Instagram';
-		if (data.type === 'basic') {
-			const labels = [['brightness', 'Brightness'], ['contrast', 'Contrast'], ['saturation', 'Saturation'], ['hue', 'Hue']]
-				.filter(([key]) => number(data[key], 0) !== 0)
-				.map(([key, label]) => `${label} ${data[key] > 0 ? '+' : ''}${data[key]}${key === 'hue' ? '°' : ''}`);
-			return labels.join(', ') || 'Basic';
-		}
-		if (data.type === 'grayscale') return `Grayscale ${Math.round(data.amount)}%`;
-		if (data.type === 'sepia') return `Sepia ${Math.round(data.amount)}%`;
-		if (data.type === 'grain') return `Grain ${Math.round(data.amount)}%`;
-		if (data.type === 'blur') return data.radius > 0 ? `Blur ${data.radius}px` : 'Off';
-		if (data.type === 'tint') return config().tintPresets[data.presetId]?.label || 'Custom Tint';
+		if (data.type === 'tint') return data.presetId === 'custom'
+			? 'Custom Tint'
+			: (config().tintPresets[data.presetId]?.label || 'Tint');
 		return data.type.charAt(0).toUpperCase() + data.type.slice(1);
 	}
 
@@ -111,6 +103,13 @@
 		};
 	}
 
+	function vignetteBlendMode(color) {
+		const match = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);
+		if (!match) return 'multiply';
+		const luminance = (0.299 * parseInt(match[1], 16) + 0.587 * parseInt(match[2], 16) + 0.114 * parseInt(match[3], 16)) / 255;
+		return luminance > 0.5 ? 'screen' : 'multiply';
+	}
+
 	function resolve(value) {
 		const data = normalizeFilterData(value);
 		if (data.type === 'instagram') {
@@ -127,7 +126,7 @@
 		if (data.type === 'basic') return { tone: { brightness: 1 + data.brightness / 100, contrast: 1 + data.contrast / 100, saturate: 1 + data.saturation / 100, hueRotate: data.hue }, blur: null, ops: [], caption: null };
 		if (['invert', 'grayscale', 'sepia'].includes(data.type)) return { tone: { [data.type]: data.amount / 100 }, blur: null, ops: [], caption: null };
 		if (data.type === 'tint') return { tone: null, blur: null, ops: [{ kind: 'fill', color: data.color, mode: data.mode, opacity: data.amount / 100 }], caption: null };
-		if (data.type === 'vignette') return { tone: null, blur: null, ops: [{ kind: 'gradient', mode: 'multiply', opacity: data.amount / 100, gradient: vignetteGradient(data) }], caption: null };
+		if (data.type === 'vignette') return { tone: null, blur: null, ops: [{ kind: 'gradient', mode: vignetteBlendMode(data.color), opacity: data.amount / 100, gradient: vignetteGradient(data) }], caption: null };
 		if (data.type === 'grain') return { tone: null, blur: null, ops: [{ kind: 'grain', mode: data.mode, amount: data.amount / 100, size: data.size, roughness: data.roughness / 100, monochrome: data.monochrome }], caption: null };
 		return { tone: null, blur: { radius: data.radius }, ops: [], caption: null };
 	}
@@ -310,14 +309,12 @@
 		});
 	}
 
-	function nameCaptionSpec(text, { width, height, stackIndex = 0 } = {}) {
+	function nameCaptionSpec(text, { width, height } = {}) {
 		const caption = config().nameCaption;
 		const available = width * caption.maxWidthFraction;
 		const estimated = Math.max(1, String(text).length * caption.fontPx * 0.58);
 		const fontPx = Math.max(caption.minFontPx, Math.min(caption.fontPx, caption.fontPx * available / estimated));
-		const step = fontPx + caption.shadow.blur + 4;
-		const direction = stackIndex === 0 ? 0 : (stackIndex % 2 ? 1 : -1) * Math.ceil(stackIndex / 2);
-		return { text, x: width / 2, y: height / 2 + direction * step, font: `${fontPx}px ${caption.fontFamily}`, fontPx, color: caption.color,
+		return { text, x: width / 2, y: height / 2, font: `${fontPx}px ${caption.fontFamily}`, fontPx, color: caption.color,
 			shadowColor: caption.shadow.color, shadowOffsetX: caption.shadow.offsetX, shadowOffsetY: caption.shadow.offsetY, shadowBlur: caption.shadow.blur,
 			textAlign: 'center', textBaseline: 'middle' };
 	}

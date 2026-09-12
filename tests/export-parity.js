@@ -41,6 +41,7 @@ async function buildComposition(page) {
 		const editor = window.editor;
 		const animatedGlitters = editor.glitterManager.content.filter((item) => item.isAnimated);
 		const animatedSticker = editor.stickerManager.content.find((item) => item.isAnimated);
+		const staticSticker = editor.stickerManager.content.find((item) => !item.isAnimated);
 
 		if (animatedGlitters.length < 2) {
 			throw new Error('Need at least two animated glitter swatches for export parity coverage');
@@ -48,12 +49,16 @@ async function buildComposition(page) {
 		if (!animatedSticker) {
 			throw new Error('Need at least one animated sticker for export parity coverage');
 		}
+		if (!staticSticker) {
+			throw new Error('Need at least one static sticker for export parity coverage');
+		}
 
 		const glitterA = animatedGlitters[0].id;
 		const glitterB = animatedGlitters[1].id;
 
 		const glitterLayer = editor.glitterManager.createLayer();
 		editor.layerManager.insertLayer(glitterLayer);
+		glitterLayer.blendMode = 'screen';
 		glitterLayer.selectedGlitterId = glitterA;
 		glitterLayer.fill = { mode: 'gradient', gradient: { type: 'linear', angle: 35, interpolation: 'steps', stops: [{ offset: 0, color: '#ff0066', alpha: 1 }, { offset: 1, color: '#3344ff', alpha: 0.75 }] } };
 		const paint = editor.glitterManager.ensurePaintMask(glitterLayer.id);
@@ -67,6 +72,7 @@ async function buildComposition(page) {
 
 		const stickerLayer = editor.stickerManager.createLayer(animatedSticker.id);
 		editor.layerManager.insertLayer(stickerLayer);
+		stickerLayer.blendMode = 'multiply';
 		stickerLayer.stickerData.transform.position = { x: 250, y: 72 };
 		stickerLayer.stickerData.transform.rotation = 28;
 		stickerLayer.stickerData.transform.scale.x = 145;
@@ -77,12 +83,23 @@ async function buildComposition(page) {
 		stickerLayer.stickerData.shadow.mode = 'glitter';
 		stickerLayer.stickerData.shadow.glitterId = glitterB;
 
+		const staticStickerLayer = editor.stickerManager.createLayer(staticSticker.id);
+		editor.layerManager.insertLayer(staticStickerLayer);
+		staticStickerLayer.blendMode = 'color-burn';
+		staticStickerLayer.stickerData.transform.position = { x: 68, y: 180 };
+		// A project saved by an older build could restore this transient cache as a
+		// plain object. Export must discard and reload it before calling putImageData.
+		staticStickerLayer.stickerData.staticImageData = { width: 1, height: 1, data: { 0: 255 } };
+		const serializedStaticSticker = editor.layerManager.serializeLayer(staticStickerLayer);
+		if (serializedStaticSticker.stickerData.staticImageData !== null) throw new Error('Static sticker pixels leaked into serialized layer state');
+
 		const textLayer = editor.textGlitterManager.createLayer({
 			text: 'Parity',
 			position: { x: 160, y: 154 },
 			align: 'center'
 		});
 		editor.layerManager.insertLayer(textLayer);
+		textLayer.blendMode = 'overlay';
 		textLayer.selectedGlitterId = glitterA;
 		textLayer.textData.fill = editor.textGlitterManager.getDefaultFill();
 		textLayer.textData.fill.mode = 'gradient';
@@ -110,6 +127,7 @@ async function buildComposition(page) {
 			position: { x: 236, y: 170 }
 		});
 		editor.layerManager.insertLayer(shapeLayer);
+		shapeLayer.blendMode = 'soft-light';
 		shapeLayer.selectedGlitterId = glitterB;
 		shapeLayer.shapeData.fill.mode = 'gradient';
 		shapeLayer.shapeData.fill.gradient = { type: 'radial', angle: 0, stops: [{ offset: 0, color: '#ffffff', alpha: 1 }, { offset: 1, color: '#00aacc', alpha: 0.65 }] };
@@ -409,6 +427,32 @@ function assertByteIdentity(reference, candidate, label) {
 	}
 }
 
+async function countDecodedNearBlackPixels(page, bytes, bounds) {
+	return page.evaluate(async ({ base64, bounds }) => {
+		const binary = atob(base64);
+		const data = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+		const image = new Image();
+		const url = URL.createObjectURL(new Blob([data], { type: 'image/gif' }));
+		await new Promise((resolve, reject) => {
+			image.onload = resolve;
+			image.onerror = reject;
+			image.src = url;
+		});
+		const canvas = document.createElement('canvas');
+		canvas.width = image.naturalWidth;
+		canvas.height = image.naturalHeight;
+		const context = canvas.getContext('2d');
+		context.drawImage(image, 0, 0);
+		URL.revokeObjectURL(url);
+		const pixels = context.getImageData(bounds.x, bounds.y, bounds.width, bounds.height).data;
+		let count = 0;
+		for (let offset = 0; offset < pixels.length; offset += 4) {
+			if (pixels[offset] < 12 && pixels[offset + 1] < 12 && pixels[offset + 2] < 12 && pixels[offset + 3] > 240) count++;
+		}
+		return count;
+	}, { base64: Buffer.from(bytes).toString('base64'), bounds });
+}
+
 async function main() {
 	const browser = await chromium.launch({ headless: true });
 	try {
@@ -434,6 +478,8 @@ async function main() {
 			const matteSecondBytes = await exportBytes(page, matteSettings);
 			const matteFirst = { bytes: matteFirstBytes, hash: hashBytes(matteFirstBytes) };
 			const matteSecond = { bytes: matteSecondBytes, hash: hashBytes(matteSecondBytes) };
+			const colorBurnBlackPixels = await countDecodedNearBlackPixels(page, matteFirstBytes, { x: 18, y: 130, width: 100, height: 100 });
+			assert(colorBurnBlackPixels > 50, `Color Burn sticker lost its black pixels in the encoded GIF (${colorBurnBlackPixels} found)`);
 
 			assertByteIdentity(matteFirst, matteSecond, 'Back-to-back matte export');
 			console.log(`PASS 1. Back-to-back matte exports matched exactly (${matteFirst.bytes.length} bytes, sha256 ${matteFirst.hash})`);

@@ -48,6 +48,8 @@ class GifExporter {
 
 		this.helperCanvas = document.createElement('canvas');
 		this.helperCtx = this.helperCanvas.getContext('2d', { willReadFrequently: true });
+		this.layerBlendCanvas = document.createElement('canvas');
+		this.layerBlendCtx = this.layerBlendCanvas.getContext('2d');
 		this.basePixelEffectCache = new Map();
 		this.baseDitherPaletteCache = new Map();
 		this.filterGrainTileCache = new Map();
@@ -757,7 +759,8 @@ class GifExporter {
 							} catch (error) {
 								throw new Error(`Failed to load sticker ${stickerData.name}`);
 							}
-						} else if (!stickerData.isAnimated && !stickerData.staticImageData) {
+					} else if (!stickerData.isAnimated && !this._getFrameImageData(stickerData.staticImageData)) {
+						stickerData.staticImageData = null;
 							callbacks.onStatus(`Loading ${stickerData.name}...`);
 							try {
 								stickerData.staticImageData = await this._loadStaticImage(stickerData.url);
@@ -821,10 +824,10 @@ class GifExporter {
 					collectTransparencyFrames: () => {},
 					collectFrameCounts: (library, counts) => counts.set(layer.id, 1),
 					hasMultiFrameGlitter: () => false,
-					render: ({ ctx, width, height, needsTransparency, safeKey, alphaThreshold, captionStackIndex }) => {
+					render: ({ ctx, width, height, needsTransparency, safeKey, alphaThreshold }) => {
 						if (!GlitterFilter.isActive(layer.filterData, layer.opacity)) return;
 						const caption = GlitterFilter.resolve(layer.filterData).caption;
-						const captionSpec = caption ? GlitterFilter.nameCaptionSpec(caption, { width, height, stackIndex: captionStackIndex }) : null;
+						const captionSpec = caption ? GlitterFilter.nameCaptionSpec(caption, { width, height }) : null;
 						GlitterFilter.renderToCanvas(ctx, width, height, layer.filterData, layer.opacity / 100, {
 							keepAlpha: needsTransparency,
 							safeKey,
@@ -969,21 +972,23 @@ class GifExporter {
 	// works on a COPY — never mutate the cache. Identity adjust puts the original
 	// bytes straight through, keeping export byte-identical to pre-WP4 content.
 	_patternSourceFromFrame(frameImageData, colorAdjust) {
+		const normalizedFrame = this._getFrameImageData(frameImageData);
+		if (!normalizedFrame) throw new Error('Invalid image frame data');
 		const patternSource = document.createElement('canvas');
-		patternSource.width = frameImageData.width;
-		patternSource.height = frameImageData.height;
+		patternSource.width = normalizedFrame.width;
+		patternSource.height = normalizedFrame.height;
 		const pctx = patternSource.getContext('2d');
 
 		if (colorAdjust && !isIdentityColorAdjust(colorAdjust)) {
 			const copy = new ImageData(
-				new Uint8ClampedArray(frameImageData.data),
-				frameImageData.width,
-				frameImageData.height
+				new Uint8ClampedArray(normalizedFrame.data),
+				normalizedFrame.width,
+				normalizedFrame.height
 			);
 			applyColorAdjustToImageData(copy, colorAdjust);
 			pctx.putImageData(copy, 0, 0);
 		} else {
-			pctx.putImageData(frameImageData, 0, 0);
+			pctx.putImageData(normalizedFrame, 0, 0);
 		}
 
 		return patternSource;
@@ -1364,6 +1369,8 @@ class GifExporter {
 		reportGifExportProgress(callbacks, 'planning', 0.5, 'Resolving source timing…');
 		this.helperCanvas.width = canvasData.width;
 		this.helperCanvas.height = canvasData.height;
+		this.layerBlendCanvas.width = canvasData.width;
+		this.layerBlendCanvas.height = canvasData.height;
 		this.canvas.width = canvasData.width;
 		this.canvas.height = canvasData.height;
 		let renderedCandidateCount = 0;
@@ -1697,15 +1704,21 @@ class GifExporter {
 		}
 
 		// 5. Composite Glitter and Sticker Layers (in correct z-order)
-		const captionLayers = layers.filter((layer) => layer.visible !== false
-			&& layer.type === LayerType.FILTER
-			&& GlitterFilter.isActive(layer.filterData, layer.opacity)
-			&& GlitterFilter.resolve(layer.filterData).caption);
 		layers.forEach((layer) => {
 			if (layer.visible === false) return;
 			if (layer.type === LayerType.BASE_IMAGE && !exportSettings.baseImage) return;
+			const blendMode = LAYER_UI_CONFIG[layer.type]?.blendable
+				? GlitterBlendModes.forLayer(layer)
+				: CONFIG.layers.defaultBlendMode;
+			const renderCtx = blendMode === CONFIG.layers.defaultBlendMode ? ctx : this.layerBlendCtx;
+			if (renderCtx === this.layerBlendCtx) {
+				renderCtx.setTransform(1, 0, 0, 1, 0, 0);
+				renderCtx.globalAlpha = 1;
+				renderCtx.globalCompositeOperation = 'source-over';
+				renderCtx.clearRect(0, 0, width, height);
+			}
 			this._buildLayerExportPlan(layer).render({
-				ctx,
+				ctx: renderCtx,
 				frameIndex,
 				frameMap,
 				flattenedFrameMap,
@@ -1717,9 +1730,21 @@ class GifExporter {
 				height,
 				needsTransparency,
 				safeKey,
-				alphaThreshold,
-				captionStackIndex: Math.max(0, captionLayers.indexOf(layer))
+				alphaThreshold
 			});
+			if (renderCtx === this.layerBlendCtx) {
+				if (blendMode === 'color-burn') {
+					const destination = ctx.getImageData(0, 0, width, height);
+					const source = renderCtx.getImageData(0, 0, width, height);
+					GlitterBlendModes.compositeColorBurn(destination, source);
+					ctx.putImageData(destination, 0, 0);
+				} else {
+					ctx.save();
+					ctx.globalCompositeOperation = GlitterBlendModes.cssToGCO(blendMode);
+					ctx.drawImage(this.layerBlendCanvas, 0, 0);
+					ctx.restore();
+				}
+			}
 		});
 
 		// 6. Render Watermark
@@ -2097,6 +2122,8 @@ class GifExporter {
 
 		for (let i = 0; i < frames.length; i++) {
 			const frame = frames[i];
+			const frameImageData = this._getFrameImageData(frame, width, height);
+			if (!frameImageData) throw new Error(`Invalid watermark frame ${i}`);
 
 			if (prevFrame && frame.disposal === 2) {
 				ctx.putImageData(prevFrame, 0, 0);
@@ -2104,7 +2131,7 @@ class GifExporter {
 				ctx.clearRect(0, 0, width, height);
 			}
 
-			ctx.putImageData(frame.data, frame.x, frame.y);
+			ctx.putImageData(frameImageData, frame.x || 0, frame.y || 0);
 			const fullFrame = ctx.getImageData(0, 0, width, height);
 			frame.data = fullFrame;
 			frame.x = 0;

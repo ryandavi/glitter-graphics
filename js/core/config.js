@@ -251,6 +251,12 @@ const CONFIG = deepFreeze({
 	},
 
 	layers: {
+		defaultBlendMode: 'normal',
+		blendModes: [
+			'normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten',
+			'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference',
+			'exclusion', 'hue', 'saturation', 'color', 'luminosity'
+		],
 		export: {
 			frameRateSource: 'first-layer'
 		},
@@ -1147,6 +1153,7 @@ const LAYER_UI_CONFIG = {
 		panelMode: 'glitter',
 		elementClass: 'glitter-element',
 		managerKey: 'glitterManager',
+		blendable: true,
 		autoOpenDesignDrawerOnCreate: true,
 		onActivate: (editor, layer) => {
 			if (!layer.locked && !hasMaskContent(layer) && layer.selectedGlitterId && editor.currentTool !== ToolType.BRUSH) {
@@ -1179,6 +1186,7 @@ const LAYER_UI_CONFIG = {
 		elementClass: 'sticker-element',
 		transformable: true,
 		managerKey: 'stickerManager',
+		blendable: true,
 		hitTestMethod: 'isPointInSticker',
 		transformPrefix: 'sticker',
 		transformCapabilities: {
@@ -1239,6 +1247,7 @@ const LAYER_UI_CONFIG = {
 		elementClass: 'text-glitter-element',
 		transformable: true,
 		managerKey: 'textGlitterManager',
+		blendable: true,
 		hitTestMethod: 'isPointInText',
 		transformPrefix: 'text',
 		transformCapabilities: {
@@ -1293,6 +1302,7 @@ const LAYER_UI_CONFIG = {
 		elementClass: 'shape-glitter-element',
 		transformable: true,
 		managerKey: 'shapeGlitterManager',
+		blendable: true,
 		hitTestMethod: 'isPointInShape',
 		transformPrefix: 'shape',
 		transformCapabilities: {
@@ -1331,6 +1341,12 @@ const LAYER_UI_CONFIG = {
 // (managers keep binding by id); paintSlot ids derive as idPrefix +
 // capitalized role. Panels not listed here are still static index.html
 // markup awaiting migration.
+const LAYER_BLEND_MODE_OPTIONS = CONFIG.layers.blendModes.map((value) => ({
+	value,
+	label: value.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' '),
+	selected: value === CONFIG.layers.defaultBlendMode
+}));
+
 const PANEL_SCHEMAS = {
 	// The "nothing selected" panel: sits under the shared Design gallery header
 	// (so it renders headerless — `section.bare`) and carries two mutually
@@ -1671,6 +1687,7 @@ const PANEL_SCHEMAS = {
 				// A Fill layer is a single masked paint, so its only opacity IS the
 				// whole-layer opacity. Keeps legacy id `opacity` (panels.js binding).
 				{ kind: 'slider', id: 'opacity', valueId: 'opacityValue', slider: 'layerOpacity', label: 'Layer Opacity' },
+				{ kind: 'select', id: 'glitterLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'glitterFill', title: 'Fill', redesign: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true, noSlotOpacity: true,
@@ -1741,7 +1758,8 @@ const PANEL_SCHEMAS = {
 					] }
 				] },
 			{ title: 'Appearance', collapsible: false, items: [
-				{ kind: 'slider', id: 'stickerLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' }
+				{ kind: 'slider', id: 'stickerLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
+				{ kind: 'select', id: 'stickerLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS }
 			] },
 			{ title: 'Transform', collapsible: false, items: [
 				{ kind: 'transformHost' }
@@ -1816,6 +1834,7 @@ const PANEL_SCHEMAS = {
 			] },
 			{ title: 'Appearance', collapsible: false, items: [
 				{ kind: 'slider', id: 'textLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
+				{ kind: 'select', id: 'textLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'textFill', title: 'Fill', redesign: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,
@@ -1894,6 +1913,7 @@ const PANEL_SCHEMAS = {
 			// the pre-schema panel order.
 			{ title: 'Appearance', collapsible: false, items: [
 				{ kind: 'slider', id: 'shapeLayerOpacity', slider: 'layerOpacity', label: 'Layer Opacity' },
+				{ kind: 'select', id: 'shapeLayerBlendMode', label: 'Layer blend mode', visibleLabel: 'Blend', classes: 'layer-blend-mode', revert: true, options: LAYER_BLEND_MODE_OPTIONS },
 				{ kind: 'paintSlot', slot: 'fill', idPrefix: 'shapeFill', title: 'Fill', redesign: true,
 					sourceSelect: true, sourceRevert: true, colorRevert: true,
 					texturePosition: true,

@@ -184,12 +184,10 @@ class FilterLayerManager {
 	}
 
 	renderContent(layersToShow) {
-		const layers = layersToShow.filter((layer) => layer.type === LayerType.FILTER && layer.visible !== false);
-		const captionLayers = layers.filter((layer) => GlitterFilter.resolve(layer.filterData).caption);
-		reconcileLayerElements(this.layerElements, layersToShow, LayerType.FILTER, (layer) => this.renderLayer(layer, captionLayers.indexOf(layer)));
+		reconcileLayerElements(this.layerElements, layersToShow, LayerType.FILTER, (layer) => this.renderLayer(layer));
 	}
 
-	renderLayer(layer, stackIndex = -1) {
+	renderLayer(layer) {
 		let element = this.layerElements.get(layer.id);
 		if (!element) {
 			element = document.createElement('div');
@@ -201,7 +199,7 @@ class FilterLayerManager {
 		const width = this.editor.previewCanvas?.width || 1;
 		const height = this.editor.previewCanvas?.height || 1;
 		const viewScale = this.editor.viewport?.currentZoom || 1;
-		const signature = `${JSON.stringify(layer.filterData)}|${layer.opacity}|${this.editor.layerManager.getLayerZIndex(layer.id)}|${width}|${height}|${viewScale}|${stackIndex}`;
+		const signature = `${JSON.stringify(layer.filterData)}|${layer.opacity}|${this.editor.layerManager.getLayerZIndex(layer.id)}|${width}|${height}|${viewScale}`;
 		if (element.dataset.renderSignature === signature) return element;
 		element.dataset.renderSignature = signature;
 		const layerZIndex = this.editor.layerManager.getLayerZIndex(layer.id);
@@ -218,7 +216,7 @@ class FilterLayerManager {
 			if (!child) child = document.createElement('div');
 			child.className = 'filter-layer-name';
 			child.textContent = caption;
-			const spec = GlitterFilter.nameCaptionSpec(caption, { width, height, stackIndex: Math.max(0, stackIndex) });
+			const spec = GlitterFilter.nameCaptionSpec(caption, { width, height });
 			child.style.fontSize = `${spec.fontPx}px`;
 			child.style.transform = `translateY(${spec.y - height / 2}px)`;
 			child.style.zIndex = layerZIndex;
