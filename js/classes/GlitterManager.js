@@ -696,6 +696,7 @@ async initBrowser() {
 
 		// Store reference
 		this.layerElements.set(layer.id, wrapper);
+		syncLayerAnimationPreview(wrapper, layer, this.editor.animationTicker);
 
 		// Update selection highlight for this layer if it's active
 		this.editor.layerManager.updateSelectionHighlight(this.editor.layerManager.activeLayerId);

@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=0c0fe840">
+	<link rel="stylesheet" href="css/style.css?v=9cf7fe80">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -174,6 +174,10 @@
 					</button>
 				</div>
 				<div class="toolbar-group toolbar-utility-group" aria-label="Application tools">
+					<button class="btn-icon icon-wrapper" id="pauseMotionTool" type="button" title="Pause motion" aria-label="Pause motion" aria-pressed="false">
+						<svg class="icon"><use href="#icon-motion-pause"></use></svg>
+						<span class="name">Pause motion</span>
+					</button>
 					<button class="btn-icon icon-wrapper" id="toolbarShortcutsBtn" type="button" title="Commands &amp; Shortcuts">
 						<svg class="icon"><use href="#icon-keyboard"></use></svg>
 						<span class="name">Commands &amp; Shortcuts</span>
@@ -2096,6 +2100,7 @@
 			     action - see AGENTS.md "Icons" for the registry.
 			     ============================================================ -->
 			<symbol id="icon-move" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v11M2.5 8h11M6 4.5 8 2.5l2 2M6 11.5 8 13.5l2-2M4.5 6 2.5 8l2 2M11.5 6 13.5 8l-2 2" /></symbol>
+			<symbol id="icon-motion-pause" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="2.5" width="3" height="11" rx=".75" /><rect x="9.5" y="2.5" width="3" height="11" rx=".75" /></symbol>
 			<symbol id="icon-brush" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2.6c.6.6.6 1.5 0 2.1l-5.2 5.2-2.1-2.1 5.2-5.2c.6-.6 1.5-.6 2.1 0Z" /><path d="M6.1 9.8c-1.2-.2-2.4.6-2.7 1.8-.2.8-.6 1.2-1.2 1.5 1 .9 2.9 1 4-.1.8-.8.9-2 .3-2.9" /></symbol>
 			<symbol id="icon-magic-wand" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13 9.5 6.5M8.5 4.5l3 3" /><path d="M12 1.8l.5 1.5 1.5.5-1.5.5L12 6l-.5-1.5L10 4l1.5-.5zM4 2.3l.4 1.1 1.1.4-1.1.4L4 5.6l-.4-1.1L2.5 4l1.1-.4z" /></symbol>
 			<symbol id="icon-pointer" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 2.5 12 6.2l-3.6 1.1-1.1 3.6z" /></symbol>
@@ -2412,7 +2417,7 @@
 	<script src="js/vendor/mp4-muxer.js?v=e2a7db11"></script>
 
 	<!-- Shared Config -->
-	<script src="js/core/config.js?v=a58e7101"></script>
+	<script src="js/core/config.js?v=65b2baa2"></script>
 	<script src="js/core/key-labels.js?v=80b61ded"></script>
 	<script src="js/core/preferences.js?v=166f962a"></script>
 	<script src="js/core/viewport-input.js?v=f964a04c"></script>
@@ -2428,7 +2433,7 @@
 	<script src="js/core/layer-elements.js?v=32584e3b"></script>
 	<script src="js/ui/slider.js?v=9388d0d4"></script>
 	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
-	<script src="js/ui/doc-modal.js?v=80920277"></script>
+	<script src="js/ui/doc-modal.js?v=21e4656c"></script>
 	<script src="js/ui/gallery.js?v=9568db2b"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
 	<script src="js/effects/mask-raster.js?v=58feb186"></script>
@@ -2443,14 +2448,16 @@
 	<script src="js/core/filter-presets.js?v=28e6146c"></script>
 	<script src="js/effects/filter.js?v=cbc74e11"></script>
 	<script src="js/effects/effect-source.js?v=f9a49205"></script>
+	<script src="js/effects/easing.js?v=7b2c85e4"></script>
+	<script src="js/effects/animation.js?v=66f57d68"></script>
 	<script src="js/effects/slot-effects.js?v=271ac780"></script>
-	<script src="js/ui/panel-renderer.js?v=4cd298a5"></script>
+	<script src="js/ui/panel-renderer.js?v=45e9a863"></script>
 	<script src="js/ui/transform-panel-renderer.js?v=3db8a3c8"></script>
 	<script src="js/ui/settings-store.js?v=428ffaea"></script>
 	<script src="js/ui/keyboard.js?v=8b909076"></script>
 	<script src="js/ui/clipboard.js?v=75977540"></script>
-	<script src="js/editor/settings.js?v=09d12d60"></script>
-	<script src="js/editor/panels.js?v=46d8d4b0"></script>
+	<script src="js/editor/settings.js?v=c05f7e18"></script>
+	<script src="js/editor/panels.js?v=136c2850"></script>
 	<script src="js/editor/disclosures.js?v=ca165a02"></script>
 	<script src="js/ui/panel-resize.js?v=c37c555b"></script>
 	<script src="js/editor/transform-panel.js?v=f049c427"></script>
@@ -2471,9 +2478,11 @@
 	<!-- Classes -->
 	<script src="js/classes/GestureManager.js?v=e505c135"></script>
 	<script src="js/classes/ModalManager.js?v=98627037"></script>
-	<script src="js/classes/ExportTimeline.js?v=5a31141b"></script>
+	<script src="js/classes/ExportTimeline.js?v=6cef619b"></script>
 	<script src="js/classes/GifPalette.js?v=aece541e"></script>
-	<script src="js/classes/GifExporter.js?v=1ab058e7"></script>
+	<script src="js/classes/AnimationTicker.js?v=3a17e873"></script>
+	<script src="js/classes/AnimationPanelController.js?v=68cfbc74"></script>
+	<script src="js/classes/GifExporter.js?v=397d04fa"></script>
 	<script src="js/classes/Mp4Exporter.js?v=39ed19d0"></script>
 	<script src="js/classes/ViewportManager.js?v=2a060275"></script>
 	<script src="js/classes/HistoryManager.js?v=30702aad"></script>
@@ -2485,26 +2494,26 @@
 	<script src="js/classes/MaskEditor.js?v=de28a63b"></script>
 
 	<!-- Layers-->
-	<script src="js/classes/LayerManager.js?v=dfadc0b9"></script>
+	<script src="js/classes/LayerManager.js?v=a2304ace"></script>
 
 	<!-- Content -->
 	<script src="js/classes/AssetBrowser.js?v=af14bba7"></script>
 	<script src="js/classes/ContentManager.js?v=5a67eb76"></script>
 	<script src="js/classes/BrushTipManager.js?v=fbdac4b4"></script>
 	<script src="js/classes/LayerTransform.js?v=0f75a62c"></script>
-	<script src="js/classes/GlitterManager.js?v=7b402a5b"></script>
+	<script src="js/classes/GlitterManager.js?v=7efc150c"></script>
 	<script src="js/classes/BaseBackgroundManager.js?v=d09c0c2b"></script>
 	<script src="js/classes/AutoGlitterManager.js?v=16dd5368"></script>
-	<script src="js/classes/TextGlitterManager.js?v=2aa4f1be"></script>
-	<script src="js/classes/ShapeGlitterManager.js?v=d1c6fc2f"></script>
-	<script src="js/classes/StickerManager.js?v=d7417966"></script>
+	<script src="js/classes/TextGlitterManager.js?v=cd809ce4"></script>
+	<script src="js/classes/ShapeGlitterManager.js?v=755f4076"></script>
+	<script src="js/classes/StickerManager.js?v=a97b3291"></script>
 	<script src="js/classes/FilterLayerManager.js?v=1bc40164"></script>
 	<script src="js/classes/GroupTransformManager.js?v=f19f8e9d"></script>
 
 		<script src="js/classes/MobileManager.js?v=b1a5756a"></script>
 
 	<!-- App -->
-	<script src="js/app.js?v=09023444"></script>
+	<script src="js/app.js?v=7152050b"></script>
 
 	<!-- Analytics: GoatCounter. Cookieless and no persistent identifier, so it needs
 	     no consent banner. Loaded last and async so it can never delay the editor.

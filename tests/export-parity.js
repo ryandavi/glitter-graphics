@@ -5,7 +5,7 @@ const crypto = require('crypto');
 
 const APP_URL = process.env.GLITTER_URL || 'http://localhost/glitter/';
 const VIEWPORT = { width: 1200, height: 900 };
-const EXPORT_TIMEOUT_MS = 20000;
+const EXPORT_TIMEOUT_MS = 60000;
 
 function assert(condition, message) {
 	if (!condition) {
@@ -82,6 +82,7 @@ async function buildComposition(page) {
 		stickerLayer.stickerData.shadow = editor.stickerManager.getDefaultShadow();
 		stickerLayer.stickerData.shadow.mode = 'glitter';
 		stickerLayer.stickerData.shadow.glitterId = glitterB;
+		stickerLayer.animation = GlitterAnimation.normalizeAnimation({ type: 'heartbeat', periodMs: 400 });
 
 		const staticStickerLayer = editor.stickerManager.createLayer(staticSticker.id);
 		editor.layerManager.insertLayer(staticStickerLayer);
@@ -151,6 +152,26 @@ async function buildComposition(page) {
 		editor.updatePreview();
 		editor.saveState();
 	});
+}
+
+async function verifyAnimationIntegration(page) {
+	await page.waitForFunction(() => document.querySelectorAll('.layer-anim-wrapper').length >= 1);
+	const result = await page.evaluate(async () => {
+		const editor = window.editor;
+		const animated = editor.layerManager.layers.filter((layer) => GlitterAnimation.isActive(layer.animation));
+		const serialized = editor.layerManager.serializeLayer(animated[0]);
+		const restored = await editor.layerManager.deserializeLayer(serialized);
+		const unknown = await editor.layerManager.deserializeLayer({ ...serialized, animation: { type: 'future-preset' } });
+		return {
+			animated: animated.length,
+			wrappers: document.querySelectorAll('.layer-anim-wrapper').length,
+			restoredType: restored.animation?.type,
+			fallbackType: unknown.animation?.type
+		};
+	});
+	assert(result.animated === 1 && result.wrappers >= 1, 'Animated layer did not register its preview wrapper');
+	assert(result.restoredType === 'heartbeat', 'Animation did not survive layer serialization');
+	assert(result.fallbackType === 'pulse', `Unknown animation type did not fall back: ${JSON.stringify(result)}`);
 }
 
 async function exportBytes(page, exportOverrides = {}) {
@@ -292,7 +313,7 @@ async function verifyStickerColorAdjustControls(page) {
 		editor.layerManager.setActiveLayer(layer.id);
 		editor.stickerManager.renderLayer(layer);
 		editor.loadStickerSettings(layer);
-		const image = layer.stickerData.element?.querySelector(':scope > img');
+		const image = layer.stickerData.element?.querySelector('img.sticker-image');
 		const hue = document.getElementById('stickerHue');
 		const advanced = hue?.closest('[data-advanced]');
 		const assetCard = document.getElementById('stickerAssetInfo')?.closest('.subsection-content-group');
@@ -301,7 +322,7 @@ async function verifyStickerColorAdjustControls(page) {
 		const live = {
 			hue: layer.stickerData.colorAdjust?.hue,
 			filter: image?.style.filter || '',
-			sameImage: image === layer.stickerData.element?.querySelector(':scope > img'),
+			sameImage: image === layer.stickerData.element?.querySelector('img.sticker-image'),
 			advanced: Boolean(advanced),
 			advancedInsideAsset: Boolean(assetCard && advanced && assetCard.contains(advanced))
 		};
@@ -310,7 +331,7 @@ async function verifyStickerColorAdjustControls(page) {
 		return live;
 	});
 	assert(result.hue === 65, 'Sticker Hue slider did not update sticker colorAdjust');
-	assert(result.filter.includes('hue-rotate(65deg)'), 'Sticker Hue slider did not update the preview filter');
+	assert(result.filter.includes('hue-rotate(65deg)'), `Sticker Hue slider did not update the preview filter: ${JSON.stringify(result)}`);
 	assert(result.sameImage, 'Sticker color adjustment recreated the animated image element');
 	assert(result.advanced, 'Sticker HSB controls are not inside an Advanced disclosure');
 	assert(result.advancedInsideAsset, 'Sticker Advanced controls are not inside the Asset card');
@@ -460,6 +481,8 @@ async function main() {
 		try {
 			await openEditor(page);
 			await buildComposition(page);
+			await verifyAnimationIntegration(page);
+			console.log('PASS Animation preview wrappers and persistence are wired');
 			await verifyStickerColorAdjustControls(page);
 			console.log('PASS Sticker HSB controls update in place inside Asset > Advanced');
 			await verifyGradientStopLiveEditing(page);

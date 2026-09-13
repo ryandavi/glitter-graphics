@@ -256,10 +256,17 @@ class GifExporter {
 	// so the export matches what the canvas showed.
 	_drawTransformedCanvas(ctx, sourceCanvas, transform, width, height, { smooth = false } = {}) {
 		const metrics = computeLayerTransform(transform, { width, height });
+		const animation = this._activeLayerAnimation?.transform === transform
+			? this._activeLayerAnimation.sample
+			: null;
 
 		ctx.save();
 		ctx.imageSmoothingEnabled = smooth;
-		ctx.globalAlpha = metrics.opacity;
+		ctx.globalAlpha *= metrics.opacity;
+		if (animation) {
+			ctx.globalAlpha *= animation.opacity;
+			ctx.translate(animation.tx, animation.ty);
+		}
 		ctx.translate(metrics.centerX, metrics.centerY);
 
 		if (metrics.rotationRad !== 0) {
@@ -267,6 +274,11 @@ class GifExporter {
 		}
 
 		ctx.scale(metrics.signedScaleX, metrics.signedScaleY);
+		if (animation) {
+			ctx.translate(-width / 2, -height / 2);
+			GlitterAnimation.applyToContext(ctx, { ...animation, tx: 0, ty: 0 }, width, height);
+			ctx.translate(width / 2, height / 2);
+		}
 
 		ctx.drawImage(
 			sourceCanvas,
@@ -277,6 +289,19 @@ class GifExporter {
 		);
 
 		ctx.restore();
+	}
+
+	_getAnimationBox(layer, canvasWidth, canvasHeight) {
+		if (layer.type === LayerType.GLITTER_FILL) return { x: 0, y: 0, width: canvasWidth, height: canvasHeight };
+		let width;
+		let height;
+		if (layer.type === LayerType.STICKER) ({ width, height } = layer.stickerData);
+		else if (layer.type === LayerType.TEXT_GLITTER) ({ width, height } = layer.textData);
+		else if (layer.type === LayerType.SHAPE) ({ width, height } = layer.shapeData);
+		width = Number(width) || 1;
+		height = Number(height) || 1;
+		const metrics = computeLayerTransform(getLayerTransform(layer), { width, height });
+		return { x: metrics.centerX - width / 2, y: metrics.centerY - height / 2, width, height };
 	}
 
 	_renderLayerToCanvas(layer, ctx, frameIndex, frameMap = null, flattenedFrameMap = null) {
@@ -1356,6 +1381,19 @@ class GifExporter {
 				fallbackDuration: CONFIG.tools.pixelEffects.animation.frameDurationMs
 			}));
 		}
+		visibleLayers.forEach((layer) => {
+			if (layer.type === LayerType.BASE_IMAGE || !GlitterAnimation.isActive(layer.animation)) return;
+			const animation = GlitterAnimation.normalizeAnimation(layer.animation);
+			const framesForPeriod = Math.max(2, Math.round(animation.periodMs / 1000 * CONFIG.tools.animation.exportFps));
+			sourceTimelines.push(new AnimationSourceTimeline({
+				key: `__anim_${layer.id}`,
+				label: `${layer.name || 'Layer'} animation`,
+				ownerLayerId: layer.id,
+				effectSlot: 'animation',
+				frames: Array.from({ length: framesForPeriod }, (_value, index) => index),
+				fallbackDuration: animation.periodMs / framesForPeriod
+			}));
+		});
 		if (watermark?.isAnimated) {
 			sourceTimelines.push(new AnimationSourceTimeline({
 				key: '__watermark',
@@ -1422,7 +1460,8 @@ class GifExporter {
 					watermark,
 					needsTransparency,
 					frameSelection,
-					flattenedFrameMap
+					flattenedFrameMap,
+					timestamp
 				);
 				if (renderedCandidateCount < candidateCount
 					&& renderedCandidateCount % CONFIG.export.progress.yieldEveryFrames === 0) {
@@ -1643,7 +1682,7 @@ class GifExporter {
 		return { name: 'Fallback', hex: 0x000001, r: 0, g: 0, b: 1 };
 	}
 
-	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, textMaskCanvases, shapeMaskCanvases, safeKey, exportSettings, watermark, needsTransparency, frameMap = null, flattenedFrameMap = null) {
+	_renderFrame(frameIndex, canvasData, layers, library, maskCanvases, textMaskCanvases, shapeMaskCanvases, safeKey, exportSettings, watermark, needsTransparency, frameMap = null, flattenedFrameMap = null, timestamp = 0) {
 		const { width, height, originalData, originalAlpha, alphaThreshold } = canvasData;
 		const ctx = this.ctx;
 		const hCtx = this.helperCtx;
@@ -1724,20 +1763,42 @@ class GifExporter {
 				renderCtx.globalCompositeOperation = 'source-over';
 				renderCtx.clearRect(0, 0, width, height);
 			}
-			this._buildLayerExportPlan(layer).render({
-				ctx: renderCtx,
-				frameIndex,
-				frameMap,
-				flattenedFrameMap,
-				maskCanvases,
-				textMaskCanvases,
-				shapeMaskCanvases,
-				helperCtx: hCtx,
-				width,
-				height,
-				needsTransparency,
-				safeKey,
-				alphaThreshold
+			const animationUnits = GlitterAnimation.isActive(layer.animation)
+				? [{ animData: layer.animation, anchorBox: this._getAnimationBox(layer, width, height) }]
+				: [{ animData: null, anchorBox: null }];
+			animationUnits.forEach((unit) => {
+				renderCtx.save();
+				if (unit.animData) {
+					const sample = GlitterAnimation.sampleAt(unit.animData, timestamp, { layerId: layer.id });
+					if (layer.type === LayerType.GLITTER_FILL) {
+						renderCtx.translate(unit.anchorBox.x, unit.anchorBox.y);
+						GlitterAnimation.applyToContext(renderCtx, sample, unit.anchorBox.width, unit.anchorBox.height);
+						renderCtx.translate(-unit.anchorBox.x, -unit.anchorBox.y);
+						renderCtx.globalAlpha *= sample.opacity;
+					} else {
+						this._activeLayerAnimation = { transform: getLayerTransform(layer), sample };
+					}
+				}
+				try {
+					this._buildLayerExportPlan(layer).render({
+						ctx: renderCtx,
+						frameIndex,
+						frameMap,
+						flattenedFrameMap,
+						maskCanvases,
+						textMaskCanvases,
+						shapeMaskCanvases,
+						helperCtx: hCtx,
+						width,
+						height,
+						needsTransparency,
+						safeKey,
+						alphaThreshold
+					});
+				} finally {
+					this._activeLayerAnimation = null;
+					renderCtx.restore();
+				}
 			});
 			if (usesLayerGroupBlend && renderCtx === this.layerBlendCtx) {
 				if (blendMode === 'color-burn') {

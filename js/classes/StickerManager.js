@@ -159,7 +159,7 @@ class StickerManager extends ContentManager {
 
 	refreshColorAdjustVisuals(layer) {
 		const filter = buildCssColorFilter(layer?.stickerData?.colorAdjust);
-		const image = this.layerElements.get(layer?.id)?.querySelector(':scope > img');
+		const image = this.layerElements.get(layer?.id)?.querySelector('img.sticker-image');
 		if (image) image.style.filter = filter;
 		if (this.ui.assetThumbnail && this.editor.layerManager.getActiveLayer()?.id === layer?.id) {
 			this.ui.assetThumbnail.style.filter = filter;
@@ -189,7 +189,8 @@ class StickerManager extends ContentManager {
 			const layer = active(); if (!layer) return;
 			layer.stickerData.shadow = null;
 			delete layer.stickerData.effectDrafts;
-			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.saveState('Edit sticker');
+			delete layer.animation;
+			this.renderLayer(layer); this.loadLayerSettings(layer); this.editor.animationPanel?.load(layer); this.editor.saveState('Edit sticker');
 		});
 		const setMode = (mode) => {
 			const layer = active();
@@ -987,6 +988,7 @@ class StickerManager extends ContentManager {
 			height: layer.stickerData.height
 		};
 		transform.applyTransform(element, dimensions);
+		syncLayerAnimationPreview(element, layer, this.editor.animationTicker);
 
 		if (isNew) transform.setupMouseDrag(element);
 
@@ -1141,6 +1143,7 @@ updateTransform(layerId, updates) {
 
 	async deserializeSticker(layerData) {
 		layerData.blendMode = GlitterBlendModes.forLayer(layerData);
+		if (layerData.animation) layerData.animation = GlitterAnimation.normalizeAnimation(layerData.animation);
 		if (layerData.stickerData) {
 			delete layerData.stickerData.blendMode;
 			layerData.stickerData.frames = null;

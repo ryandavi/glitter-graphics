@@ -482,6 +482,41 @@ const CONFIG = deepFreeze({
 				selectedOutlineWidth: 2
 			}
 		},
+		animation: {
+			defaultType: 'pulse',
+			presets: {
+				breath: { periodMs: 4000, easing: 'easeInOut', amount: 6, direction: 'alternate', iterations: Infinity, anchor: 'center' },
+				float: { periodMs: 3600, easing: 'easeInOut', amount: 14, direction: 'alternate', iterations: Infinity },
+				sway: { periodMs: 2600, easing: 'easeInOut', amount: 8, direction: 'alternate', iterations: Infinity, anchor: 'top-center' },
+				dim: { periodMs: 2000, easing: 'easeInOut', opacityFloor: 40, direction: 'alternate', iterations: Infinity },
+				drift: { periodMs: 6000, easing: 'linear', distance: 120, angle: 0, direction: 'normal', iterations: Infinity },
+				twinkle: { periodMs: 1400, easing: 'linear', duty: 60, opacityFloor: 20, direction: 'normal', iterations: Infinity },
+				pulse: { periodMs: 1400, easing: 'easeInOut', amount: 10, direction: 'alternate', iterations: Infinity, anchor: 'center' },
+				heartbeat: { periodMs: 1200, easing: 'easeOut', amount: 12, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				blink: { periodMs: 900, easing: 'steps', steps: 2, duty: 50, direction: 'normal', iterations: Infinity, fillMode: 'none', anchor: 'center' },
+				bounce: { periodMs: 1000, easing: 'bounceOut', amount: 40, angle: 90, direction: 'normal', iterations: Infinity, anchor: 'bottom-center' },
+				shake: { periodMs: 600, easing: 'linear', amount: 8, direction: 'normal', iterations: Infinity },
+				tremble: { periodMs: 120, easing: 'linear', amount: 2, direction: 'normal', iterations: Infinity },
+				wobble: { periodMs: 1000, easing: 'easeInOut', amount: 12, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				jello: { periodMs: 1000, easing: 'easeOut', amount: 12, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				tada: { periodMs: 1000, easing: 'easeInOut', amount: 10, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				swing: { periodMs: 1000, easing: 'easeOut', amount: 15, direction: 'normal', iterations: Infinity, anchor: 'top-center' },
+				'rubber-band': { periodMs: 1000, easing: 'easeOut', amount: 25, overshoot: 30, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				move: { periodMs: 2000, easing: 'easeInOut', distance: 60, angle: 0, direction: 'alternate', iterations: Infinity },
+				orbit: { periodMs: 3000, easing: 'linear', radius: 40, direction: 'normal', iterations: Infinity },
+				rotate: { periodMs: 3000, easing: 'linear', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				flip: { periodMs: 2400, easing: 'easeInOut', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				zoom: { periodMs: 8000, easing: 'easeInOut', amount: 15, angle: 0, direction: 'alternate', iterations: Infinity, anchor: 'center' },
+				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				fade: { periodMs: 1200, easing: 'easeOut', iterations: 1, direction: 'normal', fillMode: 'forwards', anchor: 'center' },
+				'fade-in': { periodMs: 1200, easing: 'easeOut', iterations: 1, direction: 'normal', fillMode: 'forwards', anchor: 'center' },
+				pop: { periodMs: 700, easing: 'elasticOut', overshoot: 30, iterations: 1, direction: 'normal', fillMode: 'forwards', anchor: 'center' }
+			},
+			jitterQuantMs: 60,
+			maxPeriodMs: 20000,
+			exportFps: 12
+		},
 		stickers: {
 			// null preserves an empty new sticker layer.
 			defaultStickerId: 1,
@@ -721,6 +756,19 @@ const CONFIG = deepFreeze({
 		// borderWidth/borderDotSpacing maxes are boot defaults that
 		// ShapeGlitterManager raises from CONFIG.tools.shapes.border at bind time.
 			sliders: {
+			animSpeed: { label: 'Speed', unit: 'ms', min: 120, max: 20000, step: 10, value: 1400 },
+			animAmount: { label: 'Intensity', unit: '', min: 0, max: 200, step: 1, value: 10 },
+			animAngle: { label: 'Angle', unit: '\u00b0', min: 0, max: 359, step: 1, value: 0 },
+			animDistance: { label: 'Distance', unit: 'px', min: 0, max: 2000, step: 1, value: 60 },
+			animRadius: { label: 'Radius', unit: 'px', min: 0, max: 1000, step: 1, value: 40 },
+			animTurns: { label: 'Turns', unit: '×', min: -8, max: 8, step: 0.1, value: 1 },
+			animDuty: { label: 'Duty cycle', unit: '%', min: 5, max: 95, step: 1, value: 50 },
+			animOpacityFloor: { label: 'Opacity floor', unit: '%', min: 0, max: 95, step: 1, value: 0 },
+			animOvershoot: { label: 'Overshoot', unit: '%', min: 0, max: 100, step: 1, value: 30 },
+			animDelay: { label: 'Delay', unit: 'ms', min: 0, max: 20000, step: 10, value: 0 },
+			animPhase: { label: 'Phase', unit: '%', min: 0, max: 100, step: 1, value: 0 },
+			animAnchorX: { label: 'Anchor X', unit: '%', min: 0, max: 100, step: 1, value: 50 },
+			animAnchorY: { label: 'Anchor Y', unit: '%', min: 0, max: 100, step: 1, value: 50 },
 			filterInstagramStrength: { label: 'Strength', unit: '%', min: 0, max: 100, step: 1, value: 100 },
 			filterBrightness: { label: 'Brightness', unit: '%', min: -100, max: 100, step: 1, value: 0 },
 			filterContrast: { label: 'Contrast', unit: '%', min: -100, max: 100, step: 1, value: 0 },
@@ -830,6 +878,10 @@ const CONFIG = deepFreeze({
 			cadenceClusterSpanTolerance: 0.25,
 			preRenderBudgetMultiplier: 1.5,
 			preferredFrameBudget: 60,
+			// Frame-count floor derived from the resolved loop length, so a long
+			// loop (e.g. an 8s zoom) doesn't get merged down to the same fixed
+			// frame count as a short one and end up choppy.
+			minFrameRateFps: 24,
 			hardFrameLimit: 1000,
 			exactDuplicateThreshold: 0,
 			balancedVisualError: 0.008,
@@ -1348,6 +1400,89 @@ const LAYER_BLEND_MODE_OPTIONS = CONFIG.layers.blendModes.map((value) => ({
 	selected: value === CONFIG.layers.defaultBlendMode
 }));
 
+const ANIMATION_PRESET_OPTIONS = Object.keys(CONFIG.tools.animation.presets).map((value) => ({
+	value,
+	label: value.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' '),
+	selected: value === CONFIG.tools.animation.defaultType
+}));
+
+function createAnimationPanelSpec(prefix) {
+	const id = (suffix) => `${prefix}Anim${suffix}`;
+	return {
+		kind: 'card', title: 'Animation', classes: 'panel-module animation-module',
+		titleSummary: { id: id('Summary'), text: 'Off' },
+		toggle: { id: id('Enabled'), label: '', title: 'Enable Animation' },
+		// No `content` wrapper: items sit directly on the card, exactly like every
+		// other toggle-gated effect module (pixel effects, shadow, border). That
+		// gets the animation card the same shared contract for free \u2014 the
+		// standard `is-collapsed` accordion (toggled by the generic effect-toggle
+		// listener, `syncPanelEffectToggle`) hides the whole body including the
+		// trailing `advanced` block, which renders as a sibling of
+		// `.subsection-card-body`, not nested inside it.
+		items: [
+			{ kind: 'set', items: [
+				{ kind: 'select', id: id('Type'), label: 'Animation type', visibleLabel: 'Preset', options: ANIMATION_PRESET_OPTIONS,
+					stepper: {
+						prev: { id: id('PresetPrev'), label: 'Previous preset', icon: 'chevron-left', title: 'Previous preset' },
+						next: { id: id('PresetNext'), label: 'Next preset', icon: 'chevron-right', title: 'Next preset' }
+					} },
+				{ kind: 'host', id: id('LoopHint'), classes: 'property-note animation-loop-hint' }
+			] },
+			{ kind: 'set', label: 'Motion', items: [
+				{ kind: 'slider', id: id('PeriodMs'), slider: 'animSpeed', label: 'Speed' },
+				{ kind: 'slider', id: id('Amount'), slider: 'animAmount', rowId: id('AmountRow') },
+				{ kind: 'slider', id: id('Angle'), slider: 'animAngle', rowId: id('AngleRow'), hidden: true },
+				{ kind: 'slider', id: id('Distance'), slider: 'animDistance', rowId: id('DistanceRow'), hidden: true },
+				{ kind: 'slider', id: id('Radius'), slider: 'animRadius', rowId: id('RadiusRow'), hidden: true },
+				{ kind: 'slider', id: id('Turns'), slider: 'animTurns', rowId: id('TurnsRow'), hidden: true },
+				{ kind: 'slider', id: id('Duty'), slider: 'animDuty', rowId: id('DutyRow'), hidden: true },
+				{ kind: 'slider', id: id('OpacityFloor'), slider: 'animOpacityFloor', rowId: id('OpacityFloorRow'), hidden: true },
+				{ kind: 'slider', id: id('Overshoot'), slider: 'animOvershoot', rowId: id('OvershootRow'), hidden: true }
+			] },
+			{ kind: 'advanced', id: id('Advanced'), items: [
+				{ kind: 'set', items: [
+					{ kind: 'select', id: id('Easing'), visibleLabel: 'Easing', label: 'Easing', options: [
+						{ value: 'linear', label: 'Linear' }, { value: 'ease', label: 'Ease' }, { value: 'easeIn', label: 'Ease in' },
+						{ value: 'easeOut', label: 'Ease out' }, { value: 'easeInOut', label: 'Ease in-out' },
+						{ value: 'bounceOut', label: 'Bounce out' }, { value: 'elasticOut', label: 'Elastic out' }, { value: 'steps', label: 'Steps' }
+					] },
+					{ kind: 'field', id: id('Steps'), type: 'number', label: 'Steps', min: 2, max: 60, step: 1, value: 2, rowId: id('StepsRow') },
+					{ kind: 'select', id: id('Direction'), visibleLabel: 'Direction', label: 'Direction', options: [
+						{ value: 'normal', label: 'Normal' }, { value: 'reverse', label: 'Reverse' },
+						{ value: 'alternate', label: 'Alternate' }, { value: 'alternate-reverse', label: 'Alternate reverse' }
+					] },
+					{ kind: 'select', id: id('Iterations'), visibleLabel: 'Iterations', label: 'Iterations', options: [
+						{ value: 'Infinity', label: '\u221e' }, { value: '1', label: '1' }, { value: '2', label: '2' }, { value: '3', label: '3' }, { value: '5', label: '5' }, { value: '10', label: '10' }
+					] }
+				] },
+				{ kind: 'set', items: [
+					{ kind: 'slider', id: id('DelayMs'), slider: 'animDelay' },
+					{ kind: 'slider', id: id('Phase'), slider: 'animPhase' },
+					{ kind: 'select', id: id('FillMode'), visibleLabel: 'Fill', label: 'Fill mode',
+						hint: 'Whether the layer holds its start pose before a delay, and its end pose after a limited number of iterations finishes. Has no effect with no delay and infinite iterations.',
+						options: [
+							{ value: 'none', label: 'None' }, { value: 'forwards', label: 'Forwards' },
+							{ value: 'backwards', label: 'Backwards' }, { value: 'both', label: 'Both' }
+						] }
+				] },
+				{ kind: 'set', items: [
+					{ kind: 'select', id: id('Anchor'), visibleLabel: 'Anchor', label: 'Anchor', options: [
+						{ value: 'top-left', label: 'Top left' }, { value: 'top-center', label: 'Top center' }, { value: 'top-right', label: 'Top right' },
+						{ value: 'center-left', label: 'Center left' }, { value: 'center', label: 'Center' }, { value: 'center-right', label: 'Center right' },
+						{ value: 'bottom-left', label: 'Bottom left' }, { value: 'bottom-center', label: 'Bottom center' }, { value: 'bottom-right', label: 'Bottom right' },
+						{ value: 'custom', label: 'Custom' }
+					] },
+					{ kind: 'slider', id: id('AnchorX'), slider: 'animAnchorX', rowId: id('AnchorXRow'), hidden: true },
+					{ kind: 'slider', id: id('AnchorY'), slider: 'animAnchorY', rowId: id('AnchorYRow'), hidden: true },
+					{ kind: 'select', id: id('SnapMode'), visibleLabel: 'Motion', label: 'Motion sampling', options: [
+						{ value: 'smooth', label: 'Smooth' }, { value: 'pixel-snap', label: 'Pixel snap' }, { value: 'step', label: 'Step' }
+					] }
+				] }
+			] }
+		]
+	};
+}
+
 const PANEL_SCHEMAS = {
 	// The "nothing selected" panel: sits under the shared Design gallery header
 	// (so it renders headerless — `section.bare`) and carries two mutually
@@ -1710,6 +1845,7 @@ const PANEL_SCHEMAS = {
 				] }
 			] }
 		],
+		effects: [createAnimationPanelSpec('glitter')],
 		auxiliarySections: [{
 			prefix: 'layer',
 			sectionPrefix: 'layerSettings',
@@ -1780,7 +1916,8 @@ const PANEL_SCHEMAS = {
 			},
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetStickerEffects', label: 'Reset Effects', secondary: true, title: 'Disable all sticker effects and clear their saved settings' }
-			] }
+			] },
+			createAnimationPanelSpec('sticker')
 		]
 	},
 	[LayerType.TEXT_GLITTER]: {
@@ -1892,7 +2029,8 @@ const PANEL_SCHEMAS = {
 			},
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetTextEffects', label: 'Reset Effects', secondary: true, title: 'Disable all text effects and clear their saved settings' }
-			] }
+			] },
+			createAnimationPanelSpec('text')
 		]
 	},
 	[LayerType.SHAPE]: {
@@ -1976,7 +2114,8 @@ const PANEL_SCHEMAS = {
 			},
 			{ kind: 'actionRow', classes: 'layer-effects-actions', actions: [
 				{ id: 'resetShapeEffects', label: 'Reset Effects', secondary: true, title: 'Disable all shape effects and clear their saved settings' }
-			] }
+			] },
+			createAnimationPanelSpec('shape')
 		]
 	},
 	// The document-size form (Image Size / Canvas Size). ONE self-contained

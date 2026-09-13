@@ -5459,6 +5459,23 @@ body.mask-editing .sticker-element {
   display: none !important;
 }
 
+.animation-select-stepper {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--spacing-xs);
+}
+.animation-select-stepper > select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.animation-select-stepper > button {
+  flex: 0 0 auto;
+  width: var(--property-control-height);
+  height: var(--property-control-height);
+  padding: 0;
+}
+
 .auto-glitter-settings-section .auto-glitter-preview-card .segmented-control,
 .auto-glitter-settings-section .auto-glitter-palette-style {
   width: 100%;
@@ -5712,13 +5729,13 @@ body.tool-text .preview-wrapper {
   z-index: 1000 !important;
   cursor: grabbing;
 }
-.sticker-element > img {
+.sticker-element img {
   display: block;
   width: 100%;
   height: 100%;
   image-rendering: auto;
 }
-.sticker-element.pixelated > img {
+.sticker-element.pixelated img {
   image-rendering: pixelated;
 }
 
@@ -5894,6 +5911,14 @@ body.tool-select .preview-canvas {
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.layer-anim-wrapper {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  image-rendering: inherit;
 }
 
 .number-field-pair {
@@ -7055,7 +7080,7 @@ body.tool-select .preview-canvas {
 .property-row > input[type=text],
 .property-row > .input-unit,
 .property-row > textarea,
-.property-row > .property-control-wide {
+.property-row > .animation-select-stepper {
   grid-column: 2/-1;
 }
 .property-row > input[type=color] {
@@ -7097,7 +7122,7 @@ body.tool-select .preview-canvas {
 .property-row.is-stacked > .segmented-control,
 .property-row.is-stacked > select,
 .property-row.is-stacked > textarea,
-.property-row.is-stacked > .property-control-wide {
+.property-row.is-stacked > .animation-select-stepper {
   grid-area: 2/1/3/4;
 }
 

@@ -473,9 +473,11 @@ class ShapeGlitterManager {
 			layer.shapeData.border = null;
 			layer.shapeData.shadow = null;
 			delete layer.shapeData.effectDrafts;
+			delete layer.animation;
 		});
 		this.loadLayerSettings(layer);
 		this.renderLayer(layer);
+		this.editor.animationPanel?.load(layer);
 		this.editor.saveState('Edit shape');
 		this.editor.layerManager.renderLayersList();
 	}
@@ -1257,6 +1259,7 @@ class ShapeGlitterManager {
 
 		const measurement = this.getMeasurementEntry(layer);
 		this.reconcileSpans(stack, layer, measurement);
+		syncLayerAnimationPreview(wrapper, layer, this.editor.animationTicker);
 		wrapper.setAttribute('aria-label', this.getShapeLabel(layer.shapeData.shapeId));
 
 		const transform = this.layerTransforms.get(layer.id);

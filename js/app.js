@@ -86,6 +86,7 @@ class GlitterEditor {
 		this.viewport = new ViewportManager(this.previewContainer, this.previewWrapper);
 		this.viewport.editor = this;
 		this.layerManager = new LayerManager(this);
+		this.animationTicker = new AnimationTicker();
 		this.stickerManager = new StickerManager(this);
 		this.glitterManager = new GlitterManager(this);
 		this.brushTipManager = new BrushTipManager(this);
@@ -94,6 +95,7 @@ class GlitterEditor {
 		this.textGlitterManager = new TextGlitterManager(this);
 		this.shapeGlitterManager = new ShapeGlitterManager(this);
 		this.filterLayerManager = new FilterLayerManager(this);
+		this.animationPanel = new AnimationPanelController(this);
 		this.pickers = new PickerRegistry(this);
 		[
 			this.glitterManager,

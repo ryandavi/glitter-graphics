@@ -553,6 +553,7 @@ isLayerContentLocked(layer) {
 
 		const layer = this.layerManager.getActiveLayer();
 		if (!layer) return;
+		this.animationPanel?.load(layer);
 
 		// Every branch below writes slider values directly, which fires no events;
 		// the reverts are swept once the panel has been repopulated.

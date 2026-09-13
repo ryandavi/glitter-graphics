@@ -472,6 +472,7 @@ initializeExportSettings() {
 		// selector it gates never has to be evaluated in the common case.
 		if (PREFERENCES.get('reduceMotion')) document.documentElement.dataset.reduceMotion = 'true';
 		else delete document.documentElement.dataset.reduceMotion;
+		this.animationTicker?.refresh();
 	}
 
 ,

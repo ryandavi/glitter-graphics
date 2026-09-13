@@ -686,11 +686,12 @@ function buildSelectProxy(entries, options = {}) {
 	return control;
 }
 
-function buildOptionGroup(label, children, rowClasses = '') {
+function buildOptionGroup(label, children, rowClasses = '', hint) {
 	const group = tplClone('tpl-option-group');
 	addPanelClasses(group, rowClasses);
 	const labelNode = group.querySelector('.property-label');
 	labelNode.textContent = label;
+	if (hint) labelNode.title = hint;
 	children.forEach((child) => group.appendChild(child));
 	// A label plus one control is a property row (R1/R2), never a set.
 	const options = children[0]?.querySelectorAll?.('.segmented-option')?.length || 0;
@@ -1297,7 +1298,27 @@ function buildPanelItem(item, schema) {
 				select.appendChild(option);
 			});
 			if (!item.visibleLabel) return select;
-			const row = buildOptionGroup(item.visibleLabel, [select], item.rowClasses);
+			// `stepper`: compact icon-only prev/next buttons flanking the select
+			// (prev on the left, next on the right) so cycling this field's options
+			// reads as one control, not a separate action row below it.
+			let control = select;
+			if (item.stepper) {
+				const buildStepButton = (action) => {
+					const button = document.createElement('button');
+					button.type = 'button';
+					button.className = 'btn-icon-simple icon-wrapper';
+					button.id = action.id;
+					if (action.title) button.title = action.title;
+					button.setAttribute('aria-label', action.title || action.label || '');
+					button.appendChild(createIcon(action.icon));
+					return button;
+				};
+				control = panelDiv('animation-select-stepper');
+				if (item.stepper.prev) control.appendChild(buildStepButton(item.stepper.prev));
+				control.appendChild(select);
+				if (item.stepper.next) control.appendChild(buildStepButton(item.stepper.next));
+			}
+			const row = buildOptionGroup(item.visibleLabel, [control], item.rowClasses, item.hint);
 			if (item.revert) attachOptionRevert(row, select, { options: item.options, roleId: item.id || item.visibleLabel, label: item.visibleLabel });
 			return row;
 		}

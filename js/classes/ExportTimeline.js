@@ -486,11 +486,21 @@ class CompositeTimelinePlanner {
 		const selectionDuplicatesMerged = originalFrameCount - entries.length;
 		entries = this._applyManualSampling(entries, Math.max(1, options.manualFrameSkip || 1));
 		const manuallySampledFrameCount = entries.length;
+		// A fixed frame budget merges a long loop down to the same frame count as a
+		// short one, so scale the floor by the resolved loop duration: never merge
+		// below what minFrameRateFps needs to stay smooth over that duration.
+		const durationFrameFloor = Number.isFinite(loop.duration)
+			? Math.ceil((loop.duration / 1000) * (this.config.minFrameRateFps || 0))
+			: 0;
+		const preferredFrameBudget = Math.min(
+			options.hardFrameLimit,
+			Math.max(options.preferredFrameBudget, durationFrameFloor)
+		);
 		const preRenderBudgetMultiplier = options.preRenderBudgetMultiplier || this.config.preRenderBudgetMultiplier;
 		const preRenderBudget = options.smartReduction && options.preRenderSampling
 			? Math.min(options.hardFrameLimit, Math.max(
-				options.preferredFrameBudget,
-				Math.ceil(options.preferredFrameBudget * preRenderBudgetMultiplier)
+				preferredFrameBudget,
+				Math.ceil(preferredFrameBudget * preRenderBudgetMultiplier)
 			))
 			: options.hardFrameLimit;
 		entries = this._limitPreRenderCandidates(entries, preRenderBudget);
@@ -508,7 +518,7 @@ class CompositeTimelinePlanner {
 		}, {
 			enabled: options.smartReduction,
 			visualErrorThreshold: options.visualErrorThreshold,
-			preferredFrameBudget: options.preferredFrameBudget,
+			preferredFrameBudget,
 			hardFrameLimit: options.hardFrameLimit
 		});
 		const totalDuration = reduced.frameDurations.reduce((sum, duration) => sum + duration, 0);

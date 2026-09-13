@@ -402,6 +402,28 @@
 	display: none !important;
 }
 
+// The animation preset picker: prev/next flank the select in one grid cell
+// as a non-wrapping flex row (the select fills whatever space the two fixed
+// arrow buttons leave, same as every other select in the panel), instead of
+// the stepper living below as a separate action row.
+.animation-select-stepper {
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+	gap: var(--spacing-xs);
+
+	> select { flex: 1 1 auto; min-width: 0; }
+
+	// Match the select's own box so prev/next read as part of the same
+	// control instead of a taller/shorter pair riding beside it.
+	> button {
+		flex: 0 0 auto;
+		width: var(--property-control-height);
+		height: var(--property-control-height);
+		padding: 0;
+	}
+}
+
 .auto-glitter-settings-section {
 	// Sticky-header / scroll-region / sticky-footer layout is the generic
 	// `.section.has-scroll-region` block in panels/_properties.scss. Only the

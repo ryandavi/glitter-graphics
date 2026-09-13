@@ -364,7 +364,9 @@ class TextGlitterManager {
 					layer.textData.border = null;
 					layer.textData.shadow = null;
 					delete layer.textData.effectDrafts;
+					delete layer.animation;
 				}, { saveHistory: true, refreshPreview: false });
+				this.editor.animationPanel?.load(layer);
 			} catch (error) {
 				this.reportFontLoadError(error);
 			}
@@ -2484,6 +2486,7 @@ class TextGlitterManager {
 				}
 				this.reconcileTextSpans(stack, layer, measurement);
 				wrapper.classList.toggle('text-overflowing', Boolean(measurement.hasOverflow));
+				syncLayerAnimationPreview(wrapper, layer, this.editor.animationTicker);
 
 				const transform = this.layerTransforms.get(layer.id);
 				if (transform) {
