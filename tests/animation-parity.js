@@ -14,6 +14,7 @@ const presets = Object.fromEntries(types.map((type) => [type, {
 Object.assign(presets.fade, { iterations: 1, fillMode: 'forwards' });
 Object.assign(presets['fade-in'], { iterations: 1, fillMode: 'forwards' });
 Object.assign(presets.pop, { iterations: 1, fillMode: 'forwards', easing: 'elasticOut', overshoot: 30 });
+Object.assign(presets.marquee, { includeWhenOffCanvas: true });
 
 global.CONFIG = { tools: { animation: {
 	defaultType: 'pulse', presets, jitterQuantMs: 60, rotateSnapStepDeg: 15,
@@ -44,6 +45,9 @@ types.forEach((type) => {
 
 assert.strictEqual(Animation.normalizeAnimation({ type: 'pulse', iterations: null }).iterations, Infinity);
 assert.strictEqual(Animation.loopDurationMs({ type: 'fade' }), 1000);
+assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee' }), true);
+assert.strictEqual(Animation.includesOffCanvas({ type: 'move' }), false);
+assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee', distance: 0 }), false);
 
 ['fade', 'fade-in', 'pop'].forEach((type) => {
 	const data = Animation.normalizeAnimation({ type });

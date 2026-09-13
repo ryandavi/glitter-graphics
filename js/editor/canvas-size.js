@@ -181,6 +181,9 @@ get CANVAS_ANCHORS() {
 		const resolved = mode === 'canvas' ? 'canvas' : 'image';
 		const sizeSummary = document.getElementById('noLayerSizeSummary');
 		if (sizeSummary) sizeSummary.textContent = resolved === 'canvas' ? 'Canvas Size' : 'Image Size';
+		document.querySelectorAll('#documentSizeGroup [data-size-mode-note]').forEach((note) => {
+			note.hidden = note.dataset.sizeModeNote !== resolved;
+		});
 		document.getElementById('scaleDesignPanel').hidden = resolved !== 'image';
 		document.getElementById('canvasSizePanel').hidden = resolved !== 'canvas';
 		document.getElementById('scaleDesignActions')?.toggleAttribute('hidden', resolved !== 'image');

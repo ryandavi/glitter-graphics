@@ -40,7 +40,7 @@
 	<meta name="twitter:image" content="https://ryandavi.github.io/glitter-graphics/images/etc/preview-image.gif">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/style.css?v=9cf7fe80">
+	<link rel="stylesheet" href="css/style.css?v=5878587a">
 
 	<!-- Favicon -->
 	<link rel="icon" href="images/etc/favicon.ico?v=bcdad78e" type="image/x-icon">
@@ -174,10 +174,6 @@
 					</button>
 				</div>
 				<div class="toolbar-group toolbar-utility-group" aria-label="Application tools">
-					<button class="btn-icon icon-wrapper" id="pauseMotionTool" type="button" title="Pause motion" aria-label="Pause motion" aria-pressed="false">
-						<svg class="icon"><use href="#icon-motion-pause"></use></svg>
-						<span class="name">Pause motion</span>
-					</button>
 					<button class="btn-icon icon-wrapper" id="toolbarShortcutsBtn" type="button" title="Commands &amp; Shortcuts">
 						<svg class="icon"><use href="#icon-keyboard"></use></svg>
 						<span class="name">Commands &amp; Shortcuts</span>
@@ -777,6 +773,10 @@
 						<!-- Preview Controls -->
 						<div class="preview-controls ui-ignore-gestures" id="previewControls">
 							<div class="preview-controls-center">
+								<button class="btn-icon icon-wrapper" id="pauseMotionTool" type="button" title="Pause motion" aria-label="Pause motion" aria-pressed="false">
+									<svg class="icon"><use href="#icon-motion-pause"></use></svg>
+									<span class="name">Pause motion</span>
+								</button>
 								<button class="preview-mode-toggle btn-icon icon-wrapper" id="previewModeToggle"
 									title="Show only selected layer" aria-pressed="false" disabled>
 									<svg class="icon">
@@ -2434,6 +2434,8 @@
 	<script src="js/ui/slider.js?v=9388d0d4"></script>
 	<script src="js/ui/tooltip.js?v=c75f0b1c"></script>
 	<script src="js/ui/doc-modal.js?v=21e4656c"></script>
+	<script src="js/ui/about-timeline-data.js?v=cf2e17de"></script>
+	<script src="js/ui/about-timeline.js?v=a51af535"></script>
 	<script src="js/ui/gallery.js?v=9568db2b"></script>
 	<script src="js/effects/color-adjust.js?v=cbb26309"></script>
 	<script src="js/effects/mask-raster.js?v=58feb186"></script>
@@ -2463,7 +2465,7 @@
 	<script src="js/editor/transform-panel.js?v=f049c427"></script>
 	<script src="js/editor/transform-interaction.js?v=bd174854"></script>
 	<script src="js/editor/document-start.js?v=c4ce37a0"></script>
-		<script src="js/editor/modals-wiring.js?v=2af9b0b2"></script>
+		<script src="js/editor/modals-wiring.js?v=fde9b6db"></script>
 	<script src="js/editor/layer-panel.js?v=3d5b5ebe"></script>
 	<script src="js/editor/canvas-gestures.js?v=3be86e55"></script>
 	<script src="js/editor/canvas-size.js?v=699b6298"></script>

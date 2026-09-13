@@ -1880,6 +1880,18 @@ body.modal-open {
 		flex: 0 0 auto;
 	}
 
+	// One contained card holding the legend, filters, summary, and list, so the
+	// whole section reads as a single unit instead of loose paragraphs — the
+	// same bordered/tinted-surface language as .figure-wrapper > figure above.
+	.timeline-panel {
+		@include inset-surface;
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-md);
+		margin: var(--spacing-lg) 0;
+		background: var(--color-bg-tertiary);
+	}
+
 	.timeline-list {
 		list-style: none;
 		padding: 0;
@@ -1903,6 +1915,15 @@ body.modal-open {
 			width: 6.5rem;
 			font-weight: 600;
 			color: var(--color-text-secondary);
+
+			// Every rendered item carries a data-tooltip (topics + country, see
+			// js/ui/about-timeline.js) — the same "term with a hover definition"
+			// cue as .context above, scoped to just the date so item text stays
+			// plain and readable.
+			cursor: help;
+			text-decoration: underline dotted;
+			text-decoration-thickness: 1px;
+			text-underline-offset: 3px;
 		}
 
 		@media (max-width: 480px) {
@@ -1915,6 +1936,84 @@ body.modal-open {
 				width: auto;
 			}
 		}
+	}
+
+	// Filter toolbar above the timeline list (js/ui/about-timeline.js renders
+	// the controls into this container). Selects/inputs use the same
+	// form-control mixin as the rest of the app instead of one-off box styles.
+	.timeline-filters {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--spacing-sm) var(--spacing-md);
+		padding-bottom: var(--spacing-md);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.timeline-filter {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+
+		label {
+			font-size: var(--font-size-sm);
+			color: var(--color-text-secondary);
+		}
+
+		select {
+			max-width: 100%;
+			@include form-control($background: var(--color-bg-secondary), $min-width: 0);
+		}
+	}
+
+	.timeline-filter-search {
+		flex: 1 1 220px;
+
+		.search-input-wrapper {
+			position: relative;
+			display: flex;
+			min-width: 0;
+
+			.search-input-icon {
+				position: absolute;
+				top: 50%;
+				left: var(--spacing-sm);
+				z-index: 1;
+				width: 1rem;
+				height: 1rem;
+				transform: translateY(-50%);
+				color: var(--color-text-tertiary);
+				pointer-events: none;
+
+				> svg.icon { font-size: 1rem; }
+			}
+
+			input {
+				@include form-control($background: var(--color-bg-secondary), $min-width: 0);
+				// Override the mixin's own padding shorthand — must come after
+				// the include or the icon overlaps the text.
+				width: 100%;
+				box-sizing: border-box;
+				padding-left: calc(var(--spacing-sm) * 2 + 1rem);
+
+				&::-webkit-search-decoration,
+				&::-webkit-search-results-button,
+				&::-webkit-search-results-decoration {
+					display: none;
+				}
+			}
+		}
+	}
+
+	.timeline-filter-clear {
+		align-self: flex-end;
+	}
+
+	.timeline-summary {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+		margin: 0;
 	}
 
 

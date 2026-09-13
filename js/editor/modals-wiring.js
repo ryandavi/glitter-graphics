@@ -85,7 +85,7 @@ updateOrientationButtons(width, height) {
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=9',
+				externalContentUrl: 'modals/about.html?v=10',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -95,6 +95,10 @@ updateOrientationButtons(width, height) {
 					this.renderVersionHistory(modalBody);
 					// Initialize pixel-scaled images
 					initPixelScalerInContainer(modalBody);
+
+					// Render the Timeline section from data before the nav below
+					// indexes the modal for search, so rendered entries are searchable.
+					initAboutTimeline(modalBody);
 
 					// Initialize references (sup ↔ reference list interaction)
 					initModalReferences(modalBody, {

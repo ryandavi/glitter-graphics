@@ -508,7 +508,7 @@ const CONFIG = deepFreeze({
 				flip: { periodMs: 2400, easing: 'easeInOut', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
 				zoom: { periodMs: 8000, easing: 'easeInOut', amount: 15, angle: 0, direction: 'alternate', iterations: Infinity, anchor: 'center' },
 				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, anchor: 'center' },
+				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, anchor: 'center', includeWhenOffCanvas: true },
 				fade: { periodMs: 1200, easing: 'easeOut', iterations: 1, direction: 'normal', fillMode: 'forwards', anchor: 'center' },
 				'fade-in': { periodMs: 1200, easing: 'easeOut', iterations: 1, direction: 'normal', fillMode: 'forwards', anchor: 'center' },
 				pop: { periodMs: 700, easing: 'elasticOut', overshoot: 30, iterations: 1, direction: 'normal', fillMode: 'forwards', anchor: 'center' }
@@ -1422,6 +1422,7 @@ function createAnimationPanelSpec(prefix) {
 		items: [
 			{ kind: 'set', items: [
 				{ kind: 'select', id: id('Type'), label: 'Animation type', visibleLabel: 'Preset', options: ANIMATION_PRESET_OPTIONS,
+					stacked: false,
 					stepper: {
 						prev: { id: id('PresetPrev'), label: 'Previous preset', icon: 'chevron-left', title: 'Previous preset' },
 						next: { id: id('PresetNext'), label: 'Next preset', icon: 'chevron-right', title: 'Next preset' }
@@ -2132,15 +2133,16 @@ const PANEL_SCHEMAS = {
 		fragmentClasses: 'document-size-group',
 		fragmentCard: { title: 'Size', collapsible: true, summaryId: 'noLayerSizeSummary', summaryText: 'Image Size' },
 		items: [
-			// Operation is its own property-set so the hairline before the mode
-			// panel is always `.property-set + .property-set` — it no longer
-			// vanishes when switching to Canvas Size.
+			// Operation and its mode-specific explanation form one property set;
+			// the selected mode panel begins the next divided set of controls.
 			{ kind: 'set', items: [
 				{ kind: 'segmented', id: 'documentSizeMode', visibleLabel: 'Operation', label: 'Sizing operation',
 					classes: 'document-size-mode', stacked: false, options: [
 						{ label: 'Image Size', active: true, attrs: { 'data-size-mode': 'image', 'aria-pressed': 'true' } },
 						{ label: 'Canvas Size', attrs: { 'data-size-mode': 'canvas', 'aria-pressed': 'false' } }
-					] }
+					] },
+				{ kind: 'host', classes: 'property-note', attrs: { 'data-size-mode-note': 'image' }, text: 'Resize the canvas and everything in the design. Proportions stay linked.' },
+				{ kind: 'host', classes: 'property-note', attrs: { 'data-size-mode-note': 'canvas', hidden: 'hidden' }, text: 'Crop or extend the canvas without scaling content.' }
 			] },
 			// `#canvasSizePanel` / `#scaleDesignPanel` are zero-padding `.property-set`
 			// wrappers (canvas-size.js toggles their `hidden`); Operation → mode
@@ -2153,10 +2155,7 @@ const PANEL_SCHEMAS = {
 			// are top-level card items so buildPanelItem lifts them to card footers.
 			{ kind: 'content', id: 'canvasSizePanel', classes: 'document-size-panel canvas-size-controls', hidden: true, items: [
 				{ kind: 'set', items: [
-					{ kind: 'host', classes: 'property-note', text: 'Crop or extend the canvas without scaling content.' },
-					{ kind: 'host', id: 'canvasSizeLimitMessage', classes: 'property-note canvas-size-limit-message', attrs: { role: 'status' } }
-				] },
-				{ kind: 'set', items: [
+					{ kind: 'host', id: 'canvasSizeLimitMessage', classes: 'property-note canvas-size-limit-message', attrs: { role: 'status' } },
 					{ kind: 'numberPair', label: 'Size', reset: { revertFor: 'canvasSizeWidth canvasSizeHeight', title: 'Reset size' }, items: [
 						{ id: 'canvasSizeWidth', mark: 'W', label: 'Width', step: 1, inputMode: 'numeric' },
 						{ id: 'canvasSizeHeight', mark: 'H', label: 'Height', step: 1, inputMode: 'numeric' }
@@ -2176,9 +2175,6 @@ const PANEL_SCHEMAS = {
 				] }
 			] },
 			{ kind: 'content', id: 'scaleDesignPanel', classes: 'document-size-panel scale-design-controls', items: [
-				{ kind: 'set', items: [
-					{ kind: 'host', classes: 'property-note', text: 'Resize the canvas and everything in the design. Proportions stay linked.' }
-				] },
 				{ kind: 'set', items: [
 					{ kind: 'numberPair', label: 'Size', reset: { revertFor: 'scaleDesignWidth scaleDesignHeight', title: 'Reset size' }, items: [
 						{ id: 'scaleDesignWidth', mark: 'W', label: 'Width', step: 1, inputMode: 'numeric' },

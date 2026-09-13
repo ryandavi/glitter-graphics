@@ -1319,6 +1319,8 @@ function buildPanelItem(item, schema) {
 				if (item.stepper.next) control.appendChild(buildStepButton(item.stepper.next));
 			}
 			const row = buildOptionGroup(item.visibleLabel, [control], item.rowClasses, item.hint);
+			if (item.stacked === false) row.classList.remove('is-stacked');
+			else if (item.stacked === true) row.classList.add('is-stacked');
 			if (item.revert) attachOptionRevert(row, select, { options: item.options, roleId: item.id || item.visibleLabel, label: item.visibleLabel });
 			return row;
 		}

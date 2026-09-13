@@ -2607,6 +2607,7 @@ class GlitterEditor {
 	_layerIntersectsExportCanvas(layer) {
 		if (![LayerType.STICKER, LayerType.TEXT_GLITTER, LayerType.SHAPE].includes(layer?.type)) return true;
 		if (!this.originalCanvas?.width || !this.originalCanvas?.height) return true;
+		if (GlitterAnimation.includesOffCanvas(layer.animation)) return true;
 
 		try {
 			const context = this.getMovableLayerContext(layer);

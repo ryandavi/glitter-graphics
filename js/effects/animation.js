@@ -47,6 +47,10 @@ const GlitterAnimation = (() => {
 		return data.amount !== 0;
 	}
 
+	function includesOffCanvas(value) {
+		return isActive(value) && normalizeAnimation(value).includeWhenOffCanvas === true;
+	}
+
 	function summaryText(value) {
 		if (!isActive(value)) return 'Off';
 		const data = normalizeAnimation(value);
@@ -229,7 +233,7 @@ const GlitterAnimation = (() => {
 	}
 
 	return {
-		ANIMATION_TYPES, normalizeAnimation, isActive, summaryText, loopDurationMs,
+		ANIMATION_TYPES, normalizeAnimation, isActive, includesOffCanvas, summaryText, loopDurationMs,
 		isSeamlessLoop, sampleAt, seededRandom01, seededRandomSmooth01, domTransformString, applyToContext
 	};
 })();
