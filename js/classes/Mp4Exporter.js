@@ -70,6 +70,7 @@ class Mp4Exporter {
 		return this.frameComposer.process({
 			...params,
 			exportSettings: opaqueSettings,
+			outputFormat: 'mp4',
 			frameSink: (plan) => this._encode(plan, opaqueSettings, callbacks)
 		});
 	}
@@ -104,8 +105,11 @@ class Mp4Exporter {
 		// mp4-muxer requires integer frame-rate metadata. Frame timing remains exact
 		// because every VideoFrame below carries its millisecond-derived timestamp
 		// and duration (for example, 110 ms stays 110 ms rather than becoming 1/9 s).
+		// The committed render clock is the only clock: when it fixed an output
+		// fps, that exact rate goes to the muxer rather than one re-derived from
+		// averaged delays.
 		const averageFrameDuration = outputDuration / outputSchedule.length;
-		const muxerFrameRate = Math.max(1, Math.round(1000 / averageFrameDuration));
+		const muxerFrameRate = Math.max(1, Math.round(plan.renderClock?.outputFps || (1000 / averageFrameDuration)));
 		const preset = CONFIG.export.mp4.qualityPresets[exportSettings.mp4Quality];
 		const encoderConfig = await Mp4Exporter.getSupportedConfig(width, height, preset.bitrate);
 		if (!encoderConfig) {

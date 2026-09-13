@@ -883,6 +883,25 @@ const CONFIG = deepFreeze({
 			balancedVisualError: 0.008,
 			smallFileVisualError: 0.02,
 			maxLoopDurationMs: 12000,
+			// The composite render clock owns displayed time once any procedural
+			// (continuously evaluated) source is present: source boundaries stop
+			// being automatic output timestamps, so continuous motion is sampled
+			// on a deliberate, format-representable cadence instead of the union
+			// of unrelated source events.
+			renderClock: {
+				// gif.js encodes delays as Math.round(ms / 10) centiseconds, so a
+				// planned delay is only honoured unchanged on that grid. Viewers
+				// clamp anything under 2 cs, which is the floor here.
+				gifDelayQuantumMs: 10,
+				gifMinimumDelayMs: 20,
+				gifMaximumDelayMs: 200,
+				mp4OutputFpsStops: [12, 15, 20, 24, 25, 30, 50, 60],
+				// Cadence shortfalls within this relative band count as equal, so
+				// delay regularity — not a hair's difference in average rate —
+				// decides between otherwise comparable clocks.
+				cadenceShortfallTolerance: 0.05,
+				loopCandidateShortlist: 4
+			},
 			fidelityStops: EXPORT_FIDELITY_STOPS,
 			defaultPreset: 'balanced',
 			presets: {

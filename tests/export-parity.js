@@ -246,11 +246,14 @@ async function exportBytes(page, exportOverrides = {}) {
 				reject(new Error('Export timed out'));
 			}, exportTimeoutMs);
 
-			exporter._handleFileSave = async (blob) => {
+			exporter._handleFileSave = async (blob, _callbacks, plan) => {
 				try {
 					clearTimeout(timeout);
 					const arrayBuffer = await blob.arrayBuffer();
 					exporter._handleFileSave = originalHandleFileSave;
+					// The committed render clock must be the only clock: stash what the
+					// planner intended so the emitted delays can be checked against it.
+					window.__exportPlannedDelays = [...(plan?.frameDurations || [])];
 					resolve(Array.from(new Uint8Array(arrayBuffer)));
 				} catch (error) {
 					exporter._handleFileSave = originalHandleFileSave;
@@ -291,6 +294,19 @@ async function exportBytes(page, exportOverrides = {}) {
 			});
 		});
 	}, { exportTimeoutMs: EXPORT_TIMEOUT_MS, exportOverrides });
+}
+
+// Graphic Control Extension: 0x21 0xF9 0x04 <packed> <delay lo> <delay hi>
+// <transparent index> 0x00. The delay is in centiseconds, which is the only
+// timing granularity a GIF can carry.
+function readGifFrameDelays(bytes) {
+	const delays = [];
+	for (let index = 0; index < bytes.length - 7; index++) {
+		if (bytes[index] !== 0x21 || bytes[index + 1] !== 0xF9 || bytes[index + 2] !== 0x04 || bytes[index + 7] !== 0x00) continue;
+		delays.push(bytes[index + 4] | (bytes[index + 5] << 8));
+		index += 7;
+	}
+	return delays;
 }
 
 async function verifyGradientStopLiveEditing(page) {
@@ -550,6 +566,16 @@ async function main() {
 
 			assertByteIdentity(matteFirst, matteSecond, 'Back-to-back matte export');
 			console.log(`PASS 1. Back-to-back matte exports matched exactly (${matteFirst.bytes.length} bytes, sha256 ${matteFirst.hash})`);
+
+			const plannedDelays = await page.evaluate(() => window.__exportPlannedDelays || []);
+			const encodedDelays = readGifFrameDelays(matteSecondBytes);
+			const expectedDelays = plannedDelays.map((delay) => Math.round(delay / 10));
+			if (!plannedDelays.length || encodedDelays.join(',') !== expectedDelays.join(',')) {
+				throw new Error(`Encoded GIF delays did not round-trip the planned render clock.
+  planned: ${expectedDelays.join(',')}
+  encoded: ${encodedDelays.join(',')}`);
+			}
+			console.log(`PASS 1b. Encoded GIF delays round-tripped the planner's clock (${encodedDelays.length} frames, ${[...new Set(encodedDelays)].join('/')} cs)`);
 
 			const transparentFirstBytes = await exportBytes(page, transparentSettings);
 			const transparentSecondBytes = await exportBytes(page, transparentSettings);

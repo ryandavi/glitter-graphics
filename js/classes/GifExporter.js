@@ -1284,7 +1284,7 @@ class GifExporter {
 
 
 	async process(params) {
-		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks, frameSink = null } = params;
+		const { visibleLayers, glitterGifs, canvasData, exportSettings, callbacks, frameSink = null, outputFormat = 'gif' } = params;
 		this.filterGrainTileCache.clear();
 
 		// Validate frame delay at the start
@@ -1418,6 +1418,7 @@ class GifExporter {
 		const planner = new CompositeTimelinePlanner(timelineConfig);
 		const plan = await planner.plan({
 			timelines: sourceTimelines,
+			outputFormat,
 			fallbackDuration: exportSettings.frameDelay,
 			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
 			maxSamplingFps: exportSettings.maxSamplingFps === 'auto' ? preset.maxSamplingFps : (exportSettings.maxSamplingFps || preset.maxSamplingFps),
@@ -1464,6 +1465,22 @@ class GifExporter {
 		plan.width = canvasData.width;
 		plan.height = canvasData.height;
 		plan.frameDelay = plan.totalDuration / plan.frames.length;
+		dbg('[GifExporter] Render clock:', {
+			mode: plan.renderClock.mode,
+			targetDuration: plan.renderClock.targetDuration,
+			actualDuration: plan.renderClock.duration,
+			frameCount: plan.renderClock.frameCount,
+			outputFps: plan.renderClock.outputFps,
+			averageFps: plan.renderClock.averageFps,
+			minimumDelay: plan.renderClock.minimumDelay,
+			maximumDelay: plan.renderClock.maximumDelay,
+			maximumAuthoredBoundaryLateness: plan.renderClock.maximumAuthoredBoundaryLateness,
+			authoredOccurrencesMissed: plan.renderClock.authoredOccurrencesMissed,
+			clippedOccurrencesMissed: plan.renderClock.clippedOccurrencesMissed,
+			proceduralCadenceShortfall: plan.renderClock.cadenceShortfall,
+			framesBeforeReduction: plan.renderClock.framesBeforeReduction,
+			framesAfterReduction: plan.renderClock.framesAfterReduction
+		});
 		reportGifExportProgress(callbacks, 'reducing', 1, `Removed ${plan.reduction.exactDuplicatesMerged + plan.reduction.nearDuplicatesMerged} duplicate or near-duplicate frames`, plan.reduction.outputFrameCount, plan.reduction.renderedFrameCount);
 		reportGifExportProgress(callbacks, 'palette', 0, 'Analyzing export colors…');
 		await this._yieldForProgress();
@@ -2093,7 +2110,8 @@ class GifExporter {
 		maxFrames = CONFIG.export.defaults.maxFrames,
 		manualFrameSkip = CONFIG.export.defaults.frameSkip,
 		baseImage = true,
-		visualErrorThreshold = CONFIG.export.defaults.visualErrorThreshold
+		visualErrorThreshold = CONFIG.export.defaults.visualErrorThreshold,
+		outputFormat = 'gif'
 	}) {
 		await this._loadMissingFrames(layers, library, {
 			parseGif,
@@ -2126,6 +2144,7 @@ class GifExporter {
 		const fidelity = timelineConfig.fidelityStops[fidelityIndex];
 		const plan = await new CompositeTimelinePlanner(timelineConfig).plan({
 			timelines,
+			outputFormat,
 			fallbackDuration,
 			maxLoopDurationMs: timelineConfig.maxLoopDurationMs,
 			maxSamplingFps: maxSamplingFps === 'auto' ? fidelity.maxSamplingFps : maxSamplingFps,
@@ -2616,8 +2635,12 @@ class GifExporter {
 				const outputFps = timelinePlan.totalDuration > 0
 					? timelinePlan.reduction.outputFrameCount * 1000 / timelinePlan.totalDuration
 					: 0;
+				// A variable-delay output can average near its target while still
+				// holding a visibly long step, so never present the average as a
+				// fixed cadence.
+				const variableCadence = (timelinePlan.renderClock?.delaySpread || 0) > 0;
 				name.textContent = 'Composite export';
-				value.textContent = `${(timelinePlan.totalDuration / 1000).toFixed(2)} s · ${timelinePlan.reduction.outputFrameCount} rendered frames · ${outputFps.toFixed(1)} fps`;
+				value.textContent = `${(timelinePlan.totalDuration / 1000).toFixed(2)} s · ${timelinePlan.reduction.outputFrameCount} rendered frames · ${variableCadence ? '~' : ''}${outputFps.toFixed(1)} fps${variableCadence ? ' average' : ''}`;
 				row.append(name, value);
 				assetAnalysisList.append(row);
 			}

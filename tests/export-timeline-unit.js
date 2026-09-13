@@ -53,7 +53,15 @@ function procedural(key, period, preferredSamplingRate = 12) {
 async function buildPlan(timelines, overrides = {}) {
 	const planner = new CompositeTimelinePlanner({
 		proceduralPeriodTolerance: 0.10,
-		preRenderBudgetMultiplier: 1.5
+		preRenderBudgetMultiplier: 1.5,
+		renderClock: {
+			gifDelayQuantumMs: 10,
+			gifMinimumDelayMs: 20,
+			gifMaximumDelayMs: 200,
+			mp4OutputFpsStops: [12, 15, 20, 24, 25, 30, 50, 60],
+			cadenceShortfallTolerance: 0.05,
+			loopCandidateShortlist: 4
+		}
 	});
 	return planner.plan({
 		timelines,
@@ -237,12 +245,126 @@ async function main() {
 	assert(CompositeFrameReducer.difference(tinyLayerA, tinyLayerB) > 0.02,
 		'A tiny high-contrast sparkle was not protected from smart reduction.');
 
+	// --- Composite render clock: the committed clock owns displayed time ---
+
+	const rotateClock = await buildPlan([
+		timeline('authored', 3, [110, 110, 110]),
+		procedural('rotate', 3000, 30)
+	]);
+	const clock = rotateClock.renderClock;
+	assert(clock.mode === 'gif' && clock.delaySpread === 0 && clock.minimumDelay === 30,
+		'A mixed authored + procedural export did not get one deliberate, regular master cadence.');
+	// The judder this whole clock exists to remove: authored boundaries describe
+	// when that source changes, not when the composite must render.
+	const authoredBoundaries = timeline('authored', 3, [110, 110, 110]).boundariesUntil(clock.duration);
+	assert(clock.timestamps.every((timestamp, index) => timestamp === index * clock.delays[0])
+		&& authoredBoundaries.some((boundary) => !clock.timestamps.includes(boundary)),
+		'Native authored boundaries were inserted into the master render clock.');
+	assert(clock.timestamps[0] === 0
+		&& clock.timestamps.at(-1) + clock.delays.at(-1) === clock.duration
+		&& !clock.timestamps.includes(clock.duration),
+		'The render clock emitted a frame at Dactual instead of ending the loop there.');
+	assert(clock.delays.every((delay) => delay >= 20 && delay % 10 === 0
+		&& Math.round(delay / 10) * 10 === delay),
+		'GIF delays were not planned on the grid gif.js actually encodes (round(ms / 10) centiseconds).');
+	assert(clock.duration === clock.delays.reduce((sum, delay) => sum + delay, 0)
+		&& clock.duration === rotateClock.totalDuration,
+		'Planner, clock and reported durations disagree after rounding.');
+	// Sampling always reads the native authored timeline at the actual output
+	// timestamp, so a late transition never accumulates into source drift.
+	const nativeAuthored = timeline('authored', 3, [110, 110, 110]);
+	const sampledIndices = rotateClock.sourceFrameSelections.get('authored');
+	assert(sampledIndices.every((frameIndex, index) => frameIndex === nativeAuthored.frameIndexAt(clock.timestamps[index])),
+		'Authored sampling did not read the original native timeline at the output timestamps.');
+	assert(clock.authoredOccurrencesMissed === 0 && clock.maximumAuthoredBoundaryLateness <= clock.maximumDelay,
+		'Authored coverage or boundary lateness exceeded what frame-start sampling allows.');
+
+	let rotateRenderCalls = 0;
+	await buildPlan([timeline('authored', 3, [110, 110, 110]), procedural('rotate', 3000, 30)], {
+		renderFrame: () => { rotateRenderCalls++; return frame(0); }
+	});
+	assert(rotateRenderCalls === clock.frameCount,
+		'Candidate planning rendered pixels instead of evaluating timing metadata only.');
+
+	const shortAuthored = await buildPlan([
+		timeline('flicker', 5, [20, 20, 20, 20, 20]),
+		procedural('rotate', 1000, 30)
+	]);
+	assert(shortAuthored.renderClock.authoredOccurrencesMissed === 0
+		&& shortAuthored.renderClock.maximumDelay <= 20,
+		'A short authored frame disappeared because the master cadence was too coarse.');
+
+	// An authored LCM above the cap stays on the existing best-fit-seam choice;
+	// its compromise duration is not a base loop whose multiples can be searched.
+	const seamWithEffect = await buildPlan([
+		timeline('twenty-four', 24, Array(24).fill(40)),
+		timeline('twenty-five', 25, Array(25).fill(40)),
+		procedural('rotate', 3000, 30)
+	]);
+	assert(!seamWithEffect.loopSeam.exact
+		&& seamWithEffect.renderClock.duration <= 12000
+		&& seamWithEffect.renderClock.frameCount <= 1000
+		&& seamWithEffect.renderClock.clippedOccurrencesMissed >= 0,
+		'A seam-truncated terminal fragment forced an unbounded global cadence.');
+
+	const videoClock = await buildPlan([
+		timeline('authored', 3, [110, 110, 110]),
+		procedural('rotate', 3000, 30)
+	], { outputFormat: 'mp4' });
+	const video = videoClock.renderClock;
+	assert(video.mode === 'mp4' && video.outputFps === 30
+		&& Math.abs(video.duration - video.frameCount * 1000 / video.outputFps) < 1e-9,
+		'MP4 duration was not frameCount / outputFps.');
+	assert(video.duration !== video.targetDuration,
+		'The MP4 fixture no longer exercises a target duration the format cannot represent exactly.');
+	const videoFit = videoClock.timingResolution.proceduralPeriodFits.find((fit) => fit.key === 'rotate');
+	assert(Math.abs(video.duration / videoFit.resolvedPeriod - Math.round(video.duration / videoFit.resolvedPeriod)) < 1e-9,
+		'Procedural period fitting used the ideal target duration instead of the duration MP4 actually represents.');
+
+	// Slow continuous motion reads as near-duplicate without being temporally
+	// redundant, so reduction may not stretch a delay past the committed cadence.
+	const motionFrames = Array.from({ length: 6 }, (_, index) => frame(50 + index, 255, 4));
+	const motionInput = () => ({
+		frames: [...motionFrames],
+		frameDurations: Array(6).fill(30),
+		selections: motionFrames.map(() => new Map())
+	});
+	const cadenceSafe = reducer.reduce(motionInput(), {
+		enabled: true, visualErrorThreshold: 0.05, preferredFrameBudget: 2, hardFrameLimit: 1000, maximumCadenceGap: 30
+	});
+	const cadenceFree = reducer.reduce(motionInput(), {
+		enabled: true, visualErrorThreshold: 0.05, preferredFrameBudget: 2, hardFrameLimit: 1000
+	});
+	assert(cadenceSafe.nearDuplicatesMerged === 0 && cadenceFree.nearDuplicatesMerged > 0,
+		'Reduction re-irregularized continuous motion the master clock had already planned.');
+
+	// The most demanding active preference sets the target resolution; it is a
+	// preference, not a hard minimum, and never becomes an effect's speed.
+	const mixedPreferences = await buildPlan([
+		procedural('slow-stepped', 1000, 8),
+		procedural('continuous', 1000, 30)
+	]);
+	assert(mixedPreferences.renderClock.maximumDelay <= 1000 / 30
+		&& mixedPreferences.timingResolution.proceduralPeriodFits.every((fit) => fit.resolvedPeriod === 1000),
+		'The most demanding sampling preference did not set the cadence, or it leaked into effect speed.');
+
+	const atMaximumLoop = await buildPlan([procedural('long', 11900, 30)], { maxLoopDurationMs: 12000 });
+	assert(atMaximumLoop.renderClock.duration <= 12000
+		&& atMaximumLoop.renderClock.frameCount <= 1000
+		&& atMaximumLoop.renderClock.delays.every((delay) => delay >= 20),
+		'A loop at the maximum duration escaped its bounded cadence and frame-count ceilings.');
+
+	const deterministicA = await buildPlan([timeline('authored', 3, [110, 110, 110]), procedural('rotate', 3000, 30)]);
+	const deterministicB = await buildPlan([timeline('authored', 3, [110, 110, 110]), procedural('rotate', 3000, 30)]);
+	assert(deterministicA.renderClock.delays.join(',') === deterministicB.renderClock.delays.join(','),
+		'Identical input did not produce an identical timing plan.');
+
 	assert(CompositeFrameReducer.hash(frame(12)) === '2x2:1598205349',
 		'Golden no-reduction composed-frame hash changed.');
 	assert(sevenEleven.reduction.durationPreserved && sampled.reduction.durationPreserved,
 		'No-reduction and sampled plans did not preserve total duration.');
 
-	console.log('PASS export timeline fixtures: authored timing, procedural fitting, seams, sampling, duplicates, alpha, effects, and visual error.');
+	console.log('PASS export timeline fixtures: authored timing, procedural fitting, seams, render-clock cadence, sampling, duplicates, alpha, effects, and visual error.');
 }
 
 main().catch((error) => {

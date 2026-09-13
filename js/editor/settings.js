@@ -600,7 +600,10 @@ initializeExportSettings() {
 				maxFrames: this.exportSettings.maxFrames,
 				manualFrameSkip: this.exportSettings.exportFrameSkip,
 				baseImage: this.exportSettings.baseImage,
-				visualErrorThreshold: this.exportSettings.visualErrorThreshold
+				visualErrorThreshold: this.exportSettings.visualErrorThreshold,
+				// The render clock is format-specific, so the estimate must be
+				// realized by the same planner the export will actually use.
+				outputFormat: this.exportSettings.format
 			});
 			if (requestId !== this.exportDurationRequestId) return;
 			const loopDurationSeconds = estimate.duration / 1000;
