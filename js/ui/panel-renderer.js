@@ -1302,12 +1302,23 @@ function buildPanelItem(item, schema) {
 			select.id = item.id;
 			addPanelClasses(select, item.classes);
 			select.setAttribute('aria-label', item.label || item.visibleLabel);
+			const optgroups = new Map();
 			item.options.forEach((entry) => {
 				const option = document.createElement('option');
 				option.value = entry.value;
 				option.textContent = entry.label;
 				option.selected = Boolean(entry.selected || entry.active);
-				select.appendChild(option);
+				let parent = select;
+				if (entry.group) {
+					parent = optgroups.get(entry.group);
+					if (!parent) {
+						parent = document.createElement('optgroup');
+						parent.label = entry.group;
+						optgroups.set(entry.group, parent);
+						select.appendChild(parent);
+					}
+				}
+				parent.appendChild(option);
 			});
 			if (!item.visibleLabel) return select;
 			// `stepper`: compact icon-only prev/next buttons flanking the select

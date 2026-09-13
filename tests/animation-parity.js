@@ -5,15 +5,12 @@ const assert = require('assert');
 const types = [
 	'breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'pulse', 'heartbeat', 'blink',
 	'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band',
-	'move', 'orbit', 'rotate', 'flip', 'zoom', 'fade', 'fade-in', 'pop', 'ping', 'marquee'
+	'move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee'
 ];
 const presets = Object.fromEntries(types.map((type) => [type, {
 	periodMs: 1000, easing: 'linear', amount: 10, distance: 20, radius: 20, turns: 1,
 	duty: 50, opacityFloor: 20, direction: 'normal', iterations: Infinity, anchor: 'center'
 }]));
-Object.assign(presets.fade, { iterations: 1, fillMode: 'forwards' });
-Object.assign(presets['fade-in'], { iterations: 1, fillMode: 'forwards' });
-Object.assign(presets.pop, { iterations: 1, fillMode: 'forwards', easing: 'elasticOut', overshoot: 30 });
 Object.assign(presets.marquee, { includeWhenOffCanvas: true });
 
 global.CONFIG = { tools: { animation: {
@@ -44,13 +41,17 @@ types.forEach((type) => {
 });
 
 assert.strictEqual(Animation.normalizeAnimation({ type: 'pulse', iterations: null }).iterations, Infinity);
-assert.strictEqual(Animation.loopDurationMs({ type: 'fade' }), 1000);
+assert.strictEqual(Animation.loopDurationMs({ type: 'pulse', iterations: 1 }), 1000);
 assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee' }), true);
 assert.strictEqual(Animation.includesOffCanvas({ type: 'move' }), false);
 assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee', distance: 0 }), false);
 
-['fade', 'fade-in', 'pop'].forEach((type) => {
-	const data = Animation.normalizeAnimation({ type });
+// Every preset now loops indefinitely by default (no built-in "play once"
+// transitions), but the engine still supports an explicit finite `iterations`
+// override, so that mechanism gets covered directly here instead of via a
+// dedicated one-shot preset.
+['pulse', 'rotate', 'move'].forEach((type) => {
+	const data = Animation.normalizeAnimation({ type, iterations: 1, fillMode: 'forwards' });
 	assert(!Animation.isSeamlessLoop(data));
 	assert.deepStrictEqual(
 		Animation.sampleAt(data, data.periodMs, { layerId: 'transition' }),
@@ -58,14 +59,16 @@ assert.strictEqual(Animation.includesOffCanvas({ type: 'marquee', distance: 0 })
 	);
 });
 
-const delayed = Animation.normalizeAnimation({ type: 'fade-in', delayMs: 100, fillMode: 'none' });
-assert.strictEqual(Animation.sampleAt(delayed, 99).opacity, 1);
-assert.strictEqual(Animation.sampleAt(delayed, 100).opacity, 0);
+const delayed = Animation.normalizeAnimation({ type: 'rotate', delayMs: 100, iterations: 1, fillMode: 'none' });
+assert.strictEqual(Animation.sampleAt(delayed, 99).rotate, 0);
+assert.strictEqual(Animation.sampleAt(delayed, 100).rotate, 0);
 const backwards = { ...delayed, fillMode: 'backwards' };
-assert.strictEqual(Animation.sampleAt(backwards, 99).opacity, 0);
-const finalTick = Animation.sampleAt(delayed, 1099).opacity;
-assert(finalTick > 0.99 && finalTick < 1);
-assert.strictEqual(Animation.sampleAt(delayed, 1100).opacity, 1);
+assert.strictEqual(Animation.sampleAt(backwards, 99).rotate, 0);
+const finalTick = Animation.sampleAt(delayed, 1099).rotate;
+assert(finalTick > 359 && finalTick < 360);
+assert.strictEqual(Animation.sampleAt(delayed, 1100).rotate, 0);
+const forwardsHeld = Animation.sampleAt({ ...delayed, fillMode: 'forwards' }, 1100).rotate;
+assert.strictEqual(forwardsHeld, 360);
 
 const snapped = Animation.sampleAt({ ...presets.move, type: 'move', snapMode: 'pixel-snap' }, 330, { layerId: 'snap' });
 assert(Number.isInteger(snapped.tx) && Number.isInteger(snapped.ty));

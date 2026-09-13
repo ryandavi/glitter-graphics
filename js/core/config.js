@@ -486,7 +486,7 @@ const CONFIG = deepFreeze({
 			defaultType: 'pulse',
 			presets: {
 				breath: { periodMs: 4000, easing: 'easeInOut', amount: 6, direction: 'alternate', iterations: Infinity, anchor: 'center' },
-				float: { periodMs: 3600, easing: 'easeInOut', amount: 14, direction: 'alternate', iterations: Infinity },
+				float: { periodMs: 3600, easing: 'easeInOut', amount: 14, angle: 270, direction: 'normal', iterations: Infinity },
 				sway: { periodMs: 2600, easing: 'easeInOut', amount: 8, direction: 'alternate', iterations: Infinity, anchor: 'top-center' },
 				dim: { periodMs: 2000, easing: 'easeInOut', opacityFloor: 40, direction: 'alternate', iterations: Infinity },
 				drift: { periodMs: 6000, easing: 'linear', distance: 120, angle: 0, direction: 'normal', iterations: Infinity },
@@ -506,12 +506,9 @@ const CONFIG = deepFreeze({
 				orbit: { periodMs: 3000, easing: 'linear', radius: 40, direction: 'normal', iterations: Infinity },
 				rotate: { periodMs: 3000, easing: 'linear', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
 				flip: { periodMs: 2400, easing: 'easeInOut', turns: 1, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				zoom: { periodMs: 8000, easing: 'easeInOut', amount: 15, angle: 0, direction: 'alternate', iterations: Infinity, anchor: 'center' },
+				zoom: { periodMs: 8000, easing: 'easeInOut', amount: 15, direction: 'alternate', iterations: Infinity, anchor: 'center' },
 				ping: { periodMs: 1600, easing: 'easeOut', radius: 40, opacityFloor: 0, direction: 'normal', iterations: Infinity, anchor: 'center' },
-				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, anchor: 'center', includeWhenOffCanvas: true },
-				fade: { periodMs: 1200, easing: 'easeOut', iterations: 1, direction: 'normal', fillMode: 'forwards', anchor: 'center' },
-				'fade-in': { periodMs: 1200, easing: 'easeOut', iterations: 1, direction: 'normal', fillMode: 'forwards', anchor: 'center' },
-				pop: { periodMs: 700, easing: 'elasticOut', overshoot: 30, iterations: 1, direction: 'normal', fillMode: 'forwards', anchor: 'center' }
+				marquee: { periodMs: 4000, easing: 'linear', distance: 600, angle: 180, direction: 'normal', iterations: Infinity, anchor: 'center', includeWhenOffCanvas: true }
 			},
 			jitterQuantMs: 60,
 			maxPeriodMs: 20000,
@@ -761,7 +758,7 @@ const CONFIG = deepFreeze({
 			animAngle: { label: 'Angle', unit: '\u00b0', min: 0, max: 359, step: 1, value: 0 },
 			animDistance: { label: 'Distance', unit: 'px', min: 0, max: 2000, step: 1, value: 60 },
 			animRadius: { label: 'Radius', unit: 'px', min: 0, max: 1000, step: 1, value: 40 },
-			animTurns: { label: 'Turns', unit: '×', min: -8, max: 8, step: 0.1, value: 1 },
+			animTurns: { label: 'Turns', unit: '×', min: 1, max: 8, step: 1, value: 1 },
 			animDuty: { label: 'Duty cycle', unit: '%', min: 5, max: 95, step: 1, value: 50 },
 			animOpacityFloor: { label: 'Opacity floor', unit: '%', min: 0, max: 95, step: 1, value: 0 },
 			animOvershoot: { label: 'Overshoot', unit: '%', min: 0, max: 100, step: 1, value: 30 },
@@ -1391,10 +1388,19 @@ const LAYER_BLEND_MODE_OPTIONS = CONFIG.layers.blendModes.map((value) => ({
 	selected: value === CONFIG.layers.defaultBlendMode
 }));
 
+const ANIMATION_PRESET_GROUPS = {
+	Ambient: ['breath', 'float', 'sway', 'dim', 'drift', 'twinkle', 'pulse'],
+	Attention: ['heartbeat', 'blink', 'bounce', 'shake', 'tremble', 'wobble', 'jello', 'tada', 'swing', 'rubber-band'],
+	Movement: ['move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee']
+};
+const ANIMATION_PRESET_GROUP_BY_TYPE = Object.fromEntries(
+	Object.entries(ANIMATION_PRESET_GROUPS).flatMap(([group, types]) => types.map((type) => [type, group]))
+);
 const ANIMATION_PRESET_OPTIONS = Object.keys(CONFIG.tools.animation.presets).map((value) => ({
 	value,
 	label: value.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' '),
-	selected: value === CONFIG.tools.animation.defaultType
+	selected: value === CONFIG.tools.animation.defaultType,
+	group: ANIMATION_PRESET_GROUP_BY_TYPE[value]
 }));
 
 function createAnimationPanelSpec(prefix) {

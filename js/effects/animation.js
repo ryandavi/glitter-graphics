@@ -5,9 +5,8 @@ const GlitterAnimation = (() => {
 		'breath', 'float', 'sway', 'dim', 'drift', 'twinkle',
 		'pulse', 'heartbeat', 'blink', 'bounce', 'shake', 'tremble',
 		'wobble', 'jello', 'tada', 'swing', 'rubber-band',
-		'move', 'orbit', 'rotate', 'flip', 'zoom', 'fade', 'fade-in', 'pop', 'ping', 'marquee'
+		'move', 'orbit', 'rotate', 'flip', 'zoom', 'ping', 'marquee'
 	]);
-	const TRANSITIONS = new Set(['fade', 'fade-in', 'pop']);
 	const IDENTITY = Object.freeze({
 		tx: 0, ty: 0, rotate: 0, scaleX: 1, scaleY: 1,
 		skewX: 0, skewY: 0, opacity: 1, originX: 0.5, originY: 0.5
@@ -38,7 +37,6 @@ const GlitterAnimation = (() => {
 	function isActive(value) {
 		if (!value || !ANIMATION_TYPES.includes(value.type)) return false;
 		const data = normalizeAnimation(value);
-		if (TRANSITIONS.has(data.type)) return true;
 		if (['dim', 'twinkle'].includes(data.type)) return data.opacityFloor < 100;
 		if (data.type === 'blink') return data.duty > 0 && data.duty < 100;
 		if (['orbit', 'ping'].includes(data.type)) return data.radius !== 0;
@@ -136,7 +134,24 @@ const GlitterAnimation = (() => {
 		const randomSmooth = (salt = 0) => seededRandomSmooth01(options.layerId, tMs, (options.seed || 0) + salt) * 2 - 1;
 		switch (data.type) {
 			case 'breath': out.scaleX = out.scaleY = 1 + amount / 100 * oscillation; break;
-			case 'float': out.ty = -amount * wave + randomSmooth(1) * amount * 0.08 * wave; break;
+			// Signed oscillation (not `wave`) so it rises and falls evenly around
+			// the resting position instead of only ever lifting upward. Direction
+			// rides the shared Angle control (default 270°/up) rather than a
+			// dedicated axis field, so the same preset covers a vertical bob and a
+			// horizontal wander just by turning the Angle dial. The jitter is
+			// perpendicular to travel and stays enveloped by `wave` (peaks at
+			// p=0.5, the fast mid-transit point, and is exactly 0 at the p=0/1 loop
+			// seam) so the noise is masked by motion instead of spiking right at
+			// the top/bottom of the arc, which read as a stutter.
+			case 'float': {
+				const lift = amount * oscillation;
+				out.tx += Math.cos(angle) * lift;
+				out.ty += Math.sin(angle) * lift;
+				const jitter = randomSmooth(1) * amount * 0.08 * wave;
+				out.tx += Math.cos(angle + Math.PI / 2) * jitter;
+				out.ty += Math.sin(angle + Math.PI / 2) * jitter;
+				break;
+			}
 			case 'sway': out.rotate = amount * oscillation; break;
 			case 'dim': out.opacity = 1 - (1 - data.opacityFloor / 100) * wave; break;
 			case 'drift': vector((Number(data.distance) || amount) * p); break;
@@ -156,25 +171,51 @@ const GlitterAnimation = (() => {
 			case 'tada': out.scaleX = out.scaleY = 1 + amount / 100 * wave; out.rotate = amount * 0.45 * Math.sin(8 * Math.PI * p) * wave; break;
 			case 'swing': out.rotate = amount * Math.sin(4 * Math.PI * p) * (1 - p); break;
 			case 'rubber-band': out.scaleX = 1 + amount / 100 * oscillation * (1 - p); out.scaleY = 1 - amount / 140 * oscillation * (1 - p); break;
-			case 'move': vector(Number(data.distance) * wave); break;
+			// OpacityFloor is optional here (0 by default = plain move); dialing it
+			// up dips opacity in sync with the same `wave` driving the travel, so
+			// the layer fades out as it moves away and back in as it returns —
+			// a "move + fade" combo without a dedicated preset for it.
+			case 'move':
+				vector(Number(data.distance) * wave);
+				if (data.opacityFloor) out.opacity = 1 - (1 - data.opacityFloor / 100) * wave;
+				break;
 			// Constant-speed one-way travel, restarting at 0 each loop (unlike
 			// drift/move, no wave/amount shaping — a marquee has to hold one
 			// speed edge-to-edge). The restart is a hard jump, not a seamless
 			// wrap; set Distance past the canvas + layer size so the jump lands
 			// while the layer is off-canvas and never reads as a cut.
 			case 'marquee': vector(Number(data.distance) * p); break;
-			case 'orbit': out.tx = data.radius * (Math.cos(2 * Math.PI * p) - 1); out.ty = data.radius * Math.sin(2 * Math.PI * p); break;
-			case 'rotate': out.rotate = data.turns * 360 * p; break;
-			case 'flip': out.scaleX = Math.cos(data.turns * 2 * Math.PI * p); break;
-			case 'zoom': out.scaleX = out.scaleY = 1 + amount / 100 * wave; vector(amount * 0.25 * wave); break;
-			case 'ping': out.scaleX = out.scaleY = 1 + data.radius / 100 * p; out.opacity = 1 - (1 - data.opacityFloor / 100) * p; break;
-			case 'fade': out.opacity = 1 - p; break;
-			case 'fade-in': out.opacity = p; break;
-			case 'pop': {
-				const overshoot = Math.max(0, data.overshoot) / 100;
-				out.scaleX = out.scaleY = Math.max(0, p + Math.sin(Math.PI * p) * overshoot);
+			// Centered on the layer's own resting position by default (anchor
+			// 'center'); other anchors bias the circle's center toward that
+			// corner/edge by up to one radius, so picking an anchor actually moves
+			// the orbit instead of being inert (transform-origin alone can't do
+			// this — it has no effect on a pure translate).
+			case 'orbit': {
+				const [anchorX, anchorY] = resolveOrigin(data);
+				const centerTx = (anchorX - 0.5) * 2 * data.radius;
+				const centerTy = (anchorY - 0.5) * 2 * data.radius;
+				out.tx = centerTx + data.radius * Math.cos(2 * Math.PI * p);
+				out.ty = centerTy + data.radius * Math.sin(2 * Math.PI * p);
 				break;
 			}
+			// Amount is optional here (0 by default = plain spin); dialing it up
+			// pulses scale in sync with the same period, turning the spin into a
+			// vortex/spiral without a dedicated preset for it.
+			case 'rotate':
+				out.rotate = data.turns * 360 * p;
+				if (amount) out.scaleX = out.scaleY = 1 + amount / 100 * oscillation;
+				break;
+			// Axis rides the shared Angle control (snapped to whichever of
+			// horizontal/vertical it's closer to) instead of a dedicated axis
+			// field, so one preset covers both flip orientations.
+			case 'flip': {
+				const flipScale = Math.cos(data.turns * 2 * Math.PI * p);
+				if (Math.abs(Math.sin(angle)) > Math.abs(Math.cos(angle))) out.scaleY = flipScale;
+				else out.scaleX = flipScale;
+				break;
+			}
+			case 'zoom': out.scaleX = out.scaleY = 1 + amount / 100 * wave; break;
+			case 'ping': out.scaleX = out.scaleY = 1 + data.radius / 100 * p; out.opacity = 1 - (1 - data.opacityFloor / 100) * p; break;
 		}
 		// Pixel-snap only whole-pixel-aligns position, keeping pixel art crisp at
 		// rest. Rounding rotation/scale to coarse steps has no such benefit (a
