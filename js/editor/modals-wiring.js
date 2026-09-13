@@ -82,10 +82,38 @@ updateOrientationButtons(width, height) {
 
 		// External content modals use the shared document-modal helpers.
 		this.modalManager
+			.register('historyModal', {
+				openBtnId: 'historyBtn',
+				closeBtnId: 'closeHistoryModal',
+				externalContentUrl: 'modals/history.html?v=2',
+				cacheContent: true,
+				resetScrollOnOpen: false,
+				rememberScroll: true,
+				onContentLoaded: (modalBody) => {
+					// Initialize pixel-scaled images
+					initPixelScalerInContainer(modalBody);
+
+					// Render the Timeline section from data before the nav below
+					// indexes the modal for search, so rendered entries are searchable.
+					initAboutTimeline(modalBody);
+
+					// Initialize references (sup ↔ reference list interaction)
+					initModalReferences(modalBody, {
+						referenceListSelector: 'ol#HistoryReferencesList'
+					});
+
+					const modal = document.getElementById('historyModal');
+					initDocumentModalNavigation(modal);
+					initModalSmoothScroll(modal);
+
+					// Initialize tooltips for dynamically loaded content
+					initTooltipsInContainer(modalBody);
+				}
+			})
 			.register('aboutModal', {
 				openBtnId: 'aboutBtn',
 				closeBtnId: 'closeAboutModal',
-				externalContentUrl: 'modals/about.html?v=10',
+				externalContentUrl: 'modals/about.html?v=14',
 				cacheContent: true,
 				resetScrollOnOpen: false,
 				rememberScroll: true,
@@ -96,14 +124,13 @@ updateOrientationButtons(width, height) {
 					// Initialize pixel-scaled images
 					initPixelScalerInContainer(modalBody);
 
-					// Render the Timeline section from data before the nav below
-					// indexes the modal for search, so rendered entries are searchable.
-					initAboutTimeline(modalBody);
-
 					// Initialize references (sup ↔ reference list interaction)
 					initModalReferences(modalBody, {
 						referenceListSelector: 'ol#AboutReferencesList'
 					});
+
+					// Jump-to-History links in the intro prose
+					initModalCrossLinks(modalBody, (id, anchor) => this.openDocumentAt(id, anchor));
 
 					const modal = document.getElementById('aboutModal');
 					initDocumentModalNavigation(modal);

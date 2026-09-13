@@ -261,6 +261,21 @@ const initDocumentModalNavigation = (modal) => {
 	});
 };
 
+// Wires up inline "jump to another document modal" links inside prose (a
+// button with data-open-modal, and optionally data-open-anchor). onOpen is
+// the caller's openDocumentAt(modalId, anchor), kept out of this file since
+// it lives on the modal manager's owner, not on doc-modal.js itself.
+const initModalCrossLinks = (modalBody, onOpen) => {
+	if (!modalBody) return;
+
+	modalBody.querySelectorAll('[data-open-modal]').forEach(link => {
+		link.addEventListener('click', (event) => {
+			event.preventDefault();
+			onOpen(link.dataset.openModal, link.dataset.openAnchor || null);
+		});
+	});
+};
+
 const initPixelScalerInContainer = (container = document) => {
 	const images = container.querySelectorAll('img[data-pixel-scale]');
 	if (images.length === 0) return;

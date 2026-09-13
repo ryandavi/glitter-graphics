@@ -77,6 +77,10 @@
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-question-circle"></use></svg></span>
 							<span class="app-menu-item-label">Guide</span>
 						</button>
+						<button class="app-menu-item" id="historyBtn" type="button" role="menuitem">
+							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-clock-history"></use></svg></span>
+							<span class="app-menu-item-label">History</span>
+						</button>
 						<button class="app-menu-item" id="aboutBtn" type="button" role="menuitem">
 							<span class="app-menu-item-icon icon-wrapper sm"><svg class="icon"><use href="#icon-circle-info"></use></svg></span>
 							<span class="app-menu-item-label">About</span>
@@ -1905,6 +1909,51 @@
 		</div>
 	</div>
 
+	<!-- History Modal -->
+	<div class="modal-overlay" id="historyModal">
+		<div class="modal-content modal-reading content-dialog document-dialog history-dialog">
+			<div class="modal-header">
+
+				<div class="modal-title">
+					<span class="modal-icon icon-wrapper">
+						<svg class="icon">
+							<use href="#icon-clock-history"></use>
+						</svg>
+						<span class="name">History</span>
+					</span>
+
+					<span class="modal-title-text">History</span>
+				</div>
+
+				<button class="btn-icon icon-wrapper modal-close" id="closeHistoryModal">
+					<svg class="icon">
+						<use href="#icon-x-mark"></use>
+					</svg>
+					<span class="name">Close</span>
+				</button>
+			</div>
+			<div class="modal-nav document-nav search-toggle-row" aria-label="History navigation" hidden>
+				<button type="button" class="btn-simple document-toc-toggle" aria-expanded="false" aria-controls="historyDocumentTocPanel">
+					<span>Contents</span>
+					<span class="icon-wrapper" aria-hidden="true"><svg class="icon"><use href="#icon-chevron-down"></use></svg></span>
+				</button>
+				<label class="search-input-wrapper">
+					<span class="icon-wrapper search-input-icon" aria-hidden="true"><svg class="icon"><use href="#icon-magnifying-glass"></use></svg></span>
+					<input type="search" class="document-search-input" placeholder="Search History" aria-label="Search History" aria-controls="historyDocumentSearchResults">
+				</label>
+				<span class="document-search-status" role="status" aria-live="polite"></span>
+				<button type="button" class="btn-icon icon-wrapper document-back-to-top" aria-label="Back to top" title="Back to top" hidden>
+					<svg class="icon"><use href="#icon-chevron-up"></use></svg>
+				</button>
+				<div class="document-toc-panel" id="historyDocumentTocPanel" hidden></div>
+				<div class="document-search-results" id="historyDocumentSearchResults" hidden></div>
+			</div>
+			<div class="modal-body">
+				<!-- Content loaded externally -->
+			</div>
+		</div>
+	</div>
+
 	<!-- Guide Modal -->
 	<div class="modal-overlay" id="guideModal">
 		<div class="modal-content modal-reading content-dialog document-dialog guide-dialog">
@@ -2124,6 +2173,7 @@
 			<symbol id="icon-chevron-right" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 4 4 4-4 4" /></symbol>
 			<symbol id="icon-chevron-up" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m4 10 4-4 4 4" /></symbol>
 			<symbol id="icon-question-circle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M6.2 6.1a1.9 1.9 0 1 1 2.7 1.75c-.55.3-.9.85-.9 1.5v.25" /><path fill="currentColor" stroke="none" d="M8 11.1a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5Z" /></symbol>
+			<symbol id="icon-clock-history" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2.2 1.3" /></symbol>
 			<symbol id="icon-minus" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10" /></symbol>
 			<symbol id="icon-layers" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 6 3-6 3-6-3 6-3Z" /><path d="m2 8 6 3 6-3M2 11l6 3 6-3" /></symbol>
 			<symbol id="icon-sliders" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5h5.4M11.1 4.5h2.4M2.5 8h1.9M7.6 8h5.9M2.5 11.5h3.4M9.1 11.5h4.4" /><circle cx="9.5" cy="4.5" r="1.6" /><circle cx="6" cy="8" r="1.6" /><circle cx="7.5" cy="11.5" r="1.6" /></symbol>
